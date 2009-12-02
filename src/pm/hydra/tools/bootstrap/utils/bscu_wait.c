@@ -7,42 +7,83 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_status HYDT_bscu_wait_for_completion(struct HYD_proxy *proxy_list)
+int *HYD_bscu_fd_list = NULL;
+int HYD_bscu_fd_count = 0;
+int *HYD_bscu_pid_list = NULL;
+int HYD_bscu_pid_count = 0;
+
+HYD_status HYDT_bscu_wait_for_completion(int timeout)
 {
-    int pid, ret_status, not_completed;
-    struct HYD_proxy *proxy;
-    struct HYD_proxy_exec *exec;
+    int pid, ret, count, i, time_elapsed, time_left;
+    struct timeval start, now;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    not_completed = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
-        if (proxy->exit_status == NULL) {
-            for (exec = proxy->exec_list; exec; exec = exec->next)
-                not_completed += exec->proc_count;
-        }
-    }
+    /* FIXME: We rely on gettimeofday here. This needs to detect the
+     * timer type available and use that. Probably more of an MPL
+     * functionality than Hydra's. */
+    gettimeofday(&start, NULL);
 
-    /* We get here only after the I/O sockets have been closed. If the
-     * application did not manually close its stdout and stderr
-     * sockets, this means that the processes have terminated. In that
-     * case the below loop will return almost immediately. If not, we
-     * poll for some time, burning CPU. */
-    while (not_completed > 0) {
-        pid = waitpid(-1, &ret_status, WNOHANG);
-        if (pid > 0) {
-            /* Find the pid and mark it as complete. */
-            for (proxy = proxy_list; proxy; proxy = proxy->next) {
-                if (proxy->pid == pid)
-                    not_completed--;
+    /* Loop till all sockets have closed */
+    while (1) {
+        count = 0;
+        for (i = 0; i < HYD_bscu_fd_count; i++) {
+            status = HYDT_dmx_query_fd_registration(HYD_bscu_fd_list[i], &ret);
+            HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
+
+            if (ret) { /* still registered */
+                count++; /* We still need to wait */
+
+                gettimeofday(&now, NULL);
+                time_elapsed = (now.tv_sec - start.tv_sec); /* Ignore microsec granularity */
+
+                if (timeout > 0) {
+                    if (time_elapsed > timeout)
+                        goto fn_exit;
+                    else
+                        time_left = timeout - time_elapsed;
+                }
+                else
+                    time_left = -1;
+
+                status = HYDT_dmx_wait_for_event(time_left);
+                HYDU_ERR_POP(status, "error waiting for event\n");
+
+                continue;
             }
         }
+
+        if (count == 0)
+            break;
     }
 
-    if (not_completed)
-        status = HYD_INTERNAL_ERROR;
+    /* Loop till all processes have completed */
+    while (1) {
+        count = 0;
+        for (i = 0; i < HYD_bscu_pid_count; i++)
+            if (HYD_bscu_pid_list[i] != -1)
+                count++;
 
+        /* If there are no processes to wait, we are done */
+        if (count == 0)
+            break;
+
+        pid = waitpid(-1, &ret, WNOHANG);
+        if (pid > 0) {
+            /* Find the pid and mark it as complete */
+            for (i = 0; i < HYD_bscu_pid_count; i++)
+                if (HYD_bscu_pid_list[i] == pid) {
+                    HYD_bscu_pid_list[i] = -1;
+                    break;
+                }
+        }
+    }
+
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+
+  fn_fail:
+    goto fn_exit;
 }

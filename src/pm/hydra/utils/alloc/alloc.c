@@ -125,11 +125,6 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 
     init_node(&(*proxy)->node);
 
-    (*proxy)->pid = -1;
-    (*proxy)->in = -1;
-    (*proxy)->out = -1;
-    (*proxy)->err = -1;
-
     (*proxy)->proxy_id = -1;
     (*proxy)->exec_launch_info = NULL;
 

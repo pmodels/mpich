@@ -13,4 +13,3 @@ include utils/others/Makefile.mk
 include utils/signals/Makefile.mk
 include utils/sock/Makefile.mk
 include utils/string/Makefile.mk
-include utils/timer/Makefile.mk

@@ -9,7 +9,7 @@
 #include "bsci.h"
 #include "rmku.h"
 
-HYD_status HYD_rmku_query_node_list(int *num_cores, struct HYD_proxy **proxy_list)
+HYD_status HYD_rmku_query_node_list(struct HYD_node **node_list)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -17,7 +17,7 @@ HYD_status HYD_rmku_query_node_list(int *num_cores, struct HYD_proxy **proxy_lis
 
     /* We just query the bootstrap server for the node list and return
      * it to the upper layer. */
-    status = HYDT_bsci_query_node_list(num_cores, proxy_list);
+    status = HYDT_bsci_query_node_list(node_list);
     HYDU_ERR_POP(status, "bootstrap device returned error while querying node list\n");
 
   fn_exit:

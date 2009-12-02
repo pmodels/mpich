@@ -38,13 +38,18 @@
 #include <sys/stat.h>
 #endif /* HAVE_SYS_STAT_H */
 
+#if defined HAVE_TIME_H
+#include <time.h>
+#endif /* HAVE_TIME_H */
+
+#if defined HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif /* HAVE_SYS_TIME_H */
+
 #include <errno.h>
 
-#if defined HAVE_GETTIMEOFDAY
-/* FIXME: Is time.h available everywhere? We should probably have
- * multiple timer options. */
-#include <time.h>
-#include <sys/time.h>
+#if !defined HAVE_GETTIMEOFDAY
+#error "hydra requires gettimeofday support"
 #endif /* HAVE_GETTIMEOFDAY */
 
 #if defined MAXHOSTNAMELEN
@@ -102,6 +107,7 @@ typedef enum {
     HYD_NO_MEM,
     HYD_SOCK_ERROR,
     HYD_INVALID_PARAM,
+    HYD_TIMED_OUT,
     HYD_INTERNAL_ERROR
 } HYD_status;
 
@@ -175,11 +181,6 @@ struct HYD_proxy {
     char **exec_launch_info;
 
     int proxy_id;
-
-    int pid;
-    int in;                     /* stdin is only valid for proxy_id 0 */
-    int out;
-    int err;
 
     int start_pid;
     int proxy_process_count;

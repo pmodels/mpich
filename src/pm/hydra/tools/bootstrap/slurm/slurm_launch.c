@@ -9,99 +9,143 @@
 #include "bscu.h"
 #include "slurm.h"
 
-HYD_status HYDT_bscd_slurm_launch_procs(char **global_args, const char *proxy_id_str,
-                                        struct HYD_proxy *proxy_list)
+static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_str,
+                                   int *num_hosts)
 {
-    struct HYD_proxy *proxy;
-    char *client_arg[HYD_NUM_TMP_STRINGS];
-    char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
-    int i, arg, num_nodes;
+    int i;
+    char *tmp[HYD_NUM_TMP_STRINGS], *foo = NULL;
+    struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /*
-     * We use the following priority order for the executable path:
-     *    1. User-specified
-     *    2. Search in path
-     *    3. Hard-coded location
-     */
-    if (HYDT_bsci_info.bootstrap_exec) {
-        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
-    }
-    else {
-        status = HYDU_find_in_path("srun", &test_path);
-        HYDU_ERR_POP(status, "error while searching for executable in user path\n");
-
-        if (test_path) {
-            tmp[0] = HYDU_strdup(test_path);
-            tmp[1] = HYDU_strdup("srun");
-            tmp[2] = NULL;
-
-            status = HYDU_str_alloc_and_join(tmp, &path);
-            HYDU_ERR_POP(status, "error joining strings\n");
-
-            HYDU_free_strlist(tmp);
-        }
-        else
-            path = HYDU_strdup("/usr/bin/srun");
-    }
-
-    arg = 0;
-    client_arg[arg++] = HYDU_strdup(path);
-    client_arg[arg++] = HYDU_strdup("--nodelist");
-
     i = 0;
-    num_nodes = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
-        tmp[i++] = HYDU_strdup(proxy->node.hostname);
-        if (proxy->next)
+    *num_hosts = 0;
+    for (node = node_list; node; node = node->next) {
+        tmp[i++] = HYDU_strdup(node->hostname);
+        (*num_hosts)++;
+
+        if (node->next)
             tmp[i++] = HYDU_strdup(",");
-        num_nodes++;
 
         /* If we used up more than half of the array elements, merge
          * what we have so far */
         if (i > (HYD_NUM_TMP_STRINGS / 2)) {
+            if (foo)
+                HYDU_FREE(foo);
+
             tmp[i++] = NULL;
-            status = HYDU_str_alloc_and_join(tmp, &client_arg[arg]);
+            status = HYDU_str_alloc_and_join(tmp, &foo);
             HYDU_ERR_POP(status, "error joining strings\n");
 
             i = 0;
-            tmp[i++] = client_arg[arg];
+            tmp[i++] = foo;
         }
     }
+
     tmp[i++] = NULL;
-    status = HYDU_str_alloc_and_join(tmp, &client_arg[arg]);
+    status = HYDU_str_alloc_and_join(tmp, &foo);
     HYDU_ERR_POP(status, "error joining strings\n");
 
-    HYDU_free_strlist(tmp);
-
-    arg++;
-
-    client_arg[arg++] = HYDU_strdup("-N");
-    client_arg[arg++] = HYDU_int_to_str(num_nodes);
-
-    client_arg[arg++] = HYDU_strdup("-n");
-    client_arg[arg++] = HYDU_int_to_str(num_nodes);
-
-    for (i = 0; global_args[i]; i++)
-        client_arg[arg++] = HYDU_strdup(global_args[i]);
-
-    client_arg[arg++] = NULL;
-
-    if (HYDT_bsci_info.debug) {
-        HYDU_dump(stdout, "Launching process: ");
-        HYDU_print_strlist(client_arg);
-    }
-
-    status = HYDU_create_process(client_arg, NULL,
-                                 &proxy_list->in,
-                                 &proxy_list->out, &proxy_list->err, &proxy_list->pid, -1);
-    HYDU_ERR_POP(status, "bootstrap spawn process returned error\n");
-
-    HYDU_free_strlist(client_arg);
+    *node_list_str = foo;
+    foo = NULL;
 
   fn_exit:
+    HYDU_free_strlist(tmp);
+    if (foo)
+        HYDU_FREE(foo);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDT_bscd_slurm_launch_procs(
+    char **args, struct HYD_node *node_list, void *userp,
+    HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
+    HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
+    HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp))
+{
+    int num_hosts, idx, i, fd_stdin, fd_stdout, fd_stderr;
+    int *pid, *fd_list;
+    char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
+    char *path = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* We use the following priority order for the executable path:
+     * (1) user-specified; (2) search in path; (3) Hard-coded
+     * location */
+    if (HYDT_bsci_info.bootstrap_exec)
+        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
+    if (!path)
+        path = HYDU_find_full_path("srun");
+    if (!path)
+        path = HYDU_strdup("/usr/bin/srun");
+
+    idx = 0;
+    targs[idx++] = HYDU_strdup(path);
+    targs[idx++] = HYDU_strdup("--nodelist");
+
+    status = node_list_to_str(node_list, &node_list_str, &num_hosts);
+    HYDU_ERR_POP(status, "unable to build a node list string\n");
+
+    targs[idx++] = HYDU_strdup(node_list_str);
+
+    targs[idx++] = HYDU_strdup("-N");
+    targs[idx++] = HYDU_int_to_str(num_hosts);
+
+    targs[idx++] = HYDU_strdup("-n");
+    targs[idx++] = HYDU_int_to_str(num_hosts);
+
+    /* Fill in the remaining arguments */
+    for (i = 0; args[i]; i++)
+        targs[idx++] = HYDU_strdup(args[i]);
+
+    /* Increase pid list to accommodate the new pid */
+    HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
+    for (i = 0; i < HYD_bscu_pid_count; i++)
+        pid[i] = HYD_bscu_pid_list[i];
+    HYDU_FREE(HYD_bscu_pid_list);
+    HYD_bscu_pid_list = pid;
+
+    /* Increase fd list to accommodate these new fds */
+    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + 3) * sizeof(int), status);
+    for (i = 0; i < HYD_bscu_fd_count; i++)
+        fd_list[i] = HYD_bscu_fd_list[i];
+    HYDU_FREE(HYD_bscu_fd_list);
+    HYD_bscu_fd_list = fd_list;
+
+    /* append proxy ID as -1 */
+    targs[idx++] = HYDU_int_to_str(-1);
+    targs[idx++] = NULL;
+
+    status = HYDU_create_process(targs, NULL, &fd_stdin, &fd_stdout, &fd_stderr,
+                                 &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
+    HYDU_ERR_POP(status, "create process returned error\n");
+
+    HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdin;
+    HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
+    HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
+
+    /* Register stdio callbacks for the spawned process */
+    status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_STDIN, userp, stdin_cb);
+    HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
+    status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_STDOUT, userp, stdout_cb);
+    HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
+    status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_STDOUT, userp, stderr_cb);
+    HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
+  fn_exit:
+    if (node_list_str)
+        HYDU_FREE(node_list_str);
+    HYDU_free_strlist(targs);
+    if (path)
+        HYDU_FREE(path);
     HYDU_FUNC_EXIT();
     return status;
 

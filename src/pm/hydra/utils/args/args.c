@@ -17,7 +17,7 @@ static int exists(char *filename)
     return 1;
 }
 
-HYD_status HYDU_find_in_path(const char *execname, char **path)
+static HYD_status find_in_path(const char *execname, char **path)
 {
     char *user_path = NULL, *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc;
     HYD_status status = HYD_SUCCESS;
@@ -85,7 +85,7 @@ HYD_status HYDU_get_base_path(const char *execname, char *wdir, char **path)
     loc = strrchr(post, '/');
     if (!loc) { /* If there is no path */
         *path = NULL;
-        status = HYDU_find_in_path(execname, path);
+        status = find_in_path(execname, path);
         HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
     }
     else {      /* There is a path */
@@ -198,6 +198,36 @@ HYD_status HYDU_parse_hostfile(char *hostfile,
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+char *HYDU_find_full_path(const char *execname)
+{
+    char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = find_in_path(execname, &test_path);
+    HYDU_ERR_POP(status, "error while searching for executable in user path\n");
+
+    if (test_path) {
+        tmp[0] = HYDU_strdup(test_path);
+        tmp[1] = HYDU_strdup(execname);
+        tmp[2] = NULL;
+
+        status = HYDU_str_alloc_and_join(tmp, &path);
+        HYDU_ERR_POP(status, "error joining strings\n");
+    }
+
+  fn_exit:
+    HYDU_free_strlist(tmp);
+    if (test_path)
+        HYDU_FREE(test_path);
+    HYDU_FUNC_EXIT();
+    return path;
 
   fn_fail:
     goto fn_exit;

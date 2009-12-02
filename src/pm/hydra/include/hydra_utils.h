@@ -129,7 +129,7 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec);
 
 /* args */
-HYD_status HYDU_find_in_path(const char *execname, char **path);
+char *HYDU_find_full_path(const char *execname);
 char *HYDU_getcwd(void);
 HYD_status HYDU_get_base_path(const char *execname, char *wdir, char **path);
 HYD_status HYDU_parse_hostfile(char *hostfile,
@@ -172,8 +172,6 @@ HYD_status HYDU_join_thread(struct HYD_thread_context ctxt);
 #endif /* HAVE_THREAD_SUPPORT */
 
 /* others */
-HYD_status HYDU_merge_proxy_segment(char *name, int start_pid, int core_count,
-                                    struct HYD_proxy **proxy_list);
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
                             int global_core_count);
 HYD_status HYDU_add_to_node_list(char *hostname, int num_procs, struct HYD_node **node_list);
@@ -273,14 +271,5 @@ char *HYDU_int_to_str(int x);
 char *HYDU_strerror(int error);
 int HYDU_strlist_lastidx(char **strlist);
 char **HYDU_str_to_strlist(char *str);
-
-/* Timer utilities */
-/* FIXME: HYD_time should be OS specific */
-#ifdef HAVE_TIME
-#include <time.h>
-#endif /* HAVE_TIME */
-typedef struct timeval HYD_time;
-void HYDU_time_set(HYD_time * time, int *val);
-int HYDU_time_left(HYD_time start, HYD_time timeout);
 
 #endif /* HYDRA_UTILS_H_INCLUDED */

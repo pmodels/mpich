@@ -9,49 +9,76 @@
 #include "bscu.h"
 #include "fork.h"
 
-HYD_status HYDT_bscd_fork_launch_procs(char **global_args, const char *proxy_id_str,
-                                       struct HYD_proxy *proxy_list)
+HYD_status HYDT_bscd_fork_launch_procs(
+    char **args, struct HYD_node *node_list, void *userp,
+    HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
+    HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
+    HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp))
 {
-    struct HYD_proxy *proxy;
-    char *client_arg[HYD_NUM_TMP_STRINGS];
-    int i, arg, process_id;
+    int num_hosts, idx, i, fd_stdin, fd_stdout, fd_stderr;
+    int *pid, *fd_list;
+    struct HYD_node *node;
+    char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    process_id = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
-        /* Setup the executable arguments */
-        arg = 0;
+    idx = 0;
+    for (i = 0; args[i]; i++)
+        targs[idx++] = HYDU_strdup(args[i]);
 
-        for (i = 0; global_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(global_args[i]);
+    /* pid_list might already have some PIDs */
+    num_hosts = 0;
+    for (node = node_list; node; node = node->next)
+        num_hosts++;
 
-        if (proxy_id_str) {
-            client_arg[arg++] = HYDU_strdup(proxy_id_str);
-            client_arg[arg++] = HYDU_int_to_str(proxy->proxy_id);
-        }
+    /* Increase pid list to accommodate these new pids */
+    HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + num_hosts) * sizeof(int), status);
+    for (i = 0; i < HYD_bscu_pid_count; i++)
+        pid[i] = HYD_bscu_pid_list[i];
+    HYDU_FREE(HYD_bscu_pid_list);
+    HYD_bscu_pid_list = pid;
 
-        client_arg[arg++] = NULL;
+    /* Increase fd list to accommodate these new fds */
+    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int),
+                status);
+    for (i = 0; i < HYD_bscu_fd_count; i++)
+        fd_list[i] = HYD_bscu_fd_list[i];
+    HYDU_FREE(HYD_bscu_fd_list);
+    HYD_bscu_fd_list = fd_list;
 
-        if (HYDT_bsci_info.debug) {
-            HYDU_dump(stdout, "Launching process: ");
-            HYDU_print_strlist(client_arg);
-        }
+    for (i = 0, node = node_list; node; node = node->next, i++) {
+        /* append proxy ID */
+        targs[idx] = HYDU_int_to_str(i);
+        targs[idx + 1] = NULL;
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
-        status = HYDU_create_process(client_arg, NULL,
-                                     (process_id == 0 ? &proxy->in : NULL),
-                                     &proxy->out, &proxy->err, &proxy->pid, -1);
+        status = HYDU_create_process(targs, NULL, (i == 0 ? &fd_stdin : NULL),
+                                     &fd_stdout, &fd_stderr,
+                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
-        HYDU_free_strlist(client_arg);
+        if (i == 0)
+            HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdin;
+        HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
+        HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
-        process_id++;
+        /* Register stdio callbacks for the spawned process */
+        if (i == 0) {
+            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_STDIN, userp, stdin_cb);
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
+        }
+
+        status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_STDOUT, userp, stdout_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
+        status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_STDOUT, userp, stderr_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
   fn_exit:
+    HYDU_free_strlist(targs);
     HYDU_FUNC_EXIT();
     return status;
 

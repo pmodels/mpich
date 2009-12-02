@@ -33,17 +33,20 @@ struct HYDT_bsci_info {
  */
 struct HYDT_bsci_fns {
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (char **global_args, const char *proxy_id_str,
-                               struct HYD_proxy *proxy_list);
+    HYD_status(*launch_procs) (
+        char **args, struct HYD_node *node_list, void *userp,
+        HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
+        HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
+        HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp));
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*finalize) (void);
 
     /** \brief Wait for bootstrap launched processes to complete */
-    HYD_status(*wait_for_completion) (struct HYD_proxy *proxy_list);
+    HYD_status(*wait_for_completion) (int timeout);
 
     /** \brief Query for node list information */
-    HYD_status(*query_node_list) (int *num_cores, struct HYD_proxy **proxy_list);
+    HYD_status(*query_node_list) (struct HYD_node **node_list);
 
     /** \brief Query for the universe size */
     HYD_status(*query_usize) (int *size);
@@ -76,21 +79,30 @@ HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, in
 /**
  * \brief HYDT_bsci_launch_procs - Launch processes
  *
- * \param[in]   global_args     Arguments to be used for the launched processes
- * \param[in]   proxy_id_str    String to prepend in the arguments for the
- *                              proxy ID (use -1 if the proxy should query for the ID)
- * \param[in]   proxy_list      List of proxy structures containing the list of hosts
+ * \param[in]   args            Arguments to be used for the launched processes
+ * \param[in]   node_list       List of nodes to launch processes on
+ * \param[in]   userp           Arbitrary user pointer that is passed to the callback functions
+ * \param[in]   stdin_cb        Stdin callback function
+ * \param[in]   stdout_cb       Stdout callback function
+ * \param[in]   stderr_cb       Stderr callback function
  *
- * This function uses the hosts information in the proxy_list to
- * launch processes. Bootstrap servers that perform sequential
- * launches (one process at a time), should set the proxy ID string in
- * sequential order. Bootstrap servers that perform parallel launches
- * should set the proxy ID string to "-1", but allow proxies to query
- * their ID information on each node using the
- * HYDT_bsci_query_proxy_id function.
+ * This function appends a proxy ID to the end of the args list and
+ * uses this combined list as the executable and its arguments to
+ * launch. Upper layers will need to account for this automatic
+ * addition of the proxy ID.
+ *
+ * Bootstrap servers that perform sequential launches (one process at
+ * a time), should set the proxy ID string in sequential
+ * order. Bootstrap servers that perform parallel launches should set
+ * the proxy ID string to "-1", but allow proxies to query their ID
+ * information on each node using the HYDT_bsci_query_proxy_id
+ * function.
  */
-HYD_status HYDT_bsci_launch_procs(char **global_args, const char *proxy_id_str,
-                                 struct HYD_proxy *proxy_list);
+HYD_status HYDT_bsci_launch_procs(
+        char **args, struct HYD_node *node_list, void *userp,
+        HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
+        HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
+        HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp));
 
 
 /**
@@ -105,27 +117,25 @@ HYD_status HYDT_bsci_finalize(void);
 /**
  * \brief HYDT_bsci_wait_for_completion - Wait for bootstrap launched processes to complete
  *
- * \param[in]   proxy_list      List of proxy structures containing the list of hosts
+ * \param[in]  timeout        Time to wait for
+ *
+ * \param[ret] status         HYD_TIMED_OUT if the timer expired
  *
  * This function waits for all processes it launched to finish. The
  * bootstrap control device should keep track of the processes it is
  * launching and wait for their completion.
  */
-HYD_status HYDT_bsci_wait_for_completion(struct HYD_proxy *proxy_list);
+HYD_status HYDT_bsci_wait_for_completion(int timeout);
 
 
 /**
  * \brief HYDT_bsci_query_node_list - Query for node list information
  *
- * \param[in,out] num_cores       Number of cores available (non-zero value refers to
- *                                a request to allocate nodes/cores)
- * \param[in]     proxy_list      List of proxy structures containing the list of hosts
+ * \param[out] node_list       Lists of nodes available
  *
- * This function allows the upper layers to query the available nodes
- * or request for nodes to be allocated (non-zero value refers to a
- * request to allocate nodes/cores).
+ * This function allows the upper layers to query the available nodes.
  */
-HYD_status HYDT_bsci_query_node_list(int *num_cores, struct HYD_proxy **proxy_list);
+HYD_status HYDT_bsci_query_node_list(struct HYD_node **node_list);
 
 
 /**

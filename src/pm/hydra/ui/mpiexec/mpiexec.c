@@ -133,13 +133,10 @@ int main(int argc, char **argv)
          * provided the host file. Query the RMK. We pass a zero core
          * count, so the RMK will give us all the nodes it already has
          * and won't try to allocate any more. */
-        status = HYD_rmki_query_node_list(&num_cores, &HYD_handle.pg_list.proxy_list);
+        status = HYD_rmki_query_node_list(&HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
-        /* We don't have an allocation capability yet, but when we do,
-         * we should try it here. */
-
-        if (HYD_handle.pg_list.proxy_list == NULL) {
+        if (HYD_handle.node_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
             status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to initialize proxy\n");
@@ -173,14 +170,12 @@ int main(int argc, char **argv)
     if (HYD_handle.user_global.debug)
         HYD_uiu_print_params();
 
-    HYDU_time_set(&HYD_handle.start, NULL);     /* NULL implies right now */
     if (getenv("MPIEXEC_TIMEOUT"))
-        timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
+        HYD_handle.timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
-        timeout = -1;   /* Set a negative timeout */
-    HYDU_time_set(&HYD_handle.timeout, &timeout);
+        HYD_handle.timeout = -1;   /* Set a negative timeout */
     if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
+        HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", HYD_handle.timeout);
 
     if (HYD_handle.print_rank_map) {
         for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
@@ -202,6 +197,17 @@ int main(int argc, char **argv)
         }
     }
 
+    /* Add the stdout/stdin/stderr callback handlers */
+    status = HYDU_sock_set_nonblock(0);
+    HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
+
+    HYD_handle.stdin_buf_count = 0;
+    HYD_handle.stdin_buf_offset = 0;
+
+    HYD_handle.stdout_cb = HYD_uii_mpx_stdout_cb;
+    HYD_handle.stderr_cb = HYD_uii_mpx_stderr_cb;
+    HYD_handle.stdin_cb = HYD_uii_mpx_stdin_cb;
+
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
@@ -214,7 +220,7 @@ int main(int argc, char **argv)
      * instead of assuming this. For example, it is possible to have a
      * PM implementation that launches separate "new" proxies on a
      * different port and kills the original proxies using them. */
-    if (strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
+    if (!strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
         /* Call finalize functions for lower layers to cleanup their resources */
         status = HYD_pmci_finalize();
         HYDU_ERR_POP(status, "process manager error on finalize\n");
@@ -224,33 +230,6 @@ int main(int argc, char **argv)
 
         exit_status = 0;
         goto fn_exit;
-    }
-
-    /* Setup stdout/stderr/stdin handlers */
-    status = HYDU_sock_set_nonblock(0);
-    HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
-
-    HYD_handle.stdin_buf_count = 0;
-    HYD_handle.stdin_buf_offset = 0;
-
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        if (proxy->out != -1) {
-            status = HYDT_dmx_register_fd(1, &proxy->out, HYD_STDOUT, NULL,
-                                          HYD_uii_mpx_stdout_cb);
-            HYDU_ERR_POP(status, "demux returned error registering fd\n");
-        }
-
-        if (proxy->err != -1) {
-            status = HYDT_dmx_register_fd(1, &proxy->err, HYD_STDOUT, NULL,
-                                          HYD_uii_mpx_stderr_cb);
-            HYDU_ERR_POP(status, "demux returned error registering fd\n");
-        }
-
-        if (proxy->in != -1) {
-            status =
-                HYDT_dmx_register_fd(1, &proxy->in, HYD_STDIN, NULL, HYD_uii_mpx_stdin_cb);
-            HYDU_ERR_POP(status, "demux returned error registering fd\n");
-        }
     }
 
     /* Wait for their completion */

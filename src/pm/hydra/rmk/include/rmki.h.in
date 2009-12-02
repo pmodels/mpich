@@ -21,7 +21,7 @@
  */
 struct HYD_rmki_fns {
     /** \brief Query node list information */
-    HYD_status(*query_node_list) (int *num_cores, struct HYD_proxy **proxy_list);
+    HYD_status(*query_node_list) (struct HYD_node **node_list);
 };
 
 /** \cond */
@@ -40,11 +40,9 @@ HYD_status HYD_rmki_init(char *rmk);
 /**
  * \brief HYD_rmki_query_node_list - Query node list information
  *
- * \param[in,out]   num_cores   Number of cores available (non-zero cores means
- *                              that the RMK should allocate the nodes if needed
- * \param[out]      proxy_list  List of proxy structures containing the list of hosts
+ * \param[out]  node_list  List of nodes available
  */
-HYD_status HYD_rmki_query_node_list(int *num_cores, struct HYD_proxy **proxy_list);
+HYD_status HYD_rmki_query_node_list(struct HYD_node **node_list);
 
 /*!
  * @}

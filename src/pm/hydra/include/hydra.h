@@ -32,11 +32,12 @@ struct HYD_handle {
      HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp);
      HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp);
 
-    /* Start time and timeout. These are filled in by the UI, but are
-     * utilized by the demux engine and the boot-strap server to
-     * decide how long we need to wait for. */
-    HYD_time start;
-    HYD_time timeout;
+    /* Timeout (in seconds) is filled in by the UI to be passed to the
+     * bootstrap server.
+     *
+     * FIXME: make this a function parameter.
+     */
+    int timeout;
 
     /* All of the available nodes */
     struct HYD_node *node_list;

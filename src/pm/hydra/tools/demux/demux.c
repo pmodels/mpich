@@ -132,7 +132,8 @@ HYD_status HYDT_dmx_wait_for_event(int wtime)
     total_fds = i;
 
     while (1) {
-        ret = poll(pollfds, total_fds, wtime);
+        /* Convert user specified time to milliseconds for poll */
+        ret = poll(pollfds, total_fds, wtime * 1000.0);
         if (ret < 0) {
             if (errno == EINTR) {
                 /* We were interrupted by a system call; this is not
@@ -181,6 +182,35 @@ HYD_status HYDT_dmx_wait_for_event(int wtime)
   fn_exit:
     if (pollfds)
         HYDU_FREE(pollfds);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_status HYDT_dmx_query_fd_registration(int fd, int *ret)
+{
+    HYDT_dmxi_callback_t *run;
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    *ret = 0;
+    for (run = cb_list; run; run = run->next) {
+        for (i = 0; i < run->num_fds; i++) {
+            if (run->fd[i] == fd) { /* found it */
+                *ret = 1;
+                break;
+            }
+        }
+        if (*ret)
+            break;
+    }
+
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 

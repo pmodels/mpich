@@ -99,11 +99,12 @@ static HYD_status group_to_individual_nodes(char *str, char **list)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_slurm_query_node_list(int *num_cores, struct HYD_proxy **proxy_list)
+HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
 {
     char *str, *num_procs;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
-    int i, j, start_pid;
+    struct HYD_node *node, *tnode;
+    int i, j;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -112,26 +113,31 @@ HYD_status HYDT_bscd_slurm_query_node_list(int *num_cores, struct HYD_proxy **pr
     num_procs = getenv("SLURM_JOB_CPUS_PER_NODE");
 
     if (str == NULL || num_procs == NULL) {
-        *proxy_list = NULL;
+        *node_list = NULL;
     }
     else {
         full_str_to_groups(str, tmp1);
         num_procs = strtok(num_procs, "(");
 
-        start_pid = 0;
         for (i = 0; tmp1[i]; i++) {
             status = group_to_individual_nodes(tmp1[i], tmp2);
             HYDU_ERR_POP(status, "unable to parse node list\n");
 
             for (j = 0; tmp2[j]; j++) {
-                status = HYDU_merge_proxy_segment(tmp2[j], start_pid, atoi(num_procs),
-                                                  proxy_list);
-                HYDU_ERR_POP(status, "merge proxy segment failed\n");
+                status = HYDU_alloc_node(&node);
+                HYDU_ERR_POP(status, "unable to allocate note\n");
 
-                start_pid += atoi(num_procs);
+                node->hostname = HYDU_strdup(tmp2[j]);
+                node->core_count = atoi(num_procs);
+
+                if (*node_list == NULL)
+                    *node_list = node;
+                else {
+                    for (tnode = *node_list; tnode->next; tnode = tnode->next);
+                    tnode->next = node;
+                }
             }
         }
-        *num_cores = start_pid;
     }
 
   fn_exit:

@@ -9,96 +9,101 @@
 #include "bscu.h"
 #include "ssh.h"
 
-/*
- * HYDT_bscd_ssh_launch_procs: For each process, we create an
- * executable which reads like "ssh exec args" and the list of
- * environment variables. We fork a worker process that sets the
- * environment and execvp's this executable.
- */
-HYD_status HYDT_bscd_ssh_launch_procs(char **global_args, const char *proxy_id_str,
-                                      struct HYD_proxy *proxy_list)
+HYD_status HYDT_bscd_ssh_launch_procs(
+    char **args, struct HYD_node *node_list, void *userp,
+    HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
+    HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
+    HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp))
 {
-    struct HYD_proxy *proxy;
-    char *client_arg[HYD_NUM_TMP_STRINGS];
-    char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
-    int i, arg, process_id;
+    int num_hosts, idx, i, fd_stdin, fd_stdout, fd_stderr, host_idx;
+    int *pid, *fd_list;
+    struct HYD_node *node;
+    char *targs[HYD_NUM_TMP_STRINGS], *path = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /*
-     * We use the following priority order for the executable path:
-     *    1. User-specified
-     *    2. Search in path
-     *    3. Hard-coded location
-     */
-    if (HYDT_bsci_info.bootstrap_exec) {
+    /* We use the following priority order for the executable path:
+     * (1) user-specified; (2) search in path; (3) Hard-coded
+     * location */
+    if (HYDT_bsci_info.bootstrap_exec)
         path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
-    }
-    else {
-        status = HYDU_find_in_path("ssh", &test_path);
-        HYDU_ERR_POP(status, "error while searching for executable in user path\n");
+    if (!path)
+        path = HYDU_find_full_path("ssh");
+    if (!path)
+        path = HYDU_strdup("/usr/bin/ssh");
 
-        if (test_path) {
-            tmp[0] = HYDU_strdup(test_path);
-            tmp[1] = HYDU_strdup("ssh");
-            tmp[2] = NULL;
+    idx = 0;
+    targs[idx++] = HYDU_strdup(path);
 
-            status = HYDU_str_alloc_and_join(tmp, &path);
-            HYDU_ERR_POP(status, "error joining strings\n");
+    /* Allow X forwarding only if explicitly requested */
+    if (HYDT_bsci_info.enablex == 1)
+        targs[idx++] = HYDU_strdup("-X");
+    else if (HYDT_bsci_info.enablex == 0)
+        targs[idx++] = HYDU_strdup("-x");
+    else    /* default mode is disable X */
+        targs[idx++] = HYDU_strdup("-x");
 
-            HYDU_free_strlist(tmp);
-        }
-        else
-            path = HYDU_strdup("/usr/bin/ssh");
-    }
+    host_idx = idx++; /* Hostname will come here */
 
-    process_id = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
-        /* Setup the executable arguments */
-        arg = 0;
-        client_arg[arg++] = HYDU_strdup(path);
+    /* Fill in the remaining arguments */
+    for (i = 0; args[i]; i++)
+        targs[idx++] = HYDU_strdup(args[i]);
 
-        /* Allow X forwarding only if explicitly requested */
-        if (HYDT_bsci_info.enablex == 1)
-            client_arg[arg++] = HYDU_strdup("-X");
-        else if (HYDT_bsci_info.enablex == 0)
-            client_arg[arg++] = HYDU_strdup("-x");
-        else    /* default mode is disable X */
-            client_arg[arg++] = HYDU_strdup("-x");
+    /* pid_list might already have some PIDs */
+    num_hosts = 0;
+    for (node = node_list; node; node = node->next)
+        num_hosts++;
 
-        client_arg[arg++] = HYDU_strdup(proxy->node.hostname);
+    /* Increase pid list to accommodate these new pids */
+    HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + num_hosts) * sizeof(int), status);
+    for (i = 0; i < HYD_bscu_pid_count; i++)
+        pid[i] = HYD_bscu_pid_list[i];
+    HYDU_FREE(HYD_bscu_pid_list);
+    HYD_bscu_pid_list = pid;
 
-        for (i = 0; global_args[i]; i++)
-            client_arg[arg++] = HYDU_strdup(global_args[i]);
+    /* Increase fd list to accommodate these new fds */
+    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int),
+                status);
+    for (i = 0; i < HYD_bscu_fd_count; i++)
+        fd_list[i] = HYD_bscu_fd_list[i];
+    HYDU_FREE(HYD_bscu_fd_list);
+    HYD_bscu_fd_list = fd_list;
 
-        if (proxy_id_str) {
-            client_arg[arg++] = HYDU_strdup(proxy_id_str);
-            client_arg[arg++] = HYDU_int_to_str(proxy->proxy_id);
-        }
+    for (i = 0, node = node_list; node; node = node->next, i++) {
+        targs[host_idx] = HYDU_strdup(node->hostname);
 
-        client_arg[arg++] = NULL;
-
-        if (HYDT_bsci_info.debug) {
-            HYDU_dump(stdout, "Launching process: ");
-            HYDU_print_strlist(client_arg);
-        }
+        /* append proxy ID */
+        targs[idx] = HYDU_int_to_str(i);
+        targs[idx + 1] = NULL;
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
-        status = HYDU_create_process(client_arg, NULL,
-                                     (process_id == 0 ? &proxy->in : NULL),
-                                     &proxy->out, &proxy->err, &proxy->pid, -1);
+        status = HYDU_create_process(targs, NULL, (i == 0 ? &fd_stdin : NULL),
+                                     &fd_stdout, &fd_stderr,
+                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
-        HYDU_free_strlist(client_arg);
+        if (i == 0)
+            HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdin;
+        HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
+        HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
-        process_id++;
+        /* Register stdio callbacks for the spawned process */
+        if (i == 0) {
+            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_STDIN, userp, stdin_cb);
+            HYDU_ERR_POP(status, "demux returned error registering fd\n");
+        }
+
+        status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_STDOUT, userp, stdout_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
+        status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_STDOUT, userp, stderr_cb);
+        HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
   fn_exit:
-    if (test_path)
-        HYDU_FREE(test_path);
+    HYDU_free_strlist(targs);
     if (path)
         HYDU_FREE(path);
     HYDU_FUNC_EXIT();

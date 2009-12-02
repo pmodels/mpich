@@ -15,82 +15,6 @@
 static char *pmi_port_str = NULL;
 static char *proxy_port_str = NULL;
 
-static void *launch_helper(void *args)
-{
-    struct HYD_proxy *proxy = (struct HYD_proxy *) args;
-    enum HYD_pmcd_pmi_proxy_cmds cmd;
-    HYD_status status = HYD_SUCCESS;
-
-    /*
-     * Here are the steps we will follow:
-     *
-     * 1. Put all the arguments to pass in to a string list.
-     *
-     * 2. Connect to the proxy (this will be our primary control
-     *    socket).
-     *
-     * 3. Read this string list and write the following to the socket:
-     *    (a) The PROC_INFO command.
-     *    (b) Integer sized data with the number of arguments to
-     *        follow.
-     *    (c) For each argument to pass, first send an integer which
-     *        tells the proxy how many bytes are coming in that
-     *        argument.
-     *
-     * 4. Open two new sockets and connect them to the proxy.
-     *
-     * 5. On the first new socket, send USE_AS_STDOUT and the second
-     *    send USE_AS_STDERR.
-     *
-     * 6. For the first process, open a separate socket and send the
-     *    USE_AS_STDIN command on it.
-     *
-     * 7. We need to figure out what to do with the LAUNCH_JOB
-     *    command; since it's going on a different socket, it might go
-     *    out-of-order. Maybe a state machine on the proxy to see if
-     *    it got all the information it needs to launch the job would
-     *    work.
-     */
-
-    status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->control_fd);
-    HYDU_ERR_POP(status, "unable to connect to proxy\n");
-
-    status = HYD_pmcd_pmi_send_exec_info(proxy);
-    HYDU_ERR_POP(status, "error sending executable info\n");
-
-    /* Create an stdout socket */
-    status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->out);
-    HYDU_ERR_POP(status, "unable to connect to proxy\n");
-
-    cmd = USE_AS_STDOUT;
-    status = HYDU_sock_write(proxy->out, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
-    HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-    /* Create an stderr socket */
-    status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->err);
-    HYDU_ERR_POP(status, "unable to connect to proxy\n");
-
-    cmd = USE_AS_STDERR;
-    status = HYDU_sock_write(proxy->err, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
-    HYDU_ERR_POP(status, "unable to write data to proxy\n");
-
-    /* If rank 0 is here, create an stdin socket */
-    if (proxy->proxy_id == 0) {
-        status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &proxy->in);
-        HYDU_ERR_POP(status, "unable to connect to proxy\n");
-
-        cmd = USE_AS_STDIN;
-        status = HYDU_sock_write(proxy->in, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
-        HYDU_ERR_POP(status, "unable to write data to proxy\n");
-    }
-
-  fn_exit:
-    return NULL;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status
 create_and_listen_portstr(HYD_status(*callback) (int fd, HYD_event_t events, void *userp),
                           char **port_str)
@@ -179,6 +103,7 @@ static HYD_status fill_in_proxy_args(char *mode, char **proxy_args)
         proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.bootstrap_exec);
     }
 
+    proxy_args[arg++] = HYDU_strdup("--proxy-id");
     proxy_args[arg++] = NULL;
 
   fn_exit:
@@ -358,6 +283,7 @@ static HYD_status fill_in_exec_launch_info(void)
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
+    struct HYD_node *node_list, *node, *tnode;
     enum HYD_pmcd_pmi_proxy_cmds cmd;
     int fd;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
@@ -377,12 +303,30 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
+    /* Copy the host list to pass to the bootstrap server */
+    node_list = NULL;
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+        HYDU_alloc_node(&node);
+        node->hostname = HYDU_strdup(proxy->node.hostname);
+        node->core_count = proxy->node.core_count;
+        node->next = NULL;
+
+        if (node_list == NULL) {
+            node_list = node;
+        }
+        else {
+            for (tnode = node_list; tnode->next; tnode = tnode->next);
+            tnode->next = node;
+        }
+    }
+
     if (!strcmp(HYD_handle.user_global.launch_mode, "boot") ||
         !strcmp(HYD_handle.user_global.launch_mode, "boot-debug")) {
         status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.pg_list.proxy_list);
+        status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, HYD_handle.stdin_cb,
+                                        HYD_handle.stdout_cb, HYD_handle.stderr_cb);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (!strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
@@ -414,7 +358,8 @@ HYD_status HYD_pmci_launch_procs(void)
         status = fill_in_exec_launch_info();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.pg_list.proxy_list);
+        status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, HYD_handle.stdin_cb,
+                                        HYD_handle.stdout_cb, HYD_handle.stderr_cb);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
 
@@ -424,6 +369,7 @@ HYD_status HYD_pmci_launch_procs(void)
     if (proxy_port_str)
         HYDU_FREE(proxy_port_str);
     HYDU_free_strlist(proxy_args);
+    HYDU_free_node_list(node_list);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -434,67 +380,15 @@ HYD_status HYD_pmci_launch_procs(void)
 
 HYD_status HYD_pmci_wait_for_completion(void)
 {
-    struct HYD_proxy *proxy;
-    int sockets_open, all_procs_exited, infinite = -1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (strcmp(HYD_handle.user_global.launch_mode, "boot") &&
-        strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
-        while (1) {
-            /* Wait for some event to occur */
-            status =
-                HYDT_dmx_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
-            HYDU_ERR_POP(status, "error waiting for event\n");
-
-            /* timeout expired */
-            if (HYDU_time_left(HYD_handle.start, HYD_handle.timeout) == 0) {
-                status = HYD_pmcd_pmi_serv_cleanup();
-                HYDU_ERR_POP(status, "cleanup of processes failed\n");
-
-                /* Reset timer to infinite */
-                HYDU_time_set(&HYD_handle.timeout, &infinite);
-                continue;
-            }
-
-            /* Check to see if there's any open read socket left; if
-             * there are, we will just wait for more events. */
-            sockets_open = 0;
-            for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-                if (proxy->out != -1 || proxy->err != -1) {
-                    sockets_open++;
-                    break;
-                }
-            }
-
-            if (sockets_open && HYDU_time_left(HYD_handle.start, HYD_handle.timeout))
-                continue;
-
-            break;
-        }
-
-        do {
-            /* Check if the exit status has already arrived */
-            all_procs_exited = 1;
-            for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-                if (proxy->exit_status == NULL) {
-                    all_procs_exited = 0;
-                    break;
-                }
-            }
-
-            if (all_procs_exited)
-                break;
-
-            /* If not, wait for some event to occur */
-            status =
-                HYDT_dmx_wait_for_event(HYDU_time_left(HYD_handle.start, HYD_handle.timeout));
-            HYDU_ERR_POP(status, "error waiting for event\n");
-        } while (1);
+    status = HYDT_bsci_wait_for_completion(HYD_handle.timeout);
+    if (status == HYD_TIMED_OUT) {
+        status = HYD_pmcd_pmi_serv_cleanup();
+        HYDU_ERR_POP(status, "cleanup of processes failed\n");
     }
-
-    status = HYDT_bsci_wait_for_completion(HYD_handle.pg_list.proxy_list);
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
 
   fn_exit:

@@ -21,18 +21,6 @@ static HYD_status close_fd(int fd)
     HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
     close(fd);
 
-    /* Find the FD in the HYD_handle and remove it. */
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        if (proxy->out == fd) {
-            proxy->out = -1;
-            goto fn_exit;
-        }
-        if (proxy->err == fd) {
-            proxy->err = -1;
-            goto fn_exit;
-        }
-    }
-
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
