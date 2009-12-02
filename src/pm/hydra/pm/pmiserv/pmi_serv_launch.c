@@ -82,11 +82,6 @@ static HYD_status fill_in_proxy_args(char **proxy_args)
     if (HYD_handle.user_global.debug)
         proxy_args[arg++] = HYDU_strdup("--debug");
 
-    if (HYD_handle.user_global.enablex != -1) {
-        proxy_args[arg++] = HYDU_strdup("--enable-x");
-        proxy_args[arg++] = HYDU_int_to_str(HYD_handle.user_global.enablex);
-    }
-
     proxy_args[arg++] = HYDU_strdup("--bootstrap");
     proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.bootstrap);
 
@@ -97,6 +92,12 @@ static HYD_status fill_in_proxy_args(char **proxy_args)
 
     proxy_args[arg++] = HYDU_strdup("--proxy-id");
     proxy_args[arg++] = NULL;
+
+    if (HYD_handle.user_global.debug) {
+        HYDU_dump_noprefix(stdout, "\nProxy launch args: ");
+        HYDU_print_strlist(proxy_args);
+        HYDU_dump_noprefix(stdout, "\n");
+    }
 
   fn_exit:
     return status;
@@ -163,24 +164,26 @@ static HYD_status fill_in_exec_launch_info(void)
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--binding");
-        if (HYD_handle.user_global.binding)
+        if (HYD_handle.user_global.binding) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--binding");
             proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.binding);
-        else
-            proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
+        }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--bindlib");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.bindlib);
+        if (HYD_handle.user_global.bindlib) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--bindlib");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.bindlib);
+        }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpointlib");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.ckpointlib);
+        if (HYD_handle.user_global.ckpointlib) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpointlib");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.ckpointlib);
+        }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-prefix");
-        if (HYD_handle.user_global.ckpoint_prefix)
+        if (HYD_handle.user_global.ckpoint_prefix) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-prefix");
             proxy->exec_launch_info[arg++] =
                 HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
-        else
-            proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
+        }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-inherited-env");
         for (i = 0, env = HYD_handle.user_global.global_env.inherited; env;
@@ -244,10 +247,17 @@ static HYD_status fill_in_exec_launch_info(void)
             }
             proxy->exec_launch_info[arg++] = NULL;
 
+            if (exec->env_prop) {
+                arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+                proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-env-prop");
+                proxy->exec_launch_info[arg++] = HYDU_strdup(exec->env_prop);
+                proxy->exec_launch_info[arg++] = NULL;
+            }
+
             arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-env-prop");
-            proxy->exec_launch_info[arg++] = exec->env_prop ? HYDU_strdup(exec->env_prop) :
-                HYDU_strdup("HYDRA_NULL");
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-args");
+            for (i = 0; exec->exec[i]; i++);
+            proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
             proxy->exec_launch_info[arg++] = NULL;
 
             HYDU_list_append_strlist(exec->exec, proxy->exec_launch_info);
@@ -322,8 +332,7 @@ HYD_status HYD_pmci_launch_procs(void)
         }
     }
 
-    status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb,
-                                       &control_port);
+    status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb, &control_port);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "Got a proxy port string of %s\n", control_port);

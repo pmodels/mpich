@@ -15,7 +15,6 @@ void HYD_uiu_init_params(void)
     HYDU_init_user_global(&HYD_handle.user_global);
 
     HYD_handle.base_path = NULL;
-    HYD_handle.proxy_port = -1;
 
     HYD_handle.css = NULL;
     HYD_handle.rmk = NULL;
@@ -337,7 +336,6 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "mpiexec options:\n");
     HYDU_dump_noprefix(stdout, "----------------\n");
     HYDU_dump_noprefix(stdout, "  Base path: %s\n", HYD_handle.base_path);
-    HYDU_dump_noprefix(stdout, "  Proxy port: %d\n", HYD_handle.proxy_port);
     HYDU_dump_noprefix(stdout, "  Bootstrap server: %s\n", HYD_handle.user_global.bootstrap);
     HYDU_dump_noprefix(stdout, "  Debug level: %d\n", HYD_handle.user_global.debug);
     HYDU_dump_noprefix(stdout, "  Enable X: %d\n", HYD_handle.user_global.enablex);

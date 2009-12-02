@@ -72,6 +72,148 @@ static HYD_status find_in_path(const char *execname, char **path)
     goto fn_exit;
 }
 
+static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_table)
+{
+    struct HYD_arg_match_table *m;
+    char *arg, *val;
+    HYD_status status = HYD_SUCCESS;
+
+    arg = **argv_p;
+    while (*arg == '-') /* Remove leading dashes */
+        arg++;
+
+    /* If arg is of the form foo=bar, we separate it out as two
+     * arguments */
+    for (val = arg; *val && *val != '='; val++);
+    *val = 0; /* close out key */
+    val++;
+
+    /* Move to the next argument */
+    (*argv_p)++;
+
+    m = match_table;
+    while (m->handler_fn) {
+        if (!strcasecmp(arg, m->arg)) {
+            if (**argv_p && HYD_IS_HELP(**argv_p)) {
+                if (m->help_fn == NULL) {
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "No help message available\n");
+                }
+                else {
+                    m->help_fn();
+                    HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+                }
+            }
+
+            status = m->handler_fn(arg, argv_p);
+            HYDU_ERR_POP(status, "match handler returned error\n");
+            break;
+        }
+        m++;
+    }
+
+    if (m->handler_fn == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized argument %s\n", arg);
+
+fn_exit:
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
+
+HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_table)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    while (**argv && ***argv == '-') {
+        if (HYD_IS_HELP(**argv)) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
+        }
+        status = match_arg(argv, match_table);
+        HYDU_ERR_POP(status, "argument matching returned error\n");
+    }
+
+    HYDU_FUNC_ENTER();
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_set_str(char *arg, char ***argv, char **var, char *val)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_ERR_CHKANDJUMP1(status, *var, HYD_INTERNAL_ERROR, "duplicate setting: %s\n", arg);
+
+    if (val == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
+
+    *var = HYDU_strdup(val);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_set_str_and_incr(char *arg, char ***argv, char **var)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, argv, var, **argv);
+    HYDU_ERR_POP(status, "unable to set int\n");
+
+    (*argv)++;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_ERR_CHKANDJUMP1(status, *var != -1, HYD_INTERNAL_ERROR,
+                         "duplicate setting: %s\n", arg);
+
+    *var = val;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (**argv == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
+
+    status = HYDU_set_int(arg, argv, var, atoi(**argv));
+    HYDU_ERR_POP(status, "unable to set int\n");
+
+    (*argv)++;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDU_get_base_path(const char *execname, char *wdir, char **path)
 {
     char *loc, *post;

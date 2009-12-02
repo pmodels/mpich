@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 
     num_cores = 0;
     if (HYD_handle.node_list == NULL) {
-        /* Proxy list is not created yet. The user might not have
+        /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. We pass a zero core
          * count, so the RMK will give us all the nodes it already has
          * and won't try to allocate any more. */
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
         if (HYD_handle.node_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
             status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
-            HYDU_ERR_POP(status, "unable to initialize proxy\n");
+            HYDU_ERR_POP(status, "unable to add to node list\n");
             HYD_handle.global_core_count += 1;
         }
         else {

@@ -19,7 +19,7 @@ static HYD_status init_params(void)
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
-    HYD_pmcd_pmip.system_global.global_core_count = 0;
+    HYD_pmcd_pmip.system_global.global_core_count = -1;
     HYD_pmcd_pmip.system_global.pmi_port = NULL;
     HYD_pmcd_pmip.system_global.pmi_id = -1;
 
@@ -35,8 +35,8 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.hostname = NULL;
-    HYD_pmcd_pmip.local.proxy_core_count = 0;
-    HYD_pmcd_pmip.local.proxy_process_count = 0;
+    HYD_pmcd_pmip.local.proxy_core_count = -1;
+    HYD_pmcd_pmip.local.proxy_process_count = -1;
     HYD_pmcd_pmip.local.stdin_buf_offset = 0;
     HYD_pmcd_pmip.local.stdin_buf_count = 0;
     HYD_pmcd_pmip.local.stdin_tmp_buf[0] = '\0';
@@ -46,309 +46,6 @@ static HYD_status init_params(void)
 
     return status;
 }
-
-/* FIXME: This function performs minimal error checking as it is not
- * supposed to be called by the user, but rather by the process
- * management server. It will still be helpful for debugging to add
- * some error checks. */
-static HYD_status parse_params(char **t_argv)
-{
-    char **argv = t_argv, *str, *argtype;
-    int arg, i, count;
-    HYD_env_t *env;
-    struct HYD_proxy_exec *exec = NULL;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    for (; *argv; ++argv) {
-        /* Working directory */
-        if (!strcmp(*argv, "--wdir")) {
-            argv++;
-            HYD_pmcd_pmip.user_global.wdir = HYDU_strdup(*argv);
-            continue;
-        }
-
-        /* PMI port string */
-        if (!strcmp(*argv, "--pmi-port")) {
-            argv++;
-            HYD_pmcd_pmip.system_global.pmi_port = HYDU_strdup(*argv);
-            continue;
-        }
-
-        /* PMI ID */
-        if (!strcmp(*argv, "--pmi-id")) {
-            argv++;
-            HYD_pmcd_pmip.system_global.pmi_id = atoi(*argv);
-            continue;
-        }
-
-        /* Binding */
-        if (!strcmp(*argv, "--binding")) {
-            argv++;
-            if (!strcmp(*argv, "HYDRA_NULL"))
-                HYD_pmcd_pmip.user_global.binding = NULL;
-            else
-                HYD_pmcd_pmip.user_global.binding = HYDU_strdup(*argv);
-
-            continue;
-        }
-
-        /* Binding library */
-        if (!strcmp(*argv, "--bindlib")) {
-            argv++;
-            HYD_pmcd_pmip.user_global.bindlib = HYDU_strdup(*argv);
-            continue;
-        }
-
-        /* Checkpointing library */
-        if (!strcmp(*argv, "--ckpointlib")) {
-            argv++;
-            HYD_pmcd_pmip.user_global.ckpointlib = HYDU_strdup(*argv);
-            continue;
-        }
-
-        if (!strcmp(*argv, "--ckpoint-prefix")) {
-            argv++;
-            if (!strcmp(*argv, "HYDRA_NULL"))
-                HYD_pmcd_pmip.user_global.ckpoint_prefix = NULL;
-            else
-                HYD_pmcd_pmip.user_global.ckpoint_prefix = HYDU_strdup(*argv);
-            continue;
-        }
-
-        /* Global env */
-        if ((!strcmp(*argv, "--global-inherited-env")) ||
-            (!strcmp(*argv, "--global-system-env")) || (!strcmp(*argv, "--global-user-env"))) {
-
-            argtype = *argv;
-
-            argv++;
-            count = atoi(*argv);
-            for (i = 0; i < count; i++) {
-                argv++;
-                str = *argv;
-
-                /* Some bootstrap servers remove the quotes that we
-                 * added, while some others do not. For the cases
-                 * where they are not removed, we do it ourselves. */
-                if (*str == '\'') {
-                    str++;
-                    str[strlen(str) - 1] = 0;
-                }
-                status = HYDU_str_to_env(str, &env);
-                HYDU_ERR_POP(status, "error converting string to env\n");
-
-                if (!strcmp(argtype, "--global-inherited-env"))
-                    HYDU_append_env_to_list(*env,
-                                            &HYD_pmcd_pmip.user_global.global_env.inherited);
-                else if (!strcmp(argtype, "--global-system-env"))
-                    HYDU_append_env_to_list(*env,
-                                            &HYD_pmcd_pmip.user_global.global_env.system);
-                else if (!strcmp(argtype, "--global-user-env"))
-                    HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.user);
-
-                HYDU_FREE(env);
-            }
-            continue;
-        }
-
-        /* Global environment type */
-        if (!strcmp(*argv, "--genv-prop")) {
-            argv++;
-            if (strcmp(*argv, "HYDRA_NULL"))
-                HYD_pmcd_pmip.user_global.global_env.prop = HYDU_strdup(*argv);
-            else
-                HYD_pmcd_pmip.user_global.global_env.prop = NULL;
-            continue;
-        }
-
-        /* One-pass Count */
-        if (!strcmp(*argv, "--global-core-count")) {
-            argv++;
-            HYD_pmcd_pmip.system_global.global_core_count = atoi(*argv);
-            continue;
-        }
-
-        /* Version string comparison */
-        if (!strcmp(*argv, "--version")) {
-            argv++;
-            if (strcmp(*argv, HYDRA_VERSION)) {
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "UI version string does not match proxy version\n");
-            }
-            continue;
-        }
-
-        /* Hostname (as specified by the user) */
-        if (!strcmp(*argv, "--hostname")) {
-            argv++;
-            HYD_pmcd_pmip.local.hostname = HYDU_strdup(*argv);
-            continue;
-        }
-
-        /* Process count */
-        if (!strcmp(*argv, "--proxy-core-count")) {
-            argv++;
-            HYD_pmcd_pmip.local.proxy_core_count = atoi(*argv);
-            continue;
-        }
-
-        /* Process count */
-        if (!strcmp(*argv, "--start-pid")) {
-            argv++;
-            HYD_pmcd_pmip.start_pid = atoi(*argv);
-            continue;
-        }
-
-        /* New executable */
-        if (!strcmp(*argv, "--exec")) {
-            if (HYD_pmcd_pmip.exec_list == NULL) {
-                status = HYDU_alloc_proxy_exec(&HYD_pmcd_pmip.exec_list);
-                HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-            }
-            else {
-                for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
-                status = HYDU_alloc_proxy_exec(&exec->next);
-                HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-            }
-            continue;
-        }
-
-        /* Process count */
-        if (!strcmp(*argv, "--exec-proc-count")) {
-            argv++;
-            for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
-            exec->proc_count = atoi(*argv);
-            continue;
-        }
-
-        /* Local env */
-        if (!strcmp(*argv, "--exec-local-env")) {
-            argv++;
-            count = atoi(*argv);
-            for (i = 0; i < count; i++) {
-                argv++;
-                str = *argv;
-
-                /* Some bootstrap servers remove the quotes that we
-                 * added, while some others do not. For the cases
-                 * where they are not removed, we do it ourselves. */
-                if (*str == '\'') {
-                    str++;
-                    str[strlen(str) - 1] = 0;
-                }
-                status = HYDU_str_to_env(str, &env);
-                HYDU_ERR_POP(status, "error converting string to env\n");
-                HYDU_append_env_to_list(*env, &exec->user_env);
-                HYDU_FREE(env);
-            }
-            continue;
-        }
-
-        /* Global environment type */
-        if (!strcmp(*argv, "--exec-env-prop")) {
-            argv++;
-            if (strcmp(*argv, "HYDRA_NULL"))
-                exec->env_prop = HYDU_strdup(*argv);
-            else
-                exec->env_prop = NULL;
-            continue;
-        }
-
-        /* Fall through case is application parameters. Load
-         * everything into the args variable. */
-        for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
-        for (arg = 0; *argv && strcmp(*argv, "--exec");) {
-            exec->exec[arg++] = HYDU_strdup(*argv);
-            ++argv;
-        }
-        exec->exec[arg++] = NULL;
-
-        /* If we already touched the next --exec, step back */
-        if (*argv && !strcmp(*argv, "--exec"))
-            argv--;
-
-        if (!(*argv))
-            break;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
-{
-    char **argv = t_argv;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = init_params();
-    HYDU_ERR_POP(status, "Error initializing proxy params\n");
-
-    while (++argv && *argv) {
-        if (!strcmp(*argv, "--proxy-port")) {
-            ++argv;
-            HYD_pmcd_pmip.upstream.server_name = HYDU_strdup(strtok(*argv, ":"));
-            HYD_pmcd_pmip.upstream.server_port = atoi(strtok(NULL, ":"));
-            continue;
-        }
-        if (!strcmp(*argv, "--proxy-id")) {
-            ++argv;
-            HYD_pmcd_pmip.local.id = atoi(*argv);
-            continue;
-        }
-        if (!strcmp(*argv, "--debug")) {
-            HYD_pmcd_pmip.user_global.debug = 1;
-            continue;
-        }
-        if (!strcmp(*argv, "--enable-x")) {
-            HYD_pmcd_pmip.user_global.enablex = 1;
-            continue;
-        }
-        if (!strcmp(*argv, "--disable-x")) {
-            HYD_pmcd_pmip.user_global.enablex = 0;
-            continue;
-        }
-        if (!strcmp(*argv, "--bootstrap")) {
-            ++argv;
-            HYD_pmcd_pmip.user_global.bootstrap = HYDU_strdup(*argv);
-            continue;
-        }
-        if (!strcmp(*argv, "--bootstrap-exec")) {
-            ++argv;
-            HYD_pmcd_pmip.user_global.bootstrap_exec = HYDU_strdup(*argv);
-            continue;
-        }
-    }
-
-    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap,
-                            HYD_pmcd_pmip.user_global.bootstrap_exec,
-                            HYD_pmcd_pmip.user_global.enablex,
-                            HYD_pmcd_pmip.user_global.debug);
-    HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
-
-    if (HYD_pmcd_pmip.local.id == -1) {
-        /* We didn't get a proxy ID during launch; query the
-         * bootstrap server for it. */
-        status = HYDT_bsci_query_proxy_id(&HYD_pmcd_pmip.local.id);
-        HYDU_ERR_POP(status, "unable to query bootstrap server for proxy ID\n");
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 
 HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 {
@@ -422,10 +119,117 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 
     HYDT_bind_finalize();
 
-    /* Reinitialize all params to set everything to "NULL" or
-     * equivalent. */
-    status = init_params();
-    HYDU_ERR_POP(status, "unable to initialize params\n");
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status control_port_fn(char *arg, char ***argv)
+{
+    char *port = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_ERR_CHKANDJUMP(status, HYD_pmcd_pmip.upstream.server_name, HYD_INTERNAL_ERROR,
+                        "duplicate control port setting\n");
+
+    port = HYDU_strdup(**argv);
+    HYD_pmcd_pmip.upstream.server_name = HYDU_strdup(strtok(port, ":"));
+    HYD_pmcd_pmip.upstream.server_port = atoi(strtok(NULL, ":"));
+
+    (*argv)++;
+
+  fn_exit:
+    if (port)
+        HYDU_FREE(port);
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status proxy_id_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.local.id);
+}
+
+static HYD_status debug_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int(arg, argv, &HYD_pmcd_pmip.user_global.debug, 1);
+}
+
+static HYD_status bootstrap_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bootstrap);
+}
+
+static HYD_status wdir_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.wdir);
+}
+
+static HYD_status pmi_port_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_port);
+}
+
+static HYD_status pmi_id_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_id);
+}
+
+static HYD_status binding_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.binding);
+}
+
+static HYD_status bindlib_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bindlib);
+}
+
+static HYD_status ckpointlib_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.ckpointlib);
+}
+
+static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.ckpoint_prefix);
+}
+
+static HYD_status global_env_fn(char *arg, char ***argv)
+{
+    int i, count;
+    char *str;
+    HYD_env_t *env;
+    HYD_status status = HYD_SUCCESS;
+
+    count = atoi(**argv);
+    for (i = 0; i < count; i++) {
+        (*argv)++;
+        str = **argv;
+
+        /* Environment variables are quoted; remove them */
+        if (*str == '\'') {
+            str++;
+            str[strlen(str) - 1] = 0;
+        }
+        status = HYDU_str_to_env(str, &env);
+        HYDU_ERR_POP(status, "error converting string to env\n");
+
+        if (!strcmp(arg, "--global-inherited-env"))
+            HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.inherited);
+        else if (!strcmp(arg, "--global-system-env"))
+            HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.system);
+        else if (!strcmp(arg, "--global-user-env"))
+            HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.user);
+
+        HYDU_FREE(env);
+    }
+    (*argv)++;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -435,6 +239,298 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
     goto fn_exit;
 }
 
+static HYD_status genv_prop_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.global_env.prop);
+}
+
+static HYD_status global_core_count_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.global_core_count);
+}
+
+static HYD_status version_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (strcmp(**argv, HYDRA_VERSION)) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "UI version string does not match proxy version\n");
+    }
+    (*argv)++;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status hostname_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.local.hostname);
+}
+
+static HYD_status proxy_core_count_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.local.proxy_core_count);
+}
+
+static HYD_status start_pid_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.start_pid);
+}
+
+static HYD_status exec_fn(char *arg, char ***argv)
+{
+    struct HYD_proxy_exec *exec = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYD_pmcd_pmip.exec_list == NULL) {
+        status = HYDU_alloc_proxy_exec(&HYD_pmcd_pmip.exec_list);
+        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
+    }
+    else {
+        for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+        status = HYDU_alloc_proxy_exec(&exec->next);
+        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status exec_proc_count_fn(char *arg, char ***argv)
+{
+    struct HYD_proxy_exec *exec = NULL;
+
+    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    return HYDU_set_int_and_incr(arg, argv, &exec->proc_count);
+}
+
+static HYD_status exec_local_env_fn(char *arg, char ***argv)
+{
+    struct HYD_proxy_exec *exec = NULL;
+    HYD_env_t *env;
+    int i, count;
+    char *str;
+    HYD_status status = HYD_SUCCESS;
+
+    if (**argv == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "NULL argument to exec local env\n");
+
+    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+
+    count = atoi(**argv);
+    for (i = 0; i < count; i++) {
+        (*argv)++;
+        str = **argv;
+
+        /* Environment variables are quoted; remove them */
+        if (*str == '\'') {
+            str++;
+            str[strlen(str) - 1] = 0;
+        }
+        status = HYDU_str_to_env(str, &env);
+        HYDU_ERR_POP(status, "error converting string to env\n");
+        HYDU_append_env_to_list(*env, &exec->user_env);
+        HYDU_FREE(env);
+    }
+    (*argv)++;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status exec_env_prop_fn(char *arg, char ***argv)
+{
+    struct HYD_proxy_exec *exec = NULL;
+
+    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+
+    return HYDU_set_str_and_incr(arg, argv, &exec->env_prop);
+}
+
+static HYD_status exec_args_fn(char *arg, char ***argv)
+{
+    int i, count;
+    struct HYD_proxy_exec *exec = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    if (**argv == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "NULL argument to exec args\n");
+
+    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+
+    count = atoi(**argv);
+    for (i = 0; i < count; i++) {
+        (*argv)++;
+        exec->exec[i] = HYDU_strdup(**argv);
+    }
+    exec->exec[i] = NULL;
+    (*argv)++;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static struct HYD_arg_match_table match_table[] = {
+    /* Proxy parameters */
+    {"control-port", control_port_fn, NULL},
+    {"proxy-id", proxy_id_fn, NULL},
+    {"debug", debug_fn, NULL},
+    {"bootstrap", bootstrap_fn, NULL},
+
+    /* Executable parameters */
+    {"wdir", wdir_fn, NULL},
+    {"pmi-port", pmi_port_fn, NULL},
+    {"pmi-id", pmi_id_fn, NULL},
+    {"binding", binding_fn, NULL},
+    {"bindlib", bindlib_fn, NULL},
+    {"ckpointlib", ckpointlib_fn, NULL},
+    {"ckpoint-prefix", ckpoint_prefix_fn, NULL},
+    {"global-inherited-env", global_env_fn, NULL},
+    {"global-system-env", global_env_fn, NULL},
+    {"global-user-env", global_env_fn, NULL},
+    {"genv-prop", genv_prop_fn, NULL},
+    {"global-core-count", global_core_count_fn, NULL},
+    {"version", version_fn, NULL},
+    {"hostname", hostname_fn, NULL},
+    {"proxy-core-count", proxy_core_count_fn, NULL},
+    {"start-pid", start_pid_fn, NULL},
+    {"exec", exec_fn, NULL},
+    {"exec-proc-count", exec_proc_count_fn, NULL},
+    {"exec-local-env", exec_local_env_fn, NULL},
+    {"exec-env-prop", exec_env_prop_fn, NULL},
+    {"exec-args", exec_args_fn, NULL}
+};
+
+HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
+{
+    char **argv = t_argv;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = init_params();
+    HYDU_ERR_POP(status, "Error initializing proxy params\n");
+
+    argv++;
+    do {
+        /* Get the proxy arguments  */
+        status = HYDU_parse_array(&argv, match_table);
+        HYDU_ERR_POP(status, "error parsing input array\n");
+
+        /* No more arguments left */
+        if (!(*argv))
+            break;
+    } while (1);
+
+    /* Verify the arguments we got */
+    if (HYD_pmcd_pmip.upstream.server_name == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "server name not available\n");
+
+    if (HYD_pmcd_pmip.upstream.server_port == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "server port not available\n");
+
+    if (HYD_pmcd_pmip.user_global.bootstrap == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bootstrap server not available\n");
+
+    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap,
+                            NULL /* no bootstrap exec */, 0, /* disable x */
+                            HYD_pmcd_pmip.user_global.debug);
+    HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
+
+    if (HYD_pmcd_pmip.local.id == -1) {
+        /* We didn't get a proxy ID during launch; query the bootstrap
+         * server for it. */
+        status = HYDT_bsci_query_proxy_id(&HYD_pmcd_pmip.local.id);
+        HYDU_ERR_POP(status, "unable to query bootstrap server for proxy ID\n");
+    }
+
+    if (HYD_pmcd_pmip.local.id == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy ID not available\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status parse_exec_params(char **t_argv)
+{
+    char **argv = t_argv;
+    int i;
+    struct HYD_proxy_exec *exec = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    do {
+        /* Get the executable arguments  */
+        status = HYDU_parse_array(&argv, match_table);
+        HYDU_ERR_POP(status, "error parsing input array\n");
+
+        /* No more arguments left */
+        if (!(*argv))
+            break;
+    } while (1);
+
+    /* verify the arguments we got */
+    if (HYD_pmcd_pmip.user_global.wdir == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "wdir not available\n");
+
+    if (HYD_pmcd_pmip.system_global.pmi_port == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI port not available\n");
+
+    if (HYD_pmcd_pmip.system_global.global_core_count == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "global core count not available\n");
+
+    if (HYD_pmcd_pmip.local.hostname == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI port not available\n");
+
+    if (HYD_pmcd_pmip.local.proxy_core_count == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy core count not available\n");
+
+    if (HYD_pmcd_pmip.start_pid == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "start PID not available\n");
+
+    if (HYD_pmcd_pmip.exec_list == NULL && HYD_pmcd_pmip.user_global.ckpoint_prefix == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "no executable given and doesn't look like a restart either\n");
+
+    /* Set default values */
+    if (HYD_pmcd_pmip.user_global.binding == NULL)
+        HYD_pmcd_pmip.user_global.binding = HYDU_strdup("none");
+
+    if (HYD_pmcd_pmip.user_global.bindlib == NULL)
+        HYD_pmcd_pmip.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
+
+    if (HYD_pmcd_pmip.user_global.ckpointlib == NULL)
+        HYD_pmcd_pmip.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd)
 {
@@ -445,7 +541,7 @@ HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd)
     HYDU_FUNC_ENTER();
 
     /* Read information about the application to launch into a string
-     * array and call parse_params() to interpret it and load it into
+     * array and call parse_exec_params() to interpret it and load it into
      * the proxy handle. */
     status = HYDU_sock_read(fd, &num_strings, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data from upstream\n");
@@ -464,7 +560,7 @@ HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd)
     arglist[num_strings] = NULL;
 
     /* Get the parser to fill in the proxy params structure. */
-    status = parse_params(arglist);
+    status = parse_exec_params(arglist);
     HYDU_ERR_POP(status, "unable to parse argument list\n");
 
     HYDU_free_strlist(arglist);
@@ -481,7 +577,6 @@ HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd)
   fn_fail:
     goto fn_exit;
 }
-
 
 HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 {
@@ -547,15 +642,12 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     process_id = 0;
     for (exec = HYD_pmcd_pmip.exec_list; exec; exec = exec->next) {
 
-        /*
-         * Increasing priority order:
-         *    - Global inherited env
-         *    - Global user env
-         *    - Local user env
-         *    - System env
-         */
+        /* Increasing priority order: (1) global inherited env; (2)
+         * global user env; (3) local user env; (4) system env. We
+         * just set them one after the other, overwriting the previous
+         * written value if needed. */
 
-        /* Global inherited env */
+        /* global inherited env */
         if ((exec->env_prop && !strcmp(exec->env_prop, "all")) ||
             (!exec->env_prop && !strcmp(HYD_pmcd_pmip.user_global.global_env.prop, "all"))) {
             for (env = HYD_pmcd_pmip.user_global.global_env.inherited; env; env = env->next) {
@@ -584,19 +676,19 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             }
         }
 
-        /* Next priority order is the global user env */
+        /* global user env */
         for (env = HYD_pmcd_pmip.user_global.global_env.user; env; env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
-        /* Next priority order is the local user env */
+        /* local user env */
         for (env = exec->user_env; env; env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
-        /* Highest priority is the system env */
+        /* system env */
         for (env = HYD_pmcd_pmip.user_global.global_env.system; env; env = env->next) {
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
@@ -701,7 +793,6 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
   fn_fail:
     goto fn_exit;
 }
-
 
 void HYD_pmcd_pmi_proxy_killjob(void)
 {

@@ -129,11 +129,16 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec);
 
 /* args */
-char *HYDU_find_full_path(const char *execname);
-char *HYDU_getcwd(void);
+HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_table);
+HYD_status HYDU_set_str(char *arg, char ***argv, char **var, char *val);
+HYD_status HYDU_set_str_and_incr(char *arg, char ***argv, char **var);
+HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val);
+HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var);
 HYD_status HYDU_get_base_path(const char *execname, char *wdir, char **path);
+char *HYDU_getcwd(void);
 HYD_status HYDU_parse_hostfile(char *hostfile,
                                HYD_status(*process_token) (char *token, int newline));
+char *HYDU_find_full_path(const char *execname);
 
 /* debug */
 HYD_status HYDU_dbg_init(const char *str);

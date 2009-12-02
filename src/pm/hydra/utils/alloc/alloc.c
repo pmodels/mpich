@@ -194,7 +194,7 @@ HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec)
 
     HYDU_MALLOC(*exec, struct HYD_proxy_exec *, sizeof(struct HYD_proxy_exec), status);
     (*exec)->exec[0] = NULL;
-    (*exec)->proc_count = 0;
+    (*exec)->proc_count = -1;
     (*exec)->env_prop = NULL;
     (*exec)->user_env = NULL;
     (*exec)->next = NULL;

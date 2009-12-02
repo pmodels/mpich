@@ -90,6 +90,9 @@
 #endif
 #endif
 
+#define HYD_IS_HELP(str) \
+    ((!strcmp((str), "-h")) || (!strcmp((str), "-help")) || (!strcmp((str), "--help")))
+
 #if defined MANUAL_EXTERN_ENVIRON
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
@@ -114,6 +117,14 @@ int gethostname(char *name, size_t len);
 #endif
 
 typedef unsigned short HYD_event_t;
+
+/* Argument matching functions */
+struct HYD_arg_match_table {
+    const char *arg;
+    HYD_status(*handler_fn) (char *arg, char ***argv_p);
+    void(*help_fn) (void);
+};
+
 
 /* Environment information */
 typedef struct HYD_env {

@@ -15,7 +15,6 @@ struct HYD_handle {
     struct HYD_user_global user_global;
 
     char *base_path;
-    int proxy_port;
 
     char *css;
     char *rmk;
