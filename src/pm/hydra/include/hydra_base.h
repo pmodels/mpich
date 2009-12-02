@@ -204,17 +204,6 @@ struct HYD_proxy {
     struct HYD_proxy *next;
 };
 
-struct HYD_exec_info {
-    int process_count;
-    char *exec[HYD_NUM_TMP_STRINGS];
-
-    /* Local environment */
-    HYD_env_t *user_env;
-    char *env_prop;
-
-    struct HYD_exec_info *next;
-};
-
 /* Global user parameters */
 struct HYD_user_global {
     /* Bootstrap server */

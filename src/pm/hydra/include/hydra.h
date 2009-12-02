@@ -45,8 +45,6 @@ struct HYD_handle {
     /* Process groups */
     struct HYD_pg pg_list;
 
-    struct HYD_exec_info *exec_info_list;
-
     /* Random parameters used for internal code */
     int func_depth;
     char stdin_tmp_buf[HYD_TMPBUF_SIZE];

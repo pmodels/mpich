@@ -236,7 +236,7 @@ static HYD_status env_fn(char *arg, char ***argv)
 {
     char *env_name, *env_value, *str[2] = { 0 };
     HYD_env_t *env;
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
     if (**argv && IS_HELP(**argv)) {
@@ -284,7 +284,7 @@ static HYD_status env_fn(char *arg, char ***argv)
 static HYD_status envlist_fn(char *arg, char ***argv)
 {
     int len;
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
     status = HYD_uiu_get_current_exec_info(&exec_info);
@@ -317,7 +317,7 @@ static HYD_status envlist_fn(char *arg, char ***argv)
 
 static HYD_status envnone_fn(char *arg, char ***argv)
 {
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
     status = HYD_uiu_get_current_exec_info(&exec_info);
@@ -344,7 +344,7 @@ static HYD_status envnone_fn(char *arg, char ***argv)
 
 static HYD_status envall_fn(char *arg, char ***argv)
 {
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
     status = HYD_uiu_get_current_exec_info(&exec_info);
@@ -371,7 +371,7 @@ static HYD_status envall_fn(char *arg, char ***argv)
 
 static HYD_status np_fn(char *arg, char ***argv)
 {
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
     if (**argv && IS_HELP(**argv)) {
@@ -1069,7 +1069,7 @@ static HYD_status match_arg(char ***argv_p)
 
 static HYD_status verify_arguments(void)
 {
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
     /* Proxy launch or checkpoint restart */
@@ -1088,7 +1088,7 @@ static HYD_status verify_arguments(void)
                             "binding not allowed while booting/shutting proxies\n");
 
         /* No executables */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.exec_info_list, HYD_INTERNAL_ERROR,
+        HYDU_ERR_CHKANDJUMP(status, HYD_uiu_exec_info_list, HYD_INTERNAL_ERROR,
                             "execs should not be specified while booting/shutting proxies\n");
     }
     else {      /* Application launch */
@@ -1101,11 +1101,12 @@ static HYD_status verify_arguments(void)
             exec_info->exec[1] = NULL;
         }
 
-        if (HYD_handle.exec_info_list == NULL)
+        if (HYD_uiu_exec_info_list == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
         /* Make sure local executable is set */
-        for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+        for (exec_info = HYD_uiu_exec_info_list; exec_info;
+             exec_info = exec_info->next) {
             if (exec_info->exec[0] == NULL)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
         }
@@ -1240,7 +1241,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     int i;
     char **argv = t_argv;
     char *progname = *argv;
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -1272,7 +1273,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
 
             if (!strcmp(*argv, ":")) {  /* Next executable */
-                status = HYDU_alloc_exec_info(&exec_info->next);
+                status = HYD_uiu_alloc_exec_info(&exec_info->next);
                 HYDU_ERR_POP(status, "allocate_exec_info returned error\n");
                 ++argv;
                 break;

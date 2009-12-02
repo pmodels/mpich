@@ -152,53 +152,6 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
 }
 
 
-HYD_status HYDU_alloc_exec_info(struct HYD_exec_info **exec_info)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(*exec_info, struct HYD_exec_info *, sizeof(struct HYD_exec_info), status);
-    (*exec_info)->process_count = 0;
-    (*exec_info)->exec[0] = NULL;
-    (*exec_info)->user_env = NULL;
-    (*exec_info)->env_prop = NULL;
-    (*exec_info)->next = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-void HYDU_free_exec_info_list(struct HYD_exec_info *exec_info_list)
-{
-    struct HYD_exec_info *exec_info, *run;
-
-    HYDU_FUNC_ENTER();
-
-    exec_info = exec_info_list;
-    while (exec_info) {
-        run = exec_info->next;
-        HYDU_free_strlist(exec_info->exec);
-
-        if (exec_info->env_prop)
-            HYDU_FREE(exec_info->env_prop);
-
-        HYDU_env_free_list(exec_info->user_env);
-        exec_info->user_env = NULL;
-
-        HYDU_FREE(exec_info);
-        exec_info = run;
-    }
-
-    HYDU_FUNC_EXIT();
-}
-
-
 HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec)
 {
     HYD_status status = HYD_SUCCESS;

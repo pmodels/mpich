@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 {
     struct HYD_proxy *proxy;
     struct HYD_proxy_exec *exec;
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     int exit_status = 0, timeout, i, process_id, proc_count, num_cores;
     HYD_status status = HYD_SUCCESS;
 
@@ -154,7 +154,8 @@ int main(int argc, char **argv)
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
-    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+    for (exec_info = HYD_uiu_exec_info_list; exec_info;
+         exec_info = exec_info->next) {
         if (exec_info->process_count == 0) {
             if (num_cores == 0)
                 exec_info->process_count = 1;

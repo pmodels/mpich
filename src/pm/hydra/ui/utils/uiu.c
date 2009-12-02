@@ -8,6 +8,8 @@
 #include "hydra_utils.h"
 #include "uiu.h"
 
+struct HYD_uiu_exec_info *HYD_uiu_exec_info_list;
+
 void HYD_uiu_init_params(void)
 {
     HYDU_init_user_global(&HYD_handle.user_global);
@@ -40,11 +42,11 @@ void HYD_uiu_init_params(void)
     HYD_handle.pg_list.pg_process_count = 0;
     HYD_handle.pg_list.next = NULL;
 
-    HYD_handle.exec_info_list = NULL;
-
     HYD_handle.func_depth = 0;
     HYD_handle.stdin_buf_offset = 0;
     HYD_handle.stdin_buf_count = 0;
+
+    HYD_uiu_exec_info_list = NULL;
 }
 
 
@@ -95,8 +97,8 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.node_list)
         HYDU_free_node_list(HYD_handle.node_list);
 
-    if (HYD_handle.exec_info_list)
-        HYDU_free_exec_info_list(HYD_handle.exec_info_list);
+    if (HYD_uiu_exec_info_list)
+        HYD_uiu_free_exec_info_list(HYD_uiu_exec_info_list);
 
     if (HYD_handle.pg_list.proxy_list)
         HYDU_free_proxy_list(HYD_handle.pg_list.proxy_list);
@@ -106,18 +108,65 @@ void HYD_uiu_free_params(void)
 }
 
 
-HYD_status HYD_uiu_get_current_exec_info(struct HYD_exec_info **exec_info)
+HYD_status HYD_uiu_alloc_exec_info(struct HYD_uiu_exec_info **exec_info)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (HYD_handle.exec_info_list == NULL) {
-        status = HYDU_alloc_exec_info(&HYD_handle.exec_info_list);
+    HYDU_MALLOC(*exec_info, struct HYD_uiu_exec_info *, sizeof(struct HYD_uiu_exec_info), status);
+    (*exec_info)->process_count = 0;
+    (*exec_info)->exec[0] = NULL;
+    (*exec_info)->user_env = NULL;
+    (*exec_info)->env_prop = NULL;
+    (*exec_info)->next = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+void HYD_uiu_free_exec_info_list(struct HYD_uiu_exec_info *exec_info_list)
+{
+    struct HYD_uiu_exec_info *exec_info, *run;
+
+    HYDU_FUNC_ENTER();
+
+    exec_info = exec_info_list;
+    while (exec_info) {
+        run = exec_info->next;
+        HYDU_free_strlist(exec_info->exec);
+
+        if (exec_info->env_prop)
+            HYDU_FREE(exec_info->env_prop);
+
+        HYDU_env_free_list(exec_info->user_env);
+        exec_info->user_env = NULL;
+
+        HYDU_FREE(exec_info);
+        exec_info = run;
+    }
+
+    HYDU_FUNC_EXIT();
+}
+
+
+HYD_status HYD_uiu_get_current_exec_info(struct HYD_uiu_exec_info **exec_info)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (HYD_uiu_exec_info_list == NULL) {
+        status = HYD_uiu_alloc_exec_info(&HYD_uiu_exec_info_list);
         HYDU_ERR_POP(status, "unable to allocate exec_info\n");
     }
 
-    *exec_info = HYD_handle.exec_info_list;
+    *exec_info = HYD_uiu_exec_info_list;
     while ((*exec_info)->next)
         *exec_info = (*exec_info)->next;
 
@@ -130,7 +179,7 @@ HYD_status HYD_uiu_get_current_exec_info(struct HYD_exec_info **exec_info)
 }
 
 
-static HYD_status add_exec_info_to_proxy(struct HYD_exec_info *exec_info,
+static HYD_status add_exec_info_to_proxy(struct HYD_uiu_exec_info *exec_info,
                                          struct HYD_proxy *proxy, int num_procs)
 {
     int i;
@@ -179,7 +228,7 @@ HYD_status HYD_uiu_create_proxy_list(void)
 {
     int proxy_rem_procs, exec_rem_procs;
     struct HYD_proxy *proxy;
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
     struct HYD_node *node;
     int total_exec_procs, num_nodes, proxy_count, proxy_id, i, start_pid;
     HYD_status status = HYD_SUCCESS;
@@ -187,7 +236,7 @@ HYD_status HYD_uiu_create_proxy_list(void)
     HYDU_FUNC_ENTER();
 
     total_exec_procs = 0;
-    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next)
+    for (exec_info = HYD_uiu_exec_info_list; exec_info; exec_info = exec_info->next)
         total_exec_procs += exec_info->process_count;
 
     num_nodes = 0;
@@ -240,7 +289,7 @@ HYD_status HYD_uiu_create_proxy_list(void)
     }
 
     proxy = HYD_handle.pg_list.proxy_list;
-    exec_info = HYD_handle.exec_info_list;
+    exec_info = HYD_uiu_exec_info_list;
     proxy_rem_procs = proxy->node.core_count;
     exec_rem_procs = exec_info ? exec_info->process_count : 0;
     while (exec_info) {
@@ -287,7 +336,7 @@ void HYD_uiu_print_params(void)
     int i;
     struct HYD_proxy *proxy;
     struct HYD_proxy_exec *exec;
-    struct HYD_exec_info *exec_info;
+    struct HYD_uiu_exec_info *exec_info;
 
     HYDU_FUNC_ENTER();
 
@@ -331,7 +380,7 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "    Executable information:\n");
     HYDU_dump_noprefix(stdout, "    **********************\n");
     i = 1;
-    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next) {
+    for (exec_info = HYD_uiu_exec_info_list; exec_info; exec_info = exec_info->next) {
         HYDU_dump_noprefix(stdout, "      Executable ID: %2d\n", i++);
         HYDU_dump_noprefix(stdout, "      -----------------\n");
         HYDU_dump_noprefix(stdout, "        Process count: %d\n", exec_info->process_count);
