@@ -177,7 +177,7 @@ AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
 #########################################################################
 AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk        Resource Management Kernel],
 		    [ hydra_rmk=$withval ],
-		    [ hydra_rmk="dummy,pbs" ])
+		    [ hydra_rmk="pbs" ])
 AC_MSG_CHECKING(resource management kernel)
 AC_MSG_RESULT($hydra_rmk)
 hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -185,7 +185,6 @@ AC_DEFINE_UNQUOTED(HYDRA_RMK_NAMES,"$hydra_rmk_names",[Enabled resource manageme
 AM_SUBST_NOTMAKE(hydra_rmk_names)
 AC_SUBST(hydra_rmk_names)
 
-hydra_rmk_dummy=false
 for hydra_rmk_name in ${hydra_rmk_names}; do
     if test -z "${hydra_default_rmk}" ; then
        hydra_default_rmk=$hydra_rmk_name
@@ -197,9 +196,6 @@ HYD_status HYD_rmki_${hydra_rmk_name}_init(void);"
     hydra_rmk_init_array="${hydra_rmk_init_array} HYD_rmki_${hydra_rmk_name}_init, "
 
     case "$hydra_rmk_name" in
-    	dummy)
-		hydra_rmk_dummy=true
-		;;
 	pbs)
 		hydra_rmk_pbs=true
 		;;
@@ -217,7 +213,6 @@ AM_SUBST_NOTMAKE(hydra_rmk_init_array)
 AC_SUBST(hydra_rmk_init_decl)
 AC_SUBST(hydra_rmk_name_array)
 AC_SUBST(hydra_rmk_init_array)
-AM_CONDITIONAL([hydra_rmk_dummy], [$hydra_rmk_dummy])
 AM_CONDITIONAL([hydra_rmk_pbs], [$hydra_rmk_pbs])
 
 

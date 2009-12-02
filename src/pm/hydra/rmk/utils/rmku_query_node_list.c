@@ -6,7 +6,6 @@
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
-#include "bsci.h"
 #include "rmku.h"
 
 HYD_status HYD_rmku_query_node_list(struct HYD_node **node_list)
@@ -15,10 +14,8 @@ HYD_status HYD_rmku_query_node_list(struct HYD_node **node_list)
 
     HYDU_FUNC_ENTER();
 
-    /* We just query the bootstrap server for the node list and return
-     * it to the upper layer. */
-    status = HYDT_bsci_query_node_list(node_list);
-    HYDU_ERR_POP(status, "bootstrap device returned error while querying node list\n");
+    /* We don't know anything about nodes or resources */
+    *node_list = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -138,7 +138,6 @@ static HYD_status process_mfile_token(char *token, int newline)
 
         status = HYDU_add_to_node_list(hostname, num_procs, &HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
-        HYD_handle.global_core_count += num_procs;
     }
     else {      /* Not a new line */
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
@@ -172,7 +171,6 @@ static HYD_status mfile_fn(char *arg, char ***argv)
     else {
         status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
-        HYD_handle.global_core_count += 1;
     }
 
     (*argv)++;
@@ -661,8 +659,6 @@ static HYD_status set_default_values(void)
     tmp = getenv("HYDRA_RMK");
     if (HYD_handle.rmk == NULL && tmp)
         HYD_handle.rmk = HYDU_strdup(tmp);
-    if (HYD_handle.rmk == NULL)
-        HYD_handle.rmk = HYDU_strdup(HYDRA_DEFAULT_RMK);
 
     tmp = getenv("HYDRA_HOST_FILE");
     if (HYD_handle.node_list == NULL && tmp) {

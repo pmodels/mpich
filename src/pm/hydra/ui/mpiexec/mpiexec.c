@@ -9,6 +9,7 @@
 #include "mpiexec.h"
 #include "rmki.h"
 #include "pmci.h"
+#include "bsci.h"
 #include "uiu.h"
 
 struct HYD_handle HYD_handle = { {0} };
@@ -93,7 +94,8 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_proxy_exec *exec;
     struct HYD_uiu_exec_info *exec_info;
-    int exit_status = 0, i, process_id, proc_count, num_cores;
+    struct HYD_node *node;
+    int exit_status = 0, i, process_id, proc_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -110,39 +112,49 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    status = HYD_rmki_init(HYD_handle.rmk);
-    HYDU_ERR_POP(status, "unable to initialize RMK\n");
+    status = HYDT_bsci_init(HYD_handle.user_global.bootstrap,
+                            HYD_handle.user_global.bootstrap_exec,
+                            HYD_handle.user_global.enablex,
+                            HYD_handle.user_global.debug);
+    HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
-    num_cores = 0;
     if (HYD_handle.node_list == NULL) {
         /* Node list is not created yet. The user might not have
-         * provided the host file. Query the RMK. We pass a zero core
-         * count, so the RMK will give us all the nodes it already has
-         * and won't try to allocate any more. */
-        status = HYD_rmki_query_node_list(&HYD_handle.node_list);
-        HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
+         * provided the host file. Query the RMK. */
+        if (HYD_handle.rmk) {
+            status = HYD_rmki_init(HYD_handle.rmk);
+            HYDU_ERR_POP(status, "unable to initialize RMK\n");
+
+            status = HYD_rmki_query_node_list(&HYD_handle.node_list);
+            HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
+        }
 
         if (HYD_handle.node_list == NULL) {
-            /* The RMK didn't give us anything back; use localhost */
+            /* didn't get anything from the RMK; try the bootstrap server */
+            status = HYDT_bsci_query_node_list(&HYD_handle.node_list);
+            HYDU_ERR_POP(status, "bootstrap returned error while querying node list\n");
+        }
+
+        if (HYD_handle.node_list == NULL) {
+            /* The RMK and bootstrap didn't give us anything back; use localhost */
             status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
-            HYD_handle.global_core_count += 1;
-        }
-        else {
-            /* The RMK returned a node list */
-            HYD_handle.global_core_count += num_cores;
         }
     }
+
+    HYD_handle.global_core_count = 0;
+    for (node = HYD_handle.node_list; node; node = node->next)
+        HYD_handle.global_core_count += node->core_count;
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     for (exec_info = HYD_uiu_exec_info_list; exec_info;
          exec_info = exec_info->next) {
         if (exec_info->process_count == 0) {
-            if (num_cores == 0)
+            if (HYD_handle.global_core_count == 0)
                 exec_info->process_count = 1;
             else
-                exec_info->process_count = num_cores;
+                exec_info->process_count = HYD_handle.global_core_count;
 
             /* If we didn't get anything from the user, take whatever
              * the RMK gave */
