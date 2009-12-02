@@ -66,7 +66,9 @@ static struct HYD_arg_match_table match_table[] = {
 
 static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 {
-    int closed;
+    int closed, count;
+    char buf[HYD_TMPBUF_SIZE];
+    HYDT_persist_header hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -78,29 +80,55 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
         if (closed) {
             status = HYDT_dmx_deregister_fd(private.client_fd);
-            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", private.client_fd);
+            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
+                                 private.client_fd);
             close(private.client_fd);
         }
     }
     else if (fd == private.stdout_fd) {
         /* stdout event */
-        status = HYDU_sock_forward_stdio(private.stdout_fd, private.client_fd, &closed);
-        HYDU_ERR_POP(status, "stdout forwarding error\n");
+        status = HYDU_sock_read(private.stdout_fd, buf, HYD_TMPBUF_SIZE, &count, 0);
+        HYDU_ERR_POP(status, "error reading stdout from upstream\n");
 
-        if (closed) {
+        hdr.io_type = HYDT_PERSIST_STDOUT;
+        hdr.buflen = count;
+
+        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr));
+        HYDU_ERR_POP(status, "error sending header to client\n");
+
+        if (hdr.buflen) {
+            status = HYDU_sock_write(private.client_fd, buf, count);
+            HYDU_ERR_POP(status, "error sending stdout to client\n");
+        }
+        else {
             status = HYDT_dmx_deregister_fd(private.stdout_fd);
-            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", private.stdout_fd);
+            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
+                                 private.stdout_fd);
             close(private.stdout_fd);
         }
     }
     else if (fd == private.stderr_fd) {
         /* stderr event */
-        status = HYDU_sock_forward_stdio(private.stderr_fd, private.client_fd, &closed);
-        HYDU_ERR_POP(status, "stderr forwarding error\n");
+        hdr.io_type = HYDT_PERSIST_STDERR;
+        hdr.buflen = 0;
 
-        if (closed) {
+        status = HYDU_sock_read(private.stderr_fd, buf, HYD_TMPBUF_SIZE, &count, 0);
+        HYDU_ERR_POP(status, "error reading stdout from upstream\n");
+
+        hdr.io_type = HYDT_PERSIST_STDOUT;
+        hdr.buflen = count;
+
+        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr));
+        HYDU_ERR_POP(status, "error sending header to client\n");
+
+        if (hdr.buflen) {
+            status = HYDU_sock_write(private.client_fd, buf, count);
+            HYDU_ERR_POP(status, "error sending stdout to client\n");
+        }
+        else {
             status = HYDT_dmx_deregister_fd(private.stderr_fd);
-            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", private.stderr_fd);
+            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
+                                 private.stderr_fd);
             close(private.stderr_fd);
         }
     }
@@ -125,13 +153,19 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
     status = HYDU_sock_accept(fd, &private.client_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    /* fork and let the slave process handle this connection */
-    private.slave_pid = fork();
-    HYDU_ERR_CHKANDJUMP(status, private.slave_pid < 0, HYD_INTERNAL_ERROR, "fork failed\n");
+    if (!HYDT_persist_handle.debug) {
+        /* In debug mode, we don't fork a slave process, but the
+         * master takes over the work of the slave. */
 
-    if (private.slave_pid > 0) { /* master process */
-        close(private.client_fd); /* the slave process will handle this */
-        goto fn_exit;
+        /* fork and let the slave process handle this connection */
+        private.slave_pid = fork();
+        HYDU_ERR_CHKANDJUMP(status, private.slave_pid < 0, HYD_INTERNAL_ERROR,
+                            "fork failed\n");
+
+        if (private.slave_pid > 0) { /* master process */
+            close(private.client_fd); /* the slave process will handle this */
+            goto fn_exit;
+        }
     }
 
     /* This is the slave process. Close and deregister the listen socket */
@@ -211,6 +245,13 @@ int main(int argc, char **argv)
     if (HYDT_persist_handle.debug == -1)
         HYDT_persist_handle.debug = 0;
 
+    if (HYDT_persist_handle.debug) {
+        HYDU_dump_noprefix(stdout, "Running in debug mode\n");
+        HYDU_dump_noprefix(stdout, "   1. Only one job will run at a time\n");
+        HYDU_dump_noprefix(stdout, "   2. Stdout will be redirected to stderr\n");
+        HYDU_dump_noprefix(stdout, "\n");
+    }
+
     tmp = getenv("HYDSERV_PORT");
     if (HYDT_persist_handle.port == -1 && tmp)
         HYDT_persist_handle.port = atoi(tmp);
@@ -240,17 +281,17 @@ int main(int argc, char **argv)
 
             status = HYDT_dmx_query_fd_registration(private.stdout_fd, &ret);
             HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
-            if (!ret)
+            if (ret)
                 continue;
 
             status = HYDT_dmx_query_fd_registration(private.stderr_fd, &ret);
             HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
-            if (!ret)
+            if (ret)
                 continue;
 
             status = HYDT_dmx_query_fd_registration(private.client_fd, &ret);
             HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
-            if (!ret)
+            if (ret)
                 continue;
 
             /* wait for the app process to terminate */

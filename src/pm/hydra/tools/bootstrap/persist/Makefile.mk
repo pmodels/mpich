@@ -11,4 +11,5 @@ hydserv_LDADD = libhydra.a $(external_libs)
 hydserv_LDFLAGS = $(external_ldflags)
 
 libhydra_a_SOURCES += $(top_srcdir)/tools/bootstrap/persist/persist_init.c \
-	$(top_srcdir)/tools/bootstrap/persist/persist_launch.c
+	$(top_srcdir)/tools/bootstrap/persist/persist_launch.c \
+	$(top_srcdir)/tools/bootstrap/persist/persist_wait.c

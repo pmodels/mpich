@@ -30,26 +30,26 @@ HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
     /* Fork off the process */
     tpid = fork();
     if (tpid == 0) {    /* Child process */
-        close(1);
-        if (out) {
-            close(outpipe[0]);
-            if (dup2(outpipe[1], 1) < 0)
-                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                     HYDU_strerror(errno));
-        }
-
-        close(2);
-        if (err) {
-            close(errpipe[0]);
-            if (dup2(errpipe[1], 2) < 0)
-                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                     HYDU_strerror(errno));
-        }
-
-        close(0);
+        close(STDIN_FILENO);
         if (in) {
             close(inpipe[1]);
-            if (dup2(inpipe[0], 0) < 0)
+            if (dup2(inpipe[0], STDIN_FILENO) < 0)
+                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
+                                     HYDU_strerror(errno));
+        }
+
+        close(STDOUT_FILENO);
+        if (out) {
+            close(outpipe[0]);
+            if (dup2(outpipe[1], STDOUT_FILENO) < 0)
+                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
+                                     HYDU_strerror(errno));
+        }
+
+        close(STDERR_FILENO);
+        if (err) {
+            close(errpipe[0]);
+            if (dup2(errpipe[1], STDERR_FILENO) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                      HYDU_strerror(errno));
         }

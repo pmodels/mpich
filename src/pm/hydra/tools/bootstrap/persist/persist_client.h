@@ -14,5 +14,9 @@ HYD_status HYDT_bscd_persist_launch_procs(
     char **args, struct HYD_node *node_list,
     HYD_status(*stdout_cb) (void *buf, int buflen),
     HYD_status(*stderr_cb) (void *buf, int buflen));
+HYD_status HYDT_bscd_persist_wait_for_completion(int timeout);
+
+extern int *HYDT_bscd_persist_control_fd;
+extern int HYDT_bscd_persist_node_count;
 
 #endif /* PERSIST_CLIENT_H_INCLUDED */

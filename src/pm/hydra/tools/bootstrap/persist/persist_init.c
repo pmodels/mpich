@@ -15,6 +15,7 @@ HYD_status HYDT_bsci_persist_init(void)
     HYDU_FUNC_ENTER();
 
     HYDT_bsci_fns.launch_procs = HYDT_bscd_persist_launch_procs;
+    HYDT_bsci_fns.wait_for_completion = HYDT_bscd_persist_wait_for_completion;
 
     HYDU_FUNC_EXIT();
 
