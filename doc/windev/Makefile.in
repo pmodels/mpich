@@ -1,7 +1,7 @@
 ALL: all-redirect
 SHELL = @SHELL@
 srcdir = @srcdir@
-VERSION = @VERSION@
+MPICH2_VERSION = @MPICH2_VERSION@
 
 .SUFFIXES: .pdf .dvi .tex
 
@@ -16,9 +16,9 @@ BIBTEX     = BIBINPUTS=".:$(srcdir):" ; export BIBINPUTS ; bibtex
 DVIPDFM    = TEXINPUTS=".:$(srcdir):" ; export TEXINPUTS ; dvipdfm
 LATEX2HTML = latex2html
 
-# Update the %VERSION% with current version string.
+# Update the %MPICH2_VERSION% with current version string.
 windev.tex: windev.tex.vin
-	sed -e "s/%VERSION%/${VERSION}/g" $? > $@
+	sed -e "s/%MPICH2_VERSION%/${MPICH2_VERSION}/g" $? > $@
 
 windev.dvi: windev.tex
 	-$(LATEX) windev.tex

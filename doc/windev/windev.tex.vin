@@ -38,7 +38,7 @@
     subprogram of the Office of Advanced Scientific Computing Research,
     SciDAC Program, Office of Science, U.S. Department of Energy, under
     Contract DE-AC02-06CH11357.}\\
-  Version %VERSION%\\
+  Version %MPICH2_VERSION%\\
   Mathematics and Computer Science Division\\
   Argonne National Laboratory}
 

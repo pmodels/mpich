@@ -43,7 +43,7 @@
     subprogram of the Office of Advanced Scientific Computing Research,
     SciDAC Program, Office of Science, U.S. Department of Energy, under
     Contract DE-AC02-06CH11357.}\\
-  Version %VERSION%\\
+  Version %MPICH2_VERSION%\\
   Mathematics and Computer Science Division\\
   Argonne National Laboratory}
 
@@ -168,7 +168,7 @@ If your tar doesn't accept the z option, use
 \end{verbatim}
 Let us assume that the directory where you do this is
 \texttt{/home/you/libraries}.  It will now contain a subdirectory named
-\texttt{mpich2-%VERSION%}.
+\texttt{mpich2-%MPICH2_VERSION%}.
 
 \item
 Choose an installation directory (the default is \texttt{/usr/local/bin)}:
@@ -188,7 +188,7 @@ that this also be separate from the source directory, so that the
 source directories remain
 clean and can be reused to build other copies on other machines.
 \begin{verbatim}
-    mkdir /tmp/you/mpich2-%VERSION%
+    mkdir /tmp/you/mpich2-%MPICH2_VERSION%
 \end{verbatim}
 
 \item
@@ -200,8 +200,8 @@ important options to consider.
 Configure MPICH2, specifying the installation directory, and running
 the \texttt{configure} script in the source directory:
 \begin{verbatim}
-    cd  /tmp/you/mpich2-%VERSION%
-    /home/you/libraries/mpich2-%VERSION%/configure \
+    cd  /tmp/you/mpich2-%MPICH2_VERSION%
+    /home/you/libraries/mpich2-%MPICH2_VERSION%/configure \
             -prefix=/home/you/mpich2-install |& tee c.txt
 \end{verbatim}
 where the \texttt{$\backslash$} means that this is really one line.  (On
@@ -409,7 +409,7 @@ started.  From each machine, after starting the mpd, you can do
 \end{verbatim}
 to see which machines are in the ring so far.  More details on
 \texttt{mpdboot} and other options for starting the mpd's are in
-\texttt{mpich2-%VERSION%/src/pm/mpd/README}.
+\texttt{mpich2-%MPICH2_VERSION%/src/pm/mpd/README}.
 
 {\em In case of persistent difficulties getting the ring of mpd's up
 and running on the machines you want, please see
@@ -459,13 +459,13 @@ in the MPI-2 standard.
 
 % There are some examples in the install
 % directory, which you have already put in your path, as well as in
-% the directory \texttt{mpich2-%VERSION%/examples}.  
+% the directory \texttt{mpich2-%MPICH2_VERSION%/examples}.
 % One of them is the classic \texttt{cpi}
 % example, which computes the value of $\pi$ by numerical integration in
 % parallel.   
 As part of the build process for MPICH2, a simple program to compute the value
 of $\pi$ by numerical integration is created in the
-\texttt{mpich2-%VERSION%/examples} directory.  If the current directory is the top
+\texttt{mpich2-%MPICH2_VERSION%/examples} directory.  If the current directory is the top
 level MPICH2 build directory, then you can run this program with
 \begin{verbatim}
     mpiexec -n 5 examples/cpi
@@ -1769,7 +1769,7 @@ To run some programs in parallel:
     n1 $  mpiexec -l -n 4 PATH_TO_MPICH2_EXAMPLES/cpi
 \end{verbatim}
 where \texttt{PATH\_TO\_MPICH2\_EXAMPLES} is the path to the
-\texttt{mpich2-%VERSION%/examples} directory.
+\texttt{mpich2-%MPICH2_VERSION%/examples} directory.
 
 To bring down the ring of mpds:
 \begin{verbatim}
