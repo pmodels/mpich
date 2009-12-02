@@ -54,7 +54,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **global_args, const char *proxy_id_s
     }
 
     process_id = 0;
-    FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
+    for (proxy = proxy_list; proxy; proxy = proxy->next) {
         /* Setup the executable arguments */
         arg = 0;
         client_arg[arg++] = HYDU_strdup(path);

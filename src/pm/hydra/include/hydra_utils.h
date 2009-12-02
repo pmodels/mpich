@@ -119,6 +119,7 @@
 /* alloc */
 void HYDU_init_user_global(struct HYD_user_global *user_global);
 void HYDU_init_global_env(struct HYD_env_global *global_env);
+HYD_status HYDU_alloc_node(struct HYD_node **node);
 HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy);
 HYD_status HYDU_alloc_exec_info(struct HYD_exec_info **exec_info);
 void HYDU_free_exec_info_list(struct HYD_exec_info *exec_info_list);
@@ -173,8 +174,7 @@ HYD_status HYDU_merge_proxy_segment(char *name, int start_pid, int core_count,
                                     struct HYD_proxy **proxy_list);
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
                             int global_core_count);
-HYD_status HYDU_add_to_proxy_list(char *hostname, int num_procs,
-                                  struct HYD_proxy **proxy_list);
+HYD_status HYDU_add_to_node_list(char *hostname, int num_procs, struct HYD_node **node_list);
 
 /* signals */
 #ifdef NEEDS_POSIX_FOR_SIGACTION

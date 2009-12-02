@@ -62,7 +62,7 @@ struct HYD_pmcd_pmi_node {
 };
 
 struct HYD_pmcd_pmi_pg {
-    int id;
+    int pgid;
 
     int num_procs;              /* Number of processes in the group */
     int num_subgroups;          /* Number of subgroups */

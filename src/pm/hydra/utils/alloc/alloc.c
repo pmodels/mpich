@@ -34,26 +34,46 @@ void HYDU_init_global_env(struct HYD_env_global *global_env)
     global_env->prop = NULL;
 }
 
+static void init_node(struct HYD_node *node)
+{
+    node->hostname = NULL;
+    node->core_count = 0;
+    node->next = NULL;
+}
+
+HYD_status HYDU_alloc_node(struct HYD_node **node)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(*node, struct HYD_node *, sizeof(struct HYD_node), status);
+    init_node(*node);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 {
-    static int proxy_id = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*proxy, struct HYD_proxy *, sizeof(struct HYD_proxy), status);
 
-    (*proxy)->node.hostname = NULL;
-    (*proxy)->node.core_count = 0;
-    (*proxy)->node.next = NULL;
+    init_node(&(*proxy)->node);
 
     (*proxy)->pid = -1;
     (*proxy)->in = -1;
     (*proxy)->out = -1;
     (*proxy)->err = -1;
 
-    (*proxy)->proxy_id = proxy_id++;
-    (*proxy)->active = 0;
+    (*proxy)->proxy_id = -1;
     (*proxy)->exec_launch_info = NULL;
 
     (*proxy)->start_pid = -1;

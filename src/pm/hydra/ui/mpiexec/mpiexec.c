@@ -128,7 +128,7 @@ int main(int argc, char **argv)
     status = HYD_rmki_init(HYD_handle.rmk);
     HYDU_ERR_POP(status, "unable to initialize RMK\n");
 
-    if (HYD_handle.pg_list.proxy_list == NULL) {
+    if (HYD_handle.node_list == NULL) {
         /* Proxy list is not created yet. The user might not have
          * provided the host file. Query the RMK. We pass a zero core
          * count, so the RMK will give us all the nodes it already has
@@ -142,8 +142,7 @@ int main(int argc, char **argv)
 
         if (HYD_handle.pg_list.proxy_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            status = HYDU_add_to_proxy_list((char *) "localhost", 1,
-                                            &HYD_handle.pg_list.proxy_list);
+            status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to initialize proxy\n");
             HYD_handle.global_core_count += 1;
         }
@@ -168,24 +167,8 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Figure out what the active proxys are: in RUNTIME and
-     * PERSISTENT modes, only proxys which have an executable are
-     * active. In BOOT, BOOT_FOREGROUND and SHUTDOWN modes, all
-     * proxys are active. */
-    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_RUNTIME ||
-        HYD_handle.user_global.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        for (proxy = HYD_handle.pg_list.proxy_list;
-             proxy && (proxy->start_pid <= HYD_handle.pg_list.pg_process_count);
-             proxy = proxy->next)
-            proxy->active = 1;
-    }
-    else {
-        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next)
-            proxy->active = 1;
-    }
-
-    status = HYD_uiu_merge_exec_info_to_proxy();
-    HYDU_ERR_POP(status, "unable to merge exec info\n");
+    status = HYD_uiu_create_proxy_list();
+    HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     if (HYD_handle.user_global.debug)
         HYD_uiu_print_params();
@@ -200,7 +183,7 @@ int main(int argc, char **argv)
         HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
 
     if (HYD_handle.print_rank_map) {
-        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
+        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
             HYDU_dump_noprefix(stdout, "(%s:", proxy->node.hostname);
 
             process_id = 0;
@@ -219,8 +202,8 @@ int main(int argc, char **argv)
         }
     }
 
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list)
-    HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next)
+        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
 
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
@@ -253,7 +236,7 @@ int main(int argc, char **argv)
     HYD_handle.stdin_buf_count = 0;
     HYD_handle.stdin_buf_offset = 0;
 
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         if (proxy->out != -1) {
             status = HYDT_dmx_register_fd(1, &proxy->out, HYD_STDOUT, NULL,
                                           HYD_uii_mpx_stdout_cb);
@@ -281,7 +264,7 @@ int main(int argc, char **argv)
     if (HYD_handle.print_all_exitcodes)
         HYDU_dump(stdout, "Exit codes: ");
     exit_status = 0;
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         proc_count = 0;
         for (exec = proxy->exec_list; exec; exec = exec->next)
             proc_count += exec->proc_count;

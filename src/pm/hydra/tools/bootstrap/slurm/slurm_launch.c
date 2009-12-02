@@ -53,9 +53,9 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **global_args, const char *proxy_id
 
     i = 0;
     num_nodes = 0;
-    FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
+    for (proxy = proxy_list; proxy; proxy = proxy->next) {
         tmp[i++] = HYDU_strdup(proxy->node.hostname);
-        if (proxy->next && proxy->next->active)
+        if (proxy->next)
             tmp[i++] = HYDU_strdup(",");
         num_nodes++;
 

@@ -91,15 +91,6 @@
 #endif
 #endif
 
-#define PROXY_IS_ACTIVE(proxy, total_procs) \
-    ((proxy)->segment_list->start_pid <= (total_procs))
-
-#define FORALL_ACTIVE_PROXIES(proxy, proxy_list)    \
-    for ((proxy) = (proxy_list); (proxy) && (proxy)->active; (proxy) = (proxy)->next)
-
-#define FORALL_PROXIES(proxy, proxy_list)    \
-    for ((proxy) = (proxy_list); (proxy); (proxy) = (proxy)->next)
-
 #if defined MANUAL_EXTERN_ENVIRON
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
@@ -196,7 +187,6 @@ struct HYD_proxy {
     char **exec_launch_info;
 
     int proxy_id;
-    int active;
 
     int pid;
     int in;                     /* stdin is only valid for proxy_id 0 */

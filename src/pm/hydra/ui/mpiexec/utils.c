@@ -161,7 +161,7 @@ static HYD_status process_mfile_token(char *token, int newline)
         procs = strtok(NULL, ":");
         num_procs = procs ? atoi(procs) : 1;
 
-        status = HYDU_add_to_proxy_list(hostname, num_procs, &HYD_handle.pg_list.proxy_list);
+        status = HYDU_add_to_node_list(hostname, num_procs, &HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
         HYD_handle.global_core_count += num_procs;
     }
@@ -195,7 +195,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
-        status = HYDU_add_to_proxy_list((char *) "localhost", 1, &HYD_handle.pg_list.proxy_list);
+        status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to add proxy\n");
         HYD_handle.global_core_count += 1;
     }

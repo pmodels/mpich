@@ -111,7 +111,7 @@ static HYD_status fn_get_appnum(int fd, char *args[])
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=appnum appnum=");
-    tmp[i++] = HYDU_int_to_str(process->node->pg->id);
+    tmp[i++] = HYDU_int_to_str(process->node->pg->pgid);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 

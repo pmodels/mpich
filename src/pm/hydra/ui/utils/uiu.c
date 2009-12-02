@@ -35,6 +35,7 @@ void HYD_uiu_init_params(void)
     HYD_handle.node_list = NULL;
     HYD_handle.global_core_count = 0;
 
+    HYD_handle.pg_list.pgid = 0;
     HYD_handle.pg_list.proxy_list = NULL;
     HYD_handle.pg_list.pg_process_count = 0;
     HYD_handle.pg_list.next = NULL;
@@ -171,14 +172,69 @@ static HYD_status add_exec_info_to_proxy(struct HYD_exec_info *exec_info,
 }
 
 
-HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
+HYD_status HYD_uiu_create_proxy_list(void)
 {
     int proxy_rem_procs, exec_rem_procs;
     struct HYD_proxy *proxy;
     struct HYD_exec_info *exec_info;
+    struct HYD_node *node;
+    int total_exec_procs, num_nodes, proxy_count, proxy_id, i, start_pid;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    total_exec_procs = 0;
+    for (exec_info = HYD_handle.exec_info_list; exec_info; exec_info = exec_info->next)
+        total_exec_procs += exec_info->process_count;
+
+    num_nodes = 0;
+    for (node = HYD_handle.node_list; node; node = node->next)
+        num_nodes++;
+
+    if (total_exec_procs >= HYD_handle.global_core_count)
+        proxy_count = num_nodes;
+    else {
+        proxy_count = 0;
+        for (node = HYD_handle.node_list; node; node = node->next) {
+            proxy_count++;
+            total_exec_procs -= node->core_count;
+            if (total_exec_procs <= 0)
+                break;
+        }
+    }
+
+    proxy_id = 0;
+    start_pid = 0;
+    for (i = 0, node = HYD_handle.node_list; i < proxy_count; i++, node = node->next) {
+        if (HYD_handle.pg_list.proxy_list == NULL) {
+            status = HYDU_alloc_proxy(&HYD_handle.pg_list.proxy_list);
+            HYDU_ERR_POP(status, "unable to allocate proxy\n");
+            proxy = HYD_handle.pg_list.proxy_list;
+
+            proxy->proxy_id = proxy_id;
+            proxy->start_pid = start_pid;
+
+            proxy->node.hostname = HYDU_strdup(node->hostname);
+            proxy->node.core_count = node->core_count;
+            proxy->node.next = NULL;
+        }
+        else {
+            status = HYDU_alloc_proxy(&proxy->next);
+            HYDU_ERR_POP(status, "unable to allocate proxy\n");
+
+            proxy = proxy->next;
+
+            proxy->proxy_id = proxy_id;
+            proxy->start_pid = start_pid;
+
+            proxy->node.hostname = HYDU_strdup(node->hostname);
+            proxy->node.core_count = node->core_count;
+            proxy->node.next = NULL;
+        }
+
+        start_pid += node->core_count;
+        proxy_id++;
+    }
 
     proxy = HYD_handle.pg_list.proxy_list;
     exec_info = HYD_handle.exec_info_list;

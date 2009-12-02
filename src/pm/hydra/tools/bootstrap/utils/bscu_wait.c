@@ -17,7 +17,7 @@ HYD_status HYDT_bscu_wait_for_completion(struct HYD_proxy *proxy_list)
     HYDU_FUNC_ENTER();
 
     not_completed = 0;
-    FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
+    for (proxy = proxy_list; proxy; proxy = proxy->next) {
         if (proxy->exit_status == NULL) {
             for (exec = proxy->exec_list; exec; exec = exec->next)
                 not_completed += exec->proc_count;
@@ -33,7 +33,7 @@ HYD_status HYDT_bscu_wait_for_completion(struct HYD_proxy *proxy_list)
         pid = waitpid(-1, &ret_status, WNOHANG);
         if (pid > 0) {
             /* Find the pid and mark it as complete. */
-            FORALL_ACTIVE_PROXIES(proxy, proxy_list) {
+            for (proxy = proxy_list; proxy; proxy = proxy->next) {
                 if (proxy->pid == pid)
                     not_completed--;
             }

@@ -50,7 +50,7 @@ static HYD_status create_pg(HYD_pmcd_pmi_pg_t ** pg, int pgid)
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*pg, HYD_pmcd_pmi_pg_t *, sizeof(HYD_pmcd_pmi_pg_t), status);
-    (*pg)->id = pgid;
+    (*pg)->pgid = pgid;
     (*pg)->num_procs = 0;
     (*pg)->num_subgroups = 0;
     (*pg)->conn_procs = NULL;
@@ -229,7 +229,7 @@ HYD_status HYD_pmcd_pmi_process_mapping(HYD_pmcd_pmi_process_t * process,
 
     seglist_head = NULL;
     node_id = -1;
-    FORALL_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         node_id++;
 
         HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
@@ -329,7 +329,7 @@ static struct HYD_pmcd_pmi_node *find_node(HYD_pmcd_pmi_pg_t * pg, int rank)
     srank = rank % HYD_handle.global_core_count;
 
     node_id = 0;
-    FORALL_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         if ((srank >= proxy->start_pid) &&
             (srank < (proxy->start_pid + proxy->node.core_count)))
             break;
@@ -345,7 +345,7 @@ static struct HYD_pmcd_pmi_node *find_node(HYD_pmcd_pmi_pg_t * pg, int rank)
     node = allocate_node(pg, node_id);
     HYDU_ERR_CHKANDJUMP(status, !node, HYD_INTERNAL_ERROR, "unable to allocate PMI node\n");
 
-    status = allocate_kvs(&node->kvs, 0);
+    status = allocate_kvs(&node->kvs, pg->pgid);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
 
     if (pg->node_list == NULL)
@@ -433,7 +433,7 @@ HYD_status HYD_pmcd_pmi_init(void)
 
     /* Find the number of processes in the PG */
     HYD_pg_list->num_subgroups = 0;
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         for (exec = proxy->exec_list; exec; exec = exec->next)
             HYD_pg_list->num_subgroups += exec->proc_count;
     }
