@@ -113,31 +113,6 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-static HYD_status stdout_cb(int fd, HYD_event_t events, void *userp)
-{
-    int closed;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_forward_stdio(private.stdout_fd, private.client_fd, &closed);
-    HYDU_ERR_POP(status, "stdin forwarding error\n");
-
-    if (closed) {
-        status = HYDT_dmx_deregister_fd(private.stdout_fd);
-        HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", private.stdout_fd);
-
-        close(private.stdout_fd);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 {
     int recvd, i, num_strings, str_len;

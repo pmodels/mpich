@@ -472,8 +472,6 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
 static HYD_status parse_exec_params(char **t_argv)
 {
     char **argv = t_argv;
-    int i;
-    struct HYD_proxy_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

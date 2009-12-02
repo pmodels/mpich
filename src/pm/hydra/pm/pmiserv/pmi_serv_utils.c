@@ -12,7 +12,6 @@
 HYD_status HYD_pmcd_pmi_send_exec_info(struct HYD_proxy *proxy)
 {
     enum HYD_pmcd_pmi_proxy_cmds cmd;
-    int i, list_len, arg_len;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

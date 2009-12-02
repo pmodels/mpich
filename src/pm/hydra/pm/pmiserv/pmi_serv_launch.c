@@ -283,8 +283,6 @@ HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
     struct HYD_node *node_list, *node, *tnode;
-    enum HYD_pmcd_pmi_proxy_cmds cmd;
-    int fd;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *tmp = NULL;
     HYD_status status = HYD_SUCCESS;
 
@@ -343,8 +341,8 @@ HYD_status HYD_pmci_launch_procs(void)
     status = fill_in_exec_launch_info();
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdin_cb,
-                                    HYD_handle.stdout_cb, HYD_handle.stderr_cb);
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb,
+                                    HYD_handle.stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:

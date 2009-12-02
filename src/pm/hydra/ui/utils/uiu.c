@@ -26,7 +26,6 @@ void HYD_uiu_init_params(void)
 
     HYD_handle.ranks_per_proc = -1;
 
-    HYD_handle.stdin_cb = NULL;
     HYD_handle.stdout_cb = NULL;
     HYD_handle.stderr_cb = NULL;
 

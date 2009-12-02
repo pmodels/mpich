@@ -12,8 +12,7 @@
 
 HYD_status HYDT_bscd_persist_launch_procs(
     char **args, struct HYD_node *node_list,
-    HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
-    HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
-    HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp));
+    HYD_status(*stdout_cb) (void *buf, int buflen),
+    HYD_status(*stderr_cb) (void *buf, int buflen));
 
 #endif /* PERSIST_CLIENT_H_INCLUDED */

@@ -35,9 +35,8 @@ struct HYDT_bsci_fns {
     /** \brief Launch processes */
     HYD_status(*launch_procs) (
         char **args, struct HYD_node *node_list,
-        HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
-        HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
-        HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp));
+        HYD_status(*stdout_cb) (void *buf, int buflen),
+        HYD_status(*stderr_cb) (void *buf, int buflen));
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*finalize) (void);
@@ -81,7 +80,6 @@ HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, in
  *
  * \param[in]   args            Arguments to be used for the launched processes
  * \param[in]   node_list       List of nodes to launch processes on
- * \param[in]   stdin_cb        Stdin callback function
  * \param[in]   stdout_cb       Stdout callback function
  * \param[in]   stderr_cb       Stderr callback function
  *
@@ -89,10 +87,6 @@ HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, in
  * uses this combined list as the executable and its arguments to
  * launch. Upper layers will need to account for this automatic
  * addition of the proxy ID.
- *
- * The callbacks passed to stdin/stdout/stderr will be passed with a
- * user-pointer pointing to the downstream stdin, stdout and stderr
- * fds.
  *
  * Bootstrap servers that perform sequential launches (one process at
  * a time), should set the proxy ID string in sequential
@@ -103,9 +97,8 @@ HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, in
  */
 HYD_status HYDT_bsci_launch_procs(
         char **args, struct HYD_node *node_list,
-        HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
-        HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
-        HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp));
+        HYD_status(*stdout_cb) (void *buf, int buflen),
+        HYD_status(*stderr_cb) (void *buf, int buflen));
 
 
 /**

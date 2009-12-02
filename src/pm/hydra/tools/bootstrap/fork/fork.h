@@ -10,9 +10,8 @@
 #include "hydra_base.h"
 
 HYD_status HYDT_bscd_fork_launch_procs(
-    char **args, struct HYD_node *node_list, void *userp,
-    HYD_status(*stdin_cb) (int fd, HYD_event_t events, void *userp),
-    HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
-    HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp));
+    char **args, struct HYD_node *node_list,
+    HYD_status(*stdout_cb) (void *buf, int buflen),
+    HYD_status(*stderr_cb) (void *buf, int buflen));
 
 #endif /* FORK_H_INCLUDED */

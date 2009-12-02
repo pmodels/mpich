@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_proxy_exec *exec;
     struct HYD_uiu_exec_info *exec_info;
-    int exit_status = 0, timeout, i, process_id, proc_count, num_cores;
+    int exit_status = 0, i, process_id, proc_count, num_cores;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -191,7 +191,6 @@ int main(int argc, char **argv)
     /* Add the stdout/stdin/stderr callback handlers */
     HYD_handle.stdout_cb = HYD_uii_mpx_stdout_cb;
     HYD_handle.stderr_cb = HYD_uii_mpx_stderr_cb;
-    HYD_handle.stdin_cb = HYD_uii_mpx_stdin_cb;
 
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
