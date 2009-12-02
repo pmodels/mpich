@@ -6,8 +6,6 @@
 
 #include "hydra_utils.h"
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;
@@ -119,10 +117,10 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
     sa.sin_family = AF_INET;
     sa.sin_port = htons(port);
 
-    /* Get the remote host's IP address */
-    pthread_mutex_lock(&mutex);
+    /* Get the remote host's IP address. Note that this is not
+     * thread-safe. Since we don't use threads right now, we don't
+     * worry about locking it. */
     ht = gethostbyname(host);
-    pthread_mutex_unlock(&mutex);
     if (ht == NULL)
         HYDU_ERR_SETANDJUMP1(status, HYD_INVALID_PARAM,
                              "unable to get host address (%s)\n", HYDU_strerror(errno));

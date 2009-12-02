@@ -80,12 +80,6 @@
 #define HYD_TMP_STRLEN  1024
 #define HYD_NUM_TMP_STRINGS 200
 
-#if !defined HAVE_PTHREAD_H
-#error "pthread.h needed"
-#else
-#include <pthread.h>
-#endif
-
 #define dprintf(...)
 
 #ifndef ATTRIBUTE

@@ -156,20 +156,9 @@ HYD_status HYDU_putenv_list(HYD_env_t * env_list, HYD_env_overwrite_t overwrite)
 HYD_status HYDU_comma_list_to_env_list(char *str, HYD_env_t ** env_list);
 
 /* launch */
-#if defined HAVE_THREAD_SUPPORT
-struct HYD_thread_context {
-    pthread_t thread;
-};
-#endif /* HAVE_THREAD_SUPPORT */
-
 HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
                                int *in, int *out, int *err, int *pid, int os_index);
 HYD_status HYDU_fork_and_exit(int os_index);
-#if defined HAVE_THREAD_SUPPORT
-HYD_status HYDU_create_thread(void *(*func) (void *), void *args,
-                              struct HYD_thread_context *ctxt);
-HYD_status HYDU_join_thread(struct HYD_thread_context ctxt);
-#endif /* HAVE_THREAD_SUPPORT */
 
 /* others */
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
