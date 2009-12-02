@@ -136,14 +136,13 @@ create_and_listen_portstr(HYD_status(*callback) (int fd, HYD_event_t events, voi
     goto fn_exit;
 }
 
-static HYD_status fill_in_proxy_args(HYD_launch_mode_t mode, char **proxy_args)
+static HYD_status fill_in_proxy_args(char *mode, char **proxy_args)
 {
     int i, arg;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
-    if (mode != HYD_LAUNCH_RUNTIME && mode != HYD_LAUNCH_BOOT &&
-        mode != HYD_LAUNCH_BOOT_FOREGROUND)
+    if (mode && !strcmp(mode, "shutdown"))
         goto fn_exit;
 
     arg = 0;
@@ -156,10 +155,10 @@ static HYD_status fill_in_proxy_args(HYD_launch_mode_t mode, char **proxy_args)
     HYDU_free_strlist(path_str);
 
     proxy_args[arg++] = HYDU_strdup("--launch-mode");
-    proxy_args[arg++] = HYDU_int_to_str(mode);
+    proxy_args[arg++] = HYDU_strdup(mode);
 
     proxy_args[arg++] = HYDU_strdup("--proxy-port");
-    if (mode == HYD_LAUNCH_RUNTIME)
+    if (!strcmp(mode, "runtime"))
         proxy_args[arg++] = HYDU_strdup(proxy_port_str);
     else
         proxy_args[arg++] = HYDU_int_to_str(HYD_handle.proxy_port);
@@ -360,10 +359,7 @@ HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
     enum HYD_pmcd_pmi_proxy_cmds cmd;
-    int fd, len, id;
-#if defined HAVE_THREAD_SUPPORT
-    struct HYD_thread_context *thread_context = NULL;
-#endif /* HAVE_THREAD_SUPPORT */
+    int fd;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
     HYD_status status = HYD_SUCCESS;
 
@@ -381,31 +377,15 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
 
-    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_RUNTIME) {
-        status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb,
-                                           &proxy_port_str);
-        HYDU_ERR_POP(status, "unable to create PMI port\n");
-        if (HYD_handle.user_global.debug)
-            HYDU_dump(stdout, "Got a proxy port string of %s\n", proxy_port_str);
-
-        status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
-        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-
-        status = fill_in_exec_launch_info();
-        HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
-
-        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.pg_list.proxy_list);
-        HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
-    }
-    else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT ||
-             HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) {
+    if (!strcmp(HYD_handle.user_global.launch_mode, "boot") ||
+        !strcmp(HYD_handle.user_global.launch_mode, "boot-debug")) {
         status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
-    else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+    else if (!strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
         for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
             status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &fd);
             if (status != HYD_SUCCESS) {
@@ -421,44 +401,21 @@ HYD_status HYD_pmci_launch_procs(void)
             close(fd);
         }
     }
-    else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        status = fill_in_exec_launch_info();
+    else {
+        status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb,
+                                           &proxy_port_str);
+        HYDU_ERR_POP(status, "unable to create PMI port\n");
+        if (HYD_handle.user_global.debug)
+            HYDU_dump(stdout, "Got a proxy port string of %s\n", proxy_port_str);
+
+        status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        len = 0;
-        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next)
-            len++;
+        status = fill_in_exec_launch_info();
+        HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-#if defined HAVE_THREAD_SUPPORT
-        HYDU_CALLOC(thread_context, struct HYD_thread_context *, len,
-                    sizeof(struct HYD_thread_context), status);
-        if (!thread_context)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "Unable to allocate memory for thread context\n");
-#endif /* HAVE_THREAD_SUPPORT */
-
-        id = 0;
-        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-#if defined HAVE_THREAD_SUPPORT
-            HYDU_create_thread(launch_helper, (void *) proxy, &thread_context[id]);
-#else
-            launch_helper(proxy);
-#endif /* HAVE_THREAD_SUPPORT */
-            id++;
-        }
-
-        id = 0;
-        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-#if defined HAVE_THREAD_SUPPORT
-            HYDU_join_thread(thread_context[id]);
-#endif /* HAVE_THREAD_SUPPORT */
-
-            status = HYDT_dmx_register_fd(1, &proxy->control_fd, HYD_STDOUT, proxy,
-                                          HYD_pmcd_pmi_serv_control_cb);
-            HYDU_ERR_POP(status, "unable to register control fd\n");
-
-            id++;
-        }
+        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.pg_list.proxy_list);
+        HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
 
   fn_exit:
@@ -466,10 +423,6 @@ HYD_status HYD_pmci_launch_procs(void)
         HYDU_FREE(pmi_port_str);
     if (proxy_port_str)
         HYDU_FREE(proxy_port_str);
-#if defined HAVE_THREAD_SUPPORT
-    if (thread_context)
-        HYDU_FREE(thread_context);
-#endif /* HAVE_THREAD_SUPPORT */
     HYDU_free_strlist(proxy_args);
     HYDU_FUNC_EXIT();
     return status;
@@ -487,11 +440,8 @@ HYD_status HYD_pmci_wait_for_completion(void)
 
     HYDU_FUNC_ENTER();
 
-    if ((HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT) ||
-        (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
-        status = HYD_SUCCESS;
-    }
-    else {
+    if (strcmp(HYD_handle.user_global.launch_mode, "boot") &&
+        strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
         while (1) {
             /* Wait for some event to occur */
             status =

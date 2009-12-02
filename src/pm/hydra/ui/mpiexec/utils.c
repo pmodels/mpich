@@ -483,24 +483,19 @@ static HYD_status boot_proxies_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.launch_mode != HYD_LAUNCH_UNSET,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.launch_mode,
                         HYD_INTERNAL_ERROR, "duplicate launch mode\n");
 
     if (**argv && IS_HELP(**argv)) {
         printf("\n");
-        printf("-boot-proxies: Launch persistent proxies\n");
-        printf("-boot-foreground-proxies: ");
+        printf("-boot: Launch persistent proxies\n");
+        printf("-boot-debug: ");
         printf("Launch persistent proxies in foreground\n");
-        printf("-shutdown-proxies: Shutdown persistent proxies\n\n");
+        printf("-shutdown: Shutdown persistent proxies\n\n");
         HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
     }
 
-    if (!strcmp(arg, "boot-proxies"))
-        HYD_handle.user_global.launch_mode = HYD_LAUNCH_BOOT;
-    else if (!strcmp(arg, "boot-foreground-proxies"))
-        HYD_handle.user_global.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
-    else if (!strcmp(arg, "shutdown-proxies"))
-        HYD_handle.user_global.launch_mode = HYD_LAUNCH_SHUTDOWN;
+    HYD_handle.user_global.launch_mode = HYDU_strdup(arg);
 
   fn_exit:
     return status;
@@ -527,32 +522,6 @@ static HYD_status proxy_port_fn(char *arg, char ***argv)
 
     HYD_handle.proxy_port = atoi(**argv);
     (*argv)++;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status use_persistent_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.launch_mode != HYD_LAUNCH_UNSET,
-                        HYD_INTERNAL_ERROR, "duplicate launch mode\n");
-
-    if (**argv && IS_HELP(**argv)) {
-        printf("\n");
-        printf("-use-persistent: Use persistent proxies\n");
-        printf("-use-runtime: Launch proxies at runtime\n\n");
-        HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
-    }
-
-    if (!strcmp(arg, "use-persistent"))
-        HYD_handle.user_global.launch_mode = HYD_LAUNCH_PERSISTENT;
-    else
-        HYD_handle.user_global.launch_mode = HYD_LAUNCH_RUNTIME;
 
   fn_exit:
     return status;
@@ -984,12 +953,10 @@ static struct match_table_fns match_table[] = {
     {"disable-x", enablex_fn},
 
     /* Proxy options */
-    {"boot-proxies", boot_proxies_fn},
-    {"boot-foreground-proxies", boot_proxies_fn},
-    {"shutdown-proxies", boot_proxies_fn},
+    {"boot", boot_proxies_fn},
+    {"boot-debug", boot_proxies_fn},
+    {"shutdown", boot_proxies_fn},
     {"proxy-port", proxy_port_fn},
-    {"use-persistent", use_persistent_fn},
-    {"use-runtime", use_persistent_fn},
 
     /* Communication sub-system options */
     {"css", css_fn},
@@ -1072,26 +1039,7 @@ static HYD_status verify_arguments(void)
     struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
-    /* Proxy launch or checkpoint restart */
-    if ((HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT) ||
-        (HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT_FOREGROUND) ||
-        (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN)) {
-
-        /* No environment */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.global_env.prop, HYD_INTERNAL_ERROR,
-                            "env setting not required for booting/shutting proxies\n");
-
-        /* No binding */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.binding, HYD_INTERNAL_ERROR,
-                            "binding not allowed while booting/shutting proxies\n");
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.bindlib, HYD_INTERNAL_ERROR,
-                            "binding not allowed while booting/shutting proxies\n");
-
-        /* No executables */
-        HYDU_ERR_CHKANDJUMP(status, HYD_uiu_exec_info_list, HYD_INTERNAL_ERROR,
-                            "execs should not be specified while booting/shutting proxies\n");
-    }
-    else {      /* Application launch */
+    if (HYD_handle.user_global.launch_mode == NULL) {      /* Application launch */
         /* On a checkpoint restart, we set the prefix as the application */
         if (HYD_handle.user_global.ckpoint_restart == 1) {
             status = HYD_uiu_get_current_exec_info(&exec_info);
@@ -1110,6 +1058,21 @@ static HYD_status verify_arguments(void)
             if (exec_info->exec[0] == NULL)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
         }
+    }
+    else { /* Proxy launch or checkpoint restart */
+        /* No environment */
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.global_env.prop, HYD_INTERNAL_ERROR,
+                            "env setting not required for booting/shutting proxies\n");
+
+        /* No binding */
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.binding, HYD_INTERNAL_ERROR,
+                            "binding not allowed while booting/shutting proxies\n");
+        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.bindlib, HYD_INTERNAL_ERROR,
+                            "binding not allowed while booting/shutting proxies\n");
+
+        /* No executables */
+        HYDU_ERR_CHKANDJUMP(status, HYD_uiu_exec_info_list, HYD_INTERNAL_ERROR,
+                            "execs should not be specified while booting/shutting proxies\n");
     }
 
   fn_exit:
@@ -1172,26 +1135,15 @@ static HYD_status set_default_values(void)
     if (HYD_handle.proxy_port == -1)
         HYD_handle.proxy_port = HYD_DEFAULT_PROXY_PORT;
 
-    tmp = getenv("HYDRA_LAUNCH_MODE");
-    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_UNSET && tmp) {
-        if (!strcmp(tmp, "persistent"))
-            HYD_handle.user_global.launch_mode = HYD_LAUNCH_PERSISTENT;
-        else if (!strcmp(tmp, "runtime"))
-            HYD_handle.user_global.launch_mode = HYD_LAUNCH_RUNTIME;
-    }
-    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_UNSET)
-        HYD_handle.user_global.launch_mode = HYD_LAUNCH_RUNTIME;
-
-    tmp = getenv("HYDRA_BOOT_FOREGROUND_PROXIES");
-    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_UNSET && tmp) {
-        if (atoi(tmp) == 1) {
-            HYD_handle.user_global.launch_mode = HYD_LAUNCH_BOOT_FOREGROUND;
-        }
-    }
-
     tmp = getenv("HYDRA_BOOTSTRAP_EXEC");
     if (HYD_handle.user_global.bootstrap_exec == NULL && tmp)
         HYD_handle.user_global.bootstrap_exec = HYDU_strdup(tmp);
+
+    tmp = getenv("HYDRA_LAUNCH_MODE");
+    if (HYD_handle.user_global.launch_mode == NULL && tmp)
+        HYD_handle.user_global.launch_mode = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.launch_mode == NULL)
+        HYD_handle.user_global.launch_mode = HYDU_strdup("runtime");
 
     /* Check environment for setting binding */
     tmp = getenv("HYDRA_BINDING");

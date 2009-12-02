@@ -24,3 +24,7 @@ endif
 if hydra_bss_slurm
 include tools/bootstrap/slurm/Makefile.mk
 endif
+
+if hydra_bss_persist
+include tools/bootstrap/persist/Makefile.mk
+endif

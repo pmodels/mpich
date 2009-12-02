@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
     /* Process launching only happens in the runtime case over here */
-    if (HYD_pmcd_pmip.user_global.launch_mode == HYD_LAUNCH_RUNTIME) {
+    if (!strcmp(HYD_pmcd_pmip.user_global.launch_mode, "runtime")) {
         HYD_pmcd_pmip.upstream.out = 1;
         HYD_pmcd_pmip.upstream.err = 2;
         HYD_pmcd_pmip.upstream.in = 0;
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
                                       HYD_pmcd_pmi_proxy_control_connect_cb);
         HYDU_ERR_POP(status, "unable to register fd\n");
 
-        if (HYD_pmcd_pmip.user_global.launch_mode == HYD_LAUNCH_BOOT) {
+        if (!strcmp(HYD_pmcd_pmip.user_global.launch_mode, "boot")) {
             /* Spawn a persistent daemon proxy and exit parent proxy */
             status = HYDU_fork_and_exit(-1);
             HYDU_ERR_POP(status, "Error spawning persistent proxy\n");

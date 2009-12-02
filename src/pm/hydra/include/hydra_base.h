@@ -105,18 +105,6 @@ typedef enum {
     HYD_INTERNAL_ERROR
 } HYD_status;
 
-/* Proxy type */
-typedef enum {
-    HYD_LAUNCH_UNSET,
-    HYD_LAUNCH_RUNTIME,
-
-    /* For persistent proxies */
-    HYD_LAUNCH_BOOT,
-    HYD_LAUNCH_BOOT_FOREGROUND,
-    HYD_LAUNCH_SHUTDOWN,
-    HYD_LAUNCH_PERSISTENT
-} HYD_launch_mode_t;
-
 #if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
 extern int putenv(char *string);
 #endif
@@ -223,7 +211,8 @@ struct HYD_user_global {
     int enablex;
     int debug;
     char *wdir;
-    HYD_launch_mode_t launch_mode;
+    char *launch_mode;
+
     struct HYD_env_global global_env;
 };
 

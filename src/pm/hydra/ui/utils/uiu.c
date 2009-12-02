@@ -79,6 +79,9 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.user_global.wdir)
         HYDU_FREE(HYD_handle.user_global.wdir);
 
+    if (HYD_handle.user_global.launch_mode)
+        HYDU_FREE(HYD_handle.user_global.launch_mode);
+
     if (HYD_handle.user_global.bootstrap_exec)
         HYDU_FREE(HYD_handle.user_global.bootstrap_exec);
 

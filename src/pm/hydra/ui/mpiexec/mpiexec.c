@@ -67,7 +67,6 @@ static void usage(void)
     printf("    -boot-foreground-proxies         boot foreground proxies (persistent mode)\n");
     printf("    -shutdown-proxies                shutdown persistent mode proxies\n");
     printf("    -proxy-port                      port for proxies to listen (boot proxies)\n");
-    printf("    -use-persistent                  use persistent mode proxies to launch\n");
 
     printf("\n");
     printf("  Communication sub-system options:\n");
@@ -215,7 +214,7 @@ int main(int argc, char **argv)
      * instead of assuming this. For example, it is possible to have a
      * PM implementation that launches separate "new" proxies on a
      * different port and kills the original proxies using them. */
-    if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN) {
+    if (strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
         /* Call finalize functions for lower layers to cleanup their resources */
         status = HYD_pmci_finalize();
         HYDU_ERR_POP(status, "process manager error on finalize\n");

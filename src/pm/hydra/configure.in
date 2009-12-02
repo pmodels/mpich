@@ -134,6 +134,7 @@ hydra_bss_ssh=false
 hydra_bss_rsh=false
 hydra_bss_fork=false
 hydra_bss_slurm=false
+hydra_bss_persist=false
 for hydra_bss_name in ${hydra_bss_names}; do
     if test -z "${hydra_default_bss}" ; then
        hydra_default_bss=$hydra_bss_name
@@ -157,6 +158,9 @@ HYD_status HYDT_bsci_${hydra_bss_name}_init(void);"
 	slurm)
 		hydra_bss_slurm=true
 		;;
+	persist)
+		hydra_bss_persist=true
+		;;
 	*)
 		;;
     esac
@@ -175,6 +179,7 @@ AM_CONDITIONAL([hydra_bss_ssh], [$hydra_bss_ssh])
 AM_CONDITIONAL([hydra_bss_rsh], [$hydra_bss_rsh])
 AM_CONDITIONAL([hydra_bss_fork], [$hydra_bss_fork])
 AM_CONDITIONAL([hydra_bss_slurm], [$hydra_bss_slurm])
+AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
 
 
 #########################################################################

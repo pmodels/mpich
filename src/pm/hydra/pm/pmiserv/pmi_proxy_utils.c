@@ -299,13 +299,12 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
     while (++argv && *argv) {
         if (!strcmp(*argv, "--launch-mode")) {
             ++argv;
-            HYD_pmcd_pmip.user_global.launch_mode =
-                (HYD_launch_mode_t) (unsigned int) atoi(*argv);
+            HYD_pmcd_pmip.user_global.launch_mode = HYDU_strdup(*argv);
             continue;
         }
         if (!strcmp(*argv, "--proxy-port")) {
             ++argv;
-            if (HYD_pmcd_pmip.user_global.launch_mode == HYD_LAUNCH_RUNTIME) {
+            if (!strcmp(HYD_pmcd_pmip.user_global.launch_mode, "runtime")) {
                 HYD_pmcd_pmip.upstream.server_name = HYDU_strdup(strtok(*argv, ":"));
                 HYD_pmcd_pmip.upstream.server_port = atoi(strtok(NULL, ":"));
             }
