@@ -202,7 +202,7 @@ static HYD_status fill_in_exec_launch_info(void)
 
     /* Create the arguments list for each proxy */
     process_id = 0;
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
         for (inherited_env_count = 0, env = HYD_handle.user_global.global_env.inherited; env;
              env = env->next, inherited_env_count++);
         for (user_env_count = 0, env = HYD_handle.user_global.global_env.user; env;
@@ -394,7 +394,7 @@ HYD_status HYD_pmci_launch_procs(void)
         status = fill_in_exec_launch_info();
         HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.proxy_list);
+        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_BOOT ||
@@ -402,11 +402,11 @@ HYD_status HYD_pmci_launch_procs(void)
         status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.proxy_list);
+        status = HYDT_bsci_launch_procs(proxy_args, "--proxy-id", HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     }
     else if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_SHUTDOWN) {
-        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
             status = HYDU_sock_connect(proxy->info.hostname, HYD_handle.proxy_port, &fd);
             if (status != HYD_SUCCESS) {
                 /* Don't abort. Try to shutdown as many proxies as possible */
@@ -426,7 +426,7 @@ HYD_status HYD_pmci_launch_procs(void)
         HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
         len = 0;
-        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list)
+        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list)
             len++;
 
 #if defined HAVE_THREAD_SUPPORT
@@ -438,7 +438,7 @@ HYD_status HYD_pmci_launch_procs(void)
 #endif /* HAVE_THREAD_SUPPORT */
 
         id = 0;
-        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
 #if defined HAVE_THREAD_SUPPORT
             HYDU_create_thread(launch_helper, (void *) proxy, &thread_context[id]);
 #else
@@ -448,7 +448,7 @@ HYD_status HYD_pmci_launch_procs(void)
         }
 
         id = 0;
-        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
 #if defined HAVE_THREAD_SUPPORT
             HYDU_join_thread(thread_context[id]);
 #endif /* HAVE_THREAD_SUPPORT */
@@ -511,7 +511,7 @@ HYD_status HYD_pmci_wait_for_completion(void)
             /* Check to see if there's any open read socket left; if
              * there are, we will just wait for more events. */
             sockets_open = 0;
-            FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+            FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
                 if (proxy->out != -1 || proxy->err != -1) {
                     sockets_open++;
                     break;
@@ -527,7 +527,7 @@ HYD_status HYD_pmci_wait_for_completion(void)
         do {
             /* Check if the exit status has already arrived */
             all_procs_exited = 1;
-            FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+            FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
                 if (proxy->exit_status == NULL) {
                     all_procs_exited = 0;
                     break;
@@ -544,7 +544,7 @@ HYD_status HYD_pmci_wait_for_completion(void)
         } while (1);
     }
 
-    status = HYDT_bsci_wait_for_completion(HYD_handle.proxy_list);
+    status = HYDT_bsci_wait_for_completion(HYD_handle.pg_list.proxy_list);
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
 
   fn_exit:

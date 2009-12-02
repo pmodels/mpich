@@ -38,11 +38,14 @@ struct HYD_handle {
     HYD_time start;
     HYD_time timeout;
 
-    struct HYD_proxy *proxy_list;
+    /* All of the available nodes */
+    struct HYD_node_info *node_list;
     int global_core_count;
 
+    /* Process groups */
+    struct HYD_pg pg_list;
+
     struct HYD_exec_info *exec_info_list;
-    int global_process_count;
 
     /* Random parameters used for internal code */
     int func_depth;

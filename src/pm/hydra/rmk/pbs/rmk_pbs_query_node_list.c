@@ -21,7 +21,7 @@ static HYD_status process_mfile_token(char *token, int newline)
         procs = strtok(NULL, ":");
         num_procs = procs ? atoi(procs) : 1;
 
-        status = HYDU_add_to_proxy_list(hostname, num_procs, &HYD_handle.proxy_list);
+        status = HYDU_add_to_proxy_list(hostname, num_procs, &HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
 
         total_num_procs += num_procs;

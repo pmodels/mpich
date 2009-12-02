@@ -32,10 +32,14 @@ void HYD_uiu_init_params(void)
 
     /* FIXME: Should the timers be initialized? */
 
-    HYD_handle.proxy_list = NULL;
+    HYD_handle.node_list = NULL;
     HYD_handle.global_core_count = 0;
+
+    HYD_handle.pg_list.proxy_list = NULL;
+    HYD_handle.pg_list.pg_process_count = 0;
+    HYD_handle.pg_list.next = NULL;
+
     HYD_handle.exec_info_list = NULL;
-    HYD_handle.global_process_count = 0;
 
     HYD_handle.func_depth = 0;
     HYD_handle.stdin_buf_offset = 0;
@@ -90,8 +94,8 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.exec_info_list)
         HYDU_free_exec_info_list(HYD_handle.exec_info_list);
 
-    if (HYD_handle.proxy_list)
-        HYDU_free_proxy_list(HYD_handle.proxy_list);
+    if (HYD_handle.pg_list.proxy_list)
+        HYDU_free_proxy_list(HYD_handle.pg_list.proxy_list);
 
     /* Re-initialize everything to default values */
     HYD_uiu_init_params();
@@ -176,7 +180,7 @@ HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
 
     HYDU_FUNC_ENTER();
 
-    proxy = HYD_handle.proxy_list;
+    proxy = HYD_handle.pg_list.proxy_list;
     exec_info = HYD_handle.exec_info_list;
     proxy_rem_procs = proxy->info.core_count;
     exec_rem_procs = exec_info ? exec_info->process_count : 0;
@@ -189,7 +193,7 @@ HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
             if (proxy_rem_procs == 0) {
                 proxy = proxy->next;
                 if (proxy == NULL)
-                    proxy = HYD_handle.proxy_list;
+                    proxy = HYD_handle.pg_list.proxy_list;
                 proxy_rem_procs = proxy->info.core_count;
             }
 
@@ -204,7 +208,7 @@ HYD_status HYD_uiu_merge_exec_info_to_proxy(void)
 
             proxy = proxy->next;
             if (proxy == NULL)
-                proxy = HYD_handle.proxy_list;
+                proxy = HYD_handle.pg_list.proxy_list;
             proxy_rem_procs = proxy->info.core_count;
         }
     }
@@ -288,7 +292,7 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "    Proxy information:\n");
     HYDU_dump_noprefix(stdout, "    *********************\n");
     i = 1;
-    for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         HYDU_dump_noprefix(stdout, "      Proxy ID: %2d\n", i++);
         HYDU_dump_noprefix(stdout, "      -----------------\n");
         HYDU_dump_noprefix(stdout, "        Proxy name: %s\n", proxy->info.hostname);

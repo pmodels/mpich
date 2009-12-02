@@ -161,7 +161,7 @@ static HYD_status process_mfile_token(char *token, int newline)
         procs = strtok(NULL, ":");
         num_procs = procs ? atoi(procs) : 1;
 
-        status = HYDU_add_to_proxy_list(hostname, num_procs, &HYD_handle.proxy_list);
+        status = HYDU_add_to_proxy_list(hostname, num_procs, &HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
         HYD_handle.global_core_count += num_procs;
     }
@@ -181,7 +181,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.proxy_list, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.pg_list.proxy_list, HYD_INTERNAL_ERROR,
                         "duplicate host file setting\n");
 
     if (**argv && IS_HELP(**argv)) {
@@ -195,7 +195,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
-        status = HYDU_add_to_proxy_list((char *) "localhost", 1, &HYD_handle.proxy_list);
+        status = HYDU_add_to_proxy_list((char *) "localhost", 1, &HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "unable to add proxy\n");
         HYD_handle.global_core_count += 1;
     }
@@ -387,7 +387,7 @@ static HYD_status np_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate process count\n");
 
     exec_info->process_count = atoi(**argv);
-    HYD_handle.global_process_count += exec_info->process_count;
+    HYD_handle.pg_list.pg_process_count += exec_info->process_count;
     (*argv)++;
 
   fn_exit:
@@ -1160,7 +1160,7 @@ static HYD_status set_default_values(void)
         HYD_handle.rmk = HYDU_strdup(HYDRA_DEFAULT_RMK);
 
     tmp = getenv("HYDRA_HOST_FILE");
-    if (HYD_handle.proxy_list == NULL && tmp) {
+    if (HYD_handle.pg_list.proxy_list == NULL && tmp) {
         status = HYDU_parse_hostfile(tmp, process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }

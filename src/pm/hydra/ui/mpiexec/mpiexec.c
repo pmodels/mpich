@@ -128,21 +128,22 @@ int main(int argc, char **argv)
     status = HYD_rmki_init(HYD_handle.rmk);
     HYDU_ERR_POP(status, "unable to initialize RMK\n");
 
-    if (HYD_handle.proxy_list == NULL) {
+    if (HYD_handle.pg_list.proxy_list == NULL) {
         /* Proxy list is not created yet. The user might not have
          * provided the host file. Query the RMK. We pass a zero core
          * count, so the RMK will give us all the nodes it already has
          * and won't try to allocate any more. */
         num_cores = 0;
-        status = HYD_rmki_query_node_list(&num_cores, &HYD_handle.proxy_list);
+        status = HYD_rmki_query_node_list(&num_cores, &HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         /* We don't have an allocation capability yet, but when we do,
          * we should try it here. */
 
-        if (HYD_handle.proxy_list == NULL) {
+        if (HYD_handle.pg_list.proxy_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            status = HYDU_add_to_proxy_list((char *) "localhost", 1, &HYD_handle.proxy_list);
+            status = HYDU_add_to_proxy_list((char *) "localhost", 1,
+                                            &HYD_handle.pg_list.proxy_list);
             HYDU_ERR_POP(status, "unable to initialize proxy\n");
             HYD_handle.global_core_count += 1;
         }
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
 
             /* If we didn't get anything from the user, take whatever
              * the RMK gave */
-            HYD_handle.global_process_count += exec_info->process_count;
+            HYD_handle.pg_list.pg_process_count += exec_info->process_count;
         }
     }
 
@@ -173,13 +174,13 @@ int main(int argc, char **argv)
      * proxys are active. */
     if (HYD_handle.user_global.launch_mode == HYD_LAUNCH_RUNTIME ||
         HYD_handle.user_global.launch_mode == HYD_LAUNCH_PERSISTENT) {
-        for (proxy = HYD_handle.proxy_list;
-             proxy && (proxy->start_pid <= HYD_handle.global_process_count);
+        for (proxy = HYD_handle.pg_list.proxy_list;
+             proxy && (proxy->start_pid <= HYD_handle.pg_list.pg_process_count);
              proxy = proxy->next)
             proxy->active = 1;
     }
     else {
-        for (proxy = HYD_handle.proxy_list; proxy; proxy = proxy->next)
+        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next)
             proxy->active = 1;
     }
 
@@ -199,7 +200,7 @@ int main(int argc, char **argv)
         HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
 
     if (HYD_handle.print_rank_map) {
-        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+        FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
             HYDU_dump_noprefix(stdout, "(%s:", proxy->info.hostname);
 
             process_id = 0;
@@ -218,7 +219,7 @@ int main(int argc, char **argv)
         }
     }
 
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list)
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list)
     HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
 
     /* Launch the processes */
@@ -252,7 +253,7 @@ int main(int argc, char **argv)
     HYD_handle.stdin_buf_count = 0;
     HYD_handle.stdin_buf_offset = 0;
 
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
         if (proxy->out != -1) {
             status = HYDT_dmx_register_fd(1, &proxy->out, HYD_STDOUT, NULL,
                                           HYD_uii_mpx_stdout_cb);
@@ -280,7 +281,7 @@ int main(int argc, char **argv)
     if (HYD_handle.print_all_exitcodes)
         HYDU_dump(stdout, "Exit codes: ");
     exit_status = 0;
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
         proc_count = 0;
         for (exec = proxy->exec_list; exec; exec = exec->next)
             proc_count += exec->proc_count;

@@ -22,7 +22,7 @@ static HYD_status close_fd(int fd)
     close(fd);
 
     /* Find the FD in the HYD_handle and remove it. */
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
         if (proxy->out == fd) {
             proxy->out = -1;
             goto fn_exit;

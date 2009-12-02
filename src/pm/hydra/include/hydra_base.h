@@ -172,6 +172,15 @@ struct HYD_proxy_exec {
     struct HYD_proxy_exec *next;
 };
 
+/* Process group */
+struct HYD_pg {
+    int pgid;
+    struct HYD_proxy *proxy_list;
+    int pg_process_count;
+
+    struct HYD_pg *next;
+};
+
 /* Information about the node itself */
 struct HYD_node_info {
     char *hostname;

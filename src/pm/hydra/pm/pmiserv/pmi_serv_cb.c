@@ -220,7 +220,7 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     HYDU_ERR_POP(status, "sock read returned error\n");
 
     /* Find the proxy */
-    FORALL_PROXIES(proxy, HYD_handle.proxy_list) {
+    FORALL_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
         if (proxy->proxy_id == proxy_id)
             break;
     }
@@ -287,7 +287,7 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
         cmd = KILL_JOB;
         status = HYDU_sock_trywrite(proxy->control_fd, &cmd,
                                     sizeof(enum HYD_pmcd_pmi_proxy_cmds));
@@ -315,7 +315,7 @@ HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send the checkpoint command */
-    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
+    FORALL_ACTIVE_PROXIES(proxy, HYD_handle.pg_list.proxy_list) {
         cmd = CKPOINT;
         status = HYDU_sock_write(proxy->control_fd, &cmd,
                                  sizeof(enum HYD_pmcd_pmi_proxy_cmds));
