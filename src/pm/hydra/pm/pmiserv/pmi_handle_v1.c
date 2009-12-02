@@ -13,14 +13,21 @@
 static HYD_status fn_initack(int fd, char *args[])
 {
     int id, rank, i;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *val;
     HYD_pmcd_pmi_pg_t *run;
+    struct HYD_pmcd_token *tokens;
+    int token_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    strtok(args[0], "=");
-    id = atoi(strtok(NULL, "="));
+    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    val = HYD_pmcd_find_token_keyval(tokens, token_count, "pmiid");
+    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find pmiid token\n");
+    id = atoi(val);
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
@@ -213,16 +220,26 @@ static HYD_status fn_put(int fd, char *args[])
     HYD_pmcd_pmi_process_t *process;
     char *kvsname, *key, *val;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    struct HYD_pmcd_token *tokens;
+    int token_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    strtok(args[0], "=");
-    kvsname = strtok(NULL, "=");
-    strtok(args[1], "=");
-    key = strtok(NULL, "=");
-    strtok(args[2], "=");
-    val = strtok(NULL, "=");
+    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    kvsname = HYD_pmcd_find_token_keyval(tokens, token_count, "kvsname");
+    HYDU_ERR_CHKANDJUMP(status, kvsname == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: kvsname\n");
+
+    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: key\n");
+
+    val = HYD_pmcd_find_token_keyval(tokens, token_count, "value");
+    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: val\n");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -274,14 +291,22 @@ static HYD_status fn_get(int fd, char *args[])
     HYD_pmcd_pmi_kvs_pair_t *run;
     char *kvsname, *key, *node_list;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    struct HYD_pmcd_token *tokens;
+    int token_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    strtok(args[0], "=");
-    kvsname = strtok(NULL, "=");
-    strtok(args[1], "=");
-    key = strtok(NULL, "=");
+    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    kvsname = HYD_pmcd_find_token_keyval(tokens, token_count, "kvsname");
+    HYDU_ERR_CHKANDJUMP(status, kvsname == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: kvsname\n");
+
+    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: key\n");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);

@@ -24,6 +24,11 @@ extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2;
 #define MAXNAMELEN  256 /* max length of various names */
 #define MAXKVSNAME  MAXNAMELEN  /* max length of a kvsname */
 
+struct HYD_pmcd_token {
+    char *key;
+    char *val;
+};
+
 typedef struct HYD_pmcd_pmi_kvs_pair {
     char key[MAXKEYLEN];
     char val[MAXVALLEN];
@@ -80,6 +85,9 @@ enum HYD_pmcd_pmi_process_mapping_type {
     HYD_pmcd_pmi_vector
 };
 
+HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
+char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
+HYD_status HYD_pmcd_create_pg(HYD_pmcd_pmi_pg_t ** pg, int pgid);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(HYD_pmcd_pmi_pg_t * pg, int fd, int rank);
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int *rank);
 HYD_pmcd_pmi_process_t *HYD_pmcd_pmi_find_process(int fd);

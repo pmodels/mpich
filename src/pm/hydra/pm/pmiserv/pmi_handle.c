@@ -24,6 +24,42 @@ struct block {
     struct block *next;
 };
 
+HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
+{
+    int i;
+    char *arg;
+    HYD_status status = HYD_SUCCESS;
+
+    for (i = 0; args[i]; i++);
+    *count = i;
+    HYDU_MALLOC(*tokens, struct HYD_pmcd_token *, *count * sizeof(struct HYD_pmcd_token),
+                status);
+
+    for (i = 0; args[i]; i++) {
+        arg = HYDU_strdup(args[i]);
+        (*tokens)[i].key = strtok(arg, "=");
+        (*tokens)[i].val = strtok(NULL, "=");
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key)
+{
+    int i;
+
+    for (i = 0; i < count; i++) {
+        if (!strcmp(tokens[i].key, key))
+            return tokens[i].val;
+    }
+
+    return NULL;
+}
+
 static HYD_status allocate_kvs(HYD_pmcd_pmi_kvs_t ** kvs, int pgid)
 {
     HYD_status status = HYD_SUCCESS;
