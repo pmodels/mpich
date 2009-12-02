@@ -4333,7 +4333,7 @@ sub TargetDependenciesDynamic {
 	    $notDirs .= "$key ";
 	}
     }
-    &RecursiveOp( "dependencies", "", "", $otherDirs, $notDirs );
+    &RecursiveOp( "dependencies", "", 1, $otherDirs, $notDirs );
 
     # First, generate the targets to maintain the individual files.
     # This makes it easy to update the dependency contents without
