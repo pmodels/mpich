@@ -9,26 +9,21 @@ external_subdirs =
 external_ldflags = -L$(top_builddir)/@mpl_srcdir@ -static
 external_libs = -lmpl
 
+bin_PROGRAMS =
+
 ACLOCAL_AMFLAGS = -I mpl/confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/@mpl_srcdir@/include \
 	-I$(top_builddir)/@mpl_srcdir@/include
 
-noinst_LIBRARIES = libhydra.a libpm.a libui.a
-bin_PROGRAMS =
+noinst_LIBRARIES = libhydra.a
 libhydra_a_SOURCES =
-libpm_a_SOURCES =
-libui_a_SOURCES =
 
 # The below directories contribute to libhydra.a
 include utils/Makefile.mk
 include rmk/Makefile.mk
 include css/Makefile.mk
 include tools/Makefile.mk
-
-# Build the PM
 include pm/Makefile.mk
-
-# Build the UI
 include ui/Makefile.mk
 
 # The external subdirs need to get built first, as we might depend on
@@ -41,7 +36,19 @@ mpich2-build-install: install
 mpich2-build-uninstall: uninstall
 
 # A special alternate installation target when using multiple process managers
-install-alt: install-alt-ui install-alt-pm
+install-alt: $(bin_PROGRAMS)
+	@if [ ! -d $(DESTDIR)${bindir} ] ; then \
+	    echo "$(mkdir_p) $(DESTDIR)${bindir} " ;\
+	    $(mkdir_p) $(DESTDIR)${bindir} ;\
+	fi
+	@for foo in $? ; do \
+		if test "$$foo" = "mpiexec" ; then \
+			$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) mpiexec \
+				$(DESTDIR)${bindir}/mpiexec.hydra ; \
+		else \
+			$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$foo $(DESTDIR)${bindir}/ ; \
+		fi ; \
+	done
 
 htmldoc:
 	if test "@DOXYGEN@" != "" ; then @DOXYGEN@ hydra-doxygen.cfg ; fi

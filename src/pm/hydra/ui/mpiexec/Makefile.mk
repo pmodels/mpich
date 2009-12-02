@@ -12,10 +12,3 @@ mpiexec_SOURCES = $(top_srcdir)/ui/mpiexec/callback.c \
 mpiexec_LDADD = libui.a libpm.a libhydra.a $(external_libs)
 mpiexec_CFLAGS = -I$(top_srcdir)/ui/utils
 mpiexec_LDFLAGS = $(external_ldflags)
-
-install-alt-ui: mpiexec
-	@if [ ! -d $(DESTDIR)${bindir} ] ; then \
-	    echo "$(mkdir_p) $(DESTDIR)${bindir} " ;\
-	    $(mkdir_p) $(DESTDIR)${bindir} ;\
-	fi
-	$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) mpiexec $(DESTDIR)${bindir}/mpiexec.hydra
