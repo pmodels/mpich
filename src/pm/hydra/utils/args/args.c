@@ -374,3 +374,34 @@ char *HYDU_find_full_path(const char *execname)
   fn_fail:
     goto fn_exit;
 }
+
+HYD_status HYDU_send_strlist(int fd, char **strlist)
+{
+    int i, list_len, len;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Check how many arguments we have */
+    list_len = HYDU_strlist_lastidx(strlist);
+    status = HYDU_sock_write(fd, &list_len, sizeof(int));
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+    /* Convert the string list to parseable data and send */
+    for (i = 0; strlist[i]; i++) {
+        len = strlen(strlist[i]) + 1;
+
+        status = HYDU_sock_write(fd, &len, sizeof(int));
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+        status = HYDU_sock_write(fd, strlist[i], len);
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 #include "bsci.h"
-#include "persist.h"
+#include "persist_client.h"
 
 HYD_status HYDT_bsci_persist_init(void)
 {

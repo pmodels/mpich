@@ -139,6 +139,7 @@ char *HYDU_getcwd(void);
 HYD_status HYDU_parse_hostfile(char *hostfile,
                                HYD_status(*process_token) (char *token, int newline));
 char *HYDU_find_full_path(const char *execname);
+HYD_status HYDU_send_strlist(int fd, char **strlist);
 
 /* debug */
 HYD_status HYDU_dbg_init(const char *str);

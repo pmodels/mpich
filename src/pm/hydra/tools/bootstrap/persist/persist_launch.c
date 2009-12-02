@@ -7,9 +7,9 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
-#include "persist.h"
+#include "persist_client.h"
 
-static int fd_stdin, fd_stdout, fd_stderr;
+static int *client_fds;
 
 HYD_status HYDT_bscd_persist_launch_procs(
     char **args, struct HYD_node *node_list,
@@ -17,9 +17,23 @@ HYD_status HYDT_bscd_persist_launch_procs(
     HYD_status(*stdout_cb) (int fd, HYD_event_t events, void *userp),
     HYD_status(*stderr_cb) (int fd, HYD_event_t events, void *userp))
 {
+    struct HYD_node *node;
+    int num_nodes, fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    num_nodes = 0;
+    for (node = node_list; node; node = node->next)
+        num_nodes++;
+
+    for (node = node_list; node; node = node->next) {
+        /* connect to hydserv on each node */
+        status = HYDU_sock_connect(node->hostname, PERSIST_DEFAULT_PORT, &fd);
+        HYDU_ERR_POP(status, "unable to connect to the main server\n");
+
+        /* send information about the executable */
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

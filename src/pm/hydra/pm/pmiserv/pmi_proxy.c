@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     status = HYD_pmcd_pmi_proxy_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
-    /* Connect back upstream and the socket to a demux engine */
+    /* Connect back upstream and add the socket to the demux engine */
     status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
                                HYD_pmcd_pmip.upstream.server_port,
                                &HYD_pmcd_pmip.upstream.control);

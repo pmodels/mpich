@@ -6,7 +6,7 @@
 
 bin_PROGRAMS += hydserv
 
-hydserv_SOURCES = $(top_srcdir)/tools/bootstrap/persist/hydserv.c
+hydserv_SOURCES = $(top_srcdir)/tools/bootstrap/persist/persist_server.c
 hydserv_LDADD = libhydra.a $(external_libs)
 hydserv_LDFLAGS = $(external_ldflags)
 
