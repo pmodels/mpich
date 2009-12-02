@@ -128,12 +128,12 @@ int main(int argc, char **argv)
     status = HYD_rmki_init(HYD_handle.rmk);
     HYDU_ERR_POP(status, "unable to initialize RMK\n");
 
+    num_cores = 0;
     if (HYD_handle.node_list == NULL) {
         /* Proxy list is not created yet. The user might not have
          * provided the host file. Query the RMK. We pass a zero core
          * count, so the RMK will give us all the nodes it already has
          * and won't try to allocate any more. */
-        num_cores = 0;
         status = HYD_rmki_query_node_list(&num_cores, &HYD_handle.pg_list.proxy_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
