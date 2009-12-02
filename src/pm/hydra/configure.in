@@ -173,51 +173,6 @@ AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
 
 
 #########################################################################
-# Check what communication sub-system we should use
-#########################################################################
-AC_ARG_WITH(hydra-css, [  --with-hydra-css           Communication Sub-system],
-		    [ hydra_css=$withval ],
-		    [ hydra_css="none" ])
-AC_MSG_CHECKING(communication subsystem)
-AC_MSG_RESULT($hydra_css)
-hydra_css_names="`echo $hydra_css | sed -e 's/:/ /g' -e 's/,/ /g'`"
-AC_DEFINE_UNQUOTED(HYDRA_CSS_NAMES,"$hydra_css_names",[Definition of enabled communication systems])
-AM_SUBST_NOTMAKE(hydra_css_names)
-AC_SUBST(hydra_css_names)
-
-hydra_css_none=false
-for hydra_css_name in ${hydra_css_names}; do
-    if test -z "${hydra_default_css}" ; then
-       hydra_default_css=$hydra_css_name
-    fi
-    hydra_css_makefiles="$hydra_css_makefiles css/${hydra_css_name}/Makefile"
-    hydra_css_init_decl="${hydra_css_init_decl}
-HYD_status HYD_cssi_${hydra_css_name}_init(void);"
-    hydra_css_name_array="${hydra_css_name_array} \"${hydra_css_name}\", "
-    hydra_css_init_array="${hydra_css_init_array} HYD_cssi_${hydra_css_name}_init, "
-
-    case "$hydra_css_name" in
-    	dummy)
-		hydra_css_none=true
-		;;		
-	*)
-		;;
-    esac
-
-done
-hydra_css_name_array="${hydra_css_name_array} NULL"
-hydra_css_init_array="${hydra_css_init_array} NULL"
-AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CSS,"$hydra_default_css",[Default communication sub-system])
-AM_SUBST_NOTMAKE(hydra_css_init_decl)
-AM_SUBST_NOTMAKE(hydra_css_name_array)
-AM_SUBST_NOTMAKE(hydra_css_init_array)
-AC_SUBST(hydra_css_init_decl)
-AC_SUBST(hydra_css_name_array)
-AC_SUBST(hydra_css_init_array)
-AM_CONDITIONAL([hydra_css_none], [$hydra_css_none])
-
-
-#########################################################################
 # Check what resource management kernel we should use
 #########################################################################
 AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk        Resource Management Kernel],
@@ -288,21 +243,6 @@ AC_MSG_CHECKING(user interface)
 AC_MSG_RESULT($hydra_ui)
 AC_SUBST(hydra_ui)
 AM_CONDITIONAL([hydra_ui_mpiexec], [test $hydra_ui = "mpiexec"])
-
-
-#########################################################################
-# Check what communication sub-system we should use
-#########################################################################
-AC_ARG_WITH(hydra-css, [  --with-hydra-css               Communication Sub-system],
-		[ hydra_css=$withval ],
-		[ hydra_css= ])
-AC_MSG_CHECKING(communication subsystem)
-if test "x$hydra_css" != "x" ; then
-   AC_MSG_RESULT($hydra_css)
-else
-   AC_MSG_RESULT(none)
-fi
-AC_SUBST(hydra_css)
 
 
 #########################################################################
@@ -509,7 +449,5 @@ AC_OUTPUT(Makefile
 	tools/bootstrap/include/bsci.h
 	rmk/src/rmki_init.c
 	rmk/include/rmki.h
-	css/src/cssi_init.c
-	css/include/cssi.h
 	hydra-doxygen.cfg
 )

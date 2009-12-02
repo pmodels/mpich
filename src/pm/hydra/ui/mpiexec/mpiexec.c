@@ -62,10 +62,6 @@ static void usage(void)
     printf("    -enable-x/-disable-x             enable or disable X forwarding\n");
 
     printf("\n");
-    printf("  Communication sub-system options:\n");
-    printf("    -css                             communication sub-system to use\n");
-
-    printf("\n");
     printf("  Resource management kernel options:\n");
     printf("    -rmk                             resource management kernel to use\n");
 

@@ -392,19 +392,6 @@ static HYD_status enablex_fn(char *arg, char ***argv)
     return HYDU_set_int(arg, argv, &HYD_handle.user_global.enablex, !strcmp(arg, "enable-x"));
 }
 
-static void css_help_fn(void)
-{
-    printf("\n");
-    printf("-css: Communication sub-system to use\n\n");
-    printf("Notes:\n");
-    printf("  * Use the -info option to see what all are compiled in\n\n");
-}
-
-static HYD_status css_fn(char *arg, char ***argv)
-{
-    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.css);
-}
-
 static void rmk_help_fn(void)
 {
     printf("\n");
@@ -615,9 +602,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"enable-x", enablex_fn, enablex_help_fn},
     {"disable-x", enablex_fn, enablex_help_fn},
 
-    /* Communication sub-system options */
-    {"css", css_fn, css_help_fn},
-
     /* Resource management kernel options */
     {"rmk", rmk_fn, rmk_help_fn},
 
@@ -673,12 +657,6 @@ static HYD_status set_default_values(void)
         HYD_handle.user_global.bootstrap = HYDU_strdup(tmp);
     if (HYD_handle.user_global.bootstrap == NULL)
         HYD_handle.user_global.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
-
-    tmp = getenv("HYDRA_CSS");
-    if (HYD_handle.css == NULL && tmp)
-        HYD_handle.css = HYDU_strdup(tmp);
-    if (HYD_handle.css == NULL)
-        HYD_handle.css = HYDU_strdup(HYDRA_DEFAULT_CSS);
 
     tmp = getenv("HYDRA_RMK");
     if (HYD_handle.rmk == NULL && tmp)

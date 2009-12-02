@@ -21,7 +21,6 @@ libhydra_a_SOURCES =
 # The below directories contribute to libhydra.a
 include utils/Makefile.mk
 include rmk/Makefile.mk
-include css/Makefile.mk
 include tools/Makefile.mk
 include pm/Makefile.mk
 include ui/Makefile.mk

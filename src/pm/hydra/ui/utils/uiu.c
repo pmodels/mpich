@@ -16,7 +16,6 @@ void HYD_uiu_init_params(void)
 
     HYD_handle.base_path = NULL;
 
-    HYD_handle.css = NULL;
     HYD_handle.rmk = NULL;
 
     HYD_handle.ckpoint_int = -1;
@@ -49,9 +48,6 @@ void HYD_uiu_free_params(void)
 {
     if (HYD_handle.base_path)
         HYDU_FREE(HYD_handle.base_path);
-
-    if (HYD_handle.css)
-        HYDU_FREE(HYD_handle.css);
 
     if (HYD_handle.rmk)
         HYDU_FREE(HYD_handle.rmk);
