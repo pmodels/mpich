@@ -17,22 +17,22 @@ HYD_status HYDU_merge_proxy_segment(char *hostname, int start_pid, int core_coun
     if (*proxy_list == NULL) {
         status = HYDU_alloc_proxy(proxy_list);
         HYDU_ERR_POP(status, "Unable to alloc proxy\n");
-        (*proxy_list)->hostname = HYDU_strdup(hostname);
+        (*proxy_list)->info.hostname = HYDU_strdup(hostname);
+        (*proxy_list)->info.core_count = core_count;
         (*proxy_list)->start_pid = start_pid;
-        (*proxy_list)->proxy_core_count = core_count;
     }
     else {
         /* Run to the last proxy */
         for (proxy = *proxy_list; proxy->next; proxy = proxy->next);
 
-        if (strcmp(proxy->hostname, hostname)) {        /* hostname doesn't match */
+        if (strcmp(proxy->info.hostname, hostname)) {        /* hostname doesn't match */
             status = HYDU_alloc_proxy(&proxy->next);
             HYDU_ERR_POP(status, "unable to alloc proxy\n");
-            proxy->next->hostname = HYDU_strdup(hostname);
+            proxy->next->info.hostname = HYDU_strdup(hostname);
             proxy->next->start_pid = start_pid;
             proxy = proxy->next;
         }
-        proxy->proxy_core_count += core_count;
+        proxy->info.core_count += core_count;
     }
 
   fn_exit:
@@ -60,27 +60,27 @@ HYD_status HYDU_add_to_proxy_list(char *hostname, int num_procs,
         status = HYDU_alloc_proxy(proxy_list);
         HYDU_ERR_POP(status, "unable to allocate proxy\n");
 
-        (*proxy_list)->hostname = HYDU_strdup(hostname);
+        (*proxy_list)->info.hostname = HYDU_strdup(hostname);
+        (*proxy_list)->info.core_count = num_procs;
 
         (*proxy_list)->start_pid = 0;
-        (*proxy_list)->proxy_core_count = num_procs;
     }
     else {
         for (proxy = *proxy_list; proxy->next; proxy = proxy->next);
 
-        if (strcmp(proxy->hostname, hostname)) {
+        if (strcmp(proxy->info.hostname, hostname)) {
             /* If the hostname does not match, create a new proxy */
             status = HYDU_alloc_proxy(&proxy->next);
             HYDU_ERR_POP(status, "unable to allocate proxy\n");
 
             proxy = proxy->next;
 
-            proxy->hostname = HYDU_strdup(hostname);
+            proxy->info.hostname = HYDU_strdup(hostname);
 
             proxy->start_pid = pid;
         }
 
-        proxy->proxy_core_count += num_procs;
+        proxy->info.core_count += num_procs;
     }
     pid += num_procs;
 

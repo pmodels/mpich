@@ -234,7 +234,7 @@ HYD_status HYD_pmcd_pmi_process_mapping(HYD_pmcd_pmi_process_t * process,
 
         HYDU_MALLOC(seg, struct segment *, sizeof(struct segment), status);
         seg->start_pid = proxy->start_pid;
-        seg->proc_count = proxy->proxy_core_count;
+        seg->proc_count = proxy->info.core_count;
         seg->node_id = node_id;
         seg->next = NULL;
 
@@ -331,7 +331,7 @@ static struct HYD_pmcd_pmi_node *find_node(HYD_pmcd_pmi_pg_t * pg, int rank)
     node_id = 0;
     FORALL_PROXIES(proxy, HYD_handle.proxy_list) {
         if ((srank >= proxy->start_pid) &&
-            (srank < (proxy->start_pid + proxy->proxy_core_count)))
+            (srank < (proxy->start_pid + proxy->info.core_count)))
             break;
         node_id++;
     }

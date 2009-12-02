@@ -172,9 +172,18 @@ struct HYD_proxy_exec {
     struct HYD_proxy_exec *next;
 };
 
+/* Information about the node itself */
+struct HYD_node_info {
+    char *hostname;
+    int core_count;
+
+    struct HYD_node_info *next;
+};
+
 /* Proxy information */
 struct HYD_proxy {
-    char *hostname;
+    struct HYD_node_info info;
+
     char **exec_launch_info;
 
     int proxy_id;
@@ -186,7 +195,6 @@ struct HYD_proxy {
     int err;
 
     int start_pid;
-    int proxy_core_count;
     int proxy_process_count;
 
     struct HYD_proxy_exec *exec_list;

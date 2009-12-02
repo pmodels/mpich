@@ -67,7 +67,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **global_args, const char *proxy_id_s
         else    /* default mode is disable X */
             client_arg[arg++] = HYDU_strdup("-x");
 
-        client_arg[arg++] = HYDU_strdup(proxy->hostname);
+        client_arg[arg++] = HYDU_strdup(proxy->info.hostname);
 
         for (i = 0; global_args[i]; i++)
             client_arg[arg++] = HYDU_strdup(global_args[i]);

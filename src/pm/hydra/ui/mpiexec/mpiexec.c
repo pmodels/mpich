@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 
     if (HYD_handle.print_rank_map) {
         FORALL_ACTIVE_PROXIES(proxy, HYD_handle.proxy_list) {
-            HYDU_dump_noprefix(stdout, "(%s:", proxy->hostname);
+            HYDU_dump_noprefix(stdout, "(%s:", proxy->info.hostname);
 
             process_id = 0;
             for (exec = proxy->exec_list; exec; exec = exec->next) {
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
                     HYDU_dump_noprefix(stdout, "%d",
                                        HYDU_local_to_global_id(process_id++,
                                                                proxy->start_pid,
-                                                               proxy->proxy_core_count,
+                                                               proxy->info.core_count,
                                                                HYD_handle.global_core_count));
                     if (i < exec->proc_count - 1 || exec->next)
                         HYDU_dump_noprefix(stdout, ",");
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
             if (HYD_handle.print_all_exitcodes) {
                 HYDU_dump_noprefix(stdout, "[%d]",
                                    HYDU_local_to_global_id(i, proxy->start_pid,
-                                                           proxy->proxy_core_count,
+                                                           proxy->info.core_count,
                                                            HYD_handle.global_core_count));
                 HYDU_dump_noprefix(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
                 if (i < proc_count - 1)
