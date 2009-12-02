@@ -114,8 +114,7 @@ int main(int argc, char **argv)
 
     status = HYDT_bsci_init(HYD_handle.user_global.bootstrap,
                             HYD_handle.user_global.bootstrap_exec,
-                            HYD_handle.user_global.enablex,
-                            HYD_handle.user_global.debug);
+                            HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
     if (HYD_handle.node_list == NULL) {
@@ -148,8 +147,7 @@ int main(int argc, char **argv)
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
-    for (exec_info = HYD_uiu_exec_info_list; exec_info;
-         exec_info = exec_info->next) {
+    for (exec_info = HYD_uiu_exec_info_list; exec_info; exec_info = exec_info->next) {
         if (exec_info->process_count == 0) {
             if (HYD_handle.global_core_count == 0)
                 exec_info->process_count = 1;
@@ -171,7 +169,7 @@ int main(int argc, char **argv)
     if (getenv("MPIEXEC_TIMEOUT"))
         HYD_handle.timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
-        HYD_handle.timeout = -1;   /* Set a negative timeout */
+        HYD_handle.timeout = -1;        /* Set a negative timeout */
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", HYD_handle.timeout);
 

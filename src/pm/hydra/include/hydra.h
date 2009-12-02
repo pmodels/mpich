@@ -26,8 +26,8 @@ struct HYD_handle {
 
     int ranks_per_proc;
 
-    HYD_status(*stdout_cb) (void *buf, int buflen);
-    HYD_status(*stderr_cb) (void *buf, int buflen);
+     HYD_status(*stdout_cb) (void *buf, int buflen);
+     HYD_status(*stderr_cb) (void *buf, int buflen);
 
     /* Timeout (in seconds) is filled in by the UI to be passed to the
      * bootstrap server.

@@ -105,7 +105,8 @@ HYD_status HYD_uiu_alloc_exec_info(struct HYD_uiu_exec_info **exec_info)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*exec_info, struct HYD_uiu_exec_info *, sizeof(struct HYD_uiu_exec_info), status);
+    HYDU_MALLOC(*exec_info, struct HYD_uiu_exec_info *, sizeof(struct HYD_uiu_exec_info),
+                status);
     (*exec_info)->process_count = 0;
     (*exec_info)->exec[0] = NULL;
     (*exec_info)->user_env = NULL;

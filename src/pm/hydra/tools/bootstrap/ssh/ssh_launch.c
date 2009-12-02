@@ -11,10 +11,9 @@
 
 static int fd_stdin, fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_ssh_launch_procs(
-    char **args, struct HYD_node *node_list,
-    HYD_status(*stdout_cb) (void *buf, int buflen),
-    HYD_status(*stderr_cb) (void *buf, int buflen))
+HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
+                                      HYD_status(*stdout_cb) (void *buf, int buflen),
+                                      HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     int num_hosts, idx, i, host_idx, fd;
     int *pid, *fd_list;
@@ -42,10 +41,10 @@ HYD_status HYDT_bscd_ssh_launch_procs(
         targs[idx++] = HYDU_strdup("-X");
     else if (HYDT_bsci_info.enablex == 0)
         targs[idx++] = HYDU_strdup("-x");
-    else    /* default mode is disable X */
+    else        /* default mode is disable X */
         targs[idx++] = HYDU_strdup("-x");
 
-    host_idx = idx++; /* Hostname will come here */
+    host_idx = idx++;   /* Hostname will come here */
 
     /* Fill in the remaining arguments */
     for (i = 0; args[i]; i++)
@@ -93,8 +92,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(
         /* Register stdio callbacks for the spawned process */
         if (i == 0) {
             fd = STDIN_FILENO;
-            status = HYDU_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin,
-                                          HYDT_bscu_stdin_cb);
+            status = HYDU_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 

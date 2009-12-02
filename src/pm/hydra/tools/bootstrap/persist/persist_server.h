@@ -11,8 +11,8 @@
 #include "persist.h"
 
 struct HYDT_persist_handle {
-    int port; /* port to listen on */
-    int debug; /* Run in debug mode */
+    int port;                   /* port to listen on */
+    int debug;                  /* Run in debug mode */
 };
 
 extern struct HYDT_persist_handle HYDT_persist_handle;

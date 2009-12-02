@@ -85,7 +85,7 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
     /* If arg is of the form foo=bar, we separate it out as two
      * arguments */
     for (val = arg; *val && *val != '='; val++);
-    *val = 0; /* close out key */
+    *val = 0;   /* close out key */
     val++;
 
     /* Move to the next argument */
@@ -115,10 +115,10 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
     if (m->handler_fn == NULL)
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized argument %s\n", arg);
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

@@ -55,10 +55,9 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_persist_launch_procs(
-    char **args, struct HYD_node *node_list,
-    HYD_status(*stdout_cb) (void *buf, int buflen),
-    HYD_status(*stderr_cb) (void *buf, int buflen))
+HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list,
+                                          HYD_status(*stdout_cb) (void *buf, int buflen),
+                                          HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     struct HYD_node *node;
     int idx, i, tmp_fd;
@@ -73,8 +72,8 @@ HYD_status HYDT_bscd_persist_launch_procs(
     for (idx = 0; args[idx]; idx++);
     args[idx + 1] = NULL;
 
-    HYDU_MALLOC(HYDT_bscd_persist_control_fd, int *, HYDT_bscd_persist_node_count * sizeof(int),
-                status);
+    HYDU_MALLOC(HYDT_bscd_persist_control_fd, int *,
+                HYDT_bscd_persist_node_count * sizeof(int), status);
 
     for (node = node_list, i = 0; node; node = node->next, i++) {
         args[idx] = HYDU_int_to_str(i);

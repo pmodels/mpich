@@ -472,8 +472,7 @@ static HYD_status fn_spawn(int fd, char *args[])
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: argcnt\n");
     if (atoi(val))
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "arguments not supported in spawn\n");
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "arguments not supported in spawn\n");
 
     execname = HYD_pmcd_find_token_keyval(tokens, token_count, "execname");
     HYDU_ERR_CHKANDJUMP(status, execname == NULL, HYD_INTERNAL_ERROR,

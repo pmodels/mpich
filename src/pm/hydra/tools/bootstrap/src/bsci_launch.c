@@ -7,10 +7,9 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 
-HYD_status HYDT_bsci_launch_procs(
-    char **args, struct HYD_node *node_list,
-    HYD_status(*stdout_cb) (void *buf, int buflen),
-    HYD_status(*stderr_cb) (void *buf, int buflen))
+HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_node *node_list,
+                                  HYD_status(*stdout_cb) (void *buf, int buflen),
+                                  HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     HYD_status status = HYD_SUCCESS;
 

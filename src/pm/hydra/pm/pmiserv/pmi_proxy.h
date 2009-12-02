@@ -19,7 +19,7 @@ struct HYD_pmcd_pmip {
 
         /* PMI */
         char *pmi_port;
-        int pmi_id; /* If this is -1, we auto-generate it */
+        int pmi_id;             /* If this is -1, we auto-generate it */
     } system_global;            /* Global system parameters */
 
     struct {

@@ -161,8 +161,8 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_CHKANDJUMP(status, private.slave_pid < 0, HYD_INTERNAL_ERROR,
                             "fork failed\n");
 
-        if (private.slave_pid > 0) { /* master process */
-            close(private.client_fd); /* the slave process will handle this */
+        if (private.slave_pid > 0) {    /* master process */
+            close(private.client_fd);   /* the slave process will handle this */
             goto fn_exit;
         }
     }

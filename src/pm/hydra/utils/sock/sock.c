@@ -410,7 +410,7 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
         if (out == tmp->out)
             break;
 
-    if (tmp == NULL) { /* No hash found; create one */
+    if (tmp == NULL) {  /* No hash found; create one */
         alloc_fwd_hash(&fwd_hash, in, out);
         if (fwd_hash_list == NULL)
             fwd_hash_list = fwd_hash;

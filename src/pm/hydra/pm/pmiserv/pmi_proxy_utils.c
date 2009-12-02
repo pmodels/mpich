@@ -445,8 +445,7 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.bootstrap == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bootstrap server not available\n");
 
-    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap,
-                            NULL /* no bootstrap exec */, 0, /* disable x */
+    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap, NULL /* no bootstrap exec */ , 0,      /* disable x */
                             HYD_pmcd_pmip.user_global.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
 
@@ -617,7 +616,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                HYD_pmcd_pmip.user_global.ckpoint_prefix);
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
-    if (HYD_pmcd_pmip.exec_list == NULL) { /* Checkpoint restart cast */
+    if (HYD_pmcd_pmip.exec_list == NULL) {      /* Checkpoint restart cast */
         status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
         HYDU_ERR_POP(status, "unable to create env\n");
 
@@ -711,7 +710,8 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                 pmi_id = HYDU_local_to_global_id(process_id,
                                                  HYD_pmcd_pmip.start_pid,
                                                  HYD_pmcd_pmip.local.proxy_core_count,
-                                                 HYD_pmcd_pmip.system_global.global_core_count);
+                                                 HYD_pmcd_pmip.system_global.
+                                                 global_core_count);
             else
                 pmi_id = HYD_pmcd_pmip.system_global.pmi_id;
 

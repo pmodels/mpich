@@ -14,7 +14,7 @@ struct dmx_callback {
     int *fd;
     HYD_event_t events;
     void *userp;
-    HYD_status(*callback) (int fd, HYD_event_t events, void *userp);
+     HYD_status(*callback) (int fd, HYD_event_t events, void *userp);
 
     struct dmx_callback *next;
 };
@@ -200,7 +200,7 @@ HYD_status HYDU_dmx_query_fd_registration(int fd, int *ret)
     *ret = 0;
     for (run = cb_list; run; run = run->next) {
         for (i = 0; i < run->num_fds; i++) {
-            if (run->fd[i] == fd) { /* found it */
+            if (run->fd[i] == fd) {     /* found it */
                 *ret = 1;
                 break;
             }

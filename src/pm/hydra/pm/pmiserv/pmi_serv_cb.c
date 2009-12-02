@@ -79,8 +79,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
 
         /* If we get "cmd=" here, we just assume that this is PMI-1
          * format (or a PMI-2 command that is backward compatible). */
-        if (!strncmp(buf, "cmd=", strlen("cmd=")) ||
-            !strncmp(buf, "mcmd=", strlen("mcmd="))) {
+        if (!strncmp(buf, "cmd=", strlen("cmd=")) || !strncmp(buf, "mcmd=", strlen("mcmd="))) {
             /* PMI-1 format command; read the rest of it */
             status = HYDU_sock_readline(fd, bufptr, buflen, &linelen);
             HYDU_ERR_POP(status, "PMI read line error\n");

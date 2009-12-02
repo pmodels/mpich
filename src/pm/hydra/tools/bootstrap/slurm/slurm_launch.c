@@ -63,10 +63,9 @@ static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_slurm_launch_procs(
-    char **args, struct HYD_node *node_list,
-    HYD_status(*stdout_cb) (void *buf, int buflen),
-    HYD_status(*stderr_cb) (void *buf, int buflen))
+HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
+                                        HYD_status(*stdout_cb) (void *buf, int buflen),
+                                        HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     int num_hosts, idx, i;
     int *pid, *fd_list;
@@ -132,16 +131,13 @@ HYD_status HYDT_bscd_slurm_launch_procs(
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
     /* Register stdio callbacks for the spawned process */
-    status = HYDU_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, &fd_stdin,
-                                  HYDT_bscu_stdin_cb);
+    status = HYDU_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-    status = HYDU_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, stdout_cb,
-                                  HYDT_bscu_inter_cb);
+    status = HYDU_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, stdout_cb, HYDT_bscu_inter_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-    status = HYDU_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb,
-                                  HYDT_bscu_inter_cb);
+    status = HYDU_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb, HYDT_bscu_inter_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
   fn_exit:
