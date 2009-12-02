@@ -24,7 +24,6 @@ void HYD_uiu_init_params(void)
 
     HYD_handle.print_rank_map = -1;
     HYD_handle.print_all_exitcodes = -1;
-    HYD_handle.pm_env = -1;
 
     HYD_handle.ranks_per_proc = -1;
 

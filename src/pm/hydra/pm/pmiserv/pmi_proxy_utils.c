@@ -20,7 +20,8 @@ static HYD_status init_params(void)
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
     HYD_pmcd_pmip.system_global.global_core_count = 0;
-    HYD_pmcd_pmip.system_global.pmi_port_str = NULL;
+    HYD_pmcd_pmip.system_global.pmi_port = NULL;
+    HYD_pmcd_pmip.system_global.pmi_id = -1;
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
@@ -69,12 +70,16 @@ static HYD_status parse_params(char **t_argv)
         }
 
         /* PMI port string */
-        if (!strcmp(*argv, "--pmi-port-str")) {
+        if (!strcmp(*argv, "--pmi-port")) {
             argv++;
-            if (!strcmp(*argv, "HYDRA_NULL"))
-                HYD_pmcd_pmip.system_global.pmi_port_str = NULL;
-            else
-                HYD_pmcd_pmip.system_global.pmi_port_str = HYDU_strdup(*argv);
+            HYD_pmcd_pmip.system_global.pmi_port = HYDU_strdup(*argv);
+            continue;
+        }
+
+        /* PMI ID */
+        if (!strcmp(*argv, "--pmi-id")) {
+            argv++;
+            HYD_pmcd_pmip.system_global.pmi_id = atoi(*argv);
             continue;
         }
 
@@ -364,8 +369,8 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
     if (HYD_pmcd_pmip.user_global.wdir)
         HYDU_FREE(HYD_pmcd_pmip.user_global.wdir);
 
-    if (HYD_pmcd_pmip.system_global.pmi_port_str)
-        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_port_str);
+    if (HYD_pmcd_pmip.system_global.pmi_port)
+        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_port);
 
     if (HYD_pmcd_pmip.user_global.binding)
         HYDU_FREE(HYD_pmcd_pmip.user_global.binding);
@@ -524,7 +529,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     if (HYD_pmcd_pmip.exec_list == NULL) { /* Checkpoint restart cast */
-        status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port_str);
+        status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
         HYDU_ERR_POP(status, "unable to create env\n");
 
         /* Restart the proxy.  Specify stdin fd only if pmi_id 0 is in this proxy. */
@@ -599,14 +604,11 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 
         /* Set the PMI port string to connect to. We currently just
          * use the global PMI port. */
-        if (HYD_pmcd_pmip.system_global.pmi_port_str) {
-            status = HYDU_env_create(&env, "PMI_PORT",
-                                     HYD_pmcd_pmip.system_global.pmi_port_str);
-            HYDU_ERR_POP(status, "unable to create env\n");
+        status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
+        HYDU_ERR_POP(status, "unable to create env\n");
 
-            status = HYDU_append_env_to_list(*env, &prop_env);
-            HYDU_ERR_POP(status, "unable to add env to list\n");
-        }
+        status = HYDU_append_env_to_list(*env, &prop_env);
+        HYDU_ERR_POP(status, "unable to add env to list\n");
 
         /* Set the MPICH_INTERFACE_HOSTNAME based on what the user provided */
         if (HYD_pmcd_pmip.local.hostname) {
@@ -619,19 +621,20 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         }
 
         for (i = 0; i < exec->proc_count; i++) {
-            pmi_id = HYDU_local_to_global_id(process_id,
-                                             HYD_pmcd_pmip.start_pid,
-                                             HYD_pmcd_pmip.local.proxy_core_count,
-                                             HYD_pmcd_pmip.system_global.global_core_count);
+            if (HYD_pmcd_pmip.system_global.pmi_id == -1)
+                pmi_id = HYDU_local_to_global_id(process_id,
+                                                 HYD_pmcd_pmip.start_pid,
+                                                 HYD_pmcd_pmip.local.proxy_core_count,
+                                                 HYD_pmcd_pmip.system_global.global_core_count);
+            else
+                pmi_id = HYD_pmcd_pmip.system_global.pmi_id;
 
-            if (HYD_pmcd_pmip.system_global.pmi_port_str) {
-                str = HYDU_int_to_str(pmi_id);
-                status = HYDU_env_create(&env, "PMI_ID", str);
-                HYDU_ERR_POP(status, "unable to create env\n");
-                HYDU_FREE(str);
-                status = HYDU_append_env_to_list(*env, &prop_env);
-                HYDU_ERR_POP(status, "unable to add env to list\n");
-            }
+            str = HYDU_int_to_str(pmi_id);
+            status = HYDU_env_create(&env, "PMI_ID", str);
+            HYDU_ERR_POP(status, "unable to create env\n");
+            HYDU_FREE(str);
+            status = HYDU_append_env_to_list(*env, &prop_env);
+            HYDU_ERR_POP(status, "unable to add env to list\n");
 
             if (chdir(HYD_pmcd_pmip.user_global.wdir) < 0)
                 HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,

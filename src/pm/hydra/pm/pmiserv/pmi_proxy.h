@@ -18,7 +18,8 @@ struct HYD_pmcd_pmip {
         int global_core_count;
 
         /* PMI */
-        char *pmi_port_str;
+        char *pmi_port;
+        int pmi_id; /* If this is -1, we auto-generate it */
     } system_global;            /* Global system parameters */
 
     struct {

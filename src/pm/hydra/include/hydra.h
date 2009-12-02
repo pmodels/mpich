@@ -24,7 +24,6 @@ struct HYD_handle {
 
     int print_rank_map;
     int print_all_exitcodes;
-    int pm_env;
 
     int ranks_per_proc;
 

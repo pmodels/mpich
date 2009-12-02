@@ -585,32 +585,6 @@ static HYD_status ranks_per_proc_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static HYD_status enable_pm_env_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.pm_env != -1, HYD_INTERNAL_ERROR,
-                        "duplicate -enable-pm-env argument\n");
-
-    if (**argv && IS_HELP(**argv)) {
-        printf("\n");
-        printf("-enable-pm-env: Enable ENV added by the process manager\n");
-        printf("-disable-pm-env: Disable ENV added by the process manager\n\n");
-        HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
-    }
-
-    if (!strcmp(arg, "enable-pm-env"))
-        HYD_handle.pm_env = 1;
-    else
-        HYD_handle.pm_env = 0;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status binding_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -913,8 +887,6 @@ static struct match_table_fns match_table[] = {
 
     /* Hybrid programming options */
     {"ranks-per-proc", ranks_per_proc_fn},
-    {"enable-pm-env", enable_pm_env_fn},
-    {"disable-pm-env", enable_pm_env_fn},
 
     /* Process-core binding options */
     {"binding", binding_fn},
@@ -1018,12 +990,6 @@ static HYD_status set_default_values(void)
         HYD_handle.user_global.debug = atoi(tmp) ? 1 : 0;
     if (HYD_handle.user_global.debug == -1)
         HYD_handle.user_global.debug = 0;
-
-    tmp = getenv("HYDRA_PM_ENV");
-    if (HYD_handle.pm_env == -1 && tmp)
-        HYD_handle.pm_env = (atoi(getenv("HYDRA_PM_ENV")) != 0);
-    if (HYD_handle.pm_env == -1)
-        HYD_handle.pm_env = 1;  /* Default is to pass the PM environment */
 
     tmp = getenv("HYDRA_BOOTSTRAP");
     if (HYD_handle.user_global.bootstrap == NULL && tmp)

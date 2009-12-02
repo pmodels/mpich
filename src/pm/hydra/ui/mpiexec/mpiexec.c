@@ -72,7 +72,6 @@ static void usage(void)
     printf("\n");
     printf("  Hybrid programming options:\n");
     printf("    -ranks-per-proc                  assign so many ranks to each process\n");
-    printf("    -enable/-disable-pm-env          process manager environment settings\n");
 
     printf("\n");
     printf("  Process-core binding options:\n");
@@ -84,7 +83,6 @@ static void usage(void)
     printf("    -ckpoint-interval                checkpoint interval\n");
     printf("    -ckpoint-prefix                  checkpoint file prefix\n");
     printf("    -ckpointlib                      checkpointing library (blcr)\n");
-    printf("    -ckpoint-restart                 restart a checkpointed application\n");
 
     printf("\n");
     printf("  Other Hydra options:\n");
@@ -191,7 +189,10 @@ int main(int argc, char **argv)
     }
 
     /* Add the stdout/stdin/stderr callback handlers */
-    status = HYDU_sock_set_nonblock(0);
+    /* FIXME: Make sure stdin is not open before setting it to
+     * non-blocking (in nested launches where mpiexec is called using
+     * another mpiexec this can be the case). */
+    status = HYDU_sock_set_nonblock(STDIN_FILENO);
     HYDU_ERR_POP(status, "unable to set socket as non-blocking\n");
 
     HYD_handle.stdin_buf_count = 0;

@@ -12,8 +12,9 @@
 #include "demux.h"
 #include "pmi_serv.h"
 
-static char *pmi_port_str = NULL;
-static char *proxy_port_str = NULL;
+static char *pmi_port = NULL;
+static int pmi_id = -1;
+static char *control_port = NULL;
 
 static HYD_status
 create_and_listen_portstr(HYD_status(*callback) (int fd, HYD_event_t events, void *userp),
@@ -75,8 +76,8 @@ static HYD_status fill_in_proxy_args(char **proxy_args)
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(path_str);
 
-    proxy_args[arg++] = HYDU_strdup("--proxy-port");
-    proxy_args[arg++] = HYDU_strdup(proxy_port_str);
+    proxy_args[arg++] = HYDU_strdup("--control-port");
+    proxy_args[arg++] = HYDU_strdup(control_port);
 
     if (HYD_handle.user_global.debug)
         proxy_args[arg++] = HYDU_strdup("--debug");
@@ -156,11 +157,11 @@ static HYD_status fill_in_exec_launch_info(void)
         proxy->exec_launch_info[arg++] = HYDU_strdup("--wdir");
         proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.wdir);
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port-str");
-        if (HYD_handle.pm_env)
-            proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port_str);
-        else
-            proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
+
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--binding");
         if (HYD_handle.user_global.binding)
@@ -274,7 +275,7 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_node *node_list, *node, *tnode;
     enum HYD_pmcd_pmi_proxy_cmds cmd;
     int fd;
-    char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
+    char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *tmp = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -283,10 +284,23 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Initialize PMI */
-    status = create_and_listen_portstr(HYD_pmcd_pmi_connect_cb, &pmi_port_str);
-    HYDU_ERR_POP(status, "unable to create PMI port\n");
+    tmp = getenv("PMI_PORT");
+    if (!tmp) { /* PMI_PORT not already set; create one */
+        status = create_and_listen_portstr(HYD_pmcd_pmi_connect_cb, &pmi_port);
+        HYDU_ERR_POP(status, "unable to create PMI port\n");
+        pmi_id = -1;
+    }
+    else {
+        if (HYD_handle.user_global.debug)
+            HYDU_dump(stdout, "someone else already set PMI port\n");
+        pmi_port = HYDU_strdup(tmp);
+        tmp = getenv("PMI_ID");
+        if (!tmp)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_PORT set but not PMI_ID\n");
+        pmi_id = atoi(tmp);
+    }
     if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "Got a PMI port string of %s\n", pmi_port_str);
+        HYDU_dump(stdout, "PMI port: %s; PMI ID: %d\n", pmi_port, pmi_id);
 
     status = HYD_pmcd_pmi_init();
     HYDU_ERR_POP(status, "unable to create process group\n");
@@ -309,10 +323,10 @@ HYD_status HYD_pmci_launch_procs(void)
     }
 
     status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb,
-                                       &proxy_port_str);
+                                       &control_port);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "Got a proxy port string of %s\n", proxy_port_str);
+        HYDU_dump(stdout, "Got a proxy port string of %s\n", control_port);
 
     status = fill_in_proxy_args(proxy_args);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
@@ -325,10 +339,10 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:
-    if (pmi_port_str)
-        HYDU_FREE(pmi_port_str);
-    if (proxy_port_str)
-        HYDU_FREE(proxy_port_str);
+    if (pmi_port)
+        HYDU_FREE(pmi_port);
+    if (control_port)
+        HYDU_FREE(control_port);
     HYDU_free_strlist(proxy_args);
     HYDU_free_node_list(node_list);
     HYDU_FUNC_EXIT();
