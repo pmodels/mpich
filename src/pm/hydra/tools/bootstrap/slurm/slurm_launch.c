@@ -131,13 +131,13 @@ HYD_status HYDT_bscd_slurm_launch_procs(
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
     /* Register stdio callbacks for the spawned process */
-    status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_STDIN, userp, stdin_cb);
+    status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLOUT, userp, stdin_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-    status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_STDOUT, userp, stdout_cb);
+    status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, userp, stdout_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-    status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_STDOUT, userp, stderr_cb);
+    status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, userp, stderr_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
   fn_exit:

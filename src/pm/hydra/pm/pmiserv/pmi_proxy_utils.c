@@ -752,7 +752,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                 HYDU_ERR_POP(status, "unable to set stdin fd to nonblocking\n");
 
                 stdin_fd = HYD_pmcd_pmip.downstream.in;
-                status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_STDIN, NULL,
+                status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_POLLOUT, NULL,
                                               HYD_pmcd_pmi_proxy_stdin_cb);
                 HYDU_ERR_POP(status, "unable to register fd\n");
             }
@@ -776,12 +776,12 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.out,
-                                  HYD_STDOUT, NULL, HYD_pmcd_pmi_proxy_stdout_cb);
+                                  HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_stdout_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.err,
-                                  HYD_STDOUT, NULL, HYD_pmcd_pmi_proxy_stderr_cb);
+                                  HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:

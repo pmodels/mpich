@@ -40,7 +40,7 @@ create_and_listen_portstr(HYD_status(*callback) (int fd, HYD_event_t events, voi
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYDT_dmx_register_fd(1, &listenfd, HYD_STDOUT, NULL, callback);
+    status = HYDT_dmx_register_fd(1, &listenfd, HYD_POLLIN, NULL, callback);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */

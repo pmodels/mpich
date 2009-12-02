@@ -71,10 +71,8 @@
 #include <sys/socket.h>
 #endif
 
-#define HYD_DEFAULT_PROXY_PORT 9899
-
-#define HYD_STDOUT  (1)
-#define HYD_STDIN   (2)
+#define HYD_POLLIN  (1)
+#define HYD_POLLOUT (2)
 
 #define HYD_TMPBUF_SIZE (64 * 1024)
 #define HYD_TMP_STRLEN  1024

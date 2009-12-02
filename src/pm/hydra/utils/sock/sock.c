@@ -381,7 +381,7 @@ HYD_status HYDU_sock_stdout_cb(int fd, HYD_event_t events, int stdout_fd, int *c
 
     *closed = 0;
 
-    if (events & HYD_STDIN)
+    if (events & HYD_POLLOUT)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
     count = read(fd, buf, HYD_TMPBUF_SIZE);
@@ -424,7 +424,7 @@ HYD_status HYDU_sock_stdin_cb(int fd, HYD_event_t events, int stdin_fd, char *bu
 
     *closed = 0;
 
-    if (events & HYD_STDOUT)
+    if (events & HYD_POLLIN)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdin handler got stdout event\n");
 
     while (1) {

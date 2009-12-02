@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "unable to send the proxy ID to the server\n");
 
     status = HYDT_dmx_register_fd(1, &HYD_pmcd_pmip.upstream.control,
-                                  HYD_STDOUT, NULL, HYD_pmcd_pmi_proxy_control_cmd_cb);
+                                  HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_control_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     while (1) {

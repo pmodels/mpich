@@ -19,14 +19,14 @@ HYD_status HYD_pmcd_pmi_proxy_control_connect_cb(int fd, HYD_event_t events, voi
 
     HYDU_FUNC_ENTER();
 
-    if (events & HYD_STDIN)
+    if (events & HYD_POLLOUT)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
     /* We got a connection from upstream */
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_STDOUT, NULL,
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, NULL,
                                   HYD_pmcd_pmi_proxy_control_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
@@ -46,7 +46,7 @@ HYD_status HYD_pmcd_pmi_proxy_control_cmd_cb(int fd, HYD_event_t events, void *u
 
     HYDU_FUNC_ENTER();
 
-    if (events & HYD_STDIN)
+    if (events & HYD_POLLOUT)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "stdout handler got stdin event\n");
 
     /* We got a command from upstream */
