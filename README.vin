@@ -980,6 +980,17 @@ To run over the Myrinet network use:
          to "2000:3000" will ensure that MPICH2 will internally only
          uses ports between 2000 and 3000.
 
+               ************************************
+
+  MPICH_ASYNC_PROGRESS - Initiates a spare thread to provide
+         asynchronous progress. This improves progress semantics for
+         all MPI operations including point-to-point, collective,
+         one-sided operations and I/O. Setting this variable would
+         increase the thread-safety level to
+         MPI_THREAD_MULTIPLE. While this improves the progress
+         semantics, it might cause a small amount of performance
+         overhead for regular MPI operations.
+
 -------------------------------------------------------------------------
 
 X. Developer Builds
