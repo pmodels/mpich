@@ -122,10 +122,10 @@ int main(int argc, char **argv)
         /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. */
         if (HYD_handle.rmk) {
-            status = HYD_rmki_init(HYD_handle.rmk);
+            status = HYDT_rmki_init(HYD_handle.rmk);
             HYDU_ERR_POP(status, "unable to initialize RMK\n");
 
-            status = HYD_rmki_query_node_list(&HYD_handle.node_list);
+            status = HYDT_rmki_query_node_list(&HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
         }
 

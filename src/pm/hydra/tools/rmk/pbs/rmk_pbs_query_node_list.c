@@ -36,7 +36,7 @@ static HYD_status process_mfile_token(char *token, int newline)
     goto fn_exit;
 }
 
-HYD_status HYD_rmkd_pbs_query_node_list(struct HYD_node **node_list)
+HYD_status HYDT_rmkd_pbs_query_node_list(struct HYD_node **node_list)
 {
     char *hostfile;
     HYD_status status = HYD_SUCCESS;

@@ -9,34 +9,34 @@
 #include "rmku.h"
 
 /* initialize to avoid common symbols */
-struct HYD_rmki_fns HYD_rmki_fns = { 0 };
+struct HYDT_rmki_fns HYDT_rmki_fns = { 0 };
 
-const char *HYD_rmki_comp_array[] = { @hydra_rmk_name_array@ };
-HYD_status(*HYD_rmki_comp_init[])(void) = { @hydra_rmk_init_array@ };
+const char *HYDT_rmki_comp_array[] = { @hydra_rmk_name_array@ };
+HYD_status(*HYDT_rmki_comp_init[])(void) = { @hydra_rmk_init_array@ };
 
-HYD_status HYD_rmki_init(char *rmk)
+HYD_status HYDT_rmki_init(char *rmk)
 {
     int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_rmki_fns.query_node_list = NULL;
+    HYDT_rmki_fns.query_node_list = NULL;
 
-    for (i = 0; HYD_rmki_comp_array[i]; i++) {
-        if (!strcmp(rmk, HYD_rmki_comp_array[i])) {
-            status = (*HYD_rmki_comp_init[i])();
+    for (i = 0; HYDT_rmki_comp_array[i]; i++) {
+        if (!strcmp(rmk, HYDT_rmki_comp_array[i])) {
+            status = (*HYDT_rmki_comp_init[i])();
             HYDU_ERR_POP(status, "RMK device returned error initializing\n");
             break;
         }
     }
 
-    if (HYD_rmki_comp_array[i] == NULL)
+    if (HYDT_rmki_comp_array[i] == NULL)
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unrecognized resource management kernel: %s\n", rmk);
 
-    if (HYD_rmki_fns.query_node_list == NULL)
-        HYD_rmki_fns.query_node_list = HYD_rmku_query_node_list;
+    if (HYDT_rmki_fns.query_node_list == NULL)
+        HYDT_rmki_fns.query_node_list = HYD_rmku_query_node_list;
 
   fn_exit:
     HYDU_FUNC_EXIT();

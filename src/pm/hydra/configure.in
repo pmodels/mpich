@@ -191,9 +191,9 @@ for hydra_rmk_name in ${hydra_rmk_names}; do
     fi
     hydra_rmk_makefiles="$hydra_rmk_makefiles rmk/${hydra_rmk_name}/Makefile"
     hydra_rmk_init_decl="${hydra_rmk_init_decl}
-HYD_status HYD_rmki_${hydra_rmk_name}_init(void);"
+HYD_status HYDT_rmki_${hydra_rmk_name}_init(void);"
     hydra_rmk_name_array="${hydra_rmk_name_array} \"${hydra_rmk_name}\", "
-    hydra_rmk_init_array="${hydra_rmk_init_array} HYD_rmki_${hydra_rmk_name}_init, "
+    hydra_rmk_init_array="${hydra_rmk_init_array} HYDT_rmki_${hydra_rmk_name}_init, "
 
     case "$hydra_rmk_name" in
 	pbs)
@@ -442,7 +442,7 @@ PAC_SUBCONFIG_FINALIZE()
 AC_OUTPUT(Makefile
 	tools/bootstrap/src/bsci_init.c
 	tools/bootstrap/include/bsci.h
-	rmk/src/rmki_init.c
-	rmk/include/rmki.h
+	tools/rmk/src/rmki_init.c
+	tools/rmk/include/rmki.h
 	hydra-doxygen.cfg
 )

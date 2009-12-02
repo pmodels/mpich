@@ -9,7 +9,7 @@
 
 /** @file rmki.h.in */
 
-#include "hydra.h"
+#include "hydra_utils.h"
 
 /*! \addtogroup rmki Resource Management Kernel Interface
  * @{
@@ -19,30 +19,30 @@
  * \brief Function pointers for device specific implementations of
  * different RMK functions
  */
-struct HYD_rmki_fns {
+struct HYDT_rmki_fns {
     /** \brief Query node list information */
     HYD_status(*query_node_list) (struct HYD_node **node_list);
 };
 
 /** \cond */
-extern struct HYD_rmki_fns HYD_rmki_fns;
+extern struct HYDT_rmki_fns HYDT_rmki_fns;
 /** \endcond */
 
 /**
- * \brief HYD_rmki_init - Initialize the resource management kernel
+ * \brief HYDT_rmki_init - Initialize the resource management kernel
  *
  * \param[in]   rmk     Resource management kernel to use
  *
  * Initializes the resource management kernel
  */
-HYD_status HYD_rmki_init(char *rmk);
+HYD_status HYDT_rmki_init(char *rmk);
 
 /**
- * \brief HYD_rmki_query_node_list - Query node list information
+ * \brief HYDT_rmki_query_node_list - Query node list information
  *
  * \param[out]  node_list  List of nodes available
  */
-HYD_status HYD_rmki_query_node_list(struct HYD_node **node_list);
+HYD_status HYDT_rmki_query_node_list(struct HYD_node **node_list);
 
 /*!
  * @}
