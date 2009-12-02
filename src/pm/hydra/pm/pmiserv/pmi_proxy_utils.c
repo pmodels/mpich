@@ -24,9 +24,6 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
-    HYD_pmcd_pmip.upstream.out = -1;
-    HYD_pmcd_pmip.upstream.err = -1;
-    HYD_pmcd_pmip.upstream.in = -1;
     HYD_pmcd_pmip.upstream.control = -1;
 
     HYD_pmcd_pmip.downstream.out = NULL;
@@ -39,7 +36,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = 0;
     HYD_pmcd_pmip.local.proxy_process_count = 0;
-    HYD_pmcd_pmip.local.procs_are_launched = 0;
     HYD_pmcd_pmip.local.stdin_buf_offset = 0;
     HYD_pmcd_pmip.local.stdin_buf_count = 0;
     HYD_pmcd_pmip.local.stdin_tmp_buf[0] = '\0';
@@ -113,11 +109,6 @@ static HYD_status parse_params(char **t_argv)
                 HYD_pmcd_pmip.user_global.ckpoint_prefix = NULL;
             else
                 HYD_pmcd_pmip.user_global.ckpoint_prefix = HYDU_strdup(*argv);
-            continue;
-        }
-
-        if (!strcmp(*argv, "--ckpoint-restart")) {
-            HYD_pmcd_pmip.user_global.ckpoint_restart = 1;
             continue;
         }
 
@@ -297,20 +288,10 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
     HYDU_ERR_POP(status, "Error initializing proxy params\n");
 
     while (++argv && *argv) {
-        if (!strcmp(*argv, "--launch-mode")) {
-            ++argv;
-            HYD_pmcd_pmip.user_global.launch_mode = HYDU_strdup(*argv);
-            continue;
-        }
         if (!strcmp(*argv, "--proxy-port")) {
             ++argv;
-            if (!strcmp(HYD_pmcd_pmip.user_global.launch_mode, "runtime")) {
-                HYD_pmcd_pmip.upstream.server_name = HYDU_strdup(strtok(*argv, ":"));
-                HYD_pmcd_pmip.upstream.server_port = atoi(strtok(NULL, ":"));
-            }
-            else {
-                HYD_pmcd_pmip.upstream.server_port = atoi(*argv);
-            }
+            HYD_pmcd_pmip.upstream.server_name = HYDU_strdup(strtok(*argv, ":"));
+            HYD_pmcd_pmip.upstream.server_port = atoi(strtok(NULL, ":"));
             continue;
         }
         if (!strcmp(*argv, "--proxy-id")) {
@@ -542,7 +523,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                HYD_pmcd_pmip.user_global.ckpoint_prefix);
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
-    if (HYD_pmcd_pmip.user_global.ckpoint_restart) {
+    if (HYD_pmcd_pmip.exec_list == NULL) { /* Checkpoint restart cast */
         status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port_str);
         HYDU_ERR_POP(status, "unable to create env\n");
 
@@ -672,8 +653,8 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                 HYD_pmcd_pmip.local.stdin_buf_offset = 0;
                 HYD_pmcd_pmip.local.stdin_buf_count = 0;
 
-                status = HYDU_sock_set_nonblock(HYD_pmcd_pmip.upstream.in);
-                HYDU_ERR_POP(status, "unable to set upstream stdin fd to nonblocking\n");
+                status = HYDU_sock_set_nonblock(STDIN_FILENO);
+                HYDU_ERR_POP(status, "unable to set stdin fd to nonblocking\n");
 
                 stdin_fd = HYD_pmcd_pmip.downstream.in;
                 status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_STDIN, NULL,
@@ -707,9 +688,6 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                   HYD_pmcd_pmip.downstream.err,
                                   HYD_STDOUT, NULL, HYD_pmcd_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
-
-    /* Indicate that the processes have been launched */
-    HYD_pmcd_pmip.local.procs_are_launched = 1;
 
   fn_exit:
     if (pmi_ids)

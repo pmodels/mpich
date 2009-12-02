@@ -60,14 +60,11 @@ create_and_listen_portstr(HYD_status(*callback) (int fd, HYD_event_t events, voi
     goto fn_exit;
 }
 
-static HYD_status fill_in_proxy_args(char *mode, char **proxy_args)
+static HYD_status fill_in_proxy_args(char **proxy_args)
 {
     int i, arg;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
-
-    if (mode && !strcmp(mode, "shutdown"))
-        goto fn_exit;
 
     arg = 0;
     i = 0;
@@ -78,14 +75,8 @@ static HYD_status fill_in_proxy_args(char *mode, char **proxy_args)
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(path_str);
 
-    proxy_args[arg++] = HYDU_strdup("--launch-mode");
-    proxy_args[arg++] = HYDU_strdup(mode);
-
     proxy_args[arg++] = HYDU_strdup("--proxy-port");
-    if (!strcmp(mode, "runtime"))
-        proxy_args[arg++] = HYDU_strdup(proxy_port_str);
-    else
-        proxy_args[arg++] = HYDU_int_to_str(HYD_handle.proxy_port);
+    proxy_args[arg++] = HYDU_strdup(proxy_port_str);
 
     if (HYD_handle.user_global.debug)
         proxy_args[arg++] = HYDU_strdup("--debug");
@@ -189,9 +180,6 @@ static HYD_status fill_in_exec_launch_info(void)
                 HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
         else
             proxy->exec_launch_info[arg++] = HYDU_strdup("HYDRA_NULL");
-
-        if (HYD_handle.user_global.ckpoint_restart)
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-restart");
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-inherited-env");
         for (i = 0, env = HYD_handle.user_global.global_env.inherited; env;
@@ -320,48 +308,21 @@ HYD_status HYD_pmci_launch_procs(void)
         }
     }
 
-    if (!strcmp(HYD_handle.user_global.launch_mode, "boot") ||
-        !strcmp(HYD_handle.user_global.launch_mode, "boot-debug")) {
-        status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
-        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+    status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb,
+                                       &proxy_port_str);
+    HYDU_ERR_POP(status, "unable to create PMI port\n");
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "Got a proxy port string of %s\n", proxy_port_str);
 
-        status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, HYD_handle.stdin_cb,
-                                        HYD_handle.stdout_cb, HYD_handle.stderr_cb);
-        HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
-    }
-    else if (!strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
-        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-            status = HYDU_sock_connect(proxy->node.hostname, HYD_handle.proxy_port, &fd);
-            if (status != HYD_SUCCESS) {
-                /* Don't abort. Try to shutdown as many proxies as possible */
-                HYDU_error_printf("Unable to connect to proxy at %s\n", proxy->node.hostname);
-                continue;
-            }
+    status = fill_in_proxy_args(proxy_args);
+    HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-            cmd = PROXY_SHUTDOWN;
-            status = HYDU_sock_write(fd, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds));
-            HYDU_ERR_POP(status, "unable to write data to proxy\n");
+    status = fill_in_exec_launch_info();
+    HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-            close(fd);
-        }
-    }
-    else {
-        status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb,
-                                           &proxy_port_str);
-        HYDU_ERR_POP(status, "unable to create PMI port\n");
-        if (HYD_handle.user_global.debug)
-            HYDU_dump(stdout, "Got a proxy port string of %s\n", proxy_port_str);
-
-        status = fill_in_proxy_args(HYD_handle.user_global.launch_mode, proxy_args);
-        HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-
-        status = fill_in_exec_launch_info();
-        HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
-
-        status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, HYD_handle.stdin_cb,
-                                        HYD_handle.stdout_cb, HYD_handle.stderr_cb);
-        HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
-    }
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, HYD_handle.stdin_cb,
+                                    HYD_handle.stdout_cb, HYD_handle.stderr_cb);
+    HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:
     if (pmi_port_str)

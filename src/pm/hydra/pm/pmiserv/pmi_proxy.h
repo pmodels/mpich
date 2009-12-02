@@ -25,10 +25,6 @@ struct HYD_pmcd_pmip {
         /* Upstream server contact information */
         char *server_name;
         int server_port;
-
-        int out;
-        int err;
-        int in;
         int control;
     } upstream;
 
@@ -50,9 +46,6 @@ struct HYD_pmcd_pmip {
 
         int proxy_core_count;
         int proxy_process_count;
-
-        /* Flag to tell whether the processes are launched */
-        int procs_are_launched;
 
         /* stdin related variables */
         int stdin_buf_offset;

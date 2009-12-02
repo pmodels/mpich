@@ -62,13 +62,6 @@ static void usage(void)
     printf("    -enable-x/-disable-x             enable or disable X forwarding\n");
 
     printf("\n");
-    printf("  Proxy options (only needed for persistent mode):\n");
-    printf("    -boot-proxies                    boot proxies to run in persistent mode\n");
-    printf("    -boot-foreground-proxies         boot foreground proxies (persistent mode)\n");
-    printf("    -shutdown-proxies                shutdown persistent mode proxies\n");
-    printf("    -proxy-port                      port for proxies to listen (boot proxies)\n");
-
-    printf("\n");
     printf("  Communication sub-system options:\n");
     printf("    -css                             communication sub-system to use\n");
 
@@ -211,26 +204,6 @@ int main(int argc, char **argv)
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
-
-    /* During shutdown, no processes are launched, so there is nothing
-     * to wait for. If the launch command didn't return an error, we
-     * are OK; just return a success. */
-    /* FIXME: We are assuming a working model for the process manager
-     * here. We need to get how many processes the PM has launched
-     * instead of assuming this. For example, it is possible to have a
-     * PM implementation that launches separate "new" proxies on a
-     * different port and kills the original proxies using them. */
-    if (!strcmp(HYD_handle.user_global.launch_mode, "shutdown")) {
-        /* Call finalize functions for lower layers to cleanup their resources */
-        status = HYD_pmci_finalize();
-        HYDU_ERR_POP(status, "process manager error on finalize\n");
-
-        /* Free the mpiexec params */
-        HYD_uiu_free_params();
-
-        exit_status = 0;
-        goto fn_exit;
-    }
 
     /* Wait for their completion */
     status = HYD_pmci_wait_for_completion();

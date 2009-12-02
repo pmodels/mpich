@@ -12,9 +12,6 @@ enum HYD_pmcd_pmi_proxy_cmds {
     PROC_INFO,
     KILL_JOB,
     PROXY_SHUTDOWN,
-    USE_AS_STDOUT,
-    USE_AS_STDERR,
-    USE_AS_STDIN,
     CKPOINT
 };
 

@@ -16,12 +16,10 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
 
     user_global->ckpointlib = NULL;
     user_global->ckpoint_prefix = NULL;
-    user_global->ckpoint_restart = 0;
 
     user_global->enablex = -1;
     user_global->debug = -1;
     user_global->wdir = NULL;
-    user_global->launch_mode = NULL;
 
     HYDU_init_global_env(&user_global->global_env);
 }

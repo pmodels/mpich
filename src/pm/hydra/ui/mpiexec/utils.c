@@ -479,31 +479,6 @@ static HYD_status enablex_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static HYD_status boot_proxies_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.launch_mode,
-                        HYD_INTERNAL_ERROR, "duplicate launch mode\n");
-
-    if (**argv && IS_HELP(**argv)) {
-        printf("\n");
-        printf("-boot: Launch persistent proxies\n");
-        printf("-boot-debug: ");
-        printf("Launch persistent proxies in foreground\n");
-        printf("-shutdown: Shutdown persistent proxies\n\n");
-        HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
-    }
-
-    HYD_handle.user_global.launch_mode = HYDU_strdup(arg);
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status proxy_port_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -789,28 +764,6 @@ static HYD_status ckpointlib_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static HYD_status ckpoint_restart_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.ckpoint_restart,
-                        HYD_INTERNAL_ERROR, "duplicate restart mode\n");
-
-    if (**argv && IS_HELP(**argv)) {
-        printf("\n");
-        printf("-ckpoint-restart: Restart checkpointed application\n\n");
-        HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
-    }
-
-    HYD_handle.user_global.ckpoint_restart = 1;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status verbose_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -855,7 +808,7 @@ static HYD_status info_fn(char *arg, char ***argv)
                        HYDRA_CONFIGURE_ARGS_CLEAN);
     HYDU_dump_noprefix(stdout, "    Process Manager:                         pmi\n");
     HYDU_dump_noprefix(stdout,
-                       "    Boot-strap servers available:            %s\n", HYDRA_BSS_NAMES);
+                       "    Bootstrap servers available:             %s\n", HYDRA_BSS_NAMES);
     HYDU_dump_noprefix(stdout, "    Communication sub-systems available:     none\n");
     HYDU_dump_noprefix(stdout,
                        "    Binding libraries available:             %s\n",
@@ -952,12 +905,6 @@ static struct match_table_fns match_table[] = {
     {"enable-x", enablex_fn},
     {"disable-x", enablex_fn},
 
-    /* Proxy options */
-    {"boot", boot_proxies_fn},
-    {"boot-debug", boot_proxies_fn},
-    {"shutdown", boot_proxies_fn},
-    {"proxy-port", proxy_port_fn},
-
     /* Communication sub-system options */
     {"css", css_fn},
 
@@ -977,7 +924,6 @@ static struct match_table_fns match_table[] = {
     {"ckpoint-interval", ckpoint_interval_fn},
     {"ckpoint-prefix", ckpoint_prefix_fn},
     {"ckpointlib", ckpointlib_fn},
-    {"ckpoint-restart", ckpoint_restart_fn},
 
     /* Other hydra options */
     {"verbose", verbose_fn},
@@ -1039,40 +985,14 @@ static HYD_status verify_arguments(void)
     struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_handle.user_global.launch_mode == NULL) {      /* Application launch */
-        /* On a checkpoint restart, we set the prefix as the application */
-        if (HYD_handle.user_global.ckpoint_restart == 1) {
-            status = HYD_uiu_get_current_exec_info(&exec_info);
-            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+    if (HYD_uiu_exec_info_list == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
-            exec_info->exec[0] = HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
-            exec_info->exec[1] = NULL;
-        }
-
-        if (HYD_uiu_exec_info_list == NULL)
+    /* Make sure local executable is set */
+    for (exec_info = HYD_uiu_exec_info_list; exec_info;
+         exec_info = exec_info->next) {
+        if (exec_info->exec[0] == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
-
-        /* Make sure local executable is set */
-        for (exec_info = HYD_uiu_exec_info_list; exec_info;
-             exec_info = exec_info->next) {
-            if (exec_info->exec[0] == NULL)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
-        }
-    }
-    else { /* Proxy launch or checkpoint restart */
-        /* No environment */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.global_env.prop, HYD_INTERNAL_ERROR,
-                            "env setting not required for booting/shutting proxies\n");
-
-        /* No binding */
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.binding, HYD_INTERNAL_ERROR,
-                            "binding not allowed while booting/shutting proxies\n");
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.bindlib, HYD_INTERNAL_ERROR,
-                            "binding not allowed while booting/shutting proxies\n");
-
-        /* No executables */
-        HYDU_ERR_CHKANDJUMP(status, HYD_uiu_exec_info_list, HYD_INTERNAL_ERROR,
-                            "execs should not be specified while booting/shutting proxies\n");
     }
 
   fn_exit:
@@ -1138,12 +1058,6 @@ static HYD_status set_default_values(void)
     tmp = getenv("HYDRA_BOOTSTRAP_EXEC");
     if (HYD_handle.user_global.bootstrap_exec == NULL && tmp)
         HYD_handle.user_global.bootstrap_exec = HYDU_strdup(tmp);
-
-    tmp = getenv("HYDRA_LAUNCH_MODE");
-    if (HYD_handle.user_global.launch_mode == NULL && tmp)
-        HYD_handle.user_global.launch_mode = HYDU_strdup(tmp);
-    if (HYD_handle.user_global.launch_mode == NULL)
-        HYD_handle.user_global.launch_mode = HYDU_strdup("runtime");
 
     /* Check environment for setting binding */
     tmp = getenv("HYDRA_BINDING");

@@ -55,9 +55,6 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.base_path)
         HYDU_FREE(HYD_handle.base_path);
 
-    if (HYD_handle.user_global.bootstrap)
-        HYDU_FREE(HYD_handle.user_global.bootstrap);
-
     if (HYD_handle.css)
         HYDU_FREE(HYD_handle.css);
 
@@ -79,8 +76,8 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.user_global.wdir)
         HYDU_FREE(HYD_handle.user_global.wdir);
 
-    if (HYD_handle.user_global.launch_mode)
-        HYDU_FREE(HYD_handle.user_global.launch_mode);
+    if (HYD_handle.user_global.bootstrap)
+        HYDU_FREE(HYD_handle.user_global.bootstrap);
 
     if (HYD_handle.user_global.bootstrap_exec)
         HYDU_FREE(HYD_handle.user_global.bootstrap_exec);

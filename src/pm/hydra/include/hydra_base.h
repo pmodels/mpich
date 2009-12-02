@@ -206,13 +206,11 @@ struct HYD_user_global {
     /* Checkpoint restart */
     char *ckpointlib;
     char *ckpoint_prefix;
-    int ckpoint_restart;
 
     /* Other random parameters */
     int enablex;
     int debug;
     char *wdir;
-    char *launch_mode;
 
     struct HYD_env_global global_env;
 };
