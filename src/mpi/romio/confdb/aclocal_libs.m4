@@ -7,6 +7,8 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     		AC_HELP_STRING([--with-$1=path],
 			       [specify path where $1 include directory and lib directory can be found]),
         if test "${with_$1}" != "yes" -a "${with_$1}" != "no" ; then
+            # is adding lib64 by default really the right thing to do?  What if
+            # we are on a 32-bit host that happens to have both lib dirs available?
             LDFLAGS="$LDFLAGS -L${with_$1}/lib64 -L${with_$1}/lib"
     	    CPPFLAGS="$CPPFLAGS -I${with_$1}/include"
         fi,
@@ -15,14 +17,14 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     		AC_HELP_STRING([--with-$1-include=path],
 			       [specify path where $1 include directory can be found]),
         if test "${with_$1_include}" != "yes" -a "${with_$1_include}" != "no" ; then
-    	    CPPFLAGS="$CPPFLAGS -I${with_$1_include}/include"
+    	    CPPFLAGS="$CPPFLAGS -I${with_$1_include}"
         fi,
     )
     AC_ARG_WITH($1-lib, 
     		AC_HELP_STRING([--with-$1-lib=path],
 			       [specify path where $1 lib directory can be found]),
         if test "${with_$1_lib}" != "yes" -a "${with_$1_lib}" != "no" ; then
-            LDFLAGS="$LDFLAGS -L${with_$1_lib}/lib64 -L${with_$1_lib}/lib"
+            LDFLAGS="$LDFLAGS -L${with_$1_lib}"
         fi,
     )
 ])
