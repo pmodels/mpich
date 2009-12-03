@@ -1262,7 +1262,7 @@ int smpd_handle_result(smpd_context_t *context)
                 ret_val = SMPD_SUCCESS;
             }
             else{
-		        printf("%s\n%d\n%s\n", host_description, listener_port, smpd_process.kvs_name);
+                printf("PMI_ROOT_HOST=%s\nPMI_ROOT_PORT=%d\nPMI_KVS=%s\nPMI_DOMAIN=%s\n", host_description, listener_port, smpd_process.kvs_name, smpd_process.domain_name);
             }
 		    /*printf("%s %d %s\n", smpd_process.host_list->host, smpd_process.port, smpd_process.kvs_name);*/
 		    fflush(stdout);
