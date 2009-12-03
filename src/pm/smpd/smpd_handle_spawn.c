@@ -194,6 +194,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	node.exe[0] = '\0';
 	node.host_id = -1;
 	node.hostname[0] = '\0';
+        node.alt_hostname[0] = '\0';
 	node.iproc = -1;
 	node.map_list = NULL;
 	node.next = NULL;
@@ -426,6 +427,7 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 		if (smpd_get_host_id(node.hostname, &node.host_id) != SMPD_SUCCESS)
 		{
 		    node.hostname[0] = '\0';
+                    node.alt_hostname[0] = '\0';
 		    node.host_id = -1;
 		}
 	    }
