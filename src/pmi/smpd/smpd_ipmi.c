@@ -309,6 +309,21 @@ static int uPMI_ConnectToHost(char *host, int port, smpd_state_t state)
     char error_msg[MPI_MAX_ERROR_STRING];
     int len;
 
+    /* Make sure that we have the smpd passphrase before connecting to PM */
+    if (smpd_process.passphrase[0] == '\0'){
+        smpd_get_smpd_data("phrase", smpd_process.passphrase, SMPD_PASSPHRASE_MAX_LENGTH);
+    }
+    if (smpd_process.passphrase[0] == '\0'){
+        if (smpd_process.noprompt){
+            pmi_err_printf("Error: No smpd passphrase specified through the registry or .smpd file, exiting.\n");
+            return PMI_FAIL;
+        }
+        else{
+            printf("Please specify an authentication passphrase for smpd: "); fflush(stdout);
+            smpd_get_password(smpd_process.passphrase);
+        }
+    }
+
     /*printf("posting a connect to %s:%d\n", host, port);fflush(stdout);*/
     result = smpd_create_context(SMPD_CONTEXT_PMI, pmi_process.set, SMPDU_SOCK_INVALID_SOCK/*pmi_process.sock*/, smpd_process.id, &pmi_process.context);
     if (result != SMPD_SUCCESS)
@@ -549,11 +564,6 @@ static int PMIi_InitSingleton(void ){
         smpd_process.nproc = 1;
 
         smpd_process.is_singleton_client = SMPD_TRUE;
-		/* Get passphrase for PM */
-		result = smpd_get_smpd_data("phrase", smpd_process.passphrase, SMPD_PASSPHRASE_MAX_LENGTH);
-		if(result != SMPD_SUCCESS){
-			PMII_ERR_SETPRINTANDJUMP("Unable to obtain the smpd passphrase\n", result);
-		}
 
         result = SMPDU_Sock_create_set(&pmi_process.set);
 	    if (result != SMPD_SUCCESS){
