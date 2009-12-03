@@ -783,6 +783,11 @@ static int rPMI_Init(int *spawned)
     if (spawned == NULL)
 	return PMI_ERR_INVALID_ARG;
 
+    /* Enable state machine tracing 
+    smpd_process.verbose = SMPD_TRUE;
+    smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
+    */
+
     /* initialize to defaults */
     smpd_process.id = 1;
     pmi_process.smpd_id = 1;
