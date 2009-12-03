@@ -557,11 +557,11 @@ static int PMIi_InitSingleton(void ){
 
         smpd_process.id = 1;
         pmi_process.smpd_id = 1;
+        pmi_process.smpd_key = 0;
         pmi_process.rpmi = PMI_TRUE;
         pmi_process.local_kvs = PMI_FALSE;
         pmi_process.iproc = 0;
         pmi_process.nproc = 1;
-        smpd_process.nproc = 1;
 
         smpd_process.is_singleton_client = SMPD_TRUE;
 
