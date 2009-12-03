@@ -685,6 +685,7 @@ int smpd_init_context(smpd_context_t *context, smpd_context_type_t type, SMPDU_S
     context->session_header[0] = '\0';
     context->singleton_init_hostname[0] = '\0';
     context->singleton_init_kvsname[0] = '\0';
+    context->singleton_init_domainname[0] = '\0';
     context->singleton_init_pm_port = -1;
     context->smpd_pwd[0] = '\0';
 #ifdef HAVE_WINDOWS_H

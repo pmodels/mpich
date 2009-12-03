@@ -470,6 +470,7 @@ typedef struct smpd_context_t
     char session_header[SMPD_MAX_SESSION_HEADER_LENGTH];
     /* FIXME: Remove this */
     char singleton_init_kvsname[SMPD_SINGLETON_MAX_KVS_NAME_LEN];
+    char singleton_init_domainname[SMPD_SINGLETON_MAX_KVS_NAME_LEN];
     char singleton_init_hostname[SMPD_SINGLETON_MAX_HOST_NAME_LEN];
     int singleton_init_pm_port;
     /* FIXME: Remove this */

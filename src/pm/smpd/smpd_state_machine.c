@@ -680,6 +680,7 @@ int smpd_state_reading_challenge_string(smpd_context_t *context, SMPDU_Sock_even
 
     if (smpd_verify_version(context->pszChallengeResponse) == SMPD_TRUE)
     {
+        smpd_dbg_printf("Verification of smpd version succeeded\n");
 	strcpy(phrase, smpd_process.passphrase);
 	/* crypt the passphrase + the challenge */
 	if (strlen(phrase) + strlen(context->pszChallengeResponse) > SMPD_PASSPHRASE_MAX_LENGTH)
@@ -697,7 +698,8 @@ int smpd_state_reading_challenge_string(smpd_context_t *context, SMPDU_Sock_even
     }
     else
     {
-	strcpy(context->pszChallengeResponse, SMPD_VERSION_FAILURE);
+        smpd_dbg_printf("Verification of smpd version failed...Sending version failure to PM\n");
+	    strcpy(context->pszChallengeResponse, SMPD_VERSION_FAILURE);
     }
 
     /* write the response */
@@ -6228,6 +6230,9 @@ int smpd_state_singleton_mpiexec_connecting(smpd_context_t *context, SMPDU_Sock_
     result = smpd_create_command("singinit_info", smpd_process.id, 1, SMPD_FALSE, &cmd_ptr);
     if(result == SMPD_SUCCESS){
         result = smpd_add_command_arg(cmd_ptr, "kvsname", context->singleton_init_kvsname);
+    }
+    if(result == SMPD_SUCCESS){
+        result = smpd_add_command_arg(cmd_ptr, "domainname", context->singleton_init_domainname);
     }
     if(result == SMPD_SUCCESS){
         result = smpd_add_command_arg(cmd_ptr, "host", context->singleton_init_hostname);

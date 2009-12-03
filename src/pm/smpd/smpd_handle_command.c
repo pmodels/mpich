@@ -1232,6 +1232,8 @@ int smpd_handle_result(smpd_context_t *context)
                         SMPD_SINGLETON_MAX_HOST_NAME_LEN);
                 strncpy(p_singleton_mpiexec_context->singleton_init_kvsname, smpd_process.kvs_name,
                         SMPD_SINGLETON_MAX_KVS_NAME_LEN);
+                strncpy(p_singleton_mpiexec_context->singleton_init_domainname, smpd_process.domain_name,
+                        SMPD_SINGLETON_MAX_KVS_NAME_LEN);
                 /* Post a connect */
                 /* FIXME : mismatch btw size of connect_to->host and max host name len */
                 result = get_hostname(connect_to_host, SMPD_SINGLETON_MAX_HOST_NAME_LEN);
@@ -6176,6 +6178,13 @@ int smpd_handle_singinit_info_command(smpd_context_t *context){
     if (MPIU_Str_get_string_arg(cmd->cmd, "kvsname", smpd_process.kvs_name, 
             SMPD_SINGLETON_MAX_KVS_NAME_LEN) != MPIU_STR_SUCCESS){
 	    smpd_err_printf("singinit_info command missing kvsname\n");
+	    smpd_exit_fn(FCNAME);
+	    return SMPD_FAIL;
+    }
+
+    if (MPIU_Str_get_string_arg(cmd->cmd, "domainname", smpd_process.domain_name, 
+            SMPD_SINGLETON_MAX_KVS_NAME_LEN) != MPIU_STR_SUCCESS){
+	    smpd_err_printf("singinit_info command missing domainname\n");
 	    smpd_exit_fn(FCNAME);
 	    return SMPD_FAIL;
     }

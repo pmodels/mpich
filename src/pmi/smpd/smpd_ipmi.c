@@ -544,8 +544,7 @@ static int PMIi_InitSingleton(void ){
         MPIU_Strncpy(pmi_process.kvs_name_singleton_nopm, pmi_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
         /* Update the pmi process structs with the new remote KVS info */
         MPIU_Strncpy(pmi_process.kvs_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
-        MPIU_Strncpy(pmi_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
-        MPIU_Strncpy(smpd_process.domain_name, smpd_process.kvs_name, PMI_MAX_KVS_NAME_LENGTH);
+        MPIU_Strncpy(pmi_process.domain_name, smpd_process.domain_name, PMI_MAX_KVS_NAME_LENGTH);
         MPIU_Strncpy(pmi_process.host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
         MPIU_Strncpy(pmi_process.root_host, smpd_process.host, PMI_MAX_HOST_NAME_LENGTH);
         pmi_process.root_port = smpd_process.port;
