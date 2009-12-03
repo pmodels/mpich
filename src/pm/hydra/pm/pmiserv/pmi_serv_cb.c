@@ -340,9 +340,6 @@ void HYD_pmcd_pmi_serv_signal_cb(int sig)
 #if defined SIGSTOP
         || sig == SIGSTOP
 #endif /* SIGSTOP */
-#if defined SIGCONT
-        || sig == SIGCONT
-#endif /* SIGSTOP */
 ) {
         /* There's nothing we can do with the return value for now. */
         HYD_pmcd_pmi_serv_cleanup();

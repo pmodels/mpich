@@ -61,11 +61,6 @@ HYD_status HYDU_set_common_signals(void (*handler) (int))
     status = HYDU_set_signal(SIGUSR1, handler);
     HYDU_ERR_POP(status, "unable to set SIGUSR1\n");
 
-#if defined SIGCONT
-    status = HYDU_set_signal(SIGCONT, handler);
-    HYDU_ERR_POP(status, "unable to set SIGCONT\n");
-#endif /* SIGCONT */
-
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
