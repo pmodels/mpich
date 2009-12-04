@@ -190,7 +190,7 @@ MPIU_ExInitialize(
     Close the completion queue progress engine. This function can only be called
     once.
 */
-void
+int
 MPIU_ExFinalize(
     void
     );

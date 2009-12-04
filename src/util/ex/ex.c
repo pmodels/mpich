@@ -155,7 +155,7 @@ MPIU_ExInitialize(
 }
 
 
-void
+int
 MPIU_ExFinalize(
     void
     )
@@ -165,6 +165,7 @@ MPIU_ExFinalize(
     CloseHandle(s_port);
     s_port = NULL;
 #endif
+    return MPI_SUCCESS;
 }
 
 
