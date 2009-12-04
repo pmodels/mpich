@@ -196,7 +196,11 @@ class MPD(object):
         if vinfo:
             print "mpd: your python version must be >= 2.2 ; current version is:", vinfo
             sys.exit(-1)
+
+        # need to close both object and underlying fd (ticket #963)
         sys.stdin.close()
+        os.close(0)
+
         if self.parmdb['MPD_ECHO_PORT_FLAG']:    # do this before becoming a daemon
             # print self.parmdb['MPD_LISTEN_PORT']
             print "mpd_port=%d" % self.parmdb['MPD_LISTEN_PORT']
