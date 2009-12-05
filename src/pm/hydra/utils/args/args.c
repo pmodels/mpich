@@ -171,6 +171,16 @@ HYD_status HYDU_set_str_and_incr(char *arg, char ***argv, char **var)
 {
     HYD_status status = HYD_SUCCESS;
 
+    if (**argv == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
+
+    if (***argv == '-') {
+        /* value starts with an '-' indicates that it might be the
+         * next option */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "option \"-%s\" does not accept value \"%s\"\n", arg, **argv);
+    }
+
     status = HYDU_set_str(arg, argv, var, **argv);
     HYDU_ERR_POP(status, "unable to set int\n");
 
@@ -205,6 +215,13 @@ HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var)
 
     if (**argv == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
+
+    if (***argv == '-') {
+        /* value starts with an '-' indicates that it might be the
+         * next option */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "option \"-%s\" does not accept value \"%s\"\n", arg, **argv);
+    }
 
     status = HYDU_set_int(arg, argv, var, atoi(**argv));
     HYDU_ERR_POP(status, "unable to set int\n");
