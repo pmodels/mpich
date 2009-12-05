@@ -15,7 +15,7 @@ HYD_status HYDT_bscd_rsh_launch_procs(char **args, struct HYD_node *node_list,
                                       HYD_status(*stdout_cb) (void *buf, int buflen),
                                       HYD_status(*stderr_cb) (void *buf, int buflen))
 {
-    int num_hosts, idx, i, host_idx;
+    int num_hosts, idx, i, host_idx, fd;
     int *pid, *fd_list;
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL;
@@ -83,7 +83,8 @@ HYD_status HYDT_bscd_rsh_launch_procs(char **args, struct HYD_node *node_list,
 
         /* Register stdio callbacks for the spawned process */
         if (i == 0) {
-            status = HYDU_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, &fd_stdin,
+            fd = STDIN_FILENO;
+            status = HYDU_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin,
                                           HYDT_bscu_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
