@@ -33,15 +33,13 @@ static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_
         /* If we used up more than half of the array elements, merge
          * what we have so far */
         if (i > (HYD_NUM_TMP_STRINGS / 2)) {
-            if (foo)
-                HYDU_FREE(foo);
-
             tmp[i++] = NULL;
             status = HYDU_str_alloc_and_join(tmp, &foo);
             HYDU_ERR_POP(status, "error joining strings\n");
 
             i = 0;
-            tmp[i++] = foo;
+            tmp[i++] = HYDU_strdup(foo);
+            HYDU_FREE(foo);
         }
     }
 
