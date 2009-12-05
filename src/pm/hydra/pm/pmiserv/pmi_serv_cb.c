@@ -336,11 +336,7 @@ void HYD_pmcd_pmi_serv_signal_cb(int sig)
 {
     HYDU_FUNC_ENTER();
 
-    if (sig == SIGINT || sig == SIGQUIT || sig == SIGTERM
-#if defined SIGSTOP
-        || sig == SIGSTOP
-#endif /* SIGSTOP */
-) {
+    if (sig == SIGINT || sig == SIGQUIT || sig == SIGTERM) {
         /* There's nothing we can do with the return value for now. */
         HYD_pmcd_pmi_serv_cleanup();
     }

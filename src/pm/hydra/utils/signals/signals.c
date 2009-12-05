@@ -53,11 +53,6 @@ HYD_status HYDU_set_common_signals(void (*handler) (int))
     status = HYDU_set_signal(SIGTERM, handler);
     HYDU_ERR_POP(status, "unable to set SIGTERM\n");
 
-#if defined SIGSTOP
-    status = HYDU_set_signal(SIGSTOP, handler);
-    HYDU_ERR_POP(status, "unable to set SIGSTOP\n");
-#endif /* SIGSTOP */
-
     status = HYDU_set_signal(SIGUSR1, handler);
     HYDU_ERR_POP(status, "unable to set SIGUSR1\n");
 
