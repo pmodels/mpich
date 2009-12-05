@@ -129,7 +129,10 @@ HYD_status HYDT_bsci_wait_for_completion(int timeout);
  *
  * \param[out] node_list       Lists of nodes available
  *
- * This function allows the upper layers to query the available nodes.
+ * This function allows the upper layers to query the available
+ * nodes. It is important to note that if the upper layer queries the
+ * bootstrap server with this function, the bootstrap layer is free to
+ * assume that the same node list will be used for proxy launching.
  */
 HYD_status HYDT_bsci_query_node_list(struct HYD_node **node_list);
 

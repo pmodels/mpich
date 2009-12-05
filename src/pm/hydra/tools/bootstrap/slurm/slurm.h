@@ -15,4 +15,6 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
 HYD_status HYDT_bscd_slurm_query_proxy_id(int *proxy_id);
 HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list);
 
+extern int HYDT_bscd_slurm_user_node_list;
+
 #endif /* SLURM_H_INCLUDED */

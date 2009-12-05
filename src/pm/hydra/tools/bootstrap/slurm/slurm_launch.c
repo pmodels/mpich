@@ -11,8 +11,7 @@
 
 static int fd_stdin, fd_stdout, fd_stderr;
 
-static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_str,
-                                   int *num_hosts)
+static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_str)
 {
     int i;
     char *tmp[HYD_NUM_TMP_STRINGS], *foo = NULL;
@@ -22,10 +21,8 @@ static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_
     HYDU_FUNC_ENTER();
 
     i = 0;
-    *num_hosts = 0;
     for (node = node_list; node; node = node->next) {
         tmp[i++] = HYDU_strdup(node->hostname);
-        (*num_hosts)++;
 
         if (node->next)
             tmp[i++] = HYDU_strdup(",");
@@ -69,6 +66,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     int *pid, *fd_list;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL;
+    struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -85,12 +83,19 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
 
     idx = 0;
     targs[idx++] = HYDU_strdup(path);
-    targs[idx++] = HYDU_strdup("--nodelist");
 
-    status = node_list_to_str(node_list, &node_list_str, &num_hosts);
-    HYDU_ERR_POP(status, "unable to build a node list string\n");
+    if (HYDT_bscd_slurm_user_node_list) {
+        targs[idx++] = HYDU_strdup("--nodelist");
 
-    targs[idx++] = HYDU_strdup(node_list_str);
+        status = node_list_to_str(node_list, &node_list_str);
+        HYDU_ERR_POP(status, "unable to build a node list string\n");
+
+        targs[idx++] = HYDU_strdup(node_list_str);
+    }
+
+    num_hosts = 0;
+    for (node = node_list; node; node = node->next)
+        num_hosts++;
 
     targs[idx++] = HYDU_strdup("-N");
     targs[idx++] = HYDU_int_to_str(num_hosts);

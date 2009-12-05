@@ -9,6 +9,8 @@
 #include "bscu.h"
 #include "slurm.h"
 
+int HYDT_bscd_slurm_user_node_list = 1;
+
 static void full_str_to_groups(char *str, char **list)
 {
     char *tmp;
@@ -138,6 +140,9 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
                 }
             }
         }
+
+        /* node list is provided by the bootstrap server */
+        HYDT_bscd_slurm_user_node_list = 0;
     }
 
   fn_exit:
