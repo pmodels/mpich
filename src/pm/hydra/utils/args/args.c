@@ -85,11 +85,16 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
     /* If arg is of the form foo=bar, we separate it out as two
      * arguments */
     for (val = arg; *val && *val != '='; val++);
+    if (*val == '=') {
+        /* Found an '='; use the rest of the argument as a separate
+         * argument */
+        **argv_p = val + 1;
+    }
+    else {
+        /* Move to the next argument */
+        (*argv_p)++;
+    }
     *val = 0;   /* close out key */
-    val++;
-
-    /* Move to the next argument */
-    (*argv_p)++;
 
     m = match_table;
     while (m->handler_fn) {
@@ -121,7 +126,6 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
   fn_fail:
     goto fn_exit;
 }
-
 
 HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_table)
 {
