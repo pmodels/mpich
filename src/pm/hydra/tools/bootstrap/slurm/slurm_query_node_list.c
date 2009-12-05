@@ -47,43 +47,40 @@ static void full_str_to_groups(char *str, char **list)
 
 static HYD_status group_to_individual_nodes(char *str, char **list)
 {
-    char *pre = NULL, *nodes = NULL, *tmp;
-    int start_node, end_node;
-    char new[MAX_HOSTNAME_LEN], *node_str[MAX_HOSTNAME_LEN];
-    int arg, i;
+    char *pre, *nodes, *tmp, *start_str, *end_str, *node_name;
+    char *node_str[HYD_NUM_TMP_STRINGS], *set[HYD_NUM_TMP_STRINGS];
+    int start, end, arg, i, j;
     HYD_status status = HYD_SUCCESS;
 
-    tmp = str;
-    i = 0;
-    while (1) {
-        new[i] = *tmp;
+    pre = HYDU_strdup(str);
+    for (tmp = pre; *tmp != '[' && *tmp != 0; tmp++);
 
-        if (*tmp == '[') {
-            new[i] = 0;
-            pre = HYDU_strdup(new);
-            i = -1;
-        }
-
-        if (*tmp == ']' || *tmp == 0) {
-            new[i] = 0;
-            nodes = HYDU_strdup(new);
-            break;
-        }
-
-        i++;
-        tmp++;
+    if (*tmp == 0) { /* only one node in the group */
+        list[0] = pre;
+        list[1] = NULL;
+        goto fn_exit;
     }
+
+    /* more than one node in the group */
+    *tmp = 0;
+    nodes = tmp + 1;
+
+    for (tmp = nodes; *tmp != ']' && *tmp != 0; tmp++);
+    *tmp = 0; /* remove the closing ']' */
+
+    for ((set[0] = strtok(nodes, ",")), i = 1; (set[i] = strtok(NULL, ",")); i++);
 
     arg = 0;
-    if (pre == NULL) {
-        list[arg++] = nodes;
-    }
-    else {
-        start_node = atoi(strtok(nodes, "-"));
-        end_node = atoi(strtok(NULL, "-"));
-        for (i = start_node; i <= end_node; i++) {
+    for (i = 0; set[i]; i++) {
+        start_str = strtok(set[i], "-");
+        end_str = strtok(NULL, "-");
+
+        start = atoi(start_str);
+        end = end_str ? atoi(end_str) : start;
+
+        for (j = start; j <= end; j++) {
             node_str[0] = HYDU_strdup(pre);
-            node_str[1] = HYDU_int_to_str(i);
+            node_str[1] = HYDU_int_to_str(j);
             node_str[2] = NULL;
 
             status = HYDU_str_alloc_and_join(node_str, &list[arg++]);
