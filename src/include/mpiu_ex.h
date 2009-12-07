@@ -262,6 +262,8 @@ typedef struct MPIU_EXOVERLAPPED {
 
 } MPIU_EXOVERLAPPED;
 
+/* Get pointer to OS overlapped from EX overlapped pointer*/
+#define MPIU_EX_GET_OVERLAPPED_PTR(ex_ovp) (&((ex_ovp)->ov))
 
 /*
     MPIU_ExInitOverlapped
