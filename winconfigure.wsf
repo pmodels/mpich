@@ -6217,6 +6217,7 @@ Function GenBuild()
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("common_cflags = $(common_cflags) -Zi -Od -DDEBUG -D_MT -MTd")
 	mfile.WriteLine("!ENDIF")
+	mfile.WriteLine("common_cflags = $(common_cflags) -DUSE_DBG_LOGGING")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("lflags  = $(lflags) /OPT:REF /INCREMENTAL:NO /NOLOGO /MANIFEST")
