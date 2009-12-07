@@ -245,12 +245,12 @@ MPIU_ExProcessCompletions(
 static
 int
 ExpKeyZeroCompletionProcessor(
-    DWORD BytesTransfered,
+    DWORD BytesTransferred,
     PVOID pOverlapped
     )
 {
     MPIU_EXOVERLAPPED* pov = CONTAINING_RECORD(pOverlapped, MPIU_EXOVERLAPPED, ov);
-    return MPIU_ExCompleteOverlapped(pov);
+    return MPIU_ExCompleteOverlapped(pov, BytesTransferred);
 }
 
 

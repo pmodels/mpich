@@ -425,9 +425,11 @@ static
 inline
 int
 MPIU_ExCompleteOverlapped(
-    MPIU_EXOVERLAPPED* pOverlapped
+    MPIU_EXOVERLAPPED* pOverlapped, int BytesTransferred
     )
 {
+    pOverlapped->ov.InternalHigh = BytesTransferred;
+
     if(SUCCEEDED(MPIU_ExGetStatus(pOverlapped)))
         return pOverlapped->pfnSuccess(pOverlapped);
 
