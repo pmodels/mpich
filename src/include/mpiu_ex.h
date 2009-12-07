@@ -357,6 +357,7 @@ MPIU_ExGetBytesTransferred(
 }
 
 #define MPIU_EX_STATUS_IO_ABORT  (0x80000000 | (FACILITY_WIN32 << 16) | ERROR_OPERATION_ABORTED)
+#define MPIU_EX_STATUS_TO_ERRNO(ex_status) HRESULT_CODE(~0x80000000 & ex_status)
 typedef HRESULT MPIU_Ex_status_t;
 
 /*
