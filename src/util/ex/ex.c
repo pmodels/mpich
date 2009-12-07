@@ -18,7 +18,6 @@
 
 static
 int
-WINAPI
 ExpKeyZeroCompletionProcessor(
     DWORD BytesTransfered,
     PVOID pOverlapped
@@ -245,7 +244,6 @@ MPIU_ExProcessCompletions(
 
 static
 int
-WINAPI
 ExpKeyZeroCompletionProcessor(
     DWORD BytesTransfered,
     PVOID pOverlapped

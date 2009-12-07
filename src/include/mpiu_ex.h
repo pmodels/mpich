@@ -90,7 +90,7 @@ MPIU_ExCloseSet(
 */
 typedef
 int
-(WINAPI * MPIU_ExCompletionProcessor)(
+(* MPIU_ExCompletionProcessor)(
     DWORD BytesTransferred,
     PVOID pOverlapped
     );
@@ -237,7 +237,7 @@ struct MPIU_EXOVERLAPPED;
 
 typedef
 int
-(WINAPI * MPIU_ExCompletionRoutine)(
+(* MPIU_ExCompletionRoutine)(
     struct MPIU_EXOVERLAPPED* pOverlapped
     );
 
