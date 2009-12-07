@@ -194,7 +194,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="dbgd.lib"
+				AdditionalDependencies="dbgd.lib exd.lib"
 				OutputFile="..\..\..\..\..\lib\ch3nemesisd.lib"
 				AdditionalLibraryDirectories="..\..\..\..\..\lib"
 			/>
@@ -203,9 +203,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"

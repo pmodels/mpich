@@ -83,6 +83,52 @@ int MPID_nem_newtcp_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int d
     return mpi_errno;
 }
 
+/* Handle the request at the head of vc's sendq */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_newtcp_module_handle_sendq_head_req
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_newtcp_module_handle_sendq_head_req(MPIDI_VC_t *vc, int *req_complete)
+{
+    int (*req_handler)(MPIDI_VC_t *, MPID_Request *, int *);
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request *req = NULL;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_HANDLE_SENDQ_HEAD_REQ);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_HANDLE_SENDQ_HEAD_REQ);
+
+    MPIU_Assert(req_complete != NULL);
+
+    MPIU_Assert(!SENDQ_EMPTY(VC_FIELD(vc, send_queue)));
+    req = SENDQ_HEAD(VC_FIELD(vc, send_queue));
+    MPIU_Assert(req != NULL);
+
+    req_handler = req->dev.OnDataAvail;
+    if (!req_handler){
+        MPIU_Assert(MPIDI_Request_get_type(req) != MPIDI_REQUEST_TYPE_GET_RESP);
+        MPIDI_CH3U_Request_complete(req);
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+        SENDQ_DEQUEUE(&VC_FIELD(vc, send_queue), &req);
+        *req_complete = 1;
+    }
+    else{
+        *req_complete = 0;
+        mpi_errno = req_handler(vc, req, req_complete);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            
+        if (*req_complete){
+            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+            SENDQ_DEQUEUE(&VC_FIELD(vc, send_queue), &req);
+        }
+    }
+    req->dev.iov_offset = 0;
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_HANDLE_SENDQ_HEAD_REQ);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_send_queued
@@ -113,6 +159,14 @@ int MPID_nem_newtcp_module_send_queued (MPIDI_VC_t *vc)
 /*         printf("sreq = %p sreq->dev.iov = %p iov = %p\n", sreq, sreq->dev.iov, iov); */
 /*         printf("iov[0].MPID_IOV_BUF = %p iov[0].MPID_IOV_LEN = %d iov_count = %d\n", iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN, sreq->dev.iov_count);//DARIUS */
 /*         printf("&iov[0].MPID_IOV_LEN = %p sreq->dev.iov_offset = %d\n", &iov[0].MPID_IOV_LEN, sreq->dev.iov_offset);//DARIUS */
+        /* FIXME: REMOVE ME !!!! DEBUG STMT */
+        {
+            int i;
+            for(i=0; i< sreq->dev.iov_count; i++){
+                MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Trying to write iov (sz = %d), pkt type = %d ...", sreq->dev.iov[sreq->dev.iov_offset + i].len, ((MPIDI_CH3_Pkt_t *)sreq->dev.iov[sreq->dev.iov_offset + i].buf)->type));
+            }
+        }
+        
         MPIU_OSW_RETRYON_INTR((offset < 0), 
             (mpi_errno = MPIU_SOCKW_Writev(VC_FIELD(vc, sc)->fd, iov, sreq->dev.iov_count, &offset)));
         if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -140,43 +194,24 @@ int MPID_nem_newtcp_module_send_queued (MPIDI_VC_t *vc)
         }
         if (!complete)
         {
-            /* writev couldn't write the entire iov, give up for now */
+            MPID_IOV *iov = &sreq->dev.iov[sreq->dev.iov_offset];
+            int n_iov = sreq->dev.iov_count;
+            /* writev couldn't write the entire iov,
+             * post a write for the rem data and exit */
+            mpi_errno = MPID_nem_newtcp_module_post_writev_ex(VC_FIELD(vc, sc), iov, n_iov);
+            if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
             break;
         }
         else
         {
             /* sent whole message */
-            int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
-
-            reqFn = sreq->dev.OnDataAvail;
-            if (!reqFn)
-            {
-                MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-                MPIDI_CH3U_Request_complete(sreq);
-                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
-                SENDQ_DEQUEUE(&VC_FIELD(vc, send_queue), &sreq);
-                break;
-            }
-
             complete = 0;
-            mpi_errno = reqFn(vc, sreq, &complete);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            
-            if (complete)
-            {
-                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
-                SENDQ_DEQUEUE(&VC_FIELD(vc, send_queue), &sreq);
-                break;
-            }
-            sreq->dev.iov_offset = 0;
+            mpi_errno = MPID_nem_newtcp_module_handle_sendq_head_req(vc, &complete);
+            if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
         }
     }
 
-    if (SENDQ_EMPTY(VC_FIELD(vc, send_queue))){
-        mpi_errno = MPID_nem_newtcp_module_conn_wr_disable(vc);
-        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
-    }
-    
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_SEND_QUEUED);
     return mpi_errno;
@@ -202,7 +237,9 @@ int MPID_nem_newtcp_module_send_finalize()
 }
 
 /* MPID_nem_newtcp_module_conn_est -- this function is called when the
-   connection is finally extablished to send any pending sends */
+ * connection is finally extablished to send any pending sends 
+ *  & post the first recv
+ */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_conn_est
 #undef FCNAME
@@ -218,12 +255,15 @@ int MPID_nem_newtcp_module_conn_est (MPIDI_VC_t *vc)
 
     if (!SENDQ_EMPTY (VC_FIELD(vc, send_queue)))
     {
-        mpi_errno = MPID_nem_newtcp_module_conn_wr_enable(vc);
-        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         mpi_errno = MPID_nem_newtcp_module_send_queued (vc);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
+    /* Post a read on the module scrap recv buf */
+    mpi_errno = MPID_nem_newtcp_module_post_read_ex(VC_FIELD(vc, sc),
+                        VC_FIELD(vc, sc)->tmp_buf, VC_FIELD(vc, sc)->tmp_buf_len);
+    if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        
  fn_fail:    
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONN_EST);
     return mpi_errno;
@@ -283,7 +323,9 @@ int MPID_nem_newtcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
-    /* create and enqueue request */
+    /* Data is partially written OR vc is still connecting...
+     * create and enqueue request
+     */
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
@@ -328,9 +370,12 @@ int MPID_nem_newtcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 /*     printf("&sreq->dev.iov[0].MPID_IOV_LEN = %p\n", &sreq->dev.iov[0].MPID_IOV_LEN);//DARIUS */
 
     if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)) && MPID_nem_newtcp_module_vc_is_connected(vc)){
-        mpi_errno = MPID_nem_newtcp_module_conn_wr_enable(vc);
-        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        /* Data was partially written... Post a write for the rem data */
+        mpi_errno = MPID_nem_newtcp_module_post_writev_ex(VC_FIELD(vc, sc),
+                        sreq->dev.iov, sreq->dev.iov_count);
+        if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
+    
     SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
 
     *sreq_ptr = sreq;
@@ -365,14 +410,23 @@ int MPID_nem_newtcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
         if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)))
         {
             MPID_IOV iov[2];
+            int iov_cnt;
 
             iov[0].MPID_IOV_BUF = hdr;
             iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
-            iov[1].MPID_IOV_BUF = data;
-            iov[1].MPID_IOV_LEN = data_sz;
+            if(data_sz > 0){
+                iov[1].MPID_IOV_BUF = data;
+                iov[1].MPID_IOV_LEN = data_sz;
+                iov_cnt = 2;
+            }
+            else{
+                iov_cnt = 1;
+            }
         
+            MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "writing hdr (sz = %d) and data (sz = %d)", sizeof(MPIDI_CH3_PktGeneric_t), data_sz));
+
             MPIU_OSW_RETRYON_INTR((offset < 0),
-                (mpi_errno = MPIU_SOCKW_Writev(VC_FIELD(vc, sc)->fd, iov, 2, &offset)));
+                (mpi_errno = MPIU_SOCKW_Writev(VC_FIELD(vc, sc)->fd, iov, iov_cnt, &offset)));
             if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
             if(offset < 0){
@@ -412,13 +466,13 @@ int MPID_nem_newtcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
                 }
             }
         }
+        /* If sendq is not empty we default to enqueueing the request */
     }
     else
     {
         mpi_errno = MPID_nem_newtcp_module_connect(vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-
 
     /* save iov */
     if (offset < sizeof(MPIDI_CH3_PktGeneric_t))
@@ -451,9 +505,12 @@ int MPID_nem_newtcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
     sreq->dev.iov_offset = 0;
 
     if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)) && MPID_nem_newtcp_module_vc_is_connected(vc)){
-        mpi_errno = MPID_nem_newtcp_module_conn_wr_enable(vc);
-        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        /* Post a write for the iov */
+        mpi_errno = MPID_nem_newtcp_module_post_writev_ex(VC_FIELD(vc, sc),
+                        sreq->dev.iov, sreq->dev.iov_count);
+        if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
+
     SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
 
  fn_exit:
@@ -538,8 +595,7 @@ int MPID_nem_newtcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
             offset -= iov_p->MPID_IOV_LEN;
     }
         
-    if (complete)
-    {
+    if (complete){
         /* sent whole iov */
         int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
 
@@ -570,11 +626,14 @@ int MPID_nem_newtcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     sreq->dev.iov_offset = 0;
         
     if (SENDQ_EMPTY(VC_FIELD(vc, send_queue)) && MPID_nem_newtcp_module_vc_is_connected(vc)){
-        mpi_errno = MPID_nem_newtcp_module_conn_wr_enable(vc);
-        if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        /* Post a write for the iov */
+        mpi_errno = MPID_nem_newtcp_module_post_writev_ex(VC_FIELD(vc, sc),
+            sreq->dev.iov, sreq->dev.iov_count);
+        if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
+ 
     SENDQ_ENQUEUE(&VC_FIELD(vc, send_queue), sreq);
-
+ 
  fn_exit:
     return mpi_errno;
  fn_fail:

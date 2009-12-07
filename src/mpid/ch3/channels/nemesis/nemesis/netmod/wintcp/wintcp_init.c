@@ -27,6 +27,8 @@ typedef struct MPIDU_Sock_ifaddr_t {
     unsigned char ifaddr[16];
 } MPIDU_Sock_ifaddr_t;
 
+/* FIXME: Move all externs to say socksm_globals.h */
+extern MPIU_ExSetHandle_t MPID_nem_newtcp_module_ex_set_hnd;
 
 MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue = 0;
 MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
@@ -79,13 +81,21 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     /* first make sure that our private fields in the vc fit into the area provided  */
     MPIU_Assert(sizeof(MPID_nem_newtcp_module_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
     
-    /* set up listener socket */
+    /* Initialize sock wrapper */
     mpi_errno = MPIU_SOCKW_Init();
     if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
+    /* Initialize the Executive progress engine */
     mpi_errno = MPIU_ExInitialize();
     if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
+    /* Create an Executive set */
+    /* FIXME: All MPI util funcs should return an MPI error code */
+    MPID_nem_newtcp_module_ex_set_hnd = MPIU_ExCreateSet();
+    MPIU_ERR_CHKANDJUMP(MPID_nem_newtcp_module_ex_set_hnd == MPIU_EX_INVALID_SET,
+                            mpi_errno, MPI_ERR_OTHER, "**ex_create_set"); 
+
+    /* Setup listen socket */
     mpi_errno = MPIU_SOCKW_Sock_open(AF_INET, SOCK_STREAM, IPPROTO_TCP, &(MPID_nem_newtcp_module_g_lstn_sc.fd));
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -98,8 +108,18 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     mpi_errno = MPIU_SOCKW_Listen(MPID_nem_newtcp_module_g_lstn_sc.fd, SOMAXCONN);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+    /* Associate the listen sock with the newtcp module executive set 
+     * - Key 0 command processor */
+    /* FIXME: No error code returned ! */
+    MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, MPID_nem_newtcp_module_g_lstn_sc.fd);
+    
+    /* Register the listening handlers with executive */
+    /* We also need to post the first accept here */
+
     MPID_nem_newtcp_module_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
+    /* FIXME: WINTCP ASYNC
     MPID_nem_newtcp_module_g_lstn_sc.handler = MPID_nem_newtcp_module_state_listening_handler;
+    */
 
     /* create business card */
     mpi_errno = MPID_nem_newtcp_module_get_business_card (pg_rank, bc_val_p, val_max_sz_p);

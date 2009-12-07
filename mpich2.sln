@@ -5638,6 +5638,7 @@ Global
 		{10115F75-1A40-4155-BCD4-9521609DFFEC}.testrelease|x64.ActiveCfg = Release|Win32
 		{ACB7CE11-E708-49CD-9DC5-6022B1BF730B}.ch3nemesisDebug|Any CPU.ActiveCfg = Debug|Win32
 		{ACB7CE11-E708-49CD-9DC5-6022B1BF730B}.ch3nemesisDebug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{ACB7CE11-E708-49CD-9DC5-6022B1BF730B}.ch3nemesisDebug|Mixed Platforms.Build.0 = Debug|Win32
 		{ACB7CE11-E708-49CD-9DC5-6022B1BF730B}.ch3nemesisDebug|Win32.ActiveCfg = Debug|Win32
 		{ACB7CE11-E708-49CD-9DC5-6022B1BF730B}.ch3nemesisDebug|Win32.Build.0 = Debug|Win32
 		{ACB7CE11-E708-49CD-9DC5-6022B1BF730B}.ch3nemesisDebug|x64.ActiveCfg = Debug|Win32

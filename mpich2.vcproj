@@ -3749,9 +3749,11 @@
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
+				OutputDocumentFile=""
 			/>
 			<Tool
 				Name="VCBscMakeTool"
+				OutputFile=""
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -3764,7 +3766,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2shmd.dll to system32 directory"
+				Description="copying mpich2nemesisd.dll to system32 directory"
 				CommandLine="copy lib\mpich2nemesisd.dll %SystemRoot%\system32\mpich2nemesisd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2nemesisd.lib lib\mpich2nemesisd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
