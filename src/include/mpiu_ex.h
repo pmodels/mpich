@@ -165,7 +165,7 @@ MPIU_ExGetPortValue(
 
     Return Value:
         The result of the asynchronous function last to complete.
-        if fWaitForEvent is FALSE and no more events to process, the value
+        if fWaitForEventAndStatus is FALSE and no more events to process, the value
         returned is MPI_SUCCESS.
 */
 int
