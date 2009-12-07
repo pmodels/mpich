@@ -253,6 +253,12 @@ typedef struct MPIU_EXOVERLAPPED {
     OVERLAPPED ov;
     MPIU_ExCompletionRoutine pfnSuccess;
     MPIU_ExCompletionRoutine pfnFailure;
+    /*  FIXME: Should we allow a user_ctxt here ?
+        This will allow us to implement finding the record containing executive
+        overlapped structure in systems/compilers that don't implement mechanisms
+        similar to CONTAINING_RECORD.
+     */
+    /* void *user_ctxt; */
 
 } MPIU_EXOVERLAPPED;
 
