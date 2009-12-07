@@ -409,6 +409,11 @@ unexpected messages queued.
 **init_vcrt:failed to create VCRT
 **init_getptr:failed to get the vcr
 
+# Executive progress engine error codes - currently used only by wintcp
+**ex_init:Unable to initialize executive progress engine
+**ex_create_set: Unable to create an executive set
+**ex_finalize:Unable to finalize executive progress engine
+
 # Socket error codes - used by several devices & utils
 **bad_sock:bad sock
 **ifnameinvalid:Interface name was invalid in call to inet_pton
