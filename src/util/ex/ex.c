@@ -5,8 +5,7 @@
  */
 
 #include <mpichconf.h>
-#include <mpiutil.h>
-#include <mpi.h>
+#include <mpiimpl.h>
 #include <mpiu_ex.h>
 #ifdef HAVE_WINNT_H
 #include <winnt.h>
