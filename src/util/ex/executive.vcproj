@@ -110,6 +110,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="../../include;../../include/win32"
 				PreprocessorDefinitions="NDEBUG"
 				RuntimeLibrary="0"

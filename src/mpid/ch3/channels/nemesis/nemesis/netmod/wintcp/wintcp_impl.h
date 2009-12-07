@@ -27,6 +27,7 @@
 #ifdef HAVE_NETDB_H
     #include <netdb.h>
 #endif
+#include "mpiu_ex.h"
 #include "socksm.h"
 
 /* globals */

@@ -36,6 +36,9 @@ int MPID_nem_newtcp_module_finalize()
     }
     mpi_errno = MPIU_SOCKW_Finalize();
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIU_ExFinalize();
+    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         
  fn_exit:
     return mpi_errno;

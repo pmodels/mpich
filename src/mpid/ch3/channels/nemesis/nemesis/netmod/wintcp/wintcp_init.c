@@ -83,6 +83,9 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     mpi_errno = MPIU_SOCKW_Init();
     if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
+    mpi_errno = MPIU_ExInitialize();
+    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
     mpi_errno = MPIU_SOCKW_Sock_open(AF_INET, SOCK_STREAM, IPPROTO_TCP, &(MPID_nem_newtcp_module_g_lstn_sc.fd));
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 

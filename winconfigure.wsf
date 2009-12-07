@@ -6508,6 +6508,7 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\util\dbg"), trimlength
 	CreateRules f.GetFolder("src\util\msgs"), trimlength
 	CreateRules f.GetFolder("src\util\procmap"), trimlength
+	CreateRules f.GetFolder("src\util\ex"), trimlength
 	CreateRules f.GetFolder("src\pmi\smpd"), trimlength
 	CreateRules f.GetFolder("src\pm\smpd"), trimlength
 	' Create a special rule for smpd_adreg.cpp since it must be compiled for UNICODE
@@ -6548,6 +6549,7 @@ Function GenBuild()
 	CreateObjs "mpich2", f.GetFolder("src\util\dbg"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\msgs"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\procmap"), trimlength, false, false
+	CreateObjs "mpich2", f.GetFolder("src\util\ex"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\pmi\smpd"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\pm\smpd"), trimlength, false, false
 	mfile.Write(" \" & vbCrLF & "	$(" & outdir & ")\smpd_adreg.obj")
