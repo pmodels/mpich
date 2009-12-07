@@ -23,6 +23,14 @@
 #include "mpimem.h"
 #include "mpidbg.h"
 #include "mpiutil.h"
+#ifdef HAVE_EXECUTIVE_PE
+    #include "mpiu_ex.h"
+#endif
+#ifdef USE_NT_SOCK
+    #ifdef HAVE_EXECUTIVE_PE
+    #include <mswsock.h>
+    #endif
+#endif
 
 #ifdef USE_NT_SOCK
 
@@ -35,6 +43,9 @@
 
 #   define MPIU_SOCKW_SOCKFD_INVALID    INVALID_SOCKET
 #   define MPIU_SOCKW_EINTR WSAEINTR
+#   ifdef HAVE_EXECUTIVE_PE
+    static const GUID MPIU_SOCKW_GUID_CONNECTEX = WSAID_CONNECTEX;
+#   endif
 
 #   undef FUNCNAME
 #   define FUNCNAME MPIU_SOCKW_Inet_addr
@@ -207,6 +218,35 @@ fn_fail:
         )                                                           \
     )
 
+#ifdef HAVE_EXECUTIVE_PE /* Have Executive Progress engine*/
+#   undef FUNCNAME
+#   define FUNCNAME MPIU_SOCKW_Accept_ex
+#   undef FCNAME
+#   define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIU_SOCKW_Accept_ex(MPIU_SOCKW_Sockfd_t sock,
+    void *addr, int addr_len, MPIU_SOCKW_Sockfd_t *new_sock_ptr,
+    MPIU_EXOVERLAPPED *ov, int *nb_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int err;
+    /* See MSDN docs regarding size of the buffer to AcceptEx() call */
+    MPIU_Assert(addr_len >= 2 * sizeof(struct sockaddr_in)+ 32);
+
+    /* FIXME: Try receiving data with AcceptEx() call to improve perf */
+    if( !AcceptEx(sock, *new_sock_ptr, addr, 0, addr_len/2, addr_len/2,
+        nb_ptr, &(ov->ov)) ){
+        err = MPIU_OSW_Get_errno();
+		MPIU_ERR_CHKANDJUMP2((err != ERROR_IO_PENDING), mpi_errno,
+			MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s %d",
+			MPIU_OSW_Strerror(err), err);
+    }
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}            
+#endif
+
 #   undef FUNCNAME
 #   define FUNCNAME MPIU_SOCKW_Connect
 #   undef FCNAME
@@ -233,6 +273,54 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
+
+#ifdef HAVE_EXECUTIVE_PE
+#   undef FUNCNAME
+#   define FUNCNAME MPIU_SOCKW_Connect_ex
+#   undef FCNAME
+#   define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIU_SOCKW_Connect_ex(
+    MPIU_SOCKW_Sockfd_t sockfd, struct sockaddr_in *addr, 
+    int addr_len, MPIU_EXOVERLAPPED *ov)
+{
+    int mpi_errno = MPI_SUCCESS, err;
+    int nb;
+    LPFN_CONNECTEX pfn_ConnectEx;
+
+    /*
+     * Query the entry point every time since different providers
+     * have different entry points
+     */
+    err = WSAIoctl(
+                 sockfd,
+                 SIO_GET_EXTENSION_FUNCTION_POINTER,
+                 (LPVOID)&MPIU_SOCKW_GUID_CONNECTEX,
+                 sizeof(MPIU_SOCKW_GUID_CONNECTEX),
+                 (LPVOID)&pfn_ConnectEx,
+                 sizeof(pfn_ConnectEx),
+                 &nb,
+                 NULL,
+                 NULL
+                 );
+
+    if(err == SOCKET_ERROR){
+        err = MPIU_OSW_Get_errno();
+        MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**fail",
+            "**fail %s %d", MPIU_OSW_Strerror(err), err);
+    }
+
+    if(!pfn_ConnectEx(sockfd, addr, addr_len, NULL, 0, &nb, &(ov->ov))){
+        err = MPIU_OSW_Get_errno();
+		MPIU_ERR_CHKANDJUMP2((err != ERROR_IO_PENDING), mpi_errno,
+			MPI_ERR_OTHER, "**sock_connect", "**sock_connect %s %d",
+			MPIU_OSW_Strerror(err), err);
+    }
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif
 
 #   undef FUNCNAME
 #   define FUNCNAME MPIU_SOCKW_Read
@@ -270,9 +358,9 @@ static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
         == SOCKET_ERROR){
         err = MPIU_OSW_Get_errno();
         MPIU_ERR_CHKANDJUMP2(!( (err == WSAEWOULDBLOCK) ||
-            (err == WSAEINTR) ), mpi_errno, MPI_ERR_OTHER,
-            "**sock_read", "**sock_read %s %d",
-            MPIU_OSW_Strerror(err), err);
+            (err == WSA_IO_PENDING) || (err == WSAEINTR) ),
+            mpi_errno, MPI_ERR_OTHER, "**sock_read",
+            "**sock_read %s %d", MPIU_OSW_Strerror(err), err);
 
         *nb_rd_ptr = -1;
     }
@@ -282,6 +370,40 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
+
+#ifdef HAVE_EXECUTIVE_PE /* Have Executive Progress engine*/
+#   undef FUNCNAME
+#   define FUNCNAME MPIU_SOCKW_Readv_ex
+#   undef FCNAME
+#   define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIU_SOCKW_Readv_ex(MPIU_SOCKW_Sockfd_t sock,
+    MPID_IOV *iov, int iov_cnt, int *nb_rd_ptr, MPIU_EXOVERLAPPED *ov)
+{
+    DWORD flags = 0;
+    int err;
+    int mpi_errno = MPI_SUCCESS;
+
+    memset(MPIU_EX_GET_OVERLAPPED_PTR(ov), 0x0, sizeof(OVERLAPPED));
+    if(WSARecv(sock, iov, iov_cnt, (LPDWORD )nb_rd_ptr, &flags, MPIU_EX_GET_OVERLAPPED_PTR(ov), NULL)
+        == SOCKET_ERROR){
+        err = MPIU_OSW_Get_errno();
+        MPIU_ERR_CHKANDJUMP2(!( (err == WSAEWOULDBLOCK) ||
+            (err == WSA_IO_PENDING) || (err == WSAEINTR) ), mpi_errno,
+            MPI_ERR_OTHER, "**sock_read", "**sock_read %s %d",
+            MPIU_OSW_Strerror(err), err);
+
+        if(nb_rd_ptr){
+            *nb_rd_ptr = -1;
+        }
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /* HAVE_EXECUTIVE_PE */
+
 
 #   undef FUNCNAME
 #   define FUNCNAME MPIU_SOCKW_Write
@@ -324,6 +446,37 @@ fn_fail:
         )                                                           \
     )
 
+#ifdef HAVE_EXECUTIVE_PE /* Have Executive Progress engine*/
+#   undef FUNCNAME
+#   define FUNCNAME MPIU_SOCKW_Writev_ex
+#   undef FCNAME
+#   define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIU_SOCKW_Writev_ex(MPIU_SOCKW_Sockfd_t sock,
+    MPID_IOV *iov, int iov_cnt, int *nb_wr_ptr, MPIU_EXOVERLAPPED *ov)
+{
+    int err;
+    int mpi_errno = MPI_SUCCESS;
+
+    memset(MPIU_EX_GET_OVERLAPPED_PTR(ov), 0x0, sizeof(OVERLAPPED));
+    if(WSASend(sock, iov, iov_cnt, (LPDWORD )nb_wr_ptr, 0x0, MPIU_EX_GET_OVERLAPPED_PTR(ov), NULL)
+        == SOCKET_ERROR){
+        err = MPIU_OSW_Get_errno();
+        MPIU_ERR_CHKANDJUMP2(!( (err == WSAEWOULDBLOCK) ||
+            (err == WSA_IO_PENDING) || (err == WSAEINTR) ), mpi_errno,
+            MPI_ERR_OTHER, "**sock_write", "**sock_write %s %d",
+            MPIU_OSW_Strerror(err), err);
+
+        if(nb_wr_ptr){
+            *nb_wr_ptr = -1;
+        }
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /* HAVE_EXECUTIVE_PE */
 
 #   undef FUNCNAME
 #   define FUNCNAME MPIU_SOCKW_Sock_cntrl_nb
