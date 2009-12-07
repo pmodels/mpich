@@ -146,7 +146,6 @@ MPIU_ExGetPortValue(
     MPIU_ExSetHandle_t Set
     );
 
-
 /*
     MPIU_ExProcessCompletions
 
@@ -158,7 +157,11 @@ MPIU_ExGetPortValue(
     indication to continue.
 
     Parameters:
-        fWaitForEvent - Block until an event sequence is complete
+        fWaitForEventAndStatus -
+            If Set to TRUE, Block until an event sequence is complete
+            If Set to FALSE, Does not block for an event seq to complete
+            On return, if set to TRUE, An event seq was completed
+            On return, if set to FALSE, An event seq did not complete
 
     Return Value:
         The result of the asynchronous function last to complete.
@@ -168,9 +171,8 @@ MPIU_ExGetPortValue(
 int
 MPIU_ExProcessCompletions(
     MPIU_ExSetHandle_t Set,
-    BOOL fWaitForEvent
+    BOOL *fWaitForEventAndStatus
     );
-
 
 /*
     MPIU_ExInitialize

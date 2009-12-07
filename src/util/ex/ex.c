@@ -5,8 +5,13 @@
  */
 
 #include <mpichconf.h>
-#include <mpiimpl.h>
+#include <mpiutil.h>
+#include <mpimem.h>
+#include <mpi.h>
 #include <mpiu_ex.h>
+#ifdef USE_DBG_LOGGING
+    #include <mpidbg.h>
+#endif
 #ifdef HAVE_WINNT_H
 #include <winnt.h>
 #endif
@@ -171,17 +176,20 @@ MPIU_ExFinalize(
 int
 MPIU_ExProcessCompletions(
     MPIU_ExSetHandle_t Set,
-    BOOL fWaitForEvent
+    BOOL *fWaitForEventAndStatus
     )
 {
-    DWORD Timeout = fWaitForEvent ? INFINITE : 0;
+    DWORD Timeout;
 
+    MPIU_Assert(fWaitForEventAndStatus != NULL);
     MPIU_Assert(IsValidSet(Set));
+
+    Timeout =  (*fWaitForEventAndStatus) ? INFINITE : 0;
 
     for (;;)
     {
         BOOL fSucc;
-        DWORD BytesTransfered;
+        DWORD BytesTransfered = 0;
         ULONG_PTR Key;
         OVERLAPPED* pOverlapped = NULL;
 
@@ -193,6 +201,14 @@ MPIU_ExProcessCompletions(
                     Timeout
                     );
 
+        if(!fSucc){
+            /* Could be a timeout or an error */
+            *fWaitForEventAndStatus = FALSE;
+        }
+        else{
+            /* An Event completed */
+            *fWaitForEventAndStatus = TRUE;
+        }
         if(!fSucc && pOverlapped == NULL)
         {
             //
@@ -203,14 +219,16 @@ MPIU_ExProcessCompletions(
             if (gle == WAIT_TIMEOUT)
                 return MPI_SUCCESS;
 
+            /* FIXME: Should'nt there be a retry count ? */
             //
             // Io Completion port internal error, try again
             //
             continue;
         }
-
+        
         MPIU_Assert(Key < _countof(s_processors));
         MPIU_Assert(s_processors[Key] != NULL);
+
 
         //
         // Call the completion processor and return the result.
