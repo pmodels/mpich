@@ -55,8 +55,10 @@ static inline int MPIU_OSW_Get_uniq_str(char *str, int strlen)
 
 #ifdef HAVE_WINDOWS_H
 #   define MPIU_OSW_EINTR WSAEINTR
+#   define MPIU_OSW_ENOBUFS WSAENOBUFS
 #else
 #   define MPIU_OSW_EINTR EINTR
+#   define MPIU_OSW_ENOBUFS ENOBUFS
 #endif
 
 /* If after func returns (errCond == true) then retry on EINTR */
