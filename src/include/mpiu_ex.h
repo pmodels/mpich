@@ -417,7 +417,6 @@ MPIU_ExCallFailure(
     return pOverlapped->pfnFailure(pOverlapped);
 }
 
-
 /*
     MPIU_ExCompleteOverlapped
 
@@ -433,10 +432,14 @@ MPIU_ExCompleteOverlapped(
 {
     pOverlapped->ov.InternalHigh = BytesTransferred;
 
-    if(SUCCEEDED(MPIU_ExGetStatus(pOverlapped)))
+    if(SUCCEEDED(MPIU_ExGetStatus(pOverlapped))){
+        pOverlapped->ov.Internal = S_OK;
         return pOverlapped->pfnSuccess(pOverlapped);
-
-    return pOverlapped->pfnFailure(pOverlapped);
+    }
+    else{
+        pOverlapped->ov.Internal = HRESULT_FROM_WIN32(GetLastError());
+        return pOverlapped->pfnFailure(pOverlapped);
+    }
 }
 
 #endif /* MPIU_EX_H_INCLUDED */
