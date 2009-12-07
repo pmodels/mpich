@@ -356,6 +356,8 @@ MPIU_ExGetBytesTransferred(
     return (DWORD)pOverlapped->ov.InternalHigh;
 }
 
+#define MPIU_EX_STATUS_IO_ABORT  (0x80000000 | (FACILITY_WIN32 << 16) | ERROR_OPERATION_ABORTED)
+typedef HRESULT MPIU_Ex_status_t;
 
 /*
     MPIU_ExGetStatus
