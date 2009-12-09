@@ -23,7 +23,7 @@
         while ((ret) == ZFSERR_STALE) {                                 \
             /* lookup again */                                          \
             (ret) = zoidfs_lookup(NULL, NULL, (fd)->filename,           \
-                                  (zoidfs_handle_t*)((fd)->fs_ptr));    \
+                                  (zoidfs_handle_t*)((fd)->fs_ptr), ZOIDFS_NO_OP_HINT);    \
             if ((ret) == ZFS_OK) {                                      \
                 *((ADIOI_ZOIDFS_object*)handle_p)                       \
                     = *((ADIOI_ZOIDFS_object*)((fd)->fs_ptr));          \

@@ -32,7 +32,7 @@ static void fake_an_open(char *fname, int access_mode,
      */
     if (access_mode & ADIO_CREATE) {
 	ret = zoidfs_create(NULL, NULL, 
-			    fname, &attribs, &handle, &created);
+			    fname, &attribs, &handle, &created, ZOIDFS_NO_OP_HINT);
 	if ((ret == ZFS_OK) && !created && (access_mode & ADIO_EXCL)) {
 	    /* lookup should not succeed if opened with EXCL */
 	    o_status->error = ZFSERR_EXIST;
@@ -40,7 +40,7 @@ static void fake_an_open(char *fname, int access_mode,
 	}
     }
     else {
-	ret = zoidfs_lookup(NULL, NULL, fname, &handle);
+	ret = zoidfs_lookup(NULL, NULL, fname, &handle, ZOIDFS_NO_OP_HINT);
     }
 
     o_status->error = ret;

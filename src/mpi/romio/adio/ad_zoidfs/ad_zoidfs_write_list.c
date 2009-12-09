@@ -156,7 +156,7 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
 				    zoidfs_write(zoidfs_obj_ptr, 
 					    mem_list_count,
 					    mem_offsets, mem_lengths, 
-					    1, &file_offsets, &file_lengths));
+					    1, &file_offsets, &file_lengths, ZOIDFS_NO_OP_HINT));
 
 		    /* --BEGIN ERROR HANDLING-- */
 		    if (err_flag != ZFS_OK) {
@@ -359,7 +359,7 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
 			    zoidfs_write(zoidfs_obj_ptr,
 				    1, buf, &mem_lengths,
 				    file_list_count, 
-				    file_lengths, file_offsets));
+				    file_offsets, file_lengths, ZOIDFS_NO_OP_HINT));
 
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
@@ -416,7 +416,7 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
 				    (const void **)&mem_offsets, 
 				    &mem_lengths,
 				    file_list_count, 
-				    file_offsets, file_lengths));
+				    file_offsets, file_lengths, ZOIDFS_NO_OP_HINT));
 
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
@@ -804,7 +804,7 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
 			    zoidfs_write(zoidfs_obj_ptr, 
 				    mem_list_count, mem_offsets, mem_lengths, 
 				    file_list_count, 
-				    file_offsets, file_lengths));
+				    file_offsets, file_lengths, ZOIDFS_NO_OP_HINT));
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (err_flag != ZFS_OK) {
 		*error_code = MPIO_Err_create_code(MPI_SUCCESS,

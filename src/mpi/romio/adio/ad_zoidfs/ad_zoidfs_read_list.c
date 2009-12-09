@@ -33,7 +33,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
     size_t mem_list_count, file_list_count;
     void ** mem_offsets;
     uint64_t *file_offsets;
-    int *mem_lengths;
+    size_t *mem_lengths;
     uint64_t *file_lengths;
     int total_blks_to_read;
 
@@ -140,7 +140,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
 				    zoidfs_read(zoidfs_obj_ptr,
 					    mem_list_count,
 					    mem_offsets, mem_lengths,
-					    1, &file_offsets, &file_lengths));
+					    1, &file_offsets, &file_lengths, ZOIDFS_NO_OP_HINT));
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event( ADIOI_MPE_read_b, 0, NULL );
 #endif
@@ -333,7 +333,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
 			    zoidfs_read(zoidfs_obj_ptr,
 				    1, buf, &mem_lengths,
 				    file_list_count,
-				    file_lengths, file_offsets));
+				    file_offsets, file_lengths, ZOIDFS_NO_OP_HINT));
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event( ADIOI_MPE_read_b, 0, NULL );
 #endif
@@ -386,7 +386,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
 				   (void **)&mem_offsets,
 				   &mem_lengths,
 				   file_list_count,
-				   file_offsets, file_lengths));
+				   file_offsets, file_lengths, ZOIDFS_NO_OP_HINT));
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event( ADIOI_MPE_read_b, 0, NULL );
 #endif
@@ -770,7 +770,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
 			    zoidfs_read(zoidfs_obj_ptr,
 				    mem_list_count, mem_offsets, mem_lengths,
 				    file_list_count,
-				    file_offsets, file_lengths));
+				    file_offsets, file_lengths, ZOIDFS_NO_OP_HINT));
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event( ADIOI_MPE_read_b, 0, NULL );
 #endif

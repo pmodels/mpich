@@ -31,7 +31,7 @@ void ADIOI_ZOIDFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
 
     if (rank == fd->hints->ranklist[0]) {
         NO_STALE(ret, fd, zoidfs_obj_ptr,
-                 zoidfs_resize(zoidfs_obj_ptr, size));
+                 zoidfs_resize(zoidfs_obj_ptr, size, ZOIDFS_NO_OP_HINT));
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     } else  {
 	MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);

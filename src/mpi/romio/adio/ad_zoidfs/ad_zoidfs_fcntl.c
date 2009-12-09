@@ -23,7 +23,7 @@ void ADIOI_ZOIDFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
     case ADIO_FCNTL_GET_FSIZE:
 	attr.mask = ZOIDFS_ATTR_SIZE;
         NO_STALE(ret, fd, zoidfs_obj_ptr,
-                 zoidfs_getattr(zoidfs_obj_ptr, &attr));
+                 zoidfs_getattr(zoidfs_obj_ptr, &attr, ZOIDFS_NO_OP_HINT));
 	if ( !(attr.mask & ZOIDFS_ATTR_SIZE) || (ret != ZFS_OK ) ) {
 	    /* --BEGIN ERROR HANDLING-- */
 	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,

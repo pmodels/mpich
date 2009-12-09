@@ -24,7 +24,7 @@ void ADIOI_ZOIDFS_Delete(char *filename, int *error_code)
     }
     /* --END ERROR HANDLING-- */
 
-    ret = zoidfs_remove(NULL, NULL, filename, NULL);
+    ret = zoidfs_remove(NULL, NULL, filename, NULL, ZOIDFS_NO_OP_HINT);
     /* --BEGIN ERROR HANDLING-- */
     if (ret != ZFS_OK) {
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS,

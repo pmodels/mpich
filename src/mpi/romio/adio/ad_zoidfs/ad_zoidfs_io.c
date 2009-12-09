@@ -38,12 +38,12 @@ static void ZOIDFS_IOContig(ADIO_File fd, void * buf, int count,
 	NO_STALE(ret, fd, zoidfs_obj_ptr,
                  zoidfs_read(zoidfs_obj_ptr, 
                              1, &buf, &mem_len,
-                             1, &file_offset, &file_len));
+                             1, &file_offset, &file_len, ZOIDFS_NO_OP_HINT));
     } else {
         NO_STALE(ret, fd, zoidfs_obj_ptr,
                  zoidfs_write(zoidfs_obj_ptr, 
                               1, (const void **)&buf, &mem_len,
-                              1, &file_offset, &file_len));
+                              1, &file_offset, &file_len, ZOIDFS_NO_OP_HINT));
     }
     /* --BEGIN ERROR HANDLING-- */
     if (ret != ZFS_OK ) {

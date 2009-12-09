@@ -32,7 +32,7 @@ void ADIOI_ZOIDFS_Flush(ADIO_File fd, int *error_code)
 	    fd->hints->ranklist[0], fd->comm);
 
     if (rank == fd->hints->ranklist[0]) {
-	ret = zoidfs_commit(zoidfs_obj_ptr);
+	ret = zoidfs_commit(zoidfs_obj_ptr, ZOIDFS_NO_OP_HINT);
     }
     MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
 
