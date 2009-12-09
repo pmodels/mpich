@@ -205,7 +205,7 @@ AC_SUBST(MPICH2_VERSION)
 ABIVERSION="`cat $srcdir/maint/Version | grep ^MPICH2_ABIVERSION: | cut -f2 -d' '`"
 AC_SUBST(ABIVERSION)
 
-
+# Print out the configure options
 CONFIGURE_ARGUMENTS="$ac_configure_args"
 AC_SUBST(CONFIGURE_ARGUMENTS)
 if test -n "$ac_configure_args" ; then
@@ -213,9 +213,10 @@ if test -n "$ac_configure_args" ; then
 else 
     echo "Configuring MPICH2 version $MPICH2_VERSION"
 fi
+
 # Add the information on the system:
 echo "Running on system: `uname -a`"
-dnl
+
 dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADER(src/include/mpichconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
@@ -228,11 +229,16 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 ])
 AH_BOTTOM([#endif])
 
-dnl
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess
 AC_CONFIG_AUX_DIR(confdb)
-dnl
+
+# Set the FROM_MPICH2 variable to tell subconfigures that they are
+# built from within MPICH2
+FROM_MPICH2=yes
+export FROM_MPICH2
+AC_ARG_VAR(FROM_MPICH2, [internally set flag to tell subconfigures that they are built from within MPICH2])
+
 dnl Use AC_ARG_ENABLE to look for --enable-feature and AC_ARG_WITH to look for
 dnl --with-capability
 dnl
@@ -1306,8 +1312,6 @@ if test "$enable_nmpi_as_mpi" = yes ; then
 fi
 
 # This goes here because we need the top_srcdir
-FROM_MPICH2=yes
-export FROM_MPICH2
 if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
        subsystems="$subsystems src/mpi/romio"
@@ -1529,10 +1533,6 @@ if test $with_mpe != no ; then
         subsystems="$subsystems src/mpe2"
 	other_install_dirs="$other_install_dirs src/mpe2"
 	mpe_dir=mpe2
-	# Make sure that MPE knows that we're building from MPICH
-        # (similar to ROMIO)
-        FROM_MPICH2=yes
-        export FROM_MPICH2
 	# Temporarily replace the default NONE value for exec_prefix
 	# and prefix with the actual, default values.
 	savePrefix=$prefix
