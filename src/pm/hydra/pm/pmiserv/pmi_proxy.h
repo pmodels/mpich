@@ -9,7 +9,7 @@
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
-#include "pmi_common.h"
+#include "pm_utils.h"
 
 struct HYD_pmcd_pmip {
     struct HYD_user_global user_global;
@@ -43,6 +43,7 @@ struct HYD_pmcd_pmip {
     /* Proxy details */
     struct {
         int id;
+        char *interface_env_name;
         char *hostname;
 
         int proxy_core_count;

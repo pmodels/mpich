@@ -14,13 +14,13 @@ struct HYD_pmcd_pmip HYD_pmcd_pmip;
 HYD_status HYD_pmcd_pmi_proxy_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int cmd_len;
-    enum HYD_pmcd_pmi_proxy_cmds cmd;
+    enum HYD_pmu_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* We got a command from upstream */
-    status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_pmcd_pmi_proxy_cmds), &cmd_len,
+    status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_pmu_cmd), &cmd_len,
                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading command from launcher\n");
     if (cmd_len == 0) {

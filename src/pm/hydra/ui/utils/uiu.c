@@ -18,6 +18,9 @@ void HYD_uiu_init_params(void)
 
     HYD_handle.rmk = NULL;
 
+    HYD_handle.port_range = NULL;
+    HYD_handle.interface_env_name = NULL;
+
     HYD_handle.ckpoint_int = -1;
 
     HYD_handle.print_rank_map = -1;
@@ -51,6 +54,12 @@ void HYD_uiu_free_params(void)
 
     if (HYD_handle.rmk)
         HYDU_FREE(HYD_handle.rmk);
+
+    if (HYD_handle.port_range)
+        HYDU_FREE(HYD_handle.port_range);
+
+    if (HYD_handle.interface_env_name)
+        HYDU_FREE(HYD_handle.interface_env_name);
 
     if (HYD_handle.user_global.binding)
         HYDU_FREE(HYD_handle.user_global.binding);
@@ -404,4 +413,38 @@ void HYD_uiu_print_params(void)
     HYDU_FUNC_EXIT();
 
     return;
+}
+
+HYD_status HYD_uiu_stdout_cb(void *buf, int buflen)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_write(STDOUT_FILENO, buf, buflen);
+    HYDU_ERR_POP(status, "unable to write data to stdout\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_uiu_stderr_cb(void *buf, int buflen)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_write(STDERR_FILENO, buf, buflen);
+    HYDU_ERR_POP(status, "unable to write data to stdout\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }

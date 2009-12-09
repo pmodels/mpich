@@ -95,7 +95,7 @@ int main(int argc, char **argv)
     struct HYD_proxy_exec *exec;
     struct HYD_uiu_exec_info *exec_info;
     struct HYD_node *node;
-    int exit_status = 0, i, process_id, proc_count;
+    int exit_status = 0, i, process_id, proc_count, timeout;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -167,11 +167,21 @@ int main(int argc, char **argv)
         HYD_uiu_print_params();
 
     if (getenv("MPIEXEC_TIMEOUT"))
-        HYD_handle.timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
+        timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
-        HYD_handle.timeout = -1;        /* Set a negative timeout */
+        timeout = -1;        /* Set a negative timeout */
     if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", HYD_handle.timeout);
+        HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
+
+    /* Check if the user wants us to use a port within a certain
+     * range. */
+    HYD_handle.port_range = getenv("MPIEXEC_PORTRANGE");
+    if (!HYD_handle.port_range)
+        HYD_handle.port_range = getenv("MPIEXEC_PORT_RANGE");
+    if (!HYD_handle.port_range)
+        HYD_handle.port_range = getenv("MPICH_PORT_RANGE");
+
+    HYD_handle.interface_env_name = HYDU_strdup("MPICH_INTERFACE_NAME");
 
     if (HYD_handle.print_rank_map) {
         for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
@@ -194,15 +204,15 @@ int main(int argc, char **argv)
     }
 
     /* Add the stdout/stdin/stderr callback handlers */
-    HYD_handle.stdout_cb = HYD_uii_mpx_stdout_cb;
-    HYD_handle.stderr_cb = HYD_uii_mpx_stderr_cb;
+    HYD_handle.stdout_cb = HYD_uiu_stdout_cb;
+    HYD_handle.stderr_cb = HYD_uiu_stderr_cb;
 
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
 
     /* Wait for their completion */
-    status = HYD_pmci_wait_for_completion();
+    status = HYD_pmci_wait_for_completion(timeout);
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
     /* Check for the exit status for all the processes */

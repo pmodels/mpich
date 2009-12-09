@@ -20,21 +20,14 @@ create_and_listen_portstr(HYD_status(*callback) (int fd, HYD_event_t events, voi
                           char **port_str)
 {
     int listenfd;
-    char *port_range, *sport;
+    char *sport, *port_range;
     uint16_t port;
     char hostname[MAX_HOSTNAME_LEN];
     HYD_status status = HYD_SUCCESS;
 
-    /* Check if the user wants us to use a port within a certain
-     * range. */
-    port_range = getenv("MPIEXEC_PORTRANGE");
-    if (!port_range)
-        port_range = getenv("MPIEXEC_PORT_RANGE");
-    if (!port_range)
-        port_range = getenv("MPICH_PORT_RANGE");
-
     /* Listen on a port in the port range */
     port = 0;
+    port_range = HYD_handle.port_range ? HYDU_strdup(HYD_handle.port_range) : NULL;
     status = HYDU_sock_listen(&listenfd, port_range, &port);
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
@@ -147,6 +140,9 @@ static HYD_status fill_in_exec_launch_info(void)
         arg = 0;
         proxy->exec_launch_info[arg++] = HYDU_strdup("--version");
         proxy->exec_launch_info[arg++] = HYDU_strdup(HYDRA_VERSION);
+
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--interface-env-name");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.interface_env_name);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--hostname");
         proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node.hostname);
@@ -332,7 +328,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = create_and_listen_portstr(HYD_pmcd_pmi_serv_control_connect_cb, &control_port);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "Got a proxy port string of %s\n", control_port);
+        HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 
     status = fill_in_proxy_args(proxy_args);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
@@ -359,13 +355,13 @@ HYD_status HYD_pmci_launch_procs(void)
 }
 
 
-HYD_status HYD_pmci_wait_for_completion(void)
+HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_wait_for_completion(HYD_handle.timeout);
+    status = HYDT_bsci_wait_for_completion(timeout);
     if (status == HYD_TIMED_OUT) {
         status = HYD_pmcd_pmi_serv_cleanup();
         HYDU_ERR_POP(status, "cleanup of processes failed\n");

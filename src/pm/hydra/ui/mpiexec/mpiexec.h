@@ -10,7 +10,5 @@
 #include "hydra.h"
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv);
-HYD_status HYD_uii_mpx_stdout_cb(void *buf, int buflen);
-HYD_status HYD_uii_mpx_stderr_cb(void *buf, int buflen);
 
 #endif /* MPIEXEC_H_INCLUDED */

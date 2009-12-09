@@ -19,6 +19,10 @@ struct HYD_handle {
     char *css;
     char *rmk;
 
+    char *port_range;
+
+    char *interface_env_name;
+
     int ckpoint_int;
 
     int print_rank_map;
@@ -28,13 +32,6 @@ struct HYD_handle {
 
      HYD_status(*stdout_cb) (void *buf, int buflen);
      HYD_status(*stderr_cb) (void *buf, int buflen);
-
-    /* Timeout (in seconds) is filled in by the UI to be passed to the
-     * bootstrap server.
-     *
-     * FIXME: make this a function parameter.
-     */
-    int timeout;
 
     /* All of the available nodes */
     struct HYD_node *node_list;

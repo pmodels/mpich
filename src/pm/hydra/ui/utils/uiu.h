@@ -29,5 +29,7 @@ HYD_status HYD_uiu_get_current_exec_info(struct HYD_uiu_exec_info **info);
 void HYD_uiu_print_params(void);
 HYD_status HYD_uiu_alloc_exec_info(struct HYD_uiu_exec_info **exec_info);
 void HYD_uiu_free_exec_info_list(struct HYD_uiu_exec_info *exec_info_list);
+HYD_status HYD_uiu_stdout_cb(void *buf, int buflen);
+HYD_status HYD_uiu_stderr_cb(void *buf, int buflen);
 
 #endif /* UIU_H_INCLUDED */

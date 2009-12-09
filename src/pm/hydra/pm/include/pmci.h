@@ -26,7 +26,7 @@ HYD_status HYD_pmci_launch_procs(void);
  *
  * Wait for launched processes to complete
  */
-HYD_status HYD_pmci_wait_for_completion(void);
+HYD_status HYD_pmci_wait_for_completion(int timeout);
 
 /**
  * \brief HYD_pmci_finalize - Finalize process management control device

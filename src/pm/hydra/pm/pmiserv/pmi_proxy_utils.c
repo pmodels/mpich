@@ -33,6 +33,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.downstream.exit_status = NULL;
 
     HYD_pmcd_pmip.local.id = -1;
+    HYD_pmcd_pmip.local.interface_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
@@ -109,6 +110,9 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 
     if (HYD_pmcd_pmip.downstream.exit_status)
         HYDU_FREE(HYD_pmcd_pmip.downstream.exit_status);
+
+    if (HYD_pmcd_pmip.local.interface_env_name)
+        HYDU_FREE(HYD_pmcd_pmip.local.interface_env_name);
 
     if (HYD_pmcd_pmip.local.hostname)
         HYDU_FREE(HYD_pmcd_pmip.local.hostname);
@@ -263,6 +267,11 @@ static HYD_status version_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static HYD_status interface_env_name_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.local.interface_env_name);
+}
+
 static HYD_status hostname_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.local.hostname);
@@ -404,6 +413,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"genv-prop", genv_prop_fn, NULL},
     {"global-core-count", global_core_count_fn, NULL},
     {"version", version_fn, NULL},
+    {"interface-env-name", interface_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
     {"proxy-core-count", proxy_core_count_fn, NULL},
     {"start-pid", start_pid_fn, NULL},
@@ -493,9 +503,6 @@ static HYD_status parse_exec_params(char **t_argv)
 
     if (HYD_pmcd_pmip.system_global.global_core_count == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "global core count not available\n");
-
-    if (HYD_pmcd_pmip.local.hostname == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI port not available\n");
 
     if (HYD_pmcd_pmip.local.proxy_core_count == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy core count not available\n");
@@ -695,9 +702,9 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         status = HYDU_append_env_to_list(*env, &prop_env);
         HYDU_ERR_POP(status, "unable to add env to list\n");
 
-        /* Set the MPICH_INTERFACE_HOSTNAME based on what the user provided */
-        if (HYD_pmcd_pmip.local.hostname) {
-            status = HYDU_env_create(&env, "MPICH_INTERFACE_HOSTNAME",
+        /* Set the interface hostname based on what the user provided */
+        if (HYD_pmcd_pmip.local.hostname && HYD_pmcd_pmip.local.interface_env_name) {
+            status = HYDU_env_create(&env, HYD_pmcd_pmip.local.interface_env_name,
                                      HYD_pmcd_pmip.local.hostname);
             HYDU_ERR_POP(status, "unable to create env\n");
 

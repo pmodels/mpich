@@ -62,22 +62,21 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     if (setsockopt(*listen_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(int)) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set TCP_NODELAY\n");
 
+    /* The sockets standard does not guarantee that a successful
+     * return here means that this is set. However, REUSEADDR not
+     * being set is not a fatal error, so we ignore that
+     * case. However, we do check for error cases, which means that
+     * something bad has happened. */
+    if (setsockopt(*listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set SO_REUSEADDR\n");
+
     for (i = low_port; i <= high_port; i++) {
         memset((void *) &sa, 0, sizeof(sa));
         sa.sin_family = AF_INET;
         sa.sin_port = htons(i);
         sa.sin_addr.s_addr = INADDR_ANY;
 
-        /* The sockets standard does not guarantee that a successful
-         * return here means that this is set. However, REUSEADDR not
-         * being set is not a fatal error, so we ignore that
-         * case. However, we do check for error cases, which means
-         * that something bad has happened. */
-        if (setsockopt(*listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) < 0)
-            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set SO_REUSEADDR\n");
-
         if (bind(*listen_fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-            close(*listen_fd);
             /* If the address is in use, we should try the next
              * port. Otherwise, it's an error. */
             if (errno != EADDRINUSE)

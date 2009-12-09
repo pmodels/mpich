@@ -230,7 +230,7 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     proxy->control_fd = accept_fd;
 
     /* Send out the executable information */
-    status = HYD_pmcd_pmi_send_exec_info(proxy);
+    status = HYD_pmu_send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
     status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy,
@@ -279,7 +279,7 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 HYD_status HYD_pmcd_pmi_serv_cleanup(void)
 {
     struct HYD_proxy *proxy;
-    enum HYD_pmcd_pmi_proxy_cmds cmd;
+    enum HYD_pmu_cmd cmd;
     HYD_status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -290,7 +290,7 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
     for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         cmd = KILL_JOB;
         status = HYDU_sock_trywrite(proxy->control_fd, &cmd,
-                                    sizeof(enum HYD_pmcd_pmi_proxy_cmds));
+                                    sizeof(enum HYD_pmu_cmd));
         if (status != HYD_SUCCESS) {
             HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
             overall_status = HYD_INTERNAL_ERROR;
@@ -307,7 +307,7 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
 HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
 {
     struct HYD_proxy *proxy;
-    enum HYD_pmcd_pmi_proxy_cmds cmd;
+    enum HYD_pmu_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -318,7 +318,7 @@ HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
     for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         cmd = CKPOINT;
         status = HYDU_sock_write(proxy->control_fd, &cmd,
-                                 sizeof(enum HYD_pmcd_pmi_proxy_cmds));
+                                 sizeof(enum HYD_pmu_cmd));
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
     }
 
@@ -340,12 +340,10 @@ void HYD_pmcd_pmi_serv_signal_cb(int sig)
         /* There's nothing we can do with the return value for now. */
         HYD_pmcd_pmi_serv_cleanup();
     }
-    else {
-        if (sig == SIGUSR1) {
-            HYD_pmcd_pmi_serv_ckpoint();
-        }
-        /* Ignore other signals for now */
+    else if (sig == SIGUSR1) {
+        HYD_pmcd_pmi_serv_ckpoint();
     }
+    /* Ignore other signals for now */
 
     HYDU_FUNC_EXIT();
     return;
