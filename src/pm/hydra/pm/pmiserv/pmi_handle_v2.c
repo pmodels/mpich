@@ -546,8 +546,10 @@ static HYD_status fn_kvs_put(int fd, char *args[])
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
     val = HYD_pmcd_find_token_keyval(tokens, token_count, "value");
-    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find value token\n");
+    if (val == NULL) {
+        /* the user sent an empty string */
+        val = HYDU_strdup("");
+    }
 
     thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
 

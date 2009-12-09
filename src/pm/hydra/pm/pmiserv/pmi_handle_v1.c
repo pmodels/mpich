@@ -237,8 +237,10 @@ static HYD_status fn_put(int fd, char *args[])
                         "unable to find token: key\n");
 
     val = HYD_pmcd_find_token_keyval(tokens, token_count, "value");
-    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find token: val\n");
+    if (val == NULL) {
+        /* the user sent an empty string */
+        val = HYDU_strdup("");
+    }
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
