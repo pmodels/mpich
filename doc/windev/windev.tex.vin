@@ -1020,6 +1020,8 @@ maximum number of bytes the logfile can grow to before it is truncated
 stdout, memlog or file.  determines where debugging output goes
 \item \texttt{MPI\_DLL\_NAME}
 name of the dll that contains the MPI and PMPI interfaces
+\item \texttt{MPI\_DLL\_PATH}
+path of the dll that contains the MPI and PMPI interfaces
 \item \texttt{MPICH2\_CHANNEL}
 short name of the channel used to create the full name of the MPI dll (ie. ib becomes mpich2ib.dll)
 \item \texttt{MPI\_WRAP\_DLL\_NAME}
