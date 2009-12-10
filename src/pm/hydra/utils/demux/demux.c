@@ -100,7 +100,7 @@ HYD_status HYDU_dmx_deregister_fd(int fd)
 
 HYD_status HYDU_dmx_wait_for_event(int wtime)
 {
-    int total_fds, i, j, events, ret;
+    int total_fds, i, j, events, ret, mstime;
     struct dmx_callback *run;
     struct pollfd *pollfds = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -132,7 +132,8 @@ HYD_status HYDU_dmx_wait_for_event(int wtime)
 
     while (1) {
         /* Convert user specified time to milliseconds for poll */
-        ret = poll(pollfds, total_fds, wtime * 1000.0);
+        mstime = (wtime < 0) ? wtime : (wtime * 1000);
+        ret = poll(pollfds, total_fds, mstime);
         if (ret < 0) {
             if (errno == EINTR) {
                 /* We were interrupted by a system call; this is not
