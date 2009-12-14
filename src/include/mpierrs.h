@@ -386,8 +386,12 @@
 /* --BEGIN ERROR MACROS-- */
 #define MPIU_ERR_POP(err_) \
     MPIU_ERR_SETANDSTMT(err_,MPI_ERR_OTHER,goto fn_fail,"**fail")
+#define MPIU_ERR_POP_LABEL(err_, label_) \
+    MPIU_ERR_SETANDSTMT(err_,MPI_ERR_OTHER,goto label_,"**fail")
 #define MPIU_ERR_POPFATAL(err_) \
     MPIU_ERR_SETFATALANDSTMT(err_,MPI_ERR_OTHER,goto fn_fail,"**fail")
+#define MPIU_ERR_POPFATAL_LABEL(err_, label_) \
+    MPIU_ERR_SETFATALANDSTMT(err_,MPI_ERR_OTHER,goto label_,"**fail")
 
 /* If you add any macros to this list, make sure that you update
  maint/extracterrmsgs to handle the additional macros (see the hash 
