@@ -9,15 +9,15 @@
 #include "bsci.h"
 #include "pmi_handle.h"
 
-static HYD_status fn_fullinit(int fd, char *args[]);
-static HYD_status fn_job_getid(int fd, char *args[]);
-static HYD_status fn_info_putnodeattr(int fd, char *args[]);
-static HYD_status fn_info_getnodeattr(int fd, char *args[]);
-static HYD_status fn_info_getjobattr(int fd, char *args[]);
-static HYD_status fn_kvs_put(int fd, char *args[]);
-static HYD_status fn_kvs_get(int fd, char *args[]);
-static HYD_status fn_kvs_fence(int fd, char *args[]);
-static HYD_status fn_finalize(int fd, char *args[]);
+static HYD_status fn_fullinit(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_job_getid(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_info_putnodeattr(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_info_getnodeattr(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_kvs_put(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_kvs_fence(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_finalize(int fd, int pmi_pgid, char *args[]);
 
 static struct reqs {
     enum type {
@@ -26,6 +26,7 @@ static struct reqs {
     } type;
 
     int fd;
+    int pmi_pgid;
     char *thrid;
     char **args;
 
@@ -62,13 +63,14 @@ static void free_req(struct reqs *req)
     HYDU_FREE(req);
 }
 
-static HYD_status queue_req(int fd, enum type type, char *args[])
+static HYD_status queue_req(int fd, int pmi_pgid, enum type type, char *args[])
 {
     struct reqs *req, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_MALLOC(req, struct reqs *, sizeof(struct reqs), status);
     req->fd = fd;
+    req->pmi_pgid = pmi_pgid;
     req->type = type;
     req->next = NULL;
 
@@ -115,11 +117,11 @@ static HYD_status poke_progress(void)
 
         req_complete = 0;
         if (req->type == NODE_ATTR_GET) {
-            status = fn_info_getnodeattr(req->fd, req->args);
+            status = fn_info_getnodeattr(req->fd, req->pmi_pgid, req->args);
             HYDU_ERR_POP(status, "getnodeattr returned error\n");
         }
         else if (req->type == KVS_GET) {
-            status = fn_kvs_get(req->fd, req->args);
+            status = fn_kvs_get(req->fd, req->pmi_pgid, req->args);
             HYDU_ERR_POP(status, "kvs_get returned error\n");
         }
 
@@ -147,7 +149,7 @@ static void print_req_list(void)
         HYDU_dump_noprefix(stdout, ")\n");
 }
 
-static HYD_status fn_fullinit(int fd, char *args[])
+static HYD_status fn_fullinit(int fd, int pmi_pgid, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
@@ -169,7 +171,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
 
-    status = HYD_pmcd_pmi_id_to_rank(id, &rank);
+    status = HYD_pmcd_pmi_id_to_rank(id, pmi_pgid, &rank);
     HYDU_ERR_POP(status, "unable to convert ID to rank\n");
     tmp[i++] = HYDU_int_to_str(rank);
 
@@ -205,7 +207,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_job_getid(int fd, char *args[])
+static HYD_status fn_job_getid(int fd, int pmi_pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
     int i;
@@ -257,7 +259,7 @@ static HYD_status fn_job_getid(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_putnodeattr(int fd, char *args[])
+static HYD_status fn_info_putnodeattr(int fd, int pmi_pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
@@ -324,7 +326,7 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_getnodeattr(int fd, char *args[])
+static HYD_status fn_info_getnodeattr(int fd, int pmi_pgid, char *args[])
 {
     int i, found;
     HYD_pmcd_pmi_process_t *process;
@@ -383,7 +385,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     }
     else if (waitval && !strcmp(waitval, "TRUE")) {
         /* The client wants to wait for a response; queue up the request */
-        status = queue_req(fd, NODE_ATTR_GET, args);
+        status = queue_req(fd, pmi_pgid, NODE_ATTR_GET, args);
         HYDU_ERR_POP(status, "unable to queue request\n");
 
         goto fn_exit;
@@ -425,7 +427,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_getjobattr(int fd, char *args[])
+static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[])
 {
     int i, ret;
     HYD_pmcd_pmi_process_t *process;
@@ -527,7 +529,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_put(int fd, char *args[])
+static HYD_status fn_kvs_put(int fd, int pmi_pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
@@ -596,7 +598,7 @@ static HYD_status fn_kvs_put(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_get(int fd, char *args[])
+static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[])
 {
     int i, found, barrier, process_count;
     HYD_pmcd_pmi_process_t *process, *prun;
@@ -649,7 +651,7 @@ static HYD_status fn_kvs_get(int fd, char *args[])
 
         if (!barrier || process_count < HYD_pg_list->num_procs) {
             /* We haven't reached a barrier yet; queue up request */
-            status = queue_req(fd, KVS_GET, args);
+            status = queue_req(fd, pmi_pgid, KVS_GET, args);
             HYDU_ERR_POP(status, "unable to queue request\n");
 
             /* We are done */
@@ -693,7 +695,7 @@ static HYD_status fn_kvs_get(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_fence(int fd, char *args[])
+static HYD_status fn_kvs_fence(int fd, int pmi_pgid, char *args[])
 {
     HYD_pmcd_pmi_process_t *process;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
@@ -746,7 +748,7 @@ static HYD_status fn_kvs_fence(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, char *args[])
+static HYD_status fn_finalize(int fd, int pmi_pgid, char *args[])
 {
     char *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;

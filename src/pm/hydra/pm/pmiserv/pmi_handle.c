@@ -230,8 +230,9 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, HYD_pmcd_pmi_kvs_t *
 }
 
 
-HYD_status HYD_pmcd_pmi_id_to_rank(int id, int *rank)
+HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pmi_pgid, int *rank)
 {
+    HYD_pmcd_pmi_pg_t *pg;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -241,12 +242,20 @@ HYD_status HYD_pmcd_pmi_id_to_rank(int id, int *rank)
         *rank = id;
     }
     else {
-        *rank = (id * HYD_handle.ranks_per_proc) + HYD_pg_list->conn_procs[id];
-        HYD_pg_list->conn_procs[id]++;
+        for (pg = HYD_pg_list; pg->pgid != pmi_pgid; pg = pg->next);
+        if (!pg)
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "PMI pgid %d not found\n", pmi_pgid);
+
+        *rank = (id * HYD_handle.ranks_per_proc) + pg->conn_procs[id];
+        pg->conn_procs[id]++;
     }
 
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 

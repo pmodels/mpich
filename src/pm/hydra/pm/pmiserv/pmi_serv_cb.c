@@ -23,7 +23,7 @@ HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, NULL, HYD_pmcd_pmi_cmd_cb);
+    status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, HYD_pmcd_pmi_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -42,12 +42,13 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
     char *str1 = NULL, *str2 = NULL;
     struct HYD_pmcd_pmi_handle_fns *h;
     HYD_status status = HYD_SUCCESS;
-    int buflen = 0;
+    int buflen = 0, pmi_pgid;
     char *bufptr;
 
     HYDU_FUNC_ENTER();
 
-    /* We got a PMI command */
+    /* We got a PMI command; find the PGID */
+    pmi_pgid = *((int *) userp);
 
     buflen = HYD_TMPBUF_SIZE;
 
@@ -107,7 +108,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
 
             if (!strcmp("cmd=init", cmd)) {
                 /* Init is generic to all PMI implementations */
-                status = HYD_pmcd_pmi_handle_init(fd, args);
+                status = HYD_pmcd_pmi_fn_init(fd, args);
                 goto fn_exit;
             }
         }
@@ -167,7 +168,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
         h = HYD_pmcd_pmi_handle->handle_fns;
         while (h->handler) {
             if (!strcmp(str2, h->cmd)) {
-                status = h->handler(fd, args);
+                status = h->handler(fd, pmi_pgid, args);
                 HYDU_ERR_POP(status, "PMI handler returned error\n");
                 break;
             }

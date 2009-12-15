@@ -204,6 +204,10 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
 HYD_status HYDU_sock_write(int fd, const void *buf, int maxsize);
 HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize);
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
+HYD_status
+HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
+                                    HYD_status(*callback) (int fd, HYD_event_t events, void *userp),
+                                    void *userp);
 
 /* Memory utilities */
 #include <ctype.h>

@@ -33,6 +33,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.downstream.exit_status = NULL;
 
     HYD_pmcd_pmip.local.id = -1;
+    HYD_pmcd_pmip.local.pgid = -1;
     HYD_pmcd_pmip.local.interface_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
@@ -153,6 +154,11 @@ static HYD_status control_port_fn(char *arg, char ***argv)
 static HYD_status proxy_id_fn(char *arg, char ***argv)
 {
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.local.id);
+}
+
+static HYD_status pgid_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.local.pgid);
 }
 
 static HYD_status debug_fn(char *arg, char ***argv)
@@ -396,6 +402,7 @@ static struct HYD_arg_match_table match_table[] = {
     /* Proxy parameters */
     {"control-port", control_port_fn, NULL},
     {"proxy-id", proxy_id_fn, NULL},
+    {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
     {"bootstrap", bootstrap_fn, NULL},
 
@@ -468,6 +475,9 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.local.id == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy ID not available\n");
+
+    if (HYD_pmcd_pmip.local.pgid == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PG ID not available\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

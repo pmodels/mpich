@@ -473,3 +473,42 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
   fn_fail:
     goto fn_exit;
 }
+
+HYD_status
+HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
+                                    HYD_status(*callback) (int fd, HYD_event_t events, void *userp),
+                                    void *userp)
+{
+    int listenfd;
+    char *sport, *real_port_range;
+    uint16_t port;
+    char hostname[MAX_HOSTNAME_LEN];
+    HYD_status status = HYD_SUCCESS;
+
+    /* Listen on a port in the port range */
+    port = 0;
+    real_port_range = port_range ? HYDU_strdup(port_range) : NULL;
+    status = HYDU_sock_listen(&listenfd, real_port_range, &port);
+    HYDU_ERR_POP(status, "unable to listen on port\n");
+
+    /* Register the listening socket with the demux engine */
+    status = HYDU_dmx_register_fd(1, &listenfd, HYD_POLLIN, userp, callback);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+    /* Create a port string for MPI processes to use to connect to */
+    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
+        HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
+                             "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
+
+    sport = HYDU_int_to_str(port);
+    HYDU_MALLOC(*port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);
+    HYDU_snprintf(*port_str, strlen(hostname) + 1 + strlen(sport) + 1,
+                  "%s:%s", hostname, sport);
+    HYDU_FREE(sport);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

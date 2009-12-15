@@ -8,7 +8,7 @@
 #include "pmi_handle.h"
 #include "pmi_handle_common.h"
 
-HYD_status HYD_pmcd_pmi_handle_init(int fd, char *args[])
+HYD_status HYD_pmcd_pmi_fn_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion;
     const char *tmp;

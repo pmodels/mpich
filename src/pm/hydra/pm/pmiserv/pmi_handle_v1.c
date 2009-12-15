@@ -8,8 +8,9 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "pmi_handle.h"
+#include "pmi_serv.h"
 
-static HYD_status fn_initack(int fd, char *args[])
+static HYD_status fn_initack(int fd, int pmi_pgid, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *val;
@@ -33,7 +34,7 @@ static HYD_status fn_initack(int fd, char *args[])
     tmp[i++] = HYDU_int_to_str(HYD_pg_list->num_procs);
     tmp[i++] = HYDU_strdup("\ncmd=set rank=");
 
-    status = HYD_pmcd_pmi_id_to_rank(id, &rank);
+    status = HYD_pmcd_pmi_id_to_rank(id, pmi_pgid, &rank);
     HYDU_ERR_POP(status, "unable to convert ID to rank\n");
     tmp[i++] = HYDU_int_to_str(rank);
 
@@ -67,7 +68,7 @@ static HYD_status fn_initack(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_maxes(int fd, char *args[])
+static HYD_status fn_get_maxes(int fd, int pmi_pgid, char *args[])
 {
     int i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -101,7 +102,7 @@ static HYD_status fn_get_maxes(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_appnum(int fd, char *args[])
+static HYD_status fn_get_appnum(int fd, int pmi_pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     int i;
@@ -137,7 +138,7 @@ static HYD_status fn_get_appnum(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_my_kvsname(int fd, char *args[])
+static HYD_status fn_get_my_kvsname(int fd, int pmi_pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     int i;
@@ -174,7 +175,7 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_in(int fd, char *args[])
+static HYD_status fn_barrier_in(int fd, int pmi_pgid, char *args[])
 {
     HYD_pmcd_pmi_process_t *process, *prun;
     HYD_pmcd_pmi_node_t *node;
@@ -213,7 +214,7 @@ static HYD_status fn_barrier_in(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_put(int fd, char *args[])
+static HYD_status fn_put(int fd, int pmi_pgid, char *args[])
 {
     int i, ret;
     HYD_pmcd_pmi_process_t *process;
@@ -285,7 +286,7 @@ static HYD_status fn_put(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get(int fd, char *args[])
+static HYD_status fn_get(int fd, int pmi_pgid, char *args[])
 {
     int i, found, ret;
     HYD_pmcd_pmi_process_t *process;
@@ -388,7 +389,7 @@ static HYD_status fn_get(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, char *args[])
+static HYD_status fn_finalize(int fd, int pmi_pgid, char *args[])
 {
     const char *cmd;
     HYD_status status = HYD_SUCCESS;
@@ -413,7 +414,7 @@ static HYD_status fn_finalize(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_usize(int fd, char *args[])
+static HYD_status fn_get_usize(int fd, int pmi_pgid, char *args[])
 {
     int usize, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -446,7 +447,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_spawn(int fd, char *args[])
+static HYD_status fn_spawn(int fd, int pmi_pgid, char *args[])
 {
     struct HYD_pg *pg;
     HYD_pmcd_pmi_pg_t *pmi_pg;
@@ -455,7 +456,7 @@ static HYD_status fn_spawn(int fd, char *args[])
     int offset, nprocs, procs_left;
     struct HYD_pmcd_token *tokens;
     int token_count, total_nodes, i, start_pid, num_procs;
-    char *val, *execname;
+    char *val, *execname, *pmi_port;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -585,12 +586,18 @@ static HYD_status fn_spawn(int fd, char *args[])
     status = HYD_pmcd_create_pg(&pmi_pg->next, pmi_pg->pgid + 1);
     HYDU_ERR_POP(status, "unable to create PMI pg\n");
 
+    pmi_pg = pmi_pg->next;
+
     /*
      * TODO:
      *   1. Create a PMI port to listen on
      *   2. Spawn the requested processes
      *   3. Modify the callback code to point to the appropriate process group
      */
+
+    status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &pmi_port,
+                                                 HYD_pmcd_pmi_connect_cb, (void *) &pmi_pg->pgid);
+    HYDU_ERR_POP(status, "unable to create PMI port\n");
 
     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "exit\n");
 

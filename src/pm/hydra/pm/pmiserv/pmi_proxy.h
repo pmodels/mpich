@@ -43,6 +43,7 @@ struct HYD_pmcd_pmip {
     /* Proxy details */
     struct {
         int id;
+        int pgid;
         char *interface_env_name;
         char *hostname;
 

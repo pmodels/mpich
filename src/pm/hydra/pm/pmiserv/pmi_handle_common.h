@@ -10,6 +10,6 @@
 #include "hydra_base.h"
 #include "pmi_handle.h"
 
-HYD_status HYD_pmcd_pmi_handle_init(int fd, char *args[]);
+HYD_status HYD_pmcd_pmi_fn_init(int fd, char *args[]);
 
 #endif /* PMI_HANDLE_COMMON_H_INCLUDED */

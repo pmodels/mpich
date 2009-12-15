@@ -20,4 +20,5 @@ libpm_a_SOURCES += $(top_srcdir)/pm/pmiserv/pmi_handle.c \
 	$(top_srcdir)/pm/pmiserv/pmi_handle_v2.c \
 	$(top_srcdir)/pm/pmiserv/pmi_serv_cb.c \
 	$(top_srcdir)/pm/pmiserv/pmi_serv_finalize.c \
-	$(top_srcdir)/pm/pmiserv/pmi_serv_launch.c
+	$(top_srcdir)/pm/pmiserv/pmi_serv_launch.c \
+	$(top_srcdir)/pm/pmiserv/pmi_utils.c

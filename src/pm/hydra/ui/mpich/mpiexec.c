@@ -180,6 +180,8 @@ int main(int argc, char **argv)
         HYD_handle.port_range = getenv("MPIEXEC_PORT_RANGE");
     if (!HYD_handle.port_range)
         HYD_handle.port_range = getenv("MPICH_PORT_RANGE");
+    if (HYD_handle.port_range)
+        HYD_handle.port_range = HYDU_strdup(HYD_handle.port_range);
 
     HYD_handle.interface_env_name = HYDU_strdup("MPICH_INTERFACE_NAME");
 

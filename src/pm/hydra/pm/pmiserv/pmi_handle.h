@@ -89,7 +89,7 @@ HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
 char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
 HYD_status HYD_pmcd_create_pg(HYD_pmcd_pmi_pg_t ** pg, int pgid);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(HYD_pmcd_pmi_pg_t * pg, int fd, int rank);
-HYD_status HYD_pmcd_pmi_id_to_rank(int id, int *rank);
+HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pmi_pgid, int *rank);
 HYD_pmcd_pmi_process_t *HYD_pmcd_pmi_find_process(int fd);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, HYD_pmcd_pmi_kvs_t * kvs,
                                 int *ret);
@@ -103,7 +103,7 @@ extern HYD_pmcd_pmi_pg_t *HYD_pg_list;
 
 struct HYD_pmcd_pmi_handle_fns {
     const char *cmd;
-     HYD_status(*handler) (int fd, char *args[]);
+    HYD_status(*handler) (int fd, int pmi_pgid, char *args[]);
 };
 
 struct HYD_pmcd_pmi_handle {
