@@ -110,7 +110,7 @@ fi
 #########################################################################
 # Check what boot-strap server we should use
 #########################################################################
-AC_ARG_WITH(hydra-bss, [  --with-hydra-bss           Boot-strap Server],
+AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh, rsh, fork, slurm, persist)],
 		    [ hydra_bss=$withval ],
 		    [ hydra_bss="ssh,rsh,fork,slurm,persist" ])
 AC_MSG_CHECKING(boot-strap server)
@@ -175,7 +175,7 @@ AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
 #########################################################################
 # Check what resource management kernel we should use
 #########################################################################
-AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk        Resource Management Kernel],
+AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk=name - Resource Management Kernel (pbs)],
 		    [ hydra_rmk=$withval ],
 		    [ hydra_rmk="pbs" ])
 AC_MSG_CHECKING(resource management kernel)
@@ -219,7 +219,7 @@ AM_CONDITIONAL([hydra_rmk_pbs], [$hydra_rmk_pbs])
 #########################################################################
 # Check what process manager we should use
 #########################################################################
-AC_ARG_WITH(hydra-pm, [  --with-hydra-pm               Process Manager],
+AC_ARG_WITH(hydra-pm, [  --with-hydra-pm=name - Process Manager (pmiserv)],
 		[ hydra_pm=$withval ],
 		[ hydra_pm=pmiserv ])
 AC_MSG_CHECKING(process manager)
@@ -231,7 +231,7 @@ AM_CONDITIONAL([hydra_pm_pmiserv], [test $hydra_pm = "pmiserv"])
 #########################################################################
 # Check what UI we should use
 #########################################################################
-AC_ARG_WITH(hydra-ui, [  --with-hydra-ui         User Interface],
+AC_ARG_WITH(hydra-ui, [  --with-hydra-ui=name - User Interface (mpiexec)],
 		[ hydra_ui=$withval ],
 		[ hydra_ui=mpiexec ])
 AC_MSG_CHECKING(user interface)
@@ -270,7 +270,7 @@ fi
 #########################################################################
 # Process Binding
 #########################################################################
-AC_ARG_WITH(hydra-bindlib, [  --with-hydra-bindlib       Process Binding Library],
+AC_ARG_WITH(hydra-bindlib, [  --with-hydra-bindlib=name - Process Binding Library (plpa, hwloc)],
 			   [ hydra_bindlib=$withval ],
 			   [ hydra_bindlib=plpa ])
 AC_MSG_CHECKING(process binding library)
@@ -325,7 +325,7 @@ AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
 #########################################################################
 # Checkpoint/Restart
 #########################################################################
-AC_ARG_WITH(hydra-ckpointlib, [  --with-hydra-ckpointlib[=lib]   Checkpointing Library],
+AC_ARG_WITH(hydra-ckpointlib, [  --with-hydra-ckpointlib=name - Checkpointing Library (blcr)],
 			   [ hydra_ckpointlib=$withval ],
 			   [ hydra_ckpointlib=none ])
 AC_MSG_CHECKING(checkpointing library)
