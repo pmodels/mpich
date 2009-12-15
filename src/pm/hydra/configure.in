@@ -231,13 +231,13 @@ AM_CONDITIONAL([hydra_pm_pmiserv], [test $hydra_pm = "pmiserv"])
 #########################################################################
 # Check what UI we should use
 #########################################################################
-AC_ARG_WITH(hydra-ui, [  --with-hydra-ui=name - User Interface (mpiexec)],
+AC_ARG_WITH(hydra-ui, [  --with-hydra-ui=name - User Interface (mpich)],
 		[ hydra_ui=$withval ],
-		[ hydra_ui=mpiexec ])
+		[ hydra_ui=mpich ])
 AC_MSG_CHECKING(user interface)
 AC_MSG_RESULT($hydra_ui)
 AC_SUBST(hydra_ui)
-AM_CONDITIONAL([hydra_ui_mpiexec], [test $hydra_ui = "mpiexec"])
+AM_CONDITIONAL([hydra_ui_mpich], [test $hydra_ui = "mpich"])
 
 
 #########################################################################
