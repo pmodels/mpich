@@ -28,3 +28,7 @@ endif
 if hydra_bss_persist
 include tools/bootstrap/persist/Makefile.mk
 endif
+
+if hydra_bss_poe
+include tools/bootstrap/poe/Makefile.mk
+endif

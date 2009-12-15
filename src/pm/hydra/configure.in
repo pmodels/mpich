@@ -110,7 +110,7 @@ fi
 #########################################################################
 # Check what boot-strap server we should use
 #########################################################################
-AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh, rsh, fork, slurm, persist)],
+AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh, rsh, fork, slurm, persist, poe)],
 		    [ hydra_bss=$withval ],
 		    [ hydra_bss="ssh,rsh,fork,slurm,persist" ])
 AC_MSG_CHECKING(boot-strap server)
@@ -125,6 +125,7 @@ hydra_bss_rsh=false
 hydra_bss_fork=false
 hydra_bss_slurm=false
 hydra_bss_persist=false
+hydra_bss_poe=false
 for hydra_bss_name in ${hydra_bss_names}; do
     if test -z "${hydra_default_bss}" ; then
        hydra_default_bss=$hydra_bss_name
@@ -151,6 +152,9 @@ HYD_status HYDT_bsci_${hydra_bss_name}_init(void);"
 	persist)
 		hydra_bss_persist=true
 		;;
+	poe)
+		hydra_bss_poe=true
+		;;
 	*)
 		;;
     esac
@@ -170,6 +174,7 @@ AM_CONDITIONAL([hydra_bss_rsh], [$hydra_bss_rsh])
 AM_CONDITIONAL([hydra_bss_fork], [$hydra_bss_fork])
 AM_CONDITIONAL([hydra_bss_slurm], [$hydra_bss_slurm])
 AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
+AM_CONDITIONAL([hydra_bss_poe], [$hydra_bss_poe])
 
 
 #########################################################################
