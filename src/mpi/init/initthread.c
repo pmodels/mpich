@@ -444,7 +444,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     if (mpi_errno != MPI_SUCCESS)
         MPIR_Process.initialized = MPICH_PRE_INIT;
     /* --END ERROR HANDLING-- */
-
+    /* FIXME: Does this need to come before the call to MPID_InitComplete?
+       For some debugger support, MPIR_WaitForDebugger may want to use
+       MPI communication routines to collect information for the debugger */
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_WaitForDebugger();
 #endif
