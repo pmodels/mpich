@@ -2,7 +2,11 @@ mpiexec_SOURCES = mpiexec.c
 # Some C compilers won't take ../libfoo.a as a library, so we use
 # -Ldir -llib for each of the libraries instead.
 # Force the use of the static, not shared library for mpich and for mpiexec
-mpiexec_LDADD = ../util/libmpiexec.a ../../../lib/libmpich.a
+#mpiexec_LDADD = ../util/libmpiexec.a ../../../lib/libmpich.a
+# Remove libmpich.a - Changes to the MPIU routines mean that external packages
+# may no longer make use of these routines.  To start with, we'll 
+# stop using the trmem routines...
+mpiexec_LDADD = ../util/libmpiexec.a 
 mpiexec_DEPADD = ../util/libmpiexec.a 
 INCLUDES = -I../../include -I${master_top_srcdir}/src/include \
     -I../../pmi/simple -I${master_top_srcdir}/src/pmi/simple \

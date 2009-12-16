@@ -20,7 +20,7 @@
 extern int putenv(char *string);
 #endif
 
-#include "mpimem.h"
+#include "pmutil.h"
 #include "process.h"
 #include "env.h"
 #include "cmnargs.h" /* for mpiexec_usage */

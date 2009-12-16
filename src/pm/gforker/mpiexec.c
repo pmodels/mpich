@@ -85,8 +85,11 @@
 #include "env.h"
 #include "simple_pmiutil.h"
 
+/* We can't use mpimem.h, because the memory routines are no longer available
+   as utility routines, and instead now import properties from the device 
+   and other parts of the 
 /* mpimem.h contains prototypes for MPIU_Strncpy etc. */
-#include "mpimem.h"
+/* #include "mpimem.h" */
 
 typedef struct { PMISetup pmiinfo; IOLabelSetup labelinfo; } SetupInfo;
 
@@ -223,6 +226,11 @@ int main( int argc, char *argv[], char *envp[] )
 	MPIE_IORegister( newfd, IO_READ, PMIServHandleInput, 
 			 pmiprocess );
     }
+    
+    /* Print out the proctable that is available to the debugger, through
+       the "MPIR" debugger interface. */
+    if (MPIE_Debug) { MPIE_PrintDebuggerInfo( stdout ); }
+
     reason = MPIE_IOLoop( pUniv.timeout );
 
     if (reason == IOLOOP_TIMEOUT) {

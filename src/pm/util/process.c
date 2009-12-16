@@ -25,8 +25,6 @@
 #include "ioloop.h"
 #include "process.h"
 #include "env.h"
-/* Use the memory defintions from mpich2/src/include */
-#include "mpimem.h"
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif

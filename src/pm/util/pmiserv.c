@@ -24,8 +24,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-/* Use the memory defintions from mpich2/src/include */
-#include "mpimem.h"
 #include "pmutil.h"
 #include "process.h"
 #include "cmnargs.h"

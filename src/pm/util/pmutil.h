@@ -60,7 +60,39 @@ extern int MPIE_Debug;
 
 
 /* Use the memory defintions from mpich2/src/include */
-#include "mpimem.h"
+/* #include "mpimem.h" */
+/* The memory routines no longer are available as utility routines.
+   The choices are to use the original memory tracing routines or
+   to select the option of using the basic memory routines.  The 
+   second option is used for now. */
+/* No memory tracing; just use native functions */
+#include <stdlib.h>
+#define MPIU_Malloc(a)    malloc((size_t)(a))
+#define MPIU_Calloc(a,b)  calloc((size_t)(a),(size_t)(b))
+#define MPIU_Free(a)      free((void *)(a))
+#define MPIU_Realloc(a,b)  realloc((void *)(a),(size_t)(b))
+
+#ifdef HAVE_STRDUP
+/* Watch for the case where strdup is defined as a macro by a header include */
+# if defined(NEEDS_STRDUP_DECL) && !defined(strdup)
+extern char *strdup( const char * );
+# endif
+#define MPIU_Strdup(a)    strdup(a)
+#else
+/* Don't define MPIU_Strdup, provide it in safestr.c */
+#endif /* HAVE_STRDUP */
+/* Provide a fallback snprintf for systems that do not have one */
+#ifdef HAVE_SNPRINTF
+#define MPIU_Snprintf snprintf
+/* Sometimes systems don't provide prototypes for snprintf */
+#ifdef NEEDS_SNPRINTF_DECL
+extern int snprintf( char *, size_t, const char *, ... ) ATTRIBUTE((format(printf,3,4)));
+#endif
+#else
+int MPIU_Snprintf( char *str, size_t size, const char *format, ... ) 
+     ATTRIBUTE((format(printf,3,4)));
+#endif /* HAVE_SNPRINTF */
+
 
 /* mpibase includes definitions of the MPIU_xxx_printf routines */
 #include "mpibase.h"

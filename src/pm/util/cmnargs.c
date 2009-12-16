@@ -29,9 +29,6 @@
 #include "pmiserv.h"
 #include "cmnargs.h"
 
-/* Use the memory defintions from mpich2/src/include */
-#include "mpimem.h"
-
 /* ----------------------------------------------------------------------- */
 /* Process options                                                         */
 /* The process options steps loads up the processTable with entries,       */
