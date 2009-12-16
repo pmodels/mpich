@@ -36,9 +36,9 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 		status->cancelled = request_ptr->status.cancelled;
 	    }
 	    mpi_errno = request_ptr->status.MPI_ERROR;
-	    MPID_Request_release(request_ptr);
 	    /* FIXME: are Ibsend requests added to the send queue? */
 	    MPIR_SENDQ_FORGET(request_ptr);
+	    MPID_Request_release(request_ptr);
 	    *request = MPI_REQUEST_NULL;
 	    break;
 	}
