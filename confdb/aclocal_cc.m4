@@ -357,10 +357,15 @@ AC_TRY_COMPILE([int foo(int) __attribute__ ((weak));],[int a;],
 pac_cv_attr_weak=yes,pac_cv_attr_weak=no)])
 # Note that being able to compile with weak_import doesn't mean that 
 # it works.
-AC_CACHE_CHECK([whether __attribute ((weak_import)) allowed],
+AC_CACHE_CHECK([whether __attribute__ ((weak_import)) allowed],
 pac_cv_attr_weak_import,[
 AC_TRY_COMPILE([int foo(int) __attribute__ ((weak_import));],[int a;],
 pac_cv_attr_weak_import=yes,pac_cv_attr_weak_import=no)])
+# Check if the alias option for weak attributes is allowed 
+AC_CACHE_CHECK([whether __attribute__((weak,alias(...))) allowed],
+pac_cv_attr_weak_alias,[
+AC_TRY_COMPILE([int foo(int) __attribute__((weak,alias("__foo")));],[int a;],
+pac_cv_attr_weak_alias=yes,pac_cv_attr_weak_alias=no)])
 ])
 
 #
