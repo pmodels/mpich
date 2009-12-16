@@ -89,16 +89,16 @@ case "$enable_sharedlibs" in
     # For example, include the libname as ${LIBNAME_SHL}
     #C_LINK_SHL='${CC} -shared -Wl,-h,<finallibname>'
     # May need -fPIC .  Test to see which one works.
-    PAC_C_CHECK_COMPILER_OPTION(-fpic,fpic_ok=yes,fpic_ok=no)
-    if test "$fpic_ok" != yes ; then
-        PAC_C_CHECK_COMPILER_OPTION(-fPIC,fPIC_ok=yes,fPIC_ok=no)
-        if test "$fPIC_ok" != yes ; then
+    PAC_C_CHECK_COMPILER_OPTION(-fPIC,fPIC_ok=yes,fPIC_ok=no)
+    if test "$fPIC_ok" != yes ; then
+        PAC_C_CHECK_COMPILER_OPTION(-fpic,fpic_ok=yes,fpic_ok=no)
+        if test "$fpic_ok" != yes ; then
 	     AC_MSG_ERROR([Neither -fpic nor -fPIC accepted by $CC])
         else
-	     CC_SHL='${CC} -fPIC'
+	     CC_SHL='${CC} -fpic'
         fi
     else
-        CC_SHL='${CC} -fpic'
+        CC_SHL='${CC} -fPIC'
     fi
     #C_LINKPATH_SHL="-Wl,-rpath -Wl,"
     # More recent versions allow multiple args, separated by commas
@@ -268,16 +268,16 @@ for pac_arg in $pac_kinds ; do
     #C_LINK_SHL='${CC} -shared -Wl,-h,<finallibname>'
     pac_cc_sharedlibs='gcc -shared'
     # Make sure we select the correct fpic option
-    PAC_C_CHECK_COMPILER_OPTION(-fpic,fpic_ok=yes,fpic_ok=no)
-    if test "$fpic_ok" != yes ; then
-        PAC_C_CHECK_COMPILER_OPTION(-fPIC,fPIC_ok=yes,fPIC_ok=no)
-        if test "$fPIC_ok" != yes ; then
+    PAC_C_CHECK_COMPILER_OPTION(-fPIC,fPIC_OK=yes,fPIC_OK=no)
+    if test "$fPIC_OK" != yes ; then
+        PAC_C_CHECK_COMPILER_OPTION(-fpic,fpic_ok=yes,fpic_ok=no)
+        if test "$fpic_ok" != yes ; then
 	     AC_MSG_ERROR([Neither -fpic nor -fPIC accepted by $CC])
         else
-	     pac_cc_sharedlibs="$pac_cc_sharedlibs -fPIC"
+	     pac_cc_sharedlibs="$pac_cc_sharedlibs -fpic"
         fi
     else
-        pac_cc_sharedlibs="$pac_cc_sharedlibs -fpic"
+        pac_cc_sharedlibs="$pac_cc_sharedlibs -fPIC"
     fi
     pac_clink_sharedlibs='gcc -shared'
     pac_type_sharedlibs=gcc
