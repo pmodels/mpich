@@ -15,6 +15,7 @@
 int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, MPI_Status *status)
 {
     nm_tag_t  match_info = 0;
+    nm_tag_t  match_mask = NEM_NMAD_MATCH_FULL_MASK;
     nm_gate_t out_gate;
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -26,11 +27,12 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     }
     else
     {
-	MPIU_Assert(0);
+       NEM_NMAD_SET_ANYTAG(match_info);
+       NEM_NMAD_SET_ANYTAG(match_mask);
     }
 
     do {
-	ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info);        
+	ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info,match_mask);
     }
     while (ret != NM_ESUCCESS);
 
@@ -53,6 +55,7 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
 int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
 {
     nm_tag_t  match_info = 0;
+    nm_tag_t  match_mask = NEM_NMAD_MATCH_FULL_MASK;
     nm_gate_t out_gate;
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -64,10 +67,11 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
     }
     else
     {
-	MPIU_Assert(0);
+       NEM_NMAD_SET_ANYTAG(match_info);
+       NEM_NMAD_SET_ANYTAG(match_mask);
     }
 
-    ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info);        
+    ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info,match_mask);
     if (ret == NM_ESUCCESS)
     {   
 	/*

@@ -148,6 +148,9 @@ typedef int16_t Nmad_Nem_tag_t;
 #define NEM_NMAD_CTXT_MASK     (NEM_NMAD_MAX_CTXT<<SHIFT_CTXT)
 #define NEM_NMAD_PGRANK_MASK   (NEM_NMAD_MAX_PGRANK<<SHIFT_PGRANK)
 
+#define NEM_NMAD_MATCH_FULL_MASK  (UINT64_C(0xffffffffffffffff))
+#define NEM_NMAD_MATCH_EMPTY_MASK (UINT64_C(0x0000000000000000))
+
 #define NEM_NMAD_SET_TAG(_match, _tag)  do {                              \
     MPIU_Assert((_tag >= 0)&&(_tag <= (NEM_NMAD_MAX_TAG)));               \
     ((_match) |= (((nm_tag_t)((_tag)&(NEM_NMAD_MAX_TAG))) << SHIFT_TAG)); \
@@ -163,6 +166,13 @@ typedef int16_t Nmad_Nem_tag_t;
 #define NEM_NMAD_SET_PGRANK(_match, _pg_rank)  do {        \
     ((_match) |= (((nm_tag_t)(_pg_rank)) << SHIFT_PGRANK));\
     }while(0)
+#define NEM_NMAD_SET_ANYSRC(_match) do{  \
+   ((_match) &= ~NEM_NMAD_RANK_MASK);    \
+   }while(0)
+#define NEM_NMAD_SET_ANYTAG(_match) do{  \
+   ((_match) &= ~NEM_NMAD_TAG_MASK);     \
+   }while(0)
+  
 
 #define NEM_NMAD_MATCH_GET_TAG(_match, _tag)   do{                             \
     ((_tag)  = ((Nmad_Nem_tag_t)(((_match) & NEM_NMAD_TAG_MASK)  >> SHIFT_TAG)));\
