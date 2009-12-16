@@ -11,7 +11,7 @@
 
 /* 
  * This file contains "safe" versions of the various string and printf
- * operations.  So far, only strncpy is included.
+ * operations.
  */
 
 /*
