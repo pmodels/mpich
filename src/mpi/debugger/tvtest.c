@@ -315,6 +315,7 @@ static int dbgrI_find_function( mqs_image *image, char *name,
 }
 
 
+#define MPIU_Memcpy memcpy
 /* Simulate requesting the debugger to fetch data from within this process */
 static int dbgrI_fetch_data( mqs_process *proc, mqs_taddr_t addr, int asize, 
 			     void *data )

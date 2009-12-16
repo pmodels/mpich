@@ -47,3 +47,7 @@ doc_LATEX_SOURCES = ${mpi_sources}
 
 optinstall_SHLIB = libtvmpich2.@SHLIB_EXT@
 
+# Remove both the library file, shared library files, and any links for 
+# versions of the shared libraries.
+clean-local:
+	rm -f libtvmpich2.*

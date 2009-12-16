@@ -6,10 +6,42 @@
 
 #include "mpiimpl.h"
 
+/* For getpid */
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+/* There are two versions of the debugger startup:
+   1. The debugger starts mpiexec - then mpiexec provides the MPIR_proctable
+      information
+   2. The debugger attaches to an MPI process which contains the 
+      MPIR_proctable and related variables
+
+   This file is intended to provide both as an option.  The macros that 
+   control the code for these are
+
+   MPICH2_STARTER_MPIEXEC
+   MPICH2_STARTER_RANK0
+ */
+#define MPICH2_STARTER_MPIEXEC
+/* #define MPICH2_STARTER_RANK0 */
+
+#ifdef MPICH2_STARTER_RANK0
+#define MPIU_PROCTABLE_NEEDED 1
+#define MPIU_BREAKPOINT_NEEDED 1
+#endif
+
+/* If MPIR_Breakpoint is not defined and called, the message queue information
+   will not be properly displayed by the debugger. */
+/* I believe this was caused by a poor choice in the dll_mpich2.c file */
+/* #define MPIU_BREAKPOINT_NEEDED 1 */
+
+#ifdef MPIU_BREAKPOINT_NEEDED
 /* We prototype this routine here because it is only used in this file.  It 
    is not static so that the debugger can find it (the debugger will set a 
    breakpoint at this routine */
 void *MPIR_Breakpoint(void);
+#endif
 
 /*
  * This file contains information and routines used to simplify the interface 
@@ -84,7 +116,7 @@ char * MPIR_debug_abort_string   = 0;
 #define MPIR_DEBUG_SPAWNED   1
 #define MPIR_DEBUG_ABORTING  2
 
-#if 0
+#ifdef MPIU_PROCTABLE_NEEDED
 /*
  * MPIR_PROCDESC is used to pass information to the debugger about 
  * all of the processes.
@@ -96,6 +128,8 @@ typedef struct {
 } MPIR_PROCDESC;
 MPIR_PROCDESC *MPIR_proctable    = 0;
 int MPIR_proctable_size          = 1;
+static int MPIR_FreeProctable( void * );
+
 #endif /* MPIR_proctable definition */
 
 /* Other symbols:
@@ -104,6 +138,10 @@ int MPIR_proctable_size          = 1;
  * MPIR_acquired_pre_main - 
  * MPIR_partial_attach_ok -
 */
+
+/* Forward references */
+static void SendqInit( void );
+static int SendqFreePool( void * );
 
 /*
  * If MPICH2 is built with the --enable-debugger option, MPI_Init and 
@@ -118,36 +156,101 @@ int MPIR_proctable_size          = 1;
  */
 void MPIR_WaitForDebugger( void )
 {
+#ifdef MPIU_PROCTABLE_NEEDED
     int rank = MPIR_Process.comm_world->rank;
     int size = MPIR_Process.comm_world->local_size;
+    int i, maxsize;
 
-#if 0
     /* FIXME: In MPICH2, the executables may not have the information
        on the other processes; this is part of the Process Manager Interface
        (PMI).  We need another way to provide this information to 
        a debugger */
+    /* The process manager probably has all of this data - the MPI2 
+       debugger interface API provides (at least originally) a way 
+       to access this. */
+    /* Also, to avoid scaling problems, we only populate the first 64
+       entries (default) */
+    maxsize = 64;
+    MPIU_GetEnvInt( "MPICH_PROCTABLE_SIZE", &maxsize );
+    if (maxsize > size) maxsize = size;
+
     if (rank == 0) {
-	MPIR_proctable    = (MPIR_PROCDESC *)MPIU_Malloc( size * sizeof(MPIR_PROCDESC) );
-	/* Temporary to see if we can get totalview's attention */
-	MPIR_proctable[0].host_name       = 0;
+	char hostname[MPI_MAX_PROCESSOR_NAME+1];
+	int  hostlen;
+	int  val;
+
+	MPIR_proctable    = (MPIR_PROCDESC *)MPIU_Malloc( 
+					 size * sizeof(MPIR_PROCDESC) );
+	for (i=0; i<size; i++) {
+	    /* Initialize the proctable */
+	    MPIR_proctable[i].host_name       = 0;
+	    MPIR_proctable[i].executable_name = 0;
+	    MPIR_proctable[i].pid             = -1;
+	}
+
+	PMPI_Get_processor_name( hostname, &hostlen );
+	MPIR_proctable[0].host_name       = (char *)MPIU_Strdup( hostname );
 	MPIR_proctable[0].executable_name = 0;
 	MPIR_proctable[0].pid             = getpid();
 
-	MPIR_proctable_size               = 1;
+	for (i=1; i<maxsize; i++) {
+	    int msg[2];
+	    PMPI_Recv( msg, 2, MPI_INT, i, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+	    MPIR_proctable[i].pid = msg[1];
+	    MPIR_proctable[i].host_name = (char *)MPIU_Malloc( msg[0] + 1 );
+	    PMPI_Recv( MPIR_proctable[i].host_name, msg[0]+1, MPI_CHAR, 
+		       i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+	    MPIR_proctable[i].host_name[msg[0]] = 0;
+	}
+
+	MPIR_proctable_size               = size;
+#if 0
+	/* Debugging hook */
+	val = 0;
+	MPIU_GetEnvBool( "MPICH_PROCTABLE_PRINT", &val );
+	if (val) {
+	    for (i=0; i<maxsize; i++) {
+		printf( "PT[%d].pid = %d, .host_name = %s\n", 
+			i, MPIR_proctable[i].pid, MPIR_proctable[i].host_name );
+	    }
+	    fflush( stdout );
+	}
+#endif
+	MPIR_Add_finalize( MPIR_FreeProctable, MPIR_proctable, 0 );
     }
+    else {
+	char hostname[MPI_MAX_PROCESSOR_NAME+1];
+	int  hostlen;
+	int  mypid = getpid();
+	int  msg[2];
+	if (rank < maxsize) {
+	    PMPI_Get_processor_name( hostname, &hostlen );
+	    msg[0] = hostlen;
+	    msg[1] = mypid;
+	    
+	    /* Deliver to the root process the proctable information */
+	    PMPI_Ssend( msg, 2, MPI_INT, 0, 0, MPI_COMM_WORLD );
+	    PMPI_Ssend( hostname, hostlen, MPI_CHAR, 0, 0, MPI_COMM_WORLD );
+	}
+    }
+#endif /* MPIU_PROCTABLE_NEEDED */
 
     /* Put the breakpoint after setting up the proctable */
     MPIR_debug_state    = MPIR_DEBUG_SPAWNED;
+#ifdef MPIU_BREAKPOINT_NEEDED
     (void)MPIR_Breakpoint();
+#endif
     /* After we exit the MPIR_Breakpoint routine, the debugger may have
        set variables such as MPIR_being_debugged */
 
+#if 0
     /* Check to see if we're not the master,
      * and wait for the debugger to attach if we're 
      * a slave. The debugger will reset the debug_gate.
      * There is no code in the library which will do it !
      * 
-     * THIS IS OLD CODE FROM MPICH1  FIXME
+     * THIS IS OLD CODE FROM MPICH1.  It is no longer needed for the 
+     * MPIEXEC is starter process mode.
      */
     if (MPIR_being_debugged && rank != 0) {
 	while (MPIR_debug_gate == 0) {
@@ -162,18 +265,23 @@ void MPIR_WaitForDebugger( void )
 		    &timeout );
 	}
     }
-#endif /* MPIR_proctable definition */
+#endif
+    /* Initialize the sendq support */
+    SendqInit();
 
     if (getenv("MPIEXEC_DEBUG")) {
 	while (!MPIR_debug_gate) ; 
     }
+
+    
 }
 
+#ifdef MPIU_BREAKPOINT_NEEDED
 /* 
  * This routine is a special dummy routine that is used to provide a
  * location for a debugger to set a breakpoint on, allowing a user (and the
  * debugger) to attach to MPI processes after MPI_Init succeeds but before
- * MPI_Init returns control to the user.  It may also be called when MPI aborts, 
+ * MPI_Init returns control to the user. It may also be called when MPI aborts, 
  * also to allow a debugger to regain control of an application.
  *
  * This routine can also initialize any datastructures that are required
@@ -181,21 +289,24 @@ void MPIR_WaitForDebugger( void )
  */
 void * MPIR_Breakpoint( void )
 {
+    MPIU_DBG_MSG(OTHER,VERBOSE,"In MPIR_Breakpoint");
     return 0;
 }
+#endif
 
 /* 
  * Call this routine to signal to the debugger that the application is aborting.
  * If there is an abort message, call the MPIR_Breakpoint routine (which 
- * allows a tool 
- * such as a debugger to gain control.
+ * allows a tool such as a debugger to gain control.
  */
 void MPIR_DebuggerSetAborting( const char *msg )
 {
-    MPIR_debug_abort_string = msg;
+    MPIR_debug_abort_string = (char *)msg;
     MPIR_debug_state        = MPIR_DEBUG_ABORTING;
+#ifdef MPIU_BREAKPOINT_NEEDED
     if (msg) 
 	MPIR_Breakpoint();
+#endif
 }
 
 /* ------------------------------------------------------------------------- */
@@ -213,7 +324,6 @@ void MPIR_DebuggerSetAborting( const char *msg )
  *
  * FIXME: We need to add MPI_Ibsend and the persistent send requests to
  * the known send requests.
- * FIXME: We need to register a Finalize call back to free memory.
  * FIXME: We should exploit this to allow Finalize to report on 
  * send requests that were never completed.
  */
@@ -232,10 +342,15 @@ MPIR_Sendq *MPIR_Sendq_head = 0;
    elements */
 static MPIR_Sendq *pool = 0;
 
+/* This routine is used to establish a queue of send requests to allow the
+   debugger easier access to the active requests.  Some devices may be able
+   to provide this information without requiring this separate queue. */
 void MPIR_Sendq_remember( MPID_Request *req, 
 			  int rank, int tag, int context_id )
 {
     MPIR_Sendq *p;
+
+    MPIU_THREAD_CS_ENTER(HANDLE,req);
     if (pool) {
 	p = pool;
 	pool = p->next;
@@ -253,16 +368,17 @@ void MPIR_Sendq_remember( MPID_Request *req,
     p->context_id = context_id;
     p->next       = MPIR_Sendq_head;
     MPIR_Sendq_head = p;
+    MPIU_THREAD_CS_EXIT(HANDLE,req)
 }
 
 void MPIR_Sendq_forget( MPID_Request *req )
 {
     MPIR_Sendq *p, *prev;
 
+    MPIU_THREAD_CS_ENTER(HANDLE,req);
     p    = MPIR_Sendq_head;
     prev = 0;
 
-    /* FIXME: Make this thread-safe */
     while (p) {
 	if (p->sreq == req) {
 	    if (prev) prev->next = p->next;
@@ -276,6 +392,47 @@ void MPIR_Sendq_forget( MPID_Request *req )
 	p    = p->next;
     }
     /* If we don't find the request, just ignore it */
+    MPIU_THREAD_CS_EXIT(HANDLE,req);
+}
+
+static int SendqFreePool( void *d )
+{
+    MPIR_Sendq *p;
+
+    /* Free the pool */
+    p = pool;
+    while (p) {
+	pool = p->next;
+	MPIU_Free( p );
+	p = pool;
+    }
+    /* Free the list of pending sends */
+    p    = MPIR_Sendq_head;
+    while (p) {
+	MPIR_Sendq_head = p->next;
+	MPIU_Free( p );
+	p = MPIR_Sendq_head;
+    }
+    return 0;
+}
+static void SendqInit( void )
+{
+    int i;
+    MPIR_Sendq *p;
+
+    /* Preallocated a few send requests */
+    for (i=0; i<10; i++) {
+	p = (MPIR_Sendq *)MPIU_Malloc( sizeof(MPIR_Sendq) );
+	if (!p) {
+	    /* Just ignore it */
+	    break;
+	}
+	p->next = pool;
+	pool    = p;
+    }
+
+    /* Make sure the pool is deleted */
+    MPIR_Add_finalize( SendqFreePool, 0, 0 );
 }
 
 /* Manage the known communicators */
@@ -292,7 +449,7 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
 {   
     MPIU_DBG_MSG_P(COMM,VERBOSE,
 		   "Adding communicator %p to remember list",comm_ptr);
-    /* FIXME: (MT) Ensure thread-safe */
+    MPIU_THREAD_CS_ENTER(HANDLE,comm_ptr);
     if (comm_ptr == MPIR_All_communicators.head) {
 	MPIU_Internal_error_printf( "Internal error: communicator is already on free list\n" );
 	return;
@@ -300,6 +457,7 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
     comm_ptr->comm_next = MPIR_All_communicators.head;
     MPIR_All_communicators.head = comm_ptr;
     MPIR_All_communicators.sequence_number++;
+    MPIU_THREAD_CS_EXIT(HANDLE,comm_ptr);
 }
 
 void MPIR_CommL_forget( MPID_Comm *comm_ptr )
@@ -308,7 +466,7 @@ void MPIR_CommL_forget( MPID_Comm *comm_ptr )
 
     MPIU_DBG_MSG_P(COMM,VERBOSE,
 		   "Forgetting communicator %p from remember list",comm_ptr);
-    /* FIXME: (MT) Ensure thread-safe */
+    MPIU_THREAD_CS_ENTER(HANDLE,comm_ptr);
     p = MPIR_All_communicators.head;
     prev = 0;
     while (p) {
@@ -326,5 +484,27 @@ void MPIR_CommL_forget( MPID_Comm *comm_ptr )
     }
     /* Record a change to the list */
     MPIR_All_communicators.sequence_number++;
+    MPIU_THREAD_CS_EXIT(HANDLE,comm_ptr);
 }
 
+#ifdef MPIU_PROCTABLE_NEEDED
+/* This routine is the finalize callback used to free the procable */
+static int MPIR_FreeProctable( void *ptable )
+{
+    int i;
+    MPIR_PROCDESC *proctable = (MPIR_PROCDESC *)ptable;
+    for (i=0; i<MPIR_proctable_size; i++) {
+	if (proctable[i].host_name) { MPIU_Free( proctable[i].host_name ); }
+    }
+    MPIU_Free( proctable );
+
+    return 0;
+}
+#endif /* MPIU_PROCTABLE_NEEDED */
+
+/* 
+ * There is an MPI-2 process table interface which has been defined; this
+ * provides a more scalable, distributed description of the process table.
+ * 
+ * 
+ */

@@ -11,10 +11,31 @@
 #include <string.h>
 #include "mpi.h"
 
+/* #define DEBUG_MPIDBG_DLL 1 */
+
 /* Define this to have the code print out details of its list traversal
    action.  This is primarily for use with dbgstub.c and the test programs
    such as tvtest.c */
 /* #define DEBUG_LIST_ITER */
+
+/* Define this to have the code print out its operation to a file.
+   This may be used to help understand how the debugger is using this
+   interface */
+/* #define DEBUG_MPIDBG_LOGGING */
+#ifdef DEBUG_MPIDBG_LOGGING
+#include <stdio.h>
+FILE *debugfp = 0;
+
+static void initLogFile(void)
+{
+    if (!debugfp) {
+	debugfp = fopen( "mpich-dbg-interface-log.txt", "w" );
+    }
+}
+#else
+/* no-op definition */
+#define initLogFile()
+#endif
 
 /* MPIR_dll_name is defined in dbg_init.c; it must be part of the target image,
    not the debugger interface */
@@ -78,7 +99,9 @@ static group_t * find_or_create_group (mqs_process *proc,
 				       mqs_tword_t np,
 				       mqs_taddr_t table);
 static int translate (group_t *this, int idx);
+#if 0
 static int reverse_translate (group_t * this, int idx);
+#endif
 static void group_decref (group_t * group);
 static communicator_t * find_communicator (mpich_process_info *p_info,
 				   mqs_taddr_t comm_base, int recv_ctx);
@@ -141,7 +164,7 @@ int mqs_version_compatibility ( void )
 
 char *mqs_version_string ( void )
 {
-  return "ETNUS MPICH message queue support for MPICH2 1.0 compiled on " __DATE__;
+    return (char *)"MPICH message queue support for MPICH2 " MPICH2_VERSION " compiled on " __DATE__;
 } 
 
 /* Allow the debugger to discover the size of an address type */
@@ -180,7 +203,7 @@ int mqs_dll_taddr_width (void)
 void mqs_setup_basic_callbacks (const mqs_basic_callbacks * cb)
 {
   int t = 1;
-
+  initLogFile();
   host_is_big_endian    = (*(char *)&t) != 1;
   mqs_basic_entrypoints = cb;
 } 
@@ -232,16 +255,16 @@ int mqs_image_has_queues (mqs_image *image, char **message)
     int have_co = 0, have_cl = 0, have_req = 0, have_dreq = 0;
 
     /* Default failure message ! */
-    *message = "The symbols and types in the MPICH library used by TotalView\n"
+    *message = (char *)"The symbols and types in the MPICH library used by TotalView\n"
 	"to extract the message queues are not as expected in\n"
 	"the image '%s'\n"
 	"No message queue display is possible.\n"
 	"This is probably an MPICH version or configuration problem.";
 
-    /* Force in the file containing our breakpoint function, to ensure that 
-     * types have been read from there before we try to look them up.
+    /* Force in the file containing our wait-for-debugger function, to ensure 
+     * that types have been read from there before we try to look them up.
      */
-    dbgr_find_function (image, "MPIR_Breakpoint", mqs_lang_c, NULL);
+    dbgr_find_function (image, (char *)"MPIR_WaitForDebugger", mqs_lang_c, NULL);
 
     /* Find the various global variables and structure definitions 
        that describe the communicator and message queue structures for
@@ -253,25 +276,25 @@ int mqs_image_has_queues (mqs_image *image, char **message)
        The communicators themselves are of type MPID_Comm.
     */
     {
-	mqs_type *cl_type = dbgr_find_type( image, "MPIR_Comm_list", 
+	mqs_type *cl_type = dbgr_find_type( image, (char *)"MPIR_Comm_list", 
 					    mqs_lang_c );
 	if (cl_type) {
 	    have_cl = 1;
 	    i_info->sequence_number_offs = 
-		dbgr_field_offset( cl_type, "sequence_number" );
-	    i_info->comm_head_offs = dbgr_field_offset( cl_type, "head" );
+		dbgr_field_offset( cl_type, (char *)"sequence_number" );
+	    i_info->comm_head_offs = dbgr_field_offset( cl_type, (char *)"head" );
 	}
     }
     {
-	mqs_type *co_type = dbgr_find_type( image, "MPID_Comm", mqs_lang_c );
+	mqs_type *co_type = dbgr_find_type( image, (char *)"MPID_Comm", mqs_lang_c );
 	if (co_type) {
 	    have_co = 1;
-	    i_info->comm_name_offs = dbgr_field_offset( co_type, "name" );
-	    i_info->comm_next_offs = dbgr_field_offset( co_type, "comm_next" );
-	    i_info->comm_rsize_offs = dbgr_field_offset( co_type, "remote_size" );
-	    i_info->comm_rank_offs = dbgr_field_offset( co_type, "rank" );
-	    i_info->comm_context_id_offs = dbgr_field_offset( co_type, "context_id" );
-	    i_info->comm_recvcontext_id_offs = dbgr_field_offset( co_type, "recvcontext_id" );
+	    i_info->comm_name_offs = dbgr_field_offset( co_type, (char *)"name" );
+	    i_info->comm_next_offs = dbgr_field_offset( co_type, (char *)"comm_next" );
+	    i_info->comm_rsize_offs = dbgr_field_offset( co_type, (char *)"remote_size" );
+	    i_info->comm_rank_offs = dbgr_field_offset( co_type, (char *)"rank" );
+	    i_info->comm_context_id_offs = dbgr_field_offset( co_type, (char *)"context_id" );
+	    i_info->comm_recvcontext_id_offs = dbgr_field_offset( co_type, (char *)"recvcontext_id" );
 	}
     }
 
@@ -281,33 +304,57 @@ int mqs_image_has_queues (mqs_image *image, char **message)
        request.  This means diving into the types that make of the 
        request definition */
     {
-	mqs_type *req_type = dbgr_find_type( image, "MPID_Request", mqs_lang_c );
+	mqs_type *req_type = dbgr_find_type( image, (char *)"MPID_Request", mqs_lang_c );
 	if (req_type) {
-	    have_req = 1;
 	    int dev_offs;
-	    dev_offs = dbgr_field_offset( req_type, "dev" );
-	    i_info->req_status_offs = dbgr_field_offset( req_type, "status" );
-	    i_info->req_cc_offs     = dbgr_field_offset( req_type, "cc" );
+	    have_req = 1;
+	    dev_offs = dbgr_field_offset( req_type, (char *)"dev" );
+	    i_info->req_status_offs = dbgr_field_offset( req_type, (char *)"status" );
+	    i_info->req_cc_offs     = dbgr_field_offset( req_type, (char *)"cc" );
 	    if (dev_offs >= 0) {
-		mqs_type *dreq_type = dbgr_find_type( image, "MPIDI_Request", 
+		mqs_type *dreq_type = dbgr_find_type( image, (char *)"MPIDI_Request", 
 						      mqs_lang_c );
 		i_info->req_dev_offs = dev_offs;
 		if (dreq_type) {
 		    int loff, match_offs;
 		    have_dreq = 1;
-		    loff = dbgr_field_offset( dreq_type, "next" );
+		    loff = dbgr_field_offset( dreq_type, (char *)"next" );
 		    i_info->req_next_offs = dev_offs + loff;
-		    match_offs = dbgr_field_offset( dreq_type, "match" );
+		    loff = dbgr_field_offset( dreq_type, (char *)"user_buf" );
+		    i_info->req_user_buf_offs = dev_offs + loff;
+		    loff = dbgr_field_offset( dreq_type, (char *)"user_count" );
+		    i_info->req_user_count_offs = dev_offs + loff;
+		    loff = dbgr_field_offset( dreq_type, (char *)"datatype" );
+		    i_info->req_datatype_offs = dev_offs + loff;
+		    match_offs = dbgr_field_offset( dreq_type, (char *)"match" );
+		    /*
+		      Current definition from the mpidpre.h file for ch3.
+
+		      typedef union {
+		      struct {
+		      int32_t tag;
+		      MPIR_Rank_t rank;
+		      MPIR_Context_id_t context_id;
+		      } parts;
+		      MPIR_Upint whole;
+		      } MPIDI_Message_match;
+		    */
 		    if (match_offs >= 0) {
-			mqs_type *match_type = dbgr_find_type( image, "MPIDI_Message_match", mqs_lang_c );
+			mqs_type *match_type = dbgr_find_type( image, (char *)"MPIDI_Message_match", mqs_lang_c );
 			if (match_type) {
-			    int moff;
-			    moff = dbgr_field_offset( match_type, "tag" );
-			    i_info->req_tag_offs = dev_offs + match_offs + moff;
-			    moff = dbgr_field_offset( match_type, "rank" );
-			    i_info->req_rank_offs = dev_offs + match_offs + moff;
-			    moff = dbgr_field_offset( match_type, "context_id" );
-			    i_info->req_context_id_offs = dev_offs + match_offs + moff;
+			    int parts_offs = dbgr_field_offset( match_type, (char *)"parts" );
+			    if (parts_offs >= 0) {
+				mqs_type *parts_type = dbgr_find_type( image, (char *)"MPIDI_Message_match_parts", mqs_lang_c );
+				if (parts_type) {
+				    int moff;
+				    moff = dbgr_field_offset( parts_type, (char *)"tag" );
+				    i_info->req_tag_offs = dev_offs + match_offs + moff;
+				    moff = dbgr_field_offset( parts_type, (char *)"rank" );
+				    i_info->req_rank_offs = dev_offs + match_offs + moff;
+				    moff = dbgr_field_offset( parts_type, (char *)"context_id" );
+				    i_info->req_context_id_offs = dev_offs + match_offs + moff;
+				}
+			    }
 			}
 		    }
 		}
@@ -317,18 +364,17 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 
     /* Send queues use a separate system */
     {
-	mqs_type *sreq_type = dbgr_find_type( image, "MPIR_Sendq", mqs_lang_c );
+	mqs_type *sreq_type = dbgr_find_type( image, (char *)"MPIR_Sendq", mqs_lang_c );
 	if (sreq_type) {
-	    i_info->sendq_next_offs = dbgr_field_offset( sreq_type, "next" );
-	    i_info->sendq_tag_offs  = dbgr_field_offset( sreq_type, "tag" );
-	    i_info->sendq_rank_offs  = dbgr_field_offset( sreq_type, "rank" );
-	    i_info->sendq_context_id_offs  = dbgr_field_offset( sreq_type, "context_id" );
+	    i_info->sendq_next_offs = dbgr_field_offset( sreq_type, (char *)"next" );
+	    i_info->sendq_tag_offs  = dbgr_field_offset( sreq_type, (char *)"tag" );
+	    i_info->sendq_rank_offs = dbgr_field_offset( sreq_type, (char *)"rank" );
+	    i_info->sendq_context_id_offs  = dbgr_field_offset( sreq_type, (char *)"context_id" );
+	    i_info->sendq_req_offs  = dbgr_field_offset( sreq_type, (char *)"sreq" );
 	}
     }
 
     return mqs_ok;
-    /* FIXME: This function is not yet implemented */
-    return err_silent_failure;
 }
 /* mqs_setup_process initializes the process structure.  
  * The memory allocated by this routine (and routines that modify this
@@ -381,20 +427,20 @@ int mqs_process_has_queues (mqs_process *proc, char **msg)
     *msg = 0;
 
     /* Check first for the communicator list */
-    if (dbgr_find_symbol (image, "MPIR_All_communicators", &p_info->commlist_base) != mqs_ok)
+    if (dbgr_find_symbol (image, (char *)"MPIR_All_communicators", &p_info->commlist_base) != mqs_ok)
 	return err_all_communicators;
 
     /* Check for the receive and send queues */
-    if (dbgr_find_symbol( image, "MPID_Recvq_posted_head_ptr", &head_ptr ) != mqs_ok)
+    if (dbgr_find_symbol( image, (char *)"MPID_Recvq_posted_head_ptr", &head_ptr ) != mqs_ok)
 	return err_posted;
     p_info->posted_base = fetch_pointer( proc, head_ptr, p_info );
 
-    if (dbgr_find_symbol( image, "MPID_Recvq_unexpected_head_ptr", &head_ptr ) != mqs_ok)
+    if (dbgr_find_symbol( image, (char *)"MPID_Recvq_unexpected_head_ptr", &head_ptr ) != mqs_ok)
 	return err_unexpected;
     p_info->unexpected_base = fetch_pointer( proc, head_ptr, p_info );
 
     /* Send queues are optional */
-    if (dbgr_find_symbol( image, "MPIR_Sendq_head", &p_info->sendq_base) == 
+    if (dbgr_find_symbol( image, (char *)"MPIR_Sendq_head", &p_info->sendq_base) == 
 	mqs_ok) {
 	p_info->has_sendq = 1;
     }
@@ -411,21 +457,21 @@ char * mqs_dll_error_string (int errcode)
 {
     switch (errcode) {
     case err_silent_failure:
-	return "";
+	return (char *)"";
     case err_no_current_communicator: 
-	return "No current communicator in the communicator iterator";
+	return (char *)"No current communicator in the communicator iterator";
     case err_bad_request:    
-	return "Attempting to setup to iterate over an unknown queue of operations";
+	return (char *)"Attempting to setup to iterate over an unknown queue of operations";
     case err_no_store: 
-	return "Unable to allocate store";
+	return (char *)"Unable to allocate store";
     case err_group_corrupt:
-	return "Could not read a communicator's group from the process (probably a store corruption)";
+	return (char *)"Could not read a communicator's group from the process (probably a store corruption)";
     case err_unexpected: 
-      return "Failed to find symbol MPID_Recvq_unexpected_head_ptr";
+	return (char *)"Failed to find symbol MPID_Recvq_unexpected_head_ptr";
     case err_posted: 
-      return "Failed to find symbol MPID_Recvq_posted_head_ptr";
+	return (char *)"Failed to find symbol MPID_Recvq_posted_head_ptr";
     }
-    return "Unknown error code";
+    return (char *)"Unknown error code";
 }
 /* ------------------------------------------------------------------------ */
 /* Queue Display
@@ -589,7 +635,8 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
     mqs_taddr_t base           = fetch_pointer (proc, p_info->next_msg, p_info);
 
 #ifdef DEBUG_LIST_ITER
-    printf( "fetch receive base = %x, comm= %x, context = %d\n", 
+    initLogFile();
+    fprintf( debugfp, "fetch receive base = %x, comm= %x, context = %d\n", 
 	    base, comm, wanted_context );
 #endif
     while (base != 0) {
@@ -597,30 +644,34 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
 	int16_t actual_context = fetch_int16( proc, base + i_info->req_context_id_offs, p_info );
 
 #ifdef DEBUG_LIST_ITER
-	printf( "fetch receive msg context = %d\n", actual_context );
+	initLogFile();
+	fprintf( debugfp, "fetch receive msg context = %d\n", actual_context );
 #endif
 	if (actual_context == wanted_context) {
 	    /* Found a request for this communicator */
 	    int tag = fetch_int( proc, base + i_info->req_tag_offs, p_info );
 	    int rank = fetch_int16( proc, base + i_info->req_rank_offs, p_info );
-	    int is_complete = fetch_int (proc, base + i_info->req_cc_offs, p_info);
+	    int is_complete   = fetch_int ( proc, base + i_info->req_cc_offs, p_info);
+	    mqs_tword_t user_buffer = fetch_pointer( proc,base+i_info->req_user_buf_offs, p_info);
+	    int   user_count  = fetch_int( proc,base + i_info->req_user_count_offs, p_info );
 
-	    res->desired_tag = tag;
-	    res->desired_local_rank = rank;
+	    /* Return -1 for ANY_TAG or ANY_SOURCE */
+	    res->desired_tag         = (tag >= 0) ? tag : -1;
+	    res->desired_local_rank  = (rank >= 0) ? rank : -1;
 	    res->desired_global_rank = -1;   /* Convert to rank in comm world,
 						if valid (in mpi-2, may
 						not be available) */
-	    res->desired_length = -1;
+	    res->desired_length      = user_count; /* Count, not bytes */
 	    
 	    res->tag_wild = (tag < 0);
+	    res->buffer             = user_buffer;
 	    /* We don't know the rest of these */
-	    res->buffer   = 0;
-	    res->system_buffer = 0;
-	    res->actual_local_rank = rank;
+	    res->system_buffer      = 0;
+	    res->actual_local_rank  = rank;
 	    res->actual_global_rank = -1;
-	    res->actual_tag = tag;
-	    res->actual_length = -1;
-	    res->extra_text[0][0] = 0;
+	    res->actual_tag         = tag;
+	    res->actual_length      = -1;
+	    res->extra_text[0][0]   = 0;
 
 	    res->status = (is_complete != 0) ? mqs_st_pending : mqs_st_complete; 
 
@@ -739,7 +790,9 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
     
 #ifdef DEBUG_LIST_ITER
     if (base) {
-	printf( "comm ptr = %p, comm context = %d\n", comm, comm->context_id );
+	initLogFile();
+	fprintf( debugf, "comm ptr = %p, comm context = %d\n", 
+		 comm, comm->context_id );
     }
 #endif
     /* Say what operation it is. We can only see non blocking send operations
@@ -759,23 +812,27 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
 	    mqs_tword_t tag    = fetch_int (proc, base+i_info->sendq_tag_offs,         p_info);
 	    mqs_tword_t length = 0;
 	    mqs_taddr_t data   = 0;
-	    mqs_taddr_t shandle= 0;
-	    mqs_tword_t complete=0;
+	    mqs_taddr_t sreq = fetch_pointer(proc, base+i_info->sendq_req_offs, p_info );
+	    mqs_tword_t is_complete = fetch_int( proc, sreq+i_info->req_cc_offs, p_info );
+	    data = fetch_pointer( proc, sreq+i_info->req_user_buf_offs, p_info );
+	    length = fetch_int( proc, sreq+i_info->req_user_count_offs, p_info );
+	    /* mqs_tword_t complete=0; */
 
 #ifdef DEBUG_LIST_ITER
-	    printf( "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n", 
+	    initLogFile();
+	    fprintf( debugpf, "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n", 
 		    base, i_info->sendq_rank_offs, i_info->sendq_tag_offs, actual_context );
 #endif
 	    
 	    /* Ok, fill in the results */
-	    res->status = -1; /* complete ? mqs_st_complete : mqs_st_pending; *//* We can't discern matched */
+	    res->status = (is_complete != 0) ? mqs_st_pending : mqs_st_complete; 
 	    res->actual_local_rank = res->desired_local_rank = target;
 	    res->actual_global_rank= res->desired_global_rank= translate (comm->group, target);
-	    res->tag_wild   = 0;
-	    res->actual_tag = res->desired_tag = tag;
+	    res->tag_wild       = 0;
+	    res->actual_tag     = res->desired_tag = tag;
 	    res->desired_length = res->actual_length = length;
 	    res->system_buffer  = 0;
-	    res->buffer = data;
+	    res->buffer         = data;
 	    
 	    
 	    /* Don't forget to step the queue ! */
@@ -900,7 +957,7 @@ static int rebuild_communicator_list (mqs_process *proc)
 	int send_ctx = fetch_int16 (proc, comm_base+i_info->comm_context_id_offs, p_info);
 	communicator_t *old = find_communicator (p_info, comm_base, recv_ctx);
 
-	char *name = "--unnamed--";
+	char *name = (char *)"--unnamed--";
 	char namebuffer[64];
 	/* In MPICH2, the name is preallocated and of size MPI_MAX_OBJECT_NAME */
 	if (dbgr_fetch_data( proc, comm_base+i_info->comm_name_offs,64,
@@ -941,7 +998,8 @@ static int rebuild_communicator_list (mqs_process *proc)
 	    nc->comm_info.size      = np;
 	    nc->comm_info.local_rank = fetch_int (proc, comm_base+i_info->comm_rank_offs,p_info);
 #ifdef DEBUG_LIST_ITER
-	    printf( "Adding communicator %p, send context=%d, recv context=%d, size=%d, name=%s\n",
+	    initLogFile();
+	    fprintf( debugfp, "Adding communicator %p, send context=%d, recv context=%d, size=%d, name=%s\n",
 		    comm_base, send_ctx, recv_ctx, np, name );
 #endif	    
 #if 0
@@ -1058,16 +1116,21 @@ static mqs_tword_t fetch_int16 (mqs_process * proc, mqs_taddr_t addr,
 
 /* ------------------------------------------------------------------------- */
 /* With each communicator we need to translate ranks to/from their
-   MPI_COMM_WORLD equivalents.  This code is not yet implemented */
+   MPI_COMM_WORLD equivalents.  This code is not yet implemented 
+*/
 /* ------------------------------------------------------------------------- */
+/* idx is rank in group this; return rank in MPI_COMM_WORLD */
 static int translate (group_t *this, int idx) 
 { 	
     return -1;
 }
+#if 0
+/* idx is rank in MPI_COMM_WORLD, return rank in group this */
 static int reverse_translate (group_t * this, int idx) 
 { 	
     return -1;
 }
+#endif
 static group_t * find_or_create_group (mqs_process *proc,
 				       mqs_tword_t np,
 				       mqs_taddr_t table)

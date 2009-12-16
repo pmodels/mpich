@@ -46,6 +46,7 @@ enum { TYPE_UNKNOWN = 0,
        TYPE_MPIDI_MESSAGE_MATCH = 4,
        TYPE_MPID_REQUEST = 5, 
        TYPE_MPIR_SENDQ = 6,
+       TYPE_MPIDI_MESSAGE_MATCH_PARTS = 7,
 } KnownTypes;
 
 /* The dll_mpich2.c has a few places where it doesn't always use the most 
@@ -55,7 +56,8 @@ enum { TYPE_UNKNOWN = 0,
 static int knownTypesArray[] = { TYPE_UNKNOWN, TYPE_MPID_COMM, 
 				 TYPE_MPIR_COMM_LIST, TYPE_MPIDI_REQUEST, 
 				 TYPE_MPIDI_MESSAGE_MATCH, TYPE_MPID_REQUEST, 
-				 TYPE_MPIR_SENDQ };
+				 TYPE_MPIR_SENDQ, 
+				 TYPE_MPIDI_MESSAGE_MATCH_PARTS };
 
 mqs_type * dbgrI_find_type(mqs_image *image, char *name, 
 			   mqs_lang_code lang)
@@ -73,6 +75,9 @@ mqs_type * dbgrI_find_type(mqs_image *image, char *name,
     }
     else if (strcmp( name, "MPIDI_Message_match" ) == 0) {
 	curType = TYPE_MPIDI_MESSAGE_MATCH;
+    }
+    else if (strcmp( name, "MPIDI_Message_match_parts" ) == 0) {
+	curType = TYPE_MPIDI_MESSAGE_MATCH_PARTS;
     }
     else if (strcmp( name, "MPID_Request" ) == 0) {
 	curType = TYPE_MPID_REQUEST;
@@ -151,18 +156,28 @@ int dbgrI_field_offset(mqs_type *type, char *name)
 	break;
     case TYPE_MPIDI_MESSAGE_MATCH:
 	{
-	    MPIDI_Message_match c;
-	    if (strcmp( name, "tag" ) == 0) {
-		off = ((char *)&c.tag - (char *)&c);
-	    }
-	    else if (strcmp( name, "rank" ) == 0) {
-		off = ((char *)&c.rank - (char *)&c);
-	    }
-	    else if (strcmp( name, "context_id" ) == 0) {
-		off = ((char *)&c.context_id - (char *)&c);
+	    if (strcmp( name, "parts" ) == 0) {
+		off = 0;
 	    }
 	    else {
-		printf( "Panic! Unrecognized message match field %s\n", name );
+		printf( "Panic: Unrecognized mpidi_match fields %s\n", name );
+	    }
+	}
+	break;
+    case TYPE_MPIDI_MESSAGE_MATCH_PARTS:
+	{
+	    MPIDI_Message_match c;
+	    if (strcmp( name, "tag" ) == 0) {
+		off = ((char *)&c.parts.tag - (char *)&c);
+	    }
+	    else if (strcmp( name, "rank" ) == 0) {
+		off = ((char *)&c.parts.rank - (char *)&c);
+	    }
+	    else if (strcmp( name, "context_id" ) == 0) {
+		off = ((char *)&c.parts.context_id - (char *)&c);
+	    }
+	    else {
+		printf( "Panic! Unrecognized message match parts field %s\n", name );
 	    }
 	}
 	break;
@@ -177,6 +192,15 @@ int dbgrI_field_offset(mqs_type *type, char *name)
 	    }
 	    else if (strcmp( name, "cc" ) == 0) {
 		off = ((char *)&c.cc - (char *)&c);
+	    }
+	    else if (strcmp( name, "user_buf" ) == 0) {
+		off = ((char *)&c.user_buf - (char *)&c);
+	    }
+	    else if (strcmp( name, "user_count" ) == 0) {
+		off = ((char *)&c.user_count - (char *)&c);
+	    }
+	    else if (strcmp( name, "datatype" ) == 0) {
+		off = ((char *)&c.datatype - (char *)&c);
 	    }
 	    /* else if (strcmp( name, "next" ) == 0) {
 		off = ((char *)&c.next - (char *)&c);
@@ -200,6 +224,9 @@ int dbgrI_field_offset(mqs_type *type, char *name)
 	    }
 	    else if (strcmp( name, "context_id" ) == 0) {
 		off = ((char *)&c.context_id - (char *)&c);
+	    }
+	    else if (strcmp( name, "sreq" ) == 0) {
+		off = ((char *)&c.sreq - (char *)&c);
 	    }
 	    else {
 		printf( "Panic! Unrecognized Sendq field %s\n", name );

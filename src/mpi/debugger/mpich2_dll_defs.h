@@ -9,41 +9,44 @@
  */
 typedef struct 
 {
-  const struct mqs_image_callbacks * image_callbacks; /* Functions needed here */
+    const struct mqs_image_callbacks * image_callbacks; /* Functions needed here */
 
-  /* in the embedded MPI_Status object */
-  int count_offs;
-  int MPI_SOURCE_offs;
-  int MPI_TAG_offs;
-
-  /* Fields in MPIR_Comm_list */
-  int sequence_number_offs;
-  int comm_head_offs;
-
-  /* Fields in MPID_Comm */
-  int comm_rsize_offs;
-  int lrank_to_grank_offs;
-  int comm_rank_offs;
-  int comm_context_id_offs;
-  int comm_recvcontext_id_offs;
-  int comm_next_offs;
-  int comm_name_offs;
-
-  /* Fields in MPID_Request (including structures within the request) */
-  int req_status_offs;
-  int req_cc_offs;
-  int req_dev_offs;
-  int req_next_offs;
-  int req_tag_offs;
-  int req_rank_offs;
-  int req_context_id_offs;
-
-  /* Fields in MPIR_Sendq */
-  int sendq_next_offs;
-  int sendq_tag_offs;
-  int sendq_rank_offs;
-  int sendq_context_id_offs;
-
+    /* in the embedded MPI_Status object */
+    int count_offs;
+    int MPI_SOURCE_offs;
+    int MPI_TAG_offs;
+    
+    /* Fields in MPIR_Comm_list */
+    int sequence_number_offs;
+    int comm_head_offs;
+    
+    /* Fields in MPID_Comm */
+    int comm_rsize_offs;
+    int lrank_to_grank_offs;
+    int comm_rank_offs;
+    int comm_context_id_offs;
+    int comm_recvcontext_id_offs;
+    int comm_next_offs;
+    int comm_name_offs;
+    
+    /* Fields in MPID_Request (including structures within the request) */
+    int req_status_offs;
+    int req_cc_offs;
+    int req_dev_offs;
+    int req_next_offs;
+    int req_tag_offs;
+    int req_rank_offs;
+    int req_context_id_offs;
+    int req_user_buf_offs;
+    int req_user_count_offs;
+    int req_datatype_offs;
+    
+    /* Fields in MPIR_Sendq */
+    int sendq_next_offs;
+    int sendq_tag_offs;
+    int sendq_rank_offs;
+    int sendq_context_id_offs;
+    int sendq_req_offs;
 } mpich_image_info; 
 
 /***********************************************************************
