@@ -477,6 +477,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     int token_count, total_nodes, i, start_pid, num_procs, pmi_id = -1, new_pgid, preput_num;
     char key[HYD_TMP_STRLEN], *val, *execname, *pmi_port, *preput_key, *preput_val;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *tmp = NULL, *control_port = NULL;
+    char *cmd_str[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -689,10 +690,22 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status =
-        HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb,
-                               HYD_handle.stderr_cb);
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb,
+                                    HYD_handle.stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
+
+    i = 0;
+    cmd_str[i++] = HYDU_strdup("cmd=spawn_result rc=0");
+    cmd_str[i++] = HYDU_strdup("\n");
+    cmd_str[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(cmd_str, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(cmd_str);
+
+    status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
+    HYDU_ERR_POP(status, "error writing PMI line\n");
+    HYDU_FREE(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
