@@ -266,6 +266,10 @@ int main( int argc, char *argv[], char *envp[] )
        had an exceptional exit, such as a timeout, use the erc value */
     if (!rc && erc) rc = erc;
 
+    /* In case you are running this under a memory analyzer, this call
+       will free any space allocated by the debugger interface */
+    MPIE_FreeFromDebugger();
+
     return( rc );
 }
 
