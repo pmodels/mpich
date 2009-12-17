@@ -339,7 +339,6 @@ HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
     goto fn_exit;
 }
 
-
 static HYD_status set_nonblock(int fd)
 {
     int flags;
@@ -351,6 +350,28 @@ static HYD_status set_nonblock(int fd)
         flags = 0;
 #if defined O_NONBLOCK
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
+        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
+#endif /* O_NONBLOCK */
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status set_block(int fd)
+{
+    int flags;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if ((flags = fcntl(fd, F_GETFL, 0)) == -1)
+        flags = 0;
+#if defined O_NONBLOCK
+    if (fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0)
         HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
 #endif /* O_NONBLOCK */
 
@@ -377,6 +398,9 @@ static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
 
     (*fwd_hash)->next = NULL;
 
+    status = set_block(in);
+    HYDU_ERR_POP(status, "unable to set out-socket to non-blocking\n");
+
     status = set_nonblock(out);
     HYDU_ERR_POP(status, "unable to set out-socket to non-blocking\n");
 
@@ -387,7 +411,6 @@ static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
   fn_fail:
     goto fn_exit;
 }
-
 
 /* This function does not provide any flow control. We just read from
  * the incoming socket as much as we can and push out to the outgoing

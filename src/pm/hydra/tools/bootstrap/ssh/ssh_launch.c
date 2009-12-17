@@ -84,8 +84,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
-        if (i == 0)
-            HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdin;
+        /* We don't wait for stdin to close */
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
