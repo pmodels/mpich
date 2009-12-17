@@ -33,6 +33,8 @@ HYD_status HYDU_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
 
     HYDU_FUNC_ENTER();
 
+    HYDU_ASSERT(events, status);
+
 #if defined HAVE_ERROR_CHECKING
     for (i = 0; i < num_fds; i++) {
         if (fd[i] < 0)
@@ -172,10 +174,13 @@ HYD_status HYDU_dmx_wait_for_event(int wtime)
 
             if (pollfds[i].revents) {
                 events = 0;
-                if (pollfds[i].revents & POLLOUT)
-                    events |= HYD_POLLOUT;
                 if (pollfds[i].revents & POLLIN)
                     events |= HYD_POLLIN;
+                if (pollfds[i].revents & POLLOUT)
+                    events |= HYD_POLLOUT;
+
+                /* We only understand POLLIN/OUT/HUP */
+                HYDU_ASSERT(!(pollfds[i].revents & ~events & ~POLLHUP), status);
 
                 if (run->callback == NULL)
                     HYDU_ERR_POP(status, "no registered callback found for socket\n");
@@ -253,4 +258,33 @@ HYD_status HYDU_dmx_finalize(void)
 
     HYDU_FUNC_EXIT();
     return status;
+}
+
+static int stdin_valid = -1;
+
+int HYDU_dmx_stdin_valid(void)
+{
+    struct pollfd fd[1];
+    int ret;
+
+    HYDU_FUNC_ENTER();
+
+    if (stdin_valid != -1)
+        return stdin_valid;
+
+    fd[0].fd = STDIN_FILENO;
+    fd[0].events = POLLIN;
+
+    /* Check if poll on stdin returns any errors; on Darwin this is
+     * broken.
+     *
+     * FIXME: Should we specifically check for POLLNVAL or any
+     * error? */
+    ret = poll(fd, 1, 0);
+    if (ret < 0)
+        stdin_valid = 0;
+    else
+        stdin_valid = 1;
+
+    return stdin_valid;
 }

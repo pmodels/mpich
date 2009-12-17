@@ -89,7 +89,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
         /* Register stdio callbacks for the spawned process */
-        if (i == 0) {
+        if (i == 0 && HYDU_dmx_stdin_valid()) {
             fd = STDIN_FILENO;
             status = HYDU_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");

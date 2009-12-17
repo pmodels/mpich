@@ -105,6 +105,13 @@
         }                                                               \
     }
 
+#define HYDU_ASSERT(x, status)                                          \
+    {                                                                   \
+        if (!(x)) {                                                     \
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "assert failed\n"); \
+        }                                                               \
+    }
+
 #if defined ENABLE_WARNINGS || !defined COMPILER_ACCEPTS_VA_ARGS
 #define HYDU_warn_printf HYDU_error_printf
 #else
@@ -329,6 +336,8 @@ HYD_status HYDU_dmx_finalize(void);
  * is.
  */
 HYD_status HYDU_dmx_query_fd_registration(int fd, int *ret);
+
+int HYDU_dmx_stdin_valid(void);
 
 /*!
  * @}

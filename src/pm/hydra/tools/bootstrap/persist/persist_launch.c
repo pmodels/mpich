@@ -87,7 +87,7 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_lis
         status = HYDU_send_strlist(HYDT_bscd_persist_control_fd[i], args);
         HYDU_ERR_POP(status, "error sending information to hydserv\n");
 
-        if (i == 0) {
+        if (i == 0 && HYDU_dmx_stdin_valid()) {
             tmp_fd = STDIN_FILENO;
             status = HYDU_dmx_register_fd(1, &tmp_fd, HYD_POLLIN,
                                           &HYDT_bscd_persist_control_fd[i],
