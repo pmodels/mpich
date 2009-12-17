@@ -94,12 +94,12 @@ static HYD_status create_stdinouterr_fifos(int num_ranks, int ranks[], int *in, 
 }
 
 
-static HYD_status create_env_file(const HYD_env_t * envlist, int num_ranks, int *ranks)
+static HYD_status create_env_file(const struct HYD_env * envlist, int num_ranks, int *ranks)
 {
     HYD_status status = HYD_SUCCESS;
     char filename[256];
     FILE *f;
-    const HYD_env_t *e;
+    const struct HYD_env *e;
     int ret;
     int r;
 
@@ -201,7 +201,7 @@ HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix)
     goto fn_exit;
 }
 
-HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, HYD_env_t * envlist, int num_ranks,
+HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, struct HYD_env * envlist, int num_ranks,
                                      int ranks[], int *in, int *out, int *err)
 {
     HYD_status status = HYD_SUCCESS;

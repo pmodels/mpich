@@ -34,7 +34,6 @@ HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-
 HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int linelen, i, cmdlen;
@@ -42,13 +41,13 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
     char *str1 = NULL, *str2 = NULL;
     struct HYD_pmcd_pmi_handle_fns *h;
     HYD_status status = HYD_SUCCESS;
-    int buflen = 0, pmi_pgid;
+    int buflen = 0, pgid;
     char *bufptr;
 
     HYDU_FUNC_ENTER();
 
     /* We got a PMI command; find the PGID */
-    pmi_pgid = *((int *) userp);
+    pgid = ((int) (size_t) userp);
 
     buflen = HYD_TMPBUF_SIZE;
 
@@ -168,7 +167,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
         h = HYD_pmcd_pmi_handle->handle_fns;
         while (h->handler) {
             if (!strcmp(str2, h->cmd)) {
-                status = h->handler(fd, pmi_pgid, args);
+                status = h->handler(fd, pgid, args);
                 HYDU_ERR_POP(status, "PMI handler returned error\n");
                 break;
             }
@@ -205,7 +204,8 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void *userp)
 {
-    int accept_fd, proxy_id, count;
+    int accept_fd, proxy_id, count, pgid;
+    struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
@@ -215,12 +215,22 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
+    /* Get the PGID of the connection */
+    pgid = ((int) (size_t) userp);
+
     /* Read the proxy ID */
     status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "sock read returned error\n");
 
+    /* Find the process group */
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
+        if (pg->pgid == pgid)
+            break;
+    if (!pg)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
+
     /* Find the proxy */
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         if (proxy->proxy_id == proxy_id)
             break;
     }
@@ -234,8 +244,7 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     status = HYD_pmu_send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy,
-                                  HYD_pmcd_pmi_serv_control_cb);
+    status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, HYD_pmcd_pmi_serv_control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -279,6 +288,7 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYD_pmcd_pmi_serv_cleanup(void)
 {
+    struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     enum HYD_pmu_cmd cmd;
     HYD_status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
@@ -288,14 +298,15 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        cmd = KILL_JOB;
-        status = HYDU_sock_trywrite(proxy->control_fd, &cmd,
-                                    sizeof(enum HYD_pmu_cmd));
-        if (status != HYD_SUCCESS) {
-            HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
-            overall_status = HYD_INTERNAL_ERROR;
-            continue;   /* Move on to the next proxy */
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+            cmd = KILL_JOB;
+            status = HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmu_cmd));
+            if (status != HYD_SUCCESS) {
+                HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
+                overall_status = HYD_INTERNAL_ERROR;
+                continue;   /* Move on to the next proxy */
+            }
         }
     }
 
@@ -307,6 +318,7 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
 
 HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
 {
+    struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     enum HYD_pmu_cmd cmd;
     HYD_status status = HYD_SUCCESS;
@@ -316,11 +328,12 @@ HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send the checkpoint command */
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        cmd = CKPOINT;
-        status = HYDU_sock_write(proxy->control_fd, &cmd,
-                                 sizeof(enum HYD_pmu_cmd));
-        HYDU_ERR_POP(status, "unable to send checkpoint message\n");
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+            cmd = CKPOINT;
+            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmu_cmd));
+            HYDU_ERR_POP(status, "unable to send checkpoint message\n");
+        }
     }
 
     HYDU_FUNC_EXIT();

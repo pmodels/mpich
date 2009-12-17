@@ -7,7 +7,7 @@
 #include "hydra_utils.h"
 #include "bind.h"
 
-HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
+HYD_status HYDU_create_process(char **client_arg, struct HYD_env * env_list,
                                int *in, int *out, int *err, int *pid, int os_index)
 {
     int inpipe[2], outpipe[2], errpipe[2], tpid;

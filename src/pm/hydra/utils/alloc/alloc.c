@@ -72,22 +72,23 @@ void HYDU_free_node_list(struct HYD_node *node_list)
     }
 }
 
-void HYDU_init_pg(struct HYD_pg *pg)
+void HYDU_init_pg(struct HYD_pg *pg, int pgid)
 {
-    pg->pgid = -1;
+    pg->pgid = pgid;
     pg->proxy_list = NULL;
     pg->pg_process_count = 0;
+    pg->pg_scratch = NULL;
     pg->next = NULL;
 }
 
-HYD_status HYDU_alloc_pg(struct HYD_pg **pg)
+HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*pg, struct HYD_pg *, sizeof(struct HYD_pg), status);
-    HYDU_init_pg(*pg);
+    HYDU_init_pg(*pg, pgid);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -107,13 +108,17 @@ void HYDU_free_pg_list(struct HYD_pg *pg_list)
 
         if (pg->proxy_list)
             HYDU_free_proxy_list(pg->proxy_list);
+
+        if (pg->pg_scratch)
+            HYDU_FREE(pg->pg_scratch);
+
         HYDU_FREE(pg);
 
         pg = tpg;
     }
 }
 
-HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
+HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -122,6 +127,8 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
     HYDU_MALLOC(*proxy, struct HYD_proxy *, sizeof(struct HYD_proxy), status);
 
     init_node(&(*proxy)->node);
+
+    (*proxy)->pg = pg;
 
     (*proxy)->proxy_id = -1;
     (*proxy)->exec_launch_info = NULL;
@@ -134,6 +141,8 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy)
 
     (*proxy)->exec_list = NULL;
     (*proxy)->next = NULL;
+
+    (*proxy)->proxy_scratch = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();

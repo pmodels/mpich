@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-HYD_status HYDU_env_to_str(HYD_env_t * env, char **str)
+HYD_status HYDU_env_to_str(struct HYD_env * env, char **str)
 {
     int i;
     char *tmp[HYD_NUM_TMP_STRINGS];
@@ -37,14 +37,14 @@ HYD_status HYDU_env_to_str(HYD_env_t * env, char **str)
 }
 
 
-HYD_status HYDU_str_to_env(char *str, HYD_env_t ** env)
+HYD_status HYDU_str_to_env(char *str, struct HYD_env ** env)
 {
     char *env_name, *env_value;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC((*env), HYD_env_t *, sizeof(HYD_env_t), status);
+    HYDU_MALLOC((*env), struct HYD_env *, sizeof(struct HYD_env), status);
     env_name = strtok(str, "=");
     env_value = strtok(NULL, "=");
     (*env)->env_name = HYDU_strdup(env_name);
@@ -63,15 +63,15 @@ HYD_status HYDU_str_to_env(char *str, HYD_env_t ** env)
 }
 
 
-static HYD_env_t *env_dup(HYD_env_t env)
+static struct HYD_env *env_dup(struct HYD_env env)
 {
-    HYD_env_t *tenv;
+    struct HYD_env *tenv;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(tenv, HYD_env_t *, sizeof(HYD_env_t), status);
-    memcpy(tenv, &env, sizeof(HYD_env_t));
+    HYDU_MALLOC(tenv, struct HYD_env *, sizeof(struct HYD_env), status);
+    memcpy(tenv, &env, sizeof(struct HYD_env));
     tenv->next = NULL;
     tenv->env_name = HYDU_strdup(env.env_name);
     tenv->env_value = env.env_value ? HYDU_strdup(env.env_value) : NULL;
@@ -88,9 +88,9 @@ static HYD_env_t *env_dup(HYD_env_t env)
 }
 
 
-HYD_status HYDU_list_inherited_env(HYD_env_t ** env_list)
+HYD_status HYDU_list_inherited_env(struct HYD_env ** env_list)
 {
-    HYD_env_t *env;
+    struct HYD_env *env;
     char *env_str;
     int i;
     HYD_status status = HYD_SUCCESS;
@@ -123,9 +123,9 @@ HYD_status HYDU_list_inherited_env(HYD_env_t ** env_list)
 }
 
 
-HYD_env_t *HYDU_env_list_dup(HYD_env_t * env)
+struct HYD_env *HYDU_env_list_dup(struct HYD_env * env)
 {
-    HYD_env_t *tenv, *run;
+    struct HYD_env *tenv, *run;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -148,13 +148,13 @@ HYD_env_t *HYDU_env_list_dup(HYD_env_t * env)
 }
 
 
-HYD_status HYDU_env_create(HYD_env_t ** env, const char *env_name, char *env_value)
+HYD_status HYDU_env_create(struct HYD_env ** env, const char *env_name, char *env_value)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*env, HYD_env_t *, sizeof(HYD_env_t), status);
+    HYDU_MALLOC(*env, struct HYD_env *, sizeof(struct HYD_env), status);
     (*env)->env_name = HYDU_strdup(env_name);
     (*env)->env_value = env_value ? HYDU_strdup(env_value) : NULL;
     (*env)->next = NULL;
@@ -168,7 +168,7 @@ HYD_status HYDU_env_create(HYD_env_t ** env, const char *env_name, char *env_val
 }
 
 
-HYD_status HYDU_env_free(HYD_env_t * env)
+HYD_status HYDU_env_free(struct HYD_env * env)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -185,9 +185,9 @@ HYD_status HYDU_env_free(HYD_env_t * env)
 }
 
 
-HYD_status HYDU_env_free_list(HYD_env_t * env)
+HYD_status HYDU_env_free_list(struct HYD_env * env)
 {
-    HYD_env_t *run, *tmp;
+    struct HYD_env *run, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -204,9 +204,9 @@ HYD_status HYDU_env_free_list(HYD_env_t * env)
 }
 
 
-HYD_env_t *HYDU_env_lookup(char *env_name, HYD_env_t * env_list)
+struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env * env_list)
 {
-    HYD_env_t *run;
+    struct HYD_env *run;
 
     HYDU_FUNC_ENTER();
 
@@ -224,9 +224,9 @@ HYD_env_t *HYDU_env_lookup(char *env_name, HYD_env_t * env_list)
 }
 
 
-HYD_status HYDU_append_env_to_list(HYD_env_t env, HYD_env_t ** env_list)
+HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_list)
 {
-    HYD_env_t *run, *tenv;
+    struct HYD_env *run, *tenv;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -283,7 +283,7 @@ HYD_status HYDU_append_env_to_list(HYD_env_t env, HYD_env_t ** env_list)
 }
 
 
-HYD_status HYDU_putenv(HYD_env_t * env, HYD_env_overwrite_t overwrite)
+HYD_status HYDU_putenv(struct HYD_env * env, HYD_env_overwrite_t overwrite)
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *str;
     int i;
@@ -317,9 +317,9 @@ HYD_status HYDU_putenv(HYD_env_t * env, HYD_env_overwrite_t overwrite)
 }
 
 
-HYD_status HYDU_putenv_list(HYD_env_t * env_list, HYD_env_overwrite_t overwrite)
+HYD_status HYDU_putenv_list(struct HYD_env * env_list, HYD_env_overwrite_t overwrite)
 {
-    HYD_env_t *env;
+    struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -338,10 +338,10 @@ HYD_status HYDU_putenv_list(HYD_env_t * env_list, HYD_env_overwrite_t overwrite)
 }
 
 
-HYD_status HYDU_comma_list_to_env_list(char *str, HYD_env_t ** env_list)
+HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env ** env_list)
 {
     char *env_name;
-    HYD_env_t *env;
+    struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

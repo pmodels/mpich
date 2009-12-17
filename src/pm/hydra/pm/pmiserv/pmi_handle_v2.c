@@ -9,15 +9,15 @@
 #include "bsci.h"
 #include "pmi_handle.h"
 
-static HYD_status fn_fullinit(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_job_getid(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_info_putnodeattr(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_info_getnodeattr(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_kvs_put(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_kvs_fence(int fd, int pmi_pgid, char *args[]);
-static HYD_status fn_finalize(int fd, int pmi_pgid, char *args[]);
+static HYD_status fn_fullinit(int fd, int pgid, char *args[]);
+static HYD_status fn_job_getid(int fd, int pgid, char *args[]);
+static HYD_status fn_info_putnodeattr(int fd, int pgid, char *args[]);
+static HYD_status fn_info_getnodeattr(int fd, int pgid, char *args[]);
+static HYD_status fn_info_getjobattr(int fd, int pgid, char *args[]);
+static HYD_status fn_kvs_put(int fd, int pgid, char *args[]);
+static HYD_status fn_kvs_get(int fd, int pgid, char *args[]);
+static HYD_status fn_kvs_fence(int fd, int pgid, char *args[]);
+static HYD_status fn_finalize(int fd, int pgid, char *args[]);
 
 static struct reqs {
     enum type {
@@ -26,7 +26,7 @@ static struct reqs {
     } type;
 
     int fd;
-    int pmi_pgid;
+    int pgid;
     char *thrid;
     char **args;
 
@@ -63,14 +63,14 @@ static void free_req(struct reqs *req)
     HYDU_FREE(req);
 }
 
-static HYD_status queue_req(int fd, int pmi_pgid, enum type type, char *args[])
+static HYD_status queue_req(int fd, int pgid, enum type type, char *args[])
 {
     struct reqs *req, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_MALLOC(req, struct reqs *, sizeof(struct reqs), status);
     req->fd = fd;
-    req->pmi_pgid = pmi_pgid;
+    req->pgid = pgid;
     req->type = type;
     req->next = NULL;
 
@@ -117,11 +117,11 @@ static HYD_status poke_progress(void)
 
         req_complete = 0;
         if (req->type == NODE_ATTR_GET) {
-            status = fn_info_getnodeattr(req->fd, req->pmi_pgid, req->args);
+            status = fn_info_getnodeattr(req->fd, req->pgid, req->args);
             HYDU_ERR_POP(status, "getnodeattr returned error\n");
         }
         else if (req->type == KVS_GET) {
-            status = fn_kvs_get(req->fd, req->pmi_pgid, req->args);
+            status = fn_kvs_get(req->fd, req->pgid, req->args);
             HYDU_ERR_POP(status, "kvs_get returned error\n");
         }
 
@@ -149,11 +149,11 @@ static void print_req_list(void)
         HYDU_dump_noprefix(stdout, ")\n");
 }
 
-static HYD_status fn_fullinit(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_fullinit(int fd, int pgid, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
-    HYD_pmcd_pmi_pg_t *run;
+    struct HYD_pg *run;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -171,12 +171,12 @@ static HYD_status fn_fullinit(int fd, int pmi_pgid, char *args[])
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
 
-    status = HYD_pmcd_pmi_id_to_rank(id, pmi_pgid, &rank);
+    status = HYD_pmcd_pmi_id_to_rank(id, pgid, &rank);
     HYDU_ERR_POP(status, "unable to convert ID to rank\n");
     tmp[i++] = HYDU_int_to_str(rank);
 
     tmp[i++] = HYDU_strdup(";size=");
-    tmp[i++] = HYDU_int_to_str(HYD_pg_list->num_procs);
+    tmp[i++] = HYDU_int_to_str(HYD_handle.pg_list.pg_process_count);
     tmp[i++] = HYDU_strdup(";appnum=0;debugged=FALSE;pmiverbose=0;rc=0;");
     tmp[i++] = NULL;
 
@@ -191,9 +191,7 @@ static HYD_status fn_fullinit(int fd, int pmi_pgid, char *args[])
 
     HYDU_FREE(cmd);
 
-    run = HYD_pg_list;
-    while (run->next)
-        run = run->next;
+    for (run = &HYD_handle.pg_list; run->next; run = run->next);
 
     /* Add the process to the last PG */
     status = HYD_pmcd_pmi_add_process_to_pg(run, fd, rank);
@@ -207,11 +205,12 @@ static HYD_status fn_fullinit(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_job_getid(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_job_getid(int fd, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
     int i;
-    HYD_pmcd_pmi_process_t *process;
+    struct HYD_pmcd_pmi_process *process;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -229,6 +228,8 @@ static HYD_status fn_job_getid(int fd, int pmi_pgid, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
+
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=job-getid-response;");
     if (thrid) {
@@ -237,7 +238,7 @@ static HYD_status fn_job_getid(int fd, int pmi_pgid, char *args[])
         tmp[i++] = HYDU_strdup(";");
     }
     tmp[i++] = HYDU_strdup("jobid=");
-    tmp[i++] = HYDU_strdup(process->node->pg->kvs->kvs_name);
+    tmp[i++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
     tmp[i++] = HYDU_strdup(";rc=0;");
     tmp[i++] = NULL;
 
@@ -259,12 +260,13 @@ static HYD_status fn_job_getid(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_putnodeattr(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_info_putnodeattr(int fd, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
     int i, ret;
-    HYD_pmcd_pmi_process_t *process;
+    struct HYD_pmcd_pmi_process *process;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -289,7 +291,9 @@ static HYD_status fn_info_putnodeattr(int fd, int pmi_pgid, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
-    status = HYD_pmcd_pmi_add_kvs(key, val, process->node->kvs, &ret);
+    proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) process->proxy->proxy_scratch;
+
+    status = HYD_pmcd_pmi_add_kvs(key, val, proxy_scratch->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     i = 0;
@@ -326,11 +330,12 @@ static HYD_status fn_info_putnodeattr(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_getnodeattr(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_info_getnodeattr(int fd, int pgid, char *args[])
 {
     int i, found;
-    HYD_pmcd_pmi_process_t *process;
-    HYD_pmcd_pmi_kvs_pair_t *run;
+    struct HYD_pmcd_pmi_process *process;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_pmcd_pmi_kvs_pair *run;
     char *key, *waitval, *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS] = { 0 }, *cmd;
     struct HYD_pmcd_token *tokens;
@@ -354,8 +359,10 @@ static HYD_status fn_info_getnodeattr(int fd, int pmi_pgid, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
+    proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) process->proxy->proxy_scratch;
+
     found = 0;
-    for (run = process->node->kvs->key_pair; run; run = run->next) {
+    for (run = proxy_scratch->kvs->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
             found = 1;
             break;
@@ -385,7 +392,7 @@ static HYD_status fn_info_getnodeattr(int fd, int pmi_pgid, char *args[])
     }
     else if (waitval && !strcmp(waitval, "TRUE")) {
         /* The client wants to wait for a response; queue up the request */
-        status = queue_req(fd, pmi_pgid, NODE_ATTR_GET, args);
+        status = queue_req(fd, pgid, NODE_ATTR_GET, args);
         HYDU_ERR_POP(status, "unable to queue request\n");
 
         goto fn_exit;
@@ -427,11 +434,12 @@ static HYD_status fn_info_getnodeattr(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_info_getjobattr(int fd, int pgid, char *args[])
 {
     int i, ret;
-    HYD_pmcd_pmi_process_t *process;
-    HYD_pmcd_pmi_kvs_pair_t *run;
+    struct HYD_pmcd_pmi_process *process;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    struct HYD_pmcd_pmi_kvs_pair *run;
     const char *key;
     char *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *node_list;
@@ -455,9 +463,11 @@ static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
+
     /* Try to find the key */
     found = 0;
-    for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
+    for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
             found = 1;
             break;
@@ -469,15 +479,14 @@ static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[])
          * generate it */
         if (strcmp(key, "PMI_process_mapping") == 0) {
             /* Create a vector format */
-            status = HYD_pmcd_pmi_process_mapping(process, HYD_pmcd_pmi_vector, &node_list);
+            status = HYD_pmcd_pmi_process_mapping(process, &node_list);
             HYDU_ERR_POP(status, "Unable to get process mapping information\n");
 
             /* Make sure the node list is within the size allowed by
              * PMI. Otherwise, tell the client that we don't know what
              * the key is */
             if (strlen(node_list) <= MAXVALLEN) {
-                status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list,
-                                              process->node->pg->kvs, &ret);
+                status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list, pg_scratch->kvs, &ret);
                 HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
             }
 
@@ -485,7 +494,7 @@ static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[])
         }
 
         /* Search for the key again */
-        for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
+        for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
             if (!strcmp(run->key, key)) {
                 found = 1;
                 break;
@@ -529,12 +538,13 @@ static HYD_status fn_info_getjobattr(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_put(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_kvs_put(int fd, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val, *thrid;
     int i, ret;
-    HYD_pmcd_pmi_process_t *process;
+    struct HYD_pmcd_pmi_process *process;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -561,7 +571,9 @@ static HYD_status fn_kvs_put(int fd, int pmi_pgid, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
-    status = HYD_pmcd_pmi_add_kvs(key, val, process->node->pg->kvs, &ret);
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
+
+    status = HYD_pmcd_pmi_add_kvs(key, val, pg_scratch->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
     i = 0;
@@ -598,12 +610,14 @@ static HYD_status fn_kvs_put(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_kvs_get(int fd, int pgid, char *args[])
 {
     int i, found, barrier, process_count;
-    HYD_pmcd_pmi_process_t *process, *prun;
-    HYD_pmcd_pmi_node_t *node;
-    HYD_pmcd_pmi_kvs_pair_t *run;
+    struct HYD_pmcd_pmi_process *process, *prun;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_kvs_pair *run;
     char *key, *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_pmcd_token *tokens;
@@ -626,8 +640,10 @@ static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d\n", fd);
 
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
+
     found = 0;
-    for (run = process->node->pg->kvs->key_pair; run; run = run->next) {
+    for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
             found = 1;
             break;
@@ -637,8 +653,9 @@ static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[])
     if (!found) {
         barrier = 1;
         process_count = 0;
-        for (node = process->node->pg->node_list; node; node = node->next) {
-            for (prun = node->process_list; prun; prun = prun->next) {
+        for (proxy = process->proxy->pg->proxy_list; proxy; proxy = proxy->next) {
+            proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+            for (prun = proxy_scratch->process_list; prun; prun = prun->next) {
                 process_count++;
                 if (prun->epoch < process->epoch) {
                     barrier = 0;
@@ -649,9 +666,9 @@ static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[])
                 break;
         }
 
-        if (!barrier || process_count < HYD_pg_list->num_procs) {
+        if (!barrier || process_count < process->proxy->pg->pg_process_count) {
             /* We haven't reached a barrier yet; queue up request */
-            status = queue_req(fd, pmi_pgid, KVS_GET, args);
+            status = queue_req(fd, pgid, KVS_GET, args);
             HYDU_ERR_POP(status, "unable to queue request\n");
 
             /* We are done */
@@ -695,9 +712,9 @@ static HYD_status fn_kvs_get(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_fence(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_kvs_fence(int fd, int pgid, char *args[])
 {
-    HYD_pmcd_pmi_process_t *process;
+    struct HYD_pmcd_pmi_process *process;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
     struct HYD_pmcd_token *tokens;
     int token_count, i;
@@ -748,7 +765,7 @@ static HYD_status fn_kvs_fence(int fd, int pmi_pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, int pmi_pgid, char *args[])
+static HYD_status fn_finalize(int fd, int pgid, char *args[])
 {
     char *thrid;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;

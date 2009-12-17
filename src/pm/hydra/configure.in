@@ -260,6 +260,20 @@ fi
 
 
 #########################################################################
+# Error checking
+#########################################################################
+AC_ARG_ENABLE(error-checking, [  --enable-error-checking - Enable error checking],
+		 [ error_check=$enableval ],
+		 [ error_check=no ])
+AC_MSG_CHECKING(error checking)
+AC_MSG_RESULT($error_check)
+if test "$error_check" = "yes"; then
+   CFLAGS="$CFLAGS -g"
+   AC_DEFINE(HAVE_ERROR_CHECKING,1,[Define if error checking is enabled])
+fi
+
+
+#########################################################################
 # Warning messages
 #########################################################################
 AC_ARG_ENABLE(warnings, [  --enable-warnings              Enable warnings],

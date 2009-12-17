@@ -125,11 +125,11 @@ struct HYD_arg_match_table {
 
 
 /* Environment information */
-typedef struct HYD_env {
+struct HYD_env {
     char *env_name;
     char *env_value;
     struct HYD_env *next;
-} HYD_env_t;
+};
 
 typedef enum HYD_env_overwrite {
     HYD_ENV_OVERWRITE_TRUE,
@@ -144,9 +144,9 @@ typedef enum {
 } HYD_env_prop_t;
 
 struct HYD_env_global {
-    HYD_env_t *system;
-    HYD_env_t *user;
-    HYD_env_t *inherited;
+    struct HYD_env *system;
+    struct HYD_env *user;
+    struct HYD_env *inherited;
     char *prop;
 };
 
@@ -154,7 +154,7 @@ struct HYD_env_global {
 struct HYD_proxy_exec {
     char *exec[HYD_NUM_TMP_STRINGS];
     int proc_count;
-    HYD_env_t *user_env;
+    struct HYD_env *user_env;
     char *env_prop;
 
     struct HYD_proxy_exec *next;
@@ -165,6 +165,9 @@ struct HYD_pg {
     int pgid;
     struct HYD_proxy *proxy_list;
     int pg_process_count;
+
+    /* scratch space for the PM */
+    void *pg_scratch;
 
     struct HYD_pg *next;
 };
@@ -181,6 +184,8 @@ struct HYD_node {
 struct HYD_proxy {
     struct HYD_node node;
 
+    struct HYD_pg *pg; /* Back pointer to the PG */
+
     char **exec_launch_info;
 
     int proxy_id;
@@ -192,6 +197,9 @@ struct HYD_proxy {
 
     int *exit_status;
     int control_fd;
+
+    /* scratch space for the PM */
+    void *proxy_scratch;
 
     struct HYD_proxy *next;
 };

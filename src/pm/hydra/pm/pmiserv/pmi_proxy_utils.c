@@ -210,7 +210,7 @@ static HYD_status global_env_fn(char *arg, char ***argv)
 {
     int i, count;
     char *str;
-    HYD_env_t *env;
+    struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
 
     count = atoi(**argv);
@@ -327,7 +327,7 @@ static HYD_status exec_proc_count_fn(char *arg, char ***argv)
 static HYD_status exec_local_env_fn(char *arg, char ***argv)
 {
     struct HYD_proxy_exec *exec = NULL;
-    HYD_env_t *env;
+    struct HYD_env *env;
     int i, count;
     char *str;
     HYD_status status = HYD_SUCCESS;
@@ -593,7 +593,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     int i, j, arg, stdin_fd, process_id, os_index, pmi_id;
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
-    HYD_env_t *env, *prop_env = NULL;
+    struct HYD_env *env, *prop_env = NULL;
     struct HYD_proxy_exec *exec;
     HYD_status status = HYD_SUCCESS;
     int *pmi_ids;

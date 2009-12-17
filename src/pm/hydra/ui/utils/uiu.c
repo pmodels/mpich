@@ -36,7 +36,7 @@ void HYD_uiu_init_params(void)
     HYD_handle.node_list = NULL;
     HYD_handle.global_core_count = 0;
 
-    HYDU_init_pg(&HYD_handle.pg_list);
+    HYDU_init_pg(&HYD_handle.pg_list, 0);
     /* Set the default PGID to 0 */
     HYD_handle.pg_list.pgid = 0;
     HYD_handle.pg_list.next = NULL;
@@ -260,12 +260,12 @@ HYD_status HYD_uiu_create_proxy_list(void)
     start_pid = 0;
     for (i = 0, node = HYD_handle.node_list; i < proxy_count; i++, node = node->next) {
         if (HYD_handle.pg_list.proxy_list == NULL) {
-            status = HYDU_alloc_proxy(&HYD_handle.pg_list.proxy_list);
+            status = HYDU_alloc_proxy(&HYD_handle.pg_list.proxy_list, &HYD_handle.pg_list);
             HYDU_ERR_POP(status, "unable to allocate proxy\n");
             proxy = HYD_handle.pg_list.proxy_list;
         }
         else {
-            status = HYDU_alloc_proxy(&proxy->next);
+            status = HYDU_alloc_proxy(&proxy->next, &HYD_handle.pg_list);
             HYDU_ERR_POP(status, "unable to allocate proxy\n");
             proxy = proxy->next;
         }
@@ -324,7 +324,7 @@ HYD_status HYD_uiu_create_proxy_list(void)
 
 void HYD_uiu_print_params(void)
 {
-    HYD_env_t *env;
+    struct HYD_env *env;
     int i;
     struct HYD_proxy *proxy;
     struct HYD_proxy_exec *exec;

@@ -26,14 +26,30 @@ HYD_status HYDU_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
                                                        void *userp))
 {
     struct dmx_callback *cb_element, *run;
-    int i;
+#if defined HAVE_ERROR_CHECKING
+    int i, j;
+#endif /* HAVE_ERROR_CHECKING */
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    for (i = 0; i < num_fds; i++)
+#if defined HAVE_ERROR_CHECKING
+    for (i = 0; i < num_fds; i++) {
         if (fd[i] < 0)
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n", fd[i]);
+
+        cb_element = cb_list;
+        while (cb_element) {
+            for (j = 0; j < cb_element->num_fds; j++) {
+                if (cb_element->fd[j] == fd[i]) {
+                    HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering duplicate fd %d\n",
+                                         fd[i]);
+                }
+            }
+            cb_element = cb_element->next;
+        }
+    }
+#endif /* HAVE_ERROR_CHECKING */
 
     HYDU_MALLOC(cb_element, struct dmx_callback *, sizeof(struct dmx_callback), status);
     cb_element->num_fds = num_fds;

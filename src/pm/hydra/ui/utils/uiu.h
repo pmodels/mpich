@@ -14,7 +14,7 @@ struct HYD_uiu_exec_info {
     char *exec[HYD_NUM_TMP_STRINGS];
 
     /* Local environment */
-    HYD_env_t *user_env;
+    struct HYD_env *user_env;
     char *env_prop;
 
     struct HYD_uiu_exec_info *next;

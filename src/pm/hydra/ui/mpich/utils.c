@@ -39,7 +39,7 @@ static void genv_help_fn(void)
 static HYD_status genv_fn(char *arg, char ***argv)
 {
     char *env_name, *env_value, *str[2] = { 0 };
-    HYD_env_t *env;
+    struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_strsplit(**argv, &str[0], &str[1], '=');
@@ -206,7 +206,7 @@ static void env_help_fn(void)
 static HYD_status env_fn(char *arg, char ***argv)
 {
     char *env_name, *env_value, *str[2] = { 0 };
-    HYD_env_t *env;
+    struct HYD_env *env;
     struct HYD_uiu_exec_info *exec_info;
     HYD_status status = HYD_SUCCESS;
 

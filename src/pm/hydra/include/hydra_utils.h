@@ -121,10 +121,10 @@ void HYDU_init_user_global(struct HYD_user_global *user_global);
 void HYDU_init_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
 void HYDU_free_node_list(struct HYD_node *node_list);
-void HYDU_init_pg(struct HYD_pg *pg);
-HYD_status HYDU_alloc_pg(struct HYD_pg **pg);
+void HYDU_init_pg(struct HYD_pg *pg, int pgid);
+HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid);
 void HYDU_free_pg_list(struct HYD_pg *pg_list);
-HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy);
+HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg);
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec);
 
@@ -148,21 +148,21 @@ void HYDU_dump_noprefix(FILE * fp, const char *str, ...);
 void HYDU_dump(FILE * fp, const char *str, ...);
 
 /* env */
-HYD_status HYDU_env_to_str(HYD_env_t * env, char **str);
-HYD_status HYDU_str_to_env(char *str, HYD_env_t ** env);
-HYD_status HYDU_list_inherited_env(HYD_env_t ** env_list);
-HYD_env_t *HYDU_env_list_dup(HYD_env_t * env);
-HYD_status HYDU_env_create(HYD_env_t ** env, const char *env_name, char *env_value);
-HYD_status HYDU_env_free(HYD_env_t * env);
-HYD_status HYDU_env_free_list(HYD_env_t * env);
-HYD_env_t *HYDU_env_lookup(char *env_name, HYD_env_t * env_list);
-HYD_status HYDU_append_env_to_list(HYD_env_t env, HYD_env_t ** env_list);
-HYD_status HYDU_putenv(HYD_env_t * env, HYD_env_overwrite_t overwrite);
-HYD_status HYDU_putenv_list(HYD_env_t * env_list, HYD_env_overwrite_t overwrite);
-HYD_status HYDU_comma_list_to_env_list(char *str, HYD_env_t ** env_list);
+HYD_status HYDU_env_to_str(struct HYD_env * env, char **str);
+HYD_status HYDU_str_to_env(char *str, struct HYD_env ** env);
+HYD_status HYDU_list_inherited_env(struct HYD_env ** env_list);
+struct HYD_env *HYDU_env_list_dup(struct HYD_env * env);
+HYD_status HYDU_env_create(struct HYD_env ** env, const char *env_name, char *env_value);
+HYD_status HYDU_env_free(struct HYD_env * env);
+HYD_status HYDU_env_free_list(struct HYD_env * env);
+struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env * env_list);
+HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_list);
+HYD_status HYDU_putenv(struct HYD_env * env, HYD_env_overwrite_t overwrite);
+HYD_status HYDU_putenv_list(struct HYD_env * env_list, HYD_env_overwrite_t overwrite);
+HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env ** env_list);
 
 /* launch */
-HYD_status HYDU_create_process(char **client_arg, HYD_env_t * env_list,
+HYD_status HYDU_create_process(char **client_arg, struct HYD_env * env_list,
                                int *in, int *out, int *err, int *pid, int os_index);
 HYD_status HYDU_fork_and_exit(int os_index);
 
