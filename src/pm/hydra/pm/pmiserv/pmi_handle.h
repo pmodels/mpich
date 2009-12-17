@@ -47,13 +47,13 @@ struct HYD_pmcd_pmi_process {
     int fd;
     int rank;                   /* COMM_WORLD rank of this process */
     int epoch;                  /* Epoch this process has reached */
-    struct HYD_proxy *proxy;     /* Back pointer to the proxy */
+    struct HYD_proxy *proxy;    /* Back pointer to the proxy */
     struct HYD_pmcd_pmi_process *next;
 };
 
 struct HYD_pmcd_pmi_proxy_scratch {
     struct HYD_pmcd_pmi_process *process_list;
-    struct HYD_pmcd_pmi_kvs *kvs;    /* Node-level KVS space for node attributes */
+    struct HYD_pmcd_pmi_kvs *kvs;       /* Node-level KVS space for node attributes */
 };
 
 struct HYD_pmcd_pmi_pg_scratch {
@@ -67,19 +67,19 @@ struct HYD_pmcd_pmi_pg_scratch {
 
 HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
 char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
-HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg * pg, int fd, int rank);
+HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank);
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
 struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd);
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs * kvs,
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);
-HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process * process,
+HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
                                         char **process_mapping);
 HYD_status HYD_pmcd_pmi_init(void);
 HYD_status HYD_pmcd_pmi_finalize(void);
 
 struct HYD_pmcd_pmi_handle_fns {
     const char *cmd;
-    HYD_status(*handler) (int fd, int pgid, char *args[]);
+     HYD_status(*handler) (int fd, int pgid, char *args[]);
 };
 
 struct HYD_pmcd_pmi_handle {

@@ -227,7 +227,8 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
         if (pg->pgid == pgid)
             break;
     if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n", pgid);
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
+                             pgid);
 
     /* Find the proxy */
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
@@ -244,7 +245,8 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     status = HYD_pmu_send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status = HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, HYD_pmcd_pmi_serv_control_cb);
+    status =
+        HYDU_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, HYD_pmcd_pmi_serv_control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -305,7 +307,7 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
             if (status != HYD_SUCCESS) {
                 HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
                 overall_status = HYD_INTERNAL_ERROR;
-                continue;   /* Move on to the next proxy */
+                continue;       /* Move on to the next proxy */
             }
         }
     }

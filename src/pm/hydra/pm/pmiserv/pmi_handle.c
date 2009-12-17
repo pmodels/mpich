@@ -46,7 +46,7 @@ char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const
     return NULL;
 }
 
-static HYD_status free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs * kvs_list)
+static HYD_status free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
 {
     struct HYD_pmcd_pmi_kvs_pair *key_pair, *tmp;
     HYD_status status = HYD_SUCCESS;
@@ -65,14 +65,16 @@ static HYD_status free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs * kvs_list)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs * kvs, int *ret)
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs * kvs,
+                                int *ret)
 {
     struct HYD_pmcd_pmi_kvs_pair *key_pair, *run;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(key_pair, struct HYD_pmcd_pmi_kvs_pair *, sizeof(struct HYD_pmcd_pmi_kvs_pair), status);
+    HYDU_MALLOC(key_pair, struct HYD_pmcd_pmi_kvs_pair *, sizeof(struct HYD_pmcd_pmi_kvs_pair),
+                status);
     HYDU_snprintf(key_pair->key, MAXKEYLEN, "%s", key);
     HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
     key_pair->next = NULL;
@@ -136,7 +138,7 @@ HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
 }
 
 
-HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process * process,
+HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
                                         char **process_mapping_str)
 {
     int i, node_id;
@@ -209,7 +211,7 @@ HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process * process,
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg * pg, int fd, int rank)
+HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank)
 {
     struct HYD_pmcd_pmi_process *process, *tmp;
     struct HYD_proxy *proxy;
@@ -222,11 +224,13 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg * pg, int fd, int rank)
     srank = rank % HYD_handle.global_core_count;
 
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-        if ((srank >= proxy->start_pid) && (srank < (proxy->start_pid + proxy->node.core_count)))
+        if ((srank >= proxy->start_pid) &&
+            (srank < (proxy->start_pid + proxy->node.core_count)))
             break;
 
     if (proxy->proxy_scratch == NULL) {
-        HYDU_MALLOC(proxy->proxy_scratch, void *, sizeof(struct HYD_pmcd_pmi_proxy_scratch), status);
+        HYDU_MALLOC(proxy->proxy_scratch, void *, sizeof(struct HYD_pmcd_pmi_proxy_scratch),
+                    status);
 
         proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
         proxy_scratch->process_list = NULL;
@@ -241,7 +245,8 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg * pg, int fd, int rank)
     }
 
     /* Add process to the node */
-    HYDU_MALLOC(process, struct HYD_pmcd_pmi_process *, sizeof(struct HYD_pmcd_pmi_process), status);
+    HYDU_MALLOC(process, struct HYD_pmcd_pmi_process *, sizeof(struct HYD_pmcd_pmi_process),
+                status);
     process->fd = fd;
     process->rank = rank;
     process->epoch = 0;

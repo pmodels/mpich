@@ -148,21 +148,21 @@ void HYDU_dump_noprefix(FILE * fp, const char *str, ...);
 void HYDU_dump(FILE * fp, const char *str, ...);
 
 /* env */
-HYD_status HYDU_env_to_str(struct HYD_env * env, char **str);
-HYD_status HYDU_str_to_env(char *str, struct HYD_env ** env);
-HYD_status HYDU_list_inherited_env(struct HYD_env ** env_list);
-struct HYD_env *HYDU_env_list_dup(struct HYD_env * env);
-HYD_status HYDU_env_create(struct HYD_env ** env, const char *env_name, char *env_value);
-HYD_status HYDU_env_free(struct HYD_env * env);
-HYD_status HYDU_env_free_list(struct HYD_env * env);
-struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env * env_list);
-HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_list);
-HYD_status HYDU_putenv(struct HYD_env * env, HYD_env_overwrite_t overwrite);
-HYD_status HYDU_putenv_list(struct HYD_env * env_list, HYD_env_overwrite_t overwrite);
-HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env ** env_list);
+HYD_status HYDU_env_to_str(struct HYD_env *env, char **str);
+HYD_status HYDU_str_to_env(char *str, struct HYD_env **env);
+HYD_status HYDU_list_inherited_env(struct HYD_env **env_list);
+struct HYD_env *HYDU_env_list_dup(struct HYD_env *env);
+HYD_status HYDU_env_create(struct HYD_env **env, const char *env_name, char *env_value);
+HYD_status HYDU_env_free(struct HYD_env *env);
+HYD_status HYDU_env_free_list(struct HYD_env *env);
+struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list);
+HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env **env_list);
+HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite);
+HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwrite);
+HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 
 /* launch */
-HYD_status HYDU_create_process(char **client_arg, struct HYD_env * env_list,
+HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid, int os_index);
 HYD_status HYDU_fork_and_exit(int os_index);
 
@@ -206,8 +206,8 @@ HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize);
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
 HYD_status
 HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
-                                    HYD_status(*callback) (int fd, HYD_event_t events, void *userp),
-                                    void *userp);
+                                    HYD_status(*callback) (int fd, HYD_event_t events,
+                                                           void *userp), void *userp);
 
 /* Memory utilities */
 #include <ctype.h>

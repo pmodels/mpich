@@ -486,7 +486,9 @@ static HYD_status fn_info_getjobattr(int fd, int pgid, char *args[])
              * PMI. Otherwise, tell the client that we don't know what
              * the key is */
             if (strlen(node_list) <= MAXVALLEN) {
-                status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list, pg_scratch->kvs, &ret);
+                status =
+                    HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list, pg_scratch->kvs,
+                                         &ret);
                 HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
             }
 

@@ -64,7 +64,7 @@ HYD_status HYDT_ckpoint_suspend(void)
     goto fn_exit;
 }
 
-HYD_status HYDT_ckpoint_restart(struct HYD_env * envlist, int num_ranks, int ranks[], int *in,
+HYD_status HYDT_ckpoint_restart(struct HYD_env *envlist, int num_ranks, int ranks[], int *in,
                                 int *out, int *err)
 {
     HYD_status status = HYD_SUCCESS;

@@ -6,7 +6,7 @@
 
 #include "hydra_utils.h"
 
-HYD_status HYDU_env_to_str(struct HYD_env * env, char **str)
+HYD_status HYDU_env_to_str(struct HYD_env *env, char **str)
 {
     int i;
     char *tmp[HYD_NUM_TMP_STRINGS];
@@ -37,7 +37,7 @@ HYD_status HYDU_env_to_str(struct HYD_env * env, char **str)
 }
 
 
-HYD_status HYDU_str_to_env(char *str, struct HYD_env ** env)
+HYD_status HYDU_str_to_env(char *str, struct HYD_env **env)
 {
     char *env_name, *env_value;
     HYD_status status = HYD_SUCCESS;
@@ -88,7 +88,7 @@ static struct HYD_env *env_dup(struct HYD_env env)
 }
 
 
-HYD_status HYDU_list_inherited_env(struct HYD_env ** env_list)
+HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
 {
     struct HYD_env *env;
     char *env_str;
@@ -123,7 +123,7 @@ HYD_status HYDU_list_inherited_env(struct HYD_env ** env_list)
 }
 
 
-struct HYD_env *HYDU_env_list_dup(struct HYD_env * env)
+struct HYD_env *HYDU_env_list_dup(struct HYD_env *env)
 {
     struct HYD_env *tenv, *run;
     HYD_status status = HYD_SUCCESS;
@@ -148,7 +148,7 @@ struct HYD_env *HYDU_env_list_dup(struct HYD_env * env)
 }
 
 
-HYD_status HYDU_env_create(struct HYD_env ** env, const char *env_name, char *env_value)
+HYD_status HYDU_env_create(struct HYD_env **env, const char *env_name, char *env_value)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -168,7 +168,7 @@ HYD_status HYDU_env_create(struct HYD_env ** env, const char *env_name, char *en
 }
 
 
-HYD_status HYDU_env_free(struct HYD_env * env)
+HYD_status HYDU_env_free(struct HYD_env *env)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -204,7 +204,7 @@ HYD_status HYDU_env_free_list(struct HYD_env * env)
 }
 
 
-struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env * env_list)
+struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list)
 {
     struct HYD_env *run;
 
@@ -283,7 +283,7 @@ HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_lis
 }
 
 
-HYD_status HYDU_putenv(struct HYD_env * env, HYD_env_overwrite_t overwrite)
+HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite)
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *str;
     int i;
@@ -317,7 +317,7 @@ HYD_status HYDU_putenv(struct HYD_env * env, HYD_env_overwrite_t overwrite)
 }
 
 
-HYD_status HYDU_putenv_list(struct HYD_env * env_list, HYD_env_overwrite_t overwrite)
+HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwrite)
 {
     struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
@@ -338,7 +338,7 @@ HYD_status HYDU_putenv_list(struct HYD_env * env_list, HYD_env_overwrite_t overw
 }
 
 
-HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env ** env_list)
+HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list)
 {
     char *env_name;
     struct HYD_env *env;

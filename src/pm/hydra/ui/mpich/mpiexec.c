@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     if (getenv("MPIEXEC_TIMEOUT"))
         timeout = atoi(getenv("MPIEXEC_TIMEOUT"));
     else
-        timeout = -1;        /* Set a negative timeout */
+        timeout = -1;   /* Set a negative timeout */
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
 

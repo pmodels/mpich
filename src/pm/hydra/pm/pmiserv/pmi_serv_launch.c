@@ -31,7 +31,8 @@ HYD_status HYD_pmci_launch_procs(void)
     if (!tmp) { /* PMI_PORT not already set; create one */
         /* pass PGID 0 as a user parameter to the PMI connect handler */
         status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &pmi_port,
-                                                     HYD_pmcd_pmi_connect_cb, (void *) (size_t) 0);
+                                                     HYD_pmcd_pmi_connect_cb,
+                                                     (void *) (size_t) 0);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
         pmi_id = -1;
     }
@@ -80,7 +81,9 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, &HYD_handle.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb, HYD_handle.stderr_cb);
+    status =
+        HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb,
+                               HYD_handle.stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:

@@ -234,7 +234,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs)
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -244,15 +244,15 @@ HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs)
     HYDU_snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d", (int) getpid());
     (*kvs)->key_pair = NULL;
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg * pg)
+HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg *pg)
 {
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
@@ -268,11 +268,11 @@ HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg * pg)
     status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -293,7 +293,8 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg, int num_procs)
     pg_scratch->num_subgroups = num_procs;
 
     /* Allocate and initialize the connected ranks */
-    HYDU_MALLOC(pg_scratch->conn_procs, int *, pg_scratch->num_subgroups * sizeof(int), status);
+    HYDU_MALLOC(pg_scratch->conn_procs, int *, pg_scratch->num_subgroups * sizeof(int),
+                status);
     for (i = 0; i < pg_scratch->num_subgroups; i++)
         pg_scratch->conn_procs[i] = 0;
 

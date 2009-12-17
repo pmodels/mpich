@@ -359,7 +359,9 @@ static HYD_status fn_get(int fd, int pgid, char *args[])
              * PMI. Otherwise, tell the client that we don't know what
              * the key is */
             if (strlen(node_list) <= MAXVALLEN) {
-                status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list, pg_scratch->kvs, &ret);
+                status =
+                    HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list, pg_scratch->kvs,
+                                         &ret);
                 HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
             }
 
@@ -601,7 +603,8 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
         proxy->exec_list->exec[1] = NULL;
 
         /* Figure out how many processes to set on this proxy */
-        num_procs = (pg->pg_process_count / HYD_handle.global_core_count) * proxy->node.core_count;
+        num_procs =
+            (pg->pg_process_count / HYD_handle.global_core_count) * proxy->node.core_count;
         if (nprocs % HYD_handle.global_core_count > start_pid) {
             if (procs_left > proxy->node.core_count)
                 num_procs += proxy->node.core_count;
@@ -686,7 +689,9 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb, HYD_handle.stderr_cb);
+    status =
+        HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb,
+                               HYD_handle.stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:

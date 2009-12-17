@@ -55,7 +55,7 @@ static HYD_status group_to_individual_nodes(char *str, char **list)
     pre = HYDU_strdup(str);
     for (tmp = pre; *tmp != '[' && *tmp != 0; tmp++);
 
-    if (*tmp == 0) { /* only one node in the group */
+    if (*tmp == 0) {    /* only one node in the group */
         list[0] = pre;
         list[1] = NULL;
         goto fn_exit;
@@ -66,7 +66,7 @@ static HYD_status group_to_individual_nodes(char *str, char **list)
     nodes = tmp + 1;
 
     for (tmp = nodes; *tmp != ']' && *tmp != 0; tmp++);
-    *tmp = 0; /* remove the closing ']' */
+    *tmp = 0;   /* remove the closing ']' */
 
     for ((set[0] = strtok(nodes, ",")), i = 1; (set[i] = strtok(NULL, ",")); i++);
 

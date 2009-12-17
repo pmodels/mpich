@@ -184,7 +184,7 @@ struct HYD_node {
 struct HYD_proxy {
     struct HYD_node node;
 
-    struct HYD_pg *pg; /* Back pointer to the PG */
+    struct HYD_pg *pg;          /* Back pointer to the PG */
 
     char **exec_launch_info;
 
