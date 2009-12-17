@@ -12,11 +12,21 @@
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {
-    int i, arg;
+    int i, arg, use_ddd;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     arg = 0;
+
+    /* Hack to use ddd with the proxy */
+    if (getenv("HYDRA_USE_DDD"))
+        use_ddd = 1;
+    else
+        use_ddd = 0;
+
+    if (use_ddd)
+        proxy_args[arg++] = HYDU_strdup("ddd");
+
     i = 0;
     path_str[i++] = HYDU_strdup(HYD_handle.base_path);
     path_str[i++] = HYDU_strdup("pmi_proxy");
@@ -44,6 +54,14 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
     proxy_args[arg++] = HYDU_strdup("--proxy-id");
     proxy_args[arg++] = NULL;
+
+    if (use_ddd) {
+        HYDU_dump_noprefix(stdout, "\nUse proxy launch args: ");
+        HYDU_print_strlist(proxy_args);
+        HYDU_dump_noprefix(stdout, "\n");
+
+        proxy_args[2] = NULL;
+    }
 
     if (HYD_handle.user_global.debug) {
         HYDU_dump_noprefix(stdout, "\nProxy launch args: ");
