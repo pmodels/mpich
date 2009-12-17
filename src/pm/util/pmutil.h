@@ -10,6 +10,19 @@
 /* style: allow:printf:4 sig:0 */
 /* style: allow:fprintf:1 sig:0 */
 /* 
+   If we do not have the GCC attribute, then make this empty.  We use
+   the GCC attribute to improve error checking by the compiler, particularly 
+   for printf/sprintf strings 
+*/
+#ifndef ATTRIBUTE
+#ifdef HAVE_GCC_ATTRIBUTE
+#define ATTRIBUTE(a_) __attribute__(a_)
+#else
+#define ATTRIBUTE(a_)
+#endif
+#endif
+
+/* 
    ---------------------------------------------------------------------------
    Function prototypes 
    ---------------------------------------------------------------------------
