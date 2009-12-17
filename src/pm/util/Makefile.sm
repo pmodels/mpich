@@ -1,7 +1,6 @@
 INCLUDES = -I../../include -I${master_top_srcdir}/src/include \
     -I../../pmi/simple -I${master_top_srcdir}/src/pmi/simple
 
-#
 # We use the msg print routines (for now) - include these in the mpiexec
 # library so that we don't need to copy the source files
 # safestr2 and simple_pmiutil2 are subsets of safestr and simple_pmiutil
@@ -18,7 +17,6 @@ distclean-local:
 clean-local:
 	-rm -f libmpiexec.a
 
-#
 # Ensure that dgbiface is compiled with the -g option, as the symbols must
 # be present for the debugger to see them
 dgbiface.o: $(srcdir)/dgbiface.c
