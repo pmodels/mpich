@@ -337,7 +337,7 @@ HYD_status HYDU_dmx_finalize(void);
  */
 HYD_status HYDU_dmx_query_fd_registration(int fd, int *ret);
 
-int HYDU_dmx_stdin_valid(void);
+HYD_status HYDU_dmx_stdin_valid(int *out);
 
 /*!
  * @}

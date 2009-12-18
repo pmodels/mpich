@@ -590,7 +590,7 @@ HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd)
 
 HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 {
-    int i, j, arg, stdin_fd, process_id, os_index, pmi_id;
+    int i, j, arg, stdin_fd, process_id, os_index, pmi_id, stdin_valid;
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
     struct HYD_env *env, *prop_env = NULL;
@@ -633,6 +633,9 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                HYD_pmcd_pmip.user_global.ckpoint_prefix);
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
+    status = HYDU_dmx_stdin_valid(&stdin_valid);
+    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
+
     if (HYD_pmcd_pmip.exec_list == NULL) {      /* Checkpoint restart cast */
         status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
         HYDU_ERR_POP(status, "unable to create env\n");
@@ -641,7 +644,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         status = HYDT_ckpoint_restart(env, HYD_pmcd_pmip.local.proxy_process_count,
                                       pmi_ids,
                                       pmi_ids[0] ? NULL :
-                                      &HYD_pmcd_pmip.downstream.in,
+                                      stdin_valid ? &HYD_pmcd_pmip.downstream.in : NULL,
                                       HYD_pmcd_pmip.downstream.out,
                                       HYD_pmcd_pmip.downstream.err);
         HYDU_ERR_POP(status, "checkpoint restart failure\n");
@@ -750,16 +753,19 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             os_index = HYDT_bind_get_os_index(process_id);
             if (pmi_id == 0) {
                 status = HYDU_create_process(client_args, prop_env,
-                                             &HYD_pmcd_pmip.downstream.in,
+                                             stdin_valid ? &HYD_pmcd_pmip.downstream.in : NULL,
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
                                              os_index);
+                HYDU_ERR_POP(status, "create process returned error\n");
 
-                stdin_fd = STDIN_FILENO;
-                status = HYDU_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
-                                              HYD_pmcd_pmi_proxy_stdin_cb);
-                HYDU_ERR_POP(status, "unable to register fd\n");
+                if (stdin_valid) {
+                    stdin_fd = STDIN_FILENO;
+                    status = HYDU_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
+                                                  HYD_pmcd_pmi_proxy_stdin_cb);
+                    HYDU_ERR_POP(status, "unable to register fd\n");
+                }
             }
             else {
                 status = HYDU_create_process(client_args, prop_env, NULL,
@@ -767,8 +773,8 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
                                              os_index);
+                HYDU_ERR_POP(status, "create process returned error\n");
             }
-            HYDU_ERR_POP(status, "create process returned error\n");
 
             process_id++;
         }

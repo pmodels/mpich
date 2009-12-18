@@ -260,17 +260,13 @@ HYD_status HYDU_dmx_finalize(void)
     return status;
 }
 
-static int stdin_valid = -1;
-
-int HYDU_dmx_stdin_valid(void)
+HYD_status HYDU_dmx_stdin_valid(int *out)
 {
     struct pollfd fd[1];
     int ret;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    if (stdin_valid != -1)
-        return stdin_valid;
 
     fd[0].fd = STDIN_FILENO;
     fd[0].events = POLLIN;
@@ -281,10 +277,17 @@ int HYDU_dmx_stdin_valid(void)
      * FIXME: Should we specifically check for POLLNVAL or any
      * error? */
     ret = poll(fd, 1, 0);
-    if (ret < 0)
-        stdin_valid = 0;
-    else
-        stdin_valid = 1;
+    HYDU_ASSERT((ret >= 0), status);
 
-    return stdin_valid;
+    if (fd[0].revents & ~POLLIN)
+        *out = 0;
+    else
+        *out = 1;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
