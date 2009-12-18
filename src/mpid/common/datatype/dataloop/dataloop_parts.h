@@ -245,7 +245,7 @@ typedef struct DLOOP_Dataloop {
    evaluate datatypes.  It represents the length of the chain of 
    datatype dependencies.  Defining this and testing when a datatype
    is created removes a test in the datatype evaluation loop. */
-#define DLOOP_MAX_DATATYPE_DEPTH 8
+#define DLOOP_MAX_DATATYPE_DEPTH 16
 
 /*S
   DLOOP_Dataloop_stackelm - Structure for an element of the stack used
