@@ -35,4 +35,4 @@ dgbiface.lo: $(srcdir)/dgbiface.c
 	fi
 	@$(C_COMPILE_SHL) -c -g $< -o _s$*.o
 	@mv -f _s$*.o $*.lo
-	    
+
