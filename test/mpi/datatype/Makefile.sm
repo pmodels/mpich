@@ -71,6 +71,8 @@ pairtype-pack_SOURCES = pairtype-pack.c
 
 struct-ezhov_SOURCES = struct-ezhov.c
 
+struct-verydeep_SOURCES = struct-verydeep.c
+
 pairtype-size-extent_SOURCES = pairtype-size-extent.c
 
 struct-derived-zeros_SOURCES = struct-derived-zeros.c
