@@ -201,7 +201,7 @@ typedef int MPI_Op;
 typedef enum MPIR_Topo_type { MPI_GRAPH=1, MPI_CART=2, MPI_DIST_GRAPH=3 } MPIR_Topo_type;
 
 #define MPI_BOTTOM      (void *)0
-#define MPI_UNWEIGHTED  ((void *)0)
+#define MPI_UNWEIGHTED  ((int *)0)
 
 #define MPI_PROC_NULL   (-1)
 #define MPI_ANY_SOURCE 	(-2)
