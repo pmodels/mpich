@@ -884,13 +884,15 @@ if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
 
     for external in $externals ; do
        if [ -d "$external" -o -L "$external" ] ; then
-           echo "running third-party initialization"
+           echo "------------------------------------------------------------------------"
+           echo "running third-party initialization in $external"
            (cd $external && ./autogen.sh) || exit 1
        fi
     done
 
     for ltdir in $ltdirs ; do
 	if [ -d "$ltdir" -o -L "$ltdir" ] ; then
+            echo "------------------------------------------------------------------------"
 	    echo "running $libtoolize in $ltdir"
 	    (cd $ltdir && $libtoolize) || exit 1
 	fi
@@ -898,6 +900,7 @@ if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
 
     for amdir in $amdirs ; do
 	if [ -d "$amdir" -o -L "$amdir" ] ; then
+	    echo "------------------------------------------------------------------------"
 	    echo "running $autoreconf in $amdir"
 	    (cd $amdir && $autoreconf -vif) || exit 1
 	fi
