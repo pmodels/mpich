@@ -23,6 +23,7 @@ void PREPEND_PREFIX(Dataloop_create)(MPI_Datatype type,
 				     int flag)
 {
     int i;
+    int err;
 
     int nr_ints, nr_aints, nr_types, combiner;
     MPI_Datatype *types;
@@ -265,12 +266,15 @@ void PREPEND_PREFIX(Dataloop_create)(MPI_Datatype type,
 		disps = aints;
 	    }
 
-	    PREPEND_PREFIX(Dataloop_create_struct)(ints[0] /* count */,
-						   &ints[1] /* blklens */,
-						   disps,
-						   types /* oldtype array */,
-						   dlp_p, dlsz_p, dldepth_p,
-						   flag);
+            err = PREPEND_PREFIX(Dataloop_create_struct)(ints[0] /* count */,
+                                                         &ints[1] /* blklens */,
+                                                         disps,
+                                                         types /* oldtype array */,
+                                                         dlp_p, dlsz_p, dldepth_p,
+                                                         flag);
+            /* TODO if/when this function returns error codes, propagate this failure instead */
+            DLOOP_Assert(0 == err);
+            /* if (err) return err; */
 
 	    if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
 		DLOOP_Free(disps);

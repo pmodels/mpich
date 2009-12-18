@@ -578,11 +578,13 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
             /* if the derived type has some data to contribute,
              * add to flattened representation */
             if (sz > 0) {
-                PREPEND_PREFIX(Segment_init)(NULL,
-                                             (DLOOP_Count) blklens[i],
-                                             oldtypes[i],
-                                             segp,
-                                             flag);
+                err = PREPEND_PREFIX(Segment_init)(NULL,
+                                                   (DLOOP_Count) blklens[i],
+                                                   oldtypes[i],
+                                                   segp,
+                                                   flag);
+                if (err) return err;
+
                 bytes = SEGMENT_IGNORE_LAST;
 
                 PREPEND_PREFIX(Segment_count_contig_blocks)(segp,
@@ -654,11 +656,12 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 	    blklens[i] != 0 &&
 	    (is_basic || sz > 0))
 	{
-	    PREPEND_PREFIX(Segment_init)((char *) MPI_AINT_CAST_TO_VOID_PTR disps[i],
+	    err = PREPEND_PREFIX(Segment_init)((char *) MPI_AINT_CAST_TO_VOID_PTR disps[i],
 					 (DLOOP_Count) blklens[i],
 					 oldtypes[i],
 					 segp,
 					 0 /* homogeneous */);
+            if (err) return err;
 
 	    last_ind = nr_blks - first_ind;
 	    bytes = SEGMENT_IGNORE_LAST;
@@ -668,6 +671,7 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 						&tmp_blklens[first_ind],
 						&tmp_disps[first_ind],
 						&last_ind);
+            if (err) return err;
 	    first_ind += last_ind;
 	}
     }
