@@ -109,7 +109,6 @@ int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
 	DLOOP_Type el_type;
 	
 	DLOOP_Handle_get_loopdepth_macro(handle, depth, flag);
-	if (depth >= DLOOP_MAX_DATATYPE_DEPTH) return -1;
 
 	DLOOP_Handle_get_loopptr_macro(handle, oldloop, flag);
 	DLOOP_Assert(oldloop != NULL);
@@ -153,10 +152,14 @@ int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
 	    sblp->el_type                  = el_type;
 
 	    depth++; /* we're adding to the depth with the builtin */
+            DLOOP_Assert(depth < (DLOOP_MAX_DATATYPE_DEPTH));
 	}
 
 	dlp = sblp;
     }
+
+    /* assert instead of return b/c dtype/dloop errorhandling code is inconsistent */
+    DLOOP_Assert(depth < (DLOOP_MAX_DATATYPE_DEPTH));
 
     /* initialize the rest of the segment values */
     segp->handle = handle;
@@ -197,6 +200,8 @@ int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
                 break;
                 /* --END ERROR HANDLING-- */
         }
+
+        DLOOP_Assert(i < DLOOP_MAX_DATATYPE_DEPTH);
 
 	/* loop_p, orig_count, orig_block, and curcount are all filled by us now.
 	 * the rest are filled in at processing time.
