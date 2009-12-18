@@ -12,7 +12,7 @@
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {
-    int i, arg, use_ddd;
+    int i, arg, use_ddd, stdin_valid;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
@@ -51,6 +51,12 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
     proxy_args[arg++] = HYDU_strdup("--pgid");
     proxy_args[arg++] = HYDU_int_to_str(pgid);
+
+    status = HYDU_dmx_stdin_valid(&stdin_valid);
+    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
+
+    proxy_args[arg++] = HYDU_strdup("--stdin-valid");
+    proxy_args[arg++] = HYDU_int_to_str(stdin_valid);
 
     proxy_args[arg++] = HYDU_strdup("--proxy-id");
     proxy_args[arg++] = NULL;
