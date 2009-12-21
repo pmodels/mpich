@@ -47,7 +47,7 @@ static void full_str_to_groups(char *str, char **list)
 
 static HYD_status group_to_individual_nodes(char *str, char **list)
 {
-    char *pre, *nodes, *tmp, *start_str, *end_str, *node_name;
+    char *pre, *nodes, *tmp, *start_str, *end_str;
     char *node_str[HYD_NUM_TMP_STRINGS], *set[HYD_NUM_TMP_STRINGS];
     int start, end, arg, i, j;
     HYD_status status = HYD_SUCCESS;
