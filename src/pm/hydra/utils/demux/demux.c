@@ -178,9 +178,11 @@ HYD_status HYDU_dmx_wait_for_event(int wtime)
                     events |= HYD_POLLIN;
                 if (pollfds[i].revents & POLLOUT)
                     events |= HYD_POLLOUT;
+                if (pollfds[i].revents & POLLHUP)
+                    events |= HYD_POLLHUP;
 
                 /* We only understand POLLIN/OUT/HUP */
-                HYDU_ASSERT(!(pollfds[i].revents & ~events & ~POLLHUP), status);
+                HYDU_ASSERT(!(pollfds[i].revents & ~POLLIN & ~POLLOUT & ~POLLHUP), status);
 
                 if (run->callback == NULL)
                     HYDU_ERR_POP(status, "no registered callback found for socket\n");

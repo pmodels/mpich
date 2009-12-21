@@ -73,6 +73,7 @@
 
 #define HYD_POLLIN  (0x0001)
 #define HYD_POLLOUT (0x0002)
+#define HYD_POLLHUP (0x0004)
 
 #define HYD_TMPBUF_SIZE (64 * 1024)
 #define HYD_TMP_STRLEN  1024
