@@ -55,12 +55,12 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list,
+HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list, int enable_stdin,
                                           HYD_status(*stdout_cb) (void *buf, int buflen),
                                           HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     struct HYD_node *node;
-    int idx, i, tmp_fd, stdin_valid;
+    int idx, i, tmp_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -71,10 +71,6 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_lis
 
     for (idx = 0; args[idx]; idx++);
     args[idx + 1] = NULL;
-
-    /* make sure we can poll on stdin */
-    status = HYDU_dmx_stdin_valid(&stdin_valid);
-    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
     HYDU_MALLOC(HYDT_bscd_persist_control_fd, int *,
                 HYDT_bscd_persist_node_count * sizeof(int), status);
@@ -91,7 +87,7 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_lis
         status = HYDU_send_strlist(HYDT_bscd_persist_control_fd[i], args);
         HYDU_ERR_POP(status, "error sending information to hydserv\n");
 
-        if (i == 0 && stdin_valid) {
+        if (i == 0 && enable_stdin) {
             tmp_fd = STDIN_FILENO;
             status = HYDU_dmx_register_fd(1, &tmp_fd, HYD_POLLIN,
                                           &HYDT_bscd_persist_control_fd[i],

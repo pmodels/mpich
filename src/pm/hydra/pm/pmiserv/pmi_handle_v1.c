@@ -690,7 +690,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb,
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, 0, HYD_handle.stdout_cb,
                                     HYD_handle.stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 

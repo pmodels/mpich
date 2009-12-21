@@ -18,7 +18,7 @@ static HYD_status init_params(void)
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
-    HYD_pmcd_pmip.system_global.stdin_valid = -1;
+    HYD_pmcd_pmip.system_global.enable_stdin = -1;
     HYD_pmcd_pmip.system_global.global_core_count = -1;
     HYD_pmcd_pmip.system_global.pmi_port = NULL;
     HYD_pmcd_pmip.system_global.pmi_id = -1;
@@ -172,9 +172,9 @@ static HYD_status bootstrap_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bootstrap);
 }
 
-static HYD_status stdin_valid_fn(char *arg, char ***argv)
+static HYD_status enable_stdin_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.stdin_valid);
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.enable_stdin);
 }
 
 static HYD_status wdir_fn(char *arg, char ***argv)
@@ -411,7 +411,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
     {"bootstrap", bootstrap_fn, NULL},
-    {"stdin-valid", stdin_valid_fn, NULL},
+    {"enable-stdin", enable_stdin_fn, NULL},
 
     /* Executable parameters */
     {"wdir", wdir_fn, NULL},
@@ -648,7 +648,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         status = HYDT_ckpoint_restart(env, HYD_pmcd_pmip.local.proxy_process_count,
                                       pmi_ids,
                                       pmi_ids[0] ? NULL :
-                                      HYD_pmcd_pmip.system_global.stdin_valid ?
+                                      HYD_pmcd_pmip.system_global.enable_stdin ?
                                       &HYD_pmcd_pmip.downstream.in : NULL,
                                       HYD_pmcd_pmip.downstream.out,
                                       HYD_pmcd_pmip.downstream.err);
@@ -758,7 +758,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             os_index = HYDT_bind_get_os_index(process_id);
             if (pmi_id == 0) {
                 status = HYDU_create_process(client_args, prop_env,
-                                             HYD_pmcd_pmip.system_global.stdin_valid ?
+                                             HYD_pmcd_pmip.system_global.enable_stdin ?
                                              &HYD_pmcd_pmip.downstream.in : NULL,
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
@@ -766,7 +766,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                              os_index);
                 HYDU_ERR_POP(status, "create process returned error\n");
 
-                if (HYD_pmcd_pmip.system_global.stdin_valid) {
+                if (HYD_pmcd_pmip.system_global.enable_stdin) {
                     stdin_fd = STDIN_FILENO;
                     status = HYDU_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
                                                   HYD_pmcd_pmi_proxy_stdin_cb);

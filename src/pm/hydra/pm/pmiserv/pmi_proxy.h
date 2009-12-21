@@ -15,7 +15,7 @@ struct HYD_pmcd_pmip {
     struct HYD_user_global user_global;
 
     struct {
-        int stdin_valid;
+        int enable_stdin;
         int global_core_count;
 
         /* PMI */

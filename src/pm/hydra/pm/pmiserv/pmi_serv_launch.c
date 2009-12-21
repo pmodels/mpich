@@ -18,7 +18,7 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_node *node_list, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *tmp = NULL, *control_port = NULL;
     char *pmi_port = NULL;
-    int pmi_id = -1;
+    int pmi_id = -1, enable_stdin;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -81,9 +81,11 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, &HYD_handle.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status =
-        HYDT_bsci_launch_procs(proxy_args, node_list, HYD_handle.stdout_cb,
-                               HYD_handle.stderr_cb);
+    status = HYDU_dmx_stdin_valid(&enable_stdin);
+    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
+
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, enable_stdin, HYD_handle.stdout_cb,
+                                    HYD_handle.stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:

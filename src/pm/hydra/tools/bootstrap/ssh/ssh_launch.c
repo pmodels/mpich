@@ -11,11 +11,11 @@
 
 static int fd_stdin, fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
+HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list, int enable_stdin,
                                       HYD_status(*stdout_cb) (void *buf, int buflen),
                                       HYD_status(*stderr_cb) (void *buf, int buflen))
 {
-    int num_hosts, idx, i, host_idx, fd, stdin_valid;
+    int num_hosts, idx, i, host_idx, fd;
     int *pid, *fd_list;
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL;
@@ -70,10 +70,6 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
     HYDU_FREE(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
-    /* make sure we can poll on stdin */
-    status = HYDU_dmx_stdin_valid(&stdin_valid);
-    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
-
     for (i = 0, node = node_list; node; node = node->next, i++) {
         targs[host_idx] = HYDU_strdup(node->hostname);
 
@@ -83,7 +79,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
-        status = HYDU_create_process(targs, NULL, ((i == 0 && stdin_valid) ? &fd_stdin : NULL),
+        status = HYDU_create_process(targs, NULL, ((i == 0 && enable_stdin) ? &fd_stdin : NULL),
                                      &fd_stdout, &fd_stderr,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
@@ -93,7 +89,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
         /* Register stdio callbacks for the spawned process */
-        if (i == 0 && stdin_valid) {
+        if (i == 0 && enable_stdin) {
             fd = STDIN_FILENO;
             status = HYDU_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
