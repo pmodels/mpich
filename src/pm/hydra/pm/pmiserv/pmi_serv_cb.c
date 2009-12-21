@@ -149,6 +149,8 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
      * PMI-1, so we will use that delimited even for PMI-2 for this
      * one command. From the next command onward, we will use the
      * PMI-2 specific delimiter. */
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
     cmd = strtok(buf, HYD_pmcd_pmi_handle->delim);
     for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
         args[i] = strtok(NULL, HYD_pmcd_pmi_handle->delim);
