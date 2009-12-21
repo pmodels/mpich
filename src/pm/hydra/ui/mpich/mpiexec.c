@@ -13,6 +13,7 @@
 #include "uiu.h"
 
 struct HYD_handle HYD_handle = { {0} };
+struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
 
 static void usage(void)
 {
@@ -92,8 +93,7 @@ static void usage(void)
 int main(int argc, char **argv)
 {
     struct HYD_proxy *proxy;
-    struct HYD_proxy_exec *exec;
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
     struct HYD_node *node;
     int exit_status = 0, i, process_id, proc_count, timeout;
     HYD_status status = HYD_SUCCESS;
@@ -147,20 +147,20 @@ int main(int argc, char **argv)
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
-    for (exec_info = HYD_uiu_exec_info_list; exec_info; exec_info = exec_info->next) {
-        if (exec_info->process_count == 0) {
+    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
+        if (exec->proc_count == -1) {
             if (HYD_handle.global_core_count == 0)
-                exec_info->process_count = 1;
+                exec->proc_count = 1;
             else
-                exec_info->process_count = HYD_handle.global_core_count;
+                exec->proc_count = HYD_handle.global_core_count;
 
             /* If we didn't get anything from the user, take whatever
              * the RMK gave */
-            HYD_handle.pg_list.pg_process_count += exec_info->process_count;
+            HYD_handle.pg_list.pg_process_count += exec->proc_count;
         }
     }
 
-    status = HYD_uiu_create_proxy_list();
+    status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_handle.node_list, &HYD_handle.pg_list, 0);
     HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     if (HYD_handle.user_global.debug)

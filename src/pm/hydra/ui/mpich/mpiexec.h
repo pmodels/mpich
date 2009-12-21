@@ -11,4 +11,6 @@
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv);
 
+extern struct HYD_exec *HYD_uii_mpx_exec_list;
+
 #endif /* MPIEXEC_H_INCLUDED */

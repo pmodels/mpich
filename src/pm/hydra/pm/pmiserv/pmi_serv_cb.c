@@ -36,8 +36,10 @@ HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
-    int linelen, i, cmdlen;
-    char *buf = NULL, *tbuf = NULL, *cmd, *args[HYD_NUM_TMP_STRINGS];
+    int linelen, i, j, k, cmdlen, pmi_version;
+    char *buf = NULL, *tbuf = NULL, *cmd, *seg;
+    char *tmp[HYD_NUM_TMP_STRINGS], *args[HYD_NUM_TMP_STRINGS], *targs[HYD_NUM_TMP_STRINGS];
+    const char *delim;
     char *str1 = NULL, *str2 = NULL;
     struct HYD_pmcd_pmi_handle_fns *h;
     HYD_status status = HYD_SUCCESS;
@@ -81,10 +83,25 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
          * format (or a PMI-2 command that is backward compatible). */
         if (!strncmp(buf, "cmd=", strlen("cmd=")) || !strncmp(buf, "mcmd=", strlen("mcmd="))) {
             /* PMI-1 format command; read the rest of it */
-            status = HYDU_sock_readline(fd, bufptr, buflen, &linelen);
-            HYDU_ERR_POP(status, "PMI read line error\n");
-            buflen -= linelen;
-            bufptr += linelen;
+            pmi_version = 1;
+
+            if (!strncmp(buf, "cmd=", strlen("cmd=")))
+                delim = " ";
+            else
+                delim = "\n";
+
+            while (1) {
+                status = HYDU_sock_readline(fd, bufptr, buflen, &linelen);
+                HYDU_ERR_POP(status, "PMI read line error\n");
+                buflen -= linelen;
+                bufptr += linelen;
+
+                if (!strncmp(buf, "cmd=", strlen("cmd=")) ||
+                    !strncmp(bufptr - strlen("endcmd\n"), "endcmd", strlen("endcmd")))
+                    break;
+                else
+                    *(bufptr - 1) = ' ';
+            }
 
             /* Unexpected termination of connection */
             if (linelen == 0)
@@ -98,12 +115,52 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
              * PMI-2 commands interleaved with regular PMI-2
              * commands. */
             tbuf = HYDU_strdup(buf);
-            cmd = strtok(tbuf, HYD_pmcd_pmi_v1.delim);
+            cmd = strtok(tbuf, delim);
             for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-                args[i] = strtok(NULL, HYD_pmcd_pmi_v1.delim);
-                if (args[i] == NULL)
+                targs[i] = strtok(NULL, delim);
+                if (targs[i] == NULL)
                     break;
             }
+
+            /* Make a pass through targs and merge space separated
+             * arguments which are actually part of the same key */
+            k = 0;
+            for (i = 0; targs[i]; i++) {
+                if (!strrchr(targs[i], ' ')) {
+                    /* no spaces */
+                    args[k++] = targs[i];
+                }
+                else {
+                    /* space in the argument; each segment is either a
+                     * new key, or a space-separated part of the
+                     * previous key */
+                    j = 0;
+                    seg = strtok(targs[i], " ");
+                    while (1) {
+                        if (!seg || strrchr(seg, '=')) {
+                            /* segment has an '='; it's a start of a new key */
+                            if (j) {
+                                tmp[j++] = NULL;
+                                status = HYDU_str_alloc_and_join(tmp, &args[k++]);
+                                HYDU_ERR_POP(status, "error while joining strings\n");
+                                HYDU_free_strlist(tmp);
+                            }
+                            j = 0;
+
+                            if (!seg)
+                                break;
+                        }
+                        else {
+                            /* no '='; part of the previous key */
+                            tmp[j++] = HYDU_strdup(" ");
+                        }
+                        tmp[j++] = HYDU_strdup(seg);
+
+                        seg = strtok(NULL, " ");
+                    }
+                }
+            }
+            args[k++] = NULL;
 
             if (!strcmp("cmd=init", cmd)) {
                 /* Init is generic to all PMI implementations */
@@ -112,12 +169,24 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
             }
         }
         else {  /* PMI-2 command */
+            pmi_version = 2;
+
+            delim = ";";
+
             *bufptr = '\0';
             cmdlen = atoi(buf);
 
             status = HYDU_sock_read(fd, buf, cmdlen, &linelen, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "PMI read line error\n");
             buf[linelen] = 0;
+
+            tbuf = HYDU_strdup(buf);
+            cmd = strtok(tbuf, delim);
+            for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
+                args[i] = strtok(NULL, delim);
+                if (args[i] == NULL)
+                    break;
+            }
         }
     } while (0);
 
@@ -151,12 +220,6 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
      * PMI-2 specific delimiter. */
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
-    cmd = strtok(buf, HYD_pmcd_pmi_handle->delim);
-    for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-        args[i] = strtok(NULL, HYD_pmcd_pmi_handle->delim);
-        if (args[i] == NULL)
-            break;
-    }
 
     if (cmd == NULL) {
         status = HYD_SUCCESS;

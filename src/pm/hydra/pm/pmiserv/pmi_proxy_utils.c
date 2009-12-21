@@ -48,7 +48,7 @@ static HYD_status init_params(void)
 
 HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 {
-    struct HYD_proxy_exec *exec, *texec;
+    struct HYD_exec *exec, *texec;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -61,9 +61,6 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 
     if (HYD_pmcd_pmip.user_global.bootstrap_exec)
         HYDU_FREE(HYD_pmcd_pmip.user_global.bootstrap_exec);
-
-    if (HYD_pmcd_pmip.user_global.wdir)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.wdir);
 
     if (HYD_pmcd_pmip.system_global.pmi_port)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_port);
@@ -175,11 +172,6 @@ static HYD_status bootstrap_fn(char *arg, char ***argv)
 static HYD_status enable_stdin_fn(char *arg, char ***argv)
 {
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.enable_stdin);
-}
-
-static HYD_status wdir_fn(char *arg, char ***argv)
-{
-    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.wdir);
 }
 
 static HYD_status pmi_port_fn(char *arg, char ***argv)
@@ -301,16 +293,16 @@ static HYD_status start_pid_fn(char *arg, char ***argv)
 
 static HYD_status exec_fn(char *arg, char ***argv)
 {
-    struct HYD_proxy_exec *exec = NULL;
+    struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
     if (HYD_pmcd_pmip.exec_list == NULL) {
-        status = HYDU_alloc_proxy_exec(&HYD_pmcd_pmip.exec_list);
+        status = HYDU_alloc_exec(&HYD_pmcd_pmip.exec_list);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
     }
     else {
         for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
-        status = HYDU_alloc_proxy_exec(&exec->next);
+        status = HYDU_alloc_exec(&exec->next);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
     }
 
@@ -324,7 +316,7 @@ static HYD_status exec_fn(char *arg, char ***argv)
 
 static HYD_status exec_proc_count_fn(char *arg, char ***argv)
 {
-    struct HYD_proxy_exec *exec = NULL;
+    struct HYD_exec *exec = NULL;
 
     for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
     return HYDU_set_int_and_incr(arg, argv, &exec->proc_count);
@@ -332,7 +324,7 @@ static HYD_status exec_proc_count_fn(char *arg, char ***argv)
 
 static HYD_status exec_local_env_fn(char *arg, char ***argv)
 {
-    struct HYD_proxy_exec *exec = NULL;
+    struct HYD_exec *exec = NULL;
     struct HYD_env *env;
     int i, count;
     char *str;
@@ -370,17 +362,26 @@ static HYD_status exec_local_env_fn(char *arg, char ***argv)
 
 static HYD_status exec_env_prop_fn(char *arg, char ***argv)
 {
-    struct HYD_proxy_exec *exec = NULL;
+    struct HYD_exec *exec = NULL;
 
     for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
 
     return HYDU_set_str_and_incr(arg, argv, &exec->env_prop);
 }
 
+static HYD_status exec_wdir_fn(char *arg, char ***argv)
+{
+    struct HYD_exec *exec = NULL;
+
+    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+
+    return HYDU_set_str_and_incr(arg, argv, &exec->wdir);
+}
+
 static HYD_status exec_args_fn(char *arg, char ***argv)
 {
     int i, count;
-    struct HYD_proxy_exec *exec = NULL;
+    struct HYD_exec *exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
     if (**argv == NULL)
@@ -414,7 +415,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"enable-stdin", enable_stdin_fn, NULL},
 
     /* Executable parameters */
-    {"wdir", wdir_fn, NULL},
     {"pmi-port", pmi_port_fn, NULL},
     {"pmi-id", pmi_id_fn, NULL},
     {"binding", binding_fn, NULL},
@@ -435,6 +435,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"exec-proc-count", exec_proc_count_fn, NULL},
     {"exec-local-env", exec_local_env_fn, NULL},
     {"exec-env-prop", exec_env_prop_fn, NULL},
+    {"exec-wdir", exec_wdir_fn, NULL},
     {"exec-args", exec_args_fn, NULL}
 };
 
@@ -469,8 +470,8 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.bootstrap == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bootstrap server not available\n");
 
-    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap, NULL /* no bootstrap exec */ , 0,      /* disable x */
-                            HYD_pmcd_pmip.user_global.debug);
+    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap, NULL /* no bootstrap exec */ ,
+                            0 /* disable x */, HYD_pmcd_pmip.user_global.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
 
     if (HYD_pmcd_pmip.local.id == -1) {
@@ -512,9 +513,6 @@ static HYD_status parse_exec_params(char **t_argv)
     } while (1);
 
     /* verify the arguments we got */
-    if (HYD_pmcd_pmip.user_global.wdir == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "wdir not available\n");
-
     if (HYD_pmcd_pmip.system_global.pmi_port == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI port not available\n");
 
@@ -601,7 +599,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
     struct HYD_env *env, *prop_env = NULL;
-    struct HYD_proxy_exec *exec;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
     int *pmi_ids;
 
@@ -730,6 +728,11 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
+        if (exec->wdir && chdir(exec->wdir) < 0)
+            HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                                 "unable to change wdir to %s (%s)\n", exec->wdir,
+                                 HYDU_strerror(errno));
+
         for (i = 0; i < exec->proc_count; i++) {
             if (HYD_pmcd_pmip.system_global.pmi_id == -1)
                 pmi_id = HYDU_local_to_global_id(process_id,
@@ -746,10 +749,6 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             HYDU_FREE(str);
             status = HYDU_append_env_to_list(*env, &prop_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
-
-            if (chdir(HYD_pmcd_pmip.user_global.wdir) < 0)
-                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                     "unable to change wdir (%s)\n", HYDU_strerror(errno));
 
             for (j = 0, arg = 0; exec->exec[j]; j++)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);

@@ -76,7 +76,7 @@
 
 #define HYD_TMPBUF_SIZE (64 * 1024)
 #define HYD_TMP_STRLEN  1024
-#define HYD_NUM_TMP_STRINGS 200
+#define HYD_NUM_TMP_STRINGS 1000
 
 #define dprintf(...)
 
@@ -150,14 +150,18 @@ struct HYD_env_global {
     char *prop;
 };
 
-/* Executables on a proxy */
-struct HYD_proxy_exec {
+/* Executable information */
+struct HYD_exec {
     char *exec[HYD_NUM_TMP_STRINGS];
+    char *wdir;
+
     int proc_count;
     struct HYD_env *user_env;
     char *env_prop;
 
-    struct HYD_proxy_exec *next;
+    int appnum;
+
+    struct HYD_exec *next;
 };
 
 /* Process group */
@@ -193,7 +197,7 @@ struct HYD_proxy {
     int start_pid;
     int proxy_process_count;
 
-    struct HYD_proxy_exec *exec_list;
+    struct HYD_exec *exec_list;
 
     int *exit_status;
     int control_fd;
@@ -221,7 +225,6 @@ struct HYD_user_global {
     /* Other random parameters */
     int enablex;
     int debug;
-    char *wdir;
 
     struct HYD_env_global global_env;
 };

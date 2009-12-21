@@ -210,13 +210,6 @@ HYD_status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
     /* Done reading; pad the last byte with a NULL */
     buf[*linelen - 1] = 0;
 
-    /* Run through the read data and see if there are any new lines in
-     * there */
-    for (n = 0; n < *linelen; n++) {
-        if (*(buf + n) == '\n')
-            *(buf + n) = ' ';
-    }
-
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

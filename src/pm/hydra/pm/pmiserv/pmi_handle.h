@@ -10,11 +10,9 @@
 #include "hydra_base.h"
 
 /* PMI-1 specific definitions */
-#define PMI_V1_DELIM " "
 extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v1;
 
 /* PMI-2 specific definitions */
-#define PMI_V2_DELIM ";"
 extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2;
 
 /* Generic definitions */
@@ -23,6 +21,11 @@ extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2;
 #define MAXVALLEN  1024 /* max length of value in keyval space */
 #define MAXNAMELEN  256 /* max length of various names */
 #define MAXKVSNAME  MAXNAMELEN  /* max length of a kvsname */
+
+struct HYD_pmcd_token_segment {
+    int start_idx;
+    int token_count;
+};
 
 struct HYD_pmcd_token {
     char *key;
@@ -45,7 +48,7 @@ struct HYD_pmcd_pmi_process {
      * process. This essentially kills any chance of PMI server
      * masquerading. */
     int fd;
-    int rank;                   /* COMM_WORLD rank of this process */
+    int rank;                   /* process rank */
     int epoch;                  /* Epoch this process has reached */
     struct HYD_proxy *proxy;    /* Back pointer to the proxy */
     struct HYD_pmcd_pmi_process *next;
@@ -66,6 +69,8 @@ struct HYD_pmcd_pmi_pg_scratch {
 };
 
 HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
+HYD_status HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
+                                   struct HYD_pmcd_token_segment *segment_list);
 char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank);
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
@@ -74,7 +79,6 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_
                                 int *ret);
 HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
                                         char **process_mapping);
-HYD_status HYD_pmcd_pmi_init(void);
 HYD_status HYD_pmcd_pmi_finalize(void);
 
 struct HYD_pmcd_pmi_handle_fns {
@@ -83,7 +87,6 @@ struct HYD_pmcd_pmi_handle_fns {
 };
 
 struct HYD_pmcd_pmi_handle {
-    const char *delim;
     struct HYD_pmcd_pmi_handle_fns *handle_fns;
 };
 

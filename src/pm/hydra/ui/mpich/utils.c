@@ -9,7 +9,26 @@
 #include "mpiexec.h"
 #include "uiu.h"
 
-struct HYD_handle HYD_handle;
+static HYD_status get_current_exec(struct HYD_exec **exec)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYD_uii_mpx_exec_list == NULL) {
+        status = HYDU_alloc_exec(&HYD_uii_mpx_exec_list);
+        HYDU_ERR_POP(status, "unable to allocate exec\n");
+        HYD_uii_mpx_exec_list->appnum = 0;
+    }
+
+    *exec = HYD_uii_mpx_exec_list;
+    while ((*exec)->next)
+        *exec = (*exec)->next;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 static void dump_env_notes(void)
 {
@@ -190,7 +209,20 @@ static void wdir_help_fn(void)
 
 static HYD_status wdir_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.wdir);
+    struct HYD_exec *exec;
+    HYD_status status = HYD_SUCCESS;
+
+    status = get_current_exec(&exec);
+    HYDU_ERR_POP(status, "get_current_exec returned error\n");
+
+    status = HYDU_set_str_and_incr(arg, argv, &exec->wdir);
+    HYDU_ERR_POP(status, "error setting wdir for executable\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void env_help_fn(void)
@@ -207,7 +239,7 @@ static HYD_status env_fn(char *arg, char ***argv)
 {
     char *env_name, *env_value, *str[2] = { 0 };
     struct HYD_env *env;
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_strsplit(**argv, &str[0], &str[1], '=');
@@ -230,10 +262,10 @@ static HYD_status env_fn(char *arg, char ***argv)
     status = HYDU_env_create(&env, env_name, env_value);
     HYDU_ERR_POP(status, "unable to create env struct\n");
 
-    status = HYD_uiu_get_current_exec_info(&exec_info);
-    HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+    status = get_current_exec(&exec);
+    HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    HYDU_append_env_to_list(*env, &exec_info->user_env);
+    HYDU_append_env_to_list(*env, &exec->user_env);
 
   fn_exit:
     return status;
@@ -255,18 +287,18 @@ static void envlist_help_fn(void)
 static HYD_status envlist_fn(char *arg, char ***argv)
 {
     int len;
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
-    status = HYD_uiu_get_current_exec_info(&exec_info);
-    HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+    status = get_current_exec(&exec);
+    HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    HYDU_ERR_CHKANDJUMP(status, exec_info->env_prop, HYD_INTERNAL_ERROR,
+    HYDU_ERR_CHKANDJUMP(status, exec->env_prop, HYD_INTERNAL_ERROR,
                         "duplicate environment setting\n");
 
     len = strlen("list:") + strlen(**argv) + 1;
-    HYDU_MALLOC(exec_info->env_prop, char *, len, status);
-    HYDU_snprintf(exec_info->env_prop, len, "list:%s", **argv);
+    HYDU_MALLOC(exec->env_prop, char *, len, status);
+    HYDU_snprintf(exec->env_prop, len, "list:%s", **argv);
     (*argv)++;
 
   fn_exit:
@@ -285,13 +317,13 @@ static void envnone_help_fn(void)
 
 static HYD_status envnone_fn(char *arg, char ***argv)
 {
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
-    status = HYD_uiu_get_current_exec_info(&exec_info);
-    HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+    status = get_current_exec(&exec);
+    HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_str(arg, argv, &exec_info->env_prop, (char *) "none");
+    status = HYDU_set_str(arg, argv, &exec->env_prop, (char *) "none");
 
   fn_exit:
     return status;
@@ -309,13 +341,13 @@ static void envall_help_fn(void)
 
 static HYD_status envall_fn(char *arg, char ***argv)
 {
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
-    status = HYD_uiu_get_current_exec_info(&exec_info);
-    HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+    status = get_current_exec(&exec);
+    HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_str(arg, argv, &exec_info->env_prop, (char *) "all");
+    status = HYDU_set_str(arg, argv, &exec->env_prop, (char *) "all");
 
   fn_exit:
     return status;
@@ -332,18 +364,16 @@ static void np_help_fn(void)
 
 static HYD_status np_fn(char *arg, char ***argv)
 {
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
-    status = HYD_uiu_get_current_exec_info(&exec_info);
-    HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+    status = get_current_exec(&exec);
+    HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    if (exec_info->process_count != 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate process count\n");
+    status = HYDU_set_int_and_incr(arg, argv, &exec->proc_count);
+    HYDU_ERR_POP(status, "error getting executable process count\n");
 
-    exec_info->process_count = atoi(**argv);
-    HYD_handle.pg_list.pg_process_count += exec_info->process_count;
-    (*argv)++;
+    HYD_handle.pg_list.pg_process_count += exec->proc_count;
 
   fn_exit:
     return status;
@@ -629,14 +659,17 @@ static struct HYD_arg_match_table match_table[] = {
 static HYD_status set_default_values(void)
 {
     char *tmp;
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
-    /* If exec_info_list is not NULL, make sure local executable is
-     * set */
-    for (exec_info = HYD_uiu_exec_info_list; exec_info; exec_info = exec_info->next)
-        if (exec_info->exec[0] == NULL)
+    /* If exec_list is not NULL, make sure local executable is set */
+    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
+        if (exec->exec[0] == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
+
+        status = HYDU_correct_wdir(&exec->wdir);
+        HYDU_ERR_POP(status, "unable to correct wdir\n");
+    }
 
     if (HYD_handle.print_rank_map == -1)
         HYD_handle.print_rank_map = 0;
@@ -714,7 +747,8 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     int i;
     char **argv = t_argv;
     char *progname = *argv;
-    struct HYD_uiu_exec_info *exec_info;
+    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS];
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -736,32 +770,51 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
         /* Get the executable information */
         /* Read the executable till you hit the end of a ":" */
         do {
-            status = HYD_uiu_get_current_exec_info(&exec_info);
-            HYDU_ERR_POP(status, "get_current_exec_info returned error\n");
+            status = get_current_exec(&exec);
+            HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
             if (!strcmp(*argv, ":")) {  /* Next executable */
-                status = HYD_uiu_alloc_exec_info(&exec_info->next);
-                HYDU_ERR_POP(status, "allocate_exec_info returned error\n");
+                status = HYDU_alloc_exec(&exec->next);
+                HYDU_ERR_POP(status, "allocate_exec returned error\n");
+                exec->next->appnum = exec->appnum + 1;
                 ++argv;
                 break;
             }
 
             i = 0;
-            while (exec_info->exec[i] != NULL)
+            while (exec->exec[i] != NULL)
                 i++;
-            exec_info->exec[i] = HYDU_strdup(*argv);
-            exec_info->exec[i + 1] = NULL;
+            exec->exec[i] = HYDU_strdup(*argv);
+            exec->exec[i + 1] = NULL;
         } while (++argv && *argv);
     } while (1);
 
     /* Get the base path */
-    if (HYD_handle.user_global.wdir == NULL) {
-        HYD_handle.user_global.wdir = HYDU_getcwd();
-        HYDU_ERR_CHKANDJUMP(status, HYD_handle.user_global.wdir == NULL, HYD_INTERNAL_ERROR,
-                            "unable to get current working directory\n");
+    /* Find the last '/' in the executable name */
+    post = HYDU_strdup(progname);
+    loc = strrchr(post, '/');
+    if (!loc) { /* If there is no path */
+        HYD_handle.base_path = NULL;
+        status = HYDU_find_in_path(progname, &HYD_handle.base_path);
+        HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
     }
-    status = HYDU_get_base_path(progname, HYD_handle.user_global.wdir, &HYD_handle.base_path);
-    HYDU_ERR_POP(status, "unable to get base path\n");
+    else {      /* There is a path */
+        *(++loc) = 0;
+
+        /* Check if its absolute or relative */
+        if (post[0] != '/') {   /* relative */
+            tmp[0] = HYDU_strdup(HYDU_getcwd());
+            tmp[1] = HYDU_strdup("/");
+            tmp[2] = HYDU_strdup(post);
+            tmp[3] = NULL;
+            status = HYDU_str_alloc_and_join(tmp, &HYD_handle.base_path);
+            HYDU_ERR_POP(status, "unable to join strings\n");
+            HYDU_free_strlist(tmp);
+        }
+        else {  /* absolute */
+            HYD_handle.base_path = HYDU_strdup(post);
+        }
+    }
 
     status = set_default_values();
     HYDU_ERR_POP(status, "setting default values failed\n");

@@ -8,8 +8,6 @@
 #include "hydra_utils.h"
 #include "uiu.h"
 
-struct HYD_uiu_exec_info *HYD_uiu_exec_info_list;
-
 void HYD_uiu_init_params(void)
 {
     HYDU_init_user_global(&HYD_handle.user_global);
@@ -31,21 +29,16 @@ void HYD_uiu_init_params(void)
     HYD_handle.stdout_cb = NULL;
     HYD_handle.stderr_cb = NULL;
 
-    /* FIXME: Should the timers be initialized? */
-
     HYD_handle.node_list = NULL;
     HYD_handle.global_core_count = 0;
 
     HYDU_init_pg(&HYD_handle.pg_list, 0);
-    /* Set the default PGID to 0 */
+
     HYD_handle.pg_list.pgid = 0;
     HYD_handle.pg_list.next = NULL;
 
     HYD_handle.func_depth = 0;
-
-    HYD_uiu_exec_info_list = NULL;
 }
-
 
 void HYD_uiu_free_params(void)
 {
@@ -73,9 +66,6 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.user_global.ckpoint_prefix)
         HYDU_FREE(HYD_handle.user_global.ckpoint_prefix);
 
-    if (HYD_handle.user_global.wdir)
-        HYDU_FREE(HYD_handle.user_global.wdir);
-
     if (HYD_handle.user_global.bootstrap)
         HYDU_FREE(HYD_handle.user_global.bootstrap);
 
@@ -97,9 +87,6 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.node_list)
         HYDU_free_node_list(HYD_handle.node_list);
 
-    if (HYD_uiu_exec_info_list)
-        HYD_uiu_free_exec_info_list(HYD_uiu_exec_info_list);
-
     if (HYD_handle.pg_list.proxy_list)
         HYDU_free_proxy_list(HYD_handle.pg_list.proxy_list);
 
@@ -107,228 +94,12 @@ void HYD_uiu_free_params(void)
     HYD_uiu_init_params();
 }
 
-
-HYD_status HYD_uiu_alloc_exec_info(struct HYD_uiu_exec_info **exec_info)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(*exec_info, struct HYD_uiu_exec_info *, sizeof(struct HYD_uiu_exec_info),
-                status);
-    (*exec_info)->process_count = 0;
-    (*exec_info)->exec[0] = NULL;
-    (*exec_info)->user_env = NULL;
-    (*exec_info)->env_prop = NULL;
-    (*exec_info)->next = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-void HYD_uiu_free_exec_info_list(struct HYD_uiu_exec_info *exec_info_list)
-{
-    struct HYD_uiu_exec_info *exec_info, *run;
-
-    HYDU_FUNC_ENTER();
-
-    exec_info = exec_info_list;
-    while (exec_info) {
-        run = exec_info->next;
-        HYDU_free_strlist(exec_info->exec);
-
-        if (exec_info->env_prop)
-            HYDU_FREE(exec_info->env_prop);
-
-        HYDU_env_free_list(exec_info->user_env);
-        exec_info->user_env = NULL;
-
-        HYDU_FREE(exec_info);
-        exec_info = run;
-    }
-
-    HYDU_FUNC_EXIT();
-}
-
-
-HYD_status HYD_uiu_get_current_exec_info(struct HYD_uiu_exec_info **exec_info)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (HYD_uiu_exec_info_list == NULL) {
-        status = HYD_uiu_alloc_exec_info(&HYD_uiu_exec_info_list);
-        HYDU_ERR_POP(status, "unable to allocate exec_info\n");
-    }
-
-    *exec_info = HYD_uiu_exec_info_list;
-    while ((*exec_info)->next)
-        *exec_info = (*exec_info)->next;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-static HYD_status add_exec_info_to_proxy(struct HYD_uiu_exec_info *exec_info,
-                                         struct HYD_proxy *proxy, int num_procs)
-{
-    int i;
-    struct HYD_proxy_exec *exec;
-    HYD_status status = HYD_SUCCESS;
-
-    if (proxy->exec_list == NULL) {
-        status = HYDU_alloc_proxy_exec(&proxy->exec_list);
-        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-
-        for (i = 0; exec_info->exec[i]; i++)
-            proxy->exec_list->exec[i] = HYDU_strdup(exec_info->exec[i]);
-        proxy->exec_list->exec[i] = NULL;
-
-        proxy->exec_list->proc_count = num_procs;
-        proxy->exec_list->env_prop = exec_info->env_prop ?
-            HYDU_strdup(exec_info->env_prop) : NULL;
-        proxy->exec_list->user_env = HYDU_env_list_dup(exec_info->user_env);
-    }
-    else {
-        for (exec = proxy->exec_list; exec->next; exec = exec->next);
-        status = HYDU_alloc_proxy_exec(&exec->next);
-        HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-
-        exec = exec->next;
-
-        for (i = 0; exec_info->exec[i]; i++)
-            exec->exec[i] = HYDU_strdup(exec_info->exec[i]);
-        exec->exec[i] = NULL;
-
-        exec->proc_count = num_procs;
-        exec->env_prop = exec_info->env_prop ? HYDU_strdup(exec_info->env_prop) : NULL;
-        exec->user_env = HYDU_env_list_dup(exec_info->user_env);
-    }
-    proxy->proxy_process_count += num_procs;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_status HYD_uiu_create_proxy_list(void)
-{
-    int proxy_rem_procs, exec_rem_procs;
-    struct HYD_proxy *proxy;
-    struct HYD_uiu_exec_info *exec_info;
-    struct HYD_node *node;
-    int total_exec_procs, num_nodes, proxy_count, proxy_id, i, start_pid;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    total_exec_procs = 0;
-    for (exec_info = HYD_uiu_exec_info_list; exec_info; exec_info = exec_info->next)
-        total_exec_procs += exec_info->process_count;
-
-    num_nodes = 0;
-    for (node = HYD_handle.node_list; node; node = node->next)
-        num_nodes++;
-
-    if (total_exec_procs >= HYD_handle.global_core_count)
-        proxy_count = num_nodes;
-    else {
-        proxy_count = 0;
-        for (node = HYD_handle.node_list; node; node = node->next) {
-            proxy_count++;
-            total_exec_procs -= node->core_count;
-            if (total_exec_procs <= 0)
-                break;
-        }
-    }
-
-    proxy_id = 0;
-    start_pid = 0;
-    for (i = 0, node = HYD_handle.node_list; i < proxy_count; i++, node = node->next) {
-        if (HYD_handle.pg_list.proxy_list == NULL) {
-            status = HYDU_alloc_proxy(&HYD_handle.pg_list.proxy_list, &HYD_handle.pg_list);
-            HYDU_ERR_POP(status, "unable to allocate proxy\n");
-            proxy = HYD_handle.pg_list.proxy_list;
-        }
-        else {
-            status = HYDU_alloc_proxy(&proxy->next, &HYD_handle.pg_list);
-            HYDU_ERR_POP(status, "unable to allocate proxy\n");
-            proxy = proxy->next;
-        }
-        proxy->proxy_id = proxy_id;
-        proxy->start_pid = start_pid;
-
-        proxy->node.hostname = HYDU_strdup(node->hostname);
-        proxy->node.core_count = node->core_count;
-        proxy->node.next = NULL;
-
-        start_pid += node->core_count;
-        proxy_id++;
-    }
-
-    proxy = HYD_handle.pg_list.proxy_list;
-    exec_info = HYD_uiu_exec_info_list;
-    proxy_rem_procs = proxy->node.core_count;
-    exec_rem_procs = exec_info ? exec_info->process_count : 0;
-    while (exec_info) {
-        if (exec_rem_procs <= proxy_rem_procs) {
-            status = add_exec_info_to_proxy(exec_info, proxy, exec_rem_procs);
-            HYDU_ERR_POP(status, "unable to add executable to proxy\n");
-
-            proxy_rem_procs -= exec_rem_procs;
-            if (proxy_rem_procs == 0) {
-                proxy = proxy->next;
-                if (proxy == NULL)
-                    proxy = HYD_handle.pg_list.proxy_list;
-                proxy_rem_procs = proxy->node.core_count;
-            }
-
-            exec_info = exec_info->next;
-            exec_rem_procs = exec_info ? exec_info->process_count : 0;
-        }
-        else {
-            status = add_exec_info_to_proxy(exec_info, proxy, proxy_rem_procs);
-            HYDU_ERR_POP(status, "unable to add executable to proxy\n");
-
-            exec_rem_procs -= proxy_rem_procs;
-
-            proxy = proxy->next;
-            if (proxy == NULL)
-                proxy = HYD_handle.pg_list.proxy_list;
-            proxy_rem_procs = proxy->node.core_count;
-        }
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 void HYD_uiu_print_params(void)
 {
     struct HYD_env *env;
-    int i;
     struct HYD_proxy *proxy;
-    struct HYD_proxy_exec *exec;
-    struct HYD_uiu_exec_info *exec_info;
+    struct HYD_exec *exec;
+    int i;
 
     HYDU_FUNC_ENTER();
 
@@ -342,7 +113,6 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "  Bootstrap server: %s\n", HYD_handle.user_global.bootstrap);
     HYDU_dump_noprefix(stdout, "  Debug level: %d\n", HYD_handle.user_global.debug);
     HYDU_dump_noprefix(stdout, "  Enable X: %d\n", HYD_handle.user_global.enablex);
-    HYDU_dump_noprefix(stdout, "  Working dir: %s\n", HYD_handle.user_global.wdir);
 
     HYDU_dump_noprefix(stdout, "\n");
     HYDU_dump_noprefix(stdout, "  Global environment:\n");
@@ -367,26 +137,6 @@ void HYD_uiu_print_params(void)
     }
 
     HYDU_dump_noprefix(stdout, "\n\n");
-
-    HYDU_dump_noprefix(stdout, "    Executable information:\n");
-    HYDU_dump_noprefix(stdout, "    **********************\n");
-    i = 1;
-    for (exec_info = HYD_uiu_exec_info_list; exec_info; exec_info = exec_info->next) {
-        HYDU_dump_noprefix(stdout, "      Executable ID: %2d\n", i++);
-        HYDU_dump_noprefix(stdout, "      -----------------\n");
-        HYDU_dump_noprefix(stdout, "        Process count: %d\n", exec_info->process_count);
-        HYDU_dump_noprefix(stdout, "        Executable: ");
-        HYDU_print_strlist(exec_info->exec);
-        HYDU_dump_noprefix(stdout, "\n");
-
-        if (exec_info->user_env) {
-            HYDU_dump_noprefix(stdout, "\n");
-            HYDU_dump_noprefix(stdout, "        User set environment:\n");
-            HYDU_dump_noprefix(stdout, "        .....................\n");
-            for (env = exec_info->user_env; env; env = env->next)
-                HYDU_dump_noprefix(stdout, "          %s=%s\n", env->env_name, env->env_value);
-        }
-    }
 
     HYDU_dump_noprefix(stdout, "    Proxy information:\n");
     HYDU_dump_noprefix(stdout, "    *********************\n");

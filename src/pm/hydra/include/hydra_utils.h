@@ -133,15 +133,19 @@ HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid);
 void HYDU_free_pg_list(struct HYD_pg *pg_list);
 HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg);
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
-HYD_status HYDU_alloc_proxy_exec(struct HYD_proxy_exec **exec);
+HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
+void HYDU_free_exec_list(struct HYD_exec *exec_list);
+HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
+                                  struct HYD_pg *pg, int proc_offset);
+HYD_status HYDU_correct_wdir(char **wdir);
 
 /* args */
+HYD_status HYDU_find_in_path(const char *execname, char **path);
 HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_table);
 HYD_status HYDU_set_str(char *arg, char ***argv, char **var, char *val);
 HYD_status HYDU_set_str_and_incr(char *arg, char ***argv, char **var);
 HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val);
 HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var);
-HYD_status HYDU_get_base_path(const char *execname, char *wdir, char **path);
 char *HYDU_getcwd(void);
 HYD_status HYDU_parse_hostfile(char *hostfile,
                                HYD_status(*process_token) (char *token, int newline));

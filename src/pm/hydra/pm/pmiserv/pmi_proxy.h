@@ -54,7 +54,7 @@ struct HYD_pmcd_pmip {
 
     /* Process segmentation information for this proxy */
     int start_pid;
-    struct HYD_proxy_exec *exec_list;
+    struct HYD_exec *exec_list;
 };
 
 extern struct HYD_pmcd_pmip HYD_pmcd_pmip;

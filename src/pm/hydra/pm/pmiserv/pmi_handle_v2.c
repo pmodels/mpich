@@ -828,4 +828,4 @@ static struct HYD_pmcd_pmi_handle_fns pmi_v2_handle_fns_foo[] = {
     {"\0", NULL}
 };
 
-struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2 = { PMI_V2_DELIM, pmi_v2_handle_fns_foo };
+struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2 = { pmi_v2_handle_fns_foo };

@@ -87,8 +87,7 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, struct HYD_pg *pg,
-                                                 char *wdir)
+HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, struct HYD_pg *pg)
 {
     int i, arg, process_id;
     int inherited_env_count, user_env_count, system_env_count;
@@ -96,7 +95,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     static int proxy_count = 0;
     struct HYD_env *env;
     struct HYD_proxy *proxy;
-    struct HYD_proxy_exec *exec;
+    struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
     /* Create the arguments list for each proxy */
@@ -139,12 +138,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
-
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--wdir");
-        if (wdir == NULL)
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.wdir);
-        else
-            proxy->exec_launch_info[arg++] = HYDU_strdup(wdir);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
         proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
@@ -243,6 +236,12 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
             }
 
             arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+
+            if (exec->wdir) {
+                proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-wdir");
+                proxy->exec_launch_info[arg++] = HYDU_strdup(exec->wdir);
+            }
+
             proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-args");
             for (i = 0; exec->exec[i]; i++);
             proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
@@ -309,7 +308,7 @@ HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg *pg)
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg, int num_procs)
+HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
 {
     int i;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -323,7 +322,7 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg, int num_procs)
     HYDU_ERR_POP(status, "unable to create pg\n");
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    pg_scratch->num_subgroups = num_procs;
+    pg_scratch->num_subgroups = pg->pg_process_count;
 
     /* Allocate and initialize the connected ranks */
     HYDU_MALLOC(pg_scratch->conn_procs, int *, pg_scratch->num_subgroups * sizeof(int),

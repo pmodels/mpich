@@ -48,8 +48,8 @@ HYD_status HYD_pmci_launch_procs(void)
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "PMI port: %s; PMI ID: %d\n", pmi_port, pmi_id);
 
-    status = HYD_pmcd_pmi_init();
-    HYDU_ERR_POP(status, "unable to create process group\n");
+    status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_handle.pg_list);
+    HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
     /* Copy the host list to pass to the bootstrap server */
     node_list = NULL;
@@ -78,7 +78,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_proxy_args(proxy_args, control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, &HYD_handle.pg_list, NULL);
+    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, &HYD_handle.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     status = HYDU_dmx_stdin_valid(&enable_stdin);

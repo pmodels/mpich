@@ -17,7 +17,7 @@ static int exists(char *filename)
     return 1;
 }
 
-static HYD_status find_in_path(const char *execname, char **path)
+HYD_status HYDU_find_in_path(const char *execname, char **path)
 {
     char *user_path = NULL, *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc;
     HYD_status status = HYD_SUCCESS;
@@ -228,51 +228,6 @@ HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var)
     goto fn_exit;
 }
 
-HYD_status HYDU_get_base_path(const char *execname, char *wdir, char **path)
-{
-    char *loc, *post;
-    char *tmp[HYD_NUM_TMP_STRINGS];
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* Find the last '/' in the executable name */
-    post = HYDU_strdup(execname);
-    loc = strrchr(post, '/');
-    if (!loc) { /* If there is no path */
-        *path = NULL;
-        status = find_in_path(execname, path);
-        HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
-    }
-    else {      /* There is a path */
-        *(++loc) = 0;
-
-        /* Check if its absolute or relative */
-        if (post[0] != '/') {   /* relative */
-            tmp[0] = HYDU_strdup(wdir);
-            tmp[1] = HYDU_strdup("/");
-            tmp[2] = HYDU_strdup(post);
-            tmp[3] = NULL;
-            status = HYDU_str_alloc_and_join(tmp, path);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-            HYDU_free_strlist(tmp);
-        }
-        else {  /* absolute */
-            *path = HYDU_strdup(post);
-        }
-    }
-
-  fn_exit:
-    if (post)
-        HYDU_FREE(post);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 char *HYDU_getcwd(void)
 {
     char *pwdval, *cwdval, *retval = NULL;
@@ -366,7 +321,7 @@ char *HYDU_find_full_path(const char *execname)
 
     HYDU_FUNC_ENTER();
 
-    status = find_in_path(execname, &test_path);
+    status = HYDU_find_in_path(execname, &test_path);
     HYDU_ERR_POP(status, "error while searching for executable in user path\n");
 
     if (test_path) {

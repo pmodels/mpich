@@ -12,7 +12,7 @@ struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };
 
 HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
 {
-    int i;
+    int i, j;
     char *arg;
     HYD_status status = HYD_SUCCESS;
 
@@ -23,8 +23,42 @@ HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
 
     for (i = 0; args[i]; i++) {
         arg = HYDU_strdup(args[i]);
-        (*tokens)[i].key = strtok(arg, "=");
-        (*tokens)[i].val = strtok(NULL, "=");
+        (*tokens)[i].key = arg;
+        for (j = 0; arg[j] && arg[j] != '='; j++);
+        if (!arg[j]) {
+            (*tokens)[i].val = NULL;
+        }
+        else {
+            arg[j] = 0;
+            (*tokens)[i].val = &arg[++j];
+        }
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
+                                   struct HYD_pmcd_token_segment *segment_list)
+{
+    int i, j;
+    HYD_status status = HYD_SUCCESS;
+
+    j = 0;
+    segment_list[j].start_idx = 0;
+    segment_list[j].token_count = 0;
+    for (i = 0; i < token_count; i++) {
+        if (!strcmp(tokens[i].key, "endcmd") && (i < token_count - 1)) {
+            j++;
+            segment_list[j].start_idx = i + 1;
+            segment_list[j].token_count = 0;
+        }
+        else {
+            segment_list[j].token_count++;
+        }
     }
 
   fn_exit:
@@ -293,34 +327,6 @@ struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd)
 
     return NULL;
 }
-
-
-HYD_status HYD_pmcd_pmi_init(void)
-{
-    struct HYD_proxy *proxy;
-    struct HYD_proxy_exec *exec;
-    int i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    i = 0;
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        for (exec = proxy->exec_list; exec; exec = exec->next)
-            i += exec->proc_count;
-    }
-
-    status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_handle.pg_list, i);
-    HYDU_ERR_POP(status, "error allocating pg scratch space\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 
 HYD_status HYD_pmcd_pmi_finalize(void)
 {
