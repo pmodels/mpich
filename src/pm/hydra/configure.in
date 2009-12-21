@@ -264,7 +264,7 @@ fi
 #########################################################################
 AC_ARG_ENABLE(error-checking, [  --enable-error-checking - Enable error checking],
 		 [ error_check=$enableval ],
-		 [ error_check=no ])
+		 [ error_check=yes ])
 AC_MSG_CHECKING(error checking)
 AC_MSG_RESULT($error_check)
 if test "$error_check" = "yes"; then
