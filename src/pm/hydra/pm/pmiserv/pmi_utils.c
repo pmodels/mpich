@@ -87,7 +87,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, struct HYD_pg *pg)
+HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, struct HYD_pg *pg,
+                                                 char *wdir)
 {
     int i, arg, process_id;
     int inherited_env_count, user_env_count, system_env_count;
@@ -140,7 +141,10 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--wdir");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.wdir);
+        if (wdir == NULL)
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.wdir);
+        else
+            proxy->exec_launch_info[arg++] = HYDU_strdup(wdir);
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
         proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
