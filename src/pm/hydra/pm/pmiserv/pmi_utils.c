@@ -263,14 +263,14 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs)
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
-    HYDU_snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d", (int) getpid());
+    HYDU_snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d", (int) getpid(), pgid);
     (*kvs)->key_pair = NULL;
 
   fn_exit:
@@ -294,7 +294,7 @@ HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg *pg)
     pg_scratch->conn_procs = NULL;
     pg_scratch->barrier_count = 0;
 
-    status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs);
+    status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs, pg->pgid);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
 
   fn_exit:

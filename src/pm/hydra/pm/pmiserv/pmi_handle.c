@@ -240,7 +240,7 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank)
     proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
 
     if (proxy_scratch->kvs == NULL) {
-        status = HYD_pmcd_pmi_allocate_kvs(&proxy_scratch->kvs);
+        status = HYD_pmcd_pmi_allocate_kvs(&proxy_scratch->kvs, pg->pgid);
         HYDU_ERR_POP(status, "unable to allocate kvs space\n");
     }
 
