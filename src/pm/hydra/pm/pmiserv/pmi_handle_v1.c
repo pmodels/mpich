@@ -426,9 +426,17 @@ static HYD_status fn_get(int fd, int pgid, char *args[])
 static HYD_status fn_finalize(int fd, int pgid, char *args[])
 {
     const char *cmd;
+    struct HYD_pmcd_pmi_process *process;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d\n", fd);
+    process->fd = -1;
 
     cmd = "cmd=finalize_ack\n";
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
