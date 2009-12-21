@@ -77,21 +77,22 @@ typedef enum {
     M_(CONN_STATE_TS_COMMRDY),                  \
     M_(CONN_STATE_TS_D_QUIESCENT)
 
+#define SOCK_STATE_                             \
+    LISTEN_STATE_,                              \
+    CONN_STATE_
+
 #define IS_LISTEN_CONN_STATE(_state)    ((CONN_STATE_TC_C_UB_ < (_state)) &&    \
                                         ((_state) < CONN_STATE_TA_C_UB_) )
 
 /* REQ - Request, RSP - Response */
 
 typedef enum CONN_TYPE {CONN_TYPE_, CONN_TYPE_SIZE} Conn_type_t;
-typedef enum MPID_nem_newtcp_module_Listen_State {LISTEN_STATE_, LISTEN_STATE_SIZE} 
-    MPID_nem_newtcp_module_Listen_State_t ;
 
-typedef enum MPID_nem_newtcp_module_Conn_State {CONN_STATE_, CONN_STATE_SIZE} 
-    MPID_nem_newtcp_module_Conn_State_t;
+typedef enum MPID_nem_newtcp_module_sock_state {SOCK_STATE_LB_, SOCK_STATE_, SOCK_STATE_SIZE}
+    MPID_nem_newtcp_module_sock_state_t;
 
-#define CONN_STATE_TO_STRING(_cstate) \
-    (( (_cstate) >= CONN_STATE_TS_CLOSED && (_cstate) < CONN_STATE_SIZE ) ? CONN_STATE_STR[_cstate] : "out_of_range")
-
+#define SOCK_STATE_TO_STRING(_state) \
+    (( (_state) > SOCK_STATE_LB_ && (_state) < SOCK_STATE_SIZE ) ? SOCK_STATE_STR[_state] : "out_of_range")
 /*
   Note: event numbering starts from 1, as 0 is assumed to be the state of all-events cleared
  */
@@ -103,13 +104,12 @@ typedef enum sockconn_event {EVENT_CONNECT = 1, EVENT_DISCONNECT}
 
 #if defined(SOCKSM_H_DEFGLOBALS_)
 const char *const CONN_TYPE_STR[CONN_TYPE_SIZE] = {CONN_TYPE_};
-const char *const LISTEN_STATE_STR[LISTEN_STATE_SIZE] = {LISTEN_STATE_};
-const char *const CONN_STATE_STR[CONN_STATE_SIZE] = {CONN_STATE_};
+const char *const SOCK_STATE_STR[SOCK_STATE_SIZE] = {SOCK_STATE_};
 #elif defined(SOCKSM_H_EXTERNS_)
 extern const char *const CONN_TYPE_STR[];
-extern const char *const LISTEN_STATE_STR[];
-extern const char *const CONN_STATE_STR[];
+extern const char *const SOCK_STATE_STR[];
 #endif
+
 #undef M_
 
 #define SOCKCONN_EX_RD_HANDLERS_SET(sc, succ_fn, fail_fn)      \
@@ -118,14 +118,8 @@ extern const char *const CONN_STATE_STR[];
             MPIU_ExInitOverlapped(&(sc->wr_ov), succ_fn, fail_fn)
 
 #define CHANGE_STATE(_sc, _state) do {                              \
-    if(IS_LISTEN_CONN_STATE(_state)){                               \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "CHANGE_STATE %p (state= %s to %s)", _sc, CONN_STATE_TO_STRING((_sc)->state.lstate), CONN_STATE_TO_STRING(_state))); \
-        (_sc)->state.lstate = _state;                               \
-    }                                                               \
-    else{                                                           \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "CHANGE_STATE %p (state= %s to %s)", _sc, CONN_STATE_TO_STRING((_sc)->state.cstate), CONN_STATE_TO_STRING(_state))); \
-        (_sc)->state.cstate = _state;                               \
-    }                                                               \
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "CHANGE_STATE %p (state= %s to %s)", _sc, CONN_STATE_TO_STRING((_sc)->state), CONN_STATE_TO_STRING(_state))); \
+    (_sc)->state = _state;                               \
     SOCKCONN_EX_RD_HANDLERS_SET((_sc), sc_state_info[_state].sc_state_rd_success_handler, sc_state_info[_state].sc_state_rd_fail_handler); \
     SOCKCONN_EX_WR_HANDLERS_SET((_sc), sc_state_info[_state].sc_state_wr_success_handler, sc_state_info[_state].sc_state_wr_fail_handler); \
 } while(0)
@@ -134,10 +128,10 @@ extern const char *const CONN_STATE_STR[];
  * a req to EX . This will help us compare perf with and without
  * posting all req to EX.
  */
-#define CALL_STATE_RD_HANDLER(_sc_p, _state)  (sc_state_info[_state].sc_state_rd_success_handler(&(_sc_p->rd_ov)))
-#define CALL_STATE_RD_FAIL_HANDLER(_sc_p, _state)  (sc_state_info[_state].sc_state_rd_fail_handler(&(_sc_p->rd_ov)))
-#define CALL_STATE_WR_HANDLER(_sc_p, _state)  (sc_state_info[_state].sc_state_wr_success_handler(&(_sc_p->wr_ov)))
-#define CALL_STATE_WR_FAIL_HANDLER(_sc_p, _state)  (sc_state_info[_state].sc_state_wr_fail_handler(&(_sc_p->wr_ov)))
+#define CALL_RD_HANDLER(_sc_p)  (sc_state_info[_sc_p->state].sc_state_rd_success_handler(&(_sc_p->rd_ov)))
+#define CALL_RD_FAIL_HANDLER(_sc_p)  (sc_state_info[_sc_p->state].sc_state_rd_fail_handler(&(_sc_p->rd_ov)))
+#define CALL_WR_HANDLER(_sc_p)  (sc_state_info[_sc_p->state].sc_state_wr_success_handler(&(_sc_p->wr_ov)))
+#define CALL_WR_FAIL_HANDLER(_sc_p)  (sc_state_info[_sc_p->state].sc_state_wr_fail_handler(&(_sc_p->wr_ov)))
 
 struct MPID_nem_new_tcp_module_sockconn;
 typedef struct MPID_nem_new_tcp_module_sockconn sockconn_t;
@@ -241,13 +235,8 @@ typedef struct MPID_nem_new_tcp_module_sockconn{
     int is_tmpvc;
     int pg_rank; /*  rank and id cached here to avoid chasing pointers in vc and vc->pg */
     char *pg_id; /*  MUST be used only if is_same_pg == FALSE */
-    /* FIXME: Do we need a distinction btw cstate & lstate ? 
-     * Get rid of two state types - just use Conn_state_t
-     */
-    union {
-        MPID_nem_newtcp_module_Conn_State_t cstate;
-        MPID_nem_newtcp_module_Listen_State_t lstate; 
-    }state;
+
+    MPID_nem_newtcp_module_sock_state_t state;
     MPIDI_VC_t *vc;
     /* Conn_type_t conn_type;  Probably useful for debugging/analyzing purposes. */
 } MPID_nem_new_tcp_module_sockconn_t;
@@ -293,7 +282,7 @@ typedef struct MPIDI_nem_newtcp_module_portinfo {
     int port_name_tag;
 } MPIDI_nem_newtcp_module_portinfo_t;
 
-#define MPID_nem_newtcp_module_vc_is_connected(vc) (VC_FIELD(vc, sc) && VC_FIELD(vc, sc)->state.cstate == CONN_STATE_TS_COMMRDY)
+#define MPID_nem_newtcp_module_vc_is_connected(vc) (VC_FIELD(vc, sc) && VC_FIELD(vc, sc)->state == CONN_STATE_TS_COMMRDY)
 int MPID_nem_newtcp_module_state_accept_success_handler(MPIU_EXOVERLAPPED *rd_ov);
 int MPID_nem_newtcp_module_state_accept_fail_handler(MPIU_EXOVERLAPPED *rd_ov);
 int MPID_nem_newtcp_module_post_readv_ex(sockconn_t *sc, MPID_IOV *iov, int n_iov);

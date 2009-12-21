@@ -196,7 +196,7 @@ typedef struct sc_state_info{
     handler_func_t sc_state_wr_fail_handler;
 } sc_state_info_t;
 
-sc_state_info_t sc_state_info[CONN_STATE_SIZE];
+sc_state_info_t sc_state_info[SOCK_STATE_SIZE];
 
 #define IS_SAME_PGID(id1, id2) \
     (strcmp(id1, id2) == 0)
@@ -226,7 +226,7 @@ sc_state_info_t sc_state_info[CONN_STATE_SIZE];
         (sc)->vc = NULL;                                            \
         (sc)->pg_is_set = FALSE;                                    \
         (sc)->is_tmpvc = FALSE;                                     \
-        (sc)->state.cstate = CONN_STATE_TS_CLOSED;                  \
+        (sc)->state = CONN_STATE_TS_CLOSED;                         \
     } while (0)
 
 /* Finalize an sc */
@@ -239,7 +239,7 @@ sc_state_info_t sc_state_info[CONN_STATE_SIZE];
         (sc)->vc = NULL;                                            \
         (sc)->pg_is_set = FALSE;                                    \
         (sc)->is_tmpvc = FALSE;                                     \
-        (sc)->state.cstate = CONN_STATE_TS_CLOSED;                  \
+        (sc)->state = CONN_STATE_TS_CLOSED;                         \
     } while (0)
 
 /* --BEGIN ERROR HANDLING-- */
@@ -257,7 +257,7 @@ static void dbg_print_sc_tbl(FILE *stream, int print_free_entries)
         sc = &g_sc_tbl[i];
 #define TF(_b) ((_b) ? "TRUE" : "FALSE")
         fprintf(stream, "[%d] ptr=%p idx=%d fd=%d state=%s\n",
-                i, sc, sc->index, sc->fd, CONN_STATE_TO_STRING(sc->state.cstate));
+                i, sc, sc->index, sc->fd, SOCK_STATE_TO_STRING(sc->state));
         fprintf(stream, "....pg_is_set=%s is_same_pg=%s is_tmpvc=%s pg_rank=%d pg_id=%s\n",
                 TF(sc->pg_is_set), TF(sc->is_same_pg), TF(sc->is_tmpvc), sc->pg_rank, sc->pg_id);
 #undef TF
@@ -910,10 +910,10 @@ static int found_better_sc(sockconn_t *sc, sockconn_t **fnd_sc)
 
     while(sc_tbl_has_next(&iter)){
         sockconn_t *iter_sc = sc_tbl_get_next(&iter);
-        MPID_nem_newtcp_module_Conn_State_t istate = iter_sc->state.cstate;
+        MPID_nem_newtcp_module_sock_state_t istate = iter_sc->state;
         if (iter_sc != sc && iter_sc->fd != MPIU_SOCKW_SOCKFD_INVALID 
             && IS_SAME_CONNECTION(iter_sc, sc)){
-            switch (sc->state.cstate){
+            switch (sc->state){
             case CONN_STATE_TC_C_CNTD:
                 MPIU_Assert(fnd_sc == NULL);
                 if (istate == CONN_STATE_TS_COMMRDY ||
@@ -1359,7 +1359,7 @@ static int recv_id_or_tmpvc_info_success_handler(MPIU_EXOVERLAPPED *rd_ov)
     mpi_errno = MPID_nem_newtcp_module_reset_readv_ex(sc);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = CALL_STATE_RD_HANDLER(sc, sc->state.lstate);
+    mpi_errno = CALL_RD_HANDLER(sc);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
@@ -1705,7 +1705,7 @@ static int state_tc_c_cnting_success_handler(MPIU_EXOVERLAPPED *wr_ov)
 	mpi_errno = MPID_nem_newtcp_module_reset_writev_ex(sc);
 	if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    CALL_STATE_WR_HANDLER(sc, sc->state.cstate);
+    CALL_WR_HANDLER(sc);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_STATE_TC_C_CNTING_SUCCESS_HANDLER);
@@ -1822,7 +1822,7 @@ static int state_tc_c_cntd_success_handler(MPIU_EXOVERLAPPED *wr_ov)
 	mpi_errno = MPID_nem_newtcp_module_reset_writev_ex(sc);
 	if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = CALL_STATE_WR_HANDLER(sc, sc->state.cstate);
+    mpi_errno = CALL_WR_HANDLER(sc);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
@@ -1833,7 +1833,7 @@ static int state_tc_c_cntd_success_handler(MPIU_EXOVERLAPPED *wr_ov)
     mpi_errno = MPID_nem_newtcp_module_reset_writev_ex(sc);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    CALL_STATE_WR_FAIL_HANDLER(sc, sc->state.cstate);
+    CALL_WR_FAIL_HANDLER(sc);
 
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
@@ -2181,9 +2181,9 @@ static int state_l_rankrcvd_success_handler(MPIU_EXOVERLAPPED *rd_ov)
      * 2) A connection already exists - Send a NACK
      */
     if (found_better_sc(sc, &fnd_sc)) {
-        if (fnd_sc->state.cstate == CONN_STATE_TS_COMMRDY)
+        if (fnd_sc->state == CONN_STATE_TS_COMMRDY)
             snd_nak = TRUE;
-        else if (fnd_sc->state.cstate == CONN_STATE_TC_C_RANKSENT)
+        else if (fnd_sc->state == CONN_STATE_TC_C_RANKSENT)
             snd_nak = do_i_win(sc);
     }
 
@@ -2717,7 +2717,7 @@ static int complete_connection(sockconn_t *sc)
     mpi_errno = MPID_nem_newtcp_module_reset_readv_ex(sc);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    CALL_STATE_RD_HANDLER(sc, sc->state.lstate);
+    CALL_RD_HANDLER(sc);
 
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "accept success, added to table, connfd=%d", sc->accept.connfd));        
 

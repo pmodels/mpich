@@ -116,7 +116,7 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     /* Register the listening handlers with executive */
     /* We also need to post the first accept here */
 
-    MPID_nem_newtcp_module_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
+    MPID_nem_newtcp_module_g_lstn_sc.state = LISTEN_STATE_LISTENING;
     /* FIXME: WINTCP ASYNC
     MPID_nem_newtcp_module_g_lstn_sc.handler = MPID_nem_newtcp_module_state_listening_handler;
     */
