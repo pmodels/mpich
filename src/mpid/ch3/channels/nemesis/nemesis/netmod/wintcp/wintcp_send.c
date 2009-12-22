@@ -159,13 +159,6 @@ int MPID_nem_newtcp_module_send_queued (MPIDI_VC_t *vc)
 /*         printf("sreq = %p sreq->dev.iov = %p iov = %p\n", sreq, sreq->dev.iov, iov); */
 /*         printf("iov[0].MPID_IOV_BUF = %p iov[0].MPID_IOV_LEN = %d iov_count = %d\n", iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN, sreq->dev.iov_count);//DARIUS */
 /*         printf("&iov[0].MPID_IOV_LEN = %p sreq->dev.iov_offset = %d\n", &iov[0].MPID_IOV_LEN, sreq->dev.iov_offset);//DARIUS */
-        /* FIXME: REMOVE ME !!!! DEBUG STMT */
-        {
-            int i;
-            for(i=0; i< sreq->dev.iov_count; i++){
-                MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Trying to write iov (sz = %d), pkt type = %d ...", sreq->dev.iov[sreq->dev.iov_offset + i].len, ((MPIDI_CH3_Pkt_t *)sreq->dev.iov[sreq->dev.iov_offset + i].buf)->type));
-            }
-        }
         
         MPIU_OSW_RETRYON_INTR((offset < 0), 
             (mpi_errno = MPIU_SOCKW_Writev(VC_FIELD(vc, sc)->fd, iov, sreq->dev.iov_count, &offset)));
