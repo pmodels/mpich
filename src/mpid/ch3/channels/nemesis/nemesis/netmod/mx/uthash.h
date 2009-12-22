@@ -37,11 +37,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 
-#define uthash_fatal(msg) exit(-1)        /* fatal error (out of memory,etc) */
-#define uthash_bkt_malloc(sz) malloc(sz)  /* malloc fcn for UT_hash_bucket's */
-#define uthash_bkt_free(ptr) free(ptr)    /* free fcn for UT_hash_bucket's   */
-#define uthash_tbl_malloc(sz) malloc(sz)  /* malloc fcn for UT_hash_table    */
-#define uthash_tbl_free(ptr) free(ptr)    /* free fcn for UT_hash_table      */
+#define uthash_fatal(msg) MPID_Abort(NULL, MPI_ERR_OTHER, -1, msg) /* fatal error (out of memory,etc) */
+#define uthash_bkt_malloc(sz) MPIU_Malloc(sz)  /* malloc fcn for UT_hash_bucket's */
+#define uthash_bkt_free(ptr) MPIU_Free(ptr)    /* free fcn for UT_hash_bucket's   */
+#define uthash_tbl_malloc(sz) MPIU_Malloc(sz)  /* malloc fcn for UT_hash_table    */
+#define uthash_tbl_free(ptr) MPIU_Free(ptr)    /* free fcn for UT_hash_table      */
 
 #define uthash_noexpand_fyi(tbl)          /* can be defined to log noexpand  */
 #define uthash_expand_fyi(tbl)            /* can be defined to log expands   */
