@@ -658,7 +658,7 @@ sub TestTimeout {
 	if (/signaled with Interrupt/) { next; }
 	# Allow 'job ending due to env var MPIEXEC_TIMEOUT' (mpd)
 	if (/job ending due to env var MPIEXEC_TIMEOUT/) { next; }
-	# Allow 'Terminated \(signal 15\)' (hydra)
+	# Allow 'EXIT STRING: Terminated \(signal 15\)' (hydra)
 	if (/Terminated \(signal 15\)/) { next; }
 	# ANY output is an error (other than timeout) 
 	if (! /^\s*$/) {
