@@ -96,14 +96,20 @@
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
 
+#define HYD_SILENT_ERROR(status) (((status) == HYD_GRACEFUL_ABORT) || ((status) == HYD_TIMED_OUT))
+
 /* Status information */
 typedef enum {
     HYD_SUCCESS = 0,
+
+    /* Silent errors */
     HYD_GRACEFUL_ABORT,
+    HYD_TIMED_OUT,
+
+    /* Regular errors */
     HYD_NO_MEM,
     HYD_SOCK_ERROR,
     HYD_INVALID_PARAM,
-    HYD_TIMED_OUT,
     HYD_INTERNAL_ERROR
 } HYD_status;
 
