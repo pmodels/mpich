@@ -9,9 +9,6 @@ AC_CONFIG_AUX_DIR(mpl/confdb)
 AC_CONFIG_MACRO_DIR(mpl/confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
-# When built as a subconfigure, pull in FLAGS from above
-PAC_SUBCONFIG_INIT()
-
 AC_CONFIG_HEADER(include/hydra_config.h)
 
 # Non-verbose make
@@ -453,9 +450,6 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
 fi
-
-# Place holder macro for finalization
-PAC_SUBCONFIG_FINALIZE()
 
 # Final output
 AC_OUTPUT(Makefile
