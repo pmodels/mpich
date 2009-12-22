@@ -224,11 +224,11 @@ static HYD_status global_env_fn(char *arg, char ***argv)
         status = HYDU_str_to_env(str, &env);
         HYDU_ERR_POP(status, "error converting string to env\n");
 
-        if (!strcmp(arg, "--global-inherited-env"))
+        if (!strcmp(arg, "global-inherited-env"))
             HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.inherited);
-        else if (!strcmp(arg, "--global-system-env"))
+        else if (!strcmp(arg, "global-system-env"))
             HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.system);
-        else if (!strcmp(arg, "--global-user-env"))
+        else if (!strcmp(arg, "global-user-env"))
             HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.user);
 
         HYDU_FREE(env);
