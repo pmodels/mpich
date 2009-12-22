@@ -9,7 +9,7 @@
 
 HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
 {
-    int buflen;
+    int buflen, i;
     char buf[HYD_TMPBUF_SIZE];
     HYD_status(*cb) (void *buf, int buflen);
     HYD_status status = HYD_SUCCESS;
@@ -27,6 +27,13 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
         status = HYDU_dmx_deregister_fd(fd);
         HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
 
+        for (i = 0; i < HYD_bscu_fd_count; i++) {
+            if (HYD_bscu_fd_list[i] == fd) {
+                HYD_bscu_fd_list[i] = -1;
+                break;
+            }
+        }
+
         close(fd);
     }
 
@@ -43,7 +50,7 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYDT_bscu_stdin_cb(int fd, HYD_event_t events, void *userp)
 {
-    int closed, in_fd;
+    int closed, in_fd, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -56,6 +63,13 @@ HYD_status HYDT_bscu_stdin_cb(int fd, HYD_event_t events, void *userp)
     if (closed || (events & HYD_POLLHUP)) {
         status = HYDU_dmx_deregister_fd(fd);
         HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
+
+        for (i = 0; i < HYD_bscu_fd_count; i++) {
+            if (HYD_bscu_fd_list[i] == fd) {
+                HYD_bscu_fd_list[i] = -1;
+                break;
+            }
+        }
 
         close(STDIN_FILENO);
     }
