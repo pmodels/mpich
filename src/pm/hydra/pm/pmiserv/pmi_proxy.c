@@ -80,6 +80,7 @@ int main(int argc, char **argv)
 
         /* Check if there are any messages from the launcher */
         status = HYDU_dmx_wait_for_event(0);
+        HYDU_IGNORE_TIMEOUT(status);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
     }
 

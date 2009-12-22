@@ -42,6 +42,12 @@
     }
 #endif
 
+#define HYDU_IGNORE_TIMEOUT(status)             \
+    {                                           \
+        if ((status) == HYD_TIMED_OUT)          \
+            (status) = HYD_SUCCESS;             \
+    }
+
 #define HYDU_ERR_POP(status, message)                                   \
     {                                                                   \
         if (status && !HYD_SILENT_ERROR(status)) {                      \
