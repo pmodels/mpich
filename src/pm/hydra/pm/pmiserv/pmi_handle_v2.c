@@ -153,7 +153,7 @@ static HYD_status fn_fullinit(int fd, int pgid, char *args[])
 {
     int id, rank, i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
-    struct HYD_pg *run;
+    struct HYD_pg *pg;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -191,10 +191,12 @@ static HYD_status fn_fullinit(int fd, int pgid, char *args[])
 
     HYDU_FREE(cmd);
 
-    for (run = &HYD_handle.pg_list; run->next; run = run->next);
+    for (pg = &HYD_handle.pg_list; pg && pg->pgid != pgid; pg = pg->next);
+    if (!pg)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with pgid %d\n", pgid);
 
-    /* Add the process to the last PG */
-    status = HYD_pmcd_pmi_add_process_to_pg(run, fd, rank);
+    /* Add the process to the appropriate PG */
+    status = HYD_pmcd_pmi_add_process_to_pg(pg, fd, rank);
     HYDU_ERR_POP(status, "unable to add process to pg\n");
 
   fn_exit:
