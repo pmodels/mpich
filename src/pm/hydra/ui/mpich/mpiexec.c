@@ -13,6 +13,7 @@
 #include "uiu.h"
 
 struct HYD_handle HYD_handle = { {0} };
+
 struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
 
 static void usage(void)
@@ -160,7 +161,8 @@ int main(int argc, char **argv)
         }
     }
 
-    status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_handle.node_list, &HYD_handle.pg_list, 0);
+    status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_handle.node_list,
+                                    &HYD_handle.pg_list, 0);
     HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     if (HYD_handle.user_global.debug)

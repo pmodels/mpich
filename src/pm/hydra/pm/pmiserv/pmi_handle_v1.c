@@ -617,7 +617,8 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
                 exec->wdir = HYDU_strdup(info_val);
             }
             else {
-                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized info key: %s\n", info_key);
+                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized info key: %s\n",
+                                     info_key);
             }
         }
 

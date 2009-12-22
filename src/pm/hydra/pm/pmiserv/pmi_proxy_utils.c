@@ -471,7 +471,7 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bootstrap server not available\n");
 
     status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap, NULL /* no bootstrap exec */ ,
-                            0 /* disable x */, HYD_pmcd_pmip.user_global.debug);
+                            0 /* disable x */ , HYD_pmcd_pmip.user_global.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
 
     if (HYD_pmcd_pmip.local.id == -1) {

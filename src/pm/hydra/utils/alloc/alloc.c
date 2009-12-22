@@ -242,7 +242,8 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list)
     HYDU_FUNC_EXIT();
 }
 
-static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy, int num_procs)
+static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy,
+                                    int num_procs)
 {
     int i;
     struct HYD_exec *texec;

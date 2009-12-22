@@ -58,7 +58,8 @@ static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list, int enable_stdin,
+HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
+                                        int enable_stdin,
                                         HYD_status(*stdout_cb) (void *buf, int buflen),
                                         HYD_status(*stderr_cb) (void *buf, int buflen))
 {
@@ -125,8 +126,9 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     targs[idx++] = HYDU_int_to_str(-1);
     targs[idx++] = NULL;
 
-    status = HYDU_create_process(targs, NULL, enable_stdin ? &fd_stdin : NULL, &fd_stdout, &fd_stderr,
-                                 &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
+    status = HYDU_create_process(targs, NULL,
+                                 enable_stdin ? &fd_stdin : NULL, &fd_stdout,
+                                 &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
     HYDU_ERR_POP(status, "create process returned error\n");
 
     /* We don't wait for stdin to close */

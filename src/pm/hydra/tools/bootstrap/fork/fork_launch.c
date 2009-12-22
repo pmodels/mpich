@@ -11,7 +11,8 @@
 
 static int fd_stdin, fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list, int enable_stdin,
+HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list,
+                                       int enable_stdin,
                                        HYD_status(*stdout_cb) (void *buf, int buflen),
                                        HYD_status(*stderr_cb) (void *buf, int buflen))
 {
@@ -54,7 +55,8 @@ HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list, 
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
-        status = HYDU_create_process(targs, NULL, ((i == 0 && enable_stdin) ? &fd_stdin : NULL),
+        status = HYDU_create_process(targs, NULL,
+                                     ((i == 0 && enable_stdin) ? &fd_stdin : NULL),
                                      &fd_stdout, &fd_stderr,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
