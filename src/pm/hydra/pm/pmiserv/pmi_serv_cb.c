@@ -370,7 +370,7 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
             cmd = KILL_JOB;
             status = HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmu_cmd));
             if (status != HYD_SUCCESS) {
-                HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->hostname);
+                HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->node.hostname);
                 overall_status = HYD_INTERNAL_ERROR;
                 continue;       /* Move on to the next proxy */
             }

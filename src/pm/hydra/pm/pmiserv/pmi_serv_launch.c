@@ -116,6 +116,11 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     }
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
 
+    /* Once the cleanup signal has been sent, wait for the proxies to
+     * get back with the exit status */
+    status = HYDT_bsci_wait_for_completion(-1);
+    HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

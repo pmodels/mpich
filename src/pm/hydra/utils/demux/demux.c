@@ -118,7 +118,7 @@ HYD_status HYDU_dmx_deregister_fd(int fd)
 
 HYD_status HYDU_dmx_wait_for_event(int wtime)
 {
-    int total_fds, i, j, events, ret;
+    int total_fds, i, j, events, ret, work_done;
     struct dmx_callback *run;
     struct pollfd *pollfds = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -167,12 +167,15 @@ HYD_status HYDU_dmx_wait_for_event(int wtime)
 
     run = cb_list;
     i = 0;
+    work_done = 0;
     while (run) {
         for (j = 0; j < run->num_fds; j++) {
             if (run->fd[j] == -1)
                 continue;
 
             if (pollfds[i].revents) {
+                work_done = 1;
+
                 events = 0;
                 if (pollfds[i].revents & POLLIN)
                     events |= HYD_POLLIN;
@@ -200,6 +203,10 @@ HYD_status HYDU_dmx_wait_for_event(int wtime)
         if (i == total_fds)
             break;
     }
+
+    /* If no work has been done, it must be a timeout */
+    if (!work_done)
+        status = HYD_TIMED_OUT;
 
   fn_exit:
     if (pollfds)

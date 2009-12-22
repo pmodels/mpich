@@ -44,12 +44,12 @@
 
 #define HYDU_ERR_POP(status, message)                                   \
     {                                                                   \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT && status != HYD_TIMED_OUT) {    \
             if (strlen(message))                                        \
                 HYDU_error_printf(message);                             \
             goto fn_fail;                                               \
         }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
+        else if (status == HYD_GRACEFUL_ABORT || status == HYD_TIMED_OUT) {                        \
             goto fn_exit;                                               \
         }                                                               \
     }
@@ -57,12 +57,12 @@
 #define HYDU_ERR_SETANDJUMP(status, error, message)                     \
     {                                                                   \
         status = error;                                                 \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT && status != HYD_TIMED_OUT) {    \
             if (strlen(message))                                        \
                 HYDU_error_printf(message);                             \
             goto fn_fail;                                               \
         }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
+        else if (status == HYD_GRACEFUL_ABORT || status == HYD_TIMED_OUT) {                        \
             goto fn_exit;                                               \
         }                                                               \
     }
@@ -82,12 +82,12 @@
 #define HYDU_ERR_SETANDJUMP1(status, error, message, arg1)              \
     {                                                                   \
         status = error;                                                 \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT && status != HYD_TIMED_OUT) {    \
             if (strlen(message))                                        \
                 HYDU_error_printf(message, arg1);                       \
             goto fn_fail;                                               \
         }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
+        else if (status == HYD_GRACEFUL_ABORT || status == HYD_TIMED_OUT) {                        \
             goto fn_exit;                                               \
         }                                                               \
     }
@@ -95,12 +95,12 @@
 #define HYDU_ERR_SETANDJUMP2(status, error, message, arg1, arg2)        \
     {                                                                   \
         status = error;                                                 \
-        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT) {    \
+        if (status != HYD_SUCCESS && status != HYD_GRACEFUL_ABORT && status != HYD_TIMED_OUT) {    \
             if (strlen(message))                                        \
                 HYDU_error_printf(message, arg1, arg2);                 \
             goto fn_fail;                                               \
         }                                                               \
-        else if (status == HYD_GRACEFUL_ABORT) {                        \
+        else if (status == HYD_GRACEFUL_ABORT || status == HYD_TIMED_OUT) {                        \
             goto fn_exit;                                               \
         }                                                               \
     }
