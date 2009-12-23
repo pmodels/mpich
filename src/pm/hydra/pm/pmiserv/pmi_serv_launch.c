@@ -15,7 +15,7 @@
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
-    struct HYD_node *node_list, *node, *tnode;
+    struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *tmp = NULL, *control_port = NULL;
     char *pmi_port = NULL;
     int pmi_id = -1, enable_stdin;

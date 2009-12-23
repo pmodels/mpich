@@ -37,7 +37,7 @@ HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
 HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int linelen, i, j, k, cmdlen, pmi_version;
-    char *buf = NULL, *tbuf = NULL, *cmd, *seg;
+    char *buf = NULL, *tbuf = NULL, *cmd = NULL, *seg;
     char *tmp[HYD_NUM_TMP_STRINGS], *args[HYD_NUM_TMP_STRINGS], *targs[HYD_NUM_TMP_STRINGS];
     const char *delim;
     char *str1 = NULL, *str2 = NULL;
