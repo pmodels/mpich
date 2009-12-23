@@ -89,25 +89,6 @@ char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const
     return NULL;
 }
 
-static HYD_status free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
-{
-    struct HYD_pmcd_pmi_kvs_pair *key_pair, *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    key_pair = kvs_list->key_pair;
-    while (key_pair) {
-        tmp = key_pair->next;
-        HYDU_FREE(key_pair);
-        key_pair = tmp;
-    }
-    HYDU_FREE(kvs_list);
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs * kvs,
                                 int *ret)
 {
@@ -338,42 +319,9 @@ struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd)
 
 HYD_status HYD_pmcd_pmi_finalize(void)
 {
-    struct HYD_pg *pg;
-    struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_pmcd_pmi_process *process, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
-        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-
-        if (pg_scratch->conn_procs)
-            HYDU_FREE(pg_scratch->conn_procs);
-
-        status = free_pmi_kvs_list(pg_scratch->kvs);
-        HYDU_ERR_POP(status, "unable to free kvs list\n");
-
-        HYDU_FREE(pg_scratch);
-        pg->pg_scratch = NULL;
-
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-
-            for (process = proxy_scratch->process_list; process;) {
-                tmp = process->next;
-                HYDU_FREE(process);
-                process = tmp;
-            }
-
-            status = free_pmi_kvs_list(proxy_scratch->kvs);
-            HYDU_ERR_POP(status, "unable to free kvs list\n");
-
-            HYDU_FREE(proxy_scratch);
-        }
-    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

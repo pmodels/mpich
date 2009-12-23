@@ -66,6 +66,9 @@ struct HYD_pmcd_pmi_pg_scratch {
 
     int barrier_count;
 
+    int control_listen_fd;
+    int pmi_listen_fd;
+
     struct HYD_pmcd_pmi_kvs *kvs;
 };
 

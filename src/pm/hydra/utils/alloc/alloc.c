@@ -110,9 +110,6 @@ void HYDU_free_pg_list(struct HYD_pg *pg_list)
         if (pg->proxy_list)
             HYDU_free_proxy_list(pg->proxy_list);
 
-        if (pg->pg_scratch)
-            HYDU_FREE(pg->pg_scratch);
-
         HYDU_FREE(pg);
 
         pg = tpg;

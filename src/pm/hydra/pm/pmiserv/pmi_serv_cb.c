@@ -11,15 +11,26 @@
 #include "pmci.h"
 #include "bsci.h"
 #include "pmi_serv.h"
+#include "pmi_utils.h"
 
 HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
 {
-    int accept_fd;
+    int accept_fd, pgid;
+    struct HYD_pg *pg;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* We got a PMI connection */
+    /* We got a PMI connection; find the PGID */
+    pgid = ((int) (size_t) userp);
+    for (pg = &HYD_handle.pg_list; pg && pg->pgid != pgid; pg = pg->next);
+    if (!pg)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find pg with id %d\n", pgid);
+
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+    pg_scratch->pmi_listen_fd = fd;
+
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
@@ -272,6 +283,7 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     int accept_fd, proxy_id, count, pgid;
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -303,6 +315,9 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     HYDU_ERR_CHKANDJUMP1(status, proxy == NULL, HYD_INTERNAL_ERROR,
                          "cannot find proxy with ID %d\n", proxy_id);
 
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+    pg_scratch->control_listen_fd = fd;
+
     /* This will be the control socket for this proxy */
     proxy->control_fd = accept_fd;
 
@@ -326,6 +341,10 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
 HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 {
     struct HYD_proxy *proxy;
+    struct HYD_pg *pg;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_pmcd_pmi_process *process, *tmp;
     int count;
     HYD_status status = HYD_SUCCESS;
 
@@ -343,6 +362,37 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "error deregistering fd\n");
 
     close(fd);
+
+    pg = proxy->pg;
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        if (proxy->exit_status == NULL)
+            goto fn_exit;
+    }
+
+    /* All proxies in this process group have terminated */
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+    HYDT_dmx_deregister_fd(pg_scratch->pmi_listen_fd);
+    HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
+    close(pg_scratch->pmi_listen_fd);
+    close(pg_scratch->control_listen_fd);
+
+    HYD_pmcd_pmi_free_pg_scratch(pg);
+
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+
+        if (proxy_scratch) {
+            for (process = proxy_scratch->process_list; process;) {
+                tmp = process->next;
+                HYDU_FREE(process);
+                process = tmp;
+            }
+
+            HYD_pmcd_free_pmi_kvs_list(proxy_scratch->kvs);
+            HYDU_FREE(proxy_scratch);
+            proxy->proxy_scratch = NULL;
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
