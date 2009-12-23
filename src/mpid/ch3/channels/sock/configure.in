@@ -6,15 +6,6 @@ dnl config.guess
 dnl
 AC_CONFIG_AUX_DIR(../../../../../confdb)
 
-dnl The MPICH2 top-level configure adds a bunch of flags to the
-dnl user-defined CFLAGS by processing different configure command-line
-dnl arguments (--enable-g, --enable-default-optimization). These updated
-dnl flags are passed down as a separate flag. Here, we don't care about
-dnl the user-defined flags, but rather this updated flags, so we just
-dnl overwrite CFLAGS with them.
-PAC_SUBCONFIG_INIT()
-
-dnl
 dnl Definitions will be placed in this file rather than in the DEFS variable
 dnl
 AC_CONFIG_HEADER(include/mpidi_ch3i_sock_conf.h)
@@ -146,9 +137,6 @@ CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 # define the ABI version of the channel ABI that we are using.
 ABIVERSION=1:1
 AC_SUBST(ABIVERSION)
-
-dnl Place holder macro for finalization
-PAC_SUBCONFIG_FINALIZE()
 
 dnl Add a step to create the dependencies directory if it is not present
 AC_OUTPUT_COMMANDS([if grep 'dependencies:' Makefile >/dev/null 2>&1 ; then

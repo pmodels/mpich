@@ -2,14 +2,6 @@ dnl Process this file with autoconf to produce a configure script.
 # Autoconf initialization:
 AC_INIT(mpdroot.h)
 
-dnl The MPICH2 top-level configure adds a bunch of flags to the
-dnl user-defined CFLAGS by processing different configure command-line
-dnl arguments (--enable-g, --enable-default-optimization). These updated
-dnl flags are passed down as a separate flag. Here, we don't care about
-dnl the user-defined flags, but rather this updated flags, so we just
-dnl overwrite CFLAGS with them.
-PAC_SUBCONFIG_INIT()
-
 # Autoconf header:
 rm -f ${srcdir}/mpdconf.h mpdconf.h
 AC_CONFIG_HEADER(mpdconf.h)
@@ -193,9 +185,6 @@ AC_SUBST(MPD_HOME)
 dnl
 dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)
-
-dnl Place holder macro for finalization
-PAC_SUBCONFIG_FINALIZE()
 
 # AC_OUTPUT_COMMANDS(chmod +x startdaemons)
 AC_OUTPUT(Makefile)

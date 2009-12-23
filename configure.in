@@ -239,6 +239,42 @@ FROM_MPICH2=yes
 export FROM_MPICH2
 AC_ARG_VAR(FROM_MPICH2, [internally set flag to tell subconfigures that they are built from within MPICH2])
 
+# Save a copy of CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS, LDFLAGS as USER_*
+# before any of these flags are being modified by configure
+# tests.
+PAC_PREFIX_FLAGS(USER, CFLAGS)
+PAC_PREFIX_FLAGS(USER, CXXFLAGS)
+PAC_PREFIX_FLAGS(USER, FFLAGS)
+PAC_PREFIX_FLAGS(USER, F90FLAGS)
+PAC_PREFIX_FLAGS(USER, LDFLAGS)
+PAC_PREFIX_FLAGS(USER, LIBS)
+
+# WRAPPER_xFLAGS are used by mpicc and friends.
+PAC_PREFIX_FLAGS(WRAPPER, CFLAGS)
+PAC_PREFIX_FLAGS(WRAPPER, CXXFLAGS)
+PAC_PREFIX_FLAGS(WRAPPER, FFLAGS)
+PAC_PREFIX_FLAGS(WRAPPER, F90FLAGS)
+PAC_PREFIX_FLAGS(WRAPPER, LDFLAGS)
+PAC_PREFIX_FLAGS(WRAPPER, LIBS)
+WRAPPER_CFLAGS="$CFLAGS $MPICH2_MPICC_FLAGS"
+WRAPPER_CXXFLAGS="$CXXFLAGS $MPICH2_MPICXX_FLAGS"
+WRAPPER_FFLAGS="$FFLAGS $MPICH2_MPIF77_FLAGS"
+WRAPPER_F90FLAGS="$F90FLAGS $MPICH2_MPIF90_FLAGS"
+WRAPPER_LDFLAGS="$CFLAGS $MPICH2_LDFLAGS"
+
+# Add MPICH2LIB_* to the appropriate flags
+AC_ARG_VAR(MPICH2LIB_CFLAGS, [extra CFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_CXXFLAGS, [extra CXXFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_FFLAGS, [extra FFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_F90FLAGS, [extra F90FLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_LDFLAGS, [extra LDFLAGS used in building MPICH2 libraries])
+CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
+CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
+FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
+F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
+LDFLAGS="$LDFLAGS $MPICH2LIB_LDFLAGS"
+
+
 dnl Use AC_ARG_ENABLE to look for --enable-feature and AC_ARG_WITH to look for
 dnl --with-capability
 dnl
@@ -517,45 +553,7 @@ AC_ARG_WITH(fwrapname,
                         routines]
     ,[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
 AC_SUBST(FWRAPNAME)
-dnl
-#
-# Save a copy of CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS, LDFLAGS as WRAPPER_*
-# before any of these flags are being modified by configure tests.
-#
-# WRAPPER_xFLAGS are used by mpicc and friends.
-# Don't modify WRAPPER_xFLAGS
-WRAPPER_CFLAGS=$CFLAGS
-WRAPPER_CXXFLAGS=$CXXFLAGS
-WRAPPER_FFLAGS=$FFLAGS
-WRAPPER_F90FLAGS=$F90FLAGS
-export WRAPPER_CFLAGS
-export WRAPPER_CXXFLAGS
-export WRAPPER_FFLAGS
-export WRAPPER_F90FLAGS
 
-
-dnl Deal with the MPICH2LIB_xFLAGS variables.  These must come after the
-dnl WRAPPER_xFLAGS variables are set but before we attempt to add more flags to
-dnl xFLAGS via macros like PAC_CC_STRICT.  We don't attempt to validate the user's
-dnl flags but we do generally attempt to validate flags that we add ourselves.  If
-dnl flags specified by the user conflict with flags that we add, the user-specified
-dnl flags should generally be preferred.  Hence the user-specified flags must come
-dnl before such macros.
-dnl
-dnl (this is a dnl comment because maint/updatefiles complains about finding the
-dnl  string "PAC_" in a generated configure script)
-if test -n "$MPICH2LIB_CFLAGS" ; then
-    CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
-fi
-if test -n "$MPICH2LIB_FFLAGS" ; then
-    FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
-fi
-if test -n "$MPICH2LIB_F90FLAGS" ; then
-    F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
-fi
-if test -n "$MPICH2LIB_CXXFLAGS" ; then
-    CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
-fi
 
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
@@ -5890,29 +5888,6 @@ if test "$ac_cv_func_thread_policy_set" = yes ; then
     fi
 fi
 
-#
-# THR_LDFLAGS are added to the WRAPPER_LDFLAGS (used to link user MPI programs)
-# THR_CFLAGS should be used only to compile the MPI library, not to compile
-# user programs.  We cannot set CFLAGS to THR_CFLAGS because we will
-# use CFLAGS to set WRAPPER_CFLAGS at the end of this configure step.
-# FIXME: We need to propagate THR_CFLAGS
-if test "$with_thread_package" != "none" ; then
-    if $CC -V 2>&1 | grep -i "sun workshop" 2>&1 >/dev/null ; then
-        # FIXME: the above should really be done using a feature test
-        # FIXME: the C++, F77 and F90 compilers also need the -mt flag
-	# However, the reason that we do this here is that the Sun compilers
-	# provide non-working versions of the thread mutex routines
-	# if -mt is not selected.
-	THR_CFLAGS="$THR_CFLAGS -mt"
-	THR_LDFLAGS="$THR_LDFLAGS -mt"
-    else
-	# FIXME: the reentrant flags belong in DEFS, but DEFS doesn't 
-        # appear to be propagated by MPICH2
-	# THR_DEFS="$THR_DEFS -D_REENTRANT -D_THREAD_SAFE"
-	THR_CFLAGS="$THR_CFLAGS -D_REENTRANT -D_THREAD_SAFE"
-    fi
-fi
-
 MPIU_THREAD_LIB_NAME=${MPILIBNAME}
 AC_SUBST(MPIU_THREAD_LIB_NAME)
 
@@ -6009,11 +5984,6 @@ dnl updated values.  Here's an attempt at a fix
 	# We use eval to handle quotes around the arguments added by
 	# autoconf when saving the args
 
-	dnl Copy current CFLAGS, FFLAGS, etc., into
-	dnl MPICH2_INTERNAL_CFLAGS, etc., and export them to the
-	dnl sub-configures. If the sub-configures want, they can replace their
-	dnl CFLAGS with the current CFLAGS through this variable.
-	PAC_MPICH2_INIT()
         if (cd $subsys && eval $use_top_srcdir/$subsys/configure $ac_sub_configure_args ) ; then
 	    :
 	else 
@@ -6294,25 +6264,6 @@ else
 fi
 AC_SUBST(MPI_MAX_PROCESSOR_NAME)
 
-# default settings for compiler and linker flags 
-# Note:
-#   The WRAPPER_CFLAGS must not contain *all* of the CFLAGS, just the 
-#   flags needed to compile with the mpi.h header.  Normally, no flags
-#   should be required to compile MPI programs (otherwise, users that choose
-#   not to use the compile scripts will submit bug reports).
-#   For now, we try using no extra Flags.  (Never, ever set WRAPPER_CFLAGS to 
-#   $CFLAGS)
-#
-# Unlike WRAPPER_CFLAGS, the linker flags will always be needed to ensure that 
-# all of the required libraries are present.
-WRAPPER_LDFLAGS="$LDFLAGS $THR_LDFLAGS"
-export WRAPPER_LDFLAGS
-AC_SUBST(WRAPPER_CFLAGS)
-AC_SUBST(WRAPPER_CXXFLAGS)
-AC_SUBST(WRAPPER_FFLAGS)
-AC_SUBST(WRAPPER_F90FLAGS)
-AC_SUBST(WRAPPER_LDFLAGS)
-#
 # Add a definition that is used to help support Windows DLLs (used in mpi.h.in)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
@@ -6464,37 +6415,6 @@ AC_OUTPUT_COMMANDS([chmod a+x src/util/dbg/getfuncstack])
 
 AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 
-# ----------------------------------------------------------------------------
-# Set the compiler flags.  There are two components to each of the compiler
-# flags:
-#
-# 1. Flags used to compile MPICH2 but not needed to compile user programs,
-#    for example, optimization options.  
-#
-# 2. Flags that change the language accepted by the compiler or the code
-#    generated by the compiler.  For example, an option to change from 
-#    32-bit to 64 bit instructions, or to generate only lower-case external 
-#    names.  
-#    (An alternate approach is to provide them directly in the variable
-#    that names the compiler, e.g., CC for the C compiler.)
-# 
-# Because of the way that configure works, the flags used to compile
-# MPICH must be placed in the "usual" places, e.g. CFLAGS (the values
-# are captured during the [AC_INIT] step).
-#
-# Normally, the flags used in 1 and 2 will be the same.  If the user needs
-# different flags in the building MPICH2 libraries than those in the
-# compilation scripts, they can set CFLAGS and MPICH2LIB_CFLAGS during
-# configure, where $CFLAGS + $MPICH2LIB_CFLAGS will be used to build
-# MPICH2 libraries, only $CFLAGS will be used in the MPI compiler
-# wrapper script.
-#
-AC_ARG_VAR( MPICH2LIB_CFLAGS, [extra CFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicc script(Only standard CFLAGS will be used in the mpicc script).  CFLAGS and MPICH2LIB_CFLAGS are non-overlapping] )
-AC_ARG_VAR( MPICH2LIB_CXXFLAGS, [extra CXXFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpicxx script(Only standard CXXFLAGS will be used in the mpicxx script).  CXXFLAGS and MPICH2LIB_CXXFLAGS are non-overlapping.] )
-AC_ARG_VAR( MPICH2LIB_FFLAGS, [extra FFLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif77 script(Only standard FFLAGS will be used in the mpif77 script).  FFLAGS and MPICH2LIB_FFLAGS are non-overlapping.] )
-AC_ARG_VAR( MPICH2LIB_F90FLAGS, [extra F90FLAGS used in building MPICH2 libraries, this flags won't be passed down to the mpif90 script(Only standard F90FLAGS will be used in the mpif90 script).  F90FLAGS and MPICH2LIB_F90FLAGS are non-overlapping.] )
-
-# AC_ARG_VAR( MPICH2LIB_LDFLAGS, [extra LDFLAGS used in building MPICH2 libraries, this flags won't be used in any of mpiXXX script.  LDFLAGS and MPICH2LIB_LDFLAGS are non-overlapping.] )
 
 # For the examples, we want to use the scripts to encourage users
 # to use them and to make them work more robustly with shared libraries
@@ -6519,10 +6439,6 @@ if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
 fi
 
-dnl Place holder macro for finalize
-PAC_MPICH2_FINALIZE()
-
-dnl
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
 AC_OUTPUT(Makefile src/Makefile src/include/Makefile \

@@ -8,8 +8,6 @@ AC_INIT([MPL], [0.1])
 AC_CONFIG_AUX_DIR(confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.10])
 
-PAC_SUBCONFIG_INIT()
-
 AC_CONFIG_HEADER([include/config.h])
 AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 
@@ -42,9 +40,6 @@ fi
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
-
-dnl Place holder macro for finalization
-PAC_SUBCONFIG_FINALIZE()
 
 dnl Final output
 AC_OUTPUT(Makefile)

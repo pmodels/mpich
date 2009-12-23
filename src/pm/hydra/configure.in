@@ -9,6 +9,9 @@ AC_CONFIG_AUX_DIR(mpl/confdb)
 AC_CONFIG_MACRO_DIR(mpl/confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
+# Reset the previous variables
+PAC_RESET_FLAGS()
+
 AC_CONFIG_HEADER(include/hydra_config.h)
 
 # Non-verbose make

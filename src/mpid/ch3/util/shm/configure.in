@@ -6,15 +6,6 @@ dnl config.guess
 dnl
 AC_CONFIG_AUX_DIR(../../../../../confdb)
 
-dnl The MPICH2 top-level configure adds a bunch of flags to the
-dnl user-defined CFLAGS by processing different configure command-line
-dnl arguments (--enable-g, --enable-default-optimization). These updated
-dnl flags are passed down as a separate flag. Here, we don't care about
-dnl the user-defined flags, but rather this updated flags, so we just
-dnl overwrite CFLAGS with them.
-PAC_SUBCONFIG_INIT()
-
-dnl
 dnl Definitions will be placed in this file rather than in the DEFS variable
 dnl
 AC_CONFIG_HEADER(mpidi_ch3shm_conf.h)
@@ -169,9 +160,6 @@ export LIBTOOL
 # which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
 # CPPFLAGS
 CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
-
-dnl Place holder macro for finalization
-PAC_SUBCONFIG_FINALIZE()
 
 dnl Note that once dependencies are enabled, we always try to
 dnl update the dependencies (that is usually the desired behavior)
