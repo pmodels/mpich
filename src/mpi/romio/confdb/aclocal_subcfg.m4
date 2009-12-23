@@ -1,10 +1,18 @@
-dnl PAC_RESET_FLAGS - Reset precious flags to those set by the user
-AC_DEFUN([PAC_RESET_FLAGS],[
+dnl PAC_RESET_ALL_FLAGS - Reset precious flags to those set by the user
+AC_DEFUN([PAC_RESET_ALL_FLAGS],[
 	if test "$FROM_MPICH2" = "yes" ; then
 	   CFLAGS="$USER_CFLAGS"
 	   CXXFLAGS="$USER_CXXFLAGS"
 	   FFLAGS="$USER_FFLAGS"
 	   F90FLAGS="$USER_F90FLAGS"
+	   LDFLAGS="$USER_LDFLAGS"
+	   LIBS="$USER_LIBS"
+	fi
+])
+
+dnl PAC_RESET_LINK_FLAGS - Reset precious link flags to those set by the user
+AC_DEFUN([PAC_RESET_LINK_FLAGS],[
+	if test "$FROM_MPICH2" = "yes" ; then
 	   LDFLAGS="$USER_LDFLAGS"
 	   LIBS="$USER_LIBS"
 	fi
