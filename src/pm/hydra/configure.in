@@ -404,11 +404,20 @@ for hydra_demux_name in ${hydra_demux_names}; do
 		;;
     esac
 done
+
 hydra_demux_names=$available_demux_names
+
+for hydra_demux_name in ${hydra_demux_names}; do
+    if test -z "${hydra_default_demux}" ; then
+       hydra_default_demux=$hydra_demux_name
+    fi
+done
+
 AM_CONDITIONAL([hydra_have_poll], [test "${have_poll}" = "yes"])
 AM_CONDITIONAL([hydra_have_select], [test "${have_select}" = "yes"])
 AM_CONDITIONAL([hydra_have_port], [test "${have_port}" = "yes"])
 AC_DEFINE_UNQUOTED(HYDRA_DEMUX_NAMES,"$hydra_demux_names",[Definition of enabled demux engines])
+AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_DEMUX,"$hydra_default_demux", [Default demux engine])
 
 
 #########################################################################

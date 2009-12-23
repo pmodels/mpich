@@ -715,6 +715,12 @@ static HYD_status set_default_values(void)
     if (HYD_handle.rmk == NULL && tmp)
         HYD_handle.rmk = HYDU_strdup(tmp);
 
+    tmp = getenv("HYDRA_DEMUX");
+    if (HYD_handle.user_global.demux == NULL && tmp)
+        HYD_handle.user_global.demux = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.demux == NULL)
+        HYD_handle.user_global.demux = HYDU_strdup(HYDRA_DEFAULT_DEMUX);
+
     tmp = getenv("HYDRA_HOST_FILE");
     if (HYD_handle.node_list == NULL && tmp) {
         status = HYDU_parse_hostfile(tmp, process_mfile_token);
