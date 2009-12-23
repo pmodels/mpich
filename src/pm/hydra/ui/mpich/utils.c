@@ -831,7 +831,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 
         /* Check if its absolute or relative */
         if (post[0] != '/') {   /* relative */
-            tmp[0] = HYDU_strdup(HYDU_getcwd());
+            tmp[0] = HYDU_getcwd();
             tmp[1] = HYDU_strdup("/");
             tmp[2] = HYDU_strdup(post);
             tmp[3] = NULL;
@@ -843,6 +843,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             HYD_handle.base_path = HYDU_strdup(post);
         }
     }
+    HYDU_FREE(post);
 
     status = set_default_values();
     HYDU_ERR_POP(status, "setting default values failed\n");

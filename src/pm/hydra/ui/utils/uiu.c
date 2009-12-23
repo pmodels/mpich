@@ -69,6 +69,9 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.user_global.bootstrap)
         HYDU_FREE(HYD_handle.user_global.bootstrap);
 
+    if (HYD_handle.user_global.demux)
+        HYDU_FREE(HYD_handle.user_global.demux);
+
     if (HYD_handle.user_global.bootstrap_exec)
         HYDU_FREE(HYD_handle.user_global.bootstrap_exec);
 
@@ -89,6 +92,9 @@ void HYD_uiu_free_params(void)
 
     if (HYD_handle.pg_list.proxy_list)
         HYDU_free_proxy_list(HYD_handle.pg_list.proxy_list);
+
+    if (HYD_handle.pg_list.next)
+        HYDU_free_pg_list(HYD_handle.pg_list.next);
 
     /* Re-initialize everything to default values */
     HYD_uiu_init_params();

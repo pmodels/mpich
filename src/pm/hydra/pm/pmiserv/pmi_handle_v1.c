@@ -62,6 +62,7 @@ static HYD_status fn_initack(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to add process to pg\n");
 
   fn_exit:
+    HYD_pmcd_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -306,6 +307,7 @@ static HYD_status fn_put(int fd, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    HYD_pmcd_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -413,6 +415,7 @@ static HYD_status fn_get(int fd, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    HYD_pmcd_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -500,7 +503,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     int nprocs, preput_num, info_num;
     char *execname, *path = NULL;
 
-    struct HYD_pmcd_token_segment *segment_list;
+    struct HYD_pmcd_token_segment *segment_list = NULL;
 
     int token_count, i, j, k, pmi_id = -1, new_pgid, total_spawns, offset, argcnt;
     char *pmi_port, *control_port, *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
@@ -669,7 +672,6 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
         exec->user_env = env;
     }
 
-
     status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "unable to allocate pg scratch space\n");
 
@@ -712,6 +714,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
     status = HYDU_create_proxy_list(exec_list, HYD_handle.node_list, pg, offset);
     HYDU_ERR_POP(status, "error creating proxy list\n");
+    HYDU_free_exec_list(exec_list);
 
     status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &control_port,
                                                  HYD_pmcd_pmi_serv_control_connect_cb,
@@ -764,13 +767,16 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
     status = HYD_pmcd_pmi_fill_in_proxy_args(proxy_args, control_port, new_pgid);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
+    HYDU_FREE(control_port);
 
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
+    HYDU_FREE(pmi_port);
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, 0, HYD_handle.stdout_cb,
                                     HYD_handle.stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
+    HYDU_free_node_list(node_list);
 
     {
         char *cmd_str[HYD_NUM_TMP_STRINGS], *cmd;
@@ -790,7 +796,10 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     }
 
   fn_exit:
-    HYDU_FREE(execname);
+    HYD_pmcd_free_tokens(tokens, token_count);
+    HYDU_free_strlist(proxy_args);
+    if (segment_list)
+        HYDU_FREE(segment_list);
     HYDU_FUNC_EXIT();
     return status;
 

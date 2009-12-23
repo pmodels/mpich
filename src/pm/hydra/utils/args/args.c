@@ -301,6 +301,9 @@ HYD_status HYDU_parse_hostfile(char *hostfile,
             status = process_token(tokens[i], !i);
             HYDU_ERR_POP(status, "unable to process token\n");
         }
+
+        HYDU_free_strlist(tokens);
+        HYDU_FREE(tokens);
     }
 
     fclose(fp);

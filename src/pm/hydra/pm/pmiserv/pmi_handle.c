@@ -41,6 +41,15 @@ HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
     goto fn_exit;
 }
 
+void HYD_pmcd_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
+{
+    int i;
+
+    for (i = 0; i < token_count; i++)
+        HYDU_FREE(tokens[i].key);
+    HYDU_FREE(tokens);
+}
+
 HYD_status HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
                                    struct HYD_pmcd_token_segment *segment_list)
 {
@@ -304,7 +313,6 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank)
     goto fn_exit;
 }
 
-
 struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd)
 {
     struct HYD_pg *pg;
@@ -331,7 +339,10 @@ struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd)
 HYD_status HYD_pmcd_pmi_finalize(void)
 {
     struct HYD_pg *pg;
+    struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_pmcd_pmi_process *process, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -344,6 +355,24 @@ HYD_status HYD_pmcd_pmi_finalize(void)
 
         status = free_pmi_kvs_list(pg_scratch->kvs);
         HYDU_ERR_POP(status, "unable to free kvs list\n");
+
+        HYDU_FREE(pg_scratch);
+        pg->pg_scratch = NULL;
+
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+            proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+
+            for (process = proxy_scratch->process_list; process;) {
+                tmp = process->next;
+                HYDU_FREE(process);
+                process = tmp;
+            }
+
+            status = free_pmi_kvs_list(proxy_scratch->kvs);
+            HYDU_ERR_POP(status, "unable to free kvs list\n");
+
+            HYDU_FREE(proxy_scratch);
+        }
     }
 
   fn_exit:

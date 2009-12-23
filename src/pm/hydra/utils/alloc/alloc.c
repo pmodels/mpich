@@ -179,6 +179,8 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
         while (exec) {
             texec = exec->next;
             HYDU_free_strlist(exec->exec);
+            if (exec->wdir)
+                HYDU_FREE(exec->wdir);
             if (exec->user_env)
                 HYDU_env_free(exec->user_env);
             if (exec->env_prop)

@@ -63,10 +63,17 @@ HYD_status HYDT_bscd_rsh_launch_procs(char **args, struct HYD_node *node_list,
     HYDU_FREE(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
+    targs[host_idx] = NULL;
+    targs[idx] = NULL;
     for (i = 0, node = node_list; node; node = node->next, i++) {
+
+        if (targs[host_idx])
+            HYDU_FREE(targs[host_idx]);
         targs[host_idx] = HYDU_strdup(node->hostname);
 
         /* append proxy ID */
+        if (targs[idx])
+            HYDU_FREE(targs[idx]);
         targs[idx] = HYDU_int_to_str(i);
         targs[idx + 1] = NULL;
 
