@@ -81,7 +81,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, &HYD_handle.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDU_dmx_stdin_valid(&enable_stdin);
+    status = HYDT_dmx_stdin_valid(&enable_stdin);
     HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, enable_stdin, HYD_handle.stdout_cb,

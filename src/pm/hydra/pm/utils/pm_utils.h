@@ -7,6 +7,8 @@
 #ifndef PM_UTILS_H_INCLUDED
 #define PM_UTILS_H_INCLUDED
 
+#include "demux.h"
+
 /* The set of commands supported */
 enum HYD_pmu_cmd {
     PROC_INFO,

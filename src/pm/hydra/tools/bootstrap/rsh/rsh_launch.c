@@ -85,15 +85,15 @@ HYD_status HYDT_bscd_rsh_launch_procs(char **args, struct HYD_node *node_list,
         /* Register stdio callbacks for the spawned process */
         if (i == 0 && enable_stdin) {
             fd = STDIN_FILENO;
-            status = HYDU_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
+            status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
-        status = HYDU_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, stdout_cb,
+        status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, stdout_cb,
                                       HYDT_bscu_inter_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        status = HYDU_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb,
+        status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb,
                                       HYDT_bscu_inter_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }

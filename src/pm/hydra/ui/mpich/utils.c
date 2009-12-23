@@ -522,6 +522,19 @@ static HYD_status ckpointlib_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.ckpointlib);
 }
 
+static void demux_help_fn(void)
+{
+    printf("\n");
+    printf("-demux: Demux engine to use\n\n");
+    printf("Notes:\n");
+    printf("  * Use the -info option to see what all are compiled in\n\n");
+}
+
+static HYD_status demux_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.demux);
+}
+
 static void verbose_help_fn(void)
 {
     printf("\n");
@@ -561,8 +574,14 @@ static HYD_status info_fn(char *arg, char ***argv)
                        "    Binding libraries available:             %s\n",
                        HYDRA_BINDLIB_NAMES);
     HYDU_dump_noprefix(stdout,
+                       "    Resource management kernels available:   %s\n",
+                       HYDRA_RMK_NAMES);
+    HYDU_dump_noprefix(stdout,
                        "    Checkpointing libraries available:       %s\n",
                        HYDRA_CKPOINTLIB_NAMES);
+    HYDU_dump_noprefix(stdout,
+                       "    Demux engines available:                 %s\n",
+                       HYDRA_DEMUX_NAMES);
 
     HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
 
@@ -644,6 +663,9 @@ static struct HYD_arg_match_table match_table[] = {
     {"ckpoint-interval", ckpoint_interval_fn, ckpoint_interval_help_fn},
     {"ckpoint-prefix", ckpoint_prefix_fn, ckpoint_prefix_help_fn},
     {"ckpointlib", ckpointlib_fn, ckpointlib_help_fn},
+
+    /* Demux engine options */
+    {"demux", demux_fn, demux_help_fn},
 
     /* Other hydra options */
     {"verbose", verbose_fn, verbose_help_fn},

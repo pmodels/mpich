@@ -10,6 +10,7 @@
 #include "rmki.h"
 #include "pmci.h"
 #include "bsci.h"
+#include "demux.h"
 #include "uiu.h"
 
 struct HYD_handle HYD_handle = { {0} };
@@ -83,6 +84,10 @@ static void usage(void)
     printf("    -ckpointlib                      checkpointing library (blcr)\n");
 
     printf("\n");
+    printf("  Demux engine options:\n");
+    printf("    -demux                           demux engine\n");
+
+    printf("\n");
     printf("  Other Hydra options:\n");
     printf("    -verbose                         verbose mode\n");
     printf("    -info                            build information\n");
@@ -112,6 +117,9 @@ int main(int argc, char **argv)
         usage();
         goto fn_fail;
     }
+
+    status = HYDT_dmx_init(&HYD_handle.user_global.demux);
+    HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
     status = HYDT_bsci_init(HYD_handle.user_global.bootstrap,
                             HYD_handle.user_global.bootstrap_exec,

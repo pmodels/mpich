@@ -5,6 +5,7 @@
  */
 
 #include "hydra_utils.h"
+#include "demux.h"
 
 struct fwd_hash {
     int in;
@@ -508,7 +509,7 @@ HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
     /* Register the listening socket with the demux engine */
-    status = HYDU_dmx_register_fd(1, &listenfd, HYD_POLLIN, userp, callback);
+    status = HYDT_dmx_register_fd(1, &listenfd, HYD_POLLIN, userp, callback);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */

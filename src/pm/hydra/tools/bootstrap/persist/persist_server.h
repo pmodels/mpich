@@ -8,6 +8,7 @@
 #define PERSIST_SERVER_H_INCLUDED
 
 #include "hydra_base.h"
+#include "demux.h"
 #include "persist.h"
 
 struct HYDT_persist_handle {

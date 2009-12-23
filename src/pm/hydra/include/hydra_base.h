@@ -229,6 +229,9 @@ struct HYD_user_global {
     char *ckpointlib;
     char *ckpoint_prefix;
 
+    /* Demux engine */
+    char *demux;
+
     /* Other random parameters */
     int enablex;
     int debug;

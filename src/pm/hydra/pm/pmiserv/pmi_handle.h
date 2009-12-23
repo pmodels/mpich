@@ -8,6 +8,7 @@
 #define PMI_HANDLE_H_INCLUDED
 
 #include "hydra_base.h"
+#include "demux.h"
 
 /* PMI-1 specific definitions */
 extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v1;

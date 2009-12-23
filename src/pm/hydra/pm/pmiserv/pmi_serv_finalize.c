@@ -22,7 +22,7 @@ HYD_status HYD_pmci_finalize(void)
     status = HYDT_bsci_finalize();
     HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
 
-    status = HYDU_dmx_finalize();
+    status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
   fn_exit:

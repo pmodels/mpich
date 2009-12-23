@@ -8,6 +8,7 @@
 #define BSCU_H_INCLUDED
 
 #include "hydra_base.h"
+#include "demux.h"
 
 extern int *HYD_bscu_fd_list;
 extern int HYD_bscu_fd_count;

@@ -440,7 +440,7 @@ static HYD_status fn_finalize(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
     if (status == HYD_SUCCESS) {
-        status = HYDU_dmx_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to register fd\n");
         close(fd);
     }

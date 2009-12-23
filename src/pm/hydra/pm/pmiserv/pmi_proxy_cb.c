@@ -25,7 +25,7 @@ HYD_status HYD_pmcd_pmi_proxy_control_cmd_cb(int fd, HYD_event_t events, void *u
     HYDU_ERR_POP(status, "error reading command from launcher\n");
     if (cmd_len == 0) {
         /* The connection has closed */
-        status = HYDU_dmx_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
         close(fd);
         goto fn_exit;
@@ -79,7 +79,7 @@ HYD_status HYD_pmcd_pmi_proxy_stdout_cb(int fd, HYD_event_t events, void *userp)
 
     if (closed) {
         /* The connection has closed */
-        status = HYDU_dmx_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
@@ -110,7 +110,7 @@ HYD_status HYD_pmcd_pmi_proxy_stderr_cb(int fd, HYD_event_t events, void *userp)
 
     if (closed) {
         /* The connection has closed */
-        status = HYDU_dmx_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
@@ -140,7 +140,7 @@ HYD_status HYD_pmcd_pmi_proxy_stdin_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "stdin forwarding error\n");
 
     if (closed) {
-        status = HYDU_dmx_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "unable to deregister fd\n");
 
         close(fd);

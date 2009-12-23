@@ -8,6 +8,7 @@
 #define PERSIST_CLIENT_H_INCLUDED
 
 #include "hydra_base.h"
+#include "bscu.h"
 #include "persist.h"
 
 HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list,

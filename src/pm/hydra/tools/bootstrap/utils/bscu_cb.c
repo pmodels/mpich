@@ -24,7 +24,7 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
 
     if (buflen == 0 || (events & HYD_POLLHUP)) {
         /* connection has closed */
-        status = HYDU_dmx_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
 
         for (i = 0; i < HYD_bscu_fd_count; i++) {
@@ -61,7 +61,7 @@ HYD_status HYDT_bscu_stdin_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "stdin forwarding error\n");
 
     if (closed || (events & HYD_POLLHUP)) {
-        status = HYDU_dmx_deregister_fd(fd);
+        status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
 
         for (i = 0; i < HYD_bscu_fd_count; i++) {

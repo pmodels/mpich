@@ -77,6 +77,9 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
     if (HYD_pmcd_pmip.user_global.ckpoint_prefix)
         HYDU_FREE(HYD_pmcd_pmip.user_global.ckpoint_prefix);
 
+    if (HYD_pmcd_pmip.user_global.demux)
+        HYDU_FREE(HYD_pmcd_pmip.user_global.demux);
+
     if (HYD_pmcd_pmip.user_global.global_env.system)
         HYDU_env_free_list(HYD_pmcd_pmip.user_global.global_env.system);
 
@@ -167,6 +170,11 @@ static HYD_status debug_fn(char *arg, char ***argv)
 static HYD_status bootstrap_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bootstrap);
+}
+
+static HYD_status demux_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.demux);
 }
 
 static HYD_status enable_stdin_fn(char *arg, char ***argv)
@@ -412,6 +420,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
     {"bootstrap", bootstrap_fn, NULL},
+    {"demux", demux_fn, NULL},
     {"enable-stdin", enable_stdin_fn, NULL},
 
     /* Executable parameters */
@@ -466,6 +475,12 @@ HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.upstream.server_port == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "server port not available\n");
+
+    if (HYD_pmcd_pmip.user_global.demux == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
+
+    status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
+    HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
     if (HYD_pmcd_pmip.user_global.bootstrap == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bootstrap server not available\n");
@@ -767,7 +782,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 
                 if (HYD_pmcd_pmip.system_global.enable_stdin) {
                     stdin_fd = STDIN_FILENO;
-                    status = HYDU_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
+                    status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
                                                   HYD_pmcd_pmi_proxy_stdin_cb);
                     HYDU_ERR_POP(status, "unable to register fd\n");
                 }
@@ -790,12 +805,12 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 
   fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
-    status = HYDU_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
+    status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.out,
                                   HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_stdout_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYDU_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
+    status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.err,
                                   HYD_POLLIN, NULL, HYD_pmcd_pmi_proxy_stderr_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
