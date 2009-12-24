@@ -52,6 +52,8 @@ static HYD_status fn_initack(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "error while joining strings\n");
     HYDU_free_strlist(tmp);
 
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
@@ -92,6 +94,8 @@ static HYD_status fn_get_maxes(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
@@ -144,6 +148,8 @@ static HYD_status fn_get_appnum(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
@@ -184,6 +190,8 @@ static HYD_status fn_get_my_kvsname(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
@@ -223,6 +231,8 @@ static HYD_status fn_barrier_in(int fd, int pgid, char *args[])
         for (proxy = process->proxy->pg->proxy_list; proxy; proxy = proxy->next) {
             proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
             for (prun = proxy_scratch->process_list; prun; prun = prun->next) {
+                if (HYD_handle.user_global.debug)
+                    HYDU_dump(stdout, "reply to %d: %s\n", prun->fd, cmd);
                 status = HYDU_sock_writeline(prun->fd, cmd, strlen(cmd));
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
@@ -302,6 +312,8 @@ static HYD_status fn_put(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
@@ -410,6 +422,8 @@ static HYD_status fn_get(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
@@ -439,6 +453,8 @@ static HYD_status fn_finalize(int fd, int pgid, char *args[])
     process->fd = -1;
 
     cmd = "cmd=finalize_ack\n";
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
@@ -477,6 +493,8 @@ static HYD_status fn_get_usize(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "reply: %s\n", cmd);
     status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
@@ -790,6 +808,8 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(cmd_str);
 
+        if (HYD_handle.user_global.debug)
+            HYDU_dump(stdout, "reply: %s\n", cmd);
         status = HYDU_sock_writeline(fd, cmd, strlen(cmd));
         HYDU_ERR_POP(status, "error writing PMI line\n");
         HYDU_FREE(cmd);
