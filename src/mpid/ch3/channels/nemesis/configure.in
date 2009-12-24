@@ -97,8 +97,9 @@ PAC_SET_HEADER_LIB_PATH(psm)
 AC_ARG_WITH(newmad, [--with-newmad=path - specify path where pm2 software can be found],
 if test "${with_newmad}" != "yes" -a "${with_newmad}" != "no" ; then
     LDFLAGS="$LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
-    CPPFLAGS="$CPPFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
-    LIBS="$LIBS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
+    WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
+    CFLAGS="$CFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
+    WRAPPER_CFLAGS="$WRAPPER_CFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
 fi,)
 
 nemesis_nets_dirs=""
@@ -526,7 +527,11 @@ AC_SUBST(CPPFLAGS)
 PAC_CC_SUBDIR_SHLIBS
 AC_SUBST(master_top_srcdir)
 AC_SUBST(master_top_builddir)
-dnl
+
+AC_SUBST(WRAPPER_CFLAGS)
+AC_SUBST(WRAPPER_LDFLAGS)
+AC_SUBST(WRAPPER_LIBS)
+
 dnl Dependency handling
 AC_SUBST(MAKE_DEPEND_C)
 
