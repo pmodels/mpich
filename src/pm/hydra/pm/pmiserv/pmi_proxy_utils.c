@@ -11,6 +11,7 @@
 #include "hydra_utils.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
+static const char *iface_ip = NULL;
 
 static HYD_status init_params(void)
 {
@@ -79,6 +80,9 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 
     if (HYD_pmcd_pmip.user_global.demux)
         HYDU_FREE(HYD_pmcd_pmip.user_global.demux);
+
+    if (HYD_pmcd_pmip.user_global.iface)
+        HYDU_FREE(HYD_pmcd_pmip.user_global.iface);
 
     if (HYD_pmcd_pmip.user_global.global_env.system)
         HYDU_env_free_list(HYD_pmcd_pmip.user_global.global_env.system);
@@ -175,6 +179,45 @@ static HYD_status bootstrap_fn(char *arg, char ***argv)
 static HYD_status demux_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.demux);
+}
+
+static HYD_status iface_fn(char *arg, char ***argv)
+{
+    struct ifaddrs *ifaddr, *ifa;
+    char buf[MAX_HOSTNAME_LEN];
+    struct sockaddr_in *sa;
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.iface);
+    HYDU_ERR_POP(status, "unable to get the network interface name\n");
+
+    /* Got the interface name; let's query for the IP address */
+    if (getifaddrs(&ifaddr) == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
+
+    for (ifa = ifaddr; ifa; ifa = ifa->ifa_next)
+        if (!strcmp(ifa->ifa_name, HYD_pmcd_pmip.user_global.iface) &&
+            (ifa->ifa_addr->sa_family == AF_INET))
+            break;
+
+    if (!ifa)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unable to find interface %s\n",
+                             HYD_pmcd_pmip.user_global.iface);
+
+    sa = (struct sockaddr_in *) ifa->ifa_addr;
+    iface_ip = inet_ntop(AF_INET, (void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN);
+    if (!iface_ip)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unable to find IP for interface %s\n",
+                             HYD_pmcd_pmip.user_global.iface);
+
+    freeifaddrs(ifaddr);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status enable_stdin_fn(char *arg, char ***argv)
@@ -421,6 +464,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"debug", debug_fn, NULL},
     {"bootstrap", bootstrap_fn, NULL},
     {"demux", demux_fn, NULL},
+    {"iface", iface_fn, NULL},
     {"enable-stdin", enable_stdin_fn, NULL},
 
     /* Executable parameters */
@@ -734,13 +778,25 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         HYDU_ERR_POP(status, "unable to add env to list\n");
 
         /* Set the interface hostname based on what the user provided */
-        if (HYD_pmcd_pmip.local.hostname && HYD_pmcd_pmip.local.interface_env_name) {
-            status = HYDU_env_create(&env, HYD_pmcd_pmip.local.interface_env_name,
-                                     HYD_pmcd_pmip.local.hostname);
-            HYDU_ERR_POP(status, "unable to create env\n");
+        if (HYD_pmcd_pmip.local.interface_env_name) {
+            if (iface_ip) {
+                /* The user asked us to use a specific interface; let's find it */
+                status = HYDU_env_create(&env, HYD_pmcd_pmip.local.interface_env_name,
+                                         (char *) iface_ip);
+                HYDU_ERR_POP(status, "unable to create env\n");
 
-            status = HYDU_append_env_to_list(*env, &prop_env);
-            HYDU_ERR_POP(status, "unable to add env to list\n");
+                status = HYDU_append_env_to_list(*env, &prop_env);
+                HYDU_ERR_POP(status, "unable to add env to list\n");
+            }
+            else if (HYD_pmcd_pmip.local.hostname) {
+                /* The second choice is the hostname the user gave */
+                status = HYDU_env_create(&env, HYD_pmcd_pmip.local.interface_env_name,
+                                         HYD_pmcd_pmip.local.hostname);
+                HYDU_ERR_POP(status, "unable to create env\n");
+
+                status = HYDU_append_env_to_list(*env, &prop_env);
+                HYDU_ERR_POP(status, "unable to add env to list\n");
+            }
         }
 
         if (exec->wdir && chdir(exec->wdir) < 0)

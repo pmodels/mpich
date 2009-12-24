@@ -18,6 +18,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->ckpoint_prefix = NULL;
 
     user_global->demux = NULL;
+    user_global->iface = NULL;
 
     user_global->enablex = -1;
     user_global->debug = -1;

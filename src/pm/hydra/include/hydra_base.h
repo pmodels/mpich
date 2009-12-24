@@ -46,6 +46,14 @@
 #include <sys/time.h>
 #endif /* HAVE_SYS_TIME_H */
 
+#if defined HAVE_IFADDRS_H
+#include <ifaddrs.h>
+#endif /* HAVE_IFADDRS_H */
+
+#if defined HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif /* HAVE_ARPA_INET_H */
+
 #include <errno.h>
 
 #if !defined HAVE_GETTIMEOFDAY
@@ -231,6 +239,9 @@ struct HYD_user_global {
 
     /* Demux engine */
     char *demux;
+
+    /* Network interface */
+    char *iface;
 
     /* Other random parameters */
     int enablex;

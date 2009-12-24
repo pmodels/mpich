@@ -614,6 +614,17 @@ static HYD_status print_all_exitcodes_fn(char *arg, char ***argv)
     return HYDU_set_int(arg, argv, &HYD_handle.print_all_exitcodes, 1);
 }
 
+static void iface_help_fn(void)
+{
+    printf("\n");
+    printf("-iface: Network interface to use (e.g., eth0, eth1, myri0, ib0)\n\n");
+}
+
+static HYD_status iface_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.iface);
+}
+
 static struct HYD_arg_match_table match_table[] = {
     /* Global environment options */
     {"genv", genv_fn, genv_help_fn},
@@ -674,6 +685,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"info", info_fn, info_help_fn},
     {"print-rank-map", print_rank_map_fn, print_rank_map_help_fn},
     {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
+    {"iface", iface_fn, iface_help_fn},
 
     {"\0", NULL}
 };
@@ -720,6 +732,10 @@ static HYD_status set_default_values(void)
         HYD_handle.user_global.demux = HYDU_strdup(tmp);
     if (HYD_handle.user_global.demux == NULL)
         HYD_handle.user_global.demux = HYDU_strdup(HYDRA_DEFAULT_DEMUX);
+
+    tmp = getenv("HYDRA_IFACE");
+    if (HYD_handle.user_global.iface == NULL && tmp)
+        HYD_handle.user_global.iface = HYDU_strdup(tmp);
 
     tmp = getenv("HYDRA_HOST_FILE");
     if (HYD_handle.node_list == NULL && tmp) {

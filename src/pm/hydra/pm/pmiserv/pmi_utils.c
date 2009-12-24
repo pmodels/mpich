@@ -52,6 +52,11 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     proxy_args[arg++] = HYDU_strdup("--demux");
     proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.demux);
 
+    if (HYD_handle.user_global.iface) {
+        proxy_args[arg++] = HYDU_strdup("--iface");
+        proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.iface);
+    }
+
     proxy_args[arg++] = HYDU_strdup("--pgid");
     proxy_args[arg++] = HYDU_int_to_str(pgid);
 

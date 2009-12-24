@@ -93,6 +93,7 @@ static void usage(void)
     printf("    -info                            build information\n");
     printf("    -print-rank-map                  print rank mapping\n");
     printf("    -print-all-exitcodes             print exit codes of all processes\n");
+    printf("    -iface                           network interface to use\n");
 }
 
 

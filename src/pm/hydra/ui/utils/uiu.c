@@ -72,6 +72,9 @@ void HYD_uiu_free_params(void)
     if (HYD_handle.user_global.demux)
         HYDU_FREE(HYD_handle.user_global.demux);
 
+    if (HYD_handle.user_global.iface)
+        HYDU_FREE(HYD_handle.user_global.iface);
+
     if (HYD_handle.user_global.bootstrap_exec)
         HYDU_FREE(HYD_handle.user_global.bootstrap_exec);
 
