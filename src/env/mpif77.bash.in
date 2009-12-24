@@ -35,8 +35,7 @@ exec_prefix=@exec_prefix@
 sysconfdir=@sysconfdir@
 includedir=@includedir@
 libdir=@libdir@
-opalibdir=@libdir@
-#
+
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
@@ -248,9 +247,9 @@ fi
 # default, environment, configuration file (if any) and command-line
 # options (if any)
 if [ "$NEEDSPLIB" = yes ] ; then
-    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME -lopa"
+    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME"
 else
-    mpilibs="-l$MPILIBNAME -lopa"
+    mpilibs="-l$MPILIBNAME"
 fi
 #
 # Init with the ones needed by MPI
@@ -276,10 +275,10 @@ if [ -n "$profConf" ] ; then
 	    FFLAGS="$PROFILE_INCPATHS $FFLAGS"
         fi
         if [ -n "$PROFILE_PRELIB" ] ; then
-	    mpilibs="$PROFILE_PRELIB $mpilibs -lopa"
+	    mpilibs="$PROFILE_PRELIB $mpilibs"
         fi
         if [ -n "$PROFILE_POSTLIB" ] ; then
-	    mpilibs="$mpilibs $PROFILE_POSTLIB -lopa"
+	    mpilibs="$mpilibs $PROFILE_POSTLIB"
         fi
     fi
 fi
@@ -294,7 +293,7 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         mpilibs="$FC_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $FC $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $mpilibs $LIBS
+    $Show $FC $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir $mpilibs $LIBS
     rc=$?
 else
     $Show $FC $FFLAGS "${allargs[@]}" -I$includedir

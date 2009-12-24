@@ -8,7 +8,7 @@
 # This script knows the default flags and libraries, and can handle
 # alternative C compilers and the associated flags and libraries.
 # The important terms are:
-#    includedir, libdir, opalibdir - Directories containing an *installed* mpich2
+#    includedir, libdir - Directories containing an *installed* mpich2
 #    prefix, execprefix - Often used to define includedir and libdir
 #    CC                 - C compiler
 #    WRAPPER_CFLAGS        - Any special flags needed to compile 
@@ -33,8 +33,7 @@ exec_prefix=@exec_prefix@
 sysconfdir=@sysconfdir@
 includedir=@includedir@
 libdir=@libdir@
-opalibdir=@libdir@
-#
+
 # Default settings for compiler, flags, and libraries.
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
@@ -193,9 +192,9 @@ fi
 # default, environment, configuration file (if any) and command-line
 # options (if any)
 if [ "$NEEDSPLIB" = yes ] ; then
-    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME -lopa"
+    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME"
 else
-    mpilibs="-l$MPILIBNAME -lopa"
+    mpilibs="-l$MPILIBNAME"
 fi
 #
 # Init with the ones needed by MPI
@@ -246,7 +245,7 @@ if [ "$linking" = yes ] ; then
 	# prepend the path for the shared libraries to the library list
 	mpilibs="$C_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $CC $CFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $mpilibs $LIBS
+    $Show $CC $CFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir $mpilibs $LIBS
     rc=$?
 else
     $Show $CC $CFLAGS "${allargs[@]}" -I$includedir

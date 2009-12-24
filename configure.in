@@ -990,6 +990,8 @@ if test -e "$opadir" ; then
     # be configured before the device itself (e.g. nemesis).
     devsubsystems="src/openpa $devsubsystems"
     other_install_dirs="$other_install_dirs src/openpa"
+
+    PAC_APPEND_FLAG([-lopa],[WRAPPER_LIBS])
 fi
 
 # ----------------------------------------------------------------------------
