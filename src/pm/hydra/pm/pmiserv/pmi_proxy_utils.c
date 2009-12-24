@@ -38,6 +38,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.pgid = -1;
     HYD_pmcd_pmip.local.interface_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
+    HYD_pmcd_pmip.local.local_binding = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
 
@@ -122,6 +123,9 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 
     if (HYD_pmcd_pmip.local.hostname)
         HYDU_FREE(HYD_pmcd_pmip.local.hostname);
+
+    if (HYD_pmcd_pmip.local.local_binding)
+        HYDU_FREE(HYD_pmcd_pmip.local.local_binding);
 
     HYDT_bind_finalize();
 
@@ -332,6 +336,11 @@ static HYD_status hostname_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.local.hostname);
 }
 
+static HYD_status local_binding_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.local.local_binding);
+}
+
 static HYD_status proxy_core_count_fn(char *arg, char ***argv)
 {
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.local.proxy_core_count);
@@ -482,6 +491,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"version", version_fn, NULL},
     {"interface-env-name", interface_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
+    {"local-binding", local_binding_fn, NULL},
     {"proxy-core-count", proxy_core_count_fn, NULL},
     {"start-pid", start_pid_fn, NULL},
     {"exec", exec_fn, NULL},
@@ -589,7 +599,7 @@ static HYD_status parse_exec_params(char **t_argv)
                             "no executable given and doesn't look like a restart either\n");
 
     /* Set default values */
-    if (HYD_pmcd_pmip.user_global.binding == NULL)
+    if (HYD_pmcd_pmip.user_global.binding && HYD_pmcd_pmip.local.local_binding == NULL)
         HYD_pmcd_pmip.user_global.binding = HYDU_strdup("none");
 
     if (HYD_pmcd_pmip.user_global.bindlib == NULL)
@@ -689,8 +699,8 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
         HYD_pmcd_pmip.downstream.exit_status[i] = -1;
 
-    status = HYDT_bind_init(HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.bindlib);
+    status = HYDT_bind_init(HYD_pmcd_pmip.local.local_binding ? HYD_pmcd_pmip.local.local_binding :
+                            HYD_pmcd_pmip.user_global.binding, HYD_pmcd_pmip.user_global.bindlib);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
 
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,

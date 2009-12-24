@@ -147,7 +147,8 @@ static HYD_status genvall_fn(char *arg, char ***argv)
 static HYD_status process_mfile_token(char *token, int newline)
 {
     int num_procs;
-    char *hostname, *procs;
+    char *hostname, *procs, *binding, *tmp, *user_map;
+    struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
     if (newline) {      /* The first entry gives the hostname and processes */
@@ -159,8 +160,23 @@ static HYD_status process_mfile_token(char *token, int newline)
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
     else {      /* Not a new line */
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "token %s not supported at this time\n", token);
+        tmp = strtok(token, "=");
+        if (!strcmp(tmp, "binding")) {
+            binding = strtok(NULL, "=");
+
+            for (node = HYD_handle.node_list; node->next; node = node->next);
+            if (node->local_binding)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate local binding setting\n");
+
+            HYDU_MALLOC(user_map, char *, HYD_TMPBUF_SIZE, status);
+            HYDU_snprintf(user_map, HYD_TMPBUF_SIZE, "user:%s", binding);
+            node->local_binding = HYDU_strdup(user_map);
+            HYDU_FREE(user_map);
+        }
+        else {
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                 "token %s not supported at this time\n", token);
+        }
     }
 
   fn_exit:

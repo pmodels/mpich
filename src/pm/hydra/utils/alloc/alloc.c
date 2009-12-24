@@ -38,6 +38,7 @@ static void init_node(struct HYD_node *node)
 {
     node->hostname = NULL;
     node->core_count = 0;
+    node->local_binding = NULL;
     node->next = NULL;
 }
 
@@ -68,6 +69,10 @@ void HYDU_free_node_list(struct HYD_node *node_list)
 
         if (node->hostname)
             HYDU_FREE(node->hostname);
+
+        if (node->local_binding)
+            HYDU_FREE(node->local_binding);
+
         HYDU_FREE(node);
 
         node = tnode;
@@ -139,6 +144,7 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg)
     (*proxy)->control_fd = -1;
 
     (*proxy)->exec_list = NULL;
+
     (*proxy)->next = NULL;
 
     (*proxy)->proxy_scratch = NULL;
@@ -374,6 +380,8 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
         proxy->proxy_id = i;
         proxy->start_pid = start_pid;
         proxy->node.hostname = HYDU_strdup(node->hostname);
+        if (node->local_binding)
+            proxy->node.local_binding = HYDU_strdup(node->local_binding);
         proxy->node.next = NULL;
 
         /* If we found enough proxies, break out */

@@ -196,6 +196,9 @@ struct HYD_node {
     char *hostname;
     int core_count;
 
+    /* Node-specific binding information */
+    char *local_binding;
+
     struct HYD_node *next;
 };
 
