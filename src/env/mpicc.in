@@ -13,8 +13,8 @@
 #    CC                 - C compiler
 #    WRAPPER_CFLAGS        - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS       - Any special flags needed to link
+#    WRAPPER_LIBS          - Any special libraries needed in order to link
 #    MPILIBNAME         - Name of the MPI library
-#    MPI_OTHERLIBS      - Other libraries needed in order to link 
 #    
 # We assume that (a) the C compiler can both compile and link programs
 #
@@ -42,9 +42,9 @@ CC="@CC@"
 C_LINKPATH_SHL="@C_LINKPATH_SHL@"
 WRAPPER_CFLAGS="@WRAPPER_CFLAGS@"
 WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
+WRAPPER_LIBS="@WRAPPER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
-MPI_OTHERLIBS="@LIBS@"
 NEEDSPLIB="@NEEDSPLIB@"
 # MPICH2_VERSION is the version of the MPICH2 library that mpicc is intended for
 MPICH2_VERSION="@MPICH2_VERSION@"
@@ -210,7 +210,8 @@ fi
 # Init with the ones needed by MPI
 CFLAGS="$WRAPPER_CFLAGS"
 LDFLAGS="$WRAPPER_LDFLAGS"
-#
+LIBS="$WRAPPER_LIBS"
+
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
     profConffile=
@@ -254,10 +255,10 @@ if [ "$linking" = yes ] ; then
 	# prepend the path for the shared libraries to the library list
 	mpilibs="$C_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $CC $MPICH2_MPICC_FLAGS $CFLAGS $LDFLAGS $allargs -I$includedir -L$libdir -L$opalibdir $MPICH2_LDFLAGS $mpilibs $MPI_OTHERLIBS
+    $Show $CC $CFLAGS $LDFLAGS $allargs -I$includedir -L$libdir -L$opalibdir $mpilibs $LIBS
     rc=$?
 else
-    $Show $CC $MPICH2_MPICC_FLAGS $CFLAGS $allargs -I$includedir
+    $Show $CC $CFLAGS $allargs -I$includedir
     rc=$?
 fi
 

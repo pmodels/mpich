@@ -13,8 +13,8 @@
 #    F90                - Fortran 90 compiler
 #    WRAPPER_F90FLAGS      - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS       - Any special flags needed to link
+#    WRAPPER_LIBS          - Any special libraries needed in order to link
 #    MPILIBNAME         - Name of the MPI library
-#    MPI_OTHERLIBS      - Other libraries needed in order to link 
 #    F90_OTHER_LIBS     - Yet more libraries, needed just with F90
 #    
 # We assume that (a) the C compiler can both compile and link programs
@@ -58,9 +58,9 @@ F90EXT="@F90EXT@"
 #
 WRAPPER_F90FLAGS="@WRAPPER_F90FLAGS@"
 WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
+WRAPPER_LIBS="@WRAPPER_LIBS@ @F90_OTHER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
-MPI_OTHERLIBS="@LIBS@ @F90_OTHER_LIBS@"
 NEEDSPLIB="@NEEDSPLIB@"
 # MPICH2_VERSION is the version of the MPICH2 library for which mpif90 is intended
 MPICH2_VERSION="@MPICH2_VERSION@"
@@ -289,7 +289,8 @@ fi
 # Init with the ones needed by MPI
 F90FLAGS="$WRAPPER_F90FLAGS"
 LDFLAGS="$WRAPPER_LDFLAGS"
-#
+LIBS="$WRAPPER_LIBS"
+
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
     profConffile=
@@ -362,10 +363,10 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         mpilibs="$F90_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $F90 $MPICH2_MPIF90_FLAGS $F90FLAGS $LDFLAGS $allargs $F90INCDIRS $F90MODDIRS -L$libdir -L$opalibdir $MPICH2_LDFLAGS $F90MODLIBS $mpilibs $MPI_OTHERLIBS
+    $Show $F90 $F90FLAGS $LDFLAGS $allargs $F90INCDIRS $F90MODDIRS -L$libdir -L$opalibdir $F90MODLIBS $mpilibs $LIBS
     rc=$?
 else
-    $Show $F90 $MPICH2_MPIF90_FLAGS $F90FLAGS $allargs $F90INCDIRS $F90MODDIRS
+    $Show $F90 $F90FLAGS $allargs $F90INCDIRS $F90MODDIRS
     rc=$?
 fi
 if [ -n "$rmfiles" ] ; then

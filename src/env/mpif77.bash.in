@@ -13,8 +13,8 @@
 #    FC                 - Fortran 77 compiler
 #    WRAPPER_FFLAGS        - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS       - Any special flags needed to link
+#    WRAPPER_LIBS          - Any special libraries needed in order to link
 #    MPILIBNAME         - Name of the MPI library
-#    MPI_OTHERLIBS      - Other libraries needed in order to link 
 #    F77_OTHER_LIBS     - Yet more libraries, needed just with F77
 #    
 #    
@@ -45,9 +45,9 @@ FC_LINKPATH_SHL="@FC_LINKPATH_SHL@"
 F77CPP="@F77CPP@"
 WRAPPER_FFLAGS="@WRAPPER_FFLAGS@"
 WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
+WRAPPER_LIBS="@WRAPPER_LIBS@ @F77_OTHER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
-MPI_OTHERLIBS="@LIBS@ @F77_OTHER_LIBS@"
 NEEDSPLIB="@NEEDSPLIB@"
 
 # MPICH2_VERSION is the version of the MPICH2 library for which mpif77 is intended
@@ -256,7 +256,8 @@ fi
 # Init with the ones needed by MPI
 FFLAGS="$WRAPPER_FFLAGS"
 LDFLAGS="$WRAPPER_LDFLAGS"
-#
+LIBS="$WRAPPER_LIBS"
+
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
     profConffile=
@@ -293,10 +294,10 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         mpilibs="$FC_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $FC $MPICH2_MPIF77_FLAGS $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $MPICH2_LDFLAGS $mpilibs $MPI_OTHERLIBS
+    $Show $FC $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $mpilibs $LIBS
     rc=$?
 else
-    $Show $FC $MPICH2_MPIF77_FLAGS $FFLAGS "${allargs[@]}" -I$includedir
+    $Show $FC $FFLAGS "${allargs[@]}" -I$includedir
     rc=$?
 fi
 if [ -n "$rmfiles" ] ; then

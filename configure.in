@@ -5742,7 +5742,11 @@ case $with_thread_package in
         #
         # OSF1 has __pthread_create but not pthread_create (because of
         # inconsistencies in the pthread spec).  Thus, we look for pthread_key_create
-        AC_CHECK_LIB([pthread],[pthread_key_create],[PAC_APPEND_FLAG([-lpthread],[LIBS])],[])
+        AC_CHECK_LIB([pthread],[pthread_key_create],have_pthreads=yes)
+	if test "$have_pthreads" = "yes" ; then
+	   PAC_APPEND_FLAG([-lpthread],[WRAPPER_LIBS])
+	   PAC_APPEND_FLAG([-lpthread],[LIBS])
+	fi
 
         AC_CHECK_FUNCS(pthread_yield)
 

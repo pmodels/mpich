@@ -13,9 +13,9 @@
 #    CXX                - C compiler
 #    WRAPPER_CXXFLAGS      - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS       - Any special flags needed to link
+#    WRAPPER_LIBS          - Any special libraries needed in order to link
 #    MPILIBNAME         - Name of the MPI library
 #    MPICXXLIBNAME      - Name of the C++ binding part of the MPI library
-#    MPI_OTHERLIBS      - Other libraries needed in order to link 
 #    
 # We assume that (a) the C++ compiler can both compile and link programs
 #
@@ -40,10 +40,10 @@ CXX="@CXX@"
 CXX_LINKPATH_SHL="@CXX_LINKPATH_SHL@"
 WRAPPER_CXXFLAGS="@WRAPPER_CXXFLAGS@"
 WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
+WRAPPER_LIBS="@WRAPPER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 MPICXXLIBNAME="@MPICXXLIBNAME@"
-MPI_OTHERLIBS="@LIBS@"
 NEEDSPLIB="@NEEDSPLIB@"
 # MPICH2_VERSION is the version of the MPICH2 library that mpicxx is intended for
 MPICH2_VERSION="@MPICH2_VERSION@"
@@ -209,8 +209,8 @@ fi
 # Init with the ones needed by MPI
 CXXFLAGS="$WRAPPER_CXXFLAGS"
 LDFLAGS="$WRAPPER_LDFLAGS"
-#
-#
+LIBS="$WRAPPER_LIBS"
+
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
     profConffile=
@@ -245,10 +245,10 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         shllibpath="$CXX_LINKPATH_SHL$libdir"
     fi
-    $Show $CXX $MPICH2_MPICXX_FLAGS $CXXFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $shllibpath $MPICH2_LDFLAGS $cxxlibs $mpilibs $MPI_OTHERLIBS
+    $Show $CXX $CXXFLAGS $LDFLAGS "${allargs[@]}" -I$includedir -L$libdir -L$opalibdir $shllibpath $cxxlibs $mpilibs $LIBS
     rc=$?
 else
-    $Show $CXX $MPICH2_MPICXX_FLAGS $CXXFLAGS "${allargs[@]}" -I$includedir
+    $Show $CXX $CXXFLAGS "${allargs[@]}" -I$includedir
     rc=$?
 fi
 
