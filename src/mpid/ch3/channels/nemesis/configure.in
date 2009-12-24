@@ -157,18 +157,21 @@ for net in $nemesis_networks ; do
 
     if test "${net}" = "gm" ; then
        PAC_CHECK_HEADER_LIB_FATAL(gm, gm.h, gm, gm_init)
+       WRAPPER_LIBS="$WRAPPER_LIBS -lgm"
     elif test "${net}" = "ib" ; then 
        PAC_CHECK_HEADER_LIB_FATAL(ib, verbs.h, ibverbs, ibv_open_device)
+       WRAPPER_LIBS="$WRAPPER_LIBS -libverbs"
     elif test "${net}" = "elan" ; then 
        echo "=== You're about to use the experimental Nemesis/Elan network module." 
        echo "=== This module has not been thoroughly tested and some performance issues remain."
        PAC_CHECK_HEADER_LIB_FATAL(elan, elan/elan.h, elan, elan_baseInit)
+       WRAPPER_LIBS="$WRAPPER_LIBS -lelan"
     elif test "${net}" = "psm" ; then 
        PAC_CHECK_HEADER_LIB_FATAL(psm, psm.h, psm_infinipath, psm_init)
-    fi
-
-    if test "${net}" = "mx" ; then
+       WRAPPER_LIBS="$WRAPPER_LIBS -lpsm_infinipath"
+    elif test "${net}" = "mx" ; then
        PAC_CHECK_HEADER_LIB_FATAL(mx, myriexpress.h, myriexpress, mx_finalize)
+       WRAPPER_LIBS="$WRAPPER_LIBS -lmyriexpress"
        AC_CHECK_HEADER([mx_extensions.h], , [
        		AC_MSG_ERROR(['mx_extensions.h not found. Are you running a recent version of MX (at least 1.2.1)?'])
         ])
@@ -185,9 +188,7 @@ for net in $nemesis_networks ; do
            AC_MSG_ERROR(['MX API version Problem.  Are you running a recent version of MX (at least 1.2.1)?'])
         fi;
 	AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
-    fi;
-
-    if test "${net}" == "newmad" ; then
+    elif test "${net}" == "newmad" ; then
        AC_CHECK_HEADER([nm_public.h], , [
           AC_MSG_ERROR(['nm_public.h not found.  Did you specify --with-newmad= ?'])
        ])				       
@@ -197,6 +198,7 @@ for net in $nemesis_networks ; do
        AC_CHECK_LIB(nmad,nm_core_init, , [
           AC_MSG_ERROR(['nmad library not found.  Did you specify --with-newmad= ?'])
        ])
+       WRAPPER_LIBS="$WRAPPER_LIBS -lnmad"
        AC_ARG_ENABLE(newmad-multirail,
        [--enable-newmad-multirail -  enables multirail support in newmad module],,enable_multi=no)
        if test "$enable_multi" = "yes" ; then
