@@ -372,7 +372,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
          * since the first proxy we started on might repeat. */
         if (i == 0)
             proxy->node.core_count = -(offset); /* offset is negative */
-        else if (i == (num_nodes - 1))
+        else if (i == (num_nodes - 1) && (offset + start_node->core_count))
             proxy->node.core_count = node->core_count + offset;
         else
             proxy->node.core_count = node->core_count;
