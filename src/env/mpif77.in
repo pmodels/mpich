@@ -35,6 +35,7 @@ exec_prefix=@exec_prefix@
 sysconfdir=@sysconfdir@
 includedir=@includedir@
 libdir=@libdir@
+opalibdir=@libdir@
 
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
@@ -315,7 +316,7 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         mpilibs="$FC_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $FC $FFLAGS $LDFLAGS $allargs -I$includedir -L$libdir $mpilibs $LIBS
+    $Show $FC $FFLAGS $LDFLAGS $allargs -I$includedir -L$libdir -L$opalibdir $mpilibs $LIBS
     rc=$?
 else
     $Show $FC $FFLAGS $allargs -I$includedir

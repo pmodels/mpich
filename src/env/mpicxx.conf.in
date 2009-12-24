@@ -12,7 +12,8 @@ exec_prefix=@exec_prefix@
 sysconfdir=@sysconfdir@
 includedir=@includedir@
 libdir=@libdir@
-#
+opalibdir=@libdir@
+
 # Default settings for compiler, flags, and libraries.
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
