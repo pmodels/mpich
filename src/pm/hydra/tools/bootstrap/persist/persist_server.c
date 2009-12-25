@@ -169,7 +169,8 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 
     /* This is the slave process. Close and deregister the listen socket */
     private.type = SLAVE;
-    HYDT_dmx_deregister_fd(private.listen_fd);
+    status = HYDT_dmx_deregister_fd(private.listen_fd);
+    HYDU_ERR_POP(status, "unable to deregister listen fd\n");
     close(private.listen_fd);
 
     /* Get the executable information */

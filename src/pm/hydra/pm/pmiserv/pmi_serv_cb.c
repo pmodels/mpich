@@ -371,8 +371,13 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 
     /* All proxies in this process group have terminated */
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    HYDT_dmx_deregister_fd(pg_scratch->pmi_listen_fd);
-    HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
+
+    status = HYDT_dmx_deregister_fd(pg_scratch->pmi_listen_fd);
+    HYDU_ERR_POP(status, "unable to deregister PMI listen fd\n");
+
+    status = HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
+    HYDU_ERR_POP(status, "unable to deregister control listen fd\n");
+
     close(pg_scratch->pmi_listen_fd);
     close(pg_scratch->control_listen_fd);
 
