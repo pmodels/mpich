@@ -42,6 +42,14 @@
     }
 #endif
 
+#define HYDU_ASSERT(x, status)                                          \
+    {                                                                   \
+        if (!(x)) {                                                     \
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,            \
+                                 "assert (%s) failed\n", #x);           \
+        }                                                               \
+    }
+
 #define HYDU_IGNORE_TIMEOUT(status)             \
     {                                           \
         if ((status) == HYD_TIMED_OUT)          \
@@ -108,13 +116,6 @@
         }                                                               \
         else if (HYD_SILENT_ERROR(status)) {                            \
             goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ASSERT(x, status)                                          \
-    {                                                                   \
-        if (!(x)) {                                                     \
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "assert failed\n"); \
         }                                                               \
     }
 
