@@ -328,6 +328,8 @@ HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg *pg)
     pg_scratch->num_subgroups = 0;
     pg_scratch->conn_procs = NULL;
     pg_scratch->barrier_count = 0;
+    pg_scratch->control_listen_fd = -1;
+    pg_scratch->pmi_listen_fd = -1;
 
     status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs, pg->pgid);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
