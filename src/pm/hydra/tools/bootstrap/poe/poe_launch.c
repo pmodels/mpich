@@ -126,7 +126,7 @@ HYD_status HYDT_bscd_poe_launch_procs(char **args, struct HYD_node *node_list,
     targs[idx++] = HYDU_int_to_str(-1);
     targs[idx++] = NULL;
 
-    status = HYDU_create_process(targs, NULL,
+    status = HYDU_create_process(targs, NULL, NULL,
                                  enable_stdin ? &fd_stdin : NULL, &fd_stdout,
                                  &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
     HYDU_ERR_POP(status, "create process returned error\n");

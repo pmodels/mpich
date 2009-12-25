@@ -791,10 +791,6 @@ static HYD_status set_default_values(void)
         HYD_handle.user_global.global_env.prop =
             !strcmp(tmp, "all") ? HYDU_strdup("all") : HYDU_strdup("none");
 
-    /* If no global environment is set, use the default */
-    if (HYD_handle.user_global.global_env.prop == NULL)
-        HYD_handle.user_global.global_env.prop = HYDU_strdup("all");
-
   fn_exit:
     return status;
 

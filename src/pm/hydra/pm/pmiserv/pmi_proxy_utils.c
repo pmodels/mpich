@@ -667,7 +667,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     int i, j, arg, stdin_fd, process_id, os_index, pmi_id;
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
-    struct HYD_env *env, *prop_env = NULL;
+    struct HYD_env *env, *opt_env = NULL, *force_env = NULL;
     struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
     int *pmi_ids;
@@ -732,18 +732,24 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
          * just set them one after the other, overwriting the previous
          * written value if needed. */
 
-        /* global inherited env */
-        if ((exec->env_prop && !strcmp(exec->env_prop, "all")) ||
-            (!exec->env_prop && !strcmp(HYD_pmcd_pmip.user_global.global_env.prop, "all"))) {
+        if (!exec->env_prop && HYD_pmcd_pmip.user_global.global_env.prop)
+            exec->env_prop = HYDU_strdup(HYD_pmcd_pmip.user_global.global_env.prop);
+
+        if (!exec->env_prop) {
+            /* user didn't specify anything; add inherited env to optional env */
             for (env = HYD_pmcd_pmip.user_global.global_env.inherited; env; env = env->next) {
-                status = HYDU_append_env_to_list(*env, &prop_env);
+                status = HYDU_append_env_to_list(*env, &opt_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
-        else if ((exec->env_prop && !strncmp(exec->env_prop, "list", strlen("list"))) ||
-                 (!exec->env_prop &&
-                  !strncmp(HYD_pmcd_pmip.user_global.global_env.prop, "list",
-                           strlen("list")))) {
+        else if (!strcmp(exec->env_prop, "all")) {
+            /* user explicitly asked us to pass all the environment */
+            for (env = HYD_pmcd_pmip.user_global.global_env.inherited; env; env = env->next) {
+                status = HYDU_append_env_to_list(*env, &force_env);
+                HYDU_ERR_POP(status, "unable to add env to list\n");
+            }
+        }
+        else if (!strncmp(exec->env_prop, "list", strlen("list"))) {
             if (exec->env_prop)
                 list = HYDU_strdup(exec->env_prop + strlen("list:"));
             else
@@ -754,7 +760,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             while (envstr) {
                 env = HYDU_env_lookup(envstr, HYD_pmcd_pmip.user_global.global_env.inherited);
                 if (env) {
-                    status = HYDU_append_env_to_list(*env, &prop_env);
+                    status = HYDU_append_env_to_list(*env, &force_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 }
                 envstr = strtok(NULL, ",");
@@ -763,19 +769,19 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 
         /* global user env */
         for (env = HYD_pmcd_pmip.user_global.global_env.user; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &prop_env);
+            status = HYDU_append_env_to_list(*env, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
         /* local user env */
         for (env = exec->user_env; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &prop_env);
+            status = HYDU_append_env_to_list(*env, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
         /* system env */
         for (env = HYD_pmcd_pmip.user_global.global_env.system; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &prop_env);
+            status = HYDU_append_env_to_list(*env, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
@@ -784,7 +790,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
         HYDU_ERR_POP(status, "unable to create env\n");
 
-        status = HYDU_append_env_to_list(*env, &prop_env);
+        status = HYDU_append_env_to_list(*env, &force_env);
         HYDU_ERR_POP(status, "unable to add env to list\n");
 
         /* Set the interface hostname based on what the user provided */
@@ -795,7 +801,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                          (char *) iface_ip);
                 HYDU_ERR_POP(status, "unable to create env\n");
 
-                status = HYDU_append_env_to_list(*env, &prop_env);
+                status = HYDU_append_env_to_list(*env, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
             else if (HYD_pmcd_pmip.local.hostname) {
@@ -804,7 +810,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                                          HYD_pmcd_pmip.local.hostname);
                 HYDU_ERR_POP(status, "unable to create env\n");
 
-                status = HYDU_append_env_to_list(*env, &prop_env);
+                status = HYDU_append_env_to_list(*env, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
@@ -828,7 +834,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             status = HYDU_env_create(&env, "PMI_ID", str);
             HYDU_ERR_POP(status, "unable to create env\n");
             HYDU_FREE(str);
-            status = HYDU_append_env_to_list(*env, &prop_env);
+            status = HYDU_append_env_to_list(*env, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
 
             for (j = 0, arg = 0; exec->exec[j]; j++)
@@ -837,7 +843,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
 
             os_index = HYDT_bind_get_os_index(process_id);
             if (pmi_id == 0) {
-                status = HYDU_create_process(client_args, prop_env,
+                status = HYDU_create_process(client_args, opt_env, force_env,
                                              HYD_pmcd_pmip.system_global.enable_stdin ?
                                              &HYD_pmcd_pmip.downstream.in : NULL,
                                              &HYD_pmcd_pmip.downstream.out[process_id],
@@ -854,7 +860,7 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
                 }
             }
             else {
-                status = HYDU_create_process(client_args, prop_env, NULL,
+                status = HYDU_create_process(client_args, opt_env, force_env, NULL,
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
@@ -865,8 +871,8 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
             process_id++;
         }
 
-        HYDU_env_free_list(prop_env);
-        prop_env = NULL;
+        HYDU_env_free_list(force_env);
+        force_env = NULL;
     }
 
   fn_spawn_complete:

@@ -213,8 +213,10 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         proxy->exec_launch_info[arg++] = NULL;
 
         arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--genv-prop");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.global_env.prop);
+        if (HYD_handle.user_global.global_env.prop) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--genv-prop");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.user_global.global_env.prop);
+        }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--start-pid");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->start_pid);
