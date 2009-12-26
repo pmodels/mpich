@@ -58,7 +58,6 @@ MPI_FARRAY6=""
 MPI_FARRAY7=""
 DEFS=""
 ROMIO_LFLAGS=""
-ROMIO_LIBLIST=""
 ROMIO_TCFLAGS=""
 ROMIO_TCPPFLAGS=""
 ROMIO_TFFLAGS=""
@@ -566,7 +565,7 @@ if test -n "$arch_alpha" || test -n "$arch_ALPHA" ; then
     MPI_OFFSET_KIND1="      INTEGER MPI_OFFSET_KIND"
     MPI_OFFSET_KIND2="      PARAMETER (MPI_OFFSET_KIND=8)"
     MPI_OFFSET_KIND_VAL=8
-    ROMIO_LIBLIST="$ROMIO_LIBLIST -laio"
+    WRAPPER_LIBS="$WRAPPER_LIBS -laio"
 fi    
 #
 if test -n "$arch_CRAY" ; then
@@ -1076,7 +1075,7 @@ if test $PVFS2_CONFIG != "notfound" ; then
 		# --with-file-system (or both)
 		CFLAGS="$CFLAGS $( $PVFS2_CONFIG --cflags)"
 		LIBS="$LIBS $( $PVFS2_CONFIG --libs)"
-		ROMIO_LIBLIST="$ROMIO_LIBLIST $LIBS"
+		WRAPPER_LIBS="$WRAPPER_LIBS $( $PVFS2_CONFIG --libs)"
 		FILE_SYSTEM="pvfs2 $FILE_SYSTEM"
 		file_system_pvfs2=1
 	fi
@@ -1266,15 +1265,10 @@ if test -n "$file_system_bgl"; then
     SYSDEP_INC=-I${prefix}/include
 else
     SYSDEP_INC=
-#
+
 # Check for presence and characteristics of async. I/O calls if
 # not disabled.
-#
-# Q: Do we need to list some "other libs" to get things to link?
-#
-save_libs=$LIBS
-LIBS=
-#
+
 # Some systems need pthreads to get AIO to work.  However, we don't want
 # to add pthreads just because it is there, as that can cause problems
 # with some implementations of pthreads and compilers (e.g., gcc version 3
@@ -1283,59 +1277,20 @@ LIBS=
 # *not linked* with pthreads.
 #
 if test "x$disable_aio" = "xno" ; then
-    foundPTHREAD=no
-
-    # Do we have aio_write in aio or rt?
-    saveLIBS=$LIBS
-    LIBS=
-    AC_SEARCH_LIBS(aio_write,aio rt,foundAIO=yes,foundAIO=no)
-    if test "$foundAIO" = yes ; then
-        AIOLIBS=$LIBS
-        LIBS="$saveLIBS $LIBS"
-    else
-        LIBS="$saveLIBS"
-    fi
-
-    # If not, try finding pthread_create first, and if found, try the
-    # test again.
-    if test "$foundAIO" = no ; then 
-        saveLIBS=$LIBS
-	LIBS=
-        AC_SEARCH_LIBS(pthread_create,pthread,foundPTHREAD=yes,
-	foundPTHREAD=no)
+    AC_SEARCH_LIBS(aio_write,aio rt,aio_write_found=yes,aio_write_found=no)
+    if test "$aio_write_found" = no ; then
+        # If not found, try finding pthread_create first, and if
+        # found, try the test again.
+        AC_SEARCH_LIBS(pthread_create,pthread,foundPTHREAD=yes,foundPTHREAD=no)
         if test "$foundPTHREAD" = yes ; then
-            AC_SEARCH_LIBS(aio_write,aio rt,foundAIO=yes,foundAIO=no)
-	    
-	    if test "$foundAIO" = yes ; then
-	        AIO_LIBS=$LIBS
-		LIBS="$saveLIBS $LIBS"
-	    else
-                LIBS=$saveLIBS
-            fi
-        else
-	    LIBS=$saveLIBS
+            AC_SEARCH_LIBS(aio_write,aio rt,aio_write_found=yes,aio_write_found=no)
         fi
     fi
 
-
-    if test "$foundAIO" = yes ; then
-        ROMIO_LIBLIST="$ROMIO_LIBLIST $AIOLIBS"
-        MPI_LIB="$MPI_LIB $AIOLIBS"
-	aio_write_found=yes
+    if test "$aio_write_found" = "yes" ; then
+	WRAPPER_LIBS="$WRAPPER_LIBS $ac_cv_search_aio_write"
     fi
- 
-dnl    AC_SEARCH_LIBS(pthread_create,pthread,
-dnl        ROMIO_LIBLIST="$ROMIO_LIBLIST $LIBS"
-dnl        MPI_LIB="$MPI_LIB $LIBS"
-dnl        )
-dnl    LIBS=
-dnl    AC_SEARCH_LIBS(aio_write,aio rt,
-dnl        ROMIO_LIBLIST="$ROMIO_LIBLIST $LIBS"
-dnl        MPI_LIB="$MPI_LIB $LIBS"
-dnl        aio_write_found=yes
-dnl    )
 fi
-LIBS=$save_libs
 
 if test "x$disable_aio" = "xno" -a -n "$aio_write_found" ; then
     AC_CHECK_HEADERS(signal.h)
@@ -1372,8 +1327,7 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
     # The test is the following: if not cross compiling, try to run a 
     # program that includes a *reference* to aio_write but does not call it
     # If the libraries are not set up correctly, then this will fail.
-    save_libs=$LIBS
-    LIBS="$LIBS $ROMIO_LIBLIST"
+
     AC_MSG_CHECKING([whether aio routines can be used])
     # Include aio.h and the aiocb struct (since we'll need these to 
     # actually use the aio_write interface).  Note that this will 
@@ -1481,8 +1435,6 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
     if test "$aio_two_arg_suspend" != "no" -a "$aio_runs" != "yes" ; then
 	AC_DEFINE(ROMIO_HAVE_AIO_SUSPEND_TWO_ARGS, 1, Define if aio_suspend needs two arguments)
     fi
-
-    LIBS=$save_libs
 
     AC_MSG_CHECKING([for aio_fildes member of aiocb structure])
     AC_TRY_COMPILE([
@@ -2087,6 +2039,7 @@ AC_SUBST(AR)
 AC_SUBST(RANLIB)
 AC_SUBST(MPI_INCLUDE_DIR)
 AC_SUBST(MPI_LIB)
+AC_SUBST(WRAPPER_LIBS)
 AC_SUBST(F77)
 AC_SUBST(NOF77)
 AC_SUBST(NOPROFILE)
@@ -2131,7 +2084,6 @@ AC_SUBST(TEST_CC)
 AC_SUBST(TEST_F77)
 AC_SUBST(ROMIO_INCLUDE)
 AC_SUBST(ROMIO_LFLAGS)
-AC_SUBST(ROMIO_LIBLIST)
 AC_SUBST(ROMIO_TCFLAGS)
 AC_SUBST(ROMIO_TCPPFLAGS)
 AC_SUBST(ROMIO_TFFLAGS)
