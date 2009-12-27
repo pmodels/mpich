@@ -507,6 +507,9 @@ static HYD_status fn_get_usize(int fd, int pgid, char *args[])
     goto fn_exit;
 }
 
+static char *mcmd_args[HYD_NUM_TMP_STRINGS] = { NULL };
+static int mcmd_num_args = 0;
+
 static HYD_status fn_spawn(int fd, int pgid, char *args[])
 {
     struct HYD_pg *pg;
@@ -523,25 +526,29 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
     struct HYD_pmcd_token_segment *segment_list = NULL;
 
-    int token_count, i, j, k, pmi_id = -1, new_pgid, total_spawns, offset, argcnt;
+    int token_count, i, j, k, pmi_id = -1, new_pgid, total_spawns, offset, argcnt, num_segments;
     char *pmi_port, *control_port, *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
     char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    for (i = 0; args[i]; i++)
+        mcmd_args[mcmd_num_args++] = HYDU_strdup(args[i]);
+    mcmd_args[mcmd_num_args] = NULL;
+
+    status = HYD_pmcd_args_to_tokens(mcmd_args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
 
     /* Here's the order of things we do:
      *
-     *   1. Allocate a process group for the new set of spawned
-     *      processes
-     *
-     *   2. Break the token list into multiple segments, each segment
+     *   1. Break the token list into multiple segments, each segment
      *      corresponding to a command. Each command represents
      *      information for one executable.
+     *
+     *   2. Allocate a process group for the new set of spawned
+     *      processes
      *
      *   3. Get all the common keys and deal with them
      *
@@ -550,18 +557,6 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
      *   5. Create a proxy list using the created executable list and
      *      spawn it.
      */
-
-
-    /* Allocate a new process group */
-    for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
-    new_pgid = pg->pgid + 1;
-
-    status = HYDU_alloc_pg(&pg->next, new_pgid);
-    HYDU_ERR_POP(status, "unable to allocate process group\n");
-
-    pg = pg->next;
-    pg->pg_process_count = 0;
-
 
     /* Break the token list into multiple segments and create an
      * executable list based on the segments. */
@@ -573,8 +568,29 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,
                 total_spawns * sizeof(struct HYD_pmcd_token_segment), status);
 
-    status = HYD_pmcd_segment_tokens(tokens, token_count, segment_list);
+    status = HYD_pmcd_segment_tokens(tokens, token_count, segment_list, &num_segments);
     HYDU_ERR_POP(status, "unable to segment tokens\n");
+
+    if (num_segments != total_spawns) {
+        /* We didn't read the entire PMI string; wait for the rest to
+         * arrive */
+        goto fn_exit;
+    }
+    else {
+        /* Got the entire PMI string; free the arguments and reset */
+        HYDU_free_strlist(mcmd_args);
+        mcmd_num_args = 0;
+    }
+
+    /* Allocate a new process group */
+    for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
+    new_pgid = pg->pgid + 1;
+
+    status = HYDU_alloc_pg(&pg->next, new_pgid);
+    HYDU_ERR_POP(status, "unable to allocate process group\n");
+
+    pg = pg->next;
+    pg->pg_process_count = 0;
 
     for (j = 0; j < total_spawns; j++) {
         /* For each segment, we create an exec structure */

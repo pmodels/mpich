@@ -51,7 +51,8 @@ void HYD_pmcd_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
 }
 
 HYD_status HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
-                                   struct HYD_pmcd_token_segment *segment_list)
+                                   struct HYD_pmcd_token_segment *segment_list,
+                                   int *num_segments)
 {
     int i, j;
     HYD_status status = HYD_SUCCESS;
@@ -69,6 +70,7 @@ HYD_status HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_coun
             segment_list[j].token_count++;
         }
     }
+    *num_segments = j + 1;
 
   fn_exit:
     return status;
