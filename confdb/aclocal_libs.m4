@@ -11,7 +11,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
             # we are on a 32-bit host that happens to have both lib dirs available?
             LDFLAGS="$LDFLAGS -L${with_$1}/lib64 -L${with_$1}/lib"
             WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS -L${with_$1}/lib64 -L${with_$1}/lib"
-            CFLAGS="$CFLAGS -I${with_$1}/include"
+            CPPFLAGS="$CPPFLAGS -I${with_$1}/include"
 	    WRAPPER_CFLAGS="$WRAPPER_CFLAGS -I${with_$1}/include"
         fi,
     )
@@ -19,7 +19,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     		AC_HELP_STRING([--with-$1-include=path],
 			       [specify path where $1 include directory can be found]),
         if test "${with_$1_include}" != "yes" -a "${with_$1_include}" != "no" ; then
-            CFLAGS="$CFLAGS -I${with_$1_include}"
+            CPPFLAGS="$CPPFLAGS -I${with_$1_include}"
             WRAPPER_CFLAGS="$WRAPPER_CFLAGS -I${with_$1_include}"
         fi,
     )
