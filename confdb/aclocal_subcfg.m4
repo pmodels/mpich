@@ -32,37 +32,52 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
         AC_MSG_NOTICE([===== configuring $1 =====])
 
 	PAC_MKDIRS($1)
-	pac_subconfig_args=""
-	# Strip off the args we need to update
-	for ac_arg in $3 ; do
-	    # Remove any quotes around the args (added by configure)
-	    ac_narg=`expr x$ac_arg : 'x'"'"'\(.*\)'"'"`
-	    if test -n "$ac_narg" ; then ac_arg=$ac_narg ; fi
 
-	    case $ac_arg in
-                -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
-		 | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
-		 | --c=*)
+	if test -x $1/mpich2setup ; then
+	   $subsys/mpich2setup
+	elif test -x $2/$1/mpich2setup ; then
+	   $2/$1/mpich2setup
+	elif test -x $2/$1/configure ; then
+	   pac_subconfig_args=""
+	   # Strip off the args we need to update
+	   for ac_arg in $3 ; do
+	       # Remove any quotes around the args (added by configure)
+	       ac_narg=`expr x$ac_arg : 'x'"'"'\(.*\)'"'"`
+	       if test -n "$ac_narg" ; then ac_arg=$ac_narg ; fi
+
+	       case $ac_arg in
+	            -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
+		    | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
+		    | --c=*)
 			;;
-		--config-cache | -C)
+		    --config-cache | -C)
 			;;
-		-srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*)
+		    -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*)
 			;;
-		-prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
+		    -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
 			;;
-		*)
+		    *)
 			pac_subconfig_args="$pac_subconfig_args $ac_arg"
 			;;
-	    esac
-	done
+	       esac
+	   done
 
-	if (cd $1 && eval $2/$1/configure $pac_subconfig_args) ; then
-	   $4
-	   :
-	else
-	   $5
-	   :
+	   if (cd $1 && eval $2/$1/configure $pac_subconfig_args) ; then
+	      $4
+	      :
+	   else
+	      $5
+	      :
+	   fi
 	fi
 
         AC_MSG_NOTICE([===== done with $1 configure =====])
+
+	# Check for any localdefs files.  These may be created, so we
+	# look in the local directory first.
+	if test -f $1/localdefs ; then
+	   . $1/localdefs
+	elif test -f $2/$1/localdefs ; then
+	   . $2/$1/localdefs
+	fi
 ])
