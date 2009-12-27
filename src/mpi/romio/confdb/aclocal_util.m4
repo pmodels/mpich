@@ -35,7 +35,7 @@ AC_DEFUN([PAC_RESTORE_FLAGS],[
 	PAC_POP_VAR(LIBS)
 ])
 
-dnl Usage: PAC_APPEND_FLAG([-02], [$CFLAGS])
+dnl Usage: PAC_APPEND_FLAG([-02], [CFLAGS])
 dnl need a clearer explanation and definition of how this is called
 AC_DEFUN([PAC_APPEND_FLAG],[
 	AC_REQUIRE([AC_PROG_FGREP])

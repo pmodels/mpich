@@ -14,6 +14,7 @@ includedir=@includedir@
 modincdir=@modincdir@
 libdir=@libdir@
 opalibdir=@libdir@
+mpldir=@mpldir@
 
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within

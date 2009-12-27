@@ -36,6 +36,7 @@ includedir=@includedir@
 modincdir=@modincdir@
 libdir=@libdir@
 opalibdir=@libdir@
+mpldir=@mpldir@
 
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
@@ -341,7 +342,17 @@ if [ "$linking" = yes ] ; then
         # Prepend the path for the shared libraries to the library list
         mpilibs="$F90_LINKPATH_SHL$libdir $mpilibs"
     fi
-    $Show $F90 $F90FLAGS $LDFLAGS "${allargs[@]}" $F90INCDIRS $F90MODDIRS -L$libdir -L$opalibdir $F90MODLIBS $mpilibs $LIBS
+
+    path_list=""
+    for path in "-L$libdir" "-L$opalibdir" "-L$mpldir" ; do
+	found_path=0
+	for p in $path_list ; do
+	    if [ "$path" = "$p" ] ; then found_path=1 ; break ; fi
+	done
+	if [ "$found_path" = "0" ] ; then path_list="$path_list $path" ; fi
+    done
+
+    $Show $F90 $F90FLAGS $LDFLAGS "${allargs[@]}" $F90INCDIRS $F90MODDIRS ${path_list} $F90MODLIBS $mpilibs $LIBS
     rc=$?
 else
     $Show $F90 $F90FLAGS "${allargs[@]}" $F90INCDIRS $F90MODDIRS

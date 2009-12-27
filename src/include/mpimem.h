@@ -18,6 +18,7 @@ extern "C" {
 #endif
 
 #include "mpichconf.h"
+#include "mpl.h"
 
 /* ensure that we weren't included out of order */
 #include "mpibase.h"
@@ -434,17 +435,7 @@ if (pointer_) { \
 #   error "No function defined for case-insensitive strncmp"
 #endif
 
-/* Provide a fallback snprintf for systems that do not have one */
-#ifdef HAVE_SNPRINTF
-#define MPIU_Snprintf snprintf
-/* Sometimes systems don't provide prototypes for snprintf */
-#ifdef NEEDS_SNPRINTF_DECL
-extern int snprintf( char *, size_t, const char *, ... ) ATTRIBUTE((format(printf,3,4)));
-#endif
-#else
-int MPIU_Snprintf( char *str, size_t size, const char *format, ... ) 
-     ATTRIBUTE((format(printf,3,4)));
-#endif /* HAVE_SNPRINTF */
+#define MPIU_Snprintf MPL_snprintf
 
 /* MPIU_Basename(path, basename)
    This function finds the basename in a path (ala "man 1 basename").
