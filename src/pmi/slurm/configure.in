@@ -19,24 +19,14 @@ PAC_VPATH_CHECK()
 PAC_LOAD_BASE_CACHE
 PAC_PROG_MAKE
 
-AC_ARG_WITH(slurm,
-    AS_HELP_STRING([--with-slurm], [path to the slurm package]),
-    [SLURM_LDFLAGS="-L${with_slurm}/lib"
-SLURM_CPPFLAGS="-I${with_slurm}/include"],
-    [])
-LDFLAGS="$SLURM_LDFLAGS $LDFLAGS"
-CPPFLAGS="$SLURM_CPPFLAGS $CPPFLAGS"
-
+AC_ARG_WITH(slurm, AS_HELP_STRING([--with-slurm], [path to the slurm package]))
 AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
-saveLIBS="$LIBS"
-LIBS=""
-AC_CHECK_LIB([pmi], [PMI_Init], [], AC_MSG_ERROR([could not find libpmi.  Configure aborted]))
-SLURM_LIBS="$SLURM_LIBS $LIBS"
-LIBS="$LIBS $saveLIBS"
+AC_CHECK_LIB([pmi], [PMI_Init], [WRAPPER_LIBS="$WRAPPER_LIBS -lpmi"],
+		    AC_MSG_ERROR([could not find libpmi.  Configure aborted]))
 
-AC_SUBST(SLURM_LIBS)
-AC_SUBST(SLURM_LDFLAGS)
-AC_SUBST(SLURM_CPPFLAGS)
+AC_SUBST(WRAPPER_CFLAGS)
+AC_SUBST(WRAPPER_LDFLAGS)
+AC_SUBST(WRAPPER_LIBS)
 
 AC_OUTPUT(localdefs)
 AC_OUTPUT(Makefile)

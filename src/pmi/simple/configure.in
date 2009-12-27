@@ -71,12 +71,8 @@ if test "$enable_pmiport" = "yes" ; then
 	sys/un.h	\
 	netdb.h		\
 	],,missing_headers=yes )
-    saveLIBS="$LIBS"
-    LIBS=""
-    AC_SEARCH_LIBS(socket,socket,,,$saveLIBS)
-    AC_SEARCH_LIBS(gethostbyname,nsl,,,$saveLIBS)
-    PMI_LIBS="$PMI_LIBS $LIBS"
-    LIBS="$saveLIBS $LIBS"
+    AC_SEARCH_LIBS(socket,socket)
+    AC_SEARCH_LIBS(gethostbyname,nsl)
     missing_functions=no
     AC_CHECK_FUNCS(socket setsockopt gethostbyname,,missing_functions=yes)
     
@@ -130,9 +126,6 @@ AC_SUBST(ETAGS)
 AC_SUBST(ETAGSADD)
 export ETAGS
 export ETAGSADD
-dnl
-dnl Libraries required by Simple
-AC_SUBST(PMI_LIBS)
 
 PAC_UPDATE_BASE_CACHE
 
