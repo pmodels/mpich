@@ -35,7 +35,6 @@
 %                        (reftex-mode 1)
 %                        (setq TeX-command "latex")))
    
-
 \begin{document}
 \markright{MPICH2 User's Guide}
 \title{\textbf{MPICH2 User's Guide}\thanks{This work was supported by the Mathematical,
@@ -73,98 +72,45 @@ Brian Toonen}
 \pagestyle{headings}
 
 
-%% Here is a basic outline for the document
-%% 1. Setting paths
-%% 2. Compiling and linking
-%%   2a. Chosing compilers (e.g., you need not use the same compiler that
-%%       MPICH was built with)
-%%   2b. Shared libraries
-%%   2c. Special issues for Fortran 77 and Fortran 90
-%%       (mostly the choice module, but also the various name mangling issues)
-%% 3. Running with mpiexec
-%%   3a. mpiexec standard options (from MPI-2)
-%%   3b. device and pm specific options
-%%   3c. environment variables
-%%       for example, \texttt{MPIEXEC\_TIMEOUT}
-%%   3d. managing stdin/out/err
-%%   3e. managing files (staging?), including executables
-%% 4. Examples 
-%%    4a. Simple programs
-%%    4b. Benchmarking (similar or identical to text in the installation guide)
-%%    4c. Pointers to other resources (books, tutorials, sample programs)
-%% 5. Debugging
-%%    5a. Working with single-process debuggers
-%%    5b. Working with parallel debuggers such as Totalview
-%% 6. Troubleshooting
-
-
 \section{Introduction}
 \label{sec:introduction}
 
 This manual assumes that MPICH2 has already been installed.  For
-instructions on how to install MPICH2, see the \emph{MPICH2 Installer's Guide},
-or the \texttt{README} in the top-level MPICH2 directory.  This manual
-explains how to compile, link, and run MPI applications, and use certain
-tools that come with MPICH2.  This is a preliminary version and some
-sections are not complete yet.  However, there should be enough here to
-get you started with MPICH2.
+instructions on how to install MPICH2, see the \emph{MPICH2
+  Installer's Guide}, or the \texttt{README} in the top-level MPICH2
+directory.  This manual explains how to compile, link, and run MPI
+applications, and use certain tools that come with MPICH2.  This is a
+preliminary version and some sections are not complete yet.  However,
+there should be enough here to get you started with MPICH2.
 
 
-\section{Migrating to MPICH2 from MPICH1}
+\section{Getting Started with MPICH2}
 \label{sec:migrating}
 
-If you have been using MPICH 1.2.x (1.2.7p1 is the latest version), you
-will find a number of things about MPICH2 that are different (and
-hopefully better in every case.)  Your MPI application programs need not
-change, of course, but a number of things about how you run them will be
-different.
-
-MPICH2 is an all-new implementation of the MPI Standard, designed to
-implement all of the MPI-2 additions to MPI (dynamic process management,
-one-sided operations, parallel I/O, and other extensions) and to apply
-the lessons learned in implementing MPICH1 to make MPICH2 more robust,
-efficient, and convenient to use.  The \emph{MPICH2 Installer's Guide}
-provides some information on changes between MPICH1 and MPICH2 to the process
-of configuring and installing MPICH.  Changes to compiling, linking, and
-running MPI programs between MPICH1 and MPICH2 are described below.
+MPICH2 is a high-performance and widely portable implementation of the
+MPI Standard, designed to implement all of MPI-1 and MPI-2 (including
+dynamic process management, one-sided operations, parallel I/O, and
+other extensions). The \emph{MPICH2 Installer's Guide} provides some
+information on MPICH2 with respect to configuring and installing
+it. Details on compiling, linking, and running MPI programs are
+described below.
 
 
 \subsection{Default Runtime Environment}
 \label{sec:default-environment}
 
-In MPICH1, the default configuration used the now-old \texttt{p4}
-portable programming environment.  Processes were started via remote
-shell commands (\texttt{rsh} or \texttt{ssh}) and the information
-necessary for processes to find and connect with one another over
-sockets was collected and then distributed at startup time in a
-non-scalable fashion.  Furthermore, the entanglement of process
-managment functionality with the communication mechanism led to
-confusing behavior of the system when things went wrong.
-
 MPICH2 provides a separation of process management and communication.
-The default runtime environment consists of a set of daemons, called
-mpd's, that establish communication among the machines to be used before
-application process startup, thus providing a clearer picture of what is
-wrong when communication cannot be established and providing a fast and
-scalable startup mechanism when parallel jobs are
-started. Section~\ref{sec:managing-mpd} describes the MPD process
-management system in more detail.  Other process managers are also available.
+The default runtime environment in MPICH2 is called Hydra. Other
+process managers are also available.
 
 \subsection{Starting Parallel Jobs}
 \label{sec:startup}
 
-MPICH1 provided the \texttt{mpirun} command to start MPICH1 jobs.  The
-MPI-2 Forum recommended a standard, portable command, called
-\texttt{mpiexec}, for this purpose.  MPICH2 implements \texttt{mpiexec}
-and all of its standard arguments, together with some extensions.  See
-Section~\ref{sec:mpiexec-standard} for standard arguments to
-\texttt{mpiexec} and various subsections of Section~\ref{sec:mpiexec}
-for extensions particular to various process management systems.
-
-MPICH2 also provides an \texttt{mpirun} command for simple backward
-compatibility, but MPICH2's \texttt{mpirun} does not provide all the
-options of \texttt{mpiexec} or all of the options of MPICH1's
-\texttt{mpirun}. 
+MPICH2 implements \texttt{mpiexec} and all of its standard arguments,
+together with some extensions. See Section~\ref{sec:mpiexec-standard}
+for standard arguments to \texttt{mpiexec} and various subsections of
+Section~\ref{sec:mpiexec} for extensions particular to various process
+management systems.
 
 
 \subsection{Command-Line Arguments in Fortran}
@@ -172,34 +118,35 @@ options of \texttt{mpiexec} or all of the options of MPICH1's
 
 MPICH1 (more precisely MPICH1's \texttt{mpirun}) required access to
 command line arguments in all application programs, including Fortran
-ones, and MPICH1's \texttt{configure} devoted some effort to finding the
-libraries that contained the right versions of \texttt{iargc} and
+ones, and MPICH1's \texttt{configure} devoted some effort to finding
+the libraries that contained the right versions of \texttt{iargc} and
 \texttt{getarg} and including those libraries with which the
-\texttt{mpif77} script linked MPI programs.
-Since MPICH2 does not require access to command line
-arguments to applications, these functions are optional, and
-\texttt{configure} does nothing special with them.  If you need them in
-your applications, you will have to ensure that they are available in
-the Fortran environment you are using.
+\texttt{mpif77} script linked MPI programs.  Since MPICH2 does not
+require access to command line arguments to applications, these
+functions are optional, and \texttt{configure} does nothing special
+with them.  If you need them in your applications, you will have to
+ensure that they are available in the Fortran environment you are
+using.
 
 \section{Quick Start}
 \label{sec:quickstart}
 
-To use MPICH2, you will have to know the directory where MPICH2 has been
-installed. 
-(Either you installed it there yourself, or your systems administrator has
-installed it.  One place to look in this case might be \texttt{/usr/local}.
-If MPICH2 has not yet been installed, see the \emph{MPICH2 Installer's Guide}.)
-We suggest that you put the \texttt{bin} subdirectory of that directory into
-your path.  This will give you access to assorted MPICH2 commands to
+To use MPICH2, you will have to know the directory where MPICH2 has
+been installed.  (Either you installed it there yourself, or your
+systems administrator has installed it.  One place to look in this
+case might be \texttt{/usr/local}.  If MPICH2 has not yet been
+installed, see the \emph{MPICH2 Installer's Guide}.)  We suggest that
+you put the \texttt{bin} subdirectory of that directory into your
+path.  This will give you access to assorted MPICH2 commands to
 compile, link, and run your programs conveniently.  Other commands in
 this directory manage parts of the run-time environment and execute
-tools.  
+tools.
 
 One of the first commands you might run is \texttt{mpich2version} to
 find out the exact version and configuration of MPICH2 you are working
-with.  Some of the material in this manual depends on just what version
-of MPICH2 you are using and how it was configured at installation time.
+with. Some of the material in this manual depends on just what version
+of MPICH2 you are using and how it was configured at installation
+time.
 
 You should now be able to run an MPI program.  Let us assume that the
 directory where MPICH2 has been installed is
@@ -215,11 +162,10 @@ for \texttt{tcsh} and \texttt{csh}, or
 for \texttt{bash} or \texttt{sh}.
 Then to run an MPI program, albeit only on one machine, you can do:
 \begin{verbatim}
-    mpd &
     cd  /home/you/mpich2-installed/examples
-    mpiexec -n 3 cpi
-    mpdallexit
+    mpiexec -n 3 ./cpi
 \end{verbatim}
+
 Details for these commands are provided below, but if you can
 successfully execute them here, then you have a correctly installed
 MPICH2 and have run an MPI program. 
@@ -234,26 +180,20 @@ for C, C++, Fortran 77, and Fortran 90 programs, respectively.  If any
 of these commands are missing, it means that MPICH2 was configured
 without support for that particular language.
 
-\subsection{Specifying Compilers}
-\label{sec:specifying-compilers}
+%% Pavan Balaji (12/27/2009): I'm commenting out this part as this is
+%% broken in the current MPICH2 stack (see ticket #502).
 
-You need not use the same compiler that MPICH2 was built with, but not
-all compilers are compatible.  You can also specify the compiler for
-building MPICH2 itself, as reported by \texttt{mpich2version}, just by
-using the compiling and linking commands from the previous section.
-%(See the \emph{Installer's Guide}).
-The environment variables \texttt{MPICH\_CC}, \texttt{MPICH\_CXX},
-\texttt{MPICH\_F77}, and \texttt{MPICH\_F90} may be used to specify
-alternate C, C++, Fortran 77, and Fortran 90 compilers, respectively.
+%% \subsection{Specifying Compilers}
+%% \label{sec:specifying-compilers}
 
-\subsection{Shared Libraries}
-\label{sec:shared-libraries}
+%% You need not use the same compiler that MPICH2 was built with, but not
+%% all compilers are compatible.  You can also specify the compiler for
+%% building MPICH2 itself, as reported by \texttt{mpich2version}, just by
+%% using the compiling and linking commands from the previous section.
+%% The environment variables \texttt{MPICH_CC}, \texttt{MPICH_CXX},
+%% \texttt{MPICH_F77}, and \texttt{MPICH_F90} may be used to specify
+%% alternate C, C++, Fortran 77, and Fortran 90 compilers, respectively.
 
-Currently shared libraries are only tested on Linux and Mac OS X, and there are
-restrictions.  See the \emph{Installer's Guide} for how to build MPICH2
-as a shared library.  If shared libraries have been built, you will
-get them automatically when you link your program with any of the
-MPICH2 compilation scripts.
 
 \subsection{Special Issues for C++}
 \label{sec:cxx}
@@ -292,38 +232,13 @@ provide full Fortran 90 support; in particular, interfaces for the
 routines, such as \texttt{MPI\_Send}, that take ``choice'' arguments
 are not provided.
 
-%% \begin{itemize}
-%% \item Review of basic and extended support; the Fortran 90 module.
-%% \item Flushing output.
-%% G95 requires 
-%% \begin{verbatim}
-%% setenv G95_UNBUFFERED_ALL TRUE
-%% \end{verbatim}
-%% or at least
-%% \begin{verbatim}
-%% setenv G95_UNBUFFERED_6 TRUE
-%% \end{verbatim}
-%% to have output to \texttt{stdout} appear when it is printed.  For
-%% example, in the example program \texttt{examples/f90/pi3f90}, without
-%% this setting, the prompt to enter the number of intervals will not
-%% appear until the program exits.
-
-%% \item Various name-mangling issues
-%% \end{itemize}
-
 
 \section{Running Programs with \texttt{mpiexec}}
 \label{sec:mpiexec}
 
-If you have been using the original MPICH, or any of a number of other MPI
-implementations, then you have probably been using \texttt{mpirun} as a
-way to start your MPI programs.
-The MPI-2 Standard describes \texttt{mpiexec} as a suggested way to run
-MPI programs.  MPICH2 implements the \texttt{mpiexec} standard, and also
-provides some extensions.  MPICH2 provides \texttt{mpirun} for backward
-compatibility with existing scripts, but it does not support the same or
-as many options as \texttt{mpiexec} or all of the options of MPICH1's
-\texttt{mpirun}.   
+The MPI-2 Standard describes \texttt{mpiexec} as a suggested way to
+run MPI programs. MPICH2 implements the \texttt{mpiexec} standard, and
+also provides some extensions.
 
 \subsection{Standard \texttt{mpiexec}}
 \label{sec:mpiexec-standard}
@@ -331,67 +246,59 @@ as many options as \texttt{mpiexec} or all of the options of MPICH1's
 Here we describe the standard \texttt{mpiexec} arguments from the MPI-2
 Standard~\cite{mpi-forum:mpi2-journal}.  The simplest form of a command
 to start an MPI job is 
+
 \begin{verbatim}
-   mpiexec -n 32 a.out
+   mpiexec -f machinefile -n 32 a.out
 \end{verbatim}
+
 to start the executable \texttt{a.out} with 32 processes (providing an
-\texttt{MPI\_COMM\_WORLD} of size 32 inside the MPI application).  Other
-options are supported, for specifying hosts to run on,  search paths for
-executables, working directories, and even a more general way of
-specifying a number of processes.  Multiple sets of processes can be run
-with different exectuables and different values for their arguments,
-with ``\texttt{:}'' separating the sets of processes, as in:
+\texttt{MPI\_COMM\_WORLD} of size 32 inside the MPI application).
+Other options are supported, for search paths for executables, working
+directories, and even a more general way of specifying a number of
+processes.  Multiple sets of processes can be run with different
+executables and different values for their arguments, with
+``\texttt{:}'' separating the sets of processes, as in:
+
 \begin{verbatim}
-   mpiexec -n 1 -host loginnode master : -n 32 -host smp slave
+   mpiexec -f machinefile -n 1 ./master : -n 32 ./slave
 \end{verbatim}
-The \texttt{-configfile} argument allows one to specify a file containing the
-specifications for process sets on separate lines in the file.  This
-makes it unnecessary to have long command lines for \texttt{mpiexec}.  
-(See pg.~353 of~\cite{Snir:1998:MPI2Book}.)
 
 It is also possible to start a one process MPI job (with a
 \texttt{MPI\_COMM\_WORLD} whose size is equal to 1), without using
-\texttt{mpiexec}. 
-This process will become an MPI process when it calls \texttt{MPI\_Init}, and
-it may then call other MPI functions.  
-Currently, MPICH2 does not fully support calling the dynamic process routines
-from MPI-2 (e.g., \texttt{MPI\_Comm\_spawn} or \texttt{MPI\_Comm\_accept})
-from processes that are not started with \texttt{mpiexec}.  
-% Note that MPD doesn't support comm_accept/connect; and the root version of
-% MPD doesn't support spawn (since MPD uses a single KVS name for all 
-% singleton inits).  Fixing this requires changes to PMI as well as MPD;
-% other process managers will also need to handle this case.
+\texttt{mpiexec}.  This process will become an MPI process when it
+calls \texttt{MPI\_Init}, and it may then call other MPI functions.
+Currently, MPICH2 does not fully support calling the dynamic process
+routines from MPI-2 (e.g., \texttt{MPI\_Comm\_spawn} or
+\texttt{MPI\_Comm\_accept}) from processes that are not started with
+\texttt{mpiexec}.
+
 
 \subsection{Extensions for All Process Management Environments}
 \label{sec:extensions-uniform}
 
-Some \texttt{mpiexec} arguments are specific to particular communication
-subsystems (``devices'') or process management environments (``process
-managers'').  Our intention is to make all arguments as uniform as
-possible across devices and process managers.  For the time being we
-will document these separately.
+Some \texttt{mpiexec} arguments are specific to particular
+communication subsystems (``devices'') or process management
+environments (``process managers'').  Our intention is to make all
+arguments as uniform as possible across devices and process managers.
+For the time being we will document these separately.
 
-\subsection{Extensions for the MPD Process Management Environment}
+\subsection{\texttt{mpiexec} Extensions for the Hydra Process Manager}
+
+MPICH2 provides a number of process management systems. Hydra is the
+default process manager in MPICH2. More details on Hydra and its
+extensions to mpiexec can be found at
+http://\linebreak[0]wiki.\linebreak[0]mcs.\linebreak[0]anl.\linebreak[0]gov/\linebreak[0]mpich2/\linebreak[0]index.php/\linebreak[0]Using\_\linebreak[0]the\_\linebreak[0]Hydra\_\linebreak[0]Process\_\linebreak[0]Manager
+
+\subsection{\texttt{mpiexec} Extensions for the MPD Process Manager}
 \label{sec:extensions-various}
-
-MPICH2 provides a number of process management systems.  The default is
-called MPD.  MPD provides a number of extensions to the standard form of
-\texttt{mpiexec}.
 
 \subsubsection{Basic \texttt{mpiexec} arguments for MPD}
 \label{sec:extensions-mpd}
 
-The default configuration of MPICH2 chooses the MPD process manager and
-the ``simple'' implementation of the Process Management Interface.
-MPD provides a version of
-\texttt{mpiexec} that supports both the standard arguments described in
-Section~\ref{sec:mpiexec-standard} and other arguments described in this
-section.  MPD also provides a number of commands for querying the MPD
-process management environment and interacting with jobs it has started. 
-
-Before running \texttt{mpiexec}, the runtime environment must be
-established.  In the case of MPD, the daemons must be running.  See
-Section~\ref{sec:managing-mpd} for how to run and manage the MPD daemons.
+Before running MPD's \texttt{mpiexec}, the runtime environment must be
+established. In the case of MPD, the daemons must be running. See
+Section~\ref{sec:managing-mpd} for how to run and manage the MPD
+daemons.
 
 We assume that the MPD ring is up and the installation's \texttt{bin}
 directory is in your path; that is, you can do:
@@ -586,20 +493,6 @@ should not be used if \texttt{bigfile} is more than a few lines long.
 Have one of the processes open the file and read it instead.  The
 functions in MPI-IO may be useful for this purpose.
 
-% the following is obsolete
-% \item[\texttt{-kx}] is used only for debugging.  The \texttt{mpd}
-%   process manager encapsulates the command-line arguments, the contents
-%   of the \texttt{-machinefile} argment, \texttt{-configfile}, and in
-%   some cases the environment, into an XML file for delivery to the
-%   internals of the process manager.  Under ordinary circumstances, this
-%   file, created in \texttt{/tmp}, is not seen by the user, and is
-%   deleted after use.  In some cases it may be desirable to examine the
-%   contents of this file after it is used, in order to debug difficulties
-%   with the installation and functioning of \texttt{mpd}.  In this case,
-%   the \texttt{-kx} argument causes \texttt{mpiexec} to keep the file,
-%   which you will be able to find in \texttt{/tmp} with a name like
-%   \texttt{smith\_tempxml\_1234}.
-
 \end{description}
 
 A ``\texttt{:}'' can optionally be used between global args
@@ -631,7 +524,7 @@ A small number of environment variables affect the behavior of
   variable is not assigned, but \texttt{MPICH\_PORT\_RANGE} \emph{is}
   assigned, then it will use the range specified by
   \texttt{MPICH\_PORT\_RANGE} for its ports.  Otherwise, it will use
-  whatever paorts are assigned to it by the system.  Port ranges are
+  whatever ports are assigned to it by the system.  Port ranges are
   given as a pair of integers separated by a colon.
 \item[\texttt{MPIEXEC\_BNR}] If this environment variable is defined
   (its value, if any, is currently insignificant), then MPD will act in
@@ -844,62 +737,6 @@ but for standard error.
   but for standard error. 
 \end{description}
 
-\subsection{Extensions for the hydra Process Management Environment}
-\label{sec:extensions-hydra}
-\texttt{hydra} is a process management system for starting processes
-using the native launcher daemons present on the system such as ssh,
-slurm, pbs. This process manager does not support programs that use
-\texttt{MPI\_Comm\_spawn} and the other dynamic process routines.
-
-\subsubsection{\texttt{mpiexec} arguments for hydra}
-\label{sec:mpiexec-hydra}
-
-In addition to the standard \texttt{mpiexec} command-line arguments,
-the \texttt{hydra} \texttt{mpiexec} supports the following options:
-\begin{description}
-\item[\texttt{-np <num>}]A synonym for the standard \texttt{-n} argument
-\item[\texttt{-env <name> <value>}]Set the environment variable
-\texttt{<name>} to \texttt{<value>} for the processes being run by
-\texttt{mpiexec}.
-\item[\texttt{-envnone}]Pass no environment variables (other than ones
-specified with  other \texttt{-env} or \texttt{-genv} arguments) to the
-processes being run by \texttt{mpiexec}. 
-By default, all environment
-variables are provided to each MPI process (rationale: principle of
-least surprise for the user)
-\item[\texttt{-envlist <list>}]Pass the listed environment variables (names
-separated  by commas), with their current values, to the processes being run by
- \texttt{mpiexec}.
-\item[\texttt{-genv <name> <value>}]The \item{-genv} options have the same
-meaning as their corresponding \texttt{-env} version, except they apply to all
-executables, not just the current executable (in the case that the colon
-syntax is used to specify multiple execuables).
-\item[\texttt{-genvnone}]Like \texttt{-envnone}, but for all executables
-\item[\texttt{-genvlist <list>}]Like \texttt{-envlist}, but for all executables
-\end{description}
-
-In addition to the commandline argments, the \texttt{hydra}
-\texttt{mpiexec} provides a number of environment variables that can
-be used to control the behavior of \texttt{mpiexec}:
-
-\begin{description}
-\item[\texttt{MPIEXEC\_TIMEOUT}]Maximum running time in seconds.
-\texttt{mpiexec} will terminate MPI programs that take longer than the value
-specified by \texttt{MPIEXEC\_TIMEOUT}.  
-\item[\texttt{MPIEXEC\_PORT\_RANGE}]Set the range of ports that
-\texttt{mpiexec} will use  
-  in communicating with the processes that it starts.  The format of 
-  this is \texttt{<low>:<high>}.  For example, to specify any port between
-  10000 and 10100, use \texttt{10000:10100}.  
-\item[\texttt{MPICH\_PORT\_RANGE}]Has the same meaning as
-\texttt{MPIEXEC\_PORT\_RANGE} and is used if \texttt{MPIEXEC\_PORT\_RANGE} is
-not set. 
-\item[\texttt{HYDRA\_HOST\_FILE}]Specifies the host file to use to
-  launch processes.
-\item[\texttt{HYDRA\_USE\_LOCALHOST}]Forces hydra to spawn all
-  processes on the local host.
-\end{description}
-
 \subsection{Restrictions of the remshell Process Management Environment}
 \label{sec:restrictions-remshell}
 
@@ -926,10 +763,19 @@ For more complex needs or for faster startup, we recommend the use of the
 \subsection{Using MPICH2 with SLURM and PBS}
 \label{sec:external_pm}
 
-MPICH2 can be used in both SLURM and PBS environments. If configured
-with SLURM, use the {\texttt srun} job launching utility provided by
-SLURM. For PBS, MPICH2 jobs can be launched in two ways: (i) using MPD
-or (ii) using the OSC mpiexec.
+There are multiple ways of using MPICH2 with SLURM or PBS. Hydra
+provides native support for both SLURM and PBS, and is likely the
+easiest way to use MPICH2 on these systems (see the Hydra
+documentation above for more details).
+
+Alternatively, SLURM also provides compatibility with MPICH2's
+internal process management interface. To use this, you need to
+configure MPICH2 with SLURM support, and then use the {\texttt srun}
+job launching utility provided by SLURM.
+
+For PBS, MPICH2 jobs can be launched in three ways: (i) use Hydra's
+mpiexec with the appropriate options corresponding to PBS, (ii) using
+MPD or (iii) using the OSC mpiexec.
 
 \subsubsection{MPD in the PBS environment}
 \label{sec:pbs2mpd}

@@ -135,12 +135,6 @@ For the default installation, you will need:
 \item A C compiler.
 \item A Fortran-77, Fortran-90, and/or C++ compiler if you wish to write
   MPI programs in any of these languages.
-\item Python 2.2 or later version, for building the default process
-  management system, MPD.
-  Most systems have
-  Python pre-installed, but you can get it free from
-  \texttt{www.python.org}.  You may assume it is there unless the
-  \texttt{configure} step below complains.
 \item Any one of a number of Unix operating systems, such as IA32-Linux.
   MPICH2 is most extensively tested on Linux;  there remain some
   difficulties on systems to which we do not currently have access.  Our
@@ -272,209 +266,60 @@ for \texttt{csh} and \texttt{tcsh}, or
 for \texttt{bash} and \texttt{sh}.  Check that everything is in order at
 this point by doing
 \begin{verbatim}
-    which mpd
     which mpicc
     which mpiexec
-    which mpirun
 \end{verbatim}
 All should refer to the commands in the \texttt{bin} subdirectory of your
 install directory.  It is at this point that you will need to
 duplicate this directory on your other machines if it is not
 in a shared file system such as NFS.
 
-\item
-MPICH2, unlike MPICH, uses an external process manager for scalable
-startup of large MPI jobs.  The default process manager is called
-MPD, which is a ring of daemons on the machines where you will run
-your MPI programs.  In the next few steps, you will get this ring up
-and tested.
-The instructions given here will probably be enough to get you started.
-If not, you should refer to Appendix~\ref{app:mpd} for troubleshooting help.
-More details on interacting with MPD can be found by running
-\texttt{mpdhelp} or any mpd command with the \texttt{--help} option, or by
-viewing the README file in \texttt{mpich2/src/pm/mpd}.  The information
-provided includes how to list running jobs, kill, suspend, or otherwise
-signal them, and how to use the \texttt{gdb} debugger via special
-arguments to \texttt{mpiexec}.
+\item Check that you can reach these machines with \texttt{ssh} or
+\texttt{rsh} without entering a password.  You can test by doing
 
-For security reasons, MPD looks in your home directory for a file named
-\texttt{.mpd.conf} containing the line
-\begin{verbatim}
-    secretword=<secretword>
-\end{verbatim}
-where \verb+<secretword>+ is a string known only to yourself.  {\em It should
-not be your normal Unix password.}  Make this file readable and writable
-only by you:
-\begin{verbatim}
-    cd $HOME
-    touch .mpd.conf
-    chmod 600 .mpd.conf
-\end{verbatim}
-Then use an editor to place a line like:
-\begin{verbatim}
-  secretword=mr45-j9z
-\end{verbatim}
-into the file.
-(Of course use a different secret word than \verb+mr45-j9z+.)
-
-\item
-The first sanity check consists of bringing up a ring of one MPD on
-the local machine, testing one MPD command, and bringing the ``ring''
-down. 
-\begin{verbatim}
-    mpd & 
-    mpdtrace
-    mpdallexit
-\end{verbatim}
-The output of \texttt{mpdtrace} should be the hostname of the machine you are
-running on.  The \texttt{mpdallexit} causes the mpd daemon to exit.
-If you encounter problems, you should check Appendix~\ref{app:mpd} on
-troubleshooting MPD. 
-
-\item
-The next sanity check is to run a non-MPI program using the daemon.
-\begin{verbatim}
-    mpd & 
-    mpiexec -n 1 /bin/hostname
-    mpdallexit
-\end{verbatim}
-This should print the name of the machine you are running on.  If not,
-you should check Appendix~\ref{app:mpd} on
-troubleshooting MPD.
-
-\item
-Now we will bring up a ring of \texttt{mpd}'s on a set of machines.  Create
-a file consisting of a list of machine names, one per line.  Name this
-file \texttt{mpd.hosts}.  These hostnames will be used as targets for
-\texttt{ssh} or \texttt{rsh}, so include full domain names if necessary.  Check that you
-can reach these machines with \texttt{ssh} or \texttt{rsh} without
-entering a password.  You can test by doing
 \begin{verbatim}
     ssh othermachine date
 \end{verbatim}
+
 or
+
 \begin{verbatim}
     rsh othermachine date
 \end{verbatim}
+
 If you cannot get this to work without entering a password, you will
-need to configure \texttt{ssh} or \texttt{rsh} so that this can be done,
-or else use the workaround for \texttt{mpdboot} in the next step.
+need to configure \texttt{ssh} or \texttt{rsh} so that this can be
+done.
 
-\item
-Start the daemons on (some of) the hosts in the file \texttt{mpd.hosts}.
-\begin{verbatim}
-  mpdboot -n <number to start> -f mpd.hosts
-\end{verbatim}
-The number to start can be less than 1 + number of hosts in the
-file, but cannot be greater than 1 + the number of hosts in the
-file.  One \texttt{mpd} is always started on the machine where
-\texttt{mpdboot} is 
-run, and is counted in the number to start, whether or not it occurs
-in the file.  By default, \texttt{mpdboot} will only start one \texttt{mpd} per
-machine even if the machine name appears in the hosts file multiple times.
-The \texttt{-1} option can be used to override this behavior, but there is typically
-no reason for a user to need multiple mpds on a single host.
-The \texttt{-1} option (that's the digit one, not the letter el) exists mostly
-to support internal testing. 
-The \texttt{--help} option explains these as well as other useful
-options.  In particular, if your cluster has multiprocessor nodes, you
-might want to use the \texttt{--ncpus} argument described in 
-Section~\ref{sec:mpd-on-smps}.
+\item Test the setup you just created:
 
-Check to see if all the hosts you listed in \texttt{mpd.hosts} are in the output
-of 
 \begin{verbatim}
-    mpdtrace
-\end{verbatim}
-and if so move on to the next step.
-
-There is a workaround if you cannot get \texttt{mpdboot} to work because of 
-difficulties with \texttt{ssh} or \texttt{rsh} setup.  You can start the
-daemons ``by 
-hand'' as follows:
-\begin{verbatim}
-   mpd &            # starts the local daemon
-   mpdtrace -l      # makes the local daemon print its host
-                    # and port in the form <host>_<port>
-\end{verbatim}
-Then log into each of the other machines, put the \texttt{install/bin}
-directory in your path, and do:
-\begin{verbatim}
-   mpd -h <hostname> -p <port> &
-\end{verbatim}
-where the hostname and port belong to the original mpd that you
-started.  From each machine, after starting the mpd, you can do 
-\begin{verbatim}
-   mpdtrace
-\end{verbatim}
-to see which machines are in the ring so far.  More details on
-\texttt{mpdboot} and other options for starting the mpd's are in
-\texttt{mpich2-%MPICH2_VERSION%/src/pm/mpd/README}.
-
-{\em In case of persistent difficulties getting the ring of mpd's up
-and running on the machines you want, please see
-Appendix~\ref{app:mpd}.  There we discuss the mpd's in more detail and
-describe how you can use the \texttt{mpdcheck} utility to diagnose
-problems with the networking configuration of your systems.}
-
-
-\item
-Test the ring you have just created:
-\begin{verbatim}
-    mpdtrace
-\end{verbatim}
-The output should consist of the hosts where MPD daemons are now
-running.  You can see how long it takes a message to circle this
-ring with 
-\begin{verbatim}
-    mpdringtest
-\end{verbatim}
-That was quick.  You can see how long it takes a message to go
-around many times by giving mpdringtest an argument:
-\begin{verbatim}
-    mpdringtest 100
-    mpdringtest 1000
+    mpiexec -f machinefile -n <number> hostname
 \end{verbatim}
 
-\item
-Test that the ring can run a multiprocess job:
+The machinefile contains the list of hosts you want to run the
+executable on.
+
 \begin{verbatim}
-    mpiexec -n <number> hostname
-\end{verbatim}
-The number of processes need not match the number of hosts in the
-ring;  if there are more, they will wrap around.  You can see the
-effect of this by getting rank labels on the stdout:
-\begin{verbatim}
-    mpiexec -l -n 30 hostname
-\end{verbatim}
-You probably didn't have to give the full pathname of the hostname
-command because it is in your path.  If not, use the full pathname:
-\begin{verbatim}
-    mpiexec -l -n 30 /bin/hostname
+  % cat machinefile
+     host1     # Run 1 process on host1
+     host2:4   # Run 4 processes on host2
+     host3:2   # Run 2 processes on host3
+     host4:1   # Run 1 process on host4
 \end{verbatim}
 
 \item
 Now we will run an MPI job, using the \texttt{mpiexec} command as specified
 in the MPI-2 standard.  
 
-% There are some examples in the install
-% directory, which you have already put in your path, as well as in
-% the directory \texttt{mpich2-%MPICH2_VERSION%/examples}.
-% One of them is the classic \texttt{cpi}
-% example, which computes the value of $\pi$ by numerical integration in
-% parallel.   
 As part of the build process for MPICH2, a simple program to compute the value
 of $\pi$ by numerical integration is created in the
 \texttt{mpich2-%MPICH2_VERSION%/examples} directory.  If the current directory is the top
 level MPICH2 build directory, then you can run this program with
 \begin{verbatim}
-    mpiexec -n 5 examples/cpi
+    mpiexec -n 5 -f machinefile ./examples/cpi
 \end{verbatim}
-The number of processes need not match the number of hosts.
 The \texttt{cpi} example will tell you which hosts it is running on.
-By default, the processes are launched one after the other on the hosts
-in the mpd ring, so it is not necessary to specify hosts when running a
-job with \texttt{mpiexec}.
 
 There are many options for \texttt{mpiexec}, by which multiple executables
 can be run, hosts can be specified (as long as they are in the mpd
@@ -486,11 +331,7 @@ paths for executables can be specified.  Do
 \end{verbatim}
 for details. A typical example is:
 \begin{verbatim}
-    mpiexec -n 1 master : -n 19 slave
-\end{verbatim}
-or
-\begin{verbatim}
-    mpiexec -n 1 -host mymachine master : -n 19 slave
+    mpiexec -f machinefile -n 1 ./master : -n 19 ./slave
 \end{verbatim}
 to ensure that the process with rank 0 runs on your workstation.
 
@@ -498,10 +339,6 @@ The arguments between `:'s in this syntax are called ``argument sets,''
 since they apply to a set of processes.  More argments are described in
 the \textit{User's Guide}.
 
-The \texttt{mpirun} command from the original MPICH is still available,
-although it does not support as many options as \texttt{mpiexec}.  You might
-want to use it in the case where you do not have the XML parser
-required for the use of \texttt{mpiexec}.
 \end{enumerate}
 
 If you have completed all of the above steps, you have successfully
@@ -599,10 +436,10 @@ Section~\ref{configure-options}.  Here we comment on some of them.
 \item[\texttt{--enable-sharedlibs=solaris-cc}]for cc on Solaris
 \end{description}
 \item[--with-pm]Select the process manager.  The default is
-  \texttt{mpd}; also useful are \texttt{gforker} and \texttt{hydra}.  You can build with
+  \texttt{hydra}; also useful are \texttt{gforker} and \texttt{mpd}.  You can build with
   all three process managers by specifying
 \begin{verbatim}
-  --with-pm=mpd:gforker:hydra
+  --with-pm=hydra:mpd:gforker
 \end{verbatim}
 \item[--without-mpe]Configure MPICH2 without the MPE package of
   program development tools (including the Jumpshot performance viewer)
@@ -659,8 +496,7 @@ MPICH2 is built, specify the following when MPICH2 is configured:
 
 Now that MPICH2 has been installed, the users have to be informed of how
 to use it.  Part of this is covered in the \emph{User's Guide}.  Other
-things users need to know are covered here.  (For example, whether they need to
-run their own mpd rings or use a system-wide one run by root.)
+things users need to know are covered here.
 
 
 \section{Migrating from MPICH1}
@@ -700,9 +536,10 @@ consistent (and required) for use of version 2 GNU \texttt{autoconf}.
 Other differences between MPICH1 and MPICH2 include the handling of
 process managers and the choice of communication device.
 
-For example, the new mpd has a new format and slightly different
-semantics for the \texttt{-machinefile} option.  Assume that you type this
-data into a file named \texttt{machfile}:
+For example, the new process managers have a new format and slightly
+different semantics for the \texttt{-machinefile} option.  Assume that
+you type this data into a file named \texttt{machfile}:
+
 \begin{verbatim}
     bp400:2
     bp401:2
@@ -782,16 +619,25 @@ different mechanisms by which your processes are started.  An interface
 (called PMI) isolates the MPICH2 library code from the process manager.
 Currently three process managers are distributed with MPICH2
 \begin{description}
-\item[mpd] This is the default, and the one that is described
-  in~Section~\ref{sec:steps}.  It consists of a ring of daemons.
+\item[hydra] This is the default process manager tha natively uses the
+existing daemons on the system such as ssh, slurm, pbs.
+\item[mpd] This is the traditional process manager used in MPICH2.  It consists of a ring of daemons.
 \item[smpd] This one can be used for both Linux and Windows.  It is the
   only process manager that supports the Windows version of MPICH2.
 \item[gforker] This is a simple process manager that creates all
   processes on a single machine.  It is useful for both debugging and on
   shared memory multiprocessors.
-\item[hydra] This is a new process manager tha natively uses the
-existing daemons on the system such as ssh, slurm, pbs.
 \end{description}
+
+\subsection{hydra} \label{sec:hydra} \texttt{hydra} is the default
+process manager that launches processes using the native daemons
+present on the system such as ssh, slurm, pbs, etc. To configure with
+the \texttt{hydra} process manager, use
+
+\begin{verbatim}
+    configure --with-pm=hydra ...
+\end{verbatim}
+
 
 \subsection{mpd}
 \label{sec:mpd}
@@ -1099,15 +945,6 @@ a single node; it's version of \texttt{mpiexec} uses the system
 To configure with the \texttt{gforker} process manager, use
 \begin{verbatim}
     configure --with-pm=gforker ...
-\end{verbatim}
-
-\subsection{hydra} \label{sec:hydra} \texttt{hydra} is a simple
-process manager that launches processes using the native daemons
-present on the system such as ssh, slurm, pbs, etc. To configure with
-the \texttt{hydra} process manager, use
-
-\begin{verbatim}
-    configure --with-pm=hydra ...
 \end{verbatim}
 
 \section{Testing}

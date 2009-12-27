@@ -430,9 +430,9 @@ AC_ARG_WITH(pm,
                   valid values.  Multiple process managers may be specified as
                   long as they all use the same pmi interface by separating them
                   with colons.  The mpiexec for the first named process manager
-                  will be installed.  Example: "--with-pm=gforker:mpd:remshell"
-                  builds the three process managers gforker, mpd, and remshell;
-                  only the mpiexec from gforker is installed into the bin
+                  will be installed.  Example: "--with-pm=hydra:mpd:gforker"
+                  builds the three process managers hydra, mpd and gforker;
+                  only the mpiexec from hydra is installed into the bin
                   directory.]
     ,,with_pm=default)
 dnl
@@ -1382,7 +1382,7 @@ if test "$with_pmi" = "uni" -a "$with_pm" = "default" ; then
     with_pm="no"
 fi
 if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
-    with_pm=mpd,hydra,gforker
+    with_pm=hydra,mpd
 fi
 
 # We allow multiple pm names, separated by : or ,

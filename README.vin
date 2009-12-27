@@ -48,7 +48,7 @@ I. Getting Started
 
 The following instructions take you through a sequence of steps to get
 the default configuration (ch3 device, nemesis channel (with TCP and
-shared memory), MPD process management) of MPICH2 up and running.
+shared memory), Hydra process management) of MPICH2 up and running.
 
 1.  You will need the following prerequisites.
 
@@ -60,8 +60,6 @@ shared memory), MPD process management) of MPICH2 up and running.
       (g77 or gfortran is sufficient) 
 
     - A C++ compiler for the C++ MPI bindings (g++ is sufficient)
-
-    - Python 2.2 or later (for the default MPD process manager)
 
     - If a Fortran 90 compiler is found, by default MPICH2 will
       attempt to build a basic MPI module.  This module contains the
@@ -181,9 +179,8 @@ shared memory), MPD process management) of MPICH2 up and running.
 
     Check that everything is in order at this point by doing 
 
-      which mpd
+      which mpicc
       which mpiexec
-      which mpirun
 
     All should refer to the commands in the bin subdirectory of your
     install directory.  It is at this point that you will need to
@@ -191,183 +188,35 @@ shared memory), MPD process management) of MPICH2 up and running.
     in a shared file system such as NFS.
 
 8.  MPICH2 uses an external process manager for scalable startup of
-    large MPI jobs.  The default process manager is called MPD, which
-    is a ring of daemons on the machines where you will run your MPI
-    programs.  In the next few steps, you will get his ring up and
-    tested.  More details on interacting with MPD can be found in the
-    README file in mpich2-%VERSION%/src/pm/mpd, such as how to list
-    running jobs, kill, suspend, or otherwise signal them, and how to
-    debug programs with "mpiexec -gdb".
+    large MPI jobs.  The default process manager is called Hydra. More
+    details on interacting with Hydra can be found at
+    http://wiki.mcs.anl.gov/mpich2/index.php/Using_the_Hydra_Process_Manager
 
-    If you have problems getting the MPD ring established, see the
-    Installation Guide for instructions on how to diagnose problems
-    with your system configuration that may be preventing it.  Also
-    see that guide if you plan to run MPD as root on behalf of users.
-    Please be aware that we do not recommend running MPD as root until
-    you have done testing to make sure that all is well.
+9. Test that you can run a multiprocess job:
 
-    Begin by placing in your home directory a file named .mpd.conf
-    (/etc/mpd.conf if root), containing the line 
+      mpiexec -f ~/machinefile -n <number> hostname
 
-      secretword=<secretword>
-
-    where <secretword> is a string known only to yourself.  It should
-    NOT be your normal Unix password.  Make this file readable and
-    writable only by you:
-
-      chmod 600 .mpd.conf
-
-9.  The first sanity check consists of bringing up a ring of one mpd on
-    the local machine, testing one mpd command, and bringing the "ring"
-    down. 
-
-      mpd &
-      mpdtrace
-      mpdallexit
-
-    The output of mpdtrace should be the hostname of the machine you are
-    running on.  The mpdallexit causes the mpd daemon to exit.
-    If you have problems getting the mpd ring established, see the
-    Installation Guide for instructions on how to diagnose problems
-    with your system configuration that may be preventing it.
-
-10. Now we will bring up a ring of mpd's on a set of machines.  Create a
-    file consisting of a list of machine names, one per line.  Name this
-    file mpd.hosts.  These hostnames will be used as targets for ssh or
-    rsh, so include full domain names if necessary.  Check that you can
-    reach these machines with ssh or rsh without entering a password.
-    You can test by doing
-
-      ssh othermachine date
-
-    or
-
-      rsh othermachine date
-
-    If you cannot get this to work without entering a password, you will
-    need to configure ssh or rsh so that this can be done, or else use
-    the workaround for mpdboot in the next step.
-
-11. Start the daemons on (some of) the hosts in the file mpd.hosts
-
-      mpdboot -n <number to start>  
-
-    The number to start can be less than 1 + number of hosts in the
-    file, but cannot be greater than 1 + the number of hosts in the
-    file.  One mpd is always started on the machine where mpdboot is
-    run, and is counted in the number to start, whether or not it occurs
-    in the file.
-
-    There is a workaround if you cannot get mpdboot to work because of
-    difficulties with ssh or rsh setup.  You can start the daemons "by
-    hand" as follows:
-
-       mpd &                # starts the local daemon
-       mpdtrace -l          # makes the local daemon print its host
-                            # and port in the form <host>_<port>
-
-    Then log into each of the other machines, put the install/bin
-    directory in your path, and do:
-
-       mpd -h <hostname> -p <port> &
-
-    where the hostname and port belong to the original mpd that you
-    started.  From each machine, after starting the mpd, you can do 
-
-       mpdtrace
-
-    to see which machines are in the ring so far.  More details on
-    mpdboot and other options for starting the mpd's are in
-    mpich2-%VERSION%/src/pm/mpd/README.
-
- !! ***************************
-    If you are still having problems getting the mpd ring established,
-    you can use the mpdcheck utility as described in the Installation Guide 
-    to diagnose problems with your system configuration.
- !! ***************************
-
-12. Test the ring you have just created:
-
-      mpdtrace
-
-    The output should consist of the hosts where MPD daemons are now
-    running.  You can see how long it takes a message to circle this
-    ring with 
-
-      mpdringtest
-
-    That was quick.  You can see how long it takes a message to go
-    around many times by giving mpdringtest an argument:
-
-      mpdringtest 100
-      mpdringtest 1000
-
-13. Test that the ring can run a multiprocess job:
-
-      mpiexec -n <number> hostname
-
-    The number of processes need not match the number of hosts in the
-    ring;  if there are more, they will wrap around.  You can see the
-    effect of this by getting rank labels on the stdout:
-
-      mpiexec -l -n 30 hostname
-
-    You probably didn't have to give the full pathname of the hostname
-    command because it is in your path.  If not, use the full pathname:
-
-      mpiexec -l -n 30 /bin/hostname
-
-14. Now we will run an MPI job, using the mpiexec command as specified
+10. Now we will run an MPI job, using the mpiexec command as specified
     in the MPI-2 standard.  There are some examples in the install
     directory, which you have already put in your path, as well as in
-    the directory mpich2-%VERSION%/examples.  One of them is the classic
-    cpi example, which computes the value of pi by numerical
+    the directory mpich2-%VERSION%/examples.  One of them is the
+    classic cpi example, which computes the value of pi by numerical
     integration in parallel.
 
-      mpiexec -n 5 cpi
+      mpiexec -f ~/machinefile -n 5 ./examples/cpi
 
-    The number of processes need not match the number of hosts.
     The cpi example will tell you which hosts it is running on.
-    By default, the processes are launched one after the other on the hosts
-    in the mpd ring, so it is not necessary to specify hosts when running a
-    job with mpiexec.
 
-    There are many options for mpiexec, by which multiple executables
-    can be run, hosts can be specified (as long as they are in the mpd
-    ring), separate command-line arguments and environment variables can
-    be passed to different processes, and working directories and search
-    paths for executables can be specified.  Do
+    For additional mpiexec options, do:
 
       mpiexec --help
-
-    for details. A typical example is:
-
-      mpiexec -n 1 master : -n 19 slave
-
-    or
-
-      mpiexec -n 1 -host mymachine : -n 19 slave
-
-    to ensure that the process with rank 0 runs on your workstation.
-
-    The arguments between ':'s in this syntax are called "argument
-    sets", since they apply to a set of processes.  Some arguments,
-    called "global", apply across all argument sets and must appear
-    first.  For example, to get rank labels on standard output, use
-
-      mpiexec -l -n 3 cpi
-
-    See the User's Guide for much more detail on arguments to mpiexec.
-
-    The mpirun command from the original MPICH is still available,
-    although it does not support as many options as mpiexec.
 
 If you have completed all of the above steps, you have successfully
 installed MPICH2 and run an MPI example.  
 
 More details on arguments to mpiexec are given in the User's Guide in
-the doc subdirectory.  Also in the User's Guide you will find help on
-debugging.  MPICH2 has some some support for the TotalView debugger, as
+the doc subdirectory. Also in the User's Guide you will find help on
+debugging. MPICH2 has some some support for the TotalView debugger, as
 well as some other approaches described there.
 
 -------------------------------------------------------------------------
@@ -608,9 +457,9 @@ using:
 
   --with-device=ch3:shm
 
-These two channels are being deprecated and will be removed starting
-the 1.2 release series of MPICH2. The nemesis channel provides all the
-functionality supported by these channels and more.
+These two channels are now unsupported on UNIX platforms. The nemesis
+channel provides all the functionality supported by these channels and
+more.
 
 dllchan
 -------
@@ -731,17 +580,18 @@ command-line for MPICH2:
 V. Alternate Process Managers
 =============================
 
-mpd
----
-MPD is the default process manager.  Its setup and use have been
-described above.  The file mpich2-%VERSION%/src/pm/mpd/README has more 
-information about interactive commands for managing the ring of MPDs.
-
 hydra
 -----
-Hydra is a new process management framework that uses existing daemons
-on nodes (e.g., ssh, pbs, slurm, sge) to start MPI processes. The file
-mpich2-%VERSION%/src/pm/hydra/README has mode information about Hydra.
+Hydra is the default process management framework that uses existing
+daemons on nodes (e.g., ssh, pbs, slurm, sge) to start MPI
+processes. More information on Hydra can be found at
+http://wiki.mcs.anl.gov/mpich2/index.php/Using_the_Hydra_Process_Manager
+
+mpd
+---
+MPD was the traditional process manager in MPICH2. The file
+mpich2-%VERSION%/src/pm/mpd/README has more information about
+interactive commands for managing the ring of MPDs.
 
 smpd
 ---- 
