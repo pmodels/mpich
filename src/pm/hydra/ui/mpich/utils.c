@@ -147,7 +147,7 @@ static HYD_status genvall_fn(char *arg, char ***argv)
 static HYD_status process_mfile_token(char *token, int newline)
 {
     int num_procs;
-    char *hostname, *procs, *binding, *tmp, *user_map;
+    char *hostname, *procs, *binding, *tmp;
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
@@ -168,10 +168,7 @@ static HYD_status process_mfile_token(char *token, int newline)
             if (node->local_binding)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate local binding setting\n");
 
-            HYDU_MALLOC(user_map, char *, HYD_TMPBUF_SIZE, status);
-            HYDU_snprintf(user_map, HYD_TMPBUF_SIZE, "user:%s", binding);
-            node->local_binding = HYDU_strdup(user_map);
-            HYDU_FREE(user_map);
+            node->local_binding = HYDU_strdup(binding);
         }
         else {
             HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
