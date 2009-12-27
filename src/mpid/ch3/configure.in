@@ -294,13 +294,6 @@ export SHLIB_EXT
 export ENABLE_SHLIB
 export LIBTOOL
 
-# TERRIBLE HACK: For some reason, anything added to LIBS by this
-# configure is lost in the subconfigure.  So we save it in another
-# variable then restore it in the subconfigure.  Note that this
-# doesn't happen with LDFLAGS!
-# FIXME: Figure out what's going on.
-export MY_EXPORTED_LIBS="$LIBS"
-
 # FIXME shouldn't put var in _SUBDIRS
 AC_CONFIG_SUBDIRS(channels/${channel_name})
 
