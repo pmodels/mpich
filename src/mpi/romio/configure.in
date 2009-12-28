@@ -1287,7 +1287,8 @@ if test "x$disable_aio" = "xno" ; then
         fi
     fi
 
-    if test "$aio_write_found" = "yes" ; then
+    if test "$aio_write_found" = "yes" -a \
+	"$ac_cv_search_aio_write" != "none required" ; then
 	WRAPPER_LIBS="$WRAPPER_LIBS $ac_cv_search_aio_write"
     fi
 fi
