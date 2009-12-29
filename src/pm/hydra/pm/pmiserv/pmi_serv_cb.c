@@ -337,7 +337,6 @@ HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void
     goto fn_exit;
 }
 
-
 HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 {
     struct HYD_proxy *proxy;
@@ -351,6 +350,32 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
     HYDU_FUNC_ENTER();
 
     proxy = (struct HYD_proxy *) userp;
+    pg = proxy->pg;
+
+    if (proxy->pid == NULL) { /* Got PIDs */
+        HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
+        status = HYDU_sock_read(fd, (void *) proxy->pid,
+                                proxy->proxy_process_count * sizeof(int),
+                                &count, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to read status from proxy\n");
+
+        if (pg->pgid) {
+            /* We initialize the debugger code only for
+             * non-dynamically spawned processes */
+            goto fn_exit;
+        }
+
+        /* Check if all the PIDs have been received */
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+            if (proxy->pid == NULL)
+                goto fn_exit;
+
+        /* Call the debugger initialization */
+        status = HYDT_dbg_setup_procdesc(pg);
+        HYDU_ERR_POP(status, "debugger setup failed\n");
+
+        goto fn_exit;
+    }
 
     HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
     status = HYDU_sock_read(fd, (void *) proxy->exit_status,
@@ -363,7 +388,6 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
 
     close(fd);
 
-    pg = proxy->pg;
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         if (proxy->exit_status == NULL)
             goto fn_exit;

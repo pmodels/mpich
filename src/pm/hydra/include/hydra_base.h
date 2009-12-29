@@ -217,6 +217,7 @@ struct HYD_proxy {
 
     struct HYD_exec *exec_list;
 
+    int *pid;
     int *exit_status;
     int control_fd;
 

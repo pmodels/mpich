@@ -875,6 +875,12 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
         force_env = NULL;
     }
 
+    /* Send the PID list upstream */
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
+                             HYD_pmcd_pmip.downstream.pid,
+                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));
+    HYDU_ERR_POP(status, "unable to return exit status upstream\n");
+
   fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,

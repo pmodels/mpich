@@ -140,6 +140,7 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg)
     (*proxy)->start_pid = -1;
     (*proxy)->proxy_process_count = 0;
 
+    (*proxy)->pid = NULL;
     (*proxy)->exit_status = NULL;
     (*proxy)->control_fd = -1;
 
@@ -175,6 +176,9 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
             HYDU_free_strlist(proxy->exec_launch_info);
             HYDU_FREE(proxy->exec_launch_info);
         }
+
+        if (proxy->pid)
+            HYDU_FREE(proxy->pid);
 
         if (proxy->exit_status)
             HYDU_FREE(proxy->exit_status);
