@@ -31,7 +31,7 @@ int MPL_snprintf(char *, size_t, const char *, ...);
  * strdup (requires the code to use MPIU_Strdup instead), while MPL
  * tries to use strdup. */
 #if !defined USE_MEMORY_TRACING
-#if defined MPL_NEEDS_STRDUP_DECL
+#if defined MPL_NEEDS_STRDUP_DECL && !defined strdup
 extern char *strdup(const char *);
 #endif /* MPL_NEEDS_STRDUP_DECL */
 
