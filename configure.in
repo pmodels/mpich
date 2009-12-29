@@ -982,8 +982,7 @@ PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
 # Atomic locks
 # FIXME TODO eventually delete the src/mpid/common/locks directory
-PAC_CONFIG_SUBDIR(src/mpid/common/locks, $use_top_srcdir, $ac_configure_args,,
-					 AC_ERROR(locks configure failed))
+subsystems="$subsystems src/mpid/common/locks"
 
 # OpenPA
 opadir="${use_top_srcdir}/src/openpa"
