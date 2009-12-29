@@ -25,6 +25,12 @@ extern int snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,
 int MPL_snprintf(char *, size_t, const char *, ...);
 #endif /* MPL_HAVE_SNPRINTF */
 
+/* FIXME: This is a hack to not define MPL_strdup when memory tracing
+ * is enabled. This is needed because the memory tracing code is still
+ * left behind in MPICH2 and not migrated to MPL; so MPICH2 undefines
+ * strdup (requires the code to use MPIU_Strdup instead), while MPL
+ * tries to use strdup. */
+#if !defined USE_MEMORY_TRACING
 #if defined MPL_NEEDS_STRDUP_DECL
 extern char *strdup(const char *);
 #endif /* MPL_NEEDS_STRDUP_DECL */
@@ -34,6 +40,7 @@ extern char *strdup(const char *);
 #else
 char *MPL_strdup(const char *str);
 #endif /* MPL_HAVE_STRDUP */
+#endif /* USE_MEMORY_TRACING */
 
 /* *INDENT-ON* */
 #if defined(__cplusplus)
