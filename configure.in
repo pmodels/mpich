@@ -274,13 +274,13 @@ FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
 F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
 LDFLAGS="$LDFLAGS $MPICH2LIB_LDFLAGS"
 
-
-dnl Use AC_ARG_ENABLE to look for --enable-feature and AC_ARG_WITH to look for
-dnl --with-capability
-dnl
-dnl Enable better caching control
+# Enable better caching control
 PAC_ARG_CACHING
-dnl
+
+# Set CFLAGS for enable strict if necessary.  Do this *first* because
+# it may influence the output of the other tests
+PAC_ARG_STRICT
+
 AC_ARG_ENABLE(echo, 
 [--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
 dnl
@@ -1630,16 +1630,7 @@ if test "$ENABLE_SHLIB" != "none" -o "$enable_debuginfo" != "no" ; then
    CREATESHLIB=`pwd`/src/util/createshlib
 fi
 AC_SUBST(CREATESHLIB)
-# ---------------------------------------------------------------------------
-# Basic properties of the C compiler; some are needed for the language 
-# bindings tests.
-# Set CFLAGS for enable strict if necessary.  Do this *first* because
-# it may influence the output of the other tests
-AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],,enable_strict=no)
-PAC_CC_STRICT($enable_strict)
-if test -n "$pac_cc_strict_flags" ; then
-    CFLAGS="$CFLAGS $pac_cc_strict_flags"
-fi
+
 # Check for whether the compiler defines a symbol that contains the 
 # function name.  The MPICH2 code, for greater portability, defines
 # its own symbols, FCNAME (a string) and FUNCNAME (a token that is not a 
