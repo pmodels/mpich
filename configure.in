@@ -979,6 +979,8 @@ PAC_CONFIG_SUBDIR(src/mpl, $use_top_srcdir, $ac_configure_args,,AC_ERROR(MPL con
 PAC_APPEND_FLAG([-lmpl], [WRAPPER_LIBS])
 PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
 PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/mpl"
+other_install_dirs="$other_install_dirs src/mpl"
 
 # Atomic locks
 # FIXME TODO eventually delete the src/mpid/common/locks directory
