@@ -22,9 +22,4 @@ multiple_ports2 4
 disconnect 3
 disconnect2 3
 disconnect3 3
-# The concurrent_spawns test can overtax the process manager, so
-# we set a shorter time limit in case it hangs.
-# There's a problem with mpd that causes concurrent_spawns to cause problems
-# with mpd, leading to many runaway concurrent_spawn processes.  This 
-# test is being disabled until mpd is fixed.
-concurrent_spawns 1 timeLimit=30
+concurrent_spawns 1
