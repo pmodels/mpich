@@ -17,7 +17,7 @@ HYD_status HYDT_dmx_init(char **demux)
 
     HYDU_FUNC_ENTER();
 
-    if (!(*demux)) { /* user didn't specify anything */
+    if (!(*demux)) {    /* user didn't specify anything */
 #if defined HAVE_POLL
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_poll_wait_for_event;
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
@@ -34,7 +34,7 @@ HYD_status HYDT_dmx_init(char **demux)
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
 #endif /* HAVE_POLL */
     }
-    else if (!strcmp(*demux, "select")) { /* user wants to use select */
+    else if (!strcmp(*demux, "select")) {       /* user wants to use select */
 #if defined HAVE_SELECT
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_select_wait_for_event;
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
@@ -43,7 +43,8 @@ HYD_status HYDT_dmx_init(char **demux)
 
     if (HYDT_dmxu_fns.wait_for_event == NULL || HYDT_dmxu_fns.stdin_valid == NULL) {
         /* We couldn't find anything; return an error */
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot find an appropriate demux engine\n");
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "cannot find an appropriate demux engine\n");
     }
 
   fn_exit:
@@ -86,7 +87,8 @@ HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    HYDU_MALLOC(cb_element, struct HYDT_dmxu_callback *, sizeof(struct HYDT_dmxu_callback), status);
+    HYDU_MALLOC(cb_element, struct HYDT_dmxu_callback *, sizeof(struct HYDT_dmxu_callback),
+                status);
     cb_element->num_fds = num_fds;
     HYDU_MALLOC(cb_element->fd, int *, num_fds * sizeof(int), status);
     memcpy(cb_element->fd, fd, num_fds * sizeof(int));

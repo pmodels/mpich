@@ -205,7 +205,8 @@ static HYD_status iface_fn(char *arg, char ***argv)
     sa = (struct sockaddr_in *) ifa->ifa_addr;
     iface_ip = inet_ntop(AF_INET, (void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN);
     if (!iface_ip)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unable to find IP for interface %s\n",
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find IP for interface %s\n",
                              HYD_pmcd_pmip.user_global.iface);
 
     freeifaddrs(ifaddr);
@@ -693,8 +694,10 @@ HYD_status HYD_pmcd_pmi_proxy_launch_procs(void)
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
         HYD_pmcd_pmip.downstream.exit_status[i] = -1;
 
-    status = HYDT_bind_init(HYD_pmcd_pmip.local.local_binding ? HYD_pmcd_pmip.local.local_binding :
-                            HYD_pmcd_pmip.user_global.binding, HYD_pmcd_pmip.user_global.bindlib);
+    status = HYDT_bind_init(HYD_pmcd_pmip.local.local_binding ?
+                            HYD_pmcd_pmip.local.local_binding :
+                            HYD_pmcd_pmip.user_global.binding,
+                            HYD_pmcd_pmip.user_global.bindlib);
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
 
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,

@@ -166,7 +166,8 @@ static HYD_status process_mfile_token(char *token, int newline)
 
             for (node = HYD_handle.node_list; node->next; node = node->next);
             if (node->local_binding)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate local binding setting\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "duplicate local binding setting\n");
 
             node->local_binding = HYDU_strdup(binding);
         }
@@ -587,14 +588,12 @@ static HYD_status info_fn(char *arg, char ***argv)
                        "    Binding libraries available:             %s\n",
                        HYDRA_BINDLIB_NAMES);
     HYDU_dump_noprefix(stdout,
-                       "    Resource management kernels available:   %s\n",
-                       HYDRA_RMK_NAMES);
+                       "    Resource management kernels available:   %s\n", HYDRA_RMK_NAMES);
     HYDU_dump_noprefix(stdout,
                        "    Checkpointing libraries available:       %s\n",
                        HYDRA_CKPOINTLIB_NAMES);
     HYDU_dump_noprefix(stdout,
-                       "    Demux engines available:                 %s\n",
-                       HYDRA_DEMUX_NAMES);
+                       "    Demux engines available:                 %s\n", HYDRA_DEMUX_NAMES);
 
     HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
 

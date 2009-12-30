@@ -353,7 +353,7 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
     proxy = (struct HYD_proxy *) userp;
     pg = proxy->pg;
 
-    if (proxy->pid == NULL) { /* Got PIDs */
+    if (proxy->pid == NULL) {   /* Got PIDs */
         HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
         status = HYDU_sock_read(fd, (void *) proxy->pid,
                                 proxy->proxy_process_count * sizeof(int),
@@ -453,7 +453,8 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
             cmd = KILL_JOB;
             status = HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmu_cmd));
             if (status != HYD_SUCCESS) {
-                HYDU_warn_printf("unable to send data to the proxy on %s\n", proxy->node.hostname);
+                HYDU_warn_printf("unable to send data to the proxy on %s\n",
+                                 proxy->node.hostname);
                 overall_status = HYD_INTERNAL_ERROR;
                 continue;       /* Move on to the next proxy */
             }

@@ -508,6 +508,7 @@ static HYD_status fn_get_usize(int fd, int pgid, char *args[])
 }
 
 static char *mcmd_args[HYD_NUM_TMP_STRINGS] = { NULL };
+
 static int mcmd_num_args = 0;
 
 static HYD_status fn_spawn(int fd, int pgid, char *args[])
@@ -526,7 +527,8 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
     struct HYD_pmcd_token_segment *segment_list = NULL;
 
-    int token_count, i, j, k, pmi_id = -1, new_pgid, total_spawns, offset, argcnt, num_segments;
+    int token_count, i, j, k, pmi_id = -1, new_pgid, total_spawns, offset;
+    int argcnt, num_segments;
     char *pmi_port, *control_port, *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
     char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;

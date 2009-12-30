@@ -193,7 +193,8 @@ static HYD_status fn_fullinit(int fd, int pgid, char *args[])
 
     for (pg = &HYD_handle.pg_list; pg && pg->pgid != pgid; pg = pg->next);
     if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with pgid %d\n", pgid);
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with pgid %d\n",
+                             pgid);
 
     /* Add the process to the appropriate PG */
     status = HYD_pmcd_pmi_add_process_to_pg(pg, fd, rank);

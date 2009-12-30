@@ -15,7 +15,8 @@ HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(pollfds, struct pollfd *, HYDT_dmxu_num_cb_fds * sizeof(struct pollfd), status);
+    HYDU_MALLOC(pollfds, struct pollfd *, HYDT_dmxu_num_cb_fds * sizeof(struct pollfd),
+                status);
 
     for (i = 0, run = HYDT_dmxu_cb_list; run; run = run->next) {
         for (j = 0; j < run->num_fds; j++) {
