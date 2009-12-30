@@ -4976,12 +4976,14 @@ fi
 if test "$enable_coverage" = "yes" ; then
     if test "$ac_cv_prog_gcc" = "yes" ; then
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+        WRAPPER_CFLAGS="$WRAPPER_CFLAGS -fprofile-arcs -ftest-coverage"
     else
         AC_MSG_WARN([--enable-coverage only supported for GCC])
     fi
     if test "$enable_cxx" = "yes" ; then
         if test "$ac_cv_cxx_compiler_gnu" = "yes" ; then
             CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
+            WRAPPER_CXXFLAGS="$WRAPPER_CXXFLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for GCC])
         fi
@@ -4991,6 +4993,7 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_f77" = yes ; then
         if test "$ac_cv_f77_compiler_gnu" = "yes" ; then
              FFLAGS="$FFLAGS -fprofile-arcs -ftest-coverage"
+             WRAPPER_FFLAGS="$WRAPPER_FFLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for G77/GFORTRAN])
         fi
@@ -4998,6 +5001,7 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_f90" = yes ; then
         if test "$ac_cv_f90_compiler_gnu" = "yes" ; then
              F90FLAGS="$F90FLAGS -fprofile-arcs -ftest-coverage"
+             WRAPPER_F90FLAGS="$WRAPPER_F90FLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for GFORTRAN])
         fi
@@ -5025,6 +5029,7 @@ EOF
         else
 	    LDFLAGSsave="$LDFLAGS"
 	    LDFLAGS="$LDFLAGS -ftest-coverage -fprofile-arcs"
+	    WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS -ftest-coverage -fprofile-arcs"
 	    if AC_TRY_EVAL(link_only) ; then 
 	        AC_MSG_RESULT([need -ftest-coverage -fprofile-arcs])
             else
