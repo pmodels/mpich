@@ -435,6 +435,7 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
+static int in_cleanup = 0;
 
 HYD_status HYD_pmcd_pmi_serv_cleanup(void)
 {
@@ -445,25 +446,43 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
 
     HYDU_FUNC_ENTER();
 
+    if (in_cleanup)
+        goto fn_exit;
+
+    in_cleanup = 1;
+
     /* FIXME: Instead of doing this from this process itself, fork a
      * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+            while (proxy->control_fd == -1) {
+                /* Wait for the proxy to connect back */
+                status = HYDT_bsci_wait_for_completion(-1);
+                HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+            }
+
+            if (proxy->exit_status) {
+                /* Already got the exit status on this fd; skip it */
+                continue;
+            }
+
             cmd = KILL_JOB;
             status = HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmu_cmd));
             if (status != HYD_SUCCESS) {
                 HYDU_warn_printf("unable to send data to the proxy on %s\n",
                                  proxy->node.hostname);
                 overall_status = HYD_INTERNAL_ERROR;
-                continue;       /* Move on to the next proxy */
             }
         }
     }
 
+  fn_exit:
     HYDU_FUNC_EXIT();
-
     return overall_status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 
