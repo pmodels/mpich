@@ -568,8 +568,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,
                 total_spawns * sizeof(struct HYD_pmcd_token_segment), status);
 
-    status = HYD_pmcd_segment_tokens(tokens, token_count, segment_list, &num_segments);
-    HYDU_ERR_POP(status, "unable to segment tokens\n");
+    HYD_pmcd_segment_tokens(tokens, token_count, segment_list, &num_segments);
 
     if (num_segments != total_spawns) {
         /* We didn't read the entire PMI string; wait for the rest to

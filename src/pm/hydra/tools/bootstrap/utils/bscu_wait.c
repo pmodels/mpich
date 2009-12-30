@@ -32,9 +32,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
             if (HYD_bscu_fd_list[i] == -1)
                 continue;
 
-            status = HYDT_dmx_query_fd_registration(HYD_bscu_fd_list[i], &ret);
-            HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
-
+            ret = HYDT_dmx_query_fd_registration(HYD_bscu_fd_list[i]);
             if (ret) {  /* still registered */
                 count++;        /* We still need to wait */
 

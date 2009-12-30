@@ -48,10 +48,9 @@ static HYD_status init_params(void)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
+void HYD_pmcd_pmi_proxy_cleanup_params(void)
 {
     struct HYD_exec *exec, *texec;
-    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -129,12 +128,7 @@ HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void)
 
     HYDT_bind_finalize();
 
-  fn_exit:
     HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status control_port_fn(char *arg, char ***argv)

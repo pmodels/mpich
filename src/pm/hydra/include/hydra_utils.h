@@ -210,7 +210,8 @@ HYD_status HYDU_set_common_signals(void (*handler) (int));
 
 /* Sock utilities */
 enum HYDU_sock_comm_flag {
-    HYDU_SOCK_COMM_MSGWAIT = 0x01
+    HYDU_SOCK_COMM_NONE = 0,
+    HYDU_SOCK_COMM_MSGWAIT = 1
 };
 
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
@@ -259,7 +260,7 @@ HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
 
 #define HYDU_FREE(p)                            \
     {                                           \
-        HYDU_free(p);                           \
+        HYDU_free((void *) p);                  \
     }
 
 #define HYDU_STRLIST_CONSOLIDATE(strlist, i, status)                    \

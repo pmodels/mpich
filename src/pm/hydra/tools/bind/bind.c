@@ -150,7 +150,7 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib)
         topo_end = HYDT_TOPO_END;
         for (i = HYDT_TOPO_MACHINE; i < HYDT_TOPO_END; i++) {
             if (use_topo_obj[i] == 0) {
-                topo_end = i;
+                topo_end = (HYDT_topo_obj_type_t) i;
                 break;
             }
         }

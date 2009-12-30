@@ -19,7 +19,7 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
     /* Get the callback information */
     cb = (HYD_status(*)(void *buf, int buflen)) userp;
 
-    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &buflen, 0);
+    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &buflen, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "error reading from fd\n");
 
     if (buflen == 0 || (events & HYD_POLLHUP)) {

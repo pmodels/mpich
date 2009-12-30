@@ -62,7 +62,7 @@ extern struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
 /* utils */
 HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv);
-HYD_status HYD_pmcd_pmi_proxy_cleanup_params(void);
+void HYD_pmcd_pmi_proxy_cleanup_params(void);
 HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd);
 HYD_status HYD_pmcd_pmi_proxy_launch_procs(void);
 void HYD_pmcd_pmi_proxy_killjob(void);

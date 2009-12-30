@@ -50,12 +50,10 @@ void HYD_pmcd_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
     HYDU_FREE(tokens);
 }
 
-HYD_status HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
-                                   struct HYD_pmcd_token_segment *segment_list,
-                                   int *num_segments)
+void HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
+                             struct HYD_pmcd_token_segment *segment_list, int *num_segments)
 {
     int i, j;
-    HYD_status status = HYD_SUCCESS;
 
     j = 0;
     segment_list[j].start_idx = 0;
@@ -71,12 +69,6 @@ HYD_status HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_coun
         }
     }
     *num_segments = j + 1;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key)
@@ -325,10 +317,6 @@ HYD_status HYD_pmcd_pmi_finalize(void)
 
     HYDU_FUNC_ENTER();
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

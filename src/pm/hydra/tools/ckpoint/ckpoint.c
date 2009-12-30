@@ -36,8 +36,10 @@ HYD_status HYDT_ckpoint_init(char *ckpointlib, char *ckpoint_prefix)
     HYDU_FUNC_EXIT();
     return status;
 
+#if defined HAVE_BLCR
   fn_fail:
     goto fn_exit;
+#endif /* HAVE_BLCR */
 }
 
 HYD_status HYDT_ckpoint_suspend(void)

@@ -17,10 +17,6 @@ HYD_status HYD_rmku_query_node_list(struct HYD_node **node_list)
     /* We don't know anything about nodes or resources */
     *node_list = NULL;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

@@ -152,32 +152,28 @@ HYD_status HYDT_dmx_wait_for_event(int wtime)
     return HYDT_dmxu_fns.wait_for_event(wtime);
 }
 
-HYD_status HYDT_dmx_query_fd_registration(int fd, int *ret)
+int HYDT_dmx_query_fd_registration(int fd)
 {
     struct HYDT_dmxu_callback *run;
-    int i;
-    HYD_status status = HYD_SUCCESS;
+    int i, ret;
 
     HYDU_FUNC_ENTER();
 
-    *ret = 0;
+    ret = 0;
     for (run = HYDT_dmxu_cb_list; run; run = run->next) {
         for (i = 0; i < run->num_fds; i++) {
             if (run->fd[i] == fd) {     /* found it */
-                *ret = 1;
+                ret = 1;
                 break;
             }
         }
-        if (*ret)
+        if (ret)
             break;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
-    return status;
 
-  fn_fail:
-    goto fn_exit;
+    return ret;
 }
 
 HYD_status HYDT_dmx_finalize(void)

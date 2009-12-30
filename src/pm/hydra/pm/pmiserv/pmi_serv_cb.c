@@ -10,6 +10,7 @@
 #include "pmi_handle_common.h"
 #include "pmci.h"
 #include "bsci.h"
+#include "debugger.h"
 #include "pmi_serv.h"
 #include "pmi_utils.h"
 

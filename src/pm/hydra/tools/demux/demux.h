@@ -74,13 +74,13 @@ HYD_status HYDT_dmx_finalize(void);
  * \brief HYDT_dmx_query_fd_registration - Query if an fd is registered
  *
  * \param[in]  fd     File descriptor to check whether registered
- * \param[out] ret    1 if registered; 0 if not
  *
  * If a file descriptor is being registered and deregistered by
  * different layers, this function allows us to query what its state
- * is.
+ * is. A return value of 1 means that the fd is still registered; 0
+ * means that it isn't.
  */
-HYD_status HYDT_dmx_query_fd_registration(int fd, int *ret);
+int HYDT_dmx_query_fd_registration(int fd);
 
 HYD_status HYDT_dmx_stdin_valid(int *out);
 

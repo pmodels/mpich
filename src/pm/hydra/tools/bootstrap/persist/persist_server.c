@@ -86,7 +86,8 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
     }
     else if (fd == private.stdout_fd) {
         /* stdout event */
-        status = HYDU_sock_read(private.stdout_fd, buf, HYD_TMPBUF_SIZE, &count, 0);
+        status = HYDU_sock_read(private.stdout_fd, buf, HYD_TMPBUF_SIZE, &count,
+                                HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "error reading stdout from upstream\n");
 
         hdr.io_type = HYDT_PERSIST_STDOUT;
@@ -111,7 +112,8 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         hdr.io_type = HYDT_PERSIST_STDERR;
         hdr.buflen = 0;
 
-        status = HYDU_sock_read(private.stderr_fd, buf, HYD_TMPBUF_SIZE, &count, 0);
+        status = HYDU_sock_read(private.stderr_fd, buf, HYD_TMPBUF_SIZE, &count,
+                                HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "error reading stdout from upstream\n");
 
         hdr.io_type = HYDT_PERSIST_STDOUT;
@@ -279,19 +281,9 @@ int main(int argc, char **argv)
         if (private.type == SLAVE) {
             /* check if all stdio fd's have been deregistered */
 
-            status = HYDT_dmx_query_fd_registration(private.stdout_fd, &ret);
-            HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
-            if (ret)
-                continue;
-
-            status = HYDT_dmx_query_fd_registration(private.stderr_fd, &ret);
-            HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
-            if (ret)
-                continue;
-
-            status = HYDT_dmx_query_fd_registration(private.client_fd, &ret);
-            HYDU_ERR_POP(status, "unable to query fd registration from demux engine\n");
-            if (ret)
+            if (HYDT_dmx_query_fd_registration(private.stdout_fd) ||
+                HYDT_dmx_query_fd_registration(private.stderr_fd) ||
+                HYDT_dmx_query_fd_registration(private.client_fd))
                 continue;
 
             /* wait for the app process to terminate */

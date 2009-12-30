@@ -95,8 +95,7 @@ int main(int argc, char **argv)
     close(HYD_pmcd_pmip.upstream.control);
 
     /* cleanup the params structure for the next job */
-    status = HYD_pmcd_pmi_proxy_cleanup_params();
-    HYDU_ERR_POP(status, "unable to cleanup params\n");
+    HYD_pmcd_pmi_proxy_cleanup_params();
 
   fn_exit:
     if (status != HYD_SUCCESS)
