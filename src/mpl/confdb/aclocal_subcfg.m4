@@ -43,23 +43,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	   for ac_arg in $3 ; do
 	       # Remove any quotes around the args (added by configure)
 	       ac_narg=`expr x$ac_arg : 'x'"'"'\(.*\)'"'"`
-	       if test -n "$ac_narg" ; then ac_arg=$ac_narg ; fi
-
-	       case $ac_arg in
-	            -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
-		    | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
-		    | --c=*)
-			;;
-		    --config-cache | -C)
-			;;
-		    -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*)
-			;;
-		    -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
-			;;
-		    *)
-			pac_subconfig_args="$pac_subconfig_args $ac_arg"
-			;;
-	       esac
+	       pac_subconfig_args="$pac_subconfig_args $ac_narg"
 	   done
 
 	   if (cd $1 && eval $2/$1/configure $pac_subconfig_args) ; then
