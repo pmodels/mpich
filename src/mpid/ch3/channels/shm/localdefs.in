@@ -1,3 +1,3 @@
 #! /bin/sh
 # Add any libraries needed by the SHM channel
-LIBS="$LIBS @SHM_LIBS@"
+WRAPPER_LIBS="@WRAPPER_LIBS@"
