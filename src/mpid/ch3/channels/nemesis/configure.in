@@ -99,7 +99,6 @@ if test "${with_newmad}" != "yes" -a "${with_newmad}" != "no" ; then
     LDFLAGS="$LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
     WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
     CFLAGS="$CFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
-    WRAPPER_CFLAGS="$WRAPPER_CFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
 fi,)
 
 nemesis_nets_dirs=""
@@ -524,7 +523,6 @@ PAC_CC_SUBDIR_SHLIBS
 AC_SUBST(master_top_srcdir)
 AC_SUBST(master_top_builddir)
 
-AC_SUBST(WRAPPER_CFLAGS)
 AC_SUBST(WRAPPER_LDFLAGS)
 
 dnl Dependency handling

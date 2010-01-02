@@ -4,8 +4,5 @@
 if test -s src/mpid/ch3/channels/nemesis/nemesis/localdefs ; then
     . src/mpid/ch3/channels/nemesis/nemesis/localdefs
 fi
-CFLAGS="@CFLAGS@"
-WRAPPER_CFLAGS="@WRAPPER_CFLAGS@"
 LIBS="@LIBS@"
-LDFLAGS="@LDFLAGS@"
 WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
