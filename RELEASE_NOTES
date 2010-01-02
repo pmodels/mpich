@@ -11,10 +11,6 @@
 
  * ch3:nemesis:mx does not support dynamic processes at this time.
 
- * ch3:ssm and ch3:shm do not support thread safety.
-
- * ch3:shm does not support dynamic processes (e.g., MPI_Comm_spawn).
-
  * Support for "external32" data representation is incomplete. This
    affects the MPI_Pack_external and MPI_Unpack_external routines, as
    well the external data representation capabilities of ROMIO.
@@ -24,15 +20,6 @@
 
 
 ### Build Platforms
-
- * ch3:nemesis does not work on Solaris. You can use ch3:sock on this
-   platform.
-
- * ch3:ssm uses special interprocess locks (often assembly) that many
-   not work with some compilers or machine architectures. It is known
-   to work on Linux with GNU, Intel and Pathscale compilers and on
-   Windows with the Visual Studio compilers, on Intel and AMD
-   architectures.
 
  * The sctp channel is fully supported for FreeBSD and Mac OS X. As of
    the time of this release, bugs in the stack currently existed in
@@ -47,8 +34,9 @@
 
 ### Other configure options
 
- * --enable-sharedlibs=gcc does not work on Solaris because of
-   difference between the GNU ld program and the Solaris ld program.
+ * --enable-sharedlibs requires specific options (gcc, gcc-osx,
+     solaris-cc) to tell the build system the compiler and platform
+     being used.
 
 
 ### Process Managers
@@ -56,9 +44,6 @@
  * The MPD process manager can only handle relatively small amounts of
    data on stdin and may also have problems if there is data on stdin
    that is not consumed by the program.
-
- * The Hydra process manager does not support dynamic processes at
-   this time.
 
  * The SMPD process manager does not work reliably with threaded MPI
    processes. MPI_Comm_spawn() does not currently work for >= 256

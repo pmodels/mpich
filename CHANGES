@@ -4,6 +4,13 @@
 
  # OVERALL: Support for Asynchronous Communication Progress.
 
+ # PM/PMI: Hydra is now the default process management framework
+   replacing MPD.
+
+ # PM/PMI: Added dynamic process support for Hydra.
+
+ # DEBUGGER: Improved support and bug fixes in the Totalview support.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
