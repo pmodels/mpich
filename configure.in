@@ -5749,7 +5749,6 @@ case $with_thread_package in
         # inconsistencies in the pthread spec).  Thus, we look for pthread_key_create
         AC_CHECK_LIB([pthread],[pthread_key_create],have_pthreads=yes)
 	if test "$have_pthreads" = "yes" ; then
-	   PAC_APPEND_FLAG([-lpthread],[WRAPPER_LIBS])
 	   PAC_APPEND_FLAG([-lpthread],[LIBS])
 	fi
 
@@ -6448,6 +6447,9 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
 # CPPFLAGS
 CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
+
+# Add the LIBS we got so far to WRAPPER_LIBS
+WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"
 
 if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])

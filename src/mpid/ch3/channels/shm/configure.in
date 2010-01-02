@@ -111,13 +111,6 @@ int main(int argc, char ** argv)
     if test $shm_open_impl = "yes" ; then
         AC_DEFINE(HAVE_SHM_OPEN,,[Define if shm_open is available])
         AC_DEFINE(HAVE_SHM_UNLINK,,[Define if shm_unlink is available])
-	# Add libraries associated with shm functionality to the wrapper flags
-        if test "$ac_cv_search_shm_open" != "none required" ; then
-           PAC_APPEND_FLAG("$ac_cv_search_shm_open", WRAPPER_LIBS)
-        fi
-        if test "$ac_cv_search_shm_unlink" != "none required" ; then
-           PAC_APPEND_FLAG("$ac_cv_search_shm_unlink", WRAPPER_LIBS)
-        fi
     else
         LIBS=$save_libs
     fi
@@ -151,7 +144,6 @@ if test -z "$ENABLE_SHLIB" ; then
     ENABLE_SHLIB=none
 fi
 
-AC_SUBST(WRAPPER_LIBS)
 AC_SUBST(AR)
 AC_SUBST(RANLIB)
 AC_SUBST(MPILIBNAME)

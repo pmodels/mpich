@@ -565,7 +565,7 @@ if test -n "$arch_alpha" || test -n "$arch_ALPHA" ; then
     MPI_OFFSET_KIND1="      INTEGER MPI_OFFSET_KIND"
     MPI_OFFSET_KIND2="      PARAMETER (MPI_OFFSET_KIND=8)"
     MPI_OFFSET_KIND_VAL=8
-    WRAPPER_LIBS="$WRAPPER_LIBS -laio"
+    LIBS="$LIBS -laio"
 fi    
 #
 if test -n "$arch_CRAY" ; then
@@ -1075,7 +1075,6 @@ if test $PVFS2_CONFIG != "notfound" ; then
 		# --with-file-system (or both)
 		CFLAGS="$CFLAGS $( $PVFS2_CONFIG --cflags)"
 		LIBS="$LIBS $( $PVFS2_CONFIG --libs)"
-		WRAPPER_LIBS="$WRAPPER_LIBS $( $PVFS2_CONFIG --libs)"
 		FILE_SYSTEM="pvfs2 $FILE_SYSTEM"
 		file_system_pvfs2=1
 	fi
@@ -1285,11 +1284,6 @@ if test "x$disable_aio" = "xno" ; then
         if test "$foundPTHREAD" = yes ; then
             AC_SEARCH_LIBS(aio_write,aio rt,aio_write_found=yes,aio_write_found=no)
         fi
-    fi
-
-    if test "$aio_write_found" = "yes" -a \
-	"$ac_cv_search_aio_write" != "none required" ; then
-	WRAPPER_LIBS="$WRAPPER_LIBS $ac_cv_search_aio_write"
     fi
 fi
 
@@ -2040,7 +2034,6 @@ AC_SUBST(AR)
 AC_SUBST(RANLIB)
 AC_SUBST(MPI_INCLUDE_DIR)
 AC_SUBST(MPI_LIB)
-AC_SUBST(WRAPPER_LIBS)
 AC_SUBST(F77)
 AC_SUBST(NOF77)
 AC_SUBST(NOPROFILE)
