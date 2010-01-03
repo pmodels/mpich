@@ -35,13 +35,19 @@ PAC_C_GNU_ATTRIBUTE
 PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Build information
-if test "x$MPICH2_VERSION" = "x" ; then
-   HYDRA_VERSION="unknown"
+if test -s "$srcdir/version/version" ; then
+    HYDRA_VERSION="`cat $srcdir/version/version | grep ^MPICH2_VERSION: | cut -f2 -d' '`"
 else
-   HYDRA_VERSION=$MPICH2_VERSION
+    HYDRA_VERSION="development copy based on svn version: `svnversion $srcdir`"
+fi
+if test -s "$srcdir/maint/release_date" ; then
+    HYDRA_RELEASE_DATE="`cat $srcdir/version/release_date`"
+else
+    HYDRA_RELEASE_DATE="development copy based on svn version: `svnversion $srcdir`"
 fi
 AC_SUBST(HYDRA_VERSION)
 AC_DEFINE_UNQUOTED(HYDRA_VERSION,"$HYDRA_VERSION",[Hydra version information])
+AC_DEFINE_UNQUOTED(HYDRA_RELEASE_DATE,"$HYDRA_RELEASE_DATE",[Hydra release date information])
 AC_DEFINE_UNQUOTED(HYDRA_CC,"$CC",[C compiler])
 AC_DEFINE_UNQUOTED(HYDRA_CXX,"$CXX",[C++ compiler])
 AC_DEFINE_UNQUOTED(HYDRA_F77,"$F77",[Fortran 77 compiler])

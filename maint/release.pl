@@ -44,7 +44,7 @@ sub usage
     print "\t--source          source svn repository (required)\n";
 
     # svn repository for the previous source in this series to ensure ABI compliance
-    print "\t--psource    source repo for the previous version for ABI compliance (required)\n";
+    print "\t--psource         source repo for the previous version for ABI compliance (required)\n";
 
     # what package we are creating
     print "\t--package         package to create (optional)\n";
@@ -152,6 +152,14 @@ system("rm -f ${root}/$logfile");
 print("===> Checking out $pack SVN source... ");
 run_cmd("rm -rf ${pack}-${version}");
 run_cmd("svn export -q ${source} ${pack}-${version}");
+print("done\n");
+
+print("===> Create release date and version information... ");
+chdir("${root}/${pack}-${version}");
+system(qq(echo `date` > ./maint/ReleaseDate));
+system(qq(mkdir ./src/pm/hydra/version));
+system(qq(cp ./maint/Version ./src/pm/hydra/version/version));
+system(qq(cp ./maint/ReleaseDate ./src/pm/hydra/version/release_date));
 print("done\n");
 
 # Remove packages that are not being released
