@@ -27,7 +27,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     		AC_HELP_STRING([--with-$1-lib=path],
 			       [specify path where $1 lib directory can be found]),
         if test "${with_$1_lib}" != "yes" -a "${with_$1_lib}" != "no" ; then
-            LDFLAGS="$WRAPPER_LDFLAGS -L${with_$1_lib}"
+            LDFLAGS="$LDFLAGS -L${with_$1_lib}"
             WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS -L${with_$1_lib}"
         fi,
     )
