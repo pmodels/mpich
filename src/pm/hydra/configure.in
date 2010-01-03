@@ -40,7 +40,7 @@ if test -s "$srcdir/version/version" ; then
 else
     HYDRA_VERSION="development copy based on svn version: `svnversion $srcdir`"
 fi
-if test -s "$srcdir/maint/release_date" ; then
+if test -s "$srcdir/version/release_date" ; then
     HYDRA_RELEASE_DATE="`cat $srcdir/version/release_date`"
 else
     HYDRA_RELEASE_DATE="development copy based on svn version: `svnversion $srcdir`"
