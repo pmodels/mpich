@@ -954,19 +954,19 @@ fn_exit:
         if (fnd_sc) {
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE,
                              (MPIU_DBG_FDEST, "found_better_sc(sc=%p (%s), *fnd_sc=%p (%s)) found=TRUE",
-                              sc, CONN_STATE_STR[sc->state.cstate],
-                              *fnd_sc, (*fnd_sc ? CONN_STATE_STR[(*fnd_sc)->state.cstate] : "N/A")));
+                              sc, SOCK_STATE_STR[sc->state],
+                              *fnd_sc, (*fnd_sc ? SOCK_STATE_STR[(*fnd_sc)->state] : "N/A")));
         }
         else {
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE,
                              (MPIU_DBG_FDEST, "found_better_sc(sc=%p (%s), fnd_sc=(nil)) found=TRUE",
-                              sc, CONN_STATE_STR[sc->state.cstate]));
+                              sc, SOCK_STATE_STR[sc->state]));
         }
     }
     else {
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE,
                          (MPIU_DBG_FDEST, "found_better_sc(sc=%p (%s), *fnd_sc=N/A) found=FALSE",
-                          sc, CONN_STATE_STR[sc->state.cstate]));
+                          sc, SOCK_STATE_STR[sc->state]));
     }
     MPIDI_FUNC_EXIT(MPID_STATE_FOUND_BETTER_SC);
     return found;
@@ -2140,7 +2140,7 @@ static int do_i_win(sockconn_t *rmt_sc)
 
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE,
                      (MPIU_DBG_FDEST, "do_i_win(rmt_sc=%p (%s)) win=%s is_same_pg=%s my_pg_rank=%d rmt_pg_rank=%d",
-                      rmt_sc, CONN_STATE_STR[rmt_sc->state.cstate],
+                      rmt_sc, SOCK_STATE_STR[rmt_sc->state],
                       (win ? "TRUE" : "FALSE"),(rmt_sc->is_same_pg ? "TRUE" : "FALSE"), MPIDI_Process.my_pg_rank,
                       rmt_sc->pg_rank));
     MPIDI_FUNC_EXIT(MPID_STATE_DO_I_WIN);
