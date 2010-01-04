@@ -6,9 +6,9 @@
 
 #include "hydra.h"
 #include "pmci.h"
-#include "pmi_handle.h"
 #include "bsci.h"
-#include "pmi_utils.h"
+#include "pmiserv_pmi.h"
+#include "pmiserv_utils.h"
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {

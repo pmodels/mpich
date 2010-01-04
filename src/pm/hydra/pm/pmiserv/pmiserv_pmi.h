@@ -4,17 +4,17 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef PMI_HANDLE_H_INCLUDED
-#define PMI_HANDLE_H_INCLUDED
+#ifndef PMISERV_PMI_H_INCLUDED
+#define PMISERV_PMI_H_INCLUDED
 
 #include "hydra_base.h"
 #include "demux.h"
 
 /* PMI-1 specific definitions */
-extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v1;
+extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1;
 
 /* PMI-2 specific definitions */
-extern struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2;
+extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v2;
 
 /* Generic definitions */
 #define MAXKEYLEN    64 /* max length of key in keyval space */
@@ -72,11 +72,11 @@ struct HYD_pmcd_pmi_pg_scratch {
     struct HYD_pmcd_pmi_kvs *kvs;
 };
 
-HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
-void HYD_pmcd_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
-void HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
+HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
+void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
+void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
                              struct HYD_pmcd_token_segment *segment_list, int *num_segments);
-char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
+char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank);
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
 struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd);
@@ -86,15 +86,13 @@ HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
                                         char **process_mapping);
 HYD_status HYD_pmcd_pmi_finalize(void);
 
-struct HYD_pmcd_pmi_handle_fns {
+HYD_status HYD_pmcd_pmi_fn_init(int fd, char *args[]);
+
+struct HYD_pmcd_pmi_handle {
     const char *cmd;
      HYD_status(*handler) (int fd, int pgid, char *args[]);
 };
 
-struct HYD_pmcd_pmi_handle {
-    struct HYD_pmcd_pmi_handle_fns *handle_fns;
-};
-
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;
 
-#endif /* PMI_HANDLE_H_INCLUDED */
+#endif /* PMISERV_PMI_H_INCLUDED */

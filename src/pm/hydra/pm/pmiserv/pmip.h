@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef PMI_PROXY_H_INCLUDED
-#define PMI_PROXY_H_INCLUDED
+#ifndef PMIP_H_INCLUDED
+#define PMIP_H_INCLUDED
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
@@ -59,19 +59,15 @@ struct HYD_pmcd_pmip {
 };
 
 extern struct HYD_pmcd_pmip HYD_pmcd_pmip;
+extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
 
 /* utils */
-HYD_status HYD_pmcd_pmi_proxy_get_params(char **t_argv);
-void HYD_pmcd_pmi_proxy_cleanup_params(void);
-HYD_status HYD_pmcd_pmi_proxy_procinfo(int fd);
-HYD_status HYD_pmcd_pmi_proxy_launch_procs(void);
-void HYD_pmcd_pmi_proxy_killjob(void);
+HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
 
 /* callback */
-HYD_status HYD_pmcd_pmi_proxy_control_connect_cb(int fd, HYD_event_t events, void *userp);
-HYD_status HYD_pmcd_pmi_proxy_control_cmd_cb(int fd, HYD_event_t events, void *userp);
-HYD_status HYD_pmcd_pmi_proxy_stdout_cb(int fd, HYD_event_t events, void *userp);
-HYD_status HYD_pmcd_pmi_proxy_stderr_cb(int fd, HYD_event_t events, void *userp);
-HYD_status HYD_pmcd_pmi_proxy_stdin_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmip_stdout_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmip_stderr_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYD_pmcd_pmip_stdin_cb(int fd, HYD_event_t events, void *userp);
 
-#endif /* PMI_PROXY_H_INCLUDED */
+#endif /* PMIP_H_INCLUDED */

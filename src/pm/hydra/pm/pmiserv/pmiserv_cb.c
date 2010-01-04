@@ -6,15 +6,14 @@
 
 #include "hydra.h"
 #include "hydra_utils.h"
-#include "pmi_handle.h"
-#include "pmi_handle_common.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "debugger.h"
-#include "pmi_serv.h"
-#include "pmi_utils.h"
+#include "pmiserv.h"
+#include "pmiserv_utils.h"
+#include "pmiserv_pmi.h"
 
-HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
+HYD_status HYD_pmcd_pmiserv_pmi_listen_cb(int fd, HYD_event_t events, void *userp)
 {
     int accept_fd, pgid;
     struct HYD_pg *pg;
@@ -35,7 +34,7 @@ HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
     status = HYDU_sock_accept(fd, &accept_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, HYD_pmcd_pmi_cmd_cb);
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, HYD_pmcd_pmiserv_pmi_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -46,14 +45,14 @@ HYD_status HYD_pmcd_pmi_connect_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
+HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     int linelen, i, j, k, cmdlen, pmi_version;
     char *buf = NULL, *tbuf = NULL, *cmd = NULL, *seg;
     char *tmp[HYD_NUM_TMP_STRINGS], *args[HYD_NUM_TMP_STRINGS], *targs[HYD_NUM_TMP_STRINGS];
     const char *delim;
     char *str1 = NULL, *str2 = NULL;
-    struct HYD_pmcd_pmi_handle_fns *h;
+    struct HYD_pmcd_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
     int buflen = 0, pgid;
     char *bufptr;
@@ -79,7 +78,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
      * that commands can arrive out-of-order and this is necessary.
      */
     if (HYD_pmcd_pmi_handle == NULL)
-        HYD_pmcd_pmi_handle = &HYD_pmcd_pmi_v1;
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
 
     do {
         status = HYDU_sock_read(fd, bufptr, 6, &linelen, HYDU_SOCK_COMM_MSGWAIT);
@@ -206,7 +205,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
         /* This is not a clean close. If a finalize was called, we
          * would have deregistered this socket. The application might
          * have aborted. Just cleanup all the processes */
-        status = HYD_pmcd_pmi_serv_cleanup();
+        status = HYD_pmcd_pmiserv_cleanup();
         if (status != HYD_SUCCESS) {
             HYDU_warn_printf("bootstrap server returned error cleaning up processes\n");
             status = HYD_SUCCESS;
@@ -241,7 +240,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
         status = HYDU_strsplit(cmd, &str1, &str2, '=');
         HYDU_ERR_POP(status, "string split returned error\n");
 
-        h = HYD_pmcd_pmi_handle->handle_fns;
+        h = HYD_pmcd_pmi_handle;
         while (h->handler) {
             if (!strcmp(str2, h->cmd)) {
                 status = h->handler(fd, pgid, args);
@@ -257,7 +256,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
             /* Cleanup all the processes and return. We don't need to
              * check the return status since we are anyway returning
              * an error */
-            HYD_pmcd_pmi_serv_cleanup();
+            HYD_pmcd_pmiserv_cleanup();
             HYDU_ERR_SETANDJUMP(status, HYD_SUCCESS, "");
         }
     }
@@ -278,67 +277,7 @@ HYD_status HYD_pmcd_pmi_cmd_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_serv_control_connect_cb(int fd, HYD_event_t events, void *userp)
-{
-    int accept_fd, proxy_id, count, pgid;
-    struct HYD_pg *pg;
-    struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* We got a control socket connection */
-    status = HYDU_sock_accept(fd, &accept_fd);
-    HYDU_ERR_POP(status, "accept error\n");
-
-    /* Get the PGID of the connection */
-    pgid = ((int) (size_t) userp);
-
-    /* Read the proxy ID */
-    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "sock read returned error\n");
-
-    /* Find the process group */
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
-        if (pg->pgid == pgid)
-            break;
-    if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
-                             pgid);
-
-    /* Find the proxy */
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        if (proxy->proxy_id == proxy_id)
-            break;
-    }
-    HYDU_ERR_CHKANDJUMP1(status, proxy == NULL, HYD_INTERNAL_ERROR,
-                         "cannot find proxy with ID %d\n", proxy_id);
-
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    pg_scratch->control_listen_fd = fd;
-
-    /* This will be the control socket for this proxy */
-    proxy->control_fd = accept_fd;
-
-    /* Send out the executable information */
-    status = HYD_pmu_send_exec_info(proxy);
-    HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
-
-    status =
-        HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, HYD_pmcd_pmi_serv_control_cb);
-    HYDU_ERR_POP(status, "unable to register fd\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
+static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
     struct HYD_proxy *proxy;
     struct HYD_pg *pg;
@@ -435,9 +374,68 @@ HYD_status HYD_pmcd_pmi_serv_control_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
+HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp)
+{
+    int accept_fd, proxy_id, count, pgid;
+    struct HYD_pg *pg;
+    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* We got a control socket connection */
+    status = HYDU_sock_accept(fd, &accept_fd);
+    HYDU_ERR_POP(status, "accept error\n");
+
+    /* Get the PGID of the connection */
+    pgid = ((int) (size_t) userp);
+
+    /* Read the proxy ID */
+    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "sock read returned error\n");
+
+    /* Find the process group */
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
+        if (pg->pgid == pgid)
+            break;
+    if (!pg)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
+                             pgid);
+
+    /* Find the proxy */
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        if (proxy->proxy_id == proxy_id)
+            break;
+    }
+    HYDU_ERR_CHKANDJUMP1(status, proxy == NULL, HYD_INTERNAL_ERROR,
+                         "cannot find proxy with ID %d\n", proxy_id);
+
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+    pg_scratch->control_listen_fd = fd;
+
+    /* This will be the control socket for this proxy */
+    proxy->control_fd = accept_fd;
+
+    /* Send out the executable information */
+    status = HYD_pmu_send_exec_info(proxy);
+    HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
+
+    status =
+        HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, control_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static int in_cleanup = 0;
 
-HYD_status HYD_pmcd_pmi_serv_cleanup(void)
+HYD_status HYD_pmcd_pmiserv_cleanup(void)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
@@ -485,8 +483,7 @@ HYD_status HYD_pmcd_pmi_serv_cleanup(void)
     goto fn_exit;
 }
 
-
-HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
+static HYD_status ckpoint(void)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
@@ -515,17 +512,16 @@ HYD_status HYD_pmcd_pmi_serv_ckpoint(void)
     goto fn_exit;
 }
 
-
-void HYD_pmcd_pmi_serv_signal_cb(int sig)
+void HYD_pmcd_pmiserv_signal_cb(int sig)
 {
     HYDU_FUNC_ENTER();
 
     if (sig == SIGINT || sig == SIGQUIT || sig == SIGTERM) {
         /* There's nothing we can do with the return value for now. */
-        HYD_pmcd_pmi_serv_cleanup();
+        HYD_pmcd_pmiserv_cleanup();
     }
     else if (sig == SIGUSR1) {
-        HYD_pmcd_pmi_serv_ckpoint();
+        ckpoint();
     }
     /* Ignore other signals for now */
 

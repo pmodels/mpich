@@ -7,9 +7,9 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
-#include "pmi_handle.h"
-#include "pmi_serv.h"
-#include "pmi_utils.h"
+#include "pmiserv.h"
+#include "pmiserv_pmi.h"
+#include "pmiserv_utils.h"
 
 static HYD_status fn_initack(int fd, int pgid, char *args[])
 {
@@ -22,10 +22,10 @@ static HYD_status fn_initack(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    val = HYD_pmcd_find_token_keyval(tokens, token_count, "pmiid");
+    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "pmiid");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                         "unable to find pmiid token\n");
     id = atoi(val);
@@ -64,7 +64,7 @@ static HYD_status fn_initack(int fd, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to add process to pg\n");
 
   fn_exit:
-    HYD_pmcd_free_tokens(tokens, token_count);
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -262,18 +262,18 @@ static HYD_status fn_put(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    kvsname = HYD_pmcd_find_token_keyval(tokens, token_count, "kvsname");
+    kvsname = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "kvsname");
     HYDU_ERR_CHKANDJUMP(status, kvsname == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: kvsname\n");
 
-    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: key\n");
 
-    val = HYD_pmcd_find_token_keyval(tokens, token_count, "value");
+    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
     if (val == NULL) {
         /* the user sent an empty string */
         val = HYDU_strdup("");
@@ -319,7 +319,7 @@ static HYD_status fn_put(int fd, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
-    HYD_pmcd_free_tokens(tokens, token_count);
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -341,14 +341,14 @@ static HYD_status fn_get(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    kvsname = HYD_pmcd_find_token_keyval(tokens, token_count, "kvsname");
+    kvsname = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "kvsname");
     HYDU_ERR_CHKANDJUMP(status, kvsname == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: kvsname\n");
 
-    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: key\n");
 
@@ -429,7 +429,7 @@ static HYD_status fn_get(int fd, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
-    HYD_pmcd_free_tokens(tokens, token_count);
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -539,7 +539,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
         mcmd_args[mcmd_num_args++] = HYDU_strdup(args[i]);
     mcmd_args[mcmd_num_args] = NULL;
 
-    status = HYD_pmcd_args_to_tokens(mcmd_args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(mcmd_args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
 
@@ -562,7 +562,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
     /* Break the token list into multiple segments and create an
      * executable list based on the segments. */
-    val = HYD_pmcd_find_token_keyval(tokens, token_count, "totspawns");
+    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "totspawns");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: totspawns\n");
     total_spawns = atoi(val);
@@ -570,7 +570,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,
                 total_spawns * sizeof(struct HYD_pmcd_token_segment), status);
 
-    HYD_pmcd_segment_tokens(tokens, token_count, segment_list, &num_segments);
+    HYD_pmcd_pmi_segment_tokens(tokens, token_count, segment_list, &num_segments);
 
     if (num_segments != total_spawns) {
         /* We didn't read the entire PMI string; wait for the rest to
@@ -595,20 +595,20 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
     for (j = 0; j < total_spawns; j++) {
         /* For each segment, we create an exec structure */
-        val = HYD_pmcd_find_token_keyval(&tokens[segment_list[j].start_idx],
+        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                          segment_list[j].token_count, "nprocs");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: nprocs\n");
         nprocs = atoi(val);
         pg->pg_process_count += nprocs;
 
-        val = HYD_pmcd_find_token_keyval(&tokens[segment_list[j].start_idx],
+        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                          segment_list[j].token_count, "argcnt");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: argcnt\n");
         argcnt = atoi(val);
 
-        val = HYD_pmcd_find_token_keyval(&tokens[segment_list[j].start_idx],
+        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                          segment_list[j].token_count, "info_num");
         if (val)
             info_num = atoi(val);
@@ -635,14 +635,14 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
             HYDU_MALLOC(key, char *, MAXKEYLEN, status);
             HYDU_snprintf(key, MAXKEYLEN, "info_key_%d", i);
-            val = HYD_pmcd_find_token_keyval(&tokens[segment_list[j].start_idx],
+            val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                              segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                                  "unable to find token: %s\n", key);
             info_key = val;
 
             HYDU_snprintf(key, MAXKEYLEN, "info_val_%d", i);
-            val = HYD_pmcd_find_token_keyval(&tokens[segment_list[j].start_idx],
+            val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                              segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                                  "unable to find token: %s\n", key);
@@ -663,7 +663,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
         status = HYDU_correct_wdir(&exec->wdir);
         HYDU_ERR_POP(status, "unable to correct wdir\n");
 
-        val = HYD_pmcd_find_token_keyval(&tokens[segment_list[j].start_idx],
+        val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                          segment_list[j].token_count, "execname");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: execname\n");
@@ -686,7 +686,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
         for (k = 0; k < argcnt; k++) {
             HYDU_MALLOC(key, char *, MAXKEYLEN, status);
             HYDU_snprintf(key, MAXKEYLEN, "arg%d", k + 1);
-            val = HYD_pmcd_find_token_keyval(&tokens[segment_list[j].start_idx],
+            val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                              segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                                  "unable to find token: %s\n", key);
@@ -713,7 +713,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* Get the common keys and deal with them */
-    val = HYD_pmcd_find_token_keyval(tokens, token_count, "preput_num");
+    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "preput_num");
     if (val)
         preput_num = atoi(val);
     else
@@ -725,13 +725,13 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 
         HYDU_MALLOC(key, char *, MAXKEYLEN, status);
         HYDU_snprintf(key, MAXKEYLEN, "preput_key_%d", i);
-        val = HYD_pmcd_find_token_keyval(tokens, token_count, key);
+        val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
         HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                              "unable to find token: %s\n", key);
         preput_key = val;
 
         HYDU_snprintf(key, HYD_TMP_STRLEN, "preput_val_%d", i);
-        val = HYD_pmcd_find_token_keyval(tokens, token_count, key);
+        val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
         HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                              "unable to find token: %s\n", key);
         preput_val = val;
@@ -752,7 +752,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     HYDU_free_exec_list(exec_list);
 
     status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &control_port,
-                                                 HYD_pmcd_pmi_serv_control_connect_cb,
+                                                 HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) new_pgid);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_handle.user_global.debug)
@@ -763,7 +763,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     if (!val) { /* PMI_PORT not already set; create one */
         /* pass PGID as a user parameter to the PMI connect handler */
         status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &pmi_port,
-                                                     HYD_pmcd_pmi_connect_cb,
+                                                     HYD_pmcd_pmiserv_pmi_listen_cb,
                                                      (void *) (size_t) new_pgid);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
         pmi_id = -1;
@@ -833,7 +833,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
     }
 
   fn_exit:
-    HYD_pmcd_free_tokens(tokens, token_count);
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_free_strlist(proxy_args);
     if (segment_list)
         HYDU_FREE(segment_list);
@@ -845,7 +845,7 @@ static HYD_status fn_spawn(int fd, int pgid, char *args[])
 }
 
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx */
-static struct HYD_pmcd_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
+static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"initack", fn_initack},
     {"get_maxes", fn_get_maxes},
     {"get_appnum", fn_get_appnum},
@@ -859,4 +859,4 @@ static struct HYD_pmcd_pmi_handle_fns pmi_v1_handle_fns_foo[] = {
     {"\0", NULL}
 };
 
-struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v1 = { pmi_v1_handle_fns_foo };
+struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1 = pmi_v1_handle_fns_foo;

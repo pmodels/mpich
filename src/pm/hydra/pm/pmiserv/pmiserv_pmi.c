@@ -5,12 +5,12 @@
  */
 
 #include "hydra.h"
-#include "pmi_handle.h"
-#include "pmi_utils.h"
+#include "pmiserv_pmi.h"
+#include "pmiserv_utils.h"
 
 struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };
 
-HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
+HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
 {
     int i, j;
     char *arg;
@@ -41,7 +41,7 @@ HYD_status HYD_pmcd_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
     goto fn_exit;
 }
 
-void HYD_pmcd_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
+void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
 {
     int i;
 
@@ -50,7 +50,7 @@ void HYD_pmcd_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
     HYDU_FREE(tokens);
 }
 
-void HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
+void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
                              struct HYD_pmcd_token_segment *segment_list, int *num_segments)
 {
     int i, j;
@@ -71,7 +71,7 @@ void HYD_pmcd_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
     *num_segments = j + 1;
 }
 
-char *HYD_pmcd_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key)
+char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key)
 {
     int i;
 
@@ -319,4 +319,43 @@ HYD_status HYD_pmcd_pmi_finalize(void)
 
     HYDU_FUNC_EXIT();
     return status;
+}
+
+HYD_status HYD_pmcd_pmi_fn_init(int fd, char *args[])
+{
+    int pmi_version, pmi_subversion;
+    const char *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    strtok(args[0], "=");
+    pmi_version = atoi(strtok(NULL, "="));
+    strtok(args[1], "=");
+    pmi_subversion = atoi(strtok(NULL, "="));
+
+    if (pmi_version == 1 && pmi_subversion <= 1) {
+        tmp = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
+        status = HYDU_sock_writeline(fd, tmp, strlen(tmp));
+        HYDU_ERR_POP(status, "error writing PMI line\n");
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
+    }
+    else if (pmi_version == 2 && pmi_subversion == 0) {
+        tmp = "cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n";
+        status = HYDU_sock_writeline(fd, tmp, strlen(tmp));
+        HYDU_ERR_POP(status, "error writing PMI line\n");
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v2;
+    }
+    else {
+        /* PMI version mismatch */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }

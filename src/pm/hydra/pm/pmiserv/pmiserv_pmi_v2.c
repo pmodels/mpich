@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "bsci.h"
-#include "pmi_handle.h"
+#include "pmiserv_pmi.h"
 
 static HYD_status fn_fullinit(int fd, int pgid, char *args[]);
 static HYD_status fn_job_getid(int fd, int pgid, char *args[]);
@@ -160,10 +160,10 @@ static HYD_status fn_fullinit(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    rank_str = HYD_pmcd_find_token_keyval(tokens, token_count, "pmirank");
+    rank_str = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "pmirank");
     HYDU_ERR_CHKANDJUMP(status, rank_str == NULL, HYD_INTERNAL_ERROR,
                         "unable to find pmirank token\n");
     id = atoi(rank_str);
@@ -220,10 +220,10 @@ static HYD_status fn_job_getid(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -276,17 +276,17 @@ static HYD_status fn_info_putnodeattr(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    val = HYD_pmcd_find_token_keyval(tokens, token_count, "value");
+    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                         "unable to find value token\n");
 
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -347,14 +347,14 @@ static HYD_status fn_info_getnodeattr(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    waitval = HYD_pmcd_find_token_keyval(tokens, token_count, "wait");
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    waitval = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "wait");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -452,13 +452,13 @@ static HYD_status fn_info_getjobattr(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -556,19 +556,19 @@ static HYD_status fn_kvs_put(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    val = HYD_pmcd_find_token_keyval(tokens, token_count, "value");
+    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
     if (val == NULL) {
         /* the user sent an empty string */
         val = HYDU_strdup("");
     }
 
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -631,13 +631,13 @@ static HYD_status fn_kvs_get(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    key = HYD_pmcd_find_token_keyval(tokens, token_count, "key");
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -727,10 +727,10 @@ static HYD_status fn_kvs_fence(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
     process = HYD_pmcd_pmi_find_process(fd);
@@ -780,10 +780,10 @@ static HYD_status fn_finalize(int fd, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_args_to_tokens(args, &tokens, &token_count);
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    thrid = HYD_pmcd_find_token_keyval(tokens, token_count, "thrid");
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=finalize-response;");
@@ -818,7 +818,7 @@ static HYD_status fn_finalize(int fd, int pgid, char *args[])
 }
 
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
-static struct HYD_pmcd_pmi_handle_fns pmi_v2_handle_fns_foo[] = {
+static struct HYD_pmcd_pmi_handle pmi_v2_handle_fns_foo[] = {
     {"fullinit", fn_fullinit},
     {"job-getid", fn_job_getid},
     {"info-putnodeattr", fn_info_putnodeattr},
@@ -831,4 +831,4 @@ static struct HYD_pmcd_pmi_handle_fns pmi_v2_handle_fns_foo[] = {
     {"\0", NULL}
 };
 
-struct HYD_pmcd_pmi_handle HYD_pmcd_pmi_v2 = { pmi_v2_handle_fns_foo };
+struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v2 = pmi_v2_handle_fns_foo;

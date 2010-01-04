@@ -7,10 +7,10 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "pmci.h"
-#include "pmi_handle.h"
+#include "pmiserv_pmi.h"
 #include "bsci.h"
-#include "pmi_serv.h"
-#include "pmi_utils.h"
+#include "pmiserv.h"
+#include "pmiserv_utils.h"
 
 HYD_status HYD_pmci_launch_procs(void)
 {
@@ -23,7 +23,7 @@ HYD_status HYD_pmci_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_set_common_signals(HYD_pmcd_pmi_serv_signal_cb);
+    status = HYDU_set_common_signals(HYD_pmcd_pmiserv_signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Initialize PMI */
@@ -31,7 +31,7 @@ HYD_status HYD_pmci_launch_procs(void)
     if (!tmp) { /* PMI_PORT not already set; create one */
         /* pass PGID 0 as a user parameter to the PMI connect handler */
         status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &pmi_port,
-                                                     HYD_pmcd_pmi_connect_cb,
+                                                     HYD_pmcd_pmiserv_pmi_listen_cb,
                                                      (void *) (size_t) 0);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
         pmi_id = -1;
@@ -69,7 +69,7 @@ HYD_status HYD_pmci_launch_procs(void)
     }
 
     status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &control_port,
-                                                 HYD_pmcd_pmi_serv_control_connect_cb,
+                                                 HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) 0);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
     if (HYD_handle.user_global.debug)
@@ -102,7 +102,6 @@ HYD_status HYD_pmci_launch_procs(void)
     goto fn_exit;
 }
 
-
 HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
     HYD_status status = HYD_SUCCESS;
@@ -111,7 +110,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
 
     status = HYDT_bsci_wait_for_completion(timeout);
     if (status == HYD_TIMED_OUT) {
-        status = HYD_pmcd_pmi_serv_cleanup();
+        status = HYD_pmcd_pmiserv_cleanup();
         HYDU_ERR_POP(status, "cleanup of processes failed\n");
     }
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
@@ -120,6 +119,29 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
      * get back with the exit status */
     status = HYDT_bsci_wait_for_completion(-1);
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmci_finalize(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_finalize();
+    HYDU_ERR_POP(status, "unable to finalize process manager utils\n");
+
+    status = HYDT_bsci_finalize();
+    HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
+
+    status = HYDT_dmx_finalize();
+    HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
