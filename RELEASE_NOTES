@@ -64,11 +64,6 @@
    that the request associated with the operation is completed by one
    of the MPI_Test or MPI_Wait routines.
 
- * For passive target RMA, there is no asynchronous agent at the
-   target that will cause progress to occur. Progress occurs only when
-   the user calls an MPI function at the target (which could well be
-   MPI_Win_free).
-
 
 ### C++ Binding:
   
