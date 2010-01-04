@@ -48,7 +48,8 @@ struct HYD_pmcd_pmi_process {
     /* This is a bad design if we need to tie in an FD to a PMI
      * process. This essentially kills any chance of PMI server
      * masquerading. */
-    int fd;
+    int fd; /* downstream fd to send the response on */
+    int pid; /* unique id for the processes sharing the same fd */
     int rank;                   /* process rank */
     int epoch;                  /* Epoch this process has reached */
     struct HYD_proxy *proxy;    /* Back pointer to the proxy */
@@ -77,9 +78,9 @@ void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
 void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
                              struct HYD_pmcd_token_segment *segment_list, int *num_segments);
 char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
-HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank);
+HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
-struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd);
+struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int key);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);
 HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
@@ -90,7 +91,7 @@ HYD_status HYD_pmcd_pmi_fn_init(int fd, char *args[]);
 
 struct HYD_pmcd_pmi_handle {
     const char *cmd;
-     HYD_status(*handler) (int fd, int pgid, char *args[]);
+    HYD_status(*handler) (int fd, int pid, int pgid, char *args[]);
 };
 
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;

@@ -229,7 +229,7 @@ HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank)
+HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int pid, int rank)
 {
     struct HYD_pmcd_pmi_process *process, *tmp;
     struct HYD_proxy *proxy;
@@ -266,6 +266,7 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank)
     HYDU_MALLOC(process, struct HYD_pmcd_pmi_process *, sizeof(struct HYD_pmcd_pmi_process),
                 status);
     process->fd = fd;
+    process->pid = pid;
     process->rank = rank;
     process->epoch = 0;
     process->proxy = proxy;
@@ -288,7 +289,7 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int rank)
     goto fn_exit;
 }
 
-struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd)
+struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
@@ -302,7 +303,7 @@ struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd)
 
             proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
             for (process = proxy_scratch->process_list; process; process = process->next) {
-                if (process->fd == fd)
+                if (process->fd == fd && process->pid == pid)
                     return process;
             }
         }

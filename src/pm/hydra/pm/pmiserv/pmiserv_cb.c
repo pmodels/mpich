@@ -243,7 +243,8 @@ HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp)
         h = HYD_pmcd_pmi_handle;
         while (h->handler) {
             if (!strcmp(str2, h->cmd)) {
-                status = h->handler(fd, pgid, args);
+                /* FIXME: Always use a pid of -1 */
+                status = h->handler(fd, -1, pgid, args);
                 HYDU_ERR_POP(status, "PMI handler returned error\n");
                 break;
             }
