@@ -697,6 +697,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"v", verbose_fn, verbose_help_fn},
     {"debug", verbose_fn, verbose_help_fn},
     {"info", info_fn, info_help_fn},
+    {"version", info_fn, info_help_fn},
     {"print-rank-map", print_rank_map_fn, print_rank_map_help_fn},
     {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
     {"iface", iface_fn, iface_help_fn},
