@@ -370,7 +370,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\include,..\..\include\win32,..\..\mpid\ch3\include,..\..\mpid\ch3\channels\ssm\include,..\..\mpid\common\datatype,..\..\mpid\common\sock,..\..\mpid\common\sock\iocp"
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;..\..\mpl\include;..\..\mpid\ch3\include;..\..\mpid\ch3\channels\ssm\include;..\..\mpid\common\datatype;..\..\mpid\common\sock;..\..\mpid\common\sock\iocp"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;USE_WINCONF_H"
 				StringPooling="true"
 				RuntimeLibrary="0"

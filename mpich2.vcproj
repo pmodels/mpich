@@ -349,7 +349,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\channels\ssm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\channels\ssm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -378,7 +378,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3ssm.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpl.lib smpd_util.lib dbg.lib sock.lib ch3ssm.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="lib/mpich2ssm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -1566,7 +1566,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\channels\ssm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\channels\ssm\include;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -1595,7 +1595,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlog.lib smpd_util.lib dbg.lib sockp.lib ch3ssmp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpl.lib rlog.lib smpd_util.lib dbg.lib sockp.lib ch3ssmp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="lib/mpich2ssmp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -2296,7 +2296,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbgmt.lib sockmt.lib ch3sockmt.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbgmt.lib sockmt.lib ch3sockmt.lib mpl.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="lib/mpich2mt.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -2372,7 +2372,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,MPICH_MULTITHREADED"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -2402,7 +2402,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlog.lib smpd_util.lib dbgmtp.lib sockmtp.lib ch3sockmtp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpl.lib rlog.lib smpd_util.lib dbgmtp.lib sockmtp.lib ch3sockmtp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="lib/mpich2mtp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
