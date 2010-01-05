@@ -22,6 +22,15 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     int ok_to_override_cb_nodes=0;
     static char myname[] = "ADIOI_GEN_SETINFO";
 
+
+    /* if we've already set up default hints and the user has not asked us to
+     * process any hints (MPI_INFO_NULL), then we can short-circuit hint
+     * processing */
+    if (fd->hints->initialized && fd->info == MPI_INFO_NULL) {
+	    *error_code = MPI_SUCCESS;
+	    return;
+    }
+
     if (fd->info == MPI_INFO_NULL) MPI_Info_create(&(fd->info));
     info = fd->info;
 
