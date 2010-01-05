@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="executive"
-	ProjectGUID="{ACB7CE11-E708-49CD-9DC5-6022B1BF730B}"
-	RootNamespace="executive"
+	Name="mpl"
+	ProjectGUID="{8A501EEE-94AD-4FAA-A67F-EE5E6D9E5CD2}"
+	RootNamespace="mpl"
 	>
 	<Platforms>
 		<Platform
@@ -39,11 +39,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../include;../../include/win32;../../mpl/include"
-				PreprocessorDefinitions="USE_DBG_LOGGING"
+				AdditionalIncludeDirectories="src\mpl\include"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="2"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -59,7 +58,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\lib\exd.lib"
+				OutputFile="lib\mpld.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -102,10 +101,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				FavorSizeOrSpeed="1"
-				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="../../include;../../include/win32;../../mpl/include"
-				PreprocessorDefinitions="NDEBUG"
+				AdditionalIncludeDirectories="src\mpl\include"
 				RuntimeLibrary="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -122,7 +118,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="../../../lib/ex.lib"
+				OutputFile="lib\mpl.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -150,7 +146,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ex.c"
+				RelativePath=".\src\mpl\src\mplstr.c"
 				>
 			</File>
 		</Filter>

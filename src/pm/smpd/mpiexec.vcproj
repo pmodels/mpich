@@ -125,7 +125,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;.\sock\include;.\sock\iocp\include;."
+				AdditionalIncludeDirectories="..\..\include;..\..\include\win32;..\..\mpl\include;.\sock\include;.\sock\iocp\include;."
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_WINDOWS_H;USE_WINCONF_H;_WIN32_WINNT=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -146,7 +146,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib dbg.lib smpd_util.lib mpi.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib mpl.lib dbg.lib smpd_util.lib mpi.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"

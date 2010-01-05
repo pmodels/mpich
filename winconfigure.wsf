@@ -228,6 +228,7 @@ unhandled_definitions_instances = 0
 unhandled_ats = ""
 unhandled_ats_count = 0
 unhandled_ats_instances = 0
+Set customDefDict = Nothing
 ' variables for creating the nmake file
 Dim bfile
 Dim mfile
@@ -1536,10 +1537,14 @@ Function RegExpFind(pattern, str)
    regEx.IgnoreCase = True             ' Set case insensitivity.
    regEx.Global = True                 ' Set global applicability.
    Set Matches = regEx.Execute(str)    ' Execute search.
-   For Each Match in Matches           ' Return the first match
-      RegExpFind = Match.Value
-      Exit For
-   Next
+   If Matches.Count <> 0 Then
+       For Each Match in Matches           ' Return the first match
+           RegExpFind = Match.Value
+       Exit For
+       Next
+   Else
+       RegExpFind = Null
+   End If
 End Function
 
 ' Append appendString to origString only if appendString is not
@@ -2286,6 +2291,55 @@ Sub AddOPADefinitions( fout, filename, b64 )
         Next
     End If
 End Sub
+
+Function CreateMPLDefDict()
+    Set customDefDict = Nothing
+    Set customDefDict = CreateObject("Scripting.Dictionary")
+    customDefDict.Add "PACKAGE", "MPL"
+    customDefDict.Add "VERSION", "0.1"
+    CreateMPLDefDict = True
+End Function
+
+Function FreeMPLDefDict()
+    Set customDefDict = Nothing
+    FreeMPLDefDict = True
+End Function
+
+Function AddPrefixToDefinitions(filename, prefix_str)
+    temp_filename = filename & "_temp"
+    If f.FileExists(temp_filename) Then
+        f.DeleteFile temp_filename, "True"
+    End If
+    f.MoveFile filename, temp_filename
+
+    Set prefix_file = f.CreateTextFile(filename, true)
+    Set temp_file = f.OpenTextFile(temp_filename)
+    
+    Do While temp_file.AtEndOfStream <> True
+        Dim str, define, macroname_val
+        str = temp_file.ReadLine()
+
+        define = RegExpFind("(#define|#ifndef)(\b).+[\r\n]*", str)
+        Select Case Left(define, 7)
+            Case "#define"
+                macroname_val = RegExpFind("(\s).+", define)
+                str = RegExpFind("(\S).+", macroname_val)
+                str = "#define " & prefix_str & str
+            Case "#ifndef"
+                macroname_val = RegExpFind("(\s).+", define)
+                str = RegExpFind("(\S).+", macroname_val)
+                str = "#ifndef " & prefix_str & str
+            Case Else
+                ' Just print the line as it is
+        End Select        
+        prefix_file.WriteLine(str)
+    Loop
+    
+    temp_file.Close()
+    prefix_file.Close()
+    f.DeleteFile temp_filename, "True"
+    AddPrefixToDefinitions = True
+End Function
 
 Sub AddDefinitions( fout, filename, b64 )
 	If f.FileExists( filename ) Then
@@ -3640,12 +3694,16 @@ Sub AddDefinitions( fout, filename, b64 )
                                 Case "USE_ASYNC_PROGRESS"
                                         fout.WriteLine("/* #undef USE_ASYNC_PROGRESS */")
 				Case Else
+                                    If Not (customDefDict Is Nothing) And (customDefDict.Exists(macroname)) Then
+                                        fout.WriteLine("#define " & macroname & " " & customDefDict.Item(macroname))
+                                    Else
 					'MsgBox("Unhandled definition <" & define & ">")
 					If appendUniqueString(unhandled_definitions, macroname) Then
 						unhandled_definitions_count = unhandled_definitions_count + 1
 					End If
 					unhandled_definitions_instances = unhandled_definitions_instances + 1
 					fout.WriteLine("/* unknown definition: " & macroname & " */")
+                                    End If
 			End Select
 			fout.WriteLine("")
 		Next
@@ -5374,6 +5432,21 @@ Else
 	cEcho "Skipping file: smpdconf.h"
 End If
 
+printMsg "STATUS", "Creating header files for MPL..."
+If f.FileExists("src\mpl\include\config.h.in") Then
+	printMsg "VERBOSE", "Creating src\mpl\include\mplconfig.h"
+	Set fout = f.CreateTextFile("src\mpl\include\mplconfig.h")
+	Call WriteHeader(fout, "mplconfig_")
+        CreateMPLDefDict()
+	Call AddDefinitions(fout, "src\mpl\include\config.h.in", false)
+        FreeMPLDefDict()
+	Call WriteFooter(fout)
+	fout.Close()
+        Call AddPrefixToDefinitions("src\mpl\include\mplconfig.h", "MPL_")
+Else
+	printMsg "VERBOSE", "Skipping file: src\mpl\include\config.h.in"
+End If
+
 printMsg "STATUS", "Creating config.h header files for OpenPA..."
 if not f.FolderExists("src\openpa\src\win32") then
         printMsg "VERBOSE", "Creating src\openpa\src\win32 directory"
@@ -5959,6 +6032,10 @@ Sub OutputLine(path, line)
 		line = Right(line, Len(line) - 28)
 		do_output = true
 	End If
+	If Left(line, 18) = "libmpl_a_SOURCES =" Then
+		line = Right(line, Len(line) - 18)
+		do_output = true
+	End If
 	If Left(line, 29) = "lib${MPIFLIBNAME}_a_SOURCES =" Then
 		line = Right(line, Len(line) - 29)
 		do_output = true
@@ -6264,6 +6341,7 @@ Function GenBuild()
 	mfile.WriteLine(" /I..\src\include \")
 	mfile.WriteLine(" /I..\src\util\wrappers \")
 	mfile.WriteLine(" /I..\src\openpa\src \")
+	mfile.WriteLine(" /I..\src\mpl\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\$(CHANNEL)\src \")
@@ -6527,6 +6605,10 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\util\logging\common"), trimlength
 	CreateRules f.GetFolder("src\util\param"), trimlength
         CreateRules f.GetFolder("src\util\thread"), trimlength
+        ' Insert rules for mpl manually since mpl is not build with Makefile.sm files
+        mfile.WriteLine("{..\src\mpl\src}.c{$(OUTDIR)}.obj:")
+        mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
+        mfile.WriteLine
 	' Insert rules for romio manually since romio is not build with Makefile.sm files
 	mfile.WriteLine("{..\src\mpi\romio\adio\ad_ntfs}.c{$(OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
@@ -6688,6 +6770,8 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\write_ordb.obj \")
 	mfile.WriteLine("	$(OUTDIR)\write_orde.obj \")
 	mfile.WriteLine("	$(OUTDIR)\write_sh.obj \")
+        ' Insert objs for mpl manually
+        mfile.WriteLine("   $(OUTDIR)\mplstr.obj \")
 	' Insert objs for f90 type create funcs manually because the src/binding/f90
         ' directory has both C & fortran interfaces
         mfile.WriteLine("   $(OUTDIR)\create_f90_util.obj \")
@@ -7306,6 +7390,10 @@ Function ParseSrcFiles(filename)
 				End If
 				If Left(fullline, 28) = "lib${MPILIBNAME}_a_SOURCES =" Then
 					src_line = src_line & " " & Right(fullline, Len(fullline) - 28)
+					'cEcho src_line
+				End If
+				If Left(fullline, 18) = "libmpl_a_SOURCES =" Then
+					src_line = src_line & " " & Right(fullline, Len(fullline) - 18)
 					'cEcho src_line
 				End If
 				fullline = ""

@@ -117,7 +117,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include,..\..\include,..\..\..\..\include,..\..\..\..\include\win32,..\..\..\common\datatype,..\..\..\common\locks"
+				AdditionalIncludeDirectories="include;..\..\include;..\..\..\..\include;..\..\..\..\include\win32;..\..\..\..\mpl\include;..\..\..\common\datatype;..\..\..\common\locks"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_WINCONF_H;_WIN32_WINNT=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -191,7 +191,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include;..\..\include;..\..\..\..\include;..\..\..\..\include\win32;..\..\..\common\datatype;..\..\..\common\locks;..\..\..\ch3\util\sock"
+				AdditionalIncludeDirectories="include;..\..\include;..\..\..\..\include;..\..\..\..\include\win32;..\..\..\..\mpl\include;..\..\..\common\datatype;..\..\..\common\locks;..\..\..\ch3\util\sock"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_WINCONF_H,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG;_WIN32_WINNT=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"

@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\include,..\..\..\include\win32,..\common"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\..\include\win32;..\common;..\..\..\mpl\include"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_WINCONF_H,NEW_MPIIO"
 				StringPooling="true"
 				RuntimeLibrary="0"
