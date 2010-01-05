@@ -5127,16 +5127,7 @@ void foo1( char *fmt, ... ) {
     fi
 fi
 
-AC_MSG_CHECKING([for variable argument list macro functionality])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([
-#include <stdio.h>
-#define conftest_va_arg_macro(...) printf(__VA_ARGS__)
-],
-[conftest_va_arg_macro("a test %d", 3);])],
-[AC_DEFINE([HAVE_MACRO_VA_ARGS],[1],[Define if C99-style variable argument list macro functionality])
- AC_MSG_RESULT([yes])],
-[AC_MSG_RESULT([no])])
-
+PAC_C_MACRO_VA_ARGS
 
 # headers for valgrind client requests
 AC_CHECK_HEADERS([valgrind.h memcheck.h valgrind/valgrind.h valgrind/memcheck.h])
