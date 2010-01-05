@@ -37,6 +37,14 @@
 #include <ctype.h>
 #endif /* MPL_HAVE_CTYPE_H */
 
+#if defined(MPL_HAVE_INTTYPES_H)
+#include <inttypes.h>
+#endif /* MPL_HAVE_INTTYPES_H */
+
+#if defined(MPL_HAVE_STDINT_H)
+#include <stdint.h>
+#endif /* MPL_HAVE_STDINT_H */
+
 #if !defined ATTRIBUTE
 #  if defined MPL_HAVE_GCC_ATTRIBUTE
 #    define ATTRIBUTE(a_) __attribute__(a_)

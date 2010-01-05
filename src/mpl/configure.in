@@ -26,6 +26,9 @@ AC_C_RESTRICT
 dnl Check if the necessary headers are available
 AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h)
 
+# A C99 compliant compiler should have inttypes.h for fixed-size int types
+AC_CHECK_HEADERS(inttypes.h stdint.h)
+
 dnl Check for strdup
 AC_CHECK_FUNCS(strdup)
 if test "$ac_cv_func_strdup" = "yes" ; then
