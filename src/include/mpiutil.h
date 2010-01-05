@@ -110,7 +110,7 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 #  if defined(HAVE_MACRO_VA_ARGS)
 
-#  include "mpiu_valgrind.h" /* for MPIU_VG_ macros */
+#  include "mpl.h" /* for MPL_VG_ macros */
 
 #  define MPIU_ASSERT_FMT_MSG_MAX_SIZE 2048
 /* newlines are added internally by this macro, callers do not need to include them */
@@ -119,9 +119,9 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
         if (!(cond_)) {                                                                \
             char *msg_ = MPIU_Malloc(MPIU_ASSERT_FMT_MSG_MAX_SIZE);                    \
             MPIU_Assert_fmt_msg_snprintf_ fmt_arg_parens_;                             \
-            MPIU_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",   \
+            MPL_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",    \
                                        __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
-            MPIU_VG_PRINTF_BACKTRACE("%s\n", msg_);                                    \
+            MPL_VG_PRINTF_BACKTRACE("%s\n", msg_);                                     \
             MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
                                        __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
             MPIU_Internal_error_printf("%s\n", msg_);                                  \
@@ -145,9 +145,9 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
         if (!(cond_)) {                                                                \
             const char *unable_msg_ =                                                  \
                 "macro __VA_ARGS__ not supported, unable to print user message";       \
-            MPIU_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",   \
+            MPL_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",    \
                                        __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
-            MPIU_VG_PRINTF_BACKTRACE("%s\n", unable_msg_);                             \
+            MPL_VG_PRINTF_BACKTRACE("%s\n", unable_msg_);                              \
             MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
                                        __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
             MPIU_Internal_error_printf("%s\n", unable_msg_);                           \

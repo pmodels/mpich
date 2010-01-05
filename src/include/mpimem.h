@@ -132,6 +132,20 @@ int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen);
 
 /* ------------------------------------------------------------------------- */
 
+void MPIU_trinit(int);
+void *MPIU_trmalloc(unsigned int, int, const char []);
+void MPIU_trfree(void *, int, const char []);
+int MPIU_trvalid(const char []);
+void MPIU_trspace(int *, int *);
+void MPIU_trid(int);
+void MPIU_trlevel(int);
+void MPIU_trDebugLevel(int);
+void *MPIU_trcalloc(unsigned int, unsigned int, int, const char []);
+void *MPIU_trrealloc(void *, int, int, const char[]);
+void *MPIU_trstrdup(const char *, int, const char[]);
+void MPIU_TrSetMaxMem(int);
+void MPIU_trdump(FILE *, int);
+
 #ifdef USE_MEMORY_TRACING
 /*M
   MPIU_Malloc - Allocate memory
@@ -162,8 +176,8 @@ int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen);
   Module:
   Utility
   M*/
-
 #define MPIU_Malloc(a)    MPIU_trmalloc((unsigned)(a),__LINE__,__FILE__)
+
 /*M
   MPIU_Calloc - Allocate memory that is initialized to zero.
 
@@ -236,30 +250,6 @@ int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen);
        will give the explanation */
 #undef strdup /* in case strdup is a macro */
 #define strdup(a)         'Error use MPIU_Strdup' :::
-
-/* FIXME: Note that some of these prototypes are for old functions in the 
-   src/util/mem/trmem.c package, and are no longer used.  Also, 
-   it may be preferable to use trmem.h instead of these definitions */
-void MPIU_trinit ( int );
-void *MPIU_trmalloc ( unsigned int, int, const char * );
-void MPIU_trfree ( void *, int, const char * );
-int MPIU_trvalid ( const char * );
-void MPIU_trspace ( int *, int * );
-void MPIU_trid ( int );
-void MPIU_trlevel ( int );
-void MPIU_trpush ( int );
-void MPIU_trpop (void);
-void MPIU_trDebugLevel ( int );
-void *MPIU_trstrdup( const char *, int, const char * );
-void *MPIU_trcalloc ( unsigned, unsigned, int, const char * );
-void *MPIU_trrealloc ( void *, int, int, const char * );
-void MPIU_TrSetMaxMem ( int );
-
-#ifndef MPIU_MEM_NOSTDIO
-void MPIU_trdump ( FILE *, int );
-void MPIU_trSummary ( FILE *, int );
-void MPIU_trdumpGrouped ( FILE *, int );
-#endif
 
 #else /* USE_MEMORY_TRACING */
 /* No memory tracing; just use native functions */
@@ -461,8 +451,8 @@ void MPIU_Basename(char *path, char **basename);
         if (len_) {                                                                                              \
             MPIU_Assert((dst_) != NULL);                                                                        \
             MPIU_Assert((src_) != NULL);                                                                        \
-            MPIU_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                    \
-            MPIU_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                    \
+            MPL_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                    \
+            MPL_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                    \
             if (((char *)(dst_) >= (char *)(src_) && ((char *)(dst_) < ((char *)(src_) + (len_)))) ||           \
                 ((char *)(src_) >= (char *)(dst_) && ((char *)(src_) < ((char *)(dst_) + (len_)))))             \
             {                                                                                                   \
@@ -475,7 +465,7 @@ void MPIU_Basename(char *path, char **basename);
 #define MPIU_MEM_CHECK_MEMCPY(dst_,src_,len_) do {} while(0)
 #endif
 
-#include "mpiu_valgrind.h"
+/* valgrind macros are now provided by MPL (via mpl.h included in mpiimpl.h) */
 
 /* ------------------------------------------------------------------------- */
 /* end of mpimem.h */

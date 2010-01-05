@@ -31,6 +31,12 @@
 #include "mpichconf.h"
 #endif
 
+/* if we are defining this, we must define it before including mpl.h */
+#if defined(MPICH_DEBUG_MEMINIT)
+#define MPL_VG_ENABLED 1
+#endif
+#include "mpl.h"
+
 /* The most common MPI error classes */
 #ifndef MPI_SUCCESS
 #define MPI_SUCCESS 0

@@ -53,6 +53,12 @@
 #  endif /* MPL_HAVE_GCC_ATTRIBUTE */
 #endif /* ATTRIBUTE */
 
+
 #include "mplstr.h"
+
+/* must come before mpltrmem.h */
+#include "mpl_valgrind.h"
+
+#include "mpltrmem.h"
 
 #endif /* MPL_H_INCLUDED */

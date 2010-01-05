@@ -529,7 +529,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 	MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
         /* the dataloop can have undefined padding sections, so we need to let
          * valgrind know that it is OK to pass this data to writev later on */
-        MPIU_VG_MAKE_MEM_DEFINED(*dataloop, target_dtp->dataloop_size);
+        MPL_VG_MAKE_MEM_DEFINED(*dataloop, target_dtp->dataloop_size);
 
         if (rma_op->type == MPIDI_RMA_PUT)
 	{
@@ -757,7 +757,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
         /* the dataloop can have undefined padding sections, so we need to let
          * valgrind know that it is OK to pass this data to writev later on */
-        MPIU_VG_MAKE_MEM_DEFINED(*dataloop, dtp->dataloop_size);
+        MPL_VG_MAKE_MEM_DEFINED(*dataloop, dtp->dataloop_size);
 
         get_pkt->dataloop_size = dtp->dataloop_size;
 

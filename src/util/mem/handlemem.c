@@ -7,8 +7,6 @@
 #include "mpiimpl.h"
 #include <stdio.h>
 
-#include "mpiu_valgrind.h"
-
 #ifdef NEEDS_PRINT_HANDLE
 static void MPIU_Print_handle( int handle );
 #endif
@@ -129,10 +127,10 @@ static int MPIU_Handle_free( void *((*indirect)[]), int indirect_size )
     return 0;
 }
 
-#if defined(MPIU_VG_AVAILABLE)
+#if defined(MPL_VG_AVAILABLE)
 #define MPIU_HANDLE_VG_LABEL(objptr_, objsize_, handle_type_, is_direct_)                        \
     do {                                                                                         \
-        if (MPIU_VG_RUNNING_ON_VALGRIND()) {                                                     \
+        if (MPL_VG_RUNNING_ON_VALGRIND()) {                                                     \
             char desc_str[256];                                                                  \
             MPIU_Snprintf(desc_str, sizeof(desc_str)-1,                                          \
                           "[MPICH2 handle: objptr=%p handle=0x%x %s/%s]",                        \
@@ -141,7 +139,7 @@ static int MPIU_Handle_free( void *((*indirect)[]), int indirect_size )
                           MPIU_Handle_get_kind_str(handle_type_));                               \
             /* we don't keep track of the block descriptor because the handle */                 \
             /* values never change once allocated */                                             \
-            MPIU_VG_CREATE_BLOCK((objptr_), (objsize_), desc_str);                               \
+            MPL_VG_CREATE_BLOCK((objptr_), (objsize_), desc_str);                               \
         }                                                                                        \
     } while (0)
 #else
@@ -243,7 +241,7 @@ static int MPIU_Handle_finalize( void *objmem_ptr )
        and then did not destroy */
 
     /* at this point we are done with the memory pool, inform valgrind */
-    MPIU_VG_DESTROY_MEMPOOL(objmem_ptr);
+    MPL_VG_DESTROY_MEMPOOL(objmem_ptr);
 
     return 0;
 }
@@ -335,7 +333,7 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
 	if (!objmem->initialized) {
 	    performed_initialize = 1;
 
-            MPIU_VG_CREATE_MEMPOOL(objmem, 0/*rzB*/, 0/*is_zeroed*/);
+            MPL_VG_CREATE_MEMPOOL(objmem, 0/*rzB*/, 0/*is_zeroed*/);
 
 	    /* Setup the first block.  This is done here so that short MPI
 	       jobs do not need to include any of the Info code if no
@@ -384,13 +382,13 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
         /* if the object was previously freed then MEMPOOL_FREE marked it as
          * NOACCESS, so we need to make it addressable again before memsetting
          * it */
-        MPIU_VG_MAKE_MEM_DEFINED(&ptr->ref_count, objmem->size - sizeof(ptr->handle));
+        MPL_VG_MAKE_MEM_DEFINED(&ptr->ref_count, objmem->size - sizeof(ptr->handle));
 	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(ptr->handle));
 #endif /* USE_MEMORY_TRACING */
         /* mark the mem as addressable yet undefined if valgrind is available */
-        MPIU_VG_MEMPOOL_ALLOC(objmem, ptr, objmem->size);
+        MPL_VG_MEMPOOL_ALLOC(objmem, ptr, objmem->size);
         /* the handle value is always valid at return from this function */
-        MPIU_VG_MAKE_MEM_DEFINED(&ptr->handle, sizeof(ptr->handle));
+        MPL_VG_MAKE_MEM_DEFINED(&ptr->handle, sizeof(ptr->handle));
 
         MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
                                          "Allocating object ptr %p (handle val 0x%08x)",
@@ -424,12 +422,12 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
                                      MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((obj)->handle)),
                                      MPIU_Object_get_ref(obj)));
 
-    MPIU_VG_MEMPOOL_FREE(objmem, obj);
+    MPL_VG_MEMPOOL_FREE(objmem, obj);
     /* MEMPOOL_FREE marks the object NOACCESS, so we have to make the
      * MPIU_Handle_common area that is used for internal book keeping
      * addressable again. */
-    MPIU_VG_MAKE_MEM_DEFINED(&obj->handle, sizeof(obj->handle));
-    MPIU_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
+    MPL_VG_MAKE_MEM_DEFINED(&obj->handle, sizeof(obj->handle));
+    MPL_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
 
     obj->next	        = objmem->avail;
     objmem->avail	= obj;

@@ -23,11 +23,16 @@ AC_PROG_RANLIB
 AC_C_CONST
 AC_C_RESTRICT
 
+PAC_C_MACRO_VA_ARGS
+
 dnl Check if the necessary headers are available
 AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h)
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
+
+# headers for valgrind client requests
+AC_CHECK_HEADERS([valgrind.h memcheck.h valgrind/valgrind.h valgrind/memcheck.h])
 
 dnl Check for strdup
 AC_CHECK_FUNCS(strdup)

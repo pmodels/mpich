@@ -169,8 +169,8 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
     MPIU_Assert(mapping != NULL);
     *mapping_vcr_out = vcr;
     *mapping_out     = mapping;
-    MPIU_VG_CHECK_MEM_IS_DEFINED(*mapping_vcr_out, vcr_size * sizeof(**mapping_vcr_out));
-    MPIU_VG_CHECK_MEM_IS_DEFINED(*mapping_out, n * sizeof(**mapping_out));
+    MPL_VG_CHECK_MEM_IS_DEFINED(*mapping_vcr_out, vcr_size * sizeof(**mapping_vcr_out));
+    MPL_VG_CHECK_MEM_IS_DEFINED(*mapping_out, n * sizeof(**mapping_out));
 
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
