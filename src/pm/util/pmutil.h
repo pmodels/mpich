@@ -85,6 +85,10 @@ extern int MPIE_Debug;
 #define MPIU_Free(a)      free((void *)(a))
 #define MPIU_Realloc(a,b)  realloc((void *)(a),(size_t)(b))
 
+int MPIU_Strncpy( char *outstr, const char *instr, size_t maxlen );
+int MPIU_Strnapp( char *, const char *, size_t );
+char *MPIU_Strdup( const char * );
+
 #ifdef HAVE_STRDUP
 /* Watch for the case where strdup is defined as a macro by a header include */
 # if defined(NEEDS_STRDUP_DECL) && !defined(strdup)
