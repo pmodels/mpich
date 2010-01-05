@@ -188,3 +188,71 @@ char *MPL_strdup(mpl_const char *str)
     return save_p;
 }
 #endif /* MPL_HAVE_STRDUP */
+
+/*
+ * MPL_strncpy - Copy at most n characters.  Stop once a null is reached.
+ *
+ * This is different from strncpy, which null pads so that exactly
+ * n characters are copied.  The strncpy behavior is correct for many
+ * applications because it guarantees that the string has no uninitialized
+ * data.
+ *
+ * If n characters are copied without reaching a null, return an error.
+ * Otherwise, return 0.
+ *
+ * Question: should we provide a way to request the length of the string,
+ * since we know it?
+ */
+/*@ MPL_strncpy - Copy a string with a maximum length
+
+    Input Parameters:
++   instr - String to copy
+-   maxlen - Maximum total length of 'outstr'
+
+    Output Parameter:
+.   outstr - String to copy into
+
+    Notes:
+    This routine is the routine that you wish 'strncpy' was.  In copying
+    'instr' to 'outstr', it stops when either the end of 'outstr' (the
+    null character) is seen or the maximum length 'maxlen' is reached.
+    Unlike 'strncpy', it does not add enough nulls to 'outstr' after
+    copying 'instr' in order to move precisely 'maxlen' characters.
+    Thus, this routine may be used anywhere 'strcpy' is used, without any
+    performance cost related to large values of 'maxlen'.
+
+    If there is insufficient space in the destination, the destination is
+    still null-terminated, to avoid potential failures in routines that neglect
+    to check the error code return from this routine.
+
+  Module:
+  Utility
+  @*/
+int MPL_strncpy( char *dest, const char *src, size_t n )
+{
+    char * mpl_restrict d_ptr = dest;
+    const char * mpl_restrict s_ptr = src;
+    register int i;
+
+    if (n == 0) return 0;
+
+    i = (int)n;
+    while (*s_ptr && i-- > 0) {
+        *d_ptr++ = *s_ptr++;
+    }
+
+    if (i > 0) {
+        *d_ptr = 0;
+        return 0;
+    }
+    else {
+        /* Force a null at the end of the string (gives better safety
+           in case the user fails to check the error code) */
+        dest[n-1] = 0;
+        /* We may want to force an error message here, at least in the
+           debugging version */
+        /*printf( "failure in copying %s with length %d\n", src, n ); */
+        return 1;
+    }
+}
+

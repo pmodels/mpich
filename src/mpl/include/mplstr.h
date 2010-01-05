@@ -42,6 +42,8 @@ char *MPL_strdup(const char *str);
 #endif /* MPL_HAVE_STRDUP */
 #endif /* USE_MEMORY_TRACING */
 
+int MPL_strncpy(char *dest, const char *src, size_t n);
+
 /* *INDENT-ON* */
 #if defined(__cplusplus)
 }
