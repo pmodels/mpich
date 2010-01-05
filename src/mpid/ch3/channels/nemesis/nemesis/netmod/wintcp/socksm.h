@@ -118,7 +118,7 @@ extern const char *const SOCK_STATE_STR[];
             MPIU_ExInitOverlapped(&(sc->wr_ov), succ_fn, fail_fn)
 
 #define CHANGE_STATE(_sc, _state) do {                              \
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "CHANGE_STATE %p (state= %s to %s)", _sc, CONN_STATE_TO_STRING((_sc)->state), CONN_STATE_TO_STRING(_state))); \
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "CHANGE_STATE %p (state= %s to %s)", _sc, SOCK_STATE_TO_STRING((_sc)->state), SOCK_STATE_TO_STRING(_state))); \
     (_sc)->state = _state;                               \
     SOCKCONN_EX_RD_HANDLERS_SET((_sc), sc_state_info[_state].sc_state_rd_success_handler, sc_state_info[_state].sc_state_rd_fail_handler); \
     SOCKCONN_EX_WR_HANDLERS_SET((_sc), sc_state_info[_state].sc_state_wr_success_handler, sc_state_info[_state].sc_state_wr_fail_handler); \
