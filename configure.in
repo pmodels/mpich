@@ -976,7 +976,7 @@ fi
 
 # MPL
 PAC_CONFIG_SUBDIR(src/mpl, $use_top_srcdir, $ac_configure_args,,AC_ERROR(MPL configure failed))
-PAC_APPEND_FLAG([-lmpl], [WRAPPER_LIBS])
+PAC_PREPEND_FLAG([-lmpl], [WRAPPER_LIBS])
 PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
 PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/mpl"
@@ -993,7 +993,7 @@ if test -e "$opadir" ; then
     CPPFLAGS="$CPPFLAGS -I${use_top_srcdir}/src/openpa/src -I${master_top_builddir}/src/openpa/src"
 
     PAC_CONFIG_SUBDIR(src/openpa, $use_top_srcdir, $ac_configure_args,,AC_ERROR(OpenPA configure failed))
-    PAC_APPEND_FLAG([-lopa],[WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
 
     other_install_dirs="$other_install_dirs src/openpa"
 fi
@@ -5740,7 +5740,7 @@ case $with_thread_package in
         # inconsistencies in the pthread spec).  Thus, we look for pthread_key_create
         AC_CHECK_LIB([pthread],[pthread_key_create],have_pthreads=yes)
 	if test "$have_pthreads" = "yes" ; then
-	   PAC_APPEND_FLAG([-lpthread],[LIBS])
+	   PAC_PREPEND_FLAG([-lpthread],[LIBS])
 	fi
 
         AC_CHECK_FUNCS(pthread_yield)
