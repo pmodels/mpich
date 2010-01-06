@@ -40,9 +40,8 @@ HYD_status HYDU_dbg_init(const char *str)
     char hostname[MAX_HOSTNAME_LEN];
     HYD_status status = HYD_SUCCESS;
 
-    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
-        HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
-                             "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
+    status = HYDU_gethostname(hostname);
+    HYDU_ERR_POP(status, "unable to get local host name\n");
 
     HYDU_MALLOC(dbg_prefix, char *, strlen(hostname) + 1 + strlen(str) + 1, status);
     HYDU_snprintf(dbg_prefix, strlen(hostname) + 1 + strlen(str) + 1, "%s@%s", str, hostname);

@@ -513,9 +513,8 @@ HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
-    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
-        HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
-                             "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
+    status = HYDU_gethostname(hostname);
+    HYDU_ERR_POP(status, "unable to get local hostname\n");
 
     sport = HYDU_int_to_str(port);
     HYDU_MALLOC(*port_str, char *, strlen(hostname) + 1 + strlen(sport) + 1, status);

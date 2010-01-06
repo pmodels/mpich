@@ -145,8 +145,13 @@ int main(int argc, char **argv)
         }
 
         if (HYD_handle.node_list == NULL) {
+            char hostname[MAX_HOSTNAME_LEN];
+
+            status = HYDU_gethostname(hostname);
+            HYDU_ERR_POP(status, "unable to get local hostname\n");
+
             /* The RMK and bootstrap didn't give us anything back; use localhost */
-            status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
+            status = HYDU_add_to_node_list(hostname, 1, &HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
         }
     }

@@ -47,3 +47,30 @@ HYD_status HYDU_add_to_node_list(char *hostname, int num_procs, struct HYD_node 
   fn_fail:
     goto fn_exit;
 }
+
+static char local_hostname[MAX_HOSTNAME_LEN] = { 0 };
+
+HYD_status HYDU_gethostname(char *hostname)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (strcmp(local_hostname, "")) {
+        HYDU_snprintf(hostname, MAX_HOSTNAME_LEN, "%s", local_hostname);
+        goto fn_exit;
+    }
+
+    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
+        HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
+                             "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
+
+    HYDU_snprintf(local_hostname, MAX_HOSTNAME_LEN, "%s", hostname);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
