@@ -4909,6 +4909,8 @@ fout.WriteLine("#define HAVE_NT_SHARED_MEM")
 fout.WriteLine("#define USE_NT_SHM	1")
 fout.WriteLine("#define USE_NT_SOCK 1")
 fout.WriteLine("#define HAVE_EXECUTIVE_PE 1")
+fout.WriteLine("#define HAVE__MKTEMP_S 1")
+fout.WriteLine("#define HAVE_FOPEN_S 1")
 ' Disable warnings for unsecure versions, eg: snprintf instead of snprintf_s, of funcs
 fout.WriteLine("#pragma warning( disable : 4996 )") 
 ' Define so that we can test whether the mpichconf.h file has been included 
@@ -4982,6 +4984,8 @@ fout.WriteLine("#define HAVE_NT_SHARED_MEM")
 fout.WriteLine("#define USE_NT_SHM	1")
 fout.WriteLine("#define USE_NT_SOCK 1")
 fout.WriteLine("#define HAVE_EXECUTIVE_PE 1")
+fout.WriteLine("#define HAVE__MKTEMP_S 1")
+fout.WriteLine("#define HAVE_FOPEN_S 1")
 ' Disable warnings for unsecure versions, eg: snprintf instead of snprintf_s, of funcs
 fout.WriteLine("#pragma warning( disable : 4996 )") 
 ' Define so that we can test whether the mpichconf.h file has been included 

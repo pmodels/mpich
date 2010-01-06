@@ -780,6 +780,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 **mkstemp:mkstemp failed
 **mkstemp %s:mkstemp failed %s
+**mktemp_s:mktemp_s failed
+**mktemp_s %s:mktemp_s failed, %s
 **lseek:lseek failed
 **lseek %s:lseek failed - %s
 **fdopen:fdopen failed
@@ -788,6 +790,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **tmpnam %s:tmpnam failed %s
 **fopen:fopen failed
 **fopen %s:fopen failed %s
+**fopen_s:fopen_s failed
+**fopen_s %s:fopen_s failed, %s
 **abi_version_mismatch:ABI version mismatch
 **abi_version_mismatch %D %D:ABI version mismatch, expected %D - got %D
 **recv_status:receive status failed

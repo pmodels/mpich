@@ -857,6 +857,44 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     MPIU_Error_printf( "Could not open log file %s\n", temp_filename );
     goto fn_exit;
 }
+#elif defined(HAVE__MKTEMP_S) && defined(HAVE_FOPEN_S)
+/* creates a temporary file in the same directory the
+   user specified for the log file */
+#undef FUNCNAME
+#define FUNCNAME MPIU_DBG_Open_temp_file
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
+{
+    int mpi_errno = MPI_SUCCESS;
+    const char temp_pattern[] = "templogXXXXXX";
+    int fd;
+    char *basename;
+    int ret;
+    errno_t ret_errno;
+    
+    ret = MPIU_Strncpy(temp_filename, filePattern, MAXPATHLEN);
+    MPIU_ERR_CHKINTERNAL(ret, mpi_errno, "logfile path too long");
+
+    MPIU_Basename(temp_filename, &basename);
+
+    /* make sure there's enough room in temp_filename to store temp_pattern */
+    MPIU_ERR_CHKINTERNAL(basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern), mpi_errno, "logfile path too long");
+
+    MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
+    
+    ret_errno = _mktemp_s(temp_filename, MAXPATHLEN);
+    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**mktemp_s", "**mktemp_s %s", strerror(ret_errno));
+
+    ret_errno = fopen_s(dbg_fp, temp_filename, "a+");
+    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**fopen_s", "**fopen_s %s", strerror(ret_errno));
+    
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    MPIU_Error_printf( "Could not open log file %s\n", temp_filename );
+    goto fn_exit;
+}
 #else
 /* creates a temporary file in some directory, which may not be where
    the user wants the log file.  When the file is renamed later, it
