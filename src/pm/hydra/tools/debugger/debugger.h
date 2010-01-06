@@ -11,7 +11,7 @@
 typedef struct MPIR_PROCDESC {
     const char *host_name;
     const char *executable_name;
-    long pid;
+    int pid;
 } MPIR_PROCDESC;
 
 /* Two global variables which a debugger can use for: (1) finding out
