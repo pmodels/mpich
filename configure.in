@@ -250,6 +250,18 @@ PAC_PREFIX_FLAGS(USER, LDFLAGS)
 PAC_PREFIX_FLAGS(USER, LIBS)
 
 # WRAPPER_xFLAGS are used by mpicc and friends.
+#
+# WRAPPER_CFLAGS and other compile flags are used for compile options
+# that are added by MPICH2, but should be used by applications (such
+# as include paths).
+#
+# All libraries that are detected by MPICH2 as needed for some of its
+# functionality (such as -lpthread) should be added to LIBS so
+# autoconf link tests can use them. Libraries that are built by MPICH2
+# at make time (and hence are not available for autoconf link tests to
+# use), such as OPA and MPL, should be added to WRAPPER_LIBS. All
+# libraries in LIBS are added to WRAPPER_LIBS as well, at the end of
+# configure.
 PAC_PREFIX_FLAGS(WRAPPER, CFLAGS)
 PAC_PREFIX_FLAGS(WRAPPER, CXXFLAGS)
 PAC_PREFIX_FLAGS(WRAPPER, FFLAGS)
