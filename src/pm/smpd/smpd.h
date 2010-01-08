@@ -100,6 +100,7 @@ typedef int SMPD_BOOL;
 #define SMPD_SERVER_AUTHENTICATION          0
 #define SMPD_CLIENT_AUTHENTICATION          1
 
+#define SMPD_MAX_INT_LENGTH                12
 #define SMPD_MAX_NAME_LENGTH              256
 #define SMPD_MAX_VALUE_LENGTH            8192
 #define SMPD_MAX_FILENAME                1024
@@ -907,6 +908,8 @@ int smpd_clear_process_registry(void);
 int smpd_validate_process_registry(void);
 SMPD_BOOL smpd_read_password_from_registry(int index, char *szAccount, char *szPassword);
 SMPD_BOOL smpd_save_password_to_registry(int index, const char *szAccount, const char *szPassword, SMPD_BOOL persistent);
+SMPD_BOOL smpd_save_cred_to_file(const char *filename, const char *szAccount, const char *szPassword);
+SMPD_BOOL smpd_read_cred_from_file(const char *filename, char *szAccount, int acc_len, char *szPassword, int pass_len);
 SMPD_BOOL smpd_delete_current_password_registry_entry(int index);
 int smpd_cache_password(const char *account, const char *password);
 SMPD_BOOL smpd_get_cached_password(char *account, char *password);

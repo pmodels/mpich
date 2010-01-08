@@ -456,12 +456,18 @@ int mp_parse_command_args(int *argcp, char **argvp[])
     {
 	if (strcmp((*argvp)[1], "-register") == 0)
 	{
+        char register_filename[SMPD_MAX_FILENAME];
 	    user_index = 0;
 	    smpd_get_opt_int(argcp, argvp, "-user", &user_index);
 	    if (user_index < 0)
 	    {
 		user_index = 0;
 	    }
+        register_filename[0] = '\0';
+        if(smpd_get_opt_string(argcp, argvp, "-file", register_filename, SMPD_MAX_FILENAME))
+        {
+            smpd_dbg_printf("Registering username/password to a file\n");
+        }
 	    for (;;)
 	    {
 		smpd_get_account_and_password(smpd_process.UserAccount, smpd_process.UserPassword);
@@ -471,6 +477,18 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 		    break;
 		printf("passwords don't match, please try again.\n");
 	    }
+        if(strlen(register_filename) > 0)
+        {
+            if(smpd_save_cred_to_file(register_filename, smpd_process.UserAccount, smpd_process.UserPassword))
+            {
+                printf("Username/password encrypted and saved to registry file\n");
+            }
+            else
+            {
+                smpd_err_printf("Error saving username/password to registry file\n");
+            }
+            smpd_exit(0);
+        }
 	    if (smpd_save_password_to_registry(user_index, smpd_process.UserAccount, smpd_process.UserPassword, SMPD_TRUE)) 
 	    {
 		printf("Password encrypted into the Registry.\n");
@@ -1391,6 +1409,25 @@ configfile_loop:
 		smpd_get_pwd_from_file(pwd_file_name);
 		num_args_to_strip = 2;
 	    }
+#ifdef HAVE_WINDOWS_H
+	    else if (strcmp(&(*argvp)[1][1], "registryfile") == 0)
+	    {
+        char reg_file_name[SMPD_MAX_FILENAME];
+		if (argc < 3)
+		{
+		    printf("Error: no filename specified after -registryfile option\n");
+		    smpd_exit_fn(FCNAME);
+		    return SMPD_FAIL;
+		}
+		strncpy(reg_file_name, (*argvp)[2], SMPD_MAX_FILENAME);
+        if(!smpd_read_cred_from_file(reg_file_name, smpd_process.UserAccount, SMPD_MAX_ACCOUNT_LENGTH, smpd_process.UserPassword, SMPD_MAX_PASSWORD_LENGTH)){
+            printf("Error: Could not read credentials from registry file\n");
+            smpd_exit_fn(FCNAME);
+            return SMPD_FAIL;
+        }
+		num_args_to_strip = 2;
+	    }
+#endif
 	    else if (strcmp(&(*argvp)[1][1], "configfile") == 0)
 	    {
 		printf("Error: The -configfile option must be the first and only option specified in a block.\n");

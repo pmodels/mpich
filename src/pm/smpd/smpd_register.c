@@ -182,6 +182,241 @@ SMPD_BOOL smpd_delete_current_password_registry_entry(int index)
     return SMPD_TRUE;
 }
 
+/* This function encrypts szAccount & szPassword and saves it into filename */
+#undef FCNAME
+#define FCNAME "smpd_save_cred_to_file"
+SMPD_BOOL smpd_save_cred_to_file(const char *filename, const char *szAccount, const char *szPassword)
+{
+    SMPD_BOOL bResult = SMPD_TRUE;
+    FILE *fp = NULL; errno_t ret_errno;
+    DATA_BLOB cred_blob, safe_blob;
+    char err_msg[SMPD_MAX_ERR_MSG_LENGTH];
+
+    smpd_enter_fn(FCNAME);
+
+    if((filename == NULL) || (strlen(filename) <=0 )){
+        smpd_err_printf("Invalid registry filename \n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+    if((szAccount == NULL) || (szPassword == NULL) || (strlen(szAccount) <= 0) || (strlen(szPassword) <=0)){
+        smpd_err_printf("Invalid user credentials \n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+    /* Open the file */
+    ret_errno = fopen_s(&fp, filename, "w+b");
+    if(ret_errno != 0){
+        smpd_err_printf("Opening registry file failed, %s(%d)\n", strerror(ret_errno), ret_errno);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Encrypt account name */
+    cred_blob.cbData = (DWORD )strlen(szAccount) + 1;
+    cred_blob.pbData = (BYTE *)szAccount;
+    if(!CryptProtectData(&cred_blob, L"MPICH2 User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &safe_blob)){
+        int err_num = GetLastError();
+        smpd_translate_win_error(GetLastError(), err_msg, SMPD_MAX_ERR_MSG_LENGTH, "CryptProtectData() failed, errno = %d, ", err_num);
+        smpd_err_printf("%s\n", err_msg);
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Store account name len */
+    if(fprintf_s(fp, "%d\n", safe_blob.cbData) <= 0){
+        smpd_err_printf("Error writing account len to registry file\n");
+        fclose(fp);
+        LocalFree(safe_blob.pbData);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+    
+    /* Store the account name*/
+    if(fwrite(safe_blob.pbData, 1, safe_blob.cbData, fp) < 0){
+        smpd_err_printf("Error writing account to registry file\n");
+        fclose(fp);
+        LocalFree(safe_blob.pbData);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+    LocalFree(safe_blob.pbData);
+
+    /* Encrypt password */
+    cred_blob.cbData = (DWORD )strlen(szPassword) + 1;
+    cred_blob.pbData = (BYTE *)szPassword;
+    if(!CryptProtectData(&cred_blob, L"MPICH2 User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &safe_blob)){
+        int err_num = GetLastError();
+        smpd_translate_win_error(GetLastError(), err_msg, SMPD_MAX_ERR_MSG_LENGTH, "CryptProtectData() failed, errno = %d, ", err_num);
+        smpd_err_printf("%s\n", err_msg);
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Store password len */
+    if(fprintf_s(fp, "%d\n", safe_blob.cbData) <= 0){
+        smpd_err_printf("Error writing password len to registry file\n");
+        fclose(fp);
+        LocalFree(safe_blob.pbData);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Store the password*/
+    if(fwrite(safe_blob.pbData, 1, safe_blob.cbData, fp) < 0){
+        smpd_err_printf("Error writing password to registry file\n");
+        fclose(fp);
+        LocalFree(safe_blob.pbData);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+    LocalFree(safe_blob.pbData);
+
+    fclose(fp);
+    smpd_exit_fn(FCNAME);
+    return bResult;
+}
+
+/* This function reads encrypted szAccount & szPassword from filename */
+#undef FCNAME
+#define FCNAME "smpd_read_cred_from_file"
+SMPD_BOOL smpd_read_cred_from_file(const char *filename, char *szAccount, int acc_len, char *szPassword, int pass_len)
+{
+    SMPD_BOOL bResult = SMPD_TRUE;
+    void *en_str=NULL;
+    char en_len[SMPD_MAX_INT_LENGTH+1];
+    FILE *fp = NULL; errno_t ret_errno;
+    DATA_BLOB cred_blob, safe_blob;
+    char err_msg[SMPD_MAX_ERR_MSG_LENGTH];
+
+    smpd_enter_fn(FCNAME);
+
+    if((filename == NULL) || (strlen(filename) <=0 )){
+        smpd_err_printf("Invalid registry filename \n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+    if((szAccount == NULL) || (szPassword == NULL) || (acc_len <= 0) || (pass_len <=0)){
+        smpd_err_printf("Invalid args for user credentials \n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+    /* Open the file */
+    ret_errno = fopen_s(&fp, filename, "r+b");
+    if(ret_errno != 0){
+        smpd_err_printf("Opening registry file failed, %s(%d)\n", strerror(ret_errno), ret_errno);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Read the account name len */
+    if(fgets(en_len, SMPD_MAX_INT_LENGTH, fp) == NULL){
+        smpd_err_printf("Error reading account length from registry file\n");
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    safe_blob.cbData = (DWORD )atoi(en_len);
+    if((safe_blob.cbData <= 0) || (safe_blob.cbData > INT_MAX)){
+        smpd_err_printf("Invalid account length read from registry file\n");
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    en_str = (void *)MPIU_Malloc(safe_blob.cbData);
+    if(en_str == NULL){
+        smpd_err_printf("Unable to allocate memory for reading account name\n");
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Read the account name */
+    if(fread_s(en_str, safe_blob.cbData, 1, safe_blob.cbData, fp) <= 0){
+        smpd_err_printf("Unable to read the account name from registry file\n");
+        fclose(fp);
+        MPIU_Free(en_str);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Decrypt account name */
+    safe_blob.pbData = (BYTE *)en_str;
+
+    if(!CryptUnprotectData(&safe_blob, NULL, NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &cred_blob)){
+        int err_num = GetLastError();
+        smpd_translate_win_error(GetLastError(), err_msg, SMPD_MAX_ERR_MSG_LENGTH, "CryptUnprotectData() failed, errno = %d, ", err_num);
+        smpd_err_printf("%s\n", err_msg);
+        fclose(fp);
+        MPIU_Free(en_str);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    MPIU_Strncpy(szAccount, cred_blob.pbData, acc_len);
+    LocalFree(cred_blob.pbData);
+    MPIU_Free(en_str);
+    en_str = NULL;
+
+    /* Read the password len */
+    if(fgets(en_len, SMPD_MAX_INT_LENGTH, fp) == NULL){
+        smpd_err_printf("Error reading password length from registry file\n");
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    safe_blob.cbData = (DWORD )atoi(en_len);
+    if((safe_blob.cbData <= 0) || (safe_blob.cbData > INT_MAX)){
+        smpd_err_printf("Invalid password length read from registry file\n");
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    en_str = (char *)MPIU_Malloc(safe_blob.cbData);
+    if(en_str == NULL){
+        smpd_err_printf("Unable to allocate memory for reading password\n");
+        fclose(fp);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Read the password */
+    if(fread_s(en_str, safe_blob.cbData, 1, safe_blob.cbData, fp) <= 0){
+        smpd_err_printf("Unable to read the password from registry file\n");
+        fclose(fp);
+        MPIU_Free(en_str);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    /* Decrypt password */
+    safe_blob.pbData = (BYTE *)en_str;
+
+    if(!CryptUnprotectData(&safe_blob, NULL, NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &cred_blob)){
+        int err_num = GetLastError();
+        smpd_translate_win_error(GetLastError(), err_msg, SMPD_MAX_ERR_MSG_LENGTH, "CryptUnprotectData() failed, errno = %d, ", err_num);
+        smpd_err_printf("%s\n", err_msg);
+        fclose(fp);
+        MPIU_Free(en_str);
+        smpd_exit_fn(FCNAME);
+        return SMPD_FALSE;
+    }
+
+    MPIU_Strncpy(szPassword, cred_blob.pbData, pass_len);
+    LocalFree(cred_blob.pbData);
+    MPIU_Free(en_str);
+
+    fclose(fp);
+    smpd_exit_fn(FCNAME);
+    return bResult;
+}
+
 #undef FCNAME
 #define FCNAME "smpd_save_password_to_registry"
 SMPD_BOOL smpd_save_password_to_registry(int index, const char *szAccount, const char *szPassword, SMPD_BOOL persistent)
