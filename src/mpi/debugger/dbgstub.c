@@ -76,7 +76,7 @@ mqs_type * dbgrI_find_type(mqs_image *image, char *name,
     else if (strcmp( name, "MPIDI_Message_match" ) == 0) {
 	curType = TYPE_MPIDI_MESSAGE_MATCH;
     }
-    else if (strcmp( name, "MPIDI_Message_match_parts" ) == 0) {
+    else if (strcmp( name, "MPIDI_Message_match_parts_t" ) == 0) {
 	curType = TYPE_MPIDI_MESSAGE_MATCH_PARTS;
     }
     else if (strcmp( name, "MPID_Request" ) == 0) {
@@ -149,6 +149,15 @@ int dbgrI_field_offset(mqs_type *type, char *name)
 	    else if (strcmp( name, "match" ) == 0) {
 		off = ((char *)&c.match - (char *)&c);
 	    }
+	    else if (strcmp( name, "user_buf" ) == 0) {
+		off = ((char *)&c.user_buf - (char *)&c);
+	    }
+	    else if (strcmp( name, "user_count" ) == 0) {
+		off = ((char *)&c.user_count - (char *)&c);
+	    }
+	    else if (strcmp( name, "datatype" ) == 0) {
+		off = ((char *)&c.datatype - (char *)&c);
+	    }
 	    else {
 		printf( "Panic! Unrecognized mpidi request field %s\n", name );
 	    }
@@ -192,15 +201,6 @@ int dbgrI_field_offset(mqs_type *type, char *name)
 	    }
 	    else if (strcmp( name, "cc" ) == 0) {
 		off = ((char *)&c.cc - (char *)&c);
-	    }
-	    else if (strcmp( name, "user_buf" ) == 0) {
-		off = ((char *)&c.user_buf - (char *)&c);
-	    }
-	    else if (strcmp( name, "user_count" ) == 0) {
-		off = ((char *)&c.user_count - (char *)&c);
-	    }
-	    else if (strcmp( name, "datatype" ) == 0) {
-		off = ((char *)&c.datatype - (char *)&c);
 	    }
 	    /* else if (strcmp( name, "next" ) == 0) {
 		off = ((char *)&c.next - (char *)&c);

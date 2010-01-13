@@ -330,12 +330,13 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 		    /*
 		      Current definition from the mpidpre.h file for ch3.
 
-		      typedef union {
-		      struct {
+		      typedef struct MPIDI_Message_match_parts {
 		      int32_t tag;
 		      MPIR_Rank_t rank;
 		      MPIR_Context_id_t context_id;
-		      } parts;
+		      } MPIDI_Message_match_parts_t;
+		      typedef union {
+		      MPIDI_Message_match_parts_t parts;
 		      MPIR_Upint whole;
 		      } MPIDI_Message_match;
 		    */
@@ -344,7 +345,7 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 			if (match_type) {
 			    int parts_offs = dbgr_field_offset( match_type, (char *)"parts" );
 			    if (parts_offs >= 0) {
-				mqs_type *parts_type = dbgr_find_type( image, (char *)"MPIDI_Message_match_parts", mqs_lang_c );
+				mqs_type *parts_type = dbgr_find_type( image, (char *)"MPIDI_Message_match_parts_t", mqs_lang_c );
 				if (parts_type) {
 				    int moff;
 				    moff = dbgr_field_offset( parts_type, (char *)"tag" );
