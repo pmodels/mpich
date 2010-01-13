@@ -228,6 +228,7 @@ typedef int SMPD_BOOL;
 
 #define SMPD_ERR_SETPRINTANDJUMP(msg, errcode) {smpd_err_printf("%s", msg); retval = errcode; goto fn_fail; }
 #define SMPD_MAX_ERR_MSG_LENGTH 100
+
 typedef enum smpd_state_t
 {
     SMPD_IDLE,
@@ -975,6 +976,7 @@ SMPD_BOOL smpd_verify_version(const char *challenge);
 void smpd_fix_up_host_tree(smpd_host_node_t *node);
 SMPD_BOOL smpd_isnumbers_with_colon(const char *str);
 int smpd_add_host_to_default_list(const char *hostname);
+int smpd_get_ccp_nodes(int *np, smpd_host_node_t **host_node_ptr_p);
 int smpd_add_extended_host_to_default_list(const char *hostname, const char *alt_hostname, const int num_cpus);
 int smpd_parse_map_string(const char *str, smpd_map_drive_node_t **list);
 int smpd_delayed_spawn_enqueue(smpd_context_t *context);

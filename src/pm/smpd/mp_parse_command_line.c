@@ -1530,6 +1530,17 @@ configfile_loop:
 		num_args_to_strip = 2;
 		smpd_add_host_to_default_list((*argvp)[2]);
 	    }
+        else if (strcmp(&(*argvp)[1][1], "ccp") == 0)
+        {
+            result = smpd_get_ccp_nodes(&nproc, &host_list);
+            if(result != SMPD_SUCCESS)
+            {
+                printf("Error: Unable to get the list of nodes from job manager \n");
+                smpd_exit_fn(FCNAME);
+                return SMPD_FAIL;
+            }
+            num_args_to_strip = 1;
+        }
 	    else if (strcmp(&(*argvp)[1][1], "hosts") == 0)
 	    {
 		if (nproc != 0)
@@ -2115,6 +2126,7 @@ configfile_loop:
 	    host_list->nproc = nproc;
 	}
 
+    smpd_dbg_printf("Processing environment variables \n");
 	/* add environment variables */
 	env_data[0] = '\0';
 	env_str = env_data;
@@ -2150,6 +2162,7 @@ configfile_loop:
 	    *env_str = '\0';
 	}
 
+    smpd_dbg_printf("Processing drive mappings\n");
 	/* merge global drive mappings with the local drive mappings */
 	gmap_node = gdrive_map_list;
 	while (gmap_node)
@@ -2199,6 +2212,7 @@ configfile_loop:
 	    gmap_node = gmap_node->next;
 	}
 
+    smpd_dbg_printf("Creating launch nodes (%d)\n", nproc);
 	for (i=0; i<nproc; i++)
 	{
 	    /* create a launch_node */
@@ -2211,6 +2225,7 @@ configfile_loop:
 	    }
 	    launch_node->clique[0] = '\0';
 	    smpd_get_next_host(&host_list, launch_node);
+        smpd_dbg_printf("Adding host (%s) to launch list \n", launch_node->hostname);
 	    launch_node->iproc = cur_rank++;
 #ifdef HAVE_WINDOWS_H
         if(smpd_process.affinity_map_sz > 0){

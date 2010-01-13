@@ -1033,6 +1033,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\smpd_ccp_util.c"
+				>
+			</File>
+			<File
 				RelativePath="smpd_command.c"
 				>
 			</File>
