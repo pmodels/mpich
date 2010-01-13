@@ -81,13 +81,13 @@ typedef MPIR_Rank_t MPID_Node_id_t;
    must be reflected in the debugger interface in src/mpi/debugger/dll_mpich2.c
    and dbgstub.c
 */
+typedef struct MPIDI_Message_match_parts {
+    int32_t tag;
+    MPIR_Rank_t rank;
+    MPIR_Context_id_t context_id;
+} MPIDI_Message_match_parts_t;
 typedef union {
-    /* We need a named struct to allow the debugger to access these fields */
-    struct MPIDI_Message_match_parts {
-	int32_t tag;
-	MPIR_Rank_t rank;
-	MPIR_Context_id_t context_id;
-    } parts;
+    MPIDI_Message_match_parts_t parts;
     MPIR_Upint whole;
 } MPIDI_Message_match;
 #define MPIDI_TAG_UB (0x7fffffff)
