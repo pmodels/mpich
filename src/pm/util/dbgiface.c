@@ -25,7 +25,7 @@
 typedef struct MPIR_PROCDESC {
   const char *host_name;
   const char *executable_name;
-  long  pid;
+  int  pid;
 } MPIR_PROCDESC;
 
 /* An array of processes */
@@ -99,7 +99,7 @@ int MPIE_InitForDebugger( ProcessWorld *pWorld )
 		hostname = apps->hostname;
 	    MPIR_proctable[i].host_name       = hostname;
 	    MPIR_proctable[i].executable_name = apps->exename;
-	    MPIR_proctable[i].pid             = apps->pState[j].pid;
+	    MPIR_proctable[i].pid             = (int)apps->pState[j].pid;
 	    i++;
 	}
 	apps = apps->nextApp;
@@ -148,7 +148,7 @@ int MPIE_PrintDebuggerInfo( FILE *fp )
     int i;
     
     for (i=0; i<MPIR_proctable_size; i++) {
-	fprintf( fp, "rank %d: exec = %s, host = %s, pid = %ld\n", 
+	fprintf( fp, "rank %d: exec = %s, host = %s, pid = %d\n", 
 		 i, 
 		 MPIR_proctable[i].executable_name,
 		 MPIR_proctable[i].host_name,
