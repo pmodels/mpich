@@ -1530,6 +1530,7 @@ configfile_loop:
 		num_args_to_strip = 2;
 		smpd_add_host_to_default_list((*argvp)[2]);
 	    }
+#ifdef HAVE_WINDOWS_H
         else if (strcmp(&(*argvp)[1][1], "ccp") == 0)
         {
             result = smpd_get_ccp_nodes(&nproc, &host_list);
@@ -1541,6 +1542,7 @@ configfile_loop:
             }
             num_args_to_strip = 1;
         }
+#endif
 	    else if (strcmp(&(*argvp)[1][1], "hosts") == 0)
 	    {
 		if (nproc != 0)
