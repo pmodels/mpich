@@ -85,8 +85,8 @@ static HYD_status iface_fn(char *arg, char ***argv)
                              HYD_pmcd_pmip.user_global.iface);
 
     sa = (struct sockaddr_in *) ifa->ifa_addr;
-    HYD_pmcd_pmip.user_global.iface = (char *) inet_ntop(AF_INET, (void *) &(sa->sin_addr), buf,
-                                                         MAX_HOSTNAME_LEN);
+    HYD_pmcd_pmip.user_global.iface =
+        HYDU_strdup((char *) inet_ntop(AF_INET, (void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
     if (!HYD_pmcd_pmip.user_global.iface)
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
                              "unable to find IP for interface %s\n", iface);
