@@ -22,4 +22,5 @@ multiple_ports2 4
 disconnect 3
 disconnect2 3
 disconnect3 3
-concurrent_spawns 1
+# Disabling this test till Hydra is fixed, so the nightly tests don't hang.
+#concurrent_spawns 1
