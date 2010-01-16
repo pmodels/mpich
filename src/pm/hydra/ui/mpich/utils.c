@@ -590,7 +590,6 @@ static HYD_status info_fn(char *arg, char ***argv)
     HYDU_dump_noprefix(stdout, "    Process Manager:                         pmi\n");
     HYDU_dump_noprefix(stdout,
                        "    Bootstrap servers available:             %s\n", HYDRA_BSS_NAMES);
-    HYDU_dump_noprefix(stdout, "    Communication sub-systems available:     none\n");
     HYDU_dump_noprefix(stdout,
                        "    Binding libraries available:             %s\n",
                        HYDRA_BINDLIB_NAMES);
