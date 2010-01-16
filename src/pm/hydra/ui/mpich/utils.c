@@ -578,7 +578,8 @@ static HYD_status info_fn(char *arg, char ***argv)
     HYDU_dump_noprefix(stdout,
                        "    Version:                                 %s\n", HYDRA_VERSION);
     HYDU_dump_noprefix(stdout,
-                       "    Release Date:                            %s\n", HYDRA_RELEASE_DATE);
+                       "    Release Date:                            %s\n",
+                       HYDRA_RELEASE_DATE);
     HYDU_dump_noprefix(stdout, "    CC:                                      %s\n", HYDRA_CC);
     HYDU_dump_noprefix(stdout, "    CXX:                                     %s\n", HYDRA_CXX);
     HYDU_dump_noprefix(stdout, "    F77:                                     %s\n", HYDRA_F77);

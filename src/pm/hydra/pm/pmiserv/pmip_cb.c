@@ -47,7 +47,7 @@ static HYD_status fn_init(int fd, char *args[])
         tmp = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
     else if (pmi_version == 2 && pmi_subversion == 0)
         tmp = "cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n";
-    else /* PMI version mismatch */
+    else        /* PMI version mismatch */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
 
@@ -343,8 +343,8 @@ static HYD_status launch_procs(void)
                 pmi_id = HYDU_local_to_global_id(process_id,
                                                  HYD_pmcd_pmip.start_pid,
                                                  HYD_pmcd_pmip.local.proxy_core_count,
-                                                 HYD_pmcd_pmip.
-                                                 system_global.global_core_count);
+                                                 HYD_pmcd_pmip.system_global.
+                                                 global_core_count);
             else
                 pmi_id = HYD_pmcd_pmip.system_global.pmi_id;
 

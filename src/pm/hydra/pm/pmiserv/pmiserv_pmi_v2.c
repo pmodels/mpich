@@ -250,7 +250,8 @@ static HYD_status fn_job_getid(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
@@ -313,7 +314,8 @@ static HYD_status fn_info_putnodeattr(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) process->proxy->proxy_scratch;
 
@@ -381,7 +383,8 @@ static HYD_status fn_info_getnodeattr(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) process->proxy->proxy_scratch;
 
@@ -485,7 +488,8 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
@@ -595,7 +599,8 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
@@ -664,7 +669,8 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
@@ -757,7 +763,8 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     process->epoch++;   /* We have reached the next epoch */
 

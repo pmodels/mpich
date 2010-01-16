@@ -43,17 +43,18 @@ enum HYD_pmcd_pmi_cmd {
 };
 
 struct HYD_pmcd_pmi_cmd_hdr {
-    int pid; /* ID of the requesting process */
-    int pmi_version; /* PMI version */
+    int pid;                    /* ID of the requesting process */
+    int pmi_version;            /* PMI version */
     int buflen;
 };
 
 struct HYD_pmcd_pmi_response_hdr {
-    int pid; /* ID of the requesting process */
+    int pid;                    /* ID of the requesting process */
     int buflen;
 };
 
 HYD_status HYD_pmcd_pmi_read_pmi_cmd(int fd, char **pmi_cmd, int *pmi_version, int *closed);
-HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd, char *args[]);
+HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd,
+                                      char *args[]);
 
 #endif /* PMI_COMMON_H_INCLUDED */

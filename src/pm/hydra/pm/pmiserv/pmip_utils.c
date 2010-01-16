@@ -77,8 +77,7 @@ static HYD_status iface_fn(char *arg, char ***argv)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
 
     for (ifa = ifaddr; ifa; ifa = ifa->ifa_next)
-        if (!strcmp(ifa->ifa_name, iface) &&
-            (ifa->ifa_addr->sa_family == AF_INET))
+        if (!strcmp(ifa->ifa_name, iface) && (ifa->ifa_addr->sa_family == AF_INET))
             break;
 
     if (!ifa)

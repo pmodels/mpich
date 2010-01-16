@@ -179,7 +179,8 @@ static HYD_status fn_get_my_kvsname(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
@@ -222,7 +223,8 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
     pg_scratch->barrier_count++;
@@ -286,7 +288,8 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
@@ -359,7 +362,8 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
@@ -452,7 +456,8 @@ static HYD_status fn_finalize(int fd, int pid, int pgid, char *args[])
     process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd, pid);
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
     process->fd = -1;
 
     cmd = "cmd=finalize_ack\n";
@@ -593,20 +598,20 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     for (j = 0; j < total_spawns; j++) {
         /* For each segment, we create an exec structure */
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                         segment_list[j].token_count, "nprocs");
+                                             segment_list[j].token_count, "nprocs");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: nprocs\n");
         nprocs = atoi(val);
         pg->pg_process_count += nprocs;
 
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                         segment_list[j].token_count, "argcnt");
+                                             segment_list[j].token_count, "argcnt");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: argcnt\n");
         argcnt = atoi(val);
 
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                         segment_list[j].token_count, "info_num");
+                                             segment_list[j].token_count, "info_num");
         if (val)
             info_num = atoi(val);
         else
@@ -633,14 +638,14 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             HYDU_MALLOC(key, char *, MAXKEYLEN, status);
             HYDU_snprintf(key, MAXKEYLEN, "info_key_%d", i);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, key);
+                                                 segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                                  "unable to find token: %s\n", key);
             info_key = val;
 
             HYDU_snprintf(key, MAXKEYLEN, "info_val_%d", i);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, key);
+                                                 segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                                  "unable to find token: %s\n", key);
             info_val = val;
@@ -661,7 +666,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "unable to correct wdir\n");
 
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                         segment_list[j].token_count, "execname");
+                                             segment_list[j].token_count, "execname");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: execname\n");
         if (path == NULL)
@@ -684,7 +689,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             HYDU_MALLOC(key, char *, MAXKEYLEN, status);
             HYDU_snprintf(key, MAXKEYLEN, "arg%d", k + 1);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, key);
+                                                 segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
                                  "unable to find token: %s\n", key);
             exec->exec[i++] = HYDU_strdup(val);

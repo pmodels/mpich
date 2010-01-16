@@ -265,7 +265,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &count, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read command from proxy\n");
 
-    if (cmd == PID_LIST) {   /* Got PIDs */
+    if (cmd == PID_LIST) {      /* Got PIDs */
         status = handle_pid_list(fd, proxy);
         HYDU_ERR_POP(status, "unable to receive PID list\n");
     }
@@ -365,8 +365,7 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     status = send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status =
-        HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, control_cb);
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -401,7 +400,8 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
             while (proxy->control_fd == -1) {
                 /* Wait for the proxy to connect back */
                 status = HYDT_bsci_wait_for_completion(-1);
-                HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+                HYDU_ERR_POP(status,
+                             "bootstrap server returned error waiting for completion\n");
             }
 
             if (proxy->exit_status) {
@@ -410,7 +410,8 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
             }
 
             cmd = KILL_JOB;
-            status = HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
+            status =
+                HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
             if (status != HYD_SUCCESS) {
                 HYDU_warn_printf("unable to send data to the proxy on %s\n",
                                  proxy->node.hostname);

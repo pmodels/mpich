@@ -52,7 +52,8 @@ HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
+HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
+                                       int *count)
 {
     int i, j;
     char *arg;
@@ -93,7 +94,8 @@ void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
 }
 
 void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
-                             struct HYD_pmcd_token_segment *segment_list, int *num_segments)
+                                 struct HYD_pmcd_token_segment *segment_list,
+                                 int *num_segments)
 {
     int i, j;
 

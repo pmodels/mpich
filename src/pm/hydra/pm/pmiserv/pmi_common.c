@@ -44,8 +44,7 @@ HYD_status HYD_pmcd_pmi_read_pmi_cmd(int fd, char **buf, int *pmi_version, int *
 
         /* If we get "cmd=" here, we just assume that this is PMI-1
          * format (or a PMI-2 command that is backward compatible). */
-        if (!strncmp(*buf, "cmd=", strlen("cmd=")) ||
-            !strncmp(*buf, "mcmd=", strlen("mcmd="))) {
+        if (!strncmp(*buf, "cmd=", strlen("cmd=")) || !strncmp(*buf, "mcmd=", strlen("mcmd="))) {
             /* PMI-1 format command; read the rest of it */
             *pmi_version = 1;
 
@@ -168,7 +167,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd
         }
         args[k++] = NULL;
     }
-    else { /* PMI-v2 */
+    else {      /* PMI-v2 */
         delim = ";";
 
         tbuf = HYDU_strdup(buf);
