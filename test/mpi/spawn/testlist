@@ -12,7 +12,7 @@ spaconacc 1
 spaconacc2 1
 selfconacc 2
 spaiccreate 2
-taskmaster 1
+taskmaster 1 timeLimit=600
 join 2
 disconnect_reconnect 3
 disconnect_reconnect2 3
