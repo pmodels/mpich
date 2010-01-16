@@ -37,6 +37,8 @@ static struct reqs {
 static HYD_status cmd_response(int fd, int pid, char *cmd)
 {
     char cmdlen[7];
+    enum HYD_pmcd_pmi_cmd c;
+    struct HYD_pmcd_pmi_response_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -50,7 +52,21 @@ static HYD_status cmd_response(int fd, int pid, char *cmd)
         HYDU_ERR_POP(status, "error writing PMI line\n");
     }
     else {
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized pid %d\n", pid);
+        c = PMI_RESPONSE;
+        status = HYDU_sock_write(fd, &c, sizeof(c));
+        HYDU_ERR_POP(status, "unable to send PMI_RESPONSE command to proxy\n");
+
+        hdr.pid = pid;
+        hdr.buflen = 6 + strlen(cmd);
+        status = HYDU_sock_write(fd, &hdr, sizeof(hdr));
+        HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
+
+        HYDU_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
+        status = HYDU_sock_write(fd, cmdlen, 6);
+        HYDU_ERR_POP(status, "error writing PMI line\n");
+
+        status = HYDU_sock_write(fd, cmd, strlen(cmd));
+        HYDU_ERR_POP(status, "error writing PMI line\n");
     }
 
   fn_exit:
@@ -158,7 +174,7 @@ static void print_req_list(void)
 
 static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
 {
-    int id, rank, i;
+    int id, i, rank;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
     struct HYD_pg *pg;
     struct HYD_pmcd_token *tokens;
@@ -177,9 +193,8 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
-
     status = HYD_pmcd_pmi_id_to_rank(id, pgid, &rank);
-    HYDU_ERR_POP(status, "unable to convert ID to rank\n");
+    HYDU_ERR_POP(status, "unable to translate PMI ID to rank\n");
     tmp[i++] = HYDU_int_to_str(rank);
 
     tmp[i++] = HYDU_strdup(";size=");
@@ -203,7 +218,6 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with pgid %d\n",
                              pgid);
 
-    /* Add the process to the appropriate PG */
     status = HYD_pmcd_pmi_add_process_to_pg(pg, fd, pid, rank);
     HYDU_ERR_POP(status, "unable to add process to pg\n");
 

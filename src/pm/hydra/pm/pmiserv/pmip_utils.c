@@ -8,6 +8,7 @@
 #include "bsci.h"
 #include "bind.h"
 #include "ckpoint.h"
+#include "demux.h"
 #include "hydra_utils.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;

@@ -9,8 +9,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/pm/include
 noinst_LIBRARIES += libpm.a
 libpm_a_SOURCES =
 
-include pm/utils/Makefile.mk
-
 if hydra_pm_pmiserv
 include pm/pmiserv/Makefile.mk
 endif

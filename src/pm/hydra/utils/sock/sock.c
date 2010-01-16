@@ -219,34 +219,6 @@ HYD_status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
     goto fn_exit;
 }
 
-
-HYD_status HYDU_sock_writeline(int fd, const char *buf, int maxsize)
-{
-    int n;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (buf[maxsize - 1] != '\n')
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "line does not end in newline\n");
-
-    do {
-        n = write(fd, buf, maxsize);
-    } while (n < 0 && errno == EINTR);
-
-    if (n < maxsize)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "write error (%s)\n",
-                             HYDU_strerror(errno));
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
                           enum HYDU_sock_comm_flag flag)
 {

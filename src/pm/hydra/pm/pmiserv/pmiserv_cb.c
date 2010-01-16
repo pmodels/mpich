@@ -45,163 +45,69 @@ HYD_status HYD_pmcd_pmiserv_pmi_listen_cb(int fd, HYD_event_t events, void *user
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp)
+static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
 {
-    int linelen, i, j, k, cmdlen, pmi_version;
-    char *buf = NULL, *tbuf = NULL, *cmd = NULL, *seg;
-    char *tmp[HYD_NUM_TMP_STRINGS], *args[HYD_NUM_TMP_STRINGS], *targs[HYD_NUM_TMP_STRINGS];
-    const char *delim;
-    char *str1 = NULL, *str2 = NULL;
+    char *args[HYD_NUM_TMP_STRINGS], *cmd = NULL;
     struct HYD_pmcd_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
-    int buflen = 0, pgid;
-    char *bufptr;
+
+    HYDU_FUNC_ENTER();
+
+    if (pmi_version == 1)
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
+    else
+        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v2;
+
+    if (HYD_handle.user_global.debug)
+        HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
+
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, pmi_version, &cmd, args);
+    HYDU_ERR_POP(status, "unable to parse PMI command\n");
+
+    h = HYD_pmcd_pmi_handle;
+    while (h->handler) {
+        if (!strcmp(cmd, h->cmd)) {
+            /* FIXME: Always use a pid of -1 */
+            status = h->handler(fd, pid, pgid, args);
+            HYDU_ERR_POP(status, "PMI handler returned error\n");
+            break;
+        }
+        h++;
+    }
+    if (!h->handler) {
+        /* We don't understand the command */
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "Unrecognized PMI command: %s | cleaning up processes\n", cmd);
+    }
+
+  fn_exit:
+    if (cmd)
+        HYDU_FREE(cmd);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    /* Cleanup all the processes */
+    status = HYD_pmcd_pmiserv_cleanup();
+    HYDU_ERR_POP(status, "unable to cleanup processes\n");
+    goto fn_exit;
+}
+
+HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp)
+{
+    int pmi_version, pgid, closed;
+    char *buf;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* We got a PMI command; find the PGID */
     pgid = ((int) (size_t) userp);
 
-    buflen = HYD_TMPBUF_SIZE;
+    status = HYD_pmcd_pmi_read_pmi_cmd(fd, &buf, &pmi_version, &closed);
+    HYDU_ERR_POP(status, "unable to read PMI command\n");
 
-    HYDU_MALLOC(buf, char *, buflen, status);
-    bufptr = buf;
-
-    /*
-     * FIXME: This is a big hack. We temporarily initialize to
-     * PMI-v1. If the incoming message is an "init", it will
-     * reinitialize the function pointers. If we get an unsolicited
-     * command, we just use the PMI-1 version for it.
-     *
-     * This part of the code should not know anything about PMI-1
-     * vs. PMI-2. But the simple PMI client-side code is so hacked up,
-     * that commands can arrive out-of-order and this is necessary.
-     */
-    if (HYD_pmcd_pmi_handle == NULL)
-        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
-
-    do {
-        status = HYDU_sock_read(fd, bufptr, 6, &linelen, HYDU_SOCK_COMM_MSGWAIT);
-        HYDU_ERR_POP(status, "unable to read the length of the command");
-        buflen -= linelen;
-        bufptr += linelen;
-
-        /* Unexpected termination of connection */
-        if (linelen == 0)
-            break;
-
-        /* If we get "cmd=" here, we just assume that this is PMI-1
-         * format (or a PMI-2 command that is backward compatible). */
-        if (!strncmp(buf, "cmd=", strlen("cmd=")) || !strncmp(buf, "mcmd=", strlen("mcmd="))) {
-            /* PMI-1 format command; read the rest of it */
-            pmi_version = 1;
-
-            if (!strncmp(buf, "cmd=", strlen("cmd=")))
-                delim = " ";
-            else
-                delim = "\n";
-
-            while (1) {
-                status = HYDU_sock_readline(fd, bufptr, buflen, &linelen);
-                HYDU_ERR_POP(status, "PMI read line error\n");
-                buflen -= linelen;
-                bufptr += linelen;
-
-                if (!strncmp(buf, "cmd=", strlen("cmd=")) ||
-                    !strncmp(bufptr - strlen("endcmd\n"), "endcmd", strlen("endcmd")))
-                    break;
-                else
-                    *(bufptr - 1) = ' ';
-            }
-
-            /* Unexpected termination of connection */
-            if (linelen == 0)
-                break;
-            else
-                *(bufptr - 1) = '\0';
-
-            /* Here we only get PMI-1 commands or backward compatible
-             * PMI-2 commands, so we always explicitly use the PMI-1
-             * delimiter. This allows us to get backward-compatible
-             * PMI-2 commands interleaved with regular PMI-2
-             * commands. */
-            tbuf = HYDU_strdup(buf);
-            cmd = strtok(tbuf, delim);
-            for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-                targs[i] = strtok(NULL, delim);
-                if (targs[i] == NULL)
-                    break;
-            }
-
-            /* Make a pass through targs and merge space separated
-             * arguments which are actually part of the same key */
-            k = 0;
-            for (i = 0; targs[i]; i++) {
-                if (!strrchr(targs[i], ' ')) {
-                    /* no spaces */
-                    args[k++] = targs[i];
-                }
-                else {
-                    /* space in the argument; each segment is either a
-                     * new key, or a space-separated part of the
-                     * previous key */
-                    j = 0;
-                    seg = strtok(targs[i], " ");
-                    while (1) {
-                        if (!seg || strrchr(seg, '=')) {
-                            /* segment has an '='; it's a start of a new key */
-                            if (j) {
-                                tmp[j++] = NULL;
-                                status = HYDU_str_alloc_and_join(tmp, &args[k++]);
-                                HYDU_ERR_POP(status, "error while joining strings\n");
-                                HYDU_free_strlist(tmp);
-                            }
-                            j = 0;
-
-                            if (!seg)
-                                break;
-                        }
-                        else {
-                            /* no '='; part of the previous key */
-                            tmp[j++] = HYDU_strdup(" ");
-                        }
-                        tmp[j++] = HYDU_strdup(seg);
-
-                        seg = strtok(NULL, " ");
-                    }
-                }
-            }
-            args[k++] = NULL;
-
-            if (!strcmp("cmd=init", cmd)) {
-                /* Init is generic to all PMI implementations */
-                status = HYD_pmcd_pmi_fn_init(fd, args);
-                goto fn_exit;
-            }
-        }
-        else {  /* PMI-2 command */
-            pmi_version = 2;
-
-            delim = ";";
-
-            *bufptr = '\0';
-            cmdlen = atoi(buf);
-
-            status = HYDU_sock_read(fd, buf, cmdlen, &linelen, HYDU_SOCK_COMM_MSGWAIT);
-            HYDU_ERR_POP(status, "PMI read line error\n");
-            buf[linelen] = 0;
-
-            tbuf = HYDU_strdup(buf);
-            cmd = strtok(tbuf, delim);
-            for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-                args[i] = strtok(NULL, delim);
-                if (args[i] == NULL)
-                    break;
-            }
-        }
-    } while (0);
-
-    if (linelen == 0) {
+    if (closed) {
         /* This is not a clean close. If a finalize was called, we
          * would have deregistered this socket. The application might
          * have aborted. Just cleanup all the processes */
@@ -223,54 +129,12 @@ HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp)
         goto fn_exit;
     }
 
-    /* Use the PMI version specific command delimiter to find what
-     * command we got and call the appropriate handler
-     * function. Before we get an "init", we are preinitialized to
-     * PMI-1, so we will use that delimited even for PMI-2 for this
-     * one command. From the next command onward, we will use the
-     * PMI-2 specific delimiter. */
-    if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
-
-    if (cmd == NULL) {
-        status = HYD_SUCCESS;
-    }
-    else {
-        /* Search for the PMI command in our table */
-        status = HYDU_strsplit(cmd, &str1, &str2, '=');
-        HYDU_ERR_POP(status, "string split returned error\n");
-
-        h = HYD_pmcd_pmi_handle;
-        while (h->handler) {
-            if (!strcmp(str2, h->cmd)) {
-                /* FIXME: Always use a pid of -1 */
-                status = h->handler(fd, -1, pgid, args);
-                HYDU_ERR_POP(status, "PMI handler returned error\n");
-                break;
-            }
-            h++;
-        }
-        if (!h->handler) {
-            /* We don't understand the command */
-            HYDU_error_printf("Unrecognized PMI command: %s | cleaning up processes\n", cmd);
-
-            /* Cleanup all the processes and return. We don't need to
-             * check the return status since we are anyway returning
-             * an error */
-            HYD_pmcd_pmiserv_cleanup();
-            HYDU_ERR_SETANDJUMP(status, HYD_SUCCESS, "");
-        }
-    }
+    /* If we got the PMI command directly, just pass the PID as -1,
+     * since the control fd is not shared for PMI communication */
+    status = handle_pmi_cmd(fd, pgid, -1, buf, pmi_version);
+    HYDU_ERR_POP(status, "unable to process PMI command\n");
 
   fn_exit:
-    if (tbuf)
-        HYDU_FREE(tbuf);
-    if (buf)
-        HYDU_FREE(buf);
-    if (str1)
-        HYDU_FREE(str1);
-    if (str2)
-        HYDU_FREE(str2);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -278,45 +142,55 @@ HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
+static HYD_status handle_pid_list(int fd, struct HYD_proxy *proxy)
 {
-    struct HYD_proxy *proxy;
-    struct HYD_pg *pg;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_pmcd_pmi_process *process, *tmp;
     int count;
+    struct HYD_proxy *tproxy;
+    struct HYD_pg *pg = proxy->pg;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    proxy = (struct HYD_proxy *) userp;
-    pg = proxy->pg;
+    HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
+    status = HYDU_sock_read(fd, (void *) proxy->pid,
+                            proxy->proxy_process_count * sizeof(int),
+                            &count, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to read status from proxy\n");
 
-    if (proxy->pid == NULL) {   /* Got PIDs */
-        HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
-        status = HYDU_sock_read(fd, (void *) proxy->pid,
-                                proxy->proxy_process_count * sizeof(int),
-                                &count, HYDU_SOCK_COMM_MSGWAIT);
-        HYDU_ERR_POP(status, "unable to read status from proxy\n");
-
-        if (pg->pgid) {
-            /* We initialize the debugger code only for
-             * non-dynamically spawned processes */
-            goto fn_exit;
-        }
-
-        /* Check if all the PIDs have been received */
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-            if (proxy->pid == NULL)
-                goto fn_exit;
-
-        /* Call the debugger initialization */
-        status = HYDT_dbg_setup_procdesc(pg);
-        HYDU_ERR_POP(status, "debugger setup failed\n");
-
+    if (pg->pgid) {
+        /* We initialize the debugger code only for non-dynamically
+         * spawned processes */
         goto fn_exit;
     }
+
+    /* Check if all the PIDs have been received */
+    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
+        if (tproxy->pid == NULL)
+            goto fn_exit;
+
+    /* Call the debugger initialization */
+    status = HYDT_dbg_setup_procdesc(pg);
+    HYDU_ERR_POP(status, "debugger setup failed\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
+{
+    int count;
+    struct HYD_proxy *tproxy;
+    struct HYD_pg *pg = proxy->pg;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_pmcd_pmi_process *process, *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
     status = HYDU_sock_read(fd, (void *) proxy->exit_status,
@@ -329,8 +203,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
     close(fd);
 
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        if (proxy->exit_status == NULL)
+    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
+        if (tproxy->exit_status == NULL)
             goto fn_exit;
     }
 
@@ -351,8 +225,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
     HYD_pmcd_pmi_free_pg_scratch(pg);
 
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
+        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) tproxy->proxy_scratch;
 
         if (proxy_scratch) {
             for (process = proxy_scratch->process_list; process;) {
@@ -363,9 +237,78 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
             HYD_pmcd_free_pmi_kvs_list(proxy_scratch->kvs);
             HYDU_FREE(proxy_scratch);
-            proxy->proxy_scratch = NULL;
+            tproxy->proxy_scratch = NULL;
         }
     }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
+{
+    int count;
+    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_pmi_cmd_hdr hdr;
+    struct HYD_proxy *proxy;
+    char *buf;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    proxy = (struct HYD_proxy *) userp;
+
+    status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &count, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to read command from proxy\n");
+
+    if (cmd == PID_LIST) {   /* Got PIDs */
+        status = handle_pid_list(fd, proxy);
+        HYDU_ERR_POP(status, "unable to receive PID list\n");
+    }
+    else if (cmd == EXIT_STATUS) {
+        status = handle_exit_status(fd, proxy);
+        HYDU_ERR_POP(status, "unable to receive exit status\n");
+    }
+    else if (cmd == PMI_CMD) {
+        status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to read PMI header from proxy\n");
+
+        HYDU_MALLOC(buf, char *, hdr.buflen + 1, status);
+
+        status = HYDU_sock_read(fd, buf, hdr.buflen, &count, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to read PMI command from proxy\n");
+
+        buf[hdr.buflen] = 0;
+
+        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
+        HYDU_ERR_POP(status, "unable to process PMI command\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status send_exec_info(struct HYD_proxy *proxy)
+{
+    enum HYD_pmcd_pmi_cmd cmd;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    cmd = PROC_INFO;
+    status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+
+    status = HYDU_send_strlist(proxy->control_fd, proxy->exec_launch_info);
+    HYDU_ERR_POP(status, "error sending exec info\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -419,7 +362,7 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     proxy->control_fd = accept_fd;
 
     /* Send out the executable information */
-    status = HYD_pmu_send_exec_info(proxy);
+    status = send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
     status =
@@ -440,7 +383,7 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    enum HYD_pmu_cmd cmd;
+    enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -467,7 +410,7 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
             }
 
             cmd = KILL_JOB;
-            status = HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmu_cmd));
+            status = HYDU_sock_trywrite(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
             if (status != HYD_SUCCESS) {
                 HYDU_warn_printf("unable to send data to the proxy on %s\n",
                                  proxy->node.hostname);
@@ -488,7 +431,7 @@ static HYD_status ckpoint(void)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    enum HYD_pmu_cmd cmd;
+    enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -499,7 +442,7 @@ static HYD_status ckpoint(void)
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
             cmd = CKPOINT;
-            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmu_cmd));
+            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
             HYDU_ERR_POP(status, "unable to send checkpoint message\n");
         }
     }

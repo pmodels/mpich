@@ -7,6 +7,7 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "pmip.h"
+#include "demux.h"
 #include "bind.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
@@ -132,6 +133,7 @@ static void cleanup_params(void)
 int main(int argc, char **argv)
 {
     int i, count, pid, ret_status;
+    enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_dbg_init("proxy");
@@ -207,6 +209,10 @@ int main(int argc, char **argv)
     }
 
     /* Send the exit status upstream */
+    cmd = EXIT_STATUS;
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
+    HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
+
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.exit_status,
                              HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));

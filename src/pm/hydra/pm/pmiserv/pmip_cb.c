@@ -8,9 +8,162 @@
 #include "hydra_utils.h"
 #include "pmip.h"
 #include "ckpoint.h"
+#include "demux.h"
 #include "bind.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
+
+static void killjob(void)
+{
+    int i;
+
+    HYDU_FUNC_ENTER();
+
+    /* Send the kill signal to all processes */
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
+            kill(HYD_pmcd_pmip.downstream.pid[i], SIGTERM);
+            kill(HYD_pmcd_pmip.downstream.pid[i], SIGKILL);
+        }
+    }
+
+    HYDU_FUNC_EXIT();
+}
+
+static HYD_status fn_init(int fd, char *args[])
+{
+    int pmi_version, pmi_subversion;
+    const char *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    strtok(args[0], "=");
+    pmi_version = atoi(strtok(NULL, "="));
+    strtok(args[1], "=");
+    pmi_subversion = atoi(strtok(NULL, "="));
+
+    if (pmi_version == 1 && pmi_subversion <= 1)
+        tmp = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
+    else if (pmi_version == 2 && pmi_subversion == 0)
+        tmp = "cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n";
+    else /* PMI version mismatch */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
+
+    status = HYDU_sock_write(fd, tmp, strlen(tmp));
+    HYDU_ERR_POP(status, "error writing PMI line\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
+{
+    char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
+    int closed;
+    struct HYD_pmcd_pmi_cmd_hdr hdr;
+    enum HYD_pmcd_pmi_cmd cmd;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_read_pmi_cmd(fd, &buf, &hdr.pmi_version, &closed);
+    HYDU_ERR_POP(status, "unable to read PMI command\n");
+
+    if (closed) {
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+        close(fd);
+
+        goto fn_exit;
+    }
+
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    HYDU_ERR_POP(status, "unable to parse PMI command\n");
+
+    if (!strcmp(pmi_cmd, "init")) {
+        /* Init is generic to all PMI implementations */
+        status = fn_init(fd, args);
+        goto fn_exit;
+    }
+
+    cmd = PMI_CMD;
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
+    HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
+
+    hdr.pid = fd;
+    hdr.buflen = strlen(buf);
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr));
+    HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
+
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen);
+    HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
+
+  fn_exit:
+    if (buf)
+        HYDU_FREE(buf);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status handle_pmi_response(int fd)
+{
+    struct HYD_pmcd_pmi_response_hdr hdr;
+    int count;
+    char *buf;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to read PMI header from proxy\n");
+
+    HYDU_MALLOC(buf, char *, hdr.buflen + 1, status);
+
+    status = HYDU_sock_read(fd, buf, hdr.buflen, &count, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to read PMI response from proxy\n");
+
+    buf[hdr.buflen] = 0;
+
+    status = HYDU_sock_write(hdr.pid, buf, hdr.buflen);
+    HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
+{
+    int accept_fd;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_accept(fd, &accept_fd);
+    HYDU_ERR_POP(status, "accept error\n");
+
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, pmi_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 static HYD_status launch_procs(void)
 {
@@ -19,8 +172,10 @@ static HYD_status launch_procs(void)
     char *client_args[HYD_NUM_TMP_STRINGS];
     struct HYD_env *env, *opt_env = NULL, *force_env = NULL;
     struct HYD_exec *exec;
-    HYD_status status = HYD_SUCCESS;
+    enum HYD_pmcd_pmi_cmd cmd;
+    char *pmi_port = NULL;
     int *pmi_ids;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -73,6 +228,12 @@ static HYD_status launch_procs(void)
                                       HYD_pmcd_pmip.downstream.err);
         HYDU_ERR_POP(status, "checkpoint restart failure\n");
         goto fn_spawn_complete;
+    }
+
+    if (HYD_pmcd_pmip.system_global.pmi_port == NULL) {
+        /* No global PMI port is specified, we use a local one */
+        status = HYDU_sock_create_and_listen_portstr(NULL, &pmi_port, pmi_listen_cb, NULL);
+        HYDU_ERR_POP(status, "unable to create PMI port\n");
     }
 
     /* Spawn the processes */
@@ -137,10 +298,15 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
-        /* Set the PMI port string to connect to. We currently just
-         * use the global PMI port. */
-        status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
-        HYDU_ERR_POP(status, "unable to create env\n");
+        if (HYD_pmcd_pmip.system_global.pmi_port) {
+            /* If a global PMI port is provided, use it */
+            status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
+            HYDU_ERR_POP(status, "unable to create env\n");
+        }
+        else {
+            status = HYDU_env_create(&env, "PMI_PORT", pmi_port);
+            HYDU_ERR_POP(status, "unable to create env\n");
+        }
 
         status = HYDU_append_env_to_list(*env, &force_env);
         HYDU_ERR_POP(status, "unable to add env to list\n");
@@ -228,10 +394,14 @@ static HYD_status launch_procs(void)
     }
 
     /* Send the PID list upstream */
+    cmd = PID_LIST;
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
+    HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
+
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.pid,
                              HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));
-    HYDU_ERR_POP(status, "unable to return exit status upstream\n");
+    HYDU_ERR_POP(status, "unable to send PID list upstream\n");
 
   fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
@@ -255,23 +425,6 @@ static HYD_status launch_procs(void)
     goto fn_exit;
 }
 
-static void killjob(void)
-{
-    int i;
-
-    HYDU_FUNC_ENTER();
-
-    /* Send the kill signal to all processes */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
-            kill(HYD_pmcd_pmip.downstream.pid[i], SIGTERM);
-            kill(HYD_pmcd_pmip.downstream.pid[i], SIGKILL);
-        }
-    }
-
-    HYDU_FUNC_EXIT();
-}
-
 static HYD_status parse_exec_params(char **t_argv)
 {
     char **argv = t_argv;
@@ -290,9 +443,6 @@ static HYD_status parse_exec_params(char **t_argv)
     } while (1);
 
     /* verify the arguments we got */
-    if (HYD_pmcd_pmip.system_global.pmi_port == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI port not available\n");
-
     if (HYD_pmcd_pmip.system_global.global_core_count == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "global core count not available\n");
 
@@ -373,15 +523,15 @@ static HYD_status procinfo(int fd)
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int cmd_len;
-    enum HYD_pmu_cmd cmd;
+    enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* We got a command from upstream */
-    status = HYDU_sock_read(fd, &cmd, sizeof(enum HYD_pmu_cmd), &cmd_len,
-                            HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &cmd_len, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading command from launcher\n");
+
     if (cmd_len == 0) {
         /* The connection has closed */
         status = HYDT_dmx_deregister_fd(fd);
@@ -395,22 +545,20 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "error parsing process info\n");
 
         status = launch_procs();
-        HYDU_ERR_POP(status, "HYD_pmcd_pmip_launch_procs returned error\n");
+        HYDU_ERR_POP(status, "launch_procs returned error\n");
     }
     else if (cmd == KILL_JOB) {
         killjob();
         status = HYD_SUCCESS;
     }
-    else if (cmd == PROXY_SHUTDOWN) {
-        /* FIXME: shutdown should be handled more cleanly. That is,
-         * check if there are other processes still running and kill
-         * them before exiting. */
-        exit(-1);
-    }
     else if (cmd == CKPOINT) {
         HYDU_dump(stdout, "requesting checkpoint\n");
         status = HYDT_ckpoint_suspend();
         HYDU_dump(stdout, "checkpoint completed\n");
+    }
+    else if (cmd == PMI_RESPONSE) {
+        status = handle_pmi_response(fd);
+        HYDU_ERR_POP(status, "unable to handle PMI response\n");
     }
     else {
         status = HYD_INTERNAL_ERROR;

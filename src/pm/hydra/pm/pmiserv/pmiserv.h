@@ -7,7 +7,7 @@
 #ifndef PMISERV_H_INCLUDED
 #define PMISERV_H_INCLUDED
 
-#include "pm_utils.h"
+#include "pmi_common.h"
 
 HYD_status HYD_pmcd_pmiserv_pmi_listen_cb(int fd, HYD_event_t events, void *userp);
 HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp);

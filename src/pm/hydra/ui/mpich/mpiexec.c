@@ -238,6 +238,10 @@ int main(int argc, char **argv)
         HYDU_dump(stdout, "Exit codes: ");
     exit_status = 0;
     for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+        if (proxy->exit_status == NULL)
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                                 "no exit status received from proxy %s\n", proxy->node.hostname);
+
         proc_count = 0;
         for (exec = proxy->exec_list; exec; exec = exec->next)
             proc_count += exec->proc_count;

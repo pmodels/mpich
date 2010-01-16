@@ -10,6 +10,48 @@
 
 struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };
 
+HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
+{
+    struct HYD_pg *pg;
+    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_pmcd_pmi_process *process;
+    int max, ll, ul;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Our rank should be >= (id * ranks_per_proc) and < ((id + 1) *
+     * ranks_per_proc. Find the maximum value available to use */
+    for (pg = &HYD_handle.pg_list; pg->pgid != pgid; pg = pg->next);
+    if (!pg)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "PMI pgid %d not found\n", pgid);
+
+    ll = id * HYD_handle.ranks_per_proc;
+    ul = ((id + 1) * HYD_handle.ranks_per_proc) - 1;
+
+    max = ll;
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        proxy_scratch = proxy->proxy_scratch;
+
+        if (proxy_scratch == NULL)
+            break;
+
+        for (process = proxy_scratch->process_list; process; process = process->next) {
+            if (max <= process->rank && process->rank <= ul)
+                max++;
+        }
+    }
+    *rank = max;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
 {
     int i, j;
@@ -122,39 +164,6 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_
   fn_fail:
     goto fn_exit;
 }
-
-
-HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
-{
-    struct HYD_pg *pg;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (HYD_handle.ranks_per_proc == -1) {
-        /* If multiple procs per rank is not defined, use ID as the rank */
-        *rank = id;
-    }
-    else {
-        for (pg = &HYD_handle.pg_list; pg->pgid != pgid; pg = pg->next);
-        if (!pg)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "PMI pgid %d not found\n", pgid);
-
-        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-
-        *rank = (id * HYD_handle.ranks_per_proc) + pg_scratch->conn_procs[id];
-        pg_scratch->conn_procs[id]++;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 
 HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
                                         char **process_mapping_str)
@@ -322,36 +331,25 @@ HYD_status HYD_pmcd_pmi_finalize(void)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_fn_init(int fd, char *args[])
+HYD_status HYD_pmcd_pmi_v1_cmd_response(int fd, int pid, const char *cmd, int cmd_len)
 {
-    int pmi_version, pmi_subversion;
-    const char *tmp;
+    enum HYD_pmcd_pmi_cmd c;
+    struct HYD_pmcd_pmi_response_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    strtok(args[0], "=");
-    pmi_version = atoi(strtok(NULL, "="));
-    strtok(args[1], "=");
-    pmi_subversion = atoi(strtok(NULL, "="));
+    c = PMI_RESPONSE;
+    status = HYDU_sock_write(fd, &c, sizeof(c));
+    HYDU_ERR_POP(status, "unable to send PMI_RESPONSE command to proxy\n");
 
-    if (pmi_version == 1 && pmi_subversion <= 1) {
-        tmp = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
-        status = HYDU_sock_writeline(fd, tmp, strlen(tmp));
-        HYDU_ERR_POP(status, "error writing PMI line\n");
-        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v1;
-    }
-    else if (pmi_version == 2 && pmi_subversion == 0) {
-        tmp = "cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n";
-        status = HYDU_sock_writeline(fd, tmp, strlen(tmp));
-        HYDU_ERR_POP(status, "error writing PMI line\n");
-        HYD_pmcd_pmi_handle = HYD_pmcd_pmi_v2;
-    }
-    else {
-        /* PMI version mismatch */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
-    }
+    hdr.pid = pid;
+    hdr.buflen = cmd_len;
+    status = HYDU_sock_write(fd, &hdr, sizeof(hdr));
+    HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
+
+    status = HYDU_sock_write(fd, cmd, cmd_len);
+    HYDU_ERR_POP(status, "unable to send response to command\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

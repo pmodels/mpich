@@ -9,19 +9,13 @@
 
 #include "hydra_base.h"
 #include "demux.h"
+#include "pmi_common.h"
 
 /* PMI-1 specific definitions */
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1;
 
 /* PMI-2 specific definitions */
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v2;
-
-/* Generic definitions */
-#define MAXKEYLEN    64 /* max length of key in keyval space */
-/* FIXME: PMI-1 uses 256, PMI-2 uses 1024; we use the MAX */
-#define MAXVALLEN  1024 /* max length of value in keyval space */
-#define MAXNAMELEN  256 /* max length of various names */
-#define MAXKVSNAME  MAXNAMELEN  /* max length of a kvsname */
 
 struct HYD_pmcd_token_segment {
     int start_idx;
@@ -33,21 +27,7 @@ struct HYD_pmcd_token {
     char *val;
 };
 
-struct HYD_pmcd_pmi_kvs_pair {
-    char key[MAXKEYLEN];
-    char val[MAXVALLEN];
-    struct HYD_pmcd_pmi_kvs_pair *next;
-};
-
-struct HYD_pmcd_pmi_kvs {
-    char kvs_name[MAXNAMELEN];  /* Name of this kvs */
-    struct HYD_pmcd_pmi_kvs_pair *key_pair;
-};
-
 struct HYD_pmcd_pmi_process {
-    /* This is a bad design if we need to tie in an FD to a PMI
-     * process. This essentially kills any chance of PMI server
-     * masquerading. */
     int fd; /* downstream fd to send the response on */
     int pid; /* unique id for the processes sharing the same fd */
     int rank;                   /* process rank */
@@ -62,9 +42,6 @@ struct HYD_pmcd_pmi_proxy_scratch {
 };
 
 struct HYD_pmcd_pmi_pg_scratch {
-    int num_subgroups;          /* Number of subgroups */
-    int *conn_procs;            /* Number of connected procs in each subgroup */
-
     int barrier_count;
 
     int control_listen_fd;
@@ -73,21 +50,21 @@ struct HYD_pmcd_pmi_pg_scratch {
     struct HYD_pmcd_pmi_kvs *kvs;
 };
 
+HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
 HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
 void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
 void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
                              struct HYD_pmcd_token_segment *segment_list, int *num_segments);
 char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
-HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);
-HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
-struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int key);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);
+HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);
+struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int key);
 HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
                                         char **process_mapping);
 HYD_status HYD_pmcd_pmi_finalize(void);
 
-HYD_status HYD_pmcd_pmi_fn_init(int fd, char *args[]);
+HYD_status HYD_pmcd_pmi_v1_cmd_response(int fd, int pid, const char *cmd, int cmd_len);
 
 struct HYD_pmcd_pmi_handle {
     const char *cmd;

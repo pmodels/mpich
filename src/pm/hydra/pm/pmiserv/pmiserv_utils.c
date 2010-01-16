@@ -27,6 +27,9 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (use_ddd)
         proxy_args[arg++] = HYDU_strdup("ddd");
 
+    if (getenv("HYDRA_USE_VALGRIND"))
+        proxy_args[arg++] = HYDU_strdup("valgrind");
+
     i = 0;
     path_str[i++] = HYDU_strdup(HYD_handle.base_path);
     path_str[i++] = HYDU_strdup("pmi_proxy");
@@ -147,8 +150,10 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
 
+#if 0
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
         proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
+#endif
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
@@ -326,8 +331,6 @@ HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg *pg)
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
-    pg_scratch->num_subgroups = 0;
-    pg_scratch->conn_procs = NULL;
     pg_scratch->barrier_count = 0;
     pg_scratch->control_listen_fd = -1;
     pg_scratch->pmi_listen_fd = -1;
@@ -345,8 +348,6 @@ HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg *pg)
 
 HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
 {
-    int i;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -355,15 +356,6 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
 
     status = HYD_pmcd_init_pg_scratch(pg);
     HYDU_ERR_POP(status, "unable to create pg\n");
-
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    pg_scratch->num_subgroups = pg->pg_process_count;
-
-    /* Allocate and initialize the connected ranks */
-    HYDU_MALLOC(pg_scratch->conn_procs, int *, pg_scratch->num_subgroups * sizeof(int),
-                status);
-    for (i = 0; i < pg_scratch->num_subgroups; i++)
-        pg_scratch->conn_procs[i] = 0;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -379,7 +371,6 @@ void HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
     if (pg_scratch) {
-        HYDU_FREE(pg_scratch->conn_procs);
         HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
         HYDU_FREE(pg_scratch);
         pg_scratch = NULL;

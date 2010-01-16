@@ -730,6 +730,9 @@ static HYD_status set_default_values(void)
     if (HYD_handle.print_all_exitcodes == -1)
         HYD_handle.print_all_exitcodes = 0;
 
+    if (HYD_handle.ranks_per_proc == -1)
+        HYD_handle.ranks_per_proc = 1;
+
     tmp = getenv("HYDRA_DEBUG");
     if (HYD_handle.user_global.debug == -1 && tmp)
         HYD_handle.user_global.debug = atoi(tmp) ? 1 : 0;
