@@ -129,7 +129,7 @@ static HYD_status fn_get_appnum(int fd, int pid, int pgid, char *args[])
     for (proxy = process->proxy->pg->proxy_list; proxy; proxy = proxy->next) {
         if ((process->rank % HYD_handle.global_core_count) >= proxy->start_pid &&
             (process->rank % HYD_handle.global_core_count) < proxy->start_pid +
-            proxy->proxy_process_count)
+            proxy->node.core_count)
             break;
     }
 
