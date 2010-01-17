@@ -6,7 +6,15 @@ AC_PREREQ(2.63)
 
 AC_INIT([MPL], [0.1])
 AC_CONFIG_AUX_DIR(confdb)
+AC_CONFIG_MACRO_DIR(confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.10])
+
+LT_PREREQ([2.2.6])
+
+# Bug in libtool adds -O2 and -g by default
+save_cflags=$CFLAGS
+LT_INIT(disable-shared)
+CFLAGS=$save_cflags
 
 AC_CONFIG_HEADER([include/config.h])
 AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
@@ -14,12 +22,10 @@ AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-dnl Bug in autoconf adds -O2 and -g by default. Make sure we only get
-dnl the flags we want.
+# Bug in autoconf adds -O2 and -g by default
 save_cflags=$CFLAGS
 AC_PROG_CC
 CFLAGS=$save_cflags
-AC_PROG_RANLIB
 AC_C_CONST
 AC_C_RESTRICT
 

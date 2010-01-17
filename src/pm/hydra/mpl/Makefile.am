@@ -7,5 +7,5 @@
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
-lib_LIBRARIES = libmpl.a
-libmpl_a_SOURCES = src/mplstr.c src/mpltrmem.c
+lib_LTLIBRARIES = libmpl.la
+libmpl_la_SOURCES = src/mplstr.c src/mpltrmem.c
