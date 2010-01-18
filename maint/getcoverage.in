@@ -49,6 +49,7 @@ $outputUncovered = 1;
 # file names
 $annoteSrcDir = "";
 $annoteWebPrefix = "";
+$CoverageMessage = "";     # Extra message for the coverage index file
 $indexfile = "";     # File to contain the index of files
 $annoteFiles = 0;
 $annoteBaseDir = "";
@@ -134,6 +135,10 @@ for (@ARGV) {
 	$indexfile = "$indexdir/index.htm";
 	$coveredindexfile = "$indexdir/covered.htm";
 	if (! -d $indexdir) { &MakeDirs( $indexfile ); }
+	next;
+    }
+    elsif (/-coveredmsg=(.*)/) {
+	$CoverageMessage = $1;
 	next;
     }
     elsif (/-debug/) { 
@@ -541,6 +546,9 @@ sub WriteAnnoteFileMap {
 	print IFD "or $percent% missed ($covered% covered)\n";
 	my $date = `date "+%Y-%m-%d-%H-%M"`;
 	print IFD "<br>This index created on $date\n";
+	if ($CoverageMessage ne "") { 
+	    print IFD "<br>$CoverageMessage<br>\n"
+	}
 	print IFD "<p>\n";
 	print IFD "The following files contained some code that was not executed.  Files in which all non-error-handling, non-debug code was executed are not shown\n"
     }
