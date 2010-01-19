@@ -136,6 +136,14 @@ be in the range 0 to %d
 MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **typematchsize:No MPI datatype available for the given typeclass and size
 **typematchsize %s %d:No MPI datatype available for typeclass %s and size %d
+**mpi_type_create_f90_complex:MPI_Type_create_f90_complex failed
+**mpi_type_create_f90_complex %d %d:MPI_Type_create_f90_complex \
+(precision=%d, range=%d) failed
+**mpi_type_create_f90_int:MPI_Type_create_f90_int failed
+**mpi_type_create_f90_int %d: MPI_Type_create_f90_int (range=%d) failed
+**mpi_type_create_f90_real:MPI_Type_create_f90_real failed
+**mpi_type_create_f90_real %d %d:MPI_Type_create_f90_real \
+(precision=%d, range=%d) failed
 **f90typetoomany:Too many requests for unnamed, predefined f90 types
 **f90typeintnone: No integer type with the requested range is available
 **f90typeintnone %d: No integer type with %d digits of range is avaiable
