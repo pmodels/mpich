@@ -82,7 +82,8 @@
 #include "simple_pmiutil.h"
 #include "env.h"             /* MPIE_Putenv */
 /* mpimem.h contains prototypes for MPIU_Strncpy etc. */
-#include "mpimem.h"
+/* We no longer can use these because they are MPI device specific */
+/* #include "mpimem.h" */
 
 typedef struct { PMISetup pmiinfo; IOLabelSetup labelinfo; } SetupInfo;
 

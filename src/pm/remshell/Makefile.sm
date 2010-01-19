@@ -1,5 +1,5 @@
 mpiexec_SOURCES = mpiexec.c 
-mpiexec_LDADD = -L../util -lmpiexec -L../../../lib -L${master_top_srcdir}/lib -lmpich
+mpiexec_LDADD = -L../util -lmpiexec 
 INCLUDES = -I../../include -I${master_top_srcdir}/src/include \
     -I../../pmi/simple -I${master_top_srcdir}/src/pmi/simple \
 	-I${master_top_srcdir}/src/pm/util 
