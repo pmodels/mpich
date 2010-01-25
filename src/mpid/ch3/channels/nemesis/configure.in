@@ -182,7 +182,7 @@ for net in $nemesis_networks ; do
            AC_MSG_ERROR(['MX API version Problem.  Are you running a recent version of MX (at least 1.2.1)?'])
         fi;
 	AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
-    elif test "${net}" == "newmad" ; then
+    elif test "${net}" = "newmad" ; then
        AC_CHECK_HEADER([nm_public.h], , [
           AC_MSG_ERROR(['nm_public.h not found.  Did you specify --with-newmad= ?'])
        ])				       
