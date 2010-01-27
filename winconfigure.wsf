@@ -6801,6 +6801,7 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\write_sh.obj \")
         ' Insert objs for mpl manually
         mfile.WriteLine("   $(OUTDIR)\mplstr.obj \")
+        mfile.WriteLine("   $(OUTDIR)\mpltrmem.obj \")
 	' Insert objs for f90 type create funcs manually because the src/binding/f90
         ' directory has both C & fortran interfaces
         mfile.WriteLine("   $(OUTDIR)\create_f90_util.obj \")

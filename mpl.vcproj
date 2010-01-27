@@ -149,6 +149,10 @@
 				RelativePath=".\src\mpl\src\mplstr.c"
 				>
 			</File>
+			<File
+				RelativePath=".\src\mpl\src\mpltrmem.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
