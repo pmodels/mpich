@@ -3693,6 +3693,10 @@ Sub AddDefinitions( fout, filename, b64 )
                                         End if
                                 Case "USE_ASYNC_PROGRESS"
                                         fout.WriteLine("/* #undef USE_ASYNC_PROGRESS */")
+                                ' Windows builds don't rely on libtool - so no need to define
+                                ' LT_OBJDIR
+                                Case "LT_OBJDIR"
+                                        fout.WriteLine("/* #undef LT_OBJDIR */")
 				Case Else
                                     If Not (customDefDict Is Nothing) And (customDefDict.Exists(macroname)) Then
                                         fout.WriteLine("#define " & macroname & " " & customDefDict.Item(macroname))
