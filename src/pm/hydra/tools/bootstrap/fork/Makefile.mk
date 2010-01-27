@@ -4,5 +4,5 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-libhydra_a_SOURCES += $(top_srcdir)/tools/bootstrap/fork/fork_init.c \
+libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/fork/fork_init.c \
 	$(top_srcdir)/tools/bootstrap/fork/fork_launch.c

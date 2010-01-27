@@ -4,4 +4,4 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-libhydra_a_SOURCES += $(top_srcdir)/utils/dbg/dbg.c
+libhydra_la_SOURCES += $(top_srcdir)/utils/dbg/dbg.c

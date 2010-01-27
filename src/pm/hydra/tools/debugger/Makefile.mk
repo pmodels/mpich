@@ -6,4 +6,4 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/tools/debugger
 
-libhydra_a_SOURCES += $(top_srcdir)/tools/debugger/debugger.c
+libhydra_la_SOURCES += $(top_srcdir)/tools/debugger/debugger.c

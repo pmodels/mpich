@@ -4,4 +4,4 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-libui_a_SOURCES += $(top_srcdir)/ui/utils/uiu.c
+libhydra_la_SOURCES += $(top_srcdir)/ui/utils/uiu.c

@@ -6,7 +6,7 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/tools/bind
 
-libhydra_a_SOURCES += $(top_srcdir)/tools/bind/bind.c
+libhydra_la_SOURCES += $(top_srcdir)/tools/bind/bind.c
 
 if hydra_have_plpa
 include tools/bind/plpa/Makefile.mk

@@ -6,4 +6,4 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/tools/rmk/utils
 
-libhydra_a_SOURCES += $(top_srcdir)/tools/rmk/utils/rmku_query_node_list.c
+libhydra_la_SOURCES += $(top_srcdir)/tools/rmk/utils/rmku_query_node_list.c
