@@ -35,7 +35,6 @@ sysconfdir=@sysconfdir@
 includedir=@includedir@
 modincdir=@modincdir@
 libdir=@libdir@
-opalibdir=@libdir@
 
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
@@ -343,7 +342,7 @@ if [ "$linking" = yes ] ; then
     fi
 
     path_list=""
-    for path in "-L$libdir" "-L$opalibdir" ; do
+    for path in "-L$libdir" ; do
 	found_path=0
 	for p in $path_list ; do
 	    if [ "$path" = "$p" ] ; then found_path=1 ; break ; fi

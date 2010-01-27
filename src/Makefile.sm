@@ -7,5 +7,8 @@ NOTSIMPLEMAKE_SUBDIRS = mpl mpe2
 distclean-local:
 	(cd include && $(MAKE) distclean)
 all-postamble:
-	build_prefix=`cd .. && pwd` && cd mpl && \
-	${MAKE} prefix=$$build_prefix exec_prefix=$$build_prefix bindir=$$build_prefix/bin install
+	build_prefix=`cd .. && pwd` && \
+	for dir in mpl openpa ; do \
+	    (cd $$dir && ${MAKE} prefix=$$build_prefix exec_prefix=$$build_prefix \
+	    bindir=$$build_prefix/bin install) ; \
+	done

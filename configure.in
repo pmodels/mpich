@@ -2126,7 +2126,6 @@ fi
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
     -e 's%libdir=.*%libdir='$libbuild_dir% \
-    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
     src/env/mpif77 > bin/mpif77 ;
 chmod a+x bin/mpif77
 else
@@ -2413,7 +2412,6 @@ if test ! -d bin  ; then mkdir bin ; fi
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
     -e 's%modincdir=.*%modincdir='$modincbuild_dir% \
     -e 's%libdir=.*%libdir='$libbuild_dir% \
-    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
     src/env/mpif90 > bin/mpif90 ;
 chmod a+x bin/mpif90 
 else
@@ -2668,7 +2666,6 @@ cp src/binding/cxx/mpicxx.h src/include
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
     -e 's%libdir=.*%libdir='$libbuild_dir% \
-    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
     src/env/mpicxx > bin/mpicxx ;
 chmod a+x bin/mpicxx
 ln -sf mpicxx bin/mpic++
@@ -6345,9 +6342,6 @@ fi
 if test -z "$libbuild_dir" ; then
     libbuild_dir=`pwd`/lib
 fi
-if test -z "$opalibbuild_dir" ; then
-    opalibbuild_dir=`pwd`/src/openpa/src
-fi
 if test -z "$modincbuild_dir" ; then
    # The include files may be in a different directory from the mpif.h file
    modincbuild_dir=$top_build_dir/src/binding/f90
@@ -6361,12 +6355,10 @@ chmod a+x src/env/mpicc ;
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
     -e 's%libdir=.*%libdir='$libbuild_dir% \
-    -e 's%^opalibdir=.*%opalibdir='$opalibbuild_dir% \
     src/env/mpicc > bin/mpicc ;
 chmod a+x bin/mpicc ],
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
-opalibbuild_dir=$opalibbuild_dir
 bashWorks=$bashWorks)
 
 # move the parkill command into the bin directory of the build tree
