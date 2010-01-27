@@ -2305,6 +2305,18 @@ Function FreeMPLDefDict()
     FreeMPLDefDict = True
 End Function
 
+Function IsLowerCaseChar(c)
+    Set regEx = New RegExp
+    regEx.Pattern = "[a-z]"
+    regEx.IgnoreCase = False
+    regEx.Global = True
+    If regEx.Test(c) Then
+        IsLowerCaseChar = True
+    Else
+        IsLowerCaseChar = False
+    End If
+End Function
+
 Function AddPrefixToDefinitions(filename, prefix_str)
     temp_filename = filename & "_temp"
     If f.FileExists(temp_filename) Then
@@ -2324,11 +2336,20 @@ Function AddPrefixToDefinitions(filename, prefix_str)
             Case "#define"
                 macroname_val = RegExpFind("(\s).+", define)
                 str = RegExpFind("(\S).+", macroname_val)
-                str = "#define " & prefix_str & str
+                If IsLowerCaseChar(Left(str, 1)) Then
+                    str = "#define " & LCase(prefix_str) & str
+                Else
+                    str = "#define " & UCase(prefix_str) & str
+                End If
+    
             Case "#ifndef"
                 macroname_val = RegExpFind("(\s).+", define)
                 str = RegExpFind("(\S).+", macroname_val)
-                str = "#ifndef " & prefix_str & str
+                If IsLowerCaseChar(Left(str, 1)) Then
+                    str = "#ifndef " & LCase(prefix_str) & str
+                Else
+                    str = "#ifndef " & UCase(prefix_str) & str
+                End If
             Case Else
                 ' Just print the line as it is
         End Select        
