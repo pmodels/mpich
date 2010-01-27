@@ -5469,9 +5469,12 @@ If f.FileExists("src\mpl\include\config.h.in") Then
         CreateMPLDefDict()
 	Call AddDefinitions(fout, "src\mpl\include\config.h.in", false)
         FreeMPLDefDict()
-	Call WriteFooter(fout)
 	fout.Close()
         Call AddPrefixToDefinitions("src\mpl\include\mplconfig.h", "MPL_")
+        Set fout = f.OpenTextFile("src\mpl\include\mplconfig.h", 8)
+        fout.WriteLine("#define snprintf _snprintf")
+	Call WriteFooter(fout)
+        fout.Close()
 Else
 	printMsg "VERBOSE", "Skipping file: src\mpl\include\config.h.in"
 End If
