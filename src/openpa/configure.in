@@ -6,7 +6,7 @@
 
 AC_PREREQ(2.62)
 
-AC_INIT([OpenPA], [1.0.1], [https://trac.mcs.anl.gov/projects/openpa/newticket])
+AC_INIT([OpenPA], [1.0.2], [https://trac.mcs.anl.gov/projects/openpa/newticket])
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess.  It also contains autoconf macro files.
 AC_CONFIG_AUX_DIR(confdb)
@@ -48,6 +48,10 @@ AC_CHECK_HEADERS([pthread.h atomic.h intrin.h inttypes.h stdint.h])
 
 AC_C_RESTRICT
 AC_C_INLINE
+
+# Not strictly needed (autoconf docs: This macro is obsolescent, as current C
+# compilers support const. New programs need not use this macro. )
+AC_C_CONST
 
 dnl Check for presence of the pthreads library.  This is needed by the test
 dnl suite.
@@ -189,6 +193,9 @@ AC_DEFUN([OPA_PRIMITIVE_TEST_PGM], [AC_LANG_PROGRAM([[
 #ifndef _opa_restrict
 #define _opa_restrict restrict
 #endif
+#ifndef _opa_const
+#define _opa_const const
+#endif
 #ifdef HAVE_GCC_ATTRIBUTE
 #define OPA_HAVE_GCC_ATTRIBUTE 1
 #endif
@@ -329,6 +336,8 @@ penalty.
     fi
 fi
 
+internal_pkg_config_libs=
+external_pkg_config_libs=
 if test "$using_emulated_primitives" = "yes" ; then
     AC_MSG_WARN([
 ===================================================
@@ -337,7 +346,12 @@ will result in a substantial impact on performance.
 Use this only for testing.
 ===================================================])
     AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1, [define to 1 to force using lock-based atomic primitives])
+    internal_pkg_config_libs="-lpthread $internal_pkg_config_libs"
+    external_pkg_config_libs="-lopa     $external_pkg_config_libs"
 fi
+
+AC_SUBST(internal_pkg_config_libs)
+AC_SUBST(external_pkg_config_libs)
 
 if test "$using_unsafe_primitives" = "yes" ; then
     AC_MSG_WARN([
@@ -369,6 +383,6 @@ else
 fi
 
 
-AC_CONFIG_FILES([Makefile src/Makefile test/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile test/Makefile openpa.pc])
 AC_OUTPUT
 

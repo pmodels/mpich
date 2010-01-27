@@ -1,4 +1,35 @@
 =============
+OpenPA v1.0.2
+=============
+Major Changes:
+      * Add support for 64-bit PPC.
+      * Static initializer macros for OPA types.
+
+balaji (1):
+      * Fix pthread_mutex usage for inter-process shared memory regions.
+
+buntinas (1):
+      * added OPA typedef for pthread_mutex_t
+
+fortnern (4):
+      * Add more tests for compare-and-swap.
+      * Add integer compare-and-swap fairness test.
+      * Add pointer version of compare-and-swap fairness test.
+      * Added configure test for pthread_yield.
+
+goodell (6):
+      * Fix bad include guard in the opa_by_lock.h header.
+      * Add new "unsafe" primitives.  Also minor updates to the docs.
+      * Add support for 64-bit PPC.
+      * Update README to reflect 64-bit PPC support.
+      * Add static initializer macros for OPA_int_t/OPA_ptr_t.
+      * Actually include the COPYRIGHT and CHANGELOG files in the distribution.
+
+jayesh (1):
+      * Fixed compiler warnings in NT intrinsics. Now type casting the arguments to NT intrinsics correctly
+
+
+=============
 OpenPA v1.0.1
 =============
 

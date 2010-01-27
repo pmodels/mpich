@@ -53,7 +53,7 @@ typedef struct { int * volatile v; } OPA_ptr_t;
     reference for the exact semantics of our OPA_* ops.
 */
 
-static _opa_inline int OPA_load_int(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(_opa_const OPA_int_t *ptr)
 {
     int retval;
     OPA_IPC_SINGLE_CS_ENTER("atomic_add");
@@ -69,7 +69,7 @@ static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
     OPA_IPC_SINGLE_CS_EXIT("atomic_add");
 }
 
-static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr)
+static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t *ptr)
 {
     int *retval;
     OPA_IPC_SINGLE_CS_ENTER("atomic_add");

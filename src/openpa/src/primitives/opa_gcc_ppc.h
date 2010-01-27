@@ -7,17 +7,15 @@
 #ifndef OPA_GCC_PPC_H_INCLUDED
 #define OPA_GCC_PPC_H_INCLUDED
 
-/* these only need to be aligned on an 8-byte boundary to work on a BG/P, but
- * they need to be aligned on a 16-byte boundary to work on many PPC970
- * processors (according to the PPC970MP manual, at least). */
-typedef struct { volatile int v    OPA_ATTRIBUTE((aligned (16))); } OPA_int_t;
-typedef struct { void * volatile v OPA_ATTRIBUTE((aligned (16))); } OPA_ptr_t;
+/* these need to be aligned on an 8-byte boundary to work on a BG/P */
+typedef struct { volatile int v    OPA_ATTRIBUTE((aligned (8))); } OPA_int_t;
+typedef struct { void * volatile v OPA_ATTRIBUTE((aligned (8))); } OPA_ptr_t;
 
 #define OPA_INT_T_INITIALIZER(val_) { (val_) }
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline int OPA_load_int(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(_opa_const OPA_int_t *ptr)
 {
     return ptr->v;
 }
@@ -29,7 +27,7 @@ static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
 }
 
 /* Aligned loads and stores are atomic. */
-static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr)
+static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t *ptr)
 {
     return ptr->v;
 }

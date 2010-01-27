@@ -31,7 +31,7 @@ typedef struct { int *v; } OPA_ptr_t;
     Thanks to Josh Haberman for inspiring this primitives implementation.
 */
 
-static _opa_inline int OPA_load_int(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(const OPA_int_t *ptr)
 {
     int retval;
     retval = ptr->v;
@@ -43,7 +43,7 @@ static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
     ptr->v = val;
 }
 
-static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr)
+static _opa_inline void *OPA_load_ptr(const OPA_ptr_t *ptr)
 {
     int *retval;
     retval = ptr->v;
