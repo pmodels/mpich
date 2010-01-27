@@ -63,11 +63,12 @@ static HYD_status demux_fn(char *arg, char ***argv)
 
 static HYD_status iface_fn(char *arg, char ***argv)
 {
+    HYD_status status = HYD_SUCCESS;
+    char *iface = NULL;
+#if defined(HAVE_GETIFADDRS)
     struct ifaddrs *ifaddr, *ifa;
     char buf[MAX_HOSTNAME_LEN];
     struct sockaddr_in *sa;
-    char *iface = NULL;
-    HYD_status status = HYD_SUCCESS;
 
     status = HYDU_set_str_and_incr(arg, argv, &iface);
     HYDU_ERR_POP(status, "unable to get the network interface name\n");
@@ -93,6 +94,17 @@ static HYD_status iface_fn(char *arg, char ***argv)
 
     freeifaddrs(ifaddr);
     HYDU_FREE(iface);
+#else
+    status = HYDU_set_str_and_incr(arg, argv, &iface);
+    HYDU_ERR_POP(status, "unable to get the network interface name\n");
+
+    /* For now just disable interface selection when getifaddrs isn't
+     * available, such as on AIX.  In the future we can implement in MPL
+     * something along the lines of MPIDI_GetIPInterface from tcp_getip.c in
+     * nemesis. */
+    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                        "interface selection not supported on this platform\n");
+#endif
 
   fn_exit:
     HYDU_FUNC_EXIT();
