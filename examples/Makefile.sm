@@ -14,7 +14,7 @@ DEFS     =
 INCLUDES = -I../src/include -I${top_srcdir}/src/include
 
 LDADD  = 
-DEPADD = ../lib/lib${MPILIBNAME}.a ../src/openpa/src/libopa.a
+DEPADD = ../lib/lib${MPILIBNAME}.a ../lib/libopa.a
 LIBS   =
 # pmandel requires a separate set of socket calls (its a long story)
 # and may not build on most platforms
