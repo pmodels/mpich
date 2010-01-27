@@ -52,10 +52,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
     if (closed) {
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to deregister fd\n");
-        close(fd);
-
+        /* A process died; kill the remaining processes */
+        killjob();
         goto fn_exit;
     }
 
@@ -116,6 +114,12 @@ static HYD_status handle_pmi_response(int fd)
 
     status = HYDU_sock_write(hdr.pid, buf, hdr.buflen);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
+
+    if (hdr.finalize) {
+        status = HYDT_dmx_deregister_fd(hdr.pid);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+        close(hdr.pid);
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

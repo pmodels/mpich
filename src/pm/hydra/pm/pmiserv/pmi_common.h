@@ -51,6 +51,7 @@ struct HYD_pmcd_pmi_cmd_hdr {
 struct HYD_pmcd_pmi_response_hdr {
     int pid;                    /* ID of the requesting process */
     int buflen;
+    int finalize;
 };
 
 HYD_status HYD_pmcd_pmi_read_pmi_cmd(int fd, char **pmi_cmd, int *pmi_version, int *closed);

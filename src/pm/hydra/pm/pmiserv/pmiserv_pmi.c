@@ -333,7 +333,8 @@ HYD_status HYD_pmcd_pmi_finalize(void)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_v1_cmd_response(int fd, int pid, const char *cmd, int cmd_len)
+HYD_status HYD_pmcd_pmi_v1_cmd_response(int fd, int pid, const char *cmd, int cmd_len,
+                                        int finalize)
 {
     enum HYD_pmcd_pmi_cmd c;
     struct HYD_pmcd_pmi_response_hdr hdr;
@@ -347,6 +348,7 @@ HYD_status HYD_pmcd_pmi_v1_cmd_response(int fd, int pid, const char *cmd, int cm
 
     hdr.pid = pid;
     hdr.buflen = cmd_len;
+    hdr.finalize = finalize;
     status = HYDU_sock_write(fd, &hdr, sizeof(hdr));
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
 
