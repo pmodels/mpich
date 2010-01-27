@@ -7,11 +7,13 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "pmip.h"
+#include "pmip_pmi.h"
 #include "ckpoint.h"
 #include "demux.h"
 #include "bind.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
+struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
 static void killjob(void)
 {
@@ -30,50 +32,24 @@ static void killjob(void)
     HYDU_FUNC_EXIT();
 }
 
-static HYD_status fn_init(int fd, char *args[])
-{
-    int pmi_version, pmi_subversion;
-    const char *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    strtok(args[0], "=");
-    pmi_version = atoi(strtok(NULL, "="));
-    strtok(args[1], "=");
-    pmi_subversion = atoi(strtok(NULL, "="));
-
-    if (pmi_version == 1 && pmi_subversion <= 1)
-        tmp = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
-    else if (pmi_version == 2 && pmi_subversion == 0)
-        tmp = "cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n";
-    else        /* PMI version mismatch */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
-
-    status = HYDU_sock_write(fd, tmp, strlen(tmp));
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
     int closed;
     struct HYD_pmcd_pmi_cmd_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     status = HYD_pmcd_pmi_read_pmi_cmd(fd, &buf, &hdr.pmi_version, &closed);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
+
+    if (hdr.pmi_version == 1)
+        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
+    else
+        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
     if (closed) {
         status = HYDT_dmx_deregister_fd(fd);
@@ -86,12 +62,17 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
-    if (!strcmp(pmi_cmd, "init")) {
-        /* Init is generic to all PMI implementations */
-        status = fn_init(fd, args);
-        goto fn_exit;
+    h = HYD_pmcd_pmip_pmi_handle;
+    while (h->handler) {
+        if (!strcmp(pmi_cmd, h->cmd)) {
+            status = h->handler(fd, args);
+            HYDU_ERR_POP(status, "PMI handler returned error\n");
+            goto fn_exit;
+        }
+        h++;
     }
 
+    /* We don't understand the command; forward it upstream */
     cmd = PMI_CMD;
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
     HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");

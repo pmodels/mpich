@@ -11,6 +11,8 @@ bin_PROGRAMS += pmi_proxy
 pmi_proxy_SOURCES = $(top_srcdir)/pm/pmiserv/pmip.c \
 	$(top_srcdir)/pm/pmiserv/pmip_cb.c \
 	$(top_srcdir)/pm/pmiserv/pmip_utils.c \
+	$(top_srcdir)/pm/pmiserv/pmip_pmi_v1.c \
+	$(top_srcdir)/pm/pmiserv/pmip_pmi_v2.c \
 	$(top_srcdir)/pm/pmiserv/pmi_common.c
 pmi_proxy_CFLAGS = $(AM_CFLAGS)
 pmi_proxy_LDFLAGS = $(external_ldflags) -L$(top_builddir)

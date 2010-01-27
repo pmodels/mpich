@@ -67,7 +67,6 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     h = HYD_pmcd_pmi_handle;
     while (h->handler) {
         if (!strcmp(cmd, h->cmd)) {
-            /* FIXME: Always use a pid of -1 */
             status = h->handler(fd, pid, pgid, args);
             HYDU_ERR_POP(status, "PMI handler returned error\n");
             break;
