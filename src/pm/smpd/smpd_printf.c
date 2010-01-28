@@ -567,6 +567,8 @@ int smpd_tprintf_templ(smpd_printf_fp_t fp, TCHAR *str, ...){
     fp(str_mb, args);
     va_end(args);
 
+    MPIU_Free(str_mb);
+
     return result;
 }
 #endif 
