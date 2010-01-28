@@ -56,7 +56,9 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 
     /* Create a new type and remember it */
     if (nAlloc > MAX_F90_TYPES) {
-	return 1;
+	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
+				     "MPIF_Create_unnamed_predefined", __LINE__,
+				     MPI_ERR_INTERN, "**f90typetoomany", 0 );
     }
     if (nAlloc == 0) {
 	/* Install the finalize callback that frees these datatyeps.
@@ -137,7 +139,7 @@ int MPIR_Match_f90_int( int range, int length, MPI_Datatype *newtype )
 			   is of no relevance to either the user or 
 			   developer */
 	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-				     "MPI_Type_create_f90_integer", line,
+				     "MPI_Type_create_f90_integer", __LINE__,
 				     MPI_ERR_INTERN, "**f90typetoomany", 0 );
     }
     

@@ -67,21 +67,13 @@ int MPI_Type_create_f90_integer( int range, MPI_Datatype *newtype )
     MPI_Datatype basetype = MPI_DATATYPE_NULL;
     static intModel f90_integer_map[] = { MPIR_F90_INTEGER_MODEL_MAP
 					  {0, 0, 0 } };
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
 
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_INITIALIZED(mpi_errno);
-	    if (mpi_errno) {
-		return MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
-	    }
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
     for (i=0; f90_integer_map[i].range > 0; i++) {
@@ -109,16 +101,24 @@ int MPI_Type_create_f90_integer( int range, MPI_Datatype *newtype )
     else {
 	mpi_errno = MPIR_Create_unnamed_predefined( basetype, 
 			    MPI_COMBINER_F90_INTEGER, range, -1, newtype );
-	if (mpi_errno) {
-	    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-					      MPIR_ERR_RECOVERABLE, 
-				     "MPI_Type_create_f90_integer", __LINE__,
-				      MPI_ERR_INTERN, "**f90typetoomany", 0 );
-	}
     }
+    if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
-
+ fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
+ fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_create_f90_int",
+	    "**mpi_type_create_f90_int %d", range );
+    }
+#   endif
+    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }

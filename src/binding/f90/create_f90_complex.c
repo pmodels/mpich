@@ -46,7 +46,8 @@ typedef struct realModel {
    the specified range
 
    Input Arguments:
-.  range - Decimal range desired
++  precision - Number of decimal digits in mantissa
+-  range - Decimal range desired
 
    Output Arguments:
 .  newtype - A predefine MPI Datatype that matches the range.
@@ -72,33 +73,27 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
     static realModel f90_real_model[2] = { 
 	{ MPIR_F90_REAL_MODEL, MPI_COMPLEX},
 	{ MPIR_F90_DOUBLE_MODEL, MPI_DOUBLE_COMPLEX } };
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
 
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            MPIR_ERRTEST_INITIALIZED(mpi_errno);
-	    if (mpi_errno) {
-		return MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
-	    }
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
     /* MPI 2.1, Section 16.2, page 473 lines 12-27 make it clear that
-       these types must returned the combiner version. */
+       these types must return the combiner version. */
     if (setupPredefTypes) {
 	setupPredefTypes = 0;
 	for (i=0; i<2; i++) {
 	    MPI_Datatype oldType = f90_real_model[i].dtype;
-	    MPIR_Create_unnamed_predefined( oldType, MPI_COMBINER_F90_COMPLEX,
+	    mpi_errno = MPIR_Create_unnamed_predefined( oldType, 
+					    MPI_COMBINER_F90_COMPLEX,
 					    f90_real_model[i].digits, 
 					    f90_real_model[i].exponent, 
 					    &f90_real_model[i].dtype );
+	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
     }
 
@@ -122,16 +117,25 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
     else {
 	mpi_errno = MPIR_Create_unnamed_predefined( basetype, 
 		    MPI_COMBINER_F90_COMPLEX, range, precision, newtype );
-	if (mpi_errno) {
-	    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-					      MPIR_ERR_RECOVERABLE, 
-				     "MPI_Type_create_f90_complex", __LINE__,
-				      MPI_ERR_INTERN, "**f90typetoomany", 0 );
 	}
-    }
-
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	
     /* ... end of body of routine ... */
 
+fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
-    return MPI_SUCCESS;
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    return mpi_errno;
+fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_create_f90_complex",
+	    "**mpi_type_create_f90_complex %d %d", precision, range );
+    }
+#   endif
+    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
