@@ -726,7 +726,6 @@ print MAKEFD "\$(MPISIZEOFMOD).\$(MOD): mpi_sizeofs.f90 mpifnoext.h\n";
 &createModSteps( "mpi_sizeofs.f90" );
 
 print MAKEFD "\$(MPIBASEMOD).\$(MOD): \$(srcdir)/${outfile_prefix}_base.f90\n";
-# Evalutate ${outfile_prefix}
 &createModSteps( '$(srcdir)/' . $outfile_prefix . '_base.f90' );
 
 print MAKEFD "\
