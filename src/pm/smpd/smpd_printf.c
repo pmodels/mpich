@@ -548,6 +548,29 @@ void smpd_trim_logfile_old()
 }
 #endif
 
+#ifdef HAVE_WINDOWS_H
+int smpd_tprintf_templ(smpd_printf_fp_t fp, TCHAR *str, ...){
+    char *str_mb = NULL;
+    int len = 0;
+    int result = 0;
+    va_list args;
+
+    len = _tcslen(str) * sizeof(TCHAR) + 1;
+    str_mb = (char *)MPIU_Malloc(len);
+    if(str_mb == NULL){
+        smpd_err_printf("Unable to allocate memory for temp buffer\n");
+        return 0;
+    }
+    SMPDU_TCSTOMBS(str_mb, str, len);
+
+    va_start(args, str);
+    fp(str_mb, args);
+    va_end(args);
+
+    return result;
+}
+#endif 
+
 int smpd_err_printf(char *str, ...)
 {
     va_list list;

@@ -220,6 +220,17 @@ typedef int SMPD_BOOL;
     }                                                               \
 }
 
+/* Some TCHAR utils for making our life easier */
+#ifdef HAVE_WINDOWS_H
+#ifdef _UNICODE
+    #define SMPDU_TCSTOMBS  wcstombs
+    #define SMPDU_MBSTOTCS  mbstowcs
+#else
+    #define SMPDU_TCSTOMBS  _tcsncpy
+    #define SMPDU_MBSTOTCS  _tcsncpy
+#endif
+#endif
+
 #ifdef HAVE_WINDOWS_H
 #   define SMPDU_UNREFERENCED_ARG(a_)   a_
 #else
@@ -834,6 +845,12 @@ int smpd_read(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len);
 int smpd_write(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len);
 int smpd_dbg_printf(char *str, ...);
 int smpd_err_printf(char *str, ...);
+#ifdef HAVE_WINDOWS_H
+    typedef int (*smpd_printf_fp_t) (char *str, ...);
+    int smpd_tprintf_templ(smpd_printf_fp_t fp, TCHAR *str, ...);
+    #define smpd_err_tprintf(str, ...) smpd_tprintf_templ(smpd_err_printf, str, __VA_ARGS__);
+    #define smpd_dbg_tprintf(str, ...) smpd_tprintf_templ(smpd_dbg_printf, str, __VA_ARGS__);
+#endif
 int smpd_enter_fn(char *fcname);
 int smpd_exit_fn(char *fcname);
 SMPD_BOOL smpd_option_on(const char *option);
