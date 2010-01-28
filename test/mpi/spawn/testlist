@@ -23,4 +23,4 @@ disconnect 3
 disconnect2 3
 disconnect3 3
 # Disabling this test till Hydra is fixed, so the nightly tests don't hang.
-#concurrent_spawns 1
+concurrent_spawns 1
