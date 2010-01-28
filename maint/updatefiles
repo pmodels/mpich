@@ -42,7 +42,7 @@ MAKE=${MAKE-make}
 # require libtoolize 
 # externals are the directories for external packages that we have 
 # included into MPICH2
-externals="src/pm/hydra/tools/bind/hwloc/hwloc"
+externals="src/pm/hydra/tools/bind/hwloc/hwloc src/pm/hydra/tools/bind/plpa/plpa"
 ltdirs="src/pm/hydra src/mpl"
 # amdirs are the directories that make use of autoreconf
 amdirs="src/openpa src/pm/hydra src/mpl"
