@@ -63,6 +63,7 @@ extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
 
 /* utils */
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
+void HYD_pmcd_pmip_killjob(void);
 
 /* callback */
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);

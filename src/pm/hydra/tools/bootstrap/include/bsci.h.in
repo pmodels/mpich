@@ -44,6 +44,9 @@ struct HYDT_bsci_fns {
     /** \brief Wait for bootstrap launched processes to complete */
     HYD_status(*wait_for_completion) (int timeout);
 
+    /** \brief Cleanup processes */
+    HYD_status(*cleanup_procs) (void);
+
     /** \brief Query for node list information */
     HYD_status(*query_node_list) (struct HYD_node **node_list);
 
@@ -123,6 +126,15 @@ HYD_status HYDT_bsci_finalize(void);
  * launching and wait for their completion.
  */
 HYD_status HYDT_bsci_wait_for_completion(int timeout);
+
+
+/**
+ * \brief HYDT_bsci_cleanup_procs - Cleanup launched processes
+ *
+ * This function cleans up the processes it launched. This is not a
+ * graceful cleanup, but rather a forced abort.
+ */
+HYD_status HYDT_bsci_cleanup_procs(void);
 
 
 /**

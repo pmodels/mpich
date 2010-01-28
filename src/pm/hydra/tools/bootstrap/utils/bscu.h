@@ -20,6 +20,7 @@ HYD_status HYDT_bscu_query_node_list(struct HYD_node **node_list);
 HYD_status HYDT_bscu_query_usize(int *size);
 HYD_status HYDT_bscu_query_proxy_id(int *proxy_id);
 HYD_status HYDT_bscu_wait_for_completion(int timeout);
+HYD_status HYDT_bscu_cleanup_procs(void);
 HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp);
 HYD_status HYDT_bscu_stdin_cb(int fd, HYD_event_t events, void *userp);
 

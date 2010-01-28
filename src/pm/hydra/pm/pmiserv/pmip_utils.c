@@ -13,6 +13,23 @@
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
+void HYD_pmcd_pmip_killjob(void)
+{
+    int i;
+
+    HYDU_FUNC_ENTER();
+
+    /* Send the kill signal to all processes */
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
+            kill(HYD_pmcd_pmip.downstream.pid[i], SIGTERM);
+            kill(HYD_pmcd_pmip.downstream.pid[i], SIGKILL);
+        }
+    }
+
+    HYDU_FUNC_EXIT();
+}
+
 static HYD_status control_port_fn(char *arg, char ***argv)
 {
     char *port = NULL;

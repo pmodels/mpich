@@ -46,6 +46,8 @@ HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, in
         HYDT_bsci_fns.finalize = HYDT_bscu_finalize;
     if (HYDT_bsci_fns.wait_for_completion == NULL)
         HYDT_bsci_fns.wait_for_completion = HYDT_bscu_wait_for_completion;
+    if (HYDT_bsci_fns.cleanup_procs == NULL)
+        HYDT_bsci_fns.cleanup_procs = HYDT_bscu_cleanup_procs;
     if (HYDT_bsci_fns.query_node_list == NULL)
         HYDT_bsci_fns.query_node_list = HYDT_bscu_query_node_list;
     if (HYDT_bsci_fns.query_usize == NULL)

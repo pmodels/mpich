@@ -15,23 +15,6 @@
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
-static void killjob(void)
-{
-    int i;
-
-    HYDU_FUNC_ENTER();
-
-    /* Send the kill signal to all processes */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
-            kill(HYD_pmcd_pmip.downstream.pid[i], SIGTERM);
-            kill(HYD_pmcd_pmip.downstream.pid[i], SIGKILL);
-        }
-    }
-
-    HYDU_FUNC_EXIT();
-}
-
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
@@ -53,7 +36,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     if (closed) {
         /* A process died; kill the remaining processes */
-        killjob();
+        HYD_pmcd_pmip_killjob();
         goto fn_exit;
     }
 
@@ -533,7 +516,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "launch_procs returned error\n");
     }
     else if (cmd == KILL_JOB) {
-        killjob();
+        HYD_pmcd_pmip_killjob();
         status = HYD_SUCCESS;
     }
     else if (cmd == CKPOINT) {

@@ -226,11 +226,9 @@ int main(int argc, char **argv)
     cleanup_params();
 
   fn_exit:
-    if (status != HYD_SUCCESS)
-        return -1;
-    else
-        return 0;
+    return status;
 
   fn_fail:
+    HYD_pmcd_pmip_killjob();
     goto fn_exit;
 }
