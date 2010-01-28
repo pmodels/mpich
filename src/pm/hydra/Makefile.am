@@ -4,7 +4,6 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-# Set external subdirs to NULL. They are built first.
 external_subdirs = @mpl_srcdir@
 external_ldflags = -L$(top_builddir)/@mpl_srcdir@
 external_libs = -lmpl

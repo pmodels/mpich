@@ -34,6 +34,9 @@ PAC_ARG_STRICT
 PAC_C_GNU_ATTRIBUTE
 PAC_CC_FUNCTION_NAME_SYMBOL
 
+# Find the full path of the source dir
+abs_srcdir=`(cd $srcdir && pwd)`
+
 # Build information
 if test -s "$srcdir/version/version" ; then
     HYDRA_VERSION="`cat $srcdir/version/version | grep ^MPICH2_VERSION: | cut -f2 -d' '`"
@@ -85,9 +88,6 @@ AC_SUBST(mpl_srcdir)
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
 AC_SUBST(DOXYGEN)
 AC_SUBST(top_srcdir)
-
-# Find the full path of the source dir (for VPATH builds)
-abs_srcdir=`(cd $srcdir && pwd)`
 
 # Check if the necessary headers are available
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
@@ -297,13 +297,20 @@ have_hwloc=no
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
+		PAC_CONFIG_SUBDIR(tools/bind/plpa/plpa,$abs_srcdir,$ac_configure_args,
+			plpa_works=yes,plpa_works=no)
+		if test "$plpa_works" = "no" ; then
+		   continue
+		fi
+
 		AC_MSG_CHECKING(if plpa works correctly)
 		old_CFLAGS=$CFLAGS
 		old_LDFLAGS=$LDFLAGS
-		CFLAGS="$CFLAGS -I${srcdir}/tools/bind/plpa/plpa"
-		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/plpa_api_probe.c"
-		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/plpa_runtime.c"
-		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/plpa_map.c"
+		CFLAGS="$CFLAGS -I${srcdir}/tools/bind/plpa/plpa/src/libplpa \
+				-Itools/bind/plpa/plpa/src/libplpa"
+		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/src/libplpa/plpa_api_probe.c"
+		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/src/libplpa/plpa_runtime.c"
+		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/src/libplpa/plpa_map.c"
 		AC_TRY_LINK([#include <plpa_internal.h>],[
 				PLPA_NAME(api_type_t) p;
 				PLPA_NAME(api_probe)(&p);

@@ -12,6 +12,7 @@
  * $HEADER$
  */
 
+#include "plpa_config.h"
 #include "plpa.h"
 #include "plpa_internal.h"
 
