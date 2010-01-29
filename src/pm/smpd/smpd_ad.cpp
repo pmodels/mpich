@@ -22,13 +22,7 @@
 static HRESULT GetGCSearch(IDirectorySearch **ppDS);
 static int smpd_build_spn_list();
 
-typedef struct smpd_host_spn_node_t
-{
-    char host[SMPD_MAX_NAME_LENGTH];
-    char dnshost[SMPD_MAX_NAME_LENGTH];
-    char spn[SMPD_MAX_NAME_LENGTH];
-    struct smpd_host_spn_node_t *next;
-} smpd_host_spn_node_t;
+/* FIXME: Remove a static spn list - use spn list handles */
 static smpd_host_spn_node_t *spn_list = NULL;
 
 #undef FCNAME
@@ -146,6 +140,304 @@ int smpd_register_spn(const char *dc, const char *dn, const char *dh)
     }
 #endif
     result = DsUnBind(&ds);
+    return SMPD_SUCCESS;
+}
+
+#define SMPD_INIT_SPN(spn, spn_len, service_class, service_dns_name, fq_hostname)   \
+    MPIU_Snprintf(spn, spn_len, "%s/%s/%s", service_class, service_dns_name, fq_hostname)
+
+#undef FCNAME
+#define FCNAME "smpd_spn_list_dbg_print"
+int smpd_spn_list_dbg_print(smpd_spn_list_hnd_t hnd){
+    smpd_host_spn_node_t *iter=NULL;
+    smpd_enter_fn(FCNAME);
+
+    if(!SMPD_SPN_LIST_HND_IS_INIT(hnd)){
+        smpd_dbg_printf("Invalid handle to spn list\n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
+    iter = *hnd;
+    while(iter){
+        smpd_dbg_printf("FQ Service name = %s\n", iter->fq_service_name);
+        iter = iter->next;
+    }
+
+    smpd_exit_fn(FCNAME);
+    return SMPD_SUCCESS;
+}
+#undef FCNAME
+#define FCNAME "smpd_spn_list_init"
+int smpd_spn_list_init(smpd_spn_list_hnd_t *spn_list_hnd_p)
+{
+    HRESULT hr;
+    int result = SMPD_SUCCESS;
+    IDirectoryObject *pSCP = NULL;
+    ADS_ATTR_INFO *pPropEntries = NULL;
+    IDirectorySearch *pSearch = NULL;
+    ADS_SEARCH_HANDLE hSearch = NULL;
+    LPWSTR pszDN;                  /* distinguished name of SCP. */
+    LPWSTR pszServiceDNSName;      /* service DNS name. */
+    LPWSTR pszClass;               /* name of service class. */
+    USHORT usPort;                 /* service port. */
+    WCHAR pszSearchString[SMPD_MAX_NAME_LENGTH];
+    char service_class[SMPD_MAX_NAME_LENGTH];
+    smpd_host_spn_node_t *iter;
+    smpd_host_spn_node_t *spn_list_head=NULL;
+
+    smpd_enter_fn(FCNAME);
+    if(spn_list_hnd_p == NULL){
+        smpd_err_printf("Invalid pointer to SPN list handle\n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
+    spn_list_head = NULL;
+
+    /* Allocate memory for spn list handle contents. Currently the handle just has the head
+     * ptr to the list 
+     */
+    *spn_list_hnd_p = (smpd_host_spn_node_t **) MPIU_Malloc(sizeof(smpd_host_spn_node_t *));
+    if(*spn_list_hnd_p == NULL){
+        smpd_err_printf("Unable to allocate memory for list handle\n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
+    **spn_list_hnd_p = NULL;
+
+    CoInitialize(NULL);
+
+    /* Get an IDirectorySearch pointer for the Global Catalog.  */
+    hr = GetGCSearch(&pSearch);
+    if (FAILED(hr) || pSearch == NULL) {
+	    smpd_err_printf("GetGC failed 0x%x\n", hr);
+        result = SMPD_FAIL;
+	    goto Cleanup;
+    }
+
+    /* Set up a deep search.
+      Thousands of objects are not expected, therefore
+      query for 1000 rows per page.*/
+    ADS_SEARCHPREF_INFO SearchPref[2];
+    DWORD dwPref = sizeof(SearchPref)/sizeof(ADS_SEARCHPREF_INFO);
+    SearchPref[0].dwSearchPref =    ADS_SEARCHPREF_SEARCH_SCOPE;
+    SearchPref[0].vValue.dwType =   ADSTYPE_INTEGER;
+    SearchPref[0].vValue.Integer =  ADS_SCOPE_SUBTREE;
+
+    SearchPref[1].dwSearchPref =    ADS_SEARCHPREF_PAGESIZE;
+    SearchPref[1].vValue.dwType =   ADSTYPE_INTEGER;
+    SearchPref[1].vValue.Integer =  1000;
+
+    hr = pSearch->SetSearchPreference(SearchPref, dwPref);
+    if (FAILED(hr)){
+	    smpd_err_printf("Failed to set search prefs: hr:0x%x\n", hr);
+        result = SMPD_FAIL;
+	    goto Cleanup;
+    }
+
+    /* Execute the search. From the GC get the distinguished name 
+      of the SCP. Use the DN to bind to the SCP and get the other 
+      properties. */
+    LPWSTR rgszDN[] = {L"distinguishedName"};
+
+    /* Search for a match of the product GUID. */
+    swprintf(pszSearchString, L"(keywords=%s)", SMPD_SERVICE_VENDOR_GUIDW);
+    hr = pSearch->ExecuteSearch(pszSearchString, rgszDN, 1, &hSearch);
+    /*hr = pSearch->ExecuteSearch(L"keywords=5722fe5f-cf46-4594-af7c-0997ca2e9d72", rgszDN, 1, &hSearch);*/
+    if (FAILED(hr)){
+	    smpd_err_printf("ExecuteSearch failed: hr:0x%x\n", hr);
+        result = SMPD_FAIL;
+	    goto Cleanup;
+    }
+
+    /* Loop through the results. Each row should be an instance of the 
+      service identified by the product GUID.
+      Add logic to select from multiple service instances. */
+    while (SUCCEEDED(hr = pSearch->GetNextRow(hSearch))){
+        DWORD dwError = ERROR_SUCCESS;
+        WCHAR szError[512];
+        WCHAR szProvider[512];
+
+        if (hr == S_ADS_NOMORE_ROWS){
+            ADsGetLastError(&dwError, szError, 512, szProvider, 512);
+            if (ERROR_MORE_DATA == dwError){
+                continue;
+            }
+            smpd_dbg_printf("No more result rows from GC\n");
+            result = SMPD_SUCCESS;
+            goto Cleanup;
+	    }
+
+        ADS_SEARCH_COLUMN Col;
+
+        hr = pSearch->GetColumn(hSearch, L"distinguishedName", &Col);
+        if(FAILED(hr)){
+            smpd_err_printf("Failed to get Distinguished Name for SPN\n");
+            result = SMPD_FAIL;
+            goto Cleanup;
+        }
+        pszDN = AllocADsStr(Col.pADsValues->CaseIgnoreString);
+        if(pszDN == NULL){
+            ADsGetLastError(&dwError, szError, 512, szProvider, 512);
+            smpd_err_printf("Failed to allocate memory for ADs string, 0x%x\n", dwError);
+            result = SMPD_FAIL;
+            goto Cleanup;
+        }
+        pSearch->FreeColumn(&Col);
+
+        /* Bind to the DN to get the other properties. */
+        LPWSTR lpszLDAPPrefix = L"LDAP://";
+        DWORD dwSCPPathLength = (DWORD)(wcslen(lpszLDAPPrefix) + wcslen(pszDN) + 1);
+        LPWSTR pwszSCPPath = (LPWSTR)malloc(sizeof(WCHAR) * dwSCPPathLength);
+        if (pwszSCPPath){
+            wcscpy(pwszSCPPath, lpszLDAPPrefix);
+            wcscat(pwszSCPPath, pszDN);
+        }
+        else{
+	        smpd_err_printf("Failed to allocate a buffer\n");
+            result = SMPD_FAIL;
+	        goto Cleanup;
+	    }               
+        /*wprintf(L"pszDN = %s\n", pszDN);*/
+
+        hr = ADsGetObject(pwszSCPPath, IID_IDirectoryObject, (void**)&pSCP);
+        free(pwszSCPPath);
+
+        if (SUCCEEDED(hr)) {
+            /* Properties to retrieve from the SCP object. */
+            LPWSTR rgszAttribs[]=
+                {
+                    {L"serviceClassName"},
+                    {L"serviceDNSName"},
+                    /*{L"serviceDNSNameType"},*/
+                    {L"serviceBindingInformation"}
+                };
+
+            DWORD dwAttrs = sizeof(rgszAttribs)/sizeof(LPWSTR);
+            DWORD dwNumAttrGot;
+            hr = pSCP->GetObjectAttributes(rgszAttribs, dwAttrs, &pPropEntries, &dwNumAttrGot);
+            if (FAILED(hr)){
+                smpd_err_printf("GetObjectAttributes Failed. hr:0x%x\n", hr);
+                result = SMPD_FAIL;
+                goto Cleanup;
+            }
+
+            pszServiceDNSName = NULL;
+            pszClass = NULL;
+            iter = (smpd_host_spn_node_t*)malloc(sizeof(smpd_host_spn_node_t));
+            if (iter == NULL){
+                smpd_err_printf("Unable to allocate memory to store an SPN entry.\n");
+                result = SMPD_FAIL;
+                goto Cleanup;
+            }
+            iter->next = NULL;
+            iter->host[0] = '\0';
+            iter->dnshost[0] = '\0';
+            iter->spn[0] = '\0';
+
+            /* Loop through the entries returned by GetObjectAttributes 
+             * and save the values in the appropriate buffers.
+             */
+            for (int i = 0; i < (LONG)dwAttrs; i++){
+                if ((wcscmp(L"serviceDNSName", pPropEntries[i].pszAttrName) == 0) &&
+                        (pPropEntries[i].dwADsType == ADSTYPE_CASE_IGNORE_STRING)){
+                    pszServiceDNSName = AllocADsStr(pPropEntries[i].pADsValues->CaseIgnoreString);
+                    /*wprintf(L"pszServiceDNSName = %s\n", pszServiceDNSName);*/
+                }
+                if ((wcscmp(L"serviceClassName", pPropEntries[i].pszAttrName) == 0) &&
+                        (pPropEntries[i].dwADsType == ADSTYPE_CASE_IGNORE_STRING)){
+                    pszClass = AllocADsStr(pPropEntries[i].pADsValues->CaseIgnoreString);
+                    /*wprintf(L"pszClass = %s\n", pszClass);*/
+                }
+                if ((wcscmp(L"serviceBindingInformation", pPropEntries[i].pszAttrName) == 0) &&
+                    (pPropEntries[i].dwADsType == ADSTYPE_CASE_IGNORE_STRING)){
+                    usPort=(USHORT)_wtoi(pPropEntries[i].pADsValues->CaseIgnoreString);
+                    /*wprintf(L"usPort = %d\n", usPort);*/
+                }
+            } /* for(;;) */
+            if(pszServiceDNSName != NULL){
+                wcstombs(iter->dnshost, pszServiceDNSName, SMPD_MAX_NAME_LENGTH);
+            }
+            wcstombs(service_class, pszClass, SMPD_MAX_NAME_LENGTH);
+            /*MPIU_Snprintf(iter->spn, SMPD_MAX_NAME_LENGTH, "%s/%s:%d", temp_str, iter->dnshost, usPort);*/
+            wcstombs(iter->fq_service_name, pszDN, SMPD_MAX_FQ_NAME_LENGTH);
+            /* MPIU_Snprintf(iter->spn, SMPD_MAX_NAME_LENGTH, "%s/%s/%s", temp_str, iter->dnshost, temp_str2); */
+            SMPD_INIT_SPN(iter->spn, SMPD_MAX_FQ_NAME_LENGTH, service_class, iter->dnshost, iter->fq_service_name);
+
+            iter->next = spn_list_head;
+	        spn_list_head = iter;
+            if (pszServiceDNSName != NULL){
+                FreeADsStr(pszServiceDNSName);
+            }
+            if (pszClass != NULL){
+                FreeADsStr(pszClass);
+            }
+        }
+        FreeADsStr(pszDN);
+    } /* GetNextRow() */
+
+Cleanup:
+
+    **spn_list_hnd_p = spn_list_head;
+    smpd_spn_list_dbg_print(*spn_list_hnd_p);
+
+    if (pSCP){
+        pSCP->Release();
+        pSCP = NULL;
+    }
+
+    if (pPropEntries){
+        FreeADsMem(pPropEntries);
+        pPropEntries = NULL;
+    }
+
+    if (pSearch){
+        if (hSearch){
+            pSearch->CloseSearchHandle(hSearch);
+            hSearch = NULL;
+        }
+
+        pSearch->Release();
+        pSearch = NULL;
+    }
+    
+    CoUninitialize();
+
+    smpd_exit_fn(FCNAME);
+    return result;
+}
+
+#undef FCNAME
+#define FCNAME "smpd_spn_list_finalize"
+int smpd_spn_list_finalize(smpd_spn_list_hnd_t *spn_list_hnd_p)
+{
+    smpd_host_spn_node_t *spn_list_head, *cur_node;
+    smpd_enter_fn(FCNAME);
+    if(spn_list_hnd_p == NULL){
+        smpd_err_printf("Invalid pointer to spn list handle\n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+    if(!SMPD_SPN_LIST_HND_IS_INIT(*spn_list_hnd_p)){
+        smpd_dbg_printf("Trying to finalize an uninitialized handle\n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
+    spn_list_head = **spn_list_hnd_p;
+    while(spn_list_head != NULL){
+        cur_node = spn_list_head;
+        spn_list_head = cur_node->next;
+        MPIU_Free(cur_node);
+    }
+    /* Free contents of the spn handle */
+    MPIU_Free(*spn_list_hnd_p);
+
+    *spn_list_hnd_p = NULL;
+
+    smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
 }
 
@@ -467,8 +759,49 @@ cleanup:
 
 
 #undef FCNAME
+#define FCNAME "smpd_lookup_spn_list"
+int smpd_lookup_spn_list(smpd_spn_list_hnd_t hnd, char *target, int length, const char *fq_name, int port)
+{
+    int result = SMPD_SUCCESS;
+    char err_msg[256];
+    ULONG len = length/*SMPD_MAX_NAME_LENGTH*/;
+    char *env;
+    smpd_host_spn_node_t *iter;
+
+    smpd_enter_fn(FCNAME);
+    if(!SMPD_SPN_LIST_HND_IS_INIT(hnd)){
+        smpd_err_printf("Invalid handle to spn list \n");
+        smpd_exit_fn(FCNAME);
+        return SMPD_FAIL;
+    }
+
+    smpd_spn_list_dbg_print(hnd); fflush(stdout);
+
+    env = getenv("MPICH_SPN");
+    if (env){
+        MPIU_Strncpy(target, env, SMPD_MAX_NAME_LENGTH);
+        smpd_exit_fn(FCNAME);
+        return SMPD_SUCCESS;
+    }
+
+    /* smpd_build_spn_list(); */
+    iter = (smpd_host_spn_node_t *) (*hnd);
+    while (iter != NULL){
+        if (stricmp(iter->fq_service_name, fq_name) == 0){
+            MPIU_Strncpy(target, iter->spn, length);
+            smpd_exit_fn(FCNAME);
+            return SMPD_SUCCESS;
+        }
+        iter = iter->next;
+    }
+
+    smpd_exit_fn(FCNAME);
+    return SMPD_FAIL;
+}
+
+#undef FCNAME
 #define FCNAME "smpd_lookup_spn"
-int smpd_lookup_spn(char *target, int length, const char * host, int port)
+int smpd_lookup_spn(char *target, int length, const char *host, int port)
 {
     int result;
     char err_msg[256];

@@ -115,6 +115,8 @@ typedef int SMPD_BOOL;
 #define SMPD_MAX_DBG_PRINTF_LENGTH      (1024 + SMPD_MAX_CMD_LENGTH)
 #define SMPD_MAX_CMD_STR_LENGTH           100
 #define SMPD_MAX_HOST_LENGTH	           64
+#define SMPD_MAX_FQ_NAME_LENGTH          1024
+#define SMPD_MAX_NETBIOS_NAME_LENGTH     1024
 #define SMPD_MAX_EXE_LENGTH              4096
 #define SMPD_MAX_ENV_LENGTH              4096
 #define SMPD_MAX_CLIQUE_LENGTH           8192
@@ -805,6 +807,21 @@ typedef struct smpd_global_t
     SMPD_BOOL prefix_output;
 } smpd_global_t;
 
+/* FIXME: Cleanup this struct after we start using spn list
+ * handles everywhere
+ */
+typedef struct smpd_host_spn_node_t
+{
+    char host[SMPD_MAX_NAME_LENGTH];
+    char dnshost[SMPD_MAX_NAME_LENGTH];
+    char fq_service_name[SMPD_MAX_FQ_NAME_LENGTH];
+    char spn[SMPD_MAX_FQ_NAME_LENGTH];
+    struct smpd_host_spn_node_t *next;
+} smpd_host_spn_node_t;
+typedef smpd_host_spn_node_t **smpd_spn_list_hnd_t;
+
+#define SMPD_SPN_LIST_HND_IS_INIT(hnd) (((hnd) != NULL) && (*(hnd) != NULL))
+
 extern smpd_global_t smpd_process;
 
 
@@ -845,12 +862,14 @@ int smpd_read(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len);
 int smpd_write(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len);
 int smpd_dbg_printf(char *str, ...);
 int smpd_err_printf(char *str, ...);
+
 #ifdef HAVE_WINDOWS_H
     typedef int (*smpd_printf_fp_t) (char *str, ...);
     int smpd_tprintf_templ(smpd_printf_fp_t fp, TCHAR *str, ...);
     #define smpd_err_tprintf(str, ...) smpd_tprintf_templ(smpd_err_printf, str, __VA_ARGS__);
     #define smpd_dbg_tprintf(str, ...) smpd_tprintf_templ(smpd_dbg_printf, str, __VA_ARGS__);
 #endif
+
 int smpd_enter_fn(char *fcname);
 int smpd_exit_fn(char *fcname);
 SMPD_BOOL smpd_option_on(const char *option);
@@ -973,10 +992,18 @@ int smpd_create_sspi_client_context(smpd_sspi_client_context_t **new_context);
 int smpd_free_sspi_client_context(smpd_sspi_client_context_t **context);
 int smpd_sspi_context_init(smpd_sspi_client_context_t **sspi_context_pptr, const char *host, int port, smpd_sspi_type_t type);
 int smpd_sspi_context_iter(int sspi_id, void **sspi_buffer_pptr, int *length_ptr);
-SMPD_BOOL smpd_setup_scp(void);
-SMPD_BOOL smpd_remove_scp(void);
+#ifdef HAVE_WINDOWS_H
+int smpd_setup_scps_with_file(char *filename);
+int smpd_setup_scp(TCHAR *hostname);
+int smpd_remove_scp(TCHAR *hostname, smpd_spn_list_hnd_t hnd);
+int smpd_remove_scps_with_file(char *filename, smpd_spn_list_hnd_t hnd);
+#endif
 int smpd_register_spn(const char *dc, const char *dn, const char *dh);
 int smpd_lookup_spn(char *target, int length, const char * host, int port);
+int smpd_lookup_spn_list(smpd_spn_list_hnd_t hnd, char *target, int length, const char * host, int port);
+int smpd_spn_list_finalize(smpd_spn_list_hnd_t *spn_list_hnd);
+int smpd_spn_list_init(smpd_spn_list_hnd_t *spn_list_hnd);
+int smpd_spn_list_dbg_print(smpd_spn_list_hnd_t hnd);
 SMPD_BOOL smpd_map_user_drives(char *pszMap, char *pszAccount, char *pszPassword, char *pszError, int maxerrlength);
 SMPD_BOOL smpd_unmap_user_drives(char *pszMap);
 void smpd_finalize_drive_maps(void);

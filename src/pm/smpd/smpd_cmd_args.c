@@ -401,39 +401,59 @@ int smpd_parse_command_args(int *argcp, char **argvp[])
     }
     if (smpd_get_opt(argcp, argvp, "-register_spn"))
     {
-	/*
-	char domain_controller[SMPD_MAX_HOST_LENGTH] = "";
-	char domain_name[SMPD_MAX_HOST_LENGTH] = "";
-	char domain_host[SMPD_MAX_HOST_LENGTH] = "";
-	smpd_get_opt_string(argcp, argvp, "-domain", domain_name, SMPD_MAX_HOST_LENGTH);
-	smpd_get_opt_string(argcp, argvp, "-dc", domain_controller, SMPD_MAX_HOST_LENGTH);
-	smpd_get_opt_string(argcp, argvp, "-host", domain_host, SMPD_MAX_HOST_LENGTH);
-	smpd_register_spn(domain_controller, domain_name, domain_host);
-	*/
-	if (!smpd_setup_scp())
-	{
-	    printf("Failed to register smpd's Service Principal Name with the domain controller.\n");
-	    ExitProcess((UINT)-1);
-	}
-	printf("Service Principal Name registered with the domain controller.\n");
-	printf("SMPD is now capable of launching processes using passwordless delegation.\n");
-	printf("The system administrator must ensure the following:\n");
-	printf(" 1) This host is trusted for delegation in Active Directory\n");
-	printf(" 2) All users who will run jobs are trusted for delegation.\n");
-	printf("Domain administrators can enable these options for hosts and users\nin Active Directory on the domain controller.\n");
-	ExitProcess(0);
+        char filename[SMPD_MAX_FILENAME];
+
+        if(smpd_get_opt_string(argcp, argvp, "-f", filename, SMPD_MAX_FILENAME)){
+            result = smpd_setup_scps_with_file(filename);
+            if(result != SMPD_SUCCESS){
+                printf("Failed to register smpd's Service Principal Names (at least one failed) with Domain Controller\n");
+                ExitProcess((UINT )-1);
+            }
+        }
+        else{
+            result = smpd_setup_scp(NULL);
+            if(result != SMPD_SUCCESS){
+                printf("Failed to register smpd's Service Principal Name with Domain Controller\n");
+                ExitProcess((UINT )-1);
+            }
+        }
+        printf("Service Principal Name registered with the domain controller.\n");
+        printf("SMPD is now capable of launching processes using passwordless delegation.\n");
+        printf("The system administrator must ensure the following:\n");
+        printf(" 1) This host is trusted for delegation in Active Directory\n");
+        printf(" 2) All users who will run jobs are trusted for delegation.\n");
+        printf("Domain administrators can enable these options for hosts and users\nin Active Directory on the domain controller.\n");
+        ExitProcess(0);
     }
     if (smpd_get_opt(argcp, argvp, "-remove_spn"))
     {
-	if (smpd_remove_scp())
-	{
-	    printf("Service Principal Name removed from the domain controller.\n");
-	}
-	else
-	{
-	    printf("Error: Failed to remove the Service Principal Name from the domain controller.\n");
-	}
-	ExitProcess(0);
+        char filename[SMPD_MAX_FILENAME];
+        smpd_spn_list_hnd_t hnd;
+
+        result = smpd_spn_list_init(&hnd);
+        if(result != SMPD_SUCCESS){
+            printf("Unable to initialize SPN list\n");
+            ExitProcess((UINT ) -1);
+        }
+
+        if(smpd_get_opt_string(argcp, argvp, "-f", filename, SMPD_MAX_FILENAME)){
+            result = smpd_remove_scps_with_file(filename, hnd);
+            if(result != SMPD_SUCCESS){
+                printf("Failed to remove smpd's Service Principal Names (at least one failed) with Domain Controller\n");
+                ExitProcess((UINT )-1);
+            }
+            printf("Removed smpd's Service Principal Names successfully\n");
+        }
+        else{
+            result = smpd_remove_scp(NULL, hnd);
+            if(result != SMPD_SUCCESS){
+                printf("Failed to remove smpd's Service Principal Name with Domain Controller\n");
+                ExitProcess((UINT )-1);
+            }
+            printf("Removed smpd's Service Principal Name successfully\n");
+        }
+        smpd_spn_list_finalize(&hnd);
+        ExitProcess(0);
     }
 
     if (smpd_get_opt(argcp, argvp, "-mgr"))
