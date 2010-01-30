@@ -171,7 +171,7 @@ void MPIR_WaitForDebugger( void )
     /* Also, to avoid scaling problems, we only populate the first 64
        entries (default) */
     maxsize = 64;
-    MPIU_get_env_int( "MPICH_PROCTABLE_SIZE", &maxsize );
+    MPL_env2int( "MPICH_PROCTABLE_SIZE", &maxsize );
     if (maxsize > size) maxsize = size;
 
     if (rank == 0) {
