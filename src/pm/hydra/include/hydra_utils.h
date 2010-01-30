@@ -233,26 +233,30 @@ HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
 /* Memory utilities */
 #include <ctype.h>
 
-/* FIXME: This should eventually become MPL_malloc and friends */
+#if defined USE_MEMORY_TRACING
+
+#define HYDU_strdup(a) MPL_trstrdup(a,__LINE__,__FILE__)
+#define strdup(a)      'Error use HYDU_strdup' :::
+
+#define HYDU_malloc(a) MPL_trmalloc((unsigned)(a),__LINE__,__FILE__)
+#define malloc(a)      'Error use HYDU_malloc' :::
+
+#define HYDU_free(a) MPL_trfree(a,__LINE__,__FILE__)
+#define free(a)      'Error use HYDU_free' :::
+
+#else /* if !defined USE_MEMORY_TRACING */
+
+#define HYDU_strdup MPL_strdup
 #define HYDU_malloc malloc
-#define HYDU_calloc calloc
-#define HYDU_free   free
+#define HYDU_free free
+
+#endif /* USE_MEMORY_TRACING */
 
 #define HYDU_snprintf MPL_snprintf
-#define HYDU_strdup   MPL_strdup
 
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
         (p) = (type) HYDU_malloc((size));                               \
-        if ((p) == NULL)                                                \
-            HYDU_ERR_SETANDJUMP1((status), HYD_NO_MEM,                  \
-                                 "failed to allocate %d bytes\n",       \
-                                 (size));                               \
-    }
-
-#define HYDU_CALLOC(p, type, num, size, status)                         \
-    {                                                                   \
-        (p) = (type) HYDU_calloc((num), (size));                        \
         if ((p) == NULL)                                                \
             HYDU_ERR_SETANDJUMP1((status), HYD_NO_MEM,                  \
                                  "failed to allocate %d bytes\n",       \
