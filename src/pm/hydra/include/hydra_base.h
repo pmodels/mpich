@@ -121,10 +121,6 @@ typedef enum {
     HYD_INTERNAL_ERROR
 } HYD_status;
 
-#if defined(HAVE_PUTENV) && defined(NEEDS_PUTENV_DECL)
-extern int putenv(char *string);
-#endif
-
 #if defined(NEEDS_GETHOSTNAME_DECL)
 int gethostname(char *name, size_t len);
 #endif

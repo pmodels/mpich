@@ -12,22 +12,22 @@
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {
-    int i, arg, use_ddd, enable_stdin;
+    int i, arg, use_ddd, use_valgrind, enable_stdin, ret;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     arg = 0;
 
-    /* Hack to use ddd with the proxy */
-    if (getenv("HYDRA_USE_DDD"))
-        use_ddd = 1;
-    else
+    /* Hack to use ddd and valgrind with the proxy */
+    if (MPL_env2bool("HYDRA_USE_DDD", &use_ddd) == 0)
         use_ddd = 0;
+    if (MPL_env2bool("HYDRA_USE_VALGRIND", &use_valgrind) == 0)
+        use_valgrind = 0;
 
     if (use_ddd)
         proxy_args[arg++] = HYDU_strdup("ddd");
 
-    if (getenv("HYDRA_USE_VALGRIND"))
+    if (use_valgrind)
         proxy_args[arg++] = HYDU_strdup("valgrind");
 
     i = 0;

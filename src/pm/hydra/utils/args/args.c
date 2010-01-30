@@ -24,10 +24,11 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
     HYDU_FUNC_ENTER();
 
-    /* The executable is somewhere in the user's path. We need to find
-     * it. */
-    if (getenv("PATH")) {       /* If the PATH environment exists */
-        user_path = HYDU_strdup(getenv("PATH"));
+    /* The executable is somewhere in the user's path. Find it. */
+    if (MPL_env2str("PATH", &user_path))
+        user_path = HYDU_strdup(user_path);
+
+    if (user_path) {    /* If the PATH environment exists */
         test_loc = strtok(user_path, ";:");
         do {
             tmp[0] = HYDU_strdup(test_loc);
@@ -229,7 +230,8 @@ char *HYDU_getcwd(void)
     struct stat spwd, scwd;
 #endif /* HAVE_STAT */
 
-    pwdval = getenv("PWD");
+    if (MPL_env2str("PWD", &pwdval) == 0)
+        pwdval = NULL;
     HYDU_MALLOC(cwdval, char *, HYDRA_MAX_PATH, status);
     if (getcwd(cwdval, HYDRA_MAX_PATH) == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,

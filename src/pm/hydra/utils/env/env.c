@@ -292,7 +292,7 @@ HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite)
     HYDU_FUNC_ENTER();
 
     /* If the overwrite flag is false, just exit */
-    if (getenv(env->env_name) && (overwrite == HYD_ENV_OVERWRITE_FALSE))
+    if (MPL_env2str(env->env_name, &str) && overwrite == HYD_ENV_OVERWRITE_FALSE)
         goto fn_exit;
 
     i = 0;
@@ -303,7 +303,7 @@ HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite)
     status = HYDU_str_alloc_and_join(tmp, &str);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    putenv(str);
+    MPL_putenv(str);
 
     for (i = 0; tmp[i]; i++)
         HYDU_FREE(tmp[i]);

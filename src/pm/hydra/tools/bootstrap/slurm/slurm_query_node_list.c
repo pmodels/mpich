@@ -108,8 +108,10 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
 
     HYDU_FUNC_ENTER();
 
-    str = getenv("SLURM_NODELIST");
-    num_procs = getenv("SLURM_JOB_CPUS_PER_NODE");
+    if (MPL_env2str("SLURM_NODELIST", &str) == 0)
+        str = NULL;
+    if (MPL_env2str("SLURM_JOB_CPUS_PER_NODE", &num_procs) == 0)
+        num_procs = NULL;
 
     if (str == NULL || num_procs == NULL) {
         *node_list = NULL;

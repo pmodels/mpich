@@ -238,7 +238,8 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
             for (prun = proxy_scratch->process_list; prun; prun = prun->next) {
                 if (HYD_handle.user_global.debug)
                     HYDU_dump(stdout, "reply to %d: %s\n", prun->fd, cmd);
-                status = HYD_pmcd_pmi_v1_cmd_response(prun->fd, prun->pid, cmd, strlen(cmd), 0);
+                status =
+                    HYD_pmcd_pmi_v1_cmd_response(prun->fd, prun->pid, cmd, strlen(cmd), 0);
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }
@@ -524,7 +525,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     struct HYD_env *env;
 
     char *key, *val;
-    int nprocs, preput_num, info_num;
+    int nprocs, preput_num, info_num, ret;
     char *execname, *path = NULL;
 
     struct HYD_pmcd_token_segment *segment_list = NULL;
@@ -723,7 +724,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     for (i = 0; i < preput_num; i++) {
         char *preput_key, *preput_val;
-        int ret;
 
         HYDU_MALLOC(key, char *, MAXKEYLEN, status);
         HYDU_snprintf(key, MAXKEYLEN, "preput_key_%d", i);
@@ -761,8 +761,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 
     /* Initialize PMI */
-    val = getenv("PMI_PORT");
-    if (!val) { /* PMI_PORT not already set; create one */
+    ret = MPL_env2str("PMI_PORT", &val);
+    if (!ret) { /* PMI_PORT not already set; create one */
         /* pass PGID as a user parameter to the PMI connect handler */
         status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &pmi_port,
                                                      HYD_pmcd_pmiserv_pmi_listen_cb,
@@ -774,10 +774,10 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         if (HYD_handle.user_global.debug)
             HYDU_dump(stdout, "someone else already set PMI port\n");
         pmi_port = HYDU_strdup(val);
-        val = getenv("PMI_ID");
-        if (!val)
+
+        ret = MPL_env2int("PMI_ID", &pmi_id);
+        if (!ret)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_PORT set but not PMI_ID\n");
-        pmi_id = atoi(val);
     }
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "PMI port: %s; PMI ID: %d\n", pmi_port, pmi_id);

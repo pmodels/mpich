@@ -241,10 +241,8 @@ int main(int argc, char **argv)
     } while (1);
 
     /* set default values for parameters */
-    tmp = getenv("HYDSERV_DEBUG");
-    if (HYDT_persist_handle.debug == -1 && tmp)
-        HYDT_persist_handle.debug = atoi(tmp) ? 1 : 0;
-    if (HYDT_persist_handle.debug == -1)
+    if (HYDT_persist_handle.debug == -1 &&
+        MPL_env2bool("HYDSERV_DEBUG", &HYDT_persist_handle.debug) == 0)
         HYDT_persist_handle.debug = 0;
 
     if (HYDT_persist_handle.debug) {
@@ -254,10 +252,8 @@ int main(int argc, char **argv)
         HYDU_dump_noprefix(stdout, "\n");
     }
 
-    tmp = getenv("HYDSERV_PORT");
-    if (HYDT_persist_handle.port == -1 && tmp)
-        HYDT_persist_handle.port = atoi(tmp);
-    if (HYDT_persist_handle.port == -1)
+    if (HYDT_persist_handle.port == -1 &&
+        MPL_env2int("HYDSERV_PORT", &HYDT_persist_handle.port) == 0)
         HYDT_persist_handle.port = PERSIST_DEFAULT_PORT;
 
     /* wait for connection requests and process them */

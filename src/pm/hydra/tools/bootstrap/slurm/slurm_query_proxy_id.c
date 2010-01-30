@@ -11,14 +11,12 @@
 
 HYD_status HYDT_bscd_slurm_query_proxy_id(int *proxy_id)
 {
+    int nodeid, ret;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (getenv("SLURM_NODEID")) {
-        *proxy_id = atoi(getenv("SLURM_NODEID"));
-    }
-    else {
+    if (MPL_env2int("SLURM_NODEID", proxy_id) == 0) {
         *proxy_id = -1;
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot find slurm proxy ID\n");
     }

@@ -733,67 +733,50 @@ static HYD_status set_default_values(void)
     if (HYD_handle.ranks_per_proc == -1)
         HYD_handle.ranks_per_proc = 1;
 
-    tmp = getenv("HYDRA_DEBUG");
-    if (HYD_handle.user_global.debug == -1 && tmp)
-        HYD_handle.user_global.debug = atoi(tmp) ? 1 : 0;
-    if (HYD_handle.user_global.debug == -1)
+    if (HYD_handle.user_global.debug == -1 &&
+        MPL_env2bool("HYDRA_DEBUG", &HYD_handle.user_global.debug) == 0)
         HYD_handle.user_global.debug = 0;
 
-    tmp = getenv("HYDRA_BOOTSTRAP");
-    if (HYD_handle.user_global.bootstrap == NULL && tmp)
-        HYD_handle.user_global.bootstrap = HYDU_strdup(tmp);
-    if (HYD_handle.user_global.bootstrap == NULL)
+    if (HYD_handle.user_global.bootstrap == NULL &&
+        MPL_env2str("HYDRA_BOOTSTRAP", &HYD_handle.user_global.bootstrap) == 0)
         HYD_handle.user_global.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
 
-    tmp = getenv("HYDRA_RMK");
-    if (HYD_handle.rmk == NULL && tmp)
-        HYD_handle.rmk = HYDU_strdup(tmp);
+    if (HYD_handle.rmk == NULL)
+        MPL_env2str("HYDRA_RMK", &HYD_handle.rmk);
 
-    tmp = getenv("HYDRA_DEMUX");
-    if (HYD_handle.user_global.demux == NULL && tmp)
-        HYD_handle.user_global.demux = HYDU_strdup(tmp);
-    if (HYD_handle.user_global.demux == NULL)
+    if (HYD_handle.user_global.demux == NULL &&
+        MPL_env2str("HYDRA_DEMUX", &HYD_handle.user_global.demux) == 0)
         HYD_handle.user_global.demux = HYDU_strdup(HYDRA_DEFAULT_DEMUX);
 
-    tmp = getenv("HYDRA_IFACE");
-    if (HYD_handle.user_global.iface == NULL && tmp)
-        HYD_handle.user_global.iface = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.iface == NULL)
+        MPL_env2str("HYDRA_IFACE", &HYD_handle.user_global.iface);
 
-    tmp = getenv("HYDRA_HOST_FILE");
-    if (HYD_handle.node_list == NULL && tmp) {
+    if (HYD_handle.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", &tmp)) {
         status = HYDU_parse_hostfile(tmp, process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
 
-    tmp = getenv("HYDRA_BOOTSTRAP_EXEC");
-    if (HYD_handle.user_global.bootstrap_exec == NULL && tmp)
-        HYD_handle.user_global.bootstrap_exec = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.bootstrap_exec == NULL)
+        MPL_env2str("HYDRA_BOOTSTRAP_EXEC", &HYD_handle.user_global.bootstrap_exec);
 
-    /* Check environment for setting binding */
-    tmp = getenv("HYDRA_BINDING");
-    if (HYD_handle.user_global.binding == NULL && tmp)
-        HYD_handle.user_global.binding = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.binding == NULL)
+        MPL_env2str("HYDRA_BINDING", &HYD_handle.user_global.binding);
 
-    tmp = getenv("HYDRA_BINDLIB");
-    if (HYD_handle.user_global.bindlib == NULL && tmp)
-        HYD_handle.user_global.bindlib = HYDU_strdup(tmp);
-    if (HYD_handle.user_global.bindlib == NULL && strcmp(HYDRA_DEFAULT_BINDLIB, ""))
+    if (HYD_handle.user_global.bindlib == NULL &&
+        MPL_env2str("HYDRA_BINDLIB", &HYD_handle.user_global.bindlib) == 0 &&
+        strcmp(HYDRA_DEFAULT_BINDLIB, ""))
         HYD_handle.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
 
-    /* Check environment for checkpointing */
-    tmp = getenv("HYDRA_CKPOINTLIB");
-    if (HYD_handle.user_global.ckpointlib == NULL && tmp)
-        HYD_handle.user_global.ckpointlib = HYDU_strdup(tmp);
-    if (HYD_handle.user_global.ckpointlib == NULL && strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
+    if (HYD_handle.user_global.ckpointlib == NULL &&
+        MPL_env2str("HYDRA_CKPOINTLIB", &HYD_handle.user_global.ckpointlib) == 0 &&
+        strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
         HYD_handle.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
 
-    tmp = getenv("HYDRA_CKPOINT_PREFIX");
-    if (HYD_handle.user_global.ckpoint_prefix == NULL && tmp)
-        HYD_handle.user_global.ckpoint_prefix = HYDU_strdup(tmp);
+    if (HYD_handle.user_global.ckpoint_prefix == NULL)
+        MPL_env2str("HYDRA_CKPOINT_PREFIX", &HYD_handle.user_global.ckpoint_prefix);
 
     /* Check environment for setting the inherited environment */
-    tmp = getenv("HYDRA_ENV");
-    if (HYD_handle.user_global.global_env.prop == NULL && tmp)
+    if (HYD_handle.user_global.global_env.prop == NULL && MPL_env2str("HYDRA_ENV", &tmp))
         HYD_handle.user_global.global_env.prop =
             !strcmp(tmp, "all") ? HYDU_strdup("all") : HYDU_strdup("none");
 

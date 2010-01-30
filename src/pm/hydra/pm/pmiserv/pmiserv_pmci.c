@@ -18,7 +18,7 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *tmp = NULL, *control_port = NULL;
     char *pmi_port = NULL;
-    int pmi_id = -1, enable_stdin;
+    int pmi_id = -1, enable_stdin, ret;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -27,8 +27,8 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Initialize PMI */
-    tmp = getenv("PMI_PORT");
-    if (!tmp) { /* PMI_PORT not already set; create one */
+    ret = MPL_env2str("PMI_PORT", &tmp);
+    if (!ret) { /* PMI_PORT not already set; create one */
         /* pass PGID 0 as a user parameter to the PMI connect handler */
         status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &pmi_port,
                                                      HYD_pmcd_pmiserv_pmi_listen_cb,
@@ -40,10 +40,10 @@ HYD_status HYD_pmci_launch_procs(void)
         if (HYD_handle.user_global.debug)
             HYDU_dump(stdout, "someone else already set PMI port\n");
         pmi_port = HYDU_strdup(tmp);
-        tmp = getenv("PMI_ID");
-        if (!tmp)
+
+        ret = MPL_env2int("PMI_ID", &pmi_id);
+        if (!ret)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_PORT set but not PMI_ID\n");
-        pmi_id = atoi(tmp);
     }
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "PMI port: %s; PMI ID: %d\n", pmi_port, pmi_id);

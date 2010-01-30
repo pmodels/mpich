@@ -43,7 +43,9 @@ HYD_status HYDT_rmkd_pbs_query_node_list(struct HYD_node **node_list)
 
     HYDU_FUNC_ENTER();
 
-    hostfile = getenv("PBS_NODEFILE");
+    if (MPL_env2str("PBS_NODEFILE", &hostfile) == 0)
+        hostfile = NULL;
+
     if (hostfile == NULL) {
         *node_list = NULL;
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "No PBS nodefile found\n");
