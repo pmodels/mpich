@@ -61,7 +61,6 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GRAPH_NEIGHBORS_COUNT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
     /* Note that this routine does not require a CS_ENTER/EXIT */
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GRAPH_NEIGHBORS_COUNT);
 

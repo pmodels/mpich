@@ -60,7 +60,7 @@ PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
     int subsetOfWorld = 0;
     int i, j;
     int n;
-    int *mapping;
+    int *mapping=0;
     int vcr_size;
     MPID_VCR *vcr;
     MPIU_CHKPMEM_DECL(1);
@@ -252,7 +252,8 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     if (group_ptr->rank != MPI_UNDEFINED) {
         MPID_VCR *mapping_vcr = NULL;
 
-        mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, &mapping_vcr, &mapping);
+        mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, 
+						       &mapping_vcr, &mapping);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* Get the new communicator structure and context id */
@@ -361,7 +362,8 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
 
     remote_mapping_vcr = comm_ptr->vcr;
 
-    mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, &mapping_vcr, &mapping);
+    mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, 
+						   &mapping_vcr, &mapping);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (group_ptr->rank != MPI_UNDEFINED) {
