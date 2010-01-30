@@ -27,14 +27,6 @@ extern void *calloc(size_t, size_t);
 extern int free(void *);
 #endif
 
-#define FPRINTF fprintf
-
-#if defined(MPL_HAVE_MACRO_VA_ARGS)
-#define MPL_trmem_error_printf(...) FPRINTF(stderr,__VA_ARGS__)
-#else
-#define MPL_trmem_error_printf printf
-#endif
-
 /*D
     MPL_trspace - Routines for tracing space usage
 
@@ -216,7 +208,7 @@ void *MPL_trmalloc(unsigned int a, int lineno, const char fname[])
         /* This is only called when additional debugging is enabled,
          * so the fact that this does not go through the regular error
          * message system is not a problem. */
-        MPL_trmem_error_printf("Exceeded allowed memory!\n");
+        MPL_error_printf("Exceeded allowed memory!\n");
         goto fn_exit;
     }
 
@@ -257,8 +249,8 @@ void *MPL_trmalloc(unsigned int a, int lineno, const char fname[])
     if (TRlevel & TR_MALLOC) {
         /* Note that %08p (what we'd like to use) isn't accepted by
          * all compilers */
-        MPL_trmem_error_printf("[%d] Allocating %d bytes at %8p in %s:%d\n",
-                               world_rank, a, new, fname, lineno);
+        MPL_error_printf("[%d] Allocating %d bytes at %8p in %s:%d\n",
+                         world_rank, a, new, fname, lineno);
     }
 
     /* Without these macros valgrind actually catches far fewer errors when
@@ -313,16 +305,16 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
         /* Damaged header */
         /* Note that %08p (what we'd like to use) isn't accepted by
          * all compilers */
-        MPL_trmem_error_printf("[%d] Block at address %8p is corrupted; cannot free;\n"
-                               "may be block not allocated with MPL_trmalloc or MALLOC\n"
-                               "called in %s at line %d\n", world_rank, a, file, line);
+        MPL_error_printf("[%d] Block at address %8p is corrupted; cannot free;\n"
+                         "may be block not allocated with MPL_trmalloc or MALLOC\n"
+                         "called in %s at line %d\n", world_rank, a, file, line);
         return;
     }
     nend = (unsigned long *) (ahead + head->size);
 /* Check that nend is properly aligned */
     if ((sizeof(long) == 4 && ((long) nend & 0x3) != 0) ||
         (sizeof(long) == 8 && ((long) nend & 0x7) != 0)) {
-        MPL_trmem_error_printf
+        MPL_error_printf
             ("[%d] Block at address %lx is corrupted (invalid address or header)\n"
              "called in %s at line %d\n", world_rank, (long) a + sizeof(TrSPACE), file, line);
         return;
@@ -333,38 +325,38 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
         if (*nend == ALREADY_FREED) {
             addrToHex((char *) a + sizeof(TrSPACE), hexstring);
             if (TRidSet) {
-                MPL_trmem_error_printf
+                MPL_error_printf
                     ("[%d] Block [id=%d(%lu)] at address %s was already freed\n", world_rank,
                      head->id, head->size, hexstring);
             }
             else {
-                MPL_trmem_error_printf("[%d] Block at address %s was already freed\n",
-                                       world_rank, hexstring);
+                MPL_error_printf("[%d] Block at address %s was already freed\n",
+                                 world_rank, hexstring);
             }
             head->fname[TR_FNAME_LEN - 1] = 0;  /* Just in case */
             head->freed_fname[TR_FNAME_LEN - 1] = 0;    /* Just in case */
-            MPL_trmem_error_printf("[%d] Block freed in %s[%d]\n",
-                                   world_rank, head->freed_fname, head->freed_lineno);
-            MPL_trmem_error_printf("[%d] Block allocated at %s[%d]\n",
-                                   world_rank, head->fname, head->lineno);
+            MPL_error_printf("[%d] Block freed in %s[%d]\n",
+                             world_rank, head->freed_fname, head->freed_lineno);
+            MPL_error_printf("[%d] Block allocated at %s[%d]\n",
+                             world_rank, head->fname, head->lineno);
             return;
         }
         else {
             /* Damaged tail */
             addrToHex(a, hexstring);
             if (TRidSet) {
-                MPL_trmem_error_printf
+                MPL_error_printf
                     ("[%d] Block [id=%d(%lu)] at address %s is corrupted (probably write past end)\n",
                      world_rank, head->id, head->size, hexstring);
             }
             else {
-                MPL_trmem_error_printf
+                MPL_error_printf
                     ("[%d] Block at address %s is corrupted (probably write past end)\n",
                      world_rank, hexstring);
             }
             head->fname[TR_FNAME_LEN - 1] = 0;  /* Just in case */
-            MPL_trmem_error_printf("[%d] Block allocated in %s[%d]\n",
-                                   world_rank, head->fname, head->lineno);
+            MPL_error_printf("[%d] Block allocated in %s[%d]\n",
+                             world_rank, head->fname, head->lineno);
         }
     }
 /* Mark the location freed */
@@ -393,8 +385,8 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
 
     if (TRlevel & TR_FREE) {
         addrToHex((char *) a + sizeof(TrSPACE), hexstring);
-        MPL_trmem_error_printf("[%d] Freeing %lu bytes at %s in %s:%d\n",
-                               world_rank, head->size, hexstring, file, line);
+        MPL_error_printf("[%d] Freeing %lu bytes at %s in %s:%d\n",
+                         world_rank, head->size, hexstring, file, line);
     }
 
     /*
@@ -455,10 +447,10 @@ int MPL_trvalid(const char str[])
         MPL_VG_MAKE_MEM_DEFINED(head, sizeof(*head));
         if (head->cookie != COOKIE_VALUE) {
             if (!errs)
-                MPL_trmem_error_printf("%s\n", str);
+                MPL_error_printf("%s\n", str);
             errs++;
             addrToHex(head, hexstring);
-            MPL_trmem_error_printf
+            MPL_error_printf
                 ("[%d] Block at address %s is corrupted (invalid cookie in head)\n",
                  world_rank, hexstring);
             MPL_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
@@ -475,22 +467,22 @@ int MPL_trvalid(const char str[])
 
         if (nend[0] != COOKIE_VALUE) {
             if (!errs)
-                MPL_trmem_error_printf("%s\n", str);
+                MPL_error_printf("%s\n", str);
             errs++;
             head->fname[TR_FNAME_LEN - 1] = 0;  /* Just in case */
             addrToHex(a, hexstring);
             if (TRidSet) {
-                MPL_trmem_error_printf
+                MPL_error_printf
                     ("[%d] Block [id=%d(%lu)] at address %s is corrupted (probably write past end)\n",
                      world_rank, head->id, head->size, hexstring);
             }
             else {
-                MPL_trmem_error_printf
+                MPL_error_printf
                     ("[%d] Block at address %s is corrupted (probably write past end)\n",
                      world_rank, hexstring);
             }
-            MPL_trmem_error_printf("[%d] Block allocated in %s[%d]\n",
-                                   world_rank, head->fname, head->lineno);
+            MPL_error_printf("[%d] Block allocated in %s[%d]\n",
+                             world_rank, head->fname, head->lineno);
         }
 
         /* set both regions back to NOACCESS */
@@ -539,15 +531,15 @@ void MPL_trdump(FILE * fp, int minid)
         MPL_VG_MAKE_MEM_DEFINED(head, sizeof(*head));
         if (head->id >= minid) {
             addrToHex((char *) head + sizeof(TrSPACE), hexstring);
-            FPRINTF(fp, "[%d] %lu at [%s], ", world_rank, head->size, hexstring);
+            fprintf(fp, "[%d] %lu at [%s], ", world_rank, head->size, hexstring);
             head->fname[TR_FNAME_LEN - 1] = 0;  /* Be extra careful */
             if (TRidSet) {
                 /* For head->id >= 0, we can add code to map the id to
                  * the name of a package, rather than using a raw number */
-                FPRINTF(fp, "id = %d %s[%d]\n", head->id, head->fname, head->lineno);
+                fprintf(fp, "id = %d %s[%d]\n", head->id, head->fname, head->lineno);
             }
             else {
-                FPRINTF(fp, "%s[%d]\n", head->fname, head->lineno);
+                fprintf(fp, "%s[%d]\n", head->fname, head->lineno);
             }
         }
         old_head = head;
@@ -584,7 +576,7 @@ static volatile FILE *TRFP = 0;
  /*ARGSUSED*/ static void PrintSum(TRINFO ** a, VISIT order, int level)
 {
     if (order == postorder || order == leaf)
-        FPRINTF(TRFP, "[%d]%s[%d] has %d\n", (*a)->id, (*a)->fname, (*a)->lineno, (*a)->size);
+        fprintf(TRFP, "[%d]%s[%d] has %d\n", (*a)->id, (*a)->fname, (*a)->lineno, (*a)->size);
 }
 
 /*+C
@@ -642,7 +634,7 @@ void MPL_trSummary(FILE * fp, int minid)
 {
     if (fp == 0)
         fp = stderr;
-    FPRINTF(fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n",
+    fprintf(fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n",
             world_rank, TRMaxMem, TRMaxMemId);
 }
 #endif
@@ -741,9 +733,9 @@ void *MPL_trrealloc(void *p, int size, int lineno, const char fname[])
         if (head->cookie != COOKIE_VALUE) {
             /* Damaged header */
             addrToHex(pa, hexstring);
-            MPL_trmem_error_printf("[%d] Block at address %s is corrupted; cannot realloc;\n"
-                                   "may be block not allocated with MPL_trmalloc or MALLOC\n",
-                                   world_rank, hexstring);
+            MPL_error_printf("[%d] Block at address %s is corrupted; cannot realloc;\n"
+                             "may be block not allocated with MPL_trmalloc or MALLOC\n",
+                             world_rank, hexstring);
             return 0;
         }
     }
@@ -921,7 +913,7 @@ void MPL_trdumpGrouped(FILE * fp, int minid)
                 nbytes += (int) cur->size;
                 cur = cur->next;
             }
-            FPRINTF(fp,
+            fprintf(fp,
                     "[%d] File %13s line %5d: %d bytes in %d allocation%c\n",
                     world_rank, head->fname, head->lineno, nbytes, nblocks,
                     (nblocks > 1) ? 's' : ' ');

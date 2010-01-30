@@ -53,6 +53,11 @@
 #  endif /* MPL_HAVE_GCC_ATTRIBUTE */
 #endif /* ATTRIBUTE */
 
+#if defined(MPL_HAVE_MACRO_VA_ARGS)
+#define MPL_error_printf(...) fprintf(stderr,__VA_ARGS__)
+#else
+#define MPL_error_printf printf
+#endif
 
 #include "mplstr.h"
 
