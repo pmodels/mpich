@@ -271,7 +271,7 @@ int mpig_pm_gk_init(int * argc, char *** argv, mpig_pm_t * const pm, bool_t * co
 
     /* determine if the job should be cancelled or abort() should be called if an error occurs.  this feature is used to get a
        core dump while debugging and is not some users will normally set. */
-    MPIU_GetEnvBool("MPIG_USE_SYSTEM_ABORT",&mpig_pm_gk_use_system_abort);
+    MPL_env2bool("MPIG_USE_SYSTEM_ABORT",&mpig_pm_gk_use_system_abort);
      
     mpig_pm_gk_state = MPIG_PM_GK_STATE_INITIALIZED;
 

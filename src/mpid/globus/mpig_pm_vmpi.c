@@ -109,7 +109,7 @@ int mpig_pm_vmpi_init(int * argc, char *** argv, mpig_pm_t * const pm, bool_t * 
      *     int env_found;
      *     int use_vmpi_pm;
      *  
-     *     env_found = MPIU_GetEnvBool("MPIG_USE_VMPI_PM", &use_vmpi_pm);
+     *     env_found = MPL_env2bool("MPIG_USE_VMPI_PM", &use_vmpi_pm);
      *     if (env_found == FALSE || use_vmpi_pm == FALSE)
      *     {
      *         *my_pm_p = FALSE;
@@ -135,7 +135,7 @@ int mpig_pm_vmpi_init(int * argc, char *** argv, mpig_pm_t * const pm, bool_t * 
 
     /* determine if the job should be cancelled or abort() should be called if an error occurs.  this feature is used to get a
        core dump while debugging and is not some users will normally set. */
-    MPIU_GetEnvBool("MPIG_USE_SYSTEM_ABORT",&mpig_pm_vmpi_use_system_abort);
+    MPL_env2bool("MPIG_USE_SYSTEM_ABORT",&mpig_pm_vmpi_use_system_abort);
      
     mpig_pm_vmpi_state = MPIG_PM_VMPI_STATE_INITIALIZED;
 

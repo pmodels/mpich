@@ -134,11 +134,6 @@
 /* Add support for the assert and strerror routines */
 #include "mpiutil.h"
 
-/* Prototypes for the functions to provide uniform access to the environment */
-int MPIU_GetEnvInt( const char *envName, int *val );
-int MPIU_GetEnvRange( const char *envName, int *lowPtr, int *highPtr );
-int MPIU_GetEnvBool( const char *envName, int *val );
-
 /* Use this macro for each parameter to a function that is not referenced in
    the body of the function */
 #ifdef HAVE_WINDOWS_H

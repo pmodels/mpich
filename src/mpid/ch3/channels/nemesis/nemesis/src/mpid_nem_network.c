@@ -28,7 +28,7 @@ int MPID_nem_choose_netmod(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
 
-    if (! MPIU_GetEnvStr("MPICH_NEMESIS_NETMOD", &val))
+    if (! MPL_env2str("MPICH_NEMESIS_NETMOD", &val))
     {
         /* netmod not specified, using the default */
         MPID_nem_netmod_func = MPID_nem_netmod_funcs[0];

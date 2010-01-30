@@ -72,7 +72,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 
     if (dbg_ifname < 0) {
 	int rc;
-	rc = MPIU_GetEnvBool( "MPICH_DBG_IFNAME", &dbg_ifname );
+	rc = MPL_env2bool( "MPICH_DBG_IFNAME", &dbg_ifname );
 	if (rc != 1) dbg_ifname = 0;
     }
 
@@ -211,7 +211,7 @@ static int MPIDI_CH3U_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 
     if (dbg_ifname < 0) {
 	int rc;
-	rc = MPIU_GetEnvBool( "MPICH_DBG_IFNAME", &dbg_ifname );
+	rc = MPL_env2bool( "MPICH_DBG_IFNAME", &dbg_ifname );
 	if (rc != 1) dbg_ifname = 0;
     }
 

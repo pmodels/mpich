@@ -441,7 +441,7 @@ int MPID_nem_tcp_bind (int sockfd)
     high_port = 0;
 
 /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
-    MPIU_GetEnvRange( "MPICH_PORT_RANGE", &low_port, &high_port );
+    MPL_env2range( "MPICH_PORT_RANGE", &low_port, &high_port );
     MPIU_ERR_CHKANDJUMP (low_port < 0 || low_port > high_port, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
     /* if MPICH_PORT_RANGE is not set, low_port and high_port are 0 so bind will use any available port */

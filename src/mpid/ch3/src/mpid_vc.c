@@ -1089,8 +1089,8 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     MPIU_CHKLMEM_DECL(4);
 
     /* See if the user wants to override our default values */
-    MPIU_GetEnvInt("PMI_VERSION", &pmi_version);
-    MPIU_GetEnvInt("PMI_SUBVERSION", &pmi_subversion);
+    MPL_env2int("PMI_VERSION", &pmi_version);
+    MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
 
     if (pg->size == 1) {
         pg->vct[0].node_id = g_num_nodes++;
@@ -1101,7 +1101,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_NO_LOCAL
     no_local = 1;
 #else
-    ret = MPIU_GetEnvBool("MPICH_NO_LOCAL", &val);
+    ret = MPL_env2bool("MPICH_NO_LOCAL", &val);
     if (ret == 1 && val)
         no_local = 1;
 #endif
@@ -1112,7 +1112,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_ODD_EVEN_CLIQUES
     odd_even_cliques = 1;
 #else
-    ret = MPIU_GetEnvBool("MPICH_ODD_EVEN_CLIQUES", &val);
+    ret = MPL_env2bool("MPICH_ODD_EVEN_CLIQUES", &val);
     if (ret == 1 && val)
         odd_even_cliques = 1;
 #endif

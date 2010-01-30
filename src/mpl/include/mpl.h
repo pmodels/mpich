@@ -59,11 +59,11 @@
 #define MPL_error_printf printf
 #endif
 
-#include "mplstr.h"
-
 /* must come before mpltrmem.h */
 #include "mpl_valgrind.h"
 
+#include "mplstr.h"
 #include "mpltrmem.h"
+#include "mplenv.h"
 
 #endif /* MPL_H_INCLUDED */

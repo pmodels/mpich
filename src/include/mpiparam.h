@@ -24,13 +24,6 @@ int MPIU_Param_get_string( const char [], const char *, char ** );
 int MPIU_Param_get_range( const char name[], int *lowPtr, int *highPtr );
 void MPIU_Param_finalize( void );
 
-/* Prototypes for the functions to provide uniform access to the environment */
-int MPIU_GetEnvInt( const char *envName, int *val );
-int MPIU_GetEnvRange( const char *envName, int *lowPtr, int *highPtr );
-int MPIU_GetEnvBool( const char *envName, int *val );
-int MPIU_GetEnvStr( const char *envName, const char **val );
-int MPIU_PutEnv( char *name_val );
-
 /* See mpishared.h as well */
 /* ------------------------------------------------------------------------- */
 /* end of mpiparam.h*/

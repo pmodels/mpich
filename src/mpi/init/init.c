@@ -120,7 +120,7 @@ int MPI_Init( int *argc, char ***argv )
     {
 	const char *str = 0;
 	threadLevel = MPI_THREAD_SINGLE;
-	if (MPIU_GetEnvStr( "MPICH_THREADLEVEL_DEFAULT", &str )) {
+	if (MPL_env2str( "MPICH_THREADLEVEL_DEFAULT", &str )) {
 	    if (strcmp(str,"MULTIPLE") == 0 || strcmp(str,"multiple") == 0) {
 		threadLevel = MPI_THREAD_MULTIPLE;
 	    }
@@ -146,7 +146,7 @@ int MPI_Init( int *argc, char ***argv )
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
     rc = 0;
-    MPIU_GetEnvBool("MPICH_ASYNC_PROGRESS", &rc);
+    MPL_env2bool("MPICH_ASYNC_PROGRESS", &rc);
     if (rc)
         threadLevel = MPI_THREAD_MULTIPLE;
 

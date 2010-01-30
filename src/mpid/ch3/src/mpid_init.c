@@ -65,7 +65,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 #else
     {
         int ret, val;
-        ret = MPIU_GetEnvBool("MPICH_USE_PMI2_API", &val);
+        ret = MPL_env2bool("MPICH_USE_PMI2_API", &val);
         if (ret == 1 && val)
             MPIDI_Use_pmi2_api = TRUE;
     }

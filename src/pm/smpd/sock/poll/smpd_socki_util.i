@@ -733,7 +733,7 @@ int SMPDU_Sock_SetSockBufferSize( int fd, int firm )
     if (sockBufSize < 0) {
 	/* FIXME: Is this the name that we want to use (this was chosen
 	   to match the original, undocumented name) */
-	rc = MPIU_GetEnvInt( "MPICH_SOCKET_BUFFER_SIZE", &sockBufSize );
+	rc = MPL_env2int( "MPICH_SOCKET_BUFFER_SIZE", &sockBufSize );
         env = getenv("MPICH_SOCKET_BUFFER_SIZE");
         if(env) { 
             sockBufSize = atoi(env);

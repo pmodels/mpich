@@ -1758,10 +1758,10 @@ static void MPIR_Err_stack_init( void )
     error_ring_mutex_create(&mpi_errno);
     MPIR_Err_chop_error_stack = FALSE;
     
-    rc = MPIU_GetEnvBool( "MPICH_PRINT_ERROR_STACK", 
+    rc = MPL_env2bool( "MPICH_PRINT_ERROR_STACK", 
 			  &MPIR_Err_print_stack_flag );
     
-    rc = MPIU_GetEnvInt( "MPICH_CHOP_ERROR_STACK", &n );
+    rc = MPL_env2int( "MPICH_CHOP_ERROR_STACK", &n );
     if (rc == 1) {
 #ifdef HAVE_WINDOWS_H
 	/* If windows, set the default width to the window size */

@@ -480,7 +480,7 @@ int MPID_nem_newtcp_module_bind (int sockfd)
     low_port = 0;
     high_port = 0;
 
-    MPIU_GetEnvRange( "MPICH_PORT_RANGE", &low_port, &high_port );
+    MPL_env2range( "MPICH_PORT_RANGE", &low_port, &high_port );
     MPIU_ERR_CHKANDJUMP (low_port < 0 || low_port > high_port, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
     memset((void *)&sin, 0, sizeof(sin));

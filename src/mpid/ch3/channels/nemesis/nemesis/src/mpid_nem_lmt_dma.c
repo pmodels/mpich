@@ -58,7 +58,7 @@ static int open_knem_dev()
     int tmp_threshold = -1;
     struct knem_cmd_info info;
 
-    ret = MPIU_GetEnvInt("MPICH_NEM_LMT_DMA_THRESHOLD", &tmp_threshold);
+    ret = MPL_env2int("MPICH_NEM_LMT_DMA_THRESHOLD", &tmp_threshold);
     if (ret == 1)
         dma_threshold = tmp_threshold;
 

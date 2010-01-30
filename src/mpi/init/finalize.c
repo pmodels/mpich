@@ -228,7 +228,7 @@ int MPI_Finalize( void )
 
 	MPIU_Param_register( "nestcheck", "NESTCHECK", 
 	     "List any memory that was allocated by MPICH2 and that remains allocated when MPI_Finalize completes" );
-	parmFound = MPIU_GetEnvBool( "MPICH_NESTCHECK", &parmValue );
+	parmFound = MPL_env2bool( "MPICH_NESTCHECK", &parmValue );
 	if (!parmFound) parmValue = 1;
 	if (parmValue) {
 	    MPIU_THREADPRIV_GET;
@@ -267,7 +267,7 @@ int MPI_Finalize( void )
 	   parameters (this script is still to be written) */
 	MPIU_Param_register( "memdump", "MEMDUMP", 
 	     "List any memory that was allocated by MPICH2 and that remains allocated when MPI_Finalize completes" );
-	parmFound = MPIU_GetEnvBool( "MPICH_MEMDUMP", &parmValue );
+	parmFound = MPL_env2bool( "MPICH_MEMDUMP", &parmValue );
 	if (!parmFound) parmValue = 1;
 	if (parmValue) {
 	    /* The second argument is the min id to print; memory allocated 

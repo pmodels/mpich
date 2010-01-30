@@ -337,7 +337,7 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
 	/* Get range here.  These leave low_port, high_port unchanged
 	   if the env variable is not set */
 	/* FIXME: Use the parameter interface and document this */
-	MPIU_GetEnvRange( "MPICH_PORT_RANGE", &low_port, &high_port );
+	MPL_env2range( "MPICH_PORT_RANGE", &low_port, &high_port );
 
 	for (portnum=low_port; portnum<=high_port; portnum++) {
 	    memset( (void *)&addr, 0, sizeof(addr) );

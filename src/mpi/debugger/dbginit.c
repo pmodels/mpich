@@ -171,7 +171,7 @@ void MPIR_WaitForDebugger( void )
     /* Also, to avoid scaling problems, we only populate the first 64
        entries (default) */
     maxsize = 64;
-    MPIU_GetEnvInt( "MPICH_PROCTABLE_SIZE", &maxsize );
+    MPIU_get_env_int( "MPICH_PROCTABLE_SIZE", &maxsize );
     if (maxsize > size) maxsize = size;
 
     if (rank == 0) {
@@ -207,7 +207,7 @@ void MPIR_WaitForDebugger( void )
 #if 0
 	/* Debugging hook */
 	val = 0;
-	MPIU_GetEnvBool( "MPICH_PROCTABLE_PRINT", &val );
+	MPL_env2bool( "MPICH_PROCTABLE_PRINT", &val );
 	if (val) {
 	    for (i=0; i<maxsize; i++) {
 		printf( "PT[%d].pid = %d, .host_name = %s\n", 

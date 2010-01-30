@@ -559,7 +559,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
     rc = 0;
-    MPIU_GetEnvBool("MPICH_ASYNC_PROGRESS", &rc);
+    MPL_env2bool("MPICH_ASYNC_PROGRESS", &rc);
     if (rc)
         reqd = MPI_THREAD_MULTIPLE;
 
