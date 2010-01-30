@@ -228,15 +228,16 @@ char *MPL_strdup(mpl_const char *str)
   Module:
   Utility
   @*/
-int MPL_strncpy( char *dest, const char *src, size_t n )
+int MPL_strncpy(char *dest, const char *src, size_t n)
 {
-    char * mpl_restrict d_ptr = dest;
-    const char * mpl_restrict s_ptr = src;
+    char *mpl_restrict d_ptr = dest;
+    const char *mpl_restrict s_ptr = src;
     register int i;
 
-    if (n == 0) return 0;
+    if (n == 0)
+        return 0;
 
-    i = (int)n;
+    i = (int) n;
     while (*s_ptr && i-- > 0) {
         *d_ptr++ = *s_ptr++;
     }
@@ -247,12 +248,11 @@ int MPL_strncpy( char *dest, const char *src, size_t n )
     }
     else {
         /* Force a null at the end of the string (gives better safety
-           in case the user fails to check the error code) */
-        dest[n-1] = 0;
+         * in case the user fails to check the error code) */
+        dest[n - 1] = 0;
         /* We may want to force an error message here, at least in the
-           debugging version */
-        /*printf( "failure in copying %s with length %d\n", src, n ); */
+         * debugging version */
+        /*printf("failure in copying %s with length %d\n", src, n); */
         return 1;
     }
 }
-

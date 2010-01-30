@@ -77,15 +77,15 @@
 #  define MPL_VG_MEMPOOL_FREE(pool, addr)             VALGRIND_MEMPOOL_FREE((pool), (addr))
 
 #else /* !defined(MPL_VG_AVAILABLE) */
-#  define MPL_VG_MAKE_MEM_DEFINED(addr_,len_)         do{}while(0)
-#  define MPL_VG_MAKE_MEM_NOACCESS(addr_,len_)        do{}while(0)
-#  define MPL_VG_MAKE_MEM_UNDEFINED(addr_,len_)       do{}while(0)
-#  define MPL_VG_CHECK_MEM_IS_DEFINED(addr_,len_)     do{}while(0)
-#  define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) do{}while(0)
-#  define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       do{}while(0)
-#  define MPL_VG_RUNNING_ON_VALGRIND()                (0)/*always false*/
+#  define MPL_VG_MAKE_MEM_DEFINED(addr_,len_)         do {} while (0)
+#  define MPL_VG_MAKE_MEM_NOACCESS(addr_,len_)        do {} while (0)
+#  define MPL_VG_MAKE_MEM_UNDEFINED(addr_,len_)       do {} while (0)
+#  define MPL_VG_CHECK_MEM_IS_DEFINED(addr_,len_)     do {} while (0)
+#  define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) do {} while (0)
+#  define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       do {} while (0)
+#  define MPL_VG_RUNNING_ON_VALGRIND()                (0)       /*always false */
 #  if defined(MPL_HAVE_MACRO_VA_ARGS)
-#    define MPL_VG_PRINTF_BACKTRACE(...)              do{}while(0)
+#    define MPL_VG_PRINTF_BACKTRACE(...)              do {} while (0)
 #  else
 #    define MPL_VG_PRINTF_BACKTRACE MPL_VG_printf_do_nothing_func
 static inline void MPL_VG_printf_do_nothing_func(char *fmt, ...)
@@ -93,13 +93,12 @@ static inline void MPL_VG_printf_do_nothing_func(char *fmt, ...)
     /* do nothing */
 }
 #  endif /* defined(MPL_HAVE_MACRO_VA_ARGS) */
-#  define MPL_VG_CREATE_MEMPOOL(pool, rzB, is_zeroed) do{}while(0)
-#  define MPL_VG_DESTROY_MEMPOOL(pool)                do{}while(0)
-#  define MPL_VG_MEMPOOL_ALLOC(pool, addr, size)      do{}while(0)
-#  define MPL_VG_MEMPOOL_FREE(pool, addr)             do{}while(0)
+#  define MPL_VG_CREATE_MEMPOOL(pool, rzB, is_zeroed) do {} while (0)
+#  define MPL_VG_DESTROY_MEMPOOL(pool)                do {} while (0)
+#  define MPL_VG_MEMPOOL_ALLOC(pool, addr, size)      do {} while (0)
+#  define MPL_VG_MEMPOOL_FREE(pool, addr)             do {} while (0)
 
 #endif /* defined(MPL_VG_AVAILABLE) */
 
 
 #endif /* !defined(MPL_VALGRIND_H_INCLUDED) */
-
