@@ -23,5 +23,5 @@ c2f90mult_LDADD = ../../util/mtest.o
 ../util/mtestf.o: 
 	(cd ../util && $(MAKE) mtestf.o)
 
-../util/mtest.o:
+../../util/mtest.o:
 	(cd ../../util && $(MAKE))
