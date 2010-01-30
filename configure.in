@@ -334,7 +334,7 @@ AC_ARG_ENABLE(g,
                     separated names including
     none     - No debugging
     handle   - Trace handle operations
-    handlealloc - Trace hancle allocations
+    handlealloc - Trace handle allocations
     dbg      - Add compiler flag, -g, to all internal
                compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
                MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
