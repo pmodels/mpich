@@ -64,9 +64,9 @@ static int init_mx( MPIDI_PG_t *pg_p )
    int                mpi_errno = MPI_SUCCESS;
    int                r;
 
-   r = MPIU_PutEnv("MX_DISABLE_SHARED=1");
+   r = MPL_putenv("MX_DISABLE_SHARED=1");
    MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
-   r = MPIU_PutEnv("MX_DISABLE_SELF=1");
+   r = MPL_putenv("MX_DISABLE_SELF=1");
    MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
 
    ret = mx_init();
