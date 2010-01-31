@@ -40,16 +40,22 @@ AC_CHECK_HEADERS(inttypes.h stdint.h)
 # headers for valgrind client requests
 AC_CHECK_HEADERS([valgrind.h memcheck.h valgrind/valgrind.h valgrind/memcheck.h])
 
-dnl Check for strdup
+# Check for strdup
 AC_CHECK_FUNCS(strdup)
 if test "$ac_cv_func_strdup" = "yes" ; then
    PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
 fi
 
-dnl Check for snprintf
+# Check for snprintf
 AC_CHECK_FUNCS(snprintf)
 if test "$ac_cv_func_snprintf" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
+fi
+
+# Check for putenv
+AC_CHECK_FUNCS(putenv)
+if test "$ac_cv_func_putenv" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi
 
 dnl Check for ATTRIBUTE

@@ -220,7 +220,6 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 
 int main(int argc, char **argv)
 {
-    char *tmp;
     uint16_t port;
     int ret, pid;
     HYD_status status = HYD_SUCCESS;

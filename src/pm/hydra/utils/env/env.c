@@ -292,7 +292,7 @@ HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite)
     HYDU_FUNC_ENTER();
 
     /* If the overwrite flag is false, just exit */
-    if (MPL_env2str(env->env_name, &str) && overwrite == HYD_ENV_OVERWRITE_FALSE)
+    if (MPL_env2str(env->env_name, (const char **) &str) && overwrite == HYD_ENV_OVERWRITE_FALSE)
         goto fn_exit;
 
     i = 0;

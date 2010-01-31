@@ -190,9 +190,9 @@ int main(int argc, char **argv)
 
     /* Check if the user wants us to use a port within a certain
      * range. */
-    if (MPL_env2str("MPIEXEC_PORTRANGE", &HYD_handle.port_range) ||
-        MPL_env2str("MPIEXEC_PORT_RANGE", &HYD_handle.port_range) ||
-        MPL_env2str("MPICH_PORT_RANGE", &HYD_handle.port_range))
+    if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_handle.port_range) ||
+        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_handle.port_range) ||
+        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_handle.port_range))
         HYD_handle.port_range = HYDU_strdup(HYD_handle.port_range);
 
     HYD_handle.interface_env_name = HYDU_strdup("MPICH_INTERFACE_NAME");

@@ -11,7 +11,6 @@
 
 HYD_status HYDT_bscd_slurm_query_proxy_id(int *proxy_id)
 {
-    int nodeid, ret;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

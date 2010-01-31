@@ -19,13 +19,13 @@ static int exists(char *filename)
 
 HYD_status HYDU_find_in_path(const char *execname, char **path)
 {
-    char *user_path = NULL, *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc;
+    char *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc, *user_path;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* The executable is somewhere in the user's path. Find it. */
-    if (MPL_env2str("PATH", &user_path))
+    if (MPL_env2str("PATH", (const char **) &user_path))
         user_path = HYDU_strdup(user_path);
 
     if (user_path) {    /* If the PATH environment exists */
@@ -224,7 +224,8 @@ HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var)
 
 char *HYDU_getcwd(void)
 {
-    char *pwdval, *cwdval, *retval = NULL;
+    char *cwdval, *retval = NULL;
+    const char *pwdval;
     HYD_status status = HYD_SUCCESS;
 #if defined HAVE_STAT
     struct stat spwd, scwd;

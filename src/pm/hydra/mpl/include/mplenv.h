@@ -15,6 +15,10 @@ extern "C" {
 #endif
 /* *INDENT-OFF* */
 
+#if defined(MPL_HAVE_PUTENV) && defined(MPL_NEEDS_PUTENV_DECL)
+extern int putenv(char *string);
+#endif
+
 /* Prototypes for the functions to provide uniform access to the environment */
 int MPL_env2int(const char *envName, int *val);
 int MPL_env2range(const char *envName, int *lowPtr, int *highPtr);

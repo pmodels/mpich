@@ -43,7 +43,7 @@ HYD_status HYDT_rmkd_pbs_query_node_list(struct HYD_node **node_list)
 
     HYDU_FUNC_ENTER();
 
-    if (MPL_env2str("PBS_NODEFILE", &hostfile) == 0)
+    if (MPL_env2str("PBS_NODEFILE", (const char **) &hostfile) == 0)
         hostfile = NULL;
 
     if (hostfile == NULL) {
