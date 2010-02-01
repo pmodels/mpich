@@ -164,6 +164,7 @@ HYD_status HYDU_dbg_init(const char *str);
 void HYDU_dump_prefix(FILE * fp);
 void HYDU_dump_noprefix(FILE * fp, const char *str, ...);
 void HYDU_dump(FILE * fp, const char *str, ...);
+void HYDU_dbg_finalize(void);
 
 /* env */
 HYD_status HYDU_env_to_str(struct HYD_env *env, char **str);
@@ -235,6 +236,8 @@ HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
 
 #if defined USE_MEMORY_TRACING
 
+#define HYDU_mem_init()  MPL_trinit(0)
+
 #define HYDU_strdup(a) MPL_trstrdup(a,__LINE__,__FILE__)
 #define strdup(a)      'Error use HYDU_strdup' :::
 
@@ -246,6 +249,7 @@ HYDU_sock_create_and_listen_portstr(char *port_range, char **port_str,
 
 #else /* if !defined USE_MEMORY_TRACING */
 
+#define HYDU_mem_init()
 #define HYDU_strdup MPL_strdup
 #define HYDU_malloc malloc
 #define HYDU_free free

@@ -267,6 +267,7 @@ int main(int argc, char **argv)
     HYDU_free_exec_list(HYD_uii_mpx_exec_list);
 
   fn_exit:
+    HYDU_dbg_finalize();
     HYDU_FUNC_EXIT();
     if (status == HYD_GRACEFUL_ABORT)
         return 0;

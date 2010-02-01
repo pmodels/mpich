@@ -226,6 +226,7 @@ int main(int argc, char **argv)
     cleanup_params();
 
   fn_exit:
+    HYDU_dbg_finalize();
     return status;
 
   fn_fail:
