@@ -38,8 +38,43 @@ static HYD_status fn_init(int fd, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_get_maxes(int fd, char *args[])
+{
+    int i;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=maxes kvsname_max=");
+    tmp[i++] = HYDU_int_to_str(MAXKVSNAME);
+    tmp[i++] = HYDU_strdup(" keylen_max=");
+    tmp[i++] = HYDU_int_to_str(MAXKEYLEN);
+    tmp[i++] = HYDU_strdup(" vallen_max=");
+    tmp[i++] = HYDU_int_to_str(MAXVALLEN);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
+
+    status = HYDU_sock_write(fd, cmd, strlen(cmd));
+    HYDU_ERR_POP(status, "error writing PMI line\n");
+    HYDU_FREE(cmd);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"init", fn_init},
+    {"get_maxes", fn_get_maxes},
     {"\0", NULL}
 };
 

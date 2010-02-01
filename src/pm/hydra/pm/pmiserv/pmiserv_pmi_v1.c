@@ -71,42 +71,6 @@ static HYD_status fn_initack(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_maxes(int fd, int pid, int pgid, char *args[])
-{
-    int i;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    i = 0;
-    tmp[i++] = HYDU_strdup("cmd=maxes kvsname_max=");
-    tmp[i++] = HYDU_int_to_str(MAXKVSNAME);
-    tmp[i++] = HYDU_strdup(" keylen_max=");
-    tmp[i++] = HYDU_int_to_str(MAXKEYLEN);
-    tmp[i++] = HYDU_strdup(" vallen_max=");
-    tmp[i++] = HYDU_int_to_str(MAXVALLEN);
-    tmp[i++] = HYDU_strdup("\n");
-    tmp[i++] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &cmd);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-    HYDU_free_strlist(tmp);
-
-    if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "reply: %s\n", cmd);
-    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 0);
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-    HYDU_FREE(cmd);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status fn_get_appnum(int fd, int pid, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -849,7 +813,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx */
 static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"initack", fn_initack},
-    {"get_maxes", fn_get_maxes},
     {"get_appnum", fn_get_appnum},
     {"get_my_kvsname", fn_get_my_kvsname},
     {"barrier_in", fn_barrier_in},
