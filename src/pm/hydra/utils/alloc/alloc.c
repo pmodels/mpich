@@ -308,7 +308,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
     struct HYD_exec *exec;
     struct HYD_node *node, *start_node;
     int proxy_rem_procs, exec_rem_procs, core_count, procs_left;
-    int total_exec_procs, num_nodes, proxy_count, i, start_pid, offset;
+    int total_exec_procs, num_nodes, i, start_pid, offset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -322,19 +322,6 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
     for (node = node_list; node; node = node->next) {
         num_nodes++;
         core_count += node->core_count;
-    }
-
-    if (total_exec_procs >= core_count)
-        proxy_count = num_nodes;
-    else {
-        proxy_count = 0;
-        procs_left = total_exec_procs;
-        for (node = node_list; node; node = node->next) {
-            proxy_count++;
-            procs_left -= node->core_count;
-            if (procs_left <= 0)
-                break;
-        }
     }
 
     /* First create the list of proxies we need */
@@ -356,10 +343,6 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
     start_pid = 0;
     procs_left = total_exec_procs;
     for (i = 0, node = start_node; i < num_nodes; i++) {
-        /* Make sure we need more proxies */
-        if (i >= proxy_count)
-            break;
-
         if (pg->proxy_list == NULL) {
             status = HYDU_alloc_proxy(&pg->proxy_list, pg);
             HYDU_ERR_POP(status, "unable to allocate proxy\n");
