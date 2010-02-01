@@ -104,6 +104,9 @@ HYD_status HYD_pmci_launch_procs(void)
 
 HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
+    struct HYD_pg *pg;
+    struct HYD_proxy *proxy;
+    int not_complete;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -119,6 +122,26 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
      * get back with the exit status */
     status = HYDT_bsci_wait_for_completion(-1);
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+
+    /* Make sure all the proxies have sent their exit status'es */
+    not_complete = 1;
+    while (not_complete) {
+        not_complete = 0;
+        for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+            for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+                if (proxy->exit_status == NULL) {
+                    not_complete = 1;
+                    break;
+                }
+            }
+            if (not_complete)
+                break;
+        }
+        if (not_complete) {
+            status = HYDT_dmx_wait_for_event(-1);
+            HYDU_ERR_POP(status, "error waiting for demux event\n");
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
