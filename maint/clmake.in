@@ -15,7 +15,8 @@ $rootSrcDir = "";
 # to get the full path for these routines
 @commands = ( "cc", "pgcc", "gcc", "icc", "acc", 
               "rm", "mv", "cp", "ar", "ranlib", "perl", "for", 
-	      "/bin/rm", "/bin/mv", "/bin/cp",
+	      "/bin/rm", "/bin/mv", "/bin/cp", "/bin/chmod",
+	      "rm", "mv", "cp", "chmod",
 	      "if", "make", "gnumake", 
 	      "[A-Za-z0-9_\/\.-]*\/mpicc",
 	      "[A-Za-z0-9_\/\.-]*\/mpif77",
@@ -26,7 +27,7 @@ $rootSrcDir = "";
 	      "acc\\+\\+", "xlc", "xlf", "xlC", "xlf90", "gfortran", 
 	      "ifort", "ifc", "test",
 	      "true", "false", "/[A-Za-z0-9_\/\.-]*createshlib", 
-	      "/bin/sh\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--mode=\\w+",
+	      "/bin/sh\\s+[A-Za-z0-9_\/\.-]*libtool\\s+\(--tag=\\w+\)*\\s+--mode=\\w+",
 	      "/bin/bash\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--mode=\\w+",
 	      "/bin/sh\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--finish",
 	      "/bin/bash\\s+[A-Za-z0-9_\/\.-]*libtool\\s+--finish",
