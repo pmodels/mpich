@@ -30,6 +30,6 @@ parser.l: tokens.h
 plpa_taskset_SOURCES = \
         plpa-taskset.c \
         plpa-taskset.h \
-        parser.l \
-        tokens.y
+        tokens.c \
+        parser.c
 plpa_taskset_LDADD = $(top_builddir)/src/libplpa/libplpa.la
