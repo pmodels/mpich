@@ -6,21 +6,18 @@ lib${MPILIBNAME}_a_SOURCES = smpd_hash.c smpd_authenticate.c smpd_printf.c \
  smpd_handle_command.c smpd_session.c smpd_start_mgr.c smpd_barrier.c \
  smpd_do_console.c smpd_restart.c smpd_host_util.c smpd_handle_spawn.c
 win_sources = smpd_job.c smpd_mapdrive.c smpd_register.c smpd_ad.cpp smpd_affinitize.c smpd_ccp_util.c
-#mpiexec_SOURCES = mpiexec.c mp_parse_command_line.c
-#smpd_SOURCES = smpd.c smpd_cmd_args.c smpd_watchprocs.c
+mpiexec_SOURCES = mpiexec.c mp_parse_command_line.c mp_parse_oldconfig.c mpiexec_rsh.c
+smpd_SOURCES = smpd.c smpd_cmd_args.c smpd_watchprocs.c
 
 INCLUDES = -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/pmi/smpd -I${master_top_srcdir}/src/pm/smpd/sock/include -I${master_top_srcdir}/src/pm/smpd/sock/@smpd_sock_name@ -I${top_builddir}/src/include -I${top_builddir}/src/pm/smpd -I${top_builddir}/src/pm/smpd/sock/@smpd_sock_name@ 
 
-#mpiexec_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich
-#mpiexec_DEPADD = ../../../lib/lib${MPILIBNAME}.a
-#smpd_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich
-#smpd_DEPADD = ../../../lib/lib${MPILIBNAME}.a
+mpiexec_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich
+mpiexec_DEPADD = ../../../lib/lib${MPILIBNAME}.a
+smpd_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich
+smpd_DEPADD = ../../../lib/lib${MPILIBNAME}.a
 
 all-postamble: mpiexec smpd
-mpiexec: mpiexec.o mp_parse_command_line.o mp_parse_oldconfig.o mpiexec_rsh.o ../../../lib/lib${MPILIBNAME}.a
-	../../../bin/mpicc -o mpiexec mpiexec.o mp_parse_command_line.o mp_parse_oldconfig.o mpiexec_rsh.o
-smpd: smpd.o smpd_cmd_args.o smpd_watchprocs.o ../../../lib/lib${MPILIBNAME}.a
-	../../../bin/mpicc -o smpd smpd.o smpd_cmd_args.o smpd_watchprocs.o
+
 install_BIN = mpiexec smpd
 distclean-local:
 	@-rm -f smpdconf.h
