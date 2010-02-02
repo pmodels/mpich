@@ -11,10 +11,18 @@ smpd_SOURCES = smpd.c smpd_cmd_args.c smpd_watchprocs.c
 
 INCLUDES = -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/pmi/smpd -I${master_top_srcdir}/src/pm/smpd/sock/include -I${master_top_srcdir}/src/pm/smpd/sock/@smpd_sock_name@ -I${top_builddir}/src/include -I${top_builddir}/src/pm/smpd -I${top_builddir}/src/pm/smpd/sock/@smpd_sock_name@ 
 
-mpiexec_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich
-mpiexec_DEPADD = ../../../lib/lib${MPILIBNAME}.a
-smpd_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich
-smpd_DEPADD = ../../../lib/lib${MPILIBNAME}.a
+mpiexec_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich -lmpl
+mpiexec_DEPADD = ../../../lib/lib${MPILIBNAME}.a ../../../lib/libmpl.a
+smpd_LDADD = -L../../../lib -L${master_top_srcdir}/lib -lmpich -lmpl
+smpd_DEPADD = ../../../lib/lib${MPILIBNAME}.a ../../../lib/libmpl.a
+
+# Rules to build MPL before SMPD
+../../../lib/libmpl.a:
+	build_prefix=`cd ../../.. && pwd` && \
+	for dir in ../../../src/mpl ; do \
+	    (cd $$dir && ${MAKE} prefix=$$build_prefix exec_prefix=$$build_prefix \
+	    bindir=$$build_prefix/bin install) ; \
+	done
 
 all-postamble: mpiexec smpd
 

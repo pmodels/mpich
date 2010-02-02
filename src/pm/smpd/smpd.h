@@ -56,6 +56,7 @@
 #endif
 #endif
 
+#include "mpl.h"
 #include "mpimem.h"
 #include "smpd_database.h"
 #include "pmi.h"
