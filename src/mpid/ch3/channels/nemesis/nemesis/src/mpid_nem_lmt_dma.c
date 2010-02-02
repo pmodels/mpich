@@ -3,9 +3,6 @@
 
 MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
-/* TODO there might be a better way to do this, the current system will lead to
-   an unresolved symbols link error if dma is chosen and knem_io.h can't be
-   found. */
 #if defined(HAVE_KNEM_IO_H)
 
 #include "knem_io.h"
@@ -16,6 +13,12 @@ static int knem_has_dma = 0;
 /* 4096 status index */
 static volatile knem_status_t *knem_status = MAP_FAILED;
 #define KNEM_STATUS_NR 4096 /* FIXME: randomly chosen */
+
+/* Values of KNEM_ABI_VERSION less than this are the old interface (pre-0.7),
+ * values greater than or equal to this are the newer interface.  At some point
+ * in the future we should drop support for the old version to keep the code
+ * simpler. */
+#define MPICH_NEW_KNEM_ABI_VERSION (0x0000000c)
 
 static size_t dma_threshold = 2048*1024;
 
@@ -92,7 +95,11 @@ static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
 {
     int mpi_errno = MPI_SUCCESS;
     int i, err;
+#if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     struct knem_cmd_init_send_param sendcmd = {0};
+#else
+    struct knem_cmd_create_region cr;
+#endif
     struct knem_cmd_param_iovec knem_iov[MPID_IOV_LIMIT];
 
     /* FIXME The knem module iovec is potentially different from the system
@@ -104,13 +111,25 @@ static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
         knem_iov[i].len  = send_iov[i] .MPID_IOV_LEN;
     }
 
+#if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     sendcmd.send_iovec_array = (uintptr_t) &knem_iov[0];
     sendcmd.send_iovec_nr = send_iov_n;
     sendcmd.flags = 0;
     err = ioctl(knem_fd, KNEM_CMD_INIT_SEND, &sendcmd);
+#else
+    cr.iovec_array = (uintptr_t) &knem_iov[0];
+    cr.iovec_nr = send_iov_n;
+    cr.flags = KNEM_FLAG_SINGLEUSE;
+    cr.protection = PROT_READ;
+    err = ioctl(knem_fd, KNEM_CMD_CREATE_REGION, &cr);
+#endif
     MPIU_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
                          "**ioctl %d %s", errno, MPIU_Strerror(errno));
+#if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     *s_cookiep = sendcmd.send_cookie;
+#else
+    *s_cookiep = cr.cookie;
+#endif
 
 fn_fail:
 fn_exit:
@@ -118,11 +137,16 @@ fn_exit:
 }
 
 /* s_cookie is an input parameter */
-static int do_dma_recv(int iov_n, MPID_IOV iov[], knem_cookie_t s_cookie, int nodma, volatile knem_status_t **status_p_p)
+static int do_dma_recv(int iov_n, MPID_IOV iov[], knem_cookie_t s_cookie, int nodma, volatile knem_status_t **status_p_p, knem_status_t *current_status_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, err;
+
+#if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     struct knem_cmd_init_async_recv_param recvcmd = {0};
+#else
+    struct knem_cmd_inline_copy icopy;
+#endif
     struct knem_cmd_param_iovec knem_iov[MPID_IOV_LIMIT];
 
     /* FIXME The knem module iovec is potentially different from the system
@@ -134,16 +158,33 @@ static int do_dma_recv(int iov_n, MPID_IOV iov[], knem_cookie_t s_cookie, int no
         knem_iov[i].len  = iov[i] .MPID_IOV_LEN;
     }
 
+#if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     recvcmd.recv_iovec_array = (uintptr_t) &knem_iov[0];
     recvcmd.recv_iovec_nr = iov_n;
     recvcmd.status_index = alloc_status_index();
     recvcmd.send_cookie = s_cookie;
     recvcmd.flags = nodma ? 0 : KNEM_FLAG_DMA | KNEM_FLAG_ASYNCDMACOMPLETE;
     err = ioctl(knem_fd, KNEM_CMD_INIT_ASYNC_RECV, &recvcmd);
+#else
+    icopy.local_iovec_array = (uintptr_t) &knem_iov[0];
+    icopy.local_iovec_nr = iov_n;
+    icopy.remote_cookie = s_cookie;
+    icopy.remote_offset = 0;
+    icopy.write = 0;
+    icopy.async_status_index = alloc_status_index();
+    icopy.flags = nodma ? 0 : KNEM_FLAG_DMA | KNEM_FLAG_ASYNCDMACOMPLETE;
+    err = ioctl(knem_fd, KNEM_CMD_INLINE_COPY, &icopy);
+#endif
     MPIU_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
                          "**ioctl %d %s", errno, MPIU_Strerror(errno));
 
+#if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     *status_p_p = &knem_status[recvcmd.status_index];
+    *current_status_p = KNEM_STATUS_PENDING;
+#else
+    *status_p_p = &knem_status[icopy.async_status_index];
+    *current_status_p = icopy.current_status;
+#endif
 
 fn_exit:
     return mpi_errno;
@@ -277,6 +318,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
     MPIDI_msg_sz_t data_sz;
     MPID_Datatype * dt_ptr;
     volatile knem_status_t *status;
+    knem_status_t current_status;
     struct lmt_dma_node *node = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_START_RECV);
 
@@ -326,8 +368,37 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
     MPIU_Assert(s_cookie.MPID_IOV_BUF != NULL);
     mpi_errno = do_dma_recv(rreq->dev.iov_count, rreq->dev.iov,
                             *((knem_cookie_t *)s_cookie.MPID_IOV_BUF), nodma,
-                            &status);
+                            &status, &current_status);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* TODO refactor this block and MPID_nem_lmt_dma_progress (and anywhere
+     * else) to share a common function.  This advancement/completion code is
+     * duplication. */
+    if (current_status != KNEM_STATUS_PENDING) {
+        /* complete the request if all data has been sent, remove it from the list */
+        int complete = 0;
+
+        MPIU_ERR_CHKANDJUMP1(current_status == KNEM_STATUS_FAILED, mpi_errno, MPI_ERR_OTHER,
+                             "**recv_status", "**recv_status %d", current_status);
+
+        mpi_errno = check_req_complete(vc, rreq, &complete);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        free_status_index(status - knem_status);
+
+        if (complete) {
+            /* request was completed by the OnDataAvail fn */
+            MPID_nem_lmt_send_DONE(vc, rreq); /* tell the other side to complete its request */
+            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+
+        }
+        else {
+            /* There is more data to send.  We must inform the sender that we have
+               completely received the current batch and that the next batch should
+               be sent. */
+            MPID_nem_lmt_send_COOKIE(vc, rreq, NULL, 0);
+        }
+    }
 
     /* XXX DJG FIXME this looks like it always pushes! */
     /* push request if not complete for progress checks later */
