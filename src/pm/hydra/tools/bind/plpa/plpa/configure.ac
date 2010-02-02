@@ -23,7 +23,10 @@ AC_INIT([plpa],
         [http://www.open-mpi.org/community/help/], [plpa])
 AC_PREREQ(2.59)
 AC_CONFIG_AUX_DIR(./config)
-AC_CONFIG_MACRO_DIR(./config)
+# The directory name in the following macros must be *exactly* the
+# same, character for character, as the value of ACLOCAL_AMFLAGS in 
+# Makefile.am .  In particularly, ./config is *not* the same as config.
+AC_CONFIG_MACRO_DIR(config)
 
 # Init automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2 subdir-objects no-define])
