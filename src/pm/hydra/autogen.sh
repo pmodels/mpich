@@ -2,7 +2,14 @@
 
 (cd tools/bind/hwloc/hwloc && ./autogen.sh)
 (cd tools/bind/plpa/plpa && ./autogen.sh)
-libtoolize=${MPICH2_LIBTOOLIZE:-libtoolize}
-autoreconf=${MPICH2_AUTORECONF:-autoreconf}
+
+if [ -n "$MPICH2_AUTOTOOLS_DIR" ] ; then
+    libtoolize=${MPICH2_AUTOTOOLS_DIR}/libtoolize
+    autoreconf=${MPICH2_AUTOTOOLS_DIR}/autoreconf
+else
+    libtoolize=${LIBTOOLIZE:-libtoolize}
+    autoreconf=${AUTORECONF:-autoreconf}
+fi
+
 $libtoolize
 $autoreconf -vif

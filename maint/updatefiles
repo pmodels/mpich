@@ -53,9 +53,6 @@ AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates makefiles s
 stepsCleared=no
 
 # Extract defaults from the environment
-autoconfdir=$MPICH2_AUTOCONF_DIR
-automakedir=$MPICH2_AUTOMAKE_DIR
-libtooldir=$MPICH2_LIBTOOL_DIR
 autotoolsdir=$MPICH2_AUTOTOOLS_DIR
 
 # Extract the arguments intended for updatefiles.  Any others are
@@ -121,16 +118,6 @@ for arg in "$@" ; do
     do_f77=no
     ;;
 
-    -with-autoconf=*|--with-autoconf=*)
-    # Select a location for a different autoconf
-    autoconfdir=`echo "A$arg" | sed -e 's/.*=//'`
-    ;;
-    -with-automake=*|--with-automake=*)
-    automakedir=`echo "A$arg" | sed -e 's/.*=//'`
-    ;;
-    -with-libtool=*|--with-libtool=*)
-    libtooldir=`echo "A$arg" | sed -e 's/.*=//'`
-    ;;
     -with-autotools=*|--with-autotools=*)
     autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
     ;;
@@ -143,19 +130,14 @@ for arg in "$@" ; do
 
     -help|--help|-usage|--usage)
     cat <<EOF
-    updatefiles [ --with-autoconf=dir ] [ --with-automake=dir ] \\
-                [ --with-libtool=dir ] [ --with-autotools=dir ] \\
+    updatefiles [ --with-autotools=dir ] \\
                 [ --do=stepname ] [ args for simplemake ]
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
     program), extracts the error messages.
 
-    You can use --with-autoconf=dir to specify a directory that
-    contains an alternate autoconf and autoheader.  Similarly
-    --with-automake can be used to specify the location of automake
-    and aclocal and --with-libtool to specify the location of
-    libtoolize. If all the autotools are installed in the same
-    location, they can be specified by the --with-autotools option.
+    You can use --with-autotools=dir to specify a directory that
+    contains alternate autotools.
 
     Use --do=stepname to update only a single step.  For example, 
     --do=build_configure only updates the configure scripts.  The available
@@ -172,28 +154,6 @@ EOF
     ;;
     esac
 done
-
-if [ -n "$autotoolsdir" ] ; then
-    if [ -n "$autoconfdir" -o -n "$automakedir" -o -n "$libtooldir" ] ; then
-        # Don't permit --with-autotools together with --with-autoconf,
-        # --with-automake or --with-libtool because which argument
-        # takes precedence is not obvious without immediate
-        # explanation.  --with-autotools is really only present to
-        # make life a little easier for those who preferred the old
-        # behavior where --with-autoconf was used to specify the
-        # location of both autoconf and automake.
-        cat <<EOT
-Error: --with-autotools was specified together with --with-autoconf,
---with-automake or --with-libtool.  --with-autotools is incompatible
-with the other options.  Please specify only one set or the other.
-EOT
-        exit 1
-    else
-        autoconfdir=$autotoolsdir
-        automakedir=$autotoolsdir
-	libtooldir=$autotoolsdir
-    fi
-fi
 
 # Reset the arguments.  Note that this doesn't handle arguments that contain
 # blanks.  I hope that we don't need those.
@@ -222,28 +182,37 @@ if [ "$st" = 2 ] ; then
     testNTfails=no
 fi
 rm -rf conftest
-#
+
 # Determine the autoconf to use.  If --with-autoconf was set, use 
 # autoconf and autoheader from that directory
 # This may also be needed for tools in the maint directory
-if [ -n "$autoconfdir" ] ; then
-    if [ -x $autoconfdir/autoconf -a -x $autoconfdir/autoheader ] ; then
-        autoconf=$autoconfdir/autoconf
-        autoheader=$autoconfdir/autoheader
-        autoreconf=$autoconfdir/autoreconf
-        autom4te=$autoconfdir/autom4te
+if [ -n "$autotoolsdir" ] ; then
+    if [ -x $autotoolsdir/autoconf -a -x $autotoolsdir/autoheader ] ; then
+        autoconf=$autotoolsdir/autoconf
+        autoheader=$autotoolsdir/autoheader
+        autoreconf=$autotoolsdir/autoreconf
+        automake=$automakedir/automake
+        aclocal=$automakedir/aclocal
+        libtoolize=$libtooldir/libtoolize
+
 	# Simplemake looks in environment variables for the autoconf
 	# and autoheader to use
 	AUTOCONF=$autoconf
 	AUTOHEADER=$autoheader
         AUTORECONF=$autoreconf
-        AUTOM4TE=$autom4te
+        AUTOMAKE=$automake
+        ACLOCAL=$aclocal
+        LIBTOOLIZE=$libtoolize
+
 	export AUTOCONF
 	export AUTOHEADER
         export AUTORECONF
         export AUTOM4TE
+        export AUTOMAKE
+        export ACLOCAL
+        export LIBTOOLIZE
     else
-        echo "Could not find executable autoconf and autoheader in $autoconfdir"
+        echo "Could not find executable autoconf and autoheader in $autotoolsdir"
 	exit 1
     fi
 else
@@ -251,39 +220,18 @@ else
     autoheader=${AUTOHEADER:-autoheader}
     autoreconf=${AUTORECONF:-autoreconf}
     autom4te=${AUTOM4TE:-autom4te}
-fi
-if [ -n "$automakedir" ] ; then
-    if [ -x "$automakedir/aclocal" -a -x "$automakedir/automake" ] ; then
-        # OpenPA uses autoreconf (and consequently aclocal and automake)
-        # but autoreconf uses whatever aclocal/automake is in your path,
-        # not the one from the same autoconf installation as the
-        # autoreconf you are invoking.  So we export ACLOCAL (etc...) so
-        # that it uses the right tools when specifying --with-automake.
-        automake=$automakedir/automake
-        aclocal=$automakedir/aclocal
-        AUTOMAKE=$automake
-        ACLOCAL=$aclocal
-        export AUTOMAKE
-        export ACLOCAL
-    else
-        echo "could not find executable aclocal and automake in $automakedir"
-        exit 1
-    fi
-else
     automake=${AUTOMAKE:-automake}
     aclocal=${ACLOCAL:-aclocal}
-fi
-if [ -n "$libtooldir" ] ; then
-    if [ -x "$libtooldir/libtoolize" ] ; then
-        libtoolize=$libtooldir/libtoolize
-        LIBTOOLIZE=$libtoolize
-        export LIBTOOLIZE
-    else
-        echo "could not find executable libtoolize in $libtooldir"
-        exit 1
-    fi
-else
     libtoolize=${LIBTOOLIZE:-libtoolize}
+fi
+
+autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
+automakedir=`which automake | sed -e 's_/[^/]*$__g'`
+libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`
+
+if [ "$autoconfdir" != "$automakedir" -a "$autoconfdir" != "$libtooldir" ] ; then
+    echo "All autotools should be in the same directory"
+    exit 1
 fi
 
 #
