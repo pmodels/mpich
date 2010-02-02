@@ -146,6 +146,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\mpl\src\mplenv.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpl\src\mplstr.c"
 				>
 			</File>
