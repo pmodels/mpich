@@ -5475,6 +5475,7 @@ If f.FileExists("src\mpl\include\config.h.in") Then
         Call AddPrefixToDefinitions("src\mpl\include\mplconfig.h", "MPL_")
         Set fout = f.OpenTextFile("src\mpl\include\mplconfig.h", 8)
         fout.WriteLine("#define snprintf _snprintf")
+        fout.WriteLine("#define inline __inline")
 	Call WriteFooter(fout)
         fout.Close()
 Else
