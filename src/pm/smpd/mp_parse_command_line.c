@@ -1871,9 +1871,9 @@ configfile_loop:
 		    return SMPD_FAIL;
 		}
 		strncpy(channel, (*argvp)[2], SMPD_MAX_NAME_LENGTH);
-        if(strcmp(channel, "shm") == 0)
+        if((strcmp(channel, "shm") == 0) || (strcmp(channel, "ssm") == 0))
         {
-            printf("WARNING: SHM channel is now deprecated. Use the NEMESIS channel instead.\n");
+            printf("WARNING: SHM & SSM channels are now deprecated. Use the NEMESIS channel instead.\n");
         }
 		num_args_to_strip = 2;
 	    }
