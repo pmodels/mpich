@@ -2277,6 +2277,8 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("#define inline __inline")
             Case "restrict"
                 fout.WriteLine("#define restrict")
+            Case "const"
+                fout.WriteLine("/* #undef const */")
             Case "USE_LOCK_BASED_PRIMITIVES"
                 fout.WriteLine("/* #undef USE_LOCK_BASED_PRIMITIVES */")
             Case Else
