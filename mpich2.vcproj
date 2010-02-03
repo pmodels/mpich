@@ -657,7 +657,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED;USE_LOGGING=MPID_LOGGING_RLOG;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN"
 				StringPooling="true"
 				RuntimeLibrary="0"

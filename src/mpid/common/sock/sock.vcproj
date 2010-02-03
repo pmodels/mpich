@@ -911,7 +911,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories=".,iocp,..\..\..\include,..\..\..\include\win32,..\..\ch3\channels\sock\include,..\..\ch3\include,..\datatype"
+				AdditionalIncludeDirectories=".;iocp;..\..\..\include;..\..\..\include\win32;..\..\..\mpl\include;..\..\ch3\channels\sock\include;..\..\ch3\include;..\datatype"
 				PreprocessorDefinitions="WIN32,NDEBUG,_LIB,USE_WINCONF_H,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG,MPICH_MULTITHREADED;_WIN32_WINNT=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"
