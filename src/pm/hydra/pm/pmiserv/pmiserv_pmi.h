@@ -52,7 +52,6 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_
                                 int *ret);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);
 struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd);
-struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int key);
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping);
 HYD_status HYD_pmcd_pmi_finalize(void);
 

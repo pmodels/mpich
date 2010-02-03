@@ -258,25 +258,6 @@ struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd)
     return NULL;
 }
 
-struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid)
-{
-    struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_pmcd_pmi_process *process = NULL;
-
-    proxy = HYD_pmcd_pmi_find_proxy(fd);
-    if (proxy) {
-        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-        if (proxy_scratch) {
-            for (process = proxy_scratch->process_list; process; process = process->next)
-                if (process->pid == pid)
-                    return process;
-        }
-    }
-
-    return NULL;
-}
-
 HYD_status HYD_pmcd_pmi_finalize(void)
 {
     HYD_status status = HYD_SUCCESS;

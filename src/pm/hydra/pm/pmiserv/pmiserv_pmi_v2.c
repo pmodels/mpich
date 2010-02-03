@@ -68,6 +68,25 @@ static HYD_status cmd_response(int fd, int pid, char *cmd, int finalize)
     goto fn_exit;
 }
 
+static struct HYD_pmcd_pmi_process *find_process(int fd, int pid)
+{
+    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_pmcd_pmi_process *process = NULL;
+
+    proxy = HYD_pmcd_pmi_find_proxy(fd);
+    if (proxy) {
+        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+        if (proxy_scratch) {
+            for (process = proxy_scratch->process_list; process; process = process->next)
+                if (process->pid == pid)
+                    return process;
+        }
+    }
+
+    return NULL;
+}
+
 static int req_complete = 0;
 
 static void free_req(struct reqs *req)
@@ -238,7 +257,7 @@ static HYD_status fn_job_getid(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
+    process = find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -302,7 +321,7 @@ static HYD_status fn_info_putnodeattr(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
+    process = find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -371,7 +390,7 @@ static HYD_status fn_info_getnodeattr(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
+    process = find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -476,7 +495,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
+    process = find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -557,7 +576,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
+    process = find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -627,7 +646,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
+    process = find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -721,7 +740,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
+    process = find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
