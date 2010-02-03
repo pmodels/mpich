@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\mpe2\src\slog2sdk\src\logformat\trace;..\..\..\..\include;..\..\..\..\include\win32;&quot;$(JAVA_HOME)\include&quot;;&quot;$(JAVA_HOME)\include\win32&quot;"
+				AdditionalIncludeDirectories="..\..\..\..\mpe2\src\slog2sdk\src\logformat\trace;..\..\..\..\include;..\..\..\..\include\win32;..\..\..\..\mpl\include;&quot;$(JAVA_HOME)\include&quot;;&quot;$(JAVA_HOME)\include\win32&quot;"
 				PreprocessorDefinitions="USE_WINCONF_H;WIN32;NDEBUG;_WINDOWS;_USRDLL;TRACEINPUT_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="0"

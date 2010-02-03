@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="irlog2rlog"
 	ProjectGUID="{F190D299-4970-4727-8CA0-70ABFEC3BAE1}"
+	RootNamespace="irlog2rlog"
 	>
 	<Platforms>
 		<Platform
@@ -42,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\include,..\..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\..\include\win32;..\..\..\mpl\include"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="0"

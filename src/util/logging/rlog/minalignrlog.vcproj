@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="minalignrlog"
 	ProjectGUID="{5BB52061-18A7-4115-A19A-7F7195779E93}"
+	RootNamespace="minalignrlog"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -123,7 +124,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\..\include,..\..\..\include\win32"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\..\include\win32;..\..\..\mpl\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="0"
