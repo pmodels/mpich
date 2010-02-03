@@ -100,9 +100,9 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
             proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
             for (prun = proxy_scratch->process_list; prun; prun = prun->next) {
                 if (HYD_handle.user_global.debug)
-                    HYDU_dump(stdout, "reply to %d: %s\n", prun->fd, cmd);
-                status =
-                    HYD_pmcd_pmi_v1_cmd_response(prun->fd, prun->pid, cmd, strlen(cmd), 0);
+                    HYDU_dump(stdout, "reply to %d: %s\n", proxy->control_fd, cmd);
+                status = HYD_pmcd_pmi_v1_cmd_response(proxy->control_fd, prun->pid, cmd,
+                                                      strlen(cmd), 0);
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }
@@ -281,18 +281,9 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_finalize(int fd, int pid, int pgid, char *args[])
 {
     const char *cmd;
-    struct HYD_pmcd_pmi_process *process;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
-    if (process == NULL)        /* We didn't find the process */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd,
-                             pid);
-    process->fd = -1;
 
     cmd = "cmd=finalize_ack\n";
     if (HYD_handle.user_global.debug)

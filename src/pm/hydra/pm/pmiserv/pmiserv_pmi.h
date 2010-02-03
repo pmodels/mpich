@@ -23,7 +23,6 @@ struct HYD_pmcd_token_segment {
 };
 
 struct HYD_pmcd_pmi_process {
-    int fd;                     /* downstream fd to send the response on */
     int pid;                    /* unique id for the processes sharing the same fd */
     int rank;                   /* process rank */
     int epoch;                  /* Epoch this process has reached */

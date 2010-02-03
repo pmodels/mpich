@@ -222,7 +222,6 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int pid, in
     /* Add process to the node */
     HYDU_MALLOC(process, struct HYD_pmcd_pmi_process *, sizeof(struct HYD_pmcd_pmi_process),
                 status);
-    process->fd = fd;
     process->pid = pid;
     process->rank = rank;
     process->epoch = 0;
@@ -255,12 +254,12 @@ struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid)
 
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            if (proxy->proxy_scratch == NULL)
+            if (proxy->proxy_scratch == NULL || proxy->control_fd != fd)
                 continue;
 
             proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
             for (process = proxy_scratch->process_list; process; process = process->next) {
-                if (process->fd == fd && process->pid == pid)
+                if (process->pid == pid)
                     return process;
             }
         }
