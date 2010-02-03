@@ -73,35 +73,33 @@ static HYD_status fn_initack(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 {
-    struct HYD_pmcd_pmi_process *process, *prun;
+    struct HYD_pmcd_pmi_process *process;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_proxy *proxy;
+    struct HYD_proxy *proxy, *tproxy;
     const char *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
-    if (process == NULL)        /* We didn't find the process */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd,
-                             pid);
+    /* Find the proxy corresponding to this fd */
+    if ((proxy = HYD_pmcd_pmi_find_proxy(fd)) == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find proxy for fd %d\n", fd);
 
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
     pg_scratch->barrier_count++;
 
     /* All the processes have arrived at the barrier; send a
      * barrier_out message to everyone. */
-    if (pg_scratch->barrier_count == process->proxy->pg->pg_process_count) {
+    if (pg_scratch->barrier_count == proxy->pg->pg_process_count) {
         cmd = "cmd=barrier_out\n";
-        for (proxy = process->proxy->pg->proxy_list; proxy; proxy = proxy->next) {
-            proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-            for (prun = proxy_scratch->process_list; prun; prun = prun->next) {
+        for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
+            proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) tproxy->proxy_scratch;
+            for (process = proxy_scratch->process_list; process; process = process->next) {
                 if (HYD_handle.user_global.debug)
-                    HYDU_dump(stdout, "reply to %d: %s\n", proxy->control_fd, cmd);
-                status = HYD_pmcd_pmi_v1_cmd_response(proxy->control_fd, prun->pid, cmd,
+                    HYDU_dump(stdout, "reply to %d: %s\n", tproxy->control_fd, cmd);
+                status = HYD_pmcd_pmi_v1_cmd_response(tproxy->control_fd, process->pid, cmd,
                                                       strlen(cmd));
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
@@ -121,7 +119,7 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
 {
     int i, ret;
-    struct HYD_pmcd_pmi_process *process;
+    struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *kvsname, *key, *val;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -148,18 +146,16 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
         val = HYDU_strdup("");
     }
 
-    /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
-    if (process == NULL)        /* We didn't find the process */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd,
-                             pid);
+    /* Find the proxy corresponding to this fd */
+    if ((proxy = HYD_pmcd_pmi_find_proxy(fd)) == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find proxy for fd %d\n", fd);
 
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
     if (strcmp(pg_scratch->kvs->kvs_name, kvsname))
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "kvsname (%s) does not match this process' kvs space (%s)\n",
+                             "kvsname (%s) does not match this group's kvs space (%s)\n",
                              kvsname, pg_scratch->kvs->kvs_name);
 
     status = HYD_pmcd_pmi_add_kvs(key, val, pg_scratch->kvs, &ret);
@@ -200,7 +196,7 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 {
     int i, found;
-    struct HYD_pmcd_pmi_process *process;
+    struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_kvs_pair *run;
     char *kvsname, *key;
@@ -222,18 +218,16 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: key\n");
 
-    /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
-    if (process == NULL)        /* We didn't find the process */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd,
-                             pid);
+    /* Find the proxy corresponding to this fd */
+    if ((proxy = HYD_pmcd_pmi_find_proxy(fd)) == NULL)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
+                             "unable to find proxy for fd %d\n", fd);
 
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
     if (strcmp(pg_scratch->kvs->kvs_name, kvsname))
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "kvsname (%s) does not match this process' kvs space (%s)\n",
+                             "kvsname (%s) does not match this group's kvs space (%s)\n",
                              kvsname, pg_scratch->kvs->kvs_name);
 
     /* Try to find the key */
