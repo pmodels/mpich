@@ -114,8 +114,7 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_process_mapping(struct HYD_pmcd_pmi_process *process,
-                                        char **process_mapping_str)
+HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping_str)
 {
     int i, node_id;
     char *tmp[HYD_NUM_TMP_STRINGS];

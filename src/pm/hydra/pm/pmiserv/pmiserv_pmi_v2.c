@@ -454,13 +454,13 @@ static HYD_status fn_info_getnodeattr(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
 {
-    int i, ret;
+    int i;
     struct HYD_pmcd_pmi_process *process;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_kvs_pair *run;
     const char *key;
     char *thrid;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *node_list;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_pmcd_token *tokens;
     int token_count, found;
     HYD_status status = HYD_SUCCESS;
@@ -490,36 +490,6 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
         if (!strcmp(run->key, key)) {
             found = 1;
             break;
-        }
-    }
-
-    if (found == 0) {
-        /* Didn't find the job attribute; see if we know how to
-         * generate it */
-        if (strcmp(key, "PMI_process_mapping") == 0) {
-            /* Create a vector format */
-            status = HYD_pmcd_pmi_process_mapping(process, &node_list);
-            HYDU_ERR_POP(status, "Unable to get process mapping information\n");
-
-            /* Make sure the node list is within the size allowed by
-             * PMI. Otherwise, tell the client that we don't know what
-             * the key is */
-            if (strlen(node_list) <= MAXVALLEN) {
-                status =
-                    HYD_pmcd_pmi_add_kvs("PMI_process_mapping", node_list, pg_scratch->kvs,
-                                         &ret);
-                HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
-            }
-
-            HYDU_FREE(node_list);
-        }
-
-        /* Search for the key again */
-        for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
-            if (!strcmp(run->key, key)) {
-                found = 1;
-                break;
-            }
         }
     }
 

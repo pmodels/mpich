@@ -17,8 +17,9 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_proxy *proxy;
     struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
-    char *pmi_port = NULL;
+    char *pmi_port = NULL, *mapping;
     int pmi_id = -1, enable_stdin, ret;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -50,6 +51,17 @@ HYD_status HYD_pmci_launch_procs(void)
 
     status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_handle.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
+
+    status = HYD_pmcd_pmi_process_mapping(&mapping);
+    HYDU_ERR_POP(status, "Unable to get process mapping information\n");
+
+    /* Make sure the mapping is within the size allowed by PMI */
+    if (strlen(mapping) <= MAXVALLEN) {
+        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) HYD_handle.pg_list.pg_scratch;
+        status = HYD_pmcd_pmi_add_kvs("PMI_process_mapping", mapping, pg_scratch->kvs, &ret);
+        HYDU_ERR_POP(status, "unable to add process_mapping to KVS\n");
+    }
+    HYDU_FREE(mapping);
 
     /* Copy the host list to pass to the bootstrap server */
     node_list = NULL;

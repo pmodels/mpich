@@ -151,6 +151,11 @@ static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_kvsname);
 }
 
+static HYD_status pmi_process_mapping_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_process_mapping);
+}
+
 static HYD_status binding_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.binding);
@@ -400,6 +405,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pmi-port", pmi_port_fn, NULL},
     {"pmi-id", pmi_id_fn, NULL},
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
+    {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
     {"binding", binding_fn, NULL},
     {"bindlib", bindlib_fn, NULL},
     {"ckpointlib", ckpointlib_fn, NULL},

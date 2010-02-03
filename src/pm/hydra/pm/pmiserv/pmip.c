@@ -23,6 +23,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.system_global.pmi_port = NULL;
     HYD_pmcd_pmip.system_global.pmi_id = -1;
     HYD_pmcd_pmip.system_global.pmi_kvsname = NULL;
+    HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
@@ -70,6 +71,9 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.system_global.pmi_kvsname)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_kvsname);
+
+    if (HYD_pmcd_pmip.system_global.pmi_process_mapping)
+        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_process_mapping);
 
     if (HYD_pmcd_pmip.user_global.binding)
         HYDU_FREE(HYD_pmcd_pmip.user_global.binding);

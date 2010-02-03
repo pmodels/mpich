@@ -108,7 +108,17 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    char *mapping = NULL;
     HYD_status status = HYD_SUCCESS;
+
+    status = HYD_pmcd_pmi_process_mapping(&mapping);
+    HYDU_ERR_POP(status, "Unable to get process mapping information\n");
+
+    /* Make sure the mapping is within the size allowed by PMI */
+    if (strlen(mapping) > MAXVALLEN) {
+        HYDU_FREE(mapping);
+        mapping = NULL;
+    }
 
     /* Create the arguments list for each proxy */
     process_id = 0;
@@ -157,6 +167,11 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-kvsname");
         proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
+
+        if (mapping) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-process-mapping");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(mapping);
+        }
 
         if (proxy->node.local_binding) {
             proxy->exec_launch_info[arg++] = HYDU_strdup("--local-binding");
@@ -284,6 +299,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     }
 
   fn_exit:
+    if (mapping)
+        HYDU_FREE(mapping);
     return status;
 
   fn_fail:

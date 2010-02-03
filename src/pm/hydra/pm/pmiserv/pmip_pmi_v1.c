@@ -8,7 +8,7 @@
 #include "pmip.h"
 #include "bsci.h"
 
-static HYD_status send_cmd_upstream(int fd, char *args[])
+static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
     int i, j;
     char *tmp[HYD_NUM_TMP_STRINGS], *buf;
@@ -19,13 +19,11 @@ static HYD_status send_cmd_upstream(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     j = 0;
-    tmp[j++] = HYDU_strdup("cmd=initack ");
+    tmp[j++] = HYDU_strdup(start);
     for (i = 0; args[i]; i++) {
         tmp[j++] = HYDU_strdup(args[i]);
         if (args[i+1])
             tmp[j++] = HYDU_strdup(" ");
-        else
-            tmp[j++] = HYDU_strdup("\n");
     }
     tmp[j] = NULL;
 
@@ -110,7 +108,7 @@ static HYD_status fn_initack(int fd, char *args[])
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
 
     /* Recreate the PMI command and send it upstream */
-    status = send_cmd_upstream(fd, args);
+    status = send_cmd_upstream("cmd=initack ", fd, args);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
   fn_exit:
@@ -263,6 +261,52 @@ static HYD_status fn_get_usize(int fd, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_get(int fd, char *args[])
+{
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *key;
+    struct HYD_pmcd_token *tokens;
+    int token_count, i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: key\n");
+
+    if (!strcmp(key, "PMI_process_mapping") &&
+        HYD_pmcd_pmip.system_global.pmi_process_mapping) {
+        i = 0;
+        tmp[i++] = HYDU_strdup("cmd=get_result rc=0 msg=success value=");
+        tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping);
+        tmp[i++] = HYDU_strdup("\n");
+        tmp[i++] = NULL;
+
+        status = HYDU_str_alloc_and_join(tmp, &cmd);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(tmp);
+
+        status = HYDU_sock_write(fd, cmd, strlen(cmd));
+        HYDU_ERR_POP(status, "error writing PMI line\n");
+        HYDU_FREE(cmd);
+    }
+    else {
+        status = send_cmd_upstream("cmd=get ", fd, args);
+        HYDU_ERR_POP(status, "error sending command upstream\n");
+    }
+
+  fn_exit:
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"init", fn_init},
     {"initack", fn_initack},
@@ -270,6 +314,7 @@ static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"get_appnum", fn_get_appnum},
     {"get_my_kvsname", fn_get_my_kvsname},
     {"get_universe_size", fn_get_usize},
+    {"get", fn_get},
     {"\0", NULL}
 };
 
