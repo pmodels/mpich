@@ -120,6 +120,7 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
 {
     struct hostent *ht;
     struct sockaddr_in sa;
+    int one = 1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -152,6 +153,10 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
         goto fn_fail;
     }
 
+    /* Disable nagle */
+    if (setsockopt(*fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(int)) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set TCP_NODELAY\n");
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -163,6 +168,7 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
 
 HYD_status HYDU_sock_accept(int listen_fd, int *fd)
 {
+    int one = 1;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -171,6 +177,10 @@ HYD_status HYDU_sock_accept(int listen_fd, int *fd)
     if (*fd < 0)
         HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "accept error (%s)\n",
                              HYDU_strerror(errno));
+
+    /* Disable nagle */
+    if (setsockopt(*fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(int)) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set TCP_NODELAY\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
