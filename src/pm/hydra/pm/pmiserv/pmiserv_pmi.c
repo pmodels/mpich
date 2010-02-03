@@ -74,7 +74,7 @@ void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
     *num_segments = j + 1;
 }
 
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs * kvs,
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret)
 {
     struct HYD_pmcd_pmi_kvs_pair *key_pair, *run;

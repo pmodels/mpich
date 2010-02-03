@@ -757,7 +757,8 @@ static HYD_status set_default_values(void)
     }
 
     if (HYD_handle.user_global.bootstrap_exec == NULL)
-        MPL_env2str("HYDRA_BOOTSTRAP_EXEC", (const char **) &HYD_handle.user_global.bootstrap_exec);
+        MPL_env2str("HYDRA_BOOTSTRAP_EXEC",
+                    (const char **) &HYD_handle.user_global.bootstrap_exec);
 
     if (HYD_handle.user_global.binding == NULL)
         MPL_env2str("HYDRA_BINDING", (const char **) &HYD_handle.user_global.binding);
@@ -768,12 +769,14 @@ static HYD_status set_default_values(void)
         HYD_handle.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
 
     if (HYD_handle.user_global.ckpointlib == NULL &&
-        MPL_env2str("HYDRA_CKPOINTLIB", (const char **) &HYD_handle.user_global.ckpointlib) == 0 &&
+        MPL_env2str("HYDRA_CKPOINTLIB",
+                    (const char **) &HYD_handle.user_global.ckpointlib) == 0 &&
         strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
         HYD_handle.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
 
     if (HYD_handle.user_global.ckpoint_prefix == NULL)
-        MPL_env2str("HYDRA_CKPOINT_PREFIX", (const char **) &HYD_handle.user_global.ckpoint_prefix);
+        MPL_env2str("HYDRA_CKPOINT_PREFIX",
+                    (const char **) &HYD_handle.user_global.ckpoint_prefix);
 
     /* Check environment for setting the inherited environment */
     if (HYD_handle.user_global.global_env.prop == NULL &&

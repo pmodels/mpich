@@ -23,7 +23,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     tmp[j++] = HYDU_strdup(start);
     for (i = 0; args[i]; i++) {
         tmp[j++] = HYDU_strdup(args[i]);
-        if (args[i+1])
+        if (args[i + 1])
             tmp[j++] = HYDU_strdup(" ");
     }
     tmp[j] = NULL;
@@ -278,8 +278,7 @@ static HYD_status fn_get(int fd, char *args[])
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: key\n");
 
-    if (!strcmp(key, "PMI_process_mapping") &&
-        HYD_pmcd_pmip.system_global.pmi_process_mapping) {
+    if (!strcmp(key, "PMI_process_mapping") && HYD_pmcd_pmip.system_global.pmi_process_mapping) {
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=get_result rc=0 msg=success value=");
         tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping);

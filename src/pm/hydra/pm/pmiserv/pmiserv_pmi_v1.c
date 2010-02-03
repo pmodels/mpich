@@ -554,7 +554,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     /* Initialize PMI */
     ret = MPL_env2str("PMI_PORT", (const char **) &pmi_port);
-    if (ret) { /* PMI_PORT already set */
+    if (ret) {  /* PMI_PORT already set */
         if (HYD_handle.user_global.debug)
             HYDU_dump(stdout, "someone else already set PMI port\n");
         pmi_port = HYDU_strdup(pmi_port);

@@ -29,7 +29,7 @@ HYD_status HYD_pmci_launch_procs(void)
 
     /* Initialize PMI */
     ret = MPL_env2str("PMI_PORT", (const char **) &pmi_port);
-    if (ret) { /* PMI_PORT already set */
+    if (ret) {  /* PMI_PORT already set */
         if (HYD_handle.user_global.debug)
             HYDU_dump(stdout, "someone else already set PMI port\n");
         pmi_port = HYDU_strdup(pmi_port);

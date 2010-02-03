@@ -332,8 +332,8 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
             if (proxy->control_fd == -1) {
                 /* The proxy hasn't connected back, allocate garbage exit status */
-                HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int),
-                            status);
+                HYDU_MALLOC(proxy->exit_status, int *,
+                            proxy->proxy_process_count * sizeof(int), status);
                 for (i = 0; i < proxy->proxy_process_count; i++)
                     proxy->exit_status[i] = 1;
 
