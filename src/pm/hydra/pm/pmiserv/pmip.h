@@ -39,6 +39,9 @@ struct HYD_pmcd_pmip {
 
         int *pid;
         int *exit_status;
+
+        int *pmi_id;
+        int *pmi_fd;
     } downstream;
 
     /* Proxy details */

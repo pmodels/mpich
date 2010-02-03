@@ -22,11 +22,6 @@ struct HYD_pmcd_token_segment {
     int token_count;
 };
 
-struct HYD_pmcd_token {
-    char *key;
-    char *val;
-};
-
 struct HYD_pmcd_pmi_process {
     int fd;                     /* downstream fd to send the response on */
     int pid;                    /* unique id for the processes sharing the same fd */
@@ -51,14 +46,9 @@ struct HYD_pmcd_pmi_pg_scratch {
 };
 
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
-                                       int *count);
-void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
 void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
                                  struct HYD_pmcd_token_segment *segment_list,
                                  int *num_segments);
-char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count,
-                                     const char *key);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);

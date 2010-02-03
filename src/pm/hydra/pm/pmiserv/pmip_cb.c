@@ -167,6 +167,10 @@ static HYD_status launch_procs(void)
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC(HYD_pmcd_pmip.downstream.exit_status, int *,
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_pmcd_pmip.downstream.pmi_id, int *,
+                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_pmcd_pmip.downstream.pmi_fd, int *,
+                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
 
     /* Initialize the exit status */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
@@ -315,6 +319,8 @@ static HYD_status launch_procs(void)
                                                  global_core_count);
             else
                 pmi_id = HYD_pmcd_pmip.system_global.pmi_id;
+
+            HYD_pmcd_pmip.downstream.pmi_id[process_id] = pmi_id;
 
             str = HYDU_int_to_str(pmi_id);
             status = HYDU_env_create(&env, "PMI_ID", str);

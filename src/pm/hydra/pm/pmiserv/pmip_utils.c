@@ -281,6 +281,14 @@ static HYD_status exec_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static HYD_status exec_appnum_fn(char *arg, char ***argv)
+{
+    struct HYD_exec *exec = NULL;
+
+    for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
+    return HYDU_set_int_and_incr(arg, argv, &exec->appnum);
+}
+
 static HYD_status exec_proc_count_fn(char *arg, char ***argv)
 {
     struct HYD_exec *exec = NULL;
@@ -402,6 +410,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"proxy-core-count", proxy_core_count_fn, NULL},
     {"start-pid", start_pid_fn, NULL},
     {"exec", exec_fn, NULL},
+    {"exec-appnum", exec_appnum_fn, NULL},
     {"exec-proc-count", exec_proc_count_fn, NULL},
     {"exec-local-env", exec_local_env_fn, NULL},
     {"exec-env-prop", exec_env_prop_fn, NULL},

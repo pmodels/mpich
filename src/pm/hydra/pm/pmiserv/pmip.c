@@ -32,6 +32,8 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.downstream.in = -1;
     HYD_pmcd_pmip.downstream.pid = NULL;
     HYD_pmcd_pmip.downstream.exit_status = NULL;
+    HYD_pmcd_pmip.downstream.pmi_id = NULL;
+    HYD_pmcd_pmip.downstream.pmi_fd = NULL;
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
@@ -115,6 +117,12 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.downstream.exit_status)
         HYDU_FREE(HYD_pmcd_pmip.downstream.exit_status);
+
+    if (HYD_pmcd_pmip.downstream.pmi_id)
+        HYDU_FREE(HYD_pmcd_pmip.downstream.pmi_id);
+
+    if (HYD_pmcd_pmip.downstream.pmi_fd)
+        HYDU_FREE(HYD_pmcd_pmip.downstream.pmi_fd);
 
     if (HYD_pmcd_pmip.local.interface_env_name)
         HYDU_FREE(HYD_pmcd_pmip.local.interface_env_name);

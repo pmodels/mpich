@@ -150,11 +150,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
 
-#if 0
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
-#endif
-
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
 
@@ -235,6 +230,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         for (exec = proxy->exec_list; exec; exec = exec->next) {
             arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
             proxy->exec_launch_info[arg++] = HYDU_strdup("--exec");
+
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-appnum");
+            proxy->exec_launch_info[arg++] = HYDU_int_to_str(exec->appnum);
 
             proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-proc-count");
             proxy->exec_launch_info[arg++] = HYDU_int_to_str(exec->proc_count);

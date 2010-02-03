@@ -52,47 +52,6 @@ HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
-                                       int *count)
-{
-    int i, j;
-    char *arg;
-    HYD_status status = HYD_SUCCESS;
-
-    for (i = 0; args[i]; i++);
-    *count = i;
-    HYDU_MALLOC(*tokens, struct HYD_pmcd_token *, *count * sizeof(struct HYD_pmcd_token),
-                status);
-
-    for (i = 0; args[i]; i++) {
-        arg = HYDU_strdup(args[i]);
-        (*tokens)[i].key = arg;
-        for (j = 0; arg[j] && arg[j] != '='; j++);
-        if (!arg[j]) {
-            (*tokens)[i].val = NULL;
-        }
-        else {
-            arg[j] = 0;
-            (*tokens)[i].val = &arg[++j];
-        }
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count)
-{
-    int i;
-
-    for (i = 0; i < token_count; i++)
-        HYDU_FREE(tokens[i].key);
-    HYDU_FREE(tokens);
-}
-
 void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
                                  struct HYD_pmcd_token_segment *segment_list,
                                  int *num_segments)
@@ -113,18 +72,6 @@ void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
         }
     }
     *num_segments = j + 1;
-}
-
-char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key)
-{
-    int i;
-
-    for (i = 0; i < count; i++) {
-        if (!strcmp(tokens[i].key, key))
-            return tokens[i].val;
-    }
-
-    return NULL;
 }
 
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs * kvs,
