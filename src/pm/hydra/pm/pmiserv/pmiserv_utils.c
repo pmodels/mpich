@@ -107,6 +107,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     struct HYD_env *env;
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     /* Create the arguments list for each proxy */
@@ -152,6 +153,10 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
+
+        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-kvsname");
+        proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
 
         if (proxy->node.local_binding) {
             proxy->exec_launch_info[arg++] = HYDU_strdup("--local-binding");

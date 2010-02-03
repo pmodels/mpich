@@ -71,49 +71,6 @@ static HYD_status fn_initack(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_my_kvsname(int fd, int pid, int pgid, char *args[])
-{
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
-    int i;
-    struct HYD_pmcd_pmi_process *process;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* Find the group id corresponding to this fd */
-    process = HYD_pmcd_pmi_find_process(fd, pid);
-    if (process == NULL)        /* We didn't find the process */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd,
-                             pid);
-
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
-
-    i = 0;
-    tmp[i++] = HYDU_strdup("cmd=my_kvsname kvsname=");
-    tmp[i++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
-    tmp[i++] = HYDU_strdup("\n");
-    tmp[i++] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &cmd);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-    HYDU_free_strlist(tmp);
-
-    if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "reply: %s\n", cmd);
-    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 0);
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-    HYDU_FREE(cmd);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_pmcd_pmi_process *process, *prun;
@@ -767,7 +724,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx */
 static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"initack", fn_initack},
-    {"get_my_kvsname", fn_get_my_kvsname},
     {"barrier_in", fn_barrier_in},
     {"put", fn_put},
     {"get", fn_get},

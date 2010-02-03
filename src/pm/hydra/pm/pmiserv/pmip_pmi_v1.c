@@ -200,6 +200,36 @@ static HYD_status fn_get_appnum(int fd, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_get_my_kvsname(int fd, char *args[])
+{
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=my_kvsname kvsname=");
+    tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_kvsname);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
+
+    status = HYDU_sock_write(fd, cmd, strlen(cmd));
+    HYDU_ERR_POP(status, "error writing PMI line\n");
+    HYDU_FREE(cmd);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status fn_get_usize(int fd, char *args[])
 {
     int usize, i;
@@ -238,6 +268,7 @@ static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"initack", fn_initack},
     {"get_maxes", fn_get_maxes},
     {"get_appnum", fn_get_appnum},
+    {"get_my_kvsname", fn_get_my_kvsname},
     {"get_universe_size", fn_get_usize},
     {"\0", NULL}
 };
