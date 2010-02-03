@@ -13,38 +13,6 @@
 #include "pmiserv_utils.h"
 #include "pmiserv_pmi.h"
 
-HYD_status HYD_pmcd_pmiserv_pmi_listen_cb(int fd, HYD_event_t events, void *userp)
-{
-    int accept_fd, pgid;
-    struct HYD_pg *pg;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* We got a PMI connection; find the PGID */
-    pgid = ((int) (size_t) userp);
-    for (pg = &HYD_handle.pg_list; pg && pg->pgid != pgid; pg = pg->next);
-    if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find pg with id %d\n", pgid);
-
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    pg_scratch->pmi_listen_fd = fd;
-
-    status = HYDU_sock_accept(fd, &accept_fd);
-    HYDU_ERR_POP(status, "accept error\n");
-
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, HYD_pmcd_pmiserv_pmi_cb);
-    HYDU_ERR_POP(status, "unable to register fd\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
 {
     char *args[HYD_NUM_TMP_STRINGS], *cmd = NULL;
@@ -89,55 +57,6 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     /* Cleanup all the processes */
     status = HYD_pmcd_pmiserv_cleanup();
     HYDU_ERR_POP(status, "unable to cleanup processes\n");
-    goto fn_exit;
-}
-
-HYD_status HYD_pmcd_pmiserv_pmi_cb(int fd, HYD_event_t events, void *userp)
-{
-    int pmi_version, pgid, closed;
-    char *buf;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* We got a PMI command; find the PGID */
-    pgid = ((int) (size_t) userp);
-
-    status = HYD_pmcd_pmi_read_pmi_cmd(fd, &buf, &pmi_version, &closed);
-    HYDU_ERR_POP(status, "unable to read PMI command\n");
-
-    if (closed) {
-        /* This is not a clean close. If a finalize was called, we
-         * would have deregistered this socket. The application might
-         * have aborted. Just cleanup all the processes */
-        status = HYD_pmcd_pmiserv_cleanup();
-        if (status != HYD_SUCCESS) {
-            HYDU_warn_printf("bootstrap server returned error cleaning up processes\n");
-            status = HYD_SUCCESS;
-            goto fn_fail;
-        }
-
-        status = HYDT_dmx_deregister_fd(fd);
-        if (status != HYD_SUCCESS) {
-            HYDU_warn_printf("unable to deregister fd %d\n", fd);
-            status = HYD_SUCCESS;
-            goto fn_fail;
-        }
-
-        close(fd);
-        goto fn_exit;
-    }
-
-    /* If we got the PMI command directly, just pass the PID as -1,
-     * since the control fd is not shared for PMI communication */
-    status = handle_pmi_cmd(fd, pgid, -1, buf, pmi_version);
-    HYDU_ERR_POP(status, "unable to process PMI command\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
     goto fn_exit;
 }
 

@@ -590,15 +590,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     /* Initialize PMI */
     ret = MPL_env2str("PMI_PORT", (const char **) &pmi_port);
-    if (!ret) { /* PMI_PORT not already set; create one */
-        /* pass PGID as a user parameter to the PMI connect handler */
-        status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &pmi_port,
-                                                     HYD_pmcd_pmiserv_pmi_listen_cb,
-                                                     (void *) (size_t) new_pgid);
-        HYDU_ERR_POP(status, "unable to create PMI port\n");
-        pmi_id = -1;
-    }
-    else {
+    if (ret) { /* PMI_PORT already set */
         if (HYD_handle.user_global.debug)
             HYDU_dump(stdout, "someone else already set PMI port\n");
         pmi_port = HYDU_strdup(pmi_port);
@@ -606,6 +598,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         ret = MPL_env2int("PMI_ID", &pmi_id);
         if (!ret)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_PORT set but not PMI_ID\n");
+    }
+    else {
+        pmi_id = -1;
     }
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "PMI port: %s; PMI ID: %d\n", pmi_port, pmi_id);
