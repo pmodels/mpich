@@ -192,9 +192,13 @@ shared memory), Hydra process management) of MPICH2 up and running.
     details on interacting with Hydra can be found at
     http://wiki.mcs.anl.gov/mpich2/index.php/Using_the_Hydra_Process_Manager
 
-9. Test that you can run a multiprocess job:
+    To start a job on your local machine, you can use:
 
-      mpiexec -f ~/machinefile -n <number> hostname
+      mpiexec -n <number> ./examples/cpi
+
+9. Test that you can run a multi-node job:
+
+      mpiexec -f machinefile -n <number> ./examples/cpi
 
 10. Now we will run an MPI job, using the mpiexec command as specified
     in the MPI-2 standard.  There are some examples in the install
@@ -203,7 +207,7 @@ shared memory), Hydra process management) of MPICH2 up and running.
     classic cpi example, which computes the value of pi by numerical
     integration in parallel.
 
-      mpiexec -f ~/machinefile -n 5 ./examples/cpi
+      mpiexec -f machinefile -n 5 ./examples/cpi
 
     The cpi example will tell you which hosts it is running on.
 
