@@ -439,41 +439,6 @@ static HYD_status fn_finalize(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_usize(int fd, int pid, int pgid, char *args[])
-{
-    int usize, i;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDT_bsci_query_usize(&usize);
-    HYDU_ERR_POP(status, "unable to get bootstrap universe size\n");
-
-    i = 0;
-    tmp[i++] = HYDU_strdup("cmd=universe_size size=");
-    tmp[i++] = HYDU_int_to_str(usize);
-    tmp[i++] = HYDU_strdup("\n");
-    tmp[i++] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &cmd);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-    HYDU_free_strlist(tmp);
-
-    if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "reply: %s\n", cmd);
-    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 0);
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-    HYDU_FREE(cmd);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static char *mcmd_args[HYD_NUM_TMP_STRINGS] = { NULL };
 
 static int mcmd_num_args = 0;
@@ -865,7 +830,6 @@ static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"barrier_in", fn_barrier_in},
     {"put", fn_put},
     {"get", fn_get},
-    {"get_universe_size", fn_get_usize},
     {"finalize", fn_finalize},
     {"spawn", fn_spawn},
     {"\0", NULL}
