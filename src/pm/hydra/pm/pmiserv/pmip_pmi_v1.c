@@ -7,6 +7,7 @@
 #include "pmip_pmi.h"
 #include "pmip.h"
 #include "bsci.h"
+#include "demux.h"
 
 static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
@@ -307,6 +308,29 @@ static HYD_status fn_get(int fd, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_finalize(int fd, char *args[])
+{
+    const char *cmd;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    cmd = "cmd=finalize_ack\n";
+    status = HYDU_sock_write(fd, cmd, strlen(cmd));
+    HYDU_ERR_POP(status, "error writing PMI line\n");
+
+    status = HYDT_dmx_deregister_fd(fd);
+    HYDU_ERR_POP(status, "unable to deregister fd\n");
+    close(fd);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"init", fn_init},
     {"initack", fn_initack},
@@ -315,6 +339,7 @@ static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"get_my_kvsname", fn_get_my_kvsname},
     {"get_universe_size", fn_get_usize},
     {"get", fn_get},
+    {"finalize", fn_finalize},
     {"\0", NULL}
 };
 

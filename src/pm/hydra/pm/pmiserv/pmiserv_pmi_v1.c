@@ -54,7 +54,7 @@ static HYD_status fn_initack(int fd, int pid, int pgid, char *args[])
 
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "reply: %s\n", cmd);
-    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 0);
+    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
     HYDU_FREE(cmd);
@@ -102,7 +102,7 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
                 if (HYD_handle.user_global.debug)
                     HYDU_dump(stdout, "reply to %d: %s\n", proxy->control_fd, cmd);
                 status = HYD_pmcd_pmi_v1_cmd_response(proxy->control_fd, prun->pid, cmd,
-                                                      strlen(cmd), 0);
+                                                      strlen(cmd));
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }
@@ -184,7 +184,7 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
 
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "reply: %s\n", cmd);
-    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 0);
+    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
@@ -265,33 +265,12 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "reply: %s\n", cmd);
-    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 0);
+    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_FREE(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status fn_finalize(int fd, int pid, int pgid, char *args[])
-{
-    const char *cmd;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    cmd = "cmd=finalize_ack\n";
-    if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "reply: %s\n", cmd);
-    status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 1);
-    HYDU_ERR_POP(status, "error writing PMI line\n");
-
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
@@ -660,7 +639,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
         if (HYD_handle.user_global.debug)
             HYDU_dump(stdout, "reply: %s\n", cmd);
-        status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd), 0);
+        status = HYD_pmcd_pmi_v1_cmd_response(fd, pid, cmd, strlen(cmd));
         HYDU_ERR_POP(status, "error writing PMI line\n");
         HYDU_FREE(cmd);
     }
@@ -683,7 +662,6 @@ static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"barrier_in", fn_barrier_in},
     {"put", fn_put},
     {"get", fn_get},
-    {"finalize", fn_finalize},
     {"spawn", fn_spawn},
     {"\0", NULL}
 };

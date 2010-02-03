@@ -55,8 +55,7 @@ struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int key);
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping);
 HYD_status HYD_pmcd_pmi_finalize(void);
 
-HYD_status HYD_pmcd_pmi_v1_cmd_response(int fd, int pid, const char *cmd, int cmd_len,
-                                        int finalize);
+HYD_status HYD_pmcd_pmi_v1_cmd_response(int fd, int pid, const char *cmd, int cmd_len);
 
 struct HYD_pmcd_pmi_handle {
     const char *cmd;
