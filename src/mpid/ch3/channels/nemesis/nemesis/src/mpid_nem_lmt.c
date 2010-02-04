@@ -366,6 +366,9 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         break;
     case MPIDI_REQUEST_TYPE_SEND:
+    case MPIDI_REQUEST_TYPE_RSEND:
+    case MPIDI_REQUEST_TYPE_SSEND:
+    case MPIDI_REQUEST_TYPE_BSEND:
         mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_done_send(vc, req);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         break;
