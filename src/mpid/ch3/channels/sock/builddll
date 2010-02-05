@@ -80,10 +80,9 @@ export CC_SHL
 export C_LINK_SHL
 export SHLIB_EXT
 #
-MPICH2_INCLUDE_FLAGS=-I$mympich2/src/mpid/ch3/include
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/util/sock"
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mybuild/src/mpid/ch3/util/sock"
-export MPICH2_INCLUDE_FLAGS
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include"
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/util/sock"
+CPPFLAGS="$CPPFLAGS -I$mybuild/src/mpid/ch3/util/sock"
 
 # The sock channel requires the sock utilities in mpid/common/sock
 # This directory may not exist yet (no other configure may have 
@@ -100,15 +99,14 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-( MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../../common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../../common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/sock/include" ; \
-export MPICH2_INCLUDE_FLAGS ; \
+( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../../../common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I../../../../common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../include" ; \
+CPPFLAGS="$CPPFLAGS -I../../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/sock/include" ; \
  $mypath/configure --enable-sharedlibs=$shlibtype \
     --prefix=$prefix --libdir=$libdir --exec-prefix=$exec_prefix )
 #
@@ -150,15 +148,15 @@ if [ ! -d ../../util/sock ] ; then
 fi
 
 (\
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../channels/sock/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/sock/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../channels/sock/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/sock/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 cd ../../util/sock && \
     $mympich2/src/mpid/ch3/util/sock/configure --enable-sharedlibs=$shlibtype \
     --prefix=$prefix --libdir=$libdir --exec-prefix=$exec_prefix )

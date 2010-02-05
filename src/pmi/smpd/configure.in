@@ -52,13 +52,6 @@ dnl AC_DEFINE(USE_HUMAN_READABLE_TOKENS,1,[Define to use ='s and spaces in the s
 SMPD_PMI_LIBS=$LIBS
 LIBS=$save_libs
 
-# Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
-# which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
-# CPPFLAGS
-# SMPD needs a definition for MPID_IOV and the sock utilities, so
-# it needs the MPICH2 include paths
-CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
-
 . ${master_top_srcdir}/src/pm/smpd/sock/setup.args
 export smpd_sock_name
 echo "smpd_sock_name = $smpd_sock_name"

@@ -126,12 +126,4 @@ done
 MPICH_DEFAULT_CH3_CHANNEL='"'$firstChannel'"'
 AC_DEFINE_UNQUOTED(MPICH_DEFAULT_CH3_CHANNEL,$MPICH_DEFAULT_CH3_CHANNEL,[Define the name of the channel to use if none is selected])
 
-# -------------------------------------------------------------------------
-
-
-# Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
-# which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
-# CPPFLAGS
-CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
-
 AC_OUTPUT(Makefile src/Makefile localdefs)

@@ -32,7 +32,7 @@ pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/uti
 pathlist="$pathlist src/mpid/common/locks"
 pathlist="$pathlist src/util/wrappers"
 for path in $pathlist ; do
-    MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
+    CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
 
 devsubsystems="$devsubsystems src/mpid/common/locks"
@@ -54,14 +54,14 @@ fi
 
 # include prototype
 #prototype_dir=${master_top_srcdir}/src/mpid/${device_name}/channels/${channel_name}/nemesis
-#MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${prototype_dir}/include -I${prototype_dir}/utils/monitor"
+#CPPFLAGS="$CPPFLAGS -I${prototype_dir}/include -I${prototype_dir}/utils/monitor"
 
 # Only include papi in CPPFLAGS configure will handle libs, and checking that it exists, etc.
 # We do this here because we want to make sure that this is added to CPPFLAGS in configures above this one.
 # By the time configure for nemesis is run, the ch3 configure has already AC_SUBSTed CPPFLAGS.
 # This is run from the top of ch3's configure.
 if test -n "${papi_dir}" ; then
-    MPICH2_INCLUDE_FLAGS=="$MPICH2_INCLUDE_FLAGS -I${papi_dir}/include"
+    CPPFLAGS=="$CPPFLAGS -I${papi_dir}/include"
 fi
 
 export nemesis_networks

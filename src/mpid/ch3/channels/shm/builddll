@@ -80,8 +80,7 @@ export CC_SHL
 export C_LINK_SHL
 export SHLIB_EXT
 #
-MPICH2_INCLUDE_FLAGS=-I$mympich2/src/mpid/ch3/include
-export MPICH2_INCLUDE_FLAGS
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include"
 
 # The shm channel requires the lock utilities in mpid/common/locks
 # This directory may not exist yet (no other configure may have 
@@ -96,11 +95,10 @@ if [ ! -f $locksSetup ] ; then
     exit 1
 fi
 
-( MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../ch3/channels/shm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../ch3/include" ; \
-export MPICH2_INCLUDE_FLAGS ; \
+( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../ch3/channels/shm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../ch3/include" ; \
 CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS" ; export CPPFLAGS ; \
   . $locksSetup ; \
 cd $mybuild/src/mpid/common/locks && \
@@ -112,13 +110,12 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-( MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../../common/locks" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/locks" ; \
-export MPICH2_INCLUDE_FLAGS ; \
+( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I../include" ; \
+CPPFLAGS="$CPPFLAGS -I../../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../../../common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
  $mypath/configure --enable-sharedlibs=$shlibtype \
     --prefix=$prefix --libdir=$libdir --exec-prefix=$exec_prefix )
 #
@@ -161,13 +158,13 @@ if [ ! -d ../../util/shmbase ] ; then
     mkdir ../../util/shmbase
 fi
 (\
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../channels/shm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/locks" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I../../channels/shm/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
 cd ../../util/shmbase && \
     $mympich2/src/mpid/ch3/util/shmbase/configure \
     --enable-sharedlibs=$shlibtype \

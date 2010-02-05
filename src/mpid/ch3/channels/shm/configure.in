@@ -181,11 +181,6 @@ export ETAGSADD
 
 PAC_UPDATE_BASE_CACHE
 
-# Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
-# which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
-# CPPFLAGS
-CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
-
 # define the ABI version of the channel ABI that we are using.
 ABIVERSION=1:1
 AC_SUBST(ABIVERSION)

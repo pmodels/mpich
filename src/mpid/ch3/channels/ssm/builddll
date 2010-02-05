@@ -80,10 +80,9 @@ export CC_SHL
 export C_LINK_SHL
 export SHLIB_EXT
 #
-MPICH2_INCLUDE_FLAGS=-I$mympich2/src/mpid/ch3/include
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/util/sock"
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mybuild/src/mpid/ch3/util/sock"
-export MPICH2_INCLUDE_FLAGS
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include"
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/util/sock"
+CPPFLAGS="$CPPFLAGS -I$mybuild/src/mpid/ch3/util/sock"
 
 # The ssm channel requires the sock utilities in mpid/common/sock
 # This directory may not exist yet (no other configure may have 
@@ -112,11 +111,10 @@ if [ ! -f $locksSetup ] ; then
     echo "Cannot find $locksSetup , needed to build process locks"
     exit 1
 fi
-( MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../ch3/channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../ch3/include" ; \
-export MPICH2_INCLUDE_FLAGS ; \
+( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../ch3/channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../ch3/include" ; \
 CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS" ; export CPPFLAGS ; \
   . $locksSetup ; \
 cd $mybuild/src/mpid/common/locks && \
@@ -128,17 +126,16 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-( MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../../common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../../common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../../common/locks" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/locks" ; \
-export MPICH2_INCLUDE_FLAGS ; \
+( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../../../common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I../../../../common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../include" ; \
+CPPFLAGS="$CPPFLAGS -I../../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../../../common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
  $mypath/configure --enable-sharedlibs=$shlibtype \
     --prefix=$prefix --libdir=$libdir --exec-prefix=$exec_prefix )
 #
@@ -183,17 +180,17 @@ if [ ! -d ../../util/shmbase ] ; then
     mkdir ../../util/shmbase
 fi
 (\
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/locks" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
 cd ../../util/shmbase && \
     $mympich2/src/mpid/ch3/util/shmbase/configure \
     --enable-sharedlibs=$shlibtype \
@@ -226,17 +223,17 @@ if [ ! -d ../../util/shm ] ; then
     mkdir ../../util/shm
 fi
 (\
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/locks" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
 cd ../../util/shm && \
     $mympich2/src/mpid/ch3/util/shm/configure \
     --enable-sharedlibs=$shlibtype \
@@ -282,17 +279,17 @@ if [ ! -d ../../util/sock ] ; then
 fi
 
 (\
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/sock/poll" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/ch3/include" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/datatype" ;\
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I../../../common/locks" ; \
-MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \
+CPPFLAGS="$CPPFLAGS -I../../../common/sock/poll" ; \
+CPPFLAGS="$CPPFLAGS -I../../channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
+CPPFLAGS="$CPPFLAGS -I../../include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ;\
+CPPFLAGS="$CPPFLAGS -I../../../common/locks" ; \
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
 cd ../../util/sock && \
     $mympich2/src/mpid/ch3/util/sock/configure --enable-sharedlibs=$shlibtype \
     --prefix=$prefix --libdir=$libdir --exec-prefix=$exec_prefix )

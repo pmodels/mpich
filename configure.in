@@ -903,7 +903,7 @@ if test "$logging_name" != "none" ; then
 	logging_name=external
 	# Add the dir to the include paths
 	#CPPFLAGS="$CPPFLAGS -I$logdir"
-	MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I$logdir"
+	CPPFLAGS="$CPPFLAGS -I$logdir"
 	EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS $logdir"
 	# Add to the list of external modules to setup
 	if test -x $logdir/setup_logging ; then
@@ -5642,11 +5642,6 @@ fi
 #   LIBS - Add libraries needed for linking
 #   LDFLAGS - Add other LD flags (e.g., search paths for libraries)
 #   CPPFLAGS - Add C preprocessor flags, including -Idir
-#   MPICH2_INCLUDE_FLAGS - A preferred alternative to adding 
-#              directories needed for include paths.  This should include
-#              directories that are *not* needed for any configure tests
-#              (e.g., if including the directory would change the result
-#              of a test, then that include flag should go into CPPFLAGS)
 #   DEFS  - Add C preprocessor definitions, e.g., -Dfoo
 # These must be updated, not replaced, so the setup_device script should
 # do, e.g., 
@@ -5691,7 +5686,6 @@ export MPILIBNAME
 export PMPILIBNAME
 export CC
 export CPPFLAGS
-export MPICH2_INCLUDE_FLAGS
 export LIBS
 export CXX
 export CXXFLAGS
@@ -6352,11 +6346,6 @@ AC_SUBST(MPIF77)
 AC_SUBST(MPIF90)
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
-
-# Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
-# which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
-# CPPFLAGS
-CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 
 # Add the LIBS we got so far to WRAPPER_LIBS
 WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"

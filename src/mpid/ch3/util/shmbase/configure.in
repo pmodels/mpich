@@ -156,11 +156,6 @@ export SHLIB_EXT
 export ENABLE_SHLIB
 export LIBTOOL
 
-# Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
-# which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
-# CPPFLAGS
-CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
-
 dnl Note that once dependencies are enabled, we always try to
 dnl update the dependencies (that is usually the desired behavior)
 dnl    find . -type d -exec sh -c '(cd {} && grep MAKE_DEPEND_C Makefile >/dev/null 2>&1 && ( test -d .deps || mkdir .deps ) && touch .deps/alldeps )' \;

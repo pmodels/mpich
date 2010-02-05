@@ -158,13 +158,6 @@ dnl Note that # does not comment out lines that are passed to autoconf,
 dnl and thus # MUST NEVER be used to comment out AC_xxx commands
 dnl AC_SEARCH_LIBS( MD5, crypto, SMPD_LIBS="$SMPD_LIBS -lcrypto" )
 
-# Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
-# which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
-# CPPFLAGS
-# SMPD needs a definition for MPID_IOV and the sock utilities, so
-# it needs the MPICH2 include paths
-CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
-
 . ${master_top_srcdir}/src/pm/smpd/sock/setup.args
 export smpd_sock_name
 AC_SUBST(smpd_sock_name)

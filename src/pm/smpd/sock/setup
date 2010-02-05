@@ -26,5 +26,5 @@ devsubsystems="$devsubsystems src/pm/smpd/sock"
 #    for path in $pathlist ; do
 #    	#CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path}"
 #    	#CPPFLAGS="$CPPFLAGS -I${master_top_srcdir}/${path}"
-#        MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
+#        CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 #    done

@@ -21,7 +21,7 @@ echo "RUNNING SETUP_CHANNEL FOR THE DLL CHANNEL"
 pathlist=""
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
 for path in $pathlist ; do
-    MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
+    CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
 #
 # Add the dllchan to the other install dirs.  In turn, the dllchannel

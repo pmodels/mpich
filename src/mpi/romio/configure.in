@@ -1889,8 +1889,6 @@ elif test $FROM_MPICH2 = yes ; then
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if status_set_bytes available])
    DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
    AC_DEFINE(HAVE_MPIU_FUNCS,1,[Define if MPICH2 memory tracing macros defined])
-   # Add the MPICH2_INCLUDE_FLAGS to CPPFLAGS
-   CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
 fi
 #
 #

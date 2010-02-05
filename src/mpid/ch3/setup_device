@@ -29,7 +29,7 @@ pathlist="$pathlist src/mpid/${device_name}/include"
 pathlist="$pathlist src/mpid/common/datatype"
 pathlist="$pathlist src/mpid/common/locks"
 for path in $pathlist ; do
-    MPICH2_INCLUDE_FLAGS="$MPICH2_INCLUDE_FLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
+    CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
 
 dir=${master_top_srcdir}/src/mpid/${device_name}/channels/${channel_name}

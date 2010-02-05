@@ -120,6 +120,4 @@ AC_SUBST(ETAGSADD)
 export ETAGS
 export ETAGSADD
 
-CPPFLAGS="$CPPFLAGS $MPICH2_INCLUDE_FLAGS"
-
 AC_OUTPUT(Makefile src/Makefile localdefs)
