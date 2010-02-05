@@ -52,6 +52,34 @@ amdirs="src/openpa src/pm/hydra src/mpl"
 AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates makefiles smpdversion getparms"
 stepsCleared=no
 
+# Check for old settings of MPICH2_xxx_DIR - some of the autotools now in 
+# use require that *all* of the autotools are in the *same* directory
+oldSet=no
+if [ -n "$MPICH2_AUTOMAKE_DIR" ] ; then oldSet=yes ; fi
+if [ -n "$MPICH2_AUTOCONF_DIR" ] ; then oldSet=yes ; fi
+if [ -n "$MPICH2_LIBTOOL_DIR" ] ; then oldSet=yes ; fi
+if [ "$oldSet" = yes ] ; then
+    if [ -z "$MPICH2_AUTOTOOLS_DIR" ] ; then
+        cat <<EOF
+MPICH2 now requires that all of the autotools reside in the same directory
+(this is really a requirement of some of the recent versions of the GNU 
+autotools).  The environment variables
+    MPICH2_AUTOMAKE_DIR
+    MPICH2_AUTOCONF_DIR
+    MPICH2_LIBTOOL_DIR
+are no longer used or supported.  Instead, use
+    MPICH2_AUTOTOOLS_DIR
+EOF
+        exit 1
+    else 
+        cat <<EOF
+Old MPICH2_xxx_DIR environment variables are set.  You should unset them to
+avoid attempting to use them later to select a different location for 
+some of the autotools.
+EOF
+    fi
+fi
+
 # Extract defaults from the environment
 autotoolsdir=$MPICH2_AUTOTOOLS_DIR
 
@@ -192,6 +220,7 @@ if [ -n "$autotoolsdir" ] ; then
         autoheader=$autotoolsdir/autoheader
         autoreconf=$autotoolsdir/autoreconf
         automake=$autotoolsdir/automake
+        autom4te=$autotoolsdir/autom4te
         aclocal=$autotoolsdir/aclocal
         libtoolize=$autotoolsdir/libtoolize
 
@@ -201,6 +230,7 @@ if [ -n "$autotoolsdir" ] ; then
 	AUTOHEADER=$autoheader
         AUTORECONF=$autoreconf
         AUTOMAKE=$automake
+	AUTOM4TE=$autom4te
         ACLOCAL=$aclocal
         LIBTOOLIZE=$libtoolize
 
@@ -293,7 +323,41 @@ EOF
 No autoconf in path or unable to determine the version of autoconf."
         acVersion="Unknown"
 fi
+#
+# Add a test for LT_PREREQ(2.2.6); note that many systems do not even
+# define the LT_PREREQ test, so something like
+# m4_ifdef([LT_PREREQ],,[m4_fatal([LT_PREREQ not defined])])
+# is required.
+cat <<EOF >.tmp/configure.ac
+AC_PREREQ(2.63)
+AC_INIT(testver,1.0)
+AC_CONFIG_AUX_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4])
+m4_ifdef([LT_PREREQ],,[m4_fatal([LT_PREREQ not defined])])
+LT_PREREQ(2.2.6)
+LT_INIT()
+AC_MSG_RESULT([A message])
+EOF
+cat <<EOF >.tmp/Makefile.am
+ACLOCAL_AMFLAGS = -I m4
+EOF
+libtoolVerOk=no
+echo "Checking that libtool version is acceptable..."
+# We have to do it this way because not all libtool versions accept 
+# a command line argument to provide the version number.
+if (cd .tmp && $libtoolize >/dev/null 2>&1 ) ; then
+    if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
+        libtoolVerOk=yes
+    fi
+fi
 rm -rf .tmp
+if [ "$libtoolVerOk" != "yes" ] ; then
+    echo "Unable to build a configure that uses Libtool.  Libtool version 2.2.6"
+    echo "or later is required; for some libtool instances, the command"
+    echo "   libtool --version"
+    echo "will provide the version number."
+    exit 1
+fi
 
 #
 # Create the bindings if necessary 
