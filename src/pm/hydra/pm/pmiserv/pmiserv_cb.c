@@ -121,6 +121,23 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 
     close(fd);
 
+    /* Reset the control fd to -1, so when the fd is reused, we don't
+     * find the wrong proxy */
+    proxy->control_fd = -1;
+
+    proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+    if (proxy_scratch) {
+        for (process = proxy_scratch->process_list; process;) {
+            tmp = process->next;
+            HYDU_FREE(process);
+            process = tmp;
+        }
+
+        HYD_pmcd_free_pmi_kvs_list(proxy_scratch->kvs);
+        HYDU_FREE(proxy_scratch);
+        proxy->proxy_scratch = NULL;
+    }
+
     for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
         if (tproxy->exit_status == NULL)
             goto fn_exit;
@@ -145,22 +162,6 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
     }
 
     HYD_pmcd_pmi_free_pg_scratch(pg);
-
-    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
-        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) tproxy->proxy_scratch;
-
-        if (proxy_scratch) {
-            for (process = proxy_scratch->process_list; process;) {
-                tmp = process->next;
-                HYDU_FREE(process);
-                process = tmp;
-            }
-
-            HYD_pmcd_free_pmi_kvs_list(proxy_scratch->kvs);
-            HYDU_FREE(proxy_scratch);
-            tproxy->proxy_scratch = NULL;
-        }
-    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

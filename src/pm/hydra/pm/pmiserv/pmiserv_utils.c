@@ -342,7 +342,7 @@ void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
     HYDU_FUNC_EXIT();
 }
 
-HYD_status HYD_pmcd_init_pg_scratch(struct HYD_pg *pg)
+static HYD_status init_pg_scratch(struct HYD_pg *pg)
 {
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
@@ -374,7 +374,7 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
 
     HYDU_MALLOC(pg->pg_scratch, void *, sizeof(struct HYD_pmcd_pmi_pg_scratch), status);
 
-    status = HYD_pmcd_init_pg_scratch(pg);
+    status = init_pg_scratch(pg);
     HYDU_ERR_POP(status, "unable to create pg\n");
 
   fn_exit:
