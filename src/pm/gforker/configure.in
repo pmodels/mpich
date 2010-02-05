@@ -233,14 +233,15 @@ dnl     if test -f "$cachedir/$fname" ; then
 dnl         cache_file=$cachedir/$fname
 dnl     fi
 dnl fi
-dnl See setup_pm.  The pm/util directory must also be configured
-AC_CONFIG_SUBDIRS(../util)
-
-AC_CHECK_HEADERS(string.h sys/time.h unistd.h stdlib.h sys/socket.h wait.h errno.h)
 
 if test -z "$master_top_srcdir" ; then
    master_top_srcdir='${srcdir}/../../..'
 fi
+
+dnl See setup_pm.  The pm/util directory must also be configured
+PAC_CONFIG_SUBDIR(../util,$srcdir,$ac_configure_args,,AC_ERROR(pm/utils configure failed))
+
+AC_CHECK_HEADERS(string.h sys/time.h unistd.h stdlib.h sys/socket.h wait.h errno.h)
 
 AC_SUBST(MPILIBNAME)
 AC_SUBST(CC)

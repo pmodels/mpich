@@ -27,17 +27,18 @@ AC_DEFUN([PAC_PREFIX_FLAGS],[
 ])
 
 dnl Sandbox configure
-dnl Usage: PAC_CONFIG_SUBDIR(subdir,abs_srcdir,config_args,action-if-success,action-if-failure)
+dnl Usage: PAC_CONFIG_SUBDIR(subdir,srcdir,config_args,action-if-success,action-if-failure)
 AC_DEFUN([PAC_CONFIG_SUBDIR],[
         AC_MSG_NOTICE([===== configuring $1 =====])
 
 	PAC_MKDIRS($1)
+	pac_abs_srcdir=`(cd $srcdir && pwd)`
 
 	if test -x $1/mpich2setup ; then
 	   $subsys/mpich2setup
-	elif test -x $2/$1/mpich2setup ; then
-	   $2/$1/mpich2setup
-	elif test -x $2/$1/configure ; then
+	elif test -x $pac_abs_srcdir/$1/mpich2setup ; then
+	   $pac_abs_srcdir/$1/mpich2setup
+	elif test -x $pac_abs_srcdir/$1/configure ; then
 	   pac_subconfig_args=""
 	   # Strip off the args we need to update
 	   for ac_arg in $3 ; do
@@ -46,7 +47,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	       pac_subconfig_args="$pac_subconfig_args $ac_narg"
 	   done
 
-	   if (cd $1 && eval $2/$1/configure $pac_subconfig_args) ; then
+	   if (cd $1 && eval $pac_abs_srcdir/$1/configure $pac_subconfig_args) ; then
 	      $4
 	      :
 	   else
@@ -61,7 +62,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	# look in the local directory first.
 	if test -f $1/localdefs ; then
 	   . $1/localdefs
-	elif test -f $2/$1/localdefs ; then
-	   . $2/$1/localdefs
+	elif test -f $pac_abs_srcdir/$1/localdefs ; then
+	   . $pac_abs_srcdir/$1/localdefs
 	fi
 ])

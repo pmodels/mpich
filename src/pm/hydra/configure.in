@@ -34,9 +34,6 @@ PAC_ARG_STRICT
 PAC_C_GNU_ATTRIBUTE
 PAC_CC_FUNCTION_NAME_SYMBOL
 
-# Find the full path of the source dir
-abs_srcdir=`(cd $srcdir && pwd)`
-
 # Build information
 if test -s "$srcdir/version/version" ; then
     HYDRA_VERSION="`cat $srcdir/version/version | grep ^MPICH2_VERSION: | cut -f2 -d' '`"
@@ -80,7 +77,7 @@ if test "$FROM_MPICH2" = "yes" ; then
    mpl_srcdir="../../mpl"
 else
    mpl_srcdir="mpl"
-   AC_CONFIG_SUBDIRS(mpl)
+   PAC_CONFIG_SUBDIR(mpl,$srcdir,$ac_configure_args,,AC_ERROR(MPL configure failed))
 fi
 AC_SUBST(mpl_srcdir)
 
@@ -290,7 +287,7 @@ have_hwloc=no
 for hydra_bindlib_name in ${hydra_bindlib_names}; do
     case "$hydra_bindlib_name" in
     	plpa)
-		PAC_CONFIG_SUBDIR(tools/bind/plpa/plpa,$abs_srcdir,$ac_configure_args,
+		PAC_CONFIG_SUBDIR(tools/bind/plpa/plpa,$srcdir,$ac_configure_args,
 			plpa_works=yes,plpa_works=no)
 		if test "$plpa_works" = "no" ; then
 		   continue
@@ -321,10 +318,12 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		if test -z "${hydra_default_bindlib}" ; then
 		   hydra_default_bindlib=$hydra_bindlib_name
 		fi
-		AC_CONFIG_SUBDIRS(tools/bind/hwloc/hwloc)
-		have_hwloc=yes
-		AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-		available_bindlib=`echo $available_bindlib hwloc`
+		PAC_CONFIG_SUBDIR(tools/bind/hwloc/hwloc,$srcdir,$ac_configure_args,
+			have_hwloc=yes,have_hwloc=no)
+		if test "$have_hwloc" = "yes" ; then
+		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+		   available_bindlib=`echo $available_bindlib hwloc`
+		fi
 		;;
 	*)
 		;;

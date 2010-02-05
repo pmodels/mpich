@@ -81,8 +81,9 @@ PAC_SUBDIR_CACHE
 
 export RANLIB
 export AR
-# FIXME: autoconf doesn't like variable names in the config_subdirs call.
-AC_CONFIG_SUBDIRS(${sock_name})
+
+PAC_CONFIG_SUBDIR(${sock_name},$srcdir,$ac_configure_args,,
+	AC_ERROR(${sock_name} configure failed))
 
 # Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
 # which include flags should start in MPICH2_INCLUDE_FLAGS and which in 
