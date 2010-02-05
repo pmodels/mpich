@@ -690,6 +690,18 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 #endif
         }
 
+#ifdef HAVE_WINDOWS_H
+        if(smpd_get_opt(argcp, argvp, "-impersonate"))
+        {
+            smpd_process.use_sspi = SMPD_TRUE;
+            smpd_process.use_delegation = SMPD_FALSE;
+        }
+        if(smpd_get_opt(argcp, argvp, "-delegate"))
+        {
+            smpd_process.use_sspi = SMPD_TRUE;
+            smpd_process.use_delegation = SMPD_TRUE;
+        }
+#endif
 	    smpd_process.nproc = atoi((*argvp)[2]);
 	    if (smpd_process.nproc < 1)
 	    {
