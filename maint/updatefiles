@@ -191,9 +191,9 @@ if [ -n "$autotoolsdir" ] ; then
         autoconf=$autotoolsdir/autoconf
         autoheader=$autotoolsdir/autoheader
         autoreconf=$autotoolsdir/autoreconf
-        automake=$automakedir/automake
-        aclocal=$automakedir/aclocal
-        libtoolize=$libtooldir/libtoolize
+        automake=$autotoolsdir/automake
+        aclocal=$autotoolsdir/aclocal
+        libtoolize=$autotoolsdir/libtoolize
 
 	# Simplemake looks in environment variables for the autoconf
 	# and autoheader to use
