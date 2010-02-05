@@ -22,12 +22,3 @@ pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
 for path in $pathlist ; do
     CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
-
-#
-# Use the sock implementation found in the common directory
-#
-file=${master_top_srcdir}/src/mpid/common/sock/setup
-if test -f $file ; then
-    echo "sourcing $file"
-    . $file
-fi

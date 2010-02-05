@@ -24,28 +24,4 @@ for path in $pathlist ; do
     CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
 
-devsubsystems="$devsubsystems src/mpid/common/locks"
 CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS"
-
-#
-# Use the sock implementation found in the common directory
-#
-file=${master_top_srcdir}/src/mpid/common/sock/setup
-if test -f $file ; then
-    echo "sourcing $file"
-    . $file
-fi
-
-dir=${master_top_srcdir}/src/mpid/common/locks
-if test ! -d $dir ; then
-    echo "ERROR: ${dir} does not exist"
-    exit 1
-fi
-file=${dir}/setup
-if test -f $file ; then
-    echo sourcing $file
-    . $file
-else 
-    echo "Cannot find $file , needed to build process locks"
-    exit 1
-fi

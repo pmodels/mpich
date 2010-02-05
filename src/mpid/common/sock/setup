@@ -21,8 +21,6 @@ if test -z "$CONFIGURE_SOCK_SETUP_SOURCED" ; then
 
     . ${master_top_srcdir}/src/mpid/common/sock/setup.args
 
-    devsubsystems="$devsubsystems src/mpid/common/sock"
-
     pathlist=""
     pathlist="$pathlist src/mpid/common/sock"
     pathlist="$pathlist src/mpid/common/sock/${sock_name}"

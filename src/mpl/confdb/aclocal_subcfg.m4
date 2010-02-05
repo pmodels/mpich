@@ -34,11 +34,11 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	PAC_MKDIRS($1)
 	pac_abs_srcdir=`(cd $srcdir && pwd)`
 
-	if test -x $1/mpich2setup ; then
-	   $subsys/mpich2setup
-	elif test -x $pac_abs_srcdir/$1/mpich2setup ; then
-	   $pac_abs_srcdir/$1/mpich2setup
-	elif test -x $pac_abs_srcdir/$1/configure ; then
+	if test -x $pac_abs_srcdir/$1/setup ; then
+	   $pac_abs_srcdir/$1/setup
+	fi
+
+	if test -x $pac_abs_srcdir/$1/configure ; then
 	   pac_subconfig_args=""
 	   prev_arg=""
 

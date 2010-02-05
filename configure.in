@@ -993,10 +993,6 @@ PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/mpl"
 other_install_dirs="$other_install_dirs src/mpl"
 
-# Atomic locks
-# FIXME TODO eventually delete the src/mpid/common/locks directory
-subsystems="$subsystems src/mpid/common/locks"
-
 # OpenPA
 opadir="${use_top_srcdir}/src/openpa"
 if test -e "$opadir" ; then
@@ -1008,6 +1004,12 @@ if test -e "$opadir" ; then
 
     other_install_dirs="$other_install_dirs src/openpa"
 fi
+
+# FIXME: TODO eventually delete the src/mpid/common/locks
+# directory. The src/mpid/common/sock directory is only used for
+# ch3:sock, ch3:ssm and ch3:shm currently, but we just configure it
+# anyway.
+subsystems="$subsystems src/mpid/common/locks src/mpid/common/sock"
 
 # ----------------------------------------------------------------------------
 # Threads
