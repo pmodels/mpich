@@ -27,7 +27,7 @@ AC_DEFUN([PAC_PREFIX_FLAGS],[
 ])
 
 dnl Sandbox configure
-dnl Usage: PAC_CONFIG_SUBDIR(subdir,srcdir,config_args,action-if-success,action-if-failure)
+dnl Usage: PAC_CONFIG_SUBDIR(subdir,action-if-success,action-if-failure)
 AC_DEFUN([PAC_CONFIG_SUBDIR],[
         AC_MSG_NOTICE([===== configuring $1 =====])
 
@@ -41,17 +41,17 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	elif test -x $pac_abs_srcdir/$1/configure ; then
 	   pac_subconfig_args=""
 	   # Strip off the args we need to update
-	   for ac_arg in $3 ; do
+	   for ac_arg in $ac_configure_args ; do
 	       # Remove any quotes around the args (added by configure)
 	       ac_narg=`expr x$ac_arg : 'x'"'"'\(.*\)'"'"`
 	       pac_subconfig_args="$pac_subconfig_args $ac_narg"
 	   done
 
 	   if (cd $1 && eval $pac_abs_srcdir/$1/configure $pac_subconfig_args) ; then
-	      $4
+	      $2
 	      :
 	   else
-	      $5
+	      $3
 	      :
 	   fi
 	fi

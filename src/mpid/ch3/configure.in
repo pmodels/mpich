@@ -95,8 +95,7 @@ if test -s $srcdir/channels/$channel_name/setup_$channel_name ; then
     if test "$needs_sock" = yes ; then
         AC_DEFINE(HAVE_UTIL_SOCK,1,[Define if the channel needs util/sock])
 	CPPFLAGS="${CPPFLAGS} -I${master_top_srcdir}/src/mpid/ch3/util/sock"
-	PAC_CONFIG_SUBDIR(util/sock,$srcdir,$ac_configure_args,,
-		AC_ERROR(util/sock configure failed))
+	PAC_CONFIG_SUBDIR(util/sock,,AC_ERROR(util/sock configure failed))
     fi				   	
     if test "$needs_shm" = yes ; then
         AC_DEFINE(HAVE_UTIL_SHM,1,[Define if the channel needs util/shm])
@@ -302,8 +301,7 @@ export LIBTOOL
 MY_EXPORTED_LIBS="$LIBS"
 export MY_EXPORTED_LIBS
 
-PAC_CONFIG_SUBDIR(channels/${channel_name},$srcdir,$ac_configure_args,,
-	AC_ERROR(channels/${channel_name} configure failed))
+PAC_CONFIG_SUBDIR(channels/${channel_name},,AC_ERROR(channels/${channel_name} configure failed))
 
 # Add the MPICH2 include flags to CPPFLAGS.  See the discussion above about
 # which include flags should start in MPICH2_INCLUDE_FLAGS and which in 

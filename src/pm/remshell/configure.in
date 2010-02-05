@@ -213,7 +213,7 @@ if test -z "$master_top_srcdir" ; then
 fi
 
 dnl See setup_pm.  The pm/util directory must also be configured
-PAC_CONFIG_SUBDIR(../util,$srcdir,$ac_configure_args,,AC_ERROR(pm/utils configure failed))
+PAC_CONFIG_SUBDIR(../util,,AC_ERROR(pm/utils configure failed))
 
 AC_CHECK_HEADERS(string.h sys/time.h unistd.h stdlib.h sys/socket.h wait.h errno.h)
 
