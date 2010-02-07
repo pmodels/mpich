@@ -1005,11 +1005,21 @@ if test -e "$opadir" ; then
     other_install_dirs="$other_install_dirs src/openpa"
 fi
 
+# FIXME: The setup file has a weird requirement that it needs to be
+# run *before* the MPICH2 device (not the setup directory itself) is
+# configured, but the actual configuration of the associated directory
+# needs to be done *after* the device is configured.
+file=${master_top_srcdir}/src/mpid/common/locks/setup
+if test -f $file ; then
+   echo sourcing $file
+   . $file
+fi
+
 # FIXME: TODO eventually delete the src/mpid/common/locks
 # directory. The src/mpid/common/sock directory is only used for
 # ch3:sock, ch3:ssm and ch3:shm currently, but we just configure it
 # anyway.
-subsystems="$subsystems src/mpid/common/locks src/mpid/common/sock"
+subsystems="$subsystems src/mpid/common/locks"
 
 # ----------------------------------------------------------------------------
 # Threads

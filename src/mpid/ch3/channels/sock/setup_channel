@@ -17,6 +17,27 @@ echo "RUNNING SETUP_CHANNEL FOR THE SOCK CHANNEL"
 # $ac_configure_args - all arguments passed to configure
 #
 
+found_dir="no"
+for sys in $devsubsystems ; do
+    if test "$sys" = "src/mpid/common/sock" ; then
+       found_dir="yes"
+       break
+    fi
+done
+if test "$found_dir" = "no" ; then
+   devsubsystems="$devsubsystems src/mpid/common/sock"
+fi
+
+# FIXME: The setup file has a weird requirement that it needs to be
+# run *before* the MPICH2 device (not the setup directory itself) is
+# configured, but the actual configuration of the associated directory
+# needs to be done *after* the device is configured.
+file=${master_top_srcdir}/src/mpid/common/sock/setup
+if test -f $file ; then
+   echo sourcing $file
+   . $file
+fi
+
 pathlist=""
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
 for path in $pathlist ; do
