@@ -9,7 +9,85 @@
 #include "bscu.h"
 #include "ssh.h"
 
+#define younger(a,b) \
+    ((((a).tv_sec > (b).tv_sec) ||                                      \
+      (((a).tv_sec == (b).tv_sec) && ((a).tv_usec > (b).tv_usec))) ? 1 : 0)
+
 static int fd_stdin, fd_stdout, fd_stderr;
+
+static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
+{
+    int i;
+    struct HYDT_bscd_ssh_time *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_MALLOC((*e), struct HYDT_bscd_ssh_time *, sizeof(struct HYDT_bscd_ssh_time), status);
+
+    (*e)->hostname = HYDU_strdup(hostname);
+    for (i = 0; i < SSH_LIMIT; i++) {
+        (*e)->init_time[i].tv_sec = 0;
+        (*e)->init_time[i].tv_usec = 0;
+    }
+    (*e)->next = NULL;
+
+    if (HYDT_bscd_ssh_time == NULL)
+        HYDT_bscd_ssh_time = (*e);
+    else {
+        for (tmp = HYDT_bscd_ssh_time; tmp->next; tmp = tmp->next);
+        tmp->next = (*e);
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status store_launch_time(struct HYDT_bscd_ssh_time *e)
+{
+    int i, min, time_left;
+    struct timeval now;
+    HYD_status status = HYD_SUCCESS;
+
+    /* Search for an unset element to store the current time */
+    for (i = 0; i < SSH_LIMIT; i++) {
+        if (e->init_time[i].tv_sec == 0 && e->init_time[i].tv_usec == 0) {
+            gettimeofday(&e->init_time[i], NULL);
+            goto fn_exit;
+        }
+    }
+
+    /* No free element found; wait for the oldest element to turn 1
+     * minute old */
+    min = 0;
+    for (i = 0; i < SSH_LIMIT; i++)
+        if (younger(e->init_time[min], e->init_time[i]))
+            min = i;
+
+    do {
+        gettimeofday(&now, NULL);
+        time_left = SSH_LIMIT_TIME - now.tv_sec + e->init_time[min].tv_sec;
+
+        if (time_left > 0) {
+            HYDU_dump(stdout, "waiting for %d seconds\n", time_left);
+            status = HYDT_dmx_wait_for_event(time_left);
+            HYDU_ERR_POP(status, "error waiting for event\n");
+        }
+
+        gettimeofday(&now, NULL);
+        time_left = SSH_LIMIT_TIME - now.tv_sec + e->init_time[min].tv_sec;
+    } while (time_left > 0);
+
+    /* Store the current time in the min element */
+    gettimeofday(&e->init_time[min], NULL);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
                                       int enable_stdin,
@@ -20,6 +98,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
     int *pid, *fd_list;
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL;
+    struct HYDT_bscd_ssh_time *e;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -84,6 +163,19 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
             HYDU_FREE(targs[idx]);
         targs[idx] = HYDU_int_to_str(i);
         targs[idx + 1] = NULL;
+
+        /* Store the launch time */
+        for (e = HYDT_bscd_ssh_time; e; e = e->next)
+            if (!strcmp(node->hostname, e->hostname))
+                break;
+
+        if (e == NULL) { /* Couldn't find an element for this host */
+            status = create_element(node->hostname, &e);
+            HYDU_ERR_POP(status, "unable to create ssh time element\n");
+        }
+
+        status = store_launch_time(e);
+        HYDU_ERR_POP(status, "error storing launch time\n");
 
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */

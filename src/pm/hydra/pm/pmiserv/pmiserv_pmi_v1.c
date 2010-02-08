@@ -276,35 +276,6 @@ static char *mcmd_args[HYD_NUM_TMP_STRINGS] = { NULL };
 
 static int mcmd_num_args = 0;
 
-static HYD_status find_unlaunched_proxies(char *hostname, int *unlaunched)
-{
-    struct HYD_pg *pg;
-    struct HYD_proxy *proxy;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    *unlaunched = 0;
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            if (!strcmp(proxy->node.hostname, hostname)) {
-                if (proxy->pid == NULL)
-                    (*unlaunched)++;
-                break;
-            }
-        }
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-#define MAX_UNLAUNCHED_PROXIES 32
-
 static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_pg *pg;
@@ -317,7 +288,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     char *key, *val;
     int nprocs, preput_num, info_num, ret;
-    int unlaunched_proxies, max_unlaunched_proxies;
     char *execname, *path = NULL;
 
     struct HYD_pmcd_token_segment *segment_list = NULL;
@@ -596,23 +566,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
     HYDU_FREE(pmi_port);
-
-    /* Check how many proxies on each proxy node haven't launched yet */
-    do {
-        max_unlaunched_proxies = 0;
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            status = find_unlaunched_proxies(proxy->node.hostname, &unlaunched_proxies);
-            HYDU_ERR_POP(status, "unable to find unlaunched proxies\n");
-
-            if (unlaunched_proxies > max_unlaunched_proxies)
-                max_unlaunched_proxies = unlaunched_proxies;
-        }
-
-        if (max_unlaunched_proxies > MAX_UNLAUNCHED_PROXIES) {
-            status = HYDT_dmx_wait_for_event(-1);
-            HYDU_ERR_POP(status, "error waiting for demux event\n");
-        }
-    } while (max_unlaunched_proxies > MAX_UNLAUNCHED_PROXIES);
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, 0, HYD_handle.stdout_cb,
                                     HYD_handle.stderr_cb);
