@@ -196,10 +196,6 @@ if [ -z "$minorVersion" ] ; then
     echo "Invalid ABIVerion $ABIVersion - should be n:m"
     exit 1
 fi
-if [ "$minorVersion" = "0" ] ; then
-    echo "Minor version number must be greater than zero"
-    exit 1
-fi
 dottedVersion=`echo $ABIVersion | sed -e 's/:/./g'`
 #
 # Now we can create the names

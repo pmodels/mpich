@@ -196,8 +196,8 @@ AC_SUBST(MPICH2_VERSION)
 # that were linked against it.  In our use, the version number is x:y, where
 #  x changes when the ABI changes
 #  y changes when major behavior of the routines, without changing the ABI;
-#    reset y to one when x changes.  Some systems don't like a 0 subversion,
-#    so we always use one as the smallest version number.
+#    reset y to one when x changes.  Following libtool's versioning scheme, 0 is
+#    the lowest value for any of the fields of the ABIVERSION string.
 # The ABIVERSION is not the same as the VERSION. It is used principly in the
 # Makefile.sm to pass the ABIVERSION to the createshlib script.
 # We use libtool-style version numbers (see --version-info in the 
