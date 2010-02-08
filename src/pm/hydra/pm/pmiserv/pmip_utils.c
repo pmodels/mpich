@@ -73,6 +73,11 @@ static HYD_status bootstrap_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bootstrap);
 }
 
+static HYD_status bootstrap_exec_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bootstrap_exec);
+}
+
 static HYD_status demux_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.demux);
@@ -349,6 +354,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
     {"bootstrap", bootstrap_fn, NULL},
+    {"bootstrap-exec", bootstrap_exec_fn, NULL},
     {"demux", demux_fn, NULL},
     {"iface", iface_fn, NULL},
     {"enable-stdin", enable_stdin_fn, NULL},
