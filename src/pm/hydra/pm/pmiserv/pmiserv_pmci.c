@@ -75,7 +75,8 @@ HYD_status HYD_pmci_launch_procs(void)
         }
     }
 
-    status = HYDU_sock_create_and_listen_portstr(HYD_handle.port_range, &control_port,
+    status = HYDU_sock_create_and_listen_portstr(HYD_handle.user_global.iface,
+                                                 HYD_handle.port_range, &control_port,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) 0);
     HYDU_ERR_POP(status, "unable to create PMI port\n");

@@ -192,7 +192,7 @@ static void mfile_help_fn(void)
 
 static HYD_status mfile_fn(char *arg, char ***argv)
 {
-    char hostname[MAX_HOSTNAME_LEN];
+    char *hostname;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_ERR_CHKANDJUMP(status, HYD_handle.node_list, HYD_INTERNAL_ERROR,
@@ -203,8 +203,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
-        status = HYDU_gethostname(hostname);
-        HYDU_ERR_POP(status, "unable to get local hostname\n");
+        hostname = HYDU_strdup("localhost");
 
         status = HYDU_add_to_node_list(hostname, 1, &HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");

@@ -204,7 +204,8 @@ static HYD_status launch_procs(void)
 
     if (HYD_pmcd_pmip.system_global.pmi_port == NULL) {
         /* No global PMI port is specified, we use a local one */
-        status = HYDU_sock_create_and_listen_portstr(NULL, &pmi_port, pmi_listen_cb, NULL);
+        status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
+                                                     NULL, &pmi_port, pmi_listen_cb, NULL);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
     }
 

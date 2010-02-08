@@ -80,56 +80,7 @@ static HYD_status demux_fn(char *arg, char ***argv)
 
 static HYD_status iface_fn(char *arg, char ***argv)
 {
-    HYD_status status = HYD_SUCCESS;
-    char *iface = NULL;
-#if defined(HAVE_GETIFADDRS)
-    struct ifaddrs *ifaddr, *ifa;
-    char buf[MAX_HOSTNAME_LEN];
-    struct sockaddr_in *sa;
-
-    status = HYDU_set_str_and_incr(arg, argv, &iface);
-    HYDU_ERR_POP(status, "unable to get the network interface name\n");
-
-    /* Got the interface name; let's query for the IP address */
-    if (getifaddrs(&ifaddr) == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
-
-    for (ifa = ifaddr; ifa; ifa = ifa->ifa_next)
-        if (!strcmp(ifa->ifa_name, iface) && (ifa->ifa_addr->sa_family == AF_INET))
-            break;
-
-    if (!ifa)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unable to find interface %s\n",
-                             HYD_pmcd_pmip.user_global.iface);
-
-    sa = (struct sockaddr_in *) ifa->ifa_addr;
-    HYD_pmcd_pmip.user_global.iface =
-        HYDU_strdup((char *)
-                    inet_ntop(AF_INET, (void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
-    if (!HYD_pmcd_pmip.user_global.iface)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unable to find IP for interface %s\n", iface);
-
-    freeifaddrs(ifaddr);
-    HYDU_FREE(iface);
-#else
-    status = HYDU_set_str_and_incr(arg, argv, &iface);
-    HYDU_ERR_POP(status, "unable to get the network interface name\n");
-
-    /* For now just disable interface selection when getifaddrs isn't
-     * available, such as on AIX.  In the future we can implement in MPL
-     * something along the lines of MPIDI_GetIPInterface from tcp_getip.c in
-     * nemesis. */
-    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                        "interface selection not supported on this platform\n");
-#endif
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.iface);
 }
 
 static HYD_status enable_stdin_fn(char *arg, char ***argv)
