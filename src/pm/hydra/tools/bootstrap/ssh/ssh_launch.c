@@ -9,9 +9,9 @@
 #include "bscu.h"
 #include "ssh.h"
 
-#define younger(a,b) \
-    ((((a).tv_sec > (b).tv_sec) ||                                      \
-      (((a).tv_sec == (b).tv_sec) && ((a).tv_usec > (b).tv_usec))) ? 1 : 0)
+#define older(a,b) \
+    ((((a).tv_sec < (b).tv_sec) ||                                      \
+      (((a).tv_sec == (b).tv_sec) && ((a).tv_usec < (b).tv_usec))) ? 1 : 0)
 
 static int fd_stdin, fd_stdout, fd_stderr;
 
@@ -46,8 +46,8 @@ static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
 
 static HYD_status store_launch_time(struct HYDT_bscd_ssh_time *e)
 {
-    int i, min, time_left;
-    struct timeval now;
+    int i, oldest, time_left;
+    struct timeval now, store;
     HYD_status status = HYD_SUCCESS;
 
     /* Search for an unset element to store the current time */
@@ -58,29 +58,24 @@ static HYD_status store_launch_time(struct HYDT_bscd_ssh_time *e)
         }
     }
 
-    /* No free element found; wait for the oldest element to turn 1
-     * minute old */
-    min = 0;
+    /* No free element found; wait for the oldest element to turn
+     * older */
+    oldest = 0;
     for (i = 0; i < SSH_LIMIT; i++)
-        if (younger(e->init_time[min], e->init_time[i]))
-            min = i;
+        if (older(e->init_time[i], e->init_time[oldest]))
+            oldest = i;
 
-    do {
-        gettimeofday(&now, NULL);
-        time_left = SSH_LIMIT_TIME - now.tv_sec + e->init_time[min].tv_sec;
+    gettimeofday(&now, NULL);
+    time_left = SSH_LIMIT_TIME - now.tv_sec + e->init_time[oldest].tv_sec;
 
-        if (time_left > 0) {
-            HYDU_dump(stdout, "waiting for %d seconds\n", time_left);
-            status = HYDT_dmx_wait_for_event(time_left);
-            HYDU_ERR_POP(status, "error waiting for event\n");
-        }
+    /* A better approach will be to make progress here, but that would
+     * mean that we need to deal with nested calls to the demux engine
+     * and process launches. */
+    if (time_left > 0)
+        sleep(time_left);
 
-        gettimeofday(&now, NULL);
-        time_left = SSH_LIMIT_TIME - now.tv_sec + e->init_time[min].tv_sec;
-    } while (time_left > 0);
-
-    /* Store the current time in the min element */
-    gettimeofday(&e->init_time[min], NULL);
+    /* Store the current time in the oldest element */
+    gettimeofday(&e->init_time[oldest], NULL);
 
   fn_exit:
     return status;
