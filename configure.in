@@ -2849,6 +2849,35 @@ fi
 # It is difficult to import/export symbols from some shared libraries, so
 # in that case, we require PMPILIBNAME and MPILIBNAME be the same
 case $ENABLE_SHLIB in 
+     osx-gcc)
+         # By default OSX doesn't resolve symbols in dynamic libraries the same
+         # way that Linux does, especially in the presence of a mixture of
+         # static and dynamic.  If we have a dynamic lib "libA.dylib" that needs
+         # a symbol "foo" from a static lib "libB.a" and we build a program with
+         # a command like "$CC main.o -lA -lB" then we will get a linking
+         # error at *runtime* that looks like this:
+         #
+         # -------8<-------
+         # dyld: lazy symbol binding failed: Symbol not found: _foo
+         #   Referenced from: /path/to/lib/libA.dylib
+         #   Expected in: flat namespace
+         # -------8<-------
+         #
+         # There might be a better solution for this, but what I've found seems
+         # to work so far is to force the OSX static linker to use a "flat
+         # namespace" model instead of the default "two-level namespace" model.
+         # See the ld(1) and dyld(1) man pages, as well as this Apple document:
+         #
+         # http://developer.apple.com/mac/library/DOCUMENTATION/DeveloperTools/Conceptual/MachOTopics/1-Articles/executing_files.html
+         #
+         # The alternative solution is to avoid our mixture of static and
+         # dynamic libraries altogether and make sure that we provide all
+         # dynamic libs for all libraries (including MPL and OPA).
+         #
+         # [goodell@ 2010-02-09]
+         PAC_APPEND_FLAG([-Wl,-flat_namespace], [LDFLAGS])
+         PAC_APPEND_FLAG([-Wl,-flat_namespace], [WRAPPER_LDFLAGS])
+     ;;
      cygwin-gcc)
 	if test "$PMPILIBNAME_set" = "no" ; then
             # Rename PMPILIBNAME
