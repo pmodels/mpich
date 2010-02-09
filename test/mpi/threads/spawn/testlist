@@ -1,2 +1,2 @@
 multispawn 1
-th_taskmaster 1
+th_taskmaster 1 timeLimit=600
