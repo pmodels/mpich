@@ -15,4 +15,4 @@
       call csub_mpi_in_place( MPI_IN_PLACE )
       call csub_mpi_status_ignore( MPI_STATUS_IGNORE )
       call csub_mpi_statuses_ignore( MPI_STATUSES_IGNORE )
-      end subroutine
+      end
