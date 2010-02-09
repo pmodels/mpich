@@ -13,8 +13,8 @@
  * connections from the same IP address per minute. If we exceed that,
  * the server assumes it's a hack-in attack, and does not accept any
  * more connections. So, we limit the number of ssh connections. */
-#define SSH_LIMIT 32
-#define SSH_LIMIT_TIME 30
+#define SSH_LIMIT 8
+#define SSH_LIMIT_TIME 15
 
 struct HYDT_bscd_ssh_time {
     char *hostname;
