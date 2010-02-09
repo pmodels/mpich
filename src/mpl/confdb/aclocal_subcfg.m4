@@ -75,9 +75,8 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 
 	       # Remove any quotes around the args (added by configure)
 	       ac_narg=`echo $ac_arg | sed -e "s/^'\(.*\)'$/\1/g"`
-	       if test -n "$ac_narg" ; then ac_arg=$ac_narg ; fi
 
-	       case $ac_arg in
+	       case $ac_narg in
                    CFLAGS=*)
 		       pac_subconfig_args="$pac_subconfig_args CFLAGS='$CFLAGS'"
 		       ;;
@@ -100,6 +99,9 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 		       pac_subconfig_args="$pac_subconfig_args LIBS='$LIBS'"
 		       ;;
 		   *)
+		       # We store ac_arg instead of ac_narg to make
+		       # sure we retain the quotes as provided to us
+		       # by autoconf
 		       pac_subconfig_args="$pac_subconfig_args $ac_arg"
 		       ;;
 	       esac
