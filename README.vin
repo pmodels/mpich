@@ -90,23 +90,23 @@ shared memory), Hydra process management) of MPICH2 up and running.
       tar xf mpich2-%VERSION%.tar
       cd mpich2-%VERSION%
 
-3.  Choose an installation directory (the default is /usr/local/bin),
-    /home/you/mpich2-install which is assumed to non-existent or empty.
-    It will be most convenient if this directory is shared by all of the
-    machines where you intend to run processes.  If not, you will have
+3.  Choose an installation directory, say /home/<USERNAME>/mpich2-install,
+    which is assumed to non-existent or empty. It will be most
+    convenient if this directory is shared by all of the machines
+    where you intend to run processes.  If not, you will have 
     to duplicate it on the other machines after installation.
 
-4.  Configure MPICH2 (The steps described here are called inpath-build,
-    we recommend user to do vpath build if possible), specifying the
-    installation directory:
+4.  Configure MPICH2 specifying the installation directory (the steps
+    described here are called inpath build; we recommend user to do
+    a vpath build if possible, see further below):
 
     for csh and tcsh:
 
-      ./configure --prefix=/home/you/mpich2-install |& tee c.txt
+      ./configure --prefix=/home/<USERNAME>/mpich2-install |& tee c.txt
 
     for bash and sh:
 
-      ./configure --prefix=/home/you/mpich2-install 2>&1 | tee c.txt
+      ./configure --prefix=/home/<USERNAME>/mpich2-install 2>&1 | tee c.txt
 
     Bourne-like shells, sh and bash, accept "2>&1 |".  Csh-like shell,
     csh and tcsh, accept "|&".  File c.txt is used to store all messages
@@ -171,11 +171,11 @@ shared memory), Hydra process management) of MPICH2 up and running.
 
     for csh and tcsh:
 
-      setenv PATH /home/you/mpich2-install/bin:$PATH
+      setenv PATH /home/<USERNAME>/mpich2-install/bin:$PATH
 
     for bash and sh:
   
-      PATH=/home/you/mpich2-install/bin:$PATH ; export PATH
+      PATH=/home/<USERNAME>/mpich2-install/bin:$PATH ; export PATH
 
     Check that everything is in order at this point by doing 
 
