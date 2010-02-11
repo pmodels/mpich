@@ -15,6 +15,7 @@ builtin(include,aclocal_mpi.m4)
 builtin(include,aclocal_shl.m4)
 builtin(include,fortran90.m4)
 builtin(include,aclocal_libs.m4)
+builtin(include,aclocal_attr_alias.m4)
 dnl Add the libtool files that libtoolize wants
 dnl Comment these out until libtool support is enabled.
 dnl May need to change this anyway, since libtoolize 
