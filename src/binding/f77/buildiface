@@ -2516,18 +2516,31 @@ if ($write_mpif) {
     print MPIFFD "\@DLLIMPORT\@\n";
 
     # Add the common blocks for the special constants
-    # (Use two to avoid problems with continuations)
-    print MPIFFD "\
-       COMMON /MPIPRIV1/ MPI_BOTTOM, MPI_IN_PLACE, MPI_STATUS_IGNORE\n";
-    print MPIFFD "\
-       COMMON /MPIPRIV2/ MPI_STATUSES_IGNORE, MPI_ERRCODES_IGNORE\n";
-    print MPIFFD "       SAVE /MPIPRIV1/,/MPIPRIV2/\n";
+
+    # Use one common block for each MPI Fortran constant to avoid possible
+    # alignment issue when different Fortran compilers are used in building
+    # the MPI libraries and compiling/linking with the user application.
+    # This does not eliminate the potential alignment warnings from the
+    # linker. Since the Fortran77 binding only needs the pointer address
+    # but never access the content of the pointer, so alignment warnings
+    # should be harmless.
+
     # Add the common block for the character parameter ARGVS_NULL (Fortran
     # requires character data in a different common block than 
     # non-character data)
+
     print MPIFFD "\
-       COMMON /MPIPRIVC/ MPI_ARGVS_NULL, MPI_ARGV_NULL
-       SAVE   /MPIPRIVC/\n";
+       CHARACTER*1 PADS_A(3), PADS_B(3)
+       COMMON /MPIFCMB1/ MPI_STATUS_IGNORE
+       COMMON /MPIFCMB2/ MPI_STATUSES_IGNORE
+       COMMON /MPIFCMB3/ MPI_BOTTOM
+       COMMON /MPIFCMB4/ MPI_IN_PLACE
+       COMMON /MPIFCMB5/ MPI_ERRCODES_IGNORE
+       COMMON /MPIFCMB7/ MPI_ARGVS_NULL, PADS_A
+       COMMON /MPIFCMB8/ MPI_ARGV_NULL, PADS_B
+       save /MPIFCMB1/,/MPIFCMB2/
+       save /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/
+       save /MPIFCMB7/,/MPIFCMB8/\n";
 
     close( MPIFFD );
     &ReplaceIfDifferent( "mpif.h.in", "mpif.h.in.new" );
@@ -2633,95 +2646,6 @@ sub build_specials {
     &ReplaceIfDifferent( $filename, $filename . ".new" );
     &AddPrototype( "init_thread", $args );
 
-    # Functions used by the C init process, but that must be called 
-    # from C
-    $OUTFD = "FORTTOC";
-    $filename = "setbot.c";
-    open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
-    #setbot.c is not one of the mpi_sources files
-    #$files[$#files+1] = $filename;
-    &print_copyright;
-
-    print $OUTFD "
-#ifdef F77_NAME_UPPER
-#define mpirinitc_ MPIRINITC
-#define mpirinitc2_ MPIRINITC2
-#elif defined(F77_NAME_LOWER_2USCORE) || defined(F77_NAME_LOWER_USCORE)
-/* leave name alone */
-#else
-#define mpirinitc_ mpirinitc
-#define mpirinitc2_ mpirinitc2
-#endif
-/* These functions are called from Fortran so only need prototypes in 
-   this file.  Note that the last argument is a character array, so
-   we need to include the elements of the Fortran character \"dope vector\".
-*/
-FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *, void *, void *, void *, 
-                                         void *, void * FORT_MIXED_LEN_DECL 
-                                         FORT_END_LEN_DECL );
-FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char * FORT_MIXED_LEN_DECL 
-                                          FORT_END_LEN_DECL );
-";
-    # These are here rather than in initf.c to solve some link order 
-    # problems for Windows when separate libraries are used for the C and
-    # Fortran routines.
-    # Note that the global variables have values.  This is to work around
-    # a bug in some C environments (e.g., Mac OS/X) that don't load
-    # external symbols that don't have a value assigned at compile time 
-    # (so called common symbols)
-    print $OUTFD "
-#ifndef F77_USE_BOOLEAN_LITERALS
-#if defined(F77_RUNTIME_VALUES) || !defined(F77_TRUE_VALUE_SET)
-MPI_Fint MPIR_F_TRUE = 1, MPIR_F_FALSE = 0;
-#else
-const MPI_Fint MPIR_F_TRUE=F77_TRUE_VALUE;
-const MPI_Fint MPIR_F_FALSE=F77_FALSE_VALUE;
-#endif
-#endif
-";
-    # MPI-2, section 4.12.5, on the declaration of MPI_F_STATUS_IGNORE
-    # MPI_F_STATUSES_IGNORE as global variables in mpi.h (!)
-    print $OUTFD "
-#ifndef USE_POINTER_FOR_BOTTOM
-int  MPIR_F_NeedInit        = 1;
-void *MPIR_F_MPI_BOTTOM     = 0;
-void *MPIR_F_MPI_IN_PLACE   = 0;
-/* MPI_F_STATUS_IGNORE etc must be declared within mpi.h (MPI-2 standard 
-   requires this) */
-/* 
-void *MPI_F_STATUS_IGNORE   = 0;
-void *MPI_F_STATUSES_IGNORE = 0;
-*/
-int  *MPI_F_ERRCODES_IGNORE = 0;
-void *MPI_F_ARGVS_NULL      = 0;
-#endif
-\n";
-
-
-    print $OUTFD "
-FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d, 
-                                         void *e, void *f FORT_MIXED_LEN(d1) 
-                                         FORT_END_LEN(d1) )
-{
-    MPIR_F_MPI_BOTTOM     = a;
-    MPIR_F_MPI_IN_PLACE   = b;
-    MPI_F_STATUS_IGNORE   = (MPI_Fint *)c;
-    MPI_F_STATUSES_IGNORE = (MPI_Fint *)d;
-    MPI_F_ERRCODES_IGNORE = (int *)e;
-    MPI_F_ARGVS_NULL      = f;
-}
-/* Initialize the Fortran ARGV_NULL to a blank.  Using this routine
-   avoids potential problems with string manipulation routines that
-   exist in the Fortran runtime but not in the C runtime libraries */
-FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1) 
-                                          FORT_END_LEN(d1) )
-{
-    *a = ' ';
-}
-";
-    close ($OUTFD);
-    &ReplaceIfDifferent( $filename, $filename . ".new" );
-    
     $OUTFD = "PCONTROLFFD";
     $filename = "pcontrolf.c";
     open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";

@@ -9,13 +9,19 @@ C
 C      BOTTOM, IN_PLACE, STATUS_IGNORE, STATUSES_IGNORE, ERRCODES_IGNORE
        integer a, b, c(mpi_status_size), d(mpi_status_size,1), e(1)
        character*1 f(1,1), MPI_ARGV_NULL(1)
-       common /MPIPRIV1/ a, b, c
-       common /MPIPRIV2/ d, e
-       save /MPIPRIV1/, /MPIPRIV2/
+       character*1 pads_a(3), pads_b(3)
+       common /MPIFCMB1/ c
+       common /MPIFCMB2/ d
+       common /MPIFCMB3/ a
+       common /MPIFCMB4/ b
+       common /MPIFCMB5/ e
+       common /MPIFCMB7/ f, pads_a
+       common /MPIFCMB8/ MPI_ARGV_NULL, pads_b
+       save /MPIFCMB1/,/MPIFCMB2/
+       save /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/
+       save /MPIFCMB7/,/MPIFCMB8/
 C      MPI_ARGVS_NULL 
 C      (Fortran requires character data in a separate common block)
-       common /MPIPRIVC/ f, MPI_ARGV_NULL
-       save /MPIPRIVC/       
        call mpirinitc( a, b, c, d, e, f )
        call mpirinitc2( MPI_ARGV_NULL )
        return

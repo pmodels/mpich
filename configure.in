@@ -1889,6 +1889,12 @@ EOF
    fi
 fi
 
+# Check if multiple __attribute__((alias)) is available
+if test "$enable_f77" = yes ; then
+    PAC_C_ATTR_ALIGNED
+    PAC_C_MULTI_ATTR_ALIAS
+fi
+
 # F90 requires F77 as well.  If the user disabled f77, do not run the
 # next test; instead, drop into the warning message
 # Set a default value for f90 works with f77.  This value is
@@ -6407,6 +6413,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/binding/f77/Makefile \
 	  src/binding/f77/mpif.h \
 	  src/binding/f77/setbotf.f \
+	  src/binding/f77/setbot.c \
 	  src/binding/f90/Makefile \
 	  src/binding/f90/mpi_sizeofs.f90 \
 	  src/packaging/Makefile \
