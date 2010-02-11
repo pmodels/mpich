@@ -61,9 +61,10 @@ if [ -n "$MPICH2_LIBTOOL_DIR" ] ; then oldSet=yes ; fi
 if [ "$oldSet" = yes ] ; then
     if [ -z "$MPICH2_AUTOTOOLS_DIR" ] ; then
         cat <<EOF
-MPICH2 now requires that all of the autotools reside in the same directory
-(this is really a requirement of some of the recent versions of the GNU 
-autotools).  The environment variables
+MPICH2 now prefers that all of the autotools reside in the same directory
+to minimize potential autotool failure.  (This is not a requirement of
+GNU autotools but a way to minimize some mysterious autotool failure in some
+environment.)  The environment variables
     MPICH2_AUTOMAKE_DIR
     MPICH2_AUTOCONF_DIR
     MPICH2_LIBTOOL_DIR
@@ -92,6 +93,9 @@ for arg in "$@" ; do
 	set -x
 	;;
 	
+    -noatdircheck|-no-atdir-check)
+        no_atdir_check=yes
+        ;;
     -do=*|--do=*)
     opt=`echo A$arg | sed -e 's/^A--*do=//'`
     # Handle some synonyms
@@ -158,7 +162,7 @@ for arg in "$@" ; do
 
     -help|--help|-usage|--usage)
     cat <<EOF
-    updatefiles [ --with-autotools=dir ] \\
+    updatefiles [ --with-autotools=dir ] [ -noatdircheck | -no-atdir-check ] \\
                 [ --do=stepname ] [ args for simplemake ]
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
@@ -166,6 +170,9 @@ for arg in "$@" ; do
 
     You can use --with-autotools=dir to specify a directory that
     contains alternate autotools.
+
+    -noatdircheck or -no-atdir-check disables the check that enforces all
+    autotools being installed in the same directory.
 
     Use --do=stepname to update only a single step.  For example, 
     --do=build_configure only updates the configure scripts.  The available
@@ -259,9 +266,11 @@ autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
 automakedir=`which automake | sed -e 's_/[^/]*$__g'`
 libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`
 
-if [ "$autoconfdir" != "$automakedir" -a "$autoconfdir" != "$libtooldir" ] ; then
-    echo "All autotools should be in the same directory"
-    exit 1
+if [ "$no_atdir_check" != "yes" ] ; then
+    if [ "$autoconfdir" != "$automakedir" -a "$autoconfdir" != "$libtooldir" ] ; then
+        echo "All autotools should be in the same directory"
+        exit 1
+    fi
 fi
 
 #
