@@ -394,6 +394,9 @@ if [ $do_bindings = "yes" ] ; then
     fi
     if [ $build_f90 = "yes" ] ; then
 	echo "Building Fortran 90 interface"
+	# Remove any copy of mpi_base.f90 (this is used to handle the
+	# Double precision vs. Real*8 option
+	rm -f src/binding/f90/mpi_base.f90.orig
 	( cd src/binding/f90 && chmod a+x ./buildiface && ./buildiface )
 	( cd src/binding/f90 && ../f77/buildiface -infile=cf90t.h -deffile=cf90tdefs)
     fi
