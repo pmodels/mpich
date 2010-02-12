@@ -172,6 +172,7 @@ if test "$pac_cv_have_socklen_t" = no ; then
 fi
 
 AC_SUBST(AR)
+AC_SUBST(AR_FLAGS)
 AC_SUBST(RANLIB)
 AC_SUBST(MPILIBNAME)
 AC_SUBST(CC)

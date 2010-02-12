@@ -72,6 +72,7 @@ dnl Find a C compiler (choose gcc first)
 AC_PROG_CC
 PAC_PROG_MAKE
 AC_CHECK_PROGS(AR,ar)
+AC_SUBST([AR_FLAGS])
 AC_PROG_RANLIB
 # Turn off creating shared libraries for any utility routines
 ENABLE_SHLIB=none

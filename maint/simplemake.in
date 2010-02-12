@@ -1274,6 +1274,7 @@ sub DefaultVariables {
     if (scalar(%libraries)) {
 	# Add ar, ranlib definitions if there are any library targets.
 	printMakeVariable( FD, "AR", "\@AR\@" );
+	printMakeVariable( FD, "AR_FLAGS", "\@AR_FLAGS\@" );
 	printMakeVariable( FD, "RANLIB", "\@RANLIB\@" );
     }
     if ($do_sharedlibs) {
@@ -3008,7 +3009,7 @@ sub LibraryBuild {
 	    &print_make_line( FD, "${libloc}lib$libname.$libext($obj): $obj" );
 	    &print_make_endline( FD );
 	    # COMMAND PRINTING
-	    &PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$libname.$libext \$?", "  AR" );
+	    &PrintVerboseOptionCommand( "\${AR} \${AR_FLAGS} ${libloc}lib$libname.$libext \$?", "  AR" );
 	}
 	else {
 	    if ($ext ne "h") {
@@ -3019,7 +3020,7 @@ sub LibraryBuild {
     &SMInvokeAction( "OutputLibDependencies", $lib, $libloc, $memext );
     if (!$dolib_member) {
         &print_make_endline( FD );
-	&PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$libname.$libext \$?",
+	&PrintVerboseOptionCommand( "\${AR} \${AR_FLAGS} ${libloc}lib$libname.$libext \$?",
 				    "  AR" );
     }
 }

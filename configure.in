@@ -239,6 +239,11 @@ FROM_MPICH2=yes
 export FROM_MPICH2
 AC_ARG_VAR(FROM_MPICH2, [internally set flag to tell subconfigures that they are built from within MPICH2])
 
+# compute canonical system types
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+# TARGET not needed, MPICH2 isn't a compiler
+
 # Save a copy of CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS, LDFLAGS as USER_*
 # before any of these flags are being modified by configure
 # tests.
@@ -2729,6 +2734,16 @@ AC_CHECK_PROGS(AR,ar)
 if test -z "$AR" ; then
     AC_MSG_ERROR([The program ar is required for building MPICH2.  Make sure that your path includes ar])
 fi
+
+# AR_FLAGS provides a way to potentially improve build performance on Mac OSX
+AR_FLAGS=cr
+# this logic is lame, should really write a real test at some point
+AS_CASE([$host],
+    # Barry proposes AR_FLAGS="Scq" in trac#754, but that won't work correctly for re-builds
+    [*-*-darwin*], [AR_FLAGS=Scr]
+)
+AC_ARG_VAR([AR_FLAGS]) # causes AC_SUBST too
+
 # Note that we set RANLIB to true if we don't find it (some systems neither
 # need it nor provide it)
 AC_CHECK_PROGS(RANLIB,ranlib,true)
@@ -5728,6 +5743,7 @@ dnl autoconf did this in a way that caused problems, paritcularly with
 dnl errors reported as inconsistent cache files.  Instead, we simply
 dnl invoke the configure scripts (if present) directly.
 export AR
+export AR_FLAGS
 export RANLIB
 export MPILIBNAME
 export PMPILIBNAME

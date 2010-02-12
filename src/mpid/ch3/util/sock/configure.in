@@ -150,6 +150,7 @@ elif test "$ac_cv_sizeof_long_long" = "$ac_cv_sizeof_void_p" ; then
 fi
 
 AC_SUBST(AR)
+AC_SUBST(AR_FLAGS)
 AC_SUBST(RANLIB)
 AC_SUBST(MPILIBNAME)
 AC_SUBST(CC)

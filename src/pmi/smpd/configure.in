@@ -58,6 +58,7 @@ echo "smpd_sock_name = $smpd_sock_name"
 
 AC_SUBST(SMPD_PMI_LIBS)
 AC_SUBST(AR)
+AC_SUBST(AR_FLAGS)
 AC_SUBST(RANLIB)
 AC_SUBST(MPILIBNAME)
 AC_SUBST(CC)
