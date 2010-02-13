@@ -10,5 +10,6 @@ all-postamble:
 	build_prefix=`cd .. && pwd` && \
 	for dir in mpl openpa ; do \
 	    (cd $$dir && ${MAKE} prefix=$$build_prefix exec_prefix=$$build_prefix \
-	    bindir=$$build_prefix/bin install) ; \
+	    bindir=$$build_prefix/bin libdir=$$build_prefix/lib \
+	    includedir=$$build_prefix/include install) ; \
 	done
