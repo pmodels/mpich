@@ -39,9 +39,10 @@ libdir=@libdir@
 # configure (e.g., determining whehter -lsocket is needee)
 CC="@CC@"
 C_LINKPATH_SHL="@C_LINKPATH_SHL@"
-WRAPPER_CFLAGS="@WRAPPER_CFLAGS@"
-WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
-WRAPPER_LIBS="@WRAPPER_LIBS@"
+CFLAGS="@WRAPPER_CFLAGS@"
+CPPFLAGS="@WRAPPER_CPPFLAGS@"
+LDFLAGS="@WRAPPER_LDFLAGS@"
+LIBS="@WRAPPER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 NEEDSPLIB="@NEEDSPLIB@"
@@ -205,11 +206,6 @@ if [ "$NEEDSPLIB" = yes ] ; then
 else
     mpilibs="-l$MPILIBNAME"
 fi
-#
-# Init with the ones needed by MPI
-CFLAGS="$WRAPPER_CFLAGS"
-LDFLAGS="$WRAPPER_LDFLAGS"
-LIBS="$WRAPPER_LIBS"
 
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
@@ -264,10 +260,10 @@ if [ "$linking" = yes ] ; then
 	if [ "$found_path" = "0" ] ; then path_list="$path_list $path" ; fi
     done
 
-    $Show $CC $CFLAGS $LDFLAGS $allargs -I$includedir ${path_list} $mpilibs $LIBS
+    $Show $CC $CPPFLAGS $CFLAGS $LDFLAGS $allargs -I$includedir ${path_list} $mpilibs $LIBS
     rc=$?
 else
-    $Show $CC $CFLAGS $allargs -I$includedir
+    $Show $CC $CPPFLAGS $CFLAGS $allargs -I$includedir
     rc=$?
 fi
 

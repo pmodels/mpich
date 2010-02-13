@@ -17,9 +17,10 @@ libdir=@libdir@
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
 CC="@CC@"
-WRAPPER_CFLAGS="@WRAPPER_CFLAGS@"
-WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
-WRAPPER_LIBS="@WRAPPER_LIBS@"
+CFLAGS="@WRAPPER_CFLAGS@"
+CPPFLAGS="@WRAPPER_CPPFLAGS@"
+LDFLAGS="@WRAPPER_LDFLAGS@"
+LIBS="@WRAPPER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 NEEDSPLIB="@NEEDSPLIB@"

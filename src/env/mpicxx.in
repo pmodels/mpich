@@ -37,9 +37,9 @@ libdir=@libdir@
 # Default settings for compiler, flags, and libraries
 CXX="@CXX@"
 CXX_LINKPATH_SHL="@CXX_LINKPATH_SHL@"
-WRAPPER_CXXFLAGS="@WRAPPER_CXXFLAGS@"
-WRAPPER_LDFLAGS="@WRAPPER_LDFLAGS@"
-WRAPPER_LIBS="@WRAPPER_LIBS@"
+CXXFLAGS="@WRAPPER_CXXFLAGS@"
+LDFLAGS="@WRAPPER_LDFLAGS@"
+LIBS="@WRAPPER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 MPICXXLIBNAME="@MPICXXLIBNAME@"
@@ -213,11 +213,6 @@ cxxlibs=
 if [ "$MPICXXLIBNAME" != "$MPILIBNAME" ] ; then
     cxxlibs="-l$MPICXXLIBNAME"
 fi
-#
-# Init with the ones needed by MPI
-CXXFLAGS="$WRAPPER_CXXFLAGS"
-LDFLAGS="$WRAPPER_LDFLAGS"
-LIBS="$WRAPPER_LIBS"
 
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
