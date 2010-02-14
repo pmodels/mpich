@@ -11,5 +11,5 @@ all-postamble:
 	for dir in mpl openpa ; do \
 	    (cd $$dir && ${MAKE} prefix=$$build_prefix exec_prefix=$$build_prefix \
 	    bindir=$$build_prefix/bin libdir=$$build_prefix/lib \
-	    includedir=$$build_prefix/include install) ; \
+	    includedir=$$build_prefix/include docdir=$$build_prefix/share/doc install) ; \
 	done
