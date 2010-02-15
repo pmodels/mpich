@@ -220,8 +220,8 @@ installed MPICH2 and run an MPI example.
 
 More details on arguments to mpiexec are given in the User's Guide in
 the doc subdirectory. Also in the User's Guide you will find help on
-debugging. MPICH2 has some some support for the TotalView debugger, as
-well as some other approaches described there.
+debugging. MPICH2 has support for the TotalView debugger, as well as
+some other approaches described there.
 
 -------------------------------------------------------------------------
 
@@ -230,7 +230,7 @@ II. Alternate Configure Options
 
 The above steps utilized the MPICH2 defaults, which included choosing
 TCP and shared memory for communication (via the "nemesis" channel)
-and the MPD process manager.  Other alternatives are available.  You
+and the Hydra process manager. Other alternatives are available.  You
 can find out about configuration alternatives with
 
    ./configure --help
@@ -247,16 +247,16 @@ MPICH2 allows several sets of compiler flags to be used. The first
 three sets are configure-time options for MPICH2, while the fourth is
 only relevant when compiling applications with mpicc and friends.
 
-1. CFLAGS, CXXFLAGS, FFLAGS, F90FLAGS and LDFLAGS (abbreviated as
-xFLAGS): Setting these flags would result in the MPICH2 library being
-compiled/linked with these flags and the flags internally being used
-in mpicc and friends.
+1. CFLAGS, CPPFLAGS, CXXFLAGS, FFLAGS, F90FLAGS, LDFLAGS and LIBS
+(abbreviated as xFLAGS): Setting these flags would result in the
+MPICH2 library being compiled/linked with these flags and the flags
+internally being used in mpicc and friends.
 
-2. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS, MPICH2LIB_FFLAGS,
-MPICH2LIB_F90FLAGS and MPICH2LIB_LDFLAGS (abbreviated as
-MPICH2LIB_xFLAGS): Setting these flags would result in the MPICH2
-library being compiled/linked with these flags. However, these flags
-will *not* be used by mpicc and friends.
+2. MPICH2LIB_CFLAGS, MPICH2LIB_CPPFLAGS, MPICH2LIB_CXXFLAGS,
+MPICH2LIB_FFLAGS, MPICH2LIB_F90FLAGS, MPICH2LIB_LDFLAGS and
+MPICH2LIB_LIBS (abbreviated as MPICH2LIB_xFLAGS): Setting these flags
+would result in the MPICH2 library being compiled/linked with these
+flags. However, these flags will *not* be used by mpicc and friends.
 
 3. MPICH2_MAKE_CFLAGS: Setting these flags would result in MPICH2's
 configure tests to not use these flags, but the makefile's to use
@@ -264,11 +264,11 @@ them. This is a temporary hack for certain cases that advanced
 developers might be interested in which break existing configure tests
 (e.g., -Werror) and are not recommended for regular users.
 
-4. MPICH2_MPICC_FLAGS, MPICH2_MPICXX_FLAGS, MPICH2_MPIF77_FLAGS,
-MPICH2_MPIF90_FLAGS and MPICH2_LDFLAGS (abbreviated as
-MPICH2_MPIX_FLAGS): These flags do *not* affect the compilation of the
-MPICH2 library itself, but will be internally used by mpicc and
-friends.
+4. MPICH2_MPICC_FLAGS, MPICH2_MPICPP_FLAGS, MPICH2_MPICXX_FLAGS,
+MPICH2_MPIF77_FLAGS, MPICH2_MPIF90_FLAGS, MPICH2_LDFLAGS and
+MPICH2_LIBS (abbreviated as MPICH2_MPIX_FLAGS): These flags do *not*
+affect the compilation of the MPICH2 library itself, but will be
+internally used by mpicc and friends.
 
 
   +--------------------------------------------------------------------+
@@ -295,8 +295,7 @@ friends.
 
 
 All these flags can be set as part of configure command or through
-environment variables. (CPPFLAGS stands for C preprocessor flags,
-which should NOT be set)
+environment variables.
 
 
 Default flags
@@ -370,9 +369,9 @@ osu_ch3 (from Ohio State University for InfiniBand and iWARP), ch_mx
 ch3 device
 **********
 The ch3 device contains different internal communication options
-called "channels". We currently support nemesis (default), sock, ssm,
-and shm channels, and experimentally provide a dllchan channel within
-the ch3 device.
+called "channels". We currently support nemesis (default) and sock
+channels, and experimentally provide a dllchan channel within the ch3
+device.
 
 nemesis channel
 ---------------
@@ -461,15 +460,16 @@ using:
 
   --with-device=ch3:shm
 
-These two channels are now unsupported on UNIX platforms. The nemesis
-channel provides all the functionality supported by these channels and
-more.
+IMPORTANT NOTE: These two channels are now unsupported and will be
+deleted in future releases. The nemesis channel provides all the
+functionality supported by these channels and more.
 
 dllchan
 -------
+dllchan is an *experimental* channel for supporting dynamic loading of
+other channels. This channel is unsupported as well.
 
-dllchan is a new *experimental* channel for supporting dynamic loading
-of other channels. To use this channel, configure with:
+To use this channel, configure with:
 
   --with-device=ch3:dllchan:sock,shm,ssm
 
