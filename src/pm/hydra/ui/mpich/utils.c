@@ -242,6 +242,107 @@ static HYD_status wdir_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static struct HYD_arg_match_table match_table[];
+
+static char **config_argv = NULL;
+
+static HYD_status parse_config_argv(void)
+{
+    struct HYD_exec *exec;
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    do {
+        /* Get the mpiexec arguments  */
+        status = HYDU_parse_array(&config_argv, match_table);
+        HYDU_ERR_POP(status, "error parsing input array\n");
+
+        if (!(*config_argv))
+            break;
+
+        /* Get the executable information */
+        do {
+            status = get_current_exec(&exec);
+            HYDU_ERR_POP(status, "get_current_exec returned error\n");
+
+            i = 0;
+            while (exec->exec[i] != NULL)
+                i++;
+            exec->exec[i] = HYDU_strdup(*config_argv);
+            exec->exec[i + 1] = NULL;
+        } while (++config_argv && *config_argv);
+    } while (1);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status process_config_token(char *token, int newline)
+{
+    struct HYD_exec *exec;
+    static int first_line = 1, idx = 0;
+    HYD_status status = HYD_SUCCESS;
+
+    if (config_argv == NULL)
+        HYDU_MALLOC(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof (char *), status);
+
+    status = get_current_exec(&exec);
+    HYDU_ERR_POP(status, "get_current_exec returned error\n");
+
+    if (newline) {      /* The first entry gives the hostname and processes */
+        if (first_line)
+            first_line = 0;
+        else {
+            status = parse_config_argv();
+            HYDU_ERR_POP(status, "error parsing config args\n");
+
+            status = HYDU_alloc_exec(&exec->next);
+            HYDU_ERR_POP(status, "allocate_exec returned error\n");
+            exec->next->appnum = exec->appnum + 1;
+        }
+
+        idx = 0;
+    }
+
+    config_argv[idx++] = HYDU_strdup(token);
+    config_argv[idx] = NULL;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static void config_help_fn(void)
+{
+    printf("\n");
+    printf("-configfile: Configuration file for MPMD launch argument information\n\n");
+    printf("Notes:\n");
+    printf("  * The config file contains information very similar to a command-line\n");
+    printf("    launch, except ':' is replaced with a new line character\n");
+}
+
+static HYD_status config_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_parse_hostfile(**argv, process_config_token);
+    HYDU_ERR_POP(status, "error parsing config file\n");
+
+    status = parse_config_argv();
+    HYDU_ERR_POP(status, "error parsing config args\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static void env_help_fn(void)
 {
     printf("\n");
@@ -658,6 +759,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"machines", mfile_fn, mfile_help_fn},
     {"machinefile", mfile_fn, mfile_help_fn},
     {"wdir", wdir_fn, wdir_help_fn},
+    {"configfile", config_fn, config_help_fn},
 
     /* Local environment options */
     {"env", env_fn, env_help_fn},
