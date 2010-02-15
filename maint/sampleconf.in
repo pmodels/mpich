@@ -42,6 +42,7 @@ dnl Find a C compiler (choose gcc first)
 dnl Here are some example calls.  See mpich/configure.in for others
 AC_PROG_CC
 AC_PATH_PROG(AR,ar)
+AC_SUBST(AR_FLAGS)
 AC_PATH_PROG(RANLIB,ranlib)
 AC_PROG_INSTALL
 dnl
