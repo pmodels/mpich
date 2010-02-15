@@ -12,6 +12,9 @@
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
+int HYD_pmcd_pmiserv_abort = 0;
+int HYD_pmcd_pmiserv_pipe[2];
+
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
@@ -110,6 +113,47 @@ HYD_status HYD_pmci_launch_procs(void)
     goto fn_exit;
 }
 
+static int user_abort_signal = 0;
+
+static HYD_status cleanup_procs(int fd, HYD_event_t events, void *userp)
+{
+    char c;
+    int count;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_read(fd, &c, 1, &count, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "read error\n");
+
+    /* This is an abort signal received from the user. This is
+     * different from a timeout. In a timeout, we wait for the proxies
+     * to connect back. If the user explicitly killed the job, then we
+     * don't wait for this. */
+    if (user_abort_signal == 0) {
+        HYDU_dump_noprefix(stdout, "Ctrl-C caught: waiting for a clean abort\n");
+        HYDU_dump_noprefix(stdout, "[press Ctrl-C again to force abort]\n");
+        user_abort_signal = 1;
+    }
+    else
+        HYD_pmcd_pmiserv_abort = 1;
+
+    status = HYD_pmcd_pmiserv_cleanup();
+    HYDU_ERR_POP(status, "cleanup of processes failed\n");
+
+    /* Once the cleanup signal has been sent, wait for the proxies to
+     * get back with the exit status */
+    status = HYDT_bsci_wait_for_completion(-1);
+    HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
     struct HYD_pg *pg;
@@ -118,6 +162,12 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    if (pipe(HYD_pmcd_pmiserv_pipe) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
+
+    status = HYDT_dmx_register_fd(1, &HYD_pmcd_pmiserv_pipe[0], POLLIN, NULL, cleanup_procs);
+    HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYDT_bsci_wait_for_completion(timeout);
     if (status == HYD_TIMED_OUT) {

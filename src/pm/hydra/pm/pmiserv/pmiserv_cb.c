@@ -13,6 +13,8 @@
 #include "pmiserv_utils.h"
 #include "pmiserv_pmi.h"
 
+static int cleanup_process = 0;
+
 static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
 {
     char *args[HYD_NUM_TMP_STRINGS], *cmd = NULL;
@@ -206,8 +208,11 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         buf[hdr.buflen] = 0;
 
-        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
-        HYDU_ERR_POP(status, "unable to process PMI command\n");
+        /* If we are cleaning up; ignore PMI requests */
+        if (!cleanup_process) {
+            status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
+            HYDU_ERR_POP(status, "unable to process PMI command\n");
+        }
     }
 
   fn_exit:
@@ -298,8 +303,6 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     goto fn_exit;
 }
 
-static int in_cleanup = 0;
-
 HYD_status HYD_pmcd_pmiserv_cleanup(void)
 {
     struct HYD_pg *pg;
@@ -311,13 +314,11 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
 
     HYDU_FUNC_ENTER();
 
-    if (in_cleanup)
+    if (cleanup_process)
         goto fn_exit;
 
-    in_cleanup = 1;
+    cleanup_process = 1;
 
-    /* FIXME: Instead of doing this from this process itself, fork a
-     * bunch of processes to do this. */
     /* Connect to all proxies and send a KILL command */
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         /* Close the control listen port, so new proxies cannot
@@ -331,20 +332,27 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
         }
 
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            if (proxy->control_fd == -1) {
-                /* The proxy hasn't connected back, allocate garbage exit status */
-                HYDU_MALLOC(proxy->exit_status, int *,
-                            proxy->proxy_process_count * sizeof(int), status);
-                for (i = 0; i < proxy->proxy_process_count; i++)
-                    proxy->exit_status[i] = 1;
 
-                force_cleanup = 1;
+            while (proxy->control_fd == -1 && proxy->exit_status == NULL) {
+                if (HYD_pmcd_pmiserv_abort) {
+                    /* Aborting; allocate garbage exit status */
+                    HYDU_MALLOC(proxy->exit_status, int *,
+                                proxy->proxy_process_count * sizeof(int), status);
+                    for (i = 0; i < proxy->proxy_process_count; i++)
+                        proxy->exit_status[i] = 1;
+
+                    force_cleanup = 1;
+                }
+                else {
+                    /* Graceful shutdown; wait for exit status to arrive */
+                    status = HYDT_dmx_wait_for_event(-1);
+                    HYDU_ERR_POP(status, "error waiting for events\n");
+                }
             }
 
-            if (proxy->exit_status) {
-                /* Already got the exit status on this fd; skip it */
+            /* If the proxy has not been setup yet, it's a forced abort */
+            if (proxy->control_fd == -1)
                 continue;
-            }
 
             cmd = KILL_JOB;
             status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
@@ -400,11 +408,19 @@ static HYD_status ckpoint(void)
 
 void HYD_pmcd_pmiserv_signal_cb(int sig)
 {
+    char c;
+
     HYDU_FUNC_ENTER();
 
     if (sig == SIGINT || sig == SIGQUIT || sig == SIGTERM) {
-        /* There's nothing we can do with the return value for now. */
-        HYD_pmcd_pmiserv_cleanup();
+        /* We don't want to send the abort signal directly to the
+         * proxies, since that would require two processes (this
+         * asynchronous process and the main process) to use the same
+         * control socket, potentially resulting in data
+         * corruption. The strategy we use is to set the abort flag
+         * and send a signal to ourselves. The signal callback does
+         * the process cleanup instead. */
+        HYDU_sock_write(HYD_pmcd_pmiserv_pipe[1], &c, 1);
     }
     else if (sig == SIGUSR1) {
         ckpoint();

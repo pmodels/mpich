@@ -51,6 +51,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
     gettimeofday(&start, NULL);
 
     /* Loop till all sockets have closed */
+  restart_wait:
     while (1) {
         count = 0;
         for (i = 0; i < HYD_bscu_fd_count; i++) {
@@ -69,8 +70,10 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                 time_elapsed = (now.tv_sec - start.tv_sec);     /* Ignore microsec granularity */
 
                 if (timeout > 0) {
-                    if (time_elapsed > timeout)
+                    if (time_elapsed > timeout) {
+                        status = HYD_TIMED_OUT;
                         goto fn_exit;
+                    }
                     else
                         time_left = timeout - time_elapsed;
                 }
@@ -80,7 +83,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                 status = HYDT_dmx_wait_for_event(time_left);
                 HYDU_ERR_POP(status, "error waiting for event\n");
 
-                continue;
+                goto restart_wait;
             }
             else
                 HYD_bscu_fd_list[i] = -1;
