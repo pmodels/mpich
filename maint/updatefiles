@@ -368,7 +368,44 @@ if [ "$libtoolVerOk" != "yes" ] ; then
     exit 1
 fi
 
-#
+# Add a test for "AM_INIT_AUTOMAKE([1.11])"; note that many systems do not even
+# define the AM_INIT_AUTOMAKE test, so something like
+# m4_ifdef([AM_INIT_AUTOMAKE],,[m4_fatal([AM_INIT_AUTOMAKE not defined])])
+# is required.
+if [ ! -d .tmp ] ; then
+    mkdir .tmp >/dev/null 2>&1
+    mkdir .tmp/m4 >/dev/null 2>&1
+fi
+cat <<EOF >.tmp/configure.ac
+AC_PREREQ(2.63)
+AC_INIT(testver,1.0)
+AC_CONFIG_AUX_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4])
+m4_ifdef([AM_INIT_AUTOMAKE],,[m4_fatal([AM_INIT_AUTOMAKE not defined])])
+AM_INIT_AUTOMAKE([1.11 foreign])
+AC_MSG_RESULT([A message])
+AC_OUTPUT([Makefile])
+EOF
+cat <<EOF >.tmp/Makefile.am
+ACLOCAL_AMFLAGS = -I m4
+EOF
+automakeVerOk=no
+echo "Checking that automake version is acceptable..."
+# We have to do it this way because not all automake versions accept
+# a command line argument to provide the version number.
+if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
+    automakeVerOk=yes
+fi
+rm -rf .tmp
+if [ "$automakeVerOk" != "yes" ] ; then
+    echo "Unable to build a configure that uses automake.  automake version 1.11"
+    echo "or later is required; for some automake instances, the command"
+    echo "   automake --version"
+    echo "will provide the version number."
+    exit 1
+fi
+
+
 # Create the bindings if necessary 
 if [ $do_bindings = "yes" ] ; then
     build_f77=no
