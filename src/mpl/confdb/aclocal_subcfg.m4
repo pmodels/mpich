@@ -31,7 +31,8 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	   . $pac_abs_srcdir/$1/setup
 	fi
 
-	if test -x $pac_abs_srcdir/$1/configure ; then
+        pac_subconfigure_file="$pac_abs_srcdir/$1/configure"
+	if test -x $pac_subconfigure_file ; then
 	   pac_subconfig_args=""
 	   prev_arg=""
 
@@ -100,14 +101,20 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	       esac
 	   done
 
-	   echo "executing: $pac_abs_srcdir/$1/configure $pac_subconfig_args"
-	   if (cd $1 && eval $pac_abs_srcdir/$1/configure $pac_subconfig_args) ; then
+	   echo "executing: $pac_subconfigure_file $pac_subconfig_args"
+	   if (cd $1 && eval $pac_subconfigure_file $pac_subconfig_args) ; then
 	      $2
 	      :
 	   else
 	      $3
 	      :
 	   fi
+        else
+           if test -e $pac_subconfigure_file ; then
+               AC_MSG_WARN([$pac_subconfigure_file exists but is not executable])
+           else
+               AC_MSG_WARN([$pac_subconfigure_file does not exist])
+           fi
 	fi
 
         AC_MSG_NOTICE([===== done with $1 configure =====])
