@@ -47,7 +47,7 @@ static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
 static HYD_status store_launch_time(struct HYDT_bscd_ssh_time *e)
 {
     int i, oldest, time_left;
-    struct timeval now, store;
+    struct timeval now;
     HYD_status status = HYD_SUCCESS;
 
     /* Search for an unset element to store the current time */
