@@ -48,13 +48,16 @@ fi
 AC_SUBST(HYDRA_VERSION)
 AC_DEFINE_UNQUOTED(HYDRA_VERSION,"$HYDRA_VERSION",[Hydra version information])
 AC_DEFINE_UNQUOTED(HYDRA_RELEASE_DATE,"$HYDRA_RELEASE_DATE",[Hydra release date information])
+
+PAC_PUSH_ALL_FLAGS
+PAC_RESET_ALL_FLAGS
 if test "$CC" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_CC,"$CC $CPPFLAGS $CXXFLAGS $LDFLAGS $LIBS",[C compiler])
+   AC_DEFINE_UNQUOTED(HYDRA_CC,"$CC $CPPFLAGS $CFLAGS $LDFLAGS $LIBS",[C compiler])
 else
    AC_DEFINE_UNQUOTED(HYDRA_CC,"",[C compiler])
 fi
 if test "$CXX" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_CXX,"$CXX $CPPFLAGS $CFLAGS $LDFLAGS $LIBS",[C++ compiler])
+   AC_DEFINE_UNQUOTED(HYDRA_CXX,"$CXX $CPPFLAGS $CXXFLAGS $LDFLAGS $LIBS",[C++ compiler])
 else
    AC_DEFINE_UNQUOTED(HYDRA_CXX,"",[C++ compiler])
 fi
@@ -68,6 +71,8 @@ if test "$F90" != "" ; then
 else
    AC_DEFINE_UNQUOTED(HYDRA_F90,"",[Fortran 90 compiler])
 fi
+PAC_POP_ALL_FLAGS
+
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
 
 # Dirty hack -- If we are compiling within MPICH2, use the MPL in the
