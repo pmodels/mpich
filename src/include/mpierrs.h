@@ -104,6 +104,8 @@
 				   "**bufalias", 0 );		\
     }
 
+/* FIXME this test is probably too broad.  Comparing the (buffer,type,count)
+ * tuples is really what is needed to check for aliasing. */
 #define MPIR_ERRTEST_ALIAS_COLL(ptr1,ptr2,err)			\
     if ((ptr1)==(ptr2)) {		                        \
         err = MPIR_Err_create_code(MPI_SUCCESS,			\

@@ -4,20 +4,30 @@
  *      See COPYRIGHT in top-level directory.
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include "mpi.h"
 
 int main( int argc, char *argv[] )
 {
-    int        err, errs = 0, len;
-    int        buf[1], rank;
-    int        recvbuf[1];
+    int        err, errs = 0, len, i;
+    int        rank = -1, size = -1;
+    int       *buf;
+    int       *recvbuf;
     char       msg[MPI_MAX_ERROR_STRING];
 
     MTest_Init( &argc, &argv );
     MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
 
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    buf[0] = 1;
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+
+    buf = malloc(size * sizeof(int));
+    recvbuf = malloc(size * sizeof(int));
+    for (i = 0; i < size; ++i) {
+        buf[i] = i;
+        recvbuf[i] = -1;
+    }
+
     err = MPI_Allreduce( buf, buf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
     if (!err) {
 	errs++;
@@ -71,6 +81,52 @@ int main( int argc, char *argv[] )
         printf("FAILED TO MPI_ABORT!!!\n");
     }
 
+    /* check for aliasing detection in MPI_Gather (tt#1006) */
+    err = MPI_Gather(buf, 1, MPI_INT, buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (!err) {
+            errs++;
+            printf( "Did not detect aliased arguments in MPI_Scatter\n" );
+        }
+        else {
+            /* Check that we can get a message for this error */
+            /* (This works if it does not SEGV or hang) */
+            MPI_Error_string( err, msg, &len );
+        }
+    }
+    if (err) {
+        /* post a correct MPI_Gather on any processes that got an error earlier */
+        err = MPI_Gather(buf, 1, MPI_INT, recvbuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (err) {
+            errs++;
+            printf("make-up gather failed on rank %d\n", rank);
+        }
+    }
+
+    /* check for aliasing detection in MPI_Scatter (tt#1006) */
+    err = MPI_Scatter(buf, 1, MPI_INT, buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (!err) {
+            errs++;
+            printf( "Did not detect aliased arguments in MPI_Scatter\n" );
+        }
+        else {
+            /* Check that we can get a message for this error */
+            /* (This works if it does not SEGV or hang) */
+            MPI_Error_string( err, msg, &len );
+        }
+    }
+    if (err) {
+        /* post a correct MPI_Scatter on any processes that got an error earlier */
+        err = MPI_Scatter(buf, 1, MPI_INT, recvbuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (err) {
+            errs++;
+            printf("make-up scatter failed on rank %d\n", rank);
+        }
+    }
+
+    free(recvbuf);
+    free(buf);
 
     MTest_Finalize( errs );
     MPI_Finalize( );
