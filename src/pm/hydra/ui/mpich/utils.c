@@ -838,46 +838,32 @@ static HYD_status set_default_values(void)
         MPL_env2bool("HYDRA_DEBUG", &HYD_handle.user_global.debug) == 0)
         HYD_handle.user_global.debug = 0;
 
-    if (HYD_handle.user_global.bootstrap == NULL &&
-        MPL_env2str("HYDRA_BOOTSTRAP", (const char **) &HYD_handle.user_global.bootstrap) == 0)
-        HYD_handle.user_global.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
-
-    if (HYD_handle.rmk == NULL)
-        MPL_env2str("HYDRA_RMK", (const char **) &HYD_handle.rmk);
-
-    if (HYD_handle.user_global.demux == NULL &&
-        MPL_env2str("HYDRA_DEMUX", (const char **) &HYD_handle.user_global.demux) == 0)
-        HYD_handle.user_global.demux = HYDU_strdup(HYDRA_DEFAULT_DEMUX);
-
-    if (HYD_handle.user_global.iface == NULL)
-        MPL_env2str("HYDRA_IFACE", (const char **) &HYD_handle.user_global.iface);
+#define get_env_str_val(lvalue_, env_var_name_, default_val_)  \
+    do {                                                       \
+        if (lvalue_ == NULL) {                                 \
+            const char *tmp_ = (default_val_);                 \
+            MPL_env2str(env_var_name_, (const char **) &tmp_); \
+            if (tmp_)                                          \
+                lvalue_ = HYDU_strdup(tmp_);                   \
+        }                                                      \
+    } while (0)
+    get_env_str_val(HYD_handle.user_global.bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
+    get_env_str_val(HYD_handle.rmk, "HYDRA_RMK", NULL);
+    get_env_str_val(HYD_handle.user_global.iface, "HYDRA_IFACE", NULL);
+    get_env_str_val(HYD_handle.user_global.demux, "HYDRA_DEMUX", HYDRA_DEFAULT_DEMUX);
+    get_env_str_val(HYD_handle.user_global.bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
+    get_env_str_val(HYD_handle.user_global.binding, "HYDRA_BINDING", NULL);
+    if (strcmp(HYDRA_DEFAULT_BINDLIB, ""))
+        get_env_str_val(HYD_handle.user_global.bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
+    if (strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
+        get_env_str_val(HYD_handle.user_global.ckpointlib, "HYDRA_CKPOINTLIB", HYDRA_DEFAULT_CKPOINTLIB);
+    get_env_str_val(HYD_handle.user_global.ckpoint_prefix, "HYDRA_CKPOINT_PREFIX", NULL);
+#undef get_env_str_val
 
     if (HYD_handle.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
         status = HYDU_parse_hostfile(tmp, process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
-
-    if (HYD_handle.user_global.bootstrap_exec == NULL)
-        MPL_env2str("HYDRA_BOOTSTRAP_EXEC",
-                    (const char **) &HYD_handle.user_global.bootstrap_exec);
-
-    if (HYD_handle.user_global.binding == NULL)
-        MPL_env2str("HYDRA_BINDING", (const char **) &HYD_handle.user_global.binding);
-
-    if (HYD_handle.user_global.bindlib == NULL &&
-        MPL_env2str("HYDRA_BINDLIB", (const char **) &HYD_handle.user_global.bindlib) == 0 &&
-        strcmp(HYDRA_DEFAULT_BINDLIB, ""))
-        HYD_handle.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
-
-    if (HYD_handle.user_global.ckpointlib == NULL &&
-        MPL_env2str("HYDRA_CKPOINTLIB",
-                    (const char **) &HYD_handle.user_global.ckpointlib) == 0 &&
-        strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
-        HYD_handle.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
-
-    if (HYD_handle.user_global.ckpoint_prefix == NULL)
-        MPL_env2str("HYDRA_CKPOINT_PREFIX",
-                    (const char **) &HYD_handle.user_global.ckpoint_prefix);
 
     /* Check environment for setting the inherited environment */
     if (HYD_handle.user_global.global_env.prop == NULL &&
