@@ -10,7 +10,7 @@ external_libs = -lmpl
 
 bin_PROGRAMS =
 
-ACLOCAL_AMFLAGS = -I mpl/confdb
+ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/@mpl_srcdir@/include \
 	-I$(top_builddir)/@mpl_srcdir@/include
 

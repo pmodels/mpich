@@ -5,8 +5,10 @@ AC_PREREQ(2.62)
 #
 
 AC_INIT([Hydra], [0])
-AC_CONFIG_AUX_DIR(mpl/confdb)
-AC_CONFIG_MACRO_DIR(mpl/confdb)
+
+AC_CONFIG_AUX_DIR(confdb)
+AC_CONFIG_MACRO_DIR(confdb)
+
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
 AC_CONFIG_HEADER(include/hydra_config.h)

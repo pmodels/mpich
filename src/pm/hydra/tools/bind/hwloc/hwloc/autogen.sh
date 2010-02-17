@@ -8,5 +8,4 @@ else
     autoreconf=${AUTORECONF:-autoreconf}
 fi
 
-$libtoolize
 $autoreconf -vif

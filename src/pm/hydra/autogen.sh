@@ -12,7 +12,6 @@ else
 fi
 
 (cd mpl && $autoreconf -vif)
-$libtoolize
 $autoreconf -vif
 
 # Remove the autom4te.cache folders for a release-like structure.
