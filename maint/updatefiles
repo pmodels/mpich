@@ -52,6 +52,31 @@ amdirs="src/openpa src/pm/hydra src/mpl"
 AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates makefiles smpdversion getparms"
 stepsCleared=no
 
+# Sanity check that any relative path svn:externals are present.  An SVN version
+# >=1.5 is needed to understand the relative path externals format.  Such
+# externals are used in particular for mpl in hydra and all non-root confdbs.
+#
+# Check for a particular file, not just the directory because several autotools
+# steps (such as libtoolize) will create the aux/macro dir.
+svn_externals_sanity_file="src/mpl/confdb/aclocal_subcfg.m4"
+if test "!" -e $svn_externals_sanity_file ; then
+    cat <<EOT
+
+ERROR: The file '$svn_externals_sanity_file'
+is not present, indicating that you do not have a complete source tree.
+This is usually caused by checking out MPICH2 with an SVN client version
+less than v1.5.  Please check your SVN client version (with
+"svn --version") and use a newer version if necessary to obtain MPICH2.
+
+If you do have a modern SVN client and believe that you have reached
+this error case for some other reason, please file a ticket at:
+
+  https://trac.mcs.anl.gov/projects/mpich2/newticket
+
+EOT
+    exit 1
+fi
+
 # Check for old settings of MPICH2_xxx_DIR - some of the autotools now in 
 # use require that *all* of the autotools are in the *same* directory
 oldSet=no
