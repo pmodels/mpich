@@ -3721,7 +3721,14 @@ Sub AddDefinitions( fout, filename, b64 )
                                 Case "LT_OBJDIR"
                                         fout.WriteLine("/* #undef LT_OBJDIR */")
 				Case Else
-                                    If Not (customDefDict Is Nothing) And (customDefDict.Exists(macroname)) Then
+                                    Dim useCustomDefDict
+                                    useCustomDefDict = False
+                                    If Not (customDefDict Is Nothing) Then
+                                        If customDefDict.Exists(macroname) Then
+                                            useCustomDefDict = True
+                                        End If
+                                    End If
+                                    If useCustomDefDict Then
                                         fout.WriteLine("#define " & macroname & " " & customDefDict.Item(macroname))
                                     Else
 					'MsgBox("Unhandled definition <" & define & ">")
