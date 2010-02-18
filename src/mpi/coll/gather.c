@@ -679,7 +679,7 @@ int MPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                     MPIR_ERRTEST_USERBUFFER(recvbuf,recvcnt,recvtype,mpi_errno);
 
                     /* catch common aliasing cases */
-                    if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcnt == recvcnt)
+                    if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcnt == recvcnt && sendcnt != 0)
                         MPIR_ERRTEST_ALIAS_COLL(sendbuf,recvbuf,mpi_errno);
                 }
                 else

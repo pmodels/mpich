@@ -675,7 +675,7 @@ int MPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                     MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcnt, mpi_errno);
 
                     /* catch common aliasing cases */
-                    if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcnt == recvcnt)
+                    if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcnt == recvcnt && recvcnt != 0)
                         MPIR_ERRTEST_ALIAS_COLL(sendbuf,recvbuf,mpi_errno);
                 }
                 else 
