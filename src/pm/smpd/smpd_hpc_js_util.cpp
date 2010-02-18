@@ -167,7 +167,6 @@ int smpd_hpc_js_create_job(smpd_hpc_js_ctxt_t ctxt, smpd_launch_node_t *head, IS
     int result;
     HRESULT hr;
     ISchedulerJob *pjob;
-    int task_id=0;
 
     smpd_enter_fn(FCNAME);
     if(!SMPDU_HPC_JS_CTXT_IS_VALID(ctxt)){
@@ -235,13 +234,13 @@ int smpd_hpc_js_create_job(smpd_hpc_js_ctxt_t ctxt, smpd_launch_node_t *head, IS
             smpd_err_printf("ERROR: Unable to set the working directory for job\n");
         }
 
-        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"%s\\stdout_%s_%d.txt", wdir, exe_namew, task_id);
+        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"stdout_mpich2_%s_%d_%d.txt", exe_namew, head->iproc, head->nproc);
         hr = ptask->put_StdOutFilePath(_bstr_t(filename));
         if(FAILED(hr)){
             smpd_err_printf("ERROR: Unable to set the stdout file path\n");
         }
 
-        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"%s\\stderr_%s_%d.txt", wdir, exe_namew, task_id);
+        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"stderr_mpich2_%s_%d_%d.txt", exe_namew, head->iproc, head->nproc);
         hr = ptask->put_StdErrFilePath(_bstr_t(filename));
         if(FAILED(hr)){
             smpd_err_printf("ERROR: Unable to set the stderr file path\n");
@@ -253,7 +252,6 @@ int smpd_hpc_js_create_job(smpd_hpc_js_ctxt_t ctxt, smpd_launch_node_t *head, IS
             smpd_exit_fn(FCNAME);
             return SMPD_FAIL;
         }
-        task_id++;
         head = head->next;
     }
 
