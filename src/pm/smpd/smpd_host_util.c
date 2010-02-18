@@ -575,6 +575,28 @@ int smpd_parse_hosts_string(const char *host_str)
     return SMPD_FALSE;
 }
 
+/* Free the global SMPD host list */
+#undef FCNAME
+#define FCNAME "smpd_free_host_list"
+int smpd_free_host_list(void )
+{
+    smpd_host_node_t *pnode;
+
+    while(smpd_process.host_list){
+        pnode = smpd_process.host_list;
+        smpd_process.host_list = smpd_process.host_list->next;
+        MPIU_Free(pnode);
+    }
+    smpd_process.host_list = NULL;
+    /* Reset tree id - mpiexec uses tree id = 0 & all hosts use
+     * tree id >= 1
+     */
+    smpd_process.tree_id = 1;
+    /* mpiexec with id=0 is the root of all hosts */
+    smpd_process.tree_parent = 0;
+    return SMPD_SUCCESS;
+}
+
 #undef FCNAME
 #define FCNAME "smpd_get_host_id"
 int smpd_get_host_id(char *host, int *id_ptr)

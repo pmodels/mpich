@@ -64,6 +64,7 @@
 #include "smpd_version.h"
 #include "smpd_iov.h"
 #include "smpd_util_sock.h"
+
 #define SMPD_VERSION_FAILURE "version_failure"
 
 #define SMPD_LISTENER_PORT               8676
@@ -789,6 +790,7 @@ typedef struct smpd_global_t
     char encrypt_prefix[SMPD_MAX_PASSWORD_LENGTH];
     SMPD_BOOL plaintext;
     SMPD_BOOL use_sspi, use_delegation, use_sspi_job_key;
+    SMPD_BOOL use_ms_hpc;
 #ifdef HAVE_WINDOWS_H
     PSecurityFunctionTable sec_fn;
 #endif
@@ -825,6 +827,12 @@ typedef smpd_host_spn_node_t **smpd_spn_list_hnd_t;
 
 extern smpd_global_t smpd_process;
 
+/* MS HPC job utils are smpd utils & hence needs the smpd structures 
+ * to be defined prior to including them.
+ */
+#ifdef HAVE_WINDOWS_H
+#include "smpd_hpc_js_exports.h"
+#endif
 
 /* function prototypes */
 #if defined(__cplusplus)
@@ -971,6 +979,7 @@ int smpd_get_pwd_from_file(char *file_name);
 int smpd_get_next_hostname(char *host, char *alt_host);
 SMPD_BOOL smpd_parse_machine_file(char *file_name);
 int smpd_parse_hosts_string(const char *host_str);
+int smpd_free_host_list(void );
 int smpd_get_host_id(char *host, int *id_ptr);
 int smpd_get_next_host(smpd_host_node_t **host_node_pptr, smpd_launch_node_t *launch_node);
 SMPD_BOOL smpd_get_argcv_from_file(FILE *fin, int *argcp, char ***argvp);
@@ -1032,6 +1041,15 @@ int smpd_handle_delayed_spawn_command(void);
 DWORD_PTR smpd_get_next_process_affinity_mask(void );
 DWORD_PTR smpd_get_processor_affinity_mask(int proc_num);
 BOOL smpd_init_affinity_table(void );
+
+int smpd_hpc_js_rmk_init(smpd_hpc_js_handle_t *phnd);
+int smpd_hpc_js_rmk_finalize(smpd_hpc_js_handle_t *phnd);
+int smpd_hpc_js_rmk_alloc_nodes(smpd_hpc_js_handle_t hnd, smpd_launch_node_t *head);
+
+int smpd_hpc_js_bs_init(smpd_hpc_js_handle_t hnd);
+int smpd_hpc_js_bs_finalize(smpd_hpc_js_handle_t hnd);
+int smpd_hpc_js_bs_launch_procs(smpd_hpc_js_handle_t hnd, smpd_launch_node_t *head);
+
 #endif
 
 #if defined(__cplusplus)

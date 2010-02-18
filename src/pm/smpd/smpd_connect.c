@@ -180,6 +180,7 @@ smpd_global_t smpd_process =
       SMPD_FALSE,       /* use_sspi                */
       SMPD_FALSE,       /* use_delegation          */
       SMPD_FALSE,       /* use_sspi_job_key        */
+      SMPD_FALSE,       /* use_ms_hpc              */
 #ifdef HAVE_WINDOWS_H
       NULL,             /* sec_fn                  */
 #endif

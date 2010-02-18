@@ -193,6 +193,35 @@ int main(int argc, char* argv[])
 	smpd_err_printf("Unable to parse the mpiexec command arguments.\n");
 	goto quit_job;
     }
+
+    /* If we are using MS HPC job scheduler we only connect
+     * to the local SMPD
+     */
+    if(smpd_process.use_ms_hpc){
+        char host[100];
+        int id;
+        /* Free the current host list */
+        result = smpd_free_host_list();
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to free the global host list\n");
+            goto quit_job;
+        }
+        /* Add local host to the host list */
+        result = smpd_get_hostname(host, 100);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to get the local hostname\n");
+            goto quit_job;
+        }
+	    result = smpd_get_host_id(host, &id);
+        if(result != SMPD_SUCCESS){
+            smpd_err_printf("Unable to get host id for local host\n");
+            goto quit_job;
+        }
+        /* Set the number of PMI procs since they are not launched by mpiexec */
+        smpd_process.nproc = smpd_process.launch_list->nproc;
+        smpd_dbg_printf("Adding (%s:%d) == (localhost) to the host list\n", host, id);
+    }
+
     /* print and see what we've got */
     /* debugging output *************/
     smpd_dbg_printf("host tree:\n");

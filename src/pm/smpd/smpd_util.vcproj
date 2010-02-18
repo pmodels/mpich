@@ -1073,6 +1073,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\smpd_hpc_js_bs.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\smpd_hpc_js_rmk.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\smpd_hpc_js_util.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\smpd_job.c"
 				>
 			</File>

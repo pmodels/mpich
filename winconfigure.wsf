@@ -3744,6 +3744,13 @@ Sub AddDefinitions( fout, filename, b64 )
 	End If
 End Sub
 
+printMsg "STATUS", "Checking MPICH2 dependencies..."
+if not f.FolderExists("C:\Program Files\Microsoft HPC Pack 2008 SDK") then
+    printMsg "ERROR", "Unable to find Microsoft HPC SDK"
+    WScript.Quit
+else
+    printMsg "VERBOSE", "Found MS HPC SDK "
+end if
 printMsg "STATUS", "Creating MPICH2 header files..."
 printMsg "STATUS", "Creating generic header files..."
 
@@ -6339,7 +6346,17 @@ Function GenBuild()
 	mfile.WriteLine("common_cflags = $(common_cflags) -DUSE_DBG_LOGGING")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
-	mfile.WriteLine("lflags  = $(lflags) /OPT:REF /INCREMENTAL:NO /NOLOGO /MANIFEST")
+        ' WARNING: This HPC SDK include path contains its own mpi.h - So include it with caution
+        mfile.WriteLine("MS_HPC_SDK_INC_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\Include""")
+	mfile.WriteLine
+        ' The HPC SDK lib path contains the type libraries required for interfacing with the HPC job manager
+	mfile.WriteLine("!IF ""$(CPU)"" == ""x86""")
+	mfile.WriteLine("MS_HPC_SDK_LIB_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\Lib\amd64""")
+	mfile.WriteLine("!ELSEIF ""$(CPU)"" == ""x64""")
+	mfile.WriteLine("MS_HPC_SDK_LIB_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\Lib\i386""")
+	mfile.WriteLine("!ENDIF")
+	mfile.WriteLine
+	mfile.WriteLine("lflags  = $(lflags) /LIBPATH:$(MS_HPC_SDK_LIB_PATH) /OPT:REF /INCREMENTAL:NO /NOLOGO /MANIFEST")
 	mfile.WriteLine("!IFDEF NODEBUG")
 	mfile.WriteLine("lflags = $(lflags) /RELEASE")
 	mfile.WriteLine("!ELSE")
@@ -6380,6 +6397,7 @@ Function GenBuild()
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("common_cflags = $(common_cflags) \")
+        mfile.WriteLine(" /I$(MS_HPC_SDK_LIB_PATH) \")
 	mfile.WriteLine(" /I..\src\include \")
 	mfile.WriteLine(" /I..\src\util\wrappers \")
 	mfile.WriteLine(" /I..\src\openpa\src \")
@@ -6490,7 +6508,7 @@ Function GenBuild()
 '	mfile.WriteLine("cflags = $(cflags) /DMPICH_MULTITHREADED")
 '	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
-	mfile.WriteLine("mpich2_libs = activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mswsock.lib ws2_32.lib mpr.lib rpcrt4.lib crypt32.lib gdi32.lib kernel32.lib advapi32.lib")
+	mfile.WriteLine("mpich2_libs = activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mswsock.lib ws2_32.lib mpr.lib rpcrt4.lib crypt32.lib gdi32.lib kernel32.lib advapi32.lib comsupp.lib")
 	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
 	mfile.WriteLine("common_libs = bufferoverflowU.lib")
 	mfile.WriteLine("!ENDIF")

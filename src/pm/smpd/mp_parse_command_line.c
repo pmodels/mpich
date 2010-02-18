@@ -678,6 +678,8 @@ int mp_parse_command_args(int *argcp, char **argvp[])
 	    char host[100];
 	    int id;
 
+        smpd_process.use_pmi_server = SMPD_TRUE;
+
 	    if (smpd_get_opt(argcp, argvp, "-verbose"))
 	    {
 		smpd_process.verbose = SMPD_TRUE;
@@ -1543,15 +1545,15 @@ configfile_loop:
 		smpd_add_host_to_default_list((*argvp)[2]);
 	    }
 #ifdef HAVE_WINDOWS_H
-        else if (strcmp(&(*argvp)[1][1], "ccp") == 0)
+        else if (strcmp(&(*argvp)[1][1], "ms_hpc") == 0)
         {
-            result = smpd_get_ccp_nodes(&nproc, &host_list);
-            if(result != SMPD_SUCCESS)
-            {
-                printf("Error: Unable to get the list of nodes from job manager \n");
-                smpd_exit_fn(FCNAME);
-                return SMPD_FAIL;
-            }
+            smpd_process.use_ms_hpc = SMPD_TRUE;
+            /* Enable SSPI for authenticating PMs */
+            smpd_process.use_sspi = SMPD_TRUE;
+            smpd_process.use_delegation = SMPD_FALSE;
+            /* Use mpiexec as PMI server */
+            smpd_process.use_pmi_server = SMPD_TRUE;
+
             num_args_to_strip = 1;
         }
 #endif
