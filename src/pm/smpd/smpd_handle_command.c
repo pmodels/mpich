@@ -827,6 +827,7 @@ launch_failure:
     return SMPD_FAIL;
 }
 
+#ifdef HAVE_WINDOWS_H
 #undef FCNAME
 #define FCNAME "smpd_add_pmi_env_to_procs"
 int smpd_add_pmi_env_to_procs(smpd_launch_node_t *head, char *hostname, int port, char *kvs_name, char *domain_name)
@@ -924,6 +925,7 @@ int smpd_add_pmi_env_to_procs(smpd_launch_node_t *head, char *hostname, int port
     smpd_exit_fn(FCNAME);
     return SMPD_SUCCESS;
 }
+#endif
 
 #undef FCNAME
 #define FCNAME "smpd_handle_result"
