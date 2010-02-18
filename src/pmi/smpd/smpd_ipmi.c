@@ -110,6 +110,19 @@ static pmi_process_t pmi_process =
     ""                      /* kvs_name of singleton proc with no PM */
 };
 
+
+void pmi_init_printf(void)
+{
+    char *env;
+    
+    env = getenv("SMPD_DBG_OUTPUT");
+    if(env != NULL){
+        /* We only support tracing for now */
+        smpd_process.verbose = SMPD_TRUE;
+        smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
+    }
+}
+
 static int silence = 0;
 static int pmi_err_printf(char *str, ...)
 {
@@ -1115,6 +1128,8 @@ int iPMI_Init(int *spawned)
     smpd_process.verbose = SMPD_TRUE;
 	smpd_process.dbg_state |= SMPD_DBG_STATE_ERROUT | SMPD_DBG_STATE_STDOUT | SMPD_DBG_STATE_TRACE;
     */
+
+    pmi_init_printf();
 
     /* don't allow pmi_init to be called more than once */
     if (pmi_process.init_finalized == PMI_INITIALIZED)
