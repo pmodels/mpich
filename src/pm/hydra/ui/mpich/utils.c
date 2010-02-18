@@ -848,15 +848,13 @@ static HYD_status set_default_values(void)
         }                                                      \
     } while (0)
     get_env_str_val(HYD_handle.user_global.bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
-    get_env_str_val(HYD_handle.rmk, "HYDRA_RMK", NULL);
+    get_env_str_val(HYD_handle.rmk, "HYDRA_RMK", HYDRA_DEFAULT_RMK);
     get_env_str_val(HYD_handle.user_global.iface, "HYDRA_IFACE", NULL);
     get_env_str_val(HYD_handle.user_global.demux, "HYDRA_DEMUX", HYDRA_DEFAULT_DEMUX);
     get_env_str_val(HYD_handle.user_global.bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
     get_env_str_val(HYD_handle.user_global.binding, "HYDRA_BINDING", NULL);
-    if (strcmp(HYDRA_DEFAULT_BINDLIB, ""))
-        get_env_str_val(HYD_handle.user_global.bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
-    if (strcmp(HYDRA_DEFAULT_CKPOINTLIB, ""))
-        get_env_str_val(HYD_handle.user_global.ckpointlib, "HYDRA_CKPOINTLIB", HYDRA_DEFAULT_CKPOINTLIB);
+    get_env_str_val(HYD_handle.user_global.bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
+    get_env_str_val(HYD_handle.user_global.ckpointlib, "HYDRA_CKPOINTLIB", HYDRA_DEFAULT_CKPOINTLIB);
     get_env_str_val(HYD_handle.user_global.ckpoint_prefix, "HYDRA_CKPOINT_PREFIX", NULL);
 #undef get_env_str_val
 

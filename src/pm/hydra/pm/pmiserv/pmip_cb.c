@@ -435,10 +435,10 @@ static HYD_status parse_exec_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.binding == NULL && HYD_pmcd_pmip.local.local_binding == NULL)
         HYD_pmcd_pmip.user_global.binding = HYDU_strdup("none");
 
-    if (HYD_pmcd_pmip.user_global.bindlib == NULL)
+    if (HYD_pmcd_pmip.user_global.bindlib == NULL && HYDRA_DEFAULT_BINDLIB)
         HYD_pmcd_pmip.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
 
-    if (HYD_pmcd_pmip.user_global.ckpointlib == NULL)
+    if (HYD_pmcd_pmip.user_global.ckpointlib == NULL && HYDRA_DEFAULT_CKPOINTLIB)
         HYD_pmcd_pmip.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
 
   fn_exit:

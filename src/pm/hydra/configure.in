@@ -186,7 +186,11 @@ done
 
 hydra_bss_name_array="${hydra_bss_name_array} NULL"
 hydra_bss_init_array="${hydra_bss_init_array} NULL"
-AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSS,"$hydra_default_bss",[Default bootstrap server])
+if test "$hydra_default_bss" != "" ; then
+   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSS,"$hydra_default_bss",[Default bootstrap server])
+else
+   AC_DEFINE(HYDRA_DEFAULT_BSS,NULL,[Default bootstrap server])
+fi
 AM_SUBST_NOTMAKE(hydra_bss_init_decl)
 AM_SUBST_NOTMAKE(hydra_bss_name_array)
 AM_SUBST_NOTMAKE(hydra_bss_init_array)
@@ -210,13 +214,18 @@ AC_SUBST(hydra_bss_names)
 #########################################################################
 AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk=name - Resource Management Kernel (pbs)],
 		    [ hydra_rmk=$withval ],
-		    [ hydra_rmk="pbs" ])
+		    [ hydra_rmk="dummy,pbs" ])
 AC_MSG_CHECKING(resource management kernel)
 AC_MSG_RESULT($hydra_rmk)
 hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 for hydra_rmk_name in ${hydra_rmk_names}; do
     case "$hydra_rmk_name" in
+	dummy)
+		# dummy is a special RMK which means that by default
+		# we don't use any RMK
+		available_rmk=`echo $available_rmk dummy`
+		;;
 	pbs)
 		hydra_rmk_pbs=true
 		available_rmk=`echo $available_rmk pbs`
@@ -232,6 +241,7 @@ for hydra_rmk_name in ${hydra_rmk_names}; do
     if test -z "${hydra_default_rmk}" ; then
        hydra_default_rmk=$hydra_rmk_name
     fi
+    if test "${hydra_rmk_name}" = "dummy" ; then continue ; fi
     hydra_rmk_init_decl="${hydra_rmk_init_decl}
 HYD_status HYDT_rmki_${hydra_rmk_name}_init(void);"
     hydra_rmk_name_array="${hydra_rmk_name_array} \"${hydra_rmk_name}\", "
@@ -244,7 +254,11 @@ AC_SUBST(hydra_rmk_names)
 
 hydra_rmk_name_array="${hydra_rmk_name_array} NULL"
 hydra_rmk_init_array="${hydra_rmk_init_array} NULL"
-AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default resource management kernel])
+if test "$hydra_default_rmk" != "" -a "$hydra_default_rmk" != "dummy"; then
+   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default resource management kernel])
+else
+   AC_DEFINE(HYDRA_DEFAULT_RMK,NULL,[Default resource management kernel])
+fi
 AM_SUBST_NOTMAKE(hydra_rmk_init_decl)
 AM_SUBST_NOTMAKE(hydra_rmk_name_array)
 AM_SUBST_NOTMAKE(hydra_rmk_init_array)
@@ -345,8 +359,11 @@ done
 
 AC_DEFINE_UNQUOTED(HYDRA_BINDLIB_NAMES,"$hydra_bindlib_names",
 		[Definition of enabled binding libraries])
-AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BINDLIB,"$hydra_default_bindlib",
-	[Default binding library])
+if test "$hydra_default_bindlib" != "" ; then
+   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BINDLIB,"$hydra_default_bindlib",[Default binding library])
+else
+   AC_DEFINE(HYDRA_DEFAULT_BINDLIB,NULL,[Default binding library])
+fi
 AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
 AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
 
@@ -389,8 +406,12 @@ done
 
 AC_DEFINE_UNQUOTED(HYDRA_CKPOINTLIB_NAMES,"$hydra_ckpointlib_names",
 		[Definition of enabled checkpointing libraries])
-AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CKPOINTLIB,"$hydra_default_ckpointlib",
-	[Default checkpointing library])
+if test "$hydra_default_ckpointlib" != "" ; then
+   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CKPOINTLIB,"$hydra_default_ckpointlib",
+		[Default checkpointing library])
+else
+   AC_DEFINE(HYDRA_DEFAULT_CKPOINTLIB,NULL,[Default checkpointing library])
+fi
 AM_CONDITIONAL([hydra_have_blcr], [test "${have_blcr}" = "yes"])
 
 
@@ -445,7 +466,11 @@ AM_CONDITIONAL([hydra_have_poll], [test "${have_poll}" = "yes"])
 AM_CONDITIONAL([hydra_have_select], [test "${have_select}" = "yes"])
 AM_CONDITIONAL([hydra_have_port], [test "${have_port}" = "yes"])
 AC_DEFINE_UNQUOTED(HYDRA_DEMUX_NAMES,"$hydra_demux_names",[Definition of enabled demux engines])
-AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_DEMUX,"$hydra_default_demux", [Default demux engine])
+if test "$hydra_default_demux" != "" ; then
+   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_DEMUX,"$hydra_default_demux",[Default demux engine])
+else
+   AC_DEFINE(HYDRA_DEFAULT_DEMUX,NULL,[Default demux engine])
+fi
 
 
 #########################################################################
