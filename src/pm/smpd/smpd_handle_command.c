@@ -1254,7 +1254,7 @@ int smpd_handle_result(smpd_context_t *context)
 				if (MPIU_Str_get_string_arg(context->read_cmd.cmd, "domain_name", smpd_process.domain_name, SMPD_MAX_DBS_NAME_LEN) == MPIU_STR_SUCCESS)
 				{
 				    smpd_dbg_printf("start_dbs succeeded, kvs_name: '%s', domain_name: '%s'\n", smpd_process.kvs_name, smpd_process.domain_name);
-                    if ((smpd_process.launch_list != NULL) && (!smpd_process.use_pmi_server))
+                    if ((smpd_process.launch_list != NULL) && (!smpd_process.use_ms_hpc))
 				    {
 					ret_val = smpd_launch_processes(smpd_process.launch_list, smpd_process.kvs_name, smpd_process.domain_name, NULL);
 				    }
