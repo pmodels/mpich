@@ -855,7 +855,7 @@ print MAKEFD
 	    cp mpimod.pcl ../../../src/include/mpimod.pcl ; \\
 	else \\
 	    if [ \"\$(F90EXT)\" != \"f90\" ] ; then \\
-	        ln -sf $srcFile $srcFileWithExt ; \\
+	        ln -f -s $srcFile $srcFileWithExt ; \\
 	    fi ; \\
 	    echo \$(F90_COMPILE_MODS) -c $srcFileWithExt ; \\
 	    \$(F90_COMPILE_MODS) -c $srcFileWithExt ; \\
