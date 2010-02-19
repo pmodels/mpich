@@ -185,7 +185,7 @@ int ADIOI_PVFS2_aio_wait_fn(int count, void ** array_of_states,
 
     ADIOI_AIO_Request **aio_reqlist;
     PVFS_sys_op_id *op_id_array;
-    int i,j, greq_count;
+    int i,j, greq_count, completed_count=0;
     int *error_array;
 
     aio_reqlist = (ADIOI_AIO_Request **)array_of_states;
@@ -194,18 +194,23 @@ int ADIOI_PVFS2_aio_wait_fn(int count, void ** array_of_states,
     error_array = (int *)ADIOI_Calloc(count, sizeof(int));
     greq_count = count;
 
+
     /* PVFS-2.6: testsome actually tests all requests and fills in op_id_array
      * with the ones that have completed.  count is an in/out parameter.
      * returns with the number of completed operations.  what a mess! */
-    PVFS_sys_testsome(op_id_array, &count, NULL, error_array, INT_MAX);
-    for (i=0; i< count; i++) {
-	for (j=0; j<greq_count; j++) {
-	    if (op_id_array[i] == aio_reqlist[j]->op_id) {
-		aio_reqlist[j]->nbytes = 
-		    aio_reqlist[j]->resp_io.total_completed;
-		MPIR_Nest_incr();
-		MPI_Grequest_complete(aio_reqlist[j]->req);
-		MPIR_Nest_decr();
+    while (completed_count < greq_count ) {
+	count = greq_count;
+	PVFS_sys_testsome(op_id_array, &count, NULL, error_array, INT_MAX);
+	completed_count += count;
+	for (i=0; i< count; i++) {
+	    for (j=0; j<greq_count; j++) {
+		if (op_id_array[i] == aio_reqlist[j]->op_id) {
+		    aio_reqlist[j]->nbytes = 
+			aio_reqlist[j]->resp_io.total_completed;
+		    MPIR_Nest_incr();
+		    MPI_Grequest_complete(aio_reqlist[j]->req);
+		    MPIR_Nest_decr();
+		}
 	    }
 	}
     }
