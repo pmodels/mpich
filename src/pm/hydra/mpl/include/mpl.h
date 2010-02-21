@@ -12,13 +12,13 @@
 #if defined _mpl_restrict
 #define mpl_restrict _mpl_restrict
 #else
-#define mpl_restrict
+#define mpl_restrict restrict
 #endif /* _mpl_restrict */
 
 #if defined _mpl_const
 #define mpl_const _mpl_const
 #else
-#define mpl_const
+#define mpl_const const
 #endif /* _mpl_const */
 
 #if defined MPL_HAVE_STDIO_H
