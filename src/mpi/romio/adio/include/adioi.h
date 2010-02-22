@@ -824,6 +824,7 @@ int  ADIOI_MPE_stat_b;
   #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) 
   #define ADIOI_Assert assert
   #define MPIR_Upint unsigned int
+  #define MPIU_THREADPRIV_DECL
 #endif
 
 #ifdef USE_DBG_LOGGING    /*todo fix dependency on mpich?*/
