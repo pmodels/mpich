@@ -11,6 +11,7 @@ MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include "knem_io.h"
 
 static int knem_fd = -1;
+static int knem_has_dma = 0;
 
 /* 4096 status index */
 static volatile knem_status_t *knem_status = MAP_FAILED;
@@ -71,6 +72,8 @@ static int open_knem_dev()
     MPIU_ERR_CHKANDJUMP2(info.abi != KNEM_ABI_VERSION, mpi_errno, MPI_ERR_OTHER,
                          "**abi_version_mismatch", "**abi_version_mismatch %D %D",
                          (unsigned long)KNEM_ABI_VERSION, (unsigned long)info.abi);
+
+    knem_has_dma = (info.features & KNEM_FEATURE_DMA);
 
     knem_status = mmap(NULL, KNEM_STATUS_NR, PROT_READ|PROT_WRITE, MAP_SHARED, knem_fd, KNEM_STATUS_ARRAY_FILE_OFFSET);
     MPIU_ERR_CHKANDJUMP1(knem_status == MAP_FAILED, mpi_errno, MPI_ERR_OTHER, "**mmap",
@@ -290,7 +293,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     /* this is where Stephanie might want to look at VC's local rank and shared cache size */
-    nodma = data_sz < dma_threshold;
+    nodma = !knem_has_dma || data_sz < dma_threshold;
 
     if (dt_contig) {
         /* handle the iov creation ourselves */

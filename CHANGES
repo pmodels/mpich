@@ -1,4 +1,28 @@
 ===============================================================================
+                               Changes in 1.2.1p1
+===============================================================================
+
+ # OVERALL: Fixes for several minor issues on PowerPC.
+
+ # OVERALL: Fix for a bug where the knem LMT backend would attempt to use an
+   I/OAT device even if one was not present in the system
+
+ # BUILD SYSTEM: Fix for a compile error when C++ complex types are not present.
+
+ # BUILD SYSTEM: Fix bash-ism in configure scripts that broke builds on Solaris.
+
+ # PM/PMI: Fix for a hang in mpdboot.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r 5824:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.2.1p1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.2.1p1?action=follow_copy&rev=HEAD&stop_rev=5824&mode=follow_copy
+
+===============================================================================
                                Changes in 1.2.1
 ===============================================================================
 

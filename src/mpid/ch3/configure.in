@@ -308,7 +308,8 @@ export LIBTOOL
 # variable then restore it in the subconfigure.  Note that this
 # doesn't happen with LDFLAGS!
 # FIXME: Figure out what's going on.
-export MY_EXPORTED_LIBS="$LIBS"
+MY_EXPORTED_LIBS="$LIBS"
+export MY_EXPORTED_LIBS
 
 # FIXME shouldn't put var in _SUBDIRS
 AC_CONFIG_SUBDIRS(channels/${channel_name})

@@ -29,7 +29,7 @@ typedef struct { void * volatile v; } OPA_ptr_t;
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
 
 /* Aligned loads and stores are atomic on x86(-64). */
-static _opa_inline int OPA_load_int(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(_opa_const OPA_int_t *ptr)
 {
     return ptr->v;
 }
@@ -41,7 +41,7 @@ static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
 }
 
 /* Aligned loads and stores are atomic on x86(-64). */
-static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr)
+static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t *ptr)
 {
     return ptr->v;
 }

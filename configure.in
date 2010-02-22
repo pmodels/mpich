@@ -4728,6 +4728,13 @@ using namespace std;
 ])
         fi
 
+        # If either complex or double complex have length 0, then mark
+        # c++ complex as unavailable
+        if test "$ac_cv_sizeof_Complex" != 0 -a \
+                "$ac_cv_sizeof_DoubleComplex" != 0 ; then
+            AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
+        fi
+
         # Datatypes are given by
         # 0x4c00 <length in bytes> (1 byte) <unique num> (1 byte)    
         # where the unique nums are
@@ -4765,12 +4772,6 @@ using namespace std;
     AC_DEFINE_UNQUOTED(MPIR_CXX_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::DOUBLE_COMPLEX])
     AC_DEFINE_UNQUOTED(MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_LONG_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::LONG_DOUBLE_COMPLEX])
     
-    # If either complex or double complex have length 0, then mark 
-    # c++ complex as unavailable
-    if test "$ac_cv_sizeof_Complex" != 0 -a \
-            "$ac_cv_sizeof_DoubleComplex" != 0 ; then
-	AC_DEFINE(HAVE_CXX_COMPLEX,1,[Define is C++ supports complex types])
-    fi
 fi
 
 # ----------------------------------------------------------------------------

@@ -21,6 +21,9 @@
 #ifndef _opa_restrict
 #define _opa_restrict restrict
 #endif
+#ifndef _opa_const
+#define _opa_const const
+#endif
 
 /*
    Primitive atomic functions
@@ -41,9 +44,9 @@
 
    The atomic functions that must be ported for each architecture: 
 
-   static _opa_inline int   OPA_load_int(OPA_int_t *ptr);
+   static _opa_inline int   OPA_load_int(_opa_const OPA_int_t *ptr);
    static _opa_inline void  OPA_store_int(OPA_int_t *ptr, int val);
-   static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr);
+   static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t *ptr);
    static _opa_inline void  OPA_store_ptr(OPA_ptr_t *ptr, void *val);
 
    static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val);

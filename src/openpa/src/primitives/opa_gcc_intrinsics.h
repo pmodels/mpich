@@ -17,7 +17,7 @@ typedef struct { void * volatile v; } OPA_ptr_t;
 
 /* Assume that loads/stores are atomic on the current platform, even though this
    may not be true at all. */
-static _opa_inline int OPA_load_int(OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(_opa_const OPA_int_t *ptr)
 {
     return ptr->v;
 }
@@ -27,7 +27,7 @@ static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
     ptr->v = val;
 }
 
-static _opa_inline void *OPA_load_ptr(OPA_ptr_t *ptr)
+static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t *ptr)
 {
     return ptr->v;
 }
