@@ -100,13 +100,17 @@ int
     MPIU_ExRegisterCompletionProcessor
 
     Register a completion processor for a specific Key.
-    N.B. Current implementation supports keys 0 - 3, where key 0 is reserved.
+    N.B. Current implementation supports keys 0 - 3, where key 0/1 is reserved.
 */
 void
 MPIU_ExRegisterCompletionProcessor(
     ULONG_PTR Key,
     MPIU_ExCompletionProcessor pfnCompletionProcessor
     );
+
+/* Predefined Completion processor keys */
+#define MPIU_EX_GENERIC_COMP_PROC_KEY   0
+#define MPIU_EX_WIN32_COMP_PROC_KEY     1
 
 /*
     MPIU_ExRegisterNextCompletionProcessor
@@ -311,6 +315,7 @@ MPIU_ExInitOverlapped(
 void
 MPIU_ExPostOverlapped(
     MPIU_ExSetHandle_t Set,
+    ULONG_PTR key,
     MPIU_EXOVERLAPPED* pOverlapped
     );
 
@@ -326,6 +331,7 @@ inline
 void
 MPIU_ExPostOverlappedResult(
     MPIU_ExSetHandle_t Set,
+    ULONG_PTR key,
     MPIU_EXOVERLAPPED* pOverlapped,
     HRESULT Status,
     DWORD BytesTransferred
@@ -333,7 +339,7 @@ MPIU_ExPostOverlappedResult(
 {
     pOverlapped->ov.Internal = Status;
     pOverlapped->ov.InternalHigh = BytesTransferred;
-    MPIU_ExPostOverlapped(Set, pOverlapped);
+    MPIU_ExPostOverlapped(Set, key, pOverlapped);
 }
 
 
@@ -349,6 +355,7 @@ MPIU_ExPostOverlappedResult(
 void
 MPIU_ExAttachHandle(
     MPIU_ExSetHandle_t Set,
+    ULONG_PTR key,
     HANDLE Handle
     );
 
@@ -439,6 +446,29 @@ static
 inline
 int
 MPIU_ExCompleteOverlapped(
+    MPIU_EXOVERLAPPED* pOverlapped, int BytesTransferred
+    )
+{
+    pOverlapped->ov.InternalHigh = BytesTransferred;
+
+    if(SUCCEEDED(MPIU_ExGetStatus(pOverlapped))){
+        return pOverlapped->pfnSuccess(pOverlapped);
+    }
+    else{
+        return pOverlapped->pfnFailure(pOverlapped);
+    }
+}
+
+/*
+    MPIU_ExWin32CompleteOverlapped
+
+    Execute the EXOVERLAPPED success or failure completion routine based
+    on the overlapped status value.
+*/
+static
+inline
+int
+MPIU_ExWin32CompleteOverlapped(
     MPIU_EXOVERLAPPED* pOverlapped, int BytesTransferred
     )
 {

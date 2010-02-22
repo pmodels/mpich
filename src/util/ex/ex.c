@@ -23,6 +23,12 @@ ExpKeyZeroCompletionProcessor(
     PVOID pOverlapped
     );
 
+static
+int
+ExpKeyOneWin32CompletionProcessor(
+    DWORD BytesTransfered,
+    PVOID pOverlapped
+    );
 
 #if 0
 //
@@ -39,7 +45,7 @@ static HANDLE s_port;
 static MPIU_ExCompletionProcessor s_processors[] = {
 
     ExpKeyZeroCompletionProcessor,
-    NULL,
+    ExpKeyOneWin32CompletionProcessor,
     NULL,
     NULL,
 };
@@ -273,10 +279,27 @@ ExpKeyZeroCompletionProcessor(
     return MPIU_ExCompleteOverlapped(pov, BytesTransferred);
 }
 
+//----------------------------------------------------------------------------
+//
+// Preregistered completion processor for Key-One
+// Used for Win32 subsystem
+//
+
+static
+int
+ExpKeyOneWin32CompletionProcessor(
+    DWORD BytesTransferred,
+    PVOID pOverlapped
+    )
+{
+    MPIU_EXOVERLAPPED* pov = CONTAINING_RECORD(pOverlapped, MPIU_EXOVERLAPPED, ov);
+    return MPIU_ExWin32CompleteOverlapped(pov, BytesTransferred);
+}
 
 void
 MPIU_ExPostOverlapped(
     MPIU_ExSetHandle_t Set,
+    ULONG_PTR key,
     MPIU_EXOVERLAPPED* pOverlapped
     )
 {
@@ -284,7 +307,7 @@ MPIU_ExPostOverlapped(
 
     MPIU_ExPostCompletion(
         Set,
-        0, // Key,
+        key, // Key,
         &pOverlapped->ov,
         0 // BytesTransfered
         );
@@ -294,6 +317,7 @@ MPIU_ExPostOverlapped(
 void
 MPIU_ExAttachHandle(
     MPIU_ExSetHandle_t Set,
+    ULONG_PTR key,
     HANDLE Handle
     )
 {
@@ -305,7 +329,7 @@ MPIU_ExAttachHandle(
         hPort = CreateIoCompletionPort(
                     Handle, // FileHandle
                     Set,    // ExistingCompletionPort
-                    0,      // CompletionKey
+                    key,      // CompletionKey
                     0       // NumberOfConcurrentThreads
                     );
 

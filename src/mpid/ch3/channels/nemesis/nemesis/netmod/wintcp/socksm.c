@@ -400,7 +400,7 @@ int MPID_nem_newtcp_module_post_dummy_read_ex(sockconn_t *sc)
     mpi_errno = MPID_nem_newtcp_module_reset_readv_ex(sc);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_ExPostOverlapped(MPID_nem_newtcp_module_ex_set_hnd, &(sc->rd_ov));
+    MPIU_ExPostOverlapped(MPID_nem_newtcp_module_ex_set_hnd, MPIU_EX_WIN32_COMP_PROC_KEY, &(sc->rd_ov));
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_NEWTCP_POST_DUMMY_READ_EX);
@@ -585,7 +585,7 @@ static inline int MPID_nem_newtcp_module_post_close_ex(sockconn_t *sc)
     mpi_errno = MPIU_SOCKW_Sock_close(sc->fd);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_ExPostOverlapped(MPID_nem_newtcp_module_ex_set_hnd, &(sc->wr_ov));
+    MPIU_ExPostOverlapped(MPID_nem_newtcp_module_ex_set_hnd, MPIU_EX_WIN32_COMP_PROC_KEY, &(sc->wr_ov));
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_NEWTCP_POST_CLOSE_EX);
@@ -1489,7 +1489,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
         mpi_errno = MPID_nem_newtcp_module_set_sockopts(sc->fd);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-        MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, sc->fd);
+        MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, MPIU_EX_WIN32_COMP_PROC_KEY, sc->fd);
 
         CHANGE_STATE(sc, CONN_STATE_TC_C_CNTING);
 
@@ -2708,7 +2708,7 @@ static int complete_connection(sockconn_t *sc)
 	sc->pg_is_set = FALSE;
 	sc->is_tmpvc = 0;
 
-	MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, sc->fd);
+	MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, MPIU_EX_WIN32_COMP_PROC_KEY, sc->fd);
 
 	CHANGE_STATE(sc, CONN_STATE_TA_C_CNTD);
 

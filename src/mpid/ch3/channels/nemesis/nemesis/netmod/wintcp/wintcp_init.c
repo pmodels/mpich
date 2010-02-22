@@ -111,7 +111,7 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     /* Associate the listen sock with the newtcp module executive set 
      * - Key 0 command processor */
     /* FIXME: No error code returned ! */
-    MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, MPID_nem_newtcp_module_g_lstn_sc.fd);
+    MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, MPIU_EX_WIN32_COMP_PROC_KEY, MPID_nem_newtcp_module_g_lstn_sc.fd);
     
     /* Register the listening handlers with executive */
     /* We also need to post the first accept here */
