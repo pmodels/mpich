@@ -99,7 +99,7 @@ int
 /*
     MPIU_ExRegisterCompletionProcessor
 
-    Resister a completion processor for a specific Key.
+    Register a completion processor for a specific Key.
     N.B. Current implementation supports keys 0 - 3, where key 0 is reserved.
 */
 void
@@ -108,6 +108,18 @@ MPIU_ExRegisterCompletionProcessor(
     MPIU_ExCompletionProcessor pfnCompletionProcessor
     );
 
+/*
+    MPIU_ExRegisterNextCompletionProcessor
+
+    Register the next completion processor and return the Key.
+    Returns an MPI error code on error
+    N.B. Current implementation supports keys 0 - 3, where key 0 is reserved.
+*/
+int
+MPIU_ExRegisterNextCompletionProcessor(
+    ULONG_PTR *Key,
+    MPIU_ExCompletionProcessor pfnCompletionProcessor
+    );
 
 /*
     MPIU_ExUnregisterCompletionProcessor

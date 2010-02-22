@@ -90,6 +90,26 @@ MPIU_ExRegisterCompletionProcessor(
     s_processors[Key] = pfnCompletionProcessor;
 }
 
+int
+MPIU_ExRegisterNextCompletionProcessor(
+    ULONG_PTR *Key,
+    MPIU_ExCompletionProcessor pfnCompletionProcessor
+    )
+{
+    int i;
+    MPIU_Assert(Key != NULL);
+
+    /* We default to the predefined Key0 completion processor */
+    *Key = 0;
+    for(i=0; i<_countof(s_processors); i++){
+        if(s_processors[i] == NULL){
+            *Key = (ULONG_PTR )i;
+            s_processors[i] = pfnCompletionProcessor;
+            return MPI_SUCCESS;
+        }
+    }
+    return MPI_ERR_INTERN;
+}
 
 void
 MPIU_ExUnregisterCompletionProcessor(
