@@ -21,7 +21,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
 					ADIO_Offset *len_list,
 					int contig_access_count,
 					int *striping_info,
-					int *buf_idx, int *error_code);
+                                        int **buf_idx, int *error_code);
 static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, void *buf,
 					  ADIOI_Flatlist_node *flat_buf,
 					  char **send_buf,
@@ -83,7 +83,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, void *buf, int count,
     ADIO_Offset orig_fp, start_offset, end_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *end_offsets = NULL;
     ADIO_Offset *len_list = NULL;
-    int *buf_idx = NULL, *striping_info = NULL;
+    int **buf_idx = NULL, *striping_info = NULL;
     int old_error, tmp_error;
 
     MPI_Comm_size(fd->comm, &nprocs);
@@ -139,8 +139,6 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, void *buf, int count,
     if ((!do_collect && fd->hints->cb_write == ADIOI_HINT_AUTO) ||
         fd->hints->cb_write == ADIOI_HINT_DISABLE) {
 
-	int filerange_is_contig = 0;
-
 	/* use independent accesses */
 	if (fd->hints->cb_write != ADIOI_HINT_DISABLE) {
 	    ADIOI_Free(offset_list);
@@ -153,7 +151,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, void *buf, int count,
 	ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 	if (buftype_is_contig && filetype_is_contig) {
 	    if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
-		off = fd->disp + (fd->etype_size) * offset;
+                off = fd->disp + (ADIO_Offset)(fd->etype_size) * offset;
 		ADIO_WriteContig(fd, buf, count, datatype,
 				 ADIO_EXPLICIT_OFFSET,
 				 off, status, error_code);
@@ -175,7 +173,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, void *buf, int count,
      */
     ADIOI_LUSTRE_Calc_my_req(fd, offset_list, len_list, contig_access_count,
                              striping_info, nprocs, &count_my_req_procs,
-                             &count_my_req_per_proc, &my_req, &buf_idx);
+                             &count_my_req_per_proc, &my_req,
+                             &buf_idx);
 
     /* based on everyone's my_req, calculate what requests of other processes
      * will be accessed by this process.
@@ -192,9 +191,9 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, void *buf, int count,
 
     /* exchange data and write in sizes of no more than stripe_size. */
     ADIOI_LUSTRE_Exch_and_write(fd, buf, datatype, nprocs, myrank,
-                                others_req, my_req,
-                                offset_list, len_list, contig_access_count,
-				striping_info, buf_idx, error_code);
+                                others_req, my_req, offset_list, len_list,
+                                contig_access_count, striping_info,
+                                buf_idx, error_code);
 
     /* If this collective write is followed by an independent write,
      * it's possible to have those subsequent writes on other processes
@@ -253,6 +252,9 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, void *buf, int count,
 	}
     }
     ADIOI_Free(my_req);
+    for (i = 0; i < nprocs; i++) {
+        ADIOI_Free(buf_idx[i]);
+    }
     ADIOI_Free(buf_idx);
     ADIOI_Free(offset_list);
     ADIOI_Free(len_list);
@@ -286,7 +288,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
 					ADIO_Offset *offset_list,
                                         ADIO_Offset *len_list, 
 					int contig_access_count,
-					int *striping_info, int *buf_idx,
+                                        int *striping_info, int **buf_idx,
                                         int *error_code)
 {
     /* Send data to appropriate processes and write in sizes of no more
@@ -308,6 +310,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
     int *send_curr_offlen_ptr, *send_size;
     int *partial_recv, *sent_to_proc, *recv_start_pos;
     int *send_buf_idx, *curr_to_proc, *done_to_proc;
+    int *this_buf_idx;
     char *write_buf = NULL;
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
@@ -355,7 +358,9 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
      * and ntimes=whole_file_portion/step_size
      */
     step_size = (ADIO_Offset) avail_cb_nodes * stripe_size;
-    max_ntimes = (int)((max_end_loc - min_st_loc) / step_size + 1);
+    max_ntimes = (max_end_loc - min_st_loc + 1) / step_size
+        + (((max_end_loc - min_st_loc + 1) % step_size) ? 1 : 0);
+/*     max_ntimes = (int)((max_end_loc - min_st_loc) / step_size + 1); */
     if (ntimes)
 	write_buf = (char *) ADIOI_Malloc(stripe_size);
 
@@ -394,6 +399,8 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
     curr_to_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     done_to_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     /* Above three are used in ADIOI_Fill_send_buffer */
+
+    this_buf_idx = (int *) ADIOI_Malloc(nprocs * sizeof(int));
 
     recv_start_pos = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     /* used to store the starting value of recv_curr_offlen_ptr[i] in
@@ -461,11 +468,13 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
 
         off = off_list[m];
         max_size = ADIOI_MIN(step_size, max_end_loc - iter_st_off + 1);
-        real_size = (int) ADIOI_MIN((off / stripe_size + 1) * stripe_size - off,
+        real_size = (int) ADIOI_MIN((off / stripe_size + 1) * stripe_size -
+                                    off,
                                     end_loc - off + 1);
 
 	for (i = 0; i < nprocs; i++) {
             if (my_req[i].count) {
+                this_buf_idx[i] = buf_idx[i][send_curr_offlen_ptr[i]];
                 for (j = send_curr_offlen_ptr[i]; j < my_req[i].count; j++) {
                     send_off = my_req[i].offsets[j];
                     send_len = my_req[i].lens[j];
@@ -484,6 +493,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
                     req_len = others_req[i].lens[j];
 		    if (req_off < iter_st_off + max_size) {
 			recv_count[i]++;
+                        ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)write_buf)+req_off-off) == (ADIO_Offset)(MPIR_Upint)(write_buf+req_off-off));
 			MPI_Address(write_buf + req_off - off,
 				    &(others_req[i].mem_ptrs[j]));
                         recv_size[i] += req_len;
@@ -503,7 +513,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
                                      buftype_is_contig, contig_access_count,
                                      striping_info, others_req, send_buf_idx,
                                      curr_to_proc, done_to_proc, &hole, m,
-                                     buftype_extent, buf_idx, error_code);
+                                     buftype_extent, this_buf_idx, error_code);
 	if (*error_code != MPI_SUCCESS)
             goto over;
 
@@ -564,6 +574,7 @@ over:
     ADIOI_Free(send_buf_idx);
     ADIOI_Free(curr_to_proc);
     ADIOI_Free(done_to_proc);
+    ADIOI_Free(this_buf_idx);
     ADIOI_Free(off_list);
 }
 
@@ -714,13 +725,14 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, void *buf,
 	j = 0;
 	for (i = 0; i < nprocs; i++)
 	    if (send_size[i]) {
+                ADIOI_Assert(buf_idx[i] != -1);
 		MPI_Isend(((char *) buf) + buf_idx[i], send_size[i],
 			  MPI_BYTE, i, myrank + i + 100 * iter, fd->comm,
 			  send_req + j);
 		j++;
-		buf_idx[i] += send_size[i];
 	    }
-    } else if (nprocs_send) {
+    } else
+        if (nprocs_send) {
 	/* buftype is not contig */
 	send_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
 	for (i = 0; i < nprocs; i++)
@@ -803,7 +815,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, void *buf,
                 n_buftypes++; \
             } \
             user_buf_idx = flat_buf->indices[flat_buf_idx] + \
-                              n_buftypes*buftype_extent; \
+                (ADIO_Offset)n_buftypes*(ADIO_Offset)buftype_extent;  \
             flat_buf_sz = flat_buf->blocklens[flat_buf_idx]; \
         } \
         buf_incr -= size_in_buf; \
@@ -815,6 +827,8 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, void *buf,
 { \
     while (size) { \
         size_in_buf = ADIOI_MIN(size, flat_buf_sz); \
+        ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIR_Upint)((MPIR_Upint)buf + user_buf_idx)); \
+        ADIOI_Assert(size_in_buf == (size_t)size_in_buf);               \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \
         send_buf_idx[p] += size_in_buf; \
@@ -827,7 +841,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, void *buf,
                 n_buftypes++; \
             } \
             user_buf_idx = flat_buf->indices[flat_buf_idx] + \
-                              n_buftypes*buftype_extent; \
+                (ADIO_Offset)n_buftypes*(ADIO_Offset)buftype_extent;    \
             flat_buf_sz = flat_buf->blocklens[flat_buf_idx]; \
         } \
         size -= size_in_buf; \
@@ -900,14 +914,17 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, void *buf,
 					       send_buf_idx[p]);
 			buf_incr = done_to_proc[p] - curr_to_proc[p];
 			ADIOI_BUF_INCR
+                        ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) == (unsigned)(curr_to_proc[p] + len - done_to_proc[p]));
 			    buf_incr = (int) (curr_to_proc[p] + len -
 					      done_to_proc[p]);
+                        ADIOI_Assert((done_to_proc[p] + size) == (unsigned)(done_to_proc[p] + size));
 			curr_to_proc[p] = done_to_proc[p] + size;
 		        ADIOI_BUF_COPY
                     } else {
 			size = (int) ADIOI_MIN(len, send_size[p] -
 					       send_buf_idx[p]);
 			buf_incr = (int) len;
+                        ADIOI_Assert((curr_to_proc[p] + size) == (unsigned)((ADIO_Offset)curr_to_proc[p] + size));
 			curr_to_proc[p] += size;
 		        ADIOI_BUF_COPY
                     }
@@ -918,6 +935,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, void *buf,
 			jj++;
 		    }
 		} else {
+                    ADIOI_Assert((curr_to_proc[p] + len) == (unsigned)((ADIO_Offset)curr_to_proc[p] + len));
 		    curr_to_proc[p] += (int) len;
 		    buf_incr = (int) len;
 		    ADIOI_BUF_INCR
