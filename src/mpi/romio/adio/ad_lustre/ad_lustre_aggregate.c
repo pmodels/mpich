@@ -22,9 +22,8 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr,
      *  striping_info[1]: stripe_count
      *  striping_info[2]: avail_cb_nodes
      */
-    int stripe_size, stripe_count, CO = 1, CO_max = 1, CO_nodes, lflag;
+    int stripe_size, stripe_count, CO = 1;
     int avail_cb_nodes, divisor, nprocs_for_coll = fd->hints->cb_nodes;
-    char *value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
 
     /* Get hints value */
     /* stripe size */
@@ -33,10 +32,7 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr,
     /* stripe_size and stripe_count have been validated in ADIOI_LUSTRE_Open() */
     stripe_count = fd->hints->striping_factor;
 
-    /* Calculate the available number of I/O clients, that is
-     *  avail_cb_nodes=min(cb_nodes, stripe_count*CO), where
-     *  CO=1 by default
-     */
+    /* Calculate the available number of I/O clients */
     if (!mode) {
         /* for collective read,
 	 * if "CO" clients access the same OST simultaneously,
@@ -47,32 +43,51 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr,
 	CO = 1;
 	/*XXX: maybe there are other better way for collective read */
     } else {
-        /* CO_max: the largest number of IO clients for each ost group */
-        CO_max = (nprocs_for_coll - 1)/ stripe_count + 1;
         /* CO also has been validated in ADIOI_LUSTRE_Open(), >0 */
 	CO = fd->hints->fs_hints.lustre.co_ratio;
-	CO = ADIOI_MIN(CO_max, CO);
     }
     /* Calculate how many IO clients we need */
+    /* Algorithm courtesy Pascal Deveze (pascal.deveze@bull.net) */
     /* To avoid extent lock conflicts,
-     * avail_cb_nodes should divide (stripe_count*CO) exactly,
-     * so that each OST is accessed by only one or more constant clients. */
-    CO_nodes = stripe_count * CO;
-    avail_cb_nodes = ADIOI_MIN(nprocs_for_coll, CO_nodes);
-    if (avail_cb_nodes ==  CO_nodes) {
-        do {
-            /* find the divisor of CO_nodes */
-            divisor = 1;
-            do {
-                divisor ++;
-            } while (CO_nodes % divisor);
-            CO_nodes = CO_nodes / divisor;
-            /* if stripe_count*CO is a prime number, change nothing */
-            if ((CO_nodes <= avail_cb_nodes) && (CO_nodes != 1)) {
-                avail_cb_nodes = CO_nodes;
-                break;
-            }
-        } while (CO_nodes != 1);
+     * avail_cb_nodes should either 
+     * 	- be a multiple of stripe_count,
+     *  - or divide stripe_count exactly
+     * so that each OST is accessed by a maximum of CO constant clients. */
+    if (nprocs_for_coll >= stripe_count)
+	/* avail_cb_nodes should be a multiple of stripe_count and the number
+	 * of procs per OST should be limited to the minimum between
+	 * nprocs_for_coll/stripe_count and CO 
+	 * 
+	 * e.g. if stripe_count=20, nprocs_for_coll=42 and CO=3 then 
+	 * avail_cb_nodes should be equal to 40 */
+        avail_cb_nodes = 
+		stripe_count * ADIOI_MIN(nprocs_for_coll/stripe_count, CO);
+    else {
+        /* nprocs_for_coll is less than stripe_count */
+        /* avail_cb_nodes should divide stripe_count */
+        /* e.g. if stripe_count=60 and nprocs_for_coll=8 then 
+	 * avail_cb_nodes should be egal to 6 */
+        /* This could be done with :
+                while (stripe_count % avail_cb_nodes != 0) avail_cb_nodes--;
+	   but this can be optimized for large values of nprocs_for_coll and
+	   stripe_count */
+        divisor = 2;
+        avail_cb_nodes = 1;
+        /* try to divise */
+        while (stripe_count >= divisor*divisor) {
+            if ((stripe_count % divisor) == 0) {
+                 if (stripe_count/divisor <= nprocs_for_coll) {
+                     /* The value is found ! */
+                     avail_cb_nodes = stripe_count/divisor;
+                     break;
+		}
+		/* if divisor is less than nprocs_for_coll, divisor is a
+		 * solution, but it is not sure that it is the best one */
+                else if (divisor <= nprocs_for_coll) 
+			avail_cb_nodes = divisor;
+	    }
+	    divisor++;
+        }
     }
 
     *striping_info_ptr = (int *) ADIOI_Malloc(3 * sizeof(int));
@@ -80,8 +95,6 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr,
     striping_info[0] = stripe_size;
     striping_info[1] = stripe_count;
     striping_info[2] = avail_cb_nodes;
-
-    ADIOI_Free(value);
 }
 
 int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
@@ -119,17 +132,19 @@ int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
  * of this process are located in the file domains of various processes
  * (including this one)
  */
+
+
 void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 			      ADIO_Offset *len_list, int contig_access_count,
 			      int *striping_info, int nprocs,
                               int *count_my_req_procs_ptr,
 			      int **count_my_req_per_proc_ptr,
 			      ADIOI_Access **my_req_ptr,
-			      int **buf_idx_ptr)
+			      int ***buf_idx_ptr)
 {
     /* Nothing different from ADIOI_Calc_my_req(), except calling
      * ADIOI_Lustre_Calc_aggregator() instead of the old one */
-    int *count_my_req_per_proc, count_my_req_procs, *buf_idx;
+    int *count_my_req_per_proc, count_my_req_procs, **buf_idx;
     int i, l, proc;
     ADIO_Offset avail_len, rem_len, curr_idx, off;
     ADIOI_Access *my_req;
@@ -142,16 +157,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
      * MPI_Alltoall later on.
      */
 
-    buf_idx = (int *) ADIOI_Malloc(nprocs * sizeof(int));
-    /* buf_idx is relevant only if buftype_is_contig.
-     * buf_idx[i] gives the index into user_buf where data received
-     * from proc. i should be placed. This allows receives to be done
-     * without extra buffer. This can't be done if buftype is not contig.
-     */
-
-    /* initialize buf_idx to -1 */
-    for (i = 0; i < nprocs; i++)
-	buf_idx[i] = -1;
+    buf_idx = (int **) ADIOI_Malloc(nprocs * sizeof(int*));
 
     /* one pass just to calculate how much space to allocate for my_req;
      * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
@@ -186,6 +192,19 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 	}
     }
 
+    /* buf_idx is relevant only if buftype_is_contig.
+     * buf_idx[i] gives the index into user_buf where data received
+     * from proc 'i' should be placed. This allows receives to be done
+     * without extra buffer. This can't be done if buftype is not contig.
+     */
+
+    /* initialize buf_idx vectors */
+    for (i = 0; i < nprocs; i++) {
+	/* add one to count_my_req_per_proc[i] to avoid zero size malloc */
+	buf_idx[i] = (int *) ADIOI_Malloc((count_my_req_per_proc[i] + 1)
+			                   * sizeof(int)); 
+    }
+
     /* now allocate space for my_req, offset, and len */
     *my_req_ptr = (ADIOI_Access *) ADIOI_Malloc(nprocs * sizeof(ADIOI_Access));
     my_req = *my_req_ptr;
@@ -214,12 +233,12 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 	avail_len = len_list[i];
 	proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
 
-	/* for each separate contiguous access from this process */
-	if (buf_idx[proc] == -1)
-	    buf_idx[proc] = (int) curr_idx;
-
 	l = my_req[proc].count;
-	curr_idx += (int) avail_len;	/* NOTE: Why is curr_idx an int?  Fix? */
+
+	ADIOI_Assert(curr_idx == (int) curr_idx);
+	ADIOI_Assert(l < count_my_req_per_proc[proc]);
+	buf_idx[proc][l] = (int) curr_idx;
+	curr_idx += avail_len;
 
 	rem_len = len_list[i] - avail_len;
 
@@ -229,6 +248,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 	 * and the associated count.
 	 */
 	my_req[proc].offsets[l] = off;
+	ADIOI_Assert(avail_len == (int) avail_len);
 	my_req[proc].lens[l] = (int) avail_len;
 	my_req[proc].count++;
 
@@ -237,14 +257,17 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 	    avail_len = rem_len;
 	    proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len,
                                                 striping_info);
-	    if (buf_idx[proc] == -1)
-		buf_idx[proc] = (int) curr_idx;
 
 	    l = my_req[proc].count;
+	    ADIOI_Assert(curr_idx == (int) curr_idx);
+	    ADIOI_Assert(l < count_my_req_per_proc[proc]);
+	    buf_idx[proc][l] = (int) curr_idx;
+
 	    curr_idx += avail_len;
 	    rem_len -= avail_len;
 
 	    my_req[proc].offsets[l] = off;
+	    ADIOI_Assert(avail_len == (int) avail_len);
 	    my_req[proc].lens[l] = (int) avail_len;
 	    my_req[proc].count++;
 	}
@@ -281,7 +304,7 @@ int ADIOI_LUSTRE_Docollect(ADIO_File fd, int contig_access_count,
      *   }
      */
 
-    int i, docollect = 1, lflag, big_req_size = 0;
+    int i, docollect = 1, big_req_size = 0;
     ADIO_Offset req_size = 0, total_req_size;
     int avg_req_size, total_access_count;
 
