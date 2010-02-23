@@ -13,7 +13,7 @@
 
 void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
-    char *value, *value_in_fd;
+    char *value;
     int flag, stripe_val[3], str_factor = -1, str_unit=0, start_iodev=-1;
     struct lov_user_md lum = { 0 };
     int err, myrank, fd_sys, perm, amode, old_mask;
