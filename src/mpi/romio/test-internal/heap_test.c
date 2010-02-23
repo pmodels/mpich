@@ -272,7 +272,7 @@ int run_test(test_params_t *test) {
 		    build_heap(&myheap);		    
 		    break;
 		case INSERT:
-		    heap_insert(&myheap, test->offsets[curr_insert_idx],
+		    ADIOI_Heap_insert(&myheap, test->offsets[curr_insert_idx],
 				curr_insert_idx, curr_insert_idx);
 		    curr_insert_idx++;
 		    break;
@@ -292,7 +292,7 @@ int run_test(test_params_t *test) {
 			err_flag++;
 		    curr_extract_idx++;
 
-		    heap_insert(&myheap, test->offsets[curr_insert_idx],
+		    ADIOI_Heap_insert(&myheap, test->offsets[curr_insert_idx],
 				curr_insert_idx, curr_insert_idx);
 		    curr_insert_idx++;
 		    break;
