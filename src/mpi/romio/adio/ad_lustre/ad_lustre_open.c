@@ -10,10 +10,16 @@
 
 #include "ad_lustre.h"
 
+/* what is the basis for this define?
+ * what happens if there are more than 1k UUIDs? */
+
+#define MAX_LOV_UUID_COUNT      1000
+
 void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 {
     int perm, old_mask, amode, amode_direct;
-    struct lov_user_md lum = { 0 };
+    int lumlen;
+    struct lov_user_md *lum = NULL;
     char *value;
 
 #if defined(MPICH2) || !defined(PRINT_ERR_MSG)
@@ -46,26 +52,32 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     if (fd->fd_sys != -1) {
         int err;
 
-        value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
-
         /* get file striping information and set it in info */
-        lum.lmm_magic = LOV_USER_MAGIC;
-        err = ioctl(fd->fd_sys, LL_IOC_LOV_GETSTRIPE, (void *) &lum);
-
+	/* odd malloc here because lov_user_md contains some fixed data and
+	 * then a list of 'lmm_objects' representing stripe */
+        lumlen = sizeof(struct lov_user_md) +
+                 MAX_LOV_UUID_COUNT * sizeof(struct lov_user_ost_data);
+        lum = (struct lov_user_md *)ADIOI_Malloc(lumlen);
+        lum->lmm_magic = LOV_USER_MAGIC;
+        err = ioctl(fd->fd_sys, LL_IOC_LOV_GETSTRIPE, (void *)lum);
         if (!err) {
-            fd->hints->striping_unit = lum.lmm_stripe_size;
-            sprintf(value, "%d", lum.lmm_stripe_size);
+            value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
+
+            fd->hints->striping_unit = lum->lmm_stripe_size;
+            sprintf(value, "%d", lum->lmm_stripe_size);
             MPI_Info_set(fd->info, "striping_unit", value);
 
-            fd->hints->striping_factor = lum.lmm_stripe_count;
-            sprintf(value, "%d", lum.lmm_stripe_count);
+            fd->hints->striping_factor = lum->lmm_stripe_count;
+            sprintf(value, "%d", lum->lmm_stripe_count);
             MPI_Info_set(fd->info, "striping_factor", value);
 
-            fd->hints->fs_hints.lustre.start_iodevice = lum.lmm_stripe_offset;
-            sprintf(value, "%d", lum.lmm_stripe_offset);
+            fd->hints->fs_hints.lustre.start_iodevice = lum->lmm_stripe_offset;
+            sprintf(value, "%d", lum->lmm_stripe_offset);
             MPI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
+
+            ADIOI_Free(value);
         }
-        ADIOI_Free(value);
+        ADIOI_Free(lum);
 
         if (fd->access_mode & ADIO_APPEND)
             fd->fp_ind = fd->fp_sys_posn = lseek(fd->fd_sys, 0, SEEK_END);
