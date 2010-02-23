@@ -20,7 +20,7 @@ static void ADIOI_LUSTRE_Aligned_Mem_File_Write(ADIO_File fd, void *buf, int len
 static void ADIOI_LUSTRE_Aligned_Mem_File_Write(ADIO_File fd, void *buf, int len, 
               ADIO_Offset offset, int *err)
 {
-    int ntimes, rem, newrem, i, size, nbytes;
+    int rem, size, nbytes;
     if (!(len % fd->d_miniosz) && (len >= fd->d_miniosz)) {
 	*err = pwrite(fd->fd_direct, buf, len, offset);
     } else if (len < fd->d_miniosz) {
@@ -39,7 +39,7 @@ static void ADIOI_LUSTRE_Aligned_Mem_File_Read(ADIO_File fd, void *buf, int len,
 static void ADIOI_LUSTRE_Aligned_Mem_File_Read(ADIO_File fd, void *buf, int len, 
               ADIO_Offset offset, int *err)
 {
-    int ntimes, rem, newrem, i, size, nbytes;
+    int rem, size, nbytes;
     if (!(len % fd->d_miniosz) && (len >= fd->d_miniosz))
 	*err = pread(fd->fd_direct, buf, len, offset);
     else if (len < fd->d_miniosz)
@@ -61,7 +61,6 @@ static int ADIOI_LUSTRE_Directio(ADIO_File fd, void *buf, int len,
 {
     int err=-1, diff, size=len, nbytes = 0;
     void *newbuf;
-    static char myname[] = "ADIOI_LUSTRE_Directio";
 
     if (offset % fd->d_miniosz) {
 	diff = fd->d_miniosz - (offset % fd->d_miniosz);
