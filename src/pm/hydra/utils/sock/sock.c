@@ -237,6 +237,8 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
 
     HYDU_FUNC_ENTER();
 
+    HYDU_ASSERT(maxlen, status);
+
     *count = 0;
     while (1) {
         do {
@@ -249,8 +251,10 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
         }
         *count += tmp;
 
-        if (flag != HYDU_SOCK_COMM_MSGWAIT || *count == maxlen || tmp == 0)
+        if (flag != HYDU_SOCK_COMM_MSGWAIT || *count == maxlen)
             break;
+        else if (0 == tmp)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "MSGWAIT requested but EOF encountered\n");
     };
 
     if (*count < 0)
