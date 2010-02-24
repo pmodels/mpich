@@ -176,7 +176,7 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
     int count;
-    enum HYD_pmcd_pmi_cmd cmd;
+    enum HYD_pmcd_pmi_cmd cmd = INVALID_PMI_CMD;
     struct HYD_pmcd_pmi_cmd_hdr hdr;
     struct HYD_proxy *proxy;
     char *buf;
@@ -213,6 +213,9 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
             status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
             HYDU_ERR_POP(status, "unable to process PMI command\n");
         }
+    }
+    else {
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unhandled PMI command=%d\n", cmd);
     }
 
   fn_exit:
