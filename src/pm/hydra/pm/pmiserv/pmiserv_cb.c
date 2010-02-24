@@ -411,7 +411,7 @@ static HYD_status ckpoint(void)
 
 void HYD_pmcd_pmiserv_signal_cb(int sig)
 {
-    char c;
+    char c = 0;
 
     HYDU_FUNC_ENTER();
 
