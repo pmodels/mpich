@@ -28,7 +28,10 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib)
     HYDU_FUNC_ENTER();
 
     HYDT_bind_info.support_level = HYDT_BIND_NONE;
-    HYDT_bind_info.bindlib = HYDU_strdup(bindlib);
+    if (bindlib)
+        HYDT_bind_info.bindlib = HYDU_strdup(bindlib);
+    else
+        HYDT_bind_info.bindlib = NULL;
     HYDT_bind_info.bindmap = NULL;
 
     /***************************** NONE *****************************/
