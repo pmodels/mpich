@@ -100,9 +100,9 @@ case "$enable_sharedlibs" in
     else
         CC_SHL='${CC} -fPIC'
     fi
-    #C_LINKPATH_SHL="-Wl,-rpath -Wl,"
-    # More recent versions allow multiple args, separated by commas
-    C_LINKPATH_SHL="-Wl,-rpath,"
+    # This used to have -Wl,-rpath earlier, but that causes problems
+    # on many systems.
+    C_LINKPATH_SHL=""
     SHLIB_EXT=so
     # We need to test that this isn't osx.  The following is a 
     # simple hack
