@@ -2339,7 +2339,7 @@ Function AddPrefixToDefinitions(filename, prefix_str)
                 macroname_val = RegExpFind("(\s).+", define)
                 str = RegExpFind("(\S).+", macroname_val)
                 If IsLowerCaseChar(Left(str, 1)) Then
-                    str = "#define " & LCase(prefix_str) & str
+                    str = "#define " & "_" & LCase(prefix_str) & str
                 Else
                     str = "#define " & UCase(prefix_str) & str
                 End If
