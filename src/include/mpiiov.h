@@ -8,7 +8,11 @@
 
 /* IOVs */
 /* The basic channel interface uses IOVs */
-#define MPID_IOV_BUF_CAST void *
+#ifdef HAVE_WINDOWS_H
+    #define MPID_IOV_BUF_CAST char *
+#else
+    #define MPID_IOV_BUF_CAST void *
+#endif
 #ifdef HAVE_WINDOWS_H
 #include <winsock2.h>
 #define MPID_IOV         WSABUF
