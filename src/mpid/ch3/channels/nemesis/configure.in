@@ -442,7 +442,7 @@ fi
 
 if test "$pac_cv_have_struct_ifconf" = "yes" -o \
         "$pac_cv_have_struct_ifconf_with_svid" = "yes" -o \
-        "$pac_cv_have_struct_ifconf_without_posix" ; then
+        "$pac_cv_have_struct_ifconf_without_posix" = "yes" ; then
     AC_DEFINE(HAVE_STRUCT_IFCONF,1,[Define if struct ifconf can be used])
 fi
 
