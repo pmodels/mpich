@@ -6,15 +6,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_PTHREAD_H
-    #include <pthread.h>
-#endif
 #include "mpi.h"
 #include "mpithreadtest.h"
 
 int rank;
 
-void run_test(void * arg)
+MTEST_THREAD_RETURN_TYPE run_test(void * arg)
 {
     MPI_Status  reqstat;
     int i, j;
@@ -34,6 +31,7 @@ void run_test(void * arg)
 		MPI_Send(NULL, 0, MPI_CHAR, peer, j, MPI_COMM_WORLD);
 	}
     }
+    return (MTEST_THREAD_RETURN_TYPE)NULL;
 }
 
 int main(int argc, char ** argv)

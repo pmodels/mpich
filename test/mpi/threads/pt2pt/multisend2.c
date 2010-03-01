@@ -18,16 +18,16 @@
 
 /* This is the master test routine */
 #define MAX_CNT 660000
-#define MAX_LOOP 200 
+#define MAX_LOOP 200
 
 static int nthreads = -1;
 
-void run_test_send(void *arg)
+MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
 {
     int    cnt, j, *buf;
     int    thread_num = (int)arg;
     double t;
-    
+
     for (cnt=1; cnt < MAX_CNT; cnt = 2*cnt) {
 	buf = (int *)malloc( cnt * sizeof(int) );
 
@@ -39,16 +39,17 @@ void run_test_send(void *arg)
 	    MPI_Send( buf, cnt, MPI_INT, thread_num, cnt, MPI_COMM_WORLD );
 	t = MPI_Wtime() - t;
 	free( buf );
-	if (thread_num == 1) 
+	if (thread_num == 1)
 	    MTestPrintfMsg( 1, "buf size %d: time %f\n", cnt, t / MAX_LOOP );
     }
+    return (MTEST_THREAD_RETURN_TYPE)NULL;
 }
 void run_test_recv( void )
 {
     int        cnt, j, *buf;
     MPI_Status status;
     double     t;
-    
+
     for (cnt=1; cnt < MAX_CNT; cnt = 2*cnt) {
 	buf = (int *)malloc( cnt * sizeof(int) );
 	t = MPI_Wtime();

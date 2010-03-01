@@ -27,7 +27,7 @@
 static int ownerWaits = 0;
 static int nthreads = -1;
 
-void run_test_send(void *arg)
+MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
 {
     int    cnt, j, *buf, wsize;
     int    thread_num = (int)arg;
@@ -72,13 +72,14 @@ void run_test_send(void *arg)
     }
     MTest_thread_barrier(nthreads);
     free( buf );
+    return (MTEST_THREAD_RETURN_TYPE)NULL;
 }
 void run_test_recv( void )
 {
     int        cnt, j, *buf;
     MPI_Status status;
     double     t;
-    
+
     for (cnt=1; cnt < MAX_CNT; cnt = 2*cnt) {
 	buf = (int *)malloc( cnt * sizeof(int) );
 	t = MPI_Wtime();
