@@ -1529,8 +1529,8 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
 		 ADIOI_Malloc(agg_ol_ct * sizeof(MPI_Aint))) == NULL)
 	    {
 		fprintf(stderr, "ADIOI_Build_client_pre_req: malloc "
-                        "pre_disp_arr of size %d failed\n",
-                        agg_ol_ct * sizeof(MPI_Aint));
+                        "pre_disp_arr of size %ld failed\n",
+                        (long int)agg_ol_ct * sizeof(MPI_Aint));
                 return -1;
 	    }
 	    if ((my_mem_view_state_p->pre_blk_arr = (int *) 
@@ -1538,8 +1538,8 @@ int ADIOI_Build_client_pre_req(ADIO_File fd,
 	    {
 		ADIOI_Free(my_mem_view_state_p->pre_disp_arr);
 		fprintf(stderr, "ADIOI_Build_client_pre_req: malloc "
-			"agg_blk_arr of size %d failed\n", 
-			agg_ol_ct * sizeof(int));
+			"agg_blk_arr of size %ld failed\n",
+			(long int)agg_ol_ct * sizeof(int));
 		return -1;
 	    }
 	}
@@ -2002,8 +2002,8 @@ int ADIOI_Build_client_req(ADIO_File fd,
 		 ADIOI_Malloc(agg_ol_ct * sizeof(MPI_Aint))) == NULL)
 	    {
 		fprintf(stderr, "ADIOI_Build_client_req: malloc "
-			"agg_disp_arr of size %d failed\n", 
-			agg_ol_ct * sizeof(MPI_Aint));
+			"agg_disp_arr of size %ld failed\n",
+			(long int)agg_ol_ct * sizeof(MPI_Aint));
 		return -1;
 	    }
 	    if ((agg_blk_arr = (int *) 
@@ -2011,8 +2011,8 @@ int ADIOI_Build_client_req(ADIO_File fd,
 	    {
 		ADIOI_Free(agg_disp_arr);
 		fprintf(stderr, "ADIOI_Build_client_req: malloc "
-			"agg_blk_arr of size %d failed\n", 
-			agg_ol_ct * sizeof(int));
+			"agg_blk_arr of size %ld failed\n",
+			(long int)agg_ol_ct * sizeof(int));
 		return -1;
 	    }
 	}

@@ -37,7 +37,6 @@ int MPI_File_delete(char *filename, MPI_Info info)
     int error_code, file_system;
     char *tmp;
     ADIOI_Fns *fsops;
-    static char myname[] = "MPI_FILE_DELETE";
     MPIU_THREADPRIV_DECL;
 #ifdef MPI_hpux
     int fl_xmpi;

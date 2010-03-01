@@ -134,7 +134,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	if (*error_code != MPI_SUCCESS) return;
 
         for (j=0; j<count; j++) 
-        { int i;
+        {
               for (i=0; i<flat_buf->count; i++) {
                   userbuf_off = (ADIO_Offset)j*(ADIO_Offset)buftype_extent + flat_buf->indices[i];
       req_off = off;
