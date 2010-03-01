@@ -434,9 +434,11 @@ if (pointer_) { \
 */
 void MPIU_Basename(char *path, char **basename);
 
-/* May be used to perform sanity and range checking on memcpy and mempcy-like
-   function calls.  This macro will bail out much like an MPIU_Assert if any of
-   the checks fail. */
+/* Evaluates to a boolean expression, true if the given byte ranges overlap,
+ * false otherwise.  That is, true iff [a_,a_+a_len_) overlaps with [b_,b_+b_len_) */
+#define MPIU_MEM_RANGES_OVERLAP(a_,a_len_,b_,b_len_) \
+    ( ((char *)(a_) >= (char *)(b_) && ((char *)(a_) < ((char *)(b_) + (b_len_)))) ||  \
+      ((char *)(b_) >= (char *)(a_) && ((char *)(b_) < ((char *)(a_) + (a_len_)))) )
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 
 #ifndef TRUE
@@ -446,16 +448,17 @@ void MPIU_Basename(char *path, char **basename);
 #define FALSE 0
 #endif
 
+/* May be used to perform sanity and range checking on memcpy and mempcy-like
+   function calls.  This macro will bail out much like an MPIU_Assert if any of
+   the checks fail. */
 #define MPIU_MEM_CHECK_MEMCPY(dst_,src_,len_)                                                                   \
     do {                                                                                                        \
-        if (len_) {                                                                                              \
+        if (len_) {                                                                                             \
             MPIU_Assert((dst_) != NULL);                                                                        \
             MPIU_Assert((src_) != NULL);                                                                        \
-            MPL_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                    \
-            MPL_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                    \
-            if (((char *)(dst_) >= (char *)(src_) && ((char *)(dst_) < ((char *)(src_) + (len_)))) ||           \
-                ((char *)(src_) >= (char *)(dst_) && ((char *)(src_) < ((char *)(dst_) + (len_)))))             \
-            {                                                                                                   \
+            MPL_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                     \
+            MPL_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                     \
+            if (MPIU_MEM_RANGES_OVERLAP((dst_),(len_),(src_),(len_))) {                                          \
                 MPIU_Assert_fmt_msg(FALSE,("memcpy argument memory ranges overlap, dst_=%p src_=%p len_=%ld\n", \
                                            (dst_), (src_), (long)(len_)));                                      \
             }                                                                                                   \

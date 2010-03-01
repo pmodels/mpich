@@ -331,9 +331,15 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     if (sendtype_iscontig && recvtype_iscontig)
-    {    
-        MPIU_Memcpy(((char *) recvbuf + recvtype_true_lb), 
-               ((char *) sendbuf + sendtype_true_lb), 
+    {
+#if defined(HAVE_ERROR_CHECKING)
+        MPIU_ERR_CHKMEMCPYANDJUMP(mpi_errno,
+                                  ((char *)recvbuf + recvtype_true_lb),
+                                  ((char *)sendbuf + sendtype_true_lb),
+                                  copy_sz);
+#endif
+        MPIU_Memcpy(((char *) recvbuf + recvtype_true_lb),
+               ((char *) sendbuf + sendtype_true_lb),
                copy_sz);
     }
     else if (sendtype_iscontig)

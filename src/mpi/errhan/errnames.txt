@@ -176,6 +176,9 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 
 **dynamic_node_ids: Node information for dynamic processes currently is not implemnted
 
+**memcpyalias:memcpy arguments alias each other
+**memcpyalias %p %p %L:memcpy arguments alias each other, dst=%d src=%d len=%L
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #
