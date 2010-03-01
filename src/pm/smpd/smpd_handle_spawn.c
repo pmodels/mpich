@@ -506,7 +506,11 @@ int smpd_handle_spawn_command(smpd_context_t *context)
 	    }
 	    else if (smpd_process.env_channel[0] != '\0')
 	    {
-		MPIU_Str_add_string_arg(&cur_env_loc, &env_maxlen, "MPICH2_CHANNEL", smpd_process.env_channel);
+		    MPIU_Str_add_string_arg(&cur_env_loc, &env_maxlen, "MPICH2_CHANNEL", smpd_process.env_channel);
+            if(smpd_process.env_netmod[0] != '\0')
+            {
+                MPIU_Str_add_string_arg(&cur_env_loc, &env_maxlen, "MPICH_NEMESIS_NETMOD", smpd_process.env_netmod);
+            }
 	    }
 	}
 	if (env_wrap_dll_specified == SMPD_FALSE)

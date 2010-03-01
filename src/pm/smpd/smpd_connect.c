@@ -192,6 +192,7 @@ smpd_global_t smpd_process =
       "",               /* val                     */
       SMPD_FALSE,       /* do_console_returns      */
       "",               /* env_channel             */
+      "",               /* env_netmod              */
       "",               /* env_dll                 */
       "",               /* env_wrap_dll            */
       NULL,             /* delayed_spawn_queue     */

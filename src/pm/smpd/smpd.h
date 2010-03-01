@@ -802,6 +802,7 @@ typedef struct smpd_global_t
     char val[SMPD_MAX_VALUE_LENGTH];
     SMPD_BOOL do_console_returns;
     char env_channel[10];
+    char env_netmod[10];
     char env_dll[SMPD_MAX_FILENAME];
     char env_wrap_dll[SMPD_MAX_FILENAME];
     smpd_delayed_spawn_node_t *delayed_spawn_queue;

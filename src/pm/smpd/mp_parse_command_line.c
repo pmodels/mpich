@@ -30,6 +30,9 @@
 #include <ctype.h>
 #endif
 
+/* The supported values right now are "newtcp" & "nd" */
+#define SMPD_MAX_NEMESIS_NETMOD_LENGTH  10
+
 void mp_print_options(void)
 {
     printf("\n");
@@ -438,6 +441,8 @@ int mp_parse_command_args(int *argcp, char **argvp[])
     SMPD_BOOL smpd_setting_priority = SMPD_INVALID_SETTING;
     char smpd_setting_path[SMPD_MAX_PATH_LENGTH] = "";
     SMPD_BOOL smpd_setting_localonly = SMPD_INVALID_SETTING;
+    char nemesis_netmod[SMPD_MAX_NEMESIS_NETMOD_LENGTH];
+
 #ifdef HAVE_WINDOWS_H
     int user_index;
     char user_index_str[20];
@@ -2442,6 +2447,25 @@ configfile_loop:
 		}
 	    }
 
+        nemesis_netmod[0] = '\0';
+#ifdef HAVE_WINDOWS_H
+        /* See if there is a netmod specified with the channel
+         * eg: -channel nemesis:newtcp | -channel nemesis:nd
+         */
+        if(strlen(channel) > 0){
+            char seps[]=":";
+            char *tok, *ctxt;
+
+            tok = strtok_s(channel, seps, &ctxt);
+            if(tok != NULL){
+                tok = strtok_s(NULL, seps, &ctxt);
+                if(tok != NULL){
+                    MPIU_Strncpy(nemesis_netmod, tok, SMPD_MAX_NEMESIS_NETMOD_LENGTH);
+                }
+            }
+        }
+#endif
+
 	    /* add the channel to the environment of each process */
 	    iter = smpd_process.launch_list;
 	    while (iter)
@@ -2449,6 +2473,7 @@ configfile_loop:
 		maxlen = (int)strlen(iter->env);
 		env_str = &iter->env[maxlen];
 		maxlen = SMPD_MAX_ENV_LENGTH - maxlen - 1;
+
 		if (maxlen > 15) /* At least 16 characters are needed to store MPICH2_CHANNEL=x */
 		{
 		    *env_str = ' ';
@@ -2458,10 +2483,24 @@ configfile_loop:
 		    env_str--;
 		    *env_str = '\0';
 		}
+		if ((strlen(nemesis_netmod) > 0) && (maxlen > 32)) /* At least 31 characters are needed to store " MPICH_NEMESIS_NETMOD=x" */
+		{
+		    *env_str = ' ';
+		    env_str++;
+		    MPIU_Str_add_string_arg(&env_str, &maxlen, "MPICH_NEMESIS_NETMOD", nemesis_netmod);
+		    /* trim the trailing white space */
+		    env_str--;
+		    *env_str = '\0';
+		}
+
 		iter = iter->next;
 	    }
+
 	    /* Save the channel to be used by spawn commands */
 	    MPIU_Strncpy(smpd_process.env_channel, channel, 10);
+        if(strlen(nemesis_netmod) > 0){
+            MPIU_Strncpy(smpd_process.env_netmod, nemesis_netmod, 10);
+        }
 	}
     }
 
