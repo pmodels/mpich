@@ -108,7 +108,7 @@ char MPIR_dll_name[] = MPICH_INFODLL_LOC;
 volatile int MPIR_debug_state    = 0;
 volatile int MPIR_debug_gate     = 0;
 volatile int MPIR_being_debugged = 0;
-char * MPIR_debug_abort_string   = 0;
+const char * MPIR_debug_abort_string = 0;
 
 /* Values for the debug_state, this seems to be all we need at the moment
  * but that may change... 
