@@ -57,6 +57,10 @@ static inline BOOL IsValidSet(MPIU_ExSetHandle_t Set)
 }
 
 
+/* FIXME : Change ExCreateSet() to allow adding the set to a list
+ * & allow sending this list to MPIU_ExProcessCompletions()
+ * MPIU_ExSetHandle_t MPIU_ExCreateSet(MPIU_ExCreateSetList_t list)
+ */
 MPIU_ExSetHandle_t
 MPIU_ExCreateSet(
     void
