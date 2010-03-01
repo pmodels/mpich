@@ -234,7 +234,7 @@ static inline int MPIU_SOCKW_Accept_ex(MPIU_SOCKW_Sockfd_t sock,
 
     /* FIXME: Try receiving data with AcceptEx() call to improve perf */
     if( !AcceptEx(sock, *new_sock_ptr, addr, 0, addr_len/2, addr_len/2,
-        nb_ptr, &(ov->ov)) ){
+        (LPDWORD )nb_ptr, &(ov->ov)) ){
         err = MPIU_OSW_Get_errno();
 		MPIU_ERR_CHKANDJUMP2((err != ERROR_IO_PENDING), mpi_errno,
 			MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s %d",
@@ -298,7 +298,7 @@ static inline int MPIU_SOCKW_Connect_ex(
                  sizeof(MPIU_SOCKW_GUID_CONNECTEX),
                  (LPVOID)&pfn_ConnectEx,
                  sizeof(pfn_ConnectEx),
-                 &nb,
+                 (LPDWORD )&nb,
                  NULL,
                  NULL
                  );
@@ -309,7 +309,7 @@ static inline int MPIU_SOCKW_Connect_ex(
             "**fail %s %d", MPIU_OSW_Strerror(err), err);
     }
 
-    if(!pfn_ConnectEx(sockfd, addr, addr_len, NULL, 0, &nb, &(ov->ov))){
+    if(!pfn_ConnectEx(sockfd, (struct sockaddr *)addr, addr_len, NULL, 0, (LPDWORD )&nb, &(ov->ov))){
         err = MPIU_OSW_Get_errno();
 		MPIU_ERR_CHKANDJUMP2((err != ERROR_IO_PENDING), mpi_errno,
 			MPI_ERR_OTHER, "**sock_connect", "**sock_connect %s %d",
