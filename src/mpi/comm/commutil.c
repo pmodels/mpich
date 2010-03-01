@@ -22,6 +22,7 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
 
 /* utility function to pretty print a context ID for debugging purposes, see
  * mpiimpl.h for more info on the various fields */
+#ifdef USE_DBG_LOGGING
 static void MPIR_Comm_dump_context_id(MPIR_Context_id_t context_id, char *out_str, int len)
 {
     int subcomm_type = MPID_CONTEXT_READ_FIELD(SUBCOMM,context_id);
@@ -43,6 +44,7 @@ static void MPIR_Comm_dump_context_id(MPIR_Context_id_t context_id, char *out_st
                   subcomm_type_name,
                   (MPID_CONTEXT_READ_FIELD(SUFFIX,context_id) ? "coll" : "pt2pt"));
 }
+#endif
 
 /* FIXME :
    Reusing context ids can lead to a race condition if (as is desirable)
