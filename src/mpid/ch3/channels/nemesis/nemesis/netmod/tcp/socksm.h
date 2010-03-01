@@ -70,16 +70,16 @@ typedef enum {
 /* REQ - Request, RSP - Response */
 
 typedef enum CONN_TYPE {CONN_TYPE_, CONN_TYPE_SIZE} Conn_type_t;
-typedef enum MPID_nem_tcp_Listen_State {LISTEN_STATE_, LISTEN_STATE_SIZE} 
+typedef enum MPID_nem_tcp_Listen_State {LISTEN_STATE_INVALID = -1, LISTEN_STATE_, LISTEN_STATE_SIZE}
     MPID_nem_tcp_Listen_State_t ;
 
-typedef enum MPID_nem_tcp_Conn_State {CONN_STATE_, CONN_STATE_SIZE} 
+typedef enum MPID_nem_tcp_Conn_State {CONN_STATE_INVALID = -1, CONN_STATE_, CONN_STATE_SIZE}
     MPID_nem_tcp_Conn_State_t;
 
 /*
   Note: event numbering starts from 1, as 0 is assumed to be the state of all-events cleared
  */
-typedef enum sockconn_event {EVENT_CONNECT = 1, EVENT_DISCONNECT} 
+typedef enum sockconn_event {EVENT_CONNECT = 1, EVENT_DISCONNECT}
     sockconn_event_t;
 
 #undef M_

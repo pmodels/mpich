@@ -56,7 +56,8 @@ typedef enum MPID_nem_pkt_type
     MPIDI_NEM_PKT_LMT_CTS,
     MPIDI_NEM_PKT_LMT_DONE,
     MPIDI_NEM_PKT_LMT_COOKIE,
-    MPIDI_NEM_PKT_END    
+    MPIDI_NEM_PKT_END,
+    MPIDI_NEM_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
 } MPID_nem_pkt_type_t;
 
 typedef struct MPID_nem_pkt_lmt_rts
