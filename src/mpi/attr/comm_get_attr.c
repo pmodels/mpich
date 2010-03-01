@@ -233,11 +233,11 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 			*(void**)attribute_val = &(p->value);
 		    }
 		    else {
-			*(void**)attribute_val = (void *)(p->value);
+			*(void**)attribute_val = (void *)(MPIR_Pint)(p->value);
 		    }
 		}
 		else
-		    *(void**)attribute_val = (void *)(p->value);
+		    *(void**)attribute_val = (void *)(MPIR_Pint)(p->value);
 
 		break;
 	    }
