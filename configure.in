@@ -5360,17 +5360,8 @@ case "$timer_type" in
 
     clock_gettime)
     missing_function=no
-    # FIXME: We are blindly adding the flag into LDFLAGS without
-    # checking if someone else added it as well, so there might be a
-    # duplication.
-    AC_CHECK_LIB(rt,clock_gettime,LDFLAGS="$LDFLAGS -lrt",missing_function=yes)
-    if test "$missing_function" = yes ; then
-       AC_MSG_ERROR([Requested timer clock_gettime (POSIX) is not available])
-    fi
-    AC_CHECK_FUNC(clock_getres,,[missing_function=yes])
-    if test "$missing_function" = yes ; then
-        AC_MSG_ERROR([Requested timer clock_gettime (POSIX) is not available because clock_getres, also needed, is not available])
-    fi
+    AC_SEARCH_LIBS([clock_gettime],[rt],,AC_MSG_ERROR([clock_gettime is not available]))
+    AC_SEARCH_LIBS([clock_getres],[rt],,AC_MSG_ERROR([clock_getres is not available]))
     MPID_TIMER_TYPE="struct timespec"
     # AIX does not always define struct timespec (!)
     # Make sure that we can use struct timespec
