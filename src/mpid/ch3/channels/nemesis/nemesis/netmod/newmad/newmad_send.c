@@ -169,7 +169,6 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 {
     MPID_Request  *sreq = NULL;
     nm_tag_t       match_info = 0;
-    struct iovec  *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
     int            num_iov = 0;    
     int            mpi_errno = MPI_SUCCESS;
     MPID_Datatype *dt_ptr;
@@ -197,6 +196,7 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 
     if(data_sz)
     {
+	struct iovec *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
 	if (dt_contig)
 	{
 	    newmad_iov[0].iov_base = (char*)(buf + dt_true_lb);
@@ -205,7 +205,7 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 	}
 	else
 	{
-	    struct iovec *mad_iov_ptr = &(newmad_iov[0]);
+	    struct iovec  *mad_iov_ptr = &(newmad_iov[0]);
 	    MPID_nem_newmad_process_sdtype(&sreq,datatype,dt_ptr,buf,count,data_sz,&mad_iov_ptr,&num_iov,0);	    	    
 	}
 	MPIU_Assert(num_iov <= NMAD_IOV_MAX_DEPTH);
@@ -219,13 +219,13 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 #endif
 	nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 				 newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
+	REQ_FIELD(sreq,iov) = newmad_iov;        
     }
     else
     {
 	nm_sr_isend_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     NULL, 0, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     }
-    REQ_FIELD(sreq,iov) = newmad_iov;        
     mpid_nem_newmad_pending_send_req++;
 
  fn_exit:
@@ -245,7 +245,6 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
 {
     MPID_Request  *sreq = NULL;
     nm_tag_t       match_info = 0;
-    struct iovec  *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
     int            num_iov = 0;    
     int            mpi_errno = MPI_SUCCESS;
     MPID_Datatype *dt_ptr;
@@ -269,6 +268,7 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
     NEM_NMAD_DIRECT_MATCH(match_info,tag,comm->rank,comm->context_id + context_offset);
     if(data_sz)
     {
+	struct iovec  *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
 	if (dt_contig)
 	{
 	    newmad_iov[0].iov_base = (char*)(buf + dt_true_lb);
@@ -282,13 +282,13 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
 	}
 	nm_sr_issend_iov(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			 newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)));    
+	REQ_FIELD(sreq,iov) = newmad_iov;        
     }
     else
     {
 	nm_sr_issend(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 		     NULL, 0, &(REQ_FIELD(sreq,newmad_req)));    
     }
-    REQ_FIELD(sreq,iov) = newmad_iov;        
     mpid_nem_newmad_pending_send_req++;
 
  fn_exit:
@@ -328,7 +328,7 @@ int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype
     MPID_Segment_count_contig_blocks(sreq->dev.segment_ptr,sreq->dev.segment_first,&last,&n_iov);
     MPIU_Assert(n_iov > 0);
     iov = MPIU_Malloc(n_iov*sizeof(MPID_IOV));
-
+    
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,iov, &n_iov);
     MPIU_Assert(last == sreq->dev.segment_size);
 
