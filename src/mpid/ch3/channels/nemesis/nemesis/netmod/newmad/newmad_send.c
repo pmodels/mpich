@@ -5,6 +5,7 @@
  */
 
 #include "newmad_impl.h"
+#include "newmad_extended_interface.h"
 #include "my_papi_defs.h"
 
 #undef FUNCNAME
@@ -15,7 +16,7 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 {
     int           mpi_errno = MPI_SUCCESS;
     nm_tag_t      match_info = 0;
-    struct iovec  mad_iov[2];
+    struct iovec *newmad_iov = (struct iovec *)MPIU_Malloc(2*sizeof(struct iovec));
     int           num_iov = 1;
     
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_ISENDCONTIG);    
@@ -32,17 +33,18 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 #endif
 
     MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
-    mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
-    mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
+    newmad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
+    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
     if(data_sz)
     {
-	mad_iov[1].iov_base = data;
-	mad_iov[1].iov_len  = data_sz;
+	newmad_iov[1].iov_base = data;
+	newmad_iov[1].iov_len  = data_sz;
 	num_iov += 1;
     }
+    REQ_FIELD(sreq,iov) = newmad_iov;
 
     nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
-			     mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
+			     newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
     mpid_nem_newmad_pending_send_req++;
     sreq->ch.vc = vc;
 
@@ -61,7 +63,7 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 {
     MPID_Request *sreq = NULL;
     nm_tag_t      match_info = 0;
-    struct iovec  mad_iov[2];
+    struct iovec *newmad_iov = (struct iovec *)MPIU_Malloc(2*sizeof(struct iovec));
     int           num_iov = 1;
     int           mpi_errno = MPI_SUCCESS;
 
@@ -84,17 +86,18 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 #endif
 
     MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
-    mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
-    mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
+    newmad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
+    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
     if (data_sz)
     {
-	mad_iov[1].iov_base = (char *)data;
-	mad_iov[1].iov_len  = data_sz;
+	newmad_iov[1].iov_base = (char *)data;
+	newmad_iov[1].iov_len  = data_sz;
 	num_iov += 1;
     }
-    
+    REQ_FIELD(sreq,iov) = newmad_iov;    
+
     nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
-			     mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
+			     newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
     mpid_nem_newmad_pending_send_req++;
     sreq->ch.vc = vc;
 
@@ -116,7 +119,7 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
 {
     int            mpi_errno = MPI_SUCCESS;
     nm_tag_t       match_info = 0;
-    struct iovec   mad_iov[NMAD_IOV_MAX_DEPTH];
+    struct iovec  *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
     int            num_iov = 1;
     MPIDI_msg_sz_t data_sz;
     int            dt_contig;
@@ -132,7 +135,7 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
 
     if(data_sz)
     {
-	struct iovec *mad_iov_ptr = &(mad_iov[0]);
+	struct iovec *mad_iov_ptr = &(newmad_iov[0]);
 	MPID_nem_newmad_process_sdtype(&sreq,sreq->dev.datatype,dt_ptr,sreq->dev.user_buf,
 				       sreq->dev.user_count,data_sz, &mad_iov_ptr,&num_iov,1);
     }
@@ -141,11 +144,12 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     fprintf(stdout,"SendNonContig ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
 #endif
     MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_PktGeneric_t));
-    mad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
-    mad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
+    newmad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
+    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
+    REQ_FIELD(sreq,iov) = newmad_iov;        
 
     nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
-			     mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
+			     newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     mpid_nem_newmad_pending_send_req++;    
 
  fn_exit:
@@ -165,7 +169,7 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 {
     MPID_Request  *sreq = NULL;
     nm_tag_t       match_info = 0;
-    struct iovec   mad_iov[NMAD_IOV_MAX_DEPTH];
+    struct iovec  *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
     int            num_iov = 0;    
     int            mpi_errno = MPI_SUCCESS;
     MPID_Datatype *dt_ptr;
@@ -190,17 +194,18 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 #ifdef DEBUG
     fprintf(stdout,"Direct Send ========> Sending NON ADI msg for req %p (match is %lx) \n",sreq,match_info);
 #endif
+
     if(data_sz)
     {
 	if (dt_contig)
 	{
-	    mad_iov[0].iov_base = (char*)(buf + dt_true_lb);
-	    mad_iov[0].iov_len  = data_sz;
+	    newmad_iov[0].iov_base = (char*)(buf + dt_true_lb);
+	    newmad_iov[0].iov_len  = data_sz;
 	    num_iov = 1;
 	}
 	else
 	{
-	    struct iovec *mad_iov_ptr = &(mad_iov[0]);
+	    struct iovec *mad_iov_ptr = &(newmad_iov[0]);
 	    MPID_nem_newmad_process_sdtype(&sreq,datatype,dt_ptr,buf,count,data_sz,&mad_iov_ptr,&num_iov,0);	    	    
 	}
 	MPIU_Assert(num_iov <= NMAD_IOV_MAX_DEPTH);
@@ -209,18 +214,18 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 	    {
 		fprintf(stdout,"======================\n");
 		fprintf(stdout,"SEND nmad_iov[%i]: [base %p][len %i]\n",index,
-			mad_iov[index].iov_base,mad_iov[index].iov_len);
+			newmad_iov[index].iov_base,newmad_iov[index].iov_len);
 	    }
 #endif
 	nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
-				 mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
+				 newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     }
     else
     {
 	nm_sr_isend_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     NULL, 0, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
     }
-
+    REQ_FIELD(sreq,iov) = newmad_iov;        
     mpid_nem_newmad_pending_send_req++;
 
  fn_exit:
@@ -240,7 +245,7 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
 {
     MPID_Request  *sreq = NULL;
     nm_tag_t       match_info = 0;
-    struct iovec   mad_iov[NMAD_IOV_MAX_DEPTH];
+    struct iovec  *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
     int            num_iov = 0;    
     int            mpi_errno = MPI_SUCCESS;
     MPID_Datatype *dt_ptr;
@@ -262,30 +267,28 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
     sreq->dev.OnDataAvail = NULL;
 
     NEM_NMAD_DIRECT_MATCH(match_info,tag,comm->rank,comm->context_id + context_offset);
-
     if(data_sz)
     {
 	if (dt_contig)
 	{
-	    mad_iov[0].iov_base = (char*)(buf + dt_true_lb);
-	    mad_iov[0].iov_len  = data_sz;
+	    newmad_iov[0].iov_base = (char*)(buf + dt_true_lb);
+	    newmad_iov[0].iov_len  = data_sz;
 	    num_iov += 1;
 	}
 	else
 	{
-	    struct iovec *mad_iov_ptr = &(mad_iov[0]);
+	    struct iovec *mad_iov_ptr = &(newmad_iov[0]);
 	    MPID_nem_newmad_process_sdtype(&sreq,datatype,dt_ptr,buf,count,data_sz,&mad_iov_ptr,&num_iov,0);	    	    
 	}
-	/* FIXME issend !*/
-	nm_sr_isend_iov(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
-			mad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)));    
+	nm_sr_issend_iov(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
+			 newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)));    
     }
     else
     {
-	/* FIXME issend !*/
-	nm_sr_isend(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
-		    NULL, 0, &(REQ_FIELD(sreq,newmad_req)));    
+	nm_sr_issend(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
+		     NULL, 0, &(REQ_FIELD(sreq,newmad_req)));    
     }
+    REQ_FIELD(sreq,iov) = newmad_iov;        
     mpid_nem_newmad_pending_send_req++;
 
  fn_exit:
@@ -301,14 +304,13 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
 #define FUNCNAME MPID_nem_newmad_process_sdtype
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  MPID_Datatype * dt_ptr, const void *buf, 
+int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  MPID_Datatype *dt_ptr, const void *buf, 
 				   int count, MPIDI_msg_sz_t data_sz, struct iovec *mad_iov[], int  *num_iov, int first_taken)
 {
-    MPID_Request  *sreq =*sreq_p;
-    MPIDI_msg_sz_t last;
-    int            iov_num_ub  = count * dt_ptr->max_contig_blocks;
-    int            n_iov       = iov_num_ub;
+    MPID_Request  *sreq        =*sreq_p;
     MPID_IOV      *iov;
+    MPIDI_msg_sz_t last;
+    int            n_iov       = 0; 
     int            num_entries = NMAD_IOV_MAX_DEPTH - first_taken;
     int            mpi_errno   = MPI_SUCCESS;
     int            index;
@@ -322,7 +324,12 @@ int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = data_sz;
     last = sreq->dev.segment_size;
-    iov = MPIU_Malloc(iov_num_ub*sizeof(MPID_IOV));
+
+    MPID_Segment_count_contig_blocks(sreq->dev.segment_ptr,sreq->dev.segment_first,&last,&n_iov);
+    MPIU_Assert(n_iov > 0);
+    iov = MPIU_Malloc(n_iov*sizeof(MPID_IOV));
+    fprintf(stdout,"====> Send:  n_iov is %i\n",n_iov);
+    
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,iov, &n_iov);
     MPIU_Assert(last == sreq->dev.segment_size);
 

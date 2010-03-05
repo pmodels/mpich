@@ -88,7 +88,7 @@ typedef struct
 typedef struct 
 {
     nm_sr_request_t newmad_req;
-    void           *iov;
+    struct iovec   *iov;
 } MPID_nem_newmad_req_area;
 /* accessor macro to private fields in REQ */
 #define REQ_FIELD(reqp, field) (((MPID_nem_newmad_req_area *)((reqp)->ch.netmod_area.padding))->field)
@@ -103,7 +103,7 @@ struct MPID_nem_newmad_internal_req
    void                  *tmpbuf;
    MPIDI_msg_sz_t         tmpbuf_sz;
    nm_sr_request_t        newmad_req;
-   struct  MPID_nem_mx_internal_req *next;
+   struct  MPID_nem_newmad_internal_req *next;
 };
 
 typedef struct MPID_nem_newmad_internal_req MPID_nem_newmad_internal_req_t;
@@ -202,7 +202,7 @@ typedef int16_t Nmad_Nem_tag_t;
 extern nm_session_t mpid_nem_newmad_session;
 extern int          mpid_nem_newmad_pending_send_req;
 
-#define NMAD_IOV_MAX_DEPTH 15 /* NM_SO_PREALLOC_IOV_LEN */
+#define NMAD_IOV_MAX_DEPTH (1024) /* NM_SO_PREALLOC_IOV_LEN */
 //#define DEBUG
 
 #endif //NEWMAD_MODULE_IMPL_H
