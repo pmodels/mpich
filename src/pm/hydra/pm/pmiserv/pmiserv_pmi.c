@@ -196,6 +196,10 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int pid, in
 
     HYDU_FUNC_ENTER();
 
+    /* For FT, we need to check if a process with this PID was added
+     * earlier, and if it was, clean it up before adding this
+     * process. */
+
     srank = rank % HYD_handle.global_core_count;
 
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next)

@@ -15,6 +15,50 @@
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
+static HYD_status pmi_respawn(int fd)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Steps to be done:
+     *
+     * 1. The argument fd is closed; find the PMI_ID of the process
+     * that terminated badly.
+     *
+     * 2. Close and deregister the stdout/stderr/stdin sockets for the
+     * dead process (otherwise, we will continue to receive events on
+     * those sockets from the demux engine).
+     *
+     * 3. Spawn the new process (see the launch_procs() function
+     * below, though most of the initialization can be skipped).
+     *
+     * 4. Update the stdout/stderr/stdin sockets as needed and
+     * register them with the demux engine.
+     *
+     * Note that the proxy does *not* maintain the KVS space for the
+     * process, so we don't clean up anything for that. The main
+     * server will clean it up when it gets a new init request from
+     * the same PMI_ID.
+     *
+     * IMPORTANT NOTE: For the main server to distinguish different
+     * MPI processes handled by the same proxy, we add a "PID" field
+     * in the header for communication between the proxy and the
+     * server. This PID is basically the FD we used for PMI
+     * communication with the MPI process. Since this FD might now
+     * change on a respawn, the server would get confused. To handle
+     * this, we need to dup the new socket so we can continue to use
+     * the old fd.
+     */
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
@@ -37,6 +81,12 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     if (closed) {
         /* A process died; kill the remaining processes */
         HYD_pmcd_pmip_killjob();
+        goto fn_exit;
+
+        /* For FT, we might want to respawn the failed process if it
+         * didn't finalize cleanly */
+        status = pmi_respawn(fd);
+        HYDU_ERR_POP(status, "PMI respawn failure\n");
         goto fn_exit;
     }
 
