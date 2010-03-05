@@ -328,8 +328,7 @@ int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype
     MPID_Segment_count_contig_blocks(sreq->dev.segment_ptr,sreq->dev.segment_first,&last,&n_iov);
     MPIU_Assert(n_iov > 0);
     iov = MPIU_Malloc(n_iov*sizeof(MPID_IOV));
-    fprintf(stdout,"====> Send:  n_iov is %i\n",n_iov);
-    
+
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,iov, &n_iov);
     MPIU_Assert(last == sreq->dev.segment_size);
 
