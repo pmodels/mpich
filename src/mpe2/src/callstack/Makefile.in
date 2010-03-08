@@ -46,6 +46,7 @@ build_include:
 
 build_lib_bin:
 	@( cd src && $(MAKE) $(MAKEOPTS) )
+	@( cd bin && $(CP) -f bt2line $(binbuild_dir) )
 
 build_etc:
 	@-for file in ./etc/*.conf ; do \
@@ -71,6 +72,7 @@ clean_include:
 clean_lib:
 
 clean_bin:
+	@-$(RM) -f $(binbuild_dir)/bt2line
 
 clean_etc:
 	@-$(RM) -f ./etc/*.conf

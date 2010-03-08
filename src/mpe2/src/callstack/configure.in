@@ -245,5 +245,10 @@ AC_SUBST(MPI_CFLAGS)
 AC_SUBST(MPI_LIBS)
 AC_SUBST(PROF_LIBNAME)
 
+AC_OUTPUT_COMMANDS( [
+if test ! -x ./bin/bt2line -a -s ./bin/bt2line ; then
+    chmod a+x ./bin/bt2line
+fi
+] )
 AC_OUTPUT( Makefile src/Makefile include/mpe_callstack.h \
-           etc/mpe_callstack_ldflags.conf)
+           etc/mpe_callstack_ldflags.conf bin/bt2line )
