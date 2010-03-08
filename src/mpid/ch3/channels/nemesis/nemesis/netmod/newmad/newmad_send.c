@@ -225,6 +225,7 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
     {
 	nm_sr_isend_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     NULL, 0, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
+	REQ_FIELD(sreq,iov) = NULL;
     }
     mpid_nem_newmad_pending_send_req++;
 
@@ -288,6 +289,7 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
     {
 	nm_sr_issend(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 		     NULL, 0, &(REQ_FIELD(sreq,newmad_req)));    
+	REQ_FIELD(sreq,iov) = NULL;
     }
     mpid_nem_newmad_pending_send_req++;
 
