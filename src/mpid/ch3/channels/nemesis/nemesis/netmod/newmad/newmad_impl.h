@@ -64,7 +64,7 @@ int MPID_nem_newmad_process_rdtype(MPID_Request **rreq_p, MPID_Datatype * dt_ptr
 /* Connection management*/
 int MPID_nem_newmad_send_conn_info (MPIDI_VC_t *vc);
 
-#define MPID_NEM_NMAD_MAX_SIZE (10*(MPID_NEM_MAX_NETMOD_STRING_LEN))
+#define MPID_NEM_NMAD_MAX_SIZE (MPID_NEM_MAX_NETMOD_STRING_LEN)
 typedef nm_gate_t mpid_nem_newmad_p_gate_t;
 
 typedef struct MPID_nem_newmad_vc_area_internal
@@ -202,8 +202,8 @@ typedef int16_t Nmad_Nem_tag_t;
 extern nm_session_t mpid_nem_newmad_session;
 extern int          mpid_nem_newmad_pending_send_req;
 
-#define NMAD_IOV_MAX_DEPTH (1024) /* NM_SO_PREALLOC_IOV_LEN */
-//#define DEBUG
+#define NMAD_IOV_MAX_DEPTH (256) /* NM_SO_PREALLOC_IOV_LEN */
+#define DEBUG
 
 #endif //NEWMAD_MODULE_IMPL_H
 

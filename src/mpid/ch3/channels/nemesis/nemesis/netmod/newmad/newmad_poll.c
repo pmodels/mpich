@@ -266,7 +266,11 @@ MPID_nem_newmad_poll(int in_blocking_poll)
 	 }
 	 else
 	 {
-	    MPIU_Assert(0);
+	     /*
+	     fprintf(stdout, ">>>>>>>>>>>>> ERROR: Wrong req type : %i (%p)\n",(int)kind,(void *)kind); 
+	     while(1);
+	     */
+	     MPIU_Assert(0);
 	 }
       }   
    }
@@ -302,7 +306,8 @@ MPID_nem_newmad_handle_sreq(MPID_Request *req)
 	   MPIU_Assert(complete == TRUE);
 	}
     }
-    MPIU_Free((REQ_FIELD(req,iov)));
+    if (REQ_FIELD(req,iov) != NULL)
+	MPIU_Free((REQ_FIELD(req,iov)));
     mpid_nem_newmad_pending_send_req--;
 }
 
@@ -445,10 +450,11 @@ void MPID_nem_newmad_anysource_posted(MPID_Request *rreq)
 					  newmad_iov,num_seg,newmad_req,(void*)rreq);	
     REQ_FIELD(rreq,iov) = newmad_iov;    
     MPID_MEM_NMAD_ADD_REQ_IN_HASH(rreq,newmad_req);  
-
-#ifdef DEBUG
-    fprintf(stdout,"========> Any Source : callback end \n");
-#endif
+    /*
+      #ifdef DEBUG
+      fprintf(stdout,"========> Any Source : callback end \n");
+      #endif
+    */
 }
 
 #undef FUNCNAME

@@ -4,7 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpid_nem_impl.h"
 #include "newmad_impl.h"
 
 #define MPIDI_CH3I_HOSTNAME_KEY "hostname_id"
@@ -124,8 +123,28 @@ MPID_nem_newmad_init (MPID_nem_queue_ptr_t proc_recv_queue,
 
    fprintf(stdout,"Size of MPID_nem_mad_module_vc_area_internal_t : %i | size of nm_sr_request_t :%i | Size of req_area : %i\n",
          sizeof(MPID_nem_newmad_vc_area_internal_t),sizeof(nm_sr_request_t), sizeof(MPID_nem_newmad_req_area));
-   //MPIU_Assert( sizeof(MPID_nem_newmad_vc_area_internal_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
+   /*
+   MPIU_Assert( sizeof(MPID_nem_newmad_vc_area_internal_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
    MPIU_Assert( sizeof(MPID_nem_newmad_req_area) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
+   */
+   if (sizeof(MPID_nem_newmad_vc_area_internal_t) > MPID_NEM_VC_NETMOD_AREA_LEN)
+   {
+       fprintf(stdout,"===========================================================\n");
+       fprintf(stdout,"===  Error : Newmad data structure size is too long     ===\n");
+       fprintf(stdout,"===  VC netmod area is %4i | Nmad struct size is %4i    ===\n", 
+	       MPID_NEM_VC_NETMOD_AREA_LEN, sizeof(MPID_nem_newmad_vc_area_internal_t));
+       fprintf(stdout,"===========================================================\n");
+       MPIU_Abort();    
+   }
+   if (sizeof(MPID_nem_newmad_req_area) > MPID_NEM_REQ_NETMOD_AREA_LEN)
+   {
+       fprintf(stdout,"===========================================================\n");
+       fprintf(stdout,"===  Error : Newmad data structure size is too long     ===\n");
+       fprintf(stdout,"===  Req netmod area is %4i | Nmad struct size is %4i   ===\n", 
+	       MPID_NEM_REQ_NETMOD_AREA_LEN, sizeof(MPID_nem_newmad_req_area));
+       fprintf(stdout,"===========================================================\n");
+       MPIU_Abort();    
+   }
 
    mpid_nem_newmad_myrank = pg_rank;
    init_mad(pg_p);
@@ -251,7 +270,7 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
    if (ret != NM_ESUCCESS) fprintf(stdout,"nm_session_connect returned ret = %d\n", ret);
 
    nm_gate_ref_set(VC_FIELD(vc, p_gate),(void*)vc);
-   
+
    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
    
    vc->eager_max_msg_sz = 32768;
