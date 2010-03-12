@@ -218,6 +218,17 @@ static HYD_status mfile_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void ppn_help_fn(void)
+{
+    printf("\n");
+    printf("-ppn: Processes per node\n\n");
+}
+
+static HYD_status ppn_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_handle.ppn);
+}
+
 static void wdir_help_fn(void)
 {
     printf("\n");
@@ -755,6 +766,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"host", mfile_fn, mfile_help_fn},
     {"hosts", mfile_fn, mfile_help_fn},
     {"hostfile", mfile_fn, mfile_help_fn},
+    {"ppn", ppn_fn, ppn_help_fn},
     {"machine", mfile_fn, mfile_help_fn},
     {"machines", mfile_fn, mfile_help_fn},
     {"machinefile", mfile_fn, mfile_help_fn},

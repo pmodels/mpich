@@ -12,6 +12,8 @@ void HYD_uiu_init_params(void)
 {
     HYDU_init_user_global(&HYD_handle.user_global);
 
+    HYD_handle.ppn = -1;
+
     HYD_handle.base_path = NULL;
 
     HYD_handle.rmk = NULL;

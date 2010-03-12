@@ -14,6 +14,8 @@
 struct HYD_handle {
     struct HYD_user_global user_global;
 
+    int ppn;
+
     char *base_path;
 
     char *css;

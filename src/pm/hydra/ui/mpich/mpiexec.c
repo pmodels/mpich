@@ -156,6 +156,12 @@ int main(int argc, char **argv)
         }
     }
 
+    /* Reset the host list to use only the number of processes per
+     * node as specified by the ppn option. */
+    if (HYD_handle.ppn != -1)
+        for (node = HYD_handle.node_list; node; node = node->next)
+            node->core_count = HYD_handle.ppn;
+
     HYD_handle.global_core_count = 0;
     for (node = HYD_handle.node_list; node; node = node->next)
         HYD_handle.global_core_count += node->core_count;
