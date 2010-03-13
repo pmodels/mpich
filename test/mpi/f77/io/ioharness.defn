@@ -50,7 +50,7 @@ do i=1, n
     if (buf(i) .ne. ans) then
         errs = errs + 1
         if (errs .le. 10) then
-            print *, r, ' buf(',i,') = ', buf(i), ' expected ', ans
+            print *, r, k, ' buf(',i,') = ', buf(i), ' expected ', ans
         endif
     endif
 enddo
@@ -65,7 +65,7 @@ do i=1, n
     if (buf2(i) .ne. r*n + (k)*n*s + i-1) then
         errs = errs + 1
         if (errs .le. 10) then
-            print *, r,' buf2(',i,') = ', buf2(i)
+            print *, r,k,' buf2(',i,') = ', buf2(i)
         endif
     endif
 enddo
