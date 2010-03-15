@@ -266,11 +266,8 @@ MPID_nem_newmad_poll(int in_blocking_poll)
 	 }
 	 else
 	 {
-	     /*
-	     fprintf(stdout, ">>>>>>>>>>>>> ERROR: Wrong req type : %i (%p)\n",(int)kind,(void *)kind); 
-	     while(1);
-	     */
-	     MPIU_Assert(0);
+	    fprintf(stdout, ">>>>>>>>>>>>> ERROR: Wrong req type : %i (%p)\n",(int)kind,req);
+	    MPIU_Assert(0);
 	 }
       }   
    }
@@ -493,6 +490,7 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq)
 	    MPIU_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);                  	
 	    ret = nm_sr_rwait(mpid_nem_newmad_session,nmad_request);
 	    MPIU_Assert(ret ==  NM_ESUCCESS);
+	    nm_sr_request_unset_completion_queue(mpid_nem_newmad_session,nmad_request);
 	    nm_sr_get_rtag(mpid_nem_newmad_session,nmad_request,&match_info);
 	    nm_sr_get_size(mpid_nem_newmad_session,nmad_request,&size);
 	    MPID_nem_newmad_handle_rreq(rreq,match_info, size);
