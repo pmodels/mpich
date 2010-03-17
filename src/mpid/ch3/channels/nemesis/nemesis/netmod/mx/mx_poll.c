@@ -751,7 +751,7 @@ c");
   rreq->dev.segment_first = 0;
   rreq->dev.segment_size = data_sz;
   last = rreq->dev.segment_size;
-  MPID_Segment_count_contig_blocks(sreq->dev.segment_ptr ,first,&last,&n_iov);
+  MPID_Segment_count_contig_blocks(rreq->dev.segment_ptr,rreq->dev.segment_first,&last,&n_iov);
   MPIU_Assert(n_iov > 0);
   iov = MPIU_Malloc(n_iov*sizeof(MPID_IOV));
 
