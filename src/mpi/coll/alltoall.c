@@ -46,6 +46,8 @@
 
    *** Modification: We post only a small number of isends and irecvs 
    at a time and wait on them as suggested by Tony Ladd. ***
+   *** See comments below about an additional modification that 
+   we may want to consider ***
 
    For long messages and power-of-two number of processes, we use a
    pairwise exchange algorithm, which takes p-1 steps. We
@@ -425,11 +427,25 @@ int MPIR_Alltoall(
         /* Medium-size message. Use isend/irecv with scattered
            destinations. Use Tony Ladd's modification to post only
            a small number of isends/irecvs at a time. */
+	/* FIXME: This converts the Alltoall to a set of blocking phases.
+	   Two alternatives should be considered:
+	   1) the choice of communication pattern could try to avoid
+	      contending routes in each phase
+	   2) rather than wait for all communication to finish (waitall),
+	      we could maintain constant queue size by using waitsome 
+	      and posting new isend/irecv as others complete.  This avoids
+	      synchronization delays at the end of each block (when
+	      there are only a few isend/irecvs left)
+	   Finally, the parameters used (MPIR_ALLTOALL_MEDIUM_MSG and
+	   MPIR_ALLTOALL_THROTTLE) need to be tunable.
+	 */
         int ii, ss, bblock;
 
         bblock = MPIR_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
+	/* FIXME: This should use the memory macros (there are storage
+	   leaks here if there is an error, for example) */
         reqarray = (MPI_Request *) MPIU_Malloc(2*bblock*sizeof(MPI_Request));
         /* --BEGIN ERROR HANDLING-- */
         if (!reqarray) {
