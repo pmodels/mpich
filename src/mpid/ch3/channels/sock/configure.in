@@ -39,6 +39,9 @@ AC_CHECK_PROGS(AR,ar)
 if test -z "$AR" ; then
     AC_MSG_ERROR([The program ar is required for building MPICH2.  Make sure that your path includes ar])
 fi
+# AR_FLAGS provides a way to potentially improve build performance on Mac OSX
+if test -z "$AR_FLAGS" ; then AR_FLAGS=cr ; fi
+
 # Note that we set RANLIB to true if we don't find it (some systems neither
 # need it nor provide it)
 AC_CHECK_PROGS(RANLIB,ranlib,true)

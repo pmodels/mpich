@@ -59,6 +59,9 @@ AC_C_INLINE
 AC_C_VOLATILE
 AC_C_CONST
 
+# AR_FLAGS provides a way to potentially improve build performance on Mac OSX
+if test -z "$AR_FLAGS" ; then AR_FLAGS=cr ; fi
+
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
 AC_SUBST(RANLIB)

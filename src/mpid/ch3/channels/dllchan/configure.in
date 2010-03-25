@@ -42,6 +42,8 @@ fi
 MPICH_SHLIB_EXT='"'$SHLIB_EXT'"'
 AC_DEFINE_UNQUOTED(MPICH_SHLIB_EXT,$MPICH_SHLIB_EXT,[Extension for shared libraries])
 
+# AR_FLAGS provides a way to potentially improve build performance on Mac OSX
+if test -z "$AR_FLAGS" ; then AR_FLAGS=cr ; fi
 
 AC_SUBST(device_name)
 AC_SUBST(channel_name)
