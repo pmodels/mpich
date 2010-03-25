@@ -10,6 +10,8 @@ mypath=`echo $mypath | sed -e 's/builddll//'`
 mympich2=`(cd $mypath && cd ../../../../.. && pwd)`
 mybuild=`(cd ../../../../../ && pwd)`
 #
+echo "Building channel dll for ssm with $0"
+#
 # Get the prefix, libdir, and exec_prefix, which may be needed for
 # setting installation directories.  These may be either passed on the
 # command line or as environment variables
@@ -111,8 +113,10 @@ if [ ! -f $locksSetup ] ; then
     echo "Cannot find $locksSetup , needed to build process locks"
     exit 1
 fi
-( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
-CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
+( \
+CPPFLAGS="-I../../ch3/channels/ssm/include -I$mympich2/src/mpid/ch3/channels/ssm/include $CPPFLAGS" ; \
+CPPFLAGS="$CPPFLAGS -I$mpmpich2/src/include -I../../../../src/include";\
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 CPPFLAGS="$CPPFLAGS -I../../ch3/channels/ssm/include" ; \
 CPPFLAGS="$CPPFLAGS -I../../ch3/include" ; \
 CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS" ; export CPPFLAGS ; \
@@ -126,7 +130,10 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+# Ensure that the sock channel includes are found before the dllchan includes
+( \
+CPPFLAGS="-I../../channels/ssm/include -I$mympich2/src/mpid/ch3/channels/ssm/include $CPPFLAGS";\
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
 CPPFLAGS="$CPPFLAGS -I../../../../common/sock" ; \
@@ -136,6 +143,7 @@ CPPFLAGS="$CPPFLAGS -I../../../include" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
 CPPFLAGS="$CPPFLAGS -I../../../../common/locks" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS" ; export CPPFLAGS ; \
  $mypath/configure --enable-sharedlibs=$shlibtype \
     --prefix=$prefix --libdir=$libdir --exec-prefix=$exec_prefix )
 #
@@ -179,7 +187,9 @@ fi
 if [ ! -d ../../util/shmbase ] ; then
     mkdir ../../util/shmbase
 fi
+# Make sure the ssm include files are used ahead of the dllchan include files
 (\
+CPPFLAGS="-I../../channels/ssm/include -I$mympich2/src/mpid/ch3/channels/ssm/include $CPPFLAGS";\
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
 CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \
@@ -191,6 +201,7 @@ CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 CPPFLAGS="$CPPFLAGS -I../../../common/locks" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS" ; export CPPFLAGS ; \
 cd ../../util/shmbase && \
     $mympich2/src/mpid/ch3/util/shmbase/configure \
     --enable-sharedlibs=$shlibtype \
@@ -222,7 +233,9 @@ fi
 if [ ! -d ../../util/shm ] ; then
     mkdir ../../util/shm
 fi
+# Make sure the shm include files are used ahead of the dllchan include files
 (\
+CPPFLAGS="-I../../channels/ssm/include -I$mympich2/src/mpid/ch3/channels/ssm/include $CPPFLAGS";\
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
 CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \
@@ -234,6 +247,7 @@ CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 CPPFLAGS="$CPPFLAGS -I../../../common/locks" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS" ; export CPPFLAGS ; \
 cd ../../util/shm && \
     $mympich2/src/mpid/ch3/util/shm/configure \
     --enable-sharedlibs=$shlibtype \
@@ -279,17 +293,17 @@ if [ ! -d ../../util/sock ] ; then
 fi
 
 (\
+CPPFLAGS="-I../../channels/ssm/include -I$mympich2/src/mpid/ch3/channels/ssm/include $CPPFLAGS" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
 CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \
 CPPFLAGS="$CPPFLAGS -I../../../common/sock/poll" ; \
-CPPFLAGS="$CPPFLAGS -I../../channels/ssm/include" ; \
-CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/ssm/include" ; \
 CPPFLAGS="$CPPFLAGS -I../../include" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/include" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ;\
 CPPFLAGS="$CPPFLAGS -I../../../common/locks" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/locks" ; \
+CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS" ; export CPPFLAGS ; \
 cd ../../util/sock && \
     $mympich2/src/mpid/ch3/util/sock/configure --enable-sharedlibs=$shlibtype \
     --prefix=$prefix --libdir=$libdir --exec-prefix=$exec_prefix )

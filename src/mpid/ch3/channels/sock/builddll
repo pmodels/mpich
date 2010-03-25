@@ -10,6 +10,7 @@ mypath=`echo $mypath | sed -e 's/builddll//'`
 mympich2=`(cd $mypath && cd ../../../../.. && pwd)`
 mybuild=`(cd ../../../../../ && pwd)`
 #
+echo "Building channel dll for sock with $0"
 # Get the prefix, libdir, and exec_prefix, which may be needed for
 # setting installation directories.  These may be either passed on the
 # command line or as environment variables
@@ -99,7 +100,10 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+# Ensure that the sock channel includes are found before the dllchan includes
+(\
+CPPFLAGS="-I../../channels/sock/include -I$mympich2/src/mpid/ch3/channels/sock/include $CPPFLAGS";\
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
 CPPFLAGS="$CPPFLAGS -I../../../../common/sock" ; \
@@ -148,6 +152,7 @@ if [ ! -d ../../util/sock ] ; then
 fi
 
 (\
+CPPFLAGS="-I../../channels/sock/include -I$mympich2/src/mpid/ch3/channels/sock/include $CPPFLAGS";\
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/sock/poll" ; \
 CPPFLAGS="$CPPFLAGS -I../../../common/sock" ; \

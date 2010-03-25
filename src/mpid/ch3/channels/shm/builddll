@@ -10,6 +10,8 @@ mypath=`echo $mypath | sed -e 's/builddll//'`
 mympich2=`(cd $mypath && cd ../../../../.. && pwd)`
 mybuild=`(cd ../../../../../ && pwd)`
 #
+echo "Building channel dll for shm with $0"
+
 # Get the prefix, libdir, and exec_prefix, which may be needed for
 # setting installation directories.  These may be either passed on the
 # command line or as environment variables
@@ -95,7 +97,10 @@ if [ ! -f $locksSetup ] ; then
     exit 1
 fi
 
-( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+(\
+CPPFLAGS="$CPPFLAGS -I$mpmpich2/src/include -I../../../../src/include";\
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/shm/include";\
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
 CPPFLAGS="$CPPFLAGS -I../../ch3/channels/shm/include" ; \
 CPPFLAGS="$CPPFLAGS -I../../ch3/include" ; \
@@ -110,7 +115,10 @@ if [ $? != 0 ] ; then
     exit 1
 fi
 
-( CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
+# Ensure that the shm channel includes are found before the dllchan includes
+( \
+CPPFLAGS="-I../../channels/shm/include -I$mympich2/src/mpid/ch3/channels/shm/include $CPPFLAGS";\
+CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/common/datatype" ; \
 CPPFLAGS="$CPPFLAGS -I../include" ; \
 CPPFLAGS="$CPPFLAGS -I../../../include" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
@@ -157,7 +165,9 @@ fi
 if [ ! -d ../../util/shmbase ] ; then
     mkdir ../../util/shmbase
 fi
+# Make sure the shm include files are used ahead of the dllchan include files
 (\
+CPPFLAGS="-I../../channels/shm/include -I$mympich2/src/mpid/ch3/channels/shm/include $CPPFLAGS";\
 CPPFLAGS="$CPPFLAGS -I../../channels/shm/include" ; \
 CPPFLAGS="$CPPFLAGS -I$mympich2/src/mpid/ch3/channels/shm/include" ; \
 CPPFLAGS="$CPPFLAGS -I../../include" ; \
