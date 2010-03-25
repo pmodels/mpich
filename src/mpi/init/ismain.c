@@ -64,7 +64,7 @@ int MPI_Is_thread_main( int *flag )
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IS_THREAD_MAIN);
     
     /* ... body of routine ...  */
-#   if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED
+#   if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED || ! defined(MPICH_IS_THREADED)
     {
 	*flag = TRUE;
     }

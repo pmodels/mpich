@@ -247,7 +247,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
 #endif
 
     /* We need this inorder to implement IS_THREAD_MAIN */
-#   if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+#   if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED) && defined(MPICH_IS_THREADED)
     {
 	MPID_Thread_self(&MPIR_ThreadInfo.master_thread);
     }
