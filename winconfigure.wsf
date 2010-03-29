@@ -2143,15 +2143,15 @@ Function ReplaceAts( str, use_f77, b64 )
 			Case "@MPICH2_NUMVERSION@"
 				str = Replace(str, "@MPICH2_NUMVERSION@", mpich2NumVersion)
 			Case "@nemesis_nets_macro_defs@"
-				str = Replace(str, "@nemesis_nets_macro_defs@", "#define MPIDI_NEM_NEWTCP_MODULE 0")
+				str = Replace(str, "@nemesis_nets_macro_defs@", "#define MPIDI_NEM_NEWTCP_MODULE 0" + vbCrLf + "#define MPIDI_NEM_ND_MODULE 1")
 			Case "@nemesis_nets_func_decl@"
-				str = Replace(str, "@nemesis_nets_func_decl@", "MPIDI_nem_newtcp_module_funcs")
+				str = Replace(str, "@nemesis_nets_func_decl@", "MPIDI_nem_newtcp_module_funcs, MPIDI_Nem_nd_funcs")
 			Case "@nemesis_nets_array_sz@"
-				str = Replace(str, "@nemesis_nets_array_sz@", "1")
+				str = Replace(str, "@nemesis_nets_array_sz@", "2")
 			Case "@nemesis_nets_func_array@"
-				str = Replace(str, "@nemesis_nets_func_array@", "&MPIDI_nem_newtcp_module_funcs")
+				str = Replace(str, "@nemesis_nets_func_array@", "&MPIDI_nem_newtcp_module_funcs, &MPIDI_Nem_nd_funcs")
 			Case "@nemesis_nets_strings@"
-				str = Replace(str, "@nemesis_nets_strings@", """newtcp""")
+				str = Replace(str, "@nemesis_nets_strings@", """newtcp"",""nd""")
 			Case Else
 			'	unhandled_ats = unhandled_ats & Match & vbNewLine
 			'	unhandled_ats_count = unhandled_ats_count + 1
@@ -6346,8 +6346,11 @@ Function GenBuild()
 	mfile.WriteLine("common_cflags = $(common_cflags) -DUSE_DBG_LOGGING")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
+        ' FIXME: We should try to use CCP_SDK env instead of hardcoding the HPC SDK path
         ' WARNING: This HPC SDK include path contains its own mpi.h - So include it with caution
         mfile.WriteLine("MS_HPC_SDK_INC_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\Include""")
+	mfile.WriteLine
+        mfile.WriteLine("MS_HPC_SDK_ND_INC_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\NetworkDirect\Include""")
 	mfile.WriteLine
         ' The HPC SDK lib path contains the type libraries required for interfacing with the HPC job manager
 	mfile.WriteLine("!IF ""$(CPU)"" == ""x86""")
@@ -6398,6 +6401,7 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("common_cflags = $(common_cflags) \")
         mfile.WriteLine(" /I$(MS_HPC_SDK_LIB_PATH) \")
+        mfile.WriteLine(" /I$(MS_HPC_SDK_ND_INC_PATH) \")
 	mfile.WriteLine(" /I..\src\include \")
 	mfile.WriteLine(" /I..\src\util\wrappers \")
 	mfile.WriteLine(" /I..\src\openpa\src \")
@@ -6501,7 +6505,8 @@ Function GenBuild()
 	mfile.WriteLine(" /DMPICH_MULTITHREADED /D ENABLE_NO_MACRO_VARARG_NAME \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\include \")
 	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\utils\monitor \")
-	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp")
+	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp \")
+	mfile.WriteLine(" /I..\src\mpid\ch3\channels\nemesis\nemesis\netmod\nd")
 	mfile.WriteLine("!ENDIF")
 '	mfile.WriteLine
 '	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""essm""")
@@ -6875,10 +6880,12 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength
 '	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength
+	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength, true, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength, false, false
 '	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength, false, false
-	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, true
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, false
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength, false, true
 
 	mfile.WriteLine
 	mfile.WriteLine("# ch3ssm")

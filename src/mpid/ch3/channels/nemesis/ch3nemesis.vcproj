@@ -767,6 +767,58 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\nemesis\netmod\nd\nd_ad_util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_dp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_ep_util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_finalize.cpp"
+				>
+				<FileConfiguration
+					Name="ch3nemesisRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						GeneratePreprocessedFile="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_init.cpp"
+				>
+				<FileConfiguration
+					Name="ch3nemesisRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="false"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_misc_util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_poll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_send.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\nemesis\netmod\nd\nd_sm.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\nemesis\netmod\wintcp\socksm.c"
 				>
 			</File>

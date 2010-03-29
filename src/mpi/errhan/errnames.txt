@@ -785,6 +785,32 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **psm_mq_init %s:psm_mq_init failed (%s)
 **psm_test:psm_test failed
 **psm_test %s:psm_test failed (%s)
+**nd_init:Initializing Network Direct Service failed
+**nd_init %s %d:Initializing Network Direct Service failed, %s (errno=%d)
+**nd_unavail:Unable to find an ND provider
+**nd_unavail %s %d:Unable to find an ND provider, %s (errno=%d)
+**nd_prov_init:Initializing ND provider failed
+**nd_prov_init %s %d:Initializing ND provider failed, %s (errno=%d)
+**nd_ad_open:Opening ND Adapter failed
+**nd_ad_open %s %d:Opening ND Adapter failed, %s (errno=%d)
+**nd_ep_create:Creating an endpoint failed 
+**nd_ep_create %s %d:Creating an endpoint failed, %s (errno=%d) 
+**nd_ep_reg_mem:Unable to register memory with ND endpoint
+**nd_ep_reg_mem %s %d:Unable to register memory with ND endpoint, %s (errno=%d)
+**nd_listen:Listening on ND Adapter failed
+**nd_listen %s %d:Listening on ND Adapter failed, %s (errno=%d)
+**nd_accept:Accepting an ND conn failed
+**nd_accept %s %d:Accepting an ND conn failed, %s (errno=%d)
+**nd_connect:Failed to connect to host
+**nd_connect %s %d:Failed to connect to host, %s (errno=%d)
+**nd_read:A read on ND Adapter failed
+**nd_read %s %d:A read on ND Adapter failed, %s (errno=%d)
+**nd_write:A write on ND Adapter failed
+**nd_write %s %d:A write on ND Adapter failed, %s (errno=%d)
+**nd_disc:Failed to disconnect from host
+**nd_disc %s %d:Failed to disconnect from host, %s (errno=%d)
+**inet_ntoa:Converting network address to string failed
+**inet_ntoa %s %d:Converting network address to string failed, %s (errno=%d)
 
 **invalid_netmod:Invalid netmod specified
 **invalid_netmod %s:Invalid netmod specified (%s)
