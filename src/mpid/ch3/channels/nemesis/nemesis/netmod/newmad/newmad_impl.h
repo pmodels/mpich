@@ -203,7 +203,7 @@ extern nm_session_t mpid_nem_newmad_session;
 extern int          mpid_nem_newmad_pending_send_req;
 
 #define NMAD_IOV_MAX_DEPTH (256) /* NM_SO_PREALLOC_IOV_LEN */
-#define DEBUG
+/*#define DEBUG*/
 
 #endif //NEWMAD_MODULE_IMPL_H
 
