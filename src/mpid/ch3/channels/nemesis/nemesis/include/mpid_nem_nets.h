@@ -7,13 +7,8 @@
 #ifndef MPID_NEM_NETS_H
 #define MPID_NEM_NETS_H
 
-typedef int (* MPID_nem_net_module_init_t)(MPID_nem_queue_ptr_t proc_recv_queue, 
-                                           MPID_nem_queue_ptr_t proc_free_queue, 
-                                           MPID_nem_cell_ptr_t proc_elements,   int num_proc_elements,
-                                           MPID_nem_cell_ptr_t module_elements, int num_module_elements, 
-                                           MPID_nem_queue_ptr_t *module_free_queue,
-                                           MPIDI_PG_t *pg_p, int pg_rank,
-                                           char **bc_val_p, int *val_max_sz_p);     
+typedef int (* MPID_nem_net_module_init_t)(MPIDI_PG_t *pg_p, int pg_rank,
+                                           char **bc_val_p, int *val_max_sz_p);
 typedef int (* MPID_nem_net_module_finalize_t)(void);
 typedef int (* MPID_nem_net_module_poll_t)(int in_blocking_poll);
 typedef int (* MPID_nem_net_module_send_t)(MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen);
