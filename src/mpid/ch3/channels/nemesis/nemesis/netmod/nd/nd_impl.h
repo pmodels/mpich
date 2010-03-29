@@ -307,10 +307,7 @@ int MPID_Nem_nd_conn_est(MPIDI_VC_t *vc);
 int MPID_Nem_nd_post_sendv(MPID_Nem_nd_conn_hnd_t conn_hnd, MPID_IOV *iov, int n_iov);
 
 
-int MPID_Nem_nd_init(MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue,
-                                 MPID_nem_cell_ptr_t proc_elements, int num_proc_elements, MPID_nem_cell_ptr_t elements,
-                                 int num_elements, MPID_nem_queue_ptr_t *free_queue,
-                                 MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
+int MPID_Nem_nd_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_Nem_nd_vc_init(MPIDI_VC_t *vc);
 int MPID_Nem_nd_finalize();
 int MPID_Nem_nd_ckpt_shutdown();

@@ -30,9 +30,6 @@ typedef struct MPIDU_Sock_ifaddr_t {
 /* FIXME: Move all externs to say socksm_globals.h */
 extern MPIU_ExSetHandle_t MPID_nem_newtcp_module_ex_set_hnd;
 
-MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue = 0;
-MPID_nem_queue_ptr_t MPID_nem_process_recv_queue = 0;
-MPID_nem_queue_ptr_t MPID_nem_process_free_queue = 0;
 extern sockconn_t MPID_nem_newtcp_module_g_lstn_sc;
 extern struct pollfd g_lstn_plfd;
 
@@ -63,10 +60,7 @@ MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
 #define FUNCNAME MPID_nem_newtcp_module_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue,
-                                 MPID_nem_cell_ptr_t proc_elements, int num_proc_elements, MPID_nem_cell_ptr_t module_elements,
-                                 int num_module_elements, MPID_nem_queue_ptr_t *module_free_queue,
-                                 MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
+int MPID_nem_newtcp_module_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -75,8 +69,6 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
 
     MPIU_UNREFERENCED_ARG(pg_p);
-    MPIU_UNREFERENCED_ARG(proc_elements);
-    MPIU_UNREFERENCED_ARG(num_proc_elements);
 
     /* first make sure that our private fields in the vc fit into the area provided  */
     MPIU_Assert(sizeof(MPID_nem_newtcp_module_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
@@ -124,24 +116,6 @@ int MPID_nem_newtcp_module_init (MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_
     /* create business card */
     mpi_errno = MPID_nem_newtcp_module_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-    /* save references to queues */
-    MPID_nem_process_recv_queue = proc_recv_queue;
-    MPID_nem_process_free_queue = proc_free_queue;
-
-    MPID_nem_newtcp_module_free_queue = &_free_queue;
-
-    /* set up network module queues */
-    MPID_nem_queue_init (MPID_nem_newtcp_module_free_queue);
-
-    for (i = 0; i < num_module_elements; ++i)
-    {
-        MPID_nem_queue_enqueue (MPID_nem_newtcp_module_free_queue, &module_elements[i]);
-    }
-
-    *module_free_queue = MPID_nem_newtcp_module_free_queue;
-
-    /* FIXME: Why happens on an error ? */
 
     mpi_errno = MPID_nem_newtcp_module_sm_init();
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);

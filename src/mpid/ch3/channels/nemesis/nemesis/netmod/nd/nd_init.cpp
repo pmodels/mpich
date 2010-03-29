@@ -35,10 +35,7 @@ MPID_nem_netmod_funcs_t MPIDI_Nem_nd_funcs = {
 #define FUNCNAME MPID_Nem_nd_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_Nem_nd_init(MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue,
-                                 MPID_nem_cell_ptr_t proc_elements, int num_proc_elements, MPID_nem_cell_ptr_t elements,
-                                 int num_elements, MPID_nem_queue_ptr_t *free_queue,
-                                 MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
+int MPID_Nem_nd_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ND_INIT);
