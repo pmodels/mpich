@@ -6,6 +6,7 @@
 #ifndef MPIU_EX_H_INCLUDED
 #define MPIU_EX_H_INCLUDED
 
+#define WIN32_LEAN_AND_MEAN
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
 #endif
@@ -90,7 +91,7 @@ MPIU_ExCloseSet(
 */
 typedef
 int
-(* MPIU_ExCompletionProcessor)(
+(__cdecl * MPIU_ExCompletionProcessor)(
     DWORD BytesTransferred,
     PVOID pOverlapped
     );
