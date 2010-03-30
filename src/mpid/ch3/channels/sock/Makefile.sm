@@ -7,5 +7,7 @@ distclean-local:
 maintainer-clean-local:
 	-rm -f include/mpidi_ch3i_sock_conf.h.in
 
+# We need to build the sock libary with libmpl
+libmpich2-ch3-sock_so_LIBS = -L../../../../../lib -lmpl
 optinstall_DLLLIB = libmpich2-ch3-sock.@SHLIB_EXT@
 

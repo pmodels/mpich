@@ -182,10 +182,11 @@ cd ..
 rm -rf .tmp
 #
 # Now, create the dynamically-loadable library
+# Some of the routines now depend on routines in libmpl.
 rm -f libmpich2-ch3-sock*.dylib libmpich2-ch3-sock*.so
 $mybuild/src/util/createshlib -echo --mode=link -version-info "1:1" \
     -clink="$C_LINK_SHL" -cc=gcc -libtype=$shlibtype \
-    -o libmpich2-ch3-sock.la -rpath `pwd`
+    -o libmpich2-ch3-sock.la -rpath `pwd` -L../../../../../lib -lmpl 
 rc=$?
 if [ $rc != 0 ] ; then 
     echo "Createshlib step failed for sock channel"
