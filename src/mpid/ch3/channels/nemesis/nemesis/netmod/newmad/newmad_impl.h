@@ -18,7 +18,6 @@
 int MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_newmad_finalize (void);
 int MPID_nem_newmad_poll(int in_blocking_progress);
-int MPID_nem_newmad_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen);
 int MPID_nem_newmad_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_newmad_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc);
 int MPID_nem_newmad_vc_init (MPIDI_VC_t *vc);
