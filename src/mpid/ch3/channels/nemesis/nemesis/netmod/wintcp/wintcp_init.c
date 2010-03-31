@@ -44,7 +44,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
     MPID_nem_newtcp_module_init,
     MPID_nem_newtcp_module_finalize,
     MPID_nem_newtcp_module_poll,
-    MPID_nem_newtcp_module_send,
     MPID_nem_newtcp_module_get_business_card,
     MPID_nem_newtcp_module_connect_to_root,
     MPID_nem_newtcp_module_vc_init,

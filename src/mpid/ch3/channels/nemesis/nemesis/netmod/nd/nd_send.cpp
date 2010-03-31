@@ -7,29 +7,6 @@
 #include "nd_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Nem_nd_send
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_Nem_nd_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ND_SEND);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ND_SEND);
-
-    /* We no longer use the send() function, we use iStartContigMsg()/
-     * SendContig()/SendNonContig() instead
-     */
-    MPIU_Assert(0);
- fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ND_SEND);
-    return mpi_errno;
- fn_fail:
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "failed, mpi_errno = %d", mpi_errno);
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPID_Nem_nd_istart_contig_msg
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

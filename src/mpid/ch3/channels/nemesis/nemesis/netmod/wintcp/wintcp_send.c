@@ -69,20 +69,6 @@ int MPID_nem_newtcp_module_send_init()
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_newtcp_module_send
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIU_UNREFERENCED_ARG(vc);
-    MPIU_UNREFERENCED_ARG(cell);
-    MPIU_UNREFERENCED_ARG(datalen);
-    MPIU_Assert(0);
-    return mpi_errno;
-}
-
 /* Handle the request at the head of vc's sendq */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newtcp_module_handle_sendq_head_req

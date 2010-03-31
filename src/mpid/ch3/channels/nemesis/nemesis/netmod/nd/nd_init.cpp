@@ -22,7 +22,6 @@ MPID_nem_netmod_funcs_t MPIDI_Nem_nd_funcs = {
     MPID_Nem_nd_init,
     MPID_Nem_nd_finalize,
     MPID_Nem_nd_poll,
-    MPID_Nem_nd_send,
     MPID_Nem_nd_get_business_card,
     MPID_Nem_nd_connect_to_root,
     MPID_Nem_nd_vc_init,
