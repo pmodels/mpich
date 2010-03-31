@@ -17,7 +17,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_elan_funcs = {
     MPID_nem_elan_finalize,
     MPID_nem_elan_ckpt_shutdown,
     MPID_nem_elan_poll,
-    MPID_nem_elan_send,
     MPID_nem_elan_get_business_card,
     MPID_nem_elan_connect_to_root,
     MPID_nem_elan_vc_init,

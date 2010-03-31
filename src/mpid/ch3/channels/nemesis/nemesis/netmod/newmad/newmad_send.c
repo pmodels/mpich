@@ -388,14 +388,4 @@ int MPID_nem_newmad_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_newmad_send
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int 
-MPID_nem_newmad_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
-{
-   int mpi_errno = MPI_SUCCESS;
-   return mpi_errno;
-}
 

@@ -11,7 +11,6 @@ typedef int (* MPID_nem_net_module_init_t)(MPIDI_PG_t *pg_p, int pg_rank,
                                            char **bc_val_p, int *val_max_sz_p);
 typedef int (* MPID_nem_net_module_finalize_t)(void);
 typedef int (* MPID_nem_net_module_poll_t)(int in_blocking_poll);
-typedef int (* MPID_nem_net_module_send_t)(MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen);
 typedef int (* MPID_nem_net_module_get_business_card_t)(int my_rank, char **bc_val_p, int *val_max_sz_p);
 typedef int (* MPID_nem_net_module_connect_to_root_t)(const char *business_card, MPIDI_VC_t *new_vc);
 typedef int (* MPID_nem_net_module_vc_init_t)(MPIDI_VC_t *vc);
@@ -25,7 +24,6 @@ typedef struct MPID_nem_netmod_funcs
     MPID_nem_net_module_init_t init;
     MPID_nem_net_module_finalize_t finalize;
     MPID_nem_net_module_poll_t poll;
-    MPID_nem_net_module_send_t send;
     MPID_nem_net_module_get_business_card_t get_business_card;
     MPID_nem_net_module_connect_to_root_t connect_to_root;
     MPID_nem_net_module_vc_init_t vc_init;

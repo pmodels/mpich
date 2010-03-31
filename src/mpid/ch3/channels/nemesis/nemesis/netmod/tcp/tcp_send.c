@@ -72,18 +72,6 @@ int MPID_nem_tcp_send_init(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_send
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIU_Assert(0);
-    return mpi_errno;
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_send_queued
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

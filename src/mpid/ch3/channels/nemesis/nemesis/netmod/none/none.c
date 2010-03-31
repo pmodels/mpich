@@ -40,12 +40,6 @@ static int nm_vc_terminate(MPIDI_VC_t *vc)
     return MPI_SUCCESS;
 }
 
-static int nm_send(MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
-{
-    MPIU_Assertp(0);
-    return MPI_SUCCESS;
-}
-
 static int nm_poll(int in_blocking_poll)
 {  
     return MPI_SUCCESS;
@@ -65,7 +59,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_none_funcs = {
     nm_init,
     nm_finalize,
     nm_poll,
-    nm_send,
     nm_get_business_card,
     nm_connect_to_root,
     nm_vc_init,

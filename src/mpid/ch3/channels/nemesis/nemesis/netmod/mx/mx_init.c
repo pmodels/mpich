@@ -11,7 +11,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_mx_funcs = {
     MPID_nem_mx_init,
     MPID_nem_mx_finalize,
     MPID_nem_mx_poll,
-    MPID_nem_mx_send,
     MPID_nem_mx_get_business_card,
     MPID_nem_mx_connect_to_root,
     MPID_nem_mx_vc_init,

@@ -536,14 +536,4 @@ MPID_nem_mx_send_conn_info (MPIDI_VC_t *vc)
    goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mx_send
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int 
-MPID_nem_mx_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
-{
-   int mpi_errno = MPI_SUCCESS;
-   return mpi_errno;
-}
 

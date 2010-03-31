@@ -48,11 +48,11 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     /*DO_PAPI (PAPI_reset (PAPI_EventSet)); */
 
     MPIU_Assert (size == sizeof(MPIDI_CH3_Pkt_t));
+    MPIU_Assert (vc_ch->is_local);
 
     my_rank = MPID_nem_mem_region.rank;
 
 #ifdef USE_FASTBOX
-    if (vc_ch->is_local)
     {
 	MPID_nem_fbox_mpich2_t *pbox = vc_ch->fbox_out;
 	int count = 10;
@@ -118,18 +118,10 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (el));
 
     DO_PAPI (PAPI_reset (PAPI_EventSet));
-    if (vc_ch->is_local)
-    {
-	MPID_nem_queue_enqueue (vc_ch->recv_queue, el);
-	/*MPID_nem_rel_dump_queue( vc_ch->recv_queue ); */
-    }
-    else
-    {
-        mpi_errno = MPID_nem_netmod_func->send (vc, el, size);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    }
+    MPID_nem_queue_enqueue (vc_ch->recv_queue, el);
+    /*MPID_nem_rel_dump_queue( vc_ch->recv_queue ); */
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues12));
-    DO_PAPI (PAPI_reset (PAPI_EventSet));    
+    DO_PAPI (PAPI_reset (PAPI_EventSet));
 
 #ifdef PREFETCH_CELL
     DO_PAPI (PAPI_reset (PAPI_EventSet));
@@ -182,7 +174,8 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV);
 
     MPIU_Assert (*n_iov > 0 && (*iov)->MPID_IOV_LEN > 0);
-    
+    MPIU_Assert(vc_ch->is_local);
+
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
     my_rank = MPID_nem_mem_region.rank;
@@ -240,16 +233,8 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent queue");
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (el));
 
-    if(vc_ch->is_local)
-    {
-	MPID_nem_queue_enqueue (vc_ch->recv_queue, el);
-	/*MPID_nem_rel_dump_queue( vc_ch->recv_queue ); */
-    }
-    else
-    {
-        mpi_errno = MPID_nem_netmod_func->send (vc, el, MPID_NEM_MPICH2_DATA_LEN - payload_len);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    }
+    MPID_nem_queue_enqueue (vc_ch->recv_queue, el);
+    /*MPID_nem_rel_dump_queue( vc_ch->recv_queue ); */
 
 #ifdef PREFETCH_CELL
     if (!MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ))
@@ -290,14 +275,15 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
 
-    
+    MPIU_Assert(vc_ch->is_local);
+
     DO_PAPI (PAPI_reset (PAPI_EventSet));
     MPIU_Assert (*n_iov > 0 && (*iov)->MPID_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
 
     my_rank = MPID_nem_mem_region.rank;
 
 #ifdef USE_FASTBOX
-    if (vc_ch->is_local && (*n_iov == 2 && (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN))
+    if (*n_iov == 2 && (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich2_t *pbox = vc_ch->fbox_out;
 	int count = 10;
@@ -383,16 +369,8 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent queue");
     MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (el));
 
-    if (vc_ch->is_local)
-    {    
-	MPID_nem_queue_enqueue (vc_ch->recv_queue, el);	
-	/*MPID_nem_rel_dump_queue( vc_ch->recv_queue ); */
-    }
-    else
-    {
-        mpi_errno = MPID_nem_netmod_func->send (vc, el, MPID_NEM_MPICH2_DATA_LEN - payload_len);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-    }
+    MPID_nem_queue_enqueue (vc_ch->recv_queue, el);	
+    /*MPID_nem_rel_dump_queue( vc_ch->recv_queue ); */
 
 #ifdef PREFETCH_CELL
     if (!MPID_nem_queue_empty (MPID_nem_mem_region.my_freeQ))
@@ -563,12 +541,12 @@ static inline void
 MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size, MPIDI_VC_t *vc, int *again)
 {
     MPID_nem_cell_ptr_t el;
-    MPIDI_msg_sz_t datalen;    
+    MPIDI_msg_sz_t datalen;
     int my_rank;
     MPIDI_msg_sz_t last;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
 
-    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */    
+    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 

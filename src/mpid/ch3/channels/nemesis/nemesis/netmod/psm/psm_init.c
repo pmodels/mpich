@@ -14,7 +14,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_psm_funcs = {
     MPID_nem_psm_finalize,
     MPID_nem_psm_ckpt_shutdown,
     MPID_nem_psm_poll,
-    MPID_nem_psm_send,
     MPID_nem_psm_get_business_card,
     MPID_nem_psm_connect_to_root,
     MPID_nem_psm_vc_init,

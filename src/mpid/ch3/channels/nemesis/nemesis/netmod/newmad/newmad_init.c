@@ -13,7 +13,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_newmad_funcs = {
     MPID_nem_newmad_init,
     MPID_nem_newmad_finalize,
     MPID_nem_newmad_poll,
-    MPID_nem_newmad_send,
     MPID_nem_newmad_get_business_card,
     MPID_nem_newmad_connect_to_root,
     MPID_nem_newmad_vc_init,
