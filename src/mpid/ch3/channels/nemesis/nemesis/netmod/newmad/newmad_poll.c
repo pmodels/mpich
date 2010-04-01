@@ -174,8 +174,8 @@ MPID_nem_newmad_poll(int in_blocking_poll)
    nm_sr_send_success(mpid_nem_newmad_session, &p_request);
    if (p_request != NULL)
    {
-      MPID_nem_newmad_unified_req_t *ref = NULL;
-      MPID_Request                  *req = NULL;
+      MPID_nem_newmad_unified_req_t *ref;
+      MPID_Request                  *req;
       MPID_Request_kind_t            kind;      
       MPIR_Context_id_t              ctxt;
       
@@ -207,8 +207,8 @@ MPID_nem_newmad_poll(int in_blocking_poll)
    nm_sr_recv_success(mpid_nem_newmad_session, &p_request);
    if (p_request != NULL)
    {
-      MPID_nem_newmad_unified_req_t *ref = NULL;
-      MPID_Request                  *req = NULL;
+      MPID_nem_newmad_unified_req_t *ref;
+      MPID_Request                  *req;
       MPID_Request_kind_t            kind;      
       MPIR_Context_id_t              ctxt;
       size_t                         size;
