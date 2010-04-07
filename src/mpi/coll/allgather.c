@@ -86,7 +86,7 @@ int MPIR_Allgather (
     int        j, i, pof2, src, rem;
     static const char FCNAME[] = "MPIR_Allgather";
     void *tmp_buf = NULL;
-    int curr_cnt, dst, type_size, left, right, jnext, comm_size_is_pof2;
+    int curr_cnt, dst, type_size, left, right, jnext;
     MPI_Comm comm;
     MPI_Status status;
     int mask, dst_tree_root, my_tree_root, is_homogeneous,  
@@ -112,20 +112,11 @@ int MPIR_Allgather (
     MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 				     (comm_size * recvcount * recvtype_extent));
 
-    /* check if comm_size is a power of two */
-    pof2 = 1;
-    while (pof2 < comm_size)
-        pof2 *= 2;
-    if (pof2 == comm_size) 
-        comm_size_is_pof2 = 1;
-    else
-        comm_size_is_pof2 = 0;
-
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
     tot_bytes = (MPI_Aint)recvcount * comm_size * type_size;
-    if ((tot_bytes < MPIR_ALLGATHER_LONG_MSG) && (comm_size_is_pof2 == 1)) {
+    if ((tot_bytes < MPIR_ALLGATHER_LONG_MSG) && !(comm_size & (comm_size - 1))) {
 
         /* Short or medium size message and power-of-two no. of processes. Use
          * recursive doubling algorithm */   

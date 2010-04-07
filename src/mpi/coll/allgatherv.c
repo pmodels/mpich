@@ -81,7 +81,7 @@ int MPIR_Allgatherv (
     MPI_Aint recvbuf_extent, recvtype_extent, recvtype_true_extent, 
 	recvtype_true_lb;
     int curr_cnt, send_cnt, dst, total_count, recvtype_size, pof2, src, rem; 
-    int recv_cnt, comm_size_is_pof2;
+    int recv_cnt;
     void *tmp_buf;
     int mask, dst_tree_root, my_tree_root, is_homogeneous, position,  
         send_offset, recv_offset, last_recv_cnt, nprocs_completed, k,
@@ -103,20 +103,11 @@ int MPIR_Allgatherv (
     MPID_Datatype_get_extent_macro( recvtype, recvtype_extent );
     MPID_Datatype_get_size_macro(recvtype, recvtype_size);
     
-    /* check if comm_size is a power of two */
-    pof2 = 1;
-    while (pof2 < comm_size)
-        pof2 *= 2;
-    if (pof2 == comm_size) 
-        comm_size_is_pof2 = 1;
-    else
-        comm_size_is_pof2 = 0;
-
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
     if ((total_count*recvtype_size < MPIR_ALLGATHER_LONG_MSG) &&
-        (comm_size_is_pof2 == 1)) {
+        !(comm_size & (comm_size - 1))) {
         /* Short or medium size message and power-of-two no. of processes. Use
          * recursive doubling algorithm */   
 
