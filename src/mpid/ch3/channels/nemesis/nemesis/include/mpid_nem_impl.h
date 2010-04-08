@@ -221,6 +221,9 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
             cookie_pkt->receiver_req_id = (req)->handle;
             break;
         case MPIDI_REQUEST_TYPE_SEND:
+        case MPIDI_REQUEST_TYPE_RSEND:
+        case MPIDI_REQUEST_TYPE_SSEND:
+        case MPIDI_REQUEST_TYPE_BSEND:
             cookie_pkt->from_sender = TRUE;
             cookie_pkt->sender_req_id = (req)->handle;
             cookie_pkt->receiver_req_id = (req)->ch.lmt_req_id;
