@@ -37,6 +37,10 @@ static int MPIR_FreeF90Datatypes( void *d )
     return 0;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Create_unnamed_predefined
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner, 
 				    int r, int p, 
 				    MPI_Datatype *new_ptr )
@@ -44,7 +48,9 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
     int i;
     int mpi_errno = MPI_SUCCESS;
     F90Predefined *type;
-    
+
+    *new_ptr = MPI_DATATYPE_NULL;
+
     /* Has this type been defined already? */
     for (i=0; i<nAlloc; i++) {
 	type = &f90Types[i];
@@ -74,10 +80,11 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 
     /* Create a contiguous type from one instance of the named type */
     mpi_errno = MPID_Type_contiguous( 1, old, &type->d );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Initialize the contents data */
-    if (mpi_errno == MPI_SUCCESS) {
-	MPID_Datatype *new_dtp;
+    {
+	MPID_Datatype *new_dtp = NULL;
 	int vals[2];
 	int nvals=0;
 
@@ -99,10 +106,17 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 	mpi_errno = MPID_Datatype_set_contents(new_dtp, combiner,
 					       nvals, 0, 0, vals,
 					       NULL, NULL );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* the MPI Standard requires that these types are pre-committed
+         * (MPI-2.2, sec 16.2.5, pg 492) */
+        mpi_errno = MPID_Type_commit(&type->d);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-    
+
     *new_ptr       = type->d;
 
+fn_fail:
     return mpi_errno;
 }
 

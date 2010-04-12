@@ -7,9 +7,22 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 #include "mpitest.h"
 
 static char MTEST_Descrip[] = "Test the routines to access the Fortran 90 datatypes from C";
+
+#define check_err(fn_name_)                                   \
+        do {                                                  \
+            if (err) {                                        \
+                char errstr[MPI_MAX_ERROR_STRING] = {'\0'};   \
+                int resultlen = 0;                            \
+                errs++;                                       \
+                MPI_Error_string(err, errstr, &resultlen);    \
+                printf("err in " #fn_name_ ": %s\n", errstr); \
+            }                                                 \
+        } while (0)
 
 /* Check the return from the routine */
 static int checkType( const char str[], int p, int r, int f90kind,
@@ -28,6 +41,7 @@ static int checkType( const char str[], int p, int r, int f90kind,
 
     if (!errs) {
 	int nints, nadds, ndtypes, combiner;
+
 	/* Check that we got the correct type */
 	MPI_Type_get_envelope( dtype, &nints, &nadds, &ndtypes, &combiner );
 	if (combiner != f90kind) {
@@ -43,7 +57,7 @@ static int checkType( const char str[], int p, int r, int f90kind,
 
 	    if (ndtypes != 0) {
 		errs++;
-		printf( "Section 8.6 states that the arraay_of_datatypes entry is empty for the create_f90 types\n" );
+		printf( "Section 8.6 states that the array_of_datatypes entry is empty for the create_f90 types\n" );
 	    }
 	    MPI_Type_get_contents( dtype, 2, 0, 1, parms, 0, &outtype );
 	    switch (combiner) {
@@ -80,6 +94,34 @@ static int checkType( const char str[], int p, int r, int f90kind,
 	    
 	}
     }
+
+    if (!errs) {
+        char buf0[64]; /* big enough to hold any single type */
+        char buf1[64]; /* big enough to hold any single type */
+        MPI_Request req[2];
+        MPI_Aint dt_size = 0;
+
+        /* check that we can actually use the type for communication,
+         * regression for tt#1028 */
+        err = MPI_Type_size(dtype, &dt_size);
+        check_err(MPI_Type_size);
+        assert(dt_size <= sizeof(buf0));
+        memset(buf0, 0, sizeof(buf0));
+        memset(buf1, 0, sizeof(buf1));
+        if (!errs) {
+            err = MPI_Isend(&buf0, 1, dtype, 0, 42, MPI_COMM_SELF, &req[0]);
+            check_err(MPI_Isend);
+        }
+        if (!errs) {
+            err = MPI_Irecv(&buf1, 1, dtype, 0, 42, MPI_COMM_SELF, &req[1]);
+            check_err(MPI_Irecv);
+        }
+        if (!errs) {
+            err = MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
+            check_err(MPI_Waitall);
+        }
+    }
+
     return errs;
 }
 
