@@ -174,9 +174,9 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd
         cmd = strtok(tbuf, delim);
         for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
             args[i] = strtok(NULL, delim);
-            args[i] = HYDU_strdup(args[i]);
             if (args[i] == NULL)
                 break;
+            args[i] = HYDU_strdup(args[i]);
         }
     }
 
