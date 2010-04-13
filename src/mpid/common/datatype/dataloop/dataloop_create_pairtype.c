@@ -50,7 +50,7 @@ int PREPEND_PREFIX(Dataloop_create_pairtype)(MPI_Datatype type,
 		 type == MPI_LONG_INT || type == MPI_SHORT_INT ||
 		 type == MPI_LONG_DOUBLE_INT || type == MPI_2INT);
 
-   if (type ==  MPI_FLOAT_INT)
+    if (type ==  MPI_FLOAT_INT)
 	PAIRTYPE_CONTENTS(MPI_FLOAT, float, MPI_INT, int);
     if (type == MPI_DOUBLE_INT)
 	PAIRTYPE_CONTENTS(MPI_DOUBLE, double, MPI_INT, int);

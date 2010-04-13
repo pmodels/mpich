@@ -226,9 +226,7 @@ typedef struct DLOOP_Dataloop {
 	DLOOP_Dataloop_struct       s_t;
 	DLOOP_Dataloop_common       cm_t;
     } loop_params;
-    DLOOP_Offset el_size; /* I don't feel like dealing with the bit manip. 
-			   * needed to get the packed size right at the moment.
-			   */
+    DLOOP_Offset el_size;
     DLOOP_Offset el_extent;
     DLOOP_Type   el_type;
 } DLOOP_Dataloop;
