@@ -293,6 +293,7 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         found = getvalint(cmd.pairs, cmd.nPairs, PMIVERBOSE_KEY, &pmiverbose);
         PMI2U_ERR_CHKANDJUMP(found == -1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
         
+        PMI2U_Free(cmd.command);
         freepairs(cmd.pairs, cmd.nPairs);
     }
     
@@ -319,6 +320,7 @@ int PMI2_Finalize(void)
         pmi2_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, FINALIZERESP_CMD, &rc, &errmsg);
         if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
         PMI2U_ERR_CHKANDJUMP1(rc, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_finalize", "**pmi2_finalize %s", errmsg ? errmsg : "unknown");
+        PMI2U_Free(cmd.command);
         freepairs(cmd.pairs, cmd.nPairs);
         
 	shutdown( PMI2_fd, SHUT_RDWR );
@@ -566,6 +568,7 @@ int PMI2_Job_GetId(char jobid[], int jobid_size)
     PMI2U_Strncpy(jobid, jid, jobid_size);
 
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -599,6 +602,7 @@ int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t *conn)
 
     
  fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
  fn_fail:
@@ -620,6 +624,7 @@ int PMI2_Job_Disconnect(const char jobid[])
     PMI2U_ERR_CHKANDJUMP1(rc, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_jobdisconnect", "**pmi2_jobdisconnect %s", errmsg ? errmsg : "unknown");
         
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -640,6 +645,7 @@ int PMI2_KVS_Put(const char key[], const char value[])
     PMI2U_ERR_CHKANDJUMP1(rc, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_kvsput", "**pmi2_kvsput %s", errmsg ? errmsg : "unknown");
         
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -659,6 +665,7 @@ int PMI2_KVS_Fence(void)
     PMI2U_ERR_CHKANDJUMP1(rc, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_kvsfence", "**pmi2_kvsfence %s", errmsg ? errmsg : "unknown");
 
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -700,6 +707,7 @@ int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value
     
 
  fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
  fn_fail:
@@ -736,6 +744,7 @@ int PMI2_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *fl
     }
     
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -785,6 +794,7 @@ int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[], int arraylen, 
     }
     
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -805,6 +815,7 @@ int PMI2_Info_PutNodeAttr(const char name[], const char value[])
     PMI2U_ERR_CHKANDJUMP1(rc, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_putnodeattr", "**pmi2_putnodeattr %s", errmsg ? errmsg : "unknown");
         
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -841,6 +852,7 @@ int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *fla
     }
     
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -889,6 +901,7 @@ int PMI2_Info_GetJobAttrIntArray(const char name[], int array[], int arraylen, i
     }
     
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     return pmi2_errno;
 fn_fail:
@@ -933,6 +946,7 @@ int PMI2_Nameserv_publish(const char service_name[], const PMI2U_Info *info_ptr,
         
         
 fn_exit:
+    PMI2U_Free(cmd.command);
     freepairs(cmd.pairs, cmd.nPairs);
     PMI2U_CHKLMEM_FREEALL();
     return pmi2_errno;
@@ -995,8 +1009,11 @@ static void freepairs(PMI2_Keyvalpair** pairs, int npairs)
         return;
 
     for (i = 0; i < npairs; ++i)
-        if (pairs[i]->isCopy)
+        if (pairs[i]->isCopy) {
+            PMI2U_Free(pairs[i]->key);
+            PMI2U_Free(pairs[i]->value);
             PMI2U_Free(pairs[i]);
+        }
     PMI2U_Free(pairs);
 }
 
