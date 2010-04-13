@@ -14,6 +14,7 @@
  * macros with static inline funcs
  */
 /* FIXME: Add more comments */
+/* FIXME: Ensure this header is only loaded when needed */
 
 #include "mpichconf.h"
 #include "mpi.h"
