@@ -146,6 +146,20 @@ static void cleanup_params(void)
     HYDU_FUNC_EXIT();
 }
 
+void signal_cb(int sig)
+{
+    HYDU_FUNC_ENTER();
+
+    if (sig == SIGPIPE) {
+        /* Upstream socket closed; kill all processes */
+        HYD_pmcd_pmip_killjob();
+    }
+    /* Ignore other signals for now */
+
+    HYDU_FUNC_EXIT();
+    return;
+}
+
 int main(int argc, char **argv)
 {
     int i, count, pid, ret_status;
@@ -154,6 +168,9 @@ int main(int argc, char **argv)
 
     status = HYDU_dbg_init("proxy");
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
+
+    status = HYDU_set_signal(SIGPIPE, signal_cb);
+    HYDU_ERR_POP(status, "unable to set SIGPIPE\n");
 
     status = init_params();
     HYDU_ERR_POP(status, "Error initializing proxy params\n");

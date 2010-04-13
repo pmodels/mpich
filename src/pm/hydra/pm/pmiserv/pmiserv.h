@@ -9,7 +9,6 @@
 
 #include "pmi_common.h"
 
-extern int HYD_pmcd_pmiserv_abort;
 extern int HYD_pmcd_pmiserv_pipe[2];
 
 HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp);

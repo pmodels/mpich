@@ -34,7 +34,6 @@ enum HYD_pmcd_pmi_cmd {
 
     /* UI to proxy commands */
     PROC_INFO,
-    KILL_JOB,
     CKPOINT,
     PMI_RESPONSE,
 

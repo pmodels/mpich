@@ -13,8 +13,6 @@
 #include "pmiserv_utils.h"
 #include "pmiserv_pmi.h"
 
-static int cleanup_process = 0;
-
 static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
 {
     char *args[HYD_NUM_TMP_STRINGS], *cmd = NULL;
@@ -208,11 +206,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         buf[hdr.buflen] = 0;
 
-        /* If we are cleaning up; ignore PMI requests */
-        if (!cleanup_process) {
-            status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
-            HYDU_ERR_POP(status, "unable to process PMI command\n");
-        }
+        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
+        HYDU_ERR_POP(status, "unable to process PMI command\n");
     }
     else {
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unhandled PMI command=%d\n", cmd);
@@ -310,19 +305,12 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    enum HYD_pmcd_pmi_cmd cmd;
-    int force_cleanup = 0, i;
+    int i;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (cleanup_process)
-        goto fn_exit;
-
-    cleanup_process = 1;
-
-    /* Connect to all proxies and send a KILL command */
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         /* Close the control listen port, so new proxies cannot
          * connect back */
@@ -335,41 +323,16 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
         }
 
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-
-            while (proxy->control_fd == -1 && proxy->exit_status == NULL) {
-                if (HYD_pmcd_pmiserv_abort) {
-                    /* Aborting; allocate garbage exit status */
-                    HYDU_MALLOC(proxy->exit_status, int *,
-                                proxy->proxy_process_count * sizeof(int), status);
-                    for (i = 0; i < proxy->proxy_process_count; i++)
-                        proxy->exit_status[i] = 1;
-
-                    force_cleanup = 1;
-                }
-                else {
-                    /* Graceful shutdown; wait for exit status to arrive */
-                    status = HYDT_dmx_wait_for_event(-1);
-                    HYDU_ERR_POP(status, "error waiting for events\n");
-                }
-            }
-
-            /* If the proxy has not been setup yet, it's a forced abort */
+            /* The proxy has not been setup yet */
             if (proxy->control_fd == -1)
                 continue;
 
-            cmd = KILL_JOB;
-            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
-            if (status != HYD_SUCCESS) {
-                HYDU_warn_printf("unable to send data to the proxy on %s\n",
-                                 proxy->node.hostname);
-                overall_status = HYD_INTERNAL_ERROR;
-            }
-        }
-    }
+            status = HYDT_dmx_deregister_fd(proxy->control_fd);
+            HYDU_ERR_POP(status, "error deregistering fd\n");
+            close(proxy->control_fd);
 
-    if (force_cleanup) {
-        status = HYDT_bsci_cleanup_procs();
-        HYDU_ERR_POP(status, "error cleaning up processes\n");
+            proxy->control_fd = -1;
+        }
     }
 
   fn_exit:
