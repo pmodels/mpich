@@ -98,12 +98,6 @@ static HYD_status handle_pmi_response(int fd)
     status = HYDU_sock_write(hdr.pid, buf, hdr.buflen);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
 
-    if (hdr.finalize) {
-        status = HYDT_dmx_deregister_fd(hdr.pid);
-        HYDU_ERR_POP(status, "unable to deregister fd\n");
-        close(hdr.pid);
-    }
-
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

@@ -32,7 +32,7 @@ static struct reqs {
     struct reqs *next;
 } *pending_reqs = NULL;
 
-static HYD_status cmd_response(int fd, int pid, char *cmd, int finalize)
+static HYD_status cmd_response(int fd, int pid, char *cmd)
 {
     char cmdlen[7];
     enum HYD_pmcd_pmi_cmd c;
@@ -47,7 +47,6 @@ static HYD_status cmd_response(int fd, int pid, char *cmd, int finalize)
 
     hdr.pid = pid;
     hdr.buflen = 6 + strlen(cmd);
-    hdr.finalize = finalize;
     status = HYDU_sock_write(fd, &hdr, sizeof(hdr));
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
 
@@ -214,7 +213,7 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "error while joining strings\n");
     HYDU_free_strlist(tmp);
 
-    status = cmd_response(fd, pid, cmd, 0);
+    status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
 
     HYDU_FREE(cmd);
@@ -289,7 +288,7 @@ static HYD_status fn_info_putnodeattr(int fd, int pid, int pgid, char *args[])
 
     HYDU_free_strlist(tmp);
 
-    status = cmd_response(fd, pid, cmd, 0);
+    status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
 
     HYDU_FREE(cmd);
@@ -363,7 +362,7 @@ static HYD_status fn_info_getnodeattr(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(tmp);
 
-        status = cmd_response(fd, pid, cmd, 0);
+        status = cmd_response(fd, pid, cmd);
         HYDU_ERR_POP(status, "send command failed\n");
         HYDU_FREE(cmd);
     }
@@ -390,7 +389,7 @@ static HYD_status fn_info_getnodeattr(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(tmp);
 
-        status = cmd_response(fd, pid, cmd, 0);
+        status = cmd_response(fd, pid, cmd);
         HYDU_ERR_POP(status, "send command failed\n");
         HYDU_FREE(cmd);
     }
@@ -475,7 +474,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
 
     HYDU_free_strlist(tmp);
 
-    status = cmd_response(fd, pid, cmd, 0);
+    status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
 
     HYDU_FREE(cmd);
@@ -544,7 +543,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
 
     HYDU_free_strlist(tmp);
 
-    status = cmd_response(fd, pid, cmd, 0);
+    status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
 
     HYDU_FREE(cmd);
@@ -657,7 +656,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    status = cmd_response(fd, pid, cmd, 0);
+    status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
 
     HYDU_FREE(cmd);
@@ -709,7 +708,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    status = cmd_response(fd, pid, cmd, 0);
+    status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
     HYDU_FREE(cmd);
 
