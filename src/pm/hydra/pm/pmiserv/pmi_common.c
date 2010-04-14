@@ -248,3 +248,78 @@ char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, c
 
     return NULL;
 }
+
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
+    HYDU_snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d", (int) getpid(), pgid);
+    (*kvs)->key_pair = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
+{
+    struct HYD_pmcd_pmi_kvs_pair *key_pair, *tmp;
+
+    HYDU_FUNC_ENTER();
+
+    key_pair = kvs_list->key_pair;
+    while (key_pair) {
+        tmp = key_pair->next;
+        HYDU_FREE(key_pair);
+        key_pair = tmp;
+    }
+    HYDU_FREE(kvs_list);
+
+    HYDU_FUNC_EXIT();
+}
+
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
+                                int *ret)
+{
+    struct HYD_pmcd_pmi_kvs_pair *key_pair, *run;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(key_pair, struct HYD_pmcd_pmi_kvs_pair *, sizeof(struct HYD_pmcd_pmi_kvs_pair),
+                status);
+    HYDU_snprintf(key_pair->key, MAXKEYLEN, "%s", key);
+    HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
+    key_pair->next = NULL;
+
+    *ret = 0;
+
+    if (kvs->key_pair == NULL) {
+        kvs->key_pair = key_pair;
+    }
+    else {
+        run = kvs->key_pair;
+        while (run->next) {
+            if (!strcmp(run->key, key_pair->key)) {
+                /* duplicate key found */
+                *ret = -1;
+                break;
+            }
+            run = run->next;
+        }
+        run->next = key_pair;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

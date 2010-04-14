@@ -74,46 +74,6 @@ void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
     *num_segments = j + 1;
 }
 
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
-                                int *ret)
-{
-    struct HYD_pmcd_pmi_kvs_pair *key_pair, *run;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(key_pair, struct HYD_pmcd_pmi_kvs_pair *, sizeof(struct HYD_pmcd_pmi_kvs_pair),
-                status);
-    HYDU_snprintf(key_pair->key, MAXKEYLEN, "%s", key);
-    HYDU_snprintf(key_pair->val, MAXVALLEN, "%s", val);
-    key_pair->next = NULL;
-
-    *ret = 0;
-
-    if (kvs->key_pair == NULL) {
-        kvs->key_pair = key_pair;
-    }
-    else {
-        run = kvs->key_pair;
-        while (run->next) {
-            if (!strcmp(run->key, key_pair->key)) {
-                /* duplicate key found */
-                *ret = -1;
-                break;
-            }
-            run = run->next;
-        }
-        run->next = key_pair;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping_str)
 {
     int i, node_id;
@@ -209,15 +169,9 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int pid, in
 
         proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
         proxy_scratch->process_list = NULL;
-        proxy_scratch->kvs = NULL;
     }
 
     proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-
-    if (proxy_scratch->kvs == NULL) {
-        status = HYD_pmcd_pmi_allocate_kvs(&proxy_scratch->kvs, pg->pgid);
-        HYDU_ERR_POP(status, "unable to allocate kvs space\n");
-    }
 
     /* Add process to the node */
     HYDU_MALLOC(process, struct HYD_pmcd_pmi_process *, sizeof(struct HYD_pmcd_pmi_process),

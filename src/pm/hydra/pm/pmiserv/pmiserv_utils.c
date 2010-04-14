@@ -307,41 +307,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
-    HYDU_snprintf((*kvs)->kvs_name, MAXNAMELEN, "kvs_%d_%d", (int) getpid(), pgid);
-    (*kvs)->key_pair = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
-{
-    struct HYD_pmcd_pmi_kvs_pair *key_pair, *tmp;
-
-    HYDU_FUNC_ENTER();
-
-    key_pair = kvs_list->key_pair;
-    while (key_pair) {
-        tmp = key_pair->next;
-        HYDU_FREE(key_pair);
-        key_pair = tmp;
-    }
-    HYDU_FREE(kvs_list);
-
-    HYDU_FUNC_EXIT();
-}
-
 static HYD_status init_pg_scratch(struct HYD_pg *pg)
 {
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;

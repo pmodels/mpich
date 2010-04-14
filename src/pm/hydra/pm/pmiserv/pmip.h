@@ -21,7 +21,6 @@ struct HYD_pmcd_pmip {
         /* PMI */
         char *pmi_port;
         int pmi_id;             /* If this is -1, we auto-generate it */
-        char *pmi_kvsname;
         char *pmi_process_mapping;
     } system_global;            /* Global system parameters */
 
@@ -56,6 +55,8 @@ struct HYD_pmcd_pmip {
 
         int proxy_core_count;
         int proxy_process_count;
+
+        struct HYD_pmcd_pmi_kvs *kvs;       /* Node-level KVS space for node attributes */
     } local;
 
     /* Process segmentation information for this proxy */

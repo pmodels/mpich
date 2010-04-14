@@ -133,7 +133,6 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
             process = tmp;
         }
 
-        HYD_pmcd_free_pmi_kvs_list(proxy_scratch->kvs);
         HYDU_FREE(proxy_scratch);
         proxy->proxy_scratch = NULL;
     }

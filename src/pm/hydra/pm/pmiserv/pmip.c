@@ -22,7 +22,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.system_global.global_core_count = -1;
     HYD_pmcd_pmip.system_global.pmi_port = NULL;
     HYD_pmcd_pmip.system_global.pmi_id = -1;
-    HYD_pmcd_pmip.system_global.pmi_kvsname = NULL;
     HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
@@ -48,6 +47,8 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.start_pid = -1;
     HYD_pmcd_pmip.exec_list = NULL;
 
+    status = HYD_pmcd_pmi_allocate_kvs(&HYD_pmcd_pmip.local.kvs, -1);
+
     return status;
 }
 
@@ -68,9 +69,6 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.system_global.pmi_port)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_port);
-
-    if (HYD_pmcd_pmip.system_global.pmi_kvsname)
-        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_kvsname);
 
     if (HYD_pmcd_pmip.system_global.pmi_process_mapping)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_process_mapping);
@@ -140,6 +138,8 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.local.local_binding)
         HYDU_FREE(HYD_pmcd_pmip.local.local_binding);
+
+    HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
     HYDT_bind_finalize();
 

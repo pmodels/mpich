@@ -67,5 +67,9 @@ HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tok
 void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
 char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count,
                                      const char *key);
+HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
+void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
+                                int *ret);
 
 #endif /* PMI_COMMON_H_INCLUDED */

@@ -209,7 +209,7 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=my_kvsname kvsname=");
-    tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_kvsname);
+    tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.local.kvs->kvs_name);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
