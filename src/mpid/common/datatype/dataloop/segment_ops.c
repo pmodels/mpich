@@ -831,7 +831,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	 * sum fits in a pointer.  Just let it truncate.
 	 */
         if ((last_idx == paramp->length-1) &&
-            (last_end != ((char *) bufp + rel_off)))
+            (last_end != ((char *) bufp + rel_off + offsetarray[i])))
 	{
 	    /* we have used up all our entries, and this one doesn't fit on
 	     * the end of the last one.
@@ -840,7 +840,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 			  (((DLOOP_Offset) size) / el_size));
 	    return 1;
 	}
-        else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[last_idx])))
+        else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[i])))
 	{
 	    /* add this size to the last vector rather than using up new one */
 	    paramp->blklens[last_idx] += size;
@@ -913,7 +913,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	 * sum fits in a pointer.  Just let it truncate.
 	 */
         if ((last_idx == paramp->length-1) &&
-            (last_end != ((char *) bufp + rel_off)))
+            (last_end != ((char *) bufp + rel_off + offsetarray[i])))
 	{
 	    /* we have used up all our entries, and this one doesn't fit on
 	     * the end of the last one.
@@ -921,7 +921,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	    *blocks_p -= (blocks_left + (size / (int) el_size));
 	    return 1;
 	}
-        else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[last_idx])))
+        else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[i])))
 	{
 	    /* add this size to the last vector rather than using up new one */
 	    paramp->blklens[last_idx] += size;
