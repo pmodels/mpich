@@ -146,7 +146,7 @@ static void cleanup_params(void)
     HYDU_FUNC_EXIT();
 }
 
-void signal_cb(int sig)
+static void signal_cb(int sig)
 {
     HYDU_FUNC_ENTER();
 
