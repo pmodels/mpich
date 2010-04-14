@@ -153,106 +153,108 @@ void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
 	     * struct for contig and vector):
 	     */
 
-	    if (dataloop->loop_params.cm_t.dataloop)
-	    {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.cm_t.dataloop + ptrdiff);
+	    if (!(dataloop->kind & DLOOP_FINAL_MASK)) {
+		DLOOP_Assert(dataloop->loop_params.cm_t.dataloop);
 
+		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.cm_t.dataloop + ptrdiff);
+	    
 		dataloop->loop_params.cm_t.dataloop =
 		    (DLOOP_Dataloop *) MPI_AINT_CAST_TO_VOID_PTR
 		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.cm_t.dataloop + ptrdiff);
-	    }
 
-	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
 		PREPEND_PREFIX(Dataloop_update)(dataloop->loop_params.cm_t.dataloop, ptrdiff);
+	    }
 	    break;
 
 	case DLOOP_KIND_BLOCKINDEXED:
-	    if (dataloop->loop_params.bi_t.offset_array)
-	    {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.bi_t.offset_array + ptrdiff);
-		dataloop->loop_params.bi_t.offset_array =
-		    (DLOOP_Offset *) MPI_AINT_CAST_TO_VOID_PTR
-		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.bi_t.offset_array + ptrdiff);
-	    }
+	    DLOOP_Assert(dataloop->loop_params.bi_t.offset_array);
 
-	    if (dataloop->loop_params.bi_t.dataloop)
-	    {
+	    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.bi_t.offset_array + ptrdiff);
+
+	    dataloop->loop_params.bi_t.offset_array =
+		(DLOOP_Offset *) MPI_AINT_CAST_TO_VOID_PTR
+		(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.bi_t.offset_array + ptrdiff);
+
+	    if (!(dataloop->kind & DLOOP_FINAL_MASK)) {
+		DLOOP_Assert(dataloop->loop_params.bi_t.dataloop);
+
 		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.bi_t.dataloop + ptrdiff);
+
 		dataloop->loop_params.bi_t.dataloop =
 		    (DLOOP_Dataloop *) MPI_AINT_CAST_TO_VOID_PTR
 		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.bi_t.dataloop + ptrdiff);
-	    }
 
-	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
 		PREPEND_PREFIX(Dataloop_update)(dataloop->loop_params.bi_t.dataloop, ptrdiff);
+	    }
 	    break;
 
 	case DLOOP_KIND_INDEXED:
-	    if (dataloop->loop_params.i_t.blocksize_array)
-	    {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.blocksize_array + ptrdiff);
-		dataloop->loop_params.i_t.blocksize_array =
-		    (DLOOP_Count *) MPI_AINT_CAST_TO_VOID_PTR
-		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.blocksize_array + ptrdiff);
-	    }
+	    DLOOP_Assert(dataloop->loop_params.i_t.blocksize_array);
 
-	    if (dataloop->loop_params.i_t.offset_array)
-	    {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.offset_array + ptrdiff);
-		dataloop->loop_params.i_t.offset_array =
-		    (DLOOP_Offset *) MPI_AINT_CAST_TO_VOID_PTR
-		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.offset_array + ptrdiff);
-	    }
+	    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.blocksize_array + ptrdiff);
 
-	    if (dataloop->loop_params.i_t.dataloop)
-	    {
+	    dataloop->loop_params.i_t.blocksize_array =
+		(DLOOP_Count *) MPI_AINT_CAST_TO_VOID_PTR
+		(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.blocksize_array + ptrdiff);
+
+	    DLOOP_Assert(dataloop->loop_params.i_t.offset_array);
+
+	    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.offset_array + ptrdiff);
+
+	    dataloop->loop_params.i_t.offset_array =
+		(DLOOP_Offset *) MPI_AINT_CAST_TO_VOID_PTR
+		(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.offset_array + ptrdiff);
+
+	    if (!(dataloop->kind & DLOOP_FINAL_MASK)) {
+		DLOOP_Assert(dataloop->loop_params.i_t.dataloop);
+
 		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.dataloop + ptrdiff);
+
 		dataloop->loop_params.i_t.dataloop =
 		    (DLOOP_Dataloop *) MPI_AINT_CAST_TO_VOID_PTR
 		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.i_t.dataloop + ptrdiff);
-	    }
 
-	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
 		PREPEND_PREFIX(Dataloop_update)(dataloop->loop_params.i_t.dataloop, ptrdiff);
+	    }
 	    break;
 
 	case DLOOP_KIND_STRUCT:
-	    if (dataloop->loop_params.s_t.blocksize_array)
-	    {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.blocksize_array + ptrdiff);
-		dataloop->loop_params.s_t.blocksize_array =
-		    (DLOOP_Count *) MPI_AINT_CAST_TO_VOID_PTR
-		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.blocksize_array + ptrdiff);
-	    }
+	    DLOOP_Assert(dataloop->loop_params.s_t.blocksize_array);
 
-	    if (dataloop->loop_params.s_t.offset_array)
-	    {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.offset_array + ptrdiff);
-		dataloop->loop_params.s_t.offset_array =
-		    (DLOOP_Offset *) MPI_AINT_CAST_TO_VOID_PTR
-		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.offset_array + ptrdiff);
-	    }
+	    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.blocksize_array + ptrdiff);
 
-	    if (dataloop->loop_params.s_t.dataloop_array)
-	    {
-		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.dataloop_array + ptrdiff);
-		dataloop->loop_params.s_t.dataloop_array =
-		    (DLOOP_Dataloop **) MPI_AINT_CAST_TO_VOID_PTR
-		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.dataloop_array + ptrdiff);
-	    }
+	    dataloop->loop_params.s_t.blocksize_array =
+		(DLOOP_Count *) MPI_AINT_CAST_TO_VOID_PTR
+		(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.blocksize_array + ptrdiff);
+
+	    DLOOP_Assert(dataloop->loop_params.s_t.offset_array);
+
+	    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.offset_array + ptrdiff);
+
+	    dataloop->loop_params.s_t.offset_array =
+		(DLOOP_Offset *) MPI_AINT_CAST_TO_VOID_PTR
+		(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.offset_array + ptrdiff);
+
+	    if (dataloop->kind & DLOOP_FINAL_MASK) break;
+
+	    DLOOP_Assert(dataloop->loop_params.s_t.dataloop_array);
+
+	    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.dataloop_array + ptrdiff);
+
+	    dataloop->loop_params.s_t.dataloop_array =
+		(DLOOP_Dataloop **) MPI_AINT_CAST_TO_VOID_PTR
+		(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) dataloop->loop_params.s_t.dataloop_array + ptrdiff);
 
 	    /* fix the N dataloop pointers too */
 	    looparray = dataloop->loop_params.s_t.dataloop_array;
 	    for (i=0; i < dataloop->loop_params.s_t.count; i++) {
-		if (looparray[i])
-		{
-		    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) looparray[i] + ptrdiff);
-		    looparray[i] = (DLOOP_Dataloop *) MPI_AINT_CAST_TO_VOID_PTR
-			(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) looparray[i] + ptrdiff);
-		}
-	    }
+		DLOOP_Assert(looparray[i]);
 
-	    if (dataloop->kind & DLOOP_FINAL_MASK) break;
+		MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) looparray[i] + ptrdiff);
+
+		looparray[i] = (DLOOP_Dataloop *) MPI_AINT_CAST_TO_VOID_PTR
+		    (MPI_VOID_PTR_CAST_TO_MPI_AINT (char *) looparray[i] + ptrdiff);
+	    }
 
 	    for (i=0; i < dataloop->loop_params.s_t.count; i++) {
 		PREPEND_PREFIX(Dataloop_update)(looparray[i], ptrdiff);
