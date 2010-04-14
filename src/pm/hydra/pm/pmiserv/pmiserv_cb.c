@@ -305,7 +305,6 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    int i;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
 

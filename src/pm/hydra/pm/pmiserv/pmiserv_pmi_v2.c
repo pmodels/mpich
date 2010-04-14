@@ -10,14 +10,12 @@
 #include "pmiserv_pmi.h"
 
 static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_job_getid(int fd, int pid, int pgid, char *args[]);
 static HYD_status fn_info_putnodeattr(int fd, int pid, int pgid, char *args[]);
 static HYD_status fn_info_getnodeattr(int fd, int pid, int pgid, char *args[]);
 static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[]);
 static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[]);
 static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[]);
 static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_finalize(int fd, int pid, int pgid, char *args[]);
 
 static struct reqs {
     enum type {
@@ -214,9 +212,7 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
     HYDU_ERR_POP(status, "error while joining strings\n");
-
-    for (i = 0; tmp[i]; i++)
-        HYDU_FREE(tmp[i]);
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd, 0);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -230,62 +226,6 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
 
     status = HYD_pmcd_pmi_add_process_to_pg(pg, fd, pid, rank);
     HYDU_ERR_POP(status, "unable to add process to pg\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status fn_job_getid(int fd, int pid, int pgid, char *args[])
-{
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
-    int i;
-    struct HYD_pmcd_pmi_process *process;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_pmcd_token *tokens;
-    int token_count;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
-
-    /* Find the group id corresponding to this fd */
-    process = find_process(fd, pid);
-    if (process == NULL)        /* We didn't find the process */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "unable to find process structure for fd %d and pid %d\n", fd,
-                             pid);
-
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
-
-    i = 0;
-    tmp[i++] = HYDU_strdup("cmd=job-getid-response;");
-    if (thrid) {
-        tmp[i++] = HYDU_strdup("thrid=");
-        tmp[i++] = HYDU_strdup(thrid);
-        tmp[i++] = HYDU_strdup(";");
-    }
-    tmp[i++] = HYDU_strdup("jobid=");
-    tmp[i++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
-    tmp[i++] = HYDU_strdup(";rc=0;");
-    tmp[i++] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &cmd);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-
-    HYDU_free_strlist(tmp);
-
-    status = cmd_response(fd, pid, cmd, 0);
-    HYDU_ERR_POP(status, "send command failed\n");
-
-    HYDU_FREE(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -667,6 +607,13 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
         process_count = 0;
         for (proxy = process->proxy->pg->proxy_list; proxy; proxy = proxy->next) {
             proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+
+            if (proxy_scratch == NULL) {
+                /* proxy not initialized yet */
+                barrier = 0;
+                break;
+            }
+
             for (prun = proxy_scratch->process_list; prun; prun = prun->next) {
                 process_count++;
                 if (prun->epoch < process->epoch) {
@@ -778,58 +725,15 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, int pid, int pgid, char *args[])
-{
-    char *thrid;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
-    struct HYD_pmcd_token *tokens;
-    int token_count, i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
-
-    i = 0;
-    tmp[i++] = HYDU_strdup("cmd=finalize-response;");
-    if (thrid) {
-        tmp[i++] = HYDU_strdup("thrid=");
-        tmp[i++] = HYDU_strdup(thrid);
-        tmp[i++] = HYDU_strdup(";");
-    }
-    tmp[i++] = HYDU_strdup("rc=0;");
-    tmp[i++] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &cmd);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-    HYDU_free_strlist(tmp);
-
-    status = cmd_response(fd, pid, cmd, 1);
-    HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx, spawn */
 static struct HYD_pmcd_pmi_handle pmi_v2_handle_fns_foo[] = {
     {"fullinit", fn_fullinit},
-    {"job-getid", fn_job_getid},
     {"info-putnodeattr", fn_info_putnodeattr},
     {"info-getnodeattr", fn_info_getnodeattr},
     {"info-getjobattr", fn_info_getjobattr},
     {"kvs-put", fn_kvs_put},
     {"kvs-get", fn_kvs_get},
     {"kvs-fence", fn_kvs_fence},
-    {"finalize", fn_finalize},
     {"\0", NULL}
 };
 
