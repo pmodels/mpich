@@ -56,7 +56,7 @@ struct HYD_pmcd_pmip {
         int proxy_core_count;
         int proxy_process_count;
 
-        struct HYD_pmcd_pmi_kvs *kvs;       /* Node-level KVS space for node attributes */
+        struct HYD_pmcd_pmi_kvs *kvs;   /* Node-level KVS space for node attributes */
     } local;
 
     /* Process segmentation information for this proxy */

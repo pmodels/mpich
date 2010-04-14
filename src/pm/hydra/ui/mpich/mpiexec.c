@@ -35,7 +35,8 @@ static void usage(void)
     printf("  Other global options:\n");
     printf("    -f {name}                        file containing the host names\n");
     printf("    -wdir {dirname}                  working directory to use\n");
-    printf("    -configfile {name}               config file containing MPMD launch options\n");
+    printf
+        ("    -configfile {name}               config file containing MPMD launch options\n");
 
     printf("\n");
     printf("\n");

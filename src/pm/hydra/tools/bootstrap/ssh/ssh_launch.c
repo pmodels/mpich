@@ -164,7 +164,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
             if (!strcmp(node->hostname, e->hostname))
                 break;
 
-        if (e == NULL) { /* Couldn't find an element for this host */
+        if (e == NULL) {        /* Couldn't find an element for this host */
             status = create_element(node->hostname, &e);
             HYDU_ERR_POP(status, "unable to create ssh time element\n");
         }

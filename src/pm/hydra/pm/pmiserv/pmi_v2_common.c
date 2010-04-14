@@ -16,7 +16,8 @@ HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, enum type type, 
     struct HYD_pmcd_pmi_v2_reqs *req, *tmp;
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_MALLOC(req, struct HYD_pmcd_pmi_v2_reqs *, sizeof(struct HYD_pmcd_pmi_v2_reqs), status);
+    HYDU_MALLOC(req, struct HYD_pmcd_pmi_v2_reqs *, sizeof(struct HYD_pmcd_pmi_v2_reqs),
+                status);
     req->fd = fd;
     req->pid = pid;
     req->pgid = pgid;

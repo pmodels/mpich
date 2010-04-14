@@ -254,7 +254,8 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
         if (flag != HYDU_SOCK_COMM_MSGWAIT || *count == maxlen)
             break;
         else if (0 == tmp)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "MSGWAIT requested but EOF encountered\n");
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "MSGWAIT requested but EOF encountered\n");
     };
 
     if (*count < 0)
@@ -555,8 +556,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *port_range, char **port_s
 
     sport = HYDU_int_to_str(port);
     HYDU_MALLOC(*port_str, char *, strlen(ip) + 1 + strlen(sport) + 1, status);
-    HYDU_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1,
-                  "%s:%s", ip, sport);
+    HYDU_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
     HYDU_FREE(sport);
 
   fn_exit:

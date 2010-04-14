@@ -299,7 +299,7 @@ static HYD_status process_config_token(char *token, int newline)
     HYD_status status = HYD_SUCCESS;
 
     if (config_argv == NULL)
-        HYDU_MALLOC(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof (char *), status);
+        HYDU_MALLOC(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
 
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
@@ -867,7 +867,8 @@ static HYD_status set_default_values(void)
     get_env_str_val(HYD_handle.user_global.bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
     get_env_str_val(HYD_handle.user_global.binding, "HYDRA_BINDING", NULL);
     get_env_str_val(HYD_handle.user_global.bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
-    get_env_str_val(HYD_handle.user_global.ckpointlib, "HYDRA_CKPOINTLIB", HYDRA_DEFAULT_CKPOINTLIB);
+    get_env_str_val(HYD_handle.user_global.ckpointlib, "HYDRA_CKPOINTLIB",
+                    HYDRA_DEFAULT_CKPOINTLIB);
     get_env_str_val(HYD_handle.user_global.ckpoint_prefix, "HYDRA_CKPOINT_PREFIX", NULL);
 #undef get_env_str_val
 

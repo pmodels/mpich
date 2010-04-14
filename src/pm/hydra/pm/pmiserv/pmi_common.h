@@ -30,7 +30,7 @@ struct HYD_pmcd_pmi_kvs {
 
 /* The set of commands supported */
 enum HYD_pmcd_pmi_cmd {
-    INVALID_PMI_CMD = 0, /* for sanity testing */
+    INVALID_PMI_CMD = 0,        /* for sanity testing */
 
     /* UI to proxy commands */
     PROC_INFO,

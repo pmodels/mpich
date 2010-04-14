@@ -183,11 +183,11 @@ static HYD_status fn_job_getid(int fd, char *args[])
     send_cmd_downstream(fd, cmd);
     HYDU_FREE(cmd);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -375,12 +375,12 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
         HYDU_ERR_POP(status, "error sending command upstream\n");
     }
 
-fn_exit:
+  fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -420,11 +420,11 @@ static HYD_status fn_finalize(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to deregister fd\n");
     close(fd);
 
-fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

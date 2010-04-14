@@ -127,8 +127,7 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
             for (process = proxy_scratch->process_list; process; process = process->next) {
                 if (HYD_handle.user_global.debug)
                     HYDU_dump(stdout, "reply to %d: %s\n", tproxy->control_fd, cmd);
-                status = cmd_response(tproxy->control_fd, process->pid, cmd,
-                                                      strlen(cmd));
+                status = cmd_response(tproxy->control_fd, process->pid, cmd, strlen(cmd));
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
         }
