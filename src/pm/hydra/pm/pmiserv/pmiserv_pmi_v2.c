@@ -84,8 +84,6 @@ static struct HYD_pmcd_pmi_process *find_process(int fd, int pid)
     return NULL;
 }
 
-static int req_complete = 0;
-
 static void free_req(struct reqs *req)
 {
     HYDU_free_strlist(req->args);
@@ -145,7 +143,6 @@ static HYD_status poke_progress(void)
     for (i = 0; i < count; i++) {
         req = dequeue_req_head();
 
-        req_complete = 0;
         if (req->type == NODE_ATTR_GET) {
             status = fn_info_getnodeattr(req->fd, req->pid, req->pgid, req->args);
             HYDU_ERR_POP(status, "getnodeattr returned error\n");
@@ -393,14 +390,6 @@ static HYD_status fn_info_getnodeattr(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "send command failed\n");
         HYDU_FREE(cmd);
     }
-
-    /* Mark the global completion variable, in case the progress
-     * engine is monitoring. */
-    /* FIXME: This should be an output parameter. We need to change
-     * the structure of the PMI function table to be able to take
-     * additional arguments, and not just the ones passed on the
-     * wire. */
-    req_complete = 1;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -658,9 +647,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-
     HYDU_FREE(cmd);
-    req_complete = 1;
 
   fn_exit:
     HYDU_FUNC_EXIT();
