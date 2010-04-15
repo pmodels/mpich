@@ -26,6 +26,8 @@ int indexed_negdisp_test(void);
 int struct_struct_test(void);
 int flatten_test(void);
 
+int build_array_section_type(MPI_Aint aext, MPI_Aint astart, MPI_Aint aend, MPI_Datatype *datatype);
+
 int main(int argc, char *argv[])
 {
     int err, errs = 0;
@@ -365,7 +367,7 @@ int indexed_negdisp_test(void)
 int struct_struct_test(void)
 {
     int err, errs = 0;
-    int i, j;
+    int i, j, dt_size = 0;
     MPI_Request req[2];
 
 
@@ -384,7 +386,6 @@ int struct_struct_test(void)
     int seq_array[N*M];
     MPI_Aint astart, aend;
     MPI_Aint size_exp = 0;
-    MPI_Aint dt_size = 0;
 
     /* 1st section selects elements 1 and 2 out of 2nd dimension, complete 1st dim.
      * should receive the values 1, 2, 3, 4 */
@@ -560,9 +561,7 @@ static int pack_and_check_expected(MPI_Datatype type, const char *name,
  * blockindexed and indexed dataloop flattening code */
 int flatten_test(void)
 {
-    int i;
     int err, errs = 0;
-    int packsize;
 #define ARR_SIZE (9)
     /* real indices              0  1  2  3  4  5  6  7  8
      * indices w/ &array[3]     -3 -2 -1  0  1  2  3  4  5 */
@@ -570,10 +569,10 @@ int flatten_test(void)
     int expected[ARR_SIZE]   = {-1, 0, 1,-1, 2,-1, 3,-1, 4};
     MPI_Datatype idx_type = MPI_DATATYPE_NULL;
     MPI_Datatype blkidx_type = MPI_DATATYPE_NULL;
-    MPI_Datatype combo_type = MPI_DATATYPE_NULL;
     MPI_Datatype combo = MPI_DATATYPE_NULL;
 #define COUNT (2)
-    MPI_Aint displ[COUNT];
+    int displ[COUNT];
+    MPI_Aint adispl[COUNT];
     int blens[COUNT];
     MPI_Datatype types[COUNT];
 
@@ -608,16 +607,16 @@ int flatten_test(void)
      * II_I_B_B  (I=idx_type, B=blkidx_type)
      * 21012345  <-- pos (left of 0 is neg)
      */
-    blens[0] = 1;
-    displ[0] = 0; /*bytes*/
-    types[0] = idx_type;
+    blens[0]  = 1;
+    adispl[0] = 0; /*bytes*/
+    types[0]  = idx_type;
 
-    blens[1] = 1;
-    displ[1] = 4 * sizeof(int); /* bytes */
-    types[1] = blkidx_type;
+    blens[1]  = 1;
+    adispl[1] = 4 * sizeof(int); /* bytes */
+    types[1]  = blkidx_type;
 
     /* must be a struct in order to trigger flattening code */
-    err = MPI_Type_create_struct(COUNT, blens, displ, types, &combo);
+    err = MPI_Type_create_struct(COUNT, blens, adispl, types, &combo);
     check_err(MPI_Type_indexed);
     err = MPI_Type_commit(&combo);
     check_err(MPI_Type_commit);
