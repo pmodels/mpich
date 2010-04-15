@@ -270,21 +270,30 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
     goto fn_exit;
 }
 
-
 HYD_status HYDU_sock_write(int fd, const void *buf, int maxsize)
 {
-    int n;
+    int n, sent, size = maxsize;
+    const char *rbuf = buf;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    do {
-        n = write(fd, buf, maxsize);
-    } while (n < 0 && errno == EINTR);
+    sent = 0;
+    while (1) {
+        n = write(fd, rbuf, size);
+        if (n > 0) {
+            sent += n;
+            rbuf += n;
+            size -= n;
+        }
 
-    if (n < maxsize)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "write error (%s)\n",
-                             HYDU_strerror(errno));
+        if (n < 0 && errno != EINTR)
+            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "write error (%s)\n",
+                                 HYDU_strerror(errno));
+
+        if (sent == maxsize)
+            break;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
