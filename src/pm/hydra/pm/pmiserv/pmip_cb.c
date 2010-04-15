@@ -43,6 +43,11 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "got pmi command (from %d): %s ", fd, pmi_cmd);
+        HYDU_print_strlist(args);
+    }
+
     h = HYD_pmcd_pmip_pmi_handle;
     while (h->handler) {
         if (!strcmp(pmi_cmd, h->cmd)) {
@@ -51,6 +56,10 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             goto fn_exit;
         }
         h++;
+    }
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "we don't understand this command; forwarding upstream\n");
     }
 
     /* We don't understand the command; forward it upstream */

@@ -47,6 +47,10 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr));
     HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
 
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "forwarding command (%s) upstream\n", buf);
+    }
+
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
 
@@ -68,6 +72,10 @@ static HYD_status send_cmd_downstream(int fd, char *cmd)
     HYDU_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
     status = HYDU_sock_write(fd, cmdlen, 6);
     HYDU_ERR_POP(status, "error writing PMI line\n");
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "PMI response: %s\n", cmd);
+    }
 
     status = HYDU_sock_write(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");

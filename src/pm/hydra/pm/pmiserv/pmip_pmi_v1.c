@@ -42,8 +42,33 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr));
     HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
 
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "forwarding command (%s) upstream\n", buf);
+    }
+
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status send_cmd_downstream(int fd, char *cmd)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "PMI response: %s\n", cmd);
+    }
+
+    status = HYDU_sock_write(fd, cmd, strlen(cmd));
+    HYDU_ERR_POP(status, "error writing PMI line\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -67,15 +92,16 @@ static HYD_status fn_init(int fd, char *args[])
     pmi_subversion = atoi(strtok(NULL, "="));
 
     if (pmi_version == 1 && pmi_subversion <= 1)
-        tmp = "cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n";
+        tmp = HYDU_strdup("cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n");
     else if (pmi_version == 2 && pmi_subversion == 0)
-        tmp = "cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n";
+        tmp = HYDU_strdup("cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n");
     else        /* PMI version mismatch */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
 
-    status = HYDU_sock_write(fd, tmp, strlen(tmp));
-    HYDU_ERR_POP(status, "error writing PMI line\n");
+    status = send_cmd_downstream(fd, tmp);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
+    HYDU_FREE(tmp);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -143,8 +169,8 @@ static HYD_status fn_get_maxes(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd));
-    HYDU_ERR_POP(status, "error writing PMI line\n");
+    status = send_cmd_downstream(fd, cmd);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
     HYDU_FREE(cmd);
 
   fn_exit:
@@ -187,8 +213,8 @@ static HYD_status fn_get_appnum(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd));
-    HYDU_ERR_POP(status, "error writing PMI line\n");
+    status = send_cmd_downstream(fd, cmd);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
     HYDU_FREE(cmd);
 
   fn_exit:
@@ -217,8 +243,8 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd));
-    HYDU_ERR_POP(status, "error writing PMI line\n");
+    status = send_cmd_downstream(fd, cmd);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
     HYDU_FREE(cmd);
 
   fn_exit:
@@ -250,8 +276,8 @@ static HYD_status fn_get_usize(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd));
-    HYDU_ERR_POP(status, "error writing PMI line\n");
+    status = send_cmd_downstream(fd, cmd);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
     HYDU_FREE(cmd);
 
   fn_exit:
@@ -289,8 +315,8 @@ static HYD_status fn_get(int fd, char *args[])
         HYDU_ERR_POP(status, "unable to join strings\n");
         HYDU_free_strlist(tmp);
 
-        status = HYDU_sock_write(fd, cmd, strlen(cmd));
-        HYDU_ERR_POP(status, "error writing PMI line\n");
+        status = send_cmd_downstream(fd, cmd);
+        HYDU_ERR_POP(status, "error sending PMI response\n");
         HYDU_FREE(cmd);
     }
     else {
@@ -314,9 +340,11 @@ static HYD_status fn_finalize(int fd, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    cmd = "cmd=finalize_ack\n";
-    status = HYDU_sock_write(fd, cmd, strlen(cmd));
-    HYDU_ERR_POP(status, "error writing PMI line\n");
+    cmd = HYDU_strdup("cmd=finalize_ack\n");
+
+    status = send_cmd_downstream(fd, cmd);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
+    HYDU_FREE(cmd);
 
     status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
