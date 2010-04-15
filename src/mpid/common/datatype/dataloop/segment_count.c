@@ -14,35 +14,35 @@
 
 /* NOTE: bufp values are unused, ripe for removal */
 
-static int DLOOP_Segment_contig_count_block(DLOOP_Offset *blocks_p,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    DLOOP_Buffer bufp,
-					    void *v_paramp);
-static int DLOOP_Segment_vector_count_block(DLOOP_Offset *blocks_p,
-					    DLOOP_Count count,
-					    DLOOP_Count blksz,
-					    DLOOP_Offset stride,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    void *bufp,
-					    void *v_paramp);
-static int DLOOP_Segment_blkidx_count_block(DLOOP_Offset *blocks_p,
-					    DLOOP_Count count,
-					    DLOOP_Count blksz,
-					    DLOOP_Offset *offsetarray,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    void *bufp,
-					    void *v_paramp);
-static int DLOOP_Segment_index_count_block(DLOOP_Offset *blocks_p,
-					   DLOOP_Count count,
-					   DLOOP_Count *blockarray,
-					   DLOOP_Offset *offsetarray,
-					   DLOOP_Type el_type,
-					   DLOOP_Offset rel_off,
-					   void *bufp,
-					   void *v_paramp);
+static int DLOOP_Leaf_contig_count_block(DLOOP_Offset *blocks_p,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 DLOOP_Buffer bufp,
+					 void *v_paramp);
+static int DLOOP_Leaf_vector_count_block(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset stride,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp,
+					 void *v_paramp);
+static int DLOOP_Leaf_blkidx_count_block(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset *offsetarray,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp,
+					 void *v_paramp);
+static int DLOOP_Leaf_index_count_block(DLOOP_Offset *blocks_p,
+					DLOOP_Count count,
+					DLOOP_Count *blockarray,
+					DLOOP_Offset *offsetarray,
+					DLOOP_Type el_type,
+					DLOOP_Offset rel_off,
+					void *bufp,
+					void *v_paramp);
 
 struct PREPEND_PREFIX(contig_blocks_params) {
     DLOOP_Count  count;
@@ -70,10 +70,10 @@ void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
     PREPEND_PREFIX(Segment_manipulate)(segp,
 				       first,
 				       lastp,
-				       DLOOP_Segment_contig_count_block,
-				       DLOOP_Segment_vector_count_block,
-				       DLOOP_Segment_blkidx_count_block,
-				       DLOOP_Segment_index_count_block,
+				       DLOOP_Leaf_contig_count_block,
+				       DLOOP_Leaf_vector_count_block,
+				       DLOOP_Leaf_blkidx_count_block,
+				       DLOOP_Leaf_index_count_block,
 				       NULL, /* size fn */
 				       (void *) &params);
 
@@ -83,16 +83,16 @@ void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
 
 /* PIECE FUNCTIONS BELOW */
 
-/* MPID_Segment_contig_count_block
+/* MPID_Leaf_contig_count_block
  *
  * Note: because bufp is just an offset, we can ignore it in our
  *       calculations of # of contig regions.
  */
-static int DLOOP_Segment_contig_count_block(DLOOP_Offset *blocks_p,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    DLOOP_Buffer bufp ATTRIBUTE((unused)),
-					    void *v_paramp)
+static int DLOOP_Leaf_contig_count_block(DLOOP_Offset *blocks_p,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 DLOOP_Buffer bufp ATTRIBUTE((unused)),
+					 void *v_paramp)
 {
     DLOOP_Offset size, el_size;
     struct PREPEND_PREFIX(contig_blocks_params) *paramp = v_paramp;
@@ -122,7 +122,7 @@ static int DLOOP_Segment_contig_count_block(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-/* DLOOP_Segment_vector_count_block
+/* DLOOP_Leaf_vector_count_block
  *
  * Input Parameters:
  * blocks_p - [inout] pointer to a count of blocks (total, for all noncontiguous pieces)
@@ -135,14 +135,14 @@ static int DLOOP_Segment_contig_count_block(DLOOP_Offset *blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-static int DLOOP_Segment_vector_count_block(DLOOP_Offset *blocks_p,
-					    DLOOP_Count count,
-					    DLOOP_Count blksz,
-					    DLOOP_Offset stride,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off, /* offset into buffer */
-					    void *bufp ATTRIBUTE((unused)),
-					    void *v_paramp)
+static int DLOOP_Leaf_vector_count_block(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset stride,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off, /* offset into buffer */
+					 void *bufp ATTRIBUTE((unused)),
+					 void *v_paramp)
 {
     DLOOP_Count new_blk_count;
     DLOOP_Offset size, el_size;
@@ -168,19 +168,19 @@ static int DLOOP_Segment_vector_count_block(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-/* DLOOP_Segment_blkidx_count_block
+/* DLOOP_Leaf_blkidx_count_block
  *
  * Note: this is only called when the starting position is at the
  * beginning of a whole block in a blockindexed type.
  */
-static int DLOOP_Segment_blkidx_count_block(DLOOP_Offset *blocks_p,
-					    DLOOP_Count count,
-					    DLOOP_Count blksz,
-					    DLOOP_Offset *offsetarray,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    void *bufp ATTRIBUTE((unused)),
-					    void *v_paramp)
+static int DLOOP_Leaf_blkidx_count_block(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset *offsetarray,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp ATTRIBUTE((unused)),
+					 void *v_paramp)
 {
     DLOOP_Count i, new_blk_count;
     DLOOP_Offset size, el_size, last_loc;
@@ -210,19 +210,19 @@ static int DLOOP_Segment_blkidx_count_block(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-/* DLOOP_Segment_index_count_block
+/* DLOOP_Leaf_index_count_block
  *
  * Note: this is only called when the starting position is at the
  * beginning of a whole block in an indexed type.
  */
-static int DLOOP_Segment_index_count_block(DLOOP_Offset *blocks_p,
-					   DLOOP_Count count,
-					   DLOOP_Count *blockarray,
-					   DLOOP_Offset *offsetarray,
-					   DLOOP_Type el_type,
-					   DLOOP_Offset rel_off,
-					   void *bufp ATTRIBUTE((unused)),
-					   void *v_paramp)
+static int DLOOP_Leaf_index_count_block(DLOOP_Offset *blocks_p,
+					DLOOP_Count count,
+					DLOOP_Count *blockarray,
+					DLOOP_Offset *offsetarray,
+					DLOOP_Type el_type,
+					DLOOP_Offset rel_off,
+					void *bufp ATTRIBUTE((unused)),
+					void *v_paramp)
 {
     DLOOP_Count new_blk_count;
     DLOOP_Offset el_size, last_loc;
