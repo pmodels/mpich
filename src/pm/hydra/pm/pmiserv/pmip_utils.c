@@ -105,7 +105,7 @@ static HYD_status pmi_id_fn(char *arg, char ***argv)
 
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
 {
-    HYDU_snprintf(HYD_pmcd_pmip.local.kvs->kvs_name, MAXNAMELEN, "%s", arg);
+    HYDU_snprintf(HYD_pmcd_pmip.local.kvs->kvs_name, MAXNAMELEN, "%s", **argv);
     (*argv)++;
 
     return HYD_SUCCESS;
