@@ -150,6 +150,7 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to add process to pg\n");
 
   fn_exit:
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -227,6 +228,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -300,6 +302,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "poke progress error\n");
 
   fn_exit:
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -408,6 +411,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -462,6 +466,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "poke progress error\n");
 
   fn_exit:
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
