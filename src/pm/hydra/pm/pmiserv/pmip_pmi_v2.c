@@ -299,7 +299,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     }
     else if (waitval && !strcmp(waitval, "TRUE")) {
         /* The client wants to wait for a response; queue up the request */
-        status = HYD_pmcd_pmi_v2_queue_req(fd, -1, -1, NODE_ATTR_GET, args, &pending_reqs);
+        status = HYD_pmcd_pmi_v2_queue_req(fd, -1, -1, args, &pending_reqs);
         HYDU_ERR_POP(status, "unable to queue request\n");
 
         goto fn_exit;

@@ -10,7 +10,7 @@
 #include "pmiserv_pmi.h"
 #include "pmi_v2_common.h"
 
-HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, enum type type, char *args[],
+HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[],
                                      struct HYD_pmcd_pmi_v2_reqs **pending_reqs)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *tmp;
@@ -21,7 +21,6 @@ HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, enum type type, 
     req->fd = fd;
     req->pid = pid;
     req->pgid = pgid;
-    req->type = type;
     req->next = NULL;
 
     status = HYDU_strdup_list(args, &req->args);
@@ -39,17 +38,4 @@ HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, enum type type, 
 
   fn_fail:
     goto fn_exit;
-}
-
-void HYD_pmcd_pmi_v2_print_req_list(struct HYD_pmcd_pmi_v2_reqs *pending_reqs)
-{
-    struct HYD_pmcd_pmi_v2_reqs *req;
-
-    if (pending_reqs)
-        HYDU_dump_noprefix(stdout, "(");
-    for (req = pending_reqs; req; req = req->next)
-        HYDU_dump_noprefix(stdout, "%s ",
-                           (req->type == NODE_ATTR_GET) ? "NODE_ATTR_GET" : "KVS_GET");
-    if (pending_reqs)
-        HYDU_dump_noprefix(stdout, ")\n");
 }

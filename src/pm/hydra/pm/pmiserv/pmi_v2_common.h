@@ -11,11 +11,6 @@
 #include "hydra_utils.h"
 
 struct HYD_pmcd_pmi_v2_reqs {
-    enum type {
-        NODE_ATTR_GET,
-        KVS_GET
-    } type;
-
     int fd;
     int pid;
     int pgid;
@@ -25,7 +20,7 @@ struct HYD_pmcd_pmi_v2_reqs {
     struct HYD_pmcd_pmi_v2_reqs *next;
 };
 
-HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, enum type type, char *args[],
+HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[],
                                      struct HYD_pmcd_pmi_v2_reqs **pending_reqs);
 void HYD_pmcd_pmi_v2_print_req_list(struct HYD_pmcd_pmi_v2_reqs *pending_reqs);
 

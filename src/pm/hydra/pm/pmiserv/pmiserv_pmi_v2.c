@@ -373,7 +373,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
 
         if (!barrier || process_count < process->proxy->pg->pg_process_count) {
             /* We haven't reached a barrier yet; queue up request */
-            status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, KVS_GET, args, &pending_reqs);
+            status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, args, &pending_reqs);
             HYDU_ERR_POP(status, "unable to queue request\n");
 
             /* We are done */
