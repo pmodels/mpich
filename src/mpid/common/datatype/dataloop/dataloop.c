@@ -657,7 +657,7 @@ PREPEND_PREFIX(Dataloop_stream_size)(struct DLOOP_Dataloop *dl_p,
             tmp_ct *= (DLOOP_Offset)(dl_p->loop_params.c_t.count);
 #ifdef DLOOP_DEBUG_SIZE
             DLOOP_dbg_printf("stream_size: contig: ct = %d; new tot_ct = " DLOOP_OFFSET_FMT_DEC_SPEC "\n",
-                             (int) dl_p->loop_params.c_t.count, (MPI_Aint) tmp_ct);
+                             (int) dl_p->loop_params.c_t.count, (DLOOP_Offset) tmp_ct);
 #endif
             break;
         case DLOOP_KIND_VECTOR:
@@ -667,7 +667,7 @@ PREPEND_PREFIX(Dataloop_stream_size)(struct DLOOP_Dataloop *dl_p,
             DLOOP_dbg_printf("stream_size: vector: ct = %d; blk = %d; new tot_ct = " DLOOP_OFFSET_FMT_DEC_SPEC "\n",
                              (int) dl_p->loop_params.v_t.count,
                              (int) dl_p->loop_params.v_t.blocksize,
-                             (MPI_Aint) tmp_ct);
+                             (DLOOP_Offset) tmp_ct);
 #endif
             break;
         case DLOOP_KIND_BLOCKINDEXED:
@@ -677,7 +677,7 @@ PREPEND_PREFIX(Dataloop_stream_size)(struct DLOOP_Dataloop *dl_p,
             DLOOP_dbg_printf("stream_size: blkindexed: blks = %d; new tot_ct = " DLOOP_OFFSET_FMT_DEC_SPEC "\n",
                              (int) dl_p->loop_params.bi_t.count *
                              (int) dl_p->loop_params.bi_t.blocksize,
-                             (MPI_Aint) tmp_ct);
+                             (DLOOP_Offset) tmp_ct);
 #endif
             break;
         case DLOOP_KIND_INDEXED:
@@ -685,7 +685,7 @@ PREPEND_PREFIX(Dataloop_stream_size)(struct DLOOP_Dataloop *dl_p,
 #ifdef DLOOP_DEBUG_SIZE
             DLOOP_dbg_printf("stream_size: contig: blks = %d; new tot_ct = " DLOOP_OFFSET_FMT_DEC_SPEC "\n",
                              (int) dl_p->loop_params.i_t.total_blocks,
-                             (MPI_Aint) tmp_ct);
+                             (DLOOP_Offset) tmp_ct);
 #endif
             break;
         default:
@@ -729,7 +729,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
     }
 
     DLOOP_dbg_printf("loc=%p, treedepth=%d, kind=%d, el_extent=" DLOOP_OFFSET_FMT_DEC_SPEC "\n",
-		     dataloop, (int) depth, (int) dataloop->kind, (MPI_Aint) dataloop->el_extent);
+		     dataloop, (int) depth, (int) dataloop->kind, (DLOOP_Offset) dataloop->el_extent);
     switch(dataloop->kind & DLOOP_KIND_MASK) {
 	case DLOOP_KIND_CONTIG:
 	    DLOOP_dbg_printf("\tCONTIG: count=%d, datatype=%p\n",
@@ -742,7 +742,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
 	    DLOOP_dbg_printf("\tVECTOR: count=%d, blksz=%d, stride=" DLOOP_OFFSET_FMT_DEC_SPEC ", datatype=%p\n",
 			     (int) dataloop->loop_params.v_t.count,
 			     (int) dataloop->loop_params.v_t.blocksize,
-			     (MPI_Aint) dataloop->loop_params.v_t.stride,
+			     (DLOOP_Offset) dataloop->loop_params.v_t.stride,
 			     dataloop->loop_params.v_t.dataloop);
 	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
 		PREPEND_PREFIX(Dataloop_print)(dataloop->loop_params.v_t.dataloop, depth+1);
@@ -771,7 +771,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
 		DLOOP_dbg_printf("\t\t%d\n", (int) dataloop->loop_params.s_t.blocksize_array[i]);
 	    DLOOP_dbg_printf("\toffsets:\n");
 	    for (i=0; i < dataloop->loop_params.s_t.count; i++)
-		DLOOP_dbg_printf("\t\t" DLOOP_OFFSET_FMT_DEC_SPEC "\n", (MPI_Aint) dataloop->loop_params.s_t.offset_array[i]);
+		DLOOP_dbg_printf("\t\t" DLOOP_OFFSET_FMT_DEC_SPEC "\n", (DLOOP_Offset) dataloop->loop_params.s_t.offset_array[i]);
 	    DLOOP_dbg_printf("\tdatatypes:\n");
 	    for (i=0; i < dataloop->loop_params.s_t.count; i++)
 		DLOOP_dbg_printf("\t\t%p\n", dataloop->loop_params.s_t.dataloop_array[i]);
