@@ -224,7 +224,6 @@ HYD_status HYDU_sock_writeline(int fd, const char *buf, int maxsize);
 HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
                           enum HYDU_sock_comm_flag flag);
 HYD_status HYDU_sock_write(int fd, const void *buf, int maxsize);
-HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize);
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
 HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip);
 HYD_status

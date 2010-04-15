@@ -294,32 +294,6 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxsize)
     goto fn_exit;
 }
 
-
-HYD_status HYDU_sock_trywrite(int fd, const void *buf, int maxsize)
-{
-    int n;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    do {
-        n = write(fd, buf, maxsize);
-    } while (n < 0 && errno == EINTR);
-
-    if (n < maxsize) {
-        HYDU_warn_printf("write error (%s)\n", HYDU_strerror(errno));
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status set_nonblock(int fd)
 {
     int flags;
