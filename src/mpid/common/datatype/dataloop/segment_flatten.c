@@ -14,35 +14,35 @@
 
 /* NOTE: I don't think I've removed the need for bufp in here yet! -- RobR */
 
-static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    void *bufp,
-					    void *v_paramp);
-static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
-					    DLOOP_Count count,
-					    DLOOP_Count blksz,
-					    DLOOP_Offset stride,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    void *bufp,
-					    void *v_paramp);
-static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
-                                            DLOOP_Count count,
-                                            DLOOP_Count blksz,
-                                            DLOOP_Offset *offsetarray,
-                                            DLOOP_Type el_type,
-                                            DLOOP_Offset rel_off,
-                                            void *bufp,
-                                            void *v_paramp);
-static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
-					   DLOOP_Count count,
-					   DLOOP_Count *blockarray,
-					   DLOOP_Offset *offsetarray,
-					   DLOOP_Type el_type,
-					   DLOOP_Offset rel_off,
-					   void *bufp,
-					   void *v_paramp);
+static int DLOOP_Leaf_contig_mpi_flatten(DLOOP_Offset *blocks_p,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp,
+					 void *v_paramp);
+static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset stride,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp,
+					 void *v_paramp);
+static int DLOOP_Leaf_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset *offsetarray,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp,
+					 void *v_paramp);
+static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
+					DLOOP_Count count,
+					DLOOP_Count *blockarray,
+					DLOOP_Offset *offsetarray,
+					DLOOP_Type el_type,
+					DLOOP_Offset rel_off,
+					void *bufp,
+					void *v_paramp);
 
 struct PREPEND_PREFIX(mpi_flatten_params) {
     int       index, length;
@@ -88,10 +88,10 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
     PREPEND_PREFIX(Segment_manipulate)(segp,
 				       first,
 				       lastp,
-				       DLOOP_Segment_contig_mpi_flatten,
-				       DLOOP_Segment_vector_mpi_flatten,
-				       DLOOP_Segment_blkidx_mpi_flatten,
-				       DLOOP_Segment_index_mpi_flatten,
+				       DLOOP_Leaf_contig_mpi_flatten,
+				       DLOOP_Leaf_vector_mpi_flatten,
+				       DLOOP_Leaf_blkidx_mpi_flatten,
+				       DLOOP_Leaf_index_mpi_flatten,
 				       NULL,
 				       &params);
 
@@ -102,14 +102,14 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 
 /* PIECE FUNCTIONS BELOW */
 
-/* DLOOP_Segment_contig_mpi_flatten
+/* DLOOP_Leaf_contig_mpi_flatten
  *
  */
-static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off,
-					    void *bufp,
-					    void *v_paramp)
+static int DLOOP_Leaf_contig_mpi_flatten(DLOOP_Offset *blocks_p,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp,
+					 void *v_paramp)
 {
     int last_idx, size;
     DLOOP_Offset el_size;
@@ -161,7 +161,7 @@ static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-/* DLOOP_Segment_vector_mpi_flatten
+/* DLOOP_Leaf_vector_mpi_flatten
  *
  * Input Parameters:
  * blocks_p - [inout] pointer to a count of blocks (total, for all noncontiguous pieces)
@@ -177,14 +177,14 @@ static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
  * TODO: MAKE THIS CODE SMARTER, USING THE SAME GENERAL APPROACH AS IN THE
  *       COUNT BLOCK CODE ABOVE.
  */
-static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
-					    DLOOP_Count count,
-					    DLOOP_Count blksz,
-					    DLOOP_Offset stride,
-					    DLOOP_Type el_type,
-					    DLOOP_Offset rel_off, /* offset into buffer */
-					    void *bufp, /* start of buffer */
-					    void *v_paramp)
+static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset stride,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off, /* offset into buffer */
+					 void *bufp, /* start of buffer */
+					 void *v_paramp)
 {
     int i, size, blocks_left;
     DLOOP_Offset el_size;
@@ -271,14 +271,14 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
-                                            DLOOP_Count count,
-                                            DLOOP_Count blksz,
-                                            DLOOP_Offset *offsetarray,
-                                            DLOOP_Type el_type,
-                                            DLOOP_Offset rel_off,
-                                            void *bufp,
-                                            void *v_paramp)
+static int DLOOP_Leaf_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
+					 DLOOP_Count count,
+					 DLOOP_Count blksz,
+					 DLOOP_Offset *offsetarray,
+					 DLOOP_Type el_type,
+					 DLOOP_Offset rel_off,
+					 void *bufp,
+					 void *v_paramp)
 {
     int i, size, blocks_left;
     DLOOP_Offset el_size;
@@ -353,14 +353,14 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
-					   DLOOP_Count count,
-					   DLOOP_Count *blockarray,
-					   DLOOP_Offset *offsetarray,
-					   DLOOP_Type el_type,
-					   DLOOP_Offset rel_off,
-					   void *bufp,
-					   void *v_paramp)
+static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
+					DLOOP_Count count,
+					DLOOP_Count *blockarray,
+					DLOOP_Offset *offsetarray,
+					DLOOP_Type el_type,
+					DLOOP_Offset rel_off,
+					void *bufp,
+					void *v_paramp)
 {
     int i, size, blocks_left;
     DLOOP_Offset el_size;
