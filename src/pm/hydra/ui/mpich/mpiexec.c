@@ -96,6 +96,7 @@ static void usage(void)
     printf("    -print-rank-map                  print rank mapping\n");
     printf("    -print-all-exitcodes             print exit codes of all processes\n");
     printf("    -iface                           network interface to use\n");
+    printf("    -ppn                             processes per node\n");
 }
 
 
