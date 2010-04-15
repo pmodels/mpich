@@ -656,7 +656,7 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 	    blklens[i] != 0 &&
 	    (is_basic || sz > 0))
 	{
-	    err = PREPEND_PREFIX(Segment_init)((char *) MPI_AINT_CAST_TO_VOID_PTR disps[i],
+	    err = PREPEND_PREFIX(Segment_init)((char *) DLOOP_OFFSET_CAST_TO_VOID_PTR disps[i],
 					 (DLOOP_Count) blklens[i],
 					 oldtypes[i],
 					 segp,

@@ -126,7 +126,7 @@ static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
 	 * blklens fits in a pointer.  Just let it truncate, if the
 	 * sizeof a pointer is less than the sizeof an MPI_Aint.
 	 */
-	last_end = (char*) MPI_AINT_CAST_TO_VOID_PTR
+	last_end = (char*) DLOOP_OFFSET_CAST_TO_VOID_PTR
 	           (paramp->disps[last_idx] + ((DLOOP_Offset) paramp->blklens[last_idx]));
     }
 
@@ -151,7 +151,7 @@ static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
     }
     else {
 	/* Since bufp can be a displacement and can be negative, we cannot use
-	 * MPI_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.  Just let it
+	 * DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.  Just let it
 	 * sign extend.
 	 */
         paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp + rel_off;
@@ -212,11 +212,11 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	    /* Since disps can be negative, we cannot use
 	     * DLOOP_Ensure_Offset_fits_in_pointer to verify that disps +
 	     * blklens fits in a pointer.  Nor can we use
-	     * MPI_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
+	     * DLOOP_OFFSET_CAST_TO_VOID_PTR to cast the sum to a pointer.
 	     * Just let it truncate, if the sizeof a pointer is less
 	     * than the sizeof an MPI_Aint.
 	     */
-	    last_end = (char *) MPI_AINT_CAST_TO_VOID_PTR
+	    last_end = (char *) DLOOP_OFFSET_CAST_TO_VOID_PTR
 		       (paramp->disps[last_idx] +
 			 (MPI_Aint)(paramp->blklens[last_idx]));
 	}
@@ -246,7 +246,7 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	}
 	else {
 	    /* Since bufp can be a displacement and can be negative, we cannot use
-	     * MPI_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.  Just let it
+	     * DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.  Just let it
 	     * sign extend.
 	     */
             paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp + rel_off;
@@ -306,11 +306,11 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	    /* Since disps can be negative, we cannot use
 	     * DLOOP_Ensure_Offset_fits_in_pointer to verify that disps +
 	     * blklens fits in a pointer.  Nor can we use
-	     * MPI_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
+	     * DLOOP_OFFSET_CAST_TO_VOID_PTR to cast the sum to a pointer.
 	     * Just let it truncate, if the sizeof a pointer is less
 	     * than the sizeof an MPI_Aint.
 	     */
-	    last_end = (char*) MPI_AINT_CAST_TO_VOID_PTR
+	    last_end = (char*) DLOOP_OFFSET_CAST_TO_VOID_PTR
 		       (paramp->disps[last_idx] +
 			((DLOOP_Offset) paramp->blklens[last_idx]));
 	}
@@ -336,7 +336,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	}
 	else {
 	    /* Since bufp can be a displacement and can be negative, we cannot
-	     * use MPI_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.
+	     * use DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.
 	     * Just let it sign extend.
 	     */
             paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp + 
@@ -388,11 +388,11 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	    /* Since disps can be negative, we cannot use
 	     * DLOOP_Ensure_Offset_fits_in_pointer to verify that disps +
 	     * blklens fits in a pointer.  Nor can we use
-	     * MPI_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
+	     * DLOOP_OFFSET_CAST_TO_VOID_PTR to cast the sum to a pointer.
 	     * Just let it truncate, if the sizeof a pointer is less
 	     * than the sizeof an MPI_Aint.
 	     */
-	    last_end = (char *) MPI_AINT_CAST_TO_VOID_PTR
+	    last_end = (char *) DLOOP_OFFSET_CAST_TO_VOID_PTR
 		       (paramp->disps[last_idx] +
 			(MPI_Aint)(paramp->blklens[last_idx]));
 	}
@@ -417,7 +417,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	}
 	else {
 	    /* Since bufp can be a displacement and can be negative, we cannot
-	     * use MPI_VOID_PTR_CAST_TO_MPI_AINT to cast the sum to a pointer.
+	     * use DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.
 	     * Just let it sign extend.
 	     */
             paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp +
