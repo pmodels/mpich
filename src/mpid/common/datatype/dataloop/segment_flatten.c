@@ -233,7 +233,7 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	     */
 	    *blocks_p -= (blocks_left + (size / (int) el_size));
 #ifdef MPID_SP_VERBOSE
-	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
+	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, " DLOOP_OFFSET_FMT_DEC_SPEC " blocks processed.\n",
 			    paramp->u.pack_vector.index,
 			    *blocks_p);
 #endif
@@ -258,7 +258,7 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
     }
 
 #ifdef MPID_SP_VERBOSE
-    MPIU_dbg_printf("\t[vector to vec exiting (2): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
+    MPIU_dbg_printf("\t[vector to vec exiting (2): next ind = %d, " DLOOP_OFFSET_FMT_DEC_SPEC " blocks processed.\n",
 		    paramp->u.pack_vector.index,
 		    *blocks_p);
 #endif

@@ -103,7 +103,7 @@ static int DLOOP_Segment_contig_count_block(DLOOP_Offset *blocks_p,
     size = *blocks_p * el_size;
 
 #ifdef MPID_SP_VERBOSE
-    MPIU_dbg_printf("contig count block: count = %d, buf+off = %d, lastloc = " MPI_AINT_FMT_DEC_SPEC "\n",
+    MPIU_dbg_printf("contig count block: count = %d, buf+off = %d, lastloc = " DLOOP_OFFSET_FMT_DEC_SPEC "\n",
 		    (int) paramp->count,
 		    (int) ((char *) bufp + rel_off),
 		    paramp->last_loc);

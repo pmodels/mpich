@@ -92,6 +92,10 @@
 #define DLOOP_OFFSET_CAST_TO_VOID_PTR MPI_AINT_CAST_TO_VOID_PTR
 #define DLOOP_VOID_PTR_CAST_TO_OFFSET MPI_VOID_PTR_CAST_TO_MPI_AINT
 
+/* printing macros */
+#define DLOOP_OFFSET_FMT_DEC_SPEC MPI_AINT_FMT_DEC_SPEC
+#define DLOOP_OFFSET_FMT_HEX_SPEC MPI_AINT_FMT_HEX_SPEC
+
 /* Include dataloop_parts.h at the end to get the rest of the prototypes
  * and defines, in terms of the prefixes and types above.
  */
