@@ -62,7 +62,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status send_cmd_downstream(int fd, char *cmd)
+static HYD_status send_cmd_downstream(int fd, const char *cmd)
 {
     char cmdlen[7];
     HYD_status status = HYD_SUCCESS;
