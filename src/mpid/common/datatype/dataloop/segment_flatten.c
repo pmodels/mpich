@@ -122,7 +122,7 @@ static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
     last_idx = paramp->index - 1;
     if (last_idx >= 0) {
 	/* Since disps can be negative, we cannot use
-	 * MPID_Ensure_Aint_fits_in_pointer to verify that disps +
+	 * DLOOP_Ensure_Offset_fits_in_pointer to verify that disps +
 	 * blklens fits in a pointer.  Just let it truncate, if the
 	 * sizeof a pointer is less than the sizeof an MPI_Aint.
 	 */
@@ -131,7 +131,7 @@ static int DLOOP_Segment_contig_mpi_flatten(DLOOP_Offset *blocks_p,
     }
 
     /* Since bufp can be a displacement and can be negative, we cannot
-     * use MPID_Ensure_Aint_fits_in_pointer to ensure the sum fits in
+     * use DLOOP_Ensure_Offset_fits_in_pointer to ensure the sum fits in
      * a pointer.  Just let it truncate.
      */
     if ((last_idx == paramp->length-1) &&
@@ -210,7 +210,7 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	last_idx = paramp->index - 1;
 	if (last_idx >= 0) {
 	    /* Since disps can be negative, we cannot use
-	     * MPID_Ensure_Aint_fits_in_pointer to verify that disps +
+	     * DLOOP_Ensure_Offset_fits_in_pointer to verify that disps +
 	     * blklens fits in a pointer.  Nor can we use
 	     * MPI_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
 	     * Just let it truncate, if the sizeof a pointer is less
@@ -222,7 +222,7 @@ static int DLOOP_Segment_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	}
 
 	/* Since bufp can be a displacement and can be negative, we cannot use
-	 * MPID_Ensure_Aint_fits_in_pointer to ensure the sum fits in a pointer.
+	 * DLOOP_Ensure_Offset_fits_in_pointer to ensure the sum fits in a pointer.
 	 * Just let it truncate.
 	 */
         if ((last_idx == paramp->length-1) &&
@@ -304,7 +304,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	last_idx = paramp->index - 1;
 	if (last_idx >= 0) {
 	    /* Since disps can be negative, we cannot use
-	     * MPID_Ensure_Aint_fits_in_pointer to verify that disps +
+	     * DLOOP_Ensure_Offset_fits_in_pointer to verify that disps +
 	     * blklens fits in a pointer.  Nor can we use
 	     * MPI_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
 	     * Just let it truncate, if the sizeof a pointer is less
@@ -316,7 +316,7 @@ static int DLOOP_Segment_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	}
 
 	/* Since bufp can be a displacement and can be negative, we
-	 * cannot use MPID_Ensure_Aint_fits_in_pointer to ensure the
+	 * cannot use DLOOP_Ensure_Offset_fits_in_pointer to ensure the
 	 * sum fits in a pointer.  Just let it truncate.
 	 */
         if ((last_idx == paramp->length-1) &&
@@ -386,7 +386,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	last_idx = paramp->index - 1;
 	if (last_idx >= 0) {
 	    /* Since disps can be negative, we cannot use
-	     * MPID_Ensure_Aint_fits_in_pointer to verify that disps +
+	     * DLOOP_Ensure_Offset_fits_in_pointer to verify that disps +
 	     * blklens fits in a pointer.  Nor can we use
 	     * MPI_AINT_CAST_TO_VOID_PTR to cast the sum to a pointer.
 	     * Just let it truncate, if the sizeof a pointer is less
@@ -398,7 +398,7 @@ static int DLOOP_Segment_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	}
 
 	/* Since bufp can be a displacement and can be negative, we
-	 * cannot use MPID_Ensure_Aint_fits_in_pointer to ensure the
+	 * cannot use DLOOP_Ensure_Offset_fits_in_pointer to ensure the
 	 * sum fits in a pointer.  Just let it truncate.
 	 */
         if ((last_idx == paramp->length-1) &&

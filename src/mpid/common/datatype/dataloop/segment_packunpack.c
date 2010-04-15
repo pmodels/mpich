@@ -123,18 +123,18 @@ int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
 	/* Ensure that pointer increment fits in a pointer */
 	/* userbuf is a pointer (not a displacement) since it is being
 	 * used on a memcpy */
-	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) + rel_off);
+	DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) + rel_off);
 	DLOOP_Memcpy((char *) paramp->userbuf + rel_off, paramp->streambuf, size);
     }
     else {
 	/* Ensure that pointer increment fits in a pointer */
 	/* userbuf is a pointer (not a displacement) since it is being used on a memcpy */
-	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) + rel_off);
+	DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) + rel_off);
 	DLOOP_Memcpy(paramp->streambuf, (char *) paramp->userbuf + rel_off, size);
     }
     /* Ensure that pointer increment fits in a pointer */
     /* streambuf is a pointer (not a displacement) since it was used on a memcpy */
-    MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) + size);
+    DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) + size);
     paramp->streambuf += size;
     return 0;
 }
@@ -162,7 +162,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 
     /* Ensure that pointer increment fits in a pointer */
     /* userbuf is a pointer (not a displacement) since it is being used for a memory copy */
-    MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) + rel_off);
+    DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) + rel_off);
     cbufp = (char*) paramp->userbuf + rel_off;
     DLOOP_Handle_get_size_macro(el_type, el_size);
 
@@ -197,11 +197,11 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 		DLOOP_Memcpy(cbufp, paramp->streambuf, ((DLOOP_Offset) blksz) * el_size);
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since it is being used for a memory copy */
-		MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
+		DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
 						 ((DLOOP_Offset) blksz) * el_size);
 		paramp->streambuf += ((DLOOP_Offset) blksz) * el_size;
 
-		MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (cbufp)) + stride);
+		DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (cbufp)) + stride);
 		cbufp += stride;
 	    }
 	    if (blocks_left) {
@@ -209,7 +209,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since
 		 * it is being used for a memory copy */
-		MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
+		DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
 						 ((DLOOP_Offset) blocks_left) * el_size);
 		paramp->streambuf += ((DLOOP_Offset) blocks_left) * el_size;
 	    }
@@ -244,7 +244,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since
 		 * it is being used for a memory copy */
-		MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
+		DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
 						 (DLOOP_Offset) blksz * el_size);
 		paramp->streambuf += (DLOOP_Offset) blksz * el_size;
 		cbufp += stride;
@@ -254,7 +254,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since
 		 * it is being used for a memory copy */
-		MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
+		DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
 						 (DLOOP_Offset) blocks_left * el_size);
 		paramp->streambuf += (DLOOP_Offset) blocks_left * el_size;
 	    }
@@ -291,7 +291,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 	/* Ensure that pointer increment fits in a pointer */
 	/* userbuf is a pointer (not a displacement) since it is being
 	 * used for a memory copy */
-	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) +
+	DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) +
 					 rel_off + offsetarray[curblock]);
 	cbufp = (char*) paramp->userbuf + rel_off + offsetarray[curblock];
 
@@ -327,7 +327,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 	/* Ensure that pointer increment fits in a pointer */
 	/* streambuf is a pointer (not a displacement) since it is
 	 * being used for a memory copy */
-	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
+	DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
 					 (DLOOP_Offset) blocklen * el_size);
 	paramp->streambuf += (DLOOP_Offset) blocklen * el_size;
 	blocks_left -= blocklen;
@@ -365,7 +365,7 @@ int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
 	/* Ensure that pointer increment fits in a pointer */
 	/* userbuf is a pointer (not a displacement) since it is being
 	 * used for a memory copy */
-	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) +
+	DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->userbuf)) +
 					 rel_off + offsetarray[curblock]);
 	cbufp = (char*) paramp->userbuf + rel_off + offsetarray[curblock];
 
@@ -401,7 +401,7 @@ int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
 	/* Ensure that pointer increment fits in a pointer */
 	/* streambuf is a pointer (not a displacement) since it is
 	 * being used for a memory copy */
-	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
+	DLOOP_Ensure_Offset_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (paramp->streambuf)) +
 					 cur_block_sz * el_size);
 	paramp->streambuf += cur_block_sz * el_size;
 	blocks_left -= cur_block_sz;

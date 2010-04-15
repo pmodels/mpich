@@ -72,6 +72,9 @@
 #define DLOOP_Handle_hasloop_macro(handle_)                           \
     ((HANDLE_GET_KIND(handle_) == HANDLE_KIND_BUILTIN) ? 0 : 1)
 
+#define DLOOP_Ensure_Offset_fits_in_pointer(value_) \
+    MPID_Ensure_Aint_fits_in_pointer(value_)
+
 /* allocate and free functions must also be defined. */
 #define DLOOP_Malloc MPIU_Malloc
 #define DLOOP_Free   MPIU_Free
