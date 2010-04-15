@@ -154,7 +154,7 @@ static int DLOOP_Leaf_contig_mpi_flatten(DLOOP_Offset *blocks_p,
 	 * DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.  Just let it
 	 * sign extend.
 	 */
-        paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp + rel_off;
+        paramp->disps[last_idx+1]   = DLOOP_PTR_DISP_CAST_TO_OFFSET bufp + rel_off;
 	paramp->blklens[last_idx+1] = size;
 	paramp->index++;
     }
@@ -249,7 +249,7 @@ static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	     * DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.  Just let it
 	     * sign extend.
 	     */
-            paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp + rel_off;
+            paramp->disps[last_idx+1]   = DLOOP_PTR_DISP_CAST_TO_OFFSET bufp + rel_off;
 	    paramp->blklens[last_idx+1] = size;
 	    paramp->index++;
 	}
@@ -339,7 +339,7 @@ static int DLOOP_Leaf_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	     * use DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.
 	     * Just let it sign extend.
 	     */
-            paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp + 
+            paramp->disps[last_idx+1]   = DLOOP_PTR_DISP_CAST_TO_OFFSET bufp + 
 		rel_off + offsetarray[i];
 	    paramp->blklens[last_idx+1] = size;
 	    paramp->index++;
@@ -420,7 +420,7 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	     * use DLOOP_VOID_PTR_CAST_TO_OFFSET to cast the sum to a pointer.
 	     * Just let it sign extend.
 	     */
-            paramp->disps[last_idx+1]   = MPI_PTR_DISP_CAST_TO_MPI_AINT bufp +
+            paramp->disps[last_idx+1]   = DLOOP_PTR_DISP_CAST_TO_OFFSET bufp +
 		rel_off + offsetarray[i];
 	    paramp->blklens[last_idx+1] = size; /* these blocks are in bytes */
 	    paramp->index++;
