@@ -22,11 +22,14 @@ HYD_status HYD_pmcd_pmi_read_pmi_cmd(int fd, char **buf, int *pmi_version, int *
     HYDU_MALLOC(*buf, char *, buflen, status);
     bufptr = *buf;
 
-    /* FIXME: We initialize to whatever PMI version we detect while
-     * reading the PMI command, instead of relying on what the init
-     * command gave us. This part of the code should not know anything
-     * about PMI-1 vs. PMI-2. But the simple PMI client-side code is
-     * so hacked up, that commands can arrive out-of-order and this is
+    /* FIXME: This should really be a "FIXME" for the client, since
+     * there's not much we can do on the server side.
+     *
+     * We initialize to whatever PMI version we detect while reading
+     * the PMI command, instead of relying on what the init command
+     * gave us. This part of the code should not know anything about
+     * PMI-1 vs. PMI-2. But the simple PMI client-side code is so
+     * hacked up, that commands can arrive out-of-order and this is
      * necessary. */
 
     *closed = 0;

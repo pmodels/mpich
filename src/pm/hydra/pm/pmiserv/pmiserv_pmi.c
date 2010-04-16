@@ -52,28 +52,6 @@ HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
     goto fn_exit;
 }
 
-void HYD_pmcd_pmi_segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
-                                 struct HYD_pmcd_token_segment *segment_list,
-                                 int *num_segments)
-{
-    int i, j;
-
-    j = 0;
-    segment_list[j].start_idx = 0;
-    segment_list[j].token_count = 0;
-    for (i = 0; i < token_count; i++) {
-        if (!strcmp(tokens[i].key, "endcmd") && (i < token_count - 1)) {
-            j++;
-            segment_list[j].start_idx = i + 1;
-            segment_list[j].token_count = 0;
-        }
-        else {
-            segment_list[j].token_count++;
-        }
-    }
-    *num_segments = j + 1;
-}
-
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping_str)
 {
     int i, node_id;

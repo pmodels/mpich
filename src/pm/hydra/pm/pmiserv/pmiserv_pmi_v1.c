@@ -303,6 +303,28 @@ static char *mcmd_args[HYD_NUM_TMP_STRINGS] = { NULL };
 
 static int mcmd_num_args = 0;
 
+static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
+                           struct HYD_pmcd_token_segment *segment_list,
+                           int *num_segments)
+{
+    int i, j;
+
+    j = 0;
+    segment_list[j].start_idx = 0;
+    segment_list[j].token_count = 0;
+    for (i = 0; i < token_count; i++) {
+        if (!strcmp(tokens[i].key, "endcmd") && (i < token_count - 1)) {
+            j++;
+            segment_list[j].start_idx = i + 1;
+            segment_list[j].token_count = 0;
+        }
+        else {
+            segment_list[j].token_count++;
+        }
+    }
+    *num_segments = j + 1;
+}
+
 static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_pg *pg;
@@ -362,7 +384,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,
                 total_spawns * sizeof(struct HYD_pmcd_token_segment), status);
 
-    HYD_pmcd_pmi_segment_tokens(tokens, token_count, segment_list, &num_segments);
+    segment_tokens(tokens, token_count, segment_list, &num_segments);
 
     if (num_segments != total_spawns) {
         /* We didn't read the entire PMI string; wait for the rest to
@@ -447,6 +469,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                 exec->wdir = HYDU_strdup(info_val);
             }
             else {
+                /* FIXME: Unrecognized info key; what should we do
+                 * here? Abort? */
                 HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized info key: %s\n",
                                      info_key);
             }
