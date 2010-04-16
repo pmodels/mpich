@@ -9,6 +9,18 @@
 #include "mpiexec.h"
 #include "uiu.h"
 
+#define CLEANUP_USER_INPUT(x) \
+    {                                                                   \
+        if (!(x)) {                                                     \
+        }                                                               \
+        else if (!strcasecmp((x), "none") || !strcasecmp((x), "no") ||  \
+            !strcasecmp((x), "dummy") || !strcasecmp((x), "null") ||    \
+            !strcasecmp((x), "nil")) {                                  \
+            HYDU_FREE((x));                                             \
+            (x) = NULL;                                                 \
+        }                                                               \
+    }
+
 static HYD_status get_current_exec(struct HYD_exec **exec)
 {
     HYD_status status = HYD_SUCCESS;
@@ -889,7 +901,10 @@ static HYD_status set_default_values(void)
         }                                                      \
     } while (0)
     get_env_str_val(HYD_handle.user_global.bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
+
     get_env_str_val(HYD_handle.rmk, "HYDRA_RMK", HYDRA_DEFAULT_RMK);
+    CLEANUP_USER_INPUT(HYD_handle.rmk);
+
     get_env_str_val(HYD_handle.user_global.iface, "HYDRA_IFACE", NULL);
     get_env_str_val(HYD_handle.user_global.demux, "HYDRA_DEMUX", HYDRA_DEFAULT_DEMUX);
     get_env_str_val(HYD_handle.user_global.bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
