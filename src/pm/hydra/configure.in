@@ -103,7 +103,7 @@ AC_CHECK_LIB(nsl,gethostbyname,LDFLAGS="$LDFLAGS -lnsl",)
 
 # Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
-	       strerror strsignal stat getifaddrs)
+	       strerror strsignal stat getifaddrs fcntl)
 
 # Check what we need to do about the environ extern
 AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,

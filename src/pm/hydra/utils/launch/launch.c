@@ -11,7 +11,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *opt_env_list,
                                struct HYD_env *force_env_list,
                                int *in, int *out, int *err, int *pid, int os_index)
 {
-    int inpipe[2], outpipe[2], errpipe[2], tpid;
+    int inpipe[2], outpipe[2], errpipe[2], tpid, flags;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -90,6 +90,15 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *opt_env_list,
         if (in) {
             close(inpipe[0]);
             *in = inpipe[1];
+
+#if defined HAVE_FCNTL
+            flags = fcntl(*in, F_GETFD, 0);
+            if (flags < 0)
+                HYDU_ERR_POP(status, "unable to get fd flags\n");
+            flags |= FD_CLOEXEC;
+            if (fcntl(*in, F_SETFD, flags) < 0)
+                HYDU_ERR_POP(status, "unable to set fd flags\n");
+#endif /* HAVE_FCNTL */
         }
         if (out)
             *out = outpipe[0];
