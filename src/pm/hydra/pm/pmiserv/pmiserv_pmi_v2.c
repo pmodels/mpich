@@ -538,7 +538,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     char *thrid;
     char *key, *val;
-    int nprocs, preputcount, infokeycount, ret;
+    int maxprocs, preputcount, infokeycount, ret;
     int ncmds;
     char *execname, *path = NULL;
 
@@ -598,11 +598,11 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     for (j = 0; j < ncmds; j++) {
         /* For each segment, we create an exec structure */
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, "nprocs");
+                                             segment_list[j].token_count, "maxprocs");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                            "unable to find token: nprocs\n");
-        nprocs = atoi(val);
-        pg->pg_process_count += nprocs;
+                            "unable to find token: maxprocs\n");
+        maxprocs = atoi(val);
+        pg->pg_process_count += maxprocs;
 
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                              segment_list[j].token_count, "argc");
@@ -699,7 +699,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         }
         exec->exec[i++] = NULL;
 
-        exec->proc_count = nprocs;
+        exec->proc_count = maxprocs;
 
         /* It is not clear what kind of environment needs to get
          * passed to the spawned process. Don't set anything here, and
