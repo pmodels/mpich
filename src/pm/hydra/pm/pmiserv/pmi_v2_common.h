@@ -16,11 +16,13 @@ struct HYD_pmcd_pmi_v2_reqs {
     int pgid;
     char *thrid;
     char **args;
+    char *key;
 
+    struct HYD_pmcd_pmi_v2_reqs *prev;
     struct HYD_pmcd_pmi_v2_reqs *next;
 };
 
-HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[],
+HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[], char *key,
                                      struct HYD_pmcd_pmi_v2_reqs **pending_reqs);
 void HYD_pmcd_pmi_v2_print_req_list(struct HYD_pmcd_pmi_v2_reqs *pending_reqs);
 

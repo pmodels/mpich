@@ -88,9 +88,9 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
     goto fn_exit;
 }
 
-static HYD_status poke_progress(void)
+static HYD_status poke_progress(char *key)
 {
-    struct HYD_pmcd_pmi_v2_reqs *req;
+    struct HYD_pmcd_pmi_v2_reqs *req, *list_head = NULL, *list_tail = NULL;
     int i, count;
     HYD_status status = HYD_SUCCESS;
 
@@ -105,12 +105,31 @@ static HYD_status poke_progress(void)
             req->next = NULL;
         }
 
-        status = fn_info_getnodeattr(req->fd, req->args);
-        HYDU_ERR_POP(status, "getnodeattr returned error\n");
+        if (key && strcmp(key, req->key)) {
+            /* If the key doesn't match the request, just queue it back */
+            if (list_head == NULL) {
+                list_head = req;
+                list_tail = req;
+            }
+            else {
+                list_tail->next = req;
+                req->prev = list_tail;
+                list_tail = req;
+            }
+        }
+        else {
+            status = fn_info_getnodeattr(req->fd, req->args);
+            HYDU_ERR_POP(status, "getnodeattr returned error\n");
 
-        /* Free the dequeued request */
-        HYDU_free_strlist(req->args);
-        HYDU_FREE(req);
+            /* Free the dequeued request */
+            HYDU_free_strlist(req->args);
+            HYDU_FREE(req);
+        }
+    }
+
+    if (list_head) {
+        list_tail->next = pending_reqs;
+        pending_reqs = list_head;
     }
 
   fn_exit:
@@ -206,6 +225,7 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
     int i, ret;
     struct HYD_pmcd_token *tokens;
     int token_count;
+    struct HYD_pmcd_pmi_v2_reqs *req;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -244,9 +264,14 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
     send_cmd_downstream(fd, cmd);
     HYDU_FREE(cmd);
 
-    /* Poke the progress engine before exiting */
-    status = poke_progress();
-    HYDU_ERR_POP(status, "poke progress error\n");
+    for (req = pending_reqs; req; req = req->next) {
+        if (!strcmp(req->key, key)) {
+            /* Poke the progress engine before exiting */
+            status = poke_progress(key);
+            HYDU_ERR_POP(status, "poke progress error\n");
+            break;
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -307,7 +332,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     }
     else if (waitval && !strcmp(waitval, "TRUE")) {
         /* The client wants to wait for a response; queue up the request */
-        status = HYD_pmcd_pmi_v2_queue_req(fd, -1, -1, args, &pending_reqs);
+        status = HYD_pmcd_pmi_v2_queue_req(fd, -1, -1, args, key, &pending_reqs);
         HYDU_ERR_POP(status, "unable to queue request\n");
 
         goto fn_exit;

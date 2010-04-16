@@ -51,9 +51,9 @@ static HYD_status cmd_response(int fd, int pid, char *cmd)
     goto fn_exit;
 }
 
-static HYD_status poke_progress(void)
+static HYD_status poke_progress(char *key)
 {
-    struct HYD_pmcd_pmi_v2_reqs *req;
+    struct HYD_pmcd_pmi_v2_reqs *req, *list_head = NULL, *list_tail = NULL;
     int i, count;
     HYD_status status = HYD_SUCCESS;
 
@@ -68,12 +68,31 @@ static HYD_status poke_progress(void)
             req->next = NULL;
         }
 
-        status = fn_kvs_get(req->fd, req->pid, req->pgid, req->args);
-        HYDU_ERR_POP(status, "kvs_get returned error\n");
+        if (key && strcmp(key, req->key)) {
+            /* If the key doesn't match the request, just queue it back */
+            if (list_head == NULL) {
+                list_head = req;
+                list_tail = req;
+            }
+            else {
+                list_tail->next = req;
+                req->prev = list_tail;
+                list_tail = req;
+            }
+        }
+        else {
+            status = fn_kvs_get(req->fd, req->pid, req->pgid, req->args);
+            HYDU_ERR_POP(status, "kvs_get returned error\n");
 
-        /* Free the dequeued request */
-        HYDU_free_strlist(req->args);
-        HYDU_FREE(req);
+            /* Free the dequeued request */
+            HYDU_free_strlist(req->args);
+            HYDU_FREE(req);
+        }
+    }
+
+    if (list_head) {
+        list_tail->next = pending_reqs;
+        pending_reqs = list_head;
     }
 
   fn_exit:
@@ -245,6 +264,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_token *tokens;
     int token_count;
+    struct HYD_pmcd_pmi_v2_reqs *req;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -294,12 +314,16 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-
     HYDU_FREE(cmd);
 
-    /* Poke the progress engine before exiting */
-    status = poke_progress();
-    HYDU_ERR_POP(status, "poke progress error\n");
+    for (req = pending_reqs; req; req = req->next) {
+        if (!strcmp(req->key, key)) {
+            /* Poke the progress engine before exiting */
+            status = poke_progress(key);
+            HYDU_ERR_POP(status, "poke progress error\n");
+            break;
+        }
+    }
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -376,7 +400,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
 
         if (!barrier || process_count < process->proxy->pg->pg_process_count) {
             /* We haven't reached a barrier yet; queue up request */
-            status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, args, &pending_reqs);
+            status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, args, key, &pending_reqs);
             HYDU_ERR_POP(status, "unable to queue request\n");
 
             /* We are done */
@@ -425,6 +449,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
     struct HYD_pmcd_token *tokens;
     int token_count, i;
+    static int fence_count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -461,9 +486,12 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "send command failed\n");
     HYDU_FREE(cmd);
 
-    /* Poke the progress engine before exiting */
-    status = poke_progress();
-    HYDU_ERR_POP(status, "poke progress error\n");
+    fence_count++;
+    if (fence_count % process->proxy->pg->pg_process_count == 0) {
+        /* Poke the progress engine before exiting */
+        status = poke_progress(NULL);
+        HYDU_ERR_POP(status, "poke progress error\n");
+    }
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
