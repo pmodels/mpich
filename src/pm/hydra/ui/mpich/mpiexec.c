@@ -97,6 +97,7 @@ static void usage(void)
     printf("    -print-all-exitcodes             print exit codes of all processes\n");
     printf("    -iface                           network interface to use\n");
     printf("    -ppn                             processes per node\n");
+    printf("    -profile                         turn on internal profiling\n");
 }
 
 
@@ -271,6 +272,17 @@ int main(int argc, char **argv)
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_pmci_finalize();
     HYDU_ERR_POP(status, "process manager error on finalize\n");
+
+#if defined ENABLE_PROFILING
+    if (HYD_handle.enable_profiling) {
+        HYDU_dump_noprefix(stdout, "\n");
+        HYD_DRAW_LINE(80);
+        HYDU_dump(stdout, "Number of PMI calls seen by the server: %d\n",
+                  HYD_handle.num_pmi_calls);
+        HYD_DRAW_LINE(80);
+        HYDU_dump_noprefix(stdout, "\n");
+    }
+#endif /* ENABLE_PROFILING */
 
     /* Free the mpiexec params */
     HYD_uiu_free_params();

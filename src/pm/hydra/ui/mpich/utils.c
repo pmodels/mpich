@@ -230,6 +230,30 @@ static HYD_status ppn_fn(char *arg, char ***argv)
     return HYDU_set_int_and_incr(arg, argv, &HYD_handle.ppn);
 }
 
+static void profile_help_fn(void)
+{
+    printf("\n");
+    printf("-profile: Turn on internal profiling\n\n");
+}
+
+static HYD_status profile_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+#if !defined ENABLE_PROFILING
+    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "profiling support not compiled in\n");
+#endif /* ENABLE_PROFILING */
+
+    status = HYDU_set_int(arg, argv, &HYD_handle.enable_profiling, 1);
+    HYDU_ERR_POP(status, "error enabling profiling\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static void wdir_help_fn(void)
 {
     printf("\n");
@@ -768,6 +792,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"hosts", mfile_fn, mfile_help_fn},
     {"hostfile", mfile_fn, mfile_help_fn},
     {"ppn", ppn_fn, ppn_help_fn},
+    {"profile", profile_fn, profile_help_fn},
     {"machine", mfile_fn, mfile_help_fn},
     {"machines", mfile_fn, mfile_help_fn},
     {"machinefile", mfile_fn, mfile_help_fn},
@@ -846,6 +871,9 @@ static HYD_status set_default_values(void)
 
     if (HYD_handle.ranks_per_proc == -1)
         HYD_handle.ranks_per_proc = 1;
+
+    if (HYD_handle.enable_profiling == -1)
+        HYD_handle.enable_profiling = 0;
 
     if (HYD_handle.user_global.debug == -1 &&
         MPL_env2bool("HYDRA_DEBUG", &HYD_handle.user_global.debug) == 0)

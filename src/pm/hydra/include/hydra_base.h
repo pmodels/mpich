@@ -100,6 +100,14 @@
 #define HYD_IS_HELP(str) \
     ((!strcmp((str), "-h")) || (!strcmp((str), "-help")) || (!strcmp((str), "--help")))
 
+#define HYD_DRAW_LINE(x)                                 \
+    {                                                    \
+        int i_;                                          \
+        for (i_ = 0; i_ < (x); i_++)                     \
+            printf("=");                                 \
+        printf("\n");                                    \
+    }
+
 #if defined MANUAL_EXTERN_ENVIRON
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */

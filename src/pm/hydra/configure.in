@@ -531,6 +531,18 @@ fi
 
 
 #########################################################################
+# Profiling
+#########################################################################
+AC_ARG_ENABLE(profiling, [  --enable-profiling - Enable profiling],
+	[ enable_profiling=$enableval ], [ enable_profiling=yes ])
+AC_MSG_CHECKING(profiling)
+AC_MSG_RESULT($enable_profiling)
+if test "$enable_profiling" = "yes"; then
+   AC_DEFINE(ENABLE_PROFILING,1,[Define if profiling enabled])
+fi
+
+
+#########################################################################
 # Check if __VA_ARGS__ is defined by the compiler
 #########################################################################
 AC_MSG_CHECKING([whether the compiler allows __VA_ARGS__])

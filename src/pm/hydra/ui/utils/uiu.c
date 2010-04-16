@@ -40,6 +40,11 @@ void HYD_uiu_init_params(void)
     HYD_handle.pg_list.next = NULL;
 
     HYD_handle.func_depth = 0;
+
+#if defined ENABLE_PROFILING
+    HYD_handle.enable_profiling = -1;
+    HYD_handle.num_pmi_calls = 0;
+#endif /* ENABLE_PROFILING */
 }
 
 void HYD_uiu_free_params(void)
