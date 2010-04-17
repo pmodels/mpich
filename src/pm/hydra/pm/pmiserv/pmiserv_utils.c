@@ -29,8 +29,10 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
         proxy_args[arg++] = HYDU_strdup("--args");
     }
 
-    if (use_valgrind)
+    if (use_valgrind) {
         proxy_args[arg++] = HYDU_strdup("valgrind");
+        proxy_args[arg++] = HYDU_strdup("--leak-check=full");
+    }
 
     i = 0;
     path_str[i++] = HYDU_strdup(HYD_handle.base_path);

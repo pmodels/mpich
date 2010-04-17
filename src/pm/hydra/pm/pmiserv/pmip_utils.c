@@ -419,9 +419,6 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.demux == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
 
-    status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
-    HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
-
     if (HYD_pmcd_pmip.user_global.bootstrap == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bootstrap server not available\n");
 

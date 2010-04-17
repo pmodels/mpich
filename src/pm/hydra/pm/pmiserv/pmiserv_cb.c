@@ -55,6 +55,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
   fn_exit:
     if (cmd)
         HYDU_FREE(cmd);
+    HYDU_free_strlist(args);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -167,6 +168,10 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 
     HYD_pmcd_pmi_free_pg_scratch(pg);
 
+    /* If this is the main PG, free the debugger PID list */
+    if (pg->pgid == 0)
+        HYDT_dbg_free_procdesc();
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -212,6 +217,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
         HYDU_ERR_POP(status, "unable to process PMI command\n");
+
+        HYDU_FREE(buf);
     }
     else {
         HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unhandled PMI command=%d\n", cmd);

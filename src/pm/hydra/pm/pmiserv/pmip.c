@@ -178,6 +178,9 @@ int main(int argc, char **argv)
     status = HYD_pmcd_pmip_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
+    status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
+    HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
+
     /* Connect back upstream and add the socket to the demux engine */
     status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
                                HYD_pmcd_pmip.upstream.server_port,
@@ -254,6 +257,9 @@ int main(int argc, char **argv)
     status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
     close(HYD_pmcd_pmip.upstream.control);
+
+    status = HYDT_dmx_finalize();
+    HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
     /* cleanup the params structure */
     cleanup_params();
