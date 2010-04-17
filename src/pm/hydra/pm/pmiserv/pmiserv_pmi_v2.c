@@ -1033,6 +1033,72 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
+{
+    struct HYD_pmcd_pmi_process *process;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name;
+    struct HYD_pmcd_pmi_publish *publish;
+    int i, token_count;
+    struct HYD_pmcd_token *tokens;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
+
+    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
+                status);
+
+    if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
+        HYDU_ERR_POP(status, "cannot find token: name\n");
+
+    for (publish = HYD_pmcd_pmi_publish_list; publish; publish = publish->next)
+        if (!strcmp(publish->name, name))
+            break;
+
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=name-lookup-response;");
+    if (thrid) {
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
+    }
+    if (publish) {
+        tmp[i++] = HYDU_strdup("value=");
+        tmp[i++] = HYDU_strdup(publish->port);
+        tmp[i++] = HYDU_strdup(";found=TRUE;rc=0;");
+    }
+    else {
+        tmp[i++] = HYDU_strdup("found=FALSE;rc=1;");
+    }
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
+
+    status = cmd_response(fd, pid, cmd);
+    HYDU_ERR_POP(status, "send command failed\n");
+    HYDU_FREE(cmd);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx */
 static struct HYD_pmcd_pmi_handle pmi_v2_handle_fns_foo[] = {
     {"fullinit", fn_fullinit},
@@ -1043,6 +1109,7 @@ static struct HYD_pmcd_pmi_handle pmi_v2_handle_fns_foo[] = {
     {"spawn", fn_spawn},
     {"name-publish", fn_name_publish},
     {"name-unpublish", fn_name_unpublish},
+    {"name-lookup", fn_name_lookup},
     {"\0", NULL}
 };
 
