@@ -696,7 +696,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         exec->exec[i++] = execname;
         for (k = 0; k < argcnt; k++) {
             HYDU_MALLOC(key, char *, MAXKEYLEN, status);
-            HYDU_snprintf(key, MAXKEYLEN, "arg%d", k);
+            HYDU_snprintf(key, MAXKEYLEN, "argv%d", k);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                                  segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
