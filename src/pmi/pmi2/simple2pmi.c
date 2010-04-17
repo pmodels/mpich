@@ -27,7 +27,7 @@
 #include <sys/socket.h>
 #endif
 
-#define printf_d(x...)  /* printf(x) */
+#define printf_d(x...)  /*XXX DJG*/ printf(x) /**/
 
 #ifdef USE_PMI_PORT
 #ifndef MAXHOSTNAME
@@ -61,6 +61,8 @@ static int blocked = FALSE;
 static MPID_Thread_cond_t cond;
 #endif
 
+/* XXX DJG the "const"s on both of these functions and the Keyvalpair
+ * struct are wrong in the isCopy==TRUE case! */
 /* init_kv_str -- fills in keyvalpair.  val is required to be a
    null-terminated string.  isCopy is set to FALSE, so caller must
    free key and val memory, if necessary.
@@ -71,6 +73,38 @@ static void init_kv_str(PMI2_Keyvalpair *kv, const char key[], const char val[])
     kv->value = val;
     kv->valueLen = strlen(val);
     kv->isCopy = FALSE;
+}
+
+/* same as init_kv_str, but strdup's the key and val first, and sets isCopy=TRUE */
+static void init_kv_strdup(PMI2_Keyvalpair *kv, const char key[], const char val[])
+{
+    /* XXX DJG could be slightly more efficient */
+    init_kv_str(kv, PMI2U_Strdup(key), PMI2U_Strdup(val));
+    kv->isCopy = TRUE;
+}
+
+/* same as init_kv_strdup, but converts val into a string first */
+/* XXX DJG could be slightly more efficient */
+static void init_kv_strdup_int(PMI2_Keyvalpair *kv, const char key[], int val)
+{
+    char tmpbuf[32] = {0};
+    int rc = PMI2_SUCCESS;
+
+    rc = PMI2U_Snprintf(tmpbuf, sizeof(tmpbuf), "%d", val);
+    PMI2U_Assert(rc >= 0);
+    init_kv_strdup(kv, key, tmpbuf);
+}
+
+/* initializes the key with ("%s%d", key_prefix, suffix), uses a string value */
+/* XXX DJG could be slightly more efficient */
+static void init_kv_strdup_intsuffix(PMI2_Keyvalpair *kv, const char key_prefix[], int suffix, const char val[])
+{
+    char tmpbuf[256/*XXX HACK*/] = {0};
+    int rc = PMI2_SUCCESS;
+
+    rc = PMI2U_Snprintf(tmpbuf, sizeof(tmpbuf), "%s%d", key_prefix, suffix);
+    PMI2U_Assert(rc >= 0);
+    init_kv_strdup(kv, tmpbuf, val);
 }
 
 
@@ -354,173 +388,114 @@ int PMI2_Abort( int flag, const char msg[] )
     return PMI2_SUCCESS;
 }
 
-int PMI2_Job_Spawn( int count, const char * cmds[], const char ** argvs[],
+int PMI2_Job_Spawn(int count, const char * cmds[],
+                   int argcs[], const char ** argvs[],
                    const int maxprocs[],
                    const int info_keyval_sizes[],
-                   const PMI2U_Info *info_keyval_vectors[],
+                   const struct MPID_Info *info_keyval_vectors[],
                    int preput_keyval_size,
-                   const PMI2U_Info *preput_keyval_vector[],
+                   const struct MPID_Info *preput_keyval_vector[],
                    char jobId[], int jobIdSize,
                    int errors[])
 {
-#if 0
-    int  i,rc,argcnt,spawncnt,total_num_processes,num_errcodes_found;
-    char buf[PMI2U_MAXLINE], tempbuf[PMI2U_MAXLINE], cmd[PMI2U_MAXLINE];
+    /* XXX DJG */
+#if 1
+    int  i,rc,spawncnt,total_num_processes,num_errcodes_found;
+    char tempbuf[PMI2U_MAXLINE];
     char *lead, *lag;
+    int spawn_rc;
+    const char *errmsg = NULL;
+    PMI2_Command spawn_cmd = {0};
+    PMI2_Command resp_cmd  = {0};
+    int pmi2_errno = 0;
+    PMI2_Keyvalpair *pairs = NULL;
+    PMI2_Keyvalpair **pairs_p = NULL;
+    int npairs = 0;
+    int total_pairs = 0;
 
     /* Connect to the PM if we haven't already */
     if (PMIi_InitIfSingleton() != 0) return -1;
 
     total_num_processes = 0;
 
-    for (spawncnt=0; spawncnt < count; spawncnt++)
+/* XXX DJG from Pavan's email:
+cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
+        subcmd=spawn-exe1;maxprocs=n;argc=narg;argv0=name;\
+                argv1=name;...;infokeycount=n;infokey0=key;\
+                infoval0=string;...;\
+(... one subcmd for each executable ...)
+*/
+
+    /* FIXME overall need a better interface for building commands!
+     * Need to be able to append commands, and to easily accept integer
+     * valued arguments.  Memory management should stay completely out
+     * of mind when writing a new PMI command impl like this! */
+
+    /* Calculate the total number of keyval pairs that we need.
+     *
+     * The command writing utility adds "cmd" and "thrid" fields for us,
+     * don't include them in our count. */
+    total_pairs = 2; /* ncmds,preputcount */
+    total_pairs += (3 * count); /* subcmd,maxprocs,argc,infokeycount */
+    total_pairs += (2 * preput_keyval_size); /* ppkeyN,ppvalN */
+    for (spawncnt = 0; spawncnt < count; ++spawncnt) {
+        fprintf(stderr, "XXX DJG total_pairs=%d spawncnt=%d count=%d argcs=%p argcs[spawncnt]=%d\n",
+                total_pairs, spawncnt, count, argcs, argcs[spawncnt]);
+        total_pairs += argcs[spawncnt]; /* argvN */
+        if (info_keyval_sizes)
+            total_pairs += 2 * info_keyval_sizes[spawncnt]; /* infokeyN,infovalN */
+    }
+
+    pairs = MPIU_Malloc(total_pairs * sizeof(PMI2_Keyvalpair));
+
+    init_kv_strdup_int(&pairs[npairs++], "ncmds", count);
+
+    init_kv_strdup_int(&pairs[npairs++], "preputcount", preput_keyval_size);
+    for (i = 0; i < preput_keyval_size; ++i) {
+        init_kv_strdup_intsuffix(&pairs[npairs++], "ppkey", i, preput_keyval_vector[i]->key);
+        init_kv_strdup_intsuffix(&pairs[npairs++], "ppval", i, preput_keyval_vector[i]->value);
+    }
+
+    for (spawncnt = 0; spawncnt < count; ++spawncnt)
     {
         total_num_processes += maxprocs[spawncnt];
 
-        rc = PMI2U_Snprintf(buf, PMI2U_MAXLINE,
-			   "mcmd=spawn\nnprocs=%d\nexecname=%s\n",
-			   maxprocs[spawncnt], cmds[spawncnt] );
-	if (rc < 0) {
-	    return PMI_FAIL;
-	}
+        init_kv_str(&pairs[npairs++], "subcmd", cmds[spawncnt]); /* sets isCopy=FALSE */
+        init_kv_strdup_int(&pairs[npairs++], "maxprocs", maxprocs[spawncnt]);
 
-	rc = PMI2U_Snprintf(tempbuf, PMI2U_MAXLINE,
-			   "totspawns=%d\nspawnssofar=%d\n",
-			   count, spawncnt+1);
+        init_kv_strdup_int(&pairs[npairs++], "argc", argcs[spawncnt]);
+        for (i = 0; i < argcs[spawncnt]; ++i) {
+            init_kv_strdup_intsuffix(&pairs[npairs++], "argv", i, argvs[spawncnt][i]);
+        }
 
-	if (rc < 0) {
-	    return PMI_FAIL;
-	}
-	rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	if (rc != 0) {
-	    return PMI_FAIL;
-	}
-
-        argcnt = 0;
-        if ((argvs != NULL) && (argvs[spawncnt] != NULL)) {
-            for (i=0; argvs[spawncnt][i] != NULL; i++)
-            {
-		/* FIXME (protocol design flaw): command line arguments
-		   may contain both = and <space> (and even tab!).
-		*/
-		/* Note that part of this fixme was really a design error -
-		   because this uses the mcmd form, the data can be
-		   sent in multiple writelines.  This code now takes
-		   advantage of that.  Note also that a correct parser
-		   of the commands will permit any character other than a
-		   new line in the argument, since the form is
-		   argn=<any nonnewline><newline> */
-                rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"arg%d=%s\n",
-				   i+1,argvs[spawncnt][i]);
-		if (rc < 0) {
-		    return PMI_FAIL;
-		}
-                rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-		if (rc != 0) {
-		    return PMI_FAIL;
-		}
-                argcnt++;
-		rc = PMI2U_writeline( PMI_fd, buf );
-		buf[0] = 0;
-
+        if (info_keyval_sizes) {
+            init_kv_strdup_int(&pairs[npairs++], "infokeycount", info_keyval_sizes[spawncnt]);
+            for (i = 0; i < info_keyval_sizes[spawncnt]; ++i) {
+                init_kv_strdup_intsuffix(&pairs[npairs++], "infokey", i, info_keyval_vectors[spawncnt][i].key);
+                init_kv_strdup_intsuffix(&pairs[npairs++], "infoval", i, info_keyval_vectors[spawncnt][i].value);
             }
         }
-        rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"argcnt=%d\n",argcnt);
-	if (rc < 0) {
-	    return PMI_FAIL;
-	}
-        rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	if (rc != 0) {
-	    return PMI_FAIL;
-	}
-    
-        rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"preput_num=%d\n",
-			   preput_keyval_size);
-	if (rc < 0) {
-	    return PMI_FAIL;
-	}
-
-        rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	if (rc != 0) {
-	    return PMI_FAIL;
-	}
-        for (i=0; i < preput_keyval_size; i++) {
-	    rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"preput_key_%d=%s\n",
-			       i,preput_keyval_vector[i].key);
-	    if (rc < 0) {
-		return PMI_FAIL;
-	    }
-	    rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	    if (rc != 0) {
-		return PMI_FAIL;
-	    }
-	    rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"preput_val_%d=%s\n",
-			       i,preput_keyval_vector[i].val);
-	    if (rc < 0) {
-		return PMI_FAIL;
-	    }
-	    rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	    if (rc != 0) {
-		return PMI_FAIL;
-	    }
-        }
-        rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"info_num=%d\n",
-			   info_keyval_sizes[spawncnt]);
-	if (rc < 0) {
-	    return PMI_FAIL;
-	}
-        rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	if (rc != 0) {
-	    return PMI_FAIL;
-	}
-	for (i=0; i < info_keyval_sizes[spawncnt]; i++)
-	{
-	    rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"info_key_%d=%s\n",
-			       i,info_keyval_vectors[spawncnt][i].key);
-	    if (rc < 0) {
-		return PMI_FAIL;
-	    }
-	    rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	    if (rc != 0) {
-		return PMI_FAIL;
-	    }
-	    rc = PMI2U_Snprintf(tempbuf,PMI2U_MAXLINE,"info_val_%d=%s\n",
-			       i,info_keyval_vectors[spawncnt][i].val);
-	    if (rc < 0) {
-		return PMI_FAIL;
-	    }
-	    rc = PMI2U_Strnapp(buf,tempbuf,PMI2U_MAXLINE);
-	    if (rc != 0) {
-		return PMI_FAIL;
-	    }
-	}
-
-        rc = PMI2U_Strnapp(buf, "endcmd\n", PMI2U_MAXLINE);
-	if (rc != 0) {
-	    return PMI_FAIL;
-	}
-        PMI2U_writeline( PMI_fd, buf );
     }
 
-    PMI2U_readline( PMI2_fd, buf, PMI2U_MAXLINE );
-    PMI2U_parse_keyvals( buf );
-    PMI2U_getval( "cmd", cmd, PMI2U_MAXLINE );
-    if ( strncmp( cmd, "spawn_result", PMI2U_MAXLINE ) != 0 ) {
-	PMI2U_printf( 1, "got unexpected response to spawn :%s:\n", buf );
-	return( -1 );
+    PMI2U_Assert(npairs <= total_pairs); /* TODO the < case warrants examination, but not now */
+
+    pairs_p = PMI2U_Malloc(npairs * sizeof(PMI2_Keyvalpair*));
+    for (i = 0; i < npairs; ++i) {
+        pairs_p[i] = &pairs[i];
     }
-    else {
-	PMI2U_getval( "rc", buf, PMI2U_MAXLINE );
-	rc = atoi( buf );
-	if ( rc != 0 ) {
-	    /****
-	    PMI2U_getval( "status", tempbuf, PMI2U_MAXLINE );
-	    PMI2U_printf( 1, "pmi2_spawn_mult failed; status: %s\n",tempbuf);
-	    ****/
-	    return( -1 );
-	}
-    }
-    
+
+    pmi2_errno = PMIi_WriteSimpleCommand(PMI2_fd, &spawn_cmd, "spawn", pairs_p, npairs);
+    if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
+
+    /* XXX DJG need to free kv pair contents too? (util fn somewhere) */
+    MPIU_Free(pairs_p);
+    MPIU_Free(pairs);
+
+    /* XXX DJG TODO release any upper level MPICH2 critical sections */
+    rc = PMIi_ReadCommandExp(PMI2_fd, &resp_cmd, "spawn-response", &spawn_rc, &errmsg);
+    if (rc != 0) { return PMI2_FAIL; }
+
+    /* XXX DJG TODO deal with the response */
     PMI2U_Assert(errors != NULL);
     if (PMI2U_getval( "errcodes", tempbuf, PMI2U_MAXLINE )) {
         num_errcodes_found = 0;
@@ -542,8 +517,85 @@ int PMI2_Job_Spawn( int count, const char * cmds[], const char ** argvs[],
         }
     }
 
+    /* XXX DJG this version used old PMI-1 style commands */
+#if 0
+    /* FIXME arbitrary hack size for now, add realloc logic and real
+     * error handling later */
+#define SPAWN_HACK_SIZE (65536)
+    buf = MPIU_Malloc(SPAWN_HACK_SIZE);
+    MPIU_Assert(buf);
+
+    rc = PMI2U_Snprintf(buf, SPAWN_HACK_SIZE,
+                       "cmd=spawn;thrid=%s;ncmds=%d;"
+                       thread_id, count);
+    if (rc < 0) { return PMI_FAIL; }
+
+    /* preput keys */
+    rc = PMI2U_Snprintf(tempbuf, MPI2U_MAXLINE,
+                       "preputcount=%d;", preput_keyval_size);
+    if (rc < 0) { return PMI_FAIL; }
+    rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
+    if (rc != 0) { return PMI_FAIL; }
+    for (i = 0; i < argcs[spawncnt]; ++i) {
+        rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
+                           "ppkey%d=%s;ppval%d=%s;",
+                           i, preput_keyval_vector[i].key, i, preput_keyval_vector[i].val);
+        if (rc < 0) { return PMI_FAIL; }
+        rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
+        if (rc != 0) { return PMI_FAIL; }
+    }
+
+    for (spawncnt=0; spawncnt < count; spawncnt++)
+    {
+        total_num_processes += maxprocs[spawncnt];
+
+        /* cmd, procs, and argc */
+        rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
+                           "subcmd=%s;maxprocs=%d;argc=%d;",
+                           cmds[spawncnt], maxprocs[spawncnt], argcs[spawncnt]);
+        if (rc < 0) { return PMI_FAIL; }
+        rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
+        if (rc != 0) { return PMI_FAIL; }
+
+        /* argv */
+        for (i = 0; i < argcs[spawncnt]; ++i) {
+            rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
+                               "argv%d=%s;",
+                               i, argv[spawncnt][i]);
+            if (rc < 0) { return PMI_FAIL; }
+            rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
+            if (rc != 0) { return PMI_FAIL; }
+        }
+
+        /* info */
+        rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
+                           "infokeycount=%d;", info_keyval_sizes[spawncnt]);
+        if (rc < 0) { return PMI_FAIL; }
+        rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
+        if (rc != 0) { return PMI_FAIL; }
+
+        for (i = 0; i < info_keyval_sizes[spawncnt]; ++i) {
+            /* XXX DJG is this right?  Or do I need to use the next ptr? */
+            const char *key = info_keyval_vectors[spawncnt][i].key;
+            const char *val = info_keyval_vectors[spawncnt][i].value;
+            rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
+                               "infokey%d=%s;infoval%d=%s;",
+                               i, key, i, val);
+            if (rc < 0) { return PMI_FAIL; }
+            rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
+            if (rc != 0) { return PMI_FAIL; }
+        }
+
+        rc = PMI2U_Strnapp(buf, "\n", SPAWN_HACK_SIZE);
+        if (rc != 0) { return PMI_FAIL; }
+
+        PMI2U_writeline( PMI_fd, buf );
+    }
 #endif
-    return 0;
+
+#endif
+fn_fail:
+    return pmi2_errno;
 }
 
 int PMI2_Job_GetId(char jobid[], int jobid_size)
@@ -1010,8 +1062,9 @@ static void freepairs(PMI2_Keyvalpair** pairs, int npairs)
 
     for (i = 0; i < npairs; ++i)
         if (pairs[i]->isCopy) {
-            PMI2U_Free(pairs[i]->key);
-            PMI2U_Free(pairs[i]->value);
+            /* FIXME casts are here to suppress legitimate constness warnings */
+            PMI2U_Free((void *)pairs[i]->key);
+            PMI2U_Free((void *)pairs[i]->value);
             PMI2U_Free(pairs[i]);
         }
     PMI2U_Free(pairs);

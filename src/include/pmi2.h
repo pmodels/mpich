@@ -165,6 +165,7 @@ int PMI2_Abort(int flag, const char msg[]);
   Input Parameters:
   + count - count of commands
   . cmds - array of command strings
+  . argcs - size of argv arrays for each command string
   . argvs - array of argv arrays for each command string
   . maxprocs - array of maximum processes to spawn for each command string
   . info_keyval_sizes - array giving the number of elements in each of the 
@@ -195,14 +196,15 @@ int PMI2_Abort(int flag, const char msg[]);
   mpiexec in the MPI-2 standard.  Environment variables may be passed to the
   spawned processes through PMI implementation specific 'info_keyval' parameters.
 @*/
-int PMI2_Job_Spawn(int count, const char * cmds[], const char ** argvs[],
-                  const int maxprocs[], 
-                  const int info_keyval_sizes[],
-                  const struct MPID_Info *info_keyval_vectors[],
-                  int preput_keyval_size,
-                  const struct MPID_Info *preput_keyval_vector[],
-                  char jobId[], int jobIdSize,      
-                  int errors[]);
+int PMI2_Job_Spawn(int count, const char * cmds[],
+                   int argcs[], const char ** argvs[],
+                   const int maxprocs[],
+                   const int info_keyval_sizes[],
+                   const struct MPID_Info *info_keyval_vectors[],
+                   int preput_keyval_size,
+                   const struct MPID_Info *preput_keyval_vector[],
+                   char jobId[], int jobIdSize,
+                   int errors[]);
 
 
 /*@

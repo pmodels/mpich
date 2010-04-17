@@ -173,11 +173,12 @@ int PMI2U_writeline( int fd, char *buf )
     int size, n;
 
     size = strlen( buf );
+    /*
     if ( size > PMI2U_MAXLINE ) {
 	buf[PMI2U_MAXLINE-1] = '\0';
 	PMI2U_printf( 1, "write_line: message string too big: :%s:\n", buf );
     }
-    else if ( buf[strlen( buf ) - 1] != '\n' )  /* error:  no newline at end */
+    else */if ( buf[strlen( buf ) - 1] != '\n' )  /* error:  no newline at end */
 	    PMI2U_printf( 1, "write_line: message string doesn't end in newline: :%s:\n",
 		       buf );
     else {

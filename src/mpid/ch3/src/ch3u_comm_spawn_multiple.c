@@ -125,34 +125,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     MPIR_Nest_incr();
 
     if (comm_ptr->rank == root) {
-	/* FIXME: This is *really* awkward.  We should either
-	   Fix on MPI-style info data structures for PMI (avoid unnecessary
-	   duplication) or add an MPIU_Info_getall(...) that creates
-	   the necessary arrays of key/value pairs */
-
-	/* convert the infos into PMI keyvals */
-        info_keyval_sizes   = (int *) MPIU_Malloc(count * sizeof(int));
-	info_keyval_vectors = 
-	    (PMI_keyval_t**) MPIU_Malloc(count * sizeof(PMI_keyval_t*));
-	if (!info_keyval_sizes || !info_keyval_vectors) { 
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
-	}
-
-	if (!info_ptrs) {
-	    for (i=0; i<count; i++) {
-		info_keyval_vectors[i] = 0;
-		info_keyval_sizes[i]   = 0;
-	    }
-	}
-	else {
-	    for (i=0; i<count; i++) {
-		mpi_errno = mpi_to_pmi_keyvals( info_ptrs[i], 
-						&info_keyval_vectors[i],
-						&info_keyval_sizes[i] );
-		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	    }
-	}
-
 	/* create an array for the pmi error codes */
 	total_num_processes = 0;
 	for (i=0; i<count; i++) {
@@ -171,20 +143,92 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	/* FIXME: info may be needed for port name */
         mpi_errno = MPID_Open_port(NULL, port_name);
 	/* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno != MPI_SUCCESS) 
-	{
-	    MPIU_ERR_POP(mpi_errno);
-	}
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	/* --END ERROR HANDLING-- */
+
+	/* Spawn the processes */
+#ifdef USE_PMI2_API
+        MPIU_Assert(count > 0);
+        {
+            int *argcs = MPIU_Malloc(count*sizeof(int));
+            struct MPID_Info preput;
+            struct MPID_Info *preput_p[1] = { &preput };
+
+            MPIU_Assert(argcs);
+            /*
+            info_keyval_sizes = MPIU_Malloc(count * sizeof(int));
+            */
+
+            /* FIXME cheating on constness */
+            preput.key = (char *)PARENT_PORT_KVSKEY;
+            preput.value = port_name;
+            preput.next = NULL;
+
+            /* compute argcs array */
+            for (i = 0; i < count; ++i) {
+                argcs[i] = 0;
+                if (argvs != NULL && argvs[i] != NULL) {
+                    while (argvs[i][argcs[i]]) {
+                        ++argcs[i];
+                    }
+                }
+
+                /* a fib for now */
+                /*
+                info_keyval_sizes[i] = 0;
+                */
+            }
+            /* XXX DJG don't need this, PMI API is thread-safe? */
+            /*MPIU_THREAD_CS_ENTER(PMI,);*/
+            pmi_errno = PMI2_Job_Spawn(count, (const char **)commands,
+                                       argcs, (const char ***)argvs,
+                                       maxprocs,
+                                       info_keyval_sizes, (const MPID_Info **)info_ptrs,
+                                       1, (const struct MPID_Info **)preput_p,
+                                       NULL, 0,
+                                       /*jobId, jobIdSize,*/ /* XXX DJG job stuff? */
+                                       pmi_errcodes);
+            /*MPIU_THREAD_CS_EXIT(PMI,);*/
+            MPIU_Free(argcs);
+            if (pmi_errno != PMI2_SUCCESS) {
+                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                     "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
+            }
+        }
+#else
+        /* FIXME: This is *really* awkward.  We should either
+           Fix on MPI-style info data structures for PMI (avoid unnecessary
+           duplication) or add an MPIU_Info_getall(...) that creates
+           the necessary arrays of key/value pairs */
+
+        /* convert the infos into PMI keyvals */
+        info_keyval_sizes   = (int *) MPIU_Malloc(count * sizeof(int));
+        info_keyval_vectors = 
+            (PMI_keyval_t**) MPIU_Malloc(count * sizeof(PMI_keyval_t*));
+        if (!info_keyval_sizes || !info_keyval_vectors) { 
+            MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+        }
+
+        if (!info_ptrs) {
+            for (i=0; i<count; i++) {
+                info_keyval_vectors[i] = 0;
+                info_keyval_sizes[i]   = 0;
+            }
+        }
+        else {
+            for (i=0; i<count; i++) {
+                mpi_errno = mpi_to_pmi_keyvals( info_ptrs[i], 
+                                                &info_keyval_vectors[i],
+                                                &info_keyval_sizes[i] );
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            }
+        }
 
         preput_keyval_vector.key = PARENT_PORT_KVSKEY;
         preput_keyval_vector.val = port_name;
 
-	/* Spawn the processes */
-	MPIU_THREAD_CS_ENTER(PMI,);
-#ifdef USE_PMI2_API
-        MPIU_Assert(0); /* FIX for pmi2 DARIUS */
-#else
+
+        MPIU_THREAD_CS_ENTER(PMI,);
         pmi_errno = PMI_Spawn_multiple(count, (const char **)
                                        commands, 
                                        (const char ***) argvs,
@@ -297,9 +341,10 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
         {
             int vallen = 0;
             MPIU_THREAD_CS_ENTER(PMI,);
-            mpi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, PARENT_PORT_KVSKEY, val, sizeof(val), &vallen);
+            pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, PARENT_PORT_KVSKEY, val, sizeof(val), &vallen);
             MPIU_THREAD_CS_EXIT(PMI,);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (pmi_errno)
+                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %s", PARENT_PORT_KVSKEY);
         }
 #else
 	MPIU_THREAD_CS_ENTER(PMI,);
