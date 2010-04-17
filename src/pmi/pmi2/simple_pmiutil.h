@@ -33,41 +33,44 @@ void PMI2U_chgval( const char *keystr, char *valstr );
 #define PMI2U_FUNC __FILE__
 #endif
 
+extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
+#define printf_d(x...)  do { if (PMI2_pmiverbose) printf(x); } while (0)
+
 /* error reporting macros */
 
-#define PMI2U_ERR_POP(err) do { pmi2_errno = err; fprintf(stderr, "ERROR: %s (%d)\n", PMI2U_FUNC, __LINE__); goto fn_fail; } while (0)
+#define PMI2U_ERR_POP(err) do { pmi2_errno = err; printf_d("ERROR: %s (%d)\n", PMI2U_FUNC, __LINE__); goto fn_fail; } while (0)
 #define PMI2U_ERR_SETANDJUMP(err, class, str) do {                              \
-        fprintf(stderr, "ERROR: "str" in %s (%d)\n", PMI2U_FUNC, __LINE__);     \
+        printf_d("ERROR: "str" in %s (%d)\n", PMI2U_FUNC, __LINE__);     \
         pmi2_errno = class;                                                      \
         goto fn_fail;                                                           \
     } while (0)
 #define PMI2U_ERR_SETANDJUMP1(err, class, str, str1, arg) do {                          \
-        fprintf(stderr, "ERROR: "str1" in %s (%d)\n", arg, PMI2U_FUNC, __LINE__);       \
+        printf_d("ERROR: "str1" in %s (%d)\n", arg, PMI2U_FUNC, __LINE__);       \
         pmi2_errno = class;                                                              \
         goto fn_fail;                                                                   \
     } while (0)
 #define PMI2U_ERR_SETANDJUMP2(err, class, str, str1, arg1, arg2) do {                           \
-        fprintf(stderr, "ERROR: "str1" in %s (%d)\n", arg1, arg2, PMI2U_FUNC, __LINE__);        \
+        printf_d("ERROR: "str1" in %s (%d)\n", arg1, arg2, PMI2U_FUNC, __LINE__);        \
         pmi2_errno = class;                                                                      \
         goto fn_fail;                                                                           \
     } while (0)
 #define PMI2U_ERR_SETANDJUMP3(err, class, str, str1, arg1, arg2, arg3) do {                     \
-        fprintf(stderr, "ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, PMI2U_FUNC, __LINE__);  \
+        printf_d("ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, PMI2U_FUNC, __LINE__);  \
         pmi2_errno = class;                                                                      \
         goto fn_fail;                                                                           \
     } while (0)
 #define PMI2U_ERR_SETANDJUMP4(err, class, str, str1, arg1, arg2, arg3, arg4) do {                       \
-        fprintf(stderr, "ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, arg4, PMI2U_FUNC, __LINE__);    \
+        printf_d("ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, arg4, PMI2U_FUNC, __LINE__);    \
         pmi2_errno = class;                                                                              \
         goto fn_fail;                                                                                   \
     } while (0)
 #define PMI2U_ERR_SETANDJUMP5(err, class, str, str1, arg1, arg2, arg3, arg4, arg5) do {                         \
-        fprintf(stderr, "ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, PMI2U_FUNC, __LINE__);      \
+        printf_d("ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, PMI2U_FUNC, __LINE__);      \
         pmi2_errno = class;                                                                                      \
         goto fn_fail;                                                                                           \
     } while (0)
 #define PMI2U_ERR_SETANDJUMP6(err, class, str, str1, arg1, arg2, arg3, arg4, arg5, arg6) do {                           \
-        fprintf(stderr, "ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, arg6, PMI2U_FUNC, __LINE__);        \
+        printf_d("ERROR: "str1" in %s (%d)\n", arg1, arg2, arg3, arg4, arg5, arg6, PMI2U_FUNC, __LINE__);        \
         pmi2_errno = class;                                                                                              \
         goto fn_fail;                                                                                                   \
     } while (0)
@@ -114,7 +117,7 @@ void PMI2U_chgval( const char *keystr, char *valstr );
 #ifdef HAVE_ERROR_CHECKING
 #define PMI2U_CHKMEM_SETERR(rc_, nbytes_, name_) do {                                           \
         rc_ = PMI2_ERR_NOMEM;                                                                   \
-        fprintf(stderr, "ERROR: memory allocation of %lu bytes failed for %s in %s (%d)\n",     \
+        printf_d("ERROR: memory allocation of %lu bytes failed for %s in %s (%d)\n",     \
                 (size_t)nbytes_, name_, PMI2U_FUNC, __LINE__);                                  \
     } while(0)
 #else

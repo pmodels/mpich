@@ -27,8 +27,6 @@
 #include <sys/socket.h>
 #endif
 
-#define printf_d(x...)  do { if (PMI2_pmiverbose) printf(x); } while (0)
-
 #ifdef USE_PMI_PORT
 #ifndef MAXHOSTNAME
 #define MAXHOSTNAME 256
@@ -54,7 +52,8 @@ static int PMI2_size = 1;
 static int PMI2_rank = 0;
 
 static int PMI2_debug_init = 0;    /* Set this to true to debug the init */
-static int PMI2_pmiverbose = 0;    /* Set this to true to print PMI debugging info */
+
+int PMI2_pmiverbose = 0;    /* Set this to true to print PMI debugging info */
 
 #ifdef MPICH_IS_THREADED
 static MPID_Thread_mutex_t mutex;
