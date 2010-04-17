@@ -1260,7 +1260,7 @@ int MPIDI_PG_CheckForSingleton( void )
 {
 
 #ifdef USE_PMI2_API
-    MPIU_Assertp(0); /* figure this out for pmi2 DARIUS */
+    /* PMI2 FIXME for now we just always assume we aren't doing singleton init */
 #else
     if (strstr((char*)pg_world->id,"singinit_kvs") == (char *)pg_world->id) {
 	char buf[256];

@@ -257,7 +257,8 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         int rc;
         int found;
         int version, subver;
-        int spawner_jobid;
+        const char *spawner_jobid;
+        int spawner_jobid_len;
         PMI2_Command cmd = {0};
         int debugged, pmiverbose;
         
@@ -311,7 +312,7 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         found = getvalint(cmd.pairs, cmd.nPairs, APPNUM_KEY, appnum);
         PMI2U_ERR_CHKANDJUMP(found != 1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
 
-        found = getvalint(cmd.pairs, cmd.nPairs, SPAWNERJOBID_KEY, &spawner_jobid);
+        found = getval(cmd.pairs, cmd.nPairs, SPAWNERJOBID_KEY, &spawner_jobid, &spawner_jobid_len);
         PMI2U_ERR_CHKANDJUMP(found == -1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
         if (found)
             *spawned = TRUE;
@@ -439,8 +440,6 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     total_pairs += (3 * count); /* subcmd,maxprocs,argc,infokeycount */
     total_pairs += (2 * preput_keyval_size); /* ppkeyN,ppvalN */
     for (spawncnt = 0; spawncnt < count; ++spawncnt) {
-        fprintf(stderr, "XXX DJG total_pairs=%d spawncnt=%d count=%d argcs=%p argcs[spawncnt]=%d\n",
-                total_pairs, spawncnt, count, argcs, argcs[spawncnt]);
         total_pairs += argcs[spawncnt]; /* argvN */
         if (info_keyval_sizes)
             total_pairs += 2 * info_keyval_sizes[spawncnt]; /* infokeyN,infovalN */
