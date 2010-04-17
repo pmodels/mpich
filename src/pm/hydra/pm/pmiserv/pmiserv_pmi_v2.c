@@ -146,7 +146,13 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->spawner_pg->pg_scratch;
         tmp[i++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
     }
-    tmp[i++] = HYDU_strdup(";debugged=FALSE;pmiverbose=0;rc=0;");
+    if (HYD_handle.user_global.debug) {
+        tmp[i++] = HYDU_strdup(";debugged=TRUE;pmiverbose=TRUE");
+    }
+    else {
+        tmp[i++] = HYDU_strdup(";debugged=FALSE;pmiverbose=FALSE");
+    }
+    tmp[i++] = HYDU_strdup(";rc=0;");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
