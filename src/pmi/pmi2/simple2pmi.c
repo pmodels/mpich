@@ -407,7 +407,6 @@ int PMI2_Job_Spawn(int count, const char * cmds[],
     char *lead, *lag;
     int spawn_rc;
     const char *errmsg = NULL;
-    PMI2_Command spawn_cmd = {0};
     PMI2_Command resp_cmd  = {0};
     int pmi2_errno = 0;
     PMI2_Keyvalpair **pairs_p = NULL;
@@ -467,7 +466,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     {
         total_num_processes += maxprocs[spawncnt];
 
-        init_kv_str(pairs_p[npairs++], "subcmd", cmds[spawncnt]); /* sets isCopy=FALSE */
+        init_kv_strdup(pairs_p[npairs++], "subcmd", cmds[spawncnt]);
         init_kv_strdup_int(pairs_p[npairs++], "maxprocs", maxprocs[spawncnt]);
 
         init_kv_strdup_int(pairs_p[npairs++], "argc", argcs[spawncnt]);
@@ -529,10 +528,6 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
 fn_fail:
     PMI2U_Free(resp_cmd.command);
     freepairs(resp_cmd.pairs, resp_cmd.nPairs);
-    /* XXX DJG do we need to do cleanup on the spawn_cmd, or is it done for us? */
-    PMI2U_Free(spawn_cmd.command);
-    freepairs(spawn_cmd.pairs, spawn_cmd.nPairs);
-
     if (pairs_p) freepairs(pairs_p, npairs);
 
     return pmi2_errno;
