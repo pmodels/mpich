@@ -325,7 +325,7 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         PMI2_debug |= debugged;
         
         pmiverbose = 0;
-        found = getvalint(cmd.pairs, cmd.nPairs, PMIVERBOSE_KEY, &pmiverbose);
+        found = getvalbool(cmd.pairs, cmd.nPairs, PMIVERBOSE_KEY, &pmiverbose);
         PMI2U_ERR_CHKANDJUMP(found == -1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
         
         PMI2U_Free(cmd.command);
