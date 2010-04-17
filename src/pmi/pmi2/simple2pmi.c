@@ -908,7 +908,9 @@ int PMI2_Nameserv_publish(const char service_name[], const PMI2U_Info *info_ptr,
     const char *errmsg;
 
     /* ignoring infokey functionality for now */
-    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEPUBLISH_CMD, NAME_KEY, service_name, PORT_KEY, port, NULL);
+    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEPUBLISH_CMD,
+                                            NAME_KEY, service_name, PORT_KEY, port,
+                                            INFOKEYCOUNT_KEY, "0", NULL);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
     pmi2_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMEPUBLISHRESP_CMD, &rc, &errmsg);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
@@ -936,7 +938,8 @@ int PMI2_Nameserv_lookup(const char service_name[], const PMI2U_Info *info_ptr,
     const char *found_port;
 
     /* ignoring infos for now */
-    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMELOOKUP_CMD, NAME_KEY, service_name, NULL);
+    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMELOOKUP_CMD,
+                                            NAME_KEY, service_name, INFOKEYCOUNT_KEY, "0", NULL);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
     pmi2_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMELOOKUPRESP_CMD, &rc, &errmsg);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
@@ -965,8 +968,8 @@ int PMI2_Nameserv_unpublish(const char service_name[],
     const char *errmsg;
     const char *found_port;
 
-    /* ignoring infos for now */
-    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEUNPUBLISH_CMD, NAME_KEY, service_name, NULL);
+    pmi2_errno = PMIi_WriteSimpleCommandStr(PMI2_fd, &cmd, NAMEUNPUBLISH_CMD,
+                                            NAME_KEY, service_name, INFOKEYCOUNT_KEY, "0", NULL);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
     pmi2_errno = PMIi_ReadCommandExp(PMI2_fd, &cmd, NAMEUNPUBLISHRESP_CMD, &rc, &errmsg);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
