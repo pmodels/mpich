@@ -196,6 +196,11 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     char *pmiid;
     int ret;
 
+    MPID_Thread_mutex_create(&mutex, &ret);
+    PMI2U_Assert(!ret);
+    MPID_Thread_cond_create(&cond, &ret);
+    PMI2U_Assert(!ret);
+
     /* FIXME: Why is setvbuf commented out? */
     /* FIXME: What if the output should be fully buffered (directed to file)?
        unbuffered (user explicitly set?) */
