@@ -177,15 +177,26 @@ HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int pid, in
     goto fn_exit;
 }
 
-struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd)
+struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
+    struct HYD_pmcd_pmi_process *process = NULL;
 
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
             if (proxy->control_fd == fd)
-                return proxy;
+                break;
+
+    if (proxy) {
+        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
+        if (proxy_scratch) {
+            for (process = proxy_scratch->process_list; process; process = process->next)
+                if (process->pid == pid)
+                    return process;
+        }
+    }
 
     return NULL;
 }

@@ -42,6 +42,10 @@ static HYD_status cmd_response(int fd, int pid, char *cmd)
     status = HYDU_sock_write(fd, cmdlen, 6);
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
+    if (HYD_handle.user_global.debug) {
+        HYDU_dump(stdout, "PMI response: %s\n", cmd);
+    }
+
     status = HYDU_sock_write(fd, cmd, strlen(cmd));
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
@@ -104,30 +108,12 @@ static HYD_status poke_progress(char *key)
     goto fn_exit;
 }
 
-static struct HYD_pmcd_pmi_process *find_process(int fd, int pid)
-{
-    struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_pmcd_pmi_process *process = NULL;
-
-    proxy = HYD_pmcd_pmi_find_proxy(fd);
-    if (proxy) {
-        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-        if (proxy_scratch) {
-            for (process = proxy_scratch->process_list; process; process = process->next)
-                if (process->pid == pid)
-                    return process;
-        }
-    }
-
-    return NULL;
-}
-
 static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
 {
     int id, i, rank;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *rank_str;
     struct HYD_pg *pg;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -142,6 +128,10 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
                         "unable to find pmirank token\n");
     id = atoi(rank_str);
 
+    for (pg = &HYD_handle.pg_list; pg && pg->pgid != pgid; pg = pg->next);
+    if (!pg)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unable to find pgid %d\n", pgid);
+
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
     status = HYD_pmcd_pmi_id_to_rank(id, pgid, &rank);
@@ -149,8 +139,14 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
     tmp[i++] = HYDU_int_to_str(rank);
 
     tmp[i++] = HYDU_strdup(";size=");
-    tmp[i++] = HYDU_int_to_str(HYD_handle.pg_list.pg_process_count);
-    tmp[i++] = HYDU_strdup(";appnum=0;debugged=FALSE;pmiverbose=0;rc=0;");
+    tmp[i++] = HYDU_int_to_str(pg->pg_process_count);
+    tmp[i++] = HYDU_strdup(";appnum=0");
+    if (pg->spawner_pg) {
+        tmp[i++] = HYDU_strdup(";spawner-jobid=");
+        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->spawner_pg->pg_scratch;
+        tmp[i++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
+    }
+    tmp[i++] = HYDU_strdup(";debugged=FALSE;pmiverbose=0;rc=0;");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -159,13 +155,7 @@ static HYD_status fn_fullinit(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-
     HYDU_FREE(cmd);
-
-    for (pg = &HYD_handle.pg_list; pg && pg->pgid != pgid; pg = pg->next);
-    if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with pgid %d\n",
-                             pgid);
 
     status = HYD_pmcd_pmi_add_process_to_pg(pg, fd, pid, rank);
     HYDU_ERR_POP(status, "unable to add process to pg\n");
@@ -203,7 +193,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = find_process(fd, pid);
+    process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -286,7 +276,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = find_process(fd, pid);
+    process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -361,7 +351,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = find_process(fd, pid);
+    process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -462,7 +452,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
     /* Find the group id corresponding to this fd */
-    process = find_process(fd, pid);
+    process = HYD_pmcd_pmi_find_process(fd, pid);
     if (process == NULL)        /* We didn't find the process */
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
                              "unable to find process structure for fd %d and pid %d\n", fd,
@@ -535,6 +525,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_token *tokens;
     struct HYD_exec *exec_list = NULL, *exec;
     struct HYD_env *env;
+    struct HYD_pmcd_pmi_process *process;
 
     char *thrid;
     char *key, *val;
@@ -595,7 +586,16 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     pg = pg->next;
     pg->pg_process_count = 0;
 
-    for (j = 0; j < ncmds; j++) {
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
+
+    pg->spawner_pg = process->proxy->pg;
+
+    for (j = 1; j <= ncmds; j++) {
         /* For each segment, we create an exec structure */
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                              segment_list[j].token_count, "maxprocs");
@@ -668,9 +668,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "unable to correct wdir\n");
 
         val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
-                                             segment_list[j].token_count, "argv0");
+                                             segment_list[j].token_count, "subcmd");
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                            "unable to find token: argv0\n");
+                            "unable to find token: subcmd\n");
         if (path == NULL)
             execname = HYDU_strdup(val);
         else {
@@ -687,7 +687,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
         i = 0;
         exec->exec[i++] = execname;
-        for (k = 1; k < argcnt; k++) {
+        for (k = 0; k < argcnt; k++) {
             HYDU_MALLOC(key, char *, MAXKEYLEN, status);
             HYDU_snprintf(key, MAXKEYLEN, "arg%d", k);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],

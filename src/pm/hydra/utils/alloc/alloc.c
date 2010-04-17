@@ -84,6 +84,7 @@ void HYDU_init_pg(struct HYD_pg *pg, int pgid)
     pg->pgid = pgid;
     pg->proxy_list = NULL;
     pg->pg_process_count = 0;
+    pg->spawner_pg = NULL;
     pg->pg_scratch = NULL;
     pg->next = NULL;
 }

@@ -28,6 +28,10 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd, int cmd_len)
     status = HYDU_sock_write(fd, &hdr, sizeof(hdr));
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
 
+    if (HYD_handle.user_global.debug) {
+        HYDU_dump(stdout, "PMI response: %s\n", cmd);
+    }
+
     status = HYDU_sock_write(fd, cmd, cmd_len);
     HYDU_ERR_POP(status, "unable to send response to command\n");
 
@@ -110,11 +114,14 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    /* Find the proxy corresponding to this fd */
-    if ((proxy = HYD_pmcd_pmi_find_proxy(fd)) == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unable to find proxy for fd %d\n", fd);
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
+    proxy = process->proxy;
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
     pg_scratch->barrier_count++;
 
@@ -146,7 +153,7 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
 {
     int i, ret;
-    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_process *process;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *kvsname, *key, *val;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
@@ -173,12 +180,14 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
         val = HYDU_strdup("");
     }
 
-    /* Find the proxy corresponding to this fd */
-    if ((proxy = HYD_pmcd_pmi_find_proxy(fd)) == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unable to find proxy for fd %d\n", fd);
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
     if (strcmp(pg_scratch->kvs->kvs_name, kvsname))
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
@@ -223,7 +232,7 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 {
     int i, found;
-    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_process *process;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_kvs_pair *run;
     char *kvsname, *key;
@@ -245,12 +254,14 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: key\n");
 
-    /* Find the proxy corresponding to this fd */
-    if ((proxy = HYD_pmcd_pmi_find_proxy(fd)) == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unable to find proxy for fd %d\n", fd);
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
 
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) process->proxy->pg->pg_scratch;
 
     if (strcmp(pg_scratch->kvs->kvs_name, kvsname))
         HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,

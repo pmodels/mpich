@@ -45,7 +45,7 @@ struct HYD_pmcd_pmi_pg_scratch {
 
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);
-struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd);
+struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid);
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping);
 HYD_status HYD_pmcd_pmi_finalize(void);
 

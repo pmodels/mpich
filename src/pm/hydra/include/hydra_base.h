@@ -189,6 +189,8 @@ struct HYD_pg {
     struct HYD_proxy *proxy_list;
     int pg_process_count;
 
+    struct HYD_pg *spawner_pg;
+
     /* scratch space for the PM */
     void *pg_scratch;
 
