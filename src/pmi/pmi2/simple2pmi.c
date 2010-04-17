@@ -27,7 +27,7 @@
 #include <sys/socket.h>
 #endif
 
-#define printf_d(x...)  /*XXX DJG*/ printf(x) /**/
+#define printf_d(x...)  do { if (PMI2_pmiverbose) printf(x); } while (0)
 
 #ifdef USE_PMI_PORT
 #ifndef MAXHOSTNAME
@@ -54,6 +54,7 @@ static int PMI2_size = 1;
 static int PMI2_rank = 0;
 
 static int PMI2_debug_init = 0;    /* Set this to true to debug the init */
+static int PMI2_pmiverbose = 0;    /* Set this to true to print PMI debugging info */
 
 #ifdef MPICH_IS_THREADED
 static MPID_Thread_mutex_t mutex;
@@ -260,7 +261,7 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         const char *spawner_jobid;
         int spawner_jobid_len;
         PMI2_Command cmd = {0};
-        int debugged, pmiverbose;
+        int debugged;
         
 
         jobid = getenv("PMI_JOBID");
@@ -323,18 +324,17 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
         found = getvalbool(cmd.pairs, cmd.nPairs, DEBUGGED_KEY, &debugged);
         PMI2U_ERR_CHKANDJUMP(found == -1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
         PMI2_debug |= debugged;
-        
-        pmiverbose = 0;
-        found = getvalbool(cmd.pairs, cmd.nPairs, PMIVERBOSE_KEY, &pmiverbose);
+
+        found = getvalbool(cmd.pairs, cmd.nPairs, PMIVERBOSE_KEY, &PMI2_pmiverbose);
         PMI2U_ERR_CHKANDJUMP(found == -1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
-        
+
         PMI2U_Free(cmd.command);
         freepairs(cmd.pairs, cmd.nPairs);
     }
-    
+
     if ( ! PMI2_initialized )
 	PMI2_initialized = NORMAL_INIT_WITH_PM;
-        
+
 fn_exit:
     return pmi2_errno;
 fn_fail:
