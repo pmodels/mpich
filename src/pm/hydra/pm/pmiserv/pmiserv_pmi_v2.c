@@ -893,7 +893,10 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "infokeycount")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: infokeycount\n");
-    publish->infokeycount = atoi(val);
+    if (val)
+        publish->infokeycount = atoi(val);
+    else
+        publish->infokeycount = 0;
 
     HYDU_MALLOC(publish->info_keys, struct HYD_pmcd_pmi_info_keys *,
                 sizeof(struct HYD_pmcd_pmi_info_keys), status);
