@@ -24,8 +24,10 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (MPL_env2bool("HYDRA_USE_VALGRIND", &use_valgrind) == 0)
         use_valgrind = 0;
 
-    if (use_ddd)
+    if (use_ddd) {
         proxy_args[arg++] = HYDU_strdup("ddd");
+        proxy_args[arg++] = HYDU_strdup("--args");
+    }
 
     if (use_valgrind)
         proxy_args[arg++] = HYDU_strdup("valgrind");
@@ -76,14 +78,6 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
     proxy_args[arg++] = HYDU_strdup("--proxy-id");
     proxy_args[arg++] = NULL;
-
-    if (use_ddd) {
-        HYDU_dump_noprefix(stdout, "\nUse proxy launch args: ");
-        HYDU_print_strlist(proxy_args);
-        HYDU_dump_noprefix(stdout, "\n");
-
-        proxy_args[2] = NULL;
-    }
 
     if (HYD_handle.user_global.debug) {
         HYDU_dump_noprefix(stdout, "\nProxy launch args: ");
