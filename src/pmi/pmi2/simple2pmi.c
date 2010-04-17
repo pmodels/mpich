@@ -487,7 +487,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     if (npairs < total_pairs) { printf_d("about to fail assertion, npairs=%d total_pairs=%d\n", npairs, total_pairs); }
     PMI2U_Assert(npairs == total_pairs);
 
-    pmi2_errno = PMIi_WriteSimpleCommand(PMI2_fd, &spawn_cmd, "spawn", pairs_p, npairs);
+    pmi2_errno = PMIi_WriteSimpleCommand(PMI2_fd, &resp_cmd, "spawn", pairs_p, npairs);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
 
     freepairs(pairs_p, npairs);
