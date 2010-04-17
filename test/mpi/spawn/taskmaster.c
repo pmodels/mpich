@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     int tasks = 0, provided, i, j;
     MPI_Comm parent;
 #ifdef USE_THREADS
-    pthread_t * threads;
+    pthread_t * threads = NULL;
 #else
     MPI_Comm * child;
 #endif /* USE_THREADS */
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	MPI_Abort(MPI_COMM_WORLD, -1);
     }
 #else
-    MPI_Init(&argc, &argv);
+    CHECK_SUCCESS(MPI_Init(&argc, &argv));
 #endif
 
     CHECK_SUCCESS(MPI_Comm_get_parent(&parent));
@@ -139,6 +139,9 @@ int main(int argc, char *argv[])
     }
 
 fn_exit:
+#ifdef USE_THREADS
+    if (threads) free(threads);
+#endif
     MPI_Finalize();
 
     return 0;
