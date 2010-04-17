@@ -10,7 +10,11 @@
 
 #include "mpiimpl.h"
 #include "namepub.h"
+#ifdef USE_PMI2_API
+#include "pmi2.h"
+#else
 #include "pmi.h"
+#endif
 
 /* style: allow:fprintf:1 sig:0 */   /* For writing the name/service pair */
 
@@ -20,9 +24,10 @@ struct MPID_NS_Handle { int dummy; };    /* unused for now */
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 {
-    static const char FCNAME[] = "MPID_NS_Create";
     static struct MPID_NS_Handle nsHandleWithNoData;
 
     MPIU_UNREFERENCED_ARG(info_ptr);
@@ -33,65 +38,72 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Publish
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
                      const char service_name[], const char port[] )
 {
+    int mpi_errno = MPI_SUCCESS;
     int rc;
-    static const char FCNAME[] = "MPID_NS_Publish";
     MPIU_UNREFERENCED_ARG(info_ptr);
     MPIU_UNREFERENCED_ARG(handle);
 
+#ifdef USE_PMI2_API
+    rc = PMI2_Nameserv_publish(service_name, info_ptr, port);
+#else
     rc = PMI_Publish_name( service_name, port );
-    if (rc != PMI_SUCCESS) {
-	/* --BEGIN ERROR HANDLING-- */
-	/*printf( "PMI_Publish_name failed for %s\n", service_name );*/
-	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_NAME, "**namepubnotpub", "**namepubnotpub %s", service_name );
-	/* --END ERROR HANDLING-- */
-    }
+#endif
+    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotpub", "**namepubnotpub %s", service_name);
 
-    return 0;
+fn_fail:
+    return mpi_errno;
 }
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Lookup
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
                     const char service_name[], char port[] )
 {
+    int mpi_errno = MPI_SUCCESS;
     int rc;
-    static const char FCNAME[] = "MPID_NS_Lookup";
     MPIU_UNREFERENCED_ARG(info_ptr);
     MPIU_UNREFERENCED_ARG(handle);
 
+#ifdef USE_PMI2_API
+    rc = PMI2_Nameserv_lookup(service_name, info_ptr, port, MPI_MAX_PORT_NAME);
+#else
     rc = PMI_Lookup_name( service_name, port );
-    if (rc != PMI_SUCCESS) {
-	/* --BEGIN ERROR HANDLING-- */
-	/*printf( "PMI_Lookup_name failed for %s\n", service_name );*/
-	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_NAME, "**namepubnotfound", "**namepubnotfound %s", service_name );
-	/* --END ERROR HANDLING-- */
-    }
+#endif
+    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotfound", "**namepubnotfound %s", service_name);
 
-    return 0;
+fn_fail:
+    return mpi_errno;
 }
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Unpublish
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
                        const char service_name[] )
 {
+    int mpi_errno = MPI_SUCCESS;
     int rc;
-    static const char FCNAME[] = "MPID_NS_Unpublish";
     MPIU_UNREFERENCED_ARG(info_ptr);
     MPIU_UNREFERENCED_ARG(handle);
 
+#ifdef USE_PMI2_API
+    printf("XXX DJG PMI service_name=%s\n", service_name);
+    rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
+#else
     rc = PMI_Unpublish_name( service_name );
-    if (rc != PMI_SUCCESS) {
-	/* --BEGIN ERROR HANDLING-- */
-	/*printf( "PMI_Unpublish_name failed for %s\n", service_name );*/
-	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_NAME, "**namepubnotunpub", "**namepubnotunpub %s", service_name );
-	/* --END ERROR HANDLING-- */
-    }
+#endif
+    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotunpub", "**namepubnotunpub %s", service_name);
 
-    return 0;
+fn_fail:
+    return mpi_errno;
 }
 
 #undef FUNCNAME

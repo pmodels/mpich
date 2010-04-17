@@ -542,6 +542,7 @@ AC_ARG_WITH(namepublisher,
                                no (no service available)
                                mpd
 			       file[:directory] (optional directory)
+                               pmi
 			       ],,
 with_namepublisher=default)
 dnl
