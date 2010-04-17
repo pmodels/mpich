@@ -399,9 +399,10 @@ int PMI2_Job_Spawn(int count, const char * cmds[],
                    char jobId[], int jobIdSize,
                    int errors[])
 {
-    /* XXX DJG */
-#if 1
     int  i,rc,spawncnt,total_num_processes,num_errcodes_found;
+    int found;
+    const char *jid;
+    int jidlen;
     char tempbuf[PMI2U_MAXLINE];
     char *lead, *lag;
     int spawn_rc;
@@ -496,6 +497,13 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
 
     /* XXX DJG TODO deal with the response */
     PMI2U_Assert(errors != NULL);
+
+    if (jobId && jobIdSize) {
+        found = getval(resp_cmd.pairs, resp_cmd.nPairs, JOBID_KEY, &jid, &jidlen);
+        PMI2U_ERR_CHKANDJUMP(found != 1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
+        PMI2U_Strncpy(jobId, jid, jobIdSize);
+    }
+
     if (PMI2U_getval( "errcodes", tempbuf, PMI2U_MAXLINE )) {
         num_errcodes_found = 0;
         lag = &tempbuf[0];
@@ -516,83 +524,6 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
         }
     }
 
-    /* XXX DJG this version used old PMI-1 style commands */
-#if 0
-    /* FIXME arbitrary hack size for now, add realloc logic and real
-     * error handling later */
-#define SPAWN_HACK_SIZE (65536)
-    buf = MPIU_Malloc(SPAWN_HACK_SIZE);
-    MPIU_Assert(buf);
-
-    rc = PMI2U_Snprintf(buf, SPAWN_HACK_SIZE,
-                       "cmd=spawn;thrid=%s;ncmds=%d;"
-                       thread_id, count);
-    if (rc < 0) { return PMI_FAIL; }
-
-    /* preput keys */
-    rc = PMI2U_Snprintf(tempbuf, MPI2U_MAXLINE,
-                       "preputcount=%d;", preput_keyval_size);
-    if (rc < 0) { return PMI_FAIL; }
-    rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
-    if (rc != 0) { return PMI_FAIL; }
-    for (i = 0; i < argcs[spawncnt]; ++i) {
-        rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
-                           "ppkey%d=%s;ppval%d=%s;",
-                           i, preput_keyval_vector[i].key, i, preput_keyval_vector[i].val);
-        if (rc < 0) { return PMI_FAIL; }
-        rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
-        if (rc != 0) { return PMI_FAIL; }
-    }
-
-    for (spawncnt=0; spawncnt < count; spawncnt++)
-    {
-        total_num_processes += maxprocs[spawncnt];
-
-        /* cmd, procs, and argc */
-        rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
-                           "subcmd=%s;maxprocs=%d;argc=%d;",
-                           cmds[spawncnt], maxprocs[spawncnt], argcs[spawncnt]);
-        if (rc < 0) { return PMI_FAIL; }
-        rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
-        if (rc != 0) { return PMI_FAIL; }
-
-        /* argv */
-        for (i = 0; i < argcs[spawncnt]; ++i) {
-            rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
-                               "argv%d=%s;",
-                               i, argv[spawncnt][i]);
-            if (rc < 0) { return PMI_FAIL; }
-            rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
-            if (rc != 0) { return PMI_FAIL; }
-        }
-
-        /* info */
-        rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
-                           "infokeycount=%d;", info_keyval_sizes[spawncnt]);
-        if (rc < 0) { return PMI_FAIL; }
-        rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
-        if (rc != 0) { return PMI_FAIL; }
-
-        for (i = 0; i < info_keyval_sizes[spawncnt]; ++i) {
-            /* XXX DJG is this right?  Or do I need to use the next ptr? */
-            const char *key = info_keyval_vectors[spawncnt][i].key;
-            const char *val = info_keyval_vectors[spawncnt][i].value;
-            rc = PMI2U_Snprintf(tempbuf, sizeof(tempbuf),
-                               "infokey%d=%s;infoval%d=%s;",
-                               i, key, i, val);
-            if (rc < 0) { return PMI_FAIL; }
-            rc = PMI2U_Strnapp(buf, tempbuf, SPAWN_HACK_SIZE);
-            if (rc != 0) { return PMI_FAIL; }
-        }
-
-        rc = PMI2U_Strnapp(buf, "\n", SPAWN_HACK_SIZE);
-        if (rc != 0) { return PMI_FAIL; }
-
-        PMI2U_writeline( PMI_fd, buf );
-    }
-#endif
-
-#endif
 fn_fail:
     return pmi2_errno;
 }
