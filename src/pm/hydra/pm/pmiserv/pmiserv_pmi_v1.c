@@ -339,6 +339,7 @@ static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
 static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_pg *pg;
+    struct HYD_pmcd_pmi_process *process;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_node *node_list = NULL, *node, *tnode;
     struct HYD_proxy *proxy;
@@ -417,6 +418,15 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     pg = pg->next;
     pg->pg_process_count = 0;
+
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
+
+    pg->spawner_pg = process->proxy->pg;
 
     for (j = 0; j < total_spawns; j++) {
         /* For each segment, we create an exec structure */
