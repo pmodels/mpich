@@ -410,7 +410,6 @@ int PMI2_Job_Spawn(int count, const char * cmds[],
     PMI2_Command spawn_cmd = {0};
     PMI2_Command resp_cmd  = {0};
     int pmi2_errno = 0;
-    PMI2_Keyvalpair *pairs = NULL;
     PMI2_Keyvalpair **pairs_p = NULL;
     int npairs = 0;
     int total_pairs = 0;
@@ -438,58 +437,61 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
      * The command writing utility adds "cmd" and "thrid" fields for us,
      * don't include them in our count. */
     total_pairs = 2; /* ncmds,preputcount */
-    total_pairs += (3 * count); /* subcmd,maxprocs,argc,infokeycount */
+    total_pairs += (3 * count); /* subcmd,maxprocs,argc */
     total_pairs += (2 * preput_keyval_size); /* ppkeyN,ppvalN */
     for (spawncnt = 0; spawncnt < count; ++spawncnt) {
         total_pairs += argcs[spawncnt]; /* argvN */
-        if (info_keyval_sizes)
+        if (info_keyval_sizes) {
+            total_pairs += 1;  /* infokeycount */
             total_pairs += 2 * info_keyval_sizes[spawncnt]; /* infokeyN,infovalN */
+        }
     }
 
-    pairs = MPIU_Malloc(total_pairs * sizeof(PMI2_Keyvalpair));
+    pairs_p = PMI2U_Malloc(total_pairs * sizeof(PMI2_Keyvalpair*));
+    /* individiually allocating instead of batch alloc b/c freepairs assumes it */
+    for (i = 0; i < total_pairs; ++i) {
+        /* FIXME we are somehow still leaking some of this memory */
+        pairs_p[i] = PMI2U_Malloc(sizeof(PMI2_Keyvalpair));
+        PMI2U_Assert(pairs_p[i]);
+    }
 
-    init_kv_strdup_int(&pairs[npairs++], "ncmds", count);
+    init_kv_strdup_int(pairs_p[npairs++], "ncmds", count);
 
-    init_kv_strdup_int(&pairs[npairs++], "preputcount", preput_keyval_size);
+    init_kv_strdup_int(pairs_p[npairs++], "preputcount", preput_keyval_size);
     for (i = 0; i < preput_keyval_size; ++i) {
-        init_kv_strdup_intsuffix(&pairs[npairs++], "ppkey", i, preput_keyval_vector[i]->key);
-        init_kv_strdup_intsuffix(&pairs[npairs++], "ppval", i, preput_keyval_vector[i]->value);
+        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppkey", i, preput_keyval_vector[i]->key);
+        init_kv_strdup_intsuffix(pairs_p[npairs++], "ppval", i, preput_keyval_vector[i]->value);
     }
 
     for (spawncnt = 0; spawncnt < count; ++spawncnt)
     {
         total_num_processes += maxprocs[spawncnt];
 
-        init_kv_str(&pairs[npairs++], "subcmd", cmds[spawncnt]); /* sets isCopy=FALSE */
-        init_kv_strdup_int(&pairs[npairs++], "maxprocs", maxprocs[spawncnt]);
+        init_kv_str(pairs_p[npairs++], "subcmd", cmds[spawncnt]); /* sets isCopy=FALSE */
+        init_kv_strdup_int(pairs_p[npairs++], "maxprocs", maxprocs[spawncnt]);
 
-        init_kv_strdup_int(&pairs[npairs++], "argc", argcs[spawncnt]);
+        init_kv_strdup_int(pairs_p[npairs++], "argc", argcs[spawncnt]);
         for (i = 0; i < argcs[spawncnt]; ++i) {
-            init_kv_strdup_intsuffix(&pairs[npairs++], "argv", i, argvs[spawncnt][i]);
+            init_kv_strdup_intsuffix(pairs_p[npairs++], "argv", i, argvs[spawncnt][i]);
         }
 
         if (info_keyval_sizes) {
-            init_kv_strdup_int(&pairs[npairs++], "infokeycount", info_keyval_sizes[spawncnt]);
+            init_kv_strdup_int(pairs_p[npairs++], "infokeycount", info_keyval_sizes[spawncnt]);
             for (i = 0; i < info_keyval_sizes[spawncnt]; ++i) {
-                init_kv_strdup_intsuffix(&pairs[npairs++], "infokey", i, info_keyval_vectors[spawncnt][i].key);
-                init_kv_strdup_intsuffix(&pairs[npairs++], "infoval", i, info_keyval_vectors[spawncnt][i].value);
+                init_kv_strdup_intsuffix(pairs_p[npairs++], "infokey", i, info_keyval_vectors[spawncnt][i].key);
+                init_kv_strdup_intsuffix(pairs_p[npairs++], "infoval", i, info_keyval_vectors[spawncnt][i].value);
             }
         }
     }
 
-    PMI2U_Assert(npairs <= total_pairs); /* TODO the < case warrants examination, but not now */
-
-    pairs_p = PMI2U_Malloc(npairs * sizeof(PMI2_Keyvalpair*));
-    for (i = 0; i < npairs; ++i) {
-        pairs_p[i] = &pairs[i];
-    }
+    if (npairs < total_pairs) { printf_d("about to fail assertion, npairs=%d total_pairs=%d\n", npairs, total_pairs); }
+    PMI2U_Assert(npairs == total_pairs);
 
     pmi2_errno = PMIi_WriteSimpleCommand(PMI2_fd, &spawn_cmd, "spawn", pairs_p, npairs);
     if (pmi2_errno) PMI2U_ERR_POP(pmi2_errno);
 
-    /* XXX DJG need to free kv pair contents too? (util fn somewhere) */
-    MPIU_Free(pairs_p);
-    MPIU_Free(pairs);
+    freepairs(pairs_p, npairs);
+    pairs_p = NULL;
 
     /* XXX DJG TODO release any upper level MPICH2 critical sections */
     rc = PMIi_ReadCommandExp(PMI2_fd, &resp_cmd, "spawn-response", &spawn_rc, &errmsg);
@@ -525,6 +527,14 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     }
 
 fn_fail:
+    PMI2U_Free(resp_cmd.command);
+    freepairs(resp_cmd.pairs, resp_cmd.nPairs);
+    /* XXX DJG do we need to do cleanup on the spawn_cmd, or is it done for us? */
+    PMI2U_Free(spawn_cmd.command);
+    freepairs(spawn_cmd.pairs, spawn_cmd.nPairs);
+
+    if (pairs_p) freepairs(pairs_p, npairs);
+
     return pmi2_errno;
 }
 
@@ -1000,7 +1010,6 @@ static void freepairs(PMI2_Keyvalpair** pairs, int npairs)
     PMI2U_Free(pairs);
 }
 
-
 /* getval & friends -- these functions search the pairs list for a
  * matching key, set val appropriately and return 1.  If no matching
  * key is found, 0 is returned.  If the value is invalid, -1 is returned */
@@ -1462,6 +1471,7 @@ int PMIi_WriteSimpleCommand( int fd, PMI2_Command *resp, const char cmd[], PMI2_
 
     PMI2U_Memcpy(cmdbuf, cmdlenbuf, ret);
 
+    cmdbuf[cmdlen+PMII_COMMANDLEN_SIZE] = '\0'; /* silence valgrind warnings in printf_d */
     printf_d("PMI sending: %s\n", cmdbuf);
     
     
