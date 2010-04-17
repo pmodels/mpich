@@ -857,6 +857,179 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
+{
+    struct HYD_pmcd_pmi_process *process;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *val;
+    struct HYD_pmcd_pmi_publish *publish, *r;
+    int i, token_count;
+    struct HYD_pmcd_token *tokens;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
+
+    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
+                status);
+
+    if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
+        HYDU_ERR_POP(status, "cannot find token: name\n");
+    publish->name = HYDU_strdup(val);
+
+    if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "port")) == NULL)
+        HYDU_ERR_POP(status, "cannot find token: port\n");
+    publish->port = HYDU_strdup(val);
+
+    if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "infokeycount")) == NULL)
+        HYDU_ERR_POP(status, "cannot find token: infokeycount\n");
+    publish->infokeycount = atoi(val);
+
+    HYDU_MALLOC(publish->info_keys, struct HYD_pmcd_pmi_info_keys *,
+                sizeof(struct HYD_pmcd_pmi_info_keys), status);
+
+    for (i = 0; i < publish->infokeycount; i++) {
+        char *info_key, *info_val;
+
+        HYDU_MALLOC(info_key, char *, MAXKEYLEN, status);
+        HYDU_snprintf(info_key, MAXKEYLEN, "infokey%d", i);
+        if ((info_val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, info_key)) == NULL)
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n", info_key);
+        publish->info_keys[i].key = HYDU_strdup(info_val);
+
+        HYDU_MALLOC(info_key, char *, MAXKEYLEN, status);
+        HYDU_snprintf(info_key, MAXKEYLEN, "infoval%d", i);
+        if ((info_val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, info_key)) == NULL)
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n", info_val);
+        publish->info_keys[i].val = HYDU_strdup(info_val);
+    }
+
+    publish->next = NULL;
+
+    if (HYD_pmcd_pmi_publish_list == NULL)
+        HYD_pmcd_pmi_publish_list = publish;
+    else {
+        for (r = HYD_pmcd_pmi_publish_list; r->next; r = r->next);
+        r->next = publish;
+    }
+
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=name-publish-response;");
+    if (thrid) {
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
+    }
+    tmp[i++] = HYDU_strdup("rc=0;");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
+
+    status = cmd_response(fd, pid, cmd);
+    HYDU_ERR_POP(status, "send command failed\n");
+    HYDU_FREE(cmd);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
+{
+    struct HYD_pmcd_pmi_process *process;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name;
+    struct HYD_pmcd_pmi_publish *publish, *r;
+    int i, token_count;
+    struct HYD_pmcd_token *tokens;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
+
+    /* Find the group id corresponding to this fd */
+    process = HYD_pmcd_pmi_find_process(fd, pid);
+    if (process == NULL)        /* We didn't find the process */
+        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
+                             "unable to find process structure for fd %d and pid %d\n", fd,
+                             pid);
+
+    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
+                status);
+
+    if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
+        HYDU_ERR_POP(status, "cannot find token: name\n");
+
+    if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
+        publish = HYD_pmcd_pmi_publish_list;
+        HYD_pmcd_pmi_publish_list = HYD_pmcd_pmi_publish_list->next;
+        publish->next = NULL;
+
+        HYD_pmcd_pmi_free_publish(publish);
+        HYDU_FREE(publish);
+    }
+    else {
+        publish = HYD_pmcd_pmi_publish_list;
+        do {
+            if (publish->next == NULL)
+                break;
+            else if (!strcmp(publish->next->name, name)) {
+                r = publish->next;
+                publish->next = r->next;
+                r->next = NULL;
+
+                HYD_pmcd_pmi_free_publish(r);
+                HYDU_FREE(r);
+            }
+            else
+                publish = publish->next;
+        } while (1);
+    }
+
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=name-unpublish-response;");
+    if (thrid) {
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
+    }
+    tmp[i++] = HYDU_strdup("rc=0;");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
+
+    status = cmd_response(fd, pid, cmd);
+    HYDU_ERR_POP(status, "send command failed\n");
+    HYDU_FREE(cmd);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx */
 static struct HYD_pmcd_pmi_handle pmi_v2_handle_fns_foo[] = {
     {"fullinit", fn_fullinit},
@@ -865,6 +1038,8 @@ static struct HYD_pmcd_pmi_handle pmi_v2_handle_fns_foo[] = {
     {"kvs-get", fn_kvs_get},
     {"kvs-fence", fn_kvs_fence},
     {"spawn", fn_spawn},
+    {"name-publish", fn_name_publish},
+    {"name-unpublish", fn_name_unpublish},
     {"\0", NULL}
 };
 

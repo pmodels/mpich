@@ -43,11 +43,25 @@ struct HYD_pmcd_pmi_pg_scratch {
     struct HYD_pmcd_pmi_kvs *kvs;
 };
 
+struct HYD_pmcd_pmi_publish {
+    char *name;
+    char *port;
+    int infokeycount;
+
+    struct HYD_pmcd_pmi_info_keys {
+        char *key;
+        char *val;
+    } *info_keys;
+
+    struct HYD_pmcd_pmi_publish *next;
+};
+
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
 HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);
 struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid);
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping);
 HYD_status HYD_pmcd_pmi_finalize(void);
+HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish *publish);
 
 struct HYD_pmcd_pmi_handle {
     const char *cmd;
@@ -55,5 +69,6 @@ struct HYD_pmcd_pmi_handle {
 };
 
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;
+extern struct HYD_pmcd_pmi_publish *HYD_pmcd_pmi_publish_list;
 
 #endif /* PMISERV_PMI_H_INCLUDED */
