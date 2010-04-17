@@ -95,7 +95,6 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     MPIU_UNREFERENCED_ARG(handle);
 
 #ifdef USE_PMI2_API
-    printf("XXX DJG PMI service_name=%s\n", service_name);
     rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
 #else
     rc = PMI_Unpublish_name( service_name );
