@@ -29,7 +29,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd, int cmd_len)
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
 
     if (HYD_handle.user_global.debug) {
-        HYDU_dump(stdout, "PMI response: %s\n", cmd);
+        HYDU_dump(stdout, "PMI response to fd %d pid %d: %s\n", fd, pid, cmd);
     }
 
     status = HYDU_sock_write(fd, cmd, cmd_len);

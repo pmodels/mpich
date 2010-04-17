@@ -183,11 +183,19 @@ struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid)
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
     struct HYD_pmcd_pmi_process *process = NULL;
+    int do_break;
 
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-            if (proxy->control_fd == fd)
+    do_break = 0;
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+            if (proxy->control_fd == fd) {
+                do_break = 1;
                 break;
+            }
+        }
+        if (do_break)
+            break;
+    }
 
     if (proxy) {
         proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;

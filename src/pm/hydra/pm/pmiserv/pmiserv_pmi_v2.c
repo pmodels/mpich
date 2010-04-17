@@ -43,7 +43,7 @@ static HYD_status cmd_response(int fd, int pid, char *cmd)
     HYDU_ERR_POP(status, "error writing PMI line\n");
 
     if (HYD_handle.user_global.debug) {
-        HYDU_dump(stdout, "PMI response: %s\n", cmd);
+        HYDU_dump(stdout, "PMI response to fd %d pid %d: %s\n", fd, pid, cmd);
     }
 
     status = HYDU_sock_write(fd, cmd, strlen(cmd));
