@@ -36,7 +36,7 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
     i = 0;
     path_str[i++] = HYDU_strdup(HYD_handle.base_path);
-    path_str[i++] = HYDU_strdup("pmi_proxy");
+    path_str[i++] = HYDU_strdup("hydra_pmi_proxy");
     path_str[i] = NULL;
     status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
     HYDU_ERR_POP(status, "unable to join strings\n");

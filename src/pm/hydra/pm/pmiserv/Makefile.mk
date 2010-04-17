@@ -6,19 +6,19 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/pm/utils
 
-bin_PROGRAMS += pmi_proxy
+bin_PROGRAMS += hydra_pmi_proxy
 
-pmi_proxy_SOURCES = $(top_srcdir)/pm/pmiserv/pmip.c \
+hydra_pmi_proxy_SOURCES = $(top_srcdir)/pm/pmiserv/pmip.c \
 	$(top_srcdir)/pm/pmiserv/pmip_cb.c \
 	$(top_srcdir)/pm/pmiserv/pmip_utils.c \
 	$(top_srcdir)/pm/pmiserv/pmip_pmi_v1.c \
 	$(top_srcdir)/pm/pmiserv/pmip_pmi_v2.c \
 	$(top_srcdir)/pm/pmiserv/pmi_common.c \
 	$(top_srcdir)/pm/pmiserv/pmi_v2_common.c
-pmi_proxy_CFLAGS = $(AM_CFLAGS)
-pmi_proxy_LDFLAGS = $(external_ldflags) -L$(top_builddir)
-pmi_proxy_LDADD = -lhydra $(external_libs)
-pmi_proxy_DEPENDENCIES = libhydra.la
+hydra_pmi_proxy_CFLAGS = $(AM_CFLAGS)
+hydra_pmi_proxy_LDFLAGS = $(external_ldflags) -L$(top_builddir)
+hydra_pmi_proxy_LDADD = -lhydra $(external_libs)
+hydra_pmi_proxy_DEPENDENCIES = libhydra.la
 
 libpm_la_SOURCES += $(top_srcdir)/pm/pmiserv/pmiserv_pmi.c \
 	$(top_srcdir)/pm/pmiserv/pmiserv_pmi_v1.c \
