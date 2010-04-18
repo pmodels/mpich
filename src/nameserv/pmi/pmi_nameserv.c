@@ -45,9 +45,9 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
+    MPIU_THREADPRIV_DECL;
     MPIU_UNREFERENCED_ARG(info_ptr);
     MPIU_UNREFERENCED_ARG(handle);
-    MPIU_THREADPRIV_DECL;
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
@@ -72,9 +72,9 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
+    MPIU_THREADPRIV_DECL;
     MPIU_UNREFERENCED_ARG(info_ptr);
     MPIU_UNREFERENCED_ARG(handle);
-    MPIU_THREADPRIV_DECL;
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
@@ -99,9 +99,9 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
+    MPIU_THREADPRIV_DECL;
     MPIU_UNREFERENCED_ARG(info_ptr);
     MPIU_UNREFERENCED_ARG(handle);
-    MPIU_THREADPRIV_DECL;
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
