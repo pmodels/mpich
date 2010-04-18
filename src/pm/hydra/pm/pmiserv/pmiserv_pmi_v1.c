@@ -315,8 +315,7 @@ static char *mcmd_args[HYD_NUM_TMP_STRINGS] = { NULL };
 static int mcmd_num_args = 0;
 
 static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
-                           struct HYD_pmcd_token_segment *segment_list,
-                           int *num_segments)
+                           struct HYD_pmcd_token_segment *segment_list, int *num_segments)
 {
     int i, j;
 

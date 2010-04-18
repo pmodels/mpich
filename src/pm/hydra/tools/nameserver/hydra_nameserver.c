@@ -230,12 +230,10 @@ int main(int argc, char **argv)
     } while (1);
 
     /* set default values for parameters */
-    if (private.debug == -1 &&
-        MPL_env2bool("HYDRA_NAMESERVER_DEBUG", &private.debug) == 0)
+    if (private.debug == -1 && MPL_env2bool("HYDRA_NAMESERVER_DEBUG", &private.debug) == 0)
         private.debug = 0;
 
-    if (private.port == -1 &&
-        MPL_env2int("HYDRA_NAMESERVER_PORT", &private.port) == 0)
+    if (private.port == -1 && MPL_env2int("HYDRA_NAMESERVER_PORT", &private.port) == 0)
         private.port = HYDRA_NAMESERVER_DEFAULT_PORT;
 
     if (private.demux == NULL &&

@@ -501,8 +501,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
 }
 
 static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
-                           struct HYD_pmcd_token_segment *segment_list,
-                           int *num_segments)
+                           struct HYD_pmcd_token_segment *segment_list, int *num_segments)
 {
     int i, j;
 
@@ -578,7 +577,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     ncmds = atoi(val);
 
     HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,
-                (ncmds+1) * sizeof(struct HYD_pmcd_token_segment), status);
+                (ncmds + 1) * sizeof(struct HYD_pmcd_token_segment), status);
     segment_tokens(tokens, token_count, segment_list, &num_segments);
     HYDU_ASSERT((ncmds + 1) == num_segments, status);
 
@@ -907,13 +906,15 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
         HYDU_MALLOC(info_key, char *, MAXKEYLEN, status);
         HYDU_snprintf(info_key, MAXKEYLEN, "infokey%d", i);
         if ((info_val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, info_key)) == NULL)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n", info_key);
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n",
+                                 info_key);
         publish->info_keys[i].key = HYDU_strdup(info_val);
 
         HYDU_MALLOC(info_key, char *, MAXKEYLEN, status);
         HYDU_snprintf(info_key, MAXKEYLEN, "infoval%d", i);
         if ((info_val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, info_key)) == NULL)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n", info_val);
+            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n",
+                                 info_val);
         publish->info_keys[i].val = HYDU_strdup(info_val);
     }
 

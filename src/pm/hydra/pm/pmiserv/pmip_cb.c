@@ -319,8 +319,8 @@ static HYD_status launch_procs(void)
                 pmi_id = HYDU_local_to_global_id(process_id,
                                                  HYD_pmcd_pmip.start_pid,
                                                  HYD_pmcd_pmip.local.proxy_core_count,
-                                                 HYD_pmcd_pmip.
-                                                 system_global.global_core_count);
+                                                 HYD_pmcd_pmip.system_global.
+                                                 global_core_count);
             else
                 pmi_id = HYD_pmcd_pmip.system_global.pmi_id;
 

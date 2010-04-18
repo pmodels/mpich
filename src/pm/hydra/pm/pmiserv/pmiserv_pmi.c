@@ -9,6 +9,7 @@
 #include "pmiserv_utils.h"
 
 struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };
+
 struct HYD_pmcd_pmi_publish *HYD_pmcd_pmi_publish_list = NULL;
 
 HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
@@ -220,7 +221,7 @@ HYD_status HYD_pmcd_pmi_finalize(void)
     return status;
 }
 
-HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish *publish)
+HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish * publish)
 {
     int i;
     HYD_status status = HYD_SUCCESS;

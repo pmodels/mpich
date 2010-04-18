@@ -48,7 +48,7 @@ struct HYD_handle {
 #if defined ENABLE_PROFILING
     int enable_profiling;
     int num_pmi_calls;
-#endif /* ENABLE_PROFILING */
+#endif                          /* ENABLE_PROFILING */
 };
 
 extern struct HYD_handle HYD_handle;
