@@ -49,7 +49,10 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     MPIU_UNREFERENCED_ARG(handle);
 
 #ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     rc = PMI2_Nameserv_publish(service_name, info_ptr, port);
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 #else
     rc = PMI_Publish_name( service_name, port );
 #endif
@@ -72,7 +75,10 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     MPIU_UNREFERENCED_ARG(handle);
 
 #ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     rc = PMI2_Nameserv_lookup(service_name, info_ptr, port, MPI_MAX_PORT_NAME);
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 #else
     rc = PMI_Lookup_name( service_name, port );
 #endif
@@ -95,7 +101,10 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     MPIU_UNREFERENCED_ARG(handle);
 
 #ifdef USE_PMI2_API
+    /* release the global CS for PMI calls */
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 #else
     rc = PMI_Unpublish_name( service_name );
 #endif
