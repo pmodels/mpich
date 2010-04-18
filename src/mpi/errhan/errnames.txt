@@ -1349,6 +1349,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **pmi_kvsfence %s: PMI2 KVS_Fence failed: %s
 **pmi_kvsget: PMI2 KVS_Get failed
 **pmi_kvsget %s: PMI2 KVS_Get failed: %s
+**pmi_kvsget %d: PMI2 KVS_Get failed: %d
 **pmi_kvsget_notfound: PMI2 Key not found in KVS_Get
 **pmi_kvsget_notfound %s: PMI2 Key not found in KVS_Get: %s
 **pmi_getnodeattr: PMI2 GetNodeAttr failed
