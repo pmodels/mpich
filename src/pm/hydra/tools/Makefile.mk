@@ -12,3 +12,4 @@ include tools/ckpoint/Makefile.mk
 include tools/demux/Makefile.mk
 include tools/rmk/Makefile.mk
 include tools/debugger/Makefile.mk
+include tools/nameserver/Makefile.mk

@@ -1,0 +1,268 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "hydra_base.h"
+#include "hydra_utils.h"
+#include "demux.h"
+
+#define HYDRA_NAMESERVER_DEFAULT_PORT 6392
+
+struct HYDT_ns_publish {
+    char *name;
+    char *info;
+    struct HYDT_ns_publish *next;
+};
+
+static struct HYDT_ns_publish *publish_list = NULL;
+
+static struct {
+    int port;
+    int debug;
+    char *demux;
+} private;
+
+static void init_params(void)
+{
+    private.port = -1;
+    private.debug = -1;
+    private.demux = NULL;
+}
+
+static void port_help_fn(void)
+{
+    printf("\n");
+    printf("-port: Use this port to listen for requests\n\n");
+}
+
+static HYD_status port_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &private.port);
+}
+
+static void debug_help_fn(void)
+{
+    printf("\n");
+    printf("-debug: Prints additional debug information\n");
+}
+
+static HYD_status debug_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int(arg, argv, &private.debug, 1);
+}
+
+static void demux_help_fn(void)
+{
+    printf("\n");
+    printf("-demux: Demux engine to use\n");
+}
+
+static HYD_status demux_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &private.demux);
+}
+
+static struct HYD_arg_match_table match_table[] = {
+    {"port", port_fn, port_help_fn},
+    {"debug", debug_fn, debug_help_fn},
+    {"demux", demux_fn, demux_help_fn}
+};
+
+static HYD_status cmd_response(int fd, struct HYDT_ns_publish *publish)
+{
+    int len = strlen(publish->info);
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_write(fd, &len, sizeof(int));
+    HYDU_ERR_POP(status, "error sending publish info\n");
+
+    status = HYDU_sock_write(fd, publish->info, len);
+    HYDU_ERR_POP(status, "error sending publish info\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
+{
+    int len, recvd;
+    char *cmd, *name;
+    struct HYDT_ns_publish *publish, *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "error reading data\n");
+
+    HYDU_MALLOC(cmd, char *, len + 1, status);
+    status = HYDU_sock_read(fd, cmd, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "error reading data\n");
+
+    if (!strcmp(cmd, "PUT")) {
+        HYDU_MALLOC(publish, struct HYDT_ns_publish *, sizeof(struct HYDT_ns_publish), status);
+
+        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+
+        HYDU_MALLOC(publish->name, char *, len + 1, status);
+        status = HYDU_sock_read(fd, publish->name, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+
+        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+
+        HYDU_MALLOC(publish->info, char *, len + 1, status);
+        status = HYDU_sock_read(fd, publish->info, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+
+        publish->next = NULL;
+
+        if (publish_list == NULL)
+            publish_list = publish;
+        else {
+            for (tmp = publish_list; tmp->next; tmp = tmp->next);
+            tmp->next = publish;
+        }
+    }
+    else if (!strcmp(cmd, "GET")) {
+        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+
+        HYDU_MALLOC(name, char *, len + 1, status);
+        status = HYDU_sock_read(fd, name, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+
+        if (!strcmp(publish_list->name, name)) {
+            status = cmd_response(fd, publish_list);
+            HYDU_ERR_POP(status, "error sending command response\n");
+
+            tmp = publish_list;
+            publish_list = publish_list->next;
+            tmp->next = NULL;
+            HYDU_FREE(tmp->name);
+            HYDU_FREE(tmp->info);
+            HYDU_FREE(tmp);
+        }
+        else {
+            for (tmp = publish_list; tmp->next; tmp = tmp->next)
+                if (!strcmp(tmp->next->name, name))
+                    break;
+
+            status = cmd_response(fd, tmp->next);
+            HYDU_ERR_POP(status, "error sending command response\n");
+
+            if (tmp->next) {
+                publish = tmp->next;
+                tmp->next = tmp->next->next;
+
+                tmp = publish;
+                publish_list = publish_list->next;
+                tmp->next = NULL;
+                HYDU_FREE(tmp->name);
+                HYDU_FREE(tmp->info);
+                HYDU_FREE(tmp);
+            }
+        }
+    }
+    else {
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized command: %s\n", cmd);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
+{
+    int client_fd;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* We got a connection */
+    status = HYDU_sock_accept(fd, &client_fd);
+    HYDU_ERR_POP(status, "accept error\n");
+
+    /* Register the listening socket with the demux engine */
+    status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, NULL, request_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+int main(int argc, char **argv)
+{
+    uint16_t port;
+    int listen_fd;
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_dbg_init("nameserver");
+    HYDU_ERR_POP(status, "unable to initialize debugging\n");
+
+    init_params();
+
+    argv++;
+    do {
+        /* get hydserv arguments */
+        status = HYDU_parse_array(&argv, match_table);
+        HYDU_ERR_POP(status, "error parsing input array\n");
+
+        if (!(*argv))
+            break;
+    } while (1);
+
+    /* set default values for parameters */
+    if (private.debug == -1 &&
+        MPL_env2bool("HYDRA_NAMESERVER_DEBUG", &private.debug) == 0)
+        private.debug = 0;
+
+    if (private.port == -1 &&
+        MPL_env2int("HYDRA_NAMESERVER_PORT", &private.port) == 0)
+        private.port = HYDRA_NAMESERVER_DEFAULT_PORT;
+
+    if (private.demux == NULL &&
+        MPL_env2str("HYDRA_NAMESERVER_DEMUX", (const char **) &private.demux) == 0)
+        private.demux = NULL;
+
+    status = HYDT_dmx_init(&private.demux);
+    HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
+
+    /* wait for connection requests and process them */
+    port = (uint16_t) private.port;
+    status = HYDU_sock_listen(&listen_fd, NULL, &port);
+    HYDU_ERR_POP(status, "unable to listen on port\n");
+
+    /* Register the listening socket with the demux engine */
+    status = HYDT_dmx_register_fd(1, &listen_fd, HYD_POLLIN, NULL, listen_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+    while (1) {
+        /* Wait for some event to occur */
+        status = HYDT_dmx_wait_for_event(-1);
+        HYDU_ERR_POP(status, "demux engine error waiting for event\n");
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
