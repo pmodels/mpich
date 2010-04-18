@@ -15,10 +15,152 @@
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
+static int storage_len = 0;
+static char storage[HYD_TMPBUF_SIZE], *sptr = storage, r[HYD_TMPBUF_SIZE];
+
+static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
+{
+    int full_command, buflen, cmdlen;
+    char *bufptr, lenptr[7];
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    *repeat = 0;
+
+    /* We need to read at least 6 bytes before we can decide if this
+     * is PMI-1 or PMI-2 */
+    if (storage_len < 6)
+        goto fn_exit;
+
+    /* FIXME: This should really be a "FIXME" for the client, since
+     * there's not much we can do on the server side.
+     *
+     * We initialize to whatever PMI version we detect while reading
+     * the PMI command, instead of relying on what the init command
+     * gave us. This part of the code should not know anything about
+     * PMI-1 vs. PMI-2. But the simple PMI client-side code in MPICH2
+     * is so hacked up, that commands can arrive out-of-order and this
+     * is necessary. This was discussed in the group and we felt that
+     * it is unsafe to change the order of the PMI command arrival in
+     * the client code (even if we are really correcting it), since
+     * other PMs might rely on the "incorrect order of commands".
+     */
+
+    /* Parse the string and if a full command is found, make sure that
+     * bufptr points to the last byte of the command */
+    full_command = 0;
+    if (!strncmp(sptr, "cmd=", strlen("cmd=")) || !strncmp(sptr, "mcmd=", strlen("mcmd="))) {
+        /* PMI-1 format command; read the rest of it */
+        *pmi_version = 1;
+
+        if (!strncmp(sptr, "cmd=", strlen("cmd="))) {
+            /* A newline marks the end of the command */
+            for (bufptr = sptr; bufptr < sptr + storage_len; bufptr++) {
+                if (*bufptr == '\n') {
+                    full_command = 1;
+                    break;
+                }
+            }
+        }
+        else { /* multi commands */
+            for (bufptr = sptr; bufptr < sptr + storage_len - strlen("endcmd\n") + 1; bufptr++) {
+                if (bufptr[0] == 'e' && bufptr[1] == 'n' && bufptr[2] == 'd' &&
+                    bufptr[3] == 'c' && bufptr[4] == 'm' && bufptr[5] == 'd' &&
+                    bufptr[6] == '\n') {
+                    full_command = 1;
+                    bufptr += strlen("endcmd\n") - 1;
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        *pmi_version = 2;
+
+        /* We already made sure we had at least 6 bytes */
+        memcpy(lenptr, sptr, 6);
+        lenptr[6] = 0;
+        cmdlen = atoi(lenptr);
+
+        if (storage_len >= cmdlen + 6) {
+            full_command = 1;
+            bufptr = sptr + 6 + cmdlen - 1;
+        }
+    }
+
+    if (full_command) {
+        /* We have a full command */
+        buflen = bufptr - sptr + 1;
+        HYDU_MALLOC(*buf, char *, buflen, status);
+        memcpy(*buf, sptr, buflen);
+        sptr += buflen;
+        storage_len -= buflen;
+        (*buf)[buflen - 1] = '\0';
+
+        if (storage_len == 0)
+            sptr = storage;
+        else
+            *repeat = 1;
+    }
+    else {
+        /* We don't have a full command. Copy the rest of the data to
+         * the front of the storage buffer. */
+
+        /* FIXME: This dual memcpy is crazy and needs to be
+         * fixed. Single memcpy should be possible, but we need to be
+         * a bit careful not to corrupt the buffer. */
+        memcpy(r, sptr, storage_len);
+        memcpy(storage, r, storage_len);
+        storage_len = 0;
+        sptr = storage;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status read_pmi_cmd(int fd, int *closed)
+{
+    int linelen;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    *closed = 0;
+
+    /* PMI-1 does not tell us how much to read. We read how much ever
+     * we can, parse out full PMI commands from it, and process
+     * them. When we don't have a full PMI command, we store the
+     * rest. */
+    status = HYDU_sock_read(fd, storage + storage_len, HYD_TMPBUF_SIZE - storage_len,
+                            &linelen, 0);
+    HYDU_ERR_POP(status, "unable to read PMI command\n");
+
+    /* Unexpected termination of connection */
+    if (linelen == 0) {
+        *closed = 1;
+        goto fn_exit;
+    }
+
+    storage_len += linelen;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
-    int closed;
+    int closed, repeat;
     struct HYD_pmcd_pmi_cmd_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
     struct HYD_pmcd_pmip_pmi_handle *h;
@@ -26,54 +168,60 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYD_pmcd_pmi_read_pmi_cmd(fd, &buf, &hdr.pmi_version, &closed);
+    status = read_pmi_cmd(fd, &closed);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
 
-    if (hdr.pmi_version == 1)
-        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
-    else
-        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
+    do {
+        status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
+        HYDU_ERR_POP(status, "error checking the PMI command\n");
 
-    if (closed) {
-        /* A process died; kill the remaining processes */
-        HYD_pmcd_pmip_killjob();
-        goto fn_exit;
-    }
+        if (hdr.pmi_version == 1)
+            HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
+        else
+            HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
-    HYDU_ERR_POP(status, "unable to parse PMI command\n");
-
-    if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "got pmi command (from %d): %s ", fd, pmi_cmd);
-        HYDU_print_strlist(args);
-    }
-
-    h = HYD_pmcd_pmip_pmi_handle;
-    while (h->handler) {
-        if (!strcmp(pmi_cmd, h->cmd)) {
-            status = h->handler(fd, args);
-            HYDU_ERR_POP(status, "PMI handler returned error\n");
+        if (closed) {
+            /* A process died; kill the remaining processes */
+            HYD_pmcd_pmip_killjob();
             goto fn_exit;
         }
-        h++;
-    }
 
-    if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "we don't understand this command; forwarding upstream\n");
-    }
+        status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+        HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
-    /* We don't understand the command; forward it upstream */
-    cmd = PMI_CMD;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
-    HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
+        if (HYD_pmcd_pmip.user_global.debug) {
+            HYDU_dump(stdout, "got pmi command (from %d): %s ", fd, pmi_cmd);
+            HYDU_print_strlist(args);
+        }
 
-    hdr.pid = fd;
-    hdr.buflen = strlen(buf);
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr));
-    HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
+        h = HYD_pmcd_pmip_pmi_handle;
+        while (h->handler) {
+            if (!strcmp(pmi_cmd, h->cmd)) {
+                status = h->handler(fd, args);
+                HYDU_ERR_POP(status, "PMI handler returned error\n");
+                goto fn_exit;
+            }
+            h++;
+        }
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen);
-    HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
+        if (HYD_pmcd_pmip.user_global.debug) {
+            HYDU_dump(stdout, "we don't understand this command; forwarding upstream\n");
+        }
+
+        /* We don't understand the command; forward it upstream */
+        cmd = PMI_CMD;
+        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
+        HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
+
+        hdr.pid = fd;
+        hdr.buflen = strlen(buf);
+        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr));
+        HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
+
+        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen);
+        HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
+
+    } while (repeat);
 
   fn_exit:
     if (buf)

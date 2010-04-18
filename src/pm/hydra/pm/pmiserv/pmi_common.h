@@ -59,7 +59,6 @@ struct HYD_pmcd_token {
     char *val;
 };
 
-HYD_status HYD_pmcd_pmi_read_pmi_cmd(int fd, char **pmi_cmd, int *pmi_version, int *closed);
 HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd,
                                       char *args[]);
 HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
