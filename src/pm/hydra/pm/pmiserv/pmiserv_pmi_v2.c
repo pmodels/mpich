@@ -1024,8 +1024,11 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     }
     if (found)
         tmp[i++] = HYDU_strdup("rc=0;");
-    else
-        tmp[i++] = HYDU_strdup("rc=1;errmsg=service_not_found");
+    else {
+        tmp[i++] = HYDU_strdup("rc=1;errmsg=service_");
+        tmp[i++] = HYDU_strdup(name);
+        tmp[i++] = HYDU_strdup("_not_found");
+    }
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
