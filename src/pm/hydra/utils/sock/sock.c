@@ -438,6 +438,8 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
         }
     }
 
+    /* If the incoming socket is closed, make sure we forward out all
+     * of the buffered data */
     while (*closed && fwd_hash->buf_count) {
         count = write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count);
         if (count < 0) {

@@ -144,6 +144,11 @@ static HYD_status read_pmi_cmd(int fd, int *closed)
     /* Unexpected termination of connection */
     if (linelen == 0) {
         *closed = 1;
+
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+        close(fd);
+
         goto fn_exit;
     }
 
@@ -171,6 +176,12 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     status = read_pmi_cmd(fd, &closed);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
 
+    if (closed) {
+        /* A process died; kill the remaining processes */
+        HYD_pmcd_pmip_killjob();
+        goto fn_exit;
+    }
+
     do {
         status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
         HYDU_ERR_POP(status, "error checking the PMI command\n");
@@ -179,12 +190,6 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
         else
             HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
-
-        if (closed) {
-            /* A process died; kill the remaining processes */
-            HYD_pmcd_pmip_killjob();
-            goto fn_exit;
-        }
 
         status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
         HYDU_ERR_POP(status, "unable to parse PMI command\n");
