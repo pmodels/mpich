@@ -958,7 +958,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_pmi_process *process;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name;
     struct HYD_pmcd_pmi_publish *publish, *r;
-    int i, token_count;
+    int i, token_count, found = 0;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
 
@@ -982,13 +982,18 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
 
-    if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
+    if (HYD_pmcd_pmi_publish_list == NULL) {
+        /* Can't find published service */
+    }
+    else if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
         publish = HYD_pmcd_pmi_publish_list;
         HYD_pmcd_pmi_publish_list = HYD_pmcd_pmi_publish_list->next;
         publish->next = NULL;
 
         HYD_pmcd_pmi_free_publish(publish);
         HYDU_FREE(publish);
+
+        found = 1;
     }
     else {
         publish = HYD_pmcd_pmi_publish_list;
@@ -1002,6 +1007,8 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 
                 HYD_pmcd_pmi_free_publish(r);
                 HYDU_FREE(r);
+
+                found = 1;
             }
             else
                 publish = publish->next;
@@ -1015,7 +1022,10 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
         tmp[i++] = HYDU_strdup(thrid);
         tmp[i++] = HYDU_strdup(";");
     }
-    tmp[i++] = HYDU_strdup("rc=0;");
+    if (found)
+        tmp[i++] = HYDU_strdup("rc=0;");
+    else
+        tmp[i++] = HYDU_strdup("rc=1;errmsg=service_not_found");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
