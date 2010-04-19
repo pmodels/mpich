@@ -861,7 +861,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_pmi_process *process;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *val;
     struct HYD_pmcd_pmi_publish *publish, *r;
-    int i, token_count;
+    int i, token_count, found;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
 
@@ -920,11 +920,18 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 
     publish->next = NULL;
 
+    found = 0;
     if (HYD_pmcd_pmi_publish_list == NULL)
         HYD_pmcd_pmi_publish_list = publish;
     else {
-        for (r = HYD_pmcd_pmi_publish_list; r->next; r = r->next);
-        r->next = publish;
+        for (r = HYD_pmcd_pmi_publish_list; r->next; r = r->next) {
+            if (!strcmp(r->next->name, publish->name)) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found)
+            r->next = publish;
     }
 
     i = 0;
@@ -934,7 +941,13 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
         tmp[i++] = HYDU_strdup(thrid);
         tmp[i++] = HYDU_strdup(";");
     }
-    tmp[i++] = HYDU_strdup("rc=0;");
+    if (found) {
+        tmp[i++] = HYDU_strdup("rc=1;errmsg=duplicate_service_");
+        tmp[i++] = HYDU_strdup(publish->name);
+        tmp[i++] = HYDU_strdup(";");
+    }
+    else
+        tmp[i++] = HYDU_strdup("rc=0;");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -1027,7 +1040,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     else {
         tmp[i++] = HYDU_strdup("rc=1;errmsg=service_");
         tmp[i++] = HYDU_strdup(name);
-        tmp[i++] = HYDU_strdup("_not_found");
+        tmp[i++] = HYDU_strdup("_not_found;");
     }
     tmp[i++] = NULL;
 
