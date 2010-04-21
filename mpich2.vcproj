@@ -7518,16 +7518,16 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\mpid\common\datatype\dataloop\segment_ops.c"
+				RelativePath=".\src\mpid\common\datatype\dataloop\segment_count.c"
 				>
-				<FileConfiguration
-					Name="ch3sockRelease|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ShowIncludes="false"
-					/>
-				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\mpid\common\datatype\dataloop\segment_flatten.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpid\common\datatype\dataloop\segment_packunpack.c"
+				>
 			</File>
 			<File
 				RelativePath=".\src\mpi\pt2pt\send.c"

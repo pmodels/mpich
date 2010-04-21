@@ -4161,7 +4161,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\mpid\common\datatype\dataloop\segment_ops.c"
+				RelativePath=".\src\mpid\common\datatype\dataloop\segment_count.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpid\common\datatype\dataloop\segment_flatten.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpid\common\datatype\dataloop\segment_packunpack.c"
 				>
 			</File>
 			<File
