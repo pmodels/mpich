@@ -485,13 +485,15 @@ extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
    realloc() on CLOG_CommSet's table[] of commIDs, because invocation
    of realloc() may invalidate all commIDs handed out by CLOG_CommSet.
 
-   Since communicator creation/destruction needs to be tracked even when
+   Communicator creation/destruction needs to be tracked even when
    user turns off logging through MPI_Pcontrol(0), otherwise subsequent
-   logging of MPI calls that uses the communicator after MPI_Pcontrol(1)
-   would fail (during logging).  CLOG_CommSet_add_intracomm() is
+   logging of MPI calls that use the communicator after MPI_Pcontrol(1)
+   would fail during logging.  CLOG_CommSet_add_intracomm() is
    needed to avoid logging failure.  But MPE_Log_commIDs_intracomm()
    is needed so enough information is written to clog2 file so clog2TOslog2
-   won't fail.
+   won't fail.  This means MPI_Pcontrol(0) of the communicator creation
+   function will not log the MPI communicator creation state but CLOG2
+   buffer(disk) is still updated/modified with the communicator creation info.
 */
 /*    if (is_mpilog_on && IS_MPELOG_ON && state->is_active) { \ */
 #define MPE_LOG_INTRACOMM(comm,new_comm,comm_etype) \
@@ -515,13 +517,15 @@ extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
    realloc() on CLOG_CommSet's table[] of commIDs, because invocation
    of realloc() may invalidate all commIDs handed out by CLOG_CommSet.
 
-   Since communicator creation/destruction needs to be tracked even when
+   Communicator creation/destruction needs to be tracked even when
    user turns off logging through MPI_Pcontrol(0), otherwise subsequent
-   logging of MPI calls that uses the communicator after MPI_Pcontrol(1)
-   would fail (during logging).  CLOG_CommSet_add_intercomm() is
+   logging of MPI calls that use the communicator after MPI_Pcontrol(1)
+   would fail during logging.  CLOG_CommSet_add_intercomm() is
    needed to avoid logging failure.  But MPE_Log_commIDs_intercomm()
    is needed so enough information is written to clog2 file so clog2TOslog2
-   won't fail.
+   won't fail.  This means MPI_Pcontrol(0) of the communicator creation
+   function will not log the MPI communicator creation state but CLOG2
+   buffer(disk) is still updated/modified with the communicator creation info.
 */
 /*    if (is_mpilog_on && IS_MPELOG_ON && state->is_active) { \ */
 #define MPE_LOG_INTERCOMM(comm,new_comm,comm_etype) \
