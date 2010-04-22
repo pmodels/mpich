@@ -484,48 +484,60 @@ extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
    Update commIDs after CLOG_CommSet_add_intracomm() which may have invoked
    realloc() on CLOG_CommSet's table[] of commIDs, because invocation
    of realloc() may invalidate all commIDs handed out by CLOG_CommSet.
+
+   Since communicator creation/destruction needs to be tracked even when
+   user turns off logging through MPI_Pcontrol(0), otherwise subsequent
+   logging of MPI calls that uses the communicator after MPI_Pcontrol(1)
+   would fail (during logging).  CLOG_CommSet_add_intracomm() is
+   needed to avoid logging failure.  But MPE_Log_commIDs_intracomm()
+   is needed so enough information is written to clog2 file so clog2TOslog2
+   won't fail.
 */
 /*    if (is_mpilog_on && IS_MPELOG_ON && state->is_active) { \ */
 #define MPE_LOG_INTRACOMM(comm,new_comm,comm_etype) \
-    if (is_thisfn_logged) { \
-        if ( new_comm != MPI_COMM_NULL ) { \
-            IS_MPELOG_ON = 0; \
-            new_commIDs = CLOG_CommSet_add_intracomm( CLOG_CommSet, \
-                                                      new_comm ); \
-            IS_MPELOG_ON = 1; \
-            commIDs = CLOG_CommSet_get_IDs( CLOG_CommSet, comm ); \
-            MPE_Log_commIDs_intracomm( commIDs, THREADID, \
-                                       comm_etype, new_commIDs ); \
-            MPE_LOG_SOLO_EVENT( new_commIDs, THREADID, MPE_COMM_INIT_ID ) \
-        } \
-        else { \
-            MPE_Log_commIDs_nullcomm( commIDs, THREADID, comm_etype ); \
-            MPE_LOG_SOLO_EVENT( commIDs, THREADID, MPE_COMM_FINALIZE_ID ) \
-        } \
+    if ( new_comm != MPI_COMM_NULL ) { \
+        IS_MPELOG_ON = 0; \
+        new_commIDs = CLOG_CommSet_add_intracomm( CLOG_CommSet, \
+                                                  new_comm ); \
+        IS_MPELOG_ON = 1; \
+        commIDs = CLOG_CommSet_get_IDs( CLOG_CommSet, comm ); \
+        MPE_Log_commIDs_intracomm( commIDs, THREADID, \
+                                   comm_etype, new_commIDs ); \
+        MPE_LOG_SOLO_EVENT( new_commIDs, THREADID, MPE_COMM_INIT_ID ) \
+    } \
+    else { \
+        MPE_Log_commIDs_nullcomm( commIDs, THREADID, comm_etype ); \
+        MPE_LOG_SOLO_EVENT( commIDs, THREADID, MPE_COMM_FINALIZE_ID ) \
     }
 
 /*
    Update commIDs after CLOG_CommSet_add_intercomm() which may have invoked
    realloc() on CLOG_CommSet's table[] of commIDs, because invocation
    of realloc() may invalidate all commIDs handed out by CLOG_CommSet.
+
+   Since communicator creation/destruction needs to be tracked even when
+   user turns off logging through MPI_Pcontrol(0), otherwise subsequent
+   logging of MPI calls that uses the communicator after MPI_Pcontrol(1)
+   would fail (during logging).  CLOG_CommSet_add_intercomm() is
+   needed to avoid logging failure.  But MPE_Log_commIDs_intercomm()
+   is needed so enough information is written to clog2 file so clog2TOslog2
+   won't fail.
 */
 /*    if (is_mpilog_on && IS_MPELOG_ON && state->is_active) { \ */
 #define MPE_LOG_INTERCOMM(comm,new_comm,comm_etype) \
-    if (is_thisfn_logged) { \
-        if ( new_comm != MPI_COMM_NULL ) { \
-            IS_MPELOG_ON = 0; \
-            new_commIDs = CLOG_CommSet_add_intercomm( CLOG_CommSet, \
-                                                      new_comm, commIDs ); \
-            IS_MPELOG_ON = 1; \
-            commIDs = CLOG_CommSet_get_IDs( CLOG_CommSet, comm ); \
-            MPE_Log_commIDs_intercomm( commIDs, THREADID, \
-                                       comm_etype, new_commIDs ); \
-            MPE_LOG_SOLO_EVENT( new_commIDs, THREADID, MPE_COMM_INIT_ID ) \
-        } \
-        else { \
-            MPE_Log_commIDs_nullcomm( commIDs, THREADID, comm_etype ); \
-            MPE_LOG_SOLO_EVENT( commIDs, THREADID, MPE_COMM_FINALIZE_ID ) \
-        } \
+    if ( new_comm != MPI_COMM_NULL ) { \
+        IS_MPELOG_ON = 0; \
+        new_commIDs = CLOG_CommSet_add_intercomm( CLOG_CommSet, \
+                                                  new_comm, commIDs ); \
+        IS_MPELOG_ON = 1; \
+        commIDs = CLOG_CommSet_get_IDs( CLOG_CommSet, comm ); \
+        MPE_Log_commIDs_intercomm( commIDs, THREADID, \
+                                   comm_etype, new_commIDs ); \
+        MPE_LOG_SOLO_EVENT( new_commIDs, THREADID, MPE_COMM_INIT_ID ) \
+    } \
+    else { \
+        MPE_Log_commIDs_nullcomm( commIDs, THREADID, comm_etype ); \
+        MPE_LOG_SOLO_EVENT( commIDs, THREADID, MPE_COMM_FINALIZE_ID ) \
     }
 
 #define MPE_LOG_ON \
