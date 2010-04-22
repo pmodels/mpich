@@ -351,6 +351,10 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_VC_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_VC_INIT);
+
+    vc_ch->pkt_handler = NULL;
+    vc_ch->num_pkt_handlers = 0;
+
     vc_ch->send_seqno = 0;
 
     vc_ch->pending_pkt_len = 0;

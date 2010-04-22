@@ -56,6 +56,7 @@ typedef enum MPID_nem_pkt_type
     MPIDI_NEM_PKT_LMT_CTS,
     MPIDI_NEM_PKT_LMT_DONE,
     MPIDI_NEM_PKT_LMT_COOKIE,
+    MPIDI_NEM_PKT_NETMOD,
     MPIDI_NEM_PKT_END,
     MPIDI_NEM_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
 } MPID_nem_pkt_type_t;
@@ -97,12 +98,20 @@ typedef struct MPID_nem_pkt_lmt_cookie
 }
 MPID_nem_pkt_lmt_cookie_t;
 
+typedef struct MPID_nem_pkt_netmod
+{
+    MPID_nem_pkt_type_t type;
+    unsigned subtype;
+}
+MPID_nem_pkt_netmod_t;
+
 typedef union MPIDI_CH3_nem_pkt
 {
     MPID_nem_pkt_lmt_rts_t lmt_rts;
     MPID_nem_pkt_lmt_cts_t lmt_cts;
     MPID_nem_pkt_lmt_done_t lmt_done;
     MPID_nem_pkt_lmt_cookie_t lmt_cookie;
+    MPID_nem_pkt_netmod_t netmod;
 } MPIDI_CH3_nem_pkt_t;
 
 

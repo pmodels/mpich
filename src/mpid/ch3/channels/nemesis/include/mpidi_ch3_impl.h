@@ -167,7 +167,11 @@ typedef struct MPIDI_CH3I_VC
     struct MPID_nem_lmt_shm_wait_element *lmt_active_lmt;
     int lmt_enqueued; /* FIXME: used for debugging */
 
-    struct 
+    /* Pointer to per-vc packet handlers */
+    MPIDI_CH3_PktHandler_Fcn **pkt_handler;
+    int num_pkt_handlers;
+    
+    struct
     {
         char padding[MPID_NEM_VC_NETMOD_AREA_LEN];
     } netmod_area;
