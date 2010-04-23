@@ -108,6 +108,116 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
+static HYD_status stdout_cb(void *buf, int buflen)
+{
+    struct HYD_pmcd_stdio_hdr *hdr;
+    static char *storage = NULL;
+    static int storage_len = 0;
+    char *rbuf, *tmp, str[HYD_TMPBUF_SIZE];
+    int rlen;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    rbuf = buf;
+    rlen = buflen;
+
+    while (1) {
+        hdr = (struct HYD_pmcd_stdio_hdr *) rbuf;
+
+        if (rlen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen) {
+            /* We don't have the entire data; store it and wait for
+             * the next event */
+            HYDU_MALLOC(tmp, char *, rlen + storage_len, status);
+            if (storage_len)
+                memcpy(tmp, storage, storage_len);
+            memcpy(tmp + storage_len, buf, rlen);
+            if (storage)
+                HYDU_FREE(storage);
+            storage = tmp;
+
+            break;
+        }
+        else {
+            rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
+            rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
+
+            if (HYD_handle.append_rank) {
+                HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
+                status = HYD_handle.stdout_cb(str, strlen(str));
+                HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+            }
+
+            status = HYD_handle.stdout_cb(rbuf, hdr->buflen);
+            HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+
+            rbuf += hdr->buflen;
+            rlen -= hdr->buflen;
+        }
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status stderr_cb(void *buf, int buflen)
+{
+    struct HYD_pmcd_stdio_hdr *hdr;
+    static char *storage = NULL;
+    static int storage_len = 0;
+    char *rbuf, *tmp, str[HYD_TMPBUF_SIZE];
+    int rlen;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    rbuf = buf;
+    rlen = buflen;
+
+    while (1) {
+        hdr = (struct HYD_pmcd_stdio_hdr *) rbuf;
+
+        if (rlen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen) {
+            /* We don't have the entire data; store it and wait for
+             * the next event */
+            HYDU_MALLOC(tmp, char *, rlen + storage_len, status);
+            if (storage_len)
+                memcpy(tmp, storage, storage_len);
+            memcpy(tmp + storage_len, buf, rlen);
+            if (storage)
+                HYDU_FREE(storage);
+            storage = tmp;
+
+            break;
+        }
+        else {
+            rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
+            rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
+
+            if (HYD_handle.append_rank) {
+                HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
+                status = HYD_handle.stdout_cb(str, strlen(str));
+                HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+            }
+
+            status = HYD_handle.stderr_cb(rbuf, hdr->buflen);
+            HYDU_ERR_POP(status, "error in the UI defined stderr callback\n");
+
+            rbuf += hdr->buflen;
+            rlen -= hdr->buflen;
+        }
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
@@ -176,8 +286,8 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYDT_dmx_stdin_valid(&enable_stdin);
     HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, enable_stdin, HYD_handle.stdout_cb,
-                                    HYD_handle.stderr_cb);
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, enable_stdin, stdout_cb,
+                                    stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:

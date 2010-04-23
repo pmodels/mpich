@@ -45,6 +45,8 @@ void HYD_uiu_init_params(void)
     HYD_handle.enable_profiling = -1;
     HYD_handle.num_pmi_calls = 0;
 #endif /* ENABLE_PROFILING */
+
+    HYD_handle.append_rank = -1;
 }
 
 void HYD_uiu_free_params(void)

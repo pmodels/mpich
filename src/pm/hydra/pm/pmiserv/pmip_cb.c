@@ -743,13 +743,15 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 
 HYD_status HYD_pmcd_pmip_stdout_cb(int fd, HYD_event_t events, void *userp)
 {
-    int closed, i;
+    int closed, i, sent, recvd;
+    char buf[HYD_TMPBUF_SIZE];
+    struct HYD_pmcd_stdio_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_forward_stdio(fd, STDOUT_FILENO, &closed);
-    HYDU_ERR_POP(status, "stdout forwarding error\n");
+    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &recvd, &closed, 0);
+    HYDU_ERR_POP(status, "sock read error\n");
 
     if (closed) {
         /* The connection has closed */
@@ -761,6 +763,25 @@ HYD_status HYD_pmcd_pmip_stdout_cb(int fd, HYD_event_t events, void *userp)
                 HYD_pmcd_pmip.downstream.out[i] = -1;
 
         close(fd);
+    }
+
+    if (recvd) {
+        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+            if (HYD_pmcd_pmip.downstream.out[i] == fd)
+                break;
+
+        HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
+
+        hdr.rank = HYD_pmcd_pmip.downstream.pmi_id[i];
+        hdr.buflen = recvd;
+
+        status = HYDU_sock_write(STDOUT_FILENO, &hdr, sizeof(hdr), &sent, &closed);
+        HYDU_ERR_POP(status, "sock write error\n");
+        HYDU_ASSERT(!closed, status);
+
+        status = HYDU_sock_write(STDOUT_FILENO, buf, recvd, &sent, &closed);
+        HYDU_ERR_POP(status, "sock write error\n");
+        HYDU_ASSERT(!closed, status);
     }
 
   fn_exit:
