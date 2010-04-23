@@ -12,20 +12,13 @@
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
-int HYD_pmcd_pmiserv_pipe[2];
-
-static HYD_status cleanup_procs(int fd, HYD_event_t events, void *userp)
+static HYD_status cleanup_procs(void)
 {
-    char c;
-    int count, closed;
     static int user_abort_signal = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_read(fd, &c, 1, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "read error\n");
-    HYDU_ASSERT(!closed, status);
 
     /* Sent kill signals to the processes. Wait for all processes to
      * exit. If they do not exit, allow the application to just force
@@ -55,6 +48,66 @@ static HYD_status cleanup_procs(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
+static HYD_status ckpoint(void)
+{
+    struct HYD_pg *pg;
+    struct HYD_proxy *proxy;
+    enum HYD_pmcd_pmi_cmd cmd;
+    int sent, closed;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* FIXME: Instead of doing this from this process itself, fork a
+     * bunch of processes to do this. */
+    /* Connect to all proxies and send the checkpoint command */
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+            cmd = CKPOINT;
+            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd),
+                                     &sent, &closed);
+            HYDU_ERR_POP(status, "unable to send checkpoint message\n");
+            HYDU_ASSERT(!closed, status);
+        }
+    }
+
+    HYDU_FUNC_EXIT();
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
+{
+    enum HYD_cmd cmd;
+    int count, closed;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "read error\n");
+    HYDU_ASSERT(!closed, status);
+
+    if (cmd == HYD_CLEANUP) {
+        status = cleanup_procs();
+        HYDU_ERR_POP(status, "error cleaning up processes\n");
+    }
+    else if (cmd == HYD_CKPOINT) {
+        status = ckpoint();
+        HYDU_ERR_POP(status, "error checkpointing processes\n");
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
@@ -66,14 +119,8 @@ HYD_status HYD_pmci_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    if (pipe(HYD_pmcd_pmiserv_pipe) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
-
-    status = HYDT_dmx_register_fd(1, &HYD_pmcd_pmiserv_pipe[0], POLLIN, NULL, cleanup_procs);
+    status = HYDT_dmx_register_fd(1, &HYD_handle.cleanup_pipe[0], POLLIN, NULL, ui_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
-
-    status = HYDU_set_common_signals(HYD_pmcd_pmiserv_signal_cb);
-    HYDU_ERR_POP(status, "unable to set signal\n");
 
     /* Initialize PMI */
     ret = MPL_env2str("PMI_PORT", (const char **) &pmi_port);

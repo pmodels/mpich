@@ -100,6 +100,33 @@ static void usage(void)
     printf("    -profile                         turn on internal profiling\n");
 }
 
+static void signal_cb(int sig)
+{
+    enum HYD_cmd cmd;
+    int sent, closed;
+
+    HYDU_FUNC_ENTER();
+
+    if (sig == SIGINT || sig == SIGQUIT || sig == SIGTERM) {
+        /* We don't want to send the abort signal directly to the
+         * proxies, since that would require two processes (this
+         * asynchronous process and the main process) to use the same
+         * control socket, potentially resulting in data
+         * corruption. The strategy we use is to set the abort flag
+         * and send a signal to ourselves. The signal callback does
+         * the process cleanup instead. */
+        cmd = HYD_CLEANUP;
+        HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+    }
+    else if (sig == SIGUSR1) {
+        cmd = HYD_CKPOINT;
+        HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+    }
+    /* Ignore other signals for now */
+
+    HYDU_FUNC_EXIT();
+    return;
+}
 
 int main(int argc, char **argv)
 {
@@ -122,6 +149,12 @@ int main(int argc, char **argv)
         usage();
         goto fn_fail;
     }
+
+    status = HYDU_set_common_signals(signal_cb);
+    HYDU_ERR_POP(status, "unable to set signal\n");
+
+    if (pipe(HYD_handle.cleanup_pipe) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
     status = HYDT_dmx_init(&HYD_handle.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");

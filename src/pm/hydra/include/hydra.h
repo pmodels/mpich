@@ -11,6 +11,11 @@
 #include "hydra_base.h"
 #include "hydra_utils.h"
 
+enum HYD_cmd {
+    HYD_CLEANUP,
+    HYD_CKPOINT
+};
+
 struct HYD_handle {
     struct HYD_user_global user_global;
 
@@ -44,6 +49,9 @@ struct HYD_handle {
 
     /* Random parameters used for internal code */
     int func_depth;
+
+    /* Cleanup */
+    int cleanup_pipe[2];
 
 #if defined ENABLE_PROFILING
     int enable_profiling;
