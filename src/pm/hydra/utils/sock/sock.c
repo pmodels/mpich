@@ -190,45 +190,6 @@ HYD_status HYDU_sock_accept(int listen_fd, int *fd)
     goto fn_exit;
 }
 
-
-/* HYD_sock_readline: Return the next newline-terminated string of
- * maximum length maxlen.  This is a buffered version, and reads from
- * fd as necessary. */
-HYD_status HYDU_sock_readline(int fd, char *buf, int maxlen, int *linelen)
-{
-    int n;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    *linelen = 0;
-    while (1) {
-        n = read(fd, buf + *linelen, maxlen - *linelen - 1);
-        if (n == 0) {   /* No more data to read */
-            break;
-        }
-        else if (n < 0) {
-            if (errno == EINTR)
-                continue;
-            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "read error (%s)\n",
-                                 HYDU_strerror(errno));
-        }
-
-        *linelen += n;
-        break;
-    }
-
-    /* Done reading; pad the last byte with a NULL */
-    buf[*linelen - 1] = 0;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
                           enum HYDU_sock_comm_flag flag)
 {
