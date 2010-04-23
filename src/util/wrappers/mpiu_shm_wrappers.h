@@ -535,7 +535,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
 
         *shm_addr_ptr = shmat(MPIU_SHMW_Lhnd_get(hnd), NULL, 0x0);
 
-        MPIU_ERR_CHKANDJUMP2(!(*shm_addr_ptr), mpi_errno, MPI_ERR_OTHER,
+        MPIU_ERR_CHKANDJUMP2((*shm_addr_ptr == (void*)(-1)), mpi_errno, MPI_ERR_OTHER,
             "**attach_shar_mem", "**attach_shar_mem %s %s",
             "shmat", MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
     }
