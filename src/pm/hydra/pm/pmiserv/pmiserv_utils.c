@@ -157,12 +157,21 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.global_core_count);
 
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-process-count");
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(pg->pg_process_count);
+
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
 
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-kvsname");
         proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
+
+        if (pg->spawner_pg) {
+            pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->spawner_pg->pg_scratch;
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-spawner-kvsname");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
+        }
 
         if (mapping) {
             proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-process-mapping");
@@ -303,40 +312,32 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
     goto fn_exit;
 }
 
-static HYD_status init_pg_scratch(struct HYD_pg *pg)
+HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
 {
+    int i;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    HYDU_MALLOC(pg->pg_scratch, void *, sizeof(struct HYD_pmcd_pmi_pg_scratch), status);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     pg_scratch->barrier_count = 0;
+
+    HYDU_MALLOC(pg_scratch->ecount, struct HYD_pmcd_pmi_ecount *,
+                pg->pg_process_count * sizeof(struct HYD_pmcd_pmi_ecount), status);
+    for (i = 0; i < pg->pg_process_count; i++) {
+        pg_scratch->ecount[i].fd = -1;
+        pg_scratch->ecount[i].pid = -1;
+        pg_scratch->ecount[i].epoch = -1;
+    }
+
     pg_scratch->control_listen_fd = -1;
     pg_scratch->pmi_listen_fd = -1;
 
     status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs, pg->pgid);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(pg->pg_scratch, void *, sizeof(struct HYD_pmcd_pmi_pg_scratch), status);
-
-    status = init_pg_scratch(pg);
-    HYDU_ERR_POP(status, "unable to create pg\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -18,7 +18,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
     int i, j, sent, closed;
     char *tmp[HYD_NUM_TMP_STRINGS], *buf;
-    struct HYD_pmcd_pmi_cmd_hdr hdr;
+    struct HYD_pmcd_pmi_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
@@ -149,6 +149,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
 {
     int id, i;
     char *rank_str;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -168,9 +169,33 @@ static HYD_status fn_fullinit(int fd, char *args[])
         if (HYD_pmcd_pmip.downstream.pmi_id[i] == id)
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
 
-    /* Recreate the PMI command and send it upstream */
-    status = send_cmd_upstream("cmd=fullinit;", fd, args);
-    HYDU_ERR_POP(status, "error sending command upstream\n");
+    i = 0;
+    /* FIXME: add support for ranks_per_proc */
+    tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
+    tmp[i++] = HYDU_int_to_str(id);
+
+    tmp[i++] = HYDU_strdup(";size=");
+    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
+    tmp[i++] = HYDU_strdup(";appnum=0");
+    if (HYD_pmcd_pmip.local.spawner_kvs_name) {
+        tmp[i++] = HYDU_strdup(";spawner-jobid=");
+        tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.local.spawner_kvs_name);
+    }
+    if (HYD_pmcd_pmip.user_global.debug) {
+        tmp[i++] = HYDU_strdup(";debugged=TRUE;pmiverbose=TRUE");
+    }
+    else {
+        tmp[i++] = HYDU_strdup(";debugged=FALSE;pmiverbose=FALSE");
+    }
+    tmp[i++] = HYDU_strdup(";rc=0;");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "error while joining strings\n");
+    HYDU_free_strlist(tmp);
+
+    send_cmd_downstream(fd, cmd);
+    HYDU_FREE(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);

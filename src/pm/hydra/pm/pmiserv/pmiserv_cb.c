@@ -111,8 +111,6 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
     struct HYD_proxy *tproxy;
     struct HYD_pg *pg = proxy->pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_pmcd_pmi_process *process, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -132,18 +130,6 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
     /* Reset the control fd to -1, so when the fd is reused, we don't
      * find the wrong proxy */
     proxy->control_fd = -1;
-
-    proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-    if (proxy_scratch) {
-        for (process = proxy_scratch->process_list; process;) {
-            tmp = process->next;
-            HYDU_FREE(process);
-            process = tmp;
-        }
-
-        HYDU_FREE(proxy_scratch);
-        proxy->proxy_scratch = NULL;
-    }
 
     for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
         if (tproxy->exit_status == NULL)
@@ -184,7 +170,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
     int count, closed;
     enum HYD_pmcd_pmi_cmd cmd = INVALID_PMI_CMD;
-    struct HYD_pmcd_pmi_cmd_hdr hdr;
+    struct HYD_pmcd_pmi_hdr hdr;
     struct HYD_proxy *proxy;
     char *buf;
     HYD_status status = HYD_SUCCESS;

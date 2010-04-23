@@ -227,9 +227,6 @@ struct HYD_proxy {
     int *exit_status;
     int control_fd;
 
-    /* scratch space for the PM */
-    void *proxy_scratch;
-
     struct HYD_proxy *next;
 };
 

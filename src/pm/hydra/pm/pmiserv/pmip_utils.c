@@ -111,6 +111,22 @@ static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
     return HYD_SUCCESS;
 }
 
+static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_MALLOC(HYD_pmcd_pmip.local.spawner_kvs_name, char *, MAXNAMELEN, status);
+
+    HYDU_snprintf(HYD_pmcd_pmip.local.spawner_kvs_name, MAXNAMELEN, "%s", **argv);
+    (*argv)++;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status pmi_process_mapping_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_process_mapping);
@@ -183,6 +199,11 @@ static HYD_status genv_prop_fn(char *arg, char ***argv)
 static HYD_status global_core_count_fn(char *arg, char ***argv)
 {
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.global_core_count);
+}
+
+static HYD_status global_process_count_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.global_process_count);
 }
 
 static HYD_status version_fn(char *arg, char ***argv)
@@ -366,6 +387,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pmi-port", pmi_port_fn, NULL},
     {"pmi-id", pmi_id_fn, NULL},
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
+    {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
     {"binding", binding_fn, NULL},
     {"bindlib", bindlib_fn, NULL},
@@ -376,6 +398,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"global-user-env", global_env_fn, NULL},
     {"genv-prop", genv_prop_fn, NULL},
     {"global-core-count", global_core_count_fn, NULL},
+    {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
     {"interface-env-name", interface_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},

@@ -22,20 +22,13 @@ struct HYD_pmcd_token_segment {
     int token_count;
 };
 
-struct HYD_pmcd_pmi_process {
-    int pid;                    /* unique id for the processes sharing the same fd */
-    int rank;                   /* process rank */
-    int epoch;                  /* Epoch this process has reached */
-    struct HYD_proxy *proxy;    /* Back pointer to the proxy */
-    struct HYD_pmcd_pmi_process *next;
-};
-
-struct HYD_pmcd_pmi_proxy_scratch {
-    struct HYD_pmcd_pmi_process *process_list;
-};
-
 struct HYD_pmcd_pmi_pg_scratch {
     int barrier_count;
+    struct HYD_pmcd_pmi_ecount {
+        int fd;
+        int pid;
+        int epoch;
+    } *ecount;
 
     int control_listen_fd;
     int pmi_listen_fd;
@@ -56,9 +49,7 @@ struct HYD_pmcd_pmi_publish {
     struct HYD_pmcd_pmi_publish *next;
 };
 
-HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank);
-HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int key, int rank);
-struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid);
+struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd);
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping);
 HYD_status HYD_pmcd_pmi_finalize(void);
 HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish *publish);

@@ -13,7 +13,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
     int i, j, sent, closed;
     char *tmp[HYD_NUM_TMP_STRINGS], *buf;
-    struct HYD_pmcd_pmi_cmd_hdr hdr;
+    struct HYD_pmcd_pmi_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
@@ -122,6 +122,7 @@ static HYD_status fn_initack(int fd, char *args[])
     char *val;
     struct HYD_pmcd_token *tokens;
     int token_count;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -139,9 +140,26 @@ static HYD_status fn_initack(int fd, char *args[])
         if (HYD_pmcd_pmip.downstream.pmi_id[i] == id)
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
 
-    /* Recreate the PMI command and send it upstream */
-    status = send_cmd_upstream("cmd=initack ", fd, args);
-    HYDU_ERR_POP(status, "error sending command upstream\n");
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
+    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
+
+    /* FIXME: allow for ranks_per_proc */
+    tmp[i++] = HYDU_strdup("\ncmd=set rank=");
+    tmp[i++] = HYDU_int_to_str(id);
+
+    tmp[i++] = HYDU_strdup("\ncmd=set debug=");
+    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.user_global.debug);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "error while joining strings\n");
+    HYDU_free_strlist(tmp);
+
+    status = send_cmd_downstream(fd, cmd);
+    HYDU_ERR_POP(status, "error sending PMI response\n");
+    HYDU_FREE(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -338,6 +356,54 @@ static HYD_status fn_get(int fd, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_barrier_in(int fd, char *args[])
+{
+    static int barrier_count = 0;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    barrier_count++;
+    if (barrier_count == HYD_pmcd_pmip.local.proxy_process_count) {
+        barrier_count = 0;
+
+        status = send_cmd_upstream("cmd=barrier_in", fd, args);
+        HYDU_ERR_POP(status, "error sending command upstream\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status fn_barrier_out(int fd, char *args[])
+{
+    const char *cmd;
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    cmd = HYDU_strdup("cmd=barrier_out\n");
+
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+        status = send_cmd_downstream(HYD_pmcd_pmip.downstream.pmi_fd[i], cmd);
+        HYDU_ERR_POP(status, "error sending PMI response\n");
+    }
+
+    HYDU_FREE(cmd);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status fn_finalize(int fd, char *args[])
 {
     const char *cmd;
@@ -371,6 +437,8 @@ static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"get_my_kvsname", fn_get_my_kvsname},
     {"get_universe_size", fn_get_usize},
     {"get", fn_get},
+    {"barrier_in", fn_barrier_in},
+    {"barrier_out", fn_barrier_out},
     {"finalize", fn_finalize},
     {"\0", NULL}
 };

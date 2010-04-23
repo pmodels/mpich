@@ -43,14 +43,9 @@ enum HYD_pmcd_pmi_cmd {
     PMI_CMD
 };
 
-struct HYD_pmcd_pmi_cmd_hdr {
+struct HYD_pmcd_pmi_hdr {
     int pid;                    /* ID of the requesting process */
     int pmi_version;            /* PMI version */
-    int buflen;
-};
-
-struct HYD_pmcd_pmi_response_hdr {
-    int pid;                    /* ID of the requesting process */
     int buflen;
 };
 

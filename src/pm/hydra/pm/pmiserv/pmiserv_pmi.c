@@ -12,48 +12,6 @@ struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle = { 0 };
 
 struct HYD_pmcd_pmi_publish *HYD_pmcd_pmi_publish_list = NULL;
 
-HYD_status HYD_pmcd_pmi_id_to_rank(int id, int pgid, int *rank)
-{
-    struct HYD_pg *pg;
-    struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_pmcd_pmi_process *process;
-    int max, ll, ul;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* Our rank should be >= (id * ranks_per_proc) and < ((id + 1) *
-     * ranks_per_proc. Find the maximum value available to use */
-    for (pg = &HYD_handle.pg_list; pg->pgid != pgid; pg = pg->next);
-    if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "PMI pgid %d not found\n", pgid);
-
-    ll = id * HYD_handle.ranks_per_proc;
-    ul = ((id + 1) * HYD_handle.ranks_per_proc) - 1;
-
-    max = ll;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        proxy_scratch = proxy->proxy_scratch;
-
-        if (proxy_scratch == NULL)
-            break;
-
-        for (process = proxy_scratch->process_list; process; process = process->next) {
-            if (max <= process->rank && process->rank <= ul)
-                max++;
-        }
-    }
-    *rank = max;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping_str)
 {
     int i, node_id;
@@ -126,87 +84,15 @@ HYD_status HYD_pmcd_pmi_process_mapping(char **process_mapping_str)
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_add_process_to_pg(struct HYD_pg *pg, int fd, int pid, int rank)
-{
-    struct HYD_pmcd_pmi_process *process, *tmp;
-    struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    int srank;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    srank = rank % HYD_handle.global_core_count;
-
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-        if ((srank >= proxy->start_pid) &&
-            (srank < (proxy->start_pid + proxy->node.core_count)))
-            break;
-
-    if (proxy->proxy_scratch == NULL) {
-        HYDU_MALLOC(proxy->proxy_scratch, void *, sizeof(struct HYD_pmcd_pmi_proxy_scratch),
-                    status);
-
-        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-        proxy_scratch->process_list = NULL;
-    }
-
-    proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-
-    /* Add process to the node */
-    HYDU_MALLOC(process, struct HYD_pmcd_pmi_process *, sizeof(struct HYD_pmcd_pmi_process),
-                status);
-    process->pid = pid;
-    process->rank = rank;
-    process->epoch = 0;
-    process->proxy = proxy;
-    process->next = NULL;
-
-    if (proxy_scratch->process_list == NULL)
-        proxy_scratch->process_list = process;
-    else {
-        tmp = proxy_scratch->process_list;
-        while (tmp->next)
-            tmp = tmp->next;
-        tmp->next = process;
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-struct HYD_pmcd_pmi_process *HYD_pmcd_pmi_find_process(int fd, int pid)
+struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_proxy_scratch *proxy_scratch;
-    struct HYD_pmcd_pmi_process *process = NULL;
-    int do_break;
 
-    do_break = 0;
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            if (proxy->control_fd == fd) {
-                do_break = 1;
-                break;
-            }
-        }
-        if (do_break)
-            break;
-    }
-
-    if (proxy) {
-        proxy_scratch = (struct HYD_pmcd_pmi_proxy_scratch *) proxy->proxy_scratch;
-        if (proxy_scratch) {
-            for (process = proxy_scratch->process_list; process; process = process->next)
-                if (process->pid == pid)
-                    return process;
-        }
-    }
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+            if (proxy->control_fd == fd)
+                return proxy;
 
     return NULL;
 }

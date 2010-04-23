@@ -164,7 +164,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
     int closed, repeat, sent;
-    struct HYD_pmcd_pmi_cmd_hdr hdr;
+    struct HYD_pmcd_pmi_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
     struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
@@ -208,7 +208,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         }
 
         if (HYD_pmcd_pmip.user_global.debug) {
-            HYDU_dump(stdout, "we don't understand this command; forwarding upstream\n");
+            HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n",
+                      pmi_cmd);
         }
 
         /* We don't understand the command; forward it upstream */
@@ -241,9 +242,10 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
 static HYD_status handle_pmi_response(int fd)
 {
-    struct HYD_pmcd_pmi_response_hdr hdr;
+    struct HYD_pmcd_pmi_hdr hdr;
     int count, closed, sent;
-    char *buf;
+    char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
+    struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -259,6 +261,24 @@ static HYD_status handle_pmi_response(int fd)
     HYDU_ASSERT(!closed, status);
 
     buf[hdr.buflen] = 0;
+
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    HYDU_ERR_POP(status, "unable to parse PMI command\n");
+
+    h = HYD_pmcd_pmip_pmi_handle;
+    while (h->handler) {
+        if (!strcmp(pmi_cmd, h->cmd)) {
+            status = h->handler(fd, args);
+            HYDU_ERR_POP(status, "PMI handler returned error\n");
+            goto fn_exit;
+        }
+        h++;
+    }
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n",
+                  pmi_cmd);
+    }
 
     status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");

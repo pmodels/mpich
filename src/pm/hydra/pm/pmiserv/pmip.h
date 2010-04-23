@@ -17,6 +17,7 @@ struct HYD_pmcd_pmip {
     struct {
         int enable_stdin;
         int global_core_count;
+        int global_process_count;
 
         /* PMI */
         char *pmi_port;
@@ -56,6 +57,7 @@ struct HYD_pmcd_pmip {
         int proxy_core_count;
         int proxy_process_count;
 
+        char *spawner_kvs_name;
         struct HYD_pmcd_pmi_kvs *kvs;   /* Node-level KVS space for node attributes */
     } local;
 

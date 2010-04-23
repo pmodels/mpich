@@ -9,15 +9,21 @@
 #include "pmi_common.h"
 #include "bind.h"
 
-HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd, char *args[])
+HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd, char *args[])
 {
     char *tbuf = NULL, *seg, *str1 = NULL, *cmd;
+    char *buf;
     char *tmp[HYD_NUM_TMP_STRINGS], *targs[HYD_NUM_TMP_STRINGS];
     const char *delim;
     int i, j, k;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    /* Make a copy of the original buffer */
+    buf = HYDU_strdup(obuf);
+    if (buf[strlen(obuf) - 1] == '\n')
+        buf[strlen(obuf) - 1] = '\0';
 
     if (pmi_version == 1) {
         if (!strncmp(buf, "cmd=", strlen("cmd=")))
@@ -95,6 +101,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd
     HYDU_ERR_POP(status, "string split returned error\n");
 
   fn_exit:
+    HYDU_FREE(buf);
     if (tbuf)
         HYDU_FREE(tbuf);
     if (str1)

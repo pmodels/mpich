@@ -20,6 +20,7 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.system_global.enable_stdin = -1;
     HYD_pmcd_pmip.system_global.global_core_count = -1;
+    HYD_pmcd_pmip.system_global.global_process_count = -1;
     HYD_pmcd_pmip.system_global.pmi_port = NULL;
     HYD_pmcd_pmip.system_global.pmi_id = -1;
     HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
@@ -41,6 +42,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.interface_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.local_binding = NULL;
+    HYD_pmcd_pmip.local.spawner_kvs_name = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
 
@@ -137,6 +139,9 @@ static void cleanup_params(void)
         HYDU_FREE(HYD_pmcd_pmip.local.hostname);
 
     if (HYD_pmcd_pmip.local.local_binding)
+        HYDU_FREE(HYD_pmcd_pmip.local.local_binding);
+
+    if (HYD_pmcd_pmip.local.spawner_kvs_name)
         HYDU_FREE(HYD_pmcd_pmip.local.local_binding);
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);

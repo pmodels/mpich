@@ -149,8 +149,6 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg)
 
     (*proxy)->next = NULL;
 
-    (*proxy)->proxy_scratch = NULL;
-
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
