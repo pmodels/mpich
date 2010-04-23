@@ -546,7 +546,7 @@ MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, 
     MPIDI_msg_sz_t last;
     MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
 
-    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
+    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */    
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 

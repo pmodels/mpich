@@ -111,7 +111,7 @@ static int init_mad( MPIDI_PG_t *pg_p )
 int
 MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
 		      char **bc_val_p, int *val_max_sz_p)
-{   
+{
    int mpi_errno = MPI_SUCCESS ;
    int index;
 

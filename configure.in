@@ -5941,6 +5941,17 @@ AC_SUBST(MPIU_THREAD_LIB_NAME)
 # End of thread configure
 # -----------------------------------------------------------------------------
 
+
+# Checkpointing
+
+AC_ARG_ENABLE(checkpointing,
+    [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
+    [
+        PAC_SET_HEADER_LIB_PATH(blcr)
+	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
+        AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
+    ],
+)
 #
 # Update the cache first with the results of the previous configure steps
 # We don't use the subdir cache because ensuring that the cache is consistant

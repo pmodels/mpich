@@ -351,12 +351,19 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_VC_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_VC_INIT);
-
+    
     vc_ch->pkt_handler = NULL;
     vc_ch->num_pkt_handlers = 0;
-
-    vc_ch->send_seqno = 0;
-
+    
+    vc_ch->send_seqno      = 0;
+#ifdef ENABLE_CHECKPOINT
+    vc_ch->ckpt_msg_len    = 0;
+    vc_ch->ckpt_msg_buf    = NULL;
+    vc_ch->ckpt_pause_send = NULL;
+    vc_ch->ckpt_pause_recv = NULL;
+    vc_ch->ckpt_continue   = NULL;
+    vc_ch->ckpt_restart    = NULL;
+#endif
     vc_ch->pending_pkt_len = 0;
     MPIU_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_PktGeneric_t *, sizeof (MPIDI_CH3_PktGeneric_t), mpi_errno, "pending_pkt");
 

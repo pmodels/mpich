@@ -11,9 +11,17 @@
 
 #define DBG_IFNAME 0
 
+#ifdef ENABLE_CHECKPOINTING
+static int ckpt_restart(void);
+#endif
+
 MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_init,
     MPID_nem_tcp_finalize,
+#ifdef ENABLE_CHECKPOINTING
+    MPID_nem_tcp_ckpt_shutdown,
+    ckpt_restart,
+#endif
     MPID_nem_tcp_connpoll,
     MPID_nem_tcp_get_business_card,
     MPID_nem_tcp_connect_to_root,
@@ -21,6 +29,9 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_vc_destroy,
     MPID_nem_tcp_vc_terminate
 };
+
+static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES];
+    
 
 #undef FUNCNAME
 #define FUNCNAME set_up_listener
@@ -44,7 +55,7 @@ static int set_up_listener(void)
     mpi_errno = MPID_nem_tcp_bind(MPID_nem_tcp_g_lstn_sc.fd);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    ret = listen(MPID_nem_tcp_g_lstn_sc.fd, SOMAXCONN);	      
+    ret = listen(MPID_nem_tcp_g_lstn_sc.fd, SOMAXCONN);
     MPIU_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", MPIU_Strerror(errno), errno);  
     MPID_nem_tcp_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
     MPID_nem_tcp_g_lstn_sc.handler = MPID_nem_tcp_state_listening_handler;
@@ -56,7 +67,6 @@ fn_fail:
 
     goto fn_exit;
 }
-
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_init
@@ -96,6 +106,60 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
     goto fn_exit;
 }
+
+#ifdef ENABLE_CHECKPOINTING
+
+#undef FUNCNAME
+#define FUNCNAME ckpt_restart
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int ckpt_restart(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char  *publish_bc_orig = NULL;
+    char  *bc_val          = NULL;
+    int    val_max_remaining;
+    MPID_nem_queue_ptr_t dummy ;
+    int i;
+    MPIDI_STATE_DECL(MPID_STATE_CKPT_RESTART);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_CKPT_RESTART);
+
+    /* Initialize the business card */
+    mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    publish_bc_orig = bc_val;
+
+    mpi_errno = MPID_nem_tcp_init(MPIDI_Process.my_pg, MPIDI_Process.my_pg_rank, &bc_val, &val_max_remaining);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    /* publish business card */
+    mpi_errno = MPIDI_PG_SetConnInfo(MPIDI_Process.my_pg_rank, (const char *)publish_bc_orig);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_Free(publish_bc_orig);
+    
+    for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
+        MPIDI_VC_t *vc;
+        MPIDI_CH3I_VC *vc_ch;
+        if (i == MPIDI_Process.my_pg_rank)
+            continue;
+        MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, i, &vc);
+        vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
+        if (!vc_ch->is_local) {
+            mpi_errno = vc_ch->ckpt_restart_vc(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+    
+
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_CKPT_RESTART);
+    return mpi_errno;
+fn_fail:
+
+    goto fn_exit;
+}
+#endif
 
 /*
  * Get a description of the network interface to use for socket communication
@@ -320,9 +384,20 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 
     vc_ch->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
     
-    vc->sendNoncontig_fn      = MPID_nem_tcp_SendNoncontig;
-    vc_ch->iStartContigMsg    = MPID_nem_tcp_iStartContigMsg;
-    vc_ch->iSendContig        = MPID_nem_tcp_iSendContig;
+    vc->sendNoncontig_fn   = MPID_nem_tcp_SendNoncontig;
+    vc_ch->iStartContigMsg = MPID_nem_tcp_iStartContigMsg;
+    vc_ch->iSendContig     = MPID_nem_tcp_iSendContig;
+#ifdef ENABLE_CHECKPOINTING
+    vc_ch->ckpt_pause_send_vc = MPID_nem_tcp_ckpt_pause_send_vc;
+    vc_ch->ckpt_continue_vc   = MPID_nem_tcp_ckpt_continue_vc;
+    vc_ch->ckpt_restart_vc    = MPID_nem_tcp_ckpt_restart_vc;
+
+    pkt_handlers[MPIDI_NEM_TCP_PKT_UNPAUSE] = MPID_nem_tcp_pkt_unpause_handler;
+#endif
+
+    vc_ch->pkt_handler = pkt_handlers;
+    vc_ch->num_pkt_handlers = MPIDI_NEM_TCP_PKT_NUM_TYPES;
+
     memset(&vc_tcp->sock_id, 0, sizeof(vc_tcp->sock_id));
     vc_tcp->sock_id.sin_family = AF_INET;
 
@@ -331,6 +406,9 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 
     ASSIGN_SC_TO_VC(vc_tcp, NULL);
     vc_tcp->send_queue.head = vc_tcp->send_queue.tail = NULL;
+
+    vc_tcp->send_paused = FALSE;
+    vc_tcp->paused_send_queue.head = vc_tcp->paused_send_queue.tail = NULL;
 
     vc_tcp->sc_ref_count = 0;
 

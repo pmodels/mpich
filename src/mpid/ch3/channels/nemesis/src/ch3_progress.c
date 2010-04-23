@@ -79,6 +79,13 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
     MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,"before outer while loop, completions=%d",completions);
 
+#ifdef ENABLE_CHECKPOINTING
+    if (MPIDI_nem_ckpt_start_checkpoint) {
+        MPIDI_nem_ckpt_start_checkpoint = FALSE;
+        MPIDI_nem_ckpt_start();
+    }
+#endif
+    
     do
     {
 	MPID_Request        *sreq;
@@ -696,10 +703,15 @@ int MPIDI_CH3I_Progress_init(void)
     /* pkt handlers for LMT */
     mpi_errno = MPID_nem_lmt_pkthandler_init(pktArray, PKTARRAY_SIZE);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+#ifdef ENABLE_CHECKPOINTING
+    mpi_errno = MPIDI_nem_ckpt_pkthandler_init(pktArray, PKTARRAY_SIZE);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#endif
 
     /* other pkt handlers */
     pktArray[MPIDI_NEM_PKT_NETMOD] = pkt_NETMOD_handler;
-    
+   
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
     return mpi_errno;

@@ -448,7 +448,7 @@ static int send_id_info(const sockconn_t *const sc)
 /*     FIXME better keep pg_id_len itself as part of MPIDI_Process.my_pg structure to */
 /*     avoid computing the length of string everytime this function is called. */
     
-    hdr.pkt_type = MPIDI_NEM_TCP_PKT_ID_INFO;
+    hdr.pkt_type = MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO;
     hdr.datalen = sizeof(MPIDI_nem_tcp_idinfo_t) + pg_id_len;    
     id_info.pg_rank = MPIDI_Process.my_pg_rank;
 
@@ -507,7 +507,7 @@ static int send_tmpvc_info(const sockconn_t *const sc)
 /*     FIXME better keep pg_id_len itself as part of MPIDI_Process.my_pg structure to */
 /*     avoid computing the length of string everytime this function is called. */
     
-    hdr.pkt_type = MPIDI_NEM_TCP_PKT_TMPVC_INFO;
+    hdr.pkt_type = MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_INFO;
     hdr.datalen = sizeof(MPIDI_nem_tcp_portinfo_t);
     port_info.port_name_tag = sc->vc->port_name_tag;
 
@@ -571,11 +571,11 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
         MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));
     }
     MPIU_ERR_CHKANDJUMP1(nread != hdr_len, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", strerror(errno));  /* FIXME-Z1 */
-    MPIU_Assert(hdr.pkt_type == MPIDI_NEM_TCP_PKT_ID_INFO ||
-		hdr.pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_INFO);
+    MPIU_Assert(hdr.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO ||
+		hdr.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_INFO);
     MPIU_Assert(hdr.datalen != 0);
     
-    if (hdr.pkt_type == MPIDI_NEM_TCP_PKT_ID_INFO) {
+    if (hdr.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO) {
 	iov[0].iov_base = (void *) &(sc->pg_rank);
 	iov[0].iov_len = sizeof(sc->pg_rank);
 	pg_id_len = hdr.datalen - sizeof(MPIDI_nem_tcp_idinfo_t);
@@ -619,7 +619,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
         
 	MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PKT_ID_INFO: sc->fd=%d, sc->vc=%p, sc=%p", sc->fd, sc->vc, sc));
     }
-    else if (hdr.pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_INFO) {
+    else if (hdr.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_INFO) {
         MPIDI_VC_t *vc;
         MPID_nem_tcp_vc_area *vc_tcp;
 
@@ -684,19 +684,19 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 #define FUNCNAME send_cmd_pkt
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int send_cmd_pkt_func(int fd, MPIDI_nem_tcp_pkt_type_t pkt_type)
+static int send_cmd_pkt_func(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
 {
     int mpi_errno = MPI_SUCCESS, offset;
     MPIDI_nem_tcp_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_tcp_header_t);
 
-    MPIU_Assert(pkt_type == MPIDI_NEM_TCP_PKT_ID_ACK ||
-                pkt_type == MPIDI_NEM_TCP_PKT_ID_NAK ||
-                pkt_type == MPIDI_NEM_TCP_PKT_DISC_REQ ||
-                pkt_type == MPIDI_NEM_TCP_PKT_DISC_ACK ||
-		pkt_type == MPIDI_NEM_TCP_PKT_DISC_NAK ||
-		pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_ACK ||
-		pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_NAK);
+    MPIU_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
+                pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
+                pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_REQ ||
+                pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_ACK ||
+		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_NAK ||
+		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
+		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK);
 
     pkt.pkt_type = pkt_type;
     pkt.datalen = 0;
@@ -723,7 +723,7 @@ static int send_cmd_pkt_func(int fd, MPIDI_nem_tcp_pkt_type_t pkt_type)
 #define FUNCNAME recv_cmd_pkt
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_pkt_type_t *pkt_type)
+static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t *pkt_type)
 {
     int mpi_errno = MPI_SUCCESS, nread;
     MPIDI_nem_tcp_header_t pkt;
@@ -739,13 +739,13 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_pkt_type_t *pkt_type)
     }
     MPIU_ERR_CHKANDJUMP2(nread != pkt_len, mpi_errno, MPI_ERR_OTHER, "**read", "**read %d %s", nread, strerror(errno)); /* FIXME-Z1 */
     MPIU_Assert(pkt.datalen == 0);
-    MPIU_Assert(pkt.pkt_type == MPIDI_NEM_TCP_PKT_ID_ACK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_PKT_ID_NAK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_ACK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_NAK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_PKT_DISC_REQ ||
-                pkt.pkt_type == MPIDI_NEM_TCP_PKT_DISC_ACK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_PKT_DISC_NAK);
+    MPIU_Assert(pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK ||
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_REQ ||
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_ACK ||
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_NAK);
     *pkt_type = pkt.pkt_type;
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_RECV_CMD_PKT);
@@ -979,7 +979,8 @@ static int cleanup_sc(sockconn_t *const sc)
     goto fn_exit;
 }
 
-/* this function is called when vc->state becomes CLOSE_ACKED */
+/* this function is called when vc->state becomes CLOSE_ACKED or when we need
+   to clean up after we restart from a checkpoint */
 /* FIXME XXX DJG do we need to do anything here to ensure that the final
    close(TRUE) packet has made it into a writev call?  The code might have a
    race for queued messages. */
@@ -994,8 +995,6 @@ int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CLEANUP);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CLEANUP);
-
-    MPIU_Assert(vc->state == MPIDI_VC_STATE_CLOSE_ACKED);
 
     if (vc_tcp->sc != NULL) {
         mpi_errno = cleanup_sc(vc_tcp->sc);
@@ -1122,7 +1121,7 @@ static int state_c_ranksent_handler(struct pollfd *const plfd, sockconn_t *const
     MPIDI_VC_t *const sc_vc = sc->vc;
     MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_nem_tcp_pkt_type_t pkt_type;
+    MPIDI_nem_tcp_socksm_pkt_type_t pkt_type;
     MPIDI_STATE_DECL(MPID_STATE_STATE_C_RANKSENT_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_C_RANKSENT_HANDLER);
@@ -1138,17 +1137,17 @@ static int state_c_ranksent_handler(struct pollfd *const plfd, sockconn_t *const
             }
         }
         else {
-            MPIU_Assert(pkt_type == MPIDI_NEM_TCP_PKT_ID_ACK ||
-                        pkt_type == MPIDI_NEM_TCP_PKT_ID_NAK);
+            MPIU_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
+                        pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK);
 
-            if (pkt_type == MPIDI_NEM_TCP_PKT_ID_ACK) {
+            if (pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK) {
                 CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
                 ASSIGN_SC_TO_VC(sc_vc_tcp, sc);
 
                 MPID_nem_tcp_conn_est (sc_vc);
                 MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "c_ranksent_handler(): connection established (sc=%p, sc->vc=%p, fd=%d)", sc, sc->vc, sc->fd));
             }
-            else { /* pkt_type must be MPIDI_NEM_TCP_PKT_ID_NAK */
+            else { /* pkt_type must be MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK */
                 CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
             }
         }
@@ -1167,7 +1166,7 @@ static int state_c_tmpvcsent_handler(struct pollfd *const plfd, sockconn_t *cons
     MPIDI_VC_t *const sc_vc = sc->vc;
     MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_nem_tcp_pkt_type_t pkt_type;
+    MPIDI_nem_tcp_socksm_pkt_type_t pkt_type;
     MPIDI_STATE_DECL(MPID_STATE_STATE_C_TMPVCSENT_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_C_TMPVCSENT_HANDLER);
@@ -1181,16 +1180,16 @@ static int state_c_tmpvcsent_handler(struct pollfd *const plfd, sockconn_t *cons
                packet then there really was a problem */
         }
         else {
-            MPIU_Assert(pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_ACK ||
-                        pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_NAK);
+            MPIU_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
+                        pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK);
 
-            if (pkt_type == MPIDI_NEM_TCP_PKT_TMPVC_ACK) {
+            if (pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK) {
                 CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
                 ASSIGN_SC_TO_VC(sc_vc_tcp, sc);
                 MPID_nem_tcp_conn_est (sc_vc);
                 MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "c_tmpvcsent_handler(): connection established (fd=%d, sc=%p, sc->vc=%p)", sc->fd, sc, sc_vc));
             }
-            else { /* pkt_type must be MPIDI_NEM_TCP_PKT_ID_NAK */
+            else { /* pkt_type must be MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK */
                 MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_c_tmpvcsent_handler() 2: changing to quiescent"));
                 CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
             }
@@ -1327,7 +1326,7 @@ static int state_l_rankrcvd_handler(struct pollfd *const plfd, sockconn_t *const
     }
     if (IS_WRITEABLE(plfd)) {
         if (snd_nak) {
-            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_PKT_ID_NAK) == MPI_SUCCESS) {
+            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK) == MPI_SUCCESS) {
                 MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "state_l_rankrcvd_handler() 2: changing to quiescent"));
                 CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
             }
@@ -1342,7 +1341,7 @@ static int state_l_rankrcvd_handler(struct pollfd *const plfd, sockconn_t *const
              * accessing PG/VC info that is no longer present. */
             if (sc_vc_tcp->sc_ref_count > 1) goto fn_exit;
 
-            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_PKT_ID_ACK) == MPI_SUCCESS) {
+            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK) == MPI_SUCCESS) {
                 CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
                 ASSIGN_SC_TO_VC(sc_vc_tcp, sc);
 		MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "connection established: sc=%p, sc->vc=%p, sc->fd=%d, is_same_pg=%s, pg_rank=%d", sc, sc_vc, sc->fd, (sc->is_same_pg ? "TRUE" : "FALSE"), sc->pg_rank));
@@ -1379,12 +1378,12 @@ static int state_l_tmpvcrcvd_handler(struct pollfd *const plfd, sockconn_t *cons
     /* we don't want to perform any h2h resolution for temp vcs */
     if (IS_WRITEABLE(plfd)) {
         if (snd_nak) {
-            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_PKT_TMPVC_NAK) == MPI_SUCCESS) {
+            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK) == MPI_SUCCESS) {
                 CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
             }
         }
         else {
-            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_PKT_TMPVC_ACK) == MPI_SUCCESS) {
+            if (send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK) == MPI_SUCCESS) {
                 CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
                 ASSIGN_SC_TO_VC(sc_vc_tcp, sc);
                 MPID_nem_tcp_conn_est(sc_vc);
@@ -1557,7 +1556,9 @@ static int state_commrdy_handler(struct pollfd *const plfd, sockconn_t *const sc
     }
     if (IS_WRITEABLE(plfd))
     {
-        mpi_errno = MPID_nem_tcp_send_queued(sc->vc);
+        MPIDI_VC_t *sc_vc = sc->vc;
+        MPID_nem_tcp_vc_area *sc_vc_tcp = VC_TCP(sc_vc);
+        mpi_errno = MPID_nem_tcp_send_queued(sc_vc, &sc_vc_tcp->send_queue);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
  fn_exit:
@@ -1623,6 +1624,10 @@ int MPID_nem_tcp_sm_init(void)
     sc_state_info[CONN_STATE_TS_D_QUIESCENT].sc_state_plfd_events = POLLOUT | POLLIN;
 
     /* Allocate the PLFD table */
+    g_tbl_size = 0;
+    g_tbl_capacity = CONN_PLFD_TBL_INIT_SIZE;
+    g_sc_tbl = NULL;
+    MPID_nem_tcp_plfd_tbl = NULL;
     alloc_sc_plfd_tbls();
     
     MPIU_CHKPMEM_MALLOC(recv_buf, char*, MPID_NEM_TCP_RECV_MAX_PKT_LEN, mpi_errno, "TCP temporary buffer");

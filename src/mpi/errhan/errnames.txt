@@ -845,7 +845,20 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **readv:readv failed
 **readv %d %s:readv failed - errno %d (%s)
 
+**ckptpkt:Failed to send checkpoint marker packet
+
+**sem_init:sem_init() failed
+**sem_init %s:sem_init() failed %s
+**sem_post:sem_post() failed
+**sem_post %s:sem_post() failed %s
+**sem_wait:sem_wait() failed
+**sem_wait %s:sem_wait() failed %s
+**sem_destroy:sem_destroy() failed
+**sem_destroy %s:sem_destroy() failed %s
+
 **comm_fail:Communication error
+
+**blcr_mod:BLCR kernel module not present
 
 #
 # mpi functions

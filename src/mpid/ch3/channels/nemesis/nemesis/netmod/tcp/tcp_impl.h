@@ -24,6 +24,12 @@ extern struct pollfd MPID_nem_tcp_g_lstn_plfd;
 #define MPID_NEM_TCP_VC_STATE_DISCONNECTED 0
 #define MPID_NEM_TCP_VC_STATE_CONNECTED 1
 
+typedef struct MPIDI_nem_tcp_request_queue
+{
+    struct MPID_Request *head;
+    struct MPID_Request *tail;
+} MPIDI_nem_tcp_request_queue_t;
+
 /* The vc provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the VC struction
    on the network module, facilitating dynamic module loading. */
@@ -31,12 +37,9 @@ typedef struct
 {
     struct sockaddr_in sock_id;
     struct MPID_nem_new_tcp_sockconn *sc;
-    struct
-    {
-        struct MPID_Request *head;
-        struct MPID_Request *tail;
-    } send_queue;
-
+    int send_paused;
+    MPIDI_nem_tcp_request_queue_t send_queue;
+    MPIDI_nem_tcp_request_queue_t paused_send_queue;
     /* this is a count of how many sc objects refer to this vc */
     int sc_ref_count;
 } MPID_nem_tcp_vc_area;
@@ -51,6 +54,14 @@ typedef struct
 /* functions */
 int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_tcp_finalize (void);
+
+#ifdef ENABLE_CHECKPOINTING
+int MPID_nem_tcp_ckpt_pause_send_vc(MPIDI_VC_t *vc);
+int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t *vc);
+int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t *vc);
+int MPID_nem_tcp_ckpt_shutdown(void);
+#endif
+
 int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc);
 int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc);
@@ -77,11 +88,13 @@ int MPID_nem_tcp_is_sock_connected(int fd);
 int MPID_nem_tcp_disconnect(struct MPIDI_VC *const vc);
 int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc);
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const l_plfd, sockconn_t *const l_sc);
-int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc);
+int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue);
 
 int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz);
 int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
                                     MPID_Request **sreq_ptr);
+int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
+                                        MPID_Request **sreq_ptr);
 int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz);
 int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port);
 
@@ -89,6 +102,9 @@ void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc);
 
 int MPID_nem_tcp_socksm_finalize(void);
 int MPID_nem_tcp_socksm_init(void);
+
+
+int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
 
 
 /* Macros */
@@ -113,7 +129,6 @@ int MPID_nem_tcp_socksm_init(void);
         (var) = (func);                         \
     } while ((var) == -1 && errno == EINTR)
 
-/* Send queue macros */
 #define Q_EMPTY(q) GENERIC_Q_EMPTY (q)
 #define Q_HEAD(q) GENERIC_Q_HEAD (q)
 #define Q_ENQUEUE_EMPTY(qp, ep) GENERIC_Q_ENQUEUE_EMPTY (qp, ep, next)
@@ -122,6 +137,14 @@ int MPID_nem_tcp_socksm_init(void);
 #define Q_ENQUEUE_MULTIPLE(qp, ep0, ep1) GENERIC_Q_ENQUEUE_MULTIPLE (qp, ep0, ep1, next)
 #define Q_DEQUEUE(qp, ep) GENERIC_Q_DEQUEUE (qp, ep, next)
 #define Q_REMOVE_ELEMENTS(qp, ep0, ep1) GENERIC_Q_REMOVE_ELEMENTS (qp, ep0, ep1, next)
+
+/* Send queue macros */
+#define SENDQ_EMPTY(q) GENERIC_Q_EMPTY (q)
+#define SENDQ_HEAD(q) GENERIC_Q_HEAD (q)
+#define SENDQ_ENQUEUE(qp, ep) GENERIC_Q_ENQUEUE (qp, ep, dev.next)
+#define SENDQ_DEQUEUE(qp, ep) GENERIC_Q_DEQUEUE (qp, ep, dev.next)
+#define SENDQ_ENQUEUE_MULTIPLE(qp, ep0, ep1) GENERIC_Q_ENQUEUE_MULTIPLE(qp, ep0, ep1, dev.next)
+
 
 /* VC list macros */
 #define VC_L_EMPTY(q) GENERIC_L_EMPTY (q)
@@ -168,6 +191,25 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found );
             ret_ = MPIU_Str_get_string_arg(bc_, MPIDI_CH3I_IFNAME_KEY, ifname_, sizeof(ifname_));       \
         MPIDU_Ftb_publish((event_name), ifname_);                                                       \
     } while(0)
+
+
+/* tcp-local packet types */
+
+typedef enum MPIDI_nem_tcp_pkt_type {
+#ifdef ENABLE_CHECKPOINTING
+    MPIDI_NEM_TCP_PKT_UNPAUSE,
+#endif
+    MPIDI_NEM_TCP_PKT_NUM_TYPES,
+    MPIDI_NEM_TCP_PKT_INVALID = -1 /* force signed, to avoid warnings */
+} MPIDI_nem_tcp_pkt_type_t;
+
+#ifdef ENABLE_CHECKPOINTING
+typedef struct MPIDI_nem_tcp_pkt_unpause
+{
+    MPID_nem_pkt_type_t type;
+    unsigned subtype;
+} MPIDI_nem_tcp_pkt_unpause_t;
+#endif
 
 
 

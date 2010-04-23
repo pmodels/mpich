@@ -56,6 +56,7 @@ typedef enum MPID_nem_pkt_type
     MPIDI_NEM_PKT_LMT_CTS,
     MPIDI_NEM_PKT_LMT_DONE,
     MPIDI_NEM_PKT_LMT_COOKIE,
+    MPIDI_NEM_PKT_CKPT_MARKER,
     MPIDI_NEM_PKT_NETMOD,
     MPIDI_NEM_PKT_END,
     MPIDI_NEM_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
@@ -98,6 +99,13 @@ typedef struct MPID_nem_pkt_lmt_cookie
 }
 MPID_nem_pkt_lmt_cookie_t;
 
+typedef struct MPID_nem_pkt_ckpt_marker
+{
+    MPID_nem_pkt_type_t type;
+    int wave; /* used for debugging */
+}
+MPID_nem_pkt_ckpt_marker_t;
+
 typedef struct MPID_nem_pkt_netmod
 {
     MPID_nem_pkt_type_t type;
@@ -111,6 +119,7 @@ typedef union MPIDI_CH3_nem_pkt
     MPID_nem_pkt_lmt_cts_t lmt_cts;
     MPID_nem_pkt_lmt_done_t lmt_done;
     MPID_nem_pkt_lmt_cookie_t lmt_cookie;
+    MPID_nem_pkt_ckpt_marker_t ckpt_marker;
     MPID_nem_pkt_netmod_t netmod;
 } MPIDI_CH3_nem_pkt_t;
 
@@ -203,7 +212,7 @@ typedef union MPIDI_CH3_nem_pkt
             MPIU_ERR_CHKANDJUMP(_cts_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**ctspkt");      \
             MPID_Request_release(_cts_req);                                                             \
         }                                                                                               \
-    } while (0)   
+    } while (0)
         
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_send_COOKIE

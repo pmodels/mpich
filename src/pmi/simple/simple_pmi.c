@@ -121,7 +121,9 @@ int PMI_Init( int *spawned )
     char *p;
     int notset = 1;
     int rc;
-
+    
+    PMI_initialized = PMI_UNINITIALIZED;
+    
     /* FIXME: Why is setvbuf commented out? */
     /* FIXME: What if the output should be fully buffered (directed to file)?
        unbuffered (user explicitly set?) */

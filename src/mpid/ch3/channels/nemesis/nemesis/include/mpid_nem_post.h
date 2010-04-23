@@ -8,6 +8,7 @@
 #define MPID_NEM_POST_H
 
 struct MPIDI_PG;
+union MPIDI_CH3_Pkt;
 
 /* if local_lmt_pending is true, local_lmt_progress will be called in the
    progress loop */
@@ -28,6 +29,15 @@ int MPID_nem_lmt_shm_progress(void);
 int MPID_nem_lmt_dma_progress(void);
 int MPID_nem_lmt_vmsplice_progress(void);
 int MPID_nem_vc_terminate(struct MPIDI_VC *vc);
+
+#ifdef ENABLE_CHECKPOINTING
+extern int MPIDI_nem_ckpt_start_checkpoint;
+int MPIDI_nem_ckpt_init(void);
+int MPIDI_nem_ckpt_finalize(void);
+int MPIDI_nem_ckpt_start(void);
+int MPIDI_nem_ckpt_pkthandler_init(int (*pktArray[])(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt,
+				     MPIDI_msg_sz_t *buflen, MPID_Request **req ), int arraySize);
+#endif
 
 /* one-sided */
 

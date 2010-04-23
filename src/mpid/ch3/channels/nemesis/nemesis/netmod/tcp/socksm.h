@@ -60,10 +60,10 @@ typedef enum {
     M_(CONN_STATE_TC_C_CNTING),                 \
     M_(CONN_STATE_TC_C_CNTD),                   \
     M_(CONN_STATE_TC_C_RANKSENT),               \
-    M_(CONN_STATE_TC_C_TMPVCSENT),               \
+    M_(CONN_STATE_TC_C_TMPVCSENT),              \
     M_(CONN_STATE_TA_C_CNTD),                   \
     M_(CONN_STATE_TA_C_RANKRCVD),               \
-    M_(CONN_STATE_TA_C_TMPVCRCVD),               \
+    M_(CONN_STATE_TA_C_TMPVCRCVD),              \
     M_(CONN_STATE_TS_COMMRDY),                  \
     M_(CONN_STATE_TS_D_QUIESCENT)
 
@@ -95,7 +95,6 @@ extern const char *const LISTEN_STATE_STR[];
 extern const char *const CONN_STATE_STR[];
 #endif
 #undef M_
-
 
 #ifdef USE_DBG_LOGGING
 #define CONN_STATE_TO_STRING(_cstate) \
@@ -129,7 +128,6 @@ typedef struct MPID_nem_new_tcp_sockconn sockconn_t;
 
 /* FIXME: should plfd really be const const?  Some handlers may need to change the plfd entry. */
 typedef int (*handler_func_t) (struct pollfd *const plfd, sockconn_t *const conn);
-
 struct MPID_nem_new_tcp_sockconn{
     int fd;
     int index;
@@ -152,20 +150,20 @@ struct MPID_nem_new_tcp_sockconn{
     handler_func_t handler;
 };
 
-typedef enum MPIDI_nem_tcp_pkt_type {
-    MPIDI_NEM_TCP_PKT_ID_INFO, /*  ID = rank + pg_id */
-    MPIDI_NEM_TCP_PKT_ID_ACK,
-    MPIDI_NEM_TCP_PKT_ID_NAK,
-    MPIDI_NEM_TCP_PKT_DISC_REQ,
-    MPIDI_NEM_TCP_PKT_DISC_ACK,
-    MPIDI_NEM_TCP_PKT_DISC_NAK,
-    MPIDI_NEM_TCP_PKT_TMPVC_INFO, 
-    MPIDI_NEM_TCP_PKT_TMPVC_ACK,
-    MPIDI_NEM_TCP_PKT_TMPVC_NAK
-} MPIDI_nem_tcp_pkt_type_t;
+typedef enum MPIDI_nem_tcp_socksm_pkt_type {
+    MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO, /*  ID = rank + pg_id */
+    MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK,
+    MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK,
+    MPIDI_NEM_TCP_SOCKSM_PKT_DISC_REQ,
+    MPIDI_NEM_TCP_SOCKSM_PKT_DISC_ACK,
+    MPIDI_NEM_TCP_SOCKSM_PKT_DISC_NAK,
+    MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_INFO, 
+    MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK,
+    MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK
+} MPIDI_nem_tcp_socksm_pkt_type_t;
     
 typedef struct MPIDI_nem_tcp_header {
-    MPIDI_nem_tcp_pkt_type_t pkt_type;
+    MPIDI_nem_tcp_socksm_pkt_type_t pkt_type;
     int datalen;
 } MPIDI_nem_tcp_header_t;
 
@@ -186,5 +184,6 @@ typedef struct MPIDI_nem_tcp_portinfo {
 
 
 #define MPID_nem_tcp_vc_is_connected(vc_tcp) (vc_tcp->sc && vc_tcp->sc->state.cstate == CONN_STATE_TS_COMMRDY)
+#define MPID_nem_tcp_vc_send_paused(vc_tcp) (vc_tcp->send_paused)
 
 #endif

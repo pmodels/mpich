@@ -42,8 +42,6 @@ static struct {MPID_nem_tcp_send_q_element_t *top;} free_buffers = {0};
 #define FREE_Q_ELEMENTS(e0, e1) S_PUSH_MULTIPLE (&free_buffers, e0, e1)
 #define FREE_Q_ELEMENT(e) S_PUSH (&free_buffers, e)
 
-int send_queued (MPIDI_VC_t *vc);
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_send_init
 #undef FCNAME
@@ -75,7 +73,7 @@ int MPID_nem_tcp_send_init(void)
 #define FUNCNAME MPID_nem_tcp_send_queued
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc)
+int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq;
@@ -89,12 +87,12 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc)
 
     MPIU_Assert(vc != NULL);
 
-    if (SENDQ_EMPTY(vc_tcp->send_queue))
+    if (SENDQ_EMPTY(*send_queue))
 	goto fn_exit;
 
-    while (!SENDQ_EMPTY(vc_tcp->send_queue))
+    while (!SENDQ_EMPTY(*send_queue))
     {
-        sreq = SENDQ_HEAD(vc_tcp->send_queue);
+        sreq = SENDQ_HEAD(*send_queue);
         
         iov = &sreq->dev.iov[sreq->dev.iov_offset];
         
@@ -148,7 +146,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc)
                 MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 MPIDI_CH3U_Request_complete(sreq);
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
-                SENDQ_DEQUEUE(&vc_tcp->send_queue, &sreq);
+                SENDQ_DEQUEUE(send_queue, &sreq);
                 continue;
             }
 
@@ -159,14 +157,14 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc)
             if (complete)
             {
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
-                SENDQ_DEQUEUE(&vc_tcp->send_queue, &sreq);
+                SENDQ_DEQUEUE(send_queue, &sreq);
                 continue;
             }
             sreq->dev.iov_offset = 0;
         }
     }
 
-    if (SENDQ_EMPTY(vc_tcp->send_queue))
+    if (SENDQ_EMPTY(*send_queue))
         UNSET_PLFD(vc_tcp);
     
  fn_exit:
@@ -212,7 +210,7 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
     if (!SENDQ_EMPTY (vc_tcp->send_queue))
     {
         SET_PLFD(vc_tcp);
-        mpi_errno = MPID_nem_tcp_send_queued (vc);
+        mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
 
@@ -220,7 +218,6 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CONN_EST);
     return mpi_errno;
 }
-
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_iStartContigMsg
@@ -242,17 +239,147 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tcp_iStartContigMsg");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
+
+    if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
+        if (MPID_nem_tcp_vc_is_connected(vc_tcp))
+        {
+            if (SENDQ_EMPTY(vc_tcp->send_queue))
+            {
+                MPID_IOV iov[2];
+                
+                iov[0].MPID_IOV_BUF = hdr;
+                iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+                iov[1].MPID_IOV_BUF = data;
+                iov[1].MPID_IOV_LEN = data_sz;
+                
+                CHECK_EINTR(offset, writev(sc->fd, iov, 2));
+                if (offset == 0) {
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+                }
+                if (offset == -1)
+                {
+                    if (errno == EAGAIN)
+                        offset = 0;
+                    else {
+                        MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                    }
+                }
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+                
+                if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
+                {
+                    /* sent whole message */
+                    *sreq_ptr = NULL;
+                    goto fn_exit;
+                }
+            }
+        }
+        else
+        {
+            mpi_errno = MPID_nem_tcp_connect(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    /* create and enqueue request */
+    MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "enqueuing");
+
+    /* create a request */
+    sreq = MPID_Request_create();
+    MPIU_Assert (sreq != NULL);
+    MPIU_Object_set_ref (sreq, 2);
+    sreq->kind = MPID_REQUEST_SEND;
+
+    sreq->dev.OnDataAvail = 0;
+    sreq->ch.vc = vc;
+    sreq->dev.iov_offset = 0;
+
+    if (offset < sizeof(MPIDI_CH3_PktGeneric_t))
+    {
+        sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)hdr;
+        sreq->dev.iov[0].MPID_IOV_BUF = (char *)&sreq->dev.pending_pkt + offset;
+        sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t) - offset ;
+        if (data_sz)
+        {
+            sreq->dev.iov[1].MPID_IOV_BUF = data;
+            sreq->dev.iov[1].MPID_IOV_LEN = data_sz;
+            sreq->dev.iov_count = 2;
+        }
+        else
+            sreq->dev.iov_count = 1;
+    }
+    else
+    {
+        sreq->dev.iov[0].MPID_IOV_BUF = (char *)data + (offset - sizeof(MPIDI_CH3_PktGeneric_t));
+        sreq->dev.iov[0].MPID_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_PktGeneric_t));
+        sreq->dev.iov_count = 1;
+    }
+    
+    MPIU_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].MPID_IOV_LEN > 0);
+
+    if (MPID_nem_tcp_vc_send_paused(vc_tcp)) {
+        SENDQ_ENQUEUE(&vc_tcp->paused_send_queue, sreq);
+    } else {
+        if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
+            if (SENDQ_EMPTY(vc_tcp->send_queue)) {
+                /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
+                SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+                SET_PLFD(vc_tcp);
+            } else {
+                /* there are other sends in the queue before this one: try to send from the queue */
+                SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+                mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            }
+        } else {
+            SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+        }
+    }
+    
+    *sreq_ptr = sreq;
+    
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+/* This sends the message even if the vc is in a paused state */
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_tcp_iStartContigMsg_paused
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
+                                        MPID_Request **sreq_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request * sreq = NULL;
+    MPIDI_msg_sz_t offset = 0;
+    MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+    sockconn_t *sc = vc_tcp->sc;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG_PAUSED);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG_PAUSED);
+    
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
+    
+    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tcp_iStartContigMsg");
+    MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
+
     if (MPID_nem_tcp_vc_is_connected(vc_tcp))
     {
         if (SENDQ_EMPTY(vc_tcp->send_queue))
         {
             MPID_IOV iov[2];
-
+                
             iov[0].MPID_IOV_BUF = hdr;
             iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
             iov[1].MPID_IOV_BUF = data;
             iov[1].MPID_IOV_LEN = data_sz;
-        
+                
             CHECK_EINTR(offset, writev(sc->fd, iov, 2));
             if (offset == 0) {
                 MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
@@ -268,7 +395,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 }
             }
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
-
+                
             if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
             {
                 /* sent whole message */
@@ -327,7 +454,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
         } else {
             /* there are other sends in the queue before this one: try to send from the queue */
             SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
-            mpi_errno = MPID_nem_tcp_send_queued(vc);
+            mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     } else {
@@ -336,10 +463,10 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     
     *sreq_ptr = sreq;
     
- fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG);
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG_PAUSED);
     return mpi_errno;
- fn_fail:
+fn_fail:
     goto fn_exit;
 }
 
@@ -363,69 +490,72 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tcp_iSendContig");
 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
-    if (MPID_nem_tcp_vc_is_connected(vc_tcp))
-    {
-        if (SENDQ_EMPTY(vc_tcp->send_queue))
+
+    if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
+        if (MPID_nem_tcp_vc_is_connected(vc_tcp))
         {
-            MPID_IOV iov[2];
-
-            iov[0].MPID_IOV_BUF = hdr;
-            iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
-            iov[1].MPID_IOV_BUF = data;
-            iov[1].MPID_IOV_LEN = data_sz;
-        
-            CHECK_EINTR(offset, writev(sc->fd, iov, 2));
-            if (offset == 0) {
-                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
-            }
-            if (offset == -1)
+            if (SENDQ_EMPTY(vc_tcp->send_queue))
             {
-                if (errno == EAGAIN)
-                    offset = 0;
-                else {
-                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror(errno));
-                }
-            }
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
-
-            if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
-            {
-                /* sent whole message */
-                int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
-
-                reqFn = sreq->dev.OnDataAvail;
-                if (!reqFn)
-                {
-                    MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-                    MPIDI_CH3U_Request_complete(sreq);
-                    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
-                    goto fn_exit;
-                }
-                else
-                {
-                    int complete = 0;
+                MPID_IOV iov[2];
                 
-                    mpi_errno = reqFn(vc, sreq, &complete);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-                    if (complete)
+                iov[0].MPID_IOV_BUF = hdr;
+                iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+                iov[1].MPID_IOV_BUF = data;
+                iov[1].MPID_IOV_LEN = data_sz;
+                
+                CHECK_EINTR(offset, writev(sc->fd, iov, 2));
+                if (offset == 0) {
+                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
+                }
+                if (offset == -1)
+                {
+                    if (errno == EAGAIN)
+                        offset = 0;
+                    else {
+                        MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                    }
+                }
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+                
+                if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
+                {
+                    /* sent whole message */
+                    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+                    
+                    reqFn = sreq->dev.OnDataAvail;
+                    if (!reqFn)
                     {
+                        MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
+                        MPIDI_CH3U_Request_complete(sreq);
                         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
                         goto fn_exit;
                     }
-
-                    /* not completed: more to send */
-                    goto enqueue_request;
+                    else
+                    {
+                        int complete = 0;
+                        
+                        mpi_errno = reqFn(vc, sreq, &complete);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        
+                        if (complete)
+                        {
+                            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+                            goto fn_exit;
+                        }
+                        
+                        /* not completed: more to send */
+                        goto enqueue_request;
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        mpi_errno = MPID_nem_tcp_connect(vc);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        else
+        {
+            mpi_errno = MPID_nem_tcp_connect(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
 
 
@@ -459,19 +589,23 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
 
-    if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
-        if (SENDQ_EMPTY(vc_tcp->send_queue)) {
-            /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
-            SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
-            SET_PLFD(vc_tcp);
-        } else {
-            /* there are other sends in the queue before this one: try to send from the queue */
-            SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
-            mpi_errno = MPID_nem_tcp_send_queued(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
+    if (MPID_nem_tcp_vc_send_paused(vc_tcp)) {
+        SENDQ_ENQUEUE(&vc_tcp->paused_send_queue, sreq);
     } else {
-        SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+        if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
+            if (SENDQ_EMPTY(vc_tcp->send_queue)) {
+                /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
+                SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+                SET_PLFD(vc_tcp);
+            } else {
+                /* there are other sends in the queue before this one: try to send from the queue */
+                SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+                mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            }
+        } else {
+            SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+        }
     }
     
  fn_exit:
@@ -510,33 +644,36 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     iov_n += 1;
     offset = 0;
 
-    if (MPID_nem_tcp_vc_is_connected(vc_tcp))
-    {
-        if (SENDQ_EMPTY(vc_tcp->send_queue))
+    if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
+        if (MPID_nem_tcp_vc_is_connected(vc_tcp))
         {
-            CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, iov_n));
-            if (offset == 0) {
-                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
-            }
-            if (offset == -1)
+            if (SENDQ_EMPTY(vc_tcp->send_queue))
             {
-                if (errno == EAGAIN)
-                    offset = 0;
-                else {
+                CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, iov_n));
+                if (offset == 0) {
                     MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
                 }
+                if (offset == -1)
+                {
+                    if (errno == EAGAIN)
+                        offset = 0;
+                    else {
+                        MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+                        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                    }
+                }
+                
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write noncontig " MPIDI_MSG_SZ_FMT, offset);
             }
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write noncontig " MPIDI_MSG_SZ_FMT, offset);
+        }
+        else
+        {
+            mpi_errno = MPID_nem_tcp_connect(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
-    else
-    {
-        mpi_errno = MPID_nem_tcp_connect(vc);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-
+    
     if (offset < iov[0].MPID_IOV_LEN)
     {
         /* header was not yet sent, save it in req */
@@ -593,19 +730,23 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
         
-    if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
-        if (SENDQ_EMPTY(vc_tcp->send_queue)) {
-            /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
-            SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
-            SET_PLFD(vc_tcp);
-        } else {
-            /* there are other sends in the queue before this one: try to send from the queue */
-            SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
-            mpi_errno = MPID_nem_tcp_send_queued(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
+    if (MPID_nem_tcp_vc_send_paused(vc_tcp)) {
+        SENDQ_ENQUEUE(&vc_tcp->paused_send_queue, sreq);
     } else {
-        SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+        if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
+            if (SENDQ_EMPTY(vc_tcp->send_queue)) {
+                /* this will be the first send on the queue: queue it and set the write flag on the pollfd */
+                SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+                SET_PLFD(vc_tcp);
+            } else {
+                /* there are other sends in the queue before this one: try to send from the queue */
+                SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+                mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            }
+        } else {
+            SENDQ_ENQUEUE(&vc_tcp->send_queue, sreq);
+        }
     }
     
  fn_exit:

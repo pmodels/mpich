@@ -244,27 +244,6 @@ if test "${with_papi}" != "no" ; then
 #    AC_CHECK_LIB(perfctr, perfctr_info, , [AC_MSG_ERROR(['perfctr library not found.  Did you specify --with-papi=?'])])
 fi
 
-AC_ARG_ENABLE(checkpointing, [--enable-checkpointing - enable checkpointing],, enable_checkpointing=no)
-AC_ARG_WITH(ckpt-dir, [--with-ckpt-dir=path - (checkpointing) specify path to ckpt directory],, with_ckpt_dir=no)
-AC_ARG_WITH(cli-dir, [--with-cli-dir=path - (checkpointing) specify path to cli directory],, with_cli_dir=no)
-
-if test "$enable_checkpointing" != "no" ; then
-    if test "$with_ckpt_dir" != "no" ; then
-        CPPFLAGS="$CPPFLAGS -I${with_ckpt_dir}"
-        LDFLAGS="$LDFLAGS -L${with_ckpt_dir} -Wl,-rpath,${with_ckpt_dir}"
-    fi
-    if test "$with_cli_dir" != "no" ; then
-        CPPFLAGS="$CPPFLAGS -I${with_cli_dir}"
-        LDFLAGS="$LDFLAGS -L${with_cli_dir}"
-    fi
-    AC_CHECK_HEADER([cli.h], , [AC_MSG_ERROR(['cli.h not found.  Did you specify --with-cli-dir=?'])])
-    AC_CHECK_LIB(cli, cli_init, , [AC_MSG_ERROR(['cli library not found.  Did you specify --with-cli-dir=?'])], -lckpt)
-
-    AC_CHECK_HEADER([ckpt.h], , [AC_MSG_ERROR(['ckpt.h not found.  Did you specify --with-ckpt-dir=?'])])
-    AC_CHECK_LIB(ckpt, ckpt_init, , [AC_MSG_ERROR(['ckpt library not found.  Did you specify --with-ckpt-dir=?'])])
-    AC_DEFINE(ENABLED_CHECKPOINTING, 1, [Define to enable nemesis checkpointing])
-fi
-
 # handle missing mkstemp, or missing mkstemp declaration
 AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(rand)
