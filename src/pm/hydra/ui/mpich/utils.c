@@ -881,7 +881,7 @@ static HYD_status set_default_values(void)
 
     /* If exec_list is not NULL, make sure local executable is set */
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->exec[0] == NULL)
+        if (exec->exec[0] == NULL && HYD_handle.user_global.ckpoint_prefix == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
         status = HYDU_correct_wdir(&exec->wdir);
