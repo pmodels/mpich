@@ -98,7 +98,7 @@ static void usage(void)
     printf("    -iface                           network interface to use\n");
     printf("    -ppn                             processes per node\n");
     printf("    -profile                         turn on internal profiling\n");
-    printf("    -append-rank                     append rank to output\n");
+    printf("    -prepend-rank                    prepend rank to output\n");
 }
 
 static void signal_cb(int sig)

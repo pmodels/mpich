@@ -20,7 +20,7 @@ struct HYD_handle {
     struct HYD_user_global user_global;
 
     int ppn;
-    int append_rank;
+    int prepend_rank;
 
     char *base_path;
 

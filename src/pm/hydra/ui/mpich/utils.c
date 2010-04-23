@@ -266,15 +266,15 @@ static HYD_status profile_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void append_rank_help_fn(void)
+static void prepend_rank_help_fn(void)
 {
     printf("\n");
-    printf("-append-rank: Append process rank to stdout and stderr\n\n");
+    printf("-prepend-rank: Prepend process rank to stdout and stderr\n\n");
 }
 
-static HYD_status append_rank_fn(char *arg, char ***argv)
+static HYD_status prepend_rank_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYD_handle.append_rank, 1);
+    return HYDU_set_int(arg, argv, &HYD_handle.prepend_rank, 1);
 }
 
 static void wdir_help_fn(void)
@@ -816,8 +816,8 @@ static struct HYD_arg_match_table match_table[] = {
     {"hostfile", mfile_fn, mfile_help_fn},
     {"ppn", ppn_fn, ppn_help_fn},
     {"profile", profile_fn, profile_help_fn},
-    {"append-rank", append_rank_fn, append_rank_help_fn},
-    {"l", append_rank_fn, append_rank_help_fn},
+    {"prepend-rank", prepend_rank_fn, prepend_rank_help_fn},
+    {"l", prepend_rank_fn, prepend_rank_help_fn},
     {"machine", mfile_fn, mfile_help_fn},
     {"machines", mfile_fn, mfile_help_fn},
     {"machinefile", mfile_fn, mfile_help_fn},
@@ -900,8 +900,8 @@ static HYD_status set_default_values(void)
     if (HYD_handle.enable_profiling == -1)
         HYD_handle.enable_profiling = 0;
 
-    if (HYD_handle.append_rank == -1)
-        HYD_handle.append_rank = 0;
+    if (HYD_handle.prepend_rank == -1)
+        HYD_handle.prepend_rank = 0;
 
     if (HYD_handle.user_global.debug == -1 &&
         MPL_env2bool("HYDRA_DEBUG", &HYD_handle.user_global.debug) == 0)
