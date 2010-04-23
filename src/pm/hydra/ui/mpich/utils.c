@@ -817,6 +817,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"ppn", ppn_fn, ppn_help_fn},
     {"profile", profile_fn, profile_help_fn},
     {"append-rank", append_rank_fn, append_rank_help_fn},
+    {"l", append_rank_fn, append_rank_help_fn},
     {"machine", mfile_fn, mfile_help_fn},
     {"machines", mfile_fn, mfile_help_fn},
     {"machinefile", mfile_fn, mfile_help_fn},
