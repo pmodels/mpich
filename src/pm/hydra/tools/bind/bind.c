@@ -70,17 +70,16 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib)
     }
 
 
+    HYDU_MALLOC(HYDT_bind_info.bindmap, int *,
+                HYDT_bind_info.total_proc_units * sizeof(int), status);
+
+    /* Initialize all entries to -1 */
+    for (i = 0; i < HYDT_bind_info.total_proc_units; i++)
+        HYDT_bind_info.bindmap[i] = -1;
+
+
     /***************************** USER *****************************/
     if (!strncmp(binding, "user:", strlen("user:"))) {
-        /* Find the number of processing elements */
-        bindstr = HYDU_strdup(binding + strlen("user:"));
-        HYDT_bind_info.total_proc_units = 0;
-        bindentry = strtok(bindstr, ",");
-        while (bindentry) {
-            HYDT_bind_info.total_proc_units++;
-            bindentry = strtok(NULL, ",");
-        }
-
         /* Find the actual processing elements */
         HYDU_MALLOC(HYDT_bind_info.bindmap, int *,
                     HYDT_bind_info.total_proc_units * sizeof(int), status);
@@ -88,26 +87,22 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib)
         bindstr = HYDU_strdup(binding + strlen("user:"));
         bindentry = strtok(bindstr, ",");
         while (bindentry) {
-            HYDT_bind_info.bindmap[i++] = atoi(bindentry);
+            HYDT_bind_info.bindmap[i] = atoi(bindentry);
+            HYDT_bind_info.bindmap[i] %= HYDT_bind_info.total_proc_units;
+            i++;
             bindentry = strtok(NULL, ",");
         }
 
         goto fn_exit;
     }
 
-
     /***************************** RR *****************************/
-    HYDU_MALLOC(HYDT_bind_info.bindmap, int *,
-                HYDT_bind_info.total_proc_units * sizeof(int), status);
-
-    /* RR is supported at the basic binding level */
     if (!strcmp(binding, "rr")) {
         for (i = 0; i < HYDT_bind_info.total_proc_units; i++)
             HYDT_bind_info.bindmap[i] = i;
 
         goto fn_exit;
     }
-
 
     /* If we reached here, the user requested for topology aware
      * binding. */
