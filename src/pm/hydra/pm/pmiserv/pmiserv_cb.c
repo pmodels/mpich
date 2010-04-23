@@ -68,7 +68,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
 
 static HYD_status handle_pid_list(int fd, struct HYD_proxy *proxy)
 {
-    int count;
+    int count, closed;
     struct HYD_proxy *tproxy;
     struct HYD_pg *pg = proxy->pg;
     HYD_status status = HYD_SUCCESS;
@@ -78,8 +78,9 @@ static HYD_status handle_pid_list(int fd, struct HYD_proxy *proxy)
     HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
     status = HYDU_sock_read(fd, (void *) proxy->pid,
                             proxy->proxy_process_count * sizeof(int),
-                            &count, HYDU_SOCK_COMM_MSGWAIT);
+                            &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
+    HYDU_ASSERT(!closed, status);
 
     if (pg->pgid) {
         /* We initialize the debugger code only for non-dynamically
@@ -106,7 +107,7 @@ static HYD_status handle_pid_list(int fd, struct HYD_proxy *proxy)
 
 static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 {
-    int count;
+    int count, closed;
     struct HYD_proxy *tproxy;
     struct HYD_pg *pg = proxy->pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -119,8 +120,9 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
     HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
     status = HYDU_sock_read(fd, (void *) proxy->exit_status,
                             proxy->proxy_process_count * sizeof(int),
-                            &count, HYDU_SOCK_COMM_MSGWAIT);
+                            &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
+    HYDU_ASSERT(!closed, status);
 
     status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "error deregistering fd\n");
@@ -166,8 +168,6 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
         pg_scratch->control_listen_fd = -1;
     }
 
-    HYD_pmcd_pmi_free_pg_scratch(pg);
-
     /* If this is the main PG, free the debugger PID list */
     if (pg->pgid == 0)
         HYDT_dbg_free_procdesc();
@@ -182,7 +182,7 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
-    int count;
+    int count, closed;
     enum HYD_pmcd_pmi_cmd cmd = INVALID_PMI_CMD;
     struct HYD_pmcd_pmi_cmd_hdr hdr;
     struct HYD_proxy *proxy;
@@ -193,8 +193,9 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
     proxy = (struct HYD_proxy *) userp;
 
-    status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &count, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read command from proxy\n");
+    HYDU_ASSERT(!closed, status);
 
     if (cmd == PID_LIST) {      /* Got PIDs */
         status = handle_pid_list(fd, proxy);
@@ -205,13 +206,15 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to receive exit status\n");
     }
     else if (cmd == PMI_CMD) {
-        status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read PMI header from proxy\n");
+        HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(buf, char *, hdr.buflen + 1, status);
 
-        status = HYDU_sock_read(fd, buf, hdr.buflen, &count, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read PMI command from proxy\n");
+        HYDU_ASSERT(!closed, status);
 
         buf[hdr.buflen] = 0;
 
@@ -235,13 +238,15 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 static HYD_status send_exec_info(struct HYD_proxy *proxy)
 {
     enum HYD_pmcd_pmi_cmd cmd;
+    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     cmd = PROC_INFO;
-    status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
+    status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd), &sent, &closed);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
+    HYDU_ASSERT(!closed, status);
 
     status = HYDU_send_strlist(proxy->control_fd, proxy->exec_launch_info);
     HYDU_ERR_POP(status, "error sending exec info\n");
@@ -256,7 +261,7 @@ static HYD_status send_exec_info(struct HYD_proxy *proxy)
 
 HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp)
 {
-    int accept_fd, proxy_id, count, pgid;
+    int accept_fd, proxy_id, count, pgid, closed;
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -272,8 +277,10 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     pgid = ((int) (size_t) userp);
 
     /* Read the proxy ID */
-    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count, &closed,
+                            HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "sock read returned error\n");
+    HYDU_ASSERT(!closed, status);
 
     /* Find the process group */
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
@@ -358,6 +365,7 @@ static HYD_status ckpoint(void)
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     enum HYD_pmcd_pmi_cmd cmd;
+    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -368,8 +376,10 @@ static HYD_status ckpoint(void)
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
             cmd = CKPOINT;
-            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd));
+            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd),
+                                     &sent, &closed);
             HYDU_ERR_POP(status, "unable to send checkpoint message\n");
+            HYDU_ASSERT(!closed, status);
         }
     }
 
@@ -385,6 +395,7 @@ static HYD_status ckpoint(void)
 void HYD_pmcd_pmiserv_signal_cb(int sig)
 {
     char c = 0;
+    int sent, closed;
 
     HYDU_FUNC_ENTER();
 
@@ -396,7 +407,7 @@ void HYD_pmcd_pmiserv_signal_cb(int sig)
          * corruption. The strategy we use is to set the abort flag
          * and send a signal to ourselves. The signal callback does
          * the process cleanup instead. */
-        HYDU_sock_write(HYD_pmcd_pmiserv_pipe[1], &c, 1);
+        HYDU_sock_write(HYD_pmcd_pmiserv_pipe[1], &c, 1, &sent, &closed);
     }
     else if (sig == SIGUSR1) {
         ckpoint();

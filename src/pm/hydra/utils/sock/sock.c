@@ -190,7 +190,7 @@ HYD_status HYDU_sock_accept(int listen_fd, int *fd)
     goto fn_exit;
 }
 
-HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
+HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed,
                           enum HYDU_sock_comm_flag flag)
 {
     int tmp;
@@ -200,28 +200,27 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
 
     HYDU_ASSERT(maxlen, status);
 
-    *count = 0;
+    *recvd = 0;
+    *closed = 0;
     while (1) {
         do {
-            tmp = read(fd, (char *) buf + *count, maxlen - *count);
+            tmp = read(fd, (char *) buf + *recvd, maxlen - *recvd);
         } while (tmp < 0 && errno == EINTR);
 
         if (tmp < 0) {
-            *count = tmp;
-            break;
+            *recvd = tmp;
+            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "read errno (%s)\n",
+                                 HYDU_strerror(errno));
         }
-        *count += tmp;
+        else if (tmp == 0) {
+            *closed = 1;
+            goto fn_exit;
+        }
+        *recvd += tmp;
 
-        if (flag != HYDU_SOCK_COMM_MSGWAIT || *count == maxlen)
+        if (flag != HYDU_SOCK_COMM_MSGWAIT || *recvd == maxlen)
             break;
-        else if (0 == tmp)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "MSGWAIT requested but EOF encountered\n");
     };
-
-    if (*count < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "read errno (%s)\n",
-                             HYDU_strerror(errno));
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -231,30 +230,31 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *count,
     goto fn_exit;
 }
 
-HYD_status HYDU_sock_write(int fd, const void *buf, int maxsize)
+HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *closed)
 {
-    int n, sent, size = maxsize;
-    const char *rbuf = buf;
+    int tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    sent = 0;
+    HYDU_ASSERT(maxlen, status);
+
+    *sent = 0;
+    *closed = 0;
     while (1) {
-        n = write(fd, rbuf, size);
-        if (n > 0) {
-            sent += n;
-            rbuf += n;
-            size -= n;
+        do {
+            tmp = write(fd, (char *) buf + *sent, maxlen - *sent);
+        } while (tmp < 0 && errno == EINTR);
+
+        if ((tmp < 0) || (*sent == 0 && tmp == 0)) {
+            *closed = 1;
+            goto fn_exit;
         }
+        *sent += tmp;
 
-        if (n < 0 && errno != EINTR)
-            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "write error (%s)\n",
-                                 HYDU_strerror(errno));
-
-        if (sent == maxsize)
+        if (*sent == maxlen)
             break;
-    }
+    };
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -373,11 +373,10 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
     *closed = 0;
     if (fwd_hash->buf_count == 0) {
         /* there is no data in the buffer, read something into it */
-        count = read(in, fwd_hash->buf, HYD_TMPBUF_SIZE);
-        if (count <= 0) {
-            *closed = 1;
-        }
-        else {
+        status = HYDU_sock_read(in, fwd_hash->buf, HYD_TMPBUF_SIZE, &count, closed, 0);
+        HYDU_ERR_POP(status, "read error\n");
+
+        if (!*closed) {
             fwd_hash->buf_offset = 0;
             fwd_hash->buf_count += count;
         }
@@ -385,15 +384,11 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
 
     if (fwd_hash->buf_count) {
         /* there is data in the buffer, send it out first */
-        count = write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count);
-        if (count < 0) {
-            if (errno == EPIPE)
-                *closed = 1;
-            else if (errno != EAGAIN)
-                HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                                     "write error on %d; errno: %d\n", out, errno);
-        }
-        else if (count) {
+        status = HYDU_sock_write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count,
+                                 &count, closed);
+        HYDU_ERR_POP(status, "write error\n");
+
+        if (!*closed) {
             fwd_hash->buf_offset += count;
             fwd_hash->buf_count -= count;
         }
@@ -402,15 +397,11 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
     /* If the incoming socket is closed, make sure we forward out all
      * of the buffered data */
     while (*closed && fwd_hash->buf_count) {
-        count = write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count);
-        if (count < 0) {
-            if (errno == EPIPE)
-                *closed = 1;
-            else if (errno != EAGAIN)
-                HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                                     "write error on %d; errno: %d\n", out, errno);
-        }
-        else if (count) {
+        status = HYDU_sock_write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count,
+                                 &count, closed);
+        HYDU_ERR_POP(status, "write error\n");
+
+        if (!*closed) {
             fwd_hash->buf_offset += count;
             fwd_hash->buf_count -= count;
         }

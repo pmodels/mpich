@@ -15,25 +15,29 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
 {
     enum HYD_pmcd_pmi_cmd c;
     struct HYD_pmcd_pmi_response_hdr hdr;
+    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     c = PMI_RESPONSE;
-    status = HYDU_sock_write(fd, &c, sizeof(c));
+    status = HYDU_sock_write(fd, &c, sizeof(c), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE command to proxy\n");
+    HYDU_ASSERT(!closed, status);
 
     hdr.pid = pid;
     hdr.buflen = strlen(cmd);
-    status = HYDU_sock_write(fd, &hdr, sizeof(hdr));
+    status = HYDU_sock_write(fd, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
+    HYDU_ASSERT(!closed, status);
 
     if (HYD_handle.user_global.debug) {
         HYDU_dump(stdout, "PMI response to fd %d pid %d: %s\n", fd, pid, cmd);
     }
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd));
+    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send response to command\n");
+    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     HYDU_FUNC_EXIT();

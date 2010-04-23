@@ -11,7 +11,7 @@
 
 static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
-    int i, j;
+    int i, j, sent, closed;
     char *tmp[HYD_NUM_TMP_STRINGS], *buf;
     struct HYD_pmcd_pmi_cmd_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
@@ -33,21 +33,24 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_free_strlist(tmp);
 
     cmd = PMI_CMD;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
+    HYDU_ASSERT(!closed, status);
 
     hdr.pid = fd;
     hdr.buflen = strlen(buf);
     hdr.pmi_version = 1;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr));
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
+    HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
         HYDU_dump(stdout, "forwarding command (%s) upstream\n", buf);
     }
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen);
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
+    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -59,6 +62,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 
 static HYD_status send_cmd_downstream(int fd, const char *cmd)
 {
+    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -67,8 +71,9 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
         HYDU_dump(stdout, "PMI response: %s\n", cmd);
     }
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd));
+    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);
     HYDU_ERR_POP(status, "error writing PMI line\n");
+    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     HYDU_FUNC_EXIT();

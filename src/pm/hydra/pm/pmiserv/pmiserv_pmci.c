@@ -14,6 +14,47 @@
 
 int HYD_pmcd_pmiserv_pipe[2];
 
+static HYD_status cleanup_procs(int fd, HYD_event_t events, void *userp)
+{
+    char c;
+    int count, closed;
+    static int user_abort_signal = 0;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_read(fd, &c, 1, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "read error\n");
+    HYDU_ASSERT(!closed, status);
+
+    /* Sent kill signals to the processes. Wait for all processes to
+     * exit. If they do not exit, allow the application to just force
+     * kill the spawned processes. */
+    if (user_abort_signal == 0) {
+        HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
+
+        status = HYD_pmcd_pmiserv_cleanup();
+        HYDU_ERR_POP(status, "cleanup of processes failed\n");
+
+        HYDU_dump_noprefix(stdout, "[press Ctrl-C again to force abort]\n");
+
+        user_abort_signal = 1;
+    }
+    else {
+        HYDU_dump_noprefix(stdout, "Ctrl-C caught... forcing cleanup\n");
+
+        status = HYDT_bsci_cleanup_procs();
+        HYDU_ERR_POP(status, "error cleaning up processes\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
@@ -24,6 +65,12 @@ HYD_status HYD_pmci_launch_procs(void)
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    if (pipe(HYD_pmcd_pmiserv_pipe) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
+
+    status = HYDT_dmx_register_fd(1, &HYD_pmcd_pmiserv_pipe[0], POLLIN, NULL, cleanup_procs);
+    HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYDU_set_common_signals(HYD_pmcd_pmiserv_signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
@@ -100,56 +147,13 @@ HYD_status HYD_pmci_launch_procs(void)
     goto fn_exit;
 }
 
-static HYD_status cleanup_procs(int fd, HYD_event_t events, void *userp)
-{
-    char c;
-    int count;
-    static int user_abort_signal = 0;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_read(fd, &c, 1, &count, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "read error\n");
-
-    /* Sent kill signals to the processes. Wait for all processes to
-     * exit. If they do not exit, allow the application to just force
-     * kill the spawned processes. */
-    if (user_abort_signal == 0) {
-        HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
-
-        status = HYD_pmcd_pmiserv_cleanup();
-        HYDU_ERR_POP(status, "cleanup of processes failed\n");
-
-        HYDU_dump_noprefix(stdout, "[press Ctrl-C again to force abort]\n");
-        user_abort_signal = 1;
-    }
-    else {
-        HYDU_dump_noprefix(stdout, "Ctrl-C caught... forcing cleanup\n");
-
-        status = HYDT_bsci_cleanup_procs();
-        HYDU_ERR_POP(status, "error cleaning up processes\n");
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
+    struct HYD_pg *pg;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    if (pipe(HYD_pmcd_pmiserv_pipe) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
-
-    status = HYDT_dmx_register_fd(1, &HYD_pmcd_pmiserv_pipe[0], POLLIN, NULL, cleanup_procs);
-    HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYDT_bsci_wait_for_completion(timeout);
     if (status == HYD_TIMED_OUT) {
@@ -161,6 +165,23 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     /* Wait for the processes to terminate */
     status = HYDT_bsci_wait_for_completion(-1);
     HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+
+    /* If we didn't get a user abort signal yet, wait for the exit
+     * status'es */
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+
+        while (pg_scratch->control_listen_fd != -1) {
+            status = HYDT_dmx_wait_for_event(-1);
+            HYDU_ERR_POP(status, "error waiting for event\n");
+        }
+
+        if (pg_scratch) {
+            HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
+            HYDU_FREE(pg_scratch);
+            pg_scratch = NULL;
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

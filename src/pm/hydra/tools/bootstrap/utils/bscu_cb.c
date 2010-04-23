@@ -9,7 +9,7 @@
 
 HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
 {
-    int buflen, i;
+    int buflen, i, closed;
     char buf[HYD_TMPBUF_SIZE];
     HYD_status(*cb) (void *buf, int buflen);
     HYD_status status = HYD_SUCCESS;
@@ -19,10 +19,10 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
     /* Get the callback information */
     cb = (HYD_status(*)(void *buf, int buflen)) userp;
 
-    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &buflen, HYDU_SOCK_COMM_NONE);
+    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &buflen, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "error reading from fd\n");
 
-    if (buflen == 0 || (events & HYD_POLLHUP)) {
+    if (closed || (events & HYD_POLLHUP)) {
         /* connection has closed */
         status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n", fd);
@@ -37,8 +37,10 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
         close(fd);
     }
 
-    status = cb(buf, buflen);
-    HYDU_ERR_POP(status, "callback returned error\n");
+    if (buflen) {
+        status = cb(buf, buflen);
+        HYDU_ERR_POP(status, "callback returned error\n");
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

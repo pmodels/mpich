@@ -73,15 +73,18 @@ static struct HYD_arg_match_table match_table[] = {
 static HYD_status cmd_response(int fd, struct HYDT_ns_publish *publish)
 {
     int len = strlen(publish->info);
+    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_write(fd, &len, sizeof(int));
+    status = HYDU_sock_write(fd, &len, sizeof(int), &sent, &closed);
     HYDU_ERR_POP(status, "error sending publish info\n");
+    HYDU_ASSERT(!closed, status);
 
-    status = HYDU_sock_write(fd, publish->info, len);
+    status = HYDU_sock_write(fd, publish->info, len, &sent, &closed);
     HYDU_ERR_POP(status, "error sending publish info\n");
+    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -93,36 +96,42 @@ static HYD_status cmd_response(int fd, struct HYDT_ns_publish *publish)
 
 static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
 {
-    int len, recvd;
+    int len, recvd, closed;
     char *cmd, *name;
     struct HYDT_ns_publish *publish, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data\n");
+    HYDU_ASSERT(!closed, status);
 
     HYDU_MALLOC(cmd, char *, len + 1, status);
-    status = HYDU_sock_read(fd, cmd, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, cmd, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data\n");
+    HYDU_ASSERT(!closed, status);
 
     if (!strcmp(cmd, "PUT")) {
         HYDU_MALLOC(publish, struct HYDT_ns_publish *, sizeof(struct HYDT_ns_publish), status);
 
-        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(publish->name, char *, len + 1, status);
-        status = HYDU_sock_read(fd, publish->name, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, publish->name, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
 
-        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(publish->info, char *, len + 1, status);
-        status = HYDU_sock_read(fd, publish->info, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, publish->info, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
 
         publish->next = NULL;
 
@@ -134,12 +143,14 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
         }
     }
     else if (!strcmp(cmd, "GET")) {
-        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(name, char *, len + 1, status);
-        status = HYDU_sock_read(fd, name, len, &recvd, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, name, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
 
         if (!strcmp(publish_list->name, name)) {
             status = cmd_response(fd, publish_list);

@@ -345,15 +345,3 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
   fn_fail:
     goto fn_exit;
 }
-
-void HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
-{
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    if (pg_scratch) {
-        HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
-        HYDU_FREE(pg_scratch);
-        pg_scratch = NULL;
-    }
-}

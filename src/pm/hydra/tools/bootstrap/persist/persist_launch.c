@@ -17,19 +17,21 @@ int HYDT_bscd_persist_node_count = 0;
 
 static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
 {
-    int count;
+    int count, closed;
     char buf[HYD_TMPBUF_SIZE];
     HYDT_persist_header hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading IO type\n");
+    HYDU_ASSERT(!closed, status);
 
     if (hdr.buflen) {
-        status = HYDU_sock_read(fd, buf, hdr.buflen, &count, HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data type\n");
+        HYDU_ASSERT(!closed, status);
 
         if (hdr.io_type == HYDT_PERSIST_STDOUT) {
             status = out_cb(buf, hdr.buflen);

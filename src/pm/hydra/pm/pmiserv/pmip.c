@@ -162,7 +162,7 @@ static void signal_cb(int sig)
 
 int main(int argc, char **argv)
 {
-    int i, count, pid, ret_status;
+    int i, count, pid, ret_status, sent, closed;
     enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
@@ -188,8 +188,10 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "unable to connect to the main server\n");
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                             &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id));
+                             &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send the proxy ID to the server\n");
+    if (closed)
+        goto fn_fail;
 
     status = HYDT_dmx_register_fd(1, &HYD_pmcd_pmip.upstream.control,
                                   HYD_POLLIN, NULL, HYD_pmcd_pmip_control_cmd_cb);
@@ -246,13 +248,17 @@ int main(int argc, char **argv)
 
     /* Send the exit status upstream */
     cmd = EXIT_STATUS;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd));
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
+    if (closed)
+        goto fn_fail;
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.exit_status,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int));
+                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent, &closed);
     HYDU_ERR_POP(status, "unable to return exit status upstream\n");
+    if (closed)
+        goto fn_fail;
 
     status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
     HYDU_ERR_POP(status, "unable to deregister fd\n");

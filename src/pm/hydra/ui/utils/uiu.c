@@ -183,12 +183,14 @@ void HYD_uiu_print_params(void)
 
 HYD_status HYD_uiu_stdout_cb(void *buf, int buflen)
 {
+    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_write(STDOUT_FILENO, buf, buflen);
+    status = HYDU_sock_write(STDOUT_FILENO, buf, buflen, &sent, &closed);
     HYDU_ERR_POP(status, "unable to write data to stdout\n");
+    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -200,12 +202,14 @@ HYD_status HYD_uiu_stdout_cb(void *buf, int buflen)
 
 HYD_status HYD_uiu_stderr_cb(void *buf, int buflen)
 {
+    int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_write(STDERR_FILENO, buf, buflen);
+    status = HYDU_sock_write(STDERR_FILENO, buf, buflen, &sent, &closed);
     HYDU_ERR_POP(status, "unable to write data to stdout\n");
+    HYDU_ASSERT(!closed, status);
 
   fn_exit:
     HYDU_FUNC_EXIT();

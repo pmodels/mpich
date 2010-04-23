@@ -65,7 +65,7 @@ static struct HYD_arg_match_table match_table[] = {
 
 static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 {
-    int closed, count;
+    int closed, count, sent;
     char buf[HYD_TMPBUF_SIZE];
     HYDT_persist_header hdr;
     HYD_status status = HYD_SUCCESS;
@@ -87,18 +87,21 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
     else if (fd == private.stdout_fd) {
         /* stdout event */
         status = HYDU_sock_read(private.stdout_fd, buf, HYD_TMPBUF_SIZE, &count,
-                                HYDU_SOCK_COMM_NONE);
+                                &closed, HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "error reading stdout from upstream\n");
+        HYDU_ASSERT(!closed, status);
 
         hdr.io_type = HYDT_PERSIST_STDOUT;
         hdr.buflen = count;
 
-        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr));
+        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr), &sent, &closed);
         HYDU_ERR_POP(status, "error sending header to client\n");
+        HYDU_ASSERT(!closed, status);
 
         if (hdr.buflen) {
-            status = HYDU_sock_write(private.client_fd, buf, count);
+            status = HYDU_sock_write(private.client_fd, buf, count, &sent, &closed);
             HYDU_ERR_POP(status, "error sending stdout to client\n");
+            HYDU_ASSERT(!closed, status);
         }
         else {
             status = HYDT_dmx_deregister_fd(private.stdout_fd);
@@ -112,19 +115,22 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         hdr.io_type = HYDT_PERSIST_STDERR;
         hdr.buflen = 0;
 
-        status = HYDU_sock_read(private.stderr_fd, buf, HYD_TMPBUF_SIZE, &count,
+        status = HYDU_sock_read(private.stderr_fd, buf, HYD_TMPBUF_SIZE, &count, &closed,
                                 HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "error reading stdout from upstream\n");
+        HYDU_ASSERT(!closed, status);
 
         hdr.io_type = HYDT_PERSIST_STDOUT;
         hdr.buflen = count;
 
-        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr));
+        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr), &sent, &closed);
         HYDU_ERR_POP(status, "error sending header to client\n");
+        HYDU_ASSERT(!closed, status);
 
         if (hdr.buflen) {
-            status = HYDU_sock_write(private.client_fd, buf, count);
+            status = HYDU_sock_write(private.client_fd, buf, count, &sent, &closed);
             HYDU_ERR_POP(status, "error sending stdout to client\n");
+            HYDU_ASSERT(!closed, status);
         }
         else {
             status = HYDT_dmx_deregister_fd(private.stderr_fd);
@@ -144,7 +150,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
 static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 {
-    int recvd, i, num_strings, str_len;
+    int recvd, i, num_strings, str_len, closed;
     char **args;
     HYD_status status = HYD_SUCCESS;
 
@@ -176,22 +182,25 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
     close(private.listen_fd);
 
     /* Get the executable information */
-    status = HYDU_sock_read(private.client_fd, &num_strings, sizeof(int), &recvd,
+    status = HYDU_sock_read(private.client_fd, &num_strings, sizeof(int), &recvd, &closed,
                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data from upstream\n");
+    HYDU_ASSERT(!closed, status);
 
     HYDU_MALLOC(args, char **, (num_strings + 1) * sizeof(char *), status);
 
     for (i = 0; i < num_strings; i++) {
-        status = HYDU_sock_read(private.client_fd, &str_len, sizeof(int), &recvd,
+        status = HYDU_sock_read(private.client_fd, &str_len, sizeof(int), &recvd, &closed,
                                 HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data from upstream\n");
+        HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(args[i], char *, str_len, status);
 
-        status = HYDU_sock_read(private.client_fd, args[i], str_len, &recvd,
+        status = HYDU_sock_read(private.client_fd, args[i], str_len, &recvd, &closed,
                                 HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data from upstream\n");
+        HYDU_ASSERT(!closed, status);
     }
     args[num_strings] = NULL;
 
