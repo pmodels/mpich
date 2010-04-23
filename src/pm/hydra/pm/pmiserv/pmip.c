@@ -190,7 +190,8 @@ int main(int argc, char **argv)
     status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
                                HYD_pmcd_pmip.upstream.server_port,
                                &HYD_pmcd_pmip.upstream.control);
-    HYDU_ERR_POP(status, "unable to connect to the main server\n");
+    HYDU_ERR_POP2(status, "unable to connect to server %s at port %d\n",
+                  HYD_pmcd_pmip.upstream.server_name, HYD_pmcd_pmip.upstream.server_port);
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id), &sent, &closed);

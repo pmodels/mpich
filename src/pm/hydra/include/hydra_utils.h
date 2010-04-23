@@ -68,6 +68,30 @@
         }                                                               \
     }
 
+#define HYDU_ERR_POP1(status, message, arg1)                            \
+    {                                                                   \
+        if (status && !HYD_SILENT_ERROR(status)) {                      \
+            if (strlen(message))                                        \
+                HYDU_error_printf(message, arg1);                       \
+            goto fn_fail;                                               \
+        }                                                               \
+        else if (HYD_SILENT_ERROR(status)) {                            \
+            goto fn_exit;                                               \
+        }                                                               \
+    }
+
+#define HYDU_ERR_POP2(status, message, arg1, arg2)                      \
+    {                                                                   \
+        if (status && !HYD_SILENT_ERROR(status)) {                      \
+            if (strlen(message))                                        \
+                HYDU_error_printf(message, arg1, arg2);                 \
+            goto fn_fail;                                               \
+        }                                                               \
+        else if (HYD_SILENT_ERROR(status)) {                            \
+            goto fn_exit;                                               \
+        }                                                               \
+    }
+
 #define HYDU_ERR_SETANDJUMP(status, error, message)                     \
     {                                                                   \
         status = error;                                                 \
@@ -79,18 +103,6 @@
         else if (HYD_SILENT_ERROR(status)) {                            \
             goto fn_exit;                                               \
         }                                                               \
-    }
-
-#define HYDU_ERR_CHKANDJUMP(status, chk, error, message)                \
-    {                                                                   \
-        if ((chk))                                                      \
-            HYDU_ERR_SETANDJUMP(status, error, message);                \
-    }
-
-#define HYDU_ERR_CHKANDJUMP1(status, chk, error, message, arg1)         \
-    {                                                                   \
-        if ((chk))                                                      \
-            HYDU_ERR_SETANDJUMP1(status, error, message, arg1);         \
     }
 
 #define HYDU_ERR_SETANDJUMP1(status, error, message, arg1)              \
@@ -117,6 +129,18 @@
         else if (HYD_SILENT_ERROR(status)) {                            \
             goto fn_exit;                                               \
         }                                                               \
+    }
+
+#define HYDU_ERR_CHKANDJUMP(status, chk, error, message)                \
+    {                                                                   \
+        if ((chk))                                                      \
+            HYDU_ERR_SETANDJUMP(status, error, message);                \
+    }
+
+#define HYDU_ERR_CHKANDJUMP1(status, chk, error, message, arg1)         \
+    {                                                                   \
+        if ((chk))                                                      \
+            HYDU_ERR_SETANDJUMP1(status, error, message, arg1);         \
     }
 
 #if defined ENABLE_WARNINGS || !defined COMPILER_ACCEPTS_VA_ARGS
