@@ -110,10 +110,13 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         /* FIXME: This dual memcpy is crazy and needs to be
          * fixed. Single memcpy should be possible, but we need to be
          * a bit careful not to corrupt the buffer. */
-        memcpy(r, sptr, storage_len);
-        memcpy(storage, r, storage_len);
-        storage_len = 0;
-        sptr = storage;
+        if (sptr != storage) {
+            memcpy(r, sptr, storage_len);
+            memcpy(storage, r, storage_len);
+            storage_len = 0;
+            sptr = storage;
+        }
+        *buf = NULL;
     }
 
   fn_exit:
@@ -183,6 +186,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     do {
         status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
         HYDU_ERR_POP(status, "error checking the PMI command\n");
+
+        if (buf == NULL)
+            break;
 
         if (hdr.pmi_version == 1)
             HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
