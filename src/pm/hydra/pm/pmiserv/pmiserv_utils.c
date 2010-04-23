@@ -163,6 +163,11 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
 
+        if (pmi_port) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
+        }
+
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-kvsname");
         proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
