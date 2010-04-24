@@ -504,3 +504,24 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *port_range, char **port_s
   fn_fail:
     goto fn_exit;
 }
+
+HYD_status HYDU_sock_cloexec(int fd)
+{
+    int flags;
+    HYD_status status = HYD_SUCCESS;
+
+#if defined HAVE_FCNTL
+            flags = fcntl(fd, F_GETFD, 0);
+            if (flags < 0)
+                HYDU_ERR_POP(status, "unable to get fd flags\n");
+            flags |= FD_CLOEXEC;
+            if (fcntl(fd, F_SETFD, flags) < 0)
+                HYDU_ERR_POP(status, "unable to set fd flags\n");
+#endif /* HAVE_FCNTL */
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

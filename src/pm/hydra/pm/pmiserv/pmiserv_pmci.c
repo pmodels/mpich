@@ -223,8 +223,8 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_proxy *proxy;
     struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
-    char *pmi_port = NULL;
-    int pmi_id = -1, enable_stdin, ret;
+    char *pmi_fd = NULL;
+    int pmi_rank = -1, enable_stdin, ret;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -233,21 +233,21 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Initialize PMI */
-    ret = MPL_env2str("PMI_PORT", (const char **) &pmi_port);
-    if (ret) {  /* PMI_PORT already set */
+    ret = MPL_env2str("PMI_FD", (const char **) &pmi_fd);
+    if (ret) {  /* PMI_FD already set */
         if (HYD_handle.user_global.debug)
-            HYDU_dump(stdout, "someone else already set PMI port\n");
-        pmi_port = HYDU_strdup(pmi_port);
+            HYDU_dump(stdout, "someone else already set PMI FD\n");
+        pmi_fd = HYDU_strdup(pmi_fd);
 
-        ret = MPL_env2int("PMI_ID", &pmi_id);
+        ret = MPL_env2int("PMI_RANK", &pmi_rank);
         if (!ret)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_PORT set but not PMI_ID\n");
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_FD set but not PMI_RANK\n");
     }
     else {
-        pmi_id = -1;
+        pmi_rank = -1;
     }
     if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "PMI port: %s; PMI ID: %d\n", pmi_port, pmi_id);
+        HYDU_dump(stdout, "PMI FD: %s; PMI ID: %d\n", pmi_fd, pmi_rank);
 
     status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_handle.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
@@ -280,7 +280,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_proxy_args(proxy_args, control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_port, pmi_id, &HYD_handle.pg_list);
+    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_fd, pmi_rank, &HYD_handle.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     status = HYDT_dmx_stdin_valid(&enable_stdin);
@@ -291,8 +291,8 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
   fn_exit:
-    if (pmi_port)
-        HYDU_FREE(pmi_port);
+    if (pmi_fd)
+        HYDU_FREE(pmi_fd);
     if (control_port)
         HYDU_FREE(control_port);
     HYDU_free_strlist(proxy_args);

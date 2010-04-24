@@ -20,8 +20,8 @@ struct HYD_pmcd_pmip {
         int global_process_count;
 
         /* PMI */
-        char *pmi_port;
-        int pmi_id;             /* If this is -1, we auto-generate it */
+        char *pmi_fd;
+        int pmi_rank;             /* If this is -1, we auto-generate it */
         char *pmi_process_mapping;
     } system_global;            /* Global system parameters */
 
@@ -42,7 +42,7 @@ struct HYD_pmcd_pmip {
         int *pid;
         int *exit_status;
 
-        int *pmi_id;
+        int *pmi_rank;
         int *pmi_fd;
     } downstream;
 

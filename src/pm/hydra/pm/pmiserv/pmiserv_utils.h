@@ -11,7 +11,7 @@
 #include "pmiserv_pmi.h"
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid);
-HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id,
+HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_fd, int pmi_rank,
                                                  struct HYD_pg *pg);
 HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg);
 

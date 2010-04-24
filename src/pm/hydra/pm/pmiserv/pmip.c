@@ -21,8 +21,8 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.system_global.enable_stdin = -1;
     HYD_pmcd_pmip.system_global.global_core_count = -1;
     HYD_pmcd_pmip.system_global.global_process_count = -1;
-    HYD_pmcd_pmip.system_global.pmi_port = NULL;
-    HYD_pmcd_pmip.system_global.pmi_id = -1;
+    HYD_pmcd_pmip.system_global.pmi_fd = NULL;
+    HYD_pmcd_pmip.system_global.pmi_rank = -1;
     HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
@@ -34,7 +34,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.downstream.in = -1;
     HYD_pmcd_pmip.downstream.pid = NULL;
     HYD_pmcd_pmip.downstream.exit_status = NULL;
-    HYD_pmcd_pmip.downstream.pmi_id = NULL;
+    HYD_pmcd_pmip.downstream.pmi_rank = NULL;
     HYD_pmcd_pmip.downstream.pmi_fd = NULL;
 
     HYD_pmcd_pmip.local.id = -1;
@@ -69,8 +69,8 @@ static void cleanup_params(void)
     if (HYD_pmcd_pmip.user_global.bootstrap_exec)
         HYDU_FREE(HYD_pmcd_pmip.user_global.bootstrap_exec);
 
-    if (HYD_pmcd_pmip.system_global.pmi_port)
-        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_port);
+    if (HYD_pmcd_pmip.system_global.pmi_fd)
+        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_fd);
 
     if (HYD_pmcd_pmip.system_global.pmi_process_mapping)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_process_mapping);
@@ -126,8 +126,8 @@ static void cleanup_params(void)
     if (HYD_pmcd_pmip.downstream.exit_status)
         HYDU_FREE(HYD_pmcd_pmip.downstream.exit_status);
 
-    if (HYD_pmcd_pmip.downstream.pmi_id)
-        HYDU_FREE(HYD_pmcd_pmip.downstream.pmi_id);
+    if (HYD_pmcd_pmip.downstream.pmi_rank)
+        HYDU_FREE(HYD_pmcd_pmip.downstream.pmi_rank);
 
     if (HYD_pmcd_pmip.downstream.pmi_fd)
         HYDU_FREE(HYD_pmcd_pmip.downstream.pmi_fd);

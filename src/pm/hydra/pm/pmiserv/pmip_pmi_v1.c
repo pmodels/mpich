@@ -116,60 +116,6 @@ static HYD_status fn_init(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_initack(int fd, char *args[])
-{
-    int id, i;
-    char *val;
-    struct HYD_pmcd_token *tokens;
-    int token_count;
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
-    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
-
-    val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "pmiid");
-    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find pmiid token\n");
-    id = atoi(val);
-
-    /* Store the PMI_ID to fd mapping */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-        if (HYD_pmcd_pmip.downstream.pmi_id[i] == id)
-            HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
-
-    i = 0;
-    tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
-    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
-
-    /* FIXME: allow for ranks_per_proc */
-    tmp[i++] = HYDU_strdup("\ncmd=set rank=");
-    tmp[i++] = HYDU_int_to_str(id);
-
-    tmp[i++] = HYDU_strdup("\ncmd=set debug=");
-    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.user_global.debug);
-    tmp[i++] = HYDU_strdup("\n");
-    tmp[i++] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, &cmd);
-    HYDU_ERR_POP(status, "error while joining strings\n");
-    HYDU_free_strlist(tmp);
-
-    status = send_cmd_downstream(fd, cmd);
-    HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(cmd);
-
-  fn_exit:
-    HYD_pmcd_pmi_free_tokens(tokens, token_count);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status fn_get_maxes(int fd, char *args[])
 {
     int i;
@@ -218,6 +164,7 @@ static HYD_status fn_get_appnum(int fd, char *args[])
         if (HYD_pmcd_pmip.downstream.pmi_fd[i] == fd)
             break;
     idx = i;
+    HYDU_ASSERT(idx < HYD_pmcd_pmip.local.proxy_process_count, status);
 
     i = 0;
     for (exec = HYD_pmcd_pmip.exec_list; exec; exec = exec->next) {
@@ -431,7 +378,6 @@ static HYD_status fn_finalize(int fd, char *args[])
 
 static struct HYD_pmcd_pmip_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"init", fn_init},
-    {"initack", fn_initack},
     {"get_maxes", fn_get_maxes},
     {"get_appnum", fn_get_appnum},
     {"get_my_kvsname", fn_get_my_kvsname},

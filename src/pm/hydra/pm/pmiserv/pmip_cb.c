@@ -298,39 +298,17 @@ static HYD_status handle_pmi_response(int fd)
     goto fn_exit;
 }
 
-static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
-{
-    int accept_fd;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_accept(fd, &accept_fd);
-    HYDU_ERR_POP(status, "accept error\n");
-
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, pmi_cb);
-    HYDU_ERR_POP(status, "unable to register fd\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status launch_procs(void)
 {
-    int i, j, arg, stdin_fd, process_id, os_index, pmi_id;
+    int i, j, arg, stdin_fd, process_id, os_index, pmi_rank;
     char *str, *envstr, *list;
     char *client_args[HYD_NUM_TMP_STRINGS];
     struct HYD_env *env, *opt_env = NULL, *force_env = NULL;
     struct HYD_exec *exec;
     enum HYD_pmcd_pmi_cmd cmd;
-    char *pmi_port = NULL;
-    int *pmi_ids;
-    int sent, closed;
-    HYD_status status = HYD_SUCCESS;
+    int *pmi_ranks;
+    int sent, closed, pmi_fds[2] = { -1, -1 };
+     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
@@ -338,9 +316,9 @@ static HYD_status launch_procs(void)
     for (exec = HYD_pmcd_pmip.exec_list; exec; exec = exec->next)
         HYD_pmcd_pmip.local.proxy_process_count += exec->proc_count;
 
-    HYDU_MALLOC(pmi_ids, int *, HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+    HYDU_MALLOC(pmi_ranks, int *, HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-        pmi_ids[i] =
+        pmi_ranks[i] =
             HYDU_local_to_global_id(i, HYD_pmcd_pmip.start_pid,
                                     HYD_pmcd_pmip.local.proxy_core_count,
                                     HYD_pmcd_pmip.system_global.global_core_count);
@@ -354,7 +332,7 @@ static HYD_status launch_procs(void)
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC(HYD_pmcd_pmip.downstream.exit_status, int *,
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
-    HYDU_MALLOC(HYD_pmcd_pmip.downstream.pmi_id, int *,
+    HYDU_MALLOC(HYD_pmcd_pmip.downstream.pmi_rank, int *,
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC(HYD_pmcd_pmip.downstream.pmi_fd, int *,
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
@@ -374,26 +352,19 @@ static HYD_status launch_procs(void)
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     if (HYD_pmcd_pmip.exec_list == NULL) {      /* Checkpoint restart cast */
-        status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
+        status = HYDU_env_create(&env, "PMI_FD", HYD_pmcd_pmip.system_global.pmi_fd);
         HYDU_ERR_POP(status, "unable to create env\n");
 
-        /* Restart the proxy.  Specify stdin fd only if pmi_id 0 is in this proxy. */
+        /* Restart the proxy.  Specify stdin fd only if pmi_rank 0 is in this proxy. */
         status = HYDT_ckpoint_restart(env, HYD_pmcd_pmip.local.proxy_process_count,
-                                      pmi_ids,
-                                      pmi_ids[0] ? NULL :
+                                      pmi_ranks,
+                                      pmi_ranks[0] ? NULL :
                                       HYD_pmcd_pmip.system_global.enable_stdin ?
                                       &HYD_pmcd_pmip.downstream.in : NULL,
                                       HYD_pmcd_pmip.downstream.out,
                                       HYD_pmcd_pmip.downstream.err);
         HYDU_ERR_POP(status, "checkpoint restart failure\n");
         goto fn_spawn_complete;
-    }
-
-    if (HYD_pmcd_pmip.system_global.pmi_port == NULL) {
-        /* No global PMI port is specified, we use a local one */
-        status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
-                                                     NULL, &pmi_port, pmi_listen_cb, NULL);
-        HYDU_ERR_POP(status, "unable to create PMI port\n");
     }
 
     /* Spawn the processes */
@@ -458,19 +429,6 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
-        if (HYD_pmcd_pmip.system_global.pmi_port) {
-            /* If a global PMI port is provided, use it */
-            status = HYDU_env_create(&env, "PMI_PORT", HYD_pmcd_pmip.system_global.pmi_port);
-            HYDU_ERR_POP(status, "unable to create env\n");
-        }
-        else {
-            status = HYDU_env_create(&env, "PMI_PORT", pmi_port);
-            HYDU_ERR_POP(status, "unable to create env\n");
-        }
-
-        status = HYDU_append_env_to_list(*env, &force_env);
-        HYDU_ERR_POP(status, "unable to add env to list\n");
-
         /* Set the interface hostname based on what the user provided */
         if (HYD_pmcd_pmip.local.interface_env_name) {
             if (HYD_pmcd_pmip.user_global.iface) {
@@ -499,30 +457,67 @@ static HYD_status launch_procs(void)
                                  HYDU_strerror(errno));
 
         for (i = 0; i < exec->proc_count; i++) {
-            if (HYD_pmcd_pmip.system_global.pmi_id == -1)
-                pmi_id = HYDU_local_to_global_id(process_id,
+
+            /* PMI_RANK */
+            if (HYD_pmcd_pmip.system_global.pmi_rank == -1)
+                pmi_rank = HYDU_local_to_global_id(process_id,
                                                  HYD_pmcd_pmip.start_pid,
                                                  HYD_pmcd_pmip.local.proxy_core_count,
                                                  HYD_pmcd_pmip.system_global.
                                                  global_core_count);
             else
-                pmi_id = HYD_pmcd_pmip.system_global.pmi_id;
+                pmi_rank = HYD_pmcd_pmip.system_global.pmi_rank;
 
-            HYD_pmcd_pmip.downstream.pmi_id[process_id] = pmi_id;
+            HYD_pmcd_pmip.downstream.pmi_rank[process_id] = pmi_rank;
 
-            str = HYDU_int_to_str(pmi_id);
-            status = HYDU_env_create(&env, "PMI_ID", str);
+            str = HYDU_int_to_str(pmi_rank);
+            status = HYDU_env_create(&env, "PMI_RANK", str);
             HYDU_ERR_POP(status, "unable to create env\n");
             HYDU_FREE(str);
             status = HYDU_append_env_to_list(*env, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
+
+
+            /* PMI_FD */
+            if (HYD_pmcd_pmip.system_global.pmi_fd) {
+                /* If a global PMI port is provided, use it */
+                status = HYDU_env_create(&env, "PMI_FD", HYD_pmcd_pmip.system_global.pmi_fd);
+                HYDU_ERR_POP(status, "unable to create env\n");
+            }
+            else {
+                if (socketpair(AF_UNIX, SOCK_STREAM, 0, pmi_fds) < 0)
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
+
+                status = HYDT_dmx_register_fd(1, &pmi_fds[0], HYD_POLLIN, NULL, pmi_cb);
+                HYDU_ERR_POP(status, "unable to register fd\n");
+
+                str = HYDU_int_to_str(pmi_fds[1]);
+                status = HYDU_env_create(&env, "PMI_FD", str);
+                HYDU_ERR_POP(status, "unable to create env\n");
+                HYDU_FREE(str);
+
+                HYD_pmcd_pmip.downstream.pmi_fd[process_id] = pmi_fds[0];
+            }
+
+            status = HYDU_append_env_to_list(*env, &force_env);
+            HYDU_ERR_POP(status, "unable to add env to list\n");
+
+
+            /* PMI_SIZE */
+            str = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
+            status = HYDU_env_create(&env, "PMI_SIZE", str);
+            HYDU_ERR_POP(status, "unable to create env\n");
+            HYDU_FREE(str);
+            status = HYDU_append_env_to_list(*env, &force_env);
+            HYDU_ERR_POP(status, "unable to add env to list\n");
+
 
             for (j = 0, arg = 0; exec->exec[j]; j++)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
             os_index = HYDT_bind_get_os_index(process_id);
-            if (pmi_id == 0) {
+            if (pmi_rank == 0) {
                 status = HYDU_create_process(client_args, opt_env, force_env,
                                              HYD_pmcd_pmip.system_global.enable_stdin ?
                                              &HYD_pmcd_pmip.downstream.in : NULL,
@@ -546,6 +541,11 @@ static HYD_status launch_procs(void)
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
                                              os_index);
                 HYDU_ERR_POP(status, "create process returned error\n");
+            }
+
+            if (pmi_fds[1] != -1) {
+                close(pmi_fds[1]);
+                pmi_fds[1] = -1;
             }
 
             process_id++;
@@ -580,8 +580,8 @@ static HYD_status launch_procs(void)
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
-    if (pmi_ids)
-        HYDU_FREE(pmi_ids);
+    if (pmi_ranks)
+        HYDU_FREE(pmi_ranks);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -772,7 +772,7 @@ HYD_status HYD_pmcd_pmip_stdout_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-        hdr.rank = HYD_pmcd_pmip.downstream.pmi_id[i];
+        hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
         hdr.buflen = recvd;
 
         status = HYDU_sock_write(STDOUT_FILENO, &hdr, sizeof(hdr), &sent, &closed);

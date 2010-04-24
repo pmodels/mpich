@@ -164,9 +164,9 @@ static HYD_status fn_fullinit(int fd, char *args[])
                         "unable to find pmirank token\n");
     id = atoi(rank_str);
 
-    /* Store the PMI_ID to fd mapping */
+    /* Store the PMI_RANK to fd mapping */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-        if (HYD_pmcd_pmip.downstream.pmi_id[i] == id)
+        if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id)
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
 
     i = 0;

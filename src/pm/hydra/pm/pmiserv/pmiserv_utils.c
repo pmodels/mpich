@@ -94,7 +94,7 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, struct HYD_pg *pg)
+HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_fd, int pmi_rank, struct HYD_pg *pg)
 {
     int i, arg, process_id;
     int inherited_env_count, user_env_count, system_env_count;
@@ -160,12 +160,12 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(char *pmi_port, int pmi_id, str
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-process-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pg->pg_process_count);
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_id);
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-rank");
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_rank);
 
-        if (pmi_port) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
+        if (pmi_fd) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-fd");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_fd);
         }
 
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;

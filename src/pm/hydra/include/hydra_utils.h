@@ -252,6 +252,8 @@ HYD_status
 HYDU_sock_create_and_listen_portstr(char *iface, char *port_range, char **port_str,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp);
+HYD_status HYDU_sock_cloexec(int fd);
+
 
 /* Memory utilities */
 #include <ctype.h>

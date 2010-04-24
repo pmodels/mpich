@@ -93,14 +93,14 @@ static HYD_status enable_stdin_fn(char *arg, char ***argv)
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.enable_stdin);
 }
 
-static HYD_status pmi_port_fn(char *arg, char ***argv)
+static HYD_status pmi_fd_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_port);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_fd);
 }
 
-static HYD_status pmi_id_fn(char *arg, char ***argv)
+static HYD_status pmi_rank_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_id);
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_rank);
 }
 
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
@@ -384,8 +384,8 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"enable-stdin", enable_stdin_fn, NULL},
 
     /* Executable parameters */
-    {"pmi-port", pmi_port_fn, NULL},
-    {"pmi-id", pmi_id_fn, NULL},
+    {"pmi-fd", pmi_fd_fn, NULL},
+    {"pmi-rank", pmi_rank_fn, NULL},
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
