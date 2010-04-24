@@ -279,6 +279,13 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
             init_kv_str(&pairs[npairs], PMIRANK_KEY, pmiid);
             ++npairs;
         }
+        else {
+            pmiid = getenv("PMI_RANK");
+            if (pmiid) {
+                init_kv_str(&pairs[npairs], PMIRANK_KEY, pmiid);
+                ++npairs;
+            }
+        }
 
 #ifdef MPICH_IS_THREADED
         MPIU_THREAD_CHECK_BEGIN;
@@ -2025,6 +2032,12 @@ static int getPMIFD(void)
 
     /* Set the default */
     PMI2_fd = -1;
+
+    p = getenv("PMI_FD");
+    if (p) {
+        PMI2_fd = atoi(p);
+        goto fn_exit;
+    }
 
     p = getenv( "PMI_PORT" );
     if (p) {
