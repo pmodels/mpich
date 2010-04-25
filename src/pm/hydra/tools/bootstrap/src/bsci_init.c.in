@@ -27,6 +27,11 @@ HYD_status HYDT_bsci_init(char *user_bootstrap, char *user_bootstrap_exec, int e
     else
         HYD_GET_ENV_STR_VAL(bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
 
+    /* Store the bootstrap value before replacing it */
+    HYDT_bsci_info.bootstrap = bootstrap;
+    if (!strcmp(bootstrap, "rsh") || !strcmp(bootstrap, "fork"))
+        bootstrap = (char *) "ssh";
+
     if (user_bootstrap_exec)
         bootstrap_exec = user_bootstrap_exec;
     else
@@ -41,7 +46,6 @@ HYD_status HYDT_bsci_init(char *user_bootstrap, char *user_bootstrap_exec, int e
     }
 
     /* Set the appropriate info */
-    HYDT_bsci_info.bootstrap = user_bootstrap;
     HYDT_bsci_info.bootstrap_exec = bootstrap_exec;
     HYDT_bsci_info.enablex = enablex;
     HYDT_bsci_info.debug = debug;

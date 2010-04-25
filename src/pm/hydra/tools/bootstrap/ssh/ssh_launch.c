@@ -105,21 +105,31 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
      * location */
     if (HYDT_bsci_info.bootstrap_exec)
         path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
-    if (!path)
-        path = HYDU_find_full_path("ssh");
-    if (!path)
-        path = HYDU_strdup("/usr/bin/ssh");
+    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+        if (!path)
+            path = HYDU_find_full_path("ssh");
+        if (!path)
+            path = HYDU_strdup("/usr/bin/ssh");
+    }
+    else {
+        if (!path)
+            path = HYDU_find_full_path("rsh");
+        if (!path)
+            path = HYDU_strdup("/usr/bin/rsh");
+    }
 
     idx = 0;
     targs[idx++] = HYDU_strdup(path);
 
     /* Allow X forwarding only if explicitly requested */
-    if (HYDT_bsci_info.enablex == 1)
-        targs[idx++] = HYDU_strdup("-X");
-    else if (HYDT_bsci_info.enablex == 0)
-        targs[idx++] = HYDU_strdup("-x");
-    else        /* default mode is disable X */
-        targs[idx++] = HYDU_strdup("-x");
+    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+        if (HYDT_bsci_info.enablex == 1)
+            targs[idx++] = HYDU_strdup("-X");
+        else if (HYDT_bsci_info.enablex == 0)
+            targs[idx++] = HYDU_strdup("-x");
+        else        /* default mode is disable X */
+            targs[idx++] = HYDU_strdup("-x");
+    }
 
     host_idx = idx++;   /* Hostname will come here */
 
@@ -175,7 +185,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
         status = store_launch_time(e);
         HYDU_ERR_POP(status, "error storing launch time\n");
 
-        if (!strcmp(node->hostname, "localhost")) {
+        if (!strcmp(HYDT_bsci_info.bootstrap, "fork") || !strcmp(node->hostname, "localhost")) {
             offset = exec_idx;
 
             if (control_fd) {
