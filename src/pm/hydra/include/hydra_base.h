@@ -108,6 +108,28 @@
         printf("\n");                                    \
     }
 
+#define HYD_GET_ENV_STR_VAL(lvalue_, env_var_name_, default_val_)       \
+    do {                                                       \
+        if (lvalue_ == NULL) {                                 \
+            const char *tmp_ = (default_val_);                 \
+            MPL_env2str(env_var_name_, (const char **) &tmp_); \
+            if (tmp_)                                          \
+                lvalue_ = HYDU_strdup(tmp_);                   \
+        }                                                      \
+    } while (0)
+
+#define HYD_CONVERT_FALSE_TO_NULL(x) \
+    {                                                                   \
+        if (!(x)) {                                                     \
+        }                                                               \
+        else if (!strcasecmp((x), "none") || !strcasecmp((x), "no") ||  \
+                 !strcasecmp((x), "dummy") || !strcasecmp((x), "null") || \
+                 !strcasecmp((x), "nil") || !strcasecmp((x), "false")) { \
+            HYDU_FREE((x));                                             \
+            (x) = NULL;                                                 \
+        }                                                               \
+    }
+
 #if defined MANUAL_EXTERN_ENVIRON
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */

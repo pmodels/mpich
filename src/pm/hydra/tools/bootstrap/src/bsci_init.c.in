@@ -13,12 +13,24 @@ const char *HYDT_bsci_comp_array[] = { @hydra_bss_name_array@ };
 HYD_status(*HYDT_bsci_comp_init[])(void) = { @hydra_bss_init_array@ };
 struct HYDT_bsci_info HYDT_bsci_info = { 0 };
 
-HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug)
+HYD_status HYDT_bsci_init(char *user_bootstrap, char *user_bootstrap_exec, int enablex,
+                          int debug)
 {
     int i;
+    char *bootstrap = NULL, *bootstrap_exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    if (user_bootstrap)
+        bootstrap = user_bootstrap;
+    else
+        HYD_GET_ENV_STR_VAL(bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
+
+    if (user_bootstrap_exec)
+        bootstrap_exec = user_bootstrap_exec;
+    else
+        HYD_GET_ENV_STR_VAL(bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
 
     for (i = 0; HYDT_bsci_comp_array[i]; i++) {
         if (!strcmp(bootstrap, HYDT_bsci_comp_array[i])) {

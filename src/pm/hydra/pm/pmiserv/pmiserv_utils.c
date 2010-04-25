@@ -48,8 +48,10 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (HYD_handle.user_global.debug)
         proxy_args[arg++] = HYDU_strdup("--debug");
 
-    proxy_args[arg++] = HYDU_strdup("--bootstrap");
-    proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.bootstrap);
+    if (HYD_handle.user_global.bootstrap) {
+        proxy_args[arg++] = HYDU_strdup("--bootstrap");
+        proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.bootstrap);
+    }
 
     if (HYD_handle.user_global.bootstrap_exec) {
         proxy_args[arg++] = HYDU_strdup("--bootstrap-exec");

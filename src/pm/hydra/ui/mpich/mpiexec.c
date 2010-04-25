@@ -165,6 +165,9 @@ int main(int argc, char **argv)
     status = HYDT_dmx_init(&HYD_handle.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
+    status = HYDT_rmki_init(HYD_handle.rmk);
+    HYDU_ERR_POP(status, "unable to initialize RMK\n");
+
     status = HYDT_bsci_init(HYD_handle.user_global.bootstrap,
                             HYD_handle.user_global.bootstrap_exec,
                             HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
@@ -173,13 +176,8 @@ int main(int argc, char **argv)
     if (HYD_handle.node_list == NULL) {
         /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. */
-        if (HYD_handle.rmk) {
-            status = HYDT_rmki_init(HYD_handle.rmk);
-            HYDU_ERR_POP(status, "unable to initialize RMK\n");
-
-            status = HYDT_rmki_query_node_list(&HYD_handle.node_list);
-            HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
-        }
+        status = HYDT_rmki_query_node_list(&HYD_handle.node_list);
+        HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         if (HYD_handle.node_list == NULL) {
             /* didn't get anything from the RMK; try the bootstrap server */

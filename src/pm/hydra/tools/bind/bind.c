@@ -17,15 +17,26 @@
 
 struct HYDT_bind_info HYDT_bind_info;
 
-HYD_status HYDT_bind_init(char *binding, char *bindlib)
+HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {
     char *bindstr, *bindentry, *obj;
+    char *binding = NULL, *bindlib = NULL;
     int i, j, k, use_topo_obj[HYDT_TOPO_END] = { 0 }, child_id, found_obj;
     HYDT_topo_obj_type_t topo_end;
     struct HYDT_topo_obj *topo_obj[HYDT_TOPO_END];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    if (user_binding)
+        binding = user_binding;
+    else
+        HYD_GET_ENV_STR_VAL(binding, "HYDRA_BINDING", NULL);
+
+    if (user_bindlib)
+        bindlib = user_bindlib;
+    else
+        HYD_GET_ENV_STR_VAL(bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
 
     HYDT_bind_info.support_level = HYDT_BIND_NONE;
     if (bindlib)
