@@ -167,7 +167,7 @@ static void signal_cb(int sig)
 
 int main(int argc, char **argv)
 {
-    int i, count, pid, ret_status, sent, closed;
+    int i, count, pid, ret_status, sent, closed, ret;
     enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
@@ -186,12 +186,18 @@ int main(int argc, char **argv)
     status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
-    /* Connect back upstream and add the socket to the demux engine */
-    status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
-                               HYD_pmcd_pmip.upstream.server_port,
-                               &HYD_pmcd_pmip.upstream.control);
-    HYDU_ERR_POP2(status, "unable to connect to server %s at port %d\n",
-                  HYD_pmcd_pmip.upstream.server_name, HYD_pmcd_pmip.upstream.server_port);
+    /* See if HYDRA_CONTROL_FD is set before trying to connect upstream */
+    ret = MPL_env2int("HYDRA_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
+    if (ret < 0) {
+        HYDU_ERR_POP(status, "error reading HYDRA_CONTROL_FD environment\n");
+    }
+    else if (ret == 0) {
+        status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
+                                   HYD_pmcd_pmip.upstream.server_port,
+                                   &HYD_pmcd_pmip.upstream.control);
+        HYDU_ERR_POP2(status, "unable to connect to server %s at port %d\n",
+                      HYD_pmcd_pmip.upstream.server_name, HYD_pmcd_pmip.upstream.server_port);
+    }
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id), &sent, &closed);

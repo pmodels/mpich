@@ -245,25 +245,20 @@ static HYD_status send_exec_info(struct HYD_proxy *proxy)
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp)
+HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *userp)
 {
-    int accept_fd, proxy_id, count, pgid, closed;
+    int proxy_id, count, pgid, closed;
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    /* We got a control socket connection */
-    status = HYDU_sock_accept(fd, &accept_fd);
-    HYDU_ERR_POP(status, "accept error\n");
 
     /* Get the PGID of the connection */
     pgid = ((int) (size_t) userp);
 
     /* Read the proxy ID */
-    status = HYDU_sock_read(accept_fd, &proxy_id, sizeof(int), &count, &closed,
+    status = HYDU_sock_read(fd, &proxy_id, sizeof(int), &count, &closed,
                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "sock read returned error\n");
     HYDU_ASSERT(!closed, status);
@@ -284,17 +279,56 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     HYDU_ERR_CHKANDJUMP1(status, proxy == NULL, HYD_INTERNAL_ERROR,
                          "cannot find proxy with ID %d\n", proxy_id);
 
-    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-    pg_scratch->control_listen_fd = fd;
-
     /* This will be the control socket for this proxy */
-    proxy->control_fd = accept_fd;
+    proxy->control_fd = fd;
 
     /* Send out the executable information */
     status = send_exec_info(proxy);
     HYDU_ERR_POP(status, "unable to send exec info to proxy\n");
 
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, proxy, control_cb);
+    status = HYDT_dmx_deregister_fd(fd);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+    status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, proxy, control_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp)
+{
+    int accept_fd, pgid;
+    struct HYD_pg *pg;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Get the PGID of the connection */
+    pgid = ((int) (size_t) userp);
+
+    /* Find the process group */
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
+        if (pg->pgid == pgid)
+            break;
+    if (!pg)
+        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
+                             pgid);
+
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
+    pg_scratch->control_listen_fd = fd;
+
+    /* We got a control socket connection */
+    status = HYDU_sock_accept(fd, &accept_fd);
+    HYDU_ERR_POP(status, "accept error\n");
+
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp,
+                                  HYD_pmcd_pmiserv_proxy_init_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:

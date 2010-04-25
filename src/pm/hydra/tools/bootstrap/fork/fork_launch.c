@@ -12,13 +12,15 @@
 static int fd_stdin, fd_stdout, fd_stderr;
 
 HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list,
-                                       int enable_stdin,
+                                       int *control_fd, int enable_stdin,
                                        HYD_status(*stdout_cb) (void *buf, int buflen),
                                        HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     int num_hosts, idx, i, fd;
     int *pid, *fd_list;
+    int sockpair[2];
     struct HYD_node *node;
+    struct HYD_env *env = NULL;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
@@ -56,9 +58,23 @@ HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list,
         targs[idx] = HYDU_int_to_str(i);
         targs[idx + 1] = NULL;
 
+        if (control_fd) {
+            char *str;
+
+            if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockpair) < 0)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
+
+            str = HYDU_int_to_str(sockpair[1]);
+            status = HYDU_env_create(&env, "HYDRA_CONTROL_FD", str);
+            HYDU_ERR_POP(status, "unable to create env\n");
+            HYDU_FREE(str);
+
+            control_fd[i] = sockpair[0];
+        }
+
         /* The stdin pointer will be some value for process_id 0; for
          * everyone else, it's NULL. */
-        status = HYDU_create_process(targs, NULL, NULL,
+        status = HYDU_create_process(targs, NULL, env,
                                      ((i == 0 && enable_stdin) ? &fd_stdin : NULL),
                                      &fd_stdout, &fd_stderr,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
@@ -82,6 +98,11 @@ HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list,
         status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb,
                                       HYDT_bscu_inter_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
+
+        if (control_fd) {
+            close(sockpair[1]);
+            HYDU_env_free(env);
+        }
     }
 
   fn_exit:

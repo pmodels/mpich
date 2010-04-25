@@ -59,7 +59,7 @@ static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_
 }
 
 HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
-                                        int enable_stdin,
+                                        int *control_fd, int enable_stdin,
                                         HYD_status(*stdout_cb) (void *buf, int buflen),
                                         HYD_status(*stderr_cb) (void *buf, int buflen))
 {

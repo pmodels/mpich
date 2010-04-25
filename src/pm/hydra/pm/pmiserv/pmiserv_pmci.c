@@ -224,7 +224,7 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
     char *pmi_fd = NULL;
-    int pmi_rank = -1, enable_stdin, ret;
+    int pmi_rank = -1, enable_stdin, ret, node_count, i, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -254,6 +254,7 @@ HYD_status HYD_pmci_launch_procs(void)
 
     /* Copy the host list to pass to the bootstrap server */
     node_list = NULL;
+    node_count = 0;
     for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
         HYDU_alloc_node(&node);
         node->hostname = HYDU_strdup(proxy->node.hostname);
@@ -267,6 +268,8 @@ HYD_status HYD_pmci_launch_procs(void)
             for (tnode = node_list; tnode->next; tnode = tnode->next);
             tnode->next = node;
         }
+
+        node_count++;
     }
 
     status = HYDU_sock_create_and_listen_portstr(HYD_handle.user_global.iface,
@@ -286,9 +289,24 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYDT_dmx_stdin_valid(&enable_stdin);
     HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, enable_stdin, stdout_cb,
+    HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
+    for (i = 0; i < node_count; i++)
+        control_fd[i] = -1;
+
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin, stdout_cb,
                                     stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
+
+    for (i = 0, proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
+        if (control_fd[i] != -1) {
+            proxy->control_fd = control_fd[i];
+
+            status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) 0,
+                                          HYD_pmcd_pmiserv_proxy_init_cb);
+            HYDU_ERR_POP(status, "unable to register fd\n");
+        }
+
+    HYDU_FREE(control_fd);
 
   fn_exit:
     if (pmi_fd)

@@ -12,7 +12,7 @@
 static int fd_stdin, fd_stdout, fd_stderr;
 
 HYD_status HYDT_bscd_rsh_launch_procs(char **args, struct HYD_node *node_list,
-                                      int enable_stdin,
+                                      int *control_fd, int enable_stdin,
                                       HYD_status(*stdout_cb) (void *buf, int buflen),
                                       HYD_status(*stderr_cb) (void *buf, int buflen))
 {
