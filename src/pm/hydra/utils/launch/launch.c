@@ -7,8 +7,7 @@
 #include "hydra_utils.h"
 #include "bind.h"
 
-HYD_status HYDU_create_process(char **client_arg, struct HYD_env *opt_env_list,
-                               struct HYD_env *force_env_list,
+HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid, int os_index)
 {
     int inpipe[2], outpipe[2], errpipe[2], tpid;
@@ -55,16 +54,9 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *opt_env_list,
                                      HYDU_strerror(errno));
         }
 
-        /* Optional environment is put as long as it doesn't overwrite
-         * existing environment */
-        if (opt_env_list) {
-            status = HYDU_putenv_list(opt_env_list, HYD_ENV_OVERWRITE_FALSE);
-            HYDU_ERR_POP(status, "unable to putenv\n");
-        }
-
         /* Forced environment overwrites existing environment */
-        if (force_env_list) {
-            status = HYDU_putenv_list(force_env_list, HYD_ENV_OVERWRITE_TRUE);
+        if (env_list) {
+            status = HYDU_putenv_list(env_list, HYD_ENV_OVERWRITE_TRUE);
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 

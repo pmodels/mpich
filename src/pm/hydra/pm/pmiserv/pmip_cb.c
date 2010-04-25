@@ -491,6 +491,12 @@ static HYD_status launch_procs(void)
                 status = HYDU_append_env_to_list(*env, &opt_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
+
+            status = HYDU_env_purge_existing(&opt_env);
+            HYDU_ERR_POP(status, "error purging optional environment\n");
+
+            force_env = opt_env;
+            opt_env = NULL;
         }
         else if (!strcmp(exec->env_prop, "all")) {
             /* user explicitly asked us to pass all the environment */
@@ -624,7 +630,7 @@ static HYD_status launch_procs(void)
 
             os_index = HYDT_bind_get_os_index(process_id);
             if (pmi_rank == 0) {
-                status = HYDU_create_process(client_args, opt_env, force_env,
+                status = HYDU_create_process(client_args, force_env,
                                              HYD_pmcd_pmip.system_global.enable_stdin ?
                                              &HYD_pmcd_pmip.downstream.in : NULL,
                                              &HYD_pmcd_pmip.downstream.out[process_id],
@@ -640,7 +646,7 @@ static HYD_status launch_procs(void)
                 }
             }
             else {
-                status = HYDU_create_process(client_args, opt_env, force_env, NULL,
+                status = HYDU_create_process(client_args, force_env, NULL,
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
