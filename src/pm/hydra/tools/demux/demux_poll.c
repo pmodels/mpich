@@ -99,32 +99,3 @@ HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
   fn_fail:
     goto fn_exit;
 }
-
-HYD_status HYDT_dmxu_poll_stdin_valid(int *out)
-{
-    struct pollfd fd[1];
-    int ret;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    fd[0].fd = STDIN_FILENO;
-    fd[0].events = POLLIN;
-
-    /* Check if poll on stdin returns any errors; on Darwin this is
-     * broken */
-    ret = poll(fd, 1, 0);
-    HYDU_ASSERT((ret >= 0), status);
-
-    if (fd[0].revents & ~POLLIN)
-        *out = 0;
-    else
-        *out = 1;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}

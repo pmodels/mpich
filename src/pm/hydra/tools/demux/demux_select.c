@@ -91,32 +91,3 @@ HYD_status HYDT_dmxu_select_wait_for_event(int wtime)
   fn_fail:
     goto fn_exit;
 }
-
-HYD_status HYDT_dmxu_select_stdin_valid(int *out)
-{
-    fd_set exceptfds;
-    int ret;
-    struct timeval zero = { 0, 0 };
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    FD_ZERO(&exceptfds);
-    FD_SET(STDIN_FILENO, &exceptfds);
-
-    /* Check if select on stdin returns any errors */
-    ret = select(STDIN_FILENO + 1, NULL, NULL, &exceptfds, &zero);
-    HYDU_ASSERT((ret >= 0), status);
-
-    if (FD_ISSET(STDIN_FILENO, &exceptfds))
-        *out = 0;
-    else
-        *out = 1;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
