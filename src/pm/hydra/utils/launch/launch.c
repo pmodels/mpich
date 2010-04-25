@@ -110,35 +110,3 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *opt_env_list,
   fn_fail:
     goto fn_exit;
 }
-
-
-HYD_status HYDU_fork_and_exit(int os_index)
-{
-    pid_t tpid;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* Fork off the process */
-    tpid = fork();
-    if (tpid == 0) {    /* Child process */
-        close(0);
-        close(1);
-        close(2);
-
-        if (os_index >= 0) {
-            status = HYDT_bind_process(os_index);
-            HYDU_ERR_POP(status, "bind process failed\n");
-        }
-    }
-    else {      /* Parent process */
-        exit(0);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}

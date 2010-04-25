@@ -208,7 +208,6 @@ HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *opt_env_list,
                                struct HYD_env *force_env_list,
                                int *in, int *out, int *err, int *pid, int os_index);
-HYD_status HYDU_fork_and_exit(int os_index);
 
 /* others */
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
