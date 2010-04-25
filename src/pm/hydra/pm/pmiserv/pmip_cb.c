@@ -18,6 +18,90 @@ struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 static int storage_len = 0;
 static char storage[HYD_TMPBUF_SIZE], *sptr = storage, r[HYD_TMPBUF_SIZE];
 
+static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
+{
+    int closed, i, sent, recvd, stdfd;
+    char buf[HYD_TMPBUF_SIZE];
+    struct HYD_pmcd_stdio_hdr hdr;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    stdfd = (int) (size_t) userp;
+
+    if (stdfd == STDIN_FILENO) {
+        status = HYDU_sock_forward_stdio(fd, HYD_pmcd_pmip.downstream.in, &closed);
+        HYDU_ERR_POP(status, "stdin forwarding error\n");
+
+        if (closed) {
+            status = HYDT_dmx_deregister_fd(fd);
+            HYDU_ERR_POP(status, "unable to deregister fd\n");
+
+            close(fd);
+
+            close(HYD_pmcd_pmip.downstream.in);
+            HYD_pmcd_pmip.downstream.in = -1;
+        }
+
+        goto fn_exit;
+    }
+
+    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &recvd, &closed, 0);
+    HYDU_ERR_POP(status, "sock read error\n");
+
+    if (closed) {
+        /* The connection has closed */
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister fd\n");
+
+        if (stdfd == STDOUT_FILENO) {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+                if (HYD_pmcd_pmip.downstream.out[i] == fd)
+                    HYD_pmcd_pmip.downstream.out[i] = -1;
+        }
+        else {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+                if (HYD_pmcd_pmip.downstream.err[i] == fd)
+                    HYD_pmcd_pmip.downstream.err[i] = -1;
+        }
+
+        close(fd);
+    }
+
+    if (recvd) {
+        if (stdfd == STDOUT_FILENO) {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+                if (HYD_pmcd_pmip.downstream.out[i] == fd)
+                    break;
+        }
+        else {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+                if (HYD_pmcd_pmip.downstream.err[i] == fd)
+                    break;
+        }
+
+        HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
+
+        hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
+        hdr.buflen = recvd;
+
+        status = HYDU_sock_write(stdfd, &hdr, sizeof(hdr), &sent, &closed);
+        HYDU_ERR_POP(status, "sock write error\n");
+        HYDU_ASSERT(!closed, status);
+
+        status = HYDU_sock_write(stdfd, buf, recvd, &sent, &closed);
+        HYDU_ERR_POP(status, "sock write error\n");
+        HYDU_ASSERT(!closed, status);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 {
     int full_command, buflen, cmdlen;
@@ -529,8 +613,7 @@ static HYD_status launch_procs(void)
 
                 if (HYD_pmcd_pmip.system_global.enable_stdin) {
                     stdin_fd = STDIN_FILENO;
-                    status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL,
-                                                  HYD_pmcd_pmip_stdin_cb);
+                    status = HYDT_dmx_register_fd(1, &stdin_fd, HYD_POLLIN, NULL, stdio_cb);
                     HYDU_ERR_POP(status, "unable to register fd\n");
                 }
             }
@@ -570,13 +653,13 @@ static HYD_status launch_procs(void)
   fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
-                                  HYD_pmcd_pmip.downstream.out,
-                                  HYD_POLLIN, NULL, HYD_pmcd_pmip_stdout_cb);
+                                  HYD_pmcd_pmip.downstream.out, HYD_POLLIN,
+                                  (void *) (size_t) STDOUT_FILENO, stdio_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
-                                  HYD_pmcd_pmip.downstream.err,
-                                  HYD_POLLIN, NULL, HYD_pmcd_pmip_stderr_cb);
+                                  HYD_pmcd_pmip.downstream.err, HYD_POLLIN,
+                                  (void *) (size_t) STDERR_FILENO, stdio_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
@@ -732,115 +815,6 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     }
 
     HYDU_ERR_POP(status, "error handling proxy command\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_pmcd_pmip_stdout_cb(int fd, HYD_event_t events, void *userp)
-{
-    int closed, i, sent, recvd;
-    char buf[HYD_TMPBUF_SIZE];
-    struct HYD_pmcd_stdio_hdr hdr;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &recvd, &closed, 0);
-    HYDU_ERR_POP(status, "sock read error\n");
-
-    if (closed) {
-        /* The connection has closed */
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to deregister fd\n");
-
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-            if (HYD_pmcd_pmip.downstream.out[i] == fd)
-                HYD_pmcd_pmip.downstream.out[i] = -1;
-
-        close(fd);
-    }
-
-    if (recvd) {
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-            if (HYD_pmcd_pmip.downstream.out[i] == fd)
-                break;
-
-        HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
-
-        hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
-        hdr.buflen = recvd;
-
-        status = HYDU_sock_write(STDOUT_FILENO, &hdr, sizeof(hdr), &sent, &closed);
-        HYDU_ERR_POP(status, "sock write error\n");
-        HYDU_ASSERT(!closed, status);
-
-        status = HYDU_sock_write(STDOUT_FILENO, buf, recvd, &sent, &closed);
-        HYDU_ERR_POP(status, "sock write error\n");
-        HYDU_ASSERT(!closed, status);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_pmcd_pmip_stderr_cb(int fd, HYD_event_t events, void *userp)
-{
-    int closed, i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_forward_stdio(fd, STDERR_FILENO, &closed);
-    HYDU_ERR_POP(status, "stderr forwarding error\n");
-
-    if (closed) {
-        /* The connection has closed */
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to deregister fd\n");
-
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-            if (HYD_pmcd_pmip.downstream.err[i] == fd)
-                HYD_pmcd_pmip.downstream.err[i] = -1;
-
-        close(fd);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_pmcd_pmip_stdin_cb(int fd, HYD_event_t events, void *userp)
-{
-    int closed;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_forward_stdio(fd, HYD_pmcd_pmip.downstream.in, &closed);
-    HYDU_ERR_POP(status, "stdin forwarding error\n");
-
-    if (closed) {
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to deregister fd\n");
-
-        close(fd);
-
-        close(HYD_pmcd_pmip.downstream.in);
-        HYD_pmcd_pmip.downstream.in = -1;
-    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
