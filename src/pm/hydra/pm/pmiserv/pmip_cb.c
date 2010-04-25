@@ -250,7 +250,7 @@ static HYD_status read_pmi_cmd(int fd, int *closed)
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
-    int closed, repeat, sent;
+    int closed, repeat, sent, i;
     struct HYD_pmcd_pmi_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
     struct HYD_pmcd_pmip_pmi_handle *h;
@@ -261,11 +261,27 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     status = read_pmi_cmd(fd, &closed);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
 
+    /* Try to find the PMI FD */
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+        if (HYD_pmcd_pmip.downstream.pmi_fd[i] == fd)
+            break;
+    HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
+
     if (closed) {
-        /* A process died; kill the remaining processes */
-        HYD_pmcd_pmip_killjob();
+        /* This is a hack to improve user-friendliness. If a PMI
+         * application terminates, we clean up the remaining
+         * processes. For a correct PMI application, we should never
+         * get closed socket event as we deregister this socket as
+         * soon as we get the finalize message. For non-PMI
+         * applications, this is harder to identify, so we just let
+         * the user cleanup the processes on a failure. */
+        if (HYD_pmcd_pmip.downstream.pmi_fd_active[i])
+            HYD_pmcd_pmip_killjob();
         goto fn_exit;
     }
+
+    /* This is a PMI application */
+    HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 1;
 
     do {
         status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
@@ -420,6 +436,12 @@ static HYD_status launch_procs(void)
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC(HYD_pmcd_pmip.downstream.pmi_fd, int *,
                 HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+    HYDU_MALLOC(HYD_pmcd_pmip.downstream.pmi_fd_active, int *,
+                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+
+    /* Initialize the PMI FD active state */
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+        HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 0;
 
     /* Initialize the exit status */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)

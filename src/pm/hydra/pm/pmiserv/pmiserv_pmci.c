@@ -346,7 +346,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
-        while (pg_scratch->control_listen_fd != -1) {
+        while (pg_scratch->control_listen_fd != HYD_PMCD_PMI_FD_CLOSED) {
             status = HYDT_dmx_wait_for_event(-1);
             HYDU_ERR_POP(status, "error waiting for event\n");
         }

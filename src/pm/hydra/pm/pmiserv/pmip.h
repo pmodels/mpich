@@ -44,6 +44,7 @@ struct HYD_pmcd_pmip {
 
         int *pmi_rank;
         int *pmi_fd;
+        int *pmi_fd_active;
     } downstream;
 
     /* Proxy details */

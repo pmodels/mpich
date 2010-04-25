@@ -17,6 +17,11 @@ extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1;
 /* PMI-2 specific definitions */
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v2;
 
+enum HYD_pmcd_pmi_fd_state {
+    HYD_PMCD_PMI_FD_UNSET = -1,
+    HYD_PMCD_PMI_FD_CLOSED = -2
+};
+
 struct HYD_pmcd_token_segment {
     int start_idx;
     int token_count;
