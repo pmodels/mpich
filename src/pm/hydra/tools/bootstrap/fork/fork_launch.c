@@ -80,6 +80,11 @@ HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
+        if (control_fd) {
+            close(sockpair[1]);
+            HYDU_env_free(env);
+        }
+
         /* We don't wait for stdin to close */
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
@@ -98,11 +103,6 @@ HYD_status HYDT_bscd_fork_launch_procs(char **args, struct HYD_node *node_list,
         status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb,
                                       HYDT_bscu_inter_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
-
-        if (control_fd) {
-            close(sockpair[1]);
-            HYDU_env_free(env);
-        }
     }
 
   fn_exit:

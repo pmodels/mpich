@@ -17,6 +17,9 @@
  * \brief BSCI internal structure to maintain persistent information.
  */
 struct HYDT_bsci_info {
+    /** \brief Boostrap server to use */
+    char *bootstrap;
+
     /** \brief Boostrap executable to use */
     char *bootstrap_exec;
 
