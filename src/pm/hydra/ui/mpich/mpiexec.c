@@ -62,13 +62,15 @@ static void usage(void)
 
     printf("\n");
     printf("  Bootstrap options:\n");
-    printf("    -bootstrap                       bootstrap server to use\n");
+    printf("    -bootstrap                       bootstrap server to use (%s)\n",
+           HYDRA_BSS_NAMES);
     printf("    -bootstrap-exec                  executable to use to bootstrap processes\n");
     printf("    -enable-x/-disable-x             enable or disable X forwarding\n");
 
     printf("\n");
     printf("  Resource management kernel options:\n");
-    printf("    -rmk                             resource management kernel to use\n");
+    printf("    -rmk                             resource management kernel to use (%s)\n",
+           HYDRA_RMK_NAMES);
 
     printf("\n");
     printf("  Hybrid programming options:\n");
@@ -77,17 +79,20 @@ static void usage(void)
     printf("\n");
     printf("  Process-core binding options:\n");
     printf("    -binding                         process-to-core binding mode\n");
-    printf("    -bindlib                         process-to-core binding library (plpa)\n");
+    printf("    -bindlib                         process-to-core binding library (%s)\n",
+           HYDRA_BINDLIB_NAMES);
 
     printf("\n");
     printf("  Checkpoint/Restart options:\n");
     printf("    -ckpoint-interval                checkpoint interval\n");
     printf("    -ckpoint-prefix                  checkpoint file prefix\n");
-    printf("    -ckpointlib                      checkpointing library (blcr)\n");
+    printf("    -ckpointlib                      checkpointing library (%s)\n",
+           !strcmp(HYDRA_CKPOINTLIB_NAMES, "") ? "none" : HYDRA_CKPOINTLIB_NAMES);
 
     printf("\n");
     printf("  Demux engine options:\n");
-    printf("    -demux                           demux engine\n");
+    printf("    -demux                           demux engine (%s)\n",
+           HYDRA_DEMUX_NAMES);
 
     printf("\n");
     printf("  Other Hydra options:\n");
