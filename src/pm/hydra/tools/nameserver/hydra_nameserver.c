@@ -8,8 +8,6 @@
 #include "hydra_utils.h"
 #include "demux.h"
 
-#define HYDRA_NAMESERVER_DEFAULT_PORT 6392
-
 struct HYDT_ns_publish {
     char *name;
     char *info;
@@ -70,9 +68,23 @@ static struct HYD_arg_match_table match_table[] = {
     {"demux", demux_fn, demux_help_fn}
 };
 
-static HYD_status cmd_response(int fd, struct HYDT_ns_publish *publish)
+static void free_publish_element(struct HYDT_ns_publish *publish)
 {
-    int len = strlen(publish->info);
+    if (publish == NULL)
+        return;
+
+    if (publish->name)
+        HYDU_FREE(publish->name);
+
+    if (publish->info)
+        HYDU_FREE(publish->info);
+
+    HYDU_FREE(publish);
+}
+
+static HYD_status cmd_response(int fd, const char *str)
+{
+    int len = strlen(str);
     int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
@@ -82,9 +94,11 @@ static HYD_status cmd_response(int fd, struct HYDT_ns_publish *publish)
     HYDU_ERR_POP(status, "error sending publish info\n");
     HYDU_ASSERT(!closed, status);
 
-    status = HYDU_sock_write(fd, publish->info, len, &sent, &closed);
-    HYDU_ERR_POP(status, "error sending publish info\n");
-    HYDU_ASSERT(!closed, status);
+    if (len) {
+        status = HYDU_sock_write(fd, str, len, &sent, &closed);
+        HYDU_ERR_POP(status, "error sending publish info\n");
+        HYDU_ASSERT(!closed, status);
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -96,12 +110,22 @@ static HYD_status cmd_response(int fd, struct HYDT_ns_publish *publish)
 
 static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
 {
-    int len, recvd, closed;
+    int len, recvd, closed, list_len;
     char *cmd, *name;
-    struct HYDT_ns_publish *publish, *tmp;
+    struct HYDT_ns_publish *publish, *tmp, *r;
+    int success = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_read(fd, &list_len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "error reading data\n");
+
+    if (closed) {
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_POP(status, "error deregistering fd\n");
+        goto fn_exit;
+    }
 
     status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data\n");
@@ -112,7 +136,7 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "error reading data\n");
     HYDU_ASSERT(!closed, status);
 
-    if (!strcmp(cmd, "PUT")) {
+    if (!strcmp(cmd, "PUBLISH")) {
         HYDU_MALLOC(publish, struct HYDT_ns_publish *, sizeof(struct HYDT_ns_publish), status);
 
         status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -135,14 +159,29 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
 
         publish->next = NULL;
 
+        for (tmp = publish_list; tmp; tmp = tmp->next)
+            if (!strcmp(tmp->name, publish->name))
+                break;
+        if (tmp == NULL)
+            success = 1;
+
         if (publish_list == NULL)
             publish_list = publish;
         else {
             for (tmp = publish_list; tmp->next; tmp = tmp->next);
             tmp->next = publish;
         }
+
+        if (success) {
+            status = cmd_response(fd, "SUCCESS");
+            HYDU_ERR_POP(status, "error responding to REMOVE request\n");
+        }
+        else {
+            status = cmd_response(fd, "FAILURE");
+            HYDU_ERR_POP(status, "error responding to REMOVE request\n");
+        }
     }
-    else if (!strcmp(cmd, "GET")) {
+    else if (!strcmp(cmd, "UNPUBLISH")) {
         status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
@@ -152,36 +191,53 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
 
-        if (!strcmp(publish_list->name, name)) {
-            status = cmd_response(fd, publish_list);
-            HYDU_ERR_POP(status, "error sending command response\n");
+        if (publish_list) {
+            if (!strcmp(publish_list->name, name)) {
+                tmp = publish_list;
+                publish_list = publish_list->next;
+                free_publish_element(tmp);
+                success = 1;
+            }
+            else {
+                for (tmp = publish_list; tmp->next && strcmp(tmp->next->name, name);
+                     tmp = tmp->next);
+                if (tmp->next) {
+                    r = tmp->next;
+                    tmp->next = tmp->next->next;
+                    free_publish_element(tmp->next);
+                    success = 1;
+                }
+            }
+        }
 
-            tmp = publish_list;
-            publish_list = publish_list->next;
-            tmp->next = NULL;
-            HYDU_FREE(tmp->name);
-            HYDU_FREE(tmp->info);
-            HYDU_FREE(tmp);
+        if (success) {
+            status = cmd_response(fd, "SUCCESS");
+            HYDU_ERR_POP(status, "error responding to REMOVE request\n");
         }
         else {
-            for (tmp = publish_list; tmp->next; tmp = tmp->next)
-                if (!strcmp(tmp->next->name, name))
-                    break;
+            status = cmd_response(fd, "FAILURE");
+            HYDU_ERR_POP(status, "error responding to REMOVE request\n");
+        }
+    }
+    else if (!strcmp(cmd, "LOOKUP")) {
+        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
 
-            status = cmd_response(fd, tmp->next);
+        HYDU_MALLOC(name, char *, len + 1, status);
+        status = HYDU_sock_read(fd, name, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading data\n");
+        HYDU_ASSERT(!closed, status);
+
+        for (tmp = publish_list; tmp && strcmp(tmp->name, name); tmp = tmp->next);
+        if (tmp) {
+            status = cmd_response(fd, tmp->info);
             HYDU_ERR_POP(status, "error sending command response\n");
-
-            if (tmp->next) {
-                publish = tmp->next;
-                tmp->next = tmp->next->next;
-
-                tmp = publish;
-                publish_list = publish_list->next;
-                tmp->next = NULL;
-                HYDU_FREE(tmp->name);
-                HYDU_FREE(tmp->info);
-                HYDU_FREE(tmp);
-            }
+            success = 1;
+        }
+        else {
+            status = cmd_response(fd, "");
+            HYDU_ERR_POP(status, "error sending command response\n");
         }
     }
     else {
@@ -207,8 +263,8 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
     status = HYDU_sock_accept(fd, &client_fd);
     HYDU_ERR_POP(status, "accept error\n");
 
-    /* Register the listening socket with the demux engine */
-    status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, NULL, request_cb);
+    /* Register the accepted socket with the demux engine */
+    status = HYDT_dmx_register_fd(1, &client_fd, HYD_POLLIN, NULL, request_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:

@@ -31,6 +31,8 @@ struct HYD_handle {
 
     char *interface_env_name;
 
+    char *nameserver;
+
     int ckpoint_int;
 
     int print_rank_map;

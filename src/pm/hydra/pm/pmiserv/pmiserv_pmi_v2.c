@@ -785,8 +785,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *val;
-    struct HYD_pmcd_pmi_publish *publish, *r;
-    int i, token_count, found;
+    char *name, *port;
+    int i, token_count, success;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
 
@@ -797,60 +797,16 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
-    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
-                status);
-
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
-    publish->name = HYDU_strdup(val);
+    name = HYDU_strdup(val);
 
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "port")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: port\n");
-    publish->port = HYDU_strdup(val);
+    port = HYDU_strdup(val);
 
-    if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "infokeycount")) == NULL)
-        HYDU_ERR_POP(status, "cannot find token: infokeycount\n");
-    if (val)
-        publish->infokeycount = atoi(val);
-    else
-        publish->infokeycount = 0;
-
-    HYDU_MALLOC(publish->info_keys, struct HYD_pmcd_pmi_info_keys *,
-                sizeof(struct HYD_pmcd_pmi_info_keys), status);
-
-    for (i = 0; i < publish->infokeycount; i++) {
-        char *info_key, *info_val;
-
-        HYDU_MALLOC(info_key, char *, MAXKEYLEN, status);
-        HYDU_snprintf(info_key, MAXKEYLEN, "infokey%d", i);
-        if ((info_val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, info_key)) == NULL)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n",
-                                 info_key);
-        publish->info_keys[i].key = HYDU_strdup(info_val);
-
-        HYDU_MALLOC(info_key, char *, MAXKEYLEN, status);
-        HYDU_snprintf(info_key, MAXKEYLEN, "infoval%d", i);
-        if ((info_val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, info_key)) == NULL)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "cannot find token: %s\n",
-                                 info_val);
-        publish->info_keys[i].val = HYDU_strdup(info_val);
-    }
-
-    publish->next = NULL;
-
-    found = 0;
-    if (HYD_pmcd_pmi_publish_list == NULL)
-        HYD_pmcd_pmi_publish_list = publish;
-    else {
-        for (r = HYD_pmcd_pmi_publish_list; r->next; r = r->next) {
-            if (!strcmp(r->next->name, publish->name)) {
-                found = 1;
-                break;
-            }
-        }
-        if (!found)
-            r->next = publish;
-    }
+    status = HYD_pmcd_pmi_publish(name, port, &success);
+    HYDU_ERR_POP(status, "error publishing service\n");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=name-publish-response;");
@@ -859,9 +815,9 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
         tmp[i++] = HYDU_strdup(thrid);
         tmp[i++] = HYDU_strdup(";");
     }
-    if (found) {
+    if (!success) {
         tmp[i++] = HYDU_strdup("rc=1;errmsg=duplicate_service_");
-        tmp[i++] = HYDU_strdup(publish->name);
+        tmp[i++] = HYDU_strdup(name);
         tmp[i++] = HYDU_strdup(";");
     }
     else
@@ -887,8 +843,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name;
-    struct HYD_pmcd_pmi_publish *publish, *r;
-    int i, token_count, found = 0;
+    int i, token_count, success;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
 
@@ -899,44 +854,11 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
-    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
-                status);
-
     if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
 
-    if (HYD_pmcd_pmi_publish_list == NULL) {
-        /* Can't find published service */
-    }
-    else if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
-        publish = HYD_pmcd_pmi_publish_list;
-        HYD_pmcd_pmi_publish_list = HYD_pmcd_pmi_publish_list->next;
-        publish->next = NULL;
-
-        HYD_pmcd_pmi_free_publish(publish);
-        HYDU_FREE(publish);
-
-        found = 1;
-    }
-    else {
-        publish = HYD_pmcd_pmi_publish_list;
-        do {
-            if (publish->next == NULL)
-                break;
-            else if (!strcmp(publish->next->name, name)) {
-                r = publish->next;
-                publish->next = r->next;
-                r->next = NULL;
-
-                HYD_pmcd_pmi_free_publish(r);
-                HYDU_FREE(r);
-
-                found = 1;
-            }
-            else
-                publish = publish->next;
-        } while (1);
-    }
+    status = HYD_pmcd_pmi_unpublish(name, &success);
+    HYDU_ERR_POP(status, "error unpublishing service\n");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=name-unpublish-response;");
@@ -945,7 +867,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
         tmp[i++] = HYDU_strdup(thrid);
         tmp[i++] = HYDU_strdup(";");
     }
-    if (found)
+    if (success)
         tmp[i++] = HYDU_strdup("rc=0;");
     else {
         tmp[i++] = HYDU_strdup("rc=1;errmsg=service_");
@@ -972,7 +894,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
 {
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name, *value;
     struct HYD_pmcd_pmi_publish *publish;
     int i, token_count;
     struct HYD_pmcd_token *tokens;
@@ -991,9 +913,8 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
     if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
 
-    for (publish = HYD_pmcd_pmi_publish_list; publish; publish = publish->next)
-        if (!strcmp(publish->name, name))
-            break;
+    status = HYD_pmcd_pmi_lookup(name, &value);
+    HYDU_ERR_POP(status, "error while looking up service\n");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=name-lookup-response;");
@@ -1002,9 +923,9 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
         tmp[i++] = HYDU_strdup(thrid);
         tmp[i++] = HYDU_strdup(";");
     }
-    if (publish) {
+    if (value) {
         tmp[i++] = HYDU_strdup("value=");
-        tmp[i++] = HYDU_strdup(publish->port);
+        tmp[i++] = HYDU_strdup(value);
         tmp[i++] = HYDU_strdup(";found=TRUE;rc=0;");
     }
     else {

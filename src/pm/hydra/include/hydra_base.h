@@ -136,6 +136,8 @@ extern char **environ;
 
 #define HYD_SILENT_ERROR(status) (((status) == HYD_GRACEFUL_ABORT) || ((status) == HYD_TIMED_OUT))
 
+#define HYDRA_NAMESERVER_DEFAULT_PORT 6392
+
 /* Status information */
 typedef enum {
     HYD_SUCCESS = 0,

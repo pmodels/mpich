@@ -786,6 +786,17 @@ static HYD_status iface_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.iface);
 }
 
+static void nameserver_help_fn(void)
+{
+    printf("\n");
+    printf("-nameserver: Nameserver to use for publish/lookup (format is host:port)\n\n");
+}
+
+static HYD_status nameserver_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.nameserver);
+}
+
 static struct HYD_arg_match_table match_table[] = {
     /* Global environment options */
     {"genv", genv_fn, genv_help_fn},
@@ -853,6 +864,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"print-rank-map", print_rank_map_fn, print_rank_map_help_fn},
     {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
     {"iface", iface_fn, iface_help_fn},
+    {"nameserver", nameserver_fn, nameserver_help_fn},
 
     {"\0", NULL}
 };

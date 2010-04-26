@@ -593,9 +593,10 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *val;
-    struct HYD_pmcd_pmi_publish *publish, *r;
     int i, token_count;
     struct HYD_pmcd_token *tokens;
+    char *name, *port;
+    int success = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -603,29 +604,22 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
-                status);
-
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "service")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: service\n");
-    publish->name = HYDU_strdup(val);
+    name = HYDU_strdup(val);
 
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "port")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: port\n");
-    publish->port = HYDU_strdup(val);
+    port = HYDU_strdup(val);
 
-    publish->info_keys = NULL;
-    publish->next = NULL;
-
-    if (HYD_pmcd_pmi_publish_list == NULL)
-        HYD_pmcd_pmi_publish_list = publish;
-    else {
-        for (r = HYD_pmcd_pmi_publish_list; r->next; r = r->next);
-        r->next = publish;
-    }
+    status = HYD_pmcd_pmi_publish(name, port, &success);
+    HYDU_ERR_POP(status, "error publishing service\n");
 
     i = 0;
-    tmp[i++] = HYDU_strdup("cmd=publish_result info=ok rc=0 msg=success\n");
+    if (success)
+        tmp[i++] = HYDU_strdup("cmd=publish_result info=ok rc=0 msg=success\n");
+    else
+        tmp[i++] = HYDU_strdup("cmd=publish_result info=ok rc=1 msg=key_already_present\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -647,9 +641,9 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *name;
-    struct HYD_pmcd_pmi_publish *publish, *r;
     int i, token_count;
     struct HYD_pmcd_token *tokens;
+    int success = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -657,40 +651,17 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
-                status);
-
     if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "service")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: service\n");
 
-    if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
-        publish = HYD_pmcd_pmi_publish_list;
-        HYD_pmcd_pmi_publish_list = HYD_pmcd_pmi_publish_list->next;
-        publish->next = NULL;
-
-        HYD_pmcd_pmi_free_publish(publish);
-        HYDU_FREE(publish);
-    }
-    else {
-        publish = HYD_pmcd_pmi_publish_list;
-        do {
-            if (publish->next == NULL)
-                break;
-            else if (!strcmp(publish->next->name, name)) {
-                r = publish->next;
-                publish->next = r->next;
-                r->next = NULL;
-
-                HYD_pmcd_pmi_free_publish(r);
-                HYDU_FREE(r);
-            }
-            else
-                publish = publish->next;
-        } while (1);
-    }
+    status = HYD_pmcd_pmi_unpublish(name, &success);
+    HYDU_ERR_POP(status, "error unpublishing service\n");
 
     i = 0;
-    tmp[i++] = HYDU_strdup("cmd=unpublish_result info=ok rc=0 msg=success\n");
+    if (success)
+        tmp[i++] = HYDU_strdup("cmd=unpublish_result info=ok rc=0 msg=success\n");
+    else
+        tmp[i++] = HYDU_strdup("cmd=unpublish_result info=ok rc=1 msg=service_not_found\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -711,8 +682,7 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
 {
-    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *name;
-    struct HYD_pmcd_pmi_publish *publish;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *name, *value;
     int i, token_count;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
@@ -722,21 +692,17 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
-                status);
-
     if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "service")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: service\n");
 
-    for (publish = HYD_pmcd_pmi_publish_list; publish; publish = publish->next)
-        if (!strcmp(publish->name, name))
-            break;
+    status = HYD_pmcd_pmi_lookup(name, &value);
+    HYDU_ERR_POP(status, "error while looking up service\n");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=lookup_result info=ok rc=0 msg=success");
-    if (publish) {
+    if (value) {
         tmp[i++] = HYDU_strdup("value=");
-        tmp[i++] = HYDU_strdup(publish->port);
+        tmp[i++] = HYDU_strdup(value);
         tmp[i++] = HYDU_strdup(" rc=0 msg=success\n");
     }
     else {

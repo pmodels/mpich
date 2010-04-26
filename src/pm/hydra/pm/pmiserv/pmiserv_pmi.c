@@ -131,3 +131,263 @@ HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish * publish)
   fn_fail:
     goto fn_exit;
 }
+
+HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
+{
+    struct HYD_pmcd_pmi_publish *r, *publish;
+    char *ns, *ns_host, *ns_port_str, *tmp[HYD_NUM_TMP_STRINGS];
+    int ns_port, ns_fd, i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (HYD_handle.nameserver == NULL) {
+        /* no external nameserver available */
+        for (r = HYD_pmcd_pmi_publish_list; r; r = r->next)
+            if (!strcmp(r->name, name))
+                break;
+        if (r) {
+            *success = 0;
+            goto fn_exit;
+        }
+        *success = 1;
+
+        HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *,
+                    sizeof(struct HYD_pmcd_pmi_publish), status);
+        publish->name = HYDU_strdup(name);
+        publish->port = HYDU_strdup(port);
+        publish->infokeycount = 0;
+        publish->info_keys = NULL;
+        publish->next = NULL;
+
+        if (HYD_pmcd_pmi_publish_list == NULL)
+            HYD_pmcd_pmi_publish_list = publish;
+        else {
+            for (r = HYD_pmcd_pmi_publish_list; r->next; r = r->next);
+            r->next = publish;
+        }
+    }
+    else {
+        int len, recvd, closed;
+        char *resp;
+
+        /* connect to the external nameserver and store the
+         * information there */
+        ns = HYDU_strdup(HYD_handle.nameserver);
+
+        ns_host = strtok(ns, ":");
+        HYDU_ASSERT(ns_host, status);
+
+        ns_port_str = strtok(NULL, ":");
+        if (ns_port_str)
+            ns_port = atoi(ns_port_str);
+        else
+            ns_port = HYDRA_NAMESERVER_DEFAULT_PORT;
+
+        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd);
+        HYDU_ERR_POP(status, "error connecting to the nameserver\n");
+
+        i = 0;
+        tmp[i++] = HYDU_strdup("PUBLISH");
+        tmp[i++] = HYDU_strdup(name);
+        tmp[i++] = HYDU_strdup(port);
+        tmp[i++] = NULL;
+
+        status = HYDU_send_strlist(ns_fd, tmp);
+        HYDU_ERR_POP(status, "error sending string list\n");
+        HYDU_free_strlist(tmp);
+
+        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
+                                HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading from nameserver\n");
+        HYDU_ASSERT(!closed, status);
+
+        HYDU_MALLOC(resp, char *, len, status);
+        status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed,
+                                HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading from nameserver\n");
+        HYDU_ASSERT(len == recvd, status);
+
+        close(ns_fd);
+
+        if (!strcmp(resp, "SUCCESS"))
+            *success = 1;
+        else
+            *success = 0;
+
+        HYDU_FREE(resp);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
+{
+    struct HYD_pmcd_pmi_publish *r, *publish;
+    char *ns, *ns_host, *ns_port_str, *tmp[HYD_NUM_TMP_STRINGS];
+    int ns_port, ns_fd, i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    *success = 0;
+    if (HYD_handle.nameserver == NULL) {
+        /* no external nameserver available */
+        if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
+            publish = HYD_pmcd_pmi_publish_list;
+            HYD_pmcd_pmi_publish_list = HYD_pmcd_pmi_publish_list->next;
+            publish->next = NULL;
+
+            HYD_pmcd_pmi_free_publish(publish);
+            HYDU_FREE(publish);
+            *success = 1;
+        }
+        else {
+            publish = HYD_pmcd_pmi_publish_list;
+            do {
+                if (publish->next == NULL)
+                    break;
+                else if (!strcmp(publish->next->name, name)) {
+                    r = publish->next;
+                    publish->next = r->next;
+                    r->next = NULL;
+
+                    HYD_pmcd_pmi_free_publish(r);
+                    HYDU_FREE(r);
+                    *success = 1;
+                }
+                else
+                    publish = publish->next;
+            } while (1);
+        }
+    }
+    else {
+        int len, recvd, closed;
+        char *resp;
+
+        /* connect to the external nameserver and get the information
+         * from there */
+        ns = HYDU_strdup(HYD_handle.nameserver);
+
+        ns_host = strtok(ns, ":");
+        HYDU_ASSERT(ns_host, status);
+
+        ns_port_str = strtok(NULL, ":");
+        if (ns_port_str)
+            ns_port = atoi(ns_port_str);
+        else
+            ns_port = HYDRA_NAMESERVER_DEFAULT_PORT;
+
+        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd);
+        HYDU_ERR_POP(status, "error connecting to the nameserver\n");
+
+        i = 0;
+        tmp[i++] = HYDU_strdup("UNPUBLISH");
+        tmp[i++] = HYDU_strdup(name);
+        tmp[i++] = NULL;
+
+        status = HYDU_send_strlist(ns_fd, tmp);
+        HYDU_ERR_POP(status, "error sending string list\n");
+
+        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
+                                HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading from nameserver\n");
+        HYDU_ASSERT(!closed, status);
+
+        HYDU_MALLOC(resp, char *, len, status);
+        status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed,
+                                HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading from nameserver\n");
+        HYDU_ASSERT(len == recvd, status);
+
+        close(ns_fd);
+
+        if (!strcmp(resp, "SUCCESS"))
+            *success = 1;
+        HYDU_FREE(resp);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
+{
+    struct HYD_pmcd_pmi_publish *publish;
+    char *ns, *ns_host, *ns_port_str, *tmp[HYD_NUM_TMP_STRINGS];
+    int ns_port, ns_fd, i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (HYD_handle.nameserver == NULL) {
+        /* no external nameserver available */
+        for (publish = HYD_pmcd_pmi_publish_list; publish; publish = publish->next)
+            if (!strcmp(publish->name, name))
+                break;
+
+        if (publish)
+            *value = HYDU_strdup(publish->port);
+    }
+    else {
+        int len, recvd, closed;
+        char *resp;
+
+        /* connect to the external nameserver and get the information
+         * from there */
+        ns = HYDU_strdup(HYD_handle.nameserver);
+
+        ns_host = strtok(ns, ":");
+        HYDU_ASSERT(ns_host, status);
+
+        ns_port_str = strtok(NULL, ":");
+        if (ns_port_str)
+            ns_port = atoi(ns_port_str);
+        else
+            ns_port = HYDRA_NAMESERVER_DEFAULT_PORT;
+
+        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd);
+        HYDU_ERR_POP(status, "error connecting to the nameserver\n");
+
+        i = 0;
+        tmp[i++] = HYDU_strdup("LOOKUP");
+        tmp[i++] = HYDU_strdup(name);
+        tmp[i++] = NULL;
+
+        status = HYDU_send_strlist(ns_fd, tmp);
+        HYDU_ERR_POP(status, "error sending string list\n");
+
+        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
+                                HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "error reading from nameserver\n");
+        HYDU_ASSERT(!closed, status);
+
+        if (len) {
+            HYDU_MALLOC(resp, char *, len, status);
+            status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed,
+                                    HYDU_SOCK_COMM_MSGWAIT);
+            HYDU_ERR_POP(status, "error reading from nameserver\n");
+            HYDU_ASSERT(len == recvd, status);
+        }
+
+        close(ns_fd);
+
+        *value = resp;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
