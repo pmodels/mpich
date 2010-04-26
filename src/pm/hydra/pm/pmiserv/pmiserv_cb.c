@@ -192,7 +192,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to receive exit status\n");
     }
     else if (cmd == PMI_CMD) {
-        status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read PMI header from proxy\n");
         HYDU_ASSERT(!closed, status);
 
@@ -230,7 +231,9 @@ static HYD_status send_exec_info(struct HYD_proxy *proxy)
     HYDU_FUNC_ENTER();
 
     cmd = PROC_INFO;
-    status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd), &sent, &closed);
+    status =
+        HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd), &sent,
+                        &closed);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
     HYDU_ASSERT(!closed, status);
 

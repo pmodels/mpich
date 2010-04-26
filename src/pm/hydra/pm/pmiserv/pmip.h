@@ -21,7 +21,7 @@ struct HYD_pmcd_pmip {
 
         /* PMI */
         char *pmi_fd;
-        int pmi_rank;             /* If this is -1, we auto-generate it */
+        int pmi_rank;           /* If this is -1, we auto-generate it */
         char *pmi_process_mapping;
     } system_global;            /* Global system parameters */
 

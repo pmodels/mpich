@@ -9,7 +9,8 @@
 #include "pmi_common.h"
 #include "bind.h"
 
-HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd, char *args[])
+HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd,
+                                      char *args[])
 {
     char *tbuf = NULL, *seg, *str1 = NULL, *cmd;
     char *buf;

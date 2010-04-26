@@ -384,8 +384,9 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
 
     if (fwd_hash->buf_count) {
         /* there is data in the buffer, send it out first */
-        status = HYDU_sock_write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count,
-                                 &count, closed);
+        status =
+            HYDU_sock_write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count,
+                            &count, closed);
         HYDU_ERR_POP(status, "write error\n");
 
         if (!*closed) {
@@ -397,8 +398,9 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
     /* If the incoming socket is closed, make sure we forward out all
      * of the buffered data */
     while (*closed && fwd_hash->buf_count) {
-        status = HYDU_sock_write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count,
-                                 &count, closed);
+        status =
+            HYDU_sock_write(out, fwd_hash->buf + fwd_hash->buf_offset, fwd_hash->buf_count,
+                            &count, closed);
         HYDU_ERR_POP(status, "write error\n");
 
         if (!*closed) {
@@ -511,12 +513,12 @@ HYD_status HYDU_sock_cloexec(int fd)
     HYD_status status = HYD_SUCCESS;
 
 #if defined HAVE_FCNTL
-            flags = fcntl(fd, F_GETFD, 0);
-            if (flags < 0)
-                HYDU_ERR_POP(status, "unable to get fd flags\n");
-            flags |= FD_CLOEXEC;
-            if (fcntl(fd, F_SETFD, flags) < 0)
-                HYDU_ERR_POP(status, "unable to set fd flags\n");
+    flags = fcntl(fd, F_GETFD, 0);
+    if (flags < 0)
+        HYDU_ERR_POP(status, "unable to get fd flags\n");
+    flags |= FD_CLOEXEC;
+    if (fcntl(fd, F_SETFD, flags) < 0)
+        HYDU_ERR_POP(status, "unable to set fd flags\n");
 #endif /* HAVE_FCNTL */
 
   fn_exit:

@@ -127,14 +127,14 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
             targs[idx++] = HYDU_strdup("-X");
         else if (HYDT_bsci_info.enablex == 0)
             targs[idx++] = HYDU_strdup("-x");
-        else        /* default mode is disable X */
+        else    /* default mode is disable X */
             targs[idx++] = HYDU_strdup("-x");
     }
 
     host_idx = idx++;   /* Hostname will come here */
 
     /* Fill in the remaining arguments */
-    exec_idx = idx; /* Store the executable index */
+    exec_idx = idx;     /* Store the executable index */
     for (i = 0; args[i]; i++)
         targs[idx++] = HYDU_strdup(args[i]);
 

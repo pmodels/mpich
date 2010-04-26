@@ -212,7 +212,8 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
 /* others */
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
                             int global_core_count);
-HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node **node_list);
+HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
+                                 struct HYD_node **node_list);
 HYD_status HYDU_gethostname(char *hostname);
 
 /* signals */

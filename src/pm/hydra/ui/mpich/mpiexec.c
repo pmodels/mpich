@@ -91,8 +91,7 @@ static void usage(void)
 
     printf("\n");
     printf("  Demux engine options:\n");
-    printf("    -demux                           demux engine (%s)\n",
-           HYDRA_DEMUX_NAMES);
+    printf("    -demux                           demux engine (%s)\n", HYDRA_DEMUX_NAMES);
 
     printf("\n");
     printf("  Other Hydra options:\n");
@@ -104,7 +103,8 @@ static void usage(void)
     printf("    -ppn                             processes per node\n");
     printf("    -profile                         turn on internal profiling\n");
     printf("    -prepend-rank                    prepend rank to output\n");
-    printf("    -nameserver                      name server information (host:port format)\n");
+    printf
+        ("    -nameserver                      name server information (host:port format)\n");
 }
 
 static void signal_cb(int sig)

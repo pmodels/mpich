@@ -203,8 +203,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
         HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(resp, char *, len, status);
-        status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed,
-                                HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading from nameserver\n");
         HYDU_ASSERT(len == recvd, status);
 
@@ -300,8 +299,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
         HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(resp, char *, len, status);
-        status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed,
-                                HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading from nameserver\n");
         HYDU_ASSERT(len == recvd, status);
 
@@ -373,8 +371,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
 
         if (len) {
             HYDU_MALLOC(resp, char *, len, status);
-            status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed,
-                                    HYDU_SOCK_COMM_MSGWAIT);
+            status = HYDU_sock_read(ns_fd, resp, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error reading from nameserver\n");
             HYDU_ASSERT(len == recvd, status);
         }

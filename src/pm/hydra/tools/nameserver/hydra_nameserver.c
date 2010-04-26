@@ -118,7 +118,8 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_read(fd, &list_len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status =
+        HYDU_sock_read(fd, &list_len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data\n");
 
     if (closed) {
@@ -139,21 +140,25 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
     if (!strcmp(cmd, "PUBLISH")) {
         HYDU_MALLOC(publish, struct HYDT_ns_publish *, sizeof(struct HYDT_ns_publish), status);
 
-        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(publish->name, char *, len + 1, status);
-        status = HYDU_sock_read(fd, publish->name, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, publish->name, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
 
-        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(publish->info, char *, len + 1, status);
-        status = HYDU_sock_read(fd, publish->info, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, publish->info, len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
 
@@ -182,7 +187,8 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
         }
     }
     else if (!strcmp(cmd, "UNPUBLISH")) {
-        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
 
@@ -220,7 +226,8 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
         }
     }
     else if (!strcmp(cmd, "LOOKUP")) {
-        status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
 

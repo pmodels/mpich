@@ -200,7 +200,8 @@ int main(int argc, char **argv)
     }
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                             &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id), &sent, &closed);
+                             &HYD_pmcd_pmip.local.id, sizeof(HYD_pmcd_pmip.local.id), &sent,
+                             &closed);
     HYDU_ERR_POP(status, "unable to send the proxy ID to the server\n");
     if (closed)
         goto fn_fail;
@@ -260,14 +261,16 @@ int main(int argc, char **argv)
 
     /* Send the exit status upstream */
     cmd = EXIT_STATUS;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
     if (closed)
         goto fn_fail;
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.exit_status,
-                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent, &closed);
+                             HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
+                             &closed);
     HYDU_ERR_POP(status, "unable to return exit status upstream\n");
     if (closed)
         goto fn_fail;

@@ -38,14 +38,16 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_free_strlist(tmp);
 
     cmd = PMI_CMD;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
     HYDU_ASSERT(!closed, status);
 
     hdr.pid = fd;
     hdr.buflen = strlen(buf);
     hdr.pmi_version = 2;
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
     HYDU_ASSERT(!closed, status);
 
