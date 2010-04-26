@@ -30,7 +30,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_vc_terminate
 };
 
-static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES];
+/* in case there are no packet types defined (e.g., they're ifdef'ed out) make sure the array is not zero length */
+static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ? MPIDI_NEM_TCP_PKT_NUM_TYPES : 1];
     
 
 #undef FUNCNAME
