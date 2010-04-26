@@ -148,7 +148,7 @@ struct HYD_env *HYDU_env_list_dup(struct HYD_env *env)
 }
 
 
-HYD_status HYDU_env_create(struct HYD_env **env, const char *env_name, char *env_value)
+HYD_status HYDU_env_create(struct HYD_env **env, const char *env_name, const char *env_value)
 {
     HYD_status status = HYD_SUCCESS;
 

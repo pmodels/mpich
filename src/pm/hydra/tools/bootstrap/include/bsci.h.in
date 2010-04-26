@@ -18,10 +18,10 @@
  */
 struct HYDT_bsci_info {
     /** \brief Boostrap server to use */
-    char *bootstrap;
+    const char *bootstrap;
 
     /** \brief Boostrap executable to use */
-    char *bootstrap_exec;
+    const char *bootstrap_exec;
 
     /** \brief Enable/disable X-forwarding */
     int  enablex;
@@ -78,7 +78,8 @@ extern struct HYDT_bsci_info HYDT_bsci_info;
  * expected to set any bootstrap implementation specific function
  * pointers in this function to be used by later BSCI calls.
  */
-HYD_status HYDT_bsci_init(char *bootstrap, char *bootstrap_exec, int enablex, int debug);
+HYD_status HYDT_bsci_init(const char *bootstrap, const char *bootstrap_exec, int enablex,
+                          int debug);
 
 
 /**

@@ -11,7 +11,7 @@ int HYDU_local_to_global_id(int local_id, int start_pid, int core_count, int glo
     return ((local_id / core_count) * global_core_count) + (local_id % core_count) + start_pid;
 }
 
-HYD_status HYDU_add_to_node_list(char *hostname, int num_procs, struct HYD_node ** node_list)
+HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node ** node_list)
 {
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;

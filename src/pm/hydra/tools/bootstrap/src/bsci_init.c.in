@@ -13,11 +13,11 @@ const char *HYDT_bsci_comp_array[] = { @hydra_bss_name_array@ };
 HYD_status(*HYDT_bsci_comp_init[])(void) = { @hydra_bss_init_array@ };
 struct HYDT_bsci_info HYDT_bsci_info = { 0 };
 
-HYD_status HYDT_bsci_init(char *user_bootstrap, char *user_bootstrap_exec, int enablex,
-                          int debug)
+HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap_exec,
+                          int enablex, int debug)
 {
     int i;
-    char *bootstrap = NULL, *bootstrap_exec = NULL;
+    const char *bootstrap = NULL, *bootstrap_exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -30,7 +30,7 @@ HYD_status HYDT_bsci_init(char *user_bootstrap, char *user_bootstrap_exec, int e
     /* Store the bootstrap value before replacing it */
     HYDT_bsci_info.bootstrap = bootstrap;
     if (!strcmp(bootstrap, "rsh") || !strcmp(bootstrap, "fork"))
-        bootstrap = (char *) "ssh";
+        bootstrap = "ssh";
 
     if (user_bootstrap_exec)
         bootstrap_exec = user_bootstrap_exec;

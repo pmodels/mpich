@@ -173,7 +173,7 @@ HYD_status HYDU_correct_wdir(char **wdir);
 /* args */
 HYD_status HYDU_find_in_path(const char *execname, char **path);
 HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_table);
-HYD_status HYDU_set_str(char *arg, char ***argv, char **var, char *val);
+HYD_status HYDU_set_str(char *arg, char ***argv, char **var, const char *val);
 HYD_status HYDU_set_str_and_incr(char *arg, char ***argv, char **var);
 HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val);
 HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var);
@@ -195,7 +195,7 @@ HYD_status HYDU_env_to_str(struct HYD_env *env, char **str);
 HYD_status HYDU_str_to_env(char *str, struct HYD_env **env);
 HYD_status HYDU_list_inherited_env(struct HYD_env **env_list);
 struct HYD_env *HYDU_env_list_dup(struct HYD_env *env);
-HYD_status HYDU_env_create(struct HYD_env **env, const char *env_name, char *env_value);
+HYD_status HYDU_env_create(struct HYD_env **env, const char *env_name, const char *env_value);
 HYD_status HYDU_env_free(struct HYD_env *env);
 HYD_status HYDU_env_free_list(struct HYD_env *env);
 struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list);
@@ -212,7 +212,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
 /* others */
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
                             int global_core_count);
-HYD_status HYDU_add_to_node_list(char *hostname, int num_procs, struct HYD_node **node_list);
+HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node **node_list);
 HYD_status HYDU_gethostname(char *hostname);
 
 /* signals */

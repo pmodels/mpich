@@ -455,7 +455,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
          * let the proxy do whatever it does by default. */
         exec->env_prop = NULL;
 
-        status = HYDU_env_create(&env, "PMI_SPAWNED", (char *) "1");
+        status = HYDU_env_create(&env, "PMI_SPAWNED", "1");
         HYDU_ERR_POP(status, "unable to create PMI_SPAWNED environment\n");
         exec->user_env = env;
     }

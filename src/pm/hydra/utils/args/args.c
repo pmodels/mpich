@@ -150,7 +150,7 @@ HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_tabl
     goto fn_exit;
 }
 
-HYD_status HYDU_set_str(char *arg, char ***argv, char **var, char *val)
+HYD_status HYDU_set_str(char *arg, char ***argv, char **var, const char *val)
 {
     HYD_status status = HYD_SUCCESS;
 

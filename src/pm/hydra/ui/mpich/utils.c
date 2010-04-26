@@ -129,7 +129,7 @@ static void genvnone_help_fn(void)
 
 static HYD_status genvnone_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str(arg, argv, &HYD_handle.user_global.global_env.prop, (char *) "none");
+    return HYDU_set_str(arg, argv, &HYD_handle.user_global.global_env.prop, "none");
 }
 
 static void genvall_help_fn(void)
@@ -141,7 +141,7 @@ static void genvall_help_fn(void)
 
 static HYD_status genvall_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str(arg, argv, &HYD_handle.user_global.global_env.prop, (char *) "all");
+    return HYDU_set_str(arg, argv, &HYD_handle.user_global.global_env.prop, "all");
 }
 
 static HYD_status process_mfile_token(char *token, int newline)
@@ -202,7 +202,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
-        status = HYDU_add_to_node_list((char *) "localhost", 1, &HYD_handle.node_list);
+        status = HYDU_add_to_node_list("localhost", 1, &HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
 
@@ -484,7 +484,7 @@ static HYD_status envnone_fn(char *arg, char ***argv)
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_str(arg, argv, &exec->env_prop, (char *) "none");
+    status = HYDU_set_str(arg, argv, &exec->env_prop, "none");
 
   fn_exit:
     return status;
@@ -508,7 +508,7 @@ static HYD_status envall_fn(char *arg, char ***argv)
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_str(arg, argv, &exec->env_prop, (char *) "all");
+    status = HYDU_set_str(arg, argv, &exec->env_prop, "all");
 
   fn_exit:
     return status;
