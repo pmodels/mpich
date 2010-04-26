@@ -382,9 +382,6 @@ void MPE_Req_wait_test( MPI_Request, MPI_Status *, char *, MPE_State *,
 */
 #define MPE_LOG_SWITCH_DECL \
     register       int              is_thisfn_logged = 0;
-
-#ifdef GCC_WALL
-
 #define MPE_LOG_STATE_DECL \
     register       MPE_State       *state   = 0; \
     register const CLOG_CommIDs_t  *commIDs = 0; \
@@ -397,23 +394,6 @@ void MPE_Req_wait_test( MPI_Request, MPI_Status *, char *, MPE_State *,
 #define MPE_LOG_BYTEBUF_DECL \
                    MPE_LOG_BYTES    bytebuf = {0};  \
                    int              bytebuf_pos = 0;
-
-#else
-
-#define MPE_LOG_STATE_DECL \
-    register       MPE_State       *state; \
-    register const CLOG_CommIDs_t  *commIDs; \
-    MPE_LOG_SWITCH_DECL
-#define MPE_LOG_COMM_DECL \
-    register       MPE_Event       *solo_event; \
-    register const CLOG_CommIDs_t  *new_commIDs;
-#define MPE_LOG_SOLO_EVENT_DECL \
-    register       MPE_Event       *solo_event;
-#define MPE_LOG_BYTEBUF_DECL \
-                   MPE_LOG_BYTES    bytebuf;  \
-                   int              bytebuf_pos;
-
-#endif
 
 extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
 
