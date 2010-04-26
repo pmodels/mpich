@@ -481,6 +481,15 @@ extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
     MPE_Req_wait_test( request, status, note, state, THREADID, IS_MPELOG_ON );
 
 /*
+   MPE_LOG_COMM_CHECK is needed in MPI_Comm_free() and MPI_Intercomm_create()
+   where commIDs could be NULL if users disable logging with MPI_Pcontrol(0).
+   But the 2 MPI functions needs commIDs to do some bookkeeping operations.
+*/
+#define MPE_LOG_COMM_CHECK(comm) \
+    if (!commIDs) \
+        commIDs = CLOG_CommSet_get_IDs( CLOG_CommSet, comm ); \
+
+/*
    Update commIDs after CLOG_CommSet_add_intracomm() which may have invoked
    realloc() on CLOG_CommSet's table[] of commIDs, because invocation
    of realloc() may invalidate all commIDs handed out by CLOG_CommSet.
@@ -2460,6 +2469,7 @@ MPI_Comm * comm;
   MPE_LOG_THREADSTM_GET
   MPE_LOG_THREAD_LOCK
   MPE_LOG_STATE_BEGIN(*comm,MPE_COMM_FREE_ID)
+  MPE_LOG_COMM_CHECK(*comm)
   MPE_LOG_THREAD_UNLOCK
 
 #if defined( MAKE_SAFE_PMPI_CALL )
@@ -3189,6 +3199,7 @@ MPI_Comm * comm_out;
   MPE_LOG_THREADSTM_GET
   MPE_LOG_THREAD_LOCK
   MPE_LOG_STATE_BEGIN(local_comm,MPE_INTERCOMM_CREATE_ID)
+  MPE_LOG_COMM_CHECK(local_comm)
   MPE_LOG_THREAD_UNLOCK
 
 #if defined( MAKE_SAFE_PMPI_CALL )
