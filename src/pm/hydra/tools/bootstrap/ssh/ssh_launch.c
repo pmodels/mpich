@@ -200,6 +200,11 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
                 HYDU_FREE(str);
 
                 control_fd[i] = sockpair[0];
+
+                /* make sure control_fd[i] is not shared by the
+                 * processes spawned in the future */
+                status = HYDU_sock_cloexec(control_fd[i]);
+                HYDU_ERR_POP(status, "unable to set control socket to close on exec\n");
             }
         }
         else
