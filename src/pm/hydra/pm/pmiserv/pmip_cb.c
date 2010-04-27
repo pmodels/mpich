@@ -401,6 +401,27 @@ static HYD_status handle_pmi_response(int fd)
     goto fn_exit;
 }
 
+static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
+{
+    int accept_fd;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYDU_sock_accept(fd, &accept_fd);
+    HYDU_ERR_POP(status, "accept error\n");
+
+    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, pmi_cb);
+    HYDU_ERR_POP(status, "unable to register fd\n");
+
+fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status launch_procs(void)
 {
     int i, j, arg, stdin_fd, process_id, os_index, pmi_rank;
@@ -462,7 +483,13 @@ static HYD_status launch_procs(void)
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     if (HYD_pmcd_pmip.exec_list->exec[0] == NULL) {      /* Checkpoint restart cast */
-        status = HYDU_env_create(&env, "PMI_FD", HYD_pmcd_pmip.system_global.pmi_fd);
+        char *pmi_port;
+
+        status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
+                                                     NULL, &pmi_port, pmi_listen_cb, NULL);
+        HYDU_ERR_POP(status, "unable to create PMI port\n");
+
+        status = HYDU_env_create(&env, "PMI_PORT", pmi_port);
         HYDU_ERR_POP(status, "unable to create env\n");
 
         /* Restart the proxy.  Specify stdin fd only if pmi_rank 0 is in this proxy. */
