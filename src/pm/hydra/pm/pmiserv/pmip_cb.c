@@ -461,7 +461,7 @@ static HYD_status launch_procs(void)
                                HYD_pmcd_pmip.user_global.ckpoint_prefix);
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
-    if (HYD_pmcd_pmip.exec_list == NULL) {      /* Checkpoint restart cast */
+    if (HYD_pmcd_pmip.exec_list->exec[0] == NULL) {      /* Checkpoint restart cast */
         status = HYDU_env_create(&env, "PMI_FD", HYD_pmcd_pmip.system_global.pmi_fd);
         HYDU_ERR_POP(status, "unable to create env\n");
 
