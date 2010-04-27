@@ -6,6 +6,8 @@
 
 #include "mpid_nem_impl.h"
 
+MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+
 #ifdef ENABLE_CHECKPOINTING
 
 #include <semaphore.h>

@@ -7,6 +7,8 @@
 #define SOCKSM_H_EXTERNS_ 1
 #include "tcp_impl.h"
 
+MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+
 #ifdef ENABLE_CHECKPOINTING
 
 #define SENDQ_EMPTY(q) GENERIC_Q_EMPTY (q)
