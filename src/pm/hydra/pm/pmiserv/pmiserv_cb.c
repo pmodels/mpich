@@ -105,9 +105,8 @@ static HYD_status handle_pid_list(int fd, struct HYD_proxy *proxy)
     goto fn_exit;
 }
 
-static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
+static HYD_status cleanup_proxy_connection(int fd, struct HYD_proxy *proxy)
 {
-    int count, closed;
     struct HYD_proxy *tproxy;
     struct HYD_pg *pg = proxy->pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -115,16 +114,8 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
-    status = HYDU_sock_read(fd, (void *) proxy->exit_status,
-                            proxy->proxy_process_count * sizeof(int),
-                            &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to read status from proxy\n");
-    HYDU_ASSERT(!closed, status);
-
     status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "error deregistering fd\n");
-
     close(fd);
 
     /* Reset the control fd to -1, so when the fd is reused, we don't
@@ -166,9 +157,34 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
     goto fn_exit;
 }
 
-static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
+static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 {
     int count, closed;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
+    status = HYDU_sock_read(fd, (void *) proxy->exit_status,
+                            proxy->proxy_process_count * sizeof(int),
+                            &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to read status from proxy\n");
+    HYDU_ASSERT(!closed, status);
+
+    status = cleanup_proxy_connection(fd, proxy);
+    HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
+{
+    int count, closed, i;
     enum HYD_pmcd_pmi_cmd cmd = INVALID_CMD;
     struct HYD_pmcd_pmi_hdr hdr;
     struct HYD_proxy *proxy;
@@ -187,9 +203,12 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
          * users */
         HYDU_dump(stderr, "connection to proxy terminated unexpectedly\n");
 
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to deregister socket\n");
-        close(fd);
+        /* allocate an exit status for the proxy, so we don't wait for it */
+        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
+        for (i = 0; i < proxy->proxy_process_count; i++)
+            proxy->exit_status[i] = 0;
+        status = cleanup_proxy_connection(fd, proxy);
+        HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
 
         goto fn_exit;
     }
