@@ -838,6 +838,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     else if (cmd == CKPOINT) {
         HYDU_dump(stdout, "requesting checkpoint\n");
         status = HYDT_ckpoint_suspend();
+        HYDU_ERR_POP(status, "checkpoint suspend failed\n");
         HYDU_dump(stdout, "checkpoint completed\n");
     }
     else if (cmd == PMI_RESPONSE) {

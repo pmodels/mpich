@@ -50,7 +50,7 @@ static HYD_status cleanup_procs(void)
 
 static HYD_status ckpoint(void)
 {
-    struct HYD_pg *pg;
+    struct HYD_pg *pg = &HYD_handle.pg_list;
     struct HYD_proxy *proxy;
     enum HYD_pmcd_pmi_cmd cmd;
     int sent, closed;
@@ -58,17 +58,16 @@ static HYD_status ckpoint(void)
 
     HYDU_FUNC_ENTER();
 
-    /* FIXME: Instead of doing this from this process itself, fork a
-     * bunch of processes to do this. */
+    if (pg->next)
+        HYDU_ERR_POP(status, "checkpointing is not supported for dynamic processes\n");
+
     /* Connect to all proxies and send the checkpoint command */
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            cmd = CKPOINT;
-            status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd),
-                                     &sent, &closed);
-            HYDU_ERR_POP(status, "unable to send checkpoint message\n");
-            HYDU_ASSERT(!closed, status);
-        }
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        cmd = CKPOINT;
+        status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd),
+                                 &sent, &closed);
+        HYDU_ERR_POP(status, "unable to send checkpoint message\n");
+        HYDU_ASSERT(!closed, status);
     }
 
     HYDU_FUNC_EXIT();

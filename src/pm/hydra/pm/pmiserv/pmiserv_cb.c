@@ -181,7 +181,18 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
     status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read command from proxy\n");
-    HYDU_ASSERT(!closed, status);
+
+    if (closed) {
+        /* this is only for developers; should not happen for regular
+         * users */
+        HYDU_dump(stderr, "connection to proxy terminated unexpectedly\n");
+
+        status = HYDT_dmx_deregister_fd(fd);
+        HYDU_ERR_POP(status, "unable to deregister socket\n");
+        close(fd);
+
+        goto fn_exit;
+    }
 
     if (cmd == PID_LIST) {      /* Got PIDs */
         status = handle_pid_list(fd, proxy);
