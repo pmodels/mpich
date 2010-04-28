@@ -220,7 +220,7 @@ static int barrier (MPID_Comm *comm_ptr)
         else
         {
             while (OPA_load_int(&barrier_vars->sig) == sense)
-                MPIDU_Yield();
+                MPIU_PW_Sched_yield();
         }
 
         goto fn_exit;
@@ -237,7 +237,7 @@ static int barrier (MPID_Comm *comm_ptr)
         /* wait for local procs to reach barrier */
         if (local_size > 1)
             while (OPA_load_int(&barrier_vars->sig0) == 0)
-                MPIDU_Yield();
+                MPIU_PW_Sched_yield();
 
         /* now do a barrier with external processes */
         mpi_errno = msg_barrier (comm_ptr, external_rank, external_size, external_ranks);
@@ -270,7 +270,7 @@ static int barrier (MPID_Comm *comm_ptr)
 	}
 
         while (OPA_load_int(&barrier_vars->sig) == sense)
-            MPIDU_Yield();
+            MPIU_PW_Sched_yield();
     }
 
  fn_exit:

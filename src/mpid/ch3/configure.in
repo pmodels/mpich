@@ -83,9 +83,7 @@ export CPPFLAGS
 # the best way to handle these systems
 # Note that the "setup_<channelname>" script must also set 
 #   needs_sock=yes
-# if util/sock is used, and
-#   needs_shm=yes
-# if util/shm is used.
+# if util/sock is used
 if test -s $srcdir/channels/$channel_name/setup_$channel_name ; then
     # Typically, this will set ch3subsystems.  For now,
     # we use this configure to create the configuration file
@@ -96,10 +94,6 @@ if test -s $srcdir/channels/$channel_name/setup_$channel_name ; then
         AC_DEFINE(HAVE_UTIL_SOCK,1,[Define if the channel needs util/sock])
 	CPPFLAGS="${CPPFLAGS} -I${master_top_srcdir}/src/mpid/ch3/util/sock"
 	PAC_CONFIG_SUBDIR(util/sock,,AC_ERROR(util/sock configure failed))
-    fi				   	
-    if test "$needs_shm" = yes ; then
-        AC_DEFINE(HAVE_UTIL_SHM,1,[Define if the channel needs util/shm])
-	#CPPFLAGS="${CPPFLAGS} -I${master_top_srcdir}/src/mpid/ch3/util/shm"
     fi				   	
 fi
 AC_SUBST(ch3subsystems)
@@ -296,6 +290,6 @@ export LIBTOOL
 
 PAC_CONFIG_SUBDIR(channels/${channel_name},,AC_ERROR(channels/${channel_name} configure failed))
 
-AC_OUTPUT(Makefile src/Makefile util/Makefile util/shm/Makefile util/shmbase/Makefile channels/Makefile util/ftb/Makefile localdefs $MPID_THREAD_OUTPUT_FILES)
+AC_OUTPUT(Makefile src/Makefile util/Makefile channels/Makefile util/ftb/Makefile localdefs $MPID_THREAD_OUTPUT_FILES)
 
 PAC_SUBDIR_CACHE_CLEANUP

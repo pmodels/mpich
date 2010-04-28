@@ -4,6 +4,8 @@
 
  # OVERALL: Support for Asynchronous Communication Progress.
 
+ # OVERALL: The ssm and shm channels have been removed.
+
  # PM/PMI: Hydra is now the default process management framework
    replacing MPD.
 

@@ -1,6 +1,0 @@
-#! /bin/sh
-#
-# The shm channel does not implement SPAWN
-echo "Executing mpich2prereq in $devicedir/channels/shm"
-MPID_NO_SPAWN=yes
-MPID_MAX_THREAD_LEVEL=MPI_THREAD_SERIALIZED

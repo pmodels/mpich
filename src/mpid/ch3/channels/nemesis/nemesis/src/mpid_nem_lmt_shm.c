@@ -17,7 +17,7 @@
 #ifdef ENABLE_NO_YIELD
 #define COND_Yield() do { } while(0)
 #else
-#define COND_Yield() MPIDU_Yield()
+#define COND_Yield() MPIU_PW_Sched_yield()
 #endif
 
 /* Progress queue */

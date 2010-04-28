@@ -759,8 +759,9 @@ typedef struct MPIDI_VC
        this has a very generous size, though this may shrink later (a channel
        can always allocate storage and hang it off of the end).  This 
        is necessary to allow dynamic loading of channels at MPI_Init time. */
-    /* The ssm channel needs a *huge* space for the VC.  We need to fix that. 
-       Note also that for dynamically-loaded channels, the VCs must all be the
+    /* The ssm channel needed a *huge* space for the VC.  But now that it's
+       gone, we need to determine the appropriate smaller size to use instead. */
+    /* Note also that for dynamically-loaded channels, the VCs must all be the
        same size, so MPIDI_CH3_VC_SIZE should not be overridden when building
        multiple channels that will be used together */
 #ifndef MPIDI_CH3_VC_SIZE
@@ -1260,13 +1261,6 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * );
  all processes in comm*/
 int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root );
 
-/* from util/shm */
-int MPIDI_CH3I_Connect_to_root_sshm(const char *, MPIDI_VC_t **);
-int MPIDI_VC_InitShm( MPIDI_VC_t *vc );
-
-/* from util/shmbase */
-void MPIDI_Generate_shm_string(char *, int);
-
 /* Channel defintitions */
 /*@
   MPIDI_CH3_iStartMsg - A non-blocking request to send a CH3 packet.  A r
@@ -1503,25 +1497,14 @@ int MPIDI_CH3_Abort(int exit_code, char * error_msg);
    executed by two or more channels */
 int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t * pg_p, int pg_rank,
                          char **bc_val_p, int *val_max_sz_p);
-int MPIDI_CH3U_Init_sshm(int has_parent, MPIDI_PG_t * pg_p, int pg_rank,
-                         char **bc_val_p, int *val_max_sz_p);
-
-int MPIDI_SHM_InitRWProc( pid_t, int * );
-int MPIDI_SHM_AttachProc( pid_t );
-int MPIDI_SHM_DetachProc( pid_t );
-int MPIDI_SHM_ReadProcessMemory( int, int, const char *, char *, size_t );
 
 /* added by brad.  business card related global and functions */
 /* FIXME: Make these part of the channel support headers */
 #define MAX_HOST_DESCRIPTION_LEN 256
 int MPIDI_CH3U_Get_business_card_sock(int myRank, 
 				      char **bc_val_p, int *val_max_sz_p);
-int MPIDI_CH3U_Get_business_card_sshm(char **bc_val_p, int *val_max_sz_p);
 
 int MPIDI_CH3_Get_business_card(int myRank, char *value, int length);
-
-/* added by brad.  finalization related upcalls */
-int MPIDI_CH3U_Finalize_sshm(void);
 
 /*
  * Channel upcall prototypes

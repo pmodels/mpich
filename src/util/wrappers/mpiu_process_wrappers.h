@@ -15,16 +15,20 @@
 #endif
 
 /* MPIU_PW_SCHED_YIELD() - Yield the processor to OS scheduler */
-/* FIXME: Currently this functionality is also implemented in 
- * mpidu_process_locks.h . Should we use MPIU_Thread_yield() ?
- */
-/* FIXME: Allow fallbacks with sleep/select */
 #if defined(HAVE_SWITCHTOTHREAD)
     #define MPIU_PW_Sched_yield() SwitchToThread()
+#elif defined(HAVE_WIN32_SLEEP)
+    #define MPIU_PW_Sched_yield() Sleep(0)
 #elif defined(HAVE_SCHED_YIELD)
     #define MPIU_PW_Sched_yield() sched_yield()
 #elif defined(HAVE_YIELD)
     #define MPIU_PW_Sched_yield() yield()
+#elif defined (HAVE_SELECT)
+    #define MPIU_PW_Sched_yield() do { struct timeval t; t.tv_sec = 0; t.tv_usec = 0; select(0,0,0,0,&t); } while (0)
+#elif defined (HAVE_USLEEP)
+    #define MPIU_PW_Sched_yield() usleep(0)
+#elif defined (HAVE_SLEEP)
+    #define MPIU_PW_Sched_yield() sleep(0)
 #else
     #error "No mechanism available to yield"
 #endif

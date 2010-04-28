@@ -35,10 +35,6 @@
 
 /* TODO need actual yield and an busy wait impls */
 #define MPIDU_Busy_wait() do {} while (0)
-/* conflicts with the "process locks" definition for now, don't enable this or
- * use it until we delete the process locks code
-#define MPIDU_Yield() do {} while (0)
- */
 
 /* ======================================================
    Ownership Mechanisms

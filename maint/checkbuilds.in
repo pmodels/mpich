@@ -68,7 +68,7 @@ $hasDemon   = 0;
 	       'pmi;simple;smpd',    #; uni no longer supported
 	       'pm;gforker;mpd', #;remshell
 	       'namepublisher;no;file;mpd', #;ldap:ldapserver',
-	       'device;ch3;ch3:shm;ch3:ssm;ch3:nemesis',
+	       'device;ch3;ch3:sock',
 );
 %chosenWith = ();
 @env_array = (

@@ -61,7 +61,7 @@ int MPID_nem_barrier(void)
     {
 	/* wait */
 	while (OPA_load_int(&MPID_nem_mem_region.barrier->wait) == sense)
-            MPIDU_Yield(); /* skip */
+            MPIU_PW_Sched_yield(); /* skip */
     }
     sense = 1 - sense;
 

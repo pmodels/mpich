@@ -447,23 +447,6 @@ channel can be configured using the following option:
 
   --with-device=ch3:sock
 
-ssm and shm channels
---------------------
-shm (shared memory) channel is for use on platforms that only use
-shared-memory communication. ssm (sockets and shared memory) is for
-use on clusters of shared-memory machines. They can be configured
-using:
-
-  --with-device=ch3:ssm
-
-  (or)
-
-  --with-device=ch3:shm
-
-IMPORTANT NOTE: These two channels are now unsupported and will be
-deleted in future releases. The nemesis channel provides all the
-functionality supported by these channels and more.
-
 dllchan
 -------
 dllchan is an *experimental* channel for supporting dynamic loading of

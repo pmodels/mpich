@@ -29,13 +29,10 @@ pathlist=""
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/include"
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/utils/monitor"
-pathlist="$pathlist src/mpid/common/locks"
 pathlist="$pathlist src/util/wrappers"
 for path in $pathlist ; do
     CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
-
-CPPFLAGS="$CPPFLAGS -DUSE_PROCESS_LOCKS"
 
 # Only include papi in CPPFLAGS configure will handle libs, and checking that it exists, etc.
 # We do this here because we want to make sure that this is added to CPPFLAGS in configures above this one.

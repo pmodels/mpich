@@ -576,7 +576,8 @@ simple communication device, known as ``ch3'' (for the third version of the
 The ch3 device itself supports a variety of communication methods.  These are
 specified by providing the name of the method after a colon in the
 \texttt{--with-device} configure option.  For example,
-\texttt{--with-device=ch3:ssm} selects the socket plus shared memory method.
+\texttt{--with-device=ch3:sock} selects the (older) socket-base communication
+method.
 The supported methods include:
 
 \begin{description}
@@ -590,11 +591,6 @@ The supported methods include:
 \item[ch3:sock]This method uses sockets for all communications between
   processes. It supports \texttt{MPI\_THREAD\_MULTIPLE} and other
   levels of thread safety.
-\item[ch3:ssm]This method uses sockets between nodes and shared memory
-  within a node.
-\item[ch3:shm]This method only uses shared memory and only works
-  within a single SMP.  It does not support the MPI dynamic process
-  routines such as \texttt{MPI\_Comm\_spawn}.
 \end{description}
 
 Most installations should use the default \texttt{ch3:nemesis} method
@@ -1157,15 +1153,10 @@ available options.
 \item
     build the sfortRelease mpich2 solution
 \item
-    build the channel of your choice.  The options are \texttt{sock},
-    \texttt{shm}, and \texttt{ssm}.   
-The shm channel is for small numbers of processes that will run on a single 
-machine using shared memory.  The shm channel should not be used for more 
-than about 8 processes.  The \texttt{ssm} (sock shared memory) channel is for
-    clusters  
-of smp nodes.  This channel should not be used if you plan to over-subscribe 
-the CPU's.  If you plan on launching more processes than you have processors 
-you should use the default \texttt{sock} channel.  The \texttt{ssm} channel 
+    build the channel of your choice.  The options are \texttt{sock} and
+    \texttt{nemesis}.
+If you plan on launching more processes than you have processors 
+you should use the default \texttt{sock} channel.  The \texttt{nemesis} channel 
 uses a polling progress engine that can perform poorly when multiple processes 
 compete for individual processors.  
 
