@@ -659,7 +659,7 @@ sub TestTimeout {
 	# Allow 'job ending due to env var MPIEXEC_TIMEOUT' (mpd)
 	if (/job ending due to env var MPIEXEC_TIMEOUT/) { next; }
 	# Allow 'EXIT STRING: Terminated \(signal 15\)' (hydra)
-	if (/Terminated \(signal 15\)/) { next; }
+	if (/APPLICATION TERMINATED WITH THE EXIT STRING: Hangup \(signal 1\)/) { next; }
 	# ANY output is an error (other than timeout) 
 	if (! /^\s*$/) {
 	    print STDERR "Unexpected output in $programname: $_";
