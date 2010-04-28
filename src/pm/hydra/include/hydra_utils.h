@@ -10,6 +10,26 @@
 #include "hydra_base.h"
 #include "mpl.h"
 
+extern char *HYD_dbg_prefix;
+
+#define HYDU_dump_prefix(fp)                    \
+    {                                           \
+        fprintf(fp, "[%s] ", HYD_dbg_prefix);   \
+        fflush(fp);                             \
+    }
+
+#define HYDU_dump_noprefix(fp, ...)             \
+    {                                           \
+        fprintf(fp, __VA_ARGS__);               \
+        fflush(fp);                             \
+    }
+
+#define HYDU_dump(fp, ...)                      \
+    {                                           \
+        HYDU_dump_prefix(fp);                   \
+        HYDU_dump_noprefix(fp, __VA_ARGS__);    \
+    }
+
 #if defined HAVE__FUNC__
 #define HYDU_FUNC __func__
 #elif defined HAVE_CAP__FUNC__
@@ -18,9 +38,7 @@
 #define HYDU_FUNC __FUNCTION__
 #endif
 
-#if !defined COMPILER_ACCEPTS_VA_ARGS
-#define HYDU_error_printf printf
-#elif defined __FILE__ && defined HYDU_FUNC
+#if defined __FILE__ && defined HYDU_FUNC
 #define HYDU_error_printf(...)                                          \
     {                                                                   \
         HYDU_dump_prefix(stderr);                                       \
@@ -45,7 +63,7 @@
 #define HYDU_ASSERT(x, status)                                          \
     {                                                                   \
         if (!(x)) {                                                     \
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,            \
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,             \
                                  "assert (%s) failed\n", #x);           \
         }                                                               \
     }
@@ -56,11 +74,10 @@
             (status) = HYD_SUCCESS;             \
     }
 
-#define HYDU_ERR_POP(status, message)                                   \
+#define HYDU_ERR_POP(status, ...)                                       \
     {                                                                   \
         if (status && !HYD_SILENT_ERROR(status)) {                      \
-            if (strlen(message))                                        \
-                HYDU_error_printf(message);                             \
+            HYDU_error_printf(__VA_ARGS__);                             \
             goto fn_fail;                                               \
         }                                                               \
         else if (HYD_SILENT_ERROR(status)) {                            \
@@ -68,79 +85,16 @@
         }                                                               \
     }
 
-#define HYDU_ERR_POP1(status, message, arg1)                            \
-    {                                                                   \
-        if (status && !HYD_SILENT_ERROR(status)) {                      \
-            if (strlen(message))                                        \
-                HYDU_error_printf(message, arg1);                       \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (HYD_SILENT_ERROR(status)) {                            \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ERR_POP2(status, message, arg1, arg2)                      \
-    {                                                                   \
-        if (status && !HYD_SILENT_ERROR(status)) {                      \
-            if (strlen(message))                                        \
-                HYDU_error_printf(message, arg1, arg2);                 \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (HYD_SILENT_ERROR(status)) {                            \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ERR_SETANDJUMP(status, error, message)                     \
+#define HYDU_ERR_SETANDJUMP(status, error, ...)                         \
     {                                                                   \
         status = error;                                                 \
-        if (status && !HYD_SILENT_ERROR(status)) {                      \
-            if (strlen(message))                                        \
-                HYDU_error_printf(message);                             \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (HYD_SILENT_ERROR(status)) {                            \
-            goto fn_exit;                                               \
-        }                                                               \
+        HYDU_ERR_POP(status, __VA_ARGS__);                              \
     }
 
-#define HYDU_ERR_SETANDJUMP1(status, error, message, arg1)              \
-    {                                                                   \
-        status = error;                                                 \
-        if (status && !HYD_SILENT_ERROR(status)) {                      \
-            if (strlen(message))                                        \
-                HYDU_error_printf(message, arg1);                       \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (HYD_SILENT_ERROR(status)) {                            \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ERR_SETANDJUMP2(status, error, message, arg1, arg2)        \
-    {                                                                   \
-        status = error;                                                 \
-        if (status && !HYD_SILENT_ERROR(status)) {                      \
-            if (strlen(message))                                        \
-                HYDU_error_printf(message, arg1, arg2);                 \
-            goto fn_fail;                                               \
-        }                                                               \
-        else if (HYD_SILENT_ERROR(status)) {                            \
-            goto fn_exit;                                               \
-        }                                                               \
-    }
-
-#define HYDU_ERR_CHKANDJUMP(status, chk, error, message)                \
+#define HYDU_ERR_CHKANDJUMP(status, chk, error, ...)                    \
     {                                                                   \
         if ((chk))                                                      \
-            HYDU_ERR_SETANDJUMP(status, error, message);                \
-    }
-
-#define HYDU_ERR_CHKANDJUMP1(status, chk, error, message, arg1)         \
-    {                                                                   \
-        if ((chk))                                                      \
-            HYDU_ERR_SETANDJUMP1(status, error, message, arg1);         \
+            HYDU_ERR_SETANDJUMP(status, error, __VA_ARGS__);            \
     }
 
 #if defined ENABLE_WARNINGS || !defined COMPILER_ACCEPTS_VA_ARGS
@@ -185,9 +139,6 @@ HYD_status HYDU_send_strlist(int fd, char **strlist);
 
 /* debug */
 HYD_status HYDU_dbg_init(const char *str);
-void HYDU_dump_prefix(FILE * fp);
-void HYDU_dump_noprefix(FILE * fp, const char *str, ...);
-void HYDU_dump(FILE * fp, const char *str, ...);
 void HYDU_dbg_finalize(void);
 
 /* env */
@@ -286,9 +237,9 @@ HYD_status HYDU_sock_cloexec(int fd);
     {                                                                   \
         (p) = (type) HYDU_malloc((size));                               \
         if ((p) == NULL)                                                \
-            HYDU_ERR_SETANDJUMP1((status), HYD_NO_MEM,                  \
-                                 "failed to allocate %d bytes\n",       \
-                                 (size));                               \
+            HYDU_ERR_SETANDJUMP((status), HYD_NO_MEM,                   \
+                                "failed to allocate %d bytes\n",        \
+                                (int) (size));                          \
     }
 
 #define HYDU_FREE(p)                            \

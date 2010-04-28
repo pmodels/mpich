@@ -172,8 +172,8 @@ static HYD_status process_mfile_token(char *token, int newline)
             node->local_binding = HYDU_strdup(binding);
         }
         else {
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                 "token %s not supported at this time\n", token);
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "token %s not supported at this time\n", token);
         }
     }
 

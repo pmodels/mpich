@@ -119,7 +119,7 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
     }
 
     if (m->handler_fn == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized argument %s\n", arg);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized argument %s\n", arg);
 
   fn_exit:
     return status;
@@ -154,7 +154,7 @@ HYD_status HYDU_set_str(char *arg, char ***argv, char **var, const char *val)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP1(status, *var, HYD_INTERNAL_ERROR, "duplicate setting: %s\n", arg);
+    HYDU_ERR_CHKANDJUMP(status, *var, HYD_INTERNAL_ERROR, "duplicate setting: %s\n", arg);
 
     if (val == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
@@ -191,8 +191,8 @@ HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_ERR_CHKANDJUMP1(status, *var != -1, HYD_INTERNAL_ERROR,
-                         "duplicate setting: %s\n", arg);
+    HYDU_ERR_CHKANDJUMP(status, *var != -1, HYD_INTERNAL_ERROR,
+                        "duplicate setting: %s\n", arg);
 
     *var = val;
 
@@ -272,8 +272,8 @@ HYD_status HYDU_parse_hostfile(char *hostfile,
     HYDU_FUNC_ENTER();
 
     if ((fp = fopen(hostfile, "r")) == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unable to open host file: %s\n", hostfile);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unable to open host file: %s\n", hostfile);
 
     while (fgets(line, HYD_TMP_STRLEN, fp)) {
         char *linep = NULL;

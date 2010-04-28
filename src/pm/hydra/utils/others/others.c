@@ -63,8 +63,8 @@ HYD_status HYDU_gethostname(char *hostname)
     }
 
     if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
-        HYDU_ERR_SETANDJUMP2(status, HYD_SOCK_ERROR,
-                             "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR,
+                            "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
 
     HYDU_snprintf(local_hostname, MAX_HOSTNAME_LEN, "%s", hostname);
 

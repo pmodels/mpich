@@ -51,8 +51,8 @@ HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap
     HYDT_bsci_info.debug = debug;
 
     if (HYDT_bsci_comp_array[i] == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unrecognized bootstrap server: %s\n", bootstrap);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unrecognized bootstrap server: %s\n", bootstrap);
 
     /* This function is mandatory */
     if (HYDT_bsci_fns.launch_procs == NULL)

@@ -57,8 +57,8 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 
     *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (*listen_fd < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
-                             HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
+                            HYDU_strerror(errno));
 
     if (setsockopt(*listen_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(int)) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set TCP_NODELAY\n");
@@ -81,8 +81,8 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
             /* If the address is in use, we should try the next
              * port. Otherwise, it's an error. */
             if (errno != EADDRINUSE)
-                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "bind error (%s)\n",
-                                     HYDU_strerror(errno));
+                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "bind error (%s)\n",
+                                    HYDU_strerror(errno));
         }
         else    /* We got a port */
             break;
@@ -93,8 +93,8 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "no port to bind\n");
 
     if (listen(*listen_fd, -1) < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "listen error (%s)\n",
-                             HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "listen error (%s)\n",
+                            HYDU_strerror(errno));
 
     /* We asked for any port, so we need to find out which port we
      * actually got. */
@@ -102,8 +102,8 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         socklen_t sinlen = sizeof(sa);
 
         if (getsockname(*listen_fd, (struct sockaddr *) &sa, &sinlen) < 0)
-            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "getsockname error (%s)\n",
-                                 HYDU_strerror(errno));
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "getsockname error (%s)\n",
+                                HYDU_strerror(errno));
         *port = ntohs(sa.sin_port);
     }
 
@@ -134,15 +134,15 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
      * worry about locking it. */
     ht = gethostbyname(host);
     if (ht == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INVALID_PARAM,
-                             "unable to get host address (%s)\n", HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
+                            "unable to get host address (%s)\n", HYDU_strerror(errno));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
     /* Create a socket and set the required options */
     *fd = socket(AF_INET, SOCK_STREAM, 0);
     if (*fd < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
-                             HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
+                            HYDU_strerror(errno));
 
     /* Not being able to connect is not an error in all cases. So we
      * return an error, but only print a warning message. The upper
@@ -175,8 +175,8 @@ HYD_status HYDU_sock_accept(int listen_fd, int *fd)
 
     *fd = accept(listen_fd, 0, 0);
     if (*fd < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "accept error (%s)\n",
-                             HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "accept error (%s)\n",
+                            HYDU_strerror(errno));
 
     /* Disable nagle */
     if (setsockopt(*fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(int)) < 0)
@@ -209,8 +209,8 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
 
         if (tmp < 0) {
             *recvd = tmp;
-            HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "read errno (%s)\n",
-                                 HYDU_strerror(errno));
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "read errno (%s)\n",
+                                HYDU_strerror(errno));
         }
         else if (tmp == 0) {
             *closed = 1;
@@ -275,7 +275,7 @@ static HYD_status set_nonblock(int fd)
         flags = 0;
 #if defined O_NONBLOCK
     if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
 #endif /* O_NONBLOCK */
 
   fn_exit:
@@ -297,7 +297,7 @@ static HYD_status set_block(int fd)
         flags = 0;
 #if defined O_NONBLOCK
     if (fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0)
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
 #endif /* O_NONBLOCK */
 
   fn_exit:
@@ -435,15 +435,15 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
             break;
 
     if (!ifa)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unable to find interface %s\n",
-                             iface);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to find interface %s\n",
+                            iface);
 
     sa = (struct sockaddr_in *) ifa->ifa_addr;
     (*ip) = HYDU_strdup((char *)
                         inet_ntop(AF_INET, (void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
     if (!*ip)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unable to find IP for interface %s\n", iface);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unable to find IP for interface %s\n", iface);
 
     freeifaddrs(ifaddr);
 #else

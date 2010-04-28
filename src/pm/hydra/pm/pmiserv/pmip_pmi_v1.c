@@ -103,8 +103,8 @@ static HYD_status fn_init(int fd, char *args[])
     else if (pmi_version == 2 && pmi_subversion == 0)
         tmp = HYDU_strdup("cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n");
     else        /* PMI version mismatch */
-        HYDU_ERR_SETANDJUMP2(status, HYD_INTERNAL_ERROR,
-                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
 
     status = send_cmd_downstream(fd, tmp);
     HYDU_ERR_POP(status, "error sending PMI response\n");

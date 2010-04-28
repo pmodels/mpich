@@ -46,8 +46,8 @@ HYD_status HYDT_rmki_init(char *user_rmk)
     }
 
     if (HYDT_rmki_comp_array[i] == NULL)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "unrecognized resource management kernel: %s\n", rmk);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unrecognized resource management kernel: %s\n", rmk);
 
     if (HYDT_rmki_fns.query_node_list == NULL)
         HYDT_rmki_fns.query_node_list = HYD_rmku_query_node_list;

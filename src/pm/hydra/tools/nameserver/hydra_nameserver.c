@@ -15,6 +15,7 @@ struct HYDT_ns_publish {
 };
 
 static struct HYDT_ns_publish *publish_list = NULL;
+char *HYD_dbg_prefix = (char *) "unknown";
 
 static struct {
     int port;
@@ -248,7 +249,7 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
         }
     }
     else {
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized command: %s\n", cmd);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized command: %s\n", cmd);
     }
 
   fn_exit:

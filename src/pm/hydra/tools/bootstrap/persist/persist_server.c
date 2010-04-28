@@ -8,6 +8,7 @@
 #include "hydra_utils.h"
 #include "persist_server.h"
 
+char *HYD_dbg_prefix = (char *) "unknown";
 struct HYDT_persist_handle HYDT_persist_handle;
 static struct {
     enum {
@@ -79,8 +80,8 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
         if (closed) {
             status = HYDT_dmx_deregister_fd(private.client_fd);
-            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
-                                 private.client_fd);
+            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n",
+                                private.client_fd);
             close(private.client_fd);
         }
     }
@@ -105,8 +106,8 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         }
         else {
             status = HYDT_dmx_deregister_fd(private.stdout_fd);
-            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
-                                 private.stdout_fd);
+            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n",
+                                private.stdout_fd);
             close(private.stdout_fd);
         }
     }
@@ -134,8 +135,8 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         }
         else {
             status = HYDT_dmx_deregister_fd(private.stderr_fd);
-            HYDU_ERR_SETANDJUMP1(status, status, "error deregistering fd %d\n",
-                                 private.stderr_fd);
+            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n",
+                                private.stderr_fd);
             close(private.stderr_fd);
         }
     }

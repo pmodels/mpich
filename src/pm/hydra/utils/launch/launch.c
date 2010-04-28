@@ -16,16 +16,16 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
     HYDU_FUNC_ENTER();
 
     if (in && (pipe(inpipe) < 0))
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                             HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
+                            HYDU_strerror(errno));
 
     if (out && (pipe(outpipe) < 0))
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                             HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
+                            HYDU_strerror(errno));
 
     if (err && (pipe(errpipe) < 0))
-        HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                             HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
+                            HYDU_strerror(errno));
 
     /* Fork off the process */
     tpid = fork();
@@ -34,24 +34,24 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
         if (in) {
             close(inpipe[1]);
             if (dup2(inpipe[0], STDIN_FILENO) < 0)
-                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                     HYDU_strerror(errno));
+                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
+                                    HYDU_strerror(errno));
         }
 
         close(STDOUT_FILENO);
         if (out) {
             close(outpipe[0]);
             if (dup2(outpipe[1], STDOUT_FILENO) < 0)
-                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                     HYDU_strerror(errno));
+                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
+                                    HYDU_strerror(errno));
         }
 
         close(STDERR_FILENO);
         if (err) {
             close(errpipe[0]);
             if (dup2(errpipe[1], STDERR_FILENO) < 0)
-                HYDU_ERR_SETANDJUMP1(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                     HYDU_strerror(errno));
+                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
+                                    HYDU_strerror(errno));
         }
 
         /* Forced environment overwrites existing environment */

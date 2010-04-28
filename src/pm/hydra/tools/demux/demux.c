@@ -68,14 +68,14 @@ HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
 #if defined HAVE_ERROR_CHECKING
     for (i = 0; i < num_fds; i++) {
         if (fd[i] < 0)
-            HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n", fd[i]);
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "registering bad fd %d\n", fd[i]);
 
         cb_element = HYDT_dmxu_cb_list;
         while (cb_element) {
             for (j = 0; j < cb_element->num_fds; j++) {
                 if (cb_element->fd[j] == fd[i]) {
-                    HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                                         "registering duplicate fd %d\n", fd[i]);
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "registering duplicate fd %d\n", fd[i]);
                 }
             }
             cb_element = cb_element->next;
@@ -134,8 +134,8 @@ HYD_status HYDT_dmx_deregister_fd(int fd)
     }
 
     /* FD is not found */
-    HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                         "could not find fd to deregister: %d\n", fd);
+    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                        "could not find fd to deregister: %d\n", fd);
 
   fn_exit:
     HYDU_FUNC_EXIT();

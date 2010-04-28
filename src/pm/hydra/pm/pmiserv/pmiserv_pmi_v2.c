@@ -571,15 +571,15 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             HYDU_snprintf(key, MAXKEYLEN, "infokey%d", i);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                                  segment_list[j].token_count, key);
-            HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
-                                 "unable to find token: %s\n", key);
+            HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                                "unable to find token: %s\n", key);
             info_key = val;
 
             HYDU_snprintf(key, MAXKEYLEN, "infoval%d", i);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                                  segment_list[j].token_count, key);
-            HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
-                                 "unable to find token: %s\n", key);
+            HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                                "unable to find token: %s\n", key);
             info_val = val;
 
             if (!strcmp(info_key, "path")) {
@@ -591,8 +591,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             else {
                 /* FIXME: Unrecognized info key; what should we do
                  * here? Abort? */
-                HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unrecognized info key: %s\n",
-                                     info_key);
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized info key: %s\n",
+                                    info_key);
             }
         }
 
@@ -624,8 +624,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             HYDU_snprintf(key, MAXKEYLEN, "argv%d", k);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                                  segment_list[j].token_count, key);
-            HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
-                                 "unable to find token: %s\n", key);
+            HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                                "unable to find token: %s\n", key);
             exec->exec[i++] = HYDU_strdup(val);
             HYDU_FREE(key);
         }
@@ -661,14 +661,14 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_MALLOC(key, char *, MAXKEYLEN, status);
         HYDU_snprintf(key, MAXKEYLEN, "ppkey%d", i);
         val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
-        HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
-                             "unable to find token: %s\n", key);
+        HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                            "unable to find token: %s\n", key);
         preput_key = val;
 
         HYDU_snprintf(key, HYD_TMP_STRLEN, "ppval%d", i);
         val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
-        HYDU_ERR_CHKANDJUMP1(status, val == NULL, HYD_INTERNAL_ERROR,
-                             "unable to find token: %s\n", key);
+        HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
+                            "unable to find token: %s\n", key);
         preput_val = val;
         HYDU_FREE(key);
 

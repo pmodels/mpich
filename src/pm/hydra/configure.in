@@ -542,10 +542,10 @@ int main()
 EOF
 pac_tmp_compile='$CC $CFLAGS conftest.c -o conftest'
 if AC_TRY_EVAL(pac_tmp_compile) && test -s conftest ; then
-   AC_DEFINE(COMPILER_ACCEPTS_VA_ARGS,1,[Define if compiler supports __VA_ARGS__])
    AC_MSG_RESULT(yes)
 else
    AC_MSG_RESULT(no)
+   AC_ERROR([Hydra needs a compiler that supports __VA_ARGS__])
 fi
 rm -f conftest*
 

@@ -25,8 +25,8 @@ static HYD_status process_mfile_token(char *token, int newline)
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
     }
     else {      /* Not a new line */
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "token %s not supported at this time\n", token);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "token %s not supported at this time\n", token);
     }
 
   fn_exit:

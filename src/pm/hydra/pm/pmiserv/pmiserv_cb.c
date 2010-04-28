@@ -48,8 +48,8 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     }
     if (!h->handler) {
         /* We don't understand the command */
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR,
-                             "Unrecognized PMI command: %s | cleaning up processes\n", cmd);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "Unrecognized PMI command: %s | cleaning up processes\n", cmd);
     }
 
   fn_exit:
@@ -241,7 +241,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_FREE(buf);
     }
     else {
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "unhandled command = %d\n", cmd);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unhandled command = %d\n", cmd);
     }
 
   fn_exit:
@@ -301,16 +301,16 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
         if (pg->pgid == pgid)
             break;
     if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
-                             pgid);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
+                            pgid);
 
     /* Find the proxy */
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         if (proxy->proxy_id == proxy_id)
             break;
     }
-    HYDU_ERR_CHKANDJUMP1(status, proxy == NULL, HYD_INTERNAL_ERROR,
-                         "cannot find proxy with ID %d\n", proxy_id);
+    HYDU_ERR_CHKANDJUMP(status, proxy == NULL, HYD_INTERNAL_ERROR,
+                        "cannot find proxy with ID %d\n", proxy_id);
 
     /* This will be the control socket for this proxy */
     proxy->control_fd = fd;
@@ -350,8 +350,8 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
         if (pg->pgid == pgid)
             break;
     if (!pg)
-        HYDU_ERR_SETANDJUMP1(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
-                             pgid);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find pg with ID %d\n",
+                            pgid);
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
     pg_scratch->control_listen_fd = fd;

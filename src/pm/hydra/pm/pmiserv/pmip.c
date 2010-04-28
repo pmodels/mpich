@@ -11,6 +11,7 @@
 #include "bind.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
+char *HYD_dbg_prefix = (char *) "unknown";
 
 static HYD_status init_params(void)
 {
@@ -195,7 +196,7 @@ int main(int argc, char **argv)
         status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
                                    HYD_pmcd_pmip.upstream.server_port,
                                    &HYD_pmcd_pmip.upstream.control);
-        HYDU_ERR_POP2(status, "unable to connect to server %s at port %d\n",
+        HYDU_ERR_POP(status, "unable to connect to server %s at port %d\n",
                       HYD_pmcd_pmip.upstream.server_name, HYD_pmcd_pmip.upstream.server_port);
     }
 
