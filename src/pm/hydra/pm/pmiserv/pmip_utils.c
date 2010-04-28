@@ -88,6 +88,11 @@ static HYD_status iface_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.iface);
 }
 
+static HYD_status prepend_rank_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int(arg, argv, &HYD_pmcd_pmip.user_global.prepend_rank, 1);
+}
+
 static HYD_status enable_stdin_fn(char *arg, char ***argv)
 {
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.enable_stdin);
@@ -386,6 +391,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"bootstrap-exec", bootstrap_exec_fn, NULL},
     {"demux", demux_fn, NULL},
     {"iface", iface_fn, NULL},
+    {"prepend-rank", prepend_rank_fn, NULL},
     {"enable-stdin", enable_stdin_fn, NULL},
 
     /* Executable parameters */
@@ -450,6 +456,9 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.user_global.debug == -1)
         HYD_pmcd_pmip.user_global.debug = 0;
+
+    if (HYD_pmcd_pmip.user_global.prepend_rank == -1)
+        HYD_pmcd_pmip.user_global.prepend_rank = 0;
 
     status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap, NULL /* no bootstrap exec */ ,
                             0 /* disable x */ , HYD_pmcd_pmip.user_global.debug);

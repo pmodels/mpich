@@ -258,7 +258,7 @@ static void prepend_rank_help_fn(void)
 
 static HYD_status prepend_rank_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYD_handle.prepend_rank, 1);
+    return HYDU_set_int(arg, argv, &HYD_handle.user_global.prepend_rank, 1);
 }
 
 static void wdir_help_fn(void)
@@ -896,8 +896,8 @@ static HYD_status set_default_values(void)
     if (HYD_handle.enable_profiling == -1)
         HYD_handle.enable_profiling = 0;
 
-    if (HYD_handle.prepend_rank == -1)
-        HYD_handle.prepend_rank = 0;
+    if (HYD_handle.user_global.prepend_rank == -1)
+        HYD_handle.user_global.prepend_rank = 0;
 
     if (HYD_handle.user_global.debug == -1 &&
         MPL_env2bool("HYDRA_DEBUG", &HYD_handle.user_global.debug) == 0)

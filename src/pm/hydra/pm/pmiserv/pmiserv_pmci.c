@@ -118,6 +118,12 @@ static HYD_status stdout_cb(void *buf, int buflen)
 
     HYDU_FUNC_ENTER();
 
+    if (!HYD_handle.user_global.prepend_rank) {
+        status = HYD_handle.stdout_cb(buf, buflen);
+        HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+        goto fn_exit;
+    }
+
     rbuf = buf;
     rlen = buflen;
 
@@ -141,11 +147,9 @@ static HYD_status stdout_cb(void *buf, int buflen)
             rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
             rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
 
-            if (HYD_handle.prepend_rank) {
-                HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
-                status = HYD_handle.stdout_cb(str, strlen(str));
-                HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
-            }
+            HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
+            status = HYD_handle.stdout_cb(str, strlen(str));
+            HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
 
             status = HYD_handle.stdout_cb(rbuf, hdr->buflen);
             HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
@@ -173,6 +177,12 @@ static HYD_status stderr_cb(void *buf, int buflen)
 
     HYDU_FUNC_ENTER();
 
+    if (!HYD_handle.user_global.prepend_rank) {
+        status = HYD_handle.stderr_cb(buf, buflen);
+        HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+        goto fn_exit;
+    }
+
     rbuf = buf;
     rlen = buflen;
 
@@ -196,11 +206,9 @@ static HYD_status stderr_cb(void *buf, int buflen)
             rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
             rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
 
-            if (HYD_handle.prepend_rank) {
-                HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
-                status = HYD_handle.stdout_cb(str, strlen(str));
-                HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
-            }
+            HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
+            status = HYD_handle.stdout_cb(str, strlen(str));
+            HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
 
             status = HYD_handle.stderr_cb(rbuf, hdr->buflen);
             HYDU_ERR_POP(status, "error in the UI defined stderr callback\n");

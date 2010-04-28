@@ -58,6 +58,9 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
         proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.bootstrap_exec);
     }
 
+    if (HYD_handle.user_global.prepend_rank)
+        proxy_args[arg++] = HYDU_strdup("--prepend-rank");
+
     proxy_args[arg++] = HYDU_strdup("--demux");
     proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.demux);
 

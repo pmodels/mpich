@@ -281,6 +281,7 @@ struct HYD_user_global {
     char *iface;
 
     /* Other random parameters */
+    int prepend_rank;
     int enablex;
     int debug;
 

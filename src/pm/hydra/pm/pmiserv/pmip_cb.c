@@ -83,12 +83,14 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-        hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
-        hdr.buflen = recvd;
+        if (HYD_pmcd_pmip.user_global.prepend_rank) {
+            hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
+            hdr.buflen = recvd;
 
-        status = HYDU_sock_write(stdfd, &hdr, sizeof(hdr), &sent, &closed);
-        HYDU_ERR_POP(status, "sock write error\n");
-        HYDU_ASSERT(!closed, status);
+            status = HYDU_sock_write(stdfd, &hdr, sizeof(hdr), &sent, &closed);
+            HYDU_ERR_POP(status, "sock write error\n");
+            HYDU_ASSERT(!closed, status);
+        }
 
         status = HYDU_sock_write(stdfd, buf, recvd, &sent, &closed);
         HYDU_ERR_POP(status, "sock write error\n");

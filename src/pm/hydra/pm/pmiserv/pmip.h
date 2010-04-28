@@ -18,11 +18,13 @@
         int _recvd, _closed;                                            \
         MPL_snprintf(_str, HYD_TMPBUF_SIZE, "[%s] ", HYD_dbg_prefix);   \
         MPL_snprintf(_str + strlen(_str), HYD_TMPBUF_SIZE - strlen(_str), __VA_ARGS__); \
-        (_hdr).rank = -1;                                               \
-        (_hdr).buflen = strlen(_str);                                   \
-        (_status) = HYDU_sock_write((_fd), &(_hdr), sizeof((_hdr)), &(_recvd), &(_closed)); \
-        HYDU_ERR_POP((_status), "sock write error\n");                  \
-        HYDU_ASSERT(!(_closed), (_status));                             \
+        if (HYD_pmcd_pmip.user_global.prepend_rank) {                   \
+            (_hdr).rank = -1;                                           \
+            (_hdr).buflen = strlen(_str);                               \
+            (_status) = HYDU_sock_write((_fd), &(_hdr), sizeof((_hdr)), &(_recvd), &(_closed)); \
+            HYDU_ERR_POP((_status), "sock write error\n");              \
+            HYDU_ASSERT(!(_closed), (_status));                         \
+        }                                                               \
         (_status) = HYDU_sock_write((_fd), &(_str), strlen(_str), &(_recvd), &(_closed)); \
         HYDU_ERR_POP((_status), "sock write error\n");                  \
         HYDU_ASSERT(!(_closed), (_status));                             \
