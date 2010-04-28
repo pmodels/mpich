@@ -12,15 +12,16 @@
 #define DBG_IFNAME 0
 
 #ifdef ENABLE_CHECKPOINTING
-static int ckpt_restart(void);
+static int ckpt_restart(char **bc_val_p, int *val_max_sz_p);
 #endif
 
 MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_init,
     MPID_nem_tcp_finalize,
 #ifdef ENABLE_CHECKPOINTING
-    MPID_nem_tcp_ckpt_shutdown,
+    NULL, /* ckpt_precheck */
     ckpt_restart,
+    NULL, /* ckpt_continue */
 #endif
     MPID_nem_tcp_connpoll,
     MPID_nem_tcp_get_business_card,
@@ -114,30 +115,45 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
 #define FUNCNAME ckpt_restart
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int ckpt_restart(void)
+static int ckpt_restart(char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    char  *publish_bc_orig = NULL;
-    char  *bc_val          = NULL;
-    int    val_max_remaining;
     MPID_nem_queue_ptr_t dummy ;
     int i;
     MPIDI_STATE_DECL(MPID_STATE_CKPT_RESTART);
 
     MPIDI_FUNC_ENTER(MPID_STATE_CKPT_RESTART);
 
-    /* Initialize the business card */
-    mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    publish_bc_orig = bc_val;
+    /* First, clean up.  We didn't shut anything down before the
+       checkpoint, so we need to go close and free any resources */
+    for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
+        MPIDI_VC_t *vc;
+        if (i == MPIDI_Process.my_pg_rank)
+            continue;
+        MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, i, &vc);
+        {
+            MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+            MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+            if (vc_ch->is_local)
+                continue;
+            
+            /* close vc */
+            mpi_errno = MPID_nem_tcp_cleanup(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            
+            /* unpause the vc */
+            vc_tcp->send_paused = FALSE;
+        }
+    }
 
-    mpi_errno = MPID_nem_tcp_init(MPIDI_Process.my_pg, MPIDI_Process.my_pg_rank, &bc_val, &val_max_remaining);
+    mpi_errno = MPID_nem_tcp_send_finalize();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
-    /* publish business card */
-    mpi_errno = MPIDI_PG_SetConnInfo(MPIDI_Process.my_pg_rank, (const char *)publish_bc_orig);
+    mpi_errno = MPID_nem_tcp_sm_finalize();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_Free(publish_bc_orig);
+
+    /* Now we can restart */
+    mpi_errno = MPID_nem_tcp_init(MPIDI_Process.my_pg, MPIDI_Process.my_pg_rank, bc_val_p, val_max_sz_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
     for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
         MPIDI_VC_t *vc;

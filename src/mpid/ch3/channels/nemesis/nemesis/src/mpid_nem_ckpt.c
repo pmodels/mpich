@@ -67,16 +67,16 @@ static int ckpt_cb(void *arg)
     ret = sem_wait(&ckpt_sem);
     CHECK_ERR(ret, "sem_wait");
 
+    if (MPID_nem_netmod_func->ckpt_precheck) {
+        int mpi_errno;
+        mpi_errno = MPID_nem_netmod_func->ckpt_precheck();
+        CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_precheck failed");
+    }
+
     rc = cr_checkpoint(0);
     if (rc < 0) {
         ckpt_result = CKPT_ERROR;
     } else if (rc) {
-
-        if (MPID_nem_netmod_func->ckpt_shutdown) {
-            int mpi_errno;
-            mpi_errno = MPID_nem_netmod_func->ckpt_shutdown();
-            CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_shutdown failed");
-        }
 
         ckpt_result = CKPT_RESTART;
         ri = cr_get_restart_info();
@@ -90,14 +90,51 @@ static int ckpt_cb(void *arg)
 
         if (MPID_nem_netmod_func->ckpt_restart) {
             int mpi_errno;
-            mpi_errno = MPID_nem_netmod_func->ckpt_restart();
+            char *publish_bc_orig = NULL;
+            char *bc_val          = NULL;
+            int val_max_remaining;
+
+            /* Initialize the new business card */
+            mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
+            CHECK_ERR_MPI(mpi_errno, mpi_errno, "BCInit failed");
+            publish_bc_orig = bc_val;
+
+            /* Restart the netmod */
+            mpi_errno = MPID_nem_netmod_func->ckpt_restart(&bc_val, &val_max_remaining);
             CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_restart failed");
+
+            /* publish business card */
+            mpi_errno = MPIDI_PG_SetConnInfo(MPIDI_Process.my_pg_rank, (const char *)publish_bc_orig);
+            CHECK_ERR_MPI(mpi_errno, mpi_errno, "SetConnInfo failed");
+            MPIU_Free(publish_bc_orig);
         }
     } else {
         ckpt_result = CKPT_CONTINUE;
+
+        if (MPID_nem_netmod_func->ckpt_continue) {
+            int mpi_errno;
+            char *publish_bc_orig = NULL;
+            char *bc_val          = NULL;
+            int val_max_remaining;
+
+            /* Initialize the new business card */
+            mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
+            CHECK_ERR_MPI(mpi_errno, mpi_errno, "BCInit failed");
+            publish_bc_orig = bc_val;
+
+            /* Restart the netmod */
+            mpi_errno = MPID_nem_netmod_func->ckpt_continue(&bc_val, &val_max_remaining);
+            CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_continue failed");
+
+            /* publish business card */
+            mpi_errno = MPIDI_PG_SetConnInfo(MPIDI_Process.my_pg_rank, (const char *)publish_bc_orig);
+            CHECK_ERR_MPI(mpi_errno, mpi_errno, "SetConnInfo failed");
+            MPIU_Free(publish_bc_orig);
+        }
+
         printf("%d: finished checkpoint\n", MPIDI_Process.my_pg_rank);fflush(stdout);
     }
-    
+
     ret = sem_post(&cont_sem);
     CHECK_ERR(ret, "sem_post");
 
@@ -410,13 +447,6 @@ static int finish_ckpt(void)
             MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, i, &vc);
             vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
             if (!vc_ch->is_local) {
-                if (vc_ch->ckpt_msg_len) {
-                    MPIU_Assert(0); /* we're already in a pkt_handler, we shouldn't call another one */
-                    mpi_errno = MPID_nem_handle_pkt(vc, vc_ch->ckpt_msg_buf, vc_ch->ckpt_msg_len);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                    MPIU_Free(vc_ch->ckpt_msg_buf);
-                    vc_ch->ckpt_msg_len = 0;
-                }
                 mpi_errno = vc_ch->ckpt_continue_vc(vc);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
