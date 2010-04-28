@@ -299,7 +299,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
         if (HYD_pmcd_pmip.user_global.debug) {
-            HYDU_dump(stdout, "got pmi command (from %d): %s ", fd, pmi_cmd);
+            HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO,
+                                    "got pmi command (from %d): %s\n", fd, pmi_cmd);
             HYDU_print_strlist(args);
         }
 
@@ -314,8 +315,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         }
 
         if (HYD_pmcd_pmip.user_global.debug) {
-            HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n",
-                      pmi_cmd);
+            HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO,
+                                    "we don't understand this command %s; forwarding upstream\n",
+                                    pmi_cmd);
         }
 
         /* We don't understand the command; forward it upstream */
@@ -385,8 +387,9 @@ static HYD_status handle_pmi_response(int fd)
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n",
-                  pmi_cmd);
+        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO,
+                                "we don't understand the response %s; forwarding downstream\n",
+                                pmi_cmd);
     }
 
     status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed);
@@ -863,10 +866,10 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "launch_procs returned error\n");
     }
     else if (cmd == CKPOINT) {
-        HYDU_dump(stdout, "requesting checkpoint\n");
+        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "requesting checkpoint\n");
         status = HYDT_ckpoint_suspend();
         HYDU_ERR_POP(status, "checkpoint suspend failed\n");
-        HYDU_dump(stdout, "checkpoint completed\n");
+        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "checkpoint completed\n");
     }
     else if (cmd == PMI_RESPONSE) {
         status = handle_pmi_response(fd);

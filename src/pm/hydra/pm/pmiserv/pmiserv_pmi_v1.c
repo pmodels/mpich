@@ -33,7 +33,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
     HYDU_ASSERT(!closed, status);
 
     if (HYD_handle.user_global.debug) {
-        HYDU_dump(stdout, "PMI response to fd %d pid %d: %s\n", fd, pid, cmd);
+        HYDU_dump(stdout, "PMI response to fd %d pid %d: %s", fd, pid, cmd);
     }
 
     status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);
