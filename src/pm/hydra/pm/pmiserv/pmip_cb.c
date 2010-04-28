@@ -200,7 +200,6 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         if (sptr != storage) {
             memcpy(r, sptr, storage_len);
             memcpy(storage, r, storage_len);
-            storage_len = 0;
             sptr = storage;
         }
         *buf = NULL;
@@ -241,6 +240,7 @@ static HYD_status read_pmi_cmd(int fd, int *closed)
     }
 
     storage_len += linelen;
+    storage[storage_len] = 0;
 
   fn_exit:
     HYDU_FUNC_EXIT();
