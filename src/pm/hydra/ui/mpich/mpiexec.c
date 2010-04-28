@@ -125,7 +125,17 @@ static void signal_cb(int sig)
         cmd = HYD_CLEANUP;
         HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
-    else if (sig == SIGUSR1) {
+    else if (sig == SIGUSR1 || sig == SIGALRM) {
+        if (HYD_handle.user_global.ckpoint_prefix == NULL) {
+            HYDU_dump(stderr, "No checkpoint prefix provided\n");
+            return;
+        }
+
+#if HAVE_ALARM
+        if (HYD_handle.ckpoint_int != -1)
+            alarm(HYD_handle.ckpoint_int);
+#endif /* HAVE_ALARM */
+
         cmd = HYD_CKPOINT;
         HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
@@ -159,6 +169,11 @@ int main(int argc, char **argv)
 
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
+
+#if HAVE_ALARM
+        if (HYD_handle.ckpoint_int != -1)
+            alarm(HYD_handle.ckpoint_int);
+#endif /* HAVE_ALARM */
 
     if (pipe(HYD_handle.cleanup_pipe) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
