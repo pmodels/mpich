@@ -163,7 +163,11 @@ int MPID_nem_tcp_ckpt_shutdown(void)
             continue;
         MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, i, &vc);
         {
+            MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
             MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+            if (vc_ch->is_local)
+                continue;
+            
             /* close vc */
             mpi_errno = MPID_nem_tcp_cleanup(vc);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
