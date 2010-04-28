@@ -18,6 +18,10 @@
  * ch3:dllchan is rated "experimental". There are known problems when
    configured with --enable-g and --enable-g=log.
 
+ * ch3 has known problems in some cases when threading and dynamic
+   processes are used together on communicators of size greater than
+   one.
+
 
 ### Build Platforms
 
