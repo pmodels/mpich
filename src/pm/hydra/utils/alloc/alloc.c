@@ -143,7 +143,7 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg)
 
     (*proxy)->pid = NULL;
     (*proxy)->exit_status = NULL;
-    (*proxy)->control_fd = -1;
+    (*proxy)->control_fd = HYD_FD_UNSET;
 
     (*proxy)->exec_list = NULL;
 

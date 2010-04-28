@@ -93,6 +93,11 @@ static HYD_status enable_stdin_fn(char *arg, char ***argv)
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.enable_stdin);
 }
 
+static HYD_status pmi_port_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_port);
+}
+
 static HYD_status pmi_fd_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.pmi_fd);
@@ -384,6 +389,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"enable-stdin", enable_stdin_fn, NULL},
 
     /* Executable parameters */
+    {"pmi-port", pmi_port_fn, NULL},
     {"pmi-fd", pmi_fd_fn, NULL},
     {"pmi-rank", pmi_rank_fn, NULL},
     {"pmi-kvsname", pmi_kvsname_fn, NULL},

@@ -138,6 +138,12 @@ extern char **environ;
 
 #define HYDRA_NAMESERVER_DEFAULT_PORT 6392
 
+/* fd state */
+enum HYD_fd_state {
+    HYD_FD_UNSET = -1,
+    HYD_FD_CLOSED = -2
+};
+
 /* Status information */
 typedef enum {
     HYD_SUCCESS = 0,

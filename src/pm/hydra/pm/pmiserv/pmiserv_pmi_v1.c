@@ -273,9 +273,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     struct HYD_pmcd_token_segment *segment_list = NULL;
 
-    int token_count, i, j, k, pmi_rank = -1, new_pgid, total_spawns, offset;
+    int token_count, i, j, k, new_pgid, total_spawns, offset;
     int argcnt, num_segments;
-    char *pmi_fd = NULL, *control_port, *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
+    char *control_port, *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
     char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
@@ -511,23 +511,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     if (HYD_handle.user_global.debug)
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 
-    /* Initialize PMI */
-    ret = MPL_env2str("PMI_FD", (const char **) &pmi_fd);
-    if (ret) {  /* PMI_FD already set */
-        if (HYD_handle.user_global.debug)
-            HYDU_dump(stdout, "someone else already set PMI port\n");
-        pmi_fd = HYDU_strdup(pmi_fd);
-
-        ret = MPL_env2int("PMI_RANK", &pmi_rank);
-        if (!ret)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_FD set but not PMI_RANK\n");
-    }
-    else {
-        pmi_rank = -1;
-    }
-    if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "PMI port: %s; PMI ID: %d\n", pmi_fd, pmi_rank);
-
     /* Go to the last PG */
     for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
 
@@ -552,9 +535,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
     HYDU_FREE(control_port);
 
-    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_fd, pmi_rank, pg);
+    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
-    HYDU_FREE(pmi_fd);
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, 0, HYD_handle.stdout_cb,
                                     HYD_handle.stderr_cb);

@@ -20,7 +20,7 @@ HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
 
     for (i = 0, run = HYDT_dmxu_cb_list; run; run = run->next) {
         for (j = 0; j < run->num_fds; j++) {
-            if (run->fd[j] == -1)
+            if (run->fd[j] == HYD_FD_UNSET)
                 continue;
 
             pollfds[i].fd = run->fd[j];
@@ -53,7 +53,7 @@ HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
     work_done = 0;
     for (i = 0, run = HYDT_dmxu_cb_list; run; run = run->next) {
         for (j = 0; j < run->num_fds; j++) {
-            if (run->fd[j] == -1)
+            if (run->fd[j] == HYD_FD_UNSET)
                 continue;
 
             if (pollfds[i].revents) {

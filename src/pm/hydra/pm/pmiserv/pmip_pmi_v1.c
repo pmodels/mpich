@@ -140,7 +140,7 @@ static HYD_status fn_initack(int fd, char *args[])
     /* Store the PMI_ID to fd mapping */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
         if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id)
-            HYD_pmcd_pmip.downstream.pmi_rank[i] = fd;
+            HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");

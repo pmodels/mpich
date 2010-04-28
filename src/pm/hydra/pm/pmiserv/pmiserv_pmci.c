@@ -222,31 +222,13 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_proxy *proxy;
     struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
-    char *pmi_fd = NULL;
-    int pmi_rank = -1, enable_stdin, ret, node_count, i, *control_fd;
+    int enable_stdin, ret, node_count, i, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     status = HYDT_dmx_register_fd(1, &HYD_handle.cleanup_pipe[0], POLLIN, NULL, ui_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
-
-    /* Initialize PMI */
-    ret = MPL_env2str("PMI_FD", (const char **) &pmi_fd);
-    if (ret) {  /* PMI_FD already set */
-        if (HYD_handle.user_global.debug)
-            HYDU_dump(stdout, "someone else already set PMI FD\n");
-        pmi_fd = HYDU_strdup(pmi_fd);
-
-        ret = MPL_env2int("PMI_RANK", &pmi_rank);
-        if (!ret)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_FD set but not PMI_RANK\n");
-    }
-    else {
-        pmi_rank = -1;
-    }
-    if (HYD_handle.user_global.debug)
-        HYDU_dump(stdout, "PMI FD: %s; PMI ID: %d\n", pmi_fd, pmi_rank);
 
     status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_handle.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
@@ -282,7 +264,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_proxy_args(proxy_args, control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-    status = HYD_pmcd_pmi_fill_in_exec_launch_info(pmi_fd, pmi_rank, &HYD_handle.pg_list);
+    status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_handle.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     status = HYDT_dmx_stdin_valid(&enable_stdin);
@@ -290,14 +272,14 @@ HYD_status HYD_pmci_launch_procs(void)
 
     HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
-        control_fd[i] = -1;
+        control_fd[i] = HYD_FD_UNSET;
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin, stdout_cb,
                                     stderr_cb);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
     for (i = 0, proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
-        if (control_fd[i] != -1) {
+        if (control_fd[i] != HYD_FD_UNSET) {
             proxy->control_fd = control_fd[i];
 
             status = HYDT_dmx_register_fd(1, &control_fd[i], HYD_POLLIN, (void *) (size_t) 0,
@@ -308,8 +290,6 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_FREE(control_fd);
 
   fn_exit:
-    if (pmi_fd)
-        HYDU_FREE(pmi_fd);
     if (control_port)
         HYDU_FREE(control_port);
     HYDU_free_strlist(proxy_args);
@@ -345,7 +325,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
-        while (pg_scratch->control_listen_fd != HYD_PMCD_PMI_FD_CLOSED) {
+        while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
             status = HYDT_dmx_wait_for_event(-1);
             HYDU_ERR_POP(status, "error waiting for event\n");
         }

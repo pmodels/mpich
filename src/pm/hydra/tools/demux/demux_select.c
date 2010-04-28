@@ -29,7 +29,7 @@ HYD_status HYDT_dmxu_select_wait_for_event(int wtime)
     nfds = 0;
     for (run = HYDT_dmxu_cb_list; run; run = run->next) {
         for (i = 0; i < run->num_fds; i++) {
-            if (run->fd[i] == -1)
+            if (run->fd[i] == HYD_FD_UNSET)
                 continue;
 
             if (run->events & HYD_POLLIN)
@@ -58,7 +58,7 @@ HYD_status HYDT_dmxu_select_wait_for_event(int wtime)
     work_done = 0;
     for (run = HYDT_dmxu_cb_list; run; run = run->next) {
         for (i = 0; i < run->num_fds; i++) {
-            if (run->fd[i] == -1)
+            if (run->fd[i] == HYD_FD_UNSET)
                 continue;
 
             events = 0;

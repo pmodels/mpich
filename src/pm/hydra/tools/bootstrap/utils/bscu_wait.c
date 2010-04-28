@@ -55,7 +55,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
     while (1) {
         count = 0;
         for (i = 0; i < HYD_bscu_fd_count; i++) {
-            if (HYD_bscu_fd_list[i] == -1)
+            if (HYD_bscu_fd_list[i] == HYD_FD_CLOSED)
                 continue;
 
             /* If we need to cleanup, don't wait for any events */
@@ -86,7 +86,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                 goto restart_wait;
             }
             else
-                HYD_bscu_fd_list[i] = -1;
+                HYD_bscu_fd_list[i] = HYD_FD_CLOSED;
         }
 
         if (count == 0)

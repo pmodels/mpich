@@ -118,9 +118,9 @@ static HYD_status cleanup_proxy_connection(int fd, struct HYD_proxy *proxy)
     HYDU_ERR_POP(status, "error deregistering fd\n");
     close(fd);
 
-    /* Reset the control fd to -1, so when the fd is reused, we don't
-     * find the wrong proxy */
-    proxy->control_fd = -1;
+    /* Reset the control fd, so when the fd is reused, we don't find
+     * the wrong proxy */
+    proxy->control_fd = HYD_FD_CLOSED;
 
     for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
         if (tproxy->exit_status == NULL)
@@ -131,19 +131,19 @@ static HYD_status cleanup_proxy_connection(int fd, struct HYD_proxy *proxy)
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* If the PMI listen fd has been initialized, deregister it */
-    if (pg_scratch->pmi_listen_fd != HYD_PMCD_PMI_FD_UNSET) {
+    if (pg_scratch->pmi_listen_fd != HYD_FD_UNSET) {
         status = HYDT_dmx_deregister_fd(pg_scratch->pmi_listen_fd);
         HYDU_ERR_POP(status, "unable to deregister PMI listen fd\n");
         close(pg_scratch->pmi_listen_fd);
-        pg_scratch->pmi_listen_fd = HYD_PMCD_PMI_FD_CLOSED;
+        pg_scratch->pmi_listen_fd = HYD_FD_CLOSED;
     }
 
-    if (pg_scratch->control_listen_fd != HYD_PMCD_PMI_FD_UNSET) {
+    if (pg_scratch->control_listen_fd != HYD_FD_UNSET) {
         status = HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
         HYDU_ERR_POP(status, "unable to deregister control listen fd\n");
         close(pg_scratch->control_listen_fd);
     }
-    pg_scratch->control_listen_fd = HYD_PMCD_PMI_FD_CLOSED;
+    pg_scratch->control_listen_fd = HYD_FD_CLOSED;
 
     /* If this is the main PG, free the debugger PID list */
     if (pg->pgid == 0)
@@ -385,23 +385,23 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
         /* Close the control listen port, so new proxies cannot
          * connect back */
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-        if (pg_scratch->control_listen_fd != HYD_PMCD_PMI_FD_UNSET) {
+        if (pg_scratch->control_listen_fd != HYD_FD_UNSET) {
             status = HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
             HYDU_ERR_POP(status, "unable to deregister control listen fd\n");
             close(pg_scratch->control_listen_fd);
         }
-        pg_scratch->control_listen_fd = HYD_PMCD_PMI_FD_CLOSED;
+        pg_scratch->control_listen_fd = HYD_FD_CLOSED;
 
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
             /* The proxy has not been setup yet */
-            if (proxy->control_fd == -1)
+            if (proxy->control_fd == HYD_FD_UNSET)
                 continue;
 
             status = HYDT_dmx_deregister_fd(proxy->control_fd);
             HYDU_ERR_POP(status, "error deregistering fd\n");
             close(proxy->control_fd);
 
-            proxy->control_fd = -1;
+            proxy->control_fd = HYD_FD_CLOSED;
         }
     }
 

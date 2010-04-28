@@ -125,7 +125,7 @@ HYD_status HYDT_dmx_deregister_fd(int fd)
     while (cb_element) {
         for (i = 0; i < cb_element->num_fds; i++) {
             if (cb_element->fd[i] == fd) {
-                cb_element->fd[i] = -1;
+                cb_element->fd[i] = HYD_FD_UNSET;
                 HYDT_dmxu_num_cb_fds--;
                 goto fn_exit;
             }

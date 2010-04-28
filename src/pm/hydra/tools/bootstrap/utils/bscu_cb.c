@@ -29,7 +29,7 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
 
         for (i = 0; i < HYD_bscu_fd_count; i++) {
             if (HYD_bscu_fd_list[i] == fd) {
-                HYD_bscu_fd_list[i] = -1;
+                HYD_bscu_fd_list[i] = HYD_FD_CLOSED;
                 break;
             }
         }
@@ -68,7 +68,7 @@ HYD_status HYDT_bscu_stdin_cb(int fd, HYD_event_t events, void *userp)
 
         for (i = 0; i < HYD_bscu_fd_count; i++) {
             if (HYD_bscu_fd_list[i] == fd) {
-                HYD_bscu_fd_list[i] = -1;
+                HYD_bscu_fd_list[i] = HYD_FD_CLOSED;
                 break;
             }
         }

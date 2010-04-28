@@ -22,17 +22,18 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.system_global.enable_stdin = -1;
     HYD_pmcd_pmip.system_global.global_core_count = -1;
     HYD_pmcd_pmip.system_global.global_process_count = -1;
+    HYD_pmcd_pmip.system_global.pmi_port = NULL;
     HYD_pmcd_pmip.system_global.pmi_fd = NULL;
     HYD_pmcd_pmip.system_global.pmi_rank = -1;
     HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
 
     HYD_pmcd_pmip.upstream.server_name = NULL;
     HYD_pmcd_pmip.upstream.server_port = -1;
-    HYD_pmcd_pmip.upstream.control = -1;
+    HYD_pmcd_pmip.upstream.control = HYD_FD_UNSET;
 
     HYD_pmcd_pmip.downstream.out = NULL;
     HYD_pmcd_pmip.downstream.err = NULL;
-    HYD_pmcd_pmip.downstream.in = -1;
+    HYD_pmcd_pmip.downstream.in = HYD_FD_UNSET;
     HYD_pmcd_pmip.downstream.pid = NULL;
     HYD_pmcd_pmip.downstream.exit_status = NULL;
     HYD_pmcd_pmip.downstream.pmi_rank = NULL;
@@ -72,6 +73,9 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.system_global.pmi_fd)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_fd);
+
+    if (HYD_pmcd_pmip.system_global.pmi_port)
+        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_port);
 
     if (HYD_pmcd_pmip.system_global.pmi_process_mapping)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_process_mapping);
@@ -220,9 +224,9 @@ int main(int argc, char **argv)
          * are, we will just wait for more events. */
         count = 0;
         for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-            if (HYD_pmcd_pmip.downstream.out[i] != -1)
+            if (HYD_pmcd_pmip.downstream.out[i] != HYD_FD_CLOSED)
                 count++;
-            if (HYD_pmcd_pmip.downstream.err[i] != -1)
+            if (HYD_pmcd_pmip.downstream.err[i] != HYD_FD_CLOSED)
                 count++;
 
             if (count)
