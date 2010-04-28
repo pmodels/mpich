@@ -139,8 +139,21 @@ static HYD_status fn_initack(int fd, char *args[])
 
     /* Store the PMI_ID to fd mapping */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-        if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id)
+        if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id) {
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
+            break;
+        }
+
+    /* The rank has not been previously stored */
+    if (i == HYD_pmcd_pmip.local.proxy_process_count) {
+        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+            if (HYD_pmcd_pmip.downstream.pmi_rank[i] == -1)
+                break;
+        HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
+
+        HYD_pmcd_pmip.downstream.pmi_rank[i] = id;
+        HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
+    }
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");

@@ -475,6 +475,7 @@ static HYD_status launch_procs(void)
 
     /* Initialize the PMI_FD and PMI FD active state */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+        HYD_pmcd_pmip.downstream.pmi_rank[i] = -1;
         HYD_pmcd_pmip.downstream.pmi_fd[i] = HYD_FD_UNSET;
         HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 0;
     }
