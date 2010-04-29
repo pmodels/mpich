@@ -318,8 +318,8 @@ fi
 acSubversion=-1
 acIncDirFlag=-I
 # Try to keep at least one version ahead of autoconf (e.g., if current is
-# 2.64, include a test for 2.65)
-for ver in 65 64 63 62 61 60 59 ; do
+# 2.65, include a test for 2.66)
+for ver in 66 65 64 63 62 61 60 59 ; do
     rm -f .tmp/configure.in .tmp/configure
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
