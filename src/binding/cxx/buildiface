@@ -1080,6 +1080,7 @@ class Graphcomm;
 # put these here because none of them use any of the other classes,
 # and we'll want to use a few of them in the implementations of the
 # other functions.
+print $OUTFD "// base (classless) routines\n";
 foreach $routine (keys(%class_mpi1base)) {
     # These aren't really a class, so they don't use Begin/EndClass
     $arginfo = $class_mpi1base{$routine};
@@ -1195,8 +1196,6 @@ typedef int Datarep_conversion_function( void *, Datatype &, int, void *,
     print $OUTFD "extern void Init(int &, char **& );\n";
     print $OUTFD "extern int Init_thread(int);\n";
     print $OUTFD "extern int Init_thread(int &, char **&, int );\n";
-    print $OUTFD "extern void Finalize(void);\n";
-    print $OUTFD "extern Aint Get_address( void * );\n";
     print $OUTFD "extern double Wtime(void);\n";
     print $OUTFD "extern double Wtick(void);\n";
 
