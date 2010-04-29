@@ -230,7 +230,7 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_proxy *proxy;
     struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
-    int enable_stdin, ret, node_count, i, *control_fd;
+    int enable_stdin, node_count, i, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

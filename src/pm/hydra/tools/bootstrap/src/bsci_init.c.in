@@ -71,6 +71,8 @@ HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap
         HYDT_bsci_fns.query_usize = HYDT_bscu_query_usize;
     if (HYDT_bsci_fns.query_proxy_id == NULL)
         HYDT_bsci_fns.query_proxy_id = HYDT_bscu_query_proxy_id;
+    if (HYDT_bsci_fns.query_env_inherit == NULL)
+        HYDT_bsci_fns.query_env_inherit = HYDT_bscu_query_env_inherit;
 
   fn_exit:
     HYDU_FUNC_EXIT();

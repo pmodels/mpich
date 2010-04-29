@@ -5,6 +5,7 @@
  */
 
 #include "hydra_utils.h"
+#include "bsci.h"
 
 HYD_status HYDU_env_to_str(struct HYD_env *env, char **str)
 {
@@ -92,7 +93,7 @@ HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
 {
     struct HYD_env *env;
     char *env_str;
-    int i;
+    int i, ret;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -100,6 +101,14 @@ HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
     *env_list = NULL;
     i = 0;
     while (environ[i]) {
+        status = HYDT_bsci_query_env_inherit(environ[i], &ret);
+        HYDU_ERR_POP(status, "error querying environment propagation\n");
+
+        if (!ret) {
+            i++;
+            continue;
+        }
+
         env_str = HYDU_strdup(environ[i]);
 
         status = HYDU_str_to_env(env_str, &env);

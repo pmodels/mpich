@@ -936,9 +936,6 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 
     HYD_uiu_init_params();
 
-    status = HYDU_list_inherited_env(&HYD_handle.user_global.global_env.inherited);
-    HYDU_ERR_POP(status, "unable to get the inherited env list\n");
-
     argv++;
     do {
         /* Get the mpiexec arguments  */

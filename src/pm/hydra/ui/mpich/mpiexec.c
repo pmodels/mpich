@@ -233,6 +233,9 @@ int main(int argc, char **argv)
         }
     }
 
+    status = HYDU_list_inherited_env(&HYD_handle.user_global.global_env.inherited);
+    HYDU_ERR_POP(status, "unable to get the inherited env list\n");
+
     status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_handle.node_list,
                                     &HYD_handle.pg_list, 0);
     HYDU_ERR_POP(status, "unable to create proxy list\n");

@@ -58,6 +58,9 @@ struct HYDT_bsci_fns {
 
     /** \brief Query the ID of a proxy */
     HYD_status(*query_proxy_id) (int *proxy_id);
+
+    /** \brief Query if an environment variable should be inherited */
+    HYD_status(*query_env_inherit) (const char *env_name, int *ret);
 };
 
 /** \cond */
@@ -177,6 +180,19 @@ HYD_status HYDT_bsci_query_usize(int *size);
  * specified as "-1" during launch.
  */
 HYD_status HYDT_bsci_query_proxy_id(int *proxy_id);
+
+/**
+ * \brief HYDT_bsci_query_env_inherit - Query if an environment
+ * variable is safe to be inherited
+ *
+ * \param[in]  env_name    Name of the environment variable
+ * \param[out] ret         Boolean for true (1) or false (0)
+ *
+ * This function is used to check if an environment variable inherited
+ * from the user's environment is safe to be propagated to the remote
+ * processes.
+ */
+HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *ret);
 
 /*! @} */
 
