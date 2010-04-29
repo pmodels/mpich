@@ -82,7 +82,13 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #ifdef ENABLE_CHECKPOINTING
     if (MPIDI_nem_ckpt_start_checkpoint) {
         MPIDI_nem_ckpt_start_checkpoint = FALSE;
-        MPIDI_nem_ckpt_start();
+        mpi_errno = MPIDI_nem_ckpt_start();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    if (MPIDI_nem_ckpt_finish_checkpoint) {
+        MPIDI_nem_ckpt_finish_checkpoint = FALSE;
+        mpi_errno = MPIDI_nem_ckpt_finish();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 #endif
     

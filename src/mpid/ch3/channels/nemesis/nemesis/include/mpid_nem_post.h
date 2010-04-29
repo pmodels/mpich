@@ -32,9 +32,11 @@ int MPID_nem_vc_terminate(struct MPIDI_VC *vc);
 
 #ifdef ENABLE_CHECKPOINTING
 extern int MPIDI_nem_ckpt_start_checkpoint;
+extern int MPIDI_nem_ckpt_finish_checkpoint;
 int MPIDI_nem_ckpt_init(void);
 int MPIDI_nem_ckpt_finalize(void);
 int MPIDI_nem_ckpt_start(void);
+int MPIDI_nem_ckpt_finish(void);
 int MPIDI_nem_ckpt_pkthandler_init(int (*pktArray[])(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt,
 				     MPIDI_msg_sz_t *buflen, MPID_Request **req ), int arraySize);
 #endif

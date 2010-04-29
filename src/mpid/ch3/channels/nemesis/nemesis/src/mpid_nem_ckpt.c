@@ -39,6 +39,7 @@ MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #define MAX_STR_LEN 1024
 
 int MPIDI_nem_ckpt_start_checkpoint = FALSE;
+int MPIDI_nem_ckpt_finish_checkpoint = FALSE;
 
 static int checkpointing = FALSE;
 static unsigned short current_wave;
@@ -47,7 +48,6 @@ static enum {CKPT_NULL, CKPT_CONTINUE, CKPT_RESTART, CKPT_ERROR} ckpt_result = C
 
 static int reinit_pmi(void);
 static int restore_env(pid_t parent_pid, int rank);
-static int finish_ckpt(void);
 static int restore_stdinouterr(int requester_pid, int rank);
 static int open_fifo(const char *fname_template, int rank, int restart_pid, int dupfd, int flags);
 
@@ -58,8 +58,6 @@ static int ckpt_cb(void *arg)
 {
     int rc, ret;
     const struct cr_restart_info* ri;
-
-    printf("%d: checkpoint requested\n", MPIDI_Process.my_pg_rank);fflush(stdout);
 
     if (MPIDI_Process.my_pg_rank == 0)
         MPIDI_nem_ckpt_start_checkpoint = TRUE;
@@ -90,49 +88,18 @@ static int ckpt_cb(void *arg)
 
         if (MPID_nem_netmod_func->ckpt_restart) {
             int mpi_errno;
-            char *publish_bc_orig = NULL;
-            char *bc_val          = NULL;
-            int val_max_remaining;
-
-            /* Initialize the new business card */
-            mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
-            CHECK_ERR_MPI(mpi_errno, mpi_errno, "BCInit failed");
-            publish_bc_orig = bc_val;
-
-            /* Restart the netmod */
-            mpi_errno = MPID_nem_netmod_func->ckpt_restart(&bc_val, &val_max_remaining);
+            mpi_errno = MPID_nem_netmod_func->ckpt_restart();
             CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_restart failed");
-
-            /* publish business card */
-            mpi_errno = MPIDI_PG_SetConnInfo(MPIDI_Process.my_pg_rank, (const char *)publish_bc_orig);
-            CHECK_ERR_MPI(mpi_errno, mpi_errno, "SetConnInfo failed");
-            MPIU_Free(publish_bc_orig);
         }
     } else {
+
         ckpt_result = CKPT_CONTINUE;
 
         if (MPID_nem_netmod_func->ckpt_continue) {
             int mpi_errno;
-            char *publish_bc_orig = NULL;
-            char *bc_val          = NULL;
-            int val_max_remaining;
-
-            /* Initialize the new business card */
-            mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
-            CHECK_ERR_MPI(mpi_errno, mpi_errno, "BCInit failed");
-            publish_bc_orig = bc_val;
-
-            /* Restart the netmod */
-            mpi_errno = MPID_nem_netmod_func->ckpt_continue(&bc_val, &val_max_remaining);
+            mpi_errno = MPID_nem_netmod_func->ckpt_continue();
             CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_continue failed");
-
-            /* publish business card */
-            mpi_errno = MPIDI_PG_SetConnInfo(MPIDI_Process.my_pg_rank, (const char *)publish_bc_orig);
-            CHECK_ERR_MPI(mpi_errno, mpi_errno, "SetConnInfo failed");
-            MPIU_Free(publish_bc_orig);
         }
-
-        printf("%d: finished checkpoint\n", MPIDI_Process.my_pg_rank);fflush(stdout);
     }
 
     ret = sem_post(&cont_sem);
@@ -408,17 +375,17 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME finish_ckpt
+#define FUNCNAME MPIDI_nem_ckpt_finish
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int finish_ckpt(void)
+int MPIDI_nem_ckpt_finish(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
     int ret;
-    MPIDI_STATE_DECL(MPID_STATE_FINISH_CKPT);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_FINISH_CKPT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
 
     /* Since we're checkpointing the shared memory region (i.e., the
        channels between local procs), we don't have to flush those
@@ -456,7 +423,7 @@ static int finish_ckpt(void)
     checkpointing = FALSE;
     
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_FINISH_CKPT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
     return mpi_errno;
 fn_fail:
 
@@ -499,10 +466,11 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_m
     }
 
     if (marker_count == 0) {
-        mpi_errno = finish_ckpt();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIDI_nem_ckpt_finish_checkpoint = TRUE;
+        /* make sure we break out of receive loop into progress loop */
+        MPIDI_CH3_Progress_signal_completion();
     }
-
+    
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *req = NULL;
 

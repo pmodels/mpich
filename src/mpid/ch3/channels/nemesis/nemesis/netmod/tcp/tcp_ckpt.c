@@ -52,16 +52,16 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
 
     vc_tcp->send_paused = FALSE;
-    
+
+    /* There may be a unpause message in the send queue.  If so, just enqueue everything on the send queue. */
+    if (SENDQ_EMPTY(vc_tcp->send_queue))
+        mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->paused_send_queue);
+        
     /* if anything is waiting to be sent on the paused queue, put it on the send queue and reconnect */
     if (!SENDQ_EMPTY(vc_tcp->paused_send_queue)) {
-        MPIU_Assert(SENDQ_EMPTY(vc_tcp->send_queue));
         
         SENDQ_ENQUEUE_MULTIPLE(&vc_tcp->send_queue, vc_tcp->paused_send_queue.head, vc_tcp->paused_send_queue.tail);
         vc_tcp->paused_send_queue.head = vc_tcp->paused_send_queue.tail = NULL;
-
-        mpi_errno = MPID_nem_tcp_connect(vc);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
 fn_exit:
