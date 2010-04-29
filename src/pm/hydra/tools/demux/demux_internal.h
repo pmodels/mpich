@@ -25,14 +25,17 @@ extern struct HYDT_dmxu_callback *HYDT_dmxu_cb_list;
 
 struct HYDT_dmxu_fns {
     HYD_status(*wait_for_event) (int wtime);
+    HYD_status(*stdin_valid) (int *out);
 };
 
 #if defined HAVE_POLL
 HYD_status HYDT_dmxu_poll_wait_for_event(int wtime);
+HYD_status HYDT_dmxu_poll_stdin_valid(int *out);
 #endif /* HAVE_POLL */
 
 #if defined HAVE_SELECT
 HYD_status HYDT_dmxu_select_wait_for_event(int wtime);
+HYD_status HYDT_dmxu_select_stdin_valid(int *out);
 #endif /* HAVE_SELECT */
 
 #endif /* DEMUX_INTERNAL_H_INCLUDED */

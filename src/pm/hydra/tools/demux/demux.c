@@ -20,24 +20,28 @@ HYD_status HYDT_dmx_init(char **demux)
     if (!(*demux)) {    /* user didn't specify anything */
 #if defined HAVE_POLL
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_poll_wait_for_event;
+        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
         *demux = HYDU_strdup("poll");
 #elif defined HAVE_SELECT
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_select_wait_for_event;
+        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
         *demux = HYDU_strdup("select");
 #endif /* HAVE_SELECT */
     }
     else if (!strcmp(*demux, "poll")) { /* user wants to use poll */
 #if defined HAVE_POLL
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_poll_wait_for_event;
+        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
 #endif /* HAVE_POLL */
     }
     else if (!strcmp(*demux, "select")) {       /* user wants to use select */
 #if defined HAVE_SELECT
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_select_wait_for_event;
+        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
 #endif /* HAVE_SELECT */
     }
 
-    if (HYDT_dmxu_fns.wait_for_event == NULL) {
+    if (HYDT_dmxu_fns.wait_for_event == NULL || HYDT_dmxu_fns.stdin_valid == NULL) {
         /* We couldn't find anything; return an error */
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "cannot find an appropriate demux engine\n");
@@ -197,21 +201,5 @@ HYD_status HYDT_dmx_finalize(void)
 
 HYD_status HYDT_dmx_stdin_valid(int *out)
 {
-    char buf[1];
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* Try to read from stdin. If we can't read it, disable stdin */
-    if (read(STDIN_FILENO, buf, 0) < 0)
-        *out = 0;
-    else
-        *out = 1;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return HYDT_dmxu_fns.stdin_valid(out);
 }
