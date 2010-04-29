@@ -6,6 +6,8 @@
 
  # OVERALL: The ssm and shm channels have been removed.
 
+ # OVERALL: Checkpoint/restart support using BLCR
+
  # PM/PMI: Hydra is now the default process management framework
    replacing MPD.
 
