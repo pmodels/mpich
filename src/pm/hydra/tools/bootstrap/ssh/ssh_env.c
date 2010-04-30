@@ -14,7 +14,7 @@ HYD_status HYDT_bscd_ssh_query_env_inherit(const char *env_name, int *ret)
 
     HYDU_FUNC_ENTER();
 
-    if (!strcmp(env_name, "DISPLAY"))
+    if (!strncmp(env_name, "DISPLAY=", strlen("DISPLAY=")))
         *ret = 0;
     else
         *ret = 1;

@@ -436,7 +436,7 @@ static HYD_status launch_procs(void)
     int i, j, arg, stdin_fd, process_id, os_index, pmi_rank;
     char *str, *envstr, *list, *pmi_port;
     char *client_args[HYD_NUM_TMP_STRINGS];
-    struct HYD_env *env, *opt_env = NULL, *force_env = NULL;
+    struct HYD_env *env, *force_env = NULL;
     struct HYD_exec *exec;
     enum HYD_pmcd_pmi_cmd cmd;
     int *pmi_ranks;
@@ -536,15 +536,9 @@ static HYD_status launch_procs(void)
         if (!exec->env_prop) {
             /* user didn't specify anything; add inherited env to optional env */
             for (env = HYD_pmcd_pmip.user_global.global_env.inherited; env; env = env->next) {
-                status = HYDU_append_env_to_list(*env, &opt_env);
+                status = HYDU_append_env_to_list(*env, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
-
-            status = HYDU_env_purge_existing(&opt_env);
-            HYDU_ERR_POP(status, "error purging optional environment\n");
-
-            force_env = opt_env;
-            opt_env = NULL;
         }
         else if (!strcmp(exec->env_prop, "all")) {
             /* user explicitly asked us to pass all the environment */

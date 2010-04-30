@@ -372,26 +372,3 @@ HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list)
   fn_fail:
     goto fn_exit;
 }
-
-HYD_status HYDU_env_purge_existing(struct HYD_env **env_list)
-{
-    struct HYD_env *new_list = NULL, *env;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    for (env = *env_list; env; env = env->next) {
-        if (!getenv(env->env_name)) {
-            status = HYDU_append_env_to_list(*env, &new_list);
-            HYDU_ERR_POP(status, "unable to append env to list\n");
-        }
-    }
-    *env_list = new_list;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}

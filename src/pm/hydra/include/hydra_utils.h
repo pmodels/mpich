@@ -154,7 +154,6 @@ HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env **env_list
 HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite);
 HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwrite);
 HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
-HYD_status HYDU_env_purge_existing(struct HYD_env **env_list);
 
 /* launch */
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
