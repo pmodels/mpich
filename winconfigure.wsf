@@ -2723,6 +2723,10 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define HAVE_LONG_DOUBLE 1")
 				Case "HAVE_LONG_LONG_INT"
 					fout.WriteLine("#define HAVE_LONG_LONG_INT 1")
+				Case "HAVE_C_ATTR_ALIGNED"
+					fout.WriteLine("/* #undef HAVE_C_ATTR_ALIGNED */")
+				Case "HAVE_C_MULTI_ATTR_ALIAS"
+					fout.WriteLine("/* #undef HAVE_C_MULTI_ATTR_ALIAS */")
 				Case "HAVE_MAX_STRUCT_ALIGNMENT"
 					'fout.WriteLine("/* #undef HAVE_MAX_STRUCT_ALIGNMENT */")
 					'If bWin64 Then
@@ -4543,6 +4547,22 @@ Function BuildIFaces()
 		Else
 			printMsg "VERBOSE", "Skipping file: src\binding\f77\setbotf.f"
 		End If
+
+                '
+                ' Generate setbot.c
+                '
+                If f.FileExists("src\binding\f77\setbot.c.in") Then
+                    set fin = f.OpenTextFile("src\binding\f77\setbot.c.in")
+                    printMsg "VERBOSE", "Creating src\binding\f77\setbot.c"
+                    set fout = f.CreateTextFile("src\binding\f77\setbot.c")
+                    contents = fin.ReadAll()
+                    contents = ReplaceAts(contents, true, false)
+                    fout.Write(contents)
+                    fin.Close()
+                    fout.Close()
+                Else
+                    printMsg "VERBOSE", "Skipping file: src\binding\f77\setbot.c"
+                End If
 
 		'
 		' Generate F90 module files

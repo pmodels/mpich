@@ -733,9 +733,13 @@ EXPORTS
 	MPI_Status_c2f=PMPI_Status_c2f
 	PMPI_Status_f2c
 	MPI_Status_f2c=PMPI_Status_f2c
-	mpipriv1_
-	mpipriv2_
-	mpiprivc_
+	mpifcmb1_
+	mpifcmb2_
+	mpifcmb3_
+	mpifcmb4_
+	mpifcmb5_
+	mpifcmb7_
+	mpifcmb8_
 ;	MPIR_F_TRUE
 ;	MPIR_F_FALSE
 	MPIR_F_NeedInit
