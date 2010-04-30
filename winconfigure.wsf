@@ -3450,8 +3450,8 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "HAVE_SYS_SYSCTL_H"
 					fout.WriteLine("#undef HAVE_SYS_SYSCTL_H")
 				' Define to enable nemesis checkpointing
-				Case "ENABLED_CHECKPOINTING"
-					fout.WriteLine("/* #undef ENABLED_CHECKPOINTING */")
+				Case "ENABLE_CHECKPOINTING"
+					fout.WriteLine("/* #undef ENABLE_CHECKPOINTING */")
 				' Define to disable shm communicn in nemesis 
 				' - for debugging
 				Case "ENABLED_NO_LOCAL"
@@ -3525,6 +3525,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_LIBSCTP */")
 				Case "HAVE_LIBNMAD"
 					fout.WriteLine("/* #undef HAVE_LIBNMAD */")
+				Case "HAVE_LIBCR"
+					fout.WriteLine("/* #undef HAVE_LIBCR */")
 				Case "HAVE_MUNMAP"
 					fout.WriteLine("/* #undef HAVE_MUNMAP */")
 				Case "HAVE_RAND"
