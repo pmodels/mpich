@@ -103,14 +103,14 @@
 <!--
 		<named
 			name = "channel"
-			helpstring = "specify the channel for --genbuildfiles (sock,shm,sshm,ssm,essm,ib)"
+			helpstring = "specify the channel for --genbuildfiles (sock,nemesis)"
 			type = "string"
 			require = "false"
 		/>
 -->
 		<named
 			name = "channel"
-			helpstring = "specify the channel for --genbuildfiles (sock,shm,sshm,ssm)"
+			helpstring = "specify the channel for --genbuildfiles (sock,nemesis)"
 			type = "string"
 			require = "false"
 		/>
@@ -6055,15 +6055,6 @@ Function CompileFile(fname)
 	If fname = "${socksources}" Then
 		CompileFile = false
 	End If
-	If fname = "${ssmsources}" Then
-		CompileFile = false
-	End If
-	If fname = "${shmsources}" Then
-		CompileFile = false
-	End If
-	If fname = "${sshmsources}" Then
-		CompileFile = false
-	End If
 	If fname = "timelimit.c" Then
 		CompileFile = false
 	End If
@@ -6114,18 +6105,6 @@ Sub OutputLine(path, line)
 		do_output = true
 	End If
 	If Left(line, 14) = "socksources = " Then
-		line = Right(line, Len(line) - 14)
-		do_output = true
-	End If
-	If Left(line, 13) = "ssmsources = " Then
-		line = Right(line, Len(line) - 13)
-		do_output = true
-	End If
-	If Left(line, 13) = "shmsources = " Then
-		line = Right(line, Len(line) - 13)
-		do_output = true
-	End If
-	If Left(line, 14) = "sshmsources = " Then
 		line = Right(line, Len(line) - 14)
 		do_output = true
 	End If
@@ -6266,10 +6245,6 @@ Function GenBuild()
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=sock RLOG=1")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=mt")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=mt RLOG=1")
-	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=ssm")
-	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=ssm RLOG=1")
-	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=shm")
-	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=shm RLOG=1")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=nemesis")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO CHANNEL=nemesis RLOG=1")
 '	bfile.WriteLine("REM nmake %SILENT% /NOLOGO CHANNEL=sshm")
@@ -6572,8 +6547,6 @@ Function GenBuild()
 	mfile.WriteLine("BIN_OUTDIR = $(CPU)\$(CFG)\bin")
 	mfile.WriteLine("SOCK_OUTDIR = $(CPU)\$(CFG)\sock$(P)")
 	mfile.WriteLine("MT_OUTDIR = $(CPU)\$(CFG)\mt$(P)")
-	mfile.WriteLine("SSM_OUTDIR = $(CPU)\$(CFG)\ssm$(P)")
-	mfile.WriteLine("SHM_OUTDIR = $(CPU)\$(CFG)\shm$(P)")
 	mfile.WriteLine("NEMESIS_OUTDIR = $(CPU)\$(CFG)\nemesis$(P)")
 '	mfile.WriteLine("SSHM_OUTDIR = $(CPU)\$(CFG)\sshm$(P)")
 '	mfile.WriteLine("ESSM_OUTDIR = $(CPU)\$(CFG)\essm$(P)")
@@ -6907,62 +6880,6 @@ Function GenBuild()
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength, false, true
 
-	mfile.WriteLine
-	mfile.WriteLine("# ch3ssm")
-	mfile.WriteLine
-	outdir = "SSM_OUTDIR"
-	CreateRules f.GetFolder("src\mpid\ch3\channels\ssm"), trimlength
-	CreateRules f.GetFolder("src\mpid\ch3\util\sock"), trimlength
-	CreateRules f.GetFolder("src\mpid\ch3\util\shm"), trimlength
-	CreateRules f.GetFolder("src\mpid\ch3\util\shmproc"), trimlength
-	CreateRules f.GetFolder("src\mpid\ch3\util\shmbase"), trimlength
-	CreateObjs "ch3ssm", f.GetFolder("src\mpid\ch3\channels\ssm"), trimlength, true, false
-	CreateObjs "ch3ssm", f.GetFolder("src\mpid\ch3\util\shm"), trimlength, false, false
-	CreateObjs "ch3ssm", f.GetFolder("src\mpid\ch3\util\shmproc"), trimlength, false, false
-	CreateObjs "ch3ssm", f.GetFolder("src\mpid\ch3\util\shmbase"), trimlength, false, false
-	CreateObjs "ch3ssm", f.GetFolder("src\mpid\ch3\util\sock"), trimlength, false, true
-
-	mfile.WriteLine
-	mfile.WriteLine("# ch3shm")
-	mfile.WriteLine
-	outdir = "SHM_OUTDIR"
-	CreateRules f.GetFolder("src\mpid\ch3\channels\shm"), trimlength
-	CreateRules f.GetFolder("src\mpid\ch3\channels\shm\src"), trimlength
-	CreateRules f.GetFolder("src\mpid\common\locks"), trimlength
-	CreateRules f.GetFolder("src\mpid\ch3\util\shmbase"), trimlength
-	CreateObjs "ch3shm", f.GetFolder("src\mpid\ch3\channels\shm"), trimlength, true, false
-	CreateObjs "ch3shm", f.GetFolder("src\mpid\ch3\channels\shm\src"), trimlength, false, false
-	CreateObjs "ch3shm", f.GetFolder("src\mpid\common\locks"), trimlength, false, false
-	CreateObjs "ch3shm", f.GetFolder("src\mpid\ch3\util\shmbase"), trimlength, false, true
-
-'	mfile.WriteLine
-'	mfile.WriteLine("# ch3sshm")
-'	mfile.WriteLine
-'	outdir = "SSHM_OUTDIR"
-'	CreateRules f.GetFolder("src\mpid\ch3\channels\sshm"), trimlength
-'	CreateRules f.GetFolder("src\mpid\ch3\util\shm"), trimlength
-'	CreateObjs "ch3sshm", f.GetFolder("src\mpid\ch3\channels\sshm"), trimlength, true, false
-'	CreateObjs "ch3sshm", f.GetFolder("src\mpid\ch3\util\shm"), trimlength, false, true
-
-'	mfile.WriteLine
-'	mfile.WriteLine("# ch3essm")
-'	mfile.WriteLine
-'	outdir = "ESSM_OUTDIR"
-'	CreateRules f.GetFolder("src\mpid\ch3\channels\essm"), trimlength
-'	CreateRules f.GetFolder("src\util\events"), trimlength
-'	mfile.WriteLine("{..\src\util\thread}.c{$(ESSM_OUTDIR)}.obj:")
-'	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(ESSM_OUTDIR)\\"" /Fd""$(ESSM_OUTDIR)\\"" $**")
-'	mfile.WriteLine
-'	CreateObjs "ch3essm", f.GetFolder("src\mpid\ch3\channels\essm"), trimlength, true, false
-'	CreateObjs "ch3essm", f.GetFolder("src\util\events"), trimlength, false, false
-'	mfile.WriteLine(" \" & vbCrLf & "	$(ESSM_OUTDIR)\mpe_thread_win.obj")
-
-'	mfile.WriteLine
-'	mfile.WriteLine("# ch3ib")
-'	mfile.WriteLine
-'	outdir = "IB_OUTDIR"
-'	CreateRules f.GetFolder("src\mpid\ch3\channels\ib"), trimlength
-'	CreateObjs "ch3ib", f.GetFolder("src\mpid\ch3\channels\ib"), trimlength, true, true
 
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""sock""")
@@ -6975,17 +6892,7 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine
-	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""ssm""")
-	mfile.WriteLine("channel_objs = $(ch3ssm_objs)")
-	mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""shm""")
-	mfile.WriteLine("channel_objs = $(ch3shm_objs)")
-'	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""sshm""")
-'	mfile.WriteLine("# channel_objs = $(ch3sshm_objs)")
-'	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""essm""")
-'	mfile.WriteLine("# channel_objs = $(ch3essm_objs)")
-'	mfile.WriteLine("# !ELSEIF ""$(CHANNEL)"" == ""ib""")
-'	mfile.WriteLine("# channel_objs = $(ch3ib_objs)")
-	mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""mt""")
+	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""mt""")
 	mfile.WriteLine("channel_objs = $(ch3mt_objs)")
 	mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""nemesis""")
 	mfile.WriteLine("channel_objs = $(ch3nemesis_objs)")

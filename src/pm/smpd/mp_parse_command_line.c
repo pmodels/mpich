@@ -1892,7 +1892,8 @@ configfile_loop:
 		strncpy(channel, (*argvp)[2], SMPD_MAX_NAME_LENGTH);
         if((strcmp(channel, "shm") == 0) || (strcmp(channel, "ssm") == 0))
         {
-            printf("WARNING: SHM & SSM channels are now deprecated. Use the NEMESIS channel instead.\n");
+            printf("WARNING: SHM & SSM channels are no longer available. Use the NEMESIS channel instead.\n");
+            return SMPD_FAIL;
         }
 		num_args_to_strip = 2;
 	    }
@@ -2402,49 +2403,7 @@ configfile_loop:
 	    */
 	    if ((strcmp(channel, "auto") == 0) && (smpd_process.launch_list != NULL))
 	    {
-		int id;
-		int multiple_nodes = 0;
-
-		/* determine whether or not there are multiple nodes */
-		id = smpd_process.launch_list->host_id;
-		iter = smpd_process.launch_list;
-		while (iter)
-		{
-		    if (iter->host_id != id)
-		    {
-			multiple_nodes = 1;
-			break;
-		    }
-		    iter = iter->next;
-		}
-
-		/* set the channel */
-		if (multiple_nodes)
-		{
-		    if (smpd_setting_internode_channel[0] != '\0')
-		    {
-			/* Use the internode channel specified in the smpd settings */
-			strncpy(channel, smpd_setting_internode_channel, 20);
-		    }
-		    else
-		    {
-			/* Use the default sock-shared-memory internode channel */
-			strcpy(channel, "ssm");
-		    }
-		}
-		else
-		{
-		    if (smpd_process.launch_list->nproc < 8)
-		    {
-			/* small jobs use the shared memory channel */
-			strcpy(channel, "shm");
-		    }
-		    else
-		    {
-			/* larger jobs use the scalable shared memory channel */
-			strcpy(channel, "ssm");
-		    }
-		}
+            strncpy(channel, "nemesis", SMPD_MAX_NAME_LENGTH);
 	    }
 
         nemesis_netmod[0] = '\0';

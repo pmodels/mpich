@@ -111,16 +111,6 @@ devenv.com mpich2.sln /build gfortDebug
 if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com mpich2.sln /build sfortDebug
 if %errorlevel% NEQ 0 goto BUILDERROR
-devenv.com mpich2.sln /build ch3shmDebug
-REM if %errorlevel% NEQ 0 goto BUILDERROR
-REM devenv.com mpich2.sln /build ch3sshmDebug
-if %errorlevel% NEQ 0 goto BUILDERROR
-devenv.com mpich2.sln /build ch3ssmDebug
-REM if %errorlevel% NEQ 0 goto BUILDERROR
-REM devenv.com mpich2.sln /build ch3ibIbalDebug
-REM if %errorlevel% NEQ 0 goto BUILDERROR
-REM devenv.com mpich2.sln /build ch3essmDebug
-REM if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com mpich2.sln /build ch3sockmtDebug
 if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com examples\examples.sln /project cpi /build Debug
@@ -159,26 +149,6 @@ if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com mpich2.sln /build sfortRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
-echo Building CH3+SHM channel ...
-devenv.com mpich2.sln /build ch3shmRelease >> make.log
-if %errorlevel% NEQ 0 goto BUILDERROR
-echo .....................................................SUCCESS
-echo Building CH3+SHM channel (profiled version) ...
-devenv.com mpich2.sln /build ch3shmPRelease >> make.log
-if %errorlevel% NEQ 0 goto BUILDERROR
-echo .....................................................SUCCESS
-echo Building CH3+SSM channel ...
-devenv.com mpich2.sln /build ch3ssmRelease >> make.log
-if %errorlevel% NEQ 0 goto BUILDERROR
-echo .....................................................SUCCESS
-echo Building CH3+SSM channel (profiled version)...
-devenv.com mpich2.sln /build ch3ssmPRelease >> make.log
-if %errorlevel% NEQ 0 goto BUILDERROR
-echo .....................................................SUCCESS
-REM devenv.com mpich2.sln /build ch3ibIbalRelease
-REM if %errorlevel% NEQ 0 goto BUILDERROR
-REM devenv.com mpich2.sln /build ch3ibIbalPRelease
-REM if %errorlevel% NEQ 0 goto BUILDERROR
 echo Building CH3+SOCK channel(multithreaded)...
 devenv.com mpich2.sln /build ch3sockmtRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
