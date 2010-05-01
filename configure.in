@@ -1994,33 +1994,31 @@ dnl    fi
 	 # if the compiler allows it (e.g., building with gcc but
 	 # a different Fortran compiler. Another option is to
 	 # *require* g77.
-	 AC_MSG_CHECKING([whether $F77 allows -shared -fpic])
 	 rm -f conftest.f
 	 cat > conftest.f <<EOF
        program main
        end
 EOF
-         if $F77 -shared -fpic -o conftest conftest.f >/dev/null 2>&1 ; then
-	     FC_SHL="$F77 -shared -fpic"
-             AC_MSG_RESULT(yes)
-         else
-             AC_MSG_RESULT(no)
-             AC_MSG_CHECKING([whether $F77 allows -fpic])
-             if $F77 -fpic -o conftest conftest.f >/dev/null 2>&1 ; then
-	         FC_SHL="$F77 -fpic"
+         FC_SHL=false
+         for sh_arg in "-shared -fPIC" "-fPIC" "-shared -fpic" "-fpic" ; do
+ 	     AC_MSG_CHECKING([whether $F77 allows $sh_arg])
+             if $F77 $sh_arg -o conftest conftest.f >/dev/null 2>&1 ; then
+	         FC_SHL="$F77 $sh_arg"
                  AC_MSG_RESULT(yes)
+	         break
              else
-	         FC_SHL=false
                  AC_MSG_RESULT(no)
-		 AC_MSG_WARN([Cannot build shared libraries for Fortran with this compiler])
              fi
+	 done
+	 if test "$FC_SHL" = "false" ; then
+	     AC_MSG_WARN([Cannot build shared libraries for Fortran with this compiler])
          fi
 	 # This is needed for Mac OSX 10.5
 	 rm -rf conftest.dSYM
          rm -f conftest*
-
 	 FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	 ;;
+
 	 cygwin|cygwin-gcc)
 	 FC_SHL="$F77 -shared"
 	 FC_LINKPATH_SHL=""
@@ -2351,24 +2349,24 @@ EOF
          gcc)
          if test "$pac_cv_f90_vendor" = gnu -o "$F90" = "g95" ; then
             # If we have the GNU Fortran 95 compiler (untested)
-            F90_SHL="$F90 -shared -fpic"
+            F90_SHL="$F90 -shared -fPIC"
             F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
          else
             case "$pac_cv_f90_vendor" in 
 	        absoft)
-	        F90_SHL="$F90 -fpic"
+	        F90_SHL="$F90 -fPIC"
                 F90_LINKPATH_SHL="-X -rpath -X "
 	        ;;
 
 	        intel)
 	        # Intel implements the GNU options
-	        F90_SHL="$F90 -shared -fpic"
+	        F90_SHL="$F90 -shared -fPIC"
                 F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	        ;;
 
 	        pgi)
 	        # Portland Group implements the GNU options
-	        F90_SHL="$F90 -shared -fpic"
+	        F90_SHL="$F90 -shared -fPIC"
                 F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	        ;;
 
@@ -2549,7 +2547,7 @@ public:
 	;;
 	gcc)
         # Assume that the compiler is g++ if gcc style shared libraries chosen
-        CXX_SHL="$CXX -shared -fpic"
+        CXX_SHL="$CXX -shared -fPIC"
         CXX_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	;;
 	cygwin|cygwin-gcc)
