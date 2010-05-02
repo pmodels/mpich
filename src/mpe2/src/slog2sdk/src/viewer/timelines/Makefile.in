@@ -53,7 +53,8 @@ $(TARGET): $(OBJ)
 	$(JAR) $(JARFLAGS)cfm $${jarfile} $(PACKAGE).manifest ; \
 	for dir in base/io/ base/topology/ base/drawable/ base/statistics/ \
 	           logformat/slog2/ logformat/slog2/input/ \
-	           viewer/common/ viewer/legends/ $(PKGDIR)/ ; do \
+	           viewer/common/ viewer/legends/ \
+	           viewer/zoomable/ viewer/histogram/ $(PKGDIR)/ ; do \
 	    classdir_prefix=@JPATH_START@$${dir}@JPATH_FINAL@ ; \
 	    $(JAR) $(JARFLAGS)uf $${jarfile} $${classdir_prefix}*.class ; \
 	done ; \

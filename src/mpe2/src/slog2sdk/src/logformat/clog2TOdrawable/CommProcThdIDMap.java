@@ -9,6 +9,7 @@
 
 package logformat.clog2TOdrawable;
 
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -48,12 +49,37 @@ public class CommProcThdIDMap extends TreeMap
            Added all possible thread lineIDs, 0...max_thread_count-1,
            for the given RecComm event.  A more scalable way of doing
            this is to log the thread event for the newly created thread.
+
+           Check if the CommProcThdIDMap already contains the gthdLineID Coord
+           key before adding another gthdLineID Coord and CommProcThdID pair.
+           Since the key is identified by gthdLineID (Coord is compared through
+           gthdLineID), so multiple keys with identical gthdLineID can be
+           added to the map resulting in existing Map.Entry being replaced
+           by a new Map.Entry where existing CommProcThdID's isUsed=true
+           value being erroneously erased.  Different CommProcThdIDs could
+           have identical gthdLineID but different etypes, like one with
+           etype=IntraCommCreate is being replaced by one that has
+           etype=LocalIntraComm.  That usually happens to the clog2 file which
+           contains an Intercomm event.  Since an Intercomm contains both
+           LocalIntraComm and RemoteIntraComm, but LocalIntraComm
+           is created by a IntraCommCreate event.  So clog2 file with
+           an Intercomm will contain both LocalIntraComm and IntraCommCreate
+           with identical gthdLineID.  Normally, CommProcThdID with
+           IntraCommCreate etype is added to the map first and its isUsed field
+           being updated with true when Drawables are added.  Later, another
+           CommProcThdID with identical gthdLineID but with LocalIntraComm
+           etype would be added to the map replacing the existing CommProcThdID.
+           If no more drawables of the same gthdLineID is found, the map would
+           contain the last CommProcThdID with isUsed=false.  A bug!
         */
         CommProcThdID  cptID;
+        Coord          key;
         int            thd;
         for ( thd = 0; thd < max_thread_count; thd++ ) {
              cptID = new CommProcThdID( comm, thd );
-             super.put( new Coord( 0.0, cptID.gthdLineID ), cptID );
+             key   = new Coord( 0.0, cptID.gthdLineID );
+             if ( ! super.containsKey( key ) )
+                 super.put( key, cptID );
         }
     }
 
@@ -86,13 +112,23 @@ public class CommProcThdIDMap extends TreeMap
     // finalize() overrides Object.finalize().
     public void finish()
     {
+        Map.Entry      coord_cptID;
         CommProcThdID  cptID;
         // Remove any "unUsed" CommProcThdID elements from the map;
+        /*
         Iterator cptID_itr  = super.values().iterator();
         while ( cptID_itr.hasNext() ) {
             cptID = (CommProcThdID) cptID_itr.next();
             if ( ! cptID.isUsed() )
                 cptID_itr.remove();
+        }
+        */
+        Iterator coord_cptID_itr = super.entrySet().iterator();
+        while ( coord_cptID_itr.hasNext() ) {
+             coord_cptID = (Map.Entry) coord_cptID_itr.next();
+             cptID = (CommProcThdID) coord_cptID.getValue();
+             if ( ! cptID.isUsed() )
+                 coord_cptID_itr.remove();
         }
     }
 

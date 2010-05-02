@@ -21,10 +21,12 @@ public class Print
         InputLog               dobj_ins;
         List                   objdefs;   // Primitive def'n
         Map                    shadefs;   // Shadow   def'n
+        List                   ycoordmaps;
         Kind                   next_kind;
         Category               objdef;
         Topology               topo;
         Primitive              drawobj;
+        YCoordMap              ycoordmap;
         long                   Nobjs;
 
         if ( args.length != 1 ) {
@@ -33,10 +35,11 @@ public class Print
             System.exit( 0 );
         }
 
-        filename = args[ 0 ];
-        objdefs  = new ArrayList();
-        shadefs  = new HashMap();
-        Nobjs    = 0;
+        filename    = args[ 0 ];
+        objdefs     = new ArrayList();
+        shadefs     = new HashMap();
+        ycoordmaps  = new ArrayList();
+        Nobjs       = 0;
 
         /* */    Date time1 = new Date();
         dobj_ins = new InputLog( filename );
@@ -50,7 +53,7 @@ public class Print
             }
             if ( next_kind == Kind.YCOORDMAP ) {
                 // invoke InputLog().getNextYCoordMap() to get stream moving
-                dobj_ins.getNextYCoordMap();
+                ycoordmaps.add( dobj_ins.getNextYCoordMap() );
             }
             if ( next_kind == Kind.CATEGORY ) {
                 objdef = dobj_ins.getNextCategory();
@@ -63,31 +66,38 @@ public class Print
         }
         dobj_ins.close();
         /* */    Date time3 = new Date();
-        System.err.println( "\n\t Shadow Category Definitions : " );
+        System.out.println( "\n\t Shadow Category Definitions : " );
         Iterator shadefs_itr = shadefs.entrySet().iterator();
         while ( shadefs_itr.hasNext() )
-            System.err.println( shadefs_itr.next() );
+            System.out.println( shadefs_itr.next() );
 
-        System.err.println( "\n\t Primitive Category Definitions : " );
+        System.out.println( "\n\t Primitive Category Definitions : " );
         Iterator objdefs_itr = objdefs.iterator();
         while ( objdefs_itr.hasNext() ) {
             objdef = (Category) objdefs_itr.next();
-            System.err.println( objdef.toString() );
+            System.out.println( objdef.toString() );
         }
 
-        System.err.println( "\n" );
-        System.err.println( "Number of Primitives = " + Nobjs );
-        System.err.println( "Number of Unmatched Events = "
+        System.out.println( "\n\t YCoordMap Definitions : " );
+        Iterator ymaps_itr = ycoordmaps.iterator();
+        while ( ymaps_itr.hasNext() ) {
+            ycoordmap = (YCoordMap) ymaps_itr.next();
+            System.out.println( ycoordmap.toString() );
+        }
+
+        System.out.println( "\n" );
+        System.out.println( "Number of Primitives = " + Nobjs );
+        System.out.println( "Number of Unmatched Events = "
                           + dobj_ins.getNumberOfUnMatchedEvents() );
 
-        System.err.println( "Total ByteSize of the logfile = "
+        System.out.println( "Total ByteSize of the logfile = "
                           + dobj_ins.getTotalBytesRead() );
-        // System.err.println( "time1 = " + time1 + ", " + time1.getTime() );
-        // System.err.println( "time2 = " + time2 + ", " + time2.getTime() );
-        // System.err.println( "time3 = " + time3 + ", " + time3.getTime() );
-        System.err.println( "timeElapsed between 1 & 2 = "
+        // System.out.println( "time1 = " + time1 + ", " + time1.getTime() );
+        // System.out.println( "time2 = " + time2 + ", " + time2.getTime() );
+        // System.out.println( "time3 = " + time3 + ", " + time3.getTime() );
+        System.out.println( "timeElapsed between 1 & 2 = "
                           + ( time2.getTime() - time1.getTime() ) + " msec" );
-        System.err.println( "timeElapsed between 2 & 3 = "
+        System.out.println( "timeElapsed between 2 & 3 = "
                           + ( time3.getTime() - time2.getTime() ) + " msec" );
     }
 }

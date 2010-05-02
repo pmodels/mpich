@@ -42,4 +42,17 @@ public class CommProcThdID
     {
         return isUsed;
     }
+
+    public String toString()
+    {
+     return ( "CommProcThdID"
+               + "[ icomm=" + icomm
+               + ", rank=" + rank
+               + ", thd=" + thd
+               + ", wrank=" + wrank
+               + ", etype=" + RecComm.toCommTypeString( etype )
+               + ", gthdLineID=" + gthdLineID
+               + ", isUsed=" + isUsed
+               + " ]");
+    }
 }
