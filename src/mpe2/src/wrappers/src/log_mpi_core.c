@@ -469,6 +469,12 @@ extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
     if (!commIDs) \
         commIDs = CLOG_CommSet_get_IDs( CLOG_CommSet, comm ); \
 
+#define MPE_LOG_COMMFREE(new_comm,comm_etype) \
+    if ( new_comm == MPI_COMM_NULL ) { \
+        MPE_Log_commIDs_nullcomm( commIDs, THREADID, comm_etype ); \
+        MPE_LOG_SOLO_EVENT( commIDs, THREADID, MPE_COMM_FINALIZE_ID ) \
+    }
+
 /*
    Update commIDs after CLOG_CommSet_add_intracomm() which may have invoked
    realloc() on CLOG_CommSet's table[] of commIDs, because invocation
@@ -495,10 +501,6 @@ extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
         MPE_Log_commIDs_intracomm( commIDs, THREADID, \
                                    comm_etype, new_commIDs ); \
         MPE_LOG_SOLO_EVENT( new_commIDs, THREADID, MPE_COMM_INIT_ID ) \
-    } \
-    else { \
-        MPE_Log_commIDs_nullcomm( commIDs, THREADID, comm_etype ); \
-        MPE_LOG_SOLO_EVENT( commIDs, THREADID, MPE_COMM_FINALIZE_ID ) \
     }
 
 /*
@@ -527,10 +529,6 @@ extern MPEU_DLL_SPEC CLOG_CommSet_t  *CLOG_CommSet;
         MPE_Log_commIDs_intercomm( commIDs, THREADID, \
                                    comm_etype, new_commIDs ); \
         MPE_LOG_SOLO_EVENT( new_commIDs, THREADID, MPE_COMM_INIT_ID ) \
-    } \
-    else { \
-        MPE_Log_commIDs_nullcomm( commIDs, THREADID, comm_etype ); \
-        MPE_LOG_SOLO_EVENT( commIDs, THREADID, MPE_COMM_FINALIZE_ID ) \
     }
 
 #define MPE_LOG_ON \
@@ -2438,7 +2436,7 @@ MPI_Comm * comm;
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
-  MPE_LOG_COMM_DECL
+  MPE_LOG_SOLO_EVENT_DECL
   MPE_LOG_THREADSTM_DECL
 
 /*
@@ -2463,9 +2461,7 @@ MPI_Comm * comm;
 #endif
 
   MPE_LOG_THREAD_LOCK
-  if ( *comm == MPI_COMM_NULL ) {
-      MPE_LOG_INTRACOMM(*comm,MPI_COMM_NULL,CLOG_COMM_FREE)
-  }
+  MPE_LOG_COMMFREE(*comm,CLOG_COMM_FREE)
 
   MPE_LOG_STATE_END(*comm,NULL)
   MPE_LOG_THREAD_UNLOCK
