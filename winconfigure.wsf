@@ -408,11 +408,11 @@ Next
   len_doublecplx      = "10"
   len_2dc             = "20"
 
-' Special C++ Datatypes to support Fortran datatypes within C++ 
+' Special C++ Datatypes
   len_bool			= "01"
   len_complex			= "08"
   len_double_complex		= "10"
-  len_long_double_complex	= "20"
+  len_long_double_complex	= "10"
 
 ' C99 types - These types are not supported by VS, however
 ' C++ pgms use the same types. So we use the C++ type sizes here
