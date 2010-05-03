@@ -2095,9 +2095,9 @@ static int __cdecl passive_quiescent_handler(MPIU_EXOVERLAPPED *recv_ov)
     HRESULT hr;
     MPID_Nem_nd_conn_hnd_t conn_hnd;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ND_SM_QUIESCENT_HANDLER);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_ND_SM_PASSIVE_QUIESCENT_HANDLER);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ND_SM_QUIESCENT_HANDLER);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ND_SM_PASSIVE_QUIESCENT_HANDLER);
 
     conn_hnd = GET_CONNHND_FROM_EX_RECV_OV(recv_ov);
     MPIU_Assert(MPID_NEM_ND_CONN_HND_IS_VALID(conn_hnd));
@@ -2110,7 +2110,7 @@ static int __cdecl passive_quiescent_handler(MPIU_EXOVERLAPPED *recv_ov)
         _com_error(hr).ErrorMessage(), hr);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ND_SM_QUIESCENT_HANDLER);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_ND_SM_PASSIVE_QUIESCENT_HANDLER);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "failed, mpi_errno = %d", mpi_errno);
