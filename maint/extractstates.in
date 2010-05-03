@@ -40,7 +40,7 @@
 # findStateDecl is the routine that is run to scan a file for information
 $scanFile = "findStateDecl";
 $cachefile = '.state-cache';
-$pattern = '\.[chi]$';
+$pattern = '\.[chi](pp){0,1}$';
 $exceptionsFile = "estates.txt";
 
 # Load in the routines to extract strings from files
