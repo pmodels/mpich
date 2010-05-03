@@ -39,12 +39,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_1B3C1E741C3840ADAE59FC3657F303EE"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_1BE96E15F472462586C19E8C77FF7927"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -130,12 +124,6 @@
         "Entry"
         {
         "MsmKey" = "8:_4894F7532DA041EF8685865F1EDAE388"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_4BE7A6E11B484280B3D49C3A7830866A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -249,12 +237,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_9F16A72499EF48B0BCBA05DBF252CB18"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_A09539DCAC1340319AC29295E437BDEF"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -268,12 +250,6 @@
         "Entry"
         {
         "MsmKey" = "8:_B4E7F878516042FF8E2767782EB8741D"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B4EC134AF8714714BD63B0EFC384A59B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -521,26 +497,6 @@
             "TargetName" = "8:clog_inttypes.h"
             "Tag" = "8:"
             "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1B3C1E741C3840ADAE59FC3657F303EE"
-            {
-            "SourcePath" = "8:..\\winbuild\\x64\\Release\\ssm\\mpich2ssm.dll"
-            "TargetName" = "8:mpich2ssm.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_C25C11E398284C2EAFD99160D8C6EA71"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -841,26 +797,6 @@
             "TargetName" = "8:setup.jpg"
             "Tag" = "8:"
             "Folder" = "8:_68D5CBFB6E6E4F878DE0BFA8C411C515"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4BE7A6E11B484280B3D49C3A7830866A"
-            {
-            "SourcePath" = "8:..\\winbuild\\x64\\Release\\ssmp\\mpich2ssmp.dll"
-            "TargetName" = "8:mpich2ssmp.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_C25C11E398284C2EAFD99160D8C6EA71"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1235,26 +1171,6 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9F16A72499EF48B0BCBA05DBF252CB18"
-            {
-            "SourcePath" = "8:..\\winbuild\\x64\\Release\\shm\\mpich2shm.dll"
-            "TargetName" = "8:mpich2shm.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_C25C11E398284C2EAFD99160D8C6EA71"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A09539DCAC1340319AC29295E437BDEF"
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\fortran\\mpi_sizeofs.mod"
@@ -1299,26 +1215,6 @@
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\gfortran\\fmpich2g.dll"
             "TargetName" = "8:fmpich2g.dll"
-            "Tag" = "8:"
-            "Folder" = "8:_C25C11E398284C2EAFD99160D8C6EA71"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B4EC134AF8714714BD63B0EFC384A59B"
-            {
-            "SourcePath" = "8:..\\winbuild\\x64\\Release\\shmp\\mpich2shmp.dll"
-            "TargetName" = "8:mpich2shmp.dll"
             "Tag" = "8:"
             "Folder" = "8:_C25C11E398284C2EAFD99160D8C6EA71"
             "Condition" = "8:"
