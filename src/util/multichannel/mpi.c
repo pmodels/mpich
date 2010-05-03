@@ -59,15 +59,22 @@
 #define MPI_ENV_CHANNEL_NAME      "MPICH2_CHANNEL"
 #define MPI_ENV_MPIWRAP_DLL_NAME  "MPI_WRAP_DLL_NAME"
 #ifdef _DEBUG
-#define MPI_DEFAULT_DLL_NAME      "mpich2d.dll"
+#define MPI_DEFAULT_DLL_NAME      "mpich2nemesisd.dll"
 #define MPI_DEFAULT_WRAP_DLL_NAME "mpich2mped.dll"
 #define DLL_FORMAT_STRING         "mpich2%sd.dll"
 #else
-#define MPI_DEFAULT_DLL_NAME      "mpich2.dll"
+#define MPI_DEFAULT_DLL_NAME      "mpich2nemesis.dll"
 #define MPI_DEFAULT_WRAP_DLL_NAME "mpich2mpe.dll"
 #define DLL_FORMAT_STRING         "mpich2%s.dll"
 #endif
 #define MAX_DLL_NAME              100
+
+/* FIXME: Remove dlls without a channel token string */
+#ifdef _DEBUG
+#define MPI_SOCK_CHANNEL_DLL_NAME   "mpich2d.dll"
+#else
+#define MPI_SOCK_CHANNEL_DLL_NAME   "mpich2.dll"
+#endif
 
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE = 0;
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE = 0;
@@ -1749,6 +1756,12 @@ BOOL LoadMPILibrary()
 		MPIU_Snprintf(name, MAX_DLL_NAME, DLL_FORMAT_STRING, channel);
 		dll_name = name;
 	    }
+        else
+        {
+            /* FIXME: Get rid of dlls without a channel substring in the name */
+    		MPIU_Snprintf(name, MAX_DLL_NAME, "%s", MPI_SOCK_CHANNEL_DLL_NAME);
+	    	dll_name = name;
+        }
 	}
 	/* no dll or channel specified so use the default */
 	if (!dll_name)
