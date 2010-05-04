@@ -2011,7 +2011,7 @@ EOF
              fi
 	 done
 	 if test "$FC_SHL" = "false" ; then
-	     AC_MSG_WARN([Cannot build shared libraries for Fortran with this compiler])
+	     AC_ERROR([Cannot build shared libraries for Fortran with this compiler])
          fi
 	 # This is needed for Mac OSX 10.5
 	 rm -rf conftest.dSYM
