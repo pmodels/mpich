@@ -196,9 +196,9 @@ AC_SUBST(hydra_bss_names)
 #########################################################################
 # Check what resource management kernel we should use
 #########################################################################
-AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk=name - Resource Management Kernel (pbs)],
+AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk=name - Resource Management Kernel (pbs, lsf)],
 		    [ hydra_rmk=$withval ],
-		    [ hydra_rmk="dummy,pbs" ])
+		    [ hydra_rmk="dummy,pbs,lsf" ])
 AC_MSG_CHECKING(resource management kernel)
 AC_MSG_RESULT($hydra_rmk)
 hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -213,6 +213,10 @@ for hydra_rmk_name in ${hydra_rmk_names}; do
 	pbs)
 		hydra_rmk_pbs=true
 		available_rmk=`echo $available_rmk pbs`
+		;;
+	lsf)
+		hydra_rmk_lsf=true
+		available_rmk=`echo $available_rmk lsf`
 		;;
 	*)
 		;;
@@ -250,6 +254,7 @@ AC_SUBST(hydra_rmk_init_decl)
 AC_SUBST(hydra_rmk_name_array)
 AC_SUBST(hydra_rmk_init_array)
 AM_CONDITIONAL([hydra_rmk_pbs], [$hydra_rmk_pbs])
+AM_CONDITIONAL([hydra_rmk_lsf], [$hydra_rmk_lsf])
 
 
 #########################################################################
