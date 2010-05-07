@@ -5991,7 +5991,10 @@ AC_SUBST(subsystems)
 # Find the size of OPA_ptr_t. This step needs to come after the OPA
 # configure above in order to get the size OPA_ptr_t evaluated for
 # this platform.
-AC_CHECK_SIZEOF(OPA_ptr_t,-1,[#include "${master_top_srcdir}/src/openpa/src/opa_primitives.h"])
+AC_CHECK_SIZEOF(OPA_ptr_t,-1,[
+#include "${master_top_srcdir}/src/openpa/src/opa_primitives.h"
+pthread_mutex_t *OPA_emulation_lock;
+])
 
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
