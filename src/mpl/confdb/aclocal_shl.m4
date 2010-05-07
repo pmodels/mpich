@@ -89,17 +89,13 @@ case "$enable_sharedlibs" in
     # For example, include the libname as ${LIBNAME_SHL}
     #C_LINK_SHL='${CC} -shared -Wl,-h,<finallibname>'
     # May need -fPIC .  Test to see which one works.
-    PAC_C_CHECK_COMPILER_OPTION(-fPIC,fPIC_ok=yes,fPIC_ok=no)
-    if test "$fPIC_ok" != yes ; then
-        PAC_C_CHECK_COMPILER_OPTION(-fpic,fpic_ok=yes,fpic_ok=no)
-        if test "$fpic_ok" != yes ; then
-	     AC_MSG_ERROR([Neither -fpic nor -fPIC accepted by $CC])
-        else
-	     CC_SHL='${CC} -fpic'
-        fi
-    else
-        CC_SHL='${CC} -fPIC'
-    fi
+    for sh_arg in "-fPIC" "-fpic" "-KPIC" ; do
+        PAC_C_CHECK_COMPILER_OPTION($sh_arg,works=yes,works=no)
+        if test "$works" = "yes" ; then
+           CC_SHL="${CC} ${sh_arg}"
+	   break
+	fi
+    done
     # This used to have -Wl,-rpath earlier, but that causes problems
     # on many systems.
     C_LINKPATH_SHL=""
