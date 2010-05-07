@@ -2000,7 +2000,7 @@ dnl    fi
        end
 EOF
          FC_SHL=false
-         for sh_arg in "-shared -fPIC" "-fPIC" "-shared -fpic" "-fpic" ; do
+         for sh_arg in "-shared -fPIC" "-fPIC" "-shared -fpic" "-fpic" "-KPIC" ; do
  	     AC_MSG_CHECKING([whether $F77 allows $sh_arg])
              if $F77 $sh_arg -o conftest conftest.f >/dev/null 2>&1 ; then
 	         FC_SHL="$F77 $sh_arg"
