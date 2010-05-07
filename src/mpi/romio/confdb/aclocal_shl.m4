@@ -96,6 +96,9 @@ case "$enable_sharedlibs" in
 	   break
 	fi
     done
+    if test "$works" != "yes"; then
+       AC_MSG_ERROR([Cannot build shared libraries with this compiler])
+    fi
     # This used to have -Wl,-rpath earlier, but that causes problems
     # on many systems.
     C_LINKPATH_SHL=""
