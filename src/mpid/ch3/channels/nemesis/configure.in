@@ -79,9 +79,8 @@ if test "$enable_fast" = "yes" ; then
     AC_DEFINE(ENABLE_NO_YIELD,1,[Define to remove yield()s in polling loops])
 fi
 
-# Check for gm, ib, mx, elan, psm options
+# Check for gm, mx, elan, psm options
 PAC_SET_HEADER_LIB_PATH(gm)
-PAC_SET_HEADER_LIB_PATH(ib)
 PAC_SET_HEADER_LIB_PATH(mx)
 PAC_SET_HEADER_LIB_PATH(elan)
 PAC_SET_HEADER_LIB_PATH(psm)
@@ -149,8 +148,6 @@ for net in $nemesis_networks ; do
 
     if test "${net}" = "gm" ; then
        PAC_CHECK_HEADER_LIB_FATAL(gm, gm.h, gm, gm_init)
-    elif test "${net}" = "ib" ; then 
-       PAC_CHECK_HEADER_LIB_FATAL(ib, verbs.h, ibverbs, ibv_open_device)
     elif test "${net}" = "elan" ; then 
        echo "=== You're about to use the experimental Nemesis/Elan network module." 
        echo "=== This module has not been thoroughly tested and some performance issues remain."
@@ -207,8 +204,6 @@ case "${nemesis_network}" in
           AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_NEWMAD, [Choose netmod]) ;;
      tcp )
           AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_TCP, [Choose netmod]) ;;
-     ib )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_IB, [Choose netmod]) ;;
      psm )
           AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_PSM, [Choose netmod]) ;;
      * )
@@ -503,4 +498,4 @@ AC_SUBST(MAKE_DEPEND_C)
 
 AC_SUBST(ETAGS)
 
-AC_OUTPUT(Makefile src/Makefile nemesis/Makefile nemesis/src/Makefile nemesis/utils/Makefile nemesis/utils/replacements/Makefile nemesis/utils/monitor/Makefile nemesis/netmod/Makefile nemesis/netmod/elan/Makefile  nemesis/netmod/gm/Makefile nemesis/netmod/mx/Makefile nemesis/netmod/tcp/Makefile nemesis/netmod/ib/Makefile nemesis/netmod/psm/Makefile nemesis/netmod/newmad/Makefile nemesis/netmod/none/Makefile localdefs nemesis/include/mpid_nem_net_module_defs.h nemesis/src/mpid_nem_net_array.c)
+AC_OUTPUT(Makefile src/Makefile nemesis/Makefile nemesis/src/Makefile nemesis/utils/Makefile nemesis/utils/replacements/Makefile nemesis/utils/monitor/Makefile nemesis/netmod/Makefile nemesis/netmod/elan/Makefile  nemesis/netmod/gm/Makefile nemesis/netmod/mx/Makefile nemesis/netmod/tcp/Makefile nemesis/netmod/psm/Makefile nemesis/netmod/newmad/Makefile nemesis/netmod/none/Makefile localdefs nemesis/include/mpid_nem_net_module_defs.h nemesis/src/mpid_nem_net_array.c)

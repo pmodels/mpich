@@ -168,7 +168,7 @@ chdir("${root}/${pack}-${version}");
 run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py");
 
 chdir("${root}/${pack}-${version}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
-my @nem_modules = qw(elan ib psm);
+my @nem_modules = qw(elan psm);
 run_cmd("rm -rf ".join(' ', map({$_ . "/*"} @nem_modules)));
 for my $module (@nem_modules) {
     # system to avoid problems with shell redirect in run_cmd
