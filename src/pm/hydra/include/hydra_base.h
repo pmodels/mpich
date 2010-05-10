@@ -10,6 +10,14 @@
 #include <stdio.h>
 #include "hydra_config.h"
 
+#if defined HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif /* HAVE_WINSOCK2_H */
+
+#if defined HAVE_WINDOWS_H
+#include <windows.h>
+#endif /* HAVE_WINDOWS_H */
+
 #if defined HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
