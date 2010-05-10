@@ -122,6 +122,7 @@ static void dbg_print_sc_tbl(FILE *stream, int print_free_entries)
 /* --END ERROR HANDLING-- */
 
 static int find_free_entry(int *index);
+static int cleanup_and_free_sc_plfd(sockconn_t *const sc);
 
 #undef FUNCNAME
 #define FUNCNAME alloc_sc_plfd_tbls
@@ -768,7 +769,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     struct pollfd *plfd = NULL;
     int index = -1;
     int mpi_errno = MPI_SUCCESS;
-    freenode_t *node;
+
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CONNECT);
 
@@ -901,37 +902,35 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     return mpi_errno;
  fn_fail:
     if (index != -1) {
-        if (sc->fd != CONN_INVALID_FD) {
-            MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "MPID_nem_tcp_connect(). closing fd = %d", sc->fd));
-            close(sc->fd);
-            sc->fd = CONN_INVALID_FD;
-            plfd->fd = CONN_INVALID_FD;
-        }
-        node = MPIU_Malloc(sizeof(freenode_t));      
-        MPIU_ERR_CHKANDSTMT(node == NULL, mpi_errno, MPI_ERR_OTHER, goto fn_exit, "**nomem");
-        node->index = index;
-/*         Note: MPIU_ERR_CHKANDJUMP should not be used here as it will be recursive  */
-/*         within fn_fail */ 
-        Q_ENQUEUE(&freeq, node);
+        int cleanup_error = MPI_SUCCESS;
+        cleanup_error = cleanup_and_free_sc_plfd(&g_sc_tbl[index]);
+        if (cleanup_error) MPIU_ERR_SET(cleanup_error, MPI_ERR_OTHER, "**fail");
     }
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
 
-/* Called to transition an sc to CLOSED.  This might be done as part of a ch3
-   close protocol or it might be done because the sc is in a quiescent state. */
-static int cleanup_sc(sockconn_t *const sc)
+/* Called to transition an sc to CLOSED, and free associated
+   resources.  This might be done as part of a ch3 close protocol,
+   because the sc is in a quiescent state, or becaues there was an
+   error associated with the connection. */
+#undef FUNCNAME
+#define FUNCNAME cleanup_and_free_sc_plfd
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int cleanup_and_free_sc_plfd(sockconn_t *const sc)
 {
-    MPIDI_VC_t *const sc_vc = sc->vc;
-    MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    struct pollfd *plfd = NULL;
+    MPIDI_VC_t *const sc_vc = sc->vc;
+    MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
+    const int index = sc->index;
+    struct pollfd *const plfd = &MPID_nem_tcp_plfd_tbl[sc->index];
     freenode_t *node;
     MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_CLEANUP_SC);
+    MPIDI_STATE_DECL(MPID_STATE_CLEANUP_AND_FREE_SC_PLFD);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_CLEANUP_SC);
+    MPIDI_FUNC_ENTER(MPID_STATE_CLEANUP_AND_FREE_SC_PLFD);
 
     if (sc == NULL)
         goto fn_exit;
@@ -942,7 +941,6 @@ static int cleanup_sc(sockconn_t *const sc)
         --sc_vc_tcp->sc_ref_count;
     }
     
-    plfd = &MPID_nem_tcp_plfd_tbl[sc->index]; 
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "vc=%p, sc=%p, closing fd=%d", sc_vc, sc, sc->fd));
 
     CHECK_EINTR(rc, close(sc->fd));
@@ -954,7 +952,6 @@ static int cleanup_sc(sockconn_t *const sc)
         MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**close", "**close %s", strerror(errno));
     }
     
-    sc->fd = plfd->fd = CONN_INVALID_FD;
     if (sc_vc && sc_vc_tcp->sc == sc) /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
     {
         ((MPIDI_CH3I_VC *)sc_vc->channel_private)->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
@@ -962,16 +959,17 @@ static int cleanup_sc(sockconn_t *const sc)
     }
 
     CHANGE_STATE(sc, CONN_STATE_TS_CLOSED);
-    sc->vc = NULL;
 
-    MPIU_CHKPMEM_MALLOC (node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node");
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    node->index = sc->index;
+    INIT_SC_ENTRY(sc, index);
+    INIT_POLLFD_ENTRY(plfd);
+
+    MPIU_CHKPMEM_MALLOC(node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node");
+    node->index = index;
     Q_ENQUEUE(&freeq, node);
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_CLEANUP_SC);
+    MPIDI_FUNC_EXIT(MPID_STATE_CLEANUP_AND_FREE_SC_PLFD);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -997,7 +995,7 @@ int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc)
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CLEANUP);
 
     if (vc_tcp->sc != NULL) {
-        mpi_errno = cleanup_sc(vc_tcp->sc);
+        mpi_errno = cleanup_and_free_sc_plfd(vc_tcp->sc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -1007,14 +1005,14 @@ int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc)
             /* We've found a proto-connection that doesn't yet have enough
                information to resolve the head-to-head situation.  If we don't
                clean him up he'll end up accessing the about-to-be-freed vc. */
-            mpi_errno = cleanup_sc(&g_sc_tbl[i]);
+            mpi_errno = cleanup_and_free_sc_plfd(&g_sc_tbl[i]);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIU_Assert(g_sc_tbl[i].vc == NULL);
         }
         ++i;
     }
 
-    /* cleanup_sc can technically cause a reconnect on a per-sc basis, but I
+    /* cleanup_and_free_sc_plfd can technically cause a reconnect on a per-sc basis, but I
        don't think that it can happen when cleanup is called.  Let's
        assert this for now and remove it if we prove that it can happen. */
     MPIU_Assert(vc_tcp->sc_ref_count == 0);
@@ -1580,7 +1578,7 @@ static int state_d_quiescent_handler(struct pollfd *const plfd, sockconn_t *cons
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_D_QUIESCENT_HANDLER);
 
-    mpi_errno = cleanup_sc(sc);
+    mpi_errno = cleanup_and_free_sc_plfd(sc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
