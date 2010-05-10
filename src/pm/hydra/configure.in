@@ -286,9 +286,9 @@ AM_CONDITIONAL([hydra_ui_mpich], [test $hydra_ui = "mpich"])
 #########################################################################
 # Process Binding
 #########################################################################
-AC_ARG_WITH(hydra-bindlib, [  --with-hydra-bindlib=name - Process Binding Library (plpa, hwloc)],
+AC_ARG_WITH(hydra-bindlib, [  --with-hydra-bindlib=name - Process Binding Library (hwloc, plpa)],
 			   [ hydra_bindlib=$withval ],
-			   [ hydra_bindlib=plpa ])
+			   [ hydra_bindlib=hwloc,plpa ])
 AC_MSG_CHECKING(process binding library)
 AC_MSG_RESULT($hydra_bindlib)
 
