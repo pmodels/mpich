@@ -54,7 +54,9 @@
 #include <arpa/inet.h>
 #endif /* HAVE_ARPA_INET_H */
 
+#if defined HAVE_ERRNO_H
 #include <errno.h>
+#endif /* HAVE_ERRNO_H */
 
 #if !defined HAVE_GETTIMEOFDAY
 #error "hydra requires gettimeofday support"
@@ -69,11 +71,21 @@
 #define HYDRA_MAX_PATH 4096
 
 /* sockets required headers */
+#ifdef HAVE_POLL_H
 #include <poll.h>
+#endif /* HAVE_POLL_H */
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif /* HAVE_FCNTL_H */
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif /* HAVE_NETDB_H */
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif /* HAVE_NETINET_IN_H */
+#ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif /* HAVE_NETINET_TCP_H */
 
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
