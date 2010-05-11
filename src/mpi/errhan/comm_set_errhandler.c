@@ -54,10 +54,12 @@ int MPI_Comm_set_errhandler(MPI_Comm comm, MPI_Errhandler errhandler)
     MPID_Comm *comm_ptr = NULL;
     int in_use;
     MPID_Errhandler *errhan_ptr = NULL;
+    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SET_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -117,6 +119,7 @@ int MPI_Comm_set_errhandler(MPI_Comm comm, MPI_Errhandler errhandler)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SET_ERRHANDLER);
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */
