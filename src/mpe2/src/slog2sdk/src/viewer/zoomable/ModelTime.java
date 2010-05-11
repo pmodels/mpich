@@ -399,6 +399,14 @@ public class ModelTime extends DefaultBoundedRangeModel
         }
     }
 
+    // tView_pos is  the time measured in second.
+    public void centerTimeViewPosition( double tView_pos )
+    {
+        this.setTimeViewPosition( tView_pos - (tView_extent/2.0) );
+        this.updatePixelCoords();
+        // this.setScrollBarIncrements();
+    }
+
     // tView_change is  the time measured in second.
     public void scroll( double tView_change )
     {

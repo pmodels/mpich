@@ -62,6 +62,7 @@ public class CanvasTimeline extends ScrollableObject
     private YaxisMaps          y_maps;
     private YaxisTree          tree_view;
     private BoundedRangeModel  y_model;
+    private ModelTime          t_model;
     private Method[]           methods;
     private String[]           y_colnames;
 
@@ -95,6 +96,7 @@ public class CanvasTimeline extends ScrollableObject
         TreeNode   treeroot;
         short      depth_max, depth_init;
 
+        t_model         = time_model;
         treetrunk       = treebody;
         y_maps          = yaxis_maps;
         tree_view       = y_maps.getTreeView();
@@ -435,6 +437,7 @@ public class CanvasTimeline extends ScrollableObject
                                                        clicked_time,
                                                        map_line2treeleaf,
                                                        y_colnames,
+                                                       t_model,
                                                        clicked_dobj );
                 }
             }
@@ -457,6 +460,7 @@ public class CanvasTimeline extends ScrollableObject
                                                        clicked_time,
                                                        map_line2treeleaf,
                                                        y_colnames,
+                                                       t_model,
                                                        clicked_dobj );
                 }
             }
@@ -479,6 +483,7 @@ public class CanvasTimeline extends ScrollableObject
                                                        clicked_time,
                                                        map_line2treeleaf,
                                                        y_colnames,
+                                                       t_model,
                                                        clicked_dobj );
                 }
             }
@@ -501,6 +506,7 @@ public class CanvasTimeline extends ScrollableObject
                                                        clicked_time,
                                                        map_line2treeleaf,
                                                        y_colnames,
+                                                       t_model,
                                                        clicked_dobj );
                 }
             }
