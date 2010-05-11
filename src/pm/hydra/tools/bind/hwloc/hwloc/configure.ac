@@ -143,8 +143,8 @@ CPPFLAGS="$HWLOC_EMBEDDED_CPPFLAGS $CPPFLAGS"
 
 # Setup libtool, but disable C++, F77, Java and Windows Resource
 # Compiler support -- we don't need that stuff.
-AM_ENABLE_SHARED
-AM_DISABLE_STATIC
+AM_DISABLE_SHARED
+AM_ENABLE_STATIC
 AM_PROG_LIBTOOL([win32-dll])
 LT_LANG([C])
 
