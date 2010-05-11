@@ -34,14 +34,14 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     topo_initialized = 1;
 
     /* Get the max number of processing elements */
-    HYDT_bind_info.total_proc_units = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PROC);
+    HYDT_bind_info.total_proc_units = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
 
     /* We have qualified for basic binding support level */
     *support_level = HYDT_BIND_BASIC;
 
     /* Setup the machine level */
     /* get the System object */
-    obj_sys = hwloc_get_system_obj(topology);
+    obj_sys = hwloc_get_root_obj(topology);
     /* init Hydra structure */
     HYDT_bind_info.machine.type = HYDT_TOPO_MACHINE;
     HYDT_bind_info.machine.os_index = -1;       /* This is a set, not a single unit */
@@ -117,7 +117,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                 core_ptr->os_index = obj_core->os_index;
                 core_ptr->num_children =
                     hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_core->cpuset,
-                                                           HWLOC_OBJ_PROC);
+                                                           HWLOC_OBJ_PU);
 
                 HYDU_MALLOC(core_ptr->children, struct HYDT_topo_obj *,
                             sizeof(struct HYDT_topo_obj) * core_ptr->num_children, status);
@@ -127,7 +127,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                 for (thread = 0; thread < core_ptr->num_children; thread++) {
                     obj_proc =
                         hwloc_get_obj_inside_cpuset_by_type(topology, obj_core->cpuset,
-                                                            HWLOC_OBJ_PROC, thread);
+                                                            HWLOC_OBJ_PU, thread);
                     thread_ptr = &core_ptr->children[thread];
                     thread_ptr->type = HYDT_TOPO_THREAD;
                     thread_ptr->os_index = obj_proc->os_index;
