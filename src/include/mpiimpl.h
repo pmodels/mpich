@@ -1794,9 +1794,17 @@ typedef struct MPICH_Nestinfo {
 #define MPICH_MAX_NESTINFO 16
 #endif /* MPICH_DEBUG_NESTING */
 
+/* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
+ * destruction time */
+#define MPIU_STRERROR_BUF_SIZE (1024)
+
 typedef struct MPICH_PerThread_t {
     int              nest_count;   /* For layered MPI implementation */
     int              op_errno;     /* For errors in predefined MPI_Ops */
+
+    /* error string storage for MPIU_Strerror */
+    char strerrbuf[MPIU_STRERROR_BUF_SIZE];
+
 #ifdef MPICH_DEBUG_NESTING
     MPICH_Nestinfo_t nestinfo[MPICH_MAX_NESTINFO];
 #endif

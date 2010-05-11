@@ -15,24 +15,8 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
 /*
  * MPIU_Sterror()
  *
- * Thread safe implementation of strerror().  The multi-threaded version 
- * will need to use thread specific storage for the string.
- * This prevents the need for allocation of heap memory each time the 
- * function is called.  Granted, stack memory could be used,
- * but allocation of large strings on the stack in a multi-threaded 
- * environment is not wise since thread stack can be relatively
- * small and a deep nesting of routines that each allocate a reasonably 
- * size error for a message can result in stack overrun.
- */
-#if defined(HAVE_STRERROR)
-#   if (MPICH_THREAD_LEVEL < MPI_THREAD_MULTIPLE || USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
-#       define MPIU_Strerror(errno_) strerror(errno_)
-#   else
-#       error need a thread safe implementation of MPIU_Strerror
-#   endif
-#else
-#   define MPIU_Strerror(errno_) "(strerror() not found)"
-#endif
+ * Thread safe implementation of strerror(), whenever possible. */
+const char *MPIU_Strerror(int errnum);
 
 /*
  * MPIU_Assert()

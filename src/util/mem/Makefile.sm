@@ -1,4 +1,4 @@
-lib${MPILIBNAME}_a_SOURCES = trmem.c handlemem.c safestr.c argstr.c
+lib${MPILIBNAME}_a_SOURCES = trmem.c handlemem.c safestr.c argstr.c strerror.c
 HEADERS = 
 INCLUDES = -I../../include -I${top_srcdir}/src/include
 
