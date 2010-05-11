@@ -101,7 +101,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	       esac
 	   done
 
-	   echo "executing: $pac_subconfigure_file $pac_subconfig_args"
+	   AC_MSG_NOTICE([executing: $pac_subconfigure_file $pac_subconfig_args])
 	   if (cd $1 && eval $pac_subconfigure_file $pac_subconfig_args) ; then
 	      $2
 	      :
