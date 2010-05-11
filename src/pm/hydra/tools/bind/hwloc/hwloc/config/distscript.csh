@@ -128,12 +128,6 @@ if ($vpath == 0) then
         exit 1
     endif
 
-    # Remove generate latex kruft; no need to ship that.  
-    echo "*** Remove generated latex kruft: `pwd`"
-    cd doxygen-doc/latex
-    rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out
-    cd ../..
-
     # Make new README file
     echo "*** Making new README"
     make readme
@@ -164,6 +158,15 @@ cp -pf $srcdir/README $distdir
 #########################################################
 cd "$distdir"
 echo "*** Now in distdir: $distdir"
+
+#
+# Remove all the latex source files from the distribution tree (the
+# PDFs are still there; we're just removing the latex source because
+# some of the filenames get really, really long...).
+#
+
+echo "*** Removing latex source from dist tree"
+rm -rf doc/doxygen-doc/latex
 
 #
 # Get the latest config.guess and config.sub from ftp.gnu.org

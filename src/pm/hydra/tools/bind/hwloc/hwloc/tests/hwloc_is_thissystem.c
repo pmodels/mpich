@@ -3,6 +3,7 @@
  * See COPYING in top-level directory.
  */
 
+#include <private/config.h>
 #include <hwloc.h>
 
 #include <stdlib.h>
@@ -15,8 +16,9 @@
 
 static void result(const char *msg, int err)
 {
+  const char *errmsg = strerror(errno);
   if (err)
-    printf("%-30s: FAILED (%d, %s)\n", msg, errno, strerror(errno));
+    printf("%-30s: FAILED (%d, %s)\n", msg, errno, errmsg);
   else
     printf("%-30s: OK\n", msg);
 }
@@ -32,7 +34,7 @@ int main(void)
   hwloc_topology_load(topology);
   assert(hwloc_topology_is_thissystem(topology));
 
-  cpuset = hwloc_cpuset_dup(hwloc_get_system_obj(topology)->cpuset);
+  cpuset = hwloc_cpuset_dup(hwloc_topology_get_complete_cpuset(topology));
   result("Binding with OS backend", hwloc_set_cpubind(topology, cpuset, 0));
 
   hwloc_topology_destroy(topology);
@@ -64,7 +66,7 @@ int main(void)
 
   hwloc_topology_destroy(topology);
 
-  free(cpuset);
+  hwloc_cpuset_free(cpuset);
 
   return 0;
 }

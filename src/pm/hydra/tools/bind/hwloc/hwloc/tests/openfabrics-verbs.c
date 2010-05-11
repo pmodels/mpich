@@ -7,13 +7,15 @@
 #include <stdio.h>
 #include <assert.h>
 #include <infiniband/verbs.h>
+#include <private/config.h>
 #include <hwloc.h>
 #include <hwloc/openfabrics-verbs.h>
 
 /* check the ibverbs helpers */
 
-int main(int argc, char **argv)
+int main(void)
 {
+  hwloc_topology_t topology;
   struct ibv_device **dev_list, *dev;
   int count, i;
 
@@ -24,11 +26,15 @@ int main(int argc, char **argv)
   }
   printf("ibv_get_device_list found %d devices\n", count);
 
+  hwloc_topology_init(&topology);
+  hwloc_topology_load(topology);
+
   for(i=0; i<count; i++) {
     hwloc_cpuset_t set;
     dev = dev_list[i];
 
-    set = hwloc_ibv_get_device_cpuset(dev);
+    set = hwloc_cpuset_alloc();
+    hwloc_ibv_get_device_cpuset(topology, dev, set);
     if (!set) {
       printf("failed to get cpuset for device %d (%s)\n",
 	     i, ibv_get_device_name(dev));
@@ -41,6 +47,8 @@ int main(int argc, char **argv)
       hwloc_cpuset_free(set);
     }
   }
+
+  hwloc_topology_destroy(topology);
 
   ibv_free_device_list(dev_list);
 

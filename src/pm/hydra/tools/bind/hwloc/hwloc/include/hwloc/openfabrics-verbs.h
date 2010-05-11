@@ -35,31 +35,31 @@
  * This function is currently only implemented in a meaningful way for
  * Linux; other systems will simply get a full cpuset.
  */
-static __inline hwloc_cpuset_t
-hwloc_ibv_get_device_cpuset(struct ibv_device *ibdev)
+static __hwloc_inline int
+hwloc_ibv_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
+			    struct ibv_device *ibdev, hwloc_cpuset_t set)
 {
-#if defined(HWLOC_LINUX_SYS)
+#ifdef HWLOC_LINUX_SYS
   /* If we're on Linux, use the verbs-provided sysfs mechanism to
      get the local cpus */
 #define HWLOC_OPENFABRICS_VERBS_SYSFS_PATH_MAX 128
   char path[HWLOC_OPENFABRICS_VERBS_SYSFS_PATH_MAX];
   FILE *sysfile = NULL;
-  hwloc_cpuset_t set;
 
   sprintf(path, "/sys/class/infiniband/%s/device/local_cpus",
 	  ibv_get_device_name(ibdev));
   sysfile = fopen(path, "r");
   if (!sysfile)
-    return NULL;
+    return -1;
 
-  set = hwloc_linux_parse_cpumap_file(sysfile);
+  hwloc_linux_parse_cpumap_file(sysfile, set);
 
   fclose(sysfile);
-  return set;
 #else
   /* Non-Linux systems simply get a full cpuset */
-  return hwloc_cpuset_dup(hwloc_get_system_obj(topology)->cpuset);
+  hwloc_cpuset_copy(set, hwloc_topology_get_complete_cpuset(topology));
 #endif
+  return 0;
 }
 
 /** @} */

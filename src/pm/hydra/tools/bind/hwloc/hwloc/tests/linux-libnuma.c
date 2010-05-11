@@ -3,7 +3,9 @@
  * See COPYING in top-level directory.
  */
 
+#include <private/config.h>
 #include <hwloc.h>
+#include <assert.h>
 #define NUMA_VERSION1_COMPATIBILITY
 #include <hwloc/linux-libnuma.h>
 
@@ -28,16 +30,18 @@ int main(void)
   if (hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE)) {
     node = NULL;
     while ((node = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_NODE, node)) != NULL)
-      hwloc_cpuset_orset(set, node->cpuset);
+      hwloc_cpuset_or(set, set, node->cpuset);
   } else {
-    hwloc_cpuset_orset(set, hwloc_get_system_obj(topology)->cpuset);
+    hwloc_cpuset_or(set, set, hwloc_topology_get_complete_cpuset(topology));
   }
 
-  set2 = hwloc_cpuset_from_linux_libnuma_bitmask(topology, numa_all_nodes_ptr);
+  set2 = hwloc_cpuset_alloc();
+  hwloc_cpuset_from_linux_libnuma_bitmask(topology, set2, numa_all_nodes_ptr);
   assert(hwloc_cpuset_isequal(set, set2));
   hwloc_cpuset_free(set2);
 
-  set2 = hwloc_cpuset_from_linux_libnuma_nodemask(topology, &numa_all_nodes);
+  set2 = hwloc_cpuset_alloc();
+  hwloc_cpuset_from_linux_libnuma_nodemask(topology, set2, &numa_all_nodes);
   assert(hwloc_cpuset_isequal(set, set2));
   hwloc_cpuset_free(set2);
 
@@ -53,18 +57,21 @@ int main(void)
 
   /* convert empty nodemask/bitmask to cpuset */
   nodemask_zero(&nodemask);
-  set = hwloc_cpuset_from_linux_libnuma_nodemask(topology, &nodemask);
+  set = hwloc_cpuset_alloc();
+  hwloc_cpuset_from_linux_libnuma_nodemask(topology, set, &nodemask);
   assert(hwloc_cpuset_iszero(set));
   hwloc_cpuset_free(set);
 
   bitmask = numa_bitmask_alloc(1);
-  set = hwloc_cpuset_from_linux_libnuma_bitmask(topology, bitmask);
+  set = hwloc_cpuset_alloc();
+  hwloc_cpuset_from_linux_libnuma_bitmask(topology, set, bitmask);
   numa_bitmask_free(bitmask);
   assert(hwloc_cpuset_iszero(set));
   hwloc_cpuset_free(set);
 
   mask=0;
-  set = hwloc_cpuset_from_linux_libnuma_ulongs(topology, &mask, HWLOC_BITS_PER_LONG);
+  set = hwloc_cpuset_alloc();
+  hwloc_cpuset_from_linux_libnuma_ulongs(topology, set, &mask, HWLOC_BITS_PER_LONG);
   assert(hwloc_cpuset_iszero(set));
   hwloc_cpuset_free(set);
 
@@ -116,7 +123,7 @@ int main(void)
       assert(!mask);
     } else {
       assert(maxnode = node->os_index + 1);
-      assert(mask == (1<<node->os_index));
+      assert(mask == (1U<<node->os_index));
     }
   }
 

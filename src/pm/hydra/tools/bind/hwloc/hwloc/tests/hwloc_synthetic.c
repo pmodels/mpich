@@ -3,6 +3,7 @@
  * See COPYING in top-level directory.
  */
 
+#include <private/config.h>
 #include <hwloc.h>
 
 #include <stdlib.h>
@@ -16,7 +17,7 @@ int main(void)
 {
   hwloc_topology_t topology;
   unsigned depth;
-  int i,j, width;
+  unsigned i,j, width;
 
   /* check a synthetic topology */
   hwloc_topology_init(&topology);

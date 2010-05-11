@@ -24,6 +24,8 @@ typedef int rsinfo_t;
 #define R_SMPSDL 4
 #define R_MCMSDL 5
 #define R_MAXPROCS 6
+#define R_L2CSDL 11
+#define R_CORESDL 12
 
 #define R_PROCS 6
 
@@ -66,5 +68,6 @@ struct subrange {
 
 int ra_attachrset (rstype_t rstype, rsid_t rsid, rsethandle_t rset, unsigned int flags);
 int ra_detachrset (rstype_t rstype, rsid_t rsid, unsigned int flags);
+int ra_getrset (rstype_t rstype, rsid_t rsid, unsigned int flags, rsethandle_t rset);
 
 #endif /* HWLOC_PORT_SYS_RSET_H */
