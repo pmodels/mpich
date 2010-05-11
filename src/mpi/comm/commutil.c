@@ -592,8 +592,9 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 
     /* We lock only around access to the mask.  If another thread is
        using the mask, we take a mask of zero */
-    MPIU_DBG_MSG_FMT( COMM, VERBOSE, (MPIU_DBG_FDEST,
-         "Entering; shared state is %d:%d", mask_in_use, lowestContextId ) );
+    MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST,
+         "Entering; shared state is %d:%d, my ctx id is %d",
+         mask_in_use, lowestContextId, comm_ptr->context_id));
     /* We need a special test in this loop for the case where some process
      has exhausted its supply of context ids.  In the single threaded case, 
      this is simple, because the algorithm is deterministic (see above).  In 
@@ -695,6 +696,13 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	    int hasNoId, totalHasNoId;
 	    /* We don't need to lock on this because we're just looking for
 	       zero or nonzero */
+            /* FIXME [goodell@] I don't agree with the above comment, pthreads
+             * doesn't really give us any guarantees when outside of a locked region and
+             * there isn't much of a penalty for acquiring the CS in this case.
+             * It gets even cheaper if we "rotate" this check half way around to
+             * the top of this loop where we already acquire the CS anyway.
+             * In the GLOBAL case, we actually are holding a lock here, so it
+             * doesn't trigger helgrind/DRD warnings. */
 	    hasNoId = MPIR_Locate_context_bit(context_mask) == 0;
 	    mpi_errno = NMPI_Allreduce( &hasNoId, &totalHasNoId, 1, MPI_INT, 
 			    MPI_MAX, comm_ptr->handle );
