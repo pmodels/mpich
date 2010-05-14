@@ -128,8 +128,7 @@ HWLOC_SETUP_CORE([], [], [AC_MSG_ERROR([Cannot continue])], [1])
 
 # Setup hwloc's docs, utils, and tests
 AS_IF([test "$hwloc_mode" = "standalone"],
-      [HWLOC_SETUP_DOCS
-       HWLOC_SETUP_UTILS
+       [HWLOC_SETUP_UTILS
        HWLOC_SETUP_TESTS])
 
 # Run the AM_CONDITIONALs
