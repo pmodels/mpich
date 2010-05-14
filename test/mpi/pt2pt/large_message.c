@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
-/* tests send/recv of a message > 2GB. count=270M, type=long long */
+/* tests send/recv of a message > 2GB. count=270M, type=long long 
+   run with 3 processes to exercise both shared memory and TCP in Nemesis tests*/
 
 int main(int argc, char *argv[]) 
 {
@@ -22,8 +23,8 @@ int main(int argc, char *argv[])
   MTest_Init(&argc,&argv); 
   ierr = MPI_Comm_size(MPI_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-  if (size != 2) {
-    fprintf(stderr,"[%d] usage: mpiexec -n 2 %s\n",rank,argv[0]);
+  if (size != 3) {
+    fprintf(stderr,"[%d] usage: mpiexec -n 3 %s\n",rank,argv[0]);
     MPI_Abort(MPI_COMM_WORLD,1);
   }
 
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
     for (i=0; i<cnt; i++) cols[i] = i;
     /* printf("[%d] sending...\n",rank);*/
     ierr = MPI_Send(cols,cnt,MPI_LONG_LONG_INT,1,0,MPI_COMM_WORLD);
+    ierr = MPI_Send(cols,cnt,MPI_LONG_LONG_INT,2,0,MPI_COMM_WORLD);
   } else {
       /* printf("[%d] receiving...\n",rank); */
     for (i=0; i<cnt; i++) cols[i] = -1;
@@ -40,7 +42,7 @@ int main(int argc, char *argv[])
        Get_count still fails because status.count is not 64 bit */
     for (i=0; i<cnt; i++) {
         if (cols[i] != i) {
-            printf("cols[i]=%lld, should be %d\n", cols[i], i);
+            printf("Rank %d, cols[i]=%lld, should be %d\n", rank, cols[i], i);
             errs++;
         }
     }
