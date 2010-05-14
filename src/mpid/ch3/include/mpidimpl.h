@@ -155,7 +155,7 @@ extern MPIDI_Process_t MPIDI_Process;
 	(dt_ptr_) = NULL;						\
 	(dt_contig_out_) = TRUE;					\
         (dt_true_lb_)    = 0;                                           \
-	(data_sz_out_) = (count_) * MPID_Datatype_get_basic_size(datatype_);\
+	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * MPID_Datatype_get_basic_size(datatype_); \
 	MPIDI_DBG_PRINTF((15, FCNAME, "basic datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT,\
 			  (dt_contig_out_), MPID_Datatype_get_basic_size(datatype_), (data_sz_out_)));\
     }									\
@@ -163,7 +163,7 @@ extern MPIDI_Process_t MPIDI_Process;
     {									\
 	MPID_Datatype_get_ptr((datatype_), (dt_ptr_));			\
 	(dt_contig_out_) = (dt_ptr_)->is_contig;			\
-	(data_sz_out_) = (count_) * (dt_ptr_)->size;			\
+	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * (dt_ptr_)->size;	\
         (dt_true_lb_)    = (dt_ptr_)->true_lb;                          \
 	MPIDI_DBG_PRINTF((15, FCNAME, "user defined datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT,\
 			  (dt_contig_out_), (dt_ptr_)->size, (data_sz_out_)));\
