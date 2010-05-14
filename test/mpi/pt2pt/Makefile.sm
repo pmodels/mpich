@@ -40,6 +40,7 @@ probenull_SOURCES    = probenull.c
 inactivereq_SOURCES  = inactivereq.c
 waittestnull_SOURCES = waittestnull.c
 sendall_SOURCES      = sendall.c
+large_message_SOURCES = large_message.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
