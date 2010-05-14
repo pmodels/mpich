@@ -209,10 +209,9 @@ void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
     int i;
     MPID_Request *sreq;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
-    fprintf(stream, "..   sc=%p fd=%d vc_ch->state=%d\n", vc_tcp->sc, (vc_tcp->sc ? vc_tcp->sc->fd : -1), vc_ch->state);
+    fprintf(stream, "..   sc=%p fd=%d vc_tcp->state=%d\n", vc_tcp->sc, (vc_tcp->sc ? vc_tcp->sc->fd : -1), vc_tcp->state);
 
     /* This function violates any abstraction in the queues, since there's no
        good way to print them without inspecting the internals. */

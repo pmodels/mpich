@@ -114,7 +114,6 @@ union MPIDI_CH3_Pkt;
 struct MPID_nem_lmt_shm_wait_element;
 struct MPIDI_CH3_PktGeneric;
 
-typedef enum{MPID_NEM_VC_STATE_CONNECTED, MPID_NEM_VC_STATE_DISCONNECTED} MPIDI_Nem_vc_state_t;
 typedef struct MPIDI_CH3I_VC
 {
     int pg_rank;
@@ -139,8 +138,6 @@ typedef struct MPIDI_CH3I_VC
     /* can be used by netmods to put this vc on a send queue or list */
     struct MPIDI_VC *next;
     struct MPIDI_VC *prev;
-
-    MPIDI_Nem_vc_state_t state;
 
     /* contig function pointers.  Netmods should set these. */
     /* iStartContigMsg -- sends a message consisting of a header (hdr) and contiguous data (data), possibly of 0 size.  If the

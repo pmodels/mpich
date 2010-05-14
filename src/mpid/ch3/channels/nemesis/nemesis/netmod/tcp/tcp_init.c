@@ -412,7 +412,7 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_VC_INIT);
 
-    vc_ch->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
+    vc_tcp->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
     
     vc->sendNoncontig_fn   = MPID_nem_tcp_SendNoncontig;
     vc_ch->iStartContigMsg = MPID_nem_tcp_iStartContigMsg;
@@ -441,6 +441,8 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
     vc_tcp->paused_send_queue.head = vc_tcp->paused_send_queue.tail = NULL;
 
     vc_tcp->sc_ref_count = 0;
+    
+    vc_tcp->connect_retry_count = 0;
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_VC_INIT);
     return mpi_errno;

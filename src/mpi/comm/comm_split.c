@@ -172,8 +172,9 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
     }
     /* Gather information on the local group of processes */
     MPIR_Nest_incr();
-    NMPI_Allgather( MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm );
+    mpi_errno = NMPI_Allgather( MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm );
     MPIR_Nest_decr();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Step 2: How many processes have our same color? */
     new_size = 0;
@@ -219,10 +220,11 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	   same color */
 	mypair.color = color;
 	mypair.key   = key;
-	NMPI_Allgather( &mypair, 2, MPI_INT, remotetable, 2, MPI_INT,
-			comm );
+	mpi_errno = NMPI_Allgather( &mypair, 2, MPI_INT, remotetable, 2, MPI_INT,
+                                    comm );
 	MPIR_Nest_decr();
-
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
 	/* Each process can now match its color with the entries in the table */
 	new_remote_size = 0;
 	last_ptr = &first_remote_entry;
@@ -266,14 +268,16 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 				       0, 0, comm, MPI_STATUS_IGNORE );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
             MPIR_Nest_incr();
-	    NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
+	    mpi_errno = NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
             MPIR_Nest_decr();
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
 	else {
 	    /* Broadcast to the other members of the local group */
             MPIR_Nest_incr();
-	    NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
+	    mpi_errno = NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
             MPIR_Nest_decr();
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
     }
 

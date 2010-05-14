@@ -21,8 +21,12 @@ extern struct pollfd *MPID_nem_tcp_plfd_tbl;
 extern sockconn_t MPID_nem_tcp_g_lstn_sc;
 extern struct pollfd MPID_nem_tcp_g_lstn_plfd;
 
-#define MPID_NEM_TCP_VC_STATE_DISCONNECTED 0
-#define MPID_NEM_TCP_VC_STATE_CONNECTED 1
+typedef enum{MPID_NEM_TCP_VC_STATE_DISCONNECTED,
+             MPID_NEM_TCP_VC_STATE_CONNECTED,
+             MPID_NEM_TCP_VC_STATE_ERROR
+} MPID_nem_tcp_vc_state_t;
+
+#define MPIDI_NEM_TCP_MAX_CONNECT_RETRIES 100
 
 typedef struct MPIDI_nem_tcp_request_queue
 {
@@ -33,15 +37,17 @@ typedef struct MPIDI_nem_tcp_request_queue
 /* The vc provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the VC struction
    on the network module, facilitating dynamic module loading. */
-typedef struct 
+typedef struct
 {
     struct sockaddr_in sock_id;
+    MPID_nem_tcp_vc_state_t state;
     struct MPID_nem_new_tcp_sockconn *sc;
     int send_paused;
     MPIDI_nem_tcp_request_queue_t send_queue;
     MPIDI_nem_tcp_request_queue_t paused_send_queue;
     /* this is a count of how many sc objects refer to this vc */
     int sc_ref_count;
+    int connect_retry_count; /* number of times we've tried to connect */
 } MPID_nem_tcp_vc_area;
 
 /* macro for tcp private in VC */
@@ -87,6 +93,7 @@ int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC 
 int MPID_nem_tcp_is_sock_connected(int fd);
 int MPID_nem_tcp_disconnect(struct MPIDI_VC *const vc);
 int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc);
+int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t *const vc);
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const l_plfd, sockconn_t *const l_sc);
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue);
 

@@ -857,6 +857,12 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **sem_destroy %s:sem_destroy() failed %s
 
 **comm_fail:Communication error
+**comm_fail %d:Communication error with rank %d
+**exceeded_connect_tries:Unable to establish connection to process
+**exceeded_connect_tries %d:Unable to establish connection to rank %d
+**vc_in_error_state:Connection is in error state
+**tcp_cleanup_fail:Error while cleaning up failed connection
+**tmpvc_connect_fail:Failure during connection protocol
 
 **blcr_mod:BLCR kernel module not present
 

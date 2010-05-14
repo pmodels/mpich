@@ -64,8 +64,7 @@ typedef enum {
     M_(CONN_STATE_TA_C_CNTD),                   \
     M_(CONN_STATE_TA_C_RANKRCVD),               \
     M_(CONN_STATE_TA_C_TMPVCRCVD),              \
-    M_(CONN_STATE_TS_COMMRDY),                  \
-    M_(CONN_STATE_TS_D_QUIESCENT)
+    M_(CONN_STATE_TS_COMMRDY)
 
 /* REQ - Request, RSP - Response */
 

@@ -213,27 +213,8 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 #ifdef USE_DBG_LOGGING
 const char * MPIDI_CH3_VC_GetStateString( struct MPIDI_VC *vc )
 {
-    const char *name = "unknown";
-    static char asdigits[20];
-    MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)vc->channel_private;
-    int    state = vcch->state;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_VC_GETSTATESTRING);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_VC_GETSTATESTRING);
-
-    switch (state) {
-    case MPIDI_CH3I_VC_STATE_UNCONNECTED: name = "CH3I_VC_STATE_UNCONNECTED"; break;
-    case MPIDI_CH3I_VC_STATE_CONNECTING:  name = "CH3I_VC_STATE_CONNECTING"; break;
-    case MPIDI_CH3I_VC_STATE_CONNECTED:   name = "CH3I_VC_STATE_CONNECTED"; break;
-    case MPIDI_CH3I_VC_STATE_FAILED:      name = "CH3I_VC_STATE_FAILED"; break;
-    default:
-	MPIU_Snprintf( asdigits, sizeof(asdigits), "%d", state );
-	asdigits[20-1] = 0;
-	name = (const char *)asdigits;
-    }
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_VC_GETSTATESTRING);
-    return name;
+    /* Nemesis doesn't have connection state associated with the VC */
+    return "N/A";
 }
 #endif
 #endif
