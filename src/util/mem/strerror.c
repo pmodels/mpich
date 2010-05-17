@@ -9,7 +9,7 @@
  * different software packages, perhaps someday by moving it to MPL. */
 #include "mpiimpl.h"
 
-#if defined(HAVE_STRERROR_R) && !defined(HAVE_STRERROR_R_DECL)
+#if defined(HAVE_STRERROR_R) && defined(NEEDS_STRERROR_R_DECL)
 int strerror_r(int errnum, char *strerrbuf, size_t buflen);
 #endif
 
