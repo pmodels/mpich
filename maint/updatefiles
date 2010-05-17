@@ -254,7 +254,11 @@ if [ -n "$autotoolsdir" ] ; then
         automake=$autotoolsdir/automake
         autom4te=$autotoolsdir/autom4te
         aclocal=$autotoolsdir/aclocal
-        libtoolize=$autotoolsdir/libtoolize
+        if [ -x "$autotoolsdir/glibtoolize" ] ; then
+            libtoolize=$autotoolsdir/glibtoolize
+        else
+            libtoolize=$autotoolsdir/libtoolize
+        fi
 
 	# Simplemake looks in environment variables for the autoconf
 	# and autoheader to use
