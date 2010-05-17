@@ -1308,14 +1308,18 @@ static MPID_Thread_mutex_t error_ring_mutex;
 static MPID_Thread_mutex_t error_ring_mutex;
 #define error_ring_mutex_create(_mpi_errno_p) MPID_Thread_mutex_create(&error_ring_mutex,_mpi_errno_p)
 #define error_ring_mutex_destroy(_mpi_errno_p) MPID_Thread_mutex_destroy(&error_ring_mutex,_mpi_errno_p)
-#define error_ring_mutex_lock() \
-    MPIU_THREAD_CHECK_BEGIN \
-     MPID_Thread_mutex_lock(&error_ring_mutex) \
-    MPIU_THREAD_CHECK_END
-#define error_ring_mutex_unlock() \
-    MPIU_THREAD_CHECK_BEGIN \
-     MPID_Thread_mutex_unlock(&error_ring_mutex) \
-    MPIU_THREAD_CHECK_END
+#define error_ring_mutex_lock()                    \
+    do {                                           \
+        MPIU_THREAD_CHECK_BEGIN                    \
+        MPID_Thread_mutex_lock(&error_ring_mutex); \
+        MPIU_THREAD_CHECK_END                      \
+    } while (0)
+#define error_ring_mutex_unlock()                    \
+    do {                                             \
+        MPIU_THREAD_CHECK_BEGIN                      \
+        MPID_Thread_mutex_unlock(&error_ring_mutex); \
+        MPIU_THREAD_CHECK_END                        \
+    } while (0)
 #else
 #define error_ring_mutex_create(_a)
 #define error_ring_mutex_destroy(_a)

@@ -473,14 +473,12 @@ AC_ARG_ENABLE(threads,
     single          - No threads (MPI_THREAD_SINGLE)
     funneled        - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
     serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
-    multiple(:impl) - Fully multi-threaded (MPI_THREAD_MULTIPLE). DO NOT
+    multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE). DO NOT
                       select this option. The default option is more
                       efficient and also supports thread_multiple.
 
-      The following implementations are supported.
-          global_mutex - a single global lock guards access to all 
-	                 MPI functions.
-      The default implementation is global_mutex.
+    See also the --enable-thread-cs option for controlling the granularity of
+    the concurrency inside of the library.
 
     For the ch3:sock and ch3:nemesis channels, a separate build is no
     longer needed for thread-multiple.  It is compiled by default and
@@ -1041,45 +1039,26 @@ fi
 if test "$enable_threads" = "runtime" ; then
     AC_DEFINE(HAVE_RUNTIME_THREADCHECK,1,[Define if MPI supports MPI_THREAD_MULTIPLE with a runtime check for thread level])
     enable_threads=multiple
-    # FIXME: This doesn't support runtime:thread-impl (as in multiple:thread-impl)
 fi
 
 MPICH_THREAD_LEVEL=MPI_THREAD_FUNNELED
 case "$enable_threads" in 
     single)
     thread_pkg_required=no
-    thread_impl=none
     MPICH_THREAD_LEVEL=MPI_THREAD_SINGLE
     ;;
     funneled)
     thread_pkg_required=no
-    thread_impl=none
     MPICH_THREAD_LEVEL=MPI_THREAD_FUNNELED
     ;;
     serialized)
     # FIXME: Why does serialized require a thread package?
     thread_pkg_required=yes
-    thread_impl=none
     MPICH_THREAD_LEVEL=MPI_THREAD_SERIALIZED
     ;;
     multiple)
     thread_pkg_required=yes
-    thread_impl=global_mutex
     MPICH_THREAD_LEVEL=MPI_THREAD_MULTIPLE
-    ;;
-    multiple:*)
-    thread_pkg_required=yes
-    thread_impl="`echo $enable_threads | sed -e 's/.*://'`"
-    MPICH_THREAD_LEVEL=MPI_THREAD_MULTIPLE
-    case "$thread_impl" in 
-	global_mutex)
-	;;
-	# global_monitor)
-	# ;;
-	*)
-	AC_MSG_ERROR(["$thread_impl" is not a valid multi-thread implementation for MPICH2])     
-	;;
-    esac
     ;;
     *)
     AC_MSG_ERROR(["$enable_threads" is not a valid value for --enable-threads])     
@@ -1121,10 +1100,6 @@ fi
 
 export MPICH_THREAD_LEVEL
 AC_DEFINE_UNQUOTED(MPICH_THREAD_LEVEL,$MPICH_THREAD_LEVEL,[Level of thread support selected at compile time])
-
-MPICH_THREAD_IMPL="MPICH_THREAD_IMPL_`echo $thread_impl | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`"
-export MPICH_THREAD_IMPL
-AC_DEFINE_UNQUOTED(USE_THREAD_IMPL,$MPICH_THREAD_IMPL,[Multi-threaded implementation selected at compile time])
 
 if test "$thread_pkg_required" = "no" ; then
     MPIU_THREAD_DEFAULT=${MPIU_THREAD_DEFAULT:-none}
@@ -5880,6 +5855,9 @@ esac
 # such as MPE, will know what's used in MPICH2
 export MPICH2_THREAD_PACKAGE
 AC_DEFINE_UNQUOTED([MPIU_THREAD_PACKAGE_NAME],[$MPIU_THREAD_PACKAGE_NAME],[set to the name of the thread package])
+
+# check for compiler-support for thread-local storage (MPIU_TLS_SPECIFIER)
+AX_TLS
 
 AC_CHECK_HEADERS(sched.h)
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select getpid)

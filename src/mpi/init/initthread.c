@@ -108,13 +108,15 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #if !defined(MPICH_IS_THREADED)
 /* If single threaded, we preallocate this.  Otherwise, we create it */
 MPICH_PerThread_t  MPIR_Thread = { 0 };
+#elif defined(MPIU_TLS_SPECIFIER)
+MPIU_TLS_SPECIFIER MPICH_PerThread_t MPIR_Thread = { 0 };
 #elif defined(HAVE_RUNTIME_THREADCHECK)
 /* If we may be single threaded, we need a preallocated version to use
    if we are single threaded case */
 MPICH_PerThread_t  MPIR_ThreadSingle = { 0 };
 #endif
 
-#if defined(MPICH_IS_THREADED) && !defined(MPID_DEFINES_MPID_CS)
+#if defined(MPICH_IS_THREADED)
 /* This routine is called when a thread exits; it is passed the value 
    associated with the key.  In our case, this is simply storage allocated
    with MPIU_Calloc */
@@ -126,13 +128,20 @@ void MPIR_CleanupThreadStorage( void *a )
 }
 
 /* These routine handle any thread initialization that my be required */
-int MPIR_Thread_CS_Init( void )
+#undef FUNCNAME
+#define FUNCNAME MPIR_Thread_CS_Init
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int MPIR_Thread_CS_Init( void )
 {
-    MPID_Thread_tls_create(MPIR_CleanupThreadStorage, 
-			   &MPIR_ThreadInfo.thread_storage, NULL);  
+    MPIU_THREADPRIV_DECL;
 
     /* we create this at all granularities right now */
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.memalloc_mutex, NULL);
+
+    /* must come after memalloc_mutex creation */
+    MPIU_THREADPRIV_INITKEY;
+    MPIU_THREADPRIV_INIT;
 
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
@@ -172,6 +181,10 @@ int MPIR_Thread_CS_Init( void )
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Thread_CS_Finalize
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Thread_CS_Finalize( void )
 {
     MPIU_DBG_MSG(THREAD,TYPICAL,"Freeing global mutex and private storage");
@@ -208,22 +221,34 @@ int MPIR_Thread_CS_Finalize( void )
 #else
 #error Unrecognized thread granularity
 #endif
-    MPIR_ReleasePerThread;						\
-    MPID_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage, NULL);	\
+
+    MPIU_THREADPRIV_FINALIZE;
 
     return MPI_SUCCESS;
 }
 #endif /* MPICH_IS_THREADED */
 
 
-int MPIR_Init_thread(int * argc, char ***argv, int required,
-		     int * provided)
+#undef FUNCNAME
+#define FUNCNAME MPIR_Init_thread
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int has_args;
     int has_env;
     int thread_provided;
     MPIU_THREADPRIV_DECL;
+
+    /* For any code in the device that wants to check for runtime 
+       decisions on the value of isThreaded, set a provisional
+       value here. We could let the MPID_Init routine override this */
+#ifdef HAVE_RUNTIME_THREADCHECK
+    MPIR_ThreadInfo.isThreaded = required == MPI_THREAD_MULTIPLE;
+#endif
+
+    MPIU_THREAD_CS_INIT;
 
     /* FIXME: Move to os-dependent interface? */
 #ifdef HAVE_WINDOWS_H
@@ -370,8 +395,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
     MPIR_Err_init();
     MPIR_Datatype_init();
 
-    MPIU_THREADPRIV_GET;
-
     MPIR_Nest_init();
     /* MPIU_Timer_pre_init(); */
 
@@ -379,28 +402,13 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
        MPID_Init if necessary */
     MPIR_Process.initialized = MPICH_WITHIN_MPI;
 
-    /* For any code in the device that wants to check for runtime 
-       decisions on the value of isThreaded, set a provisional
-       value here. We could let the MPID_Init routine override this */
-#ifdef HAVE_RUNTIME_THREADCHECK
-    MPIR_ThreadInfo.isThreaded = required == MPI_THREAD_MULTIPLE;
-#endif
+    /* We can't acquire any critical sections until this point.  Any
+     * earlier the basic data structures haven't been initialized */
+    MPIU_THREAD_CS_ENTER(INIT,required);
+
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, 
 			  &has_args, &has_env);
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS)
-    {
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, 
-			   "MPIR_Init_thread", __LINE__, MPI_ERR_OTHER, 
-			   "**init", 0);
-	/* FIXME: the default behavior for all MPI routines is to abort.  
-	   This isn't always convenient, because there's no other way to 
-	   get this routine to simply return.  But we should provide some
-	   sort of control for that and follow the default defined 
-	   by the standard */
-	return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Capture the level of thread support provided */
     MPIR_ThreadInfo.thread_provided = thread_provided;
@@ -450,18 +458,25 @@ int MPIR_Init_thread(int * argc, char ***argv, int required,
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_WaitForDebugger();
 #endif
-    
+
     /* Let the device know that the rest of the init process is completed */
     if (mpi_errno == MPI_SUCCESS) 
 	mpi_errno = MPID_InitCompleted();
 
+fn_exit:
+    MPIU_THREAD_CS_EXIT(INIT,required);
+    MPIU_THREAD_CS_FINALIZE;
     return mpi_errno;
+
+fn_fail:
+    goto fn_exit;
 }
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Init_thread
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Init_thread - Initialize the MPI execution environment
 
@@ -502,7 +517,6 @@ Notes for Fortran:
 @*/
 int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 {
-    static const char FCNAME[] = "MPI_Init_thread";
     int mpi_errno = MPI_SUCCESS;
     int rc, reqd = required;
     MPIU_THREADPRIV_DECL;
@@ -513,33 +527,8 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     MPIU_DBG_PreInit( argc, argv, rc );
 #endif
 
-    MPID_CS_INITIALIZE();
-    /* FIXME: Can we get away without locking every time.  Now, we
-       need a MPID_CS_ENTER/EXIT around MPI_Init and MPI_Init_thread.
-       Progress may be called within MPI_Init, e.g., by a spawned
-       child process.  Within progress, the lock is released and
-       reacquired when blocking.  If the lock isn't acquired before
-       then, the release in progress is incorrect.  Furthermore, if we
-       don't release the lock after progress, we'll deadlock the next
-       time this process tries to acquire the lock.
-       MPID_CS_ENTER/EXIT functions are used here instead of
-       MPIU_THREAD_CS_ENTER/EXIT because
-       MPIR_ThreadInfo.isThreaded hasn't been initialized yet.
-    */
-    /*   */
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-    MPID_CS_ENTER();
-#endif
-
-#if 0
-    /* Create the thread-private region if necessary and go ahead 
-       and initialize it */
-    MPIU_THREADPRIV_INITKEY;
-    MPIU_THREADPRIV_INIT;
-#endif
-
     MPID_MPI_INIT_FUNC_ENTER(MPID_STATE_MPI_INIT_THREAD);
-    
+
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
@@ -574,13 +563,10 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     }
 
     /* ... end of body of routine ... */
-    
+
     MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT_THREAD);
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-    MPID_CS_EXIT();
-#endif
     return mpi_errno;
-    
+
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_REPORTING
@@ -593,8 +579,9 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
     MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT_THREAD);
-    MPID_CS_EXIT();
-    MPID_CS_FINALIZE();
+
+    MPIU_THREAD_CS_EXIT(INIT,*provided);
+
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }

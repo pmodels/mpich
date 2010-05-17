@@ -86,6 +86,8 @@
 
 #endif
 
+/* NOTE, this is incompatible with the MPIU_ISTHREADED definition expected at
+ * the top level */
 #define MPIU_ISTHREADED(_s) { MPIU_THREAD_CHECK_BEGIN _s MPIU_THREAD_CHECK_END }
 
 #endif /* !MPICH_MPIDTHREAD_H_INCLUDED */

@@ -385,7 +385,7 @@ static FILE *get_fp(void)
 #ifdef MPICH_IS_THREADED
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED && MPIU_ISTHREADED()) {
+    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED && MPIU_ISTHREADED) {
         FILE *fp;
         MPID_Thread_tls_get(&dbg_tls_key, &fp);
         return fp;
@@ -402,7 +402,7 @@ static void set_fp(FILE *fp)
 #ifdef MPICH_IS_THREADED
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED && MPIU_ISTHREADED()) {
+    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED && MPIU_ISTHREADED) {
         MPID_Thread_tls_set(&dbg_tls_key, (void *)fp);
     }
     else

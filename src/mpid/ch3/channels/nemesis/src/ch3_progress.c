@@ -103,6 +103,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #ifdef MPICH_IS_THREADED
         MPIU_THREAD_CHECK_BEGIN;
         {
+            MPIU_THREADPRIV_DECL;
 	    /* In the case of threads, we poll for lesser number of
 	     * iterations than the case with only processes, as
 	     * threads contend for CPU and the lock, while processes
@@ -111,9 +112,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             {
                 pollcount = 0;
                 MPIDI_CH3I_progress_blocked = TRUE;
-                MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);
-                MPID_Thread_yield();
-                MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
+                MPIU_THREAD_CS_YIELD(ALLFUNC,);
                 MPIDI_CH3I_progress_blocked = FALSE;
                 MPIDI_CH3I_progress_wakeup_signalled = FALSE;
             }
@@ -423,7 +422,8 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DELAY);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DELAY);
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    /* FIXME should be appropriately abstracted somehow */
+#   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
 	while (completion_count == MPIDI_CH3I_progress_completion_count && MPIDI_CH3I_progress_blocked == TRUE)
 	{
@@ -448,7 +448,8 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_CONTINUE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_CONTINUE);
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    /* FIXME should be appropriately abstracted somehow */
+#   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
 	MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond);
     }
@@ -685,7 +686,8 @@ int MPIDI_CH3I_Progress_init(void)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
     MPIU_THREAD_CHECK_BEGIN
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    /* FIXME should be appropriately abstracted somehow */
+#   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
 	MPID_Thread_cond_create(&MPIDI_CH3I_progress_completion_cond, NULL);
     }

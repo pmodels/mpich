@@ -1767,130 +1767,6 @@ typedef struct MPID_TopoOps {
 /* end of mpitopo.h (in src/mpi/topo? */
 /* ------------------------------------------------------------------------- */
 
-/* Time stamps */
-/* Get the timer definitions.  The source file for this include is
-   src/mpi/timer/mpichtimer.h.in */
-#include "mpichtimer.h"
-
-typedef struct MPID_Stateinfo_t {
-    MPID_Time_t stamp;
-    int count;
-} MPID_Stateinfo_t;
-#define MPICH_MAX_STATES 512
-/* Timer state routines (src/util/instrm/states.c) */
-void MPID_TimerStateBegin( int, MPID_Time_t * );
-void MPID_TimerStateEnd( int, MPID_Time_t * );
-
-/* ------------------------------------------------------------------------- */
-/* Thread types */
-/* Temporary; this will include "mpichthread.h" eventually */
-
-#ifdef MPICH_DEBUG_NESTING
-#define MPICH_MAX_NESTFILENAME 256
-typedef struct MPICH_Nestinfo { 
-    char file[MPICH_MAX_NESTFILENAME];
-    int  line;
-} MPICH_Nestinfo_t;
-#define MPICH_MAX_NESTINFO 16
-#endif /* MPICH_DEBUG_NESTING */
-
-/* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
- * destruction time */
-#define MPIU_STRERROR_BUF_SIZE (1024)
-
-typedef struct MPICH_PerThread_t {
-    int              nest_count;   /* For layered MPI implementation */
-    int              op_errno;     /* For errors in predefined MPI_Ops */
-
-    /* error string storage for MPIU_Strerror */
-    char strerrbuf[MPIU_STRERROR_BUF_SIZE];
-
-#ifdef MPICH_DEBUG_NESTING
-    MPICH_Nestinfo_t nestinfo[MPICH_MAX_NESTINFO];
-#endif
-    /* FIXME: Is this used anywhere? */
-#ifdef HAVE_TIMING
-    MPID_Stateinfo_t timestamps[MPICH_MAX_STATES];  /* per thread state info */
-#endif
-#if defined(MPID_DEV_PERTHREAD_DECL)
-    MPID_DEV_PERTHREAD_DECL
-#endif    
-} MPICH_PerThread_t;
-
-#if !defined(MPICH_IS_THREADED)
-/* If single threaded, make this point at a pre-allocated segment.
-   This structure is allocated in src/mpi/init/initthread.c */
-extern MPICH_PerThread_t MPIR_Thread;
-
-/* The following three macros define a way to portably access thread-private
-   storage in MPICH2, and avoid extra overhead when MPICH2 is single 
-   threaded
-   INITKEY - Create the key.  Must happen *before* the other threads 
-             are created
-   INIT    - Create the thread-private storage.  Must happen once per thread
-   DECL    - Declare local variables
-   GET     - Access the thread-private storage
-   FIELD   - Access the thread-private field (by name)
-
-   The "DECL" is the extern so that there is always a statement for
-   the declaration.
-*/
-#define MPIU_THREADPRIV_INITKEY
-#define MPIU_THREADPRIV_INIT 
-/* Empty declarations are not allowed in C. However multiple decls are allowed */
-#define MPIU_THREADPRIV_DECL extern MPICH_PerThread_t MPIR_Thread
-#define MPIU_THREADPRIV_GET
-#define MPIU_THREADPRIV_FIELD(_a) (MPIR_Thread._a)
-
-#elif  defined(HAVE_RUNTIME_THREADCHECK)
-/* In the case where the thread level is set in MPI_Init_thread, we
-   need a blended version of the non-threaded and the thread-multiple
-   definitions.
-   
-   The approach is to have TWO MPICH_PerThread_t pointers.  One is local
-   (The MPIU_THREADPRIV_DECL is used in the routines local definitions), 
-   as in the threaded version of these macros.  This is set by using a routine
-   to get thread-private storage.  The second is a preallocated, extern 
-   MPICH_PerThread_t struct, as in the single threaded case.  Based on
-   MPIR_Process.isThreaded, one or the other is used.
-   
- */
-/* For the single threaded case, we use a preallocated structure 
-   This structure is allocated in src/mpi/init/initthread.c */
-extern MPICH_PerThread_t MPIR_ThreadSingle;
-
-/* We need to provide a function that will cleanup the storage attached
-   to the key.  */
-#define MPIU_THREADPRIV_INITKEY  \
-    {if (MPIR_Process.isThreaded) {\
-	    MPID_Thread_tls_create(MPIR_CleanupThreadStorage,&MPIR_Process.thread_storage,NULL);}}
-#define MPIU_THREADPRIV_INIT {if (MPIR_Process.isThreaded) {\
-	MPICH_PerThread_t *(pt_) = (MPICH_PerThread_t *) MPIU_Calloc(1, sizeof(MPICH_PerThread_t));	\
-	MPID_Thread_tls_set(&MPIR_Process.thread_storage, (void *) (pt_)); \
-        }}
-#define MPIU_THREADPRIV_DECL \
-    MPICH_PerThread_t *MPIR_Thread=0
-#define MPIU_THREADPRIV_GET  \
-    {if (!MPIR_Thread){MPIR_GetPerThread( &MPIR_Thread );}}
-#define MPIU_THREADPRIV_FIELD(_a) (MPIR_Thread->_a)
-
-#else /* Thread multiple */
-/* The following three macros define a way to portably access thread-private
-   storage in MPICH2, and avoid extra overhead when MPICH2 is single 
-   threaded.  We initialize the MPIR_Thread pointer to null so that
-   we need call the routine to get the thread-private storage only once
-   in an invocation of a routine.  */
-
-#define MPIU_THREADPRIV_INITKEY  \
-    MPID_Thread_tls_create(MPIR_CleanupThreadStorage,&MPIR_Process.thread_storage,NULL)
-#define MPIU_THREADPRIV_INIT {\
-	MPICH_PerThread_t *(pt_) = (MPICH_PerThread_t *) MPIU_Calloc(1, sizeof(MPICH_PerThread_t));	\
-	MPID_Thread_tls_set(&MPIR_Process.thread_storage, (void *) (pt_)); \
-        }
-#define MPIU_THREADPRIV_DECL MPICH_PerThread_t *MPIR_Thread=0
-#define MPIU_THREADPRIV_GET {if (!MPIR_Thread)MPIR_GetPerThread( &MPIR_Thread );}
-#define MPIU_THREADPRIV_FIELD(_a) (MPIR_Thread->_a)
-#endif
 
 /* Per process data */
 typedef enum MPIR_MPI_State_t { MPICH_PRE_INIT=0, MPICH_WITHIN_MPI=1,
@@ -1946,40 +1822,6 @@ typedef struct MPICH_PerProcess_t {
 #endif /* HAVE_CXX_BINDING */
 } MPICH_PerProcess_t;
 extern MPICH_PerProcess_t MPIR_Process;
-
-/*D
-  MPICH_THREAD_LEVEL - Indicates the maximum level of thread
-  support provided at compile time.
- 
-  Values:
-  Any of the 'MPI_THREAD_xxx' values (these are preprocessor-time constants)
-
-  Notes:
-  The macro 'MPICH_THREAD_LEVEL' defines the maximum level of
-  thread support provided, and may be used at compile time to remove
-  thread locks and other code needed only in a multithreaded environment.
-
-  A typical use is 
-.vb
-  #ifdef MPICH_IS_THREADED
-     lock((r)->lock_ptr);
-     (r)->ref_count++;
-     unlock((r)->lock_ptr);
-  #else
-     (r)->ref_count ++;
-  #fi
-.ve
-
-  Note that 'MPICH_IS_THREADED' is defined as 1 if 
-.vb
-  MPICH_THREAD_LEVEL >= MPI_THREAD_MULTIPLE
-.ve
-  is true.  The test should be used only for special cases (such as 
-  handling 'SERIALIZED').
-
-  Module:
-  Environment-DS
-  D*/
 
 /* ------------------------------------------------------------------------- */
 /* In MPICH2, each function has an "enter" and "exit" macro.  These can be 
@@ -2195,6 +2037,9 @@ void MPIR_Nest_incr_export(void);
 void MPIR_Nest_decr_export(void);
 
 #ifdef MPICH_DEBUG_NESTING
+/* this nesting is different than the MPIU_THREAD_*DEPTH macros, this is
+ * MPI/NMPI nesting, the other one is critical section nesting */
+
 /* These two routines export the versions of the nest macros that
    provide the file/line where the nest value changes, also for use in ROMIO */
 void MPIR_Nest_incr_export_dbg(const char *, int);
@@ -2202,40 +2047,59 @@ void MPIR_Nest_decr_export_dbg(const char *, int);
 
 /* FIXME: We should move the initialization and error reporting into
    routines that can be called when necessary */
-#define MPIR_Nest_init() {\
-   int _i;\
-   for (_i=0;_i<MPICH_MAX_NESTINFO;_i++) {\
-      MPIU_THREADPRIV_FIELD(nestinfo)[_i].file[0] = 0;\
-      MPIU_THREADPRIV_FIELD(nestinfo)[_i].line = 0;}}
-#define MPIR_Nest_incr() {\
-     if (MPIU_THREADPRIV_FIELD(nest_count) >= MPICH_MAX_NESTINFO) {\
-     MPIU_Internal_error_printf("nest stack exceeded at %s:%d\n",\
-          __FILE__,__LINE__);\
-     }else{\
-     MPIU_Strncpy(MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,__FILE__,\
-                  MPICH_MAX_NESTFILENAME);\
-     MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=__LINE__;}\
-     MPIU_THREADPRIV_FIELD(nest_count)++; }
+#define MPIR_Nest_init()                             \
+    do {                                             \
+        int i_;                                      \
+        MPICH_Nestinfo_t *nestinfo_ = NULL;           \
+        MPIU_THREADPRIV_GET;                         \
+        nestinfo_ = MPIU_THREADPRIV_FIELD(nestinfo); \
+        for (i_ = 0; i_ <MPICH_MAX_NESTINFO; i_++) { \
+            nestinfo_[i_].file[0] = 0;               \
+            nestinfo_[i_].line = 0;                  \
+        }                                            \
+    } while (0)
+#define MPIR_Nest_incr()                                                    \
+    do {                                                                    \
+        MPICH_Nestinfo_t *nestinfo_ = NULL;                                  \
+        MPIU_THREADPRIV_GET;                                                \
+        nestinfo_ = MPIU_THREADPRIV_FIELD(nestinfo);                        \
+        if (MPIU_THREADPRIV_FIELD(nest_count) >= MPICH_MAX_NESTINFO) {      \
+            MPIU_Internal_error_printf("nest stack exceeded at %s:%d\n",    \
+                                       __FILE__,__LINE__);                  \
+        }                                                                   \
+        else {                                                              \
+            MPIU_Strncpy(nestinfo_[MPIU_THREADPRIV_FIELD(nest_count)].file, \
+                         __FILE__, MPICH_MAX_NESTFILENAME);                 \
+            nestinfo_[MPIU_THREADPRIV_FIELD(nest_count)].line=__LINE__;}    \
+        MPIU_THREADPRIV_FIELD(nest_count)++;                                \
+    } while (0)
 /* Set the line for the current entry to - the old line - this can help
    identify increments that did not set the fields */
-#define MPIR_Nest_decr() {\
-    if (MPIU_THREADPRIV_FIELD(nest_count) >= 0) {\
-	MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=-__LINE__;} \
-     MPIU_THREADPRIV_FIELD(nest_count)--; \
-     if (MPIU_THREADPRIV_FIELD(nest_count) < MPICH_MAX_NESTINFO && \
-    strcmp(MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,__FILE__) != 0) {\
-         MPIU_Msg_printf( "Decremented nest count in file %s:%d but incremented in different file (%s:%d)\n",\
-                          __FILE__,__LINE__,\
-                          MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,\
-                          MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line);\
-     }else if (MPIU_THREADPRIV_FIELD(nest_count) < 0){\
-	 MPIU_Msg_printf("Decremented nest count in file %s:%d is negative\n",\
-			 __FILE__,__LINE__);}\
-}
+#define MPIR_Nest_decr()                                                               \
+    do {                                                                               \
+        MPICH_Nestinfo_t *nestinfo_ = NULL;                                             \
+        MPIU_THREADPRIV_GET;                                                           \
+        nestinfo_ = MPIU_THREADPRIV_FIELD(nestinfo);                                   \
+        if (MPIU_THREADPRIV_FIELD(nest_count) >= 0) {                                  \
+            nestinfo_[MPIU_THREADPRIV_FIELD(nest_count)].line=-__LINE__;               \
+        }                                                                              \
+        MPIU_THREADPRIV_FIELD(nest_count)--;                                           \
+        if (MPIU_THREADPRIV_FIELD(nest_count) < MPICH_MAX_NESTINFO &&                  \
+            strcmp(nestinfo_[MPIU_THREADPRIV_FIELD(nest_count)].file,__FILE__) != 0) { \
+            MPIU_Msg_printf( "Decremented nest count in file %s:%d but incremented in different file (%s:%d)\n", \
+                             __FILE__,__LINE__,                                        \
+                             nestinfo_[MPIU_THREADPRIV_FIELD(nest_count)].file,        \
+                             nestinfo_[MPIU_THREADPRIV_FIELD(nest_count)].line);       \
+        }                                                                              \
+        else if (MPIU_THREADPRIV_FIELD(nest_count) < 0){                               \
+            MPIU_Msg_printf("Decremented nest count in file %s:%d is negative\n",      \
+                            __FILE__,__LINE__);                                        \
+        }                                                                              \
+    } while (0)
 #else
-#define MPIR_Nest_init()
-#define MPIR_Nest_incr() {MPIU_THREADPRIV_FIELD(nest_count)++;}
-#define MPIR_Nest_decr() {MPIU_THREADPRIV_FIELD(nest_count)--;}
+#define MPIR_Nest_init() do { MPIU_THREADPRIV_GET; MPIU_THREADPRIV_FIELD(nest_count) = 0; } while (0)
+#define MPIR_Nest_incr() do { MPIU_THREADPRIV_GET; MPIU_THREADPRIV_FIELD(nest_count)++;   } while (0)
+#define MPIR_Nest_decr() do { MPIU_THREADPRIV_GET; MPIU_THREADPRIV_FIELD(nest_count)--;   } while (0)
 #endif /* MPICH_DEBUG_NESTING */
 
 #define MPIR_Nest_value() (MPIU_THREADPRIV_FIELD(nest_count))

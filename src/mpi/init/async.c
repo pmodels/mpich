@@ -27,11 +27,7 @@ static void progress_fn(void * data)
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
      * within an internal function and will call NMPI functions
      * directly. */
-    /* FIXME: The CS_ENTER/EXIT code should be abstracted out
-     * correctly, instead of relying on the #if protection here. */
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-    MPID_CS_ENTER();
-#endif
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
     /* FIXME: We assume that waiting on some request forces progress
      * on all requests. With fine-grained threads, will this still
@@ -61,9 +57,7 @@ static void progress_fn(void * data)
     MPIU_Thread_cond_signal(&progress_cond, &mpi_errno);
     MPIU_Assert(!mpi_errno);
 
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-    MPID_CS_EXIT();
-#endif
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
 #endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
     return;
@@ -125,9 +119,8 @@ int MPIR_Finalize_async_thread(void)
     MPIU_Assert(!mpi_errno);
     MPIR_Nest_decr();
 
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-    MPID_CS_EXIT();
-#endif
+    /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     MPIU_Thread_mutex_lock(&progress_mutex, &mpi_errno);
     MPIU_Assert(!mpi_errno);
@@ -140,9 +133,7 @@ int MPIR_Finalize_async_thread(void)
     MPIU_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
     MPIU_Assert(!mpi_errno);
 
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
-    MPID_CS_ENTER();
-#endif
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
     MPIU_Thread_cond_destroy(&progress_cond, &mpi_errno);
     MPIU_Assert(!mpi_errno);

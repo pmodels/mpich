@@ -26,11 +26,9 @@ volatile unsigned int MPIDI_CH3I_progress_completion_count = 0;
     volatile int MPIDI_CH3I_progress_blocked = FALSE;
     volatile int MPIDI_CH3I_progress_wakeup_signalled = FALSE;
 
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
-/* This value must be static so that it isn't an uninitialized
-   common symbol */
-static MPID_Thread_cond_t MPIDI_CH3I_progress_completion_cond;
-#   endif
+    /* This value must be static so that it isn't an uninitialized
+       common symbol */
+    static MPID_Thread_cond_t MPIDI_CH3I_progress_completion_cond;
 
     static int MPIDI_CH3I_Progress_delay(unsigned int completion_count);
     static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
@@ -286,7 +284,8 @@ int MPIDI_CH3I_Progress_init(void)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
     MPIU_THREAD_CHECK_BEGIN
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    /* FIXME should be appropriately abstracted somehow */
+#   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
 	MPID_Thread_cond_create(&MPIDI_CH3I_progress_completion_cond, NULL);
     }
@@ -351,7 +350,8 @@ int MPIDI_CH3I_Progress_finalize(void)
     MPIDU_Sock_finalize();
 
     MPIU_THREAD_CHECK_BEGIN
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    /* FIXME should be appropriately abstracted somehow */
+#   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
 	MPID_Thread_cond_destroy(&MPIDI_CH3I_progress_completion_cond, NULL);
     }
@@ -669,7 +669,8 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 {
     int mpi_errno = MPI_SUCCESS;
     
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    /* FIXME should be appropriately abstracted somehow */
+#   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
 	while (completion_count == MPIDI_CH3I_progress_completion_count)
 	{
@@ -693,7 +694,8 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
     int mpi_errno = MPI_SUCCESS;
 
     MPIU_THREAD_CHECK_BEGIN
-#   if (USE_THREAD_IMPL == MPICH_THREAD_IMPL_GLOBAL_MUTEX)
+    /* FIXME should be appropriately abstracted somehow */
+#   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
 	MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond);
     }

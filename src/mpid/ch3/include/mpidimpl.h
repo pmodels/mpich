@@ -1806,17 +1806,9 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 #define MPIU_THREAD_CS_ENTER_CH3COMM(_context)
 #define MPIU_THREAD_CS_EXIT_CH3COMM(_context)
 
-/* FIXME: Currently forcing the PER_OBJECT case to do a global
- * lock. We need a better way of fixing this. */
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL
-/* There is a single, global lock, held only when needed */
-#define MPIU_THREAD_CS_ENTER_CH3COMM(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-
+/* XXX DJG PER_OBJECT needs lots of love down here at the device and channel levels */
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-#if 1
+
 /* There is a per object lock */
 #define MPIU_THREAD_CS_ENTER_CH3COMM(_context) {\
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END \
@@ -1824,8 +1816,9 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 #define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END
 
-#if 1
-static void foofunc() { }
+/* XXX DJG what is this junk all about? */
+#if 0
+/*static void foofunc() { }*/
 #define MPIU_THREAD_CS_TRYLOCK(_context) {\
    MPIU_THREAD_CHECK_BEGIN \
    int ret; \
@@ -1839,7 +1832,7 @@ static void foofunc() { }
    } \
    ret = pthread_mutex_trylock(&MPIR_ThreadInfo.global_mutex); \
    if (ret) { \
-       foofunc(); \
+       /*foofunc();*/ \
        printf("Trylock not successful for global mutex\n"); \
    } \
    else if (!ret) { \
@@ -1863,14 +1856,6 @@ static void foofunc() { }
 }
 #else
 #define MPIU_THREAD_CS_TRYLOCK(_context)
-#endif
-
-#else
-/* There is a single, global lock, held only when needed */
-#define MPIU_THREAD_CS_ENTER_CH3COMM(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
-#define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_LOCKNAME(global_mutex) MPIU_THREAD_CHECK_END
 #endif
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
