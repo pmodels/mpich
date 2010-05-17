@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
        Get_count still fails because status.count is not 64 bit */
     for (i=0; i<cnt; i++) {
         if (cols[i] != i) {
-            printf("Rank %d, cols[i]=%lld, should be %d\n", rank, cols[i], i);
+            /*printf("Rank %d, cols[i]=%lld, should be %d\n", rank, cols[i], i);*/
             errs++;
         }
     }
