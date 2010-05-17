@@ -10,11 +10,8 @@
 #include <stdio.h>
 #include "hydra_config.h"
 
-#if defined HAVE_WINSOCK2_H
-#include <winsock2.h>
-#endif /* HAVE_WINSOCK2_H */
-
 #if defined HAVE_WINDOWS_H
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif /* HAVE_WINDOWS_H */
 
