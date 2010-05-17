@@ -74,8 +74,12 @@ int MPI_Add_error_class(int *errorclass)
     MPIU_ERR_CHKANDJUMP(new_class<0,mpi_errno,MPI_ERR_OTHER,"**noerrclasses");
 
     *errorclass = ERROR_DYN_MASK | new_class;
-    MPIR_Setmax( &MPIR_Process.attrs.lastusedcode, *errorclass );
-    
+
+    /* FIXME why isn't this done in MPIR_Err_add_class? */
+    if (*errorclass > MPIR_Process.attrs.lastusedcode) {
+       MPIR_Process.attrs.lastusedcode = *errorclass;
+    }
+
     /* ... end of body of routine ... */
 
   fn_exit:

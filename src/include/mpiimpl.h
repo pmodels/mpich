@@ -1909,45 +1909,6 @@ extern MPICH_PerProcess_t MPIR_Process;
    smpd.  We may not want to export it.  */
 void MPIR_Err_print_stack(FILE *, int);
 
-
-/* ------------------------------------------------------------------------- */
-/* XXX DJG FIXME delete this? */
-/* FIXME: Merge these with the object refcount update routines (perhaps as
-   part of a general "atomic update" file */
-/*
- * Standardized general-purpose atomic update routines.  Some comments:
- * Setmax atomically implements *a_ptr = max(b,*a_ptr) .  This can
- * be implemented using compare-and-swap (form max, if new max is 
- * larger, compare-and-swap against old max.  if failure, restart).
- * Fetch_and_increment can be implemented in a similar way; for
- * example, in IA32, 
- * loop:
- *   mov eax, valptr
- *   mov oldvalptr, eax
- *   mov ebx, eax
- *   inc ebx
- *   lock: cmpxchg valptr, ebx
- *   jnz loop
- *
- * Implementations using LoadLink/StoreConditional are similar.
- *
- * Question: can we use the simple code for MPI_THREAD_SERIALIZED?
- * If not, do we want a separate set of definitions that can be used
- * in the code where serialized is ok.
- *
- * Currently, these are used only in the routines to create new error classes
- * and codes (src/mpi/errhan/dynerrutil.c and add_error_class.c).  
- * Note that MPI object reference counts are handled with their own routines.
- *
- * Because of the current use of these routines is within the SINGLE_CS
- * thread lock (for the THREAD_MULTIPLE case), we currently
- * do *not* include a separate Critical section for these operations.
- *
- */
-#define MPIR_Setmax(a_ptr,b) if (b>*(a_ptr)) { *(a_ptr) = b; }
-#define MPIR_Fetch_and_increment(count_ptr,value_ptr) \
-    { *value_ptr = *count_ptr; *count_ptr += 1; }
-
 /* ------------------------------------------------------------------------- */
 
 /* FIXME: Move these to the communicator block; make sure that all 

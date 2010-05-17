@@ -202,7 +202,8 @@ int MPIR_Err_add_class(void)
 	MPIR_Init_err_dyncodes();
 	
     /* Get new class */
-    MPIR_Fetch_and_increment( &first_free_class, &new_class );
+    new_class = first_free_class;
+    ++first_free_class;
 
     /* --BEGIN ERROR HANDLING-- */
     if (new_class >= ERROR_MAX_NCLASS) {
@@ -243,7 +244,9 @@ int MPIR_Err_add_code( int class )
 	MPIR_Init_err_dyncodes();
 
     /* Get the new code */
-    MPIR_Fetch_and_increment( &first_free_code, &new_code );
+    new_code = first_free_code;
+    ++first_free_code;
+
     /* --BEGIN ERROR HANDLING-- */
     if (new_code >= ERROR_MAX_NCODE) {
 	/* Fail if out of codes */
