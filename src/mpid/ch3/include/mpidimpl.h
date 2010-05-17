@@ -1816,55 +1816,10 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 #define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
    MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END
 
-/* XXX DJG what is this junk all about? */
-#if 0
-/*static void foofunc() { }*/
-#define MPIU_THREAD_CS_TRYLOCK(_context) {\
-   MPIU_THREAD_CHECK_BEGIN \
-   int ret; \
-   ret = pthread_mutex_trylock(&_context->pobj_mutex); \
-   if (!ret) { \
-       printf("Trylock successful for pobj mutex\n"); \
-       pthread_mutex_unlock(&_context->pobj_mutex); \
-   } \
-   else if (ret != EBUSY) { \
-       printf("Error in pobj_mutex: %d\n", ret); \
-   } \
-   ret = pthread_mutex_trylock(&MPIR_ThreadInfo.global_mutex); \
-   if (ret) { \
-       /*foofunc();*/ \
-       printf("Trylock not successful for global mutex\n"); \
-   } \
-   else if (!ret) { \
-       pthread_mutex_unlock(&MPIR_ThreadInfo.global_mutex); \
-   } \
-   else if (ret != EBUSY) { \
-       printf("Error in global mutex: %d\n", ret); \
-   } \
-   ret = pthread_mutex_trylock(&MPIR_ThreadInfo.handle_mutex); \
-   if (ret) { \
-       printf("Trylock not successful for handle mutex\n"); \
-       pthread_mutex_unlock(&MPIR_ThreadInfo.handle_mutex); \
-   } \
-   else if (!ret) { \
-       pthread_mutex_unlock(&MPIR_ThreadInfo.handle_mutex); \
-   } \
-   else if (ret != EBUSY) { \
-       printf("Error in global mutex: %d\n", ret); \
-   } \
-   MPIU_THREAD_CHECK_END \
-}
-#else
-#define MPIU_THREAD_CS_TRYLOCK(_context)
-#endif
-
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
-/* Updates to shared data and access to shared services is handled without 
-   locks where ever possible. */
-#error lock-free not yet implemented
-
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */
+/* FIXME incomplete? or already handled by the upper level? */
+/* FIXME does it make sense to have (MPICH_IS_THREADED && _GRANULARITY==_SINGLE) ? */
 
 #else
 #error Unrecognized thread granularity
