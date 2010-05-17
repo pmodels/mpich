@@ -300,21 +300,6 @@ extern MPIU_TLS_SPECIFIER MPICH_PerThread_t MPIR_Thread;
 #endif /* defined(MPIU_TLS_SPECIFIER) */
 #endif /* defined(MPICH_IS_THREADED) */
 
-
-/* ------------------------------------------------------------------------- */
-/* yield macro */
-/* FIXME update mpiatomic.h accordingly if this is ever improved */
-#undef MPID_Thread_yield
-/* FIXME this should probably include sleep/usleep/nanosleep as an option in here */
-#if defined(HAVE_THR_YIELD)
-#define MPID_Thread_yield() thr_yield()
-#elif defined(HAVE_SCHED_YIELD)
-#define MPID_Thread_yield() sched_yield()
-#elif defined(HAVE_YIELD)
-#define MPID_Thread_yield() yield()
-#endif
-
-
 /* ------------------------------------------------------------------------- */
 /*
  * New definitions for controling the granularity of thread atomicity

@@ -43,9 +43,9 @@ do {                                                               \
 #define MPIU_Thread_yield()						\
 do {                                                                       \
     /* FIXME: need to check for different types of yield */	\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"enter MPIU_Thread_yield");    \
-    sched_yield();							\
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"exit MPIU_Thread_yield");    \
+    MPIU_DBG_MSG(THREAD,TYPICAL,"enter MPIU_Thread_yield");    \
+    MPIU_PW_Sched_yield();                                     \
+    MPIU_DBG_MSG(THREAD,TYPICAL,"exit MPIU_Thread_yield");     \
 } while (0)
 
 
