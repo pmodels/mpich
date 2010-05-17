@@ -391,6 +391,13 @@ static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code
     }
 # endif
 
+# ifdef XFS_SUPER_MAGIC
+    if (fsbuf.f_type == XFS_SUPER_MAGIC) {
+	    *fstype = ADIO_XFS;
+	    return;
+    }
+# endif
+
 # ifdef ROMIO_UFS
     /* if UFS support is enabled, default to that */
     *fstype = ADIO_UFS;
