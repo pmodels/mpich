@@ -12,7 +12,7 @@ WEB_HOST=login3.mcs.anl.gov
 WEB_DIR=/mcs/web/research/projects/romio
 
 bibtex2html -t "Papers using ROMIO" \
-	--header "Please help us keep this list up to date. Contact mpich-discuss@mcs.anl.gov for any corrections or additions.<p><h2>Recent publications</h2><p>" \
+	--header "Please help us keep this list up to date. Contact mpich-discuss@mcs.anl.gov for any corrections or additions. <p>Last updated at $(date).<p><h2>Recent publications</h2><p>" \
 	--footer "<p><h2>Other publications</h2><p>
 	<ul>
 	<li><a href='http://cucis.ece.northwestern.edu/publications/subject.html#Scalable I/O'>Northwestern University CUCIS group</a>
