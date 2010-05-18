@@ -465,11 +465,12 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 
 fn_exit:
     MPIU_THREAD_CS_EXIT(INIT,required);
-    MPIU_THREAD_CS_FINALIZE;
     return mpi_errno;
 
 fn_fail:
-    goto fn_exit;
+    MPIU_THREAD_CS_EXIT(INIT,required);
+    MPIU_THREAD_CS_FINALIZE;
+    return mpi_errno;
 }
 #endif
 
