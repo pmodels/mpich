@@ -29,6 +29,14 @@ int main(int argc, char *argv[])
   }
 
   cols = malloc(cnt*sizeof(long long));
+  if (cols == NULL) {
+      printf("malloc of >2GB array failed\n");
+      errs++;
+      MTest_Finalize(errs);
+      MPI_Finalize();
+      return 0;
+  }
+
   if (rank == 0) {
     for (i=0; i<cnt; i++) cols[i] = i;
     /* printf("[%d] sending...\n",rank);*/
