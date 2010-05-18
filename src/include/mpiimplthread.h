@@ -273,13 +273,15 @@ extern MPICH_PerThread_t MPIR_ThreadSingle;
 /* common definitions when using MPID_Thread-based TLS */
 #define MPIU_THREADPRIV_DECL MPICH_PerThread_t *MPIR_Thread=NULL
 #define MPIU_THREADPRIV_FIELD(a_) (MPIR_Thread->a_)
-#define MPIU_THREADPRIV_FINALIZE                                       \
-    do {                                                               \
-        MPIU_THREADPRIV_DECL;                                          \
-        MPIU_THREADPRIV_GET;                                           \
-        MPIU_Free(MPIR_Thread);                                        \
-        MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,NULL);     \
-        MPID_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,NULL); \
+#define MPIU_THREADPRIV_FINALIZE                                           \
+    do {                                                                   \
+        MPIU_THREADPRIV_DECL;                                              \
+        if (MPIU_ISTHREADED) {                                             \
+            MPIU_THREADPRIV_GET;                                           \
+            MPIU_Free(MPIR_Thread);                                        \
+            MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,NULL);     \
+            MPID_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,NULL); \
+        }                                                                  \
     } while (0)
 
 #else /* defined(MPIU_TLS_SPECIFIER) */
