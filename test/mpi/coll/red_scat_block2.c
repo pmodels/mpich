@@ -80,6 +80,9 @@ int main( int argc, char **argv )
     MPI_Comm_size( comm, &size );
     MPI_Comm_rank( comm, &rank );
 
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    /* MPI_Reduce_scatter block was added in MPI-2.2 */
+
     MPI_Op_create(&left, 0/*non-commutative*/, &left_op);
     MPI_Op_create(&right, 0/*non-commutative*/, &right_op);
     MPI_Op_create(&nc_sum, 0/*non-commutative*/, &nc_sum_op);
@@ -114,6 +117,7 @@ int main( int argc, char **argv )
     MPI_Op_free(&left_op);
     MPI_Op_free(&right_op);
     MPI_Op_free(&nc_sum_op);
+#endif 
 
     MTest_Finalize( err );
     MPI_Finalize( );
