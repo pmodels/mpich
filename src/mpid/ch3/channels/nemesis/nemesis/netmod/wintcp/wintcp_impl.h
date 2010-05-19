@@ -37,9 +37,10 @@ extern MPID_nem_queue_ptr_t MPID_nem_process_recv_queue;
 extern MPID_nem_queue_ptr_t MPID_nem_process_free_queue;
 extern int MPID_nem_newtcp_module_listen_fd;
 
-
-#define MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED 0
-#define MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED 1
+typedef enum{
+    MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED=0,
+    MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED
+} MPID_Nem_newtcp_module_vc_state_t;
 
 extern char *MPID_nem_newtcp_module_recv_buf;
 #define MPID_NEM_NEWTCP_MODULE_RECV_MAX_PKT_LEN 1024
@@ -59,6 +60,7 @@ typedef struct
         struct MPID_Request *tail;
     } send_queue;
     /* this is a count of how many sc objects refer to this vc */
+    MPID_Nem_newtcp_module_vc_state_t state;
     int sc_ref_count;
 } MPID_nem_newtcp_module_vc_area;
 

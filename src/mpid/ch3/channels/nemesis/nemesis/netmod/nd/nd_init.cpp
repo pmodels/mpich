@@ -75,7 +75,7 @@ int MPID_Nem_nd_vc_init(MPIDI_VC_t *vc)
 
     vc->sendNoncontig_fn      = MPID_Nem_nd_send_noncontig;
 
-    vc_ch->state = MPID_NEM_VC_STATE_DISCONNECTED;
+    MPID_NEM_ND_VCCH_NETMOD_STATE_SET(vc, MPID_NEM_ND_VC_STATE_DISCONNECTED);
     vc_ch->iStartContigMsg    = MPID_Nem_nd_istart_contig_msg;
     vc_ch->iSendContig        = MPID_Nem_nd_send_contig;
     vc_ch->next = NULL;

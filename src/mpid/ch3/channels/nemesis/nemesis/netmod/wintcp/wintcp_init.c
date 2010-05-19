@@ -351,7 +351,7 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
 
-    vc_ch->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
+    VC_FIELD(vc, state) = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
     
     vc->sendNoncontig_fn      = MPID_nem_newtcp_SendNoncontig;
     vc_ch->iStartContigMsg    = MPID_nem_newtcp_iStartContigMsg;

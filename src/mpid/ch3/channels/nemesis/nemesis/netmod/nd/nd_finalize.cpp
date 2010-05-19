@@ -84,7 +84,7 @@ int MPID_Nem_nd_vc_terminate (MPIDI_VC_t *vc)
 
     vc_ch->next = NULL;
     vc_ch->prev = NULL;
-    vc_ch->state = MPID_NEM_VC_STATE_DISCONNECTED;
+    MPID_NEM_ND_VCCH_NETMOD_STATE_SET(vc, MPID_NEM_ND_VC_STATE_DISCONNECTED);
 
     mpi_errno = MPID_Nem_nd_conn_disc(MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(vc));
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);

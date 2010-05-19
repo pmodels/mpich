@@ -211,6 +211,13 @@ enum{
 };
 
 #define MPID_NEM_ND_CONN_IS_CONNECTING(_conn_hnd) (_conn_hnd && ( (_conn_hnd->state > MPID_NEM_ND_CONN_QUIESCENT) && (_conn_hnd->state < MPID_NEM_ND_CONN_ACTIVE) ))
+
+/* VC states */
+typedef enum{
+    MPID_NEM_ND_VC_STATE_DISCONNECTED=0,
+    MPID_NEM_ND_VC_STATE_CONNECTED
+} MPID_Nem_nd_vc_state_t;
+
 /* The vc provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the VC struct
    on the network module */
@@ -224,6 +231,7 @@ typedef struct {
         struct MPID_Request *head;
         struct MPID_Request *tail;
     } pending_sendq;
+    MPID_Nem_nd_vc_state_t state;
 } MPID_Nem_nd_vc_area;
 
 #define MPID_NEM_ND_VCCH_GET_ACTIVE_RECV_REQ(_vc) (((MPIDI_CH3I_VC *)((_vc)->channel_private))->recv_active)
@@ -254,6 +262,8 @@ typedef struct {
 #define MPID_NEM_ND_VCCH_NETMOD_FIELD_GET(_vc, _field) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->_field)
 #define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_SET(_vc, _conn_hnd) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd) = _conn_hnd)
 #define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd)
+#define MPID_NEM_ND_VCCH_NETMOD_STATE_SET(_vc, _state) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->state) = _state)
+#define MPID_NEM_ND_VCCH_NETMOD_STATE_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->state)
 
 /* VC Netmod util funcs */
 #define MPID_NEM_ND_VC_IS_CONNECTED(_vc) (\

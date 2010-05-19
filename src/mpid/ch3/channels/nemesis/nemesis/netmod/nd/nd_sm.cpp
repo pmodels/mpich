@@ -1516,7 +1516,7 @@ static int wait_cack_success_handler(MPID_Nem_nd_msg_result_t *recv_result)
         vc = conn_hnd->vc;
         vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
 
-        vc_ch->state = MPID_NEM_VC_STATE_CONNECTED;
+        MPID_NEM_ND_VCCH_NETMOD_STATE_SET(vc, MPID_NEM_ND_VC_STATE_CONNECTED);
         MPID_NEM_ND_CONN_STATE_SET(conn_hnd, MPID_NEM_ND_CONN_ACTIVE);
 
         /* Repost recv buf */
@@ -1612,7 +1612,7 @@ static int __cdecl listen_success_handler(MPIU_EXOVERLAPPED *recv_ov)
 
     vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
     if(MPID_NEM_ND_CONN_HND_IS_VALID(MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(vc))){
-        if(vc_ch->state != MPID_NEM_VC_STATE_CONNECTED){
+        if(MPID_NEM_ND_VCCH_NETMOD_STATE_GET(vc) != MPID_NEM_ND_VC_STATE_CONNECTED){
             /* VC is connecting - head-to-head scenario */
             MPID_Nem_nd_conn_hnd_t old_conn_hnd = MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(vc);
             int old_conn_won_hh=0;
@@ -1745,7 +1745,7 @@ static int wait_lack_success_handler(MPID_Nem_nd_msg_result_t *recv_result){
             /* VC is now connected - send an ACK - CACK - to listen side */
             vc = conn_hnd->vc;
             vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-            vc_ch->state = MPID_NEM_VC_STATE_CONNECTED;
+            MPID_NEM_ND_VCCH_NETMOD_STATE_SET(vc, MPID_NEM_ND_VC_STATE_CONNECTED);
             MPID_NEM_ND_CONN_STATE_SET(conn_hnd, MPID_NEM_ND_CONN_ACTIVE);
 
             MPIU_Assert(!MSGBUF_FREEQ_IS_EMPTY(conn_hnd));

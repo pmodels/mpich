@@ -1320,7 +1320,7 @@ static int recv_id_or_tmpvc_info_success_handler(MPIU_EXOVERLAPPED *rd_ov)
         }
         /* --END ERROR HANDLING-- */
         MPIDI_VC_Init(vc, NULL, 0);     
-        ((MPIDI_CH3I_VC *)vc->channel_private)->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED; /* FIXME: is it needed ? */
+        VC_FIELD(vc, state) = MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED;  /* FIXME: is it needed ? */
         sc->vc = vc; 
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "about to incr sc_ref_count sc=%p sc->vc=%p sc_ref_count=%d", sc, sc->vc, VC_FIELD(sc->vc, sc_ref_count)));
         ++VC_FIELD(vc, sc_ref_count);
@@ -1443,7 +1443,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
 
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
-    if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED) {
+    if(VC_FIELD(vc, state) == MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED){
         struct sockaddr_in *sock_addr;
         struct in_addr addr;
 
@@ -1496,7 +1496,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
         mpi_errno = MPID_nem_newtcp_module_post_connect_ex(sc, sock_addr);
         if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
       
-        ((MPIDI_CH3I_VC *)vc->channel_private)->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED;
+        VC_FIELD(vc, state) = MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED;
         sc->pg_rank = vc->pg_rank;
         if (vc->pg != NULL) { /* normal (non-dynamic) connection */
             if (IS_SAME_PGID(vc->pg->id, MPIDI_Process.my_pg->id)) {
@@ -1520,7 +1520,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "about to incr sc_ref_count sc=%p sc->vc=%p sc_ref_count=%d", sc, sc->vc, VC_FIELD(sc->vc, sc_ref_count)));
         ++VC_FIELD(vc, sc_ref_count);
     }
-    else if (((MPIDI_CH3I_VC *)vc->channel_private)->state == MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED) {
+    else if(VC_FIELD(vc, state) == MPID_NEM_NEWTCP_MODULE_VC_STATE_CONNECTED){
         sc = VC_FIELD(vc, sc);
         MPIU_Assert(sc != NULL);
         /* Do nothing here, the caller just needs to wait for the connection
@@ -1577,7 +1577,7 @@ static int cleanup_sc_vc(sockconn_t *sc)
     if (sc->vc && VC_FIELD(sc->vc, sc) == sc) /* this vc may be connecting/accepting with another sc e.g., this sc lost
 the tie-breaker */
     {
-        ((MPIDI_CH3I_VC *)sc->vc->channel_private)->state = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
+        VC_FIELD(sc->vc, state) = MPID_NEM_NEWTCP_MODULE_VC_STATE_DISCONNECTED;
         ASSIGN_SC_TO_VC(sc->vc, NULL);
     }
     sc->vc = NULL;
