@@ -3025,9 +3025,9 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "HAVE_CSHARP_BINDING"
 					fout.WriteLine("/* #undef HAVE_CSHARP_BINDING */")
 				Case "MPIR_REAL4_CTYPE"
-					fout.WriteLine("/* #undef MPIR_REAL4_CTYPE */")
+					fout.WriteLine("#define MPIR_REAL4_CTYPE float")
 				Case "MPIR_REAL8_CTYPE"
-					fout.WriteLine("/* #undef MPIR_REAL8_CTYPE */")
+					fout.WriteLine("#define MPIR_REAL8_CTYPE double")
 				Case "MPIR_REAL16_CTYPE"
 					fout.WriteLine("/* #undef MPIR_REAL16_CTYPE */")
 				Case "MPIR_INTEGER1_CTYPE"
