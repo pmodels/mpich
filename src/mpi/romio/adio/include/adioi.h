@@ -70,6 +70,10 @@ struct ADIOI_Hints_struct {
                     int coll_threshold;
                     int ds_in_coll;
             } lustre;
+		struct {
+			unsigned read_chunk_sz; /* chunk size for direct reads */
+			unsigned write_chunk_sz; /* chunk size for direct writes */
+		} xfs;
     } fs_hints;
 
 };

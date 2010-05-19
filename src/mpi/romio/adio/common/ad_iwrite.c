@@ -86,9 +86,23 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
     int error_code;
     struct aiocb *aiocbp;
     ADIOI_AIO_Request *aio_req;
-
+#if defined(ROMIO_XFS)
+    unsigned maxiosz = wr ? fd->hints->fs_hints.xfs.write_chunk_sz :
+	    fd->hints->fs_hints.xfs.read_chunk_sz;
+#endif /* ROMIO_XFS */
 
     fd_sys = fd->fd_sys;
+
+#if defined(ROMIO_XFS)
+    /* Use Direct I/O if desired and properly aligned */
+    if (fd->fns == &ADIO_XFS_operations &&
+	 ((wr && fd->direct_write) || (!wr && fd->direct_read)) &&
+	 !(((long) buf) % fd->d_mem) && !(offset % fd->d_miniosz) && 
+	 !(len % fd->d_miniosz) && (len >= fd->d_miniosz) && 
+	 (len <= maxiosz)) {
+	    fd_sys = fd->fd_direct;
+    }
+#endif /* ROMIO_XFS */
 
     aio_req = (ADIOI_AIO_Request*)ADIOI_Calloc(sizeof(ADIOI_AIO_Request), 1);
     aiocbp = (struct aiocb *) ADIOI_Calloc(sizeof(struct aiocb), 1);
