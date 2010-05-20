@@ -76,7 +76,6 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
     static const char FCNAME[] = "MPI_Win_lock";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_LOCK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

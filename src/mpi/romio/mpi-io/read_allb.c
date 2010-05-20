@@ -61,7 +61,6 @@ int MPIOI_File_read_all_begin(MPI_File mpi_fh,
 {
     int error_code, datatype_size;
     ADIO_File fh;
-    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

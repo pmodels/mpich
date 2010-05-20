@@ -51,7 +51,6 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *datatype_ptr = NULL;
     MPID_Datatype *new_dtp;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_DUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

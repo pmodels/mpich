@@ -23,6 +23,7 @@ MPIU_Thread_CS_enter_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                     MPID_Thread_mutex_t *mutex)
 {
     MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
     MPIU_THREAD_CHECKDEPTH(kind, lockname, 0);
     MPIU_THREAD_CHECKNEST(kind, lockname)
     {
@@ -42,6 +43,7 @@ MPIU_Thread_CS_exit_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                    MPID_Thread_mutex_t *mutex)
 {
     MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
     MPIU_THREAD_CHECKDEPTH(kind, lockname, 1);
     MPIU_THREAD_CHECKNEST(kind, lockname)
     {
@@ -61,6 +63,7 @@ MPIU_Thread_CS_yield_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                     MPID_Thread_mutex_t *mutex)
 {
     MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
     MPIU_THREAD_CHECKDEPTH(kind, lockname, 1);
     /* don't CHECKNEST here, we want nesting to be >0 */
     MPID_Thread_mutex_unlock(mutex);

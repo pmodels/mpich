@@ -64,7 +64,6 @@ int MPI_Rsend_init(void *buf, int count, MPI_Datatype datatype, int dest,
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Request *request_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_RSEND_INIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

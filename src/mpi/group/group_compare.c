@@ -60,7 +60,6 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     MPID_Group *group_ptr1 = NULL;
     MPID_Group *group_ptr2 = NULL;
     int g1_idx, g2_idx, size, i;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_COMPARE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

@@ -74,7 +74,6 @@ int MPIOI_File_write(MPI_File mpi_fh,
     int datatype_size;
     ADIO_Offset off;
     ADIO_File fh;
-    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

@@ -38,7 +38,6 @@ int MPI_File_set_atomicity(MPI_File mpi_fh, int flag)
     static char myname[] = "MPI_FILE_SET_ATOMICITY";
     ADIO_Fcntl_t *fcntl_struct;
     ADIO_File fh;
-    MPIU_THREADPRIV_DECL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPIR_Nest_incr();

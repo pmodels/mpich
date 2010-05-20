@@ -130,7 +130,6 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
     static const char FCNAME[] = "MPI_Grequest_start";
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *lrequest_ptr;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GREQUEST_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

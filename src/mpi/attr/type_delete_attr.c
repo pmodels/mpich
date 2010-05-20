@@ -53,7 +53,6 @@ int MPI_Type_delete_attr(MPI_Datatype type, int type_keyval)
     MPID_Datatype *type_ptr = NULL;
     MPID_Attribute *p, **old_p;
     MPID_Keyval *keyval_ptr = 0;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

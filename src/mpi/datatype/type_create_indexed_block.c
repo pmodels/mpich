@@ -83,7 +83,6 @@ int MPI_Type_create_indexed_block(int count,
     MPID_Datatype *new_dtp;
     int i, *ints;
     MPIU_CHKLMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_INDEXED_BLOCK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

@@ -48,7 +48,6 @@ int MPI_Start(MPI_Request *request)
     static const char FCNAME[] = "MPI_Start";
     MPID_Request * request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

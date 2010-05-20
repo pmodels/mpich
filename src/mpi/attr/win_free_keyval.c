@@ -53,7 +53,6 @@ int MPI_Win_free_keyval(int *win_keyval)
     int mpi_errno = MPI_SUCCESS;
     MPID_Keyval *keyval_ptr = NULL;
     int          in_use;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_FREE_KEYVAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

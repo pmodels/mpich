@@ -77,7 +77,6 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *index,
     int found_nonnull_req;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAITANY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

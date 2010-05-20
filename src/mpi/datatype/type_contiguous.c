@@ -54,7 +54,6 @@ int MPI_Type_contiguous(int count,
     static const char FCNAME[] = "MPI_Type_contiguous";
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *new_dtp;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CONTIGUOUS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

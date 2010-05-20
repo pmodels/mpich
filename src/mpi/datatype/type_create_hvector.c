@@ -60,7 +60,6 @@ int MPI_Type_create_hvector(int count,
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *new_dtp;
     int ints[2];
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HVECTOR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

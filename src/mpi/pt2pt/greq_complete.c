@@ -54,7 +54,6 @@ int MPI_Grequest_complete( MPI_Request request )
 #endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *request_ptr;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GREQUEST_COMPLETE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

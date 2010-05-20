@@ -84,7 +84,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     int n_greqs;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
     MPIU_CHKLMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAITALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

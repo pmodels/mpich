@@ -60,7 +60,6 @@ int MPI_Add_error_string(int errorcode, char *string)
 {
     static const char FCNAME[] = "MPI_Add_error_string";
     int mpi_errno = MPI_SUCCESS;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ADD_ERROR_STRING);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

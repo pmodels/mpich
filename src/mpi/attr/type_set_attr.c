@@ -34,7 +34,6 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
     MPID_Datatype *type_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;
     MPID_Attribute *p, **old_p;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

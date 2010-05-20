@@ -58,7 +58,6 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
     int i, lpid, n;
     MPID_Group *group_ptr;
     MPID_VCR   *local_vcr;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

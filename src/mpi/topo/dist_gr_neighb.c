@@ -59,7 +59,6 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPIR_Topology *topo_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

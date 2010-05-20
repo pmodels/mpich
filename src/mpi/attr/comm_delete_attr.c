@@ -55,7 +55,6 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
     MPID_Comm *comm_ptr = NULL;
     MPID_Attribute *p, **old_p;
     MPID_Keyval *keyval_ptr;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

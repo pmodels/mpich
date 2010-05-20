@@ -52,7 +52,6 @@ int MPI_Group_free(MPI_Group *group)
     static const char FCNAME[] = "MPI_Group_free";
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

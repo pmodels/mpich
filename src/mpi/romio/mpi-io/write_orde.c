@@ -40,7 +40,6 @@ int MPI_File_write_ordered_end(MPI_File mpi_fh, void *buf, MPI_Status *status)
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_ORDERED_END";
     ADIO_File fh;
-    MPIU_THREADPRIV_DECL;
 
     MPIU_UNREFERENCED_ARG(buf);
 

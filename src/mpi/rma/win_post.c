@@ -66,7 +66,6 @@ int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_Group *group_ptr=NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_POST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

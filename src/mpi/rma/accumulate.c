@@ -67,7 +67,6 @@ int MPI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
     static const char FCNAME[] = "MPI_Accumulate";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ACCUMULATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

@@ -54,7 +54,6 @@ int MPI_Comm_set_errhandler(MPI_Comm comm, MPI_Errhandler errhandler)
     MPID_Comm *comm_ptr = NULL;
     int in_use;
     MPID_Errhandler *errhan_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

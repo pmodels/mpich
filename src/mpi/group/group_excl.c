@@ -67,7 +67,6 @@ int MPI_Group_excl(MPI_Group group, int n, int *ranks, MPI_Group *newgroup)
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL, *new_group_ptr;
     int size, i, newi;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_EXCL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

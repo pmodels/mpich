@@ -60,7 +60,6 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
     MPID_Comm *comm_ptr = NULL;
     int i, lpid, n;
     MPID_Group *group_ptr;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_REMOTE_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

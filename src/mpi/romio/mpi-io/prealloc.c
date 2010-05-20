@@ -39,7 +39,6 @@ int MPI_File_preallocate(MPI_File mpi_fh, MPI_Offset size)
     ADIO_File fh;
     static char myname[] = "MPI_FILE_PREALLOCATE";
     MPI_Offset tmp_sz;
-    MPIU_THREADPRIV_DECL;
 #ifdef MPI_hpux
     int fl_xmpi;
 

@@ -80,7 +80,6 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_Attribute *new_attributes = 0;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
