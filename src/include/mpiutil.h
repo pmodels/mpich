@@ -18,6 +18,10 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
  * Thread safe implementation of strerror(), whenever possible. */
 const char *MPIU_Strerror(int errnum);
 
+/* prototypes for assertion implementation helpers */
+int MPIR_Assert_fail(const char *cond, const char *file_name, int line_num);
+int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, const char *fmt, ...);
+
 /*
  * MPIU_Assert()
  *
@@ -31,15 +35,12 @@ const char *MPIU_Strerror(int errnum);
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 #   define MPIU_AssertDecl(a_) a_
 #   define MPIU_AssertDeclValue(_a,_b) _a = _b
-#   define MPIU_Assert(a_)						\
-    {									\
-	if (!(a_))							\
-	{								\
-	    MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_));	\
-            MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST, "Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_)));	\
-            MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);			\
-	}								\
-    }
+#   define MPIU_Assert(a_)                             \
+    do {                                               \
+        if (!(a_)) {                                   \
+            MPIR_Assert_fail(#a_, __FILE__, __LINE__); \
+        }                                              \
+    } while (0)
 #else
 #   define MPIU_Assert(a_)
 /* Empty decls not allowed in C */
@@ -56,15 +57,12 @@ const char *MPIU_Strerror(int errnum);
  * converted real error checking and reporting once the
  * prototype becomes part of the official and supported code base.
  */
-#define MPIU_Assertp(a_)					\
-{								\
-    if (!(a_))							\
-    {								\
-        MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_));	\
-        MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST, "Assertion failed in file %s at line %d: %s\n", __FILE__, __LINE__, MPIU_QUOTE(a_)));	\
-        MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);			\
-    }								\
-}
+#define MPIU_Assertp(a_)                                             \
+    do {                                                             \
+        if (!(a_)) {                                                 \
+            MPIR_Assert_fail(#a_, __FILE__, __LINE__);               \
+        }                                                            \
+    } while (0)
 
 /* Define the MPIU_Assert_fmt_msg macro.  This macro takes two arguments.  The
  * first is the condition to assert.  The second is a parenthesized list of
@@ -94,54 +92,26 @@ const char *MPIU_Strerror(int errnum);
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 #  if defined(HAVE_MACRO_VA_ARGS)
 
-#  include "mpl.h" /* for MPL_VG_ macros */
-
 #  define MPIU_ASSERT_FMT_MSG_MAX_SIZE 2048
-/* newlines are added internally by this macro, callers do not need to include them */
-#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                                 \
-    do {                                                                               \
-        if (!(cond_)) {                                                                \
-            char *msg_ = MPIU_Malloc(MPIU_ASSERT_FMT_MSG_MAX_SIZE);                    \
-            MPIU_Assert_fmt_msg_snprintf_ fmt_arg_parens_;                             \
-            MPL_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",    \
-                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
-            MPL_VG_PRINTF_BACKTRACE("%s\n", msg_);                                     \
-            MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
-                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
-            MPIU_Internal_error_printf("%s\n", msg_);                                  \
-            MPIU_DBG_MSG_FMT(ALL, TERSE,                                               \
-                             (MPIU_DBG_FDEST,                                          \
-                              "Assertion failed in file %s at line %d: %s\n",          \
-                              __FILE__, __LINE__, MPIU_QUOTE(cond_)));                 \
-            MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s\n",msg_));                \
-            MPIU_Free(msg_);                                                           \
-            MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);                                    \
-        }                                                                              \
+/* newlines are added internally by the impl function, callers do not need to include them */
+#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                         \
+    do {                                                                       \
+        if (!(cond_)) {                                                        \
+            MPIR_Assert_fail_fmt(#cond_, __FILE__, __LINE__,                   \
+                                 MPIU_Assert_fmt_msg_expand_ fmt_arg_parens_); \
+        }                                                                      \
     } while (0)
-/* NOTE: tightly coupled to the above macro, make changes in either one carefullly! */
-#    define MPIU_Assert_fmt_msg_snprintf_(...) \
-    MPIU_Snprintf(msg_, MPIU_ASSERT_FMT_MSG_MAX_SIZE,__VA_ARGS__)
+/* helper to just expand the parens arg inline */
+#    define MPIU_Assert_fmt_msg_expand_(...) __VA_ARGS__
 
 #  else /* defined(HAVE_MACRO_VA_ARGS) */
 
-#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                                 \
-    do {                                                                               \
-        if (!(cond_)) {                                                                \
-            const char *unable_msg_ =                                                  \
-                "macro __VA_ARGS__ not supported, unable to print user message";       \
-            MPL_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",    \
-                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
-            MPL_VG_PRINTF_BACKTRACE("%s\n", unable_msg_);                              \
-            MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n", \
-                                       __FILE__, __LINE__, MPIU_QUOTE(cond_));         \
-            MPIU_Internal_error_printf("%s\n", unable_msg_);                           \
-            MPIU_DBG_MSG_FMT(ALL, TERSE,                                               \
-                             (MPIU_DBG_FDEST,                                          \
-                              "Assertion failed in file %s at line %d: %s\n",          \
-                              __FILE__, __LINE__, MPIU_QUOTE(cond_)));                 \
-            MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s\n",unable_msg_));         \
-            MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);                                    \
-        }                                                                              \
+#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                                                   \
+    do {                                                                                                 \
+        if (!(cond_)) {                                                                                  \
+            MPIR_Assert_fail_fmt(#cond_, __FILE__, __LINE__,                                             \
+                                 "%s", "macro __VA_ARGS__ not supported, unable to print user message"); \
+        }                                                                                                \
     } while (0)
 
 #  endif
