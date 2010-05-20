@@ -413,15 +413,19 @@ M*/
 /* Helper definitions for the default macro definitions */
 #if defined(MPICH_IS_THREADED) && !defined(MPID_DEVICE_DEFINES_THREAD_CS)
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+
 /* FIXME what is this really supposed to do?  Is it supposed to check against
  * the "MPI nesting" or the critical section nesting? */
-#define MPIU_THREAD_CHECKNEST(_name)				\
-    MPIU_THREADPRIV_GET;                                        \
-    MPIU_DBG_MSG_D(THREAD,VERBOSE,"CHECKNEST, MPIR_Nest_value()=%d",MPIR_Nest_value());\
-    if (MPIR_Nest_value() == 0)	
+/* It seems to just be a hook gating actual mutex lock/unlock for usage in
+ * _GLOBAL mode */
+/* should be followed by a {} block that will be conditionally executed */
+#define MPIU_THREAD_CHECKNEST(kind_, lockname_)                                         \
+    MPIU_THREADPRIV_GET;                                                                \
+    MPIU_DBG_MSG_D(THREAD,VERBOSE,"CHECKNEST, MPIR_Nest_value()=%d",MPIR_Nest_value()); \
+    if (MPIR_Nest_value() == 0)
 
-#define MPIU_THREAD_CHECKDEPTH(_name,_value)
-#define MPIU_THREAD_UPDATEDEPTH(_name,_value)				
+#define MPIU_THREAD_CHECKDEPTH(kind_, lockname_, value_)
+#define MPIU_THREAD_UPDATEDEPTH(kind_, lockname_, value_)
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 
@@ -431,12 +435,6 @@ M*/
 /* This structure is used to keep track of where the last change was made
    to the thread cs depth */
 #ifdef MPID_THREAD_DEBUG
-
-enum MPIU_Nest_mutexes {
-    MPIU_Nest_global_mutex = 0,
-    MPIU_Nest_handle_mutex,
-    MPIU_Nest_NUM_MUTEXES
-};
 
 #define MPIU_THREAD_LOC_LEN 127
 #define MPIU_THREAD_FNAME_LEN 31
@@ -458,84 +456,74 @@ typedef struct MPIU_ThreadDebug {
                 MPIU_Calloc(MPIU_Nest_NUM_MUTEXES, sizeof(MPIU_ThreadDebug_t)); \
         }                                                                       \
     } while (0)
-#define MPIU_THREAD_CHECKDEPTH(name_,value_)                                               \
+#define MPIU_THREAD_CHECKDEPTH(kind_, lockname_, value_)                                   \
     do {                                                                                   \
         MPIU_ThreadDebug_t *nest_ptr_ = NULL;                                              \
         MPIU_THREADPRIV_GET;                                                               \
         MPIU_THREAD_INIT_NEST_CHECK_;                                                      \
         nest_ptr_ = MPIU_THREADPRIV_FIELD(nest_debug);                                     \
-        if (nest_ptr_[MPIU_Nest_##name_].count != value_) {                                \
+        if (nest_ptr_[kind_].count != value_) {                                            \
             fprintf(stderr, "%s:%d %s = %d, required %d; previously set in %s:%d(%s)\n",   \
-                    __FILE__, __LINE__,  #name_,                                           \
-                    nest_ptr_[MPIU_Nest_##name_].count, value_,                            \
-                    nest_ptr_[MPIU_Nest_##name_].file,                                     \
-                    nest_ptr_[MPIU_Nest_##name_].line,                                     \
-                    nest_ptr_[MPIU_Nest_##name_].fname );                                  \
+                    __FILE__, __LINE__,  lockname_,                                        \
+                    nest_ptr_[kind_].count, value_,                                        \
+                    nest_ptr_[kind_].file,                                                 \
+                    nest_ptr_[kind_].line,                                                 \
+                    nest_ptr_[kind_].fname );                                              \
             fflush(stderr);                                                                \
         }                                                                                  \
     } while (0)
-#define MPIU_THREAD_UPDATEDEPTH(name_,value_)                                              \
+#define MPIU_THREAD_UPDATEDEPTH(kind_, lockname_, value_)                                  \
     do {                                                                                   \
         MPIU_ThreadDebug_t *nest_ptr_ = NULL;                                              \
         MPIU_THREADPRIV_GET;                                                               \
         MPIU_THREAD_INIT_NEST_CHECK_;                                                      \
         nest_ptr_ = MPIU_THREADPRIV_FIELD(nest_debug);                                     \
-        if (nest_ptr_[MPIU_Nest_##name_].count + (value_) < 0) {                           \
+        if (nest_ptr_[kind_].count + (value_) < 0) {                                       \
             fprintf(stderr, "%s:%d %s = %d (<0); previously set in %s:%d(%s)\n",           \
-                    __FILE__, __LINE__,  #name_,                                           \
-                    nest_ptr_[MPIU_Nest_##name_].count,                                    \
-                    nest_ptr_[MPIU_Nest_##name_].file,                                     \
-                    nest_ptr_[MPIU_Nest_##name_].line,                                     \
-                    nest_ptr_[MPIU_Nest_##name_].fname );                                  \
+                    __FILE__, __LINE__,  lockname_,                                        \
+                    nest_ptr_[kind_].count,                                                \
+                    nest_ptr_[kind_].file,                                                 \
+                    nest_ptr_[kind_].line,                                                 \
+                    nest_ptr_[kind_].fname );                                              \
             fflush(stderr);                                                                \
         }                                                                                  \
-        nest_ptr_[MPIU_Nest_##name_].count += value_;                                      \
-        nest_ptr_[MPIU_Nest_##name_].line = __LINE__;                                      \
-        MPIU_Strncpy( nest_ptr_[MPIU_Nest_##name_].file, __FILE__, MPIU_THREAD_LOC_LEN );  \
-        MPIU_Strncpy( nest_ptr_[MPIU_Nest_##name_].fname, FCNAME, MPIU_THREAD_FNAME_LEN ); \
+        nest_ptr_[kind_].count += value_;                                                  \
+        nest_ptr_[kind_].line = __LINE__;                                                  \
+        MPIU_Strncpy( nest_ptr_[kind_].file, __FILE__, MPIU_THREAD_LOC_LEN );              \
+        MPIU_Strncpy( nest_ptr_[kind_].fname, FCNAME, MPIU_THREAD_FNAME_LEN );             \
     } while (0)
-#define MPIU_THREAD_CHECKNEST(_name)
+#define MPIU_THREAD_CHECKNEST(kind_, lockname_)
 
 #else
-#define MPIU_THREAD_CHECKDEPTH(_name,_value)
-#define MPIU_THREAD_UPDATEDEPTH(_name,_value)
-#define MPIU_THREAD_CHECKNEST(_name)
+#define MPIU_THREAD_CHECKDEPTH(kind_, lockname_, value_)
+#define MPIU_THREAD_UPDATEDEPTH(kind_, lockname_, value_)
+#define MPIU_THREAD_CHECKNEST(kind_, lockname_)
 #endif /* MPID_THREAD_DEBUG */
 #else
-#define MPIU_THREAD_CHECKNEST(_name)
+#define MPIU_THREAD_CHECKNEST(kind_, lockname_)
 #endif /* test on THREAD_GRANULARITY */
 
-#define MPIU_THREAD_CS_ENTER_LOCKNAME(_name) \
-{								\
-    MPIU_DBG_MSG(THREAD,VERBOSE,"attempting to ENTER " #_name); \
-    MPIU_THREAD_CHECKDEPTH(_name,0);                            \
-    MPIU_THREAD_CHECKNEST(_name)				\
-    { 								\
-        MPIU_DBG_MSG(THREAD,TYPICAL,"Enter critical section "#_name);\
-	MPID_Thread_mutex_lock(&MPIR_ThreadInfo._name);	\
-	MPIU_THREAD_UPDATEDEPTH(_name,1);                        \
-    }								\
-}
-#define MPIU_THREAD_CS_EXIT_LOCKNAME(_name)			\
-{								\
-    MPIU_DBG_MSG(THREAD,VERBOSE,"attempting to EXIT " #_name);  \
-    MPIU_THREAD_CHECKDEPTH(_name,1);                            \
-    MPIU_THREAD_CHECKNEST(_name)				\
-    { 								\
-        MPIU_DBG_MSG(THREAD,TYPICAL,"Exit critical section "#_name);\
-	MPID_Thread_mutex_unlock(&MPIR_ThreadInfo._name);	\
-	MPIU_THREAD_UPDATEDEPTH(_name,-1);                       \
-    }								\
-}
-#define MPIU_THREAD_CS_YIELD_LOCKNAME(_name)                          \
-do {                                                                  \
-    MPIU_DBG_MSG(THREAD,VERBOSE,"attempting to YIELD " #_name);       \
-    MPIU_THREAD_CHECKDEPTH(_name,1);                                  \
-    /* don't CHECKNEST here, we want nesting to be >0 */              \
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Yield critical section "#_name);     \
-    MPID_Thread_mutex_unlock(&MPIR_ThreadInfo._name);                 \
-    MPID_Thread_mutex_lock(&MPIR_ThreadInfo._name);                   \
-} while (0)
+#define MPIU_THREAD_CS_ENTER_LOCKNAME(name_)                                                   \
+    do {                                                                                       \
+        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to ENTER lockname=%s", #name_);              \
+        MPIU_Thread_CS_enter_lockname_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_); \
+    } while (0)
+#define MPIU_THREAD_CS_EXIT_LOCKNAME(name_)                                                    \
+    do {                                                                                       \
+        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to EXIT lockname=%s", #name_);               \
+        MPIU_Thread_CS_exit_lockname_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_);  \
+    } while (0)
+#define MPIU_THREAD_CS_YIELD_LOCKNAME(name_)                                                   \
+    do {                                                                                       \
+        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to YIELD lockname=%s", #name_);              \
+        MPIU_Thread_CS_yield_lockname_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_); \
+    } while (0)
+
+enum MPIU_Nest_mutexes {
+    MPIU_Nest_global_mutex = 0,
+    MPIU_Nest_handle_mutex,
+    MPIU_Nest_NUM_MUTEXES
+};
 
 /* Some locks (such as the memory allocation locks) are needed to
  * bootstrap the lock checking code.  These macros provide a similar
@@ -551,7 +539,6 @@ do {                                                                  \
         MPIU_DBG_MSG(THREAD,TYPICAL,"Exit critical section "#_name " (checking disabled)"); \
         MPID_Thread_mutex_unlock(&MPIR_ThreadInfo._name);            \
     } while (0)
-
 
 #if defined(USE_MEMORY_TRACING)
     /* These are defined for all levels of thread granularity due to the

@@ -142,4 +142,6 @@
 #define MPIU_UNREFERENCED_ARG(a)
 #endif
 
+#include "mpiimplthreadpost.h"
+
 #endif

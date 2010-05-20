@@ -3138,6 +3138,8 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIU_CALL(context,funccall) context##_##funccall
 #endif
 
+#include "mpiimplthreadpost.h"
+
 /* Include definitions from the device which require items defined by this 
    file (mpiimpl.h). */
 #include "mpidpost.h"
