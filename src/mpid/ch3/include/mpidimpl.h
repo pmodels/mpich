@@ -1803,18 +1803,35 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 #ifdef MPICH_IS_THREADED
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
-#define MPIU_THREAD_CS_ENTER_CH3COMM(_context)
-#define MPIU_THREAD_CS_EXIT_CH3COMM(_context)
+#define MPIU_THREAD_CS_ENTER_CH3COMM(context_)
+#define MPIU_THREAD_CS_EXIT_CH3COMM(context_)
 
-/* XXX DJG PER_OBJECT needs lots of love down here at the device and channel levels */
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 
+#define MPIU_THREAD_CS_ENTER_POBJ_MUTEX(mutex_p_)                                                           \
+    do {                                                                                                    \
+        MPIU_DBG_MSG_P(THREAD,VERBOSE,"attempting to ENTER per-object CS, mutex=%s", MPIU_QUOTE(mutex_p_)); \
+        /* FIXME do we need nest checking here? the existing macros won't work unmodified...*/              \
+        MPID_Thread_mutex_lock(mutex_p_);                                                                   \
+    } while (0)
+#define MPIU_THREAD_CS_EXIT_POBJ_MUTEX(mutex_p_)                                                            \
+    do {                                                                                                    \
+        MPIU_DBG_MSG_P(THREAD,VERBOSE,"attempting to EXIT per-object CS, mutex=%s", MPIU_QUOTE(mutex_p_));  \
+        /* FIXME do we need nest checking here? the existing macros won't work unmodified...*/              \
+        MPID_Thread_mutex_unlock(mutex_p_);                                                                 \
+    } while (0)
+
 /* There is a per object lock */
-#define MPIU_THREAD_CS_ENTER_CH3COMM(_context) {\
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_ENTER_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END \
-}
-#define MPIU_THREAD_CS_EXIT_CH3COMM(_context) \
-   MPIU_THREAD_CHECK_BEGIN MPIU_THREAD_CS_EXIT_POBJ_LOCKNAME(_context->pobj_mutex) MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_ENTER_CH3COMM(context_)                      \
+    do {                                                            \
+        if (MPIU_ISTHREADED)                                        \
+            MPIU_THREAD_CS_ENTER_POBJ_MUTEX(&context_->pobj_mutex); \
+    } while (0)
+#define MPIU_THREAD_CS_EXIT_CH3COMM(context_)                       \
+    do {                                                            \
+        if (MPIU_ISTHREADED)                                        \
+            MPIU_THREAD_CS_EXIT_POBJ_MUTEX(&context_->pobj_mutex);  \
+    } while (0)
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */

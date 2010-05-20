@@ -156,16 +156,6 @@ static int MPIR_Thread_CS_Init( void )
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, NULL);
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.handle_mutex, NULL);
 
-#ifdef MPID_THREAD_DEBUG
-    MPID_Thread_tls_create(MPIR_CleanupThreadStorage, 
-			   &MPIR_ThreadInfo.nest_storage, NULL);
-    { 
-	MPIU_ThreadDebug_t *nest_ptr = 
-	    (MPIU_ThreadDebug_t *) MPIU_Calloc( 2, sizeof(MPIU_ThreadDebug_t) );
-    MPID_Thread_tls_set( &MPIR_ThreadInfo.nest_storage, nest_ptr );
-    }
-#endif 
-
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
    locks where ever possible. */
@@ -200,15 +190,6 @@ int MPIR_Thread_CS_Finalize( void )
      * one for each logical class (e.g., each type of object) */
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, NULL);
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.handle_mutex, NULL);
-
-#ifdef MPID_THREAD_DEBUG
-    { void *ptr;
-	MPID_Thread_tls_get( &MPIR_ThreadInfo.nest_storage, &ptr );
-	if (ptr) MPIU_Free( ptr );
-	MPID_Thread_tls_set( &MPIR_ThreadInfo.nest_storage, NULL );
-    }
-    MPID_Thread_tls_destroy( &MPIR_ThreadInfo.nest_storage, NULL);
-#endif
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
