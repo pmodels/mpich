@@ -508,29 +508,29 @@ typedef struct MPIU_ThreadDebug {
 #define MPIU_THREAD_CS_ENTER_LOCKNAME(_name) \
 {								\
     MPIU_DBG_MSG(THREAD,VERBOSE,"attempting to ENTER " #_name); \
-    MPIU_THREAD_CHECKDEPTH(_name,0)                             \
+    MPIU_THREAD_CHECKDEPTH(_name,0);                            \
     MPIU_THREAD_CHECKNEST(_name)				\
     { 								\
         MPIU_DBG_MSG(THREAD,TYPICAL,"Enter critical section "#_name);\
 	MPID_Thread_mutex_lock(&MPIR_ThreadInfo._name);	\
-	MPIU_THREAD_UPDATEDEPTH(_name,1)                        \
+	MPIU_THREAD_UPDATEDEPTH(_name,1);                        \
     }								\
 }
 #define MPIU_THREAD_CS_EXIT_LOCKNAME(_name)			\
 {								\
     MPIU_DBG_MSG(THREAD,VERBOSE,"attempting to EXIT " #_name);  \
-    MPIU_THREAD_CHECKDEPTH(_name,1)                             \
+    MPIU_THREAD_CHECKDEPTH(_name,1);                            \
     MPIU_THREAD_CHECKNEST(_name)				\
     { 								\
         MPIU_DBG_MSG(THREAD,TYPICAL,"Exit critical section "#_name);\
 	MPID_Thread_mutex_unlock(&MPIR_ThreadInfo._name);	\
-	MPIU_THREAD_UPDATEDEPTH(_name,-1)                       \
+	MPIU_THREAD_UPDATEDEPTH(_name,-1);                       \
     }								\
 }
 #define MPIU_THREAD_CS_YIELD_LOCKNAME(_name)                          \
 do {                                                                  \
     MPIU_DBG_MSG(THREAD,VERBOSE,"attempting to YIELD " #_name);       \
-    MPIU_THREAD_CHECKDEPTH(_name,1)                                   \
+    MPIU_THREAD_CHECKDEPTH(_name,1);                                  \
     /* don't CHECKNEST here, we want nesting to be >0 */              \
     MPIU_DBG_MSG(THREAD,TYPICAL,"Yield critical section "#_name);     \
     MPID_Thread_mutex_unlock(&MPIR_ThreadInfo._name);                 \
@@ -627,6 +627,7 @@ do {                                                                  \
 
 #define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
 #define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
+#define MPIU_THREAD_CS_YIELD_ALLFUNC(_context)
 
 #define MPIU_THREAD_CS_ENTER_INIT(_context)
 #define MPIU_THREAD_CS_EXIT_INIT(_context)
