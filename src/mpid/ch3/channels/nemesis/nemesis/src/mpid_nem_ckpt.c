@@ -462,7 +462,7 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_m
     if (!vc_ch->is_local) {
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         /* There should be nothing in the channel following this. */
-        MPIU_Assert(*buflen == sizeof(MPIDI_CH3_Pkt_t))
+        MPIU_Assert(*buflen == sizeof(MPIDI_CH3_Pkt_t));
     }
 
     if (marker_count == 0) {

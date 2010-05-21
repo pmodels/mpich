@@ -51,7 +51,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
 
     MPIU_Assert(n_iov <= MPID_IOV_LIMIT);
-    MPIU_Assert(iov[0].MPID_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t))
+    MPIU_Assert(iov[0].MPID_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The sock channel uses a fixed length header, the size of which is the 
        maximum of all possible packet headers */
