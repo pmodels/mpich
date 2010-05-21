@@ -1,0 +1,21 @@
+This is the "maint/local_perl/" directory for MPICH2.  It contains any
+pure-perl modules needed by the MPICH2 maintainer scripts living in
+"maint/".  Perl is not and should not be required to build MPICH2, so
+these modules should only be used by maintainer scripts.
+
+!!! Please don't put non-pure-perl modules here !!!
+
+Only the lib/ directory will be maintained unarchived in source control.
+The distribution tarballs will also be maintained.  All of the extra
+stuff that comes with a distribution should not be committed.
+
+Scripts that need to use these modules should insert the following line
+near the top of the script (after the shebang line, before modules are
+loaded):
+
+-------8<-------
+use lib 'maint/local_perl/lib'
+-------8<-------
+
+Dave Goodell <goodell@mcs.anl.gov>
+2010-04-23
