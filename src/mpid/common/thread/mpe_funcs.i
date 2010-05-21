@@ -59,7 +59,8 @@ do {                                               \
 do {                                               \
     int err_;					\
     MPIU_Thread_mutex_lock((mutex_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);    \
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                   \
+                        ("mutex_lock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 #endif
 
@@ -73,7 +74,8 @@ do {                                               \
 do {                                               \
     int err_;					\
     MPIU_Thread_mutex_unlock((mutex_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);	\
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                     \
+                        ("mutex_unlock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 #endif
 
@@ -87,7 +89,8 @@ do {                                                       \
 do {                                                               \
     int err_;							\
     MPIU_Thread_mutex_trylock((mutex_), (flag_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);			\
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                      \
+                        ("mutex_trylock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 #endif
 
@@ -116,7 +119,8 @@ do {                                                       \
 do {                                                       \
     int err_;						\
     MPIU_Thread_cond_wait((cond_), (mutex_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);		\
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                  \
+                        ("cond_wait failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 #endif
 
@@ -130,7 +134,8 @@ do {                                               \
 do {                                               \
     int err_;					\
     MPIU_Thread_cond_broadcast((cond_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);	\
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                       \
+                        ("cond_broadcast failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 #endif
 
@@ -144,7 +149,8 @@ do {                                               \
 do {                                               \
     int err_;					\
     MPIU_Thread_cond_signal((cond_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);	\
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                    \
+                        ("cond_signal failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 #endif
 
@@ -173,7 +179,8 @@ do {                                               \
 do {                                                       \
     int err_;						\
     MPIU_Thread_tls_set((tls_), (value_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);		\
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                \
+                        ("tls_set failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 #endif
 
@@ -188,7 +195,8 @@ do {                                                       \
     int err_;						\
 							\
     MPIU_Thread_tls_get((tls_), (value_), &err_);	\
-    MPIU_Assert(err_ == MPIU_THREAD_SUCCESS);		\
+    /* can't strerror here, possible endless recursion in strerror */ \
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,("tls_get failed, err_=%d",err_)); \
 } while (0)
 #endif
 
