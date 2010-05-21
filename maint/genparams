@@ -1,0 +1,419 @@
+#!/usr/bin/env perl
+#
+# (C) 2010 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+# script TODO:
+# - generate initialization function to read vals from env vars
+# - deal with string escaping in generated C strings
+# - add support for "range" types (see MPL_env2range)
+# - sort/collate paramters by name/category
+
+use strict;
+use warnings;
+
+# help perl find the YAML parsing module
+use lib 'maint/local_perl/lib';
+
+use YAML::Tiny qw();
+use File::Basename qw(basename);
+use Data::Dumper;
+use Getopt::Long;
+
+# I'm pretty sure this is a standard lib module across all perl5
+# installs, but we can work around this easily if that doesn't turn out
+# to be true. [goodell@ 2010-04-26]
+use Digest::MD5 qw();
+
+##################################################
+
+# set true to enable debug output
+my $debug = 0;
+
+# namespace prefix for variable and type names
+my $ns = "MPIR_Param";
+
+# parameter description file
+my $param_file = "src/util/param/params.yml";
+
+# output source files
+my $header_file = "src/include/mpich_param_vals.h";
+my $c_file      = "src/util/param/param_vals.c";
+
+GetOptions(
+    "help!"       => \&print_usage_and_exit,
+    "debug!"      => \$debug,
+    "namespace=s" => \$ns,
+    "param-file"  => \$param_file,
+    "header=s"    => \$header_file,
+    "c-file=s"    => \$c_file,
+) or die "unable to parse options, stopped";
+
+sub print_usage_and_exit {
+    print <<EOT;
+Usage: $0 [OPTIONS]
+
+Supported options:
+
+    --help            - this output
+    --debug           - enable some debugging output
+    --namespace=STR   - use STR as variable/type prefix in generated code
+    --param-file=FILE - use FILE as input describing parameters
+
+EOT
+    exit 1;
+}
+
+my $run_timestamp = localtime;
+my $uc_ns = uc($ns);
+
+########################################################################
+# read the config file and turn it into a perl hash/array object
+
+# NOTE: if multiple configuration files are supported in the future,
+# this is the place that should be modified to read them all in and
+# merge them into a single consistent configuration object
+
+my $yaml = YAML::Tiny->new();
+my $params = ($yaml->read($param_file))->[0]; # [0] is for the first document
+print Dumper($params)."\n" if $debug;
+die "not a HASH, stopped" unless ref($params) eq "HASH";
+
+########################################################################
+# validate the config file
+
+# only simple checks for now, just make sure that all categories
+# referenced by parameters actually exist
+my %cat_hash = (map { ($_->{name} => 1) } @{$params->{categories}});
+foreach my $p (@{$params->{parameters}}) {
+    unless (exists $cat_hash{$p->{category}}) {
+        warn "category '".$p->{category}."' referenced by '".$p->{name}."' was not found";
+    }
+}
+
+########################################################################
+# setup output files
+open(PARAM_HDR, '>', $header_file);
+open(PARAM_C,   '>', $c_file);
+
+my $hdr_guard = header_to_incl_guard($header_file);
+my $param_file_md5 = md5sum($param_file);
+
+print PARAM_HDR <<EOT;
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2010 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+/* automatically generated
+ *   by:   $0
+ *   on:   $run_timestamp
+ *   from: $param_file (md5sum $param_file_md5)
+ *
+ * DO NOT EDIT!!!
+ */
+
+#if !defined($hdr_guard)
+#define $hdr_guard
+
+EOT
+
+print PARAM_C <<EOT;
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2010 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+/* automatically generated
+ *   by:   $0
+ *   at:   $run_timestamp
+ *   from: $param_file (md5sum $param_file_md5)
+ *
+ * DO NOT EDIT!!!
+ */
+
+#include "mpiimpl.h"
+
+EOT
+
+########################################################################
+# actually process file contents, starting w/ categories
+die "missing 'categories', stopped" unless exists $params->{categories};
+
+# write enum first
+print PARAM_HDR <<EOT;
+/* parameter categories */
+enum ${ns}_category_id_t {
+EOT
+my $num_categories = scalar @{$params->{categories}};
+foreach my $cat (@{$params->{categories}}) {
+    printf PARAM_HDR "    ${uc_ns}_CATEGORY_ID_%s,\n", $cat->{name};
+}
+# then write full contents tuple
+print PARAM_HDR <<EOT;
+    ${uc_ns}_NUM_CATEGORIES
+};
+
+struct ${ns}_category_t {
+    const enum ${ns}_category_id_t id;
+    const char *name;
+    const char *description;
+};
+
+/* array of category info for runtime usage */
+extern struct ${ns}_category_t ${ns}_categories[${uc_ns}_NUM_CATEGORIES];
+
+EOT
+
+print PARAM_C <<EOT;
+/* array of category info for runtime usage */
+struct ${ns}_category_t ${ns}_categories[${uc_ns}_NUM_CATEGORIES] = {
+EOT
+foreach my $cat (@{$params->{categories}}) {
+    my $desc = $cat->{description};
+    $desc =~ s/"/\\"/g;
+    printf PARAM_C qq(    { ) .
+        qq(${uc_ns}_CATEGORY_ID_%s,\n) .
+        qq(      "%s",\n) .
+        qq(      "%s" },\n),
+        $cat->{name}, $cat->{name}, $desc;
+}
+print PARAM_C <<EOT;
+};
+
+EOT
+
+
+########################################################################
+# now the actual parameters
+die "missing 'parameters', stopped" unless exists $params->{parameters};
+
+print PARAM_HDR <<EOT;
+/* parameter values */
+enum ${ns}_id_t {
+EOT
+my $num_params = @{$params->{parameters}};
+# XXX DJG TODO collate and separate by category
+foreach my $p (@{$params->{parameters}}) {
+    printf PARAM_HDR "    ${uc_ns}_ID_%s,\n", $p->{name};
+}
+print PARAM_HDR <<EOT;
+    ${uc_ns}_NUM_PARAMS
+};
+
+/* initializes parameter values from the environment */
+int ${ns}_init_params(void);
+
+enum ${ns}_type_t {
+    ${uc_ns}_TYPE_INVALID = 0,
+    ${uc_ns}_TYPE_INT,
+    ${uc_ns}_TYPE_DOUBLE,
+    ${uc_ns}_TYPE_BOOLEAN,
+    ${uc_ns}_TYPE_STRING
+};
+
+/* used to represent default values */
+struct ${ns}_param_default_val_t {
+    const enum ${ns}_type_t type;
+
+    /* not a union b/c of initialization portability issues */
+    const int i_val; /* also used for booleans */
+    const double d_val;
+    const char *s_val;
+};
+
+struct ${ns}_t {
+    const enum ${ns}_id_t id;
+    const char *name;
+    const char *description;
+    const struct ${ns}_param_default_val_t default_val;
+    /* TODO other fields here */
+};
+
+/* array of parameter info for runtime usage */
+extern struct ${ns}_t ${ns}_params[${uc_ns}_NUM_PARAMS];
+
+/* extern declarations for each parameter
+ * (definitions in $c_file) */
+EOT
+
+# XXX DJG TODO collate and separate by category
+foreach my $p (@{$params->{parameters}}) {
+    printf PARAM_HDR "extern %s ${uc_ns}_%s;\n",
+        type2ctype($p->{type}), $p->{name};
+}
+
+print PARAM_C <<EOT;
+/* array of parameter info for runtime usage */
+struct ${ns}_t ${ns}_params[${uc_ns}_NUM_PARAMS] = {
+EOT
+
+# XXX DJG TODO collate and separate by category
+foreach my $p (@{$params->{parameters}}) {
+    my $type_enum_val = "${uc_ns}_TYPE_".uc($p->{type});
+    my ($int_val, $str_val, $double_val) = (-1, qq(""), "0.0");
+
+    if ($p->{type} eq "string") {
+        $str_val = fmt_default($p->{default}, $p->{type});
+    }
+    elsif ($p->{type} eq "int") {
+        $int_val = fmt_default($p->{default}, $p->{type});
+    }
+    elsif ($p->{type} eq "double") {
+        $double_val = fmt_default($p->{default}, $p->{type});
+    }
+    elsif ($p->{type} eq "boolean") {
+        $int_val = fmt_default($p->{default}, $p->{type});
+    }
+    else {
+        die "unknown type $p->{type}, stopped";
+    }
+
+    my $desc = $p->{description};
+    $desc =~ s/"/\\"/g;
+
+    printf PARAM_C qq(    { ) .
+        qq(${uc_ns}_ID_%s,\n) .
+        qq(      "%s",\n) .
+        qq(      "%s",\n) .
+        #          T    I   D   S
+        qq(      { %s, %d, %s, %s } },\n),
+        $p->{name}, $p->{name}, $desc,
+        $type_enum_val, $int_val, $double_val, $str_val;
+}
+
+print PARAM_C <<EOT;
+};
+
+/* actual storage for parameters */
+EOT
+foreach my $p (@{$params->{parameters}}) {
+    printf PARAM_C "%s ${uc_ns}_%s = %s;\n",
+        type2ctype($p->{type}),
+        $p->{name},
+        fmt_default($p->{default}, $p->{type});
+}
+
+# FIXME the mpi_errno bit is MPICH-specific
+print PARAM_C <<EOT;
+
+#undef FUNCNAME
+#define FUNCNAME ${ns}_init_params
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int ${ns}_init_params(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+
+EOT
+
+foreach my $p (@{$params->{parameters}}) {
+    my $env_fn = type_to_env_fn($p->{type});
+    my @env_names = ();
+
+    # process extra envs first so the primary always wins
+    push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
+    push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, "${uc_ns}_" . $p->{name};
+
+    foreach my $env_name (@env_names) {
+        # assumes rc is defined
+        my $var_name = "${uc_ns}_" . $p->{name};
+        print PARAM_C <<EOT;
+    rc = MPL_env2${env_fn}("$env_name", &($var_name));
+    MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
+EOT
+    }
+    print PARAM_C "\n";
+}
+
+print PARAM_C <<EOT;
+fn_fail:
+    return mpi_errno;
+}
+
+EOT
+
+########################################################################
+# clean up
+
+close(PARAM_C);
+
+print PARAM_HDR "\n#endif /* $hdr_guard */\n";
+close(PARAM_HDR);
+
+
+########################################################################
+# helper subroutines
+
+# transform a parameter type to a C-language type
+sub type2ctype {
+    my $type = shift;
+    my %typemap = (
+        'int'     => 'int',
+        'double'  => 'double',
+        'string'  => 'const char *',
+        'boolean' => 'int',
+    );
+    die "unknown type '$type', stopped" unless exists $typemap{$type};
+    return $typemap{$type};
+}
+
+# transform a default value into a C value
+sub fmt_default {
+    my $val = shift;
+    my $type = shift;
+
+    if ($type eq "string") {
+        $val =~ s/"/\\"/g;
+        return qq("$val");
+    }
+    elsif ($type eq "boolean") {
+        if    ($val =~ m/^(0|f(alse)?|no?)$/i)   { return qq(0); }
+        elsif ($val =~ m/^(1|t(rue)?|y(es)?)$/i) { return qq(1); }
+        else {
+            warn "WARNING: type='$type', bad val='$val', continuing";
+            return qq(0); # fail-false
+        }
+    }
+    else {
+        return qq($val);
+    }
+}
+
+# turns foo_BAR-baz.h into FOO_BAR_BAZ_H_INCLUDED
+sub header_to_incl_guard {
+    my $header_file = shift;
+    my $guard = basename($header_file);
+    $guard =~ tr/a-z\-./A-Z__/;
+    $guard .= "_INCLUDED";
+    die "guard contains whitespace, stopped" if ($guard =~ m/\s/);
+    return $guard;
+}
+
+sub md5sum {
+    my $file = shift;
+    my $md5 = Digest::MD5->new();
+
+    open FILE, '<', $file;
+    binmode(FILE);
+    $md5->addfile(*FILE);
+    close FILE;
+
+    return $md5->hexdigest;
+}
+
+sub type_to_env_fn {
+    my $type = shift;
+    my %typemap = (
+        'int' =>  'int',
+        'string' => 'str',
+        'boolean' => 'bool',
+    );
+
+    die "unknown type '$type', stopped" unless exists $typemap{$type};
+    return $typemap{$type};
+}
+

@@ -1,0 +1,60 @@
+--- #YAML:1.0
+# This is a YAML formatted file with '#'-style comments.  This file
+# *must* be parseable by the YAML::Tiny perl module.  So don't use
+# the inline list or map forms and don't try to use any really fancy
+# features like tagging or anchors.
+#
+# The only tricky bit is that long reflowed text (such as a description)
+# should use ">-" to both fold newlines and remove the trailing newline.
+#
+# It is used to generate parameter-handling code for MPICH2.
+# See the maint/genparams script for more information.
+categories:
+    - name        : collective
+      description : parameters that control collective communication behavior
+
+parameters:
+    ##############################################################
+    # collective parameters
+    - category    : collective
+      name        : ALLTOALL_SHORT_MSG_SIZE
+      type        : int
+      default     : 256
+      description : >-
+        the short message algorithm will be used if the per-destination
+        message size (sendcount*size(sendtype)) is <= this value
+
+    - category    : collective
+      name        : ALLTOALL_MEDIUM_MSG_SIZE
+      type        : int
+      default     : 32768
+      description : >-
+        the medium message algorithm will be used if the per-destination
+        message size (sendcount*size(sendtype)) is <= this value and
+        larger than ALLTOALL_SHORT_MSG_SIZE
+
+    - category    : collective
+      name        : ALLTOALL_THROTTLE
+      type        : int
+      default     : 4
+      description : >-
+        max no. of irecvs/isends posted at a time in some alltoall
+        algorithms. Setting it to 0 causes all irecvs/isends to be
+        posted at once.
+
+    ##############################################################
+    # intranode communication parameters
+    - category    : intranode
+      name        : NOLOCAL
+      alt-env     :
+                    - NO_LOCAL
+      abs-alt-env :
+                    - MPICH_NOLOCAL
+                    - MPICH_NO_LOCAL
+      type        : boolean
+      default     : false
+      description : >-
+        If true, force all processes to operate as though all processes
+        are located on another node.  For example, this disables shared
+        memory communication hierarchical collectives.
+...
