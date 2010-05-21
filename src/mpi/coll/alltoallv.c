@@ -122,7 +122,7 @@ int MPIR_Alltoallv (
         }
     }
     else {
-        bblock = MPIR_ALLTOALL_THROTTLE;
+        bblock = MPIR_PARAM_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
         MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");

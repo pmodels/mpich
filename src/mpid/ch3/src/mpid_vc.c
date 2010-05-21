@@ -1101,9 +1101,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_NO_LOCAL
     no_local = 1;
 #else
-    ret = MPL_env2bool("MPICH_NO_LOCAL", &val);
-    if (ret == 1 && val)
-        no_local = 1;
+    no_local = MPIR_PARAM_NOLOCAL;
 #endif
 
     /* Used for debugging on a single machine: Odd procs on a node are

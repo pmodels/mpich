@@ -12,6 +12,10 @@
 categories:
     - name        : collective
       description : parameters that control collective communication behavior
+    - name        : intranode
+      description : intranode communication parameters
+    - name        : developer
+      description : useful for developers working on MPICH2 itself
 
 parameters:
     ##############################################################

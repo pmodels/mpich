@@ -148,7 +148,7 @@ int MPIR_Alltoall(
             }
         }
     }
-    else if ((nbytes <= MPIR_ALLTOALL_SHORT_MSG) && (comm_size >= 8)) {
+    else if ((nbytes <= MPIR_PARAM_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
 
         /* use the indexing algorithm by Jehoshua Bruck et al,
          * IEEE TPDS, Nov. 97 */ 
@@ -423,7 +423,7 @@ int MPIR_Alltoall(
 
     }
 
-    else if (nbytes <= MPIR_ALLTOALL_MEDIUM_MSG) {  
+    else if (nbytes <= MPIR_PARAM_ALLTOALL_MEDIUM_MSG_SIZE) {
         /* Medium-size message. Use isend/irecv with scattered
            destinations. Use Tony Ladd's modification to post only
            a small number of isends/irecvs at a time. */
@@ -441,7 +441,7 @@ int MPIR_Alltoall(
 	 */
         int ii, ss, bblock;
 
-        bblock = MPIR_ALLTOALL_THROTTLE;
+        bblock = MPIR_PARAM_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
 	/* FIXME: This should use the memory macros (there are storage
