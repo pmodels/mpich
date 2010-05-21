@@ -604,9 +604,6 @@ if [ -x maint/extractstates -a $do_genstates = "yes" ] ; then
     echo "Creating the enumeration of logging states into src/include/mpiallstates.h"
     maint/extractstates
 fi
-#if [ -x maint/extractparms -a $do_getparms = "yes" ] ; then
-#    maint/extractparms -outfile=parms.htm
-#fi
 # new parameter code
 if test -x maint/genparams -a "$do_getparms" = "yes" ; then
     echo "generating parameter handling code"

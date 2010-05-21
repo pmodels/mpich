@@ -61,4 +61,24 @@ parameters:
         If true, force all processes to operate as though all processes
         are located on another node.  For example, this disables shared
         memory communication hierarchical collectives.
+
+    - category    : developer
+      name        : NESTCHECK
+      alt-env     :
+                    - NEST_CHECK
+      abs-alt-env :
+                    - MPICH_NESTCHECK
+      type        : boolean
+      default     : true
+      description : >-
+        If true, sanity check nesting levels at MPI_Finalize.
+    - category    : developer
+      name        : MEMDUMP
+      abs-alt-env :
+                    - MPICH_MEMDUMP
+      type        : boolean
+      default     : true
+      description : >-
+        If true, list any memory that was allocated by MPICH2 and that
+        remains allocated when MPI_Finalize completes.
 ...

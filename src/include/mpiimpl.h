@@ -503,8 +503,6 @@ int MPIU_Handle_free( void *((*)[]), int );
 /* end of code that should the following be moved into mpihandlemem.h ?*/
 /* ------------------------------------------------------------------------- */
 
-#include "mpiparam.h"
-
 /* ------------------------------------------------------------------------- */
 /* Info */
 /*TInfoOverview.tex

@@ -224,13 +224,7 @@ int MPI_Finalize( void )
        finalize callbacks */
 #ifdef MPICH_DEBUG_NESTING
     {
-	int parmFound, parmValue;
-
-	MPIU_Param_register( "nestcheck", "NESTCHECK", 
-	     "List any memory that was allocated by MPICH2 and that remains allocated when MPI_Finalize completes" );
-	parmFound = MPL_env2bool( "MPICH_NESTCHECK", &parmValue );
-	if (!parmFound) parmValue = 1;
-	if (parmValue) {
+	if (MPIR_PARAM_NESTCHECK) {
 	    MPIU_THREADPRIV_GET;
 	    /* Check for an error in the nesting level */
 	    if (MPIR_Nest_value()) {
@@ -261,16 +255,7 @@ int MPI_Finalize( void )
        go to separate files or to be sorted by rank (note that
        the rank is at the head of the line) */
     {
-	int parmFound, parmValue;
-	/* The Param_register is used to document the parameters.  A 
-	   script will extract the information about these parameters,
-	   allowing the documentation to stay up-to-date with the use of the
-	   parameters (this script is still to be written) */
-	MPIU_Param_register( "memdump", "MEMDUMP", 
-	     "List any memory that was allocated by MPICH2 and that remains allocated when MPI_Finalize completes" );
-	parmFound = MPL_env2bool( "MPICH_MEMDUMP", &parmValue );
-	if (!parmFound) parmValue = 1;
-	if (parmValue) {
+	if (MPIR_PARAM_MEMDUMP) {
 	    /* The second argument is the min id to print; memory allocated 
 	       after MPI_Init is given an id of one.  This allows us to
 	       ignore, if desired, memory leaks in the MPID_Init call */
