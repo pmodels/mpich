@@ -33,6 +33,9 @@ my $debug = 0;
 
 # namespace prefix for variable and type names
 my $ns = "MPIR_Param";
+# an alternative namespace used for environment variables, unused if set
+# to ""
+my $alt_ns = "MPICH";
 
 # parameter description file
 my $param_file = "src/util/param/params.yml";
@@ -45,6 +48,7 @@ GetOptions(
     "help!"       => \&print_usage_and_exit,
     "debug!"      => \$debug,
     "namespace=s" => \$ns,
+    "alt-namespace=s" => \$alt_ns,
     "param-file"  => \$param_file,
     "header=s"    => \$header_file,
     "c-file=s"    => \$c_file,
@@ -315,7 +319,9 @@ foreach my $p (@{$params->{parameters}}) {
 
     # process extra envs first so the primary always wins
     push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
+    push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, "${alt_ns}_" . $p->{name};
     push @env_names, "${uc_ns}_" . $p->{name};
 
     foreach my $env_name (@env_names) {

@@ -4,11 +4,15 @@
 # the inline list or map forms and don't try to use any really fancy
 # features like tagging or anchors.
 #
+# It is used to generate parameter-handling code for MPICH2.
+# See the maint/genparams script for more information.
+#
 # The only tricky bit is that long reflowed text (such as a description)
 # should use ">-" to both fold newlines and remove the trailing newline.
 #
-# It is used to generate parameter-handling code for MPICH2.
-# See the maint/genparams script for more information.
+# Listing "FOO" as a parameter name will cause two environment variables
+# to be examined by default: MPIR_PARAM_FOO and MPICH_FOO, with the
+# MPIR_PARAM value having priority.
 categories:
     - name        : collective
       description : parameters that control collective communication behavior
@@ -52,9 +56,6 @@ parameters:
       name        : NOLOCAL
       alt-env     :
                     - NO_LOCAL
-      abs-alt-env :
-                    - MPICH_NOLOCAL
-                    - MPICH_NO_LOCAL
       type        : boolean
       default     : false
       description : >-
@@ -66,16 +67,13 @@ parameters:
       name        : NESTCHECK
       alt-env     :
                     - NEST_CHECK
-      abs-alt-env :
-                    - MPICH_NESTCHECK
       type        : boolean
       default     : true
       description : >-
         If true, sanity check nesting levels at MPI_Finalize.
+
     - category    : developer
       name        : MEMDUMP
-      abs-alt-env :
-                    - MPICH_MEMDUMP
       type        : boolean
       default     : true
       description : >-
