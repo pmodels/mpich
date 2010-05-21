@@ -220,6 +220,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int has_args;
     int has_env;
     int thread_provided;
+    int exit_init_cs_on_failure = 0;
     MPIU_THREADPRIV_DECL;
 
     /* For any code in the device that wants to check for runtime 
@@ -258,9 +259,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 	MPID_Thread_self(&MPIR_ThreadInfo.master_thread);
     }
 #   endif
-
-    mpi_errno = MPIR_Param_init_params();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 #if 0
     /* This should never happen */
@@ -374,13 +372,14 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_COMML_REMEMBER( MPIR_Process.comm_self );
 
     /* Call any and all MPID_Init type functions */
-    /* FIXME: The call to err init should be within an ifdef
-       HAVE_ ERROR_CHECKING block (as must all uses of Err_create_code) */
     MPIR_Err_init();
     MPIR_Datatype_init();
 
     MPIR_Nest_init();
     /* MPIU_Timer_pre_init(); */
+
+    mpi_errno = MPIR_Param_init_params();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* define MPI as initialized so that we can use MPI functions within 
        MPID_Init if necessary */
@@ -389,6 +388,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     /* We can't acquire any critical sections until this point.  Any
      * earlier the basic data structures haven't been initialized */
     MPIU_THREAD_CS_ENTER(INIT,required);
+    exit_init_cs_on_failure = 1;
 
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, 
 			  &has_args, &has_env);
@@ -432,10 +432,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     mpirinitf_();
 #endif
 
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_Process.initialized = MPICH_PRE_INIT;
-    /* --END ERROR HANDLING-- */
     /* FIXME: Does this need to come before the call to MPID_InitComplete?
        For some debugger support, MPIR_WaitForDebugger may want to use
        MPI communication routines to collect information for the debugger */
@@ -452,7 +448,12 @@ fn_exit:
     return mpi_errno;
 
 fn_fail:
-    MPIU_THREAD_CS_EXIT(INIT,required);
+    /* signal to error handling routines that core services are unavailable */
+    MPIR_Process.initialized = MPICH_PRE_INIT;
+
+    if (exit_init_cs_on_failure) {
+        MPIU_THREAD_CS_EXIT(INIT,required);
+    }
     MPIU_THREAD_CS_FINALIZE;
     return mpi_errno;
 }

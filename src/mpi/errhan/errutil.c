@@ -78,6 +78,8 @@ void MPIR_Err_print_stack_string_ext(int errcode, char *str, int maxlen,
  * their sizes, and masks and shifts that may be used to extract them.
  */
 
+static int did_err_init = FALSE; /* helps us solve a bootstrapping problem */
+
 /* A few prototypes.  These routines are called from the MPIR_Err_return 
    routines.  checkValidErrcode depends on the MPICH_ERROR_MSG_LEVEL */
 
@@ -244,10 +246,18 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     int rc;
     MPIU_THREADPRIV_DECL;
 
-    MPIU_THREADPRIV_GET; 
-
     rc = checkValidErrcode( error_class, fcname, &errcode );
-    
+
+    if (MPIR_Process.initialized == MPICH_PRE_INIT ||
+        MPIR_Process.initialized == MPICH_POST_FINALIZED)
+    {
+        /* for whatever reason, we aren't initialized (perhaps error during MPI_Init) */
+        handleFatalError(MPIR_Process.comm_world, fcname, errcode);
+        return MPI_ERR_INTERN;
+    }
+
+    MPIU_THREADPRIV_GET; /* must come after sanity check */
+
     /* First, check the nesting level */
     if (MPIR_Nest_value()) return errcode;
 
@@ -407,6 +417,7 @@ void MPIR_Err_init( void )
 #   if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_ALL
     MPIR_Err_stack_init();
 #   endif
+    did_err_init = TRUE;
 }
 
 
@@ -1308,17 +1319,21 @@ static MPID_Thread_mutex_t error_ring_mutex;
 static MPID_Thread_mutex_t error_ring_mutex;
 #define error_ring_mutex_create(_mpi_errno_p) MPID_Thread_mutex_create(&error_ring_mutex,_mpi_errno_p)
 #define error_ring_mutex_destroy(_mpi_errno_p) MPID_Thread_mutex_destroy(&error_ring_mutex,_mpi_errno_p)
-#define error_ring_mutex_lock()                    \
-    do {                                           \
-        MPIU_THREAD_CHECK_BEGIN                    \
-        MPID_Thread_mutex_lock(&error_ring_mutex); \
-        MPIU_THREAD_CHECK_END                      \
+#define error_ring_mutex_lock()                          \
+    do {                                                 \
+        if (did_err_init) {                              \
+            MPIU_THREAD_CHECK_BEGIN                      \
+            MPID_Thread_mutex_lock(&error_ring_mutex);   \
+            MPIU_THREAD_CHECK_END                        \
+        }                                                \
     } while (0)
-#define error_ring_mutex_unlock()                    \
-    do {                                             \
-        MPIU_THREAD_CHECK_BEGIN                      \
-        MPID_Thread_mutex_unlock(&error_ring_mutex); \
-        MPIU_THREAD_CHECK_END                        \
+#define error_ring_mutex_unlock()                        \
+    do {                                                 \
+        if (did_err_init) {                              \
+            MPIU_THREAD_CHECK_BEGIN                      \
+            MPID_Thread_mutex_unlock(&error_ring_mutex); \
+            MPIU_THREAD_CHECK_END                        \
+        }                                                \
     } while (0)
 #else
 #define error_ring_mutex_create(_a)
