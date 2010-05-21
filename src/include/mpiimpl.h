@@ -3174,6 +3174,9 @@ posted at once. */
 /* For pipelined collectives */
 #define MPIR_ALLGATHERV_PIPELINE_MSGSIZE   32768
 
+/* TODO convert all cut-over constants above to parameters */
+#include "mpich_param_vals.h"
+
 /* Tags for point to point operations which implement collective operations */
 #define MPIR_BARRIER_TAG               1
 #define MPIR_BCAST_TAG                 2

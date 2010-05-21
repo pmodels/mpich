@@ -26,7 +26,7 @@ fi
 # depend choices are dynamic, static, no
 do_depend=dynamic
 do_geterrmsgs=yes
-do_getparms=no
+do_getparms=yes
 do_bindings=yes
 do_f77=yes
 do_f77tof90=yes
@@ -604,9 +604,15 @@ if [ -x maint/extractstates -a $do_genstates = "yes" ] ; then
     echo "Creating the enumeration of logging states into src/include/mpiallstates.h"
     maint/extractstates
 fi
-if [ -x maint/extractparms -a $do_getparms = "yes" ] ; then
-    maint/extractparms -outfile=parms.htm
+#if [ -x maint/extractparms -a $do_getparms = "yes" ] ; then
+#    maint/extractparms -outfile=parms.htm
+#fi
+# new parameter code
+if test -x maint/genparams -a "$do_getparms" = "yes" ; then
+    echo "generating parameter handling code"
+    ./maint/genparams
 fi
+
 # Create and/or update the f90 tests
 if [ -x maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
     echo "Create or update the Fortran 90 tests derived from the Fortran 77 tests"

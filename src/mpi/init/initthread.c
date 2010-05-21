@@ -259,6 +259,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     }
 #   endif
 
+    mpi_errno = MPIR_Param_init_params();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
 #if 0
     /* This should never happen */
     if (MPIR_Version_device == 0) {

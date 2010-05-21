@@ -866,6 +866,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 **blcr_mod:BLCR kernel module not present
 
+**envvarparse:Unable to parse environment variable
+**envvarparse %s:Unable to parse environment variable (%s)
+
 #
 # mpi functions
 #

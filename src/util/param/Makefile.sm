@@ -1,4 +1,4 @@
-lib${MPILIBNAME}_a_SOURCES = param.c
+lib${MPILIBNAME}_a_SOURCES = param.c param_vals.c
 HEADERS = param.h
 INCLUDES = -I../../include -I${top_srcdir}/src/include
 
