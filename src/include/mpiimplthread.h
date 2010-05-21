@@ -233,9 +233,6 @@ extern MPICH_PerThread_t MPIR_ThreadSingle;
         if (!MPIR_Thread) {                                                         \
             if (MPIU_ISTHREADED) {                                                  \
                 MPID_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, &MPIR_Thread); \
-                if (!MPIR_Thread) {                                                 \
-                    MPIU_THREADPRIV_INIT; /* subtle, sets MPIR_Thread */            \
-                }                                                                   \
             }                                                                       \
             else {                                                                  \
                 MPIR_Thread = &MPIR_ThreadSingle;                                   \
@@ -261,9 +258,6 @@ extern MPICH_PerThread_t MPIR_ThreadSingle;
     do {                                                                        \
         if (!MPIR_Thread) {                                                     \
             MPID_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, &MPIR_Thread); \
-            if (!MPIR_Thread) {                                                 \
-                MPIU_THREADPRIV_INIT; /* subtle, sets MPIR_Thread */            \
-            }                                                                   \
             MPIU_Assert(MPIR_Thread);                                           \
         }                                                                       \
     } while (0)
