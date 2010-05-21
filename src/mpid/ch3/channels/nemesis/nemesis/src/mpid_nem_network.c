@@ -22,13 +22,12 @@ MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq
 int MPID_nem_choose_netmod(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    const char *val;
     int i;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
 
-    if (! MPL_env2str("MPICH_NEMESIS_NETMOD", &val))
+    if (strcmp(MPIR_PARAM_NEMESIS_NETMOD, "") == 0)
     {
         /* netmod not specified, using the default */
         MPID_nem_netmod_func = MPID_nem_netmod_funcs[0];
@@ -38,7 +37,7 @@ int MPID_nem_choose_netmod(void)
 
     for (i = 0; i < MPID_nem_num_netmods; ++i)
     {
-        if (!MPIU_Strncasecmp(val, MPID_nem_netmod_strings[i], MPID_NEM_MAX_NETMOD_STRING_LEN))
+        if (!MPIU_Strncasecmp(MPIR_PARAM_NEMESIS_NETMOD, MPID_nem_netmod_strings[i], MPID_NEM_MAX_NETMOD_STRING_LEN))
         {
             MPID_nem_netmod_func = MPID_nem_netmod_funcs[i];
             MPID_nem_netmod_id = i;
@@ -46,8 +45,8 @@ int MPID_nem_choose_netmod(void)
         }
     }
 
-    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s", val);
- 
+    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s", MPIR_PARAM_NEMESIS_NETMOD);
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
     return mpi_errno;

@@ -16,10 +16,20 @@
 categories:
     - name        : collective
       description : parameters that control collective communication behavior
+    - name        : pt2pt
+      description : parameters that control point-to-point communication behavior
     - name        : intranode
       description : intranode communication parameters
     - name        : developer
       description : useful for developers working on MPICH2 itself
+    - name        : error_handling
+      description : parameters that control error handling behavior (stack traces, aborts, etc)
+    - name        : debugger
+      description : parameters relevant to the "MPIR" debugger interface
+    - name        : threads
+      description : multi-threading parameters
+    - name        : nemesis
+      description : "parameters that control behavior of the ch3:nemesis channel"
 
 parameters:
     ##############################################################
@@ -79,4 +89,51 @@ parameters:
       description : >-
         If true, list any memory that was allocated by MPICH2 and that
         remains allocated when MPI_Finalize completes.
+
+    - category    : debugger
+      name        : PROCTABLE_SIZE
+      type        : int
+      default     : 64
+      description : >-
+        Size of the "MPIR" debugger interface proctable (process table).
+
+    - category    : debugger
+      name        : PROCTABLE_PRINT
+      type        : boolean
+      default     : true
+      description : >-
+        If true, dump the proctable entries at MPIR_WaitForDebugger-time.
+        (currently compile-time disabled by "#if 0")
+
+    - category    : error_handling
+      name        : PRINT_ERROR_STACK
+      type        : boolean
+      default     : true
+      description : >-
+        If true, print an error stack trace at error handling time.
+
+    - category    : error_handling
+      name        : CHOP_ERROR_STACK
+      type        : int
+      default     : 0
+      description : >-
+        If >0, truncate error stack output lines this many characters
+        wide.  If 0, do not truncate, and if <0 use a sensible default.
+
+    - category    : intranode
+      name        : NEM_LMT_DMA_THRESHOLD
+      type        : int
+      # 2048*1024 == 2MiB
+      default     : 2097152
+      description : >-
+        Messages larger than this size will use the "dma" (knem)
+        intranode LMT implementation, if it is enabled and available.
+
+    - category    : nemesis
+      name        : NEMESIS_NETMOD
+      type        : string
+      default     : ""
+      description : >-
+        If non-empty, this parameter specifies which network module
+        should be used for communication.
 ...

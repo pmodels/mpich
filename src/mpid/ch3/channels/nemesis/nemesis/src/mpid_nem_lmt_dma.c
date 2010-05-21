@@ -20,8 +20,6 @@ static volatile knem_status_t *knem_status = MAP_FAILED;
  * simpler. */
 #define MPICH_NEW_KNEM_ABI_VERSION (0x0000000c)
 
-static size_t dma_threshold = 2048*1024;
-
 /* These are for maintaining a linked-list of outstanding requests on which we
    can make progress. */
 struct lmt_dma_node {
@@ -61,10 +59,6 @@ static int open_knem_dev()
     int ret;
     int tmp_threshold = -1;
     struct knem_cmd_info info;
-
-    ret = MPL_env2int("MPICH_NEM_LMT_DMA_THRESHOLD", &tmp_threshold);
-    if (ret == 1)
-        dma_threshold = tmp_threshold;
 
     knem_fd = open(KNEM_DEVICE_FILENAME, O_RDWR);
     MPIU_ERR_CHKANDJUMP2(knem_fd < 0, mpi_errno, MPI_ERR_OTHER, "**shm_open",
@@ -334,8 +328,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype,
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
 
-    /* this is where Stephanie might want to look at VC's local rank and shared cache size */
-    nodma = !knem_has_dma || data_sz < dma_threshold;
+    nodma = !knem_has_dma || data_sz < MPIR_PARAM_NEM_LMT_DMA_THRESHOLD;
 
     if (dt_contig) {
         /* handle the iov creation ourselves */

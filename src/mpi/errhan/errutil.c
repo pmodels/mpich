@@ -1747,46 +1747,28 @@ int MPIR_Err_combine_codes(int error1, int error2)
 /* ------------------------------------------------------------------------- */
 /* Manage the error reporting stack                                          */
 /* ------------------------------------------------------------------------- */
-/* FIXME: This flag wasn't documented in the release specs, and in any
-   event shouldn't be controlled through source-code changes (i.e.,
-   make it either a configure option or a runtime option) */
-/* turn this flag on until we debug and release mpich2 */
-static int MPIR_Err_print_stack_flag = TRUE;
-static int MPIR_Err_chop_error_stack = FALSE;
-static int MPIR_Err_chop_width = 80;
 
 static void MPIR_Err_stack_init( void )
 {
-    int n, rc, mpi_errno = MPI_SUCCESS;
-    
+    int mpi_errno = MPI_SUCCESS;
+
     error_ring_mutex_create(&mpi_errno);
-    MPIR_Err_chop_error_stack = FALSE;
-    
-    rc = MPL_env2bool( "MPICH_PRINT_ERROR_STACK", 
-			  &MPIR_Err_print_stack_flag );
-    
-    rc = MPL_env2int( "MPICH_CHOP_ERROR_STACK", &n );
-    if (rc == 1) {
+
+    if (MPIR_PARAM_CHOP_ERROR_STACK < 0) {
+        MPIR_PARAM_CHOP_ERROR_STACK = 80;
 #ifdef HAVE_WINDOWS_H
-	/* If windows, set the default width to the window size */
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hConsole != INVALID_HANDLE_VALUE)
-	{
-	    CONSOLE_SCREEN_BUFFER_INFO info;
-	    if (GetConsoleScreenBufferInfo(hConsole, &info))
-	    {
-		MPIR_Err_chop_width = info.dwMaximumWindowSize.X;
-	    }
-	}
+        /* If windows, set the default width to the window size */
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hConsole != INVALID_HANDLE_VALUE)
+        {
+            CONSOLE_SCREEN_BUFFER_INFO info;
+            if (GetConsoleScreenBufferInfo(hConsole, &info))
+            {
+                /* override the parameter system in this case */
+                MPIR_PARAM_CHOP_ERROR_STACK = info.dwMaximumWindowSize.X;
+            }
+        }
 #endif
-	if (n > 0) {
-	    MPIR_Err_chop_error_stack = TRUE;
-	    MPIR_Err_chop_width = n;
-	}
-	else if (n == 0) {
-	    /* Use the default width */
-	    MPIR_Err_chop_error_stack = TRUE;
-	}
     }
 }
 
@@ -1952,7 +1934,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
 		    maxlen--;
 		}
 		
-		if (MPIR_Err_chop_error_stack)
+		if (MPIR_PARAM_CHOP_ERROR_STACK > 0)
 		{
 		    cur_pos = ErrorRing[ring_idx].msg;
 		    len = (int)strlen(cur_pos);
@@ -1962,16 +1944,16 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
 		    }
 		    while (len)
 		    {
-			if (len >= MPIR_Err_chop_width - max_location_len)
+			if (len >= MPIR_PARAM_CHOP_ERROR_STACK - max_location_len)
 			{
 			    if (len > maxlen)
 				break;
 			    /* FIXME: Don't use Snprint to append a string ! */
-			    MPIU_Snprintf(str, MPIR_Err_chop_width - 1 - max_location_len, "%s", cur_pos);
-			    str[MPIR_Err_chop_width - 1 - max_location_len] = '\n';
-			    cur_pos += MPIR_Err_chop_width - 1 - max_location_len;
-			    str += MPIR_Err_chop_width - max_location_len;
-			    maxlen -= MPIR_Err_chop_width - max_location_len;
+			    MPIU_Snprintf(str, MPIR_PARAM_CHOP_ERROR_STACK - 1 - max_location_len, "%s", cur_pos);
+			    str[MPIR_PARAM_CHOP_ERROR_STACK - 1 - max_location_len] = '\n';
+			    cur_pos += MPIR_PARAM_CHOP_ERROR_STACK - 1 - max_location_len;
+			    str += MPIR_PARAM_CHOP_ERROR_STACK - max_location_len;
+			    maxlen -= MPIR_PARAM_CHOP_ERROR_STACK - max_location_len;
 			    if (maxlen < max_location_len)
 				break;
 			    for (i=0; i<max_location_len; i++)
@@ -2076,7 +2058,7 @@ static int ErrGetInstanceString( int errorcode, char *msg, int num_remaining,
 {
     int len;
 
-    if (MPIR_Err_print_stack_flag) {
+    if (MPIR_PARAM_PRINT_ERROR_STACK) {
 	MPIU_Strncpy(msg, ", error stack:\n", num_remaining);
 	msg[num_remaining - 1] = '\0';
 	len = (int)strlen(msg);
