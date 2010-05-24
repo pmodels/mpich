@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#  define MPIU_ASSERT_FMT_MSG_MAX_SIZE 2048
 
 
 /* assertion helper routines

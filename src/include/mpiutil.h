@@ -92,7 +92,6 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 #  if defined(HAVE_MACRO_VA_ARGS)
 
-#  define MPIU_ASSERT_FMT_MSG_MAX_SIZE 2048
 /* newlines are added internally by the impl function, callers do not need to include them */
 #    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                         \
     do {                                                                       \
