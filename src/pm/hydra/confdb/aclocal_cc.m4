@@ -571,13 +571,10 @@ if test "$enable_strict_done" != "yes" ; then
     # See if the above options work with the compiler
     accepted_flags=""
     for flag in $pac_cc_strict_flags ; do
-        # the save_CFLAGS variable must be namespaced, otherwise they
-        # may not actually be saved if an invoked macro also uses
-        # save_CFLAGS
-        pcs_save_CFLAGS=$CFLAGS
+        PAC_PUSH_VAR([CFLAGS])
 	CFLAGS="$CFLAGS $accepted_flags"
-	PAC_C_CHECK_COMPILER_OPTION($flag,accepted_flags="$accepted_flags $flag",)
-        CFLAGS=$pcs_save_CFLAGS
+        PAC_C_CHECK_COMPILER_OPTION([$flag],[accepted_flags="$accepted_flags $flag"],)
+        PAC_POP_VAR([CFLAGS])
     done
     pac_cc_strict_flags=$accepted_flags
 fi
