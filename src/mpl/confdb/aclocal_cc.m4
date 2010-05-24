@@ -525,7 +525,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Winvalid-pch
         -Wno-pointer-sign
         -Wvariadic-macros
-        -std=c89
         -Wno-format-zero-length
 	-Wno-type-limits
     "
@@ -534,18 +533,28 @@ if test "$enable_strict_done" != "yes" ; then
         yes|all|posix)
 		enable_strict_done="yes"
 		pac_cc_strict_flags="-O2 $pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
+                PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
+        ;;
+
+        # sometimes we want to assume c99 but still want strict warnings/errors
+        c99)
+                enable_strict_done="yes"
+                pac_cc_strict_flags="-O2 $pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
+                PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
         ;;
 
         noposix)
 		enable_strict_done="yes"
 		pac_cc_strict_flags="-O2 $pac_common_strict_flags"
+                PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
         ;;
 
 	noopt)
 		enable_strict_done="yes"
 		pac_cc_strict_flags="$pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
+                PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
 	;;
-        
+
         no)
 		# Accept and ignore this value
 		:
