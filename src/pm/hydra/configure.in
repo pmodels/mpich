@@ -36,6 +36,14 @@ PAC_ARG_STRICT
 PAC_C_GNU_ATTRIBUTE
 PAC_CC_FUNCTION_NAME_SYMBOL
 
+# Define -D_DARWIN_C_SOURCE on OS/X to ensure that hwloc will build even if we
+# are building under MPICH2 with --enable-strict that defined _POSIX_C_SOURCE.
+# Some standard Darwin headers don't build correctly under a strict posix
+# environment.
+AS_CASE([$host],
+    [*-*-darwin*], [PAC_APPEND_FLAG([-D_DARWIN_C_SOURCE],[CPPFLAGS])]
+)
+
 # Build information
 if test -s "$srcdir/version/version" ; then
     HYDRA_VERSION="`cat $srcdir/version/version | grep ^MPICH2_VERSION: | cut -f2 -d' '`"
