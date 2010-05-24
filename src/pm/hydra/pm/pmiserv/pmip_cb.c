@@ -253,7 +253,7 @@ static HYD_status read_pmi_cmd(int fd, int *closed)
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
-    int closed, repeat, sent, i;
+    int closed, repeat, sent, i = -1;
     struct HYD_pmcd_pmi_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
     struct HYD_pmcd_pmip_pmi_handle *h;

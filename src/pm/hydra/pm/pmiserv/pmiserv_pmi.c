@@ -338,7 +338,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
     }
     else {
         int len, recvd, closed;
-        char *resp;
+        char *resp = NULL;
 
         /* connect to the external nameserver and get the information
          * from there */
