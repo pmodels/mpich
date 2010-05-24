@@ -245,8 +245,7 @@ int MPI_Finalize( void )
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPIR_Process.initialized = MPICH_POST_FINALIZED;
 
-    /* XXX DJG needs to hide behind a macro */
-    MPIR_Thread_CS_Finalize();
+    MPIU_THREAD_CS_FINALIZE;
 
     /* We place the memory tracing at the very end because any of the other
        steps may have allocated memory that they still need to release*/
