@@ -36,5 +36,5 @@ inactivereq 1
 waittestnull 1
 waitany-null 1
 # this should be run only on machines with large amount of memory (>=8GB)
-# run manually for now
-#large_message 3
+# perhaps disable in the release tarball
+large_message 3

@@ -21,6 +21,14 @@ int main(int argc, char *argv[])
 
 
   MTest_Init(&argc,&argv); 
+
+/* need large memory */
+  if (sizeof(void *) < 8) {
+      MTest_Finalize(errs);
+      MPI_Finalize();
+      return 0;
+  }
+
   ierr = MPI_Comm_size(MPI_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   if (size != 3) {
