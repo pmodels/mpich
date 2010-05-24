@@ -11,6 +11,10 @@
 #ifndef MPIIMPLTHREADPOST_H_INCLUDED
 #define MPIIMPLTHREADPOST_H_INCLUDED
 
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+/* All the funcs below require MPID Thread defns - that are available only
+ * when thread level >= serialized
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIU_Thread_CS_enter_lockname_impl_
 #undef FCNAME
@@ -75,6 +79,7 @@ MPIU_Thread_CS_yield_lockname_impl_(enum MPIU_Nest_mutexes kind,
 #undef FUNCNAME
 #undef FCNAME
 
+#endif /*  (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED) */
 
 #endif /* defined(MPIIMPLTHREADPOST_H_INCLUDED) */
 
