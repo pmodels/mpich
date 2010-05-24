@@ -3136,7 +3136,12 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIU_CALL(context,funccall) context##_##funccall
 #endif
 
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+/* mpiimplthreadpost.h requires MPID Thread defns - that are available only
+ * when thread level >= serialized
+ */
 #include "mpiimplthreadpost.h"
+#endif
 
 /* Include definitions from the device which require items defined by this 
    file (mpiimpl.h). */
