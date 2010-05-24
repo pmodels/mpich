@@ -1231,10 +1231,10 @@ if test "$enable_append_g" = "yes" ; then
     F90FLAGS="$F90FLAGS -g"
 fi
 if test "$enable_append_ndebug" = "yes" ; then
-    CFLAGS="$CFLAGS -DNDEBUG"
-    CXXFLAGS="$CXXFLAGS -DNDEBUG"
-    FFLAGS="$FFLAGS -DNDEBUG"
-    F90FLAGS="$F90FLAGS -DNDEBUG"
+    CFLAGS="$CFLAGS -DNDEBUG -DNVALGRIND"
+    CXXFLAGS="$CXXFLAGS -DNDEBUG -DNVALGRIND"
+    FFLAGS="$FFLAGS -DNDEBUG -DNVALGRIND"
+    F90FLAGS="$F90FLAGS -DNDEBUG -DNVALGRIND"
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
