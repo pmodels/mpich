@@ -2986,6 +2986,14 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#ifndef HAVE_STRERROR")
 					fout.WriteLine("#define HAVE_STRERROR 1")
 					fout.WriteLine("#endif")
+                                Case "HAVE_STRERROR_R"
+                                        fout.WriteLine("/* #undef HAVE_STRERROR_R */")
+                                Case "STRERROR_R_CHAR_P"
+                                        fout.WriteLine("/* #undef STRERROR_R_CHAR_P */")
+                                Case "NEEDS_STRERROR_R_DECL"
+                                        fout.WriteLine("/* #undef NEEDS_STRERROR_R_DECL */")
+                                Case "HAVE_DECL_STRERROR_R"
+                                        fout.WriteLine("/* #undef HAVE_DECL_STRERROR_R */")
 				Case "HAVE_ASM_AND_X86_LFENCE"
 					fout.WriteLine("/* #undef HAVE_ASM_AND_X86_LFENCE */")
 				Case "HAVE_ASM_AND_X86_MFENCE"
@@ -3088,6 +3096,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         ' Currently we only build MPICH2 with global lock 
                                         ' -Introduce this option when building lock-free version
                                         fout.WriteLine("/* #undef MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS */")
+                                Case "MPIU_TLS_SPECIFIER"
+                                        fout.WriteLine("#define MPIU_TLS_SPECIFIER __declspec( thread )")
 				Case "MPIU_HANDLE_ALLOCATION_METHOD"
 					fout.WriteLine("#define MPIU_HANDLE_ALLOCATION_METHOD MPIU_HANDLE_ALLOCATION_MUTEX")
 				Case "MPIU_MUTEX_WAIT_TIME"
