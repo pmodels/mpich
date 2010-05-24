@@ -652,6 +652,8 @@ enum MPIU_Nest_mutexes {
 #endif
 
 #else /* ! MPICH_IS_THREAED */
+#define MPIU_THREAD_CS_INIT
+#define MPIU_THREAD_CS_FINALIZE
 #define MPIU_THREAD_CS_ENTER(_name,_context)
 #define MPIU_THREAD_CS_EXIT(_name,_context)
 #define MPIU_THREAD_CS_YIELD(_name,_context)
