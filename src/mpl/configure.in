@@ -37,8 +37,80 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h)
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
 
-# headers for valgrind client requests
-AC_CHECK_HEADERS([valgrind.h memcheck.h valgrind/valgrind.h valgrind/memcheck.h])
+#######################################################################
+# valgrind support
+AC_ARG_WITH([valgrind],
+            [AS_HELP_STRING([--without-valgrind],[to disable valgrind support (such as because of version issues)])]
+            [AS_HELP_STRING([--with-valgrind=PATH],[use valgrind headers installed in PATH [default is yes]])],
+            [],[with_valgrind=yes])
+if test "$with_valgrind" != "no" ; then
+    savedCPPFLAGS="$CPPFLAGS"
+    if test "$with_valgrind" != "yes" ; then
+        # Clients of MPL will either need to respect the localdefs file (as in
+        # MPICH2) or add this entry to their own CPPFLAGS-equivalent.
+        # (TODO: a pkg-config file would help with this)
+        PAC_APPEND_FLAG([-I${with_valgrind}], [CPPFLAGS])
+    fi
+    # headers for valgrind client requests
+    AC_CHECK_HEADERS([valgrind.h memcheck.h valgrind/valgrind.h valgrind/memcheck.h])
+
+    # ensure that we have a new enough valgrind with all the client macros
+    # a preproc test would probably be sufficient, but the LINK_IFELSE helps us
+    # double-check that we aren't accidentally grabbing the headers for some
+    # other platform
+    AC_CACHE_CHECK([whether the valgrind headers are broken or too old],
+                   [pac_cv_have_broken_valgrind],
+                   [AC_LINK_IFELSE(
+                       [AC_LANG_PROGRAM([
+#if defined(HAVE_VALGRIND_H) && defined(HAVE_MEMCHECK_H)
+#  include <valgrind.h>
+#  include <memcheck.h>
+#elif defined(HAVE_VALGRIND_VALGRIND_H) && defined(HAVE_VALGRIND_MEMCHECK_H)
+#  include <valgrind/valgrind.h>
+#  include <valgrind/memcheck.h>
+#else
+#  error unexpected valgrind header error
+#endif
+int foo = 10;
+char mempool_obj;
+],[
+#if defined(VALGRIND_MAKE_MEM_DEFINED)
+    VALGRIND_MAKE_MEM_NOACCESS(&foo,sizeof(foo));
+    VALGRIND_MAKE_MEM_UNDEFINED(&foo,sizeof(foo));
+    VALGRIND_MAKE_MEM_DEFINED(&foo,sizeof(foo));
+    VALGRIND_CHECK_MEM_IS_DEFINED(&foo,sizeof(foo));
+    VALGRIND_CHECK_MEM_IS_ADDRESSABLE(&foo,sizeof(foo));
+#elif defined(VALGRIND_MAKE_READABLE)
+/* older (pre-3.2.0), but still supported style */
+    VALGRIND_MAKE_READABLE(&foo,sizeof(foo));
+    VALGRIND_MAKE_NOACCESS(&foo,sizeof(foo));
+    VALGRIND_MAKE_UNDEFINED(&foo,sizeof(foo));
+    VALGRIND_CHECK_READABLE(&foo,sizeof(foo));
+    VALGRIND_CHECK_WRITEABLE(&foo,sizeof(foo));
+#else
+#error missing essential valgrind client macros
+#endif
+    VALGRIND_CREATE_BLOCK(&foo,sizeof(foo),"description");
+    if (RUNNING_ON_VALGRIND) ++foo;
+    VALGRIND_PRINTF_BACKTRACE("testing: %s","valgrind support");
+    VALGRIND_CREATE_MEMPOOL(&mempool_obj,0,0);
+    VALGRIND_MEMPOOL_ALLOC(&mempool_obj,&foo,sizeof(foo));
+    VALGRIND_MEMPOOL_FREE(&mempool_obj,&foo);
+    VALGRIND_DESTROY_MEMPOOL(&mempool_obj);
+]) dnl end PROGRAM
+                       ],
+                       [pac_cv_have_broken_valgrind=no], dnl end if-true
+                       [pac_cv_have_broken_valgrind=yes] dnl end if-false
+                   )] dnl end IFELSE
+                   ) dnl end CACHE_CHECK
+
+    if test "$pac_cv_have_broken_valgrind" = "yes" ; then
+        AC_DEFINE([HAVE_BROKEN_VALGRIND],[1],[define if valgrind is old and/or broken compared to what we are expecting])
+        CPPFLAGS="$savedCPPFLAGS"
+    fi
+fi
+#######################################################################
+
 
 # Check for strdup
 AC_CHECK_FUNCS(strdup)
@@ -62,4 +134,5 @@ dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 
 dnl Final output
-AC_OUTPUT(Makefile)
+AC_CONFIG_FILES([Makefile localdefs])
+AC_OUTPUT
