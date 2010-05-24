@@ -204,7 +204,7 @@ soName=
 altNames=
 case $libtype in 
     gcc-osx|osx-gcc)
-    soname=$srclibbase.$dottedVersion.$SHLIB_EXT
+    soname=$srclibbase.$majorVersion.$SHLIB_EXT
     realName=$srclibbase.$dottedVersion.$SHLIB_EXT
     altNames="$srclibbase.$SHLIB_EXT"
     if [ -n "$majorVersion" ] ; then
@@ -216,7 +216,7 @@ case $libtype in
 
     *)
     # Typical Unix default
-    soName=$srclibbase.$SHLIB_EXT.$dottedVersion
+    soName=$srclibbase.$SHLIB_EXT.$majorVersion
     realName=$srclibbase.$SHLIB_EXT.$dottedVersion
     altNames="$srclibbase.$SHLIB_EXT"
     if [ -n "$majorVersion" ] ; then
