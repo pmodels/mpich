@@ -510,7 +510,8 @@ static HYD_status launch_procs(void)
         HYDU_ERR_POP(status, "unable to create env\n");
 
         /* Restart the proxy.  Specify stdin fd only if pmi_rank 0 is in this proxy. */
-        status = HYDT_ckpoint_restart(env, HYD_pmcd_pmip.local.proxy_process_count,
+        status = HYDT_ckpoint_restart(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id,
+                                      env, HYD_pmcd_pmip.local.proxy_process_count,
                                       pmi_ranks,
                                       pmi_ranks[0] ? NULL :
                                       HYD_pmcd_pmip.system_global.enable_stdin ?
@@ -892,7 +893,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     }
     else if (cmd == CKPOINT) {
         HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "requesting checkpoint\n");
-        status = HYDT_ckpoint_suspend();
+        status = HYDT_ckpoint_suspend(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
         HYDU_ERR_POP(status, "checkpoint suspend failed\n");
         HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "checkpoint completed\n");
     }

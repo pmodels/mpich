@@ -49,15 +49,20 @@ HYD_status HYDT_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
 /**
  * \brief HYDT_ckpoint_suspend - Initiate suspend of child processes
  *
+ * \param[in] pgid  process group id
+ * \param[in] id    proxy id
+ *
  * This function is called by a proxy to suspend all of its child
  * processes.
  */
-HYD_status HYDT_ckpoint_suspend(void);
+HYD_status HYDT_ckpoint_suspend(int pgid, int id);
 
 
 /**
  * \brief HYDT_ckpoint_restart - Restart child processes
  *
+ * \param[in] pgid       process group id
+ * \param[in] id         proxy id
  * \param[in] envlist    Environment setup from before the checkpoint
  * \param[in] num_ranks  Number of child processes to restart
  * \param[in] ranks      Array of ranks of the child processes
@@ -70,7 +75,7 @@ HYD_status HYDT_ckpoint_suspend(void);
  * reestablished. The environment passed in this list is resetup for
  * each process.
  */
-HYD_status HYDT_ckpoint_restart(struct HYD_env *envlist, int num_ranks, int ranks[], int *in,
+HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int num_ranks, int ranks[], int *in,
                                 int *out, int *err);
 
 /*!
