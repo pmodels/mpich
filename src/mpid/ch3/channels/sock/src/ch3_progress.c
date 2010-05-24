@@ -563,7 +563,6 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			    
 			if (nb > 0 && adjust_iov(&iovp, &sreq->dev.iov_count, nb))
 			{
-			    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
 			    int complete;
 
 			    reqFn = sreq->dev.OnDataAvail;
@@ -661,6 +660,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 
 /* Note that this routine is only called if threads are enabled; 
    it does not need to check whether runtime threads are enabled */
+/* FIXME: Test for runtime thread level (here or where used) */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Progress_delay
 #undef FCNAME
@@ -684,7 +684,7 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 }
 /* end MPIDI_CH3I_Progress_delay() */
 
-
+/* FIXME: Test for runtime thread level */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Progress_continue
 #undef FCNAME
