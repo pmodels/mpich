@@ -82,6 +82,8 @@ also the value at index %d
 **bufexists:Buffer already attached with MPI_BUFFER_ATTACH.
 **bsendbufsmall:Buffer size is smaller than MPI_BSEND_OVERHEAD
 **bsendbufsmall %d %d:Buffer size of %d is smaller than MPI_BSEND_OVERHEAD (%d)
+**bsendpending:Internal error - completion of Bsend requests that were \
+ deferred because of resource limits is not implemented
 **notgenreq:Attempt to complete a request with MPI_GREQUEST_COMPLETE that \
 was not started with MPI_GREQUEST_START
 **cancelunknown:Attempt to cancel an unknown type of request

@@ -121,7 +121,7 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Request *request_ptr;
-    ibsend_req_info *ibinfo;
+    ibsend_req_info *ibinfo=0;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBSEND);
 
@@ -215,7 +215,8 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    *request = MPI_REQUEST_NULL; /* FIXME: should we be setting the request at all in the case of an error? */
+    /* FIXME: should we be setting the request at all in the case of an error? */
+    *request = MPI_REQUEST_NULL; 
 #   ifdef HAVE_ERROR_REPORTING
     {
 	mpi_errno = MPIR_Err_create_code(

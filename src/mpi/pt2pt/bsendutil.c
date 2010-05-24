@@ -162,9 +162,9 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
 int MPIR_Bsend_detach( void *bufferp, int *size )
 {
     if (BsendBuffer.pending) {
-	/* FIXME: This is the wrong error text (notimpl) */
+	/* FIXME: Process pending bsend requests in detach */
 	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-             "MPIR_Bsend_detach", __LINE__, MPI_ERR_OTHER, "**notimpl", 0 );
+            "MPIR_Bsend_detach", __LINE__, MPI_ERR_OTHER, "**bsendpending", 0 );
     }
     if (BsendBuffer.active) {
 	/* Loop through each active element and wait on it */
@@ -477,8 +477,8 @@ static void MPIR_Bsend_check_active( void )
 }
 
 /* 
- * FIXME : For each pending item (that is, items that we couldn't even start sending),
- * try to get them going.  
+ * FIXME : For each pending item (that is, items that we couldn't even start 
+ * sending), try to get them going.  
  */
 static void MPIR_Bsend_retry_pending( void )
 {
@@ -487,7 +487,7 @@ static void MPIR_Bsend_retry_pending( void )
     while (pending) {
 	next_pending = pending->next;
 	/* Retry sending this item */
-	/* FIXME */
+	/* FIXME: Unimplemented retry of pending bsend operations */
 	pending = next_pending;
     }
 }
