@@ -4,6 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+/* Always enable valgrind macros (if possible) in this file.  If these functions
+ * are used, the caller is concerned about correctness, not performance. */
+#define MPL_VG_ENABLED 1
+
 #include "mpl.h"
 
 #ifdef malloc

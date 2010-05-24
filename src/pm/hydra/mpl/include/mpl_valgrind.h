@@ -33,8 +33,7 @@
 #undef MPL_VG_AVAILABLE
 
 #if !defined(HAVE_BROKEN_VALGRIND) && defined(MPL_VG_ENABLED)
-/* FIXME "MPICH_" shouldn't appear anywhere here */
-#  if defined(MPICH_DEBUG_MEMINIT) && !defined(NVALGRIND)
+#  if !defined(NVALGRIND)
 #    if defined(MPL_HAVE_VALGRIND_H) && defined(MPL_HAVE_MEMCHECK_H)
 #      include <valgrind.h>
 #      include <memcheck.h>
