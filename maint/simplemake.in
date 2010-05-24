@@ -4365,6 +4365,14 @@ sub TargetDependenciesDynamic {
 		$ext =~ s/^.*\.//g;
 		$sourcebasename = $sourcefile;
 		$sourcebasename =~ s/\.\w*$//;
+
+		# The file name for the dependencies output is derived
+		# from the source file.  In some cases, the source file
+		# may be drawn from a different directory; in that case,
+		# we need to remove directory specs from the name
+		$depfilename = $sourcebasename;
+		$depfilename =~ s/.*\///;
+
 		$objfiles = "_$sourcebasename.o $sourcebasename.o";
 		if ($do_sharedlibs || $found_sharedlib) {
 		    $objfiles .= " $sourcebasename.lo _$sourcebasename.lo";
@@ -4385,8 +4393,8 @@ simplemake is assuming that this file will be created by the configure step\
 in the build directory\n";
 			$srcdirloc = '';
 		    }
-		    print FD "\$(DEPS_DIR)/$sourcebasename.d: $srcdirloc$sourcefile$newline";
-		    &PrintVerboseOptionCommand( "\$(MAKE_DEPEND_C) $targetOpts $srcdirloc$sourcefile >\$(DEPS_DIR)/$sourcebasename.d", "-", "MAKE_DEPEND_C $sourcefile > \$(DEPS_DIR)/$sourcebasename.d" );
+		    print FD "\$(DEPS_DIR)/$depfilename.d: $srcdirloc$sourcefile$newline";
+		    &PrintVerboseOptionCommand( "\$(MAKE_DEPEND_C) $targetOpts $srcdirloc$sourcefile >\$(DEPS_DIR)/$depfilename.d", "-", "MAKE_DEPEND_C $sourcefile > \$(DEPS_DIR)/$depfilename.d" );
 		}
 	    }
 	}
@@ -4422,6 +4430,8 @@ in the build directory\n";
 		$ext =~ s/^.*\.//g;
 		$sourcebasename = $sourcefile;
 		$sourcebasename =~ s/\.\w*$//;
+		$depfilename = $sourcebasename;
+		$depfilename =~ s/.*\///;
 		if ($ext eq "c") {
 		    if (! -s $sourcefile) {
 			$srcdirloc = '';
@@ -4434,8 +4444,8 @@ in the build directory\n";
 		    if (!$found_profilelib) {
 			$targetOpts = "";
 		    }
-		    &PrintVerboseOptionCommand( "\$(MAKE_DEPEND_C) $targetOpts $srcdirloc$sourcefile >\$(DEPS_DIR)/$sourcebasename.d", "-", "MAKE_DEPEND_C $sourcefile > \$(DEPS_DIR)/$sourcebasename.d" );
-		    print FD "\techo \"$makeInclude \$(DEPS_DIR)/$sourcebasename.d\" >>\$(DEPS_DIR)/newalldeps$newline";
+		    &PrintVerboseOptionCommand( "\$(MAKE_DEPEND_C) $targetOpts $srcdirloc$sourcefile >\$(DEPS_DIR)/$depfilename.d", "-", "MAKE_DEPEND_C $sourcefile > \$(DEPS_DIR)/$depfilename.d" );
+		    print FD "\techo \"$makeInclude \$(DEPS_DIR)/$depfilename.d\" >>\$(DEPS_DIR)/newalldeps$newline";
 		}
 	    }
 	}
@@ -4451,6 +4461,8 @@ in the build directory\n";
 		$ext =~ s/^.*\.//g;
 		$sourcebasename = $sourcefile;
 		$sourcebasename =~ s/\.\w*$//;
+		$depfilename = $sourcebasename;
+		$depfilename =~ s/.*\///;
 		if ($ext eq "c") {
 		    if (! -s $sourcefile) {
 			$srcdirloc = '';
@@ -4463,8 +4475,8 @@ in the build directory\n";
 		    if (!$found_profilelib) {
 			$targetOpts = "";
 		    }
-		    &PrintVerboseOptionCommand( "\$(MAKE_DEPEND_C) $targetOpts $srcdirloc$sourcefile >\$(DEPS_DIR)/$sourcebasename.d", "-", "MAKE_DEPEND_C $sourcefile > \$(DEPS_DIR)/$sourcebasename.d" );
-		    print FD "\techo \"$makeInclude \$(DEPS_DIR)/$sourcebasename.d\" >>\$(DEPS_DIR)/newalldeps$newline";
+		    &PrintVerboseOptionCommand( "\$(MAKE_DEPEND_C) $targetOpts $srcdirloc$sourcefile >\$(DEPS_DIR)/$depfilename.d", "-", "MAKE_DEPEND_C $sourcefile > \$(DEPS_DIR)/$depfilename.d" );
+		    print FD "\techo \"$makeInclude \$(DEPS_DIR)/$depfilename.d\" >>\$(DEPS_DIR)/newalldeps$newline";
 		}
 	    }
 	}
