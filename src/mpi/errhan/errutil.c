@@ -1772,15 +1772,17 @@ static void MPIR_Err_stack_init( void )
     if (MPIR_PARAM_CHOP_ERROR_STACK < 0) {
         MPIR_PARAM_CHOP_ERROR_STACK = 80;
 #ifdef HAVE_WINDOWS_H
-        /* If windows, set the default width to the window size */
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (hConsole != INVALID_HANDLE_VALUE)
         {
-            CONSOLE_SCREEN_BUFFER_INFO info;
-            if (GetConsoleScreenBufferInfo(hConsole, &info))
+            /* If windows, set the default width to the window size */
+            HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (hConsole != INVALID_HANDLE_VALUE)
             {
-                /* override the parameter system in this case */
-                MPIR_PARAM_CHOP_ERROR_STACK = info.dwMaximumWindowSize.X;
+                CONSOLE_SCREEN_BUFFER_INFO info;
+                if (GetConsoleScreenBufferInfo(hConsole, &info))
+                {
+                    /* override the parameter system in this case */
+                    MPIR_PARAM_CHOP_ERROR_STACK = info.dwMaximumWindowSize.X;
+                }
             }
         }
 #endif
