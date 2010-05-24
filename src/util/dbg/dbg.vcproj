@@ -1831,7 +1831,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\param\param.c"
+				RelativePath="..\param\param_vals.c"
 				>
 			</File>
 			<File
