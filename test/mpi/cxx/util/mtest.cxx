@@ -120,7 +120,8 @@ static void *MTestTypeContigInit( MTestDatatype *mtype )
     MPI::Aint size, lb;
     if (mtype->count > 0) {
 	signed char *p;
-	int  i, totsize;
+	int  i;
+        MPI::Aint totsize;
 	mtype->datatype.Get_extent( lb, size );
 	totsize = size * mtype->count;
 	if (!mtype->buf) {
@@ -150,7 +151,8 @@ static void *MTestTypeContigInitRecv( MTestDatatype *mtype )
     MPI_Aint size;
     if (mtype->count > 0) {
 	signed char *p;
-	int  i, totsize;
+	int  i;
+        MPI::Aint totsize;
 	MPI_Type_extent( mtype->datatype, &size );
 	totsize = size * mtype->count;
 	if (!mtype->buf) {
@@ -185,8 +187,8 @@ static int MTestTypeContigCheckbuf( MTestDatatype *mtype )
 {
     unsigned char *p;
     unsigned char expected;
-    int  i, totsize, err = 0;
-    MPI_Aint size;
+    int  i, err = 0;
+    MPI_Aint size, totsize;
 
     p = (unsigned char *)mtype->buf;
     if (p) {
@@ -218,7 +220,8 @@ static void *MTestTypeVectorInit( MTestDatatype *mtype )
 
     if (mtype->count > 0) {
 	unsigned char *p;
-	int  i, j, k, nc, totsize;
+	int  i, j, k, nc;
+        MPI::Aint totsize;
 
 	mtype->datatype.Get_extent( lb, size );
 	totsize	   = mtype->count * size;
