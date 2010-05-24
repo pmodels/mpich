@@ -8,8 +8,6 @@
 #include "bind.h"
 #include "bind_hwloc.h"
 
-struct HYDT_bind_info HYDT_bind_info;
-
 static hwloc_topology_t topology;
 static int topo_initialized = 0;
 
