@@ -1730,6 +1730,8 @@ typedef struct MPID_Collops {
                       MPID_Comm *);
     int (*Reduce_scatter) (void*, void*, int *, MPI_Datatype, MPI_Op, 
                            MPID_Comm *);
+    int (*Reduce_scatter_block) (void*, void*, int, MPI_Datatype, MPI_Op, 
+                           MPID_Comm *);
     int (*Scan) (void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm * );
     int (*Exscan) (void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm * );
     
@@ -3198,6 +3200,7 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_ALLTOALLW_TAG            25
 #define MPIR_TOPO_A_TAG               26
 #define MPIR_TOPO_B_TAG               27
+#define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
 
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do
