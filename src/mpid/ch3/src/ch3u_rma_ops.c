@@ -121,10 +121,8 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_free(MPID_Win **win_ptr)
 {
-    int mpi_errno=MPI_SUCCESS, total_pt_rma_puts_accs, i, *recvcnts, comm_size;
-    MPID_Comm *comm_ptr;
+    int mpi_errno=MPI_SUCCESS, total_pt_rma_puts_accs;
     int in_use;
-    MPIU_CHKLMEM_DECL(1);
     MPIU_THREADPRIV_DECL;
     
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
@@ -134,17 +132,8 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIU_THREADPRIV_GET;
     MPIR_Nest_incr();
 
-    /* set up the recvcnts array for the reduce scatter to check if all
-       passive target rma operations are done */
-    MPID_Comm_get_ptr( (*win_ptr)->comm, comm_ptr );
-    comm_size = comm_ptr->local_size;
-        
-    MPIU_CHKLMEM_MALLOC(recvcnts, int *, comm_size*sizeof(int), mpi_errno, 
-			"recvcnts");
-    for (i=0; i<comm_size; i++)  recvcnts[i] = 1;
-        
-    mpi_errno = NMPI_Reduce_scatter((*win_ptr)->pt_rma_puts_accs, 
-				    &total_pt_rma_puts_accs, recvcnts, 
+    mpi_errno = NMPI_Reduce_scatter_block((*win_ptr)->pt_rma_puts_accs, 
+				    &total_pt_rma_puts_accs, 1, 
 				    MPI_INT, MPI_SUM, (*win_ptr)->comm);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -182,7 +171,6 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
 
  fn_exit:
     MPIR_Nest_decr();
-    MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FREE);
     return mpi_errno;
 

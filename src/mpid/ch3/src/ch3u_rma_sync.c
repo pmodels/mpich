@@ -46,7 +46,7 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
 int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, done, *recvcnts;
+    int comm_size, done;
     int *rma_target_proc, *nops_to_proc, i, total_op_count, *curr_ops_cnt;
     MPIDI_RMA_ops *curr_ptr, *next_ptr;
     MPID_Comm *comm_ptr;
@@ -55,7 +55,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     MPIDI_RMA_dtype_info *dtype_infos=NULL;
     void **dataloops=NULL;    /* to store dataloops for each datatype */
     MPID_Progress_state progress_state;
-    MPIU_CHKLMEM_DECL(7);
+    MPIU_CHKLMEM_DECL(6);
     MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FENCE);
 
@@ -158,21 +158,15 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	    for (i=0; i<total_op_count; i++) dataloops[i] = NULL;
 	}
 	
-	/* do a reduce_scatter (with MPI_SUM) on rma_target_proc. As a result,
+	/* do a reduce_scatter_block (with MPI_SUM) on rma_target_proc. As a result,
 	   each process knows how many other processes will be doing
 	   RMA ops on its window */  
             
 	/* first initialize the completion counter. */
 	win_ptr->my_counter = comm_size;
             
-	/* set up the recvcnts array for reduce scatter */
-	MPIU_CHKLMEM_MALLOC(recvcnts, int *, comm_size*sizeof(int),
-			    mpi_errno, "recvcnts");
-	for (i=0; i<comm_size; i++) recvcnts[i] = 1;
-            
 	MPIR_Nest_incr();
-	mpi_errno = NMPI_Reduce_scatter(MPI_IN_PLACE, rma_target_proc, 
-					recvcnts,
+	mpi_errno = NMPI_Reduce_scatter_block(MPI_IN_PLACE, rma_target_proc, 1,
 					MPI_INT, MPI_SUM, win_ptr->comm);
 	/* result is stored in rma_target_proc[0] */
 	MPIR_Nest_decr();
