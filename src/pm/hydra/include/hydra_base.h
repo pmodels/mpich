@@ -164,6 +164,7 @@ enum HYD_fd_state {
 /* Status information */
 typedef enum {
     HYD_SUCCESS = 0,
+    HYD_FAILURE, /* general failure */
 
     /* Silent errors */
     HYD_GRACEFUL_ABORT,
