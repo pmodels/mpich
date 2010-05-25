@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "hydra_utils.h"
 #include "ckpoint.h"
 
@@ -16,6 +19,8 @@ struct HYDT_ckpoint_info HYDT_ckpoint_info;
 HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix)
 {
     HYD_status status = HYD_SUCCESS;
+    int ret;
+    struct stat st;
 
     HYDU_FUNC_ENTER();
 
@@ -32,6 +37,10 @@ HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix)
 
     if (HYDT_ckpoint_info.ckpoint_prefix == NULL)
         goto fn_exit;
+
+    ret = stat(HYDT_ckpoint_info.ckpoint_prefix, &st);
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_FAILURE, "Failed to stat checkpoint prefix \"%s\": %s\n", HYDT_ckpoint_info.ckpoint_prefix, strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, !S_ISDIR(st.st_mode), HYD_FAILURE, "checkpoint prefix \"%s\" is not a directory.\n", HYDT_ckpoint_info.ckpoint_prefix);
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
