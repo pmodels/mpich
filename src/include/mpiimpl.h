@@ -1730,10 +1730,10 @@ typedef struct MPID_Collops {
                       MPID_Comm *);
     int (*Reduce_scatter) (void*, void*, int *, MPI_Datatype, MPI_Op, 
                            MPID_Comm *);
-    int (*Reduce_scatter_block) (void*, void*, int, MPI_Datatype, MPI_Op, 
-                           MPID_Comm *);
     int (*Scan) (void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm * );
     int (*Exscan) (void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm * );
+    int (*Reduce_scatter_block) (void*, void*, int, MPI_Datatype, MPI_Op, 
+                           MPID_Comm *);
     
 } MPID_Collops;
 
