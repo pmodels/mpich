@@ -10,7 +10,11 @@
 #include "mpiimpl.h"
 
 #if defined(HAVE_STRERROR_R) && defined(NEEDS_STRERROR_R_DECL)
+#if defined(STRERROR_R_CHAR_P)
+char *strerror_r(int errnum, char *strerrbuf, size_t buflen);
+#else
 int strerror_r(int errnum, char *strerrbuf, size_t buflen);
+#endif
 #endif
 
 /* ideally, provides a thread-safe version of strerror */
