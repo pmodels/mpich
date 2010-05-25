@@ -40,10 +40,14 @@
 #define ROMIO_HINT_DEFAULT_CFG "/etc/romio-hints"
 #define ROMIO_HINT_ENV_VAR "ROMIO_HINTS"
 
+ /* should suppress unused warnings on GCC */
+static void dump_keys(MPI_Info info) ATTRIBUTE((unused, used));
+
 /* debug function: a routine I want in the library to make my life easier when
  * using a source debugger. please ignore any "defined but not used" warnings
  */
-static void dump_keys(MPI_Info info) {
+static void dump_keys(MPI_Info info)
+{
     int i, nkeys, flag;
     char key[MPI_MAX_INFO_KEY];
     char value[MPI_MAX_INFO_VAL];

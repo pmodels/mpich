@@ -43,7 +43,11 @@ void ADIOI_Heap_free(heap_t *heap) {
     ADIOI_Free(heap->nodes);
 }
 
-static void build_heap(heap_t *heap) {
+/* should suppress unused warnings on GCC */
+static void build_heap(heap_t *heap) ATTRIBUTE((unused, used));
+
+static void build_heap(heap_t *heap)
+{
     int i;
     for (i=(heap->size/2-1); i >= 0; i--)
 	heapify(heap, i);
@@ -104,7 +108,11 @@ void ADIOI_Heap_extract_min(heap_t *heap, ADIO_Offset* offset, int *proc,
     heapify(heap, 0);
 }
 
-static void print_heap(heap_t *heap) {
+/* should suppress unused warnings on GCC */
+static void print_heap(heap_t *heap) ATTRIBUTE((unused, used));
+
+static void print_heap(heap_t *heap)
+{
 #ifndef NOEXP2
     int i;
     double level = 0;
