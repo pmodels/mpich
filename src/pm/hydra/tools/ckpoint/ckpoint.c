@@ -4,9 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "hydra_utils.h"
 #include "ckpoint.h"
 
