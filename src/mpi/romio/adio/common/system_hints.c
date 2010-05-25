@@ -52,7 +52,7 @@ static void dump_keys(MPI_Info info) {
 
     for (i=0; i<nkeys; i++) {
 	MPI_Info_get_nthkey(info, i, key);
-	MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
+	ADIOI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
 	printf("key = %s, value = %s\n", key, value);
     }
     return;
@@ -122,9 +122,9 @@ static int file_to_info(int fd, MPI_Info info)
 #endif
 	/* don't actually care what the value is. only want to know if key
 	 * exists: we leave it alone if so*/
-	MPI_Info_get(info, key, 1, &dummy, &flag);
+	ADIOI_Info_get(info, key, 1, &dummy, &flag);
 	if (flag == 1) continue;
-	MPI_Info_set(info, key, val);
+	ADIOI_Info_set(info, key, val);
     } while ((token = strtok_r(NULL, "\n", &pos1)) != NULL);
     ADIOI_Free(buffer);
     return 0;
@@ -173,10 +173,10 @@ void ADIOI_incorporate_system_hints(MPI_Info info,
     for (i=0; i<nkeys_sysinfo; i++) {
 	MPI_Info_get_nthkey(sysinfo, i, key);
 	/* don't care about the value, just want to know if hint set already*/
-	if (info != MPI_INFO_NULL) MPI_Info_get(info, key, 1, val, &flag); 
+	if (info != MPI_INFO_NULL) ADIOI_Info_get(info, key, 1, val, &flag); 
 	if (flag == 1) continue;  /* skip any hints already set by user */
-	MPI_Info_get(sysinfo, key, MPI_MAX_INFO_VAL-1, val, &flag);
-	MPI_Info_set(*new_info, key, val);
+	ADIOI_Info_get(sysinfo, key, MPI_MAX_INFO_VAL-1, val, &flag);
+	ADIOI_Info_set(*new_info, key, val);
 	flag = 0;
     }
 

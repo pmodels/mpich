@@ -202,7 +202,7 @@ void ADIOI_Calc_file_realms_aar (ADIO_File fd, int nprocs_for_coll, int cb_pfr,
     }
     if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {
 	sprintf (value, "%d", fr_size);
-	MPI_Info_set (fd->info, "romio_cb_fr_type", value);
+	ADIOI_Info_set (fd->info, "romio_cb_fr_type", value);
     }
 }
 

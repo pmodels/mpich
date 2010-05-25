@@ -61,15 +61,15 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	did_anything = 1;
 
 	/* buffer size for collective I/O */
-	MPI_Info_set(info, "cb_buffer_size", ADIOI_BGL_CB_BUFFER_SIZE_DFLT); 
+	ADIOI_Info_set(info, "cb_buffer_size", ADIOI_BGL_CB_BUFFER_SIZE_DFLT); 
 	fd->hints->cb_buffer_size = atoi(ADIOI_BGL_CB_BUFFER_SIZE_DFLT);
 
 	/* default is to let romio automatically decide when to use
 	 * collective buffering
 	 */
-	MPI_Info_set(info, "romio_cb_read", "enable"); 
+	ADIOI_Info_set(info, "romio_cb_read", "enable"); 
 	fd->hints->cb_read = ADIOI_HINT_ENABLE;
-	MPI_Info_set(info, "romio_cb_write", "enable"); 
+	ADIOI_Info_set(info, "romio_cb_write", "enable"); 
 	fd->hints->cb_write = ADIOI_HINT_ENABLE;
 
    	if ( fd->hints->cb_config_list != NULL ) ADIOI_Free (fd->hints->cb_config_list);
@@ -79,53 +79,53 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	MPI_Comm_size(fd->comm, &nprocs);
 	nprocs_is_valid = 1;
 	ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", nprocs);
-	MPI_Info_set(info, "cb_nodes", value);
+	ADIOI_Info_set(info, "cb_nodes", value);
 	fd->hints->cb_nodes = -1;
 
 	/* hint indicating that no indep. I/O will be performed on this file */
-	MPI_Info_set(info, "romio_no_indep_rw", "false");
+	ADIOI_Info_set(info, "romio_no_indep_rw", "false");
 	fd->hints->no_indep_rw = 0;
 
 	/* bgl is not implementing file realms (ADIOI_IOStridedColl),
 	   initialize to disabled it. 	   */
 	/* hint instructing the use of persistent file realms */
-	MPI_Info_set(info, "romio_cb_pfr", "disable");
+	ADIOI_Info_set(info, "romio_cb_pfr", "disable");
 	fd->hints->cb_pfr = ADIOI_HINT_DISABLE;
 	
 	/* hint guiding the assignment of persistent file realms */
-	MPI_Info_set(info, "romio_cb_fr_types", "aar");
+	ADIOI_Info_set(info, "romio_cb_fr_types", "aar");
 	fd->hints->cb_fr_type = ADIOI_FR_AAR;
 
 	/* hint to align file realms with a certain byte value */
-	MPI_Info_set(info, "romio_cb_fr_alignment", "1");
+	ADIOI_Info_set(info, "romio_cb_fr_alignment", "1");
 	fd->hints->cb_fr_alignment = 1;
 
 	/* hint to set a threshold percentage for a datatype's size/extent at
 	 * which data sieving should be done in collective I/O */
-	MPI_Info_set(info, "romio_cb_ds_threshold", "0");
+	ADIOI_Info_set(info, "romio_cb_ds_threshold", "0");
 	fd->hints->cb_ds_threshold = 0;
 
 	/* hint to switch between point-to-point or all-to-all for two-phase */
-	MPI_Info_set(info, "romio_cb_alltoall", "automatic");
+	ADIOI_Info_set(info, "romio_cb_alltoall", "automatic");
 	fd->hints->cb_alltoall = ADIOI_HINT_AUTO;
 
 	 /* deferred_open derived from no_indep_rw and cb_{read,write} */
 	fd->hints->deferred_open = 0;
 
 	/* buffer size for data sieving in independent reads */
-	MPI_Info_set(info, "ind_rd_buffer_size", ADIOI_BGL_IND_RD_BUFFER_SIZE_DFLT);
+	ADIOI_Info_set(info, "ind_rd_buffer_size", ADIOI_BGL_IND_RD_BUFFER_SIZE_DFLT);
 	fd->hints->ind_rd_buffer_size = atoi(ADIOI_BGL_IND_RD_BUFFER_SIZE_DFLT);
 
 	/* buffer size for data sieving in independent writes */
-	MPI_Info_set(info, "ind_wr_buffer_size", ADIOI_BGL_IND_WR_BUFFER_SIZE_DFLT);
+	ADIOI_Info_set(info, "ind_wr_buffer_size", ADIOI_BGL_IND_WR_BUFFER_SIZE_DFLT);
 	fd->hints->ind_wr_buffer_size = atoi(ADIOI_BGL_IND_WR_BUFFER_SIZE_DFLT);
 
   if(fd->file_system == ADIO_UFS)
   {
     /* default for ufs/pvfs is to disable data sieving  */
-    MPI_Info_set(info, "romio_ds_read", "disable"); 
+    ADIOI_Info_set(info, "romio_ds_read", "disable"); 
     fd->hints->ds_read = ADIOI_HINT_DISABLE;
-    MPI_Info_set(info, "romio_ds_write", "disable"); 
+    ADIOI_Info_set(info, "romio_ds_write", "disable"); 
     fd->hints->ds_write = ADIOI_HINT_DISABLE;
   }
   else
@@ -133,9 +133,9 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* default is to let romio automatically decide when to use data
      * sieving
      */
-    MPI_Info_set(info, "romio_ds_read", "automatic"); 
+    ADIOI_Info_set(info, "romio_ds_read", "automatic"); 
     fd->hints->ds_read = ADIOI_HINT_AUTO;
-    MPI_Info_set(info, "romio_ds_write", "automatic"); 
+    ADIOI_Info_set(info, "romio_ds_write", "automatic"); 
     fd->hints->ds_write = ADIOI_HINT_AUTO;
   }
 
@@ -149,7 +149,7 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
     /* add in user's info if supplied */
     if (users_info != MPI_INFO_NULL) {
-	MPI_Info_get(users_info, "cb_buffer_size", MPI_MAX_INFO_VAL, 
+	ADIOI_Info_get(users_info, "cb_buffer_size", MPI_MAX_INFO_VAL, 
 		     value, &flag);
 	if (flag && ((intval=atoi(value)) > 0)) {
 	    tmp_val = intval;
@@ -164,7 +164,7 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    }
 	    /* --END ERROR HANDLING-- */
 
-	    MPI_Info_set(info, "cb_buffer_size", value);
+	    ADIOI_Info_set(info, "cb_buffer_size", value);
 	    fd->hints->cb_buffer_size = intval;
 
 	}
@@ -172,7 +172,7 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* bgl is not implementing file realms (ADIOI_IOStridedColl) ... */
 	/* aligning file realms to certain sizes (e.g. stripe sizes)
 	 * may benefit I/O performance */
-	MPI_Info_get(users_info, "romio_cb_fr_alignment", MPI_MAX_INFO_VAL, 
+	ADIOI_Info_get(users_info, "romio_cb_fr_alignment", MPI_MAX_INFO_VAL, 
 		     value, &flag);
 	if (flag && ((intval=atoi(value)) > 0)) {
 	    tmp_val = intval;
@@ -187,7 +187,7 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    }
 	    /* --END ERROR HANDLING-- */
 
-	    MPI_Info_set(info, "romio_cb_fr_alignment", value);
+	    ADIOI_Info_set(info, "romio_cb_fr_alignment", value);
 	    fd->hints->cb_fr_alignment = intval;
 
 	}
@@ -195,7 +195,7 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* for collective I/O, try to be smarter about when to do data sieving
 	 * using a specific threshold for the datatype size/extent
 	 * (percentage 0-100%) */
-	MPI_Info_get(users_info, "romio_cb_ds_threshold", MPI_MAX_INFO_VAL, 
+	ADIOI_Info_get(users_info, "romio_cb_ds_threshold", MPI_MAX_INFO_VAL, 
 		     value, &flag);
 	if (flag && ((intval=atoi(value)) > 0)) {
 	    tmp_val = intval;
@@ -210,24 +210,24 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    }
 	    /* --END ERROR HANDLING-- */
 
-	    MPI_Info_set(info, "romio_cb_ds_threshold", value);
+	    ADIOI_Info_set(info, "romio_cb_ds_threshold", value);
 	    fd->hints->cb_ds_threshold = intval;
 
 	}
-	MPI_Info_get(users_info, "romio_cb_alltoall", MPI_MAX_INFO_VAL, value,
+	ADIOI_Info_get(users_info, "romio_cb_alltoall", MPI_MAX_INFO_VAL, value,
 		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
-		MPI_Info_set(info, "romio_cb_alltoall", value);
+		ADIOI_Info_set(info, "romio_cb_alltoall", value);
 		fd->hints->cb_read = ADIOI_HINT_ENABLE;
 	    }
 	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE")) {
-		MPI_Info_set(info, "romio_cb_alltoall", value);
+		ADIOI_Info_set(info, "romio_cb_alltoall", value);
 		fd->hints->cb_read = ADIOI_HINT_DISABLE;
 	    }
 	    else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC"))
 	    {
-		MPI_Info_set(info, "romio_cb_alltoall", value);
+		ADIOI_Info_set(info, "romio_cb_alltoall", value);
 		fd->hints->cb_read = ADIOI_HINT_AUTO;
 	    }
 
@@ -247,23 +247,23 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* new hints for enabling/disabling coll. buffering on
 	 * reads/writes
 	 */
-	MPI_Info_get(users_info, "romio_cb_read", MPI_MAX_INFO_VAL, value,
+	ADIOI_Info_get(users_info, "romio_cb_read", MPI_MAX_INFO_VAL, value,
 		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
-		MPI_Info_set(info, "romio_cb_read", value);
+		ADIOI_Info_set(info, "romio_cb_read", value);
 		fd->hints->cb_read = ADIOI_HINT_ENABLE;
 	    }
 	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE")) {
 		    /* romio_cb_read overrides no_indep_rw */
-		MPI_Info_set(info, "romio_cb_read", value);
-		MPI_Info_set(info, "romio_no_indep_rw", "false");
+		ADIOI_Info_set(info, "romio_cb_read", value);
+		ADIOI_Info_set(info, "romio_no_indep_rw", "false");
 		fd->hints->cb_read = ADIOI_HINT_DISABLE;
 		fd->hints->no_indep_rw = ADIOI_HINT_DISABLE;
 	    }
 	    else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC"))
 	    {
-		MPI_Info_set(info, "romio_cb_read", value);
+		ADIOI_Info_set(info, "romio_cb_read", value);
 		fd->hints->cb_read = ADIOI_HINT_AUTO;
 	    }
 
@@ -279,25 +279,25 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    }
 	    /* --END ERROR HANDLING-- */
 	}
-	MPI_Info_get(users_info, "romio_cb_write", MPI_MAX_INFO_VAL, value,
+	ADIOI_Info_get(users_info, "romio_cb_write", MPI_MAX_INFO_VAL, value,
 		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
-		MPI_Info_set(info, "romio_cb_write", value);
+		ADIOI_Info_set(info, "romio_cb_write", value);
 		fd->hints->cb_write = ADIOI_HINT_ENABLE;
 	    }
 	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE"))
 	    {
 		/* romio_cb_write overrides no_indep_rw, too */
-		MPI_Info_set(info, "romio_cb_write", value);
-		MPI_Info_set(info, "romio_no_indep_rw", "false");
+		ADIOI_Info_set(info, "romio_cb_write", value);
+		ADIOI_Info_set(info, "romio_no_indep_rw", "false");
 		fd->hints->cb_write = ADIOI_HINT_DISABLE;
 		fd->hints->no_indep_rw = ADIOI_HINT_DISABLE;
 	    }
 	    else if (!strcmp(value, "automatic") ||
 		     !strcmp(value, "AUTOMATIC"))
 	    {
-		MPI_Info_set(info, "romio_cb_write", value);
+		ADIOI_Info_set(info, "romio_cb_write", value);
 		fd->hints->cb_write = ADIOI_HINT_AUTO;
 	    }
 	
@@ -318,20 +318,20 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* bgl is not implementing file realms (ADIOI_IOStridedColl) ... */
 	/* enable/disable persistent file realms for collective I/O */
 	/* may want to check for no_indep_rdwr hint as well */
-	MPI_Info_get(users_info, "romio_cb_pfr", MPI_MAX_INFO_VAL, value,
+	ADIOI_Info_get(users_info, "romio_cb_pfr", MPI_MAX_INFO_VAL, value,
 		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
-		MPI_Info_set(info, "romio_cb_pfr", value);
+		ADIOI_Info_set(info, "romio_cb_pfr", value);
 		fd->hints->cb_pfr = ADIOI_HINT_ENABLE;
 	    }
 	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE")) {
-		MPI_Info_set(info, "romio_cb_pfr", value);
+		ADIOI_Info_set(info, "romio_cb_pfr", value);
 		fd->hints->cb_pfr = ADIOI_HINT_DISABLE;
 	    }
 	    else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC"))
 	    {
-		MPI_Info_set(info, "romio_cb_pfr", value);
+		ADIOI_Info_set(info, "romio_cb_pfr", value);
 		fd->hints->cb_pfr = ADIOI_HINT_AUTO;
 	    }
 
@@ -351,7 +351,7 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* file realm assignment types ADIOI_FR_AAR(0),
 	 ADIOI_FR_FSZ(-1), ADIOI_FR_USR_REALMS(-2), all others specify
 	 a regular fr size in bytes. probably not the best way... */
-	MPI_Info_get(users_info, "romio_cb_fr_type", MPI_MAX_INFO_VAL, 
+	ADIOI_Info_get(users_info, "romio_cb_fr_type", MPI_MAX_INFO_VAL, 
 		     value, &flag);
 	if (flag && ((intval=atoi(value)) >= -2)) {
 	    tmp_val = intval;
@@ -366,29 +366,29 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    }
 	    /* --END ERROR HANDLING-- */
 
-	    MPI_Info_set(info, "romio_cb_fr_type", value);
+	    ADIOI_Info_set(info, "romio_cb_fr_type", value);
 	    fd->hints->cb_fr_type = intval;
 
 	}
 #endif
 	/* new hint for specifying no indep. read/write will be performed */
-	MPI_Info_get(users_info, "romio_no_indep_rw", MPI_MAX_INFO_VAL, value,
+	ADIOI_Info_get(users_info, "romio_no_indep_rw", MPI_MAX_INFO_VAL, value,
 		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "true") || !strcmp(value, "TRUE")) {
 		    /* if 'no_indep_rw' set, also hint that we will do
 		     * collective buffering: if we aren't doing independent io,
 		     * then we have to do collective  */
-		MPI_Info_set(info, "romio_no_indep_rw", value);
-		MPI_Info_set(info, "romio_cb_write", "enable");
-		MPI_Info_set(info, "romio_cb_read", "enable");
+		ADIOI_Info_set(info, "romio_no_indep_rw", value);
+		ADIOI_Info_set(info, "romio_cb_write", "enable");
+		ADIOI_Info_set(info, "romio_cb_read", "enable");
 		fd->hints->no_indep_rw = 1;
 		fd->hints->cb_read = 1;
 		fd->hints->cb_write = 1;
 		tmp_val = 1;
 	    }
 	    else if (!strcmp(value, "false") || !strcmp(value, "FALSE")) {
-		MPI_Info_set(info, "romio_no_indep_rw", value);
+		ADIOI_Info_set(info, "romio_no_indep_rw", value);
 		fd->hints->no_indep_rw = 0;
 		tmp_val = 0;
 	    }
@@ -410,80 +410,80 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* new hints for enabling/disabling data sieving on
 	 * reads/writes
 	 */
-	MPI_Info_get(users_info, "romio_ds_read", MPI_MAX_INFO_VAL, value, 
+	ADIOI_Info_get(users_info, "romio_ds_read", MPI_MAX_INFO_VAL, value, 
 		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
-		MPI_Info_set(info, "romio_ds_read", value);
+		ADIOI_Info_set(info, "romio_ds_read", value);
 		fd->hints->ds_read = ADIOI_HINT_ENABLE;
 	    }
 	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE")) {
-		MPI_Info_set(info, "romio_ds_read", value);
+		ADIOI_Info_set(info, "romio_ds_read", value);
 		fd->hints->ds_read = ADIOI_HINT_DISABLE;
 	    }
 	    else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC"))
 	    {
-		MPI_Info_set(info, "romio_ds_read", value);
+		ADIOI_Info_set(info, "romio_ds_read", value);
 		fd->hints->ds_read = ADIOI_HINT_AUTO;
 	    }
 	    /* otherwise ignore */
 	}
-	MPI_Info_get(users_info, "romio_ds_write", MPI_MAX_INFO_VAL, value, 
+	ADIOI_Info_get(users_info, "romio_ds_write", MPI_MAX_INFO_VAL, value, 
 		     &flag);
 	if (flag) {
 	    if (!strcmp(value, "enable") || !strcmp(value, "ENABLE")) {
-		MPI_Info_set(info, "romio_ds_write", value);
+		ADIOI_Info_set(info, "romio_ds_write", value);
 		fd->hints->ds_write = ADIOI_HINT_ENABLE;
 	    }
 	    else if (!strcmp(value, "disable") || !strcmp(value, "DISABLE")) {
-		MPI_Info_set(info, "romio_ds_write", value);
+		ADIOI_Info_set(info, "romio_ds_write", value);
 		fd->hints->ds_write = ADIOI_HINT_DISABLE;
 	    }
 	    else if (!strcmp(value, "automatic") || !strcmp(value, "AUTOMATIC"))
 	    {
-		MPI_Info_set(info, "romio_ds_write", value);
+		ADIOI_Info_set(info, "romio_ds_write", value);
 		fd->hints->ds_write = ADIOI_HINT_AUTO;
 	    }
 	    /* otherwise ignore */
 	}
 
-	MPI_Info_get(users_info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL, 
+	ADIOI_Info_get(users_info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL, 
 		     value, &flag);
 	if (flag && ((intval = atoi(value)) > 0)) {
-	    MPI_Info_set(info, "ind_wr_buffer_size", value);
+	    ADIOI_Info_set(info, "ind_wr_buffer_size", value);
 	    fd->hints->ind_wr_buffer_size = intval;
 	}
 
-	MPI_Info_get(users_info, "ind_rd_buffer_size", MPI_MAX_INFO_VAL, 
+	ADIOI_Info_get(users_info, "ind_rd_buffer_size", MPI_MAX_INFO_VAL, 
 		     value, &flag);
 	if (flag && ((intval = atoi(value)) > 0)) {
-	    MPI_Info_set(info, "ind_rd_buffer_size", value);
+	    ADIOI_Info_set(info, "ind_rd_buffer_size", value);
 	    fd->hints->ind_rd_buffer_size = intval;
 	}
 
 	memset( value, 0, MPI_MAX_INFO_VAL+1 );
-	MPI_Info_get(users_info, "romio_min_fdomain_size", MPI_MAX_INFO_VAL,
+	ADIOI_Info_get(users_info, "romio_min_fdomain_size", MPI_MAX_INFO_VAL,
 			value, &flag);
 	if ( flag && ((intval = atoi(value)) > 0) ) {
-		MPI_Info_set(info, "romio_min_fdomain_size", value);
+		ADIOI_Info_set(info, "romio_min_fdomain_size", value);
 		fd->hints->min_fdomain_size = intval;
 	}
   /* Now we use striping unit in common code so we should
      process hints for it. */
-	MPI_Info_get(users_info, "striping_unit", MPI_MAX_INFO_VAL,
+	ADIOI_Info_get(users_info, "striping_unit", MPI_MAX_INFO_VAL,
 			value, &flag);
 	if ( flag && ((intval = atoi(value)) > 0) ) {
-		MPI_Info_set(info, "striping_unit", value);
+		ADIOI_Info_set(info, "striping_unit", value);
 		fd->hints->striping_unit = intval;
 	}
 
 	memset( value, 0, MPI_MAX_INFO_VAL+1 );
-        MPI_Info_get(users_info, ADIOI_BGL_NAGG_IN_PSET_HINT_NAME, MPI_MAX_INFO_VAL,
+        ADIOI_Info_get(users_info, ADIOI_BGL_NAGG_IN_PSET_HINT_NAME, MPI_MAX_INFO_VAL,
 		     value, &flag);
 	if (flag && ((intval = atoi(value)) > 0)) {
 
 	    did_anything = 1;
-	    MPI_Info_set(info, ADIOI_BGL_NAGG_IN_PSET_HINT_NAME, value);
+	    ADIOI_Info_set(info, ADIOI_BGL_NAGG_IN_PSET_HINT_NAME, value);
 	    fd->hints->cb_nodes = intval;
 	}
     }
@@ -495,7 +495,7 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* ignore defered open hints and do not enable it for bluegene: need all
      * processors in the open path so we can stat-and-broadcast the blocksize
      */
-    MPI_Info_set(info, "romio_no_indep_rw", "false");
+    ADIOI_Info_set(info, "romio_no_indep_rw", "false");
     fd->hints->no_indep_rw = 0;
     fd->hints->deferred_open = 0;
 
@@ -505,16 +505,16 @@ void ADIOI_BGL_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     if (ADIO_Feature(fd, ADIO_DATA_SIEVING_WRITES) == 0) {
     /* disable data sieving for fs that do not
        support file locking */
-       	MPI_Info_get(info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL,
+       	ADIOI_Info_get(info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL,
 		     value, &flag);
 	if (flag) {
 	    /* get rid of this value if it is set */
-	    MPI_Info_delete(info, "ind_wr_buffer_size");
+	    ADIOI_Info_delete(info, "ind_wr_buffer_size");
 	}
 	/* note: leave ind_wr_buffer_size alone; used for other cases
 	 * as well. -- Rob Ross, 04/22/2003
 	 */
-	MPI_Info_set(info, "romio_ds_write", "disable");
+	ADIOI_Info_set(info, "romio_ds_write", "disable");
 	fd->hints->ds_write = ADIOI_HINT_DISABLE;
     }
 

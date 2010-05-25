@@ -26,47 +26,47 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
            if necessary. */
 	MPI_Info_create(&(fd->info));
 
-	MPI_Info_set(fd->info, "direct_read", "false");
-	MPI_Info_set(fd->info, "direct_write", "false");
+	ADIOI_Info_set(fd->info, "direct_read", "false");
+	ADIOI_Info_set(fd->info, "direct_write", "false");
 	fd->direct_read = fd->direct_write = 0;
         /* initialize lustre hints */
-	MPI_Info_set(fd->info, "romio_lustre_co_ratio", "1");
+	ADIOI_Info_set(fd->info, "romio_lustre_co_ratio", "1");
         fd->hints->fs_hints.lustre.co_ratio = 1;
-	MPI_Info_set(fd->info, "romio_lustre_coll_threshold", "0");
+	ADIOI_Info_set(fd->info, "romio_lustre_coll_threshold", "0");
         fd->hints->fs_hints.lustre.coll_threshold = 0;
-	MPI_Info_set(fd->info, "romio_lustre_ds_in_coll", "enable");
+	ADIOI_Info_set(fd->info, "romio_lustre_ds_in_coll", "enable");
         fd->hints->fs_hints.lustre.ds_in_coll = ADIOI_HINT_ENABLE;
 
 	/* has user specified striping or server buffering parameters
            and do they have the same value on all processes? */
 	if (users_info != MPI_INFO_NULL) {
             /* striping information */
-	    MPI_Info_get(users_info, "striping_unit", MPI_MAX_INFO_VAL,
+	    ADIOI_Info_get(users_info, "striping_unit", MPI_MAX_INFO_VAL,
 			 value, &flag);
 	    if (flag)
 		str_unit=atoi(value);
 
-	    MPI_Info_get(users_info, "striping_factor", MPI_MAX_INFO_VAL,
+	    ADIOI_Info_get(users_info, "striping_factor", MPI_MAX_INFO_VAL,
 			 value, &flag);
 	    if (flag)
 		str_factor=atoi(value);
 
-	    MPI_Info_get(users_info, "romio_lustre_start_iodevice",
+	    ADIOI_Info_get(users_info, "romio_lustre_start_iodevice",
                          MPI_MAX_INFO_VAL, value, &flag);
 	    if (flag)
 		start_iodev=atoi(value);
 
             /* direct read and write */
-	    MPI_Info_get(users_info, "direct_read", MPI_MAX_INFO_VAL,
+	    ADIOI_Info_get(users_info, "direct_read", MPI_MAX_INFO_VAL,
 			 value, &flag);
 	    if (flag && (!strcmp(value, "true") || !strcmp(value, "TRUE"))) {
-		MPI_Info_set(fd->info, "direct_read", "true");
+		ADIOI_Info_set(fd->info, "direct_read", "true");
 		fd->direct_read = 1;
 	    }
-	    MPI_Info_get(users_info, "direct_write", MPI_MAX_INFO_VAL,
+	    ADIOI_Info_get(users_info, "direct_write", MPI_MAX_INFO_VAL,
 			     value, &flag);
 	    if (flag && (!strcmp(value, "true") || !strcmp(value, "TRUE"))) {
-		MPI_Info_set(fd->info, "direct_write", "true");
+		ADIOI_Info_set(fd->info, "direct_write", "true");
 		fd->direct_write = 1;
 	    }
 	}
@@ -138,7 +138,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     if (users_info != MPI_INFO_NULL) {
         /* CO: IO Clients/OST,
          * to keep the load balancing between clients and OSTs */
-        MPI_Info_get(users_info, "romio_lustre_co_ratio", MPI_MAX_INFO_VAL, value,
+        ADIOI_Info_get(users_info, "romio_lustre_co_ratio", MPI_MAX_INFO_VAL, value,
                      &flag);
 	if (flag && (int_val = atoi(value)) > 0) {
             tmp_val = int_val;
@@ -150,13 +150,13 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 ADIOI_Free(value);
 		return;
 	    }
-	    MPI_Info_set(fd->info, "romio_lustre_co_ratio", value);
+	    ADIOI_Info_set(fd->info, "romio_lustre_co_ratio", value);
             fd->hints->fs_hints.lustre.co_ratio = atoi(value);
 	}
         /* coll_threshold:
          * if the req size is bigger than this, collective IO may not be performed.
          */
-	MPI_Info_get(users_info, "romio_lustre_coll_threshold", MPI_MAX_INFO_VAL, value,
+	ADIOI_Info_get(users_info, "romio_lustre_coll_threshold", MPI_MAX_INFO_VAL, value,
                      &flag);
 	if (flag && (int_val = atoi(value)) > 0) {
             tmp_val = int_val;
@@ -168,11 +168,11 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 ADIOI_Free(value);
 	        return;
 	    }
-	    MPI_Info_set(fd->info, "romio_lustre_coll_threshold", value);
+	    ADIOI_Info_set(fd->info, "romio_lustre_coll_threshold", value);
             fd->hints->fs_hints.lustre.coll_threshold = atoi(value);
         }
         /* ds_in_coll: disable data sieving in collective IO */
-	MPI_Info_get(users_info, "romio_lustre_ds_in_coll", MPI_MAX_INFO_VAL,
+	ADIOI_Info_get(users_info, "romio_lustre_ds_in_coll", MPI_MAX_INFO_VAL,
 	             value, &flag);
 	if (flag && (!strcmp(value, "disable") ||
                      !strcmp(value, "DISABLE"))) {
@@ -185,7 +185,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 ADIOI_Free(value);
                 return;
 	    }
-	    MPI_Info_set(fd->info, "romio_lustre_ds_in_coll", "disable");
+	    ADIOI_Info_set(fd->info, "romio_lustre_ds_in_coll", "disable");
             fd->hints->fs_hints.lustre.ds_in_coll = ADIOI_HINT_DISABLE;
 	}
     }

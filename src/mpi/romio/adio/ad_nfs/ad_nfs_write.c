@@ -304,7 +304,7 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, void *buf, int count,
 /* get max_bufsize from the info object. */
 
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
-    MPI_Info_get(fd->info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL, value, 
+    ADIOI_Info_get(fd->info, "ind_wr_buffer_size", MPI_MAX_INFO_VAL, value, 
                  &info_flag);
     max_bufsize = atoi(value);
     ADIOI_Free(value);

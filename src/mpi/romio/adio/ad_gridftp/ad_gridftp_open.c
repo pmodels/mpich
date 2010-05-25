@@ -136,7 +136,7 @@ void ADIOI_GRIDFTP_Open(ADIO_File fd, int *error_code)
        oattr[] (eg. parallelism, striping, etc.) goes here */
     if ( fd->info!=MPI_INFO_NULL )
 	{
-	    MPI_Info_get(fd->info,"ftp_control_mode",MPI_MAX_INFO_VAL,hintval,&keyfound);
+	    ADIOI_Info_get(fd->info,"ftp_control_mode",MPI_MAX_INFO_VAL,hintval,&keyfound);
 	    if ( keyfound )
 		{
 		    if ( ( !strcmp(hintval,"extended") || !strcmp(hintval,"extended_block") ) && 
@@ -153,7 +153,7 @@ void ADIOI_GRIDFTP_Open(ADIO_File fd, int *error_code)
 			globus_err_handler("globus_ftp_client_operationattr_set_mode",myname,result);
 		}
 
-	    MPI_Info_get(fd->info,"parallelism",MPI_MAX_INFO_VAL,hintval,&keyfound);
+	    ADIOI_Info_get(fd->info,"parallelism",MPI_MAX_INFO_VAL,hintval,&keyfound);
 	    if ( keyfound )
 		{
 		    int nftpthreads;
@@ -170,14 +170,14 @@ void ADIOI_GRIDFTP_Open(ADIO_File fd, int *error_code)
 			}
 		}
 
-	    MPI_Info_get(fd->info,"striped_ftp",MPI_MAX_INFO_VAL,hintval,&keyfound);
+	    ADIOI_Info_get(fd->info,"striped_ftp",MPI_MAX_INFO_VAL,hintval,&keyfound);
 	    if ( keyfound )
 		{
 		    /* if set to "true" or "enable", set up round-robin block layout */
 		    if ( !strncmp("true",hintval,4) || !strncmp("TRUE",hintval,4) ||
 			 !strncmp("enable",hintval,4) || !strncmp("ENABLE",hintval,4) )
 			{
-			    MPI_Info_get(fd->info,"striping_factor",MPI_MAX_INFO_VAL,hintval,&keyfound);
+			    ADIOI_Info_get(fd->info,"striping_factor",MPI_MAX_INFO_VAL,hintval,&keyfound);
 			    if ( keyfound )
 				{
 				    int striping_factor;
@@ -197,7 +197,7 @@ void ADIOI_GRIDFTP_Open(ADIO_File fd, int *error_code)
 			}
 		}
 
-	    MPI_Info_get(fd->info,"tcp_buffer",MPI_MAX_INFO_VAL,hintval,&keyfound);
+	    ADIOI_Info_get(fd->info,"tcp_buffer",MPI_MAX_INFO_VAL,hintval,&keyfound);
 	    if ( keyfound )
 		{
 		    /* set tcp buffer size */
@@ -214,7 +214,7 @@ void ADIOI_GRIDFTP_Open(ADIO_File fd, int *error_code)
 			}
 		}
 
-	    MPI_Info_get(fd->info,"transfer_type",MPI_MAX_INFO_VAL,hintval,&keyfound);
+	    ADIOI_Info_get(fd->info,"transfer_type",MPI_MAX_INFO_VAL,hintval,&keyfound);
 	    if ( keyfound )
 		{
 		    globus_ftp_control_type_t filetype;

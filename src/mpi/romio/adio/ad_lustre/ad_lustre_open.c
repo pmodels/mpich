@@ -65,15 +65,15 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 
             fd->hints->striping_unit = lum->lmm_stripe_size;
             sprintf(value, "%d", lum->lmm_stripe_size);
-            MPI_Info_set(fd->info, "striping_unit", value);
+            ADIOI_Info_set(fd->info, "striping_unit", value);
 
             fd->hints->striping_factor = lum->lmm_stripe_count;
             sprintf(value, "%d", lum->lmm_stripe_count);
-            MPI_Info_set(fd->info, "striping_factor", value);
+            ADIOI_Info_set(fd->info, "striping_factor", value);
 
             fd->hints->fs_hints.lustre.start_iodevice = lum->lmm_stripe_offset;
             sprintf(value, "%d", lum->lmm_stripe_offset);
-            MPI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
+            ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
 
             ADIOI_Free(value);
         }
