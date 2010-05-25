@@ -647,6 +647,7 @@ void MPIDI_Coll_Comm_create (MPID_Comm *comm)
   comm->coll_fns->Scatter        = MPIDO_Scatter;
   comm->coll_fns->Scatterv       = MPIDO_Scatterv;
   comm->coll_fns->Reduce_scatter = MPIDO_Reduce_scatter;
+  comm->coll_fns->Reduce_scatter_block = MPIDO_Reduce_scatter_block;
   comm->coll_fns->Scan           = MPIDO_Scan;
   comm->coll_fns->Exscan         = MPIDO_Exscan;
 
@@ -746,6 +747,7 @@ void MPIDI_Coll_Comm_create (MPID_Comm *comm)
   comm->coll_fns->Scatter        = NULL;
   comm->coll_fns->Scatterv       = NULL;
   comm->coll_fns->Reduce_scatter = NULL;
+  comm->coll_fns->Reduce_scatter_block = NULL;
   comm->coll_fns->Scan           = NULL;
   comm->coll_fns->Exscan         = NULL;
 
