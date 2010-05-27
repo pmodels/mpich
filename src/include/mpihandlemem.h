@@ -205,14 +205,37 @@ M*/
    --enable-g=log is selected.  MPIU_HANDLE_CHECK_REFCOUNT is
    defined above, and adds an additional sanity check for the refcounts
 */
-#if MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_NONE || \
-    MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_LOCK
-
 #if MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_NONE
+
 typedef int MPIU_Handle_ref_count;
+#define MPIU_HANDLE_REF_COUNT_INITIALIZER(val_) (val_)
+
+#define MPIU_Object_set_ref(objptr_,val)                 \
+    do {                                                 \
+        (objptr_)->ref_count = val;                      \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "set"); \
+    } while (0)
+
+/* must be used with care, since there is no synchronization for this read */
+#define MPIU_Object_get_ref(objptr_) \
+    ((objptr_)->ref_count)
+
+#define MPIU_Object_add_ref_always(objptr_)               \
+    do {                                                  \
+        (objptr_)->ref_count++;                           \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "incr"); \
+        MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"incr");       \
+    } while (0)
+#define MPIU_Object_release_ref_always(objptr_,inuse_ptr) \
+    do {                                                  \
+        *(inuse_ptr) = --((objptr_)->ref_count);          \
+        MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "decr"); \
+        MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"decr");       \
+    } while (0)
+
 #elif MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_LOCK
+
 typedef volatile int MPIU_Handle_ref_count;
-#endif
 #define MPIU_HANDLE_REF_COUNT_INITIALIZER(val_) (val_)
 
 #define MPIU_Object_set_ref(objptr_,val)                 \
@@ -245,6 +268,7 @@ typedef volatile int MPIU_Handle_ref_count;
     } while (0)
 
 #elif MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_LOCKFREE
+
 #include "opa_primitives.h"
 typedef OPA_int_t MPIU_Handle_ref_count;
 #define MPIU_HANDLE_REF_COUNT_INITIALIZER(val_) OPA_INT_T_INITIALIZER(val_)
