@@ -1167,15 +1167,21 @@ int MPIDI_PG_Close_VCs( void )
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PG_CLOSE_VCS);
 
     while (pg) {
-	int i, inuse;
+	int i, inuse, n, i_start;
 
 	MPIU_DBG_MSG_S(CH3_DISCONNECT,VERBOSE,"Closing vcs for pg %s",
 		       (char *)pg->id );
 
-
-	for (i = 0; i < pg->size; i++)
+        /* We want to reduce the chance of having all processes send
+           close requests to the same process at once.  We do this by
+           having processes start at different indices, namely
+           (my_pg_rank+1) mod pg->size. */
+        i_start = (MPIDI_Process.my_pg_rank+1) % pg->size;
+	for (n = 0; n < pg->size; n++)
 	{
-	    MPIDI_VC_t * vc = &pg->vct[i];
+            MPIDI_VC_t * vc;
+            i = (n + i_start) % pg->size;
+	    vc = &pg->vct[i];
 	    /* If the VC is myself then skip the close message */
 	    if (pg == MPIDI_Process.my_pg && i == MPIDI_Process.my_pg_rank) {
                 /* XXX DJG FIXME-MT should we be checking this? */
