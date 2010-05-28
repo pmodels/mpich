@@ -73,7 +73,7 @@ static _opa_inline void *OPA_cas_ptr(OPA_ptr_t *ptr, void *oldv, void *newv)
                                                    (LONG)(LONG_PTR)oldv)
            );
 #elif (OPA_SIZEOF_VOID_P == 8)
-    return ((void *)(LONG_PTR)_InterlockedCompareExchange64((INT64 volatile *)&(ptr->v),
+    return ((void *)(LONG_PTR)_InterlockedCompareExchange64((__int64 *)&(ptr->v),
                                                     (INT64)(LONG_PTR)newv,
                                                     (INT64)(LONG_PTR)oldv)
            );
@@ -88,7 +88,7 @@ static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
     return (void *)(LONG_PTR )_InterlockedExchange((LONG volatile *)&(ptr->v),
                                                     (LONG)(LONG_PTR)val);
 #elif (OPA_SIZEOF_VOID_P == 8)
-    return (void *)(LONG_PTR)_InterlockedExchange64((LONG volatile *)&(ptr->v),
+    return (void *)(LONG_PTR)_InterlockedExchange64((LONG64 volatile *)&(ptr->v),
                                                      (INT64)(LONG_PTR)val);
 #else
 #error  "OPA_SIZEOF_VOID_P not valid"
@@ -97,7 +97,7 @@ static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
 
 static _opa_inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
 {
-    return _InterlockedCompareExchange(&(ptr->v), newv, oldv);
+    return _InterlockedCompareExchange((long *)&(ptr->v), newv, oldv);
 }
 
 static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)

@@ -44,7 +44,7 @@ AC_PROG_RANLIB
 
 AC_HEADER_ASSERT
 # do we need intrin.h in here since it's a windows file?
-AC_CHECK_HEADERS([pthread.h atomic.h intrin.h inttypes.h stdint.h])
+AC_CHECK_HEADERS([pthread.h atomic.h intrin.h inttypes.h stdint.h stddef.h])
 
 AC_C_RESTRICT
 AC_C_INLINE
@@ -285,6 +285,10 @@ using_unsafe_primitives=no
 
 if test "$with_atomic_primitives" = "no" ; then
     using_emulated_primitives=yes
+    # EXPLICIT_EMULATION becomes OPA_EXPLICIT_EMULATION in the installed opa_config.h
+    AC_DEFINE([EXPLICIT_EMULATION],[1],
+              [define if lock-based emulation was explicitly requested at
+               configure time via --with-atomic-primitives=no])
 elif test "$with_atomic_primitives" = "unsafe" ; then
     using_unsafe_primitives=yes
 else
@@ -304,9 +308,9 @@ dnl without AC_TRY_RUN().
         # test, since it uses fence operations which are not supported
         # on pre Pentium 4 machines, but it may still compile and link
         if test "$CROSS_COMPILING" = "no" ; then
-            OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64.h], [GCC_X86_32_64], [gcc x86/x86_64 bit primitives])
+            OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64.h], [GCC_X86_32_64], [gcc x86/x86_64 primitives])
         fi
-        OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64_p3.h], [GCC_X86_32_64_P3], [gcc x86 bit primitives for pre-Pentium 4])
+        OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64_p3.h], [GCC_X86_32_64_P3], [gcc x86 primitives for pre-Pentium 4])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ia64.h], [GCC_AND_IA64_ASM], [gcc ia64 primitives])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ppc.h], [GCC_AND_POWERPC_ASM], [gcc PowerPC atomics])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sicortex.h], [GCC_AND_SICORTEX_ASM], [gcc SiCortex atomics])
@@ -317,7 +321,7 @@ dnl without AC_TRY_RUN().
     OPA_TRY_PRIMITIVE_HEADER([opa_sun_atomic_ops.h], [SUN_ATOMIC_OPS], [Sun atomic operations library])
 
     if test "$checked_specified_primitive" = "no" ; then
-        AC_MSG_ERROR([didn't find specified atomic primitives file "$with_atomic_primitives"], 1)
+        AC_MSG_ERROR([did not find specified atomic primitives file "$with_atomic_primitives"], 1)
     fi
 
     if test "$non_emulated_primitives_available" = "no" ; then

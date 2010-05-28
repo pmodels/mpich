@@ -96,7 +96,7 @@ typedef struct {
 /* Definitions for test_threaded_cas_int */
 #define CAS_INT_NITER (5000000 / iter_reduction[curr_test])
 typedef struct {
-    OPA_int_t   *shared_val;    /* Shared int being added to by all threads */
+    OPA_int_t   *shared_val;    /* Shared int being manipulated by all threads */
     int         threadno;       /* Unique thread number */
     int         nsuccess;       /* # of times cas succeeded */
     int         master_thread;  /* Whether this is the master thread */
@@ -105,7 +105,7 @@ typedef struct {
 /* Definitions for test_threaded_cas_ptr */
 #define CAS_PTR_NITER (5000000 / iter_reduction[curr_test])
 typedef struct {
-    OPA_ptr_t   *shared_val;    /* Shared ptr being added to by all threads */
+    OPA_ptr_t   *shared_val;    /* Shared ptr being manipulated by all threads */
     int         *threadno;      /* Unique thread number */
     int         *max_threadno;  /* Maximum unique thread number */
     int         nsuccess;       /* # of times cas succeeded */
@@ -116,7 +116,7 @@ typedef struct {
 #define GROUPED_CAS_INT_NITER (5000000 / iter_reduction[curr_test])
 #define GROUPED_CAS_INT_TPG 4
 typedef struct {
-    OPA_int_t   *shared_val;    /* Shared int being added to by all threads */
+    OPA_int_t   *shared_val;    /* Shared int being manipulated by all threads */
     int         groupno;        /* Unique group number */
     int         ngroups;        /* Number of groups */
     int         nsuccess;       /* # of times cas succeeded */
@@ -127,7 +127,7 @@ typedef struct {
 #define GROUPED_CAS_PTR_NITER (5000000 / iter_reduction[curr_test])
 #define GROUPED_CAS_PTR_TPG 4
 typedef struct {
-    OPA_ptr_t   *shared_val;    /* Shared int being added to by all threads */
+    OPA_ptr_t   *shared_val;    /* Shared ptr being manipulated by all threads */
     int         *groupno;       /* Unique group number */
     int         *max_groupno;   /* Maximum unique group number */
     int         nsuccess;       /* # of times cas succeeded */
@@ -138,7 +138,7 @@ typedef struct {
 #define CAS_INT_FAIRNESS_MIN_SUCCESS (100 / iter_reduction[curr_test])
 #define CAS_INT_FAIRNESS_MAX_ITER (10000000 / iter_reduction[curr_test])
 typedef struct {
-    OPA_int_t   *shared_val;    /* Shared int being added to by all threads */
+    OPA_int_t   *shared_val;    /* Shared int being manipulated by all threads */
     int         nerrors;        /* Number of errors */
     int         threadno;       /* Unique thread number */
     int         nthreads;       /* Number of threads */
@@ -151,7 +151,7 @@ typedef struct {
 #define CAS_PTR_FAIRNESS_MIN_SUCCESS (100 / iter_reduction[curr_test])
 #define CAS_PTR_FAIRNESS_MAX_ITER (10000000 / iter_reduction[curr_test])
 typedef struct {
-    OPA_ptr_t   *shared_val;    /* Shared int being added to by all threads */
+    OPA_ptr_t   *shared_val;    /* Shared ptr being manipulated by all threads */
     int         nerrors;        /* Number of errors */
     int         *threadno;      /* Unique thread number */
     int         nthreads;       /* Number of threads */
@@ -159,6 +159,23 @@ typedef struct {
     int         terminated;     /* Whether this thread was terminated by MAX_ITER */
     int         master_thread;  /* Whether this is the master thread */
 } cas_ptr_fairness_t;
+
+/* Definitions for test_threaded_swap_int */
+#define SWAP_INT_NITER (2000000 / iter_reduction[curr_test])
+typedef struct {
+    OPA_int_t   *shared_val;    /* Shared int being manipulated by all threads */
+    int         local_val;      /* Local int value for this thread */
+    int         master_thread;  /* Whether this is the master thread */
+} swap_int_t;
+
+/* Definitions for test_threaded_swap_ptr */
+#define SWAP_PTR_NITER (2000000 / iter_reduction[curr_test])
+typedef struct {
+    OPA_ptr_t   *shared_val;    /* Shared ptr being manipulated by all threads */
+    void        *local_val;     /* Local ptr value for this thread */
+    unsigned    threadno;       /* Thread number */
+    int         master_thread;  /* Whether this is the master thread */
+} swap_ptr_t;
 
 
 /*-------------------------------------------------------------------------
@@ -1590,10 +1607,10 @@ static int test_threaded_fai_fad(void)
     for(i=0; i<nthreads; i++) {
         if(i & 1) {
             if(pthread_create(&threads[i], &ptattr, threaded_fad_helper,
-                    &shared_val)) TEST_ERROR;
+                    (void *)&shared_val)) TEST_ERROR;
         } else
             if(pthread_create(&threads[i], &ptattr, threaded_fai_helper,
-                    &shared_val)) TEST_ERROR;
+                    (void *)&shared_val)) TEST_ERROR;
     } /* end for */
 
     /* Free the attribute */
@@ -3097,6 +3114,408 @@ error:
 
 
 /*-------------------------------------------------------------------------
+ * Function: test_simple_swap_int
+ *
+ * Purpose: Tests basic functionality of OPA_swap_int with a single
+ *          thread.  Does not test atomicity of operations.
+ *
+ * Return: Success: 0
+ *         Failure: 1
+ *
+ * Programmer: Neil Fortner
+ *             Wednesday, March 24, 2010
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static int test_simple_swap_int(void)
+{
+    OPA_int_t   a;
+
+    TESTING("simple integer swap functionality", 0);
+
+    /* Store 0 in a */
+    OPA_store_int(&a, 0);
+
+    /* Compare and swap multiple times, verify return value and final result */
+    if(0 != OPA_swap_int(&a, INT_MAX)) TEST_ERROR;
+    if(INT_MAX != OPA_swap_int(&a, INT_MIN)) TEST_ERROR;
+    if(INT_MIN != OPA_swap_int(&a, 1)) TEST_ERROR;
+    if(1 != OPA_load_int(&a)) TEST_ERROR;
+
+    PASSED();
+    return 0;
+
+error:
+    return 1;
+} /* end test_simple_swap_int() */
+
+
+/*-------------------------------------------------------------------------
+ * Function: test_simple_swap_ptr
+ *
+ * Purpose: Tests basic functionality of OPA_swap_ptr with a single
+ *          thread.  Does not test atomicity of operations.
+ *
+ * Return: Success: 0
+ *         Failure: 1
+ *
+ * Programmer: Neil Fortner
+ *             Wednesday, March 24, 2010
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static int test_simple_swap_ptr(void)
+{
+    OPA_ptr_t   a;
+    void        *ptr1 = malloc(1);      /* Pointers to assign to a */
+    void        *ptr2 = malloc(1);
+    void        *ptr3 = malloc(1);
+    void        *ptr4 = malloc(1);
+
+    TESTING("simple pointer swap functionality", 0);
+
+    /* Store 0 in a */
+    OPA_store_ptr(&a, ptr1);
+
+    /* Compare and swap multiple times, verify return value and final result */
+    if(ptr1 != OPA_swap_ptr(&a, ptr3)) TEST_ERROR;
+    if(ptr3 != OPA_swap_ptr(&a, ptr4)) TEST_ERROR;
+    if(ptr4 != OPA_swap_ptr(&a, ptr2)) TEST_ERROR;
+    if(ptr2 != OPA_load_ptr(&a)) TEST_ERROR;
+
+    if(ptr1) free(ptr1);
+    if(ptr2) free(ptr2);
+    if(ptr3) free(ptr3);
+    if(ptr4) free(ptr4);
+
+    PASSED();
+    return 0;
+
+error:
+    if(ptr1) free(ptr1);
+    if(ptr2) free(ptr2);
+    if(ptr3) free(ptr3);
+    if(ptr4) free(ptr4);
+
+    return 1;
+} /* end test_simple_swap_ptr() */
+
+
+#if defined(OPA_HAVE_PTHREAD_H)
+/*-------------------------------------------------------------------------
+ * Function: threaded_swap_int_helper
+ *
+ * Purpose: Helper (thread) routine for test_threaded_swap_int
+ *
+ * Return: NULL
+ *
+ * Programmer: Neil Fortner
+ *             Wednesday, March 24, 2010
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *threaded_swap_int_helper(void *_udata)
+{
+    swap_int_t          *udata = (swap_int_t *)_udata;
+    unsigned            niter = SWAP_INT_NITER;
+    unsigned            i;
+
+    /* Main loop */
+    for(i=0; i<niter; i++)
+        udata->local_val = OPA_swap_int(udata->shared_val, udata->local_val);
+
+    /* Exit */
+    if(udata->master_thread)
+        return(NULL);
+    else
+        pthread_exit(NULL);
+} /* end threaded_cas_int_helper() */
+#endif /* OPA_HAVE_PTHREAD_H */
+
+
+/*-------------------------------------------------------------------------
+ * Function: test_threaded_swap_int
+ *
+ * Purpose: Tests atomicity of OPA_swap_int.  Launches nthreads threads,
+ *          each of which continually swaps a shared value with a local
+ *          variable whose initial value is the thread id.  Afterwards,
+ *          Verifies that each thread id is present exactly once in all of
+ *          the thread local values, and the shared value.  The initial
+ *          state of the shared value must also be present exactly once in
+ *          these places.
+ *
+ * Return: Success: 0
+ *         Failure: 1
+ *
+ * Programmer: Neil Fortner
+ *             Tuesday, June 9, 2009
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static int test_threaded_swap_int(void)
+{
+#if defined(OPA_HAVE_PTHREAD_H)
+    pthread_t           *threads = NULL; /* Threads */
+    pthread_attr_t      ptattr;         /* Thread attributes */
+    swap_int_t          *thread_data = NULL; /* User data structs for threads */
+    OPA_int_t           shared_val;     /* Integer shared between threads */
+    unsigned            *vals = NULL;   /* Local values found */
+    unsigned            nthreads = num_threads[curr_test];
+    unsigned            i;
+
+    TESTING("integer swap", nthreads);
+
+    /* Allocate array of threads */
+    if(NULL == (threads = (pthread_t *) malloc((nthreads - 1) * sizeof(pthread_t))))
+        TEST_ERROR;
+
+    /* Allocate array of thread data */
+    if(NULL == (thread_data = (swap_int_t *) calloc(nthreads, sizeof(swap_int_t))))
+        TEST_ERROR;
+
+    /* Initialize thread data structs */
+    OPA_store_int(&shared_val, nthreads);
+    for(i=0; i<nthreads; i++) {
+        thread_data[i].shared_val = &shared_val;
+        thread_data[i].local_val = i;
+    } /* end for */
+    thread_data[nthreads-1].master_thread = 1;
+
+    /* Set threads to be joinable */
+    pthread_attr_init(&ptattr);
+    pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
+
+    /* Create the threads */
+    for(i=0; i<(nthreads - 1); i++)
+        if(pthread_create(&threads[i], &ptattr, threaded_swap_int_helper,
+                &thread_data[i])) TEST_ERROR;
+    (void)threaded_swap_int_helper(&thread_data[i]);
+
+    /* Free the attribute */
+    if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
+
+    /* Join the threads */
+    for (i=0; i<(nthreads - 1); i++)
+        if(pthread_join(threads[i], NULL)) TEST_ERROR;
+
+    /* Allocate the array of local values found.  These number 0 to nthreads
+     * (1 for each thread id, and nthreads was the original value) */
+    if(NULL == (vals = (unsigned *) calloc(nthreads + 1, sizeof(unsigned))))
+        TEST_ERROR;
+
+    /* Loop over all local values and the shared value, and total up the number
+     * of times each value was found */
+    for(i=0; i<nthreads; i++) {
+        /* Verify that the value is in range */
+        if((thread_data[i].local_val < 0)
+                || (thread_data[i].local_val > nthreads))
+            FAIL_OP_ERROR(printf("    Local value for thread %u is out of range: %d\n",
+                    i, thread_data[i].local_val));
+
+        /* Increment the number of times local_val was encountered */
+        vals[thread_data[i].local_val]++;
+    } /* end for */
+    if((OPA_load_int(&shared_val) < 0)
+            || (OPA_load_int(&shared_val) > nthreads))
+        FAIL_OP_ERROR(printf("    Shared value is out of range: %d\n",
+                OPA_load_int(&shared_val)));
+    vals[OPA_load_int(&shared_val)]++;
+
+    /* Verify that each possible value was encountered exactly once */
+    for(i=0; i<nthreads; i++)
+        if(vals[i] != 1)
+            FAIL_OP_ERROR(printf("    Value %u was encountered %u times.  Expected: 1\n",
+                    i, vals[i]));
+
+    /* Free memory */
+    free(threads);
+    free(thread_data);
+    free(vals);
+
+    PASSED();
+
+#else /* OPA_HAVE_PTHREAD_H */
+    TESTING("integer swap", 0);
+    SKIPPED();
+    puts("    pthread.h not available");
+#endif /* OPA_HAVE_PTHREAD_H */
+
+    return 0;
+
+#if defined(OPA_HAVE_PTHREAD_H)
+error:
+    if(threads) free(threads);
+    if(thread_data) free(thread_data);
+    if(vals) free(vals);
+    return 1;
+#endif /* OPA_HAVE_PTHREAD_H */
+} /* end test_threaded_swap_int() */
+
+
+#if defined(OPA_HAVE_PTHREAD_H)
+/*-------------------------------------------------------------------------
+ * Function: threaded_swap_ptr_helper
+ *
+ * Purpose: Helper (thread) routine for test_threaded_swap_ptr
+ *
+ * Return: NULL
+ *
+ * Programmer: Neil Fortner
+ *             Wednesday, March 24, 2010
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *threaded_swap_ptr_helper(void *_udata)
+{
+    swap_ptr_t          *udata = (swap_ptr_t *)_udata;
+    unsigned            niter = SWAP_PTR_NITER;
+    unsigned            i;
+
+    /* Main loop */
+    for(i=0; i<niter; i++)
+        udata->local_val = OPA_swap_ptr(udata->shared_val, udata->local_val);
+
+    /* Exit */
+    if(udata->master_thread)
+        return(NULL);
+    else
+        pthread_exit(NULL);
+} /* end threaded_cas_int_helper() */
+#endif /* OPA_HAVE_PTHREAD_H */
+
+
+/*-------------------------------------------------------------------------
+ * Function: test_threaded_swap_ptr
+ *
+ * Purpose: Tests atomicity of OPA_swap_ptr.  Launches nthreads threads,
+ *          each of which continually swaps a shared value with a local
+ *          variable whose initial value is the thread id.  Afterwards,
+ *          Verifies that each thread id is present exactly once in all of
+ *          the thread local values, and the shared value.  The initial
+ *          state of the shared value must also be present exactly once in
+ *          these places.
+ *
+ * Return: Success: 0
+ *         Failure: 1
+ *
+ * Programmer: Neil Fortner
+ *             Tuesday, June 9, 2009
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+static int test_threaded_swap_ptr(void)
+{
+#if defined(OPA_HAVE_PTHREAD_H)
+    pthread_t           *threads = NULL; /* Threads */
+    pthread_attr_t      ptattr;         /* Thread attributes */
+    swap_ptr_t          *thread_data = NULL; /* User data structs for threads */
+    OPA_ptr_t           shared_val;     /* Pointer shared between threads */
+    unsigned            *vals = NULL;   /* Local values found */
+    unsigned            nthreads = num_threads[curr_test];
+    unsigned            i;
+
+    TESTING("pointer swap", nthreads);
+
+    /* Allocate array of threads */
+    if(NULL == (threads = (pthread_t *) malloc((nthreads - 1) * sizeof(pthread_t))))
+        TEST_ERROR;
+
+    /* Allocate array of thread data */
+    if(NULL == (thread_data = (swap_ptr_t *) calloc(nthreads, sizeof(swap_ptr_t))))
+        TEST_ERROR;
+
+    /* Initialize thread data structs.  Each local_val points to an element in
+     * thread_data, or NULL (original value) */
+    OPA_store_ptr(&shared_val, NULL);
+    for(i=0; i<nthreads; i++) {
+        thread_data[i].shared_val = &shared_val;
+        thread_data[i].local_val = &(thread_data[i]);
+        thread_data[i].threadno = i;
+    } /* end for */
+    thread_data[nthreads-1].master_thread = 1;
+
+    /* Set threads to be joinable */
+    pthread_attr_init(&ptattr);
+    pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
+
+    /* Create the threads */
+    for(i=0; i<(nthreads - 1); i++)
+        if(pthread_create(&threads[i], &ptattr, threaded_swap_ptr_helper,
+                &thread_data[i])) TEST_ERROR;
+    (void)threaded_swap_ptr_helper(&thread_data[i]);
+
+    /* Free the attribute */
+    if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
+
+    /* Join the threads */
+    for (i=0; i<(nthreads - 1); i++)
+        if(pthread_join(threads[i], NULL)) TEST_ERROR;
+
+    /* Allocate the array of local values found.  These number 0 to nthreads
+     * (1 for each thread id, and nthreads was the original value) */
+    if(NULL == (vals = (unsigned *) calloc(nthreads + 1, sizeof(unsigned))))
+        TEST_ERROR;
+
+    /* Loop over all local values and the shared value, and total up the number
+     * of times each value was found */
+    for(i=0; i<nthreads; i++) {
+        /* Increment the number of times local_val was encountered.  Use the
+         * threadno of the target thread_data element as the index into vals.
+         * If local_val in NULL, use nthreads as the index. */
+        if(thread_data[i].local_val)
+            vals[((swap_ptr_t *)thread_data[i].local_val)->threadno]++;
+        else
+            vals[nthreads]++;
+    } /* end for */
+    if(OPA_load_ptr(&shared_val))
+        vals[((swap_ptr_t *)OPA_load_ptr(&shared_val))->threadno]++;
+    else
+        vals[nthreads]++;
+
+    /* Verify that each possible value was encountered exactly once */
+    for(i=0; i<nthreads; i++)
+        if(vals[i] != 1)
+            FAIL_OP_ERROR(printf("    Value %d was encountered %d times.  Expected: 1\n",
+                    i, vals[i]));
+
+    /* Free memory */
+    free(threads);
+    free(thread_data);
+    free(vals);
+
+    PASSED();
+
+#else /* OPA_HAVE_PTHREAD_H */
+    TESTING("pointer swap", 0);
+    SKIPPED();
+    puts("    pthread.h not available");
+#endif /* OPA_HAVE_PTHREAD_H */
+
+    return 0;
+
+#if defined(OPA_HAVE_PTHREAD_H)
+error:
+    if(threads) free(threads);
+    if(thread_data) free(thread_data);
+    if(vals) free(vals);
+    return 1;
+#endif /* OPA_HAVE_PTHREAD_H */
+} /* end test_threaded_swap_ptr() */
+
+
+/*-------------------------------------------------------------------------
  * Function:    main
  *
  * Purpose:     Tests the opa primitives
@@ -3128,6 +3547,8 @@ int main(int argc, char **argv)
     nerrors += test_simple_faa_fai_fad();
     nerrors += test_simple_cas_int();
     nerrors += test_simple_cas_ptr();
+    nerrors += test_simple_swap_int();
+    nerrors += test_simple_swap_ptr();
 
     /* Loop over test configurations */
     for(curr_test=0; curr_test<num_thread_tests; curr_test++) {
@@ -3148,6 +3569,8 @@ int main(int argc, char **argv)
         nerrors += test_grouped_cas_ptr();
         nerrors += test_threaded_cas_int_fairness();
         nerrors += test_threaded_cas_ptr_fairness();
+        nerrors += test_threaded_swap_int();
+        nerrors += test_threaded_swap_ptr();
     } /* end for */
 
     if(nerrors)
