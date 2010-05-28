@@ -19,9 +19,12 @@ AC_DEFUN([PAC_RESET_LINK_FLAGS],[
 	fi
 ])
 
-dnl Sandbox configure
-dnl Usage: PAC_CONFIG_SUBDIR(subdir,action-if-success,action-if-failure)
-AC_DEFUN([PAC_CONFIG_SUBDIR],[
+dnl Sandbox configure with additional arguments
+dnl Usage: PAC_CONFIG_SUBDIR_ARGS(subdir,configure-args,action-if-success,action-if-failure)
+dnl
+dnl Note: I suspect this DEFUN body is underquoted in places, but it does not
+dnl seem to cause problems in practice yet. [goodell@ 2010-05-18]
+AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
         AC_MSG_NOTICE([===== configuring $1 =====])
 
 	PAC_MKDIRS($1)
@@ -33,7 +36,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 
         pac_subconfigure_file="$pac_abs_srcdir/$1/configure"
 	if test -x $pac_subconfigure_file ; then
-	   pac_subconfig_args=""
+	   pac_subconfig_args="$2"
 	   prev_arg=""
 
 	   # Strip off the args we need to update
@@ -103,10 +106,10 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 
 	   AC_MSG_NOTICE([executing: $pac_subconfigure_file $pac_subconfig_args])
 	   if (cd $1 && eval $pac_subconfigure_file $pac_subconfig_args) ; then
-	      $2
+	      $3
 	      :
 	   else
-	      $3
+	      $4
 	      :
 	   fi
         else
@@ -127,3 +130,8 @@ AC_DEFUN([PAC_CONFIG_SUBDIR],[
 	   . $pac_abs_srcdir/$1/localdefs
 	fi
 ])
+
+dnl Sandbox configure
+dnl Usage: PAC_CONFIG_SUBDIR(subdir,action-if-success,action-if-failure)
+AC_DEFUN([PAC_CONFIG_SUBDIR],[PAC_CONFIG_SUBDIR_ARGS([$1],[],[$2],[$3])])
+
