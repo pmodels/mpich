@@ -180,7 +180,14 @@ print("done\n");
 print("===> Creating configure in the main package... ");
 chdir("${root}/${pack}-${version}");
 {
-    my $cmd = "./maint/updatefiles -distrib";
+    # ./maint/updatefiles needs to be run twice; once without the
+    # -distrib option and once with.
+    my $cmd = "./maint/updatefiles";
+    $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
+    $cmd .= " --with-automake=$with_automake" if $with_automake;
+    run_cmd($cmd);
+
+    $cmd = "./maint/updatefiles -distrib";
     $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
     $cmd .= " --with-automake=$with_automake" if $with_automake;
     run_cmd($cmd);
