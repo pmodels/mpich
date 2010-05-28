@@ -188,7 +188,7 @@ for arg in "$@" ; do
     -help|--help|-usage|--usage)
     cat <<EOF
     updatefiles [ --with-autotools=dir ] [ -noatdircheck | -no-atdir-check ] \\
-                [ --do=stepname ] [ args for simplemake ]
+                [ --do=stepname ] [ -distrib ] [ args for simplemake ]
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
     program), extracts the error messages.
@@ -198,6 +198,14 @@ for arg in "$@" ; do
 
     -noatdircheck or -no-atdir-check disables the check that enforces all
     autotools being installed in the same directory.
+
+    -distrib creates a distribution version of the Makefile.in files (no
+    targets for updating the Makefile.in from Makefile.sm or rebuilding the
+    autotools targets).  This does not create the configure files because
+    some of those depend on rules in the Makefile.in in that directory.  
+    Thus, to build all of the files for a distribution, run maint/updatefiles
+    twice, as in 
+         maint/updatefiles && maint/updatefiles -distrib
 
     Use --do=stepname to update only a single step.  For example, 
     --do=build_configure only updates the configure scripts.  The available
@@ -971,7 +979,14 @@ if [ $do_build_configure = yes ] ; then
     fi
 fi
 
+# FIXME: Because this invokes scripts in third-party tools to build
+# configure and/or makefiles, it may create a configure even if
+# do_build_configure is no, or create a Makefile.in even if do_makefiles is
+# no.  
 if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
+    # Make the requests for configure/makefile visible to the external tools
+    export do_build_configure
+    export do_makefiles
     # must come after the above autoreconf-like logic because the above
     # logic will delete the results of this actual autoreconf
 
@@ -1000,7 +1015,11 @@ if [ "$do_build_configure" = "yes" -o "$do_makefiles" = "yes" ] ; then
     done
 fi
 
+# Same fixme as above on configure/makefiles 
 if [ -f src/mpe2/maint/updatefiles -a "$do_build_configure" = "yes" ] ; then
+    # Make the requests for configure/makefile visible to MPE
+    export do_build_configure
+    export do_makefiles
     # If we have the mpe2 updatefiles, execute it from the mpe directory
     (cd src/mpe2 && chmod a+x maint/updatefiles && maint/updatefiles )
 fi
