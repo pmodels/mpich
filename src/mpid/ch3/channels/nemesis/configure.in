@@ -246,9 +246,6 @@ AC_CHECK_FUNCS(srand)
 
 # ensure that atomic primitives are available
 AC_MSG_CHECKING([for OpenPA atomic primitive availability])
-AC_ARG_WITH(atomic-primitives, [--with-atomic-primitives - set to 'no' to permit
-                                atomic primitive emulation.  See the openpa
-                                directory for more info.],, with_atomic_primitives=not_specified)
 
 # Double check that we actually have a present and working OpenPA
 # configuration.  This must be AC_COMPILE_IFELSE instead of the stronger
@@ -288,10 +285,16 @@ if test "$openpa_present_and_working" = yes ; then
 ],using_emulated_atomics=no,using_emulated_atomics=yes)
 
     if test "$using_emulated_atomics" = "yes" ; then
-        if test "$with_atomic_primitives" = "no" ; then
+        AC_PREPROC_IFELSE([
+#include <opa_primitives.h>
+/* may also be undefined in older (pre-r106) versions of OPA */
+#if !defined(OPA_EXPLICIT_EMULATION)
+#error "lock-based emulation was automatic, not explicit"
+#endif
+],[atomics_explicitly_emulated=yes],[atomics_explicitly_emulated=no])
+        if test "$atomics_explicitly_emulated" = "yes" ; then
             AC_MSG_RESULT([yes (emulated)])
         else
-            # error
             AC_MSG_RESULT([no])
             AC_MSG_ERROR([
 The nemesis channel was selected yet no native atomic primitives are
