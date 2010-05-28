@@ -142,6 +142,8 @@ devenv.com mpich2.sln /build Release >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
 echo Building FORTRAN interface ...
+devenv.com mpich2.sln /build fortPRelease >> make.log
+if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com mpich2.sln /build fortRelease >> make.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 devenv.com mpich2.sln /build gfortRelease >> make.log

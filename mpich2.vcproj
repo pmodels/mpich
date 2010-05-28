@@ -4015,6 +4015,111 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="fortPRelease|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;NDEBUG"
+				MkTypLibCompatible="true"
+				SuppressStartupBanner="true"
+				TargetEnvironment="1"
+				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				InlineFunctionExpansion="1"
+				EnableIntrinsicFunctions="true"
+				OmitFramePointers="true"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				AssemblerListingLocation=".\$(ConfigurationName)/"
+				ObjectFile=".\$(ConfigurationName)/"
+				ProgramDataBaseFileName=".\$(ConfigurationName)/"
+				BrowseInformation="0"
+				WarningLevel="4"
+				SuppressStartupBanner="true"
+				CompileAs="0"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;NDEBUG"
+				Culture="1033"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalOptions="/MACHINE:I386"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
+				OutputFile="lib/mpich2.dll"
+				LinkIncremental="1"
+				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="lib"
+				IgnoreDefaultLibraryNames="libc.lib"
+				ModuleDefinitionFile=".\mpich2.def"
+				GenerateDebugInformation="false"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2.pdb"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				ImportLibrary=".\$(ConfigurationName)/mpich2.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="copying mpich2.dll to system32 directory"
+				CommandLine="copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -4376,6 +4481,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="ch3nemesisPDebug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -4830,6 +4943,14 @@
 						DisableLanguageExtensions="false"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						DisableLanguageExtensions="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\mpid\common\datatype\dataloop\dataloop_create_pairtype.c"
@@ -5236,6 +5357,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="ch3nemesisPDebug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="src\mpi\spawn"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5792,6 +5921,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="ch3nemesisPDebug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;F77_NAME_UPPER"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6358,6 +6495,14 @@
 						AdditionalIncludeDirectories="src\binding\f77"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="src\binding\f77"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\mpi\coll\oplor.c"
@@ -6666,6 +6811,14 @@
 						AdditionalIncludeDirectories="src\binding\f77"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="src\binding\f77"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\mpi\coll\oplxor.c"
@@ -6968,6 +7121,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="ch3nemesisPDebug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="src\binding\f77"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7378,6 +7539,15 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						AdditionalIncludeDirectories=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="fortPRelease|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories="src\mpi\spawn"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"
 					/>
 				</FileConfiguration>
 			</File>
