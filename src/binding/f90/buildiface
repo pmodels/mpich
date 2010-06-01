@@ -756,6 +756,7 @@ all-postamble:
 print MAKEFD "clean-local:\n";
 print MAKEFD "\trm -f *.\$(MOD)\n";
 print MAKEFD "\trm -f mpimod.pcl mpimod.pc\n";
+print MAKEFD "\trm -f lib\${MPILIBNAME}f90.a\n";
 
 print MAKEFD "maint-clean:\
 \trm -f \${mpi_sources} fproto.h\n";
