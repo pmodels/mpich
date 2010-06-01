@@ -6467,6 +6467,10 @@ Function GenBuild()
 	mfile.WriteLine("gfcflags = $(gfcflags) /DHAVE_AINT_LARGER_THAN_FINT")
 	mfile.WriteLine("sfcflags = $(sfcflags) /DHAVE_AINT_LARGER_THAN_FINT")
 	mfile.WriteLine("!ENDIF")
+	mfile.WriteLine("fpcflags = \")
+        mfile.WriteLine(" $(fcflags) \")
+        mfile.WriteLine(" /DMPICH_MPI_FROM_PMPI \")
+        mfile.WriteLine(" /DUSE_ONLY_MPI_NAMES")
 	mfile.WriteLine("fortflags = /iface:cref /c /names:uppercase")
 	mfile.WriteLine("gfortflags = /iface:cref /assume:underscore /c /names:lowercase")
 	mfile.WriteLine("sfortflags = /iface:stdcall /c /names:uppercase")
@@ -6563,6 +6567,7 @@ Function GenBuild()
 '	mfile.WriteLine("SSHM_OUTDIR = $(CPU)\$(CFG)\sshm$(P)")
 '	mfile.WriteLine("ESSM_OUTDIR = $(CPU)\$(CFG)\essm$(P)")
 '	mfile.WriteLine("IB_OUTDIR = $(CPU)\$(CFG)\ib_$(IB)$(P)")
+	mfile.WriteLine("FORTP_OUTDIR = $(CPU)\$(CFG)\fortranp")
 	mfile.WriteLine("FORT_OUTDIR = $(CPU)\$(CFG)\fortran")
 	mfile.WriteLine("GFORT_OUTDIR = $(CPU)\$(CFG)\gfortran")
 	mfile.WriteLine("SFORT_OUTDIR = $(CPU)\$(CFG)\sfortran")
@@ -6570,7 +6575,6 @@ Function GenBuild()
 	mfile.WriteLine("MPI_OUTDIR = $(CPU)\$(CFG)\mpi")
 	mfile.WriteLine("RLOG_OUTDIR = $(CPU)\$(CFG)\rlog")
 	mfile.WriteLine("MPE_OUTDIR = $(CPU)\$(CFG)\mpe")
-	mfile.WriteLine("FMPE_OUTDIR = $(CPU)\$(CFG)\fmpe")
 	mfile.WriteLine("MPE_WRAP_OUTDIR = $(CPU)\$(CFG)\mpe_wrap")
 	mfile.WriteLine("GCC_OUTDIR = $(CPU)\$(CFG)\gcc")
 	mfile.WriteLine
@@ -6582,6 +6586,9 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("$(BIN_OUTDIR) :")
 	mfile.WriteLine("	if not exist ""$(BIN_OUTDIR)\$(NULL)"" mkdir $(BIN_OUTDIR)")
+	mfile.WriteLine
+	mfile.WriteLine("$(FORTP_OUTDIR) :")
+	mfile.WriteLine("	if not exist ""$(FORTP_OUTDIR)\$(NULL)"" mkdir $(FORTP_OUTDIR)")
 	mfile.WriteLine
 	mfile.WriteLine("$(FORT_OUTDIR) :")
 	mfile.WriteLine("	if not exist ""$(FORT_OUTDIR)\$(NULL)"" mkdir $(FORT_OUTDIR)")
@@ -6603,9 +6610,6 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("$(MPE_OUTDIR) :")
 	mfile.WriteLine("	if not exist ""$(MPE_OUTDIR)\$(NULL)"" mkdir $(MPE_OUTDIR)")
-	mfile.WriteLine
-	mfile.WriteLine("$(FMPE_OUTDIR) :")
-	mfile.WriteLine("	if not exist ""$(FMPE_OUTDIR)\$(NULL)"" mkdir $(FMPE_OUTDIR)")
 	mfile.WriteLine
 	mfile.WriteLine("$(MPE_WRAP_OUTDIR) :")
 	mfile.WriteLine("	if not exist ""$(MPE_WRAP_OUTDIR)\$(NULL)"" mkdir $(MPE_WRAP_OUTDIR)")
@@ -6635,6 +6639,7 @@ Function GenBuild()
 '	mfile.WriteLine("	if exist $(ESSM_OUTDIR)p\$(NULL) rd /s /q $(ESSM_OUTDIR)p")
 '	mfile.WriteLine("	if exist $(IB_OUTDIR)IBALp\$(NULL) rd /s /q $(IB_OUTDIR)IBALp")
 '	mfile.WriteLine("	if exist $(IB_OUTDIR)VAPIp\$(NULL) rd /s /q $(IB_OUTDIR)VAPIp")
+	mfile.WriteLine("	if exist $(FORTP_OUTDIR)\$(NULL) rd /s /q $(FORTP_OUTDIR)")
 	mfile.WriteLine("	if exist $(FORT_OUTDIR)\$(NULL) rd /s /q $(FORT_OUTDIR)")
 	mfile.WriteLine("	if exist $(GFORT_OUTDIR)\$(NULL) rd /s /q $(GFORT_OUTDIR)")
 	mfile.WriteLine("	if exist $(SFORT_OUTDIR)\$(NULL) rd /s /q $(SFORT_OUTDIR)")
@@ -6642,7 +6647,6 @@ Function GenBuild()
 	mfile.WriteLine("	if exist $(MPI_OUTDIR)\$(NULL) rd /s /q $(MPI_OUTDIR)")
 	mfile.WriteLine("	if exist $(RLOG_OUTDIR)\$(NULL) rd /s /q $(RLOG_OUTDIR)")
 	mfile.WriteLine("	if exist $(MPE_OUTDIR)\$(NULL) rd /s /q $(MPE_OUTDIR)")
-	mfile.WriteLine("	if exist $(FMPE_OUTDIR)\$(NULL) rd /s /q $(FMPE_OUTDIR)")
 	mfile.WriteLine("	if exist $(MPE_WRAP_OUTDIR)\$(NULL) rd /s /q $(MPE_WRAP_OUTDIR)")
 	mfile.WriteLine("	if exist $(GCC_OUTDIR)\$(NULL) rd /s /q $(GCC_OUTDIR)")
 	mfile.WriteLine
@@ -6983,10 +6987,28 @@ Function GenBuild()
         mfile.WriteLine
 
 	mfile.WriteLine("$(FORT_OUTDIR)\fmpich2$(D).dll: $(fort_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(fort_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpich2f.def -out:$(FORT_OUTDIR)\fmpich2$(D).dll")
+	mfile.WriteLine("	$(link) $(dlllflags) $(fort_objs) $(FORTP_OUTDIR)\fmpich2p$(D).lib $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpich2f.def -out:$(FORT_OUTDIR)\fmpich2$(D).dll")
 	mfile.WriteLine("	if exist $(FORT_OUTDIR)\fmpich2$(D).dll.manifest mt.exe -manifest $(FORT_OUTDIR)\fmpich2$(D).dll.manifest -outputresource:$(FORT_OUTDIR)\fmpich2$(D).dll;2")
 	mfile.WriteLine
-	mfile.WriteLine("fort: $(FORT_OUTDIR) $(FORT_OUTDIR)\fmpich2$(D).dll")
+	mfile.WriteLine("fort: fortp $(FORT_OUTDIR) $(FORT_OUTDIR)\fmpich2$(D).dll")
+	mfile.WriteLine
+	outdir = "FORTP_OUTDIR"
+	extra_flags = "$(fpcflags)"
+	fort_prefix = ""
+	CreateRules f.GetFolder("src\binding\f77"), trimlength
+	CreateRules f.GetFolder("src\binding\f90"), trimlength
+        mfile.WriteLine
+        CreateObjs "fortp", f.GetFolder("src\binding\f77"), trimlength, true, false
+	mfile.WriteLine(" \" & vbCrLf & "   $(FORTP_OUTDIR)\typef90intf.obj \")
+        mfile.WriteLine("   $(FORTP_OUTDIR)\typef90realf.obj \")
+        mfile.WriteLine("   $(FORTP_OUTDIR)\typef90cmplxf.obj")
+        mfile.WriteLine
+
+	mfile.WriteLine("$(FORTP_OUTDIR)\fmpich2p$(D).lib: $(fortp_objs)")
+	mfile.WriteLine("	$(implib) $(liblflags) $(fortp_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) -out:$(FORTP_OUTDIR)\fmpich2p$(D).lib")
+	mfile.WriteLine
+	mfile.WriteLine("fortp: $(FORTP_OUTDIR) $(FORTP_OUTDIR)\fmpich2p$(D).lib")
+
 	mfile.WriteLine
         ' Adding rules for F90 mod files
         mfile.WriteLine("{..\src\binding\f90}.f90{$(FORT_OUTDIR)}.mod:")
@@ -7133,45 +7155,14 @@ Function GenBuild()
 	mfile.WriteLine("	$(MPE_OUTDIR)\iterator.obj \")
 	mfile.WriteLine("	$(MPE_OUTDIR)\mpe_log.obj")
 	mfile.WriteLine
-	mfile.WriteLine("{..\src\mpe2\src\logging\src}.c{$(FMPE_OUTDIR)}.obj:")
-	mfile.WriteLine("    $(cc) $(cflags) $(mpe_cflags) /DMPE_EXPORTS /DF77_NAME_UPPER /Fo""$(FMPE_OUTDIR)\\"" /Fd""$(FMPE_OUTDIR)\\"" $**")
-	mfile.WriteLine
 	mfile.WriteLine("{..\src\mpe2\src\callstack\src}.c{$(MPE_OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) $(mpe_cflags) /DMPE_EXPORTS /Fo""$(MPE_OUTDIR)\\"" /Fd""$(MPE_OUTDIR)\\"" $**")
-	mfile.WriteLine
-	mfile.WriteLine("$(FMPE_OUTDIR)\mpiu_thread.obj: ..\src\util\thread\mpiu_thread.c")
-	mfile.WriteLine("    $(cc) $(cflags) $(mpe_cflags) /DMPE_EXPORTS /DF77_NAME_UPPER /Fo""$(FMPE_OUTDIR)\\"" /Fd""$(FMPE_OUTDIR)\\"" $**")
-	mfile.WriteLine
-	mfile.WriteLine("fmpe_objs = \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_block.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_buffer.obj \")
-	mfile.WriteLine("   $(FMPE_OUTDIR)\clog_commset.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_merger.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_preamble.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_print.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_record.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_sync.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_timer.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_util.obj \")
-	mfile.WriteLine("   $(FMPE_OUTDIR)\clog_uuid.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_cache.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\clog_joiner.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\mpe_logf.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\mpiu_thread.obj \")
-	mfile.WriteLine("	$(MPE_OUTDIR)\fancyprint.obj \")
-	mfile.WriteLine("	$(MPE_OUTDIR)\iterator.obj \")
-	mfile.WriteLine("	$(FMPE_OUTDIR)\mpe_log.obj")
 	mfile.WriteLine
 	mfile.WriteLine("$(MPE_OUTDIR)\mpe$(D).dll: $(mpe_objs)")
 	mfile.WriteLine("	$(link) $(dlllflags) $(mpe_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\mpe2\mpe.def -out:$(MPE_OUTDIR)\mpe$(D).dll /IMPLIB:$(MPE_OUTDIR)\mpe$(D).lib")
 	mfile.WriteLine("	if exist $(MPE_OUTDIR)\mpe$(D).dll.manifest mt.exe -manifest $(MPE_OUTDIR)\mpe$(D).dll.manifest -outputresource:$(MPE_OUTDIR)\mpe$(D).dll;2")
 	mfile.WriteLine
-	mfile.WriteLine("$(FMPE_OUTDIR)\fmpe$(D).dll: $(fmpe_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(fmpe_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\mpe2\fmpe.def -out:$(FMPE_OUTDIR)\fmpe$(D).dll /IMPLIB:$(FMPE_OUTDIR)\fmpe$(D).lib")
-	mfile.WriteLine("	if exist $(FMPE_OUTDIR)\fmpe$(D).dll.manifest mt.exe -manifest $(FMPE_OUTDIR)\fmpe$(D).dll.manifest -outputresource:$(FMPE_OUTDIR)\fmpe$(D).dll;2")
-	mfile.WriteLine
-	mfile.WriteLine("mpe: $(MPE_OUTDIR) $(FMPE_OUTDIR) $(MPE_OUTDIR)\mpe$(D).dll $(FMPE_OUTDIR)\fmpe$(D).dll ")
+	mfile.WriteLine("mpe: $(MPE_OUTDIR) $(MPE_OUTDIR)\mpe$(D).dll ")
 
 	mfile.WriteLine
 	mfile.WriteLine("# MPE wrapper")
