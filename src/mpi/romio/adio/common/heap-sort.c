@@ -14,7 +14,6 @@
 #define NOEXP2
 
 static void heapify(heap_t *heap, int i);
-static void build_heap(heap_t *heap);
 
 /* From Introduction To Algorithms by Cormen, Leiserson, and Rivest */
 
