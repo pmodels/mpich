@@ -977,7 +977,7 @@ int MPIR_Reduce_scatter_block_inter (
    by local intracommunicator scattervs in each group.
 */
     
-    int rank, mpi_errno, root, local_size, total_count, i;
+    int rank, mpi_errno, root, local_size, total_count;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf=NULL;
     MPID_Comm *newcomm_ptr = NULL;
