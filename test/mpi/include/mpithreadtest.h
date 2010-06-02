@@ -32,8 +32,8 @@
 #error Unknown Thread Package
 #endif
 
-#define MTEST_THREAD_SUCCESS 0
-#define MTEST_THREAD_FAIL 1
+/* A dummy retval that is ignored */
+#define MTEST_THREAD_RETVAL_IGN 0
 
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg);
 int MTest_Join_threads( void );
