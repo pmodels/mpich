@@ -507,8 +507,10 @@
      MPIU_ERR_SETANDSTMT(err_,class_,stmt_,gmsg_)
 #define MPIU_ERR_SETFATALANDSTMT4(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_,arg3_,arg4_) \
      MPIU_ERR_SETANDSTMT(err_,class_,stmt_,gmsg_)
+    /* No-op - use original error class; discard newerr_ unless err is 
+       MPI_SUCCESS*/
 #define MPIU_ERR_ADD(err_, newerr_) \
-     MPIU_ERR_SET((err_), (newerr_), foo)
+    {if (!err_) err_ = newerr_;}
 #endif
 
 /* The following definitions are the same independent of the choice of 
