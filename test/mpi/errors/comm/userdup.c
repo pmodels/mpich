@@ -94,7 +94,8 @@ int main( int argc, char *argv[] )
 	MPI_Error_class( err, &eclass );
 	if (eclass != myErrClass) {
 	    errs++;
-	    fprintf( stderr, "Unexpected error class = %d\n", eclass );
+	    fprintf( stderr, "Unexpected error class = %d, expected user-defined class %d\n", eclass, 
+		     myErrClass );
 	}
 	else {
 	    MPI_Error_string( err, msg, &resultLen );
@@ -118,17 +119,17 @@ int main( int argc, char *argv[] )
 	MPI_Error_class( err, &eclass );
 	if (eclass != myErrClass) {
 	    errs++;
-	    fprintf( stderr, "Unexpected error class = %d\n", eclass );
+	    fprintf( stderr, "Unexpected error class = %d, expected user-defined class %d\n", eclass, myErrClass );
 	}
 	if (err != myErrCode) {
 	    errs++;
-	    fprintf( stderr, "Unexpected error code = %d\n", err );
+	    fprintf( stderr, "Unexpected error code = %d, expected user-defined code %d\n", err, myErrCode );
 	}
 	else {
 	    MPI_Error_string( err, msg, &resultLen );
 	    if (strcmp( msg, "My error code" ) != 0) {
 		errs++;
-		fprintf( stderr, "Unexpected error string %s\n", msg );
+		fprintf( stderr, "Unexpected error string %s, expected user-defined error string\n", msg );
 	    }
 	}
     }

@@ -1,5 +1,5 @@
 INCLUDES = -I../../../include -I${srcdir}/../../../include
-DEPADD = @MPILIBLOC@ 
+DEPADD = @MPILIBLOC@ ../../../cxx/util/mtest.o
 smvar_do_sharedlibs = 0
 
 errgetx_SOURCES   = errgetx.cxx
@@ -9,3 +9,5 @@ errsetx_LDADD     = ../../../cxx/util/mtest.o
 throwtest_SOURCES = throwtest.cxx
 throwtest_LDADD   = ../../../cxx/util/mtest.o
 
+../../../cxx/util/mtest.o: 
+	(cd ../../../cxx/util && $(MAKE) mtest.o)

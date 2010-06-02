@@ -61,8 +61,8 @@ int main( int argc, char *argv[] )
 	MPI_Error_class( errval, &errclass );
 	if (errclass != MPI_ERR_IN_STATUS) {
 	    errs++;
-	    printf( "Did not get ERR_IN_STATUS in Testsome (outcount = %d)\n",
-		    outcount );
+	    printf( "Did not get ERR_IN_STATUS in Testsome (outcount = %d, should equal 2); class returned was %d\n",
+		    outcount, errclass );
 	}
 	else if (outcount != 2) {
 	    errs++;
