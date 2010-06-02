@@ -32,18 +32,18 @@ if (defined($ENV{"DEBUG_STRICT"})) { $gStrict = 1; }
 %skipFiles = ();
 $outfile = "";
 foreach $arg (@ARGV) {
-    if ($arg =~ /^-showfiles/) { $showfiles = 1; }
-    elsif( $arg =~ /-debug/) { $debug = 1; }
-    elsif( $arg =~ /-quiet/) { $quiet = 1; }
-    elsif( $arg =~ /-notest/) { $build_test_pgm = 0; }
-    elsif( $arg =~ /-outfile=(.*)/) { $outfile = $1; }
-    elsif( $arg =~ /-careful=(.*)/) {
+    if ($arg =~ /^--?showfiles/) { $showfiles = 1; }
+    elsif( $arg =~ /^--?debug/) { $debug = 1; }
+    elsif( $arg =~ /^--?quiet/) { $quiet = 1; }
+    elsif( $arg =~ /^--?notest/) { $build_test_pgm = 0; }
+    elsif( $arg =~ /^--?outfile=(.*)/) { $outfile = $1; }
+    elsif( $arg =~ /^--?careful=(.*)/) {
 	$careful = 1;
 	$carefulFilename = $1;
     }
-    elsif( $arg =~ /-careful/) { $careful = 1; }
-    elsif( $arg =~ /-strict/)  { $gStrict = 1; }
-    elsif( $arg =~ /-skip=(.*)/) { $skipFiles{$1} = 1; }
+    elsif( $arg =~ /^--?careful/) { $careful = 1; }
+    elsif( $arg =~ /^--?strict/)  { $gStrict = 1; }
+    elsif( $arg =~ /^--?skip=(.*)/) { $skipFiles{$1} = 1; }
     else {
 	print "Adding $arg to files\n" if $debug;
 	if (-d $arg) {
@@ -149,10 +149,12 @@ sub CreateErrmsgsHeader {
  * This file automatically created by extracterrmsgs\
  * DO NOT EDIT\
  */\n";
-    print $FD "typedef struct msgpair {\
-        const unsigned int sentinal1;\
+    print $FD "#ifdef MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS
+typedef struct msgpair {
+        const unsigned int sentinal1;
         const char *short_name, *long_name; 
-        const unsigned int sentinal2; } msgpair;\n"
+        const unsigned int sentinal2; } msgpair;
+#endif\n"
 }
 #
 # We also need a way to create the records
@@ -200,12 +202,25 @@ sub CreateErrMsgMapping {
     }
     close (FD);
 
+    # For the case of classes only, output the strings for the class 
+    # messages
+    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG_CLASS\n";
+    print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $#class_msgs+1\n";
+    print $OUTFD "static const char *classToMsg[] = {\n";
+    for (my $i=0; $i<=$#class_msgs; $i++) {
+	my $shortname = $class_msgs[$i];
+	my $msg       = $longnames{$shortname};
+	print $OUTFD "\"$msg\", /* $i  $class_msgs[$i] */\n";
+    }
+    print $OUTFD "0 }; \n";
+    print $OUTFD "#endif /* MSG_CLASS */\n";
+
     # Now, output each short,long key
     # Do the generic, followed by the specific, messages
     # The long messages must be available for the generic message output.
     # An alternative is to separate the short from the long messages;
     # the long messages are needed for > MSG_NONE, the short for > MSG_CLASS.
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_NONE\n";
+    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS\n";
     print $OUTFD "/* The names are in sorted order, allowing the use of a simple\
   linear search or bisection algorithm to find the message corresponding to\
   a particular message */\n";
@@ -295,7 +310,7 @@ sub CreateErrMsgMapping {
     print $OUTFD "};\n";
     print $OUTFD "#endif\n\n";
 
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_NONE\n";
+    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS\n";
     $maxval = $#class_msgs + 1;
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $maxval\n";
     print $OUTFD "static int class_to_index[] = {\n";
@@ -842,6 +857,9 @@ sub ExpandDir {
     }
     return @files;
 }
+
+
+
 #
 # Other todos:
 # It would be good to keep track of any .N MPI_ERR_xxx names in the structured

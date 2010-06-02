@@ -241,8 +241,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, assert_hook);
 #ifdef _WIN64
     {
-    /* FIXME: This severly degrades performance but fixes alignment issues 
-       with the datatype code. */
+    /* FIXME: (Windows) This severly degrades performance but fixes alignment 
+       issues with the datatype code. */
     /* Prevent misaligned faults on Win64 machines */
     UINT mode, old_mode;
     
@@ -372,7 +372,11 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_COMML_REMEMBER( MPIR_Process.comm_self );
 
     /* Call any and all MPID_Init type functions */
+    /* Note that the error handling support is only included if error_checking 
+       is enabled at compile time. */
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Err_init();
+#endif
     MPIR_Datatype_init();
 
     MPIR_Nest_init();
