@@ -31,6 +31,10 @@
 #else
 #error Unknown Thread Package
 #endif
+
+#define MTEST_THREAD_SUCCESS 0
+#define MTEST_THREAD_FAIL 1
+
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg);
 int MTest_Join_threads( void );
 int MTest_thread_lock_create( MTEST_THREAD_LOCK_TYPE *);
