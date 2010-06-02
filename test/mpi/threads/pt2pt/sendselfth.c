@@ -8,56 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpithreadtest.h"
 
 static char MTEST_Descrip[] = "Send to self in a threaded program";
 
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#define THREAD_RETURN_TYPE DWORD
-/* HANDLE to listener thread */
-HANDLE hThread;
-int start_send_thread(THREAD_RETURN_TYPE (*fn)(void *p))
-{
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, NULL, 0, NULL);
-    if (hThread == NULL)
-    {
-	return GetLastError();
-    }
-    return 0;
-}
-
-int join_thread( void ){
-    int err = 0;
-    if(WaitForSingleObject(hThread, INFINITE) == WAIT_FAILED){
-        DEBUG(printf("Error WaitForSingleObject() \n"));
-        err = GetLastError();
-    }
-    CloseHandle(hThread);
-    return err;
-}
-
-#else
-#include <pthread.h>
-#define THREAD_RETURN_TYPE void *
-pthread_t thread;
-int start_send_thread(THREAD_RETURN_TYPE (*fn)(void *p));
-
-int start_send_thread(THREAD_RETURN_TYPE (*fn)(void *p))
-{
-    int err;
-
-    err = pthread_create(&thread, NULL/*&attr*/, fn, NULL);
-    return err;
-}
-int join_thread( void )
-{
-    return pthread_join(thread, 0);
-}
-#endif
-
-THREAD_RETURN_TYPE send_thread(void *p);
-
-THREAD_RETURN_TYPE send_thread(void *p)
+MTEST_THREAD_RETURN_TYPE send_thread(void *p)
 {
     int rank;
     char buffer[100];
@@ -65,7 +20,7 @@ THREAD_RETURN_TYPE send_thread(void *p)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     MPI_Send(buffer, sizeof(buffer), MPI_CHAR, rank, 0, MPI_COMM_WORLD);
-    return (THREAD_RETURN_TYPE)0;
+    return MTEST_THREAD_RETVAL_IGN;
 }
 
 int main( int argc, char *argv[] )
@@ -91,13 +46,13 @@ int main( int argc, char *argv[] )
 	return -1;
     }
 
-    start_send_thread(send_thread);
+    MTest_Start_thread(send_thread, NULL);
 
     MPI_Probe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
 
     MPI_Recv(buffer, sizeof(buffer), MPI_CHAR, rank, 0, MPI_COMM_WORLD, &status);
 
-    join_thread();
+    MTest_Join_threads();
 
     MTest_Finalize(0);
     MPI_Finalize();

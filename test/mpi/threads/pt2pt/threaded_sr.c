@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpithreadtest.h"
 
 static char MTEST_Descrip[] = "Threaded Send-Recv";
 
@@ -17,40 +18,13 @@ static char MTEST_Descrip[] = "Threaded Send-Recv";
  */
 #define MSG_SIZE 1024*1024
 
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#define THREAD_RETURN_TYPE DWORD
-int start_send_thread(THREAD_RETURN_TYPE (*fn)(void *p))
-{
-    HANDLE hThread;
-    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, NULL, 0, NULL);
-    if (hThread == NULL)
-    {
-	return GetLastError();
-    }
-    CloseHandle(hThread);
-    return 0;
-}
-#else
-#include <pthread.h>
-#define THREAD_RETURN_TYPE void *
-int start_send_thread(THREAD_RETURN_TYPE (*fn)(void *p))
-{
-    int err;
-    pthread_t thread;
-    /*pthread_attr_t attr;*/
-    err = pthread_create(&thread, NULL/*&attr*/, fn, NULL);
-    return err;
-}
-#endif
-
 /* Keep track of whether the send succeeded.  The values are:
    -1 (unset), 0 (failure), 1 (ok).  The unset value allows us to 
    avoid a possible race caused by reading the value before the send
    thread sets it.
 */
 static volatile int sendok = -1;
-THREAD_RETURN_TYPE send_thread(void *p)
+MTEST_THREAD_RETURN_TYPE send_thread(void *p)
 {
     int err;
     char *buffer;
@@ -63,7 +37,7 @@ THREAD_RETURN_TYPE send_thread(void *p)
 	printf("malloc failed to allocate %d bytes for the send buffer.\n", MSG_SIZE);
 	fflush(stdout);
 	sendok = 0;
-	return (THREAD_RETURN_TYPE)-1;
+	return (MTEST_THREAD_RETURN_TYPE )-1;
     }
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -83,7 +57,7 @@ THREAD_RETURN_TYPE send_thread(void *p)
     else {
 	sendok = 1;
     }
-    return (THREAD_RETURN_TYPE)err;
+    return (MTEST_THREAD_RETURN_TYPE )err;
 }
 
 int main( int argc, char *argv[] )
@@ -122,7 +96,7 @@ int main( int argc, char *argv[] )
 	return -1;
     }
 
-    start_send_thread(send_thread);
+    MTest_Start_thread(send_thread, NULL);
 
     /* give the send thread time to start up and begin sending the message */
     MTestSleep(3); 

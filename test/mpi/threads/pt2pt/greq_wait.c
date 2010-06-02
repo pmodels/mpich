@@ -2,8 +2,10 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
+#include "mpithreadtest.h"
+#ifdef HAVE_UNISTD_H
+    #include <unistd.h>
+#endif
 
 static char MTEST_Descrip[] = "threaded generalized request tests";
 
@@ -31,21 +33,20 @@ int cancel_fn(void *extra_state, int complete) { return 0; }
 
 MPI_Request grequest;
 
-void *do_work(void *arg)
+MTEST_THREAD_RETURN_TYPE do_work(void *arg)
 {
   MPI_Request *req = (MPI_Request *)arg;
   IF_VERBOSE(("Starting work in thread ...\n"));
-  sleep(3);
+  MTestSleep(3);
   IF_VERBOSE(("Work in thread done !!!\n"));
   MPI_Grequest_complete(*req);
-  return NULL;
+  return MTEST_THREAD_RETVAL_IGN;
 }
 
 int main(int argc, char *argv[])
 {
     int provided;
     MPI_Request request;
-    pthread_t thread; 
     int outcount = -1;
     int indices[1] = {-1};
     int errs;
@@ -69,24 +70,24 @@ int main(int argc, char *argv[])
 
     MPI_Grequest_start(query_fn, free_fn, cancel_fn, NULL, &request);
     grequest = request; /* copy the handle */
-    pthread_create(&thread, NULL, do_work, &grequest);
+    MTest_Start_thread(do_work, &grequest);
     IF_VERBOSE(("Waiting ...\n"));
     MPI_Wait(&request, &status);
-    pthread_join(thread, NULL);
+    MTest_Join_threads();
 
     MPI_Grequest_start(query_fn, free_fn, cancel_fn, NULL, &request);
     grequest = request; /* copy the handle */
-    pthread_create(&thread, NULL, do_work, &grequest);
+    MTest_Start_thread(do_work, &grequest);
     IF_VERBOSE(("Waiting ...\n"));
     MPI_Waitsome(1, &request, &outcount, indices, &status);
-    pthread_join(thread, NULL);
+    MTest_Join_threads();
 
     MPI_Grequest_start(query_fn, free_fn, cancel_fn, NULL, &request);
     grequest = request; /* copy the handle */
-    pthread_create(&thread, NULL, do_work, &grequest);
+    MTest_Start_thread(do_work, &grequest);
     IF_VERBOSE(("Waiting ...\n"));
     MPI_Waitall(1, &request, &status);
-    pthread_join(thread, NULL);
+    MTest_Join_threads();
 
     IF_VERBOSE(("Goodbye !!!\n"));
     MTest_Finalize(0);
