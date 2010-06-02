@@ -24,7 +24,9 @@ int MPIR_Err_return_win( struct MPID_Win *, const char [], int );
 int MPIR_Err_return_file( MPI_File, const char [], int ); /* Romio version */
 #endif
 /* FIXME:
- * The following description is out of date and should not be used
+ * Update this description to match the current version of the routine, 
+ * in particular, the pseudo-format types (even better, fix it so that
+ * the pseudo format types can work with the format attribute check).
  */
 /*@
   MPIR_Err_create_code - Create an error code and associated message
@@ -76,6 +78,25 @@ int MPIR_Err_return_file( MPI_File, const char [], int ); /* Romio version */
   This interface allows error messages to be chained together.  The first 
   argument is the last error code; if there is no previous error code, 
   use 'MPI_SUCCESS'.  
+
+  Extended Format Specifiers:
+  In addition to the standard format specifies (e.g., %d for an int value),
+  MPIR_Err_create_code accepts some additional values that correspond to 
+  various MPI types:
++ i - an MPI rank; recognizes 'MPI_ANY_SOURCE', 'MPI_PROC_NULL', and 
+      'MPI_ROOT'
+. t - an MPI tag; recognizes 'MPI_ANY_TAG'.
+. A - an MPI assert value.
+. C - an MPI communicator.
+. D - an MPI datatype.
+. E - an MPI Errhandler.
+. F - an MPI File object.
+. G - an MPI Group.
+. I - an MPI info object.
+. O - an MPI Op.
+. R - an MPI Request.
+- W - an MPI Window object.
+
 
   Module:
   Error
