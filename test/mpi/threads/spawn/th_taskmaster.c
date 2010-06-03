@@ -5,8 +5,8 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <mpi.h>
+#include "mpithreadtest.h"
 
 #define DEFAULT_TASKS 128
 #define DEFAULT_TASK_WINDOW 2
@@ -40,7 +40,7 @@ void process_disconnect(MPI_Comm * comm, int thread_id)
 }
 
 #ifdef USE_THREADS
-static void * main_thread(void * arg)
+MTEST_THREAD_RETURN_TYPE main_thread(void * arg)
 {
     MPI_Comm child_comm;
     int thread_id = *((int *) arg);
@@ -49,7 +49,7 @@ static void * main_thread(void * arg)
     CHECK_SUCCESS(MPI_Comm_set_errhandler(child_comm, MPI_ERRORS_RETURN));
     process_disconnect(&child_comm, thread_id);
 
-    return NULL;
+    return MTEST_THREAD_RETVAL_IGN;
 }
 #endif /* USE_THREADS */
 
@@ -57,9 +57,7 @@ int main(int argc, char *argv[])
 {
     int tasks = 0, provided, i, j;
     MPI_Comm parent;
-#ifdef USE_THREADS
-    pthread_t * threads = NULL;
-#else
+#ifndef USE_THREADS
     MPI_Comm * child;
 #endif /* USE_THREADS */
 
@@ -90,13 +88,7 @@ int main(int argc, char *argv[])
 	CHECK_SUCCESS(MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank));
 	CHECK_SUCCESS(MPI_Comm_size(MPI_COMM_WORLD, &comm_world_size));
 
-#ifdef USE_THREADS
-	threads = (pthread_t *) malloc(tasks * sizeof(pthread_t));
-	if (!threads) {
-	    fprintf(stderr, "Unable to allocate memory for threads\n");
-	    MPI_Abort(MPI_COMM_WORLD, -1);
-	}
-#else
+#ifndef USE_THREADS
 	child = (MPI_Comm *) malloc(tasks * sizeof(MPI_Comm));
 	if (!child) {
 	    fprintf(stderr, "Unable to allocate memory for child communicators\n");
@@ -108,10 +100,10 @@ int main(int argc, char *argv[])
 	/* Create a thread for each task. Each thread will spawn a
 	 * child process to perform its task. */
 	for (i = 0; i < tasks;) {
-	    for (j = 0; j < DEFAULT_TASK_WINDOW; j++)
-		pthread_create(&threads[j], NULL, main_thread, &j);
-	    for (j = 0; j < DEFAULT_TASK_WINDOW; j++)
-		pthread_join(threads[j], NULL);
+        for (j = 0; j < DEFAULT_TASK_WINDOW; j++){
+            MTest_Start_thread(main_thread, &j);
+        }
+        MTest_Join_threads();
 	    i += DEFAULT_TASK_WINDOW;
 	}
 #else
@@ -139,9 +131,6 @@ int main(int argc, char *argv[])
     }
 
 fn_exit:
-#ifdef USE_THREADS
-    if (threads) free(threads);
-#endif
     MPI_Finalize();
 
     return 0;

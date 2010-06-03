@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpithreadtest.h"
 
 static char MTEST_Descrip[] = "Spawn jobs from multiple threads";
 
@@ -31,65 +32,9 @@ volatile int flag = 0;
 
 MPI_Comm intercomms[NTHREADS];
 
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#define THREAD_RETURN_TYPE DWORD
-/* HANDLE to listener thread */
-HANDLE hThread[NTHREADS];
+MTEST_THREAD_RETURN_TYPE spawnProcess(void *p);
 
-int start_spawn_thread(THREAD_RETURN_TYPE (*fn)(void *p), void *arg)
-{
-    hThread[activeThreads] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, 
-					  arg, 0, NULL);
-    if (hThread[activeThreads] == NULL)
-    {
-	return GetLastError();
-    }
-    activeThreads++;
-    return 0;
-}
-
-int join_threads( void ){
-    int err = 0;
-    while (activeThreads > 0) {
-	if(WaitForSingleObject(hThread[activeThreads-1], INFINITE) == WAIT_FAILED){
-	    DEBUG(printf("Error WaitForSingleObject() \n"));
-	    err = GetLastError();
-	}
-	CloseHandle(hThread[activeThreads-1]);
-	activeThreads--;
-	return err;
-    }
-}
-
-#else
-#include <pthread.h>
-#define THREAD_RETURN_TYPE void *
-pthread_t thread[NTHREADS];
-int start_spawn_thread(THREAD_RETURN_TYPE (*fn)(void *p), void *arg);
-
-int start_spawn_thread(THREAD_RETURN_TYPE (*fn)(void *p), void *arg)
-{
-    int err;
-
-    err = pthread_create(&thread[activeThreads], NULL/*&attr*/, fn, arg);
-    if (err == 0) activeThreads++;
-    return err;
-}
-int join_threads( void )
-{
-    int err;
-    while (activeThreads > 0) {
-	err = pthread_join(thread[activeThreads-1],0);
-	activeThreads--;
-    }
-    return err;
-}
-#endif
-
-THREAD_RETURN_TYPE spawnProcess(void *p);
-
-THREAD_RETURN_TYPE spawnProcess(void *p)
+MTEST_THREAD_RETURN_TYPE spawnProcess(void *p)
 {
     int rank, i;
     char buffer[100];
@@ -109,7 +54,7 @@ THREAD_RETURN_TYPE spawnProcess(void *p)
 
     MPI_Bcast( &i, 1, MPI_INT, MPI_ROOT, intercomms[i] );
 
-    return (THREAD_RETURN_TYPE)0;
+    return MTEST_THREAD_RETVAL_IGN;
 }
 
 int main( int argc, char *argv[] )
@@ -141,7 +86,7 @@ int main( int argc, char *argv[] )
 	wasParent = 1;
 	
 	for (i=0; i<NTHREADS-1; i++) {
-	    start_spawn_thread( spawnProcess, (void *)i );
+        MTest_Start_thread(spawnProcess, (void *)i);
 	}
 	
 	/* Synchronize the threads and spawn the processes */
@@ -149,7 +94,7 @@ int main( int argc, char *argv[] )
 	spawnProcess( (void*)(NTHREADS-1) );
 
 	/* Exit the threads (but the spawned processes remain) */
-	join_threads();
+	MTest_Join_threads();
 
 	/* The master thread (this thread) checks the created communicators */
 	for (i=0; i<NTHREADS; i++) {
