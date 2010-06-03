@@ -1,5 +1,5 @@
 INCLUDES = -I../../include -I${srcdir}/../../include
-LDADD = ../../util/mtest.o
+LDADD = ../../util/mtest.o ../util/mtestthread.o
 threaded_sr_LDADD = -lpthread 
 DEPADD = @MPILIBLOC@ ../../util/mtest.o ../util/mtestthread.o
 smvar_do_sharedlibs = 0
@@ -8,25 +8,15 @@ smvar_do_sharedlibs = 0
 EXTRA_PROGRAMS       = 
 
 threads_SOURCES      = threads.c
-threads_LDADD        = ../util/mtestthread.o
 threaded_sr_SOURCES  = threaded_sr.c
-threaded_sr_LDADD    = ../util/mtestthread.o
 alltoall_SOURCES     = alltoall.c
-alltoall_LDADD       = ../util/mtestthread.o
 sendselfth_SOURCES   = sendselfth.c
-sendselfth_LDADD     = ../util/mtestthread.o
 greq_wait_SOURCES    = greq_wait.c
-greq_wait_LDADD      = ../util/mtestthread.o
 greq_test_SOURCES    = greq_test.c
-greq_test_LDADD      = ../util/mtestthread.o
 multisend_SOURCES    = multisend.c
-multisend_LDADD = ../util/mtestthread.o
 multisend2_SOURCES   = multisend2.c
-multisend2_LDADD = ../util/mtestthread.o
 multisend3_SOURCES   = multisend3.c
-multisend3_LDADD = ../util/mtestthread.o
 multisend4_SOURCES   = multisend4.c
-multisend4_LDADD = ../util/mtestthread.o
 
 ../../util/mtest.o:
 	(cd ../../util && $(MAKE) mtest.o)
