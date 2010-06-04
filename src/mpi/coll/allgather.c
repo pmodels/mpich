@@ -689,18 +689,54 @@ int MPIR_Allgather_inter (
 }
 /* end:nested */
 
+/* MPIR_Allgather performs an allgather using point-to-point messages.
+   This is intended to be used by device-specific implementations of
+   allgather.  In all other cases MPIR_Allgather_impl should be
+   used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgather
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIR_ALLGATHER);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIR_ALLGATHER);
+    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+        /* intracommunicator */
+        mpi_errno = MPIR_Allgather_intra(sendbuf, sendcount, sendtype,
+                                         recvbuf, recvcount, recvtype,
+                                         comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+        /* intercommunicator */
+        mpi_errno = MPIR_Allgather_inter(sendbuf, sendcount, sendtype,
+                                         recvbuf, recvcount, recvtype,
+                                         comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+
+    goto fn_exit;
+}
+
+/* MPIR_Allgather_impl should be called by any internal component that
+   would otherwise call MPI_Allgather.  This differs from
+   MPIR_Allgather in that this will call the coll_fns version if it
+   exists.  */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allgather_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Allgather_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allgather != NULL)
     {
@@ -725,7 +761,6 @@ int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIR_ALLGATHER);
     return mpi_errno;
 fn_fail:
 
@@ -855,9 +890,9 @@ int MPI_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
-                               recvbuf, recvcount, recvtype,
-                               comm_ptr);
+    mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype,
+                                    recvbuf, recvcount, recvtype,
+                                    comm_ptr);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */

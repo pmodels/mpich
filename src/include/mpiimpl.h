@@ -3269,8 +3269,11 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 #define MPIR_MAX(a,b) (((b)>(a))?(b):(a))
 #endif /* MPIR_MAX */
 
+int MPIR_Allgather_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        MPID_Comm *comm_ptr );
 int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, int recvcount, MPI_Datatype recvtype, 
+                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    MPID_Comm *comm_ptr );
 int MPIR_Allgather_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, int recvcount, MPI_Datatype recvtype, 

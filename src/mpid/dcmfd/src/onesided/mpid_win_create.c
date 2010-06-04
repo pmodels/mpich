@@ -141,7 +141,7 @@ static void mpid_init(void) {
  * \param[in] comm_ptr	Communicator
  * \param[out] win_ptr	Window
  * \return MPI_SUCCESS, MPI_ERR_OTHER, or error returned from
- *	NMPI_Comm_dup or MPIR_Allgather.
+ *	NMPI_Comm_dup or MPIR_Allgather_impl.
  */
 int MPID_Win_create(void *base, MPI_Aint size, int disp_unit,
                 MPID_Info *info, MPID_Comm *comm_ptr,
@@ -211,10 +211,10 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit,
 	// 'base_addr' is now an offset for the buf in memregion
 	win->_dev.coll_info[rank].base_addr = (char *)((char *)base - (char *)mem_cfg_base);
 
-        mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                        win->_dev.coll_info,
-                        sizeof(struct MPID_Win_coll_info),
-                        MPI_BYTE, comm_ptr);
+        mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                                        win->_dev.coll_info,
+                                        sizeof(struct MPID_Win_coll_info),
+                                        MPI_BYTE, comm_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         /* try to avoid a race where one node sends us a lock request
          * before we're ready */
