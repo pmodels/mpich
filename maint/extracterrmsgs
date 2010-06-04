@@ -149,7 +149,7 @@ sub CreateErrmsgsHeader {
  * This file automatically created by extracterrmsgs\
  * DO NOT EDIT\
  */\n";
-    print $FD "#ifdef MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS
+    print $FD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS
 typedef struct msgpair {
         const unsigned int sentinal1;
         const char *short_name, *long_name; 
