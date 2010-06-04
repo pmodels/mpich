@@ -3272,6 +3272,9 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype, 
                    MPID_Comm *comm_ptr );
+int MPIR_Allgather_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                         void *recvbuf, int recvcount, MPI_Datatype recvtype, 
+                         MPID_Comm *comm_ptr );
 int MPIR_Allgather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, int recvcount, MPI_Datatype recvtype, 
                          MPID_Comm *comm_ptr );

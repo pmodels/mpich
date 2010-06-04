@@ -70,7 +70,7 @@
 /* begin:nested */
 /* not declared static because a machine-specific function may call this 
    one in some cases */
-int MPIR_Allgather ( 
+int MPIR_Allgather_intra ( 
     void *sendbuf, 
     int sendcount, 
     MPI_Datatype sendtype,
@@ -84,7 +84,7 @@ int MPIR_Allgather (
     MPI_Aint   recvtype_extent, tot_bytes;
     MPI_Aint recvtype_true_extent, recvbuf_extent, recvtype_true_lb;
     int        j, i, pof2, src, rem;
-    static const char FCNAME[] = "MPIR_Allgather";
+    static const char FCNAME[] = "MPIR_Allgather_intra";
     void *tmp_buf = NULL;
     int curr_cnt, dst, type_size, left, right, jnext;
     MPI_Comm comm;
@@ -688,7 +688,52 @@ int MPIR_Allgather_inter (
     goto fn_exit;
 }
 /* end:nested */
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allgather
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                   MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIR_ALLGATHER);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIR_ALLGATHER);
+
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allgather != NULL)
+    {
+	mpi_errno = comm_ptr->coll_fns->Allgather(sendbuf, sendcount, sendtype,
+                                                  recvbuf, recvcount, recvtype,
+                                                  comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+            /* intracommunicator */
+            mpi_errno = MPIR_Allgather_intra(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             comm_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        } else {
+            /* intercommunicator */
+            mpi_errno = MPIR_Allgather_inter(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             comm_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIR_ALLGATHER);
+    return mpi_errno;
+fn_fail:
+
+    goto fn_exit;
+}
+
 #endif
+
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Allgather
@@ -810,33 +855,11 @@ int MPI_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allgather != NULL)
-    {
-	mpi_errno = comm_ptr->coll_fns->Allgather(sendbuf, sendcount,
-                                                  sendtype, recvbuf, recvcount,
-                                                  recvtype, comm_ptr);
-    }
-    else
-    {
-	MPIU_THREADPRIV_GET;
-
-	MPIR_Nest_incr();
-        if (comm_ptr->comm_kind == MPID_INTRACOMM) 
-            /* intracommunicator */
-            mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
-                                       recvbuf, recvcount, recvtype,
-                                       comm_ptr);
-        else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Allgather_inter(sendbuf, sendcount, sendtype,
-                                             recvbuf, recvcount, recvtype,
-                                             comm_ptr);            
-        }
-	MPIR_Nest_decr();
-    }
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
+    mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
+                               recvbuf, recvcount, recvtype,
+                               comm_ptr);
+    if (mpi_errno) goto fn_fail;
+    
     /* ... end of body of routine ... */
     
   fn_exit:

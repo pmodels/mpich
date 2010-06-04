@@ -171,9 +171,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	local_comm     = comm;
     }
     /* Gather information on the local group of processes */
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Allgather( MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm );
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_Allgather( MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm_ptr );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Step 2: How many processes have our same color? */
@@ -212,7 +210,6 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	MPIU_CHKLMEM_MALLOC(remotetable,splittype*,
 			    remote_size*sizeof(splittype),mpi_errno,
 			    "remotetable");
-	MPIR_Nest_incr();
 	/* This is an intercommunicator allgather */
 	
 	/* We must use a local splittype because we've already modified the
@@ -220,9 +217,8 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	   same color */
 	mypair.color = color;
 	mypair.key   = key;
-	mpi_errno = NMPI_Allgather( &mypair, 2, MPI_INT, remotetable, 2, MPI_INT,
-                                    comm );
-	MPIR_Nest_decr();
+	mpi_errno = MPIR_Allgather( &mypair, 2, MPI_INT, remotetable, 2, MPI_INT,
+                                    comm_ptr );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
 	/* Each process can now match its color with the entries in the table */

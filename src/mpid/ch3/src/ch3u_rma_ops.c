@@ -88,9 +88,9 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     tmp_buf[3*rank+1] = (MPI_Aint) disp_unit;
     tmp_buf[3*rank+2] = (MPI_Aint) (*win_ptr)->handle;
     
-    mpi_errno = NMPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-			       tmp_buf, 3 * sizeof(MPI_Aint), MPI_BYTE, 
-			       comm_ptr->handle);   
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+			       tmp_buf, 3 * sizeof(MPI_Aint), MPI_BYTE,
+			       comm_ptr);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     
     for (i=0; i<comm_size; i++)
