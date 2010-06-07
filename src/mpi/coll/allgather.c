@@ -561,9 +561,9 @@ int MPIR_Allgather_intra (
         }
     }
 
-    /* check if multiple threads are calling this collective function */
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
+    /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );    
     return (mpi_errno);
 
