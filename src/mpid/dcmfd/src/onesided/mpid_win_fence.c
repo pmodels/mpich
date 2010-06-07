@@ -45,7 +45,7 @@
  * a \e FENCE epoch is currently in affect.
  * - If MPI_MODE_NOPRECEDE is asserted, fail with MPI_ERR_RMA_SYNC.
  * - \e MPID_assert_debug that the local window is not locked.
- * - Call NMPI_Allreduce on the window communicator to sum
+ * - Call MPIR_Allreduce_impl on the window communicator to sum
  * the \e rma_sends
  * fields in the collective info array. This also waits for all
  * nodes to reach this point. This operation provides each node with
@@ -74,7 +74,7 @@
  * \param[in] assert	Synchronization hints
  * \param[in] win_ptr	Window
  * \return MPI_SUCCESS, MPI_ERR_RMA_SYNC,  or error returned from
- *	NMPI_Allreduce or NMPI_Barrier.
+ *	MPIR_Allreduce_impl or NMPI_Barrier.
  *
  * \ref fence_design
  */
@@ -114,16 +114,16 @@ int MPID_Win_fence(int assert, MPID_Win *win_ptr)
 		/* --END ERROR HANDLING-- */
 	}
 
-	mpi_errno = NMPI_Allreduce(MPI_IN_PLACE,
-				win_ptr->_dev.coll_info,
-				MPIDU_comm_size(win_ptr),
-				Coll_info_rma_dt, Coll_info_rma_op,
-				win_ptr->_dev.comm_ptr->handle);
+	mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE,
+                                        win_ptr->_dev.coll_info,
+                                        MPIDU_comm_size(win_ptr),
+                                        Coll_info_rma_dt, Coll_info_rma_op,
+                                        win_ptr->_dev.comm_ptr);
 	if (mpi_errno) {
 		char buf[MPI_MAX_ERROR_STRING];
 		int buf_len;
 		PMPI_Error_string(mpi_errno, buf, &buf_len);
-		if (1) fprintf(stderr, "%d: MPID_Win_fence failed NMPI_Allreduce: %s\n", mpid_my_lpid, buf);
+		if (1) fprintf(stderr, "%d: MPID_Win_fence failed MPIR_Allreduce_impl: %s\n", mpid_my_lpid, buf);
 		MPIU_ERR_POP(mpi_errno);
 	}
 	MPID_assert_debug(MPIDU_is_lock_free(win_ptr));

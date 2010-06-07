@@ -136,10 +136,8 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 	     The Intel test suite checks for this; it is also an easy
 	     error to make */
 	    acthigh = high ? 1 : 0;   /* Clamp high into 1 or 0 */
-	    MPIR_Nest_incr();
-	    mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, &acthigh, 1, MPI_INT, 
-				MPI_SUM, comm_ptr->local_comm->handle );
-	    MPIR_Nest_decr();
+	    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &acthigh, 1, MPI_INT,
+                                             MPI_SUM, comm_ptr->local_comm );
 	    if (mpi_errno) goto fn_fail;
 	    /* acthigh must either == 0 or the size of the local comm */
 	    if (acthigh != 0 && acthigh != comm_ptr->local_size) {

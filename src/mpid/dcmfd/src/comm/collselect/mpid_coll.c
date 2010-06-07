@@ -674,8 +674,8 @@ void MPIDI_Coll_Comm_create (MPID_Comm *comm)
 		       &my_coords[3]);
 
   /* find if the communicator is a rectangle */
-  MPIR_Allreduce(my_coords, min_coords,4, MPI_UNSIGNED, MPI_MIN, comm);
-  MPIR_Allreduce(my_coords, max_coords,4, MPI_UNSIGNED, MPI_MAX, comm);
+  MPIR_Allreduce_intra(my_coords, min_coords,4, MPI_UNSIGNED, MPI_MIN, comm);
+  MPIR_Allreduce_intra(my_coords, max_coords,4, MPI_UNSIGNED, MPI_MAX, comm);
   
   t_size = (unsigned) (max_coords[3] - min_coords[3] + 1);
   z_size = (unsigned) (max_coords[2] - min_coords[2] + 1);

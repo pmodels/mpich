@@ -3287,8 +3287,12 @@ int MPIR_Allgatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIR_Allgatherv_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
                           void *recvbuf, int *recvcounts, int *displs,   
                           MPI_Datatype recvtype, MPID_Comm *comm_ptr );
+int MPIR_Allreduce_impl(void *sendbuf, void *recvbuf, int count, 
+                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Allreduce(void *sendbuf, void *recvbuf, int count, 
                    MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
+int MPIR_Allreduce_intra(void *sendbuf, void *recvbuf, int count, 
+                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Allreduce_inter(void *sendbuf, void *recvbuf, int count, 
                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype, 

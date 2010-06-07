@@ -537,6 +537,7 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
 			   int nPGids, const int gpids[], 
 			   int root )
 {
+    int mpi_errno = MPI_SUCCESS;
     int i, allfound = 1, pgid, pgidWorld;
     MPIDI_PG_t *pg = 0;
     MPIDI_PG_iterator iter;
@@ -567,8 +568,8 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
     }
 
     /* See if everyone is happy */
-    NMPI_Allreduce( MPI_IN_PLACE, &allfound, 1, MPI_INT, MPI_LAND, 
-		    comm_ptr->handle );
+    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &allfound, 1, MPI_INT, MPI_LAND, comm_ptr );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (allfound) return MPI_SUCCESS;
 
@@ -584,7 +585,10 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
        from ch3u_port.c */
     MPID_PG_BCast( peer_ptr, comm_ptr, root );
 #endif
+ fn_exit:
     return MPI_SUCCESS;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

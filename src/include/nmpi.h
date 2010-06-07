@@ -34,7 +34,6 @@
 #define NMPI_Unpack MPI_Unpack
 #define NMPI_Wait MPI_Wait
 #define NMPI_Test MPI_Test
-#define NMPI_Allreduce MPI_Allreduce
 #define NMPI_Comm_get_attr MPI_Comm_get_attr
 #define NMPI_Comm_set_attr MPI_Comm_set_attr
 #define NMPI_Type_get_attr MPI_Type_get_attr
@@ -121,7 +120,6 @@
 #define NMPI_Unpack PMPI_Unpack
 #define NMPI_Wait PMPI_Wait
 #define NMPI_Test PMPI_Test
-#define NMPI_Allreduce PMPI_Allreduce
 #define NMPI_Comm_get_attr PMPI_Comm_get_attr
 #define NMPI_Comm_set_attr PMPI_Comm_set_attr
 #define NMPI_Type_get_attr PMPI_Type_get_attr

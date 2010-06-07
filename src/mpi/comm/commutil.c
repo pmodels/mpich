@@ -536,12 +536,9 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
 
     /* Note that this is the unthreaded version */
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
     /* Comm must be an intracommunicator */
-    mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK, 
-				MPI_INT, MPI_BAND, comm_ptr->handle );
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK, 
+                                     MPI_INT, MPI_BAND, comm_ptr );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *context_id = MPIR_Find_and_allocate_context_id(local_mask);
@@ -577,18 +574,11 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     int          testCount = 10; /* if you change this value, you need to also change 
 				    it below where it is reinitialized */
 
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
 
-    MPIU_THREADPRIV_GET;
-
     *context_id = 0;
-
-    /* We increment the nest level now because we need to know that we're
-     within another MPI routine before calling the CS_ENTER macro */
-    MPIR_Nest_incr();
 
     /* We lock only around access to the mask.  If another thread is
        using the mask, we take a mask of zero */
@@ -637,8 +627,8 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	   release that global lock when it needs to wait.  That will allow 
 	   other processes to enter the global or brief global critical section.
 	 */ 
-	mpi_errno = NMPI_Allreduce( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
-				    MPI_INT, MPI_BAND, comm_ptr->handle );
+	mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
+                                         MPI_INT, MPI_BAND, comm_ptr );
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	if (own_mask) {
@@ -704,8 +694,8 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
              * In the GLOBAL case, we actually are holding a lock here, so it
              * doesn't trigger helgrind/DRD warnings. */
 	    hasNoId = MPIR_Locate_context_bit(context_mask) == 0;
-	    mpi_errno = NMPI_Allreduce( &hasNoId, &totalHasNoId, 1, MPI_INT, 
-			    MPI_MAX, comm_ptr->handle );
+	    mpi_errno = MPIR_Allreduce_impl( &hasNoId, &totalHasNoId, 1, MPI_INT,
+                                             MPI_MAX, comm_ptr );
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    if (totalHasNoId == 1) {
 		/* Release the mask for use by other threads */
@@ -723,7 +713,6 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 
 fn_exit:
     MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
-    MPIR_Nest_decr();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
     return mpi_errno;
 fn_fail:

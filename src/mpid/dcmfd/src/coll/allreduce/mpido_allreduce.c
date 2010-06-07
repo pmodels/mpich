@@ -46,7 +46,7 @@ MPIDO_Allreduce(void * sendbuf,
       (op_type_support == MPIDO_NOT_SUPPORTED))
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_ALLREDUCE;
-    return MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+    return MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm);
   }
   /* Type_get_extent should return the proper value */
   PMPI_Type_get_extent(datatype, &data_true_lb, &data_true_extent);
@@ -226,7 +226,7 @@ MPIDO_Allreduce(void * sendbuf,
     */
     else
     {
-      rc = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+      rc = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm);
       comm->dcmf.last_algorithm = MPIDO_USE_MPICH_ALLREDUCE;
     }
   }
@@ -262,7 +262,7 @@ MPIDO_Allreduce(void * sendbuf,
 
     if (rc == STAR_FAILURE)
     {
-      rc = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+      rc = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm);
     }
 
     MPIU_Free(tb_ptr);

@@ -89,10 +89,11 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
 
 /* not declared static because a machine-specific function may call this one 
    in some cases */
-#undef FCNAME 
-#define FCNAME "MPIR_Allreduce"
-
-int MPIR_Allreduce ( 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allreduce_intra
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Allreduce_intra ( 
     void *sendbuf, 
     void *recvbuf, 
     int count, 
@@ -119,7 +120,10 @@ int MPIR_Allreduce (
 #endif
     MPIU_CHKLMEM_DECL(3);
     
-    if (count == 0) return MPI_SUCCESS;
+    /* check if multiple threads are calling this collective function */
+    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
+
+    if (count == 0) goto fn_exit;
     comm = comm_ptr->handle;
 
     MPIU_THREADPRIV_GET;
@@ -186,7 +190,7 @@ int MPIR_Allreduce (
         /* need to allocate temporary buffer to store incoming data*/
         mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
                                               &true_extent);
-	MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_Datatype_get_extent_macro(datatype, extent);
 
         MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
@@ -199,7 +203,7 @@ int MPIR_Allreduce (
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf,
                                        count, datatype);
-            MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
         MPID_Datatype_get_size_macro(datatype, type_size);
@@ -217,15 +221,12 @@ int MPIR_Allreduce (
            participate in the algorithm until the very end. The
            remaining processes form a nice power-of-two. */
         
-        /* check if multiple threads are calling this collective function */
-        MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
         if (rank < 2*rem) {
             if (rank % 2 == 0) { /* even */
                 mpi_errno = MPIC_Send(recvbuf, count, 
                                       datatype, rank+1,
                                       MPIR_ALLREDUCE_TAG, comm);
-		MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 
                 /* temporarily set the rank to -1 so that this
                    process does not pariticipate in recursive
@@ -237,8 +238,8 @@ int MPIR_Allreduce (
                                       datatype, rank-1,
                                       MPIR_ALLREDUCE_TAG, comm,
                                       MPI_STATUS_IGNORE);
-		MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
-                
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
                 /* do the reduction on received data. since the
                    ordering is right, it doesn't matter whether
                    the operation is commutative or not. */
@@ -286,7 +287,7 @@ int MPIR_Allreduce (
                                               count, datatype, dst,
                                               MPIR_ALLREDUCE_TAG, comm,
                                               MPI_STATUS_IGNORE);
-		    MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     
                     /* tmp_buf contains data received in this step.
                        recvbuf contains data accumulated so far */
@@ -320,7 +321,7 @@ int MPIR_Allreduce (
                         /* copy result back into recvbuf */
                         mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                    recvbuf, count, datatype);
-			MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     }
                     mask <<= 1;
                 }
@@ -382,7 +383,7 @@ int MPIR_Allreduce (
                                               recv_cnt, datatype, dst,
                                               MPIR_ALLREDUCE_TAG, comm,
                                               MPI_STATUS_IGNORE);
-		    MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     
                     /* tmp_buf contains data received in this step.
                        recvbuf contains data accumulated so far */
@@ -442,7 +443,7 @@ int MPIR_Allreduce (
                                               recv_cnt, datatype, dst,
                                               MPIR_ALLREDUCE_TAG, comm,
                                               MPI_STATUS_IGNORE);
-		    MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
                     if (newrank > newdst) send_idx = recv_idx;
 
@@ -463,18 +464,18 @@ int MPIR_Allreduce (
                 mpi_errno = MPIC_Recv(recvbuf, count,
                                       datatype, rank+1,
                                       MPIR_ALLREDUCE_TAG, comm,
-                                      MPI_STATUS_IGNORE); 
-            MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+                                      MPI_STATUS_IGNORE);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
-
-        /* check if multiple threads are calling this collective function */
-        MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
         if (MPIU_THREADPRIV_FIELD(op_errno)) 
 	    mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
     }
 
   fn_exit:
+    /* check if multiple threads are calling this collective function */
+    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
+
     MPIU_CHKLMEM_FREEALL();
     MPIR_Nest_decr();
     return (mpi_errno);
@@ -486,8 +487,10 @@ int MPIR_Allreduce (
 
 /* not declared static because a machine-specific function may call this one 
    in some cases */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allreduce_inter
 #undef FCNAME
-#define FCNAME "MPIR_Allreduce_inter"
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allreduce_inter ( 
     void *sendbuf, 
     void *recvbuf, 
@@ -506,11 +509,6 @@ int MPIR_Allreduce_inter (
 */
     int rank, mpi_errno, root;
     MPID_Comm *newcomm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
-
-    MPIU_THREADPRIV_GET;
-
-    MPIR_Nest_incr();
     
     rank = comm_ptr->rank;
 
@@ -521,26 +519,26 @@ int MPIR_Allreduce_inter (
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
 				      root, comm_ptr);
-	MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
 				      root, comm_ptr);
-	MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
         /* reduce to rank 0 of left group */
         root = 0;
         mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
 				      root, comm_ptr);
-	MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
 				      root, comm_ptr);
-	MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
     /* Get the local intracommunicator */
@@ -550,15 +548,141 @@ int MPIR_Allreduce_inter (
     newcomm_ptr = comm_ptr->local_comm;
 
     mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, newcomm_ptr);
-    MPIU_ERR_CHKANDJUMP((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**fail");
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_Nest_decr();
     return mpi_errno;
 
   fn_fail:
     goto fn_exit;
 }
+
+/* MPIR_Allreduce performs an allreduce using point-to-point messages.
+   This is intended to be used by device-specific implementations of
+   allreduce.  In all other cases MPIR_Allreduce_impl should be
+   used. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allreduce
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+        /* intracommunicator */
+        mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else {
+        /* intercommunicator */
+        mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+
+    goto fn_exit;
+}
+
+/* MPIR_Allreduce_impl should be called by any internal component that
+   would otherwise call MPI_Allreduce.  This differs from
+   MPIR_Allreduce in that this will call the coll_fns version if it
+   exists.  */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allreduce_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Allreduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allreduce != NULL)
+    {
+	mpi_errno = comm_ptr->coll_fns->Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+    }
+    else
+    {
+        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+            /* intracommunicator */
+#if defined(USE_SMP_COLLECTIVES)
+	    MPID_Op *op_ptr;
+	    int is_commutative; 
+
+	    /* is the op commutative? We do SMP optimizations only if it is. */ 
+	    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+		is_commutative = 1;
+            } else {
+		MPID_Op_get_ptr(op, op_ptr);
+		is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
+	    }
+
+            if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
+		/* on each node, do a reduce to the local root */ 
+                if (comm_ptr->node_comm != NULL)
+                {
+		    /* take care of the MPI_IN_PLACE case. For reduce, 
+		        MPI_IN_PLACE is specified only on the root; 
+                        for allreduce it is specified on all processes. */
+
+		    if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
+			/* IN_PLACE and not root of reduce. Data supplied to this
+			allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
+			
+			mpi_errno = MPIR_Reduce_or_coll_fn(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm);
+		    }
+		    else {
+			mpi_errno = MPIR_Reduce_or_coll_fn(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm);
+		    }
+		    if (mpi_errno) goto fn_fail;
+                }
+		else { 
+		    /* only one process on the node. copy sendbuf to recvbuf */
+		    if (sendbuf != MPI_IN_PLACE) {
+			mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+			if (mpi_errno) goto fn_fail;
+		    }
+		}
+
+                /* now do an IN_PLACE allreduce among the local roots of all nodes */
+                if (comm_ptr->node_roots_comm != NULL) {
+                    mpi_errno = MPIR_Allreduce_intra(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm);
+                    if (mpi_errno) goto fn_fail;
+                }
+
+		/* now broadcast the result among local processes */
+                if (comm_ptr->node_comm != NULL) {
+		    MPIU_THREADPRIV_GET;
+		    
+		    MPIR_Nest_incr();
+                    mpi_errno = MPIR_Bcast_or_coll_fn(recvbuf, count, datatype, 0, comm_ptr->node_comm);
+		    MPIR_Nest_decr();
+		}
+            }
+            else {
+                mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+            }
+#else
+            mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+#endif
+	}
+        else {
+            /* intercommunicator */
+            mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+        }
+    }
+
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+
+    goto fn_exit;
+}
+
 
 #endif
 
@@ -672,91 +796,8 @@ int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count,
 
     /* ... body of routine ...  */
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allreduce != NULL)
-    {
-	mpi_errno = comm_ptr->coll_fns->Allreduce(sendbuf, recvbuf, count,
-                                              datatype, op, comm_ptr);
-    }
-    else
-    {
-        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
-            /* intracommunicator */
-#if defined(USE_SMP_COLLECTIVES)
-	    MPID_Op *op_ptr;
-	    int is_commutative; 
-
-	    /* is the op commutative? We do SMP optimizations only if it is. */ 
-	    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN)
-		is_commutative = 1;
-	    else {
-		MPID_Op_get_ptr(op, op_ptr);
-		is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
-	    }
-
-            if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
-		/* on each node, do a reduce to the local root */ 
-                if (comm_ptr->node_comm != NULL)
-                {
-		    /* take care of the MPI_IN_PLACE case. For reduce, 
-		        MPI_IN_PLACE is specified only on the root; 
-                        for allreduce it is specified on all processes. */
-
-		    if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
-			/* IN_PLACE and not root of reduce. Data supplied to this
-			allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
-			
-			mpi_errno = MPIR_Reduce_or_coll_fn(recvbuf, NULL, count, datatype,
-						op, 0, comm_ptr->node_comm);
-		    }
-		    else {
-			mpi_errno = MPIR_Reduce_or_coll_fn(sendbuf, recvbuf, count, datatype,
-						op, 0, comm_ptr->node_comm);
-		    }
-		    if (mpi_errno) goto fn_fail;
-                }
-		else { 
-		    /* only one process on the node. copy sendbuf to recvbuf */
-		    if (sendbuf != MPI_IN_PLACE) {
-			mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, 
-						   recvbuf, count, datatype);
-			if (mpi_errno) goto fn_fail;
-		    }
-		}
-
-                /* now do an IN_PLACE allreduce among the local roots of all nodes */
-                if (comm_ptr->node_roots_comm != NULL) {
-                    mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype,
-					       op, comm_ptr->node_roots_comm);
-                    if (mpi_errno) goto fn_fail;
-                }
-
-		/* now broadcast the result among local processes */
-                if (comm_ptr->node_comm != NULL) {
-		    MPIU_THREADPRIV_GET;
-		    
-		    MPIR_Nest_incr();
-                    mpi_errno = MPIR_Bcast_or_coll_fn(recvbuf, count, datatype, 
-						      0, comm_ptr->node_comm);
-		    MPIR_Nest_decr();
-		}
-            }
-            else {
-                mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype,
-                                       op, comm_ptr);
-            }
-#else
-            mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype,
-                                       op, comm_ptr); 
-#endif
-	}
-        else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count,
-					     datatype, op, comm_ptr);       
-        }
-    }
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+    if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
     

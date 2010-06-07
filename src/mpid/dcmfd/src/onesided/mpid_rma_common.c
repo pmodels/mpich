@@ -65,7 +65,7 @@ DCMF_Protocol_t bg1s_ct_proto;
  *	- \e w3 = 0
  *
  * \note Epoch End includes MPID_MSGTYPE_UNLOCK and MPID_MSGTYPE_COMPLETE
- * (MPID_Win_fence() uses NMPI_Allreduce()).
+ * (MPID_Win_fence() uses MPIR_Allreduce_impl()).
  */
 
 /** \brief global for our lpid */
