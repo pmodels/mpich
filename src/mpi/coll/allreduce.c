@@ -163,8 +163,7 @@ int MPIR_Allreduce_intra (
 
     if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
         /* on each node, do a reduce to the local root */ 
-        if (comm_ptr->node_comm != NULL)
-        {
+        if (comm_ptr->node_comm != NULL) {
             /* take care of the MPI_IN_PLACE case. For reduce, 
                MPI_IN_PLACE is specified only on the root; 
                for allreduce it is specified on all processes. */
@@ -174,29 +173,29 @@ int MPIR_Allreduce_intra (
                    allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 			
                 mpi_errno = MPIR_Reduce_or_coll_fn(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm);
-            }
-            else {
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            } else {
                 mpi_errno = MPIR_Reduce_or_coll_fn(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
-            if (mpi_errno) goto fn_fail;
-        }
-        else { 
+        } else {
             /* only one process on the node. copy sendbuf to recvbuf */
             if (sendbuf != MPI_IN_PLACE) {
                 mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-                if (mpi_errno) goto fn_fail;
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
         }
 
         /* now do an IN_PLACE allreduce among the local roots of all nodes */
         if (comm_ptr->node_roots_comm != NULL) {
-            mpi_errno = allreduce_intra_or_coll_fn(sendbuf, recvbuf, count, datatype, op, comm_ptr->node_roots_comm);
+            mpi_errno = allreduce_intra_or_coll_fn(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
         /* now broadcast the result among local processes */
         if (comm_ptr->node_comm != NULL) {
             mpi_errno = MPIR_Bcast_or_coll_fn(recvbuf, count, datatype, 0, comm_ptr->node_comm);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         goto fn_exit;
     }
@@ -683,14 +682,14 @@ int MPIR_Allreduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype da
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
             /* intracommunicator */
             mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
         else {
             /* intercommunicator */
             mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
 fn_exit:
     return mpi_errno;
