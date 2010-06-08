@@ -86,6 +86,29 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
    End Algorithm: MPI_Allreduce
 */
 
+#undef FUNCNAME
+#define FUNCNAME allreduce_intra_or_coll_fn
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int allreduce_intra_or_coll_fn(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                                             MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allreduce != NULL) {
+	mpi_errno = comm_ptr->coll_fns->Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+        
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 /* not declared static because a machine-specific function may call this one 
    in some cases */
@@ -128,6 +151,57 @@ int MPIR_Allreduce_intra (
 
     MPIU_THREADPRIV_GET;
     MPIR_Nest_incr();
+
+#if defined(USE_SMP_COLLECTIVES)
+    /* is the op commutative? We do SMP optimizations only if it is. */ 
+    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        is_commutative = 1;
+    } else {
+        MPID_Op_get_ptr(op, op_ptr);
+        is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
+    }
+
+    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
+        /* on each node, do a reduce to the local root */ 
+        if (comm_ptr->node_comm != NULL)
+        {
+            /* take care of the MPI_IN_PLACE case. For reduce, 
+               MPI_IN_PLACE is specified only on the root; 
+               for allreduce it is specified on all processes. */
+
+            if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
+                /* IN_PLACE and not root of reduce. Data supplied to this
+                   allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
+			
+                mpi_errno = MPIR_Reduce_or_coll_fn(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm);
+            }
+            else {
+                mpi_errno = MPIR_Reduce_or_coll_fn(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm);
+            }
+            if (mpi_errno) goto fn_fail;
+        }
+        else { 
+            /* only one process on the node. copy sendbuf to recvbuf */
+            if (sendbuf != MPI_IN_PLACE) {
+                mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+                if (mpi_errno) goto fn_fail;
+            }
+        }
+
+        /* now do an IN_PLACE allreduce among the local roots of all nodes */
+        if (comm_ptr->node_roots_comm != NULL) {
+            mpi_errno = allreduce_intra_or_coll_fn(sendbuf, recvbuf, count, datatype, op, comm_ptr->node_roots_comm);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+
+        /* now broadcast the result among local processes */
+        if (comm_ptr->node_comm != NULL) {
+            mpi_errno = MPIR_Bcast_or_coll_fn(recvbuf, count, datatype, 0, comm_ptr->node_comm);
+        }
+        goto fn_exit;
+    }
+#endif
+            
     
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
@@ -602,71 +676,13 @@ int MPIR_Allreduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype da
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allreduce != NULL)
     {
 	mpi_errno = comm_ptr->coll_fns->Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else
     {
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
             /* intracommunicator */
-#if defined(USE_SMP_COLLECTIVES)
-	    MPID_Op *op_ptr;
-	    int is_commutative; 
-
-	    /* is the op commutative? We do SMP optimizations only if it is. */ 
-	    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-		is_commutative = 1;
-            } else {
-		MPID_Op_get_ptr(op, op_ptr);
-		is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
-	    }
-
-            if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
-		/* on each node, do a reduce to the local root */ 
-                if (comm_ptr->node_comm != NULL)
-                {
-		    /* take care of the MPI_IN_PLACE case. For reduce, 
-		        MPI_IN_PLACE is specified only on the root; 
-                        for allreduce it is specified on all processes. */
-
-		    if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
-			/* IN_PLACE and not root of reduce. Data supplied to this
-			allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
-			
-			mpi_errno = MPIR_Reduce_or_coll_fn(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm);
-		    }
-		    else {
-			mpi_errno = MPIR_Reduce_or_coll_fn(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm);
-		    }
-		    if (mpi_errno) goto fn_fail;
-                }
-		else { 
-		    /* only one process on the node. copy sendbuf to recvbuf */
-		    if (sendbuf != MPI_IN_PLACE) {
-			mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-			if (mpi_errno) goto fn_fail;
-		    }
-		}
-
-                /* now do an IN_PLACE allreduce among the local roots of all nodes */
-                if (comm_ptr->node_roots_comm != NULL) {
-                    mpi_errno = MPIR_Allreduce_intra(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm);
-                    if (mpi_errno) goto fn_fail;
-                }
-
-		/* now broadcast the result among local processes */
-                if (comm_ptr->node_comm != NULL) {
-		    MPIU_THREADPRIV_GET;
-		    
-		    MPIR_Nest_incr();
-                    mpi_errno = MPIR_Bcast_or_coll_fn(recvbuf, count, datatype, 0, comm_ptr->node_comm);
-		    MPIR_Nest_decr();
-		}
-            }
-            else {
-                mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr);
-            }
-#else
             mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr);
-#endif
 	}
         else {
             /* intercommunicator */
