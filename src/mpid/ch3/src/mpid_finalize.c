@@ -85,10 +85,7 @@ int MPID_Finalize(void)
      * other (user) routine.
      */
 #ifdef MPID_NEEDS_ICOMM_WORLD
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Barrier(MPIR_ICOMM_WORLD); 
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_Barrier_impl(MPIR_Process.icomm_world);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);

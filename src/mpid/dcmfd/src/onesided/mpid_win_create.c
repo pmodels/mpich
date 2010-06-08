@@ -218,7 +218,7 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit,
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         /* try to avoid a race where one node sends us a lock request
          * before we're ready */
-        mpi_errno = NMPI_Barrier(comm_ptr->handle);
+        mpi_errno = MPIR_Barrier_impl(comm_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         *win_ptr = win;
 
@@ -244,7 +244,7 @@ fn_fail:
  * Release all references and free memory associated with window.
  *
  * \param[in,out] win_ptr	Window
- * \return MPI_SUCCESS or error returned from NMPI_Barrier.
+ * \return MPI_SUCCESS or error returned from MPIR_Barrier_impl.
  */
 int MPID_Win_free(MPID_Win **win_ptr)
 {
@@ -260,7 +260,7 @@ int MPID_Win_free(MPID_Win **win_ptr)
         MPID_assert(win->_dev.epoch_type == MPID_EPOTYPE_NONE ||
         		win->_dev.epoch_type == MPID_EPOTYPE_REFENCE);
 
-        mpi_errno = NMPI_Barrier(win->_dev.comm_ptr->handle);
+        mpi_errno = MPIR_Barrier_impl(win->_dev.comm_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         /*
          * previous while loop  and barrier will not exit until all waiters have

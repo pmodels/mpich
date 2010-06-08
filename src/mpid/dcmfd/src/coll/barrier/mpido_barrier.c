@@ -26,7 +26,7 @@ int MPIDO_Barrier(MPID_Comm * comm)
   if(MPIDO_INFO_ISSET(properties, MPIDO_USE_MPICH_BARRIER))
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_BARRIER;
-    return MPIR_Barrier(comm);
+    return MPIR_Barrier_intra(comm);
   }
   if (MPIDO_INFO_ISSET(properties, MPIDO_USE_GI_BARRIER))
   {
@@ -43,7 +43,7 @@ int MPIDO_Barrier(MPID_Comm * comm)
   if (rc != DCMF_SUCCESS)
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_BARRIER;
-    rc = MPIR_Barrier(comm);
+    rc = MPIR_Barrier_intra(comm);
   }
   return rc;
 }

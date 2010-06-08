@@ -71,7 +71,6 @@
 #define NMPI_Graph_map  MPI_Graph_map
 #define NMPI_Iprobe MPI_Iprobe
 #define NMPI_Probe MPI_Probe
-#define NMPI_Barrier MPI_Barrier
 #define NMPI_Type_get_true_extent MPI_Type_get_true_extent
 #define NMPI_Group_translate_ranks MPI_Group_translate_ranks
 #define NMPI_Type_create_indexed_block MPI_Type_create_indexed_block
@@ -157,7 +156,6 @@
 #define NMPI_Graph_map  PMPI_Graph_map
 #define NMPI_Iprobe PMPI_Iprobe
 #define NMPI_Probe PMPI_Probe
-#define NMPI_Barrier PMPI_Barrier
 #define NMPI_Type_get_true_extent PMPI_Type_get_true_extent
 #define NMPI_Group_translate_ranks PMPI_Group_translate_ranks
 #define NMPI_Type_create_indexed_block PMPI_Type_create_indexed_block

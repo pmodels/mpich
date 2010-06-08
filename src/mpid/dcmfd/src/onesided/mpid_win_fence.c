@@ -28,7 +28,7 @@
  * lock to be released (calling advance in the loop).
  * - Set epoch type to MPID_EPOTYPE_FENCE, epoch size to window
  * communicator size, and save MPI_MODE_* assertions.
- * - Call NMPI_Barrier on the window communicator to wait for all
+ * - Call MPIR_Barrier_impl on the window communicator to wait for all
  * nodes to reach this point.
  *
  * <B>One or more nodes invoke RMA operation(s)</B>
@@ -74,7 +74,7 @@
  * \param[in] assert	Synchronization hints
  * \param[in] win_ptr	Window
  * \return MPI_SUCCESS, MPI_ERR_RMA_SYNC,  or error returned from
- *	MPIR_Allreduce_impl or NMPI_Barrier.
+ *	MPIR_Allreduce_impl or MPIR_Barrier_impl.
  *
  * \ref fence_design
  */
@@ -151,7 +151,7 @@ int MPID_Win_fence(int assert, MPID_Win *win_ptr)
 		win_ptr->_dev.my_sync_done = 0;	// not used
 		win_ptr->_dev.my_sync_begin = 0;	// not used
 		/* wait for everyone else to reach this point */
-		mpi_errno = NMPI_Barrier(win_ptr->_dev.comm_ptr->handle);
+		mpi_errno = MPIR_Barrier_impl(win_ptr->_dev.comm_ptr);
 		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 		if (win_ptr->_dev.epoch_assert & MPI_MODE_NOSTORE) {
 			/* TBD: anything to optimize? */

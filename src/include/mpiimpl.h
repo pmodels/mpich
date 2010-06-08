@@ -3315,7 +3315,6 @@ int MPIR_Alltoallw_inter(void *sendbuf, int *sendcnts, int *sdispls,
                          MPI_Datatype *sendtypes, void *recvbuf, 
                          int *recvcnts, int *rdispls, MPI_Datatype *recvtypes, 
                          MPID_Comm *comm_ptr);
-int MPIR_Barrier_inter( MPID_Comm *comm_ptr);
 int MPIR_Bcast_inter(void *buffer, int count, MPI_Datatype datatype, 
 		     int root, MPID_Comm *comm_ptr);
 int MPIR_Bcast (void *buffer, int count, MPI_Datatype datatype, int
@@ -3362,7 +3361,10 @@ int MPIR_Scatterv (void *sendbuf, int *sendcnts, int *displs,
                    MPI_Datatype sendtype, void *recvbuf, int recvcnt,
                    MPI_Datatype recvtype, int root, MPID_Comm
                    *comm_ptr);
-int MPIR_Barrier( MPID_Comm *comm_ptr );
+int MPIR_Barrier_impl( MPID_Comm *comm_ptr);
+int MPIR_Barrier( MPID_Comm *comm_ptr);
+int MPIR_Barrier_intra( MPID_Comm *comm_ptr );
+int MPIR_Barrier_inter( MPID_Comm *comm_ptr);
 
 int MPIR_Setup_intercomm_localcomm( MPID_Comm * );
 

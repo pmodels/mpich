@@ -664,7 +664,7 @@ void MPIDI_Coll_Comm_create (MPID_Comm *comm)
   if (global)
     MPIDO_INFO_SET(comm_prop, MPIDO_GLOBAL_CONTEXT);
 
-  MPIR_Barrier(comm);
+  MPIR_Barrier_intra(comm);
 
   MPIX_Comm_rank2torus(comm -> handle,
 		       comm -> rank,
@@ -771,7 +771,7 @@ void MPIDI_Coll_Comm_create (MPID_Comm *comm)
     comm -> dcmf.rcvcounters = MPIU_Malloc(type_sz * comm->local_size);
   }
 
-  MPIR_Barrier(comm);
+  MPIR_Barrier_intra(comm);
 }
 
 
