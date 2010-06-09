@@ -3351,12 +3351,14 @@ int MPIR_Reduce_scatter_block_intra(void *sendbuf, void *recvbuf, int recvcount,
 int MPIR_Reduce_scatter_block_inter(void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm
                                     *comm_ptr);
+int MPIR_Reduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                     MPI_Op op, int root, MPID_Comm *comm_ptr );
+int MPIR_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                MPI_Op op, int root, MPID_Comm *comm_ptr );
 int MPIR_Reduce_intra(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                       MPI_Op op, int root, MPID_Comm *comm_ptr );
-int MPIR_Reduce_or_coll_fn(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, int root, MPID_Comm *comm_ptr );
 int MPIR_Reduce_inter (void *sendbuf, void *recvbuf, int count, MPI_Datatype
-                 datatype, MPI_Op op, int root, MPID_Comm *comm_ptr); 
+                       datatype, MPI_Op op, int root, MPID_Comm *comm_ptr); 
 int MPIR_Scan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
               MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Scatter_intra(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 

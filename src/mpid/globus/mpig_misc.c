@@ -1005,21 +1005,17 @@ void mpig_usage_finalize(void)
 	    total_nbytes = (int64_t *) MPIU_Malloc(mpig_process.my_pg_size * sizeof(int64_t));
 	    total_nbytesv = (int64_t *) MPIU_Malloc(mpig_process.my_pg_size * sizeof(int64_t));
 	}
-
-	MPIR_Nest_incr();
-	{
-	    rc = MPIR_Gather_impl(&mpig_process.nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytes, sizeof(int64_t), MPI_BYTE,
-                                  0, MPIR_Process.comm_world);
-            if (rc) goto err;
-
-	    rc = MPIR_Gather_impl(&mpig_process.vmpi_nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytesv, sizeof(int64_t), MPI_BYTE,
-                                  0, MPIR_Process.comm_world);
-            if (rc) goto err;
-
-	    NMPI_Reduce(mpig_process.function_count, total_function_count, MPIG_FUNC_CNT_NUMFUNCS, MPI_INT, MPI_SUM,
-		0, MPI_COMM_WORLD);
-	}
-	MPIR_Nest_decr();
+        
+        rc = MPIR_Gather_impl(&mpig_process.nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytes, sizeof(int64_t), MPI_BYTE,
+                              0, MPIR_Process.comm_world);
+        if (rc) goto err;
+        
+        rc = MPIR_Gather_impl(&mpig_process.vmpi_nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytesv, sizeof(int64_t), MPI_BYTE,
+                              0, MPIR_Process.comm_world);
+        if (rc) goto err;
+        rc = MPIR_Reduce_impl(mpig_process.function_count, total_function_count, MPIG_FUNC_CNT_NUMFUNCS, MPI_INT,
+                              MPI_SUM, 0, MPIR_Process.comm_world);
+        if (rc) goto err;
 
 	if(mpig_process.my_pg_rank == 0)
 	{

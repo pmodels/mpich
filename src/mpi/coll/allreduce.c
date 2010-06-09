@@ -172,10 +172,10 @@ int MPIR_Allreduce_intra (
                 /* IN_PLACE and not root of reduce. Data supplied to this
                    allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 			
-                mpi_errno = MPIR_Reduce_or_coll_fn(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm);
+                mpi_errno = MPIR_Reduce_impl(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             } else {
-                mpi_errno = MPIR_Reduce_or_coll_fn(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm);
+                mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
         } else {
@@ -212,8 +212,9 @@ int MPIR_Allreduce_intra (
     if (!is_homogeneous) {
         /* heterogeneous. To get the same result on all processes, we
            do a reduce to 0 and then broadcast. */
-        mpi_errno = NMPI_Reduce ( sendbuf, recvbuf, count, datatype,
-                                  op, 0, comm );
+        mpi_errno = MPIR_Reduce_impl ( sendbuf, recvbuf, count, datatype,
+                                       op, 0, comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	/* FIXME: mpi_errno is error CODE, not necessarily the error
 	   class MPI_ERR_OP.  In MPICH2, we can get the error class 
 	   with 
