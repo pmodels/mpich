@@ -997,6 +997,9 @@ sub ReplaceIfDifferent {
 	# with the new one
 	if (-s $oldfilename) {
 	    print STDERR "Replacing $oldfilename\n";
+	    # If debugging and there is a difference, show that difference
+	    if ($gDebug) { system "diff $newfilename $oldfilename"; }
+
 	    unlink $oldfilename;
 	}
 	else {
