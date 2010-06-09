@@ -165,11 +165,9 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	/* first initialize the completion counter. */
 	win_ptr->my_counter = comm_size;
             
-	MPIR_Nest_incr();
-	mpi_errno = NMPI_Reduce_scatter_block(MPI_IN_PLACE, rma_target_proc, 1,
-					MPI_INT, MPI_SUM, win_ptr->comm);
+	mpi_errno = MPIR_Reduce_scatter_block_impl(MPI_IN_PLACE, rma_target_proc, 1,
+                                                   MPI_INT, MPI_SUM, comm_ptr);
 	/* result is stored in rma_target_proc[0] */
-	MPIR_Nest_decr();
 	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 	/* Set the completion counter */

@@ -3345,6 +3345,12 @@ int MPIR_Reduce_scatter_intra(void *sendbuf, void *recvbuf, int *recvcnts,
 int MPIR_Reduce_scatter_inter(void *sendbuf, void *recvbuf, int *recvcnts, 
                               MPI_Datatype datatype, MPI_Op op, 
                               MPID_Comm *comm_ptr);
+int MPIR_Reduce_scatter_block_impl(void *sendbuf, void *recvbuf, int recvcount,
+                                   MPI_Datatype datatype, MPI_Op op, MPID_Comm
+                                   *comm_ptr );
+int MPIR_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount,
+                              MPI_Datatype datatype, MPI_Op op, MPID_Comm
+                              *comm_ptr );
 int MPIR_Reduce_scatter_block_intra(void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm
                                     *comm_ptr );

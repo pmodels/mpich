@@ -256,7 +256,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     }
 
     /* compute the number of peers I will recv from */
-    mpi_errno = NMPI_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_old);
+    mpi_errno = MPIR_Reduce_scatter_block_impl(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPIU_Assert(in_out_peers[0] <= comm_size && in_out_peers[0] >= 0);

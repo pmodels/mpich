@@ -123,6 +123,7 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
 {
     int mpi_errno=MPI_SUCCESS, total_pt_rma_puts_accs;
     int in_use;
+    MPID_Comm *comm_ptr;
     MPIU_THREADPRIV_DECL;
     
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
@@ -132,9 +133,11 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIU_THREADPRIV_GET;
     MPIR_Nest_incr();
 
-    mpi_errno = NMPI_Reduce_scatter_block((*win_ptr)->pt_rma_puts_accs, 
-				    &total_pt_rma_puts_accs, 1, 
-				    MPI_INT, MPI_SUM, (*win_ptr)->comm);
+    MPID_Comm_get_ptr( (*win_ptr)->comm, comm_ptr );
+
+    mpi_errno = MPIR_Reduce_scatter_block_impl((*win_ptr)->pt_rma_puts_accs, 
+                                               &total_pt_rma_puts_accs, 1, 
+                                               MPI_INT, MPI_SUM, comm_ptr);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     if (total_pt_rma_puts_accs != (*win_ptr)->my_pt_rma_puts_accs)
