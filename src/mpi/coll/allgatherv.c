@@ -899,7 +899,7 @@ int MPIR_Allgatherv_inter (
                       &newtype);
     NMPI_Type_commit(&newtype);
 
-    mpi_errno = MPIR_Bcast(recvbuf, 1, newtype, 0, newcomm_ptr);
+    mpi_errno = MPIR_Bcast_intra(recvbuf, 1, newtype, 0, newcomm_ptr);
 
     NMPI_Type_free(&newtype);
 

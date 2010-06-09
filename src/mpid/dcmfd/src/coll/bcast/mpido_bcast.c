@@ -33,7 +33,7 @@ MPIDO_Bcast(void *buffer,
     return MPI_SUCCESS;
 
   if (MPIDO_INFO_ISSET(properties, MPIDO_USE_MPICH_BCAST))
-    return MPIR_Bcast(buffer, count, datatype, root, comm);
+    return MPIR_Bcast_intra(buffer, count, datatype, root, comm);
 
   MPIDI_Datatype_get_info(count,
                           datatype,
@@ -272,7 +272,7 @@ MPIDO_Bcast(void *buffer,
     if (!func)
     {
       comm->dcmf.last_algorithm = MPIDO_USE_MPICH_BCAST;
-      return MPIR_Bcast(buffer, count, datatype, root, comm);
+      return MPIR_Bcast_intra(buffer, count, datatype, root, comm);
     }
     
     rc = (func) (data_buffer, data_size, root, comm);
@@ -329,7 +329,7 @@ MPIDO_Bcast(void *buffer,
 
     if (rc == STAR_FAILURE || !same_callsite)
     {
-      rc = MPIR_Bcast(buffer, count, datatype, root, comm);
+      rc = MPIR_Bcast_intra(buffer, count, datatype, root, comm);
     }
     
     /* unset the internal control flow */

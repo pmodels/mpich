@@ -430,7 +430,7 @@ static int MPIR_SMP_Scan(
        reduce it with recvbuf to get final result if nessesary. */
 
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Bcast_or_coll_fn(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm);
+        mpi_errno = MPIR_Bcast_impl(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -439,7 +439,7 @@ static int MPIR_SMP_Scan(
         int is_cxx_uop = 0;
 #endif
         if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPIR_Bcast_or_coll_fn(tempbuf, count, datatype, 0, comm_ptr->node_comm);
+            mpi_errno = MPIR_Bcast_impl(tempbuf, count, datatype, 0, comm_ptr->node_comm);
             if(mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 

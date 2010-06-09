@@ -249,7 +249,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	char * parent_port;
 
 	/* FIXME: To allow just the "root" process to 
-	   request the port and then use MPIR_Bcast to 
+	   request the port and then use MPIR_Bcast_intra to 
 	   distribute it to the rest of the processes,
 	   we need to perform the Bcast after MPI is
 	   otherwise initialized.  We could do this

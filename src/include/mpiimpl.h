@@ -3317,9 +3317,11 @@ int MPIR_Alltoallw_inter(void *sendbuf, int *sendcnts, int *sdispls,
                          MPID_Comm *comm_ptr);
 int MPIR_Bcast_inter(void *buffer, int count, MPI_Datatype datatype, 
 		     int root, MPID_Comm *comm_ptr);
+int MPIR_Bcast_intra (void *buffer, int count, MPI_Datatype datatype, int
+                      root, MPID_Comm *comm_ptr);
 int MPIR_Bcast (void *buffer, int count, MPI_Datatype datatype, int
                 root, MPID_Comm *comm_ptr);
-int MPIR_Bcast_or_coll_fn (void *buffer, int count, MPI_Datatype datatype, int
+int MPIR_Bcast_impl (void *buffer, int count, MPI_Datatype datatype, int
                 root, MPID_Comm *comm_ptr);
 int MPIR_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, MPID_Comm *comm_ptr );

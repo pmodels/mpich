@@ -246,8 +246,7 @@ int MPIR_Barrier_impl(MPID_Comm *comm_ptr)
                 if (comm_ptr->node_comm != NULL)
                 {
 		    int i=0;
-                    mpi_errno = MPIR_Bcast_or_coll_fn(&i, 1, MPI_BYTE, 0,
-						      comm_ptr->node_comm);
+                    mpi_errno = MPIR_Bcast_impl(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
             }

@@ -194,7 +194,7 @@ int MPIR_Allreduce_intra (
 
         /* now broadcast the result among local processes */
         if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPIR_Bcast_or_coll_fn(recvbuf, count, datatype, 0, comm_ptr->node_comm);
+            mpi_errno = MPIR_Bcast_impl(recvbuf, count, datatype, 0, comm_ptr->node_comm);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         goto fn_exit;
@@ -221,7 +221,7 @@ int MPIR_Allreduce_intra (
 	*/
         if (mpi_errno == MPI_ERR_OP || mpi_errno == MPI_SUCCESS) {
 	    /* Allow MPI_ERR_OP since we can continue from this error */
-            rc = NMPI_Bcast  ( recvbuf, count, datatype, 0, comm );
+            rc = MPIR_Bcast_impl( recvbuf, count, datatype, 0, comm_ptr );
             if (rc) mpi_errno = rc;
         }
     }
@@ -620,7 +620,7 @@ int MPIR_Allreduce_inter (
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, newcomm_ptr);
+    mpi_errno = MPIR_Bcast_impl(recvbuf, count, datatype, 0, newcomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
   fn_exit:
@@ -694,7 +694,6 @@ int MPIR_Allreduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype da
 fn_exit:
     return mpi_errno;
 fn_fail:
-
     goto fn_exit;
 }
 

@@ -415,7 +415,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 
     /* broadcast the received info to local processes */
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"broadcasting the received 3 ints");
-    mpi_errno = MPIR_Bcast(recv_ints, 3, MPI_INT, root, comm_ptr);
+    mpi_errno = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr);
     if (mpi_errno) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -469,7 +469,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 
     /* Broadcast out the remote rank translation array */
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Broadcasting remote translation");
-    mpi_errno = MPIR_Bcast(remote_translation, remote_comm_size * 2, MPI_INT,
+    mpi_errno = MPIR_Bcast_intra(remote_translation, remote_comm_size * 2, MPI_INT,
 			   root, comm_ptr);
     if (mpi_errno) {
 	MPIU_ERR_POP(mpi_errno);
@@ -689,7 +689,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 
 	/* Broadcast the size and data to the local communicator */
 	/*printf("accept:broadcasting 1 int\n");fflush(stdout);*/
-	mpi_errno = MPIR_Bcast(&j, 1, MPI_INT, root, comm_ptr);
+	mpi_errno = MPIR_Bcast_intra(&j, 1, MPI_INT, root, comm_ptr);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_POP(mpi_errno);
 	}
@@ -702,7 +702,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 	    }
 	}
 	/*printf("accept:broadcasting string of length %d\n", j);fflush(stdout);*/
-	mpi_errno = MPIR_Bcast(pg_str, j, MPI_CHAR, root, comm_ptr);
+	mpi_errno = MPIR_Bcast_intra(pg_str, j, MPI_CHAR, root, comm_ptr);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_POP(mpi_errno);
 	}
@@ -748,7 +748,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 {
-    int n_local_pgs=0, mpi_errno = 0;
+    int n_local_pgs=0, mpi_errno = MPI_SUCCESS;
     pg_translation *local_translation = 0;
     pg_node *pg_list, *pg_next, *pg_head = 0;
     int rank, i, peer_comm_size;
@@ -768,7 +768,9 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
     }
 
     /* Now, broadcast the number of local pgs */
-    NMPI_Bcast( &n_local_pgs, 1, MPI_INT, root, comm_p->handle );
+    mpi_errno = MPIR_Bcast_impl( &n_local_pgs, 1, MPI_INT, root, comm_p);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
 
     pg_list = pg_head;
     for (i=0; i<n_local_pgs; i++) {
@@ -787,11 +789,21 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 	    len     = pg_list->lenStr;
 	    pg_list = pg_list->next;
 	}
-	NMPI_Bcast( &len, 1, MPI_INT, root, comm_p->handle );
+	mpi_errno = MPIR_Bcast_impl( &len, 1, MPI_INT, root, comm_p);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	if (rank != root) {
 	    pg_str = (char *)MPIU_Malloc(len);
+            if (!pg_str) {
+                MPIU_CHKMEM_SETERR(mpi_errno, len, "pg_str");
+                goto fn_exit;
+            }
 	}
-	NMPI_Bcast( pg_str, len, MPI_CHAR, root, comm_p->handle );
+	mpi_errno = MPIR_Bcast_impl( pg_str, len, MPI_CHAR, root, comm_p);
+        if (mpi_errno) {
+            if (rank != root)
+                MPIU_Free( pg_str );
+            MPIU_ERR_POP(mpi_errno);
+        }
 	if (rank != root) {
 	    /* flag is true if the pg was created, false if it
 	       already existed. This step
@@ -969,7 +981,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 
     /* broadcast the received info to local processes */
     /*printf("accept:broadcasting 2 ints - %d and %d\n", recv_ints[0], recv_ints[1]);fflush(stdout);*/
-    mpi_errno = MPIR_Bcast(recv_ints, 3, MPI_INT, root, comm_ptr);
+    mpi_errno = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr);
     if (mpi_errno) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -1019,7 +1031,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 
     /* Broadcast out the remote rank translation array */
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Broadcast remote_translation");
-    mpi_errno = MPIR_Bcast(remote_translation, remote_comm_size * 2, MPI_INT, 
+    mpi_errno = MPIR_Bcast_intra(remote_translation, remote_comm_size * 2, MPI_INT, 
 			   root, comm_ptr);
 #ifdef MPICH_DBG_OUTPUT
     MPIU_DBG_PRINTF(("[%d]accept:Received remote_translation after broadcast:\n", rank));

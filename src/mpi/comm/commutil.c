@@ -523,7 +523,6 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 {
     int mpi_errno = MPI_SUCCESS;
     uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -758,7 +757,6 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
 		        context instead?.  Or can we use the tag 
 		        provided in the intercomm routine? (not on a dup, 
 			but in that case it can use the collective context) */
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID);
@@ -773,8 +771,6 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(mycontext_id != 0);
 
-    MPIU_THREADPRIV_GET;
-
     /* MPIC routine uses an internal context id.  The local leads (process 0)
        exchange data */
     remote_context_id = -1;
@@ -787,10 +783,8 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
 
     /* Make sure that all of the local processes now have this
        id */
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
-                            0, comm_ptr->local_comm->handle );
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
+                                 0, comm_ptr->local_comm );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* The recvcontext_id must be the one that was allocated out of the local

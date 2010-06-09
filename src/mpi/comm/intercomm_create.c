@@ -454,9 +454,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     MPIU_Assert(recvcontext_id != 0);
     MPIU_DBG_MSG_FMT(COMM,VERBOSE, (MPIU_DBG_FDEST,"Got contextid=%d", recvcontext_id));
 
-    /* Increment the nest count for everyone because all processes
-       will be communicating now */
-    MPIR_Nest_incr();
     /* Leaders can now swap context ids and then broadcast the value
        to the local group of processes */
     if (comm_ptr->rank == local_leader) {
@@ -474,9 +471,11 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 	comm_info[1] = final_context_id;
 	comm_info[2] = is_low_group;
 	MPIU_DBG_MSG(COMM,VERBOSE,"About to bcast on local_comm");
-	NMPI_Bcast( comm_info, 3, MPI_INT, local_leader, local_comm );
-	NMPI_Bcast( remote_gpids, 2*remote_size, MPI_INT, local_leader, 
-		    local_comm );
+	mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPIR_Bcast_impl( remote_gpids, 2*remote_size, MPI_INT, local_leader,
+                                     comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	MPIU_DBG_MSG_D(COMM,VERBOSE,"end of bcast on local_comm of size %d",
 		       comm_ptr->local_size );
     }
@@ -484,14 +483,16 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     {
 	/* we're the other processes */
 	MPIU_DBG_MSG(COMM,VERBOSE,"About to receive bcast on local_comm");
-	NMPI_Bcast( comm_info, 3, MPI_INT, local_leader, local_comm );
+	mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	remote_size = comm_info[0];
 	MPIU_CHKLMEM_MALLOC(remote_gpids,int*,2*remote_size*sizeof(int),
 			    mpi_errno,"remote_gpids");
 	MPIU_CHKLMEM_MALLOC(remote_lpids,int*,remote_size*sizeof(int),
 			    mpi_errno,"remote_lpids");
-	NMPI_Bcast( remote_gpids, 2*remote_size, MPI_INT, local_leader, 
-		    local_comm );
+	mpi_errno = MPIR_Bcast_impl( remote_gpids, 2*remote_size, MPI_INT, local_leader, 
+                                    comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	/* Extract the context and group sign informatin */
 	final_context_id = comm_info[1];
@@ -529,8 +530,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 
     /* At last, we now have the information that we need to build the 
        intercommunicator */
-    /* Decrement the nesting pointer because we're done making MPI calls */
-    MPIR_Nest_decr();
 
     /* All processes in the local_comm now build the communicator */
 

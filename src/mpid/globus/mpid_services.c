@@ -233,7 +233,7 @@ int MPID_Comm_accept(char * const port_name, MPID_Info * const info, const int r
 	    int mrc;
 	    
 	    remote_vct_len = 0;
-	    mrc = NMPI_Bcast(&remote_vct_len, 1, MPI_UNSIGNED, root, comm->handle);
+	    mrc = MPIR_Bcast_impl(&remote_vct_len, 1, MPI_UNSIGNED, root, comm);
 	    if (mrc)
 	    {
 		MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: broadcast of an error condition "
@@ -247,7 +247,7 @@ int MPID_Comm_accept(char * const port_name, MPID_Info * const info, const int r
 	}   /* --END ERROR HANDLING-- */
 
 	/* send remote VC string to the other processes in the local communicator */
-	mpi_errno = NMPI_Bcast(&remote_vct_len, 1, MPI_UNSIGNED, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(&remote_vct_len, 1, MPI_UNSIGNED, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: broadcast of remote VCT string length "
@@ -257,7 +257,7 @@ int MPID_Comm_accept(char * const port_name, MPID_Info * const info, const int r
 	    goto fn_fail;
 	}   /* --END ERROR HANDLING-- */
 
-	mpi_errno = NMPI_Bcast(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: broadcast of remote VCT string to "
@@ -289,7 +289,7 @@ int MPID_Comm_accept(char * const port_name, MPID_Info * const info, const int r
     else /* not the root */
     {
 	/* receive the remote VCT string length from the root of the local communicator */
-	mpi_errno = NMPI_Bcast(&remote_vct_len, 1, MPI_UNSIGNED, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(&remote_vct_len, 1, MPI_UNSIGNED, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: reception of remote VCT string length "
@@ -319,7 +319,7 @@ int MPID_Comm_accept(char * const port_name, MPID_Info * const info, const int r
 	}   /* --END ERROR HANDLING-- */
 	
 	/* receive the remote VCT string length from the root of the local communicator */
-	mpi_errno = NMPI_Bcast(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: reception of  remote VCT string from "
@@ -567,7 +567,7 @@ int MPID_Comm_connect(const char * const port_name, MPID_Info * const info, cons
 	    int mrc;
 	    
 	    remote_vct_len = 0;
-	    mrc = NMPI_Bcast(&remote_vct_len, 1, MPI_UNSIGNED, root, comm->handle);
+	    mrc = MPIR_Bcast_impl(&remote_vct_len, 1, MPI_UNSIGNED, root, comm);
 	    if (mrc)
 	    {
 		MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: broadcast of an error condition "
@@ -581,7 +581,7 @@ int MPID_Comm_connect(const char * const port_name, MPID_Info * const info, cons
 	}   /* --END ERROR HANDLING-- */
 
 	/* send remote VC string to the other processes in the local communicator */
-	mpi_errno = NMPI_Bcast(&remote_vct_len, 1, MPI_UNSIGNED, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(&remote_vct_len, 1, MPI_UNSIGNED, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: broadcast of remote VCT string length "
@@ -591,7 +591,7 @@ int MPID_Comm_connect(const char * const port_name, MPID_Info * const info, cons
 	    goto fn_fail;
 	}   /* --END ERROR HANDLING-- */
 
-	mpi_errno = NMPI_Bcast(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: broadcast of remote VCT string to "
@@ -623,7 +623,7 @@ int MPID_Comm_connect(const char * const port_name, MPID_Info * const info, cons
     else /* not the root */
     {
 	/* receive the remote VCT string length from the root of the local communicator */
-	mpi_errno = NMPI_Bcast(&remote_vct_len, 1, MPI_UNSIGNED, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(&remote_vct_len, 1, MPI_UNSIGNED, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: reception of remote VCT string length "
@@ -653,7 +653,7 @@ int MPID_Comm_connect(const char * const port_name, MPID_Info * const info, cons
 	}   /* --END ERROR HANDLING-- */
 	
 	/* receive the remote VCT string length from the root of the local communicator */
-	mpi_errno = NMPI_Bcast(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm->handle);
+	mpi_errno = MPIR_Bcast_impl(remote_vct_str, (int) remote_vct_len, MPI_BYTE, root, comm);
 	if (mpi_errno)
 	{   /* --BEGIN ERROR HANDLING-- */
 	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_ERROR | MPIG_DEBUG_LEVEL_DYNAMIC, "ERROR: reception of  remote VCT string from "

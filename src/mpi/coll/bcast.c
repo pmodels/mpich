@@ -961,11 +961,11 @@ fn_fail:
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast
+#define FUNCNAME MPIR_Bcast_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* not declared static because it is called in intercomm. allgatherv */
-int MPIR_Bcast ( 
+int MPIR_Bcast_intra ( 
         void *buffer, 
         int count, 
         MPI_Datatype datatype, 
@@ -1060,43 +1060,6 @@ fn_fail:
     goto fn_exit;
 }
 
-/* A simple utility function to that calls the comm_ptr->coll_fns->Bcast
-   override if it exists or else it calls MPIR_Bcast with the same arguments.
-   This function just makes the high-level broadcast logic easier to read while
-   still accomodating coll_fns-style overrides.  It also reduces future errors
-   by eliminating the duplication of Bcast arguments. 
-
-   This routine is used in other files as well (barrier.c, allreduce.c)
-
-   TODO This function should be deprecated in favor of a direct call to
-   MPIR_Bcast now that we handle SMP-awareness inside of MPIR_Bcast instead
-   of MPI_Bcast.
-*/
-#undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_or_coll_fn
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Bcast_or_coll_fn(void *buffer, 
-			  int count, 
-			  MPI_Datatype datatype, 
-			  int root, 
-			  MPID_Comm *comm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Bcast != NULL)
-    {
-        /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Bcast(buffer, count,
-                                                               datatype, root, comm_ptr);
-        /* --END USEREXTENSION-- */
-    }
-    else {
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr);
-    }
-
-    return mpi_errno;
-}
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_inter
@@ -1160,7 +1123,7 @@ int MPIR_Bcast_inter (
 
         /* now do the usual broadcast on this intracommunicator
            with rank 0 as root. */
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, newcomm_ptr);
+        mpi_errno = MPIR_Bcast_intra(buffer, count, datatype, 0, newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -1169,6 +1132,80 @@ fn_fail:
     return mpi_errno;
 }
 /* end:nested */
+
+/* MPIR_Bcast_impl should be called by any internal component that
+   would otherwise call MPI_Bcast.  This differs from MPIR_Bcast in
+   that this will call the coll_fns version if it exists and will use
+   the SMP-aware bcast algorithm. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bcast_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Bcast != NULL)
+    {
+	/* --BEGIN USEREXTENSION-- */
+	mpi_errno = comm_ptr->coll_fns->Bcast(buffer, count,
+                                              datatype, root, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* --END USEREXTENSION-- */
+    }
+    else
+    {
+        if (comm_ptr->comm_kind == MPID_INTRACOMM)
+	{
+            /* intracommunicator */
+            mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr );
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            
+	}
+        else
+	{
+            /* intercommunicator */
+            mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr );
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+/* MPIR_Bcast performs an broadcast using point-to-point messages.
+   This is intended to be used by device-specific implementations of
+   broadcast.  In all other cases MPIR_Bcast_impl should be used. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bcast
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+        /* intracommunicator */
+        mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
+    } else {
+        /* intercommunicator */
+        mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
@@ -1262,29 +1299,9 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Bcast != NULL)
-    {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Bcast(buffer, count,
-                                              datatype, root, comm_ptr);
-	/* --END USEREXTENSION-- */
-    }
-    else
-    {
-        if (comm_ptr->comm_kind == MPID_INTRACOMM)
-	{
-            /* intracommunicator */
-            mpi_errno = MPIR_Bcast( buffer, count, datatype, root, comm_ptr );
-	}
-        else
-	{
-            /* intercommunicator */
-            mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr );
-        }
-    }
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    
+    mpi_errno = MPIR_Bcast_impl( buffer, count, datatype, root, comm_ptr );
+    if (mpi_errno) goto fn_exit;
 
     /* ... end of body of routine ... */
     

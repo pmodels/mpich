@@ -196,10 +196,8 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
        value of local_high, which may have changed if both groups
        of processes had the same value for high
     */
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Bcast( &local_high, 1, MPI_INT, 0, 
-			    comm_ptr->local_comm->handle );
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_Bcast_impl( &local_high, 1, MPI_INT, 0, 
+                                 comm_ptr->local_comm );
     if (mpi_errno) goto fn_fail;
 
     mpi_errno = MPIR_Comm_create( &newcomm_ptr );

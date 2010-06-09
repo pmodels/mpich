@@ -24,7 +24,6 @@
 
 #ifdef USE_MPI_FOR_NMPI
 #define NMPI_Abort MPI_Abort
-#define NMPI_Bcast MPI_Bcast
 #define NMPI_Get_count MPI_Get_count
 #define NMPI_Pack MPI_Pack
 #define NMPI_Pack_size MPI_Pack_size
@@ -109,7 +108,6 @@
 #define NMPIX_Grequest_start MPIX_Grequest_start
 #else
 #define NMPI_Abort PMPI_Abort
-#define NMPI_Bcast PMPI_Bcast
 #define NMPI_Get_count PMPI_Get_count
 #define NMPI_Pack PMPI_Pack
 #define NMPI_Pack_size PMPI_Pack_size

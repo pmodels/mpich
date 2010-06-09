@@ -263,16 +263,12 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
 				       0, 0, comm, MPI_STATUS_IGNORE );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
-            MPIR_Nest_incr();
-	    mpi_errno = NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
-            MPIR_Nest_decr();
+	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
 	else {
 	    /* Broadcast to the other members of the local group */
-            MPIR_Nest_incr();
-	    mpi_errno = NMPI_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm );
-            MPIR_Nest_decr();
+	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
     }
