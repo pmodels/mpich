@@ -51,7 +51,7 @@ int MPIDO_Reduce(void * sendbuf,
       HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN || !success)
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_REDUCE;
-    return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
+    return MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype, op, root, comm);
   }
   op_type_support = MPIDI_ConvertMPItoDCMF(op, &dcmf_op, datatype, &dcmf_data);
 
@@ -174,7 +174,7 @@ int MPIDO_Reduce(void * sendbuf,
     }
     else
     {
-      rc = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
+      rc = MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype, op, root, comm);
       comm->dcmf.last_algorithm = MPIDO_USE_MPICH_REDUCE;
     }
   }
@@ -224,7 +224,7 @@ int MPIDO_Reduce(void * sendbuf,
 
     if (rc == STAR_FAILURE || !same_callsite)
     {
-      rc = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
+      rc = MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype, op, root, comm);
     }
     /* unset the internal control flow */
     STAR_info.internal_control_flow = 0;

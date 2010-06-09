@@ -59,9 +59,9 @@ MPIDO_Alltoallw(void *sendbuf,
       if(trcvlen) MPIU_Free(trcvlen);
 
       comm->dcmf.last_algorithm = MPIDO_USE_MPICH_ALLTOALLW;
-      return MPIR_Alltoallw(sendbuf, sendcounts, senddispls, sendtypes,
-                            recvbuf, recvcounts, recvdispls, recvtypes,
-                            comm);
+      return MPIR_Alltoallw_intra(sendbuf, sendcounts, senddispls, sendtypes,
+                                  recvbuf, recvcounts, recvdispls, recvtypes,
+                                  comm);
     }
   }
   

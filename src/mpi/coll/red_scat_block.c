@@ -276,12 +276,12 @@ fn_fail:
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block
+#define FUNCNAME MPIR_Reduce_scatter_block_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* begin:nested */
 /* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Reduce_scatter_block ( 
+int MPIR_Reduce_scatter_block_intra ( 
     void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
@@ -958,7 +958,7 @@ fn_fail:
 /* end:nested */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block
+#define FUNCNAME MPIR_Reduce_scatter_block_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* begin:nested */
@@ -1072,8 +1072,8 @@ int MPIR_Reduce_scatter_block_inter (
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Scatter(tmp_buf, recvcount, datatype, recvbuf,
-                              recvcount, datatype, 0, newcomm_ptr);
+    mpi_errno = MPIR_Scatter_intra(tmp_buf, recvcount, datatype, recvbuf,
+                                   recvcount, datatype, 0, newcomm_ptr);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno)
     {
@@ -1212,9 +1212,9 @@ int MPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount,
 	MPIR_Nest_incr();
         if (comm_ptr->comm_kind == MPID_INTRACOMM) 
             /* intracommunicator */
-            mpi_errno = MPIR_Reduce_scatter_block(sendbuf, recvbuf,
-                                            recvcount, datatype, 
-                                            op, comm_ptr);
+            mpi_errno = MPIR_Reduce_scatter_block_intra(sendbuf, recvbuf,
+                                                        recvcount, datatype, 
+                                                        op, comm_ptr);
         else {
             /* intercommunicator */
             mpi_errno = MPIR_Reduce_scatter_block_inter(sendbuf, recvbuf,

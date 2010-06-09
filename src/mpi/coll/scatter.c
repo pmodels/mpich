@@ -46,7 +46,7 @@
 
 /* begin:nested */
 /* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Scatter ( 
+int MPIR_Scatter_intra ( 
 	void *sendbuf, 
 	int sendcnt, 
 	MPI_Datatype sendtype, 
@@ -56,7 +56,7 @@ int MPIR_Scatter (
 	int root, 
 	MPID_Comm *comm_ptr )
 {
-    static const char FCNAME[] = "MPIR_Scatter";
+    static const char FCNAME[] = "MPIR_Scatter_intra";
     MPI_Status status;
     MPI_Aint   extent=0;
     int        rank, comm_size, is_homogeneous, sendtype_size;
@@ -547,9 +547,9 @@ int MPIR_Scatter_inter (
             newcomm_ptr = comm_ptr->local_comm;
             
             /* now do the usual scatter on this intracommunicator */
-            mpi_errno = MPIR_Scatter(tmp_buf, recvcnt, recvtype,
-                                     recvbuf, recvcnt, recvtype, 0,
-                                     newcomm_ptr); 
+            mpi_errno = MPIR_Scatter_intra(tmp_buf, recvcnt, recvtype,
+                                           recvbuf, recvcnt, recvtype, 0,
+                                           newcomm_ptr); 
             if (rank == 0) 
                 MPIU_Free(((char*)tmp_buf+true_lb));
         }
@@ -741,9 +741,9 @@ int MPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 	MPIR_Nest_incr();
         if (comm_ptr->comm_kind == MPID_INTRACOMM) 
             /* intracommunicator */
-            mpi_errno = MPIR_Scatter(sendbuf, sendcnt, sendtype,
-                                     recvbuf, recvcnt, recvtype, root,
-                                     comm_ptr); 
+            mpi_errno = MPIR_Scatter_intra(sendbuf, sendcnt, sendtype,
+                                           recvbuf, recvcnt, recvtype, root,
+                                           comm_ptr); 
         else {
             /* intercommunicator */ 
             mpi_errno = MPIR_Scatter_inter(sendbuf, sendcnt, sendtype,

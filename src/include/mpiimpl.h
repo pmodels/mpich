@@ -3281,9 +3281,9 @@ int MPIR_Allgather_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIR_Allgather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, int recvcount, MPI_Datatype recvtype, 
                          MPID_Comm *comm_ptr );
-int MPIR_Allgatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
-                    void *recvbuf, int *recvcounts, int *displs,   
-                    MPI_Datatype recvtype, MPID_Comm *comm_ptr );
+int MPIR_Allgatherv_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
+                          void *recvbuf, int *recvcounts, int *displs,   
+                          MPI_Datatype recvtype, MPID_Comm *comm_ptr );
 int MPIR_Allgatherv_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
                           void *recvbuf, int *recvcounts, int *displs,   
                           MPI_Datatype recvtype, MPID_Comm *comm_ptr );
@@ -3295,22 +3295,22 @@ int MPIR_Allreduce_intra(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Allreduce_inter(void *sendbuf, void *recvbuf, int count, 
                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
-int MPIR_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
-                  void *recvbuf, int recvcount, MPI_Datatype recvtype, 
-                  MPID_Comm *comm_ptr);
+int MPIR_Alltoall_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
+                        void *recvbuf, int recvcount, MPI_Datatype recvtype, 
+                        MPID_Comm *comm_ptr);
 int MPIR_Alltoall_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
                         void *recvbuf, int recvcount, MPI_Datatype recvtype, 
                         MPID_Comm *comm_ptr);
-int MPIR_Alltoallv(void *sendbuf, int *sendcnts, int *sdispls, 
-                   MPI_Datatype sendtype, void *recvbuf, int *recvcnts, 
-                   int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr);
+int MPIR_Alltoallv_intra(void *sendbuf, int *sendcnts, int *sdispls, 
+                         MPI_Datatype sendtype, void *recvbuf, int *recvcnts, 
+                         int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr);
 int MPIR_Alltoallv_inter(void *sendbuf, int *sendcnts, int *sdispls, 
                          MPI_Datatype sendtype, void *recvbuf, int *recvcnts, 
                          int *rdispls, MPI_Datatype recvtype, 
                          MPID_Comm *comm_ptr);
-int MPIR_Alltoallw(void *sendbuf, int *sendcnts, int *sdispls, 
-                   MPI_Datatype *sendtypes, void *recvbuf, int *recvcnts, 
-                   int *rdispls, MPI_Datatype *recvtypes, MPID_Comm *comm_ptr);
+int MPIR_Alltoallw_intra(void *sendbuf, int *sendcnts, int *sdispls, 
+                         MPI_Datatype *sendtypes, void *recvbuf, int *recvcnts, 
+                         int *rdispls, MPI_Datatype *recvtypes, MPID_Comm *comm_ptr);
 int MPIR_Alltoallw_inter(void *sendbuf, int *sendcnts, int *sdispls, 
                          MPI_Datatype *sendtypes, void *recvbuf, 
                          int *recvcnts, int *rdispls, MPI_Datatype *recvtypes, 
@@ -3332,28 +3332,28 @@ int MPIR_Gather_inter (void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 int MPIR_Gatherv (void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
                   void *recvbuf, int *recvcnts, int *displs,
                   MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr); 
-int MPIR_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts, 
-                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
+int MPIR_Reduce_scatter_intra(void *sendbuf, void *recvbuf, int *recvcnts, 
+                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Reduce_scatter_inter(void *sendbuf, void *recvbuf, int *recvcnts, 
                               MPI_Datatype datatype, MPI_Op op, 
                               MPID_Comm *comm_ptr);
-int MPIR_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount,
-                              MPI_Datatype datatype, MPI_Op op, MPID_Comm
-                              *comm_ptr );
+int MPIR_Reduce_scatter_block_intra(void *sendbuf, void *recvbuf, int recvcount,
+                                    MPI_Datatype datatype, MPI_Op op, MPID_Comm
+                                    *comm_ptr );
 int MPIR_Reduce_scatter_block_inter(void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm
                                     *comm_ptr);
-int MPIR_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, int root, MPID_Comm *comm_ptr );
+int MPIR_Reduce_intra(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                      MPI_Op op, int root, MPID_Comm *comm_ptr );
 int MPIR_Reduce_or_coll_fn(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, int root, MPID_Comm *comm_ptr );
 int MPIR_Reduce_inter (void *sendbuf, void *recvbuf, int count, MPI_Datatype
                  datatype, MPI_Op op, int root, MPID_Comm *comm_ptr); 
 int MPIR_Scan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
               MPI_Op op, MPID_Comm *comm_ptr);
-int MPIR_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
-                 void *recvbuf, int recvcnt, MPI_Datatype recvtype, 
-                 int root, MPID_Comm *comm_ptr );
+int MPIR_Scatter_intra(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
+                       void *recvbuf, int recvcnt, MPI_Datatype recvtype, 
+                       int root, MPID_Comm *comm_ptr );
 int MPIR_Scatter_inter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype, 
                        int root, MPID_Comm *comm_ptr );

@@ -51,7 +51,7 @@
  
 /* begin:nested */
 /* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Alltoallv ( 
+int MPIR_Alltoallv_intra ( 
 	void *sendbuf, 
 	int *sendcnts, 
 	int *sdispls, 
@@ -62,7 +62,7 @@ int MPIR_Alltoallv (
 	MPI_Datatype recvtype, 
 	MPID_Comm *comm_ptr )
 {
-    static const char FCNAME[] = "MPIR_Alltoallv";
+    static const char FCNAME[] = "MPIR_Alltoallv_intra";
     int        comm_size, i, j;
     MPI_Aint   send_extent, recv_extent;
     int        mpi_errno = MPI_SUCCESS;
@@ -430,9 +430,9 @@ int MPI_Alltoallv(void *sendbuf, int *sendcnts, int *sdispls,
 	MPIR_Nest_incr();
         if (comm_ptr->comm_kind == MPID_INTRACOMM) 
             /* intracommunicator */
-            mpi_errno = MPIR_Alltoallv(sendbuf, sendcnts, sdispls,
-                                       sendtype, recvbuf, recvcnts,
-                                       rdispls, recvtype, comm_ptr);
+            mpi_errno = MPIR_Alltoallv_intra(sendbuf, sendcnts, sdispls,
+                                             sendtype, recvbuf, recvcnts,
+                                             rdispls, recvtype, comm_ptr);
         else {
             /* intercommunicator */
             mpi_errno = MPIR_Alltoallv_inter(sendbuf, sendcnts, sdispls,

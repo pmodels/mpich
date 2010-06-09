@@ -46,9 +46,9 @@ MPIDO_Alltoallv(void *sendbuf,
       tsndlen != trcvlen)
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_ALLTOALLV;
-    return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
-			  recvbuf, recvcounts, recvdispls, recvtype,
-			  comm);
+    return MPIR_Alltoallv_intra(sendbuf, sendcounts, senddispls, sendtype,
+                                recvbuf, recvcounts, recvdispls, recvtype,
+                                comm);
   }
   if (!MPIDO_AllocateAlltoallBuffers(comm))
     return MPIR_Err_create_code(MPI_SUCCESS,

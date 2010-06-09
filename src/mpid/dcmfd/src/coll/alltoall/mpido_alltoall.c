@@ -47,9 +47,9 @@ MPIDO_Alltoall(void *sendbuf,
       MPIDO_INFO_ISSET(properties, MPIDO_USE_MPICH_ALLTOALL))
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_ALLTOALL;
-    return MPIR_Alltoall(sendbuf, sendcount, sendtype,
-			 recvbuf, recvcount, recvtype,
-			 comm);
+    return MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+                               recvbuf, recvcount, recvtype,
+                               comm);
   }
   if (!MPIDO_AllocateAlltoallBuffers(comm))
     return MPIR_Err_create_code(MPI_SUCCESS,
@@ -117,9 +117,9 @@ MPIDO_Alltoall(void *sendbuf,
     STAR_info.internal_control_flow = 0;
       
     if (rc == STAR_FAILURE)
-      rc = MPIR_Alltoall(sendbuf, sendcount, sendtype,
-                         recvbuf, recvcount, recvtype,
-                         comm);
+      rc = MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+                               recvbuf, recvcount, recvtype,
+                               comm);
     MPIU_Free(tb_ptr);
   }
 

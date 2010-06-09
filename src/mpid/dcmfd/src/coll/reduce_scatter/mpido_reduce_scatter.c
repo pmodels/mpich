@@ -38,12 +38,12 @@ int MPIDO_Reduce_scatter(void *sendbuf,
      !MPIDI_IsTreeOp(op, datatype))
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_REDUCESCATTER;
-    return MPIR_Reduce_scatter(sendbuf, 
-			       recvbuf, 
-			       recvcounts, 
-			       datatype, 
-			       op, 
-			       comm);
+    return MPIR_Reduce_scatter_intra(sendbuf, 
+                                     recvbuf, 
+                                     recvcounts, 
+                                     datatype, 
+                                     op, 
+                                     comm);
   }
 
    

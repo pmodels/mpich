@@ -63,7 +63,7 @@
 /* begin:nested */
 /* not declared static because a machine-specific function may call this one 
    in some cases */
-int MPIR_Allgatherv ( 
+int MPIR_Allgatherv_intra ( 
     void *sendbuf, 
     int sendcount,   
     MPI_Datatype sendtype, 
@@ -73,7 +73,7 @@ int MPIR_Allgatherv (
     MPI_Datatype recvtype, 
     MPID_Comm *comm_ptr )
 {
-    static const char FCNAME[] = "MPIR_Allgatherv";
+    static const char FCNAME[] = "MPIR_Allgatherv_intra";
     MPI_Comm comm;
     int        comm_size, rank, j, i, left, right;
     int        mpi_errno = MPI_SUCCESS;
@@ -1058,10 +1058,10 @@ int MPI_Allgatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 	MPIR_Nest_incr();
         if (comm_ptr->comm_kind == MPID_INTRACOMM) 
             /* intracommunicator */
-            mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, 
-                                        sendtype, recvbuf,
-                                        recvcounts, displs,
-                                        recvtype, comm_ptr); 
+            mpi_errno = MPIR_Allgatherv_intra(sendbuf, sendcount, 
+                                              sendtype, recvbuf,
+                                              recvcounts, displs,
+                                              recvtype, comm_ptr); 
         else {
             /* intracommunicator */
             mpi_errno = MPIR_Allgatherv_inter(sendbuf, sendcount, 

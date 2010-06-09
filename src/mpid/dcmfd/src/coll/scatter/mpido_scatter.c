@@ -71,9 +71,9 @@ int MPIDO_Scatter(void *sendbuf,
       (!MPIDO_INFO_ISSET(properties, MPIDO_USE_TREE_BCAST) && nbytes <= 64))
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_SCATTER;
-    return MPIR_Scatter(sendbuf, sendcount, sendtype,
-                        recvbuf, recvcount, recvtype,
-                        root, comm);
+    return MPIR_Scatter_intra(sendbuf, sendcount, sendtype,
+                              recvbuf, recvcount, recvtype,
+                              root, comm);
   }
   /* set the internal control flow to disable internal star tuning */
   STAR_info.internal_control_flow = 1;
@@ -84,9 +84,9 @@ int MPIDO_Scatter(void *sendbuf,
   STAR_info.internal_control_flow = 0;
 
   if (!success)
-    return MPIR_Scatter(sendbuf, sendcount, sendtype,
-                        recvbuf, recvcount, recvtype,
-                        root, comm);
+    return MPIR_Scatter_intra(sendbuf, sendcount, sendtype,
+                              recvbuf, recvcount, recvtype,
+                              root, comm);
 
   MPIDI_VerifyBuffer(sendbuf, sbuf, true_lb);
   MPIDI_VerifyBuffer(recvbuf, rbuf, true_lb);
@@ -148,9 +148,9 @@ int MPIDO_Scatter(void *sendbuf,
     }
       
     if (rc == STAR_FAILURE || !same_callsite)
-      rc = MPIR_Scatter(sendbuf, sendcount, sendtype,
-                        recvbuf, recvcount, recvtype,
-                        root, comm);
+      rc = MPIR_Scatter_intra(sendbuf, sendcount, sendtype,
+                              recvbuf, recvcount, recvtype,
+                              root, comm);
 
     /* unset the internal control flow */
     STAR_info.internal_control_flow = 0;

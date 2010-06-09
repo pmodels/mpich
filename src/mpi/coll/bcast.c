@@ -207,8 +207,8 @@ fn_fail:
 }
 
 /* FIXME it would be nice if we could refactor things to minimize
-   duplication between this and MPIR_Scatter and friends.  We can't use
-   MPIR_Scatter as is without inducing an extra copy in the noncontig case. */
+   duplication between this and MPIR_Scatter_intra and friends.  We can't use
+   MPIR_Scatter_intra as is without inducing an extra copy in the noncontig case. */
 /* There are additional arguments included here that are unused because we
    always assume that the noncontig case has been packed into a contig case by
    the caller for now.  Once we start handling noncontig data at the upper level
