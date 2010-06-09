@@ -1008,11 +1008,13 @@ void mpig_usage_finalize(void)
 
 	MPIR_Nest_incr();
 	{
-	    NMPI_Gather(&mpig_process.nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytes, sizeof(int64_t), MPI_BYTE,
-		0, MPI_COMM_WORLD);
+	    rc = MPIR_Gather_impl(&mpig_process.nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytes, sizeof(int64_t), MPI_BYTE,
+                                  0, MPIR_Process.comm_world);
+            if (rc) goto err;
 
-	    NMPI_Gather(&mpig_process.vmpi_nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytesv, sizeof(int64_t), MPI_BYTE,
-		0, MPI_COMM_WORLD);
+	    rc = MPIR_Gather_impl(&mpig_process.vmpi_nbytes_sent, sizeof(int64_t), MPI_BYTE, total_nbytesv, sizeof(int64_t), MPI_BYTE,
+                                  0, MPIR_Process.comm_world);
+            if (rc) goto err;
 
 	    NMPI_Reduce(mpig_process.function_count, total_function_count, MPIG_FUNC_CNT_NUMFUNCS, MPI_INT, MPI_SUM,
 		0, MPI_COMM_WORLD);

@@ -60,9 +60,9 @@ int MPIDO_Gather(void *sendbuf,
       mpid_hw.tSize > 1)
   {
     comm->dcmf.last_algorithm = MPIDO_USE_MPICH_GATHER;
-    return MPIR_Gather(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcount, recvtype,
-                       root, comm);
+    return MPIR_Gather_intra(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcount, recvtype,
+                             root, comm);
   }
 
   /* set the internal control flow to disable internal star tuning */
@@ -75,9 +75,9 @@ int MPIDO_Gather(void *sendbuf,
   MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 				   true_lb);
   if (!success)
-    return MPIR_Gather(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcount, recvtype,
-                       root, comm);
+    return MPIR_Gather_intra(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcount, recvtype,
+                             root, comm);
 
   MPIDI_VerifyBuffer(sendbuf, sbuf, true_lb);
   MPIDI_VerifyBuffer(recvbuf, rbuf, true_lb);
@@ -139,9 +139,9 @@ int MPIDO_Gather(void *sendbuf,
     }
 
     if (rc == STAR_FAILURE || !same_callsite)
-      rc = MPIR_Gather(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcount, recvtype,
-                       root, comm);
+      rc = MPIR_Gather_intra(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcount, recvtype,
+                             root, comm);
 
     /* unset the internal control flow */
     STAR_info.internal_control_flow = 0;

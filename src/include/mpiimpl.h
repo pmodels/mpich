@@ -3325,9 +3325,15 @@ int MPIR_Bcast_impl (void *buffer, int count, MPI_Datatype datatype, int
                 root, MPID_Comm *comm_ptr);
 int MPIR_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, MPID_Comm *comm_ptr );
+int MPIR_Gather_impl (void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                      void *recvbuf, int recvcnt, MPI_Datatype recvtype,
+                      int root, MPID_Comm *comm_ptr);
 int MPIR_Gather (void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                  void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                  int root, MPID_Comm *comm_ptr);
+int MPIR_Gather_intra (void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                       void *recvbuf, int recvcnt, MPI_Datatype recvtype,
+                       int root, MPID_Comm *comm_ptr);
 int MPIR_Gather_inter (void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype, 
                        int root, MPID_Comm *comm_ptr );

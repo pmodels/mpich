@@ -628,8 +628,8 @@ int MPIR_Allgather_inter (
     newcomm_ptr = comm_ptr->local_comm;
 
     if (sendcount != 0) {
-        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount,
-                                sendtype, 0, newcomm_ptr);
+        mpi_errno = MPIR_Gather_intra(sendbuf, sendcount, sendtype, tmp_buf, sendcount,
+                                      sendtype, 0, newcomm_ptr);
 	if (mpi_errno) { 
 	    MPIU_ERR_POP(mpi_errno);
 	}
@@ -727,7 +727,7 @@ fn_fail:
 /* MPIR_Allgather_impl should be called by any internal component that
    would otherwise call MPI_Allgather.  This differs from
    MPIR_Allgather in that this will call the coll_fns version if it
-   exists.  */
+   exists.  This function replaces NMPI_Allgather. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgather_impl
 #undef FCNAME

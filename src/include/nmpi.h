@@ -95,7 +95,6 @@
 #define NMPI_Test_cancelled MPI_Test_cancelled
 #define NMPI_Ibsend MPI_Ibsend
 #define NMPI_Buffer_detach MPI_Buffer_detach
-#define NMPI_Gather MPI_Gather
 #define NMPI_Type_get_envelope MPI_Type_get_envelope
 #define NMPI_Type_contiguous MPI_Type_contiguous
 #define NMPI_Type_vector MPI_Type_vector
@@ -180,7 +179,6 @@
 #define NMPI_Test_cancelled PMPI_Test_cancelled
 #define NMPI_Ibsend PMPI_Ibsend
 #define NMPI_Buffer_detach PMPI_Buffer_detach
-#define NMPI_Gather PMPI_Gather
 #define NMPI_Type_get_envelope PMPI_Type_get_envelope
 #define NMPI_Type_contiguous PMPI_Type_contiguous
 #define NMPI_Type_vector PMPI_Type_vector
