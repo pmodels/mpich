@@ -13,6 +13,10 @@ if hydra_rmk_pbs
 include tools/rmk/pbs/Makefile.mk
 endif
 
+if hydra_rmk_sge
+include tools/rmk/sge/Makefile.mk
+endif
+
 if hydra_rmk_lsf
 include tools/rmk/lsf/Makefile.mk
 endif
