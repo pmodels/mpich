@@ -172,13 +172,13 @@ do {                                               \
 #if !defined(MPID_THREAD_DEBUG)
 #define MPID_Thread_tls_set(tls_, value_)	\
 do {                                               \
-    MPIU_Thread_tls_set((tls_), (void *)(value_), NULL);	\
+    MPIU_Thread_tls_set((tls_), (value_), NULL);	\
 } while (0)
 #else
 #define MPID_Thread_tls_set(tls_, value_)		\
 do {                                                       \
     int err_;						\
-    MPIU_Thread_tls_set((tls_), (void *)(value_), &err_);	\
+    MPIU_Thread_tls_set((tls_), (value_), &err_);	\
     MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                \
                         ("tls_set failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
@@ -187,14 +187,14 @@ do {                                                       \
 #if !defined(MPID_THREAD_DEBUG)
 #define MPID_Thread_tls_get(tls_, value_)	\
 do {                                               \
-    MPIU_Thread_tls_get((tls_), (void **)(value_), NULL);	\
+    MPIU_Thread_tls_get((tls_), (value_), NULL);	\
 } while (0)
 #else
 #define MPID_Thread_tls_get(tls_, value_)		\
 do {                                                       \
     int err_;						\
 							\
-    MPIU_Thread_tls_get((tls_), (void **)(value_), &err_);	\
+    MPIU_Thread_tls_get((tls_), (value_), &err_);	\
     /* can't strerror here, possible endless recursion in strerror */ \
     MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,("tls_get failed, err_=%d",err_)); \
 } while (0)
