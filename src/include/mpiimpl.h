@@ -3365,6 +3365,8 @@ int MPIR_Reduce_intra(void *sendbuf, void *recvbuf, int count, MPI_Datatype data
                       MPI_Op op, int root, MPID_Comm *comm_ptr );
 int MPIR_Reduce_inter (void *sendbuf, void *recvbuf, int count, MPI_Datatype
                        datatype, MPI_Op op, int root, MPID_Comm *comm_ptr); 
+int MPIR_Scan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
+                   MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Scan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
               MPI_Op op, MPID_Comm *comm_ptr);
 int MPIR_Scatter_intra(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
