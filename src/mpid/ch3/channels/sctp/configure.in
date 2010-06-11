@@ -87,9 +87,9 @@ fi,)
 AC_CHECK_HEADER([netinet/sctp.h], , [
     AC_MSG_ERROR(['sctp.h not found.  Did you specify --with-sctp= or --with-sctp-include=?'])
     ])
-AC_CHECK_LIB(sctp, sctp_recvmsg, , [
+AC_CHECK_FUNCS(sctp_recvmsg, , AC_CHECK_LIB(sctp, sctp_recvmsg, , [
     AC_MSG_ERROR(['sctp library not found.  Did you specify --with-sctp= or --with-sctp-lib=?'])
-    ])
+    ]))
 
 AC_SUBST(device_name)
 AC_SUBST(channel_name)
