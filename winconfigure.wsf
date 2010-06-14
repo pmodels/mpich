@@ -2239,6 +2239,8 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("#define OPA_HAVE_SYS_TYPES_H 1")
             Case "HAVE_UNISTD_H"
                 fout.WriteLine("/* #undef HAVE_UNISTD_H */")
+            Case "HAVE_STDDEF_H"
+                fout.WriteLine("#define HAVE_STDDEF_H 1")
             Case "LIMIT_THREADS"
                 fout.WriteLine("/* #undef LIMIT_THREADS */")
             ' Just using the default value in the unix build for max nthreads
@@ -2281,6 +2283,8 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("/* #undef const */")
             Case "USE_LOCK_BASED_PRIMITIVES"
                 fout.WriteLine("/* #undef USE_LOCK_BASED_PRIMITIVES */")
+            Case "EXPLICIT_EMULATION"
+                fout.WriteLine("/* #undef EXPLICIT_EMULATION */")
             Case Else
                 'MsgBox("Unhandled definition <" & define & ">")
                 If appendUniqueString(unhandled_definitions, macroname) Then
@@ -3668,6 +3672,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef HAVE_VALGRIND_MEMCHECK_H */")
 				Case "HAVE_VALGRIND_H"
 					fout.WriteLine("/* #undef HAVE_VALGRIND_H */")
+				Case "HAVE_BROKEN_VALGRIND"
+					fout.WriteLine("/* #undef HAVE_BROKEN_VALGRIND */")
                                 Case "HAVE_VALGRIND_VALGRIND_H"
                                         fout.WriteLine("/* #undef HAVE_VALGRIND_VALGRIND_H */")
 				Case "USE_SMP_COLLECTIVES"
