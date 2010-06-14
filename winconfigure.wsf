@@ -256,6 +256,7 @@ MPI_AINT32_FMT_HEX_SPEC  = "%x"
 BSEND_OVERHEAD32         = "59"
 MPI_FINT               = "int"
 'MPI_OFFSET             = "long long"
+
 MPI_OFFSET             = "__int64"
 'MPI_OFFSET_TYPEDEF     = "typedef __int64 MPI_Offset;"
 'MPI_OFFSET_TYPEDEF     = "typedef long long MPI_Offset;"
@@ -6169,6 +6170,32 @@ Function IsInBuildExclusionList(name)
     End If
 End Function
 
+compile_flags=""
+Sub SetCompileFlags(flags)
+    If compile_flags <> "" Then
+        printMsg "ERROR", "Setting compile flags before resetting the prev saved state is not supported"
+    Else
+        compile_flags = flags
+    End If
+End Sub
+Function IsSetCompileFlags()
+    If compile_flags <> "" Then
+        IsSetCompileFlags = True
+    Else
+        IsSetCompileFlags = False
+    End If
+End Function
+Function GetCompileFlags()
+    GetCompileFlags = compile_flags
+End Function
+
+Sub ResetCompileFlags()
+    If compile_flags = "" Then
+        printMsg "ERROR", "Dup reset of compile flags"
+    End If
+    compile_flags = ""
+End Sub
+
 Sub FindSimpleMakeFiles(folder, trimpath)
 	For Each sub_folder in folder.SubFolders
                 If Not IsInBuildExclusionList(sub_folder) Then
@@ -6208,7 +6235,14 @@ Sub FindSimpleMakeFiles(folder, trimpath)
 			fin.Close
 			If creating_rules And files_found Then
 				mfile.WriteLine("{..\" & Right(file.ParentFolder, Len(file.ParentFolder) - trimpath) & "}.c{$(" & outdir & ")}.obj:")
-				mfile.Write("    $(cc) $(cflags) ")
+				mfile.Write("    $(cc) ")
+                                If IsSetCompileFlags() Then
+                                    ' Get the compiler flags and use it
+                                    mfile.Write(GetCompileFlags() & " ")
+                                Else
+                                    ' Use default cflags
+                                    mfile.Write(" $(cflags) ")
+                                End If
 				If extra_flags <> "" Then
 					mfile.Write(extra_flags & " ")
 				End If
@@ -6339,7 +6373,7 @@ Function GenBuild()
 	mfile.WriteLine("!ELSEIF ""$(APPVER)"" == ""5.02""")
 	mfile.WriteLine("NMAKE_WINVER = 0x0502")
 	mfile.WriteLine("!ENDIF")
-	mfile.WriteLine("common_cflags = $(common_cflags) -Oi -DMPI_EXPORTS -D_WINNT -D_WIN32_WINNT=$(NMAKE_WINVER)")
+	mfile.WriteLine("common_cflags = $(common_cflags) -Oi -D_WINNT -D_WIN32_WINNT=$(NMAKE_WINVER)")
 	mfile.WriteLine
         mfile.WriteLine("# Set USE_MTDLL_RUNLIB env variable to 1 if you need to use")
         mfile.WriteLine("# Multithreaded dynamic link runtime library to build MPICH2")
@@ -6443,28 +6477,25 @@ Function GenBuild()
 	mfile.WriteLine("common_cflags = $(common_cflags) /I..\src\include\win64 /I..\src\binding\f90\win64 /I..\src\openpa\src\win64")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
-	mfile.WriteLine("cxxflags = $(common_cflags)")
-	mfile.WriteLine("cflags = $(cflags) $(common_cflags) /DMPICH_SKIP_MPICXX")
-	mfile.WriteLine("fcflags = \")
+	mfile.WriteLine("cxxflags = $(common_cflags) /DMPI_EXPORTS")
+	mfile.WriteLine("cflags = $(cflags) $(common_cflags) /DMPI_EXPORTS /DMPICH_SKIP_MPICXX")
+	mfile.WriteLine("fcflags = $(common_cflags) /DMPICH_SKIP_MPICXX \")
 	mfile.WriteLine(" /DUSE_FORT_CDECL \")
 	mfile.WriteLine(" /DUSE_MSC_DLLSPEC \")
 	mfile.WriteLine(" /DFORTRAN_EXPORTS \")
-	mfile.WriteLine(" /UMPI_EXPORTS \")
 	mfile.WriteLine(" /DF77_NAME_UPPER \")
 	mfile.WriteLine(" /DHAVE_C_API")
-	mfile.WriteLine("gfcflags = \")
+	mfile.WriteLine("gfcflags = $(common_cflags) /DMPICH_SKIP_MPICXX \")
 	mfile.WriteLine(" /DUSE_FORT_CDECL \")
 	mfile.WriteLine(" /DUSE_MSC_DLLSPEC \")
 	mfile.WriteLine(" /DFORTRAN_EXPORTS \")
-	mfile.WriteLine(" /UMPI_EXPORTS \")
 	mfile.WriteLine(" /DFORTRANDOUBLEUNDERSCORE \")
 	mfile.WriteLine(" /DF77_NAME_LOWER_2USCORE \")
 	mfile.WriteLine(" /DHAVE_C_API")
-	mfile.WriteLine("sfcflags = \")
+	mfile.WriteLine("sfcflags = $(common_cflags) /DMPICH_SKIP_MPICXX \")
 	mfile.WriteLine(" /DUSE_FORT_STDCALL \")
 	mfile.WriteLine(" /DUSE_MSC_DLLSPEC \")
 	mfile.WriteLine(" /DFORTRAN_EXPORTS \")
-	mfile.WriteLine(" /UMPI_EXPORTS \")
 	mfile.WriteLine(" /DF77_NAME_UPPER \")
 	mfile.WriteLine(" /DUSE_FORT_MIXED_STR_LEN \")
 	mfile.WriteLine(" /DHAVE_C_API")
@@ -6981,10 +7012,12 @@ Function GenBuild()
 	mfile.WriteLine("# Fortran")
 	mfile.WriteLine
 	outdir = "FORT_OUTDIR"
-	extra_flags = "$(fcflags)"
+        'extra_flags = "$(fcflags)"
+        SetCompileFlags("$(fcflags)")
 	fort_prefix = ""
 	CreateRules f.GetFolder("src\binding\f77"), trimlength
 	CreateRules f.GetFolder("src\binding\f90"), trimlength
+        ResetCompileFlags()
 	mfile.WriteLine
 	CreateObjs "fort", f.GetFolder("src\binding\f77"), trimlength, true, false
 	mfile.WriteLine(" \" & vbCrLf & "   $(FORT_OUTDIR)\typef90intf.obj \")
@@ -6999,10 +7032,12 @@ Function GenBuild()
 	mfile.WriteLine("fort: fortp $(FORT_OUTDIR) $(FORT_OUTDIR)\fmpich2$(D).dll")
 	mfile.WriteLine
 	outdir = "FORTP_OUTDIR"
-	extra_flags = "$(fpcflags)"
+        'extra_flags = "$(fpcflags)"
+        SetCompileFlags("$(fpcflags)")
 	fort_prefix = ""
 	CreateRules f.GetFolder("src\binding\f77"), trimlength
 	CreateRules f.GetFolder("src\binding\f90"), trimlength
+        ResetCompileFlags()
         mfile.WriteLine
         CreateObjs "fortp", f.GetFolder("src\binding\f77"), trimlength, true, false
 	mfile.WriteLine(" \" & vbCrLf & "   $(FORTP_OUTDIR)\typef90intf.obj \")
@@ -7034,9 +7069,11 @@ Function GenBuild()
         mfile.WriteLine("mpi_mod: $(FORT_OUTDIR) $(mpi_mod_objs)")
         mfile.WriteLine
 	outdir = "GFORT_OUTDIR"
-	extra_flags = "$(gfcflags)"
+        'extra_flags = "$(gfcflags)"
+        SetCompileFlags("$(gfcflags)")
 	fort_prefix = "g"
 	CreateRules f.GetFolder("src\binding\f77"), trimlength
+        ResetCompileFlags()
 	CreateObjs "gfort", f.GetFolder("src\binding\f77"), trimlength, true, true
 	mfile.WriteLine("$(GFORT_OUTDIR)\fmpich2g$(D).dll: $(gfort_objs)")
 	mfile.WriteLine("	$(link) $(dlllflags) $(gfort_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpich2fg.def -out:$(GFORT_OUTDIR)\fmpich2g$(D).dll")
@@ -7050,9 +7087,11 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("!ELSE")
 	outdir = "SFORT_OUTDIR"
-	extra_flags = "$(sfcflags)"
+        SetCompileFlags("$(sfcflags)")
+        'extra_flags = "$(sfcflags)"
 	fort_prefix = "s"
 	CreateRules f.GetFolder("src\binding\f77"), trimlength
+        ResetCompileFlags()
 	CreateObjs "sfort", f.GetFolder("src\binding\f77"), trimlength, true, false
 	' Add the extra character* versions of the MPI functions here
 	mfile.WriteLine(" \" & vbCrLf & "	$(SFORT_OUTDIR)\accumulatefs.obj \")
