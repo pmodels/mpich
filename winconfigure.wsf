@@ -6716,6 +6716,7 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\util\logging\common"), trimlength
 	CreateRules f.GetFolder("src\util\param"), trimlength
         CreateRules f.GetFolder("src\util\thread"), trimlength
+        CreateRules f.GetFolder("src\util\other"), trimlength
         ' Insert rules for mpl manually since mpl is not build with Makefile.sm files
         mfile.WriteLine("{..\src\mpl\src}.c{$(OUTDIR)}.obj:")
         mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
@@ -6758,6 +6759,7 @@ Function GenBuild()
 	CreateObjs "mpich2", f.GetFolder("src\util\logging\common"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\param"), trimlength, false, false
         CreateObjs "mpich2", f.GetFolder("src\util\thread"), trimlength, false, false
+        CreateObjs "mpich2", f.GetFolder("src\util\other"), trimlength, false, false
 	mfile.WriteLine(" \" & vbCrLf & "	$(OUTDIR)\ad_ntfs.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_ntfs_close.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_ntfs_done.obj \")
