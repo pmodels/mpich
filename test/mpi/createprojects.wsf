@@ -7,6 +7,16 @@
             helpstring = "Force the creation of new files, overwriting the old"
             required = "false"
         />
+        <unnamed
+            name = "--mpi-include-dir"
+            helpstring = "Specify mpi include dir, --mpi-include-dir=c:\progra~1\mpich2\include"
+            required = "false"
+        />
+        <unnamed
+            name = "--mpi-lib-dir"
+            helpstring = "Specify mpi lib dir, --mpi-lib-dir=c:\progra~1\mpich2\lib"
+            required = "false"
+        />
     </runtime>
 <script language="VBScript">
 
@@ -26,10 +36,15 @@ bWin64 = False
 bForce = False
 path_to_remove = f.GetAbsolutePathName(".") + "\"
 
+vs_proj_include_sep=";"
+vs_proj_lib_sep=";"
+user_mpi_include_dir=""
+user_mpi_lib_dir=""
 ' Process arguments
 argCount = WScript.Arguments.Count
 For arg = 0 To argCount - 1
   argValue = WScript.Arguments(arg)
+  argOptions = Split(argValue, "=", -1, 1)
   If argValue = "--win64" Then
     bWin64 = True
   ElseIf argValue = "--win32" Then
@@ -43,6 +58,21 @@ For arg = 0 To argCount - 1
   ElseIf argValue = "--help" Then
     WScript.Arguments.ShowUsage
     WScript.Quit
+  ' Check argvalues with options
+  ElseIf argOptions(0) = "--mpi-include-dir" Then
+    If UBound(argOptions, 1) <> 1 Then
+      WScript.Echo "ERROR: Invalid format for MPI include dir"
+      WScript.Quit(-1)
+    Else
+      user_mpi_include_dir = argOptions(1)
+    End If
+  ElseIf argOptions(0) = "--mpi-lib-dir" Then
+    If UBound(argOptions, 1) <> 1 Then
+      WScript.Echo "ERROR: Invalid format for MPI lib dir"
+      WScript.Quit(-1)
+    Else
+      user_mpi_lib_dir = argOptions(1)
+    End If
   End If
 Next
 
@@ -202,19 +232,57 @@ Function AddArchDetails(template)
 	AddArchDetails = template
 End Function
 
+' Add User MPI lib details
+Function AddUserMPILibDetails(template)
+    If user_mpi_include_dir <> "" Then
+        template = Replace( template, "MPI_C_INCLUDE_DIR", user_mpi_include_dir )
+        template = Replace( template, "__mpi_c_include_sep__", vs_proj_include_sep )
+        template = Replace( template, "MPI_CXX_INCLUDE_DIR", user_mpi_include_dir )
+        template = Replace( template, "__mpi_cxx_include_sep__", vs_proj_include_sep )
+        template = Replace( template, "MPI_F_INCLUDE_DIR", user_mpi_include_dir )
+        template = Replace( template, "__mpi_f_include_sep__", vs_proj_include_sep )
+    Else
+        template = Replace( template, "MPI_C_INCLUDE_DIR", "" )
+        template = Replace( template, "__mpi_c_include_sep__", "" )
+        template = Replace( template, "MPI_CXX_INCLUDE_DIR", "" )
+        template = Replace( template, "__mpi_cxx_include_sep__", "" )
+        template = Replace( template, "MPI_F_INCLUDE_DIR", "" )
+        template = Replace( template, "__mpi_f_include_sep__", "" )
+    End If
+    If user_mpi_lib_dir <> "" Then
+        template = Replace( template, "MPI_C_LIB_DIR", user_mpi_lib_dir )
+        template = Replace( template, "__mpi_c_lib_sep__", vs_proj_lib_sep )
+        template = Replace( template, "MPI_CXX_LIB_DIR", user_mpi_lib_dir )
+        template = Replace( template, "__mpi_cxx_lib_sep__", vs_proj_lib_sep )
+        template = Replace( template, "MPI_F_LIB_DIR", user_mpi_lib_dir )
+        template = Replace( template, "__mpi_f_lib_sep__", vs_proj_lib_sep )
+    Else
+        template = Replace( template, "MPI_C_LIB_DIR", "" )
+        template = Replace( template, "__mpi_c_lib_sep__", "" )
+        template = Replace( template, "MPI_CXX_LIB_DIR", "" )
+        template = Replace( template, "__mpi_cxx_lib_sep__", "" )
+        template = Replace( template, "MPI_F_LIB_DIR", "" )
+        template = Replace( template, "__mpi_f_lib_sep__", "" )
+    End If
+    AddUserMPILibDetails = template
+End Function
+
 set fin = f.OpenTextFile("project.txt")
 project_template = fin.ReadAll()
 project_template = AddArchDetails(project_template)
+project_template = AddUserMPILibDetails(project_template)
 fin.Close()
 
 set fin = f.OpenTextFile("project_cxx.txt")
 project_cxx_template = fin.ReadAll()
 project_cxx_template = AddArchDetails(project_cxx_template)
+project_cxx_template = AddUserMPILibDetails(project_cxx_template)
 fin.Close()
 
 set fin = f.OpenTextFile("project_f.txt")
 project_f_template = fin.ReadAll()
 project_f_template = AddArchDetails(project_f_template)
+project_f_template = AddUserMPILibDetails(project_f_template)
 fin.Close()
 
 GetTestLists cur_folder, ""

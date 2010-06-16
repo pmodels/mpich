@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="DOTDOTS..\..\src\include;DOTDOTSTARGET_HEADER;DOTDOTSinclude"
+				AdditionalIncludeDirectories="MPI_CXX_INCLUDE_DIR__mpi_cxx_include_sep__DOTDOTS..\..\src\include;DOTDOTSTARGET_HEADER;DOTDOTSinclude"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_MPI_CXX"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -35,7 +35,7 @@
 				AdditionalDependencies="cxxd.lib mpid.lib ws2_32.lib"
 				OutputFile="$(OutDir)/PROJECTNAME.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="DOTDOTS..\..\lib"
+				AdditionalLibraryDirectories="MPI_CXX_LIB_DIR__mpi_cxx_lib_sep__DOTDOTS..\..\lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/PROJECTNAME.pdb"
 				SubSystem="1"
@@ -70,7 +70,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="DOTDOTS..\..\src\include;DOTDOTSTARGET_HEADER;DOTDOTSinclude"
+				AdditionalIncludeDirectories="MPI_CXX_INCLUDE_DIR__mpi_cxx_include_sep__DOTDOTS..\..\src\include;DOTDOTSTARGET_HEADER;DOTDOTSinclude"
 				PreprocessorDefinitions="TARGET_PREPROCESSOR_DEFN;NDEBUG;_CONSOLE;HAVE_MPI_CXX"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -84,7 +84,7 @@
 				AdditionalDependencies="cxx.lib mpi.lib ws2_32.lib"
 				OutputFile="$(OutDir)/PROJECTNAME.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="DOTDOTS..\..\lib"
+				AdditionalLibraryDirectories="MPI_CXX_LIB_DIR__mpi_cxx_lib_sep__DOTDOTS..\..\lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
