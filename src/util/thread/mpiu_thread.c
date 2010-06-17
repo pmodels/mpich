@@ -596,76 +596,8 @@ void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int * err)
 
 /*
  * Thread Local Storage
+ * - Defined in src/include/thread/mpiu_thread_win_funcs.h
  */
-
-void MPIU_Thread_tls_create(MPIU_Thread_tls_exit_func_t exit_func, MPIU_Thread_tls_t * tls, int * err)
-{
-    *tls = TlsAlloc();
-    if (err != NULL)
-    {
-        if (*tls == TLS_OUT_OF_INDEXES)
-        {
-            *err = GetLastError();
-        }
-        else
-        {
-            *err = MPIU_THREAD_SUCCESS;
-        }
-    }
-}
-
-void MPIU_Thread_tls_destroy(MPIU_Thread_tls_t * tls, int * err)
-{
-    BOOL result;
-
-    result = TlsFree(*tls);
-    if (err != NULL)
-    {
-        if (result)
-        {
-            *err = MPIU_THREAD_SUCCESS;
-        }
-        else
-        {
-            *err = GetLastError();
-        }
-    }
-}
-
-void MPIU_Thread_tls_set(MPIU_Thread_tls_t * tls, void * value, int * err)
-{
-    BOOL result;
-
-    result = TlsSetValue(*tls, value);
-    if (err != NULL)
-    {
-        if (result)
-        {
-            *err = MPIU_THREAD_SUCCESS;
-        }
-        else
-        {
-            *err = GetLastError();
-        }
-    }
-}
-
-void MPIU_Thread_tls_get(MPIU_Thread_tls_t * tls, void ** value, int * err)
-{
-    *value = TlsGetValue(*tls);
-    if (err != NULL)
-    {
-        if (*value == 0 && GetLastError() != NO_ERROR)
-        {
-            *err = GetLastError();
-        }
-        else
-        {
-            *err = MPIU_THREAD_SUCCESS;
-        }
-    }
-}
-
 /* end win impl */
 #elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_NONE)
 /* do nothing */
