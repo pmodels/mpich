@@ -8,6 +8,16 @@
             required = "false"
         />
         <unnamed
+            name = "--win32"
+            helpstring = "Create 32-bit projects for the test suite"
+            required = "false"
+        />
+        <unnamed
+            name = "--win64"
+            helpstring = "Create 64-bit projects for the test suite"
+            required = "false"
+        />
+        <unnamed
             name = "--mpi-include-dir"
             helpstring = "Specify mpi include dir, --mpi-include-dir=c:\progra~1\mpich2\include"
             required = "false"
