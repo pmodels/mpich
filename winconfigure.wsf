@@ -3102,7 +3102,7 @@ Sub AddDefinitions( fout, filename, b64 )
                                         ' -Introduce this option when building lock-free version
                                         fout.WriteLine("/* #undef MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS */")
                                 Case "MPIU_TLS_SPECIFIER"
-                                        fout.WriteLine("#define MPIU_TLS_SPECIFIER __declspec( thread )")
+                                        fout.WriteLine("/* #undef MPIU_TLS_SPECIFIER */")
 				Case "MPIU_HANDLE_ALLOCATION_METHOD"
 					fout.WriteLine("#define MPIU_HANDLE_ALLOCATION_METHOD MPIU_HANDLE_ALLOCATION_MUTEX")
 				Case "MPIU_MUTEX_WAIT_TIME"
