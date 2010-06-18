@@ -215,6 +215,37 @@ static HYD_status mfile_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void hostlist_help_fn(void)
+{
+    printf("\n");
+    printf("-hostlist: Comma separated list of hosts to run on\n\n");
+}
+
+static HYD_status hostlist_fn(char *arg, char ***argv)
+{
+    char *hostname;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_ERR_CHKANDJUMP(status, HYD_handle.node_list, HYD_INTERNAL_ERROR,
+                        "duplicate host file or host list setting\n");
+
+    hostname = strtok(**argv, ",");
+    while (hostname) {
+        status = HYDU_add_to_node_list(hostname, 1, &HYD_handle.node_list);
+        HYDU_ERR_POP(status, "unable to add to node list\n");
+
+        hostname = strtok(NULL, ",");
+    }
+
+    (*argv)++;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static void ppn_help_fn(void)
 {
     printf("\n");
@@ -806,16 +837,18 @@ static struct HYD_arg_match_table match_table[] = {
 
     /* Other global options */
     {"f", mfile_fn, mfile_help_fn},
-    {"host", mfile_fn, mfile_help_fn},
-    {"hosts", mfile_fn, mfile_help_fn},
     {"hostfile", mfile_fn, mfile_help_fn},
+    {"machinefile", mfile_fn, mfile_help_fn},
+    {"machine", hostlist_fn, mfile_help_fn},
+    {"machines", hostlist_fn, mfile_help_fn},
+    {"machinelist", hostlist_fn, mfile_help_fn},
+    {"host", hostlist_fn, hostlist_help_fn},
+    {"hosts", hostlist_fn, hostlist_help_fn},
+    {"hostlist", hostlist_fn, hostlist_help_fn},
     {"ppn", ppn_fn, ppn_help_fn},
     {"profile", profile_fn, profile_help_fn},
     {"prepend-rank", prepend_rank_fn, prepend_rank_help_fn},
     {"l", prepend_rank_fn, prepend_rank_help_fn},
-    {"machine", mfile_fn, mfile_help_fn},
-    {"machines", mfile_fn, mfile_help_fn},
-    {"machinefile", mfile_fn, mfile_help_fn},
     {"wdir", wdir_fn, wdir_help_fn},
     {"configfile", config_fn, config_help_fn},
 
