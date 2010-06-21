@@ -7,8 +7,6 @@ GOTO END:
 :RUN_RELEASE
 cscript //T:3600 runtests.wsf /config:Release /channel:nemesis /out:summary_nemesis.xml
 cscript //T:3600 runtests.wsf /config:Release /channel:sock /out:summary.xml
-cscript //T:3600 runtests.wsf /config:Release /channel:ssm /out:summary_ssm.xml
-cscript //T:3600 runtests.wsf /config:Release /channel:shm /out:summary_shm.xml
 GOTO RUN_END
 :RUN_DEBUG
 cscript //T:3600 runtests.wsf /config:Debug
