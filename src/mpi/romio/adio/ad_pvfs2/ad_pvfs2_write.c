@@ -171,6 +171,7 @@ void ADIOI_PVFS2_WriteStrided(ADIO_File fd, void *buf, int count,
     if (fd->hints->fs_hints.pvfs2.listio_write == ADIOI_HINT_ENABLE) {
 	ret = ADIOI_PVFS2_WriteStridedListIO(fd, buf, count, datatype, 
 			file_ptr_type, offset, status, error_code);
+	return;
     }
 
     /* Use classic list I/O if no hints given base case */
