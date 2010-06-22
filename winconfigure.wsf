@@ -540,7 +540,7 @@ fin.Close()
 set dtypes = WScript.CreateObject("Scripting.Dictionary")
 CreateDtypeDictionary dtypes, contents, false
 set dtypes64 = WScript.CreateObject("Scripting.Dictionary")
-CreateDtypeDictionary dtypes64, contents, false
+CreateDtypeDictionary dtypes64, contents, true
 
 'mpi_datatype_prefix = "4c00"
 
