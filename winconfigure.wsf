@@ -2387,21 +2387,21 @@ Sub AddDefinitions( fout, filename, b64 )
 			fout.WriteLine(comment)
 			Select Case macroname
 				Case "HAVE_INT8_T"
-					fout.WriteLine("/* #undef HAVE_INT8_T */")
+					fout.WriteLine("#define HAVE_INT8_T 1")
 				Case "HAVE_INT16_T"
-					fout.WriteLine("/* #undef HAVE_INT16_T */")
+					fout.WriteLine("#define HAVE_INT16_T 1")
 				Case "HAVE_INT32_T"
-					fout.WriteLine("/* #undef HAVE_INT32_T */")
+					fout.WriteLine("#define HAVE_INT32_T 1")
 				Case "HAVE_INT64_T"
-					fout.WriteLine("/* #undef HAVE_INT64_T */")
+					fout.WriteLine("#define HAVE_INT64_T 1")
 				Case "HAVE_UINT8_T"
-					fout.WriteLine("/* #undef HAVE_INT8_T */")
+					fout.WriteLine("#define HAVE_UINT8_T 1")
 				Case "HAVE_UINT16_T"
-					fout.WriteLine("/* #undef HAVE_INT16_T */")
+					fout.WriteLine("#define HAVE_UINT16_T 1")
 				Case "HAVE_UINT32_T"
-					fout.WriteLine("/* #undef HAVE_INT32_T */")
+					fout.WriteLine("#define HAVE_UINT32_T 1")
 				Case "HAVE_UINT64_T"
-					fout.WriteLine("/* #undef HAVE_INT64_T */")
+					fout.WriteLine("#define HAVE_UINT64_T 1")
                                 Case "HAVE__BOOL"
                                         fout.WriteLine("/* #undef HAVE__BOOL */")
                                 Case "HAVE__COMPLEX"
