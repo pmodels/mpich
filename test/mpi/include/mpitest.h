@@ -96,7 +96,7 @@ void MTestFreeWin( MPI_Win * );
  ------8<-------
  */
 #define MTEST_HAVE_MIN_MPI_VERSION(major_,minor_) \
-    (MTEST_MPI_VERSION == (major_) && MTEST_MPI_SUBVERSION >= (minor_)) ||   \
-    (MTEST_MPI_VERSION > (major_))
+    ((MTEST_MPI_VERSION == (major_) && MTEST_MPI_SUBVERSION >= (minor_)) ||   \
+    (MTEST_MPI_VERSION > (major_)))
 
 #endif
