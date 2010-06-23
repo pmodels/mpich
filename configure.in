@@ -5622,12 +5622,41 @@ fi
 for type in int long long_long short ; do
     eval len=\$ac_cv_sizeof_$type
     if test "$len" = "$ac_cv_sizeof_void_p" ; then
+        case $type in
+            int)
+                MPIR_PINT_FMT_DEC_SPEC="\"%d\""
+                MPIR_UPINT_FMT_DEC_SPEC="\"%u\""
+                ;;
+            long)
+                MPIR_PINT_FMT_DEC_SPEC="\"%ld\""
+                MPIR_UPINT_FMT_DEC_SPEC="\"%lu\""
+                ;;
+            long_long)
+                MPIR_PINT_FMT_DEC_SPEC="\"%lld\""
+                MPIR_UPINT_FMT_DEC_SPEC="\"%llu\""
+                ;;
+            short)
+                MPIR_PINT_FMT_DEC_SPEC="\"%hd\""
+                MPIR_UPINT_FMT_DEC_SPEC="\"%hu\""
+                ;;
+            *)
+                AC_MSG_WARN([unable to determine format specifiers for MPIR_Pint, defaulting to int])
+                MPIR_PINT_FMT_DEC_SPEC="\"%d\""
+                MPIR_UPINT_FMT_DEC_SPEC="\"%u\""
+            ;;
+        esac
         MPIR_PINT=`echo $type | sed -e 's/_/ /'`
         break
     fi
 done
 AC_DEFINE_UNQUOTED(MPIR_Pint,$MPIR_PINT,[MPIR_Pint is a pointer-sized integer])
+AC_DEFINE_UNQUOTED(MPIR_PINT_FMT_DEC_SPEC,
+    $MPIR_PINT_FMT_DEC_SPEC,[MPIR_PINT_FMT_DEC_SPEC is the format
+    specifier for printing Pint as a decimal])
 AC_DEFINE_UNQUOTED(MPIR_Upint,unsigned $MPIR_PINT,[MPIR_Upint is an unsigned pointer-sized integer])
+AC_DEFINE_UNQUOTED(MPIR_UPINT_FMT_DEC_SPEC,
+    $MPIR_UPINT_FMT_DEC_SPEC,[MPIR_UPINT_FMT_DEC_SPEC is the format
+    specifier for printing Upint as a decimal])
 
 # ----------------------------------------------------------------------------
 # MPI_AINT datatype

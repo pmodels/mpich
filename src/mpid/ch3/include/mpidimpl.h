@@ -30,15 +30,9 @@
 /* Add the ch3 packet definitions */
 #include "mpidpkt.h"
 
-/* We need to match the size of MPI_Aint to the relevant Format control
+/* We need to match the size of MPIR_Pint to the relevant Format control
  */
-#ifdef MPI_AINT_IS_LONG_INT
-#define MPIDI_MSG_SZ_FMT "%ld"
-#elif defined(MPI_AINT_IS_LONG_LONG_INT)
-#define MPIDI_MSG_SZ_FMT "%lld"
-#else
-#define MPIDI_MSG_SZ_FMT "%d"
-#endif
+#define MPIDI_MSG_SZ_FMT MPIR_PINT_FMT_DEC_SPEC
 
 #if !defined(MPIDI_IOV_DENSITY_MIN)
 #   define MPIDI_IOV_DENSITY_MIN (16 * 1024)

@@ -238,19 +238,6 @@ fi
 if test "$pac_found_struct_ifconf" = "yes" ; then
     AC_DEFINE(HAVE_STRUCT_IFCONF,1,[Define if struct ifconf can be used])
 fi
-#
-# We need to know whether to use %d or %ld for writing out MPI_Aint values
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
-AC_CHECK_SIZEOF(long long)
-AC_CHECK_SIZEOF(void *)
-if test "$ac_cv_sizeof_int" = "$ac_cv_sizeof_void_p" ; then
-    :
-elif test "$ac_cv_sizeof_long" = "$ac_cv_sizeof_void_p" ; then
-    AC_DEFINE(MPI_AINT_IS_LONG_INT,1,[Define if the size of an MPI_Aint is long])
-elif test "$ac_cv_sizeof_long_long" = "$ac_cv_sizeof_void_p" ; then
-    AC_DEFINE(MPI_AINT_IS_LONG_LONG_INT,1,[Define if the size of an MPI_Aint is long long])
-fi
 
 #
 # bring in the default implementation of the MPID_Thread package
