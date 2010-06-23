@@ -4,12 +4,14 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpi.h"
+#include "mpitest.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
-#include "mpi.h"
-#include "mpitest.h"
+#endif
 
 int count, size, rank;
 int cerrcnt;
@@ -285,7 +287,9 @@ struct double_test { double a; int b; };
         op##_test##post(unsigned char, MPI_BYTE);                   \
     }
 
-#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2) && defined(HAVE_FLOAT__COMPLEX) \
+    && defined(HAVE_DOUBLE__COMPLEX) \
+    && defined(HAVE_LONG_DOUBLE__COMPLEX)
 #define test_types_set4(op, post)                                         \
     do {                                                                  \
         op##_test##post(float _Complex, MPI_C_FLOAT_COMPLEX);             \
@@ -293,13 +297,17 @@ struct double_test { double a; int b; };
         op##_test##post(long double _Complex, MPI_C_LONG_DOUBLE_COMPLEX); \
     } while (0)
 
+#else
+#define test_types_set4(op, post) do { } while (0)
+#endif
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2) && defined(HAVE__BOOL)
 #define test_types_set5(op, post)           \
     do {                                    \
         op##_test##post(_Bool, MPI_C_BOOL); \
     } while (0)
 
 #else
-#define test_types_set4(op, post) do { } while (0)
 #define test_types_set5(op, post) do { } while (0)
 #endif
 

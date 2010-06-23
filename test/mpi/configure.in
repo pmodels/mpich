@@ -367,7 +367,20 @@ AC_C_CONST
 AC_C_RESTRICT
 
 # General headers
-AC_CHECK_HEADERS(unistd.h stdarg.h string.h stdlib.h memory.h)
+AC_CHECK_HEADERS(unistd.h stdarg.h string.h stdlib.h memory.h stdint.h)
+
+# Check for fixed width types
+AC_TYPE_INT8_T
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT64_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+
+# Check for availability of C99 types
+AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
 
 # Headers needed for threads tests
 if test "$threadsdir" = "threads" ; then
