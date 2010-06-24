@@ -46,7 +46,6 @@
 #define NMPI_Comm_size MPI_Comm_size 
 #define NMPI_Comm_rank MPI_Comm_rank
 #define NMPI_Alltoall MPI_Alltoall
-#define NMPI_Scatter MPI_Scatter
 #define NMPI_Isend MPI_Isend
 #define NMPI_Irecv MPI_Irecv
 #define NMPI_Recv MPI_Recv 
@@ -127,7 +126,6 @@
 #define NMPI_Comm_size PMPI_Comm_size 
 #define NMPI_Comm_rank PMPI_Comm_rank
 #define NMPI_Alltoall PMPI_Alltoall
-#define NMPI_Scatter PMPI_Scatter
 #define NMPI_Isend PMPI_Isend
 #define NMPI_Irecv PMPI_Irecv
 #define NMPI_Recv PMPI_Recv 

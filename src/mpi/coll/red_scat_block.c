@@ -1031,8 +1031,8 @@ int MPIR_Reduce_scatter_block_inter (
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Scatter_intra(tmp_buf, recvcount, datatype, recvbuf,
-                                   recvcount, datatype, 0, newcomm_ptr);
+    mpi_errno = MPIR_Scatter_impl(tmp_buf, recvcount, datatype, recvbuf,
+                                  recvcount, datatype, 0, newcomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
  fn_exit:
