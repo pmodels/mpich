@@ -57,6 +57,7 @@
 /* FIXME MPI_UNSIGNED_SHORT will not always be the same size as uint16_t. */
 #define MPIR_CONTEXT_ID_T_DATATYPE MPI_UNSIGNED_SHORT
 typedef uint16_t MPIR_Context_id_t;
+#define MPIR_INVALID_CONTEXT_ID ((MPIR_Context_id_t)0xffff)
 
 typedef MPIU_SIZE_T MPIU_Size_t;
 

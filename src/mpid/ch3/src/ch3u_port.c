@@ -262,6 +262,11 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
     tmp_comm->context_id     = MPID_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id_offset, 1);
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
+    /* sanity: the INVALID context ID value could potentially conflict with the
+     * dynamic proccess space */
+    MPIU_Assert(tmp_comm->context_id     != MPIR_INVALID_CONTEXT_ID);
+    MPIU_Assert(tmp_comm->recvcontext_id != MPIR_INVALID_CONTEXT_ID);
+
     /* FIXME - we probably need a unique context_id. */
     tmp_comm->remote_size = 1;
 
