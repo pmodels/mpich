@@ -512,14 +512,31 @@ static int MPIR_Find_and_allocate_context_id(uint32_t local_mask[])
     return context_id;
 }
 
+/* Older, simpler interface.  Allocates a context ID collectively over the given
+ * communicator. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Get_contextid
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Get_contextid(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    mpi_errno = MPIR_Get_contextid_sparse(comm_ptr, context_id, FALSE);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_Assert(*context_id != MPIR_INVALID_CONTEXT_ID);
+fn_fail:
+    return mpi_errno;
+}
+
+
 #ifndef MPICH_IS_THREADED
 /* Unthreaded (only one MPI call active at any time) */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid
+#define FUNCNAME MPIR_Get_contextid_sparse
 #undef FCNAME
-#define FCNAME "MPIR_Get_contextid"
-int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id)
 {
     int mpi_errno = MPI_SUCCESS;
     uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
@@ -532,7 +549,15 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     if (initialize_context_mask) {
 	MPIR_Init_contextid();
     }
-    MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
+
+    if (ignore_id) {
+        /* We are not participating in the resulting communicator, so our
+         * context ID space doesn't matter.  Set the mask to "all available". */
+        memset(local_mask, 0xff, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+    }
+    else {
+        MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
+    }
 
     /* Note that this is the unthreaded version */
     /* Comm must be an intracommunicator */
@@ -540,10 +565,18 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
                                      MPI_INT, MPI_BAND, comm_ptr );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    *context_id = MPIR_Find_and_allocate_context_id(local_mask);
-    MPIU_ERR_CHKANDJUMP(!(*context_id), mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
+    if (ignore_id) {
+        *context_id = MPIR_Locate_context_bit(local_mask);
+        MPIU_ERR_CHKANDJUMP(!(*context_id), mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
+    }
+    else {
+        *context_id = MPIR_Find_and_allocate_context_id(local_mask);
+        MPIU_ERR_CHKANDJUMP(!(*context_id), mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
+    }
 
 fn_exit:
+    if (ignore_id)
+        *context_id = MPIR_INVALID_CONTEXT_ID;
     MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
 
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -561,11 +594,22 @@ static volatile int mask_in_use = 0;
 #define MPIR_MAXID (1 << 30)
 static volatile int lowestContextId = MPIR_MAXID;
 
+/* Allocates a new context ID collectively over the given communicator.  This
+ * routine is "sparse" in the sense that while it is collective, some processes
+ * may not care about the value selected context ID.
+ *
+ * One example of this case is processes who pass MPI_UNDEFINED as the color
+ * value to MPI_Comm_split.  Such processes should pass ignore_id==TRUE to
+ * obtain the best performance and utilization of the context ID space.
+ *
+ * Processes that pass ignore_id==TRUE will receive
+ * (*context_id==MPIR_INVALID_CONTEXT_ID) and should not attempt to use it.
+ */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid
+#define FUNCNAME MPIR_Get_contextid_sparse
 #undef FCNAME
-#define FCNAME "MPIR_Get_contextid"
-int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id)
 {
     int          mpi_errno = MPI_SUCCESS;
     uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
@@ -602,22 +646,32 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	if (initialize_context_mask) {
 	    MPIR_Init_contextid();
 	}
-	if (mask_in_use || comm_ptr->context_id > lowestContextId) {
-	    memset( local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
-	    own_mask        = 0;
-	    if (comm_ptr->context_id < lowestContextId) {
-		lowestContextId = comm_ptr->context_id;
-	    }
-	    MPIU_DBG_MSG_D( COMM, VERBOSE, 
-	       "In in-use, set lowestContextId to %d", lowestContextId );
-	}
-	else {
-	    MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
-	    mask_in_use     = 1;
-	    own_mask        = 1;
-	    lowestContextId = comm_ptr->context_id;
-	    MPIU_DBG_MSG( COMM, VERBOSE, "Copied local_mask" );
-	}
+        if (ignore_id) {
+            /* We are not participating in the resulting communicator, so our
+             * context ID space doesn't matter.  Set the mask to "all available". */
+            memset(local_mask, 0xff, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+            own_mask = 0;
+            /* don't need to touch mask_in_use/lowestContextId b/c our thread
+             * doesn't ever need to "win" the mask */
+        }
+        else {
+            if (mask_in_use || comm_ptr->context_id > lowestContextId) {
+                memset( local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
+                own_mask        = 0;
+                if (comm_ptr->context_id < lowestContextId) {
+                    lowestContextId = comm_ptr->context_id;
+                }
+                MPIU_DBG_MSG_D( COMM, VERBOSE, 
+                   "In in-use, set lowestContextId to %d", lowestContextId );
+            }
+            else {
+                MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
+                mask_in_use     = 1;
+                own_mask        = 1;
+                lowestContextId = comm_ptr->context_id;
+                MPIU_DBG_MSG( COMM, VERBOSE, "Copied local_mask" );
+            }
+        }
 	MPIU_THREAD_CS_EXIT(CONTEXTID,);
 	
 	/* Now, try to get a context id */
@@ -630,7 +684,13 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
                                          MPI_INT, MPI_BAND, comm_ptr );
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-	if (own_mask) {
+        if (ignore_id) {
+            /* we don't care what the value was, but make sure that everyone
+             * who did care agreed on a value */
+            *context_id = MPIR_Locate_context_bit(local_mask);
+            /* used later in out-of-context ids check and outer while loop condition */
+        }
+        else if (own_mask) {
 	    /* There is a chance that we've found a context id */
 	    MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	    /* Find_and_allocate_context_id updates the context_mask if it finds a match */
@@ -658,12 +718,6 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 		   there is another thread on this process that is waiting).
 		*/
 		MPIU_THREAD_CS_YIELD(CONTEXTID,);
-#if 0
-		/* The old code */
-		MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);
-		MPID_Thread_yield();
-		MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
-#endif
 	    }
 	    mask_in_use = 0;
 	    MPIU_THREAD_CS_EXIT(CONTEXTID,);
@@ -674,11 +728,6 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
 	    MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	    MPIU_THREAD_CS_YIELD(CONTEXTID,);
 	    MPIU_THREAD_CS_EXIT(CONTEXTID,);
-#if 0
-	    MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex);
-	    MPID_Thread_yield();
-	    MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex);
-#endif
 	}
 	/* Here is the test for out-of-context ids */
 	if ((testCount-- == 0) && (*context_id == 0)) {
@@ -711,6 +760,8 @@ int MPIR_Get_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id )
     }
 
 fn_exit:
+    if (ignore_id)
+        *context_id = MPIR_INVALID_CONTEXT_ID;
     MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
     return mpi_errno;
