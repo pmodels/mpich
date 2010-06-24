@@ -103,6 +103,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
     int       rank, size, remote_size, i, new_size, new_remote_size, 
 	first_entry = 0, first_remote_entry = 0,
 	*last_ptr;
+    int in_newcomm; /* TRUE iff *newcomm should be populated */
     MPIR_Context_id_t   new_context_id, remote_context_id;
     MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(4);
@@ -245,14 +246,16 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	new_remote_size = new_size;
     }
 
+    in_newcomm = (color != MPI_UNDEFINED && new_remote_size > 0);
+
     /* Step 3: Create the communicator */
     /* Collectively create a new context id.  The same context id will
        be used by each (disjoint) collections of processes.  The
-       processes whose color is MPI_UNDEFINED will return the 
-       context id to the pool */
+       processes whose color is MPI_UNDEFINED will not influence the
+       resulting context id (by passing ignore_id==TRUE). */
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
-    mpi_errno = MPIR_Get_contextid( local_comm_ptr, &new_context_id );
+    mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &new_context_id, !in_newcomm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(new_context_id != 0);
 
@@ -273,8 +276,10 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	}
     }
 
+    *newcomm = MPI_COMM_NULL;
+
     /* Now, create the new communicator structure if necessary */
-    if (color != MPI_UNDEFINED && new_remote_size > 0) {
+    if (in_newcomm) {
     
 	mpi_errno = MPIR_Comm_create( &newcomm_ptr );
 	if (mpi_errno) goto fn_fail;
@@ -382,12 +387,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 
 	*newcomm = newcomm_ptr->handle;
     }
-    else {
-	/* color was MPI_UNDEFINED.  Free the context id */
-	*newcomm = MPI_COMM_NULL;
-	MPIR_Free_contextid( new_context_id );
-    }
-    
+
     /* ... end of body of routine ... */
 
   fn_exit:

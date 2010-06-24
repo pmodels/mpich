@@ -245,6 +245,7 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
        member of the group */
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
+    /* TODO should be converted to use MPIR_Get_contextid_sparse instead */
     mpi_errno = MPIR_Get_contextid( comm_ptr, &new_context_id );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(new_context_id != 0);
