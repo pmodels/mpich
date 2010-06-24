@@ -228,6 +228,7 @@ static int MPIR_Scan_generic (
     }
     
  fn_exit:
+    MPIU_CHKLMEM_FREEALL();
      /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     
