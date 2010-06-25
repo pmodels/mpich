@@ -708,29 +708,29 @@ int MPIR_Allgatherv_inter (
     if (comm_ptr->is_low_group) {
         /* gatherv from right group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root,
-                                 comm_ptr);
+        mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                      recvcounts, displs, recvtype, root,
+                                      comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         /* gatherv to right group */
         root = 0;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root,
-                                 comm_ptr);
+        mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                      recvcounts, displs, recvtype, root,
+                                      comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
         /* gatherv to left group  */
         root = 0;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root,
-                                 comm_ptr);
+        mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                      recvcounts, displs, recvtype, root,
+                                      comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcounts, displs, recvtype, root,
-                                 comm_ptr);
+        mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                      recvcounts, displs, recvtype, root,
+                                      comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 

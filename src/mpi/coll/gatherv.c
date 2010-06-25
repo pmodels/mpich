@@ -41,6 +41,13 @@
 */
 
 /* not declared static because it is called in intercommunicator allgatherv */
+/* MPIR_Gatherv performs an gatherv using point-to-point messages.
+   This is intended to be used by device-specific implementations of
+   gatherv.  In all other cases MPIR_Gatherv_impl should be used. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Gatherv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gatherv ( 
 	void *sendbuf, 
 	int sendcnt,  
@@ -52,7 +59,6 @@ int MPIR_Gatherv (
 	int root, 
 	MPID_Comm *comm_ptr )
 {
-    static const char FCNAME[] = "MPIR_Gatherv";
     int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
     MPI_Comm comm;
@@ -63,6 +69,7 @@ int MPIR_Gatherv (
     MPI_Request *reqarray;
     MPI_Status *starray;
     MPIU_CHKLMEM_DECL(2);
+    MPIU_THREADPRIV_DECL;
     
     comm = comm_ptr->handle;
     rank = comm_ptr->rank;
@@ -94,6 +101,7 @@ int MPIR_Gatherv (
                         mpi_errno = MPIR_Localcopy(sendbuf, sendcnt, sendtype,
                                                    ((char *)recvbuf+displs[rank]*extent), 
                                                    recvcnts[rank], recvtype);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     }
                 }
                 else {
@@ -101,22 +109,24 @@ int MPIR_Gatherv (
                                            recvcnts[i], recvtype, i,
                                            MPIR_GATHERV_TAG, comm,
                                            &reqarray[reqs++]);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
-		/* --BEGIN ERROR HANDLING-- */
-                if (mpi_errno) {
-		    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-		    return mpi_errno;
-		}
-		/* --END ERROR HANDLING-- */
             }
         }
         /* ... then wait for *all* of them to finish: */
+	MPIU_THREADPRIV_GET;
+        MPIR_Nest_incr();
         mpi_errno = NMPI_Waitall(reqs, reqarray, starray);
+        MPIR_Nest_decr();
+        if (mpi_errno&& mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
+        
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
             for (i = 0; i < reqs; i++) {
-                if (starray[i].MPI_ERROR != MPI_SUCCESS)
+                if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
+                    MPIU_ERR_POP(mpi_errno);
+                }
             }
         }
         /* --END ERROR HANDLING-- */
@@ -147,34 +157,60 @@ int MPIR_Gatherv (
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 
                                        MPIR_GATHERV_TAG, comm);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             else {
                 mpi_errno = MPIC_Send(sendbuf, sendcnt, sendtype, root, 
                                       MPIR_GATHERV_TAG, comm);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno) {
-                mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**fail", 0);
-                return mpi_errno;
-            }
-            /* --END ERROR HANDLING-- */
         }
     }
     
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
 fn_exit:
+    /* check if multiple threads are calling this collective function */
+    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
 fn_fail:
     goto fn_exit;
 }
 
-#endif
-
+/* MPIR_Gatherv_impl should be called by any internal component that
+   would otherwise call MPI_Gatherv.  This differs from MPIR_Gatherv
+   in that this will call the coll_fns version if it exists.  This
+   function replaces NMPI_Gatherv. */
 #undef FUNCNAME
-#define FUNCNAME MPI_Gatherv
+#define FUNCNAME MPIR_Gatherv_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Gatherv_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                      void *recvbuf, int *recvcnts, int *displs, MPI_Datatype recvtype,
+                      int root, MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+        
+    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Gatherv != NULL) {
+	mpi_errno = comm_ptr->coll_fns->Gatherv(sendbuf, sendcnt, sendtype,
+                                                recvbuf, recvcnts, displs, recvtype,
+                                                root, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Gatherv(sendbuf, sendcnt, sendtype,
+                                 recvbuf, recvcnts, displs, recvtype,
+                                 root, comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#endif
 
 /*@
 
@@ -209,14 +245,16 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
+#undef FUNCNAME
+#define FUNCNAME MPI_Gatherv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
                 void *recvbuf, int *recvcnts, int *displs, 
                 MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Gatherv";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GATHERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -332,25 +370,10 @@ int MPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Gatherv != NULL)
-    {
-	mpi_errno = comm_ptr->coll_fns->Gatherv(sendbuf, sendcnt,
-                                                sendtype, recvbuf, recvcnts,
-                                                displs, recvtype, root,
-                                                comm_ptr);  
-    }
-    else
-    {
-	MPIU_THREADPRIV_GET;
-        
-        MPIR_Nest_incr();
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcnt, sendtype, 
-                                 recvbuf, recvcnts,
-                                 displs, recvtype, root, comm_ptr); 
-        MPIR_Nest_decr();
-    }
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcnt, sendtype,
+                                  recvbuf, recvcnts, displs, recvtype,
+                                  root, comm_ptr);
+    if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
     

@@ -628,8 +628,8 @@ int MPIR_Allgather_inter (
     newcomm_ptr = comm_ptr->local_comm;
 
     if (sendcount != 0) {
-        mpi_errno = MPIR_Gather_intra(sendbuf, sendcount, sendtype, tmp_buf, sendcount,
-                                      sendtype, 0, newcomm_ptr);
+        mpi_errno = MPIR_Gather_impl(sendbuf, sendcount, sendtype, tmp_buf, sendcount,
+                                     sendtype, 0, newcomm_ptr);
 	if (mpi_errno) { 
 	    MPIU_ERR_POP(mpi_errno);
 	}
@@ -720,7 +720,6 @@ int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 fn_exit:
     return mpi_errno;
 fn_fail:
-
     goto fn_exit;
 }
 
@@ -745,25 +744,15 @@ int MPIR_Allgather_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                                   comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
-        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Allgather_intra(sendbuf, sendcount, sendtype,
-                                             recvbuf, recvcount, recvtype,
-                                             comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        } else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Allgather_inter(sendbuf, sendcount, sendtype,
-                                             recvbuf, recvcount, recvtype,
-                                             comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype,
+                                   comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
 fn_exit:
     return mpi_errno;
 fn_fail:
-
     goto fn_exit;
 }
 

@@ -512,9 +512,9 @@ int MPIR_Gather_inter (
             newcomm_ptr = comm_ptr->local_comm;
 
             /* now do the a local gather on this intracommunicator */
-            mpi_errno = MPIR_Gather_intra(sendbuf, sendcnt, sendtype,
-                                          tmp_buf, sendcnt, sendtype, 0,
-                                          newcomm_ptr);
+            mpi_errno = MPIR_Gather_impl(sendbuf, sendcnt, sendtype,
+                                         tmp_buf, sendcnt, sendtype, 0,
+                                         newcomm_ptr);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             
             if (rank == 0)
@@ -614,19 +614,10 @@ int MPIR_Gather_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                                                recvtype, root, comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
-        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Gather_intra(sendbuf, sendcnt, sendtype,
-                                          recvbuf, recvcnt, recvtype, root,
-                                          comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        } else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Gather_inter(sendbuf, sendcnt, sendtype,
-                                          recvbuf, recvcnt, recvtype, root,
-                                          comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIR_Gather(sendbuf, sendcnt, sendtype,
+                                recvbuf, recvcnt, recvtype, root,
+                                comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
  fn_exit:

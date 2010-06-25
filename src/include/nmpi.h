@@ -27,7 +27,6 @@
 #define NMPI_Get_count MPI_Get_count
 #define NMPI_Pack MPI_Pack
 #define NMPI_Pack_size MPI_Pack_size
-#define NMPI_Reduce_scatter MPI_Reduce_scatter
 #define NMPI_Unpack MPI_Unpack
 #define NMPI_Wait MPI_Wait
 #define NMPI_Test MPI_Test
@@ -106,7 +105,6 @@
 #define NMPI_Get_count PMPI_Get_count
 #define NMPI_Pack PMPI_Pack
 #define NMPI_Pack_size PMPI_Pack_size
-#define NMPI_Reduce_scatter PMPI_Reduce_scatter
 #define NMPI_Unpack PMPI_Unpack
 #define NMPI_Wait PMPI_Wait
 #define NMPI_Test PMPI_Test
