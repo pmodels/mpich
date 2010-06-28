@@ -408,7 +408,6 @@ Next
   len_two_int         = "08"
   len_long_double_int = "10"
 ' Fortran datatype sizes
-  len_integer64         = "08"
   len_integer32         = "04"
   len_doublecplx      = "10"
   len_2dc             = "20"
@@ -485,11 +484,7 @@ Function CreateDtypeDictionary(byref types, str, b64)
 				Case "${len_long_double}"
 					dtype_val_str = Replace(dtype_val_str, size_str, len_long_double)
 				Case "${len_integer}"
-					if b64 then
-						dtype_val_str = Replace(dtype_val_str, size_str, len_integer64)
-					else
-						dtype_val_str = Replace(dtype_val_str, size_str, len_integer32)
-					end if
+					dtype_val_str = Replace(dtype_val_str, size_str, len_integer32)
 				Case "${len_wchar_t}"
 					dtype_val_str = Replace(dtype_val_str, size_str, len_wchar_t)
 				Case "${len_wchar}"
