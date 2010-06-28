@@ -248,10 +248,14 @@ buildfiles_channel = "sock"
 MPI_MAX_PROCESSOR_NAME = "128"
 MPI_AINT64               = "__int64"
 MPI_AINT64_FMT_DEC_SPEC  = "%I64d"
+MPIR_PINT64_FMT_DEC_SPEC  = """%I64d"""
+MPIR_UPINT64_FMT_DEC_SPEC  = """%I64u"""
 MPI_AINT64_FMT_HEX_SPEC  = "%I64x"
 BSEND_OVERHEAD64         = "95"
 MPI_AINT32               = "int"
 MPI_AINT32_FMT_DEC_SPEC  = "%d"
+MPIR_PINT32_FMT_DEC_SPEC  = """%d"""
+MPIR_UPINT32_FMT_DEC_SPEC  = """%u"""
 MPI_AINT32_FMT_HEX_SPEC  = "%x"
 BSEND_OVERHEAD32         = "59"
 MPI_FINT               = "int"
@@ -3059,6 +3063,18 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLIne("#define MPIR_CXX_DOUBLE_COMPLEX_VALUE "+ MPIR_CXX_DOUBLE_COMPLEX)
 				Case "MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE"
 					fout.WriteLIne("#define MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE "+ MPIR_CXX_LONG_DOUBLE_COMPLEX)
+                                Case "MPIR_PINT_FMT_DEC_SPEC"
+                                        If b64 Then
+                                            fout.WriteLine("#define MPIR_PINT_FMT_DEC_SPEC "+ MPIR_PINT64_FMT_DEC_SPEC)
+                                        Else
+                                            fout.WriteLine("#define MPIR_PINT_FMT_DEC_SPEC "+ MPIR_PINT32_FMT_DEC_SPEC)
+                                        End If
+                                Case "MPIR_UPINT_FMT_DEC_SPEC"
+                                        If b64 Then
+                                            fout.WriteLine("#define MPIR_UPINT_FMT_DEC_SPEC "+ MPIR_UPINT64_FMT_DEC_SPEC)
+                                        Else
+                                            fout.WriteLine("#define MPIR_UPINT_FMT_DEC_SPEC "+ MPIR_UPINT32_FMT_DEC_SPEC)
+                                        End If
 				Case "HAVE___VA_COPY"
 					fout.WriteLine("/* #undef HAVE___VA_COPY */")
 				Case "HAVE_IOSTREAM"
