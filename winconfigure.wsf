@@ -6368,6 +6368,10 @@ Function GenBuild()
 	mfile.WriteLine("fc = ifort")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
+	mfile.WriteLine("!IFDEF MPICH2_CFLAGS")
+	mfile.WriteLine("common_cflags = $(common_cflags) $(MPICH2_CFLAGS)")
+	mfile.WriteLine("!ENDIF")
+	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CPU)"" == ""x86""")
 	mfile.WriteLine("common_cflags = $(common_cflags) -D_X86_=1 -DWIN32 -D_WIN32 -W3")
 	mfile.WriteLine("!ELSEIF ""$(CPU)"" == ""x64""")
