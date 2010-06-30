@@ -6386,6 +6386,8 @@ Function GenBuild()
 	mfile.WriteLine("NMAKE_WINVER = 0x0501")
 	mfile.WriteLine("!ELSEIF ""$(APPVER)"" == ""5.02""")
 	mfile.WriteLine("NMAKE_WINVER = 0x0502")
+	mfile.WriteLine("!ELSEIF ""$(APPVER)"" == ""6.0""")
+	mfile.WriteLine("NMAKE_WINVER = 0x0600")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine("common_cflags = $(common_cflags) -Oi -D_WINNT -D_WIN32_WINNT=$(NMAKE_WINVER)")
 	mfile.WriteLine
