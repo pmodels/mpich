@@ -2576,7 +2576,7 @@ Sub AddDefinitions( fout, filename, b64 )
                                         ' controlled from the makefile
                                         fout.WriteLine("/* #undef HAVE_ERROR_CHECKING */")
                                     Else
-                                        fout.WriteLine("#define HAVE_ERROR_CHECKING=MPID_ERROR_LEVEL_ALL")
+                                        fout.WriteLine("#define HAVE_ERROR_CHECKING MPID_ERROR_LEVEL_ALL")
                                     End If
 				Case "HAVE_TIMING MPID_TIMING_KIND_LOG"
 					fout.WriteLine("/*#define HAVE_TIMING MPID_TIMING_KIND_LOG*/")
