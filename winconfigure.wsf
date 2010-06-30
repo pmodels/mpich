@@ -5569,7 +5569,7 @@ If f.FileExists("src\openpa\src\config.h.in") Then
 	printMsg "VERBOSE", "Creating src\openpa\src\win64\opa_config.h"
 	Set fout = f.CreateTextFile("src\openpa\src\win64\opa_config.h")
 	Call WriteHeader(fout, "opa_config_")
-	Call AddOPADefinitions(fout, "src\openpa\src\config.h.in", false)
+	Call AddOPADefinitions(fout, "src\openpa\src\config.h.in", true)
 	Call WriteFooter(fout)
 	fout.Close()
 Else
