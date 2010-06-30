@@ -172,14 +172,17 @@ static MPID_nem_newtcp_module_vc_area *dummy_vc_area ATTRIBUTE((unused, used)) =
  */
 #define MIN_SKIP_POLLS_INACTIVE (512)
 #define SKIP_POLLS_INC_CNT  (512)
-#define MAX_SKIP_POLLS_INACTIVE (2048)
+#define MAX_SKIP_POLLS_INACTIVE (1024)
 #define SKIP_POLLS_INC(cnt) (                               \
     (cnt >= MAX_SKIP_POLLS_INACTIVE)                        \
     ? (cnt = MIN_SKIP_POLLS_INACTIVE)                       \
     : (cnt += SKIP_POLLS_INC_CNT)                           \
 )
 
-#define MAX_SKIP_POLLS_ACTIVE (128)   /* something smaller */
+/* There is very less overhead in handling req using iocp. Do we
+ * need to skip at all ?
+ */
+#define MAX_SKIP_POLLS_ACTIVE (16)
 static int MPID_nem_tcp_skip_polls = MIN_SKIP_POLLS_INACTIVE;
 
 /* Debug function to dump the sockconn table.  This is intended to be
