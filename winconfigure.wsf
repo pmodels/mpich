@@ -2569,8 +2569,15 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "HAVE_STDIO_H"
 					fout.WriteLine("#define HAVE_STDIO_H")
 				Case "HAVE_ERROR_CHECKING"
-					fout.WriteLine("#define HAVE_ERROR_CHECKING MPID_ERROR_LEVEL_ALL")
-					fout.WriteLine("/*#undef HAVE_ERROR_CHECKING*/")
+                                    ' FIXME: Ideally we should enable the error checking level
+                                    ' for 32-bit builds in vsprojs
+                                    If b64 Then
+                                        ' On the 64-bit builds the level of error checking is
+                                        ' controlled from the makefile
+                                        fout.WriteLine("/* #undef HAVE_ERROR_CHECKING */")
+                                    Else
+                                        fout.WriteLine("#define HAVE_ERROR_CHECKING=MPID_ERROR_LEVEL_ALL")
+                                    End If
 				Case "HAVE_TIMING MPID_TIMING_KIND_LOG"
 					fout.WriteLine("/*#define HAVE_TIMING MPID_TIMING_KIND_LOG*/")
 				Case "HAVE_TIMING MPID_TIMING_KIND_ALL"
@@ -6385,19 +6392,27 @@ Function GenBuild()
         mfile.WriteLine("# Set USE_MTDLL_RUNLIB env variable to 1 if you need to use")
         mfile.WriteLine("# Multithreaded dynamic link runtime library to build MPICH2")
         mfile.WriteLine("# Default is multithreaded static run lib")
+                        ' IF (NODEBUG)
 	mfile.WriteLine("!IFDEF NODEBUG")
-	mfile.WriteLine("!IFDEF USE_MTDLL_RUNLIB")
-	mfile.WriteLine("common_cflags = $(common_cflags) -Ox -DNDEBUG -D_MT -D_DLL -MD")
+	mfile.WriteLine("common_cflags = $(common_cflags) -DNDEBUG -D_MT")
+	mfile.WriteLine("!IFDEF ENABLE_FAST")
+	mfile.WriteLine("common_cflags = $(common_cflags) -Ox -Ob2 -Ot -GS- -GR-")
 	mfile.WriteLine("!ELSE")
-	mfile.WriteLine("common_cflags = $(common_cflags) -Ox -DNDEBUG -D_MT -MT")
+	mfile.WriteLine("common_cflags = $(common_cflags) -O2 -DHAVE_ERROR_CHECKING=MPID_ERROR_LEVEL_ALL")
 	mfile.WriteLine("!ENDIF")
-	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("!IFDEF USE_MTDLL_RUNLIB")
-	mfile.WriteLine("common_cflags = $(common_cflags) -Zi -Od -DDEBUG -D_MT -D_DLL -MDd")
+	mfile.WriteLine("common_cflags = $(common_cflags) -D_DLL -MD")
 	mfile.WriteLine("!ELSE")
-	mfile.WriteLine("common_cflags = $(common_cflags) -Zi -Od -DDEBUG -D_MT -MTd")
+	mfile.WriteLine("common_cflags = $(common_cflags) -MT")
 	mfile.WriteLine("!ENDIF")
-	mfile.WriteLine("common_cflags = $(common_cflags) -DUSE_DBG_LOGGING")
+                        ' ELSE (NODEBUG)
+	mfile.WriteLine("!ELSE")
+	mfile.WriteLine("common_cflags = $(common_cflags) -DHAVE_ERROR_CHECKING=MPID_ERROR_LEVEL_ALL -DUSE_DBG_LOGGING -DDEBUG -Zi -Od -D_MT")
+	mfile.WriteLine("!IFDEF USE_MTDLL_RUNLIB")
+	mfile.WriteLine("common_cflags = $(common_cflags) -D_DLL -MDd")
+	mfile.WriteLine("!ELSE")
+	mfile.WriteLine("common_cflags = $(common_cflags) -MTd")
+	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
         ' FIXME: We should try to use CCP_SDK env instead of hardcoding the HPC SDK path
