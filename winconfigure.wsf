@@ -6423,9 +6423,9 @@ Function GenBuild()
 	mfile.WriteLine
         ' The HPC SDK lib path contains the type libraries required for interfacing with the HPC job manager
 	mfile.WriteLine("!IF ""$(CPU)"" == ""x86""")
-	mfile.WriteLine("MS_HPC_SDK_LIB_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\Lib\amd64""")
-	mfile.WriteLine("!ELSEIF ""$(CPU)"" == ""x64""")
 	mfile.WriteLine("MS_HPC_SDK_LIB_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\Lib\i386""")
+	mfile.WriteLine("!ELSEIF ""$(CPU)"" == ""x64""")
+	mfile.WriteLine("MS_HPC_SDK_LIB_PATH = ""C:\Program Files\Microsoft HPC Pack 2008 SDK\Lib\amd64""")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("lflags  = $(lflags) /LIBPATH:$(MS_HPC_SDK_LIB_PATH) /OPT:REF /INCREMENTAL:NO /NOLOGO /MANIFEST")
