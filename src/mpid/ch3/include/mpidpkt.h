@@ -52,7 +52,8 @@ typedef enum MPIDI_CH3_Pkt_type
 # if defined(MPIDI_CH3_PKT_ENUM)
     , MPIDI_CH3_PKT_ENUM
 # endif    
-    , MPIDI_CH3_PKT_END_ALL
+    , MPIDI_CH3_PKT_END_ALL,
+    MPIDI_CH3_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
 }
 MPIDI_CH3_Pkt_type_t;
 

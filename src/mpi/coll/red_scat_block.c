@@ -1148,7 +1148,6 @@ int MPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_SCATTER_BLOCK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
