@@ -84,12 +84,38 @@ static HYD_status store_launch_time(struct HYDT_bscd_ssh_time *e)
     goto fn_exit;
 }
 
+static HYD_status is_local_host(char *host, int *bool)
+{
+    char localhost[MAX_HOSTNAME_LEN];
+    HYD_status status = HYD_SUCCESS;
+
+    *bool = 0;
+    if (!strcmp(host, "localhost")) {
+        *bool = 1;
+        goto fn_exit;
+    }
+
+    status = HYDU_gethostname(localhost);
+    HYDU_ERR_POP(status, "unable to get local hostname\n");
+
+    if (!strcmp(host, localhost)) {
+        *bool = 1;
+        goto fn_exit;
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
                                       int *control_fd, int enable_stdin,
                                       HYD_status(*stdout_cb) (void *buf, int buflen),
                                       HYD_status(*stderr_cb) (void *buf, int buflen))
 {
-    int num_hosts, idx, i, host_idx, fd, exec_idx, offset;
+    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
     int *pid, *fd_list;
     int sockpair[2];
     struct HYD_node *node;
@@ -185,7 +211,12 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
         status = store_launch_time(e);
         HYDU_ERR_POP(status, "error storing launch time\n");
 
-        if (!strcmp(HYDT_bsci_info.bootstrap, "fork") || !strcmp(node->hostname, "localhost")) {
+        status = is_local_host(node->hostname, &lh);
+        HYDU_ERR_POP(status, "error checking if node is localhost\n");
+
+        /* If bootstrap server is 'fork', or this is the localhost,
+         * use fork to launch the process */
+        if (!strcmp(HYDT_bsci_info.bootstrap, "fork") || lh) {
             offset = exec_idx;
 
             if (control_fd) {
