@@ -21,6 +21,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_08C3FC29C8234AFBA063D6194AB3DF56"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_1540511B7B264B1C8D6E729601BEF526"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -93,6 +99,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_3709086365A641DCA4592BCD26E7F6BF"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_3A1EBFC27BB54A3A9DBA16B281444494"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -130,6 +142,12 @@
         "Entry"
         {
         "MsmKey" = "8:_4BF17D75F44F4CEEB89D9839E70C22E3"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_54C7D697ADBB44EBA1259E64816D736B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -249,6 +267,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_A8F534B4415F4EDEA5433AD7A6AA9B2D"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B4E7F878516042FF8E2767782EB8741D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -256,6 +280,18 @@
         "Entry"
         {
         "MsmKey" = "8:_B5D6CB6F146C48B5A707B94BF176011D"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B70F3790256942D1B9C203509065A859"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C4DDF6B309E54F6BB7F2704073AFCC2F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -280,6 +316,18 @@
         "Entry"
         {
         "MsmKey" = "8:_E828E66ADFD04CF0BB87FB081CFB9C39"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E9A99D9491374DCAA420D2DE8653D5F4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F5F1D4C1580A442DB92F822CE9183ACA"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -469,6 +517,26 @@
             "TargetName" = "8:cxx.lib"
             "Tag" = "8:"
             "Folder" = "8:_21FB2EC726254C54839F05E4290C1045"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_08C3FC29C8234AFBA063D6194AB3DF56"
+            {
+            "SourcePath" = "8:..\\examples\\windows\\installed_examples\\examples.sln"
+            "TargetName" = "8:examples.sln"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -723,6 +791,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3709086365A641DCA4592BCD26E7F6BF"
+            {
+            "SourcePath" = "8:..\\examples\\f77\\fpi.f"
+            "TargetName" = "8:fpi.f"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3A1EBFC27BB54A3A9DBA16B281444494"
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\mt\\mpich2mt.dll"
@@ -849,6 +937,26 @@
             "TargetName" = "8:rlog.lib"
             "Tag" = "8:"
             "Folder" = "8:_21FB2EC726254C54839F05E4290C1045"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_54C7D697ADBB44EBA1259E64816D736B"
+            {
+            "SourcePath" = "8:..\\examples\\windows\\installed_examples\\cxxpi.cxx"
+            "TargetName" = "8:cxxpi.cxx"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1243,6 +1351,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A8F534B4415F4EDEA5433AD7A6AA9B2D"
+            {
+            "SourcePath" = "8:..\\examples\\x64\\Release\\cpi.exe"
+            "TargetName" = "8:cpi.exe"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B4E7F878516042FF8E2767782EB8741D"
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\gfortran\\fmpich2g.dll"
@@ -1269,6 +1397,46 @@
             "TargetName" = "8:mpe_logf.h"
             "Tag" = "8:"
             "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B70F3790256942D1B9C203509065A859"
+            {
+            "SourcePath" = "8:..\\examples\\icpi.c"
+            "TargetName" = "8:icpi.c"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C4DDF6B309E54F6BB7F2704073AFCC2F"
+            {
+            "SourcePath" = "8:..\\examples\\windows\\installed_examples\\fpi.vfproj"
+            "TargetName" = "8:fpi.vfproj"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1349,6 +1517,46 @@
             "TargetName" = "8:clog_uuid.h"
             "Tag" = "8:"
             "Folder" = "8:_40F589E2DCCB433E88F7946F0C0C75C5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E9A99D9491374DCAA420D2DE8653D5F4"
+            {
+            "SourcePath" = "8:..\\examples\\windows\\installed_examples\\cpi.vcproj"
+            "TargetName" = "8:cpi.vcproj"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F5F1D4C1580A442DB92F822CE9183ACA"
+            {
+            "SourcePath" = "8:..\\examples\\windows\\installed_examples\\cxxpi.vcproj"
+            "TargetName" = "8:cxxpi.vcproj"
+            "Tag" = "8:"
+            "Folder" = "8:_066CEB1315D94E40BBFB6A2CCC2552A5"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
