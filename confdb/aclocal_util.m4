@@ -1,6 +1,6 @@
 dnl Nesting safe macros for saving variables
-dnl Usage: PAC_PUSH_VAR(CFLAGS)
-AC_DEFUN([PAC_PUSH_VAR],[
+dnl Usage: PAC_PUSH_FLAG(CFLAGS)
+AC_DEFUN([PAC_PUSH_FLAG],[
 	if test -z "${pac_save_$1_nesting}" ; then
 	   pac_save_$1_nesting=0
 	fi
@@ -8,8 +8,8 @@ AC_DEFUN([PAC_PUSH_VAR],[
 	pac_save_$1_nesting=`expr ${pac_save_$1_nesting} + 1`
 ])
 
-dnl Usage: PAC_POP_VAR(CFLAGS)
-AC_DEFUN([PAC_POP_VAR],[
+dnl Usage: PAC_POP_FLAG(CFLAGS)
+AC_DEFUN([PAC_POP_FLAG],[
 	pac_save_$1_nesting=`expr ${pac_save_$1_nesting} - 1`
 	eval $1="\$pac_save_$1_${pac_save_$1_nesting}"
 	eval pac_save_$1_${pac_save_$1_nesting}=""
@@ -17,24 +17,24 @@ AC_DEFUN([PAC_POP_VAR],[
 
 dnl Usage: PAC_PUSH_ALL_FLAGS
 AC_DEFUN([PAC_PUSH_ALL_FLAGS],[
-	PAC_PUSH_VAR(CFLAGS)
-	PAC_PUSH_VAR(CPPFLAGS)
-	PAC_PUSH_VAR(CXXFLAGS)
-	PAC_PUSH_VAR(FFLAGS)
-	PAC_PUSH_VAR(F90FLAGS)
-	PAC_PUSH_VAR(LDFLAGS)
-	PAC_PUSH_VAR(LIBS)
+	PAC_PUSH_FLAG(CFLAGS)
+	PAC_PUSH_FLAG(CPPFLAGS)
+	PAC_PUSH_FLAG(CXXFLAGS)
+	PAC_PUSH_FLAG(FFLAGS)
+	PAC_PUSH_FLAG(F90FLAGS)
+	PAC_PUSH_FLAG(LDFLAGS)
+	PAC_PUSH_FLAG(LIBS)
 ])
 
 dnl Usage: PAC_POP_ALL_FLAGS
 AC_DEFUN([PAC_POP_ALL_FLAGS],[
-	PAC_POP_VAR(CFLAGS)
-	PAC_POP_VAR(CPPFLAGS)
-	PAC_POP_VAR(CXXFLAGS)
-	PAC_POP_VAR(FFLAGS)
-	PAC_POP_VAR(F90FLAGS)
-	PAC_POP_VAR(LDFLAGS)
-	PAC_POP_VAR(LIBS)
+	PAC_POP_FLAG(CFLAGS)
+	PAC_POP_FLAG(CPPFLAGS)
+	PAC_POP_FLAG(CXXFLAGS)
+	PAC_POP_FLAG(FFLAGS)
+	PAC_POP_FLAG(F90FLAGS)
+	PAC_POP_FLAG(LDFLAGS)
+	PAC_POP_FLAG(LIBS)
 ])
 
 dnl PAC_PREFIX_FLAG - Save flag with a prefix
