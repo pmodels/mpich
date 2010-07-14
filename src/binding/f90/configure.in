@@ -59,52 +59,51 @@ PAC_PROG_CC
 PAC_ARG_STRICT
 AC_C_CONST
 
-# Find a Fortran 90 compiler.  Sets F90
-saveF90FLAGS=$F90FLAGS
-PAC_PROG_F90
-F90FLAGS=$saveF90FLAGS
+# Find a Fortran 90 compiler.  Sets FC
+saveFCFLAGS=$FCFLAGS
+PAC_PROG_FC
+FCFLAGS=$saveFCFLAGS
 
-if test -z "$F90" ; then
-   AC_MSG_ERROR([Could not find a usable F90 compiler])
+if test -z "$FC" ; then
+   AC_MSG_ERROR([Could not find a usable Fortran 90 compiler])
 fi
 
 #
-# Determine the extension for f90 files (it isn't always .f90)
-PAC_F90_EXT
-F90EXT=$pac_cv_f90_ext
-AC_SUBST(F90EXT)
+# Determine the extension for Fortran 90 files (it isn't always .f90)
+PAC_FC_EXT
+FCEXT=$ac_fc_srcext
+AC_SUBST(FCEXT)
 
-#
-# Get the sizes of the standard types.  These are used 
-# to implement MPI_SIZEOF, among other things.
-#
-# Set likely defaults
-CROSS_F90_SIZEOF_INTEGER=${CROSS_F90_SIZEOF_INTEGER:-4}
-CROSS_F90_SIZEOF_REAL=${CROSS_F90_SIZEOF_REAL:-4}
-CROSS_F90_SIZEOF_CHARACTER=${CROSS_F90_SIZEOF_CHARACTER:-1}
-CROSS_F90_SIZEOF_DOUBLE_PRECISION=${CROSS_F90_SIZEOF_DOUBLE_PRECISION:-4}
-
-dnl PAC_PROG_F90_CHECK_SIZEOF_EXT(INTEGER,$CROSS_F90_SIZEOF_INTEGER)
-dnl PAC_PROG_F90_CHECK_SIZEOF_EXT(REAL,$CROSS_F90_SIZEOF_REAL)
-dnl PAC_PROG_F90_CHECK_SIZEOF_EXT(CHARACTER,$CROSS_F90_SIZEOF_CHARACTER)
-#
-# We check the size of double precision even though it should be
-# twice the size of a real because some environments allow the user
-# to set real and double precision to the same size.  This is no longer
-# Fortran, but this check helps make us more robust
-dnl PAC_PROG_F90_CHECK_SIZEOF(DOUBLE PRECISION,$CROSS_F90_SIZEOF_DOUBLE_PRECISION)
-
-# We also want to substitute for these values, not just define them
-SIZEOF_F90_INTEGER=$pac_cv_f90_sizeof_INTEGER
-SIZEOF_F90_REAL=$pac_cv_f90_sizeof_REAL
-SIZEOF_F90_CHARACTER=$pac_cv_f90_sizeof_CHARACTER
-SIZEOF_F90_DOUBLE_PRECISION=$pac_cv_f90_sizeof_DOUBLE_PRECISION
-AC_SUBST(SIZEOF_F90_INTEGER)
-AC_SUBST(SIZEOF_F90_REAL)
-AC_SUBST(SIZEOF_F90_CHARACTER)
-AC_SUBST(SIZEOF_F90_DOUBLE_PRECISION)
-
-PAC_LANG_FORTRAN90
+dnl #
+dnl # Get the sizes of the standard types.  These are used 
+dnl # to implement MPI_SIZEOF, among other things.
+dnl #
+dnl # Set likely defaults
+dnl CROSS_F90_SIZEOF_INTEGER=${CROSS_F90_SIZEOF_INTEGER:-4}
+dnl CROSS_F90_SIZEOF_REAL=${CROSS_F90_SIZEOF_REAL:-4}
+dnl CROSS_F90_SIZEOF_CHARACTER=${CROSS_F90_SIZEOF_CHARACTER:-1}
+dnl CROSS_F90_SIZEOF_DOUBLE_PRECISION=${CROSS_F90_SIZEOF_DOUBLE_PRECISION:-4}
+dnl 
+dnl dnl PAC_PROG_F90_CHECK_SIZEOF_EXT(INTEGER,$CROSS_F90_SIZEOF_INTEGER)
+dnl dnl PAC_PROG_F90_CHECK_SIZEOF_EXT(REAL,$CROSS_F90_SIZEOF_REAL)
+dnl dnl PAC_PROG_F90_CHECK_SIZEOF_EXT(CHARACTER,$CROSS_F90_SIZEOF_CHARACTER)
+dnl #
+dnl # We check the size of double precision even though it should be
+dnl # twice the size of a real because some environments allow the user
+dnl # to set real and double precision to the same size.  This is no longer
+dnl # Fortran, but this check helps make us more robust
+dnl dnl PAC_PROG_F90_CHECK_SIZEOF(DOUBLE PRECISION,$CROSS_F90_SIZEOF_DOUBLE_PRECISION)
+dnl 
+dnl # We also want to substitute for these values, not just define them
+dnl SIZEOF_F90_INTEGER=$pac_cv_f90_sizeof_INTEGER
+dnl SIZEOF_F90_REAL=$pac_cv_f90_sizeof_REAL
+dnl SIZEOF_F90_CHARACTER=$pac_cv_f90_sizeof_CHARACTER
+dnl SIZEOF_F90_DOUBLE_PRECISION=$pac_cv_f90_sizeof_DOUBLE_PRECISION
+dnl AC_SUBST(SIZEOF_F90_INTEGER)
+dnl AC_SUBST(SIZEOF_F90_REAL)
+dnl AC_SUBST(SIZEOF_F90_CHARACTER)
+dnl AC_SUBST(SIZEOF_F90_DOUBLE_PRECISION)
+dnl 
 
 #
 # Determine the precision and range of the standard Fortran types.  This
@@ -113,235 +112,102 @@ PAC_LANG_FORTRAN90
 # find (through selected_real_kind and selected_int_kind) types with larger or
 # smaller precisions and/or ranges than the basic types.
 if test -z "$CROSS_F90_REAL_MODEL" ; then
-    AC_MSG_CHECKING([for precision and range of reals])
-    rm -f conftest*
-    cat > conftest.$ac_f90ext <<EOF
-       program main
-       real a
-       print *, precision(a), ",", range(a)
-       end
-EOF
-    if test -z "$ac_f90link" -a -n "$ac_link" ; then
-         ac_f90link=$ac_link
-    fi
-    if AC_TRY_EVAL(ac_f90link) && test -s conftest${ac_exeext} ; then
-        ./conftest > conftest.out 2>&AC_FD_CC
-        if test -s conftest.out ; then
-            F90_REAL_MODEL=`cat conftest.out | sed -e 's/  */ /g'`
-	    AC_MSG_RESULT($F90_REAL_MODEL)
-        else
-            AC_MSG_WARN([No output from test program])
-        fi
-    else
-        AC_MSG_WARN([Could not build program to determine precision and range of reals])
-	echo $ac_f90link >&AC_FD_CC
-	cat conftest.$ac_f90ext >&AC_FD_CC
-    fi
-    rm -f conftest*
+    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],[
+        real aa
+        print *, precision(aa), ",", range(aa)
+    ],[FC_REAL_MODEL])
 else
-    F90_REAL_MODEL=$CROSS_F90_REAL_MODEL
+    FC_REAL_MODEL=$CROSS_F90_REAL_MODEL
 fi
-AC_SUBST(F90_REAL_MODEL)
+AC_SUBST(FC_REAL_MODEL)
 #
 if test -z "$CROSS_F90_DOUBLE_MODEL" ; then
-    AC_MSG_CHECKING([for precision and range of double precision])
-    rm -f conftest*
-    cat > conftest.$ac_f90ext <<EOF
-       program main
-       double precision a
-       print *, precision(a), ",", range(a)
-       end
-EOF
-    if AC_TRY_EVAL(ac_f90link) && test -s conftest${ac_exeext} ; then
-        ./conftest > conftest.out 2>&AC_FD_CC
-        if test -s conftest.out ; then
-            F90_DOUBLE_MODEL=`cat conftest.out | sed -e 's/  */ /g'`
-	    AC_MSG_RESULT($F90_DOUBLE_MODEL)
-        else
-            AC_MSG_WARN([No output from test program])
-        fi
-    else
-        AC_MSG_WARN([Could not build program to determine precision and range of double precision data])
-    fi
-    rm -f conftest*
+    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],[
+        double precision aa
+        print *, precision(aa), ",", range(aa)
+    ],[FC_DOUBLE_MODEL])
 else
-    F90_DOUBLE_MODEL=$CROSS_F90_DOUBLE_MODEL
+    FC_DOUBLE_MODEL=$CROSS_F90_DOUBLE_MODEL
 fi
-AC_SUBST(F90_DOUBLE_MODEL)
+AC_SUBST(FC_DOUBLE_MODEL)
 #
 if test -z "$CROSS_F90_INTEGER_MODEL" ; then
-    AC_MSG_CHECKING([for range of integers])
-    rm -f conftest*
-    cat > conftest.$ac_f90ext <<EOF
-       program main
-       integer a
-       print *, range(a)
-       end
-EOF
-    if AC_TRY_EVAL(ac_f90link) && test -s conftest${ac_exeext} ; then
-        ./conftest > conftest.out 2>&AC_FD_CC
-        if test -s conftest.out ; then
-            F90_INTEGER_MODEL=`cat conftest.out | sed -e 's/  */ /g'`
-	    AC_MSG_RESULT($F90_INTEGER_MODEL)
-        else
-            AC_MSG_WARN([No output from test program])
-        fi
-    else
-        AC_MSG_WARN([Could not build program to determine range of integer])
-	echo $ac_f90link >&AC_FD_CC
-	cat conftest.$ac_f90ext >&AC_FD_CC
-    fi
-    rm -f conftest*
+    PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],[
+        integer aa
+        print *, range(aa)
+    ],[FC_INTEGER_MODEL])
 else
-    F90_INTEGER_MODEL=$CROSS_F90_INTEGER_MODEL
+    FC_INTEGER_MODEL=$CROSS_F90_INTEGER_MODEL
 fi
-AC_SUBST(F90_INTEGER_MODEL)
+AC_SUBST(FC_INTEGER_MODEL)
 #
+pac_fc_f77_init="no"
 # Try to find the available integer kinds by using selected_int_kind
 # This produces a table of range,kind
+if test -z "$CROSS_F90_ALL_INTEGER_MODELS" ; then
+    if test "$pac_fc_f77_init" != "yes" ; then
+        saveFFLAGS=$FFLAGS
+        AC_PROG_F77
+        FFLAGS=$saveFFLAGS
+        # We assume that the Fortran 77 and Fortran 90 linkers are compatible
+        PAC_PROG_F77_LINKER_WITH_C
+        # For name mangle, we need the library flags
+        PAC_PROG_F77_NAME_MANGLE
+        # Clean LIBS?
+        LIBS="`echo A$LIBS | sed -e 's/  */ /g' -e 's/^A//'`"
+        if test ":$LIBS:" = ": :" ; then
+            LIBS=""
+        fi
+        pac_fc_f77_init="yes"
+    fi
+    PAC_FC_AVAIL_INTEGER_MODELS([FC_ALL_INTEGER_MODELS])
+else
+    FC_ALL_INTEGER_MODELS="$CROSS_F90_ALL_INTEGER_MODELS"
+fi
+AC_SUBST(FC_ALL_INTEGER_MODELS)    
+#
 if test -z "$CROSS_F90_INTEGER_MODEL_MAP" ; then
-    saveFFLAGS=$FFLAGS
-    AC_PROG_F77
-    FFLAGS=$saveFFLAGS
-    # We assume that the Fortran 77 and Fortran 90 linkers are compatible
-    PAC_PROG_F77_LINKER_WITH_C
-    # For name mangle, we need the library flags
-    PAC_PROG_F77_NAME_MANGLE
-    # Clean LIBS?
-    LIBS="`echo A$LIBS | sed -e 's/  */ /g' -e 's/^A//'`"
-    if test ":$LIBS:" = ": :" ; then LIBS="" ; fi
-    AC_MSG_CHECKING([for available integer kinds and ranges])
-    rm -f conftest.*
-
-    # Now, create the program to find the kinds and sizes
-    # We have to do this is two steps:
-    # First, find the valid kinds.  Some (all?) Fortran compilers require
-    # that the kind be a constant expression (gfortran, for example).
-    # Once we have the valid kinds, we can determine the size of 
-    # an integer of each of the valid kinds
-    cat >conftest.$ac_f90ext <<EOF
-      program main
-      integer r, lastkind
-      lastkind=selected_int_kind(1)
-      do r=2,30
-           k = selected_int_kind(r)
-           if (k .ne. lastkind) then
-                print *, r-1,",",lastkind
-                lastkind = k
-           endif
-           if (k .le. 0) then
-               exit
-           endif
-      enddo
-      if (k.ne.lastkind) then
-          print *, 31, ",", k
-      endif
-      end 
-EOF
-    if AC_TRY_EVAL(ac_f90link) && test -s conftest${ac_exeext} ; then
-        ./conftest > conftest.out 2>&AC_FD_CC
-        if test -s conftest.out ; then
-            F90_INTEGER_MODEL=`cat conftest.out | sed -e 's/  */ /g'| tr '\012' ','`
-	    AC_MSG_RESULT($F90_INTEGER_MODEL)
-            validKinds="`sed -e 's/  */ /g' conftest.out | tr '\012' ':'`"
-        else
-            AC_MSG_WARN([No output from test program])
+    if test "$pac_fc_f77_init" != "yes" ; then
+        saveFFLAGS=$FFLAGS
+        AC_PROG_F77
+        FFLAGS=$saveFFLAGS
+        # We assume that the Fortran 77 and Fortran 90 linkers are compatible
+        PAC_PROG_F77_LINKER_WITH_C
+        # For name mangle, we need the library flags
+        PAC_PROG_F77_NAME_MANGLE
+        # Clean LIBS?
+        LIBS="`echo A$LIBS | sed -e 's/  */ /g' -e 's/^A//'`"
+        if test ":$LIBS:" = ": :" ; then
+            LIBS=""
         fi
-    else
-        AC_MSG_WARN([Could not build program to determine range of integer])
-	echo $ac_f90link >&AC_FD_CC
-	cat conftest.$ac_f90ext >&AC_FD_CC
+        pac_fc_f77_init="yes"
     fi
-    rm -f conftest*
-   
-    # First, create a C routine to provide the size in bytes 
-    # of a variable
-    cat <<EOF > conftestc.c
-#include <stdio.h>
-#include "confdefs.h"
-#ifdef F77_NAME_UPPER
-#define cisize_ CISIZE
-#define isize_ ISIZE
-#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
-#define cisize_ cisize
-#define isize_ isize
-#endif
-int cisize_(char *,char*);
-int cisize_(char *i1p, char *i2p)
-{ 
-    int isize_val=0;
-    isize_val = (int)(i2p - i1p);
-    return isize_val;
-}
-EOF
-    pac_tmp_compile='$CC -c $CFLAGS $CPPFLAGS conftestc.c >&5'
-    if AC_TRY_EVAL(pac_tmp_compile) && test -s conftestc.o ; then
-     saveIFS=$IFS
-     IFS=:
-     for rangekind in $validKinds ; do 
-        kind="`echo $rangekind | sed -e 's/.*,//'`"
-	range="`echo $rangekind | sed -e 's/,.*//'`"
-        cat >conftest.$ac_f90ext <<EOF
-      program main
-      integer (kind=$kind) a(2)
-      integer cisize
-      print *, $range, ",", $kind, ",", cisize( a(1), a(2) )
-      end
-EOF
-	IFS=$saveIFS
-        mylink='$F90 -o conftest$ac_exeext $F90FLAGS $LDFLAGS conftest.$ac_f90ext conftestc.o $LIBS >&AC_FD_CC'
-        if AC_TRY_EVAL(mylink) && test -s conftest${ac_exeext} ; then
-            ./conftest > conftest.out 2>&AC_FD_CC
-            if test -s conftest.out ; then
-	        sizes="`cat conftest.out | sed -e 's/  */ /g'`"
-                F90_INTEGER_MODEL_MAP="$F90_INTEGER_MODEL_MAP { $sizes },"
-            else
-                AC_MSG_WARN([No output from test program])
-            fi
-        else
-            AC_MSG_WARN([Could not build program to determine available integer kinds and ranges])
-            echo $mylink >&AC_FD_CC
-	    echo "LIBS = :$LIBS:" >&AC_FD_CC
-	    cat conftest.$ac_f90ext >&AC_FD_CC
-	    if test ! -s conftestc.o ; then
-	        echo "conftestc.o disappered!" >&AC_FD_CC
-	    fi
-        fi
-        rm -f conftest.*
-        IFS=:
-     done
-     IFS=$saveIFS
-     AC_MSG_RESULT($F90_INTEGER_MODEL_MAP)
-     rm -f conftest*
-    else
-        AC_MSG_WARN([Could not build routines to return sizes data])
-    fi
-    else
-        F90_INTEGER_MODEL_MAP="$CROSS_F90_INTEGER_MODEL_MAP"
-    fi
-AC_SUBST(F90_INTEGER_MODEL_MAP)    
-
+    PAC_FC_INTEGER_MODEL_MAP([FC_INTEGER_MODEL_MAP])
+else
+    FC_INTEGER_MODEL_MAP="$CROSS_F90_INTEGER_MODEL_MAP"
+fi
+AC_SUBST(FC_INTEGER_MODEL_MAP)    
 
 dnl Check for other Fortran 90 features, such as different include/use
 dnl module directory and special flags.  Build modules if requested
 
-AC_SUBST(F90_SUFFIX)
-f90includedir='${includedir}'
-f90libdir='${libdir}'
-AC_SUBST(f90includedir)
-AC_SUBST(f90libdir)
-AC_SUBST(F90_LDFLAGS)
-AC_SUBST(F90INC)
-AC_SUBST(F90_MODINCFLAG)
-AC_SUBST(F90MODINCSPEC)
-F90INCFLAG=-I
-AC_SUBST(F90INCFLAG)
-AC_SUBST(F90FLAGS)
-AC_SUBST(F90LINKER)
-AC_SUBST(F90LIB_PATH)
-if test -z "$F90_LIBDIR_LEADER" ; then 
-    F90_LIBDIR_LEADER="-L"
-fi
-AC_SUBST(F90_LIBDIR_LEADER)
+dnl AC_SUBST(F90_SUFFIX)
+dnl f90includedir='${includedir}'
+dnl f90libdir='${libdir}'
+dnl AC_SUBST(f90includedir)
+dnl AC_SUBST(f90libdir)
+dnl AC_SUBST(F90_LDFLAGS)
+dnl AC_SUBST(F90INC)
+dnl AC_SUBST(F90_MODINCFLAG)
+dnl AC_SUBST(F90MODINCSPEC)
+dnl F90INCFLAG=-I
+dnl AC_SUBST(F90INCFLAG)
+dnl AC_SUBST(F90FLAGS)
+dnl AC_SUBST(F90LINKER)
+dnl AC_SUBST(F90LIB_PATH)
+dnl if test -z "$F90_LIBDIR_LEADER" ; then 
+dnl     F90_LIBDIR_LEADER="-L"
+dnl fi
+dnl AC_SUBST(F90_LIBDIR_LEADER)
 
 AC_OUTPUT(mpif90model.h)

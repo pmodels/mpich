@@ -16,7 +16,7 @@ libdir=@libdir@
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
-FC="@FC@"
+F77="@F77@"
 F77CPP="@F77CPP@"
 FFLAGS="@WRAPPER_FFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"

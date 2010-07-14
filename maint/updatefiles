@@ -346,7 +346,7 @@ if [ "$acSubversion" -gt 0 ] ; then
     acVersion="2.$acSubversion"
     echo "You have autoconf version $acVersion or greater."
     # this used to be a check for >=63, but we only work with exactly 2.63 right now
-    if [ "$acSubversion" -ne 63 ] ; then
+    if [ "$no_atdir_check" != "yes" -a "$acSubversion" -ne 63 ] ; then
        cat <<EOF
 autoconf version 2.63 (exactly) is required
 EOF

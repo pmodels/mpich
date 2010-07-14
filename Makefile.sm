@@ -28,7 +28,7 @@ all-local:
 	    echo "@CC@ @CFLAGS@" >>lib/pkglist.new ;\
 	    echo "@CXX@ @CXXFLAGS@" >> lib/pkglist.new ;\
 	    echo "@F77@ @FFLAGS@" >> lib/pkglist.new ;\
-	    echo "@F90@ @F90FLAGS@" >> lib/pkglist.new ;\
+	    echo "@FC@ @FCFLAGS@" >> lib/pkglist.new ;\
 	    echo "@CONFIGURE_ARGUMENTS@" >>lib/pkglist.new ; \
 	    echo "@LDFLAGS@" >> lib/pkglist.new ;\
 	    if diff lib/pkglist lib/pkglist.new >/dev/null 2>&1 ; then \
@@ -68,7 +68,7 @@ cleanlibs:
 
 all-preamble:
 	@echo "Beginning make"
-	@echo "Using variables CC='@CC@' CFLAGS='@CFLAGS@' LDFLAGS='@LDFLAGS@' AR='@AR@' FC='@FC@' F90='@F90@' FFLAGS='@FFLAGS@' F90FLAGS='@F90FLAGS@' CXX='@CXX@' CPPFLAGS='@CPPFLAGS@'"
+	@echo "Using variables CC='@CC@' CFLAGS='@CFLAGS@' LDFLAGS='@LDFLAGS@' F77='@F77@' FFLAGS='@FFLAGS@' FC='@FC@' FCFLAGS='@FCFLAGS@' CXX='@CXX@' CXXFLAGS='@CXXFLAGS@' AR='@AR@' CPP='@CPP@' CPPFLAGS='@CPPFLAGS@'"
 
 # Add any final extras:
 #    1) Build the debugger interface if requested

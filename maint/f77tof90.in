@@ -266,7 +266,7 @@ sub ConvertMakefile {
 	s/mtestf\.o/mtestf90.o/;
 	s/\.F/.F90/g;
 	s/f77/f90/g;
-	s/F77/F90/g;
+	s/F77/FC/g;
 	# Update any per-program LDADD values
         s/f_LDADD/f90_LDADD/g;
 	#
@@ -372,7 +372,7 @@ sub ConvertTestlist {
 	elsif (/^\@ALLOCMEMF\@/) {
 	    # This is a special case for an optional feature (using
 	    # Cray-style pointers for MPI_Alloc_mem).
-	    $_ = "\@ALLOCMEMF90\@\n";
+	    $_ = "\@ALLOCMEMFC\@\n";
 	}
 	print OUTF $_;
     }

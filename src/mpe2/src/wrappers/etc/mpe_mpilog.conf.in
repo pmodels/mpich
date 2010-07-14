@@ -4,7 +4,7 @@ MPE_ETCDIR="@etcbuild_dir@"
 
 MPE_LOG_LIBS="@LOG_LIBS@"
 
-if [ -n "$FC" -o -n "$F90" ] ; then
+if [ -n "$FC" -o -n "$F77" ] ; then
     . $MPE_ETCDIR/mpe_f77env.conf
     PROFILE_INCPATHS="$MPE_FINC_LDR$MPE_INCDIR"
     PROFILE_PRELIB="$MPE_FLIB_LDR$MPE_LIBDIR $MPE_F2CMPI_LIBS $MPE_LOG_LIBS"

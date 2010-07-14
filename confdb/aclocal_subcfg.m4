@@ -5,7 +5,7 @@ AC_DEFUN([PAC_RESET_ALL_FLAGS],[
 	   CPPFLAGS="$USER_CPPFLAGS"
 	   CXXFLAGS="$USER_CXXFLAGS"
 	   FFLAGS="$USER_FFLAGS"
-	   F90FLAGS="$USER_F90FLAGS"
+	   FCFLAGS="$USER_FCFLAGS"
 	   LDFLAGS="$USER_LDFLAGS"
 	   LIBS="$USER_LIBS"
 	fi
@@ -86,8 +86,8 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
 		   FFLAGS=*)
 		       pac_subconfig_args="$pac_subconfig_args FFLAGS='$FFLAGS'"
 		       ;;
-		   F90FLAGS=*)
-		       pac_subconfig_args="$pac_subconfig_args F90FLAGS='$F90FLAGS'"
+		   FCFLAGS=*)
+		       pac_subconfig_args="$pac_subconfig_args FCFLAGS='$FCFLAGS'"
 		       ;;
 		   LDFLAGS=*)
 		       pac_subconfig_args="$pac_subconfig_args LDFLAGS='$LDFLAGS'"

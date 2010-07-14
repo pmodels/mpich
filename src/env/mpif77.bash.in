@@ -10,10 +10,10 @@
 # The important terms are:
 #    includedir, libdir - Directories containing an *installed* mpich2
 #    prefix, execprefix - Often used to define includedir and libdir
-#    FC                 - Fortran 77 compiler
-#    WRAPPER_FFLAGS        - Any special flags needed to compile 
-#    WRAPPER_LDFLAGS       - Any special flags needed to link
-#    WRAPPER_LIBS          - Any special libraries needed in order to link
+#    F77                - Fortran 77 compiler
+#    WRAPPER_FFLAGS     - Any special flags needed to compile 
+#    WRAPPER_LDFLAGS    - Any special flags needed to link
+#    WRAPPER_LIBS       - Any special libraries needed in order to link
 #    MPILIBNAME         - Name of the MPI library
 #    F77_OTHER_LIBS     - Yet more libraries, needed just with F77
 #    
@@ -39,8 +39,8 @@ libdir=@libdir@
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
-FC="@FC@"
-FC_LINKPATH_SHL="@FC_LINKPATH_SHL@"
+F77="@F77@"
+F77_LINKPATH_SHL="@F77_LINKPATH_SHL@"
 F77CPP="@F77CPP@"
 FFLAGS="@WRAPPER_FFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
@@ -68,8 +68,8 @@ Show=
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
 if [ -n "$MPICH_F77" ] ; then
-    FC="$MPICH_F77"
-    F77name=`echo $FC | sed 's/ /-/g'`
+    F77="$MPICH_F77"
+    F77name=`echo $F77 | sed 's/ /-/g'`
     if [ -s $sysconfdir/mpif77-$F77name.conf ] ; then
         . $sysconfdir/mpif77-$F77name.conf
     fi
@@ -113,11 +113,11 @@ for arg in "$@" ; do
     ;;
 
     -f77=*)
-    FC=`echo A$arg | sed -e 's/A-f77=//g'`
+    F77=`echo A$arg | sed -e 's/A-f77=//g'`
     addarg=no
     ;;
     -fc=*)
-    FC=`echo A$arg | sed -e 's/A-fc=//g'`
+    F77=`echo A$arg | sed -e 's/A-fc=//g'`
     addarg=no
     ;;
 
@@ -169,7 +169,7 @@ for arg in "$@" ; do
     # Loading the profConf file is handled below
     ;;
     -help)
-    NC=`echo "$FC" | sed 's%\/% %g' | awk '{print $NF}' -`
+    NC=`echo "$F77" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
         . $sysconfdir/mpixxx_opts.conf
         echo "    -f77=xxx      - Reset the native compiler to xxx."
@@ -284,9 +284,9 @@ fi
 # libraries
 #
 if [ "$linking" = yes ] ; then
-    if [ -n "$FC_LINKPATH_SHL" ] ; then
+    if [ -n "$F77_LINKPATH_SHL" ] ; then
         # Prepend the path for the shared libraries to the library list
-        mpilibs="$FC_LINKPATH_SHL$libdir $mpilibs"
+        mpilibs="$F77_LINKPATH_SHL$libdir $mpilibs"
     fi
 
     path_list=""
@@ -298,10 +298,10 @@ if [ "$linking" = yes ] ; then
 	if [ "$found_path" = "0" ] ; then path_list="$path_list $path" ; fi
     done
 
-    $Show $FC $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir ${path_list} $mpilibs $LIBS
+    $Show $F77 $FFLAGS $LDFLAGS "${allargs[@]}" -I$includedir ${path_list} $mpilibs $LIBS
     rc=$?
 else
-    $Show $FC $FFLAGS "${allargs[@]}" -I$includedir
+    $Show $F77 $FFLAGS "${allargs[@]}" -I$includedir
     rc=$?
 fi
 if [ -n "$rmfiles" ] ; then

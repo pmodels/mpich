@@ -7,18 +7,21 @@ srcdir          = @srcdir@
 LIBS            = @LIBS@
 MPILIBNAME      = @MPILIBNAME@
 
-MPICHDIR = ../..
-F90         = $(MPICHDIR)/bin/mpif90
-F90FLAGS    = @F90FLAGS@
-F90_COMPILE = $(F90) $(F90FLAGS)
-LDFLAGS     = 
+MPICHDIR    = ../..
+FC          = $(MPICHDIR)/bin/mpif90
+# Both FCFLAGS and LDFLAGS have been included in mpif90, set them to NULL here.
+FCFLAGS     =
+LDFLAGS     =
+FC_COMPILE  = $(FC) $(FCFLAGS)
+FC_LINK     = $(FC_COMPILE) $(LDFLAGS)
+
 VPATH = .:${srcdir}
 .SUFFIXES:
 .SUFFIXES: .o .f90 .txt 
 .f90.o:
-	$(F90_COMPILE) -c $<
+	$(FC_COMPILE) -c $<
 .f90:
-	$(F90_COMPILE) -o $* $< $(LDFLAGS) $(LIBS)
+	$(FC_LINK) -o $* $< $(LIBS)
 
 Makefile: ${srcdir}/Makefile.in
 	-cd ../../../ && \
@@ -34,8 +37,8 @@ distclean: clean
 maintainerclean:
 
 all-redirect: pi3f90
-pi3f90: pi3f90.o  ../../lib/lib${MPILIBNAME}.a
-	$(F90_COMPILE) -o pi3f90 pi3f90.o  ${LIBS}
+pi3f90: pi3f90.o  ../../lib/lib$(MPILIBNAME).a
+	$(FC_LINK) -o pi3f90 pi3f90.o $(LIBS)
 htmldoc:
 mandoc:
 latexdoc:

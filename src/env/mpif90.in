@@ -10,12 +10,12 @@
 # The important terms are:
 #    includedir, libdir - Directories containing an *installed* mpich2
 #    prefix, execprefix - Often used to define includedir and libdir
-#    F90                - Fortran 90 compiler
-#    WRAPPER_F90FLAGS      - Any special flags needed to compile 
-#    WRAPPER_LDFLAGS       - Any special flags needed to link
-#    WRAPPER_LIBS          - Any special libraries needed in order to link
+#    FC                 - Fortran 90 compiler
+#    WRAPPER_FCFLAGS    - Any special flags needed to compile 
+#    WRAPPER_LDFLAGS    - Any special flags needed to link
+#    WRAPPER_LIBS       - Any special libraries needed in order to link
 #    MPILIBNAME         - Name of the MPI library
-#    F90_OTHER_LIBS     - Yet more libraries, needed just with F90
+#    FC_OTHER_LIBS      - Yet more libraries, needed just with FC
 #    
 # We assume that (a) the C compiler can both compile and link programs
 #
@@ -39,25 +39,25 @@ libdir=@libdir@
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
-F90="@F90@"
-F90_LINKPATH_SHL="@F90_LINKPATH_SHL@"
-F90CPP="@F90CPP@"
+FC="@FC@"
+FC_LINKPATH_SHL="@FC_LINKPATH_SHL@"
+FCCPP="@FCCPP@"
 #
 # Fortran 90 Compiler characteristics
-F90INC="@F90INC@"
+FCINC="@FCINC@"
 # f90modinc specifies how to add a directory to the search path for modules.
 # Some compilers (Intel ifc version 5) do not support this concept, and 
 # instead need 
 # a specific list of files that contain module names and directories.
-# The F90MODINCSPEC is a more general approach that uses <dir> and <file>
+# The FCMODINCSPEC is a more general approach that uses <dir> and <file>
 # for the directory and file respectively.
-F90MODINC="@F90MODINCFLAG@"
-F90MODINCSPEC="@F90MODINCSPEC@"
-F90EXT="@F90EXT@"
+FCMODINC="@FCMODINCFLAG@"
+FCMODINCSPEC="@FCMODINCSPEC@"
+FCEXT="@FCEXT@"
 #
-F90FLAGS="@WRAPPER_F90FLAGS@"
+FCFLAGS="@WRAPPER_FCFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
-LIBS="@WRAPPER_LIBS@ @F90_OTHER_LIBS@"
+LIBS="@WRAPPER_LIBS@ @FC_OTHER_LIBS@"
 MPILIBNAME="@MPILIBNAME@"
 PMPILIBNAME="@PMPILIBNAME@"
 NEEDSPLIB="@NEEDSPLIB@"
@@ -75,16 +75,16 @@ Show=eval
 # Environment Variables.
 # The environment variables MPICH_F90 may be used to override the 
 # default choices.
-# In addition, if there is a file $sysconfdir/mpif90-$F90name.conf, 
-# where F90name is the name of the compiler with all spaces replaced by hyphens
+# In addition, if there is a file $sysconfdir/mpif90-$FCname.conf, 
+# where FCname is the name of the compiler with all spaces replaced by hyphens
 # (e.g., "f90 -64" becomes "f90--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
 if [ -n "$MPICH_F90" ] ; then
-    F90="$MPICH_F90"
-    F90name=`echo $F90 | sed 's/ /-/g'`
-    if [ -s $sysconfdir/mpif90-$F90name.conf ] ; then
-        . $sysconfdir/mpif90-$F90name.conf
+    FC="$MPICH_F90"
+    FCname=`echo $FC | sed 's/ /-/g'`
+    if [ -s $sysconfdir/mpif90-$FCname.conf ] ; then
+        . $sysconfdir/mpif90-$FCname.conf
     fi
 fi
 # Allow a profiling option to be selected through an environment variable
@@ -102,7 +102,7 @@ fi
 #
 # Look through the arguments for arguments that indicate compile only.
 # If these are *not* found, add the library options
-
+#
 linking=yes
 allargs=""
 for arg in "$@" ; do
@@ -124,7 +124,11 @@ for arg in "$@" ; do
     set -x
     ;;
     -f90=*)
-    F90=`echo A$arg | sed -e 's/A-f90=//g'`
+    FC=`echo A$arg | sed -e 's/A-f90=//g'`
+    addarg=no
+    ;;
+    -fc=*)
+    FC=`echo A$arg | sed -e 's/A-fc=//g'`
     addarg=no
     ;;
     -show)
@@ -133,11 +137,11 @@ for arg in "$@" ; do
     ;;
     -config=*)
     addarg=no
-    F90name=`echo A$arg | sed -e 's/A-config=//g'`
-    if [ -s "$sysconfdir/mpif90-$F90name.conf" ] ; then
-        . "$sysconfdir/mpif90-$F90name.conf"
+    FCname=`echo A$arg | sed -e 's/A-config=//g'`
+    if [ -s "$sysconfdir/mpif90-$FCname.conf" ] ; then
+        . "$sysconfdir/mpif90-$FCname.conf"
     else
-	echo "Configuration file mpif90-$F90name.conf not found"
+	echo "Configuration file mpif90-$FCname.conf not found"
     fi
     ;;
     -compile-info|-compile_info)
@@ -175,14 +179,16 @@ for arg in "$@" ; do
     # Loading the profConf file is handled below
     ;;
     -help)
-    NC=`echo "$F90" | sed 's%\/% %g' | awk '{print $NF}' -`
+    NC=`echo "$FC" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
         . $sysconfdir/mpixxx_opts.conf
         echo "    -f90=xxx      - Reset the native compiler to xxx."
+        echo "    -fc=xxx       - Reset the native compiler to xxx."
     else
         if [ -f "./mpixxx_opts.conf" ] ; then
             . ./mpixxx_opts.conf
             echo "    -f90=xxx      - Reset the native compiler to xxx."
+            echo "    -fc=xxx       - Reset the native compiler to xxx."
         fi
     fi
     exit 0
@@ -216,17 +222,17 @@ for arg in "$@" ; do
     cppflags="$cppflags $arg"
     ;;
     *.F|*.F90|.fpp|.FPP)
-# If F90CPP is not empty, then we need to do the following:
+# If FCCPP is not empty, then we need to do the following:
 #    If any input files have the .F or .F90 extension, then    
-#        If F90CPP = false, then
+#        If FCCPP = false, then
 #            generate an error message and exit
-#        Use F90CPP to convert the file from .F to .f, using 
+#        Use FCCPP to convert the file from .F to .f, using 
 #            $TMPDIR/f$$-$count.f as the output file name
 #            Replace the input file with this name in the args
 # This is needed only for very broken systems
 #     
-    if [ -n "$F90CPP" ] ; then
-        if [ "$F90CPP" = "false" ] ; then
+    if [ -n "$FCCPP" ] ; then
+        if [ "$FCCPP" = "false" ] ; then
             echo "This Fortran compiler does not accept .F or .F90 files"
 	    exit 1
         fi
@@ -237,8 +243,8 @@ for arg in "$@" ; do
 	#
 	TMPDIR=${TMPDIR:-/tmp}
 	# Make sure that we use a valid extension for the temp file.
-        tmpfile=$TMPDIR/f$$-$bfile.$F90EXT
-        if $F90CPP $cppflags $arg > $tmpfile ; then
+        tmpfile=$TMPDIR/f$$-$bfile.$FCEXT
+        if $FCCPP $cppflags $arg > $tmpfile ; then
             # Add this file to the commandline list
 	    count=`expr $count + 1`
 	    allargs="$allargs $tmpfile"
@@ -300,7 +306,7 @@ if [ -n "$profConf" ] ; then
     if [ -n "$profConffile" -a -s "$profConffile" ] ; then
 	. $profConffile
 	if [ -n "$PROFILE_INCPATHS" ] ; then
-	    F90FLAGS="$PROFILE_INCPATHS $F90FLAGS"
+	    FCFLAGS="$PROFILE_INCPATHS $FCFLAGS"
         fi
         if [ -n "$PROFILE_PRELIB" ] ; then
 	    mpilibs="$PROFILE_PRELIB $mpilibs"
@@ -313,7 +319,7 @@ fi
 
 # Construct the line to add the include directory (not all compilers 
 # use -I, unfortunately)
-if [ -z "${F90INC}" ] ; then
+if [ -z "${FCINC}" ] ; then
     # If there is no path, add a link to the mpif.h file.
     # There *must* be a way to provide the path the any modules (there
     # may be too many to link)
@@ -325,25 +331,25 @@ if [ -z "${F90INC}" ] ; then
 	# Remember to remove this file
 	rmfiles="$rmfiles mpif.h"
     fi
-    F90INCDIRS=
+    FCINCDIRS=
 else
-    # Normally, F90INC is just -I, but some compilers have used different
+    # Normally, FCINC is just -I, but some compilers have used different
     # command line arguments
-    F90INCDIRS=${F90INC}${includedir}
+    FCINCDIRS=${FCINC}${includedir}
 fi
 
 # Handle the specification of the directory containing the modules
 # For now, these are in the includedir (no choice argument supported)
 moduledir=$modincdir
 modulelib=${MPILIBNAME}f90
-if [ -n "$F90MODINCSPEC" ] ; then
-    newarg=`echo A"$F90MODINCSPEC" | \
+if [ -n "$FCMODINCSPEC" ] ; then
+    newarg=`echo A"$FCMODINCSPEC" | \
 	sed -e 's/^A//' -e 's%<dir>%'"$moduledir%g" -e 's/<file>/mpi/g'`
-    F90MODDIRS="$newarg"
-    F90MODLIBS="-l$modulelib"
-elif [ -n "$F90MODINC" ] ; then
-    F90MODDIRS="${F90MODINC}$moduledir"
-    F90MODLIBS="-l$modulelib"
+    FCMODDIRS="$newarg"
+    FCMODLIBS="-l$modulelib"
+elif [ -n "$FCMODINC" ] ; then
+    FCMODDIRS="${FCMODINC}$moduledir"
+    FCMODLIBS="-l$modulelib"
 fi
 
 #
@@ -353,9 +359,9 @@ fi
 # libraries
 
 if [ "$linking" = yes ] ; then
-    if [ -n "$F90_LINKPATH_SHL" ] ; then
+    if [ -n "$FC_LINKPATH_SHL" ] ; then
         # Prepend the path for the shared libraries to the library list
-        mpilibs="$F90_LINKPATH_SHL$libdir $mpilibs"
+        mpilibs="$FC_LINKPATH_SHL$libdir $mpilibs"
     fi
 
     path_list=""
@@ -367,10 +373,10 @@ if [ "$linking" = yes ] ; then
 	if [ "$found_path" = "0" ] ; then path_list="$path_list $path" ; fi
     done
 
-    $Show $F90 $F90FLAGS $LDFLAGS $allargs $F90INCDIRS $F90MODDIRS ${path_list} $F90MODLIBS $mpilibs $LIBS
+    $Show $FC $FCFLAGS $LDFLAGS $allargs $FCINCDIRS $FCMODDIRS ${path_list} $FCMODLIBS $mpilibs $LIBS
     rc=$?
 else
-    $Show $F90 $F90FLAGS $allargs $F90INCDIRS $F90MODDIRS
+    $Show $FC $FCFLAGS $allargs $FCINCDIRS $FCMODDIRS
     rc=$?
 fi
 if [ -n "$rmfiles" ] ; then

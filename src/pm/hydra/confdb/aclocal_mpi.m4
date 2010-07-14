@@ -93,7 +93,7 @@ AC_PROVIDE([AC_PROG_CC])
 AC_SUBST(CC)
 AC_SUBST(CXX)
 AC_SUBST(F77)
-AC_SUBST(F90)
+AC_SUBST(FC)
 AC_ARG_WITH(mpich,
 [--with-mpich=path  - Assume that we are building with MPICH],
 ac_mpi_type=mpich)
@@ -155,10 +155,10 @@ case $ac_mpi_type in
             TESTF77=${F77-f77}
             F77="$MPIF77"
             ac_cv_prog_F77=$F77
-            AC_PATH_PROG(MPIF90,mpif90)
-            TESTF90=${F90-f90}
-            F90="$MPIF90"
-            ac_cv_prog_F90=$F90
+            AC_PATH_PROG(MPIFC,mpif90)
+            TESTFC=${FC-f90}
+            FC="$MPIFC"
+            ac_cv_prog_FC=$FC
             AC_PATH_PROG(MPICXX,mpiCC)
             TESTCXX=${CXX-CC}
             CXX="$MPICXX"
@@ -216,10 +216,10 @@ case $ac_mpi_type in
         TESTF77=${F77-f77}
         F77="$MPIF77"
         ac_cv_prog_F77=$F77
-        AC_PATH_PROG(MPIF90,mpif90)
-        TESTF90=${F90-f90}
-        F90="$MPIF90"
-        ac_cv_prog_F90=$F90
+        AC_PATH_PROG(MPIFC,mpif90)
+        TESTFC=${FC-f90}
+        FC="$MPIFC"
+        ac_cv_prog_FC=$FC
         AC_PATH_PROG(MPICXX,mpiCC)
         TESTCXX=${CXX-CC}
         CXX="$MPICXX"
@@ -241,14 +241,14 @@ case $ac_mpi_type in
         ac_cv_prog_CC=$CC
         ac_cv_prog_F77=$F77
 	# There is no mpxlf90, but the options langlvl and free can
-	# select the F90 version of xlf
-	TESTF90=${F90-xlf90}; F90="mpxlf -qlanglvl=90ext -qfree=f90"
+	# select the Fortran 90 version of xlf
+	TESTFC=${FC-xlf90}; FC="mpxlf -qlanglvl=90ext -qfree=f90"
 	MPILIBNAME=""
 	;;
 
 	sgimpi)
 	TESTCC=${CC:=cc}; TESTF77=${F77:=f77}; 
-	TESTCXX=${CXX:=CC}; TESTF90=${F90:=f90}
+	TESTCXX=${CXX:=CC}; TESTFC=${FC:=f90}
 	AC_CHECK_LIB(mpi,MPI_Init)
 	if test "$ac_cv_lib_mpi_MPI_Init" = "yes" ; then
 	    MPILIBNAME="mpi"
@@ -271,7 +271,7 @@ case $ac_mpi_type in
 	    AC_PROG_CXX
 	fi
 	if test "$enable_f90" != no ; then
-	    PAC_PROG_F90
+	    PAC_PROG_FC
 	fi
 	# Set defaults for the TEST versions if not already set
 	if test -z "$TESTCC" ; then 
@@ -283,8 +283,8 @@ case $ac_mpi_type in
 	if test -z "$TESTCXX" ; then
 	    TESTCXX=${CXX:=CC}
         fi
-	if test -z "$TESTF90" ; then
-       	    TESTF90=${F90:=f90}
+	if test -z "$TESTFC" ; then
+       	    TESTFC=${FC:=f90}
 	fi
         if test "X$MPICC" = "X" ; then
             if test -x "$with_mpi/bin/mpicc" ; then
@@ -319,7 +319,7 @@ case $ac_mpi_type in
 	    AC_PROG_CXX
 	fi
 	if test "$enable_f90" != no ; then
-	    PAC_PROG_F90
+	    PAC_PROG_FC
 	fi
 	# Set defaults for the TEST versions if not already set
 	if test -z "$TESTCC" ; then 
@@ -331,8 +331,8 @@ case $ac_mpi_type in
 	if test -z "$TESTCXX" ; then
 	    TESTCXX=${CXX:=CC}
         fi
-	if test -z "$TESTF90" ; then
-       	    TESTF90=${F90:=f90}
+	if test -z "$TESTFC" ; then
+       	    TESTFC=${FC:=f90}
 	fi
 	;;
 esac

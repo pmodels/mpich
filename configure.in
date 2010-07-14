@@ -98,7 +98,7 @@ dnl know that they are being invoked from within the MPICH2 configure,
 dnl the following environment variables are set and exported:
 dnl    FROM_MPICH2
 dnl    MPICH2_ENABLE_F77
-dnl    MPICH2_ENABLE_F90
+dnl    MPICH2_ENABLE_FC
 dnl    MPICH2_ENABLE_CXX
 dnl
 dnl The file name here refers to a file in the source being configured
@@ -266,7 +266,7 @@ WRAPPER_CFLAGS="$CFLAGS $MPICH2_MPICC_FLAGS"
 WRAPPER_CPPFLAGS="$CPPFLAGS $MPICH2_MPICPP_FLAGS"
 WRAPPER_CXXFLAGS="$CXXFLAGS $MPICH2_MPICXX_FLAGS"
 WRAPPER_FFLAGS="$FFLAGS $MPICH2_MPIF77_FLAGS"
-WRAPPER_F90FLAGS="$F90FLAGS $MPICH2_MPIF90_FLAGS"
+WRAPPER_FCFLAGS="$FCFLAGS $MPICH2_MPIFC_FLAGS"
 WRAPPER_LDFLAGS="$LDFLAGS $MPICH2_LDFLAGS"
 WRAPPER_LIBS="$LIBS $MPICH2_LIBS"
 
@@ -275,14 +275,14 @@ AC_ARG_VAR(MPICH2LIB_CFLAGS, [extra CFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_CPPFLAGS, [extra CPPFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_CXXFLAGS, [extra CXXFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_FFLAGS, [extra FFLAGS used in building MPICH2 libraries])
-AC_ARG_VAR(MPICH2LIB_F90FLAGS, [extra F90FLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_FCFLAGS, [extra FCFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_LDFLAGS, [extra LDFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_LIBS, [extra LIBS used in building MPICH2 libraries])
 CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MPICH2LIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
 FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
-F90FLAGS="$F90FLAGS $MPICH2LIB_F90FLAGS"
+FCFLAGS="$FCFLAGS $MPICH2LIB_FCFLAGS"
 LDFLAGS="$LDFLAGS $MPICH2LIB_LDFLAGS"
 LIBS="$LIBS $MPICH2LIB_LIBS"
 
@@ -337,7 +337,7 @@ AC_ARG_ENABLE(g,
     handlealloc - Trace handle allocations
     dbg      - Add compiler flag, -g, to all internal
                compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
-               MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
+               MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
     debug    - Synonym for dbg
     log      - Enable debug event logging
     mem      - Memory usage tracing
@@ -372,7 +372,7 @@ AC_ARG_ENABLE(fast,
                nor --disable-fast is specified. (default)
     O<n>     - Appends default optimization flags, -O<n>, to all internal
                compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
-               MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
+               MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
     nochkmsg - No error checking, i.e. --disable-error-checking
     notiming - No timing collection, i.e. --disable-timing.
     ndebug   - Appends -DNDEBUG to MPICH2LIB_CFLAGS.
@@ -390,14 +390,14 @@ AC_ARG_ENABLE(check-compiler-flags,
     ,,enable_check_compiler_flags=yes)
 
 dnl
-dnl We enable f77 and f90 if we can find compilers for them.
-dnl In addition, we check whether f77 and f90 can work together.
+dnl We enable f77 and fc if we can find compilers for them.
+dnl In addition, we check whether f77 and fc can work together.
 dnl
 AC_ARG_ENABLE(f77,
 [--enable-f77 - Enable Fortran 77 bindings],,
 enable_f77=default; enable_f77_wasdefault=yes)
-AC_ARG_ENABLE(f90,
-[--enable-f90 - Enable Fortran 90 bindings],,enable_f90=default)
+AC_ARG_ENABLE(fc,
+[--enable-fc - Enable Fortran 90 bindings],,enable_fc=default)
 AC_ARG_ENABLE(cxx,
 [--enable-cxx - Enable C++ bindings],,enable_cxx=default)
 AC_ARG_ENABLE(romio,
@@ -689,7 +689,7 @@ FORTRAN_BINDING=0
 MPI_DEFAULT_COPTS="-O2"
 MPI_DEFAULT_CXXOPTS="-O2"
 MPI_DEFAULT_FOPTS="-O2"
-MPI_DEFAULT_F90OPTS="-O2"
+MPI_DEFAULT_FCOPTS="-O2"
 
 # enable-fast
 # strip off multiple options, separated by commas
@@ -731,7 +731,7 @@ for option in $enable_fast ; do
             MPI_DEFAULT_COPTS="-$option"
             MPI_DEFAULT_CXXOPTS="-$option"
             MPI_DEFAULT_FOPTS="-$option"
-            MPI_DEFAULT_F90OPTS="-$option"
+            MPI_DEFAULT_FCOPTS="-$option"
         else
             AC_MSG_WARN([Unknown value $option for --enable-fast])
         fi
@@ -1251,13 +1251,13 @@ if test "$enable_append_g" = "yes" ; then
     CFLAGS="$CFLAGS -g"
     CXXFLAGS="$CXXFLAGS -g"
     FFLAGS="$FFLAGS -g"
-    F90FLAGS="$F90FLAGS -g"
+    FCFLAGS="$FCFLAGS -g"
 fi
 if test "$enable_append_ndebug" = "yes" ; then
-    CFLAGS="$CFLAGS -DNDEBUG -DNVALGRIND"
-    CXXFLAGS="$CXXFLAGS -DNDEBUG -DNVALGRIND"
-    FFLAGS="$FFLAGS -DNDEBUG -DNVALGRIND"
-    F90FLAGS="$F90FLAGS -DNDEBUG -DNVALGRIND"
+    CFLAGS="$CFLAGS -DNDEBUG"
+    CXXFLAGS="$CXXFLAGS -DNDEBUG"
+    FFLAGS="$FFLAGS -DNDEBUG"
+    FCFLAGS="$FCFLAGS -DNDEBUG"
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
@@ -1305,7 +1305,7 @@ if test "$with_cross" != "no" ; then
 	cross_compiling=yes
 	ac_cv_prog_cc_cross=yes
 	ac_cv_prog_f77_cross=yes
- 	ac_cv_prog_f90_cross=yes
+ 	ac_cv_prog_fc_cross=yes
         ac_cv_prog_cxx_cross=yes
         export cross_compiling
 	# Export all cross variables.  Any subsidiary configure should also
@@ -1593,7 +1593,7 @@ dnl
 #
 #
 # Find a C compiler (choose gcc first).
-# We also need to do this before the F77 and F90 test to ensure that we
+# We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 saveCFLAGS=$CFLAGS
 AC_PROG_CC
@@ -1604,7 +1604,7 @@ if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
     cross_compiling=yes
     ac_cv_prog_cc_cross=yes
     ac_cv_prog_f77_cross=yes
-    ac_cv_prog_f90_cross=yes
+    ac_cv_prog_fc_cross=yes
     ac_cv_prog_cxx_cross=yes
 fi
 # Misfeature in autoconf.  When using gcc, PROG_CC insists on setting 
@@ -1709,13 +1709,13 @@ AC_SUBST(PROFILE_DEF_MPI)
 #
 # First, determine whether we are/can support the language bindings
 #
-# Handle the case that the user set FC but not F77 before we run the
-# PROG_F77 command
-if test -n "$F77" -a -n "$FC" -a "$F77" != "$FC" ; then
-    AC_MSG_ERROR([The values of the environment variables F77 (=$F77) and FC (=$FC) are not the same.  Unset one or both and rerun configure])
+# Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
+# substituting them, i.e. FC=$F90 and FCFLAGS=$F90FLAGS, we choose to emit
+# an error message and abort to avoid any ambiguous/hidden bug in choosing
+# Fortran90 compilers.
+if test -n "$F90" -o -n "$F90FLAGS" ; then
+    AC_MSG_ERROR([F90 and F90FLAGS are replaced by FC and FCFLAGS respectively in this configure, please unset F90/F90FLAGS and set FC/FCFLAGS instead and rerun configure again.])
 fi
-if test -z "$F77" -a -n "$FC" ; then F77="$FC" ; fi
-if test -z "$FC" -a -n "$F77" ; then FC="$F77" ; fi
 # ----------------------------------------------------------------------------
 # Handle default choices for the Fortran compilers
 if test "$enable_f77" = "default" ; then
@@ -1754,7 +1754,7 @@ if test "$enable_f77" = yes ; then
 fi
 
 #
-# We need to know the name mangling for Fortran before testing for F90
+# We need to know the name mangling for Fortran before testing for FC
 # compatibility (we need this because of the way we decide to generate
 # the Fortran 77 bindings)
 if test "$enable_f77" = yes ; then
@@ -1790,14 +1790,14 @@ the options (e.g., setenv FFLAGS "-f -B108").  In addition, make sure that your
 Fortran 90 compiler uses a compatible naming choice.  For the 
 Absoft Fortran 90, -YALL_NAMES=LCS selects lower case names and -B108 
 adds underscores to names, as required for iargc and getarg.  Pass this
-information to configure with the F90FLAGS environment variable.])
+information to configure with the FCFLAGS environment variable.])
         # If Fortran implicitly enabled, disable it now.  Otherwise,
 	# abort the configure since warning messages are often lost in
 	# the output.
 	if test "$enable_f77_wasdefault" = yes ; then
 	    AC_MSG_WARN([Turning off Fortran support because of mixed case names])
 	    enable_f77=no
-	    enable_f90=no
+	    enable_fc=no
 	else
 	    AC_MSG_ERROR([Aborting configure because of mixed case names in Fortran.  Either select --disable-f77 or set FFLAGS to force the compiler to select monocase names])
 	fi
@@ -1879,19 +1879,19 @@ if test "$enable_f77" = yes ; then
     PAC_C_MULTI_ATTR_ALIAS
 fi
 
-# F90 requires F77 as well.  If the user disabled f77, do not run the
+# FC requires F77 as well.  If the user disabled f77, do not run the
 # next test; instead, drop into the warning message
-# Set a default value for f90 works with f77.  This value is
-# set to no *only* if f90 was selected but was not compatible with f77
-f90_with_f77=yes
-if test "$enable_f90" = "default" -a "$enable_f77" = yes ; then
-    enable_f90=no
+# Set a default value for fc works with f77.  This value is
+# set to no *only* if fc was selected but was not compatible with f77
+fc_with_f77=yes
+if test "$enable_fc" = "default" -a "$enable_f77" = yes ; then
+    enable_fc=no
     # Check for a Fortran compiler.  Work around bug in autoconf that 
-    # adds -g to F90FLAGS
-    saveF90FLAGS="$F90FLAGS"
-    PAC_PROG_F90
-    F90FLAGS=$saveF90FLAGS
-    if test -n "$F90" ; then 
+    # adds -g to FCFLAGS
+    saveFCFLAGS="$FCFLAGS"
+    PAC_PROG_FC
+    FCFLAGS=$saveFCFLAGS
+    if test -n "$FC" ; then 
         if test -z "$F77" ; then
 	    saveFFLAGS=$FFLAGS
 	    AC_PROG_F77
@@ -1911,19 +1911,19 @@ if test "$enable_f90" = "default" -a "$enable_f77" = yes ; then
 	       "$pac_cv_prog_f77_name_mangle" = "lower doubleunderscore" ; then
 	    testRoutine="t12"
         fi
-        PAC_F90_AND_F77_COMPATIBLE(f90_with_f77=yes,f90_with_f77=no,$testRoutine)
-        if test "$f90_with_f77" != yes ; then
-	    enable_f90=no
-	    AC_MSG_WARN([The selected Fortran 90 compiler $F90 does not work with the selected Fortran 77 compiler $F77.  Use the environment variables F90 and F77 respectively to select compatible Fortran compilers.  The check here tests to see if a main program compiled with the Fortran 90 compiler can link with a subroutine compiled with the Fortran 77 compiler.])
-        elif test "$f90_with_f77" = "yes" ; then
+        PAC_FC_AND_F77_COMPATIBLE(fc_with_f77=yes,fc_with_f77=no,$testRoutine)
+        if test "$fc_with_f77" != yes ; then
+	    enable_fc=no
+	    AC_MSG_WARN([The selected Fortran 90 compiler $FC does not work with the selected Fortran 77 compiler $F77.  Use the environment variables FC and F77 respectively to select compatible Fortran compilers.  The check here tests to see if a main program compiled with the Fortran 90 compiler can link with a subroutine compiled with the Fortran 77 compiler.])
+        elif test "$fc_with_f77" = "yes" ; then
             # If we got here, there is a Fortran 90 compiler that we can use
-            enable_f90=yes
+            enable_fc=yes
         fi
-    elif test "$pac_cv_prog_f90_works" = no; then
-        AC_MSG_WARN([Use --disable-f90 to keep configure from searching for a Fortran 90 compiler])
+    elif test "$pac_cv_prog_fc_works" = no; then
+        AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
     fi
 fi
-if test "$enable_f90" = "yes" -a "$enable_f77" != "yes" ; then
+if test "$enable_fc" = "yes" -a "$enable_f77" != "yes" ; then
    # Fortran 90 support requires compatible Fortran 77 support
    AC_MSG_WARN([Fortran 90 support requires compatible Fortran 77 support.  To force the use of the Fortran 90 compiler for Fortran 77, set the environment variable F77 to the name of the Fortran 90 compiler.])
    # We should probably do the compatibility test as well
@@ -1978,12 +1978,12 @@ dnl        AC_MSG_RESULT(yes)
 dnl    else 
 dnl        AC_MSG_RESULT(no)
 dnl    fi
-    AC_SUBST(FC_SHL)
-    AC_SUBST(FC_LINKPATH_SHL)
+    AC_SUBST(F77_SHL)
+    AC_SUBST(F77_LINKPATH_SHL)
     case "$ENABLE_SHLIB" in
 	 gcc-osx|osx-gcc)
-	 FC_SHL="$F77 -fPIC"
-	 FC_LINKPATH_SHL=""
+	 F77_SHL="$F77 -fPIC"
+	 F77_LINKPATH_SHL=""
 	 ;;
 	 gcc)
 	 # Assume that the compiler is g77 if gcc style shared libraries chosen
@@ -1997,45 +1997,45 @@ dnl    fi
        program main
        end
 EOF
-         FC_SHL=false
+         F77_SHL=false
          for sh_arg in "-shared -fPIC" "-fPIC" "-shared -fpic" "-fpic" "-KPIC" ; do
  	     AC_MSG_CHECKING([whether $F77 allows $sh_arg])
              if $F77 $sh_arg -o conftest conftest.f >/dev/null 2>&1 ; then
-	         FC_SHL="$F77 $sh_arg"
+	         F77_SHL="$F77 $sh_arg"
                  AC_MSG_RESULT(yes)
 	         break
              else
                  AC_MSG_RESULT(no)
              fi
 	 done
-	 if test "$FC_SHL" = "false" ; then
+	 if test "$F77_SHL" = "false" ; then
 	     AC_ERROR([Cannot build shared libraries for Fortran with this compiler])
          fi
 	 # This is needed for Mac OSX 10.5
 	 rm -rf conftest.dSYM
          rm -f conftest*
-	 FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	 F77_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	 ;;
 
 	 cygwin|cygwin-gcc)
-	 FC_SHL="$F77 -shared"
-	 FC_LINKPATH_SHL=""
+	 F77_SHL="$F77 -shared"
+	 F77_LINKPATH_SHL=""
 	 ;;
 
 	 solaris|solaris-cc)
-	 FC_SHL="$F77 -xcode=pic32"
-         FC_LINKPATH_SHL=-R
+	 F77_SHL="$F77 -xcode=pic32"
+         F77_LINKPATH_SHL=-R
 	 ;;
 
 	 # Do we need a solaris-64 with -xcode=pic64?
 
 	 libtool)
-	 FC_SHL='${LIBTOOL} --mode=compile ${F77}'
-         FC_LINKPATH_SHL="-rpath "
+	 F77_SHL='${LIBTOOL} --mode=compile ${F77}'
+         F77_LINKPATH_SHL="-rpath "
 	 ;;
 
 	 *)
-	 FC_SHL=false
+	 F77_SHL=false
 	 ;;
     esac
     # ------------------------------------------------
@@ -2047,6 +2047,10 @@ EOF
     # that generates an error message from cpp).  The following test
     # checks to see if .F works, and if not, whether "cpp -P -C" can be used
     # This is needed for Mac OSX 10.5
+    #
+dnl # FIXME: this test should be replaced by PAC_F77_WORKS_WITH_CPP([F77CPP])
+dnl #        which should be similar to PAC_FC_WORKS_WITH_CPP([FCCPP])
+    #
     rm -rf conftest.dSYM
     rm -f conftest*
     AC_MSG_CHECKING([whether Fortran compiler processes .F files with C preprocessor])
@@ -2111,7 +2115,7 @@ if test "$has_fort_real8" = "yes" ; then
     cp src/include/mpif.h src/binding/f77/mpif.h
 fi
 # Save a copy of the original mpi_base.f90 file
-if test "$enable_f90" = "yes" ; then
+if test "$enable_fc" = "yes" ; then
   if test ! -f "$master_top_srcdir/src/binding/f90/mpi_base.f90.orig" ; then
     cp $master_top_srcdir/src/binding/f90/mpi_base.f90 $master_top_srcdir/src/binding/f90/mpi_base.f90.orig
   fi
@@ -2133,7 +2137,7 @@ else
 fi],
 master_top_srcdir=$master_top_srcdir
 enable_f77=$enable_f77
-enable_f90=$enable_f90
+enable_fc=$enable_fc
 has_exclaim=$has_exclaim
 has_fort_real8=$pac_cv_fort_real8
 has_fort90_real8=$pac_cv_fort90_real8
@@ -2141,10 +2145,10 @@ includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
 
-if test "$enable_f90" = "yes" ; then
+if test "$enable_fc" = "yes" ; then
     if test "$enable_f77" != "yes" ; then
         AC_MSG_WARN([Fortran 90 requires Fortran 77])
-        enable_f90=no
+        enable_fc=no
     else 
         bindingsubsystems="$bindingsubsystems src/binding/f90"
         bindings="$bindings f90"
@@ -2153,43 +2157,47 @@ if test "$enable_f90" = "yes" ; then
 fi
 
 # Set defaults for these values so that the Makefile in src/bindings/f90
-# is valid even if f90 is not enabled (this is necessary for the 
+# is valid even if fc is not enabled (this is necessary for the 
 # distclean target)
 MPIMODNAME=mpi
 MPICONSTMODNAME=mpi_constants
 MPISIZEOFMODNAME=mpi_sizeofs
 MPIBASEMODNAME=mpi_base
-if test "$enable_f90" = "yes" ; then
+if test "$enable_fc" = "yes" ; then
     # Determine characteristics of the Fortran 90 compiler
-    # Find a Fortran 90 compiler.  Sets F90
-    # Work around bug in autoconf that adds -g to F90FLAGS
-    saveF90FLAGS="$F90FLAGS"
-    PAC_PROG_F90
-    PAC_PROG_F90_WORKS
-    F90FLAGS=$saveF90FLAGS
-    if test "$pac_cv_prog_f90_works" = no ; then 
+    # Find a Fortran 90 compiler.  Sets FC
+    # Work around bug in autoconf that adds -g to FCFLAGS
+    saveFCFLAGS="$FCFLAGS"
+    PAC_PROG_FC
+    PAC_PROG_FC_WORKS
+    FCFLAGS=$saveFCFLAGS
+    if test "$pac_cv_prog_fc_works" = no ; then 
         # Reject this compiler
-        if test -n "$F90" ; then
-            f90_rejected=yes
-            oldF90="$F90"
-            F90=""
+        if test -n "$FC" ; then
+            fc_rejected=yes
+            oldFC="$FC"
+            FC=""
         fi
     fi
 
-    if test -z "$F90" ; then
-        if test "$f90_rejected" = "yes" ; then
-            AC_MSG_ERROR([Could not find a usable F90 compiler.  The compiler $oldF90 may be incompatible with the Fortran 77 compiler $F77; check the output of configure and consult the installation manuals])
+    # Determine the extension for Fortran 90 files (it isn't always .f90)
+    FCEXT=$ac_fc_srcext
+    AC_SUBST(FCEXT)
+
+    if test -z "$FC" ; then
+        if test "$fc_rejected" = "yes" ; then
+            AC_MSG_ERROR([Could not find a usable Fortran 90 compiler.  The compiler $oldFC may be incompatible with the Fortran 77 compiler $F77; check the output of configure and consult the installation manuals])
         else
-            AC_MSG_ERROR([Could not find a usable F90 compiler.])
+            AC_MSG_ERROR([Could not find a usable Fortran 90 compiler.])
         fi
     fi
 
     # Find the extension that this compiler uses for modules.
-    # Sets F90MODEXT (and adds it to the list substed)
-    # Sets F90MODINCFLAG (and adds it to the list substed)
-    PAC_F90_MODULE
-    AC_SUBST(F90MODINCSPEC)
-    if test "$pac_cv_f90_module_case" = "upper" ; then
+    # Sets FCMODEXT (and adds it to the list substed)
+    # Sets FCMODINCFLAG (and adds it to the list substed)
+    PAC_FC_MODULE
+    AC_SUBST(FCMODINCSPEC)
+    if test "$pac_cv_fc_module_case" = "upper" ; then
         MPIMODNAME=MPI
         MPICONSTMODNAME=MPI_CONSTANTS
 	MPISIZEOFMODNAME=MPI_SIZEOFS
@@ -2210,27 +2218,21 @@ if test "$enable_f90" = "yes" ; then
     fi
     AC_SUBST(modincdir)    
     #
-    # For now, assume that all f90 compilers accept -I for include directories
-    F90INC=-I
-    AC_SUBST(F90INC)
-    F90INCFLAG=-I
-    AC_SUBST(F90INCFLAG)
+    # Assume that all Fortran 90 compilers accept -I for include directories
+    FCINC=-I
+    AC_SUBST(FCINC)
+    FCINCFLAG=-I
+    AC_SUBST(FCINCFLAG)
 
-    #
-    # Determine the extension for f90 files (it isn't always .f90)
-    PAC_F90_EXT
-    F90EXT=$pac_cv_f90_ext
-    AC_SUBST(F90EXT)
-
-    # Check if $MPI_DEFAULT_F90OPTS is valid with $F90
+    # Check if $MPI_DEFAULT_FCOPTS is valid with $F90
     if test "$enable_default_optimize" = "yes" \
-         -a -n "$MPI_DEFAULT_F90OPTS" ; then
+         -a -n "$MPI_DEFAULT_FCOPTS" ; then
         if test "$enable_check_compiler_flags" = "yes" ; then
-            PAC_F90_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_F90OPTS], [
-            F90FLAGS="$F90FLAGS $MPI_DEFAULT_F90OPTS"
+            PAC_FC_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FCOPTS], [
+            FCFLAGS="$FCFLAGS $MPI_DEFAULT_FCOPTS"
                                      ] )
         else
-            F90FLAGS="$F90FLAGS $MPI_DEFAULT_F90OPTS"
+            FCFLAGS="$FCFLAGS $MPI_DEFAULT_FCOPTS"
         fi
     fi
 
@@ -2239,133 +2241,55 @@ if test "$enable_f90" = "yes" ; then
     # allow this or have serious bugs (OSF Fortran compilers have a bug
     # that generates an error message from cpp).  The following test
     # checks to see if .F works, and if not, whether "cpp -P -C" can be used
-    # This is needed for Mac OSX 10.5
-    rm -rf conftest.dSYM
-    rm -f conftest*
-    AC_MSG_CHECKING([whether Fortran 90 compiler processes .F90 files with C preprocessor])
-    cat >conftest.F90 <<EOF
-        program main
-#define ASIZE 10
-        integer a(ASIZE)
-        end
-EOF
-    pac_cv_f90_accepts_F90=no
-    pac_F90compile='${F90} -c $F90FLAGS $CPPFLAGS conftest.F90 1>&AC_FD_CC'
-
-    if AC_TRY_EVAL(pac_F90compile) && test -s conftest.o ; then
-        pac_cv_f90_accepts_F90=yes
-    else
-        # Can we use cpp?
-        pac_F90cpp='${CPP} -C -P $CPPFLAGS conftest.F90 >conftest.$pac_cv_f90_ext 2>&AC_FD_CC'
-        if AC_TRY_EVAL(pac_F90cpp) && test -s conftest.$pac_cv_f90_ext ; then
-            pac_fF90compile='${F90} -c $F90FLAGS $CPPFLAGS conftest.$pac_cv_f90_ext 1>&AC_FD_CC'
-	    if AC_TRY_EVAL(pac_fF90compile) && test -s conftest.o ; then
-	        pac_cv_f90_accepts_F90="no, use cpp"
-	    fi
-        fi
-    fi
-    rm -f conftest.*
-    AC_MSG_RESULT($pac_cv_f90_accepts_F90)
-    case "$pac_cv_f90_accepts_F90" in 
-        yes)
-        F90CPP=""
-        ;;
-        "no, use cpp")
-        F90CPP="$CPP -C -P"
-        ;;
-        no) 
-        F90CPP="false"
-        ;;
-    esac
-    AC_SUBST(F90CPP)
+    PAC_FC_WORKS_WITH_CPP([FCCPP])
+    AC_SUBST(FCCPP)
 
     # Check whether additional libraries are needed when linking with C
-    PAC_PROG_F90_AND_C_STDIO_LIBS
-    AC_SUBST(F90_OTHER_LIBS)
+    PAC_PROG_FC_AND_C_STDIO_LIBS
+    AC_SUBST(FC_OTHER_LIBS)
 
     # ------------------------------------------------
     # ------------------------------------------------
     # Here are the commands to substitute the compilers to be used to create
     # shared libraries.  The choices for the first two come down from the
     # top-level configure.  FC_SHL must be determined in this configure
-    AC_SUBST(F90_SHL)
-    AC_SUBST(F90_LINKPATH_SHL)
+    AC_SUBST(FC_SHL)
+    AC_SUBST(FC_LINKPATH_SHL)
 
     # Try to get a version string for the F90 compiler.  We may
     # need this to find likely command-line arguments for accessing
     # shared libraries
-    AC_MSG_CHECKING([for f90 compiler vendor])
-    # This is complicated by some compilers (such as the Intel 8.1 ifort)
-    # that return a non-zero status even when they accept the -V option
-    # (a zero status is returned only if there is a file).
-    pac_cv_f90_vendor="unknown"
-    for arg in --version -V -v ; do
-        rm -f conftest.txt
-        $F90 $arg </dev/null >conftest.txt 2>&1
-	# Ignore the return code, because some compilers set the
-	# return code to zero on invalid arguments and some to 
-        # non-zero on success (with no files to compile)
-        if test -f conftest.txt ; then
-            if grep 'Portland Group' conftest.txt >/dev/null 2>&1 ; then
-                pac_cv_f90_vendor=pgi
-            elif grep 'Sun Workshop' conftest.txt >/dev/null 2>&1 ; then
-                pac_cv_f90_vendor=sun
-            elif grep 'Absoft' conftest.txt >/dev/null 2>&1 ; then
-                pac_cv_f90_vendor=absoft
-            elif grep 'G95' conftest.txt >/dev/null 2>&1 ; then
-                pac_cv_f90_vendor=gnu
-            elif grep 'GNU Fortran' conftest.txt >/dev/null 2>&1 ; then
-                # This is gfortran
-                pac_cv_f90_vendor=gnu
-	    elif grep Intel conftest.txt >/dev/null 2>&1 ; then
-                pac_cv_f90_vendor=intel
-	    fi
-        fi
-        if test "$pac_cv_f90_vendor" != "unknown" ; then break ; fi
-    done
-    if test "$pac_cv_f90_vendor" = "unknown" ; then
-        # Try to use the compiler name
-        if test "$F90" = "ifort" -o "$F90" = "ifc" ; then 
-            pac_cv_f90_vendor=intel
-        elif test "$F90" = "pgf90" ; then
-            pac_cv_f90_vendor=pgi
-        elif test "$F90" = "xlf90" -o "$F90" = "xlf90_r" ; then
-            pac_cv_f90_vendor=ibm
-        fi
-    fi
-    AC_MSG_RESULT($pac_cv_f90_vendor)
-    rm -f conftest.txt
-    # End of checking for F90 compiler vendor
+    PAC_FC_VENDOR
 
     if test "$ENABLE_SHLIB" != none ; then
         AC_MSG_CHECKING([for how to build shared libraries for Fortran 90])
         case "$ENABLE_SHLIB" in
 	 gcc-osx|osx-gcc)
-	 F90_SHL="$F90 -fPIC"
-	 F90_LINKPATH_SHL=""
+	 FC_SHL="$FC -fPIC"
+	 FC_LINKPATH_SHL=""
 	 ;;
          gcc)
-         if test "$pac_cv_f90_vendor" = gnu -o "$F90" = "g95" ; then
+         if test "$pac_cv_fc_vendor" = gnu -o "$FC" = "g95" ; then
             # If we have the GNU Fortran 95 compiler (untested)
-            F90_SHL="$F90 -shared -fPIC"
-            F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
+            FC_SHL="$FC -shared -fPIC"
+            FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
          else
-            case "$pac_cv_f90_vendor" in 
+            case "$pac_cv_fc_vendor" in 
 	        absoft)
-	        F90_SHL="$F90 -fPIC"
-                F90_LINKPATH_SHL="-X -rpath -X "
+	        FC_SHL="$FC -fPIC"
+                FC_LINKPATH_SHL="-X -rpath -X "
 	        ;;
 
 	        intel)
 	        # Intel implements the GNU options
-	        F90_SHL="$F90 -shared -fPIC"
-                F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	        FC_SHL="$FC -shared -fPIC"
+                FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	        ;;
 
 	        pgi)
 	        # Portland Group implements the GNU options
-	        F90_SHL="$F90 -shared -fPIC"
-                F90_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	        FC_SHL="$FC -shared -fPIC"
+                FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	        ;;
 
 	        *)
@@ -2376,36 +2300,36 @@ EOF
             ;;
          solaris|solaris-cc)
             # Assume the Solaris F90 compiler, in 32-bit mode
-            F90_SHL="$F90 -xcode=pic32"
-            F90_LINKPATH_SHL=-R
+            FC_SHL="$FC -xcode=pic32"
+            FC_LINKPATH_SHL=-R
          ;;
 
 	 libtool)
-	 F90_SHL='${LIBTOOL} --mode=compile ${F90}'
-	 F90_LINKPATH_SHL="-rpath "
+	 FC_SHL='${LIBTOOL} --mode=compile ${FC}'
+	 FC_LINKPATH_SHL="-rpath "
 	 ;;
 
          *)
          # Unknown, ignore
          ;;
         esac
-	if test -n "$F90_SHL" ; then 
-	    AC_MSG_RESULT([Compile with $F90_SHL and link using path argument $F90_LINKPATH_SHL])
+	if test -n "$FC_SHL" ; then 
+	    AC_MSG_RESULT([Compile with $FC_SHL and link using path argument $FC_LINKPATH_SHL])
         else
             AC_MSG_WARN([Unable to determine how to link Fortran 90 compiler with shared libraries])
- 	    F90_SHL=false
+ 	    FC_SHL=false
 	fi
     fi
 
 dnl  Some systems don't require or accept linkpath arguments.
-dnl    if test "$ENABLE_SHLIB" != "none" -a -z "$F90_LINKPATH_SHL" -a \
+dnl    if test "$ENABLE_SHLIB" != "none" -a -z "$FC_LINKPATH_SHL" -a \
 dnl        -n "$C_LINKPATH_SHL" ; then
-dnl        AC_MSG_WARN([Unable to determine how to pass the shared-library link patth to the Fortran 90 compiler $F90.  Set the environment variable F90_LINKPATH_SHL and rerun configure (the corresponding value for the C compiler is $C_LINKPATH_SHL)])
+dnl        AC_MSG_WARN([Unable to determine how to pass the shared-library link path to the Fortran 90 compiler $FC.  Set the environment variable FC_LINKPATH_SHL and rerun configure (the corresponding value for the C compiler is $C_LINKPATH_SHL)])
 dnl    fi
     # ------------------------------------------------
 fi
 
-AC_OUTPUT_COMMANDS([if test $enable_f90 = yes ; then 
+AC_OUTPUT_COMMANDS([if test $enable_fc = yes ; then 
 if test "$bashWorks" = yes ; then cp -f src/env/mpif90.bash src/env/mpif90 ; fi
 chmod a+x src/env/mpif90
 if test ! -d bin  ; then mkdir bin ; fi 
@@ -2418,7 +2342,7 @@ else
     rm -f src/env/mpif90 src/env/mpif90.conf bin/mpif90
 fi
 ],
-enable_f90=$enable_f90
+enable_fc=$enable_fc
 modincbuild_dir=$modincbuild_dir
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
@@ -2486,7 +2410,7 @@ public:
  AC_LANG_RESTORE
 ])
     if test "$pac_cv_cxx_builds_exe" != yes ; then
-       AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
+        AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
     fi
     # Recent failures have come when a standard header is loaded
     # The Intel icpc 10.x compiler fails with <string> if gcc 4.2 is installed. 
@@ -2682,12 +2606,6 @@ AC_SUBST(bindings)
 # Bindings dirs is used for the installation target
 AC_SUBST(bindings_dirs)
 #
-# A few final exports
-# Some users use FC, others F77 for the Fortran compiler.  The following
-# tests makes us consistent
-if test -z "$FC" -a -n "$F77" ; then FC="$F77" ; export FC ; fi
-if test -z "$F77" -a -n "$FC" ; then F77="$FC" ; export F77 ; fi
-AC_SUBST(FC)
 # ----------------------------------------------------------------------------
 # End of the bindings support
 # ----------------------------------------------------------------------------
@@ -4553,34 +4471,15 @@ EOF
     # For Fortran 90, we'll also need MPI_ADDRESS_KIND and MPI_OFFSET_KIND
     # Since our compiler might BE a Fortran 90 compiler, try and determine the
     # values.  
-    if test -z "$F90" ; then
-        AC_CACHE_CHECK([whether Fortran compiler is a Fortran 90 compiler],
-        pac_cv_prog_f77_is_f90,[
-        pac_cv_prog_f77_is_f90=no
-        cat >>conftest.f90 <<EOF
-        program main
-        integer, dimension(10) :: n
-        integer k
-        print *,  range(k)
-        end
-EOF
-        if $F77 -o conftest $FFLAGS conftest.f90 >/dev/null 2>&1 ; then
-            if test -x conftest ; then
-	        pac_cv_prog_f77_is_f90=yes
+    if test -z "$FC" ; then
+        PAC_F77_IS_FC([
+            FC=$F77
+            if test -z "$FCFLAGS" ; then
+                FCFLAGS="$FFLAGS"
             fi
-        fi
-    ])
-        if test "$pac_cv_prog_f77_is_f90" = yes ; then
-            F90=$F77
-	    if test -z "$F90FLAGS" ; then 
-	        F90FLAGS="$FFLAGS"
-            fi
-        fi
+        ])
     fi
-    if test -n "$F90" ; then
-        PAC_LANG_PUSH_COMPILERS
-        PAC_LANG_FORTRAN90
-
+    if test -n "$FC" ; then
         # Offset kind should be for 8 bytes if possible (Romio prefers that)
         # address should be sizeof void * (unless --with-aint-size has
         # been set)
@@ -4599,17 +4498,17 @@ EOF
             testsize=4
         fi  
         dnl Using the {} around testsize helps the comments work correctly
-        PAC_PROG_F90_INT_KIND(ADDRESS_KIND,${testsize},$CROSS_F90_ADDRESS_KIND)
+        PAC_PROG_FC_INT_KIND(ADDRESS_KIND,${testsize},$CROSS_F90_ADDRESS_KIND)
         if test "$testsize" = 8 ; then
             OFFSET_KIND=$ADDRESS_KIND
         else
-            PAC_PROG_F90_INT_KIND(OFFSET_KIND,8,$CROSS_F90_OFFSET_KIND)
+            PAC_PROG_FC_INT_KIND(OFFSET_KIND,8,$CROSS_F90_OFFSET_KIND)
         fi
         #
         # Some compilers won't allow a -1 kind (e.g., absoft).  In this case, 
         # use a fallback (sizeof(int) kind)
         if test "$ADDRESS_KIND" = "-1" -o "$OFFSET_KIND" = "-1" ; then
-            PAC_PROG_F90_INT_KIND(simpleintkind,${pac_cv_f77_sizeof_integer})
+            PAC_PROG_FC_INT_KIND(simpleintkind,${pac_cv_f77_sizeof_integer})
             if test "$simpleintkind" = "-1" ; then
 	        # Wild guess; probably means that Fortran 90 is not available
 		AC_MSG_WARN([Unable to determine Fortran 90 KIND values for either address-sized integers or offset-sized integers.  Using 4 in that case.])
@@ -4622,11 +4521,16 @@ EOF
 	        OFFSET_KIND=$simpleintkind
             fi
         fi
-        AC_CACHE_CHECK([whether real*8 is supported in Fortran 90],pac_cv_fort90_real8,[
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      real*8 a])],
-            pac_cv_fort90_real8=yes,
-            pac_cv_fort90_real8=no)])
-        PAC_LANG_POP_COMPILERS 
+        AC_CACHE_CHECK([if real*8 is supported in Fortran 90],
+                       [pac_cv_fort90_real8],[
+            AC_COMPILE_IFELSE([
+                AC_LANG_PROGRAM([],[      real*8 a])
+            ],[
+                pac_cv_fort90_real8=yes
+            ],[
+                pac_cv_fort90_real8=no
+            ])
+        ])
     fi
     # Make sure that address kind and offset kind have values.
     if test -z "$ADDRESS_KIND" ; then
@@ -4638,12 +4542,12 @@ EOF
     # Note, however, that zero value are (in all practical case) invalid 
     # for Fortran 90, and indicate a failure.  Test and fail if Fortran 90
     # enabled.
-    if test "$enable_f90" = "yes" ; then
+    if test "$enable_fc" = "yes" ; then
         if test "$ADDRESS_KIND" -le 0 -o "$OFFSET_KIND" -le 0 ; then
-	    AC_MSG_ERROR([Unable to determine Fortran integer kinds for MPI types.  If you do not need Fortran 90, add --disable-f90 to the configure options.])
+	    AC_MSG_ERROR([Unable to determine Fortran 90 integer kinds for MPI types.  If you do not need Fortran 90, add --disable-fc to the configure options.])
 	    # If the above is converted to a warning, you need to change 
 	    # enable_f90 and remote f90 from the bindings
-	    enable_f90=no
+	    enable_fc=no
         fi
     fi
     AC_SUBST(ADDRESS_KIND)
@@ -4671,8 +4575,8 @@ EOF
 
     # FIXME:
     # We also need to include
-    # SIZEOF_F90_MPI_OFFSET
-    # SIZEOF_F90_MPI_AINT
+    # SIZEOF_FC_MPI_OFFSET
+    # SIZEOF_FC_MPI_AINT
     # 
     # If other "kinds" are supported, MPI_SIZEOF needs to identify 
     # those as well.  This is very difficult to do in a general way.
@@ -4682,25 +4586,25 @@ EOF
     CROSS_F90_SIZEOF_INTEGER=${CROSS_F90_SIZEOF_INTEGER:-0}
     CROSS_F90_SIZEOF_REAL=${CROSS_F90_SIZEOF_REAL:-0}
     CROSS_F90_SIZEOF_DOUBLE_PRECISION=${CROSS_F90_SIZEOF_DOUBLE_PRECISION:-0}
-    SIZEOF_F90_INTEGER=$CROSS_F90_SIZEOF_INTEGER
-    SIZEOF_F90_REAL=$CROSS_F90_SIZEOF_REAL
-    SIZEOF_F90_CHARACTER=1
-    SIZEOF_F90_DOUBLE_PRECISION=$CROSS_F90_SIZEOF_DOUBLE_PRECISION
+    SIZEOF_FC_INTEGER=$CROSS_F90_SIZEOF_INTEGER
+    SIZEOF_FC_REAL=$CROSS_F90_SIZEOF_REAL
+    SIZEOF_FC_CHARACTER=1
+    SIZEOF_FC_DOUBLE_PRECISION=$CROSS_F90_SIZEOF_DOUBLE_PRECISION
     if test "$pac_cv_f77_sizeof_integer" -gt 0 -a \
-	    "$SIZEOF_F90_INTEGER" = "0" ; then
-        SIZEOF_F90_INTEGER=$pac_cv_f77_sizeof_integer
+	    "$SIZEOF_FC_INTEGER" = "0" ; then
+        SIZEOF_FC_INTEGER=$pac_cv_f77_sizeof_integer
     fi
-    if test "$pac_cv_f77_sizeof_real" -gt 0 -a "$SIZEOF_F90_REAL" = "0" ; then
-        SIZEOF_F90_REAL=$pac_cv_f77_sizeof_real
+    if test "$pac_cv_f77_sizeof_real" -gt 0 -a "$SIZEOF_FC_REAL" = "0" ; then
+        SIZEOF_FC_REAL=$pac_cv_f77_sizeof_real
     fi
     if test "$pac_cv_f77_sizeof_double_precision" -gt 0 -a \
-       "$SIZEOF_F90_DOUBLE_PRECISION" = "0" ; then
-        SIZEOF_F90_DOUBLE_PRECISION=$pac_cv_f77_sizeof_double_precision
+       "$SIZEOF_FC_DOUBLE_PRECISION" = "0" ; then
+        SIZEOF_FC_DOUBLE_PRECISION=$pac_cv_f77_sizeof_double_precision
     fi
-    AC_SUBST(SIZEOF_F90_INTEGER)
-    AC_SUBST(SIZEOF_F90_REAL)
-    AC_SUBST(SIZEOF_F90_DOUBLE_PRECISION)
-    AC_SUBST(SIZEOF_F90_CHARACTER)
+    AC_SUBST(SIZEOF_FC_INTEGER)
+    AC_SUBST(SIZEOF_FC_REAL)
+    AC_SUBST(SIZEOF_FC_DOUBLE_PRECISION)
+    AC_SUBST(SIZEOF_FC_CHARACTER)
 
     # REQD is short for "real equal double precision" and is set to the
     # Fortran 90 comment character if true.  This is necessary to
@@ -4710,25 +4614,25 @@ EOF
     # version), the double precision versions of the MPI_SIZEOF routine
     # must be commented out of the module (!).
     REQD=
-    if test "$SIZEOF_F90_REAL" = "$SIZEOF_F90_DOUBLE_PRECISION" ; then
+    if test "$SIZEOF_FC_REAL" = "$SIZEOF_FC_DOUBLE_PRECISION" ; then
         REQD="!"
     fi
     AC_SUBST(REQD)
     # Is integer*1 supported, and is it a different size than integer?
     REQI1="!"
-    if test "$pac_cv_fort_integer1" = yes -a "$SIZEOF_F90_INTEGER" != 1 ; then
+    if test "$pac_cv_fort_integer1" = yes -a "$SIZEOF_FC_INTEGER" != 1 ; then
         REQI1=
     fi
     AC_SUBST(REQI1)
     # Is integer*2 supported, and is it a different size than integer?
     REQI2="!"
-    if test "$pac_cv_fort_integer2" = yes -a "$SIZEOF_F90_INTEGER" != 2 ; then
+    if test "$pac_cv_fort_integer2" = yes -a "$SIZEOF_FC_INTEGER" != 2 ; then
         REQI2=
     fi
     AC_SUBST(REQI2)
     # Is integer*8 supported, and is it a different size than integer?
     REQI8="!"
-    if test "$pac_cv_fort_integer8" = yes -a "$SIZEOF_F90_INTEGER" != 8 ; then
+    if test "$pac_cv_fort_integer8" = yes -a "$SIZEOF_FC_INTEGER" != 8 ; then
         REQI8=
     fi
     AC_SUBST(REQI8)
@@ -5043,10 +4947,10 @@ if test "$enable_coverage" = "yes" ; then
             AC_MSG_WARN([--enable-coverage only supported for G77/GFORTRAN])
         fi
     fi
-    if test "$enable_f90" = yes ; then
-        if test "$ac_cv_f90_compiler_gnu" = "yes" ; then
-             F90FLAGS="$F90FLAGS -fprofile-arcs -ftest-coverage"
-             WRAPPER_F90FLAGS="$WRAPPER_F90FLAGS -fprofile-arcs -ftest-coverage"
+    if test "$enable_fc" = yes ; then
+        if test "$ac_cv_fc_compiler_gnu" = "yes" ; then
+             FCFLAGS="$FCFLAGS -fprofile-arcs -ftest-coverage"
+             WRAPPER_FCFLAGS="$WRAPPER_FCFLAGS -fprofile-arcs -ftest-coverage"
         else
             AC_MSG_WARN([--enable-coverage only supported for GFORTRAN])
         fi
@@ -5755,13 +5659,13 @@ export CXX
 export CXXFLAGS
 export FFLAGS
 export CFLAGS
-export F90FLAGS
+export FCFLAGS
 export LDFLAGS
 # Make sure that any Fortran 77 and Fortran 90 compilers are exported to 
 # the subdir builds (in particular, ROMIO may try to use the Fortran 90
 # compiler to determine the Fortran 90 KINDS for MPI_OFFSET_KIND).
 export F77
-export F90
+export FC
 #
 # -----------------------------------------------------------------------------
 # Configure threads first.  This is necessary to obtain all required
@@ -6153,22 +6057,25 @@ AC_SUBST(MPI_OFFSET_TYPEDEF)
 if test -z "$FORTRAN_MPI_OFFSET" ; then
     FORTRAN_MPI_OFFSET=INTEGER
 fi
-if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
-    AC_LANG_FORTRAN77
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran77])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      $FORTRAN_MPI_OFFSET i])],
-                      has_f77_offsettype=yes,has_f77_offsetype=no)
+if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
+    AC_LANG_PUSH([Fortran 77])
+    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 77])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
+    ],[has_f77_offsettype=yes],[has_f77_offsetype=no])
     AC_MSG_RESULT($has_f77_offsettype)
-    PAC_LANG_PUSH_COMPILERS
-    PAC_LANG_FORTRAN90
-    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran90])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      $FORTRAN_MPI_OFFSET i])],
-                      has_f90_offsettype=yes,has_f90_offsetype=no)
-    AC_MSG_RESULT($has_f90_offsettype)
-    PAC_LANG_POP_COMPILERS
-    if test "$has_f77_offsettype" != yes -o "$has_f90_offsettype" != yes ; then
-        AC_MSG_WARN([mpif.h is not compatible with both $F77 and $F90.  We \
-recommend that you set both F77 and F90 to the same compiler and reconfigure.])
+    AC_LANG_POP([Fortran 77])
+
+    AC_LANG_PUSH([Fortran])
+    AC_MSG_CHECKING([whether the Fortran Offset type works with Fortran 90])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([],[      $FORTRAN_MPI_OFFSET i])
+    ],[has_fc_offsettype=yes],[has_fc_offsetype=no])
+    AC_LANG_POP([Fortran])
+    AC_MSG_RESULT($has_fc_offsettype)
+
+    if test "$has_f77_offsettype" != yes -o "$has_fc_offsettype" != yes ; then
+        AC_MSG_WARN([mpif.h is not compatible with both $F77 $FFLAGS and $FC $FCFLAGS.  We recommend that you set both F77 and FC to the same compiler and reconfigure.])
     fi
 fi
 AC_SUBST(FORTRAN_MPI_OFFSET)
@@ -6202,14 +6109,14 @@ AC_SUBST(EXTRA_STATUS_DECL)
 # See if we can support the type create functions that take 
 # precision and exponent range.  These need are determined by running
 # a configure script in the f90 test directory
-if test "$enable_f77" = yes -a "$enable_f90" = yes ; then
+if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
     # Create the local directory
     if test ! -d src ; then mkdir src ; fi
     if test ! -d src/binding ; then mkdir src/binding ; fi
     if test ! -d src/binding/f90 ; then mkdir src/binding/f90 ; fi
     export F77
-    export F90
-    echo "Running Configure for F90 Type routines"
+    export FC
+    echo "Running Configure for Fortran 90 Type routines"
     # Include any options passed to the top-level configure
     ac_sub_configure_args=""
     # Strip off the args that we need to update
@@ -6251,9 +6158,10 @@ dnl updated values.  Here's an attempt at a fix
      eval $master_top_srcdir/src/binding/f90/configure $ac_sub_configure_args)
     rc=$?
     if test $rc = 0 ; then
-        AC_DEFINE(HAVE_F90_TYPE_ROUTINES,1,[Define if F90 type routines available])
+        AC_DEFINE(HAVE_FC_TYPE_ROUTINES,1,
+                  [Define if Fortran 90 type routines available])
     else
-        AC_MSG_WARN([Unable to determine F90 type support; defaults used])
+        AC_MSG_WARN([Unable to determine Fortran 90 type support; defaults used])
     fi
 fi
 # -----------------------------------------------------------------------------
@@ -6282,16 +6190,16 @@ dnl steps because it does not depend on them.
 # that the correct decisions are made since this configure happens before the
 # MPICH2 library is built. 
 MPICH2_ENABLE_F77=$enable_f77
-MPICH2_ENABLE_F90=$enable_f90
+MPICH2_ENABLE_FC=$enable_fc
 MPICH2_ENABLE_CXX=$enable_cxx
 export MPICH2_ENABLE_F77
-export MPICH2_ENABLE_F90
+export MPICH2_ENABLE_FC
 export MPICH2_ENABLE_CXX
 MPICH2_BASEF77=$F77
 MPICH2_BASECXX=$CXX
-MPICH2_BASEF90=$F90
+MPICH2_BASEFC=$FC
 export MPICH2_BASE_F77
-export MPICH2_BASE_F90
+export MPICH2_BASE_FC
 export MPICH2_BASE_CXX
 # MPI_SRCDIR gives the test/mpi configure the location of the source
 # files for an MPI implementation
@@ -6346,8 +6254,8 @@ if test -z "$libbuild_dir" ; then
     libbuild_dir=`pwd`/lib
 fi
 if test -z "$modincbuild_dir" ; then
-   # The include files may be in a different directory from the mpif.h file
-   modincbuild_dir=$top_build_dir/src/binding/f90
+    # The include files may be in a different directory from the mpif.h file
+    modincbuild_dir=`pwd`/src/binding/f90
 fi
 
 dnl create a copy of mpicc in the build directory that will work for compiling
@@ -6420,12 +6328,12 @@ AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 # and, for Fortran 90, any special Fortran 90 module features.
 if test -z "$MPICC" ; then MPICC='$(bindir)/mpicc' ; fi
 if test -z "$MPIF77" ; then MPIF77='$(bindir)/mpif77' ; fi
-if test -z "$MPIF90" ; then MPIF90='$(bindir)/mpif90' ; fi
+if test -z "$MPIFC" ; then MPIFC='$(bindir)/mpif90' ; fi
 if test -z "$MPICXX" ; then MPICXX='$(bindir)/mpicxx' ; fi
 AC_SUBST(MPICC)
 AC_SUBST(MPICXX)
 AC_SUBST(MPIF77)
-AC_SUBST(MPIF90)
+AC_SUBST(MPIFC)
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
 

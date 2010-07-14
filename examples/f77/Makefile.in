@@ -9,11 +9,12 @@ MPILIBNAME      = @MPILIBNAME@
 
 MPICHDIR = ../..
 
-FC          = $(MPICHDIR)/bin/mpif77
-FFLAGS      = @FFLAGS@
-F77_COMPILE = $(FC) $(FFLAGS)
-F77_LINK    = $(FC)
+F77         = $(MPICHDIR)/bin/mpif77
+# Both FFLAGS and LDFLAGS have been included in mpif77, set them to null here.
+FFLAGS      =
 LDFLAGS     = 
+F77_COMPILE = $(F77) $(FFLAGS)
+F77_LINK    = $(F77_COMPILE) $(LDFLAGS)
 
 VPATH = .:${srcdir}
 .SUFFIXES:
@@ -21,7 +22,7 @@ VPATH = .:${srcdir}
 .f.o:
 	$(F77_COMPILE) -c $<
 .f:
-	$(F77_COMPILE) -o $* $< $(LDFLAGS) $(LIBS)
+	$(F77_LINK) -o $* $< $(LIBS)
 
 Makefile: ${srcdir}/Makefile.in
 	-cd ../../../ && \
@@ -38,8 +39,8 @@ maintainerclean:
 
 all-redirect: fpi
 coverage:
-fpi: fpi.o  ../../lib/lib${MPILIBNAME}.a
-	$(F77_LINK) $(LDFLAGS) -o fpi fpi.o  ${LIBS}
+fpi: fpi.o  ../../lib/lib$(MPILIBNAME).a
+	$(F77_LINK) -o fpi fpi.o $(LIBS)
 htmldoc:
 mandoc:
 latexdoc:

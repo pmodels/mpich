@@ -24,12 +24,14 @@
  * precision and range for reals and for doubles
  * The value is two "precision, range", as integers
  */
-#define MPIR_F90_REAL_MODEL        @F90_REAL_MODEL@
-#define MPIR_F90_DOUBLE_MODEL      @F90_DOUBLE_MODEL@
+#define MPIR_F90_REAL_MODEL          @FC_REAL_MODEL@
+#define MPIR_F90_DOUBLE_MODEL        @FC_DOUBLE_MODEL@
 /* integer model:
  * a single integer, giving the value of the range 
  */
-#define MPIR_F90_INTEGER_MODEL     @F90_INTEGER_MODEL@
+#define MPIR_F90_INTEGER_MODEL       @FC_INTEGER_MODEL@
+
+#define MPIR_F90_ALL_INTEGER_MODELS  @FC_ALL_INTEGER_MODELS@
 /* integer model map:
  * a set of triples of integers, giving the maximum range for
  * each 'kind', as in the Fortran 90 declaration
@@ -42,6 +44,6 @@
  * This can be used to find a Fortran 90 integer type with a given range.
  * 
  */
-#define MPIR_F90_INTEGER_MODEL_MAP @F90_INTEGER_MODEL_MAP@
+#define MPIR_F90_INTEGER_MODEL_MAP   @FC_INTEGER_MODEL_MAP@
 
 #endif

@@ -249,7 +249,7 @@ if test "x$1" = "xalways" -o \( "$cache_file" = "/dev/null" -a "X$real_enable_ca
     ac_cv_env_LDFLAGS_value=$LDFLAGS
     ac_cv_env_LIBS_set=${LIBS+set}
     ac_cv_env_LIBS_value=$LIBS
-    ac_cv_env_FC_set=${FS+set}
+    ac_cv_env_FC_set=${FC+set}
     ac_cv_env_FC_value=$FC
     ac_cv_env_F77_set=${F77+set}
     ac_cv_env_F77_value=$F77
@@ -272,7 +272,7 @@ if test "x$1" = "xalways" -o \( "$cache_file" = "/dev/null" -a "X$real_enable_ca
     ac_env_LDFLAGS_value=$LDFLAGS
     ac_env_LIBS_set=${LIBS+set}
     ac_env_LIBS_value=$LIBS
-    ac_env_FC_set=${FS+set}
+    ac_env_FC_set=${FC+set}
     ac_env_FC_value=$FC
     ac_env_F77_set=${F77+set}
     ac_env_F77_value=$F77

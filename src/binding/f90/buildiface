@@ -653,19 +653,19 @@ print MAKEFD "smvar_do_dependencies = ignore\n";
 #print MAKEFD "smvar_do_sharedlibs   = 0\n";
 print MAKEFD "smvar_makefile_configdir = ../../..\n";
 #print MAKEFD "smvar_debug=1\n";
-print MAKEFD "MOD              = \@F90MODEXT\@\n";
+print MAKEFD "MOD              = \@FCMODEXT\@\n";
 print MAKEFD "MPIMOD           = \@MPIMODNAME\@\n";
 print MAKEFD "MPICONSTMOD      = \@MPICONSTMODNAME\@\n";
 print MAKEFD "MPISIZEOFMOD     = \@MPISIZEOFMODNAME\@\n";
 print MAKEFD "MPIBASEMOD       = \@MPIBASEMODNAME\@\n";
-print MAKEFD "F90INCFLAG       = \@F90INCFLAG\@\n";
-print MAKEFD "F90EXT           = \@F90EXT\@\n";
-print MAKEFD "F90_COMPILE_MODS = \$(F90_COMPILE)\n";
+print MAKEFD "FCINCFLAG        = \@FCINCFLAG\@\n";
+print MAKEFD "FCEXT            = \@FCEXT\@\n";
+print MAKEFD "FC_COMPILE_MODS  = \$(FC_COMPILE)\n";
 print MAKEFD 
 "# We need to tell some compilers (e.g., Solaris f90) to look in the current 
 # directory when the source file is not in the working directory (i.e.,
 # in a VPATH build)
-F90INCLUDES = \@F90INCFLAG\@.
+FCINCLUDES = \@FCINCFLAG\@.
 
 ";
 
@@ -687,9 +687,9 @@ lib\${MPILIBNAME}f90_a_SOURCES = mpi.o mpi_constants.o mpi_sizeofs.o ${outfile_p
 print MAKEFD "all-preamble: \$(MPIMOD).\$(MOD)\n";
 
 print MAKEFD "\
-# The copy line in this step makes the F90 modules available to
+# The copy line in this step makes the Fortran90 modules available to
 # the mpif90 script before an install takes place
-# The if handles the Intel F90 compiler, which has an unusual interface
+# The if handles the Intel Fortran90 compiler, which has an unusual interface
 # (The mpimod.pcl file should contain only a local mpimod.pc name; if
 # it contains a file name in another directory and that file does not 
 # exist, the compiler may refuse to compile the file)
@@ -710,9 +710,9 @@ print MAKEFD "\
 
 #print MAKEFD "\tcp mpi.\$(MOD) mpi_constants.\$(MOD) mpi_base.\$(MOD) mpi_sizeofs.\$(MOD) ../../../src/include\n";
 #
-# Some versions of the Intel f90 compiler require special files that 
+# Some versions of the Intel Fortran90 compiler require special files that 
 # describe which modules to load.
-#print MAKEFD "\t\@if [ -n \"\@F90_WORK_FILES_ARG\@\" ] ; then \\\
+#print MAKEFD "\t\@if [ -n \"\@FC_WORK_FILES_ARG\@\" ] ; then \\\
 #\t    cp work.pc ../../../src/include/mpimod.pc ; \\\
 #\t    echo \"mpimod.pc\" > mpimod.pcl ; \\\
 #\t    echo \"\${includedir}/mpimod.pc\" >> mpimod.pcl ;\\\
@@ -785,7 +785,7 @@ doc_LATEX_SOURCES = \${doc_sources}
 # selected by configure from a list of possible choices, with an 
 # enable switch used to bypass the checks.  In addition, we need a way to 
 # dynamically create subsets, given a list of routines and types/dimensions 
-# to include.  This allows users to build precisely tailored F90 modules.
+# to include.  This allows users to build precisely tailored Fortran90 modules.
 # ----------------------------------------------------------------------------
 
 # Since configure copies mpif90 to the bin dir, we need to remove it
@@ -841,26 +841,26 @@ sub print_endline {
 sub createModSteps {
     my ($srcFile) = @_;
     
-    # Get a version of the source file with $(F90EXT) instead of .f90
+    # Get a version of the source file with $(FCEXT) instead of .f90
     # as the extension
     my $srcFileWithExt = $srcFile;
-    $srcFileWithExt =~ s/\.f90$/\.\$(F90EXT)/;
+    $srcFileWithExt =~ s/\.f90$/\.\$(FCEXT)/;
 
 print MAKEFD 
-"\t\@if [ -n \"\@F90_WORK_FILES_ARG\@\" ] ; then \\
+"\t\@if [ -n \"\@FC_WORK_FILES_ARG\@\" ] ; then \\
 	    rm -f mpimod.pc mpimod.pcl ; \\
 	    echo \"mpimod.pc\" > mpimod.pcl ; \\
-	    echo \$(F90_COMPILE_MODS) \@F90_WORK_FILES_ARG\@ -c $srcFile ; \\
-	    \$(F90_COMPILE_MODS) \@F90_WORK_FILES_ARG\@ -c $srcFile ; \\
+	    echo \$(FC_COMPILE_MODS) \@FC_WORK_FILES_ARG\@ -c $srcFile ; \\
+	    \$(FC_COMPILE_MODS) \@FC_WORK_FILES_ARG\@ -c $srcFile ; \\
 	    cp mpimod.pc ../../../src/include/mpimod.pc ; \\
 	    cp mpimod.pcl ../../../src/include/mpimod.pcl ; \\
 	else \\
-	    if [ \"\$(F90EXT)\" != \"f90\" ] ; then \\
+	    if [ \"\$(FCEXT)\" != \"f90\" ] ; then \\
 	        ln -f -s $srcFile $srcFileWithExt ; \\
 	    fi ; \\
-	    echo \$(F90_COMPILE_MODS) -c $srcFileWithExt ; \\
-	    \$(F90_COMPILE_MODS) -c $srcFileWithExt ; \\
-	    if [ \"\$(F90EXT)\" != \"f90\" ] ; then \\
+	    echo \$(FC_COMPILE_MODS) -c $srcFileWithExt ; \\
+	    \$(FC_COMPILE_MODS) -c $srcFileWithExt ; \\
+	    if [ \"\$(FCEXT)\" != \"f90\" ] ; then \\
 	        rm -f $srcFileWithExt ; \\
 	    fi ; \\
 	fi

@@ -60,8 +60,8 @@ otherlangs=""
 AC_ARG_ENABLE(f77,
 [--enable-f77 - Turn on Fortran 77 tests (default)],,enable_f77=yes)
 dnl
-AC_ARG_ENABLE(f90,
-[--enable-f90 - Turn on Fortran 90 tests (if f90 available)],,enable_f90=default)
+AC_ARG_ENABLE(fc,
+[--enable-fc - Turn on Fortran 90 tests (if f90 available)],,enable_fc=default)
 AC_ARG_ENABLE(cxx,
 [--enable-cxx - Turn on C++ tests (default)],,enable_cxx=yes)
 AC_ARG_ENABLE(romio,
@@ -97,6 +97,17 @@ level is used (this is to let MPICH2 build for the correct thread
 support without requiring a specific --enable-threads argument.
 ],,
 enable_threads=default)
+
+#
+# First, determine whether we are/can support the language bindings
+#
+# Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
+# substituting them, i.e. FC=$F90 and FCFLAGS=$F90FLAGS, we choose to emit
+# an error message and abort to avoid any ambiguous/hidden bug in choosing
+# Fortran90 compilers.
+if test -n "$F90" -o -n "$F90FLAGS" ; then
+    AC_MSG_ERROR([F90 and F90FLAGS are replaced by FC and FCFLAGS respectively in this configure, please unset F90/F90FLAGS and set FC/FCFLAGS instead and rerun configure again.])
+fi
 # ------------------------------------------------------------------------
 if test "$enable_threads" = "yes" ; then 
     enable_threads=multiple
@@ -176,7 +187,7 @@ if test "$FROM_MPICH2" = "yes" ; then
     CFLAGS=""
     CXXFLAGS=""
     FFLAGS=""
-    F90FLAGS=""
+    FCFLAGS=""
 fi
 
 # If we're building from MPICH2, check the MPICH2_ENABLE_xxx environment
@@ -185,8 +196,8 @@ if test "$FROM_MPICH2" = yes ; then
     if test -n "$MPICH2_ENABLE_F77" ; then
         enable_f77=$MPICH2_ENABLE_F77
     fi
-    if test -n "$MPICH2_ENABLE_F90" ; then
-        enable_f90=$MPICH2_ENABLE_F90
+    if test -n "$MPICH2_ENABLE_FC" ; then
+        enable_fc=$MPICH2_ENABLE_FC
     fi
     if test -n "$MPICH2_ENABLE_CXX" ; then
         enable_cxx=$MPICH2_ENABLE_CXX
@@ -196,8 +207,8 @@ if test "$FROM_MPICH2" = yes ; then
     if test -n "$MPICH2_BASEF77" ; then
         BASEF77=$MPICH2_BASEF77
     fi
-    if test -n "$MPICH2_BASEF90" ; then
-        BASEF90=$MPICH2_BASEF90
+    if test -n "$MPICH2_BASEFC" ; then
+        BASEFC=$MPICH2_BASEFC
     fi
     if test -n "$MPICH2_BASECXX" ; then
         BASECXX=$MPICH2_BASECXX
@@ -213,14 +224,14 @@ if test "$enable_f77" = yes ; then
         enable_f77=no
     fi    
 fi
-if test "$enable_f90" = yes ; then
-    AC_PROG_F90
-    if test -z "$BASEF90" ; then
-        BASEF90="$F90"
+if test "$enable_fc" = yes ; then
+    PAC_PROG_FC
+    if test -z "$BASEFC" ; then
+        BASEFC="$FC"
     fi
-    # If there is no working F90, then set enable_f90 to no
-    if test -z "$F90" ; then
-        enable_f90=no
+    # If there is no working FC, then set enable_fc to no
+    if test -z "$FC" ; then
+        enable_fc=no
     fi
 fi
 if test "$enable_cxx" = yes ; then
@@ -278,10 +289,10 @@ if test -n "$with_mpi" ; then
     else
         F77=$MPIF77
     fi
-    if test -z "$MPIF90" ; then
-        F90=$with_mpi/bin/mpif90
+    if test -z "$MPIFC" ; then
+        FC=$with_mpi/bin/mpif90
     else
-        F90=$MPIF90
+        FC=$MPIFC
     fi
     if test -z "$MPICXX" ; then
         CXX=$with_mpi/bin/mpicxx
@@ -307,10 +318,9 @@ else
         fi     
         BASEF77=$F77
         CC=$top_build_dir/bin/mpicc
-        FC=$top_build_dir/bin/mpif77
-        F77=$FC
-	BASEF90=$F90
-        F90=$top_build_dir/bin/mpif90
+        F77=$top_build_dir/bin/mpif77
+	BASEFC=$FC
+        FC=$top_build_dir/bin/mpif90
         CXX=$top_build_dir/bin/mpicxx
         # Be careful of exec prefix
 	if test "X$exec_prefix" = "XNONE" ; then
@@ -416,11 +426,10 @@ if test "$FROM_MPICH2" = yes ; then
 	BASEF77=$F77
 	#BASEINCDIR=$top_build_dir/src/include
         CC=$top_build_dir/bin/mpicc
-        FC=$top_build_dir/bin/mpif77
-        F77=$FC
+        F77=$top_build_dir/bin/mpif77
         CXX=$top_build_dir/bin/mpicxx
-	BASEF90=$F90
-        F90=$top_build_dir/bin/mpif90
+	BASEFC=$FC
+        FC=$top_build_dir/bin/mpif90
 	MPIEXEC=$top_build_dir/bin/mpiexec
         MPILIBLOC=$top_build_dir/lib/libmpich.a
     else
@@ -446,9 +455,8 @@ if test "$FROM_MPICH2" = yes ; then
 	    BASECC=$CC
         fi
         CC=$mpibindir/mpicc
-        FC=$mpibindir/mpif77
+        F77=$mpibindir/mpif77
         BASEF77=$F77
-        F77=$FC
         CXX=$mpibindir/mpicxx
         MPIEXEC=$mpibindir/mpiexec
         # For some of the tests below, we'll need a separate compiler
@@ -461,8 +469,8 @@ if test "$FROM_MPICH2" = yes ; then
 #        else 
 #            CXXTEST=$CXX
 #        fi
-	BASEF90=$F90
-        F90=$mpibindir/mpif90
+	BASEFC=$FC
+        FC=$mpibindir/mpif90
     fi
 fi
 
@@ -500,8 +508,7 @@ elif test "$enable_f77" = yes ; then
         call mpi_finalize(ierr)
         end
 EOF
-    if test -z "$FC" ; then FC=$F77 ; fi
-    if $FC -o conftest conftest.f >conftest.out 2>&1 ; then
+    if $F77 -o conftest conftest.f >conftest.out 2>&1 ; then
         AC_MSG_RESULT(yes)
         otherlangs="$otherlangs f77"
 	f77dir=f77
@@ -738,9 +745,9 @@ EOF
         fi
     fi
     AC_SUBST(F77_GETARG_LIBS)
-    # FIXME: Currently, we hope that F90 accepts the same library
-    F90_GETARG_LIBS="$F77_GETARG_LIBS"
-    AC_SUBST(F90_GETARG_LIBS)
+    # FIXME: Currently, we hope that FC accepts the same library
+    FC_GETARG_LIBS="$F77_GETARG_LIBS"
+    AC_SUBST(FC_GETARG_LIBS)
 
     # ALLOCMEMF is set in f77/ext/testlist if we can try this
     # Fortran extension
@@ -771,84 +778,68 @@ f90dir="#"
 AC_SUBST(f90dir)
 # First, see if we have an f90 compiler.  This uses code similar to that
 # in the MPICH2 top-level configure
-if test "$enable_f90" = default -a "$enable_f77" = yes ; then
-    enable_f90=no
-    if test -n "$BASEF90" ; then
-        saveF90=$F90 
-        F90=$BASEF90
+if test "$enable_fc" = default -a "$enable_f77" = yes ; then
+    enable_fc=no
+    if test -n "$BASEFC" ; then
+        saveFC=$FC 
+        FC=$BASEFC
     fi
-    # Work around bug in autoconf that adds -g to F90FLAGS
-    saveF90FLAGS="$F90FLAGS"
-    PAC_PROG_F90
-    PAC_PROG_F90_WORKS
-    F90FLAGS=$saveF90FLAGS
-    if test -z "$F90" -o "$pac_cv_prog_f90_works" != yes ; then
-        AC_MSG_WARN([Use --disable-f90 to keep configure from searching for a Fortran 90 compiler])
-	enable_f90=no
-    elif test -z "$BASEF90" ; then
-        BASEF90=$F90
+    # Work around bug in autoconf that adds -g to FCFLAGS
+    saveFCFLAGS="$FCFLAGS"
+    PAC_PROG_FC
+    PAC_PROG_FC_WORKS
+    FCFLAGS=$saveFCFLAGS
+    if test -z "$FC" -o "$pac_cv_prog_fc_works" != yes ; then
+        AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
+	enable_fc=no
+    elif test -z "$BASEFC" ; then
+        BASEFC=$FC
     fi
-    if test -n "$BASEF90" ; then
-        F90=$saveF90
+    if test -n "$BASEFC" ; then
+        FC=$saveFC
     fi
 fi
 
-if test "$enable_f90" = yes ; then
-    if test -n "$BASEF90" ; then
-        saveF90=$F90 
-        F90=$BASEF90
+if test "$enable_fc" = yes ; then
+    if test -n "$BASEFC" ; then
+        saveFC=$FC 
+        FC=$BASEFC
     fi
-    # Work around bug in autoconf that adds -g to F90FLAGS
-    saveF90FLAGS="$F90FLAGS"
-    PAC_PROG_F90
-    PAC_PROG_F90_WORKS
-    F90FLAGS=$saveF90FLAGS
+    # Work around bug in autoconf that adds -g to FCFLAGS
+    saveFCFLAGS="$FCFLAGS"
+    PAC_PROG_FC
+    PAC_PROG_FC_WORKS
+    FCFLAGS=$saveFCFLAGS
 
-    if test -n "$F90" ; then
+    if test -n "$FC" ; then
         # Make sure that the compilers are compatible.  This 
-	# will also make sure that the program named in F90 is
+	# will also make sure that the program named in FC is
 	# a working Fortran 90 compiler
 	# Only check if we're *not* building within MPICH2 
 	# (MPICH2 will have made the test)
         # FIXME: Do we want to check only simple routine names 
 	# (those without an underscore?)
 	if test "$FROM_MPICH2" != yes ; then
-            PAC_F90_AND_F77_COMPATIBLE(enable_f90=yes,enable_f90=no)
+            PAC_FC_AND_F77_COMPATIBLE(enable_fc=yes,enable_fc=no)
         fi
     fi
-    if test -n "$F90" -a "$pac_cv_f90_ext" != "f90" ; then
-        # The tests assume that .f90 works as the extension.  
-        # The IBM xlf90 compiler needs a special option to accept f90
-	AC_MSG_CHECKING([whether -qsuffix=f=f90 allows f90 suffix])
-	saveF90FLAGS=$F90FLAGS
-	F90FLAGS="$F90FLAGS -qsuffix=f=f90"
-	rm -f conftest*
-	cat >conftest.f90 <<EOF
-       program main
-       end
-EOF
-        if $F90 $F90FLAGS -o conftest conftest.f90 ; then
-            pac_cv_f90_needs_qsuffix=yes
-        else
-            pac_cv_f90_needs_qsuffix=no
-        fi
-        rm -f conftest*
-        AC_MSG_RESULT($pac_cv_f90_needs_qsuffix)
-        if test "$pac_cv_f90_needs_qsuffix" != "yes" ; then
-            F90FLAGS=$saveF90FLAGS;
-            AC_MSG_WARN([Fortran 90 tests being disabled because the $F90 compiler does not accept a .f90 extension])
+    if test -n "$FC" -a "$ac_fc_srcext" != "f90" ; then
+        AC_FC_SRCEXT([f90],[
+            FCFLAGS="$FCFLAGS $FCFLAGS_f90"
+        ],[
+            AC_MSG_WARN([Fortran 90 test being disabled because the $FC compiler does not accept a .f90 extension])
             f90dir=#
-            enable_f90=no
-        fi
+            enable_fc=no
+        ])
     fi
 
     # See if the compiler supports the Cray-style pointers
-    ALLOCMEMF90=""
-    PAC_PROG_F90_HAS_POINTER(ALLOCMEMF90="allocmemf90 1")
-    AC_SUBST(ALLOCMEMF90)
+    ALLOCMEMFC=""
+    PAC_PROG_FC_HAS_POINTER(ALLOCMEMFC="allocmemfc 1")
+    AC_SUBST(ALLOCMEMFC)
 
-    if test -n "$BASEF90" ; then
-        F90=$saveF90
+    if test -n "$BASEFC" ; then
+        FC=$saveFC
     fi
 
     if test -f f77/init/checksizes.c ; then
@@ -862,33 +853,30 @@ EOF
 fi
 #
 if test "$FROM_MPICH2" = yes ; then
-    if test "$enable_f90" = yes ; then
+    if test "$enable_fc" = yes ; then
         otherlangs="$otherlangs f90"
 	f90dir=f90
     fi
-elif test "$enable_f90" = yes ; then
+elif test "$enable_fc" = yes ; then
     AC_MSG_CHECKING([that we can build MPI programs with Fortran 90])
-    rm -f conftest*
-    cat >conftest.f90 <<EOF
-        program main
-        use mpi
-        integer ierr
-	call mpi_init(ierr)
-        call mpi_finalize(ierr)
-        end
-EOF
-    if $F90 -o conftest conftest.f90 >conftest.out 2>&1 ; then
+    AC_LANG_PUSH([Fortran])
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([
+            program main
+            use mpi
+            integer ierr
+            call mpi_init(ierr)
+            call mpi_finalize(ierr)
+            end
+        ])
+    ],[
         AC_MSG_RESULT(yes)
         otherlangs="$otherlangs f90"
 	f90dir=f90
-    else
+    ],[
         AC_MSG_RESULT(no)
-	echo "Failed to build program" >&AC_FD_CC
-	cat conftest.f90 >&AC_FD_CC
-        echo "Error messages:" >&AC_FD_CC
-	cat conftest.out >&AC_FD_CC
-    fi
-    rm -f conftest*
+    ])
+    AC_LANG_POP([Fortran])
 fi
 # Simple tests for which other languages we can handle
 cxxdir="#"
@@ -900,24 +888,22 @@ if test "$FROM_MPICH2" = yes ; then
     fi
 elif test "$enable_cxx" = yes ; then
     AC_MSG_CHECKING([that we can build MPI programs with C++])
-    rm -f conftest*
-    cat >conftest.cxx <<EOF
+    AC_LANG_PUSH([C++])
+    AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([
 #include "mpi.h"
-int main( int argc, char **argv)
-{
+        ],[
     MPI::Init();
     MPI::Finalize();
-    return 0;
-}    
-EOF
-    if $CXX -o conftest conftest.cxx >conftest.out 2>&1 ; then
+        ])
+    ],[
         AC_MSG_RESULT(yes)
         otherlangs="$otherlangs cxx"
 	cxxdir=cxx
-    else
+    ],[
         AC_MSG_RESULT(no)
-    fi
-    rm -f conftest*
+    ])
+    AC_LANG_POP([C++])
 fi
 if test "$enable_cxx" = yes ; then
     CXXsave=$CXX
@@ -1031,9 +1017,9 @@ AC_SUBST(PERL)
 AC_SUBST(otherlangs)
 AC_SUBST(threadsdir)
 AC_SUBST(CC)
+AC_SUBST(F77)
 AC_SUBST(FC)
-AC_SUBST(F90)
-AC_SUBST(F90FLAGS)
+AC_SUBST(FCFLAGS)
 AC_SUBST(FFLAGS)
 AC_SUBST(CXX)
 AC_SUBST(CXXFLAGS)
