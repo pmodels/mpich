@@ -5,10 +5,10 @@
 #
 
 """
-usage:  mpdboot --totalnum=<n_to_start> [--file=<hostsfile>]  [--help] \ 
-                [--rsh=<rshcmd>] [--user=<user>] [--mpd=<mpdcmd>]      \ 
-                [--loccons] [--remcons] [--shell] [--verbose] [-1]     \
-                [--ncpus=<ncpus>] [--ifhn=<ifhn>] [--chkup] [--chkuponly] \
+usage:  mpdboot --totalnum=<n_to_start> [--file=<hostsfile>]  [--help]        \ 
+                [--rsh=<rshcmd>] [--user=<user>] [--mpd=<mpdcmd>]             \ 
+                [--loccons] [--remcons] [--shell] [--verbose] [-1]            \ 
+                [--ncpus=<ncpus>] [--ifhn=<ifhn>] [--chkup] [--chkuponly]     \ 
                 [--maxbranch=<maxbranch>]
  or, in short form, 
         mpdboot -n n_to_start [-f <hostsfile>] [-h] [-r <rshcmd>] [-u <user>] \ 
