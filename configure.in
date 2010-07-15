@@ -6189,18 +6189,18 @@ dnl steps because it does not depend on them.
 # set and export values that the test/mpi configure will reference to ensure
 # that the correct decisions are made since this configure happens before the
 # MPICH2 library is built. 
+MPICH2_ENABLE_CXX=$enable_cxx
 MPICH2_ENABLE_F77=$enable_f77
 MPICH2_ENABLE_FC=$enable_fc
-MPICH2_ENABLE_CXX=$enable_cxx
+export MPICH2_ENABLE_CXX
 export MPICH2_ENABLE_F77
 export MPICH2_ENABLE_FC
-export MPICH2_ENABLE_CXX
-MPICH2_BASEF77=$F77
 MPICH2_BASECXX=$CXX
+MPICH2_BASEF77=$F77
 MPICH2_BASEFC=$FC
-export MPICH2_BASE_F77
-export MPICH2_BASE_FC
-export MPICH2_BASE_CXX
+export MPICH2_BASECXX
+export MPICH2_BASEF77
+export MPICH2_BASEFC
 # MPI_SRCDIR gives the test/mpi configure the location of the source
 # files for an MPI implementation
 if test -n "$ac_abs_srcdir" ; then

@@ -456,7 +456,6 @@ if test "$FROM_MPICH2" = yes ; then
         fi
         CC=$mpibindir/mpicc
         F77=$mpibindir/mpif77
-        BASEF77=$F77
         CXX=$mpibindir/mpicxx
         MPIEXEC=$mpibindir/mpiexec
         # For some of the tests below, we'll need a separate compiler
