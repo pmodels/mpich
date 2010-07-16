@@ -10,6 +10,7 @@ dnl too old to be useful, 07/14/2010.
 dnl builtin(include,aclocal_cross.m4)
 builtin(include,aclocal_cxx.m4)
 builtin(include,aclocal_f77.m4)
+builtin(include,aclocal_f77new.m4)
 builtin(include,aclocal_util.m4)
 builtin(include,aclocal_subcfg.m4)
 builtin(include,aclocal_make.m4)

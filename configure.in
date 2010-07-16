@@ -2047,47 +2047,7 @@ EOF
     # that generates an error message from cpp).  The following test
     # checks to see if .F works, and if not, whether "cpp -P -C" can be used
     # This is needed for Mac OSX 10.5
-    #
-dnl # FIXME: this test should be replaced by PAC_F77_WORKS_WITH_CPP([F77CPP])
-dnl #        which should be similar to PAC_FC_WORKS_WITH_CPP([FCCPP])
-    #
-    rm -rf conftest.dSYM
-    rm -f conftest*
-    AC_MSG_CHECKING([whether Fortran compiler processes .F files with C preprocessor])
-    cat >conftest.F <<EOF
-        program main
-#define SIZE 10
-        integer a(SIZE)
-        end
-EOF
-    pac_cv_fort_accepts_F=no
-    pac_Fcompile='${F77} -c $FFLAGS $CPPFLAGS conftest.F 1>&AC_FD_CC'
-
-    if AC_TRY_EVAL(pac_Fcompile) && test -s conftest.o ; then
-        pac_cv_fort_accepts_F=yes
-    else
-        # Can we use cpp?
-        pac_Fcpp='${CPP} -C -P $CPPFLAGS conftest.F >conftest.f 2>&AC_FD_CC'
-        if AC_TRY_EVAL(pac_Fcpp) && test -s conftest.f ; then
-            pac_fFcompile='${F77} -c $FFLAGS $CPPFLAGS conftest.f 1>&AC_FD_CC'
-   	    if AC_TRY_EVAL(pac_fFcompile) && test -s conftest.o ; then
-	        pac_cv_fort_accepts_F="no, use cpp"
- 	    fi
-        fi
-    fi
-    rm -f conftest.*
-    AC_MSG_RESULT($pac_cv_fort_accepts_F)
-    case "$pac_cv_fort_accepts_F" in 
-        yes)
-        F77CPP=""
-        ;;
-        "no, use cpp")
-         F77CPP="$CPP -C -P"
-        ;;
-        no) 
-        F77CPP="false"
-        ;;
-    esac
+    PAC_F77_WORKS_WITH_CPP([F77CPP])
     AC_SUBST(F77CPP)
 
     bindings="$bindings f77"
