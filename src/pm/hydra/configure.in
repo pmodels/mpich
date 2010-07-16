@@ -76,8 +76,8 @@ if test "$F77" != "" ; then
 else
    AC_DEFINE_UNQUOTED(HYDRA_F77,"",[Fortran 77 compiler])
 fi
-if test "$F90" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_F90,"$F90 $F90FLAGS $LDFLAGS $LIBS",[Fortran 90 compiler])
+if test "$FC" != "" ; then
+   AC_DEFINE_UNQUOTED(HYDRA_F90,"$FC $FCFLAGS $LDFLAGS $LIBS",[Fortran 90 compiler])
 else
    AC_DEFINE_UNQUOTED(HYDRA_F90,"",[Fortran 90 compiler])
 fi
