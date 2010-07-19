@@ -136,9 +136,14 @@ static MPI_Datatype mpi_pairtypes[] = {
     (MPI_Datatype) -1
 };
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Datatype_init
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Datatype_init(void)
 {
     int i;
+    int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *ptr;
 
     MPIU_Assert(MPID_Datatype_mem.initialized == 0);
@@ -167,15 +172,21 @@ int MPIR_Datatype_init(void)
         /* this is a redundant alternative to the previous statement */
         MPIU_Assert((void *) ptr == (void *) (MPID_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i])));
 
-        MPID_Type_create_pairtype(mpi_pairtypes[i], (MPID_Datatype *) ptr);
+        mpi_errno = MPID_Type_create_pairtype(mpi_pairtypes[i], (MPID_Datatype *) ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
     MPIR_Add_finalize(MPIR_Datatype_finalize, 0,
                       MPIR_FINALIZE_CALLBACK_PRIO-1);
 
-    return MPI_SUCCESS;
+fn_fail:
+    return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Datatype_finalize
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)) )
 {
     int i;
@@ -195,9 +206,12 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)) )
    That routine calls it from within a single-init section to 
    ensure thread-safety. */
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Datatype_builtin_fillin
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Datatype_builtin_fillin(void)
 {
-    static const char FCNAME[] = "MPIR_Datatype_builtin_fillin";
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPID_Datatype *dptr;
