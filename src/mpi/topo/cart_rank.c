@@ -24,11 +24,40 @@
 #undef MPI_Cart_rank
 #define MPI_Cart_rank PMPI_Cart_rank
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Cart_rank_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Cart_rank_impl(MPIR_Topology *cart_ptr, int *coords, int *rank)
+{
+    int i, ndims, coord, multiplier;
+
+    ndims = cart_ptr->topo.cart.ndims;
+    *rank = 0;
+    multiplier = 1;
+    for ( i=ndims-1; i >=0; i-- ) {
+        coord = coords[i];
+        if ( cart_ptr->topo.cart.periodic[i] ) {
+            if (coord >= cart_ptr->topo.cart.dims[i])
+                coord = coord % cart_ptr->topo.cart.dims[i];
+            else if (coord <  0) {
+                coord = coord % cart_ptr->topo.cart.dims[i];
+                if (coord) coord = cart_ptr->topo.cart.dims[i] + coord;
+            }
+        }
+        *rank += multiplier * coord;
+        multiplier *= cart_ptr->topo.cart.dims[i];
+    }
+    return;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_rank
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_rank - Determines process rank in communicator given Cartesian
                 location
@@ -59,11 +88,10 @@ Notes:
 @*/
 int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
 {
-    static const char FCNAME[] = "MPI_Cart_rank";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;
-    int i, ndims, coord, multiplier;
+    int i, ndims, coord;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_RANK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -98,10 +126,7 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
-    /* ... body of routine ...  */
-    
     cart_ptr = MPIR_Topology_get( comm_ptr );
-
     MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
 
     /* Validate coordinates */
@@ -112,7 +137,7 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
 	    ndims = cart_ptr->topo.cart.ndims;
 	    if (ndims != 0) {
 		MPIR_ERRTEST_ARGNULL(coords,"coords",mpi_errno);
-		if (mpi_errno) goto fn_fail;
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    }
 	    for (i=0; i<ndims; i++) {
 		if (!cart_ptr->topo.cart.periodic[i]) {
@@ -127,23 +152,8 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
-    ndims = cart_ptr->topo.cart.ndims;
-    *rank = 0;
-    multiplier = 1;
-    for ( i=ndims-1; i >=0; i-- ) {
-	coord = coords[i];
-	if ( cart_ptr->topo.cart.periodic[i] ) {
-	    if (coord >= cart_ptr->topo.cart.dims[i])
-		coord = coord % cart_ptr->topo.cart.dims[i];
-	    else if (coord <  0) {
-		coord = coord % cart_ptr->topo.cart.dims[i];
-		if (coord) coord = cart_ptr->topo.cart.dims[i] + coord;
-	    }
-	}
-	*rank += multiplier * coord;
-	multiplier *= cart_ptr->topo.cart.dims[i];
-    }
-    
+    /* ... body of routine ...  */
+    MPIR_Cart_rank_impl(cart_ptr, coords, rank);
     /* ... end of body of routine ... */
 
   fn_exit:

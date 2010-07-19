@@ -24,18 +24,21 @@
 #undef MPI_Cart_map
 #define MPI_Cart_map PMPI_Cart_map
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Cart_map
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Cart_map( const MPID_Comm *comm_ptr, int ndims, const int dims[], 
 		   const int periodic[], int *newrank )
-{		   
-    int rank, nranks, i, size, mpi_errno;
+{
+    int rank, nranks, i, size, mpi_errno = MPI_SUCCESS;
 
     MPIU_UNREFERENCED_ARG(periodic);
 
     /* Determine number of processes needed for topology */
     if (ndims == 0) {
 	nranks = 1;
-    }
-    else {
+    } else {
 	nranks = dims[0];
 	for ( i=1; i<ndims; i++ )
 	    nranks *= dims[i];
@@ -43,14 +46,8 @@ int MPIR_Cart_map( const MPID_Comm *comm_ptr, int ndims, const int dims[],
     size = comm_ptr->remote_size;
     
     /* Test that the communicator is large enough */
-    if (size < nranks) {
-	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-				  "MPIR_Cart_map", __LINE__,
-				  MPI_ERR_DIMS, 
-				  "**topotoolarge",
-				  "**topotoolarge %d %d", size, nranks );
-	return mpi_errno;
-    }
+    MPIU_ERR_CHKANDJUMP2(size < nranks, mpi_errno, MPI_ERR_DIMS, "**topotoolarge",
+                         "**topotoolarge %d %d", size, nranks);
 
     /* Am I in this range? */
     rank = comm_ptr->rank;
@@ -61,13 +58,46 @@ int MPIR_Cart_map( const MPID_Comm *comm_ptr, int ndims, const int dims[],
     else
 	*newrank = MPI_UNDEFINED;
 
-    return MPI_SUCCESS;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Cart_map_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
+                       const int periods[], int *newrank)
+{
+    int mpi_errno = MPI_SUCCESS;
+        
+    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartMap != NULL) {
+	mpi_errno = comm_ptr->topo_fns->cartMap( comm_ptr, ndims,
+						 (const int*) dims,
+						 (const int*) periods,
+						 newrank );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+	mpi_errno = MPIR_Cart_map( comm_ptr, ndims,
+				   (const int*) dims,
+				   (const int*) periods, newrank );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_map
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_map - Maps process to Cartesian topology information 
 
@@ -96,9 +126,6 @@ Output Parameter:
 int MPI_Cart_map(MPI_Comm comm_old, int ndims, int *dims, int *periods, 
 		 int *newrank)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Cart_map";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_MAP);
@@ -146,17 +173,10 @@ int MPI_Cart_map(MPI_Comm comm_old, int ndims, int *dims, int *periods,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartMap != NULL) {
-	mpi_errno = comm_ptr->topo_fns->cartMap( comm_ptr, ndims, 
-						 (const int*) dims,
-						 (const int*) periods, 
-						 newrank );
-    }
-    else {
-	mpi_errno = MPIR_Cart_map( comm_ptr, ndims, 
-				   (const int*) dims,
-				   (const int*) periods, newrank );
-    }
+    mpi_errno = MPIR_Cart_map_impl( comm_ptr, ndims, 
+                                    (const int*) dims,
+                                    (const int*) periods, newrank );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

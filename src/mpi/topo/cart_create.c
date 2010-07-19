@@ -26,19 +26,17 @@
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_create
-
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
+#undef FUNCNAME
+#define FUNCNAME MPIR_Cart_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[], 
 		      const int periods[], int reorder, MPI_Comm *comm_cart )
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPIR_Cart_create";
-#endif
-    int       i, newsize, rank, nranks, mpi_errno = MPI_SUCCESS;
+    int i, newsize, rank, nranks, mpi_errno = MPI_SUCCESS;
     MPID_Comm *newcomm_ptr = NULL;
     MPIR_Topology *cart_ptr = NULL;
     MPI_Comm ncomm;
@@ -104,39 +102,42 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	/* Create a new communicator as a duplicate of the input communicator
 	   (but do not duplicate the attributes) */
 	if (reorder) {
-	    MPIU_THREADPRIV_DECL;
 	    
 	    /* Allow the cart map routine to remap the assignment of ranks to 
 	       processes */
-	    MPIU_THREADPRIV_GET;
-	    MPIR_Nest_incr();
-	    mpi_errno = NMPI_Cart_map( comm_ptr->handle, ndims, (int *)dims, 
-				       (int *)periods, &rank );
+	    mpi_errno = MPIR_Cart_map_impl( comm_ptr, ndims, (const int *)dims,
+                                            (const int *)periods, &rank );
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            
 	    /* Create the new communicator with split, since we need to reorder
 	       the ranks (including the related internals, such as the connection
 	       tables */
 	    if (mpi_errno == 0) {
+                MPIU_THREADPRIV_DECL;
+                MPIU_THREADPRIV_GET;
+                MPIR_Nest_incr();
 		mpi_errno = NMPI_Comm_split( comm_ptr->handle, 
 					     rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
 					     rank, &ncomm );
+                MPIR_Nest_decr();
 		if (!mpi_errno) {
 		    MPID_Comm_get_ptr( ncomm, newcomm_ptr );
 		}
 	    }
-	    MPIR_Nest_decr();
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
 	else {
 	    mpi_errno = MPIR_Comm_copy( (MPID_Comm *)comm_ptr, newsize, 
 					&newcomm_ptr );
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    rank   = comm_ptr->rank;
 	}
-	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
 	/* If this process is not in the resulting communicator, return a 
 	   null communicator and exit */
 	if (rank >= newsize || rank == MPI_UNDEFINED) {
 	    *comm_cart = MPI_COMM_NULL;
-	    return MPI_SUCCESS;
+            goto fn_exit;
 	}
 	
 	/* Create the topololgy structure */
@@ -167,10 +168,11 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 
     /* Place this topology onto the communicator */
     mpi_errno = MPIR_Topology_put( newcomm_ptr, cart_ptr );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *comm_cart = newcomm_ptr->handle;
 
+ fn_exit:
     return mpi_errno;
 
   fn_fail:
@@ -186,11 +188,46 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	    periods, reorder, comm_cart);
     }
 #   endif
-    return mpi_errno;
     /* --END ERROR HANDLING-- */
+    goto fn_exit;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Cart_create_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Cart_create_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
+                          const int periods[], int reorder, MPI_Comm *comm_cart)
+{
+    int mpi_errno = MPI_SUCCESS;
+        
+    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartCreate != NULL) {
+	mpi_errno = comm_ptr->topo_fns->cartCreate( comm_ptr, ndims,
+						    (const int*) dims,
+						    (const int*) periods,
+						    reorder,
+						    comm_cart );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+	mpi_errno = MPIR_Cart_create( comm_ptr, ndims,
+				      (const int*) dims,
+				      (const int*) periods, reorder,
+				      comm_cart );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Cart_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_create - Makes a new communicator to which topology information
@@ -224,9 +261,6 @@ We ignore 'reorder' info currently.
 int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods, 
 		    int reorder, MPI_Comm *comm_cart)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Cart_create";
-#endif
     int       mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_CREATE);
@@ -286,34 +320,21 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods,
 
     /* ... body of routine ...  */
 
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartCreate != NULL) {
-	mpi_errno = comm_ptr->topo_fns->cartCreate( comm_ptr, ndims, 
-						    (const int*) dims,
-						    (const int*) periods, 
-						    reorder,
-						    comm_cart );
-    }
-    else {
-	mpi_errno = MPIR_Cart_create( comm_ptr, ndims, 
-				      (const int*) dims,
-				      (const int*) periods, reorder, 
-				      comm_cart );
-    }
-#ifdef HAVE_ERROR_CHECKING
+    mpi_errno = MPIR_Cart_create_impl( comm_ptr, ndims,
+                                       (const int*) dims,
+                                       (const int*) periods, reorder,
+                                       comm_cart );
     if (mpi_errno) goto fn_fail;
-#endif
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
-  fn_exit:
-#endif
+ fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_CART_CREATE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
-    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+   /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
-  fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
@@ -322,7 +343,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods,
 	    periods, reorder, comm_cart);
     }
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
-    goto fn_exit;
 #   endif
     /* --END ERROR HANDLING-- */
+    goto fn_exit;
 }

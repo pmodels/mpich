@@ -26,8 +26,85 @@
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPI_Cancel
+#define FUNCNAME MPIR_Cancel_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Cancel_impl(MPID_Request *request_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+        
+    switch (request_ptr->kind)
+    {
+	case MPID_REQUEST_SEND:
+	{
+	    mpi_errno = MPID_Cancel_send(request_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	    break;
+	}
 
+	case MPID_REQUEST_RECV:
+	{
+	    mpi_errno = MPID_Cancel_recv(request_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	    break;
+	}
+
+	case MPID_PREQUEST_SEND:
+	{
+	    if (request_ptr->partner_request != NULL) {
+		if (request_ptr->partner_request->kind != MPID_UREQUEST) {
+		    mpi_errno = MPID_Cancel_send(request_ptr->partner_request);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+		} else {
+		    /* This is needed for persistent Bsend requests */
+                    mpi_errno = MPIR_Grequest_cancel(request_ptr->partner_request,
+                                                     (request_ptr->partner_request->cc == 0));
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+		}
+	    } else {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_REQUEST,"**requestpersistactive");
+	    }
+	    break;
+	}
+
+	case MPID_PREQUEST_RECV:
+	{
+	    if (request_ptr->partner_request != NULL) {
+		mpi_errno = MPID_Cancel_recv(request_ptr->partner_request);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	    } else {
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_REQUEST,"**requestpersistactive");
+	    }
+	    break;
+	}
+
+	case MPID_UREQUEST:
+	{
+            mpi_errno = MPIR_Grequest_cancel(request_ptr, (request_ptr->cc == 0));
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	    break;
+	}
+
+	/* --BEGIN ERROR HANDLING-- */
+	default:
+	{
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_INTERN,"**cancelunknown");
+	}
+	/* --END ERROR HANDLING-- */
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Cancel
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Cancel - Cancels a communication request
 
@@ -61,10 +138,8 @@ messages).
 @*/
 int MPI_Cancel(MPI_Request *request)
 {
-    static const char FCNAME[] = "MPI_Cancel";
     int mpi_errno = MPI_SUCCESS;
     MPID_Request * request_ptr;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CANCEL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -90,91 +165,8 @@ int MPI_Cancel(MPI_Request *request)
 
     /* ... body of routine ...  */
     
-    switch (request_ptr->kind)
-    {
-	case MPID_REQUEST_SEND:
-	{
-	    mpi_errno = MPID_Cancel_send(request_ptr);
-	    if (mpi_errno) goto fn_fail;
-	    break;
-	}
-
-	case MPID_REQUEST_RECV:
-	{
-	    mpi_errno = MPID_Cancel_recv(request_ptr);
-	    if (mpi_errno) goto fn_fail;
-	    break;
-	}
-
-	case MPID_PREQUEST_SEND:
-	{
-	    if (request_ptr->partner_request != NULL)
-	    {
-		if (request_ptr->partner_request->kind != MPID_UREQUEST)
-		{
-		    mpi_errno = MPID_Cancel_send(request_ptr->partner_request);
-		    if (mpi_errno) goto fn_fail;
-		}
-		else
-		{
-		    /* This is needed for persistent Bsend requests */
-		    MPIU_THREADPRIV_GET;
-		    MPIR_Nest_incr();
-		    {
-			mpi_errno = MPIR_Grequest_cancel(
-			    request_ptr->partner_request,
-			    (request_ptr->partner_request->cc == 0));
-		    }
-		    MPIR_Nest_decr();
-		}
-	    }
-	    else
-	    {
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_REQUEST,
-				    "**requestpersistactive");
-	    }
-	    
-	    break;
-	}
-
-	case MPID_PREQUEST_RECV:
-	{
-	    if (request_ptr->partner_request != NULL)
-	    {
-		mpi_errno = MPID_Cancel_recv(request_ptr->partner_request);
-		if (mpi_errno) goto fn_fail;
-	    }
-	    else
-	    {
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_REQUEST,
-				    "**requestpersistactive");
-	    }
-
-	    break;
-	}
-
-	case MPID_UREQUEST:
-	{
-	    MPIU_THREADPRIV_GET;
-	    MPIR_Nest_incr();
-	    {
-		mpi_errno = MPIR_Grequest_cancel(request_ptr,
-		    (request_ptr->cc == 0));
-	    }
-	    MPIR_Nest_decr();
-	    
-	    break;
-	}
-
-	/* --BEGIN ERROR HANDLING-- */
-	default:
-	{
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_INTERN,"**cancelunknown");
-	}
-	/* --END ERROR HANDLING-- */
-    }
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    mpi_errno = MPIR_Cancel_impl(request_ptr);
+    if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
     

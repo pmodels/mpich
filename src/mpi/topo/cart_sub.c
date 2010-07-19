@@ -28,7 +28,8 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_sub
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_sub - Partitions a communicator into subgroups which 
@@ -56,7 +57,6 @@ process (handle)
 @*/
 int MPI_Cart_sub(MPI_Comm comm, int *remain_dims, MPI_Comm *comm_new)
 {
-    static const char FCNAME[] = "MPI_Cart_sub";
     int mpi_errno = MPI_SUCCESS, all_false;
     int ndims, key, color, ndims_in_subcomm, nnodes_in_subcomm, i, j, rank;
     MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
@@ -124,10 +124,8 @@ int MPI_Cart_sub(MPI_Comm comm, int *remain_dims, MPI_Comm *comm_new)
     if (all_false) { 
         /* ndims=0, or all entries in remain_dims are false.
            MPI 2.1 says return a 0D Cartesian topology. */
-	MPIR_Nest_incr();
-	mpi_errno = NMPI_Cart_create(comm, 0, NULL, NULL, 0, comm_new);
-	MPIR_Nest_decr();
-	if (mpi_errno) goto fn_fail;
+	mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, comm_new);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
     else {

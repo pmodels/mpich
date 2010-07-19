@@ -61,7 +61,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
 {
     ibsend_req_info *ibsend_info = (ibsend_req_info *)extra;
     MPI_Status status;
-    MPI_Request req = ibsend_info->req->handle;
+    MPID_Request *req = ibsend_info->req;
     MPIU_THREADPRIV_DECL;
 
     /* FIXME: There should be no unreferenced args! */
@@ -73,9 +73,9 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
     MPIU_THREADPRIV_GET;
 
     /* Try to cancel the underlying request */
+    MPIR_Cancel_impl(req);
     MPIR_Nest_incr();
-    NMPI_Cancel( &req );
-    NMPI_Wait( &req, &status );
+    NMPI_Wait( &req->handle, &status );
     NMPI_Test_cancelled( &status, &ibsend_info->cancelled );
     MPIR_Nest_decr();
     return 0;

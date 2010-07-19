@@ -3462,4 +3462,17 @@ int MPIU_Find_local_and_external(struct MPID_Comm *comm, int *local_size_p, int 
 int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r);
 int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
 
+/* MPIR_ functions.  These are versions of MPI_ functions appropriate for calling within MPI */
+int MPIR_Cancel_impl(MPID_Request *request_ptr);
+struct MPIR_Topology;
+void MPIR_Cart_rank_impl(struct MPIR_Topology *cart_ptr, int *coords, int *rank);
+int MPIR_Cart_create_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
+                          const int periods[], int reorder, MPI_Comm *comm_cart);
+int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
+                       const int periodic[], int *newrank);
+int MPIR_Close_port_impl(char *port_name);
+int MPIR_Open_port_impl(MPID_Info *info_ptr, char *port_name);
+
+
+
 #endif /* MPIIMPL_INCLUDED */

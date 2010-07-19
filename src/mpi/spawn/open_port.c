@@ -22,12 +22,17 @@
 #undef MPI_Open_port
 #define MPI_Open_port PMPI_Open_port
 
-/* Any internal routines can go here.  Make them static if possible */
+int MPIR_Open_port_impl(MPID_Info *info_ptr, char *port_name)
+{
+    return MPID_Open_port(info_ptr, port_name);
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Open_port
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Open_port - Establish an address that can be used to establish 
    connections between groups of MPI processes
@@ -60,7 +65,6 @@ The maximum size string that may be supplied by the system is
 @*/
 int MPI_Open_port(MPI_Info info, char *port_name)
 {
-    static const char FCNAME[] = "MPI_Open_port";
     int mpi_errno = MPI_SUCCESS;
     MPID_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_OPEN_PORT);
@@ -101,7 +105,7 @@ int MPI_Open_port(MPI_Info info, char *port_name)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Open_port(info_ptr, port_name);
+    mpi_errno = MPIR_Open_port_impl(info_ptr, port_name);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

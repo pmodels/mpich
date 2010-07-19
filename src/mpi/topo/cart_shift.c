@@ -28,7 +28,8 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_shift
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_shift - Returns the shifted source and destination ranks, given a 
                  shift direction and amount
@@ -59,7 +60,6 @@ Cartesian mesh.
 int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source, 
 		   int *dest)
 {
-    static const char FCNAME[] = "MPI_Cart_shift";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;
@@ -122,10 +122,6 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 	*source = *dest = rank;
     }
     else {
-	MPIU_THREADPRIV_DECL;
-
-	MPIU_THREADPRIV_GET;
-
 	/* To support advanced implementations that support MPI_Cart_create,
 	   we compute the new position and call PMPI_Cart_rank to get the
 	   source and destination.  We could bypass that step if we know that
@@ -135,7 +131,6 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 	}
 	/* We must return MPI_PROC_NULL if shifted over the edge of a 
 	   non-periodic mesh */
-	MPIR_Nest_incr();
 	pos[direction] += displ;
 	if (!cart_ptr->topo.cart.periodic[direction] &&
 	    (pos[direction] >= cart_ptr->topo.cart.dims[direction] ||
@@ -143,7 +138,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 	    *dest = MPI_PROC_NULL;
 	}
 	else {
-	    (void) NMPI_Cart_rank( comm, pos, dest );
+	    MPIR_Cart_rank_impl( cart_ptr, pos, dest );
 	}
 
 	pos[direction] = cart_ptr->topo.cart.position[direction] - displ;
@@ -153,9 +148,8 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 	    *source = MPI_PROC_NULL;
 	}
 	else {
-	    (void) NMPI_Cart_rank( comm, pos, source );
+	    MPIR_Cart_rank_impl( cart_ptr, pos, source );
 	}
-	MPIR_Nest_decr();
     }
 
     /* ... end of body of routine ... */

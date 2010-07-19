@@ -23,7 +23,6 @@
  */
 
 #ifdef USE_MPI_FOR_NMPI
-#define NMPI_Abort MPI_Abort
 #define NMPI_Get_count MPI_Get_count
 #define NMPI_Pack MPI_Pack
 #define NMPI_Pack_size MPI_Pack_size
@@ -59,9 +58,6 @@
 #define NMPI_Type_free MPI_Type_free
 #define NMPI_Type_size MPI_Type_size
 #define NMPI_Type_get_extent MPI_Type_get_extent
-#define NMPI_Cart_create MPI_Cart_create
-#define NMPI_Cart_rank MPI_Cart_rank
-#define NMPI_Cart_map  MPI_Cart_map
 #define NMPI_Graph_map  MPI_Graph_map
 #define NMPI_Iprobe MPI_Iprobe
 #define NMPI_Probe MPI_Probe
@@ -81,12 +77,10 @@
 #define NMPI_Comm_set_errhandler MPI_Comm_set_errhandler
 #define NMPI_Comm_create_errhandler MPI_Comm_create_errhandler
 #define NMPI_Comm_call_errhandler MPI_Comm_call_errhandler
-#define NMPI_Open_port MPI_Open_port
 #define NMPI_Comm_accept MPI_Comm_accept
 #define NMPI_Comm_connect MPI_Comm_connect
 #define NMPI_Grequest_start MPI_Grequest_start
 #define NMPI_Grequest_complete MPI_Grequest_complete
-#define NMPI_Cancel MPI_Cancel
 #define NMPI_Test_cancelled MPI_Test_cancelled
 #define NMPI_Ibsend MPI_Ibsend
 #define NMPI_Buffer_detach MPI_Buffer_detach
@@ -101,7 +95,6 @@
 #define NMPIX_Grequest_class_allocate MPIX_Grequest_class_allocate
 #define NMPIX_Grequest_start MPIX_Grequest_start
 #else
-#define NMPI_Abort PMPI_Abort
 #define NMPI_Get_count PMPI_Get_count
 #define NMPI_Pack PMPI_Pack
 #define NMPI_Pack_size PMPI_Pack_size
@@ -137,9 +130,6 @@
 #define NMPI_Type_free PMPI_Type_free
 #define NMPI_Type_size PMPI_Type_size
 #define NMPI_Type_get_extent PMPI_Type_get_extent
-#define NMPI_Cart_create PMPI_Cart_create
-#define NMPI_Cart_rank PMPI_Cart_rank
-#define NMPI_Cart_map  PMPI_Cart_map
 #define NMPI_Graph_map  PMPI_Graph_map
 #define NMPI_Iprobe PMPI_Iprobe
 #define NMPI_Probe PMPI_Probe
@@ -159,13 +149,10 @@
 #define NMPI_Comm_set_errhandler PMPI_Comm_set_errhandler
 #define NMPI_Comm_create_errhandler PMPI_Comm_create_errhandler
 #define NMPI_Comm_call_errhandler PMPI_Comm_call_errhandler
-#define NMPI_Open_port PMPI_Open_port
-#define NMPI_Close_port PMPI_Close_port
 #define NMPI_Comm_accept PMPI_Comm_accept
 #define NMPI_Comm_connect PMPI_Comm_connect
 #define NMPI_Grequest_start PMPI_Grequest_start
 #define NMPI_Grequest_complete PMPI_Grequest_complete
-#define NMPI_Cancel PMPI_Cancel
 #define NMPI_Test_cancelled PMPI_Test_cancelled
 #define NMPI_Ibsend PMPI_Ibsend
 #define NMPI_Buffer_detach PMPI_Buffer_detach

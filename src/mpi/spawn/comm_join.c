@@ -151,7 +151,7 @@ int MPI_Comm_join(int fd, MPI_Comm *intercomm)
     MPIU_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name");
     MPIU_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name");
     
-    mpi_errno = NMPI_Open_port(MPI_INFO_NULL, local_port);
+    mpi_errno = MPIR_Open_port_impl(NULL, local_port);
     MPIU_ERR_CHKANDJUMP((mpi_errno != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**openportfailed");
 
     err = MPIR_fd_send(fd, local_port, MPI_MAX_PORT_NAME);
@@ -172,11 +172,11 @@ int MPI_Comm_join(int fd, MPI_Comm *intercomm)
                                      MPI_COMM_SELF, intercomm);
     }
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    MPIR_Nest_decr();
 
-    mpi_errno = NMPI_Close_port(local_port);
+    mpi_errno = MPIR_Close_port_impl(local_port);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIR_Nest_decr();
     /* ... end of body of routine ... */
 
   fn_exit:
