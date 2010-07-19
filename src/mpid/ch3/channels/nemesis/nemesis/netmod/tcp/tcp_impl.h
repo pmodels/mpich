@@ -192,7 +192,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found );
         char bc_[1024] = ""; /* FIXME: How do we find the max length of a bc? */                             \
         char ifname_[1024] = "";                                                                        \
                                                                                                         \
-        if (vc)                                                                                         \
+        if (vc && vc->pg)  /* pg can be null for temp VCs (dynamic processes) */                        \
             ret_ = vc->pg->getConnInfo((vc)->pg_rank, bc_, sizeof(bc_), (vc)->pg);                      \
         if (!ret_)                                                                                      \
             ret_ = MPIU_Str_get_string_arg(bc_, MPIDI_CH3I_IFNAME_KEY, ifname_, sizeof(ifname_));       \
