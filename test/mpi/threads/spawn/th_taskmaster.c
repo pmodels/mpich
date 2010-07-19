@@ -43,7 +43,7 @@ void process_disconnect(MPI_Comm * comm, int thread_id)
 MTEST_THREAD_RETURN_TYPE main_thread(void * arg)
 {
     MPI_Comm child_comm;
-    int thread_id = *((int *) arg);
+    int thread_id = (int)(size_t)arg;
 
     process_spawn(&child_comm, thread_id);
     CHECK_SUCCESS(MPI_Comm_set_errhandler(child_comm, MPI_ERRORS_RETURN));
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	 * child process to perform its task. */
 	for (i = 0; i < tasks;) {
         for (j = 0; j < DEFAULT_TASK_WINDOW; j++){
-            MTest_Start_thread(main_thread, &j);
+            MTest_Start_thread(main_thread, (void*)(size_t)j);
         }
         MTest_Join_threads();
 	    i += DEFAULT_TASK_WINDOW;
