@@ -49,9 +49,9 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 
     MPIU_DBG_MSG_FMT(ALL, TERSE,
                      (MPIU_DBG_FDEST,
-                      "Assertion failed in file %s at line %d: %s\n",
+                      "Assertion failed in file %s at line %d: %s",
                       file_name, line_num, cond));
-    MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s\n",msg));
+    MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s",msg));
 
     MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);
     return MPI_ERR_INTERN; /* never get here, abort should kill us */
