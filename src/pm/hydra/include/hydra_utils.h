@@ -213,6 +213,9 @@ HYD_status HYDU_sock_cloexec(int fd);
 #define HYDU_mem_init()  MPL_trinit(0)
 
 #define HYDU_strdup(a) MPL_trstrdup(a,__LINE__,__FILE__)
+#ifdef strdup
+#undef strdup
+#endif
 #define strdup(a)      'Error use HYDU_strdup' :::
 
 #define HYDU_malloc(a) MPL_trmalloc((unsigned)(a),__LINE__,__FILE__)
