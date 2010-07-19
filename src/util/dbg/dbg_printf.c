@@ -423,13 +423,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
     MPID_Time_t t;
     double  curtime;
     unsigned long long int threadID  = 0;
-    /* Note that pthread_self gives you an id that is the address of the 
-       thread's private data, which can be the same for all processes
-       in an executable.  Thus, the thread_id will not always serve as the 
-       way to separate threads in the output; that is, the thread id
-       is not necessarily unique (or unique with high probability) among 
-       processes. */
-    static int pid = -1;
+    int pid = -1;
     FILE *dbg_fp = NULL;
 
     if (mpiu_dbg_initialized == MPIU_DBG_UNINIT) return 0;
@@ -438,6 +432,9 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 
 #ifdef MPICH_IS_THREADED
     {
+        /* the thread ID is not necessarily unique between processes, so a
+         * (pid,tid) pair should be used to uniquely identify output from
+         * particular threads on a system */
 	MPIU_Thread_id_t tid;
 	MPIU_Thread_self(&tid);
 	threadID = (unsigned long long int)tid;
