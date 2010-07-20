@@ -671,6 +671,10 @@ int MPIR_Alltoall_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Alltoall
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Alltoall - Sends data from all to all processes
 
@@ -695,10 +699,6 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Alltoall
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
                  void *recvbuf, int recvcount, MPI_Datatype recvtype, 
                  MPI_Comm comm)

@@ -835,6 +835,10 @@ int MPIR_Allgatherv_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #endif
 
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Allgatherv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Allgatherv - Gathers data from all tasks and deliver the combined data
@@ -883,10 +887,6 @@ Notes:
 .N MPI_ERR_COUNT
 .N MPI_ERR_TYPE
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Allgatherv
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Allgatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
                    void *recvbuf, int *recvcounts, int *displs, 
                    MPI_Datatype recvtype, MPI_Comm comm)

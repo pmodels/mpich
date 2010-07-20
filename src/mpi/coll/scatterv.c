@@ -183,6 +183,10 @@ int MPIR_Scatterv_impl(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype s
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Scatterv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scatterv - Scatters a buffer in parts to all processes in a communicator
@@ -214,10 +218,6 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Scatterv
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Scatterv( void *sendbuf, int *sendcnts, int *displs, 
 		  MPI_Datatype sendtype, void *recvbuf, int recvcnt,
 		  MPI_Datatype recvtype,

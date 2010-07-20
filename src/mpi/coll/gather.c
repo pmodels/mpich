@@ -629,6 +629,10 @@ int MPIR_Gather_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Gather
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Gather - Gathers together values from a group of processes
@@ -658,10 +662,6 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Gather
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
                void *recvbuf, int recvcnt, MPI_Datatype recvtype, 
                int root, MPI_Comm comm)

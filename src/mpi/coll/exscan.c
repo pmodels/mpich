@@ -277,6 +277,10 @@ int MPIR_Exscan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Exscan
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Exscan - Computes the exclusive scan (partial reductions) of data on a 
@@ -311,10 +315,6 @@ Notes:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Exscan
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
                MPI_Op op, MPI_Comm comm)
 {

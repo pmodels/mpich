@@ -212,6 +212,10 @@ int MPIR_Gatherv_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Gatherv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Gatherv - Gathers into specified locations from all processes in a group
@@ -245,10 +249,6 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Gatherv
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
                 void *recvbuf, int *recvcnts, int *displs, 
                 MPI_Datatype recvtype, int root, MPI_Comm comm)

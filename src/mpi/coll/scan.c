@@ -465,6 +465,10 @@ int MPIR_Scan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Scan
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scan - Computes the scan (partial reductions) of data on a collection of
@@ -494,10 +498,6 @@ Output Parameter:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Scan
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Scan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 	     MPI_Op op, MPI_Comm comm)
 {

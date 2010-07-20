@@ -363,6 +363,10 @@ int MPIR_Alltoallw_impl(void *sendbuf, int *sendcnts, int *sdispls, MPI_Datatype
 #endif
 
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Alltoallw
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Alltoallw - Generalized all-to-all communication allowing different
    datatypes, counts, and displacements for each partner
@@ -399,10 +403,6 @@ int MPIR_Alltoallw_impl(void *sendbuf, int *sendcnts, int *sdispls, MPI_Datatype
 .N MPI_ERR_COUNT
 .N MPI_ERR_TYPE
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Alltoallw
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Alltoallw(void *sendbuf, int *sendcnts, int *sdispls, 
                   MPI_Datatype *sendtypes, void *recvbuf, int *recvcnts, 
                   int *rdispls, MPI_Datatype *recvtypes, MPI_Comm comm)

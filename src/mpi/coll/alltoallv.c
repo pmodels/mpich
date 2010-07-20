@@ -359,6 +359,10 @@ int MPIR_Alltoallv_impl(void *sendbuf, int *sendcnts, int *sdispls, MPI_Datatype
 #endif
 
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Alltoallv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Alltoallv - Sends data from all to all processes; each process may 
    send a different amount of data and provide displacements for the input
@@ -394,10 +398,6 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Alltoallv
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Alltoallv(void *sendbuf, int *sendcnts, int *sdispls, 
                   MPI_Datatype sendtype, void *recvbuf, int *recvcnts, 
                   int *rdispls, MPI_Datatype recvtype, MPI_Comm comm)

@@ -1142,6 +1142,10 @@ int MPIR_Reduce_scatter_impl(void *sendbuf, void *recvbuf, int *recvcnts,
 
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Reduce_scatter
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Reduce_scatter - Combines values and scatters the results
@@ -1173,10 +1177,6 @@ Output Parameter:
 .N MPI_ERR_OP
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Reduce_scatter
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts, 
 		       MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {

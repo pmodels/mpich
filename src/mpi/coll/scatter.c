@@ -568,6 +568,10 @@ int MPIR_Scatter_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 }
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Scatter
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scatter - Sends data from one process to all other processes in a 
@@ -599,10 +603,6 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Scatter
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
 		void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, 
 		MPI_Comm comm)
