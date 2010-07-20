@@ -251,6 +251,7 @@ if test "$pac_c_attr_alias_main" = "yes" ; then
         fi
 
     else # if test "$cross_compiling" != "yes"
+        rm -f pac_conftestval
         ac_try="./pac_conftest_main$ac_exeext"
         if AC_TRY_EVAL(ac_try) ; then
             pac_c_attr_alias_val=0
@@ -266,6 +267,7 @@ if test "$pac_c_attr_alias_main" = "yes" ; then
                 AC_MSG_RESULT(no)
                 pac_c_multi_attr_alias=no
             fi
+            rm -f pac_conftestval
         fi
     fi
     dnl Endof if test "$cross_compiling" = "yes"

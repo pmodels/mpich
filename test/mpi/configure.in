@@ -753,8 +753,8 @@ EOF
     ALLOCMEMF=""
     PAC_PROG_F77_HAS_POINTER(ALLOCMEMF="allocmemf 1")
     AC_SUBST(ALLOCMEMF)
-    # See the f90 block of code for the Fortran 90 version of
-    # ALLOCMEMF
+    # See the f90 block of code for the Fortran 90 version of ALLOCMEMF,
+    # i.e. ALLOCMEMFC.
 
     # It is safe to now switch back to the "final" (MPI) compilers
     F77=$saveF77
@@ -834,7 +834,7 @@ if test "$enable_fc" = yes ; then
 
     # See if the compiler supports the Cray-style pointers
     ALLOCMEMFC=""
-    PAC_PROG_FC_HAS_POINTER(ALLOCMEMFC="allocmemfc 1")
+    PAC_PROG_FC_HAS_POINTER(ALLOCMEMFC="allocmemf90 1")
     AC_SUBST(ALLOCMEMFC)
 
     if test -n "$BASEFC" ; then
