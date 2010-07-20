@@ -6,10 +6,16 @@ srcdir      = @srcdir@
 CC_SHL      = @CC_SHL@
 SHLIBNAME   = @SHLIBNAME@
 
+CPPFLAGS        = @CPPFLAGS@
+# I don't like this hard-coded path to the PANFS headers but I guess that's
+# where they always are?
 INCLUDES    = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include -I../../include -I${srcdir}/../../../../include -I../../../../include -I/opt/panfs/include
-CFLAGS      = @CFLAGS@ $(INCLUDES)
+CFLAGS      = @CFLAGS@ 
 
-C_COMPILE_SHL = $(CC_SHL)
+top_builddir  = @master_topbuild_dir@
+LIBTOOL       = @LIBTOOL@
+C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
+C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 
 @VPATH@
 
@@ -23,12 +29,24 @@ default: $(LIBNAME)
 
 .SUFFIXES: $(SUFFIXES) .p .lo
 
-
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	@if [ "x$(VERBOSE)" != "x1" ] ; then \
+	  echo "  CC              $<" ; \
+	else \
+	  echo $(C_COMPILE) -c $< ; \
+	fi
+	@$(C_COMPILE) -c $<
+
 .c.lo:
-	$(C_COMPILE_SHL) $(CFLAGS) -c $< -o _s$*.o
+	@if [ "x$(VERBOSE)" != "x1" ] ; then \
+	  echo "  CC              $<" ; \
+	else \
+	  echo $(C_COMPILE_SHL) -c $< -o _s$*.o ; \
+	  echo mv -f _s$*.o $*.lo ; \
+	fi
+	@$(C_COMPILE_SHL) -c $< -o _s$*.o
 	@mv -f _s$*.o $*.lo
+
 
 $(LIBNAME): $(AD_PANFS_OBJECTS)
 	$(AR) $(LIBNAME) $(AD_PANFS_OBJECTS)
