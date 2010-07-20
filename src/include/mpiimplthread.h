@@ -332,6 +332,50 @@ extern MPIU_TLS_SPECIFIER MPICH_PerThread_t MPIR_Thread;
 /* some important critical section names:
  *   ALLFUNC - entered/exited at beginning/end of (nearly) every MPI_ function
  *   INIT - entered before MPID_Init and exited near the end of MPI_Init(_thread)
+ * See the analysis of the MPI routines for thread usage properties.  Those
+ * routines considered "Access Only" do not require ALLFUNC.  That analysis
+ * was very general; in MPICH2, some routines may have internal shared
+ * state that isn't required by the MPI specification.  Perhaps the
+ * best example of this is the MPI_ERROR_STRING routine, where the 
+ * instance-specific error messages make use of shared state, and hence
+ * must be accessed in a thread-safe fashion (e.g., require an ALLFUNC
+ * critical section).  With such routines removed, the set of routines
+ * that (probably) do not require ALLFUNC include:
+ *
+ * MPI_CART_COORDS, MPI_CART_GET, MPI_CART_MAP, MPI_CART_RANK, MPI_CART_SHIFT, 
+ * MPI_CART_SUB, MPI_CARTDIM_GET, MPI_COMM_GET_NAME, 
+ * MPI_COMM_RANK, MPI_COMM_REMOTE_SIZE, 
+ * MPI_COMM_SET_NAME, MPI_COMM_SIZE, MPI_COMM_TEST_INTER, MPI_ERROR_CLASS,
+ * MPI_FILE_GET_AMODE, MPI_FILE_GET_ATOMICITY, MPI_FILE_GET_BYTE_OFFSET, 
+ * MPI_FILE_GET_POSITION, MPI_FILE_GET_POSITION_SHARED, MPI_FILE_GET_SIZE
+ * MPI_FILE_GET_TYPE_EXTENT, MPI_FILE_SET_SIZE, 
+ * MPI_FINALIZED, MPI_GET_COUNT, MPI_GET_ELEMENTS, MPI_GRAPH_GET, 
+ * MPI_GRAPH_MAP, MPI_GRAPH_NEIGHBORS, MPI_GRAPH_NEIGHBORS_COUNT, 
+ * MPI_GRAPHDIMS_GET, MPI_GROUP_COMPARE, MPI_GROUP_RANK, 
+ * MPI_GROUP_SIZE, MPI_GROUP_TRANSLATE_RANKS, MPI_INITIALIZED, 
+ * MPI_PACK, MPI_PACK_EXTERNAL, MPI_PACK_SIZE, MPI_TEST_CANCELLED, 
+ * MPI_TOPO_TEST, MPI_TYPE_EXTENT, MPI_TYPE_GET_ENVELOPE, 
+ * MPI_TYPE_GET_EXTENT, MPI_TYPE_GET_NAME, MPI_TYPE_GET_TRUE_EXTENT, 
+ * MPI_TYPE_LB, MPI_TYPE_SET_NAME, MPI_TYPE_SIZE, MPI_TYPE_UB, MPI_UNPACK, 
+ * MPI_UNPACK_EXTERNAL, MPI_WIN_GET_NAME, MPI_WIN_SET_NAME
+ *
+ * Some of the routines that could be read-only, but internally may
+ * require access or updates to shared data include
+ * MPI_COMM_COMPARE (creation of group sets)
+ * MPI_COMM_SET_ERRHANDLER (reference count on errhandler)
+ * MPI_COMM_CALL_ERRHANDLER (actually ok, but risk high, usage low)
+ * MPI_FILE_CALL_ERRHANDLER (ditto)
+ * MPI_WIN_CALL_ERRHANDLER (ditto)
+ * MPI_ERROR_STRING (access to instance-specific string, which could
+ *                   be overwritten by another thread)
+ * MPI_FILE_SET_VIEW (setting view a big deal)
+ * MPI_TYPE_COMMIT (could update description of type internally,
+ *                  including creating a new representation.  Should
+ *                  be ok, but, like call_errhandler, low usage)
+ * 
+ * Note that other issues may force a routine to include the ALLFUNC
+ * critical section, such as debugging information that requires shared
+ * state.  Such situations should be avoided where possible.
  */
 
 /*M MPIU_THREAD_CS_ENTER - Enter a named critical section
