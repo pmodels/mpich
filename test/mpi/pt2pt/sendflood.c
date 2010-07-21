@@ -79,7 +79,7 @@ int main( int argc, char *argv[] )
 		  fprintf( pf, "  read from child %d\n", j ) ;
 		  fflush( pf ) ;
 	      }
-             status = MPI_Recv( precv[ j ], DATA_SIZE, MPI_LONG, j, MP_TAG,
+             status = MPI_Recv( precv[ j ], DATA_SIZE, MPI_INT, j, MP_TAG,
 				MPI_COMM_WORLD, MPI_STATUS_IGNORE ) ;
 	     if (verbose) {
 		 fprintf( pf, "  read from child %d done, status = %d\n", j,
@@ -92,7 +92,7 @@ int main( int argc, char *argv[] )
 		  fprintf( pf, "  send to child %d\n", j ) ;
 		  fflush( pf ) ;
 	      }
-             status = MPI_Send( psend[ j ], DATA_SIZE - 1, MPI_LONG, j,
+             status = MPI_Send( psend[ j ], DATA_SIZE - 1, MPI_INT, j,
 				MP_TAG, MPI_COMM_WORLD ) ;
 	     if (verbose) {
 		 fprintf( pf, "  send to child %d done, status = %d\n", j,
@@ -122,7 +122,7 @@ int main( int argc, char *argv[] )
 	     fprintf( pf, "Slave: loop %d\n", i ); fflush( pf );
 	   }
 	   */
-	   status = MPI_Send( psend, DATA_SIZE - 1, MPI_LONG, 0, MP_TAG,
+	   status = MPI_Send( psend, DATA_SIZE - 1, MPI_INT, 0, MP_TAG,
 			      MPI_COMM_WORLD ) ;
 	   if (verbose) {
 	       fprintf( pf, "  send to master done, status = %d\n", status ) ;
@@ -130,7 +130,7 @@ int main( int argc, char *argv[] )
 	       fprintf( pf, "  read from master\n" ) ;
 	       fflush( pf ) ;
 	   }
-	   status = MPI_Recv( precv, DATA_SIZE, MPI_LONG, 0, MP_TAG,
+	   status = MPI_Recv( precv, DATA_SIZE, MPI_INT, 0, MP_TAG,
 			      MPI_COMM_WORLD, MPI_STATUS_IGNORE ) ;
 	   if (verbose) {
 	       fprintf( pf, "  read from master done, status = %d\n", status ) ;
