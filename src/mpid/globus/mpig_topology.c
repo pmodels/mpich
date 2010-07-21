@@ -41,10 +41,10 @@ int mpig_topology_init(void)
     MPIR_Nest_incr();
     
     /* create the toplogy attribute keys */
-    mpi_errno = NMPI_Comm_create_keyval(MPI_NULL_COPY_FN, mpig_topology_destroy_depths_attr, &mpig_topology_depths_keyval, NULL);
+    mpi_errno = MPIR_Comm_create_keyval_impl(MPI_NULL_COPY_FN, mpig_topology_destroy_depths_attr, &mpig_topology_depths_keyval, NULL);
     MPIU_ERR_CHKANDJUMP1((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**globus|comm_create_key", "**globus|comm_create_key %s",
 	"topology depths keyval");
-    mpi_errno = NMPI_Comm_create_keyval(MPI_NULL_COPY_FN, mpig_topology_destroy_colors_attr, &mpig_topology_colors_keyval, NULL);
+    mpi_errno = MPIR_Comm_create_keyval_impl(MPI_NULL_COPY_FN, mpig_topology_destroy_colors_attr, &mpig_topology_colors_keyval, NULL);
     MPIU_ERR_CHKANDJUMP1((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**globus|comm_create_key", "**globus|comm_create_key %s",
 	"topology colors keyval");
     
@@ -400,13 +400,15 @@ int mpig_topology_comm_construct(MPID_Comm * const comm)
     }
 
     /* attach a the copies of the topology depths and collors information to the communicator using the attribute keys */
-    mpi_errno = NMPI_Comm_set_attr(comm->handle, mpig_topology_colors_keyval, colors_attr_copy);
+    mpi_errno = MPIR_CommSetAttr(comm->handle, mpig_topology_colors_keyval, colors_attr_copy, MPIR_ATTR_PTR);
     MPIU_ERR_CHKANDJUMP1((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**globus|comm_set_attr", "**globus|comm_set_attr %s",
 	"topology colors attribute");
-    mpi_errno = NMPI_Comm_set_attr(comm->handle, mpig_topology_depths_keyval, depths_attr_copy);
+    mpi_errno = MPIR_CommSetAttr(comm->handle, mpig_topology_depths_keyval, depths_attr_copy, MPIR_ATTR_PTR);
     if (mpi_errno)
     {
-	NMPI_Comm_delete_attr(comm->handle, mpig_topology_colors_keyval);
+        MPID_Keyval *keyval_ptr;
+        MPID_Keyval_get_ptr( mpig_topology_colors_keyval, keyval_ptr );
+	MPIR_Comm_delete_attr_impl(comm, keyval_ptr);
 	colors_attr_copy = NULL;
 	MPIU_ERR_CHKANDJUMP1((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**globus|comm_set_attr", "**globus|comm_set_attr %s",
 	    "topology depths attribute");

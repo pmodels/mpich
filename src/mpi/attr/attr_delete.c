@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "attr.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Attr_delete */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -54,7 +55,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
     static const char FCNAME[] = "MPI_Attr_delete";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
+    MPID_Keyval *keyval_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ATTR_DELETE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -76,6 +77,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
     
     /* Convert MPI object handles to object pointers */
     MPID_Comm_get_ptr( comm, comm_ptr );
+    MPID_Keyval_get_ptr( keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -85,6 +87,8 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
+            /* Validate keyval_ptr */
+	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -93,10 +97,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
 
     /* ... body of routine ...  */
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_delete_attr( comm, keyval );
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_Comm_delete_attr_impl( comm_ptr, keyval_ptr );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

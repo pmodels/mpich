@@ -22,12 +22,22 @@
 #undef MPI_Comm_connect
 #define MPI_Comm_connect PMPI_Comm_connect
 
-/* Any internal routines can go here.  Make them static if possible */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_connect_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_connect_impl(char * port_name, MPID_Info * info_ptr, int root,
+                          MPID_Comm * comm_ptr, MPID_Comm ** newcomm_ptr)
+{
+    return MPID_Comm_connect(port_name, info_ptr, root, comm_ptr, newcomm_ptr);
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_connect
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_connect - Make a request to form a new intercommunicator
 
@@ -53,7 +63,6 @@
 int MPI_Comm_connect(char *port_name, MPI_Info info, int root, MPI_Comm comm, 
                      MPI_Comm *newcomm)
 {
-    static const char FCNAME[] = "MPI_Comm_connect";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *newcomm_ptr = NULL;
@@ -98,9 +107,8 @@ int MPI_Comm_connect(char *port_name, MPI_Info info, int root, MPI_Comm comm,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Comm_connect(port_name, info_ptr, root, comm_ptr, 
-                                  &newcomm_ptr); 
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    mpi_errno = MPIR_Comm_connect_impl(port_name, info_ptr, root, comm_ptr, &newcomm_ptr);
+    if (mpi_errno) goto fn_fail;
 
     *newcomm = newcomm_ptr->handle;
         

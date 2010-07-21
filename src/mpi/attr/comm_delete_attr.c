@@ -24,11 +24,62 @@
 #undef MPI_Comm_delete_attr
 #define MPI_Comm_delete_attr PMPI_Comm_delete_attr
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_delete_attr_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Attribute *p, **old_p;
+         
+    /* Look for attribute.  They are ordered by keyval handle */
+
+    old_p = &comm_ptr->attributes;
+    p     = comm_ptr->attributes;
+    while (p) {
+	if (p->keyval->handle == keyval_ptr->handle) {
+	    break;
+	}
+	old_p = &p->next;
+	p     = p->next;
+    }
+
+    /* We can't unlock yet, because we must not free the attribute until
+       we know whether the delete function has returned with a 0 status
+       code */
+
+    if (p) {
+        int in_use;
+
+        /* Run the delete function, if any, and then free the attribute 
+	   storage */
+	mpi_errno = MPIR_Call_attr_delete( comm_ptr->handle, p );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
+        /* We found the attribute.  Remove it from the list */
+        *old_p = p->next;
+        /* Decrement the use of the keyval */
+        MPIR_Keyval_release_ref( p->keyval, &in_use);
+        if (!in_use) {
+            MPIU_Handle_obj_free( &MPID_Keyval_mem, p->keyval );
+        }
+        MPID_Attr_free(p);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_delete_attr
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_delete_attr - Deletes an attribute value associated with a key on 
    a  communicator
@@ -50,10 +101,8 @@ Input Parameters:
 @*/
 int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 {
-    static const char FCNAME[] = "MPI_Comm_delete_attr";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_Attribute *p, **old_p;
     MPID_Keyval *keyval_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DELETE_ATTR);
 
@@ -97,44 +146,11 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+
+    mpi_errno = MPIR_Comm_delete_attr_impl(comm_ptr, keyval_ptr);
+    if (mpi_errno) goto fn_fail;
     
-    /* Look for attribute.  They are ordered by keyval handle */
-
-    old_p = &comm_ptr->attributes;
-    p     = comm_ptr->attributes;
-    while (p) {
-	if (p->keyval->handle == keyval_ptr->handle) {
-	    break;
-	}
-	old_p = &p->next;
-	p     = p->next;
-    }
-
-    /* We can't unlock yet, because we must not free the attribute until
-       we know whether the delete function has returned with a 0 status
-       code */
-
-    if (p) {
-	/* Run the delete function, if any, and then free the attribute 
-	   storage */
-	mpi_errno = MPIR_Call_attr_delete( comm, p );
-
-	if (!mpi_errno) {
-	    int in_use;
-	    /* We found the attribute.  Remove it from the list */
-	    *old_p = p->next;
-	    /* Decrement the use of the keyval */
-	    MPIR_Keyval_release_ref( p->keyval, &in_use);
-	    if (!in_use) {
-		MPIU_Handle_obj_free( &MPID_Keyval_mem, p->keyval );
-	    }
-	    MPID_Attr_free(p);
-	}
-    }
-
     /* ... end of body of routine ... */
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_DELETE_ATTR);

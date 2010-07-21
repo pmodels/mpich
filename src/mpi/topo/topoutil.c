@@ -22,30 +22,30 @@ static int MPIR_Topology_finalize ( void * );
 */
 MPIR_Topology *MPIR_Topology_get( MPID_Comm *comm_ptr )
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr;
     int flag;
-    MPIU_THREADPRIV_DECL;
 
     if (MPIR_Topology_keyval == MPI_KEYVAL_INVALID) {
 	return 0;
     }
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-    (void)NMPI_Comm_get_attr(comm_ptr->handle, MPIR_Topology_keyval,
-			     &topo_ptr, &flag );
-    MPIR_Nest_decr();
-
-    if (flag) return topo_ptr;
-    return 0;
+    mpi_errno = MPIR_CommGetAttr(comm_ptr->handle, MPIR_Topology_keyval,
+                                 &topo_ptr, &flag, MPIR_ATTR_PTR );
+    if (mpi_errno) return NULL;
+    
+    if (flag)
+        return topo_ptr;
+    return NULL;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Topology_put
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 {
-    int mpi_errno;
-    MPIU_THREADPRIV_DECL;
-
-    MPIU_THREADPRIV_GET;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIU_Assert(comm_ptr != NULL);
 
@@ -54,21 +54,22 @@ int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 	/* FIXME - thread safe code needs a thread lock here, followed
 	   by another test on the keyval to see if a different thread
 	   got there first */
-	MPIR_Nest_incr();
-	mpi_errno = NMPI_Comm_create_keyval( MPIR_Topology_copy_fn, 
-					     MPIR_Topology_delete_fn,
-					     &MPIR_Topology_keyval, 0 );
-	MPIR_Nest_decr();
+	mpi_errno = MPIR_Comm_create_keyval_impl( MPIR_Topology_copy_fn,
+                                                  MPIR_Topology_delete_fn,
+                                                  &MPIR_Topology_keyval, 0 );
 	/* Register the finalize handler */
-	if (mpi_errno) return mpi_errno;
-	MPIR_Add_finalize( MPIR_Topology_finalize, (void*)0, 
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Add_finalize( MPIR_Topology_finalize, (void*)0,
 			   MPIR_FINALIZE_CALLBACK_PRIO-1);
     }
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_set_attr(comm_ptr->handle, MPIR_Topology_keyval, 
-				   topo_ptr );
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_CommSetAttr(comm_ptr->handle, MPIR_Topology_keyval,
+                                 topo_ptr, MPIR_ATTR_PTR );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+ fn_exit:
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* Ignore p */

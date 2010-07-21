@@ -29,12 +29,8 @@
 #define NMPI_Unpack MPI_Unpack
 #define NMPI_Wait MPI_Wait
 #define NMPI_Test MPI_Test
-#define NMPI_Comm_get_attr MPI_Comm_get_attr
-#define NMPI_Comm_set_attr MPI_Comm_set_attr
 #define NMPI_Type_get_attr MPI_Type_get_attr
 #define NMPI_Type_set_attr MPI_Type_set_attr
-#define NMPI_Comm_delete_attr MPI_Comm_delete_attr
-#define NMPI_Comm_create_keyval MPI_Comm_create_keyval 
 #define NMPI_Comm_free_keyval MPI_Comm_free_keyval 
 #define NMPI_Comm_group MPI_Comm_group
 #define NMPI_Comm_remote_group MPI_Comm_remote_group
@@ -75,10 +71,7 @@
 #define NMPI_Comm_get_name MPI_Comm_get_name
 #define NMPI_Comm_get_errhandler MPI_Comm_get_errhandler
 #define NMPI_Comm_set_errhandler MPI_Comm_set_errhandler
-#define NMPI_Comm_create_errhandler MPI_Comm_create_errhandler
 #define NMPI_Comm_call_errhandler MPI_Comm_call_errhandler
-#define NMPI_Comm_accept MPI_Comm_accept
-#define NMPI_Comm_connect MPI_Comm_connect
 #define NMPI_Grequest_start MPI_Grequest_start
 #define NMPI_Grequest_complete MPI_Grequest_complete
 #define NMPI_Test_cancelled MPI_Test_cancelled
@@ -101,12 +94,8 @@
 #define NMPI_Unpack PMPI_Unpack
 #define NMPI_Wait PMPI_Wait
 #define NMPI_Test PMPI_Test
-#define NMPI_Comm_get_attr PMPI_Comm_get_attr
-#define NMPI_Comm_set_attr PMPI_Comm_set_attr
 #define NMPI_Type_get_attr PMPI_Type_get_attr
 #define NMPI_Type_set_attr PMPI_Type_set_attr
-#define NMPI_Comm_delete_attr PMPI_Comm_delete_attr
-#define NMPI_Comm_create_keyval PMPI_Comm_create_keyval 
 #define NMPI_Comm_free_keyval PMPI_Comm_free_keyval 
 #define NMPI_Comm_group PMPI_Comm_group
 #define NMPI_Comm_remote_group PMPI_Comm_remote_group
@@ -147,10 +136,7 @@
 #define NMPI_Comm_get_name PMPI_Comm_get_name
 #define NMPI_Comm_get_errhandler PMPI_Comm_get_errhandler
 #define NMPI_Comm_set_errhandler PMPI_Comm_set_errhandler
-#define NMPI_Comm_create_errhandler PMPI_Comm_create_errhandler
 #define NMPI_Comm_call_errhandler PMPI_Comm_call_errhandler
-#define NMPI_Comm_accept PMPI_Comm_accept
-#define NMPI_Comm_connect PMPI_Comm_connect
 #define NMPI_Grequest_start PMPI_Grequest_start
 #define NMPI_Grequest_complete PMPI_Grequest_complete
 #define NMPI_Test_cancelled PMPI_Test_cancelled

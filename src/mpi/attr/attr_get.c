@@ -74,7 +74,6 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
     static const char FCNAME[] = "MPI_Attr_get";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ATTR_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -125,10 +124,7 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
 
     /* ... body of routine ...  */
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_get_attr( comm, keyval, attr_value, flag );
-    MPIR_Nest_decr();
+    mpi_errno = MPIR_CommGetAttr( comm, keyval, attr_value, flag, MPIR_ATTR_PTR);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

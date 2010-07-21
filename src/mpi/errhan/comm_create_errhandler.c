@@ -23,11 +23,38 @@
 #undef MPI_Comm_create_errhandler
 #define MPI_Comm_create_errhandler PMPI_Comm_create_errhandler
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_create_errhandler_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function, 
+                                     MPI_Errhandler *errhandler)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Errhandler *errhan_ptr;
+        
+    errhan_ptr = (MPID_Errhandler *)MPIU_Handle_obj_alloc( &MPID_Errhandler_mem );
+    MPIU_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    *errhandler		 = errhan_ptr->handle;
+    errhan_ptr->language = MPID_LANG_C;
+    errhan_ptr->kind	 = MPID_COMM;
+    MPIU_Object_set_ref(errhan_ptr,1);
+    errhan_ptr->errfn.C_Comm_Handler_function = function;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_create_errhandler
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_create_errhandler - Create a communicator error handler
 
@@ -49,9 +76,7 @@
 int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function, 
                                MPI_Errhandler *errhandler)
 {
-    static const char FCNAME[] = "MPI_Comm_create_errhandler";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Errhandler *errhan_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -74,15 +99,9 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function,
     
     /* ... body of routine ...  */
     
-    errhan_ptr = (MPID_Errhandler *)MPIU_Handle_obj_alloc( &MPID_Errhandler_mem );
-    MPIU_ERR_CHKANDJUMP(!errhan_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem");
-
-    *errhandler		 = errhan_ptr->handle;
-    errhan_ptr->language = MPID_LANG_C;
-    errhan_ptr->kind	 = MPID_COMM;
-    MPIU_Object_set_ref(errhan_ptr,1);
-    errhan_ptr->errfn.C_Comm_Handler_function = function;
-
+    mpi_errno = MPIR_Comm_create_errhandler_impl(function, errhandler);
+    if (mpi_errno) goto fn_fail;
+    
     /* ... end of body of routine ... */
 
   fn_exit:

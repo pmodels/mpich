@@ -3472,7 +3472,16 @@ int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
                        const int periodic[], int *newrank);
 int MPIR_Close_port_impl(char *port_name);
 int MPIR_Open_port_impl(MPID_Info *info_ptr, char *port_name);
-
+int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr);
+int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
+                                 MPI_Comm_delete_attr_function *comm_delete_attr_fn,
+                                 int *comm_keyval, void *extra_state);
+int MPIR_Comm_accept_impl(char * port_name, MPID_Info * info_ptr, int root,
+                          MPID_Comm * comm_ptr, MPID_Comm ** newcomm_ptr);
+int MPIR_Comm_connect_impl(char * port_name, MPID_Info * info_ptr, int root,
+                           MPID_Comm * comm_ptr, MPID_Comm ** newcomm_ptr);
+int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function, 
+                                     MPI_Errhandler *errhandler);
 
 
 #endif /* MPIIMPL_INCLUDED */
