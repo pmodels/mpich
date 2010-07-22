@@ -179,6 +179,11 @@ for arg in "$@" ; do
     addarg=no
     # Loading the profConf file is handled below
     ;;
+    -nativelinking)
+    # Internal option to use native compiler for linking without MPI libraries
+    nativelinking=yes
+    addarg=no
+    ;;
     -help)
     NC=`echo "$FC" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
@@ -351,8 +356,13 @@ if [ "$linking" = yes ] ; then
 	if [ "$found_path" = "0" ] ; then path_list="$path_list $path" ; fi
     done
 
-    $Show $FC $FCFLAGS $LDFLAGS "${allargs[@]}" $FCINCDIRS $FCMODDIRS ${path_list} $FCMODLIBS $mpilibs $LIBS
-    rc=$?
+    if [ "$nativelinking" = yes ] ; then
+        $Show $FC $FCFLAGS $LDFLAGS "${allargs[@]}"
+        rc=$?
+    else
+        $Show $FC $FCFLAGS $LDFLAGS "${allargs[@]}" $FCINCDIRS $FCMODDIRS ${path_list} $FCMODLIBS $mpilibs $LIBS
+        rc=$?
+    fi
 else
     $Show $FC $FCFLAGS "${allargs[@]}" $FCINCDIRS $FCMODDIRS
     rc=$?
