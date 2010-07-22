@@ -41,7 +41,7 @@ if test -z "$mpich2_top_srcdir" ; then
     /*) ;;
     *)
         use_top_srcdir=`(cd $use_top_srcdir && pwd)`
-	;;	
+        ;;        
     esac
     if test -x $use_top_srcdir/../../maint/simplemake ; then 
         mpich2_top_srcdir=`cd $use_top_srcdir && cd ../.. && pwd`
@@ -116,18 +116,18 @@ elif test "$enable_threads" = "no" ; then
 elif test "$enable_threads" = default ; then
     if test -n "$MPICH_THREAD_LEVEL" ; then
         case $MPICH_THREAD_LEVEL in 
-	    MPI_THREAD_MULTIPLE)
-	    enable_threads=multiple
-	    ;;
-	    MPI_THREAD_SERIALIZED)
-	    enable_threads=serialized
-	    ;;
-	    MPI_THREAD_FUNNELED)
-	    enable_threads=funneled
-	    ;;
-	    MPI_THREAD_SINGLE)
-	    enable_threads=single
-	    ;;
+            MPI_THREAD_MULTIPLE)
+            enable_threads=multiple
+            ;;
+            MPI_THREAD_SERIALIZED)
+            enable_threads=serialized
+            ;;
+            MPI_THREAD_FUNNELED)
+            enable_threads=funneled
+            ;;
+            MPI_THREAD_SINGLE)
+            enable_threads=single
+            ;;
         esac
     else
         enable_threads=funneled
@@ -172,24 +172,6 @@ PAC_PROG_MAKE
 MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
-# Select the base compiler.  We need to run them through
-# the ac_prog_xx commands because in later versions of autoconf, these
-# commands do more than just find the program, they set many of the 
-# variables that are needed when using the other autoconf commands, such as 
-# try compile
-AC_PROG_CC
-if test -z "$BASECC" ; then
-    BASECC="$CC"
-fi
-
-# If it is building with MPICH2, set xFLAGS to null, as mpiXX contains xFLAGS.
-if test "$FROM_MPICH2" = "yes" ; then
-    CFLAGS=""
-    CXXFLAGS=""
-    FFLAGS=""
-    FCFLAGS=""
-fi
-
 # If we're building from MPICH2, check the MPICH2_ENABLE_xxx environment
 # variables for enable defaults
 if test "$FROM_MPICH2" = yes ; then
@@ -202,47 +184,8 @@ if test "$FROM_MPICH2" = yes ; then
     if test -n "$MPICH2_ENABLE_CXX" ; then
         enable_cxx=$MPICH2_ENABLE_CXX
     fi
-    #
-    # Set the BASE_xx variables from MPICH2_BASE_xx environment
-    if test -n "$MPICH2_BASEF77" ; then
-        BASEF77=$MPICH2_BASEF77
-    fi
-    if test -n "$MPICH2_BASEFC" ; then
-        BASEFC=$MPICH2_BASEFC
-    fi
-    if test -n "$MPICH2_BASECXX" ; then
-        BASECXX=$MPICH2_BASECXX
-    fi
 fi
-if test "$enable_f77" = yes ; then
-    AC_PROG_F77
-    if test -z "$BASEF77" ; then
-        BASEF77="$F77"
-    fi
-    # If there is no working F77, then set enable_f77 to no
-    if test -z "$F77" ; then
-        enable_f77=no
-    fi    
-fi
-if test "$enable_fc" = yes ; then
-    PAC_PROG_FC
-    if test -z "$BASEFC" ; then
-        BASEFC="$FC"
-    fi
-    # If there is no working FC, then set enable_fc to no
-    if test -z "$FC" ; then
-        enable_fc=no
-    fi
-fi
-if test "$enable_cxx" = yes ; then
-    AC_PROG_CXX
-    if test -z "$BASECXX" ; then
-        BASECXX="$CXX"
-    fi
-    if test -z "$CXX" ; then
-        enable_cxx=no
-    fi
-fi
+
 # 
 # Some MPI-2 implementations (including some of the MPICH2 shared-memory
 # channels and BG/L) leave out the dynamic process routines.  This
@@ -276,14 +219,42 @@ AC_SUBST(faultsdir)
 if test "$enable_strictmpi" = "yes" ; then
     AC_DEFINE(USE_STRICT_MPI,1,[Define if only operations defined in MPI should be tested])
 fi
-#
-# Now, get the versions of the compilers that we'll use for MPI programs
-if test -n "$with_mpi" ; then
+
+if test "$FROM_MPICH2" = "yes" ; then
+    # As part of MPICH2 configure, the MPI libraries are not built yet.
+    # So build-dir version of MPI wrappers which contain the native
+    # compilers are used for compilation tests. With option -nativelinking,
+    # build-dir MPI wrappers are used for link tests as long as MPI libraries
+    # are not needed.  Because of missing MPI library, run tests with
+    # build-dir MPI wrappers can only check native compiler features.
+    #
+    # Using "mpiXX -nativelinking" instead of the BASE* compilers simplifies
+    # and increase readability of the configure.in.
+    CFLAGS="-nativelinking"
+    CXXFLAGS="-nativelinking"
+    FFLAGS="-nativelinking"
+    FCFLAGS="-nativelinking"
+    # Clear the CPPFLAGS, since the MPI configure will have added many items
+    # that are not required for user MPI programs.
+    CPPFLAGS=""
+    # Remove the libraries, since they will not be needed for the
+    # few tests that we do
+    saveLIBS=$LIBS
+    LIBS=
+
+    if test -z "$top_build_dir" ; then 
+        top_build_dir=`cd ../.. ; pwd`
+    fi
+    CC=$top_build_dir/bin/mpicc
+    CXX=$top_build_dir/bin/mpicxx
+    F77=$top_build_dir/bin/mpif77
+    FC=$top_build_dir/bin/mpif90
+elif test -n "$with_mpi" ; then
     if test -z "$MPICC" ; then
         CC=$with_mpi/bin/mpicc
-    else 
+    else
         CC=$MPICC
-    fi	
+    fi
     if test -z "$MPIF77" ; then
         F77=$with_mpi/bin/mpif77
     else
@@ -301,54 +272,31 @@ if test -n "$with_mpi" ; then
     fi
     if test -z "$MPIEXEC" ; then
         MPIEXEC=$with_mpi/bin/mpiexec
-    fi        
-else
-    if test -z "$top_build_dir" ; then 
-        top_build_dir=`cd ../.. ; pwd`
-    fi
-
-    # The following choices can cause problems if we configure as part of a 
-    # MPICH2 configure, because the libraries may not yet exist.  In 
-    # that case, we wait to make these definitions until after the
-    # tests, since the environment variables for the compilers is set 
-    # as part of the initial build
-    if test "$FROM_MPICH2" != yes ; then
-        if test -z "$BASECC" ; then 
-            BASECC=$CC
-        fi     
-        BASEF77=$F77
-        CC=$top_build_dir/bin/mpicc
-        F77=$top_build_dir/bin/mpif77
-	BASEFC=$FC
-        FC=$top_build_dir/bin/mpif90
-        CXX=$top_build_dir/bin/mpicxx
-        # Be careful of exec prefix
-	if test "X$exec_prefix" = "XNONE" ; then
-	    saveExec_prefix=$exec_prefix
-	    if test "X$prefix" = "XNONE" ; then
-	        # Use the default
-	        exec_prefix=$ac_default_prefix
-	    else
-	        exec_prefix=$prefix
-	    fi
-	    # Evaluate with the current setting of exec_prefix
-	    eval mpibindir=${bindir}
-	    exec_prefix=$saveExec_prefix
-        else
-            eval  mpibindir=${bindir}
-	fi
-        MPIEXEC=$mpibindir/mpiexec
-    else
-        # Remove the libraries, since they will not be needed for the
-        # few tests that we do
-        saveLIBS=$LIBS
-        LIBS=
     fi
 fi
 
-# Clear the CPPFLAGS, since the MPI configure will have added many items
-# that are not required for user MPI programs.
-CPPFLAGS=
+AC_PROG_CC
+if test "$enable_f77" = yes ; then
+    AC_PROG_F77
+    # If there is no working F77, then set enable_f77 to no
+    if test -z "$F77" ; then
+        enable_f77=no
+    fi    
+fi
+if test "$enable_fc" = yes ; then
+    PAC_PROG_FC
+    # If there is no working FC, then set enable_fc to no
+    if test -z "$FC" ; then
+        enable_fc=no
+    fi
+fi
+if test "$enable_cxx" = yes ; then
+    AC_PROG_CXX
+    if test -z "$CXX" ; then
+        enable_cxx=no
+    fi
+fi
+ 
 #
 # Note that some versions of autoconf will insist that the compiler 
 # produce executables at this point, which is why we must do something
@@ -360,14 +308,18 @@ dnl same test in the MPICH2 configure.
 # structure alignment test because it will test for including those
 # types as well
 AC_CACHE_CHECK([whether long double is supported],pac_cv_have_long_double,[
-     AC_TRY_COMPILE(,[long double a;],
-    pac_cv_have_long_double=yes,pac_cv_have_long_double=no)])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([],[long double a;])
+    ],[pac_cv_have_long_double=yes],[pac_cv_have_long_double=no])
+])
 if test "$pac_cv_have_long_double" = "yes" ; then
     AC_DEFINE(HAVE_LONG_DOUBLE,1,[Define if long double is supported])
 fi
 AC_CACHE_CHECK([whether long long is supported],pac_cv_have_long_long,[
-    AC_TRY_COMPILE(,[long long a;],
-    pac_cv_have_long_long=yes,pac_cv_have_long_long=no)])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([],[long long a;])
+    ],[pac_cv_have_long_long=yes],[pac_cv_have_long_long=no])
+])
 if test "$pac_cv_have_long_long" = yes ; then 
     AC_DEFINE(HAVE_LONG_LONG,1,[Define if compiler supports long long])
 fi
@@ -409,77 +361,17 @@ if test "$threadsdir" = "threads" ; then
     fi    
 fi
 
-
-# Define functionality that we support
-
-# Now, select the proper compilers for the tests
-if test "$FROM_MPICH2" = yes ; then
-    AC_MSG_RESULT([Configuring tests for MPICH2])
-    # Build for testing in place if no prefix was given
-    if test "$enable_in_place" = yes -o "X$prefix" = "XNONE" ; then
-        LIBS=$saveLIBS
-	if test -z "$BASECC" ; then
-	    BASECC=$CC
-        fi
-	# We need the base Fortran compiler for some tests that 
-	# are only about Fortran, not MPI and Fortran
-	BASEF77=$F77
-	#BASEINCDIR=$top_build_dir/src/include
-        CC=$top_build_dir/bin/mpicc
-        F77=$top_build_dir/bin/mpif77
-        CXX=$top_build_dir/bin/mpicxx
-	BASEFC=$FC
-        FC=$top_build_dir/bin/mpif90
-	MPIEXEC=$top_build_dir/bin/mpiexec
-        MPILIBLOC=$top_build_dir/lib/libmpich.a
-    else
-        # note that the default definition of bindir is 
-	#    '${exec_prefix}/bin'
-        # so even if prefix is set, exec prefix is not until
-	# the very last moment (i.e., not here). 
-	if test "X$exec_prefix" = "XNONE" ; then
-	    saveExec_prefix=$exec_prefix
-	    if test "X$prefix" = "XNONE" ; then
-	        # Use the default
-	        exec_prefix=$ac_default_prefix
-	    else
-	        exec_prefix=$prefix
-	    fi
-	    # Evaluate with the current setting of exec_prefix
-	    eval mpibindir=${bindir}
-	    exec_prefix=$saveExec_prefix
-        else
-            eval  mpibindir=${bindir}
-	fi
-	if test -z "$BASECC" ; then
-	    BASECC=$CC
-        fi
-        CC=$mpibindir/mpicc
-        F77=$mpibindir/mpif77
-        CXX=$mpibindir/mpicxx
-        MPIEXEC=$mpibindir/mpiexec
-        # For some of the tests below, we'll need a separate compiler
-	# One more complication.  If we are in the midst of building
-	# MPICH2, the installation directory does not yet contain
-	# the current compilation scripts (just to make things worse,
-	# it *may* contain old scripts!).
-#        if test ! -x $CXX ; then
-            CXXTEST=$top_build_dir/bin/mpicxx
-#        else 
-#            CXXTEST=$CXX
-#        fi
-	BASEFC=$FC
-        FC=$mpibindir/mpif90
-    fi
-fi
-
 # Check for h_addr or h_addr_list.  This is needed for the singjoin test
 # in manual/singjoin.c
 AC_CACHE_CHECK([whether struct hostent contains h_addr_list],
 pac_cv_have_haddr_list,[
-AC_TRY_COMPILE([
-#include <netdb.h>],[struct hostent hp;hp.h_addr_list[0]=0;],
-pac_cv_have_haddr_list=yes,pac_cv_have_haddr_list=no)])
+AC_COMPILE_IFELSE([
+   AC_LANG_PROGRAM([#include <netdb.h>],[
+      struct hostent hp;
+      hp.h_addr_list[0]=0;
+   ])
+],[pac_cv_have_haddr_list=yes],[pac_cv_have_haddr_list=no])
+])
 if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
@@ -493,33 +385,30 @@ if test "$FROM_MPICH2" = yes ; then
     if test "$enable_f77" = yes ; then
        # Assume success
         otherlangs="$otherlangs f77"
-	f77dir=f77
-	buildingF77=yes
+        f77dir=f77
+        buildingF77=yes
     fi
 elif test "$enable_f77" = yes ; then
     AC_MSG_CHECKING([that we can build MPI programs with Fortran 77])
-    rm -f conftest*
-    cat >conftest.f <<EOF
-        program main
-        include 'mpif.h'
-        integer ierr
-        call mpi_init(ierr)
-        call mpi_finalize(ierr)
-        end
-EOF
-    if $F77 -o conftest conftest.f >conftest.out 2>&1 ; then
+    AC_LANG_PUSH([Fortran 77])
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([
+            program main
+            include 'mpif.h'
+            integer ierr
+            call mpi_init(ierr)
+            call mpi_finalize(ierr)
+            end
+        ])
+    ],[
         AC_MSG_RESULT(yes)
         otherlangs="$otherlangs f77"
-	f77dir=f77
-	buildingF77=yes
-    else
+        f77dir=f77
+        buildingF77=yes
+    ],[
         AC_MSG_RESULT(no)
-	echo "Failed program was" >&AC_FD_CC
-	cat conftest.f >&AC_FD_CC
-	echo "Compiler output was" >&AC_FD_CC
-        cat conftest.out >&AC_FD_CC
-    fi
-    rm -f conftest*
+    ])
+    AC_LANG_POP([Fortran 77])
 fi
 #
 # At least one test (C++ test of C and Fortran datatypes) needs to 
@@ -542,23 +431,17 @@ if test "$buildingF77" = "yes" ; then
         # We use a test on the size of void * to avoid any complications
         # in dealing with running programs containing MPI headers (e.g.,
         # the IBM MPI changes the main entry point so that MPI 
-	# programs cannot be run on the host node)
-	# Make sure we are using the local C compiler (if the local
-	# machine is different that the system that MPICC is for, then
-	# set the cross-compilation feature)
-	CCsave="$CC"
-	CC="$BASECC"
+        # programs cannot be run on the host node)
         AC_CHECK_SIZEOF(void *)
-	CC="$CCsave"
-	MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
+        MPI_SIZEOF_AINT=$ac_cv_sizeof_void_p
     fi
     if test -z "$MPI_SIZEOF_OFFSET" ; then
         # We have to try and get the size of offset anyway, since 
-	# it is not the same as void * (it depends on the available
-	# file systems).  Since we want to avoid using the MPI linker,
+        # it is not the same as void * (it depends on the available
+        # file systems).  Since we want to avoid using the MPI linker,
         # we could do the following:
         #    Use the mpi compiler to compile the file, using the mpi 
-	#    header but no MPI calls
+        #    header but no MPI calls
         #    Use the regular C linker to link the program
         # However, we do this only if the environment variable BASECC
         # has been provided.  Else we can try the following:
@@ -566,68 +449,55 @@ if test "$buildingF77" = "yes" ; then
         #    sed -n 's/typedef \(.*\) MPI_Offset *;/\1/p' mpi.h
         # to extract the type corresponding to MPI_Offset and then
         # just use that.
-        AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
-             ac_cv_sizeof_MPI_Offset=unknown
-	     rm -f conftest*
-             cat >>conftest.c <<EOF
-#include "mpi.h"
-#include <stdio.h>
-int main( int argc, char **argv )
-{
-    MPI_Offset a;
-    FILE *f = fopen("conftestval", "w" );
-    if (! f) exit(1);
-    fprintf( f, "%ld\n", (long)sizeof(MPI_Offset) );
-    fclose(f);
-    return 0;
-}
-EOF
-        # FIXME.  Check for BASECC
-        # Note: This assumes that CC has been set to the C compiler for
-        # MPI Programs, and that either any necessary include paths are 
-        # already set or they are in CPPFLAGS (prefered) or CFLAGS.
-        if AC_TRY_EVAL(ac_link) && test -s conftest$ac_exeext ; then
-            if ./conftest$ac_exeext ; then
-                #success
-                ac_cv_sizeof_MPI_Offset=`cat conftestval`
-            else
-                # failure
-                AC_MSG_WARN([Unable to run the program to determine the size of MPI_Offset])
-	        echo "configure: failed program was:" >&AC_FD_CC
-	        cat conftest.c >&AC_FD_CC
-	    fi
-        else
-	    # failure
-            AC_MSG_WARN([Unable to build the program to determine the size of MPI_Offset])
-	    echo "configure: failed program was:" >&AC_FD_CC
-	    cat conftest.c >&AC_FD_CC
-        fi
-        rm -f conftest*
-])
-	if test "$ac_cv_sizeof_MPI_Offset" = "unknown" ; then
-	     AC_MSG_WARN([Using 8 for the size of MPI_Offset])
-	     MPI_SIZEOF_OFFSET=8
+dnl         AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
+dnl              ac_cv_sizeof_MPI_Offset=unknown
+dnl              rm -f conftest*
+dnl              cat >>conftest.c <<EOF
+dnl #include "mpi.h"
+dnl #include <stdio.h>
+dnl int main( int argc, char **argv )
+dnl {
+dnl     MPI_Offset a;
+dnl     FILE *f = fopen("conftestval", "w" );
+dnl     if (! f) exit(1);
+dnl     fprintf( f, "%ld\n", (long)sizeof(MPI_Offset) );
+dnl     fclose(f);
+dnl     return 0;
+dnl }
+dnl EOF
+dnl             # FIXME.  Check for BASECC
+dnl             # Note: This assumes that CC has been set to the C compiler for
+dnl             # MPI Programs, and that either any necessary include paths are 
+dnl             # already set or they are in CPPFLAGS (prefered) or CFLAGS.
+dnl             if AC_TRY_EVAL(ac_link) && test -s conftest$ac_exeext ; then
+dnl                 if ./conftest$ac_exeext ; then
+dnl                     #success
+dnl                     ac_cv_sizeof_MPI_Offset=`cat conftestval`
+dnl                 else
+dnl                     # failure
+dnl                     AC_MSG_WARN([Unable to run the program to determine the size of MPI_Offset])
+dnl                     echo "configure: failed program was:" >&AC_FD_CC
+dnl                     cat conftest.c >&AC_FD_CC
+dnl                 fi
+dnl             else
+dnl                 # failure
+dnl                 AC_MSG_WARN([Unable to build the program to determine the size of MPI_Offset])
+dnl                 echo "configure: failed program was:" >&AC_FD_CC
+dnl                 cat conftest.c >&AC_FD_CC
+dnl             fi
+dnl             rm -f conftest*
+dnl         ])
+        AC_CHECK_SIZEOF([MPI_Offset],[],[#include "mpi.h"])
+        if test "$ac_cv_sizeof_MPI_Offset" = "unknown" \
+             -o "$ac_cv_sizeof_MPI_Offset" -eq 0 ; then
+             AC_MSG_WARN([Using 8 for the size of MPI_Offset])
+             MPI_SIZEOF_OFFSET=8
         else
              MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
         fi
     fi
-    # Find out if the sized types are available in Fortran (we need only
-    # the Fortran compiler, not the MPI-Fortran compiler)
-    saveF77=$F77
-    if test -z "$BASEF77" ; then
-       # Find some Fortran compiler.  Note that we've already saved the
-       # old F77
-       F77=
-       save_FFLAGS="$FFLAGS"
-       AC_PROG_F77
-       FFLAGS="$save_FFLAGS"
-       BASEF77=$F77
-    fi
-    if test -n "$BASEF77" ; then
-        F77=$BASEF77
-    fi	
     
-    AC_LANG_FORTRAN77
+    AC_LANG_PUSH([Fortran 77])
     AC_CACHE_CHECK([whether integer*4 is supported],pac_cv_fort_integer4,[
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*4 i])],
         pac_cv_fort_integer4=yes,
@@ -640,19 +510,18 @@ EOF
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[      integer*16 i])],
         pac_cv_fort_integer16=yes,
         pac_cv_fort_integer16=no)])
+    AC_LANG_POP([Fortran 77])
 
-    F77=$saveF77
-    AC_LANG_C
     # Determine Aint and Offset
     for len in 4 8 16 ; do
         eval testval=\$"pac_cv_fort_integer$len"
-	if test "$testval" = no ; then continue ; fi
-	testval=$len
+        if test "$testval" = no ; then continue ; fi
+        testval=$len
         if test $len = "$MPI_SIZEOF_AINT" ; then
-	    F77_MPI_ADDRESS="integer*$len"
+            F77_MPI_ADDRESS="integer*$len"
         fi
         if test $len = "$MPI_SIZEOF_OFFSET" ; then
-	    F77_MPI_OFFSET="integer*$len"
+            F77_MPI_OFFSET="integer*$len"
         fi
     done
     # At this point, we could create a test program that would confirm that
@@ -695,14 +564,6 @@ EOF
 
     # Check for name mapping so that we can do the handle conversion tests
     # This test needs both the base c and fortran compilers
-    saveF77=$F77
-    saveCC=$CC
-    if test -n "$BASECC" ; then 
-        CC=$BASECC 
-    fi	   
-    if test -n "$BASEF77" ; then
-        F77=$BASEF77
-    fi	
     AC_LANG_FORTRAN77
     PAC_PROG_F77_NAME_MANGLE
 
@@ -711,35 +572,40 @@ EOF
     # FIXME: if we can't figure out how to get iargc/getarg, then 
     # we should really turn off those spawn tests
     AC_MSG_CHECKING([for Fortran libraries needed for getarg])
-    AC_LINK_IFELSE([AC_LANG_PROGRAM(,[
-        character*64 s
-        integer i
-        i = iargc()
-        call getarg(i,s)])],
-        pac_cv_getarg_needs_u77=no,
-        pac_cv_getarg_needs_u77=unknown)
+    AC_LANG_CONFTEST([
+        AC_LANG_PROGRAM([],[
+            character*64 s
+            integer i
+            i = iargc()
+            call getarg(i,s)
+        ])
+    ])
+    AC_LINK_IFELSE([],[
+        pac_cv_getarg_needs_u77=no
+    ],[
+        pac_cv_getarg_needs_u77=unknown
+    ])
     if test "$pac_cv_getarg_needs_u77" != "no" ; then
         # Try again with -lU77
         saveLIBS="$LIBS"
         LIBS="$LIBS -lU77"
-        AC_LINK_IFELSE([AC_LANG_PROGRAM(,[
-        character*64 s
-        integer i
-        i = iargc()
-        call getarg(i,s)])],
-            pac_cv_getarg_needs_u77=yes,
-            pac_cv_getarg_needs_u77=unavailable)
+        AC_LINK_IFELSE([],[
+            pac_cv_getarg_needs_u77=yes
+        ],[
+            pac_cv_getarg_needs_u77=unavailable
+        ])
         LIBS="$saveLIBS"
         if test "$pac_cv_getarg_needs_u77" = "yes" ; then
             F77_GETARG_LIBS=-lU77
         fi
     fi
+    rm -f conftest$ac_exeext
     if test -n "$F77_GETARG_LIBS" ; then
         AC_MSG_RESULT($F77_GETARG_LIBS)
     else
         if test "$pac_cv_getarg_needs_u77" = "unavailable" ; then 
-	    AC_MSG_RESULT([getarg and/or iargc are not available.  Some spawn tests will fail to link])
-	else 
+            AC_MSG_RESULT([getarg and/or iargc are not available.  Some spawn tests will fail to link])
+        else 
             AC_MSG_RESULT([none needed])
         fi
     fi
@@ -756,9 +622,6 @@ EOF
     # See the f90 block of code for the Fortran 90 version of ALLOCMEMF,
     # i.e. ALLOCMEMFC.
 
-    # It is safe to now switch back to the "final" (MPI) compilers
-    F77=$saveF77
-    CC=$saveCC
 fi
 # Set a default for the Fortran 77 version of MPI_Offset.
 if test -z "$F77_MPI_OFFSET" ; then
@@ -779,10 +642,6 @@ AC_SUBST(f90dir)
 # in the MPICH2 top-level configure
 if test "$enable_fc" = default -a "$enable_f77" = yes ; then
     enable_fc=no
-    if test -n "$BASEFC" ; then
-        saveFC=$FC 
-        FC=$BASEFC
-    fi
     # Work around bug in autoconf that adds -g to FCFLAGS
     saveFCFLAGS="$FCFLAGS"
     PAC_PROG_FC
@@ -790,20 +649,11 @@ if test "$enable_fc" = default -a "$enable_f77" = yes ; then
     FCFLAGS=$saveFCFLAGS
     if test -z "$FC" -o "$pac_cv_prog_fc_works" != yes ; then
         AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
-	enable_fc=no
-    elif test -z "$BASEFC" ; then
-        BASEFC=$FC
-    fi
-    if test -n "$BASEFC" ; then
-        FC=$saveFC
+        enable_fc=no
     fi
 fi
 
 if test "$enable_fc" = yes ; then
-    if test -n "$BASEFC" ; then
-        saveFC=$FC 
-        FC=$BASEFC
-    fi
     # Work around bug in autoconf that adds -g to FCFLAGS
     saveFCFLAGS="$FCFLAGS"
     PAC_PROG_FC
@@ -812,13 +662,13 @@ if test "$enable_fc" = yes ; then
 
     if test -n "$FC" ; then
         # Make sure that the compilers are compatible.  This 
-	# will also make sure that the program named in FC is
-	# a working Fortran 90 compiler
-	# Only check if we're *not* building within MPICH2 
-	# (MPICH2 will have made the test)
+        # will also make sure that the program named in FC is
+        # a working Fortran 90 compiler
+        # Only check if we're *not* building within MPICH2 
+        # (MPICH2 will have made the test)
         # FIXME: Do we want to check only simple routine names 
-	# (those without an underscore?)
-	if test "$FROM_MPICH2" != yes ; then
+        # (those without an underscore?)
+        if test "$FROM_MPICH2" != yes ; then
             PAC_FC_AND_F77_COMPATIBLE(enable_fc=yes,enable_fc=no)
         fi
     fi
@@ -837,10 +687,6 @@ if test "$enable_fc" = yes ; then
     PAC_PROG_FC_HAS_POINTER(ALLOCMEMFC="allocmemf90 1")
     AC_SUBST(ALLOCMEMFC)
 
-    if test -n "$BASEFC" ; then
-        FC=$saveFC
-    fi
-
     if test -f f77/init/checksizes.c ; then
         # If it is a VPATH build, f90/init may not be there.
         if test ! -d f90/init ; then
@@ -854,7 +700,7 @@ fi
 if test "$FROM_MPICH2" = yes ; then
     if test "$enable_fc" = yes ; then
         otherlangs="$otherlangs f90"
-	f90dir=f90
+        f90dir=f90
     fi
 elif test "$enable_fc" = yes ; then
     AC_MSG_CHECKING([that we can build MPI programs with Fortran 90])
@@ -871,7 +717,7 @@ elif test "$enable_fc" = yes ; then
     ],[
         AC_MSG_RESULT(yes)
         otherlangs="$otherlangs f90"
-	f90dir=f90
+        f90dir=f90
     ],[
         AC_MSG_RESULT(no)
     ])
@@ -883,7 +729,7 @@ AC_SUBST(cxxdir)
 if test "$FROM_MPICH2" = yes ; then
     if test "$enable_cxx" = yes ; then
         otherlangs="$otherlangs cxx"
-	cxxdir=cxx
+        cxxdir=cxx
     fi
 elif test "$enable_cxx" = yes ; then
     AC_MSG_CHECKING([that we can build MPI programs with C++])
@@ -898,23 +744,20 @@ elif test "$enable_cxx" = yes ; then
     ],[
         AC_MSG_RESULT(yes)
         otherlangs="$otherlangs cxx"
-	cxxdir=cxx
+        cxxdir=cxx
     ],[
         AC_MSG_RESULT(no)
     ])
     AC_LANG_POP([C++])
 fi
 if test "$enable_cxx" = yes ; then
-    CXXsave=$CXX
-    if test -n "$CXXTEST" ; then
-        CXX=$CXXTEST
-    fi
     AC_CACHE_CHECK([whether <iostream> available],pac_cv_cxx_has_iostream,[
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_TRY_COMPILE([
-#include <iostream>
-],[using namespace std;],pac_cv_cxx_has_iostream=yes,pac_cv_cxx_has_iostream=no)])
+    AC_LANG_PUSH([C++])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([#include <iostream>],[using namespace std;])
+    ],[pac_cv_cxx_has_iostream=yes],[pac_cv_cxx_has_iostream=no])
+    ])
+
     if test "$pac_cv_cxx_has_iostream" = yes ; then
         AC_DEFINE(HAVE_IOSTREAM,1,[Define if iostream is available])
     else
@@ -939,8 +782,7 @@ if test "$enable_cxx" = yes ; then
     if test "$ac_cv_cxx_namespaces" != yes ; then 
         AC_MSG_WARN([The compiler $CXX does not support C++ namespaces.  This may cause problems for the tests])
     fi
-    CXX=$CXXsave
-    AC_LANG_RESTORE
+    AC_LANG_POP([C++])
 fi
 AC_LANG_C
 # IO
@@ -952,8 +794,12 @@ if test "$enable_romio" != no ; then
         # MPICH2 no longer uses and MPIO_Request
         pac_cv_have_mpio_request=no
     else 
-        AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],pac_cv_have_mpio_request,[
-AC_TRY_COMPILE([#include "mpi.h"],[MPIO_Request r;],pac_cv_have_mpio_request=yes,pac_cv_have_mpio_request=no)])
+        AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],
+        pac_cv_have_mpio_request,[
+            AC_COMPILE_IFELSE([
+                AC_LANG_PROGRAM([#include "mpi.h"],[MPIO_Request r;])
+            ],[pac_cv_have_mpio_request=yes],[pac_cv_have_mpio_request=no])
+        ])
     fi
     if test "$pac_cv_have_mpio_request" = no ; then
         AC_DEFINE(MPIO_USES_MPI_REQUEST,,[Define if MPI IO uses MPI_Request])
@@ -969,14 +815,30 @@ if test "$FROM_MPICH2" = yes ; then
    # MPICH2 correctly includes this type.
    pac_cv_have_mpi_integer16=yes
 else
-    AC_CACHE_CHECK([whether MPI_INTEGER16 is available],pac_cv_have_mpi_integer16,[
-AC_TRY_COMPILE([#include "mpi.h"],[MPI_Datatype t = MPI_INTEGER16;],pac_cv_have_mpi_integer16=yes,pac_cv_have_mpi_integer16=no)])
+    AC_CACHE_CHECK([whether MPI_INTEGER16 is available],
+    pac_cv_have_mpi_integer16,[
+        AC_COMPILE_IFELSE([
+            AC_LANG_PROGRAM([#include "mpi.h"],[
+                MPI_Datatype t = MPI_INTEGER16;
+            ])
+        ],[pac_cv_have_mpi_integer16=yes],[pac_cv_have_mpi_integer16=no])
+    ])
 fi
 if test "$pac_cv_have_mpi_integer16" = yes ; then 
     AC_DEFINE(HAVE_MPI_INTEGER16,1,[Define if MPI_INTEGER16 is available])
 fi
-AC_CACHE_CHECK([whether MPI_2DOUBLE_COMPLEX is available],pac_cv_have_mpi_2double_complex,[
-AC_TRY_COMPILE([#include "mpi.h"],[MPI_Datatype t = MPI_2DOUBLE_COMPLEX;],pac_cv_have_mpi_2double_complex=yes,pac_cv_have_mpi_2double_complex=no)])
+AC_CACHE_CHECK([whether MPI_2DOUBLE_COMPLEX is available],
+pac_cv_have_mpi_2double_complex,[
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([#include "mpi.h"],[
+            MPI_Datatype t = MPI_2DOUBLE_COMPLEX;
+        ])
+    ],[
+        pac_cv_have_mpi_2double_complex=yes
+    ],[
+        pac_cv_have_mpi_2double_complex=no
+    ])
+])
 if test "$pac_cv_have_mpi_2double_complex" = yes ; then 
     AC_DEFINE(HAVE_MPI_2DOUBLE_COMPLEX,1,[Define if MPI_2DOUBE_COMPLEX is available])
 fi
@@ -989,14 +851,11 @@ fi
 # Make sure we are using the local C compiler (if the local
 # machine is different that the system that MPICC is for, then
 # set the cross-compilation feature)
-CCsave="$CC"
-CC="$BASECC"
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(short)
-CC="$CCsave"
 POINTERINT=MPI_Aint
 AC_MSG_CHECKING([for C integer type of address size])
 for type in int long long_long short ; do
@@ -1015,18 +874,8 @@ AC_PATH_PROG(PERL,perl)
 AC_SUBST(PERL)
 AC_SUBST(otherlangs)
 AC_SUBST(threadsdir)
-AC_SUBST(CC)
-AC_SUBST(F77)
-AC_SUBST(FC)
-AC_SUBST(FCFLAGS)
-AC_SUBST(FFLAGS)
-AC_SUBST(CXX)
-AC_SUBST(CXXFLAGS)
 AC_SUBST(MPIEXEC)
 AC_SUBST(MAKE)
-AC_SUBST(CFLAGS)
-AC_SUBST(CPPFLAGS)
-AC_SUBST(LDFLAGS)
 if test -z "$MPILIBNAME" ; then MPILIBNAME=mpich ; fi
 AC_SUBST(MPILIBNAME)
 dnl MPI_SOURCE may be set as an environment variable giving the location
@@ -1034,6 +883,38 @@ dnl of the MPI implementation.  This is used only in runtests to include
 dnl the location of the source of the MPI implementation into the XML
 dnl summary file
 AC_SUBST(MPI_SOURCE)
+
+if test "$FROM_MPICH2" = yes ; then
+    # As part of MPICH2 configure, set all xFLAGS to null
+    # as mpiXX already contains xFLAGS.
+    CFLAGS=""
+    CXXFLAGS=""
+    FFLAGS=""
+    FCFLAGS=""
+    # note that the default definition of bindir is 
+    #    '${exec_prefix}/bin'
+    # so even if prefix is set, exec prefix is not until
+    # the very last moment (i.e., not here). 
+    if test "X$exec_prefix" = "XNONE" ; then
+        saveExec_prefix=$exec_prefix
+        if test "X$prefix" = "XNONE" ; then
+            # Use the default
+            exec_prefix=$ac_default_prefix
+        else
+            exec_prefix=$prefix
+        fi
+        # Evaluate with the current setting of exec_prefix
+        eval mpibindir=${bindir}
+        exec_prefix=$saveExec_prefix
+    else
+        eval mpibindir=${bindir}
+    fi
+    CC=$mpibindir/mpicc
+    F77=$mpibindir/mpif77
+    FC=$mpibindir/mpif90
+    CXX=$mpibindir/mpicxx
+    MPIEXEC=$mpibindir/mpiexec
+fi
 
 AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])
 AC_OUTPUT_COMMANDS([chmod a+x runtests])
@@ -1044,105 +925,105 @@ AC_OUTPUT(maint/testmerge \
           runtests \
           Makefile \
           basic/Makefile \
-	  attr/Makefile \
-	  util/Makefile \
-	  coll/Makefile \
-	  comm/Makefile \
-	  datatype/Makefile \
-	  errhan/Makefile \
-	  group/Makefile \
-	  info/Makefile \
-	  init/Makefile \
-	  pt2pt/Makefile \
+          attr/Makefile \
+          util/Makefile \
+          coll/Makefile \
+          comm/Makefile \
+          datatype/Makefile \
+          errhan/Makefile \
+          group/Makefile \
+          info/Makefile \
+          init/Makefile \
+          pt2pt/Makefile \
           rma/Makefile \
-	  spawn/Makefile \
-	  topo/Makefile \
-	  io/Makefile \
-	  f77/Makefile \
-	  f77/attr/Makefile \
-	  f77/attr/attraints.h \
-	  f77/pt2pt/attr1aints.h \
-	  f77/ext/add1size.h \
-	  f77/datatype/Makefile \
-	  f77/datatype/typeaints.h \
-	  f77/util/Makefile \
-	  f77/coll/Makefile \
-	  f77/comm/Makefile \
-	  f77/topo/Makefile \
-	  f77/init/Makefile \
-	  f77/rma/addsize.h \
-	  f77/pt2pt/Makefile \
-	  f77/info/Makefile \
-	  f77/spawn/Makefile \
-	  f77/spawn/type1aint.h \
-	  f77/rma/Makefile \
-	  f77/ext/Makefile \
-	  f77/ext/testlist \
+          spawn/Makefile \
+          topo/Makefile \
+          io/Makefile \
+          f77/Makefile \
+          f77/attr/Makefile \
+          f77/attr/attraints.h \
+          f77/pt2pt/attr1aints.h \
+          f77/ext/add1size.h \
+          f77/datatype/Makefile \
+          f77/datatype/typeaints.h \
+          f77/util/Makefile \
+          f77/coll/Makefile \
+          f77/comm/Makefile \
+          f77/topo/Makefile \
+          f77/init/Makefile \
+          f77/rma/addsize.h \
+          f77/pt2pt/Makefile \
+          f77/info/Makefile \
+          f77/spawn/Makefile \
+          f77/spawn/type1aint.h \
+          f77/rma/Makefile \
+          f77/ext/Makefile \
+          f77/ext/testlist \
           f77/io/Makefile \
-	  f77/io/iooffset.h \
-	  f77/io/iodisp.h \
-	  f77/io/ioaint.h \
-	  f90/Makefile \
-	  f90/attr/Makefile \
-	  f90/datatype/Makefile \
-	  f90/f90types/Makefile \
-	  f90/util/Makefile \
-	  f90/coll/Makefile \
-	  f90/comm/Makefile \
-	  f90/topo/Makefile \
-	  f90/init/Makefile \
-	  f90/pt2pt/Makefile \
-	  f90/rma/Makefile \
-	  f90/info/Makefile \
-	  f90/spawn/Makefile \
-	  f90/timer/Makefile \
-	  f90/ext/Makefile \
-	  f90/ext/testlist \
+          f77/io/iooffset.h \
+          f77/io/iodisp.h \
+          f77/io/ioaint.h \
+          f90/Makefile \
+          f90/attr/Makefile \
+          f90/datatype/Makefile \
+          f90/f90types/Makefile \
+          f90/util/Makefile \
+          f90/coll/Makefile \
+          f90/comm/Makefile \
+          f90/topo/Makefile \
+          f90/init/Makefile \
+          f90/pt2pt/Makefile \
+          f90/rma/Makefile \
+          f90/info/Makefile \
+          f90/spawn/Makefile \
+          f90/timer/Makefile \
+          f90/ext/Makefile \
+          f90/ext/testlist \
           f90/io/Makefile \
-	  f90/misc/Makefile \
-	  cxx/Makefile \
-	  cxx/util/Makefile \
-	  cxx/attr/Makefile \
-	  cxx/pt2pt/Makefile \
-	  cxx/comm/Makefile \
-	  cxx/coll/Makefile \
+          f90/misc/Makefile \
+          cxx/Makefile \
+          cxx/util/Makefile \
+          cxx/attr/Makefile \
+          cxx/pt2pt/Makefile \
+          cxx/comm/Makefile \
+          cxx/coll/Makefile \
           cxx/info/Makefile \
-	  cxx/datatype/Makefile \
-	  cxx/io/Makefile \
-	  cxx/init/Makefile \
-	  cxx/rma/Makefile \
-	  cxx/spawn/Makefile \
-	  threads/Makefile \
-	  threads/pt2pt/Makefile \
-	  threads/util/Makefile \
-	  threads/comm/Makefile \
-	  threads/init/Makefile \
-	  threads/spawn/Makefile \
-	  errors/Makefile \
-	  errors/attr/Makefile \
-	  errors/basic/Makefile \
-	  errors/coll/Makefile \
-	  errors/comm/Makefile \
-	  errors/faults/Makefile \
-	  errors/group/Makefile \
-	  errors/pt2pt/Makefile \
-	  errors/rma/Makefile \
-	  errors/spawn/Makefile \
-	  errors/topo/Makefile \
-	  errors/io/Makefile \
-	  errors/cxx/Makefile \
-	  errors/cxx/errhan/Makefile \
-	  errors/cxx/io/Makefile \
-	  errors/f77/Makefile \
-	  errors/f90/Makefile \
-	  manual/Makefile \
-	  manual/manyconnect \
-	  perf/Makefile \
-	  testlist \
-	  cxx/testlist \
-	  f77/testlist \
-	  f90/testlist \
-	  threads/testlist \
-	  errors/testlist \
-	  errors/cxx/testlist \
-	  )
+          cxx/datatype/Makefile \
+          cxx/io/Makefile \
+          cxx/init/Makefile \
+          cxx/rma/Makefile \
+          cxx/spawn/Makefile \
+          threads/Makefile \
+          threads/pt2pt/Makefile \
+          threads/util/Makefile \
+          threads/comm/Makefile \
+          threads/init/Makefile \
+          threads/spawn/Makefile \
+          errors/Makefile \
+          errors/attr/Makefile \
+          errors/basic/Makefile \
+          errors/coll/Makefile \
+          errors/comm/Makefile \
+          errors/faults/Makefile \
+          errors/group/Makefile \
+          errors/pt2pt/Makefile \
+          errors/rma/Makefile \
+          errors/spawn/Makefile \
+          errors/topo/Makefile \
+          errors/io/Makefile \
+          errors/cxx/Makefile \
+          errors/cxx/errhan/Makefile \
+          errors/cxx/io/Makefile \
+          errors/f77/Makefile \
+          errors/f90/Makefile \
+          manual/Makefile \
+          manual/manyconnect \
+          perf/Makefile \
+          testlist \
+          cxx/testlist \
+          f77/testlist \
+          f90/testlist \
+          threads/testlist \
+          errors/testlist \
+          errors/cxx/testlist \
+          )
