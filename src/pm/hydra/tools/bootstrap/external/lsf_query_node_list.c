@@ -25,18 +25,22 @@ HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "No LSF node list found\n");
     }
     else {
+        hostname = strtok(hosts, " ");
         while (1) {
-            hostname = strtok(hosts, " ");
             if (hostname == NULL)
                 break;
 
-            num_procs_str = strtok(hosts, " ");
+            /* the even fields in the list should be the number of
+             * cores */
+            num_procs_str = strtok(NULL, " ");
             HYDU_ASSERT(num_procs_str, status);
 
             num_procs = atoi(num_procs_str);
 
             status = HYDU_add_to_node_list(hostname, num_procs, node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
+
+            hostname = strtok(NULL, " ");
         }
     }
 
