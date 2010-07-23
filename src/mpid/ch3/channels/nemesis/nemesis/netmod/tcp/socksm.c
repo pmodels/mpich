@@ -1717,6 +1717,16 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
              * on many platforms, including modern Linux. */
             if (it_plfd->revents & POLLERR || it_plfd->revents & POLLNVAL) {
                 int cleanup_errno = MPI_SUCCESS;
+                int rc;
+                char dummy;
+                const char *err_str = "UNKNOWN";
+
+                /* See if we can get a specific error for this fd
+                   (Stevens Network Programming Vol 1, pg 184) */
+                rc = read(it_plfd->fd, &dummy, 1);
+                if (rc < 0)
+                    err_str = MPIU_Strerror(rc);
+                
                 MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "error polling fd, closing sc");
                 if (it_sc->vc) {
                     MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, it_sc->vc);
@@ -1725,7 +1735,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                         MPIU_ERR_SET(cleanup_errno, MPI_ERR_OTHER, "**tcp_cleanup_fail");
                         MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                     }
-                    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", it_sc->vc->pg_rank);
+                    MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d %s", it_sc->vc->pg_rank, err_str);
                 } else {
                     MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
                     cleanup_errno = cleanup_and_free_sc_plfd(it_sc);
@@ -1733,7 +1743,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                         MPIU_ERR_SET(cleanup_errno, MPI_ERR_OTHER, "**tcp_cleanup_fail");
                         MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                     }
-                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+                    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %s", err_str);
                 }
                 goto fn_fail;
             }
