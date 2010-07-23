@@ -1743,7 +1743,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                         MPIU_ERR_SET(cleanup_errno, MPI_ERR_OTHER, "**tcp_cleanup_fail");
                         MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                     }
-                    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %s", err_str);
+                    MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**comm_fail_conn", "**comm_fail_conn %s %s", CONN_STATE_STR[it_sc->state.cstate], err_str);
                 }
                 goto fn_fail;
             }

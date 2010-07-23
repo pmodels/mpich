@@ -859,9 +859,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **sem_destroy %s:sem_destroy() failed %s
 
 **comm_fail:Communication error
-**comm_fail %s:Communication error: %s
 **comm_fail %d:Communication error with rank %d
 **comm_fail %d %s:Communication error with rank %d: %s
+**comm_fail_conn:Communication error during connect sequence
+**comm_fail_conn %s %s:Communication error during connect sequence (state=%s): %s
 **exceeded_connect_tries:Unable to establish connection to process
 **exceeded_connect_tries %d:Unable to establish connection to rank %d
 **vc_in_error_state:Connection is in error state
