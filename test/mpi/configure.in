@@ -221,6 +221,8 @@ if test "$enable_strictmpi" = "yes" ; then
 fi
 
 if test "$FROM_MPICH2" = "yes" ; then
+    # Set compilers/flags for the configure tests.
+    #
     # As part of MPICH2 configure, the MPI libraries are not built yet.
     # So build-dir version of MPI wrappers which contain the native
     # compilers are used for compilation tests. With option -nativelinking,
@@ -230,10 +232,14 @@ if test "$FROM_MPICH2" = "yes" ; then
     #
     # Using "mpiXX -nativelinking" instead of the BASE* compilers simplifies
     # and increase readability of the configure.in.
-    CFLAGS="-nativelinking"
-    CXXFLAGS="-nativelinking"
-    FFLAGS="-nativelinking"
-    FCFLAGS="-nativelinking"
+    saveLDFLAGS="$LDFLAGS"
+    LDFLAGS="-nativelinking $LDFLAGS"
+    # As part of MPICH2 configure, set all xFLAGS to null
+    # as mpiXX already contains xFLAGS.
+    CFLAGS=""
+    CXXFLAGS=""
+    FFLAGS=""
+    FCFLAGS=""
     # Clear the CPPFLAGS, since the MPI configure will have added many items
     # that are not required for user MPI programs.
     CPPFLAGS=""
@@ -885,6 +891,8 @@ dnl summary file
 AC_SUBST(MPI_SOURCE)
 
 if test "$FROM_MPICH2" = yes ; then
+    # Set compilers/flags to be substituted in output files, e.g. Makefiles.
+    LDFLAGS="$saveLDFLAGS"
     # As part of MPICH2 configure, set all xFLAGS to null
     # as mpiXX already contains xFLAGS.
     CFLAGS=""
