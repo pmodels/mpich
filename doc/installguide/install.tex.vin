@@ -348,10 +348,10 @@ installed MPICH2 and run an MPI example.
 \subsection{Compiler Optimization Levels}
 
 MPICH2 can be configured with two sets of compiler flags:
-\texttt{CFLAGS}, \texttt{CXXFLAGS}, \texttt{FFLAGS}, \texttt{F90FLAGS}
+\texttt{CFLAGS}, \texttt{CXXFLAGS}, \texttt{FFLAGS}, \texttt{FCFLAGS}
 (abbreviated as \texttt{xFLAGS}) and \texttt{MPICH2LIB\_CFLAGS},
 \texttt{MPICH2LIB\_CXXFLAGS}, \texttt{MPICH2LIB\_FFLAGS},
-\texttt{MPICH2LIB\_F90FLAGS} (abbreviated as \texttt{MPICH2LIB\_xFLAGS})
+\texttt{MPICH2LIB\_FCFLAGS} (abbreviated as \texttt{MPICH2LIB\_xFLAGS})
 for compilation; \texttt{LDFLAGS} and \texttt{MPICH2LIB\_LDFLAGS} for linking.
 All these flags can be set as part of configure command or 
 through environment variables.
@@ -383,7 +383,7 @@ or
   ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 \
                              MPICH2LIB_FFLAGS=-O3 \
                              MPICH2LIB_CXXFLAGS=-O3 \
-                             MPICH2LIB_F90FLAGS=-O3
+                             MPICH2LIB_FCFLAGS=-O3
 \end{verbatim}
 
 This will cause the MPICH2 libraries to be built with -O3, and -O3 will
@@ -467,7 +467,7 @@ configuring MPICH2 with the following options
 
 setenv F77 f77
 setenv FFLAGS "-f -N15"
-setenv F90FLAGS "-YALL_NAMES=LCS -YEXT_SFX=_"
+setenv FCFLAGS "-YALL_NAMES=LCS -YEXT_SFX=_"
 
 ./configure ....
 
@@ -1215,7 +1215,7 @@ Not all of these options may be fully supported yet.
     none     - No debugging
     handle   - Trace handle operations
     handlealloc - Trace hancle allocations
-    dbg      - Add compiler flag, -g, to CFLAGS, CXXFLAGS FFLAGS and F90FLAGS.
+    dbg      - Add compiler flag, -g, to CFLAGS, CXXFLAGS FFLAGS and FCFLAGS.
     debug    - Synonym for dbg
     log      - Enable debug event logging
     mem      - Memory usage tracing
@@ -1232,7 +1232,7 @@ Not all of these options may be fully supported yet.
                        comma separated names including
     O<n>     - Appends default optimization flags, -O<n>, to all internal
                compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
-               MPICH2LIB_FFLAGS, and MPICH2LIB_F90FLAGS.
+               MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
     defopt   - Default compiler optimization -O2 for all language bindings,
                i.e. --enable-fast=O2, when neither --enable-fast
                nor --disable-fast is specified.
@@ -1248,7 +1248,7 @@ Not all of these options may be fully supported yet.
                                  Default is on.
 
 --enable-f77 - Enable Fortran 77 bindings
---enable-f90 - Enable Fortran 90 bindings
+--enable-fc  - Enable Fortran 90 bindings
 --enable-cxx - Enable C++ bindings
 --enable-romio - Enable ROMIO MPI I/O implementation
 --enable-debuginfo - Enable support for debuggers

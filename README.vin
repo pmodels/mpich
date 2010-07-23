@@ -247,13 +247,13 @@ MPICH2 allows several sets of compiler flags to be used. The first
 three sets are configure-time options for MPICH2, while the fourth is
 only relevant when compiling applications with mpicc and friends.
 
-1. CFLAGS, CPPFLAGS, CXXFLAGS, FFLAGS, F90FLAGS, LDFLAGS and LIBS
+1. CFLAGS, CPPFLAGS, CXXFLAGS, FFLAGS, FCFLAGS, LDFLAGS and LIBS
 (abbreviated as xFLAGS): Setting these flags would result in the
 MPICH2 library being compiled/linked with these flags and the flags
 internally being used in mpicc and friends.
 
 2. MPICH2LIB_CFLAGS, MPICH2LIB_CPPFLAGS, MPICH2LIB_CXXFLAGS,
-MPICH2LIB_FFLAGS, MPICH2LIB_F90FLAGS, MPICH2LIB_LDFLAGS and
+MPICH2LIB_FFLAGS, MPICH2LIB_FCFLAGS, MPICH2LIB_LDFLAGS and
 MPICH2LIB_LIBS (abbreviated as MPICH2LIB_xFLAGS): Setting these flags
 would result in the MPICH2 library being compiled/linked with these
 flags. However, these flags will *not* be used by mpicc and friends.
@@ -265,7 +265,7 @@ developers might be interested in which break existing configure tests
 (e.g., -Werror) and are not recommended for regular users.
 
 4. MPICH2_MPICC_FLAGS, MPICH2_MPICPP_FLAGS, MPICH2_MPICXX_FLAGS,
-MPICH2_MPIF77_FLAGS, MPICH2_MPIF90_FLAGS, MPICH2_LDFLAGS and
+MPICH2_MPIF77_FLAGS, MPICH2_MPIFC_FLAGS, MPICH2_LDFLAGS and
 MPICH2_LIBS (abbreviated as MPICH2_MPIX_FLAGS): These flags do *not*
 affect the compilation of the MPICH2 library itself, but will be
 internally used by mpicc and friends.
@@ -326,14 +326,14 @@ Examples
 
 Example 1:
 
-  ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 MPICH2LIB_FFLAGS=-O3 MPICH2LIB_CXXFLAGS=-O3 MPICH2LIB_F90FLAGS=-O3
+  ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 MPICH2LIB_FFLAGS=-O3 MPICH2LIB_CXXFLAGS=-O3 MPICH2LIB_FCFLAGS=-O3
 
 This will cause the MPICH2 libraries to be built with -O3, and -O3
 will *not* be included in the mpicc and other MPI wrapper script.
 
 Example 2:
 
-  ./configure --disable-fast CFLAGS=-O3 FFLAGS=-O3 CXXFLAGS=-O3 F90FLAGS=-O3
+  ./configure --disable-fast CFLAGS=-O3 FFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3
 
 This will cause the MPICH2 libraries to be built with -O3, and -O3
 will be included in the mpicc and other MPI wrapper script.
@@ -549,11 +549,11 @@ command-line for MPICH2:
   CC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
   CXX=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-g++ \
   F77=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
-  F90=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
+  FC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
   CFLAGS="-mcpu=450fp2" \
   CXXFLAGS="-mcpu=450fp2" \
   FFLAGS="-mcpu=450fp2" \
-  F90FLAGS="-mcpu=450fp2" \
+  FCFLAGS="-mcpu=450fp2" \
   AR=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ar \
   LD=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ld \
   MSGLAYER_INCLUDE="-I${DRIVER_PATH}/comm/include" \
