@@ -97,7 +97,7 @@ extern char *HYD_dbg_prefix;
             HYDU_ERR_SETANDJUMP(status, error, __VA_ARGS__);            \
     }
 
-#if defined ENABLE_WARNINGS || !defined COMPILER_ACCEPTS_VA_ARGS
+#if defined ENABLE_WARNINGS
 #define HYDU_warn_printf HYDU_error_printf
 #else
 #define HYDU_warn_printf(...)

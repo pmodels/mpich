@@ -33,6 +33,7 @@ AM_PROG_MKDIR_P
 AC_PROG_INSTALL
 PAC_ARG_CACHING
 PAC_ARG_STRICT
+PAC_C_MACRO_VA_ARGS
 PAC_C_GNU_ATTRIBUTE
 PAC_CC_FUNCTION_NAME_SYMBOL
 
@@ -544,30 +545,6 @@ AC_MSG_RESULT($enable_profiling)
 if test "$enable_profiling" = "yes"; then
    AC_DEFINE(ENABLE_PROFILING,1,[Define if profiling enabled])
 fi
-
-
-#########################################################################
-# Check if __VA_ARGS__ is defined by the compiler
-#########################################################################
-AC_MSG_CHECKING([whether the compiler allows __VA_ARGS__])
-rm -f conftest.c
-cat > conftest.c <<EOF
-#include <stdio.h>
-#define my_print(...) printf(__VA_ARGS__)
-int main()
-{
-    my_print("woohoo!");
-    return 0;
-}
-EOF
-pac_tmp_compile='$CC $CFLAGS conftest.c -o conftest'
-if AC_TRY_EVAL(pac_tmp_compile) && test -s conftest ; then
-   AC_MSG_RESULT(yes)
-else
-   AC_MSG_RESULT(no)
-   AC_ERROR([Hydra needs a compiler that supports __VA_ARGS__])
-fi
-rm -f conftest*
 
 
 #########################################################################

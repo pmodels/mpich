@@ -67,6 +67,10 @@
 #error "hydra requires gettimeofday support"
 #endif /* HAVE_GETTIMEOFDAY */
 
+#if !defined HAVE_MACRO_VA_ARGS
+#error "hydra requires VA_ARGS support"
+#endif /* HAVE_MACRO_VA_ARGS */
+
 #if defined MAXHOSTNAMELEN
 #define MAX_HOSTNAME_LEN MAXHOSTNAMELEN
 #else
