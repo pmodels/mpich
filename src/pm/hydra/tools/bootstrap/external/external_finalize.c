@@ -6,20 +6,22 @@
 
 #include "hydra_utils.h"
 #include "bsci.h"
-#include "ssh.h"
+#include "external.h"
 
-HYD_status HYDT_bscd_ssh_finalize(void)
+HYD_status HYDT_bscd_external_finalize(void)
 {
     struct HYDT_bscd_ssh_time *e, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    for (e = HYDT_bscd_ssh_time; e;) {
-        HYDU_FREE(e->hostname);
-        tmp = e->next;
-        HYDU_FREE(e);
-        e = tmp;
+    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+        for (e = HYDT_bscd_ssh_time; e;) {
+            HYDU_FREE(e->hostname);
+            tmp = e->next;
+            HYDU_FREE(e);
+            e = tmp;
+        }
     }
 
     HYDU_FUNC_EXIT();

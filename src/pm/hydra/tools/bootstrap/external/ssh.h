@@ -16,6 +16,10 @@
 #define SSH_LIMIT 8
 #define SSH_LIMIT_TIME 15
 
+#define older(a,b) \
+    ((((a).tv_sec < (b).tv_sec) ||                                      \
+      (((a).tv_sec == (b).tv_sec) && ((a).tv_usec < (b).tv_usec))) ? 1 : 0)
+
 struct HYDT_bscd_ssh_time {
     char *hostname;
     struct timeval init_time[SSH_LIMIT];
@@ -24,11 +28,6 @@ struct HYDT_bscd_ssh_time {
 
 extern struct HYDT_bscd_ssh_time *HYDT_bscd_ssh_time;
 
-HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
-                                      int *control_fd, int enable_stdin,
-                                      HYD_status(*stdout_cb) (void *buf, int buflen),
-                                      HYD_status(*stderr_cb) (void *buf, int buflen));
-HYD_status HYDT_bscd_ssh_finalize(void);
-HYD_status HYDT_bscd_ssh_query_env_inherit(const char *env_name, int *ret);
+HYD_status HYDT_bscd_ssh_store_launch_time(char *hostname);
 
 #endif /* SSH_H_INCLUDED */

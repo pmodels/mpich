@@ -7,82 +7,9 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
-#include "ssh.h"
-
-#define older(a,b) \
-    ((((a).tv_sec < (b).tv_sec) ||                                      \
-      (((a).tv_sec == (b).tv_sec) && ((a).tv_usec < (b).tv_usec))) ? 1 : 0)
+#include "external.h"
 
 static int fd_stdin, fd_stdout, fd_stderr;
-
-static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
-{
-    int i;
-    struct HYDT_bscd_ssh_time *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_MALLOC((*e), struct HYDT_bscd_ssh_time *, sizeof(struct HYDT_bscd_ssh_time), status);
-
-    (*e)->hostname = HYDU_strdup(hostname);
-    for (i = 0; i < SSH_LIMIT; i++) {
-        (*e)->init_time[i].tv_sec = 0;
-        (*e)->init_time[i].tv_usec = 0;
-    }
-    (*e)->next = NULL;
-
-    if (HYDT_bscd_ssh_time == NULL)
-        HYDT_bscd_ssh_time = (*e);
-    else {
-        for (tmp = HYDT_bscd_ssh_time; tmp->next; tmp = tmp->next);
-        tmp->next = (*e);
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status store_launch_time(struct HYDT_bscd_ssh_time *e)
-{
-    int i, oldest, time_left;
-    struct timeval now;
-    HYD_status status = HYD_SUCCESS;
-
-    /* Search for an unset element to store the current time */
-    for (i = 0; i < SSH_LIMIT; i++) {
-        if (e->init_time[i].tv_sec == 0 && e->init_time[i].tv_usec == 0) {
-            gettimeofday(&e->init_time[i], NULL);
-            goto fn_exit;
-        }
-    }
-
-    /* No free element found; wait for the oldest element to turn
-     * older */
-    oldest = 0;
-    for (i = 0; i < SSH_LIMIT; i++)
-        if (older(e->init_time[i], e->init_time[oldest]))
-            oldest = i;
-
-    gettimeofday(&now, NULL);
-    time_left = SSH_LIMIT_TIME - now.tv_sec + e->init_time[oldest].tv_sec;
-
-    /* A better approach will be to make progress here, but that would
-     * mean that we need to deal with nested calls to the demux engine
-     * and process launches. */
-    if (time_left > 0)
-        sleep(time_left);
-
-    /* Store the current time in the oldest element */
-    gettimeofday(&e->init_time[oldest], NULL);
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
 
 static HYD_status is_local_host(char *host, int *bool)
 {
@@ -110,17 +37,16 @@ static HYD_status is_local_host(char *host, int *bool)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
-                                      int *control_fd, int enable_stdin,
-                                      HYD_status(*stdout_cb) (void *buf, int buflen),
-                                      HYD_status(*stderr_cb) (void *buf, int buflen))
+HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
+                                           int *control_fd, int enable_stdin,
+                                           HYD_status(*stdout_cb) (void *buf, int buflen),
+                                           HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
     int *pid, *fd_list;
     int sockpair[2];
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL;
-    struct HYDT_bscd_ssh_time *e;
     struct HYD_env *env = NULL;
     HYD_status status = HYD_SUCCESS;
 
@@ -137,7 +63,7 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
         if (!path)
             path = HYDU_strdup("/usr/bin/ssh");
     }
-    else {
+    else if (!strcmp(HYDT_bsci_info.bootstrap, "rsh")) {
         if (!path)
             path = HYDU_find_full_path("rsh");
         if (!path)
@@ -198,18 +124,15 @@ HYD_status HYDT_bscd_ssh_launch_procs(char **args, struct HYD_node *node_list,
         targs[idx] = HYDU_int_to_str(i);
         targs[idx + 1] = NULL;
 
-        /* Store the launch time */
-        for (e = HYDT_bscd_ssh_time; e; e = e->next)
-            if (!strcmp(node->hostname, e->hostname))
-                break;
-
-        if (e == NULL) {        /* Couldn't find an element for this host */
-            status = create_element(node->hostname, &e);
-            HYDU_ERR_POP(status, "unable to create ssh time element\n");
+        /* ssh has many types of security controls that do not allow a
+         * user to ssh to the same node multiple times very
+         * quickly. If this happens, the ssh daemons disables ssh
+         * connections causing the job to fail. This is basically a
+         * hack to slow down ssh connections to the same node. */
+        if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+            status = HYDT_bscd_ssh_store_launch_time(node->hostname);
+            HYDU_ERR_POP(status, "error storing launch time\n");
         }
-
-        status = store_launch_time(e);
-        HYDU_ERR_POP(status, "error storing launch time\n");
 
         status = is_local_host(node->hostname, &lh);
         HYDU_ERR_POP(status, "error checking if node is localhost\n");

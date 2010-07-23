@@ -139,26 +139,31 @@ fi
 #########################################################################
 # Check what bootstrap server we should use
 #########################################################################
-AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh, rsh, fork, slurm, persist)],
+AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh,rsh,fork,slurm,persist)],
 		    [ hydra_bss=$withval ],
-		    [ hydra_bss="ssh,slurm,persist" ])
+		    [ hydra_bss="ssh,rsh,fork,slurm,persist" ])
 AC_MSG_CHECKING(boot-strap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
-hydra_bss_ssh=false
-hydra_bss_slurm=false
+hydra_bss_external=false
 hydra_bss_persist=false
 for hydra_bss_name in ${hydra_bss_names}; do
     case "$hydra_bss_name" in
-        ssh|rsh|fork)
-		if test "$hydra_bss_ssh" = "false" ; then
-		   hydra_bss_ssh=true
-		   available_bss=`echo $available_bss ssh`
-		fi
-		;;		
+    	ssh)
+		hydra_bss_external=true
+		available_bss=`echo $available_bss ssh`
+		;;
+    	rsh)
+		hydra_bss_external=true
+		available_bss=`echo $available_bss rsh`
+		;;
+    	fork)
+		hydra_bss_external=true
+		available_bss=`echo $available_bss fork`
+		;;
 	slurm)
-		hydra_bss_slurm=true
+		hydra_bss_external=true
 		available_bss=`echo $available_bss slurm`
 		;;
 	persist)
@@ -195,8 +200,7 @@ AM_SUBST_NOTMAKE(hydra_bss_init_array)
 AC_SUBST(hydra_bss_init_decl)
 AC_SUBST(hydra_bss_name_array)
 AC_SUBST(hydra_bss_init_array)
-AM_CONDITIONAL([hydra_bss_ssh], [$hydra_bss_ssh])
-AM_CONDITIONAL([hydra_bss_slurm], [$hydra_bss_slurm])
+AM_CONDITIONAL([hydra_bss_external], [$hydra_bss_external])
 AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
 
 AC_DEFINE_UNQUOTED(HYDRA_BSS_NAMES,"$hydra_bss_names",[Definition of enabled bootstrap servers])
