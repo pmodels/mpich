@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include "hydra_config.h"
 
+#if defined NEEDS_POSIX_FOR_SIGACTION
+#define _POSIX_SOURCE
+#endif /* NEEDS_POSIX_FOR_SIGACTION */
+
 #if defined HAVE_WINDOWS_H
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
