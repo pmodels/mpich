@@ -14,11 +14,10 @@ static HYD_status external_init(void)
 
     HYDU_FUNC_ENTER();
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh") || !strcmp(HYDT_bsci_info.bootstrap, "rsh") ||
-        !strcmp(HYDT_bsci_info.bootstrap, "fork") || !strcmp(HYDT_bsci_info.bootstrap, "lsf"))
-        HYDT_bsci_fns.launch_procs = HYDT_bscd_external_launch_procs;
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "slurm"))
+    if (!strcmp(HYDT_bsci_info.bootstrap, "slurm"))
         HYDT_bsci_fns.launch_procs = HYDT_bscd_slurm_launch_procs;
+    else
+        HYDT_bsci_fns.launch_procs = HYDT_bscd_external_launch_procs;
 
     if (!strcmp(HYDT_bsci_info.bootstrap, "ssh"))
         HYDT_bsci_fns.finalize = HYDT_bscd_external_finalize;
