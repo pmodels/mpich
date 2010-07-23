@@ -115,7 +115,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
             } else {
                 int cleanup_errno = MPI_SUCCESS;
                 MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                 cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
                 if (cleanup_errno) MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                 goto fn_fail;
@@ -276,7 +276,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                     else {
                         int cleanup_errno = MPI_SUCCESS;
                         MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                         cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
                         if (cleanup_errno) MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                         goto fn_fail;
@@ -414,7 +414,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
                 else {
                     int cleanup_errno = MPI_SUCCESS;
                     MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                     cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc); /* ignoring return code */
                     if (cleanup_errno) MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                     goto fn_fail;
@@ -547,7 +547,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                     else {
                         int cleanup_errno = MPI_SUCCESS;
                         MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                         cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
                         if (cleanup_errno) MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                         goto fn_fail;
@@ -703,7 +703,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                     else {
                         int cleanup_errno = MPI_SUCCESS;
                         MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
-                        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", strerror (errno));
+                        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                         cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
                         if (cleanup_errno) MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                         goto fn_fail;

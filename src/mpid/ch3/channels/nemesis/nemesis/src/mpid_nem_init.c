@@ -89,7 +89,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     publish_bc_orig = bc_val;
 
     ret = gethostname (MPID_nem_hostname, MAX_HOSTNAME_LEN);
-    MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d", strerror (errno), errno);
+    MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d", MPIU_Strerror (errno), errno);
 
     MPID_nem_hostname[MAX_HOSTNAME_LEN-1] = '\0';
 

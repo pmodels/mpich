@@ -26,7 +26,7 @@ int MPID_nem_tcp_finalize(void)
     if (MPID_nem_tcp_g_lstn_sc.fd)
     {
         CHECK_EINTR (ret, close(MPID_nem_tcp_g_lstn_sc.fd));
-        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**closesocket", "**closesocket %s %d", errno, strerror (errno));
+        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**closesocket", "**closesocket %s %d", errno, MPIU_Strerror (errno));
     }
         
  fn_exit:

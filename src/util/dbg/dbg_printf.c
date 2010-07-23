@@ -843,10 +843,10 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
     
     fd = mkstemp(temp_filename);
-    MPIU_ERR_CHKANDJUMP1(fd == -1, mpi_errno, MPI_ERR_OTHER, "**mkstemp", "**mkstemp %s", strerror(errno));
+    MPIU_ERR_CHKANDJUMP1(fd == -1, mpi_errno, MPI_ERR_OTHER, "**mkstemp", "**mkstemp %s", MPIU_Strerror(errno));
 
     *dbg_fp = fdopen(fd, "a+");
-    MPIU_ERR_CHKANDJUMP1(*dbg_fp == NULL, mpi_errno, MPI_ERR_OTHER, "**fdopen", "**fdopen %s", strerror(errno));
+    MPIU_ERR_CHKANDJUMP1(*dbg_fp == NULL, mpi_errno, MPI_ERR_OTHER, "**fdopen", "**fdopen %s", MPIU_Strerror(errno));
     
  fn_exit:
     return mpi_errno;
@@ -881,10 +881,10 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
     
     ret_errno = _mktemp_s(temp_filename, MAXPATHLEN);
-    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**mktemp_s", "**mktemp_s %s", strerror(ret_errno));
+    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**mktemp_s", "**mktemp_s %s", MPIU_Strerror(ret_errno));
 
     ret_errno = fopen_s(dbg_fp, temp_filename, "a+");
-    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**fopen_s", "**fopen_s %s", strerror(ret_errno));
+    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**fopen_s", "**fopen_s %s", MPIU_Strerror(ret_errno));
     
  fn_exit:
     return mpi_errno;
@@ -914,10 +914,10 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     char *cret;
 
     cret = tmpnam(temp_filename);
-    MPIU_ERR_CHKANDJUMP1(cret == NULL, mpi_errno, MPI_ERR_OTHER, "**tmpnam", "**tmpnam %s", strerror(errno));
+    MPIU_ERR_CHKANDJUMP1(cret == NULL, mpi_errno, MPI_ERR_OTHER, "**tmpnam", "**tmpnam %s", MPIU_Strerror(errno));
 
     *dbg_fp = fopen(temp_filename, "w");
-    MPIU_ERR_CHKANDJUMP1(*dbg_fp == NULL, mpi_errno, MPI_ERR_OTHER, "**fopen", "**fopen %s", strerror(errno));    
+    MPIU_ERR_CHKANDJUMP1(*dbg_fp == NULL, mpi_errno, MPI_ERR_OTHER, "**fopen", "**fopen %s", MPIU_Strerror(errno));    
     
  fn_exit:
     return mpi_errno;

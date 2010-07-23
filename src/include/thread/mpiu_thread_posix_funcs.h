@@ -132,7 +132,7 @@ do {                                                               \
     err__ = pthread_mutex_lock(mutex_ptr_);                     \
     if (err__)                                                  \
     {                                                           \
-        MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex lock error: %s", strerror(err__));       \
+        MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex lock error: %s", MPIU_Strerror(err__));       \
         MPIU_Internal_sys_error_printf("pthread_mutex_lock", err__,\
                                        "    %s:%d\n", __FILE__, __LINE__);\
     }                                                          \
@@ -167,7 +167,7 @@ do {                                                               \
     err__ = pthread_mutex_unlock(mutex_ptr_);                   \
     if (err__)                                                  \
     {                                                           \
-        MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex unlock error: %s", strerror(err__));     \
+        MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex unlock error: %s", MPIU_Strerror(err__));     \
         MPIU_Internal_sys_error_printf("pthread_mutex_unlock", err__,         \
                                        "    %s:%d\n", __FILE__, __LINE__);    \
     }                                                           \
@@ -201,7 +201,7 @@ do {                                                                    \
     err__ = pthread_mutex_trylock(mutex_ptr_);                       \
     if (err__ && err__ != EBUSY)                                     \
     {                                                                \
-        MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex trylock error: %s", strerror(err__));    \
+        MPIU_DBG_MSG_S(THREAD,TYPICAL,"  mutex trylock error: %s", MPIU_Strerror(err__));    \
         MPIU_Internal_sys_error_printf("pthread_mutex_trylock", err__,\
                                        "    %s:%d\n", __FILE__, __LINE__);\
     }                                                                \

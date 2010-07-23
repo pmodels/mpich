@@ -234,7 +234,7 @@ void MPIU_DBG_PrintVCState(MPIDI_VC_t *vc);
  else { \
     printf( "[%d]%s returned %d (errno = %d,%s)\n", \
           MPIR_Process.comm_world->rank, \
-          #b_, a_, errno, strerror(errno));\
+          #b_, a_, errno, MPIU_Strerror(errno));\
     };           fflush(stdout);}
 #else
 #define MPIU_SYSCALL(a_,b_,c_) a_ = b_ c_
