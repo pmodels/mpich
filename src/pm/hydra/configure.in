@@ -139,9 +139,9 @@ fi
 #########################################################################
 # Check what bootstrap server we should use
 #########################################################################
-AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh,rsh,fork,slurm,persist)],
+AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh,rsh,fork,slurm,lsf,persist)],
 		    [ hydra_bss=$withval ],
-		    [ hydra_bss="ssh,rsh,fork,slurm,persist" ])
+		    [ hydra_bss="ssh,rsh,fork,slurm,lsf,persist" ])
 AC_MSG_CHECKING(boot-strap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -165,6 +165,10 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	slurm)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss slurm`
+		;;
+	lsf)
+		hydra_bss_external=true
+		available_bss=`echo $available_bss lsf`
 		;;
 	persist)
 		hydra_bss_persist=true
@@ -211,9 +215,9 @@ AC_SUBST(hydra_bss_names)
 #########################################################################
 # Check what resource management kernel we should use
 #########################################################################
-AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk=name - Resource Management Kernel (pbs, sge, lsf)],
+AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk=name - Resource Management Kernel (pbs, sge)],
 		    [ hydra_rmk=$withval ],
-		    [ hydra_rmk="dummy,pbs,sge,lsf" ])
+		    [ hydra_rmk="dummy,pbs,sge" ])
 AC_MSG_CHECKING(resource management kernel)
 AC_MSG_RESULT($hydra_rmk)
 hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -232,10 +236,6 @@ for hydra_rmk_name in ${hydra_rmk_names}; do
 	sge)
 		hydra_rmk_sge=true
 		available_rmk=`echo $available_rmk sge`
-		;;
-	lsf)
-		hydra_rmk_lsf=true
-		available_rmk=`echo $available_rmk lsf`
 		;;
 	*)
 		;;
@@ -274,7 +274,6 @@ AC_SUBST(hydra_rmk_name_array)
 AC_SUBST(hydra_rmk_init_array)
 AM_CONDITIONAL([hydra_rmk_pbs], [$hydra_rmk_pbs])
 AM_CONDITIONAL([hydra_rmk_sge], [$hydra_rmk_sge])
-AM_CONDITIONAL([hydra_rmk_lsf], [$hydra_rmk_lsf])
 
 
 #########################################################################

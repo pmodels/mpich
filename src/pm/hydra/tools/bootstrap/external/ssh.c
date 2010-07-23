@@ -9,6 +9,8 @@
 #include "bscu.h"
 #include "ssh.h"
 
+struct HYDT_bscd_ssh_time *HYDT_bscd_ssh_time = NULL;
+
 static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
 {
     int i;

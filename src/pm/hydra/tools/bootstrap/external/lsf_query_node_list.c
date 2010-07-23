@@ -4,11 +4,12 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_base.h"
-#include "rmki.h"
-#include "rmk_lsf.h"
+#include "hydra_utils.h"
+#include "bsci.h"
+#include "bscu.h"
+#include "lsf.h"
 
-HYD_status HYDT_rmkd_lsf_query_node_list(struct HYD_node **node_list)
+HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list)
 {
     char *hosts, *hostname, *num_procs_str;
     int num_procs;
@@ -39,10 +40,10 @@ HYD_status HYDT_rmkd_lsf_query_node_list(struct HYD_node **node_list)
         }
     }
 
-  fn_exit:
+fn_exit:
     HYDU_FUNC_EXIT();
     return status;
 
-  fn_fail:
+fn_fail:
     goto fn_exit;
 }

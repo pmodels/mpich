@@ -69,6 +69,21 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         if (!path)
             path = HYDU_strdup("/usr/bin/rsh");
     }
+    else if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+        char *bin_dir = NULL;
+        int length;
+
+        MPL_env2str("LSF_BINDIR", (const char **) &bin_dir);
+        if (bin_dir) {
+            length = strlen(bin_dir) + 2 + strlen("blaunch");
+            HYDU_MALLOC(path, char *, length, status);
+            MPL_snprintf(path, length, "%s/blaunch", bin_dir);
+        }
+        if (!path)
+            path = HYDU_find_full_path("blaunch");
+        if (!path)
+            path = HYDU_strdup("/usr/bin/blaunch");
+    }
 
     idx = 0;
     targs[idx++] = HYDU_strdup(path);
@@ -81,6 +96,9 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
             targs[idx++] = HYDU_strdup("-x");
         else    /* default mode is disable X */
             targs[idx++] = HYDU_strdup("-x");
+    }
+    else if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+        targs[idx++] = HYDU_strdup("-n");
     }
 
     host_idx = idx++;   /* Hostname will come here */
