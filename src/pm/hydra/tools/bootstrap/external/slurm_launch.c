@@ -66,7 +66,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     int num_hosts, idx, i, fd;
     int *pid, *fd_list;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
-    char *path = NULL;
+    char *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
@@ -103,6 +103,15 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
 
     targs[idx++] = HYDU_strdup("-n");
     targs[idx++] = HYDU_int_to_str(num_hosts);
+
+    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
+    if (extra_arg_list) {
+        extra_arg = strtok(extra_arg_list, " ");
+        while (extra_arg) {
+            targs[idx++] = HYDU_strdup(extra_arg);
+            extra_arg = strtok(NULL, " ");
+        }
+    }
 
     /* Fill in the remaining arguments */
     for (i = 0; args[i]; i++)

@@ -46,7 +46,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     int *pid, *fd_list;
     int sockpair[2];
     struct HYD_node *node;
-    char *targs[HYD_NUM_TMP_STRINGS], *path = NULL;
+    char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_env *env = NULL;
     HYD_status status = HYD_SUCCESS;
 
@@ -87,6 +87,15 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
 
     idx = 0;
     targs[idx++] = HYDU_strdup(path);
+
+    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
+    if (extra_arg_list) {
+        extra_arg = strtok(extra_arg_list, " ");
+        while (extra_arg) {
+            targs[idx++] = HYDU_strdup(extra_arg);
+            extra_arg = strtok(NULL, " ");
+        }
+    }
 
     /* Allow X forwarding only if explicitly requested */
     if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
