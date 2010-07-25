@@ -197,9 +197,11 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         }
 
         /* The stdin pointer will be some value for process_id 0; for
-         * everyone else, it's NULL. */
+         * everyone else, it's a dummy value. We don't just pass it
+         * NULL, as older versions of ssh seem to freak out when no
+         * stdin socket is provided. */
         status = HYDU_create_process(targs + offset, env,
-                                     ((i == 0 && enable_stdin) ? &fd_stdin : NULL),
+                                     ((i == 0 && enable_stdin) ? &fd_stdin : &fd),
                                      &fd_stdout, &fd_stderr,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
