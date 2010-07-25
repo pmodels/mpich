@@ -43,7 +43,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
                                            HYD_status(*stderr_cb) (void *buf, int buflen))
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
-    int *pid, *fd_list;
+    int *pid, *fd_list, *dummy;
     int sockpair[2];
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
@@ -187,9 +187,18 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
                 status = HYDU_sock_cloexec(control_fd[i]);
                 HYDU_ERR_POP(status, "unable to set control socket to close on exec\n");
             }
+
+            dummy = NULL;
         }
-        else
+        else {
             offset = 0;
+
+            /* dummy is NULL only when ssh is actually being used */
+            if (!strcmp(HYDT_bsci_info.bootstrap, "ssh"))
+                dummy = &fd;
+            else
+                dummy = NULL;
+        }
 
         if (HYDT_bsci_info.debug) {
             HYDU_dump(stdout, "Launch arguments: ");
@@ -201,7 +210,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
         status = HYDU_create_process(targs + offset, env,
-                                     ((i == 0 && enable_stdin) ? &fd_stdin : &fd),
+                                     ((i == 0 && enable_stdin) ? &fd_stdin : dummy),
                                      &fd_stdout, &fd_stderr,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
