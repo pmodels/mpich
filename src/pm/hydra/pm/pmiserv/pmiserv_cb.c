@@ -203,10 +203,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
          * users */
         HYDU_dump(stderr, "connection to proxy terminated unexpectedly\n");
 
-        /* allocate an exit status for the proxy, so we don't wait for it */
-        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
-        for (i = 0; i < proxy->proxy_process_count; i++)
-            proxy->exit_status[i] = 0;
+        /* clean up the proxy connection */
         status = cleanup_proxy_connection(fd, proxy);
         HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
 

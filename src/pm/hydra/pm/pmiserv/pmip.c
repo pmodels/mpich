@@ -200,7 +200,7 @@ int main(int argc, char **argv)
         status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
                                    HYD_pmcd_pmip.upstream.server_port,
                                    &HYD_pmcd_pmip.upstream.control);
-        HYDU_ERR_POP(status, "unable to connect to server %s at port %d\n",
+        HYDU_ERR_POP(status, "unable to connect to server %s at port %d (check for firewalls!)\n",
                       HYD_pmcd_pmip.upstream.server_name, HYD_pmcd_pmip.upstream.server_port);
     }
 

@@ -83,6 +83,23 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                 status = HYDT_dmx_wait_for_event(time_left);
                 HYDU_ERR_POP(status, "error waiting for event\n");
 
+                /* Check if any processes terminated badly; if they
+                 * did, return an error. */
+                pid = waitpid(-1, &ret, WNOHANG);
+                if (pid > 0) {
+                    /* Find the pid and mark it as complete */
+                    for (i = 0; i < HYD_bscu_pid_count; i++)
+                        if (HYD_bscu_pid_list[i] == pid) {
+                            HYD_bscu_pid_list[i] = -1;
+                            break;
+                        }
+
+                    if (ret) {
+                        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                            "one of the processes terminated badly; timing out\n");
+                    }
+                }
+
                 goto restart_wait;
             }
             else
