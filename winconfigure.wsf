@@ -3314,6 +3314,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef MPISGI */")
 				Case "MPI_OFFSET_IS_INT"
 					fout.WriteLine("/* #undef MPI_OFFSET_IS_INT */")
+				Case "SIZEOF_MPI_OFFSET"
+					fout.WriteLine("/* #undef SIZEOF_MPI_OFFSET */")
 				Case "NEEDS_FSYNC_DECL"
 					fout.WriteLine("/* #undef NEEDS_FSYNC_DECL */")
 				Case "NEEDS_FTRUNCATE_DECL"
