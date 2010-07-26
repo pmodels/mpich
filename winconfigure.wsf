@@ -1990,45 +1990,48 @@ Function ReplaceAts( str, use_f77, b64 )
 					str = Replace(str, "@F77_MPI_OFFSET@", "INTEGER (KIND=8)")
 				End If
 			' FIXME: The size of int,... could depend on compiler options
-                        ' These defns, *F90*, are specific to the Intel Fortran Compiler on Windows.
+                        ' These defns, *FC*, are specific to the Intel Fortran Compiler on Windows.
                         ' These values may not work for say gfortran
                         ' We should have a way to override these values
-			Case "@SIZEOF_F90_INTEGER@"
+			Case "@SIZEOF_FC_INTEGER@"
 				If b64 then
-					str = Replace(str, "@SIZEOF_F90_INTEGER@", "4")
+					str = Replace(str, "@SIZEOF_FC_INTEGER@", "4")
 				Else
-					str = Replace(str, "@SIZEOF_F90_INTEGER@", "4")
+					str = Replace(str, "@SIZEOF_FC_INTEGER@", "4")
 				End If
-			Case "@SIZEOF_F90_REAL@"
+			Case "@SIZEOF_FC_REAL@"
 				If b64 then
-					str = Replace(str, "@SIZEOF_F90_REAL@", "4")
+					str = Replace(str, "@SIZEOF_FC_REAL@", "4")
 				Else
-					str = Replace(str, "@SIZEOF_F90_REAL@", "4")
+					str = Replace(str, "@SIZEOF_FC_REAL@", "4")
 				End If
-			Case "@SIZEOF_F90_CHARACTER@"
+			Case "@SIZEOF_FC_CHARACTER@"
 				If b64 then
-					str = Replace(str, "@SIZEOF_F90_CHARACTER@", "1")
+					str = Replace(str, "@SIZEOF_FC_CHARACTER@", "1")
 				Else
-					str = Replace(str, "@SIZEOF_F90_CHARACTER@", "1")
+					str = Replace(str, "@SIZEOF_FC_CHARACTER@", "1")
 				End If
-			Case "@SIZEOF_F90_DOUBLE_PRECISION@"
+			Case "@SIZEOF_FC_DOUBLE_PRECISION@"
 				If b64 then
-					str = Replace(str, "@SIZEOF_F90_DOUBLE_PRECISION@", "8")
+					str = Replace(str, "@SIZEOF_FC_DOUBLE_PRECISION@", "8")
 				Else
-					str = Replace(str, "@SIZEOF_F90_DOUBLE_PRECISION@", "8")
+					str = Replace(str, "@SIZEOF_FC_DOUBLE_PRECISION@", "8")
 				End If
                         ' Fortran real model in "precision, range" format
-                        Case "@F90_REAL_MODEL@"
-                            str = Replace(str, "@F90_REAL_MODEL@", "6 , 37")
+                        Case "@FC_REAL_MODEL@"
+                            str = Replace(str, "@FC_REAL_MODEL@", "6 , 37")
                         ' Fortran double model in "precision, range" format
-                        Case "@F90_DOUBLE_MODEL@"
-                            str = Replace(str, "@F90_DOUBLE_MODEL@", "15 , 307")
+                        Case "@FC_DOUBLE_MODEL@"
+                            str = Replace(str, "@FC_DOUBLE_MODEL@", "15 , 307")
+                        ' Fortran integer range
+                        Case "@FC_INTEGER_MODEL@"
+                            str = Replace(str, "@FC_INTEGER_MODEL@", "9")
                         ' Fortran integer model in "range1, kind1, range2, kind2, ..." format
-                        Case "@F90_INTEGER_MODEL@"
-                            str = Replace(str, "@F90_INTEGER_MODEL@", "2 , 1 , 4 , 2 , 9 , 4 , 18 , 8 ,")
+                        Case "@FC_ALL_INTEGER_MODELS@"
+                            str = Replace(str, "@FC_ALL_INTEGER_MODELS@", "2 , 1 , 4 , 2 , 9 , 4 , 18 , 8 ,")
                         ' Fortran integer model map in "{range1, kind1, size1}, {range2, kind2, size2}..." format
-                        Case "@F90_INTEGER_MODEL_MAP@"
-                            str = Replace(str, "@F90_INTEGER_MODEL_MAP@", "{ 2 , 1 , 1 }, { 4 , 2 , 2 }, { 9 , 4 , 4 }, { 18 , 8 , 8 },")
+                        Case "@FC_INTEGER_MODEL_MAP@"
+                            str = Replace(str, "@FC_INTEGER_MODEL_MAP@", "{ 2 , 1 , 1 }, { 4 , 2 , 2 }, { 9 , 4 , 4 }, { 18 , 8 , 8 },")
 			' REQD = (Real EQuals Double precision) ? "!" : ""
 			Case "@REQD@"
 				str = Replace(str, "@REQD@", "")
@@ -2133,11 +2136,11 @@ Function ReplaceAts( str, use_f77, b64 )
 			Case "@FFLAGS@"
 				' FIXME: Not the complete list of FFLAGS --- only some listed
 				str = Replace(str, "@FFLAGS@", "/names:lowercase /iface:cref /assume:underscore")
-			Case "@F90@"
-				str = Replace(str, "@F90@", "ifort.exe")
-			Case "@F90FLAGS@"
-				' FIXME: Not the complete list of F90FLAGS --- only some listed
-				str = Replace(str, "@F90FLAGS@", "/names:lowercase /iface:cref /assume:underscore")
+			Case "@FC@"
+				str = Replace(str, "@FC@", "ifort.exe")
+			Case "@FCFLAGS@"
+				' FIXME: Not the complete list of FCFLAGS --- only some listed
+				str = Replace(str, "@FCFLAGS@", "/names:lowercase /iface:cref /assume:underscore")
 			Case "@MPICH2_VERSION@"
 				str = Replace(str, "@MPICH2_VERSION@", mpich2Version)
 			Case "@MPICH2_NUMVERSION@"
@@ -3593,8 +3596,8 @@ Sub AddDefinitions( fout, filename, b64 )
 				Case "HAVE_DOUBLE_ALIGNMENT_EXCEPTION"
 					' FIXME: Doesn't windows 64-bit have alignment exception ? 
 					fout.WriteLine("#undef HAVE_DOUBLE_ALIGNMENT_EXCEPTION")
-				Case "HAVE_F90_TYPE_ROUTINES"
-					fout.WriteLine("#define HAVE_F90_TYPE_ROUTINES")
+				Case "HAVE_FC_TYPE_ROUTINES"
+					fout.WriteLine("#define HAVE_FC_TYPE_ROUTINES")
 				Case "HAVE_GETPID"
 					fout.WriteLine("#undef HAVE_GETPID")
 				Case "HAVE_MPICHCONF"
