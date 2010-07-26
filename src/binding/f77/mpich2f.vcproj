@@ -5447,6 +5447,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\reduce_localf.c"
+				>
+			</File>
+			<File
 				RelativePath=".\reducef.c"
 				>
 			</File>
