@@ -104,6 +104,9 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
 	       esac
 	   done
 
+           dnl Add option to disable configure options checking
+           pac_subconfig_args="$pac_subconfig_args --disable-option-checking"
+
 	   AC_MSG_NOTICE([executing: $pac_subconfigure_file $pac_subconfig_args])
 	   if (cd $1 && eval $pac_subconfigure_file $pac_subconfig_args) ; then
 	      $3
