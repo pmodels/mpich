@@ -57,8 +57,11 @@ int MPIR_Cancel_impl(MPID_Request *request_ptr)
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		} else {
 		    /* This is needed for persistent Bsend requests */
+                    /* FIXME why do we directly access the partner request's
+                     * cc field?  shouldn't our cc_ptr be set to the address
+                     * of the partner req's cc field? */
                     mpi_errno = MPIR_Grequest_cancel(request_ptr->partner_request,
-                                                     (request_ptr->partner_request->cc == 0));
+                                                     MPID_cc_is_complete(&request_ptr->partner_request->cc));
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		}
 	    } else {
@@ -80,7 +83,7 @@ int MPIR_Cancel_impl(MPID_Request *request_ptr)
 
 	case MPID_UREQUEST:
 	{
-            mpi_errno = MPIR_Grequest_cancel(request_ptr, (request_ptr->cc == 0));
+            mpi_errno = MPIR_Grequest_cancel(request_ptr, MPID_cc_is_complete(&request_ptr->cc));
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    break;
 	}

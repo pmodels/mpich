@@ -105,13 +105,13 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
 
     /* ... body of routine ...  */
 
-    if (*request_ptr->cc_ptr != 0) {
+    if (!MPID_Request_is_complete(request_ptr)) {
 	/* request not complete. poke the progress engine. Req #3130 */
 	mpi_errno = MPID_Progress_test();
 	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     }
     
-    if (*request_ptr->cc_ptr == 0)
+    if (MPID_Request_is_complete(request_ptr))
     {
 	switch(request_ptr->kind)
 	{

@@ -75,7 +75,7 @@ int MPID_Isend(const void * buf, int count, MPI_Datatype datatype, int rank,
     if (rank == MPI_PROC_NULL)
     {
 	MPIU_Object_set_ref(sreq, 1);
-	sreq->cc = 0;
+        MPID_cc_set(&sreq->cc, 0);
 	goto fn_exit;
     }
 

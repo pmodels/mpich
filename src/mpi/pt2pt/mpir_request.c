@@ -21,12 +21,12 @@ int MPIR_Progress_wait_request(MPID_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if ((*(req)->cc_ptr) != 0)
+    if (!MPID_Request_is_complete(req))
     {
         MPID_Progress_state progress_state;
 
         MPID_Progress_start(&progress_state);
-        while ((*(req)->cc_ptr) != 0)
+        while (!MPID_Request_is_complete(req))
         {
             mpi_errno = MPID_Progress_wait(&progress_state);
             if (mpi_errno != MPI_SUCCESS)
@@ -96,7 +96,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 		MPID_Request * prequest_ptr = request_ptr->partner_request;
 
 		/* reset persistent request to inactive state */
-		request_ptr->cc = 0;
+                MPID_cc_set(&request_ptr->cc, 0);
 		request_ptr->cc_ptr = &request_ptr->cc;
 		request_ptr->partner_request = NULL;
 		
@@ -174,7 +174,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 		MPID_Request * prequest_ptr = request_ptr->partner_request;
 
 		/* reset persistent request to inactive state */
-		request_ptr->cc = 0;
+                MPID_cc_set(&request_ptr->cc, 0);
 		request_ptr->cc_ptr = &request_ptr->cc;
 		request_ptr->partner_request = NULL;
 		
@@ -565,7 +565,7 @@ int MPIR_Grequest_progress_poke(int count,
      * request classes those grequests are members of */
     for (i=0, j=0, n_classes=1, n_native=0, n_greq=0; i< count; i++)
     {
-	if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0) continue;
+	if (request_ptrs[i] == NULL || MPID_Request_is_complete(request_ptrs[i])) continue;
 	if (request_ptrs[i]->kind == MPID_UREQUEST)
 	{
 	    n_greq += 1;
@@ -590,7 +590,7 @@ int MPIR_Grequest_progress_poke(int count,
 	{
 	    if (request_ptrs[i] != NULL && 
                 request_ptrs[i]->kind == MPID_UREQUEST && 
-                *request_ptrs[i]->cc_ptr != 0 &&
+                !MPID_Request_is_complete(request_ptrs[i]) &&
                 request_ptrs[i]->poll_fn != NULL)
             {
 		mpi_errno = (request_ptrs[i]->poll_fn)(request_ptrs[i]->grequest_extra_state, &(array_of_statuses[i]));
@@ -680,7 +680,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
     {
         /* skip over requests we're not interested in */
         if (request_ptrs[i] == NULL ||
-            *request_ptrs[i]->cc_ptr == 0 ||
+            MPID_Request_is_complete(request_ptrs[i]) ||
             request_ptrs[i]->kind != MPID_UREQUEST ||
             request_ptrs[i]->wait_fn == NULL)
         {
@@ -689,21 +689,25 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
 
         mpi_error = (request_ptrs[i]->wait_fn)(1, &request_ptrs[i]->grequest_extra_state, 0, NULL);
         if (mpi_error) MPIU_ERR_POP(mpi_error);
-        MPIU_Assert(*request_ptrs[i]->cc_ptr == 0);
+        MPIU_Assert(MPID_Request_is_complete(request_ptrs[i]));
     }
 
     MPID_Progress_start(&progress_state);
     for (i = 0; i < count; ++i)
     {
-        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 || request_ptrs[i]->kind != MPID_UREQUEST)
+        if (request_ptrs[i] == NULL ||
+            MPID_Request_is_complete(request_ptrs[i]) ||
+            request_ptrs[i]->kind != MPID_UREQUEST)
+        {
             continue;
+        }
         /* We have a greq that doesn't have a wait function; some other
            thread will cause completion via MPI_Grequest_complete().  Rather
            than waste the time by simply yielding the processor to the
            other thread, we'll make progress on regular requests too.  The
            progress engine should permit the other thread to run at some
            point. */
-        while (*request_ptrs[i]->cc_ptr != 0)
+        while (MPID_Request_is_complete(request_ptrs[i]))
         {
             mpi_error = MPID_Progress_wait(&progress_state);
             if (mpi_error != MPI_SUCCESS)

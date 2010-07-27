@@ -78,7 +78,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
 	MPID_Request_release(rreq);
 	/* sreq has never been seen by the user or outside this thread, so it is safe to reset ref_count and cc */
 	MPIU_Object_set_ref(sreq, 1);
-	sreq->cc = 0;
+        MPID_cc_set(&sreq->cc, 0);
     }
     else
     {
@@ -115,7 +115,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
 	    
 	    /* sreq has never been seen by the user or outside this thread, so it is safe to reset ref_count and cc */
 	    MPIU_Object_set_ref(sreq, 1);
-	    sreq->cc = 0;
+            MPID_cc_set(&sreq->cc, 0);
 	    /* --END ERROR HANDLING-- */
 	}
 	    

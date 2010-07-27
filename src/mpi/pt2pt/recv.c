@@ -144,12 +144,12 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     
     /* If a request was returned, then we need to block until the request is 
        complete */
-    if ((*(request_ptr)->cc_ptr) != 0)
+    if (!MPID_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
 	    
 	MPID_Progress_start(&progress_state);
-	while((*(request_ptr)->cc_ptr) != 0)
+        while (!MPID_Request_is_complete(request_ptr))
 	{
 	    /* MT: Progress_wait may release the SINGLE_CS while it
 	       waits */

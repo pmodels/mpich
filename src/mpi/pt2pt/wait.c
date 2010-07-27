@@ -104,12 +104,12 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 
     /* ... body of routine ... */
     
-    if ((*(request_ptr)->cc_ptr) != 0)
+    if (!MPID_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
 	    
 	MPID_Progress_start(&progress_state);
-	while((*(request_ptr)->cc_ptr) != 0)
+        while (!MPID_Request_is_complete(request_ptr))
 	{
 	    mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
 	    if (request_ptr->kind == MPID_UREQUEST && 

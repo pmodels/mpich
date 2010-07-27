@@ -150,6 +150,8 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+
+    /* MT FIXME this routine is not thread-safe in the non-global case */
     
     lrequest_ptr = MPID_Request_create();
     /* --BEGIN ERROR HANDLING-- */
@@ -166,7 +168,7 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
     lrequest_ptr->kind                 = MPID_UREQUEST;
     MPIU_Object_set_ref( lrequest_ptr, 1 );
     lrequest_ptr->cc_ptr               = &lrequest_ptr->cc;
-    lrequest_ptr->cc                   = 1;
+    MPID_cc_set(lrequest_ptr->cc_ptr, 1);
     lrequest_ptr->comm                 = NULL;
     lrequest_ptr->cancel_fn            = cancel_fn;
     lrequest_ptr->free_fn              = free_fn;

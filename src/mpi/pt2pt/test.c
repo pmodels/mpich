@@ -128,7 +128,7 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
 	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     }
     
-    if (*request_ptr->cc_ptr == 0)
+    if (MPID_Request_is_complete(request_ptr))
     {
 	mpi_errno = MPIR_Request_complete(request, request_ptr, status, 
 					  &active_flag);

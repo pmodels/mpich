@@ -731,6 +731,71 @@ enum MPIU_Nest_mutexes {
     } while (0);                                               \
     MPIU_THREAD_CHECK_END
 
+
+/* MT FIXME the following description is almost right, but it needs minor
+ * updates and revision to account for the COMPLETION CS and other issues in the
+ * request */
+/* The fine-grained locking discipline for requests is unfortunately complicated:
+ *
+ * (1) Raw allocation and deallocation of requests is protected internally by
+ * the HANDLEALLOC critical section.  This is currently the same as the HANDLE
+ * CS, not sure why we have both...
+ *
+ * (2) Once allocated, a directly allocated request is intially held exclusively
+ * by a single thread.  Direct allocation is common for send requests, but recv
+ * requests are usually created differently.
+ *
+ * (3) Most receive requests are created as the result of a call to FDP_or_AEU
+ * or FDU_or_AEP.  Calls to these functions (along with the other receive queue
+ * functions) must be inside a MSGQUEUE CS.  This CS protects the queue data
+ * structures as well as any fields inside the requests while they are in the
+ * queue.  For example, assume a call to FDU_or_AEP, as in MPID_Recv.  If the
+ * FDU case hits, the MSGQUEUE CS may be released immediately after the call.
+ * If the AEP case hits, however, the MSGQUEUE CS must remain held until any
+ * request field manipulation (such as dev.recv_pending_count) is complete.
+ *
+ * (4) In both the send and receive request cases, there is usually a particular
+ * thread in some upper-level code (e.g. MPI_Send) with interest in the
+ * completion of the request.  This may or may not be a thread that is also
+ * making progress on this request (often not).  The upper level code must not
+ * attempt to access any request fields (such as the status) until completion is
+ * signalled by the lower layer.
+ *
+ * (5) Once removed from the receive queue, the request is once again
+ * exclusively owned by the dequeuing thread.  From here, the dequeuing thread
+ * may do whatever it wants with the request without holding any CS, until it
+ * signals the request's completion.  Signalling completion indicates that the
+ * thread in the upper layer polling on it may access the rest of the fields in
+ * the request.  This completion signalling is lock-free and must be implemented
+ * carefully to work correctly in the face of optimizing compilers and CPUs.
+ * The upper-level thread now wholly owns the request until it is deallocated.
+ *
+ * (6) In ch3:nemesis at least, multithreaded access to send requests is managed
+ * by the MPIDCOMM (progress engine) CS.  The completion signalling pattern
+ * applies here (think MPI_Isend/MPI_Wait).
+ *
+ * (7) Request cancellation is tricky-ish.  For send cancellation, it is
+ * possible that the completion counter is actually *incremented* because a
+ * pkt is sent to the recipient asking for remote cancellation.  By asking for
+ * cancellation (of any kind of req), the upper layer gives up its exclusive
+ * access to the request and must wait for the completion counter to drop to 0
+ * before exclusively accessing the request fields.
+ *
+ * The completion counter is a reference count, much like the object liveness
+ * reference count.  However it differs from a normal refcount because of
+ * guarantees in the MPI Standard.  Applications must not attempt to complete
+ * (wait/test/free) a given request concurrently in two separate threads.  So
+ * checking for cc==0 is safe because only one thread is ever allowed to make
+ * that check.
+ *
+ * A non-zero completion count must always be accompanied by a normal reference
+ * that is logically held by the progress engine.  Similarly, once the
+ * completion counter drops to zero, the progress engine is expected to release
+ * its reference.
+ */
+/* lock ordering: if MPIDCOMM+MSGQUEUE must be aquired at the same time, then
+ * the order should be to acquire MPIDCOMM first, then MSGQUEUE.  Release in
+ * reverse order. */
 #define MPIU_THREAD_CS_ENTER_MSGQUEUE(context_)           \
     do {                                                  \
         MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(msgq_mutex) \
@@ -805,6 +870,108 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_EXIT(_name,_context)
 #define MPIU_THREAD_CS_YIELD(_name,_context)
 #endif /* MPICH_IS_THREADED */
+
+
+/* define a type for the completion counter */
+#if defined(MPICH_IS_THREADED)
+# if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+
+/* memory barriers aren't needed in this impl, because all access to completion
+ * counters is done while holding the ALLFUNC critical section */
+typedef volatile int MPID_cc_t;
+#  define MPID_cc_set(cc_ptr_, val_) (*(cc_ptr_)) = (val_)
+#  define MPID_cc_is_complete(cc_ptr_) (0 == *(cc_ptr_))
+#define MPID_cc_decr(cc_ptr_, incomplete_)     \
+do {                                           \
+    *(incomplete_) = --(*(req_)->cc_ptr);      \
+} while (0)
+#define MPID_cc_incr(cc_ptr_, was_incomplete_) \
+do {                                           \
+    *(was_incomplete_) = (*(req_)->cc_ptr)++;  \
+} while (0)
+
+# elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+
+typedef OPA_int_t MPID_cc_t;
+
+/* implies no barrier, since this routine should only be used for request
+ * initialization */
+static inline void MPID_cc_set(MPID_cc_t *cc_ptr, int val)
+{
+    if (val == 0) {
+        /* values other than 0 do not enforce any ordering, and therefore do not
+         * start a HB arc */
+        /* MT FIXME using cc_set in this way is sloppy.  Sometimes the caller
+         * really does know that the cc value may cleared, but more likely this
+         * is just a hack to avoid the work of figuring out what the cc value
+         * currently is and decrementing it instead. */
+        /* barrier ensures that any state written before indicating completion is
+         * seen by the thread polling on the cc.  If OPA adds store-release
+         * semantics, we can convert to that instead. */
+        OPA_write_barrier();
+        MPL_VG_ANNOTATE_HAPPENS_BEFORE(cc_ptr);
+    }
+#if defined(MPL_VG_AVAILABLE)
+    /* MT subtle: store_int is actually safe to use, but Helgrind/DRD/TSan all
+     * view the store/load pair as a race.  Using an atomic operation for the
+     * store side makes all three happy.  DRD & TSan also support
+     * ANNOTATE_BENIGN_RACE, but Helgrind does not. */
+    OPA_swap_int(cc_ptr, val);
+#else
+    OPA_store_int(cc_ptr, val);
+#endif
+}
+
+ATTRIBUTE((unused))
+static MPIU_DBG_INLINE_KEYWORD int MPID_cc_is_complete(MPID_cc_t *cc_ptr)
+{
+    int complete;
+    complete = (0 == OPA_load_int(cc_ptr));
+    if (complete) {
+        MPL_VG_ANNOTATE_HAPPENS_AFTER(cc_ptr);
+        OPA_read_barrier();
+    }
+    return complete;
+}
+
+/* incomplete_==TRUE iff the cc > 0 after the decr */
+#define MPID_cc_decr(cc_ptr_, incomplete_)                                  \
+    do {                                                                    \
+        OPA_write_barrier();                                                \
+        MPL_VG_ANNOTATE_HAPPENS_BEFORE(cc_ptr_);                            \
+        *(incomplete_) = !OPA_decr_and_test_int(cc_ptr_);                   \
+        /* TODO check if this HA is actually necessary */                   \
+        if (!*(incomplete_)) {                                              \
+            MPL_VG_ANNOTATE_HAPPENS_AFTER(cc_ptr_);                         \
+        }                                                                   \
+    } while (0)
+
+/* MT FIXME does this need a HB/HA annotation?  This macro is only used for
+ * cancel_send right now. */
+/* was_incomplete_==TRUE iff the cc==0 before the decr */
+#define MPID_cc_incr(cc_ptr_, was_incomplete_)                              \
+    do {                                                                    \
+        *(was_incomplete_) = OPA_fetch_and_incr_int(cc_ptr_);               \
+    } while (0)
+
+# else
+#  error "unexpected thread granularity"
+# endif /* granularity */
+#else /* !defined(MPICH_IS_THREADED) */
+
+typedef int MPID_cc_t;
+# define MPID_cc_set(cc_ptr_, val_) (*(cc_ptr_)) = (val_)
+# define MPID_cc_is_complete(cc_ptr_) (0 == *(cc_ptr_))
+#define MPID_cc_decr(cc_ptr_, incomplete_)     \
+do {                                           \
+    *(incomplete_) = --(*(req_)->cc_ptr);      \
+} while (0)
+#define MPID_cc_incr(cc_ptr_, was_incomplete_) \
+do {                                           \
+    *(was_incomplete_) = (*(req_)->cc_ptr)++;  \
+} while (0)
+
+#endif /* defined(MPICH_IS_THREADED) */
 
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
 

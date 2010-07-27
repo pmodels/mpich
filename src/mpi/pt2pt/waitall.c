@@ -186,7 +186,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
         }
         
         /* wait for ith request to complete */
-        while (*request_ptrs[i]->cc_ptr != 0)
+        while (!MPID_Request_is_complete(request_ptrs[i]))
         {
             /* generalized requests should already be finished */
             MPIU_Assert(request_ptrs[i]->kind != MPID_UREQUEST);

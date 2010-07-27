@@ -228,7 +228,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		{
 		    if (requests[i] != NULL)
 		    {
-			if (*(requests[i]->cc_ptr) != 0)
+			if (!MPID_Request_is_complete(requests[i]))
 			{
 			    done = 0;
 			    break;
@@ -1182,7 +1182,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    {
 		if (requests[i] != NULL)
 		{
-		    if (*(requests[i]->cc_ptr) != 0)
+		    if (!MPID_Request_is_complete(requests[i]))
 		    {
 			done = 0;
 			break;
@@ -1721,7 +1721,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 	    {
 		if (requests[i] != NULL)
 		{
-		    if (*(requests[i]->cc_ptr) != 0)
+		    if (!MPID_Request_is_complete(requests[i]))
 		    {
 			done = 0;
 			break;
@@ -1932,12 +1932,12 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
     }
 
     if (request != NULL) {
-	if (*(request->cc_ptr) != 0)
+	if (!MPID_Request_is_complete(request))
         {
 	    MPID_Progress_state progress_state;
 	    
             MPID_Progress_start(&progress_state);
-	    while (*(request->cc_ptr) != 0)
+	    while (!MPID_Request_is_complete(request))
             {
                 mpi_errno = MPID_Progress_wait(&progress_state);
                 /* --BEGIN ERROR HANDLING-- */
@@ -2050,12 +2050,12 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
     }
 
     /* now wait for the data to arrive */
-    if (*(rreq->cc_ptr) != 0)
+    if (!MPID_Request_is_complete(rreq))
     {
 	MPID_Progress_state progress_state;
 	
 	MPID_Progress_start(&progress_state);
-	while (*(rreq->cc_ptr) != 0)
+	while (!MPID_Request_is_complete(rreq))
         {
             mpi_errno = MPID_Progress_wait(&progress_state);
             /* --BEGIN ERROR HANDLING-- */

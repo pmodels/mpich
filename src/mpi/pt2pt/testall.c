@@ -169,7 +169,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 			    &(array_of_statuses[i]));
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
-	if (request_ptrs[i] != NULL && *request_ptrs[i]->cc_ptr == 0)
+	if (request_ptrs[i] != NULL && MPID_Request_is_complete(request_ptrs[i]))
 	{
 	    n_completed++;
 	    if (MPIR_Request_get_error(request_ptrs[i]) != MPI_SUCCESS)
@@ -186,7 +186,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 	{
 	    if (request_ptrs[i] != NULL)
 	    {
-		if (*request_ptrs[i]->cc_ptr == 0) 
+                if (MPID_Request_is_complete(request_ptrs[i]))
 		{
 		    n_completed ++;
 		    status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;

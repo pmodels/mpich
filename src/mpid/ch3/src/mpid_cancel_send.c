@@ -73,7 +73,8 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	    sreq->status.cancelled = TRUE;
 	    /* no other thread should be waiting on sreq, so it is safe to 
 	       reset ref_count and cc */
-	    sreq->cc = 0;
+            MPID_cc_set(&sreq->cc, 0);
+            /* FIXME should be a decr and assert, not a set */
 	    MPIU_Object_set_ref(sreq, 1);
 	}
 	else
@@ -127,7 +128,8 @@ int MPID_Cancel_send(MPID_Request * sreq)
 		    sreq->status.cancelled = TRUE;
 		    /* no other thread should be waiting on sreq, so it is 
 		       safe to reset ref_count and cc */
-		    sreq->cc = 0;
+                    MPID_cc_set(&sreq->cc, 0);
+                    /* FIXME should be a decr and assert, not a set */
 		    MPIU_Object_set_ref(sreq, 1);
 		    goto fn_exit;
 		}
@@ -141,7 +143,8 @@ int MPID_Cancel_send(MPID_Request * sreq)
 		sreq->status.cancelled = TRUE;
 		/* no other thread should be waiting on sreq, so it is safe to 
 		   reset ref_count and cc */
-		sreq->cc = 0;
+                MPID_cc_set(&sreq->cc, 0);
+                /* FIXME should be a decr and assert, not a set */
 		MPIU_Object_set_ref(sreq, 1);
 		goto fn_exit;
 	    }

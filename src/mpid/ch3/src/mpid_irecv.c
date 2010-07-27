@@ -30,8 +30,9 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	rreq = MPID_Request_create();
 	if (rreq != NULL)
 	{
+            /* MT FIXME should these be handled by MPID_Request_create? */
 	    MPIU_Object_set_ref(rreq, 1);
-	    rreq->cc = 0;
+            MPID_cc_set(&rreq->cc, 0);
 	    rreq->kind = MPID_REQUEST_RECV;
 	    MPIR_Status_set_procnull(&rreq->status);
 	}

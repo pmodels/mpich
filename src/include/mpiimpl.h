@@ -1290,6 +1290,10 @@ typedef void (MPIR_Grequest_f77_cancel_function)(void *, int*, int *);
 typedef void (MPIR_Grequest_f77_free_function)(void *, int *); 
 typedef void (MPIR_Grequest_f77_query_function)(void *, MPI_Status *, int *); 
 
+
+/* see mpiimplthread.h for the def of MPID_cc_t and related functions/macros */
+#define MPID_Request_is_complete(req_) (MPID_cc_is_complete((req_)->cc_ptr))
+
 /*S
   MPID_Request - Description of the Request data structure
 
@@ -1309,11 +1313,11 @@ typedef struct MPID_Request {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Request_kind_t kind;
     /* completion counter */
-    volatile int cc;
+    MPID_cc_t cc;
     /* pointer to the completion counter */
     /* This is necessary for the case when an operation is described by a 
        list of requests */
-    int volatile *cc_ptr;
+    MPID_cc_t *cc_ptr;
     /* A comm is needed to find the proper error handler */
     MPID_Comm *comm;
     /* Status is needed for wait/test/recv */

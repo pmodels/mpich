@@ -238,12 +238,12 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         /* --END ERROR HANDLING-- */
     }
 
-    if (*sreq->cc_ptr != 0 || *rreq->cc_ptr != 0)
+    if (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq))
     {
         MPID_Progress_state progress_state;
 
         MPID_Progress_start(&progress_state);
-        while (*sreq->cc_ptr != 0 || *rreq->cc_ptr != 0)
+        while (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq))
         {
             mpi_errno = MPID_Progress_wait(&progress_state);
             if (mpi_errno != MPI_SUCCESS)
@@ -508,12 +508,12 @@ int MPIC_Wait(MPID_Request * request_ptr)
     MPIDI_STATE_DECL(MPID_STATE_MPIC_WAIT);
 
     MPIDI_PT2PT_FUNC_ENTER(MPID_STATE_MPIC_WAIT);
-    if ((*(request_ptr)->cc_ptr) != 0)
+    if (!MPID_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
 	
 	MPID_Progress_start(&progress_state);
-	while((*(request_ptr)->cc_ptr) != 0)
+        while (!MPID_Request_is_complete(request_ptr))
 	{
 	    mpi_errno = MPID_Progress_wait(&progress_state);
 	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }

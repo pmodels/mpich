@@ -172,31 +172,21 @@ extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
 
 /*
  * Request utility macros (public - can be used in MPID macros)
- *
- * MT: The inc/dec of the completion counter must be atomic since the progress
- * engine could be completing the request in one
- * thread and the application could be cancelling the request in another 
- * thread.
  */
-/* NOTE: If a fine-grain thread sync model is used, this macro will need 
-   to ensure that it is thread-atomic */
 
 /* SHMEM: In the case of a single-threaded shmem channel sharing requests 
    between processes, a write barrier must be performed
-   before decrementing the completion counter.  This insures that other fields
+   before decrementing the completion counter.  This ensures that other fields
    in the req structure are updated before the
    completion is signalled.  How should that be incorporated into this code 
    from the channel level? */
-#define MPIDI_CH3U_Request_decrement_cc(req_, incomplete_)	\
-{								\
-    *(incomplete_) = --(*(req_)->cc_ptr);			\
-}
-
-
-#define MPIDI_CH3U_Request_increment_cc(req_, was_incomplete_)	\
-{								\
-    *(was_incomplete_) = (*(req_)->cc_ptr)++;			\
-}
+/* The above comment is accurate, although we do not currently have any channels
+ * that do this.  Memory barriers are included in fine-grained multithreaded
+ * versions of the MPID_cc_incr/decr macros. */
+#define MPIDI_CH3U_Request_decrement_cc(req_, incomplete_)   \
+    MPID_cc_decr((req_)->cc_ptr, incomplete_)
+#define MPIDI_CH3U_Request_increment_cc(req_, was_incomplete_)   \
+    MPID_cc_incr((req_)->cc_ptr, was_incomplete_)
 
 /*
  * Device level request management macros
@@ -220,7 +210,7 @@ extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
 /* MPID_Request_set_completed (the function) is defined in ch3u_request.c */
 #define MPID_REQUEST_SET_COMPLETED(req_)	\
 {						\
-    *(req_)->cc_ptr = 0;			\
+    MPID_cc_set((req_)->cc_ptr, 0);             \
     MPIDI_CH3_Progress_signal_completion();	\
 }
 
