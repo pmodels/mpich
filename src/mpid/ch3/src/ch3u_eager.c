@@ -269,6 +269,10 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
     if (sreq != NULL) {
 	/*printf( "Surprise, did not complete send of eagershort (starting connection?)\n" ); 
 	  fflush(stdout); */
+        /* MT FIXME setting fields in the request after it has been given to the
+         * progress engine is racy.  The start call above is protected by
+         * CH3COMM:vc CS, but the progress engine is protected by MPIDCOMM.  So
+         * we can't just extend CH3COMM below this point... what's the fix? */
 	MPIDI_Request_set_seqnum(sreq, seqnum);
 	MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
     }
