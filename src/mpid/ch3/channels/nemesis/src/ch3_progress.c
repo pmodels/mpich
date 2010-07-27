@@ -30,6 +30,10 @@ extern MPID_Request ** const MPID_Recvq_posted_tail_ptr;
 extern MPID_Request ** const MPID_Recvq_unexpected_tail_ptr;
 #endif
 
+/* MT any races on this var reported by DRD/helgrind/TSan are probably bugs.
+ * This var is protected by the COMPLETION critical section in non-global mode. */
+/* FIXME volatile is probably unnecessary, access is arbitrated entirely by
+ * mutex, but the decl is shared among channels */
 volatile unsigned int MPIDI_CH3I_progress_completion_count = 0;
 
 /* NEMESIS MULTITHREADING: Extra Data Structures Added */
@@ -71,7 +75,6 @@ static qn_ent_t *qn_head = NULL;
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
-    unsigned completions = MPIDI_CH3I_progress_completion_count;
     int mpi_errno = MPI_SUCCESS;
     int complete;
 #if !defined(ENABLE_NO_YIELD) || defined(MPICH_IS_THREADED)
@@ -81,8 +84,12 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
 
-    MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,"before outer while loop, completions=%d",completions);
+    /* sanity: if this doesn't hold, we can't track our local view of completion safely */
+    if (is_blocking) {
+        MPIU_Assert(progress_state != NULL);
+    }
 
 #ifdef ENABLE_CHECKPOINTING
     if (MPIDI_nem_ckpt_start_checkpoint) {
@@ -96,7 +103,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 #endif
-    
+
     do
     {
 	MPID_Request        *sreq;
@@ -258,7 +265,16 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     if (MPIDI_CH3I_progress_blocked == TRUE && is_blocking && !MPID_nem_local_lmt_pending)
                     {
                         /* There's nothing to send and there's another thread already blocking in the progress engine.*/
-                        MPIDI_CH3I_Progress_delay(MPIDI_CH3I_progress_completion_count);
+                        MPIDI_CH3I_Progress_delay(progress_state->ch.completion_count);
+
+                        /* MT FIXME performance: if _delay took the progress
+                         * state or just the counter-by-reference, we could
+                         * update it while we already hold the lock in _delay
+                         * and not reacquire it here */
+                        MPIU_THREAD_CS_ENTER(COMPLETION,);
+                        /* reset for the next iteration */
+                        progress_state->ch.completion_count = MPIDI_CH3I_progress_completion_count;
+                        MPIU_THREAD_CS_EXIT(COMPLETION,);
                     }
                 }
                 MPIU_THREAD_CHECK_END;
@@ -396,26 +412,34 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        MPIU_DBG_MSG_FMT(CH3_PROGRESS,VERBOSE,(MPIU_DBG_FDEST,"end of outer while loop, completions=%d MPIDI_CH3I_progress_completion_count=%d",completions,MPIDI_CH3I_progress_completion_count));
+        /* in the case of progress_wait, bail out if anything completed */
+        if (is_blocking) {
+            int made_progress = FALSE;
+            MPIU_THREAD_CS_ENTER(COMPLETION,);
+            if (progress_state->ch.completion_count != MPIDI_CH3I_progress_completion_count) {
+                made_progress = TRUE;
+                /* reset for the next iteration */
+                progress_state->ch.completion_count = MPIDI_CH3I_progress_completion_count;
+            }
+            MPIU_THREAD_CS_EXIT(COMPLETION,);
+            if (made_progress) break;
+        }
     }
-    while (completions == MPIDI_CH3I_progress_completion_count && is_blocking);
+    while (is_blocking);
 
 #ifdef MPICH_IS_THREADED
     MPIU_THREAD_CHECK_BEGIN;
     {
         if (is_blocking)
         {
-            MPIDI_CH3I_Progress_continue(MPIDI_CH3I_progress_completion_count);
+            MPIDI_CH3I_Progress_continue(0/*unused*/);
         }
     }
     MPIU_THREAD_CHECK_END;
 #endif
 
  fn_exit:
-    /* Reset the progress state so it is fresh for the next iteration */
-    if (progress_state)
-        progress_state->ch.completion_count = MPIDI_CH3I_progress_completion_count;
-
+    MPIU_THREAD_CS_EXIT(MPIDCOMM,);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS);
     return mpi_errno;
  fn_fail:
@@ -438,9 +462,18 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
-	while (completion_count == MPIDI_CH3I_progress_completion_count && MPIDI_CH3I_progress_blocked == TRUE)
+	while (1)
 	{
-	    MPID_Thread_cond_wait(&MPIDI_CH3I_progress_completion_cond, &MPIR_ThreadInfo.global_mutex);
+            /* we also currently hold the MPIDCOMM CS */
+            MPIU_THREAD_CS_ENTER(COMPLETION,);
+            if (completion_count != MPIDI_CH3I_progress_completion_count ||
+                MPIDI_CH3I_progress_blocked != TRUE)
+            {
+                MPIU_THREAD_CS_EXIT(COMPLETION,);
+                break;
+            }
+            MPIU_THREAD_CS_EXIT(COMPLETION,);
+	    MPID_Thread_cond_wait(&MPIDI_CH3I_progress_completion_cond, &MPIR_ThreadInfo.global_mutex/*MPIDCOMM*/);
 	}
     }
 #   endif
@@ -464,6 +497,7 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
+        /* we currently hold the MPIDCOMM CS */
 	MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond);
     }
 #   endif

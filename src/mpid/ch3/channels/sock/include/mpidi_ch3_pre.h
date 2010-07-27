@@ -99,4 +99,13 @@ MPIDI_CH3I_Progress_state;
 
 #define MPIDI_CH3_PROGRESS_STATE_DECL MPIDI_CH3I_Progress_state ch;
 
+#ifdef MPICH_IS_THREADED
+#define MPIDI_CH3I_PROGRESS_WAKEUP                                                            \
+    if (MPIDI_CH3I_progress_blocked == TRUE && MPIDI_CH3I_progress_wakeup_signalled == FALSE) \
+    {                                                                                         \
+        MPIDI_CH3I_progress_wakeup_signalled = TRUE;                                          \
+        MPIDI_CH3I_Progress_wakeup();                                                         \
+    }                                                                                         \
+#endif
+
 #endif /* !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED) */

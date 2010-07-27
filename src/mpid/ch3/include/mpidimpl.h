@@ -265,7 +265,6 @@ extern MPIDI_Process_t MPIDI_Process;
 #  error MPIU_HANDLE_ALLOCATION_METHOD not defined
 #endif
 
-/* FIXME: This must be used within an MPIDCOMM critical section.  */
 #define MPIDI_CH3U_Request_complete(req_)			\
 {								\
     int incomplete__;						\
@@ -1192,11 +1191,12 @@ int MPIDI_CH3I_Progress_finalize(void);
 #ifndef MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT
 #define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT                                \
     do {                                                                         \
-        /* MT FIXME this is not atomic... will the MPID_cc_t type work here? */  \
+        MPIU_THREAD_CS_ENTER(COMPLETION,);                                       \
         ++MPIDI_CH3I_progress_completion_count;                                  \
         MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,                                     \
                      "just incremented MPIDI_CH3I_progress_completion_count=%d", \
                      MPIDI_CH3I_progress_completion_count);                      \
+        MPIU_THREAD_CS_EXIT(COMPLETION,);                                        \
     } while (0)
 #endif
 
@@ -1212,16 +1212,26 @@ int MPIDI_CH3I_Progress_finalize(void);
     extern volatile int MPIDI_CH3I_progress_blocked;
     extern volatile int MPIDI_CH3I_progress_wakeup_signalled;
 
+/* This allows the channel to hook the MPIDI_CH3_Progress_signal_completion
+ * macro when it is necessary to wake up some part of the progress engine from a
+ * blocking operation.  Currently ch3:sock uses it, ch3:nemesis does not. */
+/* MT alternative implementations of this macro are responsible for providing any
+ * synchronization (acquiring MPIDCOMM, etc) */
+#ifndef MPIDI_CH3I_PROGRESS_WAKEUP
+# define MPIDI_CH3I_PROGRESS_WAKEUP do {/*do nothing*/} while(0)
+#endif
+
     void MPIDI_CH3I_Progress_wakeup(void);
+    /* MT TODO profiling is needed here.  We currently protect the completion
+     * counter with the COMPLETION critical section, which could be a source of
+     * contention.  It should be possible to peform these updates atomically via
+     * OPA instead, but the additional complexity should be justified by
+     * profiling evidence.  [goodell@ 2010-06-29] */
 #   define MPIDI_CH3_Progress_signal_completion()			\
-    {									\
+    do {                                                                \
         MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT;                      \
-	if (MPIDI_CH3I_progress_blocked == TRUE && MPIDI_CH3I_progress_wakeup_signalled == FALSE)\
-	{								\
-	    MPIDI_CH3I_progress_wakeup_signalled = TRUE;		\
-	    MPIDI_CH3I_Progress_wakeup();				\
-	}								\
-    }
+        MPIDI_CH3I_PROGRESS_WAKEUP;                                     \
+    } while (0)
 #endif
 
 /* Function that may be used to provide business card info */
