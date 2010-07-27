@@ -2008,8 +2008,11 @@ int MPIR_Group_create( int, MPID_Group ** );
 int MPIR_Group_release(MPID_Group *group_ptr);
 
 int MPIR_dup_fn ( MPI_Comm, int, void *, void *, void *, int * );
+/* marks a request as complete, extracting the status */
 int MPIR_Request_complete(MPI_Request *, MPID_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPID_Request *);
+/* run the progress engine until the given request is complete */
+int MPIR_Progress_wait_request(MPID_Request *req);
 
 /* The following routines perform the callouts to the user routines registered
    as part of a generalized request.  They handle any language binding issues

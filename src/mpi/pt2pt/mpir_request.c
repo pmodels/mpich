@@ -8,6 +8,44 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Progress_wait_request
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+/*@
+  MPIR_Progress_wait_request
+
+  A helper routine that implements the very common case of running the progress
+  engine until the given request is complete.
+  @*/
+int MPIR_Progress_wait_request(MPID_Request *req)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if ((*(req)->cc_ptr) != 0)
+    {
+        MPID_Progress_state progress_state;
+
+        MPID_Progress_start(&progress_state);
+        while ((*(req)->cc_ptr) != 0)
+        {
+            mpi_errno = MPID_Progress_wait(&progress_state);
+            if (mpi_errno != MPI_SUCCESS)
+            {
+                /* --BEGIN ERROR HANDLING-- */
+                MPID_Progress_end(&progress_state);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                /* --END ERROR HANDLING-- */
+            }
+        }
+        MPID_Progress_end(&progress_state);
+    }
+fn_fail: /* no special err handling at this level */
+fn_exit:
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Request_complete
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
