@@ -125,6 +125,8 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_FU);
 
+    MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
+
     rreq = recvq_unexpected_head;
 
     match.parts.context_id = context_id;
@@ -197,6 +199,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_FDU);
 
+    MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
+
     matching_prev_rreq = NULL;
     matching_cur_rreq = NULL;
     prev_rreq = NULL;
@@ -267,6 +271,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_OR_AEP);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_OR_AEP);
+
+    MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
 
     /* Optimize this loop for an empty unexpected receive queue */
     rreq = recvq_unexpected_head;
@@ -475,6 +481,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_FDP_OR_AEU);
 
+    MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
+
  top_loop:
     prev_rreq = NULL;
 
@@ -624,6 +632,8 @@ int MPIDI_CH3U_Recvq_count_unexp(void)
 {
     int count = 0;
     MPID_Request *req = recvq_unexpected_head;
+
+    MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
 
     while (req)
     {
