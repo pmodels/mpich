@@ -21,7 +21,8 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* these are inline functions instead of macros to avoid some of the
  * MPIU_THREADPRIV_DECL scoping issues */
-static inline void
+MPIU_DBG_ATTRIBUTE_NOINLINE
+static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_enter_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                     const char *lockname,
                                     MPID_Thread_mutex_t *mutex)
@@ -41,7 +42,8 @@ MPIU_Thread_CS_enter_lockname_impl_(enum MPIU_Nest_mutexes kind,
 #define FUNCNAME MPIU_Thread_CS_exit_lockname_impl_
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline void
+MPIU_DBG_ATTRIBUTE_NOINLINE
+static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_exit_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                    const char *lockname,
                                    MPID_Thread_mutex_t *mutex)
@@ -61,7 +63,8 @@ MPIU_Thread_CS_exit_lockname_impl_(enum MPIU_Nest_mutexes kind,
 #define FUNCNAME MPIU_Thread_CS_yield_lockname_impl_
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline void
+MPIU_DBG_ATTRIBUTE_NOINLINE
+static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_yield_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                     const char *lockname,
                                     MPID_Thread_mutex_t *mutex)
