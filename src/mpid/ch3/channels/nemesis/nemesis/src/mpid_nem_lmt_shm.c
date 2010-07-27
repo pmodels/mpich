@@ -137,6 +137,19 @@ int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Req
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_SHM_INITIATE_LMT);
 
+    /* MT FIXME deadlock: we hold the LMT CS right now, the following macro
+     * unexpectedly acquires the MPIDCOMM CS.  The normal locking order is
+     * MPIDCOMM then LMT.  Possible fixes:
+     * 1) eliminate the "upcall" somehow
+     * 2) eliminate the LMT CS and protect it with the MPIDCOMM CS.
+     * 3) don't eliminate the upcall, but make it so that the upcall doesn't
+     * need the MPIDCOMM CS.
+     * 4) totally change the meaning and usage of the LMT CS so that it actually
+     * protects data rather than code, which is how it really should be.
+     *
+     * Options (2) is currently in use, the LMT CS has been made the same as the
+     * MPIDCOMM CS.
+     */
     MPID_nem_lmt_send_RTS(vc, rts_pkt, NULL, 0);
 
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);

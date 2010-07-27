@@ -82,7 +82,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     /* Make sure payload is aligned on a double */
     MPIU_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.mpich2.payload[0], sizeof(double)));
 
-
     /* Initialize the business card */
     mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -383,6 +382,11 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 	vc_ch->free_queue = NULL;
     }
 
+    /* MT we acquire the LMT CS here, b/c there is at least a theoretical race
+     * on some fields, such as lmt_copy_buf.  In practice it's not an issue, but
+     * this will keep DRD happy. */
+    MPIU_THREAD_CS_ENTER(LMT,);
+
     /* override rendezvous functions */
     vc->rndvSend_fn = MPID_nem_lmt_RndvSend;
     vc->rndvRecv_fn = MPID_nem_lmt_RndvRecv;
@@ -486,6 +490,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 /*         MPIU_Assert(vc_ch->iStartContigMsg && vc_ch->iSendContig && vc->sendNoncontig_fn); */
 
     }
+
+    MPIU_THREAD_CS_EXIT(LMT,);
 
     /* FIXME: ch3 assumes there is a field called sendq_head in the ch
        portion of the vc.  This is unused in nemesis and should be set

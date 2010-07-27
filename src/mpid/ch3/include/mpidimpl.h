@@ -1800,6 +1800,9 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 #define MPIU_THREAD_CS_ENTER_CH3COMM(context_)
 #define MPIU_THREAD_CS_EXIT_CH3COMM(context_)
 
+#define MPIU_THREAD_CS_ENTER_LMT(_context)
+#define MPIU_THREAD_CS_EXIT_LMT(_context)
+
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 
 #define MPIU_THREAD_CS_ENTER_POBJ_MUTEX(mutex_p_)                                                           \
@@ -1826,6 +1829,11 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
         if (MPIU_ISTHREADED)                                        \
             MPIU_THREAD_CS_EXIT_POBJ_MUTEX(&context_->pobj_mutex);  \
     } while (0)
+
+/* MT FIXME making LMT into MPIDCOMM for now because of overwhelming deadlock
+ * issues */
+#define MPIU_THREAD_CS_ENTER_LMT(context_) MPIU_THREAD_CS_ENTER_MPIDCOMM(context_)
+#define MPIU_THREAD_CS_EXIT_LMT(context_)  MPIU_THREAD_CS_EXIT_MPIDCOMM(context_)
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */

@@ -98,7 +98,9 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count, MP
     MPIDI_Pkt_set_seqnum(rts_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
 
+    MPIU_THREAD_CS_ENTER(LMT,);
     mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_initiate_lmt(vc, &upkt.p, sreq);
+    MPIU_THREAD_CS_EXIT(LMT,);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
@@ -162,6 +164,8 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     MPIDI_STATE_DECL(MPID_STATE_PKT_RTS_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_PKT_RTS_HANDLER);
+
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
 
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST, "received LMT RTS pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d, data_sz=" MPIDI_MSG_SZ_FMT,
                                         rts_pkt->sender_req_id, rts_pkt->match.parts.rank, rts_pkt->match.parts.tag, rts_pkt->match.parts.context_id,
@@ -249,6 +253,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
     MPIDI_FUNC_EXIT(MPID_STATE_PKT_RTS_HANDLER);
     return mpi_errno;
  fn_fail:
@@ -300,7 +305,9 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
             /* if whole cookie has been received, start the send */
             sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF = data_buf;
             sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = cts_pkt->cookie_len;
+            MPIU_THREAD_CS_ENTER(LMT,);
             mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_start_send(vc, sreq, sreq->ch.lmt_tmp_cookie);
+            MPIU_THREAD_CS_EXIT(LMT,);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
             sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
             *buflen = sizeof(MPIDI_CH3_Pkt_t) + cts_pkt->cookie_len;
@@ -328,7 +335,9 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     else
     {
         MPID_IOV cookie = {0,0};
+        MPIU_THREAD_CS_ENTER(LMT,);
         mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_start_send(vc, sreq, cookie);
+        MPIU_THREAD_CS_EXIT(LMT,);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
         *rreqp = NULL;
@@ -359,6 +368,8 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     MPID_Request_get_ptr(done_pkt->req_id, req);
 
+    MPIU_THREAD_CS_ENTER(LMT,);
+
     switch (MPIDI_Request_get_type(req))
     {
     case MPIDI_REQUEST_TYPE_RECV:
@@ -380,6 +391,7 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t
     *rreqp = NULL;
 
  fn_exit:
+    MPIU_THREAD_CS_EXIT(LMT,);
     MPIDI_FUNC_EXIT(MPID_STATE_PKT_DONE_HANDLER);
     return mpi_errno;
  fn_fail:
@@ -424,7 +436,9 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
 
             cookie.MPID_IOV_BUF = data_buf;
             cookie.MPID_IOV_LEN = cookie_pkt->cookie_len;
+            MPIU_THREAD_CS_ENTER(LMT,);
             mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_handle_cookie(vc, req, cookie);
+            MPIU_THREAD_CS_EXIT(LMT,);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             *rreqp = NULL;
@@ -452,7 +466,9 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
     {
         MPID_IOV cookie = {0,0};
 
+        MPIU_THREAD_CS_ENTER(LMT,);
         mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_handle_cookie(vc, req, cookie);
+        MPIU_THREAD_CS_EXIT(LMT,);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
         *rreqp = NULL;
@@ -496,7 +512,9 @@ static int do_cts(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 
     s_cookie = rreq->ch.lmt_tmp_cookie;
 
+    MPIU_THREAD_CS_ENTER(LMT,);
     mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_start_recv(vc, rreq, s_cookie);
+    MPIU_THREAD_CS_EXIT(LMT,);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* free cookie buffer allocated in RTS handler */
@@ -530,7 +548,9 @@ static int do_send(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 
     r_cookie = sreq->ch.lmt_tmp_cookie;
 
+    MPIU_THREAD_CS_ENTER(LMT,);
     mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_start_send(vc, sreq, r_cookie);
+    MPIU_THREAD_CS_EXIT(LMT,);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* free cookie buffer allocated in CTS handler */
@@ -561,7 +581,9 @@ static int do_cookie(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 
     cookie = req->ch.lmt_tmp_cookie;
 
+    MPIU_THREAD_CS_ENTER(LMT,);
     mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_handle_cookie(vc, req, cookie);
+    MPIU_THREAD_CS_EXIT(LMT,);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     /* free cookie buffer allocated in COOKIE handler */
