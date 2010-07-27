@@ -53,6 +53,11 @@ if test "$with_valgrind" != "no" ; then
     fi
     # headers for valgrind client requests
     AC_CHECK_HEADERS([valgrind.h memcheck.h valgrind/valgrind.h valgrind/memcheck.h])
+    # headers for valgrind-based thread checking tools
+    # TODO: incorporate ThreadSanitizer as well (include dynamic_annotations.h,
+    # link with dynamic_annotations.c)
+    AC_CHECK_HEADERS([helgrind.h valgrind/helgrind.h])
+    AC_CHECK_HEADERS([drd.h valgrind/drd.h])
 
     # ensure that we have a new enough valgrind with all the client macros
     # a preproc test would probably be sufficient, but the LINK_IFELSE helps us

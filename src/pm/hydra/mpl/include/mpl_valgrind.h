@@ -46,6 +46,74 @@
 #  endif
 #endif
 
+
+/* Valgrind-based thread checking tools:
+ *
+ * There are three main tools right now, Helgrind and DRD come in the standard
+ * Valgrind distribution, while ThreadSanitizer (tsan) requires a separate
+ * download.  All three tools are fairly similar, with a few variations.  They
+ * primarily check for data races by tracing the happens-before relation between
+ * memory accesses and synchronization primitives.  Helgrind also offers good
+ * pthread API usage checking and lock-order checking, which usually makes it
+ * the most useful tool of the group.  Unfortunately, Helgrind has the most
+ * limited support for client requests.
+ *
+ * All three tools are source-level compatible with the ANNOTATE_* set of macros
+ * defined by tsan.  However, they are not totally binary compatible, so a
+ * particular tool must usually be selected at compile time.  One exception to
+ * this is that modern-ish DRDs will usually understand Helgrind requests (but
+ * Helgrind won't understand DRD requests).
+ *
+ * To further complicate matters, Helgrind will issue warnings when a client
+ * request is encountered that it does not implement.  In particular, Helgrind
+ * does not support ANNOTATE_BENIGN_RACE or
+ * ANNOTATE_IGNORE_{READS,WRITES}_{BEGIN,END}, which makes it difficult to avoid
+ * emitting warning/error messages w.r.t. some kinds of lockfree
+ * synchronization.
+ *
+ * So for the moment, we only provide a minimal set of annotations that seems to
+ * be both common between the tools and useful in MPICH2.
+ */
+
+#define MPL_VG_THREAD_INVALID  0
+#define MPL_VG_THREAD_HELGRIND 1
+#define MPL_VG_THREAD_DRD      2
+#define MPL_VG_THREAD_TSAN     3
+
+/* TODO make this selectable by configure */
+/* default to helgrind for now, since DRD understands helgrind annotations, but
+ * not the other way around */
+#define MPL_VG_THREAD_TOOL MPL_VG_THREAD_HELGRIND
+
+
+#if defined(MPL_VG_AVAILABLE)
+#  if (MPL_VG_THREAD_TOOL == MPL_VG_THREAD_HELGRIND)
+#    if defined(MPL_HAVE_HELGRIND_H)
+#      include <helgrind.h>
+#      define MPL_VG_THREAD_TOOL_SUPPORTED_ 1
+#    elif defined(MPL_HAVE_VALGRIND_HELGRIND_H)
+#      include <valgrind/helgrind.h>
+#      define MPL_VG_THREAD_TOOL_SUPPORTED_ 1
+#    endif
+#  elif (MPL_VG_THREAD_TOOL == MPL_VG_THREAD_DRD)
+#    if defined(MPL_HAVE_DRD_H)
+#      include <drd.h>
+#      define MPL_VG_THREAD_TOOL_SUPPORTED_ 1
+#    elif defined(MPL_HAVE_VALGRIND_DRD_H)
+#      include <valgrind/drd.h>
+#      define MPL_VG_THREAD_TOOL_SUPPORTED_ 1
+#    endif
+#  elif (MPL_VG_THREAD_TOOL == MPL_VG_THREAD_TSAN)
+     /* support wouldn't be hard to add, but it does require additional build
+      * system work */
+#    error 'ThreadSanitizer not currently supported'
+#  else
+#    error 'unknown or unsupported tool'
+#  endif
+#else
+#  undef MPL_VG_THREAD_TOOL_SUPPORTED_ /*defensive*/
+#endif
+
 /* This is only a modest subset of all of the available client requests defined
    in the valgrind headers.  As MPICH2 is modified to use more of them, this
    list should be expanded appropriately. */
@@ -99,6 +167,17 @@ static inline void MPL_VG_printf_do_nothing_func(char *fmt, ...)
 #  define MPL_VG_MEMPOOL_FREE(pool, addr)             do {} while (0)
 
 #endif /* defined(MPL_VG_AVAILABLE) */
+
+#if defined(MPL_VG_THREAD_TOOL_SUPPORTED_)
+   /* could switch on tool type, but all three tools know about these annotations */
+#  define MPL_VG_ANNOTATE_HAPPENS_BEFORE(obj_)        ANNOTATE_HAPPENS_BEFORE(obj_)
+#  define MPL_VG_ANNOTATE_HAPPENS_AFTER(obj_)         ANNOTATE_HAPPENS_AFTER(obj_)
+#  define MPL_VG_ANNOTATE_NEW_MEMORY(obj_,size_)      ANNOTATE_NEW_MEMORY(obj_,size_)
+#else
+#  define MPL_VG_ANNOTATE_HAPPENS_BEFORE(obj_)        do {} while (0)
+#  define MPL_VG_ANNOTATE_HAPPENS_AFTER(obj_)         do {} while (0)
+#  define MPL_VG_ANNOTATE_NEW_MEMORY(obj_,size_)      do {} while (0)
+#endif
 
 
 #endif /* !defined(MPL_VALGRIND_H_INCLUDED) */
