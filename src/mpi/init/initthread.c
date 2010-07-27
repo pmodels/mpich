@@ -148,13 +148,11 @@ static int MPIR_Thread_CS_Init( void )
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, NULL);
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.handle_mutex, NULL);
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
-      MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-    /* MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL: There is a single, global
-     * lock, held only when needed */
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     /* MPIU_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, NULL);
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.handle_mutex, NULL);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.msgq_mutex, NULL);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
@@ -182,14 +180,12 @@ int MPIR_Thread_CS_Finalize( void )
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, NULL);
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL || \
-      MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-    /* MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL: There is a single, global
-     * lock, held only when needed */
+#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     /* MPIU_THREAD_GRANULARITY_PER_OBJECT: There are multiple locks,
      * one for each logical class (e.g., each type of object) */
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, NULL);
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.handle_mutex, NULL);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.msgq_mutex, NULL);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 

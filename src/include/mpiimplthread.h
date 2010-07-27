@@ -52,6 +52,7 @@ enum MPIU_Thread_cs_name {
     MPIU_THREAD_CS_NAME_MPIDCOMM,
     MPIU_THREAD_CS_NAME_PMI,
     MPIU_THREAD_CS_NAME_CONTEXTID,
+    MPIU_THREAD_CS_NAME_MSGQUEUE,
     /* FIXME device-specific, should this live here? */
     /*
     MPIU_THREAD_CS_NAME_CH3COMM,
@@ -80,6 +81,10 @@ typedef struct MPICH_ThreadInfo_t {
     MPID_Thread_mutex_t global_mutex;
     /* We need the handle mutex to avoid problems with lock nesting */
     MPID_Thread_mutex_t handle_mutex;
+#endif
+
+#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
+    MPID_Thread_mutex_t msgq_mutex;
 #endif
 
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
@@ -599,6 +604,7 @@ M*/
 enum MPIU_Nest_mutexes {
     MPIU_Nest_global_mutex = 0,
     MPIU_Nest_handle_mutex,
+    MPIU_Nest_msgq_mutex,
     MPIU_Nest_NUM_MUTEXES
 };
 
@@ -725,6 +731,17 @@ enum MPIU_Nest_mutexes {
     } while (0);                                               \
     MPIU_THREAD_CHECK_END
 
+#define MPIU_THREAD_CS_ENTER_MSGQUEUE(context_)           \
+    do {                                                  \
+        MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(msgq_mutex) \
+        MPIU_THREAD_CS_ASSERT_ENTER_HELPER(MSGQUEUE);     \
+    } while (0)
+#define MPIU_THREAD_CS_EXIT_MSGQUEUE(context_)            \
+    do {                                                  \
+        MPIU_THREAD_CS_ASSERT_EXIT_HELPER(MSGQUEUE);      \
+        MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(msgq_mutex)  \
+    } while (0)
+
 /* change to 0 to enable some iffy CS assert_held logic */
 #if 1
 #define MPIU_THREAD_CS_ASSERT_HELD(name_) do{/*nothing for now */}while(0)
@@ -757,8 +774,6 @@ enum MPIU_Nest_mutexes {
     } while (0)
 #endif
 
-#define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
-#define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
 /* MT FIXME should all of these CS types share the global_mutex?  If yes, how do
  * we avoid accidental deadlock?  If not, we probably risk inconsistent locking
  * schemes, leading to races. */
