@@ -381,10 +381,11 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             if (!sreq->dev.OnDataAvail)
             {
-                /* MT FIXME is racy, and we can't ignore races in asserts with
-                 * helgrind.  Ideally we'd fix the real race instead of ignoring
-                 * it anyway... */
+                /* MT FIXME-N1 race under per-object, harmless to disable here but
+                 * its a symptom of a bigger problem... */
+#if !(defined(MPICH_IS_THREADED) || (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT))
                 MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
+#endif
 
                 MPIDI_CH3U_Request_complete(sreq);
 
@@ -678,7 +679,10 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 reqFn = rreq->dev.OnDataAvail;
                 if (!reqFn)
                 {
+                    /* MT FIXME-N1 */
+#if !(defined(MPICH_IS_THREADED) || (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT))
                     MPIU_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
+#endif
                     MPIDI_CH3U_Request_complete(rreq);
                     complete = TRUE;
                 }
