@@ -121,6 +121,9 @@ for arg in "$@" ; do
     -noatdircheck|-no-atdir-check)
         no_atdir_check=yes
         ;;
+    -noatvercheck|-no-atver-check)
+        no_atver_check=yes
+        ;;
     -do=*|--do=*)
     opt=`echo A$arg | sed -e 's/^A--*do=//'`
     # Handle some synonyms
@@ -187,7 +190,9 @@ for arg in "$@" ; do
 
     -help|--help|-usage|--usage)
     cat <<EOF
-    updatefiles [ --with-autotools=dir ] [ -noatdircheck | -no-atdir-check ] \\
+    updatefiles [ --with-autotools=dir ] \\
+                [ -noatdircheck | -no-atdir-check ] \\
+                [ -noatvercheck | -no-atver-check ] \\
                 [ --do=stepname ] [ -distrib ] [ args for simplemake ]
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
@@ -198,6 +203,9 @@ for arg in "$@" ; do
 
     -noatdircheck or -no-atdir-check disables the check that enforces all
     autotools being installed in the same directory.
+
+    -noatvercheck or -no-atver-check disables the check the version of 
+    autotools.
 
     -distrib creates a distribution version of the Makefile.in files (no
     targets for updating the Makefile.in from Makefile.sm or rebuilding the
@@ -345,15 +353,14 @@ rm -f .tmp/configure.in .tmp/configure
 if [ "$acSubversion" -gt 0 ] ; then
     acVersion="2.$acSubversion"
     echo "You have autoconf version $acVersion or greater."
-    # this used to be a check for >=63, but we only work with exactly 2.63 right now
-    if [ "$no_atdir_check" != "yes" -a "$acSubversion" -ne 63 ] ; then
-       cat <<EOF
-autoconf version 2.63 (exactly) is required
-EOF
-       if [ "$do_build_configure" = yes ] ; then 
-            echo "Exiting updatefiles...."
-            exit 1
-       fi
+    if [ "$no_atver_check" != "yes" ] ; then
+        if [ "$acSubversion" -ne 63 -a "$acSubversion" -ne 64 ] ; then
+            echo "autoconf version 2.63 or 2.64 is required"
+            if [ "$do_build_configure" = yes ] ; then 
+                echo "Exiting updatefiles...."
+                exit 1
+            fi
+        fi
     fi
 else
     cat <<EOF
@@ -365,7 +372,7 @@ format for the version output and it changes between autoconf versions.
 In addition, some versions of autoconf choose among many versions and
 provide incorrect output).
 EOF
-	error_summary="$error_summary \
+        error_summary="$error_summary \
 No autoconf in path or unable to determine the version of autoconf."
         acVersion="Unknown"
 fi
