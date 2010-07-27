@@ -50,6 +50,7 @@ enum MPIU_Thread_cs_name {
     MPIU_THREAD_CS_NAME_HANDLE,
     MPIU_THREAD_CS_NAME_HANDLEALLOC,
     MPIU_THREAD_CS_NAME_MPIDCOMM,
+    MPIU_THREAD_CS_NAME_COMPLETION,
     MPIU_THREAD_CS_NAME_PMI,
     MPIU_THREAD_CS_NAME_CONTEXTID,
     MPIU_THREAD_CS_NAME_MSGQUEUE,
@@ -85,6 +86,8 @@ typedef struct MPICH_ThreadInfo_t {
 
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     MPID_Thread_mutex_t msgq_mutex;
+    MPID_Thread_mutex_t completion_mutex;
+    MPID_Thread_mutex_t ctx_mutex;
 #endif
 
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
@@ -605,6 +608,8 @@ enum MPIU_Nest_mutexes {
     MPIU_Nest_global_mutex = 0,
     MPIU_Nest_handle_mutex,
     MPIU_Nest_msgq_mutex,
+    MPIU_Nest_completion_mutex,
+    MPIU_Nest_ctx_mutex,
     MPIU_Nest_NUM_MUTEXES
 };
 
@@ -681,6 +686,10 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)
 #define MPIU_THREAD_CS_YIELD_MPIDCOMM(_context)
 
+#define MPIU_THREAD_CS_ENTER_COMPLETION(_context)
+#define MPIU_THREAD_CS_EXIT_COMPLETION(_context)
+#define MPIU_THREAD_CS_YIELD_COMPLETION(_context)
+
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context)
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context)
 #define MPIU_THREAD_CS_ENTER_PMI(_context)
@@ -730,6 +739,9 @@ enum MPIU_Nest_mutexes {
         MPIU_THREAD_CS_YIELD_LOCKNAME_RECURSIVE(global_mutex); \
     } while (0);                                               \
     MPIU_THREAD_CHECK_END
+
+#define MPIU_THREAD_CS_ENTER_COMPLETION(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(completion_mutex)
+#define MPIU_THREAD_CS_EXIT_COMPLETION(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(completion_mutex)
 
 
 /* MT FIXME the following description is almost right, but it needs minor
@@ -849,10 +861,9 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_ENTER_PMI(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
 #define MPIU_THREAD_CS_EXIT_PMI(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
 
-/* TODO this can probably use its own mutex... */
-#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
-#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
-#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) MPIU_THREAD_CS_YIELD_LOCKNAME_CHECKED(global_mutex)
+#define MPIU_THREAD_CS_ENTER_CONTEXTID(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(ctx_mutex)
+#define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(ctx_mutex)
+#define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) MPIU_THREAD_CS_YIELD_LOCKNAME_CHECKED(ctx_mutex)
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without
