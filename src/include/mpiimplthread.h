@@ -984,5 +984,42 @@ do {                                           \
 
 #endif /* defined(MPICH_IS_THREADED) */
 
+
+/* "publishes" the obj with handle value (handle_) via the handle pointer
+ * (hnd_lval_).  That is, it is a version of the following statement that fixes
+ * memory consistency issues:
+ *     (hnd_lval_) = (handle_);
+ *
+ * assumes that the following is always true: typeof(*hnd_lval_ptr_)==int
+ */
+/* This could potentially be generalized beyond MPI-handle objects, but we
+ * should only take that step after seeing good evidence of its use.  A general
+ * macro (that is portable to non-gcc compilers) will need type information to
+ * make the appropriate volatile cast. */
+/* Ideally _GLOBAL would use this too, but we don't want to count on OPA
+ * availability in _GLOBAL mode.  Instead the ALLFUNC critical section should be
+ * used. */
+#if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
+#define MPIU_OBJ_PUBLISH_HANDLE(hnd_lval_, handle_)                                 \
+    do {                                                                            \
+        if (MPIU_ISTHREADED) {                                                      \
+            /* wmb ensures all read-only object field values are seen before the */ \
+            /* handle value is seen at the application level */                     \
+            OPA_write_barrier();                                                    \
+            /* volatile ensures lval is not speculatively read or written */        \
+            *(volatile int *)&(hnd_lval_) = (handle_);                              \
+        }                                                                           \
+        else {                                                                      \
+            (hnd_lval_) = (handle_);                                                \
+        }                                                                           \
+    } while (0)
+#else
+#define MPIU_OBJ_PUBLISH_HANDLE(hnd_lval_, handle_)  \
+    do {                                             \
+        (hnd_lval_) = (handle_);                     \
+    } while (0)
+#endif
+
+
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
 
