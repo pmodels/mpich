@@ -31,6 +31,39 @@
       completeness and implementation of our atomic primitives in the future.
 */
 
+/* Ordering assumptions for general multithreaded code that is not strictly
+ * lock-based.  (these don't apply to device-specific code such as MMIO, where
+ * each device will need to choose appropriate assumptions)
+ *
+ * 1) A CPU will see its own loads/stores in program order, even if they do not
+ *    appear that way to other CPUs.
+ * 2) A thread will usually execute on a single CPU for an extended period of
+ *    time, yielding behavior in (1) for that thread.  When a context switch
+ *    does occur, possibly rescheduling a thread on a different CPU, the OS will
+ *    issue appropriate memory barriers so that the thread sees its own
+ *    loads/stores in program order.
+ * 3) A CPU may reorder an operation w.r.t. another store unless they are to the
+ *    same address.
+ * 4) When available, operations before OPA memory barriers will appear to
+ *    precede operations after OPA memory barriers, subject to the kind of
+ *    operations and kind of barrier used (e.g. OPA_read_barrier orders loads
+ *    w.r.t. loads).  OPA memory barriers also prevent the compiler from
+ *    reordering instructions across the barrier in either direction.
+ * 5) MPID_Thread_mutex_lock (typically pthreads under the hood) serves as an
+ *    "acquire" barrier (currently missing in OPA), preventing operations after
+ *    the lock from appearing earlier than the lock.
+ * 6) MPID_Thread_mutex_unlock serves as a "release" barrier (currently missing
+ *    in OPA), preventing operations before the unlock from appearing later
+ *    than the unlock.
+ *
+ * NOTE: most real processors have stronger ordering guarantees than this
+ * (x86/x86_64 in particular is _much_ stronger).  However, coding
+ * conservatively to these assumptions will result in much more portable
+ * multithreaded code.  AFAIK, these assumptions are not weak enough to match
+ * Alpha processor ordering, so if they (or similar new generation processors)
+ * ever make a comeback we'll have quite a bit of work to do.
+ */
+
 /* FIXME anything labeled MPIDU_ here should really be MPIU_ */
 
 /* TODO need actual yield and an busy wait impls */
