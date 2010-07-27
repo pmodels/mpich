@@ -381,7 +381,11 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             if (!sreq->dev.OnDataAvail)
             {
+                /* MT FIXME is racy, and we can't ignore races in asserts with
+                 * helgrind.  Ideally we'd fix the real race instead of ignoring
+                 * it anyway... */
                 MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
+
                 MPIDI_CH3U_Request_complete(sreq);
 
                 /* MT - clear the current active send before dequeuing/destroying the current request */
@@ -488,7 +492,7 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 #define FUNCNAME MPIDI_CH3I_Progress_continue
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
+static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_CONTINUE);
@@ -924,6 +928,9 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
 
+    /* MT FIXME acquiring MPIDCOMM here violates lock ordering rules (see
+     * mpiimplthread.h comments), easily causes deadlock */
+
     if ((rreq)->dev.match.parts.rank == MPI_ANY_SOURCE)
         /* call anysource handler */
 	anysource_posted(rreq);
@@ -932,15 +939,28 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
         int local_rank = -1;
 	MPIDI_VC_t *vc;
 
+        /* MT FIXME does this macro need some sort of synchronization too? */
 	MPIDI_Comm_get_vc_set_active((rreq)->comm, (rreq)->dev.match.parts.rank, &vc);
+
 #ifdef ENABLE_COMM_OVERRIDES
+        /* MT FIXME causes deadlock b/c of the MSGQUEUE/CH3COMM ordering (acquired
+         * in reverse in some pkt handlers?) */
+        MPIU_THREAD_CS_ENTER(CH3COMM,vc);
         /* call vc-specific handler */
 	if (vc->comm_ops && vc->comm_ops->recv_posted)
             vc->comm_ops->recv_posted(vc, rreq);
+        MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 #endif
-        
+
+        /* MT FIXME we unfortunately must disable this optimization for now in
+         * per_object mode. There are possibly other ways to synchronize the
+         * fboxes that won't cause lock-ordering deadlocks.  There might also be
+         * ways to do this that don't require a hook on every request post, but
+         * instead do some sort of caching or something analogous to branch
+         * prediction. */
+#if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY != MPIU_THREAD_GRANULARITY_PER_OBJECT)
         /* enqueue fastbox */
-        
+
         /* don't enqueue a fastbox for yourself */
         MPIU_Assert(rreq->comm != NULL);
         if (rreq->dev.match.parts.rank == rreq->comm->rank)
@@ -956,8 +976,9 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
         local_rank = MPID_NEM_LOCAL_RANK(vc->pg_rank);
 
         MPID_nem_mpich2_enqueue_fastbox(local_rank);
+#endif
     }
-    
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
 }
@@ -975,16 +996,20 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
-    
+
     if (rreq->dev.match.parts.rank == MPI_ANY_SOURCE)
     {
 	matched = anysource_matched(rreq);
     }
+    /* MT FIXME we unfortunately must disable this optimization for now in
+     * per_object mode. There are possibly other ways to synchronize the
+     * fboxes that won't cause lock-ordering deadlocks */
+#if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY != MPIU_THREAD_GRANULARITY_PER_OBJECT)
     else
     {
         if (rreq->dev.match.parts.rank == rreq->comm->rank)
             goto fn_exit;
-        
+
         /* don't use MPID_NEM_IS_LOCAL, it doesn't handle dynamic processes */
         MPIDI_Comm_get_vc_set_active(rreq->comm, rreq->dev.match.parts.rank, &vc);
         MPIU_Assert(vc != NULL);
@@ -998,7 +1023,8 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq)
 
         MPID_nem_mpich2_dequeue_fastbox(local_rank);
     }
-    
+#endif
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
     return matched;

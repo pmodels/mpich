@@ -40,6 +40,8 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     MPIDI_VC_t * vc;
     MPID_Request *sreq = *sreq_p;
 
+    /* MT FIXME what are the two operations we are waiting for?  the send and
+     * the sync response? */
     MPID_cc_set(&sreq->cc, 2);
     sreq->dev.OnDataAvail = 0;
     sreq->dev.OnFinal = 0;
@@ -125,6 +127,8 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     
     MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending zero length message");
     
+    /* MT FIXME what are the two operations we are waiting for?  the send and
+     * the sync response? */
     MPID_cc_set(&sreq->cc, 2);
     MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
     sreq->dev.OnDataAvail = 0;
