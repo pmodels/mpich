@@ -62,6 +62,9 @@ typedef struct qn_ent
 
 static qn_ent_t *qn_head = NULL;
 
+/* NOTE: it appears that this function is sometimes (inadvertently?) recursive.
+ * Some packet handlers, such as MPIDI_CH3_PktHandler_Close, call iStartMsg,
+ * which calls MPID_Progress_test. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Progress
 #undef FCNAME
