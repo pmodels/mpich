@@ -3,6 +3,16 @@
 			KNOWN ISSUES
 ----------------------------------------------------------------------
 
+### Threads
+
+ * ch3:sock does not (and will not) support fine-grained threading
+
+ * MPI-IO APIs are not currently thread-safe when using fine-grained
+   threading (--enable-thread-cs=per-object)
+
+ * ch3:nemesis:tcp fine-grained threading is still experimental and may
+   have correctness or performance issues
+
 ### Lacking channel-specific features
 
  * ch3 does not presently support communication across heterogeneous

@@ -2,6 +2,8 @@
                                Changes in 1.3
 ===============================================================================
 
+ # THREADS: initial support for fine-grained threading in ch3:nemesis:tcp
+
  # OVERALL: Support for Asynchronous Communication Progress.
 
  # OVERALL: The ssm and shm channels have been removed.
