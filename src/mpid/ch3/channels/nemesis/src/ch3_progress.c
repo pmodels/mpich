@@ -77,6 +77,8 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
+
+
     MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,"before outer while loop, completions=%d",completions);
 
 #ifdef ENABLE_CHECKPOINTING

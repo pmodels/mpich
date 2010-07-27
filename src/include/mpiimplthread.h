@@ -564,6 +564,22 @@ M*/
 #define MPIU_THREAD_CHECKNEST(kind_, lockname_)
 #endif /* test on THREAD_GRANULARITY */
 
+#define MPIU_THREAD_CS_ENTER_LOCKNAME_RECURSIVE(name_)                                          \
+    do {                                                                                        \
+        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to recursively ENTER lockname=%s", #name_);   \
+        MPIU_Thread_CS_enter_lockname_recursive_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_); \
+    } while (0)
+#define MPIU_THREAD_CS_EXIT_LOCKNAME_RECURSIVE(name_)                                           \
+    do {                                                                                        \
+        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to recursively EXIT lockname=%s", #name_);    \
+        MPIU_Thread_CS_exit_lockname_recursive_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_);  \
+    } while (0)
+#define MPIU_THREAD_CS_YIELD_LOCKNAME_RECURSIVE(name_)                                          \
+    do {                                                                                        \
+        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to recursively YIELD lockname=%s", #name_);   \
+        MPIU_Thread_CS_yield_lockname_recursive_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_); \
+    } while (0)
+
 #define MPIU_THREAD_CS_ENTER_LOCKNAME(name_)                                                   \
     do {                                                                                       \
         MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to ENTER lockname=%s", #name_);              \
@@ -654,8 +670,11 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_EXIT_HANDLEALLOC(_context)
 #define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context)
 #define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context)
+
 #define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context)
 #define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)
+#define MPIU_THREAD_CS_YIELD_MPIDCOMM(_context)
+
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context)
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context)
 #define MPIU_THREAD_CS_ENTER_PMI(_context)
@@ -686,8 +705,25 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_ENTER_HANDLEALLOC(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(handle_mutex)
 #define MPIU_THREAD_CS_EXIT_HANDLEALLOC(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(handle_mutex)
 
-#define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
-#define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
+/* MPIDCOMM protects the progress engine and related code */
+#define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context)                \
+    MPIU_THREAD_CHECK_BEGIN                                    \
+    do {                                                       \
+        MPIU_THREAD_CS_ENTER_LOCKNAME_RECURSIVE(global_mutex); \
+    } while (0);                                               \
+    MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)                \
+    MPIU_THREAD_CHECK_BEGIN                                   \
+    do {                                                      \
+        MPIU_THREAD_CS_EXIT_LOCKNAME_RECURSIVE(global_mutex); \
+    } while (0);                                              \
+    MPIU_THREAD_CHECK_END
+#define MPIU_THREAD_CS_YIELD_MPIDCOMM(_context)                \
+    MPIU_THREAD_CHECK_BEGIN                                    \
+    do {                                                       \
+        MPIU_THREAD_CS_YIELD_LOCKNAME_RECURSIVE(global_mutex); \
+    } while (0);                                               \
+    MPIU_THREAD_CHECK_END
 
 /* change to 0 to enable some iffy CS assert_held logic */
 #if 1
@@ -700,11 +736,16 @@ enum MPIU_Nest_mutexes {
     do {                                                                                       \
         int same = FALSE;                                                                      \
         MPID_Thread_id_t me;                                                                   \
-        MPID_Thread_self(&me);                                                                 \
-        MPID_Thread_same(&me, &MPIR_ThreadInfo.cs_holder[MPIU_THREAD_CS_NAME_##name_], &same); \
-        MPIU_Assert(same);                                                                     \
+        if (MPIU_ISTHREADED) {                                                                 \
+            MPID_Thread_self(&me);                                                                 \
+            MPID_Thread_same(&me, &MPIR_ThreadInfo.cs_holder[MPIU_THREAD_CS_NAME_##name_], &same); \
+            MPIU_Assert_fmt_msg(same, ("me=%#08x holder=%#08x",                                              \
+                                       ((unsigned)(size_t)me),                                                       \
+                                       ((unsigned)(size_t)MPIR_ThreadInfo.cs_holder[MPIU_THREAD_CS_NAME_##name_]))); \
+        }                                                                                      \
     } while (0)
 
+/* MT FIXME buggy, these defs don't work with recursive mutexes as implemented */
 #define MPIU_THREAD_CS_ASSERT_ENTER_HELPER(name_)                                                        \
     do {                                                                                                 \
         MPID_Thread_self(&MPIR_ThreadInfo.cs_holder[MPIU_THREAD_CS_NAME_##name_]);                       \
