@@ -706,11 +706,14 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
     if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
+
+    MPIU_THREAD_CS_ENTER(PMI,);
     pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
     if (pmi_errno) {
 	MPIDI_PG_CheckForSingleton();
 	pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
     }
+    MPIU_THREAD_CS_EXIT(PMI,);
     if (pmi_errno) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**pmi_kvs_get");
     }
