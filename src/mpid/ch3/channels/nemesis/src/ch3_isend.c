@@ -19,6 +19,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
+    int in_cs = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISEND);
@@ -38,8 +39,10 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)hdr);
 
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+    in_cs = TRUE;
+
     if (MPIDI_CH3I_SendQ_empty (CH3_NORMAL_QUEUE))
-        /* MT */
     {
 	MPIU_DBG_MSG_D (CH3_CHANNEL, VERBOSE, "iSend %d", (int) hdr_sz);
 	mpi_errno = MPID_nem_mpich2_send_header (hdr, hdr_sz, vc, &again);
@@ -73,6 +76,10 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
 
 
  fn_exit:
+    if (in_cs) {
+        MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+    }
+
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISEND);
     return mpi_errno;
  fn_fail:

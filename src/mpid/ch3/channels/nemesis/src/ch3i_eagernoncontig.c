@@ -28,6 +28,8 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)header);
 
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+
     if (!MPIDI_CH3I_SendQ_empty(CH3_NORMAL_QUEUE)) /* MT */
     {
         /* send queue is not empty, enqueue the request then check to
@@ -89,6 +91,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
     }
 
  fn_exit:
+    MPIU_THREAD_CS_EXIT(MPIDCOMM,);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
     return mpi_errno;
  fn_fail:
