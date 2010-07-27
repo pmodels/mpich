@@ -62,6 +62,12 @@
  * multithreaded code.  AFAIK, these assumptions are not weak enough to match
  * Alpha processor ordering, so if they (or similar new generation processors)
  * ever make a comeback we'll have quite a bit of work to do.
+ *
+ * When it comes to lockfree synchronization, we currently do not handle
+ * non-cache-coherent architectures in any sane way.  Such architectures will
+ * also require that we carefully insert cache flushing operations at the
+ * appropriate places.  We will also need a similar set of assumptions to use
+ * when reasoning about lockfree synchronization.
  */
 
 /* FIXME anything labeled MPIDU_ here should really be MPIU_ */
