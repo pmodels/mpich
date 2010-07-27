@@ -684,6 +684,9 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
                                          MPI_INT, MPI_BAND, comm_ptr );
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+        /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
+         * narrow this region */
+        MPIU_THREAD_CS_ENTER(CONTEXTID,);
         if (ignore_id) {
             /* we don't care what the value was, but make sure that everyone
              * who did care agreed on a value */
@@ -692,7 +695,6 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
         }
         else if (own_mask) {
 	    /* There is a chance that we've found a context id */
-	    MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	    /* Find_and_allocate_context_id updates the context_mask if it finds a match */
 	    *context_id = MPIR_Find_and_allocate_context_id(local_mask);
 	    MPIU_DBG_MSG_D( COMM, VERBOSE, 
@@ -707,8 +709,8 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 	    }
 	    else {
 		/* else we did not find a context id. Give up the mask in case
-		   there is another thread (with a lower context id) waiting for
-		   it.
+                   there is another thread (with a lower input context id)
+                   waiting for it.
 
 		   We need to ensure that any other threads have the 
 		   opportunity to run.  We do this by releasing the single
@@ -720,35 +722,33 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 		MPIU_THREAD_CS_YIELD(CONTEXTID,);
 	    }
 	    mask_in_use = 0;
-	    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 	}
 	else {
 	    /* As above, force this thread to yield */
-	    /* FIXME: TEMP for current yield definition*/
-	    MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	    MPIU_THREAD_CS_YIELD(CONTEXTID,);
-	    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 	}
+        MPIU_THREAD_CS_EXIT(CONTEXTID,);
+
 	/* Here is the test for out-of-context ids */
+        /* FIXME we may be able to "rotate" this a half iteration up to the top
+         * where we already have to grab the lock */
 	if ((testCount-- == 0) && (*context_id == 0)) {
 	    int hasNoId, totalHasNoId;
-	    /* We don't need to lock on this because we're just looking for
-	       zero or nonzero */
-            /* FIXME [goodell@] I don't agree with the above comment, pthreads
-             * doesn't really give us any guarantees when outside of a locked region and
-             * there isn't much of a penalty for acquiring the CS in this case.
-             * It gets even cheaper if we "rotate" this check half way around to
-             * the top of this loop where we already acquire the CS anyway.
-             * In the GLOBAL case, we actually are holding a lock here, so it
-             * doesn't trigger helgrind/DRD warnings. */
+            MPIU_THREAD_CS_ENTER(CONTEXTID,);
 	    hasNoId = MPIR_Locate_context_bit(context_mask) == 0;
+            MPIU_THREAD_CS_EXIT(CONTEXTID,);
+
+            /* we _must_ release the lock above in order to avoid deadlocking on
+             * this blocking allreduce operation */
 	    mpi_errno = MPIR_Allreduce_impl( &hasNoId, &totalHasNoId, 1, MPI_INT,
                                              MPI_MAX, comm_ptr );
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    if (totalHasNoId == 1) {
 		/* Release the mask for use by other threads */
 		if (own_mask) {
+                    MPIU_THREAD_CS_ENTER(CONTEXTID,);
 		    mask_in_use = 0;
+                    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 		}
 		MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm");
 	    }
