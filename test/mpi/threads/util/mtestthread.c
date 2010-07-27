@@ -22,7 +22,9 @@
 #endif
 
 static MTEST_THREAD_HANDLE threads[MTEST_MAX_THREADS];
-static int nthreads = 0;
+/* access w/o a lock is broken, but "volatile" should help reduce the amount of
+ * speculative loading/storing */
+static volatile int nthreads = 0;
 
 #ifdef HAVE_WINDOWS_H
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE (*fn)(void *p),void *arg)

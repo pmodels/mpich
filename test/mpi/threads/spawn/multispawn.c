@@ -26,10 +26,6 @@ static char MTEST_Descrip[] = "Spawn jobs from multiple threads";
 #define NPERTHREAD 4
 int activeThreads = 0;
 
-/* We use this flag to permit the master thread to signal the threads
-   that it creates */
-volatile int flag = 0;
-
 MPI_Comm intercomms[NTHREADS];
 
 MTEST_THREAD_RETURN_TYPE spawnProcess(void *p);
@@ -45,8 +41,9 @@ MTEST_THREAD_RETURN_TYPE spawnProcess(void *p)
     /* The thread number is passed into this routine through the value of the
        argument */
     i = (int)p;
+
     /* Synchronize */
-    while (!flag) ;
+    MTest_thread_barrier(NTHREADS);
 
     /* Spawn */
     MPI_Comm_spawn( "./multispawn", MPI_ARGV_NULL, NPERTHREAD, 
@@ -61,6 +58,7 @@ int main( int argc, char *argv[] )
 {
     int rank, size, i, wasParent = 0;
     int provided;
+    int err;
     char buffer[100];
     MPI_Status status;
     MPI_Comm   parentcomm;
@@ -84,17 +82,32 @@ int main( int argc, char *argv[] )
     MPI_Comm_get_parent( &parentcomm );
     if (parentcomm == MPI_COMM_NULL) {
 	wasParent = 1;
-	
+
+        err = MTest_thread_barrier_init();
+        if (err) {
+            printf("barrier_init failed\n");
+            fflush(stdout);
+            MPI_Finalize();
+            return 1;
+        }
+
 	for (i=0; i<NTHREADS-1; i++) {
-        MTest_Start_thread(spawnProcess, (void *)i);
+            MTest_Start_thread(spawnProcess, (void *)i);
 	}
-	
-	/* Synchronize the threads and spawn the processes */
-	flag = 1;
+
+	/* spawn the processes */
 	spawnProcess( (void*)(NTHREADS-1) );
 
 	/* Exit the threads (but the spawned processes remain) */
 	MTest_Join_threads();
+
+        err = MTest_thread_barrier_free();
+        if (err) {
+            printf("barrier_free failed\n");
+            fflush(stdout);
+            MPI_Finalize();
+            return 1;
+        }
 
 	/* The master thread (this thread) checks the created communicators */
 	for (i=0; i<NTHREADS; i++) {
