@@ -128,6 +128,9 @@ int MPI_Issend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     MPIR_SENDQ_REMEMBER(request_ptr,dest,tag,comm_ptr->context_id);
 
     /* return the handle of the request to the user */
+    /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for issend, lower-level access is
+     * responsible for its own consistency, while upper-level field access is
+     * controlled by the completion counter */
     *request = request_ptr->handle;
 
     /* ... end of body of routine ... */

@@ -145,8 +145,8 @@ int MPI_Group_excl(MPI_Group group, int n, int *ranks, MPI_Group *newgroup)
     new_group_ptr->size = size - n;
     new_group_ptr->idx_of_first_lpid = -1;
 
-    *newgroup = new_group_ptr->handle;
-    
+    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+
     /* ... end of body of routine ... */
 
   fn_exit:

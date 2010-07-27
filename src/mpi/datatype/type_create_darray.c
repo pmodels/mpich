@@ -368,6 +368,7 @@ int MPI_Type_create_darray(int size,
 {
     static const char FCNAME[] = "MPI_Type_create_darray";
     int mpi_errno = MPI_SUCCESS, i;
+    MPI_Datatype new_handle;
 
     int procs, tmp_rank, tmp_size, blklens[3], *coords;
     MPI_Aint *st_offsets, orig_extent, disps[3];
@@ -675,7 +676,7 @@ int MPI_Type_create_darray(int size,
 				 blklens,
 				 disps,
 				 types,
-				 newtype);
+				 &new_handle);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     /* --END ERROR HANDLING-- */
@@ -709,7 +710,7 @@ int MPI_Type_create_darray(int size,
 	ints[i + 3*ndims + 3] = array_of_psizes[i];
     }
     ints[4*ndims + 3] = order;
-    MPID_Datatype_get_ptr(*newtype, datatype_ptr);
+    MPID_Datatype_get_ptr(new_handle, datatype_ptr);
     mpi_errno = MPID_Datatype_set_contents(datatype_ptr,
 					   MPI_COMBINER_DARRAY,
 					   4*ndims + 4,
@@ -722,6 +723,7 @@ int MPI_Type_create_darray(int size,
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     /* --END ERROR HANDLING-- */
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -48,7 +48,6 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
        field */
     keyval_ptr->handle           = (keyval_ptr->handle & ~(0x03c00000)) |
 	                           (MPID_COMM << 22);
-    *comm_keyval		 = keyval_ptr->handle;
     MPIU_Object_set_ref(keyval_ptr,1);
     keyval_ptr->was_freed        = 0;
     keyval_ptr->kind	         = MPID_COMM;
@@ -57,6 +56,8 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
     keyval_ptr->copyfn.proxy = MPIR_Attr_copy_c_proxy;
     keyval_ptr->delfn.user_function = comm_delete_attr_fn;
     keyval_ptr->delfn.proxy = MPIR_Attr_delete_c_proxy;
+
+    MPIU_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
 
  fn_exit:
     return mpi_errno;

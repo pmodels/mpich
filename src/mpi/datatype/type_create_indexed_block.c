@@ -80,6 +80,7 @@ int MPI_Type_create_indexed_block(int count,
 {
     static const char FCNAME[] = "MPI_Type_create_indexed_block";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
     int i, *ints;
     MPIU_CHKLMEM_DECL(1);
@@ -125,7 +126,7 @@ int MPI_Type_create_indexed_block(int count,
 				       array_of_displacements,
 				       0, /* dispinbytes */
 				       oldtype,
-				       newtype);
+				       &new_handle);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
@@ -139,7 +140,7 @@ int MPI_Type_create_indexed_block(int count,
 	ints[i+2] = array_of_displacements[i];
     }
 
-    MPID_Datatype_get_ptr(*newtype, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_INDEXED_BLOCK,
 				           count + 2, /* ints */
@@ -150,6 +151,7 @@ int MPI_Type_create_indexed_block(int count,
 				           &oldtype);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
     
   fn_exit:

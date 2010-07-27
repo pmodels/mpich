@@ -290,7 +290,7 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
         mpi_errno = MPIR_Comm_commit(newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        *newcomm = newcomm_ptr->handle;
+        MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     }
     else {
         /* This process is not in the group */

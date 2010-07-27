@@ -102,6 +102,7 @@ int MPI_Type_struct(int count,
 {
     static const char FCNAME[] = "MPI_Type_struct";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_STRUCT);
 
@@ -150,7 +151,7 @@ int MPI_Type_struct(int count,
 				 blocklens,
 				 indices,
 				 old_types,
-				 newtype);
+				 &new_handle);
 
     if (mpi_errno == MPI_SUCCESS) {
 	int i, *ints;
@@ -163,7 +164,7 @@ int MPI_Type_struct(int count,
 	    ints[i+1] = blocklens[i];
 	}
 
-	MPID_Datatype_get_ptr(*newtype, new_dtp);
+	MPID_Datatype_get_ptr(new_handle, new_dtp);
 	mpi_errno = MPID_Datatype_set_contents(new_dtp,
 					       MPI_COMBINER_STRUCT,
 					       count+1, /* ints (count, blocklengths) */
@@ -176,6 +177,7 @@ int MPI_Type_struct(int count,
     }
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

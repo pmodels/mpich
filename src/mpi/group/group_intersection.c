@@ -160,10 +160,10 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgro
 	}
     }
 
-    *newgroup = new_group_ptr->handle;
+    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_INTERSECTION);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);

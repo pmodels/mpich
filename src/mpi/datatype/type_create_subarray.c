@@ -64,6 +64,7 @@ int MPI_Type_create_subarray(int ndims,
 {
     static const char FCNAME[] = "MPI_Type_create_subarray";
     int mpi_errno = MPI_SUCCESS, i;
+    MPI_Datatype new_handle;
 
     /* these variables are from the original version in ROMIO */
     MPI_Aint size, extent, disps[3];
@@ -284,7 +285,7 @@ int MPI_Type_create_subarray(int ndims,
 				 blklens,
 				 disps,
 				 types,
-				 newtype);
+				 &new_handle);
 
     NMPI_Type_free(&tmp1);
 
@@ -308,7 +309,7 @@ int MPI_Type_create_subarray(int ndims,
     }
     ints[3*ndims + 1] = order;
 
-    MPID_Datatype_get_ptr(*newtype, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 					   MPI_COMBINER_SUBARRAY,
 					   3 * ndims + 2, /* ints */
@@ -320,6 +321,7 @@ int MPI_Type_create_subarray(int ndims,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
     MPIR_Nest_decr();
 

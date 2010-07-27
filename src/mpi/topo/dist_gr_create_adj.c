@@ -171,7 +171,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     mpi_errno = MPIR_Topology_put(comm_dist_graph_ptr, topo_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    *comm_dist_graph = comm_dist_graph_ptr->handle;
+    MPIU_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
     /* ... end of body of routine ... */
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);

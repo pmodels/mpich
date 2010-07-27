@@ -84,6 +84,7 @@ int MPI_Type_hindexed(int count,
 {
     static const char FCNAME[] = "MPI_Type_hindexed";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
     int i, *ints;
     MPIU_CHKLMEM_DECL(1);
@@ -131,7 +132,7 @@ int MPI_Type_hindexed(int count,
 				  indices,
 				  1, /* displacements in bytes */
 				  old_type,
-				  newtype);
+				  &new_handle);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     MPIU_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array");
@@ -143,7 +144,7 @@ int MPI_Type_hindexed(int count,
 	ints[i+1] = blocklens[i];
     }
 
-    MPID_Datatype_get_ptr(*newtype, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_HINDEXED,
 				           count+1, /* ints */
@@ -154,6 +155,7 @@ int MPI_Type_hindexed(int count,
 				           &old_type);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

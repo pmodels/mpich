@@ -61,6 +61,7 @@ int MPI_Type_create_struct(int count,
     static const char FCNAME[] = "MPI_Type_create_struct";
     int mpi_errno = MPI_SUCCESS;
     int i, *ints;
+    MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
@@ -110,7 +111,7 @@ int MPI_Type_create_struct(int count,
 				 array_of_blocklengths,
 				 array_of_displacements,
 				 array_of_types,
-				 newtype);
+				 &new_handle);
 
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
@@ -125,7 +126,7 @@ int MPI_Type_create_struct(int count,
 	ints[i+1] = array_of_blocklengths[i];
     }
 
-    MPID_Datatype_get_ptr(*newtype, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_STRUCT,
 				           count+1, /* ints (cnt,blklen) */
@@ -137,6 +138,7 @@ int MPI_Type_create_struct(int count,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -170,7 +170,7 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
     mpi_errno = MPIR_Topology_put( newcomm_ptr, cart_ptr );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    *comm_cart = newcomm_ptr->handle;
+    MPIU_OBJ_PUBLISH_HANDLE(*comm_cart, newcomm_ptr->handle);
 
  fn_exit:
     return mpi_errno;

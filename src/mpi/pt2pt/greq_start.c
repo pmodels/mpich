@@ -177,8 +177,9 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
     lrequest_ptr->wait_fn              = NULL;
     lrequest_ptr->grequest_extra_state = extra_state;
     lrequest_ptr->greq_lang            = MPID_LANG_C;
-    *request = lrequest_ptr->handle;
-    
+
+    MPIU_OBJ_PUBLISH_HANDLE(*request, lrequest_ptr->handle);
+
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -246,7 +247,6 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 	} 
 	/* --END ERROR HANDLING-- */
 
-	*greq_class = class_ptr->handle;
 	class_ptr->query_fn = query_fn;
 	class_ptr->free_fn = free_fn;
 	class_ptr->cancel_fn = cancel_fn;
@@ -270,6 +270,8 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
                               MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO+1);
             MPIR_Grequest_registered_finalizer = 1;
         }
+
+        MPIU_OBJ_PUBLISH_HANDLE(*greq_class, class_ptr->handle);
 
 	/* ... end of body of routine ... */
 fn_exit:

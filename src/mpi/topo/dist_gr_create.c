@@ -374,7 +374,9 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPIU_CHKPMEM_COMMIT();
-    *comm_dist_graph = comm_dist_graph_ptr->handle;
+
+    MPIU_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
+
     /* ... end of body of routine ... */
 
   fn_exit:

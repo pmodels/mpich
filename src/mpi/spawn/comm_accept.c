@@ -110,7 +110,7 @@ int MPI_Comm_accept(char *port_name, MPI_Info info, int root, MPI_Comm comm,
     mpi_errno = MPIR_Comm_accept_impl(port_name, info_ptr, root, comm_ptr, &newcomm_ptr);
     if (mpi_errno) goto fn_fail;
 
-    *newcomm = newcomm_ptr->handle;
+    MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
 
     /* ... end of body of routine ... */
 

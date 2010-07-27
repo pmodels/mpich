@@ -120,6 +120,7 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     static const char FCNAME[] = "MPI_Ibsend";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    MPI_Request new_handle;
     MPID_Request *request_ptr;
     ibsend_req_info *ibinfo=0;
     MPIU_THREADPRIV_DECL;
@@ -199,13 +200,14 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     MPIR_Nest_incr();
     NMPI_Grequest_start( MPIR_Ibsend_query, 
 			 MPIR_Ibsend_free,
-			 MPIR_Ibsend_cancel, ibinfo, request );
+			 MPIR_Ibsend_cancel, ibinfo, &new_handle );
     /* The request is immediately complete because the MPIR_Bsend_isend has
        already moved the data out of the user's buffer */
     MPIR_Request_add_ref( request_ptr );
     /* Request count is now 2 (set to 1 in Grequest_start) */
-    NMPI_Grequest_complete( *request );
+    NMPI_Grequest_complete( new_handle );
     MPIR_Nest_decr();
+    MPIU_OBJ_PUBLISH_HANDLE(*request, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

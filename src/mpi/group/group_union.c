@@ -191,7 +191,7 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
 	    k++;
 	}
     }
-    *newgroup = new_group_ptr->handle;
+    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */
 

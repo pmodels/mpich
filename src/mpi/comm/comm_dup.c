@@ -150,8 +150,8 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
     if (mpi_errno) goto fn_fail;
 
     newcomm_ptr->attributes = new_attributes;
-    *newcomm = newcomm_ptr->handle;
-    
+
+    MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:

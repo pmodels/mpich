@@ -53,6 +53,7 @@ int MPI_Type_contiguous(int count,
 {
     static const char FCNAME[] = "MPI_Type_contiguous";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CONTIGUOUS);
 
@@ -88,11 +89,11 @@ int MPI_Type_contiguous(int count,
     
     mpi_errno = MPID_Type_contiguous(count,
 				     old_type,
-				     new_type_p);
+				     &new_handle);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPID_Datatype_get_ptr(*new_type_p, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_CONTIGUOUS,
 				           1, /* ints (count) */
@@ -104,6 +105,7 @@ int MPI_Type_contiguous(int count,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*new_type_p, new_handle);
     /* ... end of body of routine ... */
     
   fn_exit:

@@ -53,6 +53,7 @@ int MPI_Type_hvector(int count,
 {
     static const char FCNAME[] = "MPI_Type_hvector";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
     int ints[2];
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_HVECTOR);
@@ -91,12 +92,12 @@ int MPI_Type_hvector(int count,
 				 (MPI_Aint) stride,
 				 1, /* stride in bytes */
 				 old_type,
-				 newtype_p);
+				 &new_handle);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     ints[0] = count;
     ints[1] = blocklen;
-    MPID_Datatype_get_ptr(*newtype_p, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_HVECTOR,
     				           2, /* ints (count, blocklen) */
@@ -107,6 +108,7 @@ int MPI_Type_hvector(int count,
 				           &old_type);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype_p, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

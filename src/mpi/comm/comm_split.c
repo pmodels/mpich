@@ -385,7 +385,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
         mpi_errno = MPIR_Comm_commit(newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-	*newcomm = newcomm_ptr->handle;
+        MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     }
 
     /* ... end of body of routine ... */

@@ -98,7 +98,6 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function *type_copy_attr_fn,
        field */
     keyval_ptr->handle           = (keyval_ptr->handle & ~(0x03c00000)) |
 	(MPID_DATATYPE << 22);
-    *type_keyval		 = keyval_ptr->handle;
     MPIU_Object_set_ref(keyval_ptr,1);
     keyval_ptr->was_freed        = 0;
     keyval_ptr->kind	         = MPID_DATATYPE;
@@ -111,6 +110,8 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function *type_copy_attr_fn,
     /* Tell finalize to check for attributes on permenant types */
     MPIR_DatatypeAttrFinalize();
     
+    MPIU_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
+
     /* ... end of body of routine ... */
 
   fn_exit:

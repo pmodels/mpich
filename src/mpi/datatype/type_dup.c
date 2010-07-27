@@ -49,6 +49,7 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
 {
     static const char FCNAME[] = "MPI_Type_dup";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_Datatype *datatype_ptr = NULL;
     MPID_Datatype *new_dtp;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_DUP);
@@ -90,11 +91,11 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Type_dup(datatype, newtype);
+    mpi_errno = MPID_Type_dup(datatype, &new_handle);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPID_Datatype_get_ptr(*newtype, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_DUP,
 				           0, /* ints */
@@ -104,7 +105,7 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
 				           NULL,
 				           &datatype);
 
-    mpi_errno = MPID_Type_commit(newtype);
+    mpi_errno = MPID_Type_commit(&new_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     /* Copy attributes, executing the attribute copy functions */
@@ -122,13 +123,13 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
 	if (mpi_errno)
 	{
             MPID_Datatype_release(new_dtp);
-	    *newtype = MPI_DATATYPE_NULL;
 	    goto fn_fail;
 	}
     }
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -138,6 +139,7 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+    *newtype = MPI_DATATYPE_NULL;
 #   ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(

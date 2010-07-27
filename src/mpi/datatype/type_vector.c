@@ -56,6 +56,7 @@ int MPI_Type_vector(int count,
 {
     static const char FCNAME[] = "MPI_Type_vector";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_VECTOR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -92,7 +93,7 @@ int MPI_Type_vector(int count,
 				 (MPI_Aint) stride,
 				 0, /* stride not in bytes, in extents */
 				 old_type,
-				 newtype_p);
+				 &new_handle);
 
     if (mpi_errno == MPI_SUCCESS) {
 	MPID_Datatype *new_dtp;
@@ -101,7 +102,7 @@ int MPI_Type_vector(int count,
 	ints[0] = count;
 	ints[1] = blocklength;
 	ints[2] = stride;
-	MPID_Datatype_get_ptr(*newtype_p, new_dtp);
+	MPID_Datatype_get_ptr(new_handle, new_dtp);
 	mpi_errno = MPID_Datatype_set_contents(new_dtp,
 					       MPI_COMBINER_VECTOR,
 					       3, /* ints (cnt, blklen, str) */
@@ -114,6 +115,7 @@ int MPI_Type_vector(int count,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype_p, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

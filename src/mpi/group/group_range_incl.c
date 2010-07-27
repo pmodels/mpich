@@ -153,7 +153,7 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
 	    }
 	}
     }
-    *newgroup = new_group_ptr->handle;
+    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */
 

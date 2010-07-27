@@ -81,6 +81,7 @@ int MPI_Type_indexed(int count,
 {
     static const char FCNAME[] = "MPI_Type_indexed";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
     int i, *ints;
     MPIU_CHKLMEM_DECL(1);
@@ -129,7 +130,7 @@ int MPI_Type_indexed(int count,
 				  indices,
 				  0, /* displacements not in bytes */
 				  old_type,
-				  newtype);
+				  &new_handle);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* copy all integer values into a temporary buffer; this
@@ -145,7 +146,7 @@ int MPI_Type_indexed(int count,
     for (i=0; i < count; i++) {
 	ints[i + count + 1] = indices[i];
     }
-    MPID_Datatype_get_ptr(*newtype, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 					   MPI_COMBINER_INDEXED,
 					   2*count + 1, /* ints */
@@ -156,6 +157,7 @@ int MPI_Type_indexed(int count,
 					   &old_type);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

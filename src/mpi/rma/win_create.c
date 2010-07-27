@@ -121,7 +121,7 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info,
     win_ptr->errhandler = 0;
 
     /* return the handle of the window object to the user */
-    *win = win_ptr->handle;
+    MPIU_OBJ_PUBLISH_HANDLE(*win, win_ptr->handle);
 
     /* ... end of body of routine ... */
 

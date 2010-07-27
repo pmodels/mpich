@@ -55,6 +55,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
 {
     static const char FCNAME[] = "MPI_Type_create_resized";
     int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
     MPI_Aint aints[2];
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
@@ -86,7 +87,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
 
     /* ... body of routine ... */
 
-    mpi_errno = MPID_Type_create_resized(oldtype, lb, extent, newtype);
+    mpi_errno = MPID_Type_create_resized(oldtype, lb, extent, &new_handle);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
 	goto fn_fail;
@@ -95,7 +96,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
     aints[0] = lb;
     aints[1] = extent;
 
-    MPID_Datatype_get_ptr(*newtype, new_dtp);
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_RESIZED,
 				           0,
@@ -107,6 +108,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:
