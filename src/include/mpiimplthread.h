@@ -43,6 +43,22 @@
 #endif
 
 
+/* I don't have a better place for this at the moment, so it lives here for now. */
+enum MPIU_Thread_cs_name {
+    MPIU_THREAD_CS_NAME_ALLFUNC = 0,
+    MPIU_THREAD_CS_NAME_INIT,
+    MPIU_THREAD_CS_NAME_HANDLE,
+    MPIU_THREAD_CS_NAME_HANDLEALLOC,
+    MPIU_THREAD_CS_NAME_MPIDCOMM,
+    MPIU_THREAD_CS_NAME_PMI,
+    MPIU_THREAD_CS_NAME_CONTEXTID,
+    /* FIXME device-specific, should this live here? */
+    /*
+    MPIU_THREAD_CS_NAME_CH3COMM,
+     */
+    MPIU_THREAD_CS_NUM_NAMES
+};
+
 typedef struct MPICH_ThreadInfo_t {
     int               thread_provided;  /* Provided level of thread support */
     /* This is a special case for is_thread_main, which must be
@@ -68,6 +84,9 @@ typedef struct MPICH_ThreadInfo_t {
 
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
     MPID_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
+#endif
+#if 1 /* FIXME should be conditional on something? */
+    MPID_Thread_id_t cs_holder[MPIU_THREAD_CS_NUM_NAMES];
 #endif
 } MPICH_ThreadInfo_t;
 extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
@@ -132,14 +151,31 @@ typedef struct MPICH_Nestinfo {
     int  line;
 } MPICH_Nestinfo_t;
 #define MPICH_MAX_NESTINFO 16
+
+#define MPIU_THREAD_LOC_LEN 127
+#define MPIU_THREAD_FNAME_LEN 31
+typedef struct MPIU_ThreadDebug {
+    int count;
+    int line;
+    char file[MPIU_THREAD_LOC_LEN+1];
+    char fname[MPIU_THREAD_FNAME_LEN+1];
+} MPIU_ThreadDebug_t;
 #endif /* MPICH_DEBUG_NESTING */
+
 
 /* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
  * destruction time */
 #define MPIU_STRERROR_BUF_SIZE (1024)
 
-/* this structure contains all thread-local variables, will be zeroed at
- * allocation time */
+/* FIXME should really be MPIU_Nest_NUM_MUTEXES, but it's defined later */
+#define MPICH_MAX_LOCKS (5)
+
+/* This structure contains all thread-local variables and will be zeroed at
+ * allocation time.
+ *
+ * Note that any pointers to dynamically allocated memory stored in this
+ * structure must be externally cleaned up.
+ * */
 typedef struct MPICH_PerThread_t {
     int              nest_count;   /* For layered MPI implementation */
     int              op_errno;     /* For errors in predefined MPI_Ops */
@@ -147,9 +183,12 @@ typedef struct MPICH_PerThread_t {
     /* error string storage for MPIU_Strerror */
     char strerrbuf[MPIU_STRERROR_BUF_SIZE];
 
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+    int lock_depth[MPICH_MAX_LOCKS];
+#endif
 #ifdef MPICH_DEBUG_NESTING
     MPICH_Nestinfo_t nestinfo[MPICH_MAX_NESTINFO];
-    struct MPIU_ThreadDebug *nest_debug;
+    struct MPIU_ThreadDebug nest_debug[MPICH_MAX_NESTINFO];
 #endif
     /* FIXME: Is this used anywhere? */
 #ifdef HAVE_TIMING
@@ -480,31 +519,10 @@ M*/
    to the thread cs depth */
 #ifdef MPID_THREAD_DEBUG
 
-#define MPIU_THREAD_LOC_LEN 127
-#define MPIU_THREAD_FNAME_LEN 31
-typedef struct MPIU_ThreadDebug {
-    int count;
-    int line;
-    char file[MPIU_THREAD_LOC_LEN+1];
-    char fname[MPIU_THREAD_FNAME_LEN+1];
-} MPIU_ThreadDebug_t;
-
-/* helper macro to allocate and initialize storage for the CS nest checks, not
- * part of the public API */
-/* NOTE: assumes that MPIU_THREADPRIV_DECL has been done already */
-#define MPIU_THREAD_INIT_NEST_CHECK_                                            \
-    do {                                                                        \
-        MPIU_THREADPRIV_GET;                                                    \
-        if (!MPIU_THREADPRIV_FIELD(nest_debug)) {                               \
-            MPIU_THREADPRIV_FIELD(nest_debug) =                                 \
-                MPIU_Calloc(MPIU_Nest_NUM_MUTEXES, sizeof(MPIU_ThreadDebug_t)); \
-        }                                                                       \
-    } while (0)
 #define MPIU_THREAD_CHECKDEPTH(kind_, lockname_, value_)                                   \
     do {                                                                                   \
         MPIU_ThreadDebug_t *nest_ptr_ = NULL;                                              \
         MPIU_THREADPRIV_GET;                                                               \
-        MPIU_THREAD_INIT_NEST_CHECK_;                                                      \
         nest_ptr_ = MPIU_THREADPRIV_FIELD(nest_debug);                                     \
         if (nest_ptr_[kind_].count != value_) {                                            \
             fprintf(stderr, "%s:%d %s = %d, required %d; previously set in %s:%d(%s)\n",   \
@@ -520,7 +538,6 @@ typedef struct MPIU_ThreadDebug {
     do {                                                                                   \
         MPIU_ThreadDebug_t *nest_ptr_ = NULL;                                              \
         MPIU_THREADPRIV_GET;                                                               \
-        MPIU_THREAD_INIT_NEST_CHECK_;                                                      \
         nest_ptr_ = MPIU_THREADPRIV_FIELD(nest_debug);                                     \
         if (nest_ptr_[kind_].count + (value_) < 0) {                                       \
             fprintf(stderr, "%s:%d %s = %d (<0); previously set in %s:%d(%s)\n",           \
@@ -672,8 +689,38 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_ENTER_MPIDCOMM(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
 #define MPIU_THREAD_CS_EXIT_MPIDCOMM(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
 
+/* change to 0 to enable some iffy CS assert_held logic */
+#if 1
+#define MPIU_THREAD_CS_ASSERT_HELD(name_) do{/*nothing for now */}while(0)
+#define MPIU_THREAD_CS_ASSERT_ENTER_HELPER(name_)
+#define MPIU_THREAD_CS_ASSERT_EXIT_HELPER(name_)
+#else
+
+#define MPIU_THREAD_CS_ASSERT_HELD(name_)                                                      \
+    do {                                                                                       \
+        int same = FALSE;                                                                      \
+        MPID_Thread_id_t me;                                                                   \
+        MPID_Thread_self(&me);                                                                 \
+        MPID_Thread_same(&me, &MPIR_ThreadInfo.cs_holder[MPIU_THREAD_CS_NAME_##name_], &same); \
+        MPIU_Assert(same);                                                                     \
+    } while (0)
+
+#define MPIU_THREAD_CS_ASSERT_ENTER_HELPER(name_)                                                        \
+    do {                                                                                                 \
+        MPID_Thread_self(&MPIR_ThreadInfo.cs_holder[MPIU_THREAD_CS_NAME_##name_]);                       \
+    } while (0)
+#define MPIU_THREAD_CS_ASSERT_EXIT_HELPER(name_)                                                         \
+    do {                                                                                                 \
+        /* FIXME hack, assumes all 0-bytes won't be a valid thread ID */                                 \
+        memset(&MPIR_ThreadInfo.cs_holder[MPIU_THREAD_CS_NAME_##name_], 0x00, sizeof(MPID_Thread_id_t)); \
+    } while (0)
+#endif
+
 #define MPIU_THREAD_CS_ENTER_MSGQUEUE(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
 #define MPIU_THREAD_CS_EXIT_MSGQUEUE(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
+/* MT FIXME should all of these CS types share the global_mutex?  If yes, how do
+ * we avoid accidental deadlock?  If not, we probably risk inconsistent locking
+ * schemes, leading to races. */
 
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
