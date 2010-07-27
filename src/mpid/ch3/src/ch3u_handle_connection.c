@@ -144,6 +144,8 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
 
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+
     /* FIXME: Remove this IFDEF */
 #if defined(MPIDI_CH3_USES_SSHM) && 0
     MPIU_Assert( vc->state == MPIDI_VC_STATE_ACTIVE || 
@@ -165,7 +167,8 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
     MPIDI_Pkt_init(close_pkt, MPIDI_CH3_PKT_CLOSE);
     close_pkt->ack = (vc->state == MPIDI_VC_STATE_ACTIVE) ? FALSE : TRUE;
     
-    /* MT: this is not thread safe */
+    /* MT: this is not thread safe, the CH3COMM CS is scoped to the vc and
+     * doesn't protect this global correctly */
     MPIDI_Outstanding_close_ops += 1;
     MPIU_DBG_MSG_FMT(CH3_DISCONNECT,TYPICAL,(MPIU_DBG_FDEST,
 		  "sending close(%s) on vc (pg=%p) %p to rank %d, ops = %d", 
@@ -198,6 +201,8 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 	   will not be released until the pkt is actually sent. */
 	MPID_Request_release(sreq);
     }
+
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
     return mpi_errno;

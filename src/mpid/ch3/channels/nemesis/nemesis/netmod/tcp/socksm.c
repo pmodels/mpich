@@ -1690,6 +1690,11 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
        size of the table, which leads to iterating over invalid revents. */
     int num_polled = g_tbl_size;
 
+    if (num_polled) {
+        MPIU_Assert(MPID_nem_tcp_plfd_tbl != NULL);
+        MPIU_Assert(g_sc_tbl != NULL);
+    }
+
     /* To improve shared memory performance, we don't call the poll()
      * system call every time. The MPID_nem_tcp_skip_polls value is
      * changed depending on whether we have any active connections.
