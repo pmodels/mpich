@@ -49,7 +49,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
 	    MPIR_ERRTEST_KEYVAL(comm_keyval, MPID_COMM, "communicator", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(comm_keyval, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -69,7 +69,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
 	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
         MPID_END_ERROR_CHECKS;
     }
@@ -90,9 +90,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    /* If found, call the delete function before replacing the 
 	       attribute */
 	    mpi_errno = MPIR_Call_attr_delete( comm, p );
-	    if (mpi_errno) {
-		goto fn_fail;
-	    }
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    p->attrType = attrType;
 	    p->value    = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
 	    /* printf( "Updating attr at %x\n", &p->value ); */
@@ -131,17 +129,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_comm_set_attr",
-	    "**mpi_comm_set_attr %C %d %p", comm, comm_keyval, attribute_val);
-    }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 #endif /* MPICH_MPI_FROM_PMPI */
 
