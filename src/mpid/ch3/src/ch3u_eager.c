@@ -458,6 +458,9 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	    /* These next two indicate that once matched, there is
 	       one more step (the unpack into the user buffer) to perform. */
 	    rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_UnpackUEBufComplete;
+
+            /* normally starts at 2, but we are implicitly decrementing it
+             * because all of the data arrived in the pkt (see mpidpre.h) */
 	    rreq->dev.recv_pending_count = 1;
 	}
 

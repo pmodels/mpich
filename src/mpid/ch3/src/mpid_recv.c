@@ -73,32 +73,39 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	    }
 	    
             /* the request was found in the unexpected queue, so it has a
-               recv_pending_count of at least 1 */
+               recv_pending_count of at least 1, corresponding to this matching */
             MPIDI_Request_decr_pending(rreq);
             MPIDI_Request_check_pending(rreq, &recv_pending);
-	    if (!recv_pending)
-	    {
-		/* All of the data has arrived, we need to unpack the data and 
-		   then free the buffer and the request. */
-		if (rreq->dev.recv_data_sz > 0)
-		{
-		    MPIDI_CH3U_Request_unpack_uebuf(rreq);
-		    MPIU_Free(rreq->dev.tmpbuf);
-		}
-		
-		mpi_errno = rreq->status.MPI_ERROR;
-		if (status != MPI_STATUS_IGNORE)
-		{
-		    *status = rreq->status;
-		}
-		
-		MPID_Request_release(rreq);
-		rreq = NULL;
-		
-		goto fn_exit;
-	    }
+
+            if (MPID_Request_is_complete(rreq)) {
+                /* is it ever possible to have (cc==0 && recv_pending>0) ? */
+                MPIU_Assert(!recv_pending);
+
+                /* All of the data has arrived, we need to unpack the data and 
+                   then free the buffer and the request. */
+                if (rreq->dev.recv_data_sz > 0)
+                {
+                    MPIDI_CH3U_Request_unpack_uebuf(rreq);
+                    MPIU_Free(rreq->dev.tmpbuf);
+                }
+
+                mpi_errno = rreq->status.MPI_ERROR;
+                if (status != MPI_STATUS_IGNORE)
+                {
+                    *status = rreq->status;
+                }
+
+                MPID_Request_release(rreq);
+                rreq = NULL;
+
+                goto fn_exit;
+            }
 	    else
 	    {
+                /* there should never be outstanding completion events for an unexpected
+                 * recv without also having a "pending recv" */
+                MPIU_Assert(recv_pending);
+
 		/* The data is still being transfered across the net.  
 		   We'll leave it to the progress engine to handle once the
 		   entire message has arrived. */

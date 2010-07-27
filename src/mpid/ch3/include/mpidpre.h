@@ -249,8 +249,16 @@ typedef struct MPIDI_Request {
 
     unsigned int   state;
     int            cancel_pending;
-    /* FIXME the precise meaning of this field is unclear, comments/docs
-       about it should be added */
+
+    /* This field seems to be used for unexpected messages.  Unexpected messages
+     * need to go through two steps: matching and receiving the data.  These
+     * steps could happen in either order though, so this field is initialized
+     * to 2.  It is decremented when the request is matched and also when all of
+     * the data is available.  Once it reaches 0 it should be safe to copy from
+     * the temporary buffer (if there is one) to the user buffer.  This field is
+     * related to, but not quite the same thing as the completion counter (cc). */
+    /* MT access should be controlled by the MSGQUEUE CS when the req is still
+     * unexpected, exclusive access otherwise */
     int            recv_pending_count;
 
     /* The next 8 are for RMA */
