@@ -29,9 +29,12 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
     MPIDI_CH3_Progress_start(&progress_state);
     do
     {
-	if (MPIDI_CH3U_Recvq_FU( source, tag, context, status )) {
-	    break;
-	}
+        int found;
+
+        MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+        found = MPIDI_CH3U_Recvq_FU(source, tag, context, status);
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+        if (found) break;
 
 	mpi_errno = MPIDI_CH3_Progress_wait(&progress_state);
     }

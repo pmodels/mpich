@@ -291,6 +291,8 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     int found;
     int mpi_errno = MPI_SUCCESS;
 
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+
     /* printf( "Receiving short eager!\n" ); fflush(stdout); */
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 	"received eagershort send pkt, rank=%d, tag=%d, context=%d",
@@ -469,6 +471,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_CH3_Progress_signal_completion();
 
  fn_fail:
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
     return mpi_errno;
 }
 
@@ -575,7 +578,9 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     char *data_buf;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
-    
+
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 	"received eager send pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d",
 	eager_pkt->sender_req_id, eager_pkt->match.parts.rank, 
@@ -630,6 +635,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     }
 
  fn_fail:
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
     return mpi_errno;
 }
 

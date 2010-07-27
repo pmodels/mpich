@@ -408,7 +408,8 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 
     found = FALSE;
     prev_rreq = NULL;
-    
+
+    /* MT FIXME is this right? or should the caller do this? */
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
     cur_rreq = recvq_posted_head;
     while (cur_rreq != NULL) {

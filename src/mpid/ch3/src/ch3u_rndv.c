@@ -127,10 +127,13 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    rts_pkt->match.parts.rank,rts_pkt->data_sz,
 		    "ReceivedRndv");
 
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&rts_pkt->match, &found);
     MPIU_ERR_CHKANDJUMP1(!rreq, mpi_errno,MPI_ERR_OTHER, "**nomemreq", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
     
     set_request_info(rreq, rts_pkt, MPIDI_REQUEST_RNDV_MSG);
+
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
 
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     
