@@ -117,6 +117,15 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 pollcount = 0;
                 MPIDI_CH3I_progress_blocked = TRUE;
                 MPIU_THREAD_CS_YIELD(ALLFUNC,);
+                /* MPIDCOMM yield is needed because at least the send functions
+                 * acquire MPIDCOMM to put things into the send queues.  Failure
+                 * to yield could result in a deadlock.  This thread needs the
+                 * send from another thread to be posted, but the other thread
+                 * can't post it while this CS is held. */
+                /* assertion: we currently do not hold any other critical
+                 * sections besides the MPIDCOMM CS at this point.  Violating
+                 * this will probably lead to lock-ordering deadlocks. */
+                MPIU_THREAD_CS_YIELD(MPIDCOMM,);
                 MPIDI_CH3I_progress_blocked = FALSE;
                 MPIDI_CH3I_progress_wakeup_signalled = FALSE;
             }
