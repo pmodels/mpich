@@ -314,9 +314,6 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_Request_set_seqnum((rreq), (eagershort_pkt)->seqnum);
     /* FIXME: Why do we set the message type? */
     MPIDI_Request_set_msg_type((rreq), MPIDI_REQUEST_EAGER_MSG);
-    /* The request is still complete (in the sense of 
-       having all data) */
-    MPIDI_CH3U_Request_complete(rreq);
 
     /* This packed completes the reception of the indicated data.
        The packet handler returns null for a request that requires
@@ -418,7 +415,14 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		rreq->dev.OnDataAvail = 0;
 	    }
 	}
-	else {
+	else { /* (!found) */
+            /* MT note: unexpected rreq is currently protected by MSGQUEUE CS */
+
+            /* FIXME the AEU branch gives (rreq->cc==1) but the complete at the
+             * bottom of this function will decr it.  Is everything going to be
+             * cool in this case?  No upper layer has a pointer to rreq yet
+             * (it's unexpected and freshly allocated) 
+             */
 	    MPIDI_msg_sz_t recv_data_sz;
 	    /* This is easy; copy the data into a temporary buffer.
 	       To begin with, we use the same temporary location as
@@ -463,14 +467,19 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	}
     }
 
-    /* The semantics of the packet handlers is that a returned request
-       means that additional actions are required on the request */
-    /* We also signal completion (without this, the progress engine
-       may fail to return from a Progress_wait; the probe-unexp test 
-       failed without this Progress_signal_completion call) */
-    MPIDI_CH3_Progress_signal_completion();
+    /* The request is still complete (in the sense of having all data), decr the
+     * cc and kick the progress engine. */
+    /* MT note: when multithreaded, completing a request (cc==0) also signifies
+     * that an upper layer may acquire exclusive ownership of the request, so
+     * all rreq field modifications must be complete at this point.  This macro
+     * also kicks the progress engine, which was previously done here via
+     * MPIDI_CH3_Progress_signal_completion(). */
+    MPIDI_CH3U_Request_complete(rreq);
 
  fn_fail:
+    /* MT note: it may be possible to narrow this CS after careful
+     * consideration.  Note though that the (!found) case must be wholly
+     * protected by this CS. */
     MPIU_THREAD_CS_EXIT(MSGQUEUE,);
     return mpi_errno;
 }
