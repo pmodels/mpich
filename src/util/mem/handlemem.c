@@ -390,6 +390,14 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
         /* the handle value is always valid at return from this function */
         MPL_VG_MAKE_MEM_DEFINED(&ptr->handle, sizeof(ptr->handle));
 
+        /* necessary to prevent annotations from being misinterpreted.  HB/HA
+         * arcs will be drawn between a req object in across a free/alloc
+         * boundary otherwise */
+        /* NOTE: basically causes DRD's --trace-addr option to be useless for
+         * handlemem-allocated objects. Consider one of the trace-inducing
+         * annotations instead. */
+        MPL_VG_ANNOTATE_NEW_MEMORY(ptr, objmem->size);
+
         MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
                                          "Allocating object ptr %p (handle val 0x%08x)",
                                          ptr, ptr->handle));
