@@ -1734,13 +1734,14 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                 
                 MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "error polling fd, closing sc");
                 if (it_sc->vc) {
+                    int pg_rank = it_sc->vc->pg_rank; /* vc goes away on cleanup */
                     MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, it_sc->vc);
                     cleanup_errno = MPID_nem_tcp_cleanup_on_error(it_sc->vc);
                     if (cleanup_errno) {
                         MPIU_ERR_SET(cleanup_errno, MPI_ERR_OTHER, "**tcp_cleanup_fail");
                         MPIU_ERR_ADD(mpi_errno, cleanup_errno);
                     }
-                    MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d %s", it_sc->vc->pg_rank, err_str);
+                    MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d %s", pg_rank, err_str);
                 } else {
                     MPIDU_Ftb_publish(MPIDU_FTB_EV_COMMUNICATION, "");
                     cleanup_errno = cleanup_and_free_sc_plfd(it_sc);
