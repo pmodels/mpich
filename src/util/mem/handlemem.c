@@ -382,8 +382,13 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
         /* if the object was previously freed then MEMPOOL_FREE marked it as
          * NOACCESS, so we need to make it addressable again before memsetting
          * it */
-        MPL_VG_MAKE_MEM_DEFINED(&ptr->ref_count, objmem->size - sizeof(ptr->handle));
-	memset( (void*)&ptr->ref_count, 0xef, objmem->size-sizeof(ptr->handle));
+        /* save and restore the handle -- it's a more robust method than
+         * encoding the layout of the structure */
+        int tmp_handle;
+        MPL_VG_MAKE_MEM_DEFINED(ptr, objmem->size);
+        tmp_handle = ptr->handle ;
+        memset(ptr, 0xef, objmem->size);
+        ptr->handle = tmp_handle;
 #endif /* USE_MEMORY_TRACING */
         /* mark the mem as addressable yet undefined if valgrind is available */
         MPL_VG_MEMPOOL_ALLOC(objmem, ptr, objmem->size);
