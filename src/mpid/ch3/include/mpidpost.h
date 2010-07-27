@@ -207,10 +207,43 @@ extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
     }							\
 }
 
+/* MT note: The following order of operations is _essential_ for correct
+ * operation of the fine-grained multithreading code.  Assume that
+ * _signal_completion() acquires and releases a mutex in order to update the
+ * global completion counter (it does for fine-grained ch3:nemesis).  Further,
+ * assume the following standard pattern is used by the request consumer to wait
+ * for completion:
+ *
+ *   if (req is not complete (req->cc!=0)) {
+ *     // progress_enter:
+ *     acquire mutex;
+ *     my_count = global_count;
+ *     release mutex;
+ *
+ *     while (req is not complete (req->cc!=0)) {
+ *       progress_wait(&my_count);
+ *     }
+ *   }
+ *
+ * Where progress_wait will attempt to make progress forever as long as
+ * (my_count==global_count).  If it is possible for the consumer to see the
+ * global completion count before seeing the request's completion counter drop
+ * to zero, the consumer could spin in progress_wait forever without a chance to
+ * retest the request.
+ *
+ * If the mutex approach is dropped in favor of atomic access, additional memory
+ * barriers must be inserted.  The mutex acquire/release currently enforces
+ * sufficient ordering constraints provided the statement order below is not
+ * accidentally inverted.
+ *
+ * See also the note above the MSGQUEUE CS macros and request completion in
+ * mpiimplthread.h.
+ */
 /* MPID_Request_set_completed (the function) is defined in ch3u_request.c */
 #define MPID_REQUEST_SET_COMPLETED(req_)	\
 {						\
     MPID_cc_set((req_)->cc_ptr, 0);             \
+    /* MT do not reorder! see note above*/      \
     MPIDI_CH3_Progress_signal_completion();	\
 }
 
