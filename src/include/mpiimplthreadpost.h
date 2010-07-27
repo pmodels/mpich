@@ -22,6 +22,7 @@
 /* these are inline functions instead of macros to avoid some of the
  * MPIU_THREADPRIV_DECL scoping issues */
 MPIU_DBG_ATTRIBUTE_NOINLINE
+ATTRIBUTE((unused))
 static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_enter_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                     const char *lockname,
@@ -43,6 +44,7 @@ MPIU_Thread_CS_enter_lockname_impl_(enum MPIU_Nest_mutexes kind,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 MPIU_DBG_ATTRIBUTE_NOINLINE
+ATTRIBUTE((unused))
 static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_exit_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                    const char *lockname,
@@ -64,6 +66,7 @@ MPIU_Thread_CS_exit_lockname_impl_(enum MPIU_Nest_mutexes kind,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 MPIU_DBG_ATTRIBUTE_NOINLINE
+ATTRIBUTE((unused))
 static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_yield_lockname_impl_(enum MPIU_Nest_mutexes kind,
                                     const char *lockname,
@@ -89,6 +92,7 @@ MPIU_Thread_CS_yield_lockname_impl_(enum MPIU_Nest_mutexes kind,
 /* these are inline functions instead of macros to avoid some of the
  * MPIU_THREADPRIV_DECL scoping issues */
 MPIU_DBG_ATTRIBUTE_NOINLINE
+ATTRIBUTE((unused))
 static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_enter_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
                                               const char *lockname,
@@ -113,6 +117,7 @@ MPIU_Thread_CS_enter_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 MPIU_DBG_ATTRIBUTE_NOINLINE
+ATTRIBUTE((unused))
 static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_exit_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
                                              const char *lockname,
@@ -137,6 +142,7 @@ MPIU_Thread_CS_exit_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 MPIU_DBG_ATTRIBUTE_NOINLINE
+ATTRIBUTE((unused))
 static MPIU_DBG_INLINE_KEYWORD void
 MPIU_Thread_CS_yield_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
                                               const char *lockname,
