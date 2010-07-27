@@ -406,7 +406,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 
 	    /* --BEGIN ERROR HANDLING-- */
 	    /* verify that we're in the right location */
-	    if (tmp_last != first) DLOOP_Assert(0);
+	    DLOOP_Assert(tmp_last == first);
 	    /* --END ERROR HANDLING-- */
 	}
 

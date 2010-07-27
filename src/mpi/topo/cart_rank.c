@@ -91,7 +91,6 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;
-    int i, ndims, coord;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_RANK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -132,6 +131,7 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
     /* Validate coordinates */
 #   ifdef HAVE_ERROR_CHECKING
     {
+        int i, ndims, coord;
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    ndims = cart_ptr->topo.cart.ndims;

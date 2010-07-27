@@ -180,6 +180,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
+#ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(
         mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
         "**mpi_dist_graph_create_adjacent",
@@ -187,6 +188,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
         comm_old, indegree, sources, sourceweights,
         outdegree, destinations, destweights,
         info, reorder, comm_dist_graph);
+#endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

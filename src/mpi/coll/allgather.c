@@ -70,6 +70,10 @@
 /* begin:nested */
 /* not declared static because a machine-specific function may call this 
    one in some cases */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allgather_intra
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgather_intra ( 
     void *sendbuf, 
     int sendcount, 
@@ -84,7 +88,6 @@ int MPIR_Allgather_intra (
     MPI_Aint   recvtype_extent, tot_bytes;
     MPI_Aint recvtype_true_extent, recvbuf_extent, recvtype_true_lb;
     int        j, i, pof2, src, rem;
-    static const char FCNAME[] = "MPIR_Allgather_intra";
     void *tmp_buf = NULL;
     int curr_cnt, dst, type_size, left, right, jnext;
     MPI_Comm comm;

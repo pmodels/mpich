@@ -332,6 +332,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    "**mpi_comm_get_attr %C %d %p %p", comm, comm_keyval, attribute_val, flag);
     }
 #   endif
+    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

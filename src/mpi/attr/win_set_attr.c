@@ -197,6 +197,7 @@ corresponding keyval was created) will be called.
 int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_Win *win_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -220,6 +221,8 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 	    "**mpi_win_set_attr %W %d %p", win, win_keyval, attribute_val);
     }
 #   endif
+    MPID_Win_get_ptr( win, win_ptr );
+    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

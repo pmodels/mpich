@@ -184,7 +184,7 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
-    int count, closed, i;
+    int count, closed;
     enum HYD_pmcd_pmi_cmd cmd = INVALID_CMD;
     struct HYD_pmcd_pmi_hdr hdr;
     struct HYD_proxy *proxy;

@@ -342,8 +342,8 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods,
 	    "**mpi_cart_create %C %d %p %p %d %p", comm_old, ndims, dims, 
 	    periods, reorder, comm_cart);
     }
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
 #   endif
+    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     /* --END ERROR HANDLING-- */
     goto fn_exit;
 }

@@ -121,10 +121,12 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+#ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(
         mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
         "**mpi_dist_graph_neighbors", "**mpi_dist_graph_neighbors %C %d %p %p %d %p %p",
         comm, maxindegree, sources, sourceweights, maxoutdegree, destinations, destweights);
+#endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

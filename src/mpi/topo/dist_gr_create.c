@@ -403,10 +403,12 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
         MPIU_Free(dist_graph_ptr->out_weights);
     MPIU_CHKPMEM_REAP();
     /* --BEGIN ERROR HANDLING-- */
+#ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(
         mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
         "**mpi_dist_graph_create", "**mpi_dist_graph_create %C %d %p %p %p %p %I %d %p",
         comm_old, n, sources, degrees, destinations, weights, info, reorder, comm_dist_graph);
+#endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

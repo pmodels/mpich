@@ -177,7 +177,6 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
 {
     static const char FCNAME[] = "MPI_Graph_create";
     int mpi_errno = MPI_SUCCESS;
-    int i;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GRAPH_CREATE);
 
@@ -229,6 +228,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    int comm_size = comm_ptr->remote_size;
+            int i;
 
 	    /* Check that the communicator is large enough */
 	    if (nnodes > comm_size) {

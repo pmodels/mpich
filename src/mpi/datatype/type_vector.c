@@ -134,10 +134,3 @@ int MPI_Type_vector(int count,
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
-
-
-
-
-
-

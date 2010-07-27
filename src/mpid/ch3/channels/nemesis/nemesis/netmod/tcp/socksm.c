@@ -247,7 +247,7 @@ static int expand_sc_plfd_tbls (void)
     {
         sockconn_t *sc = &g_sc_tbl[i];
         MPIDI_VC_t *vc = sc->vc;
-        MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+        MPIU_AssertDeclValue(MPID_nem_tcp_vc_area *vc_tcp, VC_TCP(vc));
        /*         sockconn_t *dbg_sc = g_sc_tbl[i].vc ? VC_FIELD(g_sc_tbl[i].vc, sc) : (sockconn_t*)(-1); */
 
         /* The state is only valid if the FD is valid.  The VC field is only
@@ -1426,7 +1426,7 @@ fn_exit:
 static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
 {
     MPIDI_VC_t *const sc_vc = sc->vc;
-    MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
+    MPIU_AssertDeclValue(MPID_nem_tcp_vc_area *const sc_vc_tcp, VC_TCP(sc_vc));
     int mpi_errno = MPI_SUCCESS;
     ssize_t bytes_recvd;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_RECV_HANDLER);

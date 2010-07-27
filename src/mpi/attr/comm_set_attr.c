@@ -206,6 +206,7 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 	    "**mpi_comm_set_attr %C %d %p", comm, comm_keyval, attribute_val);
     }
 #   endif
+    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

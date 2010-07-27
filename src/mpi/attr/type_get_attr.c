@@ -215,8 +215,8 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
 	    "**mpi_type_get_attr %D %d %p %p", 
 	    type, type_keyval, attribute_val, flag);
     }
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
 #endif
+    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

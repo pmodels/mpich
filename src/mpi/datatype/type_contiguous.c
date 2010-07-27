@@ -124,11 +124,3 @@ int MPI_Type_contiguous(int count,
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
-
-
-
-
-
-
-
