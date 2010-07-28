@@ -34,11 +34,12 @@ V.    Alternate Process Managers
 VI.   VPATH Builds
 VII.  Shared Libraries
 VIII. Other Features
-IX.   Environment Variables
-X.    Developer Builds
-XI.   Building ROMIO into MPICH2
-XII.  Testing the MPICH2 installation
-XIII. Installing MPICH2 on windows
+IX.   Checkpoint/Restart
+X.    Environment Variables
+XI.   Developer Builds
+XII.  Building ROMIO into MPICH2
+XIII. Testing the MPICH2 installation
+XIV.  Installing MPICH2 on windows
 
 
 -------------------------------------------------------------------------
@@ -755,8 +756,79 @@ Compilation options for development:
 
 -------------------------------------------------------------------------
 
-IX. Environment Variables
-=========================
+IX. Checkpoint/Restart
+======================
+
+MPICH2 supports checkpointing and restart fault-tolerance using BLCR.
+
+Configuration
+-------------
+
+First, you need to have BLCR version 0.8.2 installed on your machine.
+If it's installed in the default system location, add the following
+two options to your configure command:
+
+  --enable-checkpointing 
+  --with-hydra-ckpointlib=blcr
+
+If BLCR is not installed in the default system location, you'll need
+to tell MPICH2's configure where to find it.  You might also need to
+set the LD_LIBRARY_PATH environment variable so that BLCR's shared
+libraries can be found.  In this case add the following options to
+your configure comment:
+
+  --enable-checkpointing 
+  --with-hydra-ckpointlib=blcr 
+  --with-blcr=<BLCR_INSTALL_DIR> 
+  LD_LIBRARY_PATH=<BLCR_INSTALL_DIR>/lib
+
+where <BLCR_INSTALL_DIR> is the directory where BLCR has been
+installed (whatever was specified in --prefix when BLCR was
+configured).
+
+Note, checkpointing is only supported with the Hydra process manager.
+(Hyrda will configured by default, unless you choose something else
+with the --with-pm= configure option.)
+
+After it's configured compile as usual (e.g., make; make install).
+
+Running an Application
+----------------------
+
+Hydra provides checkpoint/restart capability.  Currently, only BLCR is
+being experimented with.  You can pick these through the mpiexec
+option -ckpointlib to specify the checkpointing library to use and
+-ckpoint-prefix to specify the prefix of the file to write the
+checkpoint image to:
+
+  mpiexec -ckpointlib blcr -ckpoint-prefix /tmp/app.ckpoint -f hosts \
+  -n 4 ./app
+
+While the application is running, the user can request for a
+checkpoint at any time by sending a SIGUSR1 signal to mpiexec.
+
+You can also automatically checkpoint the application at regular
+intervals using the mpiexec option -ckpoint-interval (seconds):
+
+  mpiexec -ckpointlib blcr -ckpoint-prefix /tmp/app.ckpoint \
+  -ckpoint-interval 3600 -f hosts -n 4 ./app
+
+The checkpoint/restart parameters can be controlled with the
+environment variables HYDRA_CKPOINTLIB, HYDRA_CKPOINT_PREFIX and
+HYDRA_CKPOINT_INTERVAL.
+
+To restart a process:
+
+  mpiexec -ckpointlib blcr -ckpoint-prefix /tmp/app.ckpoint -f hosts -n 4
+
+These instructions can also be found on the MPICH2 wiki:
+
+  http://wiki.mcs.anl.gov/mpich2/index.php/Checkpointing
+
+-------------------------------------------------------------------------
+
+X. Environment Variables
+========================
 
 MPICH2 provides several environment variables that have different
 purposes.
@@ -830,8 +902,8 @@ To run over the Myrinet network use:
 
 -------------------------------------------------------------------------
 
-X. Developer Builds
-===================
+XI. Developer Builds
+====================
 For MPICH2 developers who want to directly work on the svn, there are
 a few additional steps involved (people using the release tarballs do
 not have to follow these steps). Details about these steps can be
@@ -840,8 +912,8 @@ http://wiki.mcs.anl.gov/mpich2/index.php/Getting_And_Building_MPICH2
 
 -------------------------------------------------------------------------
 
-XI. Building ROMIO into MPICH2
-==============================
+XII. Building ROMIO into MPICH2
+===============================
 By default, ROMIO, an implementation of the I/O portion of MPI-2 will
 be built as a part of MPICH2. The file systems to be built can be
 speicified by passing them in a '+'-delimited list to the
@@ -857,8 +929,8 @@ build support for PVFS automatically.
 
 -------------------------------------------------------------------------
 
-XII. Testing the MPICH2 installation
-====================================
+XIII. Testing the MPICH2 installation
+=====================================
 To test MPICH2, use the following options after installing mpich2.
 These will assume that mpich2 is installed into /usr/local/mpich2.
 
@@ -870,8 +942,8 @@ The results summary will be placed in test/summary.xml
 
 -------------------------------------------------------------------------
 
-XIII. Installing MPICH2 on Windows
-==================================
+XIV. Installing MPICH2 on Windows
+=================================
 
 Here are the instructions for setting up MPICH2 on a Windows machine:
 
@@ -939,6 +1011,10 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
 
 10) Compile and run an MPI application:
 
-    Compile an mpi application.  Use mpi.h from mpich2\src\include\win32 and mpi.lib in mpich2\lib
-    Place your executable along with the mpich2 dlls somewhere accessable to all the machines.
+    Compile an mpi application.  Use mpi.h from mpich2\src\include\win32 
+    and mpi.lib in mpich2\lib
+    
+    Place your executable along with the mpich2 dlls somewhere accessable
+    to all the machines.
+    
     Execute a job by running something like: mpiexec -n 3 myapp.exe
