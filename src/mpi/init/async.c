@@ -15,7 +15,7 @@ static MPIU_Thread_cond_t progress_cond;
 static volatile int progress_thread_done = 0;
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Init_async_thread
+#define FUNCNAME progress_fn
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static void progress_fn(void * data)
@@ -69,34 +69,39 @@ static void progress_fn(void * data)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Init_async_thread(void)
 {
-    int mpi_errno = MPI_SUCCESS;
 #if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
-    MPIU_THREADPRIV_DECL;
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_self_ptr, *progress_comm_ptr;
+    int err = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
-    MPIU_THREADPRIV_GET;
 
     /* Dup comm world for the progress thread */
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_dup(MPI_COMM_SELF, &progress_comm);
-    MPIU_Assert(!mpi_errno);
-    MPIR_Nest_decr();
+    MPID_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    progress_comm = progress_comm_ptr->handle;
 
-    MPIU_Thread_cond_create(&progress_cond, &mpi_errno);
-    MPIU_Assert(!mpi_errno);
-
+    MPIU_Thread_cond_create(&progress_cond, &err);
+    MPIU_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**cond_create", "**cond_create %s", strerror(err));
+    
     MPIU_Thread_mutex_create(&progress_mutex, &mpi_errno);
-    MPIU_Assert(!mpi_errno);
-
+    MPIU_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s", strerror(err));
+    
     MPIU_Thread_create((MPIU_Thread_func_t) progress_fn, NULL, &progress_thread_id, &mpi_errno);
-    MPIU_Assert(!mpi_errno);
-
+    MPIU_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s", strerror(err));
+    
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
-#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
+ fn_exit:
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+#else
+    return MPI_SUCCESS;
+#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
 }
 
 #undef FUNCNAME

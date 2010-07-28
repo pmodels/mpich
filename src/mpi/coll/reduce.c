@@ -1195,7 +1195,7 @@ int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr);
-    if (mpi_errno) goto fn_exit;
+    if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
     

@@ -108,7 +108,8 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
 	comm_ptr = MPIR_Process.comm_world;
     }
 
-    NMPI_Comm_get_name(comm, comm_name, &len);
+    
+    MPIR_Comm_get_name_impl(comm_ptr, comm_name, &len);
     if (len == 0)
     {
 	MPIU_Snprintf(comm_name, MPI_MAX_OBJECT_NAME, "comm=0x%X", comm);

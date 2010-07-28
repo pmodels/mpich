@@ -31,14 +31,7 @@
 #define NMPI_Test MPI_Test
 #define NMPI_Type_get_attr MPI_Type_get_attr
 #define NMPI_Type_set_attr MPI_Type_set_attr
-#define NMPI_Comm_free_keyval MPI_Comm_free_keyval 
-#define NMPI_Comm_group MPI_Comm_group
-#define NMPI_Comm_remote_group MPI_Comm_remote_group
-#define NMPI_Group_compare MPI_Group_compare
-#define NMPI_Group_free MPI_Group_free
 #define NMPI_Comm_split MPI_Comm_split
-#define NMPI_Comm_size MPI_Comm_size 
-#define NMPI_Comm_rank MPI_Comm_rank
 #define NMPI_Isend MPI_Isend
 #define NMPI_Irecv MPI_Irecv
 #define NMPI_Recv MPI_Recv 
@@ -46,8 +39,6 @@
 #define NMPI_Waitall MPI_Waitall
 #define NMPI_Sendrecv MPI_Sendrecv
 #define NMPI_Type_extent MPI_Type_extent
-#define NMPI_Comm_free MPI_Comm_free
-#define NMPI_Comm_dup MPI_Comm_dup
 #define NMPI_Type_lb MPI_Type_lb
 #define NMPI_Type_indexed MPI_Type_indexed 
 #define NMPI_Type_commit MPI_Type_commit
@@ -68,9 +59,6 @@
 #define NMPI_Info_get MPI_Info_get
 #define NMPI_Info_create MPI_Info_create
 #define NMPI_Info_set MPI_Info_set
-#define NMPI_Comm_get_name MPI_Comm_get_name
-#define NMPI_Comm_get_errhandler MPI_Comm_get_errhandler
-#define NMPI_Comm_set_errhandler MPI_Comm_set_errhandler
 #define NMPI_Comm_call_errhandler MPI_Comm_call_errhandler
 #define NMPI_Grequest_start MPI_Grequest_start
 #define NMPI_Grequest_complete MPI_Grequest_complete
@@ -96,14 +84,7 @@
 #define NMPI_Test PMPI_Test
 #define NMPI_Type_get_attr PMPI_Type_get_attr
 #define NMPI_Type_set_attr PMPI_Type_set_attr
-#define NMPI_Comm_free_keyval PMPI_Comm_free_keyval 
-#define NMPI_Comm_group PMPI_Comm_group
-#define NMPI_Comm_remote_group PMPI_Comm_remote_group
-#define NMPI_Group_compare PMPI_Group_compare
-#define NMPI_Group_free PMPI_Group_free
 #define NMPI_Comm_split PMPI_Comm_split
-#define NMPI_Comm_size PMPI_Comm_size 
-#define NMPI_Comm_rank PMPI_Comm_rank
 #define NMPI_Isend PMPI_Isend
 #define NMPI_Irecv PMPI_Irecv
 #define NMPI_Recv PMPI_Recv 
@@ -111,8 +92,6 @@
 #define NMPI_Waitall PMPI_Waitall
 #define NMPI_Sendrecv PMPI_Sendrecv
 #define NMPI_Type_extent PMPI_Type_extent
-#define NMPI_Comm_free PMPI_Comm_free
-#define NMPI_Comm_dup PMPI_Comm_dup
 #define NMPI_Type_lb PMPI_Type_lb
 #define NMPI_Type_indexed PMPI_Type_indexed 
 #define NMPI_Type_commit PMPI_Type_commit
@@ -133,9 +112,6 @@
 #define NMPI_Info_get PMPI_Info_get
 #define NMPI_Info_create PMPI_Info_create
 #define NMPI_Info_set PMPI_Info_set
-#define NMPI_Comm_get_name PMPI_Comm_get_name
-#define NMPI_Comm_get_errhandler PMPI_Comm_get_errhandler
-#define NMPI_Comm_set_errhandler PMPI_Comm_set_errhandler
 #define NMPI_Comm_call_errhandler PMPI_Comm_call_errhandler
 #define NMPI_Grequest_start PMPI_Grequest_start
 #define NMPI_Grequest_complete PMPI_Grequest_complete

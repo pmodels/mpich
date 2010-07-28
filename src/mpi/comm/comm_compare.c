@@ -71,15 +71,12 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr1 = NULL;
     MPID_Comm *comm_ptr2 = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_COMPARE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_COMPARE);
 
-    MPIU_THREADPRIV_GET;
-    
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
@@ -120,35 +117,40 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 	*result = MPI_IDENT;
     }
     else if (comm_ptr1->comm_kind == MPID_INTRACOMM) {
-	MPI_Group group1, group2;
+	MPID_Group *group_ptr1, *group_ptr2;
 
-	MPIR_Nest_incr();
-	NMPI_Comm_group( comm1, &group1 );
-	NMPI_Comm_group( comm2, &group2 );
-	NMPI_Group_compare( group1, group2, result );
+        mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
 	/* If the groups are the same but the contexts are different, then
 	   the communicators are congruent */
-	if (*result == MPI_IDENT) 
+	if (*result == MPI_IDENT)
 	    *result = MPI_CONGRUENT;
-	NMPI_Group_free( &group1 );
-	NMPI_Group_free( &group2 );
-	MPIR_Nest_decr();
+	mpi_errno = MPIR_Group_free_impl(group_ptr1);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPIR_Group_free_impl(group_ptr2);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else { 
 	/* INTER_COMM */
 	int       lresult, rresult;
-	MPI_Group group1, group2;
-	MPI_Group rgroup1, rgroup2;
+	MPID_Group *group_ptr1, *group_ptr2;
+	MPID_Group *rgroup_ptr1, *rgroup_ptr2;
 	
 	/* Get the groups and see what their relationship is */
-	MPIR_Nest_incr();
-	NMPI_Comm_group (comm1, &group1);
-	NMPI_Comm_group (comm2, &group2);
-	NMPI_Group_compare ( group1, group2, &lresult );
+	mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	MPIR_Group_compare_impl(group_ptr1, group_ptr2, &lresult);
 
-	NMPI_Comm_remote_group (comm1, &rgroup1);
-	NMPI_Comm_remote_group (comm2, &rgroup2);
-	NMPI_Group_compare ( rgroup1, rgroup2, &rresult );
+	mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr1, &rgroup_ptr1);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr2, &rgroup_ptr2);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	MPIR_Group_compare_impl(rgroup_ptr1, rgroup_ptr2, &rresult);
 
 	/* Choose the result that is "least" strong. This works 
 	   due to the ordering of result types in mpi.h */
@@ -160,23 +162,24 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 	  (*result) = MPI_CONGRUENT;
 
 	/* Free the groups */
-	NMPI_Group_free (&group1);
-	NMPI_Group_free (&group2);
-	NMPI_Group_free (&rgroup1);
-	NMPI_Group_free (&rgroup2);
-	MPIR_Nest_decr();
+	mpi_errno = MPIR_Group_free_impl(group_ptr1);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPIR_Group_free_impl(group_ptr2);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPIR_Group_free_impl(rgroup_ptr1);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	mpi_errno = MPIR_Group_free_impl(rgroup_ptr2);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_COMPARE);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
+#   ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
@@ -184,9 +187,9 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 	    "**mpi_comm_compare %C %C %p", comm1, comm2, result);
     }
     /* Use whichever communicator is non-null if possible */
+#   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr1 ? comm_ptr1 : comm_ptr2, 
 				      FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }

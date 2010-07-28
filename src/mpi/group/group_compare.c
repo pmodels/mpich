@@ -24,11 +24,62 @@
 #undef MPI_Group_compare
 #define MPI_Group_compare PMPI_Group_compare
 
+void MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result)
+{
+    int g1_idx, g2_idx, size, i;
+    
+    /* See if their sizes are equal */
+    if (group_ptr1->size != group_ptr2->size) {
+	*result = MPI_UNEQUAL;
+	goto fn_exit;
+    }
+
+    /* Run through the lrank to lpid lists of each group in lpid order
+       to see if the same processes are involved */
+    g1_idx = group_ptr1->idx_of_first_lpid;
+    g2_idx = group_ptr2->idx_of_first_lpid;
+    /* If the lpid list hasn't been created, do it now */
+    if (g1_idx < 0) {
+	MPIR_Group_setup_lpid_list( group_ptr1 );
+	g1_idx = group_ptr1->idx_of_first_lpid;
+    }
+    if (g2_idx < 0) {
+	MPIR_Group_setup_lpid_list( group_ptr2 );
+	g2_idx = group_ptr2->idx_of_first_lpid;
+    }
+    while (g1_idx >= 0 && g2_idx >= 0) {
+	if (group_ptr1->lrank_to_lpid[g1_idx].lpid !=
+	    group_ptr2->lrank_to_lpid[g2_idx].lpid) {
+	    *result = MPI_UNEQUAL;
+	    goto fn_exit;
+	}
+	g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
+	g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+    }
+
+    /* See if the processes are in the same order by rank */
+    size = group_ptr1->size;
+    for (i=0; i<size; i++) {
+	if (group_ptr1->lrank_to_lpid[i].lpid !=
+	    group_ptr2->lrank_to_lpid[i].lpid) {
+	    *result = MPI_SIMILAR;
+	    goto fn_exit;
+	}
+    }
+	
+    /* If we reach here, the groups are identical */
+    *result = MPI_IDENT;
+
+ fn_exit:
+    return;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_compare
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Group_compare - Compares two groups
@@ -53,13 +104,9 @@ and 'MPI_UNEQUAL' otherwise
 @*/
 int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Group_compare";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr1 = NULL;
     MPID_Group *group_ptr2 = NULL;
-    int g1_idx, g2_idx, size, i;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_COMPARE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -104,48 +151,8 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    /* See if their sizes are equal */
-    if (group_ptr1->size != group_ptr2->size) {
-	*result = MPI_UNEQUAL;
-	goto fn_exit;
-    }
 
-    /* Run through the lrank to lpid lists of each group in lpid order
-       to see if the same processes are involved */
-    g1_idx = group_ptr1->idx_of_first_lpid;
-    g2_idx = group_ptr2->idx_of_first_lpid;
-    /* If the lpid list hasn't been created, do it now */
-    if (g1_idx < 0) { 
-	MPIR_Group_setup_lpid_list( group_ptr1 ); 
-	g1_idx = group_ptr1->idx_of_first_lpid;
-    }
-    if (g2_idx < 0) { 
-	MPIR_Group_setup_lpid_list( group_ptr2 ); 
-	g2_idx = group_ptr2->idx_of_first_lpid;
-    }
-    while (g1_idx >= 0 && g2_idx >= 0) {
-	if (group_ptr1->lrank_to_lpid[g1_idx].lpid !=
-	    group_ptr2->lrank_to_lpid[g2_idx].lpid) {
-	    *result = MPI_UNEQUAL;
-	    goto fn_exit;
-	}
-	g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-	g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-    }
-
-    /* See if the processes are in the same order by rank */
-    size = group_ptr1->size;
-    for (i=0; i<size; i++) {
-	if (group_ptr1->lrank_to_lpid[i].lpid != 
-	    group_ptr2->lrank_to_lpid[i].lpid) {
-	    *result = MPI_SIMILAR;
-	    goto fn_exit;
-	}
-    }
-	
-    /* If we reach here, the groups are identical */
-    *result = MPI_IDENT;
+    MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
    
     /* ... end of body of routine ... */
 

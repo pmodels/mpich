@@ -24,11 +24,63 @@
 #undef MPI_Comm_group
 #define MPI_Comm_group PMPI_Comm_group
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_group_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_VCR   *local_vcr;
+    int i, lpid, n;
+
+    /* Create a group if necessary and populate it with the
+       local process ids */
+    if (!comm_ptr->local_group) {
+	n = comm_ptr->local_size;
+	mpi_errno = MPIR_Group_create( n, group_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
+	/* Make sure that we get the correct group */
+	if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+	    local_vcr = comm_ptr->local_vcr;
+	}
+	else
+	    local_vcr = comm_ptr->vcr;
+	
+	for (i=0; i<n; i++) {
+	    (void) MPID_VCR_Get_lpid( local_vcr[i], &lpid );
+	    (*group_ptr)->lrank_to_lpid[i].lrank = i;
+	    (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
+	}
+	(*group_ptr)->size		 = n;
+        (*group_ptr)->rank		 = comm_ptr->rank;
+        (*group_ptr)->idx_of_first_lpid = -1;
+	
+	comm_ptr->local_group = *group_ptr;
+    } else {
+        *group_ptr = comm_ptr->local_group;
+    }
+    
+    /* FIXME : Add a sanity check that the size of the group is the same as
+       the size of the communicator.  This helps catch corrupted 
+       communicators */
+
+    MPIR_Group_add_ref( comm_ptr->local_group );
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_group
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_group - Accesses the group associated with given communicator
@@ -52,12 +104,9 @@ Notes:
 @*/
 int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
 {
-    static const char FCNAME[] = "MPI_Comm_group";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int i, lpid, n;
     MPID_Group *group_ptr;
-    MPID_VCR   *local_vcr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -97,43 +146,9 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
 
     /* ... body of routine ...  */
     
-    /* Create a group if necessary and populate it with the 
-       local process ids */
-    if (!comm_ptr->local_group) {
-	n = comm_ptr->local_size;
-	mpi_errno = MPIR_Group_create( n, &group_ptr );
-	/* --BEGIN ERROR HANDLING-- */
-	if (mpi_errno)
-	{
-	    goto fn_fail;
-	}
-	/* --END ERROR HANDLING-- */
-
-	/* Make sure that we get the correct group */
-	if (comm_ptr->comm_kind == MPID_INTERCOMM) {
-	    local_vcr = comm_ptr->local_vcr;
-	}
-	else
-	    local_vcr = comm_ptr->vcr;
-	
-	for (i=0; i<n; i++) {
-	    (void) MPID_VCR_Get_lpid( local_vcr[i], &lpid );
-	    group_ptr->lrank_to_lpid[i].lrank = i;
-	    group_ptr->lrank_to_lpid[i].lpid  = lpid;
-	}
-	group_ptr->size		 = n;
-	group_ptr->rank		 = comm_ptr->rank;
-	group_ptr->idx_of_first_lpid = -1;
-	
-	comm_ptr->local_group = group_ptr;
-    }
-    /* FIXME : Add a sanity check that the size of the group is the same as
-       the size of the communicator.  This helps catch corrupted 
-       communicators */
-
-    *group = comm_ptr->local_group->handle;
-    MPIR_Group_add_ref( comm_ptr->local_group );
-
+    mpi_errno = MPIR_Comm_group_impl(comm_ptr, &group_ptr);
+    if (mpi_errno) goto fn_fail;
+    *group = group_ptr->handle;
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -23,6 +23,14 @@
 #undef MPI_Comm_get_name
 #define MPI_Comm_get_name PMPI_Comm_get_name
 
+void MPIR_Comm_get_name_impl(MPID_Comm *comm_ptr, char *comm_name, int *resultlen)
+{
+    /* The user must allocate a large enough section of memory */
+    MPIU_Strncpy(comm_name, comm_ptr->name, MPI_MAX_OBJECT_NAME);
+    *resultlen = (int)strlen(comm_name);
+    return;
+}
+
 #endif
 
 #undef FUNCNAME
@@ -95,11 +103,8 @@ int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    /* The user must allocate a large enough section of memory */
-    MPIU_Strncpy( comm_name, comm_ptr->name, MPI_MAX_OBJECT_NAME );
 
-    *resultlen = (int)strlen( comm_name );
+    MPIR_Comm_get_name_impl(comm_ptr, comm_name, resultlen);
     
     /* ... end of body of routine ... */
 

@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "attr.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Keyval_free */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -56,7 +57,7 @@ int MPI_Keyval_free(int *keyval)
 {
     static const char FCNAME[] = "MPI_Keyval_free";
     int mpi_errno = MPI_SUCCESS;
-    MPIU_THREADPRIV_DECL;                                       \
+    MPID_Keyval *keyval_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -74,17 +75,29 @@ int MPI_Keyval_free(int *keyval)
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
+    /* Convert MPI object handles to object pointers */
+    MPID_Keyval_get_ptr( *keyval, keyval_ptr );
+
+    /* Validate parameters and objects (post conversion) */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+
     /* ... body of routine ...  */
     
-    MPIU_THREADPRIV_GET;                                        \
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_free_keyval( keyval );
-    MPIR_Nest_decr();
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
+    MPIR_Comm_free_keyval_impl(*keyval);
+    *keyval = MPI_KEYVAL_INVALID;
+    
     /* ... end of body of routine ... */
 
-  fn_exit: 
+  fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_KEYVAL_FREE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

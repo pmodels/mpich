@@ -27,7 +27,8 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Errhandler_get
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_get - Gets the error handler for a communicator
 
@@ -60,10 +61,9 @@ by 'MPI_Comm_group' is no longer needed.
 @*/
 int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler *errhandler)
 {
-    static const char FCNAME[] = "MPI_Errhandler_get";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
+    MPID_Errhandler *errhandler_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -71,8 +71,6 @@ int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler *errhandler)
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ERRHANDLER_GET);
 
-    MPIU_THREADPRIV_GET;
-    
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -104,29 +102,32 @@ int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler *errhandler)
 
     /* ... body of routine ...  */
     
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_get_errhandler( comm, errhandler );
-    MPIR_Nest_decr();
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
+    MPIR_Comm_get_errhandler_impl( comm_ptr, &errhandler_ptr );
+    if (errhandler_ptr)
+        *errhandler = errhandler_ptr->handle;
+    else
+        *errhandler = MPI_ERRORS_ARE_FATAL;
+    
     /* ... end of body of routine ... */
 
+#   ifdef HAVE_ERROR_CHECKING
   fn_exit:
+#   endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ERRHANDLER_GET);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
+#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_errhandler_get",
 	    "**mpi_errhandler_get %C %p", comm, errhandler);
     }
-#   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     goto fn_exit;
+#   endif
     /* --END ERROR HANDLING-- */
 }
 

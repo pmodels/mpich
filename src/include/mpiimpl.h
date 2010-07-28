@@ -3469,6 +3469,11 @@ int MPIU_Find_local_and_external(struct MPID_Comm *comm, int *local_size_p, int 
 int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r);
 int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
 
+/* Trivial accessor macros */
+
+#define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
+#define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
+
 /* MPIR_ functions.  These are versions of MPI_ functions appropriate for calling within MPI */
 int MPIR_Cancel_impl(MPID_Request *request_ptr);
 struct MPIR_Topology;
@@ -3487,8 +3492,19 @@ int MPIR_Comm_accept_impl(char * port_name, MPID_Info * info_ptr, int root,
                           MPID_Comm * comm_ptr, MPID_Comm ** newcomm_ptr);
 int MPIR_Comm_connect_impl(char * port_name, MPID_Info * info_ptr, int root,
                            MPID_Comm * comm_ptr, MPID_Comm ** newcomm_ptr);
-int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function, 
+int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function,
                                      MPI_Errhandler *errhandler);
+int MPIR_Comm_dup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr);
+int MPIR_Comm_free_impl(MPID_Comm * comm_ptr);
+void MPIR_Comm_free_keyval_impl(int keyval);
+void MPIR_Comm_get_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler **errhandler_ptr);
+void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhandler_ptr);
+void MPIR_Comm_get_name_impl(MPID_Comm *comm, char *comm_name, int *resultlen);
+int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
+int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
+int MPIR_Comm_split(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr);
+void MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result);
+int MPIR_Group_free_impl(MPID_Group *group_ptr);
 
 
 #endif /* MPIIMPL_INCLUDED */

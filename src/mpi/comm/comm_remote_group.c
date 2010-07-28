@@ -24,11 +24,49 @@
 #undef MPI_Comm_remote_group
 #define MPI_Comm_remote_group PMPI_Comm_remote_group
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_remote_group_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, lpid, n;
+            
+    /* Create a group and populate it with the local process ids */
+    if (!comm_ptr->remote_group) {
+        n = comm_ptr->remote_size;
+        mpi_errno = MPIR_Group_create( n, group_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        for (i=0; i<n; i++) {
+            (*group_ptr)->lrank_to_lpid[i].lrank = i;
+            (void) MPID_VCR_Get_lpid( comm_ptr->vcr[i], &lpid );
+            (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
+        }
+        (*group_ptr)->size = n;
+        (*group_ptr)->rank = MPI_UNDEFINED;
+        (*group_ptr)->idx_of_first_lpid = -1;
+        
+        comm_ptr->remote_group = *group_ptr;
+    } else {
+        *group_ptr = comm_ptr->remote_group;
+    }
+    MPIR_Group_add_ref( comm_ptr->remote_group );
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_remote_group
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_remote_group - Accesses the remote group associated with 
@@ -55,10 +93,8 @@ The user is responsible for freeing the group when it is no longer needed.
 @*/
 int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
 {
-    static const char FCNAME[] = "MPI_Comm_remote_group";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int i, lpid, n;
     MPID_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_REMOTE_GROUP);
 
@@ -102,30 +138,11 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    /* Create a group and populate it with the local process ids */
-    if (!comm_ptr->remote_group) {
-	n = comm_ptr->remote_size;
-	mpi_errno = MPIR_Group_create( n, &group_ptr );
-	/* --BEGIN ERROR HANDLING-- */
-	if (mpi_errno)
-	{
-	    goto fn_fail;
-	}
-	/* --END ERROR HANDLING-- */
-	
-	for (i=0; i<n; i++) {
-	    group_ptr->lrank_to_lpid[i].lrank = i;
-	    (void) MPID_VCR_Get_lpid( comm_ptr->vcr[i], &lpid );
-	    group_ptr->lrank_to_lpid[i].lpid  = lpid;
-	}
-	group_ptr->size		 = n;
-	group_ptr->rank		 = MPI_UNDEFINED;
-	group_ptr->idx_of_first_lpid = -1;
-	comm_ptr->remote_group   = group_ptr;
-    }
-    *group = comm_ptr->remote_group->handle;
-    MPIR_Group_add_ref( comm_ptr->remote_group );
+
+    mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr, &group_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    *group = group_ptr->handle;
     
     /* ... end of body of routine ... */
 

@@ -26,10 +26,11 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_CommSetAttr
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, 
 		      MPIR_AttrType attrType )
 {
-    static const char FCNAME[] = "MPIR_CommSetAttr";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;

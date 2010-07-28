@@ -24,11 +24,33 @@
 #undef MPI_Comm_free_keyval
 #define MPI_Comm_free_keyval PMPI_Comm_free_keyval
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_free_keyval_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Comm_free_keyval_impl(int keyval)
+{
+    int in_use;
+    MPID_Keyval *keyval_ptr;
+    
+    MPID_Keyval_get_ptr(keyval, keyval_ptr);
+    if (!keyval_ptr->was_freed) {
+        keyval_ptr->was_freed = 1;
+        MPIR_Keyval_release_ref( keyval_ptr, &in_use);
+        if (!in_use) {
+            MPIU_Handle_obj_free( &MPID_Keyval_mem, keyval_ptr );
+        }
+    }
+    return;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_free_keyval
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_free_keyval - Frees an attribute key for communicators
 
@@ -49,11 +71,7 @@ Key values are global (they can be used with any and all communicators)
 @*/
 int MPI_Comm_free_keyval(int *comm_keyval)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Comm_free_keyval";
-#endif
     MPID_Keyval *keyval_ptr = NULL;
-    int          in_use;
     int          mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_FREE_KEYVAL);
 
@@ -94,16 +112,10 @@ int MPI_Comm_free_keyval(int *comm_keyval)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    if (!keyval_ptr->was_freed) {
-        keyval_ptr->was_freed = 1;
-        MPIR_Keyval_release_ref( keyval_ptr, &in_use);
-        if (!in_use) {
-            MPIU_Handle_obj_free( &MPID_Keyval_mem, keyval_ptr );
-        }
-    }
-    *comm_keyval = MPI_KEYVAL_INVALID;
 
+    MPIR_Comm_free_keyval_impl(*comm_keyval);
+    *comm_keyval = MPI_KEYVAL_INVALID;
+        
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

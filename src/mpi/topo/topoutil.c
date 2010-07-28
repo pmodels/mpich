@@ -76,19 +76,13 @@ int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 /* begin:nested */
 static int MPIR_Topology_finalize( void *p ATTRIBUTE((unused)) )
 {
-    MPIU_THREADPRIV_DECL;
-
-    MPIU_THREADPRIV_GET;
-
-    MPIR_Nest_incr();
-
     MPIU_UNREFERENCED_ARG(p);
 
     if (MPIR_Topology_keyval != MPI_KEYVAL_INVALID) {
 	/* Just in case */
-	NMPI_Comm_free_keyval( &MPIR_Topology_keyval );
+	MPIR_Comm_free_keyval_impl(MPIR_Topology_keyval);
+        MPIR_Topology_keyval = MPI_KEYVAL_INVALID;
     }
-    MPIR_Nest_decr();
     return 0;
 }
 /* end:nested */

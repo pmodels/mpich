@@ -24,21 +24,13 @@
 #undef MPI_Comm_split
 #define MPI_Comm_split PMPI_Comm_split
 
-#endif
-
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_split
-
-
 typedef struct splittype {
     int color, key;
 } splittype;
 
-PMPI_LOCAL void MPIU_Sort_inttable( splittype *, int );
-#ifndef MPICH_MPI_FROM_PMPI
 /* Sort the entries in keytable into increasing order by key.  A stable
    sort should be used incase the key values are not unique. */
-PMPI_LOCAL void MPIU_Sort_inttable( splittype *keytable, int size )
+static void MPIU_Sort_inttable( splittype *keytable, int size )
 {
     splittype tmp;
     int i, j;
@@ -54,98 +46,22 @@ PMPI_LOCAL void MPIU_Sort_inttable( splittype *keytable, int size )
 	}
     }
 }
-#endif
 
-/*@
-
-MPI_Comm_split - Creates new communicators based on colors and keys
-
-Input Parameters:
-+ comm - communicator (handle) 
-. color - control of subset assignment (nonnegative integer).  Processes 
-  with the same color are in the same new communicator 
-- key - control of rank assigment (integer)
-
-Output Parameter:
-. newcomm - new communicator (handle) 
-
-Notes:
-  The 'color' must be non-negative or 'MPI_UNDEFINED'.
-
-.N ThreadSafe
-
-.N Fortran
-
-Algorithm:
-.vb
-  1. Use MPI_Allgather to get the color and key from each process
-  2. Count the number of processes with the same color; create a 
-     communicator with that many processes.  If this process has
-     'MPI_UNDEFINED' as the color, create a process with a single member.
-  3. Use key to order the ranks
-  4. Set the VCRs using the ordered key values
-.ve
- 
-.N Errors
-.N MPI_SUCCESS
-.N MPI_ERR_COMM
-.N MPI_ERR_EXHAUSTED
-
-.seealso: MPI_Comm_free
-@*/
-int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_split(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr)
 {
-    static const char FCNAME[] = "MPI_Comm_split";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL, *newcomm_ptr, *local_comm_ptr;
-    MPI_Comm  local_comm;
+    MPID_Comm *local_comm_ptr;
     splittype *table, *remotetable=0, *keytable, *remotekeytable=0;
-    int       rank, size, remote_size, i, new_size, new_remote_size, 
-	first_entry = 0, first_remote_entry = 0,
-	*last_ptr;
+    int       rank, size, remote_size, i, new_size, new_remote_size,
+	first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm; /* TRUE iff *newcomm should be populated */
     MPIR_Context_id_t   new_context_id, remote_context_id;
-    MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(4);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT);
 
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPLIT);
-
-    /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno) goto fn_fail;
-	}
-        MPID_END_ERROR_CHECKS;
-    }
-    
-#   endif /* HAVE_ERROR_CHECKING */
-    
-    /* Get handles to MPI objects. */
-    MPID_Comm_get_ptr( comm, comm_ptr );
-    
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
-	    /* If comm_ptr is not valid, it will be reset to null */
-            if (mpi_errno) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS;
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* ... body of routine ...  */
-    
     rank        = comm_ptr->rank;
     size        = comm_ptr->local_size;
     remote_size = comm_ptr->remote_size;
@@ -155,8 +71,6 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 			"table");
     table[rank].color = color;
     table[rank].key   = key;
-    
-    MPIU_THREADPRIV_GET;
 
     /* Get the communicator to use in collectives on the local group of 
        processes */
@@ -165,11 +79,9 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	    MPIR_Setup_intercomm_localcomm( comm_ptr );
 	}
 	local_comm_ptr = comm_ptr->local_comm;
-	local_comm     = local_comm_ptr->handle;
     }
     else {
 	local_comm_ptr = comm_ptr;
-	local_comm     = comm;
     }
     /* Gather information on the local group of processes */
     mpi_errno = MPIR_Allgather_impl( MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm_ptr );
@@ -264,7 +176,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	if (comm_ptr->rank == 0) {
 	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
 				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
-				       0, 0, comm, MPI_STATUS_IGNORE );
+				       0, 0, comm_ptr->handle, MPI_STATUS_IGNORE );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
 	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -276,17 +188,17 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	}
     }
 
-    *newcomm = MPI_COMM_NULL;
+    *newcomm_ptr = NULL;
 
     /* Now, create the new communicator structure if necessary */
     if (in_newcomm) {
     
-	mpi_errno = MPIR_Comm_create( &newcomm_ptr );
+	mpi_errno = MPIR_Comm_create( newcomm_ptr );
 	if (mpi_errno) goto fn_fail;
 
-	newcomm_ptr->recvcontext_id = new_context_id;
-	newcomm_ptr->local_size	    = new_size;
-	newcomm_ptr->comm_kind	    = comm_ptr->comm_kind;
+	(*newcomm_ptr)->recvcontext_id = new_context_id;
+	(*newcomm_ptr)->local_size	    = new_size;
+	(*newcomm_ptr)->comm_kind	    = comm_ptr->comm_kind;
 	/* Other fields depend on whether this is an intercomm or intracomm */
 
 	/* Step 4: Order the processes by their key values.  Sort the
@@ -320,14 +232,14 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	       corresponding process in the input communicator */
 	    MPIU_Sort_inttable( remotekeytable, new_remote_size );
 
-	    MPID_VCRT_Create( new_size, &newcomm_ptr->local_vcrt );
-	    MPID_VCRT_Get_ptr( newcomm_ptr->local_vcrt, 
-			       &newcomm_ptr->local_vcr );
+	    MPID_VCRT_Create( new_size, &(*newcomm_ptr)->local_vcrt );
+	    MPID_VCRT_Get_ptr( (*newcomm_ptr)->local_vcrt, 
+			       &(*newcomm_ptr)->local_vcr );
 	    for (i=0; i<new_size; i++) {
 		MPID_VCR_Dup( comm_ptr->local_vcr[keytable[i].color], 
-			      &newcomm_ptr->local_vcr[i] );
+			      &(*newcomm_ptr)->local_vcr[i] );
 		if (keytable[i].color == comm_ptr->rank) {
-		    newcomm_ptr->rank = i;
+		    (*newcomm_ptr)->rank = i;
 		}
 	    }
 	    
@@ -346,52 +258,153 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 	       is required to return MPI_COMM_NULL instead of an intercomm 
 	       with an empty remote group. */
 
-	    MPID_VCRT_Create( new_remote_size, &newcomm_ptr->vcrt );
-	    MPID_VCRT_Get_ptr( newcomm_ptr->vcrt, &newcomm_ptr->vcr );
+	    MPID_VCRT_Create( new_remote_size, &(*newcomm_ptr)->vcrt );
+	    MPID_VCRT_Get_ptr( (*newcomm_ptr)->vcrt, &(*newcomm_ptr)->vcr );
 	    for (i=0; i<new_remote_size; i++) {
 		MPID_VCR_Dup( comm_ptr->vcr[remotekeytable[i].color], 
-			      &newcomm_ptr->vcr[i] );
+			      &(*newcomm_ptr)->vcr[i] );
 	    }
 
-	    newcomm_ptr->context_id     = remote_context_id;
-	    newcomm_ptr->remote_size    = new_remote_size;
-	    newcomm_ptr->local_comm     = 0;
-	    newcomm_ptr->is_low_group   = comm_ptr->is_low_group;
+	    (*newcomm_ptr)->context_id     = remote_context_id;
+	    (*newcomm_ptr)->remote_size    = new_remote_size;
+	    (*newcomm_ptr)->local_comm     = 0;
+	    (*newcomm_ptr)->is_low_group   = comm_ptr->is_low_group;
 
 	}
 	else {
 	    /* INTRA Communicator */
-	    newcomm_ptr->context_id     = newcomm_ptr->recvcontext_id;
-	    newcomm_ptr->remote_size    = new_size;
-	    MPID_VCRT_Create( new_size, &newcomm_ptr->vcrt );
-	    MPID_VCRT_Get_ptr( newcomm_ptr->vcrt, &newcomm_ptr->vcr );
+	    (*newcomm_ptr)->context_id     = (*newcomm_ptr)->recvcontext_id;
+	    (*newcomm_ptr)->remote_size    = new_size;
+	    MPID_VCRT_Create( new_size, &(*newcomm_ptr)->vcrt );
+	    MPID_VCRT_Get_ptr( (*newcomm_ptr)->vcrt, &(*newcomm_ptr)->vcr );
 	    for (i=0; i<new_size; i++) {
 		MPID_VCR_Dup( comm_ptr->vcr[keytable[i].color], 
-			      &newcomm_ptr->vcr[i] );
+			      &(*newcomm_ptr)->vcr[i] );
 		if (keytable[i].color == comm_ptr->rank) {
-		    newcomm_ptr->rank = i;
+		    (*newcomm_ptr)->rank = i;
 		}
 	    }
 	}
 
 	/* Inherit the error handler (if any) */
-	newcomm_ptr->errhandler = comm_ptr->errhandler;
+	(*newcomm_ptr)->errhandler = comm_ptr->errhandler;
 	if (comm_ptr->errhandler) {
 	    MPIR_Errhandler_add_ref( comm_ptr->errhandler );
 	}
 
         /* Notify the device of this new communicator */
-	MPID_Dev_comm_create_hook( newcomm_ptr );
-        mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+	MPID_Dev_comm_create_hook( *newcomm_ptr );
+        mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     }
+    
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+ fn_fail:
+
+    goto fn_exit;
+}
+
+#endif
+
+
+
+
+#undef FUNCNAME
+#define FUNCNAME MPI_Comm_split
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+/*@
+
+MPI_Comm_split - Creates new communicators based on colors and keys
+
+Input Parameters:
++ comm - communicator (handle) 
+. color - control of subset assignment (nonnegative integer).  Processes 
+  with the same color are in the same new communicator 
+- key - control of rank assigment (integer)
+
+Output Parameter:
+. newcomm - new communicator (handle) 
+
+Notes:
+  The 'color' must be non-negative or 'MPI_UNDEFINED'.
+
+.N ThreadSafe
+
+.N Fortran
+
+Algorithm:
+.vb
+  1. Use MPI_Allgather to get the color and key from each process
+  2. Count the number of processes with the same color; create a 
+     communicator with that many processes.  If this process has
+     'MPI_UNDEFINED' as the color, create a process with a single member.
+  3. Use key to order the ranks
+  4. Set the VCRs using the ordered key values
+.ve
+ 
+.N Errors
+.N MPI_SUCCESS
+.N MPI_ERR_COMM
+.N MPI_ERR_EXHAUSTED
+
+.seealso: MPI_Comm_free
+@*/
+int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPLIT);
+
+    /* Validate parameters, especially handles needing to be converted */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+	    MPIR_ERRTEST_COMM(comm, mpi_errno);
+            if (mpi_errno) goto fn_fail;
+	}
+        MPID_END_ERROR_CHECKS;
+    }
+    
+#   endif /* HAVE_ERROR_CHECKING */
+    
+    /* Get handles to MPI objects. */
+    MPID_Comm_get_ptr( comm, comm_ptr );
+    
+    /* Validate parameters and objects (post conversion) */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+            /* Validate comm_ptr */
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+	    /* If comm_ptr is not valid, it will be reset to null */
+            if (mpi_errno) goto fn_fail;
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+
+    /* ... body of routine ...  */
+    
+    mpi_errno = MPIR_Comm_split(comm_ptr, color, key, &newcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (newcomm_ptr)
+        MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
+    else
+        *newcomm = MPI_COMM_NULL;
 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPLIT);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

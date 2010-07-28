@@ -63,16 +63,11 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	rank = comm_ptr->rank;
 
 	if (rank == 0) {
-            MPIU_THREADPRIV_DECL;
-
-            MPIU_THREADPRIV_GET;
-            MPIR_Nest_incr();
-	    mpi_errno = NMPI_Comm_dup(MPI_COMM_SELF, &ncomm);
-            MPIR_Nest_decr();
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPID_Comm *comm_self_ptr;
+            MPID_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
+	    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &newcomm_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    
-	    MPID_Comm_get_ptr( ncomm, newcomm_ptr );
-	
 	    /* Create the topology structure */
 	    MPIU_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
 				mpi_errno, "cart_ptr" );
@@ -93,7 +88,7 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	}
 	else {
 	    *comm_cart = MPI_COMM_NULL;
-	    return MPI_SUCCESS;
+	    goto fn_exit;
 	}
     }
 
@@ -163,7 +158,7 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	    cart_ptr->topo.cart.position[i] = rank / nranks;
 	    rank = rank % nranks;
 	}
-    } 
+    }
 
 
     /* Place this topology onto the communicator */
@@ -178,16 +173,6 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     MPIU_CHKPMEM_REAP();
-#   ifdef HAVE_ERROR_CHECKING
-    {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, "MPIR_Cart_create", __LINE__, 
-	    MPI_ERR_OTHER, 
-	    "**mpi_cart_create",
-	    "**mpi_cart_create %C %d %p %p %d %p", comm_ptr, ndims, dims, 
-	    periods, reorder, comm_cart);
-    }
-#   endif
     /* --END ERROR HANDLING-- */
     goto fn_exit;
 }

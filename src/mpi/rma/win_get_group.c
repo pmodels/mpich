@@ -58,15 +58,14 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
     static const char FCNAME[] = "MPI_Win_get_group";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
+    MPID_Comm *win_comm_ptr;
+    MPID_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_GET_GROUP);
-
-    MPIU_THREADPRIV_GET;
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -99,12 +98,12 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Comm_group(win_ptr->comm, group);
-    MPIR_Nest_decr();
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    MPID_Comm_get_ptr( win_ptr->comm, win_comm_ptr );
 
+    mpi_errno = MPIR_Comm_group_impl(win_comm_ptr, &group_ptr);
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    *group = group_ptr->handle;
+    
     /* ... end of body of routine ... */
 
   fn_exit:

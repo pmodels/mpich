@@ -395,6 +395,12 @@ unexpected messages queued.
 #**argnull:Invalid null parameter
 #**argnull %s:Invalid null parameter %s
 
+**cond_create:MPIU_Thread_cond_create failed
+**cond_create %s:MPIU_Thread_cond_create failed: %s
+**mutex_create:MPIU_Thread_mutex_create failed
+**mutex_create %s:MPIU_Thread_mutex_create failed: %s
+**thread_create:MPIU_Thread_create failed
+**thread_create %s:MPIU_Thread_create failed: %s
 
 #
 # Errors common to several devices

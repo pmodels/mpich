@@ -184,11 +184,11 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit,
         win->_dev.epoch_type = MPID_EPOTYPE_NONE;
         win->_dev.my_cstcy = DCMF_MATCH_CONSISTENCY;
 
-        mpi_errno = NMPI_Comm_dup(comm_ptr->handle, &win->comm);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        mpi_errno = MPI_Comm_dup_impl(comm_ptr, &win->_dev.comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        win->comm = win->_dev.comm_ptr->handle;
+        
         MPID_assert_debug(win->comm != MPI_COMM_NULL);
-
-        MPID_Comm_get_ptr(win->comm, win->_dev.comm_ptr);
         MPID_assert_debug(win->_dev.comm_ptr != NULL);
 
         /* allocate memory for the base addresses, disp_units, and
@@ -250,12 +250,9 @@ int MPID_Win_free(MPID_Win **win_ptr)
 {
         int mpi_errno=MPI_SUCCESS;
         MPID_Win *win = *win_ptr;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         MPID_assert(win->_dev.epoch_type == MPID_EPOTYPE_NONE ||
         		win->_dev.epoch_type == MPID_EPOTYPE_REFENCE);
@@ -269,7 +266,8 @@ int MPID_Win_free(MPID_Win **win_ptr)
         int rank = win->_dev.comm_ptr->rank;
 	(void) DCMF_Memregion_destroy(
 			&win->_dev.coll_info[rank].mem_region);
-        NMPI_Comm_free(&win->comm);
+        mpi_errno = MPIR_Comm_free_impl(win->_dev.comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIDU_FREE(win->_dev.coll_info, mpi_errno, "win->_dev.coll_info");
         mpidu_free_lock(win);
         /** \todo check whether refcount needs to be decremented
@@ -277,7 +275,6 @@ int MPID_Win_free(MPID_Win **win_ptr)
         MPIU_Handle_obj_free(&MPID_Win_mem, win);
         *win_ptr = NULL;
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_FREE);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */

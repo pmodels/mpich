@@ -21,12 +21,13 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_rank
 #define MPI_Comm_rank PMPI_Comm_rank
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_rank
 #undef FCNAME
-#define FCNAME "MPI_Comm_rank"
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 
@@ -89,7 +90,7 @@ int MPI_Comm_rank( MPI_Comm comm, int *rank )
 
     /* ... body of routine ...  */
     
-    *rank = comm_ptr->rank;
+    *rank = MPIR_Comm_rank(comm_ptr);
     
     /* ... end of body of routine ... */
 

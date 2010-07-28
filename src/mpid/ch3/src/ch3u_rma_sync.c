@@ -796,12 +796,13 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 #define FUNCNAME MPIDI_Win_post
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
+int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 {
     int nest_level_inc = FALSE;
     int mpi_errno=MPI_SUCCESS;
-    MPI_Group win_grp, post_grp;
+    MPID_Group *win_grp_ptr;
     int i, post_grp_size, *ranks_in_post_grp, *ranks_in_win_grp, dst, rank;
+    MPID_Comm *win_comm_ptr;
     MPIU_CHKLMEM_DECL(2);
     MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_POST);
@@ -845,7 +846,7 @@ int MPIDI_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 	MPID_Progress_end(&progress_state);
     }
         
-    post_grp_size = group_ptr->size;
+    post_grp_size = post_grp_ptr->size;
         
     /* initialize the completion counter */
     win_ptr->my_counter = post_grp_size;
@@ -871,20 +872,20 @@ int MPIDI_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 	    ranks_in_post_grp[i] = i;
 	}
         
-	nest_level_inc = TRUE;
-	MPIR_Nest_incr();
+        MPID_Comm_get_ptr( win_ptr->comm, win_comm_ptr );
+
+        mpi_errno = MPIR_Comm_group_impl(win_comm_ptr, &win_grp_ptr);
+	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
-	mpi_errno = NMPI_Comm_group(win_ptr->comm, &win_grp);
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	
-	post_grp = group_ptr->handle;
-	
-	mpi_errno = NMPI_Group_translate_ranks(post_grp, post_grp_size,
-					       ranks_in_post_grp, win_grp, 
+   	nest_level_inc = TRUE;
+        MPIR_Nest_incr();
+
+	mpi_errno = NMPI_Group_translate_ranks(post_grp_ptr->handle, post_grp_size,
+					       ranks_in_post_grp, win_grp_ptr->handle,
 					       ranks_in_win_grp);
 	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	
-	NMPI_Comm_rank(win_ptr->comm, &rank);
+        rank = MPIR_Comm_rank(win_comm_ptr);
 	
 	/* Send a 0-byte message to the source processes */
 	for (i=0; i<post_grp_size; i++)
@@ -896,10 +897,10 @@ int MPIDI_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	    }
 	}
-	
-	mpi_errno = NMPI_Group_free(&win_grp);
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    }    
+
+        mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
+	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -989,7 +990,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     MPI_Win source_win_handle, target_win_handle;
     MPIDI_RMA_dtype_info *dtype_infos=NULL;
     void **dataloops=NULL;    /* to store dataloops for each datatype */
-    MPI_Group win_grp, start_grp;
+    MPID_Group *win_grp_ptr;
     int start_grp_size, *ranks_in_start_grp, *ranks_in_win_grp, rank;
     MPIU_CHKLMEM_DECL(7);
     MPIU_THREADPRIV_DECL;
@@ -1017,21 +1018,20 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	ranks_in_start_grp[i] = i;
     }
         
+    mpi_errno = MPIR_Comm_group_impl(comm_ptr, &win_grp_ptr);
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
     nest_level_inc = TRUE;
     MPIR_Nest_incr();
     
-    mpi_errno = NMPI_Comm_group(win_ptr->comm, &win_grp);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
-    start_grp = win_ptr->start_group_ptr->handle;
-
-    mpi_errno = NMPI_Group_translate_ranks(start_grp, start_grp_size,
-					   ranks_in_start_grp, win_grp, 
+    mpi_errno = NMPI_Group_translate_ranks(win_ptr->start_group_ptr->handle, start_grp_size,
+					   ranks_in_start_grp, win_grp_ptr->handle,
 					   ranks_in_win_grp);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         
         
-    NMPI_Comm_rank(win_ptr->comm, &rank);
+    rank = MPIR_Comm_rank(comm_ptr);
+
     /* If MPI_MODE_NOCHECK was not specified, we need to check if
        Win_post was called on the target processes. Wait for a 0-byte sync
        message from each target process */
@@ -1235,8 +1235,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     }
     win_ptr->rma_ops_list = NULL;
     
-    mpi_errno = NMPI_Group_free(&win_grp);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* free the group stored in window */
     MPIR_Group_release(win_ptr->start_group_ptr);

@@ -26,7 +26,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_size
 #undef FCNAME
-#define FCNAME "MPI_Comm_size"
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 
@@ -93,7 +93,7 @@ int MPI_Comm_size( MPI_Comm comm, int *size )
 
     /* ... body of routine ...  */
     
-    *size = comm_ptr->local_size;
+    *size = MPIR_Comm_size(comm_ptr);
     
     /* ... end of body of routine ... */
 

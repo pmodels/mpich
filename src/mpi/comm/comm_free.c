@@ -24,11 +24,20 @@
 #undef MPI_Comm_free
 #define MPI_Comm_free PMPI_Comm_free
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_free_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_free_impl(MPID_Comm * comm_ptr)
+{
+    return MPIR_Comm_release(comm_ptr, 0);
+}
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_free
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Comm_free - Marks the communicator object for deallocation
 
@@ -65,7 +74,6 @@ disallows freeing a null communicator.  The text from the standard is:
 @*/
 int MPI_Comm_free(MPI_Comm *comm)
 {
-    static const char FCNAME[] = "MPI_Comm_free";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_FREE);
@@ -114,7 +122,7 @@ int MPI_Comm_free(MPI_Comm *comm)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_Comm_release(comm_ptr, 0);
+    mpi_errno = MPIR_Comm_free_impl(comm_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     
     *comm = MPI_COMM_NULL;

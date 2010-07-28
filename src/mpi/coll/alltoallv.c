@@ -490,7 +490,7 @@ int MPI_Alltoallv(void *sendbuf, int *sendcnts, int *sdispls,
     mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcnts, sdispls,
                                     sendtype, recvbuf, recvcnts,
                                     rdispls, recvtype, comm_ptr);
-    if (mpi_errno) goto fn_exit;
+    if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
 

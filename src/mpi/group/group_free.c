@@ -23,11 +23,32 @@
 #undef MPI_Group_free
 #define MPI_Group_free PMPI_Group_free
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Group_free_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Group_free_impl(MPID_Group *group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+        
+    /* Do not free MPI_GROUP_EMPTY */
+    if (group_ptr->handle != MPI_GROUP_EMPTY) {
+        mpi_errno = MPIR_Group_release(group_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_free
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
 MPI_Group_free - Frees a group
@@ -49,7 +70,6 @@ On output, group is set to 'MPI_GROUP_NULL'.
 @*/
 int MPI_Group_free(MPI_Group *group)
 {
-    static const char FCNAME[] = "MPI_Group_free";
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_FREE);
@@ -98,16 +118,11 @@ int MPI_Group_free(MPI_Group *group)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    /* Do not free MPI_GROUP_EMPTY */
-    if (*group != MPI_GROUP_EMPTY)
-    { 
-        mpi_errno = MPIR_Group_release(group_ptr);
-    }
 
+    mpi_errno = MPIR_Group_free_impl(group_ptr);
     *group = MPI_GROUP_NULL;
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-    
+
     /* ... end of body of routine ... */
 
   fn_exit:
