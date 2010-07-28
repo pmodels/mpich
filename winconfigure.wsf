@@ -3690,12 +3690,20 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_MEMCHECK_H */")
                                 Case "HAVE_VALGRIND_MEMCHECK_H"
                                         fout.WriteLine("/* #undef HAVE_VALGRIND_MEMCHECK_H */")
+                                Case "HAVE_HELGRIND_H"
+                                        fout.WriteLine("/* #undef HAVE_HELGRIND_H */")
 				Case "HAVE_VALGRIND_H"
 					fout.WriteLine("/* #undef HAVE_VALGRIND_H */")
 				Case "HAVE_BROKEN_VALGRIND"
 					fout.WriteLine("/* #undef HAVE_BROKEN_VALGRIND */")
                                 Case "HAVE_VALGRIND_VALGRIND_H"
                                         fout.WriteLine("/* #undef HAVE_VALGRIND_VALGRIND_H */")
+                                Case "HAVE_VALGRIND_HELGRIND_H"
+                                        fout.WriteLine("/* #undef HAVE_VALGRIND_HELGRIND_H */")
+                                Case "HAVE_DRD_H"
+                                        fout.WriteLine("/* #undef HAVE_DRD_H */")
+                                Case "HAVE_VALGRIND_DRD_H"
+                                        fout.WriteLine("/* #undef HAVE_VALGRIND_DRD_H */")
 				Case "USE_SMP_COLLECTIVES"
 					fout.WriteLine("#define USE_SMP_COLLECTIVES 1")
 				Case "CH3_RANK_BITS"
