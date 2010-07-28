@@ -819,13 +819,8 @@ enum MPIU_Nest_mutexes {
         MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(msgq_mutex)  \
     } while (0)
 
-/* change to 0 to enable some iffy CS assert_held logic */
-#if 1
-#define MPIU_THREAD_CS_ASSERT_HELD(name_) do{/*nothing for now */}while(0)
-#define MPIU_THREAD_CS_ASSERT_ENTER_HELPER(name_)
-#define MPIU_THREAD_CS_ASSERT_EXIT_HELPER(name_)
-#else
-
+/* change to 1 to enable some iffy CS assert_held logic */
+#if 0
 #define MPIU_THREAD_CS_ASSERT_HELD(name_)                                                      \
     do {                                                                                       \
         int same = FALSE;                                                                      \
@@ -882,6 +877,12 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_YIELD(_name,_context)
 #endif /* MPICH_IS_THREADED */
 
+#ifndef MPIU_THREAD_CS_ASSERT_HELD
+#define MPIU_THREAD_CS_ASSERT_HELD(name_) do{/*nothing*/}while(0)
+#define MPIU_THREAD_CS_ASSERT_ENTER_HELPER(name_)
+#define MPIU_THREAD_CS_ASSERT_EXIT_HELPER(name_)
+#endif
+
 
 /* define a type for the completion counter */
 #if defined(MPICH_IS_THREADED)
@@ -894,11 +895,11 @@ typedef volatile int MPID_cc_t;
 #  define MPID_cc_is_complete(cc_ptr_) (0 == *(cc_ptr_))
 #define MPID_cc_decr(cc_ptr_, incomplete_)     \
 do {                                           \
-    *(incomplete_) = --(*(req_)->cc_ptr);      \
+    *(incomplete_) = --(*(cc_ptr_));           \
 } while (0)
 #define MPID_cc_incr(cc_ptr_, was_incomplete_) \
 do {                                           \
-    *(was_incomplete_) = (*(req_)->cc_ptr)++;  \
+    *(was_incomplete_) = (*(cc_ptr_))++;       \
 } while (0)
 
 # elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
@@ -975,11 +976,11 @@ typedef int MPID_cc_t;
 # define MPID_cc_is_complete(cc_ptr_) (0 == *(cc_ptr_))
 #define MPID_cc_decr(cc_ptr_, incomplete_)     \
 do {                                           \
-    *(incomplete_) = --(*(req_)->cc_ptr);      \
+    *(incomplete_) = --(*(cc_ptr_));           \
 } while (0)
 #define MPID_cc_incr(cc_ptr_, was_incomplete_) \
 do {                                           \
-    *(was_incomplete_) = (*(req_)->cc_ptr)++;  \
+    *(was_incomplete_) = (*(cc_ptr_))++;       \
 } while (0)
 
 #endif /* defined(MPICH_IS_THREADED) */
