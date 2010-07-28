@@ -43,8 +43,8 @@ int main( int argc, char **argv )
 	  table[i][j] = rank + 10;
 
       /* Everybody gets the gathered table */
-      MPI_Allgather(&table[begin_row][0], send_count, MPI_INT, 
-		   &table[0][0],          recv_count, MPI_INT, MPI_COMM_WORLD);
+      MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+                    &table[0][0], recv_count, MPI_INT, MPI_COMM_WORLD);
 
       /* Everybody should have the same table now,  */
       /* This test does not in any way guarantee there are no errors */
