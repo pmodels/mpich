@@ -105,7 +105,7 @@ MPIDI_CH3I_Progress_state;
     {                                                                                         \
         MPIDI_CH3I_progress_wakeup_signalled = TRUE;                                          \
         MPIDI_CH3I_Progress_wakeup();                                                         \
-    }                                                                                         \
+    }
 #endif
 
 #endif /* !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED) */
