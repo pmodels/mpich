@@ -266,15 +266,8 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     {
                         /* There's nothing to send and there's another thread already blocking in the progress engine.*/
                         MPIDI_CH3I_Progress_delay(progress_state->ch.completion_count);
-
-                        /* MT FIXME performance: if _delay took the progress
-                         * state or just the counter-by-reference, we could
-                         * update it while we already hold the lock in _delay
-                         * and not reacquire it here */
-                        MPIU_THREAD_CS_ENTER(COMPLETION,);
-                        /* reset for the next iteration */
-                        progress_state->ch.completion_count = MPIDI_CH3I_progress_completion_count;
-                        MPIU_THREAD_CS_EXIT(COMPLETION,);
+                        /* the progress_state count will be updated below at the
+                         * bottom of the outermost loop (see CC-1) */
                     }
                 }
                 MPIU_THREAD_CHECK_END;
@@ -417,7 +410,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        /* in the case of progress_wait, bail out if anything completed */
+        /* in the case of progress_wait, bail out if anything completed (CC-1) */
         if (is_blocking) {
             int made_progress = FALSE;
             MPIU_THREAD_CS_ENTER(COMPLETION,);
