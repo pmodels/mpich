@@ -87,10 +87,10 @@ int MPIR_Init_async_thread(void)
     MPIU_Thread_cond_create(&progress_cond, &err);
     MPIU_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**cond_create", "**cond_create %s", strerror(err));
     
-    MPIU_Thread_mutex_create(&progress_mutex, &mpi_errno);
+    MPIU_Thread_mutex_create(&progress_mutex, &err);
     MPIU_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s", strerror(err));
     
-    MPIU_Thread_create((MPIU_Thread_func_t) progress_fn, NULL, &progress_thread_id, &mpi_errno);
+    MPIU_Thread_create((MPIU_Thread_func_t) progress_fn, NULL, &progress_thread_id, &err);
     MPIU_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s", strerror(err));
     
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
