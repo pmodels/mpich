@@ -1734,7 +1734,9 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                 
                 MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "error polling fd, closing sc");
                 if (it_sc->vc) {
+#ifdef HAVE_ERROR_CHECKING
                     int pg_rank = it_sc->vc->pg_rank; /* vc goes away on cleanup */
+#endif
                     MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, it_sc->vc);
                     cleanup_errno = MPID_nem_tcp_cleanup_on_error(it_sc->vc);
                     if (cleanup_errno) {

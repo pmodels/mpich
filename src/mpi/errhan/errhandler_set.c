@@ -27,7 +27,8 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Errhandler_set
-
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_set - Sets the error handler for a communicator
 
@@ -51,7 +52,6 @@ The replacement for this routine is 'MPI_Comm_set_errhandler'.
 @*/
 int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
 {
-    static const char FCNAME[] = "MPI_Errhandler_set";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Errhandler *errhan_ptr;
