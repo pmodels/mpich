@@ -92,8 +92,6 @@ typedef struct MPICH_ThreadInfo_t {
 
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
     MPID_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
-#endif
-#if 1 /* FIXME should be conditional on something? */
     MPID_Thread_id_t cs_holder[MPIU_THREAD_CS_NUM_NAMES];
 #endif
 } MPICH_ThreadInfo_t;
