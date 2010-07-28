@@ -61,7 +61,7 @@ AC_ARG_ENABLE(f77,
 [--enable-f77 - Turn on Fortran 77 tests (default)],,enable_f77=yes)
 dnl
 AC_ARG_ENABLE(fc,
-[--enable-fc - Turn on Fortran 90 tests (if f90 available)],,enable_fc=default)
+[--enable-fc - Turn on Fortran 90 tests (if f90 available)],,enable_fc=yes)
 AC_ARG_ENABLE(cxx,
 [--enable-cxx - Turn on C++ tests (default)],,enable_cxx=yes)
 AC_ARG_ENABLE(romio,
@@ -227,7 +227,7 @@ if test "$FROM_MPICH2" = "yes" ; then
     # So build-dir version of MPI wrappers which contain the native
     # compilers are used for compilation tests. With option -nativelinking,
     # build-dir MPI wrappers are used for link tests as long as MPI libraries
-    # are not needed.  Because of missing MPI library, run tests with
+    # are not needed.  Because of missing MPI libraries, run tests with
     # build-dir MPI wrappers can only check native compiler features.
     #
     # Using "mpiXX -nativelinking" instead of the BASE* compilers simplifies
@@ -281,28 +281,11 @@ elif test -n "$with_mpi" ; then
     fi
 fi
 
+# Running C compiler tests
+# Work around feature in autoconf that adds -g -O2 to CFLAGS
+saveCFLAGS="$CFLAGS"
 AC_PROG_CC
-if test "$enable_f77" = yes ; then
-    AC_PROG_F77
-    # If there is no working F77, then set enable_f77 to no
-    if test -z "$F77" ; then
-        enable_f77=no
-    fi    
-fi
-if test "$enable_fc" = yes ; then
-    PAC_PROG_FC
-    # If there is no working FC, then set enable_fc to no
-    if test -z "$FC" ; then
-        enable_fc=no
-    fi
-fi
-if test "$enable_cxx" = yes ; then
-    AC_PROG_CXX
-    if test -z "$CXX" ; then
-        enable_cxx=no
-    fi
-fi
- 
+CFLAGS="$saveCFLAGS"
 #
 # Note that some versions of autoconf will insist that the compiler 
 # produce executables at this point, which is why we must do something
@@ -335,7 +318,9 @@ AC_C_CONST
 AC_C_RESTRICT
 
 # General headers
-AC_CHECK_HEADERS(unistd.h stdarg.h string.h stdlib.h memory.h stdint.h)
+dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
+dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
+AC_CHECK_HEADERS(stdarg.h )
 
 # Check for fixed width types
 AC_TYPE_INT8_T
@@ -382,6 +367,17 @@ if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
 
+# Running Fortran 77 compiler tests
+if test "$enable_f77" = yes ; then
+    # Work around feature in autoconf that adds -g -O2 to FFLAGS
+    saveFFLAGS="$FFLAGS"
+    AC_PROG_F77
+    FFLAGS="$saveFFLAGS"
+    # If there is no working F77, then set enable_f77 to no
+    if test -z "$F77" ; then
+        enable_f77=no
+    fi    
+fi
 # Simple tests for which other languages we can handle.  
 # Use these only when configuring separate from an MPICH2 build
 f77dir="#"
@@ -642,43 +638,45 @@ if test -z "$F77_MPI_ADDRESS" ; then
 fi
 AC_SUBST(F77_MPI_ADDRESS)
 
+# Running Fortran 90+ compiler tests
+if test "$enable_fc" = yes ; then
+    # Work around feature in autoconf that adds -g -O2 to FCFLAGS
+    saveFCFLAGS="$FCFLAGS"
+    PAC_PROG_FC
+    FCFLAGS="$saveFCFLAGS"
+    # If there is no working FC, then set enable_fc to no
+    if test -z "$FC" ; then
+        enable_fc=no
+    fi
+fi
 f90dir="#"
 AC_SUBST(f90dir)
 # First, see if we have an f90 compiler.  This uses code similar to that
 # in the MPICH2 top-level configure
-if test "$enable_fc" = default -a "$enable_f77" = yes ; then
-    enable_fc=no
-    # Work around bug in autoconf that adds -g to FCFLAGS
-    saveFCFLAGS="$FCFLAGS"
-    PAC_PROG_FC
+if test "$enable_fc" = yes -a "$enable_f77" = yes ; then
     PAC_PROG_FC_WORKS
-    FCFLAGS=$saveFCFLAGS
     if test -z "$FC" -o "$pac_cv_prog_fc_works" != yes ; then
-        AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
         enable_fc=no
     fi
 fi
 
+dnl If enable_fc=yes up to this point then enable_f77=yes also
+dnl PAC_PROG_FC and PAC_PROG_FC_WORKS return OK
 if test "$enable_fc" = yes ; then
-    # Work around bug in autoconf that adds -g to FCFLAGS
-    saveFCFLAGS="$FCFLAGS"
-    PAC_PROG_FC
-    PAC_PROG_FC_WORKS
-    FCFLAGS=$saveFCFLAGS
-
-    if test -n "$FC" ; then
-        # Make sure that the compilers are compatible.  This 
-        # will also make sure that the program named in FC is
-        # a working Fortran 90 compiler
-        # Only check if we're *not* building within MPICH2 
-        # (MPICH2 will have made the test)
-        # FIXME: Do we want to check only simple routine names 
-        # (those without an underscore?)
-        if test "$FROM_MPICH2" != yes ; then
-            PAC_FC_AND_F77_COMPATIBLE(enable_fc=yes,enable_fc=no)
-        fi
+    # Make sure that the compilers are compatible.  This 
+    # will also make sure that the program named in FC is
+    # a working Fortran 90 compiler
+    # Only check if we're *not* building within MPICH2 
+    # (MPICH2 will have made the test)
+    # FIXME: Do we want to check only simple routine names 
+    # (those without an underscore?)
+    if test "$FROM_MPICH2" != yes ; then
+        PAC_FC_AND_F77_COMPATIBLE(enable_fc=yes,enable_fc=no)
     fi
-    if test -n "$FC" -a "$ac_fc_srcext" != "f90" ; then
+fi
+
+if test "$enable_fc" = yes ; then
+    if test "$ac_fc_srcext" != "f90" ; then
         AC_FC_SRCEXT([f90],[
             FCFLAGS="$FCFLAGS $FCFLAGS_f90"
         ],[
@@ -728,6 +726,17 @@ elif test "$enable_fc" = yes ; then
         AC_MSG_RESULT(no)
     ])
     AC_LANG_POP([Fortran])
+fi
+
+# Running C++ compiler tests
+if test "$enable_cxx" = yes ; then
+    # Work around feature in autoconf that adds -g -O2 to CXXFLAGS
+    saveCXXFLAGS="$CXXFLAGS"
+    AC_PROG_CXX
+    CXXFLAGS="$saveCXXFLAGS"
+    if test -z "$CXX" ; then
+        enable_cxx=no
+    fi
 fi
 # Simple tests for which other languages we can handle
 cxxdir="#"

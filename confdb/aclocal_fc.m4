@@ -352,8 +352,9 @@ dnl argument provides another routine name.
 dnl
 AC_DEFUN([PAC_FC_AND_F77_COMPATIBLE],[
 AC_REQUIRE([PAC_PROG_FC_WORKS])
-AC_CACHE_CHECK([whether Fortran 90 works with Fortran 77],
+AC_CACHE_CHECK([whether Fortran 90 compiler works with Fortran 77 compiler],
 pac_cv_fc_and_f77,[
+pacTestRoutine=foo_abc
 ifelse([$3],,,[eval pacTestRoutine=$3])
 pac_cv_fc_and_f77="unknown"
 # compile the f77 program and link with the f90 program
