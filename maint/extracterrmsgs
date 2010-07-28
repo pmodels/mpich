@@ -30,6 +30,7 @@ if (defined($ENV{"DEBUG_STRICT"})) { $gStrict = 1; }
 # Check for special args
 @files = ();
 %skipFiles = ();
+my @errnameFiles = ();
 $outfile = "";
 foreach $arg (@ARGV) {
     if ($arg =~ /^--?showfiles/) { $showfiles = 1; }
@@ -52,7 +53,13 @@ foreach $arg (@ARGV) {
 	    @files = (@files, &ExpandDir( $arg ));
 	}
 	else {
-	    $files[$#files+1] = $arg;
+            # errname files are treated differently
+            if ($arg =~ m{(^|[/\\])errnames.txt$}) {
+                push @errnameFiles, $arg;
+            }
+            else {
+                $files[$#files+1] = $arg;
+            }
 	}
     }
 }
