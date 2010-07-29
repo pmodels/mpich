@@ -198,12 +198,9 @@ int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *vc ATTRIBUTE((u
     MPID_Datatype *new_dtp = NULL;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
-    MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRESPDERIVEDDTCOMPLETE);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRESPDERIVEDDTCOMPLETE);
-    
-    MPIU_THREADPRIV_GET;
     
     /* create derived datatype */
     create_derived_datatype(rreq, &new_dtp);
@@ -213,14 +210,7 @@ int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *vc ATTRIBUTE((u
     
     /* first need to allocate tmp_buf to recv the data into */
     
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Type_get_true_extent(new_dtp->handle, 
-					  &true_lb, &true_extent);
-    MPIR_Nest_decr();
-    if (mpi_errno) {
-	MPIU_ERR_POP(mpi_errno);
-    }
-    
+    MPIR_Type_get_true_extent_impl(new_dtp->handle, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(new_dtp->handle, extent); 
     
     tmp_buf = MPIU_Malloc(rreq->dev.user_count * 
@@ -617,12 +607,9 @@ static int do_accumulate_op(MPID_Request *rreq)
     int mpi_errno = MPI_SUCCESS, predefined;
     MPI_Aint true_lb, true_extent;
     MPI_User_function *uop;
-    MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_DO_ACCUMULATE_OP);
     
     MPIDI_FUNC_ENTER(MPID_STATE_DO_ACCUMULATE_OP);
-
-    MPIU_THREADPRIV_GET;
 
     if (rreq->dev.op == MPI_REPLACE)
     {
@@ -713,13 +700,7 @@ static int do_accumulate_op(MPID_Request *rreq)
 
  fn_exit:
     /* free the temporary buffer */
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Type_get_true_extent(rreq->dev.datatype, &true_lb, &true_extent);
-    MPIR_Nest_decr();
-    if (mpi_errno) {
-	MPIU_ERR_POP(mpi_errno);
-    }
-    
+    MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
     MPIU_Free((char *) rreq->dev.user_buf + true_lb);
 
     MPIDI_FUNC_EXIT(MPID_STATE_DO_ACCUMULATE_OP);

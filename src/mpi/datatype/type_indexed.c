@@ -23,11 +23,67 @@
 #undef MPI_Type_indexed
 #define MPI_Type_indexed PMPI_Type_indexed
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_indexed_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Type_indexed_impl(int count, int blocklens[], int indices[], MPI_Datatype old_type,
+                           MPI_Datatype *newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPID_Datatype *new_dtp;
+    int i, *ints;
+    MPIU_CHKLMEM_DECL(1);
+
+    mpi_errno = MPID_Type_indexed(count,
+				  blocklens,
+				  indices,
+				  0, /* displacements not in bytes */
+				  old_type,
+				  &new_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    /* copy all integer values into a temporary buffer; this
+     * includes the count, the blocklengths, and the displacements.
+     */
+    MPIU_CHKLMEM_MALLOC(ints, int *, (2 * count + 1) * sizeof(int), mpi_errno, "contents integer array");
+
+    ints[0] = count;
+
+    for (i=0; i < count; i++) {
+	ints[i+1] = blocklens[i];
+    }
+    for (i=0; i < count; i++) {
+	ints[i + count + 1] = indices[i];
+    }
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+					   MPI_COMBINER_INDEXED,
+					   2*count + 1, /* ints */
+					   0, /* aints  */
+					   1, /* types */
+					   ints,
+					   NULL,
+					   &old_type);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_indexed
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Type_indexed - Creates an indexed datatype
 
@@ -79,12 +135,7 @@ int MPI_Type_indexed(int count,
 		     MPI_Datatype old_type,
 		     MPI_Datatype *newtype)
 {
-    static const char FCNAME[] = "MPI_Type_indexed";
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
-    int i, *ints;
-    MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_INDEXED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -124,44 +175,13 @@ int MPI_Type_indexed(int count,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+
+    mpi_errno = MPIR_Type_indexed_impl(count, blocklens, indices, old_type, newtype);
+    if (mpi_errno) goto fn_fail;
     
-    mpi_errno = MPID_Type_indexed(count,
-				  blocklens,
-				  indices,
-				  0, /* displacements not in bytes */
-				  old_type,
-				  &new_handle);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    /* copy all integer values into a temporary buffer; this
-     * includes the count, the blocklengths, and the displacements.
-     */
-    MPIU_CHKLMEM_MALLOC(ints, int *, (2 * count + 1) * sizeof(int), mpi_errno, "contents integer array");
-
-    ints[0] = count;
-
-    for (i=0; i < count; i++) {
-	ints[i+1] = blocklens[i];
-    }
-    for (i=0; i < count; i++) {
-	ints[i + count + 1] = indices[i];
-    }
-    MPID_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPID_Datatype_set_contents(new_dtp,
-					   MPI_COMBINER_INDEXED,
-					   2*count + 1, /* ints */
-					   0, /* aints  */
-					   1, /* types */
-					   ints,
-					   NULL,
-					   &old_type);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_INDEXED);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

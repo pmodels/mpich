@@ -213,17 +213,20 @@ int MPIR_Gather_intra (
 			    blocks[1] = (recvcnt * recvblks) - blocks[0];
 			    displs[1] = 0;
 			    
-			    NMPI_Type_indexed(2, blocks, displs, recvtype, &tmp_type);
-			    NMPI_Type_commit(&tmp_type);
+			    mpi_errno = MPIR_Type_indexed_impl(2, blocks, displs, recvtype, &tmp_type);
+                            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                            
+			    mpi_errno = MPIR_Type_commit_impl(&tmp_type);
+                            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 			    
 			    mpi_errno = MPIC_Recv(recvbuf, 1, tmp_type, src,
 						  MPIR_GATHER_TAG, comm, &status);
                             if (mpi_errno) {
-                                NMPI_Type_free(&tmp_type);
+                                MPIR_Type_free_impl(&tmp_type);
                                 MPIU_ERR_POP(mpi_errno);
                             }
 
-			    NMPI_Type_free(&tmp_type);
+			    MPIR_Type_free_impl(&tmp_type);
 			}
 		    }
                     else /* Intermediate nodes store in temporary buffer */
@@ -274,16 +277,19 @@ int MPIR_Gather_intra (
 		    struct_displs[1] = MPI_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
 		    types[1] = MPI_BYTE;
 
-		    NMPI_Type_create_struct(2, blocks, struct_displs, types, &tmp_type);
-		    NMPI_Type_commit(&tmp_type);
+		    mpi_errno = MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    
+		    mpi_errno = MPIR_Type_commit_impl(&tmp_type);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 		    mpi_errno = MPIC_Send(MPI_BOTTOM, 1, tmp_type, dst,
 					  MPIR_GATHER_TAG, comm);
                     if (mpi_errno) {
-                        NMPI_Type_free(&tmp_type);
+                        MPIR_Type_free_impl(&tmp_type);
                         MPIU_ERR_POP(mpi_errno);
                     }
-		    NMPI_Type_free(&tmp_type);
+		    MPIR_Type_free_impl(&tmp_type);
 		}
 
                 break;
@@ -490,10 +496,7 @@ int MPIR_Gather_inter (
             
             if (rank == 0)
 	    {
-                mpi_errno = NMPI_Type_get_true_extent(sendtype, &true_lb,
-                                                      &true_extent);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                
+                MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
                 MPID_Datatype_get_extent_macro(sendtype, extent);
  
 		MPID_Ensure_Aint_fits_in_pointer(sendcnt*local_size*

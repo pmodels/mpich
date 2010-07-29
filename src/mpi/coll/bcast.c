@@ -411,9 +411,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     if (is_contig && is_homogeneous)
     {
         /* contiguous and homogeneous. no need to pack. */
-        mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                              &true_extent);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
         tmp_buf = (char *) buffer + true_lb;
     }
@@ -670,9 +668,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     if (is_contig && is_homogeneous)
     {
         /* contiguous and homogeneous. no need to pack. */
-        mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                              &true_extent);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
         tmp_buf = (char *) buffer + true_lb;
     }

@@ -28,8 +28,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_size
 #undef FCNAME
-#define FCNAME "MPI_Type_size"
-
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Type_size - Return the number of bytes occupied by entries
                     in the datatype

@@ -23,13 +23,32 @@
 #undef MPI_Type_get_true_extent
 #define MPI_Type_get_true_extent PMPI_Type_get_true_extent
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_get_true_extent_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint *true_extent)
+{
+    MPID_Datatype *datatype_ptr = NULL;
+
+    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+	*true_lb     = 0;
+	*true_extent = MPID_Datatype_get_basic_size(datatype);
+    }
+    else {
+	*true_lb     = datatype_ptr->true_lb;
+	*true_extent = datatype_ptr->true_ub - datatype_ptr->true_lb;
+    }
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_true_extent
 #undef FCNAME
-#define FCNAME "MPI_Type_get_true_extent"
-
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_true_extent - Get the true lower bound and extent for a
      datatype
@@ -91,14 +110,7 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb,
 
     /* ... body of routine ...  */
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
-	*true_lb     = 0;
-	*true_extent = MPID_Datatype_get_basic_size(datatype);
-    }
-    else {
-	*true_lb     = datatype_ptr->true_lb;
-	*true_extent = datatype_ptr->true_ub - datatype_ptr->true_lb;
-    }
+    MPIR_Type_get_true_extent_impl(datatype, true_lb, true_extent);
 
     /* ... end of body of routine ... */
 

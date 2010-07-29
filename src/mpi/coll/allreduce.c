@@ -262,9 +262,7 @@ int MPIR_Allreduce_intra (
         }
         
         /* need to allocate temporary buffer to store incoming data*/
-        mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                              &true_extent);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPID_Datatype_get_extent_macro(datatype, extent);
 
         MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));

@@ -23,11 +23,63 @@
 #undef MPI_Type_create_struct
 #define MPI_Type_create_struct PMPI_Type_create_struct
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_create_struct_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Type_create_struct_impl(int count,
+                                 int array_of_blocklengths[],
+                                 MPI_Aint array_of_displacements[],
+                                 MPI_Datatype array_of_types[],
+                                 MPI_Datatype *newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, *ints;
+    MPI_Datatype new_handle;
+    MPID_Datatype *new_dtp;
+    MPIU_CHKLMEM_DECL(1);
+
+    mpi_errno = MPID_Type_struct(count,
+				 array_of_blocklengths,
+				 array_of_displacements,
+				 array_of_types,
+				 &new_handle);
+
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+
+    MPIU_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description");
+
+    ints[0] = count;
+    for (i=0; i < count; i++)
+	ints[i+1] = array_of_blocklengths[i];
+
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+				           MPI_COMBINER_STRUCT,
+				           count+1, /* ints (cnt,blklen) */
+				           count, /* aints (disps) */
+				           count, /* types */
+				           ints,
+				           array_of_displacements,
+				           array_of_types);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+        
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_struct
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_struct - Create an MPI datatype from a general set of
    datatypes, displacements, and block sizes
@@ -58,12 +110,7 @@ int MPI_Type_create_struct(int count,
 			   MPI_Datatype array_of_types[],
 			   MPI_Datatype *newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_struct";
     int mpi_errno = MPI_SUCCESS;
-    int i, *ints;
-    MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
-    MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -107,42 +154,13 @@ int MPI_Type_create_struct(int count,
 
     /* ... body of routine ... */
 
-    mpi_errno = MPID_Type_struct(count,
-				 array_of_blocklengths,
-				 array_of_displacements,
-				 array_of_types,
-				 &new_handle);
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS)
-	goto fn_fail;
-    /* --END ERROR HANDLING-- */
-
-    MPIU_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description");
-
-    ints[0] = count;
-    for (i=0; i < count; i++)
-    {
-	ints[i+1] = array_of_blocklengths[i];
-    }
-
-    MPID_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPID_Datatype_set_contents(new_dtp,
-				           MPI_COMBINER_STRUCT,
-				           count+1, /* ints (cnt,blklen) */
-				           count, /* aints (disps) */
-				           count, /* types */
-				           ints,
-				           array_of_displacements,
-				           array_of_types);
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    mpi_errno = MPIR_Type_create_struct_impl(count, array_of_blocklengths, array_of_displacements,
+                                             array_of_types, newtype);
+    if (mpi_errno) goto fn_exit;
+        
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

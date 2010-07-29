@@ -28,8 +28,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_extent
 #undef FCNAME
-#define FCNAME "MPI_Type_extent"
-
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Type_extent - Returns the extent of a datatype
 
@@ -53,7 +52,6 @@ The replacement for this routine is 'MPI_Type_get_extent'.
 int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_extent;
     MPID_Datatype *datatype_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_EXTENT);
 
@@ -91,8 +89,7 @@ int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent)
 
     /* ... body of routine ...  */
 
-    MPID_Datatype_get_extent_macro(datatype, type_extent);
-    *extent = type_extent;
+    MPIR_Type_extent_impl(datatype, extent);
 
     /* ... end of body of routine ... */
 

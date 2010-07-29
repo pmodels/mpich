@@ -112,7 +112,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
 
     MPID_Datatype_get_extent_macro(datatype, extent);
     /* assumes nesting is handled by the caller right now, may not be true in the future */
-    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         is_commutative = 1;
@@ -328,9 +328,7 @@ int MPIR_Reduce_scatter_block_intra (
     }
 
     MPID_Datatype_get_extent_macro(datatype, extent);
-    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                          &true_extent);  
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         is_commutative = 1;
@@ -771,8 +769,11 @@ int MPIR_Reduce_scatter_block_intra (
                 for (j=my_tree_root; (j<my_tree_root+mask) && (j<comm_size); j++)
                     dis[1] += recvcount;
 
-                NMPI_Type_indexed(2, blklens, dis, datatype, &sendtype);
-                NMPI_Type_commit(&sendtype);
+                mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &sendtype);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                
+                mpi_errno = MPIR_Type_commit_impl(&sendtype);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
                 /* calculate recvtype */
                 blklens[0] = blklens[1] = 0;
@@ -786,8 +787,11 @@ int MPIR_Reduce_scatter_block_intra (
                 for (j=dst_tree_root; (j<dst_tree_root+mask) && (j<comm_size); j++)
                     dis[1] += recvcount;
 
-                NMPI_Type_indexed(2, blklens, dis, datatype, &recvtype);
-                NMPI_Type_commit(&recvtype);
+                mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &recvtype);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                
+                mpi_errno = MPIR_Type_commit_impl(&recvtype);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
                 received = 0;
                 if (dst < comm_size) {
@@ -918,8 +922,8 @@ int MPIR_Reduce_scatter_block_intra (
                     }
                 }
 
-                NMPI_Type_free(&sendtype);
-                NMPI_Type_free(&recvtype);
+                MPIR_Type_free_impl(&sendtype);
+                MPIR_Type_free_impl(&recvtype);
 
                 mask <<= 1;
                 i++;
@@ -984,10 +988,7 @@ int MPIR_Reduce_scatter_block_inter (
         /* In each group, rank 0 allocates a temp. buffer for the 
            reduce */
 
-        mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                              &true_extent);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPID_Datatype_get_extent_macro(datatype, extent);
 
         MPIU_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPIR_MAX(extent,true_extent)), mpi_errno, "tmp_buf");

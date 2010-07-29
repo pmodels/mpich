@@ -122,7 +122,7 @@ int MPIR_Exscan (
     if (count == 0) return MPI_SUCCESS;
 
     MPIU_THREADPRIV_GET;
-
+    
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -156,11 +156,7 @@ int MPIR_Exscan (
     }
     
     /* need to allocate temporary buffer to store partial scan*/
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                          &true_extent);
-    MPIR_Nest_decr();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPID_Datatype_get_extent_macro( datatype, extent );
 

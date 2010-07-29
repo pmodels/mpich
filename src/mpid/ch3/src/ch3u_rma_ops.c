@@ -470,10 +470,7 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 		   the same datatype as the target. Then do the
 		   accumulate operation. */
 		
-		mpi_errno = NMPI_Type_get_true_extent(target_datatype, 
-						      &true_lb, &true_extent);
-		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-		
+		MPIR_Type_get_true_extent_impl(target_datatype, &true_lb, &true_extent);
 		MPID_Datatype_get_extent_macro(target_datatype, extent); 
 		
 		MPIU_CHKLMEM_MALLOC(tmp_buf, void *, 

@@ -19,6 +19,10 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
 		      MPI_Aint *st_offset);
 
 
+#undef FUNCNAME
+#define FUNCNAME PREPEND_PREFIX(Type_convert_darray)
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int PREPEND_PREFIX(Type_convert_darray)(int size,
 					int rank,
 					int ndims,
@@ -30,11 +34,12 @@ int PREPEND_PREFIX(Type_convert_darray)(int size,
 					MPI_Datatype oldtype,
 					MPI_Datatype *newtype)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPI_Datatype type_old, type_new=MPI_DATATYPE_NULL, types[3];
     int procs, tmp_rank, i, tmp_size, blklens[3], *coords;
     MPI_Aint *st_offsets, orig_extent, disps[3];
 
-    NMPI_Type_extent(oldtype, &orig_extent);
+    MPIR_Type_extent_impl(oldtype, &orig_extent);
 
 /* calculate position in Cartesian grid as MPI would (row-major
    ordering) */
@@ -55,30 +60,33 @@ int PREPEND_PREFIX(Type_convert_darray)(int size,
 	for (i=0; i<ndims; i++) {
 	    switch(array_of_distribs[i]) {
 	    case MPI_DISTRIBUTE_BLOCK:
-		MPIOI_Type_block(array_of_gsizes, i, ndims,
-				 array_of_psizes[i],
-				 coords[i], array_of_dargs[i],
-				 order, orig_extent,
-				 type_old, &type_new,
-				 st_offsets+i);
+		mpi_errno = MPIOI_Type_block(array_of_gsizes, i, ndims,
+                                             array_of_psizes[i],
+                                             coords[i], array_of_dargs[i],
+                                             order, orig_extent,
+                                             type_old, &type_new,
+                                             st_offsets+i);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		break;
 	    case MPI_DISTRIBUTE_CYCLIC:
-		MPIOI_Type_cyclic(array_of_gsizes, i, ndims,
-				  array_of_psizes[i], coords[i],
-				  array_of_dargs[i], order,
-				  orig_extent, type_old,
-				  &type_new, st_offsets+i);
+		mpi_errno = MPIOI_Type_cyclic(array_of_gsizes, i, ndims,
+                                              array_of_psizes[i], coords[i],
+                                              array_of_dargs[i], order,
+                                              orig_extent, type_old,
+                                              &type_new, st_offsets+i);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		break;
 	    case MPI_DISTRIBUTE_NONE:
 		/* treat it as a block distribution on 1 process */
-		MPIOI_Type_block(array_of_gsizes, i, ndims, 1, 0,
-				 MPI_DISTRIBUTE_DFLT_DARG, order,
-				 orig_extent,
-				 type_old, &type_new,
-				 st_offsets+i);
+		mpi_errno = MPIOI_Type_block(array_of_gsizes, i, ndims, 1, 0,
+                                             MPI_DISTRIBUTE_DFLT_DARG, order,
+                                             orig_extent,
+                                             type_old, &type_new,
+                                             st_offsets+i);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		break;
 	    }
-	    if (i) NMPI_Type_free(&type_old);
+	    if (i) MPIR_Type_free_impl(&type_old);
 	    type_old = type_new;
 	}
 
@@ -97,26 +105,29 @@ int PREPEND_PREFIX(Type_convert_darray)(int size,
 	for (i=ndims-1; i>=0; i--) {
 	    switch(array_of_distribs[i]) {
 	    case MPI_DISTRIBUTE_BLOCK:
-		MPIOI_Type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
-				 coords[i], array_of_dargs[i], order,
-				 orig_extent, type_old, &type_new,
-				 st_offsets+i);
+		mpi_errno = MPIOI_Type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
+                                             coords[i], array_of_dargs[i], order,
+                                             orig_extent, type_old, &type_new,
+                                             st_offsets+i);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		break;
 	    case MPI_DISTRIBUTE_CYCLIC:
-		MPIOI_Type_cyclic(array_of_gsizes, i, ndims,
-				  array_of_psizes[i], coords[i],
-				  array_of_dargs[i], order,
-				  orig_extent, type_old, &type_new,
-				  st_offsets+i);
+		mpi_errno = MPIOI_Type_cyclic(array_of_gsizes, i, ndims,
+                                              array_of_psizes[i], coords[i],
+                                              array_of_dargs[i], order,
+                                              orig_extent, type_old, &type_new,
+                                              st_offsets+i);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		break;
 	    case MPI_DISTRIBUTE_NONE:
 		/* treat it as a block distribution on 1 process */
-		MPIOI_Type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
-		      coords[i], MPI_DISTRIBUTE_DFLT_DARG, order, orig_extent,
-                           type_old, &type_new, st_offsets+i);
+		mpi_errno = MPIOI_Type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
+                                             coords[i], MPI_DISTRIBUTE_DFLT_DARG, order, orig_extent,
+                                             type_old, &type_new, st_offsets+i);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		break;
 	    }
-	    if (i != ndims-1) NMPI_Type_free(&type_old);
+	    if (i != ndims-1) MPIR_Type_free_impl(&type_old);
 	    type_old = type_new;
 	}
 
@@ -140,26 +151,36 @@ int PREPEND_PREFIX(Type_convert_darray)(int size,
     types[1] = type_new;
     types[2] = MPI_UB;
     
-    NMPI_Type_struct(3, blklens, disps, types, newtype);
+    mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, newtype);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    NMPI_Type_free(&type_new);
+    MPIR_Type_free_impl(&type_new);
 
     DLOOP_Free(st_offsets);
     DLOOP_Free(coords);
-    return MPI_SUCCESS;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 
 /* Returns MPI_SUCCESS on success, an MPI error code on failure.  Code above
  * needs to call MPIO_Err_return_xxx.
  */
+#undef FUNCNAME
+#define FUNCNAME MPIOI_Type_block
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
-		     int rank, int darg, int order, MPI_Aint orig_extent,
-		     MPI_Datatype type_old, MPI_Datatype *type_new,
-		     MPI_Aint *st_offset)
+                            int rank, int darg, int order, MPI_Aint orig_extent,
+                            MPI_Datatype type_old, MPI_Datatype *type_new,
+                            MPI_Aint *st_offset)
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
+    int mpi_errno = MPI_SUCCESS;
     int blksize, global_size, mysize, i, j;
     MPI_Aint stride;
 
@@ -170,15 +191,8 @@ static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs
     else {
 	blksize = darg;
 
-	/* --BEGIN ERROR HANDLING-- */
-	if (blksize <= 0) {
-	    return MPI_ERR_ARG;
-	}
-
-	if (blksize * nprocs < global_size) {
-	    return MPI_ERR_ARG;
-	}
-	/* --END ERROR HANDLING-- */
+        MPIU_ERR_CHKINTERNAL(blksize <= 0, mpi_errno, "blksize must be > 0");
+        MPIU_ERR_CHKINTERNAL(blksize * nprocs < global_size, mpi_errno, "blksize * nprocs must be >= global size");
     }
 
     j = global_size - blksize*rank;
@@ -187,19 +201,23 @@ static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs
 
     stride = orig_extent;
     if (order == MPI_ORDER_FORTRAN) {
-	if (dim == 0)
-	    NMPI_Type_contiguous(mysize, type_old, type_new);
-	else {
+	if (dim == 0) {
+	    mpi_errno = MPIR_Type_contiguous_impl(mysize, type_old, type_new);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        } else {
 	    for (i=0; i<dim; i++) stride *= (MPI_Aint)(array_of_gsizes[i]);
-	    NMPI_Type_hvector(mysize, 1, stride, type_old, type_new);
+	    mpi_errno = MPIR_Type_hvector_impl(mysize, 1, stride, type_old, type_new);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
     }
     else {
-	if (dim == ndims-1)
-	    NMPI_Type_contiguous(mysize, type_old, type_new);
-	else {
+	if (dim == ndims-1) {
+	    mpi_errno = MPIR_Type_contiguous_impl(mysize, type_old, type_new);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        } else {
 	    for (i=ndims-1; i>dim; i--) stride *= (MPI_Aint)(array_of_gsizes[i]);
-	    NMPI_Type_hvector(mysize, 1, stride, type_old, type_new);
+	    mpi_errno = MPIR_Type_hvector_impl(mysize, 1, stride, type_old, type_new);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
     }
 
@@ -207,7 +225,10 @@ static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs
      /* in terms of no. of elements of type oldtype in this dimension */
     if (mysize == 0) *st_offset = 0;
 
-    return MPI_SUCCESS;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 
@@ -221,6 +242,7 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
+    int mpi_errno = MPI_SUCCESS;
     int blksize, i, blklens[3], st_index, end_index, local_size, rem, count;
     MPI_Aint stride, disps[3];
     MPI_Datatype type_tmp, types[3];
@@ -228,11 +250,7 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
     if (darg == MPI_DISTRIBUTE_DFLT_DARG) blksize = 1;
     else blksize = darg;
 
-    /* --BEGIN ERROR HANDLING-- */
-    if (blksize <= 0) {
-	return MPI_ERR_ARG;
-    }
-    /* --END ERROR HANDLING-- */
+    MPIU_ERR_CHKINTERNAL(blksize <= 0, mpi_errno, "blksize must be > 0");
 
     st_index = rank*blksize;
     end_index = array_of_gsizes[dim] - 1;
@@ -252,7 +270,8 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
 	for (i=0; i<dim; i++) stride *= (MPI_Aint)(array_of_gsizes[i]);
     else for (i=ndims-1; i>dim; i--) stride *= (MPI_Aint)(array_of_gsizes[i]);
 
-    NMPI_Type_hvector(count, blksize, stride, type_old, type_new);
+    mpi_errno = MPIR_Type_hvector_impl(count, blksize, stride, type_old, type_new);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (rem) {
 	/* if the last block is of size less than blksize, include
@@ -265,9 +284,10 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
 	blklens[0] = 1;
 	blklens[1] = rem;
 
-	NMPI_Type_struct(2, blklens, disps, types, &type_tmp);
+	mpi_errno = MPIR_Type_struct_impl(2, blklens, disps, types, &type_tmp);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-	NMPI_Type_free(type_new);
+	MPIR_Type_free_impl(type_new);
 	*type_new = type_tmp;
     }
 
@@ -282,8 +302,11 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
         types[2] = MPI_UB;
         disps[2] = orig_extent * ((MPI_Aint)(array_of_gsizes[dim]));
         blklens[0] = blklens[1] = blklens[2] = 1;
-        NMPI_Type_struct(3, blklens, disps, types, &type_tmp);
-        NMPI_Type_free(type_new);
+
+        mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, &type_tmp);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
+        MPIR_Type_free_impl(type_new);
         *type_new = type_tmp;
 
         *st_offset = 0;  /* set it to 0 because it is taken care of in
@@ -297,5 +320,8 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
 
     if (local_size == 0) *st_offset = 0;
 
-    return MPI_SUCCESS;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }

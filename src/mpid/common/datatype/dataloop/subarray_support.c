@@ -8,7 +8,10 @@
  */
 
 #include "dataloop.h"
-
+#undef FUNCNAME
+#define FUNCNAME PREPEND_PREFIX(Type_convert_subarray)
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int PREPEND_PREFIX(Type_convert_subarray)(int ndims,
 					  int *array_of_sizes,
 					  int *array_of_subsizes,
@@ -17,27 +20,31 @@ int PREPEND_PREFIX(Type_convert_subarray)(int ndims,
 					  MPI_Datatype oldtype,
 					  MPI_Datatype *newtype)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint extent, disps[3], size;
     int i, blklens[3];
     MPI_Datatype tmp1, tmp2, types[3];
 
-    NMPI_Type_extent(oldtype, &extent);
+    MPIR_Type_extent_impl(oldtype, &extent);
 
     if (order == MPI_ORDER_FORTRAN) {
 	/* dimension 0 changes fastest */
 	if (ndims == 1) {
-	    NMPI_Type_contiguous(array_of_subsizes[0], oldtype, &tmp1);
+	    mpi_errno = MPIR_Type_contiguous_impl(array_of_subsizes[0], oldtype, &tmp1);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
 	else {
-	    NMPI_Type_vector(array_of_subsizes[1],
-			     array_of_subsizes[0],
-			     array_of_sizes[0], oldtype, &tmp1);
+	    mpi_errno = MPIR_Type_vector_impl(array_of_subsizes[1],
+                                              array_of_subsizes[0],
+                                              array_of_sizes[0], oldtype, &tmp1);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	    size = (MPI_Aint)(array_of_sizes[0]) * extent;
 	    for (i=2; i<ndims; i++) {
 		size *= (MPI_Aint)(array_of_sizes[i-1]);
-		NMPI_Type_hvector(array_of_subsizes[i], 1, size, tmp1, &tmp2);
-		NMPI_Type_free(&tmp1);
+		mpi_errno = MPIR_Type_hvector_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+		MPIR_Type_free_impl(&tmp1);
 		tmp1 = tmp2;
 	    }
 	}
@@ -55,18 +62,21 @@ int PREPEND_PREFIX(Type_convert_subarray)(int ndims,
     else /* order == MPI_ORDER_C */ {
 	/* dimension ndims-1 changes fastest */
 	if (ndims == 1) {
-	    NMPI_Type_contiguous(array_of_subsizes[0], oldtype, &tmp1);
+	    mpi_errno = MPIR_Type_contiguous_impl(array_of_subsizes[0], oldtype, &tmp1);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	}
 	else {
-	    NMPI_Type_vector(array_of_subsizes[ndims-2],
-			     array_of_subsizes[ndims-1],
-			     array_of_sizes[ndims-1], oldtype, &tmp1);
+	    mpi_errno = MPIR_Type_vector_impl(array_of_subsizes[ndims-2],
+                                              array_of_subsizes[ndims-1],
+                                              array_of_sizes[ndims-1], oldtype, &tmp1);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	    size = (MPI_Aint)(array_of_sizes[ndims-1]) * extent;
 	    for (i=ndims-3; i>=0; i--) {
 		size *= (MPI_Aint)(array_of_sizes[i+1]);
-		NMPI_Type_hvector(array_of_subsizes[i], 1, size, tmp1, &tmp2);
-		NMPI_Type_free(&tmp1);
+		mpi_errno = MPIR_Type_hvector_impl(array_of_subsizes[i], 1, size, tmp1, &tmp2);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+		MPIR_Type_free_impl(&tmp1);
 		tmp1 = tmp2;
 	    }
 	}
@@ -91,9 +101,13 @@ int PREPEND_PREFIX(Type_convert_subarray)(int ndims,
     types[1] = tmp1;
     types[2] = MPI_UB;
     
-    NMPI_Type_struct(3, blklens, disps, types, newtype);
+    mpi_errno = MPIR_Type_struct_impl(3, blklens, disps, types, newtype);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    NMPI_Type_free(&tmp1);
+    MPIR_Type_free_impl(&tmp1);
 
-    return MPI_SUCCESS;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }

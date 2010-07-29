@@ -23,11 +23,38 @@
 #undef MPI_Type_commit
 #define MPI_Type_commit PMPI_Type_commit
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_commit_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Type_commit_impl(MPI_Datatype *datatype)
+{
+    int mpi_errno = MPI_SUCCESS;
+        
+    if (HANDLE_GET_KIND(*datatype) == HANDLE_KIND_BUILTIN) goto fn_exit;
+
+    /* pair types stored as real types are a special case */
+    if (*datatype == MPI_FLOAT_INT ||
+	*datatype == MPI_DOUBLE_INT ||
+	*datatype == MPI_LONG_INT ||
+	*datatype == MPI_SHORT_INT ||
+	*datatype == MPI_LONG_DOUBLE_INT) goto fn_exit;
+
+    mpi_errno = MPID_Type_commit(datatype);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_commit
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Type_commit - Commits the datatype
 
@@ -44,7 +71,6 @@ Input Parameter:
 @*/
 int MPI_Type_commit(MPI_Datatype *datatype)
 {
-    static const char FCNAME[] = "MPI_Type_commit";
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *datatype_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_COMMIT);
@@ -84,19 +110,10 @@ int MPI_Type_commit(MPI_Datatype *datatype)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
+
+    mpi_errno = MPIR_Type_commit_impl(datatype);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
-    if (HANDLE_GET_KIND(*datatype) == HANDLE_KIND_BUILTIN) goto fn_exit;
-
-    /* pair types stored as real types are a special case */
-    if (*datatype == MPI_FLOAT_INT ||
-	*datatype == MPI_DOUBLE_INT ||
-	*datatype == MPI_LONG_INT ||
-	*datatype == MPI_SHORT_INT ||
-	*datatype == MPI_LONG_DOUBLE_INT) goto fn_exit;
-
-    mpi_errno = MPID_Type_commit(datatype);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
     /* ... end of body of routine ... */
     
   fn_exit:

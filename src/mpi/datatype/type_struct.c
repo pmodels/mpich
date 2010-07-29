@@ -22,12 +22,60 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_struct
 #define MPI_Type_struct PMPI_Type_struct
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_struct_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Type_struct_impl(int count, int blocklens[], MPI_Aint indices[], MPI_Datatype old_types[], MPI_Datatype *newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    int i, *ints;
+    MPID_Datatype *new_dtp;
+    MPIU_CHKLMEM_DECL(1);
+
+    mpi_errno = MPID_Type_struct(count,
+				 blocklens,
+				 indices,
+				 old_types,
+				 &new_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+
+    MPIU_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array");
+
+    ints[0] = count;
+    for (i=0; i < count; i++) {
+        ints[i+1] = blocklens[i];
+    }
+    
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+                                           MPI_COMBINER_STRUCT,
+                                           count+1, /* ints (count, blocklengths) */
+                                           count, /* aints (displacements) */
+                                           count, /* types */
+                                           ints,
+                                           indices,
+                                           old_types);
+    
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
 
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_struct
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Type_struct - Creates a struct datatype
 
@@ -100,10 +148,7 @@ int MPI_Type_struct(int count,
 		    MPI_Datatype old_types[],
 		    MPI_Datatype *newtype)
 {
-    static const char FCNAME[] = "MPI_Type_struct";
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
-    MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_STRUCT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -146,42 +191,13 @@ int MPI_Type_struct(int count,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+
+    mpi_errno = MPIR_Type_struct_impl(count, blocklens, indices, old_types, newtype);
+    if (mpi_errno) goto fn_fail;
     
-    mpi_errno = MPID_Type_struct(count,
-				 blocklens,
-				 indices,
-				 old_types,
-				 &new_handle);
-
-    if (mpi_errno == MPI_SUCCESS) {
-	int i, *ints;
-	MPID_Datatype *new_dtp;
-
-	MPIU_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array");
-
-	ints[0] = count;
-	for (i=0; i < count; i++) {
-	    ints[i+1] = blocklens[i];
-	}
-
-	MPID_Datatype_get_ptr(new_handle, new_dtp);
-	mpi_errno = MPID_Datatype_set_contents(new_dtp,
-					       MPI_COMBINER_STRUCT,
-					       count+1, /* ints (count, blocklengths) */
-					       count, /* aints (displacements) */
-					       count, /* types */
-					       ints,
-					       indices,
-					       old_types);
-
-    }
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_STRUCT);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

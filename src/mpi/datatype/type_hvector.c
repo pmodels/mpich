@@ -23,11 +23,53 @@
 #undef MPI_Type_hvector
 #define MPI_Type_hvector PMPI_Type_hvector
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_hvector_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatype old_type, MPI_Datatype *newtype_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Datatype new_handle;
+    MPID_Datatype *new_dtp;
+    int ints[2];
+    
+    mpi_errno = MPID_Type_vector(count,
+				 blocklen,
+				 (MPI_Aint) stride,
+				 1, /* stride in bytes */
+				 old_type,
+				 &new_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    ints[0] = count;
+    ints[1] = blocklen;
+    MPID_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+				           MPI_COMBINER_HVECTOR,
+    				           2, /* ints (count, blocklen) */
+				           1, /* aints */
+				           1, /* types */
+				           ints,
+				           &stride,
+				           &old_type);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype_p, new_handle);
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_hvector
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Type_hvector - type_hvector
 
@@ -51,11 +93,7 @@ int MPI_Type_hvector(int count,
 		     MPI_Datatype old_type,
 		     MPI_Datatype *newtype_p)
 {
-    static const char FCNAME[] = "MPI_Type_hvector";
     int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
-    int ints[2];
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_HVECTOR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -87,28 +125,9 @@ int MPI_Type_hvector(int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Type_vector(count,
-				 blocklen,
-				 (MPI_Aint) stride,
-				 1, /* stride in bytes */
-				 old_type,
-				 &new_handle);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    ints[0] = count;
-    ints[1] = blocklen;
-    MPID_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPID_Datatype_set_contents(new_dtp,
-				           MPI_COMBINER_HVECTOR,
-    				           2, /* ints (count, blocklen) */
-				           1, /* aints */
-				           1, /* types */
-				           ints,
-				           &stride,
-				           &old_type);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype_p, new_handle);
+    mpi_errno = MPIR_Type_hvector_impl(count, blocklen, stride, old_type, newtype_p);
+    if (mpi_errno) goto fn_fail;
+    
     /* ... end of body of routine ... */
 
   fn_exit:

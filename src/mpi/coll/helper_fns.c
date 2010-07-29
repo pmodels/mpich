@@ -324,11 +324,8 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
         copy_sz = sdata_sz;
     }
 
-    mpi_errno = NMPI_Type_get_true_extent(sendtype, &sendtype_true_lb, &true_extent);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    
-    mpi_errno = NMPI_Type_get_true_extent(recvtype, &recvtype_true_lb, &true_extent);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
+    MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
 
     if (sendtype_iscontig && recvtype_iscontig)
     {

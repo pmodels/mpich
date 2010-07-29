@@ -23,13 +23,31 @@
 #undef MPI_Type_get_extent
 #define MPI_Type_get_extent PMPI_Type_get_extent
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_get_extent_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent)
+{
+    MPID_Datatype *datatype_ptr = NULL;
+
+    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+	*lb     = 0;
+	*extent = MPID_Datatype_get_basic_size(datatype);
+    } else {
+	*lb     = datatype_ptr->lb;
+	*extent = datatype_ptr->extent; /* derived, should be same as ub - lb */
+    }
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_extent
 #undef FCNAME
-#define FCNAME "MPI_Type_get_extent"
-
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_extent - Get the lower bound and extent for a Datatype
 
@@ -89,15 +107,8 @@ int MPI_Type_get_extent(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent)
 
     /* ... body of routine ...  */
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
-	*lb     = 0;
-	*extent = MPID_Datatype_get_basic_size(datatype);
-    }
-    else {
-	*lb     = datatype_ptr->lb;
-	*extent = datatype_ptr->extent; /* derived, should be same as ub - lb */
-    }
-
+    MPIR_Type_get_extent_impl(datatype, lb, extent);
+    
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

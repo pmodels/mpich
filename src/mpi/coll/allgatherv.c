@@ -125,9 +125,7 @@ int MPIR_Allgatherv_intra (
             /* need to receive contiguously into tmp_buf because
                displs could make the recvbuf noncontiguous */
 
-            mpi_errno = NMPI_Type_get_true_extent(recvtype, &recvtype_true_lb,
-                                                  &recvtype_true_extent);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
             MPID_Ensure_Aint_fits_in_pointer(total_count *
                            (MPIR_MAX(recvtype_true_extent, recvtype_extent)));
@@ -482,10 +480,7 @@ int MPIR_Allgatherv_intra (
         /* allocate a temporary buffer of the same size as recvbuf. */
 
         /* get true extent of recvtype */
-        mpi_errno = NMPI_Type_get_true_extent(recvtype, 
-                                              &recvtype_true_lb,
-                                              &recvtype_true_extent);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
             
         MPID_Ensure_Aint_fits_in_pointer(total_count *
                         MPIR_MAX(recvtype_true_extent, recvtype_extent));
@@ -745,20 +740,22 @@ int MPIR_Allgatherv_inter (
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    NMPI_Type_indexed(remote_size, recvcounts, displs, recvtype,
-                      &newtype);
-    NMPI_Type_commit(&newtype);
+    mpi_errno = MPIR_Type_indexed_impl(remote_size, recvcounts, displs, recvtype, &newtype);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    mpi_errno = MPIR_Type_commit_impl(&newtype);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Bcast_intra(recvbuf, 1, newtype, 0, newcomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    NMPI_Type_free(&newtype);
+    MPIR_Type_free_impl(&newtype);
 
  fn_exit:
     return mpi_errno;
  fn_fail:
     if (newtype != MPI_DATATYPE_NULL)
-        NMPI_Type_free(&newtype);
+        MPIR_Type_free_impl(&newtype);
 
     goto fn_exit;
 }

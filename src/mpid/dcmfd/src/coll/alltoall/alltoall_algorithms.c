@@ -80,8 +80,8 @@ MPIDO_Alltoall_simple(void * send_buff, int send_count,
   rank = comm->rank;
   np = comm->local_size;
 
-  NMPI_Type_extent(send_type, &sndinc);
-  NMPI_Type_extent(recv_type, &rcvinc);
+  MPIR_Type_extent_impl(send_type, &sndinc);
+  MPIR_Type_extent_impl(recv_type, &rcvinc);
 
   sndinc *= send_count;
   rcvinc *= recv_count;

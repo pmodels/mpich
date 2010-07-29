@@ -23,13 +23,25 @@
 #undef MPI_Type_free
 #define MPI_Type_free PMPI_Type_free
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_free_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Type_free_impl(MPI_Datatype *datatype)
+{
+    MPID_Datatype *datatype_ptr = NULL;
+
+    MPID_Datatype_get_ptr( *datatype, datatype_ptr );
+    MPID_Datatype_release(datatype_ptr);
+    *datatype = MPI_DATATYPE_NULL;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_free
 #undef FCNAME
-#define FCNAME "MPI_Type_free"
-
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Type_free - Frees the datatype
 
@@ -124,9 +136,8 @@ int MPI_Type_free(MPI_Datatype *datatype)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    MPID_Datatype_release(datatype_ptr);
-    *datatype = MPI_DATATYPE_NULL;
+
+    MPIR_Type_free_impl(datatype);
 
     /* ... end of body of routine ... */
 

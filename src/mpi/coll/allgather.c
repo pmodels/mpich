@@ -430,11 +430,7 @@ int MPIR_Allgather_intra (
         /* allocate a temporary buffer of the same size as recvbuf. */
 
         /* get true extent of recvtype */
-        mpi_errno = NMPI_Type_get_true_extent(recvtype, &recvtype_true_lb,
-                                              &recvtype_true_extent);  
-	if (mpi_errno) { 
-	    MPIU_ERR_POP(mpi_errno);
-	}
+        MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
             
         recvbuf_extent = recvcount * comm_size *
             (MPIR_MAX(recvtype_true_extent, recvtype_extent));
@@ -610,10 +606,8 @@ int MPIR_Allgather_inter (
     if ((rank == 0) && (sendcount != 0)) {
         /* In each group, rank 0 allocates temp. buffer for local
            gather */
-        mpi_errno = NMPI_Type_get_true_extent(sendtype, &true_lb, &true_extent);
-	if (mpi_errno) { 
-	    MPIU_ERR_POP(mpi_errno);
-	}
+        MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
+
         MPID_Datatype_get_extent_macro( sendtype, send_extent );
         extent = MPIR_MAX(send_extent, true_extent);
 

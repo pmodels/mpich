@@ -67,8 +67,7 @@ static int MPIR_Reduce_binomial (
 
     /* Create a temporary buffer */
 
-    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);  
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
@@ -307,8 +306,7 @@ static int MPIR_Reduce_redscat_gather (
 
     /* Create a temporary buffer */
 
-    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);  
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
@@ -753,8 +751,7 @@ int MPIR_Reduce_intra (
         /* Create a temporary buffer on local roots of all nodes */
         if (comm_ptr->node_roots_comm != NULL) {
 
-            mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);
-            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
             MPID_Datatype_get_extent_macro(datatype, extent);
 
             MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
@@ -928,9 +925,7 @@ int MPIR_Reduce_inter (
         rank = comm_ptr->rank;
         
         if (rank == 0) {
-            mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                                  &true_extent);
-	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
             MPID_Datatype_get_extent_macro(datatype, extent);
 	    /* I think this is the worse case, so we can avoid an assert() 

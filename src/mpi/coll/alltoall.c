@@ -205,12 +205,12 @@ int MPIR_Alltoall_intra(
                 }
             }
 
-            mpi_errno = NMPI_Type_create_indexed_block(count, recvcount, 
-                                               displs, recvtype, &newtype);
-	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            mpi_errno = MPIR_Type_create_indexed_block_impl(count, recvcount,
+                                                            displs, recvtype, &newtype);
+	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-            mpi_errno = NMPI_Type_commit(&newtype);
-	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            mpi_errno = MPIR_Type_commit_impl(&newtype);
+	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             position = 0;
             mpi_errno = NMPI_Pack(recvbuf, 1, newtype, tmp_buf, pack_size, 
@@ -223,8 +223,7 @@ int MPIR_Alltoall_intra(
                                       MPI_STATUS_IGNORE);
 	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-            mpi_errno = NMPI_Type_free(&newtype);
-	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            MPIR_Type_free_impl(&newtype);
 
             pof2 *= 2;
         }
@@ -233,9 +232,7 @@ int MPIR_Alltoall_intra(
          * a temporary buffer of the same size as recvbuf. */
         
         /* get true extent of recvtype */
-        mpi_errno = NMPI_Type_get_true_extent(recvtype, &recvtype_true_lb,
-                                              &recvtype_true_extent);  
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
         recvbuf_extent = recvcount * comm_size *
             (MPIR_MAX(recvtype_true_extent, recvtype_extent));
@@ -273,9 +270,7 @@ int MPIR_Alltoall_intra(
            sendbuf_extent*comm_size */
         
         /* get true extent of sendtype */
-        mpi_errno = NMPI_Type_get_true_extent(sendtype, &sendtype_true_lb,
-                                              &sendtype_true_extent);  
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &sendtype_true_extent);
 
         sendbuf_extent = sendcount * comm_size *
             (MPIR_MAX(sendtype_true_extent, sendtype_extent));
@@ -524,7 +519,7 @@ int MPIR_Alltoall_intra(
     return (mpi_errno);
  fn_fail:
     if (newtype != MPI_DATATYPE_NULL)
-        NMPI_Type_free(&newtype);
+        MPIR_Type_free_impl(&newtype);
     goto fn_exit;
 }
 /* end:nested */

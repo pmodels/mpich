@@ -236,9 +236,6 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
     char *string;
     int size;
     MPI_Aint extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
-    MPIU_THREADPRIV_DECL;
-
-    MPIU_THREADPRIV_GET;
 
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
 	string = MPIDU_Datatype_builtin_to_string(type);
@@ -256,13 +253,11 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 	sticky_ub = type_ptr->has_sticky_ub;
     }
 
-    MPIR_Nest_incr();
-    NMPI_Type_size(type, &size);
-    NMPI_Type_get_true_extent(type, &true_lb, &extent);
+    MPIR_Type_size_impl(type, &size);
+    MPIR_Type_get_true_extent_impl(type, &true_lb, &extent);
     true_ub = extent + true_lb;
-    NMPI_Type_get_extent(type, &lb, &extent);
+    MPIR_Type_get_extent_impl(type, &lb, &extent);
     ub = extent + lb;
-    MPIR_Nest_decr();
 
     if (header == 1) {
 	/*               012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789 */

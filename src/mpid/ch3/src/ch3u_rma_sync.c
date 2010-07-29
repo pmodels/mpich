@@ -2461,19 +2461,10 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(accum_pkt->datatype, predefined);
     if (predefined)
     {
-	MPIU_THREADPRIV_DECL;
-	MPIU_THREADPRIV_GET;
 	MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP);
 	req->dev.datatype = accum_pkt->datatype;
 
-	MPIR_Nest_incr();
-	mpi_errno = NMPI_Type_get_true_extent(accum_pkt->datatype, 
-					      &true_lb, &true_extent);
-	MPIR_Nest_decr();
-	if (mpi_errno) {
-	    MPIU_ERR_POP(mpi_errno);
-	}
-
+	MPIR_Type_get_true_extent_impl(accum_pkt->datatype, &true_lb, &true_extent);
 	MPID_Datatype_get_extent_macro(accum_pkt->datatype, extent); 
 	tmp_buf = MPIU_Malloc(accum_pkt->count * 
 			      (MPIR_MAX(extent,true_extent)));

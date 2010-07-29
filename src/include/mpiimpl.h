@@ -3473,6 +3473,8 @@ int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
+#define MPIR_Type_extent_impl(datatype, extent_ptr) MPID_Datatype_get_extent_macro(datatype, *(extent_ptr))
+#define MPIR_Type_size_impl(datatype, size) MPID_Datatype_get_size_macro(datatype, *(size))
 
 /* MPIR_ functions.  These are versions of MPI_ functions appropriate for calling within MPI */
 int MPIR_Cancel_impl(MPID_Request *request_ptr);
@@ -3509,6 +3511,30 @@ int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
 int MPIR_Comm_split(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr);
 void MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result);
 int MPIR_Group_free_impl(MPID_Group *group_ptr);
+int MPIR_Type_commit_impl(MPI_Datatype *datatype);
+int MPIR_Type_create_struct_impl(int count,
+                                 int array_of_blocklengths[],
+                                 MPI_Aint array_of_displacements[],
+                                 MPI_Datatype array_of_types[],
+                                 MPI_Datatype *newtype);
+int MPIR_Type_create_indexed_block_impl(int count,
+                                        int blocklength,
+                                        int array_of_displacements[],
+                                        MPI_Datatype oldtype,
+                                        MPI_Datatype *newtype);
+int MPIR_Type_contiguous_impl(int count,
+                              MPI_Datatype old_type,
+                              MPI_Datatype *new_type_p);
+void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent);
+void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint *true_extent);
+void MPIR_Type_get_envelope_impl(MPI_Datatype datatype, int *num_integers, int *num_addresses,
+                                 int *num_datatypes, int *combiner);
+int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
+int MPIR_Type_indexed_impl(int count, int blocklens[], int indices[], MPI_Datatype old_type,
+                           MPI_Datatype *newtype);
+void MPIR_Type_free_impl(MPI_Datatype *datatype);
+int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
+int MPIR_Type_struct_impl(int count, int blocklens[], MPI_Aint indices[], MPI_Datatype old_types[], MPI_Datatype *newtype);
 
 
 

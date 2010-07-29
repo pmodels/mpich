@@ -401,7 +401,6 @@ int MPIR_Scatter_inter (
     MPID_Comm *newcomm_ptr = NULL;
     MPI_Comm comm;
     MPIU_CHKLMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
@@ -438,12 +437,7 @@ int MPIR_Scatter_inter (
             rank = comm_ptr->rank;
             
             if (rank == 0) {
-             	MPIU_THREADPRIV_GET;
-                MPIR_Nest_incr();
-                mpi_errno = NMPI_Type_get_true_extent(recvtype, &true_lb,
-                                                      &true_extent);
-                MPIR_Nest_decr();
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                MPIR_Type_get_true_extent_impl(recvtype, &true_lb, &true_extent);
 
                 MPID_Datatype_get_extent_macro(recvtype, extent);
 		MPID_Ensure_Aint_fits_in_pointer(extent*recvcnt*local_size);

@@ -127,11 +127,7 @@ static int MPIR_Scan_generic (
     }
     
     /* need to allocate temporary buffer to store partial scan*/
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb,
-                                          &true_extent);
-    MPIR_Nest_decr();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPID_Datatype_get_extent_macro(datatype, extent);
     MPIU_CHKLMEM_MALLOC(partial_scan, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "partial_scan");
@@ -278,10 +274,7 @@ int MPIR_Scan(
     }
     
     MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Type_get_true_extent(datatype, &true_lb, &true_extent);
-    MPIR_Nest_decr();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno); 
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPID_Datatype_get_extent_macro(datatype, extent);
 

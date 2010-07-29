@@ -23,11 +23,47 @@
 #undef MPI_Type_get_envelope
 #define MPI_Type_get_envelope PMPI_Type_get_envelope
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_get_envelope_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
+                                 int *num_integers,
+                                 int *num_addresses,
+                                 int *num_datatypes,
+                                 int *combiner)
+{
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN ||
+	datatype == MPI_FLOAT_INT ||
+	datatype == MPI_DOUBLE_INT ||
+	datatype == MPI_LONG_INT ||
+	datatype == MPI_SHORT_INT ||
+	datatype == MPI_LONG_DOUBLE_INT)
+    {
+	*combiner      = MPI_COMBINER_NAMED;
+	*num_integers  = 0;
+	*num_addresses = 0;
+	*num_datatypes = 0;
+    }
+    else {
+	MPID_Datatype *dtp;
+
+	MPID_Datatype_get_ptr(datatype, dtp);
+
+	*combiner      = dtp->contents->combiner;
+	*num_integers  = dtp->contents->nr_ints;
+	*num_addresses = dtp->contents->nr_aints;
+	*num_datatypes = dtp->contents->nr_types;
+    }
+
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_envelope
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_envelope - get type envelope
 
@@ -51,7 +87,6 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
 			  int *num_datatypes,
 			  int *combiner)
 {
-    static const char FCNAME[] = "MPI_Type_get_envelope";
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *datatype_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ENVELOPE);
@@ -91,46 +126,32 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
 
     /* ... body of routine ...  */
     
-    /* handle all the predefined types here */
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN ||
-	datatype == MPI_FLOAT_INT ||
-	datatype == MPI_DOUBLE_INT ||
-	datatype == MPI_LONG_INT ||
-	datatype == MPI_SHORT_INT ||
-	datatype == MPI_LONG_DOUBLE_INT)
-    {
-	*num_integers  = 0;
-	*num_addresses = 0;
-	*num_datatypes = 0;
-	*combiner = MPI_COMBINER_NAMED;
-	goto fn_exit;
-    }
-
-    mpi_errno = MPID_Type_get_envelope(datatype,
-				       num_integers,
-				       num_addresses,
-				       num_datatypes,
-				       combiner);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    MPIR_Type_get_envelope_impl(datatype,
+                                num_integers,
+                                num_addresses,
+                                num_datatypes,
+                                combiner);
 
     /* ... end of body of routine ... */
 
-  fn_exit:
+#   ifdef HAVE_ERROR_CHECKING
+ fn_exit:
+#   endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_ENVELOPE);
     return mpi_errno;
 
-  fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
+ fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_get_envelope",
 	    "**mpi_type_get_envelope %D %p %p %p %p", datatype, num_integers, num_addresses, num_datatypes, combiner);
     }
-#   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#   endif
 }
 
 

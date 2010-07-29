@@ -108,48 +108,42 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 	{
 	    int nRealTypes = sizeof(real_types) / sizeof(MPI_Datatype);
 	    tname = "MPI_TYPECLASS_REAL";
-	    MPIR_Nest_incr();
 	    for (i=0; i<nRealTypes; i++) {
 		if (real_types[i] == MPI_DATATYPE_NULL) { continue; }
-		NMPI_Type_size( real_types[i], &tsize );
+		MPIR_Type_size_impl( real_types[i], &tsize );
 		if (tsize == size) {
 		    matched_datatype = real_types[i];
 		    break;
 		}
 	    }
-	    MPIR_Nest_decr();
 	}
 	break;
     case MPI_TYPECLASS_INTEGER:
 	{
 	    int nIntTypes = sizeof(int_types) / sizeof(MPI_Datatype);
 	    tname = "MPI_TYPECLASS_INTEGER";
-	    MPIR_Nest_incr();
 	    for (i=0; i<nIntTypes; i++) {
 		if (int_types[i] == MPI_DATATYPE_NULL) { continue; }
-		NMPI_Type_size( int_types[i], &tsize );
+		MPIR_Type_size_impl( int_types[i], &tsize );
 		if (tsize == size) {
 		    matched_datatype = int_types[i];
 		    break;
 		}
 	    }
-	    MPIR_Nest_decr();
 	}
 	break;
     case MPI_TYPECLASS_COMPLEX:
 	{
 	    int nComplexTypes = sizeof(complex_types) / sizeof(MPI_Datatype);
 	    tname = "MPI_TYPECLASS_COMPLEX";
-	    MPIR_Nest_incr();
 	    for (i=0; i<nComplexTypes; i++) {
 		if (complex_types[i] == MPI_DATATYPE_NULL) { continue; }
-		NMPI_Type_size( complex_types[i], &tsize );
+		MPIR_Type_size_impl( complex_types[i], &tsize );
 		if (tsize == size) {
 		    matched_datatype = complex_types[i];
 		    break;
 		}
 	    }
-	    MPIR_Nest_decr();
 	}
 	break;
     default:

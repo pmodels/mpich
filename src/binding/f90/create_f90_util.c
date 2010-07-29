@@ -26,14 +26,10 @@ static F90Predefined f90Types[MAX_F90_TYPES];
 static int MPIR_FreeF90Datatypes( void *d )
 {
     int i;
-    MPIU_THREADPRIV_DECL;
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
     for (i=0; i<nAlloc; i++) {
-        NMPI_Type_free( &f90Types[i].d );
+        MPIR_Type_free_impl( &f90Types[i].d );
     }
-    MPIR_Nest_decr();
     return 0;
 }
 
