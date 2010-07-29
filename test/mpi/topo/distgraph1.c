@@ -22,11 +22,14 @@
 #define DPRINTF(arg_list_)
 #endif
 
+/* convenience globals */
+int size, rank;
+
 /* We need MPI 2.2 to be able to compile the following routines. */
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
 
 /* Maybe use a bit vector instead? */
-int **layout, size, rank;
+int **layout;
 
 #define MAX_LAYOUT_NAME_LEN 256
 char graph_layout_name[MAX_LAYOUT_NAME_LEN] = {'\0'};
