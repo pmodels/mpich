@@ -86,7 +86,8 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     }
 
     idx = 0;
-    targs[idx++] = HYDU_strdup(path);
+    if (path)
+        targs[idx++] = HYDU_strdup(path);
 
     MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
     if (extra_arg_list) {
@@ -111,6 +112,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     }
 
     host_idx = idx++;   /* Hostname will come here */
+    targs[host_idx] = NULL;
 
     /* Fill in the remaining arguments */
     exec_idx = idx;     /* Store the executable index */
@@ -137,7 +139,6 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     HYDU_FREE(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
-    targs[host_idx] = NULL;
     targs[idx] = NULL;
     for (i = 0, node = node_list; node; node = node->next, i++) {
 
