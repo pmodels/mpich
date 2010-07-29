@@ -45,8 +45,7 @@ static int  mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr,
 	goto fn_exit;
     }
 
-    mpi_errno = NMPI_Info_get_nkeys( info_ptr->handle, &nkeys );
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    MPIR_Info_get_nkeys_impl( info_ptr, &nkeys );
     if (nkeys == 0) {
 	goto fn_exit;
     }
@@ -54,19 +53,18 @@ static int  mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr,
     if (!kv) { MPIU_ERR_POP(mpi_errno); }
 
     for (i=0; i<nkeys; i++) {
-	mpi_errno = NMPI_Info_get_nthkey( info_ptr->handle, i, key );
+	mpi_errno = MPIR_Info_get_nthkey_impl( info_ptr, i, key );
 	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	mpi_errno = NMPI_Info_get_valuelen( info_ptr->handle, key, &vallen, 
-					    &flag );
-	if (!flag || mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+	MPIR_Info_get_valuelen_impl( info_ptr, key, &vallen, &flag );
+        MPIU_ERR_CHKANDJUMP1(!flag, mpi_errno, MPI_ERR_OTHER,"**infonokey", "**infonokey %s", key);
+
 	kv[i].key = MPIU_Strdup(key);
 	kv[i].val = MPIU_Malloc( vallen + 1 );
 	if (!kv[i].key || !kv[i].val) { 
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
 	}
-	mpi_errno = NMPI_Info_get( info_ptr->handle, key, vallen+1,
-				   kv[i].val, &flag );
-	if (!flag || mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+	MPIR_Info_get_impl( info_ptr, key, vallen+1, kv[i].val, &flag );
+        MPIU_ERR_CHKANDJUMP1(!flag, mpi_errno, MPI_ERR_OTHER,"**infonokey", "**infonokey %s", key);
 	MPIU_DBG_PRINTF(("key: <%s>, value: <%s>\n", kv[i].key, kv[i].val));
     }
 

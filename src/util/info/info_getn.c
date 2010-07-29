@@ -22,10 +22,29 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get_nkeys
 #define MPI_Info_get_nkeys PMPI_Info_get_nkeys
-#endif
 
 #undef FUNCNAME
-#define FUNCNAME MPI_Info_get_nkeys
+#define FUNCNAME MPIR_Info_get_nkeys_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Info_get_nkeys_impl(MPID_Info *info_ptr, int *nkeys)
+{
+    int n;
+    
+    info_ptr = info_ptr->next;
+    n = 0;
+
+    while (info_ptr) {
+        info_ptr = info_ptr->next;
+        n ++;
+    }
+    *nkeys = n;
+
+    return;
+}
+
+#endif
+
 
 /*@
     MPI_Info_get_nkeys - Returns the number of currently defined keys in info
@@ -44,13 +63,13 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
+#undef FUNCNAME
+#define FUNCNAME MPI_Info_get_nkeys
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Info_get_nkeys( MPI_Info info, int *nkeys )
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Info_get_nkeys";
-#endif
     MPID_Info *info_ptr=0;
-    int      n;
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_GET_NKEYS);
 
@@ -92,15 +111,7 @@ int MPI_Info_get_nkeys( MPI_Info info, int *nkeys )
 
     /* ... body of routine ...  */
     
-    info_ptr = info_ptr->next;
-    n = 0;
-
-    while (info_ptr) {
-	/*printf( "Looking at %x\n", info_ptr->id );*/
-	info_ptr = info_ptr->next;
-	n ++;
-    }
-    *nkeys = n;
+    MPIR_Info_get_nkeys_impl(info_ptr, nkeys);
     
     /* ... end of body of routine ... */
 

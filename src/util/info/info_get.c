@@ -22,10 +22,36 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get
 #define MPI_Info_get PMPI_Info_get
-#endif
 
 #undef FUNCNAME
-#define FUNCNAME MPI_Info_get
+#define FUNCNAME MPIR_Info_get_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Info_get_impl(MPID_Info *info_ptr, char *key, int valuelen, char *value, int *flag)
+{
+    MPID_Info *curr_ptr;
+    curr_ptr = info_ptr->next;
+    *flag = 0;
+
+    while (curr_ptr) {
+        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
+            MPIU_Strncpy(value, curr_ptr->value, valuelen);
+            /* The following is problematic - if the user passes the
+               declared length, then this will access memory one
+               passed that point */
+            /* FIXME: The real fix is to change MPIU_Strncpy to
+               set the null at the end (always!) and return an error
+               if it had to truncate the result. */
+            /* value[valuelen] = '\0'; */
+            *flag = 1;
+            break;
+        }
+        curr_ptr = curr_ptr->next;
+    }
+    return;
+}
+
+#endif
 
 /*@
     MPI_Info_get - Retrieves the value associated with a key
@@ -51,13 +77,14 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_INFO_VALUE
 @*/
+#undef FUNCNAME
+#define FUNCNAME MPI_Info_get
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Info_get(MPI_Info info, char *key, int valuelen, char *value, 
 		 int *flag)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Info_get";
-#endif
-    MPID_Info *curr_ptr, *info_ptr=0;
+    MPID_Info *info_ptr=0;
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_GET);
 
@@ -112,25 +139,7 @@ int MPI_Info_get(MPI_Info info, char *key, int valuelen, char *value,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    curr_ptr = info_ptr->next;
-    *flag = 0;
-
-    while (curr_ptr) {
-	if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-	    MPIU_Strncpy(value, curr_ptr->value, valuelen);
-	    /* The following is problematic - if the user passes the
-	       declared length, then this will access memory one
-	       passed that point */
-	    /* FIXME: The real fix is to change MPIU_Strncpy to 
-	       set the null at the end (always!) and return an error
-	       if it had to truncate the result. */
-	    /* value[valuelen] = '\0'; */
-	    *flag = 1;
-	    break;
-	}
-	curr_ptr = curr_ptr->next;
-    }
+    MPIR_Info_get_impl(info_ptr, key, valuelen, value, flag);
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

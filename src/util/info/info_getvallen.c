@@ -22,10 +22,31 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get_valuelen
 #define MPI_Info_get_valuelen PMPI_Info_get_valuelen
-#endif
 
 #undef FUNCNAME
-#define FUNCNAME MPI_Info_get_valuelen
+#define FUNCNAME MPIR_Info_get_valuelen_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, char *key, int *valuelen, int *flag)
+{
+    MPID_Info *curr_ptr;
+
+    curr_ptr = info_ptr->next;
+    *flag = 0;
+
+    while (curr_ptr) {
+        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
+            *valuelen = (int)strlen(curr_ptr->value);
+            *flag = 1;
+            break;
+        }
+        curr_ptr = curr_ptr->next;
+    }
+
+    return;
+}
+
+#endif
 
 /*@
     MPI_Info_get_valuelen - Retrieves the length of the value associated with 
@@ -48,12 +69,13 @@
 .N MPI_ERR_INFO_KEY
 .N MPI_ERR_OTHER
 @*/
+#undef FUNCNAME
+#define FUNCNAME MPIRInfo_get_valuelen
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Info_get_valuelen( MPI_Info info, char *key, int *valuelen, int *flag )
 {
-    MPID_Info *curr_ptr, *info_ptr=0;
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Info_get_valuelen";
-#endif
+    MPID_Info *info_ptr=0;
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_GET_VALUELEN);
 
@@ -107,18 +129,7 @@ int MPI_Info_get_valuelen( MPI_Info info, char *key, int *valuelen, int *flag )
 
     /* ... body of routine ...  */
     
-    curr_ptr = info_ptr->next;
-    *flag = 0;
-
-    while (curr_ptr) {
-	if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-	    *valuelen = (int)strlen(curr_ptr->value);
-	    *flag = 1;
-	    break;
-	}
-	curr_ptr = curr_ptr->next;
-    }
-    
+    MPIR_Info_get_valuelen_impl(info_ptr, key, valuelen, flag);
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

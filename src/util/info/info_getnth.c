@@ -22,10 +22,38 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get_nthkey
 #define MPI_Info_get_nthkey PMPI_Info_get_nthkey
-#endif
 
 #undef FUNCNAME
-#define FUNCNAME MPI_Info_get_nthkey
+#define FUNCNAME MPIR_Info_get_nthkey_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Info_get_nthkey_impl(MPID_Info *info_ptr, int n, char *key)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Info *curr_ptr;
+    int nkeys;
+
+    curr_ptr = info_ptr->next;
+    nkeys = 0;
+    while (curr_ptr && nkeys != n) {
+        curr_ptr = curr_ptr->next;
+        nkeys++;
+    }
+
+    /* verify that n is valid */
+    MPIU_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n, nkeys);
+
+    MPIU_Strncpy( key, curr_ptr->key, MPI_MAX_INFO_KEY+1 );
+    /* Eventually, we could remember the location of this key in
+       the head using the key/value locations (and a union datatype?) */
+ 
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+#endif
 
 /*@
     MPI_Info_get_nthkey - Returns the nth defined key in info
@@ -46,12 +74,14 @@ Output Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_ARG
 @*/
+#undef FUNCNAME
+#define FUNCNAME MPI_Info_get_nthkey
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 {
-    MPID_Info *curr_ptr, *info_ptr=0;
-    int       nkeys;
-    static const char FCNAME[] = "MPI_Info_get_nthkey";
     int mpi_errno = MPI_SUCCESS;
+    MPID_Info *info_ptr=0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_GET_NTHKEY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -90,22 +120,8 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    curr_ptr = info_ptr->next;
-    nkeys = 0;
-    while (curr_ptr && nkeys != n)
-    {
-	curr_ptr = curr_ptr->next;
-	nkeys++;
-    }
-
-    /* verify that n is valid */
-    MPIU_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n, nkeys);
-
-    MPIU_Strncpy( key, curr_ptr->key, MPI_MAX_INFO_KEY+1 );
-    /* Eventually, we could remember the location of this key in 
-       the head using the key/value locations (and a union datatype?) */
-
+    mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, n, key);
+    if (mpi_errno) goto fn_fail;
     /* ... end of body of routine ... */
 
   fn_exit:

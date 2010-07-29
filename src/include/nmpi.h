@@ -53,10 +53,6 @@
 #define NMPI_Type_create_indexed_block MPI_Type_create_indexed_block
 #define NMPI_Type_create_struct MPI_Type_create_struct
 #define NMPI_Wtime MPI_Wtime 
-#define NMPI_Info_get_nkeys MPI_Info_get_nkeys
-#define NMPI_Info_get_nthkey MPI_Info_get_nthkey
-#define NMPI_Info_get_valuelen MPI_Info_get_valuelen
-#define NMPI_Info_get MPI_Info_get
 #define NMPI_Info_create MPI_Info_create
 #define NMPI_Info_set MPI_Info_set
 #define NMPI_Comm_call_errhandler MPI_Comm_call_errhandler
@@ -106,10 +102,6 @@
 #define NMPI_Type_create_indexed_block PMPI_Type_create_indexed_block
 #define NMPI_Type_create_struct PMPI_Type_create_struct
 #define NMPI_Wtime PMPI_Wtime
-#define NMPI_Info_get_nkeys PMPI_Info_get_nkeys
-#define NMPI_Info_get_nthkey PMPI_Info_get_nthkey
-#define NMPI_Info_get_valuelen PMPI_Info_get_valuelen
-#define NMPI_Info_get PMPI_Info_get
 #define NMPI_Info_create PMPI_Info_create
 #define NMPI_Info_set PMPI_Info_set
 #define NMPI_Comm_call_errhandler PMPI_Comm_call_errhandler
