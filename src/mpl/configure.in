@@ -40,9 +40,9 @@ AC_CHECK_HEADERS(inttypes.h stdint.h)
 #######################################################################
 # valgrind support
 AC_ARG_WITH([valgrind],
-            [AS_HELP_STRING([--without-valgrind],[to disable valgrind support (such as because of version issues)])]
-            [AS_HELP_STRING([--with-valgrind=PATH],[use valgrind headers installed in PATH [default is yes]])],
-            [],[with_valgrind=yes])
+[AS_HELP_STRING([--without-valgrind],[to disable valgrind support (such as because of version issues)])]
+[AS_HELP_STRING([--with-valgrind=PATH],[use valgrind headers installed in PATH (default is "yes", use no special path)])],
+[],[with_valgrind=yes])
 if test "$with_valgrind" != "no" ; then
     savedCPPFLAGS="$CPPFLAGS"
     if test "$with_valgrind" != "yes" ; then
