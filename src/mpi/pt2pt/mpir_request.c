@@ -707,7 +707,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
            other thread, we'll make progress on regular requests too.  The
            progress engine should permit the other thread to run at some
            point. */
-        while (MPID_Request_is_complete(request_ptrs[i]))
+        while (!MPID_Request_is_complete(request_ptrs[i]))
         {
             mpi_error = MPID_Progress_wait(&progress_state);
             if (mpi_error != MPI_SUCCESS)
