@@ -79,10 +79,6 @@ AC_ARG_ENABLE(fast,
 AC_ARG_ENABLE(strictmpi,
 [--enable-strictmpi - Only test for operations specifically defined by the MPI standard.  This turns off tests for some common extensions, including for combinations of predefined datatypes and predefined MPI_Op s.],,enable_strictmpi=no)
 
-AC_ARG_WITH(mpi,
-[--with-mpi=dir - Use the selected MPI; compilation scripts for mpicc, mpif77
-                  and mpicxx should be in dir/bin],,)
-
 AC_ARG_ENABLE(threads,
 [--enable-threads=level - Specify the level of thread support expected from the
 MPI implementation.  The following levels are supported.
@@ -97,6 +93,46 @@ level is used (this is to let MPICH2 build for the correct thread
 support without requiring a specific --enable-threads argument.
 ],,
 enable_threads=default)
+
+AC_ARG_WITH(mpi,
+[--with-mpi=dir - Use the selected MPI; compilation scripts for mpicc, mpif77
+                  and mpicxx should be in dir/bin],,)
+
+AC_ARG_WITH(config-args,
+[--with-config-args=filename        - Specify configure argument file that
+                                     contains the values of variables that
+                                     configure reads,
+                                     e.g. CC,CFLAGS,F77,FFLAGS,FC,FCFLAGS....
+                                     If the filename does not begin with
+                                     / (absolute path), . or .. (relative path),
+                                     the filename will be assumed to be
+                                     $top_srcdir/configargs/<filename>.cfg.],,
+with_config_args=no)
+dnl
+if test "$with_config_args" != "no" ; then
+    case "$with_config_args" in 
+        /*|../*|./*)
+            config_args_file="$with_config_args"
+            ;;
+        *)
+            config_args_file="$srcdir/configargs/$with_config_args.cfg"
+            ;;
+    esac
+    if test -s "$config_args_file" ; then
+        AC_MSG_RESULT([Reading the configure arguments in ${config_args_file}.])
+        . $config_args_file
+        # Export all the variables in $config_args_file
+        # i.e. CC,CFLAGS, F77/FFLAGS, FC/FCFLAGS, CXX/CXXFLAGS and friends...
+        config_args_vars=`grep -v '^#' $config_args_file | sed -e 's/=.*//g'`
+        for var in $config_args_vars ; do
+            eval value=\$"$var"
+            echo "Exporting $var=$value ..."
+            export $var
+        done
+    else
+        AC_MSG_WARN([Non-existent ${config_args_file}.])
+    fi
+fi
 
 #
 # First, determine whether we are/can support the language bindings
@@ -323,14 +359,14 @@ dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
 AC_CHECK_HEADERS(stdarg.h )
 
 # Check for fixed width types
-AC_TYPE_INT8_T
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
+dnl AC_TYPE_INT8_T
+dnl AC_TYPE_INT16_T
+dnl AC_TYPE_INT32_T
+dnl AC_TYPE_INT64_T
+dnl AC_TYPE_UINT8_T
+dnl AC_TYPE_UINT16_T
+dnl AC_TYPE_UINT32_T
+dnl AC_TYPE_UINT64_T
 
 # Check for availability of C99 types
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
@@ -677,6 +713,7 @@ fi
 
 if test "$enable_fc" = yes ; then
     if test "$ac_fc_srcext" != "f90" ; then
+        AC_LANG_PUSH([Fortran])
         AC_FC_SRCEXT([f90],[
             FCFLAGS="$FCFLAGS $FCFLAGS_f90"
         ],[
@@ -684,6 +721,7 @@ if test "$enable_fc" = yes ; then
             f90dir=#
             enable_fc=no
         ])
+        AC_LANG_POP([Fortran])
     fi
 
     # See if the compiler supports the Cray-style pointers
