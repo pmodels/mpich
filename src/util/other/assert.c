@@ -25,7 +25,7 @@ int MPIR_Assert_fail(const char *cond, const char *file_name, int line_num)
                                file_name, line_num, cond);
     MPIU_DBG_MSG_FMT(ALL, TERSE,
                      (MPIU_DBG_FDEST,
-                      "Assertion failed in file %s at line %d: %s\n",
+                      "Assertion failed in file %s at line %d: %s",
                       file_name, line_num, cond));
     MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);
     return MPI_ERR_INTERN; /* never get here, abort should kill us */
