@@ -8,6 +8,8 @@
 #include "mpi_init.h"
 #include "mpiu_thread.h"
 
+#ifndef MPICH_MPI_FROM_PMPI
+
 static MPI_Comm progress_comm;
 static MPIU_Thread_id_t progress_thread_id;
 static MPIU_Thread_mutex_t progress_mutex;
@@ -151,3 +153,5 @@ int MPIR_Finalize_async_thread(void)
 #endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
     return mpi_errno;
 }
+
+#endif
