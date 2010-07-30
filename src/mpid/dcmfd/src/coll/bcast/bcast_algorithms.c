@@ -316,7 +316,7 @@ MPIDO_Bcast_scatter_gather(void * buffer,
       {
         MPIC_Recv(buffer + relative_rank * scatter_size, recv_size,
                   MPI_BYTE, src, MPIR_BCAST_TAG, comm->handle, &status);
-        NMPI_Get_count(&status, MPI_BYTE, &curr_size);
+        MPIR_Get_count_impl(&status, MPI_BYTE, &curr_size);
       }
       break;
     }
@@ -376,7 +376,7 @@ MPIDO_Bcast_scatter_gather(void * buffer,
                     MPIR_BCAST_TAG,
                     buffer + recv_offset, scatter_size * mask, MPI_BYTE,
                     dst, MPIR_BCAST_TAG, comm->handle, &status);
-      NMPI_Get_count(&status, MPI_BYTE, &recv_size);
+      MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
       curr_size += recv_size;
     }
 
@@ -444,7 +444,7 @@ MPIDO_Bcast_scatter_gather(void * buffer,
 
           /* num_procs_completed is also equal to the no. of processes
              whose data we don't have */
-          NMPI_Get_count(&status, MPI_BYTE, &recv_size);
+          MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
           curr_size += recv_size;
         }
         tmp_mask >>= 1;

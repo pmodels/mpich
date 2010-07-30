@@ -33,13 +33,12 @@
 #define FUNCNAME MPIR_Cart_create
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[], 
+int MPIR_Cart_create( MPID_Comm *comm_ptr, int ndims, const int dims[], 
 		      const int periods[], int reorder, MPI_Comm *comm_cart )
 {
     int i, newsize, rank, nranks, mpi_errno = MPI_SUCCESS;
     MPID_Comm *newcomm_ptr = NULL;
     MPIR_Topology *cart_ptr = NULL;
-    MPI_Comm ncomm;
     MPIU_CHKPMEM_DECL(4);
     
     /* Set this as null incase we exit with an error */
@@ -90,9 +89,7 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	    *comm_cart = MPI_COMM_NULL;
 	    goto fn_exit;
 	}
-    }
-
-    else {
+    } else {
 
 	/* Create a new communicator as a duplicate of the input communicator
 	   (but do not duplicate the attributes) */
@@ -107,21 +104,12 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 	    /* Create the new communicator with split, since we need to reorder
 	       the ranks (including the related internals, such as the connection
 	       tables */
-	    if (mpi_errno == 0) {
-                MPIU_THREADPRIV_DECL;
-                MPIU_THREADPRIV_GET;
-                MPIR_Nest_incr();
-		mpi_errno = NMPI_Comm_split( comm_ptr->handle, 
-					     rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
-					     rank, &ncomm );
-                MPIR_Nest_decr();
-		if (!mpi_errno) {
-		    MPID_Comm_get_ptr( ncomm, newcomm_ptr );
-		}
-	    }
+            mpi_errno = MPIR_Comm_split_impl( comm_ptr,
+                                              rank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
+                                              rank, &newcomm_ptr );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-	}
-	else {
+
+        } else {
 	    mpi_errno = MPIR_Comm_copy( (MPID_Comm *)comm_ptr, newsize, 
 					&newcomm_ptr );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -181,7 +169,7 @@ int MPIR_Cart_create( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 #define FUNCNAME MPIR_Cart_create_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Cart_create_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
+int MPIR_Cart_create_impl(MPID_Comm *comm_ptr, int ndims, const int dims[],
                           const int periods[], int reorder, MPI_Comm *comm_cart)
 {
     int mpi_errno = MPI_SUCCESS;

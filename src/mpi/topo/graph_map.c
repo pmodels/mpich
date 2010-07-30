@@ -39,11 +39,41 @@ int MPIR_Graph_map( const MPID_Comm *comm_ptr, int nnodes,
     }
     return MPI_SUCCESS;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Graph_map_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Graph_map_impl(const MPID_Comm *comm_ptr, int nnodes,
+                        const int indx[], const int edges[], int *newrank)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphMap != NULL) {
+	mpi_errno = comm_ptr->topo_fns->graphMap( comm_ptr, nnodes,
+						  (const int*) indx,
+						  (const int*) edges,
+						  newrank );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+	mpi_errno = MPIR_Graph_map( comm_ptr, nnodes,
+				   (const int*) indx,
+				   (const int*) edges, newrank );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+        
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Graph_map
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Graph_map - Maps process to graph topology information
 
@@ -70,7 +100,6 @@ calling process does not belong to graph (integer)
 int MPI_Graph_map(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
                   int *newrank)
 {
-    static const char FCNAME[] = "MPI_Graph_map";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GRAPH_MAP);
@@ -114,20 +143,12 @@ int MPI_Graph_map(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
 
     /* ... body of routine ...  */
     
-    MPIU_ERR_CHKANDJUMP(comm_ptr->local_size < nnodes,mpi_errno,MPI_ERR_ARG,
-			"**graphnnodes");
-    
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphMap != NULL) {
-	mpi_errno = comm_ptr->topo_fns->graphMap( comm_ptr, nnodes, 
-						  (const int*) indx,
-						  (const int*) edges, 
-						  newrank );
-    }
-    else {
-	mpi_errno = MPIR_Graph_map( comm_ptr, nnodes,
-				   (const int*) indx,
-				   (const int*) edges, newrank );
-    }
+    MPIU_ERR_CHKANDJUMP(comm_ptr->local_size < nnodes,mpi_errno,MPI_ERR_ARG, "**graphnnodes");
+
+    mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, (const int*) indx,
+                                    (const int*) edges, newrank);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -195,7 +195,7 @@ int MPIR_Allgatherv_intra (
                     /* for convenience, recv is posted for a bigger amount
                        than will be sent */ 
                     
-                    NMPI_Get_count(&status, recvtype, &last_recv_cnt);
+                    MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
                     curr_cnt += last_recv_cnt;
                 }
                 
@@ -277,7 +277,7 @@ int MPIR_Allgatherv_intra (
                             /* for convenience, recv is posted for a
                                bigger amount than will be sent */ 
                             
-                            NMPI_Get_count(&status, recvtype, &last_recv_cnt);
+                            MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
                             curr_cnt += last_recv_cnt;
                         }
                         tmp_mask >>= 1;
@@ -378,7 +378,7 @@ int MPIR_Allgatherv_intra (
                     /* for convenience, recv is posted for a bigger amount
                        than will be sent */ 
                     
-                    NMPI_Get_count(&status, MPI_BYTE, &last_recv_cnt);
+                    MPIR_Get_count_impl(&status, MPI_BYTE, &last_recv_cnt);
                     curr_cnt += last_recv_cnt;
                 }
                 
@@ -447,7 +447,7 @@ int MPIR_Allgatherv_intra (
                             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                             /* for convenience, recv is posted for a bigger amount
                                than will be sent */ 
-                            NMPI_Get_count(&status, MPI_BYTE, &last_recv_cnt);
+                            MPIR_Get_count_impl(&status, MPI_BYTE, &last_recv_cnt);
                             curr_cnt += last_recv_cnt;
                         }
                         tmp_mask >>= 1;
@@ -521,7 +521,7 @@ int MPIR_Allgatherv_intra (
                                       src, MPIR_ALLGATHERV_TAG, comm, &status);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-            NMPI_Get_count(&status, recvtype, &recv_cnt);
+            MPIR_Get_count_impl(&status, recvtype, &recv_cnt);
             curr_cnt += recv_cnt;
 
             pof2 *= 2;

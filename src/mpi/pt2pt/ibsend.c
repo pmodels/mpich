@@ -120,10 +120,8 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     static const char FCNAME[] = "MPI_Ibsend";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPI_Request new_handle;
-    MPID_Request *request_ptr;
+    MPID_Request *request_ptr, *new_request_ptr;
     ibsend_req_info *ibinfo=0;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBSEND);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -131,8 +129,6 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPI_IBSEND);
 
-    MPIU_THREADPRIV_GET;
-    
     /* Validate handle parameters needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -197,17 +193,15 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     ibinfo = (ibsend_req_info *)MPIU_Malloc( sizeof(ibsend_req_info) );
     ibinfo->req       = request_ptr;
     ibinfo->cancelled = 0;
-    MPIR_Nest_incr();
-    NMPI_Grequest_start( MPIR_Ibsend_query, 
-			 MPIR_Ibsend_free,
-			 MPIR_Ibsend_cancel, ibinfo, &new_handle );
+    mpi_errno = MPIR_Grequest_start_impl( MPIR_Ibsend_query, MPIR_Ibsend_free,
+                                          MPIR_Ibsend_cancel, ibinfo, &new_request_ptr );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* The request is immediately complete because the MPIR_Bsend_isend has
        already moved the data out of the user's buffer */
     MPIR_Request_add_ref( request_ptr );
     /* Request count is now 2 (set to 1 in Grequest_start) */
-    NMPI_Grequest_complete( new_handle );
-    MPIR_Nest_decr();
-    MPIU_OBJ_PUBLISH_HANDLE(*request, new_handle);
+    MPIR_Grequest_complete_impl(new_request_ptr);
+    MPIU_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:

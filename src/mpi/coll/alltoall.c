@@ -311,7 +311,7 @@ int MPIR_Alltoall_intra(
                 
                 /* in case of non-power-of-two nodes, less data may be
                    received than specified */
-                NMPI_Get_count(&status, sendtype, &last_recv_cnt);
+                MPIR_Get_count_impl(&status, sendtype, &last_recv_cnt);
                 curr_cnt += last_recv_cnt;
             }
             
@@ -370,7 +370,7 @@ int MPIR_Alltoall_intra(
                                               dst, MPIR_ALLTOALL_TAG,
                                               comm, &status); 
 			if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-                        NMPI_Get_count(&status, sendtype, &last_recv_cnt);
+                        MPIR_Get_count_impl(&status, sendtype, &last_recv_cnt);
                         curr_cnt += last_recv_cnt;
                     }
                     tmp_mask >>= 1;

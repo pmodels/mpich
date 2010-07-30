@@ -27,11 +27,26 @@
    are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of 
    static; this macro expands into "static" if weak symbols are supported and
    into nothing otherwise. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Grequest_complete
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Grequest_complete_impl(MPID_Request *request_ptr)
+{
+    /* Set the request as completed.  This does not change the
+       reference count on the generalized request */
+    MPID_Request_set_completed( request_ptr );
+
+    /* The request release comes with the wait/test, not this complete
+       routine, so we don't call the MPID_Request_release routine */
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Grequest_complete
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Grequest_complete - Notify MPI that a user-defined request is complete
 
@@ -49,9 +64,6 @@
 @*/
 int MPI_Grequest_complete( MPI_Request request )
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Grequest_complete";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *request_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GREQUEST_COMPLETE);
@@ -94,12 +106,7 @@ int MPI_Grequest_complete( MPI_Request request )
 
     /* ... body of routine ...  */
     
-    /* Set the request as completed.  This does not change the
-       reference count on the generalized request */
-    MPID_Request_set_completed( request_ptr );
-
-    /* The request release comes with the wait/test, not this complete
-       routine, so we don't call the MPID_Request_release routine */
+    MPIR_Grequest_complete_impl(request_ptr);
     
     /* ... end of body of routine ... */
 

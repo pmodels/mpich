@@ -184,7 +184,7 @@ int MPIR_Scatter_intra (
 
 		    /* the recv size is larger than what may be sent in
                        some cases. query amount of data actually received */
-                    NMPI_Get_count(&status, MPI_BYTE, &curr_cnt);
+                    MPIR_Get_count_impl(&status, MPI_BYTE, &curr_cnt);
                 }
                 break;
             }
@@ -321,7 +321,7 @@ int MPIR_Scatter_intra (
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 /* the recv size is larger than what may be sent in
                    some cases. query amount of data actually received */
-                NMPI_Get_count(&status, MPI_BYTE, &curr_cnt);
+                MPIR_Get_count_impl(&status, MPI_BYTE, &curr_cnt);
                 break;
             }
             mask <<= 1;

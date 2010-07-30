@@ -21,13 +21,48 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Get_count
 #define MPI_Get_count PMPI_Get_count
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Get_count_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Get_count_impl(MPI_Status *status, MPI_Datatype datatype, int *count)
+{
+    int size;
+    /* Check for correct number of bytes */
+    MPID_Datatype_get_size_macro(datatype, size);
+    if (size != 0) {
+	if ((status->count % size) != 0)
+	    (*count) = MPI_UNDEFINED;
+	else
+	    (*count) = status->count / size;
+    } else {
+	if (status->count > 0) {
+	    /* --BEGIN ERROR HANDLING-- */
+
+	    /* case where datatype size is 0 and count is > 0 should
+	     * never occur.
+	     */
+
+	    (*count) = MPI_UNDEFINED;
+	    /* --END ERROR HANDLING-- */
+	} else {
+	    /* This is ambiguous.  However, discussions on MPI Forum
+	       reached a consensus that this is the correct return 
+	       value
+	    */
+	    (*count) = 0;
+	}
+    }
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Get_count
 #undef FCNAME
-#define FCNAME "MPI_Get_count"
-
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPI_Get_count - Gets the number of "top level" elements
 
@@ -52,7 +87,6 @@ size of 'datatype' (so that 'count' would not be integral), a 'count' of
 int MPI_Get_count( MPI_Status *status, 	MPI_Datatype datatype, int *count )
 {
     int mpi_errno = MPI_SUCCESS;
-    int size;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GET_COUNT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -84,34 +118,7 @@ int MPI_Get_count( MPI_Status *status, 	MPI_Datatype datatype, int *count )
 
     /* ... body of routine ...  */
     
-    /* Check for correct number of bytes */
-    MPID_Datatype_get_size_macro(datatype, size);
-    if (size != 0) {
-	if ((status->count % size) != 0)
-	    (*count) = MPI_UNDEFINED;
-	else
-	    (*count) = status->count / size;
-    }
-    else {
-	if (status->count > 0)
-	{
-	    /* --BEGIN ERROR HANDLING-- */
-
-	    /* case where datatype size is 0 and count is > 0 should
-	     * never occur.
-	     */
-
-	    (*count) = MPI_UNDEFINED;
-	    /* --END ERROR HANDLING-- */
-	}
-	else {
-	    /* This is ambiguous.  However, discussions on MPI Forum
-	       reached a consensus that this is the correct return 
-	       value
-	    */
-	    (*count) = 0;
-	}
-    }
+    MPIR_Get_count_impl(status, datatype, count);
     
     /* ... end of body of routine ... */
 

@@ -306,8 +306,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
         /* receive inbound edges */
         mpi_errno = NMPI_Probe(MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_old, &status);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        mpi_errno = NMPI_Get_count(&status, MPI_INT, &count);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Get_count_impl(&status, MPI_INT, &count);
         /* can't use CHKLMEM macros b/c we are in a loop */
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPIR_ERR_RECOVERABLE, "**nomem");
@@ -336,8 +335,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
         /* receive outbound edges */
         mpi_errno = NMPI_Probe(MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_old, &status);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        mpi_errno = NMPI_Get_count(&status, MPI_INT, &count);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIR_Get_count_impl(&status, MPI_INT, &count);
         /* can't use CHKLMEM macros b/c we are in a loop */
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPIR_ERR_RECOVERABLE, "**nomem");

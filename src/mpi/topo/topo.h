@@ -40,9 +40,9 @@ typedef struct MPIR_Topology {
 
 MPIR_Topology *MPIR_Topology_get( MPID_Comm * );
 int MPIR_Topology_put( MPID_Comm *, MPIR_Topology * );
-int MPIR_Cart_create( const MPID_Comm *, int, const int [], 
+int MPIR_Cart_create( MPID_Comm *, int, const int [], 
 		      const int [], int, MPI_Comm * );
-int MPIR_Graph_create( const MPID_Comm *, int, 
+int MPIR_Graph_create( MPID_Comm *, int, 
 		       const int[], const int[], int, 
 		       MPI_Comm *);
 int MPIR_Dims_create( int, int, int * );

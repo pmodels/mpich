@@ -34,11 +34,15 @@
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes, 
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Graph_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Graph_create( MPID_Comm *comm_ptr, int nnodes, 
 		       const int indx[], const int edges[], int reorder, 
 		       MPI_Comm *comm_graph)
 {
-    static const char FCNAME[] = "MPIR_Graph_create";
     int mpi_errno = MPI_SUCCESS;
     int i, nedges;
     MPID_Comm *newcomm_ptr = NULL;
@@ -51,36 +55,24 @@ int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes,
     /* Create a new communicator */
     if (reorder) {
 	int nrank;
-	MPI_Comm ncomm;
-	MPIU_THREADPRIV_DECL;
-
-	MPIU_THREADPRIV_GET;
 
 	/* Allow the cart map routine to remap the assignment of ranks to 
 	   processes */
-	MPIR_Nest_incr();
-	mpi_errno = NMPI_Graph_map( comm_ptr->handle, nnodes, 
-				    (int *)indx, (int *)edges, 
-				    &nrank );
+	mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, indx, edges, &nrank);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	/* Create the new communicator with split, since we need to reorder
 	   the ranks (including the related internals, such as the connection
 	   tables */
-	if (mpi_errno == 0) {
-	    mpi_errno = NMPI_Comm_split( comm_ptr->handle, 
-				nrank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
-				nrank, &ncomm );
-	    if (!mpi_errno) {
-		MPID_Comm_get_ptr( ncomm, newcomm_ptr );
-	    }
-	}
-	MPIR_Nest_decr();
-    }
-    else {
+        mpi_errno = MPIR_Comm_split_impl( comm_ptr,
+                                          nrank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
+                                          nrank, &newcomm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
 	/* Just use the first nnodes processes in the communicator */
 	mpi_errno = MPIR_Comm_copy( (MPID_Comm *)comm_ptr, nnodes, 
 				    &newcomm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
 
     /* If this process is not in the resulting communicator, return a 
@@ -139,7 +131,8 @@ int MPIR_Graph_create( const MPID_Comm *comm_ptr, int nnodes,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Graph_create
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 MPI_Graph_create - Makes a new communicator to which topology information
                  has been attached
@@ -175,7 +168,6 @@ We ignore the 'reorder' info currently.
 int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *indx, int *edges, 
 		     int reorder, MPI_Comm *comm_graph)
 {
-    static const char FCNAME[] = "MPI_Graph_create";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GRAPH_CREATE);

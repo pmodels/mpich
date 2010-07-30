@@ -3480,7 +3480,7 @@ int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
 int MPIR_Cancel_impl(MPID_Request *request_ptr);
 struct MPIR_Topology;
 void MPIR_Cart_rank_impl(struct MPIR_Topology *cart_ptr, int *coords, int *rank);
-int MPIR_Cart_create_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
+int MPIR_Cart_create_impl(MPID_Comm *comm_ptr, int ndims, const int dims[],
                           const int periods[], int reorder, MPI_Comm *comm_cart);
 int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
                        const int periodic[], int *newrank);
@@ -3508,9 +3508,17 @@ void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhand
 void MPIR_Comm_get_name_impl(MPID_Comm *comm, char *comm_name, int *resultlen);
 int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
 int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
-int MPIR_Comm_split(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr);
+int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr);
 void MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result);
 int MPIR_Group_free_impl(MPID_Group *group_ptr);
+void MPIR_Get_count_impl(MPI_Status *status, MPI_Datatype datatype, int *count);
+void MPIR_Grequest_complete_impl(MPID_Request *request_ptr);
+int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
+                             MPI_Grequest_free_function *free_fn,
+                             MPI_Grequest_cancel_function *cancel_fn,
+                             void *extra_state, MPID_Request **request_ptr);
+int MPIR_Graph_map_impl(const MPID_Comm *comm_ptr, int nnodes,
+                        const int indx[], const int edges[], int *newrank);
 int MPIR_Type_commit_impl(MPI_Datatype *datatype);
 int MPIR_Type_create_struct_impl(int count,
                                  int array_of_blocklengths[],
@@ -3535,7 +3543,6 @@ int MPIR_Type_indexed_impl(int count, int blocklens[], int indices[], MPI_Dataty
 void MPIR_Type_free_impl(MPI_Datatype *datatype);
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
 int MPIR_Type_struct_impl(int count, int blocklens[], MPI_Aint indices[], MPI_Datatype old_types[], MPI_Datatype *newtype);
-
 
 
 #endif /* MPIIMPL_INCLUDED */

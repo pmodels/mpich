@@ -66,6 +66,42 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Grequest_start
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
+                             MPI_Grequest_free_function *free_fn,
+                             MPI_Grequest_cancel_function *cancel_fn,
+                             void *extra_state, MPID_Request **request_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+        
+    /* MT FIXME this routine is not thread-safe in the non-global case */
+    
+    *request_ptr = MPID_Request_create();
+    MPIU_ERR_CHKANDJUMP1(request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "generalized request");
+    
+    (*request_ptr)->kind                 = MPID_UREQUEST;
+    MPIU_Object_set_ref( *request_ptr, 1 );
+    (*request_ptr)->cc_ptr               = &(*request_ptr)->cc;
+    MPID_cc_set((*request_ptr)->cc_ptr, 1);
+    (*request_ptr)->comm                 = NULL;
+    (*request_ptr)->cancel_fn            = cancel_fn;
+    (*request_ptr)->free_fn              = free_fn;
+    (*request_ptr)->query_fn             = query_fn;
+    (*request_ptr)->poll_fn              = NULL;
+    (*request_ptr)->wait_fn              = NULL;
+    (*request_ptr)->grequest_extra_state = extra_state;
+    (*request_ptr)->greq_lang            = MPID_LANG_C;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #else
 extern MPID_Grequest_class MPID_Grequest_class_direct[];
 extern MPIU_Object_alloc_t MPID_Grequest_class_mem;
@@ -75,7 +111,8 @@ extern MPID_Grequest_class *MPIR_Grequest_class_list;
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Grequest_start
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Grequest_start - Create and return a user-defined request
 
@@ -127,9 +164,8 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 			MPI_Grequest_cancel_function *cancel_fn, 
 			void *extra_state, MPI_Request *request )
 {
-    static const char FCNAME[] = "MPI_Grequest_start";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *lrequest_ptr;
+    MPID_Request *request_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GREQUEST_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -150,35 +186,11 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    /* MT FIXME this routine is not thread-safe in the non-global case */
     
-    lrequest_ptr = MPID_Request_create();
-    /* --BEGIN ERROR HANDLING-- */
-    if (lrequest_ptr == NULL)
-    {
-	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-					  FCNAME, __LINE__, MPI_ERR_OTHER, 
-					  "**nomem", "**nomem %s", 
-					  "generalized request" );
-	goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
+    if (mpi_errno) goto fn_fail;
     
-    lrequest_ptr->kind                 = MPID_UREQUEST;
-    MPIU_Object_set_ref( lrequest_ptr, 1 );
-    lrequest_ptr->cc_ptr               = &lrequest_ptr->cc;
-    MPID_cc_set(lrequest_ptr->cc_ptr, 1);
-    lrequest_ptr->comm                 = NULL;
-    lrequest_ptr->cancel_fn            = cancel_fn;
-    lrequest_ptr->free_fn              = free_fn;
-    lrequest_ptr->query_fn             = query_fn;
-    lrequest_ptr->poll_fn              = NULL;
-    lrequest_ptr->wait_fn              = NULL;
-    lrequest_ptr->grequest_extra_state = extra_state;
-    lrequest_ptr->greq_lang            = MPID_LANG_C;
-
-    MPIU_OBJ_PUBLISH_HANDLE(*request, lrequest_ptr->handle);
+    MPIU_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
 
     /* ... end of body of routine ... */
 
@@ -222,6 +234,8 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 
 #undef FUNCNAME
 #define FUNCNAME MPIX_Grequest_class_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* extensions for Generalized Request redesign paper */
 int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 		               MPI_Grequest_free_function *free_fn,
@@ -230,7 +244,6 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 			       MPIX_Grequest_wait_function *wait_fn,
 			       MPIX_Grequest_class *greq_class)
 {
-    	static const char FCNAME[] = "MPIX_Grequest_class_create";
 	MPID_Grequest_class *class_ptr;
 	int mpi_errno = MPI_SUCCESS;
 

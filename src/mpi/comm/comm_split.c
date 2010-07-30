@@ -48,15 +48,15 @@ static void MPIU_Sort_inttable( splittype *keytable, int size )
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split
+#define FUNCNAME MPIR_Comm_split_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Comm_split(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr)
+int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *local_comm_ptr;
     splittype *table, *remotetable=0, *keytable, *remotekeytable=0;
-    int       rank, size, remote_size, i, new_size, new_remote_size,
+    int rank, size, remote_size, i, new_size, new_remote_size,
 	first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm; /* TRUE iff *newcomm should be populated */
     MPIR_Context_id_t   new_context_id, remote_context_id;
@@ -302,7 +302,6 @@ int MPIR_Comm_split(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm
     MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
  fn_fail:
-
     goto fn_exit;
 }
 
@@ -395,7 +394,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_Comm_split(comm_ptr, color, key, &newcomm_ptr);
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, &newcomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     if (newcomm_ptr)
         MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);

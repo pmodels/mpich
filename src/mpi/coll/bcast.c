@@ -284,7 +284,7 @@ static int scatter_for_bcast(
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
                 /* query actual size of data received */
-                NMPI_Get_count(&status, MPI_BYTE, &curr_size);
+                MPIR_Get_count_impl(&status, MPI_BYTE, &curr_size);
             }
             break;
         }
@@ -470,7 +470,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
                                       MPI_BYTE, dst, MPIR_BCAST_TAG, comm, &status);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-            NMPI_Get_count(&status, MPI_BYTE, &recv_size);
+            MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
             curr_size += recv_size;
         }
 
@@ -556,7 +556,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
                        whose data we don't have */
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-                    NMPI_Get_count(&status, MPI_BYTE, &recv_size);
+                    MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
                     curr_size += recv_size;
                     /* printf("Rank %d, recv from %d, offset %d, size %d\n", rank, dst, offset, recv_size);
                        fflush(stdout);*/

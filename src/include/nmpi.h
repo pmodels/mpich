@@ -23,7 +23,6 @@
  */
 
 #ifdef USE_MPI_FOR_NMPI
-#define NMPI_Get_count MPI_Get_count
 #define NMPI_Pack MPI_Pack
 #define NMPI_Pack_size MPI_Pack_size
 #define NMPI_Unpack MPI_Unpack
@@ -31,7 +30,6 @@
 #define NMPI_Test MPI_Test
 #define NMPI_Type_get_attr MPI_Type_get_attr
 #define NMPI_Type_set_attr MPI_Type_set_attr
-#define NMPI_Comm_split MPI_Comm_split
 #define NMPI_Isend MPI_Isend
 #define NMPI_Irecv MPI_Irecv
 #define NMPI_Recv MPI_Recv 
@@ -39,7 +37,6 @@
 #define NMPI_Waitall MPI_Waitall
 #define NMPI_Sendrecv MPI_Sendrecv
 #define NMPI_Type_lb MPI_Type_lb
-#define NMPI_Graph_map  MPI_Graph_map
 #define NMPI_Iprobe MPI_Iprobe
 #define NMPI_Probe MPI_Probe
 #define NMPI_Group_translate_ranks MPI_Group_translate_ranks
@@ -47,8 +44,6 @@
 #define NMPI_Info_create MPI_Info_create
 #define NMPI_Info_set MPI_Info_set
 #define NMPI_Comm_call_errhandler MPI_Comm_call_errhandler
-#define NMPI_Grequest_start MPI_Grequest_start
-#define NMPI_Grequest_complete MPI_Grequest_complete
 #define NMPI_Test_cancelled MPI_Test_cancelled
 #define NMPI_Ibsend MPI_Ibsend
 #define NMPI_Buffer_detach MPI_Buffer_detach
@@ -57,7 +52,6 @@
 #define NMPIX_Grequest_class_allocate MPIX_Grequest_class_allocate
 #define NMPIX_Grequest_start MPIX_Grequest_start
 #else
-#define NMPI_Get_count PMPI_Get_count
 #define NMPI_Pack PMPI_Pack
 #define NMPI_Pack_size PMPI_Pack_size
 #define NMPI_Unpack PMPI_Unpack
@@ -65,7 +59,6 @@
 #define NMPI_Test PMPI_Test
 #define NMPI_Type_get_attr PMPI_Type_get_attr
 #define NMPI_Type_set_attr PMPI_Type_set_attr
-#define NMPI_Comm_split PMPI_Comm_split
 #define NMPI_Isend PMPI_Isend
 #define NMPI_Irecv PMPI_Irecv
 #define NMPI_Recv PMPI_Recv 
@@ -73,7 +66,6 @@
 #define NMPI_Waitall PMPI_Waitall
 #define NMPI_Sendrecv PMPI_Sendrecv
 #define NMPI_Type_lb PMPI_Type_lb
-#define NMPI_Graph_map  PMPI_Graph_map
 #define NMPI_Iprobe PMPI_Iprobe
 #define NMPI_Probe PMPI_Probe
 #define NMPI_Group_translate_ranks PMPI_Group_translate_ranks
@@ -81,8 +73,6 @@
 #define NMPI_Info_create PMPI_Info_create
 #define NMPI_Info_set PMPI_Info_set
 #define NMPI_Comm_call_errhandler PMPI_Comm_call_errhandler
-#define NMPI_Grequest_start PMPI_Grequest_start
-#define NMPI_Grequest_complete PMPI_Grequest_complete
 #define NMPI_Test_cancelled PMPI_Test_cancelled
 #define NMPI_Ibsend PMPI_Ibsend
 #define NMPI_Buffer_detach PMPI_Buffer_detach
