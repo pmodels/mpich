@@ -23,7 +23,6 @@
 #undef MPI_Cancel
 #define MPI_Cancel PMPI_Cancel
 
-#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Cancel_impl
@@ -102,6 +101,7 @@ int MPIR_Cancel_impl(MPID_Request *request_ptr)
 
     goto fn_exit;
 }
+#endif
 
 
 #undef FUNCNAME
