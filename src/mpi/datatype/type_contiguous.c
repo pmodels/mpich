@@ -22,7 +22,6 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_contiguous
 #define MPI_Type_contiguous PMPI_Type_contiguous
-#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_contiguous_impl
@@ -62,6 +61,9 @@ int MPIR_Type_contiguous_impl(int count,
 
     goto fn_exit;
 }
+
+#endif
+
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_contiguous
