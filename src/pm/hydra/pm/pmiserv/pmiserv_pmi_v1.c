@@ -53,7 +53,6 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
     struct HYD_proxy *proxy, *tproxy;
     const char *cmd;
     int proxy_count;
-    static int barrier_count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -65,9 +64,9 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
     for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next)
         proxy_count++;
 
-    barrier_count++;
-    if (barrier_count == proxy_count) {
-        barrier_count = 0;
+    proxy->pg->barrier_count++;
+    if (proxy->pg->barrier_count == proxy_count) {
+        proxy->pg->barrier_count = 0;
         cmd = "cmd=barrier_out\n";
 
         for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {

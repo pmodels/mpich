@@ -244,6 +244,7 @@ struct HYD_pg {
     int pgid;
     struct HYD_proxy *proxy_list;
     int pg_process_count;
+    int barrier_count;
 
     struct HYD_pg *spawner_pg;
 
