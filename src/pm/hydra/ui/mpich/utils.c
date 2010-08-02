@@ -223,18 +223,30 @@ static void hostlist_help_fn(void)
 
 static HYD_status hostlist_fn(char *arg, char ***argv)
 {
-    char *hostname;
+    char *hostlist[HYD_NUM_TMP_STRINGS];
+    int count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_ERR_CHKANDJUMP(status, HYD_handle.node_list, HYD_INTERNAL_ERROR,
                         "duplicate host file or host list setting\n");
 
-    hostname = strtok(**argv, ",");
-    while (hostname) {
-        status = HYDU_add_to_node_list(hostname, 1, &HYD_handle.node_list);
-        HYDU_ERR_POP(status, "unable to add to node list\n");
+    hostlist[count] = strtok(**argv, ",");
+    while ((count < HYD_NUM_TMP_STRINGS) && hostlist[count])
+        hostlist[++count] = strtok(NULL, ",");
 
-        hostname = strtok(NULL, ",");
+    if (count >= HYD_NUM_TMP_STRINGS)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "too many hosts listed\n");
+
+    for (count = 0; hostlist[count]; count++) {
+        char *h, *procs = NULL;
+        int np;
+
+        h = strtok(hostlist[count], ":");
+        procs = strtok(NULL, ":");
+        np = procs ? atoi(procs) : 1;
+
+        status = HYDU_add_to_node_list(h, np, &HYD_handle.node_list);
+        HYDU_ERR_POP(status, "unable to add to node list\n");
     }
 
     (*argv)++;
