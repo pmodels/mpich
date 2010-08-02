@@ -338,11 +338,8 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
             HYDU_ERR_POP(status, "error waiting for event\n");
         }
 
-        if (pg_scratch) {
-            HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
-            HYDU_FREE(pg_scratch);
-            pg_scratch = NULL;
-        }
+        status = HYD_pmcd_pmi_free_pg_scratch(pg);
+        HYDU_ERR_POP(status, "error freeing PG scratch space\n");
     }
 
   fn_exit:

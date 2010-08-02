@@ -406,3 +406,30 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
   fn_fail:
     goto fn_exit;
 }
+
+HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
+{
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (pg->pg_scratch) {
+        pg_scratch = pg->pg_scratch;
+
+        if (pg_scratch->ecount)
+            HYDU_FREE(pg_scratch->ecount);
+
+        HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
+
+        HYDU_FREE(pg_scratch);
+        pg->pg_scratch = NULL;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

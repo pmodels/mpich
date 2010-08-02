@@ -173,6 +173,9 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
         if (proxy->node.hostname)
             HYDU_FREE(proxy->node.hostname);
 
+        if (proxy->node.local_binding)
+            HYDU_FREE(proxy->node.local_binding);
+
         if (proxy->exec_launch_info) {
             HYDU_free_strlist(proxy->exec_launch_info);
             HYDU_FREE(proxy->exec_launch_info);
