@@ -11,7 +11,6 @@
 #include "bind.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
-char *HYD_dbg_prefix = (char *) "unknown";
 
 static HYD_status init_params(void)
 {
@@ -176,7 +175,7 @@ int main(int argc, char **argv)
     enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_dbg_init("proxy");
+    status = HYDU_dbg_init("proxy:unset");
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
 
     status = HYDU_set_signal(SIGPIPE, signal_cb);

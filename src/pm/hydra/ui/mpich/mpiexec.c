@@ -15,7 +15,6 @@
 
 struct HYD_handle HYD_handle = { {0} };
 struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
-char *HYD_dbg_prefix = (char *) "unknown";
 
 static void usage(void)
 {

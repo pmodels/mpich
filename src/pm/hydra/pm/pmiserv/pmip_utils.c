@@ -429,6 +429,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 {
     char **argv = t_argv;
+    static char dbg_prefix[2 * MAX_HOSTNAME_LEN];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -476,6 +477,12 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.local.pgid == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PG ID not available\n");
+
+    HYDU_dbg_finalize();
+    HYDU_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
+                  HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
+    status = HYDU_dbg_init((const char *) dbg_prefix);
+    HYDU_ERR_POP(status, "unable to initialization debugging\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

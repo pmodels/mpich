@@ -6,6 +6,8 @@
 
 #include "hydra_utils.h"
 
+char *HYD_dbg_prefix = (char *) "unknown";
+
 HYD_status HYDU_dbg_init(const char *str)
 {
     char hostname[MAX_HOSTNAME_LEN];

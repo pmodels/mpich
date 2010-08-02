@@ -8,7 +8,6 @@
 #include "hydra_utils.h"
 #include "persist_server.h"
 
-char *HYD_dbg_prefix = (char *) "unknown";
 struct HYDT_persist_handle HYDT_persist_handle;
 static struct {
     enum {
