@@ -339,7 +339,7 @@ acSubversion=-1
 acIncDirFlag=-I
 # Try to keep at least one version ahead of autoconf (e.g., if current is
 # 2.65, include a test for 2.66)
-for ver in 66 65 64 63 62 61 60 59 ; do
+for ver in 68 67 66 65 64 63 62 61 60 59 ; do
     rm -f .tmp/configure.in .tmp/configure
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
@@ -354,13 +354,17 @@ if [ "$acSubversion" -gt 0 ] ; then
     acVersion="2.$acSubversion"
     echo "You have autoconf version $acVersion or greater."
     if [ "$no_atver_check" != "yes" ] ; then
-        if [ "$acSubversion" -ne 63 -a "$acSubversion" -ne 64 ] ; then
-            echo "autoconf version 2.63 or 2.64 is required"
-            if [ "$do_build_configure" = yes ] ; then 
-                echo "Exiting updatefiles...."
-                exit 1
-            fi
-        fi
+        case "$acSubversion" in
+            63|64|67)
+                ;;
+            *)
+                echo "autoconf version 2.63, 2.64 or 2.67 is required"
+                if [ "$do_build_configure" = yes ] ; then 
+                    echo "Exiting updatefiles...."
+                    exit 1
+                fi
+                ;;
+        esac
     fi
 else
     cat <<EOF
@@ -382,7 +386,7 @@ fi
 # m4_ifdef([LT_PREREQ],,[m4_fatal([LT_PREREQ not defined])])
 # is required.
 cat <<EOF >.tmp/configure.ac
-AC_PREREQ(2.63)
+AC_PREREQ(2.$acSubversion)
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
@@ -421,7 +425,7 @@ if [ ! -d .tmp ] ; then
     mkdir .tmp/m4 >/dev/null 2>&1
 fi
 cat <<EOF >.tmp/configure.ac
-AC_PREREQ(2.63)
+AC_PREREQ(2.$acSubversion)
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
