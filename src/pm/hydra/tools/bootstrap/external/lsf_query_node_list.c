@@ -11,7 +11,7 @@
 
 HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list)
 {
-    char *hosts, *hostname, *num_procs_str;
+    char *hosts, *hostname, *num_procs_str, *thosts = NULL;
     int num_procs;
     HYD_status status = HYD_SUCCESS;
 
@@ -25,6 +25,9 @@ HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "No LSF node list found\n");
     }
     else {
+        hosts = HYDU_strdup(hosts);
+        thosts = hosts;
+
         hostname = strtok(hosts, " ");
         while (1) {
             if (hostname == NULL)
@@ -42,6 +45,9 @@ HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list)
 
             hostname = strtok(NULL, " ");
         }
+
+        if (thosts)
+            HYDU_FREE(thosts);
     }
 
 fn_exit:

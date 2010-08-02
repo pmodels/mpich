@@ -100,7 +100,7 @@ static HYD_status group_to_individual_nodes(char *str, char **list)
 
 HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
 {
-    char *str, *num_procs;
+    char *str, *num_procs, *tstr = NULL, *tnum_procs = NULL;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
     struct HYD_node *node, *tnode;
     int i, j;
@@ -117,6 +117,9 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
         *node_list = NULL;
     }
     else {
+        tstr = HYDU_strdup(str);
+        tnum_procs = HYDU_strdup(num_procs);
+
         full_str_to_groups(str, tmp1);
         num_procs = strtok(num_procs, "(");
 
@@ -142,6 +145,11 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
 
         /* node list is provided by the bootstrap server */
         HYDT_bscd_slurm_user_node_list = 0;
+
+        if (tstr)
+            HYDU_FREE(tstr);
+        if (tnum_procs)
+            HYDU_FREE(tnum_procs);
     }
 
   fn_exit:
