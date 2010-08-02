@@ -105,6 +105,7 @@ static void usage(void)
     printf("    -prepend-rank                    prepend rank to output\n");
     printf
         ("    -nameserver                      name server information (host:port format)\n");
+    printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
 }
 
 static void signal_cb(int sig)

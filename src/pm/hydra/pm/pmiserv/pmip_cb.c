@@ -273,15 +273,20 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     }
 
     if (closed) {
-        /* This is a hack to improve user-friendliness. If a PMI
-         * application terminates, we clean up the remaining
+        /* If a PMI application terminates, we clean up the remaining
          * processes. For a correct PMI application, we should never
          * get closed socket event as we deregister this socket as
          * soon as we get the finalize message. For non-PMI
          * applications, this is harder to identify, so we just let
          * the user cleanup the processes on a failure. */
-        if (using_pmi_port || HYD_pmcd_pmip.downstream.pmi_fd_active[i])
-            HYD_pmcd_pmip_killjob();
+        if (using_pmi_port || HYD_pmcd_pmip.downstream.pmi_fd_active[i]) {
+            if (HYD_pmcd_pmip.user_global.auto_cleanup)
+                HYD_pmcd_pmip_killjob();
+            else {
+                /* If the user doesn't want to automatically cleanup,
+                 * just deregister the FD and ignore this error */
+            }
+        }
         goto fn_exit;
     }
 

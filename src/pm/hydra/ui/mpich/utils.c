@@ -840,6 +840,19 @@ static HYD_status nameserver_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_handle.nameserver);
 }
 
+static void auto_cleanup_help_fn(void)
+{
+    printf("\n");
+    printf("-disable-auto-cleanup: Don't auto-cleanup of processes when the app aborts\n");
+    printf("-enable-auto-cleanup: Auto-cleanup processes when the app aborts (default)\n\n");
+}
+
+static HYD_status auto_cleanup_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int(arg, argv, &HYD_handle.user_global.auto_cleanup,
+                        !strcmp(arg, "enable-auto-cleanup"));
+}
+
 static struct HYD_arg_match_table match_table[] = {
     /* Global environment options */
     {"genv", genv_fn, genv_help_fn},
@@ -910,6 +923,8 @@ static struct HYD_arg_match_table match_table[] = {
     {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
     {"iface", iface_fn, iface_help_fn},
     {"nameserver", nameserver_fn, nameserver_help_fn},
+    {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
+    {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
 
     {"\0", NULL}
 };
@@ -960,6 +975,9 @@ static HYD_status set_default_values(void)
         MPL_env2str("HYDRA_ENV", (const char **) &tmp))
         HYD_handle.user_global.global_env.prop =
             !strcmp(tmp, "all") ? HYDU_strdup("all") : HYDU_strdup("none");
+
+    if (HYD_handle.user_global.auto_cleanup == -1)
+        HYD_handle.user_global.auto_cleanup = 1;
 
   fn_exit:
     return status;

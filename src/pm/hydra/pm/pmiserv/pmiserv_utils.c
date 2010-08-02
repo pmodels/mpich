@@ -167,6 +167,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-process-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pg->pg_process_count);
 
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--auto-cleanup");
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.user_global.auto_cleanup);
 
         /* Check if we are running in embedded mode */
         ret = MPL_env2str("PMI_FD", (const char **) &pmi_fd);

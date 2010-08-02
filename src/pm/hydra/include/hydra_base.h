@@ -312,6 +312,8 @@ struct HYD_user_global {
     int enablex;
     int debug;
 
+    int auto_cleanup;
+
     struct HYD_env_global global_env;
 };
 

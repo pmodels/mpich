@@ -24,6 +24,8 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->debug = -1;
     user_global->prepend_rank = -1;
 
+    user_global->auto_cleanup = -1;
+
     HYDU_init_global_env(&user_global->global_env);
 }
 
