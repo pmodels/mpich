@@ -54,6 +54,7 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
+    int in_cs = FALSE;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
 
@@ -93,7 +94,10 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, win_ptr);
+    in_cs = TRUE;
+
     if (!win_ptr->errhandler || 
 	win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
 	mpi_errno = MPIR_Err_return_win( win_ptr, "MPI_Win_call_errhandler", errorcode );
@@ -141,6 +145,9 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
     /* ... end of body of routine ... */
 
   fn_exit:
+    if (in_cs)
+        MPIU_THREAD_CS_EXIT(MPI_OBJ, win_ptr);
+
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
     return mpi_errno;
 

@@ -30,6 +30,9 @@
 void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhandler_ptr)
 {
     int in_use;
+
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+
     /* We don't bother with the case where the errhandler is NULL;
        in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
        which is builtin and can never be freed. */
@@ -43,6 +46,7 @@ void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhand
     MPIR_Errhandler_add_ref(errhandler_ptr);
     comm_ptr->errhandler = errhandler_ptr;
 
+    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
     return;
 }
 

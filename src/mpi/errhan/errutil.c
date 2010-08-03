@@ -242,6 +242,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 			  int errcode )
 {
     const int error_class = ERROR_GET_CLASS(errcode);
+    MPID_Errhandler *errhandler = NULL;
     int rc;
     MPIU_THREADPRIV_DECL;
 
@@ -263,32 +264,48 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_comm(comm_ptr=%p, fcname=%s, errcode=%d)", comm_ptr, fcname, errcode));
 
-    if (!comm_ptr || comm_ptr->errhandler == NULL) {
-	/* Try to replace with the default handler, which is the one on 
-	   MPI_COMM_WORLD.  This gives us correct behavior for the
-	   case where the error handler on MPI_COMM_WORLD has been changed. */
-	if (MPIR_Process.comm_world)
-	{
-	    comm_ptr = MPIR_Process.comm_world;
-	}
+    if (comm_ptr) {
+        MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+        errhandler = comm_ptr->errhandler;
+        MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
     }
 
-    if (MPIR_Err_is_fatal(errcode) ||
-	comm_ptr == NULL || comm_ptr->errhandler == NULL || 
-	comm_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+    if (errhandler == NULL) {
+        /* Try to replace with the default handler, which is the one on 
+           MPI_COMM_WORLD.  This gives us correct behavior for the
+           case where the error handler on MPI_COMM_WORLD has been changed. */
+        if (MPIR_Process.comm_world)
+        {
+            comm_ptr = MPIR_Process.comm_world;
+        }
+    }
+
+    if (MPIR_Err_is_fatal(errcode) || comm_ptr == NULL) {
 	/* Calls MPID_Abort */
 	handleFatalError( comm_ptr, fcname, errcode );
+        /* never get here */
+    }
+
+    MPIU_Assert(comm_ptr != NULL);
+
+    /* comm_ptr may have changed to comm_world.  Keep this locked as long as we
+     * are using the errhandler to prevent it from disappearing out from under
+     * us. */
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+    errhandler = comm_ptr->errhandler;
+
+    if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
+        MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+	/* Calls MPID_Abort */
+	handleFatalError( comm_ptr, fcname, errcode );
+        /* never get here */
     }
 
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode( errcode );
 
-    if (comm_ptr->errhandler->handle == MPI_ERRORS_RETURN ||
-	comm_ptr->errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS)
-    {
-	return errcode;
-    }
-    else
+    if (errhandler->handle != MPI_ERRORS_RETURN &&
+        errhandler->handle != MPIR_ERRORS_THROW_EXCEPTIONS)
     {
 	/* The user error handler may make calls to MPI routines, so the
 	 * nesting counter must be incremented before the handler is called */
@@ -324,6 +341,8 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 
 	MPIR_Nest_decr();
     }
+
+    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
     return errcode;
 }
 

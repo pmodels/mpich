@@ -53,6 +53,7 @@
 int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
+    int in_cs = FALSE;
     MPID_Comm *comm_ptr = NULL;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CALL_ERRHANDLER);
@@ -77,6 +78,9 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
     
     /* Convert MPI object handles to object pointers */
     MPID_Comm_get_ptr( comm, comm_ptr );
+
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr); /* protect access to comm_ptr->errhandler */
+    in_cs = TRUE;
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -149,6 +153,9 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
     /* ... end of body of routine ... */
 
   fn_exit:
+    if (in_cs)
+        MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CALL_ERRHANDLER);
     return mpi_errno;
 

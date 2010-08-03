@@ -31,9 +31,11 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIR_Comm_get_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler **errhandler_ptr)
 {
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
     *errhandler_ptr = comm_ptr->errhandler;
     if (comm_ptr->errhandler)
 	MPIR_Errhandler_add_ref(comm_ptr->errhandler);
+    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 
     return;
 }

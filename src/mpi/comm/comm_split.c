@@ -287,10 +287,12 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	}
 
 	/* Inherit the error handler (if any) */
+        MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
 	(*newcomm_ptr)->errhandler = comm_ptr->errhandler;
 	if (comm_ptr->errhandler) {
 	    MPIR_Errhandler_add_ref( comm_ptr->errhandler );
 	}
+        MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 
         /* Notify the device of this new communicator */
 	MPID_Dev_comm_create_hook( *newcomm_ptr );

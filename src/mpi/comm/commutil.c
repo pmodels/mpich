@@ -1030,10 +1030,12 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
     }
 
     /* Inherit the error handler (if any) */
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
 	MPIR_Errhandler_add_ref( comm_ptr->errhandler );
     }
+    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 
     /* Notify the device of the new communicator */
     MPID_Dev_comm_create_hook(newcomm_ptr);
@@ -1140,6 +1142,7 @@ static int comm_delete(MPID_Comm * comm_ptr, int isDisconnect)
         MPIR_Free_contextid( comm_ptr->recvcontext_id );
 
         /* We need to release the error handler */
+        /* no MPI_OBJ CS needed */
         if (comm_ptr->errhandler &&
             ! (HANDLE_GET_KIND(comm_ptr->errhandler->handle) ==
                HANDLE_KIND_BUILTIN) ) {

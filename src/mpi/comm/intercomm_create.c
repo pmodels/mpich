@@ -557,11 +557,13 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     }
 
     /* Inherit the error handler (if any) */
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
 	MPIR_Errhandler_add_ref( comm_ptr->errhandler );
     }
-	
+    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+
     /* Notify the device of this new communicator */
     MPID_Dev_comm_create_hook( newcomm_ptr );
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);

@@ -86,9 +86,11 @@ int MPI_Comm_set_name(MPI_Comm comm, char *comm_name)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
     MPIU_Strncpy( comm_ptr->name, comm_name, MPI_MAX_OBJECT_NAME );
-    
+    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

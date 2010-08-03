@@ -165,6 +165,7 @@ int MPI_Finalize( void )
      * At this point, we will release any user-defined error handlers on 
      * comm self and comm world
      */
+    /* no MPI_OBJ CS needed here */
     if (MPIR_Process.comm_world->errhandler && 
 	! (HANDLE_GET_KIND(MPIR_Process.comm_world->errhandler->handle) == 
 	   HANDLE_KIND_BUILTIN) ) {
