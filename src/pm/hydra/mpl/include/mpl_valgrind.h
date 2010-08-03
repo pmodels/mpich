@@ -172,7 +172,12 @@ static inline void MPL_VG_printf_do_nothing_func(char *fmt, ...)
    /* could switch on tool type, but all three tools know about these annotations */
 #  define MPL_VG_ANNOTATE_HAPPENS_BEFORE(obj_)        ANNOTATE_HAPPENS_BEFORE(obj_)
 #  define MPL_VG_ANNOTATE_HAPPENS_AFTER(obj_)         ANNOTATE_HAPPENS_AFTER(obj_)
-#  define MPL_VG_ANNOTATE_NEW_MEMORY(obj_,size_)      ANNOTATE_NEW_MEMORY(obj_,size_)
+   /* older versions of some of Helgrind & DRD don't support this annotation */
+#  if defined(ANNOTATE_NEW_MEMORY)
+#    define MPL_VG_ANNOTATE_NEW_MEMORY(obj_,size_)    ANNOTATE_NEW_MEMORY(obj_,size_)
+#  else
+#    define MPL_VG_ANNOTATE_NEW_MEMORY(obj_,size_)    do {} while (0)
+#  endif
 #else
 #  define MPL_VG_ANNOTATE_HAPPENS_BEFORE(obj_)        do {} while (0)
 #  define MPL_VG_ANNOTATE_HAPPENS_AFTER(obj_)         do {} while (0)
