@@ -371,10 +371,10 @@ AC_COMPILE_IFELSE([
     ])
 ],[
     # pac_f77compile_ok=yes
-    mv conftest.$ac_objext pac_f77conftest.$ac_objext
+    mv conftest.$OBJEXT pac_f77conftest.$OBJEXT
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
-    LIBS="pac_f77conftest.$ac_objext $LIBS"
+    LIBS="pac_f77conftest.$OBJEXT $LIBS"
     AC_LANG_PUSH(Fortran)
     AC_LINK_IFELSE([
         AC_LANG_SOURCE([
@@ -391,7 +391,7 @@ AC_COMPILE_IFELSE([
     LIBS="$saved_LIBS"
     AC_LANG_POP(Fortran)
     # remove previously generated object file.
-    rm -f pac_f77conftest.$ac_objext
+    rm -f pac_f77conftest.$OBJEXT
 ], [
     # pac_f77compile_ok=no
     pac_cv_fc_and_f77=no
@@ -467,10 +467,10 @@ int $confname( int a )
     ])
 ],[
     pac_compile_ok=yes
-    mv conftest.$ac_objext pac_conftest.$ac_objext
+    mv conftest.$OBJEXT pac_conftest.$OBJEXT
     # Save LIBS and prepend object file to LIBS
     saved_LIBS="$LIBS"
-    LIBS="pac_conftest.$ac_objext $LIBS"
+    LIBS="pac_conftest.$OBJEXT $LIBS"
     AC_LANG_PUSH(Fortran)
     AC_LINK_IFELSE([
         AC_LANG_PROGRAM([],[call conf1(0)])
@@ -485,7 +485,7 @@ int $confname( int a )
     ])
     LIBS="$saved_LIBS"
     AC_LANG_POP(Fortran)
-    rm -f pac_conftest.$ac_objext
+    rm -f pac_conftest.$OBJEXT
 ])
 AC_LANG_POP(C)
 dnl
@@ -581,9 +581,9 @@ if test "$pac_result" = "yes" ; then
             end
         ])
     ],[
-        mv conftest.$ac_objext pac_conftest.$ac_objext
+        mv conftest.$OBJEXT pac_conftest.$OBJEXT
         saved_LIBS="$LIBS"
-        LIBS="pac_conftest.$ac_objext $LIBS"
+        LIBS="pac_conftest.$OBJEXT $LIBS"
 
         FCFLAGS="$FCFLAGS_opt"
         pac_logfile="pac_test4.log"
@@ -596,7 +596,7 @@ if test "$pac_result" = "yes" ; then
             pac_result=no
         ])
         LIBS="$saved_LIBS"
-        rm -f pac_conftest.$ac_objext
+        rm -f pac_conftest.$OBJEXT
     ],[
         pac_result=no
     ])
@@ -774,7 +774,7 @@ AC_LINK_IFELSE([
     ])
 ],[
     rm -f pac_conftest.out
-    PAC_RUNLOG([./conftest${ac_exeext} > pac_conftest.out])
+    PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
     if test -s pac_conftest.out ; then
         pac_fc_num_model="`cat pac_conftest.out | sed -e 's/  */ /g'`"
         AC_MSG_RESULT([$pac_fc_num_model])
@@ -809,7 +809,7 @@ AC_LINK_IFELSE([
     ])
 ],[
     rm -f pac_conftest.out
-    PAC_RUNLOG([./conftest${ac_exeext} > pac_conftest.out])
+    PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
     if test -s pac_conftest.out ; then
         pac_fc_num_model="`cat pac_conftest.out | sed -e 's/  */ /g'`"
         AC_MSG_RESULT([$pac_fc_num_model])
@@ -855,7 +855,7 @@ AC_LINK_IFELSE([
     ])
 ],[
     rm -f pac_conftest.out
-    PAC_RUNLOG([./conftest${ac_exeext} > pac_conftest.out])
+    PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
     if test -s pac_conftest.out ; then
         pac_flag=`cat pac_conftest.out | sed -e 's/  */ /g'| tr '\012' ','`
         AC_MSG_RESULT([$pac_flag])
@@ -904,7 +904,7 @@ int cisize_(char *i1p, char *i2p)
 }
     ])
 ],[
-    PAC_RUNLOG([mv conftest.$ac_objext pac_conftest.$ac_objext])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     pac_ccompile_ok=yes
 ],[
     pac_ccompile_ok=no
@@ -913,7 +913,7 @@ AC_LANG_POP([C])
 dnl
 if test "$pac_ccompile_ok" = "yes" ; then
     saved_LIBS="$LIBS"
-    LIBS="pac_conftest.$ac_objext $LIBS"
+    LIBS="pac_conftest.$OBJEXT $LIBS"
     saved_IFS=$IFS
     IFS=:
     AC_LANG_PUSH([Fortran])
@@ -933,7 +933,7 @@ if test "$pac_ccompile_ok" = "yes" ; then
         IFS=$saved_IFS
         AC_LINK_IFELSE([],[
             rm -f pac_conftest.out
-            PAC_RUNLOG([./conftest${ac_exeext} > pac_conftest.out])
+            PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
             if test -s pac_conftest.out ; then
                 sizes="`cat pac_conftest.out | sed -e 's/  */ /g'`"
                 pac_flag="$pac_flag { $sizes },"
@@ -951,6 +951,6 @@ if test "$pac_ccompile_ok" = "yes" ; then
     ifelse([$1],[],[PAC_FC_INTEGER_MODEL_MAP=$pac_flag],[$1=$pac_flag])
     AC_LANG_POP([Fortran])
     LIBS="$saved_LIBS"
-    rm -f pac_conftest.$ac_objext
+    rm -f pac_conftest.$OBJEXT
 fi
 ])

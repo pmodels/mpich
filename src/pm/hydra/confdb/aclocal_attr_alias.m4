@@ -30,7 +30,7 @@ AC_PATH_PROGS_FEATURE_CHECK(NM_G, nm, [
                 AC_LANG_SOURCE([int iglobal;])
             ],[
                 changequote(,)
-                case `${ac_path_NM_G} -B conftest.$ac_objext | sed -e 's|[0-9][0-9]*  *[A-Z]  *iglobal|XXXX|g'` in
+                case `${ac_path_NM_G} -B conftest.$OBJEXT | sed -e 's|[0-9][0-9]*  *[A-Z]  *iglobal|XXXX|g'` in
                 *XXXX*)
                     pac_path_NM_G="${ac_path_NM_G} -B"
                     pac_path_NM_G_type="BSD"
@@ -47,7 +47,7 @@ AC_PATH_PROGS_FEATURE_CHECK(NM_G, nm, [
                     AC_LANG_SOURCE([int iglobal;])
                 ],[
                     changequote(,)
-                    case `${ac_path_NM_G} -P conftest.$ac_objext | sed -e 's|iglobal  *[A-Z]  *[0-9][0-9]*|XXXX|g'` in
+                    case `${ac_path_NM_G} -P conftest.$OBJEXT | sed -e 's|iglobal  *[A-Z]  *[0-9][0-9]*|XXXX|g'` in
                     *XXXX*)
                         pac_path_NM_G="${ac_path_NM_G} -P"
                         pac_path_NM_G_type="POSIX"
@@ -145,13 +145,13 @@ int same_addrs2( void *ptr )
 
     ])
 ],[
-    rm -f pac_conftest_other.$ac_objext
-    _AC_DO(cp conftest.$ac_objext pac_conftest_other.$ac_objext)
-    test -s pac_conftest_other.$ac_objext && pac_c_attr_alias_other=yes
+    rm -f pac_conftest_other.$OBJEXT
+    PAC_RUNLOG([cp conftest.$OBJEXT pac_conftest_other.$OBJEXT])
+    test -s pac_conftest_other.$OBJEXT && pac_c_attr_alias_other=yes
 dnl     cp conftest.$ac_ext pac_conftest_other.$ac_ext
 dnl     echo
-dnl     echo "pac_conftest_other.$ac_objext"
-dnl     nm -P -g pac_conftest_other.$ac_objext | grep -i "mpifcmb"
+dnl     echo "pac_conftest_other.$OBJEXT"
+dnl     nm -P -g pac_conftest_other.$OBJEXT | grep -i "mpifcmb"
 ],[
     pac_c_attr_alias_other=no
 ])  dnl Endof AC_COMPILE_IFELSE
@@ -161,7 +161,7 @@ if test "$pac_c_attr_alias_other" = "yes" ; then
 
 #   Save LIBS for later restoration.
     saved_LIBS="$LIBS"
-    LIBS="pac_conftest_other.$ac_objext $LIBS"
+    LIBS="pac_conftest_other.$OBJEXT $LIBS"
 
 #   Link the "other" __attribute__ object file.
     AC_LINK_IFELSE([
@@ -193,13 +193,13 @@ extern int same_addrs2( void *ptr );
     fprintf( file, "%d\n", iaddr );
         ])
     ],[
-        rm -f pac_conftest_main$ac_exeext
-        _AC_DO([cp conftest$ac_exeext pac_conftest_main$ac_exeext])
-        test -x pac_conftest_main$ac_exeext && pac_c_attr_alias_main=yes
+        rm -f pac_conftest_main$EXEEXT
+        PAC_RUNLOG([cp conftest$EXEEXT pac_conftest_main$EXEEXT])
+        test -x pac_conftest_main$EXEEXT && pac_c_attr_alias_main=yes
 dnl         cp conftest.$ac_ext pac_conftest_main.$ac_ext
 dnl         echo
-dnl         echo "pac_conftest_main$ac_exeext"
-dnl         nm -P -g pac_conftest_main$ac_exeext | grep -i "mpifcmb"
+dnl         echo "pac_conftest_main$EXEEXT"
+dnl         nm -P -g pac_conftest_main$EXEEXT | grep -i "mpifcmb"
     ],[
         pac_c_attr_alias_main=no
 dnl         cp conftest.$ac_ext pac_conftest_main.$ac_ext
@@ -207,7 +207,7 @@ dnl         cp conftest.$ac_ext pac_conftest_main.$ac_ext
 
 # Restore the previously saved LIBS
     LIBS="$saved_LIBS"
-    rm -f pac_conftest_other.$ac_objext
+    rm -f pac_conftest_other.$OBJEXT
 fi dnl Endof if test "$pac_c_attr_alias_other" = "yes"
 
 if test "$pac_c_attr_alias_main" = "yes" ; then
@@ -216,12 +216,12 @@ if test "$pac_c_attr_alias_main" = "yes" ; then
         # echo "PAC CROSS-COMPILING" dnl
         # POSIX NM = nm -P format dnl
         if test "$pac_path_NM_G_type" = "POSIX" ; then
-            addrs=`${pac_path_NM_G} ./pac_conftest_main$ac_exeext | grep -i mpifcmb | sed -e 's% *[a-zA-Z][a-zA-Z]*  *[a-zA-Z]  *\([0-9abcdef][0-9abcdef]*\).*%\1%g'`
+            addrs=`${pac_path_NM_G} ./pac_conftest_main$EXEEXT | grep -i mpifcmb | sed -e 's% *[a-zA-Z][a-zA-Z]*  *[a-zA-Z]  *\([0-9abcdef][0-9abcdef]*\).*%\1%g'`
         fi
 
         # BSD NM = nm -B format dnl
         if test "$pac_path_NM_G_type" = "BSD" ; then
-            addrs=`${pac_path_NM_G} -g ./pac_conftest_main$ac_exeext | grep -i mpifcmb | sed -e "s% *\([0-9abcdef][0-9abcdef]*\)  *[a-zA-Z]  *[a-zA-Z][a-zA-A]*.*%\1%g"`
+            addrs=`${pac_path_NM_G} -g ./pac_conftest_main$EXEEXT | grep -i mpifcmb | sed -e "s% *\([0-9abcdef][0-9abcdef]*\)  *[a-zA-Z]  *[a-zA-Z][a-zA-A]*.*%\1%g"`
         fi
         changequote([,])
 
@@ -252,7 +252,7 @@ if test "$pac_c_attr_alias_main" = "yes" ; then
 
     else # if test "$cross_compiling" != "yes"
         rm -f pac_conftestval
-        ac_try="./pac_conftest_main$ac_exeext"
+        ac_try="./pac_conftest_main$EXEEXT"
         if AC_TRY_EVAL(ac_try) ; then
             pac_c_attr_alias_val=0
             if test -s pac_conftestval ; then
@@ -271,7 +271,7 @@ if test "$pac_c_attr_alias_main" = "yes" ; then
         fi
     fi
     dnl Endof if test "$cross_compiling" = "yes"
-    rm -f pac_conftest_main$ac_exeext
+    rm -f pac_conftest_main$EXEEXT
 else
     AC_MSG_RESULT(no! link failure)
     pac_c_multi_attr_alias=no
