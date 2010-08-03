@@ -11,7 +11,8 @@
    threading (--enable-thread-cs=per-object)
 
  * ch3:nemesis:tcp fine-grained threading is still experimental and may
-   have correctness or performance issues
+   have correctness or performance issues.  Known correctness issues
+   include dynamic process support and generalized request support.
 
 ### Lacking channel-specific features
 
