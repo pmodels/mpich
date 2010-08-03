@@ -116,14 +116,9 @@ static int checkForUserErrcode( int );
 #endif
 
 /* Preallocated errorhandler objects */
-MPID_Errhandler MPID_Errhandler_builtin[3] = {
-        { MPIU_OBJECT_HEADER_INITIALIZER(MPI_ERRORS_ARE_FATAL, 0), },
-        { MPIU_OBJECT_HEADER_INITIALIZER(MPI_ERRORS_RETURN, 0), },
-
-        { MPIU_OBJECT_HEADER_INITIALIZER(MPIR_ERRORS_THROW_EXCEPTIONS, 0) },
-    };
+MPID_Errhandler MPID_Errhandler_builtin[3] = { {0} };
 MPID_Errhandler MPID_Errhandler_direct[MPID_ERRHANDLER_PREALLOC] = 
-    { { MPIU_OBJECT_HEADER_INITIALIZER(0,0) } };
+    { {0} };
 MPIU_Object_alloc_t MPID_Errhandler_mem = { 0, 0, 0, 0, MPID_ERRHANDLER, 
 					    sizeof(MPID_Errhandler), 
 					    MPID_Errhandler_direct,
@@ -413,6 +408,12 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 
 void MPIR_Err_init( void )
 {
+    /* these are "stub" objects, so the other fields (which are statically
+     * initialized to zero) don't really matter */
+    MPID_Errhandler_builtin[0].handle = MPI_ERRORS_ARE_FATAL;
+    MPID_Errhandler_builtin[1].handle = MPI_ERRORS_RETURN;
+    MPID_Errhandler_builtin[2].handle = MPIR_ERRORS_THROW_EXCEPTIONS;
+
 #   if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_ALL
     MPIR_Err_stack_init();
 #   endif

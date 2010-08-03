@@ -14,8 +14,9 @@
 #endif
 
 /* Preallocated comm objects */
-MPID_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN] = { { MPIU_OBJECT_HEADER_INITIALIZER(0,0) } };
-MPID_Comm MPID_Comm_direct[MPID_COMM_PREALLOC]   = { { MPIU_OBJECT_HEADER_INITIALIZER(0,0) } };
+/* initialized in initthread.c */
+MPID_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN] = { {0} };
+MPID_Comm MPID_Comm_direct[MPID_COMM_PREALLOC]   = { {0} };
 MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM, 
 				      sizeof(MPID_Comm), MPID_Comm_direct,
                                       MPID_COMM_PREALLOC};
@@ -65,14 +66,43 @@ static void MPIR_Comm_dump_context_id(MPIR_Context_id_t context_id, char *out_st
    have a similar check when building fault-tolerant versions of MPI).
  */
 
-/* Create a new communicator with a context.  
-   Do *not* initialize the other fields except for the reference count.
-   See MPIR_Comm_copy for a function to produce a copy of part of a
-   communicator 
-*/
+/* Zeroes most non-handle fields in a communicator, as well as initializing any
+ * other special fields, such as a per-object mutex.  Also defaults the
+ * reference count to 1, under the assumption that the caller holds a reference
+ * to it.
+ *
+ * !!! The resulting struct is _not_ ready for communication !!! */
+int MPIR_Comm_init(MPID_Comm *comm_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIU_Object_set_ref(comm_p, 1);
+
+    /* Clear many items (empty means to use the default; some of these
+       may be overridden within the upper-level communicator initialization) */
+    comm_p->errhandler   = NULL;
+    comm_p->attributes   = NULL;
+    comm_p->remote_group = NULL;
+    comm_p->local_group  = NULL;
+    comm_p->coll_fns     = NULL;
+    comm_p->topo_fns     = NULL;
+    comm_p->name[0]      = '\0';
+
+    comm_p->is_node_aware   = 0;
+    comm_p->node_comm       = NULL;
+    comm_p->node_roots_comm = NULL;
+    comm_p->intranode_table = NULL;
+    comm_p->internode_table = NULL;
+
+    /* Fields not set include context_id, remote and local size, and
+       kind, since different communicator construction routines need
+       different values */
+fn_fail:
+    return mpi_errno;
+}
 
 
-/*  
+/*
     Create a communicator structure and perform basic initialization 
     (mostly clearing fields and updating the reference count).  
  */
@@ -81,7 +111,7 @@ static void MPIR_Comm_dump_context_id(MPIR_Context_id_t context_id, char *out_st
 #undef FCNAME
 #define FCNAME "MPIR_Comm_create"
 int MPIR_Comm_create( MPID_Comm **newcomm_ptr )
-{   
+{
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *newptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE);
@@ -89,35 +119,12 @@ int MPIR_Comm_create( MPID_Comm **newcomm_ptr )
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE);
 
     newptr = (MPID_Comm *)MPIU_Handle_obj_alloc( &MPID_Comm_mem );
-    /* --BEGIN ERROR HANDLING-- */
-    if (!newptr) {
-	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-		   FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
-	goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
+    MPIU_ERR_CHKANDJUMP(!newptr, mpi_errno, MPI_ERR_OTHER, "**nomem")
+
     *newcomm_ptr = newptr;
-    MPIU_Object_set_ref( newptr, 1 );
 
-    /* Clear many items (empty means to use the default; some of these
-       may be overridden within the communicator initialization) */
-    newptr->errhandler   = 0;
-    newptr->attributes	 = 0;
-    newptr->remote_group = 0;
-    newptr->local_group	 = 0;
-    newptr->coll_fns	 = 0;
-    newptr->topo_fns	 = 0;
-    newptr->name[0]	 = 0;
-
-    newptr->is_node_aware   = 0;
-    newptr->node_comm       = NULL;
-    newptr->node_roots_comm = NULL;
-    newptr->intranode_table = NULL;
-    newptr->internode_table = NULL;
-
-    /* Fields not set include context_id, remote and local size, and 
-       kind, since different communicator construction routines need 
-       different values */
+    mpi_errno = MPIR_Comm_init(newptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Insert this new communicator into the list of known communicators.
        Make this conditional on debugger support to match the test in 
@@ -148,7 +155,10 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
     localcomm_ptr = (MPID_Comm *)MPIU_Handle_obj_alloc( &MPID_Comm_mem );
     MPIU_ERR_CHKANDJUMP(!localcomm_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem");
 
-    MPIU_Object_set_ref( localcomm_ptr, 1 );
+    /* get sensible default values for most fields (usually zeros) */
+    mpi_errno = MPIR_Comm_init(localcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* use the parent intercomm's recv ctx as the basis for our ctx */
     localcomm_ptr->recvcontext_id = MPID_CONTEXT_SET_FIELD(IS_LOCALCOMM, intercomm_ptr->recvcontext_id, 1);
     localcomm_ptr->context_id = localcomm_ptr->recvcontext_id;
@@ -166,32 +176,12 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
     localcomm_ptr->local_size  = intercomm_ptr->local_size;
     localcomm_ptr->rank        = intercomm_ptr->rank;
 
-    /* More advanced version: if the group is available, dup it by 
-       increasing the reference count */
-    localcomm_ptr->local_group  = 0;
-    localcomm_ptr->remote_group = 0;
-
-    /* This is an internal communicator, so ignore */
-    localcomm_ptr->errhandler = 0;
-    
-    /* FIXME  : No local functions for the collectives */
-    localcomm_ptr->coll_fns = 0;
-
+    /* TODO More advanced version: if the group is available, dup it by 
+       increasing the reference count instead of recreating it later */
+    /* FIXME  : No coll_fns functions for the collectives */
     /* FIXME  : No local functions for the topology routines */
-    localcomm_ptr->topo_fns = 0;
-
-    /* We do *not* inherit any name */
-    localcomm_ptr->name[0] = 0;
-
-    localcomm_ptr->attributes = 0;
 
     intercomm_ptr->local_comm = localcomm_ptr;
-
-    localcomm_ptr->is_node_aware   = 0;
-    localcomm_ptr->node_comm       = NULL;
-    localcomm_ptr->node_roots_comm = NULL;
-    localcomm_ptr->intranode_table = NULL;
-    localcomm_ptr->internode_table = NULL;
 
     /* sets up the SMP-aware sub-communicators and tables */
     mpi_errno = MPIR_Comm_commit(localcomm_ptr);

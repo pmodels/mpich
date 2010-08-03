@@ -12,12 +12,28 @@
 #endif
 
 /* Preallocated group objects */
-MPID_Group MPID_Group_builtin[MPID_GROUP_N_BUILTIN] = {
-    { MPIU_OBJECT_HEADER_INITIALIZER(MPI_GROUP_EMPTY, 1), 0, MPI_UNDEFINED, -1, 0, } };
-MPID_Group MPID_Group_direct[MPID_GROUP_PREALLOC] = { { MPIU_OBJECT_HEADER_INITIALIZER(0,0) } };
+MPID_Group MPID_Group_builtin[MPID_GROUP_N_BUILTIN] = { {0} };
+MPID_Group MPID_Group_direct[MPID_GROUP_PREALLOC] = { {0} };
 MPIU_Object_alloc_t MPID_Group_mem = { 0, 0, 0, 0, MPID_GROUP, 
 				      sizeof(MPID_Group), MPID_Group_direct,
 				       MPID_GROUP_PREALLOC};
+
+int MPIR_Group_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIU_Assert(MPID_GROUP_N_BUILTIN == 1); /* update this func if this ever triggers */
+
+    MPID_Group_builtin[0].handle = MPI_GROUP_EMPTY;
+    MPIU_Object_set_ref(&MPID_Group_builtin[0], 1);
+    MPID_Group_builtin[0].size = 0;
+    MPID_Group_builtin[0].rank = MPI_UNDEFINED;
+    MPID_Group_builtin[0].idx_of_first_lpid = -1;
+    MPID_Group_builtin[0].lrank_to_lpid = NULL;
+
+    /* TODO hook for device here? */
+    return mpi_errno;
+}
 
 
 int MPIR_Group_release(MPID_Group *group_ptr)

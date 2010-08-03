@@ -3448,6 +3448,11 @@ int MPIR_Comm_is_node_consecutive( MPID_Comm *);
 void MPIR_Free_err_dyncodes( void );
 
 
+/* random initializers */
+int MPIR_Group_init(void);
+int MPIR_Comm_init(MPID_Comm *);
+
+
 /* Collective functions cannot be called from multiple threads. These
    are stubs used in the collective communication calls to check for
    user error. Currently they are just being macroed out. */

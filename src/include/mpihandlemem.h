@@ -372,12 +372,6 @@ typedef OPA_int_t MPIU_Handle_ref_count;
 #define MPIU_OBJECT_HEADER           \
     int handle;                      \
     MPIU_Handle_ref_count ref_count/*semicolon intentionally omitted*/
-/* For static initialization of structures starting with MPIU_OBJECT_HEADER.
- * This should be put inside of curly braces {} at the position corresponding to
- * the MPIU_OBJECT_HEADER (should always be first unless you *really* know what
- * you are doing) */
-#define MPIU_OBJECT_HEADER_INITIALIZER(handle_val_, ref_cnt_val_) \
-    (handle_val_), MPIU_HANDLE_REF_COUNT_INITIALIZER(ref_cnt_val_)
 
 /* ALL objects have the handle as the first value. */
 /* Inactive (unused and stored on the appropriate avail list) objects 
