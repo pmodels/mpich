@@ -4,6 +4,7 @@ putfence1 4
 putfidx 4
 getfence1 4
 accfence1 4
+adlb_mimic1 3
 accfence2 4
 putpscw1 4
 getgroup 4

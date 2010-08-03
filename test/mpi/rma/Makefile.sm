@@ -34,6 +34,7 @@ epochtest_SOURCES = epochtest.c
 getfence1_SOURCES = getfence1.c
 accfence1_SOURCES = accfence1.c
 accfence2_SOURCES = accfence2.c
+adlb_mimic1_SOURCES = adlb_mimic1.c
 putpscw1_SOURCES = putpscw1.c
 getgroup_SOURCES = getgroup.c
 contig_displ_SOURCES = contig_displ.c
