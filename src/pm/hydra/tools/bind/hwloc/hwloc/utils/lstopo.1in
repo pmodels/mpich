@@ -39,7 +39,7 @@ These indexes are prefixed with "p#" instead of "#".
 \fB\-c\fR \fB\-\-cpuset\fR
 Display the cpuset of each object.
 .TP
-\fB\-C\fR \fB\-\-cpuset-only\fR
+\fB\-C\fR \fB\-\-cpuset\-only\fR
 Only display the cpuset of each object; do not display anything else
 about the object.
 .TP
@@ -67,7 +67,7 @@ topology on the local machine).  If <path> is "\-", the standard input
 is used.  XML support must have been compiled in to hwloc for this
 option to be usable.
 .TP
-\fB\-\-fsys-root\fR <path>
+\fB\-\-fsys\-root\fR <path>
 Read topology from the chroot specified by <path> (instead of
 discovering the topology on the local machine).  This option is
 generally only available on Linux.
@@ -77,14 +77,15 @@ Detect topology as seen by process <pid>, i.e. as if process <pid> did the
 discovery itself, and show its current binding. Note that this can for instance
 change the set of allowed processors. If 0 is given as pid, the current binding for the lstopo process will be shown.
 .TP
-\fB\-\-top\fR <pid>
+\fB\-\-top\fR
 Show existing processes as misc objects in the output. To avoid uselessly
 cluttering the output, only processes that are restricted to some part of the
 machine are shown.  On Linux, kernel threads are not shown.
 .TP
 \fB\-\-synthetic\fR <specification>
 Simulate a fake hierarchy (instead of discovering the topology on the
-local machine).
+local machine). If <specification> is "node:2 pu:3", the topology will
+contain two NUMA nodes with 3 processing units in each of them.
 .TP
 \fB\-\-fontsize\fR <size>
 Set size of text font.
@@ -125,6 +126,12 @@ CPUs by their color; see the COLORS section, below.
 .\" **************************
 .SH OUTPUT FORMATS
 .
+.PP
+The filename on the command line determines the format of the output.
+There are a few filenames that indicate specific output formats and
+devices (e.g., a filename of "-" will output a text summary to
+stdout), but most filenames indicate the desired output format by 
+their suffix (e.g., "topo.png" will output a PNG-format file).
 .TP
 .B \-
 Send a text summary to stdout.
@@ -142,7 +149,7 @@ representation of the map.
 .TP
 .B \-.txt
 If the entire filename is "\-.txt", lstopo outputs the same ASCII art
-representation as other ".txt" filenames, but with two execeptions: 1)
+representation as other ".txt" filenames, but with two exceptions: 1)
 the output is sent to stdout, and 2) if colors are supported on the
 terminal, the ASCII art will be colorized.
 .
@@ -168,13 +175,16 @@ support, lstopo outputs a PNG representation of the map.
 .
 .TP
 .B <filename>.svg
-If the filename ends in ".svn" and lstopo was compiled with the proper
+If the filename ends in ".svg" and lstopo was compiled with the proper
 support, lstopo outputs an SVG representation of the map.
 .
 .TP
 .B <filename>.xml
 If the filename ends in ".xml" and lstopo was compiled with the proper
 support, lstopo outputs an XML representation of the map.
+It may be reused later, even on another machine, with lstopo \-\-xml,
+the HWLOC_XMLFILE environment variable, or the hwloc_topology_set_xml()
+function.
 .
 .PP
 See the output of "lstopo \-\-help" for a specific list of what
@@ -240,6 +250,13 @@ variable is set to a relevant value):
 To export the topology to a PNG file:
 
     lstopo file.png
+
+To export a XML file on a machine and later display the corresponding
+graphic output on another machine:
+
+    machine1$ lstopo file.xml
+    <transfer file.xml from machine1 to machine2>
+    machine2$ lstopo --xml file.xml
 
 To display a summary of the topology:
 

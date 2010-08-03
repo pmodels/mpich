@@ -112,10 +112,8 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
     }
 
-    if (hwloc_mask_process_arg(topology, depth, argv[1], logicali, set, verbose) < 0) {
-      if (verbose)
-	fprintf(stderr, "ignored unrecognized argument %s\n", argv[1]);
-    }
+    if (hwloc_mask_process_arg(topology, depth, argv[1], logicali, set, verbose) < 0)
+      fprintf(stderr, "ignored unrecognized argument %s\n", argv[1]);
 
  next:
     argc--;
@@ -134,7 +132,10 @@ int main(int argc, char *argv[])
       hwloc_obj_t obj = hwloc_get_first_largest_obj_inside_cpuset(topology, remaining);
       hwloc_obj_type_snprintf(type, sizeof(type), obj, 1);
       idx = logicalo ? obj->logical_index : obj->os_index;
-      printf("%s%s:%u", first ? "" : " ", type, idx);
+      if (idx == (unsigned) -1)
+        printf("%s%s", first ? "" : " ", type);
+      else
+        printf("%s%s:%u", first ? "" : " ", type, idx);
       hwloc_cpuset_andnot(remaining, remaining, obj->cpuset);
       first = 0;
     }

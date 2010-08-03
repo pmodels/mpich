@@ -45,15 +45,25 @@ static void
 hwloc_topology_clear (struct hwloc_topology *topology);
 
 #if defined(HAVE_SYSCTLBYNAME)
-int hwloc_get_sysctlbyname(const char *name, int *ret)
+int hwloc_get_sysctlbyname(const char *name, int64_t *ret)
 {
-  int n;
+  union {
+    int32_t i32;
+    int64_t i64;
+  } n;
   size_t size = sizeof(n);
   if (sysctlbyname(name, &n, &size, NULL, 0))
     return -1;
-  if (size != sizeof(n))
-    return -1;
-  *ret = n;
+  switch (size) {
+    case sizeof(n.i32):
+      *ret = n.i32;
+      break;
+    case sizeof(n.i64):
+      *ret = n.i64;
+      break;
+    default:
+      return -1;
+  }
   return 0;
 }
 #endif
@@ -93,7 +103,7 @@ hwloc_fallback_nbprocessors(struct hwloc_topology *topology) {
   host_info(mach_host_self(), HOST_BASIC_INFO, (integer_t*) &info, &count);
   n = info.avail_cpus;
 #elif defined(HAVE_SYSCTLBYNAME)
-  int n;
+  int64_t n;
   if (hwloc_get_sysctlbyname("hw.ncpu", &n))
     n = -1;
 #elif defined(HAVE_SYSCTL) && HAVE_DECL_CTL_HW && HAVE_DECL_HW_NCPU
@@ -140,8 +150,10 @@ hwloc_setup_group_from_min_distance_clique(unsigned nbobjs,
     unsigned size = 1; /* current object i */
 
     /* if already grouped, skip */
-    if (groupids[i])
+    if (groupids[i]) {
+      hwloc_cpuset_free(closest_objs_set);
       continue;
+    }
 
     /* find closest nodes */
     for(j=i+1; j<nbobjs; j++) {
@@ -164,6 +176,7 @@ hwloc_setup_group_from_min_distance_clique(unsigned nbobjs,
 	    (*distances)[j][k] != min_distance) {
 	  /* the minimal-distance graph is not complete. abort */
 	  hwloc_debug("%s", "found incomplete minimal-distance graph, aborting\n");
+	  hwloc_cpuset_free(closest_objs_set);
 	  return 0;
 	}
 
@@ -539,10 +552,12 @@ hwloc_get_type_order(hwloc_obj_type_t type)
   return obj_type_order[type];
 }
 
+#if !defined(NDEBUG)
 static hwloc_obj_type_t hwloc_get_order_type(int order)
 {
   return obj_order_type[order];
 }
+#endif
 
 int hwloc_compare_types (hwloc_obj_type_t type1, hwloc_obj_type_t type2)
 {
@@ -2093,12 +2108,14 @@ hwloc__check_children(struct hwloc_obj *parent)
 	continue;
       /* check that child cpuset is included in the parent */
       assert(hwloc_cpuset_isincluded(parent->children[j]->cpuset, remaining_parent_set));
+#if !defined(NDEBUG)
       /* check that children are correctly ordered (see below), empty ones may be anywhere */
       if (!hwloc_cpuset_iszero(parent->children[j]->cpuset)) {
         int firstchild = hwloc_cpuset_first(parent->children[j]->cpuset);
         int firstparent = hwloc_cpuset_first(remaining_parent_set);
         assert(firstchild == firstparent);
       }
+#endif
       /* clear previously used parent cpuset bits so that we actually checked above
        * that children cpusets do not intersect and are ordered properly
        */

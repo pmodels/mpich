@@ -50,7 +50,7 @@ EOF])
     # mode).
     HWLOC_startdir=`pwd`
     if test x"hwloc_config_prefix" != "x" -a ! -d "hwloc_config_prefix"; then
-        mkdir "hwloc_config_prefix"
+        mkdir -p "hwloc_config_prefix"
     fi
     if test x"hwloc_config_prefix" != "x"; then
         cd "hwloc_config_prefix"
@@ -62,6 +62,7 @@ EOF])
     # the real $top_srcdir, because we may be building in embedded
     # mode).  First, go back to the startdir incase the $srcdir is
     # relative.
+
     cd "$HWLOC_startdir"
     cd "$srcdir"/hwloc_config_prefix
     HWLOC_top_srcdir="`pwd`"
@@ -79,12 +80,19 @@ EOF])
     # Debug mode?
     AC_MSG_CHECKING([if want hwloc maintainer support])
     hwloc_debug=
-    AS_IF([test "$enable_debug" = "yes"],
-          [hwloc_debug=1
-           hwloc_debug_msg="enabled"])
-    AS_IF([test "$hwloc_debug" = "" -a "$hwloc_mode" = "embedded" -a "$enable_debug" = ""],
+
+    # Unconditionally disable debug mode in embedded mode; if someone
+    # asks, we can add a configure-time option for it.  Disable it
+    # now, however, because --enable-debug is not even added as an
+    # option when configuring in embedded mode, and we wouldn't want
+    # to hijack the enclosing application's --enable-debug configure
+    # switch.
+    AS_IF([test "$hwloc_mode" = "embedded"],
           [hwloc_debug=0
            hwloc_debug_msg="disabled (embedded mode)"])
+    AS_IF([test "$hwloc_debug" = "" -a "$enable_debug" = "yes"],
+          [hwloc_debug=1
+           hwloc_debug_msg="enabled"])
     AS_IF([test "$hwloc_debug" = "" -a "$enable_debug" = "" -a -d .svn],
           [hwloc_debug=1
            hwloc_debug_msg="enabled (SVN checkout default)"])
@@ -133,6 +141,53 @@ EOF])
     AS_IF([test "$hwloc_symbol_prefix_value" = "hwloc_"],
           [AC_DEFINE([HWLOC_SYM_TRANSFORM], [0])],
           [AC_DEFINE([HWLOC_SYM_TRANSFORM], [1])])
+
+    #
+    # Define C flags
+    #
+
+    # hwloc uses C99 style, so ensure that we can figure out which
+    # compiler flags will drive this.
+    hwloc_CC_save=$CC
+    hwloc_CFLAGS_save=$CFLAGS
+    AC_PROG_CC_C99
+    AS_IF([test x"$ac_cv_prog_cc_c99" = xno],
+          [AC_WARN([C99 support is required by hwloc])
+           $3],
+          [HWLOC_SETUP_CORE_AFTER_C99($1, $2, $3, $4)])
+])
+
+dnl Same order of parameters form HWLOC-SETUP-CORE
+AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
+    hwloc_CC_c99_flags=`echo $CC | sed -e "s;^$hwloc_CC_save;;"`
+    CC=$hwloc_CC_save
+    CFLAGS=$hwloc_CFLAGS_save
+
+    # GCC specifics.
+    if test "x$GCC" = "xyes"; then
+        HWLOC_GCC_CFLAGS="-Wall -Wmissing-prototypes -Wundef"
+        HWLOC_GCC_CFLAGS="$HWLOC_GCC_CFLAGS -Wpointer-arith -Wcast-align"
+    fi
+
+    # Enample system extensions for O_DIRECTORY, fdopen, fssl, etc.
+    AC_USE_SYSTEM_EXTENSIONS
+    AH_VERBATIM([USE_HPUX_SYSTEM_EXTENSIONS],
+[/* Enable extensions on HP-UX. */
+#ifndef _HPUX_SOURCE
+# undef _HPUX_SOURCE
+#endif
+])
+    AC_DEFINE([_HPUX_SOURCE], [1], [Are we building for HP-UX?])
+    
+    AC_LANG_PUSH([C])
+    
+    # Check to see if we're producing a 32 or 64 bit executable by
+    # checking the sizeof void*.  Note that AC CHECK_SIZEOF even works
+    # when cross compiling (!), according to the AC 2.64 docs.  This
+    # check is needed because on some systems, you can instruct the
+    # compiler to specifically build 32 or 64 bit executables -- even
+    # though the $target may indicate something different.
+    AC_CHECK_SIZEOF([void *])
 
     #
     # Check OS support
@@ -203,56 +258,25 @@ EOF])
     #
     AC_MSG_CHECKING([which CPU support to include])
     case ${target} in
-      i*86-*-*)
-        AC_DEFINE(HWLOC_X86_32_ARCH, 1, [Define to 1 on x86_32])
-        hwloc_x86_32=yes
-        AC_MSG_RESULT([x86_32])
-        ;;
-      x86_64-*-*)
-        AC_DEFINE(HWLOC_X86_64_ARCH, 1, [Define to 1 on x86_64])
-        hwloc_x86_64=yes
-        AC_MSG_RESULT([x86_64])
-        ;;
+      i*86-*-*|x86_64-*-*)
+        case ${ac_cv_sizeof_void_p} in
+          4)
+            AC_DEFINE(HWLOC_X86_32_ARCH, 1, [Define to 1 on x86_32])
+            hwloc_x86_32=yes
+            AC_MSG_RESULT([x86_32])
+            ;;
+          8)
+            AC_DEFINE(HWLOC_X86_64_ARCH, 1, [Define to 1 on x86_64])
+            hwloc_x86_64=yes
+            AC_MSG_RESULT([x86_64])
+            ;;
+          *)
+            AC_DEFINE(HWLOC_X86_64_ARCH, 1, [Define to 1 on x86_64])
+            hwloc_x86_64=yes
+            AC_MSG_RESULT([unknown -- assuming x86_64])
+            ;;
+        esac
     esac
-    
-    #
-    # Define C flags
-    #
-
-    # hwloc uses C99 style, so ensure that we can figure out which
-    # compiler flags will drive this.
-    hwloc_CC_save=$CC
-    hwloc_CFLAGS_save=$CFLAGS
-    AC_PROG_CC_C99
-    AS_IF([test x"$ac_cv_prog_cc_c99" = xno],
-          [AC_WARN([C99 support is required by hwloc])
-           $3],
-          [HWLOC_SETUP_CORE_AFTER_C99($1, $2, $3, $4)])
-])
-
-dnl Same order of parameters form HWLOC-SETUP-CORE
-AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
-    hwloc_CC_c99_flags=`echo $CC | sed -e "s/^$hwloc_CC_save//"`
-    CC=$hwloc_CC_save
-    CFLAGS=$hwloc_CFLAGS_save
-
-    # GCC specifics.
-    if test "x$GCC" = "xyes"; then
-        HWLOC_GCC_CFLAGS="-Wall -Wmissing-prototypes -Wundef"
-        HWLOC_GCC_CFLAGS="$HWLOC_GCC_CFLAGS -Wpointer-arith -Wcast-align"
-    fi
-
-    # Enample system extensions for O_DIRECTORY, fdopen, fssl, etc.
-    AC_USE_SYSTEM_EXTENSIONS
-    AH_VERBATIM([USE_HPUX_SYSTEM_EXTENSIONS],
-[/* Enable extensions on HP-UX. */
-#ifndef _HPUX_SOURCE
-# undef _HPUX_SOURCE
-#endif
-])
-    AC_DEFINE([_HPUX_SOURCE], [1], [Are we building for HP-UX?])
-    
-    AC_LANG_PUSH([C])
     
     _HWLOC_CHECK_DIFF_U
     
@@ -296,6 +320,10 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     ])
     AC_DEFINE_UNQUOTED(hwloc_strncasecmp, $hwloc_strncasecmp, [Define this to either strncasecmp or strncmp])
     
+    AC_CHECK_HEADER([stdint.h], [
+      AC_DEFINE([HWLOC_HAVE_STDINT_H], [1], [Define to 1 if you have the <stdint.h> header file.])
+    ])
+    
     AC_CHECK_TYPES([wchar_t], [
       AC_CHECK_FUNCS([putwc])
     ], [], [[#include <wchar.h>]])
@@ -306,7 +334,7 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     AC_CHECK_HEADERS([langinfo.h], [
       AC_CHECK_FUNCS([nl_langinfo])
     ])
-    old_LIBS="$LIBS"
+    hwloc_old_LIBS="$LIBS"
     LIBS=
     AC_CHECK_HEADERS([curses.h], [
       AC_CHECK_HEADERS([term.h], [
@@ -317,7 +345,8 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
           ])
       ], [], [[#include <curses.h>]])
     ])
-    LIBS="$old_LIBS"
+    LIBS="$hwloc_old_LIBS"
+    unset hwloc_old_LIBS
 
     AC_CHECK_TYPES([KAFFINITY,
                     PROCESSOR_CACHE_TYPE,
@@ -332,21 +361,29 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
                     GROUP_RELATIONSHIP,
                     SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX],
                     [],[],[[#include <windows.h>]])
-    AC_HAVE_LIBRARY(gdi32)
+    AC_CHECK_LIB([gdi32], [main],
+                 [HWLOC_LIBS="-lgdi32 $HWLOC_LIBS"
+                  AC_DEFINE([HAVE_LIBGDI32], 1, [Define to 1 if we have -lgdi32])])
     
     AC_CHECK_HEADER([windows.h], [
       AC_DEFINE([HWLOC_HAVE_WINDOWS_H], [1], [Define to 1 if you have the `windows.h' header.])
     ])
     
     AC_CHECK_HEADERS([sys/lgrp_user.h], [
-      AC_HAVE_LIBRARY([lgrp])
+      AC_CHECK_LIB([lgrp], [lgrp_latency_cookie],
+                   [HWLOC_LIBS="-llgrp $HWLOC_LIBS"
+                    AC_DEFINE([HAVE_LIBLGRP], 1, [Define to 1 if we have -llgrp])])
     ])
     AC_CHECK_HEADERS([kstat.h], [
-      AC_HAVE_LIBRARY([kstat])
+      AC_CHECK_LIB([kstat], [main], 
+                   [HWLOC_LIBS="-lkstat $HWLOC_LIBS"
+                    AC_DEFINE([HAVE_LIBKSTAT], 1, [Define to 1 if we have -lkstat])])
     ])
     
     AC_CHECK_HEADERS([infiniband/verbs.h], [
-      AC_HAVE_LIBRARY([ibverbs], [hwloc_have_libibverbs=yes])
+      AC_CHECK_LIB([ibverbs], [ibv_open_device], 
+                   [HWLOC_LIBS="-libverbs $HWLOC_LIBS"
+                    AC_DEFINE([HAVE_LIBIBVERBS], 1, [Define to 1 if we have -libverbs])])
     ])
     
     AC_CHECK_DECLS([_SC_NPROCESSORS_ONLN,
@@ -438,7 +475,7 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     )
 
     # check for kerrighed, but don't abort if not found
-    HWLOC_PKG_CHECK_MODULES([KERRIGHED], [kerrighed >= 2.0], [], [:])
+    HWLOC_PKG_CHECK_MODULES([KERRIGHED], [kerrighed >= 2.0], [], [], [:])
 
     AC_PATH_PROGS([HWLOC_MS_LIB], [lib])
     AC_ARG_VAR([HWLOC_MS_LIB], [Path to Microsoft's Visual Studio `lib' tool])
@@ -504,14 +541,18 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     ]])
     AC_CHECK_FUNC([sched_setaffinity], [hwloc_have_sched_setaffinity=yes])
     AC_CHECK_HEADERS([sys/cpuset.h],,,[[#include <sys/param.h>]])
+    AC_SEARCH_LIBS([pthread_getthrds_np], [pthread],
+      AC_DEFINE([HWLOC_HAVE_PTHREAD_GETTHRDS_NP], 1, `Define to 1 if you have pthread_getthrds_np')
+    )
     
-    # Setup HWLOC's C, CPP, and LD flags
+    # Setup HWLOC's C, CPP, and LD flags, and LIBS
     HWLOC_CFLAGS="$hwloc_CC_c99_flags $HWLOC_CFLAGS"
     AC_SUBST(HWLOC_CFLAGS)
     HWLOC_CPPFLAGS='-I$(HWLOC_top_srcdir)/include -I$(HWLOC_top_builddir)/include'
     AC_SUBST(HWLOC_CPPFLAGS)
     HWLOC_LDFLAGS='-L$(HWLOC_top_builddir)/src'
     AC_SUBST(HWLOC_LDFLAGS)
+    AC_SUBST(HWLOC_LIBS)
 
     # Set these values explicitly for embedded builds.  Exporting
     # these values through *_EMBEDDED_* values gives us the freedom to
@@ -522,6 +563,8 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     AC_SUBST(HWLOC_EMBEDDED_CPPFLAGS)
     HWLOC_EMBEDDED_LDADD='$(HWLOC_top_builddir)/src/libhwloc_embedded.la'
     AC_SUBST(HWLOC_EMBEDDED_LDADD)
+    HWLOC_EMBEDDED_LIBS=$HWLOC_LIBS
+    AC_SUBST(HWLOC_EMBEDDED_LIBS)
 
     # Try to compile the cpuid inlines
     AC_MSG_CHECKING([for cpuid])

@@ -14,10 +14,13 @@
 #ifndef HWLOC_H
 #define HWLOC_H
 
+#include <hwloc/config.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <limits.h>
+#ifdef HWLOC_HAVE_STDINT_H
 #include <stdint.h>
+#endif
 
 /*
  * Symbol transforms
@@ -30,6 +33,10 @@
 
 #include <hwloc/cpuset.h>
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /** \defgroup hwlocality_api_version API version
@@ -847,6 +854,7 @@ HWLOC_DECLSPEC int hwloc_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t
  */
 HWLOC_DECLSPEC int hwloc_get_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_cpuset_t set, int policy);
 
+#ifdef hwloc_thread_t
 /** \brief Bind a thread \p tid on cpus given in cpuset \p set
  *
  * \note hwloc_thread_t is pthread_t on unix platforms, and HANDLE on native
@@ -854,10 +862,10 @@ HWLOC_DECLSPEC int hwloc_get_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t
  *
  * \note HWLOC_CPUBIND_PROCESS can not be used in \p policy.
  */
-#ifdef hwloc_thread_t
 HWLOC_DECLSPEC int hwloc_set_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t tid, hwloc_const_cpuset_t set, int policy);
 #endif
 
+#ifdef hwloc_thread_t
 /** \brief Get the current binding of thread \p tid
  *
  * \note hwloc_thread_t is pthread_t on unix platforms, and HANDLE on native
@@ -865,11 +873,15 @@ HWLOC_DECLSPEC int hwloc_set_thread_cpubind(hwloc_topology_t topology, hwloc_thr
  *
  * \note HWLOC_CPUBIND_PROCESS can not be used in \p policy.
  */
-#ifdef hwloc_thread_t
 HWLOC_DECLSPEC int hwloc_get_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t tid, hwloc_cpuset_t set, int policy);
 #endif
 
 /** @} */
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 
 /* high-level helpers */

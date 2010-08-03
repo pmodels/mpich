@@ -39,7 +39,7 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
     # Doxygen?
     AC_ARG_ENABLE([doxygen],
         [AC_HELP_STRING([--enable-doxygen],
-                        [enable support for building Doxygen documentation (note that this option is ONLY relevant in developer builds; Doxygen documentation is pre-built for tarball builds and this option is therefore ignored)])],,[enable_doxygen=no])
+                        [enable support for building Doxygen documentation (note that this option is ONLY relevant in developer builds; Doxygen documentation is pre-built for tarball builds and this option is therefore ignored)])])
 
     # Picky?
     AC_ARG_ENABLE(picky,
@@ -186,7 +186,7 @@ EOF
 
     # Cairo support
     if test "x$enable_cairo" != "xno"; then
-      HWLOC_PKG_CHECK_MODULES([CAIRO], [cairo], [:], [enable_cairo="no"])
+      HWLOC_PKG_CHECK_MODULES([CAIRO], [cairo], [cairo_fill], [:], [enable_cairo=no])
       if test "x$enable_cairo" != "xno"; then
         AC_PATH_XTRA
 	CFLAGS_save=$CFLAGS
@@ -220,7 +220,7 @@ EOF
     # XML support        
     
     if test "x$enable_xml" != "xno"; then
-        HWLOC_PKG_CHECK_MODULES([XML], [libxml-2.0], [:], [enable_xml="no"])
+        HWLOC_PKG_CHECK_MODULES([XML], [libxml-2.0], [xmlNewDoc], [:], [enable_xml="no"])
     fi
     
     if test "x$enable_xml" != "xno"; then
