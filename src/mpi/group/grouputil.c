@@ -31,6 +31,9 @@ int MPIR_Group_init(void)
     MPID_Group_builtin[0].idx_of_first_lpid = -1;
     MPID_Group_builtin[0].lrank_to_lpid = NULL;
 
+    /* the mutex is probably never used, but initializing it doesn't hurt */
+    MPIU_THREAD_MPI_OBJ_INIT(&MPID_Group_builtin[0]);
+
     /* TODO hook for device here? */
     return mpi_errno;
 }

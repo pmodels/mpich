@@ -369,8 +369,9 @@ typedef OPA_int_t MPIU_Handle_ref_count;
  * MPIU_Object_add_ref and MPIU_Object_release_ref.
  *
  * NOTE: This macro *must* be invoked as the very first element of the structure! */
-#define MPIU_OBJECT_HEADER           \
-    int handle;                      \
+#define MPIU_OBJECT_HEADER             \
+    int handle;                        \
+    MPIU_THREAD_OBJECT_HOOK/*no-semi*/ \
     MPIU_Handle_ref_count ref_count/*semicolon intentionally omitted*/
 
 /* ALL objects have the handle as the first value. */

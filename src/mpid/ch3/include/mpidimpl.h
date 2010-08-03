@@ -742,11 +742,6 @@ typedef struct MPIDI_VC
     MPIDI_Comm_ops_t *comm_ops;    
 #endif
 
-#ifdef MPICH_IS_THREADED    
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-    MPID_Thread_mutex_t pobj_mutex;
-#endif
-#endif
     /* Rather than have each channel define its own fields for the 
        channel-specific data, we provide a fixed-sized scratchpad.  Currently,
        this has a very generous size, though this may shrink later (a channel
@@ -1200,6 +1195,7 @@ int MPIDI_CH3I_Progress_finalize(void);
     } while (0)
 #endif
 
+
 /* The following is part of an implementation of a control of a 
    resource shared among threads - it needs to be managed more 
    explicitly as such as shared resource */
@@ -1209,6 +1205,7 @@ int MPIDI_CH3I_Progress_finalize(void);
        MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT;		\
     }
 #else
+    /* TODO these decls should probably move into each channel as appropriate */
     extern volatile int MPIDI_CH3I_progress_blocked;
     extern volatile int MPIDI_CH3I_progress_wakeup_signalled;
 

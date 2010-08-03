@@ -266,6 +266,8 @@ int MPIR_Datatype_builtin_fillin(void)
 	    dptr->ub	   = dptr->size;
 	    dptr->true_ub	   = dptr->size;
 	    dptr->contents     = NULL; /* should never get referenced? */
+
+            MPIU_THREAD_MPI_OBJ_INIT(dptr);
 	}
 	/* --BEGIN ERROR HANDLING-- */
  	if (d != -1 && i < sizeof(mpi_dtypes)/sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) { 

@@ -403,6 +403,9 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
          * annotations instead. */
         MPL_VG_ANNOTATE_NEW_MEMORY(ptr, objmem->size);
 
+        /* must come after NEW_MEMORY annotation above to avoid problems */
+        MPIU_THREAD_MPI_OBJ_INIT(ptr);
+
         MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
                                          "Allocating object ptr %p (handle val 0x%08x)",
                                          ptr, ptr->handle));
@@ -434,6 +437,8 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
                                      (obj)->handle,
                                      MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((obj)->handle)),
                                      MPIU_Object_get_ref(obj)));
+
+    MPIU_THREAD_MPI_OBJ_FINALIZE(obj);
 
     MPL_VG_MEMPOOL_FREE(objmem, obj);
     /* MEMPOOL_FREE marks the object NOACCESS, so we have to make the

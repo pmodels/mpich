@@ -78,6 +78,8 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
 
     MPIU_Object_set_ref(comm_p, 1);
 
+    MPIU_THREAD_MPI_OBJ_INIT(comm_p);
+
     /* Clear many items (empty means to use the default; some of these
        may be overridden within the upper-level communicator initialization) */
     comm_p->errhandler   = NULL;

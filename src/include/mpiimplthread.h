@@ -53,6 +53,7 @@ enum MPIU_Thread_cs_name {
     MPIU_THREAD_CS_NAME_COMPLETION,
     MPIU_THREAD_CS_NAME_PMI,
     MPIU_THREAD_CS_NAME_CONTEXTID,
+    MPIU_THREAD_CS_NAME_MPI_OBJ,
     MPIU_THREAD_CS_NAME_MSGQUEUE,
     /* FIXME device-specific, should this live here? */
     /*
@@ -699,6 +700,9 @@ enum MPIU_Nest_mutexes {
  * doesn't do anything at ENTER/EXIT? */
 #define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) MPIU_THREAD_CS_YIELD_LOCKNAME_CHECKED(global_mutex)
 
+#define MPIU_THREAD_CS_ENTER_MPI_OBJ(context_) do {} while(0)
+#define MPIU_THREAD_CS_EXIT_MPI_OBJ(context_)  do {} while(0)
+
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 /* There are multiple locks, one for each (major) object */
@@ -858,6 +862,37 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(ctx_mutex)
 #define MPIU_THREAD_CS_YIELD_CONTEXTID(_context) MPIU_THREAD_CS_YIELD_LOCKNAME_CHECKED(ctx_mutex)
 
+/* must include semicolon */
+#define MPIU_THREAD_OBJECT_HOOK MPID_Thread_mutex_t pobj_mutex;
+
+#define MPIU_THREAD_CS_ENTER_MPI_OBJ(context_)                      \
+    do {                                                            \
+        if (MPIU_ISTHREADED)                                        \
+            MPID_Thread_mutex_lock(&context_->pobj_mutex);          \
+    } while (0)
+#define MPIU_THREAD_CS_EXIT_MPI_OBJ(context_)                       \
+    do {                                                            \
+        if (MPIU_ISTHREADED)                                        \
+            MPID_Thread_mutex_unlock(&context_->pobj_mutex);        \
+    } while (0)
+
+/* initialize any per-object mutex in an MPI handle allocated object.  Mainly
+ * provided to reduce the amount of #ifdef/#endif code outside of this file. */
+#define MPIU_THREAD_MPI_OBJ_INIT(objptr_)                        \
+    do {                                                         \
+        int err_ = 0;                                            \
+        MPID_Thread_mutex_create(&(objptr_)->pobj_mutex, &err_); \
+        MPIU_Assert(!err_);                                      \
+    } while (0)
+
+#define MPIU_THREAD_MPI_OBJ_FINALIZE(objptr_)                    \
+    do {                                                         \
+        int err;                                                 \
+        MPID_Thread_mutex_destroy(&(objptr_)->pobj_mutex, &err); \
+        MPIU_Assert(!err);                                       \
+    } while (0)                                                  \
+
+
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without
    locks where ever possible. */
@@ -874,6 +909,12 @@ enum MPIU_Nest_mutexes {
 #define MPIU_THREAD_CS_EXIT(_name,_context)
 #define MPIU_THREAD_CS_YIELD(_name,_context)
 #endif /* MPICH_IS_THREADED */
+
+/* catch-all */
+#ifndef MPIU_THREAD_OBJECT_HOOK
+#  define MPIU_THREAD_OBJECT_HOOK /**/
+#  define MPIU_THREAD_OBJECT_HOOK_INIT /**/
+#endif
 
 #ifndef MPIU_THREAD_CS_ASSERT_HELD
 #define MPIU_THREAD_CS_ASSERT_HELD(name_) do{/*nothing*/}while(0)
@@ -1019,6 +1060,12 @@ do {                                           \
     } while (0)
 #endif
 
+#ifndef MPIU_THREAD_MPI_OBJ_INIT
+#define MPIU_THREAD_MPI_OBJ_INIT(objptr_) do {} while (0)
+#endif
+#ifndef MPIU_THREAD_MPI_OBJ_FINALIZE
+#define MPIU_THREAD_MPI_OBJ_FINALIZE(objptr_) do {} while (0)
+#endif
 
 #endif /* !defined(MPIIMPLTHREAD_H_INCLUDED) */
 
