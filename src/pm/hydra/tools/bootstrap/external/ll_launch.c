@@ -16,7 +16,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list,
                                      HYD_status(*stdout_cb) (void *buf, int buflen),
                                      HYD_status(*stderr_cb) (void *buf, int buflen))
 {
-    int num_hosts, idx, i, fd, total_procs, node_count;
+    int idx, i, fd, total_procs, node_count;
     int *pid, *fd_list;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
