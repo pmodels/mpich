@@ -28,8 +28,6 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV *iov, int n_i
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
 
-    /* MT FIXME should these function pointer invocations be covered by the
-     * MPIDCOMM CS? */
     if (vc_ch->iSendContig)
     {
         MPIU_Assert(n_iov > 0);

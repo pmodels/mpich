@@ -89,6 +89,7 @@ typedef struct MPICH_ThreadInfo_t {
     MPID_Thread_mutex_t msgq_mutex;
     MPID_Thread_mutex_t completion_mutex;
     MPID_Thread_mutex_t ctx_mutex;
+    MPID_Thread_mutex_t pmi_mutex;
 #endif
 
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
@@ -609,6 +610,7 @@ enum MPIU_Nest_mutexes {
     MPIU_Nest_msgq_mutex,
     MPIU_Nest_completion_mutex,
     MPIU_Nest_ctx_mutex,
+    MPIU_Nest_pmi_mutex,
     MPIU_Nest_NUM_MUTEXES
 };
 
@@ -706,8 +708,6 @@ enum MPIU_Nest_mutexes {
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 /* There are multiple locks, one for each (major) object */
-
-/* FIXME needs testing and work */
 
 #define MPIU_THREAD_CS_ENTER_ALLFUNC(_context)
 #define MPIU_THREAD_CS_EXIT_ALLFUNC(_context)
@@ -848,15 +848,13 @@ enum MPIU_Nest_mutexes {
     } while (0)
 #endif
 
-/* MT FIXME should all of these CS types share the global_mutex?  If yes, how do
- * we avoid accidental deadlock?  If not, we probably risk inconsistent locking
- * schemes, leading to races. */
-
+/* MT FIXME should this CS share the global_mutex?  If yes, how do
+ * we avoid accidental deadlock? */
 #define MPIU_THREAD_CS_ENTER_INITFLAG(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
 #define MPIU_THREAD_CS_EXIT_INITFLAG(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
 
-#define MPIU_THREAD_CS_ENTER_PMI(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(global_mutex)
-#define MPIU_THREAD_CS_EXIT_PMI(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(global_mutex)
+#define MPIU_THREAD_CS_ENTER_PMI(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(pmi_mutex)
+#define MPIU_THREAD_CS_EXIT_PMI(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(pmi_mutex)
 
 #define MPIU_THREAD_CS_ENTER_CONTEXTID(_context) MPIU_THREAD_CS_ENTER_LOCKNAME_CHECKED(ctx_mutex)
 #define MPIU_THREAD_CS_EXIT_CONTEXTID(_context)  MPIU_THREAD_CS_EXIT_LOCKNAME_CHECKED(ctx_mutex)

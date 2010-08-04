@@ -155,6 +155,7 @@ static int MPIR_Thread_CS_Init( void )
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.msgq_mutex, NULL);
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.completion_mutex, NULL);
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.ctx_mutex, NULL);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.pmi_mutex, NULL);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
@@ -190,6 +191,7 @@ int MPIR_Thread_CS_Finalize( void )
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.msgq_mutex, NULL);
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.completion_mutex, NULL);
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.ctx_mutex, NULL);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.pmi_mutex, NULL);
 
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
