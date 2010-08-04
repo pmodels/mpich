@@ -146,7 +146,7 @@ static void cleanup_params(void)
         HYDU_FREE(HYD_pmcd_pmip.local.local_binding);
 
     if (HYD_pmcd_pmip.local.spawner_kvs_name)
-        HYDU_FREE(HYD_pmcd_pmip.local.local_binding);
+        HYDU_FREE(HYD_pmcd_pmip.local.spawner_kvs_name);
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
