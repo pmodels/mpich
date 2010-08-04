@@ -82,6 +82,16 @@ static HYD_status genv_fn(char *arg, char ***argv)
     HYDU_ERR_POP(status, "unable to create env struct\n");
 
     HYDU_append_env_to_list(*env, &HYD_handle.user_global.global_env.user);
+    HYDU_env_free(env);
+
+    if (str[0])
+        HYDU_FREE(str[0]);
+    if (str[1])
+        HYDU_FREE(str[1]);
+    if (env_name)
+        HYDU_FREE(env_name);
+    if (env_value)
+        HYDU_FREE(env_value);
 
   fn_exit:
     return status;
@@ -470,6 +480,16 @@ static HYD_status env_fn(char *arg, char ***argv)
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
     HYDU_append_env_to_list(*env, &exec->user_env);
+    HYDU_env_free(env);
+
+    if (str[0])
+        HYDU_FREE(str[0]);
+    if (str[1])
+        HYDU_FREE(str[1]);
+    if (env_name)
+        HYDU_FREE(env_name);
+    if (env_value)
+        HYDU_FREE(env_value);
 
   fn_exit:
     return status;

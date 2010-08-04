@@ -17,6 +17,12 @@ HYD_status HYDT_bsci_finalize(void)
     status = HYDT_bsci_fns.finalize();
     HYDU_ERR_POP(status, "bootstrap device returned error while finalizing\n");
 
+    if (HYDT_bsci_info.bootstrap)
+        HYDU_FREE(HYDT_bsci_info.bootstrap);
+
+    if (HYDT_bsci_info.bootstrap_exec)
+        HYDU_FREE(HYDT_bsci_info.bootstrap_exec);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

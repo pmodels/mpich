@@ -17,27 +17,24 @@ HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap
                           int enablex, int debug)
 {
     int i;
-    const char *bootstrap = NULL, *bootstrap_exec = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (user_bootstrap)
-        bootstrap = user_bootstrap;
-    else
-        HYD_GET_ENV_STR_VAL(bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
-
     /* Store the bootstrap value as multiple bootstrap servers might
      * set the same internal function pointers */
-    HYDT_bsci_info.bootstrap = bootstrap;
+    if (user_bootstrap)
+        HYDT_bsci_info.bootstrap = HYDU_strdup(user_bootstrap);
+    else
+        HYD_GET_ENV_STR_VAL(HYDT_bsci_info.bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
 
     if (user_bootstrap_exec)
-        bootstrap_exec = user_bootstrap_exec;
+        HYDT_bsci_info.bootstrap_exec = HYDU_strdup(user_bootstrap_exec);
     else
-        HYD_GET_ENV_STR_VAL(bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
+        HYD_GET_ENV_STR_VAL(HYDT_bsci_info.bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
 
     for (i = 0; HYDT_bsci_comp_array[i]; i++) {
-        if (!strcmp(bootstrap, HYDT_bsci_comp_array[i])) {
+        if (!strcmp(HYDT_bsci_info.bootstrap, HYDT_bsci_comp_array[i])) {
             status = (*HYDT_bsci_comp_init[i])();
             HYDU_ERR_POP(status, "bootstrap device returned error initializing\n");
             break;
@@ -45,13 +42,12 @@ HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap
     }
 
     /* Set the appropriate info */
-    HYDT_bsci_info.bootstrap_exec = bootstrap_exec;
     HYDT_bsci_info.enablex = enablex;
     HYDT_bsci_info.debug = debug;
 
     if (HYDT_bsci_comp_array[i] == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unrecognized bootstrap server: %s\n", bootstrap);
+                            "unrecognized bootstrap server: %s\n", HYDT_bsci_info.bootstrap);
 
     /* This function is mandatory */
     if (HYDT_bsci_fns.launch_procs == NULL)
