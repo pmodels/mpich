@@ -152,12 +152,10 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPIDI_Pkt_init(cts_pkt, MPIDI_CH3_PKT_RNDV_CLR_TO_SEND);
 	cts_pkt->sender_req_id = rts_pkt->sender_req_id;
 	cts_pkt->receiver_req_id = rreq->handle;
-	/* Because this is a packet-handler function, it will be called from within a Critical section */
-	/* FIXME: is that a ch3 or an mpid critical section? */
-	/* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
+        MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, cts_pkt, 
 						  sizeof(*cts_pkt), &cts_req));
-	/* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
+        MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
 				"**ch3|ctspkt");
@@ -249,9 +247,9 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)((char *)sreq->dev.user_buf + dt_true_lb);
 	iov[1].MPID_IOV_LEN = data_sz;
 
-	/* MPIU_THREAD_CS_ENTER(CH3COMM,vc);*/
+        MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(vc, sreq, iov, 2));
-	/* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
+        MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|senddata");
     }
     else
@@ -263,9 +261,9 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	sreq->dev.segment_first = 0;
 	sreq->dev.segment_size = data_sz;
 
-	/*MPIU_THREAD_CS_ENTER(CH3COMM,vc);*/
+	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	mpi_errno = vc->sendNoncontig_fn(vc, sreq, rs_pkt, sizeof(*rs_pkt));
-	/*MPIU_THREAD_CS_EXIT(CH3COMM,vc);*/
+	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|senddata");
     }    
     *rreqp = NULL;
