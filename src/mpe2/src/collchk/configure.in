@@ -429,21 +429,36 @@ dnl         Check for MPI_REALx
                 AC_MSG_RESULT(no)
             fi
 
-dnl         Check for MPI_COMPLEXx and MPI_2COMPLEXxxx
-            AC_MSG_CHECKING( [for Fortran MPI_Datatype, COMPLEX related, in C] )
+dnl         Check for MPI_COMPLEXx 
+            AC_MSG_CHECKING( [for Fortran MPI_Datatype, COMPLEXn related, in C] )
             PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
-                                  [ MPI_Datatype type1, type2, type3, type4 ],
+                                  [ MPI_Datatype type1, type2 ],
                                   [
     type1 = MPI_COMPLEX8;
     type2 = MPI_COMPLEX16;
-    type3 = MPI_2COMPLEX;
-    type4 = MPI_2DOUBLE_COMPLEX;
                                   ],
                                   [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
             if test "$mpe_link_ok" = "yes" ; then
                 AC_MSG_RESULT(yes)
                 AC_DEFINE( HAVE_FORTRAN_MPI_DATATYPE_COMPLEXX_IN_C, 1,
                     [Define if Fortran MPI_Datatype, COMPLEXs, exist in C] )
+            else
+                AC_MSG_RESULT(no)
+            fi
+
+dnl         Check for MPI_2COMPLEXxxx
+            AC_MSG_CHECKING( [for Fortran MPI_Datatype, 2COMPLEX related, in C] )
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
+                                  [ MPI_Datatype type1, type2 ],
+                                  [
+    type1 = MPI_2COMPLEX;
+    type2 = MPI_2DOUBLE_COMPLEX;
+                                  ],
+                                  [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+            if test "$mpe_link_ok" = "yes" ; then
+                AC_MSG_RESULT(yes)
+                AC_DEFINE( HAVE_FORTRAN_MPI_DATATYPE_2COMPLEX_IN_C, 1,
+                    [Define if Fortran MPI_Datatype, 2COMPLEX, exist in C] )
             else
                 AC_MSG_RESULT(no)
             fi
@@ -478,6 +493,7 @@ dnl         if HAVE_FORTRAN_MPI_DATATYPE_IN_C is false
 else
 dnl if MPICH2, assume all Fortran MPI_Datatypes are available in C
 dnl if MPICH1, assume only basic Fortran MPI_Datatypes are available in C
+dnl if MPICH2, assume 2COMPLEX is *not* available (default as of 1.3x)
     if test "$MPI_IMPL" = "MPICH2" ; then
          AC_DEFINE( HAVE_FORTRAN_MPI_DATATYPE_IN_C, 1,
                     [Define if Fortran MPI_Datatype exists in C] )

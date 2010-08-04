@@ -140,7 +140,7 @@ unsigned int CollChk_basic_value(MPI_Datatype type)
         return 0x329;      /* (0x107,1)@(0x107,1) */
     else if ( type == MPI_2DOUBLE_PRECISION )
         return 0x33a;      /* (0x109,1)@(0x109,1) */
-#if defined( HAVE_FORTRAN_MPI_DATATYPE_COMPLEXX_IN_C )
+#if defined( HAVE_FORTRAN_MPI_DATATYPE_2COMPLEX_IN_C )
     else if ( type == MPI_2COMPLEX )
         return 0x323;      /* (0x101,1)@(0x101,1) */
     else if ( type == MPI_2DOUBLE_COMPLEX )
@@ -248,7 +248,7 @@ unsigned int CollChk_basic_count(MPI_Datatype type)
     else if (    type == MPI_2INTEGER
               || type == MPI_2REAL
               || type == MPI_2DOUBLE_PRECISION
-#if defined( HAVE_FORTRAN_MPI_DATATYPE_COMPLEXX_IN_C )
+#if defined( HAVE_FORTRAN_MPI_DATATYPE_2COMPLEX_IN_C )
               || type == MPI_2COMPLEX
               || type == MPI_2DOUBLE_COMPLEX
 #endif
