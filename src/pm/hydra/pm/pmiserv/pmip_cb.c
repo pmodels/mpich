@@ -542,14 +542,14 @@ static HYD_status launch_procs(void)
         if (!exec->env_prop) {
             /* user didn't specify anything; add inherited env to optional env */
             for (env = HYD_pmcd_pmip.user_global.global_env.inherited; env; env = env->next) {
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list(env->env_name, env->env_value, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
         else if (!strcmp(exec->env_prop, "all")) {
             /* user explicitly asked us to pass all the environment */
             for (env = HYD_pmcd_pmip.user_global.global_env.inherited; env; env = env->next) {
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list(env->env_name, env->env_value, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
@@ -564,7 +564,8 @@ static HYD_status launch_procs(void)
             while (envstr) {
                 env = HYDU_env_lookup(envstr, HYD_pmcd_pmip.user_global.global_env.inherited);
                 if (env) {
-                    status = HYDU_append_env_to_list(*env, &force_env);
+                    status = HYDU_append_env_to_list(env->env_name, env->env_value,
+                                                         &force_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 }
                 envstr = strtok(NULL, ",");
@@ -573,19 +574,19 @@ static HYD_status launch_procs(void)
 
         /* global user env */
         for (env = HYD_pmcd_pmip.user_global.global_env.user; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &force_env);
+            status = HYDU_append_env_to_list(env->env_name, env->env_value, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
         /* local user env */
         for (env = exec->user_env; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &force_env);
+            status = HYDU_append_env_to_list(env->env_name, env->env_value, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
         /* system env */
         for (env = HYD_pmcd_pmip.user_global.global_env.system; env; env = env->next) {
-            status = HYDU_append_env_to_list(*env, &force_env);
+            status = HYDU_append_env_to_list(env->env_name, env->env_value, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
@@ -593,11 +594,9 @@ static HYD_status launch_procs(void)
         if (HYD_pmcd_pmip.local.interface_env_name) {
             if (HYD_pmcd_pmip.user_global.iface) {
                 /* The user asked us to use a specific interface; let's find it */
-                status = HYDU_env_create(&env, HYD_pmcd_pmip.local.interface_env_name,
-                                         HYD_pmcd_pmip.user_global.iface);
-                HYDU_ERR_POP(status, "unable to create env\n");
-
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.interface_env_name,
+                                                 HYD_pmcd_pmip.user_global.iface,
+                                                 &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
             else if (HYD_pmcd_pmip.local.hostname) {
@@ -606,7 +605,9 @@ static HYD_status launch_procs(void)
                                          HYD_pmcd_pmip.local.hostname);
                 HYDU_ERR_POP(status, "unable to create env\n");
 
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.interface_env_name,
+                                                     HYD_pmcd_pmip.local.hostname,
+                                                     &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
         }
@@ -634,33 +635,26 @@ static HYD_status launch_procs(void)
                  * checkpointing case, use PMI_PORT format */
 
                 /* PMI_PORT */
-                status = HYDU_env_create(&env, "PMI_PORT", pmi_port);
-                HYDU_ERR_POP(status, "unable to create env\n");
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list("PMI_PORT", pmi_port, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
 
                 /* PMI_ID */
                 str = HYDU_int_to_str(pmi_rank);
-                status = HYDU_env_create(&env, "PMI_ID", str);
-                HYDU_ERR_POP(status, "unable to create env\n");
-                HYDU_FREE(str);
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list("PMI_ID", str, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
+                HYDU_FREE(str);
             }
             else {
                 /* PMI_RANK */
                 str = HYDU_int_to_str(pmi_rank);
-                status = HYDU_env_create(&env, "PMI_RANK", str);
-                HYDU_ERR_POP(status, "unable to create env\n");
-                HYDU_FREE(str);
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list("PMI_RANK", str, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
+                HYDU_FREE(str);
 
                 /* PMI_FD */
                 if (HYD_pmcd_pmip.system_global.pmi_fd) {
                     /* If a global PMI port is provided, use it */
-                    status = HYDU_env_create(&env, "PMI_FD", HYD_pmcd_pmip.system_global.pmi_fd);
-                    HYDU_ERR_POP(status, "unable to create env\n");
+                    str = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_fd);
                 }
                 else {
                     if (socketpair(AF_UNIX, SOCK_STREAM, 0, pmi_fds) < 0)
@@ -670,23 +664,18 @@ static HYD_status launch_procs(void)
                     HYDU_ERR_POP(status, "unable to register fd\n");
 
                     str = HYDU_int_to_str(pmi_fds[1]);
-                    status = HYDU_env_create(&env, "PMI_FD", str);
-                    HYDU_ERR_POP(status, "unable to create env\n");
-                    HYDU_FREE(str);
-
                     HYD_pmcd_pmip.downstream.pmi_fd[process_id] = pmi_fds[0];
                 }
 
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list("PMI_FD", str, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
+                HYDU_FREE(str);
 
                 /* PMI_SIZE */
                 str = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
-                status = HYDU_env_create(&env, "PMI_SIZE", str);
-                HYDU_ERR_POP(status, "unable to create env\n");
-                HYDU_FREE(str);
-                status = HYDU_append_env_to_list(*env, &force_env);
+                status = HYDU_append_env_to_list("PMI_SIZE", str, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
+                HYDU_FREE(str);
             }
 
             for (j = 0, arg = 0; exec->exec[j]; j++)

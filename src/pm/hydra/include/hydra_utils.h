@@ -143,14 +143,15 @@ void HYDU_dbg_finalize(void);
 
 /* env */
 HYD_status HYDU_env_to_str(struct HYD_env *env, char **str);
-HYD_status HYDU_str_to_env(char *str, struct HYD_env **env);
 HYD_status HYDU_list_inherited_env(struct HYD_env **env_list);
 struct HYD_env *HYDU_env_list_dup(struct HYD_env *env);
 HYD_status HYDU_env_create(struct HYD_env **env, const char *env_name, const char *env_value);
 HYD_status HYDU_env_free(struct HYD_env *env);
 HYD_status HYDU_env_free_list(struct HYD_env *env);
 struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list);
-HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env **env_list);
+HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
+                                   struct HYD_env ** env_list);
+HYD_status HYDU_append_env_str_to_list(char *str, struct HYD_env **env_list);
 HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite);
 HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwrite);
 HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);

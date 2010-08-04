@@ -171,7 +171,6 @@ static HYD_status global_env_fn(char *arg, char ***argv)
 {
     int i, count;
     char *str;
-    struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
 
     count = atoi(**argv);
@@ -184,17 +183,13 @@ static HYD_status global_env_fn(char *arg, char ***argv)
             str++;
             str[strlen(str) - 1] = 0;
         }
-        status = HYDU_str_to_env(str, &env);
-        HYDU_ERR_POP(status, "error converting string to env\n");
 
         if (!strcmp(arg, "global-inherited-env"))
-            HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.inherited);
+            HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.inherited);
         else if (!strcmp(arg, "global-system-env"))
-            HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.system);
+            HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.system);
         else if (!strcmp(arg, "global-user-env"))
-            HYDU_append_env_to_list(*env, &HYD_pmcd_pmip.user_global.global_env.user);
-
-        HYDU_FREE(env);
+            HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.user);
     }
     (*argv)++;
 
@@ -306,7 +301,6 @@ static HYD_status exec_proc_count_fn(char *arg, char ***argv)
 static HYD_status exec_local_env_fn(char *arg, char ***argv)
 {
     struct HYD_exec *exec = NULL;
-    struct HYD_env *env;
     int i, count;
     char *str;
     HYD_status status = HYD_SUCCESS;
@@ -326,10 +320,7 @@ static HYD_status exec_local_env_fn(char *arg, char ***argv)
             str++;
             str[strlen(str) - 1] = 0;
         }
-        status = HYDU_str_to_env(str, &env);
-        HYDU_ERR_POP(status, "error converting string to env\n");
-        HYDU_append_env_to_list(*env, &exec->user_env);
-        HYDU_FREE(env);
+        HYDU_append_env_str_to_list(str, &exec->user_env);
     }
     (*argv)++;
 

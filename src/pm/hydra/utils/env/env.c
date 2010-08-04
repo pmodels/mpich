@@ -38,60 +38,8 @@ HYD_status HYDU_env_to_str(struct HYD_env *env, char **str)
 }
 
 
-HYD_status HYDU_str_to_env(char *str, struct HYD_env **env)
-{
-    char *env_name, *env_value;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC((*env), struct HYD_env *, sizeof(struct HYD_env), status);
-    env_name = strtok(str, "=");
-    env_value = strtok(NULL, "=");
-    (*env)->env_name = HYDU_strdup(env_name);
-    (*env)->env_value = env_value ? HYDU_strdup(env_value) : NULL;
-    (*env)->next = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    if (*env)
-        HYDU_FREE(*env);
-    *env = NULL;
-    goto fn_exit;
-}
-
-
-static struct HYD_env *env_dup(struct HYD_env env)
-{
-    struct HYD_env *tenv;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(tenv, struct HYD_env *, sizeof(struct HYD_env), status);
-    memcpy(tenv, &env, sizeof(struct HYD_env));
-    tenv->next = NULL;
-    tenv->env_name = HYDU_strdup(env.env_name);
-    tenv->env_value = env.env_value ? HYDU_strdup(env.env_value) : NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return tenv;
-
-  fn_fail:
-    if (tenv)
-        HYDU_FREE(tenv);
-    tenv = NULL;
-    goto fn_exit;
-}
-
-
 HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
 {
-    struct HYD_env *env;
     char *env_str;
     int i, ret;
     HYD_status status = HYD_SUCCESS;
@@ -111,13 +59,9 @@ HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
 
         env_str = HYDU_strdup(environ[i]);
 
-        status = HYDU_str_to_env(env_str, &env);
-        HYDU_ERR_POP(status, "error converting string to env\n");
-
-        status = HYDU_append_env_to_list(*env, env_list);
+        status = HYDU_append_env_str_to_list(env_str, env_list);
         HYDU_ERR_POP(status, "unable to add env to list\n");
 
-        HYDU_env_free(env);
         HYDU_FREE(env_str);
 
         i++;
@@ -142,7 +86,7 @@ struct HYD_env *HYDU_env_list_dup(struct HYD_env *env)
     run = env;
     tenv = NULL;
     while (run) {
-        status = HYDU_append_env_to_list(*run, &tenv);
+        status = HYDU_append_env_to_list(run->env_name, run->env_value, &tenv);
         HYDU_ERR_POP(status, "unable to add env to list\n");
         run = run->next;
     }
@@ -232,17 +176,16 @@ struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list)
     return run;
 }
 
-
-HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_list)
+HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
+                                   struct HYD_env ** env_list)
 {
     struct HYD_env *run, *tenv;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    tenv = env_dup(env);
-    if (tenv == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to dup env\n");
+    status = HYDU_env_create(&tenv, env_name, env_value);
+    HYDU_ERR_POP(status, "unable to create env structure\n");
 
     tenv->next = NULL;
 
@@ -254,7 +197,7 @@ HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_lis
         run = *env_list;
 
         while (1) {
-            if (!strcmp(run->env_name, env.env_name)) {
+            if (!strcmp(run->env_name, env_name)) {
                 /* If we found an entry for this environment variable, just update it */
                 if (run->env_value != NULL && tenv->env_value != NULL) {
                     HYDU_FREE(run->env_value);
@@ -264,7 +207,7 @@ HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_lis
                     HYDU_FREE(run->env_value);
                     run->env_value = NULL;
                 }
-                else if (env.env_value != NULL) {
+                else if (env_value != NULL) {
                     run->env_value = HYDU_strdup(tenv->env_value);
                 }
 
@@ -291,6 +234,25 @@ HYD_status HYDU_append_env_to_list(struct HYD_env env, struct HYD_env ** env_lis
     goto fn_exit;
 }
 
+HYD_status HYDU_append_env_str_to_list(char *str, struct HYD_env **env_list)
+{
+    char *env_name, *env_value;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    env_name = strtok(str, "=");
+    env_value = strtok(NULL, "=");
+    status = HYDU_append_env_to_list(env_name, env_value, env_list);
+    HYDU_ERR_POP(status, "unable to append env to list\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite)
 {
@@ -351,17 +313,13 @@ HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwr
 HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list)
 {
     char *env_name;
-    struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     env_name = strtok(str, ",");
     do {
-        status = HYDU_env_create(&env, env_name, NULL);
-        HYDU_ERR_POP(status, "unable to create env struct\n");
-
-        status = HYDU_append_env_to_list(*env, env_list);
+        status = HYDU_append_env_to_list(env_name, NULL, env_list);
         HYDU_ERR_POP(status, "unable to add env to list\n");
     } while ((env_name = strtok(NULL, ",")));
 
