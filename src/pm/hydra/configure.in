@@ -139,9 +139,9 @@ fi
 #########################################################################
 # Check what bootstrap server we should use
 #########################################################################
-AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh,rsh,fork,slurm,lsf,persist)],
+AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh,rsh,fork,slurm,ll,lsf,persist)],
 		    [ hydra_bss=$withval ],
-		    [ hydra_bss="ssh,rsh,fork,slurm,lsf,persist" ])
+		    [ hydra_bss="ssh,rsh,fork,slurm,ll,lsf,persist" ])
 AC_MSG_CHECKING(boot-strap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -165,6 +165,10 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	slurm)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss slurm`
+		;;
+	ll)
+		hydra_bss_external=true
+		available_bss=`echo $available_bss ll`
 		;;
 	lsf)
 		hydra_bss_external=true

@@ -16,6 +16,8 @@ static HYD_status external_init(void)
 
     if (!strcmp(HYDT_bsci_info.bootstrap, "slurm"))
         HYDT_bsci_fns.launch_procs = HYDT_bscd_slurm_launch_procs;
+    else if (!strcmp(HYDT_bsci_info.bootstrap, "ll"))
+        HYDT_bsci_fns.launch_procs = HYDT_bscd_ll_launch_procs;
     else
         HYDT_bsci_fns.launch_procs = HYDT_bscd_external_launch_procs;
 
@@ -25,6 +27,11 @@ static HYD_status external_init(void)
     if (!strcmp(HYDT_bsci_info.bootstrap, "slurm")) {
         HYDT_bsci_fns.query_proxy_id = HYDT_bscd_slurm_query_proxy_id;
         HYDT_bsci_fns.query_node_list = HYDT_bscd_slurm_query_node_list;
+    }
+
+    if (!strcmp(HYDT_bsci_info.bootstrap, "ll")) {
+        HYDT_bsci_fns.query_proxy_id = HYDT_bscd_ll_query_proxy_id;
+        HYDT_bsci_fns.query_node_list = HYDT_bscd_ll_query_node_list;
     }
 
     if (!strcmp(HYDT_bsci_info.bootstrap, "lsf"))
@@ -53,6 +60,11 @@ HYD_status HYDT_bsci_fork_init(void)
 }
 
 HYD_status HYDT_bsci_slurm_init(void)
+{
+    return external_init();
+}
+
+HYD_status HYDT_bsci_ll_init(void)
 {
     return external_init();
 }

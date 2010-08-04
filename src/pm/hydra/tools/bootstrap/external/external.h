@@ -10,6 +10,7 @@
 #include "ssh.h"
 #include "slurm.h"
 #include "lsf.h"
+#include "ll.h"
 
 HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
                                            int *control_fd, int enable_stdin,
