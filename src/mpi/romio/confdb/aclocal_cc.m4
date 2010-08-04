@@ -23,7 +23,6 @@ dnl D*/
 dnl 2.52 doesn't have AC_PROG_CC_GNU
 ifdef([AC_PROG_CC_GNU],,[AC_DEFUN([AC_PROG_CC_GNU],)])
 AC_DEFUN([PAC_PROG_CC],[
-AC_PROVIDE([AC_PROG_CC])
 AC_CHECK_PROGS(CC, cc xlC xlc pgcc icc pathcc gcc )
 test -z "$CC" && AC_MSG_ERROR([no acceptable cc found in \$PATH])
 PAC_PROG_CC_WORKS
