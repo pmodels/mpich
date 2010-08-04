@@ -374,6 +374,7 @@ int MPIDI_CH3I_Progress_finalize(void)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 void MPIDI_CH3I_Progress_wakeup(void)
 {
+    MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"progress_wakeup called");
     MPIDU_Sock_wakeup(MPIDI_CH3I_sock_set);
 }
 #endif
