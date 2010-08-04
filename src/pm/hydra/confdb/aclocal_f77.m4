@@ -682,6 +682,9 @@ EOF
 	# Check that cross != yes so that this works with autoconf 2.52
 	# Check that cross_compiling != yes so that this works with 
 	# autoconf 2.6x for some (but almost certainly not all)x
+	# Question: why do we test that this runs?  It looks like we
+	# needed this for some old Fortran compilers that produced
+	# executable code that then did not run.
 	if test "$ac_cv_prog_f77_cross" != "yes" -a \
 	        "$cross_compiling" != "yes" ; then
 	    if ./conftest >/dev/null 2>&1 ; then

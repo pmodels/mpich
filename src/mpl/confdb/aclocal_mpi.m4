@@ -85,15 +85,39 @@ dnl created with mpcc will not run locally, but executables created
 dnl with xlc may be used to discover properties of the compiler, such as
 dnl the size of data types).
 dnl
+dnl Historical note:
+dnl Some common autoconf tests, such as AC_CHECK_SIZEOF, used to require
+dnl running a program.  But some MPI compilers (often really compilation 
+dnl scripts) produced programs that could only be run with special commands,
+dnl such as a batch submission system.  To allow these test programs to be
+dnl run, a separate set of compiler variables, TESTCC, TESTF77, etc., 
+dnl were defined.  However, in later versions of autoconf, it both became
+dnl unnecessary to run programs for tests such as AC_CHECK_SIZEOF and 
+dnl it became necessary to define CC etc. before invoking AC_PROG_CC (and
+dnl the othe language compilers), because those commands now do much, much
+dnl more than just determining the compiler.
+dnl
+dnl To address the change, we still define the TESTCC ect. compilers where
+dnl possible to allow the use of AC_TRY_RUN when required, but we define
+dnl the CC etc variables and do not define ac_cv_prog_CC etc., as these 
+dnl cause autoconf to skip all of the other initialization code that 
+dnl AC_PROG_CC etc. runs.  Note also that this command must occur before 
+dnl AC_PROG_CC (or anything that might cause AC_PROG_CC to be invoked).
+dnl
 dnl See also:
 dnl PAC_LANG_PUSH_COMPILERS, PAC_LIB_MPI
 dnl D*/
 AC_DEFUN([PAC_ARG_MPI_TYPES],[
-AC_PROVIDE([AC_PROG_CC])
-AC_SUBST(CC)
-AC_SUBST(CXX)
-AC_SUBST(F77)
-AC_SUBST(FC)
+PAC_ARG_MPI_KNOWN_TYPES
+PAC_MPI_FIND_COMPILERS
+PAC_MPI_CHECK_MPI_LIB
+])
+dnl
+dnl To keep autoconf from prematurely invoking the compiler check scripts,
+dnl we need a command that first sets the compilers and a separate one
+dnl that makes any necessary checks for libraries
+dnl
+AC_DEFUN([PAC_ARG_MPI_KNOWN_TYPES],[
 AC_ARG_WITH(mpich,
 [--with-mpich=path  - Assume that we are building with MPICH],
 ac_mpi_type=mpich)
@@ -127,6 +151,8 @@ fi
 if test "$ac_mpi_type" = "unknown" -a "$pac_lib_mpi_is_building" = "yes" ; then
     ac_mpi_type="mpich"
 fi
+])
+AC_DEFUN([PAC_MPI_FIND_COMPILERS],[
 # Set defaults
 MPIRUN_NP="-np "
 MPIEXEC_N="-n "
@@ -150,19 +176,15 @@ case $ac_mpi_type in
             AC_PATH_PROG(MPICC,mpicc)
             TESTCC=${CC-cc}
             CC="$MPICC"
-	    ac_cv_prog_CC=$CC
             AC_PATH_PROG(MPIF77,mpif77)
             TESTF77=${F77-f77}
             F77="$MPIF77"
-            ac_cv_prog_F77=$F77
             AC_PATH_PROG(MPIFC,mpif90)
             TESTFC=${FC-f90}
             FC="$MPIFC"
-            ac_cv_prog_FC=$FC
             AC_PATH_PROG(MPICXX,mpiCC)
             TESTCXX=${CXX-CC}
             CXX="$MPICXX"
-            ac_cv_prog_CXX=$CXX
 	    # We may want to restrict this to the path containing mpirun
 	    AC_PATH_PROG(MPIEXEC,mpiexec)
 	    AC_PATH_PROG(MPIRUN,mpirun)
@@ -174,6 +196,141 @@ case $ac_mpi_type in
 	    # All of the above should have been passed in the environment!
 	    :
         fi
+	;;
+
+        mpichnt)
+        ;;
+
+	lammpi)
+	dnl
+        dnl This isn't correct.  It should try to get the underlying compiler
+        dnl from the mpicc and mpif77 scripts or mpireconfig
+        save_PATH="$PATH"
+        if test "$with_mpich" != "yes" -a "$with_mpich" != "no" ; then 
+	    # Look for commands; if not found, try adding bin to the path
+		if test ! -x $with_lammpi/mpicc -a -x $with_lammpi/bin/mpicc ; then
+			with_lammpi="$with_lammpi/bin"
+		fi
+                PATH=$with_lammpi:${PATH}
+        fi
+        AC_PATH_PROG(MPICC,mpicc)
+        TESTCC=${CC-cc}
+        CC="$MPICC"
+        AC_PATH_PROG(MPIF77,mpif77)
+        TESTF77=${F77-f77}
+        F77="$MPIF77"
+        AC_PATH_PROG(MPIFC,mpif90)
+        TESTFC=${FC-f90}
+        FC="$MPIFC"
+        AC_PATH_PROG(MPICXX,mpiCC)
+        TESTCXX=${CXX-CC}
+        CXX="$MPICXX"
+	PATH="$save_PATH"
+  	MPILIBNAME="lammpi"
+	MPIBOOT="lamboot"
+	MPIUNBOOT="wipe"
+	MPIRUN="mpirun"
+	;;
+
+	ibmmpi)
+	AC_CHECK_PROGS(MPCC,mpcc)
+	AC_CHECK_PROGS(MPXLF,mpxlf)
+	if test -z "$MPCC" -o -z "$MPXLF" ; then
+	    AC_MSG_ERROR([Could not find IBM MPI compilation scripts.  Either mpcc or mpxlf is missing])
+	fi
+	TESTCC=${CC-xlC}; TESTF77=${F77-xlf}; CC=mpcc; F77=mpxlf
+	# There is no mpxlf90, but the options langlvl and free can
+	# select the Fortran 90 version of xlf
+	if test "$enable_f90" != no ; then
+	    AC_CHECK_PROGS(MPIXLF90,mpxlf90)
+	    TESTFC=${FC-xlf90}
+            if test "X$MPIXLF90" != "X" ; then 
+	        FC="mpxlf90"
+	    else
+	    	FC="mpxlf -qlanglvl=90ext -qfree=f90"
+	    fi
+	fi
+	MPILIBNAME=""
+	cross_compiling=yes
+	# Turn off the autoconf version 3 warning message
+	ac_tool_warned=yes
+	;;
+
+	sgimpi)
+	TESTCC=${CC:=cc}; TESTF77=${F77:=f77}; 
+	TESTCXX=${CXX:=CC}; TESTFC=${FC:=f90}
+	MPIRUN=mpirun
+	MPIBOOT=""
+	MPIUNBOOT=""
+	;;
+
+	generic)
+	# Find the compilers.  Expect the compilers to be mpicc and mpif77
+	# in $with_mpi/bin or $with_mpi
+        if test "X$MPICC" = "X" ; then
+            if test -x "$with_mpi/bin/mpicc" ; then
+                MPICC=$with_mpi/bin/mpicc
+	    elif test -x "$with_mpi/mpicc" ; then
+	        MPICC=$with_mpi/mpicc
+            fi
+        fi
+        if test "X$MPICXX" = "X" ; then
+            if test -x "$with_mpi/bin/mpicxx" ; then
+                MPICXX=$with_mpi/bin/mpicxx
+	    elif test -x "$with_mpi/mpicxx" ; then
+	        MPICXX=$with_mpi/mpicxx
+            fi
+        fi
+        if test "X$MPIF77" = "X" ; then
+            if test -x "$with_mpi/bin/mpif77" ; then
+                MPIF77=$with_mpi/bin/mpif77
+	    elif test -x "$with_mpi/mpif77" ; then
+	        MPIF77=$with_mpi/mpif77
+            fi
+        fi
+        if test "X$MPIF90" = "X" ; then
+            if test -x "$with_mpi/bin/mpif90" ; then
+                MPIF90=$with_mpi/bin/mpif90
+	    elif test -x "$with_mpi/mpif90" ; then
+	        MPIF90=$with_mpi/mpif90
+            fi
+        fi
+        if test "X$MPIEXEC" = "X" ; then
+            if test -x "$with_mpi/bin/mpiexec" ; then
+                MPIEXEC=$with_mpi/bin/mpiexec
+	    elif test -x "$with_mpi/mpiexec" ; then
+	        MPIEXEC=$with_mpi/mpiexec
+            fi
+        fi
+        CC=$MPICC
+        F77=$MPIF77
+	if test "X$MPICXX" != "X" ; then CXX=$MPICXX ; fi
+	if test "X$MPIF90" !- "X" ; then F90=$MPIF90 ; fi
+	;;
+
+	*)
+	# Use the default choices for the compilers
+	;;
+esac
+# Tell autoconf to determine properties of the compilers (these are the 
+# compilers for MPI programs)
+AC_PROG_CC
+if test "$enable_f77" != no -a "$enable_fortran" != no ; then
+    AC_PROG_F77
+fi
+if test "$enable_cxx" != no ; then
+    AC_PROG_CXX
+fi
+if test "$enable_f90" != no ; then
+    PAC_PROG_FC
+fi
+])
+
+dnl
+dnl This uses the selected CC etc to check for include paths and libraries
+AC_DEFUN([PAC_MPI_CHECK_MPI_LIB],[
+case $ac_mpi_type in
+	mpich)
 	;;
 
         mpichnt)
@@ -197,146 +354,30 @@ case $ac_mpi_type in
         ;;
 
 	lammpi)
-	dnl
-        dnl This isn't correct.  It should try to get the underlying compiler
-        dnl from the mpicc and mpif77 scripts or mpireconfig
-        save_PATH="$PATH"
-        if test "$with_mpich" != "yes" -a "$with_mpich" != "no" ; then 
-	    # Look for commands; if not found, try adding bin to the path
-		if test ! -x $with_lammpi/mpicc -a -x $with_lammpi/bin/mpicc ; then
-			with_lammpi="$with_lammpi/bin"
-		fi
-                PATH=$with_lammpi:${PATH}
-        fi
-        AC_PATH_PROG(MPICC,mpicc)
-        TESTCC=${CC-cc}
-        CC="$MPICC"
-        ac_cv_prog_CC=$CC
-        AC_PATH_PROG(MPIF77,mpif77)
-        TESTF77=${F77-f77}
-        F77="$MPIF77"
-        ac_cv_prog_F77=$F77
-        AC_PATH_PROG(MPIFC,mpif90)
-        TESTFC=${FC-f90}
-        FC="$MPIFC"
-        ac_cv_prog_FC=$FC
-        AC_PATH_PROG(MPICXX,mpiCC)
-        TESTCXX=${CXX-CC}
-        CXX="$MPICXX"
-        ac_cv_prog_CXX=$CXX
-	PATH="$save_PATH"
-  	MPILIBNAME="lammpi"
-	MPIBOOT="lamboot"
-	MPIUNBOOT="wipe"
-	MPIRUN="mpirun"
 	;;
 
 	ibmmpi)
-	AC_CHECK_PROGS(MPCC,mpcc)
-	AC_CHECK_PROGS(MPXLF,mpxlf)
-	if test -z "$MPCC" -o -z "$MPXLF" ; then
-	    AC_MSG_ERROR([Could not find IBM MPI compilation scripts.  Either mpcc or mpxlf is missing])
-	fi
-	TESTCC=${CC-xlC}; TESTF77=${F77-xlf}; CC=mpcc; F77=mpxlf
-        ac_cv_prog_CC=$CC
-        ac_cv_prog_F77=$F77
-	# There is no mpxlf90, but the options langlvl and free can
-	# select the Fortran 90 version of xlf
-	TESTFC=${FC-xlf90}; FC="mpxlf -qlanglvl=90ext -qfree=f90"
-	MPILIBNAME=""
 	;;
 
 	sgimpi)
-	TESTCC=${CC:=cc}; TESTF77=${F77:=f77}; 
-	TESTCXX=${CXX:=CC}; TESTFC=${FC:=f90}
 	AC_CHECK_LIB(mpi,MPI_Init)
 	if test "$ac_cv_lib_mpi_MPI_Init" = "yes" ; then
 	    MPILIBNAME="mpi"
 	fi	
-	MPIRUN=mpirun
-	MPIBOOT=""
-	MPIUNBOOT=""
 	;;
 
 	generic)
-	# Find the compilers.  Expect the compilers to be mpicc and mpif77
-	# in $with_mpi/bin
-        PAC_PROG_CC
-	# We only look for the other compilers if there is no
-	# disable for them
-	if test "$enable_f77" != no -a "$enable_fortran" != no ; then
-   	    AC_PROG_F77
-        fi
-	if test "$enable_cxx" != no ; then
-	    AC_PROG_CXX
-	fi
-	if test "$enable_f90" != no ; then
-	    PAC_PROG_FC
-	fi
-	# Set defaults for the TEST versions if not already set
-	if test -z "$TESTCC" ; then 
-	    TESTCC=${CC:=cc}
-        fi
-	if test -z "$TESTF77" ; then 
-  	    TESTF77=${F77:=f77}
-        fi
-	if test -z "$TESTCXX" ; then
-	    TESTCXX=${CXX:=CC}
-        fi
-	if test -z "$TESTFC" ; then
-       	    TESTFC=${FC:=f90}
-	fi
-        if test "X$MPICC" = "X" ; then
-            if test -x "$with_mpi/bin/mpicc" ; then
-                MPICC=$with_mpi/bin/mpicc
-            fi
-        fi
-        if test "X$MPIF77" = "X" ; then
-            if test -x "$with_mpi/bin/mpif77" ; then
-                MPIF77=$with_mpi/bin/mpif77
-            fi
-        fi
-        if test "X$MPIEXEC" = "X" ; then
-            if test -x "$with_mpi/bin/mpiexec" ; then
-                MPIEXEC=$with_mpi/bin/mpiexec
-            fi
-        fi
-        CC=$MPICC
-        F77=$MPIF77
-        ac_cv_prog_CC=$CC
-        ac_cv_prog_F77=$F77
+	AC_SEARCH_LIBS(MPI_Init,mpi mpich2 mpich)
+	if test "$ac_cv_lib_mpi_MPI_Init" = "yes" ; then
+	    MPILIBNAME="mpi"
+	fi	
 	;;
 
 	*)
-	# Find the compilers
-	PAC_PROG_CC
-	# We only look for the other compilers if there is no
-	# disable for them
-	if test "$enable_f77" != no -a "$enable_fortran" != no ; then
-   	    AC_PROG_F77
-        fi
-	if test "$enable_cxx" != no ; then
-	    AC_PROG_CXX
-	fi
-	if test "$enable_f90" != no ; then
-	    PAC_PROG_FC
-	fi
-	# Set defaults for the TEST versions if not already set
-	if test -z "$TESTCC" ; then 
-	    TESTCC=${CC:=cc}
-        fi
-	if test -z "$TESTF77" ; then 
-  	    TESTF77=${F77:=f77}
-        fi
-	if test -z "$TESTCXX" ; then
-	    TESTCXX=${CXX:=CC}
-        fi
-	if test -z "$TESTFC" ; then
-       	    TESTFC=${FC:=f90}
-	fi
 	;;
 esac
 ])
+
 dnl
 dnl/*D
 dnl PAC_MPI_F2C - Determine if MPI has the MPI-2 functions MPI_xxx_f2c and
