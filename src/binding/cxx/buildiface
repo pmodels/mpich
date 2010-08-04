@@ -2177,7 +2177,6 @@ print $OUTFD "\
 
     # Keyval and attribute routines
     print $OUTFD <<EOT;
-#include \"mpihandlemem.h\"
 #include \"mpi_attr.h\"
 #include \"mpi_lang.h\"
 static
