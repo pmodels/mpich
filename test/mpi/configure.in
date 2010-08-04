@@ -403,6 +403,27 @@ if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
 
+# Check for the MPI Version.  This test assumes at least MPI 2.0.  For
+# some tests, we need to know if we are MPI 2.1 or MPI 2.2,
+# particularly for new routines in Fortran
+AC_CACHE_CHECK([for major version of MPI],pac_cv_mpi_major_version,[
+for pac_cv_mpi_major_version in 3 2 1 unknown ; do
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
+#if MPI_VERSION == $pac_cv_mpi_major_version 
+    ''' force failure '''
+#endif])],,break)
+done
+])
+
+AC_CACHE_CHECK([for minor version of MPI],pac_cv_mpi_minor_version,[
+for pac_cv_mpi_minor_version in 4 3 2 1 0 unknown ; do
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
+#if MPI_SUBVERSION == $pac_cv_mpi_minor_version 
+    ''' force failure '''
+#endif])],,break)
+done
+])
+
 # Running Fortran 77 compiler tests
 if test "$enable_f77" = yes ; then
     # Work around feature in autoconf that adds -g -O2 to FFLAGS
