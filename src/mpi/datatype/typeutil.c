@@ -85,14 +85,16 @@ static MPI_Datatype mpi_dtypes[] = {
     MPI_DOUBLE_PRECISION,
     MPI_INTEGER,
     MPI_2INTEGER,
+#ifdef MPICH_DEFINE_2COMPLEX
     MPI_2COMPLEX,
     MPI_2DOUBLE_COMPLEX,
+#endif
     MPI_2REAL,
     MPI_2DOUBLE_PRECISION,
     MPI_CHARACTER,
 #ifdef HAVE_FORTRAN_BINDING
-    /* Size-specific types; these are in section 10.2.4 (Extended Fortran Support)
-       as well as optional in MPI-1
+    /* Size-specific types; these are in section 10.2.4 (Extended Fortran 
+       Support) as well as optional in MPI-1
     */
     MPI_REAL4,
     MPI_REAL8,

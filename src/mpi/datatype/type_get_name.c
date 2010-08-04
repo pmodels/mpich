@@ -74,8 +74,10 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_DOUBLE_PRECISION),
     type_name_entry(MPI_INTEGER),
     type_name_entry(MPI_2INTEGER),
+#ifdef MPICH_DEFINE_2COMPLEX
     type_name_entry(MPI_2COMPLEX),
     type_name_entry(MPI_2DOUBLE_COMPLEX),
+#endif
     type_name_entry(MPI_2REAL),
     type_name_entry(MPI_2DOUBLE_PRECISION),
     type_name_entry(MPI_CHARACTER),

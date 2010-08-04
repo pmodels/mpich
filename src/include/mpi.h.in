@@ -66,8 +66,17 @@ typedef int MPI_Datatype;
 #define MPI_DOUBLE_PRECISION  ((MPI_Datatype)@MPI_DOUBLE_PRECISION@)
 #define MPI_INTEGER           ((MPI_Datatype)@MPI_INTEGER@)
 #define MPI_2INTEGER          ((MPI_Datatype)@MPI_2INTEGER@)
+/* 
+ * MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX were defined by accident in 
+ * MPI 1.0 and removed in MPI 1.1.  
+ *
+ * This definition provides backward compatibility.  These definitions
+ * will be removed in a subsequent MPICH release
+ */
+#ifdef MPICH_DEFINE_2COMPLEX
 #define MPI_2COMPLEX          ((MPI_Datatype)@MPI_2COMPLEX@)
 #define MPI_2DOUBLE_COMPLEX   ((MPI_Datatype)@MPI_2DOUBLE_COMPLEX@)
+#endif 
 #define MPI_2REAL             ((MPI_Datatype)@MPI_2REAL@)
 #define MPI_2DOUBLE_PRECISION ((MPI_Datatype)@MPI_2DOUBLE_PRECISION@)
 #define MPI_CHARACTER         ((MPI_Datatype)@MPI_CHARACTER@)
