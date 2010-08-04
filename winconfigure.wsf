@@ -3722,6 +3722,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef USE_SYSV_SHM */")
                                 Case "HAVE_MPI_2DOUBLE_COMPLEX"
                                         fout.WriteLine("#define HAVE_MPI_2DOUBLE_COMPLEX 1")
+                                Case "HAVE_MPI_2COMPLEX"
+                                        fout.WriteLine("#define HAVE_MPI_2COMPLEX 1")
                                 Case "HAVE_MPI_INTEGER16"
                                         fout.WriteLine("#define HAVE_MPI_INTEGER16 1")
                                 Case "MPIO_USES_MPI_REQUEST"
