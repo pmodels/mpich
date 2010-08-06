@@ -26,11 +26,10 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_CommSetAttr
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, 
 		      MPIR_AttrType attrType )
 {
+    static const char FCNAME[] = "MPIR_CommSetAttr";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;
@@ -50,7 +49,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
 	    MPIR_ERRTEST_KEYVAL(comm_keyval, MPID_COMM, "communicator", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(comm_keyval, mpi_errno);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -70,7 +69,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
 	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }
@@ -91,7 +90,9 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    /* If found, call the delete function before replacing the 
 	       attribute */
 	    mpi_errno = MPIR_Call_attr_delete( comm, p );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	    if (mpi_errno) {
+		goto fn_fail;
+	    }
 	    p->attrType = attrType;
 	    p->value    = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
 	    /* printf( "Updating attr at %x\n", &p->value ); */
@@ -130,7 +131,17 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
     return mpi_errno;
 
   fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+	mpi_errno = MPIR_Err_create_code(
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_comm_set_attr",
+	    "**mpi_comm_set_attr %C %d %p", comm, comm_keyval, attribute_val);
+    }
+#   endif
+    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 #endif /* MPICH_MPI_FROM_PMPI */
 
@@ -174,7 +185,6 @@ corresponding keyval was created) will be called.
 int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_ATTR);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SET_ATTR);
@@ -196,8 +206,6 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 	    "**mpi_comm_set_attr %C %d %p", comm, comm_keyval, attribute_val);
     }
 #   endif
-    MPID_Comm_get_ptr( comm, comm_ptr );
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
