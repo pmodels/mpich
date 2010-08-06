@@ -5,7 +5,7 @@ allred3 10
 allred4 4
 reduce 5
 reduce 10
-reduce_local 2
+reduce_local 2 mpiversion=2.2
 op_commutative 2
 red3 10
 red4 10

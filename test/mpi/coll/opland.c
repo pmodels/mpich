@@ -11,8 +11,6 @@
 
 static char MTEST_Descrip[] = "Test MPI_LAND operations on optional datatypes dupported by MPICH2";
 
-void MismatchOp( int, const char [] );
-
 /*
  * This test looks at the handling of logical and for types that are not 
  * integers or are not required integers (e.g., long long).  MPICH2 allows
@@ -52,7 +50,7 @@ int main( int argc, char *argv[] )
     coutbuf[2] = 1;
     rc = MPI_Reduce( cinbuf, coutbuf, 3, MPI_CHAR, MPI_LAND, 0, comm );
     if (rc) {
-	MismatchOp( rc, "MPI_LAND and MPI_CHAR" );
+	MTestPrintErrorMsg( "MPI_LAND and MPI_CHAR", rc );
 	errs++;
     }
     else {
@@ -84,7 +82,7 @@ int main( int argc, char *argv[] )
     scoutbuf[2] = 1;
     rc = MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_LAND, 0, comm );
     if (rc) {
-	MismatchOp( rc, "MPI_LAND and MPI_SIGNED_CHAR" );
+	MTestPrintErrorMsg( "MPI_LAND and MPI_SIGNED_CHAR", rc );
 	errs++;
     }
     else {
@@ -115,7 +113,7 @@ int main( int argc, char *argv[] )
     ucoutbuf[2] = 1;
     rc = MPI_Reduce( ucinbuf, ucoutbuf, 3, MPI_UNSIGNED_CHAR, MPI_LAND, 0, comm );
     if (rc) {
-	MismatchOp( rc, "MPI_LAND and MPI_UNSIGNED_CHAR" );
+	MTestPrintErrorMsg( "MPI_LAND and MPI_UNSIGNED_CHAR", rc );
 	errs++;
     }
     else {
@@ -147,7 +145,7 @@ int main( int argc, char *argv[] )
     foutbuf[2] = 1;
     rc = MPI_Reduce( finbuf, foutbuf, 3, MPI_FLOAT, MPI_LAND, 0, comm );
     if (rc) {
-	MismatchOp( rc, "MPI_LAND and MPI_FLOAT" );
+	MTestPrintErrorMsg( "MPI_LAND and MPI_FLOAT", rc );
 	errs++;
     }
     else {
@@ -178,7 +176,7 @@ int main( int argc, char *argv[] )
     doutbuf[2] = 1;
     rc = MPI_Reduce( dinbuf, doutbuf, 3, MPI_DOUBLE, MPI_LAND, 0, comm );
     if (rc) {
-	MismatchOp( rc, "MPI_LAND and MPI_DOUBLE" );
+	MTestPrintErrorMsg( "MPI_LAND and MPI_DOUBLE", rc );
 	errs++;
     }
     else {
@@ -212,7 +210,7 @@ int main( int argc, char *argv[] )
 	MTestPrintfMsg( 10, "Reduce of MPI_LONG_DOUBLE\n" );
 	rc = MPI_Reduce( ldinbuf, ldoutbuf, 3, MPI_LONG_DOUBLE, MPI_LAND, 0, comm );
 	if (rc) {
-	    MismatchOp( rc, "MPI_LAND and MPI_LONG_DOUBLE" );
+	    MTestPrintErrorMsg( "MPI_LAND and MPI_LONG_DOUBLE", rc );
 	    errs++;
 	}
 	else {
@@ -252,7 +250,7 @@ int main( int argc, char *argv[] )
 	MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
 	rc = MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_LAND, 0, comm );
 	if (rc) {
-	    MismatchOp( rc, "MPI_LAND and MPI_LONG_LONG" );
+	    MTestPrintErrorMsg( "MPI_LAND and MPI_LONG_LONG", rc );
 	    errs++;
 	}
 	else {
@@ -281,14 +279,3 @@ int main( int argc, char *argv[] )
     return 0;
 }
 
-void MismatchOp( int errcode, const char opAndType[] )
-{
-    int errclass, slen;
-    char string[MPI_MAX_ERROR_STRING];
-    
-    MPI_Error_class( errcode, &errclass );
-    MPI_Error_string( errcode, string, &slen );
-    printf( "For MPI_Op and Type %s: Error class %d (%s)\n", opAndType, 
-	    errclass, string );
-    fflush( stdout );
-}

@@ -19,6 +19,7 @@ static char MTEST_Descrip[] = "Test MPI_LOR operations on optional datatypes dup
 int main( int argc, char *argv[] )
 {
     int errs = 0, err;
+    int rc;
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
@@ -54,7 +55,7 @@ int main( int argc, char *argv[] )
     err = MPI_Reduce( cinbuf, coutbuf, 3, MPI_CHAR, MPI_LOR, 0, comm );
     if (err) {
 	errs++;
-	MTestPrintError( err );
+	MTestPrintErrorMsg( "MPI_LOR and MPI_CHAR", err );
     }
     else {
 	if (rank == 0) {
@@ -86,7 +87,7 @@ int main( int argc, char *argv[] )
     err = MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_LOR, 0, comm );
     if (err) {
 	errs++;
-	MTestPrintError( err );
+	MTestPrintErrorMsg( "MPI_LOR and MPI_SIGNED_CHAR", err );
     }
     else {
 	if (rank == 0) {
@@ -117,7 +118,7 @@ int main( int argc, char *argv[] )
     err = MPI_Reduce( ucinbuf, ucoutbuf, 3, MPI_UNSIGNED_CHAR, MPI_LOR, 0, comm );
     if (err) {
 	errs++;
-	MTestPrintError( err );
+	MTestPrintErrorMsg( "MPI_LOR and MPI_UNSIGNED_CHAR", err );
     }
     else {
 	if (rank == 0) {
@@ -149,7 +150,7 @@ int main( int argc, char *argv[] )
     err = MPI_Reduce( finbuf, foutbuf, 3, MPI_FLOAT, MPI_LOR, 0, comm );
     if (err) {
 	errs++;
-	MTestPrintError( err );
+	MTestPrintErrorMsg( "MPI_LOR and MPI_FLOAT", err );
     }
     else {
 	if (rank == 0) {
@@ -180,7 +181,7 @@ int main( int argc, char *argv[] )
     err = MPI_Reduce( dinbuf, doutbuf, 3, MPI_DOUBLE, MPI_LOR, 0, comm );
     if (err) {
 	errs++;
-	MTestPrintError( err );
+	MTestPrintErrorMsg( "MPI_LOR and MPI_DOUBLE", err );
     }
     else {
 	if (rank == 0) {
@@ -214,7 +215,7 @@ int main( int argc, char *argv[] )
 	err = MPI_Reduce( ldinbuf, ldoutbuf, 3, MPI_LONG_DOUBLE, MPI_LOR, 0, comm );
 	if (err) {
 	    errs++;
-	    MTestPrintError( err );
+	    MTestPrintErrorMsg( "MPI_LOR and MPI_LONG_DOUBLE", err );
 	}
 	else {
 	    if (rank == 0) {
@@ -253,7 +254,7 @@ int main( int argc, char *argv[] )
 	err = MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_LOR, 0, comm );
 	if (err) {
 	    errs++;
-	    MTestPrintError( err );
+	    MTestPrintErrorMsg( "MPI_LOR and MPI_LONG_LONG", err );
 	}
 	else {
 	    if (rank == 0) {
@@ -275,6 +276,7 @@ int main( int argc, char *argv[] )
     }
 #endif
 
+    MPI_Errhandler_set( comm, MPI_ERRORS_ARE_FATAL );
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;

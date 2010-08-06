@@ -38,6 +38,8 @@
 #
 
 # Global variables
+$MPIMajorVersion = "@MPI_SUBVERSION@";
+$MPIMinorVersion = "@MPI_VERSION@";
 $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
 $np_arg  = "-n";         # Name of argument to specify the number of processes
 $err_count = 0;          # Number of programs that failed.
@@ -280,6 +282,7 @@ sub RunList {
 	my $progArgs   = "";
 	my $mpiexecArgs = "";
 	my $progEnv    = "";
+	my $mpiVersion = "";
 	if ($#args >= 1) { $np = $args[1]; }
 	# Process the key=value arguments
 	for (my $i=2; $i <= $#args; $i++) {
@@ -304,10 +307,24 @@ sub RunList {
 		elsif ($key eq "env") {
 		    $progEnv = "$progEnv $value";
 		}
+		elsif ($key eq "mpiversion") {
+		    $mpiVersion = $value;
+		}
 		else {
 		    print STDERR "Unrecognized key $key in $listfileSource\n";
 		}
 	    }
+	}
+
+	# If a minimum MPI version is specified, check against the
+	# available MPI.  If the version is unknown, we ignore this
+	# test (thus, all tests will be run).  
+	if ($mpiVersion ne "" && $MPIMajorVersion ne "unknown" &&
+	    $MPIMinorVersion ne "unknown") {
+	    my ($majorReq,$minorReq) = split(/\./,$mpiVersion);
+	    if ($majorReq > $MPIMajorVersion) { next; }
+	    if ($majorReq == $MPIMajorVersion &&
+		$minorReq > $MPIMinorVersion) { next; }
 	}
 
 	if ($np eq "") { $np = $np_default; }

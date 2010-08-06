@@ -112,7 +112,8 @@ int no_real_types_test(void)
     if (extent != -10) {
 	if (verbose) {
 	    fprintf(stderr,
-		    "error: extent != -10 in no_real_types_test()\n");
+		    "error: extent is %ld but should be -10 in no_real_types_test()\n", 
+		    (long) extent );
 	    fprintf( stderr, 
 	     "type map is { (LB,10) }, so UB is 0 and extent is ub-lb\n" );
 	}

@@ -2,4 +2,5 @@ uallreducef 4
 exscanf 5
 alltoallwf 7
 inplacef 4
-reducelocalf 2
+# reducelocalf is only available since MPI 2.2
+reducelocalf 2 mpiversion=2.2

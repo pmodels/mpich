@@ -41,6 +41,9 @@ C
        if (iv .ne. MPI_VERSION .or. isubv .ne. MPI_SUBVERSION) then
           errs = errs + 1
           print *, 'Version in mpif.h and get_version do not agree'
+          print *, 'Version in mpif.h is ', MPI_VERSION, '.', 
+     &              MPI_SUBVERSION
+          print *, 'Version in get_version is ', iv, '.', isubv
        endif
        if (iv .lt. 1 .or. iv .gt. 2) then
           errs = errs + 1

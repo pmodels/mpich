@@ -10,4 +10,4 @@ topotest 4
 topodup 4
 graphcr 4
 graphcr2 4
-distgraph1 4
+distgraph1 4 mpiversion=2.2

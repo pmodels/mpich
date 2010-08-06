@@ -19,6 +19,7 @@ static char MTEST_Descrip[] = "Test MPI_LXOR operations on optional datatypes du
 int main( int argc, char *argv[] )
 {
     int errs = 0;
+    int rc;
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
@@ -30,6 +31,9 @@ int main( int argc, char *argv[] )
     MTest_Init( &argc, &argv );
 
     comm = MPI_COMM_WORLD;
+    /* Set errors return so that we can provide better information 
+       should a routine reject one of the operand/datatype pairs */
+    MPI_Errhandler_set( comm, MPI_ERRORS_RETURN );
 
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
@@ -44,19 +48,25 @@ int main( int argc, char *argv[] )
     coutbuf[0] = 0;
     coutbuf[1] = 1;
     coutbuf[2] = 1;
-    MPI_Reduce( cinbuf, coutbuf, 3, MPI_CHAR, MPI_LXOR, 0, comm );
-    if (rank == 0) {
-	if (coutbuf[0] != (size % 2)) {
-	    errs++;
-	    fprintf( stderr, "char XOR(1) test failed\n" );
-	}
-	if (coutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "char XOR(0) test failed\n" );
-	}
-	if (coutbuf[2] == (size % 2) && size > 1) {
-	    errs++;
-	    fprintf( stderr, "char XOR(>) test failed\n" );
+    rc = MPI_Reduce( cinbuf, coutbuf, 3, MPI_CHAR, MPI_LXOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_LXOR and MPI_CHAR", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (coutbuf[0] != (size % 2)) {
+		errs++;
+		fprintf( stderr, "char XOR(1) test failed\n" );
+	    }
+	    if (coutbuf[1]) {
+		errs++;
+		fprintf( stderr, "char XOR(0) test failed\n" );
+	    }
+	    if (coutbuf[2] == (size % 2) && size > 1) {
+		errs++;
+		fprintf( stderr, "char XOR(>) test failed\n" );
+	    }
 	}
     }
 #endif /* USE_STRICT_MPI */
@@ -70,19 +80,25 @@ int main( int argc, char *argv[] )
     scoutbuf[0] = 0;
     scoutbuf[1] = 1;
     scoutbuf[2] = 1;
-    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_LXOR, 0, comm );
-    if (rank == 0) {
-	if (scoutbuf[0] != (size % 2)) {
-	    errs++;
-	    fprintf( stderr, "signed char XOR(1) test failed\n" );
-	}
-	if (scoutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "signed char XOR(0) test failed\n" );
-	}
-	if (scoutbuf[2] == (size % 2) && size > 1) {
-	    errs++;
-	    fprintf( stderr, "signed char XOR(>) test failed\n" );
+    rc = MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_LXOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_LXOR and MPI_SIGNED_CHAR", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (scoutbuf[0] != (size % 2)) {
+		errs++;
+		fprintf( stderr, "signed char XOR(1) test failed\n" );
+	    }
+	    if (scoutbuf[1]) {
+		errs++;
+		fprintf( stderr, "signed char XOR(0) test failed\n" );
+	    }
+	    if (scoutbuf[2] == (size % 2) && size > 1) {
+		errs++;
+		fprintf( stderr, "signed char XOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -95,19 +111,25 @@ int main( int argc, char *argv[] )
     ucoutbuf[0] = 0;
     ucoutbuf[1] = 1;
     ucoutbuf[2] = 1;
-    MPI_Reduce( ucinbuf, ucoutbuf, 3, MPI_UNSIGNED_CHAR, MPI_LXOR, 0, comm );
-    if (rank == 0) {
-	if (ucoutbuf[0] != (size % 2)) {
-	    errs++;
-	    fprintf( stderr, "unsigned char XOR(1) test failed\n" );
-	}
-	if (ucoutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "unsigned char XOR(0) test failed\n" );
-	}
-	if (ucoutbuf[2] == (size % 2) && size > 1) {
-	    errs++;
-	    fprintf( stderr, "unsigned char XOR(>) test failed\n" );
+    rc = MPI_Reduce( ucinbuf, ucoutbuf, 3, MPI_UNSIGNED_CHAR, MPI_LXOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_LXOR and MPI_UNSIGNED_CHAR", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (ucoutbuf[0] != (size % 2)) {
+		errs++;
+		fprintf( stderr, "unsigned char XOR(1) test failed\n" );
+	    }
+	    if (ucoutbuf[1]) {
+		errs++;
+		fprintf( stderr, "unsigned char XOR(0) test failed\n" );
+	    }
+	    if (ucoutbuf[2] == (size % 2) && size > 1) {
+		errs++;
+		fprintf( stderr, "unsigned char XOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -121,19 +143,25 @@ int main( int argc, char *argv[] )
     foutbuf[0] = 0;
     foutbuf[1] = 1;
     foutbuf[2] = 1;
-    MPI_Reduce( finbuf, foutbuf, 3, MPI_FLOAT, MPI_LXOR, 0, comm );
-    if (rank == 0) {
-	if (foutbuf[0] != (size % 2)) {
-	    errs++;
-	    fprintf( stderr, "float XOR(1) test failed\n" );
-	}
-	if (foutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "float XOR(0) test failed\n" );
-	}
-	if (foutbuf[2] == (size % 2) && size > 1) {
-	    errs++;
-	    fprintf( stderr, "float XOR(>) test failed\n" );
+    rc = MPI_Reduce( finbuf, foutbuf, 3, MPI_FLOAT, MPI_LXOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_LXOR and MPI_FLOAT", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (foutbuf[0] != (size % 2)) {
+		errs++;
+		fprintf( stderr, "float XOR(1) test failed\n" );
+	    }
+	    if (foutbuf[1]) {
+		errs++;
+		fprintf( stderr, "float XOR(0) test failed\n" );
+	    }
+	    if (foutbuf[2] == (size % 2) && size > 1) {
+		errs++;
+		fprintf( stderr, "float XOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -146,19 +174,25 @@ int main( int argc, char *argv[] )
     doutbuf[0] = 0;
     doutbuf[1] = 1;
     doutbuf[2] = 1;
-    MPI_Reduce( dinbuf, doutbuf, 3, MPI_DOUBLE, MPI_LXOR, 0, comm );
-    if (rank == 0) {
-	if (doutbuf[0] != (size % 2)) {
-	    errs++;
-	    fprintf( stderr, "double XOR(1) test failed\n" );
-	}
-	if (doutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "double XOR(0) test failed\n" );
-	}
-	if (doutbuf[2] == (size % 2) && size > 1) {
-	    errs++;
-	    fprintf( stderr, "double XOR(>) test failed\n" );
+    rc = MPI_Reduce( dinbuf, doutbuf, 3, MPI_DOUBLE, MPI_LXOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_LXOR and MPI_DOUBLE", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (doutbuf[0] != (size % 2)) {
+		errs++;
+		fprintf( stderr, "double XOR(1) test failed\n" );
+	    }
+	    if (doutbuf[1]) {
+		errs++;
+		fprintf( stderr, "double XOR(0) test failed\n" );
+	    }
+	    if (doutbuf[2] == (size % 2) && size > 1) {
+		errs++;
+		fprintf( stderr, "double XOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -174,19 +208,25 @@ int main( int argc, char *argv[] )
     ldoutbuf[2] = 1;
     if (MPI_LONG_DOUBLE != MPI_DATATYPE_NULL) {
 	MTestPrintfMsg( 10, "Reduce of MPI_LONG_DOUBLE\n" );
-	MPI_Reduce( ldinbuf, ldoutbuf, 3, MPI_LONG_DOUBLE, MPI_LXOR, 0, comm );
-	if (rank == 0) {
-	    if (ldoutbuf[0] != (size % 2)) {
-		errs++;
-		fprintf( stderr, "long double XOR(1) test failed\n" );
-	    }
-	    if (ldoutbuf[1]) {
-		errs++;
-		fprintf( stderr, "long double XOR(0) test failed\n" );
-	    }
-	    if (ldoutbuf[2] == (size % 2) && size > 1) {
-		errs++;
-		fprintf( stderr, "long double XOR(>) test failed\n" );
+	rc = MPI_Reduce( ldinbuf, ldoutbuf, 3, MPI_LONG_DOUBLE, MPI_LXOR, 0, comm );
+	if (rc) {
+	    MTestPrintErrorMsg( "MPI_LXOR and MPI_LONG_DOUBLE", rc );
+	    errs++;
+	}
+	else {
+	    if (rank == 0) {
+		if (ldoutbuf[0] != (size % 2)) {
+		    errs++;
+		    fprintf( stderr, "long double XOR(1) test failed\n" );
+		}
+		if (ldoutbuf[1]) {
+		    errs++;
+		    fprintf( stderr, "long double XOR(0) test failed\n" );
+		}
+		if (ldoutbuf[2] == (size % 2) && size > 1) {
+		    errs++;
+		    fprintf( stderr, "long double XOR(>) test failed\n" );
+		}
 	    }
 	}
     }
@@ -207,25 +247,32 @@ int main( int argc, char *argv[] )
     lloutbuf[2] = 1;
     if (MPI_LONG_LONG != MPI_DATATYPE_NULL) {
 	MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
-	MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_LXOR, 0, comm );
-	if (rank == 0) {
-	    if (lloutbuf[0] != (size % 2)) {
-		errs++;
-		fprintf( stderr, "long long XOR(1) test failed\n" );
-	    }
-	    if (lloutbuf[1]) {
-		errs++;
-		fprintf( stderr, "long long XOR(0) test failed\n" );
-	    }
-	    if (lloutbuf[2] == (size % 2) && size > 1) {
-		errs++;
-		fprintf( stderr, "long long XOR(>) test failed\n" );
+	rc = MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_LXOR, 0, comm );
+	if (rc) {
+	    MTestPrintErrorMsg( "MPI_LXOR and MPI_LONG_LONG", rc );
+	    errs++;
+	}
+	else {
+	    if (rank == 0) {
+		if (lloutbuf[0] != (size % 2)) {
+		    errs++;
+		    fprintf( stderr, "long long XOR(1) test failed\n" );
+		}
+		if (lloutbuf[1]) {
+		    errs++;
+		    fprintf( stderr, "long long XOR(0) test failed\n" );
+		}
+		if (lloutbuf[2] == (size % 2) && size > 1) {
+		    errs++;
+		    fprintf( stderr, "long long XOR(>) test failed\n" );
+		}
 	    }
 	}
     }
     }
 #endif
 
+    MPI_Errhandler_set( comm, MPI_ERRORS_ARE_FATAL );
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;

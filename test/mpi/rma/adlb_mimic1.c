@@ -46,6 +46,7 @@ static char MTEST_Descrip[] = "ADLB mimic test";
 int main(int argc, char **argv)
 {
     int comm_size, comm_rank, i, by_rank, errs = 0;
+    int rc;
     char *rma_win_addr, *local_buf;
     char check;
     MPI_Win win;
@@ -58,11 +59,24 @@ int main(int argc, char **argv)
     if ((comm_size > (MAX_BUF_SIZE / PUT_SIZE)) || (comm_size <= 2))
         MPI_Abort(MPI_COMM_WORLD, 1);
 
-    MPI_Alloc_mem(MAX_BUF_SIZE, MPI_INFO_NULL, (void *) &rma_win_addr);
+    /* If alloc mem returns an error (because too much memory is requested */
+    MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
+
+    rc = MPI_Alloc_mem(MAX_BUF_SIZE, MPI_INFO_NULL, (void *) &rma_win_addr);
+    if (rc) {
+	MTestPrintErrorMsg( "Unable to MPI_Alloc_mem space (not an error)", rc );
+	MPI_Abort( MPI_COMM_WORLD, 0 );
+    }
+
     memset(rma_win_addr, 0, MAX_BUF_SIZE);
     MPI_Win_create((void *) rma_win_addr, MAX_BUF_SIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
-    MPI_Alloc_mem(PUT_SIZE, MPI_INFO_NULL, (void *) &local_buf);
+    rc = MPI_Alloc_mem(PUT_SIZE, MPI_INFO_NULL, (void *) &local_buf);
+    if (rc) {
+	MTestPrintErrorMsg( "Unable to MPI_Alloc_mem space (not an error)", rc );
+	MPI_Abort( MPI_COMM_WORLD, 0 );
+    }
+
     for (i = 0; i < PUT_SIZE; i++)
         local_buf[i] = 1;
 

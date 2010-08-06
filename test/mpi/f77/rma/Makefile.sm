@@ -32,9 +32,11 @@ winattrf_LDADD        = ../util/mtestf.o
 winattr2f_SOURCES     = winattr2f.f
 winattr2f_LDADD       = ../util/mtestf.o
 
+# bindir may be used in MPIEXEC, so make sure it is defined
+BINDIR=${bindir}
 testing:
 	../../runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=$(bindir)/mpiexec \
+			-mpiexec=@MPIEXEC@ \
 		   	-xmlfile=summary.xml
 
 ../util/mtestf.o: 

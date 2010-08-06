@@ -19,6 +19,7 @@ static char MTEST_Descrip[] = "Test MPI_BOR operations on optional datatypes dup
 int main( int argc, char *argv[] )
 {
     int errs = 0;
+    int rc;
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];
@@ -35,6 +36,9 @@ int main( int argc, char *argv[] )
     MTest_Init( &argc, &argv );
 
     comm = MPI_COMM_WORLD;
+    /* Set errors return so that we can provide better information 
+       should a routine reject one of the operand/datatype pairs */
+    MPI_Errhandler_set( comm, MPI_ERRORS_RETURN );
 
     MPI_Comm_rank( comm, &rank );
     MPI_Comm_size( comm, &size );
@@ -49,19 +53,25 @@ int main( int argc, char *argv[] )
     coutbuf[0] = 0;
     coutbuf[1] = 1;
     coutbuf[2] = 1;
-    MPI_Reduce( cinbuf, coutbuf, 3, MPI_CHAR, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (coutbuf[0] != (char)0xff) {
-	    errs++;
-	    fprintf( stderr, "char BOR(1) test failed\n" );
-	}
-	if (coutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "char BOR(0) test failed\n" );
-	}
-	if (coutbuf[2] != (char)0xff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "char BOR(>) test failed\n" );
+    rc = MPI_Reduce( cinbuf, coutbuf, 3, MPI_CHAR, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_CHAR", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (coutbuf[0] != (char)0xff) {
+		errs++;
+		fprintf( stderr, "char BOR(1) test failed\n" );
+	    }
+	    if (coutbuf[1]) {
+		errs++;
+		fprintf( stderr, "char BOR(0) test failed\n" );
+	    }
+	    if (coutbuf[2] != (char)0xff && size > 1) {
+		errs++;
+		fprintf( stderr, "char BOR(>) test failed\n" );
+	    }
 	}
     }
 #endif /* USE_STRICT_MPI */
@@ -75,19 +85,25 @@ int main( int argc, char *argv[] )
     scoutbuf[0] = 0;
     scoutbuf[1] = 1;
     scoutbuf[2] = 1;
-    MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (scoutbuf[0] != (signed char)0xff) {
-	    errs++;
-	    fprintf( stderr, "signed char BOR(1) test failed\n" );
-	}
-	if (scoutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "signed char BOR(0) test failed\n" );
-	}
-	if (scoutbuf[2] != (signed char)0xff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "signed char BOR(>) test failed\n" );
+    rc = MPI_Reduce( scinbuf, scoutbuf, 3, MPI_SIGNED_CHAR, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_SIGNED_CHAR", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (scoutbuf[0] != (signed char)0xff) {
+		errs++;
+		fprintf( stderr, "signed char BOR(1) test failed\n" );
+	    }
+	    if (scoutbuf[1]) {
+		errs++;
+		fprintf( stderr, "signed char BOR(0) test failed\n" );
+	    }
+	    if (scoutbuf[2] != (signed char)0xff && size > 1) {
+		errs++;
+		fprintf( stderr, "signed char BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -100,19 +116,25 @@ int main( int argc, char *argv[] )
     ucoutbuf[0] = 0;
     ucoutbuf[1] = 1;
     ucoutbuf[2] = 1;
-    MPI_Reduce( ucinbuf, ucoutbuf, 3, MPI_UNSIGNED_CHAR, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (ucoutbuf[0] != 0xff) {
-	    errs++;
-	    fprintf( stderr, "unsigned char BOR(1) test failed\n" );
-	}
-	if (ucoutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "unsigned char BOR(0) test failed\n" );
-	}
-	if (ucoutbuf[2] != 0xff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "unsigned char BOR(>) test failed\n" );
+    rc = MPI_Reduce( ucinbuf, ucoutbuf, 3, MPI_UNSIGNED_CHAR, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_UNSIGNED_CHAR", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (ucoutbuf[0] != 0xff) {
+		errs++;
+		fprintf( stderr, "unsigned char BOR(1) test failed\n" );
+	    }
+	    if (ucoutbuf[1]) {
+		errs++;
+		fprintf( stderr, "unsigned char BOR(0) test failed\n" );
+	    }
+	    if (ucoutbuf[2] != 0xff && size > 1) {
+		errs++;
+		fprintf( stderr, "unsigned char BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -125,19 +147,25 @@ int main( int argc, char *argv[] )
     coutbuf[0] = 0;
     coutbuf[1] = 1;
     coutbuf[2] = 1;
-    MPI_Reduce( cinbuf, coutbuf, 3, MPI_BYTE, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (coutbuf[0] != (char)0xff) {
-	    errs++;
-	    fprintf( stderr, "byte BOR(1) test failed\n" );
-	}
-	if (coutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "byte BOR(0) test failed\n" );
-	}
-	if (coutbuf[2] != (char)0xff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "byte BOR(>) test failed\n" );
+    rc = MPI_Reduce( cinbuf, coutbuf, 3, MPI_BYTE, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_BYTE", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (coutbuf[0] != (char)0xff) {
+		errs++;
+		fprintf( stderr, "byte BOR(1) test failed\n" );
+	    }
+	    if (coutbuf[1]) {
+		errs++;
+		fprintf( stderr, "byte BOR(0) test failed\n" );
+	    }
+	    if (coutbuf[2] != (char)0xff && size > 1) {
+		errs++;
+		fprintf( stderr, "byte BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -150,19 +178,25 @@ int main( int argc, char *argv[] )
     soutbuf[0] = 0;
     soutbuf[1] = 1;
     soutbuf[2] = 1;
-    MPI_Reduce( sinbuf, soutbuf, 3, MPI_SHORT, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (soutbuf[0] != (short)0xffff) {
-	    errs++;
-	    fprintf( stderr, "short BOR(1) test failed\n" );
-	}
-	if (soutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "short BOR(0) test failed\n" );
-	}
-	if (soutbuf[2] != (short)0xffff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "short BOR(>) test failed\n" );
+    rc = MPI_Reduce( sinbuf, soutbuf, 3, MPI_SHORT, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_SHORT", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (soutbuf[0] != (short)0xffff) {
+		errs++;
+		fprintf( stderr, "short BOR(1) test failed\n" );
+	    }
+	    if (soutbuf[1]) {
+		errs++;
+		fprintf( stderr, "short BOR(0) test failed\n" );
+	    }
+	    if (soutbuf[2] != (short)0xffff && size > 1) {
+		errs++;
+		fprintf( stderr, "short BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -175,19 +209,25 @@ int main( int argc, char *argv[] )
     usoutbuf[0] = 0;
     usoutbuf[1] = 1;
     usoutbuf[2] = 1;
-    MPI_Reduce( usinbuf, usoutbuf, 3, MPI_UNSIGNED_SHORT, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (usoutbuf[0] != 0xffff) {
-	    errs++;
-	    fprintf( stderr, "short BOR(1) test failed\n" );
-	}
-	if (usoutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "short BOR(0) test failed\n" );
-	}
-	if (usoutbuf[2] != 0xffff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "short BOR(>) test failed\n" );
+    rc = MPI_Reduce( usinbuf, usoutbuf, 3, MPI_UNSIGNED_SHORT, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_UNSIGNED_SHORT", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (usoutbuf[0] != 0xffff) {
+		errs++;
+		fprintf( stderr, "short BOR(1) test failed\n" );
+	    }
+	    if (usoutbuf[1]) {
+		errs++;
+		fprintf( stderr, "short BOR(0) test failed\n" );
+	    }
+	    if (usoutbuf[2] != 0xffff && size > 1) {
+		errs++;
+		fprintf( stderr, "short BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -200,19 +240,25 @@ int main( int argc, char *argv[] )
     uoutbuf[0] = 0;
     uoutbuf[1] = 1;
     uoutbuf[2] = 1;
-    MPI_Reduce( uinbuf, uoutbuf, 3, MPI_UNSIGNED, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (uoutbuf[0] != 0xffffffff) {
-	    errs++;
-	    fprintf( stderr, "unsigned BOR(1) test failed\n" );
-	}
-	if (uoutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "unsigned BOR(0) test failed\n" );
-	}
-	if (uoutbuf[2] != 0xffffffff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "unsigned BOR(>) test failed\n" );
+    rc = MPI_Reduce( uinbuf, uoutbuf, 3, MPI_UNSIGNED, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_UNSIGNED", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (uoutbuf[0] != 0xffffffff) {
+		errs++;
+		fprintf( stderr, "unsigned BOR(1) test failed\n" );
+	    }
+	    if (uoutbuf[1]) {
+		errs++;
+		fprintf( stderr, "unsigned BOR(0) test failed\n" );
+	    }
+	    if (uoutbuf[2] != 0xffffffff && size > 1) {
+		errs++;
+		fprintf( stderr, "unsigned BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -225,19 +271,25 @@ int main( int argc, char *argv[] )
     ioutbuf[0] = 0;
     ioutbuf[1] = 1;
     ioutbuf[2] = 1;
-    MPI_Reduce( iinbuf, ioutbuf, 3, MPI_INT, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (ioutbuf[0] != 0xffffffff) {
-	    errs++;
-	    fprintf( stderr, "int BOR(1) test failed\n" );
-	}
-	if (ioutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "int BOR(0) test failed\n" );
-	}
-	if (ioutbuf[2] != 0xffffffff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "int BOR(>) test failed\n" );
+    rc = MPI_Reduce( iinbuf, ioutbuf, 3, MPI_INT, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_INT", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (ioutbuf[0] != 0xffffffff) {
+		errs++;
+		fprintf( stderr, "int BOR(1) test failed\n" );
+	    }
+	    if (ioutbuf[1]) {
+		errs++;
+		fprintf( stderr, "int BOR(0) test failed\n" );
+	    }
+	    if (ioutbuf[2] != 0xffffffff && size > 1) {
+		errs++;
+		fprintf( stderr, "int BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -250,19 +302,25 @@ int main( int argc, char *argv[] )
     loutbuf[0] = 0;
     loutbuf[1] = 1;
     loutbuf[2] = 1;
-    MPI_Reduce( linbuf, loutbuf, 3, MPI_LONG, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (loutbuf[0] != 0xffffffff) {
-	    errs++;
-	    fprintf( stderr, "long BOR(1) test failed\n" );
-	}
-	if (loutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "long BOR(0) test failed\n" );
-	}
-	if (loutbuf[2] != 0xffffffff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "long BOR(>) test failed\n" );
+    rc = MPI_Reduce( linbuf, loutbuf, 3, MPI_LONG, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_LONG", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (loutbuf[0] != 0xffffffff) {
+		errs++;
+		fprintf( stderr, "long BOR(1) test failed\n" );
+	    }
+	    if (loutbuf[1]) {
+		errs++;
+		fprintf( stderr, "long BOR(0) test failed\n" );
+	    }
+	    if (loutbuf[2] != 0xffffffff && size > 1) {
+		errs++;
+		fprintf( stderr, "long BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -275,19 +333,25 @@ int main( int argc, char *argv[] )
     uloutbuf[0] = 0;
     uloutbuf[1] = 1;
     uloutbuf[2] = 1;
-    MPI_Reduce( ulinbuf, uloutbuf, 3, MPI_UNSIGNED_LONG, MPI_BOR, 0, comm );
-    if (rank == 0) {
-	if (uloutbuf[0] != 0xffffffff) {
-	    errs++;
-	    fprintf( stderr, "unsigned long BOR(1) test failed\n" );
-	}
-	if (uloutbuf[1]) {
-	    errs++;
-	    fprintf( stderr, "unsigned long BOR(0) test failed\n" );
-	}
-	if (uloutbuf[2] != 0xffffffff && size > 1) {
-	    errs++;
-	    fprintf( stderr, "unsigned long BOR(>) test failed\n" );
+    rc = MPI_Reduce( ulinbuf, uloutbuf, 3, MPI_UNSIGNED_LONG, MPI_BOR, 0, comm );
+    if (rc) {
+	MTestPrintErrorMsg( "MPI_BOR and MPI_UNSIGNED_LONG", rc );
+	errs++;
+    }
+    else {
+	if (rank == 0) {
+	    if (uloutbuf[0] != 0xffffffff) {
+		errs++;
+		fprintf( stderr, "unsigned long BOR(1) test failed\n" );
+	    }
+	    if (uloutbuf[1]) {
+		errs++;
+		fprintf( stderr, "unsigned long BOR(0) test failed\n" );
+	    }
+	    if (uloutbuf[2] != 0xffffffff && size > 1) {
+		errs++;
+		fprintf( stderr, "unsigned long BOR(>) test failed\n" );
+	    }
 	}
     }
 
@@ -304,25 +368,32 @@ int main( int argc, char *argv[] )
     lloutbuf[2] = 1;
     if (MPI_LONG_LONG != MPI_DATATYPE_NULL) {
 	MTestPrintfMsg( 10, "Reduce of MPI_LONG_LONG\n" );
-	MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_BOR, 0, comm );
-	if (rank == 0) {
-	    if (lloutbuf[0] != 0xffffffff) {
-		errs++;
-		fprintf( stderr, "long long BOR(1) test failed\n" );
-	    }
-	    if (lloutbuf[1]) {
-		errs++;
-		fprintf( stderr, "long long BOR(0) test failed\n" );
-	    }
-	    if (lloutbuf[2] != 0xffffffff && size > 1) {
-		errs++;
-		fprintf( stderr, "long long BOR(>) test failed\n" );
+	rc = MPI_Reduce( llinbuf, lloutbuf, 3, MPI_LONG_LONG, MPI_BOR, 0, comm );
+	if (rc) {
+	    MTestPrintErrorMsg( "MPI_BOR and MPI_LONG_LONG", rc );
+	    errs++;
+	}
+	else {
+	    if (rank == 0) {
+		if (lloutbuf[0] != 0xffffffff) {
+		    errs++;
+		    fprintf( stderr, "long long BOR(1) test failed\n" );
+		}
+		if (lloutbuf[1]) {
+		    errs++;
+		    fprintf( stderr, "long long BOR(0) test failed\n" );
+		}
+		if (lloutbuf[2] != 0xffffffff && size > 1) {
+		    errs++;
+		    fprintf( stderr, "long long BOR(>) test failed\n" );
+		}
 	    }
 	}
     }
     }
 #endif
 
+    MPI_Errhandler_set( comm, MPI_ERRORS_ARE_FATAL );
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;

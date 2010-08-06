@@ -80,11 +80,11 @@ int main( int argc, char *argv[] )
 	    MPI_Waitall( nmsg, r, MPI_STATUSES_IGNORE );
 
 	    if (tsend > 0.5) {
-		printf( "Isends for messages of size %d took too long (%f seconds)\n", msgSize, tsend );
+		printf( "Isends for %d messages of size %d took too long (%f seconds)\n", nmsg, msgSize, tsend );
 		errs++;
 	    }
-	    MTestPrintfMsg( 1, "Isends for size = %d took %f seconds\n", 
-			    msgSize, tsend );
+	    MTestPrintfMsg( 1, "%d Isends for size = %d took %f seconds\n", 
+			    nmsg, msgSize, tsend );
 
 	    for (i=0; i<nmsg; i++) {
 		free( buf[i] );

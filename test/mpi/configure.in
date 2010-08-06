@@ -423,6 +423,10 @@ for pac_cv_mpi_minor_version in 4 3 2 1 0 unknown ; do
 #endif])],,break)
 done
 ])
+MPI_VERSION=$pac_cv_mpi_major_version
+MPI_SUBVERSION=$pac_cv_mpi_minor_version	
+AC_SUBST(MPI_VERSION)
+AC_SUBST(MPI_SUBVERSION)
 
 # Running Fortran 77 compiler tests
 if test "$enable_f77" = yes ; then
@@ -758,6 +762,9 @@ if test "$enable_fc" = yes ; then
         fi
         cp f77/init/checksizes.c f90/init
     fi
+
+    # The Fortran90 tests rely on free-form input
+    AC_FC_FREEFORM
 fi
 #
 if test "$FROM_MPICH2" = yes ; then

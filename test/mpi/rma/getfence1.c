@@ -39,6 +39,9 @@ int main( int argc, char *argv[] )
 		/* Make sure that everyone has a recv buffer */
 		recvtype.InitBuf( &recvtype );
 		sendtype.InitBuf( &sendtype );
+		/* By default, print information about errors */
+		recvtype.printErrors = 1;
+		sendtype.printErrors = 1;
 
 		MPI_Type_extent( sendtype.datatype, &extent );
 		MPI_Win_create( sendtype.buf, sendtype.count * extent, 
