@@ -1905,6 +1905,10 @@
 				RelativePath="..\mem\safestr.c"
 				>
 			</File>
+			<File
+				RelativePath="..\mem\strerror.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
