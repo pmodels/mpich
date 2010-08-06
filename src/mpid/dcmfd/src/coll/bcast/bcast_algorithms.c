@@ -464,6 +464,7 @@ MPIDO_Bcast_flattree(void * buffer,
 		     int root,
 		     MPID_Comm * comm)
 {
+  int mpi_errno = MPI_SUCCESS;
   MPI_Request * req_ptr;
   MPI_Request * reqs;
   MPI_Status status;
@@ -475,9 +476,10 @@ MPIDO_Bcast_flattree(void * buffer,
 
   if (rank != root)
   {
-    MPIC_Recv(buffer, bytes, MPI_CHAR, root, MPIR_BCAST_TAG,
-              comm->handle, &status);
-    return MPI_SUCCESS;
+    mpi_errno = MPIC_Recv(buffer, bytes, MPI_CHAR, root, MPIR_BCAST_TAG,
+                          comm->handle, &status);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    goto fn_exit;
   }
 
   reqs = (MPI_Request *) MPIU_Malloc((num_procs - 1) * sizeof(MPI_Request));
@@ -489,14 +491,20 @@ MPIDO_Bcast_flattree(void * buffer,
   {
     if (i == rank)
       continue;
-    MPIC_Isend(buffer, bytes, MPI_CHAR, i, MPIR_BCAST_TAG,
-               comm->handle, req_ptr++);
+    mpi_errno = MPIC_Isend(buffer, bytes, MPI_CHAR, i, MPIR_BCAST_TAG,
+                           comm->handle, req_ptr++);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
   }
 
-  NMPI_Waitall(num_procs - 1, reqs, MPI_STATUSES_IGNORE);
+  mpi_errno = MPIR_Waitall_impl(num_procs - 1, reqs, MPI_STATUSES_IGNORE);
+  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
   MPIU_Free(reqs);
-  return MPI_SUCCESS;
+  
+ fn_exit:
+  return mpi_errno;
+ fn_fail:
+  goto fn_exit;
 }
 
 

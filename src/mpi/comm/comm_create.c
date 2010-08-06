@@ -390,8 +390,8 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
        so that the remote process can construct the appropriate VCRT
        First we exchange group sizes and context ids.  Then the
        ranks in the remote group, from which the remote VCRT can
-       be constructed.  We can't use NMPI_Sendrecv since we need to
-       use the "collective" context in the original intercommunicator */
+       be constructed.  We need to use the "collective" context in the
+       original intercommunicator */
     if (comm_ptr->rank == 0) {
         int info[2];
         info[0] = new_context_id;

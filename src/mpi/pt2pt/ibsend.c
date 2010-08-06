@@ -37,7 +37,7 @@ PMPI_LOCAL int MPIR_Ibsend_query( void *extra, MPI_Status *status )
 {
     ibsend_req_info *ibsend_info = (ibsend_req_info *)extra;
     status->cancelled = ibsend_info->cancelled;
-    return 0;
+    return MPI_SUCCESS;
 }
 PMPI_LOCAL int MPIR_Ibsend_free( void *extra )
 {
@@ -55,14 +55,18 @@ PMPI_LOCAL int MPIR_Ibsend_free( void *extra )
     }
 
     MPIU_Free( ibsend_info );
-    return 0;
+    return MPI_SUCCESS;
 }
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ibsend_cancel
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
 {
+    int mpi_errno = MPI_SUCCESS;
     ibsend_req_info *ibsend_info = (ibsend_req_info *)extra;
     MPI_Status status;
     MPID_Request *req = ibsend_info->req;
-    MPIU_THREADPRIV_DECL;
 
     /* FIXME: There should be no unreferenced args! */
     /* Note that this value should always be 1 because 
@@ -70,22 +74,65 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
        created */
     MPIU_UNREFERENCED_ARG(complete);
 
-    MPIU_THREADPRIV_GET;
 
     /* Try to cancel the underlying request */
-    MPIR_Cancel_impl(req);
-    MPIR_Nest_incr();
-    NMPI_Wait( &req->handle, &status );
-    NMPI_Test_cancelled( &status, &ibsend_info->cancelled );
-    MPIR_Nest_decr();
-    return 0;
+    mpi_errno = MPIR_Cancel_impl(req);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Wait_impl( &req->handle, &status );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIR_Test_cancelled_impl( &status, &ibsend_info->cancelled );
+    
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ibsend_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Ibsend_impl(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                     MPID_Comm *comm_ptr, MPI_Request *request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request *request_ptr, *new_request_ptr;
+    ibsend_req_info *ibinfo=0;
+        
+    /* We don't try tbsend in for MPI_Ibsend because we must create a
+       request even if we can send the message */
+
+    mpi_errno = MPIR_Bsend_isend( buf, count, datatype, dest, tag, comm_ptr, 
+				  IBSEND, &request_ptr );
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    /* FIXME: use the memory management macros */
+    ibinfo = (ibsend_req_info *)MPIU_Malloc( sizeof(ibsend_req_info) );
+    ibinfo->req       = request_ptr;
+    ibinfo->cancelled = 0;
+    mpi_errno = MPIR_Grequest_start_impl( MPIR_Ibsend_query, MPIR_Ibsend_free,
+                                          MPIR_Ibsend_cancel, ibinfo, &new_request_ptr );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    /* The request is immediately complete because the MPIR_Bsend_isend has
+       already moved the data out of the user's buffer */
+    MPIR_Request_add_ref( request_ptr );
+    /* Request count is now 2 (set to 1 in Grequest_start) */
+    MPIR_Grequest_complete_impl(new_request_ptr);
+    MPIU_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
+  
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Ibsend
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Ibsend - Starts a nonblocking buffered send
 
@@ -117,11 +164,8 @@ Output Parameter:
 int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, 
 	       MPI_Comm comm, MPI_Request *request)
 {
-    static const char FCNAME[] = "MPI_Ibsend";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_Request *request_ptr, *new_request_ptr;
-    ibsend_req_info *ibinfo=0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBSEND);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -182,26 +226,10 @@ int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    /* We don't try tbsend in for MPI_Ibsend because we must create a
-       request even if we can send the message */
 
-    mpi_errno = MPIR_Bsend_isend( buf, count, datatype, dest, tag, comm_ptr, 
-				  IBSEND, &request_ptr );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    /* FIXME: use the memory management macros */
-    ibinfo = (ibsend_req_info *)MPIU_Malloc( sizeof(ibsend_req_info) );
-    ibinfo->req       = request_ptr;
-    ibinfo->cancelled = 0;
-    mpi_errno = MPIR_Grequest_start_impl( MPIR_Ibsend_query, MPIR_Ibsend_free,
-                                          MPIR_Ibsend_cancel, ibinfo, &new_request_ptr );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    /* The request is immediately complete because the MPIR_Bsend_isend has
-       already moved the data out of the user's buffer */
-    MPIR_Request_add_ref( request_ptr );
-    /* Request count is now 2 (set to 1 in Grequest_start) */
-    MPIR_Grequest_complete_impl(new_request_ptr);
-    MPIU_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
+    mpi_errno = MPIR_Ibsend_impl(buf, count, datatype, dest, tag, comm_ptr, request);
+    if (mpi_errno) goto fn_fail;
+    
     /* ... end of body of routine ... */
 
   fn_exit:

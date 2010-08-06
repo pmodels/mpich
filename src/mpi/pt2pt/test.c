@@ -23,11 +23,59 @@
 #undef MPI_Test
 #define MPI_Test PMPI_Test
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Test_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int active_flag;
+    MPID_Request *request_ptr = NULL;
+
+    /* If this is a null request handle, then return an empty status */
+    if (*request == MPI_REQUEST_NULL) {
+	MPIR_Status_set_empty(status);
+	*flag = TRUE;
+	goto fn_exit;
+    }
+    
+    *flag = FALSE;
+
+    MPID_Request_get_ptr( *request, request_ptr );
+
+    /* If the request is already completed AND we want to avoid calling
+     the progress engine, we could make the call to MPID_Progress_test
+     conditional on the request not being completed. */
+    mpi_errno = MPID_Progress_test();
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    if (request_ptr->kind == MPID_UREQUEST && request_ptr->poll_fn != NULL) {
+	mpi_errno = (request_ptr->poll_fn)(request_ptr->grequest_extra_state,
+                                           status);
+	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    }
+    
+    if (MPID_Request_is_complete(request_ptr)) {
+	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
+					  &active_flag);
+	*flag = TRUE;
+	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* Fall through to the exit */
+    }
+        
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Test
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Test  - Tests for the completion of a request
 
@@ -53,11 +101,9 @@ Output Parameter:
 @*/
 int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
 {
-    static const char FCNAME[] = "MPI_Test";
-    MPID_Request *request_ptr = NULL;
-    int active_flag;
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TEST);
+    MPID_Request *request_ptr = NULL;
+   MPID_MPI_STATE_DECL(MPID_STATE_MPI_TEST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
@@ -79,16 +125,15 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
     }
 #   endif /* HAVE_ERROR_CHECKING */
     
-    /* Convert MPI object handles to object pointers */
     MPID_Request_get_ptr( *request, request_ptr );
     
-    /* Validate parameters and objects (post conversion) */
+   /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    if (*request != MPI_REQUEST_NULL)
-	    { 
+	    {
 		/* Validate request_ptr */
 		MPID_Request_valid_ptr( request_ptr, mpi_errno );
 	    }
@@ -104,39 +149,10 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    /* If this is a null request handle, then return an empty status */
-    if (*request == MPI_REQUEST_NULL)
-    {
-	MPIR_Status_set_empty(status);
-	*flag = TRUE;
-	goto fn_exit;
-    }
-    
-    *flag = FALSE;
 
-    /* If the request is already completed AND we want to avoid calling
-     the progress engine, we could make the call to MPID_Progress_test
-     conditional on the request not being completed. */
-    mpi_errno = MPID_Progress_test();
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    if (request_ptr->kind == MPID_UREQUEST && request_ptr->poll_fn != NULL) 
-    {
-	mpi_errno = (request_ptr->poll_fn)(request_ptr->grequest_extra_state, 
-			status);
-	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-    }
+    mpi_errno = MPIR_Test_impl(request, flag, status);
+    if (mpi_errno) goto fn_fail;
     
-    if (MPID_Request_is_complete(request_ptr))
-    {
-	mpi_errno = MPIR_Request_complete(request, request_ptr, status, 
-					  &active_flag);
-	*flag = TRUE;
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	/* Fall through to the exit */
-    }
-
     /* ... end of body of routine ... */
     
   fn_exit:

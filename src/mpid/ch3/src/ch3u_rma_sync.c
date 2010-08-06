@@ -19,6 +19,8 @@
  * 
  */
 
+#define SYNC_POST_TAG 100
+
 static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops * rma_op, MPID_Win * win_ptr, 
 				   MPI_Win source_win_handle, 
 				   MPI_Win target_win_handle, 
@@ -803,7 +805,7 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
     MPID_Group *win_grp_ptr;
     int i, post_grp_size, *ranks_in_post_grp, *ranks_in_win_grp, dst, rank;
     MPID_Comm *win_comm_ptr;
-    MPIU_CHKLMEM_DECL(2);
+    MPIU_CHKLMEM_DECL(4);
     MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_POST);
 
@@ -853,6 +855,9 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
         
     if ((assert & MPI_MODE_NOCHECK) == 0)
     {
+        MPI_Request *req;
+        MPI_Status *status;
+ 
 	/* NOCHECK not specified. We need to notify the source
 	   processes that Post has been called. */  
 	
@@ -887,16 +892,36 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 	
         rank = MPIR_Comm_rank(win_comm_ptr);
 	
+	MPIU_CHKLMEM_MALLOC(req, MPI_Request *, post_grp_size * sizeof(MPI_Request), mpi_errno, "req");
+        MPIU_CHKLMEM_MALLOC(status, MPI_Status *, post_grp_size*sizeof(MPI_Status), mpi_errno, "status");
+
 	/* Send a 0-byte message to the source processes */
-	for (i=0; i<post_grp_size; i++)
-	{
+	for (i = 0; i < post_grp_size; i++) {
 	    dst = ranks_in_win_grp[i];
 	    
 	    if (dst != rank) {
-		mpi_errno = NMPI_Send(&i, 0, MPI_INT, dst, 100, win_ptr->comm);
-		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	    }
+                MPID_Request *req_ptr;
+		mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr,
+                                       MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
+		if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                req[i] = req_ptr->handle;
+	    } else {
+                req[i] = MPI_REQUEST_NULL;
+            }
 	}
+        mpi_errno = MPIR_Waitall_impl(post_grp_size, req, status);
+        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
+
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno == MPI_ERR_IN_STATUS) {
+            for (i = 0; i < post_grp_size; i++) {
+                if (status[i].MPI_ERROR != MPI_SUCCESS) {
+                    mpi_errno = status[i].MPI_ERROR;
+                    MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+        /* --END ERROR HANDLING-- */
 
         mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -992,7 +1017,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     void **dataloops=NULL;    /* to store dataloops for each datatype */
     MPID_Group *win_grp_ptr;
     int start_grp_size, *ranks_in_start_grp, *ranks_in_win_grp, rank;
-    MPIU_CHKLMEM_DECL(7);
+    MPIU_CHKLMEM_DECL(9);
     MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_COMPLETE);
 
@@ -1037,15 +1062,38 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
        message from each target process */
     if ((win_ptr->start_assert & MPI_MODE_NOCHECK) == 0)
     {
-	for (i=0; i<start_grp_size; i++)
-	{
+        MPI_Request *req;
+        MPI_Status *status;
+        
+        MPIU_CHKLMEM_MALLOC(req, MPI_Request *, start_grp_size*sizeof(MPI_Request), mpi_errno, "req");
+        MPIU_CHKLMEM_MALLOC(status, MPI_Status *, start_grp_size*sizeof(MPI_Status), mpi_errno, "status");
+
+	for (i = 0; i < start_grp_size; i++) {
 	    src = ranks_in_win_grp[i];
 	    if (src != rank) {
-		mpi_errno = NMPI_Recv(NULL, 0, MPI_INT, src, 100,
-				      win_ptr->comm, MPI_STATUS_IGNORE);
-		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	    }
+                MPID_Request *req_ptr;
+                mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
+                                       comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
+		if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                req[i] = req_ptr->handle;
+	    } else {
+                req[i] = MPI_REQUEST_NULL;
+            }
+
 	}
+        mpi_errno = MPIR_Waitall_impl(start_grp_size, req, status);
+        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
+
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno == MPI_ERR_IN_STATUS) {
+            for (i = 0; i < start_grp_size; i++) {
+                if (status[i].MPI_ERROR != MPI_SUCCESS) {
+                    mpi_errno = status[i].MPI_ERROR;
+                    MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+        /* --END ERROR HANDLING-- */
     }
         
     /* keep track of no. of ops to each proc. Needed for knowing

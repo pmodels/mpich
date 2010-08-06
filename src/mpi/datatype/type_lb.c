@@ -23,13 +23,27 @@
 #undef MPI_Type_lb
 #define MPI_Type_lb PMPI_Type_lb
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_lb_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint *displacement)
+{
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+	*displacement = 0;
+    } else {
+        MPID_Datatype *datatype_ptr = NULL;
+        MPID_Datatype_get_ptr(datatype, datatype_ptr);
+	*displacement = datatype_ptr->lb;
+    }
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_lb
 #undef FCNAME
 #define FCNAME "MPI_Type_lb"
-
 /*@
     MPI_Type_lb - Returns the lower-bound of a datatype
 
@@ -92,15 +106,8 @@ int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement)
 
     /* ... body of routine ...  */
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
-    {
-	*displacement = 0;
-    }
-    else
-    {
-	*displacement = datatype_ptr->lb;
-    }
-
+    MPIR_Type_lb_impl(datatype, displacement);
+    
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

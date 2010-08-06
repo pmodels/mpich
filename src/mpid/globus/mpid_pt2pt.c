@@ -69,19 +69,14 @@ int MPID_Startall(int count, MPID_Request * requests[])
 	    case MPIG_REQUEST_TYPE_BSEND:
 	    {
 		MPI_Request sreq_handle;
-		
-		MPIR_Nest_incr();
-		{
-		    rc = NMPI_Ibsend(buf, cnt, dt, rank, tag, preq->comm->handle, &sreq_handle);
-		    if (rc == MPI_SUCCESS)
-		    {
-			MPID_Request_get_ptr(sreq_handle, preq->partner_request);
-		    }
-		}
-		MPIR_Nest_decr();
-		
+                rc = MPIR_Ibsend_impl(buf, cnt, dt, rank, tag, preq->comm, &sreq_handle);
+                if (rc == MPI_SUCCESS)
+                {
+                    MPID_Request_get_ptr(sreq_handle, preq->partner_request);
+                }
+				
 		break;
-	    }		
+	    }
 
 	    default:
 	    {

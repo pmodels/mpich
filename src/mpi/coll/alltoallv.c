@@ -175,7 +175,7 @@ int MPIR_Alltoallv_intra (
                 }
             }
 
-            mpi_errno = NMPI_Waitall(req_cnt, reqarray, starray);
+            mpi_errno = MPIR_Waitall_impl(req_cnt, reqarray, starray);
             if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
 
             /* --BEGIN ERROR HANDLING-- */

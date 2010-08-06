@@ -3180,7 +3180,8 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 /* TODO convert all cut-over constants above to parameters */
 #include "mpich_param_vals.h"
 
-/* Tags for point to point operations which implement collective operations */
+/* Tags for point to point operations which implement collective and other
+   internal operations */
 #define MPIR_BARRIER_TAG               1
 #define MPIR_BCAST_TAG                 2
 #define MPIR_GATHER_TAG                3
@@ -3210,10 +3211,10 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_TOPO_B_TAG               27
 #define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
 
-/* These functions are used in the implementation of collective
-   operations. They are wrappers around MPID send/recv functions. They do
-   sends/receives by setting the context offset to
-   MPID_CONTEXT_INTRA_COLL. */
+/* These functions are used in the implementation of collective and
+   other internal operations. They are wrappers around MPID send/recv
+   functions. They do sends/receives by setting the context offset to
+   MPID_CONTEXT_INTRA(INTER)_COLL. */
 int MPIC_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
               MPI_Comm comm);
 int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
@@ -3235,7 +3236,7 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
 int MPIC_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                MPI_Comm comm, MPI_Request *request);
 int MPIC_Wait(MPID_Request * request_ptr);
-
+int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status);
 
 void MPIR_MAXF  ( void *, void *, int *, MPI_Datatype * ) ;
 void MPIR_MINF  ( void *, void *, int *, MPI_Datatype * ) ;
@@ -3480,6 +3481,7 @@ int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 #define MPIR_Type_extent_impl(datatype, extent_ptr) MPID_Datatype_get_extent_macro(datatype, *(extent_ptr))
 #define MPIR_Type_size_impl(datatype, size) MPID_Datatype_get_size_macro(datatype, *(size))
+#define MPIR_Test_cancelled_impl(status, flag) *(flag) = (status)->cancelled
 
 /* MPIR_ functions.  These are versions of MPI_ functions appropriate for calling within MPI */
 int MPIR_Cancel_impl(MPID_Request *request_ptr);
@@ -3548,6 +3550,13 @@ int MPIR_Type_indexed_impl(int count, int blocklens[], int indices[], MPI_Dataty
 void MPIR_Type_free_impl(MPI_Datatype *datatype);
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
 int MPIR_Type_struct_impl(int count, int blocklens[], MPI_Aint indices[], MPI_Datatype old_types[], MPI_Datatype *newtype);
+void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint *displacement);
+int MPIR_Ibsend_impl(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                     MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status);
+int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status);
+int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
+                      MPI_Status array_of_statuses[]);
 
 
 #endif /* MPIIMPL_INCLUDED */

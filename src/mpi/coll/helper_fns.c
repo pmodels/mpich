@@ -16,6 +16,31 @@
    MPID_CONTEXT_INTRA_COLL or MPID_CONTEXT_INTER_COLL. */
 
 #undef FUNCNAME
+#define FUNCNAME MPIC_Probe
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int context_id;
+    MPID_Comm *comm_ptr;
+
+    MPID_Comm_get_ptr( comm, comm_ptr );
+
+    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+    
+    mpi_errno = MPID_Probe(source, tag, comm_ptr, context_id, status);
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIC_Send
 #undef FCNAME
 #define FCNAME "MPIC_Send"

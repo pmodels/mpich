@@ -10,11 +10,13 @@
 
 #ifndef MPICH_MPI_FROM_PMPI
 
-static MPI_Comm progress_comm;
+static MPID_Comm *progress_comm_ptr;
 static MPIU_Thread_id_t progress_thread_id;
 static MPIU_Thread_mutex_t progress_mutex;
 static MPIU_Thread_cond_t progress_cond;
 static volatile int progress_thread_done = 0;
+
+#define WAKE_TAG 100
 
 #undef FUNCNAME
 #define FUNCNAME progress_fn
@@ -24,7 +26,9 @@ static void progress_fn(void * data)
 {
 #if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
     int mpi_errno = MPI_SUCCESS;
-    MPIU_THREADPRIV_DECL;
+    MPID_Request *request_ptr = NULL;
+    MPI_Request request;
+    MPI_Status status;
 
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
      * within an internal function and will call NMPI functions
@@ -40,12 +44,12 @@ static void progress_fn(void * data)
      * appropriate, either change what we do in this thread, or delete
      * this comment. */
 
-    MPIU_THREADPRIV_GET;
-
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Recv(NULL, 0, MPI_CHAR, 0, 0, progress_comm, MPI_STATUS_IGNORE);
+    mpi_errno = MPID_Irecv(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
+                           MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIU_Assert(!mpi_errno);
-    MPIR_Nest_decr();
+    request = request_ptr->handle;
+    mpi_errno = MPIR_Wait_impl(&request, &status);
+    MPIU_Assert(!mpi_errno);
 
     /* Send a signal to the main thread saying we are done */
     MPIU_Thread_mutex_lock(&progress_mutex, &mpi_errno);
@@ -73,7 +77,7 @@ int MPIR_Init_async_thread(void)
 {
 #if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_self_ptr, *progress_comm_ptr;
+    MPID_Comm *comm_self_ptr;
     int err = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
@@ -84,7 +88,6 @@ int MPIR_Init_async_thread(void)
     MPID_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
     mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    progress_comm = progress_comm_ptr->handle;
 
     MPIU_Thread_cond_create(&progress_cond, &err);
     MPIU_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**cond_create", "**cond_create %s", strerror(err));
@@ -114,17 +117,19 @@ int MPIR_Finalize_async_thread(void)
 {
     int mpi_errno = MPI_SUCCESS;
 #if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
-    MPIU_THREADPRIV_DECL;
+    MPID_Request *request_ptr = NULL;
+    MPI_Request request;
+    MPI_Status status;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
-    MPIU_THREADPRIV_GET;
-
-    MPIR_Nest_incr();
-    mpi_errno = NMPI_Send(NULL, 0, MPI_CHAR, 0, 0, progress_comm);
+    mpi_errno = MPID_Isend(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
+                           MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIU_Assert(!mpi_errno);
-    MPIR_Nest_decr();
+    request = request_ptr->handle;
+    mpi_errno = MPIR_Wait_impl(&request, &status);
+    MPIU_Assert(!mpi_errno);
 
     /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */
     MPIU_THREAD_CS_EXIT(ALLFUNC,);

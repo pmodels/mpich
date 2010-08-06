@@ -65,7 +65,6 @@ int MPIR_Scatterv (
     int      i, reqs;
     MPI_Request *reqarray;
     MPI_Status *starray;
-    MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(2);
 
     comm = comm_ptr->handle;
@@ -114,10 +113,7 @@ int MPIR_Scatterv (
             }
         }
         /* ... then wait for *all* of them to finish: */
-	MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
-        mpi_errno = NMPI_Waitall(reqs, reqarray, starray);
-        MPIR_Nest_decr();
+        mpi_errno = MPIR_Waitall_impl(reqs, reqarray, starray);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {

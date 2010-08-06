@@ -239,15 +239,12 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     int i;
     MPID_Comm *newcomm_ptr;
     MPIU_CHKLMEM_DECL(4);
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INTERCOMM_CREATE);
-
-    MPIU_THREADPRIV_GET;
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -349,7 +346,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 	}
 #       endif /* HAVE_ERROR_CHECKING */
 	
-	MPIR_Nest_incr();
 	/* First, exchange the group information.  If we were certain
 	   that the groups were disjoint, we could exchange possible 
 	   context ids at the same time, saving one communication.
@@ -362,11 +358,12 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 	MPIU_DBG_MSG_FMT(COMM,VERBOSE,
              (MPIU_DBG_FDEST,"rank %d sendrecv to rank %d", 
               peer_comm_ptr->rank, remote_leader));
-	mpi_errno = NMPI_Sendrecv( &local_size,  1, MPI_INT, 
+	mpi_errno = MPIC_Sendrecv( &local_size,  1, MPI_INT, 
 				   remote_leader, tag,
 				   &remote_size, 1, MPI_INT, 
 				   remote_leader, tag, 
 				   peer_comm, MPI_STATUS_IGNORE );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	MPIU_DBG_MSG_FMT(COMM,VERBOSE,
            (MPIU_DBG_FDEST, "local size = %d, remote size = %d", local_size, 
@@ -384,30 +381,23 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 
 	mpi_errno = MPID_GPID_GetAllInComm( comm_ptr, local_size, local_gpids, 
 					    &singlePG );
-	if (mpi_errno) {
-	    MPIR_Nest_decr();
-	    goto fn_fail;
-	}
-	/* Exchange the lpid arrays */
-	NMPI_Sendrecv( local_gpids, 2*local_size, MPI_INT, 
-		       remote_leader, tag,
-		       remote_gpids, 2*remote_size, MPI_INT, 
-		       remote_leader, tag, peer_comm, MPI_STATUS_IGNORE );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+	/* Exchange the lpid arrays */
+	mpi_errno = MPIC_Sendrecv( local_gpids, 2*local_size, MPI_INT, 
+                                   remote_leader, tag,
+                                   remote_gpids, 2*remote_size, MPI_INT, 
+                                   remote_leader, tag, peer_comm, MPI_STATUS_IGNORE );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
 	/* Convert the remote gpids to the lpids */
 	mpi_errno = MPID_GPID_ToLpidArray( remote_size, 
 					   remote_gpids, remote_lpids );
-	if (mpi_errno) {
-	    MPIR_Nest_decr();
-	    goto fn_fail;
-	}
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	/* Get our own lpids */
 	mpi_errno = MPID_LPID_GetAllInComm( comm_ptr, local_size, local_lpids );
-	if (mpi_errno) {
-	    MPIR_Nest_decr();
-	    goto fn_fail;
-	}
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
 #       ifdef HAVE_ERROR_CHECKING
 	{
@@ -417,11 +407,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		   check for any overlap */
 		mpi_errno = MPIR_CheckDisjointLpids( local_lpids, local_size,
 						   remote_lpids, remote_size );
-		if (mpi_errno)
-		{
-		    MPIR_Nest_decr();
-		    goto fn_fail;
-		}	    
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    }
 	    MPID_END_ERROR_CHECKS;
 	}
@@ -435,7 +421,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 	/* At this point, we're done with the local lpids; they'll
 	   be freed with the other local memory on exit */
 
-	MPIR_Nest_decr();
     } /* End of the first phase of the leader communication */
 
     /* 
@@ -459,10 +444,11 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     if (comm_ptr->rank == local_leader) {
 	MPIR_Context_id_t remote_context_id;
 
-	NMPI_Sendrecv( &recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
-		       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag, 
-		       peer_comm, MPI_STATUS_IGNORE );
-	
+	mpi_errno = MPIC_Sendrecv( &recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
+                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag, 
+                                   peer_comm, MPI_STATUS_IGNORE );
+	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
 	final_context_id = remote_context_id;
 
 	/* Now, send all of our local processes the remote_lpids, 
@@ -524,7 +510,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     if (comm_ptr->rank != local_leader) {
 	mpi_errno = MPID_GPID_ToLpidArray( remote_size, remote_gpids, 
 					   remote_lpids );
-	if (mpi_errno) { MPIR_Nest_decr(); goto fn_fail; }
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
 

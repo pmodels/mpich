@@ -105,22 +105,15 @@ int MPID_Startall(int count, MPID_Request * requests[])
 	    case MPIDI_REQUEST_TYPE_BSEND:
 	    {
 		MPI_Request sreq_handle;
-		MPIU_THREADPRIV_DECL;
 
-		MPIU_THREADPRIV_GET;
-		
-		MPIR_Nest_incr();
-		{
-		    rc = NMPI_Ibsend(preq->dev.user_buf, preq->dev.user_count,
-				     preq->dev.datatype, preq->dev.match.parts.rank,
-				     preq->dev.match.parts.tag, preq->comm->handle, 
-				     &sreq_handle);
-		    if (rc == MPI_SUCCESS)
-		    {
-			MPID_Request_get_ptr(sreq_handle, preq->partner_request);
-		    }
-		}
-		MPIR_Nest_decr();
+                rc = MPIR_Ibsend_impl(preq->dev.user_buf, preq->dev.user_count,
+                                      preq->dev.datatype, preq->dev.match.parts.rank,
+                                      preq->dev.match.parts.tag, preq->comm,
+                                      &sreq_handle);
+                if (rc == MPI_SUCCESS)
+                {
+                    MPID_Request_get_ptr(sreq_handle, preq->partner_request);
+                }
 		break;
 	    }
 

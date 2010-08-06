@@ -70,6 +70,7 @@ MPIDO_Alltoall_simple(void * send_buff, int send_count,
 		      int recv_count, MPI_Datatype recv_type,
 		      MPID_Comm * comm)
 {
+  int mpi_errno = MPI_SUCCESS;
   int i, rank, np, nreqs, partner;
   char * send_ptr;
   char * recv_ptr;
@@ -112,17 +113,23 @@ MPIDO_Alltoall_simple(void * send_buff, int send_count,
     partner = (rank + i) % np;
     if (partner == rank) continue;
 
-    MPIC_Irecv(recv_ptr + (partner * rcvinc), recv_count, recv_type, partner,
-               MPIR_ALLTOALL_TAG, comm->handle, req_ptr++);
-    MPIC_Isend(send_ptr + (partner * sndinc), send_count, send_type, partner,
-               MPIR_ALLTOALL_TAG, comm->handle, req_ptr++);
+    mpi_errno = MPIC_Irecv(recv_ptr + (partner * rcvinc), recv_count, recv_type, partner,
+                           MPIR_ALLTOALL_TAG, comm->handle, req_ptr++);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIC_Isend(send_ptr + (partner * sndinc), send_count, send_type, partner,
+                           MPIR_ALLTOALL_TAG, comm->handle, req_ptr++);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
   }
 
-  NMPI_Waitall(nreqs, req, MPI_STATUSES_IGNORE);
+  mpi_errno = MPIR_Waitall_impl(nreqs, req, MPI_STATUSES_IGNORE);
+  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
   if (req)
     MPIU_Free(req);
 
+ fn_exit:
   return MPI_SUCCESS;
+ fn_fail:
+  goto fn_exit;
 }
 

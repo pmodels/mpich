@@ -27,7 +27,8 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Isend
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Isend - Begins a nonblocking send
 
@@ -57,7 +58,6 @@ Output Parameter:
 int MPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	      MPI_Comm comm, MPI_Request *request)
 {
-    static const char FCNAME[] = "MPI_Isend";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Request *request_ptr = NULL;
