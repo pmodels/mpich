@@ -701,6 +701,8 @@ for arg in --version -V -v ; do
             pac_cv_fc_vendor=pgi
         elif grep 'Sun Workshop' conftest.txt >/dev/null 2>&1 ; then
             pac_cv_fc_vendor=sun
+	elif grep 'Sun Fortran 9' conftest.txt >/dev/null 2>&1 ; then 
+	    pac_cv_fc_vendor=sun
         elif grep 'Absoft' conftest.txt >/dev/null 2>&1 ; then
             pac_cv_fc_vendor=absoft
         elif grep 'G95' conftest.txt >/dev/null 2>&1 ; then
@@ -716,11 +718,13 @@ for arg in --version -V -v ; do
 done
 if test "$pac_cv_fc_vendor" = "unknown" ; then
     # Try to use the compiler name
-    if test "$F90" = "ifort" -o "$F90" = "ifc" ; then
+    if test "$FC" = "ifort" -o "$FC" = "ifc" ; then
         pac_cv_fc_vendor=intel
-    elif test "$F90" = "pgf90" ; then
+    elif test "$FC" = "pgf90" ; then
         pac_cv_fc_vendor=pgi
-    elif test "$F90" = "xlf90" -o "$F90" = "xlf90_r" ; then
+    elif test "$FC" = "xlf90" -o "$FC" = "xlf90_r" ; then
+        pac_cv_fc_vendor=ibm
+    elif test "$FC" = "xlf95" -o "$FC" = "xlf95_r" ; then
         pac_cv_fc_vendor=ibm
     fi
 fi

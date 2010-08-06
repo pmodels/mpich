@@ -2251,6 +2251,12 @@ if test "$enable_fc" = "yes" ; then
 	        FC_SHL="$FC -shared -fPIC"
                 FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
 	        ;;
+		
+		sun)
+		# Sun studio compiler on Linux
+		FC_SHL="$FC -KPIC"
+		FC_LINKPATH_SHL="-Qoption ld -rpath,"
+		;;
 
 	        *)
 	        # Unknown, ignore
