@@ -5,14 +5,15 @@
 
 ### Threads
 
- * ch3:sock does not (and will not) support fine-grained threading
+ * ch3:sock does not (and will not) support fine-grained threading.
 
  * MPI-IO APIs are not currently thread-safe when using fine-grained
-   threading (--enable-thread-cs=per-object)
+   threading (--enable-thread-cs=per-object).
 
  * ch3:nemesis:tcp fine-grained threading is still experimental and may
    have correctness or performance issues.  Known correctness issues
    include dynamic process support and generalized request support.
+
 
 ### Lacking channel-specific features
 
@@ -63,6 +64,10 @@
  * The SMPD process manager does not work reliably with threaded MPI
    processes. MPI_Comm_spawn() does not currently work for >= 256
    arguments with smpd.
+
+ * The hwloc process binding support within the Hydra process manager
+   does not build correctly with the PGI compilers. hwloc support can
+   be disabled using the configure option "--without-hydra-bindlib".
 
 
 ### Performance issues

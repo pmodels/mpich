@@ -2,32 +2,35 @@
                                Changes in 1.3
 ===============================================================================
 
- # THREADS: initial support for fine-grained threading in ch3:nemesis:tcp
+ # OVERALL: Initial support for fine-grained threading in
+   ch3:nemesis:tcp.
 
  # OVERALL: Support for Asynchronous Communication Progress.
 
  # OVERALL: The ssm and shm channels have been removed.
 
- # OVERALL: Checkpoint/restart support using BLCR
+ # OVERALL: Checkpoint/restart support using BLCR.
 
  # PM/PMI: Hydra is now the default process management framework
    replacing MPD.
 
  # PM/PMI: Added dynamic process support for Hydra.
 
+ # PM/PMI: Added support for LSF and POE in Hydra.
+
  # DEBUGGER: Improved support and bug fixes in the Totalview support.
+
+ # Build system: Replaced F90/F90FLAGS by FC/FCFLAGS. F90/F90FLAGS are
+   not longer supported in the configure.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
-     svn log -r5762:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3a2
+     svn log -r5762:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3b1
 
      ... or at the following link:
 
-     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3a2?action=follow_copy&rev=HEAD&stop_rev=5762&mode=follow_copy
-
-  # Build system: Replaced F90/F90FLAGS by FC/FCFLAGS.  F90/F90FLAGS are not
-    longer supported in the configure.
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3b1?action=follow_copy&rev=HEAD&stop_rev=5762&mode=follow_copy
 
 
 ===============================================================================
