@@ -84,6 +84,12 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         if (!path)
             path = HYDU_strdup("/usr/bin/blaunch");
     }
+    else if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+        if (!path)
+            path = HYDU_find_full_path("qrsh");
+        if (!path)
+            path = HYDU_strdup("/usr/bin/qrsh");
+    }
 
     idx = 0;
     if (path)
@@ -109,6 +115,9 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     }
     else if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
         targs[idx++] = HYDU_strdup("-n");
+    }
+    else if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+        targs[idx++] = HYDU_strdup("-inherit");
     }
 
     host_idx = idx++;   /* Hostname will come here */

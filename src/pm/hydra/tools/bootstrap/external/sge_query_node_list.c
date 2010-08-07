@@ -4,9 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_base.h"
-#include "rmki.h"
-#include "rmk_sge.h"
+#include "hydra_utils.h"
+#include "bsci.h"
+#include "bscu.h"
+#include "sge.h"
 
 static struct HYD_node *global_node_list = NULL;
 
@@ -44,7 +45,7 @@ static HYD_status process_mfile_token(char *token, int newline)
     goto fn_exit;
 }
 
-HYD_status HYDT_rmkd_sge_query_node_list(struct HYD_node **node_list)
+HYD_status HYDT_bscd_sge_query_node_list(struct HYD_node **node_list)
 {
     char *hostfile;
     HYD_status status = HYD_SUCCESS;

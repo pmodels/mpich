@@ -12,7 +12,3 @@ include tools/rmk/utils/Makefile.mk
 if hydra_rmk_pbs
 include tools/rmk/pbs/Makefile.mk
 endif
-
-if hydra_rmk_sge
-include tools/rmk/sge/Makefile.mk
-endif

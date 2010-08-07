@@ -14,30 +14,38 @@ static HYD_status external_init(void)
 
     HYDU_FUNC_ENTER();
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "slurm"))
-        HYDT_bsci_fns.launch_procs = HYDT_bscd_slurm_launch_procs;
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "ll"))
-        HYDT_bsci_fns.launch_procs = HYDT_bscd_ll_launch_procs;
-    else
+    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh"))
         HYDT_bsci_fns.launch_procs = HYDT_bscd_external_launch_procs;
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh"))
-        HYDT_bsci_fns.finalize = HYDT_bscd_external_finalize;
+    if (!strcmp(HYDT_bsci_info.bootstrap, "lsf"))
+        HYDT_bsci_fns.query_node_list = HYDT_bscd_lsf_query_node_list;
+
+    if (!strcmp(HYDT_bsci_info.bootstrap, "sge"))
+        HYDT_bsci_fns.query_node_list = HYDT_bscd_sge_query_node_list;
+
+    /* rsh, fork use the default values */
 
     if (!strcmp(HYDT_bsci_info.bootstrap, "slurm")) {
+        HYDT_bsci_fns.launch_procs = HYDT_bscd_slurm_launch_procs;
         HYDT_bsci_fns.query_proxy_id = HYDT_bscd_slurm_query_proxy_id;
         HYDT_bsci_fns.query_node_list = HYDT_bscd_slurm_query_node_list;
     }
 
     if (!strcmp(HYDT_bsci_info.bootstrap, "ll")) {
+        HYDT_bsci_fns.launch_procs = HYDT_bscd_ll_launch_procs;
         HYDT_bsci_fns.query_proxy_id = HYDT_bscd_ll_query_proxy_id;
         HYDT_bsci_fns.query_node_list = HYDT_bscd_ll_query_node_list;
     }
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "lsf"))
-        HYDT_bsci_fns.query_node_list = HYDT_bscd_lsf_query_node_list;
+    /* set default values */
+    if (HYDT_bsci_fns.launch_procs == NULL)
+        HYDT_bsci_fns.launch_procs = HYDT_bscd_external_launch_procs;
 
-    HYDT_bsci_fns.query_env_inherit = HYDT_bscd_external_query_env_inherit;
+    if (HYDT_bsci_fns.finalize == NULL)
+        HYDT_bsci_fns.finalize = HYDT_bscd_external_finalize;
+
+    if (HYDT_bsci_fns.query_env_inherit == NULL)
+        HYDT_bsci_fns.query_env_inherit = HYDT_bscd_external_query_env_inherit;
 
     HYDU_FUNC_EXIT();
 
@@ -59,17 +67,22 @@ HYD_status HYDT_bsci_fork_init(void)
     return external_init();
 }
 
+HYD_status HYDT_bsci_lsf_init(void)
+{
+    return external_init();
+}
+
+HYD_status HYDT_bsci_sge_init(void)
+{
+    return external_init();
+}
+
 HYD_status HYDT_bsci_slurm_init(void)
 {
     return external_init();
 }
 
 HYD_status HYDT_bsci_ll_init(void)
-{
-    return external_init();
-}
-
-HYD_status HYDT_bsci_lsf_init(void)
 {
     return external_init();
 }
