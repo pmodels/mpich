@@ -13,7 +13,9 @@ static int fd_stdin, fd_stdout, fd_stderr;
 
 static HYD_status is_local_host(char *host, int *bool)
 {
+    static int init = 1;
     char localhost[MAX_HOSTNAME_LEN];
+    int host_len, localhost_len;
     HYD_status status = HYD_SUCCESS;
 
     *bool = 0;
@@ -22,12 +24,43 @@ static HYD_status is_local_host(char *host, int *bool)
         goto fn_exit;
     }
 
-    status = HYDU_gethostname(localhost);
-    HYDU_ERR_POP(status, "unable to get local hostname\n");
+    if (init) {
+        status = HYDU_gethostname(localhost);
+        HYDU_ERR_POP(status, "unable to get local hostname\n");
+
+        localhost_len = strlen(localhost);
+
+        init = 0;
+    }
 
     if (!strcmp(host, localhost)) {
         *bool = 1;
         goto fn_exit;
+    }
+
+    /* If the two hostnames are not of the same length, it is possible
+     * that they differ in the domain information, and not the
+     * hostname */
+    host_len = strlen(host);
+    if (host_len != localhost_len) {
+        int shortlen;
+
+        if (host_len < localhost_len) {
+            shortlen = host_len;
+            if ((!MPL_strncmp(host, localhost, shortlen)) &&
+                (localhost[shortlen] == 0 || localhost[shortlen] == '.')) {
+                *bool = 1;
+                goto fn_exit;
+            }
+        }
+        else {
+            shortlen = localhost_len;
+            if ((!MPL_strncmp(host, localhost, shortlen)) &&
+                (host[shortlen] == 0 || host[shortlen] == '.')) {
+                *bool = 1;
+                goto fn_exit;
+            }
+        }
     }
 
   fn_exit:
