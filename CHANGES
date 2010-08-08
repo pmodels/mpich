@@ -16,7 +16,7 @@
 
  # PM/PMI: Added dynamic process support for Hydra.
 
- # PM/PMI: Added support for LSF and POE in Hydra.
+ # PM/PMI: Added support for LSF, SGE and POE in Hydra.
 
  # DEBUGGER: Improved support and bug fixes in the Totalview support.
 
