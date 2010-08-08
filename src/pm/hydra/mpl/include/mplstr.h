@@ -37,6 +37,16 @@ char *MPL_strdup(const char *str);
 
 int MPL_strncpy(char *dest, const char *src, size_t n);
 
+#if defined MPL_NEEDS_STRNCMP_DECL
+extern int strncmp(const char *s1, const char *s2, size_t n);
+#endif
+
+#if defined MPL_HAVE_STRNCMP
+#define MPL_strncmp strncmp
+#else
+#error "strncmp is required"
+#endif /* MPL_HAVE_STRNCMP */
+
 /* *INDENT-ON* */
 #if defined(__cplusplus)
 }

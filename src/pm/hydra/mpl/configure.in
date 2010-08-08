@@ -129,6 +129,12 @@ if test "$ac_cv_func_snprintf" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
 fi
 
+# Check for strncmp
+AC_CHECK_FUNCS(strncmp)
+if test "$ac_cv_func_strncmp" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <string.h>],strncmp)
+fi
+
 # Check for putenv
 AC_CHECK_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
