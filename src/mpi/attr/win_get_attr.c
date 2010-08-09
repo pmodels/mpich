@@ -25,13 +25,11 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_WinGetAttr
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val, 
 		     int *flag, MPIR_AttrType outAttrType )
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPIR_WinGetAttr";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_WIN_GET_ATTR);
@@ -206,7 +204,8 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_get_attr
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_attr - Get attribute cached on an MPI window object
 
@@ -238,9 +237,10 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, 
 		     int *flag)
 {
-    static const char FCNAME[] = "MPI_Win_get_attr";
     int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ERROR_CHECKING
     MPID_Win *win_ptr = NULL;
+#endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -267,6 +267,7 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 	    "**mpi_win_get_attr %W %d %p %p", 
 	    win, win_keyval, attribute_val, flag);
     }
+    MPID_Win_get_ptr( win, win_ptr );
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
 #endif
     goto fn_exit;
