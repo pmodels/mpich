@@ -355,11 +355,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_COMML_REMEMBER( MPIR_Process.comm_self );
 
     /* Call any and all MPID_Init type functions */
-    /* Note that the error handling support is only included if error_checking 
-       is enabled at compile time. */
-#ifdef HAVE_ERROR_CHECKING
     MPIR_Err_init();
-#endif
     MPIR_Datatype_init();
     MPIR_Group_init();
 
