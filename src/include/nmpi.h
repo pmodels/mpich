@@ -23,9 +23,6 @@
  */
 
 #ifdef USE_MPI_FOR_NMPI
-#define NMPI_Pack MPI_Pack
-#define NMPI_Pack_size MPI_Pack_size
-#define NMPI_Unpack MPI_Unpack
 #define NMPI_Type_get_attr MPI_Type_get_attr
 #define NMPI_Type_set_attr MPI_Type_set_attr
 #define NMPI_Irecv MPI_Irecv
@@ -33,7 +30,6 @@
 #define NMPI_Type_lb MPI_Type_lb
 #define NMPI_Iprobe MPI_Iprobe
 #define NMPI_Probe MPI_Probe
-#define NMPI_Group_translate_ranks MPI_Group_translate_ranks
 #define NMPI_Wtime MPI_Wtime 
 #define NMPI_Info_create MPI_Info_create
 #define NMPI_Info_set MPI_Info_set
@@ -44,9 +40,6 @@
 #define NMPIX_Grequest_class_allocate MPIX_Grequest_class_allocate
 #define NMPIX_Grequest_start MPIX_Grequest_start
 #else
-#define NMPI_Pack PMPI_Pack
-#define NMPI_Pack_size PMPI_Pack_size
-#define NMPI_Unpack PMPI_Unpack
 #define NMPI_Type_get_attr PMPI_Type_get_attr
 #define NMPI_Type_set_attr PMPI_Type_set_attr
 #define NMPI_Irecv PMPI_Irecv
@@ -54,7 +47,6 @@
 #define NMPI_Type_lb PMPI_Type_lb
 #define NMPI_Iprobe PMPI_Iprobe
 #define NMPI_Probe PMPI_Probe
-#define NMPI_Group_translate_ranks PMPI_Group_translate_ranks
 #define NMPI_Wtime PMPI_Wtime
 #define NMPI_Info_create PMPI_Info_create
 #define NMPI_Info_set PMPI_Info_set

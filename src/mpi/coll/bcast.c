@@ -94,13 +94,11 @@ static int MPIR_Bcast_binomial(
      * heterogeneous systems. We want to use MPI_Type_size() wherever
      * possible, and MPI_Pack_size() in other places.
      */
-    if (is_homogeneous) {
+    if (is_homogeneous)
         MPID_Datatype_get_size_macro(datatype, type_size);
-    }
-    else {
-        mpi_errno = NMPI_Pack_size(1, datatype, comm, &type_size);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
+    else
+        MPIR_Pack_size_impl(1, datatype, &type_size);
+
     nbytes = type_size * count;
 
     if (!is_contig || !is_homogeneous)
@@ -109,9 +107,11 @@ static int MPIR_Bcast_binomial(
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
-        if (rank == root)
-            NMPI_Pack(buffer, count, datatype, tmp_buf, nbytes,
-                      &position, comm);
+        if (rank == root) {
+            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes,
+                                       &position);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
@@ -194,8 +194,10 @@ static int MPIR_Bcast_binomial(
         if (rank != root)
         {
             position = 0;
-            NMPI_Unpack(tmp_buf, nbytes, &position, buffer, count,
-                        datatype, comm);
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer,
+                                         count, datatype);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            
         }
     }
 
@@ -399,13 +401,11 @@ static int MPIR_Bcast_scatter_doubling_allgather(
      * heterogeneous systems. We want to use MPI_Type_size() wherever
      * possible, and MPI_Pack_size() in other places.
      */
-    if (is_homogeneous) {
+    if (is_homogeneous)
         MPID_Datatype_get_size_macro(datatype, type_size);
-    }
-    else {
-        mpi_errno = NMPI_Pack_size(1, datatype, comm, &type_size);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
+    else
+        MPIR_Pack_size_impl(1, datatype, &type_size);
+
     nbytes = type_size * count;
 
     if (is_contig && is_homogeneous)
@@ -421,9 +421,11 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
-        if (rank == root)
-            NMPI_Pack(buffer, count, datatype, tmp_buf, nbytes,
-                      &position, comm);
+        if (rank == root) {
+            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes,
+                                       &position);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
 
 
@@ -576,8 +578,9 @@ static int MPIR_Bcast_scatter_doubling_allgather(
         if (rank != root)
         {
             position = 0;
-            NMPI_Unpack(tmp_buf, nbytes, &position, buffer, count,
-                        datatype, comm);
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer,
+                                         count, datatype);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
 
@@ -656,13 +659,11 @@ static int MPIR_Bcast_scatter_ring_allgather(
      * heterogeneous systems. We want to use MPI_Type_size() wherever
      * possible, and MPI_Pack_size() in other places.
      */
-    if (is_homogeneous) {
+    if (is_homogeneous)
         MPID_Datatype_get_size_macro(datatype, type_size);
-    }
-    else {
-        mpi_errno = NMPI_Pack_size(1, datatype, comm, &type_size);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
+    else
+        MPIR_Pack_size_impl(1, datatype, &type_size);
+
     nbytes = type_size * count;
 
     if (is_contig && is_homogeneous)
@@ -678,9 +679,11 @@ static int MPIR_Bcast_scatter_ring_allgather(
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
-        if (rank == root)
-            NMPI_Pack(buffer, count, datatype, tmp_buf, nbytes,
-                      &position, comm);
+        if (rank == root) {
+            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes,
+                                       &position);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     scatter_size = (nbytes + comm_size - 1)/comm_size; /* ceiling division */
@@ -735,8 +738,9 @@ static int MPIR_Bcast_scatter_ring_allgather(
         if (rank != root)
         {
             position = 0;
-            NMPI_Unpack(tmp_buf, nbytes, &position, buffer, count,
-                        datatype, comm);
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer,
+                                         count, datatype);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
 
@@ -803,13 +807,11 @@ static int MPIR_SMP_Bcast(
      * heterogeneous systems. We want to use MPI_Type_size() wherever
      * possible, and MPI_Pack_size() in other places.
      */
-    if (is_homogeneous) {
+    if (is_homogeneous)
         MPID_Datatype_get_size_macro(datatype, type_size);
-    }
-    else {
-        mpi_errno = NMPI_Pack_size(1, datatype, comm_ptr->handle, &type_size);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
+    else
+        MPIR_Pack_size_impl(1, datatype, &type_size);
+
     nbytes = type_size * count;
 
     if ((nbytes < MPIR_BCAST_SHORT_MSG) || (comm_ptr->local_size < MPIR_BCAST_MIN_PROCS))
@@ -1012,13 +1014,11 @@ int MPIR_Bcast_intra (
      * heterogeneous systems. We want to use MPI_Type_size() wherever
      * possible, and MPI_Pack_size() in other places.
      */
-    if (is_homogeneous) {
+    if (is_homogeneous)
         MPID_Datatype_get_size_macro(datatype, type_size);
-    }
-    else {
-        mpi_errno = NMPI_Pack_size(1, datatype, comm, &type_size);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
+    else
+        MPIR_Pack_size_impl(1, datatype, &type_size);
+
     nbytes = type_size * count;
 
     if ((nbytes < MPIR_BCAST_SHORT_MSG) || (comm_size < MPIR_BCAST_MIN_PROCS))

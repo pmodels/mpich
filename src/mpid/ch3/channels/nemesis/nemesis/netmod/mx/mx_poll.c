@@ -777,7 +777,7 @@ c");
   else
   {
     int packsize = 0;
-    NMPI_Pack_size(rreq->dev.user_count, rreq->dev.datatype, rreq->comm->handle, &packsize);
+    MPIR_Pack_size_impl(rreq->dev.user_count, rreq->dev.datatype, &packsize);
     rreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
     MPIU_Assert(rreq->dev.tmpbuf);
     rreq->dev.tmpbuf_sz = packsize;

@@ -162,7 +162,7 @@ int MPIR_Alltoall_intra(
          * IEEE TPDS, Nov. 97 */ 
 
         /* allocate temporary buffer */
-        NMPI_Pack_size(recvcount*comm_size, recvtype, comm, &pack_size);
+        MPIR_Pack_size_impl(recvcount*comm_size, recvtype, &pack_size);
         MPIU_CHKLMEM_MALLOC(tmp_buf, void *, pack_size, mpi_errno, "tmp_buf");
 
         /* Do Phase 1 of the algorithim. Shift the data blocks on process i
@@ -213,8 +213,7 @@ int MPIR_Alltoall_intra(
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             position = 0;
-            mpi_errno = NMPI_Pack(recvbuf, 1, newtype, tmp_buf, pack_size, 
-                                  &position, comm);
+            mpi_errno = MPIR_Pack_impl(recvbuf, 1, newtype, tmp_buf, pack_size, &position);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             mpi_errno = MPIC_Sendrecv(tmp_buf, position, MPI_PACKED, dst,

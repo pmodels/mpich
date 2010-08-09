@@ -220,7 +220,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
 		MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAITALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -233,6 +232,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            int i;
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 

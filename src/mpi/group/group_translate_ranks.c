@@ -24,11 +24,65 @@
 #undef MPI_Group_translate_ranks
 #define MPI_Group_translate_ranks PMPI_Group_translate_ranks
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Group_translate_ranks_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, int *ranks1,
+                                    MPID_Group *group_ptr2, int *ranks2)
+{
+    int i, g2_idx, l1_pid, l2_pid;
+    
+    /* Initialize the output ranks */
+    for (i=0; i<n; i++)
+	ranks2[i] = MPI_UNDEFINED;
+
+    /* We may want to optimize for the special case of group2 is 
+       a dup of MPI_COMM_WORLD, or more generally, has rank == lpid 
+       for everything within the size of group2.  NOT DONE YET */
+    g2_idx = group_ptr2->idx_of_first_lpid;
+    if (g2_idx < 0) {
+	MPIR_Group_setup_lpid_list( group_ptr2 );
+	g2_idx = group_ptr2->idx_of_first_lpid;
+    }
+    if (g2_idx >= 0) {
+	/* g2_idx can be < 0 if the g2 group is empty */
+	l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
+	for (i=0; i<n; i++) {
+	    if (ranks1[i] == MPI_PROC_NULL) {
+		ranks2[i] = MPI_PROC_NULL;
+		continue;
+	    }
+	    l1_pid = group_ptr1->lrank_to_lpid[ranks1[i]].lpid;
+	    /* Search for this l1_pid in group2.  Use the following
+	       optimization: start from the last position in the lpid list
+	       if possible.  A more sophisticated version could use a 
+	       tree based or even hashed search to speed the translation. */
+	    if (l1_pid < l2_pid || g2_idx < 0) {
+		/* Start over from the beginning */
+		g2_idx = group_ptr2->idx_of_first_lpid;
+		l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
+	    }
+	    while (g2_idx >= 0 && l1_pid > l2_pid) {
+		g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+		if (g2_idx >= 0)
+		    l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
+		else
+		    l2_pid = -1;
+            }
+	    if (l1_pid == l2_pid)
+		ranks2[i] = group_ptr2->lrank_to_lpid[g2_idx].lrank;
+	}
+    }
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_translate_ranks
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
  MPI_Group_translate_ranks - Translates the ranks of processes in one group to 
                              those in another group
@@ -56,13 +110,9 @@
 int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1, 
 			      MPI_Group group2, int *ranks2)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Group_translate_ranks";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr1 = NULL;
     MPID_Group *group_ptr2 = NULL;
-    int i, g2_idx, l1_pid, l2_pid;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -104,6 +154,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1,
 	    if (group_ptr1) {
 		/* Check that the rank entries are valid */
 		int size1 = group_ptr1->size;
+                int i;
 		for (i=0; i<n; i++) {
 		    if ( (ranks1[i] < 0 && ranks1[i] != MPI_PROC_NULL) || 
 			ranks1[i] >= size1) {
@@ -124,50 +175,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1,
 
     /* ... body of routine ...  */
     
-    /* Initialize the output ranks */
-    for (i=0; i<n; i++) {
-	ranks2[i] = MPI_UNDEFINED;
-    }
-
-    /* We may want to optimize for the special case of group2 is 
-       a dup of MPI_COMM_WORLD, or more generally, has rank == lpid 
-       for everything within the size of group2.  NOT DONE YET */
-    g2_idx = group_ptr2->idx_of_first_lpid;
-    if (g2_idx < 0) {
-	MPIR_Group_setup_lpid_list( group_ptr2 );
-	g2_idx = group_ptr2->idx_of_first_lpid;
-    }
-    if (g2_idx >= 0) {
-	/* g2_idx can be < 0 if the g2 group is empty */
-	l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-	for (i=0; i<n; i++) {
-	    if (ranks1[i] == MPI_PROC_NULL) {
-		ranks2[i] = MPI_PROC_NULL;
-		continue;
-	    }
-	    l1_pid = group_ptr1->lrank_to_lpid[ranks1[i]].lpid;
-	    /* Search for this l1_pid in group2.  Use the following
-	       optimization: start from the last position in the lpid list
-	       if possible.  A more sophisticated version could use a 
-	       tree based or even hashed search to speed the translation. */
-	    if (l1_pid < l2_pid || g2_idx < 0) {
-		/* Start over from the beginning */
-		g2_idx = group_ptr2->idx_of_first_lpid;
-		l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-	    }
-	    while (g2_idx >= 0 && l1_pid > l2_pid) {
-		g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-		if (g2_idx >= 0) {
-		    l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-		}
-		else 
-		    l2_pid = -1;
-	    }
-	    if (l1_pid == l2_pid) {
-		ranks2[i] = group_ptr2->lrank_to_lpid[g2_idx].lrank;
-	    }
-	}
-    }
+    MPIR_Group_translate_ranks_impl(group_ptr1, n, ranks1, group_ptr2, ranks2);
     
     /* ... end of body of routine ... */
 

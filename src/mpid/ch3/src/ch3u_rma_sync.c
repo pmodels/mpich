@@ -882,13 +882,9 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
         mpi_errno = MPIR_Comm_group_impl(win_comm_ptr, &win_grp_ptr);
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
-   	nest_level_inc = TRUE;
-        MPIR_Nest_incr();
 
-	mpi_errno = NMPI_Group_translate_ranks(post_grp_ptr->handle, post_grp_size,
-					       ranks_in_post_grp, win_grp_ptr->handle,
-					       ranks_in_win_grp);
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+	MPIR_Group_translate_ranks_impl(post_grp_ptr, post_grp_size, ranks_in_post_grp,
+                                        win_grp_ptr, ranks_in_win_grp);
 	
         rank = MPIR_Comm_rank(win_comm_ptr);
 	
@@ -1046,17 +1042,14 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     mpi_errno = MPIR_Comm_group_impl(comm_ptr, &win_grp_ptr);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-    nest_level_inc = TRUE;
-    MPIR_Nest_incr();
-    
-    mpi_errno = NMPI_Group_translate_ranks(win_ptr->start_group_ptr->handle, start_grp_size,
-					   ranks_in_start_grp, win_grp_ptr->handle,
-					   ranks_in_win_grp);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-        
+    MPIR_Group_translate_ranks_impl(win_ptr->start_group_ptr, start_grp_size, ranks_in_start_grp,
+                                    win_grp_ptr, ranks_in_win_grp);
         
     rank = MPIR_Comm_rank(comm_ptr);
 
+    nest_level_inc = TRUE;
+    MPIR_Nest_incr();
+    
     /* If MPI_MODE_NOCHECK was not specified, we need to check if
        Win_post was called on the target processes. Wait for a 0-byte sync
        message from each target process */

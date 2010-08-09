@@ -206,7 +206,6 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
     MPIR_Bsend_data_t *p;
     MPIR_Bsend_msg_t *msg;
     int packsize, pass;
-    MPIU_THREADPRIV_DECL;
 
     /* Find a free segment and copy the data into it.  If we could 
        have, we would already have used tBsend to send the message with
@@ -216,8 +215,6 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
        or if we can just use (a MPIU_Memcpy) of the buffer.
     */
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     /* We check the active buffer first.  This helps avoid storage 
        fragmentation */
@@ -225,13 +222,9 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (dtype != MPI_PACKED)
-    {
-        (void)NMPI_Pack_size( count, dtype, comm_ptr->handle, &packsize );
-    }
+        MPIR_Pack_size_impl( count, dtype, &packsize );
     else
-    {
         packsize = count;
-    }
 
     MPIU_DBG_MSG_D(BSEND,TYPICAL,"looking for buffer of size %d", packsize);
     /*
@@ -257,8 +250,8 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 	    msg->count = 0;
             if (dtype != MPI_PACKED)
             {
-                (void)NMPI_Pack( buf, count, dtype, p->msg.msgbuf, packsize, 
-                                 &p->msg.count, comm_ptr->handle );
+                mpi_errno = MPIR_Pack_impl( buf, count, dtype, p->msg.msgbuf, packsize, &p->msg.count);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             else
             {
@@ -270,7 +263,11 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 	    mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED, 
 				   dest, tag, comm_ptr,
 				   MPID_CONTEXT_INTRA_PT2PT, &p->request );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
+            /* If the error is "request not available", we should 
+               put this on the pending list.  This will depend on
+               how we signal failure to send. */
+
 	    if (p->request) {
 		MPIU_DBG_MSG_FMT(BSEND,TYPICAL,
 		    (MPIU_DBG_FDEST,"saving request %p in %p",p->request,p));
@@ -294,7 +291,6 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 	/* Give priority to any pending operations */
 	MPIR_Bsend_retry_pending( );
     }
-    MPIR_Nest_decr();
     
     if (!p) {
 	/* Return error for no buffer space found */
@@ -302,11 +298,7 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 	   packsize could not be found */
 	MPIU_DBG_MSG(BSEND,TYPICAL,"Could not find space; dumping arena" );
 	MPIU_DBG_STMT(BSEND,TYPICAL,MPIR_Bsend_dump());
-
-	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPIR_Bsend_isend", __LINE__, MPI_ERR_BUFFER, "**bufbsend", 
-                                          "**bufbsend %d %d", packsize, 
-                                          BsendBuffer.buffer_size );
-        MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_BUFFER, "**bufbsend", "**bufbsend %d %d", packsize, BsendBuffer.buffer_size);
     }
     
  fn_exit:

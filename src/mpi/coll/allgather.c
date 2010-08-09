@@ -272,7 +272,7 @@ int MPIR_Allgather_intra (
         else { 
             /* heterogeneous. need to use temp. buffer. */
             
-            NMPI_Pack_size(recvcount*comm_size, recvtype, comm, &tmp_buf_size);
+            MPIR_Pack_size_impl(recvcount*comm_size, recvtype, &tmp_buf_size);
             
             MPIU_CHKLMEM_MALLOC(tmp_buf, void*, tmp_buf_size, mpi_errno, "tmp_buf");
             
@@ -285,21 +285,21 @@ int MPIR_Allgather_intra (
                'position' is incremented. */
             
             position = 0;
-            NMPI_Pack(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size,
-                      &position, comm);
+            MPIR_Pack_impl(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size, &position);
             nbytes = position*recvcount;
             
             /* pack local data into right location in tmp_buf */
             position = rank * nbytes;
             if (sendbuf != MPI_IN_PLACE) {
-                NMPI_Pack(sendbuf, sendcount, sendtype, tmp_buf, tmp_buf_size,
-                          &position, comm);
+                mpi_errno = MPIR_Pack_impl(sendbuf, sendcount, sendtype, tmp_buf, tmp_buf_size,
+                                           &position);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             else {
                 /* if in_place specified, local data is found in recvbuf */
-                NMPI_Pack(((char *)recvbuf + recvtype_extent*rank), recvcount,
-                          recvtype, tmp_buf, tmp_buf_size, 
-                          &position, comm);
+                mpi_errno = MPIR_Pack_impl(((char *)recvbuf + recvtype_extent*rank), recvcount,
+                                           recvtype, tmp_buf, tmp_buf_size, &position);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             
             curr_cnt = nbytes;
@@ -383,12 +383,10 @@ int MPIR_Allgather_intra (
                                                   last_recv_cnt, MPI_BYTE,
                                                   dst, MPIR_ALLGATHER_TAG,
                                                   comm);  
+                            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                             /* last_recv_cnt was set in the previous
                                receive. that's the amount of data to be
                                sent now. */
-			    if (mpi_errno) { 
-				MPIU_ERR_POP(mpi_errno);
-			    }
                         }
                         /* recv only if this proc. doesn't have data and sender
                            has data */
@@ -400,11 +398,9 @@ int MPIR_Allgather_intra (
                                                   MPI_BYTE, dst,
                                                   MPIR_ALLGATHER_TAG,
                                                   comm, &status); 
+                            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                             /* nprocs_completed is also equal to the
                                no. of processes whose data we don't have */
-			    if (mpi_errno) { 
-				MPIU_ERR_POP(mpi_errno);
-			    }
                             MPIR_Get_count_impl(&status, MPI_BYTE, &last_recv_cnt);
                             curr_cnt += last_recv_cnt;
                         }
@@ -417,8 +413,9 @@ int MPIR_Allgather_intra (
             }
             
             position = 0;
-            NMPI_Unpack(tmp_buf, tmp_buf_size, &position, recvbuf,
-                        recvcount*comm_size, recvtype, comm);            
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, tmp_buf_size, &position, recvbuf,
+                                         recvcount*comm_size, recvtype);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 #endif /* MPID_HAS_HETERO */
     }

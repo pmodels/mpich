@@ -23,11 +23,24 @@
 #undef MPI_Pack_size
 #define MPI_Pack_size PMPI_Pack_size
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Pack_size_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, int *size)
+{
+    int typesize;
+    MPID_Datatype_get_size_macro(datatype, typesize);
+    *size = incount * typesize;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Pack_size
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
    MPI_Pack_size - Returns the upper bound on the amount of space needed to
                     pack a message
@@ -63,11 +76,6 @@ int MPI_Pack_size(int incount,
 {
     MPID_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    int typesize;
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Pack_size";
-    MPID_Datatype *datatype_ptr = NULL;
-#endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -93,6 +101,8 @@ int MPI_Pack_size(int incount,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPID_Datatype *datatype_ptr = NULL;
+
 	    MPIR_ERRTEST_COUNT(incount, mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
             if (mpi_errno) goto fn_fail;
@@ -116,10 +126,9 @@ int MPI_Pack_size(int incount,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    
-    MPID_Datatype_get_size_macro(datatype, typesize);
-    *size = incount * typesize;
 
+    MPIR_Pack_size_impl(incount, datatype, size);
+    
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING

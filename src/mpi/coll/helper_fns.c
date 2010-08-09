@@ -218,7 +218,6 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     int tmpbuf_size = 0;
     int tmpbuf_count = 0;
     MPID_Comm *comm_ptr;
-    MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV_REPLACE);
 #ifdef MPID_LOG_ARROWS
@@ -227,24 +226,18 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 #endif
 
     MPIDI_PT2PT_FUNC_ENTER_BOTH(MPID_STATE_MPIC_SENDRECV_REPLACE);
-
-    MPIU_THREADPRIV_GET;
-
+    
     MPID_Comm_get_ptr( comm, comm_ptr );
     context_id_offset = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
     if (count > 0 && dest != MPI_PROC_NULL)
     {
-        MPIR_Nest_incr();
-        mpi_errno = NMPI_Pack_size(count, datatype, comm, &tmpbuf_size);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+        MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
         MPIU_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer");
 
-        mpi_errno = NMPI_Pack(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count, comm);
+        mpi_errno = MPIR_Pack_impl(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIR_Nest_decr();
     }
 
     mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag,

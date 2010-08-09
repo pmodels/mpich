@@ -150,12 +150,11 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 
 	if (count > 0 && dest != MPI_PROC_NULL)
 	{
-	    mpi_errno = NMPI_Pack_size(count, datatype, comm, &tmpbuf_size);
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+	    MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
 
 	    MPIU_CHKLMEM_MALLOC_ORJUMP(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer");
 
-	    mpi_errno = NMPI_Pack(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count, comm);
+	    mpi_errno = MPIR_Pack_impl(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count);
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
 	

@@ -247,8 +247,7 @@ int MPIR_Scatter_intra (
 #ifdef MPID_HAS_HETERO
     else { /* communicator is heterogeneous */
         if (rank == root) {
-            NMPI_Pack_size(sendcnt*comm_size, sendtype, comm,
-                           &tmp_buf_size);
+            MPIR_Pack_size_impl(sendcnt*comm_size, sendtype, &tmp_buf_size);
 
             MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
 
@@ -261,8 +260,9 @@ int MPIR_Scatter_intra (
              tmp_buf and see by how much 'position' is incremented. */
 
             position = 0;
-            NMPI_Pack(sendbuf, 1, sendtype, tmp_buf, tmp_buf_size,
-		      &position, comm);
+            mpi_errno = MPIR_Pack_impl(sendbuf, 1, sendtype, tmp_buf, tmp_buf_size, &position);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            
             nbytes = position*sendcnt;
 
             curr_cnt = nbytes*comm_size;
@@ -270,41 +270,46 @@ int MPIR_Scatter_intra (
             if (root == 0) {
                 if (recvbuf != MPI_IN_PLACE) {
                     position = 0;
-                    NMPI_Pack(sendbuf, sendcnt*comm_size, sendtype, tmp_buf,
-                              tmp_buf_size, &position, comm);
+                    mpi_errno = MPIR_Pack_impl(sendbuf, sendcnt*comm_size, sendtype, tmp_buf,
+                                               tmp_buf_size, &position);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
                 else {
                     position = nbytes;
-                    NMPI_Pack(((char *) sendbuf + extent*sendcnt), 
-                              sendcnt*(comm_size-1), sendtype, tmp_buf,
-                              tmp_buf_size, &position, comm);
+                    mpi_errno = MPIR_Pack_impl(((char *) sendbuf + extent*sendcnt), 
+                                               sendcnt*(comm_size-1), sendtype, tmp_buf,
+                                               tmp_buf_size, &position);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
             }
             else {
                 if (recvbuf != MPI_IN_PLACE) {
                     position = 0;
-                    NMPI_Pack(((char *) sendbuf + extent*sendcnt*rank),
-                              sendcnt*(comm_size-rank), sendtype, tmp_buf,
-                              tmp_buf_size, &position, comm); 
+                    mpi_errno = MPIR_Pack_impl(((char *) sendbuf + extent*sendcnt*rank),
+                                               sendcnt*(comm_size-rank), sendtype, tmp_buf,
+                                               tmp_buf_size, &position);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
                 else {
                     position = nbytes;
-                    NMPI_Pack(((char *) sendbuf + extent*sendcnt*(rank+1)),
-                              sendcnt*(comm_size-rank-1), sendtype, tmp_buf,
-                              tmp_buf_size, &position, comm); 
+                    mpi_errno = MPIR_Pack_impl(((char *) sendbuf + extent*sendcnt*(rank+1)),
+                                               sendcnt*(comm_size-rank-1), sendtype, tmp_buf,
+                                               tmp_buf_size, &position);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
-                NMPI_Pack(sendbuf, sendcnt*rank, sendtype, tmp_buf,
-                          tmp_buf_size, &position, comm); 
+                mpi_errno = MPIR_Pack_impl(sendbuf, sendcnt*rank, sendtype, tmp_buf,
+                                           tmp_buf_size, &position);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
         }
         else {
-            NMPI_Pack_size(recvcnt*(comm_size/2), recvtype, comm, &tmp_buf_size);
+            MPIR_Pack_size_impl(recvcnt*(comm_size/2), recvtype, &tmp_buf_size);
             MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
 
             /* calculate nbytes */
             position = 0;
-            NMPI_Pack(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size,
-		      &position, comm);
+            mpi_errno = MPIR_Pack_impl(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size, &position);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             nbytes = position*recvcnt;
 
             curr_cnt = 0;
@@ -351,9 +356,11 @@ int MPIR_Scatter_intra (
         
         /* copy local data into recvbuf */
         position = 0;
-        if (recvbuf != MPI_IN_PLACE)
-            NMPI_Unpack(tmp_buf, tmp_buf_size, &position, recvbuf, recvcnt,
-                        recvtype, comm);
+        if (recvbuf != MPI_IN_PLACE) {
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, tmp_buf_size, &position, recvbuf,
+                                         recvcnt, recvtype);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
 #endif /* MPID_HAS_HETERO */
     

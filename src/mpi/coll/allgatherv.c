@@ -309,7 +309,7 @@ int MPIR_Allgatherv_intra (
 #ifdef MPID_HAS_HETERO
         else {
             /* heterogeneous. need to use temp. buffer. */
-            NMPI_Pack_size(total_count, recvtype, comm, &tmp_buf_size);
+            MPIR_Pack_size_impl(total_count, recvtype, &tmp_buf_size);
             MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
             
             /* calculate the value of nbytes, the number of bytes in packed
@@ -319,8 +319,9 @@ int MPIR_Allgatherv_intra (
                into tmp_buf and see by how much 'position' is incremented. */
             
             position = 0;
-            NMPI_Pack(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size,
-                      &position, comm);
+            mpi_errno = MPIR_Pack_impl(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size,
+                                       &position);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             nbytes = position;
             
             /* pack local data into right location in tmp_buf */
@@ -329,14 +330,16 @@ int MPIR_Allgatherv_intra (
             position *= nbytes;
             
             if (sendbuf != MPI_IN_PLACE) {
-                NMPI_Pack(sendbuf, sendcount, sendtype, tmp_buf,
-                          tmp_buf_size, &position, comm);
+                mpi_errno = MPIR_Pack_impl(sendbuf, sendcount, sendtype, tmp_buf,
+                                           tmp_buf_size, &position);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             else {
                 /* if in_place specified, local data is found in recvbuf */ 
-                NMPI_Pack(((char *)recvbuf + displs[rank]*recvtype_extent), 
-                          recvcounts[rank], recvtype, tmp_buf,
-                          tmp_buf_size, &position, comm);
+                mpi_errno = MPIR_Pack_impl(((char *)recvbuf + displs[rank]*recvtype_extent),
+                                           recvcounts[rank], recvtype, tmp_buf,
+                                           tmp_buf_size, &position);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             
             curr_cnt = recvcounts[rank]*nbytes;
@@ -463,9 +466,10 @@ int MPIR_Allgatherv_intra (
                 if ((sendbuf != MPI_IN_PLACE) || (j != rank)) {
                     /* not necessary to unpack if in_place and
                        j==rank. otherwise unpack. */
-                    NMPI_Unpack(tmp_buf, tmp_buf_size, &position, 
-                                ((char *)recvbuf + displs[j]*recvtype_extent),
-                                recvcounts[j], recvtype, comm);
+                    mpi_errno = MPIR_Unpack_impl(tmp_buf, tmp_buf_size, &position,
+                                                 ((char *)recvbuf + displs[j]*recvtype_extent),
+                                                 recvcounts[j], recvtype);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
             }
         }
