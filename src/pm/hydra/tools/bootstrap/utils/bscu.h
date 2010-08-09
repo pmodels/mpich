@@ -24,5 +24,6 @@ HYD_status HYDT_bscu_query_env_inherit(const char *env_name, int *ret);
 HYD_status HYDT_bscu_cleanup_procs(void);
 HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp);
 HYD_status HYDT_bscu_stdin_cb(int fd, HYD_event_t events, void *userp);
+HYD_status HYDT_bscu_query_native_int(int *ret);
 
 #endif /* BSCU_H_INCLUDED */

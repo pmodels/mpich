@@ -9,45 +9,28 @@
 #include "bscu.h"
 
 struct HYDT_bsci_fns HYDT_bsci_fns = { 0 };
-const char *HYDT_bsci_comp_array[] = { @hydra_bss_name_array@ };
-HYD_status(*HYDT_bsci_comp_init[])(void) = { @hydra_bss_init_array@ };
+static const char *bss_name_array[] = { @hydra_bss_name_array@ };
+static HYD_status(*bss_init_array[])(void) = { @hydra_bss_init_array@ };
 struct HYDT_bsci_info HYDT_bsci_info = { 0 };
 
-HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap_exec,
-                          int enablex, int debug)
+static void init_bsci_fns(void)
 {
-    int i;
+    HYDT_bsci_fns.launch_procs = NULL;
+    HYDT_bsci_fns.finalize = NULL;
+    HYDT_bsci_fns.wait_for_completion = NULL;
+    HYDT_bsci_fns.cleanup_procs = NULL;
+    HYDT_bsci_fns.query_node_list = NULL;
+    HYDT_bsci_fns.query_usize = NULL;
+    HYDT_bsci_fns.query_proxy_id = NULL;
+    HYDT_bsci_fns.query_env_inherit = NULL;
+    HYDT_bsci_fns.query_native_int = NULL;
+}
+
+static HYD_status set_bsci_defaults(void)
+{
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    /* Store the bootstrap value as multiple bootstrap servers might
-     * set the same internal function pointers */
-    if (user_bootstrap)
-        HYDT_bsci_info.bootstrap = HYDU_strdup(user_bootstrap);
-    else
-        HYD_GET_ENV_STR_VAL(HYDT_bsci_info.bootstrap, "HYDRA_BOOTSTRAP", HYDRA_DEFAULT_BSS);
-
-    if (user_bootstrap_exec)
-        HYDT_bsci_info.bootstrap_exec = HYDU_strdup(user_bootstrap_exec);
-    else
-        HYD_GET_ENV_STR_VAL(HYDT_bsci_info.bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
-
-    for (i = 0; HYDT_bsci_comp_array[i]; i++) {
-        if (!strcmp(HYDT_bsci_info.bootstrap, HYDT_bsci_comp_array[i])) {
-            status = (*HYDT_bsci_comp_init[i])();
-            HYDU_ERR_POP(status, "bootstrap device returned error initializing\n");
-            break;
-        }
-    }
-
-    /* Set the appropriate info */
-    HYDT_bsci_info.enablex = enablex;
-    HYDT_bsci_info.debug = debug;
-
-    if (HYDT_bsci_comp_array[i] == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unrecognized bootstrap server: %s\n", HYDT_bsci_info.bootstrap);
 
     /* This function is mandatory */
     if (HYDT_bsci_fns.launch_procs == NULL)
@@ -68,6 +51,94 @@ HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap
         HYDT_bsci_fns.query_proxy_id = HYDT_bscu_query_proxy_id;
     if (HYDT_bsci_fns.query_env_inherit == NULL)
         HYDT_bsci_fns.query_env_inherit = HYDT_bscu_query_env_inherit;
+    if (HYDT_bsci_fns.query_native_int == NULL)
+        HYDT_bsci_fns.query_native_int = HYDT_bscu_query_native_int;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDT_bsci_init(const char *user_bootstrap, const char *user_bootstrap_exec,
+                          int enablex, int debug)
+{
+    int i, ret;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Initialize bootstrap functions */
+    init_bsci_fns();
+
+    /* Store the bootstrap value as multiple bootstrap servers might
+     * set the same internal function pointers */
+    if (user_bootstrap)
+        HYDT_bsci_info.bootstrap = HYDU_strdup(user_bootstrap);
+    else {
+        MPL_env2str("HYDRA_BOOTSTRAP", (const char **) &HYDT_bsci_info.bootstrap);
+        if (HYDT_bsci_info.bootstrap == NULL) {
+            /* user didn't specify anything; try to find a bootstrap
+             * that will work correctly */
+            for (i = 0; bss_name_array[i]; i++) {
+                HYDT_bsci_info.bootstrap = HYDU_strdup(bss_name_array[i]);
+                HYDT_bsci_info.enablex = enablex;
+                HYDT_bsci_info.debug = debug;
+
+                status = (*bss_init_array[i])();
+                HYDU_ERR_POP(status, "bootstrap device returned error initializing\n");
+
+                /* Set default values for the bootstrap functions */
+                status = set_bsci_defaults();
+                HYDU_ERR_POP(status, "error setting BSCI defaults\n");
+
+                status = HYDT_bsci_fns.query_native_int(&ret);
+                HYDU_ERR_POP(status, "unable to query native environment\n");
+
+                status = HYDT_bsci_fns.finalize();
+                HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
+
+                if (ret)
+                    break;
+
+                HYDU_FREE(HYDT_bsci_info.bootstrap);
+                HYDT_bsci_info.bootstrap = NULL;
+
+                /* Reinitialize the bootstrap functions */
+                init_bsci_fns();
+            }
+        }
+
+        if (HYDT_bsci_info.bootstrap == NULL)
+            HYDT_bsci_info.bootstrap = HYDU_strdup(HYDRA_DEFAULT_BSS);
+    }
+
+    if (user_bootstrap_exec)
+        HYDT_bsci_info.bootstrap_exec = HYDU_strdup(user_bootstrap_exec);
+    else
+        HYD_GET_ENV_STR_VAL(HYDT_bsci_info.bootstrap_exec, "HYDRA_BOOTSTRAP_EXEC", NULL);
+
+    for (i = 0; bss_name_array[i]; i++) {
+        if (!strcmp(HYDT_bsci_info.bootstrap, bss_name_array[i])) {
+            status = (*bss_init_array[i])();
+            HYDU_ERR_POP(status, "bootstrap device returned error initializing\n");
+            break;
+        }
+    }
+
+    /* Set the appropriate info */
+    HYDT_bsci_info.enablex = enablex;
+    HYDT_bsci_info.debug = debug;
+
+    if (bss_name_array[i] == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unrecognized bootstrap server: %s\n", HYDT_bsci_info.bootstrap);
+
+    /* Set default values for the bootstrap functions */
+    status = set_bsci_defaults();
+    HYDU_ERR_POP(status, "error setting BSCI defaults\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

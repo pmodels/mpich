@@ -22,6 +22,9 @@
 struct HYDT_rmki_fns {
     /** \brief Query node list information */
     HYD_status(*query_node_list) (struct HYD_node **node_list);
+
+    /** \brief Query native integration in the environment */
+    HYD_status(*query_native_int) (int *ret);
 };
 
 /** \cond */
@@ -43,6 +46,14 @@ HYD_status HYDT_rmki_init(char *rmk);
  * \param[out]  node_list  List of nodes available
  */
 HYD_status HYDT_rmki_query_node_list(struct HYD_node **node_list);
+
+/**
+ * \brief HYDT_rmki_query_native_int - Query native integration into
+ * the environment
+ *
+ * \param[out]  ret        Return bool: true (1) or false (0)
+ */
+HYD_status HYDT_rmki_query_native_int(int *ret);
 
 /*!
  * @}

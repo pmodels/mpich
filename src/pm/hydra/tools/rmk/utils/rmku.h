@@ -10,5 +10,6 @@
 #include "hydra_base.h"
 
 HYD_status HYD_rmku_query_node_list(struct HYD_node **node_list);
+HYD_status HYD_rmku_query_native_int(int *ret);
 
 #endif /* RMKU_H_INCLUDED */

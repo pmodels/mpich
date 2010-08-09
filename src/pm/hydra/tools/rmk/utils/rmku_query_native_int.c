@@ -5,19 +5,17 @@
  */
 
 #include "hydra_base.h"
-#include "rmki.h"
-#include "rmk_pbs.h"
+#include "hydra_utils.h"
+#include "rmku.h"
 
-HYD_status HYDT_rmki_pbs_init(void)
+HYD_status HYD_rmku_query_native_int(int *ret)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDT_rmki_fns.query_node_list = HYDT_rmkd_pbs_query_node_list;
-    HYDT_rmki_fns.query_native_int = HYDT_rmkd_pbs_query_native_int;
+    *ret = 0;
 
     HYDU_FUNC_EXIT();
-
     return status;
 }

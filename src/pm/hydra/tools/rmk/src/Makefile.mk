@@ -5,4 +5,5 @@
 #
 
 libhydra_la_SOURCES += $(top_builddir)/tools/rmk/src/rmki_init.c \
-	$(top_srcdir)/tools/rmk/src/rmki_query_node_list.c
+	$(top_srcdir)/tools/rmk/src/rmki_query_node_list.c \
+	$(top_srcdir)/tools/rmk/src/rmki_query_native_int.c

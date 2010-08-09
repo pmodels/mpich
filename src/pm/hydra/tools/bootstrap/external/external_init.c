@@ -47,6 +47,9 @@ static HYD_status external_init(void)
     if (HYDT_bsci_fns.query_env_inherit == NULL)
         HYDT_bsci_fns.query_env_inherit = HYDT_bscd_external_query_env_inherit;
 
+    if (HYDT_bsci_fns.query_native_int == NULL)
+        HYDT_bsci_fns.query_native_int = HYDT_bscd_external_query_native_int;
+
     HYDU_FUNC_EXIT();
 
     return status;

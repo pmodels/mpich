@@ -61,6 +61,10 @@ struct HYDT_bsci_fns {
 
     /** \brief Query if an environment variable should be inherited */
     HYD_status(*query_env_inherit) (const char *env_name, int *ret);
+
+    /** \brief Query if the bootstrap server integrates natively with
+     * the RM */
+    HYD_status(*query_native_int) (int *ret);
 };
 
 /** \cond */
@@ -193,6 +197,18 @@ HYD_status HYDT_bsci_query_proxy_id(int *proxy_id);
  * processes.
  */
 HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *ret);
+
+/**
+ * \brief HYDT_bsci_query_native_int - Query if the bootstrap
+ * server integrates natively with the RM
+ *
+ * \param[out] ret                    Boolean for true (1) or false (0)
+ *
+ * This function is used to check if an environment variable inherited
+ * from the user's environment is safe to be propagated to the remote
+ * processes.
+ */
+HYD_status HYDT_bsci_query_native_int (int *ret);
 
 /*! @} */
 

@@ -8,16 +8,23 @@
 #include "rmki.h"
 #include "rmk_pbs.h"
 
-HYD_status HYDT_rmki_pbs_init(void)
+HYD_status HYDT_rmkd_pbs_query_native_int(int *ret)
 {
+    const char *dummy = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDT_rmki_fns.query_node_list = HYDT_rmkd_pbs_query_node_list;
-    HYDT_rmki_fns.query_native_int = HYDT_rmkd_pbs_query_native_int;
+    MPL_env2str("PBS_NODEFILE", &dummy);
+    if (!dummy)
+        *ret = 0;
+    else
+        *ret = 1;
 
+  fn_exit:
     HYDU_FUNC_EXIT();
-
     return status;
+
+  fn_fail:
+    goto fn_exit;
 }

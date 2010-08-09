@@ -6,18 +6,20 @@
 
 #include "hydra_base.h"
 #include "rmki.h"
-#include "rmk_pbs.h"
 
-HYD_status HYDT_rmki_pbs_init(void)
+HYD_status HYDT_rmki_query_native_int(int *ret)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYDT_rmki_fns.query_node_list = HYDT_rmkd_pbs_query_node_list;
-    HYDT_rmki_fns.query_native_int = HYDT_rmkd_pbs_query_native_int;
+    status = HYDT_rmki_fns.query_native_int(ret);
+    HYDU_ERR_POP(status, "RMK device returned error while querying native integration\n");
 
+  fn_exit:
     HYDU_FUNC_EXIT();
-
     return status;
+
+  fn_fail:
+    goto fn_exit;
 }

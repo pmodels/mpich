@@ -19,5 +19,6 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
                                            HYD_status(*stderr_cb) (void *buf, int buflen));
 HYD_status HYDT_bscd_external_finalize(void);
 HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret);
+HYD_status HYDT_bscd_external_query_native_int(int *ret);
 
 #endif /* EXTERNAL_H_INCLUDED */
