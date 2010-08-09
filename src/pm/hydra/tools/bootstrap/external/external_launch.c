@@ -163,6 +163,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     }
     else if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
         targs[idx++] = HYDU_strdup("-inherit");
+        targs[idx++] = HYDU_strdup("-V");
     }
 
     host_idx = idx++;   /* Hostname will come here */
