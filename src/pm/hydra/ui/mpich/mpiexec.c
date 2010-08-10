@@ -14,6 +14,7 @@
 #include "uiu.h"
 
 struct HYD_handle HYD_handle = { {0} };
+
 struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
 
 static void usage(void)
@@ -172,8 +173,8 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "unable to set signal\n");
 
 #if HAVE_ALARM
-        if (HYD_handle.ckpoint_int != -1)
-            alarm(HYD_handle.ckpoint_int);
+    if (HYD_handle.ckpoint_int != -1)
+        alarm(HYD_handle.ckpoint_int);
 #endif /* HAVE_ALARM */
 
     if (pipe(HYD_handle.cleanup_pipe) < 0)

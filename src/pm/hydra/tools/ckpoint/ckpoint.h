@@ -75,8 +75,8 @@ HYD_status HYDT_ckpoint_suspend(int pgid, int id);
  * reestablished. The environment passed in this list is resetup for
  * each process.
  */
-HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int num_ranks, int ranks[], int *in,
-                                int *out, int *err);
+HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int num_ranks,
+                                int ranks[], int *in, int *out, int *err);
 
 /*!
  * @}

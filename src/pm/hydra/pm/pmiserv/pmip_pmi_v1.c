@@ -47,7 +47,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "forwarding command (%s) upstream\n", buf);
+        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "forwarding command (%s) upstream\n",
+                                buf);
     }
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);
@@ -134,7 +135,7 @@ static HYD_status fn_initack(int fd, char *args[])
 
     val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "pmiid");
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                                                 "unable to find pmiid token\n");
+                        "unable to find pmiid token\n");
     id = atoi(val);
 
     /* Store the PMI_ID to fd mapping */
@@ -176,12 +177,12 @@ static HYD_status fn_initack(int fd, char *args[])
     HYDU_ERR_POP(status, "error sending PMI response\n");
     HYDU_FREE(cmd);
 
-fn_exit:
+  fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

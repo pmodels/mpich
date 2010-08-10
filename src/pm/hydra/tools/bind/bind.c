@@ -15,7 +15,7 @@
 #include "hwloc/bind_hwloc.h"
 #endif /* HAVE_HWLOC */
 
-struct HYDT_bind_info HYDT_bind_info = {0};
+struct HYDT_bind_info HYDT_bind_info = { 0 };
 
 HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {

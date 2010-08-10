@@ -244,28 +244,30 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         /* Check if we are running in embedded mode */
         ret = MPL_env2str("PMI_FD", (const char **) &pmi_fd);
-        if (ret) {  /* PMI_FD already set */
+        if (ret) {      /* PMI_FD already set */
             if (HYD_handle.user_global.debug)
                 HYDU_dump(stdout, "someone else already set PMI FD\n");
             pmi_fd = HYDU_strdup(pmi_fd);
 
             ret = MPL_env2int("PMI_RANK", &pmi_rank);
             if (!ret)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_FD set but not PMI_RANK\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "PMI_FD set but not PMI_RANK\n");
         }
         else {
             pmi_rank = -1;
         }
 
         ret = MPL_env2str("PMI_PORT", (const char **) &pmi_port);
-        if (ret) {  /* PMI_FD already set */
+        if (ret) {      /* PMI_FD already set */
             if (HYD_handle.user_global.debug)
                 HYDU_dump(stdout, "someone else already set PMI PORT\n");
             pmi_port = HYDU_strdup(pmi_port);
 
             ret = MPL_env2int("PMI_ID", &pmi_rank);
             if (!ret)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PMI_PORT set but not PMI_ID\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "PMI_PORT set but not PMI_ID\n");
         }
         else {
             pmi_rank = -1;

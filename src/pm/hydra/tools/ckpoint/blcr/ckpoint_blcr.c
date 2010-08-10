@@ -107,7 +107,7 @@ static HYD_status create_env_file(const struct HYD_env *envlist, int num_ranks, 
 
     for (r = 0; r < num_ranks; ++r) {
         MPL_snprintf(filename, sizeof(filename), "/tmp/hydra-env-file-%d:%d", (int) getpid(),
-                 ranks[r]);
+                     ranks[r]);
 
         f = fopen(filename, "w");
         HYDU_ERR_CHKANDJUMP(status, f == NULL, HYD_INTERNAL_ERROR, "fopen failed: %s\n",
@@ -201,8 +201,9 @@ HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix, int pgid, int id)
     goto fn_exit;
 }
 
-HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, struct HYD_env *envlist,
-                                     int num_ranks, int ranks[], int *in, int *out, int *err)
+HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id,
+                                     struct HYD_env *envlist, int num_ranks, int ranks[],
+                                     int *in, int *out, int *err)
 {
     HYD_status status = HYD_SUCCESS;
     pid_t mypid;

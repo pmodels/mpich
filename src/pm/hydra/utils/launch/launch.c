@@ -16,16 +16,13 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
     HYDU_FUNC_ENTER();
 
     if (in && (pipe(inpipe) < 0))
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                            HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", HYDU_strerror(errno));
 
     if (out && (pipe(outpipe) < 0))
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                            HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", HYDU_strerror(errno));
 
     if (err && (pipe(errpipe) < 0))
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n",
-                            HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", HYDU_strerror(errno));
 
     /* Fork off the process */
     tpid = fork();

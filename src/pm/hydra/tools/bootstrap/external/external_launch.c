@@ -124,8 +124,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         MPL_env2str("SGE_ROOT", (const char **) &sge_root);
         MPL_env2str("ARC", (const char **) &arc);
         if (sge_root && arc) {
-            length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 +
-                strlen("qrsh") + 1;
+            length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 + strlen("qrsh") + 1;
             HYDU_MALLOC(path, char *, length, status);
             MPL_snprintf(path, length, "%s/bin/%s/qrsh", sge_root, arc);
         }

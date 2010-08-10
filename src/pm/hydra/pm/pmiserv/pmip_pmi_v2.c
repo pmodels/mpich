@@ -52,7 +52,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "forwarding command (%s) upstream\n", buf);
+        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "forwarding command (%s) upstream\n",
+                                buf);
     }
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);

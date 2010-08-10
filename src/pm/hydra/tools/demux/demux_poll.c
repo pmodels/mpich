@@ -46,8 +46,7 @@ HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
             status = HYD_SUCCESS;
             goto fn_exit;
         }
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "poll error (%s)\n",
-                            HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "poll error (%s)\n", HYDU_strerror(errno));
     }
 
     work_done = 0;

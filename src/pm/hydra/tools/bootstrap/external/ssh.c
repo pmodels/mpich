@@ -51,7 +51,7 @@ HYD_status HYDT_bscd_ssh_store_launch_time(char *hostname)
         if (!strcmp(hostname, e->hostname))
             break;
 
-    if (e == NULL) {        /* Couldn't find an element for this host */
+    if (e == NULL) {    /* Couldn't find an element for this host */
         status = create_element(hostname, &e);
         HYDU_ERR_POP(status, "unable to create ssh time element\n");
     }
