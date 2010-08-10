@@ -5787,6 +5787,30 @@ Function ConfigureTestDir
 		Else
 			printMsg "VERBOSE", "Skipping file: attraints.h"
 		End If
+		'
+		' attr1aints.h
+		'
+		If f.FileExists("test\mpi\f77\pt2pt\attr1aints.h.in") Then
+			printMsg "VERBOSE", "Creating src\include\win32\attr1aints.h"
+			Set fout = f.CreateTextFile("src\include\win32\attr1aints.h")
+			Set fin = f.OpenTextFile("test\mpi\f77\pt2pt\attr1aints.h.in")
+			contents = fin.ReadAll()
+			contents = ReplaceAts(contents, false, false)
+			fout.Write(contents)
+			fin.Close()
+			fout.Close()
+
+			printMsg "VERBOSE", "Creating src\include\win64\attr1aints.h"
+			Set fout = f.CreateTextFile("src\include\win64\attr1aints.h")
+			Set fin = f.OpenTextFile("test\mpi\f77\pt2pt\attr1aints.h.in")
+			contents = fin.ReadAll()
+			contents = ReplaceAts(contents, false, true)
+			fout.Write(contents)
+			fin.Close()
+			fout.Close()
+		Else
+			printMsg "VERBOSE", "Skipping file: attr1aints.h"
+		End If
 
 		'
 		' typeaints.h
