@@ -141,6 +141,9 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
+    MPI_Free_mem(rma_win_addr);
+    MPI_Free_mem(local_buf);
+
     MTest_Finalize(errs);
     MPI_Finalize();
 
