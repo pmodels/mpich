@@ -40,7 +40,7 @@ HYD_status HYDU_env_to_str(struct HYD_env *env, char **str)
 
 HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
 {
-    char *env_str;
+    char *env_str, *env_name;
     int i, ret;
     HYD_status status = HYD_SUCCESS;
 
@@ -49,8 +49,13 @@ HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
     *env_list = NULL;
     i = 0;
     while (environ[i]) {
-        status = HYDT_bsci_query_env_inherit(environ[i], &ret);
+        env_str = HYDU_strdup(environ[i]);
+        env_name = strtok(env_str, "=");
+
+        status = HYDT_bsci_query_env_inherit(env_name, &ret);
         HYDU_ERR_POP(status, "error querying environment propagation\n");
+
+        HYDU_FREE(env_str);
 
         if (!ret) {
             i++;
