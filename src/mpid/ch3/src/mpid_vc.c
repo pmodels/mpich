@@ -1036,15 +1036,16 @@ static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *
                     pg->vct[rank].node_id = node_id;
                     ++rank;
                     if (rank == pg->size)
-                        goto fn_exit;
+                        goto map_done;
                 }
                 ++node_id;
             }
         }
     }
 
-fn_exit:
+map_done:
     ++(*num_nodes); /* add one to get the num instead of the max */
+fn_exit:
     MPIU_Free(mb);
     return mpi_errno;
 fn_fail:
@@ -1232,8 +1233,11 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         node_names[i][0] = '\0';
     }
 
+    g_num_nodes = 0; /* defensive */
+
     for (i = 0; i < pg->size; ++i)
     {
+        MPIU_Assert(g_num_nodes < pg->size);
         if (i == our_pg_rank)
         {
             /* This is us, no need to perform a get */
