@@ -25,6 +25,10 @@ warn() {
     echo "===> WARNING: $@"
 }
 
+echo_n() {
+    # "echo_n" isn't portable, must portably implement with printf
+    printf "%s" "$*"
+}
 
 
 echo
@@ -37,7 +41,7 @@ echo
 ## Checks to make sure we are running from the correct location
 ########################################################################
 
-echo -n "Verifying the location of updatefiles... "
+echo_n "Verifying the location of updatefiles... "
 if [ ! -d maint -o ! -s maint/simplemake.in ] ; then
     echo "must execute at top level directory for now"
     exit 1
@@ -56,7 +60,7 @@ echo "done"
 #
 # Check for a particular file, not just the directory because several
 # autotools steps (such as libtoolize) will create the aux/macro dir.
-echo -n "Checking for svn checkout errors... "
+echo_n "Checking for svn checkout errors... "
 svn_externals_sanity_file="src/mpl/confdb/aclocal_subcfg.m4"
 if test "!" -e $svn_externals_sanity_file ; then
     cat <<EOT
@@ -248,7 +252,7 @@ done
 ## Check for the location of autotools
 ########################################################################
 
-echo -n "Verifying that autotools are in the same location... "
+echo_n "Verifying that autotools are in the same location... "
 if [ -z "$autotoolsdir" ] ; then
     autotoolsdir=$MPICH2_AUTOTOOLS_DIR
 fi
@@ -321,7 +325,7 @@ acSubversion=-1
 acIncDirFlag=-I
 # Try to keep at least one version ahead of autoconf (e.g., if current
 # is 2.65, include a test for 2.66)
-echo -n "Checking for autoconf version... "
+echo_n "Checking for autoconf version... "
 for ver in 68 67 66 65 64 63 62 61 60 59 ; do
     recreate_tmp
     cat >.tmp/configure.in <<EOF
@@ -364,7 +368,7 @@ fi
 ## Verify automake version
 ########################################################################
 
-echo -n "Checking for automake version... "
+echo_n "Checking for automake version... "
 recreate_tmp
 if [ ! -d .tmp/m4 ] ; then
     mkdir .tmp/m4 >/dev/null 2>&1
@@ -404,7 +408,7 @@ fi
 ## Verify libtool version
 ########################################################################
 
-echo -n "Checking for libtool version... "
+echo_n "Checking for libtool version... "
 recreate_tmp
 cat <<EOF >.tmp/configure.ac
 AC_INIT(testver,1.0)
@@ -443,7 +447,7 @@ fi
 ## Checking for UNIX find
 ########################################################################
 
-echo -n "Checking for UNIX find... "
+echo_n "Checking for UNIX find... "
 find . -name 'configure.in' > /dev/null 2>&1
 if [ $? = 0 ] ; then
     echo "done"
@@ -457,7 +461,7 @@ fi
 ## Checking if xargs accepts -r
 ########################################################################
 
-echo -n "Checking if xargs accepts -r... "
+echo_n "Checking if xargs accepts -r... "
 if [ ! -z "`find . -name __random_file__`" ] ; then
     echo "error: found a file named __random_file__"
     exit 1
@@ -484,7 +488,7 @@ echo
 ## Building the README
 ########################################################################
 
-echo -n "Updating the README... "
+echo_n "Updating the README... "
 VERSION=`cat maint/Version | grep ^MPICH2_VERSION | cut -f2 -d' '`
 if [ -f README.vin ] ; then
     sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
@@ -499,7 +503,7 @@ fi
 ## Update SMPD version
 ########################################################################
 
-echo -n "Creating src/pm/smpd/smpd_version.h... "
+echo_n "Creating src/pm/smpd/smpd_version.h... "
 if [ "$do_smpdversion" = yes ] ; then
     smpdVersion=`cat maint/Version | grep ^MPICH2_VERSION | cut -f2 -d' '`
     cat >src/pm/smpd/smpd_version.h <<EOF
@@ -538,12 +542,12 @@ if [ $do_bindings = "yes" ] ; then
     fi
 
     if [ $build_f77 = "yes" ] ; then
-	echo -n "Building Fortran 77 interface... "
+	echo_n "Building Fortran 77 interface... "
 	( cd src/binding/f77 && chmod a+x ./buildiface && ./buildiface )
 	echo "done"
     fi
     if [ $build_f90 = "yes" ] ; then
-	echo -n "Building Fortran 90 interface... "
+	echo_n "Building Fortran 90 interface... "
 	# Remove any copy of mpi_base.f90 (this is used to handle the
 	# Double precision vs. Real*8 option
 	rm -f src/binding/f90/mpi_base.f90.orig
@@ -558,7 +562,7 @@ if [ $do_bindings = "yes" ] ; then
 	build_cxx=yes
     fi
     if [ $build_cxx = "yes" ] ; then
-	echo -n "Building C++ interface... "
+	echo_n "Building C++ interface... "
 	( cd src/binding/cxx && chmod a+x ./buildiface &&
 	  ./buildiface -nosep $otherarg )
 	echo "done"
@@ -577,7 +581,7 @@ if [ $do_geterrmsgs = "yes" ] ; then
         chmod a+x maint/extracterrmsgs
     fi
     if [ -x maint/extracterrmsgs ] ; then
-        echo -n "Extracting error messages... "
+        echo_n "Extracting error messages... "
         rm -rf .tmp
         rm -f .err
 	rm -f unusederr.txt
@@ -614,7 +618,7 @@ Error message files in src/mpi/errhan were not updated."
             mv .tmp src/mpi/errhan/defmsg.h
         fi
         if [ ! -s src/mpi/errhan/defmsg.h ] ; then
-            echo -n "Creating a dummy defmsg.h file... "
+            echo_n "Creating a dummy defmsg.h file... "
 	    cat > src/mpi/errhan/defmsg.h <<EOF
 typedef struct { const unsigned int sentinal1; const char *short_name, *long_name; const unsigned int sentinal2; } msgpair;
 static const int generic_msgs_len = 0;
@@ -693,14 +697,14 @@ if [ ! -x maint/simplemake ] ; then
 fi
 
 # Run some of the simple codes
-echo -n "Creating the enumeration of logging states into src/include/mpiallstates.h... "
+echo_n "Creating the enumeration of logging states into src/include/mpiallstates.h... "
 if [ -x maint/extractstates -a $do_genstates = "yes" ] ; then
     ./maint/extractstates
 fi
 echo "done"
 
 # new parameter code
-echo -n "Generating parameter handling code... "
+echo_n "Generating parameter handling code... "
 if test -x maint/genparams -a "$do_getparms" = "yes" ; then
     ./maint/genparams
 fi
@@ -708,7 +712,7 @@ echo "done"
 
 # simplemake
 if [ $made_simplemake != "no" ] ; then
-    echo -n "Checking if simplemake is created correctly... "
+    echo_n "Checking if simplemake is created correctly... "
     # Check that only the first three lines were changed:
     rm -f .t1 .t2
     sed -e 1,3d maint/simplemake.in > .t1
@@ -728,7 +732,7 @@ fi
 
 # Create and/or update the f90 tests
 if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
-    echo -n "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
+    echo_n "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
     for dir in test/mpi/f77/* ; do
         if [ ! -d $dir ] ; then continue ; fi
 	leafDir=`basename $dir`
@@ -787,7 +791,7 @@ if [ $do_build_configure = yes ] ; then
     # Check for out-of-date configures (the dependency handling isn't
     # 100% accurate, so we use this step as an additional check)
     if [ ! -s maint/conftimestamp ] ; then
-	echo -n "Deleting all configure scripts because of missing confdbtimestamp... "
+	echo_n "Deleting all configure scripts because of missing confdbtimestamp... "
 	find . -name configure -print | grep -v maint/configure | xargs rm -f
 	find . -name autom4te.cache -print | xargs rm -rf
 	date > maint/conftimestamp
@@ -797,7 +801,7 @@ if [ $do_build_configure = yes ] ; then
 	# report success, even if there are no newer files in confdb
 	files=`find confdb -newer  maint/conftimestamp 2>&1` 
 	if [ -n "$files" ] ; then
-	    echo -n "Deleting all configure scripts because of changes in confdb... "
+	    echo_n "Deleting all configure scripts because of changes in confdb... "
  	    find . -name configure -print | grep -v maint/configure | xargs rm -f
 	    date > maint/conftimestamp
 	    echo "done"
@@ -900,7 +904,7 @@ fi
 # <ctrl>-M).  We may need to add this sed step sed -e '/"\"/d' -e
 # 's/\//g' (the first removes case statements on \^M, the second
 # removes the \^M from the ac_config_files statement
-echo -n "Fixing ^M characters in configure files... "
+echo_n "Fixing ^M characters in configure files... "
 fixBackWhackCtrlMBug=no
 for cf in `find . -name 'configure' -print` ; do
     if grep 'src/Makefile \\ src' $cf 2>&1 >/dev/null ; then 
