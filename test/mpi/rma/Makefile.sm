@@ -56,6 +56,7 @@ fkeyvalwin_SOURCES = fkeyvalwin.c
 baseattrwin_SOURCES = baseattrwin.c
 
 nullpscw_SOURCES = nullpscw.c
+rmanull_SOURCES    = rmanull.c
 
 mixedsync_SOURCES = mixedsync.c
 selfrma_SOURCES   = selfrma.c
