@@ -1109,7 +1109,7 @@ sub ReadMfile {
 }
 
 sub WriteMfile {
-    $maxline = 80;
+    $maxline = 100;
     $output_filename = $_[0];
     # Write out the generated Makefile
     unlink $output_filename . ".new";
@@ -1682,10 +1682,10 @@ sub DefaultRules {
 	# number in it (!)
 	&print_make_longline( FD, "\t\@rm -rf autom4te*.cache" );
 	if ($configure_has_config_headers ne "no") {
-	    &print_make_longline( FD,  "\t(cd \${srcdir} && $autoheader_prog $aargs && \\$newline\t$autoconf $aargs )" );
+	    &print_make_longline( FD,  "\t(cd \${srcdir} && $autoheader_prog $aargs && $autoconf $aargs)" );
 	}
 	else {
-	    &print_make_longline( FD,  "\t(cd \${srcdir} && $autoconf $aargs )" );
+	    &print_make_longline( FD,  "\t(cd \${srcdir} && $autoconf $aargs)" );
 	}
 	if ($fixup_autoconf_cd) {
 	    # This is needed for DOS in case the pwd contains blanks
