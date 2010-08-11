@@ -2058,8 +2058,10 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
     MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, lock_get_unlock_pkt, 
 				      sizeof(*lock_get_unlock_pkt), &sreq));
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
     }
@@ -2131,9 +2133,11 @@ int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
     /* send lock granted packet */
     MPIDI_Pkt_init(lock_granted_pkt, MPIDI_CH3_PKT_LOCK_GRANTED);
     lock_granted_pkt->source_win_handle = source_win_handle;
-        
+
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, lock_granted_pkt,
 				      sizeof(*lock_granted_pkt), &req));
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     if (mpi_errno) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
     }
@@ -2369,8 +2373,9 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPID_Datatype_get_size_macro(get_pkt->datatype, type_size);
 	iov[1].MPID_IOV_LEN = get_pkt->count * type_size;
 
-	/* Because this is in a packet handler, it is already within a critical section */	
+        MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(vc, req, iov, 2));
+        MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
