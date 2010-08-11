@@ -767,14 +767,11 @@ int MPID_Win_lock(int lock_type, int dest, int assert,
         int mpi_errno = MPI_SUCCESS;
         MPIDU_Onesided_ctl_t info;
         int lpid;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_LOCK);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_LOCK);
 
         MPIU_UNREFERENCED_ARG(assert);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         if (dest == MPI_PROC_NULL) goto fn_exit;
 
@@ -810,7 +807,6 @@ int MPID_Win_lock(int lock_type, int dest, int assert,
         win_ptr->_dev.epoch_assert = assert;
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_LOCK);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */
@@ -846,12 +842,9 @@ int MPID_Win_unlock(int dest, MPID_Win *win_ptr)
         int mpi_errno = MPI_SUCCESS;
         int lpid;
         MPIDU_Onesided_ctl_t info;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_UNLOCK);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         if (dest == MPI_PROC_NULL) goto fn_exit;
 
@@ -907,7 +900,6 @@ int MPID_Win_unlock(int dest, MPID_Win *win_ptr)
         epoch_end_cb(win_ptr);
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_UNLOCK);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */

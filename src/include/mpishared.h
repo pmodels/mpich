@@ -67,9 +67,7 @@
 
 /* Add support for the states and function enter/exit macros */
 /* #include "mpitimerimpl.h" */
-#if defined(MPICH_DEBUG_FINE_GRAIN_NESTING)
-#   include "mpiu_func_nesting.h"
-#elif defined(MPICH_DEBUG_MEMARENA)
+#if defined(MPICH_DEBUG_MEMARENA)
 #   include "mpifuncmem.h"
 #elif defined(USE_DBG_LOGGING)
 #   include "mpifunclog.h"

@@ -82,12 +82,9 @@ int MPID_Win_fence(int assert, MPID_Win *win_ptr)
 {
 	int mpi_errno = MPI_SUCCESS;
 	int rank = win_ptr->_dev.comm_ptr->rank;
-	MPIU_THREADPRIV_DECL;
 	MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_FENCE);
 
 	MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_FENCE);
-	MPIU_THREADPRIV_GET;
-	MPIR_Nest_incr();
 
 	/*
 	 * FENCE must always (effectively) barrier, so since we don't know
@@ -164,7 +161,6 @@ int MPID_Win_fence(int assert, MPID_Win *win_ptr)
 	}
 
 fn_exit:
-	MPIR_Nest_decr();
 	MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_FENCE);
 	return mpi_errno;
 	/* --BEGIN ERROR HANDLING-- */

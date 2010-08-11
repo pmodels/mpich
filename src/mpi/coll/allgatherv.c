@@ -60,7 +60,7 @@
    End Algorithm: MPI_Allgatherv
 */
 
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one 
    in some cases */
 #undef FUNCNAME
@@ -669,9 +669,9 @@ int MPIR_Allgatherv_intra (
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
 
-/* begin:nested */
+
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgatherv_inter
@@ -763,7 +763,7 @@ int MPIR_Allgatherv_inter (
 
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Allgatherv performs an allgatherv using point-to-point
    messages.  This is intended to be used by device-specific

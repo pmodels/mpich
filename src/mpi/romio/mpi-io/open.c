@@ -54,7 +54,6 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode,
 #endif /* MPI_hpux */
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPIR_Nest_incr();
 
     /* --BEGIN ERROR HANDLING-- */
     if (comm == MPI_COMM_NULL)
@@ -192,14 +191,11 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode,
     HPMP_IO_OPEN_END(fl_xmpi, *fh, comm);
 #endif /* MPI_hpux */
 
-    MPIR_Nest_decr();
-
 fn_exit:
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIR_Nest_decr();
     error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

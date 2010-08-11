@@ -73,12 +73,6 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
     int mpi_errno = MPI_SUCCESS;
     MPID_Keyval* kv = attr_p->keyval;
 
-    MPIU_THREADPRIV_DECL;
-
-    MPIU_THREADPRIV_GET;
-
-    MPIR_Nest_incr();
-    
     if(kv->delfn.user_function == NULL)
         goto fn_exit;
 
@@ -109,7 +103,6 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
     /* --END ERROR HANDLING-- */
 
   fn_exit:
-    MPIR_Nest_decr();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -137,12 +130,6 @@ int MPIR_Call_attr_copy( int handle, MPID_Attribute *attr_p, void** value_copy, 
     int rc;
     MPID_Keyval* kv = attr_p->keyval;
 
-    MPIU_THREADPRIV_DECL;
-    
-    MPIU_THREADPRIV_GET;
-    
-    MPIR_Nest_incr();
-
     if(kv->copyfn.user_function == NULL)
         goto fn_exit;
 
@@ -168,7 +155,6 @@ int MPIR_Call_attr_copy( int handle, MPID_Attribute *attr_p, void** value_copy, 
     }
     /* --END ERROR HANDLING-- */
 fn_exit:
-    MPIR_Nest_decr();
     return mpi_errno;
 fn_fail:
     goto fn_exit;

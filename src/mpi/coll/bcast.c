@@ -777,7 +777,7 @@ fn_fail:
  * the cutoff points for these algorithms.  If I've done this right, you should
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
-/* begin:nested */
+
 static int MPIR_SMP_Bcast(
         void *buffer, 
         int count, 
@@ -914,7 +914,7 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* This is the default implementation of broadcast. The algorithm is:
    
@@ -975,15 +975,9 @@ int MPIR_Bcast_intra (
     int nbytes=0;
     int type_size, is_homogeneous;
     MPI_Comm comm;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST);
-
-    /* The various MPIR_Bcast_* impls use NMPI functions, so we bump the nest
-       count here to avoid repeatedly calling incr/decr. */
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr(); 
 
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
@@ -1044,8 +1038,6 @@ int MPIR_Bcast_intra (
     }
 
 fn_exit:
-    MPIR_Nest_decr();
-
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
@@ -1061,7 +1053,7 @@ fn_fail:
 #define FUNCNAME MPIR_Bcast_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* begin:nested */
+
 /* Not PMPI_LOCAL because it is called in intercomm allgather */
 int MPIR_Bcast_inter ( 
     void *buffer, 
@@ -1127,7 +1119,7 @@ fn_fail:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST_INTER);
     return mpi_errno;
 }
-/* end:nested */
+
 
 /* MPIR_Bcast_impl should be called by any internal component that
    would otherwise call MPI_Bcast.  This differs from MPIR_Bcast in

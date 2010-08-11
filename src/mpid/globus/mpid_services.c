@@ -114,8 +114,6 @@ int MPID_Comm_accept(char * const port_name, MPID_Info * const info, const int r
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_ADI3 | MPIG_DEBUG_LEVEL_DYNAMIC, "entering: port_name=%s, root=%d"
 	", comm=" MPIG_HANDLE_FMT ", commp=" MPIG_PTR_FMT, port_name, root, comm->handle, MPIG_PTR_CAST(comm)));
 
-    MPIR_Nest_incr();
-    
     /* allocate a new communicator structure */
     mpi_errno = MPIR_Comm_create(&newcomm);
     if (mpi_errno)
@@ -389,8 +387,6 @@ int MPID_Comm_accept(char * const port_name, MPID_Info * const info, const int r
 	mpig_port_vc_close(port_vc);
     }
 
-    MPIR_Nest_decr();
-    
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_ADI3 | MPIG_DEBUG_LEVEL_DYNAMIC, "entering: port_name=%s, root=%d"
 	", comm=" MPIG_HANDLE_FMT ", commp=" MPIG_PTR_FMT ", newcomm=" MPIG_PTR_FMT, port_name, root, comm->handle,
 	MPIG_PTR_CAST(comm), MPIG_PTR_CAST(newcomm)));
@@ -448,8 +444,6 @@ int MPID_Comm_connect(const char * const port_name, MPID_Info * const info, cons
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_ADI3 | MPIG_DEBUG_LEVEL_DYNAMIC, "entering: port_name=%s, root=%d"
 	", comm=" MPIG_HANDLE_FMT ", commp=" MPIG_PTR_FMT, port_name, root, comm->handle, MPIG_PTR_CAST(comm)));
 
-    MPIR_Nest_incr();
-    
     /* allocate a new communicator structure */
     mpi_errno = MPIR_Comm_create(&newcomm);
     if (mpi_errno)
@@ -723,8 +717,6 @@ int MPID_Comm_connect(const char * const port_name, MPID_Info * const info, cons
 	mpig_port_vc_close(port_vc);
     }
 
-    MPIR_Nest_decr();
-    
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_ADI3 | MPIG_DEBUG_LEVEL_DYNAMIC, "entering: port_name=%s, root=%d"
 	", comm=" MPIG_HANDLE_FMT ", commp=" MPIG_PTR_FMT ", newcomm=" MPIG_PTR_FMT, port_name, root, comm->handle,
 	MPIG_PTR_CAST(comm), MPIG_PTR_CAST(newcomm)));

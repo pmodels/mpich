@@ -151,14 +151,11 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit,
         MPID_Win *win;
         int mpi_errno=MPI_SUCCESS, comm_size, rank;
 
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_CREATE);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_CREATE);
 
         MPIU_UNREFERENCED_ARG(info);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         comm_size = MPIDU_comm_size_c(comm_ptr);
         rank = comm_ptr->rank;
@@ -223,7 +220,6 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit,
         *win_ptr = win;
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_CREATE);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */

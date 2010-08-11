@@ -57,7 +57,6 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
 #endif /* MPI_hpux */
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPIR_Nest_incr();
 
     if (*request == MPIO_REQUEST_NULL) {
 	    error_code = MPI_SUCCESS;
@@ -91,7 +90,6 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
 #endif /* MPI_hpux */
 
 fn_exit:
-    MPIR_Nest_decr();
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return error_code;
 }

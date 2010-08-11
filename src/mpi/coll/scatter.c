@@ -44,7 +44,7 @@
    End Algorithm: MPI_Scatter
 */
 
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatter_intra
@@ -70,7 +70,6 @@ int MPIR_Scatter_intra (
     int        mpi_errno = MPI_SUCCESS;
     MPI_Comm comm;
     MPIU_CHKLMEM_DECL(4);
-    MPIU_THREADPRIV_DECL;
     
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
@@ -82,9 +81,6 @@ int MPIR_Scatter_intra (
 
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
@@ -366,16 +362,15 @@ int MPIR_Scatter_intra (
     
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    MPIR_Nest_decr();
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
 
-/* begin:nested */
+
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatter_inter
@@ -501,7 +496,7 @@ int MPIR_Scatter_inter (
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Scatter performs an scatter using point-to-point messages.
    This is intended to be used by device-specific implementations of

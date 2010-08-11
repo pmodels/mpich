@@ -111,7 +111,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
     MPIU_CHKLMEM_DECL(3);
 
     MPID_Datatype_get_extent_macro(datatype, extent);
-    /* assumes nesting is handled by the caller right now, may not be true in the future */
+
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
@@ -282,7 +282,7 @@ fn_fail:
 #define FUNCNAME MPIR_Reduce_scatter_block_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_block_intra ( 
     void *sendbuf, 
@@ -320,8 +320,6 @@ int MPIR_Reduce_scatter_block_intra (
     /* set op_errno to 0. stored in perthread structure */
     MPIU_THREADPRIV_GET;
     MPIU_THREADPRIV_FIELD(op_errno) = 0;
-
-    MPIR_Nest_incr();
 
     if (recvcount == 0) {
         goto fn_exit;
@@ -940,7 +938,6 @@ int MPIR_Reduce_scatter_block_intra (
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
 
-    MPIR_Nest_decr();
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
@@ -951,13 +948,13 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_block_inter ( 
     void *sendbuf, 
@@ -1042,7 +1039,7 @@ int MPIR_Reduce_scatter_block_inter (
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Reduce_scatter_block performs a red_scat_block using
    point-to-point messages.  This is intended to be used by

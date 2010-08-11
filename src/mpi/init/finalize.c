@@ -118,7 +118,6 @@ int MPI_Finalize( void )
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank=0;
 #endif
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -219,29 +218,9 @@ int MPI_Finalize( void )
 
     /* FIXME: Many of these debugging items could/should be callbacks, 
        added to the finalize callback list */
-    /* FIXME: Both the memory tracing and debug nesting code blocks should
-       be finalize callbacks */
+    /* FIXME: the memory tracing code block should be a finalize callback */
     /* If memory debugging is enabled, check the memory here, after all
        finalize callbacks */
-#ifdef MPICH_DEBUG_NESTING
-    {
-	if (MPIR_PARAM_NESTCHECK) {
-	    MPIU_THREADPRIV_GET;
-	    /* Check for an error in the nesting level */
-	    if (MPIR_Nest_value()) {
-		int i,n;
-		n = MPIR_Nest_value();
-		fprintf( stderr, "Unexpected value for nesting level = %d\n", n );
-		fprintf( stderr, "Nest stack is:\n" );
-		for (i=n-1; i>=0; i--) {
-		    fprintf( stderr, "\t[%d] %s:%d\n", i, 
-			     MPIU_THREADPRIV_FIELD(nestinfo[i].file), 
-			     MPIU_THREADPRIV_FIELD(nestinfo[i].line) );
-		}
-	    }
-	}
-    }
-#endif
 
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPIR_Process.initialized = MPICH_POST_FINALIZED;

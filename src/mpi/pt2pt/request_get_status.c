@@ -149,27 +149,21 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
 		else
 		{
 		    /* This is needed for persistent Bsend requests */
-		    MPIU_THREADPRIV_DECL;
-		    MPIU_THREADPRIV_GET;
-		    MPIR_Nest_incr();
-		    {
-			int rc;
-			
-			rc = MPIR_Grequest_query(prequest_ptr);
-			if (mpi_errno == MPI_SUCCESS)
-			{
-			    mpi_errno = rc;
-			}
-			if (status != MPI_STATUS_IGNORE)
-			{
-			    status->cancelled = prequest_ptr->status.cancelled;
-			}
-			if (mpi_errno == MPI_SUCCESS)
-			{
-			    mpi_errno = prequest_ptr->status.MPI_ERROR;
-			}
-		    }
-		    MPIR_Nest_decr();
+                    int rc;
+                    
+                    rc = MPIR_Grequest_query(prequest_ptr);
+                    if (mpi_errno == MPI_SUCCESS)
+                    {
+                        mpi_errno = rc;
+                    }
+                    if (status != MPI_STATUS_IGNORE)
+                    {
+                        status->cancelled = prequest_ptr->status.cancelled;
+                    }
+                    if (mpi_errno == MPI_SUCCESS)
+                    {
+                        mpi_errno = prequest_ptr->status.MPI_ERROR;
+                    }
 		}
             }
             else
@@ -215,24 +209,18 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
 
         case MPID_UREQUEST:
         {
-	    MPIU_THREADPRIV_DECL;
-	    MPIU_THREADPRIV_GET;
-	    MPIR_Nest_incr();
-	    {
-		int rc;
-		
-		rc = MPIR_Grequest_query(request_ptr);
-		if (mpi_errno == MPI_SUCCESS)
-		{
-		    mpi_errno = rc;
-		}
-		if (status != MPI_STATUS_IGNORE)
-		{
-		    status->cancelled = request_ptr->status.cancelled;
-		}
-		MPIR_Request_extract_status(request_ptr, status);
-	    }
-	    MPIR_Nest_decr();
+            int rc;
+            
+            rc = MPIR_Grequest_query(request_ptr);
+            if (mpi_errno == MPI_SUCCESS)
+            {
+                mpi_errno = rc;
+            }
+            if (status != MPI_STATUS_IGNORE)
+            {
+                status->cancelled = request_ptr->status.cancelled;
+            }
+            MPIR_Request_extract_status(request_ptr, status);
 	    
             break;
         }

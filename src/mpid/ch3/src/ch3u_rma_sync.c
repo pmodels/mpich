@@ -58,12 +58,10 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     void **dataloops=NULL;    /* to store dataloops for each datatype */
     MPID_Progress_state progress_state;
     MPIU_CHKLMEM_DECL(6);
-    MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FENCE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FENCE);
 
-    MPIU_THREADPRIV_GET;
     /* In case this process was previously the target of passive target rma
      * operations, we need to take care of the following...
      * Since we allow MPI_Win_unlock to return without a done ack from
@@ -800,18 +798,14 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 {
-    int nest_level_inc = FALSE;
     int mpi_errno=MPI_SUCCESS;
     MPID_Group *win_grp_ptr;
     int i, post_grp_size, *ranks_in_post_grp, *ranks_in_win_grp, dst, rank;
     MPID_Comm *win_comm_ptr;
     MPIU_CHKLMEM_DECL(4);
-    MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_POST);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_POST);
-
-    MPIU_THREADPRIV_GET;
 
 #if 0
     /* Reset the fence counter so that in case the user has switched from 
@@ -925,10 +919,6 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    if (nest_level_inc)
-    { 
-	MPIR_Nest_decr();
-    }
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_POST);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -1001,7 +991,6 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_complete(MPID_Win *win_ptr)
 {
-    int nest_level_inc = FALSE;
     int mpi_errno = MPI_SUCCESS;
     int comm_size, *nops_to_proc, src, new_total_op_count;
     int i, j, dst, done, total_op_count, *curr_ops_cnt;
@@ -1014,12 +1003,10 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     MPID_Group *win_grp_ptr;
     int start_grp_size, *ranks_in_start_grp, *ranks_in_win_grp, rank;
     MPIU_CHKLMEM_DECL(9);
-    MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_COMPLETE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_COMPLETE);
 
-    MPIU_THREADPRIV_GET;
     MPID_Comm_get_ptr( win_ptr->comm, comm_ptr );
     comm_size = comm_ptr->local_size;
         
@@ -1047,9 +1034,6 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
         
     rank = MPIR_Comm_rank(comm_ptr);
 
-    nest_level_inc = TRUE;
-    MPIR_Nest_incr();
-    
     /* If MPI_MODE_NOCHECK was not specified, we need to check if
        Win_post was called on the target processes. Wait for a 0-byte sync
        message from each target process */
@@ -1284,10 +1268,6 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     win_ptr->start_group_ptr = NULL; 
     
  fn_exit:
-    if (nest_level_inc)
-    { 
-	MPIR_Nest_decr();
-    }
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_COMPLETE);
     return mpi_errno;

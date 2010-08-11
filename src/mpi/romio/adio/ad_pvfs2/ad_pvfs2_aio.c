@@ -170,9 +170,7 @@ int ADIOI_PVFS2_aio_poll_fn(void *extra_state, MPI_Status *status)
     ret = PVFS_sys_wait(aio_req->op_id, "ADIOI_PVFS2_aio_poll_fn", &error);
     if (ret == 0) {
 	aio_req->nbytes = aio_req->resp_io.total_completed;
-	MPIR_Nest_incr();
 	MPI_Grequest_complete(aio_req->req);
-	MPIR_Nest_decr();
 	return MPI_SUCCESS;
     } else
 	return MPI_UNDEFINED; /* TODO: what's this error? */
@@ -207,9 +205,7 @@ int ADIOI_PVFS2_aio_wait_fn(int count, void ** array_of_states,
 		if (op_id_array[i] == aio_reqlist[j]->op_id) {
 		    aio_reqlist[j]->nbytes = 
 			aio_reqlist[j]->resp_io.total_completed;
-		    MPIR_Nest_incr();
 		    MPI_Grequest_complete(aio_reqlist[j]->req);
-		    MPIR_Nest_decr();
 		}
 	    }
 	}

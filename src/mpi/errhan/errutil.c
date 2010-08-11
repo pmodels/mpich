@@ -145,67 +145,6 @@ void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 #endif /* HAVE_CXX_BINDING */
 
 /* ------------------------------------------------------------------------- */
-/* 
-   Nesting level for routines.
-   Note that since these use per-thread data, no locks or atomic update
-   routines are required.
-
-   In a single-threaded environment, these are replaced with
-   MPIR_Thread.nest_count ++, --.  These are defined in the mpiimpl.h file.
- */
-/* ------------------------------------------------------------------------- */
-
-/* These routines export the nest increment and decrement for use in ROMIO */
-void MPIR_Nest_incr_export( void )
-{
-    MPIU_THREADPRIV_DECL;
-    MPIU_THREADPRIV_GET;
-    MPIU_THREADPRIV_FIELD(nest_count) = MPIU_THREADPRIV_FIELD(nest_count) + 1;
-}
-void MPIR_Nest_decr_export( void )
-{
-    MPIU_THREADPRIV_DECL;
-    MPIU_THREADPRIV_GET;
-    MPIU_THREADPRIV_FIELD(nest_count) = MPIU_THREADPRIV_FIELD(nest_count) - 1;
-}
-#ifdef MPICH_DEBUG_NESTING
-void MPIR_Nest_incr_export_dbg( const char *srcfile, int srcline )
-{
-    MPIU_THREADPRIV_DECL;
-    MPIU_THREADPRIV_GET;
-
-    if (MPIU_THREADPRIV_FIELD(nest_count) >= MPICH_MAX_NESTINFO) { 
-	MPIU_Internal_error_printf("nest stack exceeded at %s:%d\n",
-				   srcfile, srcline );
-    }
-    else {
-	MPIU_Strncpy(MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,srcfile, MPICH_MAX_NESTFILENAME);
-	MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=srcline;
-    }
-     MPIU_THREADPRIV_FIELD(nest_count)++; 
-}
-void MPIR_Nest_decr_export_dbg( const char *srcfile, int srcline )
-{
-    MPIU_THREADPRIV_DECL;
-    MPIU_THREADPRIV_GET;
-
-    if (MPIU_THREADPRIV_FIELD(nest_count) >= 0) {
-	MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line=-srcline;}
-     MPIU_THREADPRIV_FIELD(nest_count)--;
-     if (MPIU_THREADPRIV_FIELD(nest_count) < MPICH_MAX_NESTINFO && 
-	 strcmp(MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file,srcfile) != 0) {
-         MPIU_Msg_printf( "Decremented nest count in file %s:%d but incremented in different file (%s:%d)\n", 
-                          srcfile, srcline,
-                          MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].file, \
-                          MPIU_THREADPRIV_FIELD(nestinfo)[MPIU_THREADPRIV_FIELD(nest_count)].line);\
-     }
-     else if (MPIU_THREADPRIV_FIELD(nest_count) < 0) {
-	 MPIU_Msg_printf("Decremented nest count in file %s:%d is negative\n", 
-			 srcfile,srcline);
-     }
-}
-#endif /* DEBUG_NESTING */
-/* ------------------------------------------------------------------------- */
 /* These routines are called on error exit from most top-level MPI routines
    to invoke the appropriate error handler.  Also included is the routine
    to call if MPI has not been initialized (MPIR_Err_preinit) and to 
@@ -244,7 +183,6 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     const int error_class = ERROR_GET_CLASS(errcode);
     MPID_Errhandler *errhandler = NULL;
     int rc;
-    MPIU_THREADPRIV_DECL;
 
     rc = checkValidErrcode( error_class, fcname, &errcode );
 
@@ -256,11 +194,6 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
         handleFatalError(MPIR_Process.comm_world, fcname, errcode);
         return MPI_ERR_INTERN;
     }
-
-    MPIU_THREADPRIV_GET; /* must come after sanity check */
-
-    /* First, check the nesting level */
-    if (MPIR_Nest_value()) return errcode;
 
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_comm(comm_ptr=%p, fcname=%s, errcode=%d)", comm_ptr, fcname, errcode));
 
@@ -307,10 +240,6 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     if (errhandler->handle != MPI_ERRORS_RETURN &&
         errhandler->handle != MPIR_ERRORS_THROW_EXCEPTIONS)
     {
-	/* The user error handler may make calls to MPI routines, so the
-	 * nesting counter must be incremented before the handler is called */
-	MPIR_Nest_incr();
-    
 	/* We pass a final 0 (for a null pointer) to these routines
 	   because MPICH-1 expected that */
 	switch (comm_ptr->errhandler->language)
@@ -339,7 +268,6 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 #endif /* FORTRAN_BINDING */
 	}
 
-	MPIR_Nest_decr();
     }
 
     MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
@@ -353,9 +281,6 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 {
     const int error_class = ERROR_GET_CLASS(errcode);
     int rc ;
-    MPIU_THREADPRIV_DECL;
-
-    MPIU_THREADPRIV_GET;
 
     if (win_ptr == NULL || win_ptr->errhandler == NULL)
 	return MPIR_Err_return_comm(NULL, fcname, errcode);
@@ -364,9 +289,6 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
        we will have had to call an MPI routine that would make that test */
 
     rc = checkValidErrcode( error_class, fcname, &errcode );
-
-    /* First, check the nesting level */
-    if (MPIR_Nest_value()) return errcode;
 
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_win(win_ptr=%p, fcname=%s, errcode=%d)", win_ptr, fcname, errcode));
 
@@ -389,10 +311,6 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
     {
 	/* Now, invoke the error handler for the window */
 
-	/* The user error handler may make calls to MPI routines, so the
-	 * nesting counter must be incremented before the handler is called */
-	MPIR_Nest_incr();
-    
 	/* We pass a final 0 (for a null pointer) to these routines
 	   because MPICH-1 expected that */
 	switch (win_ptr->errhandler->language)
@@ -420,7 +338,6 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 #endif /* FORTRAN_BINDING */
 	}
 
-	MPIR_Nest_decr();
     }
     return errcode;
 }

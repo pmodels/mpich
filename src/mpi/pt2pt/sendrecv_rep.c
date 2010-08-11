@@ -68,7 +68,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     static const char FCNAME[] = "MPI_Sendrecv_replace";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
 #ifdef MPID_LOG_ARROWS
     /* This isn't the right test, but it is close enough for now */
     int sendcount = count, recvcount = count;
@@ -81,11 +80,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_PT2PT_FUNC_ENTER_BOTH(MPID_STATE_MPI_SENDRECV_REPLACE);
 
-    MPIU_THREADPRIV_GET;
-    
     /* Convert handles to MPI objects. */
     MPID_Comm_get_ptr(comm, comm_ptr);
-    MPIR_Nest_incr();
     
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -217,7 +213,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     
     /* ... end of body of routine ... */
-    MPIR_Nest_decr();
 
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -226,7 +221,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     return mpi_errno;
     
   fn_fail:
-    MPIR_Nest_decr();
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
     {

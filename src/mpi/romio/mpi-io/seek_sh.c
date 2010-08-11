@@ -40,7 +40,6 @@ int MPI_File_seek_shared(MPI_File mpi_fh, MPI_Offset offset, int whence)
     ADIO_File fh;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(mpi_fh);
 
@@ -177,7 +176,6 @@ int MPI_File_seek_shared(MPI_File mpi_fh, MPI_Offset offset, int whence)
     error_code = MPI_SUCCESS;
 
 fn_exit:
-    MPIR_Nest_decr();
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;

@@ -703,7 +703,7 @@ fn_fail:
    End Algorithm: MPI_Reduce
 */
 
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one 
    in some cases */
 #undef FUNCNAME
@@ -725,14 +725,9 @@ int MPIR_Reduce_intra (
 #if defined(USE_SMP_COLLECTIVES)
     MPIU_CHKLMEM_DECL(1);
 #endif
-    MPIU_THREADPRIV_DECL;
-
     if (count == 0) return MPI_SUCCESS;
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
 #if defined(USE_SMP_COLLECTIVES)
     /* is the op commutative? We do SMP optimizations only if it is. */
@@ -859,7 +854,6 @@ int MPIR_Reduce_intra (
   fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    MPIR_Nest_decr();
 #if defined(USE_SMP_COLLECTIVES)
     MPIU_CHKLMEM_FREEALL();
 #endif
@@ -867,9 +861,9 @@ int MPIR_Reduce_intra (
   fn_fail:
     goto fn_exit;
 }
-/* end:nested */
 
-/* begin:nested */
+
+
 /* Needed in intercommunicator allreduce */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_inter
@@ -897,7 +891,6 @@ int MPIR_Reduce_inter (
     void *tmp_buf=NULL;
     MPID_Comm *newcomm_ptr = NULL;
     MPI_Comm comm;
-    MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(1);
 
     if (root == MPI_PROC_NULL) {
@@ -906,8 +899,6 @@ int MPIR_Reduce_inter (
     }
 
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
     
     comm = comm_ptr->handle;
 
@@ -961,13 +952,12 @@ int MPIR_Reduce_inter (
   fn_exit:
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr ); 
     MPIU_CHKLMEM_FREEALL();
-    MPIR_Nest_decr();
     return mpi_errno;
 
   fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Reduce performs an reduce using point-to-point messages.
    This is intended to be used by device-specific implementations of

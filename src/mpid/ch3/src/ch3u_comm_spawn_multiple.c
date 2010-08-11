@@ -113,14 +113,10 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     PMI_keyval_t **info_keyval_vectors=0, preput_keyval_vector;
     int *pmi_errcodes = 0, pmi_errno;
     int total_num_processes, should_accept = 1;
-    MPIU_THREADPRIV_DECL;
-
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     if (comm_ptr->rank == root) {
 	/* create an array for the pmi error codes */
@@ -298,7 +294,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     if (pmi_errcodes) {
 	MPIU_Free(pmi_errcodes);
     }
-    MPIR_Nest_decr();
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
     return mpi_errno;
  fn_fail:

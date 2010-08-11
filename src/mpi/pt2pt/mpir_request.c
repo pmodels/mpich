@@ -111,32 +111,26 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 		else
 		{
 		    /* This is needed for persistent Bsend requests */
-		    MPIU_THREADPRIV_DECL;
-		    MPIU_THREADPRIV_GET;
-		    MPIR_Nest_incr();
-		    {
-			int rc;
+                    int rc;
 			
-			rc = MPIR_Grequest_query(prequest_ptr);
-			if (mpi_errno == MPI_SUCCESS)
-			{
-			    mpi_errno = rc;
-			}
-			if (status != MPI_STATUS_IGNORE)
-			{
-			    status->cancelled = prequest_ptr->status.cancelled;
-			}
-			if (mpi_errno == MPI_SUCCESS)
-			{
-			    mpi_errno = prequest_ptr->status.MPI_ERROR;
-			}
-			rc = MPIR_Grequest_free(prequest_ptr);
-			if (mpi_errno == MPI_SUCCESS)
-			{
-			    mpi_errno = rc;
-			}
-		    }
-		    MPIR_Nest_decr();
+                    rc = MPIR_Grequest_query(prequest_ptr);
+                    if (mpi_errno == MPI_SUCCESS)
+                    {
+                        mpi_errno = rc;
+                    }
+                    if (status != MPI_STATUS_IGNORE)
+                    {
+                        status->cancelled = prequest_ptr->status.cancelled;
+                    }
+                    if (mpi_errno == MPI_SUCCESS)
+                    {
+                        mpi_errno = prequest_ptr->status.MPI_ERROR;
+                    }
+                    rc = MPIR_Grequest_free(prequest_ptr);
+                    if (mpi_errno == MPI_SUCCESS)
+                    {
+                        mpi_errno = rc;
+                    }
 		}
 
 		/* FIXME: MPIR_SENDQ_FORGET(request_ptr); -- it appears that
@@ -205,33 +199,22 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 
 	case MPID_UREQUEST:
 	{
-	    MPIU_THREADPRIV_DECL;
-
-	    MPIU_THREADPRIV_GET;
-
-	    /* The user error handler may make calls to MPI routines, so the
-	       nesting counter must be incremented before the handler is
-	       called */
-	    MPIR_Nest_incr();
-	    {
-		int rc;
-		
-		rc = MPIR_Grequest_query(request_ptr);
-		if (mpi_errno == MPI_SUCCESS)
-		{
-		    mpi_errno = rc;
-		}
-		MPIR_Request_extract_status(request_ptr, status);
-		rc = MPIR_Grequest_free(request_ptr);
-		if (mpi_errno == MPI_SUCCESS)
-		{
-		    mpi_errno = rc;
-		}
-		
-		MPID_Request_release(request_ptr);
-		*request = MPI_REQUEST_NULL;
-	    }
-	    MPIR_Nest_decr();
+            int rc;
+            
+            rc = MPIR_Grequest_query(request_ptr);
+            if (mpi_errno == MPI_SUCCESS)
+            {
+                mpi_errno = rc;
+            }
+            MPIR_Request_extract_status(request_ptr, status);
+            rc = MPIR_Grequest_free(request_ptr);
+            if (mpi_errno == MPI_SUCCESS)
+            {
+                mpi_errno = rc;
+            }
+            
+            MPID_Request_release(request_ptr);
+            *request = MPI_REQUEST_NULL;
 	    
 	    break;
 	}
@@ -263,10 +246,6 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 int MPIR_Request_get_error(MPID_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_THREADPRIV_DECL;
-
-    /* FIXME: Why do we need to get the thread-private storage here? */
-    MPIU_THREADPRIV_GET;
 
     switch(request_ptr->kind)
     {
@@ -318,11 +297,7 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 	{
 	    int rc;
 	    
-	    /* The user error handler may make calls to MPI routines, so the 
-	       nesting counter must be incremented before the handler 
-	       is called */
 	    /* Note that we've acquired the thread private storage above */
-	    MPIR_Nest_incr();
     
 	    switch (request_ptr->greq_lang)
 	    {
@@ -363,7 +338,6 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 		}
 	    }
 
-	    MPIR_Nest_decr();
 	    break;
 	}
 	

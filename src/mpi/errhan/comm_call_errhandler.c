@@ -55,15 +55,12 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
     int mpi_errno = MPI_SUCCESS;
     int in_cs = FALSE;
     MPID_Comm *comm_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CALL_ERRHANDLER);
     
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CALL_ERRHANDLER);
 
-    MPIU_THREADPRIV_GET;
-    
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -126,10 +123,6 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
     }
 #endif
 
-    /* The user error handler may make calls to MPI routines, so the nesting
-     * counter must be incremented before the handler is called */
-    MPIR_Nest_incr();
-    
     /* Process any user-defined error handling function */
     switch (comm_ptr->errhandler->language) {
     case MPID_LANG_C:
@@ -148,8 +141,6 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 #endif
     }
 
-    MPIR_Nest_decr();
-    
     /* ... end of body of routine ... */
 
   fn_exit:

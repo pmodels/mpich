@@ -45,7 +45,7 @@
 */
 
 /* not declared static because it is called in intercomm. allgather */
-/* begin:nested */
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather_intra
 #undef FCNAME
@@ -76,7 +76,6 @@ int MPIR_Gather_intra (
     MPI_Datatype types[2], tmp_type;
     int copy_offset = 0, copy_blks = 0;
     MPIU_CHKLMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
 
 #ifdef MPID_HAS_HETERO
     int position, recv_size;
@@ -89,9 +88,6 @@ int MPIR_Gather_intra (
     if ( ((rank == root) && (recvcnt == 0)) ||
          ((rank != root) && (sendcnt == 0)) )
         return MPI_SUCCESS;
-
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
@@ -408,14 +404,13 @@ int MPIR_Gather_intra (
     MPIU_CHKLMEM_FREEALL();
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    MPIR_Nest_decr();
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
 
-/* begin:nested */
+
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather_inter
@@ -450,15 +445,12 @@ int MPIR_Gather_inter (
     MPID_Comm *newcomm_ptr = NULL;
     MPI_Comm comm;
     MPIU_CHKLMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
 
     if (root == MPI_PROC_NULL)
     {
         /* local processes other than root do nothing */
         return MPI_SUCCESS;
     }
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
@@ -560,12 +552,11 @@ int MPIR_Gather_inter (
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    MPIR_Nest_decr();
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Gather performs an gather using point-to-point messages.  This
    is intended to be used by device-specific implementations of

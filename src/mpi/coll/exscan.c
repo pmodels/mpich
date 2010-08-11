@@ -87,7 +87,7 @@ do {                                                                            
    End Algorithm: MPI_Exscan
 */
 
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 /* MPIR_Exscan performs an exscan using point-to-point messages.  This
    is intended to be used by device-specific implementations of
@@ -241,7 +241,7 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Exscan_impl should be called by any internal component that
    would otherwise call MPI_Exscan.  This differs from MPIR_Exscan in

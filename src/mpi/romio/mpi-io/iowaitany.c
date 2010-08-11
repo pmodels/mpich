@@ -37,9 +37,7 @@ int MPIO_Waitany(int count, MPIO_Request requests[], int *index,
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
     if (count == 1) {
-	MPIR_Nest_incr();
 	err = MPIO_Wait( requests, status );
-    	MPIR_Nest_decr();
 	if (!err) *index = 0;
 	goto fn_exit;
     }

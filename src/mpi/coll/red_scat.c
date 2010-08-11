@@ -99,17 +99,13 @@ static int MPIR_Reduce_scatter_noncomm (
     MPI_Comm comm = comm_ptr->handle;
     MPI_User_function *uop;
     MPID_Op *op_ptr;
-    MPIU_THREADPRIV_DECL;
 #ifdef HAVE_CXX_BINDING
     int is_cxx_uop = 0;
 #endif
     MPIU_CHKLMEM_DECL(3);
 
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-
     MPID_Datatype_get_extent_macro(datatype, extent);
-    /* assumes nesting is handled by the caller right now, may not be true in the future */
+
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
@@ -225,7 +221,6 @@ static int MPIR_Reduce_scatter_noncomm (
     mpi_errno = MPIR_Localcopy(result_ptr, size, datatype,
                                recvbuf, size, datatype);
 fn_exit:
-    MPIR_Nest_decr();
     MPIU_CHKLMEM_FREEALL();
     return mpi_errno;
 fn_fail:
@@ -283,7 +278,7 @@ fn_fail:
 #define FUNCNAME MPIR_Reduce_scatter_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_intra ( 
     void *sendbuf, 
@@ -321,8 +316,6 @@ int MPIR_Reduce_scatter_intra (
     /* set op_errno to 0. stored in perthread structure */
     MPIU_THREADPRIV_GET;
     MPIU_THREADPRIV_FIELD(op_errno) = 0;
-
-    MPIR_Nest_incr();
 
     MPID_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -960,7 +953,6 @@ int MPIR_Reduce_scatter_intra (
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
 
-    MPIR_Nest_decr();
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
@@ -971,13 +963,13 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_inter ( 
     void *sendbuf, 
@@ -1074,7 +1066,7 @@ int MPIR_Reduce_scatter_inter (
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Reduce_Scatter performs an reduce_scatter using point-to-point
    messages.  This is intended to be used by device-specific

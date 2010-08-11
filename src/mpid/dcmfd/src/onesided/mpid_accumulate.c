@@ -272,12 +272,9 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
         DCMF_Request_t *reqp;
         MPIDU_Onesided_info_t *info;
         DCMF_Consistency consistency = win_ptr->_dev.my_cstcy;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_ACCUMULATE);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_ACCUMULATE);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_REFENCE) {
 		win_ptr->_dev.epoch_type = MPID_EPOTYPE_FENCE;
@@ -449,7 +446,6 @@ int MPID_Accumulate(void *origin_addr, int origin_count,
         }
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_ACCUMULATE);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */

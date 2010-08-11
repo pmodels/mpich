@@ -152,25 +152,6 @@ typedef struct MPID_Stateinfo_t {
 void MPID_TimerStateBegin( int, MPID_Time_t * );
 void MPID_TimerStateEnd( int, MPID_Time_t * );
 
-#ifdef MPICH_DEBUG_NESTING
-#define MPICH_MAX_NESTFILENAME 256
-typedef struct MPICH_Nestinfo {
-    char file[MPICH_MAX_NESTFILENAME];
-    int  line;
-} MPICH_Nestinfo_t;
-#define MPICH_MAX_NESTINFO 16
-
-#define MPIU_THREAD_LOC_LEN 127
-#define MPIU_THREAD_FNAME_LEN 31
-typedef struct MPIU_ThreadDebug {
-    int count;
-    int line;
-    char file[MPIU_THREAD_LOC_LEN+1];
-    char fname[MPIU_THREAD_FNAME_LEN+1];
-} MPIU_ThreadDebug_t;
-#endif /* MPICH_DEBUG_NESTING */
-
-
 /* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
  * destruction time */
 #define MPIU_STRERROR_BUF_SIZE (1024)
@@ -185,7 +166,6 @@ typedef struct MPIU_ThreadDebug {
  * structure must be externally cleaned up.
  * */
 typedef struct MPICH_PerThread_t {
-    int              nest_count;   /* For layered MPI implementation */
     int              op_errno;     /* For errors in predefined MPI_Ops */
 
     /* error string storage for MPIU_Strerror */
@@ -193,10 +173,6 @@ typedef struct MPICH_PerThread_t {
 
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
     int lock_depth[MPICH_MAX_LOCKS];
-#endif
-#ifdef MPICH_DEBUG_NESTING
-    MPICH_Nestinfo_t nestinfo[MPICH_MAX_NESTINFO];
-    struct MPIU_ThreadDebug nest_debug[MPICH_MAX_NESTINFO];
 #endif
     /* FIXME: Is this used anywhere? */
 #ifdef HAVE_TIMING
@@ -505,16 +481,6 @@ M*/
 #if defined(MPICH_IS_THREADED) && !defined(MPID_DEVICE_DEFINES_THREAD_CS)
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 
-/* FIXME what is this really supposed to do?  Is it supposed to check against
- * the "MPI nesting" or the critical section nesting? */
-/* It seems to just be a hook gating actual mutex lock/unlock for usage in
- * _GLOBAL mode */
-/* should be followed by a {} block that will be conditionally executed */
-#define MPIU_THREAD_CHECKNEST(kind_, lockname_)                                         \
-    MPIU_THREADPRIV_GET;                                                                \
-    MPIU_DBG_MSG_D(THREAD,VERBOSE,"CHECKNEST, MPIR_Nest_value()=%d",MPIR_Nest_value()); \
-    if (MPIR_Nest_value() == 0)
-
 #define MPIU_THREAD_CHECKDEPTH(kind_, lockname_, value_)
 #define MPIU_THREAD_UPDATEDEPTH(kind_, lockname_, value_)
 
@@ -561,15 +527,10 @@ M*/
         MPIU_Strncpy( nest_ptr_[kind_].file, __FILE__, MPIU_THREAD_LOC_LEN );              \
         MPIU_Strncpy( nest_ptr_[kind_].fname, FCNAME, MPIU_THREAD_FNAME_LEN );             \
     } while (0)
-#define MPIU_THREAD_CHECKNEST(kind_, lockname_)
-
 #else
 #define MPIU_THREAD_CHECKDEPTH(kind_, lockname_, value_)
 #define MPIU_THREAD_UPDATEDEPTH(kind_, lockname_, value_)
-#define MPIU_THREAD_CHECKNEST(kind_, lockname_)
 #endif /* MPID_THREAD_DEBUG */
-#else
-#define MPIU_THREAD_CHECKNEST(kind_, lockname_)
 #endif /* test on THREAD_GRANULARITY */
 
 #define MPIU_THREAD_CS_ENTER_LOCKNAME_RECURSIVE(name_)                                          \

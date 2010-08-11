@@ -69,7 +69,7 @@
    End Algorithm: MPI_Alltoall
 */
 
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall_intra
@@ -96,7 +96,6 @@ int MPIR_Alltoall_intra(
     MPI_Request *reqarray;
     MPI_Status *starray;
     MPIU_CHKLMEM_DECL(6);
-    MPIU_THREADPRIV_DECL;
 #ifdef MPIR_OLD_SHORT_ALLTOALL_ALG
     MPI_Aint sendtype_true_extent, sendbuf_extent, sendtype_true_lb;
     int k, p, curr_cnt, dst_tree_root, my_tree_root;
@@ -104,9 +103,6 @@ int MPIR_Alltoall_intra(
 #endif
 
     if (recvcount == 0) return MPI_SUCCESS;
-
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
@@ -514,16 +510,15 @@ int MPIR_Alltoall_intra(
     MPIU_CHKLMEM_FREEALL();
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    MPIR_Nest_decr();
     return (mpi_errno);
  fn_fail:
     if (newtype != MPI_DATATYPE_NULL)
         MPIR_Type_free_impl(&newtype);
     goto fn_exit;
 }
-/* end:nested */
 
-/* begin:nested */
+
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall_inter
@@ -605,7 +600,7 @@ int MPIR_Alltoall_inter(
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall

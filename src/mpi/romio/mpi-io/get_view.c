@@ -53,7 +53,6 @@ int MPI_File_get_view(MPI_File mpi_fh,
     MPI_Datatype copy_etype, copy_filetype;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(mpi_fh);
 
@@ -96,7 +95,6 @@ int MPI_File_get_view(MPI_File mpi_fh,
     }
 
 fn_exit:
-    MPIR_Nest_decr();
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return MPI_SUCCESS;

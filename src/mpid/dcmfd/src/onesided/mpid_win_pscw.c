@@ -64,12 +64,9 @@ int MPID_Win_complete(MPID_Win *win_ptr)
 {
         unsigned pending;
         int mpi_errno = MPI_SUCCESS;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_COMPLETE);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_COMPLETE);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         if (win_ptr->_dev.epoch_type != MPID_EPOTYPE_START &&
                         win_ptr->_dev.epoch_type != MPID_EPOTYPE_POSTSTART) {
@@ -106,7 +103,6 @@ int MPID_Win_complete(MPID_Win *win_ptr)
         }
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_COMPLETE);
         return mpi_errno;
 
@@ -224,12 +220,9 @@ fn_fail:
 int MPID_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 {
         int mpi_errno = MPI_SUCCESS;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_START);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_START);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
         if (win_ptr->_dev.epoch_type == MPID_EPOTYPE_NONE ||
 			win_ptr->_dev.epoch_type == MPID_EPOTYPE_REFENCE) {
                 MPIDU_Spin_lock_free(win_ptr);
@@ -259,7 +252,6 @@ int MPID_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
         }
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_START);
         return mpi_errno;
 
@@ -293,12 +285,9 @@ int MPID_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 {
         int mpi_errno = MPI_SUCCESS;
         volatile unsigned pending = 0;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_POST);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_POST);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
         if (win_ptr->_dev.epoch_type != MPID_EPOTYPE_NONE &&
 			win_ptr->_dev.epoch_type != MPID_EPOTYPE_REFENCE) {
                 /* --BEGIN ERROR HANDLING-- */
@@ -355,7 +344,6 @@ int MPID_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
         }
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_POST);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */
@@ -388,12 +376,9 @@ fn_fail:
 int MPID_Win_test (MPID_Win *win_ptr, int *flag)
 {
         int mpi_errno = MPI_SUCCESS;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_TEST);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_TEST);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         if (win_ptr->_dev.epoch_type != MPID_EPOTYPE_POST) {
                 /* --BEGIN ERROR HANDLING-- */
@@ -408,7 +393,6 @@ int MPID_Win_test (MPID_Win *win_ptr, int *flag)
         *flag = (mpid_check_post_done(win_ptr) != 0);
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_TEST);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */
@@ -438,12 +422,9 @@ fn_fail:
 int MPID_Win_wait(MPID_Win *win_ptr)
 {
         int mpi_errno = MPI_SUCCESS;
-        MPIU_THREADPRIV_DECL;
         MPID_MPI_STATE_DECL(MPID_STATE_MPID_WIN_WAIT);
 
         MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_WIN_WAIT);
-        MPIU_THREADPRIV_GET;
-        MPIR_Nest_incr();
 
         if (win_ptr->_dev.epoch_type != MPID_EPOTYPE_POST) {
                 /* --BEGIN ERROR HANDLING-- */
@@ -460,7 +441,6 @@ int MPID_Win_wait(MPID_Win *win_ptr)
         }
 
 fn_exit:
-        MPIR_Nest_decr();
         MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_WIN_WAIT);
         return mpi_errno;
         /* --BEGIN ERROR HANDLING-- */

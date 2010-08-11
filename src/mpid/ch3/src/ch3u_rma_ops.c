@@ -389,7 +389,6 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
                     int target_count, MPI_Datatype target_datatype, MPI_Op op,
                     MPID_Win *win_ptr)
 {
-    int nest_level_inc = FALSE;
     int mpi_errno=MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
     int dt_contig, rank, origin_predefined, target_predefined;
@@ -399,12 +398,10 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
     MPID_Comm *win_comm_ptr;
     MPIU_CHKLMEM_DECL(2);
     MPIU_CHKPMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
 
-    MPIU_THREADPRIV_GET;
     MPIDI_Datatype_get_info(origin_count, origin_datatype,
 			    dt_contig, data_sz, dtp, dt_true_lb);  
     
@@ -412,9 +409,6 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
     {
 	goto fn_exit;
     }
-    
-    MPIR_Nest_incr();
-    nest_level_inc = TRUE;
     
     /* FIXME: It makes sense to save the rank (and size) of the
        communicator in the window structure to speed up these operations,
@@ -574,10 +568,6 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    if (nest_level_inc)
-    { 
-	MPIR_Nest_decr();
-    }
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_ACCUMULATE);
     return mpi_errno;
 

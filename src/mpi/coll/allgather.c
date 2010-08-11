@@ -67,7 +67,7 @@
 
    End Algorithm: MPI_Allgather
 */
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this 
    one in some cases */
 #undef FUNCNAME
@@ -566,13 +566,13 @@ int MPIR_Allgather_intra (
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgather_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one 
    in some cases */
 int MPIR_Allgather_inter ( 
@@ -681,7 +681,7 @@ int MPIR_Allgather_inter (
   fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* MPIR_Allgather performs an allgather using point-to-point messages.
    This is intended to be used by device-specific implementations of

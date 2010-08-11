@@ -73,7 +73,7 @@ int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 }
 
 /* Ignore p */
-/* begin:nested */
+
 static int MPIR_Topology_finalize( void *p ATTRIBUTE((unused)) )
 {
     MPIU_UNREFERENCED_ARG(p);
@@ -85,7 +85,7 @@ static int MPIR_Topology_finalize( void *p ATTRIBUTE((unused)) )
     }
     return 0;
 }
-/* end:nested */
+
 
 static int *MPIR_Copy_array( int n, const int a[], int *err )
 {

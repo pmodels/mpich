@@ -150,7 +150,6 @@ int MPIR_Allreduce_intra (
     comm = comm_ptr->handle;
 
     MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
 #if defined(USE_SMP_COLLECTIVES)
     /* is the op commutative? We do SMP optimizations only if it is. */ 
@@ -549,7 +548,6 @@ int MPIR_Allreduce_intra (
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
     MPIU_CHKLMEM_FREEALL();
-    MPIR_Nest_decr();
     return (mpi_errno);
 
   fn_fail:

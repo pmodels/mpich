@@ -47,7 +47,6 @@ int MPI_File_preallocate(MPI_File mpi_fh, MPI_Offset size)
 #endif /* MPI_hpux */
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(mpi_fh);
 
@@ -97,7 +96,6 @@ int MPI_File_preallocate(MPI_File mpi_fh, MPI_Offset size)
 
 
 fn_exit:
-    MPIR_Nest_decr();
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     /* TODO: bcast result? */

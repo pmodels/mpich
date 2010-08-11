@@ -89,8 +89,6 @@ int MPIOI_File_iwrite(MPI_File mpi_fh,
     ADIO_File fh;
     MPI_Offset nbytes=0;
 
-    MPIR_Nest_incr();
-
     fh = MPIO_File_resolve(mpi_fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -162,8 +160,6 @@ int MPIOI_File_iwrite(MPI_File mpi_fh,
 			   offset, request, &error_code);
     }
 fn_exit:
-    MPIR_Nest_decr();
-
     return error_code;
 }
 #endif

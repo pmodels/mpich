@@ -81,7 +81,6 @@ int MPI_Type_create_subarray(int ndims,
     MPID_Datatype *new_dtp;
 
     MPID_Datatype *datatype_ptr = NULL;
-    MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
 
@@ -89,9 +88,6 @@ int MPI_Type_create_subarray(int ndims,
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
-
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     /* Get handles to MPI objects. */
     MPID_Datatype_get_ptr(oldtype, datatype_ptr);
@@ -323,7 +319,6 @@ int MPI_Type_create_subarray(int ndims,
 
     MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
-    MPIR_Nest_decr();
 
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -333,7 +328,6 @@ int MPI_Type_create_subarray(int ndims,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIR_Nest_decr();
 #   ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(

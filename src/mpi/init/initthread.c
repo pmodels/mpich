@@ -224,7 +224,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int has_env;
     int thread_provided;
     int exit_init_cs_on_failure = 0;
-    MPIU_THREADPRIV_DECL;
 
     /* For any code in the device that wants to check for runtime 
        decisions on the value of isThreaded, set a provisional
@@ -359,7 +358,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_Datatype_init();
     MPIR_Group_init();
 
-    MPIR_Nest_init();
     /* MPIU_Timer_pre_init(); */
 
     mpi_errno = MPIR_Param_init_params();

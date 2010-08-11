@@ -89,10 +89,6 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 	MPID_Errhandler_get_ptr( eh, e );
     }
 
-    /* The user error handler may make calls to MPI routines, so the nesting
-     * counter must be incremented before the handler is called */
-    MPIR_Nest_incr();
-
     /* Note that, unlike the rest of MPICH2, MPI_File objects are pointers,
        not integers.  */
 
@@ -123,8 +119,6 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 #endif
     }
 
-    MPIR_Nest_decr();
-    
 #else
     /* Dummy in case ROMIO is not defined */
     mpi_errno = MPI_ERR_INTERN;

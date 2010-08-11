@@ -18,9 +18,6 @@
 /* Include the mpi definitions */
 #include "mpi.h"
 
-/* Include nested mpi (NMPI) definitions */
-#include "nmpi.h"
-
 /* There are a few definitions that must be made *before* the mpichconf.h
    file is included.  These include the definitions of the error levels and some
    thread granularity constants */
@@ -1837,20 +1834,13 @@ extern MPICH_PerProcess_t MPIR_Process;
  * 1. timing (controlled by macros in mpitimerimpl.h)
  *    These collect data on when each function began and finished; the
  *    resulting data can be displayed using special programs
- * 2. nesting (selected with --enable-g=nesting)
- *    Checks that the "NMPI" functions and the Nest_incr/decr calls
- *    are properly nested at runtime.  
- * 3. Debug logging (selected with --enable-g=log)
+ * 2. Debug logging (selected with --enable-g=log)
  *    Invokes MPIU_DBG_MSG at the entry and exit for each routine            
- * 4. Additional memory validation of the memory arena (--enable-g=memarena)
+ * 3. Additional memory validation of the memory arena (--enable-g=memarena)
  */
 /* ------------------------------------------------------------------------- */
-/* if fine-grain nest testing is enabled then define the function enter/exit
-   macros to track the nesting level; otherwise, allow the timing module the
-   opportunity to define the macros */
-#if defined(MPICH_DEBUG_FINE_GRAIN_NESTING)
-#   include "mpiu_func_nesting.h"
-#elif defined(MPICH_DEBUG_MEMARENA)
+/* allow the timing module the opportunity to define the macros */
+#if defined(MPICH_DEBUG_MEMARENA)
 #   include "mpifuncmem.h"
 #elif defined(USE_DBG_LOGGING)
 #   include "mpifunclog.h"
@@ -1995,8 +1985,6 @@ void MPIR_Add_finalize( int (*routine)( void * ), void *extra, int priority );
 #define MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO 1
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
-
-#include "mpinestimpl.h"
 
 /*int MPIR_Comm_attr_dup(MPID_Comm *, MPID_Attribute **);
   int MPIR_Comm_attr_delete(MPID_Comm *, MPID_Attribute *);*/

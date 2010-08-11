@@ -44,7 +44,7 @@
 
    End Algorithm: MPI_Alltoallw
 */
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoallw_intra
@@ -71,13 +71,8 @@ int MPIR_Alltoallw_intra (
     int outstanding_requests;
     int ii, ss, bblock;
     int type_size;
-    MPIU_THREADPRIV_DECL;
-
     MPIU_CHKLMEM_DECL(2);
     
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
-
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -207,13 +202,12 @@ int MPIR_Alltoallw_intra (
   fn_exit:
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );  
     MPIU_CHKLMEM_FREEALL();
-    MPIR_Nest_decr();
     return (mpi_errno);
 
   fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME

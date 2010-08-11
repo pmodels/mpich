@@ -76,7 +76,6 @@ int MPIOI_File_read(MPI_File mpi_fh,
     ADIO_Offset off;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPIR_Nest_incr();
 
     fh = MPIO_File_resolve(mpi_fh);
 
@@ -157,7 +156,6 @@ int MPIOI_File_read(MPI_File mpi_fh,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    MPIR_Nest_decr();
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;

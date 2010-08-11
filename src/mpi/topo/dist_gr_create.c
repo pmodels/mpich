@@ -83,16 +83,12 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     int in_out_peers[2] = {-1, -1};
     MPIU_CHKLMEM_DECL(9);
     MPIU_CHKPMEM_DECL(1);
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIST_GRAPH_CREATE);
-
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -391,7 +387,6 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
 
     MPIU_CHKLMEM_FREEALL();
 
-    MPIR_Nest_decr();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;

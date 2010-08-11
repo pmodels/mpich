@@ -38,8 +38,6 @@ int mpig_topology_init(void)
     MPIG_FUNC_ENTER(MPID_STATE_mpig_topology_init);
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_COMM, "entering"));
 
-    MPIR_Nest_incr();
-    
     /* create the toplogy attribute keys */
     mpi_errno = MPIR_Comm_create_keyval_impl(MPI_NULL_COPY_FN, mpig_topology_destroy_depths_attr, &mpig_topology_depths_keyval, NULL);
     MPIU_ERR_CHKANDJUMP1((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**globus|comm_create_key", "**globus|comm_create_key %s",
@@ -49,7 +47,6 @@ int mpig_topology_init(void)
 	"topology colors keyval");
     
   fn_return:
-    MPIR_Nest_decr();
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_COMM, "exiting: mpi_errno=" MPIG_ERRNO_FMT, mpi_errno));
     MPIG_FUNC_EXIT(MPID_STATE_mpig_topology_init);
     return mpi_errno;
@@ -148,8 +145,6 @@ int mpig_topology_comm_construct(MPID_Comm * const comm)
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_COMM,
 	"entering: comm=" MPIG_HANDLE_FMT ", commp=" MPIG_PTR_FMT, comm->handle, MPIG_PTR_CAST(comm)));
 
-    MPIR_Nest_incr();
-    
     /* topology information is only created for intracommunicators, at least for now */
     if (comm->comm_kind == MPID_INTERCOMM) goto fn_return;
 
@@ -433,7 +428,6 @@ int mpig_topology_comm_construct(MPID_Comm * const comm)
     comm->dev.topology_max_depth = max_depth;
 
   fn_return:
-    MPIR_Nest_decr();
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_COMM, "exiting: comm=" MPIG_HANDLE_FMT ", commp=" MPIG_PTR_FMT
 	",mpi_errno=" MPIG_ERRNO_FMT, comm->handle, MPIG_PTR_CAST(comm), mpi_errno));
     MPIG_FUNC_EXIT(MPID_STATE_mpig_topology_comm_construct);

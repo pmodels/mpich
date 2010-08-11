@@ -316,7 +316,7 @@ int MPIR_Bsend_isend( void *buf, int count, MPI_Datatype dtype,
 
 /* Add block p to the free list. Merge into adjacent blocks.  Used only 
    within the check_active */
-/* begin:nested */
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_free_segment
 #undef FCNAME
@@ -401,7 +401,7 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
     MPIU_DBG_MSG(BSEND,TYPICAL,"At the end of free_segment:" );
     MPIU_DBG_STMT(BSEND,TYPICAL,MPIR_Bsend_dump());
 }
-/* end:nested */
+
 /* 
  * The following routine tests for completion of active sends and 
  * frees the related storage

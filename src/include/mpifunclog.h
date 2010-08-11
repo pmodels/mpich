@@ -20,12 +20,6 @@
 #define MPIDI_INIT_STATE_DECL(a)	MPIR_STATE_DECL(a)
 #define MPIDI_FINALIZE_STATE_DECL(a)	MPIR_STATE_DECL(a)
 
-/* FIXME: it would be nice to have a nesting level for the function call, 
-   and use 
-   MPIU_DBG_MSG_D(ROUTINE_ENTER,TYPICAL,"[%d]Entering "#a,MPIR_DBG_nestlevel++)
-   and a similar value for the exit (not thread-safe, but useful in the
-   single threaded case).
-*/
 /* function enter and exit macros */
 #define MPIR_FUNC_ENTER(a) \
     MPIU_DBG_MSG(ROUTINE_ENTER,TYPICAL,"Entering "#a )

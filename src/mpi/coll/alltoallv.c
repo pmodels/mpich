@@ -49,7 +49,7 @@
    End Algorithm: MPI_Alltoallv
 */
  
-/* begin:nested */
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoallv_intra
@@ -76,12 +76,8 @@ int MPIR_Alltoallv_intra (
     MPI_Comm comm;
     int ii, ss, bblock;
     int type_size;
-    MPIU_THREADPRIV_DECL;
 
     MPIU_CHKLMEM_DECL(2);
-
-    MPIU_THREADPRIV_GET;
-    MPIR_Nest_incr();
 
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
@@ -195,15 +191,14 @@ fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     MPIU_CHKLMEM_FREEALL();
-    MPIR_Nest_decr();
     return (mpi_errno);
 
 fn_fail:
     goto fn_exit;
 }
-/* end:nested */
 
-/* begin:nested */
+
+
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoallv_inter
@@ -294,7 +289,7 @@ int MPIR_Alltoallv_inter (
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoallv

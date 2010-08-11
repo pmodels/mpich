@@ -74,15 +74,6 @@ parameters:
         memory communication hierarchical collectives.
 
     - category    : developer
-      name        : NESTCHECK
-      alt-env     :
-                    - NEST_CHECK
-      type        : boolean
-      default     : true
-      description : >-
-        If true, sanity check nesting levels at MPI_Finalize.
-
-    - category    : developer
       name        : MEMDUMP
       type        : boolean
       default     : true

@@ -60,7 +60,7 @@
    End Algorithm: MPI_Scan
 */
 
-/* begin:nested */
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scan_generic
 #undef FCNAME
@@ -232,7 +232,7 @@ static int MPIR_Scan_generic (
  fn_fail:
     goto fn_exit;
 }
-/* end:nested */
+
 
 
 /* not declared static because a machine-specific function may call this one in some cases */

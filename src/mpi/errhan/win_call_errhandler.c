@@ -119,10 +119,6 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 	goto fn_exit;
     }
 #endif
-    /* The user error handler may make calls to MPI routines, so the nesting
-     * counter must be incremented before the handler is called */
-    MPIR_Nest_incr();
-    
     switch (win_ptr->errhandler->language) {
     case MPID_LANG_C:
 #ifdef HAVE_CXX_BINDING
@@ -139,8 +135,6 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 	break;
 #endif
     }
-    
-    MPIR_Nest_decr();
     
     /* ... end of body of routine ... */
 
