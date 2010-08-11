@@ -39,7 +39,7 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
     # Doxygen?
     AC_ARG_ENABLE([doxygen],
         [AC_HELP_STRING([--enable-doxygen],
-                        [enable support for building Doxygen documentation (note that this option is ONLY relevant in developer builds; Doxygen documentation is pre-built for tarball builds and this option is therefore ignored)])])
+                        [enable support for building Doxygen documentation (note that this option is ONLY relevant in developer builds; Doxygen documentation is pre-built for tarball builds and this option is therefore ignored)])],,[enable_doxygen=no])
 
     # Picky?
     AC_ARG_ENABLE(picky,
