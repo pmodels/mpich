@@ -385,7 +385,7 @@ if test "$enable_source" = "yes" \
     trial_pkgs="$trial_pkgs oldsource"
 fi
 
-dnl Cleanup the subpackages' Makefiles if they exist
+dnl Cleanup the subpackages\' Makefiles if they exist
 AC_MSG_CHECKING( [for leftover Makefiles in subpackages] )
 leftover_pkgs=""
 for pkg in $trial_pkgs ; do

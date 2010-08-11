@@ -38,24 +38,13 @@ if [ "$acWorks" != yes ] ; then
 fi
 rm -rf .tmp
 
-
-# The directory of this script is located
-# PWD is not guaranteed to be set to the current directory in all cases
-# (e.g., in /bin/sh, (cd src/mpe2 && maint/updatefiles won't set
-# PWD to .../src/mpe2)
-# The parent directory of where this script is located
-saved_wd=`pwd`
-cd `dirname $0`/.. && master_dir=`pwd`
-cd $saved_wd
-
-# Locate all the configure.in under master_dir
-cfgins=`find $master_dir -name 'configure.in' -print`
+cfgins=`find . -name 'configure.in' -print`
 for cfgin in $cfgins ; do
     dir="`dirname $cfgin`"
-    echo "Creating configure in $dir/ ..."
-    cd $dir
-    if [ -n "`grep AC_CONFIG_HEADER $cfgin`" ] ; then
-        $MPE_AUTOHEADER
+    echo "Building directory $dir"
+    if [ ! -z "`grep AC_CONFIG_HEADS $cfgin`" ] ; then
+	(cd $dir && $MPE_AUTOHEADER && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
+    else
+	(cd $dir && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
     fi
-    $MPE_AUTOCONF && rm -rf autom4te*.cache
 done
