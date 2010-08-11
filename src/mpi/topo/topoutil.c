@@ -62,8 +62,7 @@ int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
         MPIR_Add_finalize( MPIR_Topology_finalize, (void*)0,
 			   MPIR_FINALIZE_CALLBACK_PRIO-1);
     }
-    mpi_errno = MPIR_CommSetAttr(comm_ptr->handle, MPIR_Topology_keyval,
-                                 topo_ptr, MPIR_ATTR_PTR );
+    mpi_errno = MPIR_Comm_set_attr_impl(comm_ptr, MPIR_Topology_keyval, topo_ptr, MPIR_ATTR_PTR);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
  fn_exit:

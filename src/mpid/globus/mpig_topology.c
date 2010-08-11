@@ -404,10 +404,10 @@ int mpig_topology_comm_construct(MPID_Comm * const comm)
     }
 
     /* attach a the copies of the topology depths and collors information to the communicator using the attribute keys */
-    mpi_errno = MPIR_CommSetAttr(comm->handle, mpig_topology_colors_keyval, colors_attr_copy, MPIR_ATTR_PTR);
+    mpi_errno = MPIR_Comm_set_attr_impl(comm, mpig_topology_colors_keyval, colors_attr_copy, MPIR_ATTR_PTR);
     MPIU_ERR_CHKANDJUMP1((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**globus|comm_set_attr", "**globus|comm_set_attr %s",
 	"topology colors attribute");
-    mpi_errno = MPIR_CommSetAttr(comm->handle, mpig_topology_depths_keyval, depths_attr_copy, MPIR_ATTR_PTR);
+    mpi_errno = MPIR_Comm_set_attr_impl(comm, mpig_topology_depths_keyval, depths_attr_copy, MPIR_ATTR_PTR);
     if (mpi_errno)
     {
         MPID_Keyval *keyval_ptr;

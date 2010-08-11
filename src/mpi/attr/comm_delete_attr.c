@@ -52,10 +52,15 @@ int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
     if (p) {
         int in_use;
 
-        /* Run the delete function, if any, and then free the attribute 
-	   storage */
+        /* Run the delete function, if any, and then free the
+	   attribute storage.  Note that due to an ambiguity in the
+	   standard, if the usr function returns something other than
+	   MPI_SUCCESS, we should either return the user return code,
+	   or an mpich error code.  The precedent set by the Intel
+	   test suite says we should return the user return code.  So
+	   we must not ERR_POP here. */
 	mpi_errno = MPIR_Call_attr_delete( comm_ptr->handle, p );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) goto fn_fail;
         
         /* We found the attribute.  Remove it from the list */
         *old_p = p->next;
@@ -70,7 +75,6 @@ int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
  fn_exit:
     return mpi_errno;
  fn_fail:
-
     goto fn_exit;
 }
 

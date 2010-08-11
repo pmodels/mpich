@@ -3551,5 +3551,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status);
 int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status);
 int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
                       MPI_Status array_of_statuses[]);
+int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribute_val, 
+                            MPIR_AttrType attrType);
 
 #endif /* MPIIMPL_INCLUDED */
