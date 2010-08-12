@@ -1999,7 +1999,9 @@ EOF
 	 # This is needed for Mac OSX 10.5
 	 rm -rf conftest.dSYM
          rm -f conftest*
-	 F77_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	 if test "$enable_rpath" = yes ; then 
+	      F77_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	 fi
 	 ;;
 
 	 cygwin|cygwin-gcc)
@@ -2009,14 +2011,18 @@ EOF
 
 	 solaris|solaris-cc)
 	 F77_SHL="$F77 -xcode=pic32"
-         F77_LINKPATH_SHL=-R
+	 if test "$enable_rpath" = yes ; then 
+             F77_LINKPATH_SHL=-R
+         fi
 	 ;;
 
 	 # Do we need a solaris-64 with -xcode=pic64?
 
 	 libtool)
 	 F77_SHL='${LIBTOOL} --mode=compile ${F77}'
-         F77_LINKPATH_SHL="-rpath "
+	 if test "$enable_rpath" = yes ; then 
+             F77_LINKPATH_SHL="-rpath "
+         fi
 	 ;;
 
 	 *)
@@ -2217,30 +2223,40 @@ if test "$enable_fc" = "yes" ; then
          if test "$pac_cv_fc_vendor" = gnu -o "$FC" = "g95" ; then
             # If we have the GNU Fortran 95 compiler (untested)
             FC_SHL="$FC -shared -fPIC"
-            FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	    if test "$enable_rpath" = yes ; then 
+                FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
+            fi
          else
             case "$pac_cv_fc_vendor" in 
 	        absoft)
 	        FC_SHL="$FC -fPIC"
-                FC_LINKPATH_SHL="-X -rpath -X "
+		if test "$enable_rpath" = yes ; then 
+                    FC_LINKPATH_SHL="-X -rpath -X "
+                fi
 	        ;;
 
 	        intel)
 	        # Intel implements the GNU options
 	        FC_SHL="$FC -shared -fPIC"
-                FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
+		if test "$enable_rpath" = yes ; then 
+                    FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
+		fi
 	        ;;
 
 	        pgi)
 	        # Portland Group implements the GNU options
 	        FC_SHL="$FC -shared -fPIC"
-                FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
+		if test "$enable_rpath" = yes ; then 
+                    FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
+		fi
 	        ;;
 		
 		sun)
 		# Sun studio compiler on Linux
 		FC_SHL="$FC -KPIC"
-		FC_LINKPATH_SHL="-Qoption ld -rpath,"
+		if test "$enable_rpath" = yes ; then 
+		    FC_LINKPATH_SHL="-Qoption ld -rpath,"
+		fi
 		;;
 
 	        *)
@@ -2257,7 +2273,9 @@ if test "$enable_fc" = "yes" ; then
 
 	 libtool)
 	 FC_SHL='${LIBTOOL} --mode=compile ${FC}'
-	 FC_LINKPATH_SHL="-rpath "
+	 if test "$enable_rpath" = yes ; then 
+             FC_LINKPATH_SHL="-rpath "
+         fi
 	 ;;
 
          *)
@@ -2421,7 +2439,9 @@ public:
 	gcc)
         # Assume that the compiler is g++ if gcc style shared libraries chosen
         CXX_SHL="$CXX -shared -fPIC"
-        CXX_LINKPATH_SHL="-Wl,-rpath -Wl,"
+	if test "$enable_rpath" = yes ; then 
+            CXX_LINKPATH_SHL="-Wl,-rpath -Wl,"
+        fi
 	;;
 	cygwin|cygwin-gcc)
         CXX_SHL="$CXX -shared"
@@ -2429,11 +2449,15 @@ public:
 	;;
 	solaris|solaris-cc)
         CXX_SHL="$CXX -xcode=pic32"
-        CXX_LINKPATH_SHL=-R
+	if test "$enable_rpath" = yes ; then 
+            CXX_LINKPATH_SHL=-R
+        fi
 	;;
 	libtool)
 	CXX_SHL='${LIBTOOL} --mode=compile ${CXX}'
-	CXX_LINKPATH_SHL="-rpath "
+        if test "$enable_rpath" = yes ; then 
+	    CXX_LINKPATH_SHL="-rpath "
+        fi
 	;;
 	*)
 	CXX_SHL=false
