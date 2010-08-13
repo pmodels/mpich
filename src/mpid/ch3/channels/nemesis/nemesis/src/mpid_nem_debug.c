@@ -126,10 +126,7 @@ void MPID_nem_dbg_print_all_sendq(FILE *stream)
         MPIDI_PG_Get_next(&iter, &pg);
         fprintf(stream, "PG ptr=%p size=%d id=%s refcount=%d\n", pg, pg->size, (const char*)pg->id, MPIU_Object_get_ref(pg));
         for (i = 0; i < MPIDI_PG_Get_size(pg); ++i) {
-            /* We would prefer to use "MPIDI_PG_Get_vc_set_active(pg, rank, &vc);"
-               but that macro has the side effect of changing the VC's state, which
-               we don't want to do. */
-            vc = &((pg)->vct[i]);
+            MPIDI_PG_Get_vc(pg, i, &vc);
             MPID_nem_dbg_print_vc_sendq(stream, vc);
         }
     }

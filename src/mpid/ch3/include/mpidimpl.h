@@ -74,7 +74,7 @@ typedef struct MPIDI_PG
 
     /* VC table.  At present this is a pointer to an array of VC structures. 
        Someday we may want make this a pointer to an array
-       of VC references.  Thus, it is important to use MPIDI_PG_Get_vc_set_active() 
+       of VC references.  Thus, it is important to use MPIDI_PG_Get_vc() 
        instead of directly referencing this field. */
     struct MPIDI_VC * vct;
 
@@ -500,6 +500,8 @@ extern MPIDI_Process_t MPIDI_Process;
 /*------------------
   BEGIN COMM SECTION
   ------------------*/
+#define MPIDI_Comm_get_vc(comm_, rank_, vcp_) *(vcp_) = (comm_)->vcr[(rank_)]
+
 #define MPIDI_Comm_get_vc_set_active(comm_, rank_, vcp_) do {           \
         *(vcp_) = (comm_)->vcr[(rank_)];                                \
         if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)                \
@@ -559,8 +561,6 @@ int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter);
 int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter);
 int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t **pgp);
 
-/* FIXME: MPIDI_PG_Get_vc_set_active is a macro, not a routine */
-int MPIDI_PG_Get_vc_set_active(MPIDI_PG_t * pg, int rank, struct MPIDI_VC ** vc); 
 int MPIDI_PG_Close_VCs( void );
 
 int MPIDI_PG_InitConnKVS( MPIDI_PG_t * );
@@ -584,6 +584,8 @@ do {                                            \
 do {                                            \
     MPIU_Object_release_ref(pg_, inuse_);	\
 } while (0)
+
+#define MPIDI_PG_Get_vc(pg_, rank_, vcp_) *(vcp_) = &(pg_)->vct[rank_]
 
 #define MPIDI_PG_Get_vc_set_active(pg_, rank_, vcp_)  do {              \
         *(vcp_) = &(pg_)->vct[rank_];                                   \
