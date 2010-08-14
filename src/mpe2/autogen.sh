@@ -42,7 +42,7 @@ cfgins=`find . -name 'configure.in' -print`
 for cfgin in $cfgins ; do
     dir="`dirname $cfgin`"
     echo "Building directory $dir"
-    if [ ! -z "`grep AC_CONFIG_HEADS $cfgin`" ] ; then
+    if [ ! -z "`grep AC_CONFIG_HEADER $cfgin`" ] ; then
 	(cd $dir && $MPE_AUTOHEADER && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
     else
 	(cd $dir && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
