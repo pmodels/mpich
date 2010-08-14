@@ -129,7 +129,8 @@ AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates makefiles s
 stepsCleared=no
 
 # Extract the arguments intended for updatefiles.  Any others are
-# given to simplemake.  
+# given to simplemake.
+temp_args=""
 for arg in "$@" ; do
     case $arg in 
     -echo)
@@ -203,6 +204,7 @@ for arg in "$@" ; do
     -distrib)
     do_depend=no
     do_build_configure=no
+    temp_args="$temp_args $arg"
     ;;
 
     -help|--help|-usage|--usage)
@@ -243,9 +245,13 @@ EOF
     exit 1
     ;;
     *)
+    temp_args="$temp_args $arg"
     ;;
     esac
 done
+# Reset the arguments.  Note that this doesn't handle arguments that
+# contain blanks.  I hope that we don't need those.
+set -- $temp_args
 
 
 ########################################################################
