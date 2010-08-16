@@ -137,6 +137,8 @@ static int MPIR_Thread_CS_Init( void )
 {
     MPIU_THREADPRIV_DECL;
 
+    MPIU_Assert(MPICH_MAX_LOCKS >= MPIU_Nest_NUM_MUTEXES);
+
     /* we create this at all granularities right now */
     MPID_Thread_mutex_create(&MPIR_ThreadInfo.memalloc_mutex, NULL);
 

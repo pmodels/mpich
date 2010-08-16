@@ -157,7 +157,7 @@ void MPID_TimerStateEnd( int, MPID_Time_t * );
 #define MPIU_STRERROR_BUF_SIZE (1024)
 
 /* FIXME should really be MPIU_Nest_NUM_MUTEXES, but it's defined later */
-#define MPICH_MAX_LOCKS (5)
+#define MPICH_MAX_LOCKS (6)
 
 /* This structure contains all thread-local variables and will be zeroed at
  * allocation time.
