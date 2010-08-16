@@ -491,7 +491,9 @@ M*/
 
 /* This structure is used to keep track of where the last change was made
    to the thread cs depth */
-#ifdef MPID_THREAD_DEBUG
+/* temporarily disabled until we figure out if these should be restored (they
+ * are currently broken) */
+#if 0 && MPID_THREAD_DEBUG
 
 #define MPIU_THREAD_CHECKDEPTH(kind_, lockname_, value_)                                   \
     do {                                                                                   \
