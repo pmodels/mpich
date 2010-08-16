@@ -87,6 +87,13 @@ int main( int argc, char *argv[] )
 	    /* Just delay a bit */
 	    delay( 0.0001 );
 	}
+
+	/* The synchronization mode can only be changed when the process 
+	   memory and public copy are guaranteed to have the same values 
+	   (See 11.7, Semantics and Correctness). This barrier ensures that 
+	   the lock/unlock completes before the fence call.  */
+	MPI_Barrier( comm );
+
 	MTestPrintfMsg( 3, "About to start fence\n" );
 	MPI_Win_fence( 0, win );
 	if (crank == source) {
@@ -115,7 +122,6 @@ int main( int argc, char *argv[] )
 	/* End of test loop */
     }
 
-    MPI_Barrier( MPI_COMM_WORLD );
     /* Use mixed put and accumulate */
     for (loop=0; loop<2; loop++) {
 	/* Perform several communication operations, mixing synchronization
@@ -139,6 +145,8 @@ int main( int argc, char *argv[] )
 	    /* Just delay a bit */
 	    delay( 0.0001 );
 	}
+	/* See above - the fence should not start until the unlock completes */
+	MPI_Barrier( comm );
 	MPI_Win_fence( 0, win );
 	if (crank == source) {
 	    MPI_Accumulate( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, 
@@ -188,6 +196,8 @@ int main( int argc, char *argv[] )
 	    /* Just delay a bit */
 	    delay( 0.0001 );
 	}
+	/* See above - the fence should not start until the unlock completes */
+	MPI_Barrier( comm );
 	MPI_Win_fence( 0, win );
 	if (crank == source) {
 	    MPI_Accumulate( buf0, count0, MPI_INT, dest, 1, count0, MPI_INT, 
