@@ -127,6 +127,7 @@ void MPIR_CleanupThreadStorage( void *a )
     }
 }
 
+#if !defined(MPID_DEVICE_DEFINES_THREAD_CS)
 /* These routine handle any thread initialization that my be required */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Thread_CS_Init
@@ -210,6 +211,7 @@ int MPIR_Thread_CS_Finalize( void )
 
     return MPI_SUCCESS;
 }
+#endif /* !MPID_DEVICE_DEFINES_THREAD_CS */
 #endif /* MPICH_IS_THREADED */
 
 

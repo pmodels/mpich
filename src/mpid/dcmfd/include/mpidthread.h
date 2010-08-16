@@ -22,7 +22,7 @@
 /* This file is included by mpidpre.h, so it is included before mpiimplthread.h.
  * This is intentional because it lets us override the critical section macros */
 
-#if (MPICH_THREAD_LEVEL != MPI_THREAD_MULTIPLE) /* == !defined(MPICH_ISTHREADED) */
+#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE) /* == defined(MPICH_IS_THREADED) */
 
 /* suppress default macro definitions */
 #define MPID_DEFINES_MPIU_THREAD_CS 1
@@ -188,4 +188,5 @@
 #error "unhandled thread granularity"
 #endif /* MPIU_THREAD_GRANULARITY == ... */
 
+#endif /* MPICH_IS_THREADED */
 #endif /* !MPICH_MPIDTHREAD_H_INCLUDED */

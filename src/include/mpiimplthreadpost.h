@@ -11,7 +11,7 @@
 #ifndef MPIIMPLTHREADPOST_H_INCLUDED
 #define MPIIMPLTHREADPOST_H_INCLUDED
 
-#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED) && !defined(MPID_DEVICE_DEFINES_THREAD_CS)
 /* All the funcs below require MPID Thread defns - that are available only
  * when thread level >= serialized
  */
