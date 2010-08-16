@@ -21,7 +21,7 @@ fi
 if [ "$acWorks" != yes ] ; then
     echo "Selected version of autoconf cannot handle version 2.52"
     echo "Trying to find an autoconf-2.xx..."
-    for ver in 56 55 54 53 52 ; do
+    for ver in `seq 52 68 | sort -r` ; do
         autoconf="autoconf-2.$ver"
         if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
 	    MPE_AUTOCONF=$autoconf
@@ -38,10 +38,20 @@ if [ "$acWorks" != yes ] ; then
 fi
 rm -rf .tmp
 
-cfgins=`find . -name 'configure.in' -print`
+# We cannot use "find . -name 'configre.in'" to locate configure.ins
+# because "." is the working directory not the top-level MPE2 source
+# directory.  So we use the full-pathname of this script to locate the
+# MPE2's top-level directory.  'dirname' does not return the full-pathname
+# and may not be reliable in general, so we cd to the directory and
+# use pwd to get the full-pathname of the top-level MPE2 source directory.
+saved_wd=`pwd`
+cd `dirname $0` && master_dir=`pwd`
+cd $saved_wd
+
+cfgins=`find $master_dir -name 'configure.in' -print`
 for cfgin in $cfgins ; do
     dir="`dirname $cfgin`"
-    echo "Building directory $dir"
+    echo "Building directory $dir ..."
     if [ ! -z "`grep AC_CONFIG_HEADER $cfgin`" ] ; then
 	(cd $dir && $MPE_AUTOHEADER && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
     else
