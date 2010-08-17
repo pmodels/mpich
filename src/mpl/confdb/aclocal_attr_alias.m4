@@ -415,7 +415,7 @@ if test "$pac_f2c_alignedn_diffbase" = "yes" ; then
         AC_COMPILE_IFELSE([
             AC_LANG_SOURCE([
 changequote(,)
-struct mpif_cmblk_t_ { int imembers[$cmblksize]; };
+struct mpif_cmblk_t_ { $MPI_FINT imembers[$cmblksize]; };
 changequote([,])
 typedef struct mpif_cmblk_t_ mpif_cmblk_t;
 mpif_cmblk_t mpifcmbr $pac_attr_aligned_str = {0};
