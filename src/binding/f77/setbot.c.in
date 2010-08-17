@@ -98,11 +98,7 @@ struct mpif_cmblk1_t_ {
     MPI_Fint MPIF_STATUS_IGNORE[MPIF_STATUS_SIZE];
 };
 typedef struct mpif_cmblk1_t_ mpif_cmblk1_t;
-#if defined(HAVE_C_ATTR_ALIGNED)
-mpif_cmblk1_t mpifcmb1r __attribute__((aligned)) = {0};
-#else
-mpif_cmblk1_t mpifcmb1r = {0};
-#endif
+mpif_cmblk1_t mpifcmb1r @CMB_STATUS_ALIGNMENT@ = {0};
 extern mpif_cmblk1_t _CMPIFCMB1  __attribute__ ((alias("mpifcmb1r")));
 extern mpif_cmblk1_t   MPIFCMB1  __attribute__ ((alias("mpifcmb1r")));
 extern mpif_cmblk1_t   MPIFCMB1_ __attribute__ ((alias("mpifcmb1r")));
@@ -114,11 +110,7 @@ struct mpif_cmblk2_t_ {
     MPI_Fint MPIF_STATUSES_IGNORE[1][MPIF_STATUS_SIZE];
 };
 typedef struct mpif_cmblk2_t_ mpif_cmblk2_t;
-#if defined(HAVE_C_ATTR_ALIGNED)
-mpif_cmblk2_t mpifcmb2r __attribute__((aligned)) = {0};
-#else
-mpif_cmblk2_t mpifcmb2r = {0};
-#endif
+mpif_cmblk2_t mpifcmb2r @CMB_STATUS_ALIGNMENT@ = {0};
 extern mpif_cmblk2_t _CMPIFCMB2  __attribute__ ((alias("mpifcmb2r")));
 extern mpif_cmblk2_t   MPIFCMB2  __attribute__ ((alias("mpifcmb2r")));
 extern mpif_cmblk2_t   MPIFCMB2_ __attribute__ ((alias("mpifcmb2r")));
@@ -130,11 +122,7 @@ struct mpif_cmblk3_t_ {
     MPI_Fint MPIF_BOTTOM;
 };
 typedef struct mpif_cmblk3_t_ mpif_cmblk3_t;
-#if defined(HAVE_C_ATTR_ALIGNED)
-mpif_cmblk3_t mpifcmb3r __attribute__((aligned)) = {0};
-#else
-mpif_cmblk3_t mpifcmb3r = {0};
-#endif
+mpif_cmblk3_t mpifcmb3r @CMB_1INT_ALIGNMENT@ = {0};
 extern mpif_cmblk3_t _CMPIFCMB3  __attribute__ ((alias("mpifcmb3r")));
 extern mpif_cmblk3_t   MPIFCMB3  __attribute__ ((alias("mpifcmb3r")));
 extern mpif_cmblk3_t   MPIFCMB3_ __attribute__ ((alias("mpifcmb3r")));
@@ -146,11 +134,7 @@ struct mpif_cmblk4_t_ {
     MPI_Fint MPIF_IN_PLACE;
 };
 typedef struct mpif_cmblk4_t_ mpif_cmblk4_t;
-#if defined(HAVE_C_ATTR_ALIGNED)
-mpif_cmblk4_t mpifcmb4r __attribute__((aligned)) = {0};
-#else
-mpif_cmblk4_t mpifcmb4r = {0};
-#endif
+mpif_cmblk4_t mpifcmb4r @CMB_1INT_ALIGNMENT@ = {0};
 extern mpif_cmblk4_t _CMPIFCMB4  __attribute__ ((alias("mpifcmb4r")));
 extern mpif_cmblk4_t   MPIFCMB4  __attribute__ ((alias("mpifcmb4r")));
 extern mpif_cmblk4_t   MPIFCMB4_ __attribute__ ((alias("mpifcmb4r")));
@@ -162,11 +146,7 @@ struct mpif_cmblk5_t_ {
     MPI_Fint MPIF_ERRCODES_IGNORE[1];
 };
 typedef struct mpif_cmblk5_t_ mpif_cmblk5_t;
-#if defined(HAVE_C_ATTR_ALIGNED)
-mpif_cmblk5_t mpifcmb5r __attribute__((aligned)) = {0};
-#else
-mpif_cmblk5_t mpifcmb5r = {0};
-#endif
+mpif_cmblk5_t mpifcmb5r @CMB_1INT_ALIGNMENT@ = {0};
 extern mpif_cmblk5_t _CMPIFCMB5  __attribute__ ((alias("mpifcmb5r")));
 extern mpif_cmblk5_t   MPIFCMB5  __attribute__ ((alias("mpifcmb5r")));
 extern mpif_cmblk5_t   MPIFCMB5_ __attribute__ ((alias("mpifcmb5r")));
@@ -179,11 +159,7 @@ struct mpif_cmblk7_t_ {
     char pads[3];
 };
 typedef struct mpif_cmblk7_t_ mpif_cmblk7_t;
-#if defined(HAVE_C_ATTR_ALIGNED)
-mpif_cmblk7_t mpifcmb7r __attribute__((aligned)) = {0};
-#else
-mpif_cmblk7_t mpifcmb7r = {0};
-#endif
+mpif_cmblk7_t mpifcmb7r @CMB_1INT_ALIGNMENT@ = {0};
 extern mpif_cmblk7_t _CMPIFCMB7  __attribute__ ((alias("mpifcmb7r")));
 extern mpif_cmblk7_t   MPIFCMB7  __attribute__ ((alias("mpifcmb7r")));
 extern mpif_cmblk7_t   MPIFCMB7_ __attribute__ ((alias("mpifcmb7r")));
@@ -196,11 +172,7 @@ struct mpif_cmblk8_t_ {
     char pads[3];
 };
 typedef struct mpif_cmblk8_t_ mpif_cmblk8_t;
-#if defined(HAVE_C_ATTR_ALIGNED)
-mpif_cmblk8_t mpifcmb8r __attribute__((aligned)) = {0};
-#else
-mpif_cmblk8_t mpifcmb8r = {0};
-#endif
+mpif_cmblk8_t mpifcmb8r @CMB_1INT_ALIGNMENT@ = {0};
 extern mpif_cmblk8_t _CMPIFCMB8  __attribute__ ((alias("mpifcmb8r")));
 extern mpif_cmblk8_t   MPIFCMB8  __attribute__ ((alias("mpifcmb8r")));
 extern mpif_cmblk8_t   MPIFCMB8_ __attribute__ ((alias("mpifcmb8r")));

@@ -308,6 +308,8 @@ else
     libtoolize=${LIBTOOLIZE:-libtoolize}
 fi
 
+# FIXME: "which xxx" determines xxx in user's PATH
+# but not necessarily what is being used here in this script
 autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
 automakedir=`which automake | sed -e 's_/[^/]*$__g'`
 libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`

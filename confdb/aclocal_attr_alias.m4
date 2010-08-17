@@ -74,10 +74,12 @@ AC_PATH_PROGS_FEATURE_CHECK(NM_G, nm, [
 AC_LANG_POP(C)
 ]) dnl Endof AC_DEFUN([PAC_PATH_NM_G]
 dnl
+dnl PAC_C_MULTI_ATTR_ALIAS()
 dnl
-dnl The checks if Multiple __attribute__((alias)) is available
-dnl If the multiple __attribute((alias)) support is there,
-dnl define(HAVE_C_MULTI_ATTR_ALIAS) and pac_c_multi_attr_alias=yes.
+dnl The checks if multiple __attribute__((alias)) is available
+dnl If the multiple __attribute((alias)) support is found,
+dnl pac_c_multi_attr_alias=yes is set.
+dnl
 dnl The default is to do a runtime test.  When cross_compiling=yes,
 dnl pac_path_NM_G will be used to determine the test result.
 dnl If CFLAGS(or CPPFLAGS) contains ATTR_ALIAS_DEBUG, the runtime will print
@@ -241,8 +243,6 @@ if test "$pac_c_attr_alias_main" = "yes" ; then
         if test "$diff_addrs" != "yes" ; then
             dnl echo "Same addresses. Multiple aliases support"
             AC_MSG_RESULT([${NM_G} says yes])
-            AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
-                      [Define if multiple __attribute__((alias)) are supported])
             pac_c_multi_attr_alias=yes
         else
             dnl echo "Different addresses. No multiple aliases support."
@@ -260,8 +260,6 @@ if test "$pac_c_attr_alias_main" = "yes" ; then
             fi
             if test "$pac_c_attr_alias_val" -eq 1 ; then
                 AC_MSG_RESULT(yes)
-                AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
-                          [Define if multiple __attribute__((alias)) are supported])
                 pac_c_multi_attr_alias=yes
             else
                 AC_MSG_RESULT(no)
@@ -281,8 +279,10 @@ AC_LANG_POP(C)
 
 ]) dnl  Endof AC_DEFUN([PAC_C_MULTI_ATTR_ALIAS]
 dnl
-dnl Check if __attribute__((aligned)) is supported.
-dnl If so, define HAVE_C_ATTR_ALIGNED and set pac_c_attr_aligned=yes.
+dnl PAC_C_ATTR_ALIGNED()
+dnl
+dnl Check if __attribute__((aligned)) support is there.
+dnl If so, set pac_c_attr_aligned=yes.
 dnl
 dnl Do a link test instead of compile test to check if the linker
 dnl would emit an error.
@@ -298,12 +298,207 @@ typedef struct mpif_cmblk_t_ mpif_cmblk_t;
 mpif_cmblk_t mpifcmbr __attribute__((aligned)) = {0};
     ],[])
 ],[pac_c_attr_aligned=yes], [pac_c_attr_aligned=no])
-if test "$pac_c_attr_aligned" = "yes" ; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_C_ATTR_ALIGNED,1,
-              [Define if __attribute__((aligned)) is supported.])
-else
-    AC_MSG_RESULT(no)
-fi
+AC_MSG_RESULT([$pac_c_attr_aligned])
 AC_LANG_POP(C)
 ])
+dnl
+dnl PAC_F2C_ATTR_ALIGNED_SIZE(ARRAY_SIZE, [OUTPUT_VAR], [MIN_ALIGNMENT])
+dnl
+dnl ARRAY_SIZE    : Size of the integer array within the fortran commmon block.
+dnl OUTPUT_VAR    : Optional variable to be set.
+dnl                 if test succeeds, set OUTPUT_VAR=$pac_f2c_attr_aligned_str.
+dnl                 if test fails, set OUTPUT_VAR="unknown".
+dnl MIN_ALIGNMENT : Optional value.
+dnl                 Minimum alignment size to be used in OUTPUT_VAR.
+dnl                 pac_f2c_attr_aligned_str won't be modified.
+dnl
+dnl "pac_f2c_attr_aligned_str" will be set with
+dnl 1) __attribute__((aligned(ALIGNMENT_SIZE))),
+dnl 2) __attribute__((aligned)).
+dnl 3) "", i.e. empty string.
+dnl
+dnl 2) means the test can't find a good alignment value, but both the Fortran
+dnl    and C compilers are OK with "aligned" which in principle means the C
+dnl    compiler will pick the maximum useful alignment supported by the
+dnl    architecture.
+dnl 3) means that the test has failed to find the alignment.
+dnl
+AC_DEFUN([PAC_F2C_ATTR_ALIGNED_SIZE],[
+cmblksize=$1
+AC_MSG_CHECKING([the minimum alignment of Fortran common block of $cmblksize integers])
+dnl To find the minmium alignment of Fortran common block (of integer array)
+dnl as seen by C object file, C object files of various (typical) alignments
+dnl are linked to the Fortran code using the common block of integer array.
+#
+dnl Since the incorrect alignment results only a warning messages from the
+dnl fortran compiler(or linker), so we use "diff" to compare the fortran
+dnl compiler/linker output.  We cannot use AC_LANG_WERROR,
+dnl i.e. ac_fc_werror_flag=yes, because compiler like pgf77 at version 10.x)
+dnl has non-zero stderr output if a fortran program is used in the linking.
+dnl The stderr contains the name of fortran program even if the linking is
+dnl successful.  We could avoid the non-zero stderr output in pgf77 by
+dnl compiling everthing into object files and linking all the object files
+dnl with pgf77.  Doing that would need us to use AC_TRY_EVAL instead of
+dnl AC_LINK_IFELSE, so "diff" approach is used instead.
+#
+dnl Using diff of compiler(linker) output requires a reference output file
+dnl as the base of diff.  The process of creating this reference output file
+dnl has to be exactly the same as the testing process, because pgf77 has
+dnl the following weird behavour
+dnl pgf77 -o ftest ftest.f         => when $?=0 with zero stderr output
+dnl pgf77 -o ftest ftest.f dummy.o => when $?=0 with non-zero stderr output.
+dnl                                   stderr has "ftest.f:".
+dnl 
+# First create a fortran CONFTEST which will be used repeatedly.
+AC_LANG_PUSH([Fortran]) dnl AC_LANG_PUSH([Fortran 77])
+AC_LANG_CONFTEST([
+    AC_LANG_SOURCE([
+        program fconftest
+        integer isize
+        parameter (isize=$cmblksize)
+        integer status_array(isize)
+        common /mpifcmb/ status_array
+        save /mpifcmb/
+        end
+    ])
+])
+AC_LANG_POP([Fortran]) dnl AC_LANG_POP([Fortran 77])
+dnl
+dnl
+dnl
+# Compile a C dummy.$OBJEXT and link with Fortran test program to create
+# a reference linker output file, pac_align0.log, as the base of "diff".
+AC_LANG_PUSH([C])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([])],[
+    cp conftest.$ac_ext pac_conftest.c
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    saved_LIBS="$LIBS"
+    LIBS="pac_conftest.$OBJEXT $LIBS"
+    AC_LANG_PUSH([Fortran]) dnl AC_LANG_PUSH([Fortran 77])
+    saved_ac_link="$ac_link"
+    ac_link="`echo $saved_ac_link | sed -e 's|>.*$|> $pac_logfile 2>\&1|g'`"
+    pac_logfile="pac_align0.log"
+    rm -f $pac_logfile
+    AC_LINK_IFELSE([],[
+        pac_f2c_alignedn_diffbase=yes
+    ],[
+        pac_f2c_alignedn_diffbase=no
+    ])
+    # Be sure NOT to remove the conftest.f which is still needed for later use.
+    # rm -f conftest.$ac_ext 
+    # Restore everything in autoconf that has been overwritten
+    ac_link="$saved_ac_link"
+    # restore previously saved LIBS
+    LIBS="$saved_LIBS"
+    AC_LANG_POP([Fortran]) dnl AC_LANG_POP([Fortran 77])
+],[
+    pac_f2c_alignedn_diffbase=no
+])
+AC_LANG_POP([C])
+dnl
+dnl
+if test "$pac_f2c_alignedn_diffbase" = "yes" ; then
+    # Initialize pac_result_str to empty string since part of the test
+    # depends on pac_result_str is empty or non-empty string.
+    pac_result_str=""
+    # Initialize pac_f2c_attr_aligned_str to empty string and
+    # it will remain as empty string if the following test fails.
+    pac_f2c_attr_aligned_str=""
+    for asize in 4 8 16 32 64 128 max ; do
+        if test "$asize" != "max" ; then
+            pac_attr_aligned_str="__attribute__((aligned($asize)))"
+        else
+            pac_attr_aligned_str="__attribute__((aligned))"
+        fi
+        AC_LANG_PUSH([C])
+        #Compile the __attribute__ object file.
+        AC_COMPILE_IFELSE([
+            AC_LANG_SOURCE([
+changequote(,)
+struct mpif_cmblk_t_ { int imembers[$cmblksize]; };
+changequote([,])
+typedef struct mpif_cmblk_t_ mpif_cmblk_t;
+mpif_cmblk_t mpifcmbr $pac_attr_aligned_str = {0};
+
+extern mpif_cmblk_t _CMPIFCMB  __attribute__ ((alias("mpifcmbr")));
+extern mpif_cmblk_t   MPIFCMB  __attribute__ ((alias("mpifcmbr")));
+extern mpif_cmblk_t   MPIFCMB_ __attribute__ ((alias("mpifcmbr")));
+extern mpif_cmblk_t _Cmpifcmb  __attribute__ ((alias("mpifcmbr")));
+extern mpif_cmblk_t   mpifcmb  __attribute__ ((alias("mpifcmbr")));
+extern mpif_cmblk_t   mpifcmb_ __attribute__ ((alias("mpifcmbr")));
+            ])
+        ],[
+            cp conftest.$ac_ext pac_conftest.c
+            PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+            saved_LIBS="$LIBS"
+            LIBS="pac_conftest.$OBJEXT $LIBS"
+            AC_LANG_PUSH([Fortran]) dnl AC_LANG_PUSH([Fortran 77])
+            saved_ac_link="$ac_link"
+            ac_link="`echo $saved_ac_link | sed -e 's|>.*$|> $pac_logfile 2>\&1|g'`"
+            pac_logfile="pac_align1.log"
+            rm -f $pac_logfile
+            # Use conftest.f created in CONFTEST.
+            AC_LINK_IFELSE([],[
+                PAC_RUNLOG_IFELSE([diff -b pac_align0.log pac_align1.log],[
+                    pac_attr_alignedn=yes
+                ],[
+                    pac_attr_alignedn=no
+                    cat $pac_logfile >&AS_MESSAGE_LOG_FD
+                    echo "failed C program was:" >&AS_MESSAGE_LOG_FD
+                    cat pac_conftest.c >&AS_MESSAGE_LOG_FD
+                    echo "failed Fortran program was:" >&AS_MESSAGE_LOG_FD
+                    cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
+                ])
+            ],[
+                pac_attr_alignedn=no
+            ])
+            # Restore everything in autoconf that has been overwritten
+            ac_link="$saved_ac_link"
+            # restore previously saved LIBS
+            LIBS="$saved_LIBS"
+            AC_LANG_POP([Fortran]) dnl AC_LANG_POP([Fortran 77])
+            # remove previously generated object file and C file.
+            rm -f pac_conftest.$OBJEXT pac_conftest.c
+            rm -f $pac_logfile
+            if test "$pac_attr_alignedn" = yes ; then
+                ifelse([$3],[],[
+                    pac_result_str="$asize"
+                    pac_f2c_attr_aligned_str="$pac_attr_aligned_str"
+                    break
+                ],[
+                    if test "$asize" != "max" -a "$asize" -lt "$3" ; then
+                        if test "X$pac_result_str" = "X" ; then
+                            pac_result_str="$asize"
+                            pac_f2c_attr_aligned_str="$pac_attr_aligned_str"
+                        fi
+                        continue
+                    else
+                        pac_f2c_attr_aligned_str="$pac_attr_aligned_str"
+                        if test "X$pac_result_str" != "X" ; then
+                            pac_result_str="$pac_result_str, too small! reset to $asize"
+                        else
+                            pac_result_str="$asize"
+                        fi
+                        break
+                    fi
+                ])
+            fi
+        ], [
+            pac_attr_alignedn=no
+        ])
+        AC_LANG_POP([C])
+    done
+    ifelse([$2],[],[],[$2="$pac_f2c_attr_aligned_str"])
+else
+    pac_result_str=""
+    # Since the test fails, set pac_f2c_attr_aligned_str to empty string.
+    pac_f2c_attr_aligned_str=""
+fi
+if test "X$pac_result_str" != "X" ; then
+    AC_MSG_RESULT([$pac_result_str])
+else
+    AC_MSG_RESULT([unknown])
+fi
+rm -f pac_align0.log
+])
+dnl

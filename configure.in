@@ -533,6 +533,12 @@ enable_weak_symbols=yes)
 dnl
 dnl
 dnl
+AC_ARG_ENABLE(multi-aliases,
+[--enable-multi-aliases - Multiple aliasing to support multiple fortran compilers (default)],,
+enable_multi_aliases=yes)
+dnl
+dnl
+dnl
 AC_ARG_WITH(cross,
 [--with-cross=file - Specify the values of variables that configure cannot
                     determine in a cross-compilation environment]
@@ -1856,12 +1862,6 @@ EOF
    if test "$pac_f_init_works_with_c" = "yes" ; then
        AC_DEFINE(HAVE_MPI_F_INIT_WORKS_WITH_C,1,[Define if the Fortran init code for MPI works from C programs without special libraries])
    fi
-fi
-
-# Check if multiple __attribute__((alias)) is available
-if test "$enable_f77" = yes ; then
-    PAC_C_ATTR_ALIGNED
-    PAC_C_MULTI_ATTR_ALIAS
 fi
 
 # FC requires F77 as well.  If the user disabled f77, do not run the
@@ -4440,6 +4440,23 @@ EOF
     # for example, used the high (sign) bit to indicate true and false; the 
     # rest of the bits were ignored.  For now, we'll assume that there are 
     # unique true and false values.
+
+    # Check if multiple __attribute__((alias)) is available
+    if test "$enable_multi_aliases" = "yes" ; then
+        PAC_C_MULTI_ATTR_ALIAS
+        if test "$pac_c_multi_attr_alias" = "yes" ; then
+            PAC_F2C_ATTR_ALIGNED_SIZE([1],[CMB_1INT_ALIGNMENT])
+            AC_SUBST(CMB_1INT_ALIGNMENT)
+            PAC_F2C_ATTR_ALIGNED_SIZE([$MPI_STATUS_SIZE],[CMB_STATUS_ALIGNMENT],
+                                      [32])
+            AC_SUBST(CMB_STATUS_ALIGNMENT)
+            if test "X$CMB_1INT_ALIGNMENT" != "X" \
+                 -a "X$CMB_STATUS_ALIGNMENT" != "X" ; then
+                AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
+                    [Define if multiple __attribute__((alias)) are supported])
+            fi
+        fi
+    fi
 
     # Get the ADDRESS_KIND and OFFSET_KIND if possible
     #
