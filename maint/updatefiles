@@ -30,6 +30,16 @@ echo_n() {
     printf "%s" "$*"
 }
 
+# Assume prog's install-dir is <install-dir>/bin/<prog>.
+# Given tool name, the install-dir is returned is returned in 2nd argument.
+# example, proghomedir libtoolize libtooldir.
+ProgHomeDir() {
+    prog=$1
+    progpath="`which $prog`"
+    progbindir="`dirname $progpath`"
+    saved_wd=`pwd` && cd $progbindir/.. && proghome=`pwd` && cd $saved_wd
+    eval $2=$proghome
+}
 
 echo
 echo "##################################"
@@ -308,8 +318,10 @@ else
     libtoolize=${LIBTOOLIZE:-libtoolize}
 fi
 
-# FIXME: "which xxx" determines xxx in user's PATH
-# but not necessarily what is being used here in this script
+# FIXME:
+# Given the code below use "$autoconf" instead of "autoconf" from user's PATH.
+# The following 3 lines should at least use "which $autoconf" instead of
+# "which autoconf" or it could use "ProgHomeDir autoconf autoconfdir".
 autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
 automakedir=`which automake | sed -e 's_/[^/]*$__g'`
 libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`
@@ -448,6 +460,35 @@ else
     echo "   libtool --version"
     echo "will provide the version number."
     exit 1
+fi
+
+# If autotools are not in the same directory, overide autoreconf appropriately.
+if [ "$no_atdir_check" = "yes" ] ; then
+    ProgHomeDir libtoolize libtooldir
+    libtoolm4dir="$libtooldir/share/aclocal"
+    echo_n "Checking if $autoreconf takes -I $libtoolm4dir ... "
+    autoreconfIworks=no
+    if [ -d "$libtoolm4dir" ] ; then
+        recreate_tmp
+        cat >.tmp/configure.ac <<_EOF
+AC_INIT(foo,1.0)
+AC_PROG_LIBTOOL
+AC_OUTPUT
+_EOF
+        if (cd .tmp && $autoreconf -I $libtoolm4dir -ivf >/dev/null 2>&1) ; then
+            autoreconfIworks=yes
+        fi
+    fi
+    echo "$autoreconfIworks"
+    # If autoreconf accepts -I correctly, use -I.
+    # If not, run libtoolize before autoreconf (for autoconf <= 2.63)
+    if [ "$autoreconfIworks" = "yes" ] ; then
+        AUTORECONF="$autoreconf -I $libtoolm4dir"
+    else
+        AUTORECONF="eval $libtoolize && $autoreconf"
+    fi
+    export AUTORECONF
+    autoreconf="$AUTORECONF"
 fi
 
 
