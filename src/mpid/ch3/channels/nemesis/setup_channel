@@ -39,7 +39,7 @@ done
 # By the time configure for nemesis is run, the ch3 configure has already AC_SUBSTed CPPFLAGS.
 # This is run from the top of ch3's configure.
 if test -n "${papi_dir}" ; then
-    CPPFLAGS=="$CPPFLAGS -I${papi_dir}/include"
+    CPPFLAGS="$CPPFLAGS -I${papi_dir}/include"
 fi
 
 export nemesis_networks
