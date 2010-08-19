@@ -367,6 +367,16 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     mpi_errno = MPIR_Param_init_params();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* Wait for debugger to attach if requested. */
+    if (MPIR_PARAM_DEBUG_HOLD) {
+        volatile int hold = 1;
+        while (hold)
+#ifdef HAVE_USLEEP
+            usleep(100);
+#endif
+            ;
+    }
+
     /* define MPI as initialized so that we can use MPI functions within 
        MPID_Init if necessary */
     MPIR_Process.initialized = MPICH_WITHIN_MPI;

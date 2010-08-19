@@ -127,4 +127,18 @@ parameters:
       description : >-
         If non-empty, this parameter specifies which network module
         should be used for communication.
+  
+  ##############################################################
+    # debugging parameters
+    - category    : debugger
+      name        : DEBUG_HOLD
+      type        : boolean
+      default     : false
+      description : >-
+        If true causes processes to wait in MPI_Init and
+        MPI_Initthread for a debugger to be attached.  Once the
+        debugger has attached, the variable 'hold' should be set to 0
+        in order to allow the process to continue (e.g., in gdb, "set
+        hold=0").
+
 ...
