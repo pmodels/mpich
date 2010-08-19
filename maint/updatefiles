@@ -25,14 +25,19 @@ warn() {
     echo "===> WARNING: $@"
 }
 
+error() {
+    echo "===> ERROR:   $@"
+}
+
 echo_n() {
     # "echo_n" isn't portable, must portably implement with printf
     printf "%s" "$*"
 }
 
-# Assume prog's install-dir is <install-dir>/bin/<prog>.
-# Given tool name, the install-dir is returned is returned in 2nd argument.
-# example, proghomedir libtoolize libtooldir.
+# Assume Program's install-dir is <install-dir>/bin/<prog>.
+# Given program name as the 1st argument,
+# the install-dir is returned is returned in 2nd argument.
+# e.g., ProgHomeDir libtoolize libtooldir.
 ProgHomeDir() {
     prog=$1
     progpath="`which $prog`"
@@ -115,6 +120,8 @@ do_build_configure=yes
 export do_build_configure
 do_genstates=yes
 do_smpdversion=yes
+do_atdir_check=no
+do_atver_check=yes
 
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
@@ -147,11 +154,21 @@ for arg in "$@" ; do
 	set -x
 	;;
 	
-    -noatdircheck|-no-atdir-check)
-        no_atdir_check=yes
+    -atdircheck=*)
+        val=`echo X$arg | sed -e 's/^X-atdircheck=//'`
+        case $val in
+            yes|YES|true|TRUE|1) do_atdir_check=yes ;;
+            no|NO|false|FALSE|0) do_atdir_check=no ;;
+            *) warn "unknown option: $arg."
+        esac
         ;;
-    -noatvercheck|-no-atver-check)
-        no_atver_check=yes
+    -atvercheck=*)
+        val=`echo X$arg | sed -e 's/^X-atvercheck=//'`
+        case $val in
+            yes|YES|true|TRUE|1) do_atver_check=yes ;;
+            no|NO|false|FALSE|0) do_atver_check=no ;;
+            *) warn "unknown option: $arg."
+        esac
         ;;
     -do=*|--do=*)
     opt=`echo A$arg | sed -e 's/^A--*do=//'`
@@ -220,8 +237,8 @@ for arg in "$@" ; do
     -help|--help|-usage|--usage)
     cat <<EOF
     updatefiles [ --with-autotools=dir ] \\
-                [ -noatdircheck | -no-atdir-check ] \\
-                [ -noatvercheck | -no-atver-check ] \\
+                [ -atdircheck=[yes|no] ] \\
+                [ -atvercheck=[yes|no] ] \\
                 [ --do=stepname ] [ -distrib ] [ args for simplemake ]
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
@@ -230,11 +247,11 @@ for arg in "$@" ; do
     You can use --with-autotools=dir to specify a directory that
     contains alternate autotools.
 
-    -noatdircheck or -no-atdir-check disables the check that enforces all
-    autotools being installed in the same directory.
+    -atdircheck=[yes|no] specifies the enforcement of all autotools
+    should be installed in the same directory.
 
-    -noatvercheck or -no-atver-check disables the check the version of 
-    autotools.
+    -atvercheck=[yes|no] specifies if the check for the version of 
+    autotools should be carried out.
 
     -distrib creates a distribution version of the Makefile.in files (no
     targets for updating the Makefile.in from Makefile.sm or rebuilding the
@@ -268,7 +285,6 @@ set -- $temp_args
 ## Check for the location of autotools
 ########################################################################
 
-echo_n "Verifying that autotools are in the same location... "
 if [ -z "$autotoolsdir" ] ; then
     autotoolsdir=$MPICH2_AUTOTOOLS_DIR
 fi
@@ -322,17 +338,26 @@ fi
 # Given the code below use "$autoconf" instead of "autoconf" from user's PATH.
 # The following 3 lines should at least use "which $autoconf" instead of
 # "which autoconf" or it could use "ProgHomeDir autoconf autoconfdir".
-autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
-automakedir=`which automake | sed -e 's_/[^/]*$__g'`
-libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`
+# autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
+# automakedir=`which automake | sed -e 's_/[^/]*$__g'`
+# libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`
+ProgHomeDir autoconf   autoconfdir
+ProgHomeDir automake   automakedir
+ProgHomeDir libtoolize libtooldir
 
-if [ "$no_atdir_check" != "yes" ] ; then
-    if [ "$autoconfdir" != "$automakedir" -a "$autoconfdir" != "$libtooldir" ] ; then
-        echo "all autotools should be in the same directory"
-        exit 1
-    fi
+echo_n "Checking if autotools are in the same location... "
+if [ "$autoconfdir" = "$automakedir" -a "$autoconfdir" = "$libtooldir" ] ; then
+    same_atdir=yes
+else
+    same_atdir=no
 fi
-echo "done"
+echo "$same_atdir"
+
+# Emit a big warning message if $same_atdir = no.
+if [ "$same_atdir" != "yes" ] ; then
+    warn "Experimental support of autotools being in different locations."
+    warn "Configure or even make may fail in some unexpected ways."
+fi
 
 
 ########################################################################
@@ -346,7 +371,7 @@ acIncDirFlag=-I
 # Try to keep at least one version ahead of autoconf (e.g., if current
 # is 2.65, include a test for 2.66)
 echo_n "Checking for autoconf version... "
-for ver in 68 67 66 65 64 63 62 61 60 59 ; do
+for ver in `seq 59 68 | sort -r` ; do
     recreate_tmp
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
@@ -359,7 +384,10 @@ done
 rm -rf .tmp
 if [ "$acSubversion" -gt 0 ] ; then
     echo "2.$acSubversion"
-    if [ "$no_atver_check" != "yes" ] ; then
+    if [ "$do_atver_check" = "yes" ] ; then
+        # 2.62 has bug in AC_C_BIGENDIAN.
+        # 2.65's AC_TYPE_INT*_T always returns 0.
+        # 2.66 is broken with AC_CHECK_SIZEOF and AC_CONFIG_SUBDIRS.
         case "$acSubversion" in
             63|64|67)
                 ;;
@@ -415,12 +443,14 @@ rm -rf .tmp
 if [ "$automakeVerOk" = "yes" ] ; then
     echo ">= 1.11"
 else
-    echo "too old version"
-    echo "Unable to build a configure that uses automake.  automake version 1.11"
-    echo "or later is required; for some automake instances, the command"
-    echo "   automake --version"
-    echo "will provide the version number."
-    exit 1
+    echo "too old"
+    if [ "$do_atver_check" = "yes" ] ; then
+        echo "Unable to build a configure that uses automake.  automake version 1.11"
+        echo "or later is required; for some automake instances, the command"
+        echo "   automake --version"
+        echo "will provide the version number."
+        exit 1
+    fi
 fi
 
 
@@ -454,43 +484,83 @@ rm -rf .tmp
 if [ "$libtoolVerOk" = "yes" ] ; then
     echo ">= 2.2.6"
 else
-    echo "too old version"
-    echo "Unable to build a configure that uses Libtool.  Libtool version 2.2.6"
-    echo "or later is required; for some libtool instances, the command"
-    echo "   libtool --version"
-    echo "will provide the version number."
-    exit 1
+    echo "too old"
+    if [ "$do_atver_check" = "yes" ] ; then
+        echo "Unable to build a configure that uses Libtool.  Libtool version 2.2.6"
+        echo "or later is required; for some libtool instances, the command"
+        echo "   libtool --version"
+        echo "will provide the version number."
+        exit 1
+    fi
 fi
 
-# If autotools are not in the same directory, overide autoreconf appropriately.
-if [ "$no_atdir_check" = "yes" ] ; then
-    ProgHomeDir libtoolize libtooldir
+
+########################################################################
+## Check if autoreconf can be patched to work
+## when autotools are not in the same location.
+########################################################################
+
+# If autotools are not in the same location, override autoreconf appropriately.
+if [ "$same_atdir" != "yes" ] ; then
+    if [ -z "$libtooldir" ] ; then
+        ProgHomeDir libtoolize libtooldir
+    fi
     libtoolm4dir="$libtooldir/share/aclocal"
-    echo_n "Checking if $autoreconf takes -I $libtoolm4dir ... "
-    autoreconfIworks=no
-    if [ -d "$libtoolm4dir" ] ; then
+    echo_n "Checking if $autoreconf accepts -I $libtoolm4dir... "
+    new_autoreconf_works=no
+    if [ -d "$libtoolm4dir" -a -f "$libtoolm4dir/libtool.m4" ] ; then
         recreate_tmp
         cat >.tmp/configure.ac <<_EOF
 AC_INIT(foo,1.0)
 AC_PROG_LIBTOOL
 AC_OUTPUT
 _EOF
-        if (cd .tmp && $autoreconf -I $libtoolm4dir -ivf >/dev/null 2>&1) ; then
-            autoreconfIworks=yes
-        fi
-    fi
-    echo "$autoreconfIworks"
-    # If autoreconf accepts -I correctly, use -I.
-    # If not, run libtoolize before autoreconf (for autoconf <= 2.63)
-    if [ "$autoreconfIworks" = "yes" ] ; then
         AUTORECONF="$autoreconf -I $libtoolm4dir"
-    else
-        AUTORECONF="eval $libtoolize && $autoreconf"
+        if (cd .tmp && $AUTORECONF -ivf >/dev/null 2>&1) ; then
+            new_autoreconf_works=yes
+        fi
+        rm -rf .tmp
     fi
-    export AUTORECONF
-    autoreconf="$AUTORECONF"
+    echo "$new_autoreconf_works"
+    # If autoreconf accepts -I <libtool's m4 dir> correctly, use -I.
+    # If not, run libtoolize before autoreconf (i.e. for autoconf <= 2.63)
+    # This test is more general than checking the autoconf version.
+    if [ "$new_autoreconf_works" != "yes" ] ; then
+        echo_n "Checking if $autoreconf works after an additional $libtoolize step... "
+        new_autoreconf_works=no
+        recreate_tmp
+        # Need AC_CONFIG_
+        cat >.tmp/configure.ac <<_EOF
+AC_INIT(foo,1.0)
+AC_CONFIG_AUX_DIR([m4])
+AC_CONFIG_MACRO_DIR([m4])
+AC_PROG_LIBTOOL
+AC_OUTPUT
+_EOF
+        cat >.tmp/Makefile.am <<_EOF
+ACLOCAL_AMFLAGS = -I m4
+_EOF
+        AUTORECONF="eval $libtoolize && $autoreconf"
+        if (cd .tmp && $AUTORECONF -ivf >u.txt 2>&1) ; then
+            new_autoreconf_works=yes
+        fi
+        rm -rf .tmp
+        echo "$new_autoreconf_works"
+    fi
+    if [ "$new_autoreconf_works" = "yes" ] ; then
+        export AUTORECONF
+        autoreconf="$AUTORECONF"
+    else
+        # Since all autoreconf workarounds do not work, we need
+        # to require all autotools to be in the same directory.
+        do_atdir_check=yes
+        error "Since none of the autoreconf workaround works"
+        error "and autotools are not in the same directory, aborting..."
+        error "Updating autotools or putting all autotools in the same location"
+        error "may resolve the issue."
+        exit 1
+    fi
 fi
-
 
 ########################################################################
 ## Checking for UNIX find
