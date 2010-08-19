@@ -337,13 +337,13 @@ fi
 # FIXME:
 # Given the code below use "$autoconf" instead of "autoconf" from user's PATH.
 # The following 3 lines should at least use "which $autoconf" instead of
-# "which autoconf" or it could use "ProgHomeDir autoconf autoconfdir".
+# "which autoconf" or it could use "ProgHomeDir $autoconf autoconfdir".
 # autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
 # automakedir=`which automake | sed -e 's_/[^/]*$__g'`
 # libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`
-ProgHomeDir autoconf   autoconfdir
-ProgHomeDir automake   automakedir
-ProgHomeDir libtoolize libtooldir
+ProgHomeDir $autoconf   autoconfdir
+ProgHomeDir $automake   automakedir
+ProgHomeDir $libtoolize libtooldir
 
 echo_n "Checking if autotools are in the same location... "
 if [ "$autoconfdir" = "$automakedir" -a "$autoconfdir" = "$libtooldir" ] ; then
@@ -371,7 +371,10 @@ acIncDirFlag=-I
 # Try to keep at least one version ahead of autoconf (e.g., if current
 # is 2.65, include a test for 2.66)
 echo_n "Checking for autoconf version... "
-for ver in 68 67 66 65 64 63 62 61 60 59 ; do
+acver_min=59
+acver_max=68
+ver="$acver_max"
+while [ "$ver" -ge "$acver_min" ] ; do
     recreate_tmp
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
@@ -380,6 +383,7 @@ EOF
 	acSubversion=$ver
 	break
     fi
+    ver="`expr $ver - 1`"
 done
 rm -rf .tmp
 if [ "$acSubversion" -gt 0 ] ; then
@@ -503,7 +507,7 @@ fi
 # If autotools are not in the same location, override autoreconf appropriately.
 if [ "$same_atdir" != "yes" ] ; then
     if [ -z "$libtooldir" ] ; then
-        ProgHomeDir libtoolize libtooldir
+        ProgHomeDir $libtoolize libtooldir
     fi
     libtoolm4dir="$libtooldir/share/aclocal"
     echo_n "Checking if $autoreconf accepts -I $libtoolm4dir... "
