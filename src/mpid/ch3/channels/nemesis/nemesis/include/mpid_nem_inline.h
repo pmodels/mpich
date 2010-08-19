@@ -738,7 +738,7 @@ MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocki
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
 #ifdef USE_FASTBOX
-    if (poll_fboxes(cell)) goto fbox_l;
+    if (poll_active_fboxes(cell)) goto fbox_l;
 #endif/* USE_FASTBOX     */
 
     if (MPID_nem_num_netmods)
@@ -750,7 +750,18 @@ MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocki
     if (MPID_nem_queue_empty (MPID_nem_mem_region.my_recvQ) || !MPID_nem_recv_seqno_matches (MPID_nem_mem_region.my_recvQ))
     {
 #ifdef USE_FASTBOX
-	poll_all_fboxes (cell, goto fbox_l);
+        /* check for messages from any process (even those from which
+           we don't expect messages).  If we're nonblocking, check all
+           fboxes at once, if we're in a blocking loop we'll keep
+           iterating, so just check them one at a time. */
+        if (!in_blocking_progress) {
+            int found;
+            found = poll_every_fbox(cell);
+            if (found)
+                goto fbox_l;
+        } else {
+            poll_next_fbox (cell, goto fbox_l);
+        }
 #endif/* USE_FASTBOX     */
 	*cell = NULL;
 	goto fn_exit;
@@ -776,7 +787,7 @@ MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocki
     return mpi_errno;
 
  fbox_l:
-    *in_fbox = 1;
+   *in_fbox = 1;
     goto fn_exit;
 
 }
@@ -799,7 +810,7 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
     int mpi_errno = MPI_SUCCESS;
     
 #ifdef USE_FASTBOX
-    if (poll_fboxes(cell)) goto fbox_l;
+    if (poll_active_fboxes(cell)) goto fbox_l;
 #endif/* USE_FASTBOX     */
 
     if (MPID_nem_num_netmods)
@@ -811,7 +822,7 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
     while ((--timeout > 0) && (MPID_nem_queue_empty (MPID_nem_mem_region.my_recvQ) || !MPID_nem_recv_seqno_matches (MPID_nem_mem_region.my_recvQ)))
     {
 #ifdef USE_FASTBOX
-	poll_all_fboxes (cell, goto fbox_l);
+	poll_next_fbox (cell, goto fbox_l);
 #endif/* USE_FASTBOX     */
 	*cell = NULL;
 	goto exit_l;
@@ -871,7 +882,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 #endif
 
 #ifdef USE_FASTBOX
-    if (poll_fboxes(cell)) goto fbox_l;
+    if (poll_active_fboxes(cell)) goto fbox_l;
 #endif /*USE_FASTBOX */
 
     if (MPID_nem_num_netmods)
@@ -885,8 +896,8 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	DO_PAPI (PAPI_reset (PAPI_EventSet));
 
 #ifdef USE_FASTBOX	
-	poll_all_fboxes (cell, goto fbox_l);
-        if (poll_fboxes(cell)) goto fbox_l;
+	poll_next_fbox (cell, goto fbox_l);
+        if (poll_active_fboxes(cell)) goto fbox_l;
 #endif /*USE_FASTBOX */
 
 	if (MPID_nem_num_netmods)

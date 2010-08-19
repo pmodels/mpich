@@ -27,7 +27,7 @@ extern unsigned short        *MPID_nem_recv_seqno;
 /* int    MPID_nem_mpich2_enqueue_fastbox (int local_rank); */
 
 #if 0 /* papi timing stuff added */
-#define poll_fboxes(_cell, do_found) do {								\
+#define poll_active_fboxes(_cell, do_found) do {								\
     MPID_nem_fboxq_elem_t *orig_fboxq_elem;									\
 													\
     if (MPID_nem_fboxq_head != NULL)										\
@@ -60,7 +60,7 @@ extern unsigned short        *MPID_nem_recv_seqno;
     *(_cell) = NULL;											\
 } while (0)
 #else
-static inline int poll_fboxes(MPID_nem_cell_ptr_t *cell)
+static inline int poll_active_fboxes(MPID_nem_cell_ptr_t *cell)
 {
     MPID_nem_fboxq_elem_t *orig_fboxq_elem;
     int found = FALSE;
@@ -94,8 +94,32 @@ fn_exit:
     return found;
 }
 #endif
+
+static inline int poll_every_fbox(MPID_nem_cell_ptr_t *cell)
+{
+    MPID_nem_fboxq_elem_t *orig_fbox_el = MPID_nem_curr_fbox_all_poll;
+    MPID_nem_fbox_mpich2_t *fbox;
+    int found = FALSE;
+
+    do {
+        fbox = MPID_nem_curr_fbox_all_poll->fbox;
+        if (fbox && fbox->flag.value == 1 &&
+            fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank]) {
+            ++MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank];
+            *cell = &fbox->cell;
+            found = TRUE;
+            break;
+        }
+        ++MPID_nem_curr_fbox_all_poll;
+        if (MPID_nem_curr_fbox_all_poll > MPID_nem_fboxq_elem_list_last)
+            MPID_nem_curr_fbox_all_poll = MPID_nem_fboxq_elem_list;
+    } while (MPID_nem_curr_fbox_all_poll != orig_fbox_el);
+
+    return found;
+}
+
      
-#define poll_all_fboxes(_cell, do_found) do {										\
+#define poll_next_fbox(_cell, do_found) do {										\
     MPID_nem_fbox_mpich2_t *fbox;													\
 															\
     fbox = MPID_nem_curr_fbox_all_poll->fbox;											\
