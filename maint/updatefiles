@@ -371,7 +371,7 @@ acIncDirFlag=-I
 # Try to keep at least one version ahead of autoconf (e.g., if current
 # is 2.65, include a test for 2.66)
 echo_n "Checking for autoconf version... "
-for ver in `seq 59 68 | sort -r` ; do
+for ver in 68 67 66 65 64 63 62 61 60 59 ; do
     recreate_tmp
     cat >.tmp/configure.in <<EOF
 AC_PREREQ(2.$ver)
