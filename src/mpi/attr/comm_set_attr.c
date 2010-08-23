@@ -32,15 +32,19 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
                             MPIR_AttrType attrType)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Keyval *keyval_ptr;
+    MPID_Keyval *keyval_ptr = NULL;
     MPID_Attribute *p, **old_p;
+
+    MPIU_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, "**keyvalinvalid", "**keyvalinvalid");
 
     /* CHANGE FOR MPI 2.2:  Look for attribute.  They are ordered by when they
        were added, with the most recent first. This uses 
        a simple linear list algorithm because few applications use more than a 
        handful of attributes */
-    
+
     MPID_Keyval_get_ptr( comm_keyval, keyval_ptr );
+    MPIU_Assert(keyval_ptr != NULL);
+
     /* printf( "Setting attr val to %x\n", attribute_val ); */
     old_p = &comm_ptr->attributes;
     p     = comm_ptr->attributes;
