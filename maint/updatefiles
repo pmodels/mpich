@@ -829,9 +829,14 @@ echo "done"
 # new parameter code
 echo_n "Generating parameter handling code... "
 if test -x maint/genparams -a "$do_getparms" = "yes" ; then
-    ./maint/genparams
+    if ./maint/genparams ; then
+        echo "done"
+    else
+        echo "failed"
+        error "unable to generate parameter handling code"
+        exit 1
+    fi
 fi
-echo "done"
 
 # simplemake
 if [ $made_simplemake != "no" ] ; then
