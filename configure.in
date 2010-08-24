@@ -278,6 +278,9 @@ PAC_ARG_CACHING
 # it may influence the output of the other tests
 PAC_ARG_STRICT
 
+# Check for shared library support
+PAC_ARG_SHAREDLIBS
+
 # Experimental library dependencies for shared libraries
 AC_ARG_ENABLE(lib-depend,
 	[AC_HELP_STRING(--enable-lib-depend - Turn on library dependencies (experimental))],
@@ -1607,8 +1610,6 @@ fi
 ENABLE_SHLIB=$enable_sharedlibs
 if test -z "$ENABLE_SHLIB" -o "$ENABLE_SHLIB" = "no" ; then
     ENABLE_SHLIB=none
-    # Also turn off the libtool tests
-    enable_shared=no
 fi
 # We need the script that is used to create shared libraries if either
 # we are creating shared libraries for MPICH2 or we are creating the
@@ -2716,16 +2717,6 @@ dnl         fi
     AC_DEFINE_UNQUOTED(MPICH2_LIBDIR,$MPICH2_LIBDIR,[Name of installation directory intended for MPICH2])
 fi
 
-# ----------------------------------------------------------------------------
-# Don't setup the shared libraries until we know which compiler we will be
-# using
-PAC_ARG_SHAREDLIBS
-# We allow aliases for enable_sharedlibs, but after ARG_SHAREDLIBS, 
-# enable_sharedlibs contains the cannonical version
-ENABLE_SHLIB="$enable_sharedlibs"
-if test -z "$ENABLE_SHLIB" -o "$ENABLE_SHLIB" = "no" ; then
-    ENABLE_SHLIB=none
-fi
 # Special restrictions for some shared libraries
 # It is difficult to import/export symbols from some shared libraries, so
 # in that case, we require PMPILIBNAME and MPILIBNAME be the same
