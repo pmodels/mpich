@@ -6,6 +6,9 @@
 # Version Information
 MPICH2_VERSION=1.3b1
 
+# Release date
+MPICH2_RELEASE_DATE="unreleased development copy"
+
 # For libtool ABI versioning rules see:
 # http://www.gnu.org/software/libtool/manual/libtool.html#Updating-version-info
 

@@ -46,16 +46,12 @@ AS_CASE([$host],
 )
 
 # Build information
-if test -s "$srcdir/version/version" ; then
-    . $srcdir/version/version
-    HYDRA_VERSION=${MPICH2_VERSION}
+if test -s "$srcdir/VERSION" ; then
+    . $srcdir/VERSION
+    HYDRA_VERSION="$MPICH2_VERSION"
+    HYDRA_RELEASE_DATE="$MPICH2_RELEASE_DATE"
 else
-    HYDRA_VERSION="development copy based on svn version: `svnversion $srcdir`"
-fi
-if test -s "$srcdir/version/release_date" ; then
-    HYDRA_RELEASE_DATE="`cat $srcdir/version/release_date`"
-else
-    HYDRA_RELEASE_DATE="development copy based on svn version: `svnversion $srcdir`"
+    AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
 AC_SUBST(HYDRA_VERSION)
 AC_DEFINE_UNQUOTED(HYDRA_VERSION,"$HYDRA_VERSION",[Hydra version information])

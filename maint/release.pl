@@ -156,10 +156,7 @@ print("done\n");
 
 print("===> Create release date and version information... ");
 chdir("${root}/${pack}-${version}");
-system(qq(echo `date` > ./maint/ReleaseDate));
-system(qq(mkdir ./src/pm/hydra/version));
-system(qq(cp ./maint/Version ./src/pm/hydra/version/version));
-system(qq(cp ./maint/ReleaseDate ./src/pm/hydra/version/release_date));
+system(qq(sed -i "s/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE=\"`date`\"/g" ./maint/Version));
 print("done\n");
 
 # Remove packages that are not being released

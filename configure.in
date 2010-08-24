@@ -127,21 +127,14 @@ AC_INIT(src/include/mpichconf.h.in)
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
-# Try to find the release date
-if test -s "$srcdir/maint/ReleaseDate" ; then
-    RELEASE_DATE="`cat $srcdir/maint/ReleaseDate`"
-else
-    RELEASE_DATE="Unknown, built on `date`"
-fi
-AC_SUBST(RELEASE_DATE)
-
-# Try to find the version
+# Try to find the version and release date
 if test -s "$srcdir/maint/Version" ; then
     . $srcdir/maint/Version
     export MPICH2_VERSION
 else
     AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
+AC_SUBST(MPICH2_RELEASE_DATE)
 
 # Produce a numeric version assuming the following format:
 # Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]

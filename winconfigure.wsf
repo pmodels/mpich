@@ -2117,8 +2117,8 @@ Function ReplaceAts( str, use_f77, b64 )
 			' Config options 
 			Case "@CONFIGURE_ARGS_CLEAN@"
 				str = Replace(str, "@CONFIGURE_ARGS_CLEAN@", "Check winconfigure.wsf for config options")
-			Case "@RELEASE_DATE@"
-				str = Replace(str, "@RELEASE_DATE@", Date)
+			Case "@MPICH2_RELEASE_DATE@"
+				str = Replace(str, "@MPICH2_RELEASE_DATE@", Date)
 			Case "@DEVICE@"
 				str = Replace(str, "@DEVICE@", "ch3")
 			Case "@CC@"
