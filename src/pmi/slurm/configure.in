@@ -21,7 +21,7 @@ PAC_PROG_MAKE
 
 AC_ARG_WITH(slurm, AS_HELP_STRING([--with-slurm], [path to the slurm package]))
 AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  Configure aborted])])
-AC_CHECK_LIB([pmi], [PMI_Init], [WRAPPER_LIBS="$WRAPPER_LIBS -lpmi"],
+AC_CHECK_LIB([pmi], [PMI_Init], [PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
 		    AC_MSG_ERROR([could not find libpmi.  Configure aborted]))
 
 AC_SUBST(WRAPPER_CFLAGS)
