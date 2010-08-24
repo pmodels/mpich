@@ -47,7 +47,8 @@ AS_CASE([$host],
 
 # Build information
 if test -s "$srcdir/version/version" ; then
-    HYDRA_VERSION="`cat $srcdir/version/version | grep ^MPICH2_VERSION: | cut -f2 -d' '`"
+    . $srcdir/version/version
+    HYDRA_VERSION=${MPICH2_VERSION}
 else
     HYDRA_VERSION="development copy based on svn version: `svnversion $srcdir`"
 fi

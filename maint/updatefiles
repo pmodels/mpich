@@ -612,9 +612,9 @@ echo
 ########################################################################
 
 echo_n "Updating the README... "
-VERSION=`cat maint/Version | grep ^MPICH2_VERSION | cut -f2 -d' '`
+. ./maint/Version
 if [ -f README.vin ] ; then
-    sed -e "s/%VERSION%/${VERSION}/g" README.vin > README
+    sed -e "s/%VERSION%/${MPICH2_VERSION}/g" README.vin > README
     echo "done"
 else
     echo "error"
@@ -628,7 +628,7 @@ fi
 
 echo_n "Creating src/pm/smpd/smpd_version.h... "
 if [ "$do_smpdversion" = yes ] ; then
-    smpdVersion=`cat maint/Version | grep ^MPICH2_VERSION | cut -f2 -d' '`
+    smpdVersion=${MPICH2_VERSION}
     cat >src/pm/smpd/smpd_version.h <<EOF
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  

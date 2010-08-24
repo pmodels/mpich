@@ -16,6 +16,13 @@ save_cflags=$CFLAGS
 LT_INIT(disable-shared)
 CFLAGS=$save_cflags
 
+if test -s "$srcdir/VERSION" ; then
+   . $srcdir/VERSION
+   AC_SUBST(libmpl_so_version)
+else
+   AC_MSG_ERROR([Version information not found. Configuration aborted.])
+fi
+
 AC_CONFIG_HEADER([include/config.h])
 AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 

@@ -133,10 +133,6 @@ export ETAGSADD
 
 PAC_UPDATE_BASE_CACHE
 
-# define the ABI version of the channel ABI that we are using.
-ABIVERSION=1:1
-AC_SUBST(ABIVERSION)
-
 dnl Add a step to create the dependencies directory if it is not present
 AC_OUTPUT_COMMANDS([if grep 'dependencies:' Makefile >/dev/null 2>&1 ; then
     if test ! -s src/.deps/alldeps ; then 
