@@ -76,14 +76,14 @@ echo "done"
 # Check for a particular file, not just the directory because several
 # autotools steps (such as libtoolize) will create the aux/macro dir.
 echo_n "Checking for svn checkout errors... "
-svn_externals_sanity_file="src/mpl/confdb/aclocal_subcfg.m4"
+svn_externals_sanity_file="src/pm/hydra/VERSION"
 if test "!" -e $svn_externals_sanity_file ; then
     cat <<EOT
 
 ERROR: The file '$svn_externals_sanity_file'
 is not present, indicating that you do not have a complete source tree.
 This is usually caused by checking out MPICH2 with an SVN client version
-less than v1.5.  Please check your SVN client version (with
+less than v1.6.  Please check your SVN client version (with
 "svn --version") and use a newer version if necessary to obtain MPICH2.
 
 If you do have a modern SVN client and believe that you have reached
