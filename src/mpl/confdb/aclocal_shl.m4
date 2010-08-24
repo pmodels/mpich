@@ -74,7 +74,9 @@ Only gcc, osx-gcc, and solaris-cc are currently supported],,enable_sharedlibs=de
 
 if test "$enable_sharedlibs" = "default" ; then
    if test "$enable_shared" = "yes" ; then
-      enable_sharedlibs=gcc
+      AS_CASE([$host],
+	      [*-*-darwin*], [enable_sharedlibs=gcc-osx],
+	      [enable_sharedlibs=gcc])
    else
       enable_sharedlibs=none
    fi
