@@ -1,7 +1,7 @@
 # -*- Mode: makefile; -*-
-SUBDIRS = . @EXTERNAL_SRC_DIRS@ src examples
+SUBDIRS = . @EXTERNAL_SRC_DIRS@ src
 # Do not include test in the basic build.  
-OTHER_DIRS = test
+OTHER_DIRS = test examples
 DOC_SUBDIRS = doc
 # The all-local target makes sure that when different subsystems are selected
 # for the configure step, the libraries are removed and the object files 
@@ -74,6 +74,7 @@ all-preamble:
 #    1) Build the debugger interface if requested
 # Move the "pkglist.new" file to "pkglist" on successful completion
 all-postamble:
+	( cd examples && $(MAKE) )
 	@if [ "@BUILD_TVDLL@" = "yes" ] ; then \
 	( cd src/mpi/debugger && $(MAKE) ./libtvmpich2.@SHLIB_EXT@ ) ; fi
 	@if [ -s lib/pkglist.new ] ; then mv -f lib/pkglist.new lib/pkglist ; fi
@@ -148,9 +149,10 @@ optinstall_LIB = lib/lib${MPIFWRAPNAME}.a
 # UNUSED, example for experimentation only
 #lib${MPILIBNAME}_so_EXPORTS = maint/mpi.def
 #libf${MPILIBNAME}_so_EXPORTS = maint/fmpi.def
-libf${MPILIBNAME}_so_LIBS   = -L. -l$(MPILIBNAME)
-lib${MPILIBNAME}f90_so_LIBS = -L. -l$(MPILIBNAME)
-lib${MPICXXLIBNAME}_so_LIBS = -L. -l$(MPILIBNAME)
+lib${MPILIBNAME}_so_LIBS   = -L. @LIB_DEPS@
+libf${MPILIBNAME}_so_LIBS   = -L. -l$(MPILIBNAME) @LIB_DEPS@
+lib${MPILIBNAME}f90_so_LIBS = -L. -l$(MPILIBNAME) @LIB_DEPS@
+lib${MPICXXLIBNAME}_so_LIBS = -L. -l$(MPILIBNAME) @LIB_DEPS@
 
 install_INCLUDE = src/include/mpi.h
 
