@@ -36,7 +36,7 @@ int OPA_Shm_asymm_init(char *base);
 #define OPA_SHM_IS_REL_NULL(rel_ptr) (OPA_load_ptr(&(rel_ptr).offset) == OPA_SHM_REL_NULL)
 #define OPA_SHM_SET_REL_NULL(rel_ptr) (OPA_store_ptr(&(rel_ptr).offset, OPA_SHM_REL_NULL))
 #define OPA_SHM_REL_ARE_EQUAL(rel_ptr1, rel_ptr2) \
-    (OPA_load_int(&(rel_ptr1).offset) == OPA_load_int(&(rel_ptr2).offset))
+    (OPA_load_ptr(&(rel_ptr1).offset) == OPA_load_ptr(&(rel_ptr2).offset))
 
 /* This structure exists such that it is possible to expand the expressiveness
    of a relative address at some point in the future.  It also provides a
@@ -189,7 +189,7 @@ int OPA_Queue_is_empty(OPA_Queue_info_t *qhead)
    it shares the same calling restrictions) but it does not disturb the actual
    contents of the queue. */
 static _opa_inline
-volatile void *OPA_Queue_peek_head(OPA_Queue_info_t *qhead_ptr)
+void *OPA_Queue_peek_head(OPA_Queue_info_t *qhead_ptr)
 {
     OPA_assert(qhead_ptr != NULL);
 
@@ -251,8 +251,8 @@ do {                                                                      \
     XXX DJG NOTE: you must *always* call _is_empty() prior to this function */
 #define OPA_Queue_dequeue(qhead_ptr, elt_ptr, elt_type, elt_hdr_field)        \
 do {                                                                          \
-    register elt_type *_e;                                                    \
-    register OPA_Shm_rel_addr_t _r_e;                                         \
+    elt_type *_e;                                                             \
+    OPA_Shm_rel_addr_t _r_e;                                                  \
                                                                               \
     _r_e = (qhead_ptr)->shadow_head;                                          \
     _e = OPA_Shm_rel_to_abs(_r_e);                                            \
@@ -270,7 +270,7 @@ do {                                                                          \
                                                                               \
         if (!OPA_SHM_REL_ARE_EQUAL(old_tail, _r_e)) {                         \
             while (OPA_SHM_IS_REL_NULL(_e->elt_hdr_field.next)) {             \
-                OPA_busy_wait();                                       \
+                OPA_busy_wait();                                              \
             }                                                                 \
             (qhead_ptr)->shadow_head = _e->elt_hdr_field.next;                \
         }                                                                     \

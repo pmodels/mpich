@@ -5,30 +5,32 @@
  */
 
 #ifndef OPA_TEST_NAIVE
-#include "opa_primitives.h"
+#  include "opa_primitives.h"
 #else /* OPA_TEST_NAIVE */
-#include "opa_config.h"
-#include "opa_util.h"
-#ifndef _opa_inline
-#define _opa_inline inline
-#endif
+#  define OPA_PRIMITIVES_H_INCLUDED
+#  include "opa_config.h"
+#  include "opa_util.h"
+#  ifndef _opa_inline
+#    define _opa_inline inline
+#  endif
 #endif /* OPA_TEST_NAIVE */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <time.h>
 #if defined(OPA_HAVE_PTHREAD_H)
-#include <pthread.h>
+#  include <pthread.h>
 #endif /* HAVE_PTHREAD_H */
 
 /* Define the macro to use for yielding the current thread (to others) */
 #if defined(OPA_HAVE_PTHREAD_YIELD)
-#define OPA_TEST_YIELD() pthread_yield()
+#  define OPA_TEST_YIELD() pthread_yield()
 #elif defined(OPA_HAVE_SCHED_YIELD)
-#include <sched.h>
-#define OPA_TEST_YIELD() (void) sched_yield()
+#  include <sched.h>
+#  define OPA_TEST_YIELD() (void) sched_yield()
 #else
-#define OPA_TEST_YIELD() (void) 0
+#  define OPA_TEST_YIELD() (void) 0
 #endif
 
 /*
@@ -39,7 +41,7 @@
 #ifdef OPA_TEST_NAIVE
 
 #define OPA_UNIVERSAL_PRIMITIVE OPA_CAS
-#define OPA_LL_SC_SUPPORTED
+#define OPA_LL_SC_SUPPORTED 1
 
 typedef volatile int OPA_int_t;
 typedef void * volatile OPA_ptr_t;
@@ -89,11 +91,23 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 /* For LL/SC only use load/store.  This is more naive than the above
  * implementation for CAS */
 #define OPA_LL_int OPA_load_int
-#define OPA_SC_int OPA_store_int
+#define OPA_SC_int(A, B) (OPA_store_int(A, B), 1)
 #define OPA_LL_ptr OPA_load_ptr
-#define OPA_SC_ptr OPA_store_ptr
+#define OPA_SC_ptr(A, B) (OPA_store_ptr(A, B), 1)
+
+#if defined(OPA_HAVE_SCHED_YIELD)
+#  include <sched.h>
+#  define OPA_busy_wait() sched_yield()
+#else
+#  define OPA_busy_wait() do { } while (0)
+#endif
 
 #endif /* OPA_TEST_NAIVE */
+
+/*
+ * Cache line padding.  See note in opa_queue.h.
+ */
+#define OPA_TEST_CACHELINE_PADDING 128
 
 /*
  * Print the current location on the standard output stream.
@@ -130,6 +144,14 @@ do {                                                                           \
 #define SKIPPED()       do {puts(" -SKIP-");fflush(stdout);} while(0)
 #define TEST_ERROR      do {FAILED(); AT(); goto error;} while(0)
 #define FAIL_OP_ERROR(OP) do {FAILED(); AT(); OP; goto error;} while(0)
+#define OP_SUPPRESS(OP, COUNTER, LIMIT) do {                                   \
+    if((COUNTER) <= (LIMIT)) {                                                 \
+        OP;                                                                    \
+        if((COUNTER) == (LIMIT))                                               \
+            puts("    Suppressing further output...");                         \
+        fflush(stdout);                                                        \
+    } /* end if */                                                             \
+} while(0)
 
 /*
  * Array of number of threads.  Each threaded test is run once for each entry in

@@ -10,8 +10,23 @@ AC_INIT([OpenPA], [1.0.2], [https://trac.mcs.anl.gov/projects/openpa/newticket])
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess.  It also contains autoconf macro files.
 AC_CONFIG_AUX_DIR(confdb)
+AC_CONFIG_MACRO_DIR([confdb])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+
+LT_PREREQ([2.2.6])
+
+# Bug in libtool adds -O2 and -g by default
+save_cflags=$CFLAGS
+LT_INIT(disable-shared)
+CFLAGS=$save_cflags
+
+if test -s "$srcdir/VERSION" ; then
+   . $srcdir/VERSION
+   AC_SUBST(libopa_so_version)
+else
+   AC_MSG_ERROR([Version information not found. Configuration aborted.])
+fi
 
 # FIXME this header needs to end up in the installation include directory in some form,
 # so we probably need to change its name to something that won't collide in the
@@ -40,7 +55,6 @@ else
 fi
 
 AC_PROG_CC
-AC_PROG_RANLIB
 
 AC_HEADER_ASSERT
 # do we need intrin.h in here since it's a windows file?

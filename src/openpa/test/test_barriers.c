@@ -36,6 +36,10 @@
 /* Definitions for test_barriers_linear_array */
 #define LINEAR_ARRAY_NITER 4000000
 #define LINEAR_ARRAY_LEN 100
+typedef struct {
+    OPA_int_t *shared_array;
+    int       master_thread;  /* Whether this is the master thread */
+} linear_array_t;
 
 /* Definitions for test_barriers_variables */
 #define VARIABLES_NITER 4000000
@@ -51,6 +55,7 @@ typedef struct {
     OPA_int_t *v_7;
     OPA_int_t *v_8;
     OPA_int_t *v_9;
+    int       master_thread;  /* Whether this is the master thread */
 } variables_t;
 
 /* Definitions for test_barriers_scattered_array */
@@ -79,7 +84,6 @@ static int test_barriers_sanity(void)
 {
     OPA_int_t   a;
     int         b;
-
 
     TESTING("memory barrier sanity", 0);
 
@@ -158,7 +162,7 @@ static int test_barriers_sanity(void)
 
 error:
     return 1;
-} /* end test_simple_add_incr_decr() */
+} /* end test_barriers_sanity() */
 
 
 #if defined(OPA_HAVE_PTHREAD_H)
@@ -178,9 +182,10 @@ error:
  *
  *-------------------------------------------------------------------------
  */
-static void *test_barriers_linear_array_write(void *_shared_array)
+static void *test_barriers_linear_array_write(void *_udata)
 {
-    OPA_int_t           *shared_array = (OPA_int_t *)_shared_array;
+    linear_array_t      *udata = (linear_array_t *)_udata;
+    OPA_int_t           *shared_array = udata->shared_array;
     int                 niter = LINEAR_ARRAY_NITER / LINEAR_ARRAY_LEN
                                 / iter_reduction[curr_test];
     int                 i, j;
@@ -196,7 +201,10 @@ static void *test_barriers_linear_array_write(void *_shared_array)
         } /* end for */
 
     /* Exit */
-    pthread_exit(NULL);
+    if(udata->master_thread)
+        return(NULL);
+    else
+        pthread_exit(NULL);
 } /* end test_barriers_linear_array_write() */
 
 
@@ -217,9 +225,10 @@ static void *test_barriers_linear_array_write(void *_shared_array)
  *
  *-------------------------------------------------------------------------
  */
-static void *test_barriers_linear_array_read(void *_shared_array)
+static void *test_barriers_linear_array_read(void *_udata)
 {
-    OPA_int_t           *shared_array = (OPA_int_t *)_shared_array;
+    linear_array_t      *udata = (linear_array_t *)_udata;
+    OPA_int_t           *shared_array = udata->shared_array;
     int                 read_buffer[LINEAR_ARRAY_LEN];
     int                 niter = LINEAR_ARRAY_NITER / LINEAR_ARRAY_LEN
                                 / iter_reduction[curr_test];
@@ -247,8 +256,11 @@ static void *test_barriers_linear_array_read(void *_shared_array)
             } /* end if */
     } /* end for */
 
-    /* Any non-NULL exit value indicates an error, we use &i here */
-    pthread_exit(nerrors ? &i : NULL);
+    /* Any non-NULL exit value indicates an error, we use (void *) 1 here */
+    if(udata->master_thread)
+        return(nerrors ? (void *) 1 : NULL);
+    else
+        pthread_exit(nerrors ? (void *) 1 : NULL);
 } /* end test_barriers_linear_array_read() */
 #endif /* OPA_HAVE_PTHREAD_H */
 
@@ -275,6 +287,7 @@ static int test_barriers_linear_array(void)
 #if defined(OPA_HAVE_PTHREAD_H)
     pthread_t           *threads = NULL; /* Threads */
     pthread_attr_t      ptattr;         /* Thread attributes */
+    linear_array_t      *thread_data = NULL; /* User data structs for each thread */
     static OPA_int_t    shared_array[LINEAR_ARRAY_LEN]; /* Array to operate on */
     void                *ret;           /* Thread return value */
     unsigned            nthreads = num_threads[curr_test];
@@ -287,6 +300,10 @@ static int test_barriers_linear_array(void)
     if(NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
         TEST_ERROR;
 
+    /* Allocate array of thread data */
+    if(NULL == (thread_data = (linear_array_t *) calloc(nthreads,
+            sizeof(linear_array_t)))) TEST_ERROR;
+
     /* Set threads to be joinable */
     pthread_attr_init(&ptattr);
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
@@ -295,20 +312,31 @@ static int test_barriers_linear_array(void)
     for(i=0; i<LINEAR_ARRAY_LEN; i++)
         OPA_store_int(&shared_array[i], 0);
 
+    /* Initialize thread data structs */
+    for(i=0; i<nthreads; i++)
+        thread_data[i].shared_array = shared_array;
+    thread_data[nthreads-1].master_thread = 1;
+
     /* Create the threads. */
-    for(i=0; i<nthreads; i++) {
+    for(i=0; i<(nthreads - 1); i++) {
         if(pthread_create(&threads[i], &ptattr, test_barriers_linear_array_write,
-                shared_array)) TEST_ERROR;
-        if(++i < nthreads)
+                &thread_data[i])) TEST_ERROR;
+        if(++i < (nthreads - 1))
             if(pthread_create(&threads[i], &ptattr, test_barriers_linear_array_read,
-                    shared_array)) TEST_ERROR;
+                    &thread_data[i])) TEST_ERROR;
     } /* end for */
+    if(nthreads % 2) {
+        if(test_barriers_linear_array_write(&thread_data[(nthreads - 1)]))
+            nerrors++;
+    } else
+        if(test_barriers_linear_array_read(&thread_data[(nthreads - 1)]))
+            nerrors++;
 
     /* Free the attribute */
     if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
 
     /* Join the threads */
-    for (i=0; i<nthreads; i++) {
+    for (i=0; i<(nthreads - 1); i++) {
         if(pthread_join(threads[i], &ret)) TEST_ERROR;
         if(ret)
             nerrors++;
@@ -404,7 +432,10 @@ static void *test_barriers_variables_write(void *_udata)
     } /* end for */
 
     /* Exit */
-    pthread_exit(NULL);
+    if(udata->master_thread)
+        return(NULL);
+    else
+        pthread_exit(NULL);
 } /* end test_barriers_variables_write() */
 
 
@@ -483,8 +514,11 @@ static void *test_barriers_variables_read(void *_udata)
             } /* end if */
     } /* end for */
 
-    /* Any non-NULL exit value indicates an error, we use &i here */
-    pthread_exit(nerrors ? &i : NULL);
+    /* Any non-NULL exit value indicates an error, we use (void *) 1 here */
+    if(udata->master_thread)
+        return(nerrors ? (void *) 1 : NULL);
+    else
+        pthread_exit(nerrors ? (void *) 1 : NULL);
 } /* end test_barriers_variables_read() */
 #endif /* OPA_HAVE_PTHREAD_H */
 
@@ -511,8 +545,8 @@ static int test_barriers_variables(void)
 #if defined(OPA_HAVE_PTHREAD_H)
     pthread_t           *threads = NULL; /* Threads */
     pthread_attr_t      ptattr;         /* Thread attributes */
+    variables_t         *thread_data = NULL; /* User data structs for each thread */
     OPA_int_t           v_0, v_1, v_2, v_3, v_4, v_5, v_6, v_7, v_8, v_9;
-    variables_t         udata;          /* List of pointers to shared variables */
     void                *ret;           /* Thread return value */
     unsigned            nthreads = num_threads[curr_test];
     int                 nerrors = 0;    /* number of errors */
@@ -523,6 +557,10 @@ static int test_barriers_variables(void)
     /* Allocate array of threads */
     if(NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
         TEST_ERROR;
+
+    /* Allocate array of thread data */
+    if(NULL == (thread_data = (variables_t *) calloc(nthreads,
+            sizeof(variables_t)))) TEST_ERROR;
 
     /* Set threads to be joinable */
     pthread_attr_init(&ptattr);
@@ -540,32 +578,41 @@ static int test_barriers_variables(void)
     OPA_store_int(&v_8, 0);
     OPA_store_int(&v_9, 0);
 
-    /* Initialize udata struct */
-    udata.v_0 = &v_0;
-    udata.v_1 = &v_1;
-    udata.v_2 = &v_2;
-    udata.v_3 = &v_3;
-    udata.v_4 = &v_4;
-    udata.v_5 = &v_5;
-    udata.v_6 = &v_6;
-    udata.v_7 = &v_7;
-    udata.v_8 = &v_8;
-    udata.v_9 = &v_9;
+    /* Initialize thread data structs */
+    for(i=0; i<nthreads; i++) {
+        thread_data[i].v_0 = &v_0;
+        thread_data[i].v_1 = &v_1;
+        thread_data[i].v_2 = &v_2;
+        thread_data[i].v_3 = &v_3;
+        thread_data[i].v_4 = &v_4;
+        thread_data[i].v_5 = &v_5;
+        thread_data[i].v_6 = &v_6;
+        thread_data[i].v_7 = &v_7;
+        thread_data[i].v_8 = &v_8;
+        thread_data[i].v_9 = &v_9;
+    } /* end for */
+    thread_data[nthreads-1].master_thread = 1;
 
     /* Create the threads. */
-    for(i=0; i<nthreads; i++) {
+    for(i=0; i<(nthreads - 1); i++) {
         if(pthread_create(&threads[i], &ptattr, test_barriers_variables_write,
-                &udata)) TEST_ERROR;
-        if(++i < nthreads)
+                &thread_data[i])) TEST_ERROR;
+        if(++i < (nthreads - 1))
             if(pthread_create(&threads[i], &ptattr, test_barriers_variables_read,
-                    &udata)) TEST_ERROR;
+                    &thread_data[i])) TEST_ERROR;
     } /* end for */
+    if(nthreads % 2) {
+        if(test_barriers_variables_write(&thread_data[(nthreads - 1)]))
+            nerrors++;
+    } else
+        if(test_barriers_variables_read(&thread_data[(nthreads - 1)]))
+            nerrors++;
 
     /* Free the attribute */
     if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
 
     /* Join the threads */
-    for (i=0; i<nthreads; i++) {
+    for (i=0; i<(nthreads - 1); i++) {
         if(pthread_join(threads[i], &ret)) TEST_ERROR;
         if(ret)
             nerrors++;
@@ -619,9 +666,9 @@ static int test_barriers_scattered_array(void)
 #if defined(OPA_HAVE_PTHREAD_H)
     pthread_t           *threads = NULL; /* Threads */
     pthread_attr_t      ptattr;         /* Thread attributes */
+    variables_t         *thread_data = NULL; /* User data structs for each thread */
     static OPA_int_t    shared_array[SCATTERED_ARRAY_SIZE];
     int                 shared_locs[VARIABLES_NVAR] = SCATTERED_ARRAY_LOCS;
-    variables_t         udata;          /* List of pointers to shared variables */
     void                *ret;           /* Thread return value */
     unsigned            nthreads = num_threads[curr_test];
     int                 nerrors = 0;    /* number of errors */
@@ -633,6 +680,10 @@ static int test_barriers_scattered_array(void)
     if(NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
         TEST_ERROR;
 
+    /* Allocate array of thread data */
+    if(NULL == (thread_data = (variables_t *) calloc(nthreads,
+            sizeof(variables_t)))) TEST_ERROR;
+
     /* Set threads to be joinable */
     pthread_attr_init(&ptattr);
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
@@ -641,33 +692,42 @@ static int test_barriers_scattered_array(void)
     for(i=0; i<VARIABLES_NVAR; i++)
         OPA_store_int(&shared_array[shared_locs[i]], 0);
 
-    /* Initialize udata struct */
-    udata.v_0 = &shared_array[shared_locs[0]];
-    udata.v_1 = &shared_array[shared_locs[1]];
-    udata.v_2 = &shared_array[shared_locs[2]];
-    udata.v_3 = &shared_array[shared_locs[3]];
-    udata.v_4 = &shared_array[shared_locs[4]];
-    udata.v_5 = &shared_array[shared_locs[5]];
-    udata.v_6 = &shared_array[shared_locs[6]];
-    udata.v_7 = &shared_array[shared_locs[7]];
-    udata.v_8 = &shared_array[shared_locs[8]];
-    udata.v_9 = &shared_array[shared_locs[9]];
+    /* Initialize thread data structs */
+    for(i=0; i<nthreads; i++) {
+        thread_data[i].v_0 = &shared_array[shared_locs[0]];
+        thread_data[i].v_1 = &shared_array[shared_locs[1]];
+        thread_data[i].v_2 = &shared_array[shared_locs[2]];
+        thread_data[i].v_3 = &shared_array[shared_locs[3]];
+        thread_data[i].v_4 = &shared_array[shared_locs[4]];
+        thread_data[i].v_5 = &shared_array[shared_locs[5]];
+        thread_data[i].v_6 = &shared_array[shared_locs[6]];
+        thread_data[i].v_7 = &shared_array[shared_locs[7]];
+        thread_data[i].v_8 = &shared_array[shared_locs[8]];
+        thread_data[i].v_9 = &shared_array[shared_locs[9]];
+    } /* end for */
+    thread_data[nthreads-1].master_thread = 1;
 
     /* Create the threads.  We will use the helper routines for
      * test_barriers_variables. */
-    for(i=0; i<nthreads; i++) {
+    for(i=0; i<(nthreads - 1); i++) {
         if(pthread_create(&threads[i], &ptattr, test_barriers_variables_write,
-                &udata)) TEST_ERROR;
-        if(++i < nthreads)
+                &thread_data[i])) TEST_ERROR;
+        if(++i < (nthreads - 1))
             if(pthread_create(&threads[i], &ptattr, test_barriers_variables_read,
-                    &udata)) TEST_ERROR;
+                    &thread_data[i])) TEST_ERROR;
     } /* end for */
+    if(nthreads % 2) {
+        if(test_barriers_variables_write(&thread_data[(nthreads - 1)]))
+            nerrors++;
+    } else
+        if(test_barriers_variables_read(&thread_data[(nthreads - 1)]))
+            nerrors++;
 
     /* Free the attribute */
     if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
 
     /* Join the threads */
-    for (i=0; i<nthreads; i++) {
+    for (i=0; i<(nthreads - 1); i++) {
         if(pthread_join(threads[i], &ret)) TEST_ERROR;
         if(ret)
             nerrors++;
@@ -736,7 +796,7 @@ int main(int argc, char **argv)
         nerrors += test_barriers_linear_array();
         nerrors += test_barriers_variables();
         nerrors += test_barriers_scattered_array();
-    }
+    } /* end for */
 
     if(nerrors)
         goto error;
