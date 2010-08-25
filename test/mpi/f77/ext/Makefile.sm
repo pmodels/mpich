@@ -1,5 +1,8 @@
 # We don't use a general LDADD for mtestf.o because c2fmult is a C-only
 # program
+# "F77INCLUDES = -I." is needed when allocmemf.f is compiled,
+# i.e. when cray-pointer is available, because it includes add1size.h
+F77INCLUDES = -I.
 INCLUDES = -I../../include -I${srcdir}/../../include
 DEPADD = @MPILIBLOC@ ../util/mtestf.o ../../util/mtest.o
 smvar_do_sharedlibs = 0
