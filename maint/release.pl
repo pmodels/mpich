@@ -156,7 +156,7 @@ print("done\n");
 
 print("===> Create release date and version information... ");
 chdir("${root}/${pack}-${version}");
-system(qq(sed -i "s/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE=\"`date`\"/g" ./maint/Version));
+system(qq(sed -i \"s/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE=\\\"`date`\\\"/g\" ./maint/Version));
 print("done\n");
 
 # Remove packages that are not being released
