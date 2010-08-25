@@ -55,22 +55,29 @@ dnl will probably be defined, including symbols to specify how shared library
 dnl search paths are specified and how shared library names are set.
 dnl D*/
 AC_DEFUN([PAC_ARG_SHAREDLIBS],[
+
 AC_ARG_ENABLE(shared,
 	AC_HELP_STRING([--enable-shared], [Enable shared library builds]),,
 	enable_shared=no)
+
 AC_ARG_ENABLE(rpath,
-[--enable-rpath - Determine whether the rpath is set when programs are compiled
-and linked when shared libraries are built.  The default is yes; use 
---disable-rpath to turn this feature off; in that case, shared libraries
-will be found according to the rules for your system (e.g., in LD_LIBRARY_PATH],,enable_rpath=yes)
+	AC_HELP_STRING([--enable-rpath],
+		[Determine whether the rpath is set when programs are
+		compiled and linked when shared libraries are built.
+		The default is yes; use --disable-rpath to turn this
+		feature off; in that case, shared libraries will be
+		found according to the rules for your system (e.g., in
+		LD_LIBRARY_PATH)]),,enable_rpath=yes)
+
 AC_ARG_ENABLE(sharedlibs,
-[--enable-sharedlibs=kind - Enable shared libraries.  kind may be
-    gcc     - Standard gcc and GNU ld options for creating shared libraries
-    osx-gcc - Special options for gcc needed only on OS/X
-    solaris-cc - Solaris native (SPARC) compilers for 32 bit systems
-    cygwin-gcc - Special options for gcc needed only for cygwin
-    none    - same as --disable-sharedlibs
-Only gcc, osx-gcc, and solaris-cc are currently supported],,enable_sharedlibs=default)
+[  --enable-sharedlibs=kind - Enable shared libraries.  kind may be
+        gcc     - Standard gcc and GNU ld options for creating shared libraries
+        osx-gcc - Special options for gcc needed only on OS/X
+        solaris-cc - Solaris native (SPARC) compilers for 32 bit systems
+        cygwin-gcc - Special options for gcc needed only for cygwin
+        none    - same as --disable-sharedlibs
+      Only gcc, osx-gcc, and solaris-cc are currently supported
+],,enable_sharedlibs=default)
 
 if test "$enable_sharedlibs" = "default" ; then
    if test "$enable_shared" = "yes" ; then

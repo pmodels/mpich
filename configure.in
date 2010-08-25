@@ -222,7 +222,9 @@ AC_CONFIG_AUX_DIR(confdb)
 # built from within MPICH2
 FROM_MPICH2=yes
 export FROM_MPICH2
-AC_ARG_VAR(FROM_MPICH2, [internally set flag to tell subconfigures that they are built from within MPICH2])
+AC_ARG_VAR(FROM_MPICH2,
+	AC_HELP_STRING[internally set flag to tell subconfigures that
+	they are built from within MPICH2])
 
 # compute canonical system types
 AC_CANONICAL_BUILD
@@ -256,13 +258,20 @@ WRAPPER_LDFLAGS="$LDFLAGS $MPICH2_LDFLAGS"
 WRAPPER_LIBS="$MPICH2_LIBS"
 
 # Add MPICH2LIB_* to the appropriate flags
-AC_ARG_VAR(MPICH2LIB_CFLAGS, [extra CFLAGS used in building MPICH2 libraries])
-AC_ARG_VAR(MPICH2LIB_CPPFLAGS, [extra CPPFLAGS used in building MPICH2 libraries])
-AC_ARG_VAR(MPICH2LIB_CXXFLAGS, [extra CXXFLAGS used in building MPICH2 libraries])
-AC_ARG_VAR(MPICH2LIB_FFLAGS, [extra FFLAGS used in building MPICH2 libraries])
-AC_ARG_VAR(MPICH2LIB_FCFLAGS, [extra FCFLAGS used in building MPICH2 libraries])
-AC_ARG_VAR(MPICH2LIB_LDFLAGS, [extra LDFLAGS used in building MPICH2 libraries])
-AC_ARG_VAR(MPICH2LIB_LIBS, [extra LIBS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_CFLAGS,
+	AC_HELP_STRING[extra CFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_CPPFLAGS,
+	AC_HELP_STRING[extra CPPFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_CXXFLAGS,
+	AC_HELP_STRING[extra CXXFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_FFLAGS,
+	AC_HELP_STRING[extra FFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_FCFLAGS,
+	AC_HELP_STRING[extra FCFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_LDFLAGS,
+	AC_HELP_STRING[extra LDFLAGS used in building MPICH2 libraries])
+AC_ARG_VAR(MPICH2LIB_LIBS,
+	AC_HELP_STRING[extra LIBS used in building MPICH2 libraries])
 CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MPICH2LIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
@@ -281,292 +290,257 @@ PAC_ARG_STRICT
 # Check for shared library support
 PAC_ARG_SHAREDLIBS
 
-# Experimental library dependencies for shared libraries
 AC_ARG_ENABLE(lib-depend,
-	[AC_HELP_STRING(--enable-lib-depend - Turn on library dependencies (experimental))],
-	enable_lib_depend=$enableval,enable_lib_depend=no)
+	AC_HELP_STRING([--enable-lib-depend], [Turn on library dependencies (experimental)]),,
+	[enable_lib_depend=no])
 
 AC_ARG_ENABLE(echo, 
-[--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
-dnl
-dnl
+	AC_HELP_STRING([--enable-echo], [Turn on strong echoing. The default is enable=no.]),
+	set -x)
+
 AC_ARG_ENABLE(coverage,
-[--enable-coverage - Turn on coverage analysis using gcc and gcov],,
-enable_coverage=no)
-dnl
+	AC_HELP_STRING([--enable-coverage], [Turn on coverage analysis using gcc and gcov]),,
+	enable_coverage=no)
+
 AC_ARG_ENABLE(dynamiclibs,
-[--enable-dynamiclibs - Enable the use of dynamic libraries by the devices
-                       that support them],,enable_dynamiclibs=no)
-dnl
+	AC_HELP_STRING([--enable-dynamiclibs], [Enable the use of dynamic libraries
+                       by the devices that support them]),,enable_dynamiclibs=no)
+
 AC_ARG_ENABLE(error-checking,
-[--enable-error-checking=level - Control the amount of error checking.  
-    no        - no error checking
-    runtime   - error checking controllable at runtime through environment 
-                variables
-    all       - error checking always enabled],,enable_error_checking=all)
-dnl
+[  --enable-error-checking=level
+      Control the amount of error checking.  
+        no        - no error checking
+        runtime   - error checking controllable at runtime through environment 
+                    variables
+        all       - error checking always enabled
+],,enable_error_checking=all)
+
 AC_ARG_ENABLE(error-messages,
-[--enable-error-messages=level - Control the amount of detail in error messages.
-    all       - Maximum amount of information
-    generic   - Only generic messages (no information about the specific
-                instance)
-    class     - One message per MPI error class
-    none      - No messages],,enable_error_messages=all)
-dnl
+[  --enable-error-messages=level - Control the amount of detail in error messages.
+        all       - Maximum amount of information
+        generic   - Only generic messages (no information about the specific
+                    instance)
+        class     - One message per MPI error class
+        none      - No messages
+],,enable_error_messages=all)
+
 AC_ARG_ENABLE(timing,
-[--enable-timing=level - Control the amount of timing information
-                        collected by the MPICH implementation.
-    none    - Collect no data (default)
-    all     - Collect lots of data
-    runtime - Runtime control of data collected]
-  ,,enable_timing=default)
-dnl
+[  --enable-timing=level - Control the amount of timing information
+                           collected by the MPICH implementation.
+        none    - Collect no data (default)
+        all     - Collect lots of data
+        runtime - Runtime control of data collected
+],,enable_timing=default)
+
 AC_ARG_ENABLE(g,
-[--enable-g=option - Control the level of debugging support in the
-                    MPICH implementation.  option is a list of comma
-                    separated names including
-    none     - No debugging
-    handle   - Trace handle operations
-    handlealloc - Trace handle allocations
-    dbg      - Add compiler flag, -g, to all internal
-               compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
-               MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
-    debug    - Synonym for dbg
-    log      - Enable debug event logging
-    mem      - Memory usage tracing
-    meminit  - Preinitialize memory associated structures and unions to
-               eliminate access warnings from programs like valgrind
-    memarena - Check for overwrite errors in memory allocation arena
-    mutex    - Enable error checking on pthread mutexes
-    mutexnesting - Check for non-nesting of mutexes
-    all      - All of the above choices],,enable_g=none)
-dnl
+[  --enable-g=option - Control the level of debugging support in the
+                      MPICH implementation.  option is a list of comma
+                      separated names including
+        none     - No debugging
+        handle   - Trace handle operations
+        handlealloc - Trace handle allocations
+        dbg      - Add compiler flag, -g, to all internal
+                   compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
+                   MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
+        debug    - Synonym for dbg
+        log      - Enable debug event logging
+        mem      - Memory usage tracing
+        meminit  - Preinitialize memory associated structures and unions to
+                   eliminate access warnings from programs like valgrind
+        memarena - Check for overwrite errors in memory allocation arena
+        mutex    - Enable error checking on pthread mutexes
+        mutexnesting - Check for non-nesting of mutexes
+        all      - All of the above choices
+],,enable_g=none)
+
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset, 
 dnl particularly on 32 bit systems with large (64 bit) file systems.
 AC_ARG_WITH(aint-size,
-[--with-aint-size - Override the size of MPI_AINT (in bytes)],,with_aint_size=0)
-dnl
-dnl
-dnl --enable-sharedlibs=kind is set with the PAC_ARG_SHAREDLIBS macro 
-dnl
-dnl AC_ARG_ENABLE(internat,
-dnl [--enable-internat - Enable internationalization of messages.
-dnl  Not yet supported])
-dnl
-dnl --enable-fast
+	AC_HELP_STRING([--with-aint-size], [Override the size of MPI_AINT (in bytes)]),,
+	with_aint_size=0)
+
 AC_ARG_ENABLE(fast,
-[--enable-fast=option - Control the level of fast execution in the
-                       MPICH implementation.  option is a list of
-                       comma separated names including
-    defopt   - Default compiler optimization -O2 for all language bindings,
-               i.e. --enable-fast=O2, when neither --enable-fast
-               nor --disable-fast is specified. (default)
-    O<n>     - Appends default optimization flags, -O<n>, to all internal
-               compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
-               MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
-    nochkmsg - No error checking, i.e. --disable-error-checking
-    notiming - No timing collection, i.e. --disable-timing.
-    ndebug   - Appends -DNDEBUG to MPICH2LIB_CFLAGS.
-    all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
-               when --enable-fast is specified without any option.
-    none     - None of above options, i.e. --disable-fast.  Note that 
-    	       --enable-strict will add the -O2 option even if
-	       --enable-fast=none is given.
+[  --enable-fast=option - Control the level of fast execution in the
+                         MPICH implementation.  option is a list of
+                         comma separated names including
+        defopt   - Default compiler optimization -O2 for all language bindings,
+                   i.e. --enable-fast=O2, when neither --enable-fast
+                   nor --disable-fast is specified. (default)
+        O<n>     - Appends default optimization flags, -O<n>, to all internal
+                   compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
+                   MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
+        nochkmsg - No error checking, i.e. --disable-error-checking
+        notiming - No timing collection, i.e. --disable-timing.
+        ndebug   - Appends -DNDEBUG to MPICH2LIB_CFLAGS.
+        all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
+                   when --enable-fast is specified without any option.
+        none     - None of above options, i.e. --disable-fast. Note that
+                   --enable-strict will add the -O2 option even if
+                   --enable-fast=none is given.
 ],,enable_fast=defopt)
 
 AC_ARG_ENABLE(check-compiler-flags,
-[--enable-check-compiler-flags -- enable the checks for all compiler
-                                 options, xxxFLAGS, MPICH2_xxxFLAGS.
-                                 Default is on.]
-    ,,enable_check_compiler_flags=yes)
+	AC_HELP_STRING([--enable-check-compiler-flags], [enable the checks for all compiler
+                       options, xxxFLAGS, MPICH2_xxxFLAGS. Default is on.]),,
+		       enable_check_compiler_flags=yes)
 
-dnl
 dnl We enable f77 and fc if we can find compilers for them.
 dnl In addition, we check whether f77 and fc can work together.
-dnl
 AC_ARG_ENABLE(f77,
-[--enable-f77 - Enable Fortran 77 bindings],,
-enable_f77=default; enable_f77_wasdefault=yes)
+	AC_HELP_STRING([--enable-f77], [Enable Fortran 77 bindings]),,
+	enable_f77=default;enable_f77_wasdefault=yes)
+
 AC_ARG_ENABLE(fc,
-[--enable-fc - Enable Fortran 90 bindings],,enable_fc=default)
+	AC_HELP_STRING([--enable-fc], [Enable Fortran 90 bindings]),,enable_fc=default)
+
 AC_ARG_ENABLE(cxx,
-[--enable-cxx - Enable C++ bindings],,enable_cxx=default)
+	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=default)
+
 AC_ARG_ENABLE(romio,
-[--enable-romio - Enable ROMIO MPI I/O implementation],
-,enable_romio=yes)
-dnl
+	AC_HELP_STRING([--enable-romio], [Enable ROMIO MPI I/O implementation]),,
+	enable_romio=yes)
+
 AC_ARG_ENABLE(debuginfo,
-[--enable-debuginfo - Enable support for debuggers],,enable_debuginfo=no)
+	AC_HELP_STRING([--enable-debuginfo], [Enable support for debuggers]),,
+	enable_debuginfo=no)
 
 AC_ARG_ENABLE(smpcoll,
-	[--enable-smpcoll - Enable support for SMP/multi-core aware collectives],
-	smpcoll=$enableval,
-	smpcoll=yes)
-
+	AC_HELP_STRING([--enable-smpcoll],
+			[Enable support for SMP/multi-core aware collectives]),
+	smpcoll=$enableval,smpcoll=yes)
 if test $smpcoll = "yes" ; then
    AC_DEFINE(USE_SMP_COLLECTIVES,1,[define to enable SMP/multi-core aware collectives])
 fi
 
-dnl The environment variable MPICH_DEBUGLIBNAME may be used to override the
-dnl default name of the library that the debugger will load to access the
-dnl MPICH2 internal data structures.
-dnl
+dnl The environment variable MPICH_DEBUGLIBNAME may be used to
+dnl override the default name of the library that the debugger will
+dnl load to access the MPICH2 internal data structures.
 AC_ARG_ENABLE(nmpi-as-mpi,
-[--enable-nmpi-as-mpi - Use MPI rather than PMPI routines for MPI
+	AC_HELP_STRING([--enable-nmpi-as-mpi], [Use MPI rather than PMPI routines for MPI
                        routines, such as the collectives, that may be
-                       implemented in terms of other MPI routines]
-  ,,enable_nmpi_as_mpi=no)
+                       implemented in terms of other MPI routines]),,
+	enable_nmpi_as_mpi=no)
 
-dnl
-dnl With options
-dnl "default" is a special device that allows MPICH to choose one based on 
-dnl the environment.
+dnl "default" is a special device that allows MPICH to choose one
+dnl based on the environment.
 AC_ARG_WITH(device,
-[--with-device=name - Specify the communication device for MPICH.],,
-with_device=default)
-dnl
-AC_ARG_WITH(pmi, [--with-pmi=name - Specify the pmi interface for MPICH.],,
-with_pmi=default)
-dnl
+	AC_HELP_STRING([--with-device=name], [Specify the communication device for MPICH]),,
+	with_device=default)
+
+AC_ARG_WITH(pmi,
+	AC_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
+	with_pmi=default)
+
 AC_ARG_WITH(pm, 
-[--with-pm=name - Specify the process manager for MPICH.  "no" or "none" are
-                  valid values.  Multiple process managers may be specified as
-                  long as they all use the same pmi interface by separating them
-                  with colons.  The mpiexec for the first named process manager
-                  will be installed.  Example: "--with-pm=hydra:mpd:gforker"
-                  builds the three process managers hydra, mpd and gforker;
-                  only the mpiexec from hydra is installed into the bin
-                  directory.]
-    ,,with_pm=default)
-dnl
+	AC_HELP_STRING([--with-pm=name],
+		[Specify the process manager for MPICH.  "no" or "none" are
+                 valid values.  Multiple process managers may be specified as
+                 long as they all use the same pmi interface by separating them
+                 with colons.  The mpiexec for the first named process manager
+                 will be installed.  Example: "--with-pm=hydra:mpd:gforker"
+                 builds the three process managers hydra, mpd and gforker;
+                 only the mpiexec from hydra is installed into the bin
+                 directory.]),,with_pm=default)
+
 AC_ARG_WITH(logging,
-[--with-logging=name - Specify the logging library for MPICH.],
-[if test -z "$withval" ; then with_logging=rlog ; fi],
-with_logging=none)
-dnl 
+	AC_HELP_STRING([--with-logging=name], [Specify the logging library for MPICH]),
+	[if test -z "$withval" ; then with_logging=rlog ; fi],with_logging=none)
+
 dnl both --without-mpe and --disable-mpe are supported
 dnl AC_ARG_ENABLE(mpe) is used only when --with(out)-mpe is not used.
 AC_ARG_WITH(mpe,
-[--with-mpe - Build the MPE (MPI Parallel Environment) routines],,
-with_mpe=default)
+	AC_HELP_STRING([--with-mpe], [Build the MPE (MPI Parallel Environment) routines]),,
+	with_mpe=default)
 if test "$with_mpe" = "default" ; then
     AC_ARG_ENABLE(mpe,
-    [--enable-mpe - Build the MPE (MPI Parallel Environment) routines],
-    with_mpe=$enableval,with_mpe=default)
+	AC_HELP_STRING([--enable-mpe], [Build the MPE (MPI Parallel Environment) routines]),
+	with_mpe=$enableval,with_mpe=default)
 fi
-dnl
+
 AC_ARG_ENABLE(threads,
-[--enable-threads=level - Control the level of thread support in the 
-                         MPICH implementation.  The following levels
-                         are supported.
-    default         - Choose thread level at runtime based on parameters 
-                      passed to MPI_Init_thread (default)
-    single          - No threads (MPI_THREAD_SINGLE)
-    funneled        - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
-    serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
-    multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE). DO NOT
-                      select this option. The default option is more
-                      efficient and also supports thread_multiple.
+[  --enable-threads=level - Control the level of thread support in the 
+                           MPICH implementation.  The following levels
+                           are supported.
+        default         - Choose thread level at runtime based on parameters 
+                          passed to MPI_Init_thread (default)
+        single          - No threads (MPI_THREAD_SINGLE)
+        funneled        - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
+        serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
+        multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE). DO NOT
+                          select this option. The default option is more
+                          efficient and also supports thread_multiple.
 
-    See also the --enable-thread-cs option for controlling the granularity of
-    the concurrency inside of the library.
+        See also the --enable-thread-cs option for controlling the granularity of
+        the concurrency inside of the library
+],,enable_threads=default)
 
-    For the ch3:sock and ch3:nemesis channels, a separate build is no
-    longer needed for thread-multiple.  It is compiled by default and
-    is selectable at run time with MPI_Init_thread.  If
-    MPI_Init_thread is not called, the default is funneled.  For
-    other channels, the --enable-threads option is not supported
-    currently, and the default is funneled.]
-    ,
-    , 
-    enable_threads=default)
-
-dnl
 AC_ARG_ENABLE(thread-cs,
-[--enable-thread-cs=type - Choose the method used for critical
-                          sections and other atomic updates when
-                          multiple threads are present.  Values may
-                          be global (default), per-object, lock-free]
- , , enable_thread_cs=global)
+	AC_HELP_STRING([--enable-thread-cs=type],
+			[Choose the method used for critical sections
+                         and other atomic updates when multiple
+                         threads are present.  Values may be global
+                         (default), per-object, lock-free]),,enable_thread_cs=global)
 
 AC_ARG_ENABLE(refcount,
-[--enable-refcount=type - Choose the method for ensuring atomic
-                         updates to the reference counts for MPI
-                         objects.  Values may be lock, lock-free,
-                         none.  The default depends on the thread-cs
-                         choice; for global it is none (because none
-                         is required), for per-object it is lock, and for
-                         lock-free it is lock-free]
-    ,,enable_refcount=default)
+	AC_HELP_STRING([--enable-refcount=type],
+			[Choose the method for ensuring atomic updates
+                         to the reference counts for MPI objects.
+                         Values may be lock, lock-free, none.  The
+                         default depends on the thread-cs choice; for
+                         global it is none (because none is required),
+                         for per-object it is lock, and for lock-free
+                         it is lock-free]),,enable_refcount=default)
 
-AC_ARG_ENABLE(mutex-timing, [--enable-mutex-timing - calculate the time spent waiting on mutexes.],
-    AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes])
- )
+AC_ARG_ENABLE(mutex-timing,
+	AC_HELP_STRING([--enable-mutex-timing], [calculate the time spent waiting on mutexes]),
+	AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes]))
 
 AC_ARG_ENABLE(handle-allocation,
-[--enable-handle-allocation=type - Choose the method used for
-                                  allocating MPI object handles.
-                                  Values may be 'tls' for thread-local
-                                  storage or 'mutex' for simple
-                                  locking.  'mutex' is the default.]
-    ,, enable_handle_allocation=default)
+	AC_HELP_STRING([--enable-handle-allocation=type],
+			[Choose the method used for allocating MPI
+			 object handles.  Values may be 'tls' for
+			 thread-local storage or 'mutex' for simple
+			 locking.  'mutex' is the default.]),,enable_handle_allocation=default)
 
 AC_ARG_ENABLE([predefined-refcount],
-              [AS_HELP_STRING([--enable-predefined-refcount],
-                              [control whether predefined objects like MPI_COMM_WORLD are
-                               reference counted (default depends on --enable-thread-cs choice)])],
-              [],
+	AS_HELP_STRING([--enable-predefined-refcount],
+                       [control whether predefined objects like
+		       MPI_COMM_WORLD are reference counted (default
+		       depends on --enable-thread-cs choice)]),[],
               [enable_predefined_refcount=default])
 
-dnl 
-dnl
 AC_ARG_ENABLE(weak-symbols,
-[--enable-weak-symbols - Use weak symbols to implement PMPI routines (default)],,
-enable_weak_symbols=yes)
-dnl
-dnl
-dnl
-AC_ARG_ENABLE(multi-aliases,
-[--enable-multi-aliases - Multiple aliasing to support multiple fortran compilers (default)],,
-enable_multi_aliases=yes)
-dnl
-dnl
-dnl
-AC_ARG_WITH(cross,
-[--with-cross=file - Specify the values of variables that configure cannot
-                    determine in a cross-compilation environment]
-    ,,with_cross=no)
-dnl
-AC_ARG_WITH(namepublisher,
-[--with-namepublisher=name - Choose the system that will support 
-                             MPI_PUBLISH_NAME and MPI_LOOKUP_NAME.  Options
-                             include
-                               no (no service available)
-                               mpd
-			       file[:directory] (optional directory)
-                               pmi
-			       ],,
-with_namepublisher=default)
-dnl
-dnl AC_ARG_WITH(cxxlibname,
-dnl [--with-cxxlibname=name  - Specify name of library containing C++ interface
-dnl routines],[MPICXXLIBNAME=$withval;set_MPICXXLIBNAME="yes"],MPICXXLIBNAME=)
+	AC_HELP_STRING([--enable-weak-symbols],
+			[Use weak symbols to implement PMPI routines (default)]),,
+		enable_weak_symbols=yes)
 
-dnl flibname complicates the handling of MPIR_F_TRUE and MPIR_F_FALSE, 
-dnl particularly when using IBM/MS-style shared libraries.  Withdraw this
-dnl option and see if anyone misses it.
-dnl
-dnl AC_ARG_WITH(flibname,
-dnl [--with-flibname=name  - Specify name of library containing Fortran interface
-dnl routines],[MPIFLIBNAME=$withval;set_MPIFLIBNAME="yes"],MPIFLIBNAME=)
+AC_ARG_ENABLE(multi-aliases,
+	AC_HELP_STRING([--enable-multi-aliases],
+		[Multiple aliasing to support multiple fortran compilers (default)]),,
+		enable_multi_aliases=yes)
+
+AC_ARG_WITH(cross,
+	AC_HELP_STRING([--with-cross=file],
+		[Specify the values of variables that configure cannot
+                 determine in a cross-compilation environment]),,with_cross=no)
+
+AC_ARG_WITH(namepublisher,
+[  --with-namepublisher=name   Choose the system that will support 
+                              MPI_PUBLISH_NAME and MPI_LOOKUP_NAME.  Options
+                              include
+                                   no (no service available)
+                                   mpd
+			           file[:directory] (optional directory)
+                                   pmi],,with_namepublisher=default)
+
 AC_SUBST(MPIFLIBNAME)
 AC_SUBST(PMPIFLIBNAME)
-dnl
+
 dnl The default is a special wrapper library
 AC_ARG_WITH(fwrapname,
-[--with-fwrapname=name - Specify name of library containing Fortran interface
-                        routines]
-    ,[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
+	AC_HELP_STRING([--with-fwrapname=name],
+		[Specify name of library containing Fortran interface routines]),
+	[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
 AC_SUBST(FWRAPNAME)
 
 
@@ -3037,13 +3011,12 @@ fi
 # Set a default for MAKE_DEPEND_C
 MAKE_DEPEND_C=true
 AC_SUBST(MAKE_DEPEND_C)
-AC_ARG_ENABLE(dependencies,[
---enable-dependencies - Generate dependencies for sourcefiles.  This
-            requires that the Makefile.in files are also created
-            to support dependencies (see maint/updatefiles)],,
-enable_dependencies=default)
-#
-#
+AC_ARG_ENABLE(dependencies,
+	AC_HELP_STRING([--enable-dependencies],
+		[Generate dependencies for sourcefiles.  This requires
+		that the Makefile.in files are also created to support
+		dependencies (see maint/updatefiles)]),,enable_dependencies=default)
+
 if test -z "$enable_dependencies" ; then 
    enable_dependencies=default
 fi
@@ -4317,16 +4290,6 @@ int main( int argc, char **argv ){
     # Try and compute the values of .true. and .false. in Fortran
     # This code has been removed because the Fortran binding code does
     # not yet support it.  
-dnl    AC_ARG_ENABLE(runtimevalues,
-dnl [--enable-runtimevalues - Determine various parameters of the Fortran 
-dnl                          environment at run time, such as the values for
-dnl                          .TRUE. and .FALSE. .  This allows a single MPICH
-dnl                          library to be used with multiple Fortran compilers],
-dnl use_runtimevalues=$enableval,use_runtimevalues=false)
-dnl     if test "$use_runtimevalues" = "yes" ; then
-dnl         AC_DEFINE(F77_RUNTIME_VALUES,1,[Define if Fortran environment should be determined at runtime])
-dnl     fi
-
     if test "$cross_compiling" = "no" ; then
         AC_MSG_CHECKING([for values of Fortran logicals])
         # Use a Fortran main program.  This simplifies some steps, 
@@ -5072,7 +5035,8 @@ dnl fi
 AC_FUNC_ALLOCA
 # We don't use alloca unless USE_ALLOCA is also set.
 AC_ARG_ENABLE(alloca,
-[--enable-alloca - Use alloca to allocate temporary memory if available],,enable_alloca=no)
+	AC_HELP_STRING([--enable-alloca],
+		[Use alloca to allocate temporary memory if available]),,enable_alloca=no)
 if test "$enable_alloca" = yes ; then
     AC_DEFINE(USE_ALLOCA,1,[Define if alloca should be used if available])
 fi
@@ -5160,22 +5124,21 @@ dnl    Linux-alpha cycle counter
 dnl
 dnl We also allow --enable-timer-type=name to select a timer type
 AC_ARG_ENABLE(timer-type,
+[  --enable-timer-type=name - Select the timer to use for MPI_Wtime and
+                             internal timestamps.
+        gethrtime        - Solaris timer (Solaris systems only)
+        clock_gettime    - Posix timer (where available)
+        gettimeofday     - Most Unix systems
+        linux86_cycle    - Linux x86; returns cycle counts, not time in seconds*
+        linuxalpha_cycle - Like linux86_cycle, but for Linux Alpha*
+        gcc_ia64_cycle   - IPF ar.itc timer*
+        device - The timer is provided by the device
 
-[--enable-timer-type=name - Select the timer to use for MPI_Wtime and
-                           internal timestamps.
-    gethrtime        - Solaris timer (Solaris systems only)
-    clock_gettime    - Posix timer (where available)
-    gettimeofday     - Most Unix systems
-    linux86_cycle    - Linux x86; returns cycle counts, not time in seconds*
-    linuxalpha_cycle - Like linux86_cycle, but for Linux Alpha*
-    gcc_ia64_cycle   - IPF ar.itc timer*
-    device - The timer is provided by the device
-
-    *Note that the cycle timers are intended to be used by MPICH2
-     developers for internal low-level timing.  Normal users should
-     not use these as they are not guaranteed to be accurate in
-     certain situations.]
-,timer_type=$enable_timer_type)
+        *Note that the cycle timers are intended to be used by MPICH2
+        developers for internal low-level timing.  Normal users should
+        not use these as they are not guaranteed to be accurate in
+        certain situations
+],timer_type=$enable_timer_type)
 
 if test -z "$timer_type" ; then 
     # Try to pick a timer based on what is available
@@ -5649,14 +5612,16 @@ export FC
 MPIU_THREAD_DEFAULT=${MPIU_THREAD_DEFAULT:-posix}
 
 AC_ARG_WITH([thread-package],
-[AS_HELP_STRING([--with-thread-package=package],
-[Thread package to use.  Supported thread packages include:
-    posix or pthreads - POSIX threads
-    solaris - Solaris threads (Solaris OS only)
-    win - windows threads
-    none - no threads
-If the option is not specified, the default package is ${MPIU_THREAD_DEFAULT}.  If the option is specified, but a package is not given, then the default is posix.])],,
-with_thread_package=${MPIU_THREAD_DEFAULT})
+[  --with-thread-package=package     Thread package to use. Supported thread packages include:
+        posix or pthreads - POSIX threads
+        solaris - Solaris threads (Solaris OS only)
+        win - windows threads
+        none - no threads
+
+    If the option is not specified, the default package is
+    ${MPIU_THREAD_DEFAULT}.  If the option is specified, but a package
+    is not given, then the default is posix
+],,with_thread_package=${MPIU_THREAD_DEFAULT})
 
 if test "$with_thread_package" = "yes" ; then
    with_thread_package=posix
@@ -5838,7 +5803,6 @@ AC_SUBST(MPIU_THREAD_LIB_NAME)
 
 
 # Checkpointing
-
 AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [
@@ -5847,7 +5811,7 @@ AC_ARG_ENABLE(checkpointing,
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
     ],
 )
-#
+
 # Update the cache first with the results of the previous configure steps
 # We don't use the subdir cache because ensuring that the cache is consistant
 # with the way in which configure wishes to use it is very difficult and 

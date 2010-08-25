@@ -175,10 +175,9 @@ dnl set here are redundant; the LOAD_CACHE call relies on the way autoconf
 dnl initially processes ARG_ENABLE commands.
 AC_DEFUN([PAC_ARG_CACHING],[
 AC_ARG_ENABLE(cache,
-[--enable-cache  - Turn on configure caching],
-enable_cache="$enableval",enable_cache="notgiven")
+	AC_HELP_STRING([--enable-cache], [Turn on configure caching]),,
+	[enable_cache="notgiven"])
 ])
-dnl
 
 dnl Clean the cache of extraneous quotes that AC_CACHE_SAVE may add
 dnl
@@ -329,8 +328,9 @@ dnl cause problems.
 dnl
 AC_DEFUN([PAC_CREATE_BASE_CACHE],[
 AC_ARG_ENABLE(base-cache,
-[--enable-base-cache - Enable the use of a simple cache for the subsidieary
-                       configure scripts.],,enable_base_cache=default)
+	AC_HELP_STRING([--enable-base-cache],
+		[Enable the use of a simple cache for the subsidiary
+                 configure scripts]),,enable_base_cache=default)
 # The default case is controlled by the environment variable CONF_USE_CACHEFILE
 if test "$enable_base_cache" = "default" ; then
     if test "$CONF_USE_CACHEFILE" = yes ; then
