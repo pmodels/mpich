@@ -99,7 +99,7 @@ static int checkType( const char str[], int p, int r, int f90kind,
         char buf0[64]; /* big enough to hold any single type */
         char buf1[64]; /* big enough to hold any single type */
         MPI_Request req[2];
-        MPI_Aint dt_size = 0;
+        int dt_size = 0;
 
         /* check that we can actually use the type for communication,
          * regression for tt#1028 */
