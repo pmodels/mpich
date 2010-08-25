@@ -22,6 +22,22 @@ AC_DEFUN([PAC_RESET_LINK_FLAGS],[
 dnl Sandbox configure with additional arguments
 dnl Usage: PAC_CONFIG_SUBDIR_ARGS(subdir,configure-args,action-if-success,action-if-failure)
 dnl
+dnl The subconfigure argument list is created based on "ac_precious_vars"
+dnl instead of explicitly use of well-known Makefile variables, like
+dnl CC/CFLAGS/CPPFLAGS..., this generalization is effective as long as
+dnl calling configure.in declares the needed variables to be passed down
+dnl to subconfigure as "precious" appropriately.  The precious variable
+dnl can be created in the following ways:
+dnl 1) implicit declaration through use of autoconf macros, like
+dnl    AC_PROG_CC (declares CC/CFLAGS/CPPFLAGS/LIBS/LDFLAGS), or
+dnl    AC_PROG_F77 (declares F77/FFLAGS/FLIBS) ... 
+dnl    which are in turns invoked by other subconfigure.
+dnl    When in doubt, check "ac_precious_var" in the calling configure.
+dnl 2) explicit "precious" declaration through AC_ARG_VAR.
+dnl Without correct "precious" declaration in the calling configure.in,
+dnl there would be variables not being included in the subconfigure
+dnl argument list.
+dnl
 dnl Note: I suspect this DEFUN body is underquoted in places, but it does not
 dnl seem to cause problems in practice yet. [goodell@ 2010-05-18]
 AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
@@ -92,11 +108,9 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
 
 	   AC_MSG_NOTICE([executing: $pac_subconfigure_file $pac_subconfig_args])
 	   if (cd $1 && eval $pac_subconfigure_file $pac_subconfig_args) ; then
-	      $3
-	      :
+               ifelse([$3],[],[:],[$3])
 	   else
-	      $4
-	      :
+               ifelse([$4],[],[:],[$4])
 	   fi
         else
            if test -e $pac_subconfigure_file ; then
