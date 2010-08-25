@@ -37,72 +37,53 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
         pac_subconfigure_file="$pac_abs_srcdir/$1/configure"
 	if test -x $pac_subconfigure_file ; then
 	   pac_subconfig_args="$2"
-	   prev_arg=""
 
-	   # Strip off the args we need to update
-	   for ac_arg in $ac_configure_args ; do
-
-	       # HACK: Though each argument in ac_configure_args is
-	       # quoted to account for spaces, when we get them, the
-	       # argument list is treated as a space separated list
-	       # and the quotes are treated as a part of the
-	       # argument. So, we explicitly look for the quotes and
-	       # recreate the arguments. If/when this is fixed by
-	       # autoconf, this hack can be deleted.
-	       end_char=`echo $ac_arg | sed -e 's/.*\(.\)$/\1/g'`
-
-	       # If the previous argument was incomplete, we append
-	       # this argument to that
-	       if test "$prev_arg" != "" -o "$end_char" != "'" ; then
-                  prev_arg="$prev_arg $ac_arg"
-	       fi
-
-	       # If the end character is a quote, we are at the end of
-	       # an argument.
-	       if test "$end_char" = "'" ; then
-                  # If the previous argument just got completed, set
-		  # the current argument to the entire argument value
-		  if test "$prev_arg" != "" ; then ac_arg="$prev_arg" ; fi
-		  prev_arg=
-	       else
-		  # If the previous argument hasn't completed yet,
-		  # just continue on to the next argument
-		  continue
-	       fi
-
-	       # Remove any quotes around the args (added by configure)
-	       ac_narg=`echo $ac_arg | sed -e "s/^'\(.*\)'$/\1/g"`
-
-	       case $ac_narg in
-                   CFLAGS=*)
-		       pac_subconfig_args="$pac_subconfig_args CFLAGS='$CFLAGS'"
-		       ;;
-		   CPPFLAGS=*)
-		       pac_subconfig_args="$pac_subconfig_args CPPFLAGS='$CPPFLAGS'"
-		       ;;
-		   CXXFLAGS=*)
-		       pac_subconfig_args="$pac_subconfig_args CXXFLAGS='$CXXFLAGS'"
-		       ;;
-		   FFLAGS=*)
-		       pac_subconfig_args="$pac_subconfig_args FFLAGS='$FFLAGS'"
-		       ;;
-		   FCFLAGS=*)
-		       pac_subconfig_args="$pac_subconfig_args FCFLAGS='$FCFLAGS'"
-		       ;;
-		   LDFLAGS=*)
-		       pac_subconfig_args="$pac_subconfig_args LDFLAGS='$LDFLAGS'"
-		       ;;
-		   LIBS=*)
-		       pac_subconfig_args="$pac_subconfig_args LIBS='$LIBS'"
-		       ;;
-		   *)
-		       # We store ac_arg instead of ac_narg to make
-		       # sure we retain the quotes as provided to us
-		       # by autoconf
-		       pac_subconfig_args="$pac_subconfig_args $ac_arg"
-		       ;;
-	       esac
-	   done
+            # Set IFS so ac_configure_args can be tokenized
+            # with extra " " tokens being skipped.
+            saved_IFS="$IFS"
+            IFS="'"
+            for pac_arg in $ac_configure_args ; do
+                case "$pac_arg" in
+                # Ignore any null and leading blank strings.
+                ""|" "*)
+                    ;;
+                *)
+                    pac_pval=""
+                    # Restore saved IFS so ac_precious_vars which has
+                    # " " as separator can be correctly tokenized
+                    IFS="$saved_IFS"
+                    for pac_pvar in $ac_precious_vars ; do
+                        # check if configure argument token contains the
+                        # precious variable, i.e. "name_of_prec_var=".
+                        pvar_in_arg=`echo $pac_arg | grep "$pac_pvar=" -`
+                        if test "X$pvar_in_arg" != "X" ; then
+                            # check if current precious variable is set in env
+                            eval pvar_set=\${$pac_pvar+set}
+                            if test "$pvar_set" = "set" ; then
+                                # Append 'name_of_prec_var=value_of_prec_var'
+                                # to the subconfigure arguments list, where
+                                # value_of_prec_var is fetched from the env.
+                                eval pac_pval=\${$pac_pvar}
+                                pac_subconfig_args="$pac_subconfig_args '$pac_pvar=$pac_pval'"
+                                break
+                            fi
+                        fi
+                    done
+                    # since the precious variable is not set in the env.,
+                    # append the corresponding configure argument token
+                    # to the subconfigure argument list.
+                    if test "X$pac_pval" = "X" ; then
+                        pac_subconfig_args="$pac_subconfig_args '$pac_arg'"
+                    fi
+                    # reset "'" as IFS to process ac_configure_args
+                    saved_IFS="$IFS"
+                    IFS="'"
+                    ;;
+                esac
+            done
+            # Restore IFS.
+            IFS="$saved_IFS"
+            dnl echo "pac_subconfig_args = |$pac_subconfig_args|"
 
            dnl Add option to disable configure options checking
            if test "$enable_option_checking" = no ; then
