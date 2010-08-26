@@ -96,7 +96,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
 
                     if (ret) {
                         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                            "one of the processes terminated badly; timing out\n");
+                                            "one of the processes terminated badly; aborting\n");
                     }
                 }
 
