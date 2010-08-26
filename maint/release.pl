@@ -126,7 +126,7 @@ check_package("autoconf");
 check_package("automake");
 print("\n");
 
-my $current_ver = `svn cat ${source}/maint/Version | grep ^MPICH2_VERSION: | cut -f2 -d' '`;
+my $current_ver = `svn cat ${source}/maint/Version | grep ^MPICH2_VERSION | cut -f2 -d'='`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
 }
@@ -156,7 +156,10 @@ print("done\n");
 
 print("===> Create release date and version information... ");
 chdir("${root}/${pack}-${version}");
-system(qq(sed -i \"s/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE=\\\"`date`\\\"/g\" ./maint/Version));
+
+my $date = `date`;
+chomp $date;
+system(qq(sed -i 's/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE="$date"/g' ./maint/Version));
 print("done\n");
 
 # Remove packages that are not being released
