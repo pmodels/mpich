@@ -42,7 +42,7 @@ ProgHomeDir() {
     prog=$1
     progpath="`which $prog`"
     progbindir="`dirname $progpath`"
-    saved_wd=`pwd` && cd $progbindir/.. && proghome=`pwd` && cd $saved_wd
+    proghome=`(cd $progbindir/.. && pwd)`
     eval $2=$proghome
 }
 
@@ -334,13 +334,6 @@ else
     libtoolize=${LIBTOOLIZE:-libtoolize}
 fi
 
-# FIXME:
-# Given the code below use "$autoconf" instead of "autoconf" from user's PATH.
-# The following 3 lines should at least use "which $autoconf" instead of
-# "which autoconf" or it could use "ProgHomeDir $autoconf autoconfdir".
-# autoconfdir=`which autoconf | sed -e 's_/[^/]*$__g'`
-# automakedir=`which automake | sed -e 's_/[^/]*$__g'`
-# libtooldir=`which libtool | sed -e 's_/[^/]*$__g'`
 ProgHomeDir $autoconf   autoconfdir
 ProgHomeDir $automake   automakedir
 ProgHomeDir $libtoolize libtooldir
@@ -348,16 +341,18 @@ ProgHomeDir $libtoolize libtooldir
 echo_n "Checking if autotools are in the same location... "
 if [ "$autoconfdir" = "$automakedir" -a "$autoconfdir" = "$libtooldir" ] ; then
     same_atdir=yes
+    echo "yes, all in $autoconfdir"
 else
     same_atdir=no
-fi
-echo "$same_atdir"
-
-# Emit a big warning message if $same_atdir = no.
-if [ "$same_atdir" != "yes" ] ; then
+    echo "no"
+    echo "	autoconf is in $autoconfdir"
+    echo "	automake is in $automakedir"
+    echo "	libtool  is in $libtooldir"
+    # Emit a big warning message if $same_atdir = no.
     warn "Experimental support of autotools being in different locations."
     warn "Configure or even make may fail in some unexpected ways."
 fi
+
 
 
 ########################################################################
