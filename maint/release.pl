@@ -159,7 +159,7 @@ chdir("${root}/${pack}-${version}");
 
 my $date = `date`;
 chomp $date;
-system(qq(sed -i 's/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE="$date"/g' ./maint/Version));
+system(qq(sed -i '' -e 's/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE="$date"/g' ./maint/Version));
 print("done\n");
 
 # Remove packages that are not being released
