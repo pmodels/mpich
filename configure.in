@@ -226,11 +226,6 @@ AC_ARG_VAR(FROM_MPICH2,
 	AC_HELP_STRING[internally set flag to tell subconfigures that
 	they are built from within MPICH2])
 
-# compute canonical system types
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
-# TARGET not needed, MPICH2 isn't a compiler
-
 # Save a copy of precious flags as USER_* before any of these flags
 # are being modified by configure tests.
 PAC_PREFIX_ALL_FLAGS(USER)
@@ -279,6 +274,29 @@ FFLAGS="$FFLAGS $MPICH2LIB_FFLAGS"
 FCFLAGS="$FCFLAGS $MPICH2LIB_FCFLAGS"
 LDFLAGS="$LDFLAGS $MPICH2LIB_LDFLAGS"
 LIBS="$LIBS $MPICH2LIB_LIBS"
+
+
+# Find a C compiler.
+# We also need to do this before the F77 and FC test to ensure that we
+# find the C preprocessor reliably.
+PAC_PUSH_FLAG([CFLAGS])
+AC_PROG_CC
+AC_PROG_CPP
+# Bug in autoconf.  Restore cross settings
+if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
+    AC_MSG_RESULT([Resetting cross compilation to yes])
+    cross_compiling=yes
+    ac_cv_prog_cc_cross=yes
+    ac_cv_prog_f77_cross=yes
+    ac_cv_prog_fc_cross=yes
+    ac_cv_prog_cxx_cross=yes
+fi
+PAC_POP_FLAG([CFLAGS])
+
+# compute canonical system types
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+# TARGET not needed, MPICH2 isn't a compiler
 
 # Enable better caching control
 PAC_ARG_CACHING
@@ -1532,52 +1550,6 @@ if test $with_mpe != no ; then
 fi
 AC_SUBST(mpe_dir)
 AC_SUBST(other_install_dirs)
-
-dnl
-dnl The recommended order for items in a configure.in file is
-dnl     check for programs
-dnl     check for libraries
-dnl     check for header files
-dnl     check for typedefs
-dnl     check for structures
-dnl     check for compiler characteristics
-dnl     check for library functions
-dnl     check for system services
-dnl
-dnl We actually check for compilers first, then roughly follow this order,
-dnl though logical subsystems (like Fortran support) my use this order
-dnl within their part of the configure.
-dnl
-#
-#
-# Find a C compiler (choose gcc first).
-# We also need to do this before the F77 and FC test to ensure that we
-# find the C preprocessor reliably.
-saveCFLAGS=$CFLAGS
-AC_PROG_CC
-AC_PROG_CPP
-# Bug in autoconf.  Restore cross settings
-if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
-    AC_MSG_RESULT([Resetting cross compilation to yes])
-    cross_compiling=yes
-    ac_cv_prog_cc_cross=yes
-    ac_cv_prog_f77_cross=yes
-    ac_cv_prog_fc_cross=yes
-    ac_cv_prog_cxx_cross=yes
-fi
-# Misfeature in autoconf.  When using gcc, PROG_CC insists on setting 
-# CFLAGS to -g -O2 if CFLAGS is not set.  This may be appropriate for
-# many tools built with configure and gcc, but not always.  In particular,
-# there seems to be no way to get gcc to use no extra flags if that is desired.
-if test -z "$saveCFLAGS" -a -n "$CFLAGS" ; then
-    # restore CFLAGS
-    # Note: This may not be correct if PROG_CC decided to add other 
-    # flags to CFLAGS to enforce some behavior (such as ANSI/ISO C),
-    # But we haven't seen that in practice.  It would be better
-    # if the CFLAGS were decomposed into flags-that-change-the-language
-    # that the compiler accepts from optimizations
-    CFLAGS=$saveCFLAGS
-fi
 
 # Check whether shared libraries are enabled.  We need to know this
 # before we start chosing the Fortran, Fortran 90, and C++ compilers
