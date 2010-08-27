@@ -458,19 +458,19 @@ To use this channel, configure with:
   --with-device=ch3:dllchan:sock,shm,ssm
 
 This provides the sock, shm, and ssm channels as options, with sock
-being the default. In addition, you must specify the shared library
-type; under Linux and when using gcc (or compilers that mimic gcc for
-shared-library construction) add:
+being the default. In addition, you must specify shared library
+builds using:
+
+  --enable-shared
+
+Under Linux and when using gcc (or compilers that mimic gcc for
+shared-library construction) and on MAC OSX, this automatically adds
+the appropriate type of shared library support required. But this can
+be overridden using:
 
   --enable-sharedlibs=gcc
-
-On Mac OSX, use:
-
   --enable-sharedlibs=gcc-osx
-
-On Solaris, use:
-
-  --enable-sharedlibs=solaris-cc
+  --enable-sharedlibs=solaris-cc (for solaris)
 
 To select a channel other than the default channel, set the
 environment variable MPICH_CH3CHANNEL to the channel name (i.e., sock,
@@ -631,9 +631,15 @@ placed in /home/me/mpich2-<VERSION>, the build is done in
 
 VII. Shared Libraries
 =====================
-Shared libraries are currently only supported for gcc on Linux and Mac
-and for cc on Solaris. To have shared libraries created when MPICH2 is
-built, specify the following when MPICH2 is configured:
+Shared libraries are currently only supported for gcc (and gcc-like
+compilers) on Linux and Mac and for cc on Solaris. To have shared
+libraries created when MPICH2 is built, specify the following when
+MPICH2 is configured:
+
+    configure --enable-shared
+
+To further tune the shared library type, you can append the following
+options:
 
     configure --enable-sharedlibs=gcc         (on Linux)
     configure --enable-sharedlibs=osx-gcc     (on Mac OS X)
