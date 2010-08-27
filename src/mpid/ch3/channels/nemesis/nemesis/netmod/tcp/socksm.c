@@ -72,13 +72,6 @@ static struct {
 #define IS_SAME_PGID(id1, id2) \
     (strcmp(id1, id2) == 0)
 
-/* Will evaluate to false if either one of these sc's does not have valid pg data */
-#define IS_SAME_CONNECTION(sc1, sc2)                                    \
-    (sc1->pg_is_set && sc2->pg_is_set &&                                \
-     sc1->pg_rank == sc2->pg_rank &&                                    \
-     ((sc1->is_same_pg && sc2->is_same_pg) ||                           \
-      (!sc1->is_same_pg && !sc2->is_same_pg &&                          \
-       IS_SAME_PGID(sc1->pg_id, sc2->pg_id))))
 
 #define INIT_SC_ENTRY(sc, ind)                  \
     do {                                        \
@@ -124,6 +117,32 @@ static void dbg_print_sc_tbl(FILE *stream, int print_free_entries)
 static int find_free_entry(int *index);
 static int cleanup_and_free_sc_plfd(sockconn_t *const sc);
 static int error_closed(struct MPIDI_VC *const vc);
+
+#undef FUNCNAME
+#define FUNCNAME is_same_connection
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int is_same_connection(sockconn_t *sc1, sockconn_t *sc2)
+{
+
+    /* Returns TRUE iff sc1 and sc2 connect the same processes */
+
+    /* if pg_is_set is TRUE, then either it's the same pg, or pg_id is not NULL */
+    MPIU_Assert(!sc1->pg_is_set || sc1->is_same_pg || sc1->pg_id != NULL);
+    MPIU_Assert(!sc2->pg_is_set || sc2->is_same_pg || sc2->pg_id != NULL);
+
+    /* if it's a tmpvc, the pg should not be set */
+    MPIU_Assert(!sc1->is_tmpvc || !sc1->pg_is_set);
+    MPIU_Assert(!sc1->is_tmpvc || !sc1->pg_is_set);
+
+    return !sc1->is_tmpvc && !sc2->is_tmpvc &&
+        sc1->pg_is_set && sc2->pg_is_set &&
+        sc1->pg_rank == sc2->pg_rank &&
+        (( sc1->is_same_pg &&  sc2->is_same_pg) ||
+         (!sc1->is_same_pg && !sc2->is_same_pg &&
+          IS_SAME_PGID(sc1->pg_id, sc2->pg_id)));
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME alloc_sc_plfd_tbls
@@ -347,7 +366,7 @@ static int found_better_sc(sockconn_t *sc, sockconn_t **fnd_sc)
         MPID_nem_tcp_Conn_State_t istate = iter_sc->state.cstate;
 
         if (iter_sc != sc && iter_sc->fd != CONN_INVALID_FD 
-            && IS_SAME_CONNECTION(iter_sc, sc))
+            && is_same_connection(iter_sc, sc))
         {
             switch (sc->state.cstate)
             {
@@ -615,7 +634,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
             ++sc_vc_tcp->sc_ref_count;
         }
         
-        /* very important, without this IS_SAME_CONNECTION will always fail */
+        /* very important, without this is_same_connection() will always fail */
         sc->pg_is_set = TRUE;
         
 	MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PKT_ID_INFO: sc->fd=%d, sc->vc=%p, sc=%p", sc->fd, sc->vc, sc));
@@ -880,14 +899,13 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
                 sc->is_same_pg = FALSE;
                 sc->pg_id = vc->pg->id;
             }
+            /* very important, without this is_same_connection() will always fail */
+            sc->pg_is_set = TRUE;
+            MPIU_Assert(!sc->is_tmpvc);
         }
         else { /* (vc->pg == NULL), dynamic proc connection - temp vc */
-            sc->is_same_pg = FALSE;
-            sc->pg_id = NULL;
+            MPIU_Assert(sc->is_tmpvc);
         }
-
-        /* very important, without this IS_SAME_CONNECTION will always fail */
-        sc->pg_is_set = TRUE;
 
         ASSIGN_SC_TO_VC(vc_tcp, sc);
         sc->vc = vc;
