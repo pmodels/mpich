@@ -89,6 +89,14 @@ if test "$enable_sharedlibs" = "default" ; then
    fi
 fi
 
+# If --enable-sharedlibs is given, but --enable-shared is not, throw
+# an error
+if test "$enable_sharedlibs" != "no" -a "$enable_sharedlibs" != "none" ; then
+   if test "$enable_shared" = "no" ; then
+      AC_MSG_ERROR([--enable-sharedlibs cannot be used without --enable-shared])
+   fi
+fi
+
 CC_SHL=true
 C_LINK_SHL=true
 C_LINKPATH_SHL=""
