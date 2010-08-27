@@ -429,7 +429,9 @@ Section~\ref{configure-options}.  Here we comment on some of them.
   is recommended only for getting the best performance out of proven
   production applications, and for benchmarking.
 \item[--enable-shared]Build MPICH2 with shared libraries. 
-  MPICH2 will try to automatically detect the type of shared library support required. For cases where you want to manually control this, the following options can be used.
+  MPICH2 will try to automatically detect the type of shared library
+  support required. For cases where you want to manually control this,
+  the following options can be used.
 \begin{description}
 \item[\texttt{--enable-sharedlibs=gcc}]for standard gcc on Linux  
 \item[\texttt{--enable-sharedlibs=osx-gcc}]for Mac OS X or
@@ -488,8 +490,8 @@ MPICH2 is configured:
     configure --enable-shared
 \end{verbatim}
 
-To further tune the shared library type, you can append the following
-options:
+For users who wish to manually control the linker parameters, this can
+be done using:
 
 \begin{verbatim}
     configure --enable-sharedlibs=gcc         (on Linux)

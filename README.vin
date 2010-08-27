@@ -463,13 +463,14 @@ builds using:
 
   --enable-shared
 
-Under Linux and when using gcc (or compilers that mimic gcc for
-shared-library construction) and on MAC OSX, this automatically adds
-the appropriate type of shared library support required. But this can
-be overridden using:
+This option tries to pick the appropriate linker parameters for your
+platform, and is known to work under Linux and when using gcc (or
+compilers that mimic gcc for shared-library construction) and on MAC
+OSX. For other platforms, or for users who wish to manually control
+the linker parameters, this can be done using:
 
-  --enable-sharedlibs=gcc
-  --enable-sharedlibs=gcc-osx
+  --enable-sharedlibs=gcc (for Linux)
+  --enable-sharedlibs=gcc-osx (for MACOS)
   --enable-sharedlibs=solaris-cc (for solaris)
 
 To select a channel other than the default channel, set the
@@ -638,8 +639,8 @@ MPICH2 is configured:
 
     configure --enable-shared
 
-To further tune the shared library type, you can append the following
-options:
+For users who wish to manually control the linker parameters, this can
+be done using:
 
     configure --enable-sharedlibs=gcc         (on Linux)
     configure --enable-sharedlibs=osx-gcc     (on Mac OS X)
