@@ -708,9 +708,6 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
 
     MPIU_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
                 pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
-                pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_REQ ||
-                pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_ACK ||
-		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_NAK ||
 		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
 		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK);
 
@@ -758,10 +755,7 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t *pkt_type)
     MPIU_Assert(pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
                 pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
                 pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_REQ ||
-                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_ACK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_DISC_NAK);
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK);
     *pkt_type = pkt.pkt_type;
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_RECV_CMD_PKT);
