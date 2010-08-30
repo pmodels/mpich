@@ -146,23 +146,8 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 
-    /* FIXME: Remove this IFDEF */
-#if defined(MPIDI_CH3_USES_SSHM) && 0
-    MPIU_Assert( vc->state == MPIDI_VC_STATE_ACTIVE || 
-		 vc->state == MPIDI_VC_STATE_REMOTE_CLOSE 
-		 /* sshm queues are uni-directional.  A VC that is connected 
-		 * in the read direction is marked MPIDI_VC_STATE_INACTIVE
-		 * so that a connection will be formed on the first write.  
-		 * Since the other side is marked MPIDI_VC_STATE_ACTIVE for 
-		 * writing 
-		 * we need to initiate the close protocol on the read side 
-		 * even if the write state is MPIDI_VC_STATE_INACTIVE. */
-		 || ((vc->state == MPIDI_VC_STATE_INACTIVE) && 
-		     ((MPIDI_CH3I_VC *)(vc->channel_private))->shm_read_connected) );
-#else
     MPIU_Assert( vc->state == MPIDI_VC_STATE_ACTIVE || 
 		 vc->state == MPIDI_VC_STATE_REMOTE_CLOSE );
-#endif
 
     MPIDI_Pkt_init(close_pkt, MPIDI_CH3_PKT_CLOSE);
     close_pkt->ack = (vc->state == MPIDI_VC_STATE_ACTIVE) ? FALSE : TRUE;
@@ -251,26 +236,8 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		   vc->pg_rank);
             MPIDI_CHANGE_VC_STATE(vc, CLOSE_ACKED);
 	}
-#if 0
-	else if (vc->state == MPIDI_VC_STATE_CLOSE_ACKED) {
-	    /* FIXME: This situation has been seen with the ssm device,
-	       when running on a single process.  It may indicate that the
-	       close protocol, for shared memory connections, can
-	       occasionally reach this state when both sides start
-	       closing the connection.  We will act as if this is
-	       duplicate information can be ignored (rather than triggering
-	       the Assert in the next case) */
-	    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,
-			 "Saw CLOSE_ACKED while already in that state");
-            MPIDI_CHANGE_VC_STATE(vc, REMOTE_CLOSE);
- 	    /* We need this terminate to decrement the outstanding closes */
-	    /* For example, with sockets, Connection_terminate will close
-	       the socket */
-	    mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
-	}
-#endif
 	else /* (vc->state == MPIDI_VC_STATE_ACTIVE) */
-	{
+        {
 	    /* FIXME: Debugging */
 	    if (vc->state != MPIDI_VC_STATE_ACTIVE) {
 		printf( "Unexpected state %d in vc %p\n", vc->state, vc );

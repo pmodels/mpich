@@ -721,20 +721,6 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 	}
 	
 	MPIU_Free(pg_str);
-	if (flag) {
-	    /* FIXME: If this is really needed, make it a destroy callback
-	       on the process group rather than an SSHM-specific item */
-#ifdef MPIDI_CH3_USES_SSHM
-	    /* extra pg ref needed for shared memory modules because the 
-	     * shm_XXXXing_list's
-	     * need to be walked though in the later stages of finalize to
-	     * free queue_info's.
-	     */
-	    /* FIXME: Need to understand this and either remove or make
-	       common to all channels */
-	    MPIDI_PG_add_ref(remote_pg[i]);
-#endif
-	}
     }
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_RECEIVEPGANDDISTRIBUTE);

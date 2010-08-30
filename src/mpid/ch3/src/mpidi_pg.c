@@ -1195,20 +1195,7 @@ int MPIDI_PG_Close_VCs( void )
 	    }
 
 	    if (vc->state == MPIDI_VC_STATE_ACTIVE || 
-		vc->state == MPIDI_VC_STATE_REMOTE_CLOSE
-#if defined(MPIDI_CH3_USES_SSHM) && 0
-		/* FIXME: Remove this IFDEF */
-		/* sshm queues are uni-directional.  A VC that is connected 
-		 * in the read direction is marked MPIDI_VC_STATE_INACTIVE
-		 * so that a connection will be formed on the first write.  
-		 * Since the other side is marked MPIDI_VC_STATE_ACTIVE for 
-		 * writing 
-		 * we need to initiate the close protocol on the read side 
-		 * even if the write state is MPIDI_VC_STATE_INACTIVE. */
-		|| ((vc->state == MPIDI_VC_STATE_INACTIVE) && 
-		    ((MPIDI_CH3I_VC *)(vc->channel_private))->shm_read_connected)
-#endif
-		)
+		vc->state == MPIDI_VC_STATE_REMOTE_CLOSE)
 	    {
 		MPIDI_CH3U_VC_SendClose( vc, i );
 	    }
