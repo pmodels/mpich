@@ -140,21 +140,6 @@ int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 	    }
 	    else {
 		MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
-#if 0
-		printf( "ifaddr len = %d\n", ifaddr->len );
-		{int i;
-		    unsigned char *p = info->h_addr_list[0];
-		    for (i=0; i<ifaddr->len; i++) { 
-			printf( "%.2x", *p++ );
-		    }
-		    printf( "\n" ); fflush(stdout);
-		    p = info->h_addr_list[0];
-		    for (i=0; i<ifaddr->len; i++) { 
-			printf( "%.3d", *p++ );
-		    }
-		    printf( "\n" ); fflush(stdout);
-		}
-#endif
 	    }
 	}
     }

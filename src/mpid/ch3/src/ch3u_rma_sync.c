@@ -807,14 +807,11 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_POST);
 
-#if 0
-    /* Reset the fence counter so that in case the user has switched from 
-       fence to 
-       post-wait synchronization, he cannot use the previous fence to mark 
-       the beginning of a fence epoch.  */
-    /* FIXME: We can't do this because fence_cnt must be updated collectively */
-    win_ptr->fence_cnt = 0;
-#endif
+    /* Even though we would want to reset the fence counter to keep
+     * the user from using the previous fence to mark the beginning of
+     * a fence epoch if he switched from fence to lock-unlock
+     * synchronization, we cannot do this because fence_cnt must be
+     * updated collectively */
 
     /* In case this process was previously the target of passive target rma
      * operations, we need to take care of the following...
@@ -940,13 +937,11 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_START);
 
-#if 0
-    /* Reset the fence counter so that in case the user has switched from 
-       fence to start-complete synchronization, he cannot use the previous 
-       fence to mark the beginning of a fence epoch.  */
-    /* FIXME: We can't do this because fence_cnt must be updated collectively */
-    win_ptr->fence_cnt = 0;
-#endif
+    /* Even though we would want to reset the fence counter to keep
+     * the user from using the previous fence to mark the beginning of
+     * a fence epoch if he switched from fence to lock-unlock
+     * synchronization, we cannot do this because fence_cnt must be
+     * updated collectively */
 
     /* In case this process was previously the target of passive target rma
      * operations, we need to take care of the following...
@@ -1359,13 +1354,11 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 
     MPIU_UNREFERENCED_ARG(assert);
 
-#if 0
-    /* Reset the fence counter so that in case the user has switched from 
-       fence to lock-unlock synchronization, he cannot use the previous fence 
-       to mark the beginning of a fence epoch.  */
-    /* FIXME: We can't do this because fence_cnt must be updated collectively */
-    win_ptr->fence_cnt = 0;
-#endif
+    /* Even though we would want to reset the fence counter to keep
+     * the user from using the previous fence to mark the beginning of
+     * a fence epoch if he switched from fence to lock-unlock
+     * synchronization, we cannot do this because fence_cnt must be
+     * updated collectively */
 
     if (dest == MPI_PROC_NULL) goto fn_exit;
         
