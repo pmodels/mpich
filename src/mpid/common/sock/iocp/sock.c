@@ -693,6 +693,7 @@ static int socki_get_host_list(char *hostname, socki_host_name_t **listp)
 int MPIDU_Sock_hostname_to_host_description(char *hostname, char *host_description, int len)
 {
     int mpi_errno = MPI_SUCCESS;
+    int str_errno = MPIU_STR_SUCCESS;
     socki_host_name_t *iter, *list = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_HOSTNAME_TO_HOST_DESCRIPTION);
 
@@ -715,12 +716,9 @@ int MPIDU_Sock_hostname_to_host_description(char *hostname, char *host_descripti
     while (iter)
     {
         MPIU_DBG_PRINTF(("adding host: %s\n", iter->host));
-        mpi_errno = MPIU_Str_add_string(&host_description, &len, iter->host);
-        if (mpi_errno != MPI_SUCCESS)
-        {
-            mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_NOMEM, "**desc_len", 0);
-            goto fn_exit;
-        }
+        str_errno = MPIU_Str_add_string(&host_description, &len, iter->host);
+        MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPIDU_SOCK_ERR_NOMEM, "**desc_len");
+
         iter = iter->next;
     }
 
@@ -1149,6 +1147,7 @@ static unsigned int GetMask(char *pszMask)
 int MPIDU_Sock_post_connect(MPIDU_Sock_set_t set, void * user_ptr, char * host_description, int port, MPIDU_Sock_t * sock)
 {
     int mpi_errno;
+    int str_errno = MPIU_STR_SUCCESS;
     struct hostent *lphost;
     struct sockaddr_in sockAddr;
     sock_state_t *connect_state;
@@ -1215,11 +1214,11 @@ int MPIDU_Sock_post_connect(MPIDU_Sock_set_t set, void * user_ptr, char * host_d
     while (!connected)
     {
 	host[0] = '\0';
-	mpi_errno = MPIU_Str_get_string(&connect_state->cur_host, host, 100);
+	str_errno = MPIU_Str_get_string(&connect_state->cur_host, host, 100);
 	/*printf("got <%s> out of <%s>\n", host, connect_state->host_description);fflush(stdout);*/
-	if (mpi_errno != MPIU_STR_SUCCESS)
+	if (str_errno != MPIU_STR_SUCCESS)
 	{
-	    if (mpi_errno == MPIU_STR_NOMEM)
+	    if (str_errno == MPIU_STR_NOMEM)
 		mpi_errno = MPIR_Err_create_code(connect_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_NOMEM, "**nomem", 0);
 	    else
 		mpi_errno = MPIR_Err_create_code(connect_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_FAIL, "**fail", "**fail %d", mpi_errno);

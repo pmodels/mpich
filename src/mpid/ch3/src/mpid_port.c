@@ -284,6 +284,7 @@ static void free_port_name_tag(int tag)
 static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
+    int str_errno = MPIU_STR_SUCCESS;
     int len;
     int port_name_tag = 0; /* this tag is added to the business card,
                               which is then returned as the port name */
@@ -296,14 +297,9 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
     MPIU_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
 
     len = MPI_MAX_PORT_NAME;
-    mpi_errno = MPIU_Str_add_int_arg(&port_name, &len, 
-			MPIDI_CH3I_PORT_NAME_TAG_KEY, port_name_tag);
-
-    /* FIXME: MPIU_xxx routines should return regular mpi error codes */
-    if (mpi_errno != MPIU_STR_SUCCESS) {
-	mpi_errno = MPI_SUCCESS;
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
-    }
+    str_errno = MPIU_Str_add_int_arg(&port_name, &len,
+                                     MPIDI_CH3I_PORT_NAME_TAG_KEY, port_name_tag);
+    MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
 
     /* This works because Get_business_card uses the same MPIU_Str_xxx 
        functions as above to add the business card to the input string */
@@ -356,16 +352,17 @@ fn_fail:
  */
 int MPIDI_GetTagFromPort( const char *port_name, int *port_name_tag )
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    int str_errno = MPIU_STR_SUCCESS;
 
-    mpi_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY,
+    str_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY,
                                      port_name_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS)
-    {
-	mpi_errno = MPI_SUCCESS;
-	MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER, "**argstr_no_port_name_tag");
-    }
+    MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_no_port_name_tag");
+
+ fn_exit:
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #endif

@@ -162,37 +162,28 @@ MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
 int
 MPID_nem_newmad_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
-   int mpi_errno = MPI_SUCCESS;
-   char name[MPID_NEM_NMAD_MAX_SIZE];
-   
-   gethostname(name,MPID_NEM_NMAD_MAX_SIZE);
-
-   mpi_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_HOSTNAME_KEY, name, strlen(name));
-   if (mpi_errno != MPIU_STR_SUCCESS){
-       if (mpi_errno == MPIU_STR_NOMEM){
-	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
-       }
-       else{
-	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard");
-       }
-       goto fn_exit;
-   }
-   
-   mpi_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_URL_KEY, local_session_url, strlen(local_session_url));
-   if (mpi_errno != MPIU_STR_SUCCESS){
-       if (mpi_errno == MPIU_STR_NOMEM){
-	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard_len");
-       }
-       else{
-	   MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**buscard");
-       }
-       goto fn_exit;
-   }
-
-   fn_exit:
-       return mpi_errno;
-   fn_fail: ATTRIBUTE((unused))
-       goto fn_exit;
+    int mpi_errno = MPI_SUCCESS;
+    int str_errno = MPIU_STR_SUCCESS;
+    char name[MPID_NEM_NMAD_MAX_SIZE];
+    
+    gethostname(name,MPID_NEM_NMAD_MAX_SIZE);
+    
+    str_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_HOSTNAME_KEY, name, strlen(name));
+    if (str_errno) {
+        MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
+    }
+    
+    str_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_URL_KEY, local_session_url, strlen(local_session_url));
+    if (str_errno) {
+        MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
+    }
+    
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -203,23 +194,22 @@ int
 MPID_nem_newmad_get_from_bc (const char *business_card, char *hostname, char *url)
 {
    int mpi_errno = MPI_SUCCESS;
+   int str_errno = MPIU_STR_SUCCESS;
    int len;
    
-   mpi_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_HOSTNAME_KEY, hostname, 
+   str_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_HOSTNAME_KEY, hostname,
 					MPID_NEM_NMAD_MAX_SIZE, &len);
-   if ((mpi_errno != MPIU_STR_SUCCESS)){
-       MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
-   }
+   /* FIXME: create a real error string for this */
+   MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_hostd");
 
-   mpi_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_URL_KEY, url, 
+   mpi_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_URL_KEY, url,
 					MPID_NEM_NMAD_MAX_SIZE, &len);
-   if ((mpi_errno != MPIU_STR_SUCCESS)){
-       MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
-   }
+   /* FIXME: create a real error string for this */
+   MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_hostd");
    
    fn_exit:
      return mpi_errno;
-   fn_fail:  
+   fn_fail:
      goto fn_exit;
 }
 

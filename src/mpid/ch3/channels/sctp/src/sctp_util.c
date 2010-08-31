@@ -662,6 +662,7 @@ static int MPIDU_Sctp_get_host_description(char * host_description, int len)
 int MPIDI_CH3U_Get_business_card_sctp(char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
+    int str_errno = MPIU_STR_SUCCESS;
     int port;
     char host_description[MAX_HOST_DESCRIPTION_LEN];
     
@@ -671,32 +672,17 @@ int MPIDI_CH3U_Get_business_card_sctp(char **bc_val_p, int *val_max_sz_p)
     }
 
     port = MPIDI_CH3I_listener_port;
-    mpi_errno = MPIU_Str_add_int_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, port);
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPIU_STR_SUCCESS)
-    {
-	if (mpi_errno == MPIU_STR_NOMEM) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**buscard_len");
-	}
-	else {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**buscard");
-	}
+    str_errno = MPIU_Str_add_int_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, port);
+    if (str_errno) {
+        MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    /* --END ERROR HANDLING-- */
     
-    mpi_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_HOST_DESCRIPTION_KEY, host_description);
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPIU_STR_SUCCESS)
-    {
-	if (mpi_errno == MPIU_STR_NOMEM) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**buscard_len");
-	}
-	else {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**buscard");
-	}
-	return mpi_errno;
+    str_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_HOST_DESCRIPTION_KEY, host_description);
+    if (str_errno) {
+        MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    /* --END ERROR HANDLING-- */
 
     /* Look up the interface address cooresponding to this host description */
     /* FIXME: We should start switching to getaddrinfo instead of 
@@ -722,18 +708,14 @@ int MPIDI_CH3U_Get_business_card_sctp(char **bc_val_p, int *val_max_sz_p)
 	    MPIU_Snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", 
 			   p[0], p[1], p[2], p[3] );
 	    MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"ifname = %s",ifname );
-	    mpi_errno = MPIU_Str_add_string_arg( bc_val_p, 
+	    str_errno = MPIU_Str_add_string_arg( bc_val_p, 
 						 val_max_sz_p, 
 						 MPIDI_CH3I_IFNAME_KEY,
 						 ifname );
-	    if (mpi_errno != MPIU_STR_SUCCESS) {
-		if (mpi_errno == MPIU_STR_NOMEM) {
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**buscard_len");
-		}
-		else {
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**buscard");
-		}
-	    }
+            if (str_errno) {
+                MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
+            }
 	}
     }
 #endif
