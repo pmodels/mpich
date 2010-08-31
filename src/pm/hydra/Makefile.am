@@ -31,6 +31,15 @@ SUBDIRS = ${external_subdirs} .
 mpich2-build-install: install
 mpich2-build-uninstall: uninstall
 
+# Provide an alias for mpirun to support tools that assume that
+# mpiexec is called mpirun
+install-exec-local:
+	if [ -x ${DESTDIR}${bindir}/mpiexec ] ; then \
+	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec mpirun ; fi
+
+uninstall-local:
+	rm -f ${DESTDIR}${bindir}/mpirun
+
 # A special alternate installation target when using multiple process managers
 install-alt: $(bin_PROGRAMS)
 	@if [ ! -d $(DESTDIR)${bindir} ] ; then \
