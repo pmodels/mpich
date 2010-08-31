@@ -83,6 +83,8 @@ if test "$enable_sharedlibs" = "default" ; then
    if test "$enable_shared" = "yes" ; then
       AS_CASE([$host],
 	      [*-*-darwin*], [enable_sharedlibs=gcc-osx],
+	      [*-*-cygwin*|*-*-mingw*|*-*-pw32*|*-*-cegcc*], [enable_sharedlibs=cygwin-gcc],
+	      [*-*-sunos*], [enable_sharedlibs=solaris-gcc],
 	      [enable_sharedlibs=gcc])
    else
       enable_sharedlibs=none
