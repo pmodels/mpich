@@ -5,14 +5,16 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpi.h"
+#include "mpitest.h"
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #include <time.h>
 #include <math.h>
 #include <assert.h>
-#include "mpi.h"
-#include "mpitest.h"
 
 #define START_BUF (1)
 #define LARGE_BUF (256 * 1024)

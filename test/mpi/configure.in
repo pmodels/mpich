@@ -356,7 +356,7 @@ AC_C_RESTRICT
 # General headers
 dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
 dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
-AC_CHECK_HEADERS(stdarg.h )
+AC_CHECK_HEADERS(stdarg.h sys/time.h)
 
 # Check for fixed width types
 AC_TYPE_INT8_T
