@@ -89,7 +89,6 @@ PAC_SET_HEADER_LIB_PATH(psm)
 AC_ARG_WITH(newmad, [--with-newmad=path - specify path where pm2 software can be found],
 if test "${with_newmad}" != "yes" -a "${with_newmad}" != "no" ; then
     LDFLAGS="$LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
-    WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
     CPPFLAGS="$CPPFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
 fi,)
 

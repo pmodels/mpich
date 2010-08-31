@@ -241,15 +241,16 @@ PAC_PREFIX_ALL_FLAGS(USER)
 # autoconf link tests can use them. Libraries that are built by MPICH2
 # at make time (and hence are not available for autoconf link tests to
 # use), such as OPA and MPL, should be added to WRAPPER_LIBS for
-# static builds. All libraries in LIBS are added to WRAPPER_LIBS as
-# well, at the end of configure.
+# static builds. All libraries in LIBS are added to WRAPPER_LIBS
+# (similarly LDFLAGS are added to WRAPPER_LDFLAGS) as well, at the end
+# of configure.
 PAC_PREFIX_ALL_FLAGS(WRAPPER)
 WRAPPER_CFLAGS="$CFLAGS $MPICH2_MPICC_FLAGS"
 WRAPPER_CPPFLAGS="$CPPFLAGS $MPICH2_MPICPP_FLAGS"
 WRAPPER_CXXFLAGS="$CXXFLAGS $MPICH2_MPICXX_FLAGS"
 WRAPPER_FFLAGS="$FFLAGS $MPICH2_MPIF77_FLAGS"
 WRAPPER_FCFLAGS="$FCFLAGS $MPICH2_MPIFC_FLAGS"
-WRAPPER_LDFLAGS="$LDFLAGS $MPICH2_LDFLAGS"
+WRAPPER_LDFLAGS="$MPICH2_LDFLAGS"
 WRAPPER_LIBS="$MPICH2_LIBS"
 
 # Add MPICH2LIB_* to the appropriate flags
@@ -2694,7 +2695,6 @@ case $ENABLE_SHLIB in
          #
          # [goodell@ 2010-02-09]
          PAC_APPEND_FLAG([-Wl,-flat_namespace], [LDFLAGS])
-         PAC_APPEND_FLAG([-Wl,-flat_namespace], [WRAPPER_LDFLAGS])
      ;;
      cygwin-gcc)
 	if test "$PMPILIBNAME_set" = "no" ; then
@@ -4886,7 +4886,6 @@ EOF
         else
 	    LDFLAGSsave="$LDFLAGS"
 	    LDFLAGS="$LDFLAGS -ftest-coverage -fprofile-arcs"
-	    WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS -ftest-coverage -fprofile-arcs"
 	    if AC_TRY_EVAL(link_only) ; then 
 	        AC_MSG_RESULT([need -ftest-coverage -fprofile-arcs])
             else
@@ -6240,14 +6239,22 @@ AC_SUBST(MPIFC)
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
 
-# Add the LIBS we got so far to WRAPPER_LIBS
+# Add the LDFLAGS/LIBS we got so far to WRAPPERs
+WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS"
 WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"
+
+# Setup required inter-library dependencies
 LIB_DEPS=""
+LDFLAGS_DEPS=""
 if test "$ENABLE_SHLIB" != "none" -a "$enable_lib_depend" = "yes" ; then
    LIB_DEPS="$WRAPPER_LIBS"
    WRAPPER_LIBS=""
+   LDFLAGS_DEPS="$WRAPPER_LDFLAGS"
+   # WRAPPER_LDFLAGS are not reset as they point to the position of
+   # the dependency libraries when rpath builds are not enabled
 fi
 AC_SUBST(LIB_DEPS)
+AC_SUBST(LDFLAGS_DEPS)
 
 if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])

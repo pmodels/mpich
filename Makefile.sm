@@ -149,10 +149,10 @@ optinstall_LIB = lib/lib${MPIFWRAPNAME}.a
 # UNUSED, example for experimentation only
 #lib${MPILIBNAME}_so_EXPORTS = maint/mpi.def
 #libf${MPILIBNAME}_so_EXPORTS = maint/fmpi.def
-lib${MPILIBNAME}_so_LIBS   = -L. @LIB_DEPS@
-libf${MPILIBNAME}_so_LIBS   = -L. -l$(MPILIBNAME) @LIB_DEPS@
-lib${MPILIBNAME}f90_so_LIBS = -L. -l$(MPILIBNAME) @LIB_DEPS@
-lib${MPICXXLIBNAME}_so_LIBS = -L. -l$(MPILIBNAME) @LIB_DEPS@
+lib${MPILIBNAME}_so_LIBS   = -L. @LDFLAGS_DEPS@ @LIB_DEPS@
+libf${MPILIBNAME}_so_LIBS   = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
+lib${MPILIBNAME}f90_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
+lib${MPICXXLIBNAME}_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
 
 install_INCLUDE = src/include/mpi.h
 
