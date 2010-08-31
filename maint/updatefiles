@@ -104,17 +104,17 @@ echo "done"
 # Default choices
 do_bindings=yes
 do_geterrmsgs=yes
-# depend choices are yes and no
 do_depend=yes
 do_getparms=yes
 do_f77=yes
 do_f77tof90=yes
 do_build_configure=yes
-export do_build_configure
 do_genstates=yes
 do_smpdversion=yes
 do_atdir_check=no
 do_atver_check=yes
+
+export do_build_configure
 
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
@@ -143,92 +143,98 @@ stepsCleared=no
 temp_args=""
 for arg in "$@" ; do
     case $arg in 
-    -echo)
-	set -x
-	;;
+	-echo)
+	    set -x
+	    ;;
 	
-    -atdircheck=*)
-        val=`echo X$arg | sed -e 's/^X-atdircheck=//'`
-        case $val in
-            yes|YES|true|TRUE|1) do_atdir_check=yes ;;
-            no|NO|false|FALSE|0) do_atdir_check=no ;;
-            *) warn "unknown option: $arg."
-        esac
-        ;;
-    -atvercheck=*)
-        val=`echo X$arg | sed -e 's/^X-atvercheck=//'`
-        case $val in
-            yes|YES|true|TRUE|1) do_atver_check=yes ;;
-            no|NO|false|FALSE|0) do_atver_check=no ;;
-            *) warn "unknown option: $arg."
-        esac
-        ;;
-    -do=*|--do=*)
-    opt=`echo A$arg | sed -e 's/^A--*do=//'`
-    # Handle some synonyms
-    case $opt in 
-	build-configure|configure) opt=build_configure ;;
-	makefile|Makefile|Makefiles) opt=makefiles;;
-    esac
-    var=do_$opt
-    # Check that this opt is known
-    eval oldval=\$"$var"
-    if [ -z "$oldval" ] ; then
-	echo "-do=$opt is unrecognized"
-	exit 1
-    else 
-        if [ $stepsCleared = no ] ; then
-	    for step in $AllSteps ; do
-	        var=do_$step
-	        eval $var=no
-	    done
-	    stepsCleared=yes
-        fi
-        var=do_$opt
-        eval $var=yes
-    fi
-    ;;
+	-atdircheck=*)
+	    val=`echo X$arg | sed -e 's/^X-atdircheck=//'`
+            case $val in
+		yes|YES|true|TRUE|1) do_atdir_check=yes ;;
+		no|NO|false|FALSE|0) do_atdir_check=no ;;
+		*) warn "unknown option: $arg."
+            esac
+            ;;
 
-    -with-genstates|--with-genstates)
-    do_genstates=yes
-    ;;
-    -without-genstates|--without-genstates)
-    do_genstates=no
-    ;;
+	-atvercheck=*)
+            val=`echo X$arg | sed -e 's/^X-atvercheck=//'`
+            case $val in
+		yes|YES|true|TRUE|1) do_atver_check=yes ;;
+		no|NO|false|FALSE|0) do_atver_check=no ;;
+		*) warn "unknown option: $arg."
+            esac
+            ;;
+
+	-do=*|--do=*)
+	    opt=`echo A$arg | sed -e 's/^A--*do=//'`
+	    case $opt in 
+		build-configure|configure) opt=build_configure ;;
+		makefile|Makefile|Makefiles) opt=makefiles;;
+	    esac
+	    var=do_$opt
+
+	    # Check that this opt is known
+	    eval oldval=\$"$var"
+	    if [ -z "$oldval" ] ; then
+		echo "-do=$opt is unrecognized"
+		exit 1
+	    else
+		if [ $stepsCleared = no ] ; then
+		    for step in $AllSteps ; do
+			var=do_$step
+			eval $var=no
+		    done
+		    stepsCleared=yes
+		fi
+		var=do_$opt
+		eval $var=yes
+	    fi
+	    ;;
+
+	-with-genstates|--with-genstates)
+	    do_genstates=yes
+	    ;;
+
+	-without-genstates|--without-genstates)
+	    do_genstates=no
+	    ;;
  
-    -with-errmsgs|--with-errmsgs)
-    do_geterrmsgs=yes
-    ;;
-    -without-errmsgs|--without-errmsgs)
-    do_geterrmsgs=no
-    ;;
+	-with-errmsgs|--with-errmsgs)
+	    do_geterrmsgs=yes
+	    ;;
 
-    -with-bindings|--with-bindings)
-    do_bindings=yes
-    ;;
-    -without-bindings|--without-bindings)
-    do_bindings=no
-    ;;
+	-without-errmsgs|--without-errmsgs)
+	    do_geterrmsgs=no
+	    ;;
 
-    -with-f77|--with-f77)
-    do_f77=yes
-    ;;
-    -without-f77|--without-f77)
-    do_f77=no
-    ;;
+	-with-bindings|--with-bindings)
+	    do_bindings=yes
+	    ;;
 
-    -with-autotools=*|--with-autotools=*)
-    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
-    ;;
+	-without-bindings|--without-bindings)
+	    do_bindings=no
+	    ;;
 
-    -distrib)
-    do_depend=no
-    do_build_configure=no
-    temp_args="$temp_args $arg"
-    ;;
+	-with-f77|--with-f77)
+	    do_f77=yes
+	    ;;
 
-    -help|--help|-usage|--usage)
-    cat <<EOF
+	-without-f77|--without-f77)
+	    do_f77=no
+	    ;;
+
+	-with-autotools=*|--with-autotools=*)
+	    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
+	    ;;
+
+	-distrib)
+	    do_depend=no
+	    do_build_configure=no
+	    temp_args="$temp_args $arg"
+	    ;;
+
+	-help|--help|-usage|--usage)
+	    cat <<EOF
     updatefiles [ --with-autotools=dir ] \\
                 [ -atdircheck=[yes|no] ] \\
                 [ -atvercheck=[yes|no] ] \\
@@ -258,15 +264,16 @@ for arg in "$@" ; do
     --do=build_configure only updates the configure scripts.  The available
     steps are:
 EOF
-    for step in $AllSteps
-    do
-       echo "        $step"
-    done
-    exit 1
-    ;;
-    *)
-    temp_args="$temp_args $arg"
-    ;;
+	    for step in $AllSteps ; do
+		echo "        $step"
+	    done
+	    exit 1
+	    ;;
+
+	*)
+	    temp_args="$temp_args $arg"
+	    ;;
+
     esac
 done
 # Reset the arguments.  Note that this doesn't handle arguments that
