@@ -36,7 +36,7 @@ static void MTestRMACleanup( void );
  Environment Variables:
 + MPITEST_DEBUG - If set (to any value), turns on debugging output
 - MPITEST_VERBOSE - If set to a numeric value, turns on that level of
-  verbose output.  This is used by the routine 'MTestPrintfMsg'
+  verbose output.
 
  */
 void MTest_Init( void )
@@ -778,20 +778,6 @@ void MTestPrintErrorMsg( const char msg[], int errcode )
     cout.flush();
 }
 /* ------------------------------------------------------------------------ */
-#if 0
-void MTestPrintfMsg( int level, const char format[], ... )
-{
-    va_list list;
-    int n;
-
-    if (verbose && level >= verbose) {
-	va_start(list,format);
-	n = vprintf( format, list );
-	va_end(list);
-	fflush(stdout);
-    }
-}
-#endif
 /* Fatal error.  Report and exit */
 void MTestError( const char *msg )
 {

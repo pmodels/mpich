@@ -6,14 +6,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#if 0
-#include "mpitestconf.h"
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
-#else
-#include <string.h>
-#endif
 
 static int verbose = 0;
 

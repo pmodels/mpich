@@ -1303,17 +1303,3 @@ int vector_blklen_negstride_negextent_of_int_with_lb_ub_test(void)
 
     return errs;
 }
-
-#if 0
-/* Use this unless mtest is included. */
-void MTestPrintError( int errcode )
-{
-    int errclass, slen;
-    char string[MPI_MAX_ERROR_STRING];
-    
-    MPI_Error_class( errcode, &errclass );
-    MPI_Error_string( errcode, string, &slen );
-    printf( "Error class %d (%s)\n", errclass, string );
-    fflush( stdout );
-}
-#endif

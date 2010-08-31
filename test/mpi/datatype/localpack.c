@@ -44,14 +44,6 @@ int main(int argc, char *argv[])
     MPI_Pack(&a, 1, MPI_DOUBLE, buffer, BUF_SIZE, &pos, MPI_COMM_WORLD);
     MPI_Pack(&b, 1, MPI_DOUBLE, buffer, BUF_SIZE, &pos, MPI_COMM_WORLD);
 
-#if 0
-    /* not a valid test for all MPI implementations */
-    if ( *(int *) buffer != 10) {
-    	errs++;
-	if (verbose) fprintf(stderr, "Wrong value for n in packbuf.\n");
-    }
-#endif
-
     size = pos;
     pos  = 0;
     n    = 0;

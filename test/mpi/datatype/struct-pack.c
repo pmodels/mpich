@@ -366,12 +366,6 @@ int struct_of_structs_test(void)
 	return errs;
     }
 
-#if 0
-    for (i=0; i < bufsize; i++) {
-	printf("%d : %d\n", i, (int) packbuf[i]);
-    }
-#endif
-
     memset(buf2, 0, 50);
     position = 0;
     err = MPI_Unpack(packbuf, bufsize, &position, buf2, 5, finaltype, MPI_COMM_WORLD);

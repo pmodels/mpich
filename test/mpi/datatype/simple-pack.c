@@ -155,17 +155,6 @@ int vector_of_vectors_test(void)
 			     position, sizeoftype);
     }
 
-#if 0
-    /* NOTE: THESE TESTS AREN'T VALID; MAKE ASSUMPTIONS ABOUT PACKING METHOD */
-    for (i=0; i < 4; i++) {
-	if (((int *)buf)[i] != i+1) {
-	    errs++;
-	    if (verbose) fprintf(stderr, "buf[%d] = %d; should be %d\n",
-				 i, ((int *)buf)[i], i+1);
-	}
-    }
-#endif
-    
     memset(array, 0, 9*sizeof(int));
     position = 0;
     err = MPI_Unpack(buf,
@@ -271,17 +260,6 @@ int optimizable_vector_of_basics_test(void)
 	if (verbose) fprintf(stderr, "position = %d; should be %d (pack)\n",
 			     position, sizeoftype);
     }
-
-#if 0
-    /* NOTE: THESE TESTS AREN'T VALID; MAKE ASSUMPTIONS ABOUT PACKING METHOD */
-    for (i=0; i < 20; i++) {
-	if (((int *)buf)[i] != i) {
-	    errs++;
-	    if (verbose) fprintf(stderr, "buf[%d] = %d; should be %d\n",
-				 i, ((int *)buf)[i], i);
-	}
-    }
-#endif
 
     memset(array, 0, 20 * sizeof(int));
     position = 0;

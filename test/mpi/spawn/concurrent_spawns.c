@@ -62,10 +62,6 @@ int main(int argc, char *argv[])
 	num_spawns = MAX_NUM_SPAWNS;
     }
 
-#if 0
-    { int fd1 = open("concurrent_spawns",O_RDONLY);
-    printf( "fd = %d\n", fd1 ); fflush(stdout); close(fd1); }
-#endif
     /* If an argument is passed in use it for num_spawns */
     /* This is the case for all spawned processes and optionally the first 
        process as well */

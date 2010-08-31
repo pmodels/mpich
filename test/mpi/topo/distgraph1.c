@@ -16,11 +16,8 @@
 #define MAX_WEIGHT 100
 
 
-#if 0
-#define DPRINTF(arg_list_) printf arg_list_
-#else
+/* #define DPRINTF(arg_list_) printf arg_list_ */
 #define DPRINTF(arg_list_)
-#endif
 
 /* convenience globals */
 int size, rank;

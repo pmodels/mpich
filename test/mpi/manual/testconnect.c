@@ -65,19 +65,6 @@ int main( int argc, char ** argv ) {
 
     MPI_Init( 0, 0 );
 
-#if 0
-    {
-        /* SEGV handler */
-        struct sigaction new_action, old_action;
-        new_action.sa_handler = segv_handler;
-        sigemptyset( &new_action.sa_mask );
-        new_action.sa_flags = 0;
-        sigaction( SIGSEGV, &new_action, NULL );
-        printf( "Installed SEGV handler\n" );
-    }
-#endif
-
-
     /* the existance of the file is used to decide which processes 
        first do a connect to the root process.  */
     fh = fopen( fname, "rt" );
@@ -92,18 +79,6 @@ int main( int argc, char ** argv ) {
 	    printf( "[%d] Wrote port %s to %s\n", myNum, port, fname ); fflush(stdout);
 	}
         comm = MPI_COMM_WORLD;
-#if 0
-        {
-            /* Install signal handler */
-            struct sigaction new_action, old_action;
-            new_action.sa_handler = term_handler;
-            sigemptyset( &new_action.sa_mask );
-            new_action.sa_flags = 0;
-            sigaction( SIGINT, &new_action, NULL );
-            sigaction( SIGTERM, &new_action, NULL );
-            printf( "Installed signal handlers\n" );
-        }
-#endif
     } else {
         fgets( port, MPI_MAX_PORT_NAME, fh );
         fclose( fh );
