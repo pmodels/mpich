@@ -1852,9 +1852,6 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 		    CloseHandle(sock->write.ovl.hEvent);
 		    sock->read.ovl.hEvent = NULL;
 		    sock->write.ovl.hEvent = NULL;
-#if 0
-		    MPIU_Free(sock); /* will this cause future io completion port errors since sock is the iocp user pointer? */
-#endif
 		    if (sock->sock != INVALID_SOCKET)
 		    {
 			/*printf("closing socket %d\n", sock->sock);fflush(stdout);*/
@@ -2384,9 +2381,6 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 			CloseHandle(sock->write.ovl.hEvent);
 			sock->read.ovl.hEvent = NULL;
 			sock->write.ovl.hEvent = NULL;
-#if 0
-			MPIU_Free(sock); /* will this cause future io completion port errors since sock is the iocp user pointer? */
-#endif
 			MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SOCK_WAIT);
 			return MPI_SUCCESS;
 		    }

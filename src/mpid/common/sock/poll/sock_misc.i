@@ -5,34 +5,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if 0
-/* FIXME: Who uses this and why? */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Sock_hostname_to_host_description
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDU_Sock_hostname_to_host_description(char *hostname, char *host_description, int len)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_HOSTNAME_TO_HOST_DESCRIPTION);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_HOSTNAME_TO_HOST_DESCRIPTION);
-    
-    MPIDU_SOCKI_VERIFY_INIT(mpi_errno, fn_exit);
-    
-    if (MPIU_Strncpy(host_description, hostname, (size_t) len))
-    /* --BEGIN ERROR HANDLING-- */
-    {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_BAD_LEN,
-					 "**sock|badhdmax", 0);
-    }
-    /* --END ERROR HANDLING-- */
- fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SOCK_HOSTNAME_TO_HOST_DESCRIPTION);
-    return mpi_errno;
-}
-#endif
-
 /* This routine is called in mpid/ch3/util/sock/ch3u_connect_sock.c */
 /* FIXME: This routine is misnamed; it is really get_interface_name (in the 
    case where there are several networks available to the calling process,

@@ -23,10 +23,6 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
 {
     int           mpi_errno=MPI_SUCCESS;
     MPID_Datatype *datatype_ptr;
-#if 0
-    MPID_Segment  *segp;
-    MPI_Aint      first, last;
-#endif
 
     MPIU_Assert(HANDLE_GET_KIND(*datatype_p) != HANDLE_KIND_BUILTIN);
 
@@ -58,39 +54,11 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
 			     &datatype_ptr->hetero_dloop_depth,
 			     MPID_DATALOOP_HETEROGENEOUS);
 
-#if 0
-	/* determine number of contiguous blocks in the type */
-	segp = MPID_Segment_alloc();
-        /* --BEGIN ERROR HANDLING-- */
-        if (!segp)
-        {
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                             MPIR_ERR_RECOVERABLE,
-                                             "MPID_Type_commit",
-                                             __LINE__,
-                                             MPI_ERR_OTHER,
-                                             "**nomem",
-                                             0);
-            return mpi_errno;
-        }
-        /* --END ERROR HANDLING-- */
-
-	MPID_Segment_init(0, 1, *datatype_p, segp, 0); /* first 0 is bufptr,
-							* 1 is count
-							* last 0 is homogeneous
-							*/
-
-	first = 0;
-	last  = SEGMENT_IGNORE_LAST;
-
-	MPID_Segment_free(segp);
-#endif
-
 	MPIU_DBG_PRINTF(("# contig blocks = %d\n",
 			 (int) datatype_ptr->max_contig_blocks));
 
 #if 0
-	MPIDI_Dataloop_dot_printf(datatype_ptr->dataloop, 0, 1);
+        MPIDI_Dataloop_dot_printf(datatype_ptr->dataloop, 0, 1);
 #endif
     }
 

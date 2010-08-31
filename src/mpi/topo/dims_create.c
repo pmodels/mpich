@@ -303,13 +303,6 @@ int MPIR_Dims_create( int nnodes, int ndims, int *dims )
 		dims[i] = chosen[j++];
 	    }
 	}
-#if 0
-	/* Any remaining unset dims are set to one */
-	for (i++;i<ndims; i++) {
-	    if (dims[i] == 0) 
-		dims[i] = 1;
-	}
-#endif
     }
     else {
 	/* We must combine some of the factors */

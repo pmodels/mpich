@@ -62,13 +62,6 @@
 #endif
 #endif
 
-#if 0
-#if !defined(__FLOAT_WORD_ORDER) || !defined(__LITTLE_ENDIAN)
-#error This code assumes that __FLOAT_WORD_ORDER and __LITTLE_ENDIAN are defined
-#endif
-#define FLENDIAN (__FLOAT_WORD_ORDER == __LITTLE_ENDIAN)
-#endif
-
 /*
   set to 1: uses manual swapping routines
             for 16/32 bit data types

@@ -266,12 +266,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     }
 #   endif
 
-#if 0
-    /* This should never happen */
-    if (MPIR_Version_device == 0) {
-	
-    }
-#endif     
 #ifdef HAVE_ERROR_CHECKING
     /* Eventually this will support commandline and environment options
      for controlling error checks.  It will use the routine 

@@ -92,16 +92,4 @@ DLOOP_Count PREPEND_PREFIX(Type_blockindexed_count_contig)(DLOOP_Count count,
                                                            int dispinbytes,
                                                            DLOOP_Offset old_extent);
                                                           
-#if 0
-/* Helper functions for accessing datatype contents */
-void PREPEND_PREFIX(Type_access_contents)(MPI_Datatype type,
-					  int **ints_p,
-					  MPI_Aint **aints_p,
-					  MPI_Datatype **types_p);
-void PREPEND_PREFIX(Type_release_contents)(MPI_Datatype type,
-					   int **ints_p,
-					   MPI_Aint **aints_p,
-					   MPI_Datatype **types_p);
-#endif
-
 #endif

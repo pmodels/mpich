@@ -354,9 +354,6 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 	     * the end of the last one.
 	     */
 	    *blocks_p -= (blocks_left + (size / basic_size));
-#if 0
-	    paramp->u.pack_vector.index++;
-#endif
 #ifdef MPID_SP_VERBOSE
 	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
 			    paramp->u.pack_vector.index,
