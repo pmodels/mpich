@@ -622,13 +622,6 @@ static int MPIDU_Sctp_get_host_description(char * host_description, int len)
        name?  What if a different interface is needed? */
     /* Use hostname supplied in environment variable, if it exists */
     env_hostname = getenv("MPICH_INTERFACE_HOSTNAME");
-#if 0
-    if (!env_hostname) {
-	/* FIXME: Try to get the environment variable that uses the rank 
-	   in comm world, i.e., MPICH_INTERFACE_HOSTNAME_R_%d.  For 
-	   this, we'll need to know the rank for this process. */
-    }
-#endif
     if (env_hostname != NULL)
     {
 	rc = MPIU_Strncpy(host_description, env_hostname, len);

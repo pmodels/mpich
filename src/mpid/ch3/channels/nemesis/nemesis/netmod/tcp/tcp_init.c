@@ -437,16 +437,6 @@ int MPID_nem_tcp_vc_destroy(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
 
     /* currently do nothing */
-#if 0
-    struct pollfd *plfd;
-    sockconn_t *sc;
-
-    sc = VC_FIELD(vc, sc);
-    if (sc == NULL)
-        goto fn_exit;
-
-    plfd = &MPID_nem_tcp_plfd_tbl[sc->index]; 
-#endif
 
     return mpi_errno;
 }

@@ -79,35 +79,4 @@ int mkstemp (char *template)
     errno = EEXIST;
     return -1;
 }
-
-#if 0
-#include <stdio.h>
-#include <string.h>
-
-int main()
-{
-    int fd;
-    char fname[]     = "/tmp/TEMPXXXXXX";
-    char fnameorig[] = "/tmp/TEMPXXXXXX";
-    int i;
-    
-    for (i = 0; i < 100; ++i)
-    {
-        strcpy (fname, fnameorig);
-        fd = mkstemp (fname);
-        if (fd == -1)
-        {
-            perror ("mkstemp");
-            return -1;
-        }
-
-        printf ("%d: %s\n", i, fname);
-        close (fd);
-    }
-    return 0;
-}
-
-        
-#endif
-
 #endif

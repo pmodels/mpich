@@ -26,40 +26,6 @@ extern unsigned short        *MPID_nem_recv_seqno;
 /* int    MPID_nem_mpich2_dequeue_fastbox (int local_rank); */
 /* int    MPID_nem_mpich2_enqueue_fastbox (int local_rank); */
 
-#if 0 /* papi timing stuff added */
-#define poll_active_fboxes(_cell, do_found) do {								\
-    MPID_nem_fboxq_elem_t *orig_fboxq_elem;									\
-													\
-    if (MPID_nem_fboxq_head != NULL)										\
-    {													\
-	orig_fboxq_elem = MPID_nem_curr_fboxq_elem;								\
-	do												\
-	{												\
-	    int value;											\
-	    MPID_nem_fbox_mpich2_t *fbox;										\
-													\
-	    fbox = MPID_nem_curr_fboxq_elem->fbox;								\
-													\
-	    DO_PAPI2 (PAPI_reset (PAPI_EventSet));							\
-	    value = fbox->flag.value;									\
-	    if (value == 1)										\
-		DO_PAPI2 (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues9));				\
-										       		\
-	    if (value == 1 && fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank])	\
-	    {												\
-		++MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank];							\
-		*(_cell) = &fbox->cell;									\
-		do_found;										\
-	    }												\
-	    MPID_nem_curr_fboxq_elem = MPID_nem_curr_fboxq_elem->next;							\
-	    if (MPID_nem_curr_fboxq_elem == NULL)								\
-		MPID_nem_curr_fboxq_elem = MPID_nem_fboxq_head;								\
-	}												\
-	while (MPID_nem_curr_fboxq_elem != orig_fboxq_elem);							\
-    }													\
-    *(_cell) = NULL;											\
-} while (0)
-#else
 static inline int poll_active_fboxes(MPID_nem_cell_ptr_t *cell)
 {
     MPID_nem_fboxq_elem_t *orig_fboxq_elem;
@@ -93,7 +59,6 @@ static inline int poll_active_fboxes(MPID_nem_cell_ptr_t *cell)
 fn_exit:
     return found;
 }
-#endif
 
 static inline int poll_every_fbox(MPID_nem_cell_ptr_t *cell)
 {

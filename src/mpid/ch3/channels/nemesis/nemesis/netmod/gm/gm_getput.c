@@ -42,20 +42,6 @@ MPID_nem_gm_get (void *target_p, void *source_p, int len, MPIDI_VC_t *source_vc,
 	OPA_decr_int (completion_ctr);
 	return 0;
     }
-#if 0
-    {
-	gm_status_t status;
-	
-	status = gm_directcopy_get (MPID_nem_module_gm_port, source_p, target_p, len, 0, VC_FIELD(source_vc, gm_port_id));
-	if (status != GM_SUCCESS)
-	{
-	    gm_perror ("directcopy", status);
-	    exit (-1);
-	}
-	OPA_decr_int (completion_ctr);
-    return 0;
-    }
-#endif
     if (MPID_nem_module_gm_num_send_tokens)
     {
 	MPID_nem_gm_do_get (target_p, source_p, len, VC_FIELD(source_vc, gm_node_id), VC_FIELD(source_vc, gm_port_id), completion_ctr);
