@@ -1063,25 +1063,6 @@ configfile_loop:
 			num_args_to_strip = 2;
 		    }
 		}
-#if 0
-		/* the run_local flag + the rsh_mpiexec flag causes the rsh code to launch the processes locally */
-		smpd_process.mpiexec_run_local = SMPD_TRUE;
-		smpd_process.rsh_mpiexec = SMPD_TRUE;
-		if (smpd_process.mpiexec_inorder_launch == SMPD_FALSE)
-		{
-		    smpd_launch_node_t *temp_node, *ordered_list = NULL;
-		    /* sort any existing reverse order nodes to be in order */
-		    while (smpd_process.launch_list)
-		    {
-			temp_node = smpd_process.launch_list->next;
-			smpd_process.launch_list->next = ordered_list;
-			ordered_list = smpd_process.launch_list;
-			smpd_process.launch_list = temp_node;
-		    }
-		    smpd_process.launch_list = ordered_list;
-		}
-		smpd_process.mpiexec_inorder_launch = SMPD_TRUE;
-#else
 		/* Use localroot to implement localonly */
 		smpd_process.local_root = SMPD_TRUE;
 		/* create a host list of one and set nproc to -1 to be replaced by nproc after parsing the block */
@@ -1101,7 +1082,6 @@ configfile_loop:
 		host_list->nproc = -1;
 		host_list->alt_host[0] = '\0';
 		smpd_get_hostname(host_list->host, SMPD_MAX_HOST_LENGTH);
-#endif
 	    }
 	    else if (strcmp(&(*argvp)[1][1], "machinefile") == 0)
 	    {

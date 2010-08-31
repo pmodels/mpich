@@ -33,13 +33,6 @@
 #define FCNAME "smpd_clear_process_registry"
 int smpd_clear_process_registry()
 {
-#if 0
-    if (SHDeleteKey(HKEY_LOCAL_MACHINE, SMPD_REGISTRY_KEY "\\process") != ERROR_SUCCESS)
-    {
-	/* It's ok if the key does not exist */
-    }
-    return SMPD_SUCCESS;
-#endif
     HKEY tkey;
     DWORD dwLen, result;
     int i;
@@ -802,57 +795,6 @@ int smpd_pinthread(smpd_pinthread_arg_t *p)
     /*smpd_dbg_printf("*** exiting smpd_pinthread ***\n");*/
     return 0;
 }
-#if 0
-/* 1 byte at a time version */
-int smpd_pinthread(smpd_pinthread_arg_t *p)
-{
-    char ch;
-    DWORD num_written;
-    SOCKET hIn;
-    HANDLE hOut;
-    int num_read;
-
-    hIn = p->hIn;
-    hOut = p->hOut;
-    MPIU_Free(p);
-    p = NULL;
-
-    smpd_dbg_printf("*** entering smpd_pinthread ***\n");
-    for (;;)
-    {
-	num_read = recv(hIn, &ch, 1, 0);
-	if (num_read == SOCKET_ERROR)
-	{
-	    if (num_read == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK)
-	    {
-		int optval = TRUE;
-		ioctlsocket(hIn, FIONBIO, &optval);
-		continue;
-	    }
-	    smpd_dbg_printf("recv from stdin socket failed, error %d.\n", WSAGetLastError());
-	    break;
-	}
-	if (num_read == 0)
-	{
-	    break;
-	}
-	if (!WriteFile(hOut, &ch, 1, &num_written, NULL))
-	{
-	    smpd_dbg_printf("WriteFile failed, error %d\n", GetLastError());
-	    break;
-	}
-    }
-    smpd_dbg_printf("*** smpd_pinthread finishing ***\n");
-    FlushFileBuffers(hOut);
-    if (closesocket(hIn) == SOCKET_ERROR)
-    {
-	smpd_err_printf("closesocket failed, sock %d, error %d\n", hIn, WSAGetLastError());
-    }
-    CloseHandle(hOut);
-    /*smpd_dbg_printf("*** exiting smpd_pinthread ***\n");*/
-    return 0;
-}
-#endif
 
 #undef FCNAME
 #define FCNAME "smpd_launch_process"

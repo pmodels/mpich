@@ -18,54 +18,6 @@ typedef struct smpd_job_key_list_t
 
 static smpd_job_key_list_t *list = NULL;
 
-#if 0 /* check for the key and username */
-#undef FCNAME
-#define FCNAME "job_key_exists"
-static SMPD_BOOL job_key_exists(const char *key, const char *username, const char *domain, const char *full_domain)
-{
-    smpd_job_key_list_t *iter;
-    char account_str[SMPD_MAX_ACCOUNT_LENGTH];
-    char domain_str[SMPD_MAX_ACCOUNT_LENGTH];
-
-    smpd_enter_fn(FCNAME);
-
-    if (domain == NULL && full_domain == NULL)
-    {
-	smpd_parse_account_domain(username, account_str, domain_str);
-	if (domain_str[0] != '\0')
-	{
-	    username = account_str;
-	    domain = domain_str;
-	}
-    }
-    iter = list;
-    while (iter)
-    {
-	if (strcmp(iter->key, key) == 0)
-	{
-	    /* key matches */
-	    if (strcmp(iter->username, username) == 0)
-	    {
-		/* username matches */
-		if ((domain != NULL && stricmp(domain, iter->domain) == 0) ||                /* domain matches */
-		    (full_domain != NULL && stricmp(full_domain, iter->full_domain) == 0) || /* full domain name matches */
-		    (iter->domain[0] == '\0' && iter->full_domain[0] == '\0') ||             /* no domain to match */
-		    (domain == NULL && full_domain == NULL))                                 /* no domain to match */
-		{
-		    /* domain matches */
-		    smpd_exit_fn(FCNAME);
-		    return SMPD_TRUE;
-		}
-	    }
-	}
-	iter = iter->next;
-    }
-
-    smpd_exit_fn(FCNAME);
-    return SMPD_FALSE;
-}
-#endif
-
 #undef FCNAME
 #define FCNAME "job_key_exists"
 static SMPD_BOOL job_key_exists(const char *key)

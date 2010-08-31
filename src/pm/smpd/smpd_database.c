@@ -8,21 +8,12 @@
 static void get_uuid(char *str)
 {
 #ifdef HAVE_WINDOWS_H
-#if 0
-    UUID guid;
-    char *rpcstr;
-    UuidCreate(&guid);
-    UuidToString(&guid, &rpcstr);
-    strcpy(str, rpcstr);
-    RpcStringFree(&rpcstr);
-#else
     UUID guid;
     UuidCreate(&guid);
     sprintf(str, "%08lX-%04X-%04x-%02X%02X-%02X%02X%02X%02X%02X%02X",
 	guid.Data1, guid.Data2, guid.Data3,
 	guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
 	guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
-#endif
 #elif defined(HAVE_CFUUIDCREATE)
     CFUUIDRef       myUUID;
     CFStringRef     myUUIDString;

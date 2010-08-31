@@ -816,49 +816,6 @@ SMPD_BOOL smpd_get_argcv_from_file(FILE *fin, int *argcp, char ***argvp)
     smpd_exit_fn(FCNAME);
     return SMPD_FALSE;
 }
-#if 0 /* This way simply tokenizes by space characters without any escape capabilities */
-#undef FCNAME
-#define FCNAME "smpd_get_argcv_from_file"
-SMPD_BOOL smpd_get_argcv_from_file(FILE *fin, int *argcp, char ***argvp)
-{
-    static char line[SMPD_MAX_LINE_LENGTH];
-    static char *argv[SMPD_MAX_ARGC];
-    char *token;
-    int index;
-
-    smpd_enter_fn(FCNAME);
-
-    argv[0] = "bogus.exe";
-    while (fgets(line, SMPD_MAX_LINE_LENGTH, fin))
-    {
-	index = 1;
-	token = strtok(line, " \r\n");
-	while (token)
-	{
-	    argv[index] = token;
-	    index++;
-	    if (index == SMPD_MAX_ARGC)
-	    {
-		argv[SMPD_MAX_ARGC-1] = NULL;
-		break;
-	    }
-	    token = strtok(NULL, " \r\n");
-	}
-	if (index != 1)
-	{
-	    if (index < SMPD_MAX_ARGC)
-		argv[index] = NULL;
-	    *argcp = index;
-	    *argvp = argv;
-	    smpd_exit_fn(FCNAME);
-	    return SMPD_TRUE;
-	}
-    }
-
-    smpd_exit_fn(FCNAME);
-    return SMPD_FALSE;
-}
-#endif
 
 #undef FCNAME
 #define FCNAME "next_launch_node"
