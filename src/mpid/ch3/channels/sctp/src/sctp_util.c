@@ -774,8 +774,7 @@ int MPIDU_Sctp_get_conninfo_from_bc( const char *bc,
        by changing the Sock_post_connect to only accept interface
        address.  Note also that Windows does not have the inet_pton 
        routine; the Windows version of this routine will need to 
-       be identified or written.  See also channels/sock/ch3_progress.c and
-       channels/ssm/ch3_progress_connect.c */
+       be identified or written.  See also channels/sock/ch3_progress.c */
     *hasIfaddr = 0;
 #if !defined(HAVE_WINDOWS_H) && defined(HAVE_INET_PTON)
     str_errno = MPIU_Str_get_string_arg(bc, MPIDI_CH3I_IFNAME_KEY, 

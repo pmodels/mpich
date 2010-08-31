@@ -411,7 +411,7 @@ Event errors: a MPI error code with a Sock extended error class
 . MPIDU_SOCK_ERR_NOMEM - unable to allocate required memory
 - MPIDU_SOCK_ERR_FAIL - other error?
 
-<BRT> Any other event errors?  Does the sock/ssm channel require finer granularity?
+<BRT> Any other event errors?  Does the sock channel require finer granularity?
 
 Notes:
 The host description of the listening host is supplied MPIDU_Sock_get_host_description().  The intention is that the description

@@ -144,9 +144,7 @@ int MPIDI_PG_Finalize(void)
        That reference is released
        only after ch3_finalize returns. If I release it before ch3_finalize, 
        the ssm channel crashes. */
-
 #if 0
-
     if (MPIDI_PG_list != NULL)
     { 
 	

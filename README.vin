@@ -448,40 +448,6 @@ channel can be configured using the following option:
 
   --with-device=ch3:sock
 
-dllchan
--------
-dllchan is an *experimental* channel for supporting dynamic loading of
-other channels. This channel is unsupported as well.
-
-To use this channel, configure with:
-
-  --with-device=ch3:dllchan:sock,shm,ssm
-
-This provides the sock, shm, and ssm channels as options, with sock
-being the default. In addition, you must specify shared library
-builds using:
-
-  --enable-shared
-
-This option tries to pick the appropriate linker parameters for your
-platform, and is known to work under Linux and when using gcc (or
-compilers that mimic gcc for shared-library construction) and on MAC
-OSX. For other platforms, or for users who wish to manually control
-the linker parameters, this can be done using:
-
-  --enable-sharedlibs=gcc (for Linux)
-  --enable-sharedlibs=gcc-osx (for MACOS)
-  --enable-sharedlibs=solaris-cc (for solaris)
-
-To select a channel other than the default channel, set the
-environment variable MPICH_CH3CHANNEL to the channel name (i.e., sock,
-shm, or ssm).
-
-There are known problems with this channel, particularly during the
-make step. You may find that some symbols are not found when loading
-the libraries. If you want to try this experimental channel, please
-let us know what does and does not work.
-
 sctp channel
 ------------
 The SCTP channel is a new channel using the Stream Control

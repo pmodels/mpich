@@ -378,8 +378,7 @@ int MPIDU_Sock_get_conninfo_from_bc( const char *bc,
        by changing the Sock_post_connect to only accept interface
        address.  Note also that Windows does not have the inet_pton 
        routine; the Windows version of this routine will need to 
-       be identified or written.  See also channels/sock/ch3_progress.c and
-       channels/ssm/ch3_progress_connect.c */
+       be identified or written.  See also channels/sock/ch3_progress.c */
     *hasIfaddr = 0;
 #if !defined(HAVE_WINDOWS_H) && defined(HAVE_INET_PTON)
     str_errno = MPIU_Str_get_string_arg(bc, MPIDI_CH3I_IFNAME_KEY, 
@@ -1100,10 +1099,9 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 }
 /* end MPIDI_CH3I_VC_post_sockconnect() */
 
-/* Given a connection string, start the process of creating a socket 
-   connection to that designated interface (on a node).  This routine 
-   is used both in MPIDI_CH3I_VC_post_sockconnect and in 
-   MPIDI_CH3I_VC_post_connect in the ch3:ssm channel. 
+/* Given a connection string, start the process of creating a socket
+   connection to that designated interface (on a node).  This routine
+   is used in MPIDI_CH3I_VC_post_sockconnect.
 
    vallen = sizeof(val)
 */
@@ -1158,7 +1156,7 @@ int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 	   the host description string instead of the interface address
 	   bytes when posting a socket connection.  This should be fixed 
 	   by changing the Sock_post_connect to only accept interface
-	   address.  See also channels/ssm/ch3_progress_connect.c */
+	   address. */
 #ifndef HAVE_WINDOWS_H
 	if (hasIfaddr) {
 	    mpi_errno = MPIDU_Sock_post_connect_ifaddr(MPIDI_CH3I_sock_set, 

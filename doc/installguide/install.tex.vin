@@ -615,7 +615,6 @@ the \texttt{ch3:sock} method is suggested.
 % or MPICH_PORT_RANGE.
 %
 %\subsection{Special Features of Each Communication Device}
-%\subsubsection{ch3:shm}
 %\subsubsection{ch3:nemesis}
 
 \section{Installing and Managing Process Managers}
