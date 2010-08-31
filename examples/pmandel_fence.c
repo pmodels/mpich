@@ -1023,7 +1023,7 @@ void read_mand_args(int argc, char *argv[], int *o_max_iterations,
 	    else
 		*save_image = 0;
 	}
-#if 0
+#if DEBUG2
 	if (myid == 0)
 	{
 	    printf("Doing %d iterations over (%.2lf:%.2lf,%.2lf:%.2lf) on a %d x %d grid\n",
@@ -1121,7 +1121,7 @@ void check_mand_params(int *m_max_iterations,
 	*m_pixels_down = MAX_HEIGHT;
     }
 
-#if 0
+#if DEBUG2
     printf("%d iterations over (%.2lf:%.2lf,%.2lf:%.2lf), %d x %d grid, diverge value %lf\n",
 	*m_max_iterations, *m_x_min,*m_x_max,*m_y_min,*m_y_max,
 	*m_pixels_across, *m_pixels_down, *m_divergent_limit);
@@ -1141,7 +1141,7 @@ void check_julia_params(double *julia_x_constant, double *julia_y_constant)
     }
 #endif
 
-#if 0
+#if DEBUG2
     /* In theory, any point can be investigated, although it's not much point
     if it's outside of the area viewed.  But, hey, that's not our problem */
     printf("Exploring julia set around (%lf, %lf)\n", *julia_x_constant, *julia_y_constant);
