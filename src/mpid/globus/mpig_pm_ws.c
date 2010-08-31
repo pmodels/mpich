@@ -228,21 +228,6 @@ static int mpig_pm_ws_init(int * argc, char *** argv, mpig_pm_t * const pm, bool
     if (mpig_pm_ws_Initialized)
 	return MPI_SUCCESS;
 
-#if 0
-    /* START NICK: debugging */
-    {
-	char fname[100];
-	Pid = getpid();
-	sprintf(fname, "mpig_pm_ws.%ud.log", Pid);
-	if ((Log_fp = fopen(fname, "w")) == NULL)
-	{
-	    sprintf(mpig_pm_ws_ErrorMsg, "ERROR: file %s: line %d: unable to fopen log file%s", __FILE__, __LINE__, fname); \
-	    MPID_Abort(NULL, MPI_ERR_OTHER, 1, mpig_pm_ws_ErrorMsg); \
-	} /* endif */
-    }
-    /* END NICK: debugging */
-#endif
-
     /****************/
     /* get env vars */
     /****************/
@@ -624,20 +609,6 @@ static int mpig_pm_ws_abort(mpig_pm_t * const pm, int exit_code)
 		   know how to use any of that information to help 
 		   guide my next move and so I ignore them for now.
 		*/
-#if 0
-if(result != GLOBUS_SUCCESS)
-{
-    if(fault_type != GLOBUS_SUCCESS)
-    {
-	/* check fault */
-	...
-
-	xsd_any_destroy(fault);
-    } /* endif */
-
-    /* deal with error */
-} /* endif */
-#endif
 		/* dunno if this all of this "destroy" at the end of
 		this loop is necessary if every time, or worst, 
 		if it breaks things, but what the heck */
@@ -1352,21 +1323,6 @@ static void mpig_pm_ws_rz_data_callback(globus_result_t res, const char *data, s
 /***************************/
 /* LOCAL UTILITY FUNCTIONS */
 /***************************/
-
-#if 0
-static void print_byte_array(char *v, int vlen)
-{
-    int i;
-
-    fprintf(Log_fp, "%ud: byte array %d bytes >", Pid, vlen); fflush(Log_fp);
-    for (i = 0; i < vlen; i ++)
-    {
-        fprintf(Log_fp, "%c", (isprint(v[i]) ? v[i] : '.')); fflush(Log_fp);
-    } /* endfor */
-    fprintf(Log_fp, "<\n"); fflush(Log_fp);
-
-} /* end print_byte_array() */
-#endif
 
 static globus_result_t set_attr_security(
     globus_soap_message_attr_t          message_attr,

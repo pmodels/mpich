@@ -3553,45 +3553,8 @@ static void mpig_cm_xio_disconnnect_handle_close_proc(globus_xio_handle_t handle
 	    mpig_cm_xio_vc_set_state(vc, MPIG_CM_XIO_VC_STATE_UNCONNECTED);
 	}
 
-#if 0
-	/* MPI-2-NOTE: a MPI_Comm_disconnect() followed closely by or simultaneously with a MPI_Comm_connect/accept() can cause
-	 * two different scenarios to occur.
-	 *
-	 * first, an incoming OPEN_PROC_REQ message may arrive to establish a connection for this VC before the disconnect protocol
-	 * has finished.  in that case, the temp_vc for the new connection is queued.  we need to check that queue and complete
-	 * the connection if an entry is found.
-	 *
-	 * second, after a new communicator referencing this VC is formed using MPI_Comm_connect/accept(), one or more send
-	 * requests could have been enqueued while the disconnect protocol was in progress.  if an new connection request has not
-	 * been received (see the first scenario), then a new connection must be initiated from this end.
-	 */
-
-	/* MPI-2-FIXME: check the pending connection queue for a temp_vc with the same PG id and PG rank as ours */
-	if (matching temp VC in pending connections queue)
-	{
-	    ...;
-
-	    mpig_cm_xio_vc_inc_ref_count(vc, &vc_was_inuse);
-	    vc_inuse = TRUE;
-	}
-	else if (mpig_cm_xio_sendq_empty(vc) == FALSE)
-	{
-	    /* MPI-2-FIXME: if no pending connection exists, and the send queue is not empty, then start forming a new
-	       connection */
-	    bool_t failed;
-
-	    MPIU_Assert(vc_inuse);
-	    
-	    MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_CEMT | MPIG_DEBUG_LEVEL_VC, "VC send queue not empty; initiating reconnect: vc="
-		MPIG_PTR_FMT, MPIG_PTR_CAST(vc)));
-	    mpi_errno = mpig_cm_xio_client_connect_proc(vc);
-	    MPIU_ERR_CHKANDJUMP1((mpi_errno), mpi_errno, MPI_ERR_OTHER, "**globus|cm_xio|client_connect_proc",
-		"**globus|cm_xio|client_connect_proc %p", vc);
-	}
-#else
 	/* MPI-2-NOTE: this assert is only true for MPI-1 code.  it should be removed when MPI-2 support is added. */
 	MPIU_Assert(mpig_cm_xio_sendq_empty(vc));
-#endif
 
 	/*
 	 * decrement the reference count of the VC to compensate for the bump in mpig_cm_xio_disconnect().  remove the VC from

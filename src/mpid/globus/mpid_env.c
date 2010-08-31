@@ -525,14 +525,6 @@ int MPID_Finalize()
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_ADI3, "exiting: mpi_errno=" MPIG_ERRNO_FMT, mpi_errno));
     MPIG_FUNC_EXIT(MPID_STATE_MPID_FINALIZE);
     return mpi_errno;
-
-#if 0    
-  fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    /* MPID_Abort(NULL, mpi_errno, 255, "ERROR: MPID_Finalize was about to return a nonzero error code"); */
-    goto fn_return;
-    /* --END ERROR HANDLING-- */
-#endif
 }
 /* MPID_Finalize() */
 
@@ -711,14 +703,6 @@ int MPID_Get_universe_size(int  * universe_size)
     MPIG_DEBUG_PRINTF((MPIG_DEBUG_LEVEL_FUNC | MPIG_DEBUG_LEVEL_ADI3, "exiting"));
     MPIG_FUNC_EXIT(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
     return mpi_errno;
-
-#if 0    
-  fn_fail:
-    {   /* --BEGIN ERROR HANDLING-- */
-	*universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
-	goto fn_return;
-    }   /* --END ERROR HANDLING-- */
-#endif
 }
 /* MPID_Get_universe_size() */
 
