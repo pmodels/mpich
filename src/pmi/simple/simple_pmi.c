@@ -51,11 +51,8 @@
 #include "mpimem.h"
 
 /* Temporary debug definitions */
-#if 0
-#define DBG_PRINTF(args) printf args ; fflush(stdout)
-#else
+/* #define DBG_PRINTF(args) printf args ; fflush(stdout) */
 #define DBG_PRINTF(args)
-#endif
 
 #include "pmi.h"
 #include "simple_pmiutil.h"

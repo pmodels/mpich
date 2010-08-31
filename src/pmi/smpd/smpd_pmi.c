@@ -322,29 +322,6 @@ int PMI_Spawn_multiple(int count,
 	errors);
 }
 
-#if 0
-int PMI_Parse_option(int num_args, char *args[], int *num_parsed, PMI_keyval_t **keyvalp, int *size)
-{
-    if (fn.PMI_Parse_option == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Parse_option(num_args, args, num_parsed, keyvalp, size);
-}
-
-int PMI_Args_to_keyval(int *argcp, char *((*argvp)[]), PMI_keyval_t **keyvalp, int *size)
-{
-    if (fn.PMI_Args_to_keyval == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Args_to_keyval(argcp, argvp, keyvalp, size);
-}
-
-int PMI_Free_keyvals(PMI_keyval_t keyvalp[], int size)
-{
-    if (fn.PMI_Free_keyvals == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Free_keyvals(keyvalp, size);
-}
-#endif
-
 int PMI_Publish_name( const char service_name[], const char port[] )
 {
     if (fn.PMI_Publish_name == NULL)

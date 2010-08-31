@@ -30,13 +30,6 @@ ExpKeyOneWin32CompletionProcessor(
     PVOID pOverlapped
     );
 
-#if 0
-//
-// The only completion port, supporting all events
-//
-static HANDLE s_port;
-#endif
-
 //
 // The registered processors. This module supports up to 4 processors where
 // processor zero is pre-registered for overlapped operations completion.
@@ -169,21 +162,6 @@ MPIU_ExInitialize(
     void
     )
 {
-#if 0
-    MPIU_Assert(s_port == NULL);
-    s_port = CreateIoCompletionPort(
-                INVALID_HANDLE_VALUE,   // FileHandle
-                NULL,   // ExistingCompletionPort
-                0,      // CompletionKey
-                0       // NumberOfConcurrentThreads
-                );
-
-    if(s_port != NULL)
-        return MPI_SUCCESS;
-
-    return MPI_ERR_INTERN;
-#endif
-
     return MPI_SUCCESS;
 }
 
@@ -193,11 +171,6 @@ MPIU_ExFinalize(
     void
     )
 {
-#if 0
-    MPIU_Assert(s_port != NULL);
-    CloseHandle(s_port);
-    s_port = NULL;
-#endif
     return MPI_SUCCESS;
 }
 

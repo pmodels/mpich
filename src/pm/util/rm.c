@@ -149,18 +149,6 @@ int MPIE_ChooseHosts( ProcessWorld *pWorld,
 	    }
 	}
 	
-#if 0
-	if (mt->nHosts == 0) {
-	    if (arch) {
-		MPIU_Error_printf( "No machines specified for %s\n", arch );
-	    }
-	    else {
-		MPIU_Error_printf( "No machines specified\n" );
-	    }
-		
-	    return 1;
-	}
-#endif
 	app = app->nextApp;
     }
     if (mt) {

@@ -32,12 +32,6 @@
 /* stdio is needed for vsprintf and vsnprintf */
 #include <stdio.h>
 
-#if 0
-/* TEMP TO KEEP COMPILER HAPPY */
-void MPIR_Err_print_stack_string_ext(int errcode, char *str, int maxlen, 
-				     MPIR_Err_get_class_string_func_t fn);
-#endif
-
 /*
  * Structure of this file
  *
@@ -558,10 +552,6 @@ int MPIR_Err_create_code_valist( int lastcode, int fatal, const char fcname[],
 #else
     int errcode = lastcode;
     if (lastcode == MPI_SUCCESS) errcode = error_class;
-#if 0
-    printf( "[%s:%d]:Lastcode %d, error class %d (%s), returning %d\n", 
-	    fcname, line, lastcode, error_class, generic_msg, errcode );
-#endif
     return errcode;
 #endif /* MSG_LEVEL == GENERIC */
 }
