@@ -101,13 +101,6 @@ echo "done"
 ## Initialize variables to default values (possibly from the environment)
 ########################################################################
 
-error_summary=""
-
-# final_status records whether there have been problems in updatefiles
-# 1 = warning, 3 = fatal, 2 = reserved for future use, 
-# 0 = no problems detected.
-final_status=0
-
 # Default choices
 do_bindings=yes
 do_geterrmsgs=yes
@@ -581,7 +574,7 @@ fi
 
 echo_n "Checking if xargs accepts -r... "
 if [ ! -z "`find . -name __random_file__`" ] ; then
-    echo "error: found a file named __random_file__"
+    error "found a file named __random_file__"
     exit 1
 else
     find . -name __random_file__ | xargs rm -rf > /dev/null 2>&1
@@ -613,7 +606,7 @@ if [ -f README.vin ] ; then
     echo "done"
 else
     echo "error"
-    echo "README.vin file not present, unable to update README version number (perhaps we are running in a release tarball source tree?)"
+    error "README.vin file not present, unable to update README version number (perhaps we are running in a release tarball source tree?)"
 fi
 
 
@@ -717,11 +710,9 @@ if [ $do_geterrmsgs = "yes" ] ; then
             if [ -s .err2 ] ; then
                 warn "Because of errors in extracting error messages, the file"
                 warn "src/mpi/errhan/defmsg.h was not updated."
-	        error_summary="$error_summary \
-Error message files in src/mpi/errhan were not updated."
-                update_errdefs=no
-	        final_status=1
-   	        rm -f .tmp
+		error "Error message files in src/mpi/errhan were not updated."
+   	        rm -f .tmp .err .err2
+		exit 1
             fi
             rm -f .err .err2
         else
@@ -1092,30 +1083,3 @@ if [ "$do_build_configure" = "yes" ] ; then
 	fi
     done
 fi
-
-
-# The following must be the last statements executed
-if [ -n "$error_summary" ] ; then
-    echo " "
-    echo "Problems encountered while running updatefiles."
-    echo "These may cause problems when configuring or building MPICH2."
-    echo "$error_summary"
-fi
-case $final_status in 
-   0) # all is well
-	;;
-   1) # warnings
- 	;;
-   2) # reserved for future use
-	;;
-   3) # fatal, cannot continue
-	echo "updatefiles step failed!  Review the output and fix the problem"
-        echo "before continuing"
-        exit 1
-	;;	
-   *) # unknown
-	echo "Internal error in updatefiles; final_status=$final_status"
-	exit 1
-	;;
-esac
-
