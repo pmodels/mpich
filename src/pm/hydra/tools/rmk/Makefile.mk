@@ -9,6 +9,10 @@ AM_CPPFLAGS += -I$(top_srcdir)/tools/rmk/include -I$(top_builddir)/tools/rmk/inc
 include tools/rmk/src/Makefile.mk
 include tools/rmk/utils/Makefile.mk
 
+if hydra_rmk_none
+include tools/rmk/none/Makefile.mk
+endif
+
 if hydra_rmk_pbs
 include tools/rmk/pbs/Makefile.mk
 endif
