@@ -391,7 +391,7 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
 
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
             /* The proxy has not been setup yet */
-            if (proxy->control_fd == HYD_FD_UNSET)
+            if (proxy->control_fd == HYD_FD_UNSET || proxy->control_fd == HYD_FD_CLOSED)
                 continue;
 
             status = HYDT_dmx_deregister_fd(proxy->control_fd);
