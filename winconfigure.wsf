@@ -1281,9 +1281,10 @@ End Function
 '
 ' Get MPICH2 Version & ABI Version
 '
-Function GetMPICH2Versions(ByRef mpich2Version, ByRef mpich2ABIVersion)
+Function GetMPICH2Versions(ByRef mpich2Version, ByRef mpich2ABIVersion, ByRef mpich2ReleaseDate)
     mpich2Version = "0.0"
     mpich2ABIVersion = "0.0"
+    mpich2ReleaseDate = "0/0/0"
     if f.FileExists("maint\Version") then
         Dim fin, str
         Set fin = f.OpenTextFile("maint\Version")
@@ -1291,22 +1292,31 @@ Function GetMPICH2Versions(ByRef mpich2Version, ByRef mpich2ABIVersion)
             Dim strTokenArr
             str = fin.ReadLine()
             Trim(str)
-            strTokenArr = Split(str, " ", -1 , 1)
-            If UBound(strTokenArr, 1) = 1 Then
-                If(StrComp(Left(strTokenArr(0), 14), "MPICH2_VERSION") = 0) Then
-                    mpich2Version = strTokenArr(1)
-                ElseIf(StrComp(Left(strTokenArr(0), 17), "MPICH2_ABIVERSION") = 0) Then
-                    mpich2ABIVersion = Replace(strTokenArr(1), ":", ".")
-                Else
-                    printMsg "ERROR", "Invalid String """ & str & """ found in mpich2 Version file"
-                End If
+            If(StrComp(Left(str, 1), "#") = 0) OR (str = "") Then
+                ' Ignore comments and newlines
             Else
-                printMsg "ERROR", "Invalid format in mpich2 Version file. Expected: ""MPICH2_VERSION_NAME MPICH2_VERSION"" format"
+                strTokenArr = Split(str, "=", -1 , 1)
+                If UBound(strTokenArr, 1) = 1 Then
+                    If(StrComp(Left(strTokenArr(0), 14), "MPICH2_VERSION") = 0) Then
+                        mpich2Version = strTokenArr(1)
+                    ElseIf(StrComp(Left(strTokenArr(0), 17), "MPICH2_ABIVERSION") = 0) Then
+                        mpich2ABIVersion = Replace(strTokenArr(1), ":", ".")
+                    ElseIf(StrComp(Left(strTokenArr(0), 19), "MPICH2_RELEASE_DATE") = 0) Then
+                        mpich2ReleaseDate = strTokenArr(1)
+                    ElseIf(StrComp(Left(strTokenArr(0), 19), "libmpich_so_version") = 0) Then
+                        'Ignore libmpich so version
+                    Else
+                        printMsg "ERROR", "Invalid String """ & str & """ found in mpich2 Version file"
+                    End If
+                Else
+                    printMsg "ERROR", "Invalid format in mpich2 Version file. Expected: ""MPICH2_VERSION_NAME MPICH2_VERSION"" format"
+                End If
             End If
         Loop
         fin.Close()
     end if
-    If (StrComp(mpich2Version, "0.0") <> 0) AND (StrComp(mpich2ABIVersion, "0.0") <> 0) Then
+    ' We only care about MPICH2 version for now
+    If (StrComp(mpich2Version, "0.0") <> 0) Then
         GetMPICH2Versions = True
     Else
         GetMPICH2Versions = False
@@ -1526,8 +1536,8 @@ Function GetMPICH2NumVersion(ver)
 	printMsg "VERBOSE", " MPICH2 NUM VERSION " & numVer
 End Function
 
-GetMPICH2Versions mpich2Version, mpich2ABIVersion
-printMsg "VERBOSE", "MPICH2_VERSION = " & mpich2Version & " MPICH2_ABIVERSION = " & mpich2ABIVersion
+GetMPICH2Versions mpich2Version, mpich2ABIVersion, mpich2ReleaseDate
+printMsg "VERBOSE", "MPICH2_VERSION = " & mpich2Version & " MPICH2_RELEASE_DATE = " & mpich2ReleaseDate
 mpich2NumVersion = GetMPICH2NumVersion(mpich2Version)
 
 Function RegExpFind(pattern, str)
