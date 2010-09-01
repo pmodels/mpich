@@ -125,20 +125,6 @@ int main(int argc, char **argv)
     }
 /* end of initialization */
 
-#if 0 
-    /* XXX: make the romio testcases handle more than one command line 
-     * argument.. like --aggregation  */
-    
-    /* for deferred open: hint stuff */
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_no_indep_rw", "true");
-    MPI_Info_set(info, "romio_cb_read", "enable");
-    MPI_Info_set(info, "romio_cb_write", "enable");
-    MPI_Info_set(info, "cb_nodes", "1");
-    MPI_Info_set(info, "cb_config_list", "schwinn.mcs.anl.gov:1");
-#endif
-
-
     /* write the array to the file */
     errcode = MPI_File_open(MPI_COMM_WORLD, filename, 
 		    MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);

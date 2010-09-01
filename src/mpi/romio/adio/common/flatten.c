@@ -18,13 +18,6 @@
 #endif
 
 void ADIOI_Optimize_flattened(ADIOI_Flatlist_node *flat_type);
-#if 0 /* unused function ADIOI_Flatten_copy_type()*/
-void ADIOI_Flatten_copy_type(ADIOI_Flatlist_node *flat,
-			     int old_type_start,
-			     int old_type_end,
-			     int new_type_start,
-			     ADIO_Offset offset_adjustment);
-#endif /* unused function ADIOI_Flatten_copy_type()*/
 /* flatten datatype and add it to Flatlist */
 void ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
@@ -1135,26 +1128,3 @@ void ADIOI_Delete_flattened(MPI_Datatype datatype)
 	ADIOI_Free(flat);
     }
 }
-#if 0 /* unused function ADIOI_Flatten_copy_type()*/
-/* ADIOI_Flatten_copy_type()
- * flat - pointer to flatlist node holding offset and lengths
- * start - starting index of src type in arrays
- * end - one larger than ending index of src type (makes loop clean)
- * offset_adjustment - amount to add to "indices" (offset) component
- *                     of each off/len pair copied
- */
-void ADIOI_Flatten_copy_type(ADIOI_Flatlist_node *flat,
-			     int old_type_start,
-			     int old_type_end,
-			     int new_type_start,
-			     ADIO_Offset offset_adjustment)
-{
-    int i, out_index = new_type_start;
-
-    for (i=old_type_start; i < old_type_end; i++) {
-	flat->indices[out_index]   = flat->indices[i] + offset_adjustment;
-	flat->blocklens[out_index] = flat->blocklens[i];
-	out_index++;
-    }
-}
-#endif /* unused function ADIOI_Flatten_copy_type()*/

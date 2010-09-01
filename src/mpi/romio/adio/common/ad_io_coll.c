@@ -108,14 +108,6 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
        likely to be common, let me do the simplest thing possible here:
        Each process completes all pending nonblocking operations before
        completing. */
-#if 0
-     /* the "new generalized request" approach makes this impossible */
-    if (rdwr == ADIOI_WRITE) {
-	ADIOI_Complete_async(error_code);
-	if (*error_code != MPI_SUCCESS) return;
-	MPI_Barrier(fd->comm);
-    }
-#endif
 
     nprocs_for_coll = fd->hints->cb_nodes;
     orig_fp = fd->fp_ind;

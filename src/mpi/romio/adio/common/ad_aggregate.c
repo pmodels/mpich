@@ -83,13 +83,6 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
 
     ADIOI_UNREFERENCED_ARG(fd_start);
 
-#ifdef AGG_DEBUG
-#if 0
-    FPRINTF(stdout, "off = %lld, min_off = %lld, len = %lld, fd_size = %lld\n",
-	    off, min_off, *len, fd_size);
-#endif
-#endif
-    
     /* get an index into our array of aggregators */
     rank_index = (int) ((off - min_off + fd_size)/ fd_size - 1);
 

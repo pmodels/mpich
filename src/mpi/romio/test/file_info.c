@@ -16,21 +16,11 @@
  * default hints.  These hints are specific to the MPI-IO implementation, so
  * pick one of the following profiles to use */
 
-#if 0  /* hints are for BlueGene */
-#   define DFLT_CB_BUFFER_SIZE     16777216
-#   define DFLT_IND_RD_BUFFER_SIZE 4194304
-#   define DFLT_IND_WR_BUFFER_SIZE 4194304
-#   define DFLT_ROMIO_CB_READ      "enable"
-#   define DFLT_ROMIO_CB_WRITE     "enable"
-#   define SKIP_CB_CONFIG_LIST_TEST     1
-#endif
-#if 1 /* hints for MPICH2 */
 #   define DFLT_CB_BUFFER_SIZE     16777216
 #   define DFLT_IND_RD_BUFFER_SIZE 4194304
 #   define DFLT_IND_WR_BUFFER_SIZE 524288
 #   define DFLT_ROMIO_CB_READ      "automatic"
 #   define DFLT_ROMIO_CB_WRITE     "automatic"
-#endif
 /* #undef INFO_DEBUG */
 
 /* Test will print out information about unexpected hint keys or values that
@@ -123,13 +113,6 @@ int main(int argc, char **argv)
 	}
 	else if (!strcmp("cb_nodes", key)) {
 	    /* unreliable test -- just ignore value */
-#if 0
-	    if (atoi(value) != 1) {
-		errs++;
-		if (verbose) fprintf(stderr, "cb_nodes is %d; should be %d\n", atoi(value),
-				     1);
-	    }
-#endif
 	}
 	else if (!strcmp("romio_no_indep_rw", key)) {
 	    if (strcmp("false", value)) {
@@ -161,13 +144,6 @@ int main(int argc, char **argv)
 	}
 	else if (!strcmp("romio_ds_write", key)) {
 	    /* Unreliable test -- value is file system dependent.  Ignore. */
-#if 0
-	    if (strcmp("automatic", value)) {
-		errs++;
-		if (verbose) fprintf(stderr, "romio_ds_write is set to %s; should be %s\n",
-				     value, "automatic");
-	    }
-#endif
 	}
 	else if (!strcmp("cb_config_list", key)) {
 #ifndef SKIP_CB_CONFIG_LIST_TEST
@@ -343,13 +319,6 @@ int main(int argc, char **argv)
 	}
 	else if (!strcmp("romio_ds_write", key)) {
 	    /* Unreliable test -- value is file system dependent.  Ignore. */
-#if 0
-	    if (strcmp("automatic", value)) {
-		errs++;
-		if (verbose) fprintf(stderr, "romio_ds_write is set to %s; should be %s\n",
-				     value, "automatic");
-	    }
-#endif
 	}
 	else if (!strcmp("cb_config_list", key)) {
 #ifndef SKIP_CB_CONFIG_LIST_TEST

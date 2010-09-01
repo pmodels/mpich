@@ -284,11 +284,6 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 	    }
 	}
     }
-#if 0
-    for (i = 0; i < nprocs; i++) {
-	FPRINTF(stdout, "buf_idx[%d] = 0x%x\n", i, buf_idx[i]);
-    }
-#endif
 #endif
 
     *count_my_req_procs_ptr = count_my_req_procs;

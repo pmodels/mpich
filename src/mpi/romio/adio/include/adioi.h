@@ -78,15 +78,6 @@ struct ADIOI_Hints_struct {
 
 };
 
-#if 0
-typedef int MPI_Datarep_conversion_function(void *userbuf,
-					    MPI_Datatype datatype,
-					    int count,
-					    void *filebuf,
-					    MPI_Offset position,
-					    void *extra_state);
-#endif
-
 typedef struct ADIOI_Datarep {
     char *name;
     void *state;
