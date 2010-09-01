@@ -7865,7 +7865,7 @@ If bRemoveFortran Then
 End If
 
 Sub UpdateSMPDVersion
-        GetMPICH2Versions mpich2VerStr, mpich2ABIVerStr
+        GetMPICH2Versions mpich2VerStr, mpich2ABIVerStr, mpich2ReleaseDate
 	printMsg "VERBOSE", "Creating src\pm\smpd\smpd_version.h"
 	Set fout = f.CreateTextFile("src\pm\smpd\smpd_version.h", true)
 	fout.WriteLine("#define SMPD_VERSION """ & mpich2VerStr & """")
