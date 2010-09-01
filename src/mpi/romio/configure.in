@@ -411,13 +411,13 @@ case $ARCH in
     ;;
 esac
 
-AC_PROG_CC
+PAC_PROG_CC
 
 if test "$NOF77" != 1 ; then
     # Grrr.   The autoconf test for F77 will abort the configure
     # if no compiler is found.  We'd prefer to simply turn off
     # support for Fortran, and/or give a more informative message.
-    AC_PROG_F77
+    PAC_PROG_F77
 fi
 if test "$CC" = "gcc" -a -z "$C_DEBUG_FLAG" ; then
      C_DEBUG_FLAG="-g -O -Wall -Wstrict-prototypes -Wmissing-prototypes"

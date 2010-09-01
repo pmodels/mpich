@@ -1,3 +1,10 @@
+dnl PAC_PROG_CXX - reprioritize the C++ compiler search order
+AC_DEFUN([PAC_PROG_CXX],[
+	PAC_PUSH_ALL_FLAGS
+	AC_PROG_CXX([g++ icpc pgCC xlC pathCC cl])
+	PAC_POP_ALL_FLAGS
+])
+
 dnl This is from crypt.to/autoconf-archive, slightly modified.
 dnl It defines bool as int if it is not availalbe
 dnl

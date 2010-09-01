@@ -1,38 +1,13 @@
-dnl
-dnl This is a replacement for AC_PROG_CC that does not prefer gcc and
-dnl that does not mess with CFLAGS.  See acspecific.m4 for the original defn.
-dnl
-dnl/*D
-dnl PAC_PROG_CC - Find a working C compiler
-dnl
-dnl Synopsis:
-dnl PAC_PROG_CC
-dnl
-dnl Output Effect:
-dnl   Sets the variable CC if it is not already set
-dnl
-dnl Notes:
-dnl   Unlike AC_PROG_CC, this does not prefer gcc and does not set CFLAGS.
-dnl   It does check that the compiler can compile a simple C program.
-dnl   It also sets the variable GCC to yes if the compiler is gcc.  It does
-dnl   not yet check for some special options needed in particular for 
-dnl   parallel computers, such as -Tcray-t3e, or special options to get
-dnl   full ANSI/ISO C, such as -Aa for HP.
-dnl
-dnl D*/
-dnl 2.52 doesn't have AC_PROG_CC_GNU
+dnl AC_PROG_CC_GNU
 ifdef([AC_PROG_CC_GNU],,[AC_DEFUN([AC_PROG_CC_GNU],)])
+
+dnl PAC_PROG_CC - reprioritize the C compiler search order
 AC_DEFUN([PAC_PROG_CC],[
-AC_CHECK_PROGS(CC, cc xlC xlc pgcc icc pathcc gcc )
-test -z "$CC" && AC_MSG_ERROR([no acceptable cc found in \$PATH])
-PAC_PROG_CC_WORKS
-AC_PROG_CC_GNU
-if test "$ac_cv_prog_gcc" = yes; then
-  GCC=yes
-else
-  GCC=
-fi
+	PAC_PUSH_ALL_FLAGS
+	AC_PROG_CC([gcc icc pgcc xlc xlC pathcc cc])
+	PAC_POP_ALL_FLAGS
 ])
+
 dnl
 dnl/*D
 dnl PAC_C_CHECK_COMPILER_OPTION - Check that a compiler option is accepted

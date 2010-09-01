@@ -29,10 +29,7 @@ AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# Bug in autoconf adds -O2 and -g by default
-save_cflags=$CFLAGS
-AC_PROG_CC
-CFLAGS=$save_cflags
+PAC_PROG_CC
 AC_C_CONST
 AC_C_RESTRICT
 

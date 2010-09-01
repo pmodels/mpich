@@ -19,12 +19,12 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # Reset link flags
 PAC_RESET_LINK_FLAGS()
 
+PAC_PROG_CC
 # Bug in autoconf adds -O2 and -g by default. Make sure we only get
 # the flags we want.
-save_cflags=$CFLAGS
-AC_PROG_CC
+PAC_PUSH_ALL_FLAGS
 AC_TYPE_SIZE_T
-CFLAGS=$save_cflags
+PAC_POP_ALL_FLAGS
 
 # Libtool might be required for third-party packages
 LT_INIT

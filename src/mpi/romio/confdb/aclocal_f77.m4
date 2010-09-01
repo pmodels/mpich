@@ -1,3 +1,11 @@
+dnl PAC_PROG_F77 - reprioritize the F77 compiler search order
+AC_DEFUN([PAC_PROG_F77],[
+	PAC_PUSH_ALL_FLAGS
+	AC_PROG_F77([gfortran ifort pgf77 pgf90 af77 g77 xlf f77 frt cf77 fort77 \
+			  fl32 xlf90 f90 pghpf epcf90 g95 xlf95 f95 fort ifc efc pgf95 lf95 ftn])
+	PAC_POP_ALL_FLAGS
+])
+
 dnl
 dnl/*D
 dnl PAC_PROG_F77_NAME_MANGLE - Determine how the Fortran compiler mangles

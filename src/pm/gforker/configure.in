@@ -74,8 +74,9 @@ dnl Determine the executable and object file extensions.  These
 dnl are needed for some operations under cygwin
 AC_EXEEXT
 AC_OBJEXT
-dnl Find a C compiler (choose gcc first)
-AC_PROG_CC
+
+dnl Find a C compiler
+PAC_PROG_CC
 
 PAC_ARG_STRICT
 AC_PROG_INSTALL

@@ -30,8 +30,11 @@ dnl       it may also be the name of a command for something other than
 dnl       the Fortran compiler (e.g., fc=file system check!)
 dnl D*/
 AC_DEFUN([PAC_PROG_FC],[
+PAC_PUSH_ALL_FLAGS
 AC_PROG_FC([m4_default([$1],
-                       [f90 xlf90 pgf90 ifort epcf90 f95 fort xlf95 lf95 pathf95 pathf90 gfortran g95 ifc efc])])
+		[gfortran ifort pgf90 pathf90 pathf95 xlf90 xlf95 f90 epcf90 f95 \
+		 fort lf95 g95 ifc efc])])
+PAC_POP_ALL_FLAGS
 ])
 dnl
 dnl PAC_FC_EXT checks for the default Fortran 90 program extension, f90 then f.

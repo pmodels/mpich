@@ -280,8 +280,8 @@ LIBS="$LIBS $MPICH2LIB_LIBS"
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
+PAC_PROG_CC
 PAC_PUSH_FLAG([CFLAGS])
-AC_PROG_CC
 AC_PROG_CPP
 # Bug in autoconf.  Restore cross settings
 if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
@@ -1702,17 +1702,13 @@ if test "$enable_f77" = "default" ; then
     # check to see if it works (which the PROG_F77 command does as well)
     # It also prefers g77 to f77, and doesn't know about other compilers
     # Also handle the bug that autoconf sets FFLAGS for you
-    saveFFLAGS=$FFLAGS
-    AC_PROG_F77
-    FFLAGS=$saveFFLAGS
+    PAC_PROG_F77
     if test -n "$F77" ; then 
         enable_f77_wasdefault=yes
         enable_f77=yes
     fi
 elif test "$enable_f77" = "yes" ; then
-    saveFFLAGS=$FFLAGS
-    AC_PROG_F77
-    FFLAGS=$saveFFLAGS
+    PAC_PROG_F77
 fi
 
 if test "$enable_f77" = yes ; then
@@ -1863,9 +1859,7 @@ if test "$enable_fc" = "default" -a "$enable_f77" = yes ; then
     FCFLAGS=$saveFCFLAGS
     if test -n "$FC" ; then 
         if test -z "$F77" ; then
-	    saveFFLAGS=$FFLAGS
-	    AC_PROG_F77
-	    FFLAGS=$saveFFLAGS
+	    PAC_PROG_F77
 	fi
 	#
 	# If we allow multiple weak symbols, we should test a name
@@ -2319,29 +2313,7 @@ if test "$enable_cxx" = "default" ; then
 fi
 
 if test "$enable_cxx" = "yes" ; then
-    # Save the current CXXFLAGS (see below for the reason)
-    saveCXXFLAGS=$CXXFLAGS
-    # Misfeature in autoconf.  While the macro name is PROG_CXX, it 
-    # looks at the CCC environment variable, not CXX, even though it 
-    # *sets* CXX!!!!
-    if test -z "$CCC" -a -n "$CXX" ; then
-        CCC="$CXX"
-    fi
-    AC_PROG_CXX
-    # Misfeature in autoconf.  When using gcc, PROG_CXX insists on setting 
-    # CXXFLAGS to -g -O2 if CXXFLAGS is not set.  This may be appropriate for
-    # many tools built with configure and gcc, but not always.  In particular,
-    # there seems to be no way to get gcc to use no extra flags if that is 
-    # desired.
-    if test -z "$saveCXXFLAGS" -a -n "$CXXFLAGS" ; then
-        # restore CXXFLAGS
-        # Note: This may not be correct if PROG_CXX decided to add other 
-        # flags to CXXFLAGS to enforce some behavior (such as ANSI/ISO C++),
-        # But we haven't seen that in practice.  It would be better
-        # if the CXXFLAGS were decomposed into flags-that-change-the-language
-        # that the compiler accepts from optimizations
-        CXXFLAGS=$saveCXXFLAGS
-    fi
+    PAC_PROG_CXX
     # Another bug in autoconf.  The checks for the C++ compiler do not
     # ensure that you can link a program that is built with the C++ 
     # compiler.  We've seen this error with gcc and icc, particularly

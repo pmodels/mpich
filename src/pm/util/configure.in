@@ -67,9 +67,9 @@ dnl     check for compiler characteristics
 dnl     check for library functions
 dnl     check for system services
 dnl Here are some sample tests
-dnl
-dnl Find a C compiler (choose gcc first)
-AC_PROG_CC
+
+dnl Find a C compiler
+PAC_PROG_CC
 PAC_PROG_MAKE
 AC_CHECK_PROGS(AR,ar)
 AC_SUBST([AR_FLAGS])

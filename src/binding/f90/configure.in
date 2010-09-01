@@ -146,9 +146,7 @@ pac_fc_f77_init="no"
 # This produces a table of range,kind
 if test -z "$CROSS_F90_ALL_INTEGER_MODELS" ; then
     if test "$pac_fc_f77_init" != "yes" ; then
-        saveFFLAGS=$FFLAGS
-        AC_PROG_F77
-        FFLAGS=$saveFFLAGS
+        PAC_PROG_F77
         # We assume that the Fortran 77 and Fortran 90 linkers are compatible
         PAC_PROG_F77_LINKER_WITH_C
         # For name mangle, we need the library flags
@@ -168,9 +166,7 @@ AC_SUBST(FC_ALL_INTEGER_MODELS)
 #
 if test -z "$CROSS_F90_INTEGER_MODEL_MAP" ; then
     if test "$pac_fc_f77_init" != "yes" ; then
-        saveFFLAGS=$FFLAGS
-        AC_PROG_F77
-        FFLAGS=$saveFFLAGS
+        PAC_PROG_F77
         # We assume that the Fortran 77 and Fortran 90 linkers are compatible
         PAC_PROG_F77_LINKER_WITH_C
         # For name mangle, we need the library flags

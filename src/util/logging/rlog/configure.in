@@ -54,9 +54,9 @@ if test -z "$master_top_builddir" ; then
 fi
 export master_top_builddir
 AC_SUBST(master_top_builddir)
-dnl
-dnl Find a C compiler (choose gcc first)
-AC_PROG_CC
+
+dnl Find a C compiler
+PAC_PROG_CC
 AC_PATH_PROG(AR,ar)
 AC_SUBST(AR_FLAGS)
 # Note that we set RANLIB to true if we don't find it (some systems neither

@@ -35,7 +35,7 @@ dnl are needed for some operations under cygwin
 AC_EXEEXT
 AC_OBJEXT
 # Checking for programs.
-AC_PROG_CC
+PAC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_LN_S
 # A quick check to ensure that install-sh has the execute bit set
@@ -43,7 +43,7 @@ AC_PROG_LN_S
 if test -f install.sh -a ! -x install.sh ; then chmod +x install.sh ; fi
 AC_PROG_INSTALL
 
-MPD_AC_PROG_CHECK_INSTALL_WORKS
+PAC_PROG_CHECK_INSTALL_WORKS
 
 if test "$installOk" = "no" ; then
     # echo "RMB1: SETTING install"
