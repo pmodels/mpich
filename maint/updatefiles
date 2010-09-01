@@ -829,6 +829,8 @@ if test -x maint/genparams -a "$do_getparms" = "yes" ; then
         error "unable to generate parameter handling code"
         exit 1
     fi
+else
+    echo "skipped"
 fi
 
 # simplemake
