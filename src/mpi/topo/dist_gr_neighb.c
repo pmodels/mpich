@@ -35,15 +35,15 @@
 MPI_Dist_graph_neighbors - Provides adjacency information for a distributed graph topology.
 
 Input Parameters:
-+ comm - descr (type)
-. maxindegree - descr (type)
-- maxoutdegree - descr (type)
++ comm - communicator with distributed graph topology (handle)
+. maxindegree - size of sources and sourceweights arrays (non-negative integer)
+- maxoutdegree - size of destinations and destweights arrays (non-negative integer)
 
 Output Parameter:
-+ sources - descr (type)
-. sourceweights - descr (type)
-. destinations - descr (type)
-- destweights - descr (type)
++ sources - processes for which the calling process is a destination (array of non-negative integers)
+. sourceweights - weights of the edges into the calling process (array of non-negative integers)
+. destinations - processes for which the calling process is a source (array of non-negative integers)
+- destweights - weights of the edges out of the calling process (array of non-negative integers)
 
 .N ThreadSafe
 
