@@ -7333,10 +7333,10 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("# create special rules for the TraceInput.dll source files since they need to include Java paths")
 	mfile.WriteLine("$(RLOG_OUTDIR)\logformat_trace_InputLog.obj: ..\src\util\logging\rlog\logformat_trace_InputLog.c")
-	mfile.WriteLine("    $(cc) $(cflags) /I..\src\mpe2\src\slog2sdk\src\logformat\trace -DHAVE_STRNICMP /I$(JAVA_HOME)\include /I$(JAVA_HOME)\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\logformat_trace_InputLog.c")
+	mfile.WriteLine("    $(cc) $(cflags) /I..\src\mpe2\src\slog2sdk\src\logformat\trace -DHAVE_STRNICMP /I""$(JAVA_HOME)""\include /I""$(JAVA_HOME)""\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\logformat_trace_InputLog.c")
 	mfile.WriteLine
 	mfile.WriteLine("$(RLOG_OUTDIR)\trace_input.obj: ..\src\util\logging\rlog\trace_input.c")
-	mfile.WriteLine("    $(cc) $(cflags) /DHAVE_STRNICMP /I..\src\mpe2\src\slog2sdk\src\logformat\trace /I$(JAVA_HOME)\include /I$(JAVA_HOME)\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\trace_input.c")
+	mfile.WriteLine("    $(cc) $(cflags) /DHAVE_STRNICMP /I..\src\mpe2\src\slog2sdk\src\logformat\trace /I""$(JAVA_HOME)""\include /I""$(JAVA_HOME)""\include\win32 /Fo""$(RLOG_OUTDIR)\\"" /Fd""$(RLOG_OUTDIR)\\"" ..\src\util\logging\rlog\trace_input.c")
 	mfile.WriteLine
 	mfile.WriteLine("trace_input_objs = \")
 	mfile.WriteLine("	$(RLOG_OUTDIR)\logformat_trace_InputLog.obj \")
