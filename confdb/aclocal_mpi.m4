@@ -305,7 +305,7 @@ case $ac_mpi_type in
         CC=$MPICC
         F77=$MPIF77
 	if test "X$MPICXX" != "X" ; then CXX=$MPICXX ; fi
-	if test "X$MPIF90" !- "X" ; then F90=$MPIF90 ; fi
+	if test "X$MPIF90" != "X" ; then F90=$MPIF90 ; fi
 	;;
 
 	*)
