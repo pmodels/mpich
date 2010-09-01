@@ -2,14 +2,13 @@ SUBDIRS_mpe_dir = mpe2
 SUBDIRS = mpl mpid mpi util nameserv binding env packaging @mpe_dir@ pmi pm .
 # Add "include" to the directories used for creating the TAGS files
 TAGS_DIRS = include
-NOTSIMPLEMAKE_SUBDIRS = mpl mpe2
+NOTSIMPLEMAKE_SUBDIRS = mpl mpe2 openpa
 # We need to invoke the distclean target in the include directory
 distclean-local:
 	(cd include && $(MAKE) distclean)
 all-postamble:
-	build_prefix=`cd .. && pwd` && \
-	for dir in mpl openpa ; do \
-	    (cd $$dir && ${MAKE} prefix=$$build_prefix exec_prefix=$$build_prefix \
-	    bindir=$$build_prefix/bin libdir=$$build_prefix/lib \
-	    includedir=$$build_prefix/include docdir=$$build_prefix/share/doc install) ; \
+	for dir in mpl @opadir@ ; do \
+	    (cd $$dir && ${MAKE} prefix=$(top_builddir) exec_prefix=$(top_builddir) \
+	    bindir=$(top_builddir)/bin libdir=$(top_builddir)/lib \
+	    includedir=$(top_builddir)/include docdir=$(top_builddir)/share/doc install) ; \
 	done

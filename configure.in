@@ -990,29 +990,76 @@ EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/mpl"
 other_install_dirs="$other_install_dirs src/mpl"
 
 # OpenPA
-opadir="${use_top_srcdir}/src/openpa"
-if test -e "$opadir" ; then
-    EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/openpa"
-    CPPFLAGS="$CPPFLAGS -I${use_top_srcdir}/src/openpa/src -I${master_top_builddir}/src/openpa/src"
+AC_ARG_WITH([openpa-prefix],
+            [AS_HELP_STRING([[--with-openpa-prefix[=DIR]]],
+                            [use the OpenPA atomics library installed in DIR,
+                             rather than the one included in src/openpa.  Pass
+                             "embedded" to force usage of the OpenPA source
+                             distributed with MPICH2.])],
+            [],
+            [# see if OPA is already installed on the system
+             PAC_PUSH_FLAG([LIBS])
+             PAC_PREPEND_FLAG([-lopa],[LIBS])
+             AC_LINK_IFELSE([AC_LANG_PROGRAM([dnl
+#include "opa_primitives.h"
+],[
+OPA_int_t i;
+OPA_store_int(i,10);
+OPA_fetch_and_incr_int(&i,5);
+])dnl
+                             ],
+                            [with_openpa_prefix=system],[with_openpa_prefix=embedded])
+             PAC_POP_FLAG([LIBS])
+             ])
+# @opadir@ is used in src/Makefile.sm to control whether or not the OPA in
+# src/openpa is built and installed
+opadir=""
+AC_SUBST([opadir])
 
-    # OPA defaults to "auto", but in MPICH2 we want "auto_allow_emulation" to
-    # easily permit using channels like ch3:sock that don't care about atomics
-    AC_ARG_WITH([atomic-primitives],
-                [AS_HELP_STRING([--with-atomic-primitives],
-                                [Force OPA to use a specific atomic primitives
-                                 implementation.  See the src/openpa directory
-                                 for more info.])],
-                [],[with_atomic_primitives=not_specified])
-    opa_subdir_args=""
-    if test "$with_atomic_primitives" = "not_specified" ; then
-        opa_subdir_args="--with-atomic-primitives=auto_allow_emulation"
+if test "$with_openpa_prefix" = "embedded" ; then
+    if test -e "${use_top_srcdir}/src/openpa" ; then
+        opadir="openpa"
+        EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/openpa"
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
+
+        # OPA defaults to "auto", but in MPICH2 we want "auto_allow_emulation" to
+        # easily permit using channels like ch3:sock that don't care about atomics
+        AC_ARG_WITH([atomic-primitives],
+                    [AS_HELP_STRING([--with-atomic-primitives],
+                                    [Force OPA to use a specific atomic primitives
+                                     implementation.  See the src/openpa directory
+                                     for more info.])],
+                    [],[with_atomic_primitives=not_specified])
+        opa_subdir_args=""
+        if test "$with_atomic_primitives" = "not_specified" ; then
+            opa_subdir_args="--with-atomic-primitives=auto_allow_emulation"
+        fi
+        PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_ERROR([OpenPA configure failed])])
+        PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
+
+        other_install_dirs="$other_install_dirs src/openpa"
+    else
+        AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
     fi
-    PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_ERROR([OpenPA configure failed])])
+elif test "$with_openpa_prefix" = "system" ; then
     PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
-
-    other_install_dirs="$other_install_dirs src/openpa"
+elif test "$with_openpa_prefix" = "no" ; then
+    # The user doesn't want to use OPA.  This may or may not cause MPICH2 to
+    # fail to configure/build, depending on many other factors.
+    :
+else
+    # The user specified an already-installed OPA; just sanity check, don't
+    # subconfigure it
+    AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
+          [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
+    PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
+    PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
+    if test -d ${with_openpa_prefix}/lib64 ; then
+        PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
+    fi
+    PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi
-
 
 # ----------------------------------------------------------------------------
 # Threads

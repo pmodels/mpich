@@ -14,7 +14,11 @@ DEFS     =
 INCLUDES = -I../src/include -I${top_srcdir}/src/include
 
 LDADD  = 
-DEPADD = ../lib/lib${MPILIBNAME}.a ../lib/libopa.a
+
+# We previously put "../lib/libopa.a" here, but that only covers one of the
+# various OPA build/install cases.  Omit it for now.
+DEPADD = ../lib/lib${MPILIBNAME}.a
+
 LIBS   =
 # pmandel requires a separate set of socket calls (its a long story)
 # and may not build on most platforms
