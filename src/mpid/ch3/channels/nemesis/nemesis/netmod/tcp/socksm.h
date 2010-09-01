@@ -155,7 +155,8 @@ typedef enum MPIDI_nem_tcp_socksm_pkt_type {
     MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK,
     MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_INFO,
     MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK,
-    MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK
+    MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK,
+    MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED
 } MPIDI_nem_tcp_socksm_pkt_type_t;
     
 typedef struct MPIDI_nem_tcp_header {

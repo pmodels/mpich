@@ -67,26 +67,34 @@ int MPID_Finalize(void)
       *
       * Processes that still have open connections must then try to contact
       * the remaining processes.
-      * 
+      *
+      * August 2010:
+      *
+      * The barrier has been removed so that finalize won't hang when
+      * another processes has died.  This allows processes to finalize
+      * and exit while other processes are still executing.  This has
+      * the following consequences:
+      *
+      *  * If a process tries to send a message to a process that has
+      *    exited before completing the matching receive, it will now
+      *    get an error.  This is an erroneous program.
+      *
+      *  * If a process finalizes before completing a nonblocking
+      *    send, the message might not be sent.  Similarly, if it
+      *    finalizes before completing all receives, the sender may
+      *    get an error.  These are erroneous programs.
+      *
+      *  * A process may isend to another process that has already
+      *    terminated, then cancel the send.  The program is not
+      *    erroneous in this case, but this will result in an error.
+      *    This can be fixed by not returning an error until the app
+      *    completes the send request.  If the app cancels the
+      *    request, we need to to search the pending send queue and
+      *    cancel it, in which case an error shouldn't be generated.
       */
     
-    /* commenting out the close protocol and simply using MPI_Barrier until 
-       MPI_Comm_disconnect correctly disconnects all VCs */
 
-    /* FIXME:
-     * Using MPI_Barrier on MPI_COMM_WORLD here is dangerous.  It is fine,
-     * of course, for correct programs, but incorrect programs, for examples, 
-     * ones that call MPI_Barrier(MPI_COMM_WORLD) in some but not all processes
-     * will show unexpected symptoms (e.g., the otherwise Unmatched MPI_Barrier
-     * calls will match this barrier, and then MPI_Finalize will hang.  To
-     * fix this, we need a separate Barrier operation, either an independent
-     * Barrier or an independent communicator that is not used by any
-     * other (user) routine.
-     */
 #ifdef MPID_NEEDS_ICOMM_WORLD
-    mpi_errno = MPIR_Barrier_impl(MPIR_Process.icomm_world);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
     mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #endif

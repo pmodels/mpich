@@ -605,7 +605,7 @@ int MPIDI_CH3I_Progress_handle_sctp_event(MPIDU_Sctp_event_t * event)
 
             MPIDI_VC_t* vc = (MPIDI_VC_t*) event-> user_ptr;  /* points to VC for close */
             
-            MPIU_Assert(vc->state == MPIDI_VC_STATE_CLOSE_ACKED);
+            MPIU_Assert(vc->state == MPIDI_VC_STATE_CLOSED);
 
             if(vc == MPIDI_CH3I_dynamic_tmp_vc) {
                 MPIU_Assert(MPIDI_CH3I_dynamic_tmp_fd == vc->ch.fd);

@@ -619,11 +619,14 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
  E*/
 typedef enum MPIDI_VC_State
 {
-    MPIDI_VC_STATE_INACTIVE=1,
-    MPIDI_VC_STATE_ACTIVE,
-    MPIDI_VC_STATE_LOCAL_CLOSE,
-    MPIDI_VC_STATE_REMOTE_CLOSE,
-    MPIDI_VC_STATE_CLOSE_ACKED
+    MPIDI_VC_STATE_INACTIVE=1,      /* Comm either hasn't started or has completed. */
+    MPIDI_VC_STATE_ACTIVE,          /* Comm has started and hasn't completed */
+    MPIDI_VC_STATE_LOCAL_CLOSE,     /* Local side has initiated close protocol */
+    MPIDI_VC_STATE_REMOTE_CLOSE,    /* Remote side has initiated close protocol */
+    MPIDI_VC_STATE_CLOSE_ACKED,     /* Both have initiated close, we have acknowledged remote side */
+    MPIDI_VC_STATE_CLOSED,          /* Both have initiated close, both have acked */
+    MPIDI_VC_STATE_INACTIVE_CLOSED, /* INACTIVE VCs are moved to this state in Finalize */
+    MPIDI_VC_STATE_MORIBUND         /* Abnormally terminated, there may be unsent/unreceived msgs */
 } MPIDI_VC_State_t;
 
 struct MPID_Comm;

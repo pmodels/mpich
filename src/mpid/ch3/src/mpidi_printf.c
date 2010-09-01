@@ -218,6 +218,8 @@ const char * MPIDI_VC_GetStateString(int state)
     {
 	case MPIDI_VC_STATE_INACTIVE:
 	    return "MPIDI_VC_STATE_INACTIVE";
+	case MPIDI_VC_STATE_INACTIVE_CLOSED:
+	    return "MPIDI_VC_STATE_INACTIVE_CLOSED";
 	case MPIDI_VC_STATE_ACTIVE:
 	    return "MPIDI_VC_STATE_ACTIVE";
 	case MPIDI_VC_STATE_LOCAL_CLOSE:
@@ -226,6 +228,10 @@ const char * MPIDI_VC_GetStateString(int state)
 	    return "MPIDI_VC_STATE_REMOTE_CLOSE";
 	case MPIDI_VC_STATE_CLOSE_ACKED:
 	    return "MPIDI_VC_STATE_CLOSE_ACKED";
+	case MPIDI_VC_STATE_CLOSED:
+	    return "MPIDI_VC_STATE_CLOSED";
+        case MPIDI_VC_STATE_MORIBUND:
+	    return "MPIDI_VC_STATE_MORIBUND";
 	default:
 	    return "unknown";
     }

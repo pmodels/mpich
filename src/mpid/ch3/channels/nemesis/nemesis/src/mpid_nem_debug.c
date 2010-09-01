@@ -40,6 +40,9 @@ static const char *vc_state_to_str(MPIDI_VC_State_t state)
         state_case(LOCAL_CLOSE);
         state_case(REMOTE_CLOSE);
         state_case(CLOSE_ACKED);
+        state_case(CLOSED);
+        state_case(INACTIVE_CLOSED);
+        state_case(MORIBUND);
         default: return "(invalid state)"; break;
     }
 }

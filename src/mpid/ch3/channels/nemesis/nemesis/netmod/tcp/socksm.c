@@ -434,8 +434,11 @@ static int vc_is_in_shutdown(MPIDI_VC_t *vc)
     MPIU_Assert(vc != NULL);
     if (vc->state == MPIDI_VC_STATE_REMOTE_CLOSE ||
         vc->state == MPIDI_VC_STATE_CLOSE_ACKED ||
+        vc->state == MPIDI_VC_STATE_CLOSED ||
         vc->state == MPIDI_VC_STATE_LOCAL_CLOSE ||
-        vc->state == MPIDI_VC_STATE_INACTIVE)
+        vc->state == MPIDI_VC_STATE_INACTIVE ||
+        vc->state == MPIDI_VC_STATE_INACTIVE_CLOSED ||
+        vc->state == MPIDI_VC_STATE_MORIBUND)
     {
         retval = TRUE;
     }
@@ -636,6 +639,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
         
         /* very important, without this is_same_connection() will always fail */
         sc->pg_is_set = TRUE;
+        MPIU_Assert(!sc->is_tmpvc);
         
 	MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PKT_ID_INFO: sc->fd=%d, sc->vc=%p, sc=%p", sc->fd, sc->vc, sc));
     }
@@ -679,6 +683,8 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "enqueuing on acceptq vc=%p, sc->fd=%d, tag=%d", vc, sc->fd, sc->vc->port_name_tag));
         MPIDI_CH3I_Acceptq_enqueue(vc, sc->vc->port_name_tag);
+
+        MPIU_Assert(!sc->pg_is_set);
     }
 
     MPIU_CHKPMEM_COMMIT();
@@ -709,7 +715,8 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
     MPIU_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
                 pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
 		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
-		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK);
+		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK ||
+                pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED);
 
     pkt.pkt_type = pkt_type;
     pkt.datalen = 0;
@@ -755,7 +762,9 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t *pkt_type)
     MPIU_Assert(pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
                 pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
                 pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
-                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK);
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK ||
+                pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED);
+    
     *pkt_type = pkt.pkt_type;
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_RECV_CMD_PKT);
@@ -849,6 +858,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         }
         else {
             sc->is_tmpvc = TRUE;
+            MPIU_Assert(!sc->pg_is_set);
         }
 
         sock_addr = &(vc_tcp->sock_id);
@@ -997,7 +1007,7 @@ static int cleanup_and_free_sc_plfd(sockconn_t *const sc)
     goto fn_exit;
 }
 
-/* this function is called when vc->state becomes CLOSE_ACKED or when we need
+/* this function is called when vc->state becomes CLOSED or when we need
    to clean up after we restart from a checkpoint */
 /* FIXME XXX DJG do we need to do anything here to ensure that the final
    close(TRUE) packet has made it into a writev call?  The code might have a
@@ -1152,19 +1162,30 @@ static int state_c_ranksent_handler(struct pollfd *const plfd, sockconn_t *const
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
         MPIU_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
-                    pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK);
+                    pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
+                    pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED);
 
-        if (pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK) {
+        switch (pkt_type) {
+        case MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK:
             CHANGE_STATE(sc, CONN_STATE_TS_COMMRDY);
             ASSIGN_SC_TO_VC(sc_vc_tcp, sc);
 
             MPID_nem_tcp_conn_est (sc_vc);
             sc_vc_tcp->connect_retry_count = 0; /* successfully connected, reset connection retry count */
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "c_ranksent_handler(): connection established (sc=%p, sc->vc=%p, fd=%d)", sc, sc->vc, sc->fd));
-        }
-        else { /* pkt_type must be MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK */
+            break;
+        case MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK:
             MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "received NAK, closing sc");
             mpi_errno = cleanup_and_free_sc_plfd(sc); /* QUIESCENT */
+            break;
+        case MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED:
+            MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "received CLOSED, closing sc");
+            mpi_errno = MPIDI_CH3U_Handle_connection(sc_vc, MPIDI_VC_EVENT_TERMINATED);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            mpi_errno = cleanup_and_free_sc_plfd(sc); /* QUIESCENT */
+            break;
+        default:
+            MPIU_Assert(0);
         }
     }
 
@@ -1338,15 +1359,22 @@ static int state_l_rankrcvd_handler(struct pollfd *const plfd, sockconn_t *const
     status = MPID_nem_tcp_check_sock_status(plfd);
     if (status == MPID_NEM_TCP_SOCK_ERROR_EOF)
         goto fn_fail;
-    
-    if (found_better_sc(sc, &fnd_sc)) {
-        if (fnd_sc->state.cstate == CONN_STATE_TS_COMMRDY)
-            snd_nak = TRUE;
-        else if (fnd_sc->state.cstate == CONN_STATE_TC_C_RANKSENT)
-            snd_nak = do_i_win(sc);
-    }
-    
+
     if (IS_WRITEABLE(plfd)) {
+
+        if (sc_vc->state == MPIDI_VC_STATE_INACTIVE_CLOSED) {
+            mpi_errno = send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            mpi_errno = cleanup_and_free_sc_plfd(sc); /* QUIESCENT */
+        }
+        
+        if (found_better_sc(sc, &fnd_sc)) {
+            if (fnd_sc->state.cstate == CONN_STATE_TS_COMMRDY)
+                snd_nak = TRUE;
+            else if (fnd_sc->state.cstate == CONN_STATE_TC_C_RANKSENT)
+                snd_nak = do_i_win(sc);
+        }
+    
         if (snd_nak) {
             mpi_errno = send_cmd_pkt(sc->fd, MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -1878,12 +1906,15 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
 static int error_closed(struct MPIDI_VC *const vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+    MPID_nem_tcp_vc_area * const vc_tcp = VC_TCP(vc);
     MPIDI_STATE_DECL(MPID_STATE_ERROR_CLOSED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_ERROR_CLOSED);
 
     vc_tcp->state = MPID_NEM_TCP_VC_STATE_ERROR;
+
+    mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* complete pending send/recv requests with error ??? */
 
  fn_exit:

@@ -985,8 +985,11 @@ static int vc_is_in_shutdown(MPIDI_VC_t *vc)
     MPIU_Assert(vc != NULL);
     if (vc->state == MPIDI_VC_STATE_REMOTE_CLOSE ||
         vc->state == MPIDI_VC_STATE_CLOSE_ACKED ||
+        vc->state == MPIDI_VC_STATE_CLOSED ||
         vc->state == MPIDI_VC_STATE_LOCAL_CLOSE ||
-        vc->state == MPIDI_VC_STATE_INACTIVE)
+        vc->state == MPIDI_VC_STATE_INACTIVE ||
+        vc->state == MPIDI_VC_STATE_INACTIVE_CLOSED ||
+        vc->state == MPIDI_VC_STATE_MORIBUND)
     {
         retval = TRUE;
     }
@@ -1561,7 +1564,7 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
 }
 
 /* Cleanup vc related stuff in sc 
- * When vc->state becomes CLOSE_ACKED, MPID_nem_newtcp_module_cleanup() calls this function
+ * When vc->state becomes CLOSED, MPID_nem_newtcp_module_cleanup() calls this function
  * to cleanup vc related fields in sc
  * We cleanup sc only after the sock close succeeds
  */
@@ -1626,7 +1629,7 @@ static int cleanup_sc(sockconn_t *sc)
     goto fn_exit;
 }
 
-/* this function is called when vc->state becomes CLOSE_ACKED */
+/* this function is called when vc->state becomes CLOSED */
 /* FIXME XXX DJG do we need to do anything here to ensure that the final
    close(TRUE) packet has made it into a writev call?  The code might have a
    race for queued messages. */
@@ -1643,7 +1646,7 @@ int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CLEANUP);
 
-    MPIU_Assert(vc->state == MPIDI_VC_STATE_CLOSE_ACKED);
+    MPIU_Assert(vc->state == MPIDI_VC_STATE_CLOSED);
     sc = VC_FIELD(vc, sc);
 
     if (sc != NULL) {
