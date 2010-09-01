@@ -280,8 +280,17 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
          * applications, this is harder to identify, so we just let
          * the user cleanup the processes on a failure. */
         if (using_pmi_port || HYD_pmcd_pmip.downstream.pmi_fd_active[i]) {
-            if (HYD_pmcd_pmip.user_global.auto_cleanup)
+            if (HYD_pmcd_pmip.user_global.auto_cleanup) {
                 HYD_pmcd_pmip_killjob();
+
+                /* Need to send an abort notification to the user */
+                cmd = ABORT;
+                status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
+                                         &cmd, sizeof(cmd), &sent, &closed);
+                HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
+                if (closed)
+                    goto fn_fail;
+            }
             else {
                 /* If the user doesn't want to automatically cleanup,
                  * just deregister the FD and ignore this error */

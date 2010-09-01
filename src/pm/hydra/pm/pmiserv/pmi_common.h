@@ -40,6 +40,7 @@ enum HYD_pmcd_pmi_cmd {
     /* Proxy to UI commands */
     PID_LIST,
     EXIT_STATUS,
+    ABORT,
     PMI_CMD
 };
 
