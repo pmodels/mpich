@@ -727,6 +727,8 @@ int MPIDU_Sock_hostname_to_host_description(char *hostname, char *host_descripti
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SOCK_HOSTNAME_TO_HOST_DESCRIPTION);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
