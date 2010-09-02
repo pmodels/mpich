@@ -90,6 +90,28 @@ int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns *a )
     return 0;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Get_business_card
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+
+    MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+
+    mpi_errno = MPID_nem_get_business_card(myRank, value, length);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    MPIDI_FUNC_EXIT(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 /* Perform the channel-specific vc initialization */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_VC_Init
