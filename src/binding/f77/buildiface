@@ -551,6 +551,16 @@ foreach $_ (@ARGV) {
 		  'Register_datarep-2' => 'in:checkdatarep',
 		  'Register_datarep-3' => 'in:checkdatarep',
     'Op_commutative' => '2', 'Op_commutative-2' => 'out:logical',
+# MPI-2.2 Functions
+    'Dist_graph_create_adjacent' => '4:7',
+		 'Dist_graph_create_adjacent-4' => 'in:unweighted',
+		 'Dist_graph_create_adjacent-7' => 'in:unweighted',
+    'Dist_graph_create' => '6', 'Dist_graph_create-6' => 'in:unweighted',
+    'Dist_graph_neighbors_count' => '4',
+		'Dist_graph_neighbors_count-4' => 'out:logical',
+    'Dist_graph_neighbors' => '4:7',
+		'Dist_graph_neighbors-4' => 'in:unweighted',
+		'Dist_graph_neighbors-7' => 'in:unweighted',
     );
 
 # 
@@ -1320,6 +1330,25 @@ sub inplace_in_arg {
 }
 # inplace_ctof( cvar, fvar )
 sub inplace_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+}
+# --------------------------------------------------------------------------
+# MPI_UNWEIGHTED buffer pointers
+sub unweighted_ftoc {
+    my $count = $_[0];
+    &specialInitStatement( $OUTFD );
+    print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
+}
+sub unweighted_in_decl {
+    my $count = $_[0];
+}
+sub unweighted_in_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+# unweighted_ctof( cvar, fvar )
+sub unweighted_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
 }
@@ -2471,7 +2500,7 @@ if ($write_mpif) {
     }
     # 
     # Finally, the special symbols
-    print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE\n";
+    print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE, MPI_UNWEIGHTED\n";
 
     # And the external names.  This are necessary to 
     # ensure that these are passed as routines, not implicitly-defined 
@@ -2523,7 +2552,9 @@ if ($write_mpif) {
     # This does not eliminate the potential alignment warnings from the
     # linker. Since the Fortran77 binding only needs the pointer address
     # but never access the content of the pointer, so alignment warnings
-    # should be harmless.
+    # should be harmless. Alignment warnings from linker will be addressed
+    # by checking that Fortran common block alignment created in C is OK
+    # by the Fortran compiler(done at configure time for the primary compilers)
 
     # Add the common block for the character parameter ARGVS_NULL (Fortran
     # requires character data in a different common block than 
@@ -2535,12 +2566,13 @@ if ($write_mpif) {
        COMMON /MPIFCMB2/ MPI_STATUSES_IGNORE
        COMMON /MPIFCMB3/ MPI_BOTTOM
        COMMON /MPIFCMB4/ MPI_IN_PLACE
-       COMMON /MPIFCMB5/ MPI_ERRCODES_IGNORE
+       COMMON /MPIFCMB5/ MPI_UNWEIGHTED
+       COMMON /MPIFCMB6/ MPI_ERRCODES_IGNORE
        COMMON /MPIFCMB7/ MPI_ARGVS_NULL, PADS_A
        COMMON /MPIFCMB8/ MPI_ARGV_NULL, PADS_B
-       save /MPIFCMB1/,/MPIFCMB2/
-       save /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/
-       save /MPIFCMB7/,/MPIFCMB8/\n";
+       SAVE /MPIFCMB1/,/MPIFCMB2/
+       SAVE /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/,/MPIFCMB6/
+       SAVE /MPIFCMB7/,/MPIFCMB8/\n";
 
     close( MPIFFD );
     &ReplaceIfDifferent( "mpif.h.in", "mpif.h.in.new" );

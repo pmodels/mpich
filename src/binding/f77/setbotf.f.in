@@ -6,23 +6,27 @@ C
        subroutine mpirinitf( )
        integer mpi_status_size
        parameter (mpi_status_size=@MPI_STATUS_SIZE@)
-C      BOTTOM, IN_PLACE, STATUS_IGNORE, STATUSES_IGNORE, ERRCODES_IGNORE
-       integer a, b, c(mpi_status_size), d(mpi_status_size,1), e(1)
-       character*1 f(1,1), MPI_ARGV_NULL(1)
+C      STATUS_IGNORE, STATUSES_IGNORE
+       integer si(mpi_status_size), ssi(mpi_status_size,1)
+C      BOTTOM, IN_PLACE, UNWEIGHTED, ERRCODES_IGNORE
+       integer bt, ip, uw, ecsi(1)
+C      ARGVS_NULL, ARGV_NULL
+       character*1 asn(1,1), an(1)
        character*1 pads_a(3), pads_b(3)
-       common /MPIFCMB1/ c
-       common /MPIFCMB2/ d
-       common /MPIFCMB3/ a
-       common /MPIFCMB4/ b
-       common /MPIFCMB5/ e
-       common /MPIFCMB7/ f, pads_a
-       common /MPIFCMB8/ MPI_ARGV_NULL, pads_b
+       common /MPIFCMB1/ si
+       common /MPIFCMB2/ ssi
+       common /MPIFCMB3/ bt
+       common /MPIFCMB4/ ip
+       common /MPIFCMB5/ uw
+       common /MPIFCMB6/ ecsi
+       common /MPIFCMB7/ asn, pads_a
+       common /MPIFCMB8/ an, pads_b
        save /MPIFCMB1/,/MPIFCMB2/
-       save /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/
+       save /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/,/MPIFCMB6/
        save /MPIFCMB7/,/MPIFCMB8/
 C      MPI_ARGVS_NULL 
 C      (Fortran requires character data in a separate common block)
-       call mpirinitc( a, b, c, d, e, f )
-       call mpirinitc2( MPI_ARGV_NULL )
+       call mpirinitc(si, ssi, bt, ip, uw, ecsi, asn)
+       call mpirinitc2(an)
        return
        end

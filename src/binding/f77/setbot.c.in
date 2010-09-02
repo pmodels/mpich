@@ -20,7 +20,7 @@
    this file.  Note that the last argument is a character array, so
    we need to include the elements of the Fortran character "dope vector".
 */
-FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *, void *, void *, void *, 
+FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *, void *, void *, void *, void *,
                                          void *, void * FORT_MIXED_LEN_DECL 
                                          FORT_END_LEN_DECL );
 FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char * FORT_MIXED_LEN_DECL 
@@ -52,6 +52,7 @@ const MPI_Fint MPIR_F_FALSE=F77_FALSE_VALUE;
 int  MPIR_F_NeedInit        = 1;
 void *MPIR_F_MPI_BOTTOM     = 0;
 void *MPIR_F_MPI_IN_PLACE   = 0;
+void *MPIR_F_MPI_UNWEIGHTED = 0;
 /* MPI_F_STATUS_IGNORE etc must be declared within mpi.h (MPI-2 standard 
    requires this) */
 /* 
@@ -62,24 +63,27 @@ int  *MPI_F_ERRCODES_IGNORE = 0;
 void *MPI_F_ARGVS_NULL      = 0;
 #endif
 
-FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d, 
-                                         void *e, void *f FORT_MIXED_LEN(d1) 
+FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *si, void *ssi,
+                                         void *bt, void *ip, 
+                                         void *uw, void *ecsi, 
+                                         void *asn FORT_MIXED_LEN(d1) 
                                          FORT_END_LEN(d1) )
 {
-    MPIR_F_MPI_BOTTOM     = a;
-    MPIR_F_MPI_IN_PLACE   = b;
-    MPI_F_STATUS_IGNORE   = (MPI_Fint *)c;
-    MPI_F_STATUSES_IGNORE = (MPI_Fint *)d;
-    MPI_F_ERRCODES_IGNORE = (int *)e;
-    MPI_F_ARGVS_NULL      = f;
+    MPI_F_STATUS_IGNORE   = (MPI_Fint *) si;
+    MPI_F_STATUSES_IGNORE = (MPI_Fint *) ssi;
+    MPIR_F_MPI_BOTTOM     = bt;
+    MPIR_F_MPI_IN_PLACE   = ip;
+    MPIR_F_MPI_UNWEIGHTED = uw;
+    MPI_F_ERRCODES_IGNORE = (int *)ecsi;
+    MPI_F_ARGVS_NULL      = asn;
 }
 /* Initialize the Fortran ARGV_NULL to a blank.  Using this routine
    avoids potential problems with string manipulation routines that
    exist in the Fortran runtime but not in the C runtime libraries */
-FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1) 
+FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *an FORT_MIXED_LEN(d1) 
                                           FORT_END_LEN(d1) )
 {
-    *a = ' ';
+    *an = ' ';
 }
 
 
@@ -98,7 +102,7 @@ struct mpif_cmblk1_t_ {
     MPI_Fint MPIF_STATUS_IGNORE[MPIF_STATUS_SIZE];
 };
 typedef struct mpif_cmblk1_t_ mpif_cmblk1_t;
-mpif_cmblk1_t mpifcmb1r @CMB_STATUS_ALIGNMENT@ = {0};
+mpif_cmblk1_t mpifcmb1r @CMB_STATUS_ALIGNMENT@ = {{0}};
 extern mpif_cmblk1_t _CMPIFCMB1  __attribute__ ((alias("mpifcmb1r")));
 extern mpif_cmblk1_t   MPIFCMB1  __attribute__ ((alias("mpifcmb1r")));
 extern mpif_cmblk1_t   MPIFCMB1_ __attribute__ ((alias("mpifcmb1r")));
@@ -110,7 +114,7 @@ struct mpif_cmblk2_t_ {
     MPI_Fint MPIF_STATUSES_IGNORE[1][MPIF_STATUS_SIZE];
 };
 typedef struct mpif_cmblk2_t_ mpif_cmblk2_t;
-mpif_cmblk2_t mpifcmb2r @CMB_STATUS_ALIGNMENT@ = {0};
+mpif_cmblk2_t mpifcmb2r @CMB_STATUS_ALIGNMENT@ = {{{0}}};
 extern mpif_cmblk2_t _CMPIFCMB2  __attribute__ ((alias("mpifcmb2r")));
 extern mpif_cmblk2_t   MPIFCMB2  __attribute__ ((alias("mpifcmb2r")));
 extern mpif_cmblk2_t   MPIFCMB2_ __attribute__ ((alias("mpifcmb2r")));
@@ -143,7 +147,7 @@ extern mpif_cmblk4_t   mpifcmb4  __attribute__ ((alias("mpifcmb4r")));
 extern mpif_cmblk4_t   mpifcmb4_ __attribute__ ((alias("mpifcmb4r")));
 
 struct mpif_cmblk5_t_ {
-    MPI_Fint MPIF_ERRCODES_IGNORE[1];
+    MPI_Fint MPIF_UNWEIGHTED;
 };
 typedef struct mpif_cmblk5_t_ mpif_cmblk5_t;
 mpif_cmblk5_t mpifcmb5r @CMB_1INT_ALIGNMENT@ = {0};
@@ -154,12 +158,24 @@ extern mpif_cmblk5_t _Cmpifcmb5  __attribute__ ((alias("mpifcmb5r")));
 extern mpif_cmblk5_t   mpifcmb5  __attribute__ ((alias("mpifcmb5r")));
 extern mpif_cmblk5_t   mpifcmb5_ __attribute__ ((alias("mpifcmb5r")));
 
+struct mpif_cmblk6_t_ {
+    MPI_Fint MPIF_ERRCODES_IGNORE[1];
+};
+typedef struct mpif_cmblk6_t_ mpif_cmblk6_t;
+mpif_cmblk6_t mpifcmb6r @CMB_1INT_ALIGNMENT@ = {{0}};
+extern mpif_cmblk6_t _CMPIFCMB6  __attribute__ ((alias("mpifcmb6r")));
+extern mpif_cmblk6_t   MPIFCMB6  __attribute__ ((alias("mpifcmb6r")));
+extern mpif_cmblk6_t   MPIFCMB6_ __attribute__ ((alias("mpifcmb6r")));
+extern mpif_cmblk6_t _Cmpifcmb6  __attribute__ ((alias("mpifcmb6r")));
+extern mpif_cmblk6_t   mpifcmb6  __attribute__ ((alias("mpifcmb6r")));
+extern mpif_cmblk6_t   mpifcmb6_ __attribute__ ((alias("mpifcmb6r")));
+
 struct mpif_cmblk7_t_ {
     char MPIF_ARGVS_NULL[1][1];
     char pads[3];
 };
 typedef struct mpif_cmblk7_t_ mpif_cmblk7_t;
-mpif_cmblk7_t mpifcmb7r @CMB_1INT_ALIGNMENT@ = {0};
+mpif_cmblk7_t mpifcmb7r @CMB_1INT_ALIGNMENT@ = {{{0}}};
 extern mpif_cmblk7_t _CMPIFCMB7  __attribute__ ((alias("mpifcmb7r")));
 extern mpif_cmblk7_t   MPIFCMB7  __attribute__ ((alias("mpifcmb7r")));
 extern mpif_cmblk7_t   MPIFCMB7_ __attribute__ ((alias("mpifcmb7r")));
@@ -172,7 +188,7 @@ struct mpif_cmblk8_t_ {
     char pads[3];
 };
 typedef struct mpif_cmblk8_t_ mpif_cmblk8_t;
-mpif_cmblk8_t mpifcmb8r @CMB_1INT_ALIGNMENT@ = {0};
+mpif_cmblk8_t mpifcmb8r @CMB_1INT_ALIGNMENT@ = {{0}};
 extern mpif_cmblk8_t _CMPIFCMB8  __attribute__ ((alias("mpifcmb8r")));
 extern mpif_cmblk8_t   MPIFCMB8  __attribute__ ((alias("mpifcmb8r")));
 extern mpif_cmblk8_t   MPIFCMB8_ __attribute__ ((alias("mpifcmb8r")));
@@ -191,6 +207,9 @@ extern mpif_cmblk8_t   mpifcmb8_ __attribute__ ((alias("mpifcmb8r")));
   #pragma weak MPIR_IS_IN_PLACE   = mpir_is_in_place_
   #pragma weak mpir_is_in_place   = mpir_is_in_place_
   #pragma weak mpir_is_in_place__ = mpir_is_in_place_
+  #pragma weak MPIR_IS_UNWEIGHTED   = mpir_is_unweighted_
+  #pragma weak mpir_is_unweighted   = mpir_is_unweighted_
+  #pragma weak mpir_is_unweighted__ = mpir_is_unweighted_
   #pragma weak MPIR_IS_STATUS_IGNORE   = mpir_is_status_ignore_
   #pragma weak mpir_is_status_ignore   = mpir_is_status_ignore_
   #pragma weak mpir_is_status_ignore__ = mpir_is_status_ignore_
@@ -207,6 +226,7 @@ extern mpif_cmblk8_t   mpifcmb8_ __attribute__ ((alias("mpifcmb8r")));
   #if defined(F77_NAME_UPPER)
     #define mpir_is_bottom_ MPIR_IS_BOTTOM
     #define mpir_is_in_place_ MPIR_IS_IN_PLACE
+    #define mpir_is_unweighted_ MPIR_IS_UNWEIGHTED
     #define mpir_is_status_ignore_ MPIR_IS_STATUS_IGNORE
     #define mpir_is_statuses_ignore_ MPIR_IS_STATUSES_IGNORE
     #define mpir_is_errcodes_ignore_ MPIR_IS_ERRCODES_IGNORE
@@ -214,6 +234,7 @@ extern mpif_cmblk8_t   mpifcmb8_ __attribute__ ((alias("mpifcmb8r")));
   #elif defined(F77_NAME_LOWER_2USCORE)
     #define mpir_is_bottom_ mpir_is_bottom__
     #define mpir_is_in_place_ mpir_is_in_place__
+    #define mpir_is_unweighted_ mpir_is_unweighted__
     #define mpir_is_status_ignore_ mpir_is_status_ignore__
     #define mpir_is_statuses_ignore_ mpir_is_statuses_ignore__
     #define mpir_is_errcodes_ignore_ mpir_is_errcodes_ignore__
@@ -221,6 +242,7 @@ extern mpif_cmblk8_t   mpifcmb8_ __attribute__ ((alias("mpifcmb8r")));
   #elif defined(F77_NAME_LOWER)
     #define mpir_is_bottom_ mpir_is_bottom
     #define mpir_is_in_place_ mpir_is_in_place
+    #define mpir_is_unweighted_ mpir_is_unweighted
     #define mpir_is_status_ignore_ mpir_is_status_ignore
     #define mpir_is_statuses_ignore_ mpir_is_statuses_ignore
     #define mpir_is_errcodes_ignore_ mpir_is_errcodes_ignore
@@ -257,6 +279,18 @@ void mpir_is_in_place_( void *a, int *ierr )
          fprintf(stderr, "Not matched : ");
      fprintf(stderr,"MPIR_F_MPI_IN_PLACE=%p, MPI_IN_PLACE=%p\n",
              MPIR_F_MPI_IN_PLACE, a);
+}
+
+void mpir_is_unweighted_( void *a, int *ierr );
+void mpir_is_unweighted_( void *a, int *ierr )
+{
+     *ierr = ( a == MPIR_F_MPI_UNWEIGHTED ? 1 : 0 );
+     if ( *ierr )
+         fprintf(stderr, "Matched : ");
+     else
+         fprintf(stderr, "Not matched : ");
+     fprintf(stderr,"MPIR_F_MPI_UNWEIGHTED=%p, MPI_UNWEIGHTED=%p\n",
+             MPIR_F_MPI_UNWEIGHTED, a);
 }
 
 void mpir_is_status_ignore_( void *a, int *ierr );
