@@ -550,8 +550,8 @@ foreach $_ (@ARGV) {
     'Register_datarep' => '1:2:3', 'Register_datarep-1' => 'in:addnull',
 		  'Register_datarep-2' => 'in:checkdatarep',
 		  'Register_datarep-3' => 'in:checkdatarep',
-    'Op_commutative' => '2', 'Op_commutative-2' => 'out:logical',
 # MPI-2.2 Functions
+    'Op_commutative' => '2', 'Op_commutative-2' => 'out:logical',
     'Dist_graph_create_adjacent' => '4:7',
 		 'Dist_graph_create_adjacent-4' => 'in:unweighted',
 		 'Dist_graph_create_adjacent-7' => 'in:unweighted',
@@ -1334,7 +1334,7 @@ sub inplace_ctof {
     my $outvar  = $_[1];
 }
 # --------------------------------------------------------------------------
-# MPI_UNWEIGHTED buffer pointers
+# MPI_UNWEIGHTED pointers
 sub unweighted_ftoc {
     my $count = $_[0];
     &specialInitStatement( $OUTFD );
