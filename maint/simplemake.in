@@ -3991,6 +3991,10 @@ sub TargetInstall {
 	    # install should be constrained.  If there is a reason for an 
 	    # install with three levels of directories, either install the 
 	    # subdirectories separately or modify this code.
+            #
+            # The generated code assumes ${INSTALL_DATA} is not relative.
+            # Autoconf doesn't guarantee this, but we fix it up in
+            # PAC_PROG_CHECK_INSTALL_WORKS.  See also ticket #1007.
 
 	    # Sigh.  This causes some make programs (such as gnumake)
 	    # to print a message about an ignored error.  To avoid that,
