@@ -69,6 +69,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_2CB8889ECC4846F2B9D5F55CF8DE8510"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2E78FEC4317B423D931438231C273528"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -76,6 +82,12 @@
         "Entry"
         {
         "MsmKey" = "8:_328D583D55BC4B38A679F9ACF3DCE98A"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_34280675DFE044D6A460602A3301FCE2"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -333,8 +345,32 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_FA7FEB4E019147ABB551882DD956CA32"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_FC909F7EDA2B41A09386F543C60DFB6F"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_2CB8889ECC4846F2B9D5F55CF8DE8510"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_34280675DFE044D6A460602A3301FCE2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_FA7FEB4E019147ABB551882DD956CA32"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -507,6 +543,14 @@
         {
             "LaunchCondition"
             {
+                "{A06ECF26-33A3-4562-8140-9B0E340D4F24}:_E970EC37CB124A8AA1DE3079AB7DAB77"
+                {
+                "Name" = "8:.NET Framework"
+                "Message" = "8:[VSDNETMSG]"
+                "Version" = "8:2.0.50727"
+                "AllowLaterVersions" = "11:FALSE"
+                "InstallUrl" = "8:http://go.microsoft.com/fwlink/?LinkId=9832"
+                }
             }
         }
         "File"
@@ -691,6 +735,37 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_2CB8889ECC4846F2B9D5F55CF8DE8510"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.3898.24477, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_2CB8889ECC4846F2B9D5F55CF8DE8510"
+                    {
+                    "Name" = "8:wmpiregister.exe"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\bin\\wmpiregister.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2E78FEC4317B423D931438231C273528"
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\mpe\\mpe.dll"
@@ -715,6 +790,37 @@
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\bin\\smpd.exe"
             "TargetName" = "8:smpd.exe"
+            "Tag" = "8:"
+            "Folder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_34280675DFE044D6A460602A3301FCE2"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.3898.24476, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_34280675DFE044D6A460602A3301FCE2"
+                    {
+                    "Name" = "8:wmpiexec.exe"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\bin\\wmpiexec.exe"
+            "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
             "Condition" = "8:"
@@ -1571,6 +1677,37 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FA7FEB4E019147ABB551882DD956CA32"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.3898.24477, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_FA7FEB4E019147ABB551882DD956CA32"
+                    {
+                    "Name" = "8:wmpiconfig.exe"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\bin\\wmpiconfig.exe"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FC909F7EDA2B41A09386F543C60DFB6F"
             {
             "SourcePath" = "8:..\\src\\mpe2\\src\\slog2sdk\\lib\\traceTOslog2.jar"
@@ -1617,6 +1754,17 @@
             "Property" = "8:ProgramMenuFolder"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_04313EC4EFA74697A3F3DA33690273F3"
+                    {
+                    "Name" = "8:MPICH2"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_CF76DBB4C22C469F8CE5EB5E6718C2EE"
+                        "Folders"
+                        {
+                        }
+                    }
                 }
             }
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_68D5CBFB6E6E4F878DE0BFA8C411C515"
@@ -1850,6 +1998,76 @@
         }
         "Shortcut"
         {
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_88C5DAAFE24E48D1804737781488D23E"
+            {
+            "Name" = "8:wmpiconfig"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_FA7FEB4E019147ABB551882DD956CA32"
+            "Folder" = "8:_04313EC4EFA74697A3F3DA33690273F3"
+            "WorkingFolder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_9C7CBF2AF78B4932AEC2DA77E2D793FE"
+            {
+            "Name" = "8:wmpiregister"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_2CB8889ECC4846F2B9D5F55CF8DE8510"
+            "Folder" = "8:_04313EC4EFA74697A3F3DA33690273F3"
+            "WorkingFolder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_EF954B83624744F0B9A622F7D84A6553"
+            {
+            "Name" = "8:README"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_8CBECA0124104310A593105472265C70"
+            "Folder" = "8:_04313EC4EFA74697A3F3DA33690273F3"
+            "WorkingFolder" = "8:_68D5CBFB6E6E4F878DE0BFA8C411C515"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_FA22635E45E84501A5FCE22F460AC96C"
+            {
+            "Name" = "8:Jumpshot"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_40C475D735CD4B2E8DC110F8FCC1537A"
+            "Folder" = "8:_04313EC4EFA74697A3F3DA33690273F3"
+            "WorkingFolder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_FC20C8FF8DB04FA8818511523262E7FB"
+            {
+            "Name" = "8:wmpiexec"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_34280675DFE044D6A460602A3301FCE2"
+            "Folder" = "8:_04313EC4EFA74697A3F3DA33690273F3"
+            "WorkingFolder" = "8:_CB4581DB084E4E7E8C5A128FA780483C"
+            "Icon" = "8:"
+            "Feature" = "8:"
+            }
         }
         "UserInterface"
         {
