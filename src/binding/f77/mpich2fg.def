@@ -394,14 +394,22 @@ EXPORTS
 	mpi_get_version__=pmpi_get_version__
 	pmpi_graph_create__
 	mpi_graph_create__=pmpi_graph_create__
+	pmpi_dist_graph_create__
+	mpi_dist_graph_create__=pmpi_dist_graph_create__
+	pmpi_dist_graph_create_adjacent__
+	mpi_dist_graph_create_adjacent__=pmpi_dist_graph_create_adjacent__
 	pmpi_graph_get__
 	mpi_graph_get__=pmpi_graph_get__
 	pmpi_graph_map__
 	mpi_graph_map__=pmpi_graph_map__
 	pmpi_graph_neighbors__
 	mpi_graph_neighbors__=pmpi_graph_neighbors__
+	pmpi_dist_graph_neighbors__
+	mpi_dist_graph_neighbors__=pmpi_dist_graph_neighbors__
 	pmpi_graph_neighbors_count__
 	mpi_graph_neighbors_count__=pmpi_graph_neighbors_count__
+	pmpi_dist_graph_neighbors_count__
+	mpi_dist_graph_neighbors_count__=pmpi_dist_graph_neighbors_count__
 	pmpi_graphdims_get__
 	mpi_graphdims_get__=pmpi_graphdims_get__
 	pmpi_grequest_complete__
@@ -738,6 +746,7 @@ EXPORTS
 	mpifcmb3_
 	mpifcmb4_
 	mpifcmb5_
+	mpifcmb6_
 	mpifcmb7_
 	mpifcmb8_
 ;	MPIR_F_TRUE

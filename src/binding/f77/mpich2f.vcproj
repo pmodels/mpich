@@ -3111,6 +3111,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dist_graph_create_adjacentf.c"
+				>
+			</File>
+			<File
+				RelativePath=".\dist_graph_createf.c"
+				>
+			</File>
+			<File
+				RelativePath=".\dist_graph_neighbors_countf.c"
+				>
+			</File>
+			<File
+				RelativePath=".\dist_graph_neighborsf.c"
+				>
+			</File>
+			<File
 				RelativePath=".\dup_comm_fnf.c"
 				>
 			</File>
