@@ -514,18 +514,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\src\ch3_comm_spawn.c"
-				>
-				<FileConfiguration
-					Name="ch3nemesisDebug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ShowIncludes="false"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\src\ch3_finalize.c"
 				>
 			</File>
