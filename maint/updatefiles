@@ -965,10 +965,21 @@ if [ $do_build_configure = yes ] ; then
 		# Using an explicit acIncDirFlag will force a
 		# consistent choice of autoconf. Only use autoheader
 		# if AC_CONFIG_HEADER is present
+	        echo "Found $dir/configure.in; executing make configure target"
 		if grep AC_CONFIG_HEADER $dir/configure.in >/dev/null 2>&1 ; then
 		    (cd $dir && $autoheader $acIncDirFlag .)
 		fi
 		(cd $dir && $autoconf $acIncDirFlag . && rm -rf autom4te*.cache)
+		if [ ! -x $dir/configure ] ; then
+		    echo "Could not build configure in $dir with make configure"
+		    exit 1
+	        elif grep PAC_ $dir/configure >/dev/null 2>&1 ; then
+		    # FIXME: Is this correct? What happens when the
+		    # PAC macro is within a commented out region
+                    # AC: comment in PAC macro should be prefixed by dnl.
+		    echo "configure in $dir contains unresolved PAC macros"
+		    exit 1
+		fi
 	        continue
 	    fi
 
@@ -1003,6 +1014,7 @@ if [ $do_build_configure = yes ] ; then
 	        elif grep PAC_ $dir/configure >/dev/null 2>&1 ; then
 		    # FIXME: Is this correct? What happens when the
 		    # PAC macro is within a commented out region
+                    # AC: comment in PAC macro should be prefixed by dnl.
 		    echo "configure in $dir contains unresolved PAC macros"
 		    exit 1
 		fi
