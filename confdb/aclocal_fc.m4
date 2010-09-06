@@ -30,11 +30,11 @@ dnl       it may also be the name of a command for something other than
 dnl       the Fortran compiler (e.g., fc=file system check!)
 dnl D*/
 AC_DEFUN([PAC_PROG_FC],[
-PAC_PUSH_ALL_FLAGS
+PAC_PUSH_FLAG([FCFLAGS])
 AC_PROG_FC([m4_default([$1],
-		[gfortran ifort pgf90 pathf90 pathf95 xlf90 xlf95 f90 epcf90 f95 \
-		 fort lf95 g95 ifc efc])])
-PAC_POP_ALL_FLAGS
+           [ifort pgf90 pathf90 pathf95 xlf90 xlf95 f90 epcf90 f95 fort lf95 \
+            gfortran g95 ifc efc])])
+PAC_POP_FLAG([FCFLAGS])
 ])
 dnl
 dnl PAC_FC_EXT checks for the default Fortran 90 program extension, f90 then f.
@@ -287,7 +287,7 @@ AC_LANG_CONFTEST([AC_LANG_PROGRAM([],[use conf])])
 saved_FCFLAGS="$FCFLAGS"
 pac_cv_fc_module_incflag=""
 for inchdr in '-I' '-M' '-p' ; do
-    FCFLAGS="$save_FCFLAGS ${inchdr}conftestdir"
+    FCFLAGS="$saved_FCFLAGS ${inchdr}conftestdir"
     AC_COMPILE_IFELSE([],[pac_cv_fc_module_incflag="$inchdr" ; break])
 done
 if test "X$pac_cv_fc_module_incflag" = "X" ; then
