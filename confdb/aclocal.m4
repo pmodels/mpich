@@ -24,6 +24,7 @@ builtin(include,aclocal_fc.m4)
 builtin(include,aclocal_libs.m4)
 builtin(include,aclocal_attr_alias.m4)
 builtin(include,ax_tls.m4)
+builtin(include,aclocal_romio.m4)
 dnl Add the libtool files that libtoolize wants
 dnl Comment these out until libtool support is enabled.
 dnl May need to change this anyway, since libtoolize 
