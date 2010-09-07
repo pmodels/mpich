@@ -1023,9 +1023,14 @@ if [ $do_build_configure = yes ] ; then
 		rm -f $dir/mf.out
             fi
         fi
-        if [ ! -x $dir/configure ] ; then
-            echo "Could not build configure from configure.in in $dir"
-	    echo "Aborting updatefiles!"
+	# Make sure a configure was created
+	if [ ! -x $dir/configure ] ; then
+	    echo "Could not build configure in $dir"
+	    exit 1
+	elif `cat $dir/configure | sed -e '/^dnl/d' -e 's/ dnl.*//g' | grep PAC_` 2>&1 ; then
+	    # FIXME: Is this correct? What happens when the PAC macro
+	    # is within a commented out region
+	    echo "configure in $dir contains unresolved PAC macros"
 	    exit 1
         fi
     done
