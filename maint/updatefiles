@@ -960,30 +960,10 @@ if [ $do_build_configure = yes ] ; then
         fi
 
 	if [ -s $dir/Makefile.in ] ; then 
-	    # Check for known problems
-            if [ $dir = "./src/mpi/romio" ] ; then
-		# Using an explicit acIncDirFlag will force a
-		# consistent choice of autoconf. Only use autoheader
-		# if AC_CONFIG_HEADER is present
-	        echo "Found $dir/configure.in; executing make configure target"
-		if grep AC_CONFIG_HEADER $dir/configure.in >/dev/null 2>&1 ; then
-		    (cd $dir && $autoheader $acIncDirFlag .)
-		fi
-		(cd $dir && $autoconf $acIncDirFlag . && rm -rf autom4te*.cache)
-		if [ ! -x $dir/configure ] ; then
-		    echo "Could not build configure in $dir with make configure"
-		    exit 1
-	        elif grep PAC_ $dir/configure >/dev/null 2>&1 ; then
-		    # FIXME: Is this correct? What happens when the
-		    # PAC macro is within a commented out region
-                    # AC: comment in PAC macro should be prefixed by dnl.
-		    echo "configure in $dir contains unresolved PAC macros"
-		    exit 1
-		fi
-	        continue
-	    fi
-
 	    # First, check for a configure target in Makefile.in
+	    # FIXME: this check is completely broken for Makefiles
+	    # that have multiple targets on the same line (e.g.,
+	    # configure config.h: configure.in)
 	    if grep 'configure:' $dir/Makefile.in >/dev/null 2>&1 ; then
 		# The make -q checks whether the target is upto date first;
 		# if it isn't, we remake it.
@@ -998,26 +978,13 @@ if [ $do_build_configure = yes ] ; then
                 (cd $dir && rm -f mf.tmp ; \
 	            sed -e 's%@SHELL@%/bin/sh%' -e "s%@srcdir@%.%g" \
 		    -e '/include .*alldeps/d' -e '/@SET_MAKE@/d' Makefile.in > mf.tmp ; \
+	            echo "Found $dir/configure.in; executing ${MAKE} -f mf.tmp ./configure" ; \
 		    if ${MAKE} -q -f mf.tmp ./configure >mf.out 2>&1 ; \
 		    then \
                     : ; \
 		    else \
-	            echo "Found $dir/configure.in; executing make configure target" ; \
-	            ${MAKE} -f mf.tmp ./configure ; fi ; \
-		    if [ -s configure ] ; then rm -f mf.tmp ; \
-		    else echo "See `pwd`/mf.tmp for Makefile that failed" ; fi ;\
-	        )
+	            ${MAKE} -f mf.tmp ./configure ; fi)
 
-		if [ ! -x $dir/configure ] ; then
-		    echo "Could not build configure in $dir with make configure"
-		    exit 1
-	        elif grep PAC_ $dir/configure >/dev/null 2>&1 ; then
-		    # FIXME: Is this correct? What happens when the
-		    # PAC macro is within a commented out region
-                    # AC: comment in PAC macro should be prefixed by dnl.
-		    echo "configure in $dir contains unresolved PAC macros"
-		    exit 1
-		fi
 		# Remove make output now that we no longer need it.
 		rm -f $dir/mf.newer
 		rm -f $dir/mf.out
@@ -1032,7 +999,7 @@ if [ $do_build_configure = yes ] ; then
 	    # is within a commented out region
 	    echo "configure in $dir contains unresolved PAC macros"
 	    exit 1
-        fi
+	fi
     done
     echo "Done generating configure scripts"
     echo "---------------------------------------------------------------"
