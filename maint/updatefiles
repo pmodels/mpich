@@ -988,6 +988,7 @@ if [ $do_build_configure = yes ] ; then
 		# Remove make output now that we no longer need it.
 		rm -f $dir/mf.newer
 		rm -f $dir/mf.out
+		rm -f $dir/mf.tmp
             fi
         fi
 	# Make sure a configure was created
