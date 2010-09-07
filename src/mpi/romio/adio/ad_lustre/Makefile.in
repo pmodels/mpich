@@ -13,7 +13,7 @@ top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
 C_COMPILE_SHL = $(CC_SHL) @CFLAGS@ $(INCLUDES)
 
-@VPATH@
+VPATH = .:${srcdir}
 
 AD_LUSTRE_OBJECTS = ad_lustre.o ad_lustre_open.o \
       ad_lustre_rwcontig.o ad_lustre_wrcoll.o ad_lustre_wrstr.o  \

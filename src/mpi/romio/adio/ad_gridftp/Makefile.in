@@ -13,7 +13,7 @@ top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
 C_COMPILE_SHL = $(CC_SHL) 
 
-@VPATH@
+VPATH = .:${srcdir}
 
 AD_GRIDFTP_OBJECTS = ad_gridftp_close.o \
 	ad_gridftp_open.o ad_gridftp_read.o ad_gridftp_write.o \

@@ -13,7 +13,7 @@ top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
 C_COMPILE_SHL = $(CC_SHL) 
 
-@VPATH@
+VPATH = .:${srcdir}
 
 AD_BGLOCKLESS_OBJECTS = ad_bglockless.o ad_bglockless_features.o
 

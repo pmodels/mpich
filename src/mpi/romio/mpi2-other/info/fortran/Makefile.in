@@ -7,7 +7,7 @@ srcdir      = @srcdir@
 INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I../../../include -I${srcdir}/../../../adio/include -I${srcdir}/../../../mpi-io -I../../../adio/include
 CFLAGS      = @CFLAGS@ $(MPIOPROFILE) $(INCLUDE_DIR)
 
-@VPATH@
+VPATH = .:${srcdir}
 
 MPIO_OBJECTS = info_createf.o info_dupf.o info_getf.o info_getnthf.o \
       info_setf.o info_deletef.o info_freef.o info_getnksf.o info_getvlnf.o

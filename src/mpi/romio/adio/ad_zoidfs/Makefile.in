@@ -13,7 +13,7 @@ top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
 C_COMPILE_SHL = $(CC_SHL)
 
-@VPATH@
+VPATH = .:${srcdir}
 
 AD_ZOIDFS_OBJECTS = ad_zoidfs.o ad_zoidfs_close.o ad_zoidfs_common.o \
 	ad_zoidfs_delete.o ad_zoidfs_fcntl.o ad_zoidfs_flush.o \

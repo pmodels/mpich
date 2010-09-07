@@ -18,7 +18,7 @@ FILE_SYS_DIRS = @FILE_SYS_DIRS@
 ALL_DIRS    = mpi-io mpi-io/fortran mpi2-other/info mpi2-other/info/fortran mpi2-other/array mpi2-other/array/fortran adio/common adio/ad_pfs adio/ad_piofs adio/ad_nfs adio/ad_ufs adio/ad_xfs adio/ad_hfs adio/ad_sfs adio/ad_testfs adio/ad_pvfs adio/ad_pvfs2 adio/ad_panfs adio/ad_gridftp adio/ad_lustre adio/ad_bgl adio/ad_bglockless test test-internal mpi-io/glue/default mpi-io/glue/mpich1 mpi-io/glue/mpich2
 SHELL       = /bin/sh
 
-@VPATH@
+VPATH = .:${srcdir}
 
 all: mpio
 
@@ -185,7 +185,6 @@ TAGS:
 # This target is appropriate for autoconf 2.59 (the command line options
 # for selecting the macro directories changes in incompatible ways between
 # autoconf releases).
-configure: ${srcdir}/configure
-${srcdir}/configure ${srcdir}/adio/include/romioconf.h: ${srcdir}/configure.in ${srcdir}/aclocal.m4
-	cd ${srcdir} && rm -rf autom4te*.cache && autoconf -I .
-	cd ${srcdir} && autoheader -I .
+${srcdir}/configure: ${srcdir}/configure.in
+	cd ${srcdir} && rm -rf autom4te*.cache && autoconf -I confdb
+	cd ${srcdir} && autoheader -I confdb

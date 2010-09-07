@@ -13,7 +13,7 @@ top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
 C_COMPILE_SHL = $(CC_SHL)
 
-@VPATH@
+VPATH = .:${srcdir}
 
 MPIO_OBJECTS = subarray.o darray.o
 

@@ -21,7 +21,7 @@ SHELL = /bin/sh
 prefix     = @prefix@
 top_srcdir = @top_srcdir@
 srcdir     = @srcdir@
-@VPATH@
+VPATH = .:${srcdir}
 
 PROFLIB =
 CFLAGS  = @CFLAGS@ @DEFS@ $(OPTFLAGS) 

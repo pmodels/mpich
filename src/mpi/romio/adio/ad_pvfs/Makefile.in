@@ -18,7 +18,7 @@ C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 #C_COMPILE_SHL = $(CC_SHL) 
 
-@VPATH@
+VPATH = .:${srcdir}
 
 AD_PVFS_OBJECTS = ad_pvfs_close.o ad_pvfs_read.o \
       ad_pvfs_open.o ad_pvfs_write.o \

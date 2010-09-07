@@ -19,7 +19,7 @@ C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 #C_COMPILE_SHL = $(CC_SHL) 
 
-@VPATH@
+VPATH = .:${srcdir}
 
 # mpi_sources gives the files that implement the MPI IO routines.  
 # This is used for the MPICH2 documentation target, and does not

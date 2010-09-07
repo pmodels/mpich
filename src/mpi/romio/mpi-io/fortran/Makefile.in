@@ -14,7 +14,7 @@ LIBTOOL       = @LIBTOOL@
 C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 
-@VPATH@
+VPATH = .:${srcdir}
 
 MPIO_FOBJECTS = closef.o readf.o openf.o writef.o get_extentf.o \
       ireadf.o iwritef.o iotestf.o iowaitf.o seekf.o \

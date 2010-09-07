@@ -10,7 +10,7 @@ CFLAGS      = @CFLAGS@ $(INCLUDES) -DBGL_OPTIM_STEP1_2=1 -DBGL_OPTIM_STEP1_1=1
 
 C_COMPILE_SHL = $(CC_SHL) @CFLAGS@ $(INCLUDES)
 
-@VPATH@
+VPATH = .:${srcdir}
 
 AD_BGL_OBJECTS = \
       ad_bgl_open.o ad_bgl_close.o \
