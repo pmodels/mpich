@@ -66,6 +66,7 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 #define MPIR_OP_TYPE_MACRO_HAVE_REAL4_CTYPE(mpi_type_,c_type_)
 #define MPIR_OP_TYPE_MACRO_HAVE_REAL8_CTYPE(mpi_type_,c_type_)
 #define MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(mpi_type_,c_type_)
+#define MPIR_OP_TYPE_MACRO_HAVE_CXX(mpi_type_,c_type_)
 #define MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(mpi_type_,c_type_)
 #define MPIR_OP_TYPE_MACRO_HAVE_CXX_LONG_DOUBLE_COMPLEX(mpi_type_,c_type_)
 #define MPIR_OP_TYPE_MACRO_HAVE_INT8_T(mpi_type_,c_type_)
@@ -137,6 +138,12 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 #if defined(MPIR_REAL16_CTYPE)
 #  undef MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE
 #  define MPIR_OP_TYPE_MACRO_HAVE_REAL16_CTYPE(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#endif
+
+/* general C++ types */
+#if defined(HAVE_CXX_BINDING)
+#  undef MPIR_OP_TYPE_MACRO_HAVE_CXX
+#  define MPIR_OP_TYPE_MACRO_HAVE_CXX(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
 #endif
 
 /* C++ complex types */
@@ -297,7 +304,8 @@ typedef struct {
 /* FIXME Is MPI_Fint really OK here? */
 #define MPIR_OP_TYPE_GROUP_LOGICAL                         \
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_LOGICAL, MPI_Fint) \
-    MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(MPI_C_BOOL, _Bool)
+    MPIR_OP_TYPE_MACRO_HAVE_C_BOOL(MPI_C_BOOL, _Bool)      \
+    MPIR_OP_TYPE_MACRO_HAVE_CXX(MPIR_CXX_BOOL_VALUE, MPIR_CXX_BOOL_CTYPE)
 #define MPIR_OP_TYPE_GROUP_LOGICAL_EXTRA /* empty, provided for consistency */
 
 /* complex group */

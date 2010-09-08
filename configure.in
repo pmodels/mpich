@@ -4572,6 +4572,13 @@ fi
 if test "$enable_cxx" = "yes" ; then
     AC_LANG_CPLUSPLUS
     AC_CHECK_SIZEOF(bool)
+
+    if test "$ac_cv_type__Bool" = "yes" -a "$ac_cv_sizeof__Bool" = "$ac_cv_sizeof_bool" ; then
+        AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[_Bool],[a C type used to compute C++ bool reductions])
+    else
+        AC_MSG_ERROR([unable to determine matching C type for C++ bool])
+    fi
+
     AC_CHECK_HEADER(complex)
     if test "$ac_cv_header_complex" = "yes" ; then 
         # The C++ complex types are all templated.  We finagle this by 
@@ -4634,6 +4641,7 @@ using namespace std;
     AC_LANG_C
 
     # Make these available to the collective operations and other code
+    AC_DEFINE_UNQUOTED(MPIR_CXX_BOOL_VALUE,$MPIR_CXX_BOOL,[Define as the MPI Datatype handle for MPI::BOOL])
     AC_DEFINE_UNQUOTED(MPIR_CXX_COMPLEX_VALUE,$MPIR_CXX_COMPLEX,[Define as the MPI Datatype handle for MPI::COMPLEX])
     AC_DEFINE_UNQUOTED(MPIR_CXX_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::DOUBLE_COMPLEX])
     AC_DEFINE_UNQUOTED(MPIR_CXX_LONG_DOUBLE_COMPLEX_VALUE,$MPIR_CXX_LONG_DOUBLE_COMPLEX,[Define as the MPI Datatype handle for MPI::LONG_DOUBLE_COMPLEX])

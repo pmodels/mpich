@@ -21,6 +21,7 @@ icallreducex_SOURCES = icallreducex.cxx
 icreducex_SOURCES = icreducex.cxx
 icalltoallx_SOURCES = icalltoallx.cxx
 alltoallw2x_SOURCES = alltoallw2x.cxx
+reduceboolx_SOURCES = reduceboolx.cxx
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
