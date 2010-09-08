@@ -48,9 +48,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
 	{
 	    MPIU_Object_set_ref(sreq, 0);
 	    MPIDI_CH3_Request_destroy(sreq);
-	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, 
-		         FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|eagermsg", 0);
-	    goto fn_fail;
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
 	}
 	/* --END ERROR HANDLING-- */
 
@@ -62,9 +60,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
 	/* --BEGIN ERROR HANDLING-- */
 	MPIU_Object_set_ref(sreq, 0);
 	MPIDI_CH3_Request_destroy(sreq);
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, 
-		    FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|loadsendiov", 0);
-	goto fn_fail;
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
 	/* --END ERROR HANDLING-- */
     }
 
@@ -187,7 +183,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, 2, sreq_p));
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
+	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
     }
 
     sreq = *sreq_p;
@@ -263,7 +259,7 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
 				      sizeof(*eagershort_pkt), sreq_p ));
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
+	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
     }
     sreq = *sreq_p;
     if (sreq != NULL) {
@@ -550,14 +546,14 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
 	MPIU_Object_set_ref(sreq, 0);
 	MPIDI_CH3_Request_destroy(sreq);
 	*sreq_p = NULL;
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, 
-			    __LINE__, MPI_ERR_OTHER, "**ch3|eagermsg", 0);
-	goto fn_exit;
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
     }
     /* --END ERROR HANDLING-- */
     
  fn_exit:
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* 

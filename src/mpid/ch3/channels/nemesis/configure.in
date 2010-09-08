@@ -79,6 +79,10 @@ if test "$enable_fast" = "yes" ; then
     AC_DEFINE(ENABLE_NO_YIELD,1,[Define to remove yield()s in polling loops])
 fi
 
+# make sure we support signal
+AC_CHECK_HEADERS(signal.h)
+AC_CHECK_FUNCS(signal)
+
 # Check for gm, mx, elan, psm options
 PAC_SET_HEADER_LIB_PATH(gm)
 PAC_SET_HEADER_LIB_PATH(mx)

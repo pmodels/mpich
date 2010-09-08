@@ -170,7 +170,7 @@ typedef union MPIDI_CH3_nem_pkt
         {                                                                                               \
             MPIU_Object_set_ref(_rts_req, 0);                                                           \
             MPIDI_CH3_Request_destroy(_rts_req);                                                        \
-            MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                             \
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                                  \
         }                                                                                               \
         /* --END ERROR HANDLING-- */                                                                    \
         if (_rts_req != NULL)                                                                           \
@@ -179,10 +179,9 @@ typedef union MPIDI_CH3_nem_pkt
             {                                                                                           \
                 MPIU_Object_set_ref(_rts_req, 0);                                                       \
                 MPIDI_CH3_Request_destroy(_rts_req);                                                    \
-                mpi_errno = MPIR_Err_create_code(_rts_req->status.MPI_ERROR, MPIR_ERR_FATAL,            \
-                                                 FCNAME, __LINE__, MPI_ERR_OTHER, "**rtspkt", 0);       \
+                mpi_errno = _rts_req->status.MPI_ERROR;                                                 \
                 MPID_Request_release(_rts_req);                                                         \
-                goto fn_exit;                                                                           \
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                              \
             }                                                                                           \
             MPID_Request_release(_rts_req);                                                             \
         }                                                                                               \

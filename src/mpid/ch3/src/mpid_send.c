@@ -100,12 +100,7 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
-	    /* FIXME: this is a fatal error because a sequence number has 
-	       already been allocated.  If sequence numbers are not
-	       being used then this could be a recoverable error.  A check 
-	       needs to be added that sets the error to fatal or
-	       recoverable depending on the use of sequence numbers. */
-	    MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
 	}
 	/* --END ERROR HANDLING-- */
 	if (sreq != NULL)

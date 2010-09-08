@@ -8,6 +8,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 
 #define DBG_IFNAME 0
 
@@ -99,7 +102,25 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
     mpi_errno = MPID_nem_tcp_send_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+#ifdef HAVE_SIGNAL
+    {
+        /* In order to be able to handle socket errors on our own, we need
+           to ignore SIGPIPE.  This may cause problems for programs that
+           intend to handle SIGPIPE or count on being killed, but I expect
+           such programs are very rare, and I'm not sure what the best
+           solution would be anyway. */
+        void *ret;
 
+        ret = signal(SIGPIPE, SIG_IGN);
+        MPIU_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
+        if (ret != SIG_DFL && ret != SIG_IGN) {
+            /* The app has set its own signal handler.  Replace the previous handler. */
+            ret = signal(SIGPIPE, ret);
+            MPIU_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
+        }
+    }
+#endif
+    
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_INIT);
 /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */

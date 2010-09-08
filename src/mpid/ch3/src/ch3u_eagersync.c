@@ -82,8 +82,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 	    MPIU_Object_set_ref(sreq, 0);
 	    MPIDI_CH3_Request_destroy(sreq);
 	    *sreq_p = NULL;
-	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|eagermsg", 0);
-	    goto fn_fail;
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
 	}
 	/* --END ERROR HANDLING-- */
     }
@@ -155,13 +154,14 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
 	MPIU_Object_set_ref(sreq, 0);
 	MPIDI_CH3_Request_destroy(sreq);
 	*sreq_p = NULL;
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|eagermsg", 0);
-	goto fn_exit;
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
     }
     /* --END ERROR HANDLING-- */
 
  fn_exit:
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* 

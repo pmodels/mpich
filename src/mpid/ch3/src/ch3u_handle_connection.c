@@ -220,10 +220,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 		
     mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, close_pkt, 
 					      sizeof(*close_pkt), &sreq));
-    if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER,
-		     "**ch3|send_close_ack");
-    }
+    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|send_close_ack");
     
     if (sreq != NULL) {
 	/* There is still another reference being held by the channel.  It
@@ -231,14 +228,21 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 	MPID_Request_release(sreq);
     }
 
+ fn_exit:
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* Here is the matching code that processes a close packet when it is 
    received */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_Close
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
 				MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
 {
@@ -258,10 +262,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		       vc->pg_rank);
 	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, resp_pkt, 
 					  sizeof(*resp_pkt), &resp_sreq));
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
-				"**ch3|send_close_ack");
-	}
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|send_close_ack");
 	
 	if (resp_sreq != NULL)
 	{

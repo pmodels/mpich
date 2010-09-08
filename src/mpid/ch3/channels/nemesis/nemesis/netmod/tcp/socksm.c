@@ -797,9 +797,15 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 
     MPIU_Assert(vc != NULL);
 
+    /* Handle error case */
+    if (vc_tcp->state == MPID_NEM_TCP_VC_STATE_ERROR ||
+        vc->state == MPIDI_VC_STATE_MORIBUND) {
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**vc_in_error_state");
+    }
+
     /* We have an active connection, start polling more often */
     MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_ACTIVE;
-        
+
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     if (vc_tcp->state == MPID_NEM_TCP_VC_STATE_DISCONNECTED) {
@@ -925,7 +931,8 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
            resolution. */
     }
     else {
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**vc_in_error_state");
+        /* We already handled the error case at the top of the routine. */
+        MPIU_Assertp(0);
     }
 
  fn_exit:
@@ -1498,7 +1505,7 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
                        the other side performs a tcp close() before we do and we
                        blow up here. */
                     MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "other side closed, but we're shutting down, closing sc");
-                    mpi_errno = cleanup_and_free_sc_plfd(sc); /* QUIESCENT */
+                    mpi_errno = MPID_nem_tcp_cleanup_on_error(sc_vc);
                     goto fn_exit;
                 }
                 else

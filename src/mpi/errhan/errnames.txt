@@ -880,6 +880,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **envvarparse:Unable to parse environment variable
 **envvarparse %s:Unable to parse environment variable (%s)
 
+**signal:signal() failed
+**signal %s:signal() failed: %s
+
 #
 # mpi functions
 #

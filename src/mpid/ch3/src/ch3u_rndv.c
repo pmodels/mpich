@@ -60,8 +60,7 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
 	MPIU_Object_set_ref(sreq, 0);
 	MPIDI_CH3_Request_destroy(sreq);
 	*sreq_p = NULL;
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|rtspkt", 0);
-	goto fn_exit;
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rtspkt");
     }
     /* --END ERROR HANDLING-- */
     if (rts_sreq != NULL)
@@ -71,9 +70,9 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
 	    MPIU_Object_set_ref(sreq, 0);
 	    MPIDI_CH3_Request_destroy(sreq);
 	    *sreq_p = NULL;
-	    mpi_errno = MPIR_Err_create_code(rts_sreq->status.MPI_ERROR, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|rtspkt", 0);
-	    MPID_Request_release(rts_sreq);
-	    goto fn_exit;
+            mpi_errno = rts_sreq->status.MPI_ERROR;
+            MPID_Request_release(rts_sreq);
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rtspkt");
 	}
 	MPID_Request_release(rts_sreq);
     }
@@ -85,8 +84,9 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
        engine, threads, etc.). */
 
  fn_exit:
-
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* 

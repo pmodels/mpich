@@ -2374,7 +2374,7 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	{
 	    MPIU_Object_set_ref(req, 0);
 	    MPIDI_CH3_Request_destroy(req);
-	    MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
 	}
 	/* --END ERROR HANDLING-- */
 	
@@ -2853,7 +2853,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	{
 	    MPIU_Object_set_ref(req, 0);
 	    MPIDI_CH3_Request_destroy(req);
-	    MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
 	}
 	/* --END ERROR HANDLING-- */
     }

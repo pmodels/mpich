@@ -112,8 +112,7 @@ int MPID_Isend(const void * buf, int count, MPI_Datatype datatype, int rank,
 	    MPIU_Object_set_ref(sreq, 0);
 	    MPIDI_CH3_Request_destroy(sreq);
 	    sreq = NULL;
-	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME,
-			 __LINE__, MPI_ERR_OTHER, "**ch3|eagermsg", 0);
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
 	    goto fn_exit;
 	}
 	/* --END ERROR HANDLING-- */

@@ -17,7 +17,6 @@
 int MPID_nem_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_FINALIZE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_FINALIZE);
@@ -54,16 +53,6 @@ int MPID_nem_finalize(void)
 #ifdef PAPI_MONITOR
     my_papi_close();
 #endif /*PAPI_MONITOR */
-
-#ifdef USE_PMI2_API
-    /* FIXME: I removed this PMI_Barrier in PMI2.  The barrier seems
-       not to be necessary, but I'm keeping this here until I'm
-       convinced that this isn't here to handle some timing-related
-       bug. DARIUS */
-#else
-    pmi_errno = PMI_Barrier(); 
-    MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno); 
-#endif
     
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_FINALIZE);
