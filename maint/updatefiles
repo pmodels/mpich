@@ -995,9 +995,7 @@ if [ $do_build_configure = yes ] ; then
 	if [ ! -x $dir/configure ] ; then
 	    echo "Could not build configure in $dir"
 	    exit 1
-	elif `cat $dir/configure | sed -e '/^dnl/d' -e 's/ dnl.*//g' | grep PAC_` 2>&1 ; then
-	    # FIXME: Is this correct? What happens when the PAC macro
-	    # is within a commented out region
+	elif grep '\bPAC_' $dir/configure >/dev/null 2>&1 ; then
 	    echo "configure in $dir contains unresolved PAC macros"
 	    exit 1
 	fi
