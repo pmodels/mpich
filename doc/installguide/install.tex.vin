@@ -1180,6 +1180,20 @@ distribution and the Unix commands described in previous sections.  This
 will not build the same libraries as described in this section.  It will 
 build a ``Unix'' distribution that runs under \texttt{cygwin}.
 
+\subsection{\texttt{Vista/Windows 7/Windows Server 2008 Users}}
+To install MPICH on Windows flavors with User Account Control you need
+to open an adminstrator command prompt and use the msiexec utility.
+
+\begin{enumerate}
+\item
+    Right-click on the command prompt icon and choose "Run as administrator"
+\item
+    You can install MPICH from the administrator command prompt by executing 
+\begin{verbatim}
+    msiexec /I mpich2-1.x.xxx.msi
+\end{verbatim}
+\end{enumerate}
+
 \section{All Configure Options}
 \label{configure-options}
 
