@@ -74,8 +74,8 @@ int main( int argc, char **argv )
 		}
 	    }
 	}
-	delete vin;
-	delete vout;
+	delete[] vin;
+	delete[] vout;
     }
     
     sumop.Free();
