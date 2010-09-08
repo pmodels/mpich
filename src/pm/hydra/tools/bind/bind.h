@@ -13,7 +13,7 @@
 
 /*! \cond */
 
-#define HYDT_TOPO_CHILD_ID(obj) \
+#define HYDT_OBJ_CHILD_ID(obj) \
     ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_topo_obj))
 
 /*! \endcond */
@@ -32,17 +32,17 @@ typedef enum {
     HYDT_BIND_NONE = 0,
 
     /** \brief Provides information on number of processing elements
-     * in the system, and allows for process binding */
+     * in the machine, and allows for process binding */
     HYDT_BIND_BASIC,
 
     /** \brief Provides information about the topology of the
      * processing elements (nodes, processors, cores, threads). */
-    HYDT_BIND_TOPO,
+    HYDT_BIND_CPU,
 
     /** \brief Provides information about the topology of the
      * processing elements (nodes, processors, cores, threads) as well
      * as the memory hierarchy (caches, memory). */
-    HYDT_BIND_MEMTOPO
+    HYDT_BIND_MEM
 } HYDT_bind_support_level_t;
 
 
@@ -53,22 +53,22 @@ typedef enum {
  */
 typedef enum {
     /** \brief Cache coherent set of processors */
-    HYDT_TOPO_MACHINE = 0,
+    HYDT_OBJ_MACHINE = 0,
 
     /** \brief Sockets sharing memory dimms */
-    HYDT_TOPO_NODE,
+    HYDT_OBJ_NODE,
 
     /** \brief A physical socket, possibly comprising of many cores */
-    HYDT_TOPO_SOCKET,
+    HYDT_OBJ_SOCKET,
 
     /** \brief A core, possibly comprising of many hardware threads */
-    HYDT_TOPO_CORE,
+    HYDT_OBJ_CORE,
 
     /** \brief A hardware thread */
-    HYDT_TOPO_THREAD,
+    HYDT_OBJ_THREAD,
 
     /** \brief Marker for the last element in the enum */
-    HYDT_TOPO_END
+    HYDT_OBJ_END
 } HYDT_topo_obj_type_t;
 
 
@@ -105,7 +105,7 @@ struct HYDT_topo_obj {
 };
 
 /**
- * \brief Binding information for one machine in the system
+ * \brief Binding information
  *
  * Contains private persistent information stored by the binding
  * library.

@@ -41,7 +41,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     *support_level = HYDT_BIND_BASIC;
 
     /* Setup the machine level */
-    HYDT_bind_info.machine.type = HYDT_TOPO_MACHINE;
+    HYDT_bind_info.machine.type = HYDT_OBJ_MACHINE;
     HYDT_bind_info.machine.os_index = -1;       /* This is a set, not a single unit */
     HYDT_bind_info.machine.parent = NULL;
     HYDT_bind_info.machine.num_children = 1;
@@ -51,7 +51,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 
     /* Setup the node level */
     node = &HYDT_bind_info.machine.children[0];
-    node->type = HYDT_TOPO_NODE;
+    node->type = HYDT_OBJ_NODE;
     node->os_index = -1;
     node->parent = &HYDT_bind_info.machine;
     ret = PLPA_NAME(get_socket_info) (&node->num_children, &max);
@@ -67,7 +67,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     total_cores = 0;
     for (i = 0; i < node->num_children; i++) {
         sock = &node->children[i];
-        sock->type = HYDT_TOPO_SOCKET;
+        sock->type = HYDT_OBJ_SOCKET;
         sock->os_index = -1;
         sock->parent = node;
 
@@ -100,7 +100,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 
         for (j = 0; j < sock->num_children; j++) {
             core = &sock->children[j];
-            core->type = HYDT_TOPO_CORE;
+            core->type = HYDT_OBJ_CORE;
             core->os_index = -1;
             core->parent = sock;
             core->num_children = HYDT_bind_info.total_proc_units / total_cores;
@@ -110,7 +110,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 
             for (k = 0; k < core->num_children; k++) {
                 thread = &core->children[k];
-                thread->type = HYDT_TOPO_THREAD;
+                thread->type = HYDT_OBJ_THREAD;
                 thread->os_index = -1;
                 thread->parent = core;
                 thread->num_children = 0;
@@ -142,8 +142,8 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
         }
     }
 
-    /* We have qualified for topology-aware binding support level */
-    *support_level = HYDT_BIND_TOPO;
+    /* We have qualified for CPU topology-aware binding support level */
+    *support_level = HYDT_BIND_CPU;
 
   fn_exit:
     HYDU_FUNC_EXIT();

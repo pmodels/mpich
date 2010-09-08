@@ -19,11 +19,11 @@ struct HYDT_bind_info HYDT_bind_info = { 0 };
 
 HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {
-    char *bindstr, *bindentry, *obj;
+    char *bindstr, *bindentry, *elem;
     char *binding = NULL, *bindlib = NULL;
-    int i, j, k, use_topo_obj[HYDT_TOPO_END] = { 0 }, child_id, found_obj;
+    int i, j, k, use_topo_obj[HYDT_OBJ_END] = { 0 }, child_id, found_obj;
     HYDT_topo_obj_type_t topo_end;
-    struct HYDT_topo_obj *topo_obj[HYDT_TOPO_END];
+    struct HYDT_topo_obj *obj;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -80,7 +80,6 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         goto fn_exit;
     }
 
-
     HYDU_MALLOC(HYDT_bind_info.bindmap, int *,
                 HYDT_bind_info.total_proc_units * sizeof(int), status);
 
@@ -115,114 +114,126 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         goto fn_exit;
     }
 
+
     /* If we reached here, the user requested for topology aware
      * binding. */
-    if (HYDT_bind_info.support_level != HYDT_BIND_TOPO)
+    if (HYDT_bind_info.support_level < HYDT_BIND_CPU)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "topology binding not supported on this platform\n");
 
 
-    /***************************** TOPO *****************************/
-    if (!strncmp(binding, "topo", strlen("topo"))) {
+    /***************************** CPU *****************************/
+    if (!strncmp(binding, "cpu", strlen("cpu"))) {
         bindstr = HYDU_strdup(binding);
         bindentry = strtok(bindstr, ":");
         bindentry = strtok(NULL, ":");
 
         if (bindentry == NULL) {
             /* No extension option specified; use all resources */
-            for (i = HYDT_TOPO_MACHINE; i < HYDT_TOPO_END; i++)
+            for (i = HYDT_OBJ_MACHINE; i < HYDT_OBJ_END; i++)
                 use_topo_obj[i] = 1;
         }
         else {
-            obj = strtok(bindentry, ",");
+            elem = strtok(bindentry, ",");
             do {
-                if (!strcmp(obj, "node"))
-                    use_topo_obj[HYDT_TOPO_NODE] = 1;
-                else if (!strcmp(obj, "socket") || !strcmp(obj, "sockets"))
-                    use_topo_obj[HYDT_TOPO_SOCKET] = 1;
-                else if (!strcmp(obj, "core") || !strcmp(obj, "cores"))
-                    use_topo_obj[HYDT_TOPO_CORE] = 1;
-                else if (!strcmp(obj, "thread") || !strcmp(obj, "threads"))
-                    use_topo_obj[HYDT_TOPO_THREAD] = 1;
+                if (!strcmp(elem, "socket") || !strcmp(elem, "sockets"))
+                    use_topo_obj[HYDT_OBJ_SOCKET] = 1;
+                else if (!strcmp(elem, "core") || !strcmp(elem, "cores"))
+                    use_topo_obj[HYDT_OBJ_CORE] = 1;
+                else if (!strcmp(elem, "thread") || !strcmp(elem, "threads"))
+                    use_topo_obj[HYDT_OBJ_THREAD] = 1;
                 else
                     HYDU_ERR_POP(status, "unrecognized binding option\n");
 
-                obj = strtok(NULL, ",");
-            } while (obj);
+                elem = strtok(NULL, ",");
+            } while (elem);
         }
 
-        for (i = HYDT_TOPO_END - 1; i > HYDT_TOPO_MACHINE; i--) {
+        for (i = HYDT_OBJ_END - 1; i > HYDT_OBJ_MACHINE; i--) {
+            /* If an object has to be used, its parent object is also
+             * used. For example, you cannot use a core without using
+             * a socket. */
             if (use_topo_obj[i])
                 use_topo_obj[i - 1] = 1;
         }
 
-        topo_end = HYDT_TOPO_END;
-        for (i = HYDT_TOPO_MACHINE; i < HYDT_TOPO_END; i++) {
+        topo_end = HYDT_OBJ_END;
+        for (i = HYDT_OBJ_MACHINE; i < HYDT_OBJ_END; i++) {
             if (use_topo_obj[i] == 0) {
                 topo_end = (HYDT_topo_obj_type_t) i;
                 break;
             }
         }
 
-        /* Initialize indices and topology objects */
-        topo_obj[HYDT_TOPO_MACHINE] = &HYDT_bind_info.machine;
-        for (j = HYDT_TOPO_MACHINE; j < HYDT_TOPO_END; j++) {
-            if (j)
-                topo_obj[j] = topo_obj[j - 1]->children;
+        i = 0;
+        j = 0;
+        obj = &HYDT_bind_info.machine;
+        while (1) {
+            /* Go down the left most branch of the tree */
+            while (j < HYDT_OBJ_END - 1) {
+                obj = obj->children;
+                j++;
+            }
+
+            HYDT_bind_info.bindmap[i++] = obj->os_index;
+
+            /* Roll back to the user-requested topology level */
+            while (j >= topo_end) {
+                obj = obj->parent;
+                j--;
+            }
+
+            child_id = HYDT_OBJ_CHILD_ID(obj);
+            if (child_id < obj->parent->num_children - 1) {
+                /* Move to the next sibling */
+                obj++;
+            }
+            else {
+                /* No more siblings; move to an ancestor who has a
+                 * sibling */
+                do {
+                    obj = obj->parent;
+                    if (obj == NULL || obj->parent == NULL)
+                        break;
+
+                    child_id = HYDT_OBJ_CHILD_ID(obj);
+                } while (child_id == obj->parent->num_children - 1);
+
+                /* If we are out of ancestors; break out */
+                if (obj == NULL || obj->parent == NULL)
+                    break;
+
+                /* Else, move to the ancestor's sibling */
+                obj++;
+            }
         }
 
-        for (i = 0; i < HYDT_bind_info.total_proc_units; i++) {
-            HYDT_bind_info.bindmap[i] = topo_obj[HYDT_TOPO_END - 1]->os_index;
-
-            /* If we are done, break out */
-            if (i == HYDT_bind_info.total_proc_units - 1)
-                break;
-
-            /* If not, increment the object structure */
-            found_obj = 0;
-
-            for (j = HYDT_TOPO_END - 1; j > HYDT_TOPO_MACHINE; j--) {
-
-                /* If our topology depth is greater than what the user
-                 * requested, don't try to find any more siblings */
-                if (j >= topo_end)
-                    continue;
-
-                child_id = HYDT_TOPO_CHILD_ID(topo_obj[j]);
-                if (child_id < topo_obj[j]->parent->num_children - 1) {
-                    /* This object is not the last of the siblings;
-                     * move to the next sibling */
-                    topo_obj[j] = &topo_obj[j]->parent->children[child_id + 1];
-                    for (k = j + 1; k < HYDT_TOPO_END; k++)
-                        topo_obj[k] = topo_obj[k - 1]->children;
-
-                    found_obj = 1;
+        /* Store the number of values we got from the topology. Repeat
+         * these values till we fill in all the processing elements */
+        j = i;
+        while (1) {
+            for (k = 0; k < j; k++) {
+                if (i == HYDT_bind_info.total_proc_units)
                     break;
-                }
+                HYDT_bind_info.bindmap[i++] = HYDT_bind_info.bindmap[k];
             }
-
-            if (!found_obj) {
-                /* Initialize indices and topology objects */
-                topo_obj[HYDT_TOPO_MACHINE] = &HYDT_bind_info.machine;
-                for (j = HYDT_TOPO_MACHINE; j < HYDT_TOPO_END; j++) {
-                    if (j)
-                        topo_obj[j] = topo_obj[j - 1]->children;
-                }
-            }
+            if (i == HYDT_bind_info.total_proc_units)
+                break;
         }
 
         goto fn_exit;
     }
 
 
-    /* If we reached here, the user requested for topology aware
-     * binding. */
-    if (HYDT_bind_info.support_level != HYDT_BIND_MEMTOPO)
+    /* If we reached here, the user requested for memory topology
+     * aware binding. */
+    if (HYDT_bind_info.support_level < HYDT_BIND_MEM)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "memory topology binding not supported on this platform\n");
 
-    /***************************** TOPOMEM *****************************/
-    if (!strncmp(binding, "topomem", strlen("topomem"))) {
+
+    /***************************** CACHE *****************************/
+    if (!strncmp(binding, "cache", strlen("cache"))) {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "memory-aware topology binding is not implemented yet\n");
     }
