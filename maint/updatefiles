@@ -976,14 +976,16 @@ if [ $do_build_configure = yes ] ; then
 		rm -f $dir/mf.newer
 		date > $dir/mf.newer
                 (cd $dir && rm -f mf.tmp ; \
-	            sed -e 's%@SHELL@%/bin/sh%' -e "s%@srcdir@%.%g" \
-		    -e '/include .*alldeps/d' -e '/@SET_MAKE@/d' Makefile.in > mf.tmp ; \
-	            echo "Found $dir/configure.in; executing ${MAKE} -f mf.tmp ./configure" ; \
-		    if ${MAKE} -q -f mf.tmp ./configure >mf.out 2>&1 ; \
-		    then \
-                    : ; \
-		    else \
-	            ${MAKE} -f mf.tmp ./configure ; fi)
+                     sed -e 's%@SHELL@%/bin/sh%' -e "s%@srcdir@%.%g" \
+                         -e '/include .*alldeps/d' -e '/@SET_MAKE@/d' \
+                         -e 's%@VPATH@%%' Makefile.in > mf.tmp ; \
+                 echo "Found $dir/configure.in; executing ${MAKE} -f mf.tmp ./configure" ; \
+                 if ${MAKE} -q -f mf.tmp ./configure >mf.out 2>&1 ; then \
+                     : ; \
+                 else \
+                     ${MAKE} -f mf.tmp ./configure ; \
+                 fi \
+                )
 
 		# Remove make output now that we no longer need it.
 		rm -f $dir/mf.newer
