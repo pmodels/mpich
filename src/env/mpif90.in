@@ -80,7 +80,10 @@ Show=eval
 # (e.g., "f90 -64" becomes "f90--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
+# Added MPICH_F90_OLD, MPICH_F90 can be used to prefix FC with external utility,
+# e.g. setenv MPICH_F90 'eval linkcache $MPICH_F90_OLD'
 if [ -n "$MPICH_F90" ] ; then
+    MPICH_F90_OLD="$FC"
     FC="$MPICH_F90"
     FCname=`echo $FC | sed 's/ /-/g'`
     if [ -s $sysconfdir/mpif90-$FCname.conf ] ; then

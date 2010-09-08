@@ -62,7 +62,10 @@ Show=
 # (e.g., "CC -64" becomes "CC--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
+# Added MPICH_CXX_OLD, MPICH_CXX can be used to prefix CXX
+# with external utility, e.g. setenv MPICH_CXX 'eval linkcache $MPICH_CXX_OLD'
 if [ -n "$MPICH_CXX" ] ; then
+    MPICH_CXX_OLD="$CXX"
     CXX="$MPICH_CXX"
     CXXname=`echo $CXX | sed 's/ /-/g'`
     if [ -s $sysconfdir/mpicxx-$CXXname.conf ] ; then

@@ -67,7 +67,10 @@ Show=eval
 # (e.g., "f77 -64" becomes "f77--64", that file is sources, allowing other
 # changes to the compilation environment.  See the variables used by the 
 # script (defined above)
+# Added MPICH_F77_OLD, MPICH_F77 can be used to prefix F77
+# with external utility, e.g. setenv MPICH_F77 'eval linkcache $MPICH_F77_OLD'
 if [ -n "$MPICH_F77" ] ; then
+    MPICH_F77_OLD="$F77"
     F77="$MPICH_F77"
     F77name=`echo $F77 | sed 's/ /-/g'`
     if [ -s $sysconfdir/mpif77-$F77name.conf ] ; then
