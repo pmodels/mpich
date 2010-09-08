@@ -696,7 +696,7 @@ int MTestGetIntercomm( MPI::Intercomm &comm, int &isLeftGroup, int min_size )
 	    done = true;
 
         /* we are only done if all processes are done */
-        MPI::COMM_WORLD.Allreduce(MPI_IN_PLACE, &done, 1, MPI::INT, MPI::LAND);
+        MPI::COMM_WORLD.Allreduce(MPI_IN_PLACE, &done, 1, MPI::BOOL, MPI::LAND);
 
         /* Advance the comm index whether we are done or not, otherwise we could
          * spin forever trying to allocate a too-small communicator over and
