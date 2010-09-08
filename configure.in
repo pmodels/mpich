@@ -410,7 +410,7 @@ AC_ARG_ENABLE(f77,
 	enable_f77=default;enable_f77_wasdefault=yes)
 
 AC_ARG_ENABLE(fc,
-	AC_HELP_STRING([--enable-fc], [Enable Fortran 90 bindings]),,enable_fc=default)
+	AC_HELP_STRING([--enable-fc], [Enable Fortran 90 bindings]),,enable_fc=yes)
 
 AC_ARG_ENABLE(cxx,
 	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=default)
@@ -1850,7 +1850,7 @@ fi
 # Set a default value for fc works with f77.  This value is
 # set to no *only* if fc was selected but was not compatible with f77
 fc_with_f77=yes
-if test "$enable_fc" = "default" -a "$enable_f77" = yes ; then
+if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
     enable_fc=no
     # Check for a Fortran compiler.  Work around bug in autoconf that 
     # adds -g to FCFLAGS
