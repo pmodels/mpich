@@ -51,18 +51,19 @@ void CLOG_Util_abort( int errorcode )
 {
     MPE_CallStack_t  cstk;
     char             msg[ CLOG_ERR_STRLEN ];
-    int              world_rank;
+    int              isz, world_rank;
 
     PMPI_Comm_rank( MPI_COMM_WORLD, &world_rank );
     sprintf( msg, "Backtrace of the callstack at rank %d:\n", world_rank );
-    write( STDERR_FILENO, msg, strlen(msg)+1 );
+    isz = write( STDERR_FILENO, msg, strlen(msg)+1 );
     MPE_CallStack_init( &cstk );
     MPE_CallStack_fancyprint( &cstk, STDERR_FILENO,
                               "\tAt ", 1, MPE_CALLSTACK_UNLIMITED );
     PMPI_Abort( MPI_COMM_WORLD, errorcode );
 }
 
-CLOG_BOOL_T CLOG_Util_getenvbool( char *env_var, CLOG_BOOL_T default_value )
+CLOG_BOOL_T CLOG_Util_getenvbool( const char *env_var,
+                                  CLOG_BOOL_T default_value )
 {
     char *env_val;
 

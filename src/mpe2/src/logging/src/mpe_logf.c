@@ -109,9 +109,7 @@ extern void free();
  */
 
 static char *mpe_tmp_cpy( char *, int );
-static char *mpe_tmp_cpy( s, d )
-char *s;
-int  d;
+static char *mpe_tmp_cpy( char *s, int d )
 {
     char *p;
     p = (char *)malloc( d + 1 );
@@ -127,31 +125,31 @@ int  d;
 }
 
 int mpe_init_log_( void );
-int  mpe_init_log_( void )
+int mpe_init_log_( void )
 {
     return MPE_Init_log();
 }
 
 int mpe_initialized_logging_( void );
-int  mpe_initialized_logging_( void )
+int mpe_initialized_logging_( void )
 {
     return MPE_Initialized_logging();
 }
 
 int mpe_start_log_( void );
-int  mpe_start_log_( void )
+int mpe_start_log_( void )
 {
     return MPE_Start_log();
 }
 
 int mpe_stop_log_( void );
-int  mpe_stop_log_( void )
+int mpe_stop_log_( void )
 {
     return MPE_Stop_log();
 }
 
 int mpe_log_sync_clocks_( void );
-int  mpe_log_sync_clocks_( void )
+int mpe_log_sync_clocks_( void )
 {
     return MPE_Log_sync_clocks();
 }
@@ -187,9 +185,8 @@ int mpe_log_receive_( int *otherParty, int *tag, int *size )
 }
 
 #if defined( WITH_CRAY_FCD_STRING )
-int  mpe_describe_info_state_( start_etype, final_etype, name, color, format )
-int *start_etype, *final_etype;
-_fcd name, color, format;
+int  mpe_describe_info_state_( int *start_etype, int *final_etype,
+                               _fcd name, _fcd color, _fcd format )
 {
     char *c1, *c2, *c3;
     int  err;
@@ -203,13 +200,12 @@ _fcd name, color, format;
     return err;
 }
 #else
-int  mpe_describe_info_state_( int *, int *, char *, char *, char *,
-                                int, int, int );
-int  mpe_describe_info_state_( start_etype, final_etype, name, color, format,
-                               d1, d2, d3 )
-int *start_etype, *final_etype;
-char *name, *color, *format;
-int  d1, d2, d3;
+int  mpe_describe_info_state_( int *, int *,
+                               char *, char *, char *,
+                               int, int, int );
+int  mpe_describe_info_state_( int *start_etype, int *final_etype,
+                               char *name, char *color, char *format,
+                               int  d1, int d2, int d3 )
 {
     char *c1, *c2, *c3;
     int  err;
@@ -225,9 +221,8 @@ int  d1, d2, d3;
 #endif
 
 #if defined( WITH_CRAY_FCD_STRING )
-int  mpe_describe_state_( start_etype, final_etype, name, color )
-int *start_etype, *final_etype;
-_fcd name, color;
+int  mpe_describe_state_( int *start_etype, int *final_etype,
+                          _fcd name, _fcd color )
 {
     char *c1, *c2;
     int  err;
@@ -240,10 +235,8 @@ _fcd name, color;
 }
 #else
 int  mpe_describe_state_( int *, int *, char *, char *, int, int );
-int  mpe_describe_state_( start_etype, final_etype, name, color, d1, d2 )
-int *start_etype, *final_etype;
-char *name, *color;
-int  d1, d2;
+int  mpe_describe_state_( int *start_etype, int *final_etype,
+                          char *name, char *color, int d1, int d2 )
 {
     char *c1, *c2;
     int  err;
@@ -257,9 +250,7 @@ int  d1, d2;
 #endif
 
 #if defined( WITH_CRAY_FCD_STRING )
-int  mpe_describe_info_event_( event, name, color, format )
-int *event;
-_fcd name, color, format;
+int  mpe_describe_info_event_( int *event, _fcd name, _fcd color, _fcd format )
 {
     char *c1, *c2, *c3;
     int  err;
@@ -274,10 +265,9 @@ _fcd name, color, format;
 }
 #else
 int  mpe_describe_info_event_( int *, char *, char*, char *, int, int, int );
-int  mpe_describe_info_event_( event, name, color, format, d1, d2, d3 )
-int *event;
-char *name, *color, *format;
-int  d1, d2, d3;
+int  mpe_describe_info_event_( int *event,
+                               char *name, char *color, char *format,
+                               int d1, int d2, int d3 )
 {
     char *c1, *c2, *c3;
     int  err;
@@ -293,9 +283,7 @@ int  d1, d2, d3;
 #endif
 
 #if defined( WITH_CRAY_FCD_STRING )
-int mpe_describe_event_( event, name, color )
-int *event;
-_fcd name, color;
+int mpe_describe_event_( int *event, _fcd name, _fcd color )
 {
     char *c1, *c2;
     int  err;
@@ -308,10 +296,7 @@ _fcd name, color;
 }
 #else
 int  mpe_describe_event_( int *, char *, char*, int, int );
-int  mpe_describe_event_( event, name, color, d1, d2 )
-int *event;
-char *name, *color;
-int  d1, d2;
+int  mpe_describe_event_( int *event, char *name, char *color, int d1, int d2 )
 {
     char *c1, *c2;
     int  err;
@@ -332,9 +317,7 @@ int  mpe_log_pack_( void *bytebuf, int *position,
 }
 
 #if defined( WITH_CRAY_FCD_STRING )
-int  mpe_log_event_( event, data, byteinfo )
-int *event, *data;
-_fcd byteinfo;
+int  mpe_log_event_( int *event, int *data, _fcd byteinfo )
 {
     int  byteinfo_size, err;
     byteinfo_size = _fcdlen( byteinfo );
@@ -347,10 +330,7 @@ _fcd byteinfo;
 }
 #else
 int  mpe_log_event_( int *, int *, char *, int );
-int  mpe_log_event_( event, data, byteinfo, d1 )
-int *event, *data;
-char *byteinfo;
-int  d1;
+int  mpe_log_event_( int *event, int *data, char *byteinfo, int d1 )
 {
     int  err;
     if ( d1 <= 0 )
@@ -366,18 +346,13 @@ int  d1;
 #endif
 
 #if defined( WITH_CRAY_FCD_STRING )
-int  mpe_log_info_event_( event, byteinfo )
-int *event;
-_fcd byteinfo;
+int  mpe_log_info_event_( int *event, _fcd byteinfo )
 {
     return MPE_Log_info_event( *event, _fcdtocp( byteinfo ) );
 }
 #else
 int  mpe_log_info_event_( int *, char *, int );
-int  mpe_log_info_event_( event, byteinfo, d1 )
-int *event;
-char *byteinfo;
-int  d1;
+int  mpe_log_info_event_( int *event, char *byteinfo, int d1 )
 {
     return MPE_Log_info_event( *event, byteinfo );
 }
@@ -390,8 +365,7 @@ int  mpe_log_bare_event_( int *event )
 }
 
 #if defined( WITH_CRAY_FCD_STRING )
-int  mpe_finish_log_( filename )
-_fcd filename;
+int  mpe_finish_log_( _fcd filename )
 {
     char *c1;
     int  err;
@@ -402,9 +376,7 @@ _fcd filename;
 }
 #else
 int  mpe_finish_log_( char *, int );
-int  mpe_finish_log_( filename, d1 )
-char *filename;
-int  d1;
+int  mpe_finish_log_( char *filename, int d1 )
 {
     char *c1;
     int  err;

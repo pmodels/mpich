@@ -38,6 +38,6 @@ void CLOG_Sync_init( CLOG_Sync_t *sync );
 
 CLOG_Time_t CLOG_Sync_run( CLOG_Sync_t *sync );
 
-char *CLOG_Sync_print_type( const CLOG_Sync_t *sync );
+const char *CLOG_Sync_print_type( const CLOG_Sync_t *sync );
 
 #endif

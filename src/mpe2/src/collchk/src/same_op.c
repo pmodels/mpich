@@ -5,8 +5,8 @@
 #include "collchk.h" 
 
 
-static char* CollChk_get_op_string(MPI_Op op);
-static char* CollChk_get_op_string(MPI_Op op)
+static const char* CollChk_get_op_string(MPI_Op op);
+static const char* CollChk_get_op_string(MPI_Op op)
 {
     if ( op == MPI_MAX )
         return "MPI_MAX";
@@ -51,7 +51,7 @@ int CollChk_same_op(MPI_Comm comm, MPI_Op op, char* call)
     MPI_Comm_size(comm, &s);
 
     sprintf(err_str, COLLCHK_NO_ERROR_STR);
-    sprintf(op_str, CollChk_get_op_string(op));
+    sprintf(op_str, "%s", CollChk_get_op_string(op));
 
     if (r == 0) {
         /* send the name of the op to the other processes */

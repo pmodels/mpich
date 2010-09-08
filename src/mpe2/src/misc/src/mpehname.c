@@ -41,9 +41,7 @@
 + name : character pointer
 - nlen : integer
 @*/
-void MPE_GetHostName( name, nlen )
-char *name;
-int  nlen;
+void MPE_GetHostName( char *name, int nlen )
 {
 /* This is the prefered form, IF IT WORKS. */
 #if defined(HAVE_UNAME) && defined(HAVE_GETHOSTBYNAME)

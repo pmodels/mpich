@@ -534,7 +534,7 @@ CLOG_Time_t CLOG_Sync_run( CLOG_Sync_t *sync )
     }
 }
 
-char *CLOG_Sync_print_type( const CLOG_Sync_t *sync )
+const char *CLOG_Sync_print_type( const CLOG_Sync_t *sync )
 {
     switch ( sync->algorithm_ID ) {
         case CLOG_SYNC_AGRM_DEFAULT:

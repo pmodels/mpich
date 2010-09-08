@@ -9,7 +9,8 @@
 
 void CLOG_Util_abort( int errorcode );
 
-CLOG_BOOL_T CLOG_Util_getenvbool( char *env_var, CLOG_BOOL_T default_value );
+CLOG_BOOL_T CLOG_Util_getenvbool( const char *env_var,
+                                  CLOG_BOOL_T default_value );
 
 void CLOG_Util_set_tmpfilename( char *tmp_pathname );
 

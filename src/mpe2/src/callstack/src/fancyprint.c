@@ -36,6 +36,7 @@ void MPE_CallStack_fancyprint( MPE_CallStack_t *cstk, int fd,
 {
     char   strbuf[ MPE_CALLSTACK_MAXLINE ];
     int    printf_mode, idx;
+    int    ierr;
 
     MPE_CallStack_iteratorInit( cstk );
 #if defined( HAVE_PRINTSTACK )
@@ -65,7 +66,7 @@ void MPE_CallStack_fancyprint( MPE_CallStack_t *cstk, int fd,
                 sprintf( strbuf, "%s\n",
                          MPE_CallStack_iteratorFetchNext( cstk ) );
         }
-        write( fd, strbuf, strlen(strbuf)+1 );
+        ierr = write( fd, strbuf, strlen(strbuf)+1 );
         idx++ ;
     }
 }

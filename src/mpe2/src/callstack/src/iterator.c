@@ -33,11 +33,12 @@ extern FILE* fdopen( int, const char * );
 void MPE_CallStack_iteratorInit( MPE_CallStack_t *cstk )
 {
     int    pipefds[2];
+    int    ierr;
     /* Connect a pipe to the fd used in backtrace_symbols_fd(). */
 #ifdef HAVE_WINDOWS_H
     /*FIXME: CreatePipe() --- windows */
 #else
-    pipe( pipefds );
+    ierr = pipe( pipefds );
 #endif
     /* Set the writing end of the pipe non-blocking */
 #ifdef HAVE_WINDOWS_H
