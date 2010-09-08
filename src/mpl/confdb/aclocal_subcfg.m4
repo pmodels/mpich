@@ -71,7 +71,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
                     for pac_pvar in $ac_precious_vars ; do
                         # check if configure argument token contains the
                         # precious variable, i.e. "name_of_prec_var=".
-                        pvar_in_arg=`echo $pac_arg | grep "$pac_pvar=" -`
+                        pvar_in_arg=`echo $pac_arg | grep "$pac_pvar="`
                         if test "X$pvar_in_arg" != "X" ; then
                             # check if current precious variable is set in env
                             eval pvar_set=\${$pac_pvar+set}
