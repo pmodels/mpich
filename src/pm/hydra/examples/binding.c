@@ -10,10 +10,12 @@
 #include "mpi.h"
 
 #define NUM_CPUS 4
+#define STRLEN (NUM_CPUS * 10)
 
 int main(int argc, char **argv)
 {
     int rank, size, ret, i, num_cpus = -1;
+    char str[STRLEN], foo[STRLEN];
     cpu_set_t mask;
 
     MPI_Init(&argc, &argv);
@@ -41,10 +43,12 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
 
-    printf("[%d] ", rank);
-    for (i = 0; i < num_cpus; i++)
-        printf("%d ", CPU_ISSET(i, &mask));
-    printf("\n");
+    snprintf(foo, STRLEN, "[%d] ", rank);
+    for (i = 0; i < num_cpus; i++) {
+        snprintf(str, STRLEN, "%s %d ", foo, CPU_ISSET(i, &mask));
+        snprintf(foo, STRLEN, "%s", str);
+    }
+    fprintf(stderr, "%s\n", str);
 
     MPI_Finalize();
 
