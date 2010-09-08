@@ -98,11 +98,16 @@ struct HYDT_topo_obj {
     /** \brief Array of children objects */
     struct HYDT_topo_obj *children;
 
-    /** \brief Depth of the shared memory regions. This is a pointer
-     * to accomodate multiple levels of memory shared by this set of
-     * processing units. */
-    int *shared_memory_depth;
+    /** \brief Local memory */
+    size_t local_mem_size;
+
+    /** \brief Size of cache shared by this object's elements */
+    size_t cache_size;
+
+    /** \brief Depth of the highest level cache in this object */
+    int cache_depth;
 };
+
 
 /**
  * \brief Binding information
