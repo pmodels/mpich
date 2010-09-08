@@ -596,7 +596,7 @@ int MTestGetIntercomm( MPI::Intercomm &comm, int &isLeftGroup, int min_size )
        MPI::COMM_NULL is always considered large enough.  The size is
        the sum of the sizes of the local and remote groups */
     while (!done) {
-	comm          = MPI::COMM_NULL;
+        comm          = MPI::COMM_NULL;
 	isLeftGroup   = 0;
 	interCommName = "MPI_COMM_NULL";
 
@@ -623,8 +623,9 @@ int MTestGetIntercomm( MPI::Intercomm &comm, int &isLeftGroup, int min_size )
 		mcomm.Free();
 		interCommName = "Intercomm by splitting MPI::COMM_WORLD";
 	    }
-	    else 
+	    else {
 		comm = MPI::COMM_NULL;
+            }
 	    break;
 	case 1:
 	    /* Split comm world in to 1 and the rest */
@@ -648,8 +649,9 @@ int MTestGetIntercomm( MPI::Intercomm &comm, int &isLeftGroup, int min_size )
 		mcomm.Free();
 		interCommName = "Intercomm by splitting MPI::COMM_WORLD into 1, rest";
 	    }
-	    else 
+	    else {
 		comm = MPI::COMM_NULL;
+            }
 	    break;
 
 	case 2:
@@ -674,10 +676,11 @@ int MTestGetIntercomm( MPI::Intercomm &comm, int &isLeftGroup, int min_size )
 		mcomm.Free();
 		interCommName = "Intercomm by splitting MPI::COMM_WORLD into 2, rest";
 	    }
-	    else 
+	    else {
 		comm = MPI::COMM_NULL;
+            }
 	    break;
-	    
+
 	default:
 	    comm = MPI::COMM_NULL;
 	    interCommName = "MPI::COMM_NULL";
@@ -691,16 +694,20 @@ int MTestGetIntercomm( MPI::Intercomm &comm, int &isLeftGroup, int min_size )
 	}
 	else
 	    done = true;
+
+        /* we are only done if all processes are done */
+        MPI::COMM_WORLD.Allreduce(MPI_IN_PLACE, &done, 1, MPI::INT, MPI::LAND);
+
+        /* Advance the comm index whether we are done or not, otherwise we could
+         * spin forever trying to allocate a too-small communicator over and
+         * over again. */
+        interCommIdx++;
+
+        if (!done && comm != MPI::COMM_NULL) {
+            comm.Free();
+        }
     }
 
-    /* we are only done if all processes are done */
-    MPI::COMM_WORLD.Allreduce(MPI_IN_PLACE, &done, 1, MPI::INT, MPI::LAND);
-
-    interCommIdx++;
-
-    if (!done && comm != MPI::COMM_NULL) {
-	comm.Free();
-    }
     return interCommIdx;
 }
 /* Return the name of an intercommunicator */
