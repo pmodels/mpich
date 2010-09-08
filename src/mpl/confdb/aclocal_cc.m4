@@ -502,45 +502,60 @@ if test "$enable_strict_done" != "yes" ; then
         -Wno-format-zero-length
 	-Wno-type-limits
     "
-    pac_cc_strict_flags=""
-    case "$1" in 
-        yes|all|posix)
+
+    enable_c89=yes
+    enable_c99=no
+    enable_posix=yes
+    enable_opt=yes
+    flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
+    for flag in ${flags}; do
+        case "$flag" in
+	     c89)
 		enable_strict_done="yes"
-		pac_cc_strict_flags="-O2 $pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
-                PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
-        ;;
-
-        # sometimes we want to assume c99 but still want strict warnings/errors
-        c99)
-                enable_strict_done="yes"
-                pac_cc_strict_flags="-O2 $pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
-                PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
-        ;;
-
-        noposix)
+		enable_c89=yes
+		;;
+	     c99)
 		enable_strict_done="yes"
-		pac_cc_strict_flags="-O2 $pac_common_strict_flags"
-                PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
-        ;;
-
-	noopt)
+		enable_c99=yes
+		;;
+	     posix)
 		enable_strict_done="yes"
-		pac_cc_strict_flags="$pac_common_strict_flags -D_POSIX_C_SOURCE=199506L"
-                PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
-	;;
-
-        no)
-		# Accept and ignore this value
-		:
-        ;;
-
-        *)
-		if test -n "$1" ; then
-		   AC_MSG_WARN([Unrecognized value for enable-strict:$1])
+		enable_posix=yes
+		;;
+	     noposix)
+		enable_strict_done="yes"
+		enable_posix=no
+		;;
+	     opt)
+		enable_strict_done="yes"
+		enable_opt=yes
+		;;
+	     noopt)
+		enable_strict_done="yes"
+		enable_opt=no
+		;;
+	     *)
+		if test -n "$flag" ; then
+		   AC_MSG_WARN([Unrecognized value for enable-strict:$flag])
 		fi
-        ;;
+		;;
+	esac
+    done
 
-    esac
+    if test "${enable_opt}" = "yes" ; then
+       pac_cc_strict_flags="-O2"
+    fi
+    pac_cc_strict_flags="$pac_cc_strict_flags $pac_common_strict_flags"
+    if test "${enable_posix}" = "yes" ; then
+       PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags])
+    fi
+    # We only allow one of strict-C99 or strict-C89 to be enabled. If
+    # C99 is enabled, we automatically disable C89.
+    if test "${enable_c99}" = "yes" ; then
+       PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
+    elif test "${enable_c89}" = "yes" ; then
+       PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
+    fi
 
     # See if the above options work with the compiler
     accepted_flags=""
