@@ -18,7 +18,7 @@ C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 #C_COMPILE_SHL = $(CC_SHL) 
 
-VPATH = .:${srcdir}
+@VPATH@
 
 AD_NFS_OBJECTS = ad_nfs_read.o \
       ad_nfs_open.o ad_nfs_write.o ad_nfs_done.o \

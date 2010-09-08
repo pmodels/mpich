@@ -33,7 +33,7 @@ CFLAGS      = @CPPFLAGS@ @CFLAGS@ $(MPIOPROFILE) $(INCLUDE_DIR)
 LIBTOOL       = @LIBTOOL@
 C_COMPILE_SHL = $(CC_SHL)
 
-VPATH = .:${srcdir}
+@VPATH@
 
 DLOOP_OBJECTS = darray_support.o dataloop.o \
 		dataloop_create.o dataloop_create_blockindexed.o \

@@ -17,7 +17,7 @@ LIBTOOL       = @LIBTOOL@
 C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 
-VPATH = .:${srcdir}
+@VPATH@
 
 AD_PANFS_OBJECTS = ad_panfs.o ad_panfs_open.o ad_panfs_hints.o ad_panfs_read.o ad_panfs_resize.o ad_panfs_write.o
 

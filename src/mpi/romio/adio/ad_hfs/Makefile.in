@@ -6,7 +6,7 @@ srcdir      = @srcdir@
 INCLUDES    = -I@MPI_INCLUDE_DIR@ -I${srcdir}/../include -I../include -I../../include -I${srcdir}/../../../../include -I../../../../include
 CFLAGS      = @CPPFLAGS@ @CFLAGS@ $(INCLUDES)
 
-VPATH = .:${srcdir}
+@VPATH@
 
 AD_HFS_OBJECTS = ad_hfs_read.o  \
       ad_hfs_open.o ad_hfs_write.o \

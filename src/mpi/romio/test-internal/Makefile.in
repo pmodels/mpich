@@ -10,7 +10,8 @@ CTESTS = file_realms_test io_bounds_test heap_test
 FTESTS =  
 srcdir=@srcdir@
 
-VPATH = .:${srcdir}
+@VPATH@
+
 
 all: c-test
 

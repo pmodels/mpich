@@ -13,7 +13,8 @@ CTESTS = simple perf async coll_test coll_perf misc file_info excl large_array \
 FTESTS = fcoll_test fperf fmisc pfcoll_test 
 srcdir=@srcdir@
 
-VPATH = .:${srcdir}
+@VPATH@
+
 
 all: c-test @FORTRAN_TEST@
 

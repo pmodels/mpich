@@ -18,7 +18,7 @@ C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 #C_COMPILE_SHL = $(CC_SHL) 
 
-VPATH = .:${srcdir}
+@VPATH@
 
 AD_UFS_OBJECTS = ad_ufs_open.o ad_ufs.o
 

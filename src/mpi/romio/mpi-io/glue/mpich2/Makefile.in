@@ -18,7 +18,7 @@ C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 #C_COMPILE_SHL = $(CC_SHL) 
 
-VPATH = .:${srcdir}
+@VPATH@
 
 MPIO_OBJECTS = mpio_file.o mpio_err.o
 

@@ -149,6 +149,8 @@ dnl the moment to allow ROMIO to be separatedly distributed.
 dnl scripts.
 AC_CONFIG_AUX_DIR(confdb)
 
+# Check if Make is working
+PAC_PROG_MAKE
 #
 # Check that an arch was set
 # If it wasn't set, try to guess using "util/tarch"
@@ -293,7 +295,6 @@ AR="${AR:-ar} cr$AR_LOCAL"
 if test -z "$RANLIB" ; then
     AC_PROG_RANLIB
 fi
-MAKE=${MAKE:-make}
 #
 # USER_CFLAGS and USER_FFLAGS are used only in test/Makefile.in
 if test $DEBUG = "yes"; then
@@ -2015,7 +2016,7 @@ echo "setting TEST_F77 to $TEST_F77"
 echo "setting CFLAGS to $CFLAGS"
 echo "setting USER_CFLAGS to $USER_CFLAGS"
 echo "setting USER_FFLAGS to $USER_FFLAGS"
-#
+
 AC_SUBST(ARCH)
 AC_SUBST(FILE_SYSTEM)
 AC_SUBST(CC)

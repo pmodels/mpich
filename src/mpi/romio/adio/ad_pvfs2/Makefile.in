@@ -14,7 +14,7 @@ LIBTOOL       = @LIBTOOL@
 C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 
-VPATH = .:${srcdir}
+@VPATH@
 
 AD_PVFS2_OBJECTS = ad_pvfs2_close.o ad_pvfs2_read.o \
       ad_pvfs2_open.o ad_pvfs2_write.o \

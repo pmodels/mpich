@@ -20,7 +20,7 @@ C_COMPILE       = $(CC) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 C_COMPILE_SHL   = $(CC_SHL) $(DEFS) $(INCLUDES) $(CFLAGS) $(CPPFLAGS)
 #C_COMPILE_SHL = $(CC_SHL) 
 
-VPATH = .:${srcdir}
+@VPATH@
 
 AD_OBJECTS = ad_close.o ad_init.o ad_end.o ad_open.o flatten.o \
       malloc.o ad_read_coll.o eof_offset.o \
