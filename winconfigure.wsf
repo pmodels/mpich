@@ -2058,6 +2058,10 @@ Function ReplaceAts( str, use_f77, b64 )
 				'str = Replace(str, "@PCONTROL_LIST@", "")
 			Case "@configure_input@"
 				'str = Replace(str, "@configure_input@", "")
+			Case "@CMB_STATUS_ALIGNMENT@"
+				'str = Replace(str, "@CMB_STATUS_ALIGNMENT@", "")
+			Case "@CMB_1INT_ALIGNMENT@"
+				'str = Replace(str, "@CMB_1INT_ALIGNMENT@", "")
 			Case "@DLLIMPORT@"
 				str = Replace(str, "@DLLIMPORT@", "CDEC$ ATTRIBUTES DLLIMPORT::/MPIFCMB1/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIFCMB2/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIFCMB3/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIFCMB4/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIFCMB5/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIFCMB7/" & vbNewLine & "CDEC$ ATTRIBUTES DLLIMPORT::/MPIFCMB8/")
 			Case "@MPID_THREAD_TYPEDEFS@"
