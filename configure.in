@@ -223,7 +223,7 @@ AC_CONFIG_AUX_DIR(confdb)
 FROM_MPICH2=yes
 export FROM_MPICH2
 AC_ARG_VAR(FROM_MPICH2,
-	AC_HELP_STRING[internally set flag to tell subconfigures that
+	[internal flag to tell subconfigures that
 	they are built from within MPICH2])
 
 # Save a copy of precious flags as USER_* before any of these flags
@@ -255,19 +255,19 @@ WRAPPER_LIBS="$MPICH2_LIBS"
 
 # Add MPICH2LIB_* to the appropriate flags
 AC_ARG_VAR(MPICH2LIB_CFLAGS,
-	AC_HELP_STRING[extra CFLAGS used in building MPICH2 libraries])
+	[extra CFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_CPPFLAGS,
-	AC_HELP_STRING[extra CPPFLAGS used in building MPICH2 libraries])
+	[extra CPPFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_CXXFLAGS,
-	AC_HELP_STRING[extra CXXFLAGS used in building MPICH2 libraries])
+	[extra CXXFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_FFLAGS,
-	AC_HELP_STRING[extra FFLAGS used in building MPICH2 libraries])
+	[extra FFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_FCFLAGS,
-	AC_HELP_STRING[extra FCFLAGS used in building MPICH2 libraries])
+	[extra FCFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_LDFLAGS,
-	AC_HELP_STRING[extra LDFLAGS used in building MPICH2 libraries])
+	[extra LDFLAGS used in building MPICH2 libraries])
 AC_ARG_VAR(MPICH2LIB_LIBS,
-	AC_HELP_STRING[extra LIBS used in building MPICH2 libraries])
+	[extra LIBS used in building MPICH2 libraries])
 CFLAGS="$CFLAGS $MPICH2LIB_CFLAGS"
 CPPFLAGS="$CPPFLAGS $MPICH2LIB_CPPFLAGS"
 CXXFLAGS="$CXXFLAGS $MPICH2LIB_CXXFLAGS"
@@ -382,8 +382,11 @@ AC_ARG_ENABLE(fc,
 
 AC_ARG_ENABLE(f90,
 	AC_HELP_STRING([--enable-f90],
-		[Obsolete option: Use --enable-fc/--disable-fc instead]),
-	[AC_MSG_ERROR([--enable-f90 and --disable-f90 are NO longer valid configure options, use --enable-fc or --disable-fc instead])])
+		[Obsolete option: Use --enable-fc or --disable-fc instead]),
+	[AC_MSG_ERROR([
+--enable-f90 and --disable-f90 are NO longer valid configure options,
+use --enable-fc or --disable-fc instead])]
+)
 
 AC_ARG_ENABLE(cxx,
 	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=default)
@@ -1894,7 +1897,13 @@ if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
 fi
 if test "$enable_fc" = "yes" -a "$enable_f77" != "yes" ; then
    # Fortran 90 support requires compatible Fortran 77 support
-   AC_MSG_WARN([Fortran 90 support requires compatible Fortran 77 support.  To force the use of the Fortran 90 compiler for Fortran 77, set the environment variable F77 to the name of the Fortran 90 compiler.])
+   AC_MSG_ERROR([
+Fortran 90 support requires compatible Fortran 77 support.
+To force the use of the Fortran 90 compiler for Fortran 77,
+do not use configure option --disable-f77, and set the environment
+variable F77 to the name of the Fortran 90 compiler, or \$FC.
+If you do not want any Fortran support, use configure options
+--disable-f77 and --disable-fc.])
    # We should probably do the compatibility test as well
    enable_f77=yes
 fi
@@ -2574,7 +2583,7 @@ AS_CASE([$host],
     # Barry proposes AR_FLAGS="Scq" in trac#754, but that won't work correctly for re-builds
     [*-*-darwin*], [AR_FLAGS=Scr]
 )
-AC_ARG_VAR([AR_FLAGS]) # causes AC_SUBST too
+AC_ARG_VAR(AR_FLAGS,[AR command flags]) # causes AC_SUBST too
 
 # Note that we set RANLIB to true if we don't find it (some systems neither
 # need it nor provide it)
