@@ -277,38 +277,6 @@ LDFLAGS="$LDFLAGS $MPICH2LIB_LDFLAGS"
 LIBS="$LIBS $MPICH2LIB_LIBS"
 
 
-# Find a C compiler.
-# We also need to do this before the F77 and FC test to ensure that we
-# find the C preprocessor reliably.
-PAC_PROG_CC
-PAC_PUSH_FLAG([CFLAGS])
-AC_PROG_CPP
-# Bug in autoconf.  Restore cross settings
-if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
-    AC_MSG_RESULT([Resetting cross compilation to yes])
-    cross_compiling=yes
-    ac_cv_prog_cc_cross=yes
-    ac_cv_prog_f77_cross=yes
-    ac_cv_prog_fc_cross=yes
-    ac_cv_prog_cxx_cross=yes
-fi
-PAC_POP_FLAG([CFLAGS])
-
-# compute canonical system types
-AC_CANONICAL_BUILD
-AC_CANONICAL_HOST
-# TARGET not needed, MPICH2 isn't a compiler
-
-# Enable better caching control
-PAC_ARG_CACHING
-
-# Set CFLAGS for enable strict if necessary.  Do this *first* because
-# it may influence the output of the other tests
-PAC_ARG_STRICT
-
-# Check for shared library support
-PAC_ARG_SHAREDLIBS
-
 AC_ARG_ENABLE(lib-depend,
 	AC_HELP_STRING([--enable-lib-depend], [Turn on library dependencies (experimental)]),,
 	[enable_lib_depend=no])
@@ -411,6 +379,11 @@ AC_ARG_ENABLE(f77,
 
 AC_ARG_ENABLE(fc,
 	AC_HELP_STRING([--enable-fc], [Enable Fortran 90 bindings]),,enable_fc=yes)
+
+AC_ARG_ENABLE(f90,
+	AC_HELP_STRING([--enable-f90],
+		[Obsolete option: Use --enable-fc/--disable-fc instead]),
+	[AC_MSG_ERROR([--enable-f90 and --disable-f90 are NO longer valid configure options, use --enable-fc or --disable-fc instead])])
 
 AC_ARG_ENABLE(cxx,
 	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=default)
@@ -561,6 +534,38 @@ AC_ARG_WITH(fwrapname,
 		[Specify name of library containing Fortran interface routines]),
 	[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
 AC_SUBST(FWRAPNAME)
+
+# Find a C compiler.
+# We also need to do this before the F77 and FC test to ensure that we
+# find the C preprocessor reliably.
+PAC_PROG_CC
+PAC_PUSH_FLAG([CFLAGS])
+AC_PROG_CPP
+# Bug in autoconf.  Restore cross settings
+if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
+    AC_MSG_RESULT([Resetting cross compilation to yes])
+    cross_compiling=yes
+    ac_cv_prog_cc_cross=yes
+    ac_cv_prog_f77_cross=yes
+    ac_cv_prog_fc_cross=yes
+    ac_cv_prog_cxx_cross=yes
+fi
+PAC_POP_FLAG([CFLAGS])
+
+# compute canonical system types
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+# TARGET not needed, MPICH2 isn't a compiler
+
+# Enable better caching control
+PAC_ARG_CACHING
+
+# Set CFLAGS for enable strict if necessary.  Do this *first* because
+# it may influence the output of the other tests
+PAC_ARG_STRICT
+
+# Check for shared library support
+PAC_ARG_SHAREDLIBS
 
 
 # -----------------------------------------------------------------------------
@@ -4473,7 +4478,7 @@ EOF
         if test "$ADDRESS_KIND" -le 0 -o "$OFFSET_KIND" -le 0 ; then
 	    AC_MSG_ERROR([Unable to determine Fortran 90 integer kinds for MPI types.  If you do not need Fortran 90, add --disable-fc to the configure options.])
 	    # If the above is converted to a warning, you need to change 
-	    # enable_f90 and remote f90 from the bindings
+	    # enable_fc and remote f90 from the bindings
 	    enable_fc=no
         fi
     fi
