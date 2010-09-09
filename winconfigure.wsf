@@ -3076,6 +3076,10 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef MPIR_INTEGER8_CTYPE */")
 				Case "MPIR_INTEGER16_CTYPE"
 					fout.WriteLine("/* #undef MPIR_INTEGER16_CTYPE */")
+				Case "MPIR_CXX_BOOL_CTYPE"
+					fout.WriteLine("#define MPIR_CXX_BOOL_CTYPE unsigned char")
+				Case "MPIR_CXX_BOOL_VALUE"
+					fout.WriteLIne("#define MPIR_CXX_BOOL_VALUE "+ MPIR_CXX_BOOL)
 				Case "MPIR_CXX_COMPLEX_VALUE"
 					fout.WriteLIne("#define MPIR_CXX_COMPLEX_VALUE "+ MPIR_CXX_COMPLEX)
 				Case "MPIR_CXX_DOUBLE_COMPLEX_VALUE"
