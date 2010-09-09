@@ -2254,6 +2254,8 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("/* #undef HAVE_UNISTD_H */")
             Case "HAVE_STDDEF_H"
                 fout.WriteLine("#define HAVE_STDDEF_H 1")
+            Case "HAVE_DLFCN_H"
+                fout.WriteLine("/* #undef HAVE_DLFCN_H */")
             Case "LIMIT_THREADS"
                 fout.WriteLine("/* #undef LIMIT_THREADS */")
             ' Just using the default value in the unix build for max nthreads
@@ -2298,6 +2300,10 @@ Sub AddOPADefinitions( fout, filename, b64 )
                 fout.WriteLine("/* #undef USE_LOCK_BASED_PRIMITIVES */")
             Case "EXPLICIT_EMULATION"
                 fout.WriteLine("/* #undef EXPLICIT_EMULATION */")
+            ' Windows builds don't rely on libtool - so no need to define
+            ' LT_OBJDIR
+            Case "LT_OBJDIR"
+                fout.WriteLine("/* #undef LT_OBJDIR */")
             Case Else
                 'MsgBox("Unhandled definition <" & define & ">")
                 If appendUniqueString(unhandled_definitions, macroname) Then
@@ -3300,6 +3306,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_READLINK */")
 				Case "HAVE_SIGNAL_H"
 					fout.WriteLine("/* #undef HAVE_SIGNAL_H */")
+				Case "HAVE_SIGNAL"
+					fout.WriteLine("/* #undef HAVE_SIGNAL */")
 				Case "HAVE_STAT"
 					fout.WriteLine("/* #undef HAVE_STAT */")
 				Case "HAVE_STATUS_SET_BYTES"
