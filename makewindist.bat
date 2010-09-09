@@ -198,6 +198,8 @@ echo ERROR: WIN64 Build environment not setup correctly ...
 GOTO END
 :AFTER_WIN64_SANITY_CHECK
 echo Building MPICH2 x64 ...
+REM Adding hpc sdk import libs to PATH so that VS can detect it 
+set PATH=%CCP_LIB64%;%PATH%
 cd winbuild
 CALL build.bat > ..\make_x64.log
 if %errorlevel% NEQ 0 goto BUILDERROR
