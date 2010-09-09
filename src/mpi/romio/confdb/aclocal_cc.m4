@@ -534,6 +534,10 @@ if test "$enable_strict_done" != "yes" ; then
 		enable_strict_done="yes"
 		enable_opt=no
 		;;
+	     no)
+		# Accept and ignore this value
+		:
+		;;
 	     *)
 		if test -n "$flag" ; then
 		   AC_MSG_WARN([Unrecognized value for enable-strict:$flag])
@@ -542,19 +546,22 @@ if test "$enable_strict_done" != "yes" ; then
 	esac
     done
 
-    if test "${enable_opt}" = "yes" ; then
-       pac_cc_strict_flags="-O2"
-    fi
-    pac_cc_strict_flags="$pac_cc_strict_flags $pac_common_strict_flags"
-    if test "${enable_posix}" = "yes" ; then
-       PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags])
-    fi
-    # We only allow one of strict-C99 or strict-C89 to be enabled. If
-    # C99 is enabled, we automatically disable C89.
-    if test "${enable_c99}" = "yes" ; then
-       PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
-    elif test "${enable_c89}" = "yes" ; then
-       PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
+    pac_cc_strict_flags=""
+    if test "${enable_strict_done}" = "yes" ; then
+       if test "${enable_opt}" = "yes" ; then
+       	  pac_cc_strict_flags="-O2"
+       fi
+       pac_cc_strict_flags="$pac_cc_strict_flags $pac_common_strict_flags"
+       if test "${enable_posix}" = "yes" ; then
+       	  PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags])
+       fi
+       # We only allow one of strict-C99 or strict-C89 to be
+       # enabled. If C99 is enabled, we automatically disable C89.
+       if test "${enable_c99}" = "yes" ; then
+       	  PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
+       elif test "${enable_c89}" = "yes" ; then
+       	  PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
+       fi
     fi
 
     # See if the above options work with the compiler
