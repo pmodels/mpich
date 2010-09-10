@@ -12,7 +12,7 @@
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {
-    int i, arg, use_ddd, use_valgrind, enable_stdin;
+    int i, arg, use_ddd, use_valgrind, use_strace, enable_stdin;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
@@ -23,6 +23,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
         use_ddd = 0;
     if (MPL_env2bool("HYDRA_USE_VALGRIND", &use_valgrind) == 0)
         use_valgrind = 0;
+    if (MPL_env2bool("HYDRA_USE_STRACE", &use_strace) == 0)
+        use_strace = 0;
 
     if (use_ddd) {
         proxy_args[arg++] = HYDU_strdup("ddd");
@@ -32,6 +34,13 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (use_valgrind) {
         proxy_args[arg++] = HYDU_strdup("valgrind");
         proxy_args[arg++] = HYDU_strdup("--leak-check=full");
+    }
+
+    if (use_strace) {
+        proxy_args[arg++] = HYDU_strdup("strace");
+        proxy_args[arg++] = HYDU_strdup("-o");
+        proxy_args[arg++] = HYDU_strdup("hydra_strace");
+        proxy_args[arg++] = HYDU_strdup("-ff");
     }
 
     i = 0;
@@ -334,6 +343,11 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
             proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-prefix");
             proxy->exec_launch_info[arg++] =
                 HYDU_strdup(HYD_handle.user_global.ckpoint_prefix);
+        }
+
+        if (HYD_handle.user_global.ckpoint_num) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-num");
+            proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.user_global.ckpoint_num);
         }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-inherited-env");

@@ -13,7 +13,7 @@
 
 struct HYDT_ckpoint_info HYDT_ckpoint_info;
 
-HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix)
+HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix, int user_ckpoint_num)
 {
     HYD_status status = HYD_SUCCESS;
     int ret;
@@ -42,6 +42,8 @@ HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix)
     HYDU_ERR_CHKANDJUMP(status, !S_ISDIR(st.st_mode), HYD_FAILURE,
                         "checkpoint prefix \"%s\" is not a directory.\n",
                         HYDT_ckpoint_info.ckpoint_prefix);
+    
+    HYDT_ckpoint_info.ckpoint_num = (user_ckpoint_num == -1) ? 0 : user_ckpoint_num;
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
@@ -69,11 +71,13 @@ HYD_status HYDT_ckpoint_suspend(int pgid, int id)
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
-        status = HYDT_ckpoint_blcr_suspend(HYDT_ckpoint_info.ckpoint_prefix, pgid, id);
+        status = HYDT_ckpoint_blcr_suspend(HYDT_ckpoint_info.ckpoint_prefix, pgid, id, HYDT_ckpoint_info.ckpoint_num);
         HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
     }
 #endif /* HAVE_BLCR */
 
+    ++HYDT_ckpoint_info.ckpoint_num;
+    
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -95,12 +99,15 @@ HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int n
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
         status =
-            HYDT_ckpoint_blcr_restart(HYDT_ckpoint_info.ckpoint_prefix, pgid, id, envlist,
-                                      num_ranks, ranks, in, out, err);
+            HYDT_ckpoint_blcr_restart(HYDT_ckpoint_info.ckpoint_prefix, pgid, id, HYDT_ckpoint_info.ckpoint_num,
+                                      envlist, num_ranks, ranks, in, out, err);
         HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
     }
 #endif /* HAVE_BLCR */
 
+    /* next checkpoint number should be the one after the one we restarted from */
+    ++HYDT_ckpoint_info.ckpoint_num;
+    
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

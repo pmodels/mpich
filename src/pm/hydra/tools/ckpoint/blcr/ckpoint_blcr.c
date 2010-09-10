@@ -130,7 +130,7 @@ static HYD_status create_env_file(const struct HYD_env *envlist, int num_ranks, 
     goto fn_exit;
 }
 
-HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix, int pgid, int id)
+HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix, int pgid, int id, int ckpt_num)
 {
     HYD_status status = HYD_SUCCESS;
     int ret;
@@ -142,7 +142,7 @@ HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix, int pgid, int id)
     HYDU_FUNC_ENTER();
 
     /* build the checkpoint filename */
-    MPL_snprintf(filename, sizeof(filename), "%s/context-%d-%d", prefix, pgid, id);
+    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid, id);
 
     /* remove existing checkpoint file, if any */
     (void) unlink(filename);
@@ -201,7 +201,7 @@ HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix, int pgid, int id)
     goto fn_exit;
 }
 
-HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id,
+HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int ckpt_num,
                                      struct HYD_env *envlist, int num_ranks, int ranks[],
                                      int *in, int *out, int *err)
 {
@@ -225,7 +225,7 @@ HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id,
     if (status)
         HYDU_ERR_POP(status, "blcr restart\n");
 
-    MPL_snprintf(filename, sizeof(filename), "%s/context-%d-%d", prefix, pgid, id);
+    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid, id);
 
     context_fd = open(filename, O_RDONLY /* | O_LARGEFILE */);
     HYDU_ERR_CHKANDJUMP(status, context_fd < 0, HYD_INTERNAL_ERROR, "open failed, %s\n",

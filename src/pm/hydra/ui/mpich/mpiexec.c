@@ -87,6 +87,7 @@ static void usage(void)
     printf("  Checkpoint/Restart options:\n");
     printf("    -ckpoint-interval                checkpoint interval\n");
     printf("    -ckpoint-prefix                  checkpoint file prefix\n");
+    printf("    -ckpoint-num                     checkpoint number to restart\n");
     printf("    -ckpointlib                      checkpointing library (%s)\n",
            !strcmp(HYDRA_CKPOINTLIB_NAMES, "") ? "none" : HYDRA_CKPOINTLIB_NAMES);
 

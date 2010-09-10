@@ -505,7 +505,8 @@ static HYD_status launch_procs(void)
     HYDU_ERR_POP(status, "unable to initialize process binding\n");
 
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,
-                               HYD_pmcd_pmip.user_global.ckpoint_prefix);
+                               HYD_pmcd_pmip.user_global.ckpoint_prefix,
+                               HYD_pmcd_pmip.user_global.ckpoint_num);
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
 
     if (HYD_pmcd_pmip.system_global.pmi_port || HYD_pmcd_pmip.user_global.ckpoint_prefix) {

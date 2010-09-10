@@ -162,6 +162,11 @@ static HYD_status ckpointlib_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.ckpointlib);
 }
 
+static HYD_status ckpoint_num_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.ckpoint_num);
+}
+
 static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.ckpoint_prefix);
@@ -402,6 +407,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"bindlib", bindlib_fn, NULL},
     {"ckpointlib", ckpointlib_fn, NULL},
     {"ckpoint-prefix", ckpoint_prefix_fn, NULL},
+    {"ckpoint-num", ckpoint_num_fn, NULL},
     {"global-inherited-env", global_env_fn, NULL},
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},

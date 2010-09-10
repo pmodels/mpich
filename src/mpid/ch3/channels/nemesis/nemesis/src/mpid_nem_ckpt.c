@@ -439,8 +439,6 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_m
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_ckpt_marker_t * const ckpt_pkt = (MPID_nem_pkt_ckpt_marker_t *)pkt;
-    MPIDI_CH3I_VC *vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
-    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_PKT_CKPT_MARKER_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_PKT_CKPT_MARKER_HANDLER);
@@ -457,13 +455,6 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_m
     /* We're checkpointing the shared memory region, so we don't need
        to flush the channels between local processes, only remote
        processes */
-    
-    /* make sure netmods don't receive any packets from this vc after the marker */
-    if (!vc_ch->is_local) {
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        /* There should be nothing in the channel following this. */
-        MPIU_Assert(*buflen == sizeof(MPIDI_CH3_Pkt_t));
-    }
 
     if (marker_count == 0) {
         MPIDI_nem_ckpt_finish_checkpoint = TRUE;

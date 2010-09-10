@@ -28,6 +28,8 @@ struct HYDT_ckpoint_info {
     /** \brief Storage prefix for where to store checkpointing files
      * and other associated meta-data */
     char *ckpoint_prefix;
+    /** \brief checkpoint number to restart from*/
+    int ckpoint_num;
 };
 
 /** \cond */
@@ -39,11 +41,12 @@ extern struct HYDT_ckpoint_info HYDT_ckpoint_info;
  *
  * \param[in]  ckpointlib      Checkpointing library to use
  * \param[in]  ckpoint_prefix  Storage prefix for where to store checkpointing files
+ * \param[in]  ckpoint_num     Checkpoint number to restart from
  *
  * This function initializes the checkpointing library requested by
  * the user.
  */
-HYD_status HYDT_ckpoint_init(char *ckpointlib, char *ckpoint_prefix);
+HYD_status HYDT_ckpoint_init(char *ckpointlib, char *ckpoint_prefix, int ckpoint_num);
 
 
 /**
