@@ -14,7 +14,6 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-    sleep(1);
 
     if (in && (pipe(inpipe) < 0))
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", HYDU_strerror(errno));
