@@ -107,52 +107,36 @@ AC_DEFUN([JAC_FIND_PROG_IN_KNOWNS],[
 $1=""
 # Determine the system type
 AC_REQUIRE([AC_CANONICAL_HOST])
-subdir=""
+if test -d "/software/commmon" ; then
+    subdir=/software/common
+else
+    subdir=""
+fi
+subdir_pfx=""
 case "$host" in
-    mips-sgi-irix*)
-        if test -d "/software/irix" ; then
-            subdir="irix"
-        elif test -d "/software/irix-6" ; then
-            subdir="irix-6"
-        fi
+    *irix*)
+        subdir_pfx="irix"
         ;;
     *linux*)
-        if test -d "/software/linux" ; then
-            subdir="linux"
-        fi
+        subdir_pfx="linux"
         ;;
     *solaris*)
-        if test -d "/software/solaris" ; then
-            subdir="solaris"
-        elif test -d "/software/solaris-2" ; then
-            subdir="solaris-2"
-        fi
+        subdir_pfx="solaris"
         ;;
     *sun4*)
-        if test -d "/software/sun4" ; then
-            subdir="sun4"
-        fi
+        subdir_pfx="sun4"
         ;;
-    *aix*)
-        if test -d "/software/aix-4" ; then
-            subdir="aix-4"
-        fi
-        ;;
-    *rs6000*)
-        if test -d "/software/aix-4" ; then
-            subdir="aix-4"
-        fi
+    *aix*|*rs6000*)
+        subdir_pfx="aix"
         ;;
     *freebsd*)
-        if test -d "/software/freebsd" ; then
-            subdir="freebsd"
-        fi
+        subdir_pfx="freebsd"
 esac
 #
-if test -z "$subdir" ; then
-    if test -d "/software/common" ; then
-       subdir="common"
-    fi
+if test -n "$subdir_pfx" ; then
+    for dir in /software/${subdir_pfx}* ; do
+       test -d "$dir" && subdir=$dir
+    done
 fi
 #
 reverse_dirs=""
@@ -162,12 +146,12 @@ for dir in \
     /usr/j2sdk* \
     /usr/java* \
     /usr/java/jdk* \
-    /usr/local/diablo-jdk* \
     /usr/java/j2sdk* \
     /usr/local \
     /usr/local/java* \
     /usr/local/jdk* \
     /usr/local/j2sdk* \
+    /usr/local/diablo-jdk* \
     /usr/share \
     /usr/share/java* \
     /usr/share/jdk* \
@@ -176,6 +160,7 @@ for dir in \
     /usr/contrib/java* \
     /usr/contrib/jdk* \
     /usr/contrib/j2sdk* \
+    /usr/lib/jvm/java* \
     /System/Library/Frameworks/JavaVM.framework/Versions/*/Home \
     $HOME/java* \
     $HOME/jdk* \
@@ -189,12 +174,12 @@ for dir in \
     /opt/local/java* \
     /Tools/jdk* \
     /Tools/j2sdk* \
-    /software/$subdir/apps/packages/java* \
-    /software/$subdir/apps/packages/jdk* \
-    /software/$subdir/apps/packages/j2sdk* \
-    /software/$subdir/com/packages/java* \
-    /software/$subdir/com/packages/jdk* \
-    /software/$subdir/com/packages/j2sdk* \
+    $subdir/apps/packages/java* \
+    $subdir/apps/packages/jdk* \
+    $subdir/apps/packages/j2sdk* \
+    $subdir/com/packages/java* \
+    $subdir/com/packages/jdk* \
+    $subdir/com/packages/j2sdk* \
     /soft/apps/packages/java* \
     /soft/apps/packages/jdk* \
     /soft/apps/packages/j2sdk* \
@@ -230,7 +215,7 @@ dnl         *java* | *jdk* | *j2sdk* | *Frameworks* )
 dnl
         # Not all releases work.Try tests defined in the 3rd argument
         if test -n "[$]$1" ; then
-            AC_MSG_CHECKING([for $2 in user's PATH])
+            AC_MSG_CHECKING([for $2 in known path])
             AC_MSG_RESULT([found [$]$1])
             is_prog_found=yes
             ifelse([$3],, [$1="" ; break], [

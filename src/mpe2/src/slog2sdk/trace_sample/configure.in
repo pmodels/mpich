@@ -169,20 +169,24 @@ case "$host_os" in
     aix4* | aix5* )
         dnl  temporary fix to force libtool on AIX to generate .so file,
         dnl  i.e. inform libtool to do runtime linking.
-        LDFLAGS="$LDFLAGS -brtl"
+        LIBSO_LDFLAGS="-brtl"
         ;;
     *darwin* )
         dnl  force libtool to build .jnilib which is needed by Mac's JVM
-        LDFLAGS="$LDFLAGS -shrext .jnilib"
+        LIBSO_LDFLAGS="-shrext .jnilib"
         ;;
     *cygwin* )
         dnl  Since SUN's JDK assumes a win32 compiler, so force cygwin/gcc
         dnl  to be in MINGW32 mode. 
-        CC="gcc -mno-cygwin"
-        LDFLAGS="$LDFLAGS -Wl,--enable-stdcall-fixup"
+        LIBSO_CFLAGS="-mno-cygwin"
+        LIBSO_LDFLAGS="-Wl,--enable-stdcall-fixup"
         LIBSO_PREFIX=""
         ;;
 esac
+dnl Strictly speaking, we need to test LIBSO_CFLAGS and LIBSO_LDFLAGS
+dnl with libtool before using them in Makefile. **FIXME**
+AC_SUBST(LIBSO_CFLAGS)
+AC_SUBST(LIBSO_LDFLAGS)
 AC_SUBST(LIBSO_PREFIX)
 
 dnl  intel compiler does not need shared library symbol exported.
