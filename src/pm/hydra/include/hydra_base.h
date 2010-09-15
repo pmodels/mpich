@@ -300,6 +300,7 @@ struct HYD_user_global {
     /* Checkpoint restart */
     char *ckpointlib;
     char *ckpoint_prefix;
+    int ckpoint_num;
 
     /* Demux engine */
     char *demux;
