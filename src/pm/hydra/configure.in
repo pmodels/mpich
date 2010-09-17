@@ -377,9 +377,6 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		fi
 		;;		
 	hwloc)
-		if test -z "${hydra_default_bindlib}" ; then
-		   hydra_default_bindlib=$hydra_bindlib_name
-		fi
 		if test "$with_hwloc_prefix" = "embedded" ; then
 		   PAC_CONFIG_SUBDIR([tools/bind/hwloc/hwloc],[have_hwloc=yes],[have_hwloc=no])
                 else
