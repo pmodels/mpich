@@ -10,23 +10,15 @@
 
 static hwloc_topology_t topology;
 
-#define dprint(d, ...)                          \
-    do {                                        \
-        int _i;                                 \
-        for (_i = 0; _i < d; _i++)              \
-            printf("    ");                     \
-        printf(__VA_ARGS__);                    \
+#define dprint(d, ...)                           \
+    do {                                         \
+        int _i;                                  \
+        for (_i = 0; _i < d; _i++)               \
+            fprintf(stderr, "    ");             \
+        fprintf(stderr, __VA_ARGS__);            \
     } while (0)
 
-#define OBJ_TYPE(t)                             \
-    (t == HWLOC_OBJ_SYSTEM ? "SYSTEM" :         \
-     t == HWLOC_OBJ_MACHINE ? "MACHINE" :       \
-     t == HWLOC_OBJ_NODE ? "NODE" :             \
-     t == HWLOC_OBJ_SOCKET ? "SOCKET" :         \
-     t == HWLOC_OBJ_CACHE ? "CACHE" :           \
-     t == HWLOC_OBJ_CORE ? "CORE" :             \
-     t == HWLOC_OBJ_PU ? "THREAD" : "UNKNOWN")
-
+/* Retained for debugging purposes */
 static void print_obj_info(hwloc_obj_t obj) ATTRIBUTE((unused));
 static void print_obj_info(hwloc_obj_t obj)
 {
@@ -34,44 +26,109 @@ static void print_obj_info(hwloc_obj_t obj)
 
     if (obj->type == HWLOC_OBJ_CACHE)
         dprint(obj->depth, "[%s] L%u cache size: %lu\n",
-               OBJ_TYPE(obj->type), obj->attr->cache.depth, obj->attr->cache.size);
+               hwloc_obj_type_string(obj->type), obj->attr->cache.depth,
+               obj->attr->cache.size);
     else {
         if (obj->memory.total_memory || obj->memory.local_memory)
-            dprint(obj->depth, "[%s] total memory: %lu; local memory: %lu\n",
-                   OBJ_TYPE(obj->type), obj->memory.total_memory, obj->memory.local_memory);
+            dprint(obj->depth, "[%s:%u] total memory: %lu; local memory: %lu\n",
+                   hwloc_obj_type_string(obj->type), obj->os_index, obj->memory.total_memory,
+                   obj->memory.local_memory);
         else
-            dprint(obj->depth, "[%s]\n", OBJ_TYPE(obj->type));
+            dprint(obj->depth, "[%s:%u]\n", hwloc_obj_type_string(obj->type), obj->os_index);
     }
 
     for (i = 0; i < obj->arity; i++)
         print_obj_info(obj->children[i]);
 }
 
-static inline void load_mem_cache_info(struct HYDT_topo_obj *obj, hwloc_obj_t hobj)
+static HYD_status count_attached_caches(hwloc_obj_t obj, int *cache_count)
 {
-    static int listed_depth = 0;
-    static int logical_index = -1;
+    int tmp, i;
+    HYD_status status = HYD_SUCCESS;
 
-    if (hobj)
-        obj->local_mem_size = hobj->memory.local_memory;
+    *cache_count = 0;
+    for (i = 0; i < obj->arity; i++) {
+        if (obj->children[i]->type == HWLOC_OBJ_CACHE) {
+            /* Child object is a cache object */
 
-    if (hobj && hobj->arity == 1 && hobj->children[0]->type == HWLOC_OBJ_CACHE) {
-        obj->cache_size = hobj->children[0]->attr->cache.size;
-        obj->cache_depth = hobj->children[0]->attr->cache.depth;
+            /* Check if this belongs to this object or the child
+             * object. */
+            if (!hwloc_cpuset_compare(obj->cpuset, obj->children[i]->cpuset)) {
+                /* cpuset's match; it belongs to us */
+                (*cache_count)++;
+
+                /* Make sure there is only one child */
+                if (obj->arity != 1)
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "confusing cache topology\n");
+
+                /* For this child, check if there are more children */
+                status = count_attached_caches(obj->children[0], &tmp);
+                HYDU_ERR_POP(status, "unable to count caches\n");
+
+                (*cache_count) += tmp;
+            }
+        }
     }
-    else if (hobj && hobj->parent && hobj->parent->arity == 1 &&
-             hobj->parent->type == HWLOC_OBJ_CACHE &&
-             (listed_depth == 0 || hobj->parent->attr->cache.depth < listed_depth) &&
-             (logical_index == -1 || hobj->parent->logical_index != logical_index)) {
-        obj->cache_size = hobj->parent->attr->cache.size;
-        obj->cache_depth = hobj->parent->attr->cache.depth;
-        listed_depth = obj->cache_depth;
-        logical_index = hobj->parent->logical_index;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status gather_attached_cache_info(hwloc_obj_t obj, struct HYDT_mem_obj *mem)
+{
+    static int cidx = -1; /* cache index */
+    HYD_status status = HYD_SUCCESS;
+
+    if (obj->arity == 0)
+        goto fn_exit;
+
+    cidx++;
+    if (obj->children[0]->type == HWLOC_OBJ_CACHE &&
+        !hwloc_cpuset_compare(obj->cpuset, obj->children[0]->cpuset)) {
+        /* cpuset's match; it belongs to us */
+
+        mem->cache_size[cidx] = obj->children[0]->attr->cache.size;
+        mem->cache_depth[cidx] = obj->children[0]->attr->cache.depth;
+
+        /* For this child, check if there are more children */
+        status = gather_attached_cache_info(obj->children[0], mem);
+        HYDU_ERR_POP(status, "unable to gather cache info\n");
     }
-    else {
-        obj->cache_size = 0;
-        obj->cache_depth = 0;
-    }
+    cidx--;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status load_mem_cache_info(struct HYDT_topo_obj *obj, hwloc_obj_t hobj)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    obj->mem.local_mem_size = hobj->memory.local_memory;
+
+    status = count_attached_caches(hobj, &obj->mem.num_caches);
+    HYDU_ERR_POP(status, "error counting attached caches\n");
+
+    HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t),
+                status);
+    HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int),
+                status);
+
+    status = gather_attached_cache_info(hobj, &obj->mem);
+    HYDU_ERR_POP(status, "error gathering attached cache info\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
@@ -102,11 +159,17 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     /* Setup the machine level */
     obj_sys = hwloc_get_root_obj(topology);
 
+    /* Retained for debugging purposes */
+    /* print_obj_info(obj_sys); */
+
     /* init Hydra structure */
     HYDT_bind_info.machine.type = HYDT_OBJ_MACHINE;
     HYDT_bind_info.machine.os_index = -1;       /* This is a set, not a single unit */
     HYDT_bind_info.machine.parent = NULL;
-    load_mem_cache_info(&HYDT_bind_info.machine, obj_sys);
+
+    status = load_mem_cache_info(&HYDT_bind_info.machine, obj_sys);
+    HYDU_ERR_POP(status, "error loading memory/cache info\n");
+
 
     /* There is no real node, consider there is one */
     HYDT_bind_info.machine.num_children = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE);
@@ -124,7 +187,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
         obj_node = hwloc_get_obj_inside_cpuset_by_type(topology, obj_sys->cpuset,
                                                        HWLOC_OBJ_NODE, node);
 
-        load_mem_cache_info(node_ptr, obj_node);
+        status = load_mem_cache_info(node_ptr, obj_node);
+        HYDU_ERR_POP(status, "error loading memory/cache info\n");
 
         if (!obj_node)
             obj_node = obj_sys;
@@ -148,7 +212,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
             obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology, obj_node->cpuset,
                                                            HWLOC_OBJ_SOCKET, sock);
 
-            load_mem_cache_info(sock_ptr, obj_sock);
+            status = load_mem_cache_info(sock_ptr, obj_sock);
+            HYDU_ERR_POP(status, "error loading memory/cache info\n");
 
             if (!obj_sock)
                 obj_sock = obj_node;
@@ -175,7 +240,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                                                                obj_sock->cpuset,
                                                                HWLOC_OBJ_CORE, core);
 
-                load_mem_cache_info(core_ptr, obj_core);
+                status = load_mem_cache_info(core_ptr, obj_core);
+                HYDU_ERR_POP(status, "error loading memory/cache info\n");
 
                 if (!obj_core)
                     obj_core = obj_sock;
@@ -204,7 +270,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                     thread_ptr->num_children = 0;
                     thread_ptr->children = NULL;
 
-                    load_mem_cache_info(thread_ptr, obj_thread);
+                    status = load_mem_cache_info(thread_ptr, obj_thread);
+                    HYDU_ERR_POP(status, "error loading memory/cache info\n");
                 }
             }
         }

@@ -98,14 +98,20 @@ struct HYDT_topo_obj {
     /** \brief Array of children objects */
     struct HYDT_topo_obj *children;
 
-    /** \brief Local memory */
-    size_t local_mem_size;
+    /** \brief Memory object attached to this topology object */
+    struct HYDT_mem_obj {
+        /** \brief Local memory */
+        size_t local_mem_size;
 
-    /** \brief Size of cache shared by this object's elements */
-    size_t cache_size;
+        /** \brief Number of caches */
+        int num_caches;
 
-    /** \brief Depth of the highest level cache in this object */
-    int cache_depth;
+        /** \brief Size of cache shared by this object's elements */
+        size_t *cache_size;
+
+        /** \brief Depth of the highest level cache in this object */
+        int *cache_depth;
+    } mem;
 };
 
 

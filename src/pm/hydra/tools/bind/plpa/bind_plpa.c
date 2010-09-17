@@ -47,9 +47,6 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     HYDT_bind_info.machine.num_children = 1;
     HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_topo_obj *,
                 sizeof(struct HYDT_topo_obj), status);
-    HYDT_bind_info.machine.local_mem_size = 0;
-    HYDT_bind_info.machine.cache_size = 0;
-    HYDT_bind_info.machine.cache_depth = 0;
 
     /* Setup the node level */
     node = &HYDT_bind_info.machine.children[0];
@@ -63,9 +60,6 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     }
     HYDU_MALLOC(node->children, struct HYDT_topo_obj *,
                 sizeof(struct HYDT_topo_obj) * node->num_children, status);
-    node->local_mem_size = 0;
-    node->cache_size = 0;
-    node->cache_depth = 0;
 
     /* Setup the socket level */
     total_cores = 0;
@@ -88,9 +82,6 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
         }
         HYDU_MALLOC(sock->children, struct HYDT_topo_obj *,
                     sizeof(struct HYDT_topo_obj) * sock->num_children, status);
-        sock->local_mem_size = 0;
-        sock->cache_size = 0;
-        sock->cache_depth = 0;
 
         total_cores += sock->num_children;
     }
@@ -112,9 +103,6 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
             core->num_children = HYDT_bind_info.total_proc_units / total_cores;
             HYDU_MALLOC(core->children, struct HYDT_topo_obj *,
                         sizeof(struct HYDT_topo_obj) * core->num_children, status);
-            core->local_mem_size = 0;
-            core->cache_size = 0;
-            core->cache_depth = 0;
 
             for (k = 0; k < core->num_children; k++) {
                 thread = &core->children[k];
@@ -123,9 +111,6 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
                 thread->parent = core;
                 thread->num_children = 0;
                 thread->children = NULL;
-                thread->local_mem_size = 0;
-                thread->cache_size = 0;
-                thread->cache_depth = 0;
             }
         }
     }
