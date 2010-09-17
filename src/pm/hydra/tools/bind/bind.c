@@ -17,6 +17,17 @@
 
 struct HYDT_bind_info HYDT_bind_info = { 0 };
 
+static int get_os_index(struct HYDT_topo_obj *obj)
+{
+    struct HYDT_topo_obj *tmp;
+
+    tmp = obj;
+    while (tmp->children)
+        tmp = tmp->children;
+
+    return tmp->os_index;
+}
+
 HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {
     char *bindstr, *bindentry, *elem;
@@ -212,7 +223,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         topo_end = HYDT_OBJ_END;
         obj = &HYDT_bind_info.machine;
         for (i = HYDT_OBJ_MACHINE; i < HYDT_OBJ_END; i++) {
-            if (obj->mem.cache_depth == use_cache_level) {
+            if (obj->mem.cache_depth[0] == use_cache_level) {
                 topo_end = (HYDT_topo_obj_type_t) (i + 1);
                 break;
             }
@@ -227,30 +238,24 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         j = 0;
         obj = &HYDT_bind_info.machine;
         while (1) {
-            /* Go down the left most branch of the tree */
-            while (j < HYDT_OBJ_END - 1) {
+            /* go down the left most branch from where we are */
+            for (; j < topo_end - 1; j++)
                 obj = obj->children;
-                j++;
-            }
 
-            HYDT_bind_info.bindmap[i++] = obj->os_index;
-
-            /* Roll back to the user-requested topology level */
-            while (j >= topo_end) {
-                obj = obj->parent;
-                j--;
-            }
+            HYDT_bind_info.bindmap[i++] = get_os_index(obj);
 
             child_id = HYDT_OBJ_CHILD_ID(obj);
             if (child_id < obj->parent->num_children - 1) {
                 /* Move to the next sibling */
                 obj++;
+                continue;
             }
             else {
                 /* No more siblings; move to an ancestor who has a
                  * sibling */
                 do {
                     obj = obj->parent;
+                    j--;
                     if (obj == NULL || obj->parent == NULL)
                         break;
 
