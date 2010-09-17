@@ -33,7 +33,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     char *bindstr, *bindentry, *elem;
     char *binding = NULL, *bindlib = NULL;
     int i, j, k, use_topo_obj[HYDT_OBJ_END] = { 0 }, child_id;
-    int use_cache_level = 0;
+    int use_cache_level = 0, break_out;
     HYDT_topo_obj_type_t topo_end = HYDT_OBJ_END;
     struct HYDT_topo_obj *obj;
     HYD_status status = HYD_SUCCESS;
@@ -222,11 +222,19 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
         topo_end = HYDT_OBJ_END;
         obj = &HYDT_bind_info.machine;
+        break_out = 0;
         for (i = HYDT_OBJ_MACHINE; i < HYDT_OBJ_END; i++) {
-            if (obj->mem.cache_depth[0] == use_cache_level) {
-                topo_end = (HYDT_topo_obj_type_t) (i + 1);
-                break;
+            for (j = 0; j < obj->mem.num_caches; j++) {
+                if (obj->mem.cache_depth[j] == use_cache_level) {
+                    topo_end = (HYDT_topo_obj_type_t) (i + 1);
+                    fprintf(stderr, "topo end: %d\n", topo_end);
+                    break_out = 1;
+                    break;
+                }
             }
+            if (break_out)
+                break;
+
             obj = obj->children;
         }
     }

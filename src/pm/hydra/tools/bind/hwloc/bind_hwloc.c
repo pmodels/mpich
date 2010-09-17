@@ -41,37 +41,50 @@ static void print_obj_info(hwloc_obj_t obj)
         print_obj_info(obj->children[i]);
 }
 
+static int count_attached_caches(hwloc_obj_t hobj, hwloc_cpuset_t cpuset)
+{
+    int count = 0, i;
+
+    if (hobj->type == HWLOC_OBJ_CACHE && !hwloc_cpuset_compare(hobj->cpuset, cpuset))
+        count++;
+
+    for (i = 0; i < hobj->arity; i++)
+        count += count_attached_caches(hobj->children[i], cpuset);
+
+    return count;
+}
+
+static void gather_attached_caches(struct HYDT_topo_obj *obj, hwloc_obj_t hobj,
+                                   hwloc_cpuset_t cpuset)
+{
+    int i;
+    static int cidx = 0;
+
+    if (hobj->type == HWLOC_OBJ_CACHE && !hwloc_cpuset_compare(hobj->cpuset, cpuset)) {
+        obj->mem.cache_size[cidx] = hobj->attr->cache.size;
+        obj->mem.cache_depth[cidx] = hobj->attr->cache.depth;
+        cidx++;
+    }
+
+    for (i = 0; i < hobj->arity; i++)
+        gather_attached_caches(obj, hobj->children[i], cpuset);
+}
+
 static HYD_status load_mem_cache_info(struct HYDT_topo_obj *obj, hwloc_obj_t hobj)
 {
-    int total_cache_objs, i, j;
-    hwloc_obj_t obj_cache;
     HYD_status status = HYD_SUCCESS;
 
     obj->mem.local_mem_size = hobj->memory.local_memory;
 
     /* Check how many cache objects match out cpuset */
-    total_cache_objs = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_CACHE);
-    obj->mem.num_caches = 0;
-    for (i = 0; i < total_cache_objs; i++) {
-        if (hwloc_get_obj_inside_cpuset_by_type(topology, hobj->cpuset,
-                                                HWLOC_OBJ_CACHE, i))
-            obj->mem.num_caches++;
-    }
+    obj->mem.num_caches = count_attached_caches(hobj, hobj->cpuset);
 
     HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t),
                 status);
     HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int),
                 status);
 
-    for (i = 0, j = 0; i < total_cache_objs; i++) {
-        obj_cache = hwloc_get_obj_inside_cpuset_by_type(topology, hobj->cpuset,
-                                                        HWLOC_OBJ_CACHE, i);
-        if (obj_cache) {
-            obj->mem.cache_size[j] = obj_cache->attr->cache.size;
-            obj->mem.cache_depth[j] = obj_cache->attr->cache.depth;
-            j++;
-        }
-    }
+    gather_attached_caches(obj, hobj, hobj->cpuset);
 
   fn_exit:
     return status;
