@@ -13,8 +13,8 @@
 
 /*! \cond */
 
-#define HYDT_OBJ_CHILD_ID(obj) \
-    ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_topo_obj))
+#define HYDT_BIND_OBJ_CHILD_ID(obj) \
+    ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_bind_obj))
 
 /*! \endcond */
 
@@ -29,47 +29,47 @@
  */
 typedef enum {
     /** \brief No support is provided */
-    HYDT_BIND_NONE = 0,
+    HYDT_BIND_SUPPORT_NONE = 0,
 
     /** \brief Provides information on number of processing elements
      * in the machine, and allows for process binding */
-    HYDT_BIND_BASIC,
+    HYDT_BIND_SUPPORT_BASIC,
 
     /** \brief Provides information about the topology of the
      * processing elements (nodes, processors, cores, threads). */
-    HYDT_BIND_CPU,
+    HYDT_BIND_SUPPORT_CPUTOPO,
 
     /** \brief Provides information about the topology of the
      * processing elements (nodes, processors, cores, threads) as well
      * as the memory hierarchy (caches, memory). */
-    HYDT_BIND_MEM
+    HYDT_BIND_SUPPORT_MEMTOPO
 } HYDT_bind_support_level_t;
 
 
 /**
- * \brief HYDT_topo_obj_type_t
+ * \brief HYDT_bind_obj_type_t
  *
  * Type of object in the hardware topology map.
  */
 typedef enum {
     /** \brief Cache coherent set of processors */
-    HYDT_OBJ_MACHINE = 0,
+    HYDT_BIND_OBJ_MACHINE = 0,
 
     /** \brief Sockets sharing memory dimms */
-    HYDT_OBJ_NODE,
+    HYDT_BIND_OBJ_NODE,
 
     /** \brief A physical socket, possibly comprising of many cores */
-    HYDT_OBJ_SOCKET,
+    HYDT_BIND_OBJ_SOCKET,
 
     /** \brief A core, possibly comprising of many hardware threads */
-    HYDT_OBJ_CORE,
+    HYDT_BIND_OBJ_CORE,
 
     /** \brief A hardware thread */
-    HYDT_OBJ_THREAD,
+    HYDT_BIND_OBJ_THREAD,
 
     /** \brief Marker for the last element in the enum */
-    HYDT_OBJ_END
-} HYDT_topo_obj_type_t;
+    HYDT_BIND_OBJ_END
+} HYDT_bind_obj_type_t;
 
 
 /**
@@ -81,25 +81,25 @@ typedef enum {
  * object contains several sockets. Each socket contains several
  * cores. Each core contains several threads.
  */
-struct HYDT_topo_obj {
+struct HYDT_bind_obj {
     /** \brief Object type */
-    HYDT_topo_obj_type_t type;
+    HYDT_bind_obj_type_t type;
 
     /** \brief OS index of this object type (-1 if this type has
      * children) */
     int os_index;
 
     /** \brief Parent object of which this is a part */
-    struct HYDT_topo_obj *parent;
+    struct HYDT_bind_obj *parent;
 
     /** \brief Number of children objects */
     int num_children;
 
     /** \brief Array of children objects */
-    struct HYDT_topo_obj *children;
+    struct HYDT_bind_obj *children;
 
     /** \brief Memory object attached to this topology object */
-    struct HYDT_mem_obj {
+    struct HYDT_bind_mem_obj {
         /** \brief Local memory */
         size_t local_mem_size;
 
@@ -136,7 +136,7 @@ struct HYDT_bind_info {
     int total_proc_units;
 
     /** \brief Top-level topology object */
-    struct HYDT_topo_obj machine;
+    struct HYDT_bind_obj machine;
 };
 
 /*! \cond */

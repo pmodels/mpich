@@ -17,9 +17,9 @@
 
 struct HYDT_bind_info HYDT_bind_info = { 0 };
 
-static int get_os_index(struct HYDT_topo_obj *obj)
+static int get_os_index(struct HYDT_bind_obj *obj)
 {
-    struct HYDT_topo_obj *tmp;
+    struct HYDT_bind_obj *tmp;
 
     tmp = obj;
     while (tmp->children)
@@ -32,10 +32,10 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {
     char *bindstr, *bindentry, *elem;
     char *binding = NULL, *bindlib = NULL;
-    int i, j, k, use_topo_obj[HYDT_OBJ_END] = { 0 }, child_id;
+    int i, j, k, use_topo_obj[HYDT_BIND_OBJ_END] = { 0 }, child_id;
     int use_cache_level = 0, break_out;
-    HYDT_topo_obj_type_t topo_end = HYDT_OBJ_END;
-    struct HYDT_topo_obj *obj;
+    HYDT_bind_obj_type_t topo_end = HYDT_BIND_OBJ_END;
+    struct HYDT_bind_obj *obj;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -50,7 +50,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     else
         HYD_GET_ENV_STR_VAL(bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
 
-    HYDT_bind_info.support_level = HYDT_BIND_NONE;
+    HYDT_bind_info.support_level = HYDT_BIND_SUPPORT_NONE;
     if (bindlib)
         HYDT_bind_info.bindlib = HYDU_strdup(bindlib);
     else
@@ -85,7 +85,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
     /* If we are not able to initialize the binding library, we set
      * all mappings to -1 */
-    if (HYDT_bind_info.support_level == HYDT_BIND_NONE) {
+    if (HYDT_bind_info.support_level == HYDT_BIND_SUPPORT_NONE) {
         HYDU_MALLOC(HYDT_bind_info.bindmap, int *, sizeof(int), status);
         HYDT_bind_info.total_proc_units = 1;
         HYDT_bind_info.bindmap[0] = -1;
@@ -134,7 +134,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     if (!strncmp(binding, "cpu", strlen("cpu"))) {
         /* If we reached here, the user requested for CPU topology
          * aware binding. */
-        if (HYDT_bind_info.support_level < HYDT_BIND_CPU)
+        if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_CPUTOPO)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "topology binding not supported on this platform\n");
 
@@ -144,18 +144,18 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
         if (bindentry == NULL) {
             /* No extension option specified; use all resources */
-            for (i = HYDT_OBJ_MACHINE; i < HYDT_OBJ_END; i++)
+            for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_END; i++)
                 use_topo_obj[i] = 1;
         }
         else {
             elem = strtok(bindentry, ",");
             do {
                 if (!strcmp(elem, "socket") || !strcmp(elem, "sockets"))
-                    use_topo_obj[HYDT_OBJ_SOCKET] = 1;
+                    use_topo_obj[HYDT_BIND_OBJ_SOCKET] = 1;
                 else if (!strcmp(elem, "core") || !strcmp(elem, "cores"))
-                    use_topo_obj[HYDT_OBJ_CORE] = 1;
+                    use_topo_obj[HYDT_BIND_OBJ_CORE] = 1;
                 else if (!strcmp(elem, "thread") || !strcmp(elem, "threads"))
-                    use_topo_obj[HYDT_OBJ_THREAD] = 1;
+                    use_topo_obj[HYDT_BIND_OBJ_THREAD] = 1;
                 else
                     HYDU_ERR_POP(status, "unrecognized binding option\n");
 
@@ -163,7 +163,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             } while (elem);
         }
 
-        for (i = HYDT_OBJ_END - 1; i > HYDT_OBJ_MACHINE; i--) {
+        for (i = HYDT_BIND_OBJ_END - 1; i > HYDT_BIND_OBJ_MACHINE; i--) {
             /* If an object has to be used, its parent object is also
              * used. For example, you cannot use a core without using
              * a socket. */
@@ -171,10 +171,10 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
                 use_topo_obj[i - 1] = 1;
         }
 
-        topo_end = HYDT_OBJ_END;
-        for (i = HYDT_OBJ_MACHINE; i < HYDT_OBJ_END; i++) {
+        topo_end = HYDT_BIND_OBJ_END;
+        for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_END; i++) {
             if (use_topo_obj[i] == 0) {
-                topo_end = (HYDT_topo_obj_type_t) i;
+                topo_end = (HYDT_bind_obj_type_t) i;
                 break;
             }
         }
@@ -185,7 +185,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     if (!strncmp(binding, "cache", strlen("cache"))) {
         /* If we reached here, the user requested for memory topology
          * aware binding. */
-        if (HYDT_bind_info.support_level < HYDT_BIND_MEM)
+        if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_MEMTOPO)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "memory topology binding not supported on this platform\n");
 
@@ -220,13 +220,13 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             } while (elem);
         }
 
-        topo_end = HYDT_OBJ_END;
+        topo_end = HYDT_BIND_OBJ_END;
         obj = &HYDT_bind_info.machine;
         break_out = 0;
-        for (i = HYDT_OBJ_MACHINE; i < HYDT_OBJ_END; i++) {
+        for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_END; i++) {
             for (j = 0; j < obj->mem.num_caches; j++) {
                 if (obj->mem.cache_depth[j] == use_cache_level) {
-                    topo_end = (HYDT_topo_obj_type_t) (i + 1);
+                    topo_end = (HYDT_bind_obj_type_t) (i + 1);
                     fprintf(stderr, "topo end: %d\n", topo_end);
                     break_out = 1;
                     break;
@@ -252,7 +252,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
             HYDT_bind_info.bindmap[i++] = get_os_index(obj);
 
-            child_id = HYDT_OBJ_CHILD_ID(obj);
+            child_id = HYDT_BIND_OBJ_CHILD_ID(obj);
             if (child_id < obj->parent->num_children - 1) {
                 /* Move to the next sibling */
                 obj++;
@@ -267,7 +267,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
                     if (obj == NULL || obj->parent == NULL)
                         break;
 
-                    child_id = HYDT_OBJ_CHILD_ID(obj);
+                    child_id = HYDT_BIND_OBJ_CHILD_ID(obj);
                 } while (child_id == obj->parent->num_children - 1);
 
                 /* If we are out of ancestors; break out */
@@ -305,7 +305,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     goto fn_exit;
 }
 
-static void cleanup_topo_level(struct HYDT_topo_obj level)
+static void cleanup_topo_level(struct HYDT_bind_obj level)
 {
     int i;
 

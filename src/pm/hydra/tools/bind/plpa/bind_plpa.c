@@ -17,7 +17,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 {
     PLPA_NAME(api_type_t) p;
     int ret, i, j, k, proc_id, socket_id, core_id, max, total_cores;
-    struct HYDT_topo_obj *node, *sock, *core, *thread;
+    struct HYDT_bind_obj *node, *sock, *core, *thread;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -38,19 +38,19 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     }
 
     /* We have qualified for basic binding support level */
-    *support_level = HYDT_BIND_BASIC;
+    *support_level = HYDT_BIND_SUPPORT_BASIC;
 
     /* Setup the machine level */
-    HYDT_bind_info.machine.type = HYDT_OBJ_MACHINE;
+    HYDT_bind_info.machine.type = HYDT_BIND_OBJ_MACHINE;
     HYDT_bind_info.machine.os_index = -1;       /* This is a set, not a single unit */
     HYDT_bind_info.machine.parent = NULL;
     HYDT_bind_info.machine.num_children = 1;
-    HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_topo_obj *,
-                sizeof(struct HYDT_topo_obj), status);
+    HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_bind_obj *,
+                sizeof(struct HYDT_bind_obj), status);
 
     /* Setup the node level */
     node = &HYDT_bind_info.machine.children[0];
-    node->type = HYDT_OBJ_NODE;
+    node->type = HYDT_BIND_OBJ_NODE;
     node->os_index = -1;
     node->parent = &HYDT_bind_info.machine;
     ret = PLPA_NAME(get_socket_info) (&node->num_children, &max);
@@ -58,14 +58,14 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
         HYDU_warn_printf("plpa get socket info failed\n");
         goto fn_fail;
     }
-    HYDU_MALLOC(node->children, struct HYDT_topo_obj *,
-                sizeof(struct HYDT_topo_obj) * node->num_children, status);
+    HYDU_MALLOC(node->children, struct HYDT_bind_obj *,
+                sizeof(struct HYDT_bind_obj) * node->num_children, status);
 
     /* Setup the socket level */
     total_cores = 0;
     for (i = 0; i < node->num_children; i++) {
         sock = &node->children[i];
-        sock->type = HYDT_OBJ_SOCKET;
+        sock->type = HYDT_BIND_OBJ_SOCKET;
         sock->os_index = -1;
         sock->parent = node;
 
@@ -80,8 +80,8 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
             HYDU_warn_printf("plpa get core info failed\n");
             goto fn_fail;
         }
-        HYDU_MALLOC(sock->children, struct HYDT_topo_obj *,
-                    sizeof(struct HYDT_topo_obj) * sock->num_children, status);
+        HYDU_MALLOC(sock->children, struct HYDT_bind_obj *,
+                    sizeof(struct HYDT_bind_obj) * sock->num_children, status);
 
         total_cores += sock->num_children;
     }
@@ -97,16 +97,16 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 
         for (j = 0; j < sock->num_children; j++) {
             core = &sock->children[j];
-            core->type = HYDT_OBJ_CORE;
+            core->type = HYDT_BIND_OBJ_CORE;
             core->os_index = -1;
             core->parent = sock;
             core->num_children = HYDT_bind_info.total_proc_units / total_cores;
-            HYDU_MALLOC(core->children, struct HYDT_topo_obj *,
-                        sizeof(struct HYDT_topo_obj) * core->num_children, status);
+            HYDU_MALLOC(core->children, struct HYDT_bind_obj *,
+                        sizeof(struct HYDT_bind_obj) * core->num_children, status);
 
             for (k = 0; k < core->num_children; k++) {
                 thread = &core->children[k];
-                thread->type = HYDT_OBJ_THREAD;
+                thread->type = HYDT_BIND_OBJ_THREAD;
                 thread->os_index = -1;
                 thread->parent = core;
                 thread->num_children = 0;
@@ -138,7 +138,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     }
 
     /* We have qualified for CPU topology-aware binding support level */
-    *support_level = HYDT_BIND_CPU;
+    *support_level = HYDT_BIND_SUPPORT_CPUTOPO;
 
   fn_exit:
     HYDU_FUNC_EXIT();
