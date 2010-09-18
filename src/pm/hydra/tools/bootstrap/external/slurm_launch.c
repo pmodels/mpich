@@ -7,6 +7,7 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
+#include "bind.h"
 #include "slurm.h"
 
 static int fd_stdin, fd_stdout, fd_stderr;
@@ -68,6 +69,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_node *node;
+    struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -135,9 +137,10 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     targs[idx++] = HYDU_int_to_str(-1);
     targs[idx++] = NULL;
 
+    HYDT_bind_cpuset_zero(&cpuset);
     status = HYDU_create_process(targs, NULL,
                                  enable_stdin ? &fd_stdin : NULL, &fd_stdout,
-                                 &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
+                                 &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
     HYDU_ERR_POP(status, "create process returned error\n");
 
     /* We don't wait for stdin to close */

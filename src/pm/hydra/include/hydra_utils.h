@@ -157,8 +157,10 @@ HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwr
 HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 
 /* launch */
+struct HYDT_bind_cpuset_t;
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
-                               int *in, int *out, int *err, int *pid, int os_index);
+                               int *in, int *out, int *err, int *pid,
+                               struct HYDT_bind_cpuset_t cpuset);
 
 /* others */
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "mpi.h"
 
-#define NUM_CPUS 4
+#define NUM_CPUS 16
 #define STRLEN (NUM_CPUS * 10)
 
 int main(int argc, char **argv)

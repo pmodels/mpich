@@ -447,7 +447,7 @@ static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
 
 static HYD_status launch_procs(void)
 {
-    int i, j, arg, stdin_fd, process_id, os_index, pmi_rank;
+    int i, j, arg, stdin_fd, process_id, pmi_rank;
     char *str, *envstr, *list, *pmi_port;
     char *client_args[HYD_NUM_TMP_STRINGS];
     struct HYD_env *env, *force_env = NULL;
@@ -455,6 +455,7 @@ static HYD_status launch_procs(void)
     enum HYD_pmcd_pmi_cmd cmd;
     int *pmi_ranks;
     int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
+    struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -691,7 +692,7 @@ static HYD_status launch_procs(void)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
-            os_index = HYDT_bind_get_os_index(process_id);
+            HYDT_bind_pid_to_cpuset(process_id, &cpuset);
             if (pmi_rank == 0) {
                 status = HYDU_create_process(client_args, force_env,
                                              HYD_pmcd_pmip.system_global.enable_stdin ?
@@ -699,7 +700,7 @@ static HYD_status launch_procs(void)
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
-                                             os_index);
+                                             cpuset);
                 HYDU_ERR_POP(status, "create process returned error\n");
 
                 if (HYD_pmcd_pmip.system_global.enable_stdin) {
@@ -713,7 +714,7 @@ static HYD_status launch_procs(void)
                                              &HYD_pmcd_pmip.downstream.out[process_id],
                                              &HYD_pmcd_pmip.downstream.err[process_id],
                                              &HYD_pmcd_pmip.downstream.pid[process_id],
-                                             os_index);
+                                             cpuset);
                 HYDU_ERR_POP(status, "create process returned error\n");
             }
 

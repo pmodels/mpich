@@ -74,6 +74,9 @@ static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hob
 {
     HYD_status status = HYD_SUCCESS;
 
+    if (obj == NULL || hobj == NULL)
+        goto fn_exit;
+
     obj->mem.local_mem_size = hobj->memory.local_memory;
 
     /* Check how many cache objects match out cpuset */
@@ -91,6 +94,16 @@ static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hob
 
   fn_fail:
     goto fn_exit;
+}
+
+static void set_cpuset_idx(int idx, struct HYDT_bind_obj *obj)
+{
+    struct HYDT_bind_obj *tmp = obj;
+
+    do {
+        HYDT_bind_cpuset_set(idx, &tmp->cpuset);
+        tmp = tmp->parent;
+    } while (tmp);
 }
 
 HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
@@ -126,7 +139,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
 
     /* init Hydra structure */
     HYDT_bind_info.machine.type = HYDT_BIND_OBJ_MACHINE;
-    HYDT_bind_info.machine.os_index = -1;       /* This is a set, not a single unit */
+    HYDT_bind_cpuset_zero(&HYDT_bind_info.machine.cpuset);
     HYDT_bind_info.machine.parent = NULL;
 
     status = load_mem_cache_info(&HYDT_bind_info.machine, obj_sys);
@@ -153,7 +166,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
 
         if (!obj_node)
             obj_node = obj_sys;
-        node_ptr->os_index = obj_node->os_index;
+        HYDT_bind_cpuset_zero(&node_ptr->cpuset);
         node_ptr->num_children =
             hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_node->cpuset,
                                                    HWLOC_OBJ_SOCKET);
@@ -179,7 +192,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
             if (!obj_sock)
                 obj_sock = obj_node;
 
-            sock_ptr->os_index = obj_sock->os_index;
+            HYDT_bind_cpuset_zero(&sock_ptr->cpuset);
             sock_ptr->num_children =
                 hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_sock->cpuset,
                                                        HWLOC_OBJ_CORE);
@@ -207,7 +220,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                 if (!obj_core)
                     obj_core = obj_sock;
 
-                core_ptr->os_index = obj_core->os_index;
+                HYDT_bind_cpuset_zero(&core_ptr->cpuset);
                 core_ptr->num_children =
                     hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_core->cpuset,
                                                            HWLOC_OBJ_PU);
@@ -226,10 +239,12 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                                                                      HWLOC_OBJ_PU, thread);
                     thread_ptr = &core_ptr->children[thread];
                     thread_ptr->type = HYDT_BIND_OBJ_THREAD;
-                    thread_ptr->os_index = obj_thread->os_index;
                     thread_ptr->parent = core_ptr;
                     thread_ptr->num_children = 0;
                     thread_ptr->children = NULL;
+
+                    HYDT_bind_cpuset_zero(&thread_ptr->cpuset);
+                    set_cpuset_idx(obj_thread->os_index, thread_ptr);
 
                     status = load_mem_cache_info(thread_ptr, obj_thread);
                     HYDU_ERR_POP(status, "error loading memory/cache info\n");
@@ -249,19 +264,27 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     goto fn_exit;
 }
 
-HYD_status HYDT_bind_hwloc_process(int os_index)
+HYD_status HYDT_bind_hwloc_process(struct HYDT_bind_cpuset_t cpuset)
 {
-    hwloc_cpuset_t cpuset = hwloc_cpuset_alloc();
-
+    hwloc_cpuset_t hwloc_cpuset = hwloc_cpuset_alloc();
+    int i, count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    hwloc_cpuset_set(cpuset, os_index);
-    hwloc_set_cpubind(topology, cpuset, HWLOC_CPUBIND_THREAD);
+    hwloc_cpuset_zero(hwloc_cpuset);
+    for (i = 0; i < HYDT_bind_info.total_proc_units; i++) {
+        if (HYDT_bind_cpuset_isset(i, cpuset)) {
+            hwloc_cpuset_set(hwloc_cpuset, i);
+            count++;
+        }
+    }
+
+    if (count)
+        hwloc_set_cpubind(topology, hwloc_cpuset, HWLOC_CPUBIND_THREAD);
 
   fn_exit:
-    hwloc_cpuset_free(cpuset);
+    hwloc_cpuset_free(hwloc_cpuset);
     HYDU_FUNC_EXIT();
     return status;
 

@@ -6,6 +6,7 @@
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
+#include "bind.h"
 #include "persist_server.h"
 
 struct HYDT_persist_handle HYDT_persist_handle;
@@ -152,6 +153,7 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 {
     int recvd, i, num_strings, str_len, closed;
     char **args;
+    struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -205,8 +207,9 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
     args[num_strings] = NULL;
 
     /* spawn process */
+    HYDT_bind_cpuset_zero(&cpuset);
     status = HYDU_create_process(args, NULL, &private.stdin_fd, &private.stdout_fd,
-                                 &private.stderr_fd, &private.app_pid, -1);
+                                 &private.stderr_fd, &private.app_pid, cpuset);
     HYDU_ERR_POP(status, "unable to create process\n");
 
     /* use the accepted connection for stdio */

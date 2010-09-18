@@ -7,6 +7,7 @@
 #include "hydra_utils.h"
 #include "bsci.h"
 #include "bscu.h"
+#include "bind.h"
 #include "external.h"
 
 static int fd_stdin, fd_stdout, fd_stderr;
@@ -81,6 +82,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_env *env = NULL;
+    struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -194,6 +196,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     HYD_bscu_fd_list = fd_list;
 
     targs[idx] = NULL;
+    HYDT_bind_cpuset_zero(&cpuset);
     for (i = 0, node = node_list; node; node = node->next, i++) {
 
         if (targs[host_idx])
@@ -267,7 +270,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         status = HYDU_create_process(targs + offset, env,
                                      ((i == 0 && enable_stdin) ? &fd_stdin : dummy),
                                      &fd_stdout, &fd_stderr,
-                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
+                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         if (offset && control_fd) {

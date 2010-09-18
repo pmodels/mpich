@@ -72,6 +72,17 @@ typedef enum {
 } HYDT_bind_obj_type_t;
 
 
+#define HYDT_BIND_MAX_CPU_COUNT (16384)
+
+#if (HYDT_BIND_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG)
+#error "Too small a CPU count"
+#endif /* (HYDT_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG) */
+
+struct HYDT_bind_cpuset_t {
+    unsigned long set[HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG];
+};
+
+
 /**
  * \brief An object in the hardware topology map
  *
@@ -85,9 +96,8 @@ struct HYDT_bind_obj {
     /** \brief Object type */
     HYDT_bind_obj_type_t type;
 
-    /** \brief OS index of this object type (-1 if this type has
-     * children) */
-    int os_index;
+    /** \brief OS index set of this object type */
+    struct HYDT_bind_cpuset_t cpuset;
 
     /** \brief Parent object of which this is a part */
     struct HYDT_bind_obj *parent;
@@ -129,7 +139,7 @@ struct HYDT_bind_info {
     char *bindlib;
 
     /** \brief Ordered OS index map to bind the processes */
-    int *bindmap;
+    struct HYDT_bind_cpuset_t *bindmap;
 
     /** \brief Total processing units available on the machine. This
      * is needed for all binding levels, except "NONE" */
@@ -168,24 +178,78 @@ void HYDT_bind_finalize(void);
 /**
  * \brief HYDT_bind_process - Bind process to a processing element
  *
- * \param[in] os_index  The Operating System index to bind the process to
+ * \param[in] cpuset  The Operating System index set to bind the process to
  *
- * This function binds a process to an appropriate OS index. If the OS
- * index is negative, no binding needs to be performed.
+ * This function binds a process to an appropriate OS index set. If
+ * the OS index does not contain any set OS index, no binding is done.
  */
-HYD_status HYDT_bind_process(int os_index);
+HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset);
 
 
 /**
- * \brief HYDT_bind_get_os_index - Get the OS index for a process ID
+ * \brief HYDT_bind_pid_to_cpuset - Get the OS index set for a process ID
  *
  * \param[in] process_id   The process index for which we need the OS index
+ * \param[out] cpuset      The OS index set to which the process can bind
  *
- * This function looks up the appropriate OS index (by wrapping around
- * in cases where the process_id is larger than the number of
+ * This function looks up the appropriate OS indices (by wrapping
+ * around in cases where the process_id is larger than the number of
  * available processing units).
  */
-int HYDT_bind_get_os_index(int process_id);
+void HYDT_bind_pid_to_cpuset(int process_id, struct HYDT_bind_cpuset_t *cpuset);
+
+
+static inline void HYDT_bind_cpuset_zero(struct HYDT_bind_cpuset_t *cpuset)
+{
+    int i;
+
+    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+        cpuset->set[i] = 0;
+}
+
+static inline void HYDT_bind_cpuset_clr(int os_index, struct HYDT_bind_cpuset_t *cpuset)
+{
+    int idx;
+    unsigned long mask;
+
+    idx = (os_index / SIZEOF_UNSIGNED_LONG);
+    mask = ~(1 << (os_index % SIZEOF_UNSIGNED_LONG));
+
+    cpuset->set[idx] &= mask;
+}
+
+static inline void HYDT_bind_cpuset_set(int os_index, struct HYDT_bind_cpuset_t *cpuset)
+{
+    int idx;
+    unsigned long mask;
+
+    idx = (os_index / SIZEOF_UNSIGNED_LONG);
+    mask = (1 << (os_index % SIZEOF_UNSIGNED_LONG));
+
+    cpuset->set[idx] |= mask;
+}
+
+static inline int HYDT_bind_cpuset_isset(int os_index, struct HYDT_bind_cpuset_t cpuset)
+{
+    int idx;
+    unsigned long mask;
+
+    idx = (os_index / SIZEOF_UNSIGNED_LONG);
+    mask = (1 << (os_index % SIZEOF_UNSIGNED_LONG));
+
+    return (cpuset.set[idx] & mask);
+}
+
+static inline void HYDT_bind_cpuset_dup(struct HYDT_bind_cpuset_t src,
+                                        struct HYDT_bind_cpuset_t *dest)
+{
+    int i;
+
+    HYDT_bind_cpuset_zero(dest);
+    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT; i++)
+        if (HYDT_bind_cpuset_isset(i, src))
+            HYDT_bind_cpuset_set(i, dest);
+}
 
 /*!
  * @}

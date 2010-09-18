@@ -9,6 +9,7 @@
 #include "pmci.h"
 #include "pmiserv_pmi.h"
 #include "bsci.h"
+#include "bind.h"
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
@@ -284,6 +285,9 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
+
+    status = HYDT_bind_init(HYD_handle.user_global.binding, HYD_handle.user_global.bindlib);
+    HYDU_ERR_POP(status, "unable to initializing binding library");
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin, stdout_cb,
                                     stderr_cb);

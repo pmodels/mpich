@@ -17,17 +17,6 @@
 
 struct HYDT_bind_info HYDT_bind_info = { 0 };
 
-static int get_os_index(struct HYDT_bind_obj *obj)
-{
-    struct HYDT_bind_obj *tmp;
-
-    tmp = obj;
-    while (tmp->children)
-        tmp = tmp->children;
-
-    return tmp->os_index;
-}
-
 HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {
     char *bindstr, *bindentry, *elem;
@@ -61,9 +50,10 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     /***************************** NONE *****************************/
     if (!binding || !strcmp(binding, "none")) {
         /* If no binding is given, we just set all mappings to -1 */
-        HYDU_MALLOC(HYDT_bind_info.bindmap, int *, sizeof(int), status);
+        HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
+                    sizeof(struct HYDT_bind_cpuset_t), status);
         HYDT_bind_info.total_proc_units = 1;
-        HYDT_bind_info.bindmap[0] = -1;
+        HYDT_bind_cpuset_zero(&HYDT_bind_info.bindmap[0]);
 
         goto fn_exit;
     }
@@ -86,34 +76,35 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     /* If we are not able to initialize the binding library, we set
      * all mappings to -1 */
     if (HYDT_bind_info.support_level == HYDT_BIND_SUPPORT_NONE) {
-        HYDU_MALLOC(HYDT_bind_info.bindmap, int *, sizeof(int), status);
+        HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
+                    sizeof(struct HYDT_bind_cpuset_t), status);
         HYDT_bind_info.total_proc_units = 1;
-        HYDT_bind_info.bindmap[0] = -1;
+        HYDT_bind_cpuset_zero(&HYDT_bind_info.bindmap[0]);
 
         goto fn_exit;
     }
 
     /* We at least have basic support from the binding library, so the
      * total_proc_units field is valid */
-    HYDU_MALLOC(HYDT_bind_info.bindmap, int *,
-                HYDT_bind_info.total_proc_units * sizeof(int), status);
+    HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
+                HYDT_bind_info.total_proc_units * sizeof(struct HYDT_bind_cpuset_t), status);
 
-    /* Initialize all entries to -1 */
+    /* Initialize all entries */
     for (i = 0; i < HYDT_bind_info.total_proc_units; i++)
-        HYDT_bind_info.bindmap[i] = -1;
+        HYDT_bind_cpuset_zero(&HYDT_bind_info.bindmap[i]);
 
 
     /***************************** USER *****************************/
     if (!strncmp(binding, "user:", strlen("user:"))) {
         /* Find the actual processing elements */
-        HYDU_MALLOC(HYDT_bind_info.bindmap, int *,
-                    HYDT_bind_info.total_proc_units * sizeof(int), status);
+        HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
+                    HYDT_bind_info.total_proc_units * sizeof(struct HYDT_bind_cpuset_t), status);
         i = 0;
         bindstr = HYDU_strdup(binding + strlen("user:"));
         bindentry = strtok(bindstr, ",");
         while (bindentry) {
-            HYDT_bind_info.bindmap[i] = atoi(bindentry);
-            HYDT_bind_info.bindmap[i] %= HYDT_bind_info.total_proc_units;
+            HYDT_bind_cpuset_set(atoi(bindentry) % HYDT_bind_info.total_proc_units,
+                                 &HYDT_bind_info.bindmap[i]);
             i++;
             bindentry = strtok(NULL, ",");
         }
@@ -124,7 +115,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     /***************************** RR *****************************/
     if (!strcmp(binding, "rr")) {
         for (i = 0; i < HYDT_bind_info.total_proc_units; i++)
-            HYDT_bind_info.bindmap[i] = i;
+            HYDT_bind_cpuset_set(i, &HYDT_bind_info.bindmap[i]);
 
         goto fn_exit;
     }
@@ -250,7 +241,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             for (; j < topo_end - 1; j++)
                 obj = obj->children;
 
-            HYDT_bind_info.bindmap[i++] = get_os_index(obj);
+            HYDT_bind_cpuset_dup(obj->cpuset, &HYDT_bind_info.bindmap[i]);
+            i++;
 
             child_id = HYDT_BIND_OBJ_CHILD_ID(obj);
             if (child_id < obj->parent->num_children - 1) {
@@ -327,7 +319,7 @@ void HYDT_bind_finalize(void)
     cleanup_topo_level(HYDT_bind_info.machine);
 }
 
-HYD_status HYDT_bind_process(int os_index)
+HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -335,14 +327,14 @@ HYD_status HYDT_bind_process(int os_index)
 
 #if defined HAVE_PLPA
     if (!strcmp(HYDT_bind_info.bindlib, "plpa")) {
-        status = HYDT_bind_plpa_process(os_index);
+        status = HYDT_bind_plpa_process(cpuset);
         HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
     }
 #endif /* HAVE_PLPA */
 
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
-        status = HYDT_bind_hwloc_process(os_index);
+        status = HYDT_bind_hwloc_process(cpuset);
         HYDU_ERR_POP(status, "HWLOC failure binding process to core\n");
     }
 #endif /* HAVE_HWLOC */
@@ -355,10 +347,8 @@ HYD_status HYDT_bind_process(int os_index)
     goto fn_exit;
 }
 
-int HYDT_bind_get_os_index(int process_id)
+void HYDT_bind_pid_to_cpuset(int process_id, struct HYDT_bind_cpuset_t *cpuset)
 {
-    /* TODO: Allow the binding layer to export CPU sets instead of
-     * single units */
-
-    return HYDT_bind_info.bindmap[process_id % HYDT_bind_info.total_proc_units];
+    HYDT_bind_cpuset_dup(HYDT_bind_info.bindmap[process_id % HYDT_bind_info.total_proc_units],
+                         cpuset);
 }

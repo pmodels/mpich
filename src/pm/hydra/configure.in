@@ -26,6 +26,8 @@ AC_C_VOLATILE
 AC_C_RESTRICT
 AC_C_INLINE
 
+AC_CHECK_SIZEOF(unsigned long)
+
 # Bug in autoconf adds -O2 and -g by default. Make sure we only get
 # the flags we want.
 PAC_PUSH_ALL_FLAGS
