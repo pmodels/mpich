@@ -245,10 +245,8 @@ static inline void HYDT_bind_cpuset_dup(struct HYDT_bind_cpuset_t src,
 {
     int i;
 
-    HYDT_bind_cpuset_zero(dest);
-    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT; i++)
-        if (HYDT_bind_cpuset_isset(i, src))
-            HYDT_bind_cpuset_set(i, dest);
+    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+        dest->set[i] = src.set[i];
 }
 
 /*!
