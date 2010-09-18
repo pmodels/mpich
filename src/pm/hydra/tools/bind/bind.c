@@ -218,7 +218,6 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             for (j = 0; j < obj->mem.num_caches; j++) {
                 if (obj->mem.cache_depth[j] == use_cache_level) {
                     topo_end = (HYDT_bind_obj_type_t) (i + 1);
-                    fprintf(stderr, "topo end: %d\n", topo_end);
                     break_out = 1;
                     break;
                 }
