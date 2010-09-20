@@ -70,7 +70,7 @@ shared memory), Hydra process management) of MPICH2 up and running.
       use those routines, however, the MPI module does not contain
       interface specifications for them. If you have trouble with the
       configuration step and do not need Fortran 90, configure with
-      --disable-f90 .
+      --disable-fc .
 
     Configure will check for these prerequisites and try to work around
     deficiencies if possible.  (If you don't have Fortran, you will
@@ -659,8 +659,7 @@ Language bindings:
                  It has been tested with the Fortran parts of the Intel
                  test suite.
 
-  --enable-f90 - Build the Fortran 90 bindings.  This is not on by
-                 default, since these have not yet been tested.
+  --enable-fc  - Build the Fortran 90 bindings.  This is on by default.
 
   --enable-cxx - Build the C++ bindings.  This has been tested with the
                  Notre Dame C++ test suite and some additional tests.
