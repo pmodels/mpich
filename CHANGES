@@ -25,6 +25,11 @@
  # Build system: Replaced F90/F90FLAGS by FC/FCFLAGS. F90/F90FLAGS are
    not longer supported in the configure.
 
+ # Multi-compiler support: On systems where C compiler that is used to
+   build mpich2 libraries supports multiple weak symbols and multiple aliases,
+   the Fortran binding built in the mpich2 libraries can handle different
+   Fortran compilers (than the one used to build mpich2).
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 

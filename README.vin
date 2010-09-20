@@ -40,6 +40,7 @@ XI.   Developer Builds
 XII.  Building ROMIO into MPICH2
 XIII. Testing the MPICH2 installation
 XIV.  Installing MPICH2 on windows
+XV.   Multiple Fortran compiler support.
 
 
 -------------------------------------------------------------------------
@@ -990,3 +991,39 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
     to all the machines.
     
     Execute a job by running something like: mpiexec -n 3 myapp.exe
+
+-------------------------------------------------------------------------
+
+XIV. Multiple Fortran compiler support
+======================================
+
+If the C compiler that is used to build MPICH2 libraries supports both
+multiple weak symbols and multiple aliases of common symbols, the Fortran 77
+binding can support multiple Fortran compilers.  The multiple weak symbols
+support allow MPICH2 to provide different name mangling scheme (of
+subroutine names) required by differen Fortran compilers.  The multiple
+aliases of common symbols support enables MPICH2 to equal different common
+block symbols of the MPI Fortran constant, e.g. MPI_IN_PLACE,
+MPI_STATUS_IGNORE...  So they are understood by different Fortran compilers.
+
+Since the support of multiple aliases of common symbols is new/experimental,
+users can disable the feature by using configure option --disable-multi-aliases
+if it causes any undesirable effect, e.g. linker warnings of different sizes
+of common symbols, MPIFCMB* (the warning should be harmless).
+
+We have only tested this support on a limited set of platforms/compilers.
+On linux, if the C compiler that builds MPICH2 is either gcc or icc,
+the above support will be enabled by configure.  At the time of this
+writing, pgcc does not seem to have this multiple aliases of common symbols,
+so configure will detect the deficiency and disable the feature automatically.
+The tested Fortran compiler includes GNU Forran compilers(gfortan, g77),
+Intel Fortran compiler(ifort), Portland Group Fortran compilers(pgf77, pgf90), 
+Absoft Fortran compilers (af77, af90), and IBM XL fortran compiler(xlf).
+What this mean is that if mpich2 is built by gcc/gfortran, the resulting
+mpich2 library can be used to link a Fortran program compiled/linked by
+another fortran compiler, say pgf77, say through mpif77 -f77=pgf77.
+As long as the Fortran program is linked without any errors by
+one of these compilers, the program shall be running fine.
+
+Ref: http://trac.mcs.anl.gov/projects/mpich2/ticket/502.
+
