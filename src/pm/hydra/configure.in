@@ -393,6 +393,10 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
                     AC_MSG_RESULT([$have_hwloc])
                 fi
 
+                # FIXME: Disable hwloc on Cygwin for now. The hwloc package, atleast as of 1.0.2,
+                # does not install correctly on Cygwin
+                AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
+
 		if test "$have_hwloc" = "yes" ; then
 		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 		   available_bindlib=`echo $available_bindlib hwloc`
