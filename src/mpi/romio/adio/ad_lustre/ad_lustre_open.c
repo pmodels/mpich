@@ -57,7 +57,12 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 	 * then a list of 'lmm_objects' representing stripe */
         lumlen = sizeof(struct lov_user_md) +
                  MAX_LOV_UUID_COUNT * sizeof(struct lov_user_ost_data);
-        lum = (struct lov_user_md *)ADIOI_Malloc(lumlen);
+	/* furthermore, Pascal Deveze reports that, even though we pass a
+	 * "GETSTRIPE" (read) flag to the ioctl, if some of the values of this
+	 * struct are uninitialzed, the call can give an error.  calloc in case
+	 * there are other members that must be initialized and in case
+	 * lov_user_md struct changes in future */
+	lum = (struct lov_user_md *)ADIOI_Calloc(1,lumlen);
         lum->lmm_magic = LOV_USER_MAGIC;
         err = ioctl(fd->fd_sys, LL_IOC_LOV_GETSTRIPE, (void *)lum);
         if (!err) {
