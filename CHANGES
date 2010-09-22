@@ -20,6 +20,9 @@
 
  # PM/PMI: Added support for LSF, SGE and POE in Hydra.
 
+ # PM/PMI: Added support for CPU and memory/cache topology aware
+   process-core binding.
+
  # DEBUGGER: Improved support and bug fixes in the Totalview support.
 
  # Build system: Replaced F90/F90FLAGS by FC/FCFLAGS. F90/F90FLAGS are
