@@ -251,8 +251,13 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         else {
             offset = 0;
 
-            /* dummy is NULL only when ssh is actually being used */
-            if (!strcmp(HYDT_bsci_info.bootstrap, "ssh"))
+            /* dummy is NULL only for bootstrap servers that can
+             * handle a closed stdin socket. Older versions of ssh and
+             * SGE seem to have problems when stdin is closed before
+             * they are launched. */
+            if (!strcmp(HYDT_bsci_info.bootstrap, "ssh") ||
+                !strcmp(HYDT_bsci_info.bootstrap, "rsh") ||
+                !strcmp(HYDT_bsci_info.bootstrap, "sge"))
                 dummy = &fd;
             else
                 dummy = NULL;
