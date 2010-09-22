@@ -61,7 +61,7 @@ static int init_mad( MPIDI_PG_t *pg_p )
     int   index = 0;
     int   ret;
     int   mpi_errno = MPI_SUCCESS;
-    char *dummy_argv[1] = {NULL};
+    char *dummy_argv[2] = {"mpich2",NULL};
     int   dummy_argc    = 1;
 
     MPID_nem_newmad_internal_req_queue_init();
