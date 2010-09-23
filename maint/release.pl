@@ -152,6 +152,7 @@ system("rm -f ${root}/$logfile");
 print("===> Checking out $pack SVN source... ");
 run_cmd("rm -rf ${pack}-${version}");
 run_cmd("svn export -q ${source} ${pack}-${version}");
+run_cmd("find ${pack}-${version} -name .gitignore | xargs rm -f");
 print("done\n");
 
 print("===> Create release date and version information... ");
