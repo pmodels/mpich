@@ -107,6 +107,12 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
                                  &HYDT_bind_info.bindmap[i]);
             i++;
             bindentry = strtok(NULL, ",");
+
+            /* If the user provided more OS indices than the number of
+             * processing units the system has, ignore the extra
+             * ones */
+            if (i >= HYDT_bind_info.total_proc_units)
+                break;
         }
 
         goto fn_exit;
