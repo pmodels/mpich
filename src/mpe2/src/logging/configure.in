@@ -408,7 +408,8 @@ dnl )
 AC_SYS_LARGEFILE
 if test "$enable_largefile" != no ; then
     AC_MSG_CHECKING( [for O_LARGEFILE for open()] )
-    AC_COMPILE_IFELSE( AC_LANG_PROGRAM( [
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([
 #if defined( HAVE_SYS_TYPES_H )
 #include <sys/types.h>
 #endif
@@ -418,15 +419,17 @@ if test "$enable_largefile" != no ; then
 #if defined( HAVE_FCNTL_H )
 #include <fcntl.h>
 #endif
-                     ], [
-    int fd;
-    fd = open( "tmpfile", O_CREAT | O_LARGEFILE, 0644 );   
-                     ] ), [
-    AC_DEFINE( HAVE_O_LARGEFILE, 1,
-              [Define to 1 if O_LARGEFILE flag for open() exists.] )
-    AC_MSG_RESULT(yes)
-    ], [
-        AC_COMPILE_IFELSE( AC_LANG_PROGRAM( [
+        ],[
+        int fd;
+        fd = open( "tmpfile", O_CREAT | O_LARGEFILE, 0644 );   
+        ])
+    ],[
+        AC_DEFINE( HAVE_O_LARGEFILE, 1,
+                   [Define to 1 if O_LARGEFILE flag for open() exists.] )
+        AC_MSG_RESULT(yes)
+    ],[
+        AC_COMPILE_IFELSE([
+            AC_LANG_PROGRAM([
 #define _LARGEFILE64_SOURCE
 #if defined( HAVE_SYS_TYPES_H )
 #include <sys/types.h>
@@ -437,38 +440,41 @@ if test "$enable_largefile" != no ; then
 #if defined( HAVE_FCNTL_H )
 #include <fcntl.h>
 #endif
-                         ], [
+            ],[
     int fd;
     fd = open( "tmpfile", O_CREAT | O_LARGEFILE, 0644 );   
-                         ] ), [
+            ])
+        ],[
             AC_DEFINE( HAVE_O_LARGEFILE, 1,
                        [Define to 1 if O_LARGEFILE flag for open() exists.] )
             AC_DEFINE( _LARGEFILE64_SOURCE, 1,
                        [Define if 64-bit file address support in 32-bit OS.] )
             AC_MSG_RESULT( [needs _LARGEFILE64_SOURCE] )
-        ], [
+        ],[
             AC_MSG_RESULT(no)
-        ] )
-    ] )
+        ])
+    ])
 fi
         dnl end of AC_COMPILE_IFELSE with O_LARGEFILE
     dnl end of AC_COMPILE_IFELSE with O_LARGEFILE and _LARGEFILE64_SOURCE
 
 AC_MSG_CHECKING( [for O_BINARY for open()] )
-AC_LINK_IFELSE( AC_LANG_PROGRAM( [
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([
 #if defined( HAVE_FCNTL_H )
 #include <fcntl.h>
 #endif
-              ], [
+    ],[
     int fd;
     fd = open( "tmpfile", O_CREAT | O_BINARY, 0644 );
-              ] ), [
+    ])
+],[
     AC_DEFINE( HAVE_O_BINARY, 1,
                [Define to 1 if O_BINARY flag for open() exists.] )
     AC_MSG_RESULT(yes)
-    ], [
+],[
     AC_MSG_RESULT(no)
-] )
+])
 
 dnl   Determine if PMPI_Comm_create_keyval exists
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then

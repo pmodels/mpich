@@ -1292,6 +1292,7 @@ AC_CACHE_CHECK([whether the compiler defines __func__],
 pac_cv_have__func__,[
 tmp_am_cross=no
 AC_RUN_IFELSE([
+AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -1302,9 +1303,11 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+])
 ], pac_cv_have__func__=yes, pac_cv_have__func__=no,tmp_am_cross=yes)
 if test "$tmp_am_cross" = yes ; then
     AC_LINK_IFELSE([
+    AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -1315,6 +1318,7 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+    ])
 ], pac_cv_have__func__=yes, pac_cv_have__func__=no)
 fi
 ])
@@ -1327,6 +1331,7 @@ AC_CACHE_CHECK([whether the compiler defines __FUNC__],
 pac_cv_have_cap__func__,[
 tmp_am_cross=no
 AC_RUN_IFELSE([
+AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -1337,9 +1342,11 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+])
 ], pac_cv_have_cap__func__=yes, pac_cv_have_cap__func__=no,tmp_am_cross=yes)
 if test "$tmp_am_cross" = yes ; then
     AC_LINK_IFELSE([
+    AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -1350,6 +1357,7 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+    ])
 ], pac_cv_have__func__=yes, pac_cv_have__func__=no)
 fi
 ])
@@ -1362,6 +1370,7 @@ AC_CACHE_CHECK([whether the compiler sets __FUNCTION__],
 pac_cv_have__function__,[
 tmp_am_cross=no
 AC_RUN_IFELSE([
+AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -1372,9 +1381,11 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+])
 ], pac_cv_have__function__=yes, pac_cv_have__function__=no,tmp_am_cross=yes)
 if test "$tmp_am_cross" = yes ; then
     AC_LINK_IFELSE([
+    AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -1385,6 +1396,7 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+    ])
 ], pac_cv_have__func__=yes, pac_cv_have__func__=no)
 fi
 ])

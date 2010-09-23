@@ -390,8 +390,11 @@ if [ "$acSubversion" -gt 0 ] ; then
         case "$acSubversion" in
             63|64|67)
                 ;;
+            68)
+                warn "autoconf-2.68 emits massive amount of warnings on certain uses of AC_*_IFELSE."
+                ;;
             *)
-                echo "autoconf version 2.63, 2.64 or 2.67 is required"
+                echo "autoconf version 2.63, 2.64, 2.67 or 2.68 is required"
 		exit 1
                 ;;
         esac

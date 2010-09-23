@@ -154,6 +154,7 @@ AC_CHECK_FUNCS(uuid_generate uuid_parse uuid_unparse uuid_copy)
 AC_CACHE_CHECK([endianess of system],
 lac_cv_my_endian,[
 AC_RUN_IFELSE([
+AC_LANG_SOURCE([
 #include <stdio.h>
 #include <stdlib.h>
 int main(int argc, char **argv)
@@ -180,6 +181,7 @@ int main(int argc, char **argv)
     fclose(f);
     exit(0);
 }
+])
 ],lac_cv_my_endian=`cat conftest.out`,
   lac_cv_my_endian="FAILED",
   lac_cv_my_endian=${CROSS_MY_ENDIAN:-undetermined})
@@ -272,6 +274,7 @@ AC_MSG_RESULT([$MPIG_SIZE_FMT])
 AC_CACHE_CHECK([whether CPP accepts C99 style variadic macros],
 lac_cv_have_c99_variadic_macros,[
 AC_COMPILE_IFELSE([
+AC_LANG_SOURCE([
 #include <stdio.h>
 #define MY_PRINTF(rank, fmt, ...)  printf("%d: " fmt, rank, ## __VA_ARGS__)
 int main(int argc, char ** argv)
@@ -280,6 +283,7 @@ int main(int argc, char ** argv)
     MY_PRINTF(1, "world %d", 3);
     return 0;
 }
+])
 ], lac_cv_have_c99_variadic_macros=yes, lac_cv_have_c99_variadic_macros=no)
 ])
 if test $lac_cv_have_c99_variadic_macros = "yes" ; then
@@ -289,6 +293,7 @@ fi
 AC_CACHE_CHECK([whether CPP accepts GNU style variadic macros],
 lac_cv_have_gnu_variadic_macros,[
 AC_COMPILE_IFELSE([
+AC_LANG_SOURCE([
 #include <stdio.h>
 #define MY_PRINTF(rank, fmt, args...)  printf("%d: " fmt, rank, ## args)
 int main(int argc, char ** argv)
@@ -297,6 +302,7 @@ int main(int argc, char ** argv)
     MY_PRINTF(1, "world %d", 3);
     return 0;
 }
+])
 ], lac_cv_have_gnu_variadic_macros=yes, lac_cv_have_gnu_variadic_macros=no)
 ])
 if test $lac_cv_have_gnu_variadic_macros = "yes" ; then
@@ -309,6 +315,7 @@ fi
 AC_CACHE_CHECK([whether the compiler defines __func__],
 lac_cv_have__func__,[
 AC_RUN_IFELSE([
+AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -319,6 +326,7 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+])
 ], lac_cv_have__func__=yes, lac_cv_have__func__=no)
 ])
 if test $lac_cv_have__func__ = "yes" ; then
@@ -328,6 +336,7 @@ fi
 AC_CACHE_CHECK([whether the compiler defines __FUNC__],
 lac_cv_have_cap__func__,[
 AC_RUN_IFELSE([
+AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -338,6 +347,7 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+])
 ], lac_cv_have_cap__func__=yes, lac_cv_have_cap__func__=no)
 ])
 if test $lac_cv_have_cap__func__ = "yes" ; then
@@ -347,6 +357,7 @@ fi
 AC_CACHE_CHECK([whether the compiler sets __FUNCTION__],
 lac_cv_have__function__,[
 AC_RUN_IFELSE([
+AC_LANG_SOURCE([
 #include <string.h>
 int foo(void);
 int foo(void)
@@ -357,6 +368,7 @@ int main(int argc, char ** argv)
 {
     return (foo() ? 0 : 1);
 }
+])
 ], lac_cv_have__function__=yes, lac_cv_have__function__=no)
 ])
 if test $lac_cv_have__function__ = "yes" ; then
@@ -374,6 +386,7 @@ AC_CACHE_CHECK([for the vendor MPI function $1 (C binding)], lac_lower_varname, 
 SAVE_MPIG_CONFIGURE_ACTIVE=${MPIG_CONFIGURE_ACTIVE}
 MPIG_CONFIGURE_ACTIVE=""
 AC_LINK_IFELSE([
+AC_LANG_SOURCE([
 void $1(float * a);
 int main(int argc, char *argv[[]])
 {
@@ -383,6 +396,7 @@ int main(int argc, char *argv[[]])
     return 0;
 }
 ], lac_lower_varname=yes, lac_lower_varname=no)
+])
 MPIG_CONFIGURE_ACTIVE=${SAVE_MPIG_CONFIGURE_ACTIVE}
 ])
 if test ${lac_lower_varname} = "yes" ; then
@@ -400,6 +414,7 @@ AC_CACHE_CHECK([for the vendor MPI constant $2 (C binding)], lac_lower_varname, 
 SAVE_MPIG_CONFIGURE_ACTIVE=${MPIG_CONFIGURE_ACTIVE}
 MPIG_CONFIGURE_ACTIVE=""
 AC_COMPILE_IFELSE([
+AC_LANG_SOURCE([
 #include "mpi.h"
 void func($1 a);
 int main(int argc, char *argv[[]])
@@ -408,6 +423,7 @@ int main(int argc, char *argv[[]])
     func(a);
     return 0;
 }
+])
 ], lac_lower_varname=yes, lac_lower_varname=no)
 MPIG_CONFIGURE_ACTIVE=${SAVE_MPIG_CONFIGURE_ACTIVE}
 ])
@@ -568,6 +584,7 @@ if test "${MPIG_VMPI:?}" != "no" ; then
     AC_CACHE_CHECK([version of the MPI standard implemented by the vendor MPI],
     lac_cv_vmpi_version,[
         AC_RUN_IFELSE([
+        AC_LANG_SOURCE([
         #include "mpi.h"
         #include <stdio.h>
         int main(int argc, char *argv[[]])
@@ -577,6 +594,7 @@ if test "${MPIG_VMPI:?}" != "no" ; then
             close(fp);
             return 0;
         }
+        ])
         ], lac_cv_vmpi_version=`cat conftest.out`, lac_cv_vmpi_version=0)
     ])
 

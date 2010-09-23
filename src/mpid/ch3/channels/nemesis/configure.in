@@ -281,19 +281,23 @@ openpa_present_and_working=no)
 
 if test "$openpa_present_and_working" = yes ; then
     AC_PREPROC_IFELSE([
+    AC_LANG_SOURCE([
 #include <opa_primitives.h>
 #if defined(OPA_USE_LOCK_BASED_PRIMITIVES)
 #error "lock-based emulation is currently in use"
 #endif
+    ])
 ],using_emulated_atomics=no,using_emulated_atomics=yes)
 
     if test "$using_emulated_atomics" = "yes" ; then
         AC_PREPROC_IFELSE([
+        AC_LANG_SOURCE([
 #include <opa_primitives.h>
 /* may also be undefined in older (pre-r106) versions of OPA */
 #if !defined(OPA_EXPLICIT_EMULATION)
 #error "lock-based emulation was automatic, not explicit"
 #endif
+])
 ],[atomics_explicitly_emulated=yes],[atomics_explicitly_emulated=no])
         if test "$atomics_explicitly_emulated" = "yes" ; then
             AC_MSG_RESULT([yes (emulated)])

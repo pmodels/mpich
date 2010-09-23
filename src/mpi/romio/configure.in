@@ -1241,8 +1241,8 @@ fi
 
 # layout change after pvfs-2.6.3:
 if test -n "$file_system_pvfs2"; then
-    AC_COMPILE_IFELSE(
-       [  
+    AC_COMPILE_IFELSE([
+        AC_LANG_SOURCE([
 #include <stdlib.h>
 #include "pvfs2.h"
           int main(int argc, char **argv) { 
@@ -1250,7 +1250,7 @@ if test -n "$file_system_pvfs2"; then
 	      PVFS_sys_attr attr;
 	      PVFS_sys_create(NULL, ref, attr, NULL, NULL, NULL, NULL); 
 	  return 0; }
-       ],
+       ])],
        , AC_DEFINE(HAVE_PVFS2_CREATE_WITHOUT_LAYOUT, 1, 
        		[Define if PVFS_sys_create does not have layout parameter])
        )
