@@ -98,31 +98,88 @@ static HYD_status group_to_individual_nodes(char *str, char **list)
     goto fn_exit;
 }
 
+static HYD_status extract_tasks_per_node(int **tasks_per_node, int *nnodes, int *valid)
+{
+    char *task_list, *task_set, **tmp_core_list;
+    char *dummy, *nodes, *cores;
+    int i, j, k, p, count;
+    HYD_status status = HYD_SUCCESS;
+
+    *valid = 1;
+
+    if (MPL_env2str("SLURM_NNODES", (const char **) &dummy) == 0) {
+        *valid = 0;
+        goto fn_exit;
+    }
+    *nnodes = atoi(dummy);
+
+    if (MPL_env2str("SLURM_TASKS_PER_NODE", (const char **) &task_list) == 0) {
+        *valid = 0;
+        goto fn_exit;
+    }
+    task_list = MPL_strdup(task_list);
+
+    HYDU_MALLOC(*tasks_per_node, int *, *nnodes * sizeof(int), status);
+    HYDU_MALLOC(tmp_core_list, char **, *nnodes * sizeof(char *), status);
+
+    task_set = strtok(task_list, ",");
+    i = 0;
+    do {
+        HYDU_MALLOC(tmp_core_list[i], char *, sizeof(task_set) + 1, status);
+        MPL_snprintf(tmp_core_list[i], sizeof(task_set) + 1, "%s", task_set);
+        i++;
+        task_set = strtok(NULL, ",");
+    } while (task_set);
+    count = i;
+
+    p = 0;
+    for (i = 0; i < count; i++) {
+        cores = strtok(tmp_core_list[i], "(");
+        nodes = strtok(NULL, "(");
+        if (nodes) {
+            nodes[strlen(nodes) - 1] = 0;
+            nodes++;
+            j = atoi(nodes);
+        }
+        else
+            j = 1;
+
+        for (k = 0; k < j; k++)
+            (*tasks_per_node)[p++] = atoi(cores);
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
 {
-    char *str, *num_procs, *tstr = NULL, *tnum_procs = NULL;
+    char *str, *tstr = NULL;
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
     struct HYD_node *node, *tnode;
-    int i, j;
+    int i, j, k;
+    int *tasks_per_node, nnodes, valid;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     if (MPL_env2str("SLURM_NODELIST", (const char **) &str) == 0)
         str = NULL;
-    if (MPL_env2str("SLURM_TASKS_PER_NODE", (const char **) &num_procs) == 0)
-        num_procs = NULL;
 
-    if (str == NULL || num_procs == NULL) {
+    status = extract_tasks_per_node(&tasks_per_node, &nnodes, &valid);
+    HYDU_ERR_POP(status, "unable to extract the number of tasks per node\n");
+
+    if (str == NULL || !valid) {
         *node_list = NULL;
     }
     else {
         tstr = HYDU_strdup(str);
-        tnum_procs = HYDU_strdup(num_procs);
-
         full_str_to_groups(str, tmp1);
-        num_procs = strtok(num_procs, "(");
 
+        k = 0;
         for (i = 0; tmp1[i]; i++) {
             status = group_to_individual_nodes(tmp1[i], tmp2);
             HYDU_ERR_POP(status, "unable to parse node list\n");
@@ -132,7 +189,7 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
                 HYDU_ERR_POP(status, "unable to allocate note\n");
 
                 node->hostname = HYDU_strdup(tmp2[j]);
-                node->core_count = atoi(num_procs);
+                node->core_count = tasks_per_node[k++];
 
                 if (*node_list == NULL)
                     *node_list = node;
@@ -148,8 +205,6 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
 
         if (tstr)
             HYDU_FREE(tstr);
-        if (tnum_procs)
-            HYDU_FREE(tnum_procs);
     }
 
   fn_exit:

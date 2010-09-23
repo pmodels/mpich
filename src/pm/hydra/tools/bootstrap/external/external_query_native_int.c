@@ -54,6 +54,8 @@ HYD_status HYDT_bscd_external_query_native_int(int *ret)
             break;
         if (!env_is_avail("SLURM_JOB_CPUS_PER_NODE"))
             break;
+        if (!env_is_avail("SLURM_NNODES"))
+            break;
 
         *ret = 1;
         goto fn_exit;
