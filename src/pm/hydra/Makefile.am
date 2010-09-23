@@ -34,26 +34,26 @@ mpich2-build-uninstall: uninstall
 # Provide an alias for mpirun to support tools that assume that
 # mpiexec is called mpirun
 install-exec-local:
-	if [ -x ${DESTDIR}${bindir}/mpiexec ] ; then \
-	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec mpirun ; fi
-
-uninstall-local:
-	rm -f ${DESTDIR}${bindir}/mpirun
+	if [ -x ${DESTDIR}${bindir}/mpiexec.hydra ] ; then \
+	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpiexec ; \
+	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpirun ; \
+	fi
 
 # A special alternate installation target when using multiple process managers
 install-alt: $(bin_PROGRAMS)
 	@if [ ! -d $(DESTDIR)${bindir} ] ; then \
-	    echo "$(mkdir_p) $(DESTDIR)${bindir} " ;\
-	    $(mkdir_p) $(DESTDIR)${bindir} ;\
+		echo "$(mkdir_p) $(DESTDIR)${bindir} " ;\
+		$(mkdir_p) $(DESTDIR)${bindir} ;\
 	fi
 	@for foo in $? ; do \
-		if test "$$foo" = "mpiexec" ; then \
-			$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) mpiexec \
-				$(DESTDIR)${bindir}/mpiexec.hydra ; \
-		else \
-			$(INSTALL_PROGRAM) $(INSTALL_STRIP_FLAG) $$foo $(DESTDIR)${bindir}/ ; \
+		if test "$$foo" != "mpiexec" ; then \
+			echo "install $$foo" ; \
+			$(MAKE) install $$foo ; \
 		fi ; \
 	done
+
+uninstall-local:
+	rm -f ${DESTDIR}${bindir}/mpirun ${DESTDIR}${bindir}/mpiexec
 
 htmldoc:
 	if test "@DOXYGEN@" != "" ; then @DOXYGEN@ hydra-doxygen.cfg ; fi
