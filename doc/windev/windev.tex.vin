@@ -967,6 +967,19 @@ The limitation of this method of starting processes is that MPI-2 spawning opera
 are not supported.  If your application calls MPI\_Comm\_spawn it will produce
 an error.
 
+\subsection{Debugging jobs using MPI Cluster Debugger}
+This section describes how to debug MPI jobs using the MPI Cluster Debugger available with Visual Studio suites. Follow the steps below to debug your MPI application (myapp.exe) locally on your machine
+\begin{enumerate}
+\item Select Visual Studio application project properties (Select ``\texttt{myapp.exe properties}'' item from the ``\texttt{Project}'' menu)
+\item In Debugging section (Select ``\texttt{Configuration Properties}'' and then select ``\texttt{Debugging}'' category), select ``\texttt{MPI Cluster debugger}'' as the debugger to launch from the drop down menu.
+\item Set the ``\texttt{Run Environment}'' item to ``\texttt{localhost/NUM\_PROCS\_TO\_LAUNCH}'' (e.g. localhost/3 to launch 3 MPI processes)
+\item Set the ``\texttt{Application Arguments}'' item, if your MPI application has any arguments (To specify input to your application redirect it from a text file)
+\item Set the ``\texttt{MPIExec Command}'' item to point to MPICH2's mpiexec (\texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$bin$\backslash$mpiexec.exe})
+\item Click OK to submit the project property changes
+\item Insert break points in the Visual Studio explorer window
+\item Press F5 to start debugging your code. Note that multiple windows pop up showing a view of the processes launched and the corresponding call stacks. The debugger automatically switches between MPI processes, if required, when it hits a breakpoint.
+\end{enumerate}
+
 \subsection{Environment variables}
 This section describes the environment variables used by MPICH2 and smpd.
 
