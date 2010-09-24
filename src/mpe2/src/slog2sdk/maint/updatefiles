@@ -23,7 +23,7 @@ fi
 if [ "$acWorks" != yes ] ; then
     echo "Selected version of autoconf cannot handle version 2.52"
     echo "Trying to find an autoconf-2.xx..."
-    for ver in 57 56 55 54 53 52 ; do
+    for ver in `seq 52 69 | sort -r` ; do
         autoconf="autoconf-2.$ver"
         if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
 	    SLOG2_AUTOCONF=$autoconf
@@ -56,3 +56,9 @@ for cfgin in $cfgins ; do
     fi
     $SLOG2_AUTOCONF && rm -rf autom4te*.cache
 done
+
+# *** FIXME ****
+# Given the mpich2/maint/updatefiles uses libtoolize, this script should be
+# updated to call LIBTOOLIZE -ivfc to update all the libtool related files.
+# ALso, mpe2/autogen.sh should not do autoheader/autoconf on slog2sdk and
+# should instead call slog2sdk/maint/updatefiles.
