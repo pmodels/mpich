@@ -150,26 +150,8 @@ static int ckpt_restart(void)
 
     /* First, clean up.  We didn't shut anything down before the
        checkpoint, so we need to go close and free any resources */
-    for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
-        MPIDI_VC_t *vc;
-        if (i == MPIDI_Process.my_pg_rank)
-            continue;
-        MPIDI_PG_Get_vc(MPIDI_Process.my_pg, i, &vc);
-        {
-            MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
-            MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-            if (vc_ch->is_local)
-                continue;
-            
-            /* close vc */
-            mpi_errno = MPID_nem_tcp_cleanup(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            
-            /* unpause the vc */
-            vc_tcp->send_paused = FALSE;
-        }
-    }
-
+    mpi_errno = MPID_nem_tcp_ckpt_cleanup();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_tcp_send_finalize();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_tcp_sm_finalize();
