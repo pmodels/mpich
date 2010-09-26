@@ -22,7 +22,7 @@ lib${MPILIBNAME}_a_SOURCES = dbginit.c
 libtvmpich2_so_SOURCES = dll_mpich2.c
 # Force a custom target
 ./libtvmpich2.@SHLIB_EXT@: ./libtvmpich2.la
-	(cd . && $(CREATESHLIB) -libtype=@DBG_SHLIB_TYPE@ --mode=link -cc="@CC_SHL_DBG@" -clink="@C_LINK_SHL_DBG@" -o libtvmpich2.la  -rpath $(libdir) )
+	(cd . && $(CREATESHLIB) -libtype=@DBG_SHLIB_TYPE@ --mode=link -cc="@CC_SHL_DBG@" -clink="@C_LINK_SHL_DBG@" -o libtvmpich2.la  -rpath $(libdir) -ldflags "$(LDFLAGS)")
 
 INCLUDES = -I../../include -I${top_srcdir}/src/include
 profilelib_${MPILIBNAME} = ${PMPILIBNAME}
