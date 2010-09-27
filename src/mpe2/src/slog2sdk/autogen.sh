@@ -1,10 +1,13 @@
 #! /bin/sh
 AUTOHEADER=${AUTOHEADER:-autoheader}
 AUTOCONF=${AUTOCONF:-autoconf}
+LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
 MPE_AUTOHEADER=${MPE_AUTOHEADER:-$AUTOHEADER}
 MPE_AUTOCONF=${MPE_AUTOCONF:-$AUTOCONF}
+MPE_LIBTOOLIZE=${MPE_LIBTOOLIZE:-$LIBTOOLIZE}
 SLOG2_AUTOHEADER=${SLOG2_AUTOHEADER:-$MPE_AUTOHEADER}
 SLOG2_AUTOCONF=${SLOG2_AUTOCONF:-$MPE_AUTOCONF}
+SLOG2_LIBTOOLIZE=${SLOG2_LIBTOOLIZE:-$MPE_LIBTOOLIZE}
 
 # Check that we have a workable autoconf
 acWorks=no
@@ -41,24 +44,29 @@ fi
 rm -rf .tmp
 
 # The parent directory of where this script is located
-saved_wd=`pwd`
-cd `dirname $0`/.. && master_dir=`pwd`
-cd $saved_wd
-
-# Locate all the configure.in under master_dir
-cfgins=`find $master_dir -name 'configure.in' -print`
-for cfgin in $cfgins ; do
-    dir="`dirname $cfgin`"
-    echo "Creating configure in $dir/ ..."
-    cd $dir
-    if [ -n "`grep AC_CONFIG_HEADER $cfgin`" ] ; then
-        $SLOG2_AUTOHEADER
-    fi
-    $SLOG2_AUTOCONF && rm -rf autom4te*.cache
-done
+pgmdir="`dirname $0`"
+master_dir=`(cd $pgmdir && pwd)`
+echo "master_dir = $master_dir"
 
 # *** FIXME ****
 # Given the mpich2/maint/updatefiles uses libtoolize, this script should be
 # updated to call LIBTOOLIZE -ivfc to update all the libtool related files.
 # ALso, mpe2/autogen.sh should not do autoheader/autoconf on slog2sdk and
 # should instead call slog2sdk/maint/updatefiles.
+
+
+# Locate all the configure.in under master_dir
+cfgins=`find $master_dir -name 'configure.in' -print`
+for cfgin in $cfgins ; do
+    dir="`dirname $cfgin`"
+    if [ -n "`grep AC_PROG_LIBTOOL $cfgin`" ] ; then
+        echo "Running libtoolize in $dir/ ..."
+        (cd $dir && $SLOG2_LIBTOOLIZE -ivfc) || exit 1
+    fi
+    echo "Creating configure in $dir/ ..."
+    if [ -n "`grep AC_CONFIG_HEADER $cfgin`" ] ; then
+        (cd $dir && $SLOG2_AUTOHEADER && $SLOG2_AUTOCONF && rm -rf autom4te*.cache) || exit 1
+    else
+        (cd $dir && $SLOG2_AUTOCONF && rm -rf autom4te*.cache) || exit 1
+    fi
+done
