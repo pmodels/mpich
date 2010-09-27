@@ -21,7 +21,7 @@ fi
 if [ "$acWorks" != yes ] ; then
     echo "Selected version of autoconf cannot handle version 2.52"
     echo "Trying to find an autoconf-2.xx..."
-    for ver in `seq 52 68 | sort -r` ; do
+    for ver in `seq 52 69 | sort -r` ; do
         autoconf="autoconf-2.$ver"
         if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
 	    MPE_AUTOCONF=$autoconf
@@ -44,17 +44,33 @@ rm -rf .tmp
 # MPE2's top-level directory.  'dirname' does not return the full-pathname
 # and may not be reliable in general, so we cd to the directory and
 # use pwd to get the full-pathname of the top-level MPE2 source directory.
-saved_wd=`pwd`
-cd `dirname $0` && master_dir=`pwd`
-cd $saved_wd
+pgmdir="`dirname $0`"
+master_dir=`(cd $pgmdir && pwd)`
 
+# Remove all the configure first so we can track if the autoconf has been run.
+find $master_dir -name 'configure' -exec rm -f {} \;
+
+# Locate all the autogen.sh and invoke the script accordingly.
+atgs=`find $master_dir -name 'autogen.sh' -print`
+for atg in $atgs ; do
+    dir="`dirname $atg`"
+    if [ "$atg" != "$master_dir/autogen.sh" ] ; then
+        echo "Running autogen.sh in $dir/ ..."
+        $atg || exit 1
+    fi
+done
+
+# Locate all the configure.in and invoke autoconf if no configure is found.
 cfgins=`find $master_dir -name 'configure.in' -print`
 for cfgin in $cfgins ; do
     dir="`dirname $cfgin`"
-    echo "Building directory $dir ..."
-    if [ ! -z "`grep AC_CONFIG_HEADER $cfgin`" ] ; then
-	(cd $dir && $MPE_AUTOHEADER && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
-    else
-	(cd $dir && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
+    if [ ! -x "$dir/configure" ] ; then
+        if [ -n "`grep AC_CONFIG_HEADER $cfgin`" ] ; then
+            echo "Running autoheader/autoconf in $dir/ ..."
+            (cd $dir && $MPE_AUTOHEADER && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
+        else
+            echo "Running autoconf in $dir/ ..."
+            (cd $dir && $MPE_AUTOCONF && rm -rf autom4te*.cache) || exit 1
+        fi
     fi
 done
