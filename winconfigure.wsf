@@ -6528,9 +6528,11 @@ Function GenBuild()
 	mfile.WriteLine("P = p")
 	mfile.WriteLine("common_cflags = $(common_cflags) /DHAVE_STRNICMP /DHAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED /DUSE_LOGGING=MPID_LOGGING_RLOG")
 	mfile.WriteLine("rlog_libs = $(RLOG_OUTDIR)\rlog$(D).lib")
+	mfile.WriteLine("PLIB_DEP = rlog")
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("P =")
 	mfile.WriteLine("rlog_libs =")
+	mfile.WriteLine("PLIB_DEP =")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("common_cflags = -c -nologo $(common_cflags) \")
@@ -6660,7 +6662,7 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("mpich2_libs = activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mswsock.lib ws2_32.lib mpr.lib rpcrt4.lib crypt32.lib gdi32.lib kernel32.lib advapi32.lib comsupp.lib")
 	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
-	mfile.WriteLine("common_libs = bufferoverflowU.lib")
+	mfile.WriteLine("# common_libs = bufferoverflowU.lib")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""ib""")
@@ -7038,7 +7040,7 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("ch3sock: $(SOCK_OUTDIR)\mpich2$(P)$(D).dll")
 	mfile.WriteLine
-	mfile.WriteLine("$(SOCK_OUTDIR)\mpich2$(P)$(D).dll: $(ch3sock_objs) $(mpich2_objs)")
+	mfile.WriteLine("$(SOCK_OUTDIR)\mpich2$(P)$(D).dll: $(ch3sock_objs) $(mpich2_objs) $(PLIB_DEP)")
 	mfile.WriteLine("	$(link) $(dlllflags) $(ch3sock_objs) $(mpich2_objs) $(mpich2_libs) $(rlog_libs) $(common_libs) -out:$(SOCK_OUTDIR)\mpich2$(P)$(D).dll /DEF:..\mpich2.def")
 	mfile.WriteLine("	if exist $(SOCK_OUTDIR)\mpich2$(P)$(D).dll.manifest mt.exe -manifest $(SOCK_OUTDIR)\mpich2$(P)$(D).dll.manifest -outputresource:$(SOCK_OUTDIR)\mpich2$(P)$(D).dll;2")
 	mfile.WriteLine
@@ -7054,7 +7056,7 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("ch3$(CHANNEL): $(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
 	mfile.WriteLine
-	mfile.WriteLine("$(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(channel_objs) $(mpich2_objs)")
+	mfile.WriteLine("$(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(channel_objs) $(mpich2_objs) $(PLIB_DEP)")
 	mfile.WriteLine("	$(link) $(dlllflags) $(channel_objs) $(mpich2_objs) $(mpich2_libs) $(rlog_libs) $(common_libs) -out:$(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll /DEF:..\mpich2.def")
 	mfile.WriteLine("	if exist $(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll.manifest mt.exe -manifest $(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll.manifest -outputresource:$(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll;2")
 	mfile.WriteLine
