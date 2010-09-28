@@ -157,6 +157,16 @@
             nmake_cmd_prefix = nmake_cmd_prefix & " APPVER=" & appver
         End If
 
+        If cpu_type = "x64" Then
+            tmp_build_script.WriteLine("set PATH=%CCP_LIB64%;%PATH%")                
+        ElseIf cpu_type = "x86" Then
+            ' Assume ia32
+            tmp_build_script.WriteLine("set PATH=%CCP_LIB32%;%PATH%")                
+        Else
+            ' Unknown cpu type OR CPU type specified by environment
+            ' Assume that CCP paths are also specified by the environment
+        End If
+
         ' Write default target
         tmp_build_script.WriteLine(nmake_cmd_prefix & nmake_cmd_suffix)
 
