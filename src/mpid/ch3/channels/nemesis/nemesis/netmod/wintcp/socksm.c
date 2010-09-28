@@ -277,10 +277,7 @@ static inline int MPID_nem_newtcp_module_reset_readv_ex(sockconn_t *sc)
     MPIU_Assert(sc != NULL);
     sc->read.n_iov = -1;
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 /* Reset the wr context on a sock conn */
@@ -291,10 +288,7 @@ static inline int MPID_nem_newtcp_module_reset_writev_ex(sockconn_t *sc)
     MPIU_Assert(sc != NULL);
     sc->write.n_iov = -1;
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 /* Post a read on a sock conn with an iov
@@ -312,7 +306,6 @@ fn_fail:
 int MPID_nem_newtcp_module_post_readv_ex(sockconn_t *sc, MPID_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i=0;
     MPIDI_STATE_DECL(MPID_STATE_NEWTCP_POST_READV_EX);
 
     MPIDI_FUNC_ENTER(MPID_STATE_NEWTCP_POST_READV_EX);
@@ -359,7 +352,6 @@ fn_fail:
 int MPID_nem_newtcp_module_post_read_ex(sockconn_t *sc, void *buf, int nb)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i=0;
     MPIDI_STATE_DECL(MPID_STATE_NEWTCP_POST_READ_EX);
 
     MPIDI_FUNC_ENTER(MPID_STATE_NEWTCP_POST_READ_EX);
@@ -393,7 +385,6 @@ fn_fail:
 int MPID_nem_newtcp_module_post_dummy_read_ex(sockconn_t *sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i=0;
     MPIDI_STATE_DECL(MPID_STATE_NEWTCP_POST_DUMMY_READ_EX);
 
     MPIDI_FUNC_ENTER(MPID_STATE_NEWTCP_POST_DUMMY_READ_EX);
@@ -427,7 +418,6 @@ fn_fail:
 int MPID_nem_newtcp_module_post_writev_ex(sockconn_t *sc, MPID_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i=0;
     MPIDI_STATE_DECL(MPID_STATE_NEWTCP_POST_WRITEV_EX);
 
     MPIDI_FUNC_ENTER(MPID_STATE_NEWTCP_POST_WRITEV_EX);
@@ -474,7 +464,6 @@ fn_fail:
 int MPID_nem_newtcp_module_post_write_ex(sockconn_t *sc, void *buf, int nb)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i=0;
     MPIDI_STATE_DECL(MPID_STATE_NEWTCP_POST_WRITE_EX);
 
     MPIDI_FUNC_ENTER(MPID_STATE_NEWTCP_POST_WRITE_EX);
@@ -680,10 +669,8 @@ static int ex_read_progress_update(sockconn_t *sc, int *complete)
         if(sc->read.n_iov == 0) *complete = 1;
     }
 
-fn_exit:
+ fn_exit:
     return sc->read.nb;
-fn_fail:
-    goto fn_exit;
 }
 
 /* Returns the total number of bytes written on sc for the posted wr
@@ -720,10 +707,8 @@ static int ex_write_progress_update(sockconn_t *sc, int *complete)
         if(sc->write.n_iov == 0) *complete = 1;
     }
 
-fn_exit:
+ fn_exit:
     return sc->write.nb;
-fn_fail:
-    goto fn_exit;
 }
 
 static int find_free_sc(sockconn_t **sc_p);
@@ -736,7 +721,6 @@ static int find_free_sc(sockconn_t **sc_p);
 static int alloc_sc_tbl(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
-    sockconn_t *sc = NULL;
     MPIU_CHKPMEM_DECL (2);
 
     MPIU_Assert(g_sc_tbl == NULL);
@@ -801,7 +785,7 @@ static int expand_sc_tbl (void)
     /* FIXME: We need to check whether a non-linear growth of the sc_tbl
      * will be better for performance for large jobs
      */
-    int new_capacity = g_sc_tbl_capacity + g_sc_tbl_grow_size, i;
+    int new_capacity = g_sc_tbl_capacity + g_sc_tbl_grow_size;
     MPIU_CHKPMEM_DECL (2);
 
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "expand_sc_tbl Entry"));
@@ -894,7 +878,7 @@ static int find_free_sc(sockconn_t **sc_p)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int found_better_sc(sockconn_t *sc, sockconn_t **fnd_sc)
 {
-    int i, found = FALSE;
+    int found = FALSE;
     sc_tbl_fw_iterator_t iter;
     MPIDI_STATE_DECL(MPID_STATE_FOUND_BETTER_SC);
 
@@ -1435,7 +1419,6 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc)
     sockconn_t *sc = NULL;
     int mpi_errno = MPI_SUCCESS;
     freenode_t *node;
-    int isConnPend=0;
     MPIU_CHKLMEM_DECL(1);
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CONNECT);
@@ -1590,8 +1573,6 @@ the tie-breaker */
 
  fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 /* Called to transition an sc to CLOSED.  This might be done as part of a ch3
@@ -1639,7 +1620,7 @@ static int cleanup_sc(sockconn_t *sc)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc)
 {
-    int mpi_errno = MPI_SUCCESS, i;
+    int mpi_errno = MPI_SUCCESS;
     sc_tbl_fw_iterator_t iter;
     sockconn_t *sc = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_CLEANUP);
@@ -1695,7 +1676,6 @@ static int state_tc_c_cnting_success_handler(MPIU_EXOVERLAPPED *wr_ov)
 {
     int mpi_errno = MPI_SUCCESS;
     sockconn_t *sc;
-    MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
     MPIDI_STATE_DECL(MPID_STATE_STATE_TC_C_CNTING_SUCCESS_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_TC_C_CNTING_SUCCESS_HANDLER);
@@ -1730,7 +1710,6 @@ static int gen_cnting_fail_handler(MPIU_EXOVERLAPPED *wr_ov)
     int mpi_errno = MPI_SUCCESS;
     sockconn_t *sc;
     MPIU_Ex_status_t ex_status;
-    MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
     MPIDI_STATE_DECL(MPID_STATE_GEN_CNTING_FAIL_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_GEN_CNTING_FAIL_HANDLER);
@@ -2045,8 +2024,6 @@ static int state_l_cntd_success_handler(MPIU_EXOVERLAPPED *rd_ov)
 {
     int mpi_errno = MPI_SUCCESS;
     sockconn_t *sc = NULL;
-    MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
-    int got_sc_eof = 0;
     MPIDI_nem_newtcp_module_header_t *pkt;
     int pkt_len;
     MPIDI_STATE_DECL(MPID_STATE_STATE_L_CNTD_SUCCESS_HANDLER);
@@ -2086,8 +2063,6 @@ static int state_l_cntd_fail_handler(MPIU_EXOVERLAPPED *rd_ov)
 {
     int mpi_errno = MPI_SUCCESS;
     sockconn_t *sc = NULL;
-    MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
-    int got_sc_eof = 0;
     MPIDI_STATE_DECL(MPID_STATE_STATE_L_CNTD_FAIL_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_L_CNTD_FAIL_HANDLER);
@@ -2161,8 +2136,6 @@ static int state_l_rankrcvd_success_handler(MPIU_EXOVERLAPPED *rd_ov)
 {
     int mpi_errno = MPI_SUCCESS;
     sockconn_t *sc = NULL;
-    /* FIXME: Rename the status type to look like a non-MACRO */
-    MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
     sockconn_t *fnd_sc;
     int snd_nak = FALSE;
     int nb, complete;
@@ -2247,7 +2220,6 @@ static int state_l_tmpvcrcvd_success_handler(MPIU_EXOVERLAPPED *rd_ov)
 {
     int mpi_errno = MPI_SUCCESS;
     sockconn_t *sc = NULL;
-    MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t stat;
     int snd_nak = FALSE;
     int nb, complete;
     MPIDI_STATE_DECL(MPID_STATE_STATE_L_TMPVCRCVD_SUCCESS_HANDLER);
