@@ -72,7 +72,7 @@ static inline void sc_tbl_fw_iterator_init(sc_tbl_fw_iterator_t *iter)
 /* Finalize the sc_tbl iterator */
 static inline void sc_tbl_fw_iterator_finalize(sc_tbl_fw_iterator_t *iter)
 {
-    sc_tbl_fw_iterator_init(&iter);
+    sc_tbl_fw_iterator_init(iter);
 }
 /* Returns 1 is sc_tbl has more elements, 0 otherwise */
 static inline int sc_tbl_has_next(sc_tbl_fw_iterator_t *iter)
