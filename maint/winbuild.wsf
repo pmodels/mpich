@@ -64,7 +64,7 @@
         Dim i, arg, arg_cnt, arg_val, arg_option, tmp_str_array
         Dim fso, tmp_build_script, tmp_fname
     
-        default_channel_array = Array("nemesis", "sock", "mt", "ssm", "shm")
+        default_channel_array = Array("nemesis", "sock", "mt")
         misc_targets_array = Array("cxx", "sfort", "irlog2rlog", "TraceInput")
         gcc_targets_array = Array("gcc_libs")
         fort_targets_array = Array("fort", "mpi_mod", "gfort")
