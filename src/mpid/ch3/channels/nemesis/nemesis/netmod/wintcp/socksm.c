@@ -109,7 +109,7 @@ static inline int init_sc_tbl_list(void )
 }
 
 /* Add sc table to the global sc table list */
- static inline int add_sc_tbl_to_list(static sockconn_t *sc_tbl, int sc_tbl_sz)
+ static inline int add_sc_tbl_to_list(sockconn_t *sc_tbl, int sc_tbl_sz)
 {
     sc_tbl_list_node_t *node = NULL;
     int mpi_errno = MPI_SUCCESS;
