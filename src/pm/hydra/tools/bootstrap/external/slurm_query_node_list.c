@@ -117,7 +117,7 @@ static HYD_status extract_tasks_per_node(int **tasks_per_node, int *nnodes, int 
         *valid = 0;
         goto fn_exit;
     }
-    task_list = MPL_strdup(task_list);
+    task_list = HYDU_strdup(task_list);
 
     HYDU_MALLOC(*tasks_per_node, int *, *nnodes * sizeof(int), status);
     HYDU_MALLOC(tmp_core_list, char **, *nnodes * sizeof(char *), status);
