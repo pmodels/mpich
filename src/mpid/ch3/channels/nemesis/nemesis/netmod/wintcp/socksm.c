@@ -1731,7 +1731,7 @@ static int gen_cnting_fail_handler(MPIU_EXOVERLAPPED *wr_ov)
 
         mpi_errno = MPID_nem_newtcp_module_post_close_ex(sc);
 
-        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_connect",
+        MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**sock_connect",
             "**sock_connect %s %d", MPIU_OSW_Strerror(MPIU_EX_STATUS_TO_ERRNO(MPIU_ExGetStatus(wr_ov))),
             MPIU_EX_STATUS_TO_ERRNO(MPIU_ExGetStatus(wr_ov)));
     }
@@ -2081,7 +2081,7 @@ static int state_l_cntd_fail_handler(MPIU_EXOVERLAPPED *rd_ov)
 	CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
     
     MPID_nem_newtcp_module_post_close_ex(sc);
-    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept",
+    MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**sock_accept",
         "**sock_accept %s %d", MPIU_OSW_Strerror(MPIU_EX_STATUS_TO_ERRNO(MPIU_ExGetStatus(rd_ov))),
         MPIU_EX_STATUS_TO_ERRNO(MPIU_ExGetStatus(rd_ov)));
 
@@ -2808,7 +2808,7 @@ int MPID_nem_newtcp_module_state_accept_fail_handler(MPIU_EXOVERLAPPED *rd_ov)
     else{
         /* FIXME: Get rid of static allocn of listen sock and post a close */
         mpi_errno = MPIU_SOCKW_Sock_close(sc->fd);
-        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept",
+        MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**sock_accept",
             "**sock_accept %s %d", MPIU_OSW_Strerror(MPIU_EX_STATUS_TO_ERRNO(MPIU_ExGetStatus(rd_ov))),
             MPIU_EX_STATUS_TO_ERRNO(MPIU_ExGetStatus(rd_ov)));
     }
