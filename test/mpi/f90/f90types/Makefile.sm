@@ -6,3 +6,4 @@ createf90types_DEPADD    = ../../util/mtest.o
 
 ../../util/mtest.o: 
 	(cd ../../util && $(MAKE) mtest.o)
+
