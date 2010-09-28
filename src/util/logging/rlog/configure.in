@@ -83,14 +83,6 @@ dnl PAC_C_STRUCT_ALIGNMENT
 dnl
 dnl Look for Standard headers
 AC_HEADER_STDC
-AC_CHECK_HEADER(jni.h)
-if test "$ac_cv_header_jni_h" != "yes" ; then
-   # Try to find the java include path.  For now, just generate warning
-   # At ANL, places to look include /soft/com/packages/j2sdk1.4.0/include
-   # and /soft/com/packages/jdk-1.3.1/include (and /soft/com/jdk*)
-   # May also want to look in $JAVA_HOME/include
-   AC_MSG_WARN([cannot compile trace code])
-fi
 dnl
 MPILIBNAME=${MPILIBNAME:-"mpich"}
 AC_SUBST(MPILIBNAME)
@@ -106,10 +98,22 @@ dnl place, the user can set the environment variable and configure will
 dnl use that value (it should still check that the value is valid, i.e.,
 dnl the necessary files are in the specified directory)
 dnl
-java_home=/soft/com/packages/j2sdk1.4.0
-java_arch=linux
-AC_SUBST(java_home)
-AC_SUBST(java_arch)
+dnl AC_CHECK_HEADER(jni.h)
+dnl if test "$ac_cv_header_jni_h" != "yes" ; then
+dnl    # Try to find the java include path.  For now, just generate warning
+dnl    # At ANL, places to look include /soft/com/packages/j2sdk1.4.0/include
+dnl    # and /soft/com/packages/jdk-1.3.1/include (and /soft/com/jdk*)
+dnl    # May also want to look in $JAVA_HOME/include
+dnl    AC_MSG_WARN([cannot compile trace code])
+dnl fi
+dnl java_home=/soft/com/packages/j2sdk1.4.0
+dnl java_arch=linux
+dnl AC_SUBST(java_home)
+dnl AC_SUBST(java_arch)
+dnl
+dnl 09/28/2010, chan, the above checks are not enough to build
+dnl libTraceInput.so for rlog.  The work is currently being done
+dnl mpe2/src/slog2sdk/trace_rlog.
 
 if test -z "$ENABLE_SHLIB" ; then
     CC_SHL="$CC"
