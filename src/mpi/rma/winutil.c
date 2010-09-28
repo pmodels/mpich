@@ -6,6 +6,8 @@
 
 #include "mpiimpl.h"
 
+/* FIXME: Move this into wincreate (having a separate file is unneccessary,
+   and it leads to a false "missing coverage" report) */
 #ifndef MPID_WIN_PREALLOC 
 #define MPID_WIN_PREALLOC 8
 #endif
