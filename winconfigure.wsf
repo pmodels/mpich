@@ -4979,6 +4979,15 @@ Sub WriteFooter( fout )
 	fout.WriteLine("#endif")
 End Sub
 
+'
+' Write common VS pragmas to header file pointed to by fout
+'
+Sub WriteCommonVSPragmas(fout)
+    ' Disable warnings for unsecure versions, eg: snprintf instead of snprintf_s, of funcs
+    fout.WriteLine("#pragma warning( disable : 4996 )") 
+    ' Disable warnings for do{}while(0) constructs - conditional expression is constant
+    fout.WriteLine("#pragma warning( disable : 4127 )")
+End Sub
 
 '
 ' mpichconf.h
@@ -5050,8 +5059,7 @@ fout.WriteLine("#define USE_NT_SOCK 1")
 fout.WriteLine("#define HAVE_EXECUTIVE_PE 1")
 fout.WriteLine("#define HAVE__MKTEMP_S 1")
 fout.WriteLine("#define HAVE_FOPEN_S 1")
-' Disable warnings for unsecure versions, eg: snprintf instead of snprintf_s, of funcs
-fout.WriteLine("#pragma warning( disable : 4996 )") 
+WriteCommonVSPragmas(fout)
 ' Define so that we can test whether the mpichconf.h file has been included 
 fout.WriteLine(" /* Define so that we can test whether the mpichconf.h has been included */")
 fout.WriteLine("#define HAVE_MPICHCONF 1")
@@ -5125,8 +5133,7 @@ fout.WriteLine("#define USE_NT_SOCK 1")
 fout.WriteLine("#define HAVE_EXECUTIVE_PE 1")
 fout.WriteLine("#define HAVE__MKTEMP_S 1")
 fout.WriteLine("#define HAVE_FOPEN_S 1")
-' Disable warnings for unsecure versions, eg: snprintf instead of snprintf_s, of funcs
-fout.WriteLine("#pragma warning( disable : 4996 )") 
+WriteCommonVSPragmas(fout)
 ' Define so that we can test whether the mpichconf.h file has been included 
 fout.WriteLine(" /* Define so that we can test whether the mpichconf.h has been included */")
 fout.WriteLine("#define HAVE_MPICHCONF 1")
