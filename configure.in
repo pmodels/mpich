@@ -463,7 +463,8 @@ AC_ARG_ENABLE(threads,
         serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
         multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE). DO NOT
                           select this option. The default option is more
-                          efficient and also supports thread_multiple.
+                          efficient and also supports thread_multiple. 
+                          (multiple aliased to default now)
 
         See also the --enable-thread-cs option for controlling the granularity of
         the concurrency inside of the library
@@ -1091,14 +1092,20 @@ if test "$enable_threads" = default ; then
 fi
 
 if test "$enable_threads" = "yes" ; then 
-    enable_threads=multiple
+    enable_threads=runtime
 elif test "$enable_threads" = "no" ; then
     enable_threads=single
 elif test "$enable_threads" = "default"; then
-    if test "$with_device" = "default" -o "$with_device" = "ch3:sock" ; then
+    if test "$with_device" = "default" -o "$with_device" = "ch3:nemesis" ; then
         enable_threads=runtime
     fi
 fi
+
+# if user specifies multiple, set it to the default which is runtime (more efficient)
+if test "$enable_threads" = "multiple" ; then
+    enable_threads=runtime
+fi
+
 # Runtime is an alias for multiple with an additional value
 if test "$enable_threads" = "runtime" ; then
     AC_DEFINE(HAVE_RUNTIME_THREADCHECK,1,[Define if MPI supports MPI_THREAD_MULTIPLE with a runtime check for thread level])
