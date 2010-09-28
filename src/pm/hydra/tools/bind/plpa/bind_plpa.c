@@ -160,20 +160,26 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset)
 {
     int ret, i;
+    int isset = 0;
     PLPA_NAME(cpu_set_t) plpa_cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     PLPA_NAME_CAPS(CPU_ZERO) (&plpa_cpuset);
+    isset = 0;
     for (i = 0; i < HYDT_bind_info.total_proc_units; i++) {
-        if (HYDT_bind_cpuset_isset(i, cpuset))
+        if (HYDT_bind_cpuset_isset(i, cpuset)) {
             PLPA_NAME_CAPS(CPU_SET) (i, &plpa_cpuset);
+            isset = 1;
+        }
     }
 
-    ret = PLPA_NAME(sched_setaffinity) (0, HYDT_BIND_MAX_CPU_COUNT, &plpa_cpuset);
-    if (ret)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "plpa setaffinity failed\n");
+    if (isset) {
+        ret = PLPA_NAME(sched_setaffinity) (0, HYDT_BIND_MAX_CPU_COUNT, &plpa_cpuset);
+        if (ret)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "plpa setaffinity failed\n");
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
