@@ -1,4 +1,6 @@
 allred 4
+allred 7
+allred 4 arg=100
 allredmany 4
 allred2 4
 allred3 10

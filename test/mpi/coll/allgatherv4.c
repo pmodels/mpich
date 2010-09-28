@@ -16,6 +16,8 @@
 #include <math.h>
 #include <assert.h>
 
+/* FIXME: What is this test supposed to accomplish? */
+
 #define START_BUF (1)
 #define LARGE_BUF (256 * 1024)
 
@@ -25,7 +27,6 @@
 
 char * sbuf, * rbuf;
 int * recvcounts, * displs;
-long long tmp;
 int errs = 0;
 
 /* #define dprintf printf */
@@ -172,12 +173,14 @@ void comm_tests(MPI_Comm comm)
     }
 }
 
-double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double * max_time)
+double run_test(long long msg_size, MPI_Comm comm, test_t test_type, 
+		double * max_time)
 {
     int i, j;
     int comm_size, comm_rank;
     double start, end;
     double total_time, avg_time;
+    MPI_Aint tmp;
 
     MPI_Comm_size(comm, &comm_size);
     MPI_Comm_rank(comm, &comm_rank);
@@ -194,6 +197,10 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double * ma
             recvcounts[i] = (i < (comm_size / 2)) ? (2 * msg_size) : 0;
         else if (test_type == LINEAR_DECREASE) {
             tmp = 2 * msg_size * (comm_size - 1 - i) / (comm_size - 1);
+	    if (tmp != (int)tmp) {
+		fprintf( stderr, "Integer overflow in variable tmp\n" );
+		MPI_Abort( MPI_COMM_WORLD, 1 );
+	    }
             recvcounts[i] = (int) tmp;
 
             /* If the maximum message size is too large, don't run */
@@ -215,16 +222,22 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double * ma
             displs[i+1] = displs[i] + recvcounts[i];
     }
 
+    /* Test that:
+       1: sbuf is large enough
+       2: rbuf is large enough
+       3: There were no failures (e.g., tmp nowhere > rbuf size 
+    */
     MPI_Barrier(comm);
-    start = 1000000.0 * MPI_Wtime();
+    start = MPI_Wtime();
     for (i = 0; i < LOOPS; i++) {
         MPI_Allgatherv(sbuf, recvcounts[comm_rank], MPI_CHAR,
                        rbuf, recvcounts, displs, MPI_CHAR, comm);
     }
-    end = 1000000.0 * MPI_Wtime();
+    end = MPI_Wtime();
     MPI_Barrier(comm);
 
-    total_time = end - start;
+    /* Convert to microseconds (why?) */
+    total_time = 1.0e6 * (end - start);
     MPI_Reduce(&total_time, &avg_time, 1, MPI_DOUBLE, MPI_SUM, 0, comm);
     MPI_Reduce(&total_time, max_time, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
 
