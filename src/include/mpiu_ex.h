@@ -110,8 +110,8 @@ MPIU_ExRegisterCompletionProcessor(
     );
 
 /* Predefined Completion processor keys */
-#define MPIU_EX_GENERIC_COMP_PROC_KEY   0
-#define MPIU_EX_WIN32_COMP_PROC_KEY     1
+#define MPIU_EX_GENERIC_COMP_PROC_KEY   0x0
+#define MPIU_EX_WIN32_COMP_PROC_KEY     0x1
 
 /*
     MPIU_ExRegisterNextCompletionProcessor
