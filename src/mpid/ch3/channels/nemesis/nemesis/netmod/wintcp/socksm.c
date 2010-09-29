@@ -592,7 +592,7 @@ fn_exit:
  * Side-effect : *iov_p, *n_iov_p, buf & len of (*iov_p)
  *  could be modified by this function.
  */
-static void trim_iov(MPID_IOV **iov_p, int *n_iov_p, int nb)
+static void trim_iov(MPID_IOV **iov_p, int *n_iov_p, unsigned int nb)
 {
     MPID_IOV *cur_iov;
     int cur_n_iov;
@@ -1100,6 +1100,8 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d, offset=%d, errno=%d %s", mpi_errno, offset, errno, strerror(errno)));
     goto fn_exit;
 }
+
+static int cleanup_sc_vc(sockconn_t *sc);
 
 #undef FUNCNAME
 #define FUNCNAME gen_read_fail_handler

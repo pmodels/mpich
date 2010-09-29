@@ -30,6 +30,7 @@
 
 #include "mpiu_ex.h"
 #include "socksm.h"
+#include "pmi.h"
 
 /* globals */
 extern MPID_nem_queue_ptr_t MPID_nem_newtcp_module_free_queue;
@@ -96,10 +97,10 @@ int MPID_nem_newtcp_module_connect (struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_conn_wr_enable (struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_conn_wr_disable (struct MPIDI_VC *const vc);
 */
-int MPID_nem_newtcp_module_connpoll (void);
+int MPID_nem_newtcp_module_connpoll (int );
 int MPID_nem_newtcp_module_sm_init (void);
 int MPID_nem_newtcp_module_sm_finalize (void);
-int MPID_nem_newtcp_module_set_sockopts (int fd);
+int MPID_nem_newtcp_module_set_sockopts (MPIU_SOCKW_Sockfd_t fd);
 /* FIXME: WINTCP ASYNC
 MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t MPID_nem_newtcp_module_check_sock_status(MPIU_SOCKW_Waitset_sock_hnd_t fd_ws_hnd);
 */
@@ -113,6 +114,7 @@ int MPID_nem_newtcp_module_recv_handler (MPIU_EXOVERLAPPED *ov);
 int MPID_nem_newtcp_module_conn_est (MPIDI_VC_t *vc);
 int MPID_nem_newtcp_module_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank);
 int MPID_nem_newtcp_module_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC **vc);
+int MPID_nem_newtcp_module_get_addr_port_from_bc (const char *business_card, struct in_addr *addr, in_port_t *port);
 int MPID_nem_newtcp_module_is_sock_connected(int fd);
 int MPID_nem_newtcp_module_disconnect (struct MPIDI_VC *const vc);
 int MPID_nem_newtcp_module_cleanup (struct MPIDI_VC *const vc);
