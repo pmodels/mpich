@@ -287,7 +287,7 @@ For the time being we will document these separately.
 MPICH2 provides a number of process management systems. Hydra is the
 default process manager in MPICH2. More details on Hydra and its
 extensions to mpiexec can be found at
-http://\linebreak[0]wiki.\linebreak[0]mcs.\linebreak[0]anl.\linebreak[0]gov/\linebreak[0]mpich2/\linebreak[0]index.php/\linebreak[0]Using\_\linebreak[0]the\_\linebreak[0]Hydra\_\linebreak[0]Process\_\linebreak[0]Manager
+\url{http://wiki.mcs.anl.gov/mpich2/index.php/Using\_the\_Hydra\_Process\_Manager}
 
 \subsection{\texttt{mpiexec} Extensions for the MPD Process Manager}
 \label{sec:extensions-various}
@@ -807,7 +807,7 @@ mpdallexit.
 Pete Wyckoff from the Ohio Supercomputer Center provides a alternate
 utility called OSC mpiexec to launch MPICH2 jobs on PBS systems
 without using MPD. More information about this can be found here:
-http://www.osc.edu/$\sim$pw/mpiexec
+\url{http://www.osc.edu/~pw/mpiexec}
 
 
 \section{Managing the Process Management Environment}
@@ -1078,6 +1078,99 @@ instance of Python has no children and is not the child of a
 Python process. That is the one that is running mpiexec and is the one you
 want to attach to.
 
+\section{Checkpointing}
+\label{sec:checkpointing}
+MPICH2 supports checkpoint/rollback fault tolerance when used with the
+Hydra process manager.  Currently only the BLCR checkpointing library
+is supported.  BLCR needs to be installed separately.  Below we
+describe how to enable the feature in MPICH2 and how to use it.  This
+information can also be found on the MPICH Wiki:
+\url{http://wiki.mcs.anl.gov/mpich2/index.php/Checkpointing}
+
+\subsection{Configuring for checkpointing}
+\label{sec:conf-checkp}
+
+First, you need to have BLCR version 0.8.2 installed on your
+machine.  If it's installed in the default system location, add the
+following two options to your configure command:
+\begin{small}
+\begin{verbatim}
+    --enable-checkpointing --with-hydra-ckpointlib=blcr
+\end{verbatim}
+\end{small}
+
+If BLCR is not installed in the default system location, you'll need
+to tell MPICH2's configure where to find it.  You might also need to
+set the \texttt{LD\_LIBRARY\_PATH} environment variable so that BLCR's shared
+libraries can be found.  In this case add the following options to your
+configure command:
+\begin{small}
+\begin{verbatim}
+    --enable-checkpointing --with-hydra-ckpointlib=blcr 
+    --with-blcr=BLCR_INSTALL_DIR LD_LIBRARY_PATH=BLCR_INSTALL_DIR/lib
+\end{verbatim}
+\end{small}
+where \texttt{BLCR\_INSTALL\_DIR} is the directory where BLCR has been
+installed (whatever was specified in \texttt{--prefix} when BLCR was
+configured).  Note, checkpointing is only supported with the Hydra
+process manager.  Hyrda will used by default, unless you choose
+something else with the \texttt{--with-pm=} configure option.
+
+After it's configured, compile as usual (e.g., \texttt{make; make install}). 
+
+\subsection{Taking checkpoints}
+\label{sec:taking-checkpoints}
+
+To use checkpointing, include the \texttt{-ckpointlib} option for
+\texttt{mpiexec} to specify the checkpointing library to use and
+\texttt{-ckpoint-prefix} to specify the directory where the checkpoint
+images should be written:
+\begin{small}
+\begin{verbatim}
+    shell$ mpiexec -ckpointlib blcr \
+           -ckpoint-prefix /home/buntinas/ckpts/app.ckpoint \
+           -f hosts -n 4 ./app
+\end{verbatim}
+\end{small}
+
+While the application is running, the user can request for a
+checkpoint at any time by sending a \texttt{SIGUSR1} signal to
+\texttt{mpiexec}.  You can also automatically checkpoint the
+application at regular intervals using the mpiexec option
+\texttt{-ckpoint-interval} to specify the number of seconds between
+checkpoints:
+\begin{small}
+\begin{verbatim}
+    shell$ mpiexec -ckpointlib blcr \
+           -ckpoint-prefix /home/buntinas/ckpts/app.ckpoint \
+           -ckpoint-interval 3600 -f hosts -n 4 ./app
+\end{verbatim}
+\end{small}
+
+The checkpoint/restart parameters can also be controlled with the
+environment variables \texttt{HYDRA\_\linebreak[0]CKPOINTLIB},
+\texttt{HYDRA\_\linebreak[0]CKPOINT\_\linebreak[0]PREFIX} and
+\texttt{HYDRA\_\linebreak[0]CKPOINT\_\linebreak[0]INTERVAL}.
+
+Each checkpoint generates one file per node.  Note that checkpoints
+for all processes on a node will be stored in the same file.  Each
+time a new checkpoint is taken an additional set of files are created.
+The files are numbered by the checkpoint number.  This allows the
+application to be restarted from checkpoints other than the most
+recent.  The checkpoint number can be specified with the
+\texttt{-ckpoint-num} parameter.  To restart a process:
+\begin{small}
+\begin{verbatim}
+    shell$ mpiexec -ckpointlib blcr \
+           -ckpoint-prefix /home/buntinas/ckpts/app.ckpoint \
+           -ckpoint-num 5 -f hosts -n 4
+\end{verbatim}
+\end{small}
+
+Note that by default, the process will be restarted from the first
+checkpoint, so in most cases, the checkpoint number should be
+specified.
+
 \section{MPE}
 \label{sec:mpe}
 MPICH2 comes with the same MPE (Multi-Processing Environment) tools that are
@@ -1285,8 +1378,7 @@ for a description of the options to \texttt{mpiexec}.
 \section{Frequently Asked Questions}
 
 The frequently asked questions are maintained online
-here:\linebreak[0]
-http://wiki.mcs.anl.gov/\linebreak[0]mpich2/\linebreak[0]index.php/\linebreak[0]Frequently\_Asked\_Questions
+here:\url{http://wiki.mcs.anl.gov/mpich2/index.php/Frequently_Asked_Questions}
 
 \bibliographystyle{plain}
 \bibliography{user}
