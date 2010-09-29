@@ -77,7 +77,7 @@ int MPID_nem_newtcp_module_init (MPIDI_PG_t *pg_p, int pg_rank,
                                  char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_newtcp_module_finalize (void);
 int MPID_nem_newtcp_module_ckpt_shutdown (void);
-int MPID_nem_newtcp_module_poll(void);
+int MPID_nem_newtcp_module_poll(int);
 int MPID_nem_newtcp_module_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_newtcp_module_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc);
 int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc);
@@ -106,7 +106,7 @@ MPID_NEM_NEWTCP_MODULE_SOCK_STATUS_t MPID_nem_newtcp_module_check_sock_status(MP
 */
 int MPID_nem_newtcp_module_poll_finalize (void);
 int MPID_nem_newtcp_module_send_finalize (void);
-int MPID_nem_newtcp_module_bind (int sockfd);
+int MPID_nem_newtcp_module_bind (MPIU_SOCKW_Sockfd_t sockfd);
 /* FIXME: WINTCP ASYNC
 int MPID_nem_newtcp_module_recv_handler (MPIU_SOCKW_Waitset_sock_hnd_t fd_ws_hnd, sockconn_t *sc);
 */

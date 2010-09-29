@@ -143,6 +143,5 @@ MPID_nem_newtcp_module_check_sock_status(MPIU_SOCKW_Waitset_sock_hnd_t fd_ws_hnd
         rc = MPID_NEM_NEWTCP_MODULE_SOCK_NOEVENT;
     }
 
- fn_exit:
     return rc;
 }

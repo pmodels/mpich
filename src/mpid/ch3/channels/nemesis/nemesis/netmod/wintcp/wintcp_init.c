@@ -62,7 +62,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_newtcp_module_funcs = {
 int MPID_nem_newtcp_module_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_INIT);
@@ -102,7 +101,7 @@ int MPID_nem_newtcp_module_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p,
     /* Associate the listen sock with the newtcp module executive set 
      * - Key 0 command processor */
     /* FIXME: No error code returned ! */
-    MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, MPIU_EX_WIN32_COMP_PROC_KEY, MPID_nem_newtcp_module_g_lstn_sc.fd);
+    MPIU_ExAttachHandle(MPID_nem_newtcp_module_ex_set_hnd, MPIU_EX_WIN32_COMP_PROC_KEY, (HANDLE )MPID_nem_newtcp_module_g_lstn_sc.fd);
     
     /* Register the listening handlers with executive */
     /* We also need to post the first accept here */
@@ -345,12 +344,8 @@ int MPID_nem_newtcp_module_vc_init (MPIDI_VC_t *vc)
     VC_FIELD(vc, sc_ref_count) = 0; 
     VC_FIELD(vc, send_queue).head = VC_FIELD(vc, send_queue).tail = NULL;
     
- fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_NEWTCP_MODULE_VC_INIT);
     return mpi_errno;
- fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -364,10 +359,7 @@ int MPID_nem_newtcp_module_vc_destroy(MPIDI_VC_t *vc)
     /* free any resources associated with this VC here */
     MPIU_UNREFERENCED_ARG(vc);
 
- fn_exit:   
        return mpi_errno;
- fn_fail:
-       goto fn_exit;
 }
 
 
@@ -421,7 +413,7 @@ int MPID_nem_newtcp_module_get_addr_port_from_bc (const char *business_card, str
 #define FUNCNAME MPID_nem_newtcp_module_bind
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_newtcp_module_bind (int sockfd)
+int MPID_nem_newtcp_module_bind (MPIU_SOCKW_Sockfd_t sockfd)
 {
     int mpi_errno = MPI_SUCCESS;
     struct sockaddr_in sin;
