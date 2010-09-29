@@ -26,15 +26,19 @@ fi
 if [ "$acWorks" != yes ] ; then
     echo "Selected version of autoconf cannot handle version 2.52"
     echo "Trying to find an autoconf-2.xx..."
-    for ver in `seq 52 69 | sort -r` ; do
+    acver_min=59
+    acver_max=69
+    ver="$acver_max"
+    while [ "$ver" -ge "$acver_min" ] ; do
         autoconf="autoconf-2.$ver"
         if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
-	    SLOG2_AUTOCONF=$autoconf
-	    SLOG2_AUTOHEADER="autoheader-2.$ver"
-	    echo "Found $autoconf"
-	    acWorks=yes
-	    break
+            SLOG2_AUTOCONF=$autoconf
+            SLOG2_AUTOHEADER="autoheader-2.$ver"
+            echo "Found $autoconf"
+            acWorks=yes
+            break
         fi
+        ver="`expr $ver - 1`"
     done
     if [ "$acWorks" != yes ] ; then
         echo "Unable to find workable autoconf"
