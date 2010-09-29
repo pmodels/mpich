@@ -1089,11 +1089,10 @@ int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc)
     goto fn_exit;
 }
 
-/* This cleans up and frees connection resources for all VCs, then
-   unpauses them.  Note that we didn't free or close any connections
-   before taking the checkpoint, so we need to do that on restart
-   (except we don't close the sockets because they should already be
-   closed). */
+/* This cleans up and frees connection resources for all VCs.  Note
+   that we didn't free or close any connections before taking the
+   checkpoint, so we need to do that on restart (except we don't close
+   the sockets because they should already be closed). */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_ckpt_cleanup
 #undef FCNAME
@@ -1120,9 +1119,6 @@ int MPID_nem_tcp_ckpt_cleanup(void)
             /* cleanup vc */
             mpi_errno = cleanup_and_free_sc_plfd(vc_tcp->sc);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-            /* unpause the vc */
-            vc_tcp->send_paused = FALSE;
         }
     }
 
