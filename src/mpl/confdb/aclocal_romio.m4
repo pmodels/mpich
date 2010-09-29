@@ -527,7 +527,10 @@ dnl
 dnl tries to determine the Fortran 90 kind parameter for 8-byte integers
 dnl
 define(PAC_MPI_OFFSET_KIND,
-[rm -f conftest*
+[
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
+rm -f conftest*
 # Determine the extension for Fortran 90 files (not all compilers accept
 # .f and not all accept .f90)
 if test -z "$ac_f90ext" ; then
@@ -544,6 +547,8 @@ EOF
     if AC_TRY_EVAL(ac_f90compile) ; then
         AC_MSG_RESULT([f90])
     else
+	# This is needed for Mac OSX 10.5
+	rm -rf conftest.dSYM
         rm -f conftest*
         ac_f90ext="f"
         cat > conftest.$ac_f90ext <<EOF
@@ -578,6 +583,8 @@ if $F90 -o conftest conftest.$ac_f90ext >/dev/null 2>&1 ; then
         KINDVAL=`cat conftest.out`
     fi
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 if test -n "$KINDVAL" -a "$KINDVAL" != "-1" ; then
    AC_MSG_RESULT($KINDVAL)
@@ -659,6 +666,8 @@ dnl
 define(PAC_MAKE_VPATH,[
 AC_SUBST(VPATH)
 AC_MSG_CHECKING(for virtual path format)
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -rf conftest*
 mkdir conftestdir
 cat >conftestdir/a.c <<EOF
@@ -690,6 +699,8 @@ EOF
 	AC_MSG_RESULT(neither VPATH nor .PATH works)
     fi
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -rf conftest*
 ])dnl
 dnl

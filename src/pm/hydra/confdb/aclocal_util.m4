@@ -138,6 +138,8 @@ dnl PAC_VPATH_CHECK([file-names],[directory-names])
 dnl  file-names should be files other than config.status and any header (e.g.,
 dnl fooconf.h) file that should be removed.  It is optional
 AC_DEFUN([PAC_VPATH_CHECK],[
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 date >conftest$$
 # If creating a file in the current directory does not show up in the srcdir
@@ -183,5 +185,7 @@ if test ! -s $srcdir/conftest$$ ; then
         fi
     fi
 fi
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
 rm -f conftest*
 ])
