@@ -50,6 +50,9 @@ static int verbose = 0;         /* Message level (0 is none) */
 
  Environment Variables:
 + MPITEST_DEBUG - If set (to any value), turns on debugging output
+. MPITEST_THREADLEVEL_DEFAULT - If set, use as the default "provided"
+                                level of thread support.  Applies to 
+                                MTest_Init but not MTest_Init_thread.
 - MPITEST_VERBOSE - If set to a numeric value, turns on that level of
   verbose output.  This is used by the routine 'MTestPrintfMsg'
 
@@ -99,11 +102,44 @@ void MTest_Init_thread( int *argc, char ***argv, int required, int *provided )
 	}
     }
 }
+/* 
+ * Initialize the tests, using an MPI-1 style init.  Supports 
+ * MTEST_THREADLEVEL_DEFAULT to test with user-specified thread level
+ */
 void MTest_Init( int *argc, char ***argv )
 {
     int provided;
-    
-    MTest_Init_thread( argc, argv, MPI_THREAD_SINGLE, &provided );
+#if MPI_VERSION >= 2 || defined(HAVE_MPI_INIT_THREAD)
+    const char *str = 0;
+    int        threadLevel;
+
+    threadLevel = MPI_THREAD_SINGLE;
+    str = getenv( "MTEST_THREADLEVEL_DEFAULT" );
+    if (str && *str) {
+	if (strcmp(str,"MULTIPLE") == 0 || strcmp(str,"multiple") == 0) {
+	    threadLevel = MPI_THREAD_MULTIPLE;
+	}
+	else if (strcmp(str,"SERIALIZED") == 0 || 
+		 strcmp(str,"serialized") == 0) {
+	    threadLevel = MPI_THREAD_SERIALIZED;
+	}
+	else if (strcmp(str,"FUNNELED") == 0 || strcmp(str,"funneled") == 0) {
+	    threadLevel = MPI_THREAD_FUNNELED;
+	}
+	else if (strcmp(str,"SINGLE") == 0 || strcmp(str,"single") == 0) {
+	    threadLevel = MPI_THREAD_SINGLE;
+	}
+	else {
+	    fprintf( stderr, "Unrecognized thread level %s\n", str );
+	    /* Use exit since MPI_Init/Init_thread has not been called. */
+	    exit(1);
+	}
+    }
+    MTest_Init_thread( argc, argv, threadLevel, &provided );
+#else
+    /* If the MPI_VERSION is 1, there is no MPI_THREAD_xxx defined */
+    MTest_Init_thread( argc, argv, 0, &provided );
+#endif    
 }
 
 /*
