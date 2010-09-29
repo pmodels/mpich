@@ -57,7 +57,7 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI
     if (SENDQ_EMPTY(vc_tcp->send_queue))
         mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->paused_send_queue);
         
-    /* if anything is waiting to be sent on the paused queue, put it on the send queue and reconnect */
+    /* if anything is left on the paused queue, put it on the send queue and wait for the reconnect */
     if (!SENDQ_EMPTY(vc_tcp->paused_send_queue)) {
         
         SENDQ_ENQUEUE_MULTIPLE(&vc_tcp->send_queue, vc_tcp->paused_send_queue.head, vc_tcp->paused_send_queue.tail);
