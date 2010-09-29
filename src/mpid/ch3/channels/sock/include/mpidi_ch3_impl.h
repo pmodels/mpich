@@ -34,9 +34,14 @@ MPIDI_CH3I_VC;
 
     /* MT - not thread safe! */
 
+/* The SendQ will add a reference to the request in order to prevent
+ * manipulating the dev.next field after the request has been destroyed.  This
+ * ref will be dropped after dequeueing.  (tt#1038) */
+
 #define MPIDI_CH3I_SendQ_enqueue(vcch, req)				\
 {									\
     MPIU_DBG_MSG(CH3_MSG,TYPICAL,"Enqueuing this request");\
+    MPIR_Request_add_ref(req);                                          \
     req->dev.next = NULL;						\
     if (vcch->sendq_tail != NULL)					\
     {									\
@@ -53,6 +58,7 @@ MPIDI_CH3I_VC;
 #define MPIDI_CH3I_SendQ_enqueue_head(vcch, req)			\
 {									\
     MPIU_DBG_MSG(CH3_MSG,TYPICAL,"Enqueuing this request at head");\
+    MPIR_Request_add_ref(req);                                          \
     req->dev.next = vcch->sendq_head;					\
     if (vcch->sendq_tail == NULL)					\
     {									\
@@ -64,12 +70,14 @@ MPIDI_CH3I_VC;
     /* MT - not thread safe! */
 #define MPIDI_CH3I_SendQ_dequeue(vcch)					\
 {									\
+    MPID_Request *req_ = vcch->sendq_head;                              \
     MPIU_DBG_MSG(CH3_MSG,TYPICAL,"Dequeuing this request");\
     vcch->sendq_head = vcch->sendq_head->dev.next;			\
     if (vcch->sendq_head == NULL)					\
     {									\
 	vcch->sendq_tail = NULL;					\
     }									\
+    MPID_Request_release(req_);                                         \
 }
 
 
