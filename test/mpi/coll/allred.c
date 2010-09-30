@@ -37,11 +37,12 @@ struct double_test { double a; int b; };
      (op == MPI_MINLOC) ? "MPI_MINLOC" : \
      "MPI_NO_OP")
 
+/* calloc to avoid spurious valgrind warnings when "type" has padding bytes */
 #define DECL_MALLOC_IN_OUT_SOL(type)                 \
     type *in, *out, *sol;                            \
-    in = (type *) malloc(count * sizeof(type));      \
-    out = (type *) malloc(count * sizeof(type));     \
-    sol = (type *) malloc(count * sizeof(type));
+    in  = (type *) calloc(count, sizeof(type));      \
+    out = (type *) calloc(count, sizeof(type));      \
+    sol = (type *) calloc(count, sizeof(type));
 
 #define SET_INDEX_CONST(arr, val)               \
     {                                           \

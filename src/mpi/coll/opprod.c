@@ -69,6 +69,21 @@ void MPIR_PROD (
         }
         /* --END ERROR HANDLING-- */
     }
+
+    /* NOTE: the coll/allred test may report uninitialized bytes originating
+     * from the stack in this function when run under valgrind.  AFAICT,
+     * these are safe and harmless, and only occur for
+     * MPI_C_LONG_DOUBLE_COMPLEX corresponding to an 80-bit-precision value
+     * padded out to 128 bits.  The padding causes the warning when fed to
+     * writev (or similar).  Since the stack allocation is implicitly
+     * performed by the compiler, we can't force the input to be defined.
+     * Instead we mark the output defined, even though this might hide
+     * errors from uninitialized input data. [goodell@ 2010-09-30] */
+#if defined(MPICH_DEBUG_MEMINIT) && defined(HAVE_LONG_DOUBLE__COMPLEX)
+    if (*type == MPI_C_LONG_DOUBLE_COMPLEX) {
+        MPL_VG_MAKE_MEM_DEFINED(inoutvec, (len*sizeof(long double _Complex)));
+    }
+#endif
 }
 
 
