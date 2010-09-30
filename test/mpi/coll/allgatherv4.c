@@ -56,8 +56,8 @@ int main(int argc, char ** argv)
     if (LARGE_BUF * comm_size > MAX_BUF)
         goto fn_exit;
 
-    sbuf = (void *) malloc(MAX_BUF);
-    rbuf = (void *) malloc(MAX_BUF);
+    sbuf = (void *) calloc(MAX_BUF, 1);
+    rbuf = (void *) calloc(MAX_BUF, 1);
 
     srand(time(NULL));
 
@@ -67,8 +67,8 @@ int main(int argc, char ** argv)
         fprintf(stderr, "Unable to allocate memory:\n");
 	if (!sbuf) fprintf(stderr,"\tsbuf of %d bytes\n", MAX_BUF );
 	if (!rbuf) fprintf(stderr,"\trbuf of %d bytes\n", MAX_BUF );
-	if (!recvcounts) fprintf(stderr,"\trecvcounts of %d bytes\n", comm_size * sizeof(int) );
-	if (!displs) fprintf(stderr,"\tdispls of %d bytes\n", comm_size * sizeof(int) );
+	if (!recvcounts) fprintf(stderr,"\trecvcounts of %zd bytes\n", comm_size * sizeof(int) );
+	if (!displs) fprintf(stderr,"\tdispls of %zd bytes\n", comm_size * sizeof(int) );
         fflush(stderr);
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
