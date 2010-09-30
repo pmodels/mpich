@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include "mpitestconf.h"
 #include <stdio.h>
+#include <string.h>
 #include "mpitest.h"
 
 static char MTEST_Descrip[] = "Test MPI_MAXLOC operations on datatypes dupported by MPICH2";
@@ -230,7 +231,11 @@ int main( int argc, char *argv[] )
     /* long double int */
     {
 	struct longdoubleint { long double val; int loc; } cinbuf[3], coutbuf[3];
- 	
+
+        /* avoid valgrind warnings about padding bytes in the long double */
+        memset(&cinbuf[0], 0, sizeof(cinbuf));
+        memset(&coutbuf[0], 0, sizeof(coutbuf));
+
 	cinbuf[0].val = 1;
 	cinbuf[0].loc = rank;
 	cinbuf[1].val = 0;
