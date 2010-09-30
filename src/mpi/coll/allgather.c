@@ -776,7 +776,7 @@ Notes:
  The MPI standard (1.0 and 1.1) says that 
 .n
 .n
- The jth block of data sent from  each proess is received by every process 
+ The jth block of data sent from  each process is received by every process 
  and placed in the jth block of the buffer 'recvbuf'.  
 .n
 .n

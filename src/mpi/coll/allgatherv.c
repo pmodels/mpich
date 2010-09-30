@@ -865,7 +865,7 @@ Notes:
 .n
 .n
  The jth block of data sent from 
- each proess is received by every process and placed in the jth block of the 
+ each process is received by every process and placed in the jth block of the 
  buffer 'recvbuf'.  
 .n
 .n
