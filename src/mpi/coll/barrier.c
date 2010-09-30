@@ -127,7 +127,8 @@ PMPI_LOCAL int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr )
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Barrier_inter( MPID_Comm *comm_ptr )
 {
-    int rank, mpi_errno = MPI_SUCCESS, i, root;
+    int rank, mpi_errno = MPI_SUCCESS, root;
+    int i = 0;
     MPID_Comm *newcomm_ptr = NULL;
 
     rank = comm_ptr->rank;
