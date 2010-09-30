@@ -4,7 +4,7 @@
 #
 
 # Version Information
-MPICH2_VERSION=1.3rc1
+MPICH2_VERSION=1.3rc2
 
 # Release date
 MPICH2_RELEASE_DATE="unreleased development copy"
