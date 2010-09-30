@@ -82,10 +82,8 @@ static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hob
     /* Check how many cache objects match out cpuset */
     obj->mem.num_caches = count_attached_caches(hobj, hobj->cpuset);
 
-    HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t),
-                status);
-    HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int),
-                status);
+    HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t), status);
+    HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int), status);
 
     gather_attached_caches(obj, hobj, hobj->cpuset);
 

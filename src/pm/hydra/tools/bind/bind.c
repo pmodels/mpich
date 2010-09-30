@@ -98,7 +98,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     if (!strncmp(binding, "user:", strlen("user:"))) {
         /* Find the actual processing elements */
         HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
-                    HYDT_bind_info.total_proc_units * sizeof(struct HYDT_bind_cpuset_t), status);
+                    HYDT_bind_info.total_proc_units * sizeof(struct HYDT_bind_cpuset_t),
+                    status);
         i = 0;
         bindstr = HYDU_strdup(binding + strlen("user:"));
         bindentry = strtok(bindstr, ",");
@@ -236,8 +237,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
     }
 
     /* Common part for the CPU and Cache binding schemes */
-    if (!strncmp(binding, "cpu", strlen("cpu")) ||
-        !strncmp(binding, "cache", strlen("cache"))) {
+    if (!strncmp(binding, "cpu", strlen("cpu")) || !strncmp(binding, "cache", strlen("cache"))) {
         i = 0;
         j = 0;
         obj = &HYDT_bind_info.machine;

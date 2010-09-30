@@ -347,7 +347,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         if (HYD_handle.user_global.ckpoint_num) {
             proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-num");
-            proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_handle.user_global.ckpoint_num);
+            proxy->exec_launch_info[arg++] =
+                HYDU_int_to_str(HYD_handle.user_global.ckpoint_num);
         }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-inherited-env");
