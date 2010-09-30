@@ -42,17 +42,45 @@ static void MTestRMACleanup( void );
 void MTest_Init( void )
 {
     bool flag;
-    char *envval = 0;
+    const char *envval = 0;
+    int        threadLevel, provided;
+
+    threadLevel = MPI::THREAD_SINGLE;
+    envval = getenv( "MTEST_THREADLEVEL_DEFAULT" );
+    if (envval && *envval) {
+	if (strcmp(envval,"MULTIPLE") == 0 || strcmp(envval,"multiple") == 0) {
+	    threadLevel = MPI::THREAD_MULTIPLE;
+	}
+	else if (strcmp(envval,"SERIALIZED") == 0 || 
+		 strcmp(envval,"serialized") == 0) {
+	    threadLevel = MPI::THREAD_SERIALIZED;
+	}
+	else if (strcmp(envval,"FUNNELED") == 0 || 
+		 strcmp(envval,"funneled") == 0) {
+	    threadLevel = MPI::THREAD_FUNNELED;
+	}
+	else if (strcmp(envval,"SINGLE") == 0 || strcmp(envval,"single") == 0) {
+	    threadLevel = MPI::THREAD_SINGLE;
+	}
+	else {
+	    cerr << "Unrecognized thread level " << envval << "\n";
+	    cerr.flush();
+	    /* Use exit since MPI_Init/Init_thread has not been called. */
+	    exit(1);
+	}
+    }
 
     flag = MPI::Is_initialized( );
     if (!flag) {
-	MPI::Init( );
+	provided = MPI::Init_thread( threadLevel );
     }
+
     /* Check for debugging control */
     if (getenv( "MPITEST_DEBUG" )) {
 	dbgflag = 1;
 	wrank = MPI::COMM_WORLD.Get_rank();
     }
+
     /* Check for verbose control */
     envval = getenv( "MPITEST_VERBOSE" );
     if (envval) {
