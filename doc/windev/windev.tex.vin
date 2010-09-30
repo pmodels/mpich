@@ -968,7 +968,7 @@ are not supported.  If your application calls MPI\_Comm\_spawn it will produce
 an error.
 
 \subsection{Debugging jobs using MPI Cluster Debugger}
-This section describes how to debug MPI jobs using the MPI Cluster Debugger available with Visual Studio suites. Follow the steps below to debug your MPI application (myapp.exe) locally on your machine
+This section describes how to debug MPI jobs using the MPI Cluster Debugger available with Visual Studio suites. Follow the steps below to debug your MPI application (myapp.exe) locally on your machine using Visual Studio 2010
 \begin{enumerate}
 \item Select Visual Studio application project properties (Select ``\texttt{myapp.exe properties}'' item from the ``\texttt{Project}'' menu)
 \item In Debugging section (Select ``\texttt{Configuration Properties}'' and then select ``\texttt{Debugging}'' category), select ``\texttt{MPI Cluster debugger}'' as the debugger to launch from the drop down menu.
