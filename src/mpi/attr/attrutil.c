@@ -302,6 +302,8 @@ MPIR_Attr_copy_c_proxy(
     )
 {
     void *attrib_val = NULL;
+    int ret;
+
     /* Make sure that the attribute value is delieverd as a pointer */
     if (MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         attrib_val = &attrib;
@@ -309,7 +311,15 @@ MPIR_Attr_copy_c_proxy(
     else{
         attrib_val = attrib;
     }
-    return user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
+
+    /* user functions might call other MPI functions, so we need to
+     * release the lock here. This is safe to do as ALLFUNC is not at
+     * all recursive in our implementation. */
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    ret = user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+
+    return ret;
 }
 
 
@@ -324,12 +334,22 @@ MPIR_Attr_delete_c_proxy(
     )
 {
     void *attrib_val = NULL;
+    int ret;
+
     /* Make sure that the attribute value is delieverd as a pointer */
     if (MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT))
         attrib_val = &attrib;
     else
         attrib_val = attrib;
-    return user_function(handle, keyval, attrib_val, extra_state);
+
+    /* user functions might call other MPI functions, so we need to
+     * release the lock here. This is safe to do as ALLFUNC is not at
+     * all recursive in our implementation. */
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    ret = user_function(handle, keyval, attrib_val, extra_state);
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+
+    return ret;
 }
 
 
