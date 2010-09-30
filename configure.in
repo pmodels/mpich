@@ -452,18 +452,27 @@ if test "$with_mpe" = "default" ; then
 	with_mpe=$enableval,with_mpe=default)
 fi
 
+dnl
+dnl The default option needs to be defined in terms of a specific choice 
+dnl (runtime in this case).  Note that the default choice is the same as
+dnl runtime only for certain devices - not for every device.
 AC_ARG_ENABLE(threads,
 [  --enable-threads=level - Control the level of thread support in the 
                            MPICH implementation.  The following levels
                            are supported.
-        default         - Choose thread level at runtime based on parameters 
-                          passed to MPI_Init_thread (default)
         single          - No threads (MPI_THREAD_SINGLE)
         funneled        - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
         serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
-        multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE). DO NOT
-                          select this option. The default option is more
-                          efficient and also supports thread_multiple.
+        runtime         - The level of thread support is determined by 
+                          the arguments to MPI_Init_thread, with
+                          MPI_THREAD_MULTIPLE available.  The default option
+                          for many communication devices.
+        multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE) always. 
+                          DO NOT select this option. The option runtime is more
+                          efficient and also supports thread_multiple. 
+                          (multiple aliased to runtime now)
+        default         - Make a good choice depending on the communication
+                          device.  For ch3:nemesis, this is runtime.
 
         See also the --enable-thread-cs option for controlling the granularity of
         the concurrency inside of the library
@@ -1099,6 +1108,7 @@ elif test "$enable_threads" = "default"; then
         enable_threads=runtime
     fi
 fi
+
 # Runtime is an alias for multiple with an additional value
 if test "$enable_threads" = "runtime" ; then
     AC_DEFINE(HAVE_RUNTIME_THREADCHECK,1,[Define if MPI supports MPI_THREAD_MULTIPLE with a runtime check for thread level])
