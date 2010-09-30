@@ -261,6 +261,21 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
+
+/* This function is called by the fortran bindings. */
+int MPIR_CommGetAttr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
+                          int *flag, MPIR_AttrType outAttrType )
+{
+    int mpi_errno;
+    
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    mpi_errno = MPIR_CommGetAttr(comm, comm_keyval, attribute_val, flag, outAttrType);
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+
+    return mpi_errno;
+}
+
+
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME

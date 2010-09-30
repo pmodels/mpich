@@ -343,10 +343,10 @@ foreach $_ (@ARGV) {
 # at the end.  This is used with the attribute routines which must 
 # pass an additional argument to a special attribute routine that handles
 # the differences between C and Fortran attributes.
-%ChangeCall = ( 'Comm_get_attr' => 'MPIR_CommGetAttr:!MPIR_ATTR_AINT' ,
+%ChangeCall = ( 'Comm_get_attr' => 'MPIR_CommGetAttr_fort:!MPIR_ATTR_AINT' ,
 		'Type_get_attr' => 'MPIR_TypeGetAttr:!MPIR_ATTR_AINT',
 		'Win_get_attr'  => 'MPIR_WinGetAttr:!MPIR_ATTR_AINT',
-		'Attr_get'      => 'MPIR_CommGetAttr:!MPIR_ATTR_INT',
+		'Attr_get'      => 'MPIR_CommGetAttr_fort:!MPIR_ATTR_INT',
 		'Comm_set_attr' => 'MPIR_CommSetAttr:!MPIR_ATTR_AINT',
 		'Type_set_attr' => 'MPIR_TypeSetAttr:!MPIR_ATTR_AINT',
 		'Win_set_attr'  => 'MPIR_WinSetAttr:!MPIR_ATTR_AINT',

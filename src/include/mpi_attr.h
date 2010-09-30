@@ -20,4 +20,6 @@ int MPIR_CommGetAttr( MPI_Comm, int, void *, int *, MPIR_AttrType );
 int MPIR_TypeGetAttr( MPI_Datatype, int, void *, int *, MPIR_AttrType );
 int MPIR_WinGetAttr( MPI_Win, int, void *, int *, MPIR_AttrType );
 
+int MPIR_CommGetAttr_fort( MPI_Comm, int, void *, int *, MPIR_AttrType );
+
 #endif /* MPI_ATTR_H_INCLUDED */
