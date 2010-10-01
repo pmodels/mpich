@@ -19,6 +19,7 @@ using namespace std;
 #endif
 #include "mpitestcxx.h"
 #include <stdlib.h>
+#include <string.h>
 
 static int dbgflag = 0;         /* Flag used for debugging */
 static int wrank = -1;          /* World rank */
