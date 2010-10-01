@@ -285,12 +285,13 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         {
 	    /* FIXME: Debugging */
 	    if (vc->state != MPIDI_VC_STATE_ACTIVE) {
-		printf( "Unexpected state %d in vc %p\n", vc->state, vc );
+		printf( "Unexpected state %s in vc %p (expecting MPIDI_VC_STATE_ACTIVE)\n", MPIDI_VC_GetStateString(vc->state), vc );
 		fflush(stdout);
 	    }
 	    MPIU_DBG_MSG_D(CH3_DISCONNECT,TYPICAL,
                      "received close(FALSE) from %d, moving to REMOTE_CLOSE.",
 				   vc->pg_rank);
+            
 	    MPIU_Assert(vc->state == MPIDI_VC_STATE_ACTIVE);
             MPIDI_CHANGE_VC_STATE(vc, REMOTE_CLOSE);
 	}

@@ -108,7 +108,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
             MPIDI_CH3I_SendQ_enqueue(sreq, CH3_NORMAL_QUEUE);
             /* FIXME we are sometimes called from within the progress engine, we
              * shouldn't be calling the progress engine again */
-            mpi_errno = MPIDI_CH3_Progress_test();
+            mpi_errno = MPIDI_CH3I_Shm_send_progress();
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     

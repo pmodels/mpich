@@ -43,7 +43,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 	sreq->ch.vc           = vc;
 
         MPIDI_CH3I_SendQ_enqueue(sreq, CH3_NORMAL_QUEUE);
-        mpi_errno = MPIDI_CH3_Progress_test();
+        mpi_errno = MPIDI_CH3I_Shm_send_progress();
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
     }

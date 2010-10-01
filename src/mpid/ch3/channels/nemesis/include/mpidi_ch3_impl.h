@@ -81,6 +81,7 @@ do {										\
 
 int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
+int MPIDI_CH3I_Shm_send_progress(void);
 
 int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz );
 
