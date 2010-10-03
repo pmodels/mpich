@@ -1001,6 +1001,11 @@ static HYD_status set_default_values(void)
     if (HYD_handle.user_global.auto_cleanup == -1)
         HYD_handle.user_global.auto_cleanup = 1;
 
+    /* Make sure this is either a restart or there is an executable to
+     * launch */
+    if (HYD_uii_mpx_exec_list == NULL && HYD_handle.user_global.ckpoint_prefix == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
+
   fn_exit:
     return status;
 
