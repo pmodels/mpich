@@ -41,13 +41,8 @@ install-exec-local:
 
 # A special alternate installation target when using multiple process managers
 install-alt: $(bin_PROGRAMS)
-	@if [ ! -d $(DESTDIR)${bindir} ] ; then \
-		echo "$(mkdir_p) $(DESTDIR)${bindir} " ;\
-		$(mkdir_p) $(DESTDIR)${bindir} ;\
-	fi
 	@for foo in $? ; do \
 		if test "$$foo" != "mpiexec" ; then \
-			echo "install $$foo" ; \
 			$(MAKE) install $$foo ; \
 		fi ; \
 	done
