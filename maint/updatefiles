@@ -121,12 +121,12 @@ MAKE=${MAKE-make}
 
 # externals are the directories for external packages that we have
 # included into MPICH2
-externals="src/mpe2 src/pm/hydra/tools/bind/hwloc/hwloc src/pm/hydra/tools/bind/plpa/plpa"
+externals="src/mpe2 src/pm/hydra"
 # ltdirs are the directories that make use of libtool and require
 # libtoolize
-ltdirs="src/pm/hydra src/mpl"
+ltdirs="src/mpl"
 # amdirs are the directories that make use of autoreconf
-amdirs="src/openpa src/pm/hydra src/mpl"
+amdirs="src/openpa src/mpl"
 
 
 ########################################################################
