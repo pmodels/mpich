@@ -11,6 +11,15 @@
 
  # OVERALL: Checkpoint/restart support using BLCR.
 
+ # OVERALL: Improved tolerance to process and communication failures
+   when error handler is set to MPI_ERRORS_RETURN.  If a communication
+   operation fails (e.g., due to a process failure) MPICH2 will return
+   an error, and further communication to that process is not
+   possible.  However, communication with other processes will still
+   proceed normally.  Note, however, that the behavior collective
+   operations on communicators containing the failed process is
+   undefined, and may give incorrect results or hang some processes.
+
  # OVERALL: Experimental support for inter-library dependencies.
 
  # PM/PMI: Hydra is now the default process management framework

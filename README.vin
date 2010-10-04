@@ -792,7 +792,9 @@ HYDRA_CKPOINT_INTERVAL.
 
 To restart a process:
 
-  mpiexec -ckpointlib blcr -ckpoint-prefix /tmp/app.ckpoint -f hosts -n 4
+  mpiexec -ckpointlib blcr -ckpoint-prefix /tmp/app.ckpoint -f hosts -n 4 -ckpoint-num <N>
+
+where <N> is the checkpoint number you want to restart from.
 
 These instructions can also be found on the MPICH2 wiki:
 
