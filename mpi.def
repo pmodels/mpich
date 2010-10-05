@@ -718,6 +718,7 @@ EXPORTS
 ; mpich2 extra and renamed symbols
 ;
     MPIR_CommGetAttr
+    MPIR_CommGetAttr_fort
     MPIR_CommSetAttr
     MPIR_TypeGetAttr
     MPIR_TypeSetAttr

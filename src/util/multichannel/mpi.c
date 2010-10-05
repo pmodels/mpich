@@ -726,6 +726,7 @@ static struct fn_table
     int (*MPIR_Err_return_comm)(struct MPID_Comm *, const char [], int);
     
     int (*MPIR_CommGetAttr)( MPI_Comm , int , void *, int *, MPIR_AttrType );
+    int (*MPIR_CommGetAttr_fort)( MPI_Comm , int , void *, int *, MPIR_AttrType );
     int (*MPIR_CommSetAttr)( MPI_Comm , int , void *, MPIR_AttrType );
     int (*MPIR_TypeGetAttr)( MPI_Datatype , int , void *,int *, MPIR_AttrType );
     int (*MPIR_TypeSetAttr)(MPI_Datatype , int , void *,MPIR_AttrType );
@@ -1719,6 +1720,7 @@ static BOOL LoadFunctions(const char *dll_name, const char *wrapper_dll_name)
     fn.MPIR_Err_return_comm = (int (*)(struct MPID_Comm *, const char [], int ))GetProcAddress(hPMPIModule, "MPIR_Err_return_comm");
 
     fn.MPIR_CommGetAttr = (int (*)( MPI_Comm , int , void *, int *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_CommGetAttr");
+    fn.MPIR_CommGetAttr_fort = (int (*)( MPI_Comm , int , void *, int *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_CommGetAttr_fort");
     fn.MPIR_CommSetAttr = (int (*)( MPI_Comm , int , void *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_CommSetAttr");
     fn.MPIR_TypeGetAttr = (int (*)( MPI_Datatype , int , void *,int *, MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_TypeGetAttr");
     fn.MPIR_TypeSetAttr = (int (*)(MPI_Datatype , int , void *,MPIR_AttrType ))GetProcAddress(hPMPIModule, "MPIR_TypeSetAttr");
@@ -1847,6 +1849,14 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 {
     MPICH_CHECK_INIT(MPIR_CommGetAttr);
     return fn.MPIR_CommGetAttr(comm, comm_keyval, attribute_val, flag, outAttrType);
+}
+
+#undef FCNAME
+#define FCNAME MPIR_CommGetAttr_fort
+int MPIR_CommGetAttr_fort( MPI_Comm comm, int comm_keyval, void *attribute_val, int *flag, MPIR_AttrType outAttrType )
+{
+    MPICH_CHECK_INIT(MPIR_CommGetAttr_fort);
+    return fn.MPIR_CommGetAttr_fort(comm, comm_keyval, attribute_val, flag, outAttrType);
 }
 
 #undef FCNAME
