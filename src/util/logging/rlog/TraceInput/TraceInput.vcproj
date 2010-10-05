@@ -47,17 +47,18 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\mpe2\src\slog2sdk\src\logformat\trace;..\..\..\..\include;..\..\..\..\include\win32;..\..\..\..\mpl\include;&quot;$(JAVA_HOME)\include&quot;;&quot;$(JAVA_HOME)\include\win32&quot;"
+				AdditionalIncludeDirectories="..\..\rlog;..\..\..\..\mpe2\src\slog2sdk\src\logformat\trace;..\..\..\..\include;..\..\..\..\include\win32;..\..\..\..\mpl\include;&quot;$(JAVA_HOME)\include&quot;;&quot;$(JAVA_HOME)\include\win32&quot;"
 				PreprocessorDefinitions="USE_WINCONF_H;WIN32;NDEBUG;_WINDOWS;_USRDLL;TRACEINPUT_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/TraceInput.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
+				PrecompiledHeaderFile="..\Release/TraceInput.pch"
+				AssemblerListingLocation="..\Release/"
+				ObjectFile="..\Release/"
+				ProgramDataBaseFileName="..\Release/"
 				BrowseInformation="1"
+				BrowseInformationFile="..\Release/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				CompileAs="0"
@@ -77,12 +78,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="rlog.lib dbg.lib odbc32.lib odbccp32.lib"
-				OutputFile=".\Release/TraceInput.dll"
+				OutputFile="..\Release/TraceInput.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\..\..\..\lib"
-				ProgramDatabaseFile=".\Release/TraceInput.pdb"
-				ImportLibrary=".\Release/TraceInput.lib"
+				ProgramDatabaseFile="..\Release/TraceInput.pdb"
+				ImportLibrary="..\Release/TraceInput.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -213,11 +214,11 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat;f90;for;f;fpp"
 			>
 			<File
-				RelativePath="..\logformat_trace_InputLog.c"
+				RelativePath=".\logformat_trace_InputLog.c"
 				>
 			</File>
 			<File
-				RelativePath="..\trace_input.c"
+				RelativePath=".\trace_input.c"
 				>
 			</File>
 		</Filter>
