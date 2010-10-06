@@ -161,7 +161,7 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
     char *tmp1[HYD_NUM_TMP_STRINGS], *tmp2[HYD_NUM_TMP_STRINGS];
     struct HYD_node *node, *tnode;
     int i, j, k;
-    int *tasks_per_node, nnodes, valid;
+    int *tasks_per_node = NULL, nnodes, valid;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
