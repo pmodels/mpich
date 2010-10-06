@@ -534,6 +534,12 @@ if test "$enable_strict_done" != "yes" ; then
 		enable_strict_done="yes"
 		enable_opt=no
 		;;
+	     all|yes)
+		enable_strict_done="yes"
+		enable_c89=yes
+		enable_posix=yes
+		enable_opt=yes
+	        ;;
 	     no)
 		# Accept and ignore this value
 		:
