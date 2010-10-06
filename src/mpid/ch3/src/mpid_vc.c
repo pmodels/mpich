@@ -816,6 +816,7 @@ fn_fail:
 #define expect_s(_s, _e) (strncmp(_s, _e, strlen(_e)) == 0 && !isident((_s)[strlen(_e)]))
 
 typedef enum {
+    UNKNOWN_MAPPING = -1,
     NULL_MAPPING = 0,
     VECTOR_MAPPING
 } mapping_type_t;
@@ -937,7 +938,7 @@ static void t(const char *s, int nprocs)
     map_block_t *mb;
     int nblocks=0;
     int i;
-    mapping_type_t mt = -1;
+    mapping_type_t mt = UNKNOWN_MAPPING;
     int rank;
     int block, block_node, node_proc;
 
@@ -996,7 +997,7 @@ static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *
 {
     int mpi_errno = MPI_SUCCESS;
     /* PMI_process_mapping is available */
-    mapping_type_t mt = -1;
+    mapping_type_t mt = UNKNOWN_MAPPING;
     map_block_t *mb = NULL;
     int nblocks = 0;
     int rank;
