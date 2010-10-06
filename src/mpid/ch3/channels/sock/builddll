@@ -37,6 +37,12 @@ done
 BUILD_DLLS=yes
 export BUILD_DLLS
 #
+# We must have a valid ABIVERSION
+if [ "X$ABIVERSION" = "X" ] ; then
+    echo "No ABIVERSION available - required to build sock DLL"
+    exit 1
+fi
+#
 # Determine shared library type (only a few supported)
 osname=`uname -s`
 if [ -z "$shlibtype" ] ; then

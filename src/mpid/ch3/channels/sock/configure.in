@@ -21,6 +21,19 @@ AH_BOTTOM([#endif])
 
 echo "RUNNING CONFIGURE FOR THE SOCK CHANNEL"
 
+# ABIVERSION is needed when a separate sock dll library is built (e.g., for
+# dllchan)
+if test "X$ABIVERSION" = "X" ; then
+   if test "X$libmpich_so_version" != X ; then 
+      ABIVERSION="$libmpich_so_version"
+   else
+      # Note that an install of a sock-dll will fail if the ABI version is not
+      # available
+      AC_MSG_WARN([Unable to set the ABIVERSION])
+   fi
+fi
+AC_SUBST(ABIVERSION)
+
 dnl
 dnl First check that we have a clean build if we are doing a VPATH build
 PAC_VPATH_CHECK()
