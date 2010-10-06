@@ -90,8 +90,8 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OP_COMMUTATIVE);
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
