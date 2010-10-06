@@ -216,7 +216,8 @@ int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *vc ATTRIBUTE((u
     tmp_buf = MPIU_Malloc(rreq->dev.user_count * 
 			  (MPIR_MAX(extent,true_extent)));  
     if (!tmp_buf) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+		    rreq->dev.user_count * MPIR_MAX(extent,true_extent));
     }
     
     /* adjust for potential negative lower bound in datatype */
@@ -278,7 +279,7 @@ int MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete( MPIDI_VC_t *vc,
     
     /* create request for sending data */
     sreq = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(sreq == NULL, mpi_errno,MPI_ERR_OTHER,"**nomem");
+    MPIU_ERR_CHKANDJUMP(sreq == NULL, mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     
     sreq->kind = MPID_REQUEST_SEND;
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_GET_RESP);
@@ -552,7 +553,8 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
     /* allocate new datatype object and handle */
     new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
     if (!new_dtp) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+			     "MPID_Datatype_mem" );
     }
 
     *dtp = new_dtp;
@@ -993,7 +995,7 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
 
     req = MPID_Request_create();
     if (req == NULL) {
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     }
     req->dev.target_win_handle = win_ptr->handle;
     req->dev.source_win_handle = lock_queue->source_win_handle;

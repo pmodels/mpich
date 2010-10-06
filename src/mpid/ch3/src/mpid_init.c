@@ -381,7 +381,8 @@ static int InitPG( int *argc, char ***argv,
         /* This memory will be freed by the PG_Destroy if there is an error */
 	pg_id = MPIU_Malloc(MAX_JOBID_LEN);
 	if (pg_id == NULL) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+				 MAX_JOBID_LEN);
 	}
 
         mpi_errno = PMI2_Job_GetId(pg_id, MAX_JOBID_LEN);
@@ -403,7 +404,8 @@ static int InitPG( int *argc, char ***argv,
 	/* This memory will be freed by the PG_Destroy if there is an error */
 	pg_id = MPIU_Malloc(pg_id_sz + 1);
 	if (pg_id == NULL) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+				 pg_id_sz+1);
 	}
 
 	/* Note in the singleton init case, the pg_id is a dummy.
@@ -501,7 +503,8 @@ int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
     /* This memroy is returned by this routine */
     *bc_val_p = MPIU_Malloc(*val_max_sz_p);
     if (*bc_val_p == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**nomem","**nomem %d",
+			     *val_max_sz_p);
     }
     
     /* Add a null to simplify looking at the bc */

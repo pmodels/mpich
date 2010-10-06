@@ -553,7 +553,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         {
             /* derived datatype on origin */
             *request = MPID_Request_create();
-            MPIU_ERR_CHKANDJUMP(*request == NULL,mpi_errno,MPI_ERR_OTHER,"**nomem");
+            MPIU_ERR_CHKANDJUMP(*request == NULL,mpi_errno,MPI_ERR_OTHER,"**nomemreq");
             
             MPIU_Object_set_ref(*request, 2);
             (*request)->kind = MPID_REQUEST_SEND;
@@ -586,7 +586,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
 
         *request = MPID_Request_create();
         if (*request == NULL) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
         }
 
         MPIU_Object_set_ref(*request, 2);
@@ -673,7 +673,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
        handle. */  
     req = MPID_Request_create();
     if (req == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     }
 
     *request = req;
@@ -1911,7 +1911,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
 
         request = MPID_Request_create();
         if (request == NULL) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
         }
 
         MPIU_Object_set_ref(request, 2);
@@ -2014,7 +2014,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
        handle. */  
     rreq = MPID_Request_create();
     if (rreq == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     }
 
     MPIU_Object_set_ref(rreq, 2);
@@ -2256,12 +2256,14 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *) 
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
         if (! req->dev.dtype_info) {
-            MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+            MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_RMA_dtype_info");
         }
 
         req->dev.dataloop = MPIU_Malloc(put_pkt->dataloop_size);
         if (! req->dev.dataloop) {
-            MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+            MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+				 put_pkt->dataloop_size);
         }
 
         /* if we received all of the dtype_info and dataloop, copy it
@@ -2396,12 +2398,14 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req->dev.dtype_info = (MPIDI_RMA_dtype_info *) 
 	    MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
 	if (! req->dev.dtype_info) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_RMA_dtype_info");
 	}
 	
 	req->dev.dataloop = MPIU_Malloc(get_pkt->dataloop_size);
 	if (! req->dev.dataloop) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+				 get_pkt->dataloop_size);
 	}
 	
         /* if we received all of the dtype_info and dataloop, copy it
@@ -2488,7 +2492,8 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	tmp_buf = MPIU_Malloc(accum_pkt->count * 
 			      (MPIR_MAX(extent,true_extent)));
 	if (!tmp_buf) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+			 accum_pkt->count * MPIR_MAX(extent,true_extent));
 	}
 	
 	/* adjust for potential negative lower bound in datatype */
@@ -2539,12 +2544,14 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req->dev.dtype_info = (MPIDI_RMA_dtype_info *) 
 	    MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
 	if (! req->dev.dtype_info) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_RMA_dtype_info");
 	}
 	
 	req->dev.dataloop = MPIU_Malloc(accum_pkt->dataloop_size);
 	if (! req->dev.dataloop) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+				 accum_pkt->dataloop_size);
 	}
 	
         if (data_len >= sizeof(MPIDI_RMA_dtype_info) + accum_pkt->dataloop_size)
@@ -2634,7 +2641,8 @@ int MPIDI_CH3_PktHandler_Lock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	
 	new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
 	if (!new_ptr) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_Win_lock_queue");
 	}
 	if (prev_ptr != NULL)
 	    prev_ptr->next = new_ptr;
@@ -2707,12 +2715,14 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	
 	new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
 	if (!new_ptr) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_Win_lock_queue");
 	}
 	
 	new_ptr->pt_single_op = (MPIDI_PT_single_op *) MPIU_Malloc(sizeof(MPIDI_PT_single_op));
 	if (new_ptr->pt_single_op == NULL) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_PT_single_op");
 	}
 	
 	/* FIXME: MT: The queuing may need to be done atomically. */
@@ -2742,7 +2752,8 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	/* allocate memory to receive the data */
 	new_ptr->pt_single_op->data = MPIU_Malloc(req->dev.recv_data_sz);
 	if (new_ptr->pt_single_op->data == NULL) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+				 req->dev.recv_data_sz);
 	}
 
 	new_ptr->pt_single_op->data_recd = 0;
@@ -2874,11 +2885,13 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	
 	new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
 	if (!new_ptr) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_Win_lock_queue");
 	}
 	new_ptr->pt_single_op = (MPIDI_PT_single_op *) MPIU_Malloc(sizeof(MPIDI_PT_single_op));
 	if (new_ptr->pt_single_op == NULL) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+				 "MPIDI_PT_Single_op");
 	}
 	
 	if (prev_ptr != NULL)
@@ -2950,12 +2963,14 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
     if (!new_ptr) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+			     "MPIDI_Win_lock_queue");
     }
     
     new_ptr->pt_single_op = (MPIDI_PT_single_op *) MPIU_Malloc(sizeof(MPIDI_PT_single_op));
     if (new_ptr->pt_single_op == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %s",
+			     "MPIDI_PT_single_op");
     }
     
     MPID_Win_get_ptr(lock_accum_unlock_pkt->target_win_handle, win_ptr);
@@ -2988,7 +3003,8 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* allocate memory to receive the data */
     new_ptr->pt_single_op->data = MPIU_Malloc(req->dev.recv_data_sz);
     if (new_ptr->pt_single_op->data == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+			     req->dev.recv_data_sz);
     }
     
     new_ptr->pt_single_op->data_recd = 0;

@@ -260,7 +260,12 @@ extern MPIDI_Process_t MPIDI_Process;
         MPIU_THREADPRIV_FIELD(request_handle_count) -= 1;              \
     } while (0)
 #elif MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_MUTEX
-#  define MPIDI_Request_tls_alloc(req) (req) = MPIU_Handle_obj_alloc(&MPID_Request_mem)
+#  define MPIDI_Request_tls_alloc(req_) \
+    do { \
+	(req_) = MPIU_Handle_obj_alloc(&MPID_Request_mem); \
+        MPIU_DBG_MSG_P(CH3_CHANNEL,VERBOSE,		\
+	       "allocated request, handle=0x%08x", req_);\
+    } while (0)
 #else
 #  error MPIU_HANDLE_ALLOCATION_METHOD not defined
 #endif

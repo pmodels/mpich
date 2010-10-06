@@ -1234,7 +1234,7 @@ int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
     /* --BEGIN ERROR HANDLING-- */
     if (q_item == NULL)
     {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDI_CH3I_Acceptq_t" );
 	goto fn_exit;
     }
     /* --END ERROR HANDLING-- */

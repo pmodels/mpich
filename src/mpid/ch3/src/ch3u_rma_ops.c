@@ -34,7 +34,8 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     rank = comm_ptr->rank;
     
     *win_ptr = (MPID_Win *)MPIU_Handle_obj_alloc( &MPID_Win_mem );
-    MPIU_ERR_CHKANDJUMP(!(*win_ptr),mpi_errno,MPI_ERR_OTHER,"**nomem");
+    MPIU_ERR_CHKANDJUMP1(!(*win_ptr),mpi_errno,MPI_ERR_OTHER,"**nomem",
+			 "**nomem %s","MPID_Win_mem");
 
     MPIU_Object_set_ref(*win_ptr, 1);
 
@@ -488,7 +489,8 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 	    else {
 	    
 		segp = MPID_Segment_alloc();
-		MPIU_ERR_CHKANDJUMP((!segp), mpi_errno, MPI_ERR_OTHER, "**nomem"); 
+		MPIU_ERR_CHKANDJUMP1((!segp), mpi_errno, MPI_ERR_OTHER, 
+				    "**nomem","**nomem %s","MPID_Segment_alloc"); 
 		MPID_Segment_init(NULL, target_count, target_datatype, segp, 0);
 		first = 0;
 		last  = SEGMENT_IGNORE_LAST;

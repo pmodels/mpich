@@ -233,7 +233,8 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 	    {
 		MPIU_DBG_MSG(CH3_CHANNEL,TYPICAL,"SRBuf allocation failure");
 		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
-                                FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+                                FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 
+						 "**nomem %d", data_sz);
 		sreq->status.MPI_ERROR = mpi_errno;
 		goto fn_exit;
 	    }
@@ -418,7 +419,9 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 		   a fatal error? */
 		MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,"SRBuf allocation failure");
 		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
-			      FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+			      FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 
+			 "**nomem %d", 
+			 rreq->dev.segment_size - rreq->dev.segment_first);
 		rreq->status.MPI_ERROR = mpi_errno;
 		goto fn_exit;
 	    }

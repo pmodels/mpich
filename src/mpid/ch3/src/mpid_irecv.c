@@ -38,7 +38,7 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	}
 	else
 	{
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_NO_MEM, "**nomem");
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
 	}
 	goto fn_exit;
     }
@@ -50,7 +50,7 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
     if (rreq == NULL)
     {
 	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_NO_MEM, "**nomem");
+	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     }
 
     if (found)

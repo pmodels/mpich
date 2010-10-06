@@ -45,7 +45,7 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
                                        comm, buf, count, datatype, &found);
     if (rreq == NULL) {
 	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_NO_MEM, "**nomem");
+	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     }
 
     if (found)

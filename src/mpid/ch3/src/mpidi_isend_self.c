@@ -48,7 +48,8 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
 	MPIU_Object_set_ref(sreq, 0);
 	MPIDI_CH3_Request_destroy(sreq);
 	sreq = NULL;
-        MPIU_ERR_SET1(mpi_errno, MPI_ERR_NO_MEM, "**nomem", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
+        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", 
+		      "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
 	goto fn_exit;
     }
     /* --END ERROR HANDLING-- */

@@ -247,7 +247,8 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
     
     rreq->dev.tmpbuf = MPIU_Malloc(rreq->dev.recv_data_sz);
     if (!rreq->dev.tmpbuf) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+			     rreq->dev.recv_data_sz);
     }
     rreq->dev.tmpbuf_sz = rreq->dev.recv_data_sz;
     
@@ -378,7 +379,8 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreq)
     
     rreq->dev.tmpbuf = MPIU_Malloc(rreq->dev.recv_data_sz);
     if (!rreq->dev.tmpbuf) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+			     rreq->dev.recv_data_sz);
     }
     rreq->dev.tmpbuf_sz = rreq->dev.recv_data_sz;
     
