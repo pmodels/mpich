@@ -93,8 +93,6 @@ int ADIOI_ZOIDFS_error_convert(int error)
 	    return MPI_ERR_NO_SUCH_FILE;
 	case ZFSERR_IO:
 	    return MPI_ERR_IO;
-	case ZFSERR_NOMEM:
-	    return MPI_ERR_NO_MEM;
 	case ZFSERR_EXIST:
 	    return MPI_ERR_FILE_EXISTS;
 	case ZFSERR_NOTDIR: /* ??? */
@@ -116,6 +114,8 @@ int ADIOI_ZOIDFS_error_convert(int error)
 	/* case ZFSERR_NOTEMPTY: */
 	/* case ZFSERR_WFLUSH: */
 	/* case ZFSERR_OTHER: */
+	case ZFSERR_NOMEM:
+	    return MPI_ERR_INTERN;
 	default:
 	    return MPI_UNDEFINED;
     }
