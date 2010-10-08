@@ -158,6 +158,64 @@ MPIRUN_NP="-np "
 MPIEXEC_N="-n "
 AC_SUBST(MPIRUN_NP)
 AC_SUBST(MPIEXEC_N)
+dnl
+AC_ARG_VAR([MPIEXEC],[Name and path of mpiexec program])
+AC_ARG_VAR([MPIRUN],[Name and path of mpirun program])
+AC_ARG_VAR([MPIBOOT],[Name and path of program to run before mpirun])
+AC_ARG_VAR([MPIUNBOOT],[Name and path of program to run after all mpirun])
+AC_ARG_VAR([MPICC],[Name and absolute path of program used to compile MPI programs in C])
+AC_ARG_VAR([MPIF77],[Name and absolute path of program used to compile MPI programs in F77])
+AC_ARG_VAR([MPICXX],[Name and absolute path of program used to compile MPI programs in C++])
+AC_ARG_VAR([MPIF90],[Name and absolute path of program used to compile MPI programs in F90])
+#
+# Check for things that will cause trouble.  For example, 
+# if MPICC is defined but does not contain a / or \, then PATH_PROG will
+# ignore the value
+if test -n "$MPICC" ; then
+   case $MPICC in
+changequote(<<,>>)
+    [\\/]* | ?:[\\/]*)
+changequote([,])
+    # Ok, PATH_PROG will figure it out
+    ;;  
+  *)
+    AC_MSG_ERROR([MPICC must be set to an absolute path if it is set])
+  esac
+fi
+if test -n "$MPICXX" ; then
+   case $MPICXX in
+changequote(<<,>>)
+    [\\/]* | ?:[\\/]*)
+changequote([,])
+    # Ok, PATH_PROG will figure it out
+    ;;  
+  *)
+    AC_MSG_ERROR([MPICXX must be set to an absolute path if it is set])
+  esac
+fi
+if test -n "$MPIF77" ; then
+   case $MPIF77 in
+changequote(<<,>>)
+    [\\/]* | ?:[\\/]*)
+changequote([,])
+    # Ok, PATH_PROG will figure it out
+    ;;  
+  *)
+    AC_MSG_ERROR([MPIF77 must be set to an absolute path if it is set])
+  esac
+fi
+if test -n "$MPIF90" ; then
+   case $MPIF90 in
+changequote(<<,>>)
+    [\\/]* | ?:[\\/]*)
+changequote([,])
+    # Ok, PATH_PROG will figure it out
+    ;;  
+  *)
+    AC_MSG_ERROR([MPIF90 must be set to an absolute path if it is set])
+  esac
+fi
+
 case $ac_mpi_type in
 	mpich)
         dnl 
@@ -174,16 +232,24 @@ case $ac_mpi_type in
                 PATH=$with_mpich:${PATH}
             fi
             AC_PATH_PROG(MPICC,mpicc)
-            TESTCC=${CC-cc}
+	    if test -z "$TESTCC" ; then TESTCC=${CC-cc} ; fi
             CC="$MPICC"
+	    # Note that autoconf may unconditionally change the value of 
+	    # CC (!) in some other command. Thus, we define CCMASTER
+	    CCMASTER=$CC
+	    # to permit configure codes to recover the correct CC.  This
+	    # is an ugly not-quite-correct workaround for the fact that 
+	    # does not want you to change the C compiler once you have set it
+	    # (But since it does so unconditionally, it silently creates 
+	    # bogus output files.)
             AC_PATH_PROG(MPIF77,mpif77)
-            TESTF77=${F77-f77}
+	    if test -z "$TESTF77" ; then TESTF77=${F77-f77} ; fi
             F77="$MPIF77"
             AC_PATH_PROG(MPIFC,mpif90)
-            TESTFC=${FC-f90}
+	    if test -z "$TESTFC" ; then TESTFC=${FC-f90} ; fi 
             FC="$MPIFC"
             AC_PATH_PROG(MPICXX,mpiCC)
-            TESTCXX=${CXX-CC}
+	    if test -z "$TESTCXX" ; then TESTCXX=${CXX-CC} ; fi
             CXX="$MPICXX"
 	    # We may want to restrict this to the path containing mpirun
 	    AC_PATH_PROG(MPIEXEC,mpiexec)
@@ -214,16 +280,17 @@ case $ac_mpi_type in
                 PATH=$with_lammpi:${PATH}
         fi
         AC_PATH_PROG(MPICC,mpicc)
-        TESTCC=${CC-cc}
+        if test -z "$TESTCC" ; then TESTCC=${CC-cc} ; fi
         CC="$MPICC"
         AC_PATH_PROG(MPIF77,mpif77)
-        TESTF77=${F77-f77}
+	if test -z "$TESTCC" ; then TESTF77=${F77-f77} ; fi
         F77="$MPIF77"
         AC_PATH_PROG(MPIFC,mpif90)
         TESTFC=${FC-f90}
+	if test -z "$TESTFC" ; then TESTFC=${FC-f90} ; fi
         FC="$MPIFC"
         AC_PATH_PROG(MPICXX,mpiCC)
-        TESTCXX=${CXX-CC}
+	if test -z "$TESTCXX" ; then TESTCXX=${CXX-CC} ; fi
         CXX="$MPICXX"
 	PATH="$save_PATH"
   	MPILIBNAME="lammpi"
@@ -238,12 +305,14 @@ case $ac_mpi_type in
 	if test -z "$MPCC" -o -z "$MPXLF" ; then
 	    AC_MSG_ERROR([Could not find IBM MPI compilation scripts.  Either mpcc or mpxlf is missing])
 	fi
-	TESTCC=${CC-xlC}; TESTF77=${F77-xlf}; CC=mpcc; F77=mpxlf
+	if test -z "$TESTCC" ; then TESTCC=${CC-xlC} ; fi
+	if test -z "$TESTF77" ; then TESTF77=${F77-xlf}; fi
+	CC=mpcc; F77=mpxlf
 	# There is no mpxlf90, but the options langlvl and free can
 	# select the Fortran 90 version of xlf
 	if test "$enable_f90" != no ; then
 	    AC_CHECK_PROGS(MPIXLF90,mpxlf90)
-	    TESTFC=${FC-xlf90}
+	    if test -z "$TESTFC" ; then TESTFC=${FC-xlf90}; fi
             if test "X$MPIXLF90" != "X" ; then 
 	        FC="mpxlf90"
 	    else
@@ -257,8 +326,14 @@ case $ac_mpi_type in
 	;;
 
 	sgimpi)
-	TESTCC=${CC:=cc}; TESTF77=${F77:=f77}; 
-	TESTCXX=${CXX:=CC}; TESTFC=${FC:=f90}
+	if test -z "$TESTCC" ; then TESTCC=${CC:=cc} ; fi
+	if test -z "$TESTF77" ; then TESTF77=${F77:=f77} ; fi
+	if test -z "$TESTCXX" ; then TESTCXX=${CXX:=CC} ; fi
+	if test -z "$TESTFC" ; then TESTFC=${FC:=f90} ; fi
+	AC_CHECK_LIB(mpi,MPI_Init)
+	if test "$ac_cv_lib_mpi_MPI_Init" = "yes" ; then
+	    MPILIBNAME="mpi"
+	fi	
 	MPIRUN=mpirun
 	MPIBOOT=""
 	MPIUNBOOT=""
@@ -266,6 +341,32 @@ case $ac_mpi_type in
 
 	generic)
 	# Find the compilers.  Expect the compilers to be mpicc and mpif77
+	# in $with_mpi/bin
+        PAC_PROG_CC
+	# We only look for the other compilers if there is no
+	# disable for them
+	if test "$enable_f77" != no -a "$enable_fortran" != no ; then
+   	    AC_PROG_F77
+        fi
+	if test "$enable_cxx" != no ; then
+	    AC_PROG_CXX
+	fi
+	if test "$enable_f90" != no ; then
+	    PAC_PROG_FC
+	fi
+	# Set defaults for the TEST versions if not already set
+	if test -z "$TESTCC" ; then 
+	    TESTCC=${CC:=cc}
+        fi
+	if test -z "$TESTF77" ; then 
+  	    TESTF77=${F77:=f77}
+        fi
+	if test -z "$TESTCXX" ; then
+	    TESTCXX=${CXX:=CC}
+        fi
+	if test -z "$TESTFC" ; then
+       	    TESTFC=${FC:=f90}
+	fi
 	# in $with_mpi/bin or $with_mpi
         if test "X$MPICC" = "X" ; then
             if test -x "$with_mpi/bin/mpicc" ; then
@@ -346,6 +447,17 @@ case $ac_mpi_type in
         if test "$found" = "no" ; then
           AC_CHECK_LIB(mpich2,MPI_Init,found="yes",found="no")
         fi
+	if test "$enable_cxx" != no ; then
+	    AC_PROG_CXX
+	fi
+	if test "$enable_f90" != no ; then
+	    PAC_PROG_FC
+	fi
+	# Set defaults for the TEST versions if not already set
+	if test -z "$TESTCC" ; then TESTCC=${CC:=cc} ; fi
+	if test -z "$TESTF77" ; then TESTF77=${F77:=f77} ; fi
+	if test -z "$TESTCXX" ; then TESTCXX=${CXX:=CC} ; fi
+	if test -z "$TESTFC" ; then TESTFC=${FC:=f90} ; fi
         if test "$found" = "no" ; then
           CFLAGS=$save_CFLAGS
           CPPFLAGS=$save_CPPFLAGS
