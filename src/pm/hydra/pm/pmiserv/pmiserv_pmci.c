@@ -128,40 +128,64 @@ static HYD_status stdout_cb(void *buf, int buflen)
         goto fn_exit;
     }
 
-    rbuf = buf;
-    rlen = buflen;
+    if (storage_len)
+        hdr = (struct HYD_pmcd_stdio_hdr *) storage;
+    else
+        hdr = (struct HYD_pmcd_stdio_hdr *) buf;
+
+    if (storage_len || (buflen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen)) {
+        HYDU_MALLOC(tmp, char *, storage_len + buflen, status);
+        memcpy(tmp, storage, storage_len);
+        memcpy(tmp + storage_len, buf, buflen);
+        HYDU_FREE(storage);
+        storage = tmp;
+        storage_len += buflen;
+        tmp = NULL;
+
+        rbuf = storage;
+        rlen = storage_len;
+    }
+    else {
+        rbuf = buf;
+        rlen = buflen;
+    }
 
     while (1) {
         hdr = (struct HYD_pmcd_stdio_hdr *) rbuf;
 
-        if (rlen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen) {
-            /* We don't have the entire data; store it and wait for
-             * the next event */
-            HYDU_MALLOC(tmp, char *, rlen + storage_len, status);
-            if (storage_len)
-                memcpy(tmp, storage, storage_len);
-            memcpy(tmp + storage_len, buf, rlen);
-            if (storage)
-                HYDU_FREE(storage);
-            storage = tmp;
-
+        if (rlen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen)
             break;
-        }
-        else {
-            rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
-            rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
 
-            HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
-            status = HYD_handle.stdout_cb(str, strlen(str));
-            HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+        rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
+        rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
 
-            status = HYD_handle.stdout_cb(rbuf, hdr->buflen);
-            HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+        HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
+        status = HYD_handle.stdout_cb(str, strlen(str));
+        HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
 
-            rbuf += hdr->buflen;
-            rlen -= hdr->buflen;
-        }
+        status = HYD_handle.stdout_cb(rbuf, hdr->buflen);
+        HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+
+        rbuf += hdr->buflen;
+        rlen -= hdr->buflen;
+
+        if (!rlen)
+            break;
     }
+
+    if (rlen) { /* left overs */
+        HYDU_MALLOC(tmp, char *, rlen, status);
+        memcpy(tmp, rbuf, rlen);
+        if (storage)
+            HYDU_FREE(storage);
+        storage = tmp;
+    }
+    else {
+        if (storage)
+            HYDU_FREE(storage);
+        storage = NULL;
+    }
+    storage_len = rlen;
 
   fn_exit:
     return status;
@@ -187,40 +211,64 @@ static HYD_status stderr_cb(void *buf, int buflen)
         goto fn_exit;
     }
 
-    rbuf = buf;
-    rlen = buflen;
+    if (storage_len)
+        hdr = (struct HYD_pmcd_stdio_hdr *) storage;
+    else
+        hdr = (struct HYD_pmcd_stdio_hdr *) buf;
+
+    if (storage_len || (buflen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen)) {
+        HYDU_MALLOC(tmp, char *, storage_len + buflen, status);
+        memcpy(tmp, storage, storage_len);
+        memcpy(tmp + storage_len, buf, buflen);
+        HYDU_FREE(storage);
+        storage = tmp;
+        storage_len += buflen;
+        tmp = NULL;
+
+        rbuf = storage;
+        rlen = storage_len;
+    }
+    else {
+        rbuf = buf;
+        rlen = buflen;
+    }
 
     while (1) {
         hdr = (struct HYD_pmcd_stdio_hdr *) rbuf;
 
-        if (rlen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen) {
-            /* We don't have the entire data; store it and wait for
-             * the next event */
-            HYDU_MALLOC(tmp, char *, rlen + storage_len, status);
-            if (storage_len)
-                memcpy(tmp, storage, storage_len);
-            memcpy(tmp + storage_len, buf, rlen);
-            if (storage)
-                HYDU_FREE(storage);
-            storage = tmp;
-
+        if (rlen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen)
             break;
-        }
-        else {
-            rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
-            rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
 
-            HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
-            status = HYD_handle.stdout_cb(str, strlen(str));
-            HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
+        rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
+        rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
 
-            status = HYD_handle.stderr_cb(rbuf, hdr->buflen);
-            HYDU_ERR_POP(status, "error in the UI defined stderr callback\n");
+        HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
+        status = HYD_handle.stdout_cb(str, strlen(str));
+        HYDU_ERR_POP(status, "error in the UI defined stdout callback\n");
 
-            rbuf += hdr->buflen;
-            rlen -= hdr->buflen;
-        }
+        status = HYD_handle.stderr_cb(rbuf, hdr->buflen);
+        HYDU_ERR_POP(status, "error in the UI defined stderr callback\n");
+
+        rbuf += hdr->buflen;
+        rlen -= hdr->buflen;
+
+        if (!rlen)
+            break;
     }
+
+    if (rlen) { /* left overs */
+        HYDU_MALLOC(tmp, char *, rlen, status);
+        memcpy(tmp, rbuf, rlen);
+        if (storage)
+            HYDU_FREE(storage);
+        storage = tmp;
+    }
+    else {
+        if (storage)
+            HYDU_FREE(storage);
+        storage = NULL;
+    }
+    storage_len = rlen;
 
   fn_exit:
     return status;
