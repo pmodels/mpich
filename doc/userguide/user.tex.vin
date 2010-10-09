@@ -46,19 +46,23 @@ Version %MPICH2_VERSION%\\
 Mathematics and Computer Science Division\\
 Argonne National Laboratory}
 
-\author{William Gropp\\
-Ewing Lusk\\
-David Ashton\\
+\author{
 Pavan Balaji\\
 Darius Buntinas\\
 Ralph Butler\\
 Anthony Chan\\
 David Goodell\\
+William Gropp\\
 Jayesh Krishna\\
+Rob Latham\\
+Ewing Lusk\\
 Guillaume Mercier\\
 Rob Ross\\
-Rajeev Thakur\\
-Brian Toonen}
+Rajeev Thakur\\[2.0ex]
+\textbf{Past Contributors:}\\
+David Ashton\\
+Brian Toonen
+}
 
 \maketitle
 

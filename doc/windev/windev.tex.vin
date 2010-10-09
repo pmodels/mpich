@@ -1,3 +1,4 @@
+% -*- Mode: latex; -*-
 \documentclass[dvipdfm,11pt]{article}
 \usepackage[dvipdfm]{hyperref} % Upgraded url package
 \parskip=.1in
@@ -42,8 +43,23 @@
   Mathematics and Computer Science Division\\
   Argonne National Laboratory}
 
-\author{David Ashton\\
-Jayesh Krishna}
+\author{
+Pavan Balaji\\
+Darius Buntinas\\
+Ralph Butler\\
+Anthony Chan\\
+David Goodell\\
+William Gropp\\
+Jayesh Krishna\\
+Rob Latham\\
+Ewing Lusk\\
+Guillaume Mercier\\
+Rob Ross\\
+Rajeev Thakur\\[2.0ex]
+\textbf{Past Contributors:}\\
+David Ashton\\
+Brian Toonen
+}
 
 \maketitle
 \cleardoublepage
