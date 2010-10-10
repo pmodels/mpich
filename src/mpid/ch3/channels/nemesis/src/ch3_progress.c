@@ -227,7 +227,6 @@ int MPIDI_CH3I_Shm_send_progress(void)
 int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
     int mpi_errno = MPI_SUCCESS;
-    int complete;
 #if !defined(ENABLE_NO_YIELD) || defined(MPICH_IS_THREADED)
     int pollcount = 0;
 #endif
