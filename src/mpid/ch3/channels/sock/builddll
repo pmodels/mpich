@@ -1,6 +1,7 @@
 #! /bin/sh
 #
 set -x
+printenv
 # This script builds a stand-alone DLL for the socket channel.
 # It makes use of the configure scripts in the necessary components
 #

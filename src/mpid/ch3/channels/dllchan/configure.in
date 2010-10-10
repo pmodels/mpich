@@ -45,6 +45,20 @@ AC_DEFINE_UNQUOTED(MPICH_SHLIB_EXT,$MPICH_SHLIB_EXT,[Extension for shared librar
 # AR_FLAGS provides a way to potentially improve build performance on Mac OSX
 if test -z "$AR_FLAGS" ; then AR_FLAGS=cr ; fi
 
+# ABIVERSION is needed when a separate sock dll library is built (e.g., for
+# dllchan)
+if test "X$ABIVERSION" = "X" ; then
+   if test "X$libmpich_so_version" != X ; then 
+      ABIVERSION="$libmpich_so_version"
+   else
+      # Note that an install of a sock-dll will fail if the ABI version is not
+      # available
+      AC_MSG_WARN([Unable to set the ABIVERSION])
+   fi
+fi
+AC_SUBST(ABIVERSION)
+
+
 AC_SUBST(device_name)
 AC_SUBST(channel_name)
 AC_SUBST(AR)
@@ -80,6 +94,8 @@ PAC_UPDATE_BASE_CACHE
 if test -z "$channel_args" ; then
      channel_args=sock
 fi
+
+export ABIVERSION
 
 channel_args=`echo $channel_args | sed -e 's/,/ /g'`
 builddir=`(cd .. && pwd)`

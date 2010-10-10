@@ -7,6 +7,7 @@ all-local:
 	for dir in @SUBCHANNELS@ ; do \
 	    CC="@CC@" ; export CC ; CFLAGS="@CFLAGS@" ; export CFLAGS ; \
 	    CPPFLAGS="@CPPFLAGS@" ; export CPPFLAGS ; \
+	    ABIVERSION="@ABIVERSION@" ; export ABIVERSION ; \
 	    (cd ../$$dir && ${srcdir}/../$$dir/builddll --prefix=${prefix} \
     					 --libdir=${libdir} \
 					 --exec-prefix=${exec_prefix} \
