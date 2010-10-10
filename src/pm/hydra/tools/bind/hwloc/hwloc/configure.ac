@@ -124,7 +124,7 @@ AS_IF([test "$enable_embedded_mode" != "yes"],
              [HWLOC_BUILD_STANDALONE])])
 
 # Setup the hwloc core
-HWLOC_SETUP_CORE([], [], [AC_MSG_ERROR([Cannot continue])], [1])
+HWLOC_SETUP_CORE([], [], [AC_MSG_ERROR([Cannot build hwloc])], [1])
 
 # Setup hwloc's docs, utils, and tests
 AS_IF([test "$hwloc_mode" = "standalone"],
