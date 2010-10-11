@@ -83,23 +83,26 @@ static int init_mad( MPIDI_PG_t *pg_p )
     goto fn_exit;
 }
 
-/*
- int  
-   MPID_nem_newmad_init(MPID_nem_queue_ptr_t proc_recv_queue, MPID_nem_queue_ptr_t proc_free_queue, MPID_nem_cell_ptr_t proc_elements, int num_proc_elements,
-	          MPID_nem_cell_ptr_t module_elements, int num_module_elements, 
-		  MPID_nem_queue_ptr_t *module_free_queue)
-
-   IN
-       proc_recv_queue -- main recv queue for the process
-       proc_free_queue -- main free queueu for the process
-       proc_elements -- pointer to the process' queue elements
-       num_proc_elements -- number of process' queue elements
-       module_elements -- pointer to queue elements to be used by this module
-       num_module_elements -- number of queue elements for this module
-   OUT
-       free_queue -- pointer to the free queue for this module.  The process will return elements to
-                     this queue
-*/
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_newmad_init_completed
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int
+MPID_nem_newmad_init_completed(void)
+{
+   
+   int mpi_errno = MPI_SUCCESS ;
+   int ret;
+   
+   ret = nm_sr_monitor(mpid_nem_newmad_session, NM_SR_EVENT_RECV_UNEXPECTED,
+		       &MPID_nem_newmad_get_adi_msg);
+   MPIU_Assert( ret == NM_ESUCCESS);
+   
+fn_exit:
+       return mpi_errno;
+fn_fail:
+       goto fn_exit;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_newmad_init
@@ -153,6 +156,9 @@ MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
    mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_newmad_anysource_posted, MPID_nem_newmad_anysource_matched);
    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+   mpi_errno = MPID_nem_register_initcomp_cb(MPID_nem_newmad_init_completed);
+   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+   
    fn_exit:
        return mpi_errno;
    fn_fail: 
