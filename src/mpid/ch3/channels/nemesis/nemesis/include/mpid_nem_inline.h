@@ -8,7 +8,7 @@
 #define _MPID_NEM_INLINE_H
 
 #define MPID_NEM_POLLS_BEFORE_YIELD 1000
-#define MPID_NEM_THREAD_POLLS_BEFORE_YIELD 1
+#define MPID_NEM_THREAD_POLLS_BEFORE_YIELD 10
 
 #include "my_papi_defs.h"
 #include "mpiiov.h"
