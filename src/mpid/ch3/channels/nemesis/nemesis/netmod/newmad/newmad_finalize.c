@@ -16,7 +16,7 @@ MPID_nem_newmad_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
 
-    while(MPID_nem_newmad_pending_send_req > 0)
+    while(mpid_nem_newmad_pending_send_req > 0)
      MPID_nem_newmad_poll(FALSE);   
    
     nm_session_destroy(mpid_nem_newmad_session);
