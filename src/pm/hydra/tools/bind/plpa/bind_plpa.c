@@ -176,7 +176,7 @@ HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset)
     }
 
     if (isset) {
-        ret = PLPA_NAME(sched_setaffinity) (0, HYDT_BIND_MAX_CPU_COUNT, &plpa_cpuset);
+        ret = PLPA_NAME(sched_setaffinity) (0, HYDT_bind_info.total_proc_units, &plpa_cpuset);
         if (ret)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "plpa setaffinity failed\n");
     }

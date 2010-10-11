@@ -100,10 +100,17 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
                     HYDT_bind_info.total_proc_units * sizeof(struct HYDT_bind_cpuset_t),
                     status);
+
+        /* Initialize all values to map to all CPUs */
+        for (i = 0; i < HYDT_bind_info.total_proc_units; i++)
+            for (j = 0; j < HYDT_bind_info.total_proc_units; j++)
+                HYDT_bind_cpuset_set(j, &HYDT_bind_info.bindmap[i]);
+
         i = 0;
         bindstr = HYDU_strdup(binding + strlen("user:"));
         bindentry = strtok(bindstr, ",");
         while (bindentry) {
+            HYDT_bind_cpuset_zero(&HYDT_bind_info.bindmap[i]);
             HYDT_bind_cpuset_set(atoi(bindentry) % HYDT_bind_info.total_proc_units,
                                  &HYDT_bind_info.bindmap[i]);
             i++;
