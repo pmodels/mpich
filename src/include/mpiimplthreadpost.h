@@ -70,7 +70,7 @@ MPIU_Thread_CS_yield_lockname_impl_(enum MPIU_Nest_mutexes kind,
     MPIU_THREADPRIV_GET;
     MPIU_THREAD_CHECKDEPTH(kind, lockname, 1);
     MPID_Thread_mutex_unlock(mutex);
-    /* FIXME should we MPID_Thread_yield() here? */
+    MPID_Thread_yield();
     MPID_Thread_mutex_lock(mutex);
 }
 
@@ -151,7 +151,7 @@ MPIU_Thread_CS_yield_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
     MPIU_DBG_MSG_D(THREAD,TYPICAL,"recursive yield, depth=%d", depth);
 
     MPID_Thread_mutex_unlock(mutex);
-    /* FIXME should we MPID_Thread_yield() here? */
+    MPID_Thread_yield();
     MPID_Thread_mutex_lock(mutex);
 }
 
