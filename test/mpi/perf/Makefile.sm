@@ -11,6 +11,7 @@ dtpack_SOURCES          = dtpack.c
 allredtrace_SOURCES     = allredtrace.c
 commcreatep_SOURCES     = commcreatep.c
 timer_SOURCES		= timer.c
+manyrma_SOURCES         = manyrma.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
