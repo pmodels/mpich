@@ -51,13 +51,15 @@ static void free_status_index(int index)
 
 /* Opens the knem device and sets knem_fd accordingly.  Uses mpich2 errhandling
    conventions. */
-static int open_knem_dev()
+#undef FUNCNAME
+#define FUNCNAME open_knem_dev
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int open_knem_dev(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int err;
     int i;
-    int ret;
-    int tmp_threshold = -1;
     struct knem_cmd_info info;
 
     knem_fd = open(KNEM_DEVICE_FILENAME, O_RDWR);
@@ -84,6 +86,10 @@ fn_fail:
 
 /* Sends as much data from the request as possible via the knem ioctl.
    s_cookiep is an output parameter */
+#undef FUNCNAME
+#define FUNCNAME do_dma_send
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
                        MPID_IOV send_iov[], knem_cookie_t *s_cookiep)
 {
@@ -131,6 +137,10 @@ fn_exit:
 }
 
 /* s_cookie is an input parameter */
+#undef FUNCNAME
+#define FUNCNAME do_dma_recv
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int do_dma_recv(int iov_n, MPID_IOV iov[], knem_cookie_t s_cookie, int nodma, volatile knem_status_t **status_p_p, knem_status_t *current_status_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -191,6 +201,10 @@ fn_fail:
    the request in a single shot as possible.
    
    s_cookiep is an output parameter. */
+#undef FUNCNAME
+#define FUNCNAME send_sreq_data
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_cookiep)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -252,6 +266,10 @@ fn_fail:
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME check_req_complete
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -280,19 +298,24 @@ int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Req
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
-    knem_cookie_t s_cookie;
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
-
+    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
 
-    mpi_errno = send_sreq_data(vc, sreq, &s_cookie);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPID_nem_lmt_send_RTS(vc, rts_pkt, &s_cookie, sizeof(s_cookie));
+    MPIU_CHKPMEM_MALLOC(sreq->ch.s_cookie, knem_cookie_t *, sizeof(knem_cookie_t), mpi_errno, "s_cookie");
 
-fn_fail:
+    mpi_errno = send_sreq_data(vc, sreq, sreq->ch.s_cookie);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPID_nem_lmt_send_RTS(vc, rts_pkt, sreq->ch.s_cookie, sizeof(knem_cookie_t));
+
 fn_exit:
+    MPIU_CHKPMEM_COMMIT();
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
     return mpi_errno;
+fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
 }
 
 /* This function is called initially when an RTS message comes in, but may also
@@ -306,7 +329,6 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
 {
     int mpi_errno = MPI_SUCCESS;
     int nodma;
-    int i, err;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDI_msg_sz_t data_sz;
@@ -423,6 +445,9 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
 
+    /* free cookie from RTS packet */
+    MPIU_Free(sreq->ch.s_cookie);
+
     /* We shouldn't ever need to handle the more IOVs case here.  The DONE
        message should only be sent when all of the data is truly transferred.
        However in the interest of robustness, we'll start to handle it and
@@ -499,6 +524,10 @@ fn_fail:
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_lmt_dma_progress
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;

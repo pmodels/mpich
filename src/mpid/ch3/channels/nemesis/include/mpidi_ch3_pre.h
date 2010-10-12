@@ -43,6 +43,7 @@ struct MPIDI_CH3I_Request
     struct MPID_Request *lmt_req;        /* pointer to original send/recv request */
     MPIDI_msg_sz_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */
     MPID_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
+    void                *s_cookie;       /* temporary storage for the cookie data in case the packet can't be sent immediately */
 
     struct
     {
