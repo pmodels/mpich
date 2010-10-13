@@ -40,6 +40,7 @@ fi
 
 pathlist=""
 pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
+pathlist="$pathlist src/util/wrappers"
 for path in $pathlist ; do
     CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
 done
