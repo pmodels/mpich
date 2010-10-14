@@ -117,6 +117,7 @@ typedef int SMPD_BOOL;
 #define SMPD_MAX_DBG_PRINTF_LENGTH      (1024 + SMPD_MAX_CMD_LENGTH)
 #define SMPD_MAX_CMD_STR_LENGTH           100
 #define SMPD_MAX_HOST_LENGTH	           64
+#define SMPD_MAX_HOST_DESC_LENGTH        512
 #define SMPD_MAX_FQ_NAME_LENGTH          1024
 #define SMPD_MAX_NETBIOS_NAME_LENGTH     1024
 #define SMPD_MAX_EXE_LENGTH              4096

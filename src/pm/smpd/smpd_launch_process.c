@@ -826,7 +826,7 @@ int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority
     SMPDU_Sock_t sock_pmi_listener;
     smpd_context_t *listener_context;
     int listener_port = 0;
-    char host_description[256];
+    char host_description[SMPD_MAX_HOST_DESC_LENGTH];
     char err_msg[MAX_ERROR_LENGTH] = "";
 
     smpd_enter_fn(FCNAME);
@@ -943,7 +943,7 @@ int smpd_launch_process(smpd_process_t *process, int priorityClass, int priority
 	    }
 	    listener_context->state = SMPD_PMI_LISTENING;
 	    /* Adding process rank since the interface for SMPDU_Sock_get_host_description changed */
-	    nError = SMPDU_Sock_get_host_description(process->rank, host_description, 256);
+	    nError = SMPDU_Sock_get_host_description(process->rank, host_description, SMPD_MAX_HOST_DESC_LENGTH);
 	    if (nError != SMPD_SUCCESS)
 	    {
 		smpd_err_printf("SMPDU_Sock_get_host_description failed,\nsock error: %s\n", get_sock_error_string(nError));
