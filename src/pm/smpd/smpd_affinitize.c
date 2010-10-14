@@ -60,6 +60,41 @@ static inline BOOL one_bit_set(LONG_PTR x)
     return ( x == lowest_bit(x) );
 }
 
+static inline void dbg_print_relationship(SYSTEM_LOGICAL_PROCESSOR_INFORMATION *pInfo)
+{
+    switch(pInfo->Relationship){
+        case RelationProcessorCore:
+            smpd_dbg_printf("Processor core [%x] info\n", pInfo->ProcessorCore.Flags);
+            break;
+        /* case RelationProcessorPackage: */
+        case RelationCache:
+            switch (pInfo->Cache.Type)
+            {
+                case CacheUnified:
+                    smpd_dbg_printf("Unified cache info\n");
+                    break;
+                case CacheData:
+                    smpd_dbg_printf("Data cache info\n");
+                    break;
+                case CacheInstruction:
+                    smpd_dbg_printf("Instruction cache info\n");
+                    break;
+                case CacheTrace:
+                    smpd_dbg_printf("Trace cache info\n");
+                    break;
+                default:
+                    smpd_dbg_printf("Unknown cache info [type=%d]\n", pInfo->Cache.Type);
+                    break;
+            }
+            smpd_dbg_printf("level=%d, assoc=%d, lnsz=%d, sz=%d\n", pInfo->Cache.Level, pInfo->Cache.Associativity, pInfo->Cache.LineSize, pInfo->Cache.Size);
+            break;
+        case RelationNumaNode:
+            smpd_dbg_printf("Numa node [%d] Info\n", pInfo->NumaNode.NodeNumber);
+            break;
+        default:
+            smpd_dbg_printf("Unknown Relationship [rel=%d]\n", pInfo->Relationship);
+    }
+}
 
 static inline priority_t get_relationship_priority(SYSTEM_LOGICAL_PROCESSOR_INFORMATION* pInfo)
 {
@@ -154,7 +189,15 @@ static int init_resource_table(SYSTEM_LOGICAL_PROCESSOR_INFORMATION* pInfo, int 
             nTableEntries++;
         }
 
-        SMPDU_Assert( ( EntryMask & pInfo[i].ProcessorMask ) == 0);
+        if( ( EntryMask & pInfo[i].ProcessorMask ) != 0){
+            /* Ignore duplicate resource infos */
+            smpd_dbg_printf("WARNING: Duplicate resource Info [for core=%x], Ignoring resource : \n", pInfo[i].ProcessorMask);
+            smpd_dbg_printf("==========================\n");
+            dbg_print_relationship(&pInfo[i]);
+            smpd_dbg_printf("==========================\n");
+            continue;
+        }
+
         EntryMask |= pInfo[i].ProcessorMask;
 
         j = nTableEntries - 1;
