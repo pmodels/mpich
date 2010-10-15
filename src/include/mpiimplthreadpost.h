@@ -95,8 +95,9 @@ MPIU_Thread_CS_enter_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
     depth = MPIU_THREADPRIV_FIELD(lock_depth)[kind];
-    MPIU_Assert(depth >= 0 && depth < 10); /* probably a mismatch if we hit this */
     MPIU_DBG_MSG_D(THREAD,TYPICAL,"recursive enter, depth=%d", depth);
+
+    MPIU_Assert(depth >= 0 && depth < 10); /* probably a mismatch if we hit this */
 
     if (depth == 0) {
         MPIU_DBG_MSG_S(THREAD,TYPICAL,"locking %s", lockname);
@@ -120,8 +121,9 @@ MPIU_Thread_CS_exit_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
     depth = MPIU_THREADPRIV_FIELD(lock_depth)[kind];
-    MPIU_Assert(depth > 0 && depth < 10); /* probably a mismatch if we hit this */
     MPIU_DBG_MSG_D(THREAD,TYPICAL,"recursive exit, depth=%d", depth);
+
+    MPIU_Assert(depth > 0 && depth < 10); /* probably a mismatch if we hit this */
 
     if (depth == 1) {
         MPIU_DBG_MSG_S(THREAD,TYPICAL,"unlocking %s", lockname);
@@ -145,10 +147,10 @@ MPIU_Thread_CS_yield_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
     depth = MPIU_THREADPRIV_FIELD(lock_depth)[kind];
+    MPIU_DBG_MSG_D(THREAD,TYPICAL,"recursive yield, depth=%d", depth);
+
     MPIU_Assert(depth > 0 && depth < 10); /* we must hold the mutex */
     /* no need to update depth, this is a thread-local value */
-
-    MPIU_DBG_MSG_D(THREAD,TYPICAL,"recursive yield, depth=%d", depth);
 
     MPID_Thread_mutex_unlock(mutex);
     MPID_Thread_yield();
