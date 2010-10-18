@@ -5932,47 +5932,11 @@ if test -n "$MPI_OFFSET_TYPE" ; then
     # Get and export the size of this type if possible
     if test -z "$MPI_SIZEOF_OFFSET" ; then 
         # set a default
-        dnl We'd like to use AC_CHECK_SIZEOF, but that won't take a variable.
         AC_CACHE_CHECK([the sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,[
-        ac_cv_sizeof_MPI_Offset=unknown
-	# This is needed for Mac OSX 10.5
-	rm -rf conftest.dSYM
-        rm -f conftest*
-        cat >> conftest.c <<EOF
-#include "confdefs.h"
-#include <stdio.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-int main( int argc, char **argv )
-{
-    $MPI_OFFSET a;
-    FILE *f = fopen("conftestval", "w" );
-    if (! f) exit(1);
-    fprintf( f, "%ld\n", (long)sizeof(a) );
-    fclose(f);
-    return 0;
-}
-EOF
-        if AC_TRY_EVAL(ac_link) && test -s conftest$ac_exeext ; then
-            if ./conftest$ac_exeext ; then
-                #success
-                ac_cv_sizeof_MPI_Offset=`cat conftestval`
-            else
-                # failure
-                AC_MSG_WARN([Unable to run the program to determine the size of MPI_Offset])
-	        echo "configure: failed program was:" >&AC_FD_CC
-	        cat conftest.c >&AC_FD_CC
-	    fi
-        else
-	    # failure
-            AC_MSG_WARN([Unable to build the program to determine the size of MPI_Offset])
-	    echo "configure: failed program was:" >&AC_FD_CC
-	    cat conftest.c >&AC_FD_CC
-        fi
-	# This is needed for Mac OSX 10.5
-	rm -rf conftest.dSYM
-        rm -f conftest*
+            ac_cv_sizeof_MPI_Offset=unknown
+            AC_COMPUTE_INT([ac_cv_sizeof_MPI_Offset],[sizeof($MPI_OFFSET)],[],[
+                AC_MSG_WARN([Unable to determine the size of MPI_Offset])
+            ])
 	])
 	if test "$ac_cv_sizeof_MPI_Offset" != "unknown" ; then 
   	    MPI_SIZEOF_OFFSET=$ac_cv_sizeof_MPI_Offset
