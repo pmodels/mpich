@@ -171,7 +171,7 @@ static void signal_cb(int sig)
 
 int main(int argc, char **argv)
 {
-    int i, count, pid, ret_status, sent, closed, ret;
+    int i, count, pid, ret_status, sent, closed, ret, done;
     enum HYD_pmcd_pmi_cmd cmd;
     HYD_status status = HYD_SUCCESS;
 
@@ -237,25 +237,20 @@ int main(int argc, char **argv)
     }
 
     /* Now wait for the processes to finish */
+    done = 0;
     while (1) {
         pid = waitpid(-1, &ret_status, 0);
 
         /* Find the pid and mark it as complete. */
         if (pid > 0)
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-                if (HYD_pmcd_pmip.downstream.pid[i] == pid)
+                if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
                     HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                    done++;
+                }
 
-        /* Check how many more processes are pending */
-        count = 0;
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-            if (HYD_pmcd_pmip.downstream.exit_status[i] == -1) {
-                count++;
-                break;
-            }
-        }
-
-        if (count == 0)
+        /* If no more processes are pending, break out */
+        if (done == HYD_pmcd_pmip.local.proxy_process_count)
             break;
 
         /* Check if there are any messages from the launcher */
