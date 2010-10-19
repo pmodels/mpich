@@ -1186,8 +1186,11 @@ will not build the same libraries as described in this section.  It will
 build a ``Unix'' distribution that runs under \texttt{cygwin}.
 
 \subsection{\texttt{Vista/Windows 7/Windows Server 2008 Users}}
-To install MPICH on Windows flavors with User Account Control you need
-to open an adminstrator command prompt and use the msiexec utility.
+\label{sec:Vista_install}
+To install MPICH version \texttt{1.3} or later please follow the 
+instructions provided in \ref{sec:winbin}. Please follow the steps
+below to install older versions of MPICH on Windows flavors with User
+Account Control.
 
 \begin{enumerate}
 \item

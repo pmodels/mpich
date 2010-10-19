@@ -1873,6 +1873,7 @@
         "MsiBootstrapper"
         {
         "LangId" = "3:1033"
+        "RequiresElevation" = "11:TRUE"
         }
         "Product"
         {
