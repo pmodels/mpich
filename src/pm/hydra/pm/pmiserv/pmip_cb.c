@@ -533,7 +533,8 @@ static HYD_status launch_procs(void)
                                       HYD_pmcd_pmip.system_global.enable_stdin ?
                                       &HYD_pmcd_pmip.downstream.in : NULL,
                                       HYD_pmcd_pmip.downstream.out,
-                                      HYD_pmcd_pmip.downstream.err);
+                                      HYD_pmcd_pmip.downstream.err,
+                                      HYD_pmcd_pmip.downstream.pid);
         HYDU_ERR_POP(status, "checkpoint restart failure\n");
         goto fn_spawn_complete;
     }

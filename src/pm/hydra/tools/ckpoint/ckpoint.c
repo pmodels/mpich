@@ -90,7 +90,7 @@ HYD_status HYDT_ckpoint_suspend(int pgid, int id)
 }
 
 HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int num_ranks,
-                                int ranks[], int *in, int *out, int *err)
+                                int ranks[], int *in, int *out, int *err, int *pid)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -104,7 +104,7 @@ HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int n
         status =
             HYDT_ckpoint_blcr_restart(HYDT_ckpoint_info.ckpoint_prefix, pgid, id,
                                       HYDT_ckpoint_info.ckpoint_num, envlist, num_ranks, ranks,
-                                      in, out, err);
+                                      in, out, err, pid);
         HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
     }
 #endif /* HAVE_BLCR */
