@@ -37,6 +37,12 @@
 
 ### Build Platforms
 
+ * Builds using the native "make" program on OpenSolaris fail unknown
+   reasons.  A workaround is to use GNU Make instead.  See the following
+   ticket for more information:
+
+     http://trac.mcs.anl.gov/projects/mpich2/ticket/1122
+
  * The sctp channel is fully supported for FreeBSD and Mac OS X. As of
    the time of this release, bugs in the stack currently existed in
    the Linux kernel, and will hopefully soon be resolved. It is known
