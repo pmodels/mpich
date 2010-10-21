@@ -86,6 +86,7 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
     int error_code;
     struct aiocb *aiocbp;
     ADIOI_AIO_Request *aio_req;
+    MPI_Status status;
 #if defined(ROMIO_XFS)
     unsigned maxiosz = wr ? fd->hints->fs_hints.xfs.write_chunk_sz :
 	    fd->hints->fs_hints.xfs.read_chunk_sz;
@@ -148,10 +149,10 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
 	    treat this as a blocking request and return.  */
 	    if (wr) 
 		ADIO_WriteContig(fd, buf, len, MPI_BYTE, 
-			    ADIO_EXPLICIT_OFFSET, offset, NULL, &error_code);  
+			    ADIO_EXPLICIT_OFFSET, offset, &status, &error_code);  
 	    else
 		ADIO_ReadContig(fd, buf, len, MPI_BYTE,
-			    ADIO_EXPLICIT_OFFSET, offset, NULL, &error_code);  
+			    ADIO_EXPLICIT_OFFSET, offset, &status, &error_code);  
 		    
 	    MPIO_Completed_request_create(&fd, len, &error_code, request);
 	    return 0;
