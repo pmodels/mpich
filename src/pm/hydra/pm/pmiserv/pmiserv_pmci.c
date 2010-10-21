@@ -115,8 +115,8 @@ static HYD_status outerr(void *buf, int buflen, char **storage, int *storage_len
                          HYD_status(*cb) (void *buf, int buflen))
 {
     struct HYD_pmcd_stdio_hdr *hdr;
-    char *rbuf, *tmp, str[HYD_TMPBUF_SIZE];
-    int rlen;
+    char *rbuf, *tbuf, *tmp, str[HYD_TMPBUF_SIZE];
+    int rlen, tcnt, restart, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -158,12 +158,36 @@ static HYD_status outerr(void *buf, int buflen, char **storage, int *storage_len
         rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
         rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
 
-        HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
-        status = cb(str, strlen(str));
-        HYDU_ERR_POP(status, "error in the UI defined callback\n");
+        tbuf = rbuf;
+        tcnt = hdr->buflen;
+        do {
+            if (tcnt == 0)
+                break;
 
-        status = cb(rbuf, hdr->buflen);
-        HYDU_ERR_POP(status, "error in the UI defined callback\n");
+            HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
+            status = cb(str, strlen(str));
+            HYDU_ERR_POP(status, "error in the UI defined callback\n");
+
+            restart = 0;
+            for (i = 0; i < tcnt; i++) {
+                if (tbuf[i] == '\n') {
+                    status = cb(tbuf, i + 1);
+                    HYDU_ERR_POP(status, "error in the UI defined callback\n");
+
+                    tbuf += i + 1;
+                    tcnt -= i + 1;
+
+                    restart = 1;
+                    break;
+                }
+            }
+            if (restart)
+                continue;
+
+            status = cb(tbuf, tcnt);
+            HYDU_ERR_POP(status, "error in the UI defined callback\n");
+            break;
+        } while (1);
 
         rbuf += hdr->buflen;
         rlen -= hdr->buflen;
