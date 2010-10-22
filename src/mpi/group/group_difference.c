@@ -160,6 +160,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 		k++;
 	    }
 	}
+        /* TODO calculate is_local_dense_monotonic */
     }
 
     MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);

@@ -43,6 +43,7 @@ int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
             (*group_ptr)->lrank_to_lpid[i].lrank = i;
             (void) MPID_VCR_Get_lpid( comm_ptr->vcr[i], &lpid );
             (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
+            /* TODO calculate is_local_dense_monotonic */
         }
         (*group_ptr)->size = n;
         (*group_ptr)->rank = MPI_UNDEFINED;

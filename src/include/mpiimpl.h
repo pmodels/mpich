@@ -996,12 +996,26 @@ typedef struct MPID_Group {
     int          idx_of_first_lpid;
     MPID_Group_pmap_t *lrank_to_lpid; /* Array mapping a local rank to local 
 					 process number */
+    int          is_local_dense_monotonic; /* see NOTE-G1 */
+
     /* We may want some additional data for the RMA syncrhonization calls */
   /* Other, device-specific information */
 #ifdef MPID_DEV_GROUP_DECL
     MPID_DEV_GROUP_DECL
 #endif
 } MPID_Group;
+
+/* NOTE-G1: is_local_dense_monotonic will be true iff the group meets the
+ * following criteria:
+ * 1) the lpids are all in the range [0,size-1], i.e. a subset of comm world
+ * 2) the pids are sequentially numbered in increasing order, without any gaps,
+ *    stride, or repetitions
+ *
+ * This additional information allows us to handle the common case (insofar as
+ * group ops are common) for MPI_Group_translate_ranks where group2 is
+ * group_of(MPI_COMM_WORLD), or some simple subset.  This is an important use
+ * case for many MPI tool libraries, such as Scalasca.
+ */
 
 extern MPIU_Object_alloc_t MPID_Group_mem;
 /* Preallocated group objects */

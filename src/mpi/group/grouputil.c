@@ -86,14 +86,19 @@ int MPIR_Group_create( int nproc, MPID_Group **new_group_ptr )
     /* Make sure that there is no question that the list of ranks sorted
        by pids is marked as uninitialized */
     (*new_group_ptr)->idx_of_first_lpid = -1;
+
+    (*new_group_ptr)->is_local_dense_monotonic = FALSE;
     return mpi_errno;
 }
 /*
  * return value is the first index in the list
  *
- * This sorts an lpid array by lpid value, using a simple merge sort
+ * This "sorts" an lpid array by lpid value, using a simple merge sort
  * algorithm.
  *
+ * In actuality, it does not reorder the elements of maparray (these must remain
+ * in group rank order).  Instead it builds the traversal order (in increasing
+ * lpid order) through the maparray given by the "next_lpid" fields.
  */
 static int MPIR_Mergesort_lpidarray( MPID_Group_pmap_t maparray[], int n )
 {
