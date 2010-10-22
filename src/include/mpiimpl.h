@@ -3140,32 +3140,7 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
    file (mpiimpl.h). */
 #include "mpidpost.h"
 
-/* ------------------------------------------------------------------------- */
-/* FIXME: Also for mpicoll.h, in src/mpi/coll?  */
-/* ------------------------------------------------------------------------- */
-/* thresholds to switch between long and short vector algorithms for
-   collective operations */ 
-/* FIXME: Should there be a way to (a) update/compute these at configure time
-   and (b) provide runtime control?  Should these be MPIR_xxx_DEFAULT 
-   instead? */
-#define MPIR_BCAST_SHORT_MSG          12288
-#define MPIR_BCAST_LONG_MSG           524288
-#define MPIR_BCAST_MIN_PROCS          8
-#define MPIR_REDSCAT_COMMUTATIVE_LONG_MSG 524288
-#define MPIR_REDSCAT_NONCOMMUTATIVE_SHORT_MSG 512
-#define MPIR_ALLGATHER_SHORT_MSG      81920
-#define MPIR_ALLGATHER_LONG_MSG       524288
-#define MPIR_REDUCE_SHORT_MSG         2048
-#define MPIR_ALLREDUCE_SHORT_MSG      2048
-#define MPIR_GATHER_VSMALL_MSG        1024
-#define MPIR_SCATTER_SHORT_MSG        2048  /* for intercommunicator scatter */
-#define MPIR_GATHER_SHORT_MSG         2048  /* for intercommunicator scatter */
-#define MPIR_GATHERV_MIN_PROCS        32
-
-/* For pipelined collectives */
-#define MPIR_ALLGATHERV_PIPELINE_MSGSIZE   32768
-
-/* TODO convert all cut-over constants above to parameters */
+/* tunable parameter values */
 #include "mpich_param_vals.h"
 
 /* Tags for point to point operations which implement collective and other

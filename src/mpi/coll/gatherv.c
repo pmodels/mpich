@@ -65,7 +65,6 @@ int MPIR_Gatherv (
     MPI_Aint       extent;
     int            i, reqs;
     int min_procs;
-    char *min_procs_str;
     MPI_Request *reqarray;
     MPI_Status *starray;
     MPIU_CHKLMEM_DECL(2);
@@ -135,20 +134,11 @@ int MPIR_Gatherv (
                irrelevant here. */
             comm_size = comm_ptr->local_size;
 
-	    /* FIXME:  Do not use getenv, particularly each time the
-               routine is called.  Instead, use the parameter routines */
-            min_procs_str = getenv("MPICH2_GATHERV_MIN_PROCS");
-            /* FIXME: atoi does not indicate any errors and should not be
-               used unless there is a separate test for correctness */
-            if (min_procs_str != NULL)
-                min_procs = atoi(min_procs_str);
-            else
-                min_procs = comm_size + 1; /* Disable ssend if env not set */
-
+            min_procs = MPIR_PARAM_GATHERV_INTER_SSEND_MIN_PROCS;
             if (min_procs == -1)
                 min_procs = comm_size + 1; /* Disable ssend */
-            else if (min_procs == 0)
-                min_procs = MPIR_GATHERV_MIN_PROCS; /* Use the default value */
+            else if (min_procs == 0) /* backwards compatibility, use default value */
+                MPIR_PARAM_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS,&min_procs);
 
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 

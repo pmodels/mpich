@@ -60,6 +60,115 @@ parameters:
         algorithms. Setting it to 0 causes all irecvs/isends to be
         posted at once.
 
+    - category    : collective
+      name        : REDSCAT_COMMUTATIVE_LONG_MSG_SIZE
+      type        : int
+      default     : 524288
+      description : >-
+        the long message algorithm will be used if the operation is commutative
+        and the send buffer size is >= this value (in bytes)
+
+    - category    : collective
+      name        : BCAST_MIN_PROCS
+      type        : int
+      default     : 8
+      description : >-
+        the minimum number of processes in a communicator to use a non-binomial
+        broadcast algorithm
+
+    - category    : collective
+      name        : BCAST_SHORT_MSG_SIZE
+      type        : int
+      default     : 12288
+      description : >-
+        the short message algorithm will be used if the send buffer size is <
+        this value (in bytes)
+
+    - category    : collective
+      name        : BCAST_LONG_MSG_SIZE
+      type        : int
+      default     : 524288
+      description : >-
+        the long message algorithm will be used if the send buffer size is >=
+        this value (in bytes)
+
+    - category    : collective
+      name        : ALLGATHER_SHORT_MSG_SIZE
+      type        : int
+      default     : 81920
+      description : >-
+        For MPI_Allgather and MPI_Allgatherv, the short message algorithm will
+        be used if the send buffer size is < this value (in bytes).
+
+    - category    : collective
+      name        : ALLGATHER_LONG_MSG_SIZE
+      type        : int
+      default     : 524288
+      description : >-
+        For MPI_Allgather and MPI_Allgatherv, the long message algorithm will be
+        used if the send buffer size is >= this value (in bytes)
+
+    - category    : collective
+      name        : REDUCE_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        the short message algorithm will be used if the send buffer size is <=
+        this value (in bytes)
+
+    - category    : collective
+      name        : ALLREDUCE_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        the short message algorithm will be used if the send buffer size is <=
+        this value (in bytes)
+
+    - category    : collective
+      name        : GATHER_VSMALL_MSG_SIZE
+      type        : int
+      default     : 1024
+      description : >-
+        use a temporary buffer for intracommunicator MPI_Gather if the send
+        buffer size is < this value (in bytes)
+
+    - category    : collective
+      name        : GATHER_INTER_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        use the short message algorithm for intercommunicator MPI_Gather if the
+        send buffer size is < this value (in bytes)
+
+    - category    : collective
+      name        : GATHERV_INTER_SSEND_MIN_PROCS
+      # backwards compatibility
+      abs-alt-env :
+                    - MPICH2_GATHERV_MIN_PROCS
+      type        : int
+      default     : 32
+      description : >-
+        Use Ssend (synchronous send) for intercommunicator MPI_Gatherv if the
+        "group B" size is >= this value.  Specifying "-1" always avoids using
+        Ssend.  For backwards compatibility, specifying "0" uses the default
+        value.
+
+    - category    : collective
+      name        : SCATTER_INTER_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        use the short message algorithm for intercommunicator MPI_Scatter if the
+        send buffer size is < this value (in bytes)
+
+    - category    : collective
+      name        : ALLGATHERV_PIPELINE_MSG_SIZE
+      type        : int
+      default     : 32768
+      description : >-
+        The smallest message size that will be used for the pipelined, large-message,
+        ring algorithm in the MPI_Allgatherv implementation.
+
     ##############################################################
     # intranode communication parameters
     - category    : intranode

@@ -342,7 +342,7 @@ int MPIR_Allreduce_intra (
            using recursive doubling in that case.) */
 
         if (newrank != -1) {
-            if ((count*type_size <= MPIR_ALLREDUCE_SHORT_MSG) ||
+            if ((count*type_size <= MPIR_PARAM_ALLREDUCE_SHORT_MSG_SIZE) ||
                 (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) ||  
                 (count < pof2)) { /* use recursive doubling */
                 mask = 0x1;
