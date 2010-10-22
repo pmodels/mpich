@@ -4,7 +4,10 @@
 mpi_sources = allreduce.c barrier.c op_create.c op_free.c \
  bcast.c alltoall.c alltoallv.c reduce.c scatter.c \
  gather.c scatterv.c gatherv.c scan.c exscan.c allgather.c allgatherv.c \
- red_scat.c alltoallw.c reduce_local.c op_commutative.c red_scat_block.c
+ red_scat.c alltoallw.c reduce_local.c op_commutative.c red_scat_block.c \
+ iallgather.c iallgatherv.c iallreduce.c ialltoall.c ialltoallv.c ialltoallw.c \
+ ibarrier.c ibcast.c iexscan.c igather.c igatherv.c ired_scat.c \
+ ired_scat_block.c ireduce.c iscan.c iscatter.c iscatterv.c
 
 lib${MPILIBNAME}_a_SOURCES = $(mpi_sources) \
  helper_fns.c opsum.c opmax.c opmin.c opband.c opbor.c opbxor.c \

@@ -1410,6 +1410,42 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_wingetattr:MPIR_WinGetAttr failed
 **mpir_wingetattr %W %d %p %p:MPIR_WinGetAttr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 
+## MPI-3 nonblocking collectives
+**mpix_ibarrier: MPIX_Ibarrier failed
+**mpix_ibarrier %C %p: MPIX_Ibarrier(comm=%C, request=%p)
+**mpix_ibcast: MPIX_Ibcast failed
+**mpix_ibcast %p %d %C %p: MPIX_Ibcast(buffer=%p, count=%d, comm=%C, request=%p)
+**mpix_igather: MPIX_Igather failed
+**mpix_igather %p %d %D %p %d %D %d %C %p: MPIX_Igather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_igatherv: MPIX_Igatherv failed
+**mpix_igatherv %p %d %D %p %p %p %D %d %C %p: MPIX_Igatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_iscatter: MPIX_Iscatter failed
+**mpix_iscatter %p %d %D %p %d %D %d %C %p: MPIX_Iscatter(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_iscatterv: MPIX_Iscatterv failed
+**mpix_iscatterv %p %p %p %D %p %d %D %d %C %p: MPIX_Iscatterv(sendbuf=%p, sendcounts=%p, displs=%p, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_iallgather: MPIX_Iallgather failed
+**mpix_iallgather %p %d %D %p %d %D %C %p: MPIX_Iallgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_iallgatherv: MPIX_Iallgatherv failed
+**mpix_iallgatherv %p %d %D %p %p %p %D %C %p: MPIX_Iallgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ialltoall: MPIX_Ialltoall failed
+**mpix_ialltoall %p %d %D %p %d %D %C %p: MPIX_Ialltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_ialltoallv: MPIX_Ialltoallv failed
+**mpix_ialltoallv %p %p %p %D %p %p %p %D %C %p: MPIX_Ialltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ialltoallw: MPIX_Ialltoallw failed
+**mpix_ialltoallw %p %p %p %p %p %p %p %p %C %p: MPIX_Ialltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C, request=%p)
+**mpix_ireduce: MPIX_Ireduce failed
+**mpix_ireduce %p %p %d %D %O %d %C %p: MPIX_Ireduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, root=%d, comm=%C, request=%p)
+**mpix_iallreduce: MPIX_Iallreduce failed
+**mpix_iallreduce %p %p %d %D %O %C %p: MPIX_Iallreduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_ireduce_scatter: MPIX_Ireduce_scatter failed
+**mpix_ireduce_scatter %p %p %p %D %O %C %p: MPIX_Ireduce_scatter(sendbuf=%p, recvbuf=%p, recvcounts=%p, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_ireduce_scatter_block: MPIX_Ireduce_scatter_block failed
+**mpix_ireduce_scatter_block %p %p %d %D %O %C %p: MPIX_Ireduce_scatter_block(sendbuf=%p, recvbuf=%p, recvcount=%d, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_iscan: MPIX_Iscan failed
+**mpix_iscan %p %p %d %D %O %C %p: MPIX_Iscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_iexscan: MPIX_Iexscan failed
+**mpix_iexscan %p %p %d %D %O %C %p: MPIX_Iexscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
+
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

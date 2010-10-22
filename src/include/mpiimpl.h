@@ -1750,7 +1750,49 @@ typedef struct MPID_Collops {
     int (*Exscan) (void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm * );
     int (*Reduce_scatter_block) (void*, void*, int, MPI_Datatype, MPI_Op, 
                            MPID_Comm *);
-    
+
+    /* MPI-3 nonblocking collectives */
+    int (*Ibarrier)(MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Ibcast)(void *buffer, int count, MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Igather)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                   int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
+                   MPI_Request *request);
+    int (*Igatherv)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                    int *recvcounts, int *displs, MPI_Datatype recvtype, int root,
+                    MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Iscatter)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                    int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
+                    MPI_Request *request);
+    int (*Iscatterv)(void *sendbuf, int *sendcounts, int *displs, MPI_Datatype sendtype,
+                     void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+                     MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Iallgather)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                      int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                      MPI_Request *request);
+    int (*Iallgatherv)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                       int *recvcounts, int *displs, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                       MPI_Request *request);
+    int (*Ialltoall)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                     int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                     MPI_Request *request);
+    int (*Ialltoallv)(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype sendtype,
+                      void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype recvtype,
+                      MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Ialltoallw)(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *sendtypes,
+                      void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype *recvtypes,
+                      MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Ireduce)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                   int root, MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Iallreduce)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                      MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Ireduce_scatter)(void *sendbuf, void *recvbuf, int *recvcounts, MPI_Datatype datatype,
+                           MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Ireduce_scatter_block)(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype,
+                                 MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Iscan)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                 MPID_Comm *comm_ptr, MPI_Request *request);
+    int (*Iexscan)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                   MPID_Comm *comm_ptr, MPI_Request *request);
 } MPID_Collops;
 
 #define MPIR_BARRIER_TAG 1
@@ -3424,6 +3466,26 @@ int MPIR_Comm_is_node_aware( MPID_Comm * );
 int MPIR_Comm_is_node_consecutive( MPID_Comm *);
 
 void MPIR_Free_err_dyncodes( void );
+
+/* begin impl functions for NBC */
+int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ibcast_impl(void *buffer, int count, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Igather_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Igatherv_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Iscatter_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Iscatterv_impl(void *sendbuf, int *sendcounts, int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Iallgather_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Iallgatherv_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ialltoall_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ialltoallv_impl(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype sendtype, void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ialltoallw_impl(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *sendtypes, void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype *recvtypes, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ireduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Iallreduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ireduce_scatter_impl(void *sendbuf, void *recvbuf, int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ireduce_scatter_block_impl(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Iscan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Iexscan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+/* end impl functions for NBC */
 
 
 /* random initializers */
