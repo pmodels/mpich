@@ -83,6 +83,9 @@ int main( int argc, char *argv[] )
 	errs++;
     }
 
+    MPI_Group_free(&gself);
+    MPI_Group_free(&gworld);
+
     MTest_Finalize( errs );
     MPI_Finalize();
 
