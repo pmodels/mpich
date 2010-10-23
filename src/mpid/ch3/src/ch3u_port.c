@@ -335,29 +335,22 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     int mpi_errno=MPI_SUCCESS;
     int j, i, rank, recv_ints[3], send_ints[3], context_id;
     int remote_comm_size=0;
-    MPID_Comm *tmp_comm = NULL, *intercomm;
+    MPID_Comm *tmp_comm = NULL;
     MPIDI_VC_t *new_vc = NULL;
     int sendtag=100, recvtag=100, n_remote_pgs;
     int n_local_pgs=1, local_comm_size;
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
+    MPIR_Context_id_t recvcontext_id = MPIR_INVALID_CONTEXT_ID;
     MPIU_CHKLMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_CONNECT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_COMM_CONNECT);
 
-    /* Create the new intercommunicator here. We need to send the
-       context id to the other side. */
-    /* FIXME: If we fail to connect, someone needs to free this newcomm */
-    mpi_errno = MPIR_Comm_create(newcomm);
-    if (mpi_errno) {
-	MPIU_ERR_POP(mpi_errno);
-    }
-    mpi_errno = MPIR_Get_contextid( comm_ptr, &(*newcomm)->recvcontext_id );
+    /* Get the context ID here because we need to send it to the remote side */
+    mpi_errno = MPIR_Get_contextid( comm_ptr, &recvcontext_id );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    /* FIXME why is this commented out? */
-    /* (*newcomm)->context_id = (*newcomm)->recvcontext_id; */
 
     rank = comm_ptr->rank;
     local_comm_size = comm_ptr->local_size;
@@ -369,7 +362,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 	mpi_errno = MPIDI_Create_inter_root_communicator_connect(
 	    port_name, &tmp_comm, &new_vc);
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIU_ERR_POP_LABEL(mpi_errno, no_port);
 	}
 
 	/* Make an array to translate local ranks to process group index 
@@ -384,25 +377,27 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 	   group id, size and all its KVS values */
 	mpi_errno = ExtractLocalPGInfo( comm_ptr, local_translation, 
 					&pg_list, &n_local_pgs );
-
+        MPIU_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Can't extract local PG info.");
 
 	/* Send the remote root: n_local_pgs, local_comm_size,
            Recv from the remote root: n_remote_pgs, remote_comm_size,
-           context_id for newcomm */
+           recvcontext_id for newcomm */
 
         send_ints[0] = n_local_pgs;
         send_ints[1] = local_comm_size;
-        send_ints[2] = (*newcomm)->recvcontext_id;
+        send_ints[2] = recvcontext_id;
 
 	MPIU_DBG_MSG_FMT(CH3_CONNECT,VERBOSE,(MPIU_DBG_FDEST,
-		  "sending two ints, %d and %d, and receiving 3 ints", 
-                  send_ints[0], send_ints[1]));
+		  "sending 3 ints, %d, %d and %d, and receiving 3 ints", 
+                  send_ints[0], send_ints[1], send_ints[2]));
         mpi_errno = MPIC_Sendrecv(send_ints, 3, MPI_INT, 0,
                                   sendtag++, recv_ints, 3, MPI_INT,
                                   0, recvtag++, tmp_comm->handle,
                                   MPI_STATUS_IGNORE);
         if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+            /* this is a no_port error because we may fail to connect
+               on the send if the port name is invalid */
+	    MPIU_ERR_POP_LABEL(mpi_errno, no_port);
 	}
     }
 
@@ -413,6 +408,9 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 	MPIU_ERR_POP(mpi_errno);
     }
 
+    /* check if root was unable to connect to the port */
+    MPIU_ERR_CHKANDJUMP1(recv_ints[0] == -1, mpi_errno, MPI_ERR_PORT, "**portexist", "**portexist %s", port_name);
+    
     n_remote_pgs     = recv_ints[0];
     remote_comm_size = recv_ints[1];
     context_id	     = recv_ints[2];
@@ -476,12 +474,15 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     }
 #endif
 
-    intercomm                 = *newcomm;
-    intercomm->context_id     = context_id;
-    intercomm->is_low_group   = 1;
+    mpi_errno = MPIR_Comm_create(newcomm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    (*newcomm)->context_id     = context_id;
+    (*newcomm)->recvcontext_id = recvcontext_id;
+    (*newcomm)->is_low_group   = 1;
 
     mpi_errno = SetupNewIntercomm( comm_ptr, remote_comm_size, 
-				   remote_translation, remote_pg, intercomm );
+				   remote_translation, remote_pg, *newcomm );
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -519,7 +520,37 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_COMM_CONNECT);
     return mpi_errno;
  fn_fail:
-    goto fn_exit;
+    {
+        int mpi_errno2 = MPI_SUCCESS;
+        if (new_vc) {
+            mpi_errno2 = MPIDI_CH3_VC_Destroy(new_vc);
+            if (mpi_errno2) MPIU_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**fail");
+        }
+
+        if (recvcontext_id != MPIR_INVALID_CONTEXT_ID)
+            MPIR_Free_contextid(recvcontext_id);
+        
+        if (mpi_errno2) MPIU_ERR_ADD(mpi_errno, mpi_errno2);
+
+        goto fn_exit;
+    }
+ no_port:
+    {
+        int mpi_errno2 = MPI_SUCCESS;
+
+       /* broadcast error notification to other processes */
+        MPIU_Assert(rank == root);
+        recv_ints[0] = -1;
+        recv_ints[1] = -1;
+        recv_ints[2] = -1;
+        MPIU_ERR_SET1(mpi_errno, MPI_ERR_PORT, "**portexist", "**portexist %s", port_name);
+
+        /* notify other processes to return an error */
+        MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"broadcasting 3 ints: error case");
+        mpi_errno2 = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr);
+        if (mpi_errno2) MPIU_ERR_ADD(mpi_errno, mpi_errno2);
+        goto fn_fail;
+    }
 }
 
 /*
