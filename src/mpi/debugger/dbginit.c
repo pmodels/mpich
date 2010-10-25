@@ -365,7 +365,7 @@ void MPIR_Sendq_remember( MPID_Request *req,
     p->context_id = context_id;
     p->next       = MPIR_Sendq_head;
     MPIR_Sendq_head = p;
-    MPIU_THREAD_CS_EXIT(HANDLE,req)
+    MPIU_THREAD_CS_EXIT(HANDLE,req);
 }
 
 void MPIR_Sendq_forget( MPID_Request *req )
