@@ -43,6 +43,9 @@ all-local:
 clean-preamble:
 	${MAKE} cleanlibs
 
+clean-postamble:
+	cd examples && ${MAKE} clean
+
 cleanobjsandlibs:
 	${MAKE} clean && cd test && ${MAKE} clean
 	rm -f lib/newconfig
