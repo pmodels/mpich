@@ -149,12 +149,13 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
     node_id = 0;
     for (block = blocklist_head; block; block = block->next) {
         tmp[i++] = HYDU_strdup("(");
-        tmp[i++] = HYDU_int_to_str(node_id++);
+        tmp[i++] = HYDU_int_to_str(node_id);
         tmp[i++] = HYDU_strdup(",");
         tmp[i++] = HYDU_int_to_str(block->num_blocks);
         tmp[i++] = HYDU_strdup(",");
         tmp[i++] = HYDU_int_to_str(block->block_size);
         tmp[i++] = HYDU_strdup(")");
+        node_id += (block->num_blocks * block->block_size);
         if (block->next)
             tmp[i++] = HYDU_strdup(",");
         HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
