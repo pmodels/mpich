@@ -160,9 +160,14 @@ typedef struct MPID_Nem_nd_conn_hnd_{
      * in a credit packet
      */
     int recv_credits;
+	/* Currently tracking only pending sends...
+	 * FIXME: Can we get this info from send_credits ?
+	 */
+	int npending_ops;
     /* Is a Flow control pkt pending ? */
     int fc_pkt_pending;
-    /* FIXME: Make sure that we only have 1 pending RDMA read */
+
+	/* FIXME: Make sure that we only have 1 pending RDMA read */
     /* FIXME: Move rdma fields to another struct */
     /* Once we finish invalidating a MW - use these credits as send_credits */
 
@@ -184,7 +189,9 @@ typedef struct MPID_Nem_nd_conn_hnd_{
 typedef struct MPID_Nem_nd_block_op_hnd_{
     /* For EX blocking ops */
     MPIU_EXOVERLAPPED ex_ov;
+	MPID_Nem_nd_conn_hnd_t conn_hnd;
 } *MPID_Nem_nd_block_op_hnd_t;
+#define MPID_NEM_ND_BLOCK_OP_HND_INVALID NULL
 #define MPID_NEM_ND_BLOCK_OP_GET_OVERLAPPED_PTR(hnd) (MPIU_EX_GET_OVERLAPPED_PTR(&(hnd->ex_ov)))
 
 #define MPID_NEM_ND_CONN_HND_INVALID    NULL
