@@ -73,9 +73,6 @@ static int init_mad( MPIDI_PG_t *pg_p )
     if(ret != NM_ESUCCESS) {
 	fprintf(stdout,"nm_sr_init return err = %d\n", ret);
     }
-
-   ret = nm_sr_monitor(mpid_nem_newmad_session, NM_SR_EVENT_RECV_UNEXPECTED,&MPID_nem_newmad_get_adi_msg);
-   MPIU_Assert( ret == NM_ESUCCESS);
    
  fn_exit:
     return mpi_errno;

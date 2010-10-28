@@ -22,7 +22,7 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_ISENDCONTIG);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_ISENDCONTIG);    
 
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "newmad_iSendContig");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
@@ -69,7 +69,7 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_ISTARTCONTIGMSG);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_ISTARTCONTIGMSG);    
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "newmad_iSendContig");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
@@ -128,7 +128,7 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_SENDNONCONTIGMSG);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_SENDNONCONTIGMSG);    
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));   
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));   
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "MPID_nem_newmad_iSendNoncontig");    
 
     MPIDI_Datatype_get_info(sreq->dev.user_count,sreq->dev.datatype, dt_contig, data_sz, dt_ptr,dt_true_lb);
