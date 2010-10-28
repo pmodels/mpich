@@ -240,10 +240,16 @@ MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
    VC_FIELD(vc, remote_connected) = 0;
 #else
    {
-       char business_card[MPID_NEM_MAX_NETMOD_STRING_LEN];
-       int ret;
-       
-       mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_NETMOD_STRING_LEN, vc->pg);
+       char *business_card;
+       int   val_max_sz;
+       int   ret;
+#ifdef USE_PMI2_API
+       val_max_sz = PMI2_MAX_VALLEN;
+#else
+       mpi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+#endif 
+       business_card = (char *)MPIU_Malloc(val_max_sz); 
+       mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card,val_max_sz, vc->pg);
        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
        
        mpi_errno = MPID_nem_mx_get_from_bc (business_card, &VC_FIELD(vc, remote_endpoint_id), &VC_FIELD(vc, remote_nic_id));
