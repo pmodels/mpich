@@ -15,7 +15,7 @@ int MPID_nem_mx_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI
 {
     int mpi_errno = MPI_SUCCESS;
     mx_request_t  mx_request; 
-    mx_segment_t  mx_iov[3];
+    mx_segment_t  mx_iov[2];
     uint32_t      num_seg = 1;
     mx_return_t   ret;
     uint64_t      match_info = 0;        
