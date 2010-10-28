@@ -798,9 +798,16 @@ int MPIDI_CH3I_Progress_init(void)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_finalize(void)
 {
+    qn_ent_t *ent;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
+
+    while(qn_head) {
+        ent = qn_head->next;
+        MPIU_Free(qn_head);
+        qn_head = ent;
+    }
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
     return MPI_SUCCESS;

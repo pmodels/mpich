@@ -16,6 +16,10 @@ int MPIDI_CH3_Finalize(void)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_FINALIZE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_FINALIZE);
+
+    mpi_errno = MPIDI_CH3I_Progress_finalize();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     mpi_errno = MPID_nem_finalize();
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
