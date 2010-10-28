@@ -23,10 +23,10 @@ static mpid_nem_mx_hash_t *mpid_nem_mx_asreqs = NULL;
     s->mx_req_ptr = (_mx_req);						       \
     HASH_ADD(hh1, mpid_nem_mx_asreqs, mpid_req_ptr, sizeof(MPID_Request*), s); \
 }while(0)
-#define MPID_NEM_MX_GET_REQ_FROM_HASH(_mpi_req_ptr,_mx_req) do{		                                 \
-    mpid_nem_mx_hash_t *s;						                                 \
-    HASH_FIND(hh1, mpid_nem_mx_asreqs, &(_mpi_req_ptr), sizeof(MPID_Request*), s);                       \
-    if(s){HASH_DELETE(hh1, mpid_nem_mx_asreqs, s); (_mx_req) = s->mx_req_ptr; } else {(_mx_req) = NULL;} \
+#define MPID_NEM_MX_GET_REQ_FROM_HASH(_mpi_req_ptr,_mx_req) do{		                                              \
+    mpid_nem_mx_hash_t *s;						                                              \
+    HASH_FIND(hh1, mpid_nem_mx_asreqs, &(_mpi_req_ptr), sizeof(MPID_Request*), s);                                    \
+    if(s){HASH_DELETE(hh1, mpid_nem_mx_asreqs, s); (_mx_req) = s->mx_req_ptr; MPIU_Free(s);} else {(_mx_req) = NULL;} \
 }while(0)
 
 static mpid_nem_mx_hash_t *mpid_nem_mx_connreqs ATTRIBUTE((unused, used))= NULL; 
