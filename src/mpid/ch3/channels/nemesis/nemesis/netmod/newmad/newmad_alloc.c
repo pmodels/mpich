@@ -30,7 +30,8 @@ int MPID_nem_newmad_internal_req_queue_init(void)
 	curr_req->next = next_req;
 	curr_req = next_req;
     }
-
+   curr_req->next = NULL;
+   
  fn_exit:
     return mpi_errno;
  fn_fail: ATTRIBUTE((unused))
