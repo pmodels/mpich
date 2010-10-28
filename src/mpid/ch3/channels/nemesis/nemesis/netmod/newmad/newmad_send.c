@@ -150,8 +150,8 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
 	MPID_Segment_pack(sreq->dev.segment_ptr,sreq->dev.segment_first, &last,(char *)(sreq->dev.tmpbuf));
 	MPIU_Assert(last == sreq->dev.segment_size);
 	newmad_iov[1].iov_base = (char *)(sreq->dev.tmpbuf);
-	newlad_iov[1].iov_len = (uint32_t)last;
-	num_seg++;
+	newmad_iov[1].iov_len = (uint32_t)last;
+	num_iov++;
     }
 
     REQ_FIELD(sreq,iov) = newmad_iov;        
@@ -196,7 +196,6 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
     int            dt_contig;
     MPIDI_msg_sz_t data_sz;
     MPI_Aint       dt_true_lb;
-    int            index;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_DIRECTSEND);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_DIRECTSEND);
