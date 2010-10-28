@@ -32,6 +32,9 @@ int MPID_nem_choose_netmod(void)
         /* netmod not specified, using the default */
         MPID_nem_netmod_func = MPID_nem_netmod_funcs[0];
         MPID_nem_netmod_id = 0;
+#ifdef ENABLE_COMM_OVERRIDES
+        MPIDI_Anysource_iprobe_fn = MPID_nem_netmod_func->anysource_iprobe;
+#endif
         goto fn_exit;
     }
 
