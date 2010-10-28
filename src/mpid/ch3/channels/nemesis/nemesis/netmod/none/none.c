@@ -63,5 +63,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_none_funcs = {
     nm_connect_to_root,
     nm_vc_init,
     nm_vc_destroy,
-    nm_vc_terminate
+    nm_vc_terminate,
+    NULL /* anysource iprobe */
 };

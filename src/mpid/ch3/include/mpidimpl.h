@@ -684,6 +684,9 @@ typedef struct MPIDI_Comm_ops
 		  int *flag, MPI_Status *status);
    
 } MPIDI_Comm_ops_t;
+
+extern int (*MPIDI_Anysource_iprobe_fn)(int tag, MPID_Comm * comm, int context_offset, int *flag,
+                                        MPI_Status * status);
 #endif
 
 typedef struct MPIDI_VC

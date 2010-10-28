@@ -17,7 +17,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_newmad_funcs = {
     MPID_nem_newmad_connect_to_root,
     MPID_nem_newmad_vc_init,
     MPID_nem_newmad_vc_destroy,
-    MPID_nem_newmad_vc_terminate
+    MPID_nem_newmad_vc_terminate,
+    MPID_nem_newmad_anysource_iprobe
 };
 
 static MPIDI_Comm_ops_t comm_ops = {
