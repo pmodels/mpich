@@ -142,7 +142,7 @@ MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
        fprintf(stdout,"===  Req netmod area is %4i | Nmad struct size is %4i   ===\n", 
 	       MPID_NEM_REQ_NETMOD_AREA_LEN, sizeof(MPID_nem_newmad_req_area));
        fprintf(stdout,"===========================================================\n");
-       MPIU_Abort();    
+       /* MPIU_Abort(); */
    }
 
    mpid_nem_newmad_myrank = pg_rank;
