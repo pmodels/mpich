@@ -8,6 +8,7 @@
 #include "pmip.h"
 #include "bsci.h"
 #include "demux.h"
+#include "hydt_ftb.h"
 
 static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {

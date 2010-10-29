@@ -9,6 +9,7 @@
 #include "pmip.h"
 #include "demux.h"
 #include "bind.h"
+#include "hydt_ftb.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
@@ -190,6 +191,9 @@ int main(int argc, char **argv)
     status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
+    status = HYDT_ftb_init();
+    HYDU_ERR_POP(status, "unable to initialize FTB\n");
+
     /* See if HYDRA_CONTROL_FD is set before trying to connect upstream */
     ret = MPL_env2int("HYDRA_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
     if (ret < 0) {
@@ -281,6 +285,9 @@ int main(int argc, char **argv)
 
     status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
+
+    status = HYDT_ftb_finalize();
+    HYDU_ERR_POP(status, "unable to initialize FTB\n");
 
     /* cleanup the params structure */
     cleanup_params();

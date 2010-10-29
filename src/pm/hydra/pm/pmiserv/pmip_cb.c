@@ -11,6 +11,7 @@
 #include "ckpoint.h"
 #include "demux.h"
 #include "bind.h"
+#include "hydt_ftb.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
@@ -456,6 +457,7 @@ static HYD_status launch_procs(void)
     int *pmi_ranks;
     int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
     struct HYDT_bind_cpuset_t cpuset;
+    char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -535,7 +537,14 @@ static HYD_status launch_procs(void)
                                       HYD_pmcd_pmip.downstream.out,
                                       HYD_pmcd_pmip.downstream.err,
                                       HYD_pmcd_pmip.downstream.pid);
-        HYDU_ERR_POP(status, "checkpoint restart failure\n");
+        MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA, "pgid:%d ranks:%d-%d",
+                     HYD_pmcd_pmip.local.pgid, pmi_ranks[0],
+                     pmi_ranks[HYD_pmcd_pmip.local.proxy_process_count - 1]);
+        if (status) {
+            status = HYDT_ftb_publish("FTB_MPI_CKPOINT_FAILED", ftb_event_payload);
+            HYDU_ERR_POP(status, "checkpoint restart FTB publishing failure\n");
+        }
+        status = HYDT_ftb_publish("FTB_MPI_CKPOINTED", ftb_event_payload);
         goto fn_spawn_complete;
     }
 
