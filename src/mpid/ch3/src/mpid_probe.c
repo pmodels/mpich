@@ -55,11 +55,21 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
             MPIDI_VC_t * vc;
             MPIDI_Comm_get_vc_set_active(comm, source, &vc);
             
-            if (vc->comm_ops && vc->comm_ops->probe) {
-                /* netmod has overridden probe */
-                mpi_errno = vc->comm_ops->probe(vc, source, tag, comm, context_offset, status);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                goto fn_exit;
+            if (vc->comm_ops && vc->comm_ops->iprobe) {
+                /* netmod has overridden iprobe */
+                do {
+                    int found;
+                    
+                    mpi_errno = vc->comm_ops->iprobe(vc, source, tag, comm, context_offset, &found,
+                                                     status);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (found) break;
+                    
+                    MPIU_THREAD_CS_YIELD(ALLFUNC,);
+                    
+                    mpi_errno = MPIDI_CH3_Progress_test();
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                } while (1);
             }
             /* fall-through to shm case */
         }
