@@ -43,6 +43,8 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
                 mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 if (found) break;
+
+                MPIU_THREAD_CS_YIELD(ALLFUNC,);
                 
                 mpi_errno = MPIDI_CH3_Progress_test();
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
