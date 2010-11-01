@@ -1729,6 +1729,15 @@ elif test "$enable_f77" = "yes" ; then
     PAC_PROG_F77
 fi
 
+if test "$enable_f77" = "yes" -a "$F77" = "" ; then
+   # No Fortran 77 compiler found; abort
+   AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
+   build any Fortran programs, you can disable Fortran support using
+   --disable-f77 and --disable-fc. If you do want to build Fortran
+   programs, you need to install a Fortran compiler such as gfortran
+   or ifort before you can proceed.])
+fi
+
 if test "$enable_f77" = yes ; then
     # Check if $MPI_DEFAULT_FOPTS is valid with $F77
     if test "$enable_default_optimize" = "yes" \
@@ -1904,7 +1913,17 @@ if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
     elif test "$pac_cv_prog_fc_works" = no; then
         AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
     fi
+
+    if test "$enable_fc" = "yes" -a "$FC" = "" ; then
+       # No Fortran 90 compiler found; abort
+       AC_MSG_ERROR([No Fortran 90 compiler found. If you don't need
+       to build any Fortran 90 programs, you can disable Fortran 90
+       support using --disable-fc. If you do want to build Fortran 90
+       programs, you need to install a Fortran 90 compiler such as
+       gfortran or ifort before you can proceed.])
+    fi
 fi
+
 if test "$enable_fc" = "yes" -a "$enable_f77" != "yes" ; then
    # Fortran 90 support requires compatible Fortran 77 support
    AC_MSG_ERROR([
