@@ -274,6 +274,8 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
    mpi_errno = MPID_nem_newmad_get_from_bc (business_card, VC_FIELD(vc, hostname), VC_FIELD(vc, url));
    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
+   MPIU_Free(business_card);
+   
    ret = nm_session_connect(mpid_nem_newmad_session, &(VC_FIELD(vc,p_gate)), VC_FIELD(vc, url));
    if (ret != NM_ESUCCESS) fprintf(stdout,"nm_session_connect returned ret = %d\n", ret);
 
