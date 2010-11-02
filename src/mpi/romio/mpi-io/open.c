@@ -23,6 +23,10 @@
 #include "mpioprof.h"
 #endif
 
+/* for user-definde reduce operator */
+#include "adio_extern.h"
+
+
 extern int ADIO_Init_keyval;
 
 /*@
@@ -42,7 +46,7 @@ Output Parameters:
 int MPI_File_open(MPI_Comm comm, char *filename, int amode, 
                   MPI_Info info, MPI_File *fh)
 {
-    int error_code, file_system, flag, /* tmp_amode, */rank;
+    int error_code, file_system, flag, tmp_amode=0, rank;
     char *tmp;
     MPI_Comm dupcomm;
     ADIOI_Fns *fsops;
@@ -100,24 +104,23 @@ int MPI_File_open(MPI_Comm comm, char *filename, int amode,
 					  "**fileamodeseq", 0);
 	goto fn_fail;
     }
-    /* --END ERROR HANDLING-- */
 
-/* check if amode is the same on all processes */
     MPI_Comm_dup(comm, &dupcomm);
-
-/*  
-    Removed this check because broadcast is too expensive. 
-    tmp_amode = amode;
-    MPI_Bcast(&tmp_amode, 1, MPI_INT, 0, dupcomm);
-    if (amode != tmp_amode) {
-	FPRINTF(stderr, "MPI_File_open: amode must be the same on all processes\n");
-	MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-*/
 
 /* check if ADIO has been initialized. If not, initialize it */
     MPIR_MPIOInit(&error_code);
     if (error_code != MPI_SUCCESS) goto fn_fail;
+
+/* check if amode is the same on all processes */
+    MPI_Allreduce(&amode, &tmp_amode, 1, MPI_INT, ADIO_same_amode, dupcomm);
+
+    if (tmp_amode == ADIO_AMODE_NOMATCH) {
+	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+			myname, __LINE__, MPI_ERR_AMODE,
+			"**fileamodediff", 0);
+	goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
 
     file_system = -1;
 

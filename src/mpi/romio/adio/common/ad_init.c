@@ -23,6 +23,8 @@ int MPIR_Infotable_ptr = 0, MPIR_Infotable_max = 0;
 
 MPI_Info ADIOI_syshints = MPI_INFO_NULL;
 
+MPI_Op ADIO_same_amode=MPI_OP_NULL;
+
 #if defined(ROMIO_XFS) || defined(ROMIO_LUSTRE)
 int ADIOI_Direct_read = 0, ADIOI_Direct_write = 0;
 #endif
@@ -30,6 +32,20 @@ int ADIOI_Direct_read = 0, ADIOI_Direct_write = 0;
 int ADIO_Init_keyval=MPI_KEYVAL_INVALID;
 
 MPI_Errhandler ADIOI_DFLT_ERR_HANDLER = MPI_ERRORS_RETURN;
+
+
+static void my_consensus(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype)
+{
+    int i, *in, *inout;
+    in = (int*)invec;
+    inout = (int*)inoutvec;
+
+    for (i=0; i< *len; i++) {
+        if (in[i] != inout[i])
+	    inout[i] = ADIO_AMODE_NOMATCH;
+    }
+    return;
+}
 
 void ADIO_Init(int *argc, char ***argv, int *error_code)
 {
@@ -111,4 +127,5 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
 #endif
 
     *error_code = MPI_SUCCESS;
+    MPI_Op_create(my_consensus, 1, &ADIO_same_amode);
 }
