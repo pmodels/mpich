@@ -22,6 +22,8 @@
 #undef MPI_Allreduce
 #define MPI_Allreduce PMPI_Allreduce
 
+/* The order of entries in this table must match the definitions in 
+   mpi.h.in */
 MPI_User_function *MPIR_Op_table[] = { MPIR_MAXF, MPIR_MINF, MPIR_SUM,
                                        MPIR_PROD, MPIR_LAND,
                                        MPIR_BAND, MPIR_LOR, MPIR_BOR,
