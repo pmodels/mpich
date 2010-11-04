@@ -74,6 +74,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
                     
  		    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL, "Connection closed prematurely.");
 
+                    MPIDU_Ftb_publish_vc(MPIDU_FTB_EV_UNREACHABLE, vc);
                     MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
 
                     break;
@@ -97,6 +98,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 
  		    MPIU_DBG_MSG_D(CH3_DISCONNECT,TYPICAL, "Connection closed prematurely during close protocol.  "
                                    "Outstanding close operations = %d", MPIDI_Outstanding_close_ops);
+                    MPIDU_Ftb_publish_vc(MPIDU_FTB_EV_UNREACHABLE, vc);
                     MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
                     
 		    /* MT: this is not thread safe */
