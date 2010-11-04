@@ -33,11 +33,12 @@ MPIDI_Irecv_rsm(void          * buf,
   if (rreq == NULL)
     {
       *request = rreq;
+      /* MPI_ERR_NO_MEM is specific to MPI_ALLOC_MEM */
       mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                        MPIR_ERR_FATAL,
                                        func,
                                        __LINE__,
-                                       MPI_ERR_NO_MEM,
+                                       MPI_ERR_OTHER,
                                        "**nomem",
                                        0);
       return mpi_errno;
