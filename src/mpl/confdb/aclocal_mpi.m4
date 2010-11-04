@@ -301,22 +301,22 @@ case $ac_mpi_type in
 
 	ibmmpi)
 	AC_CHECK_PROGS(MPCC,mpcc)
-	AC_CHECK_PROGS(MPXLF,mpxlf)
+	AC_CHECK_PROGS(MPXLF,mpxlf mpfort)
 	if test -z "$MPCC" -o -z "$MPXLF" ; then
-	    AC_MSG_ERROR([Could not find IBM MPI compilation scripts.  Either mpcc or mpxlf is missing])
+	    AC_MSG_ERROR([Could not find IBM MPI compilation scripts.  Either mpcc or mpxlf/mpfort is missing])
 	fi
 	if test -z "$TESTCC" ; then TESTCC=${CC-xlC} ; fi
 	if test -z "$TESTF77" ; then TESTF77=${F77-xlf}; fi
-	CC=mpcc; F77=mpxlf
+	CC=mpcc; F77=$MPXLF
 	# There is no mpxlf90, but the options langlvl and free can
 	# select the Fortran 90 version of xlf
 	if test "$enable_f90" != no ; then
-	    AC_CHECK_PROGS(MPIXLF90,mpxlf90)
+	    AC_CHECK_PROGS(MPIXLF90,mpxlf90 mpfort)
 	    if test -z "$TESTFC" ; then TESTFC=${FC-xlf90}; fi
             if test "X$MPIXLF90" != "X" ; then 
-	        FC="mpxlf90"
+	        FC="$MPIXLF90"
 	    else
-	    	FC="mpxlf -qlanglvl=90ext -qfree=f90"
+	    	FC="$MPXLF -qlanglvl=90ext -qfree=f90"
 	    fi
 	fi
 	MPILIBNAME=""
