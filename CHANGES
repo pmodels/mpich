@@ -1,11 +1,36 @@
 ===============================================================================
-                               Changes in 1.3.1
+                               Changes in 1.4
 ===============================================================================
 
  # MPI-3: the new MPI-3 nonblocking collectives functions are now available for
    device-level experimentation as "MPIX_" functions (e.g. "MPIX_Ibcast").
    Calls to these functions will fail at runtime unless the device provides an
    override implementation.
+
+
+===============================================================================
+                               Changes in 1.3.1rc1
+===============================================================================
+
+ # OVERALL: MPICH2 is now fully compliant with the CIFTS FTB standard
+   MPI events (based on the draft standard).
+
+ # OVERALL: Major improvements to RMA performance for long lists of
+   RMA operations.
+
+ # OVERALL: Performance improvements for Group_translate_ranks.
+
+ # ROMIO: PVFS error codes are now mapped to MPI error codes.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r7350:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3.1rc1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3.1rc1?action=follow_copy&rev=HEAD&stop_rev=7350&mode=follow_copy
+
 
 ===============================================================================
                                Changes in 1.3
