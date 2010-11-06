@@ -28,6 +28,11 @@ typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
 /* for keeping track of RMA ops, which will be executed at the next sync call */
 typedef struct MPIDI_RMA_ops {
     struct MPIDI_RMA_ops *next;  /* pointer to next element in list */
+    /* FIXME: It would be better to setup the packet that will be sent, at 
+       least in most cases (if, as a result of the sync/ops/sync sequence,
+       a different packet type is needed, it can be extracted from the 
+       information otherwise stored). */
+    /* FIXME: Use enum for RMA op type? */
     int type;  /* MPIDI_RMA_PUT, MPID_REQUEST_GET,
 		  MPIDI_RMA_ACCUMULATE, MPIDI_RMA_LOCK */
     void *origin_addr;
@@ -39,6 +44,10 @@ typedef struct MPIDI_RMA_ops {
     MPI_Datatype target_datatype;
     MPI_Op op;  /* for accumulate */
     int lock_type;  /* for win_lock */
+    /* Used to complete operations */
+    struct MPID_Request *request;
+    MPIDI_RMA_dtype_info dtype_info;
+    void *dataloop;
 } MPIDI_RMA_ops;
 
 typedef struct MPIDI_PT_single_op {
@@ -59,5 +68,4 @@ typedef struct MPIDI_Win_lock_queue {
     MPIDI_VC_t * vc;
     struct MPIDI_PT_single_op *pt_single_op;  /* to store info for lock-put-unlock optimization */
 } MPIDI_Win_lock_queue;
-
 #endif

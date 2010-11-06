@@ -117,7 +117,7 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 						  MPI_ERR_OTHER, 
 						  "**locktype", 0 );
 
-            MPID_Comm_get_ptr( win_ptr->comm, comm_ptr );
+	    comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
 
             if (mpi_errno) goto fn_fail;

@@ -1497,7 +1497,9 @@ typedef struct MPID_Win {
     MPID_Attribute *attributes;
     MPID_Group *start_group_ptr; /* group passed in MPI_Win_start */
     int start_assert;            /* assert passed to MPI_Win_start */
-    MPI_Comm    comm;         /* communicator of window (dup) */
+    MPID_Comm *comm_ptr;         /* Pointer to comm of window (dup) */
+    int         myrank;          /* Rank of this process in comm (used to 
+				    detect operations on self) */
 #ifdef USE_THREADED_WINDOW_CODE
     /* These were causing compilation errors.  We need to figure out how to
        integrate threads into MPICH2 before including these fields. */
@@ -1959,6 +1961,9 @@ extern MPICH_PerProcess_t MPIR_Process;
 /* Definitions for error handling and reporting */
 #include "mpierror.h"
 #include "mpierrs.h"
+
+/* Definitions for instrumentation (currently used within RMA code) */
+#include "mpiinstr.h"
 
 /* FIXME: This routine is only used within mpi/src/err/errutil.c and 
    smpd.  We may not want to export it.  */

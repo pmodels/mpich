@@ -630,7 +630,7 @@ static int do_accumulate_op(MPID_Request *rreq)
     if (HANDLE_GET_KIND(rreq->dev.op) == HANDLE_KIND_BUILTIN)
     {
         /* get the function by indexing into the op table */
-        uop = MPIR_Op_table[(rreq->dev.op)%16 - 1];
+        uop = MPIR_Op_table[((rreq->dev.op)&0xf) - 1];
     }
     else
     {
@@ -956,7 +956,7 @@ static int do_simple_accumulate(MPIDI_PT_single_op *single_op)
     if (HANDLE_GET_KIND(single_op->op) == HANDLE_KIND_BUILTIN)
     {
         /* get the function by indexing into the op table */
-        uop = MPIR_Op_table[(single_op->op)%16 - 1];
+        uop = MPIR_Op_table[((single_op->op)&0xf) - 1];
     }
     else
     {

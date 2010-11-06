@@ -1094,10 +1094,16 @@ typedef struct MPIDI_RMA_Ops {
 #define MPIDI_RMAFNS_VERSION 1
 int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns * );
 
+/* FIXME: These are specific to the RMA code and should be in the RMA 
+   header file. */
 #define MPIDI_RMA_PUT 23
 #define MPIDI_RMA_GET 24
 #define MPIDI_RMA_ACCUMULATE 25
 #define MPIDI_RMA_LOCK 26
+
+/* Special case RMA operations */
+#define MPIDI_RMA_ACC_CONTIG 27
+
 #define MPIDI_RMA_DATATYPE_BASIC 50
 #define MPIDI_RMA_DATATYPE_DERIVED 51
 
@@ -1703,6 +1709,8 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 			      MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
+				     MPIDI_msg_sz_t *, MPID_Request ** );
+int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 				     MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 			      MPIDI_msg_sz_t *, MPID_Request ** );
