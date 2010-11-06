@@ -2446,7 +2446,7 @@ public:
     case "$ENABLE_SHLIB" in
         gcc-osx|osx-gcc)
         # Assume that the compiler is g++ if gcc style shared libraries chosen
-        CXX_SHL="$CXX -fPIC"
+        CXX_SHL="$CXX -fPIC -dynamiclib -undefined suppress -single_module -flat_namespace"
         CXX_LINKPATH_SHL=""
 	;;
 	gcc)
