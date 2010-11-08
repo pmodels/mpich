@@ -68,4 +68,8 @@ typedef struct MPIDI_Win_lock_queue {
     MPIDI_VC_t * vc;
     struct MPIDI_PT_single_op *pt_single_op;  /* to store info for lock-put-unlock optimization */
 } MPIDI_Win_lock_queue;
+
+/* Routine use to tune RMA optimizations */
+void MPIDI_CH3_RMA_SetAccImmed( int flag );
+
 #endif

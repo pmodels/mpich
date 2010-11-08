@@ -228,7 +228,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_INCR(winfence_issue,0,total_op_count);
 	MPIU_INSTR_DURATION_MAX(winfence_issue,1,total_op_count);
 	i = 0;
-	curr_ptr = win_ptr->rma_ops_list_head;
+	curr_ptr    = win_ptr->rma_ops_list_head;
 	prevNextPtr = &win_ptr->rma_ops_list_head;
 	while (curr_ptr != NULL)
 	{
@@ -259,6 +259,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		mpi_errno = MPIDI_CH3I_Send_contig_acc_msg(curr_ptr, win_ptr,
 				   source_win_handle, target_win_handle, 
 				   &curr_ptr->request );
+		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 		break;
 	    case (MPIDI_RMA_GET):
 		mpi_errno = MPIDI_CH3I_Recv_rma_msg(curr_ptr, win_ptr,
@@ -284,8 +285,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		curr_ptr     = tmpptr;
 	    }
 	    else  {
-		curr_ptr    = curr_ptr->next;
 		prevNextPtr = &curr_ptr->next;
+		curr_ptr    = curr_ptr->next;
 		/* FIXME: We could at least occassionally try to wait
 		   on completion of the pending send requests rather than
 		   focus on filling the queues.  */
@@ -1322,7 +1323,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
         
     i = 0;
     prevNextPtr = &win_ptr->rma_ops_list_head;
-    curr_ptr = win_ptr->rma_ops_list_head;
+    curr_ptr    = win_ptr->rma_ops_list_head;
     while (curr_ptr != NULL)
     {
 	/* The completion counter at the target is decremented only on 
@@ -1352,6 +1353,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    mpi_errno = MPIDI_CH3I_Send_contig_acc_msg(curr_ptr, win_ptr,
 				       source_win_handle, target_win_handle, 
 				       &curr_ptr->request );
+	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	    break;
 	case (MPIDI_RMA_GET):
 	    mpi_errno = MPIDI_CH3I_Recv_rma_msg(curr_ptr, win_ptr,
@@ -1377,8 +1379,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    curr_ptr     = tmpptr;
 	}
 	else  {
-	    curr_ptr    = curr_ptr->next;
 	    prevNextPtr = &curr_ptr->next;
+	    curr_ptr    = curr_ptr->next;
 	}
     }
     MPIU_INSTR_DURATION_END(wincomplete_issue);
@@ -1427,7 +1429,9 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 		/* Its hard to use the automatic allocator here, as those 
 		   macros are optimized for a known maximum number of items. */
 		MPIDI_RMA_ops *new_ptr;
+		MPIU_INSTR_DURATION_START(rmaqueue_alloc);
 		new_ptr = (MPIDI_RMA_ops *)MPIU_Malloc(sizeof(MPIDI_RMA_ops) );
+		MPIU_INSTR_DURATION_END(rmaqueue_alloc);
 		/* --BEGIN ERROR HANDLING-- */
 		if (!new_ptr) {
 		    MPIU_CHKMEM_SETERR(mpi_errno,sizeof(MPIDI_RMA_ops),
@@ -1986,6 +1990,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 	    mpi_errno = MPIDI_CH3I_Send_contig_acc_msg(curr_ptr, win_ptr,
 				       source_win_handle, target_win_handle, 
 				       &curr_ptr->request );
+	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	    break;
         case (MPIDI_RMA_GET):
             mpi_errno = MPIDI_CH3I_Recv_rma_msg(curr_ptr, win_ptr,
@@ -2010,8 +2015,8 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 	    curr_ptr     = tmpptr;
 	}
 	else  {
-	    curr_ptr    = curr_ptr->next;
 	    prevNextPtr = &curr_ptr->next;
+	    curr_ptr    = curr_ptr->next;
 	}
     }
     MPIU_INSTR_DURATION_END(winunlock_issue);
