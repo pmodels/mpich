@@ -6,9 +6,6 @@
 
 #include "newmad_impl.h"
 
-#define MPIDI_CH3I_HOSTNAME_KEY "hostname_id"
-#define MPIDI_CH3I_URL_KEY      "url_id"
-
 MPID_nem_netmod_funcs_t MPIDI_nem_newmad_funcs = {
     MPID_nem_newmad_init,
     MPID_nem_newmad_finalize,
@@ -44,6 +41,7 @@ static MPIDI_Comm_ops_t comm_ops = {
     MPID_nem_newmad_iprobe /* iprobe */
 };
 
+#define MPIDI_CH3I_URL_KEY "url_id"
 
 static int         mpid_nem_newmad_myrank;
 static const char *label="mpich2";
@@ -112,7 +110,7 @@ MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
 {
    int mpi_errno = MPI_SUCCESS ;
    int index;
-
+   
    /*
    fprintf(stdout,"Size of MPID_nem_mad_module_vc_area_internal_t : %i | size of nm_sr_request_t :%i | Size of req_area : %i\n",
          sizeof(MPID_nem_newmad_vc_area_internal_t),sizeof(nm_sr_request_t), sizeof(MPID_nem_newmad_req_area));
@@ -123,17 +121,16 @@ MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
    MPIU_Assert( sizeof(MPID_nem_newmad_req_area) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
    */
    
-   /*
-   if (sizeof(MPID_nem_newmad_vc_area_internal_t) > MPID_NEM_VC_NETMOD_AREA_LEN)
+
+   if (sizeof(MPID_nem_newmad_vc_area) > MPID_NEM_VC_NETMOD_AREA_LEN)
    {
        fprintf(stdout,"===========================================================\n");
        fprintf(stdout,"===  Error : Newmad data structure size is too long     ===\n");
        fprintf(stdout,"===  VC netmod area is %4i | Nmad struct size is %4i    ===\n", 
 	       MPID_NEM_VC_NETMOD_AREA_LEN, sizeof(MPID_nem_newmad_vc_area_internal_t));
        fprintf(stdout,"===========================================================\n");
-       MPIU_Abort();    
+       exit(0);
    }
-   */
    
    if (sizeof(MPID_nem_newmad_req_area) > MPID_NEM_REQ_NETMOD_AREA_LEN)
    {
@@ -142,7 +139,7 @@ MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
        fprintf(stdout,"===  Req netmod area is %4i | Nmad struct size is %4i   ===\n", 
 	       MPID_NEM_REQ_NETMOD_AREA_LEN, sizeof(MPID_nem_newmad_req_area));
        fprintf(stdout,"===========================================================\n");
-       /* MPIU_Abort(); */
+       exit(0);
    }
 
    mpid_nem_newmad_myrank = pg_rank;
@@ -172,15 +169,6 @@ MPID_nem_newmad_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPIU_STR_SUCCESS;
-    char name[MPID_NEM_NMAD_MAX_SIZE];
-    
-    gethostname(name,MPID_NEM_NMAD_MAX_SIZE);
-    
-    str_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_HOSTNAME_KEY, name, strlen(name));
-    if (str_errno) {
-        MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
-    }
     
     str_errno = MPIU_Str_add_binary_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_URL_KEY, local_session_url, strlen(local_session_url));
     if (str_errno) {
@@ -199,19 +187,11 @@ MPID_nem_newmad_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_newmad_get_from_bc (const char *business_card, char *hostname, char *url)
+MPID_nem_newmad_get_from_bc (const char *business_card, char *url)
 {
    int mpi_errno = MPI_SUCCESS;
    int str_errno = MPIU_STR_SUCCESS;
    int len;
-   
-   str_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_HOSTNAME_KEY, hostname,
-					MPID_NEM_NMAD_MAX_SIZE, &len);
-   if (str_errno != MPIU_STR_SUCCESS)
-   {	
-      /* FIXME: create a real error string for this */
-      MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_hostd");
-   }
    
    str_errno = MPIU_Str_get_binary_arg (business_card, MPIDI_CH3I_URL_KEY, url,
 					MPID_NEM_NMAD_MAX_SIZE, &len);
@@ -263,15 +243,10 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card,val_max_sz,vc->pg);
    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
    
-   (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area) =
-     (MPID_nem_newmad_vc_area_internal_t *)MPIU_Malloc(sizeof(MPID_nem_newmad_vc_area_internal_t));
-   MPIU_Assert( (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area) != NULL);
-   
    /* Very important */
-   memset(VC_FIELD(vc, hostname),0,MPID_NEM_NMAD_MAX_SIZE);
    memset(VC_FIELD(vc, url),0,MPID_NEM_NMAD_MAX_SIZE);
    
-   mpi_errno = MPID_nem_newmad_get_from_bc (business_card, VC_FIELD(vc, hostname), VC_FIELD(vc, url));
+   mpi_errno = MPID_nem_newmad_get_from_bc (business_card, VC_FIELD(vc, url));
    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
    MPIU_Free(business_card);
@@ -280,7 +255,6 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
    if (ret != NM_ESUCCESS) fprintf(stdout,"nm_session_connect returned ret = %d\n", ret);
 
    nm_gate_ref_set(VC_FIELD(vc, p_gate),(void*)vc);
-
    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
    
    vc->eager_max_msg_sz = 32768;
@@ -304,8 +278,6 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 int MPID_nem_newmad_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;   
-
-    MPIU_Free((((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->area));
 
  fn_exit:   
        return mpi_errno;
