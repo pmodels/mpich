@@ -127,7 +127,7 @@ MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank,
        fprintf(stdout,"===========================================================\n");
        fprintf(stdout,"===  Error : Newmad data structure size is too long     ===\n");
        fprintf(stdout,"===  VC netmod area is %4i | Nmad struct size is %4i    ===\n", 
-	       MPID_NEM_VC_NETMOD_AREA_LEN, sizeof(MPID_nem_newmad_vc_area_internal_t));
+	       MPID_NEM_VC_NETMOD_AREA_LEN, sizeof(MPID_nem_newmad_vc_area));
        fprintf(stdout,"===========================================================\n");
        exit(0);
    }
