@@ -307,13 +307,11 @@ MPIU_ExInitOverlapped(
 }
 
 /*
-    MPIU_ExReInitOverlapped
+    MPIU_ExReInitOverlapped ==> ONLY REQD for manual events
 
     Re-Initialize the success & failure callback function fields
-    The hEvent field of the OVERLAPPED is reset since it will
-	be reused
 
-	Returns TRUE if Re-init succeeds, FALSE otherwise
+    Re-init the event
 */
 
 static
@@ -325,10 +323,18 @@ MPIU_ExReInitOverlapped(
     MPIU_ExCompletionRoutine pfnFailure
     )
 {
-    pOverlapped->pfnSuccess = pfnSuccess;
-    pOverlapped->pfnFailure = pfnFailure;
+    /* Re-init succ/fail handlers only if they are ~null */
+    if(pfnSuccess){
+        pOverlapped->pfnSuccess = pfnSuccess;
+    }
+    if(pfnFailure){
+        pOverlapped->pfnFailure = pfnFailure;
+    }
 
-    return(ResetEvent(pOverlapped->ov.hEvent));
+    if(pOverlapped->ov.hEvent)
+        return(ResetEvent(pOverlapped->ov.hEvent));
+    else
+        return TRUE;
 }
 
 /*
