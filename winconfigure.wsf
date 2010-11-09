@@ -3802,6 +3802,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                 ' LT_OBJDIR
                                 Case "LT_OBJDIR"
                                         fout.WriteLine("/* #undef LT_OBJDIR */")
+                                Case "USE_MPIU_INSTR"
+                                        fout.WriteLine("/* #undef USE_MPIU_INSTR */")
 				Case Else
                                     Dim useCustomDefDict
                                     useCustomDefDict = False
