@@ -20,6 +20,9 @@
 
  # OVERALL: Performance improvements for Group_translate_ranks.
 
+ # COLLECTIVES: Collective algorithm selection thresholds can now be controlled
+   at runtime via environment variables.
+
  # ROMIO: PVFS error codes are now mapped to MPI error codes.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
