@@ -73,14 +73,15 @@ static HYD_status group_to_individual_nodes(char *str, char **list)
     arg = 0;
     for (i = 0; set[i]; i++) {
         start_str = strtok(set[i], "-");
-        end_str = strtok(NULL, "-");
+        if ((end_str = strtok(NULL, "-")) == NULL)
+            end_str = start_str;
 
         start = atoi(start_str);
-        end = end_str ? atoi(end_str) : start;
+        end = atoi(end_str);
 
         for (j = start; j <= end; j++) {
             node_str[0] = HYDU_strdup(pre);
-            node_str[1] = HYDU_int_to_str(j);
+            node_str[1] = HYDU_int_to_str_pad(j, strlen(start_str));
             node_str[2] = NULL;
 
             status = HYDU_str_alloc_and_join(node_str, &list[arg++]);

@@ -282,6 +282,7 @@ HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin);
 HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep);
 HYD_status HYDU_strdup_list(char *src[], char **dest[]);
 char *HYDU_int_to_str(int x);
+char *HYDU_int_to_str_pad(int x, int maxlen);
 char *HYDU_strerror(int error);
 int HYDU_strlist_lastidx(char **strlist);
 char **HYDU_str_to_strlist(char *str);
