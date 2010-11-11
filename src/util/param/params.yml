@@ -26,6 +26,8 @@ categories:
       description : parameters that control error handling behavior (stack traces, aborts, etc)
     - name        : debugger
       description : parameters relevant to the "MPIR" debugger interface
+    - name        : checkpointing
+      description : parameters relevant to checkpointing
     - name        : threads
       description : multi-threading parameters
     - name        : nemesis
@@ -244,10 +246,25 @@ parameters:
       type        : boolean
       default     : false
       description : >-
-        If true causes processes to wait in MPI_Init and
+        If true, causes processes to wait in MPI_Init and
         MPI_Initthread for a debugger to be attached.  Once the
         debugger has attached, the variable 'hold' should be set to 0
         in order to allow the process to continue (e.g., in gdb, "set
         hold=0").
 
+  ##############################################################
+    # checkpointing parameters
+    - category    : checkpointing
+      name        : ENABLE_CKPOINT
+      type        : boolean
+      default     : false
+      description : >-
+        If true, enables checkpointing support and returns an error if
+        checkpointing library cannot be initialized.
+
 ...
+
+# Local Variables:
+# mode: conf-colon
+# indent-tabs-mode: nil
+# End:
