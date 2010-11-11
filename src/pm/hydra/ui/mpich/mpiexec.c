@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 
     /* if the user set the checkpoint prefix, set env var to enable checkpointing on the processes  */
     if (HYD_handle.user_global.ckpoint_prefix)
-        HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1", &HYD_handle.user_global.global_env.user);
+        HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1", &HYD_handle.user_global.global_env.system);
 
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
