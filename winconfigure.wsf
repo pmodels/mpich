@@ -246,7 +246,11 @@ buildfiles_channel = "sock"
 ' Miscellaneous settings
 '
 MPI_MAX_PROCESSOR_NAME = "128"
-MPI_AINT64               = "__int64"
+' Use the decorated MPI_AINT64_TYPE with MPI_AINT64_TYPEDEF_BEGIN & *END decos
+' for user exposed headers
+MPI_AINT64_TYPE        = "MPI_AINT64_TYPE"
+' Use MPI_AINT64 for internal headers
+MPI_AINT64              = "__int64"
 MPI_AINT64_FMT_DEC_SPEC  = "%I64d"
 MPIR_PINT64_FMT_DEC_SPEC  = """%I64d"""
 MPIR_UPINT64_FMT_DEC_SPEC  = """%I64u"""
@@ -265,6 +269,8 @@ MPI_OFFSET             = "__int64"
 'MPI_OFFSET_TYPEDEF     = "typedef __int64 MPI_Offset;"
 'MPI_OFFSET_TYPEDEF     = "typedef long long MPI_Offset;"
 MPI_OFFSET_TYPEDEF     = "#if defined(USE_GCC) || defined(__GNUC__)" + vbCrLf + "typedef long long MPI_Offset;" + vbCrLf + "#else" + vbCrLf + "typedef __int64 MPI_Offset;" + vbCrLf + "#endif"
+MPI_AINT64_TYPEDEF_BEGIN    = "#undef MPI_AINT64_TYPE" + vbCrLf + "#if defined(USE_GCC) || defined(__GNUC__)" + vbCrLf + "#define MPI_AINT64_TYPE long long" + vbCrLf + "#else" + vbCrLf + "#define MPI_AINT64_TYPE __int64" + vbCrLf + "#endif" + vbCrLf
+MPI_AINT64_TYPEDEF_END = vbCrLf + "#undef MPI_AINT64_TYPE" + vbCrLf
 EXTRA_STATUS_DECL      = ""
 HAVE_ROMIO             = "#include ""mpio.h"""
 mpi_dll_spec_definition = "#ifdef USE_MPI_STATIC_LIBRARY" + vbCrLf + "# define MPIU_DLL_SPEC" + vbCrLf + "#else" + vbCrLf + "# ifdef MPI_EXPORTS" + vbCrLf + "#  define MPIU_DLL_SPEC __declspec(dllexport)" + vbCrLf + "# else" + vbCrLf + "#  define MPIU_DLL_SPEC __declspec(dllimport)" + vbCrLf + "# endif" + vbCrLf + "#endif" + vbCrLf + "#define MPI_CALL __cdecl" + vbCrLf
@@ -1607,6 +1613,27 @@ Function appendUniqueString(ByRef origString, ByVal appendString)
 	Else
 		appendUniqueString = False
 	End If
+End Function
+
+Function ReplaceAtsWithDecoration(ByVal str, use_f77, b64 )
+    Dim regEx, Match, Matches
+    Set regEx = New RegExp
+    regEx.Pattern = "@.[0-9a-z_]*@"
+    regEx.IgnoreCase = True
+    regEx.Global = True
+    Set Matches = regEx.Execute(str)
+    For Each Match in Matches
+        Select Case Match
+            Case "@MPI_AINT@"
+                if b64 then
+                    str = Replace(str, "@MPI_AINT@", MPI_AINT64_TYPE)
+                    str = MPI_AINT64_TYPEDEF_BEGIN & str & MPI_AINT64_TYPEDEF_END
+                else
+                    str = Replace(str, "@MPI_AINT@", MPI_AINT32)
+                end if
+        End Select
+    Next
+    ReplaceAtsWithDecoration = str
 End Function
 
 Function ReplaceAts( str, use_f77, b64 )
@@ -3886,9 +3913,16 @@ printMsg "VERBOSE", "Creating src\include\win32\mpi.h"
 set fout32 = f.CreateTextFile("src\include\win32\mpi.h")
 set fin = f.OpenTextFile("src\include\mpi.h.in")
 
-contents32 = fin.ReadAll()
-contents64 = contents32
+contents32=""
+contents64=""
+do until fin.AtEndOfStream = True
+    line = fin.ReadLine()
+    contents32 = contents32 + ReplaceAtsWithDecoration(line, false, false) + vbCrLf
+    contents64 = contents64 + ReplaceAtsWithDecoration(line, false, true) + vbCrLf
+loop
+
 fin.Close()
+
 contents32 = ReplaceAts(contents32, false, false)
 contents64 = ReplaceAts(contents64, false, true)
 if bAddDllDecoration then
