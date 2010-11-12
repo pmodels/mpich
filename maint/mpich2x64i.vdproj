@@ -63,6 +63,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_204DB77A62174C2C900B75BA7782596A"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2A131B743AAD4CC99C6926BDEAB87CB2"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -76,6 +82,12 @@
         "Entry"
         {
         "MsmKey" = "8:_2E78FEC4317B423D931438231C273528"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_2ED4D01C4AB04611862206AEB490440A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -345,6 +357,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_F8734FE1E95D489C99076694D4F5C387"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_FA7FEB4E019147ABB551882DD956CA32"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -364,13 +382,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_34280675DFE044D6A460602A3301FCE2"
+        "OwnerKey" = "8:_FA7FEB4E019147ABB551882DD956CA32"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_FA7FEB4E019147ABB551882DD956CA32"
+        "OwnerKey" = "8:_34280675DFE044D6A460602A3301FCE2"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -715,6 +733,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_204DB77A62174C2C900B75BA7782596A"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\gcc\\libmpicxx.a"
+            "TargetName" = "8:libmpicxx.a"
+            "Tag" = "8:"
+            "Folder" = "8:_21FB2EC726254C54839F05E4290C1045"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2A131B743AAD4CC99C6926BDEAB87CB2"
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\mpe_wrap\\mpich2mpe.dll"
@@ -739,7 +777,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.3898.24477, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.3947.19215, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_2CB8889ECC4846F2B9D5F55CF8DE8510"
@@ -786,6 +824,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2ED4D01C4AB04611862206AEB490440A"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\gcc\\libmpi.a"
+            "TargetName" = "8:libmpi.a"
+            "Tag" = "8:"
+            "Folder" = "8:_21FB2EC726254C54839F05E4290C1045"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_328D583D55BC4B38A679F9ACF3DCE98A"
             {
             "SourcePath" = "8:..\\winbuild\\x64\\Release\\bin\\smpd.exe"
@@ -810,7 +868,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.3898.24476, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.3947.19214, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_34280675DFE044D6A460602A3301FCE2"
@@ -1677,11 +1735,31 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F8734FE1E95D489C99076694D4F5C387"
+            {
+            "SourcePath" = "8:..\\winbuild\\x64\\Release\\gcc\\libfmpich2g.a"
+            "TargetName" = "8:libfmpich2g.a"
+            "Tag" = "8:"
+            "Folder" = "8:_21FB2EC726254C54839F05E4290C1045"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FA7FEB4E019147ABB551882DD956CA32"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.3898.24477, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.3947.19213, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_FA7FEB4E019147ABB551882DD956CA32"

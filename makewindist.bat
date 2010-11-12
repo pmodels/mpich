@@ -211,6 +211,12 @@ echo Building MPICH2 examples ...
 devenv.com examples\examples.sln /project cpi /build "Release|x64" >> make_x64.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
+echo Building GNU libs ...
+cd maint
+CALL makegcclibs_64.bat
+if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+cd ..
 echo Building Wrapper utils
 devenv.com mpich2.sln /build "wrapperUtilRelease" >> make_x64.log
 if %errorlevel% NEQ 0 goto BUILDERROR

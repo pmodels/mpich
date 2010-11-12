@@ -6474,6 +6474,7 @@ Function GenBuild()
 	bfile.WriteLine("nmake %SILENT% /NOLOGO irlog2rlog")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO TraceInput")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO gcc_libs")
+	bfile.WriteLine("nmake %SILENT% /NOLOGO impgen")
 	bfile.Close()
 
 	Set mfile = f.CreateTextFile("winbuild\makefile", true)
