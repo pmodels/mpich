@@ -523,7 +523,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     {
         int mpi_errno2 = MPI_SUCCESS;
         if (new_vc) {
-            mpi_errno2 = MPIDI_CH3_VC_Destroy(new_vc);
+	    mpi_errno2 = MPIU_CALL(MPIDI_CH3,VC_Destroy(new_vc));
             if (mpi_errno2) MPIU_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**fail");
         }
 
