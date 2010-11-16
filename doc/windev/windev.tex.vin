@@ -1215,9 +1215,8 @@ like this: \texttt{mpi\_init\_\_}.  Add the library that matches your Fortran co
 \item Compile your application.
 \end{enumerate}
 
-\subsubsection{Cygwin gcc}
-You can compile your MPI programs using gcc/g++ from Cygwin and the MPICH2 header files/libraries installed with MPICH2 on windows. Compile using the header files in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include}
-and link using the libs, lib*.a, in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}. Note that you should use the ``-localroot'' option when running programs compiled using gcc/g++ from Cygwin.
+\subsubsection{Cygwin and MinGW GNU compilers}
+You can compile your MPI programs using gcc/g++/g77/gfortran from Cygwin or MinGW using the MPICH2 header files/libraries installed with MPICH2 on windows. Compile using the header files in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include} and link using the libs, lib*.a, in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}. Note that you should use the ``-localroot'' option when running programs compiled using gcc/g++ from Cygwin.
 
 \subsection{Performance Analysis}
 MPICH2 includes the Multi-Processing Environment (MPE), which is a
