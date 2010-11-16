@@ -15,7 +15,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_gm_funcs = {
     MPID_nem_gm_connect_to_root,
     MPID_nem_gm_vc_init,
     MPID_nem_gm_vc_destroy,
-    MPID_nem_gm_vc_terminate
+    MPID_nem_gm_vc_terminate,
+    NULL /* anysource iprobe */
 };
 
 

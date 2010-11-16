@@ -99,7 +99,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
         CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, sreq->dev.iov_count));
         if (offset == 0) {
             int cleanup_errno = MPI_SUCCESS;
-            MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
             MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
             cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -115,7 +115,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
                 break;
             } else {
                 int cleanup_errno = MPI_SUCCESS;
-                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                 MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                 MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -265,7 +265,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 CHECK_EINTR(offset, writev(sc->fd, iov, 2));
                 if (offset == 0) {
                     int cleanup_errno = MPI_SUCCESS;
-                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
                     MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -278,7 +278,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                         offset = 0;
                     else {
                         int cleanup_errno = MPI_SUCCESS;
-                        MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -405,7 +405,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
             CHECK_EINTR(offset, writev(sc->fd, iov, 2));
             if (offset == 0) {
                 int cleanup_errno = MPI_SUCCESS;
-                MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
                 MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -418,7 +418,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
                     offset = 0;
                 else {
                     int cleanup_errno = MPI_SUCCESS;
-                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                     MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                     MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc); /* ignoring return code */
@@ -540,7 +540,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                 CHECK_EINTR(offset, writev(sc->fd, iov, 2));
                 if (offset == 0) {
                     int cleanup_errno = MPI_SUCCESS;
-                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
                     MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -553,7 +553,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         offset = 0;
                     else {
                         int cleanup_errno = MPI_SUCCESS;
-                        MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -698,7 +698,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                 CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, iov_n));
                 if (offset == 0) {
                     int cleanup_errno = MPI_SUCCESS;
-                    MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
                     MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);
@@ -711,7 +711,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                         offset = 0;
                     else {
                         int cleanup_errno = MPI_SUCCESS;
-                        MPIDU_FTB_COMMERR(MPIDU_FTB_EV_COMMUNICATION, vc);
+
                         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror (errno));
                         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         cleanup_errno = MPID_nem_tcp_cleanup_on_error(vc);

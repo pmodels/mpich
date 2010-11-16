@@ -187,18 +187,6 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found );
 #define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
 #define MPIDI_CH3I_IFNAME_KEY "ifname"
 
-/* convenience macro for publishing FTB communication error events */
-#define MPIDU_FTB_COMMERR(event_name, vc) do {                                                          \
-        int ret_ = -1;                                                                                  \
-        char bc_[1024] = ""; /* FIXME: How do we find the max length of a bc? */                             \
-        char ifname_[1024] = "";                                                                        \
-                                                                                                        \
-        if (vc && vc->pg)  /* pg can be null for temp VCs (dynamic processes) */                        \
-            ret_ = vc->pg->getConnInfo((vc)->pg_rank, bc_, sizeof(bc_), (vc)->pg);                      \
-        if (!ret_)                                                                                      \
-            ret_ = MPIU_Str_get_string_arg(bc_, MPIDI_CH3I_IFNAME_KEY, ifname_, sizeof(ifname_));       \
-        MPIDU_Ftb_publish((event_name), ifname_);                                                       \
-    } while(0)
 
 
 /* tcp-local packet types */

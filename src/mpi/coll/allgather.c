@@ -119,7 +119,7 @@ int MPIR_Allgather_intra (
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
     tot_bytes = (MPI_Aint)recvcount * comm_size * type_size;
-    if ((tot_bytes < MPIR_ALLGATHER_LONG_MSG) && !(comm_size & (comm_size - 1))) {
+    if ((tot_bytes < MPIR_PARAM_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
 
         /* Short or medium size message and power-of-two no. of processes. Use
          * recursive doubling algorithm */   
@@ -420,7 +420,7 @@ int MPIR_Allgather_intra (
 #endif /* MPID_HAS_HETERO */
     }
 
-    else if (tot_bytes < MPIR_ALLGATHER_SHORT_MSG) {
+    else if (tot_bytes < MPIR_PARAM_ALLGATHER_SHORT_MSG_SIZE) {
         /* Short message and non-power-of-two no. of processes. Use
          * Bruck algorithm (see description above). */
 

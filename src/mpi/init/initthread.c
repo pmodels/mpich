@@ -10,6 +10,9 @@
 #ifdef HAVE_CRTDBG_H
 #include <crtdbg.h>
 #endif
+#ifdef HAVE_USLEEP
+#include <unistd.h>
+#endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Init_thread */
 #if defined(HAVE_PRAGMA_WEAK)

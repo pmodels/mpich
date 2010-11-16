@@ -369,6 +369,9 @@ void *MPIU_Handle_indirect_init( void *(**)[], int *, int, int, int, int );
 int MPIU_Handle_free( void *((*)[]), int );
 */
 /* Convert Handles to objects for MPI types that have predefined objects */
+/* TODO examine generated assembly for this construct, it's probably suboptimal
+ * on Blue Gene.  An if/else if/else might help the compiler out.  It also lets
+ * us hint that one case is likely(), usually the BUILTIN case. */
 #define MPID_Getb_ptr(kind,a,bmsk,ptr)                                  \
 {                                                                       \
    switch (HANDLE_GET_KIND(a)) {                                        \
@@ -996,12 +999,26 @@ typedef struct MPID_Group {
     int          idx_of_first_lpid;
     MPID_Group_pmap_t *lrank_to_lpid; /* Array mapping a local rank to local 
 					 process number */
+    int          is_local_dense_monotonic; /* see NOTE-G1 */
+
     /* We may want some additional data for the RMA syncrhonization calls */
   /* Other, device-specific information */
 #ifdef MPID_DEV_GROUP_DECL
     MPID_DEV_GROUP_DECL
 #endif
 } MPID_Group;
+
+/* NOTE-G1: is_local_dense_monotonic will be true iff the group meets the
+ * following criteria:
+ * 1) the lpids are all in the range [0,size-1], i.e. a subset of comm world
+ * 2) the pids are sequentially numbered in increasing order, without any gaps,
+ *    stride, or repetitions
+ *
+ * This additional information allows us to handle the common case (insofar as
+ * group ops are common) for MPI_Group_translate_ranks where group2 is
+ * group_of(MPI_COMM_WORLD), or some simple subset.  This is an important use
+ * case for many MPI tool libraries, such as Scalasca.
+ */
 
 extern MPIU_Object_alloc_t MPID_Group_mem;
 /* Preallocated group objects */
@@ -1256,6 +1273,7 @@ extern MPID_Comm MPID_Comm_direct[];
    the device may need to create a new contextid */
 int MPIR_Get_contextid( MPID_Comm *, MPIR_Context_id_t *context_id );
 int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id);
+void MPIR_Free_contextid( MPIR_Context_id_t );
 
 /* ------------------------------------------------------------------------- */
 
@@ -1479,7 +1497,9 @@ typedef struct MPID_Win {
     MPID_Attribute *attributes;
     MPID_Group *start_group_ptr; /* group passed in MPI_Win_start */
     int start_assert;            /* assert passed to MPI_Win_start */
-    MPI_Comm    comm;         /* communicator of window (dup) */
+    MPID_Comm *comm_ptr;         /* Pointer to comm of window (dup) */
+    int         myrank;          /* Rank of this process in comm (used to 
+				    detect operations on self) */
 #ifdef USE_THREADED_WINDOW_CODE
     /* These were causing compilation errors.  We need to figure out how to
        integrate threads into MPICH2 before including these fields. */
@@ -1899,6 +1919,9 @@ extern MPICH_PerProcess_t MPIR_Process;
 /* Definitions for error handling and reporting */
 #include "mpierror.h"
 #include "mpierrs.h"
+
+/* Definitions for instrumentation (currently used within RMA code) */
+#include "mpiinstr.h"
 
 /* FIXME: This routine is only used within mpi/src/err/errutil.c and 
    smpd.  We may not want to export it.  */
@@ -3140,32 +3163,7 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
    file (mpiimpl.h). */
 #include "mpidpost.h"
 
-/* ------------------------------------------------------------------------- */
-/* FIXME: Also for mpicoll.h, in src/mpi/coll?  */
-/* ------------------------------------------------------------------------- */
-/* thresholds to switch between long and short vector algorithms for
-   collective operations */ 
-/* FIXME: Should there be a way to (a) update/compute these at configure time
-   and (b) provide runtime control?  Should these be MPIR_xxx_DEFAULT 
-   instead? */
-#define MPIR_BCAST_SHORT_MSG          12288
-#define MPIR_BCAST_LONG_MSG           524288
-#define MPIR_BCAST_MIN_PROCS          8
-#define MPIR_REDSCAT_COMMUTATIVE_LONG_MSG 524288
-#define MPIR_REDSCAT_NONCOMMUTATIVE_SHORT_MSG 512
-#define MPIR_ALLGATHER_SHORT_MSG      81920
-#define MPIR_ALLGATHER_LONG_MSG       524288
-#define MPIR_REDUCE_SHORT_MSG         2048
-#define MPIR_ALLREDUCE_SHORT_MSG      2048
-#define MPIR_GATHER_VSMALL_MSG        1024
-#define MPIR_SCATTER_SHORT_MSG        2048  /* for intercommunicator scatter */
-#define MPIR_GATHER_SHORT_MSG         2048  /* for intercommunicator scatter */
-#define MPIR_GATHERV_MIN_PROCS        32
-
-/* For pipelined collectives */
-#define MPIR_ALLGATHERV_PIPELINE_MSGSIZE   32768
-
-/* TODO convert all cut-over constants above to parameters */
+/* tunable parameter values */
 #include "mpich_param_vals.h"
 
 /* Tags for point to point operations which implement collective and other

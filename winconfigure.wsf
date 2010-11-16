@@ -1133,90 +1133,123 @@ Function ToInteger(c)
 	ToInteger = i
 End Function
 
-'first = true
-Function HexToInt(str)
-	Dim i, multiplier, index
-	i = 0
-	multiplier = 1
-	for index = len(str) to 3 step -1
-		i = i + (ToInteger(Mid(str, index, 1)) * multiplier)
-		multiplier = multiplier * 16
-		'if first then
-		'	MsgBox "char " & Mid(str, index, 1) & ", i = " & i
-		'end if
-	next
-	'first = false
-	HexToInt = i
+' eg: IsSignedInteger(0x8000, 4) = True
+Function IsSignedInteger(hex_str, nb)
+    Dim max_nibbles
+
+    IsSignedInteger = False
+    max_nibbles = nb/4
+
+    If (len(hex_str) > 2) AND (len(hex_str) - 2 <= max_nibbles) Then
+        If len(hex_str) - 2 < max_nibbles Then
+            ' IsSignedInteger = False
+        Else
+            If ToInteger(Mid(hex_str, 3, 1)) >= 8 Then
+                IsSignedInteger = True
+            End If
+        End If
+    Else
+        printMsg "ERROR", "Invalid HEX string provided , str=" & hex_str
+    End If
 End Function
 
-F77_MPI_DOUBLE_COMPLEX    = HexToInt(dtypes.Item("MPI_DOUBLE_COMPLEX"))
-F77_MPI_COMPLEX           = HexToInt(dtypes.Item("MPI_COMPLEX"))
-F77_MPI_LOGICAL_W32           = HexToInt(dtypes.Item("MPI_LOGICAL"))
-F77_MPI_LOGICAL_W64           = HexToInt(dtypes64.Item("MPI_LOGICAL"))
-F77_MPI_REAL_W32              = HexToInt(dtypes.Item("MPI_REAL"))
-F77_MPI_REAL_W64              = HexToInt(dtypes64.Item("MPI_REAL"))
-F77_MPI_DOUBLE_PRECISION  = HexToInt(dtypes.Item("MPI_DOUBLE_PRECISION"))
-F77_MPI_INTEGER_W32           = HexToInt(dtypes.Item("MPI_INTEGER"))
-F77_MPI_INTEGER_W64           = HexToInt(dtypes64.Item("MPI_INTEGER"))
-F77_MPI_2INTEGER          = HexToInt(dtypes.Item("MPI_2INTEGER"))
-F77_MPI_2COMPLEX          = HexToInt(dtypes.Item("MPI_2COMPLEX"))
-F77_MPI_2DOUBLE_COMPLEX   = HexToInt(dtypes.Item("MPI_2DOUBLE_COMPLEX"))
-F77_MPI_2REAL             = HexToInt(dtypes.Item("MPI_2REAL"))
-F77_MPI_2DOUBLE_PRECISION = HexToInt(dtypes.Item("MPI_2DOUBLE_PRECISION"))
-F77_MPI_CHARACTER         = HexToInt(dtypes.Item("MPI_CHARACTER"))
-F77_MPI_BYTE              = HexToInt(dtypes.Item("MPI_BYTE"))
-F77_MPI_LB                = HexToInt(dtypes.Item("MPI_LB"))
-F77_MPI_PACKED            = HexToInt(dtypes.Item("MPI_PACKED"))
-F77_MPI_UB                = HexToInt(dtypes.Item("MPI_UB"))
-F77_COMPLEX8              = HexToInt(dtypes.Item("MPI_COMPLEX8"))
-F77_COMPLEX16             = HexToInt(dtypes.Item("MPI_COMPLEX16"))
-F77_COMPLEX32             = HexToInt(dtypes.Item("MPI_COMPLEX32"))
-F77_INTEGER1              = HexToInt(dtypes.Item("MPI_INTEGER1"))
-F77_INTEGER2              = HexToInt(dtypes.Item("MPI_INTEGER2"))
-F77_INTEGER4              = HexToInt(dtypes.Item("MPI_INTEGER4"))
-F77_INTEGER8              = HexToInt(dtypes.Item("MPI_INTEGER8"))
-F77_INTEGER16             = HexToInt(dtypes.Item("MPI_INTEGER16"))
-F77_REAL4                 = HexToInt(dtypes.Item("MPI_REAL4"))
-F77_REAL8                 = HexToInt(dtypes.Item("MPI_REAL8"))
-F77_REAL16                = HexToInt(dtypes.Item("MPI_REAL16"))
-F77_CHAR					= HexToInt(dtypes.Item("MPI_CHAR"))
-F77_SIGNED_CHAR				= HexToInt(dtypes.Item("MPI_SIGNED_CHAR"))
-F77_UNSIGNED_CHAR			= HexToInt(dtypes.Item("MPI_UNSIGNED_CHAR"))
-F77_WCHAR					= HexToInt(dtypes.Item("MPI_WCHAR"))
-F77_SHORT					= HexToInt(dtypes.Item("MPI_SHORT"))
-F77_UNSIGNED_SHORT			= HexToInt(dtypes.Item("MPI_UNSIGNED_SHORT"))
-F77_INT						= HexToInt(dtypes.Item("MPI_INT"))
-F77_UNSIGNED				= HexToInt(dtypes.Item("MPI_UNSIGNED"))
-F77_LONG					= HexToInt(dtypes.Item("MPI_LONG"))
-F77_UNSIGNED_LONG			= HexToInt(dtypes.Item("MPI_UNSIGNED_LONG"))
-F77_FLOAT					= HexToInt(dtypes.Item("MPI_FLOAT"))
-F77_DOUBLE					= HexToInt(dtypes.Item("MPI_DOUBLE"))
-F77_LONG_DOUBLE				= HexToInt(dtypes.Item("MPI_LONG_DOUBLE"))
-F77_LONG_LONG_INT			= HexToInt(dtypes.Item("MPI_LONG_LONG_INT"))
-F77_UNSIGNED_LONG_LONG		= HexToInt(dtypes.Item("MPI_UNSIGNED_LONG_LONG"))
-F77_LONG_LONG				= HexToInt(dtypes.Item("MPI_LONG_LONG"))
-F77_FLOAT_INT				= HexToInt(dtypes.Item("MPI_FLOAT_INT"))
-F77_DOUBLE_INT				= HexToInt(dtypes.Item("MPI_DOUBLE_INT"))
-F77_LONG_INT				= HexToInt(dtypes.Item("MPI_LONG_INT"))
-F77_SHORT_INT				= HexToInt(dtypes.Item("MPI_SHORT_INT"))
-F77_2INT					= HexToInt(dtypes.Item("MPI_2INT"))
-F77_LONG_DOUBLE_INT			= HexToInt(dtypes.Item("MPI_LONG_DOUBLE_INT"))
-F77_INT8_T              = HexToInt(dtypes.Item("MPI_INT8_T"))
-F77_INT16_T             = HexToInt(dtypes.Item("MPI_INT16_T"))
-F77_INT32_T             = HexToInt(dtypes.Item("MPI_INT32_T"))
-F77_INT64_T             = HexToInt(dtypes.Item("MPI_INT64_T"))
-F77_UINT8_T             = HexToInt(dtypes.Item("MPI_UINT8_T"))
-F77_UINT16_T            = HexToInt(dtypes.Item("MPI_UINT16_T"))
-F77_UINT32_T            = HexToInt(dtypes.Item("MPI_UINT32_T"))
-F77_UINT64_T            = HexToInt(dtypes.Item("MPI_UINT64_T"))
-F77_C_BOOL              = HexToInt(dtypes.Item("MPI_C_BOOL"))
-F77_C_FLOAT_COMPLEX     = HexToInt(dtypes.Item("MPI_C_FLOAT_COMPLEX"))
-F77_C_COMPLEX           = HexToInt(dtypes.Item("MPI_C_COMPLEX"))
-F77_C_DOUBLE_COMPLEX    = HexToInt(dtypes.Item("MPI_C_DOUBLE_COMPLEX"))
-F77_C_LONG_DOUBLE_COMPLEX      = HexToInt(dtypes.Item("MPI_C_LONG_DOUBLE_COMPLEX"))
-F77_AINT_W32                = HexToInt(dtypes.Item("MPI_AINT_W32"))
-F77_AINT_W64                = HexToInt(dtypes64.Item("MPI_AINT_W64"))
-F77_OFFSET_W64              = HexToInt(dtypes.Item("MPI_OFFSET_W64"))
+'first = true
+' eg: HexToInt(0x1, 32) = 1, HexToInt(0x1f, 32)=31
+Function HexToInt(str, nb)
+        Dim i, multiplier, index, max_nibbles
+        i = 0
+        multiplier = 1
+        max_nibbles = nb/4
+        if len(str) - 2 > max_nibbles then
+            printMsg "ERROR", "Cannot convert hex to integer, hex=" & str
+            HexToInt = 0
+        else
+            for index = len(str) to 3 step -1
+                i = i + (ToInteger(Mid(str, index, 1)) * multiplier)
+                multiplier = multiplier * 16
+            next
+            If IsSignedInteger(str, nb) Then
+                HexToInt = i - 2^nb
+            Else
+                HexToInt = i
+            End If
+        end if
+End Function
+
+'Convert hex to a fortran integer
+Function HexToFint(str)
+    ' sizeof(fint) = 4 bytes
+    HexToFint = HexToInt(str, 32)
+End Function
+
+F77_MPI_DOUBLE_COMPLEX    = HexToFint(dtypes.Item("MPI_DOUBLE_COMPLEX"))
+F77_MPI_COMPLEX           = HexToFint(dtypes.Item("MPI_COMPLEX"))
+F77_MPI_LOGICAL_W32           = HexToFint(dtypes.Item("MPI_LOGICAL"))
+F77_MPI_LOGICAL_W64           = HexToFint(dtypes64.Item("MPI_LOGICAL"))
+F77_MPI_REAL_W32              = HexToFint(dtypes.Item("MPI_REAL"))
+F77_MPI_REAL_W64              = HexToFint(dtypes64.Item("MPI_REAL"))
+F77_MPI_DOUBLE_PRECISION  = HexToFint(dtypes.Item("MPI_DOUBLE_PRECISION"))
+F77_MPI_INTEGER_W32           = HexToFint(dtypes.Item("MPI_INTEGER"))
+F77_MPI_INTEGER_W64           = HexToFint(dtypes64.Item("MPI_INTEGER"))
+F77_MPI_2INTEGER          = HexToFint(dtypes.Item("MPI_2INTEGER"))
+F77_MPI_2COMPLEX          = HexToFint(dtypes.Item("MPI_2COMPLEX"))
+F77_MPI_2DOUBLE_COMPLEX   = HexToFint(dtypes.Item("MPI_2DOUBLE_COMPLEX"))
+F77_MPI_2REAL             = HexToFint(dtypes.Item("MPI_2REAL"))
+F77_MPI_2DOUBLE_PRECISION = HexToFint(dtypes.Item("MPI_2DOUBLE_PRECISION"))
+F77_MPI_CHARACTER         = HexToFint(dtypes.Item("MPI_CHARACTER"))
+F77_MPI_BYTE              = HexToFint(dtypes.Item("MPI_BYTE"))
+F77_MPI_LB                = HexToFint(dtypes.Item("MPI_LB"))
+F77_MPI_PACKED            = HexToFint(dtypes.Item("MPI_PACKED"))
+F77_MPI_UB                = HexToFint(dtypes.Item("MPI_UB"))
+F77_COMPLEX8              = HexToFint(dtypes.Item("MPI_COMPLEX8"))
+F77_COMPLEX16             = HexToFint(dtypes.Item("MPI_COMPLEX16"))
+F77_COMPLEX32             = HexToFint(dtypes.Item("MPI_COMPLEX32"))
+F77_INTEGER1              = HexToFint(dtypes.Item("MPI_INTEGER1"))
+F77_INTEGER2              = HexToFint(dtypes.Item("MPI_INTEGER2"))
+F77_INTEGER4              = HexToFint(dtypes.Item("MPI_INTEGER4"))
+F77_INTEGER8              = HexToFint(dtypes.Item("MPI_INTEGER8"))
+F77_INTEGER16             = HexToFint(dtypes.Item("MPI_INTEGER16"))
+F77_REAL4                 = HexToFint(dtypes.Item("MPI_REAL4"))
+F77_REAL8                 = HexToFint(dtypes.Item("MPI_REAL8"))
+F77_REAL16                = HexToFint(dtypes.Item("MPI_REAL16"))
+F77_CHAR					= HexToFint(dtypes.Item("MPI_CHAR"))
+F77_SIGNED_CHAR				= HexToFint(dtypes.Item("MPI_SIGNED_CHAR"))
+F77_UNSIGNED_CHAR			= HexToFint(dtypes.Item("MPI_UNSIGNED_CHAR"))
+F77_WCHAR					= HexToFint(dtypes.Item("MPI_WCHAR"))
+F77_SHORT					= HexToFint(dtypes.Item("MPI_SHORT"))
+F77_UNSIGNED_SHORT			= HexToFint(dtypes.Item("MPI_UNSIGNED_SHORT"))
+F77_INT						= HexToFint(dtypes.Item("MPI_INT"))
+F77_UNSIGNED				= HexToFint(dtypes.Item("MPI_UNSIGNED"))
+F77_LONG					= HexToFint(dtypes.Item("MPI_LONG"))
+F77_UNSIGNED_LONG			= HexToFint(dtypes.Item("MPI_UNSIGNED_LONG"))
+F77_FLOAT					= HexToFint(dtypes.Item("MPI_FLOAT"))
+F77_DOUBLE					= HexToFint(dtypes.Item("MPI_DOUBLE"))
+F77_LONG_DOUBLE				= HexToFint(dtypes.Item("MPI_LONG_DOUBLE"))
+F77_LONG_LONG_INT			= HexToFint(dtypes.Item("MPI_LONG_LONG_INT"))
+F77_UNSIGNED_LONG_LONG		= HexToFint(dtypes.Item("MPI_UNSIGNED_LONG_LONG"))
+F77_LONG_LONG				= HexToFint(dtypes.Item("MPI_LONG_LONG"))
+F77_FLOAT_INT				= HexToFint(dtypes.Item("MPI_FLOAT_INT"))
+F77_DOUBLE_INT				= HexToFint(dtypes.Item("MPI_DOUBLE_INT"))
+F77_LONG_INT				= HexToFint(dtypes.Item("MPI_LONG_INT"))
+F77_SHORT_INT				= HexToFint(dtypes.Item("MPI_SHORT_INT"))
+F77_2INT					= HexToFint(dtypes.Item("MPI_2INT"))
+F77_LONG_DOUBLE_INT			= HexToFint(dtypes.Item("MPI_LONG_DOUBLE_INT"))
+F77_INT8_T              = HexToFint(dtypes.Item("MPI_INT8_T"))
+F77_INT16_T             = HexToFint(dtypes.Item("MPI_INT16_T"))
+F77_INT32_T             = HexToFint(dtypes.Item("MPI_INT32_T"))
+F77_INT64_T             = HexToFint(dtypes.Item("MPI_INT64_T"))
+F77_UINT8_T             = HexToFint(dtypes.Item("MPI_UINT8_T"))
+F77_UINT16_T            = HexToFint(dtypes.Item("MPI_UINT16_T"))
+F77_UINT32_T            = HexToFint(dtypes.Item("MPI_UINT32_T"))
+F77_UINT64_T            = HexToFint(dtypes.Item("MPI_UINT64_T"))
+F77_C_BOOL              = HexToFint(dtypes.Item("MPI_C_BOOL"))
+F77_C_FLOAT_COMPLEX     = HexToFint(dtypes.Item("MPI_C_FLOAT_COMPLEX"))
+F77_C_COMPLEX           = HexToFint(dtypes.Item("MPI_C_COMPLEX"))
+F77_C_DOUBLE_COMPLEX    = HexToFint(dtypes.Item("MPI_C_DOUBLE_COMPLEX"))
+F77_C_LONG_DOUBLE_COMPLEX      = HexToFint(dtypes.Item("MPI_C_LONG_DOUBLE_COMPLEX"))
+F77_AINT_W32                = HexToFint(dtypes.Item("MPI_AINT_W32"))
+F77_AINT_W64                = HexToFint(dtypes64.Item("MPI_AINT_W64"))
+F77_OFFSET_W64              = HexToFint(dtypes.Item("MPI_OFFSET_W64"))
 
 if false then
 foo = ""
@@ -3802,6 +3835,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                 ' LT_OBJDIR
                                 Case "LT_OBJDIR"
                                         fout.WriteLine("/* #undef LT_OBJDIR */")
+                                Case "USE_MPIU_INSTR"
+                                        fout.WriteLine("/* #undef USE_MPIU_INSTR */")
 				Case Else
                                     Dim useCustomDefDict
                                     useCustomDefDict = False

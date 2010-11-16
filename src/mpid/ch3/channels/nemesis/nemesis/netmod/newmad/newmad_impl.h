@@ -51,6 +51,7 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
 /* Any source management */
 void MPID_nem_newmad_anysource_posted(MPID_Request *rreq);
 int MPID_nem_newmad_anysource_matched(MPID_Request *rreq);
+int MPID_nem_newmad_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status);
 
 /* Callbacks for events */
 void MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info);
@@ -64,23 +65,17 @@ int MPID_nem_newmad_process_rdtype(MPID_Request **rreq_p, MPID_Datatype * dt_ptr
 /* Connection management*/
 int MPID_nem_newmad_send_conn_info (MPIDI_VC_t *vc);
 
-#define MPID_NEM_NMAD_MAX_SIZE (MPID_NEM_MAX_NETMOD_STRING_LEN)
+#define MPID_NEM_NMAD_MAX_SIZE 64
 typedef nm_gate_t mpid_nem_newmad_p_gate_t;
-
-typedef struct MPID_nem_newmad_vc_area_internal
-{
-    char                     hostname[MPID_NEM_NMAD_MAX_SIZE];
-    char                     url[MPID_NEM_NMAD_MAX_SIZE];
-    mpid_nem_newmad_p_gate_t p_gate;
-} MPID_nem_newmad_vc_area_internal_t;
 
 /* The current max size for the whole structure is 128 bytes */
 typedef struct
 {
-    MPID_nem_newmad_vc_area_internal_t *area;
+    char                     url[MPID_NEM_NMAD_MAX_SIZE];
+    mpid_nem_newmad_p_gate_t p_gate;
 } MPID_nem_newmad_vc_area;
 /* accessor macro to private fields in VC */
-#define VC_FIELD(vcp, field) (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)((vcp)->channel_private))->netmod_area.padding)->area->field)
+#define VC_FIELD(vcp, field) (((MPID_nem_newmad_vc_area *)((MPIDI_CH3I_VC *)((vcp)->channel_private))->netmod_area.padding)->field)
 
 /* The req provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the req structure

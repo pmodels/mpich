@@ -11,6 +11,7 @@
 #include "ckpoint.h"
 #include "demux.h"
 #include "bind.h"
+#include "hydt_ftb.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
@@ -257,6 +258,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     struct HYD_pmcd_pmi_hdr hdr;
     enum HYD_pmcd_pmi_cmd cmd;
     struct HYD_pmcd_pmip_pmi_handle *h;
+    char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -280,6 +282,12 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
          * applications, this is harder to identify, so we just let
          * the user cleanup the processes on a failure. */
         if (using_pmi_port || HYD_pmcd_pmip.downstream.pmi_fd_active[i]) {
+            MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA,
+                         "pgid:%d rank:%d",
+                         HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[i]);
+            status = HYDT_ftb_publish("FTB_MPI_PROCS_DEAD", ftb_event_payload);
+            HYDU_ERR_POP(status, "FTB publish failed\n");
+
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
                 HYD_pmcd_pmip_killjob();
 
@@ -456,6 +464,7 @@ static HYD_status launch_procs(void)
     int *pmi_ranks;
     int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
     struct HYDT_bind_cpuset_t cpuset;
+    char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -526,6 +535,10 @@ static HYD_status launch_procs(void)
         HYDU_ERR_POP(status, "unable to create env\n");
 
         /* Restart the proxy.  Specify stdin fd only if pmi_rank 0 is in this proxy. */
+        MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA, "pgid:%d ranks:%d-%d",
+                     HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[0],
+                     HYD_pmcd_pmip.downstream.pmi_rank
+                     [HYD_pmcd_pmip.local.proxy_process_count-1]);
         status = HYDT_ckpoint_restart(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id,
                                       env, HYD_pmcd_pmip.local.proxy_process_count,
                                       pmi_ranks,
@@ -535,7 +548,11 @@ static HYD_status launch_procs(void)
                                       HYD_pmcd_pmip.downstream.out,
                                       HYD_pmcd_pmip.downstream.err,
                                       HYD_pmcd_pmip.downstream.pid);
-        HYDU_ERR_POP(status, "checkpoint restart failure\n");
+        if (status)
+            status = HYDT_ftb_publish("FTB_MPI_PROCS_RESTART_FAIL", ftb_event_payload);
+        else
+            status = HYDT_ftb_publish("FTB_MPI_PROCS_RESTARTED", ftb_event_payload);
+        HYDU_ERR_POP(status, "checkpoint restart FTB publishing failure\n");
         goto fn_spawn_complete;
     }
 
@@ -873,6 +890,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int cmd_len, closed;
     enum HYD_pmcd_pmi_cmd cmd;
+    char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -899,7 +917,18 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     }
     else if (cmd == CKPOINT) {
         HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "requesting checkpoint\n");
+
+        MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA, "pgid:%d ranks:%d-%d",
+                     HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[0],
+                     HYD_pmcd_pmip.downstream.pmi_rank
+                     [HYD_pmcd_pmip.local.proxy_process_count-1]);
         status = HYDT_ckpoint_suspend(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
+        if (status)
+            status = HYDT_ftb_publish("FTB_MPI_PROCS_CKPT_FAIL", ftb_event_payload);
+        else
+            status = HYDT_ftb_publish("FTB_MPI_PROCS_CKPTED", ftb_event_payload);
+        HYDU_ERR_POP(status, "FTB publishing failure\n");
+
         HYDU_ERR_POP(status, "checkpoint suspend failed\n");
         HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "checkpoint completed\n");
     }

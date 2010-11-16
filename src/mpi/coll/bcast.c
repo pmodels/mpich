@@ -814,7 +814,7 @@ static int MPIR_SMP_Bcast(
 
     nbytes = type_size * count;
 
-    if ((nbytes < MPIR_BCAST_SHORT_MSG) || (comm_ptr->local_size < MPIR_BCAST_MIN_PROCS))
+    if ((nbytes < MPIR_PARAM_BCAST_SHORT_MSG_SIZE) || (comm_ptr->local_size < MPIR_PARAM_BCAST_MIN_PROCS))
     {
         /* send to intranode-rank 0 on the root's node */
         if (comm_ptr->node_comm != NULL &&
@@ -847,12 +847,12 @@ static int MPIR_SMP_Bcast(
                                       buffer, count, datatype, 0, comm_ptr->node_comm);
         }
     }
-    else /* (nbytes > MPIR_BCAST_SHORT_MSG) && (comm_ptr->size >= MPIR_BCAST_MIN_PROCS) */
+    else /* (nbytes > MPIR_PARAM_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_PARAM_BCAST_MIN_PROCS) */
     {
         /* supposedly...
            smp+doubling good for pof2
            reg+ring better for non-pof2 */
-        if (nbytes < MPIR_BCAST_LONG_MSG && MPIU_is_pof2(comm_ptr->local_size, NULL))
+        if (nbytes < MPIR_PARAM_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm_ptr->local_size, NULL))
         {
             /* medium-sized msg and pof2 np */
 
@@ -1015,19 +1015,19 @@ int MPIR_Bcast_intra (
 
     nbytes = type_size * count;
 
-    if ((nbytes < MPIR_BCAST_SHORT_MSG) || (comm_size < MPIR_BCAST_MIN_PROCS))
+    if ((nbytes < MPIR_PARAM_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_PARAM_BCAST_MIN_PROCS))
     {
         mpi_errno = MPIR_Bcast_binomial(buffer, count, datatype, root, comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-    else /* (nbytes >= MPIR_BCAST_SHORT_MSG) && (comm_size >= MPIR_BCAST_MIN_PROCS) */
+    else /* (nbytes >= MPIR_PARAM_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_PARAM_BCAST_MIN_PROCS) */
     {
-        if ((nbytes < MPIR_BCAST_LONG_MSG) && (MPIU_is_pof2(comm_size, NULL)))
+        if ((nbytes < MPIR_PARAM_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL)))
         {
             mpi_errno = MPIR_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
-        else /* (nbytes >= MPIR_BCAST_LONG_MSG) || !(comm_size_is_pof2) */
+        else /* (nbytes >= MPIR_PARAM_BCAST_LONG_MSG_SIZE) || !(comm_size_is_pof2) */
         {
             /* We want the ring algorithm whether or not we have a
                topologically aware communicator.  Doing inter/intra-node

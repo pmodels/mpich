@@ -10,6 +10,7 @@
 #include "rmki.h"
 #include "pmci.h"
 #include "bsci.h"
+#include "hydt_ftb.h"
 #include "demux.h"
 #include "uiu.h"
 
@@ -170,6 +171,10 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
+    /* if the user set the checkpoint prefix, set env var to enable checkpointing on the processes  */
+    if (HYD_handle.user_global.ckpoint_prefix)
+        HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1", &HYD_handle.user_global.global_env.system);
+
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
@@ -191,6 +196,9 @@ int main(int argc, char **argv)
                             HYD_handle.user_global.bootstrap_exec,
                             HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
+
+    status = HYDT_ftb_init();
+    HYDU_ERR_POP(status, "unable to initialize FTB\n");
 
     if (HYD_handle.node_list == NULL) {
         /* Node list is not created yet. The user might not have
@@ -326,6 +334,9 @@ int main(int argc, char **argv)
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_pmci_finalize();
     HYDU_ERR_POP(status, "process manager error on finalize\n");
+
+    status = HYDT_ftb_finalize();
+    HYDU_ERR_POP(status, "error finalizing FTB\n");
 
 #if defined ENABLE_PROFILING
     if (HYD_handle.enable_profiling) {

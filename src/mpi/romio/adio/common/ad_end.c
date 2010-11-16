@@ -55,6 +55,8 @@ void ADIO_End(int *error_code)
     if( ADIOI_syshints != MPI_INFO_NULL)
 	    MPI_Info_free(&ADIOI_syshints);
 
+    MPI_Op_free(&ADIO_same_amode);
+
     *error_code = MPI_SUCCESS;
 }
 

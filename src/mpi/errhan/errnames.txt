@@ -280,6 +280,7 @@ be in the range 0 to %d
 **fileamoderead:Cannot use MPI_MODE_CREATE or MPI_MODE_EXCL with \
  MPI_MODE_RDONLY 
 **fileamodeseq:Cannot specify MPI_MODE_SEQUENTIAL with MPI_MODE_RDWR
+**fileamodediff:amode must be the same on all processors
 **filename:Invalid file name
 **filename %s:Invalid file name %s
 **filenamelong:Pathname too long

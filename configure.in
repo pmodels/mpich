@@ -135,7 +135,6 @@ else
     AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
 AC_SUBST(MPICH2_RELEASE_DATE)
-
 # Produce a numeric version assuming the following format:
 # Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]
 # Example: 1.0.7rc1 has
@@ -330,6 +329,7 @@ AC_ARG_ENABLE(g,
                    compiler flags, i.e. MPICH2LIB_CFLAGS, MPICH2LIB_CXXFLAGS,
                    MPICH2LIB_FFLAGS, and MPICH2LIB_FCFLAGS.
         debug    - Synonym for dbg
+        instr    - Enable instrumentation
         log      - Enable debug event logging
         mem      - Memory usage tracing
         meminit  - Preinitialize memory associated structures and unions to
@@ -740,7 +740,9 @@ for option in $enable_fast ; do
             MPI_DEFAULT_FOPTS="-$option"
             MPI_DEFAULT_FCOPTS="-$option"
         else
+	    IFS="$save_IFS"
             AC_MSG_WARN([Unknown value $option for --enable-fast])
+	    IFS=","
         fi
         ;;
         none|no)
@@ -751,7 +753,9 @@ for option in $enable_fast ; do
         enable_append_ndebug=no
         ;;
         *)
+	IFS="$save_IFS"
         AC_MSG_WARN([Unknown value $option for --enable-fast])
+	IFS=","
         ;;
     esac
 done
@@ -1260,6 +1264,9 @@ for option in $enable_g ; do
 	handle)
 	AC_DEFINE(MPICH_DEBUG_HANDLES,1,[Define to enable handle checking])
 	;;
+	instr)
+	perform_instr=yes
+	;;
 	meminit)
 	perform_meminit=yes
 	;;
@@ -1284,12 +1291,15 @@ for option in $enable_g ; do
 	perform_dbglog=yes
 	enable_append_g=yes
 	perform_meminit=yes
+	perform_instr=yes
 	perform_dbgmutex=yes
 	perform_mutexnesting=yes
 	perform_handlealloc=yes
 	;;
 	*)
-	AC_MSG_WARN([Unknown value $enable_g for enable-g])
+	IFS=$save_IFS
+	AC_MSG_WARN([Unknown value $option for enable-g])
+	IFS=","
 	;;
     esac
 done
@@ -1311,7 +1321,10 @@ if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
 fi
 if test "$perform_handlealloc" = yes ; then
-   AC_DEFINE(MPICH_DEBUG_HANDLEALLOC,1,[Define to enable checking of handles still allocated at MPI_Finalize])
+    AC_DEFINE(MPICH_DEBUG_HANDLEALLOC,1,[Define to enable checking of handles still allocated at MPI_Finalize])
+fi
+if test "$perform_instr" = yes ; then
+    AC_DEFINE(USE_MPIU_INSTR,1,[Define this to enable internal instrumentation] )
 fi
 
 if test -n "$perform_memtracing" ; then
@@ -1729,6 +1742,15 @@ elif test "$enable_f77" = "yes" ; then
     PAC_PROG_F77
 fi
 
+if test "$enable_f77" = "yes" -a "$F77" = "" ; then
+   # No Fortran 77 compiler found; abort
+   AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
+   build any Fortran programs, you can disable Fortran support using
+   --disable-f77 and --disable-fc. If you do want to build Fortran
+   programs, you need to install a Fortran compiler such as gfortran
+   or ifort before you can proceed.])
+fi
+
 if test "$enable_f77" = yes ; then
     # Check if $MPI_DEFAULT_FOPTS is valid with $F77
     if test "$enable_default_optimize" = "yes" \
@@ -1904,7 +1926,17 @@ if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
     elif test "$pac_cv_prog_fc_works" = no; then
         AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
     fi
+
+    if test "$enable_fc" = "yes" -a "$FC" = "" ; then
+       # No Fortran 90 compiler found; abort
+       AC_MSG_ERROR([No Fortran 90 compiler found. If you don't need
+       to build any Fortran 90 programs, you can disable Fortran 90
+       support using --disable-fc. If you do want to build Fortran 90
+       programs, you need to install a Fortran 90 compiler such as
+       gfortran or ifort before you can proceed.])
+    fi
 fi
+
 if test "$enable_fc" = "yes" -a "$enable_f77" != "yes" ; then
    # Fortran 90 support requires compatible Fortran 77 support
    AC_MSG_ERROR([
@@ -2414,7 +2446,7 @@ public:
     case "$ENABLE_SHLIB" in
         gcc-osx|osx-gcc)
         # Assume that the compiler is g++ if gcc style shared libraries chosen
-        CXX_SHL="$CXX -fPIC"
+        CXX_SHL="$CXX -fPIC -dynamiclib -undefined suppress -single_module -flat_namespace"
         CXX_LINKPATH_SHL=""
 	;;
 	gcc)

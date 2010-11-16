@@ -43,6 +43,9 @@ all-local:
 clean-preamble:
 	${MAKE} cleanlibs
 
+clean-postamble:
+	cd examples && ${MAKE} clean
+
 cleanobjsandlibs:
 	${MAKE} clean && cd test && ${MAKE} clean
 	rm -f lib/newconfig
@@ -153,6 +156,7 @@ lib${MPILIBNAME}_so_LIBS   = -L. @LDFLAGS_DEPS@ @LIB_DEPS@
 libf${MPILIBNAME}_so_LIBS   = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
 lib${MPILIBNAME}f90_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
 lib${MPICXXLIBNAME}_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
+lib${MPICXXLIBNAME}_so_LINKER = @CXX_SHL@
 
 install_INCLUDE = src/include/mpi.h
 

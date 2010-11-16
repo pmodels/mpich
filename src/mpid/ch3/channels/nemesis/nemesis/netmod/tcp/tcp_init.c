@@ -31,7 +31,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_connect_to_root,
     MPID_nem_tcp_vc_init,
     MPID_nem_tcp_vc_destroy,
-    MPID_nem_tcp_vc_terminate
+    MPID_nem_tcp_vc_terminate,
+    NULL /* anysource iprobe */
 };
 
 /* in case there are no packet types defined (e.g., they're ifdef'ed out) make sure the array is not zero length */
@@ -372,7 +373,8 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 
     mpi_errno = MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPID_nem_tcp_connect(new_vc);
+    mpi_errno = MPID_nem_tcp_connect(new_vc);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);

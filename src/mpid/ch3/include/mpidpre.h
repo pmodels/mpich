@@ -170,7 +170,9 @@ typedef struct MPIDI_VC * MPID_VCR;
     int *disp_units;      /* array of displacement units of all windows */\
     MPI_Win *all_win_handles;    /* array of handles to the window objects\
                                           of all processes */            \
-    struct MPIDI_RMA_ops *rma_ops_list; /* list of outstanding RMA requests */  \
+    struct MPIDI_RMA_ops *rma_ops_list_head; /* list of outstanding \
+                                                RMA requests */ \
+    struct MPIDI_RMA_ops *rma_ops_list_tail; \
     volatile int lock_granted;  /* flag to indicate whether lock has     \
                                    been granted to this process (as source) for         \
                                    passive target rma */                 \

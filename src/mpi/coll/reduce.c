@@ -838,7 +838,7 @@ int MPIR_Reduce_intra (
     while (pof2 <= comm_size) pof2 <<= 1;
     pof2 >>=1;
 
-    if ((count*type_size > MPIR_REDUCE_SHORT_MSG) &&
+    if ((count*type_size > MPIR_PARAM_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
         /* do a reduce-scatter followed by gather to root. */
         mpi_errno = MPIR_Reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr);

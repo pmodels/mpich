@@ -6,6 +6,11 @@
 
 #ifndef MX_MODULE_IMPL_H
 #define MX_MODULE_IMPL_H
+#ifdef USE_PMI2_API
+#include "pmi2.h"
+#else
+#include "pmi.h"
+#endif
 #include <myriexpress.h>
 #include "mx_extensions.h"
 #include "mpid_nem_impl.h"
@@ -41,6 +46,8 @@ int MPID_nem_mx_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq);
 int MPID_nem_mx_cancel_recv(MPIDI_VC_t *vc, MPID_Request *rreq);
 int MPID_nem_mx_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, MPI_Status *status);
 int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status);
+
+int MPID_nem_mx_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status);
 
 /* Callback routine for unex msgs in MX */
 mx_unexp_handler_action_t MPID_nem_mx_get_adi_msg(void *context,mx_endpoint_addr_t source,
@@ -175,12 +182,12 @@ typedef int16_t Mx_Nem_tag_t;
         ((_match) |= (((uint64_t)((_tag)&(NEM_MX_MAX_TAG))) << SHIFT_TAG)); \
 }while(0)
 #define NEM_MX_SET_SRC(_match, _src) do {                      \
-        MPIU_Assert(_src >= 0)&&(_src<=(NEM_MX_MAX_RANK)));    \
+        MPIU_Assert((_src >= 0)&&(_src<=(NEM_MX_MAX_RANK)));   \
         ((_match) |= (((uint64_t)(_src)) << SHIFT_RANK));      \
 }while(0)
-#define NEM_MX_SET_CTXT(_match, _ctxt) do {                    \
-        MPIU_Assert(_ctxt >= 0)&&(_ctxt<=(NEM_MX_MAX_CTXT)));  \
-       ((_match) |= (((uint64_t)(_ctxt)) << SHIFT_CTXT));      \
+#define NEM_MX_SET_CTXT(_match, _ctxt) do {                     \
+        MPIU_Assert((_ctxt >= 0)&&(_ctxt<=(NEM_MX_MAX_CTXT)));  \
+        ((_match) |= (((uint64_t)(_ctxt)) << SHIFT_CTXT));      \
 }while(0)
 #define NEM_MX_SET_PGRANK(_match, _pg_rank)  do {               \
 	((_match) |= (((uint64_t)(_pg_rank)) << SHIFT_PGRANK));	\

@@ -21,6 +21,8 @@ typedef int (* MPID_nem_net_module_connect_to_root_t)(const char *business_card,
 typedef int (* MPID_nem_net_module_vc_init_t)(MPIDI_VC_t *vc);
 typedef int (* MPID_nem_net_module_vc_destroy_t)(MPIDI_VC_t *vc);
 typedef int (* MPID_nem_net_module_vc_terminate_t)(MPIDI_VC_t *vc);
+typedef int (* MPID_nem_net_module_anysource_iprobe_t)(int tag, MPID_Comm *comm, int context_offset, int *flag,
+                                                       MPI_Status *status);
 
 typedef void (* MPID_nem_net_module_vc_dbg_print_sendq_t)(FILE *stream, MPIDI_VC_t *vc);
 
@@ -39,6 +41,7 @@ typedef struct MPID_nem_netmod_funcs
     MPID_nem_net_module_vc_init_t vc_init;
     MPID_nem_net_module_vc_destroy_t vc_destroy;
     MPID_nem_net_module_vc_terminate_t vc_terminate;
+    MPID_nem_net_module_anysource_iprobe_t anysource_iprobe;
 } MPID_nem_netmod_funcs_t;
 
 extern MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq;

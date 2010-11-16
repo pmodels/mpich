@@ -347,9 +347,34 @@ EOT
 
 close(PARAM_C);
 
-print PARAM_HDR "\n#endif /* $hdr_guard */\n";
-close(PARAM_HDR);
+print PARAM_HDR <<EOT;
 
+/* TODO: this should be defined elsewhere */
+#define ${ns}_assert MPIU_Assert
+
+/* helper macros for safely getting the default value of a parameter */
+EOT
+my @type_field = (
+    ['INT','i_val'],
+    ['DOUBLE','d_val'],
+    ['BOOLEAN','i_val'],
+    ['STRING','s_val'],
+);
+foreach my $tuple (@type_field) {
+    my ($type,$field) = @$tuple;
+    print PARAM_HDR <<EOT;
+#define ${uc_ns}_GET_DEFAULT_${type}(p_suffix_,out_ptr_)                                               \\
+    do {                                                                                               \\
+        ${ns}_assert(${uc_ns}_TYPE_${type} == ${ns}_params[${uc_ns}_ID_##p_suffix_].default_val.type); \\
+        *(out_ptr_) = ${ns}_params[${uc_ns}_ID_##p_suffix_].default_val.${field};                      \\
+    } while (0)
+EOT
+}
+print PARAM_HDR <<EOT;
+
+#endif /* $hdr_guard */
+EOT
+close(PARAM_HDR);
 
 ########################################################################
 # helper subroutines

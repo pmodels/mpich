@@ -137,6 +137,11 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     targs[idx++] = HYDU_int_to_str(-1);
     targs[idx++] = NULL;
 
+    if (HYDT_bsci_info.debug) {
+        HYDU_dump(stdout, "Launch arguments: ");
+        HYDU_print_strlist(targs);
+    }
+
     HYDT_bind_cpuset_zero(&cpuset);
     status = HYDU_create_process(targs, NULL,
                                  enable_stdin ? &fd_stdin : NULL, &fd_stdout,

@@ -33,6 +33,7 @@ int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPID_VCR   *local_vcr;
     int i, lpid, n;
+    int comm_world_size = MPIR_Process.comm_world->local_size;
 
     /* Create a group if necessary and populate it with the
        local process ids */
@@ -47,12 +48,19 @@ int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
 	}
 	else
 	    local_vcr = comm_ptr->vcr;
-	
+
+        (*group_ptr)->is_local_dense_monotonic = TRUE;
 	for (i=0; i<n; i++) {
 	    (void) MPID_VCR_Get_lpid( local_vcr[i], &lpid );
 	    (*group_ptr)->lrank_to_lpid[i].lrank = i;
 	    (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
+            if (lpid > comm_world_size ||
+                (i > 0 && (*group_ptr)->lrank_to_lpid[i-1].lpid != (lpid-1)))
+            {
+                (*group_ptr)->is_local_dense_monotonic = FALSE;
+            }
 	}
+
 	(*group_ptr)->size		 = n;
         (*group_ptr)->rank		 = comm_ptr->rank;
         (*group_ptr)->idx_of_first_lpid = -1;

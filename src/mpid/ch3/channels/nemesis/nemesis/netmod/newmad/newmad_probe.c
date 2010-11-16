@@ -92,3 +92,13 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
  fn_fail:  ATTRIBUTE((unused))
     goto fn_exit;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_newmad_anysource_iprobe
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_newmad_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
+{   
+    return MPID_nem_newmad_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
+}
+

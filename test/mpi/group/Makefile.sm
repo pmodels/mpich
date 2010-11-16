@@ -13,6 +13,8 @@ gtranks_SOURCES = gtranks.c
 gtranks_LDADD = ../util/mtest.o
 groupnullincl_SOURCES = groupnullincl.c
 groupnullincl_LDADD = ../util/mtest.o
+gtranksperf_SOURCES = gtranksperf.c
+gtranksperf_LDADD = ../util/mtest.o
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)

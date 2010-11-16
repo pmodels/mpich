@@ -136,12 +136,12 @@ int MPIR_Gather_intra (
 
 	/* If the message is smaller than the threshold, we will copy
 	 * our message in there too */
-	if (nbytes < MPIR_GATHER_VSMALL_MSG) tmp_buf_size++;
+	if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) tmp_buf_size++;
 
 	tmp_buf_size *= nbytes;
 
 	/* For zero-ranked root, we don't need any temporary buffer */
-	if ((rank == root) && (!root || (nbytes >= MPIR_GATHER_VSMALL_MSG)))
+	if ((rank == root) && (!root || (nbytes >= MPIR_PARAM_GATHER_VSMALL_MSG_SIZE)))
 	    tmp_buf_size = 0;
 
 	if (tmp_buf_size) {
@@ -157,7 +157,7 @@ int MPIR_Gather_intra (
 		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	    }
         }
-	else if (tmp_buf_size && (nbytes < MPIR_GATHER_VSMALL_MSG))
+	else if (tmp_buf_size && (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE))
 	{
             /* copy from sendbuf into tmp_buf */
             mpi_errno = MPIR_Localcopy(sendbuf, sendcnt, sendtype,
@@ -196,7 +196,7 @@ int MPIR_Gather_intra (
 						  &status);
                             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 			}
-			else if (nbytes < MPIR_GATHER_VSMALL_MSG) {
+			else if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) {
 			    mpi_errno = MPIC_Recv(tmp_buf, recvblks * nbytes, MPI_BYTE,
 						  src, MPIR_GATHER_TAG, comm, &status);
                             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -235,7 +235,7 @@ int MPIR_Gather_intra (
 			if (relative_src + mask > comm_size)
 			    recvblks -= (relative_src + mask - comm_size);
 
-			if (nbytes < MPIR_GATHER_VSMALL_MSG)
+			if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE)
 			    offset = mask * nbytes;
 			else
 			    offset = (mask - 1) * nbytes;
@@ -260,7 +260,7 @@ int MPIR_Gather_intra (
                                           MPIR_GATHER_TAG, comm);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
-                else if (nbytes < MPIR_GATHER_VSMALL_MSG) {
+                else if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) {
 		    mpi_errno = MPIC_Send(tmp_buf, curr_cnt, MPI_BYTE, dst,
 					  MPIR_GATHER_TAG, comm);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -293,7 +293,7 @@ int MPIR_Gather_intra (
             mask <<= 1;
         }
 
-        if ((rank == root) && root && (nbytes < MPIR_GATHER_VSMALL_MSG) && copy_blks)
+        if ((rank == root) && root && (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) && copy_blks)
 	{
             /* reorder and copy from tmp_buf into recvbuf */
 	    mpi_errno = MPIR_Localcopy(tmp_buf,
@@ -470,7 +470,7 @@ int MPIR_Gather_inter (
         nbytes = sendtype_size * sendcnt * local_size;
     }
 
-    if (nbytes < MPIR_GATHER_SHORT_MSG)
+    if (nbytes < MPIR_PARAM_GATHER_INTER_SHORT_MSG_SIZE)
     {
         if (root == MPI_ROOT)
 	{

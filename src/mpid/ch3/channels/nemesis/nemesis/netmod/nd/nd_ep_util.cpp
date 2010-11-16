@@ -44,6 +44,7 @@ int MPID_Nem_nd_conn_hnd_init(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_conn_ty
     MPIU_ExInitOverlapped(&((*pconn_hnd)->recv_ov), NULL, NULL);
     MPIU_ExInitOverlapped(&((*pconn_hnd)->send_ov), NULL, NULL);
 
+	(*pconn_hnd)->npending_ops = 0;
     (*pconn_hnd)->zcp_in_progress = 0;
 
     /* Create an endpoint - listen conns don't need an endpoint */

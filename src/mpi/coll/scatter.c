@@ -424,7 +424,7 @@ int MPIR_Scatter_inter (
         nbytes = recvtype_size * recvcnt * local_size;
     }
 
-    if (nbytes < MPIR_SCATTER_SHORT_MSG) {
+    if (nbytes < MPIR_PARAM_SCATTER_INTER_SHORT_MSG_SIZE) {
         if (root == MPI_ROOT) {
             /* root sends all data to rank 0 on remote group and returns */
             mpi_errno = MPIC_Send(sendbuf, sendcnt*remote_size,

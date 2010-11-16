@@ -23,10 +23,10 @@ static mpid_nem_mx_hash_t *mpid_nem_mx_asreqs = NULL;
     s->mx_req_ptr = (_mx_req);						       \
     HASH_ADD(hh1, mpid_nem_mx_asreqs, mpid_req_ptr, sizeof(MPID_Request*), s); \
 }while(0)
-#define MPID_NEM_MX_GET_REQ_FROM_HASH(_mpi_req_ptr,_mx_req) do{		                                 \
-    mpid_nem_mx_hash_t *s;						                                 \
-    HASH_FIND(hh1, mpid_nem_mx_asreqs, &(_mpi_req_ptr), sizeof(MPID_Request*), s);                       \
-    if(s){HASH_DELETE(hh1, mpid_nem_mx_asreqs, s); (_mx_req) = s->mx_req_ptr; } else {(_mx_req) = NULL;} \
+#define MPID_NEM_MX_GET_REQ_FROM_HASH(_mpi_req_ptr,_mx_req) do{		                                              \
+    mpid_nem_mx_hash_t *s;						                                              \
+    HASH_FIND(hh1, mpid_nem_mx_asreqs, &(_mpi_req_ptr), sizeof(MPID_Request*), s);                                    \
+    if(s){HASH_DELETE(hh1, mpid_nem_mx_asreqs, s); (_mx_req) = s->mx_req_ptr; MPIU_Free(s);} else {(_mx_req) = NULL;} \
 }while(0)
 
 static mpid_nem_mx_hash_t *mpid_nem_mx_connreqs ATTRIBUTE((unused, used))= NULL; 
@@ -328,8 +328,10 @@ MPID_nem_mx_poll(int in_blocking_poll)
      }
      else if (kind == MPID_REQUEST_RECV)	       
      {
-       MPID_nem_mx_internal_req_t *adi_req = &(myreq->nem_mx_req);
+       MPID_nem_mx_internal_req_t *adi_req = &(myreq->nem_mx_req);	
        MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
+       if(adi_req->vc == NULL)
+	  mx_get_endpoint_addr_context(status.source,(void **)(&(adi_req->vc))); 
        if (status.msg_length <= sizeof(MPIDI_CH3_PktGeneric_t))
        {
 	 MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
@@ -432,6 +434,8 @@ MPID_nem_mx_poll(int in_blocking_progress)
       {
       	 MPID_nem_mx_internal_req_t *adi_req = &(myreq->nem_mx_req);
 	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
+	 if(adi_req->vc == NULL)
+	   mx_get_endpoint_addr_context(status.source,(void **)(&(adi_req->vc))); 
 	 if (status.msg_length <= sizeof(MPIDI_CH3_PktGeneric_t))
 	 {
 	   MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
@@ -552,8 +556,23 @@ MPID_nem_mx_handle_rreq(MPID_Request *req, mx_status_t status)
   MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, userbuf_sz, dt_ptr, dt_true_lb);
   /*fprintf(stdout," ===> userbuf_size is %i, msg_length is %i, xfer_length is %i\n",userbuf_sz,status.msg_length,status.xfer_length); */
   
-  if (status.msg_length <=  userbuf_sz) {
-    data_sz = req->dev.recv_data_sz;
+  if (status.msg_length <=  userbuf_sz) 
+  {
+     data_sz = status.xfer_length;
+     /* the sent message was truncated */
+     if (status.msg_length != status.xfer_length )
+     {
+	MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+					    "message truncated on receiver side, real_msg_sz=" 
+					    MPIDI_MSG_SZ_FMT ", expected_msg_sz="
+					    MPIDI_MSG_SZ_FMT,
+					    status.xfer_length, status.msg_length));
+	req->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
+						     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
+						     "**truncate", "**truncate %d %d %d %d", 
+						     req->status.MPI_SOURCE, req->status.MPI_TAG, 
+						     req->dev.recv_data_sz, userbuf_sz );
+     }
   }
   else
   {
