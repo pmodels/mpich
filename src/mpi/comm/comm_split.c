@@ -28,22 +28,62 @@ typedef struct splittype {
     int color, key;
 } splittype;
 
+/* Same as splittype but with an additional field to stabilize the qsort.  We
+ * could just use one combined type, but using separate types simplifies the
+ * allgather step. */
+typedef struct sorttype {
+    int color, key;
+    int orig_idx;
+} sorttype;
+
+static int sorttype_compare(const void *v1, const void *v2) {
+    const sorttype *s1 = v1;
+    const sorttype *s2 = v2;
+
+    if (s1->key > s2->key)
+        return 1;
+    if (s1->key < s2->key)
+        return -1;
+
+    /* (s1->key == s2->key), maintain original order */
+    if (s1->orig_idx > s2->orig_idx)
+        return 1;
+    else if (s1->orig_idx < s2->orig_idx)
+        return -1;
+
+    return 0; /* should never happen */
+}
+
 /* Sort the entries in keytable into increasing order by key.  A stable
    sort should be used incase the key values are not unique. */
-static void MPIU_Sort_inttable( splittype *keytable, int size )
+static void MPIU_Sort_inttable( sorttype *keytable, int size )
 {
-    splittype tmp;
+    sorttype tmp;
     int i, j;
 
-    /* FIXME Bubble sort */
-    for (i=0; i<size; i++) {
-	for (j=i+1; j<size; j++) {
-	    if (keytable[i].key > keytable[j].key) {
-		tmp	    = keytable[i];
-		keytable[i] = keytable[j];
-		keytable[j] = tmp;
-	    }
-	}
+#if defined(HAVE_QSORT)
+    /* temporary switch for profiling performance differences */
+    if (MPIR_PARAM_COMM_SPLIT_USE_QSORT)
+    {
+        /* qsort isn't a stable sort, so we have to enforce stability by keeping
+         * track of the original indices */
+        for (i = 0; i < size; ++i)
+            keytable[i].orig_idx = i;
+        qsort(keytable, size, sizeof(sorttype), &sorttype_compare);
+    }
+    else
+#endif
+    {
+        /* fall through to bubble sort if qsort is unavailable/disabled */
+        for (i=0; i<size; i++) {
+            for (j=i+1; j<size; j++) {
+                if (keytable[i].key > keytable[j].key) {
+                    tmp         = keytable[i];
+                    keytable[i] = keytable[j];
+                    keytable[j] = tmp;
+                }
+            }
+        }
     }
 }
 
@@ -55,7 +95,8 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *local_comm_ptr;
-    splittype *table, *remotetable=0, *keytable, *remotekeytable=0;
+    splittype *table, *remotetable=0;
+    sorttype *keytable, *remotekeytable=0;
     int rank, size, remote_size, i, new_size, new_remote_size,
 	first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm; /* TRUE iff *newcomm should be populated */
@@ -206,7 +247,7 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	   extract the table into a smaller array and sort that.
 	   Also, store in the "color" entry the rank in the input communicator
 	   of the entry. */
-	MPIU_CHKLMEM_MALLOC(keytable,splittype*,new_size*sizeof(splittype),
+	MPIU_CHKLMEM_MALLOC(keytable,sorttype*,new_size*sizeof(sorttype),
 			    mpi_errno,"keytable");
 	for (i=0; i<new_size; i++) {
 	    keytable[i].key   = table[first_entry].key;
@@ -219,8 +260,8 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	MPIU_Sort_inttable( keytable, new_size );
 
 	if (comm_ptr->comm_kind == MPID_INTERCOMM) {
-	    MPIU_CHKLMEM_MALLOC(remotekeytable,splittype*,
-				new_remote_size*sizeof(splittype),
+	    MPIU_CHKLMEM_MALLOC(remotekeytable,sorttype*,
+				new_remote_size*sizeof(sorttype),
 				mpi_errno,"remote keytable");
 	    for (i=0; i<new_remote_size; i++) {
 		remotekeytable[i].key   = remotetable[first_remote_entry].key;

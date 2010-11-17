@@ -5033,6 +5033,10 @@ AC_CHECK_FUNCS(snprintf)
 if test "$ac_cv_func_snprintf" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
 fi
+
+# qsort will be used in MPI_Comm_split, if available
+AC_CHECK_FUNCS([qsort])
+
 # if we are using stdarg, we may need va_copy .  Test to see if we have it
 # Since it may be a built-in instead of a function, we must try to 
 # compile and link a program that uses it.

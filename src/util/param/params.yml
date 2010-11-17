@@ -16,6 +16,8 @@
 categories:
     - name        : collective
       description : parameters that control collective communication behavior
+    - name        : communicator
+      description : parameters that control communicator construction and operation
     - name        : pt2pt
       description : parameters that control point-to-point communication behavior
     - name        : intranode
@@ -170,6 +172,15 @@ parameters:
       description : >-
         The smallest message size that will be used for the pipelined, large-message,
         ring algorithm in the MPI_Allgatherv implementation.
+
+    ##############################################################
+    # communicator parameters
+    - category    : communicator
+      name        : COMM_SPLIT_USE_QSORT
+      type        : boolean
+      default     : true
+      description : >-
+        Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
 
     ##############################################################
     # intranode communication parameters
