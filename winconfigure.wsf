@@ -3864,6 +3864,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef LT_OBJDIR */")
                                 Case "USE_MPIU_INSTR"
                                         fout.WriteLine("/* #undef USE_MPIU_INSTR */")
+                                Case "HAVE_QSORT"
+                                        fout.WriteLine("#define HAVE_QSORT 1")
 				Case Else
                                     Dim useCustomDefDict
                                     useCustomDefDict = False
