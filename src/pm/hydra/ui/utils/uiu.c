@@ -181,16 +181,32 @@ void HYD_uiu_print_params(void)
     return;
 }
 
-HYD_status HYD_uiu_stdout_cb(void *buf, int buflen)
+HYD_status HYD_uiu_stdout_cb(int pgid, int proxy_id, int rank, void *_buf, int buflen)
 {
-    int sent, closed;
+    int sent, closed, mark, i;
+    char *buf = (char *) _buf;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_write(STDOUT_FILENO, buf, buflen, &sent, &closed);
-    HYDU_ERR_POP(status, "unable to write data to stdout\n");
-    HYDU_ASSERT(!closed, status);
+    if (HYD_handle.user_global.prepend_rank == 0) {
+        status = HYDU_sock_write(STDOUT_FILENO, buf, buflen, &sent, &closed);
+        HYDU_ERR_POP(status, "unable to write data to stdout\n");
+        HYDU_ASSERT(!closed, status);
+    }
+    else {
+        mark = 0;
+        for (i = 0; i < buflen; i++) {
+            if (buf[i] == '\n' || i == buflen - 1) {
+                HYDU_dump_noprefix(stdout, "[%d] ", rank);
+                status = HYDU_sock_write(STDOUT_FILENO, (const void *) &buf[mark],
+                                         i - mark + 1, &sent, &closed);
+                HYDU_ERR_POP(status, "unable to write data to stdout\n");
+                HYDU_ASSERT(!closed, status);
+                mark = i + 1;
+            }
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -200,16 +216,32 @@ HYD_status HYD_uiu_stdout_cb(void *buf, int buflen)
     goto fn_exit;
 }
 
-HYD_status HYD_uiu_stderr_cb(void *buf, int buflen)
+HYD_status HYD_uiu_stderr_cb(int pgid, int proxy_id, int rank, void *_buf, int buflen)
 {
-    int sent, closed;
+    int sent, closed, mark, i;
+    char *buf = (char *) _buf;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_write(STDERR_FILENO, buf, buflen, &sent, &closed);
-    HYDU_ERR_POP(status, "unable to write data to stdout\n");
-    HYDU_ASSERT(!closed, status);
+    if (HYD_handle.user_global.prepend_rank == 0) {
+        status = HYDU_sock_write(STDERR_FILENO, buf, buflen, &sent, &closed);
+        HYDU_ERR_POP(status, "unable to write data to stderr\n");
+        HYDU_ASSERT(!closed, status);
+    }
+    else {
+        mark = 0;
+        for (i = 0; i < buflen; i++) {
+            if (buf[i] == '\n' || i == buflen - 1) {
+                HYDU_dump_noprefix(stderr, "[%d] ", rank);
+                status = HYDU_sock_write(STDERR_FILENO, (const void *) &buf[mark],
+                                         i - mark + 1, &sent, &closed);
+                HYDU_ERR_POP(status, "unable to write data to stderr\n");
+                HYDU_ASSERT(!closed, status);
+                mark = i + 1;
+            }
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

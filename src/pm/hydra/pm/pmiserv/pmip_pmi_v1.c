@@ -14,8 +14,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
     int i, j, sent, closed;
     char *tmp[HYD_NUM_TMP_STRINGS], *buf;
-    struct HYD_pmcd_pmi_hdr hdr;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -33,12 +32,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    cmd = PMI_CMD;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
-    HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
-    HYDU_ASSERT(!closed, status);
-
+    hdr.cmd = PMI_CMD;
     hdr.pid = fd;
     hdr.buflen = strlen(buf);
     hdr.pmi_version = 1;
@@ -48,8 +42,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "forwarding command (%s) upstream\n",
-                                buf);
+        HYDU_dump(stdout, "forwarding command (%s) upstream\n", buf);
     }
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);
@@ -72,7 +65,7 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
     HYDU_FUNC_ENTER();
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "PMI response: %s", cmd);
+        HYDU_dump(stdout, "PMI response: %s", cmd);
     }
 
     status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);

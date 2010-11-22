@@ -202,8 +202,7 @@ static HYD_status handle_abort(int fd, struct HYD_proxy *proxy)
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
     int count, closed;
-    enum HYD_pmcd_pmi_cmd cmd = INVALID_CMD;
-    struct HYD_pmcd_pmi_hdr hdr;
+    struct HYD_pmcd_hdr hdr;
     struct HYD_proxy *proxy;
     char *buf;
     HYD_status status = HYD_SUCCESS;
@@ -212,7 +211,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
     proxy = (struct HYD_proxy *) userp;
 
-    status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read command from proxy\n");
 
     if (closed) {
@@ -227,24 +226,19 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         goto fn_exit;
     }
 
-    if (cmd == PID_LIST) {      /* Got PIDs */
+    if (hdr.cmd == PID_LIST) {      /* Got PIDs */
         status = handle_pid_list(fd, proxy);
         HYDU_ERR_POP(status, "unable to receive PID list\n");
     }
-    else if (cmd == EXIT_STATUS) {
+    else if (hdr.cmd == EXIT_STATUS) {
         status = handle_exit_status(fd, proxy);
         HYDU_ERR_POP(status, "unable to receive exit status\n");
     }
-    else if (cmd == ABORT) {
+    else if (hdr.cmd == ABORT) {
         status = handle_abort(fd, proxy);
         HYDU_ERR_POP(status, "unable to receive exit status\n");
     }
-    else if (cmd == PMI_CMD) {
-        status =
-            HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-        HYDU_ERR_POP(status, "unable to read PMI header from proxy\n");
-        HYDU_ASSERT(!closed, status);
-
+    else if (hdr.cmd == PMI_CMD) {
         HYDU_MALLOC(buf, char *, hdr.buflen + 1, status);
 
         status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -258,8 +252,21 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_FREE(buf);
     }
+    else if (hdr.cmd == STDOUT || hdr.cmd == STDERR) {
+        HYDU_MALLOC(buf, char *, hdr.buflen, status);
+
+        status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to read PMI command from proxy\n");
+        HYDU_ASSERT(!closed, status);
+
+        if (hdr.cmd == STDOUT)
+            status = HYD_handle.stdout_cb(hdr.pgid, hdr.proxy_id, hdr.rank, buf, hdr.buflen);
+        else
+            status = HYD_handle.stderr_cb(hdr.pgid, hdr.proxy_id, hdr.rank, buf, hdr.buflen);
+        HYDU_ERR_POP(status, "error in the UI defined callback\n");
+    }
     else {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unhandled command = %d\n", cmd);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unhandled command = %d\n", hdr.cmd);
     }
 
   fn_exit:
@@ -272,16 +279,14 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
 static HYD_status send_exec_info(struct HYD_proxy *proxy)
 {
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    cmd = PROC_INFO;
-    status =
-        HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd), &sent,
-                        &closed);
+    hdr.cmd = PROC_INFO;
+    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
     HYDU_ASSERT(!closed, status);
 

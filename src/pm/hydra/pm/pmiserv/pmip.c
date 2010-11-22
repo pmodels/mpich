@@ -173,7 +173,7 @@ static void signal_cb(int sig)
 int main(int argc, char **argv)
 {
     int i, count, pid, ret_status, sent, closed, ret, done;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_dbg_init("proxy:unset");
@@ -264,9 +264,9 @@ int main(int argc, char **argv)
     }
 
     /* Send the exit status upstream */
-    cmd = EXIT_STATUS;
+    hdr.cmd = EXIT_STATUS;
     status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
     if (closed)
         goto fn_fail;

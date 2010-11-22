@@ -11,25 +11,6 @@
 #include "hydra_utils.h"
 #include "pmi_common.h"
 
-#define HYD_pmcd_pmi_proxy_dump(_status, _fd, ...)                      \
-    {                                                                   \
-        char _str[HYD_TMPBUF_SIZE];                                     \
-        struct HYD_pmcd_stdio_hdr _hdr;                                 \
-        int _recvd, _closed;                                            \
-        MPL_snprintf(_str, HYD_TMPBUF_SIZE, "[%s] ", HYD_dbg_prefix);   \
-        MPL_snprintf(_str + strlen(_str), HYD_TMPBUF_SIZE - strlen(_str), __VA_ARGS__); \
-        if (HYD_pmcd_pmip.user_global.prepend_rank) {                   \
-            (_hdr).rank = -1;                                           \
-            (_hdr).buflen = strlen(_str);                               \
-            (_status) = HYDU_sock_write((_fd), &(_hdr), sizeof((_hdr)), &(_recvd), &(_closed)); \
-            HYDU_ERR_POP((_status), "sock write error\n");              \
-            HYDU_ASSERT(!(_closed), (_status));                         \
-        }                                                               \
-        (_status) = HYDU_sock_write((_fd), &(_str), strlen(_str), &(_recvd), &(_closed)); \
-        HYDU_ERR_POP((_status), "sock write error\n");                  \
-        HYDU_ASSERT(!(_closed), (_status));                             \
-    }
-
 struct HYD_pmcd_pmip {
     struct HYD_user_global user_global;
 

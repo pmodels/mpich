@@ -9,15 +9,12 @@
 #include "bscu.h"
 #include "persist_client.h"
 
-static HYD_status(*out_cb) (void *buf, int buflen);
-static HYD_status(*err_cb) (void *buf, int buflen);
-
 int *HYDT_bscd_persist_control_fd = NULL;
 int HYDT_bscd_persist_node_count = 0;
 
 static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
 {
-    int count, closed;
+    int count, closed, sent;
     char buf[HYD_TMPBUF_SIZE];
     HYDT_persist_header hdr;
     HYD_status status = HYD_SUCCESS;
@@ -34,12 +31,16 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ASSERT(!closed, status);
 
         if (hdr.io_type == HYDT_PERSIST_STDOUT) {
-            status = out_cb(buf, hdr.buflen);
-            HYDU_ERR_POP(status, "error calling stdout callback\n");
+            HYDU_sock_write(STDOUT_FILENO, buf, hdr.buflen, &sent, &closed);
+            HYDU_ERR_POP(status, "stdout forwarding error\n");
+            HYDU_ASSERT(!closed, status);
+            HYDU_ASSERT(sent == hdr.buflen, status);
         }
         else {
-            status = err_cb(buf, hdr.buflen);
-            HYDU_ERR_POP(status, "error calling stderr callback\n");
+            HYDU_sock_write(STDERR_FILENO, buf, hdr.buflen, &sent, &closed);
+            HYDU_ERR_POP(status, "stderr forwarding error\n");
+            HYDU_ASSERT(!closed, status);
+            HYDU_ASSERT(sent == hdr.buflen, status);
         }
     }
     else {
@@ -58,9 +59,7 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
 }
 
 HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list,
-                                          int *control_fd, int enable_stdin,
-                                          HYD_status(*stdout_cb) (void *buf, int buflen),
-                                          HYD_status(*stderr_cb) (void *buf, int buflen))
+                                          int *control_fd, int enable_stdin)
 {
     struct HYD_node *node;
     int idx, i, tmp_fd;
@@ -94,7 +93,7 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_lis
             tmp_fd = STDIN_FILENO;
             status = HYDT_dmx_register_fd(1, &tmp_fd, HYD_POLLIN,
                                           &HYDT_bscd_persist_control_fd[i],
-                                          HYDT_bscu_stdin_cb);
+                                          HYDT_bscu_stdio_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
@@ -102,9 +101,6 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_lis
                                       persist_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
-
-    out_cb = stdout_cb;
-    err_cb = stderr_cb;
 
   fn_exit:
     HYDU_FUNC_EXIT();

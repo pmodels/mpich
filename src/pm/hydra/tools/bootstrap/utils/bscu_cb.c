@@ -7,20 +7,17 @@
 #include "hydra_utils.h"
 #include "bscu.h"
 
-HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
+HYD_status HYDT_bscu_stdio_cb(int fd, HYD_event_t events, void *userp)
 {
-    int buflen, i, closed;
-    char buf[HYD_TMPBUF_SIZE];
-    HYD_status(*cb) (void *buf, int buflen);
+    int stdfd, closed, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* Get the callback information */
-    cb = (HYD_status(*)(void *buf, int buflen)) userp;
+    stdfd = (int) (size_t) userp;
 
-    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &buflen, &closed, HYDU_SOCK_COMM_NONE);
-    HYDU_ERR_POP(status, "error reading from fd\n");
+    status = HYDU_sock_forward_stdio(fd, stdfd, &closed);
+    HYDU_ERR_POP(status, "stdin forwarding error\n");
 
     if (closed || (events & HYD_POLLHUP)) {
         /* connection has closed */
@@ -35,46 +32,6 @@ HYD_status HYDT_bscu_inter_cb(int fd, HYD_event_t events, void *userp)
         }
 
         close(fd);
-    }
-
-    if (buflen) {
-        status = cb(buf, buflen);
-        HYDU_ERR_POP(status, "callback returned error\n");
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYDT_bscu_stdin_cb(int fd, HYD_event_t events, void *userp)
-{
-    int closed, in_fd, i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    in_fd = *((int *) userp);
-
-    status = HYDU_sock_forward_stdio(STDIN_FILENO, in_fd, &closed);
-    HYDU_ERR_POP(status, "stdin forwarding error\n");
-
-    if (closed || (events & HYD_POLLHUP)) {
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n", fd);
-
-        for (i = 0; i < HYD_bscu_fd_count; i++) {
-            if (HYD_bscu_fd_list[i] == fd) {
-                HYD_bscu_fd_list[i] = HYD_FD_CLOSED;
-                break;
-            }
-        }
-
-        close(STDIN_FILENO);
-        close(in_fd);
     }
 
   fn_exit:

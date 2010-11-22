@@ -72,9 +72,7 @@ static HYD_status is_local_host(char *host, int *bool)
 }
 
 HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
-                                           int *control_fd, int enable_stdin,
-                                           HYD_status(*stdout_cb) (void *buf, int buflen),
-                                           HYD_status(*stderr_cb) (void *buf, int buflen))
+                                           int *control_fd, int enable_stdin)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
     int *pid, *fd_list, *dummy;
@@ -291,16 +289,16 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         /* Register stdio callbacks for the spawned process */
         if (i == 0 && enable_stdin) {
             fd = STDIN_FILENO;
-            status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
+            status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdio_cb);
             HYDU_ERR_POP(status, "demux returned error registering fd\n");
         }
 
-        status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, stdout_cb,
-                                      HYDT_bscu_inter_cb);
+        status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN,
+                                      (void *) (size_t) STDOUT_FILENO, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb,
-                                      HYDT_bscu_inter_cb);
+        status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN,
+                                      (void *) (size_t) STDERR_FILENO, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 

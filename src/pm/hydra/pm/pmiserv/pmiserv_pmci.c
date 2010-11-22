@@ -56,7 +56,7 @@ static HYD_status ckpoint(void)
 {
     struct HYD_pg *pg = &HYD_handle.pg_list;
     struct HYD_proxy *proxy;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
@@ -67,9 +67,8 @@ static HYD_status ckpoint(void)
 
     /* Connect to all proxies and send the checkpoint command */
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        cmd = CKPOINT;
-        status = HYDU_sock_write(proxy->control_fd, &cmd, sizeof(enum HYD_pmcd_pmi_cmd),
-                                 &sent, &closed);
+        hdr.cmd = CKPOINT;
+        status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
         HYDU_ASSERT(!closed, status);
     }
@@ -109,128 +108,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 
   fn_fail:
     goto fn_exit;
-}
-
-static HYD_status outerr(void *buf, int buflen, char **storage, int *storage_len,
-                         HYD_status(*cb) (void *buf, int buflen))
-{
-    struct HYD_pmcd_stdio_hdr *hdr;
-    char *rbuf, *tbuf, *tmp, str[HYD_TMPBUF_SIZE];
-    int rlen, tcnt, restart, i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (!HYD_handle.user_global.prepend_rank) {
-        status = cb(buf, buflen);
-        HYDU_ERR_POP(status, "error in the UI defined callback\n");
-        goto fn_exit;
-    }
-
-    if (*storage_len)
-        hdr = (struct HYD_pmcd_stdio_hdr *) *storage;
-    else
-        hdr = (struct HYD_pmcd_stdio_hdr *) buf;
-
-    if (*storage_len || (buflen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen)) {
-        HYDU_MALLOC(tmp, char *, *storage_len + buflen, status);
-        memcpy(tmp, *storage, *storage_len);
-        memcpy(tmp + *storage_len, buf, buflen);
-        HYDU_FREE(*storage);
-        *storage = tmp;
-        *storage_len += buflen;
-        tmp = NULL;
-
-        rbuf = *storage;
-        rlen = *storage_len;
-    }
-    else {
-        rbuf = buf;
-        rlen = buflen;
-    }
-
-    while (1) {
-        hdr = (struct HYD_pmcd_stdio_hdr *) rbuf;
-
-        if (rlen < sizeof(struct HYD_pmcd_stdio_hdr) + hdr->buflen)
-            break;
-
-        rbuf += sizeof(struct HYD_pmcd_stdio_hdr);
-        rlen -= sizeof(struct HYD_pmcd_stdio_hdr);
-
-        tbuf = rbuf;
-        tcnt = hdr->buflen;
-        do {
-            if (tcnt == 0)
-                break;
-
-            HYDU_snprintf(str, HYD_TMPBUF_SIZE, "[%d] ", hdr->rank);
-            status = cb(str, strlen(str));
-            HYDU_ERR_POP(status, "error in the UI defined callback\n");
-
-            restart = 0;
-            for (i = 0; i < tcnt; i++) {
-                if (tbuf[i] == '\n') {
-                    status = cb(tbuf, i + 1);
-                    HYDU_ERR_POP(status, "error in the UI defined callback\n");
-
-                    tbuf += i + 1;
-                    tcnt -= i + 1;
-
-                    restart = 1;
-                    break;
-                }
-            }
-            if (restart)
-                continue;
-
-            status = cb(tbuf, tcnt);
-            HYDU_ERR_POP(status, "error in the UI defined callback\n");
-            break;
-        } while (1);
-
-        rbuf += hdr->buflen;
-        rlen -= hdr->buflen;
-
-        if (!rlen)
-            break;
-    }
-
-    if (rlen) { /* left overs */
-        HYDU_MALLOC(tmp, char *, rlen, status);
-        memcpy(tmp, rbuf, rlen);
-        if (*storage)
-            HYDU_FREE(*storage);
-        *storage = tmp;
-    }
-    else {
-        if (*storage)
-            HYDU_FREE(*storage);
-        *storage = NULL;
-    }
-    *storage_len = rlen;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status stdout_cb(void *buf, int buflen)
-{
-    static char *storage = NULL;
-    static int storage_len = 0;
-
-    return outerr(buf, buflen, &storage, &storage_len, HYD_handle.stdout_cb);
-}
-
-static HYD_status stderr_cb(void *buf, int buflen)
-{
-    static char *storage = NULL;
-    static int storage_len = 0;
-
-    return outerr(buf, buflen, &storage, &storage_len, HYD_handle.stderr_cb);
 }
 
 HYD_status HYD_pmci_launch_procs(void)
@@ -293,8 +170,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYDT_bind_init(HYD_handle.user_global.binding, HYD_handle.user_global.bindlib);
     HYDU_ERR_POP(status, "unable to initializing binding library");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin, stdout_cb,
-                                    stderr_cb);
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
 
     for (i = 0, proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next, i++)

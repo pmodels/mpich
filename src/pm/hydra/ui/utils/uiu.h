@@ -12,7 +12,7 @@
 void HYD_uiu_init_params(void);
 void HYD_uiu_free_params(void);
 void HYD_uiu_print_params(void);
-HYD_status HYD_uiu_stdout_cb(void *buf, int buflen);
-HYD_status HYD_uiu_stderr_cb(void *buf, int buflen);
+HYD_status HYD_uiu_stdout_cb(int pgid, int proxy_id, int rank, void *buf, int buflen);
+HYD_status HYD_uiu_stderr_cb(int pgid, int proxy_id, int rank, void *buf, int buflen);
 
 #endif /* UIU_H_INCLUDED */

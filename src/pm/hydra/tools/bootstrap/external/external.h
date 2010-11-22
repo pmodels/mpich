@@ -14,9 +14,7 @@
 #include "sge.h"
 
 HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
-                                           int *control_fd, int enable_stdin,
-                                           HYD_status(*stdout_cb) (void *buf, int buflen),
-                                           HYD_status(*stderr_cb) (void *buf, int buflen));
+                                           int *control_fd, int enable_stdin);
 HYD_status HYDT_bscd_external_finalize(void);
 HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret);
 HYD_status HYDT_bscd_external_query_native_int(int *ret);

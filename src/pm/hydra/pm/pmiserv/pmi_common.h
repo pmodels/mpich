@@ -28,36 +28,41 @@ struct HYD_pmcd_pmi_kvs {
     struct HYD_pmcd_pmi_kvs_pair *key_pair;
 };
 
-/* The set of commands supported */
-enum HYD_pmcd_pmi_cmd {
-    INVALID_CMD = 0,            /* for sanity testing */
+struct HYD_pmcd_hdr {
+    /* The set of commands supported */
+    enum {
+        INVALID_CMD = 0,            /* for sanity testing */
 
-    /* UI to proxy commands */
-    PROC_INFO,
-    CKPOINT,
-    PMI_RESPONSE,
+        /* UI to proxy commands */
+        PROC_INFO,
+        CKPOINT,
+        PMI_RESPONSE,
 
-    /* Proxy to UI commands */
-    PID_LIST,
-    EXIT_STATUS,
-    ABORT,
-    PMI_CMD
-};
+        /* Proxy to UI commands */
+        PID_LIST,
+        EXIT_STATUS,
+        ABORT,
+        PMI_CMD,
+        STDOUT,
+        STDERR
+    } cmd;
 
-struct HYD_pmcd_pmi_hdr {
+    /* Generic */
+    int buflen;
+
+    /* PMI_CMD */
     int pid;                    /* ID of the requesting process */
     int pmi_version;            /* PMI version */
-    int buflen;
+
+    /* STDOUT/STDERR */
+    int pgid;
+    int proxy_id;
+    int rank;
 };
 
 struct HYD_pmcd_token {
     char *key;
     char *val;
-};
-
-struct HYD_pmcd_stdio_hdr {
-    int rank;
-    int buflen;
 };
 
 HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd,

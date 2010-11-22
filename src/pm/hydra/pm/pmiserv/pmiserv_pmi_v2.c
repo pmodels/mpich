@@ -22,18 +22,13 @@ static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 static HYD_status cmd_response(int fd, int pid, char *cmd)
 {
     char cmdlen[7];
-    enum HYD_pmcd_pmi_cmd c;
-    struct HYD_pmcd_pmi_hdr hdr;
+    struct HYD_pmcd_hdr hdr;
     int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    c = PMI_RESPONSE;
-    status = HYDU_sock_write(fd, &c, sizeof(c), &sent, &closed);
-    HYDU_ERR_POP(status, "unable to send PMI_RESPONSE command to proxy\n");
-    HYDU_ASSERT(!closed, status);
-
+    hdr.cmd = PMI_RESPONSE;
     hdr.pid = pid;
     hdr.pmi_version = 2;
     hdr.buflen = 6 + strlen(cmd);
@@ -716,8 +711,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, 0, HYD_handle.stdout_cb,
-                                    HYD_handle.stderr_cb);
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, 0);
     HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
     HYDU_free_node_list(node_list);
 

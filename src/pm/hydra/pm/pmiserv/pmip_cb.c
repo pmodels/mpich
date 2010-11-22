@@ -24,7 +24,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 {
     int closed, i, sent, recvd, stdfd;
     char buf[HYD_TMPBUF_SIZE];
-    struct HYD_pmcd_stdio_hdr hdr;
+    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -53,11 +53,13 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
     if (recvd) {
         if (stdfd == STDOUT_FILENO) {
+            hdr.cmd = STDOUT;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.out[i] == fd)
                     break;
         }
         else {
+            hdr.cmd = STDERR;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.err[i] == fd)
                     break;
@@ -65,16 +67,17 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-        if (HYD_pmcd_pmip.user_global.prepend_rank) {
-            hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
-            hdr.buflen = recvd;
+        hdr.pgid = HYD_pmcd_pmip.local.pgid;
+        hdr.proxy_id = HYD_pmcd_pmip.local.id;
+        hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
+        hdr.buflen = recvd;
 
-            status = HYDU_sock_write(stdfd, &hdr, sizeof(hdr), &sent, &closed);
-            HYDU_ERR_POP(status, "sock write error\n");
-            HYDU_ASSERT(!closed, status);
-        }
+        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent,
+                                 &closed);
+        HYDU_ERR_POP(status, "sock write error\n");
+        HYDU_ASSERT(!closed, status);
 
-        status = HYDU_sock_write(stdfd, buf, recvd, &sent, &closed);
+        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, recvd, &sent, &closed);
         HYDU_ERR_POP(status, "sock write error\n");
         HYDU_ASSERT(!closed, status);
     }
@@ -255,8 +258,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
     int closed, repeat, sent, i = -1;
-    struct HYD_pmcd_pmi_hdr hdr;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     struct HYD_pmcd_pmip_pmi_handle *h;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
@@ -292,10 +294,10 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                 HYD_pmcd_pmip_killjob();
 
                 /* Need to send an abort notification to the user */
-                cmd = ABORT;
+                hdr.cmd = ABORT;
                 status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                                         &cmd, sizeof(cmd), &sent, &closed);
-                HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
+                                         &hdr, sizeof(hdr), &sent, &closed);
+                HYDU_ERR_POP(status, "unable to send ABORT command upstream\n");
                 if (closed)
                     goto fn_fail;
             }
@@ -327,8 +329,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
         if (HYD_pmcd_pmip.user_global.debug) {
-            HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO,
-                                    "got pmi command (from %d): %s\n", fd, pmi_cmd);
+            HYDU_dump(stdout, "got pmi command (from %d): %s\n", fd, pmi_cmd);
             HYDU_print_strlist(args);
         }
 
@@ -343,18 +344,12 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         }
 
         if (HYD_pmcd_pmip.user_global.debug) {
-            HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO,
-                                    "we don't understand this command %s; forwarding upstream\n",
-                                    pmi_cmd);
+            HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n",
+                      pmi_cmd);
         }
 
         /* We don't understand the command; forward it upstream */
-        cmd = PMI_CMD;
-        status =
-            HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
-        HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
-        HYDU_ASSERT(!closed, status);
-
+        hdr.cmd = PMI_CMD;
         hdr.pid = fd;
         hdr.buflen = strlen(buf);
         status =
@@ -379,19 +374,14 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-static HYD_status handle_pmi_response(int fd)
+static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 {
-    struct HYD_pmcd_pmi_hdr hdr;
     int count, closed, sent;
     char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
     struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to read PMI header from proxy\n");
-    HYDU_ASSERT(!closed, status);
 
     HYDU_MALLOC(buf, char *, hdr.buflen + 1, status);
 
@@ -415,9 +405,8 @@ static HYD_status handle_pmi_response(int fd)
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO,
-                                "we don't understand the response %s; forwarding downstream\n",
-                                pmi_cmd);
+        HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n",
+                  pmi_cmd);
     }
 
     status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed);
@@ -460,7 +449,7 @@ static HYD_status launch_procs(void)
     char *client_args[HYD_NUM_TMP_STRINGS];
     struct HYD_env *env, *force_env = NULL;
     struct HYD_exec *exec;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     int *pmi_ranks;
     int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
     struct HYDT_bind_cpuset_t cpuset;
@@ -750,9 +739,9 @@ static HYD_status launch_procs(void)
     }
 
     /* Send the PID list upstream */
-    cmd = PID_LIST;
+    hdr.cmd = PID_LIST;
     status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
     HYDU_ASSERT(!closed, status);
 
@@ -889,14 +878,14 @@ static HYD_status procinfo(int fd)
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     int cmd_len, closed;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* We got a command from upstream */
-    status = HYDU_sock_read(fd, &cmd, sizeof(cmd), &cmd_len, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &cmd_len, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading command from launcher\n");
 
     if (closed) {
@@ -908,15 +897,15 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYD_pmcd_pmip_killjob();
         status = HYD_SUCCESS;
     }
-    else if (cmd == PROC_INFO) {
+    else if (hdr.cmd == PROC_INFO) {
         status = procinfo(fd);
         HYDU_ERR_POP(status, "error parsing process info\n");
 
         status = launch_procs();
         HYDU_ERR_POP(status, "launch_procs returned error\n");
     }
-    else if (cmd == CKPOINT) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "requesting checkpoint\n");
+    else if (hdr.cmd == CKPOINT) {
+        HYDU_dump(stdout, "requesting checkpoint\n");
 
         MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA, "pgid:%d ranks:%d-%d",
                      HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[0],
@@ -930,10 +919,10 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "FTB publishing failure\n");
 
         HYDU_ERR_POP(status, "checkpoint suspend failed\n");
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "checkpoint completed\n");
+        HYDU_dump(stdout, "checkpoint completed\n");
     }
-    else if (cmd == PMI_RESPONSE) {
-        status = handle_pmi_response(fd);
+    else if (hdr.cmd == PMI_RESPONSE) {
+        status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
     }
     else {
