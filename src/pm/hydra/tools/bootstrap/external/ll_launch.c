@@ -100,7 +100,8 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list,
     /* Register stdio callbacks for the spawned process */
     if (enable_stdin) {
         fd = STDIN_FILENO;
-        status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdio_cb);
+        status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN,
+                                      (void *) (size_t) fd_stdin, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
