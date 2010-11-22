@@ -66,7 +66,7 @@ $hasDemon   = 0;
 @with_array = (
 	       'logging;none;rlog',
 	       'pmi;simple;smpd',    #; uni no longer supported
-	       'pm;gforker;mpd', #;remshell
+	       'pm;gforker;mpd',
 	       'namepublisher;no;file;mpd', #;ldap:ldapserver',
 	       'device;ch3;ch3:sock',
 );

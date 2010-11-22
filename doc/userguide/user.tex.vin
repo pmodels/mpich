@@ -741,29 +741,6 @@ but for standard error.
   but for standard error. 
 \end{description}
 
-\subsection{Restrictions of the remshell Process Management Environment}
-\label{sec:restrictions-remshell}
-
-The \texttt{remshell} ``process manager'' provides a very simple version of
-\texttt{mpiexec} that makes use of the secure shell command (\texttt{ssh}) to
-start processes on a collection of machines.  As this is intended primarily as
-an illustration of how to build a version of \texttt{mpiexec} that works with
-other process managers, it does not implement all of the features of the other
-\texttt{mpiexec} programs described in this document.  In particular, it
-ignores the command line options that control the environment variables given
-to the MPI programs.  It does support the same output labeling features
-provided by the \texttt{gforker} version of \texttt{mpiexec}. 
-However, this version of \texttt{mpiexec} can be used
-much like the \texttt{mpirun} for the \texttt{ch\_p4} device in MPICH-1 to run
-programs on a collection of machines that allow remote shells.  A file by the
-name of \texttt{machines} should contain the names of machines on which
-processes can be run, one machine name per line.  There must be enough
-machines listed to satisfy the requested number of processes; you can list the
-same machine name multiple times if necessary.  
-
-For more complex needs or for faster startup, we recommend the use of the
-\texttt{mpd} process manager.
-
 \subsection{Using MPICH2 with SLURM and PBS}
 \label{sec:external_pm}
 
