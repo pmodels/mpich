@@ -4515,6 +4515,8 @@ Function BuildIFaces()
 	If bForce Or Not f.FileExists("src\binding\cxx\mpicxx.h.in") Then
 
 		Set WshShell = CreateObject("WScript.Shell")
+                Set userEnv = WshShell.Environment("USER")
+                userEnv("nodosfilewarning") = 1
 		WshShell.CurrentDirectory = "src\binding\cxx"
 		printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface -nosep"
 		WshShell.Run "perl buildiface -nosep", 0, true
@@ -4586,6 +4588,8 @@ Function BuildIFaces()
 		If bForce Or Not f.FileExists("src\binding\mcxx\mpimcxx.h.in") Then
 	
 			Set WshShell = CreateObject("WScript.Shell")
+                        Set userEnv = WshShell.Environment("USER")
+                        userEnv("nodosfilewarning") = 1
 			WshShell.CurrentDirectory = "src\binding\mcxx"
 			printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface -nosep"
 			WshShell.Run "perl buildiface -nosep", 0, true
@@ -4628,6 +4632,8 @@ Function BuildIFaces()
 		If bForce Or Not f.FileExists("src\binding\f77\mpif.h.in") Then
 
 			Set WshShell = CreateObject("WScript.Shell")
+                        Set userEnv = WshShell.Environment("USER")
+                        userEnv("nodosfilewarning") = 1
 			WshShell.CurrentDirectory = "src\binding\f77"
 			printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface"
 			WshShell.Run "perl buildiface", 0, true
@@ -4719,6 +4725,8 @@ Function BuildIFaces()
 		If bForce Or Not f.FileExists("src\binding\f90\mpi.f90") Then
 
 			Set WshShell = CreateObject("WScript.Shell")
+                        Set userEnv = WshShell.Environment("USER")
+                        userEnv("nodosfilewarning") = 1
 			WshShell.CurrentDirectory = "src\binding\f90"
 			printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface"
 			WshShell.Run "perl buildiface", 0, true
