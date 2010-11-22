@@ -547,7 +547,8 @@ mpd
 ---
 MPD was the traditional process manager in MPICH2. The file
 mpich2-%VERSION%/src/pm/mpd/README has more information about
-interactive commands for managing the ring of MPDs.
+interactive commands for managing the ring of MPDs. The MPD process
+manager is now deprecated.
 
 smpd
 ---- 
