@@ -358,7 +358,8 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
             break;
 
     if (tmp == NULL) {  /* No hash found; create one */
-        alloc_fwd_hash(&fwd_hash, in, out);
+        status = alloc_fwd_hash(&fwd_hash, in, out);
+        HYDU_ERR_POP(status, "unable to allocate forward hash\n");
         if (fwd_hash_list == NULL)
             fwd_hash_list = fwd_hash;
         else {
