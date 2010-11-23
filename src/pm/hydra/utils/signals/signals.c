@@ -57,7 +57,7 @@ HYD_status HYDU_set_common_signals(void (*handler) (int))
     HYDU_ERR_POP(status, "unable to set SIGUSR1\n");
 
     status = HYDU_set_signal(SIGALRM, handler);
-    HYDU_ERR_POP(status, "unable to set SIGUSR1\n");
+    HYDU_ERR_POP(status, "unable to set SIGALRM\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

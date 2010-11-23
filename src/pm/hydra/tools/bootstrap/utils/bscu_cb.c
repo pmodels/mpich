@@ -17,7 +17,7 @@ HYD_status HYDT_bscu_stdio_cb(int fd, HYD_event_t events, void *userp)
     stdfd = (int) (size_t) userp;
 
     status = HYDU_sock_forward_stdio(fd, stdfd, &closed);
-    HYDU_ERR_POP(status, "stdin forwarding error\n");
+    HYDU_ERR_POP(status, "stdio forwarding error\n");
 
     if (closed || (events & HYD_POLLHUP)) {
         /* connection has closed */
