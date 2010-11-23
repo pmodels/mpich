@@ -143,7 +143,7 @@ static void signal_cb(int sig)
         cmd = HYD_CKPOINT;
         HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
-    /* Ignore other signals for now */
+    /* Ignore all other signals, including SIGTTIN */
 
     HYDU_FUNC_EXIT();
     return;

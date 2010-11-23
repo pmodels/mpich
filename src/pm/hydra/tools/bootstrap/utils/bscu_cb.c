@@ -32,6 +32,8 @@ HYD_status HYDT_bscu_stdio_cb(int fd, HYD_event_t events, void *userp)
         }
 
         close(fd);
+        if (fd == STDIN_FILENO)
+            close(stdfd);
     }
 
   fn_exit:

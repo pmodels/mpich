@@ -113,6 +113,16 @@ HYD_status HYDT_dmxu_select_stdin_valid(int *out)
     else
         *out = 1;
 
+    /* This is an extremely round-about way of solving a simple
+     * problem. isatty(STDIN_FILENO) seems to return 1, even when
+     * mpiexec is run in the background. So, instead of relying on
+     * that, we catch SIGTTIN and ignore it. But that causes the
+     * read() call to return an error (with errno == EINTR) when we
+     * are not attached to the terminal. */
+    ret = read(STDIN_FILENO, NULL, 0);
+    if (ret < 0 && errno == EINTR)
+        *out = 0;
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

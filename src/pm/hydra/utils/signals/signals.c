@@ -59,6 +59,11 @@ HYD_status HYDU_set_common_signals(void (*handler) (int))
     status = HYDU_set_signal(SIGALRM, handler);
     HYDU_ERR_POP(status, "unable to set SIGALRM\n");
 
+#ifdef SIGTTIN
+    status = HYDU_set_signal(SIGTTIN, handler);
+    HYDU_ERR_POP(status, "unable to set SIGTTIN\n");
+#endif /* SIGTTIN */
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
