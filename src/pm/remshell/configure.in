@@ -1,0 +1,255 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes 
+dnl bugs in autoconf caching.
+dnl
+dnl The file name here refers to a file in the source being configured
+AC_INIT(mpiexec.c)
+
+dnl Definitions will be placed in this file rather than in the DEFS variable
+AC_CONFIG_HEADER(remshellconf.h)
+AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*  
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+#ifndef REMSHELLCONF_H_INCLUDED
+#define REMSHELLCONF_H_INCLUDED
+])
+AH_BOTTOM([#endif])
+dnl
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+AC_CONFIG_AUX_DIR(../../../confdb)
+dnl
+echo "RUNNING CONFIGURE FOR THE REMSHELL PM"
+dnl
+dnl Use AC_ARG_ENABLE to look for --enable-feature and AC_ARG_WITH to look for
+dnl --with-capability
+dnl
+dnl Enable better caching control
+PAC_ARG_CACHING
+dnl
+AC_ARG_ENABLE(echo, 
+[--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
+
+AC_ARG_ENABLE(onsig,
+[--enable-onsig - Control the handling of processes that signal (e.g., SEGV)
+ using ptrace.  Disabled by default],,enable_onsig=no)
+AC_ARG_ENABLE(newsession,
+[--enable-newsession - Create a new process group session if standard in is
+                      not connected to a terminal],,enable_newsession=yes)
+dnl With options
+dnl
+dnl First check that we have a clean build if we are doing a VPATH build
+PAC_VPATH_CHECK()
+dnl
+dnl Process any enable or with values
+
+dnl This test is complicated by the fact that top_srcdir is not set until
+dnl the very end of configure.  Instead, we get it ourselves
+if test -z "$top_srcdir" ; then
+   use_top_srcdir=$srcdir   
+else
+   use_top_srcdir=$top_srcdir
+fi
+
+PAC_LOAD_BASE_CACHE
+
+dnl The recommended order for items in a configure.in file is
+dnl     check for programs
+dnl     check for libraries
+dnl     check for header files
+dnl     check for typedefs
+dnl     check for structures
+dnl     check for compiler characteristics
+dnl     check for library functions
+dnl     check for system services
+dnl Here are some sample tests
+dnl
+dnl Determine the executable and object file extensions.  These
+dnl are needed for some operations under cygwin
+AC_EXEEXT
+AC_OBJEXT
+
+dnl Find a C compiler
+PAC_PROG_CC
+
+PAC_ARG_STRICT
+AC_PROG_INSTALL
+PAC_PROG_MKDIR_P
+PAC_PROG_MAKE
+dnl AC_CHECK_PROGS(AR,ar)
+dnl AC_PROG_RANLIB
+# Turn off creating shared libraries for any utility routines.  If we *are*
+# building shared libaries, make sure that we create a static executable
+case "$ENABLE_SHLIB" in 
+    none) ;;
+    gcc) 
+    LDFLAGS="$LDFLAGS -static"    
+    ;;
+    libtool)
+    ;;
+    *)
+    ;;
+esac
+
+ENABLE_SHLIB=none
+AC_SUBST(ENABLE_SHLIB)
+dnl
+dnl     check for compiler characteristics
+AC_C_CONST
+AC_C_VOLATILE
+AC_C_RESTRICT
+AC_C_INLINE
+dnl
+dnl check for library functions
+dnl AC_CHECK_FUNCS(strtol time gettimeofday)
+AC_CHECK_FUNCS(snprintf)
+if test "$ac_cv_func_snprintf" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
+fi
+AC_CHECK_FUNCS(strdup)
+if test "$ac_cv_func_strdup" = "yes" ; then
+    # Do we need to declare strdup?
+    PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
+fi
+
+if test "$enable_onsig" = "yes" ; then
+    AC_CHECK_FUNCS(ptrace)
+    # It isn't enough to find ptrace.  We also need the ptrace 
+    # parameters, which some systems, such as IRIX, do not define.
+    if test "$ac_cv_func_ptrace" = yes ; then
+        AC_CACHE_CHECK([for ptrace named parameters],
+pac_cv_has_ptrace_parms,[
+        AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/ptrace.h>],[int i = PTRACE_CONT;],pac_cv_has_ptrace_parms=yes,
+pac_cv_has_ptrace_parms=no)])
+        if test "$pac_cv_has_ptrace_parms" = "yes" ; then
+	    AC_DEFINE(HAVE_PTRACE_CONT,,[Define if ptrace parameters available])
+	fi
+    fi
+fi
+# Check for the functions needed to create a new session.
+# Cygwin has setsid but not getsid
+AC_CHECK_FUNCS(setsid isatty getsid)
+if test "$enable_newsession" = "yes" ; then
+    AC_DEFINE(USE_NEW_SESSION,1,[Define if mpiexec should create a new process group session])
+fi
+dnl
+dnl Check for special compile characteristics
+dnl
+dnl Is there libnsl needed for gethostbyname?
+dnl AC_SEARCH_LIBS(gethostbyname,nsl)
+AC_SEARCH_LIBS(socketpair,socket)
+dnl
+dnl Look for Standard headers
+AC_HEADER_STDC
+dnl Check for a specific header
+AC_CHECK_HEADERS(sys/types.h signal.h sys/ptrace.h)
+dnl
+dnl Check for functions.  This invokes another test if the function is 
+dnl found.  The braces around the second test are essential. 
+dnl AC_CHECK_FUNC(setpgrp,[AC_FUNC_SETPGRP])
+AC_CHECK_FUNCS(strsignal)
+dnl 
+dnl Check for signal handlers
+AC_CHECK_FUNCS(sigaction signal sigset)
+if test "$ac_cv_func_sigaction" = "yes" ; then
+    AC_MSG_CHECKING(for struct sigaction)
+    AC_TRY_COMPILE([#include <signal.h>],[
+struct sigaction act; sigaddset( &act.sa_mask, SIGINT );],sigaction_ok="yes",sigaction_ok="no")
+    AC_MSG_RESULT($sigaction_ok)
+    if test "$sigaction_ok" = "no" ; then
+        AC_MSG_CHECKING(for struct sigaction with _POSIX_SOURCE)
+        AC_TRY_COMPILE([#define _POSIX_SOURCE
+#include <signal.h>],[
+struct sigaction act; sigaddset( &act.sa_mask, SIGINT );],sigaction_with_posix_ok="yes",sigaction_with_posix_ok="no")
+        AC_MSG_RESULT($sigaction_with_posix_ok)
+        if test "$sigaction_with_posix_ok" = "yes" ; then
+            sigaction_ok=yes
+	    sigaction_needs_posix=yes
+	fi
+    fi
+fi
+dnl
+# Decide on the signal handler to use
+if test "$ac_cv_func_sigaction" = "yes" -a "$sigaction_ok" = "yes" ; then
+    if test "$sigaction_needs_posix" = yes ; then
+        AC_DEFINE(NEEDS_POSIX_FOR_SIGACTION,1,[Define if _POSIX_SOURCE needed to get sigaction])
+    fi
+    AC_DEFINE(USE_SIGACTION,1,[Define if sigaction should be used to set signals])
+elif test "$ac_cv_func_signal" = "yes" ; then
+    AC_DEFINE(USE_SIGNAL,1,[Define if signal should be used to set signals])
+fi
+dnl
+dnl Setup other replaceable values
+MPILIBNAME=${MPILIBNAME:-"mpich"}
+dnl
+dnl
+dnl Configure the pm utilities for mpiexec2 (which will eventually replace
+dnl mpiexec)
+PAC_SUBDIR_CACHE
+dnl
+dnl You can't configure a directory that isn't a strict subdirectory
+dnl reliably.  For example, configure will set the cache file incorrectly
+dnl unless you set it explicitly
+dnl if test "$cache_file" != "/dev/null" ; then
+dnl     # convert the cachefile to an absolute path
+dnl     cachedir=`echo $cache_file | sed -e 's%/[^/]*$%%'`
+dnl     fname=`basename $cache_file`
+dnl     if test -d $cachedir ; then
+dnl         cachedir=`(cd $cachedir && pwd)`
+dnl     else
+dnl 	cachedir=`pwd`
+dnl     fi
+dnl     if test -f "$cachedir/$fname" ; then 
+dnl         cache_file=$cachedir/$fname
+dnl     fi
+dnl fi
+
+if test -z "$master_top_srcdir" ; then
+   master_top_srcdir='${srcdir}/../../..'
+fi
+
+dnl See setup_pm.  The pm/util directory must also be configured
+PAC_CONFIG_SUBDIR(../util,,AC_ERROR(pm/utils configure failed))
+
+AC_CHECK_HEADERS(string.h sys/time.h unistd.h stdlib.h sys/socket.h wait.h errno.h)
+
+AC_PATH_PROG(SSH,ssh)
+if test -z "$SSH" ; then
+    AC_PATH_PROG(RSH,rsh)
+    if test -n "$RSH" ; then
+        remshell="$RSH"
+    fi
+else
+    remshell="$SSH"
+fi
+
+AC_SUBST(MPILIBNAME)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(CC_SHL)
+AC_SUBST(C_LINK_SHL)
+AC_SUBST(master_top_srcdir)
+dnl
+dnl Dependency handling
+AC_SUBST(MAKE_DEPEND_C)
+dnl
+AC_DEFINE_UNQUOTED(DEFAULT_MACHINES_PATH,"$eval_datadir:.",[Define the search path for machines files])
+AC_DEFINE_UNQUOTED(DEFAULT_REMOTE_SHELL,"$remshell",[Define the default remote shell program to use])
+dnl
+dnl Etags
+AC_SUBST(ETAGS)
+AC_SUBST(ETAGSADD)
+export ETAGS
+export ETAGSADD
+dnl
+dnl Other autoconf variables that may be imported from the calling environment
+AC_SUBST(DOCTEXT)
+PAC_UPDATE_BASE_CACHE
+
+dnl Generate the Makefiles from Makefile.in
+AC_OUTPUT(Makefile)
