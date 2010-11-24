@@ -159,9 +159,22 @@ int main(int argc, char **argv)
 
     HYDU_FUNC_ENTER();
 
+    /* Initialize engines that don't require use to know anything
+     * about the user preferences first */
     status = HYDU_dbg_init("mpiexec");
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
 
+    status = HYDU_set_common_signals(signal_cb);
+    HYDU_ERR_POP(status, "unable to set signal\n");
+
+    if (pipe(HYD_handle.cleanup_pipe) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
+
+    status = HYDT_ftb_init();
+    HYDU_ERR_POP(status, "unable to initialize FTB\n");
+
+
+    /* Get user preferences*/
     status = HYD_uii_mpx_get_parameters(argv);
     if (status == HYD_GRACEFUL_ABORT) {
         exit(0);
@@ -171,22 +184,13 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    /* if the user set the checkpoint prefix, set env var to enable
-     * checkpointing on the processes  */
-    if (HYD_handle.user_global.ckpoint_prefix)
-        HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1",
-                                &HYD_handle.user_global.global_env.system);
 
-    status = HYDU_set_common_signals(signal_cb);
-    HYDU_ERR_POP(status, "unable to set signal\n");
-
+    /* Now we initialize engines that require us to know user
+     * preferences */
 #if HAVE_ALARM
     if (HYD_handle.ckpoint_int != -1)
         alarm(HYD_handle.ckpoint_int);
 #endif /* HAVE_ALARM */
-
-    if (pipe(HYD_handle.cleanup_pipe) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
     status = HYDT_dmx_init(&HYD_handle.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
@@ -198,9 +202,6 @@ int main(int argc, char **argv)
                             HYD_handle.user_global.bootstrap_exec,
                             HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
-
-    status = HYDT_ftb_init();
-    HYDU_ERR_POP(status, "unable to initialize FTB\n");
 
     if (HYD_handle.node_list == NULL) {
         /* Node list is not created yet. The user might not have

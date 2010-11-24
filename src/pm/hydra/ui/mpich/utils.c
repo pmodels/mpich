@@ -1088,6 +1088,12 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     status = set_default_values();
     HYDU_ERR_POP(status, "setting default values failed\n");
 
+    /* If the user set the checkpoint prefix, set env var to enable
+     * checkpointing on the processes  */
+    if (HYD_handle.user_global.ckpoint_prefix)
+        HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1",
+                                &HYD_handle.user_global.global_env.system);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
