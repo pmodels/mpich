@@ -143,9 +143,6 @@ EOF
     # specifically disabled by the user.
     AC_MSG_CHECKING([whether to enable "picky" compiler mode])
     hwloc_want_picky=0
-    AS_IF([test "$GCC" = "yes"],
-          [AS_IF([test -d "$srcdir/.svn" -o -d "$srcdir/.hg"],
-                 [hwloc_want_picky=1])])
     if test "$enable_picky" = "yes"; then
         if test "$GCC" = "yes"; then
             AC_MSG_RESULT([yes])
