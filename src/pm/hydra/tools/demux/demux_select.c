@@ -120,7 +120,7 @@ HYD_status HYDT_dmxu_select_stdin_valid(int *out)
      * read() call to return an error (with errno == EINTR) when we
      * are not attached to the terminal. */
     ret = read(STDIN_FILENO, NULL, 0);
-    if (ret < 0 && errno == EINTR)
+    if (ret < 0 && errno == EINTR && HYDT_dmxu_got_sigttin)
         *out = 0;
 
   fn_exit:

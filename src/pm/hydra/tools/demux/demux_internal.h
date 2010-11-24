@@ -22,6 +22,7 @@ struct HYDT_dmxu_callback {
 
 extern int HYDT_dmxu_num_cb_fds;
 extern struct HYDT_dmxu_callback *HYDT_dmxu_cb_list;
+extern int HYDT_dmxu_got_sigttin;
 
 struct HYDT_dmxu_fns {
     HYD_status(*wait_for_event) (int wtime);

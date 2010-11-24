@@ -10,6 +10,22 @@
 int HYDT_dmxu_num_cb_fds = 0;
 struct HYDT_dmxu_callback *HYDT_dmxu_cb_list = NULL;
 struct HYDT_dmxu_fns HYDT_dmxu_fns = { 0 };
+int HYDT_dmxu_got_sigttin = 0;
+
+#if defined(SIGTTIN) && defined(HAVE_ISATTY)
+static void signal_cb(int sig)
+{
+    HYDU_FUNC_ENTER();
+
+    if (sig == SIGTTIN) {
+        HYDT_dmxu_got_sigttin = 1;
+    }
+    /* Ignore all other signals */
+
+    HYDU_FUNC_EXIT();
+    return;
+}
+#endif /* SIGTTIN and HAVE_ISATTY */
 
 HYD_status HYDT_dmx_init(char **demux)
 {
@@ -46,6 +62,13 @@ HYD_status HYDT_dmx_init(char **demux)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "cannot find an appropriate demux engine\n");
     }
+
+#if defined(SIGTTIN) && defined(HAVE_ISATTY)
+    if (isatty(STDIN_FILENO)) {
+        status = HYDU_set_signal(SIGTTIN, signal_cb);
+        HYDU_ERR_POP(status, "unable to set SIGTTIN\n");
+    }
+#endif /* SIGTTIN and HAVE_ISATTY */
 
   fn_exit:
     HYDU_FUNC_EXIT();
