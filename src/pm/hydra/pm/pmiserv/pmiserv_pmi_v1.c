@@ -19,6 +19,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
 
     HYDU_FUNC_ENTER();
 
+    HYD_pmcd_init_header(&hdr);
     hdr.cmd = PMI_RESPONSE;
     hdr.pid = pid;
     hdr.pmi_version = 1;

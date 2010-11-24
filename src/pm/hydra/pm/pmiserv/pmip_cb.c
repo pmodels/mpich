@@ -53,12 +53,14 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
     if (recvd) {
         if (stdfd == STDOUT_FILENO) {
+            HYD_pmcd_init_header(&hdr);
             hdr.cmd = STDOUT;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.out[i] == fd)
                     break;
         }
         else {
+            HYD_pmcd_init_header(&hdr);
             hdr.cmd = STDERR;
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.err[i] == fd)
@@ -264,6 +266,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    HYD_pmcd_init_header(&hdr);
 
     status = read_pmi_cmd(fd, &closed);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
@@ -739,6 +743,7 @@ static HYD_status launch_procs(void)
     }
 
     /* Send the PID list upstream */
+    HYD_pmcd_init_header(&hdr);
     hdr.cmd = PID_LIST;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);

@@ -67,6 +67,7 @@ static HYD_status ckpoint(void)
 
     /* Connect to all proxies and send the checkpoint command */
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        HYD_pmcd_init_header(&hdr);
         hdr.cmd = CKPOINT;
         status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
@@ -249,6 +250,8 @@ HYD_status HYD_pmci_finalize(void)
 
     status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
+
+    HYDT_bind_finalize();
 
   fn_exit:
     HYDU_FUNC_EXIT();

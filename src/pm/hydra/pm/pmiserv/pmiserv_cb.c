@@ -285,6 +285,7 @@ static HYD_status send_exec_info(struct HYD_proxy *proxy)
 
     HYDU_FUNC_ENTER();
 
+    HYD_pmcd_init_header(&hdr);
     hdr.cmd = PROC_INFO;
     status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");

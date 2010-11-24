@@ -32,6 +32,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
+    HYD_pmcd_init_header(&hdr);
     hdr.cmd = PMI_CMD;
     hdr.pid = fd;
     hdr.buflen = strlen(buf);

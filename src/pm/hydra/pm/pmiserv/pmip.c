@@ -264,6 +264,7 @@ int main(int argc, char **argv)
     }
 
     /* Send the exit status upstream */
+    HYD_pmcd_init_header(&hdr);
     hdr.cmd = EXIT_STATUS;
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
