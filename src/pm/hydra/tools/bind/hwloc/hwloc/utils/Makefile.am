@@ -1,4 +1,5 @@
-# Copyright 2009 INRIA, Université Bordeaux 1
+# Copyright © 2009-2010 INRIA
+# Copyright © 2009-2010 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
@@ -9,9 +10,11 @@ LDADD = $(HWLOC_top_builddir)/src/libhwloc.la
 
 EXTRA_DIST = test-hwloc-distrib.output
 
+noinst_HEADERS = misc.h
+
 # Only build the utilities if we're building in standalone mode
 if HWLOC_BUILD_UTILS
-bin_PROGRAMS = lstopo hwloc-calc hwloc-bind hwloc-distrib
+bin_PROGRAMS = lstopo hwloc-calc hwloc-bind hwloc-distrib hwloc-ps
 endif
 
 lstopo_SOURCES = lstopo.h lstopo.c lstopo-color.c lstopo-text.c lstopo-draw.c lstopo-fig.c
@@ -39,7 +42,7 @@ endif HWLOC_BUILD_TESTS
 
 # Only install man pages if we're building in standalone mode
 if HWLOC_BUILD_UTILS
-man1_pages = lstopo.1 hwloc-bind.1 hwloc-distrib.1 hwloc-calc.1
+man1_pages = lstopo.1 hwloc-bind.1 hwloc-distrib.1 hwloc-calc.1 hwloc-ps.1
 man7_pages = hwloc.7
 man_pages = $(man7_pages) $(man1_pages)
 EXTRA_DIST += $(man1_pages:.1=.1in) $(man7_pages:.7=.7in)

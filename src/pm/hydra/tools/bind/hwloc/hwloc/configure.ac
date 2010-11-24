@@ -1,6 +1,8 @@
 # -*- shell-script -*-
 #
-# Copyright © 2009      CNRS, INRIA, Université Bordeaux 1
+# Copyright © 2009      CNRS
+# Copyright © 2009-2010 INRIA
+# Copyright © 2009      Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 #
 # See COPYING in top-level directory.
@@ -34,9 +36,12 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.10 dist-bzip2 subdir-objects foreign tar-ustar -Wall -Werror])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# Libtool2 is needed
+# We want new Libtool.  None of that old stuff.  Pfft.    
 m4_ifdef([LT_PREREQ], [],
 	 [m4_fatal([libtool version 2.2.6 or higher is required], [63])])
+LT_PREREQ([2.2.6])
+
+AC_LANG([C])
 
 # Make configure depend on the VERSION file, since it's used in AC_INIT
 AC_SUBST([CONFIGURE_DEPENDENCIES], ['$(top_srcdir)/VERSION'])
@@ -124,7 +129,7 @@ AS_IF([test "$enable_embedded_mode" != "yes"],
              [HWLOC_BUILD_STANDALONE])])
 
 # Setup the hwloc core
-HWLOC_SETUP_CORE([], [], [AC_MSG_ERROR([Cannot build hwloc])], [1])
+HWLOC_SETUP_CORE([], [], [AC_MSG_ERROR([Cannot continue])], [1])
 
 # Setup hwloc's docs, utils, and tests
 AS_IF([test "$hwloc_mode" = "standalone"],
@@ -142,8 +147,8 @@ LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
 
 # Setup libtool, but disable C++, F77, Java and Windows Resource
 # Compiler support -- we don't need that stuff.
-AM_DISABLE_SHARED
-AM_ENABLE_STATIC
+AM_ENABLE_SHARED
+AM_DISABLE_STATIC
 AM_PROG_LIBTOOL([win32-dll])
 LT_LANG([C])
 

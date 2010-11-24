@@ -1,5 +1,7 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -33,6 +35,8 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
+/* Avoid Xwindow's definition conflict with Windows' use for fields names.  */
+#undef Status
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 
 #include <stdio.h>
@@ -455,9 +459,10 @@ static struct draw_methods svg_draw_methods = {
 void
 output_svg(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode __hwloc_attribute_unused)
 {
-  FILE *output = open_file(filename, "w");
+  FILE *output;
   cairo_surface_t *cs;
 
+  output = open_file(filename, "w");
   if (!output) {
     fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
     return;

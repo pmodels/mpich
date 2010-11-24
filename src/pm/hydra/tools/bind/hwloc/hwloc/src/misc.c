@@ -1,5 +1,7 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -8,6 +10,9 @@
 #include <private/misc.h>
 
 #include <stdarg.h>
+#ifdef HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -64,4 +69,20 @@ int hwloc_namecoloncmp(const char *haystack, const char *needle, size_t n)
     i++;
   }
   return i < n;
+}
+
+void hwloc_add_uname_info(struct hwloc_topology *topology __hwloc_attribute_unused)
+{
+#ifdef HAVE_UNAME
+  struct utsname utsname;
+
+  if (uname(&utsname) < 0)
+    return;
+
+  hwloc_add_object_info(topology->levels[0][0], "OSName", utsname.sysname);
+  hwloc_add_object_info(topology->levels[0][0], "OSRelease", utsname.release);
+  hwloc_add_object_info(topology->levels[0][0], "OSVersion", utsname.version);
+  hwloc_add_object_info(topology->levels[0][0], "HostName", utsname.nodename);
+  hwloc_add_object_info(topology->levels[0][0], "Architecture", utsname.machine);
+#endif /* HAVE_UNAME */
 }

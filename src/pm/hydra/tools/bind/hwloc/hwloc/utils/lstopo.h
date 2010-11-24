@@ -1,5 +1,7 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 Université Bordeaux 1
  * See COPYING in top-level directory.
  */
 
@@ -11,6 +13,7 @@
 
 extern hwloc_obj_type_t show_only;
 extern int show_cpuset;
+extern int taskset;
 extern hwloc_pid_t pid;
 
 typedef void output_method (struct hwloc_topology *topology, const char *output, int logical, int verbose_mode);

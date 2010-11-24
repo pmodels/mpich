@@ -2,7 +2,9 @@
 #-*-sh-*-
 
 #
-# Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+# Copyright © 2009 CNRS
+# Copyright © 2009-2010 INRIA
+# Copyright © 2009-2010 Université Bordeaux 1
 # Copyright © 2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 #
@@ -39,11 +41,23 @@ fi
 file="$tmp/lstopo_xml.output.xml"
 
 set -e
-$lstopo --xml "$1" "$file"
-diff @HWLOC_DIFF_U@ "$1" "$file"
+$lstopo --if xml --input "$1" --of xml "$file"
+
+if [ "$HWLOC_UPDATE_TEST_TOPOLOGY_OUTPUT" != 1 ]
+then
+    diff @HWLOC_DIFF_U@ "$1" "$file"
+else
+    if ! diff "$1" "$file" >/dev/null
+    then
+	cp -f "$file" "$1"
+	echo "Updated $1"
+    fi
+fi
+
 if [ -n "@XMLLINT@" ]
 then
-  cp "$HWLOC_top_srcdir"/src/hwloc.dtd "$tmp/"
-  @XMLLINT@ --valid "$file" > /dev/null
+    cp "$HWLOC_top_srcdir"/src/hwloc.dtd "$tmp/"
+    @XMLLINT@ --valid "$file" > /dev/null
 fi
+
 rm -rf "$tmp"
