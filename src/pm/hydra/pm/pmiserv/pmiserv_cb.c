@@ -226,7 +226,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         goto fn_exit;
     }
 
-    if (hdr.cmd == PID_LIST) {      /* Got PIDs */
+    if (hdr.cmd == PID_LIST) {  /* Got PIDs */
         status = handle_pid_list(fd, proxy);
         HYDU_ERR_POP(status, "unable to receive PID list\n");
     }

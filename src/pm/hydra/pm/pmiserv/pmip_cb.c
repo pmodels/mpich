@@ -527,7 +527,7 @@ static HYD_status launch_procs(void)
         MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA, "pgid:%d ranks:%d-%d",
                      HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[0],
                      HYD_pmcd_pmip.downstream.pmi_rank
-                     [HYD_pmcd_pmip.local.proxy_process_count-1]);
+                     [HYD_pmcd_pmip.local.proxy_process_count - 1]);
         status = HYDT_ckpoint_restart(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id,
                                       env, HYD_pmcd_pmip.local.proxy_process_count,
                                       pmi_ranks,
@@ -639,8 +639,8 @@ static HYD_status launch_procs(void)
                 pmi_rank = HYDU_local_to_global_id(process_id,
                                                    HYD_pmcd_pmip.start_pid,
                                                    HYD_pmcd_pmip.local.proxy_core_count,
-                                                   HYD_pmcd_pmip.system_global.
-                                                   global_core_count);
+                                                   HYD_pmcd_pmip.
+                                                   system_global.global_core_count);
             else
                 pmi_rank = HYD_pmcd_pmip.system_global.pmi_rank;
 
@@ -910,7 +910,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA, "pgid:%d ranks:%d-%d",
                      HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[0],
                      HYD_pmcd_pmip.downstream.pmi_rank
-                     [HYD_pmcd_pmip.local.proxy_process_count-1]);
+                     [HYD_pmcd_pmip.local.proxy_process_count - 1]);
         status = HYDT_ckpoint_suspend(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
         if (status)
             status = HYDT_ftb_publish("FTB_MPI_PROCS_CKPT_FAIL", ftb_event_payload);

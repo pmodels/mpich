@@ -10,11 +10,11 @@
 static FTB_client_handle_t ch;
 
 static FTB_event_info_t event_info[] = {
-    { "FTB_MPI_PROCS_RESTARTED",     "info" },
-    { "FTB_MPI_PROCS_RESTART_FAIL",  "error" },
-    { "FTB_MPI_PROCS_CKPTED",        "info" },
-    { "FTB_MPI_PROCS_CKPT_FAILED",   "error" },
-    { "FTB_MPI_PROCS_DEAD",          "error" }
+    {"FTB_MPI_PROCS_RESTARTED", "info"},
+    {"FTB_MPI_PROCS_RESTART_FAIL", "error"},
+    {"FTB_MPI_PROCS_CKPTED", "info"},
+    {"FTB_MPI_PROCS_CKPT_FAILED", "error"},
+    {"FTB_MPI_PROCS_DEAD", "error"}
 };
 
 HYD_status HYDT_ftb_init(void)
