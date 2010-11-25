@@ -63,12 +63,6 @@
 
 ### Process Managers
 
- * Hydra's prepend-rank option has some known problems. You might be
-   able to use it most, but not all times.
-
- * Running Hydra's mpiexec as a background process does not work
-   correctly at this time.
-
  * The MPD process manager can only handle relatively small amounts of
    data on stdin and may also have problems if there is data on stdin
    that is not consumed by the program.
@@ -76,11 +70,6 @@
  * The SMPD process manager does not work reliably with threaded MPI
    processes. MPI_Comm_spawn() does not currently work for >= 256
    arguments with smpd.
-
- * The hwloc process binding support within the Hydra process manager
-   does not build correctly with PGI compilers in some
-   environments. hwloc support can be disabled using the configure
-   option "--without-hydra-bindlib".
 
 
 ### Performance issues
