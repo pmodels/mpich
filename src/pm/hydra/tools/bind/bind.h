@@ -16,6 +16,9 @@
 #define HYDT_BIND_OBJ_CHILD_ID(obj) \
     ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_bind_obj))
 
+/* This should be higher than the number of cache levels we support */
+#define HYDT_INVALID_CACHE_DEPTH (10)
+
 /*! \endcond */
 
 /*! \addtogroup bind Process Binding Interface

@@ -175,6 +175,10 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             if (use_topo_obj[i])
                 use_topo_obj[i - 1] = 1;
         }
+	/* We should have at least one process on the node; otherwise,
+	   the mapping makes no sense */
+	for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_NODE; i++)
+	    use_topo_obj[i] = 1;
 
         topo_end = HYDT_BIND_OBJ_END;
         for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_END; i++) {
@@ -198,7 +202,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         bindentry = strtok(bindstr, ":");
         bindentry = strtok(NULL, ":");
 
-        use_cache_level = 0;
+	/* Don't share any cache to start with */
+        use_cache_level = HYDT_INVALID_CACHE_DEPTH;
         if (bindentry == NULL) {
             /* No extension option specified; use all resources */
             use_cache_level = 1;
@@ -206,20 +211,22 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         else {
             elem = strtok(bindentry, ",");
             do {
-                if (!strcmp(elem, "l3") || !strcmp(elem, "l3")) {
-                    if (!use_cache_level || use_cache_level > 3)
+                if (!strcmp(elem, "l3") || !strcmp(elem, "L3")) {
+                    if (use_cache_level > 3)
                         use_cache_level = 3;
                 }
-                else if (!strcmp(elem, "l2") || !strcmp(elem, "l2")) {
-                    if (!use_cache_level || use_cache_level > 2)
+                else if (!strcmp(elem, "l2") || !strcmp(elem, "L2")) {
+                    if (use_cache_level > 2)
                         use_cache_level = 2;
                 }
-                else if (!strcmp(elem, "l1") || !strcmp(elem, "l1")) {
-                    if (!use_cache_level || use_cache_level > 1)
+                else if (!strcmp(elem, "l1") || !strcmp(elem, "L1")) {
+                    if (use_cache_level > 1)
                         use_cache_level = 1;
                 }
-                else
-                    HYDU_ERR_POP(status, "unrecognized binding option\n");
+                else {
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "unrecognized binding option\n");
+                }
 
                 elem = strtok(NULL, ",");
             } while (elem);
@@ -230,6 +237,10 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         break_out = 0;
         for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_END; i++) {
             for (j = 0; j < obj->mem.num_caches; j++) {
+		/* If the cache level is lower than what I'm allowed
+		   to share, and there are more than one OS indices
+		   below this level (there is actually sharing) mark
+		   this as the lowest level I can get to */
                 if (obj->mem.cache_depth[j] == use_cache_level) {
                     topo_end = (HYDT_bind_obj_type_t) (i + 1);
                     break_out = 1;
@@ -253,8 +264,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             for (; j < topo_end - 1; j++)
                 obj = obj->children;
 
-            HYDT_bind_cpuset_dup(obj->cpuset, &HYDT_bind_info.bindmap[i]);
-            i++;
+	    HYDT_bind_cpuset_dup(obj->cpuset, &HYDT_bind_info.bindmap[i]);
+	    i++;
 
             child_id = HYDT_BIND_OBJ_CHILD_ID(obj);
             if (child_id < obj->parent->num_children - 1) {

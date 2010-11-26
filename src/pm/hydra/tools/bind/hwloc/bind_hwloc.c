@@ -55,10 +55,10 @@ static int count_attached_caches(hwloc_obj_t hobj, hwloc_cpuset_t cpuset)
 }
 
 static void gather_attached_caches(struct HYDT_bind_obj *obj, hwloc_obj_t hobj,
-                                   hwloc_cpuset_t cpuset)
+                                   hwloc_cpuset_t cpuset, int cindex)
 {
     int i;
-    static int cidx = 0;
+    int cidx = cindex;
 
     if (hobj->type == HWLOC_OBJ_CACHE && !hwloc_cpuset_compare(hobj->cpuset, cpuset)) {
         obj->mem.cache_size[cidx] = hobj->attr->cache.size;
@@ -67,7 +67,7 @@ static void gather_attached_caches(struct HYDT_bind_obj *obj, hwloc_obj_t hobj,
     }
 
     for (i = 0; i < hobj->arity; i++)
-        gather_attached_caches(obj, hobj->children[i], cpuset);
+        gather_attached_caches(obj, hobj->children[i], cpuset, cidx);
 }
 
 static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hobj)
@@ -82,12 +82,15 @@ static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hob
     /* Check how many cache objects match out cpuset */
     obj->mem.num_caches = count_attached_caches(hobj, hobj->cpuset);
 
-    HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t), status);
-    memset(obj->mem.cache_size, 0, obj->mem.num_caches * sizeof(size_t));
-    HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int), status);
-    memset(obj->mem.cache_depth, 0, obj->mem.num_caches * sizeof(int));
+    if (obj->mem.num_caches) {
+	HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t),
+		    status);
+	memset(obj->mem.cache_size, 0, obj->mem.num_caches * sizeof(size_t));
+	HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int), status);
+	memset(obj->mem.cache_depth, 0, obj->mem.num_caches * sizeof(int));
 
-    gather_attached_caches(obj, hobj, hobj->cpuset);
+	gather_attached_caches(obj, hobj, hobj->cpuset, 0);
+    }
 
   fn_exit:
     return status;
