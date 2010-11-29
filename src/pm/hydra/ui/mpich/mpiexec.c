@@ -174,7 +174,7 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "unable to initialize FTB\n");
 
 
-    /* Get user preferences*/
+    /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
     if (status == HYD_GRACEFUL_ABORT) {
         exit(0);
