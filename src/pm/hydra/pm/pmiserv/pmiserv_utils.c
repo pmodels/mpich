@@ -34,6 +34,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (use_valgrind) {
         proxy_args[arg++] = HYDU_strdup("valgrind");
         proxy_args[arg++] = HYDU_strdup("--leak-check=full");
+        proxy_args[arg++] = HYDU_strdup("--show-reachable=yes");
+        proxy_args[arg++] = HYDU_strdup("--track-origins=yes");
     }
 
     if (use_strace) {
