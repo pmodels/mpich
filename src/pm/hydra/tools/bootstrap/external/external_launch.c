@@ -88,21 +88,21 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     /* We use the following priority order for the executable path:
      * (1) user-specified; (2) search in path; (3) Hard-coded
      * location */
-    if (HYDT_bsci_info.bootstrap_exec)
-        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+    if (HYDT_bsci_info.launcher_exec)
+        path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+    if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
         if (!path)
             path = HYDU_find_full_path("ssh");
         if (!path)
             path = HYDU_strdup("/usr/bin/ssh");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "rsh")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "rsh")) {
         if (!path)
             path = HYDU_find_full_path("rsh");
         if (!path)
             path = HYDU_strdup("/usr/bin/rsh");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
         char *bin_dir = NULL;
         int length;
 
@@ -117,7 +117,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         if (!path)
             path = HYDU_strdup("/usr/bin/blaunch");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         char *sge_root = NULL, *arc = NULL;
         int length;
 
@@ -149,7 +149,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     }
 
     /* Allow X forwarding only if explicitly requested */
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+    if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
         if (HYDT_bsci_info.enablex == 1)
             targs[idx++] = HYDU_strdup("-X");
         else if (HYDT_bsci_info.enablex == 0)
@@ -157,10 +157,10 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         else    /* default mode is disable X */
             targs[idx++] = HYDU_strdup("-x");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
         targs[idx++] = HYDU_strdup("-n");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         targs[idx++] = HYDU_strdup("-inherit");
         targs[idx++] = HYDU_strdup("-V");
     }
@@ -212,7 +212,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
          * quickly. If this happens, the ssh daemons disables ssh
          * connections causing the job to fail. This is basically a
          * hack to slow down ssh connections to the same node. */
-        if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+        if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
             status = HYDT_bscd_ssh_store_launch_time(node->hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
@@ -220,9 +220,9 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         status = is_local_host(node->hostname, &lh);
         HYDU_ERR_POP(status, "error checking if node is localhost\n");
 
-        /* If bootstrap server is 'fork', or this is the localhost,
-         * use fork to launch the process */
-        if (!strcmp(HYDT_bsci_info.bootstrap, "fork") || lh) {
+        /* If launcher is 'fork', or this is the localhost, use fork
+         * to launch the process */
+        if (!strcmp(HYDT_bsci_info.launcher, "fork") || lh) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -249,13 +249,13 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         else {
             offset = 0;
 
-            /* dummy is NULL only for bootstrap servers that can
-             * handle a closed stdin socket. Older versions of ssh and
-             * SGE seem to have problems when stdin is closed before
-             * they are launched. */
-            if (!strcmp(HYDT_bsci_info.bootstrap, "ssh") ||
-                !strcmp(HYDT_bsci_info.bootstrap, "rsh") ||
-                !strcmp(HYDT_bsci_info.bootstrap, "sge"))
+            /* dummy is NULL only for launchers that can handle a
+             * closed stdin socket. Older versions of ssh and SGE seem
+             * to have problems when stdin is closed before they are
+             * launched. */
+            if (!strcmp(HYDT_bsci_info.launcher, "ssh") ||
+                !strcmp(HYDT_bsci_info.launcher, "rsh") ||
+                !strcmp(HYDT_bsci_info.launcher, "sge"))
                 dummy = &fd;
             else
                 dummy = NULL;

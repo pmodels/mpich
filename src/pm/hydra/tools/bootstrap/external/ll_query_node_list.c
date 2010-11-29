@@ -60,7 +60,7 @@ HYD_status HYDT_bscd_ll_query_node_list(struct HYD_node **node_list)
     }
     *node_list = global_node_list;
 
-    /* node list is provided by the bootstrap server */
+    /* node list is provided by the RMK */
     HYDT_bscd_ll_user_node_list = 0;
 
   fn_exit:

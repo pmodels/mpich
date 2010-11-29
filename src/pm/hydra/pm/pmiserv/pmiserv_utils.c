@@ -57,14 +57,19 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (HYD_handle.user_global.debug)
         proxy_args[arg++] = HYDU_strdup("--debug");
 
-    if (HYD_handle.user_global.bootstrap) {
-        proxy_args[arg++] = HYDU_strdup("--bootstrap");
-        proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.bootstrap);
+    if (HYD_handle.user_global.rmk) {
+        proxy_args[arg++] = HYDU_strdup("--rmk");
+        proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.rmk);
     }
 
-    if (HYD_handle.user_global.bootstrap_exec) {
-        proxy_args[arg++] = HYDU_strdup("--bootstrap-exec");
-        proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.bootstrap_exec);
+    if (HYD_handle.user_global.launcher) {
+        proxy_args[arg++] = HYDU_strdup("--launcher");
+        proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.launcher);
+    }
+
+    if (HYD_handle.user_global.launcher_exec) {
+        proxy_args[arg++] = HYDU_strdup("--launcher-exec");
+        proxy_args[arg++] = HYDU_strdup(HYD_handle.user_global.launcher_exec);
     }
 
     if (HYD_handle.user_global.prepend_rank)

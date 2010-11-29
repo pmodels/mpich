@@ -75,8 +75,8 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     /* We use the following priority order for the executable path:
      * (1) user-specified; (2) search in path; (3) Hard-coded
      * location */
-    if (HYDT_bsci_info.bootstrap_exec)
-        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
+    if (HYDT_bsci_info.launcher_exec)
+        path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
     if (!path)
         path = HYDU_find_full_path("srun");
     if (!path)

@@ -15,7 +15,7 @@ HYD_status HYDT_bsci_query_native_int(int *ret)
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_fns.query_native_int(ret);
-    HYDU_ERR_POP(status, "bootstrap device returned error querying native integration\n");
+    HYDU_ERR_POP(status, "RMK returned error querying native integration\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -688,7 +688,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     /* Go to the last PG */
     for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
 
-    /* Copy the host list to pass to the bootstrap server */
+    /* Copy the host list to pass to the launcher */
     node_list = NULL;
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         HYDU_alloc_node(&node);
@@ -713,7 +713,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, 0);
-    HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
+    HYDU_ERR_POP(status, "launcher cannot launch processes\n");
     HYDU_free_node_list(node_list);
 
     {

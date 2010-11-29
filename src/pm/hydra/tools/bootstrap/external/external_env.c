@@ -17,7 +17,7 @@ HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret)
 
     *ret = 1;
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+    if (!strcmp(HYDT_bsci_info.rmk, "ssh")) {
         const char *env_list[] = { "DISPLAY", NULL };
 
         for (i = 0; env_list[i]; i++) {
@@ -28,7 +28,7 @@ HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret)
         }
     }
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+    if (!strcmp(HYDT_bsci_info.rmk, "lsf")) {
         const char *env_list[] = { "DISPLAY", "EGO_SERVERDIR", "LSB_TRAPSIGS",
             "LSF_SERVERDIR", "HOSTTYPE", "LSB_HOSTS",
             "LSF_BINDIR", "EGO_BINDIR", "PWD", "HOME",
@@ -56,7 +56,7 @@ HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret)
         }
     }
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+    if (!strcmp(HYDT_bsci_info.rmk, "sge")) {
         const char *env_list[] = { "DISPLAY", "SGE_ROOT", "SGE_CELL", "SGE_DEBUG_LEVEL",
             "SGE_QMASTER_PORT", "SGE_O_HOME", "SGE_O_HOST",
             "SGE_O_LOGNAME", "SGE_O_MAIL", "SGE_O_PATH",
@@ -80,7 +80,7 @@ HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret)
         }
     }
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "slurm")) {
+    if (!strcmp(HYDT_bsci_info.rmk, "slurm")) {
         const char *env_list[] = { "SLURM_ACCOUNT", "SLURM_CPU_BIND",
             "SLURM_CPUS_PER_TASK", "SLURM_CONN_TYPE",
             "SLURM_CORE_FORMAT", "SLURM_DEBUG", "SLURMD_DEBUG",
@@ -110,7 +110,7 @@ HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret)
         }
     }
 
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ll")) {
+    if (!strcmp(HYDT_bsci_info.rmk, "ll")) {
         const char *env_list[] = { "LOADL_STEP_CLASS", "LOADL_STEP_ARGS",
             "LOADL_STEP_ID", "LOADL_STARTD_PORT",
             "LOADL_STEP_NICE", "LOADL_STEP_IN", "LOADL_STEP_ERR",

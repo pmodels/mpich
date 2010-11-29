@@ -15,7 +15,7 @@ HYD_status HYDT_bsci_wait_for_completion(int timeout)
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_fns.wait_for_completion(timeout);
-    HYDU_ERR_POP(status, "bootstrap device returned error waiting for completion\n");
+    HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

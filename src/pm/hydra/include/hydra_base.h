@@ -279,9 +279,12 @@ struct HYD_proxy {
 
 /* Global user parameters */
 struct HYD_user_global {
-    /* Bootstrap server */
-    char *bootstrap;
-    char *bootstrap_exec;
+    /* RMK */
+    char *rmk;
+
+    /* Launcher */
+    char *launcher;
+    char *launcher_exec;
 
     /* Process binding */
     char *binding;

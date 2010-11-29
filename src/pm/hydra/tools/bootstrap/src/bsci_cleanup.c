@@ -15,7 +15,7 @@ HYD_status HYDT_bsci_cleanup_procs(void)
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_fns.cleanup_procs();
-    HYDU_ERR_POP(status, "bootstrap device returned error cleaning up processes\n");
+    HYDU_ERR_POP(status, "launcher returned error cleaning up processes\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

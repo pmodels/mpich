@@ -15,7 +15,7 @@ HYD_status HYDT_bsci_query_node_list(struct HYD_node **node_list)
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_fns.query_node_list(node_list);
-    HYDU_ERR_POP(status, "bootstrap device returned error while querying node list\n");
+    HYDU_ERR_POP(status, "RMK returned error while querying node list\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

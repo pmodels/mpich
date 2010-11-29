@@ -15,7 +15,7 @@ HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_node *node_list, int *
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_fns.launch_procs(args, node_list, control_fd, enable_stdin);
-    HYDU_ERR_POP(status, "bootstrap device returned error while launching processes\n");
+    HYDU_ERR_POP(status, "launcher returned error while launching processes\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

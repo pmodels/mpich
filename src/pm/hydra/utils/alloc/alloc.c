@@ -8,8 +8,9 @@
 
 void HYDU_init_user_global(struct HYD_user_global *user_global)
 {
-    user_global->bootstrap = NULL;
-    user_global->bootstrap_exec = NULL;
+    user_global->rmk = NULL;
+    user_global->launcher = NULL;
+    user_global->launcher_exec = NULL;
 
     user_global->binding = NULL;
     user_global->bindlib = NULL;
@@ -30,12 +31,59 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     HYDU_init_global_env(&user_global->global_env);
 }
 
+void HYDU_finalize_user_global(struct HYD_user_global *user_global)
+{
+    if (user_global->rmk)
+        HYDU_FREE(user_global->rmk);
+
+    if (user_global->launcher)
+        HYDU_FREE(user_global->launcher);
+
+    if (user_global->launcher_exec)
+        HYDU_FREE(user_global->launcher_exec);
+
+    if (user_global->binding)
+        HYDU_FREE(user_global->binding);
+
+    if (user_global->bindlib)
+        HYDU_FREE(user_global->bindlib);
+
+    if (user_global->ckpointlib)
+        HYDU_FREE(user_global->ckpointlib);
+
+    if (user_global->ckpoint_prefix)
+        HYDU_FREE(user_global->ckpoint_prefix);
+
+    if (user_global->demux)
+        HYDU_FREE(user_global->demux);
+
+    if (user_global->iface)
+        HYDU_FREE(user_global->iface);
+
+    HYDU_finalize_global_env(&user_global->global_env);
+}
+
 void HYDU_init_global_env(struct HYD_env_global *global_env)
 {
     global_env->system = NULL;
     global_env->user = NULL;
     global_env->inherited = NULL;
     global_env->prop = NULL;
+}
+
+void HYDU_finalize_global_env(struct HYD_env_global *global_env)
+{
+    if (global_env->system)
+        HYDU_env_free_list(global_env->system);
+
+    if (global_env->user)
+        HYDU_env_free_list(global_env->user);
+
+    if (global_env->inherited)
+        HYDU_env_free_list(global_env->inherited);
+
+    if (global_env->prop)
+        HYDU_FREE(global_env->prop);
 }
 
 static void init_node(struct HYD_node *node)

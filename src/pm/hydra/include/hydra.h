@@ -24,7 +24,6 @@ struct HYD_handle {
     char *base_path;
 
     char *css;
-    char *rmk;
 
     char *port_range;
 

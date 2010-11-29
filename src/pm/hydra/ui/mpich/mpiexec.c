@@ -7,7 +7,6 @@
 #include "hydra.h"
 #include "hydra_utils.h"
 #include "mpiexec.h"
-#include "rmki.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "hydt_ftb.h"
@@ -63,16 +62,16 @@ static void usage(void)
     printf("Hydra specific options (treated as global):\n");
 
     printf("\n");
-    printf("  Bootstrap options:\n");
-    printf("    -bootstrap                       bootstrap server to use (%s)\n",
-           HYDRA_BSS_NAMES);
-    printf("    -bootstrap-exec                  executable to use to bootstrap processes\n");
+    printf("  Launch options:\n");
+    printf("    -launcher                        launcher to use (%s)\n",
+           HYDRA_AVAILABLE_LAUNCHERS);
+    printf("    -launcher-exec                   executable to use to launch processes\n");
     printf("    -enable-x/-disable-x             enable or disable X forwarding\n");
 
     printf("\n");
     printf("  Resource management kernel options:\n");
     printf("    -rmk                             resource management kernel to use (%s)\n",
-           HYDRA_RMK_NAMES);
+           HYDRA_AVAILABLE_RMKS);
 
     printf("\n");
     printf("  Hybrid programming options:\n");
@@ -82,7 +81,7 @@ static void usage(void)
     printf("  Process-core binding options:\n");
     printf("    -binding                         process-to-core binding mode\n");
     printf("    -bindlib                         process-to-core binding library (%s)\n",
-           HYDRA_BINDLIB_NAMES);
+           HYDRA_AVAILABLE_BINDLIBS);
 
     printf("\n");
     printf("  Checkpoint/Restart options:\n");
@@ -90,11 +89,12 @@ static void usage(void)
     printf("    -ckpoint-prefix                  checkpoint file prefix\n");
     printf("    -ckpoint-num                     checkpoint number to restart\n");
     printf("    -ckpointlib                      checkpointing library (%s)\n",
-           !strcmp(HYDRA_CKPOINTLIB_NAMES, "") ? "none" : HYDRA_CKPOINTLIB_NAMES);
+           !strcmp(HYDRA_AVAILABLE_CKPOINTLIBS, "") ? "none" : HYDRA_AVAILABLE_CKPOINTLIBS);
 
     printf("\n");
     printf("  Demux engine options:\n");
-    printf("    -demux                           demux engine (%s)\n", HYDRA_DEMUX_NAMES);
+    printf("    -demux                           demux engine (%s)\n",
+           HYDRA_AVAILABLE_DEMUXES);
 
     printf("\n");
     printf("  Other Hydra options:\n");
@@ -195,28 +195,19 @@ int main(int argc, char **argv)
     status = HYDT_dmx_init(&HYD_handle.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
-    status = HYDT_rmki_init(HYD_handle.rmk);
-    HYDU_ERR_POP(status, "unable to initialize RMK\n");
-
-    status = HYDT_bsci_init(HYD_handle.user_global.bootstrap,
-                            HYD_handle.user_global.bootstrap_exec,
+    status = HYDT_bsci_init(HYD_handle.user_global.rmk, HYD_handle.user_global.launcher,
+                            HYD_handle.user_global.launcher_exec,
                             HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
     if (HYD_handle.node_list == NULL) {
         /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. */
-        status = HYDT_rmki_query_node_list(&HYD_handle.node_list);
+        status = HYDT_bsci_query_node_list(&HYD_handle.node_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         if (HYD_handle.node_list == NULL) {
-            /* didn't get anything from the RMK; try the bootstrap server */
-            status = HYDT_bsci_query_node_list(&HYD_handle.node_list);
-            HYDU_ERR_POP(status, "bootstrap returned error while querying node list\n");
-        }
-
-        if (HYD_handle.node_list == NULL) {
-            /* The RMK and bootstrap didn't give us anything back; use localhost */
+            /* The RMK didn't give us anything back; use localhost */
             status = HYDU_add_to_node_list("localhost", 1, &HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
         }

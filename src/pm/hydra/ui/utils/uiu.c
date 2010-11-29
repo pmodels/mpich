@@ -16,8 +16,6 @@ void HYD_uiu_init_params(void)
 
     HYD_handle.base_path = NULL;
 
-    HYD_handle.rmk = NULL;
-
     HYD_handle.port_range = NULL;
     HYD_handle.interface_env_name = NULL;
 
@@ -49,53 +47,16 @@ void HYD_uiu_init_params(void)
 
 void HYD_uiu_free_params(void)
 {
+    HYDU_finalize_user_global(&HYD_handle.user_global);
+
     if (HYD_handle.base_path)
         HYDU_FREE(HYD_handle.base_path);
-
-    if (HYD_handle.rmk)
-        HYDU_FREE(HYD_handle.rmk);
 
     if (HYD_handle.port_range)
         HYDU_FREE(HYD_handle.port_range);
 
     if (HYD_handle.interface_env_name)
         HYDU_FREE(HYD_handle.interface_env_name);
-
-    if (HYD_handle.user_global.binding)
-        HYDU_FREE(HYD_handle.user_global.binding);
-
-    if (HYD_handle.user_global.bindlib)
-        HYDU_FREE(HYD_handle.user_global.bindlib);
-
-    if (HYD_handle.user_global.ckpointlib)
-        HYDU_FREE(HYD_handle.user_global.ckpointlib);
-
-    if (HYD_handle.user_global.ckpoint_prefix)
-        HYDU_FREE(HYD_handle.user_global.ckpoint_prefix);
-
-    if (HYD_handle.user_global.bootstrap)
-        HYDU_FREE(HYD_handle.user_global.bootstrap);
-
-    if (HYD_handle.user_global.demux)
-        HYDU_FREE(HYD_handle.user_global.demux);
-
-    if (HYD_handle.user_global.iface)
-        HYDU_FREE(HYD_handle.user_global.iface);
-
-    if (HYD_handle.user_global.bootstrap_exec)
-        HYDU_FREE(HYD_handle.user_global.bootstrap_exec);
-
-    if (HYD_handle.user_global.global_env.inherited)
-        HYDU_env_free_list(HYD_handle.user_global.global_env.inherited);
-
-    if (HYD_handle.user_global.global_env.system)
-        HYDU_env_free_list(HYD_handle.user_global.global_env.system);
-
-    if (HYD_handle.user_global.global_env.user)
-        HYDU_env_free_list(HYD_handle.user_global.global_env.user);
-
-    if (HYD_handle.user_global.global_env.prop)
-        HYDU_FREE(HYD_handle.user_global.global_env.prop);
 
     if (HYD_handle.node_list)
         HYDU_free_node_list(HYD_handle.node_list);
@@ -126,7 +87,7 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "mpiexec options:\n");
     HYDU_dump_noprefix(stdout, "----------------\n");
     HYDU_dump_noprefix(stdout, "  Base path: %s\n", HYD_handle.base_path);
-    HYDU_dump_noprefix(stdout, "  Bootstrap server: %s\n", HYD_handle.user_global.bootstrap);
+    HYDU_dump_noprefix(stdout, "  Launcher: %s\n", HYD_handle.user_global.launcher);
     HYDU_dump_noprefix(stdout, "  Debug level: %d\n", HYD_handle.user_global.debug);
     HYDU_dump_noprefix(stdout, "  Enable X: %d\n", HYD_handle.user_global.enablex);
 

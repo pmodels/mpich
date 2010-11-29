@@ -299,7 +299,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_query_usize(&usize);
-    HYDU_ERR_POP(status, "unable to get bootstrap universe size\n");
+    HYDU_ERR_POP(status, "unable to get launcher universe size\n");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=universe_size size=");

@@ -596,30 +596,30 @@ static HYD_status np_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void bootstrap_help_fn(void)
+static void launcher_help_fn(void)
 {
     printf("\n");
-    printf("-bootstrap: Bootstrap server to use\n\n");
+    printf("-launcher: Launcher to use\n\n");
     printf("Notes:\n");
     printf("  * Use the -info option to see what all are compiled in\n\n");
 }
 
-static HYD_status bootstrap_fn(char *arg, char ***argv)
+static HYD_status launcher_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.bootstrap);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.launcher);
 }
 
-static void bootstrap_exec_help_fn(void)
+static void launcher_exec_help_fn(void)
 {
     printf("\n");
-    printf("-bootstrap-exec: Bootstrap executable to use\n\n");
+    printf("-launcher-exec: Launcher executable to use\n\n");
     printf("Notes:\n");
     printf("  * This is needed only if Hydra cannot automatically find it\n\n");
 }
 
-static HYD_status bootstrap_exec_fn(char *arg, char ***argv)
+static HYD_status launcher_exec_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.bootstrap_exec);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.launcher_exec);
 }
 
 static void enablex_help_fn(void)
@@ -644,7 +644,7 @@ static void rmk_help_fn(void)
 
 static HYD_status rmk_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.rmk);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_handle.user_global.rmk);
 }
 
 static void ranks_per_proc_help_fn(void)
@@ -787,26 +787,29 @@ static HYD_status info_fn(char *arg, char ***argv)
     HYDU_dump_noprefix(stdout,
                        "    Release Date:                            %s\n",
                        HYDRA_RELEASE_DATE);
-    HYDU_dump_noprefix(stdout, "    CC:                                      %s\n", HYDRA_CC);
-    HYDU_dump_noprefix(stdout, "    CXX:                                     %s\n", HYDRA_CXX);
-    HYDU_dump_noprefix(stdout, "    F77:                                     %s\n", HYDRA_F77);
-    HYDU_dump_noprefix(stdout, "    F90:                                     %s\n", HYDRA_F90);
+    HYDU_dump_noprefix(stdout, "    CC:                              %s\n", HYDRA_CC);
+    HYDU_dump_noprefix(stdout, "    CXX:                             %s\n", HYDRA_CXX);
+    HYDU_dump_noprefix(stdout, "    F77:                             %s\n", HYDRA_F77);
+    HYDU_dump_noprefix(stdout, "    F90:                             %s\n", HYDRA_F90);
     HYDU_dump_noprefix(stdout,
                        "    Configure options:                       %s\n",
                        HYDRA_CONFIGURE_ARGS_CLEAN);
     HYDU_dump_noprefix(stdout, "    Process Manager:                         pmi\n");
     HYDU_dump_noprefix(stdout,
-                       "    Bootstrap servers available:             %s\n", HYDRA_BSS_NAMES);
+                       "    Launchers available:                     %s\n",
+                       HYDRA_AVAILABLE_LAUNCHERS);
     HYDU_dump_noprefix(stdout,
                        "    Binding libraries available:             %s\n",
-                       HYDRA_BINDLIB_NAMES);
+                       HYDRA_AVAILABLE_BINDLIBS);
     HYDU_dump_noprefix(stdout,
-                       "    Resource management kernels available:   %s\n", HYDRA_RMK_NAMES);
+                       "    Resource management kernels available:   %s\n",
+                       HYDRA_AVAILABLE_RMKS);
     HYDU_dump_noprefix(stdout,
                        "    Checkpointing libraries available:       %s\n",
-                       HYDRA_CKPOINTLIB_NAMES);
+                       HYDRA_AVAILABLE_CKPOINTLIBS);
     HYDU_dump_noprefix(stdout,
-                       "    Demux engines available:                 %s\n", HYDRA_DEMUX_NAMES);
+                       "    Demux engines available:                 %s\n",
+                       HYDRA_AVAILABLE_DEMUXES);
 
     HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
 
@@ -910,9 +913,11 @@ static struct HYD_arg_match_table match_table[] = {
 
     /* Hydra specific options */
 
-    /* Bootstrap options */
-    {"bootstrap", bootstrap_fn, bootstrap_help_fn},
-    {"bootstrap-exec", bootstrap_exec_fn, bootstrap_exec_help_fn},
+    /* Launcher options */
+    {"launcher", launcher_fn, launcher_help_fn},
+    {"launcher-exec", launcher_exec_fn, launcher_exec_help_fn},
+    {"bootstrap", launcher_fn, launcher_help_fn},
+    {"bootstrap-exec", launcher_exec_fn, launcher_exec_help_fn},
     {"enable-x", enablex_fn, enablex_help_fn},
     {"disable-x", enablex_fn, enablex_help_fn},
 

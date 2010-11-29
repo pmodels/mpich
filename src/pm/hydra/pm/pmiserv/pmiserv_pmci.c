@@ -127,7 +127,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_handle.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
-    /* Copy the host list to pass to the bootstrap server */
+    /* Copy the host list to pass to the launcher */
     node_list = NULL;
     node_count = 0;
     for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
@@ -172,7 +172,7 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "unable to initializing binding library");
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin);
-    HYDU_ERR_POP(status, "bootstrap server cannot launch processes\n");
+    HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
         if (control_fd[i] != HYD_FD_UNSET) {
@@ -226,7 +226,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     /* Either all application processes exited or we have timed
      * out. We now wait for all the proxies to terminate. */
     status = HYDT_bsci_wait_for_completion(-1);
-    HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+    HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

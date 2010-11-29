@@ -62,14 +62,10 @@ static void cleanup_params(void)
 
     HYDU_FUNC_ENTER();
 
+    HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
+
     if (HYD_pmcd_pmip.upstream.server_name)
         HYDU_FREE(HYD_pmcd_pmip.upstream.server_name);
-
-    if (HYD_pmcd_pmip.user_global.bootstrap)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.bootstrap);
-
-    if (HYD_pmcd_pmip.user_global.bootstrap_exec)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.bootstrap_exec);
 
     if (HYD_pmcd_pmip.system_global.pmi_fd)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_fd);
@@ -79,33 +75,6 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.system_global.pmi_process_mapping)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_process_mapping);
-
-    if (HYD_pmcd_pmip.user_global.binding)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.binding);
-
-    if (HYD_pmcd_pmip.user_global.bindlib)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.bindlib);
-
-    if (HYD_pmcd_pmip.user_global.ckpointlib)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.ckpointlib);
-
-    if (HYD_pmcd_pmip.user_global.ckpoint_prefix)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.ckpoint_prefix);
-
-    if (HYD_pmcd_pmip.user_global.demux)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.demux);
-
-    if (HYD_pmcd_pmip.user_global.iface)
-        HYDU_FREE(HYD_pmcd_pmip.user_global.iface);
-
-    if (HYD_pmcd_pmip.user_global.global_env.system)
-        HYDU_env_free_list(HYD_pmcd_pmip.user_global.global_env.system);
-
-    if (HYD_pmcd_pmip.user_global.global_env.user)
-        HYDU_env_free_list(HYD_pmcd_pmip.user_global.global_env.user);
-
-    if (HYD_pmcd_pmip.user_global.global_env.inherited)
-        HYDU_env_free_list(HYD_pmcd_pmip.user_global.global_env.inherited);
 
     if (HYD_pmcd_pmip.exec_list) {
         exec = HYD_pmcd_pmip.exec_list;

@@ -110,7 +110,9 @@ extern char *HYD_dbg_prefix;
 
 /* alloc */
 void HYDU_init_user_global(struct HYD_user_global *user_global);
+void HYDU_finalize_user_global(struct HYD_user_global *user_global);
 void HYDU_init_global_env(struct HYD_env_global *global_env);
+void HYDU_finalize_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
 void HYDU_free_node_list(struct HYD_node *node_list);
 void HYDU_init_pg(struct HYD_pg *pg, int pgid);
