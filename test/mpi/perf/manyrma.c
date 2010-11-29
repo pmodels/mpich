@@ -31,6 +31,8 @@ typedef struct {
 } timing;
 
 static int verbose = 1;
+static int barrierSync = 0;
+static double tickThreshold = 0.0;
 
 void PrintResults( int cnt, timing t[] );
 void RunAccFence( MPI_Win win, int destRank, int cnt, int sz, timing t[] );
@@ -51,8 +53,14 @@ int main( int argc, char *argv[] )
     MPI_Group wgroup, accessGroup, exposureGroup;
     double t1[MAX_RUNS], t2[MAX_RUNS], t3[MAX_RUNS];
     timing t[MAX_RUNS];
+    int    maxSz = MAX_RMA_SIZE;
 
     MPI_Init( &argc, &argv );
+
+    /* Determine clock accuracy */
+    tickThreshold = 10.0 * MPI_Wtick();
+    MPI_Allreduce( MPI_IN_PLACE, &tickThreshold, 1, MPI_DOUBLE, MPI_MAX, 
+		   MPI_COMM_WORLD );
 
     for (i=1; i<argc; i++) {
 	if (strcmp( argv[i], "-put" ) == 0) {
@@ -75,6 +83,13 @@ int main( int argc, char *argv[] )
 	    if (syncChoice == SYNC_ALL) syncChoice = SYNC_NONE;
 	    syncChoice |= SYNC_PSCW;
 	}
+	else if (strcmp( argv[i], "-maxsz" ) == 0) {
+	    i++;
+	    maxSz = atoi( argv[i] );
+	}
+	else if (strcmp( argv[i], "-barrier" ) == 0) {
+	    barrierSync = 1;
+	}
 	else {
 	    fprintf( stderr, "Unrecognized argument %s\n", argv[i] );
 	    MPI_Abort( MPI_COMM_WORLD, 1 );
@@ -94,7 +109,7 @@ int main( int argc, char *argv[] )
     MPI_Group_incl( wgroup, 1, &srcRank, &exposureGroup );
     MPI_Group_free( &wgroup );
 
-    arraysize = MAX_RMA_SIZE * MAX_COUNT;
+    arraysize = maxSz * MAX_COUNT;
     arraybuffer = (int*)malloc( arraysize * sizeof(int) );
     if (!arraybuffer) {
 	fprintf( stderr, "Unable to allocate %d words\n", arraysize );
@@ -112,7 +127,7 @@ int main( int argc, char *argv[] )
     maxCount = MAX_COUNT;
 
     if ((syncChoice & SYNC_FENCE) && (rmaChoice & RMA_ACC)) {
-	for (sz=1; sz<=MAX_RMA_SIZE; sz = sz + sz) {
+	for (sz=1; sz<=maxSz; sz = sz + sz) {
 	    if (wrank == 0) 
 		printf( "Accumulate with fence, %d elements\n", sz );
 	    cnt = 1;
@@ -127,7 +142,7 @@ int main( int argc, char *argv[] )
     }
 
     if ((syncChoice & SYNC_LOCK) && (rmaChoice & RMA_ACC)) {
-	for (sz=1; sz<=MAX_RMA_SIZE; sz = sz + sz) {
+	for (sz=1; sz<=maxSz; sz = sz + sz) {
 	    if (wrank == 0) 
 		printf( "Accumulate with lock, %d elements\n", sz );
 	    cnt = 1;
@@ -142,7 +157,7 @@ int main( int argc, char *argv[] )
     }
 
     if ((syncChoice & SYNC_FENCE) && (rmaChoice & RMA_PUT)) {
-	for (sz=1; sz<=MAX_RMA_SIZE; sz = sz + sz) {
+	for (sz=1; sz<=maxSz; sz = sz + sz) {
 	    if (wrank == 0) 
 		printf( "Put with fence, %d elements\n", sz );
 	    cnt = 1;
@@ -157,7 +172,7 @@ int main( int argc, char *argv[] )
     }
 
     if ((syncChoice & SYNC_LOCK) && (rmaChoice & RMA_PUT)) {
-	for (sz=1; sz<=MAX_RMA_SIZE; sz = sz + sz) {
+	for (sz=1; sz<=maxSz; sz = sz + sz) {
 	    if (wrank == 0) 
 		printf( "Put with lock, %d elements\n", sz );
 	    cnt = 1;
@@ -172,7 +187,7 @@ int main( int argc, char *argv[] )
     }
 
     if ((syncChoice & SYNC_PSCW) && (rmaChoice & RMA_PUT)) {
-	for (sz=1; sz<=MAX_RMA_SIZE; sz = sz + sz) {
+	for (sz=1; sz<=maxSz; sz = sz + sz) {
 	    if (wrank == 0) 
 		printf( "Put with pscw, %d elements\n", sz );
 	    cnt = 1;
@@ -188,7 +203,7 @@ int main( int argc, char *argv[] )
     }
 
     if ((syncChoice & SYNC_PSCW) && (rmaChoice & RMA_ACC)) {
-	for (sz=1; sz<=MAX_RMA_SIZE; sz = sz + sz) {
+	for (sz=1; sz<=maxSz; sz = sz + sz) {
 	    if (wrank == 0) 
 		printf( "Accumulate with pscw, %d elements\n", sz );
 	    cnt = 1;
@@ -218,8 +233,8 @@ void RunAccFence( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
     int k, i, j, one = 1;
 
     for (k=0; k<MAX_RUNS; k++) {
-	MPI_Win_fence( 0, win );
 	MPI_Barrier( MPI_COMM_WORLD );
+	MPI_Win_fence( 0, win );
 	j = 0;
 	t[k].startOp = MPI_Wtime();
 	for (i=0; i<cnt; i++) {
@@ -228,6 +243,7 @@ void RunAccFence( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
 	    j += sz;
 	}
 	t[k].endOp = MPI_Wtime();
+	if (barrierSync) MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_fence( 0, win );
 	t[k].endSync = MPI_Wtime();
     }
@@ -238,8 +254,8 @@ void RunAccLock( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
     int k, i, j, one = 1;
 
     for (k=0; k<MAX_RUNS; k++) {
-	MPI_Win_lock( MPI_LOCK_SHARED, destRank, 0, win );
 	MPI_Barrier( MPI_COMM_WORLD );
+	MPI_Win_lock( MPI_LOCK_SHARED, destRank, 0, win );
 	j = 0;
 	t[k].startOp = MPI_Wtime();
 	for (i=0; i<cnt; i++) {
@@ -248,6 +264,7 @@ void RunAccLock( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
 	    j += sz;
 	}
 	t[k].endOp = MPI_Wtime();
+	if (barrierSync) MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_unlock( destRank, win );
 	t[k].endSync = MPI_Wtime();
     }
@@ -258,8 +275,8 @@ void RunPutFence( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
     int k, i, j, one = 1;
 
     for (k=0; k<MAX_RUNS; k++) {
-	MPI_Win_fence( 0, win );
 	MPI_Barrier( MPI_COMM_WORLD );
+	MPI_Win_fence( 0, win );
 	j = 0;
 	t[k].startOp = MPI_Wtime();
 	for (i=0; i<cnt; i++) {
@@ -268,6 +285,7 @@ void RunPutFence( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
 	    j += sz;
 	}
 	t[k].endOp = MPI_Wtime();
+	if (barrierSync) MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_fence( 0, win );
 	t[k].endSync = MPI_Wtime();
     }
@@ -278,8 +296,8 @@ void RunPutLock( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
     int k, i, j, one = 1;
 
     for (k=0; k<MAX_RUNS; k++) {
-	MPI_Win_lock( MPI_LOCK_SHARED, destRank, 0, win );
 	MPI_Barrier( MPI_COMM_WORLD );
+	MPI_Win_lock( MPI_LOCK_SHARED, destRank, 0, win );
 	j = 0;
 	t[k].startOp = MPI_Wtime();
 	for (i=0; i<cnt; i++) {
@@ -287,6 +305,7 @@ void RunPutLock( MPI_Win win, int destRank, int cnt, int sz, timing t[] )
 	    j += sz;
 	}
 	t[k].endOp = MPI_Wtime();
+	if (barrierSync) MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_unlock( destRank, win );
 	t[k].endSync = MPI_Wtime();
     }
@@ -298,9 +317,9 @@ void RunPutPSCW( MPI_Win win, int destRank, int cnt, int sz,
     int k, i, j, one = 1;
 
     for (k=0; k<MAX_RUNS; k++) {
+	MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_post( exposureGroup, 0, win );
 	MPI_Win_start( accessGroup, 0, win );
-	MPI_Barrier( MPI_COMM_WORLD );
 	j = 0;
 	t[k].startOp = MPI_Wtime();
 	for (i=0; i<cnt; i++) {
@@ -308,6 +327,7 @@ void RunPutPSCW( MPI_Win win, int destRank, int cnt, int sz,
 	    j += sz;
 	}
 	t[k].endOp = MPI_Wtime();
+	if (barrierSync) MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_complete( win );
 	MPI_Win_wait( win );
 	t[k].endSync = MPI_Wtime();
@@ -320,9 +340,9 @@ void RunAccPSCW( MPI_Win win, int destRank, int cnt, int sz,
     int k, i, j, one = 1;
 
     for (k=0; k<MAX_RUNS; k++) {
+	MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_post( exposureGroup, 0, win );
 	MPI_Win_start( accessGroup, 0, win );
-	MPI_Barrier( MPI_COMM_WORLD );
 	j = 0;
 	t[k].startOp = MPI_Wtime();
 	for (i=0; i<cnt; i++) {
@@ -331,6 +351,7 @@ void RunAccPSCW( MPI_Win win, int destRank, int cnt, int sz,
 	    j += sz;
 	}
 	t[k].endOp = MPI_Wtime();
+	if (barrierSync) MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Win_complete( win );
 	MPI_Win_wait( win );
 	t[k].endSync = MPI_Wtime();
