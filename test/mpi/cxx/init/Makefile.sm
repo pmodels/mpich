@@ -5,6 +5,7 @@ DEPADD = @MPILIBLOC@ ../util/mtest.o
 
 baseenv_SOURCES = baseenv.cxx
 initstatx_SOURCES = initstatx.cxx
+initstat2x_SOURCES = initstat2x.cxx
 
 ../util/mtest.o: 
 	(cd ../util && $(MAKE) mtest.o)
