@@ -50,6 +50,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
     HYDU_ASSERT(!closed, status);
 
+    HYDU_FREE(buf);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

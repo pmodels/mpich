@@ -213,7 +213,6 @@ HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg)
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
 {
     struct HYD_proxy *proxy, *tproxy;
-    struct HYD_exec *exec, *texec;
 
     HYDU_FUNC_ENTER();
 
@@ -238,19 +237,7 @@ void HYDU_free_proxy_list(struct HYD_proxy *proxy_list)
         if (proxy->exit_status)
             HYDU_FREE(proxy->exit_status);
 
-        exec = proxy->exec_list;
-        while (exec) {
-            texec = exec->next;
-            HYDU_free_strlist(exec->exec);
-            if (exec->wdir)
-                HYDU_FREE(exec->wdir);
-            if (exec->user_env)
-                HYDU_env_free(exec->user_env);
-            if (exec->env_prop)
-                HYDU_FREE(exec->env_prop);
-            HYDU_FREE(exec);
-            exec = texec;
-        }
+        HYDU_free_exec_list(proxy->exec_list);
 
         HYDU_FREE(proxy);
         proxy = tproxy;

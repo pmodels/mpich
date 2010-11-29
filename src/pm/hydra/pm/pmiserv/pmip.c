@@ -8,6 +8,7 @@
 #include "hydra_utils.h"
 #include "pmip.h"
 #include "demux.h"
+#include "bsci.h"
 #include "bind.h"
 #include "hydt_ftb.h"
 
@@ -58,15 +59,9 @@ static HYD_status init_params(void)
 
 static void cleanup_params(void)
 {
-    struct HYD_exec *exec, *texec;
-
-    HYDU_FUNC_ENTER();
-
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
-    if (HYD_pmcd_pmip.upstream.server_name)
-        HYDU_FREE(HYD_pmcd_pmip.upstream.server_name);
-
+    /* System global */
     if (HYD_pmcd_pmip.system_global.pmi_fd)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_fd);
 
@@ -76,26 +71,21 @@ static void cleanup_params(void)
     if (HYD_pmcd_pmip.system_global.pmi_process_mapping)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_process_mapping);
 
-    if (HYD_pmcd_pmip.exec_list) {
-        exec = HYD_pmcd_pmip.exec_list;
-        while (exec) {
-            texec = exec->next;
-            HYDU_free_strlist(exec->exec);
-            if (exec->user_env)
-                HYDU_env_free(exec->user_env);
-            HYDU_FREE(exec);
-            exec = texec;
-        }
-    }
 
-    if (HYD_pmcd_pmip.downstream.pid)
-        HYDU_FREE(HYD_pmcd_pmip.downstream.pid);
+    /* Upstream */
+    if (HYD_pmcd_pmip.upstream.server_name)
+        HYDU_FREE(HYD_pmcd_pmip.upstream.server_name);
 
+
+    /* Downstream */
     if (HYD_pmcd_pmip.downstream.out)
         HYDU_FREE(HYD_pmcd_pmip.downstream.out);
 
     if (HYD_pmcd_pmip.downstream.err)
         HYDU_FREE(HYD_pmcd_pmip.downstream.err);
+
+    if (HYD_pmcd_pmip.downstream.pid)
+        HYDU_FREE(HYD_pmcd_pmip.downstream.pid);
 
     if (HYD_pmcd_pmip.downstream.exit_status)
         HYDU_FREE(HYD_pmcd_pmip.downstream.exit_status);
@@ -106,6 +96,11 @@ static void cleanup_params(void)
     if (HYD_pmcd_pmip.downstream.pmi_fd)
         HYDU_FREE(HYD_pmcd_pmip.downstream.pmi_fd);
 
+    if (HYD_pmcd_pmip.downstream.pmi_fd_active)
+        HYDU_FREE(HYD_pmcd_pmip.downstream.pmi_fd_active);
+
+
+    /* Local */
     if (HYD_pmcd_pmip.local.interface_env_name)
         HYDU_FREE(HYD_pmcd_pmip.local.interface_env_name);
 
@@ -120,9 +115,11 @@ static void cleanup_params(void)
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
-    HYDT_bind_finalize();
 
-    HYDU_FUNC_EXIT();
+    /* Exec list */
+    HYDU_free_exec_list(HYD_pmcd_pmip.exec_list);
+
+    HYDT_bind_finalize();
 }
 
 static void signal_cb(int sig)
@@ -257,7 +254,10 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
     status = HYDT_ftb_finalize();
-    HYDU_ERR_POP(status, "unable to initialize FTB\n");
+    HYDU_ERR_POP(status, "unable to finalize FTB\n");
+
+    status = HYDT_bsci_finalize();
+    HYDU_ERR_POP(status, "unable to finalize the bootstrap device\n");
 
     /* cleanup the params structure */
     cleanup_params();

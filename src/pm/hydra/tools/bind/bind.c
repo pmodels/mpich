@@ -35,7 +35,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         HYD_GET_ENV_STR_VAL(binding, "HYDRA_BINDING", NULL);
 
     if (user_bindlib)
-        bindlib = user_bindlib;
+        bindlib = HYDU_strdup(user_bindlib);
     else
         HYD_GET_ENV_STR_VAL(bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
 

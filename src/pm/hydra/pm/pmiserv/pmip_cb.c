@@ -258,7 +258,7 @@ static HYD_status read_pmi_cmd(int fd, int *closed)
 
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
-    char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
+    char *buf = NULL, *pmi_cmd = NULL, *args[HYD_NUM_TMP_STRINGS] = { 0 };
     int closed, repeat, sent, i = -1;
     struct HYD_pmcd_hdr hdr;
     struct HYD_pmcd_pmip_pmi_handle *h;
@@ -369,6 +369,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     } while (repeat);
 
   fn_exit:
+    if (pmi_cmd)
+        HYDU_FREE(pmi_cmd);
+    HYDU_free_strlist(args);
     if (buf)
         HYDU_FREE(buf);
     HYDU_FUNC_EXIT();
@@ -381,7 +384,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 {
     int count, closed, sent;
-    char *buf = NULL, *pmi_cmd, *args[HYD_NUM_TMP_STRINGS];
+    char *buf = NULL, *pmi_cmd = NULL, *args[HYD_NUM_TMP_STRINGS] = { 0 };
     struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
@@ -418,6 +421,11 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
     HYDU_ASSERT(!closed, status);
 
   fn_exit:
+    if (pmi_cmd)
+        HYDU_FREE(pmi_cmd);
+    HYDU_free_strlist(args);
+    if (buf)
+        HYDU_FREE(buf);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -622,10 +630,6 @@ static HYD_status launch_procs(void)
             }
             else if (HYD_pmcd_pmip.local.hostname) {
                 /* The second choice is the hostname the user gave */
-                status = HYDU_env_create(&env, HYD_pmcd_pmip.local.interface_env_name,
-                                         HYD_pmcd_pmip.local.hostname);
-                HYDU_ERR_POP(status, "unable to create env\n");
-
                 status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.interface_env_name,
                                                  HYD_pmcd_pmip.local.hostname, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
@@ -729,6 +733,8 @@ static HYD_status launch_procs(void)
                                              cpuset);
                 HYDU_ERR_POP(status, "create process returned error\n");
             }
+
+            HYDU_free_strlist(client_args);
 
             if (pmi_fds[1] != HYD_FD_UNSET) {
                 close(pmi_fds[1]);
