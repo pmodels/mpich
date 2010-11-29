@@ -40,8 +40,10 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         HYD_GET_ENV_STR_VAL(bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
 
     HYDT_bind_info.support_level = HYDT_BIND_SUPPORT_NONE;
-    if (bindlib)
+    if (bindlib) {
         HYDT_bind_info.bindlib = HYDU_strdup(bindlib);
+        HYDU_FREE(bindlib);
+    }
     else
         HYDT_bind_info.bindlib = NULL;
     HYDT_bind_info.bindmap = NULL;

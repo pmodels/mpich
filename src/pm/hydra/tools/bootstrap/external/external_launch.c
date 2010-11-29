@@ -15,7 +15,7 @@ static int fd_stdin, fd_stdout, fd_stderr;
 static HYD_status is_local_host(char *host, int *bool)
 {
     static int init = 1, localhost_len;
-    char localhost[MAX_HOSTNAME_LEN];
+    char localhost[MAX_HOSTNAME_LEN] = { 0 };
     int host_len;
     HYD_status status = HYD_SUCCESS;
 

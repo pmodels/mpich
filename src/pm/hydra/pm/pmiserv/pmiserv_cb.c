@@ -264,6 +264,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         else
             status = HYD_handle.stderr_cb(hdr.pgid, hdr.proxy_id, hdr.rank, buf, hdr.buflen);
         HYDU_ERR_POP(status, "error in the UI defined callback\n");
+
+        HYDU_FREE(buf);
     }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unhandled command = %d\n", hdr.cmd);
