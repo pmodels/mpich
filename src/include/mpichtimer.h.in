@@ -25,6 +25,7 @@
 /* The value "USE_DEVICE" means that the ADI device provides the timer */
 #define USE_DEVICE                  9
 #define USE_WIN64_CYCLE             10
+#define USE_MACH_ABSOLUTE_TIME      11
 #define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
 
 #if MPICH_TIMER_KIND == USE_GETHRTIME 
@@ -45,6 +46,8 @@
 #elif MPICH_TIMER_KIND == USE_QUERYPERFORMANCECOUNTER
 #include <winsock2.h>
 #include <windows.h>
+#elif MPICH_TIMER_KIND == USE_MACH_ABSOLUTE_TIME
+#include <mach/mach_time.h>
 #elif MPICH_TIMER_KIND == USE_WIN86_CYCLE
 #include <winsock2.h>
 #include <windows.h>
