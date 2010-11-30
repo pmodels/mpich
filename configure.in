@@ -2081,7 +2081,17 @@ EOF
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
     # Also define the name FORTRAN_BINDING for use in #if @FORTRAN_BINDING@..
     FORTRAN_BINDING=1
+
 fi
+
+WTIME_DOUBLE_TYPE="DOUBLE PRECISION"
+# Save a copy of the original mpi_base.f90 file
+if test "$enable_fc" = "yes" -a "$has_fort90_real8" = "yes" ; then
+    WTIME_DOUBLE_TYPE="REAL*8"
+fi
+# WTIME_DOUBLE_TYPE is substituted into mpi_base.f90
+AC_SUBST(WTIME_DOUBLE_TYPE)
+
 
 dnl By modifying mpif.h to use ! for comments, it can work with many f90 
 dnl compilers without creating a separate version.  
@@ -2099,18 +2109,6 @@ if test "$has_fort_real8" = "yes" ; then
     sed -e 's/DOUBLE PRECISION/REAL*8/g' src/include/mpif.h > src/include/mpif.h.new
     mv src/include/mpif.h.new src/include/mpif.h
     cp src/include/mpif.h src/binding/f77/mpif.h
-fi
-# Save a copy of the original mpi_base.f90 file
-if test "$enable_fc" = "yes" ; then
-  if test ! -f "$master_top_srcdir/src/binding/f90/mpi_base.f90.orig" ; then
-    cp $master_top_srcdir/src/binding/f90/mpi_base.f90 $master_top_srcdir/src/binding/f90/mpi_base.f90.orig
-  fi
-  if test "$has_fort90_real8" = "yes" ; then
-    sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90.orig > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
-    mv -f $master_top_srcdir/src/binding/f90/mpi_base.f90.new $master_top_srcdir/src/binding/f90/mpi_base.f90
-  else
-    cp -f $master_top_srcdir/src/binding/f90/mpi_base.f90.orig $master_top_srcdir/src/binding/f90/mpi_base.f90
-  fi
 fi
 
 if test ! -d bin  ; then mkdir bin ; fi 
@@ -6329,6 +6327,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/binding/f77/setbot.c \
 	  src/binding/f90/Makefile \
 	  src/binding/f90/mpi_sizeofs.f90 \
+	  src/binding/f90/mpi_base.f90 \
 	  src/packaging/Makefile \
 	  src/packaging/pkgconfig/mpich2-ch3.pc \
 	  src/packaging/pkgconfig/Makefile \
