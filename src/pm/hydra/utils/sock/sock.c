@@ -365,6 +365,11 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
         if (!*closed) {
             fwd_hash->buf_offset = 0;
             fwd_hash->buf_count += count;
+
+            /* We should never get a zero count, as the upper-layer
+             * should have waited for an event from the demux engine
+             * before calling us. */
+            HYDU_ASSERT(count, status);
         }
     }
 
