@@ -52,31 +52,27 @@ static HYD_status cleanup_procs(void)
     goto fn_exit;
 }
 
-static HYD_status ckpoint(void)
+static HYD_status send_cmd_to_proxies(struct HYD_pmcd_hdr hdr)
 {
     struct HYD_pg *pg = &HYD_handle.pg_list;
     struct HYD_proxy *proxy;
-    struct HYD_pmcd_hdr hdr;
     int sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (pg->next)
+    if (pg->next && hdr.cmd == CKPOINT)
         HYDU_ERR_POP(status, "checkpointing is not supported for dynamic processes\n");
 
-    /* Connect to all proxies and send the checkpoint command */
+    /* Send the command to all proxies */
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        HYD_pmcd_init_header(&hdr);
-        hdr.cmd = CKPOINT;
         status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
         HYDU_ASSERT(!closed, status);
     }
 
-    HYDU_FUNC_EXIT();
-
   fn_exit:
+    HYDU_FUNC_EXIT();
     return status;
 
   fn_fail:
@@ -85,8 +81,9 @@ static HYD_status ckpoint(void)
 
 static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
-    enum HYD_cmd cmd;
+    struct HYD_cmd cmd;
     int count, closed;
+    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -95,13 +92,29 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "read error\n");
     HYDU_ASSERT(!closed, status);
 
-    if (cmd == HYD_CLEANUP) {
+    if (cmd.type == HYD_CLEANUP) {
         status = cleanup_procs();
         HYDU_ERR_POP(status, "error cleaning up processes\n");
     }
-    else if (cmd == HYD_CKPOINT) {
-        status = ckpoint();
+    else if (cmd.type == HYD_CKPOINT) {
+        HYD_pmcd_init_header(&hdr);
+        hdr.cmd = CKPOINT;
+        status = send_cmd_to_proxies(hdr);
         HYDU_ERR_POP(status, "error checkpointing processes\n");
+    }
+    else if (cmd.type == HYD_SIGNAL) {
+        HYD_pmcd_init_header(&hdr);
+        hdr.cmd = SIGNAL;
+        hdr.signum = cmd.signum;
+
+        status = send_cmd_to_proxies(hdr);
+        HYDU_ERR_POP(status, "error sending SIGTSTP signal\n");
+
+        status = HYDT_bsci_propagate_signal(SIGTSTP);
+        HYDU_ERR_POP(status, "error propagating the SIGTSTP signal to the launcher\n");
+    }
+    else {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized command\n");
     }
 
   fn_exit:

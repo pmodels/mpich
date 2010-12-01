@@ -11,7 +11,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid,
                                struct HYDT_bind_cpuset_t cpuset)
 {
-    int inpipe[2], outpipe[2], errpipe[2], tpid;
+    int inpipe[2], outpipe[2], errpipe[2], tpid, sid;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -60,6 +60,12 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
 
         status = HYDT_bind_process(cpuset);
         HYDU_ERR_POP(status, "bind process failed\n");
+
+#if defined HAVE_SETSID
+        sid = setsid();
+        if (sid < 0)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "setsid failed\n");
+#endif /* HAVE_SETSID */
 
         if (execvp(client_arg[0], client_arg) < 0) {
             /* The child process should never get back to the proxy

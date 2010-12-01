@@ -113,7 +113,7 @@ static void usage(void)
 
 static void signal_cb(int sig)
 {
-    enum HYD_cmd cmd;
+    struct HYD_cmd cmd;
     int sent, closed;
 
     HYDU_FUNC_ENTER();
@@ -126,7 +126,7 @@ static void signal_cb(int sig)
          * corruption. The strategy we use is to set the abort flag
          * and send a signal to ourselves. The signal callback does
          * the process cleanup instead. */
-        cmd = HYD_CLEANUP;
+        cmd.type = HYD_CLEANUP;
         HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
     else if (sig == SIGUSR1 || sig == SIGALRM) {
@@ -140,7 +140,13 @@ static void signal_cb(int sig)
             alarm(HYD_handle.ckpoint_int);
 #endif /* HAVE_ALARM */
 
-        cmd = HYD_CKPOINT;
+        cmd.type = HYD_CKPOINT;
+        HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+    }
+    else if (sig == SIGTSTP) {
+        /* Pass on the signal to the child processes */
+        cmd.type = HYD_SIGNAL;
+        cmd.signum = SIGTSTP;
         HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
     /* Ignore all other signals */

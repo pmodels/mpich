@@ -32,6 +32,7 @@ static void init_launcher_fns(void)
     HYDT_bsci_fns.query_usize = NULL;
     HYDT_bsci_fns.query_proxy_id = NULL;
     HYDT_bsci_fns.query_env_inherit = NULL;
+    HYDT_bsci_fns.propagate_signal = NULL;
 }
 
 static void set_rmk_defaults(void)
@@ -58,6 +59,8 @@ static void set_launcher_defaults(void)
         HYDT_bsci_fns.query_proxy_id = HYDT_bscu_query_proxy_id;
     if (HYDT_bsci_fns.query_env_inherit == NULL)
         HYDT_bsci_fns.query_env_inherit = HYDT_bscu_query_env_inherit;
+    if (HYDT_bsci_fns.propagate_signal == NULL)
+        HYDT_bsci_fns.propagate_signal = HYDT_bscu_propagate_signal;
 }
 
 static const char *detect_rmk(int debug)

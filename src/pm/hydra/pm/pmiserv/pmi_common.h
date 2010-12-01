@@ -30,7 +30,7 @@ struct HYD_pmcd_pmi_kvs {
 
 struct HYD_pmcd_hdr {
     /* The set of commands supported */
-    enum {
+    enum HYD_pmcd_cmd {
         INVALID_CMD = 0,        /* for sanity testing */
 
         /* UI to proxy commands */
@@ -44,7 +44,8 @@ struct HYD_pmcd_hdr {
         ABORT,
         PMI_CMD,
         STDOUT,
-        STDERR
+        STDERR,
+        SIGNAL
     } cmd;
 
     /* Generic */
@@ -58,6 +59,9 @@ struct HYD_pmcd_hdr {
     int pgid;
     int proxy_id;
     int rank;
+
+    /* SIGNAL */
+    int signum;
 };
 
 struct HYD_pmcd_token {

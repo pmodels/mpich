@@ -11,9 +11,15 @@
 #include "hydra_base.h"
 #include "hydra_utils.h"
 
-enum HYD_cmd {
-    HYD_CLEANUP,
-    HYD_CKPOINT
+struct HYD_cmd {
+    enum {
+        HYD_CLEANUP,
+        HYD_CKPOINT,
+        HYD_SIGNAL
+    } type;
+
+    /* SIGNAL */
+    int signum;
 };
 
 struct HYD_handle {
