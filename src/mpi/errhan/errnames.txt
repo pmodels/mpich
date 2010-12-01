@@ -1415,7 +1415,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpix_ibarrier: MPIX_Ibarrier failed
 **mpix_ibarrier %C %p: MPIX_Ibarrier(comm=%C, request=%p)
 **mpix_ibcast: MPIX_Ibcast failed
-**mpix_ibcast %p %d %C %p: MPIX_Ibcast(buffer=%p, count=%d, comm=%C, request=%p)
+**mpix_ibcast %p %d %D %C %p: MPIX_Ibcast(buffer=%p, count=%d, datatype=%D, comm=%C, request=%p)
 **mpix_igather: MPIX_Igather failed
 **mpix_igather %p %d %D %p %d %D %d %C %p: MPIX_Igather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
 **mpix_igatherv: MPIX_Igatherv failed

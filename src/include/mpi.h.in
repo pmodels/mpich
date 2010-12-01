@@ -1242,7 +1242,7 @@ int PMPIX_Grequest_start(MPI_Grequest_query_function *,
 
 /* MPI-3 nonblocking collectives */
 int MPIX_Ibarrier(MPI_Comm comm, MPI_Request *request);
-int MPIX_Ibcast(void *buffer, int count, MPI_Comm comm, MPI_Request *request);
+int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, MPI_Comm comm, MPI_Request *request);
 int MPIX_Igather(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
 int MPIX_Igatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
 int MPIX_Iscatter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
@@ -1261,7 +1261,7 @@ int MPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 
 #if !defined(MPI_BUILD_PROFILING)
 int PMPIX_Ibarrier(MPI_Comm comm, MPI_Request *request);
-int PMPIX_Ibcast(void *buffer, int count, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Igather(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Igatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Iscatter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);

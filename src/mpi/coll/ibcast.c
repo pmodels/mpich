@@ -28,12 +28,12 @@
 #define FUNCNAME MPIR_Ibcast_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Ibcast_impl(void *buffer, int count, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Ibcast != NULL) {
-        mpi_errno = comm_ptr->coll_fns->Ibcast(buffer, count, comm_ptr, request);
+        mpi_errno = comm_ptr->coll_fns->Ibcast(buffer, count, datatype, comm_ptr, request);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
@@ -85,7 +85,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ibcast(void *buffer, int count, MPI_Comm comm, MPI_Request *request)
+int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
@@ -99,6 +99,7 @@ int MPIX_Ibcast(void *buffer, int count, MPI_Comm comm, MPI_Request *request)
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */
@@ -116,6 +117,13 @@ int MPIX_Ibcast(void *buffer, int count, MPI_Comm comm, MPI_Request *request)
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+                MPID_Datatype *datatype_ptr = NULL;
+                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+            }
+
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
@@ -127,7 +135,7 @@ int MPIX_Ibcast(void *buffer, int count, MPI_Comm comm, MPI_Request *request)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ibcast_impl(buffer, count, comm_ptr, request);
+    mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, comm_ptr, request);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
@@ -143,7 +151,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_ibcast", "**mpix_ibcast %p %d %C %p", buffer, count, comm, request);
+            "**mpix_ibcast", "**mpix_ibcast %p %d %D %C %p", buffer, count, datatype, comm, request);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
