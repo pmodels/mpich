@@ -71,9 +71,6 @@ struct HYDT_bsci_fns {
 
     /** \brief Query if an environment variable should be inherited */
     HYD_status(*query_env_inherit) (const char *env_name, int *ret);
-
-    /** \brief Propagate signal */
-    HYD_status(*propagate_signal) (int signum);
 };
 
 /** \cond */
@@ -217,17 +214,6 @@ HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *ret);
  * processes.
  */
 HYD_status HYDT_bsci_query_native_int(int *ret);
-
-/**
- * \brief HYDT_bsci_propagate_signal - Propagate signal to the
- * launched processes
- *
- * \param[in] signum                   Signal number
- *
- * This function propagates the input signal to all the launched
- * processes.
- */
-HYD_status HYDT_bsci_propagate_signal(int signum);
 
 /*! @} */
 

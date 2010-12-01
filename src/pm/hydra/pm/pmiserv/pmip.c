@@ -148,6 +148,9 @@ int main(int argc, char **argv)
     status = HYDU_set_signal(SIGPIPE, signal_cb);
     HYDU_ERR_POP(status, "unable to set SIGPIPE\n");
 
+    status = HYDU_set_common_signals(SIG_IGN);
+    HYDU_ERR_POP(status, "error setting signal handlers to SIG_IGN\n");
+
     status = init_params();
     HYDU_ERR_POP(status, "Error initializing proxy params\n");
 

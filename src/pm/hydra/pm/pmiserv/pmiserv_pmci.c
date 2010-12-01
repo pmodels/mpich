@@ -109,9 +109,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 
         status = send_cmd_to_proxies(hdr);
         HYDU_ERR_POP(status, "error sending SIGTSTP signal\n");
-
-        status = HYDT_bsci_propagate_signal(SIGTSTP);
-        HYDU_ERR_POP(status, "error propagating the SIGTSTP signal to the launcher\n");
     }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized command\n");

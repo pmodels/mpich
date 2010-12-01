@@ -13,5 +13,4 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/utils/bscu_finalize.c \
 	$(top_srcdir)/tools/bootstrap/utils/bscu_usize.c \
 	$(top_srcdir)/tools/bootstrap/utils/bscu_wait.c \
 	$(top_srcdir)/tools/bootstrap/utils/bscu_cb.c \
-	$(top_srcdir)/tools/bootstrap/utils/bscu_env.c \
-	$(top_srcdir)/tools/bootstrap/utils/bscu_signal.c
+	$(top_srcdir)/tools/bootstrap/utils/bscu_env.c
