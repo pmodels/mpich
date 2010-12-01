@@ -74,14 +74,19 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         hdr.rank = HYD_pmcd_pmip.downstream.pmi_rank[i];
         hdr.buflen = recvd;
 
-        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent,
-                                 &closed);
-        HYDU_ERR_POP(status, "sock write error\n");
-        HYDU_ASSERT(!closed, status);
+        {
+            int upstream_sock_closed;
 
-        status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, recvd, &sent, &closed);
-        HYDU_ERR_POP(status, "sock write error\n");
-        HYDU_ASSERT(!closed, status);
+            status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent,
+                                     &upstream_sock_closed);
+            HYDU_ERR_POP(status, "sock write error\n");
+            HYDU_ASSERT(!upstream_sock_closed, status);
+
+            status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, recvd, &sent,
+                                     &upstream_sock_closed);
+            HYDU_ERR_POP(status, "sock write error\n");
+            HYDU_ASSERT(!upstream_sock_closed, status);
+        }
     }
 
     if (closed) {
@@ -302,8 +307,28 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                 status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                                          &hdr, sizeof(hdr), &sent, &closed);
                 HYDU_ERR_POP(status, "unable to send ABORT command upstream\n");
-                if (closed)
-                    goto fn_fail;
+                HYDU_ASSERT(!closed, status);
+
+                /* Once the abort signal has been sent, we cannot
+                 * forward anymore STDOUT/STDERR messages
+                 * upstream. Close all the stdout/stderr sockets */
+                for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+                    if (HYD_pmcd_pmip.downstream.out[i] != HYD_FD_CLOSED) {
+                        status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.downstream.out[i]);
+                        HYDU_ERR_POP(status, "error deregistering stdout socket\n");
+
+                        close(HYD_pmcd_pmip.downstream.out[i]);
+                        HYD_pmcd_pmip.downstream.out[i] = HYD_FD_CLOSED;
+                    }
+
+                    if (HYD_pmcd_pmip.downstream.err[i] != HYD_FD_CLOSED) {
+                        status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.downstream.err[i]);
+                        HYDU_ERR_POP(status, "error deregistering stderr socket\n");
+
+                        close(HYD_pmcd_pmip.downstream.err[i]);
+                        HYD_pmcd_pmip.downstream.err[i] = HYD_FD_CLOSED;
+                    }
+                }
             }
             else {
                 /* If the user doesn't want to automatically cleanup,
