@@ -5619,8 +5619,8 @@ if test -f $devicedir/setup_device ; then
     echo sourcing $devicedir/setup_device
     . $devicedir/setup_device
 fi
-# See if we need to update the timer type
-if test "$timer_type" = "device" ; then
+# See if we need to update the timer type (which was converted to uppercase)
+if test "$timer_type" = "DEVICE" ; then
     # The device selected should export the datatype for the timer
     # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
     if test -n "$MPID_DEVICE_TIMER_TYPE" ; then 
