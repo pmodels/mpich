@@ -128,7 +128,7 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
     case MPID_LANG_CXX:
 	MPIR_Process.cxx_call_errfn( 2, &win_ptr->handle, 
 				     &errorcode, 
-		       win_ptr->errhandler->errfn.C_Win_Handler_function );
+     (void (*)(void))win_ptr->errhandler->errfn.C_Win_Handler_function );
 	break;
 #endif
 #ifdef HAVE_FORTRAN_BINDING

@@ -133,7 +133,7 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
     case MPID_LANG_CXX:
 	MPIR_Process.cxx_call_errfn( 0, &comm_ptr->handle, 
 				     &errorcode, 
-		       comm_ptr->errhandler->errfn.C_Comm_Handler_function );
+     (void (*)(void))comm_ptr->errhandler->errfn.C_Comm_Handler_function );
 	break;
 #endif
 #ifdef HAVE_FORTRAN_BINDING
