@@ -17,7 +17,10 @@ using namespace std;
 #else
 #include <iostream.h>
 #endif
+
 #include "mpitestcxx.h"
+/* Needed for strcmp */
+#include <string.h>
 
 int main( int argc, char *argv[] )
 {
