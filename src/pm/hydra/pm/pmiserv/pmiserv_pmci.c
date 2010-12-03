@@ -102,14 +102,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
         status = send_cmd_to_proxies(hdr);
         HYDU_ERR_POP(status, "error checkpointing processes\n");
     }
-    else if (cmd.type == HYD_SIGNAL) {
-        HYD_pmcd_init_header(&hdr);
-        hdr.cmd = SIGNAL;
-        hdr.signum = cmd.signum;
-
-        status = send_cmd_to_proxies(hdr);
-        HYDU_ERR_POP(status, "error sending SIGTSTP signal\n");
-    }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized command\n");
     }

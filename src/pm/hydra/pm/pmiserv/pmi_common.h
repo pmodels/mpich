@@ -44,8 +44,7 @@ struct HYD_pmcd_hdr {
         ABORT,
         PMI_CMD,
         STDOUT,
-        STDERR,
-        SIGNAL
+        STDERR
     } cmd;
 
     /* Generic */
@@ -59,9 +58,6 @@ struct HYD_pmcd_hdr {
     int pgid;
     int proxy_id;
     int rank;
-
-    /* SIGNAL */
-    int signum;
 };
 
 struct HYD_pmcd_token {

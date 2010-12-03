@@ -124,11 +124,18 @@ static void cleanup_params(void)
 
 static void signal_cb(int sig)
 {
+    int i;
+
     HYDU_FUNC_ENTER();
 
     if (sig == SIGPIPE) {
         /* Upstream socket closed; kill all processes */
         HYD_pmcd_pmip_killjob();
+    }
+    else if (sig == SIGTSTP) {
+        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+            if (HYD_pmcd_pmip.downstream.pid[i] != -1)
+                kill(HYD_pmcd_pmip.downstream.pid[i], sig);
     }
     /* Ignore other signals for now */
 
@@ -148,8 +155,11 @@ int main(int argc, char **argv)
     status = HYDU_set_signal(SIGPIPE, signal_cb);
     HYDU_ERR_POP(status, "unable to set SIGPIPE\n");
 
-    status = HYDU_set_common_signals(SIG_IGN);
-    HYDU_ERR_POP(status, "error setting signal handlers to SIG_IGN\n");
+    status = HYDU_set_signal(SIGTSTP, signal_cb);
+    HYDU_ERR_POP(status, "unable to set SIGTSTP\n");
+
+    status = HYDU_set_common_signals(signal_cb);
+    HYDU_ERR_POP(status, "unable to set common signals\n");
 
     status = init_params();
     HYDU_ERR_POP(status, "Error initializing proxy params\n");

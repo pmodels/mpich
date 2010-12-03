@@ -913,7 +913,7 @@ static HYD_status procinfo(int fd)
 
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
-    int cmd_len, closed, i;
+    int cmd_len, closed;
     struct HYD_pmcd_hdr hdr;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
@@ -960,11 +960,6 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     else if (hdr.cmd == PMI_RESPONSE) {
         status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
-    }
-    else if (hdr.cmd == SIGNAL) {
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-            if (HYD_pmcd_pmip.downstream.pid[i] != -1)
-                kill(HYD_pmcd_pmip.downstream.pid[i], hdr.signum);
     }
     else {
         status = HYD_INTERNAL_ERROR;

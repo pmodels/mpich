@@ -144,12 +144,6 @@ static void signal_cb(int sig)
         cmd.type = HYD_CKPOINT;
         HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
-    else if (sig == SIGTSTP) {
-        /* Pass on the signal to the child processes */
-        cmd.type = HYD_SIGNAL;
-        cmd.signum = SIGTSTP;
-        HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
-    }
     /* Ignore all other signals */
 
     HYDU_FUNC_EXIT();

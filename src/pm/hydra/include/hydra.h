@@ -14,12 +14,8 @@
 struct HYD_cmd {
     enum {
         HYD_CLEANUP,
-        HYD_CKPOINT,
-        HYD_SIGNAL
+        HYD_CKPOINT
     } type;
-
-    /* SIGNAL */
-    int signum;
 };
 
 struct HYD_handle {
