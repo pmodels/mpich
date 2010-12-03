@@ -50,11 +50,11 @@ $hasDemon   = 0;
 		  'g;none;all;handle;dbg;log;meminit',
 		  'fast',
 		  'f77',
-		  'f90',
+		  'fc',
 		  'cxx',
 		  'romio',
 		  'coverage',
-		  'strict',    #;posix
+		  'strict;c99;posix',    #;posix
 		  'debuginfo', # Message queues
 		  'weak_symbols;no;yes',
                   'threads;single;multiple',
