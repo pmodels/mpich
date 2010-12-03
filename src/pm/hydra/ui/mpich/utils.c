@@ -9,6 +9,8 @@
 #include "mpiexec.h"
 #include "uiu.h"
 
+static int hostname_propagation = -1;
+
 static HYD_status get_current_exec(struct HYD_exec **exec)
 {
     HYD_status status = HYD_SUCCESS;
@@ -877,6 +879,19 @@ static HYD_status auto_cleanup_fn(char *arg, char ***argv)
                         !strcmp(arg, "enable-auto-cleanup"));
 }
 
+static void hostname_propagation_help_fn(void)
+{
+    printf("\n");
+    printf("-disable-hostname-propagation: Let MPICH2 auto-detect the hostname\n");
+    printf("-enable-hostname-propagation: Pass user hostnames to MPICH2 (default)\n\n");
+}
+
+static HYD_status hostname_propagation_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int(arg, argv, &hostname_propagation,
+                        strcmp(arg, "disable-hostname-propagation"));
+}
+
 static struct HYD_arg_match_table match_table[] = {
     /* Global environment options */
     {"genv", genv_fn, genv_help_fn},
@@ -952,6 +967,8 @@ static struct HYD_arg_match_table match_table[] = {
     {"nameserver", nameserver_fn, nameserver_help_fn},
     {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
+    {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
+    {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
 
     {"\0", NULL}
 };
@@ -1010,6 +1027,9 @@ static HYD_status set_default_values(void)
      * launch */
     if (HYD_uii_mpx_exec_list == NULL && HYD_handle.user_global.ckpoint_prefix == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
+
+    if (hostname_propagation || hostname_propagation == -1)
+        HYD_handle.interface_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
 
   fn_exit:
     return status;

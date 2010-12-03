@@ -244,8 +244,10 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         proxy->exec_launch_info[arg++] = HYDU_strdup("--version");
         proxy->exec_launch_info[arg++] = HYDU_strdup(HYDRA_VERSION);
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--interface-env-name");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.interface_env_name);
+        if (HYD_handle.interface_env_name) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--interface-env-name");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_handle.interface_env_name);
+        }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--hostname");
         proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node.hostname);

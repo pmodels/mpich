@@ -109,6 +109,7 @@ static void usage(void)
     printf
         ("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
+    printf("    -disable-hostname-propagation  let MPICH2 auto-detect the hostname\n");
 }
 
 static void signal_cb(int sig)
@@ -266,8 +267,6 @@ int main(int argc, char **argv)
         MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_handle.port_range) ||
         MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_handle.port_range))
         HYD_handle.port_range = HYDU_strdup(HYD_handle.port_range);
-
-    HYD_handle.interface_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
 
     if (HYD_handle.print_rank_map) {
         for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
