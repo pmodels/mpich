@@ -44,6 +44,11 @@ struct HYD_handle {
     /* All of the available nodes */
     struct HYD_node *node_list;
     int global_core_count;
+    enum HYD_sort_order {
+        NONE = 0,
+        ASCENDING = 1,
+        DESCENDING = 2
+    } sort_order;
 
     /* Process groups */
     struct HYD_pg pg_list;

@@ -109,7 +109,8 @@ static void usage(void)
     printf
         ("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
-    printf("    -disable-hostname-propagation  let MPICH2 auto-detect the hostname\n");
+    printf("    -disable-hostname-propagation    let MPICH2 auto-detect the hostname\n");
+    printf("    -order-nodes                     order nodes as ascending/descending cores\n");
 }
 
 static void signal_cb(int sig)
@@ -150,12 +151,68 @@ static void signal_cb(int sig)
     return;
 }
 
+static void append_node_to_list(struct HYD_node *node, struct HYD_node **list)
+{
+    struct HYD_node *r1;
+
+    for (r1 = *list; r1; r1 = r1->next)
+        if (!strcmp(r1->hostname, node->hostname)) {
+            r1->core_count += node->core_count;
+            return;
+        }
+
+    if (*list == NULL) {
+        *list = node;
+        (*list)->next = NULL;
+    }
+    else if ((*list)->core_count > node->core_count) {
+        node->next = *list;
+        *list = node;
+    }
+    else {
+        for (r1 = *list; r1->next && r1->next->core_count < node->core_count; r1 = r1->next);
+        node->next = r1->next;
+        r1->next = node;
+    }
+}
+
+static void sort_node_list(void)
+{
+    struct HYD_node *r1, *node, *new_list;
+    int sorted;
+
+    while (1) {
+        new_list = NULL;
+
+        for (node = HYD_handle.node_list; node;) {
+            r1 = node->next;
+            append_node_to_list(node, &new_list);
+            node = r1;
+        }
+
+        /* Check to make sure the nodes are sorted. They might not be
+         * sorted if there are duplicate hostname entries. */
+        sorted = 1;
+        for (node = HYD_handle.node_list; node; node = node->next) {
+            if (node->next && (node->core_count > node->next->core_count)) {
+                sorted = 0;
+                break;
+            }
+        }
+
+        if (sorted)
+            break;
+    }
+
+    HYD_handle.node_list = new_list;
+}
+
 int main(int argc, char **argv)
 {
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, process_id, proc_count, timeout;
+    int exit_status = 0, i, process_id, proc_count, timeout, reset_rmk;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -201,6 +258,8 @@ int main(int argc, char **argv)
                             HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
+    reset_rmk = 0;
+
     if (HYD_handle.node_list == NULL) {
         /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. */
@@ -212,16 +271,7 @@ int main(int argc, char **argv)
             status = HYDU_add_to_node_list("localhost", 1, &HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
 
-            /* Reinitialize the bootstrap server with the "none" RMK,
-             * so it knows that we are not using the node list
-             * provided by the RMK */
-            status = HYDT_bsci_finalize();
-            HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
-
-            status = HYDT_bsci_init("none", HYD_handle.user_global.launcher,
-                                    HYD_handle.user_global.launcher_exec,
-                                    HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
-            HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
+            reset_rmk = 1;
         }
     }
 
@@ -230,6 +280,26 @@ int main(int argc, char **argv)
     if (HYD_handle.ppn != -1)
         for (node = HYD_handle.node_list; node; node = node->next)
             node->core_count = HYD_handle.ppn;
+
+    /* The RMK returned a node list. See if the user requested us to
+     * manipulate it in some way */
+    if (HYD_handle.sort_order != NONE) {
+        sort_node_list();
+        reset_rmk = 1;
+    }
+
+    if (reset_rmk) {
+        /* Reinitialize the bootstrap server with the "none" RMK, so
+         * it knows that we are not using the node list provided by
+         * the RMK */
+        status = HYDT_bsci_finalize();
+        HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
+
+        status = HYDT_bsci_init("none", HYD_handle.user_global.launcher,
+                                HYD_handle.user_global.launcher_exec,
+                                HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
+        HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
+    }
 
     HYD_handle.global_core_count = 0;
     for (node = HYD_handle.node_list; node; node = node->next)

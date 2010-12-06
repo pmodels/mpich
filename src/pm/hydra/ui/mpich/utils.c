@@ -892,6 +892,35 @@ static HYD_status hostname_propagation_fn(char *arg, char ***argv)
                         strcmp(arg, "disable-hostname-propagation"));
 }
 
+static void order_nodes_help_fn(void)
+{
+    printf("\n");
+    printf("-order-nodes ASCENDING: Sort the node list in ascending order\n");
+    printf("-order-nodes DESCENDING: Sort the node list in descending order\n");
+}
+
+static HYD_status order_nodes_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (!strcmp(**argv, "ASCENDING") || !strcmp(**argv, "ascending") ||
+        !strcmp(**argv, "UP") || !strcmp(**argv, "up"))
+        HYD_handle.sort_order = ASCENDING;
+    else if (!strcmp(**argv, "DESCENDING") || !strcmp(**argv, "descending") ||
+        !strcmp(**argv, "DOWN") || !strcmp(**argv, "down"))
+        HYD_handle.sort_order = DESCENDING;
+    else
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized sort order\n");
+
+    (*argv)++;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static struct HYD_arg_match_table match_table[] = {
     /* Global environment options */
     {"genv", genv_fn, genv_help_fn},
@@ -969,6 +998,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
+    {"order-nodes", order_nodes_fn, order_nodes_help_fn},
 
     {"\0", NULL}
 };
