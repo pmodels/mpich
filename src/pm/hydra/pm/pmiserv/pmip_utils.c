@@ -13,7 +13,7 @@
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
-void HYD_pmcd_pmip_killjob(void)
+void HYD_pmcd_pmip_kill_localprocs(void)
 {
     int i;
 

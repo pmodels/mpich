@@ -159,7 +159,7 @@ static HYD_status cleanup_proxy_connection(int fd, struct HYD_proxy *proxy)
 
 static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 {
-    int count, closed;
+    int count, closed, i, aborted = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -174,22 +174,19 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
     status = cleanup_proxy_connection(fd, proxy);
     HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
 
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
+    /* If any of the processes aborted, cleanup the remaining
+     * processes */
+    for (i = 0; i < proxy->proxy_process_count; i++) {
+        if (proxy->exit_status[i]) {
+            aborted = 1;
+            break;
+        }
+    }
 
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status handle_abort(int fd, struct HYD_proxy *proxy)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYD_pmcd_pmiserv_cleanup();
-    HYDU_ERR_POP(status, "unable to cleanup processes\n");
+    if (aborted && HYD_handle.user_global.auto_cleanup) {
+        status = HYD_pmcd_pmiserv_cleanup();
+        HYDU_ERR_POP(status, "unable to cleanup processes\n");
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -232,10 +229,6 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     }
     else if (hdr.cmd == EXIT_STATUS) {
         status = handle_exit_status(fd, proxy);
-        HYDU_ERR_POP(status, "unable to receive exit status\n");
-    }
-    else if (hdr.cmd == ABORT) {
-        status = handle_abort(fd, proxy);
         HYDU_ERR_POP(status, "unable to receive exit status\n");
     }
     else if (hdr.cmd == PMI_CMD) {
@@ -411,7 +404,8 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
         /* Close the control listen port, so new proxies cannot
          * connect back */
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-        if (pg_scratch->control_listen_fd != HYD_FD_UNSET) {
+        if (pg_scratch->control_listen_fd != HYD_FD_UNSET &&
+            pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
             status = HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
             HYDU_ERR_POP(status, "unable to deregister control listen fd\n");
             close(pg_scratch->control_listen_fd);

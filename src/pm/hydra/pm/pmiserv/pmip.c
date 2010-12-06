@@ -130,7 +130,7 @@ static void signal_cb(int sig)
 
     if (sig == SIGPIPE) {
         /* Upstream socket closed; kill all processes */
-        HYD_pmcd_pmip_killjob();
+        HYD_pmcd_pmip_kill_localprocs();
     }
     else if (sig == SIGTSTP) {
         for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
@@ -280,6 +280,6 @@ int main(int argc, char **argv)
     return status;
 
   fn_fail:
-    HYD_pmcd_pmip_killjob();
+    HYD_pmcd_pmip_kill_localprocs();
     goto fn_exit;
 }

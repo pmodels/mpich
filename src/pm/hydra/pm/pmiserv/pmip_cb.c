@@ -300,35 +300,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ERR_POP(status, "FTB publish failed\n");
 
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
-                HYD_pmcd_pmip_killjob();
-
-                /* Need to send an abort notification to the user */
-                hdr.cmd = ABORT;
-                status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
-                                         &hdr, sizeof(hdr), &sent, &closed);
-                HYDU_ERR_POP(status, "unable to send ABORT command upstream\n");
-                HYDU_ASSERT(!closed, status);
-
-                /* Once the abort signal has been sent, we cannot
-                 * forward anymore STDOUT/STDERR messages
-                 * upstream. Close all the stdout/stderr sockets */
-                for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-                    if (HYD_pmcd_pmip.downstream.out[i] != HYD_FD_CLOSED) {
-                        status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.downstream.out[i]);
-                        HYDU_ERR_POP(status, "error deregistering stdout socket\n");
-
-                        close(HYD_pmcd_pmip.downstream.out[i]);
-                        HYD_pmcd_pmip.downstream.out[i] = HYD_FD_CLOSED;
-                    }
-
-                    if (HYD_pmcd_pmip.downstream.err[i] != HYD_FD_CLOSED) {
-                        status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.downstream.err[i]);
-                        HYDU_ERR_POP(status, "error deregistering stderr socket\n");
-
-                        close(HYD_pmcd_pmip.downstream.err[i]);
-                        HYD_pmcd_pmip.downstream.err[i] = HYD_FD_CLOSED;
-                    }
-                }
+                HYD_pmcd_pmip_kill_localprocs();
             }
             else {
                 /* If the user doesn't want to automatically cleanup,
@@ -930,7 +902,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to deregister fd\n");
         close(fd);
 
-        HYD_pmcd_pmip_killjob();
+        HYD_pmcd_pmip_kill_localprocs();
         status = HYD_SUCCESS;
     }
     else if (hdr.cmd == PROC_INFO) {

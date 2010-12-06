@@ -41,7 +41,6 @@ struct HYD_pmcd_hdr {
         /* Proxy to UI commands */
         PID_LIST,
         EXIT_STATUS,
-        ABORT,
         PMI_CMD,
         STDOUT,
         STDERR

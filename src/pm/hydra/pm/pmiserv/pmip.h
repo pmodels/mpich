@@ -72,7 +72,7 @@ extern struct HYD_pmcd_pmip HYD_pmcd_pmip;
 extern struct HYD_arg_match_table HYD_pmcd_pmip_match_table[];
 
 HYD_status HYD_pmcd_pmip_get_params(char **t_argv);
-void HYD_pmcd_pmip_killjob(void);
+void HYD_pmcd_pmip_kill_localprocs(void);
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp);
 
 #endif /* PMIP_H_INCLUDED */
