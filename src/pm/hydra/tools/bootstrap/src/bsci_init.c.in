@@ -60,6 +60,15 @@ static void set_launcher_defaults(void)
         HYDT_bsci_fns.query_env_inherit = HYDT_bscu_query_env_inherit;
 }
 
+static void init_bsci_info(void)
+{
+    HYDT_bsci_info.rmk = NULL;
+    HYDT_bsci_info.launcher = NULL;
+    HYDT_bsci_info.launcher_exec = NULL;
+    HYDT_bsci_info.enablex = -1;
+    HYDT_bsci_info.debug = -1;
+}
+
 static const char *detect_rmk(int debug)
 {
     int i, ret;
@@ -109,6 +118,7 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
     HYDU_FUNC_ENTER();
 
     /* Initialize the RMK and launcher functions */
+    init_bsci_info();
     init_rmk_fns();
     init_launcher_fns();
 

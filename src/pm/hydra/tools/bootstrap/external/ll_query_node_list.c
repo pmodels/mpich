@@ -9,8 +9,6 @@
 #include "bscu.h"
 #include "ll.h"
 
-int HYDT_bscd_ll_user_node_list = 1;
-
 static struct HYD_node *global_node_list = NULL;
 static int total_node_count = 0;
 
@@ -59,9 +57,6 @@ HYD_status HYDT_bscd_ll_query_node_list(struct HYD_node **node_list)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     *node_list = global_node_list;
-
-    /* node list is provided by the RMK */
-    HYDT_bscd_ll_user_node_list = 0;
 
   fn_exit:
     HYDU_FUNC_EXIT();

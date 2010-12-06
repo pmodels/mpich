@@ -211,6 +211,17 @@ int main(int argc, char **argv)
             /* The RMK didn't give us anything back; use localhost */
             status = HYDU_add_to_node_list("localhost", 1, &HYD_handle.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
+
+            /* Reinitialize the bootstrap server with the "none" RMK,
+             * so it knows that we are not using the node list
+             * provided by the RMK */
+            status = HYDT_bsci_finalize();
+            HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
+
+            status = HYDT_bsci_init("none", HYD_handle.user_global.launcher,
+                                    HYD_handle.user_global.launcher_exec,
+                                    HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
+            HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
         }
     }
 

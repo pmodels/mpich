@@ -38,7 +38,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list,
     idx = 0;
     targs[idx++] = HYDU_strdup(path);
 
-    if (HYDT_bscd_ll_user_node_list) {
+    if (!strcmp(HYDT_bsci_info.rmk, "ll")) {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "ll does not support user-defined host lists\n");
     }

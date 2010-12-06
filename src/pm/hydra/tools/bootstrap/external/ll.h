@@ -15,6 +15,4 @@ HYD_status HYDT_bscd_ll_query_proxy_id(int *proxy_id);
 HYD_status HYDT_bscd_ll_query_node_list(struct HYD_node **node_list);
 HYD_status HYDTI_bscd_ll_query_node_count(int *count);
 
-extern int HYDT_bscd_ll_user_node_list;
-
 #endif /* LL_H_INCLUDED */
