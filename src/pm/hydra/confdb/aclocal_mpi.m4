@@ -222,7 +222,7 @@ case $ac_mpi_type in
         dnl This isn't correct.  It should try to get the underlying compiler
         dnl from the mpicc and mpif77 scripts or mpireconfig
         if test "X$pac_lib_mpi_is_building" != "Xyes" ; then
-            save_PATH="$PATH"
+	    PAC_PUSH_FLAG([PATH])
             if test "$with_mpich" != "yes" -a "$with_mpich" != "no" ; then 
 		# Look for commands; if not found, try adding bin to the
 		# path
@@ -256,7 +256,7 @@ case $ac_mpi_type in
 	    AC_PATH_PROG(MPIRUN,mpirun)
 	    AC_PATH_PROG(MPIBOOT,mpichboot)
 	    AC_PATH_PROG(MPIUNBOOT,mpichstop)
-	    PATH="$save_PATH"
+	    PAC_POP_FLAG([PATH])
   	    MPILIBNAME="mpich"
         else 
 	    # All of the above should have been passed in the environment!
@@ -271,7 +271,7 @@ case $ac_mpi_type in
 	dnl
         dnl This isn't correct.  It should try to get the underlying compiler
         dnl from the mpicc and mpif77 scripts or mpireconfig
-        save_PATH="$PATH"
+	PAC_PUSH_FLAG([PATH])
         if test "$with_mpich" != "yes" -a "$with_mpich" != "no" ; then 
 	    # Look for commands; if not found, try adding bin to the path
 		if test ! -x $with_lammpi/mpicc -a -x $with_lammpi/bin/mpicc ; then
@@ -292,7 +292,7 @@ case $ac_mpi_type in
         AC_PATH_PROG(MPICXX,mpiCC)
 	if test -z "$TESTCXX" ; then TESTCXX=${CXX-CC} ; fi
         CXX="$MPICXX"
-	PATH="$save_PATH"
+	PAC_POP_FLAG([PATH])
   	MPILIBNAME="lammpi"
 	MPIBOOT="lamboot"
 	MPIUNBOOT="wipe"
@@ -437,12 +437,12 @@ case $ac_mpi_type in
         mpichnt)
         dnl
         dnl This isn't adequate, but it helps with using MPICH-NT/SDK.gcc
-	save_CFLAGS="$CFLAGS"
-        CFLAGS="$save_CFLAGS -I$with_mpichnt/include"
-        save_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$save_CPPFLAGS -I$with_mpichnt/include"
-        save_LDFLAGS="$LDFLAGS"
-        LDFLAGS="$save_LDFLAGS -L$with_mpichnt/lib"
+	PAC_PUSH_FLAG([CFLAGS])
+        CFLAGS="$CFLAGS -I$with_mpichnt/include"
+	PAC_PUSH_FLAG([CPPFLAGS])
+        CPPFLAGS="$CPPFLAGS -I$with_mpichnt/include"
+	PAC_PUSH_FLAG([LDFLAGS])
+        LDFLAGS="$LDFLAGS -L$with_mpichnt/lib"
         AC_CHECK_LIB(mpich,MPI_Init,found="yes",found="no")
         if test "$found" = "no" ; then
           AC_CHECK_LIB(mpich2,MPI_Init,found="yes",found="no")
@@ -459,9 +459,9 @@ case $ac_mpi_type in
 	if test -z "$TESTCXX" ; then TESTCXX=${CXX:=CC} ; fi
 	if test -z "$TESTFC" ; then TESTFC=${FC:=f90} ; fi
         if test "$found" = "no" ; then
-          CFLAGS=$save_CFLAGS
-          CPPFLAGS=$save_CPPFLAGS
-          LDFLAGS=$save_LDFLAGS
+	  PAC_POP_FLAG([CFLAGS])
+	  PAC_POP_FLAG([CPPFLAGS])
+	  PAC_POP_FLAG([LDFLAGS])
         fi
         ;;
 

@@ -92,7 +92,7 @@ dnl Create any missing directories in the path
 AC_DEFUN([PAC_MKDIRS],[
 # Build any intermediate directories
 for dir in $1 ; do
-    saveIFS="$IFS"
+    PAC_PUSH_FLAG([IFS])
     IFS="/"
     tmp_curdir=""
     for tmp_subdir in $dir ; do
@@ -100,7 +100,7 @@ for dir in $1 ; do
 	if test ! -d "$tmp_curdir" ; then mkdir "$tmp_curdir" ; fi
         tmp_curdir="${tmp_curdir}/"
     done
-    IFS="$saveIFS"
+    PAC_POP_FLAG([IFS])
 done
 ])
 
