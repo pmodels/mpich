@@ -151,6 +151,10 @@ static void signal_cb(int sig)
     return;
 }
 
+#define ordered(n1, n2) \
+    (((HYD_handle.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
+     ((HYD_handle.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
+
 static void append_node_to_list(struct HYD_node *node, struct HYD_node **list)
 {
     struct HYD_node *r1;
@@ -165,12 +169,12 @@ static void append_node_to_list(struct HYD_node *node, struct HYD_node **list)
         *list = node;
         (*list)->next = NULL;
     }
-    else if ((*list)->core_count > node->core_count) {
+    else if (!ordered(*list, node)) {
         node->next = *list;
         *list = node;
     }
     else {
-        for (r1 = *list; r1->next && r1->next->core_count < node->core_count; r1 = r1->next);
+        for (r1 = *list; r1->next && ordered(r1->next, node); r1 = r1->next);
         node->next = r1->next;
         r1->next = node;
     }
@@ -189,12 +193,13 @@ static void sort_node_list(void)
             append_node_to_list(node, &new_list);
             node = r1;
         }
+        HYD_handle.node_list = new_list;
 
         /* Check to make sure the nodes are sorted. They might not be
          * sorted if there are duplicate hostname entries. */
         sorted = 1;
         for (node = HYD_handle.node_list; node; node = node->next) {
-            if (node->next && (node->core_count > node->next->core_count)) {
+            if (node->next && !ordered(node, node->next)) {
                 sorted = 0;
                 break;
             }
