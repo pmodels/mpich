@@ -392,7 +392,7 @@ double MPID_Wtick( void )
 {
     MPIU_THREADSAFE_INIT_DECL(initTick);
     static double tickval = -1.0;
-    double timediff;
+    double timediff;  /* Keep compiler happy about timediff set before use*/
     MPID_Time_t t1, t2;
     int    cnt;
     int    icnt;
@@ -403,11 +403,14 @@ double MPID_Wtick( void )
 	for (icnt=0; icnt<10; icnt++) {
 	    cnt = 1000;
 	    MPID_Wtime( &t1 );
-	    while (cnt--) {
+	    /* Make it abundently clear to the compiler that this block is
+	       executed at least once. */
+	    do {
 		MPID_Wtime( &t2 );
 		MPID_Wtime_diff( &t1, &t2, &timediff );
 		if (timediff > 0) break;
-		}
+	    }
+	    while (cnt--);
 	    if (cnt && timediff > 0.0 && timediff < tickval) {
 		MPID_Wtime_diff( &t1, &t2, &tickval );
 	    }
