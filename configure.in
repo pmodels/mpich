@@ -2084,15 +2084,6 @@ EOF
 
 fi
 
-WTIME_DOUBLE_TYPE="DOUBLE PRECISION"
-# Save a copy of the original mpi_base.f90 file
-if test "$enable_fc" = "yes" -a "$has_fort90_real8" = "yes" ; then
-    WTIME_DOUBLE_TYPE="REAL*8"
-fi
-# WTIME_DOUBLE_TYPE is substituted into mpi_base.f90
-AC_SUBST(WTIME_DOUBLE_TYPE)
-
-
 dnl By modifying mpif.h to use ! for comments, it can work with many f90 
 dnl compilers without creating a separate version.  
 dnl Note that this is run AFTER the AC_OUTPUT actions
@@ -2124,7 +2115,6 @@ enable_f77=$enable_f77
 enable_fc=$enable_fc
 has_exclaim=$has_exclaim
 has_fort_real8=$pac_cv_fort_real8
-has_fort90_real8=$pac_cv_fort90_real8
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
@@ -4502,6 +4492,7 @@ EOF
 	        OFFSET_KIND=$simpleintkind
             fi
         fi
+	AC_LANG_PUSH([Fortran])
         AC_CACHE_CHECK([if real*8 is supported in Fortran 90],
                        [pac_cv_fort90_real8],[
             AC_COMPILE_IFELSE([
@@ -4512,6 +4503,14 @@ EOF
                 pac_cv_fort90_real8=no
             ])
         ])
+	AC_LANG_POP([Fortran])
+	WTIME_DOUBLE_TYPE="DOUBLE PRECISION"
+	# Save a copy of the original mpi_base.f90 file
+	if test "$enable_fc" = "yes" -a "$pac_cv_fort90_real8" = "yes" ; then
+	    WTIME_DOUBLE_TYPE="REAL*8"
+        fi
+	# WTIME_DOUBLE_TYPE is substituted into mpi_base.f90
+	AC_SUBST(WTIME_DOUBLE_TYPE)
     fi
     # Make sure that address kind and offset kind have values.
     if test -z "$ADDRESS_KIND" ; then
