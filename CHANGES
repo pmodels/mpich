@@ -9,6 +9,50 @@
 
 
 ===============================================================================
+                               Changes in 1.3.2
+===============================================================================
+
+ # OVERALL: MPICH2 now recognizes the OSX mach_absolute_time as a
+   native timer type.
+
+ # OVERALL: Performance improvements to MPI_Comm_split on large
+   systems.
+
+ # PM/PMI: Several fixes and improvements to Hydra's process binding
+   capability.
+
+ # PM/PMI: Upgrade the hwloc version to 1.1rc3.
+
+ # PM/PMI: Allow users to sort node lists allocated by resource
+   managers in Hydra.
+
+ # PM/PMI: Improvements to signal handling. Now Hydra respects Ctrl-Z
+   signals and passes on the signal to the application.
+
+ # PM/PMI: Improvements to STDOUT/STDERR handling including improved
+   support for rank prepending on output. Improvements to STDIN
+   handling for applications being run in the background.
+
+ # PM/PMI: Split the bootstrap servers into "launchers" and "resource
+   managers", allowing the user to pick a different resource manager
+   from the launcher. For example, the user can now pick the "SLURM"
+   resource manager and "SSH" as the launcher.
+
+ # PM/PMI: The MPD process manager is deprecated.
+
+ # WINDOWS: Adding support for gfortran and 64-bit gcc libs.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r7457:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3.2rc1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3.2rc1?action=follow_copy&rev=HEAD&stop_rev=7457&mode=follow_copy
+
+
+===============================================================================
                                Changes in 1.3.1
 ===============================================================================
 
