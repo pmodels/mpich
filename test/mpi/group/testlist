@@ -2,9 +2,7 @@ groupcreate 4
 grouptest 8
 grouptest2 4
 groupnullincl 4
-
-gtranks 4
-
-# this may be too many processes for some systems, but the test needs a large-ish
-# number of processes to yield an effective performance check
+gtranks 8
+# this may be too many processes for some systems, but the test needs a 
+# large-ish number of processes to yield an effective performance check
 gtranksperf 20
