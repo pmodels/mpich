@@ -758,10 +758,12 @@ int MPIR_Allgatherv_inter (
  fn_exit:
     return mpi_errno;
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     if (newtype != MPI_DATATYPE_NULL)
         MPIR_Type_free_impl(&newtype);
 
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 

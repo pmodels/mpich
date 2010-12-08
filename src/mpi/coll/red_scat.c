@@ -586,7 +586,7 @@ int MPIR_Reduce_scatter_intra (
 
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 
-        
+
         if (sendbuf != MPI_IN_PLACE) {
             /* copy local data into recvbuf */
             mpi_errno = MPIR_Localcopy(((char *)sendbuf+disps[rank]*extent),

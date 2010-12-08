@@ -70,10 +70,12 @@ int MPIC_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_SEND);
     return mpi_errno;
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     if (request_ptr) {
         MPID_Request_release(request_ptr);
     }
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
@@ -113,10 +115,12 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     MPIDI_PT2PT_FUNC_EXIT_BACK(MPID_STATE_MPIC_RECV);
     return mpi_errno;
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     if (request_ptr) { 
 	MPID_Request_release(request_ptr);
     }
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
@@ -149,10 +153,12 @@ int MPIC_Ssend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_SSEND);
     return mpi_errno;
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     if (request_ptr) {
         MPID_Request_release(request_ptr);
     }
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
@@ -194,8 +200,10 @@ int MPIC_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPID_Request_release(send_req_ptr);
     MPID_Request_release(recv_req_ptr);
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     MPIDI_PT2PT_FUNC_EXIT_BOTH(MPID_STATE_MPIC_SENDRECV);
     return mpi_errno;
+    /* --END ERROR HANDLING-- */
 }
 
 /* NOTE: for regular collectives (as opposed to irregular collectives) calling
@@ -469,8 +477,10 @@ int MPIC_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     *request = request_ptr->handle;
 
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_ISEND);
     return mpi_errno;
+    /* --END ERROR HANDLING-- */
 }
 
 
@@ -499,8 +509,10 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
     *request = request_ptr->handle;
 
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     MPIDI_PT2PT_FUNC_EXIT_BACK(MPID_STATE_MPIC_IRECV);
     return mpi_errno;
+    /* --END ERROR HANDLING-- */
 }
 
 /* FIXME: For the brief-global and finer-grain control, we must ensure that
@@ -531,6 +543,8 @@ int MPIC_Wait(MPID_Request * request_ptr)
     }
 
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_WAIT);
     return mpi_errno;
+    /* --END ERROR HANDLING-- */
 }
