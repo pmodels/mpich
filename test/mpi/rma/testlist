@@ -20,6 +20,8 @@ test3 2
 test4 2
 test5 2
 lockcontention 3
+lockcontention2 4
+lockcontention2 8	       
 transpose4 2
 fetchandadd 7
 fetchandadd_tree 7
