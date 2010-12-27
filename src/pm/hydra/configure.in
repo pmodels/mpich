@@ -360,7 +360,8 @@ for hydra_bindlib in ${hydra_bindlibs}; do
 		;;		
 	hwloc)
 		if test "$with_hwloc_prefix" = "embedded" ; then
-		   PAC_CONFIG_SUBDIR([tools/bind/hwloc/hwloc],[have_hwloc=yes],[have_hwloc=no])
+		   PAC_CONFIG_SUBDIR_ARGS([tools/bind/hwloc/hwloc],[--enable-embedded-mode],
+			[have_hwloc=yes],[have_hwloc=no])
                 else
                     AC_CHECK_HEADERS([hwloc.h])
                     # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our minimum
