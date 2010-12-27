@@ -155,8 +155,6 @@ static void signal_cb(int sig)
     (((HYD_handle.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
      ((HYD_handle.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
 
-#if defined HAVE_QSORT
-
 static int compar(const void *_n1, const void *_n2)
 {
     struct HYD_node *n1, *n2;
@@ -208,63 +206,6 @@ static HYD_status qsort_node_list(void)
   fn_fail:
     goto fn_exit;
 }
-
-#else /* HAVE_QSORT */
-
-static HYD_status insert_sort_node_list(void)
-{
-    struct HYD_node *r1, *r2, *node, *new_list;
-    int sorted;
-    HYD_status status = HYD_SUCCESS;
-
-    while (1) {
-        new_list = NULL;
-
-        for (node = HYD_handle.node_list; node;) {
-            r2 = node->next;
-
-            if (new_list == NULL) {
-                new_list = node;
-                new_list->next = NULL;
-            }
-            else if (!ordered(new_list, node)) {
-                node->next = new_list;
-                new_list = node;
-            }
-            else {
-                for (r1 = new_list; r1->next && ordered(r1->next, node); r1 = r1->next);
-                node->next = r1->next;
-                r1->next = node;
-            }
-
-            node = r2;
-        }
-        HYD_handle.node_list = new_list;
-
-        /* Check to make sure the nodes are sorted. They might not be
-         * sorted if there are duplicate hostname entries. */
-        sorted = 1;
-        for (node = HYD_handle.node_list; node; node = node->next) {
-            if (node->next && !ordered(node, node->next)) {
-                sorted = 0;
-                break;
-            }
-        }
-
-        if (sorted)
-            break;
-    }
-
-    HYD_handle.node_list = new_list;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-#endif /* HAVE_QSORT */
 
 int main(int argc, char **argv)
 {
@@ -343,11 +284,7 @@ int main(int argc, char **argv)
     /* The RMK returned a node list. See if the user requested us to
      * manipulate it in some way */
     if (HYD_handle.sort_order != NONE) {
-#if defined HAVE_QSORT
         qsort_node_list();
-#else
-        insert_sort_node_list();
-#endif /* HAVE_QSORT */
         reset_rmk = 1;
     }
 
