@@ -304,7 +304,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             }
             else {
                 /* If the user doesn't want to automatically cleanup,
-                 * just deregister the FD and ignore this error */
+                 * just ignore this error */
             }
         }
         goto fn_exit;
