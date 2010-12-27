@@ -105,7 +105,7 @@ static HYD_status handle_pid_list(int fd, struct HYD_proxy *proxy)
     goto fn_exit;
 }
 
-static HYD_status cleanup_proxy_connection(int fd, struct HYD_proxy *proxy)
+static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
 {
     struct HYD_proxy *tproxy;
     struct HYD_pg *pg = proxy->pg;
@@ -114,31 +114,34 @@ static HYD_status cleanup_proxy_connection(int fd, struct HYD_proxy *proxy)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_dmx_deregister_fd(fd);
-    HYDU_ERR_POP(status, "error deregistering fd\n");
-    close(fd);
+    if (proxy->control_fd != HYD_FD_UNSET && proxy->control_fd != HYD_FD_CLOSED) {
+        status = HYDT_dmx_deregister_fd(proxy->control_fd);
+        HYDU_ERR_POP(status, "error deregistering fd\n");
+        close(proxy->control_fd);
 
-    /* Reset the control fd, so when the fd is reused, we don't find
-     * the wrong proxy */
-    proxy->control_fd = HYD_FD_CLOSED;
-
-    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
-        if (tproxy->exit_status == NULL)
-            goto fn_exit;
+        /* Reset the control fd, so when the fd is reused, we don't
+         * find the wrong proxy */
+        proxy->control_fd = HYD_FD_CLOSED;
     }
+
+    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
+        if (tproxy->control_fd != HYD_FD_UNSET && tproxy->control_fd != HYD_FD_CLOSED)
+            goto fn_exit;
 
     /* All proxies in this process group have terminated */
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* If the PMI listen fd has been initialized, deregister it */
-    if (pg_scratch->pmi_listen_fd != HYD_FD_UNSET) {
+    if (pg_scratch->pmi_listen_fd != HYD_FD_UNSET &&
+        pg_scratch->pmi_listen_fd != HYD_FD_CLOSED) {
         status = HYDT_dmx_deregister_fd(pg_scratch->pmi_listen_fd);
         HYDU_ERR_POP(status, "unable to deregister PMI listen fd\n");
         close(pg_scratch->pmi_listen_fd);
-        pg_scratch->pmi_listen_fd = HYD_FD_CLOSED;
     }
+    pg_scratch->pmi_listen_fd = HYD_FD_CLOSED;
 
-    if (pg_scratch->control_listen_fd != HYD_FD_UNSET) {
+    if (pg_scratch->control_listen_fd != HYD_FD_UNSET &&
+        pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
         status = HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
         HYDU_ERR_POP(status, "unable to deregister control listen fd\n");
         close(pg_scratch->control_listen_fd);
@@ -171,7 +174,7 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
     HYDU_ERR_POP(status, "unable to read status from proxy\n");
     HYDU_ASSERT(!closed, status);
 
-    status = cleanup_proxy_connection(fd, proxy);
+    status = cleanup_proxy(proxy);
     HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
 
     /* If any of the processes aborted, cleanup the remaining
@@ -217,7 +220,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_dump(stderr, "connection to proxy terminated unexpectedly\n");
 
         /* clean up the proxy connection */
-        status = cleanup_proxy_connection(fd, proxy);
+        status = cleanup_proxy(proxy);
         HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
 
         goto fn_exit;
@@ -395,39 +398,20 @@ HYD_status HYD_pmcd_pmiserv_cleanup(void)
 {
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    HYD_status status = HYD_SUCCESS, overall_status = HYD_SUCCESS;
+    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
-        /* Close the control listen port, so new proxies cannot
-         * connect back */
-        pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-        if (pg_scratch->control_listen_fd != HYD_FD_UNSET &&
-            pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
-            status = HYDT_dmx_deregister_fd(pg_scratch->control_listen_fd);
-            HYDU_ERR_POP(status, "unable to deregister control listen fd\n");
-            close(pg_scratch->control_listen_fd);
-        }
-        pg_scratch->control_listen_fd = HYD_FD_CLOSED;
-
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            /* The proxy has not been setup yet */
-            if (proxy->control_fd == HYD_FD_UNSET || proxy->control_fd == HYD_FD_CLOSED)
-                continue;
-
-            status = HYDT_dmx_deregister_fd(proxy->control_fd);
-            HYDU_ERR_POP(status, "error deregistering fd\n");
-            close(proxy->control_fd);
-
-            proxy->control_fd = HYD_FD_CLOSED;
+            status = cleanup_proxy(proxy);
+            HYDU_ERR_POP(status, "unable to cleanup proxy\n");
         }
     }
 
   fn_exit:
     HYDU_FUNC_EXIT();
-    return overall_status;
+    return status;
 
   fn_fail:
     goto fn_exit;
