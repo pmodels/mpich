@@ -153,9 +153,6 @@ EOF])
 dnl Same order of parameters form HWLOC-SETUP-CORE
 AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     hwloc_CC_c99_flags=`echo $CC | sed -e "s;^$hwloc_CC_save;;"`
-    if test "$ac_cv_prog_cc_c99" = "no" ; then
-       AC_ERROR([C99 support required for hwloc])
-    fi
     CC=$hwloc_CC_save
     CFLAGS=$hwloc_CFLAGS_save
 
@@ -313,15 +310,20 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
       ])
     ])
     AC_DEFINE_UNQUOTED(hwloc_strncasecmp, $hwloc_strncasecmp, [Define this to either strncasecmp or strncmp])
+
+    AC_CHECK_FUNCS([strftime])
+    AC_CHECK_FUNCS([setlocale])
     
     AC_CHECK_HEADER([stdint.h], [
       AC_DEFINE([HWLOC_HAVE_STDINT_H], [1], [Define to 1 if you have the <stdint.h> header file.])
     ])
+    AC_CHECK_HEADERS([sys/mman.h])
     
     AC_CHECK_TYPES([KAFFINITY,
                     PROCESSOR_CACHE_TYPE,
                     CACHE_DESCRIPTOR,
                     LOGICAL_PROCESSOR_RELATIONSHIP,
+                    RelationProcessorPackage,
                     SYSTEM_LOGICAL_PROCESSOR_INFORMATION,
                     GROUP_AFFINITY,
                     PROCESSOR_RELATIONSHIP,
@@ -329,7 +331,9 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
                     CACHE_RELATIONSHIP,
                     PROCESSOR_GROUP_INFO,
                     GROUP_RELATIONSHIP,
-                    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX],
+                    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,
+		    PSAPI_WORKING_SET_EX_BLOCK,
+		    PSAPI_WORKING_SET_EX_INFORMATION],
                     [],[],[[#include <windows.h>]])
     AC_CHECK_LIB([gdi32], [main],
                  [HWLOC_LIBS="-lgdi32 $HWLOC_LIBS"
@@ -663,8 +667,7 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_HAVE_OSF], [test "x$hwloc_osf" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_HPUX], [test "x$hwloc_hpux" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_WINDOWS], [test "x$hwloc_windows" = "xyes"])
-        AM_CONDITIONAL([HWLOC_HAVE_MINGW32], 
-                       [test "x$hwloc_target_os" = "xmingw32"])
+        AM_CONDITIONAL([HWLOC_HAVE_MINGW32], [test "x$target_os" = "xmingw32"])
 
         AM_CONDITIONAL([HWLOC_HAVE_X86_32], [test "x$hwloc_x86_32" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_64], [test "x$hwloc_x86_64" = "xyes"])

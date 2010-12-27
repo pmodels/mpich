@@ -41,7 +41,7 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
     # Doxygen?
     AC_ARG_ENABLE([doxygen],
         [AC_HELP_STRING([--enable-doxygen],
-                        [enable support for building Doxygen documentation (note that this option is ONLY relevant in developer builds; Doxygen documentation is pre-built for tarball builds and this option is therefore ignored)])],,[enable_doxygen=no])
+                        [enable support for building Doxygen documentation (note that this option is ONLY relevant in developer builds; Doxygen documentation is pre-built for tarball builds and this option is therefore ignored)])])
 
     # Picky?
     AC_ARG_ENABLE(picky,
@@ -143,6 +143,9 @@ EOF
     # specifically disabled by the user.
     AC_MSG_CHECKING([whether to enable "picky" compiler mode])
     hwloc_want_picky=0
+    AS_IF([test "$GCC" = "yes"],
+          [AS_IF([test -d "$srcdir/.svn" -o -d "$srcdir/.hg"],
+                 [hwloc_want_picky=1])])
     if test "$enable_picky" = "yes"; then
         if test "$GCC" = "yes"; then
             AC_MSG_RESULT([yes])

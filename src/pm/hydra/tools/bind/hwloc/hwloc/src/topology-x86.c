@@ -2,8 +2,16 @@
  * Copyright © 2010 INRIA
  * Copyright © 2010 Université Bordeaux 1
  * Copyright © 2010 Cisco Systems, Inc.  All rights reserved.
- *
  * See COPYING in top-level directory.
+ *
+ *
+ * This backend is only used when the operating system does not export
+ * the necessary hardware topology information to user-space applications.
+ * Currently, only the FreeBSD backend relies on this x86 backend.
+ *
+ * Other backends such as Linux have their own way to retrieve various
+ * pieces of hardware topology information from the operating system
+ * on various architectures, without having to use this x86-specific code.
  */
 
 #include <private/config.h>
@@ -223,7 +231,7 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
   {
     hwloc_bitmap_t sockets_cpuset = hwloc_bitmap_dup(complete_cpuset);
     hwloc_bitmap_t socket_cpuset;
-    hwloc_obj_t socket;
+    hwloc_obj_t sock;
 
     while ((i = hwloc_bitmap_first(sockets_cpuset)) != (unsigned) -1) {
       unsigned socketid = infos[i].socketid;
@@ -236,11 +244,11 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
           hwloc_bitmap_clr(sockets_cpuset, j);
         }
       }
-      socket = hwloc_alloc_setup_object(HWLOC_OBJ_SOCKET, socketid);
-      socket->cpuset = socket_cpuset;
+      sock = hwloc_alloc_setup_object(HWLOC_OBJ_SOCKET, socketid);
+      sock->cpuset = socket_cpuset;
       hwloc_debug_1arg_bitmap("os socket %u has cpuset %s\n",
           socketid, socket_cpuset);
-      hwloc_insert_object_by_cpuset(topology, socket);
+      hwloc_insert_object_by_cpuset(topology, sock);
     }
     hwloc_bitmap_free(sockets_cpuset);
   }

@@ -28,6 +28,7 @@
 #include <pthread.h>
 #include <sys/mman.h>
 #if defined HWLOC_HAVE_SET_MEMPOLICY || defined HWLOC_HAVE_MBIND
+#define migratepages migrate_pages /* workaround broken migratepages prototype in numaif.h before libnuma 2.0.2 */
 #include <numaif.h>
 #endif
 
@@ -971,12 +972,6 @@ hwloc_linux_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_nod
 
   return buffer;
 }
-
-static int
-hwloc_linux_free_membind(hwloc_topology_t topology __hwloc_attribute_unused, void *addr, size_t len)
-{
-  return munmap(addr, len);
-}
 #endif /* HWLOC_HAVE_MBIND */
 
 #ifdef HWLOC_HAVE_SET_MEMPOLICY
@@ -1004,7 +999,7 @@ hwloc_linux_set_thisthread_membind(hwloc_topology_t topology, hwloc_const_nodese
 #ifdef HWLOC_HAVE_MIGRATE_PAGES
     unsigned long *fullmask = malloc(max_os_index/HWLOC_BITS_PER_LONG * sizeof(long));
     if (fullmask) {
-      memset(fullmask, max_os_index/HWLOC_BITS_PER_LONG * sizeof(long), 0xf);
+      memset(fullmask, 0xf, max_os_index/HWLOC_BITS_PER_LONG * sizeof(long));
       err = migrate_pages(0, max_os_index+1, fullmask, linuxmask);
       free(fullmask);
     } else
@@ -1217,11 +1212,11 @@ hwloc_linux_parse_cpumap_file(FILE *file, hwloc_bitmap_t set)
     hwloc_bitmap_set_ith_ulong(set, i, maps[i]);
 #else
   for(i=0; i<(nr_maps+1)/2; i++) {
-    unsigned long ulong_;
-    ulong_ = maps[2*i];
+    unsigned long mask;
+    mask = maps[2*i];
     if (2*i+1<nr_maps)
-      ulong_ |= maps[2*i+1] << KERNEL_CPU_MASK_BITS;
-    hwloc_bitmap_set_ith_ulong(set, i, ulong_);
+      mask |= maps[2*i+1] << KERNEL_CPU_MASK_BITS;
+    hwloc_bitmap_set_ith_ulong(set, i, mask);
   }
 #endif
 
@@ -2703,7 +2698,7 @@ hwloc_set_linux_hooks(struct hwloc_topology *topology)
   topology->set_area_membind = hwloc_linux_set_area_membind;
   topology->alloc_membind = hwloc_linux_alloc_membind;
   topology->alloc = hwloc_alloc_mmap;
-  topology->free_membind = hwloc_linux_free_membind;
+  topology->free_membind = hwloc_free_mmap;
   topology->support.membind->firsttouch_membind = 1;
   topology->support.membind->bind_membind = 1;
   topology->support.membind->interleave_membind = 1;
