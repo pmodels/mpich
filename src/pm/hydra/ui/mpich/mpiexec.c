@@ -155,37 +155,89 @@ static void signal_cb(int sig)
     (((HYD_handle.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
      ((HYD_handle.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
 
-static void append_node_to_list(struct HYD_node *node, struct HYD_node **list)
-{
-    struct HYD_node *r1;
+#if defined HAVE_QSORT
 
-    if (*list == NULL) {
-        *list = node;
-        (*list)->next = NULL;
-    }
-    else if (!ordered(*list, node)) {
-        node->next = *list;
-        *list = node;
-    }
-    else {
-        for (r1 = *list; r1->next && ordered(r1->next, node); r1 = r1->next);
-        node->next = r1->next;
-        r1->next = node;
-    }
+static int compar(const void *_n1, const void *_n2)
+{
+    struct HYD_node *n1, *n2;
+    int ret;
+
+    n1 = *((struct HYD_node **) _n1);
+    n2 = *((struct HYD_node **) _n2);
+
+    if (n1->core_count == n2->core_count)
+        ret = 0;
+    else if (n1->core_count < n2->core_count)
+        ret = -1;
+    else
+        ret = 1;
+
+    if (HYD_handle.sort_order == DESCENDING)
+        ret *= -1;
+
+    return ret;
 }
 
-static void sort_node_list(void)
+static HYD_status qsort_node_list(void)
 {
-    struct HYD_node *r1, *node, *new_list;
+    struct HYD_node **node_list, *node, *new_list, *r1;
+    int count, i;
+    HYD_status status = HYD_SUCCESS;
+
+    for (count = 0, node = HYD_handle.node_list; node; node = node->next, count++);
+
+    HYDU_MALLOC(node_list, struct HYD_node **, count * sizeof(struct HYD_node *), status);
+    for (i = 0, node = HYD_handle.node_list; node; node = node->next, i++)
+        node_list[i] = node;
+
+    qsort((void *) node_list, (size_t) count, sizeof(struct HYD_node *), compar);
+
+    r1 = new_list = node_list[0];
+    for (i = 1; i < count; i++) {
+        r1->next = node_list[i];
+        r1 = r1->next;
+        r1->next = NULL;
+    }
+    HYD_handle.node_list = new_list;
+
+    HYDU_FREE(node_list);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#else /* HAVE_QSORT */
+
+static HYD_status insert_sort_node_list(void)
+{
+    struct HYD_node *r1, *r2, *node, *new_list;
     int sorted;
+    HYD_status status = HYD_SUCCESS;
 
     while (1) {
         new_list = NULL;
 
         for (node = HYD_handle.node_list; node;) {
-            r1 = node->next;
-            append_node_to_list(node, &new_list);
-            node = r1;
+            r2 = node->next;
+
+            if (new_list == NULL) {
+                new_list = node;
+                new_list->next = NULL;
+            }
+            else if (!ordered(new_list, node)) {
+                node->next = new_list;
+                new_list = node;
+            }
+            else {
+                for (r1 = new_list; r1->next && ordered(r1->next, node); r1 = r1->next);
+                node->next = r1->next;
+                r1->next = node;
+            }
+
+            node = r2;
         }
         HYD_handle.node_list = new_list;
 
@@ -204,7 +256,15 @@ static void sort_node_list(void)
     }
 
     HYD_handle.node_list = new_list;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
+
+#endif /* HAVE_QSORT */
 
 int main(int argc, char **argv)
 {
@@ -283,7 +343,11 @@ int main(int argc, char **argv)
     /* The RMK returned a node list. See if the user requested us to
      * manipulate it in some way */
     if (HYD_handle.sort_order != NONE) {
-        sort_node_list();
+#if defined HAVE_QSORT
+        qsort_node_list();
+#else
+        insert_sort_node_list();
+#endif /* HAVE_QSORT */
         reset_rmk = 1;
     }
 
