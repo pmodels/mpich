@@ -414,7 +414,7 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
 
 #if defined(HAVE_GETIFADDRS)
     struct ifaddrs *ifaddr, *ifa;
-    char buf[MAX_HOSTNAME_LEN];
+    char buf[INET_ADDRSTRLEN];
     struct sockaddr_in *sa;
 
     /* Got the interface name; let's query for the IP address */
@@ -431,7 +431,8 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
 
     sa = (struct sockaddr_in *) ifa->ifa_addr;
     (*ip) = HYDU_strdup((char *)
-                        inet_ntop(AF_INET, (void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
+                        inet_ntop(AF_INET, (const void *) &(sa->sin_addr), buf,
+                                  MAX_HOSTNAME_LEN));
     if (!*ip)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unable to find IP for interface %s\n", iface);
@@ -445,6 +446,106 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                         "interface selection not supported on this platform\n");
 #endif
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_sock_is_local(char *host, int *is_local)
+{
+    struct hostent *ht;
+    char *ip1, *ip2;
+    char buf1[INET_ADDRSTRLEN], buf2[INET_ADDRSTRLEN];
+    struct sockaddr_in *sa_ptr, sa;
+    static int init = 1;
+    static char localhost[MAX_HOSTNAME_LEN] = { 0 };
+    static char shortlocal[MAX_HOSTNAME_LEN] = { 0 };
+    char shorthost[MAX_HOSTNAME_LEN] = { 0 };
+    int i;
+
+#if defined(HAVE_GETIFADDRS)
+    struct ifaddrs *ifaddr, *ifa;
+#endif /* HAVE_GETIFADDRS */
+
+    HYD_status status = HYD_SUCCESS;
+
+    *is_local = 0;
+
+    ht = gethostbyname(host);
+    if (ht == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
+                            "unable to get host address (%s)\n", HYDU_strerror(errno));
+
+    memset((char *) &sa, 0, sizeof(struct sockaddr_in));
+    memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
+    ip1 = HYDU_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf1,
+                                         MAX_HOSTNAME_LEN));
+    HYDU_ASSERT(ip1, status);
+
+#if defined(HAVE_GETIFADDRS)
+    /* Got the interface name; let's query for the IP address */
+    if (getifaddrs(&ifaddr) == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
+
+    for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr->sa_family == AF_INET) {
+            sa_ptr = (struct sockaddr_in *) ifa->ifa_addr;
+            ip2 = HYDU_strdup((char *)
+                              inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf2,
+                                        MAX_HOSTNAME_LEN));
+            HYDU_ASSERT(ip2, status);
+
+            if (!strcmp(ip1, ip2)) {
+                *is_local = 1;
+                goto fn_exit;
+            }
+        }
+    }
+
+    freeifaddrs(ifaddr);
+#endif
+
+    /* Direct comparison of host names */
+    if (init) {
+        init = 0;
+
+        status = HYDU_gethostname(localhost);
+        HYDU_ERR_POP(status, "unable to get local hostname\n");
+
+        strcpy(shortlocal, localhost);
+        for (i = 0; shortlocal[i]; i++) {
+            if (shortlocal[i] == '.') {
+                shortlocal[i] = 0;
+                break;
+            }
+        }
+    }
+
+    if (!strcmp(host, localhost)) {
+        *is_local = 1;
+        goto fn_exit;
+    }
+
+    /* If the two hostnames are not of the same length, it is possible
+     * that they differ in the domain information, and not the
+     * hostname */
+    if (strlen(host) != strlen(localhost)) {
+        strcpy(shorthost, host);
+        for (i = 0; shorthost[i]; i++) {
+            if (shorthost[i] == '.') {
+                shorthost[i] = 0;
+                break;
+            }
+        }
+
+        if (!strcmp(shorthost, shortlocal)) {
+            *is_local = 1;
+            goto fn_exit;
+        }
+    }
 
   fn_exit:
     return status;
