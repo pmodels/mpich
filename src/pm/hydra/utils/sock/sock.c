@@ -554,6 +554,25 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     goto fn_exit;
 }
 
+HYD_status HYDU_sock_remote_access(char *host, int *remote_access)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    /* FIXME: Comparing the hostname to "127.*" does not seem like a
+     * good way of checking if a hostname is remotely accessible */
+    if (!MPL_strncmp(host, "127.", strlen("127.")) || !strcmp(host, "localhost") ||
+        !MPL_strncmp(host, "localhost.", strlen("localhost.")))
+        *remote_access = 0;
+    else
+        *remote_access = 1;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status
 HYDU_sock_create_and_listen_portstr(char *iface, char *port_range, char **port_str,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
