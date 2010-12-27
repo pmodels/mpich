@@ -341,7 +341,7 @@ static HYD_status fn_get(int fd, char *args[])
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: key\n");
 
-    if (!strcmp(key, "PMI_process_mapping") && HYD_pmcd_pmip.system_global.pmi_process_mapping) {
+    if (!strcmp(key, "PMI_process_mapping")) {
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=get_result rc=0 msg=success value=");
         tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping);

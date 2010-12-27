@@ -411,7 +411,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
 
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
-    if (!strcmp(key, "PMI_process_mapping") && HYD_pmcd_pmip.system_global.pmi_process_mapping) {
+    if (!strcmp(key, "PMI_process_mapping")) {
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=info-getjobattr-response;");
         if (thrid) {
