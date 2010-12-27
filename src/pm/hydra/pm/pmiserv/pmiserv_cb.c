@@ -60,9 +60,6 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     return status;
 
   fn_fail:
-    /* Cleanup all the processes */
-    status = HYD_pmcd_pmiserv_cleanup();
-    HYDU_ERR_POP(status, "unable to cleanup processes\n");
     goto fn_exit;
 }
 
@@ -162,7 +159,7 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
 
 static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
 {
-    int count, closed, i, aborted = 0;
+    int count, closed, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -181,14 +178,12 @@ static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
      * processes */
     for (i = 0; i < proxy->proxy_process_count; i++) {
         if (proxy->exit_status[i]) {
-            aborted = 1;
+            if (HYD_handle.user_global.auto_cleanup) {
+                status = HYD_pmcd_pmiserv_cleanup();
+                HYDU_ERR_POP(status, "unable to cleanup processes\n");
+            }
             break;
         }
-    }
-
-    if (aborted && HYD_handle.user_global.auto_cleanup) {
-        status = HYD_pmcd_pmiserv_cleanup();
-        HYDU_ERR_POP(status, "unable to cleanup processes\n");
     }
 
   fn_exit:
@@ -213,18 +208,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
     status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to read command from proxy\n");
-
-    if (closed) {
-        /* this is only for developers; should not happen for regular
-         * users */
-        HYDU_dump(stderr, "connection to proxy terminated unexpectedly\n");
-
-        /* clean up the proxy connection */
-        status = cleanup_proxy(proxy);
-        HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
-
-        goto fn_exit;
-    }
+    HYDU_ASSERT(!closed, status)
 
     if (hdr.cmd == PID_LIST) {  /* Got PIDs */
         status = handle_pid_list(fd, proxy);

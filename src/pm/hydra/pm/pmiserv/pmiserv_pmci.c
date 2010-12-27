@@ -15,34 +15,14 @@
 
 static HYD_status cleanup_procs(void)
 {
-    static int user_abort_signal = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
+    HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
 
-    /* Sent kill signals to the processes. Wait for all processes to
-     * exit. If they do not exit, allow the application to just force
-     * kill the spawned processes. */
-    if (user_abort_signal == 0) {
-        HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
-
-        status = HYD_pmcd_pmiserv_cleanup();
-        HYDU_ERR_POP(status, "cleanup of processes failed\n");
-
-        HYDU_dump_noprefix(stdout, "[press Ctrl-C again to force abort]\n");
-
-        user_abort_signal = 1;
-    }
-    else {
-        HYDU_dump_noprefix(stdout, "Ctrl-C caught... forcing cleanup\n");
-
-        /* Something has gone really wrong! Ask the bootstrap server
-         * to forcefully cleanup the proxies, but this may leave some
-         * of the application processes still running. */
-        status = HYDT_bsci_cleanup_procs();
-        HYDU_ERR_POP(status, "error cleaning up processes\n");
-    }
+    status = HYD_pmcd_pmiserv_cleanup();
+    HYDU_ERR_POP(status, "cleanup of processes failed\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

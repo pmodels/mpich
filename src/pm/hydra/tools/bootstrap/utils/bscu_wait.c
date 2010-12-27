@@ -12,31 +12,6 @@ int HYD_bscu_fd_count = 0;
 int *HYD_bscu_pid_list = NULL;
 int HYD_bscu_pid_count = 0;
 
-static int cleanup = 0;
-
-HYD_status HYDT_bscu_cleanup_procs(void)
-{
-    int i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    for (i = 0; i < HYD_bscu_pid_count; i++)
-        if (HYD_bscu_pid_list[i] != -1) {
-            kill(HYD_bscu_pid_list[i], SIGTERM);
-            kill(HYD_bscu_pid_list[i], SIGKILL);
-        }
-
-    cleanup = 1;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYDT_bscu_wait_for_completion(int timeout)
 {
     int pid, ret, count, i, time_elapsed, time_left;
@@ -56,10 +31,6 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
         count = 0;
         for (i = 0; i < HYD_bscu_fd_count; i++) {
             if (HYD_bscu_fd_list[i] == HYD_FD_CLOSED)
-                continue;
-
-            /* If we need to cleanup, don't wait for any events */
-            if (cleanup)
                 continue;
 
             ret = HYDT_dmx_query_fd_registration(HYD_bscu_fd_list[i]);

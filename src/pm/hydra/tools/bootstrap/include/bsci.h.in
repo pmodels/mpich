@@ -60,9 +60,6 @@ struct HYDT_bsci_fns {
     /** \brief Wait for launched processes to complete */
     HYD_status(*wait_for_completion) (int timeout);
 
-    /** \brief Cleanup processes */
-    HYD_status(*cleanup_procs) (void);
-
     /** \brief Query for the universe size */
     HYD_status(*query_usize) (int *size);
 
@@ -143,15 +140,6 @@ HYD_status HYDT_bsci_finalize(void);
  * wait for their completion.
  */
 HYD_status HYDT_bsci_wait_for_completion(int timeout);
-
-
-/**
- * \brief HYDT_bsci_cleanup_procs - Cleanup launched processes
- *
- * This function cleans up the processes it launched. This is not a
- * graceful cleanup, but rather a forced abort.
- */
-HYD_status HYDT_bsci_cleanup_procs(void);
 
 
 /**

@@ -28,7 +28,6 @@ static void init_launcher_fns(void)
     HYDT_bsci_fns.launch_procs = NULL;
     HYDT_bsci_fns.launcher_finalize = NULL;
     HYDT_bsci_fns.wait_for_completion = NULL;
-    HYDT_bsci_fns.cleanup_procs = NULL;
     HYDT_bsci_fns.query_usize = NULL;
     HYDT_bsci_fns.query_proxy_id = NULL;
     HYDT_bsci_fns.query_env_inherit = NULL;
@@ -50,8 +49,6 @@ static void set_launcher_defaults(void)
         HYDT_bsci_fns.launcher_finalize = HYDT_bscu_launcher_finalize;
     if (HYDT_bsci_fns.wait_for_completion == NULL)
         HYDT_bsci_fns.wait_for_completion = HYDT_bscu_wait_for_completion;
-    if (HYDT_bsci_fns.cleanup_procs == NULL)
-        HYDT_bsci_fns.cleanup_procs = HYDT_bscu_cleanup_procs;
     if (HYDT_bsci_fns.query_usize == NULL)
         HYDT_bsci_fns.query_usize = HYDT_bscu_query_usize;
     if (HYDT_bsci_fns.query_proxy_id == NULL)
