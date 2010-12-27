@@ -159,12 +159,6 @@ static void append_node_to_list(struct HYD_node *node, struct HYD_node **list)
 {
     struct HYD_node *r1;
 
-    for (r1 = *list; r1; r1 = r1->next)
-        if (!strcmp(r1->hostname, node->hostname)) {
-            r1->core_count += node->core_count;
-            return;
-        }
-
     if (*list == NULL) {
         *list = node;
         (*list)->next = NULL;
