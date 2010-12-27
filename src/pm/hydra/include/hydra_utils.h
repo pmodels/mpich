@@ -206,7 +206,8 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip);
 HYD_status HYDU_sock_is_local(char *host, int *is_local);
 HYD_status HYDU_sock_remote_access(char *host, int *remote_access);
 HYD_status
-HYDU_sock_create_and_listen_portstr(char *iface, char *port_range, char **port_str,
+HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
+                                    char **port_str,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp);
 HYD_status HYDU_sock_cloexec(int fd);

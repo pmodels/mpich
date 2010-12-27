@@ -678,6 +678,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_free_exec_list(exec_list);
 
     status = HYDU_sock_create_and_listen_portstr(HYD_handle.user_global.iface,
+                                                 HYD_handle.local_hostname,
                                                  HYD_handle.port_range, &control_port,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) new_pgid);

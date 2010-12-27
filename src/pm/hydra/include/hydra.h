@@ -31,6 +31,8 @@ struct HYD_handle {
 
     char *nameserver;
 
+    char *local_hostname;
+
     int ckpoint_int;
 
     int print_rank_map;

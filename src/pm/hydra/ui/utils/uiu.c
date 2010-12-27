@@ -19,6 +19,9 @@ void HYD_uiu_init_params(void)
     HYD_handle.port_range = NULL;
     HYD_handle.interface_env_name = NULL;
 
+    HYD_handle.nameserver = NULL;
+    HYD_handle.local_hostname = NULL;
+
     HYD_handle.ckpoint_int = -1;
 
     HYD_handle.print_rank_map = -1;
@@ -57,6 +60,12 @@ void HYD_uiu_free_params(void)
 
     if (HYD_handle.interface_env_name)
         HYDU_FREE(HYD_handle.interface_env_name);
+
+    if (HYD_handle.nameserver)
+        HYDU_FREE(HYD_handle.nameserver);
+
+    if (HYD_handle.local_hostname)
+        HYDU_FREE(HYD_handle.local_hostname);
 
     if (HYD_handle.node_list)
         HYDU_free_node_list(HYD_handle.node_list);

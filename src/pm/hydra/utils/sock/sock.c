@@ -574,7 +574,8 @@ HYD_status HYDU_sock_remote_access(char *host, int *remote_access)
 }
 
 HYD_status
-HYDU_sock_create_and_listen_portstr(char *iface, char *port_range, char **port_str,
+HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
+                                    char **port_str,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp)
 {
@@ -597,6 +598,9 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *port_range, char **port_s
     if (iface) {
         status = HYDU_sock_get_iface_ip(iface, &ip);
         HYDU_ERR_POP(status, "unable to get network interface IP\n");
+    }
+    else if (hostname) {
+        ip = HYDU_strdup(hostname);
     }
     else {
         HYDU_MALLOC(ip, char *, MAX_HOSTNAME_LEN, status);

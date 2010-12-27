@@ -523,7 +523,8 @@ static HYD_status launch_procs(void)
             pmi_port = HYD_pmcd_pmip.system_global.pmi_port;
         else {
             status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
-                                                         NULL, &pmi_port, pmi_listen_cb, NULL);
+                                                         NULL, NULL, &pmi_port, pmi_listen_cb,
+                                                         NULL);
             HYDU_ERR_POP(status, "unable to create PMI port\n");
         }
     }
