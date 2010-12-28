@@ -116,10 +116,10 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_kvs_pair *run;
     const char *key;
-    char *thrid;
+    char *thrid, *val;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_pmcd_token *tokens;
-    int token_count, found;
+    int token_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -137,11 +137,14 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
+    val = NULL;
+    if (!strcmp(key, "PMI_dead_processes"))
+        val = pg_scratch->dead_processes;
+
     /* Try to find the key */
-    found = 0;
     for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
-            found = 1;
+            val = run->val;
             break;
         }
     }
@@ -154,9 +157,9 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
         tmp[i++] = HYDU_strdup(";");
     }
     tmp[i++] = HYDU_strdup("found=");
-    if (found) {
+    if (val) {
         tmp[i++] = HYDU_strdup("TRUE;value=");
-        tmp[i++] = HYDU_strdup(run->val);
+        tmp[i++] = HYDU_strdup(val);
         tmp[i++] = HYDU_strdup(";rc=0;");
     }
     else {

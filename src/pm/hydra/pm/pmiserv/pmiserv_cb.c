@@ -218,6 +218,57 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         HYDU_FREE(buf);
     }
+    else if (hdr.cmd == PROCESS_TERMINATED) {
+        if (HYD_handle.user_global.auto_cleanup == 0) {
+            /* Update the map of the alive processes */
+            pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+            if (!strcmp(pg_scratch->dead_processes, "")) {
+                /* This is the first dead process */
+                HYDU_FREE(pg_scratch->dead_processes);
+                HYDU_MALLOC(pg_scratch->dead_processes, char *, MAXVALLEN, status);
+                HYDU_snprintf(pg_scratch->dead_processes, MAXVALLEN, "%d", hdr.pid);
+            }
+            else {
+                /* FIXME: This is a very simple implementation. The
+                 * following are yet to be implemented:
+                 *
+                 * 1. Sorting: The list of processes should be sorted.
+                 *
+                 * 2. Ranges: If there are more than 2 processes with
+                 * contiguous ranks, compress them to a range.
+                 *
+                 * 3. Multiple keys: If the list of dead processes
+                 * does not fit inside a single value length, set it
+                 * as a multi-line value.
+                 */
+                char *tmp;
+
+                HYDU_MALLOC(tmp, char *, MAXVALLEN, status);
+                HYDU_snprintf(tmp, MAXVALLEN, "%s,%d", pg_scratch->dead_processes, hdr.pid);
+                HYDU_FREE(pg_scratch->dead_processes);
+                pg_scratch->dead_processes = tmp;
+            }
+
+            for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+                for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
+                    if (tproxy->control_fd == HYD_FD_UNSET ||
+                        tproxy->control_fd == HYD_FD_CLOSED)
+                        continue;
+
+                    if (tproxy->pg->pgid == proxy->pg->pgid &&
+                        tproxy->proxy_id == proxy->proxy_id)
+                        continue;
+
+                    HYD_pmcd_init_header(&hdr);
+                    hdr.cmd = SIGNAL_PROCESSES;
+                    status = HYDU_sock_write(tproxy->control_fd, &hdr, sizeof(hdr), &sent,
+                                             &closed);
+                    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+                    HYDU_ASSERT(!closed, status);
+                }
+            }
+        }
+    }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unhandled command = %d\n", hdr.cmd);
     }

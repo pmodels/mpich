@@ -154,11 +154,11 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 {
-    int i, found;
+    int i;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_kvs_pair *run;
-    char *kvsname, *key;
+    char *kvsname, *key, *val;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_pmcd_token *tokens;
     int token_count;
@@ -182,25 +182,31 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
+    val = NULL;
+    if (!strcmp(key, "PMI_dead_processes")) {
+        val = pg_scratch->dead_processes;
+        goto found_val;
+    }
+
     if (strcmp(pg_scratch->kvs->kvs_name, kvsname))
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "kvsname (%s) does not match this group's kvs space (%s)\n",
                             kvsname, pg_scratch->kvs->kvs_name);
 
     /* Try to find the key */
-    found = 0;
     for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
         if (!strcmp(run->key, key)) {
-            found = 1;
+            val = run->val;
             break;
         }
     }
 
+  found_val:
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=get_result rc=");
-    if (found) {
+    if (val) {
         tmp[i++] = HYDU_strdup("0 msg=success value=");
-        tmp[i++] = HYDU_strdup(run->val);
+        tmp[i++] = HYDU_strdup(val);
     }
     else {
         tmp[i++] = HYDU_strdup("-1 msg=key_");

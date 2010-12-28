@@ -37,13 +37,15 @@ struct HYD_pmcd_hdr {
         PROC_INFO,
         CKPOINT,
         PMI_RESPONSE,
+        SIGNAL_PROCESSES,
 
         /* Proxy to UI commands */
         PID_LIST,
         EXIT_STATUS,
         PMI_CMD,
         STDOUT,
-        STDERR
+        STDERR,
+        PROCESS_TERMINATED
     } cmd;
 
     /* Generic */

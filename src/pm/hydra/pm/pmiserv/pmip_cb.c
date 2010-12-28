@@ -227,7 +227,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd = NULL, *args[HYD_NUM_TMP_STRINGS] = { 0 };
-    int closed, repeat, sent, i = -1, linelen;
+    int closed, repeat, sent, i = -1, linelen, pid;
     struct HYD_pmcd_hdr hdr;
     struct HYD_pmcd_pmip_pmi_handle *h;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
@@ -251,6 +251,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             if (HYD_pmcd_pmip.downstream.pmi_fd[i] == fd)
                 break;
         HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
+        pid = i;
     }
 
     if (closed) {
@@ -260,10 +261,10 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
          * soon as we get the finalize message. For non-PMI
          * applications, this is harder to identify, so we just let
          * the user cleanup the processes on a failure. */
-        if (using_pmi_port || HYD_pmcd_pmip.downstream.pmi_fd_active[i]) {
+        if (using_pmi_port || HYD_pmcd_pmip.downstream.pmi_fd_active[pid]) {
             MPL_snprintf(ftb_event_payload, HYDT_FTB_MAX_PAYLOAD_DATA,
                          "pgid:%d rank:%d",
-                         HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[i]);
+                         HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.downstream.pmi_rank[pid]);
             status = HYDT_ftb_publish("FTB_MPI_PROCS_DEAD", ftb_event_payload);
             HYDU_ERR_POP(status, "FTB publish failed\n");
 
@@ -272,10 +273,24 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             }
             else {
                 /* If the user doesn't want to automatically cleanup,
-                 * just deregister the socket and ignore this error */
+                 * deregister the socket, signal the remaining
+                 * processes, and send this information upstream */
                 status = HYDT_dmx_deregister_fd(fd);
                 HYDU_ERR_POP(status, "unable to deregister fd\n");
                 close(fd);
+
+                /* FIXME: This code needs to change from sending the
+                 * SIGUSR1 signal to a PMI-2 notification message. */
+                for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+                    if (HYD_pmcd_pmip.downstream.pid[i] != -1)
+                        kill(HYD_pmcd_pmip.downstream.pid[i], SIGUSR1);
+
+                hdr.cmd = PROCESS_TERMINATED;
+                hdr.pid = HYD_pmcd_pmip.downstream.pmi_rank[pid];
+                status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr),
+                                         &sent, &closed);
+                HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
+                HYDU_ASSERT(!closed, status);
             }
         }
         goto fn_exit;
@@ -287,7 +302,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     /* This is a PMI application */
     if (!using_pmi_port)
-        HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 1;
+        HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
     do {
         status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
@@ -861,7 +876,7 @@ static HYD_status procinfo(int fd)
 
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
-    int cmd_len, closed;
+    int cmd_len, closed, i;
     struct HYD_pmcd_hdr hdr;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
@@ -900,6 +915,13 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     else if (hdr.cmd == PMI_RESPONSE) {
         status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
+    }
+    else if (hdr.cmd == SIGNAL_PROCESSES) {
+        /* FIXME: This code needs to change from sending the SIGUSR1
+         * signal to a PMI-2 notification message. */
+        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+            if (HYD_pmcd_pmip.downstream.pid[i] != -1)
+                kill(HYD_pmcd_pmip.downstream.pid[i], SIGUSR1);
     }
     else {
         status = HYD_INTERNAL_ERROR;
