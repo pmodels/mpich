@@ -63,45 +63,6 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     goto fn_exit;
 }
 
-static HYD_status handle_pid_list(int fd, struct HYD_proxy *proxy)
-{
-    int count, closed;
-    struct HYD_proxy *tproxy;
-    struct HYD_pg *pg = proxy->pg;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
-    status = HYDU_sock_read(fd, (void *) proxy->pid,
-                            proxy->proxy_process_count * sizeof(int),
-                            &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to read status from proxy\n");
-    HYDU_ASSERT(!closed, status);
-
-    if (pg->pgid) {
-        /* We initialize the debugger code only for non-dynamically
-         * spawned processes */
-        goto fn_exit;
-    }
-
-    /* Check if all the PIDs have been received */
-    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
-        if (tproxy->pid == NULL)
-            goto fn_exit;
-
-    /* Call the debugger initialization */
-    status = HYDT_dbg_setup_procdesc(pg);
-    HYDU_ERR_POP(status, "debugger setup failed\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
 {
     struct HYD_proxy *tproxy;
@@ -164,48 +125,13 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
     goto fn_exit;
 }
 
-static HYD_status handle_exit_status(int fd, struct HYD_proxy *proxy)
-{
-    int count, closed, i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
-    status = HYDU_sock_read(fd, (void *) proxy->exit_status,
-                            proxy->proxy_process_count * sizeof(int),
-                            &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to read status from proxy\n");
-    HYDU_ASSERT(!closed, status);
-
-    status = cleanup_proxy(proxy);
-    HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
-
-    /* If any of the processes aborted, cleanup the remaining
-     * processes */
-    for (i = 0; i < proxy->proxy_process_count; i++) {
-        if (proxy->exit_status[i]) {
-            if (HYD_handle.user_global.auto_cleanup) {
-                status = HYD_pmcd_pmiserv_cleanup();
-                HYDU_ERR_POP(status, "unable to cleanup processes\n");
-            }
-            break;
-        }
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
-    int count, closed;
+    int count, closed, sent, i;
+    struct HYD_pg *pg;
     struct HYD_pmcd_hdr hdr;
-    struct HYD_proxy *proxy;
+    struct HYD_proxy *proxy, *tproxy;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *buf;
     HYD_status status = HYD_SUCCESS;
 
@@ -218,12 +144,50 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ASSERT(!closed, status)
 
     if (hdr.cmd == PID_LIST) {  /* Got PIDs */
-        status = handle_pid_list(fd, proxy);
-        HYDU_ERR_POP(status, "unable to receive PID list\n");
+        HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
+        status = HYDU_sock_read(fd, (void *) proxy->pid,
+                                proxy->proxy_process_count * sizeof(int),
+                                &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to read status from proxy\n");
+        HYDU_ASSERT(!closed, status);
+
+        if (proxy->pg->pgid) {
+            /* We initialize the debugger code only for non-dynamically
+             * spawned processes */
+            goto fn_exit;
+        }
+
+        /* Check if all the PIDs have been received */
+        for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next)
+            if (tproxy->pid == NULL)
+                goto fn_exit;
+
+        /* Call the debugger initialization */
+        status = HYDT_dbg_setup_procdesc(proxy->pg);
+        HYDU_ERR_POP(status, "debugger setup failed\n");
     }
     else if (hdr.cmd == EXIT_STATUS) {
-        status = handle_exit_status(fd, proxy);
-        HYDU_ERR_POP(status, "unable to receive exit status\n");
+        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
+        status = HYDU_sock_read(fd, (void *) proxy->exit_status,
+                                proxy->proxy_process_count * sizeof(int),
+                                &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to read status from proxy\n");
+        HYDU_ASSERT(!closed, status);
+
+        status = cleanup_proxy(proxy);
+        HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
+
+        /* If any of the processes aborted, cleanup the remaining
+         * processes */
+        for (i = 0; i < proxy->proxy_process_count; i++) {
+            if (proxy->exit_status[i]) {
+                if (HYD_handle.user_global.auto_cleanup) {
+                    status = HYD_pmcd_pmiserv_cleanup();
+                    HYDU_ERR_POP(status, "unable to cleanup processes\n");
+                }
+                break;
+            }
+        }
     }
     else if (hdr.cmd == PMI_CMD) {
         HYDU_MALLOC(buf, char *, hdr.buflen + 1, status);
