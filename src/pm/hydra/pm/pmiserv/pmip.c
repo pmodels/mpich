@@ -248,16 +248,14 @@ int main(int argc, char **argv)
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
     HYDU_ERR_POP(status, "unable to send EXIT_STATUS command upstream\n");
-    if (closed)
-        goto fn_fail;
+    HYDU_ASSERT(!closed, status);
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.exit_status,
                              HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
                              &closed);
     HYDU_ERR_POP(status, "unable to return exit status upstream\n");
-    if (closed)
-        goto fn_fail;
+    HYDU_ASSERT(!closed, status);
 
     status = HYDT_dmx_deregister_fd(HYD_pmcd_pmip.upstream.control);
     HYDU_ERR_POP(status, "unable to deregister fd\n");

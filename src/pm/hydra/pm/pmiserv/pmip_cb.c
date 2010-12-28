@@ -224,47 +224,10 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
     goto fn_exit;
 }
 
-static HYD_status read_pmi_cmd(int fd, int *closed)
-{
-    int linelen;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    *closed = 0;
-
-    /* PMI-1 does not tell us how much to read. We read how much ever
-     * we can, parse out full PMI commands from it, and process
-     * them. When we don't have a full PMI command, we store the
-     * rest. */
-    status = HYDU_sock_read(fd, storage + storage_len, HYD_TMPBUF_SIZE - storage_len,
-                            &linelen, closed, 0);
-    HYDU_ERR_POP(status, "unable to read PMI command\n");
-
-    /* Unexpected termination of connection */
-    if (*closed) {
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to deregister fd\n");
-        close(fd);
-
-        goto fn_exit;
-    }
-
-    storage_len += linelen;
-    storage[storage_len] = 0;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
     char *buf = NULL, *pmi_cmd = NULL, *args[HYD_NUM_TMP_STRINGS] = { 0 };
-    int closed, repeat, sent, i = -1;
+    int closed, repeat, sent, i = -1, linelen;
     struct HYD_pmcd_hdr hdr;
     struct HYD_pmcd_pmip_pmi_handle *h;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
@@ -274,7 +237,12 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     HYD_pmcd_init_header(&hdr);
 
-    status = read_pmi_cmd(fd, &closed);
+    /* PMI-1 does not tell us how much to read. We read how much ever
+     * we can, parse out full PMI commands from it, and process
+     * them. When we don't have a full PMI command, we store the
+     * rest. */
+    status = HYDU_sock_read(fd, storage + storage_len, HYD_TMPBUF_SIZE - storage_len,
+                            &linelen, &closed, 0);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
 
     /* If we used the PMI_FD format, try to find the PMI FD */
@@ -304,10 +272,17 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             }
             else {
                 /* If the user doesn't want to automatically cleanup,
-                 * just ignore this error */
+                 * just deregister the socket and ignore this error */
+                status = HYDT_dmx_deregister_fd(fd);
+                HYDU_ERR_POP(status, "unable to deregister fd\n");
+                close(fd);
             }
         }
         goto fn_exit;
+    }
+    else {
+        storage_len += linelen;
+        storage[storage_len] = 0;
     }
 
     /* This is a PMI application */
@@ -896,17 +871,9 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     /* We got a command from upstream */
     status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &cmd_len, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading command from launcher\n");
+    HYDU_ASSERT(!closed, status);
 
-    if (closed) {
-        /* The connection has closed */
-        status = HYDT_dmx_deregister_fd(fd);
-        HYDU_ERR_POP(status, "unable to deregister fd\n");
-        close(fd);
-
-        HYD_pmcd_pmip_kill_localprocs();
-        status = HYD_SUCCESS;
-    }
-    else if (hdr.cmd == PROC_INFO) {
+    if (hdr.cmd == PROC_INFO) {
         status = procinfo(fd);
         HYDU_ERR_POP(status, "error parsing process info\n");
 

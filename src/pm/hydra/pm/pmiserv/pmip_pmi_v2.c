@@ -73,6 +73,9 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
     HYDU_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
     status = HYDU_sock_write(fd, cmdlen, 6, &sent, &closed);
     HYDU_ERR_POP(status, "error writing PMI line\n");
+    /* FIXME: We cannot abort when we are not able to send data
+     * downstream. The upper layer needs to handle this based on
+     * whether we want to abort or not.*/
     HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
