@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef PMI_COMMON_H_INCLUDED
-#define PMI_COMMON_H_INCLUDED
+#ifndef COMMON_H_INCLUDED
+#define COMMON_H_INCLUDED
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
@@ -77,4 +77,4 @@ void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
                                 int *ret);
 
-#endif /* PMI_COMMON_H_INCLUDED */
+#endif /* COMMON_H_INCLUDED */

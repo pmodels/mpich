@@ -9,7 +9,7 @@
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
-#include "pmi_common.h"
+#include "common.h"
 
 struct HYD_pmcd_pmip {
     struct HYD_user_global user_global;

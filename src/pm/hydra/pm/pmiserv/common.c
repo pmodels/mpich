@@ -6,7 +6,7 @@
 
 #include "hydra_base.h"
 #include "hydra_utils.h"
-#include "pmi_common.h"
+#include "common.h"
 #include "bind.h"
 
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
