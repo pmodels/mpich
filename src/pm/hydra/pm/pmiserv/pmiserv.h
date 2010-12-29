@@ -11,6 +11,6 @@
 
 HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *userp);
 HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp);
-HYD_status HYD_pmcd_pmiserv_cleanup(void);
+HYD_status HYD_pmcd_pmiserv_cleanup_pg(struct HYD_pg *pg);
 
 #endif /* PMISERV_H_INCLUDED */

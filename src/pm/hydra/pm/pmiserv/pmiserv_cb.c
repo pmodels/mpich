@@ -182,7 +182,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         if (HYD_handle.user_global.auto_cleanup) {
             for (i = 0; i < proxy->proxy_process_count; i++) {
                 if (proxy->exit_status[i]) {
-                    status = HYD_pmcd_pmiserv_cleanup();
+                    status = HYD_pmcd_pmiserv_cleanup_pg(proxy->pg);
                     HYDU_ERR_POP(status, "unable to cleanup processes\n");
                     break;
                 }
@@ -484,19 +484,16 @@ HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmiserv_cleanup(void)
+HYD_status HYD_pmcd_pmiserv_cleanup_pg(struct HYD_pg *pg)
 {
-    struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-            status = cleanup_proxy(proxy);
-            HYDU_ERR_POP(status, "unable to cleanup proxy\n");
-        }
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+        status = cleanup_proxy(proxy);
+        HYDU_ERR_POP(status, "unable to cleanup proxy\n");
     }
 
   fn_exit:

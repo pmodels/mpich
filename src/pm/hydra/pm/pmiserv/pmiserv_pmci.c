@@ -13,6 +13,26 @@
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
+static HYD_status cleanup_all_pgs(void)
+{
+    struct HYD_pg *pg;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+        status = HYD_pmcd_pmiserv_cleanup_pg(pg);
+        HYDU_ERR_POP(status, "unable to cleanup PG\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status cleanup_procs(void)
 {
     HYD_status status = HYD_SUCCESS;
@@ -21,7 +41,7 @@ static HYD_status cleanup_procs(void)
 
     HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
 
-    status = HYD_pmcd_pmiserv_cleanup();
+    status = cleanup_all_pgs();
     HYDU_ERR_POP(status, "cleanup of processes failed\n");
 
   fn_exit:
@@ -196,7 +216,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
         while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
             status = HYDT_dmx_wait_for_event(timeout);
             if (status == HYD_TIMED_OUT) {
-                status = HYD_pmcd_pmiserv_cleanup();
+                status = cleanup_all_pgs();
                 HYDU_ERR_POP(status, "cleanup of processes failed\n");
             }
             HYDU_ERR_POP(status, "error waiting for event\n");
