@@ -6317,7 +6317,10 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/binding/f90/mpi_sizeofs.f90 \
 	  src/binding/f90/mpi_base.f90 \
 	  src/packaging/Makefile \
-	  src/packaging/pkgconfig/mpich2-ch3.pc \
+	  src/packaging/pkgconfig/mpich2-c.pc \
+	  src/packaging/pkgconfig/mpich2-cxx.pc \
+	  src/packaging/pkgconfig/mpich2-f77.pc \
+	  src/packaging/pkgconfig/mpich2-f90.pc \
 	  src/packaging/pkgconfig/Makefile \
 	  src/packaging/envmods/mpich2.module \
 	  src/packaging/envmods/Makefile \
