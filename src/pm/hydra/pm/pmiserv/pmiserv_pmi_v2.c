@@ -455,7 +455,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_node *node_list = NULL, *node, *tnode;
+    struct HYD_node *node_list = NULL, *node, *tnode, *user_node_list = NULL;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_token *tokens;
     struct HYD_exec *exec_list = NULL, *exec;
@@ -586,6 +586,13 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             else if (!strcmp(info_key, "wdir")) {
                 exec->wdir = HYDU_strdup(info_val);
             }
+            else if (!strcmp(info_key, "host")) {
+                HYDU_MALLOC(user_node_list, struct HYD_node *, sizeof(struct HYD_node), status);
+                user_node_list->hostname = HYDU_strdup(info_val);
+                user_node_list->core_count = 1;
+                user_node_list->local_binding = NULL;
+                user_node_list->next = NULL;
+            }
             else {
                 /* Unrecognized info key; ignore */
             }
@@ -673,8 +680,14 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next)
         offset += pg->pg_process_count;
 
-    status = HYDU_create_proxy_list(exec_list, HYD_handle.node_list, pg, offset);
-    HYDU_ERR_POP(status, "error creating proxy list\n");
+    if (user_node_list) {
+        status = HYDU_create_proxy_list(exec_list, user_node_list, pg, offset);
+        HYDU_ERR_POP(status, "error creating proxy list\n");
+    }
+    else {
+        status = HYDU_create_proxy_list(exec_list, HYD_handle.node_list, pg, offset);
+        HYDU_ERR_POP(status, "error creating proxy list\n");
+    }
     HYDU_free_exec_list(exec_list);
 
     status = HYDU_sock_create_and_listen_portstr(HYD_handle.user_global.iface,
@@ -748,6 +761,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_free_strlist(proxy_args);
     if (segment_list)
         HYDU_FREE(segment_list);
+    if (user_node_list)
+        HYDU_free_node_list(user_node_list);
     HYDU_FUNC_EXIT();
     return status;
 
