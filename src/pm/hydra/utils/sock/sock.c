@@ -457,7 +457,7 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
 HYD_status HYDU_sock_is_local(char *host, int *is_local)
 {
     struct hostent *ht;
-    char *ip1, *ip2;
+    char *ip1 = NULL, *ip2 = NULL;
     char buf1[INET_ADDRSTRLEN], buf2[INET_ADDRSTRLEN];
     struct sockaddr_in *sa_ptr, sa;
     static int init = 1;
@@ -500,8 +500,12 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
             if (!strcmp(ip1, ip2)) {
                 *is_local = 1;
+                freeifaddrs(ifaddr);
                 goto fn_exit;
             }
+
+            HYDU_FREE(ip2);
+            ip2 = NULL;
         }
     }
 
@@ -548,6 +552,10 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     }
 
   fn_exit:
+    if (ip1)
+        HYDU_FREE(ip1);
+    if (ip2)
+        HYDU_FREE(ip2);
     return status;
 
   fn_fail:
