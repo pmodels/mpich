@@ -90,7 +90,7 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
     }
 
     for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
-        if (tproxy->control_fd != HYD_FD_UNSET && tproxy->control_fd != HYD_FD_CLOSED)
+        if (tproxy->control_fd != HYD_FD_CLOSED)
             goto fn_exit;
 
     /* All proxies in this process group have terminated */
