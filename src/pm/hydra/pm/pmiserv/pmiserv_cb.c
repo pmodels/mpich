@@ -179,13 +179,13 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         /* If any of the processes aborted, cleanup the remaining
          * processes */
-        for (i = 0; i < proxy->proxy_process_count; i++) {
-            if (proxy->exit_status[i]) {
-                if (HYD_handle.user_global.auto_cleanup) {
+        if (HYD_handle.user_global.auto_cleanup) {
+            for (i = 0; i < proxy->proxy_process_count; i++) {
+                if (proxy->exit_status[i]) {
                     status = HYD_pmcd_pmiserv_cleanup();
                     HYDU_ERR_POP(status, "unable to cleanup processes\n");
+                    break;
                 }
-                break;
             }
         }
     }
