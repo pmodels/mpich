@@ -406,10 +406,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                 exec->wdir = HYDU_strdup(info_val);
             }
             else {
-                /* FIXME: Unrecognized info key; what should we do
-                 * here? Abort? */
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized info key: %s\n",
-                                    info_key);
+                /* Unrecognized info key; ignore */
             }
         }
 
