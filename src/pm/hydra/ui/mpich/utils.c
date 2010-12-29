@@ -1149,6 +1149,11 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
         HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1",
                                 &HYD_handle.user_global.global_env.system);
 
+    /* Preset common environment options for disabling STDIO buffering
+     * in Fortran */
+    HYDU_append_env_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y",
+                            &HYD_handle.user_global.global_env.system);
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
