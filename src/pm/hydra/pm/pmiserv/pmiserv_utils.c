@@ -497,6 +497,7 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
     pg_scratch->pmi_listen_fd = HYD_FD_UNSET;
 
     pg_scratch->dead_processes = HYDU_strdup("");
+    pg_scratch->dead_process_count = 0;
 
     status = HYD_pmcd_pmi_allocate_kvs(&pg_scratch->kvs, pg->pgid);
     HYDU_ERR_POP(status, "unable to allocate kvs space\n");

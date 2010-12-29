@@ -34,6 +34,7 @@ struct HYD_pmcd_pmi_pg_scratch {
     int pmi_listen_fd;
 
     char *dead_processes;
+    int dead_process_count;
 
     struct HYD_pmcd_pmi_kvs *kvs;
 };
