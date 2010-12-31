@@ -681,7 +681,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         offset += pg->pg_process_count;
 
     if (user_node_list) {
-        status = HYDU_create_proxy_list(exec_list, user_node_list, pg, offset);
+        status = HYDU_create_proxy_list(exec_list, user_node_list, pg, 0);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     else {
