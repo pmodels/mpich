@@ -9,9 +9,7 @@
 #include "bscu.h"
 #include "sge.h"
 
-static struct HYD_node *global_node_list = NULL;
-
-static HYD_status process_mfile_token(char *token, int newline)
+static HYD_status process_mfile_token(char *token, int newline, struct HYD_node **node_list)
 {
     int num_procs;
     static int entry_count = 0;
@@ -32,7 +30,7 @@ static HYD_status process_mfile_token(char *token, int newline)
 
         num_procs = atoi(token);
 
-        status = HYDU_add_to_node_list(hostname, num_procs, &global_node_list);
+        status = HYDU_add_to_node_list(hostname, num_procs, node_list);
         HYDU_ERR_POP(status, "unable to initialize proxy\n");
 
         hostname = NULL;
@@ -60,10 +58,9 @@ HYD_status HYDT_bscd_sge_query_node_list(struct HYD_node **node_list)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "No SGE nodefile found\n");
     }
     else {
-        status = HYDU_parse_hostfile(hostfile, process_mfile_token);
+        status = HYDU_parse_hostfile(hostfile, node_list, process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
-    *node_list = global_node_list;
 
   fn_exit:
     HYDU_FUNC_EXIT();

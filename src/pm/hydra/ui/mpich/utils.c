@@ -151,46 +151,6 @@ static HYD_status genvall_fn(char *arg, char ***argv)
     return HYDU_set_str(arg, argv, &HYD_handle.user_global.global_env.prop, "all");
 }
 
-static HYD_status process_mfile_token(char *token, int newline)
-{
-    int num_procs;
-    char *hostname, *procs, *binding, *tmp;
-    struct HYD_node *node;
-    HYD_status status = HYD_SUCCESS;
-
-    if (newline) {      /* The first entry gives the hostname and processes */
-        hostname = strtok(token, ":");
-        procs = strtok(NULL, ":");
-        num_procs = procs ? atoi(procs) : 1;
-
-        status = HYDU_add_to_node_list(hostname, num_procs, &HYD_handle.node_list);
-        HYDU_ERR_POP(status, "unable to add to node list\n");
-    }
-    else {      /* Not a new line */
-        tmp = strtok(token, "=");
-        if (!strcmp(tmp, "binding")) {
-            binding = strtok(NULL, "=");
-
-            for (node = HYD_handle.node_list; node->next; node = node->next);
-            if (node->local_binding)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "duplicate local binding setting\n");
-
-            node->local_binding = HYDU_strdup(binding);
-        }
-        else {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "token %s not supported at this time\n", token);
-        }
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void mfile_help_fn(void)
 {
     printf("\n");
@@ -205,7 +165,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
                         "duplicate host file setting\n");
 
     if (strcmp(**argv, "HYDRA_USE_LOCALHOST")) {
-        status = HYDU_parse_hostfile(**argv, process_mfile_token);
+        status = HYDU_parse_hostfile(**argv, &HYD_handle.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
@@ -373,7 +333,7 @@ static HYD_status parse_config_argv(void)
     goto fn_exit;
 }
 
-static HYD_status process_config_token(char *token, int newline)
+static HYD_status process_config_token(char *token, int newline, struct HYD_node **node_list)
 {
     struct HYD_exec *exec;
     static int first_line = 1, idx = 0;
@@ -423,7 +383,7 @@ static HYD_status config_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_parse_hostfile(**argv, process_config_token);
+    status = HYDU_parse_hostfile(**argv, NULL, process_config_token);
     HYDU_ERR_POP(status, "error parsing config file\n");
 
     status = parse_config_argv();
@@ -1040,7 +1000,7 @@ static HYD_status set_default_values(void)
     HYD_GET_ENV_STR_VAL(HYD_handle.user_global.iface, "HYDRA_IFACE", NULL);
 
     if (HYD_handle.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
-        status = HYDU_parse_hostfile(tmp, process_mfile_token);
+        status = HYDU_parse_hostfile(tmp, &HYD_handle.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
 
