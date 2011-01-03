@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 int HYDU_local_to_global_id(int local_id, int start_pid, int core_count, int global_core_count)
 {

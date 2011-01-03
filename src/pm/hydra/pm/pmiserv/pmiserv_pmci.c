@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "hydra_server.h"
 #include "hydra.h"
-#include "hydra_utils.h"
 #include "pmci.h"
 #include "pmiserv_pmi.h"
 #include "bsci.h"
@@ -20,7 +20,7 @@ static HYD_status cleanup_all_pgs(void)
 
     HYDU_FUNC_ENTER();
 
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
         status = HYD_pmcd_pmiserv_cleanup_pg(pg);
         HYDU_ERR_POP(status, "unable to cleanup PG\n");
     }
@@ -54,7 +54,7 @@ static HYD_status cleanup_procs(void)
 
 static HYD_status send_cmd_to_proxies(struct HYD_pmcd_hdr hdr)
 {
-    struct HYD_pg *pg = &HYD_handle.pg_list;
+    struct HYD_pg *pg = &HYD_server_info.pg_list;
     struct HYD_proxy *proxy;
     int sent, closed;
     HYD_status status = HYD_SUCCESS;
@@ -123,16 +123,17 @@ HYD_status HYD_pmci_launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_dmx_register_fd(1, &HYD_handle.cleanup_pipe[0], POLLIN, NULL, ui_cmd_cb);
+    status =
+        HYDT_dmx_register_fd(1, &HYD_server_info.cleanup_pipe[0], POLLIN, NULL, ui_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_handle.pg_list);
+    status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
     /* Copy the host list to pass to the launcher */
     node_list = NULL;
     node_count = 0;
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
         HYDU_alloc_node(&node);
         node->hostname = HYDU_strdup(proxy->node.hostname);
         node->core_count = proxy->node.core_count;
@@ -149,19 +150,19 @@ HYD_status HYD_pmci_launch_procs(void)
         node_count++;
     }
 
-    status = HYDU_sock_create_and_listen_portstr(HYD_handle.user_global.iface,
-                                                 HYD_handle.local_hostname,
-                                                 HYD_handle.port_range, &control_port,
+    status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
+                                                 HYD_server_info.local_hostname,
+                                                 HYD_server_info.port_range, &control_port,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) 0);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
-    if (HYD_handle.user_global.debug)
+    if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 
     status = HYD_pmcd_pmi_fill_in_proxy_args(proxy_args, control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
-    status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_handle.pg_list);
+    status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     status = HYDT_dmx_stdin_valid(&enable_stdin);
@@ -171,13 +172,15 @@ HYD_status HYD_pmci_launch_procs(void)
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
-    status = HYDT_bind_init(HYD_handle.user_global.binding, HYD_handle.user_global.bindlib);
+    status =
+        HYDT_bind_init(HYD_server_info.user_global.binding,
+                       HYD_server_info.user_global.bindlib);
     HYDU_ERR_POP(status, "unable to initializing binding library");
 
     status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
-    for (i = 0, proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
+    for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
         if (control_fd[i] != HYD_FD_UNSET) {
             proxy->control_fd = control_fd[i];
 
@@ -210,7 +213,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
 
     /* We first wait for the exit statuses to arrive till the timeout
      * period */
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next) {
+    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
         while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {

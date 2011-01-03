@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "hydt_ftb.h"
 
 HYD_status HYDT_ftb_init(void)

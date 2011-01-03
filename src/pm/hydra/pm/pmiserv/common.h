@@ -7,8 +7,7 @@
 #ifndef COMMON_H_INCLUDED
 #define COMMON_H_INCLUDED
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 
 /* Generic definitions */
 #define MAXKEYLEN    64 /* max length of key in keyval space */

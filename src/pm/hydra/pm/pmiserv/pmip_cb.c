@@ -5,7 +5,6 @@
  */
 
 #include "hydra.h"
-#include "hydra_utils.h"
 #include "pmip.h"
 #include "pmip_pmi.h"
 #include "ckpoint.h"

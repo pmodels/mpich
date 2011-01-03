@@ -7,8 +7,7 @@
 #ifndef DEMUX_INTERNAL_H_INCLUDED
 #define DEMUX_INTERNAL_H_INCLUDED
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 
 struct HYDT_dmxu_callback {
     int num_fds;

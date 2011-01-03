@@ -4,18 +4,21 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "hydra_server.h"
 #include "hydra.h"
-#include "hydra_utils.h"
 #include "mpiexec.h"
 #include "pmci.h"
 #include "bsci.h"
 #include "hydt_ftb.h"
 #include "demux.h"
+#include "ui.h"
 #include "uiu.h"
 
-struct HYD_handle HYD_handle = { {0} };
+struct HYD_server_info HYD_server_info = { {0} };
 
 struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
+struct HYD_ui_info HYD_ui_info;
+struct HYD_ui_mpich_info HYD_ui_mpich_info;
 
 static void usage(void)
 {
@@ -129,21 +132,21 @@ static void signal_cb(int sig)
          * and send a signal to ourselves. The signal callback does
          * the process cleanup instead. */
         cmd.type = HYD_CLEANUP;
-        HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+        HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
     else if (sig == SIGUSR1 || sig == SIGALRM) {
-        if (HYD_handle.user_global.ckpoint_prefix == NULL) {
+        if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
             HYDU_dump(stderr, "No checkpoint prefix provided\n");
             return;
         }
 
 #if HAVE_ALARM
-        if (HYD_handle.ckpoint_int != -1)
-            alarm(HYD_handle.ckpoint_int);
+        if (HYD_ui_mpich_info.ckpoint_int != -1)
+            alarm(HYD_ui_mpich_info.ckpoint_int);
 #endif /* HAVE_ALARM */
 
         cmd.type = HYD_CKPOINT;
-        HYDU_sock_write(HYD_handle.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+        HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
     /* Ignore all other signals */
 
@@ -152,8 +155,8 @@ static void signal_cb(int sig)
 }
 
 #define ordered(n1, n2) \
-    (((HYD_handle.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
-     ((HYD_handle.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
+    (((HYD_ui_mpich_info.sort_order == ASCENDING) && ((n1)->core_count <= (n2)->core_count)) || \
+     ((HYD_ui_mpich_info.sort_order == DESCENDING) && ((n1)->core_count >= (n2)->core_count)))
 
 static int compar(const void *_n1, const void *_n2)
 {
@@ -170,7 +173,7 @@ static int compar(const void *_n1, const void *_n2)
     else
         ret = 1;
 
-    if (HYD_handle.sort_order == DESCENDING)
+    if (HYD_ui_mpich_info.sort_order == DESCENDING)
         ret *= -1;
 
     return ret;
@@ -182,10 +185,10 @@ static HYD_status qsort_node_list(void)
     int count, i;
     HYD_status status = HYD_SUCCESS;
 
-    for (count = 0, node = HYD_handle.node_list; node; node = node->next, count++);
+    for (count = 0, node = HYD_server_info.node_list; node; node = node->next, count++);
 
     HYDU_MALLOC(node_list, struct HYD_node **, count * sizeof(struct HYD_node *), status);
-    for (i = 0, node = HYD_handle.node_list; node; node = node->next, i++)
+    for (i = 0, node = HYD_server_info.node_list; node; node = node->next, i++)
         node_list[i] = node;
 
     qsort((void *) node_list, (size_t) count, sizeof(struct HYD_node *), compar);
@@ -196,7 +199,7 @@ static HYD_status qsort_node_list(void)
         r1 = r1->next;
         r1->next = NULL;
     }
-    HYD_handle.node_list = new_list;
+    HYD_server_info.node_list = new_list;
 
     HYDU_FREE(node_list);
 
@@ -225,7 +228,7 @@ int main(int argc, char **argv)
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
-    if (pipe(HYD_handle.cleanup_pipe) < 0)
+    if (pipe(HYD_server_info.cleanup_pipe) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
     status = HYDT_ftb_init();
@@ -246,29 +249,30 @@ int main(int argc, char **argv)
     /* Now we initialize engines that require us to know user
      * preferences */
 #if HAVE_ALARM
-    if (HYD_handle.ckpoint_int != -1)
-        alarm(HYD_handle.ckpoint_int);
+    if (HYD_ui_mpich_info.ckpoint_int != -1)
+        alarm(HYD_ui_mpich_info.ckpoint_int);
 #endif /* HAVE_ALARM */
 
-    status = HYDT_dmx_init(&HYD_handle.user_global.demux);
+    status = HYDT_dmx_init(&HYD_server_info.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
-    status = HYDT_bsci_init(HYD_handle.user_global.rmk, HYD_handle.user_global.launcher,
-                            HYD_handle.user_global.launcher_exec,
-                            HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
+    status =
+        HYDT_bsci_init(HYD_server_info.user_global.rmk, HYD_server_info.user_global.launcher,
+                       HYD_server_info.user_global.launcher_exec,
+                       HYD_server_info.user_global.enablex, HYD_server_info.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
     reset_rmk = 0;
 
-    if (HYD_handle.node_list == NULL) {
+    if (HYD_server_info.node_list == NULL) {
         /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. */
-        status = HYDT_bsci_query_node_list(&HYD_handle.node_list);
+        status = HYDT_bsci_query_node_list(&HYD_server_info.node_list);
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
-        if (HYD_handle.node_list == NULL) {
+        if (HYD_server_info.node_list == NULL) {
             /* The RMK didn't give us anything back; use localhost */
-            status = HYDU_add_to_node_list("localhost", 1, &HYD_handle.node_list);
+            status = HYDU_add_to_node_list("localhost", 1, &HYD_server_info.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
 
             reset_rmk = 1;
@@ -277,13 +281,13 @@ int main(int argc, char **argv)
 
     /* Reset the host list to use only the number of processes per
      * node as specified by the ppn option. */
-    if (HYD_handle.ppn != -1)
-        for (node = HYD_handle.node_list; node; node = node->next)
-            node->core_count = HYD_handle.ppn;
+    if (HYD_ui_mpich_info.ppn != -1)
+        for (node = HYD_server_info.node_list; node; node = node->next)
+            node->core_count = HYD_ui_mpich_info.ppn;
 
     /* The RMK returned a node list. See if the user requested us to
      * manipulate it in some way */
-    if (HYD_handle.sort_order != NONE) {
+    if (HYD_ui_mpich_info.sort_order != NONE) {
         qsort_node_list();
         reset_rmk = 1;
     }
@@ -295,40 +299,41 @@ int main(int argc, char **argv)
         status = HYDT_bsci_finalize();
         HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
 
-        status = HYDT_bsci_init("none", HYD_handle.user_global.launcher,
-                                HYD_handle.user_global.launcher_exec,
-                                HYD_handle.user_global.enablex, HYD_handle.user_global.debug);
+        status = HYDT_bsci_init("none", HYD_server_info.user_global.launcher,
+                                HYD_server_info.user_global.launcher_exec,
+                                HYD_server_info.user_global.enablex,
+                                HYD_server_info.user_global.debug);
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
-    HYD_handle.global_core_count = 0;
-    for (node = HYD_handle.node_list; node; node = node->next)
-        HYD_handle.global_core_count += node->core_count;
+    HYD_server_info.global_core_count = 0;
+    for (node = HYD_server_info.node_list; node; node = node->next)
+        HYD_server_info.global_core_count += node->core_count;
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
         if (exec->proc_count == -1) {
-            if (HYD_handle.global_core_count == 0)
+            if (HYD_server_info.global_core_count == 0)
                 exec->proc_count = 1;
             else
-                exec->proc_count = HYD_handle.global_core_count;
+                exec->proc_count = HYD_server_info.global_core_count;
 
             /* If we didn't get anything from the user, take whatever
              * the RMK gave */
-            HYD_handle.pg_list.pg_process_count += exec->proc_count;
+            HYD_server_info.pg_list.pg_process_count += exec->proc_count;
         }
     }
 
-    status = HYDU_list_inherited_env(&HYD_handle.user_global.global_env.inherited);
+    status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);
     HYDU_ERR_POP(status, "unable to get the inherited env list\n");
 
-    status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_handle.node_list,
-                                    &HYD_handle.pg_list, 0);
+    status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_server_info.node_list,
+                                    &HYD_server_info.pg_list, 0);
     HYDU_ERR_POP(status, "unable to create proxy list\n");
 
     /* See if the node list contains a remotely accessible localhost */
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
         int is_local, remote_access;
 
         status = HYDU_sock_is_local(proxy->node.hostname, &is_local);
@@ -345,26 +350,26 @@ int main(int argc, char **argv)
     }
 
     if (proxy)
-        HYD_handle.local_hostname = HYDU_strdup(proxy->node.hostname);
+        HYD_server_info.local_hostname = HYDU_strdup(proxy->node.hostname);
 
-    if (HYD_handle.user_global.debug)
+    if (HYD_server_info.user_global.debug)
         HYD_uiu_print_params();
 
     if (MPL_env2int("MPIEXEC_TIMEOUT", &timeout) == 0)
         timeout = -1;   /* Infinite timeout */
 
-    if (HYD_handle.user_global.debug)
+    if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "Timeout set to %d (-1 means infinite)\n", timeout);
 
     /* Check if the user wants us to use a port within a certain
      * range. */
-    if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_handle.port_range) ||
-        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_handle.port_range) ||
-        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_handle.port_range))
-        HYD_handle.port_range = HYDU_strdup(HYD_handle.port_range);
+    if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
+        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_server_info.port_range))
+        HYD_server_info.port_range = HYDU_strdup(HYD_server_info.port_range);
 
-    if (HYD_handle.print_rank_map) {
-        for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    if (HYD_ui_mpich_info.print_rank_map) {
+        for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
             HYDU_dump_noprefix(stdout, "(%s:", proxy->node.hostname);
 
             process_id = 0;
@@ -374,7 +379,7 @@ int main(int argc, char **argv)
                                        HYDU_local_to_global_id(process_id++,
                                                                proxy->start_pid,
                                                                proxy->node.core_count,
-                                                               HYD_handle.global_core_count));
+                                                               HYD_server_info.global_core_count));
                     if (i < exec->proc_count - 1 || exec->next)
                         HYDU_dump_noprefix(stdout, ",");
                 }
@@ -384,8 +389,8 @@ int main(int argc, char **argv)
     }
 
     /* Add the stdout/stdin/stderr callback handlers */
-    HYD_handle.stdout_cb = HYD_uiu_stdout_cb;
-    HYD_handle.stderr_cb = HYD_uiu_stderr_cb;
+    HYD_server_info.stdout_cb = HYD_uiu_stdout_cb;
+    HYD_server_info.stderr_cb = HYD_uiu_stderr_cb;
 
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
@@ -396,10 +401,10 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "process manager error waiting for completion\n");
 
     /* Check for the exit status for all the processes */
-    if (HYD_handle.print_all_exitcodes)
+    if (HYD_ui_mpich_info.print_all_exitcodes)
         HYDU_dump(stdout, "Exit codes: ");
     exit_status = 0;
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
         if (proxy->exit_status == NULL) {
             /* We didn't receive the exit status for this proxy */
             exit_status |= 1;
@@ -410,11 +415,11 @@ int main(int argc, char **argv)
         for (exec = proxy->exec_list; exec; exec = exec->next)
             proc_count += exec->proc_count;
         for (i = 0; i < proc_count; i++) {
-            if (HYD_handle.print_all_exitcodes) {
+            if (HYD_ui_mpich_info.print_all_exitcodes) {
                 HYDU_dump_noprefix(stdout, "[%d]",
                                    HYDU_local_to_global_id(i, proxy->start_pid,
                                                            proxy->node.core_count,
-                                                           HYD_handle.global_core_count));
+                                                           HYD_server_info.global_core_count));
                 HYDU_dump_noprefix(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
                 if (i < proc_count - 1)
                     HYDU_dump_noprefix(stdout, ",");
@@ -422,7 +427,7 @@ int main(int argc, char **argv)
             exit_status |= proxy->exit_status[i];
         }
     }
-    if (HYD_handle.print_all_exitcodes)
+    if (HYD_ui_mpich_info.print_all_exitcodes)
         HYDU_dump_noprefix(stdout, "\n");
 
     /* Call finalize functions for lower layers to cleanup their resources */
@@ -433,11 +438,11 @@ int main(int argc, char **argv)
     HYDU_ERR_POP(status, "error finalizing FTB\n");
 
 #if defined ENABLE_PROFILING
-    if (HYD_handle.enable_profiling) {
+    if (HYD_server_info.enable_profiling) {
         HYDU_dump_noprefix(stdout, "\n");
         HYD_DRAW_LINE(80);
         HYDU_dump(stdout, "Number of PMI calls seen by the server: %d\n",
-                  HYD_handle.num_pmi_calls);
+                  HYD_server_info.num_pmi_calls);
         HYD_DRAW_LINE(80);
         HYDU_dump_noprefix(stdout, "\n");
     }

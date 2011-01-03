@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 void HYDU_init_user_global(struct HYD_user_global *user_global)
 {
@@ -24,7 +24,6 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
 
     user_global->enablex = -1;
     user_global->debug = -1;
-    user_global->prepend_rank = -1;
 
     user_global->auto_cleanup = -1;
 

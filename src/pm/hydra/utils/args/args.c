@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 static int exists(char *filename)
 {
@@ -302,7 +302,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
 
 HYD_status HYDU_parse_hostfile(char *hostfile, struct HYD_node **node_list,
                                HYD_status(*process_token) (char *token, int newline,
-                                                           struct HYD_node **node_list))
+                                                           struct HYD_node ** node_list))
 {
     char line[HYD_TMP_STRLEN], **tokens;
     FILE *fp;

@@ -7,7 +7,7 @@
 #ifndef PERSIST_CLIENT_H_INCLUDED
 #define PERSIST_CLIENT_H_INCLUDED
 
-#include "hydra_base.h"
+#include "hydra.h"
 #include "bscu.h"
 #include "persist.h"
 

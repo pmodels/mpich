@@ -9,7 +9,7 @@
 
 /** @file bind.h */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 /*! \cond */
 

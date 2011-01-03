@@ -9,7 +9,7 @@
 
 /** @file ckpoint.h */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 /*! \addtogroup ckpoint Checkpointing Library Interface
  * @{

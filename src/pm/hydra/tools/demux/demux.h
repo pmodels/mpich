@@ -7,8 +7,7 @@
 #ifndef DEMUX_H_INCLUDED
 #define DEMUX_H_INCLUDED
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 
 /*! \addtogroup demux Demultiplexing Engine
  * @{

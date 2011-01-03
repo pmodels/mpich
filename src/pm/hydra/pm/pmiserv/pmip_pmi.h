@@ -7,7 +7,7 @@
 #ifndef PMIP_PMI_H_INCLUDED
 #define PMIP_PMI_H_INCLUDED
 
-#include "hydra_base.h"
+#include "hydra.h"
 #include "common.h"
 
 /* PMI-1 specific definitions */

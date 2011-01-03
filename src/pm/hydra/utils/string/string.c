@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 HYD_status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 {

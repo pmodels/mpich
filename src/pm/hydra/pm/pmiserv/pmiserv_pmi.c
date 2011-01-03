@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra.h"
+#include "hydra_server.h"
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
@@ -17,7 +17,7 @@ struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd)
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
 
-    for (pg = &HYD_handle.pg_list; pg; pg = pg->next)
+    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
             if (proxy->control_fd == fd)
                 return proxy;
@@ -69,7 +69,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
 
     HYDU_FUNC_ENTER();
 
-    if (HYD_handle.nameserver == NULL) {
+    if (HYD_server_info.nameserver == NULL) {
         /* no external nameserver available */
         for (r = HYD_pmcd_pmi_publish_list; r; r = r->next)
             if (!strcmp(r->name, name))
@@ -101,7 +101,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
 
         /* connect to the external nameserver and store the
          * information there */
-        ns = HYDU_strdup(HYD_handle.nameserver);
+        ns = HYDU_strdup(HYD_server_info.nameserver);
 
         ns_host = strtok(ns, ":");
         HYDU_ASSERT(ns_host, status);
@@ -163,7 +163,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
     HYDU_FUNC_ENTER();
 
     *success = 0;
-    if (HYD_handle.nameserver == NULL) {
+    if (HYD_server_info.nameserver == NULL) {
         /* no external nameserver available */
         if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
             publish = HYD_pmcd_pmi_publish_list;
@@ -199,7 +199,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
 
         /* connect to the external nameserver and get the information
          * from there */
-        ns = HYDU_strdup(HYD_handle.nameserver);
+        ns = HYDU_strdup(HYD_server_info.nameserver);
 
         ns_host = strtok(ns, ":");
         HYDU_ASSERT(ns_host, status);
@@ -255,7 +255,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
 
     HYDU_FUNC_ENTER();
 
-    if (HYD_handle.nameserver == NULL) {
+    if (HYD_server_info.nameserver == NULL) {
         /* no external nameserver available */
         for (publish = HYD_pmcd_pmi_publish_list; publish; publish = publish->next)
             if (!strcmp(publish->name, name))
@@ -270,7 +270,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
 
         /* connect to the external nameserver and get the information
          * from there */
-        ns = HYDU_strdup(HYD_handle.nameserver);
+        ns = HYDU_strdup(HYD_server_info.nameserver);
 
         ns_host = strtok(ns, ":");
         HYDU_ASSERT(ns_host, status);

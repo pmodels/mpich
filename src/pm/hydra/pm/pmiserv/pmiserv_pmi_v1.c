@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "hydra_server.h"
 #include "hydra.h"
-#include "hydra_utils.h"
 #include "bsci.h"
 #include "pmiserv.h"
 #include "pmiserv_pmi.h"
@@ -28,7 +28,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
     HYDU_ASSERT(!closed, status);
 
-    if (HYD_handle.user_global.debug) {
+    if (HYD_server_info.user_global.debug) {
         HYDU_dump(stdout, "PMI response to fd %d pid %d: %s", fd, pid, cmd);
     }
 
@@ -331,7 +331,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     }
 
     /* Allocate a new process group */
-    for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
+    for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next);
     new_pgid = pg->pgid + 1;
 
     status = HYDU_alloc_pg(&pg->next, new_pgid);
@@ -406,14 +406,16 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                 exec->wdir = HYDU_strdup(info_val);
             }
             else if (!strcmp(info_key, "host")) {
-                HYDU_MALLOC(user_node_list, struct HYD_node *, sizeof(struct HYD_node), status);
+                HYDU_MALLOC(user_node_list, struct HYD_node *, sizeof(struct HYD_node),
+                            status);
                 user_node_list->hostname = HYDU_strdup(info_val);
                 user_node_list->core_count = 1;
                 user_node_list->local_binding = NULL;
                 user_node_list->next = NULL;
             }
             else if (!strcmp(info_key, "hostfile")) {
-                status = HYDU_parse_hostfile(info_val, &user_node_list, HYDU_process_mfile_token);
+                status =
+                    HYDU_parse_hostfile(info_val, &user_node_list, HYDU_process_mfile_token);
                 HYDU_ERR_POP(status, "error parsing hostfile\n");
             }
             else {
@@ -500,7 +502,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     /* Create the proxy list */
     offset = 0;
-    for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next)
+    for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next)
         offset += pg->pg_process_count;
 
     if (user_node_list) {
@@ -508,22 +510,22 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     else {
-        status = HYDU_create_proxy_list(exec_list, HYD_handle.node_list, pg, offset);
+        status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg, offset);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     HYDU_free_exec_list(exec_list);
 
-    status = HYDU_sock_create_and_listen_portstr(HYD_handle.user_global.iface,
-                                                 HYD_handle.local_hostname,
-                                                 HYD_handle.port_range, &control_port,
+    status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
+                                                 HYD_server_info.local_hostname,
+                                                 HYD_server_info.port_range, &control_port,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) new_pgid);
     HYDU_ERR_POP(status, "unable to create PMI port\n");
-    if (HYD_handle.user_global.debug)
+    if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 
     /* Go to the last PG */
-    for (pg = &HYD_handle.pg_list; pg->next; pg = pg->next);
+    for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next);
 
     /* Copy the host list to pass to the launcher */
     node_list = NULL;

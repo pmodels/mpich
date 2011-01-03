@@ -7,8 +7,7 @@
 #ifndef PMIP_H_INCLUDED
 #define PMIP_H_INCLUDED
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "common.h"
 
 struct HYD_pmcd_pmip {

@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bsci.h"
 
 HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_node *node_list, int *control_fd,

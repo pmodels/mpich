@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "ckpoint.h"
 #include "ckpoint_blcr.h"
 #include <libcr.h>

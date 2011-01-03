@@ -4,8 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bscu.h"
 
 HYD_status HYDT_bscu_rmk_finalize(void)

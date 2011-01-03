@@ -7,7 +7,7 @@
 #ifndef LL_H_INCLUDED
 #define LL_H_INCLUDED
 
-#include "hydra_base.h"
+#include "hydra.h"
 
 HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list,
                                      int *control_fd, int enable_stdin);

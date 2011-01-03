@@ -4,77 +4,69 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "hydra_server.h"
 #include "hydra.h"
-#include "hydra_utils.h"
+#include "ui.h"
 #include "uiu.h"
 
 void HYD_uiu_init_params(void)
 {
-    HYDU_init_user_global(&HYD_handle.user_global);
+    HYDU_init_user_global(&HYD_server_info.user_global);
 
-    HYD_handle.ppn = -1;
+    HYD_server_info.base_path = NULL;
 
-    HYD_handle.base_path = NULL;
+    HYD_server_info.port_range = NULL;
+    HYD_server_info.interface_env_name = NULL;
 
-    HYD_handle.port_range = NULL;
-    HYD_handle.interface_env_name = NULL;
+    HYD_server_info.nameserver = NULL;
+    HYD_server_info.local_hostname = NULL;
 
-    HYD_handle.nameserver = NULL;
-    HYD_handle.local_hostname = NULL;
+    HYD_server_info.stdout_cb = NULL;
+    HYD_server_info.stderr_cb = NULL;
 
-    HYD_handle.ckpoint_int = -1;
+    HYD_server_info.node_list = NULL;
+    HYD_server_info.global_core_count = 0;
 
-    HYD_handle.print_rank_map = -1;
-    HYD_handle.print_all_exitcodes = -1;
+    HYDU_init_pg(&HYD_server_info.pg_list, 0);
 
-    HYD_handle.ranks_per_proc = -1;
-
-    HYD_handle.stdout_cb = NULL;
-    HYD_handle.stderr_cb = NULL;
-
-    HYD_handle.node_list = NULL;
-    HYD_handle.global_core_count = 0;
-
-    HYDU_init_pg(&HYD_handle.pg_list, 0);
-
-    HYD_handle.pg_list.pgid = 0;
-    HYD_handle.pg_list.next = NULL;
-
-    HYD_handle.func_depth = 0;
+    HYD_server_info.pg_list.pgid = 0;
+    HYD_server_info.pg_list.next = NULL;
 
 #if defined ENABLE_PROFILING
-    HYD_handle.enable_profiling = -1;
-    HYD_handle.num_pmi_calls = 0;
+    HYD_server_info.enable_profiling = -1;
+    HYD_server_info.num_pmi_calls = 0;
 #endif /* ENABLE_PROFILING */
+
+    HYD_ui_info.prepend_rank = -1;
 }
 
 void HYD_uiu_free_params(void)
 {
-    HYDU_finalize_user_global(&HYD_handle.user_global);
+    HYDU_finalize_user_global(&HYD_server_info.user_global);
 
-    if (HYD_handle.base_path)
-        HYDU_FREE(HYD_handle.base_path);
+    if (HYD_server_info.base_path)
+        HYDU_FREE(HYD_server_info.base_path);
 
-    if (HYD_handle.port_range)
-        HYDU_FREE(HYD_handle.port_range);
+    if (HYD_server_info.port_range)
+        HYDU_FREE(HYD_server_info.port_range);
 
-    if (HYD_handle.interface_env_name)
-        HYDU_FREE(HYD_handle.interface_env_name);
+    if (HYD_server_info.interface_env_name)
+        HYDU_FREE(HYD_server_info.interface_env_name);
 
-    if (HYD_handle.nameserver)
-        HYDU_FREE(HYD_handle.nameserver);
+    if (HYD_server_info.nameserver)
+        HYDU_FREE(HYD_server_info.nameserver);
 
-    if (HYD_handle.local_hostname)
-        HYDU_FREE(HYD_handle.local_hostname);
+    if (HYD_server_info.local_hostname)
+        HYDU_FREE(HYD_server_info.local_hostname);
 
-    if (HYD_handle.node_list)
-        HYDU_free_node_list(HYD_handle.node_list);
+    if (HYD_server_info.node_list)
+        HYDU_free_node_list(HYD_server_info.node_list);
 
-    if (HYD_handle.pg_list.proxy_list)
-        HYDU_free_proxy_list(HYD_handle.pg_list.proxy_list);
+    if (HYD_server_info.pg_list.proxy_list)
+        HYDU_free_proxy_list(HYD_server_info.pg_list.proxy_list);
 
-    if (HYD_handle.pg_list.next)
-        HYDU_free_pg_list(HYD_handle.pg_list.next);
+    if (HYD_server_info.pg_list.next)
+        HYDU_free_pg_list(HYD_server_info.pg_list.next);
 
     /* Re-initialize everything to default values */
     HYD_uiu_init_params();
@@ -95,30 +87,30 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "\n");
     HYDU_dump_noprefix(stdout, "mpiexec options:\n");
     HYDU_dump_noprefix(stdout, "----------------\n");
-    HYDU_dump_noprefix(stdout, "  Base path: %s\n", HYD_handle.base_path);
-    HYDU_dump_noprefix(stdout, "  Launcher: %s\n", HYD_handle.user_global.launcher);
-    HYDU_dump_noprefix(stdout, "  Debug level: %d\n", HYD_handle.user_global.debug);
-    HYDU_dump_noprefix(stdout, "  Enable X: %d\n", HYD_handle.user_global.enablex);
+    HYDU_dump_noprefix(stdout, "  Base path: %s\n", HYD_server_info.base_path);
+    HYDU_dump_noprefix(stdout, "  Launcher: %s\n", HYD_server_info.user_global.launcher);
+    HYDU_dump_noprefix(stdout, "  Debug level: %d\n", HYD_server_info.user_global.debug);
+    HYDU_dump_noprefix(stdout, "  Enable X: %d\n", HYD_server_info.user_global.enablex);
 
     HYDU_dump_noprefix(stdout, "\n");
     HYDU_dump_noprefix(stdout, "  Global environment:\n");
     HYDU_dump_noprefix(stdout, "  -------------------\n");
-    for (env = HYD_handle.user_global.global_env.inherited; env; env = env->next)
+    for (env = HYD_server_info.user_global.global_env.inherited; env; env = env->next)
         HYDU_dump_noprefix(stdout, "    %s=%s\n", env->env_name, env->env_value);
 
-    if (HYD_handle.user_global.global_env.system) {
+    if (HYD_server_info.user_global.global_env.system) {
         HYDU_dump_noprefix(stdout, "\n");
         HYDU_dump_noprefix(stdout, "  Hydra internal environment:\n");
         HYDU_dump_noprefix(stdout, "  ---------------------------\n");
-        for (env = HYD_handle.user_global.global_env.system; env; env = env->next)
+        for (env = HYD_server_info.user_global.global_env.system; env; env = env->next)
             HYDU_dump_noprefix(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
-    if (HYD_handle.user_global.global_env.user) {
+    if (HYD_server_info.user_global.global_env.user) {
         HYDU_dump_noprefix(stdout, "\n");
         HYDU_dump_noprefix(stdout, "  User set environment:\n");
         HYDU_dump_noprefix(stdout, "  ---------------------\n");
-        for (env = HYD_handle.user_global.global_env.user; env; env = env->next)
+        for (env = HYD_server_info.user_global.global_env.user; env; env = env->next)
             HYDU_dump_noprefix(stdout, "    %s=%s\n", env->env_name, env->env_value);
     }
 
@@ -127,7 +119,7 @@ void HYD_uiu_print_params(void)
     HYDU_dump_noprefix(stdout, "    Proxy information:\n");
     HYDU_dump_noprefix(stdout, "    *********************\n");
     i = 1;
-    for (proxy = HYD_handle.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
         HYDU_dump_noprefix(stdout, "      Proxy ID: %2d\n", i++);
         HYDU_dump_noprefix(stdout, "      -----------------\n");
         HYDU_dump_noprefix(stdout, "        Proxy name: %s\n", proxy->node.hostname);
@@ -159,7 +151,7 @@ HYD_status HYD_uiu_stdout_cb(int pgid, int proxy_id, int rank, void *_buf, int b
 
     HYDU_FUNC_ENTER();
 
-    if (HYD_handle.user_global.prepend_rank == 0) {
+    if (HYD_ui_info.prepend_rank == 0) {
         status = HYDU_sock_write(STDOUT_FILENO, buf, buflen, &sent, &closed);
         HYDU_ERR_POP(status, "unable to write data to stdout\n");
         HYDU_ASSERT(!closed, status);
@@ -194,7 +186,7 @@ HYD_status HYD_uiu_stderr_cb(int pgid, int proxy_id, int rank, void *_buf, int b
 
     HYDU_FUNC_ENTER();
 
-    if (HYD_handle.user_global.prepend_rank == 0) {
+    if (HYD_ui_info.prepend_rank == 0) {
         status = HYDU_sock_write(STDERR_FILENO, buf, buflen, &sent, &closed);
         HYDU_ERR_POP(status, "unable to write data to stderr\n");
         HYDU_ASSERT(!closed, status);

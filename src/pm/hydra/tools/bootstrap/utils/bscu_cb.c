@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bscu.h"
 
 HYD_status HYDT_bscu_stdio_cb(int fd, HYD_event_t events, void *userp)

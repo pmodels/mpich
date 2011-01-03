@@ -7,7 +7,7 @@
 #ifndef UIU_H_INCLUDED
 #define UIU_H_INCLUDED
 
-#include "hydra.h"
+#include "hydra_server.h"
 
 void HYD_uiu_init_params(void);
 void HYD_uiu_free_params(void);

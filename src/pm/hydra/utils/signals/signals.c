@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 HYD_status HYDU_set_signal(int signum, void (*handler) (int))
 {

@@ -170,7 +170,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
 
     i = 0;
-    /* FIXME: add support for ranks_per_proc */
+    /* FIXME: allow for multiple ranks per PMI ID */
     tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
     tmp[i++] = HYDU_int_to_str(id);
 
