@@ -9,6 +9,12 @@
 #include "ui.h"
 #include "uiu.h"
 
+static struct stdoe_fd {
+    int fd;
+    char *regex;
+    struct stdoe_fd *next;
+} *stdoe_fd_list = NULL;
+
 void HYD_uiu_init_params(void)
 {
     HYDU_init_user_global(&HYD_server_info.user_global);
@@ -38,10 +44,16 @@ void HYD_uiu_init_params(void)
 #endif /* ENABLE_PROFILING */
 
     HYD_ui_info.prepend_regex = NULL;
+    HYD_ui_info.outfile_regex = NULL;
+    HYD_ui_info.errfile_regex = NULL;
+
+    stdoe_fd_list = NULL;
 }
 
 void HYD_uiu_free_params(void)
 {
+    struct stdoe_fd *tmp, *run;
+
     HYDU_finalize_user_global(&HYD_server_info.user_global);
 
     if (HYD_server_info.base_path)
@@ -70,6 +82,19 @@ void HYD_uiu_free_params(void)
 
     if (HYD_ui_info.prepend_regex)
         HYDU_FREE(HYD_ui_info.prepend_regex);
+
+    if (HYD_ui_info.outfile_regex)
+        HYDU_FREE(HYD_ui_info.outfile_regex);
+
+    if (HYD_ui_info.errfile_regex)
+        HYDU_FREE(HYD_ui_info.errfile_regex);
+
+    for (run = stdoe_fd_list; run;) {
+        close(run->fd);
+        tmp = run->next;
+        HYDU_FREE(run);
+        run = tmp;
+    }
 
     /* Re-initialize everything to default values */
     HYD_uiu_init_params();
@@ -146,12 +171,11 @@ void HYD_uiu_print_params(void)
     return;
 }
 
-static HYD_status stdoe_cb(int fd, int pgid, int proxy_id, int rank, void *_buf, int buflen)
+static HYD_status resolve_regex_string(const char *regex, char **str, int pgid, int proxy_id,
+                                       int rank)
 {
-    int sent, closed, mark, i, offset;
-    char *buf = (char *) _buf;
-    char *prepend, *tprepend;
-    char *s_rank, *s_pgid, *s_proxy_id, *s_host, *s;
+    int offset, i;
+    char *tstr, *s_rank, *s_pgid, *s_proxy_id, *s_host, *s;
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     char *tmp[HYD_NUM_TMP_STRINGS];
@@ -159,88 +183,139 @@ static HYD_status stdoe_cb(int fd, int pgid, int proxy_id, int rank, void *_buf,
 
     HYDU_FUNC_ENTER();
 
+    tstr = *str = HYDU_strdup(regex);
+
+    offset = 0;
+    i = 0;
+    do {
+        s_rank = strstr(*str, "%r");
+        s_pgid = strstr(*str, "%g");
+        s_proxy_id = strstr(*str, "%p");
+        s_host = strstr(*str, "%h");
+
+        s = s_rank;
+        if (s == NULL || (s_pgid && s_pgid < s))
+            s = s_pgid;
+        if (s == NULL || (s_proxy_id && s_proxy_id < s))
+            s = s_proxy_id;
+        if (s == NULL || (s_host && s_host < s))
+            s = s_host;
+
+        if (s)
+            *s = 0;
+
+        tmp[i++] = HYDU_strdup(*str);
+
+        if (s) {
+            if (s[1] == 'r') {
+                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", rank);
+            }
+            else if (s[1] == 'g') {
+                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", pgid);
+            }
+            else if (s[1] == 'p') {
+                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", proxy_id);
+            }
+            else if (s[1] == 'h') {
+                for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
+                    if (pg->pgid == pgid)
+                        break;
+                HYDU_ASSERT(pg, status);
+
+                for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+                    if (proxy->proxy_id == proxy_id)
+                        break;
+                HYDU_ASSERT(proxy, status);
+
+                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node.hostname);
+            }
+            else {
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized regex\n");
+            }
+            i++;
+
+            *str = s + 2;
+        }
+        else
+            *str = NULL;
+    } while (*str);
+
+    tmp[i++] = NULL;
+    status = HYDU_str_alloc_and_join(tmp, str);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf, int buflen)
+{
+    int fd = _fd;
+    char *regex_resolve, *regex = NULL;
+    struct stdoe_fd *tmp, *run;
+    int sent, closed, mark, i;
+    char *buf = (char *) _buf, *prepend;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    regex = (_fd == STDOUT_FILENO) ? HYD_ui_info.outfile_regex :
+        (_fd == STDERR_FILENO) ? HYD_ui_info.errfile_regex : NULL;
+
+    if (regex) {
+        /* See if the regex already exists */
+        status = resolve_regex_string(regex, &regex_resolve, pgid, proxy_id, rank);
+
+        for (run = stdoe_fd_list; run; run = run->next)
+            if (!strcmp(run->regex, regex_resolve))
+                break;
+
+        if (run) {
+            fd = run->fd;
+            HYDU_FREE(regex_resolve);
+        }
+        else {
+            HYDU_MALLOC(tmp, struct stdoe_fd *, sizeof(struct stdoe_fd), status);
+            tmp->regex = regex_resolve;
+            tmp->fd = open(tmp->regex, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+            HYDU_ASSERT(tmp->fd >= 0, status);
+            tmp->next = NULL;
+
+            if (stdoe_fd_list == NULL)
+                stdoe_fd_list = tmp;
+            else {
+                for (run = stdoe_fd_list; run->next; run = run->next);
+                run->next = tmp;
+            }
+
+            fd = tmp->fd;
+        }
+    }
+
     if (HYD_ui_info.prepend_regex == NULL) {
         status = HYDU_sock_write(fd, buf, buflen, &sent, &closed);
         HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
         HYDU_ASSERT(!closed, status);
     }
     else {
-        tprepend = prepend = HYDU_strdup(HYD_ui_info.prepend_regex);
-
-        offset = 0;
-        i = 0;
-        do {
-            s_rank = strstr(prepend, "%r");
-            s_pgid = strstr(prepend, "%g");
-            s_proxy_id = strstr(prepend, "%p");
-            s_host = strstr(prepend, "%h");
-
-            s = s_rank;
-            if (s == NULL || (s_pgid && s_pgid < s))
-                s = s_pgid;
-            if (s == NULL || (s_proxy_id && s_proxy_id < s))
-                s = s_proxy_id;
-            if (s == NULL || (s_host && s_host < s))
-                s = s_host;
-
-            if (s)
-                *s = 0;
-
-            tmp[i++] = HYDU_strdup(prepend);
-
-            if (s) {
-                if (s[1] == 'r') {
-                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", rank);
-                }
-                else if (s[1] == 'g') {
-                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", pgid);
-                }
-                else if (s[1] == 'p') {
-                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", proxy_id);
-                }
-                else if (s[1] == 'h') {
-                    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
-                        if (pg->pgid == pgid)
-                            break;
-                    HYDU_ASSERT(pg, status);
-
-                    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-                        if (proxy->proxy_id == proxy_id)
-                            break;
-                    HYDU_ASSERT(proxy, status);
-
-                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node.hostname);
-                }
-                else {
-                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                        "unrecognized prepend regex\n");
-                }
-                i++;
-
-                prepend = s + 2;
-            }
-            else
-                prepend = NULL;
-        } while (prepend);
-
-        tmp[i++] = NULL;
-        status = HYDU_str_alloc_and_join(tmp, &prepend);
-        HYDU_ERR_POP(status, "unable to join strings\n");
-        HYDU_free_strlist(tmp);
+        status = resolve_regex_string(HYD_ui_info.prepend_regex, &prepend, pgid, proxy_id,
+                                      rank);
+        HYDU_ERR_POP(status, "error resolving regex\n");
 
         mark = 0;
         for (i = 0; i < buflen; i++) {
             if (buf[i] == '\n' || i == buflen - 1) {
-                if (fd == STDOUT_FILENO) {
-                    HYDU_dump_noprefix(stdout, "%s ", prepend);
-                }
-                else if (fd == STDERR_FILENO) {
-                    HYDU_dump_noprefix(stderr, "%s ", prepend);
-                }
+                status = HYDU_sock_write(fd, (const void *) prepend, strlen(prepend), &sent,
+                                         &closed);
                 status = HYDU_sock_write(fd, (const void *) &buf[mark], i - mark + 1,
                                          &sent, &closed);
                 HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
@@ -249,7 +324,7 @@ static HYD_status stdoe_cb(int fd, int pgid, int proxy_id, int rank, void *_buf,
             }
         }
 
-        HYDU_FREE(tprepend);
+        HYDU_FREE(prepend);
     }
 
   fn_exit:

@@ -9,6 +9,8 @@
 
 struct HYD_ui_info {
     char *prepend_regex;
+    char *outfile_regex;
+    char *errfile_regex;
 };
 
 extern struct HYD_ui_info HYD_ui_info;
