@@ -37,7 +37,7 @@ void HYD_uiu_init_params(void)
     HYD_server_info.num_pmi_calls = 0;
 #endif /* ENABLE_PROFILING */
 
-    HYD_ui_info.prepend_rank = -1;
+    HYD_ui_info.prepend_regex = NULL;
 }
 
 void HYD_uiu_free_params(void)
@@ -67,6 +67,9 @@ void HYD_uiu_free_params(void)
 
     if (HYD_server_info.pg_list.next)
         HYDU_free_pg_list(HYD_server_info.pg_list.next);
+
+    if (HYD_ui_info.prepend_regex)
+        HYDU_FREE(HYD_ui_info.prepend_regex);
 
     /* Re-initialize everything to default values */
     HYD_uiu_init_params();
@@ -143,31 +146,110 @@ void HYD_uiu_print_params(void)
     return;
 }
 
-HYD_status HYD_uiu_stdout_cb(int pgid, int proxy_id, int rank, void *_buf, int buflen)
+static HYD_status stdoe_cb(int fd, int pgid, int proxy_id, int rank, void *_buf, int buflen)
 {
-    int sent, closed, mark, i;
+    int sent, closed, mark, i, offset;
     char *buf = (char *) _buf;
+    char *prepend, *tprepend;
+    char *s_rank, *s_pgid, *s_proxy_id, *s_host, *s;
+    struct HYD_pg *pg;
+    struct HYD_proxy *proxy;
+    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (HYD_ui_info.prepend_rank == 0) {
-        status = HYDU_sock_write(STDOUT_FILENO, buf, buflen, &sent, &closed);
-        HYDU_ERR_POP(status, "unable to write data to stdout\n");
+    if (HYD_ui_info.prepend_regex == NULL) {
+        status = HYDU_sock_write(fd, buf, buflen, &sent, &closed);
+        HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
         HYDU_ASSERT(!closed, status);
     }
     else {
+        tprepend = prepend = HYDU_strdup(HYD_ui_info.prepend_regex);
+
+        offset = 0;
+        i = 0;
+        do {
+            s_rank = strstr(prepend, "%r");
+            s_pgid = strstr(prepend, "%g");
+            s_proxy_id = strstr(prepend, "%p");
+            s_host = strstr(prepend, "%h");
+
+            s = s_rank;
+            if (s == NULL || (s_pgid && s_pgid < s))
+                s = s_pgid;
+            if (s == NULL || (s_proxy_id && s_proxy_id < s))
+                s = s_proxy_id;
+            if (s == NULL || (s_host && s_host < s))
+                s = s_host;
+
+            if (s)
+                *s = 0;
+
+            tmp[i++] = HYDU_strdup(prepend);
+
+            if (s) {
+                if (s[1] == 'r') {
+                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", rank);
+                }
+                else if (s[1] == 'g') {
+                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", pgid);
+                }
+                else if (s[1] == 'p') {
+                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", proxy_id);
+                }
+                else if (s[1] == 'h') {
+                    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
+                        if (pg->pgid == pgid)
+                            break;
+                    HYDU_ASSERT(pg, status);
+
+                    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+                        if (proxy->proxy_id == proxy_id)
+                            break;
+                    HYDU_ASSERT(proxy, status);
+
+                    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node.hostname);
+                }
+                else {
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "unrecognized prepend regex\n");
+                }
+                i++;
+
+                prepend = s + 2;
+            }
+            else
+                prepend = NULL;
+        } while (prepend);
+
+        tmp[i++] = NULL;
+        status = HYDU_str_alloc_and_join(tmp, &prepend);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(tmp);
+
         mark = 0;
         for (i = 0; i < buflen; i++) {
             if (buf[i] == '\n' || i == buflen - 1) {
-                HYDU_dump_noprefix(stdout, "[%d] ", rank);
-                status = HYDU_sock_write(STDOUT_FILENO, (const void *) &buf[mark],
-                                         i - mark + 1, &sent, &closed);
-                HYDU_ERR_POP(status, "unable to write data to stdout\n");
+                if (fd == STDOUT_FILENO) {
+                    HYDU_dump_noprefix(stdout, "%s ", prepend);
+                }
+                else if (fd == STDERR_FILENO) {
+                    HYDU_dump_noprefix(stderr, "%s ", prepend);
+                }
+                status = HYDU_sock_write(fd, (const void *) &buf[mark], i - mark + 1,
+                                         &sent, &closed);
+                HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
                 HYDU_ASSERT(!closed, status);
                 mark = i + 1;
             }
         }
+
+        HYDU_FREE(tprepend);
     }
 
   fn_exit:
@@ -178,37 +260,12 @@ HYD_status HYD_uiu_stdout_cb(int pgid, int proxy_id, int rank, void *_buf, int b
     goto fn_exit;
 }
 
-HYD_status HYD_uiu_stderr_cb(int pgid, int proxy_id, int rank, void *_buf, int buflen)
+HYD_status HYD_uiu_stdout_cb(int pgid, int proxy_id, int rank, void *buf, int buflen)
 {
-    int sent, closed, mark, i;
-    char *buf = (char *) _buf;
-    HYD_status status = HYD_SUCCESS;
+    return stdoe_cb(STDOUT_FILENO, pgid, proxy_id, rank, buf, buflen);
+}
 
-    HYDU_FUNC_ENTER();
-
-    if (HYD_ui_info.prepend_rank == 0) {
-        status = HYDU_sock_write(STDERR_FILENO, buf, buflen, &sent, &closed);
-        HYDU_ERR_POP(status, "unable to write data to stderr\n");
-        HYDU_ASSERT(!closed, status);
-    }
-    else {
-        mark = 0;
-        for (i = 0; i < buflen; i++) {
-            if (buf[i] == '\n' || i == buflen - 1) {
-                HYDU_dump_noprefix(stderr, "[%d] ", rank);
-                status = HYDU_sock_write(STDERR_FILENO, (const void *) &buf[mark],
-                                         i - mark + 1, &sent, &closed);
-                HYDU_ERR_POP(status, "unable to write data to stderr\n");
-                HYDU_ASSERT(!closed, status);
-                mark = i + 1;
-            }
-        }
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+HYD_status HYD_uiu_stderr_cb(int pgid, int proxy_id, int rank, void *buf, int buflen)
+{
+    return stdoe_cb(STDERR_FILENO, pgid, proxy_id, rank, buf, buflen);
 }

@@ -280,7 +280,24 @@ static void prepend_rank_help_fn(void)
 
 static HYD_status prepend_rank_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYD_ui_info.prepend_rank, 1);
+    return HYDU_set_str(arg, argv, &HYD_ui_info.prepend_regex, "[%r]");
+}
+
+static void prepend_regex_help_fn(void)
+{
+    printf("\n");
+    printf("-prepend-regex: Prepend this regular expression to stdout and stderr\n");
+    printf("   Regular expressions can include:\n");
+    printf("       %%r: Process rank\n");
+    printf("       %%g: Process group ID\n");
+    printf("       %%p: Proxy ID\n");
+    printf("       %%h: Hostname\n");
+    printf("\n");
+}
+
+static HYD_status prepend_regex_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.prepend_regex);
 }
 
 static void wdir_help_fn(void)
@@ -915,6 +932,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"profile", profile_fn, profile_help_fn},
     {"prepend-rank", prepend_rank_fn, prepend_rank_help_fn},
     {"l", prepend_rank_fn, prepend_rank_help_fn},
+    {"prepend-regex", prepend_regex_fn, prepend_regex_help_fn},
     {"wdir", wdir_fn, wdir_help_fn},
     {"configfile", config_fn, config_help_fn},
 
@@ -999,9 +1017,6 @@ static HYD_status set_default_values(void)
 
     if (HYD_ui_mpich_info.ranks_per_proc == -1)
         HYD_ui_mpich_info.ranks_per_proc = 1;
-
-    if (HYD_ui_info.prepend_rank == -1)
-        HYD_ui_info.prepend_rank = 0;
 
     if (HYD_server_info.enable_profiling == -1)
         HYD_server_info.enable_profiling = 0;

@@ -8,7 +8,7 @@
 #define UI_H_INCLUDED
 
 struct HYD_ui_info {
-    int prepend_rank;
+    char *prepend_regex;
 };
 
 extern struct HYD_ui_info HYD_ui_info;

@@ -109,6 +109,7 @@ static void usage(void)
     printf("    -ppn                             processes per node\n");
     printf("    -profile                         turn on internal profiling\n");
     printf("    -prepend-rank                    prepend rank to output\n");
+    printf("    -prepend-regex                  prepend regex to output\n");
     printf
         ("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
