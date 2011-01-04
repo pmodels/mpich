@@ -93,7 +93,7 @@ static int MPIR_Bsend_finalize( void * );
 int MPIR_Bsend_attach( void *buffer, int buffer_size )
 {
     MPIR_Bsend_data_t *p;
-    long        offset;
+    size_t offset, align_sz;
 
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -128,11 +128,14 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
     BsendBuffer.origbuffer_size	= buffer_size;
     BsendBuffer.buffer		= buffer;
     BsendBuffer.buffer_size	= buffer_size;
-    offset = ((long)buffer) % sizeof(void *);
+
+    /* Make sure that the buffer that we use is aligned to align_sz.  Some other
+       code assumes pointer-alignment, and some code assumes double alignment
+       (see #1149). */
+    align_sz = MPIR_MAX(sizeof(void *), sizeof(double));
+    offset = ((size_t)buffer) % sizeof(void *);
     if (offset) {
-	/* Make sure that the buffer that we use is aligned for pointers,
-	   because the code assumes that */
-	offset = sizeof(void *) - offset;
+        offset = align_sz - offset;
 	buffer = (char *)buffer + offset;
 	BsendBuffer.buffer      = buffer;
 	BsendBuffer.buffer_size -= offset;
@@ -145,7 +148,7 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
     p		  = (MPIR_Bsend_data_t *)buffer;
     p->size	  = buffer_size - BSENDDATA_HEADER_TRUE_SIZE;
     p->total_size = buffer_size;
-    p->next	  = p->prev = 0;
+    p->next	  = p->prev = NULL;
     p->msg.msgbuf = (char *)p + BSENDDATA_HEADER_TRUE_SIZE;
 
     return MPI_SUCCESS;
