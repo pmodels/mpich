@@ -7,8 +7,8 @@
 #include "mpidimpl.h"
 
 /* Count the number of outstanding close requests */
-static int MPIDI_Outstanding_close_ops = 0;
-volatile int MPIDI_Failed_vc_count = 0;
+static volatile int MPIDI_Outstanding_close_ops = 0;
+int MPIDI_Failed_vc_count = 0;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_connection
