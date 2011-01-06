@@ -7,8 +7,8 @@
 #include "mpidimpl.h"
 
 /* Count the number of outstanding close requests */
-static volatile int MPIDI_Outstanding_close_ops = 0;
-
+static int MPIDI_Outstanding_close_ops = 0;
+volatile int MPIDI_Failed_vc_count = 0;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_connection
@@ -75,6 +75,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
  		    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL, "Connection closed prematurely.");
 
                     MPIDI_CH3U_Complete_posted_with_error(vc);
+                    ++MPIDI_Failed_vc_count;
                     
                     MPIDU_Ftb_publish_vc(MPIDU_FTB_EV_UNREACHABLE, vc);
                     MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
@@ -102,7 +103,8 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
                                    "Outstanding close operations = %d", MPIDI_Outstanding_close_ops);
 
                     MPIDI_CH3U_Complete_posted_with_error(vc);
-                    
+                    ++MPIDI_Failed_vc_count;
+
                     MPIDU_Ftb_publish_vc(MPIDU_FTB_EV_UNREACHABLE, vc);
                     MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
                     

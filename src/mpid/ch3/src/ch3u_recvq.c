@@ -344,9 +344,11 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     /* A matching request was not found in the unexpected queue, so we 
        need to allocate a new request and add it to the posted queue */
     {
-	int mpi_errno=0;
-	MPIDI_Request_create_rreq( rreq, mpi_errno, 
-				   found = FALSE;goto lock_exit );
+	int mpi_errno = MPI_SUCCESS;
+
+        found = FALSE;
+
+	MPIDI_Request_create_rreq( rreq, mpi_errno, goto lock_exit );
 	rreq->dev.match.parts.tag	   = tag;
 	rreq->dev.match.parts.rank	   = source;
 	rreq->dev.match.parts.context_id   = context_id;
@@ -368,7 +370,26 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
         rreq->dev.user_buf         = user_buf;
         rreq->dev.user_count       = user_count;
         rreq->dev.datatype         = datatype;
-	rreq->dev.next		   = NULL;
+
+        /* check whether VC has failed, or this is an ANY_SOURCE in a
+           failed communicator */
+        if (source != MPI_ANY_SOURCE) {
+            MPIDI_VC_t *vc;
+            MPIDI_Comm_get_vc(comm, source, &vc);
+            if (vc->state == MPIDI_VC_STATE_MORIBUND) {
+                MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                rreq->status.MPI_ERROR = mpi_errno;
+                MPIDI_CH3U_Request_complete(rreq);
+                goto lock_exit;
+            }
+        } else if (MPID_VCRT_Contains_failed_vc(comm->vcrt)) {
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+            rreq->status.MPI_ERROR = mpi_errno;
+            MPIDI_CH3U_Request_complete(rreq);
+            goto lock_exit;
+        }
+        
+	rreq->dev.next = NULL;
 	if (recvq_posted_tail != NULL) {
 	    recvq_posted_tail->dev.next = rreq;
 	}
@@ -379,8 +400,6 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	MPIDI_POSTED_RECV_ENQUEUE_HOOK(rreq);
     }
     
-    found = FALSE;
-
   lock_exit:
 
     *foundp = found;

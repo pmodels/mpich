@@ -787,6 +787,8 @@ typedef struct MPIDI_VCRT * MPID_VCRT;
 typedef struct MPIDI_VC * MPID_VCR;
 #endif
 
+/* number of VCs that are in MORIBUND state */
+extern int MPIDI_Failed_vc_count;
 
 /* Initialize a new VC */
 int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );

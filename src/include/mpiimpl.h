@@ -3159,6 +3159,11 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect);
 int MPID_VCRT_Get_ptr(MPID_VCRT vcrt, MPID_VCR **vc_pptr);
 
 /*@
+  MPID_VCRT_Contains_failed_vc - returns TRUE iff a VC in this VCRT is in MORUBIND state
+  @*/
+int MPID_VCRT_Contains_failed_vc(MPID_VCRT vcrt);
+
+/*@
   MPID_VCR_Dup - Create a duplicate reference to a virtual connection
   @*/
 int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr);
