@@ -1884,7 +1884,7 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
             MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "after accept, l_sc=%p lstnfd=%d connfd=%d, errno=%d:%s ", l_sc, l_sc->fd, connfd, errno, MPIU_Strerror(save_errno)));
             if (errno == EINTR) 
                 continue;
-            else if (errno == EWOULDBLOCK)
+            else if (errno == EWOULDBLOCK || errno == EAGAIN)
                 break; /*  no connection in the listen queue. get out of here.(N1) */
 
             MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s", MPIU_Strerror(save_errno));
