@@ -24,6 +24,8 @@ categories:
       description : intranode communication parameters
     - name        : developer
       description : useful for developers working on MPICH2 itself
+    - name        : memory
+      description : affects memory allocation and usage, including MPI object handles
     - name        : error_handling
       description : parameters that control error handling behavior (stack traces, aborts, etc)
     - name        : debugger
@@ -272,6 +274,21 @@ parameters:
       description : >-
         If true, enables checkpointing support and returns an error if
         checkpointing library cannot be initialized.
+
+  ##############################################################
+    # memory parameters
+    - category    : memory
+      name        : ABORT_ON_LEAKED_HANDLES
+      type        : boolean
+      default     : false
+      description : >-
+        If true, MPI will call MPI_Abort at MPI_Finalize if any MPI object
+        handles have been leaked.  For example, if MPI_Comm_dup is called
+        without calling a corresponding MPI_Comm_free.  For uninteresting
+        reasons, enabling this option may prevent all known object leaks from
+        being reported.  MPICH2 must have been configure with
+        "--enable-g=handlealloc" or better in order for this functionality to
+        work.
 
 ...
 
