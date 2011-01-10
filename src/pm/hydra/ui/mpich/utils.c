@@ -280,10 +280,10 @@ static void prepend_rank_help_fn(void)
 
 static HYD_status prepend_rank_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str(arg, argv, &HYD_ui_info.prepend_regex, "[%r] ");
+    return HYDU_set_str(arg, argv, &HYD_ui_info.prepend_pattern, "[%r] ");
 }
 
-static void regex_info(void)
+static void pattern_info(void)
 {
     printf("   Regular expressions can include:\n");
     printf("       %%r: Process rank\n");
@@ -292,41 +292,41 @@ static void regex_info(void)
     printf("       %%h: Hostname\n");
 }
 
-static void prepend_regex_help_fn(void)
+static void prepend_pattern_help_fn(void)
 {
     printf("\n");
-    printf("-prepend-regex: Prepend this regular expression to stdout and stderr\n");
-    regex_info();
+    printf("-prepend-pattern: Prepend this regular expression to stdout and stderr\n");
+    pattern_info();
     printf("\n");
 }
 
-static HYD_status prepend_regex_fn(char *arg, char ***argv)
+static HYD_status prepend_pattern_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.prepend_regex);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.prepend_pattern);
 }
 
-static void outfile_regex_help_fn(void)
+static void outfile_pattern_help_fn(void)
 {
     printf("\n");
-    printf("-outfile-regex: Send stdout to this file\n\n");
-    regex_info();
+    printf("-outfile-pattern: Send stdout to this file\n\n");
+    pattern_info();
 }
 
-static HYD_status outfile_regex_fn(char *arg, char ***argv)
+static HYD_status outfile_pattern_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.outfile_regex);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.outfile_pattern);
 }
 
-static void errfile_regex_help_fn(void)
+static void errfile_pattern_help_fn(void)
 {
     printf("\n");
-    printf("-errfile-regex: Send stderr to this file\n\n");
-    regex_info();
+    printf("-errfile-pattern: Send stderr to this file\n\n");
+    pattern_info();
 }
 
-static HYD_status errfile_regex_fn(char *arg, char ***argv)
+static HYD_status errfile_pattern_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.errfile_regex);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.errfile_pattern);
 }
 
 static void wdir_help_fn(void)
@@ -961,9 +961,9 @@ static struct HYD_arg_match_table match_table[] = {
     {"profile", profile_fn, profile_help_fn},
     {"prepend-rank", prepend_rank_fn, prepend_rank_help_fn},
     {"l", prepend_rank_fn, prepend_rank_help_fn},
-    {"prepend-regex", prepend_regex_fn, prepend_regex_help_fn},
-    {"outfile-regex", outfile_regex_fn, outfile_regex_help_fn},
-    {"errfile-regex", errfile_regex_fn, errfile_regex_help_fn},
+    {"prepend-pattern", prepend_pattern_fn, prepend_pattern_help_fn},
+    {"outfile-pattern", outfile_pattern_fn, outfile_pattern_help_fn},
+    {"errfile-pattern", errfile_pattern_fn, errfile_pattern_help_fn},
     {"wdir", wdir_fn, wdir_help_fn},
     {"configfile", config_fn, config_help_fn},
 

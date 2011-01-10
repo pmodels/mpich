@@ -8,9 +8,9 @@
 #define UI_H_INCLUDED
 
 struct HYD_ui_info {
-    char *prepend_regex;
-    char *outfile_regex;
-    char *errfile_regex;
+    char *prepend_pattern;
+    char *outfile_pattern;
+    char *errfile_pattern;
 };
 
 extern struct HYD_ui_info HYD_ui_info;

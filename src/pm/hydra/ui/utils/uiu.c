@@ -11,7 +11,7 @@
 
 static struct stdoe_fd {
     int fd;
-    char *regex;
+    char *pattern;
     struct stdoe_fd *next;
 } *stdoe_fd_list = NULL;
 
@@ -43,9 +43,9 @@ void HYD_uiu_init_params(void)
     HYD_server_info.num_pmi_calls = 0;
 #endif /* ENABLE_PROFILING */
 
-    HYD_ui_info.prepend_regex = NULL;
-    HYD_ui_info.outfile_regex = NULL;
-    HYD_ui_info.errfile_regex = NULL;
+    HYD_ui_info.prepend_pattern = NULL;
+    HYD_ui_info.outfile_pattern = NULL;
+    HYD_ui_info.errfile_pattern = NULL;
 
     stdoe_fd_list = NULL;
 }
@@ -80,14 +80,14 @@ void HYD_uiu_free_params(void)
     if (HYD_server_info.pg_list.next)
         HYDU_free_pg_list(HYD_server_info.pg_list.next);
 
-    if (HYD_ui_info.prepend_regex)
-        HYDU_FREE(HYD_ui_info.prepend_regex);
+    if (HYD_ui_info.prepend_pattern)
+        HYDU_FREE(HYD_ui_info.prepend_pattern);
 
-    if (HYD_ui_info.outfile_regex)
-        HYDU_FREE(HYD_ui_info.outfile_regex);
+    if (HYD_ui_info.outfile_pattern)
+        HYDU_FREE(HYD_ui_info.outfile_pattern);
 
-    if (HYD_ui_info.errfile_regex)
-        HYDU_FREE(HYD_ui_info.errfile_regex);
+    if (HYD_ui_info.errfile_pattern)
+        HYDU_FREE(HYD_ui_info.errfile_pattern);
 
     for (run = stdoe_fd_list; run;) {
         close(run->fd);
@@ -171,7 +171,7 @@ void HYD_uiu_print_params(void)
     return;
 }
 
-static HYD_status resolve_regex_string(const char *regex, char **str, int pgid, int proxy_id,
+static HYD_status resolve_pattern_string(const char *pattern, char **str, int pgid, int proxy_id,
                                        int rank)
 {
     int offset, i;
@@ -183,7 +183,7 @@ static HYD_status resolve_regex_string(const char *regex, char **str, int pgid, 
 
     HYDU_FUNC_ENTER();
 
-    tstr = *str = HYDU_strdup(regex);
+    tstr = *str = HYDU_strdup(pattern);
 
     offset = 0;
     i = 0;
@@ -234,7 +234,7 @@ static HYD_status resolve_regex_string(const char *regex, char **str, int pgid, 
                 MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node.hostname);
             }
             else {
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized regex\n");
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized pattern\n");
             }
             i++;
 
@@ -260,7 +260,7 @@ static HYD_status resolve_regex_string(const char *regex, char **str, int pgid, 
 static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf, int buflen)
 {
     int fd = _fd;
-    char *regex_resolve, *regex = NULL;
+    char *pattern_resolve, *pattern = NULL;
     struct stdoe_fd *tmp, *run;
     int sent, closed, mark, i;
     char *buf = (char *) _buf, *prepend;
@@ -268,25 +268,25 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
 
     HYDU_FUNC_ENTER();
 
-    regex = (_fd == STDOUT_FILENO) ? HYD_ui_info.outfile_regex :
-        (_fd == STDERR_FILENO) ? HYD_ui_info.errfile_regex : NULL;
+    pattern = (_fd == STDOUT_FILENO) ? HYD_ui_info.outfile_pattern :
+        (_fd == STDERR_FILENO) ? HYD_ui_info.errfile_pattern : NULL;
 
-    if (regex) {
-        /* See if the regex already exists */
-        status = resolve_regex_string(regex, &regex_resolve, pgid, proxy_id, rank);
+    if (pattern) {
+        /* See if the pattern already exists */
+        status = resolve_pattern_string(pattern, &pattern_resolve, pgid, proxy_id, rank);
 
         for (run = stdoe_fd_list; run; run = run->next)
-            if (!strcmp(run->regex, regex_resolve))
+            if (!strcmp(run->pattern, pattern_resolve))
                 break;
 
         if (run) {
             fd = run->fd;
-            HYDU_FREE(regex_resolve);
+            HYDU_FREE(pattern_resolve);
         }
         else {
             HYDU_MALLOC(tmp, struct stdoe_fd *, sizeof(struct stdoe_fd), status);
-            tmp->regex = regex_resolve;
-            tmp->fd = open(tmp->regex, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+            tmp->pattern = pattern_resolve;
+            tmp->fd = open(tmp->pattern, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
             HYDU_ASSERT(tmp->fd >= 0, status);
             tmp->next = NULL;
 
@@ -301,15 +301,15 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
         }
     }
 
-    if (HYD_ui_info.prepend_regex == NULL) {
+    if (HYD_ui_info.prepend_pattern == NULL) {
         status = HYDU_sock_write(fd, buf, buflen, &sent, &closed);
         HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
         HYDU_ASSERT(!closed, status);
     }
     else {
-        status = resolve_regex_string(HYD_ui_info.prepend_regex, &prepend, pgid, proxy_id,
+        status = resolve_pattern_string(HYD_ui_info.prepend_pattern, &prepend, pgid, proxy_id,
                                       rank);
-        HYDU_ERR_POP(status, "error resolving regex\n");
+        HYDU_ERR_POP(status, "error resolving pattern\n");
 
         mark = 0;
         for (i = 0; i < buflen; i++) {
