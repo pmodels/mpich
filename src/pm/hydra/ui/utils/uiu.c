@@ -171,85 +171,89 @@ void HYD_uiu_print_params(void)
     return;
 }
 
-static HYD_status resolve_pattern_string(const char *pattern, char **str, int pgid, int proxy_id,
-                                       int rank)
+static HYD_status resolve_pattern_string(const char *pattern, char **str, int pgid, int proxy_id, int rank)
 {
-    int offset, i;
-    char *tstr, *s_rank, *s_pgid, *s_proxy_id, *s_host, *s;
+    HYD_status status = HYD_SUCCESS;
+    int i, pos, tpos;
+    char *tmp[HYD_NUM_TMP_STRINGS] = {NULL};
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
-    char *tmp[HYD_NUM_TMP_STRINGS];
-    HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    tstr = *str = HYDU_strdup(pattern);
-
-    offset = 0;
+    *str = NULL;
+    tpos = 0;
+    pos = 0;
     i = 0;
-    do {
-        s_rank = strstr(*str, "%r");
-        s_pgid = strstr(*str, "%g");
-        s_proxy_id = strstr(*str, "%p");
-        s_host = strstr(*str, "%h");
+    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+    tmp[i][0] = '\0';
 
-        s = s_rank;
-        if (s == NULL || (s_pgid && s_pgid < s))
-            s = s_pgid;
-        if (s == NULL || (s_proxy_id && s_proxy_id < s))
-            s = s_proxy_id;
-        if (s == NULL || (s_host && s_host < s))
-            s = s_host;
-
-        if (s)
-            *s = 0;
-
-        tmp[i++] = HYDU_strdup(*str);
-
-        if (s) {
-            if (s[1] == 'r') {
-                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", rank);
-            }
-            else if (s[1] == 'g') {
-                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", pgid);
-            }
-            else if (s[1] == 'p') {
-                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", proxy_id);
-            }
-            else if (s[1] == 'h') {
-                for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
-                    if (pg->pgid == pgid)
-                        break;
-                HYDU_ASSERT(pg, status);
-
-                for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-                    if (proxy->proxy_id == proxy_id)
-                        break;
-                HYDU_ASSERT(proxy, status);
-
-                HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
-                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node.hostname);
-            }
-            else {
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized pattern\n");
-            }
-            i++;
-
-            *str = s + 2;
+    while (1) {
+        HYDU_ASSERT(tpos < HYD_TMP_STRLEN, status);
+        if (pattern[pos] != '%') {
+            tmp[i][tpos++] = pattern[pos++];
+            if (pattern[pos-1] == '\0')
+                break;
         }
-        else
-            *str = NULL;
-    } while (*str);
+        else {
+            ++pos; /* consume '%' */
 
-    tmp[i++] = NULL;
+            if (pattern[pos] == '%') {
+                tmp[i][tpos++] = pattern[pos++];
+                continue;
+            }
+
+            /* all remaining valid specifiers need a new temp string */
+            tmp[i][tpos] = '\0';
+            ++i;
+            tpos = 0;
+            HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+            tmp[i][0] = '\0';
+
+            switch (pattern[pos]) {
+                case 'r':
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", rank);
+                    break;
+                case 'g':
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", pgid);
+                    break;
+                case 'p':
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%d", proxy_id);
+                    break;
+                case 'h':
+                    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
+                        if (pg->pgid == pgid)
+                            break;
+                    HYDU_ASSERT(pg, status);
+
+                    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+                        if (proxy->proxy_id == proxy_id)
+                            break;
+                    HYDU_ASSERT(proxy, status);
+                    MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node.hostname);
+                    break;
+                case '\0':
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "dangling '%%' at end of pattern\n");
+                default:
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized pattern specifier ('%c')\n", pattern[pos]);
+                    break;
+            }
+
+            ++pos; /* skip past fmt specifier */
+
+            ++i;
+            tpos = 0;
+            HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+            tmp[i][0] = '\0';
+        }
+    }
+
+    tmp[++i] = NULL;
     status = HYDU_str_alloc_and_join(tmp, str);
     HYDU_ERR_POP(status, "unable to join strings\n");
-    HYDU_free_strlist(tmp);
 
   fn_exit:
+    HYDU_free_strlist(tmp);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -274,6 +278,7 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
     if (pattern) {
         /* See if the pattern already exists */
         status = resolve_pattern_string(pattern, &pattern_resolve, pgid, proxy_id, rank);
+        HYDU_ERR_POP(status, "error resolving pattern\n");
 
         for (run = stdoe_fd_list; run; run = run->next)
             if (!strcmp(run->pattern, pattern_resolve))
@@ -314,8 +319,10 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
         mark = 0;
         for (i = 0; i < buflen; i++) {
             if (buf[i] == '\n' || i == buflen - 1) {
-                status = HYDU_sock_write(fd, (const void *) prepend, strlen(prepend), &sent,
-                                         &closed);
+                if (prepend[0] != '\0') { /* sock_write barfs on maxlen==0 */
+                    status = HYDU_sock_write(fd, (const void *) prepend,
+                                             strlen(prepend), &sent, &closed);
+                }
                 status = HYDU_sock_write(fd, (const void *) &buf[mark], i - mark + 1,
                                          &sent, &closed);
                 HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
