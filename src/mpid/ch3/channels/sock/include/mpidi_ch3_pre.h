@@ -58,6 +58,11 @@ MPIDI_CH3I_Progress_state;
 
 #define MPIDI_CH3_PROGRESS_STATE_DECL MPIDI_CH3I_Progress_state ch;
 
+/* This variable is used in the definitions of the MPID_Progress_xxx macros,
+   and must be available to the routines in src/mpi */
+extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
+
+
 /* MPICH_IS_THREADED isn't defined yet (handled by mpiimplthread.h) */
 #if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
 #define MPIDI_CH3I_PROGRESS_WAKEUP                                                                \

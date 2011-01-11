@@ -10,12 +10,8 @@
 /* #define MPIDI_CH3_EAGER_MAX_MSG_SIZE (1500 - sizeof(MPIDI_CH3_Pkt_t)) */
 #define MPIDI_CH3_EAGER_MAX_MSG_SIZE   (128*1024)
 
-#define MPIDI_CH3_Progress_start(progress_state_)                                       \
-do {                                                                                    \
-    MPIU_THREAD_CS_ENTER(COMPLETION,);                                                  \
-    (progress_state_)->ch.completion_count = MPIDI_CH3I_progress_completion_count;      \
-    MPIU_THREAD_CS_EXIT(COMPLETION,);                                                   \
-} while (0)
+#define MPIDI_CH3_Progress_start(progress_state_)                                                       \
+        (progress_state_)->ch.completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
 #define MPIDI_CH3_Progress_end(progress_state_)
 
 enum {

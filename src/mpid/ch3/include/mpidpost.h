@@ -159,10 +159,6 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPID_Comm * comm_ptr,
 @*/
 void MPIDI_CH3U_Request_destroy(MPID_Request * req);
 
-/* This variable is used in the definitions of the MPID_Progress_xxx macros,
-   and must be available to the routines in src/mpi */
-extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
-
 /* Include definitions from the channel which require items defined by this 
    file (mpidimpl.h) or the file it includes
    (mpiimpl.h). */

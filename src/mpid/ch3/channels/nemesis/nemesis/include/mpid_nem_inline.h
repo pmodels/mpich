@@ -866,7 +866,7 @@ static inline int
 MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 {
     int mpi_errno = MPI_SUCCESS;
-    unsigned completions = MPIDI_CH3I_progress_completion_count;
+    unsigned completions = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
 #ifndef ENABLE_NO_YIELD
     int pollcount = 0;
 #endif
@@ -905,8 +905,8 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	    mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-            if (completions != MPIDI_CH3I_progress_completion_count || MPID_nem_local_lmt_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
-                || MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE))
+            if (completions != OPA_load_int(&MPIDI_CH3I_progress_completion_count) || MPID_nem_local_lmt_pending
+                || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] || MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE))
             {
                 *cell = NULL;
                 *in_fbox = 0;
