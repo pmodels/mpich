@@ -1250,6 +1250,10 @@ sub WriteMfile {
     # Unrecognized lines go here
     print FD $other_text;
 
+    # fix for ticket #1122, forces OpenSolaris make to pass variable overrides
+    # to recursive make invocations
+    print FD "${newline}.POSIX:${newline}";
+
     # Add a final target, used by gnumake
     print FD "${newline}FORCE_TARGET:${newline}${newline}";
 
