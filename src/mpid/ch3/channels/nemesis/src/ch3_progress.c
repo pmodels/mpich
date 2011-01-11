@@ -49,7 +49,7 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
 #endif /* MPICH_IS_THREADED */
 /* NEMESIS MULTITHREADING - End block*/
 
-volatile static int sigusr1_count = 0;
+static volatile int sigusr1_count = 0;
 static int my_sigusr1_count = 0;
 
 struct MPID_Request *MPIDI_CH3I_sendq_head[CH3_NUM_QUEUES] = {0};
@@ -440,8 +440,8 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        if (MPIDI_Sigusr1_count > my_sigusr1_count) {
-            my_sigusr1_count = MPIDI_Sigusr1_count;
+        if (sigusr1_count > my_sigusr1_count) {
+            my_sigusr1_count = sigusr1_count;
             mpi_errno = MPIDI_CH3U_Check_for_failed_procs();
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
