@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "pmi.h"
 
 /* Count the number of outstanding close requests */
 static volatile int MPIDI_Outstanding_close_ops = 0;
@@ -65,6 +66,18 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 
 		    break;
 
+                case MPIDI_VC_STATE_INACTIVE:
+                    /* VC was terminated before it was activated.
+                       This can happen if a failed process was
+                       detected before the process used the VC. */
+                    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL, "VC terminated before it was activated.  We probably got a failed"
+                                 "process notification.");
+                    ++MPIDI_Failed_vc_count;
+                    MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
+
+                    break;
+
+                    
                 case MPIDI_VC_STATE_ACTIVE:
                 case MPIDI_VC_STATE_REMOTE_CLOSE:
                     /* This is a premature termination.  This process
@@ -125,7 +138,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		    mpi_errno = MPIR_Err_create_code(
 			MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, 
                         MPI_ERR_INTERN, "**ch3|unhandled_connection_state",
-			"**ch3|unhandled_connection_state %p %d", vc, event);
+			"**ch3|unhandled_connection_state %p %d", vc, vc->state);
                     goto fn_fail;
 		    break;
 		}
@@ -372,4 +385,77 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
     return mpi_errno;
 }
+
+#define parse_rank(r_p) do {                                                                    \
+        while (isspace(*c)) /* skip spaces */                                                   \
+            ++c;                                                                                \
+        MPIU_ERR_CHKINTERNAL(!isdigit(*c), mpi_errno, "error parsing failed process list");     \
+        *(r_p) = strtol(c, &c, 0);                                                              \
+        while (isspace(*c)) /* skip spaces */                                                   \
+            ++c;                                                                                \
+    } while (0)
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Check_for_failed_procs
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Check_for_failed_procs(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    char *val;
+    char *c;
+    int len;
+    char *kvsname;
+    int rank, rank_hi;
+    MPIU_CHKLMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+    mpi_errno = MPIDI_PG_GetConnKVSname(&kvsname);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    pmi_errno = PMI_KVS_Get_value_length_max(&len);
+    MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_CHKLMEM_MALLOC(val, char *, len, mpi_errno, "val");
+    pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", val, len);
+    MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+
+    MPIU_DBG_MSG_S(CH3_DISCONNECT, TYPICAL, "Received proc fail notification: %s", val);
+    
+    if (*val == '\0')
+        /* there are no failed processes */
+        goto fn_exit;
+
+    /* parse list of failed processes.  This is a comma separated list
+       of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
+    c = val;
+    while(1) {
+        parse_rank(&rank);
+        if (*c == '-') {
+            ++c; /* skip '-' */
+            parse_rank(&rank_hi);
+        } else
+            rank_hi = rank;
+        while (rank <= rank_hi) {
+            MPIDI_VC_t *vc;
+            MPIDI_PG_Get_vc(MPIDI_Process.my_pg, rank, &vc);
+            mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            ++rank;
+        }
+        MPIU_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno, "error parsing failed process list");
+        if (*c == '\0')
+            break;
+        ++c; /* skip ',' */
+    }
+
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 

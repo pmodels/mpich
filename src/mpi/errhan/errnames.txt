@@ -883,6 +883,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 **signal:signal() failed
 **signal %s:signal() failed: %s
+**sigusr1:This version of MPICH requires the SIGUSR1 signal, but the application has already installed a handler
 
 #
 # mpi functions

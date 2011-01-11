@@ -11,6 +11,9 @@
 #if defined (MPID_NEM_INLINE) && MPID_NEM_INLINE
 #include "mpid_nem_inline.h"
 #endif
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 
 
 #define PKTARRAY_SIZE (MPIDI_NEM_PKT_END+1)
@@ -46,6 +49,9 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
 #endif /* MPICH_IS_THREADED */
 /* NEMESIS MULTITHREADING - End block*/
 
+volatile static int sigusr1_count = 0;
+static int my_sigusr1_count = 0;
+
 struct MPID_Request *MPIDI_CH3I_sendq_head[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_sendq_tail[CH3_NUM_QUEUES] = {0};
 struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES] = {0};
@@ -65,6 +71,11 @@ typedef struct qn_ent
 } qn_ent_t;
 
 static qn_ent_t *qn_head = NULL;
+
+static void sigusr1_handler(int sig)
+{
+    ++sigusr1_count;
+}
 
 /* MPIDI_CH3I_Shm_send_progress() this function makes progress sending
    queued messages on the shared memory queues.  This function is
@@ -429,6 +440,12 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
+        if (MPIDI_Sigusr1_count > my_sigusr1_count) {
+            my_sigusr1_count = MPIDI_Sigusr1_count;
+            mpi_errno = MPIDI_CH3U_Check_for_failed_procs();
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    
         /* in the case of progress_wait, bail out if anything completed (CC-1) */
         if (is_blocking) {
             int made_progress = FALSE;
@@ -787,6 +804,18 @@ int MPIDI_CH3I_Progress_init(void)
     /* other pkt handlers */
     pktArray[MPIDI_NEM_PKT_NETMOD] = pkt_NETMOD_handler;
    
+#ifdef HAVE_SIGNAL
+    {
+        /* install signal handler for process failure notifications from hydra */
+        void *ret;
+        
+        ret = signal(SIGUSR1, &sigusr1_handler);
+        MPIU_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
+        /* Error if the app set its own SIGUSR1 handler. */
+        MPIU_ERR_CHKANDJUMP(ret != SIG_DFL, mpi_errno, MPI_ERR_OTHER, "**sigusr1");
+    }
+#endif
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
     return mpi_errno;
@@ -826,6 +855,14 @@ int MPIDI_CH3_Connection_terminate (MPIDI_VC_t * vc)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
+
+    MPIU_DBG_MSG_D(CH3_DISCONNECT, TYPICAL, "Terminating VC %d", vc->pg_rank);
+
+    /* if this is already closed, exit */
+    if (vc->state == MPIDI_VC_STATE_MORIBUND ||
+        vc->state == MPIDI_VC_STATE_INACTIVE_CLOSED)
+        goto fn_exit;
+
     if (((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
         mpi_errno = MPID_nem_vc_terminate(vc);
     else

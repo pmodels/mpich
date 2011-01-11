@@ -1586,6 +1586,9 @@ int MPIDI_CH3_Channel_close( void );
 #else
 #define MPIDI_CH3_Channel_close( )   MPI_SUCCESS
 #endif
+/* MPIDI_CH3U_Check_for_failed_procs() reads PMI_dead_processes key
+   and marks VCs to those processes as failed */
+int MPIDI_CH3U_Check_for_failed_procs(void);
 
 /*@
   MPIDI_CH3_Pre_init - Allows the channel to initialize before PMI_init is 
