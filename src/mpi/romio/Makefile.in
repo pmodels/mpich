@@ -6,7 +6,6 @@ AR          = @AR@
 LIBNAME     = @LIBNAME@
 NOF77       = @NOF77@
 NOPROFILE   = @NOPROFILE@
-MPI         = @MPI@
 PREFIX      = @prefix@
 srcdir      = @srcdir@
 BUILD_MPI_INFO = @BUILD_MPI_INFO@
