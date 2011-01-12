@@ -71,6 +71,8 @@ static qn_ent_t *qn_head = NULL;
 static void sigusr1_handler(int sig)
 {
     ++sigusr1_count;
+    /* poke the progress engine in case we're waiting in a blocking recv */
+    MPIDI_CH3_Progress_signal_completion();
 }
 
 /* MPIDI_CH3I_Shm_send_progress() this function makes progress sending
@@ -248,6 +250,12 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         MPIU_Assert(progress_state != NULL);
     }
 
+    if (sigusr1_count > my_sigusr1_count) {
+        my_sigusr1_count = sigusr1_count;
+        mpi_errno = MPIDI_CH3U_Check_for_failed_procs();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    
 #ifdef ENABLE_CHECKPOINTING
     if (MPIR_PARAM_ENABLE_CKPOINT) {
         if (MPIDI_nem_ckpt_start_checkpoint) {
@@ -333,7 +341,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #endif
                 )
             {
-                mpi_errno = MPID_nem_mpich2_blocking_recv(&cell, &in_fbox);
+                mpi_errno = MPID_nem_mpich2_blocking_recv(&cell, &in_fbox, progress_state->ch.completion_count);
             }
             else
             {
@@ -436,12 +444,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        if (sigusr1_count > my_sigusr1_count) {
-            my_sigusr1_count = sigusr1_count;
-            mpi_errno = MPIDI_CH3U_Check_for_failed_procs();
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-    
         /* in the case of progress_wait, bail out if anything completed (CC-1) */
         if (is_blocking) {
             int completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);

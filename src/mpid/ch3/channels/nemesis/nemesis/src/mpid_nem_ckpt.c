@@ -68,9 +68,12 @@ static int ckpt_cb(void *arg)
     int rc, ret;
     const struct cr_restart_info* ri;
 
-    if (MPIDI_Process.my_pg_rank == 0)
+    if (MPIDI_Process.my_pg_rank == 0) {
         MPIDI_nem_ckpt_start_checkpoint = TRUE;
-
+        /* poke the progress engine in case we're waiting in a blocking recv */
+        MPIDI_CH3_Progress_signal_completion();
+    }
+    
     ret = sem_wait(&ckpt_sem);
     CHECK_ERR(ret, "sem_wait");
 
