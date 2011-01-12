@@ -37,6 +37,7 @@ struct HYD_pmcd_hdr {
         CKPOINT,
         PMI_RESPONSE,
         SIGNAL_PROCESSES,
+        STDIN,
 
         /* Proxy to UI commands */
         PID_LIST,

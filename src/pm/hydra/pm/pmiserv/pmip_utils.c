@@ -93,11 +93,6 @@ static HYD_status iface_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.iface);
 }
 
-static HYD_status enable_stdin_fn(char *arg, char ***argv)
-{
-    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.enable_stdin);
-}
-
 static HYD_status auto_cleanup_fn(char *arg, char ***argv)
 {
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.auto_cleanup);
@@ -393,7 +388,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"launcher-exec", launcher_exec_fn, NULL},
     {"demux", demux_fn, NULL},
     {"iface", iface_fn, NULL},
-    {"enable-stdin", enable_stdin_fn, NULL},
     {"auto-cleanup", auto_cleanup_fn, NULL},
 
     /* Executable parameters */

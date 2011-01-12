@@ -391,7 +391,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Add the stdout/stdin/stderr callback handlers */
+    /* Add the stdout/stderr callback handlers */
     HYD_server_info.stdout_cb = HYD_uiu_stdout_cb;
     HYD_server_info.stderr_cb = HYD_uiu_stderr_cb;
 

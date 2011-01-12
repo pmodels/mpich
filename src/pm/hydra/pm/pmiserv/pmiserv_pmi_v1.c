@@ -551,7 +551,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL, 0);
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
     HYDU_free_node_list(node_list);
 

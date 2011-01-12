@@ -10,10 +10,10 @@
 #include "bind.h"
 #include "external.h"
 
-static int fd_stdin, fd_stdout, fd_stderr;
+static int fd_stdout, fd_stderr;
 
 HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
-                                           int *control_fd, int enable_stdin)
+                                           int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
     int *pid, *fd_list, *dummy;
@@ -207,13 +207,10 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
             HYDU_print_strlist(targs + offset);
         }
 
-        /* The stdin pointer will be some value for process_id 0; for
-         * everyone else, it's a dummy value. We don't just pass it
+        /* The stdin pointer is a dummy value. We don't just pass it
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
-        status = HYDU_create_process(targs + offset, env,
-                                     ((i == 0 && enable_stdin) ? &fd_stdin : dummy),
-                                     &fd_stdout, &fd_stderr,
+        status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
         HYDU_ERR_POP(status, "create process returned error\n");
 
@@ -223,17 +220,8 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
             env = NULL;
         }
 
-        /* We don't wait for stdin to close */
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
-
-        /* Register stdio callbacks for the spawned process */
-        if (i == 0 && enable_stdin) {
-            fd = STDIN_FILENO;
-            status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN,
-                                          (void *) (size_t) fd_stdin, HYDT_bscu_stdio_cb);
-            HYDU_ERR_POP(status, "demux returned error registering fd\n");
-        }
 
         status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN,
                                       (void *) (size_t) STDOUT_FILENO, HYDT_bscu_stdio_cb);

@@ -10,7 +10,7 @@
 #include "bind.h"
 #include "slurm.h"
 
-static int fd_stdin, fd_stdout, fd_stderr;
+static int fd_stdout, fd_stderr;
 
 static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_str)
 {
@@ -60,9 +60,9 @@ static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_
 }
 
 HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
-                                        int *control_fd, int enable_stdin)
+                                        int *control_fd)
 {
-    int num_hosts, idx, i, fd;
+    int num_hosts, idx, i;
     int *pid, *fd_list;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
@@ -141,22 +141,12 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     }
 
     HYDT_bind_cpuset_zero(&cpuset);
-    status = HYDU_create_process(targs, NULL,
-                                 enable_stdin ? &fd_stdin : NULL, &fd_stdout,
-                                 &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
+    status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr,
+                                 &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
     HYDU_ERR_POP(status, "create process returned error\n");
 
-    /* We don't wait for stdin to close */
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
-
-    /* Register stdio callbacks for the spawned process */
-    if (enable_stdin) {
-        fd = STDIN_FILENO;
-        status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN,
-                                      (void *) (size_t) fd_stdin, HYDT_bscu_stdio_cb);
-        HYDU_ERR_POP(status, "demux returned error registering fd\n");
-    }
 
     status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN,
                                   (void *) (size_t) STDOUT_FILENO, HYDT_bscu_stdio_cb);

@@ -19,7 +19,6 @@ static HYD_status init_params(void)
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
-    HYD_pmcd_pmip.system_global.enable_stdin = -1;
     HYD_pmcd_pmip.system_global.global_core_count = -1;
     HYD_pmcd_pmip.system_global.global_process_count = -1;
     HYD_pmcd_pmip.system_global.pmi_port = NULL;

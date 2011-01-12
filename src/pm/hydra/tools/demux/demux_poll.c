@@ -107,28 +107,26 @@ HYD_status HYDT_dmxu_poll_stdin_valid(int *out)
 
     HYDU_FUNC_ENTER();
 
-    fd[0].fd = STDIN_FILENO;
-    fd[0].events = POLLIN;
+    status = HYDT_dmxi_stdin_valid(out);
+    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
-    /* Check if poll on stdin returns any errors; on Darwin this is
-     * broken */
-    ret = poll(fd, 1, 0);
-    HYDU_ASSERT((ret >= 0), status);
+    if (*out) {
+        /* The generic test thinks that STDIN is valid. Try poll
+         * specific tests. */
 
-    if (fd[0].revents & ~(POLLIN | POLLHUP))
-        *out = 0;
-    else
-        *out = 1;
+        fd[0].fd = STDIN_FILENO;
+        fd[0].events = POLLIN;
 
-    /* This is an extremely round-about way of solving a simple
-     * problem. isatty(STDIN_FILENO) seems to return 1, even when
-     * mpiexec is run in the background. So, instead of relying on
-     * that, we catch SIGTTIN and ignore it. But that causes the
-     * read() call to return an error (with errno == EINTR) when we
-     * are not attached to the terminal. */
-    ret = read(STDIN_FILENO, NULL, 0);
-    if (ret < 0 && errno == EINTR && HYDT_dmxu_got_sigttin)
-        *out = 0;
+        /* Check if poll on stdin returns any errors; on Darwin this
+         * is broken */
+        ret = poll(fd, 1, 0);
+        HYDU_ASSERT((ret >= 0), status);
+
+        if (fd[0].revents & ~(POLLIN | POLLHUP))
+            *out = 0;
+        else
+            *out = 1;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

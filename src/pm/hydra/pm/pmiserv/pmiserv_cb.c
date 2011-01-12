@@ -139,11 +139,16 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
     proxy = (struct HYD_proxy *) userp;
 
-    status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to read command from proxy\n");
-    HYDU_ASSERT(!closed, status)
+    if (fd == STDIN_FILENO) {
+        hdr.cmd = STDIN;
+    }
+    else {
+        status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to read command from proxy\n");
+        HYDU_ASSERT(!closed, status);
+    }
 
-        if (hdr.cmd == PID_LIST) {      /* Got PIDs */
+    if (hdr.cmd == PID_LIST) {      /* Got PIDs */
         HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
         status = HYDU_sock_read(fd, (void *) proxy->pid,
                                 proxy->proxy_process_count * sizeof(int),
@@ -221,6 +226,31 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "error in the UI defined callback\n");
 
         HYDU_FREE(buf);
+    }
+    else if (hdr.cmd == STDIN) {
+        HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
+        HYDU_ERR_POP(status, "unable to allocate memory\n");
+
+        HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed, 0);
+        HYDU_ERR_POP(status, "error reading from stdin\n");
+
+        hdr.buflen = count;
+
+        HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed);
+        HYDU_ERR_POP(status, "error writing to control socket\n");
+        HYDU_ASSERT(!closed, status);
+
+        if (hdr.buflen) {
+            HYDU_sock_write(proxy->control_fd, buf, hdr.buflen, &count, &closed);
+            HYDU_ERR_POP(status, "error writing to control socket\n");
+            HYDU_ASSERT(!closed, status);
+
+            HYDU_FREE(buf);
+        }
+        else {
+            status = HYDT_dmx_deregister_fd(STDIN_FILENO);
+            HYDU_ERR_POP(status, "unable to deregister STDIN\n");
+        }
     }
     else if (hdr.cmd == PROCESS_TERMINATED) {
         if (HYD_server_info.user_global.auto_cleanup == 0) {
@@ -440,6 +470,40 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
 
     status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, proxy, control_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
+
+    if (pgid == 0 && proxy->proxy_id == 0) {
+        int fd_stdin = STDIN_FILENO;
+        int stdin_valid;
+        struct HYD_pmcd_hdr hdr;
+
+        /* FIXME: The below stdin_valid check is somehow interfering
+         * in the case where the application is run in the background,
+         * but expects some STDIN. The correct behavior is to close
+         * the STDIN socket for the application in that case. However,
+         * mpiexec seems to hang. I'm still investigating this
+         * case. In the meanwhile, I have commented out the stdin
+         * validity check. PLEASE DO NOT DELETE. All other cases
+         * dealing with STDIN seem to be working correctly. */
+#if 0
+        status = HYDT_dmx_stdin_valid(&stdin_valid);
+        HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
+#else
+        stdin_valid = 1;
+#endif
+
+        if (!stdin_valid) {
+            hdr.cmd = STDIN;
+            hdr.buflen = 0;
+
+            HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed);
+            HYDU_ERR_POP(status, "error writing to control socket\n");
+            HYDU_ASSERT(!closed, status);
+        }
+        else {
+            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, proxy, control_cb);
+            HYDU_ERR_POP(status, "unable to register fd\n");
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

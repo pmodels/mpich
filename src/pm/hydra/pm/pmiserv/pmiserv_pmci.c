@@ -101,7 +101,7 @@ HYD_status HYD_pmci_launch_procs(void)
     struct HYD_proxy *proxy;
     struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
-    int enable_stdin, node_count, i, *control_fd;
+    int node_count, i, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -148,9 +148,6 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_dmx_stdin_valid(&enable_stdin);
-    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
-
     HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
@@ -160,7 +157,7 @@ HYD_status HYD_pmci_launch_procs(void)
                        HYD_server_info.user_global.bindlib);
     HYDU_ERR_POP(status, "unable to initializing binding library");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd, enable_stdin);
+    status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)

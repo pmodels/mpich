@@ -101,27 +101,25 @@ HYD_status HYDT_dmxu_select_stdin_valid(int *out)
 
     HYDU_FUNC_ENTER();
 
-    FD_ZERO(&exceptfds);
-    FD_SET(STDIN_FILENO, &exceptfds);
+    status = HYDT_dmxi_stdin_valid(out);
+    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
-    /* Check if select on stdin returns any errors */
-    ret = select(STDIN_FILENO + 1, NULL, NULL, &exceptfds, &zero);
-    HYDU_ASSERT((ret >= 0), status);
+    if (*out) {
+        /* The generic test thinks that STDIN is valid. Try select
+         * specific tests. */
 
-    if (FD_ISSET(STDIN_FILENO, &exceptfds))
-        *out = 0;
-    else
-        *out = 1;
+        FD_ZERO(&exceptfds);
+        FD_SET(STDIN_FILENO, &exceptfds);
 
-    /* This is an extremely round-about way of solving a simple
-     * problem. isatty(STDIN_FILENO) seems to return 1, even when
-     * mpiexec is run in the background. So, instead of relying on
-     * that, we catch SIGTTIN and ignore it. But that causes the
-     * read() call to return an error (with errno == EINTR) when we
-     * are not attached to the terminal. */
-    ret = read(STDIN_FILENO, NULL, 0);
-    if (ret < 0 && errno == EINTR && HYDT_dmxu_got_sigttin)
-        *out = 0;
+        /* Check if select on stdin returns any errors */
+        ret = select(STDIN_FILENO + 1, NULL, NULL, &exceptfds, &zero);
+        HYDU_ASSERT((ret >= 0), status);
+
+        if (FD_ISSET(STDIN_FILENO, &exceptfds))
+            *out = 0;
+        else
+            *out = 1;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
