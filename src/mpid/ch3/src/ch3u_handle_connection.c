@@ -71,7 +71,8 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
                        This can happen if a failed process was
                        detected before the process used the VC. */
                     MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL, "VC terminated before it was activated.  We probably got a failed"
-                                 "process notification.");
+                                 " process notification.");
+                    MPIDI_CH3U_Complete_posted_with_error(vc);
                     ++MPIDI_Failed_vc_count;
                     MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
 

@@ -1941,8 +1941,6 @@ static int error_closed(struct MPIDI_VC *const vc, int req_errno)
 
     mpi_errno = MPID_nem_tcp_error_out_send_queue(vc, req_errno);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
-    /* complete pending send/recv requests with error ??? */
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_ERROR_CLOSED);

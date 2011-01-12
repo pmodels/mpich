@@ -562,6 +562,7 @@ int MPID_nem_tcp_bind (int sockfd)
 int MPID_nem_tcp_vc_terminate (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
+    int req_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_NEM_TCP_VC_TERMINATE);
 
     MPIDI_FUNC_ENTER(MPID_NEM_TCP_VC_TERMINATE);
@@ -569,6 +570,10 @@ int MPID_nem_tcp_vc_terminate (MPIDI_VC_t *vc)
     mpi_errno = MPID_nem_tcp_cleanup(vc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
+    MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+    mpi_errno = MPID_nem_tcp_error_out_send_queue(vc, req_errno);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_NEM_TCP_VC_TERMINATE);
     return mpi_errno;
