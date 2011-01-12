@@ -476,32 +476,19 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
         int stdin_valid;
         struct HYD_pmcd_hdr hdr;
 
-        /* FIXME: The below stdin_valid check is somehow interfering
-         * in the case where the application is run in the background,
-         * but expects some STDIN. The correct behavior is to close
-         * the STDIN socket for the application in that case. However,
-         * mpiexec seems to hang. I'm still investigating this
-         * case. In the meanwhile, I have commented out the stdin
-         * validity check. PLEASE DO NOT DELETE. All other cases
-         * dealing with STDIN seem to be working correctly. */
-#if 0
         status = HYDT_dmx_stdin_valid(&stdin_valid);
         HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
-#else
-        stdin_valid = 1;
-#endif
 
-        if (!stdin_valid) {
+        if (stdin_valid) {
+            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, proxy, control_cb);
+            HYDU_ERR_POP(status, "unable to register fd\n");
+        }
+        else {
             hdr.cmd = STDIN;
             hdr.buflen = 0;
-
             HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed);
             HYDU_ERR_POP(status, "error writing to control socket\n");
             HYDU_ASSERT(!closed, status);
-        }
-        else {
-            status = HYDT_dmx_register_fd(1, &fd_stdin, HYD_POLLIN, proxy, control_cb);
-            HYDU_ERR_POP(status, "unable to register fd\n");
         }
     }
 

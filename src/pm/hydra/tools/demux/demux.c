@@ -235,7 +235,19 @@ HYD_status HYDT_dmxi_stdin_valid(int *out)
     }
 #endif /* SIGTTIN and HAVE_ISATTY */
 
+    /* FIXME: The below read() check for STDIN validity is somehow
+     * interfering in the case where the application is run in the
+     * background, but expects some STDIN. The correct behavior is to
+     * close the STDIN socket for the application in that
+     * case. However, this seems to hang. I'm still investigating this
+     * case. In the meanwhile, I have commented out this check. PLEASE
+     * DO NOT DELETE. All other cases dealing with STDIN seem to be
+     * working correctly. */
+#if 0
     ret = read(STDIN_FILENO, NULL, 0);
+#else
+    ret = 0;
+#endif
     if (ret < 0 && errno == EINTR && got_sigttin)
         *out = 0;
     else
