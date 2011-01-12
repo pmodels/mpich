@@ -964,6 +964,8 @@ static struct HYD_arg_match_table match_table[] = {
     {"prepend-pattern", prepend_pattern_fn, prepend_pattern_help_fn},
     {"outfile-pattern", outfile_pattern_fn, outfile_pattern_help_fn},
     {"errfile-pattern", errfile_pattern_fn, errfile_pattern_help_fn},
+    {"outfile", outfile_pattern_fn, outfile_pattern_help_fn},
+    {"errfile", errfile_pattern_fn, errfile_pattern_help_fn},
     {"wdir", wdir_fn, wdir_help_fn},
     {"configfile", config_fn, config_help_fn},
 
