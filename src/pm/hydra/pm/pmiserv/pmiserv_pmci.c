@@ -33,25 +33,6 @@ static HYD_status cleanup_all_pgs(void)
     goto fn_exit;
 }
 
-static HYD_status cleanup_procs(void)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
-
-    status = cleanup_all_pgs();
-    HYDU_ERR_POP(status, "cleanup of processes failed\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status send_cmd_to_proxies(struct HYD_pmcd_hdr hdr)
 {
     struct HYD_pg *pg = &HYD_server_info.pg_list;
@@ -93,8 +74,10 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ASSERT(!closed, status);
 
     if (cmd.type == HYD_CLEANUP) {
-        status = cleanup_procs();
-        HYDU_ERR_POP(status, "error cleaning up processes\n");
+        HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
+        status = cleanup_all_pgs();
+        HYDU_ERR_POP(status, "cleanup of processes failed\n");
+        exit(1);
     }
     else if (cmd.type == HYD_CKPOINT) {
         HYD_pmcd_init_header(&hdr);
