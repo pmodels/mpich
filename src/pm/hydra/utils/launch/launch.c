@@ -11,7 +11,8 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid,
                                struct HYDT_bind_cpuset_t cpuset)
 {
-    int inpipe[2], outpipe[2], errpipe[2], tpid;
+    int inpipe[2], outpipe[2], errpipe[2], tpid, i, j, k, has_space, num_args, ret;
+    char *path = NULL, **args;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -61,7 +62,47 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
         status = HYDT_bind_process(cpuset);
         HYDU_ERR_POP(status, "bind process failed\n");
 
-        if (execvp(client_arg[0], client_arg) < 0) {
+        status = HYDU_strdup_list(client_arg, &args);
+        HYDU_ERR_POP(status, "unable to dup argument list\n");
+
+        num_args = HYDU_strlist_lastidx(client_arg);
+
+        for (j = 0; j < num_args; j++) {
+            has_space = 0;
+            for (i = 0; args[j][i]; i++) {
+                if (args[j][i] == ' ') {
+                    has_space = 1;
+                    break;
+                }
+            }
+
+            if (has_space) {
+                /* executable string has space */
+                HYDU_FREE(args[j]);
+
+                if (j == 0) {
+                    path = HYDU_strdup(client_arg[j]);
+                    k = 0;
+                    for (i = 0; path[i]; i++)
+                        if (path[i] == '/')
+                            k = i + 1;
+                    path[k] = 0;
+
+                    if (path[0]) {
+                        ret = chdir(path);
+                        HYDU_ASSERT(!ret, status);
+                    }
+
+                    args[j] = HYDU_strdup(&client_arg[j][k]);
+                }
+                else {
+                    HYDU_MALLOC(args[j], char *, strlen(client_arg[j]) + 3, status);
+                    MPL_snprintf(args[j], strlen(client_arg[j]) + 5, "'%s'", client_arg[j]);
+                }
+            }
+        }
+
+        if (execvp(args[0], args) < 0) {
             /* The child process should never get back to the proxy
              * code; if there is an error, just throw it here and
              * exit. */
