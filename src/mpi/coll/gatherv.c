@@ -61,6 +61,7 @@ int MPIR_Gatherv (
 {
     int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Comm comm;
     MPI_Aint       extent;
     int            i, reqs;
@@ -120,7 +121,11 @@ int MPIR_Gatherv (
             for (i = 0; i < reqs; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
-                    MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
             }
         }
@@ -143,12 +148,20 @@ int MPIR_Gatherv (
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 
                                        MPIR_GATHERV_TAG, comm);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
             else {
                 mpi_errno = MPIC_Send(sendbuf, sendcnt, sendtype, root, 
                                       MPIR_GATHERV_TAG, comm);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
         }
     }
@@ -158,6 +171,8 @@ fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     MPIU_CHKLMEM_FREEALL();
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
     return mpi_errno;
 fn_fail:
     goto fn_exit;

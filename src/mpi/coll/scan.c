@@ -75,7 +75,8 @@ static int MPIR_Scan_generic (
 {
     MPI_Status status;
     int        rank, comm_size;
-    int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative; 
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
@@ -171,7 +172,11 @@ static int MPIR_Scan_generic (
                                       count, datatype, dst,
                                       MPIR_SCAN_TAG, comm,
                                       &status);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
             
             if (rank > dst) {
 #ifdef HAVE_CXX_BINDING
@@ -228,7 +233,9 @@ static int MPIR_Scan_generic (
      /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     
-   return (mpi_errno);
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
@@ -252,6 +259,7 @@ int MPIR_Scan(
     MPID_Comm *comm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(3);
     MPIU_THREADPRIV_DECL;
     int rank = comm_ptr->rank;
@@ -303,7 +311,11 @@ int MPIR_Scan(
     {
         mpi_errno = MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, 
                                    op, comm_ptr->node_comm);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
     }
     else if (sendbuf != MPI_IN_PLACE)
     {
@@ -321,7 +333,11 @@ int MPIR_Scan(
         mpi_errno = MPIC_Recv(localfulldata, count, datatype, 
                               comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG, 
                               comm_ptr->node_comm->handle, &status);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
     }
     else if (comm_ptr->node_roots_comm == NULL && 
              comm_ptr->node_comm != NULL && 
@@ -329,7 +345,11 @@ int MPIR_Scan(
     {
         mpi_errno = MPIC_Send(recvbuf, count, datatype,
                               0, MPIR_SCAN_TAG, comm_ptr->node_comm->handle);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
     }
     else if (comm_ptr->node_roots_comm != NULL)
     {
@@ -344,7 +364,11 @@ int MPIR_Scan(
     {
         mpi_errno = MPIR_Scan_impl(localfulldata, prefulldata, count, datatype,
                                    op, comm_ptr->node_roots_comm);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
 
         if (MPIU_Get_internode_rank(comm_ptr, rank) != 
             comm_ptr->node_roots_comm->local_size-1)
@@ -352,7 +376,11 @@ int MPIR_Scan(
             mpi_errno = MPIC_Send(prefulldata, count, datatype,
                                   MPIU_Get_internode_rank(comm_ptr, rank) + 1,
                                   MPIR_SCAN_TAG, comm_ptr->node_roots_comm->handle);
-            if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
         if (MPIU_Get_internode_rank(comm_ptr, rank) != 0)
         {
@@ -361,7 +389,11 @@ int MPIR_Scan(
                                   MPIR_SCAN_TAG, comm_ptr->node_roots_comm->handle, 
                                   &status);
             noneed = 0;
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
     }
 
@@ -373,7 +405,11 @@ int MPIR_Scan(
 
     if (comm_ptr->node_comm != NULL) {
         mpi_errno = MPIR_Bcast_impl(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
     }
 
     if (noneed == 0) {
@@ -382,7 +418,11 @@ int MPIR_Scan(
 #endif
         if (comm_ptr->node_comm != NULL) {
             mpi_errno = MPIR_Bcast_impl(tempbuf, count, datatype, 0, comm_ptr->node_comm);
-            if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
 
         /* do reduce on tempbuf and recvbuf, finish scan. */
@@ -420,6 +460,8 @@ int MPIR_Scan(
 
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
     return mpi_errno;
 
   fn_fail:

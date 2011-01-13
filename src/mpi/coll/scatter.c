@@ -68,6 +68,7 @@ int MPIR_Scatter_intra (
     int tmp_buf_size = 0;
     void *tmp_buf=NULL;
     int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Comm comm;
     MPIU_CHKLMEM_DECL(4);
     
@@ -171,16 +172,24 @@ int MPIR_Scatter_intra (
                     mpi_errno = MPIC_Recv(recvbuf, recvcnt, recvtype,
                                           src, MPIR_SCATTER_TAG, comm, 
                                           &status);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
                 else {
                     mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
                                           MPIR_SCATTER_TAG, comm, &status);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-		    /* the recv size is larger than what may be sent in
-                       some cases. query amount of data actually received */
-                    MPIR_Get_count_impl(&status, MPI_BYTE, &curr_cnt);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                        curr_cnt = 0;
+                    } else
+                        /* the recv size is larger than what may be sent in
+                           some cases. query amount of data actually received */
+                        MPIR_Get_count_impl(&status, MPI_BYTE, &curr_cnt);
                 }
                 break;
             }
@@ -218,7 +227,11 @@ int MPIR_Scatter_intra (
                                            MPI_BYTE, dst,
                                            MPIR_SCATTER_TAG, comm);
                 }
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
                 curr_cnt -= send_subtree_cnt;
             }
             mask >>= 1;
@@ -319,10 +332,15 @@ int MPIR_Scatter_intra (
                 
                 mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
                                      MPIR_SCATTER_TAG, comm, &status);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                /* the recv size is larger than what may be sent in
-                   some cases. query amount of data actually received */
-                MPIR_Get_count_impl(&status, MPI_BYTE, &curr_cnt);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    curr_cnt = 0;
+                } else
+                    /* the recv size is larger than what may be sent in
+                       some cases. query amount of data actually received */
+                    MPIR_Get_count_impl(&status, MPI_BYTE, &curr_cnt);
                 break;
             }
             mask <<= 1;
@@ -344,7 +362,11 @@ int MPIR_Scatter_intra (
                 mpi_errno = MPIC_Send (((char *)tmp_buf + nbytes*mask),
                                       send_subtree_cnt, MPI_BYTE, dst,
                                       MPIR_SCATTER_TAG, comm);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
                 curr_cnt -= send_subtree_cnt;
             }
             mask >>= 1;
@@ -364,6 +386,8 @@ int MPIR_Scatter_intra (
     MPIU_CHKLMEM_FREEALL();
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -396,6 +420,7 @@ int MPIR_Scatter_inter (
 */
 
     int rank, local_size, remote_size, mpi_errno=MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int i, nbytes, sendtype_size, recvtype_size;
     MPI_Status status;
     MPI_Aint extent, true_extent, true_lb = 0;
@@ -429,7 +454,11 @@ int MPIR_Scatter_inter (
             /* root sends all data to rank 0 on remote group and returns */
             mpi_errno = MPIC_Send(sendbuf, sendcnt*remote_size,
                                   sendtype, 0, MPIR_SCATTER_TAG, comm);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
             goto fn_exit;
         }
         else {
@@ -454,7 +483,11 @@ int MPIR_Scatter_inter (
                 mpi_errno = MPIC_Recv(tmp_buf, recvcnt*local_size,
                                       recvtype, root,
                                       MPIR_SCATTER_TAG, comm, &status);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
             
             /* Get the local intracommunicator */
@@ -467,7 +500,11 @@ int MPIR_Scatter_inter (
             mpi_errno = MPIR_Scatter_impl(tmp_buf, recvcnt, recvtype,
                                           recvbuf, recvcnt, recvtype, 0,
                                           newcomm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
     }
     else {
@@ -478,13 +515,21 @@ int MPIR_Scatter_inter (
                 mpi_errno = MPIC_Send(((char *)sendbuf+sendcnt*i*extent), 
                                       sendcnt, sendtype, i,
                                       MPIR_SCATTER_TAG, comm);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
         }
         else {
             mpi_errno = MPIC_Recv(recvbuf,recvcnt,recvtype,root,
                                   MPIR_SCATTER_TAG,comm,&status);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
     }
 
@@ -492,6 +537,8 @@ int MPIR_Scatter_inter (
     MPIU_CHKLMEM_FREEALL();
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
     return mpi_errno;
  fn_fail:
     goto fn_exit;

@@ -62,7 +62,8 @@ int MPIR_Alltoallw_intra (
 	MPID_Comm *comm_ptr )
 {
     int        comm_size, i, j;
-    int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Status *starray;
     MPI_Request *reqarray;
@@ -100,7 +101,11 @@ int MPIR_Alltoallw_intra (
                                                       j, MPIR_ALLTOALL_TAG,
                                                       j, MPIR_ALLTOALL_TAG,
                                                       comm, &status);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
                 else if (rank == j) {
                     /* same as above with i/j args reversed */
@@ -109,7 +114,11 @@ int MPIR_Alltoallw_intra (
                                                       i, MPIR_ALLTOALL_TAG,
                                                       i, MPIR_ALLTOALL_TAG,
                                                       comm, &status);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
             }
         }
@@ -167,7 +176,11 @@ int MPIR_Alltoallw_intra (
                 for (i=0; i<outstanding_requests; i++) {
                     if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                         mpi_errno = starray[i].MPI_ERROR;
-                        MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) {
+                            /* for communication errors, just record the error but continue */
+                            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                        }
                     }
                 }
             }
@@ -193,7 +206,11 @@ int MPIR_Alltoallw_intra (
                                       ((char *)recvbuf+rdispls[src]), 
                                       recvcnts[src], recvtypes[dst], src,
                                       MPIR_ALLTOALLW_TAG, comm, &status);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
 #endif
     }
@@ -202,7 +219,9 @@ int MPIR_Alltoallw_intra (
   fn_exit:
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );  
     MPIU_CHKLMEM_FREEALL();
-    return (mpi_errno);
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    return mpi_errno;
 
   fn_fail:
     goto fn_exit;
@@ -238,6 +257,7 @@ int MPIR_Alltoallw_inter (
 */
     int local_size, remote_size, max_size, i;
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     int src, dst, rank, sendcount, recvcount;
     char *sendaddr, *recvaddr;
@@ -284,13 +304,19 @@ int MPIR_Alltoallw_inter (
                                   dst, MPIR_ALLTOALLW_TAG, recvaddr, 
                                   recvcount, recvtype, src,
                                   MPIR_ALLTOALLW_TAG, comm, &status);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
     }
     
  fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-    return (mpi_errno);
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    return mpi_errno;
  fn_fail:
     goto fn_exit;
 }

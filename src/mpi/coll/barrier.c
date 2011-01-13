@@ -55,6 +55,7 @@ PMPI_LOCAL int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr );
 int MPIR_Barrier_intra( MPID_Comm *comm_ptr )
 {
     int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Comm comm;
 
     /* Only one collective operation per communicator can be active at any
@@ -76,13 +77,18 @@ int MPIR_Barrier_intra( MPID_Comm *comm_ptr )
                                   MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
                                   src, MPIR_BARRIER_TAG, comm,
                                   MPI_STATUS_IGNORE);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
         mask <<= 1;
     }
 
  fn_exit:
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -128,6 +134,7 @@ PMPI_LOCAL int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr )
 int MPIR_Barrier_inter( MPID_Comm *comm_ptr )
 {
     int rank, mpi_errno = MPI_SUCCESS, root;
+    int mpi_errno_ret = MPI_SUCCESS;
     int i = 0;
     MPID_Comm *newcomm_ptr = NULL;
 
@@ -143,7 +150,11 @@ int MPIR_Barrier_inter( MPID_Comm *comm_ptr )
 
     /* do a barrier on the local intracommunicator */
     mpi_errno = MPIR_Barrier_intra(newcomm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
 
     /* rank 0 on each group does an intercommunicator broadcast to the
        remote group to indicate that all processes in the local group
@@ -156,23 +167,41 @@ int MPIR_Barrier_inter( MPID_Comm *comm_ptr )
         /* bcast to right*/
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
         /* receive bcast from right */
         root = 0;
         mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
     }
     else {
         /* receive bcast from left */
         root = 0;
         mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
     }
  fn_exit:
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -217,6 +246,7 @@ int MPIR_Barrier(MPID_Comm *comm_ptr)
 int MPIR_Barrier_impl(MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Barrier != NULL)
     {
@@ -233,13 +263,21 @@ int MPIR_Barrier_impl(MPID_Comm *comm_ptr)
                 if (comm_ptr->node_comm != NULL)
                 {
                     mpi_errno = MPIR_Barrier_or_coll_fn(comm_ptr->node_comm);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
 
                 /* do the barrier across roots of all nodes */
                 if (comm_ptr->node_roots_comm != NULL) {
                     mpi_errno = MPIR_Barrier_or_coll_fn(comm_ptr->node_roots_comm);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
 
                 /* release the local processes on each node with a 1-byte broadcast
@@ -248,7 +286,11 @@ int MPIR_Barrier_impl(MPID_Comm *comm_ptr)
                 {
 		    int i=0;
                     mpi_errno = MPIR_Bcast_impl(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
             }
             else {
@@ -268,6 +310,8 @@ int MPIR_Barrier_impl(MPID_Comm *comm_ptr)
     }
         
  fn_exit:
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
     return mpi_errno;
  fn_fail:
     goto fn_exit;

@@ -106,7 +106,8 @@ int MPIR_Exscan (
 {
     MPI_Status status;
     int        rank, comm_size;
-    int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative, flag; 
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
@@ -187,7 +188,11 @@ int MPIR_Exscan (
                                       count, datatype, dst,
                                       MPIR_EXSCAN_TAG, comm,
                                       &status);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
 
             if (rank > dst) {
                 call_uop(tmp_buf, partial_scan, count, datatype);
@@ -237,7 +242,9 @@ int MPIR_Exscan (
 
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    return (mpi_errno);
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    return mpi_errno;
 fn_fail:
     goto fn_exit;
 }
