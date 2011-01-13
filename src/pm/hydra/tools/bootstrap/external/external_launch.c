@@ -12,8 +12,8 @@
 
 static int fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
-                                           int *control_fd)
+HYD_status HYDT_bscd_external_launch_procs(const char *base_path, char **args,
+                                           struct HYD_node *node_list, int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
     int *pid, *fd_list, *dummy;
@@ -210,8 +210,9 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         /* The stdin pointer is a dummy value. We don't just pass it
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
-        status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr,
-                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
+        status = HYDU_create_process(base_path, targs + offset, env, dummy, &fd_stdout,
+                                     &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++],
+                                     cpuset);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         if (offset && control_fd) {

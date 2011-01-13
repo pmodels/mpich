@@ -12,8 +12,8 @@
 
 static int fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list,
-                                     int *control_fd)
+HYD_status HYDT_bscd_ll_launch_procs(const char *base_path, char **args,
+                                     struct HYD_node *node_list, int *control_fd)
 {
     int idx, i, total_procs, node_count;
     int *pid, *fd_list;
@@ -88,7 +88,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list,
     targs[idx++] = NULL;
 
     HYDT_bind_cpuset_zero(&cpuset);
-    status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr,
+    status = HYDU_create_process(base_path, targs, NULL, NULL, &fd_stdout, &fd_stderr,
                                  &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
     HYDU_ERR_POP(status, "create process returned error\n");
 

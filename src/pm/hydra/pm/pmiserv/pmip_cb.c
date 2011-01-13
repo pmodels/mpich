@@ -671,7 +671,7 @@ static HYD_status launch_procs(void)
             client_args[arg++] = NULL;
 
             HYDT_bind_pid_to_cpuset(process_id, &cpuset);
-            status = HYDU_create_process(client_args, force_env,
+            status = HYDU_create_process(NULL, client_args, force_env,
                                          HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? NULL :
                                          &HYD_pmcd_pmip.downstream.in,
                                          &HYD_pmcd_pmip.downstream.out[process_id],

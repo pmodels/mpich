@@ -58,8 +58,8 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list,
-                                          int *control_fd)
+HYD_status HYDT_bscd_persist_launch_procs(const char *base_path, char **args,
+                                          struct HYD_node *node_list, int *control_fd)
 {
     struct HYD_node *node;
     int idx, i;

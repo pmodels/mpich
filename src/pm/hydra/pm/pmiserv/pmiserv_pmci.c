@@ -157,7 +157,8 @@ HYD_status HYD_pmci_launch_procs(void)
                        HYD_server_info.user_global.bindlib);
     HYDU_ERR_POP(status, "unable to initializing binding library");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd);
+    status = HYDT_bsci_launch_procs(HYD_server_info.base_path, proxy_args, node_list,
+                                    control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)

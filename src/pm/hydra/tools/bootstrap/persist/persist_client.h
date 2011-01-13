@@ -11,8 +11,8 @@
 #include "bscu.h"
 #include "persist.h"
 
-HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list,
-                                          int *control_fd);
+HYD_status HYDT_bscd_persist_launch_procs(const char *base_path, char **args,
+                                          struct HYD_node *node_list, int *control_fd);
 HYD_status HYDT_bscd_persist_wait_for_completion(int timeout);
 
 extern int *HYDT_bscd_persist_control_fd;
