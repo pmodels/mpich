@@ -1370,7 +1370,7 @@ if test "$with_cross" != "no" ; then
  	ac_cv_prog_fc_cross=yes
         ac_cv_prog_cxx_cross=yes
         export cross_compiling
-	# Export all cross variables.  Any subsidiary configure should also
+g	# Export all cross variables.  Any subsidiary configure should also
         # export CROSS_xxx
 	rm -f confcross
 	(set) 2>&1 | grep CROSS_ | \
@@ -2889,14 +2889,8 @@ fi
 if test "$with_namepublisher" != no -a "$with_namepublisher" != "none" ; then
     case "$with_namepublisher" in 
     none|no) ;;
-    ldap*)
-        subsystems="$subsystems src/nameserv/ldap"
-	# The configure in the nameserv/ldap directory will look for 
-	# the ldap files.
-	AC_DEFINE(USE_LDAP_FOR_NAMEPUB,1,[Define if ldap should be used for name publishing])
-	nameserv_name="ldap"
-    ;;
-
+    # Removed ldap namepublisher hook - we no longer support or distribute
+    # the ldap-based name server
     file*)
     # Note that we always build the Makefile for the file version because
     # this name publisher is really too simple to require a 
@@ -2916,6 +2910,17 @@ if test "$with_namepublisher" != no -a "$with_namepublisher" != "none" ; then
 
     mpd)
     nameserv_name="mpd"
+    # The mpd nameserver is specific to the mpd process manager
+    foundMPD=no
+    for pm_name in $pm_names ; do
+        if test "$pm_name" = "mpd" ; then 
+	    foundMPD=yes
+	    break
+	fi
+    done
+    if test "$foundMPD" = no ; then
+        AC_MSG_ERROR([The mpd nameserver requires the mpd process manager])
+    fi
     ;;
 
     *)
