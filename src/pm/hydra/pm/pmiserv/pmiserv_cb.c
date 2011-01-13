@@ -144,12 +144,13 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         hdr.cmd = STDIN;
     }
     else {
-        status = HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        status =
+            HYDU_sock_read(fd, &hdr, sizeof(hdr), &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read command from proxy\n");
         HYDU_ASSERT(!closed, status);
     }
 
-    if (hdr.cmd == PID_LIST) {      /* Got PIDs */
+    if (hdr.cmd == PID_LIST) {  /* Got PIDs */
         HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
         status = HYDU_sock_read(fd, (void *) proxy->pid,
                                 proxy->proxy_process_count * sizeof(int),
