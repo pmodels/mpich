@@ -18,6 +18,9 @@
  # OVERALL: Performance improvements to MPI_Comm_split on large
    systems.
 
+ # OVERALL: Several improvements to error returns capabilities in the
+   presence of faults.
+
  # PM/PMI: Several fixes and improvements to Hydra's process binding
    capability.
 
