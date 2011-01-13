@@ -28,6 +28,13 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV *iov, int n_i
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
 
+    if (vc->state == MPIDI_VC_STATE_MORIBUND) {
+        sreq->status.MPI_ERROR = MPI_SUCCESS;
+        MPIU_ERR_SET1(sreq->status.MPI_ERROR, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+        MPIDI_CH3U_Request_complete(sreq);
+        goto fn_fail;
+    }
+
     if (vc_ch->iSendContig)
     {
         MPIU_Assert(n_iov > 0);

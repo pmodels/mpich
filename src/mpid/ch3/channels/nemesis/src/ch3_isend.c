@@ -24,6 +24,13 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISEND);
 
+    if (vc->state == MPIDI_VC_STATE_MORIBUND) {
+        sreq->status.MPI_ERROR = MPI_SUCCESS;
+        MPIU_ERR_SET1(sreq->status.MPI_ERROR, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+        MPIDI_CH3U_Request_complete(sreq);
+        goto fn_fail;
+    }
+
     if (((MPIDI_CH3I_VC *)vc->channel_private)->iSendContig)
     {
         mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->iSendContig(vc, sreq, hdr, hdr_sz, NULL, 0);
