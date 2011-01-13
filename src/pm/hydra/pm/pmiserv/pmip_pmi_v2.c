@@ -165,9 +165,14 @@ static HYD_status fn_fullinit(int fd, char *args[])
     id = atoi(rank_str);
 
     /* Store the PMI_RANK to fd mapping */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-        if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id)
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+        if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id) {
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
+            HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 1;
+            break;
+        }
+    }
+    HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
     i = 0;
     /* FIXME: allow for multiple ranks per PMI ID */

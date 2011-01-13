@@ -140,6 +140,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     proxy = (struct HYD_proxy *) userp;
 
     if (fd == STDIN_FILENO) {
+        HYD_pmcd_init_header(&hdr);
         hdr.cmd = STDIN;
     }
     else {
