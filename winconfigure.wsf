@@ -3718,6 +3718,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef LINUX86_CYCLE_CPUID_RDTSC32 */")
                                 Case "LINUX86_CYCLE_CPUID_RDTSC64"
                                         fout.WriteLine("/* #undef LINUX86_CYCLE_CPUID_RDTSC64 */")
+                                Case "HAVE_MACH_ABSOLUTE_TIME"
+                                        fout.WriteLine("/* #undef HAVE_MACH_ABSOLUTE_TIME */")
 				Case "MPICH2_LIBDIR"
 					fout.WriteLine("#undef MPICH2_LIBDIR")
                                 Case "MPICH_DEBUG_MUTEXNESTING"
