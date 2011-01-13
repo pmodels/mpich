@@ -2196,23 +2196,52 @@ int smpd_wait_process(smpd_pwait_t wait, int *exit_code_ptr)
 #endif
 }
 
+#define SMPD_MAX_SUSPEND_RETRY_COUNT 4
+
 #undef FCNAME
 #define FCNAME "smpd_suspend_process"
 int smpd_suspend_process(smpd_process_t *process)
 {
 #ifdef HAVE_WINDOWS_H
     int result = SMPD_SUCCESS;
+    int retry_cnt = 0;
     smpd_enter_fn(FCNAME);
 
-    if (SuspendThread(process->wait.hThread) == -1)
-    {
-	result = GetLastError();
-	smpd_err_printf("SuspendThread failed with error %d for process %d:%s:'%s'\n",
-	    result, process->rank, process->kvs_name, process->exe);
-    }
+    do{
+        if (SuspendThread(process->wait.hThread) == -1){
+            int exit_code;
+
+            /* Check if the thread is still active */
+            if(!GetExitCodeThread(process->wait.hThread, &exit_code)){
+                smpd_err_printf("Getting exit code for thread failed\n");
+                break;
+            }
+            else{
+                if(exit_code != STILL_ACTIVE){
+                    smpd_err_printf("The thread to be suspended is no longer active, exit_code = %d\n", exit_code);
+                    break;
+                }
+                else{
+                    smpd_err_printf("The thread is active but cannot be suspended\n");
+                }
+            }
+
+	        result = GetLastError();
+	        smpd_err_printf("SuspendThread failed[%d times] with error %d for process %d:%s:'%s'\n",
+	            retry_cnt, result, process->rank, process->kvs_name, process->exe);
+        }
+        else{
+            break;
+        }
+
+        /* Ignore error and proceed if we fail to suspend */
+        result = SMPD_SUCCESS;
+        retry_cnt++;
+    }while(retry_cnt < SMPD_MAX_SUSPEND_RETRY_COUNT);
 
     smpd_exit_fn(FCNAME);
-    return result;
+    /* Ignore error */
+    return SMPD_SUCCESS;
 #else
     smpd_enter_fn(FCNAME);
 
@@ -2295,19 +2324,23 @@ static BOOL SafeTerminateProcess(HANDLE hProcess, UINT uExitCode)
 #define FCNAME "smpd_kill_process"
 int smpd_kill_process(smpd_process_t *process, int exit_code)
 {
+    int result = SMPD_SUCCESS;
 #ifdef HAVE_WINDOWS_H
     smpd_enter_fn(FCNAME);
 
     smpd_process_from_registry(process);
     if (!SafeTerminateProcess(process->wait.hProcess, exit_code)){
+        smpd_err_printf("unable terminate process safely. exit_code = %d\n", exit_code);
 	    if (GetLastError() != ERROR_PROCESS_ABORTED){
-	        TerminateProcess(process->wait.hProcess, exit_code);
+            if(!TerminateProcess(process->wait.hProcess, exit_code)){
+                if (GetLastError() != ERROR_PROCESS_ABORTED){
+                    result = SMPD_FAIL;
+                }
+            }
 	    }
-        smpd_exit_fn(FCNAME);
-        return SMPD_FAIL;
     }
     smpd_exit_fn(FCNAME);
-    return SMPD_SUCCESS;
+    return result;
 #else
     int status;
     smpd_enter_fn(FCNAME);
