@@ -396,6 +396,8 @@ int MPIDI_CH3U_VC_WaitForClose( void )
             ++c;                                                                                \
     } while (0)
 
+#define ALLOC_STEP 10
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Check_for_failed_procs
 #undef FCNAME
@@ -405,10 +407,13 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     char *val;
+    int *attr_val = NULL, *ret;
     char *c;
     int len;
     char *kvsname;
     int rank, rank_hi;
+    int i;
+    int alloc_len;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
 
@@ -424,12 +429,22 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
 
     MPIU_DBG_MSG_S(CH3_DISCONNECT, TYPICAL, "Received proc fail notification: %s", val);
     
-    if (*val == '\0')
+    if (*val == '\0') {
         /* there are no failed processes */
+        attr_val = MPIU_Malloc(sizeof(int));
+        if (!attr_val) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(int), "attr_val"); goto fn_fail; }
+        *attr_val = MPI_PROC_NULL;
+        mpi_errno = MPIR_Comm_set_attr_impl(MPIR_Process.comm_world, MPICH_ATTR_FAILED_PROCESSES, attr_val, MPIR_ATTR_PTR);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
+    }
 
+    attr_val = MPIU_Malloc(sizeof(int) * ALLOC_STEP);
+    alloc_len = ALLOC_STEP;
+    
     /* parse list of failed processes.  This is a comma separated list
        of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
+    i = 0;
     c = val;
     while(1) {
         parse_rank(&rank);
@@ -440,9 +455,19 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
             rank_hi = rank;
         while (rank <= rank_hi) {
             MPIDI_VC_t *vc;
+            /* terminate the VC */
             MPIDI_PG_Get_vc(MPIDI_Process.my_pg, rank, &vc);
             mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            /* update the dead node attribute list */
+            if (alloc_len <= i) {
+                /* allocate more space */
+                ret = MPIU_Realloc(attr_val, sizeof(int) * (alloc_len + ALLOC_STEP));
+                if (!ret) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(int) * (alloc_len + ALLOC_STEP), "attr_val"); goto fn_fail; }
+                attr_val = ret;
+            }
+            attr_val[i] = rank;
+            ++i;
             ++rank;
         }
         MPIU_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno, "error parsing failed process list");
@@ -450,12 +475,25 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
             break;
         ++c; /* skip ',' */
     }
+    /* terminate dead node attribute list with an MPI_PROC_NULL */
+    if (alloc_len <= i) {
+        /* allocate more space */
+        ret = MPIU_Realloc(attr_val, alloc_len + ALLOC_STEP);
+        if (!ret) { MPIU_CHKMEM_SETERR(mpi_errno, alloc_len + ALLOC_STEP, attr_val); goto fn_fail; }
+        attr_val = ret;
+    }
+    attr_val[i] = MPI_PROC_NULL;
+
+    mpi_errno = MPIR_Comm_set_attr_impl(MPIR_Process.comm_world, MPICH_ATTR_FAILED_PROCESSES, attr_val, MPIR_ATTR_PTR);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
     return mpi_errno;
  fn_fail:
+    if (attr_val)
+        MPIU_Free(attr_val);
     goto fn_exit;
 }
 

@@ -1429,6 +1429,9 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc);
    MPID_Comm_connect and accept */
 int MPIDI_CH3_Connect_to_root(const char *, MPIDI_VC_t **);
 
+/* keyval for COMM_WORLD attribute holding list of failed processes */
+extern int MPICH_ATTR_FAILED_PROCESSES;
+
 
 /*
  * Channel utility prototypes

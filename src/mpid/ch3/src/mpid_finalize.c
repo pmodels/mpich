@@ -93,7 +93,9 @@ int MPID_Finalize(void)
       *    cancel it, in which case an error shouldn't be generated.
       */
     
-
+    MPIR_Comm_free_keyval_impl(MPICH_ATTR_FAILED_PROCESSES);
+    MPICH_ATTR_FAILED_PROCESSES = MPI_KEYVAL_INVALID;
+    
 #ifdef MPID_NEEDS_ICOMM_WORLD
     mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
