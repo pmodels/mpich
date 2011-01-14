@@ -12,7 +12,8 @@
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {
-    int arg, use_ddd, use_valgrind, use_strace;
+    int i, arg, use_ddd, use_valgrind, use_strace;
+    char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     arg = 0;
@@ -44,7 +45,14 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
         proxy_args[arg++] = HYDU_strdup("-ff");
     }
 
-    proxy_args[arg++] = HYDU_strdup("hydra_pmi_proxy");
+    i = 0;
+    path_str[i++] = HYDU_strdup(HYD_server_info.base_path);
+    path_str[i++] = HYDU_strdup("hydra_pmi_proxy");
+    path_str[i] = NULL;
+    status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(path_str);
+
     proxy_args[arg++] = HYDU_strdup("--control-port");
     proxy_args[arg++] = HYDU_strdup(control_port);
 

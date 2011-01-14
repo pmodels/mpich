@@ -9,8 +9,7 @@
 
 #include "hydra.h"
 
-HYD_status HYDT_bscd_ll_launch_procs(const char *base_path, char **args,
-                                     struct HYD_node *node_list, int *control_fd);
+HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list, int *control_fd);
 HYD_status HYDT_bscd_ll_query_proxy_id(int *proxy_id);
 HYD_status HYDT_bscd_ll_query_node_list(struct HYD_node **node_list);
 HYD_status HYDTI_bscd_ll_query_node_count(int *count);

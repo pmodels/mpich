@@ -464,8 +464,8 @@ HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 
 /* launch */
 struct HYDT_bind_cpuset_t;
-HYD_status HYDU_create_process(const char *base_path, char **client_arg,
-                               struct HYD_env *env_list, int *in, int *out, int *err, int *pid,
+HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
+                               int *in, int *out, int *err, int *pid,
                                struct HYDT_bind_cpuset_t cpuset);
 
 /* others */

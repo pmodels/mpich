@@ -194,7 +194,7 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 
     /* spawn process */
     HYDT_bind_cpuset_zero(&cpuset);
-    status = HYDU_create_process(NULL, args, NULL, NULL, &private.stdout_fd,
+    status = HYDU_create_process(args, NULL, NULL, &private.stdout_fd,
                                  &private.stderr_fd, &private.app_pid, cpuset);
     HYDU_ERR_POP(status, "unable to create process\n");
 

@@ -12,13 +12,12 @@
 
 static int fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_ll_launch_procs(const char *base_path, char **args,
-                                     struct HYD_node *node_list, int *control_fd)
+HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list, int *control_fd)
 {
     int idx, i, total_procs, node_count;
-    int *pid, *fd_list;
+    int *pid, *fd_list, exec_idx;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
-    char *path = NULL, *extra_arg_list = NULL, *extra_arg;
+    char *path = NULL, *extra_arg_list = NULL, *extra_arg, quoted_exec_string[HYD_TMP_STRLEN];
     struct HYD_node *node;
     struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
@@ -66,8 +65,16 @@ HYD_status HYDT_bscd_ll_launch_procs(const char *base_path, char **args,
     }
 
     /* Fill in the remaining arguments */
+    exec_idx = idx;
     for (i = 0; args[i]; i++)
         targs[idx++] = HYDU_strdup(args[i]);
+
+    /* Create a quoted version of the exec string, which is only used
+     * when the executable is not launched directly, but through an
+     * external launcher */
+    HYDU_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
+    HYDU_FREE(targs[exec_idx]);
+    targs[exec_idx] = quoted_exec_string;
 
     /* Increase pid list to accommodate the new pid */
     HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
@@ -88,7 +95,7 @@ HYD_status HYDT_bscd_ll_launch_procs(const char *base_path, char **args,
     targs[idx++] = NULL;
 
     HYDT_bind_cpuset_zero(&cpuset);
-    status = HYDU_create_process(base_path, targs, NULL, NULL, &fd_stdout, &fd_stderr,
+    status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr,
                                  &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
     HYDU_ERR_POP(status, "create process returned error\n");
 

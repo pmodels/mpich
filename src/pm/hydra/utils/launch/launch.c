@@ -7,11 +7,11 @@
 #include "hydra.h"
 #include "bind.h"
 
-HYD_status HYDU_create_process(const char *base_path, char **client_arg,
-                               struct HYD_env *env_list, int *in, int *out, int *err, int *pid,
+HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
+                               int *in, int *out, int *err, int *pid,
                                struct HYDT_bind_cpuset_t cpuset)
 {
-    int inpipe[2], outpipe[2], errpipe[2], tpid, ret;
+    int inpipe[2], outpipe[2], errpipe[2], tpid;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -60,11 +60,6 @@ HYD_status HYDU_create_process(const char *base_path, char **client_arg,
 
         status = HYDT_bind_process(cpuset);
         HYDU_ERR_POP(status, "bind process failed\n");
-
-        if (base_path) {
-            ret = chdir(base_path);
-            HYDU_ASSERT(!ret, status);
-        }
 
         if (execvp(client_arg[0], client_arg) < 0) {
             /* The child process should never get back to the proxy

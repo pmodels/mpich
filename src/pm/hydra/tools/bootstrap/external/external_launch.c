@@ -12,14 +12,15 @@
 
 static int fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_external_launch_procs(const char *base_path, char **args,
-                                           struct HYD_node *node_list, int *control_fd)
+HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
+                                           int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
+    char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
     struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
@@ -114,6 +115,14 @@ HYD_status HYDT_bscd_external_launch_procs(const char *base_path, char **args,
     for (i = 0; args[i]; i++)
         targs[idx++] = HYDU_strdup(args[i]);
 
+    /* Store the original exec string */
+    original_exec_string = targs[exec_idx];
+
+    /* Create a quoted version of the exec string, which is only used
+     * when the executable is not launched directly, but through an
+     * external launcher */
+    HYDU_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
+
     /* pid_list might already have some PIDs */
     num_hosts = 0;
     for (node = node_list; node; node = node->next)
@@ -190,6 +199,10 @@ HYD_status HYDT_bscd_external_launch_procs(const char *base_path, char **args,
         else {
             offset = 0;
 
+            /* We are not launching the executable directly; use the
+             * quoted version */
+            targs[exec_idx] = quoted_exec_string;
+
             /* dummy is NULL only for launchers that can handle a
              * closed stdin socket. Older versions of ssh and SGE seem
              * to have problems when stdin is closed before they are
@@ -210,10 +223,14 @@ HYD_status HYDT_bscd_external_launch_procs(const char *base_path, char **args,
         /* The stdin pointer is a dummy value. We don't just pass it
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
-        status = HYDU_create_process(base_path, targs + offset, env, dummy, &fd_stdout,
-                                     &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++],
-                                     cpuset);
+        status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr,
+                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
         HYDU_ERR_POP(status, "create process returned error\n");
+
+        /* Reset to the original exec string */
+        targs[exec_idx] = original_exec_string;
+
+        /* Reset the exec string to the original value */
 
         if (offset && control_fd) {
             close(sockpair[1]);
