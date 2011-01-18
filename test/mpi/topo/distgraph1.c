@@ -260,6 +260,15 @@ int main(int argc, char *argv[])
             MPI_Comm_free(&comm);
         }
 
+        /* a weak check that passing MPI_UNWEIGHTED doesn't cause
+         * create_adjacent to explode */
+        MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, indegree, sources, MPI_UNWEIGHTED,
+                                       outdegree, destinations, MPI_UNWEIGHTED, MPI_INFO_NULL,
+                                       reorder, &comm);
+        MPI_Barrier(comm);
+        /* intentionally no verify here, weights won't match */
+        MPI_Comm_free(&comm);
+
 
         /* MPI_Dist_graph_create() where each process specifies its
          * outgoing edges */
