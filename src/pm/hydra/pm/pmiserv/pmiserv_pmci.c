@@ -199,6 +199,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
         while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
             status = HYDT_dmx_wait_for_event(timeout);
             if (status == HYD_TIMED_OUT) {
+                HYDU_dump(stdout, "APPLICATION TIMED OUT\n");
                 status = cleanup_all_pgs();
                 HYDU_ERR_POP(status, "cleanup of processes failed\n");
             }
