@@ -32,7 +32,7 @@ on bug fixes and new releases.
 4.  Alternate Process Managers
 5.  Alternate Configure Options
 6.  Testing the MPICH2 installation
-7.  Checkpoint/Restart
+7.  Fault Tolerance
 8.  Environment Variables
 9.  Developer Builds
 10. Installing MPICH2 on windows
@@ -735,13 +735,72 @@ The results summary will be placed in test/summary.xml
 
 -------------------------------------------------------------------------
 
-7. Checkpoint/Restart
-=====================
+7. Fault Tolerance
+==================
+
+MPICH2 has some tolerance to process failures, and supports
+checkpointing and restart. 
+
+Tolerance to Process Failures
+-----------------------------
+
+The features described in this section should be considered
+experimental.  Which means that they have not been fully tested, and
+the behavior may change in future releases.
+
+Communication failures in MPICH2 are not fatal errors.  This means
+that if the user sets the error handler to MPI_ERRORS_RETURN, MPICH2
+will return an appropriate error code in the event of a communication
+failure.  When a process detects a failure when communicating with
+another process, it will consider that other process as having failed
+and will no longer attempt to communicate with that process.  The user
+can, however, continue making communication calls to other processes.
+Any outstanding send or receive operations to a failed process, or
+wildcard receives (i.e., with MPI_ANY_SOURCE) posted to communicators
+with a failed process, will be immediately completed with an
+appropriate error code.
+
+Collectives performed on a communicator with a failed process will not
+hang, however, the results of the operation are undefined.  Some, but
+not necessarily all, processes may return an error.  Specifically,
+the collective on some process might not return an error, but the
+result may still be invalid.
+
+If used with the hydra process manager, hydra will detect failed
+processes and notify the MPICH2 library.  Users can query the list of
+failed processes using the MPICH_ATTR_FAILED_PROCESSES predefined
+attribute on MPI_COMM_WORLD.  The attribute value is an integer array
+containing the ranks of the failed processes.  The array is terminated
+by MPI_PROC_NULL.  The user needs to declare the following extern in
+order to use the attribute:
+    extern int MPICH_ATTR_FAILED_PROCESSES;
+
+Note that hydra by default will abort the entire application when any
+process terminates before calling MPI_Finalize.  In order to allow
+an application to continue running despite failed processes, you'll
+need to pass the -disable-auto-cleanup option to mpiexec.
+
+Unsupported feature: In the current implementation (version 1.3.2),
+hydra notifies the MPICH2 library of failed processes by sending a
+SIGUSR1 signal.  The application can catch this signal to be notified
+of failed processes.  If the application replaces the library's signal
+handler with its own, the application must be sure to call the
+library's handler from it's own handler.  The MPICH_ATTR_FAILED_
+PROCESSES attribute is not updated in the signal handler immediately,
+so the application must call a function like MPI_Iprobe() in order to
+allow the library to process the notification.  Note that you cannot
+call MPI function from inside a signal handler (which admittedly makes
+this difficult to use).  This feature may not be (probably won't be)
+supported in future releases, so portable applications should not use
+it.
+
+Checkpoint and Restart
+----------------------
 
 MPICH2 supports checkpointing and restart fault-tolerance using BLCR.
 
-Configuration
--------------
+CONFIGURATION
+
 First, you need to have BLCR version 0.8.2 or later installed on your
 machine.  If it's installed in the default system location, add the
 following two options to your configure command:
@@ -769,8 +828,8 @@ After it's configured compile as usual (e.g., make; make install).
 Note, checkpointing is only supported with the Hydra process manager.
 
 
-Verifying Checkpointing Support
--------------------------------
+VERIFYING CHECKPOINTING SUPPORT
+
 Make sure MPICH2 is correctly configured with BLCR. You can do this
 using:
 
@@ -779,8 +838,8 @@ using:
 This should display 'BLCR' under 'Checkpointing libraries available'.
 
 
-Checkpointing the Application
------------------------------
+CHECKPOINTING THE APPLICATION
+
 There are two ways to cause the application to checkpoint. You can ask
 mpiexec to periodically checkpoint the application using the mpiexec
 option -ckpoint-interval (seconds):
