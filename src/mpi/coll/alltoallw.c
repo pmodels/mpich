@@ -94,7 +94,7 @@ int MPIR_Alltoallw_intra (
         for (i = 0; i < comm_size; ++i) {
             /* start inner loop at i to avoid re-exchanging data */
             for (j = i; j < comm_size; ++j) {
-                if (rank == i) {
+                if (rank == i && recvcnts[j]) {
                     /* also covers the (rank == i && rank == j) case */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]),
                                                       recvcnts[j], recvtypes[j],
@@ -107,7 +107,7 @@ int MPIR_Alltoallw_intra (
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
                 }
-                else if (rank == j) {
+                else if (rank == j && recvcnts[i]) {
                     /* same as above with i/j args reversed */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]),
                                                       recvcnts[i], recvtypes[i],
@@ -300,6 +300,10 @@ int MPIR_Alltoallw_inter (
             sendtype = sendtypes[dst];
         }
 
+        if (sendcount == 0)
+            dst = MPI_PROC_NULL;
+        if (recvcount == 0)
+            src = MPI_PROC_NULL;
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, 
                                   dst, MPIR_ALLTOALLW_TAG, recvaddr, 
                                   recvcount, recvtype, src,
