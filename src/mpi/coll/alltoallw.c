@@ -98,8 +98,8 @@ int MPIR_Alltoallw_intra (
                     /* also covers the (rank == i && rank == j) case */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]),
                                                       recvcnts[j], recvtypes[j],
-                                                      j, MPIR_ALLTOALL_TAG,
-                                                      j, MPIR_ALLTOALL_TAG,
+                                                      j, MPIR_ALLTOALLW_TAG,
+                                                      j, MPIR_ALLTOALLW_TAG,
                                                       comm, &status);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
@@ -111,8 +111,8 @@ int MPIR_Alltoallw_intra (
                     /* same as above with i/j args reversed */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]),
                                                       recvcnts[i], recvtypes[i],
-                                                      i, MPIR_ALLTOALL_TAG,
-                                                      i, MPIR_ALLTOALL_TAG,
+                                                      i, MPIR_ALLTOALLW_TAG,
+                                                      i, MPIR_ALLTOALLW_TAG,
                                                       comm, &status);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */

@@ -107,8 +107,8 @@ int MPIR_Alltoallv_intra (
                     /* also covers the (rank == i && rank == j) case */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]*recv_extent),
                                                       recvcnts[j], recvtype,
-                                                      j, MPIR_ALLTOALL_TAG,
-                                                      j, MPIR_ALLTOALL_TAG,
+                                                      j, MPIR_ALLTOALLV_TAG,
+                                                      j, MPIR_ALLTOALLV_TAG,
                                                       comm, &status);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
@@ -116,8 +116,8 @@ int MPIR_Alltoallv_intra (
                     /* same as above with i/j args reversed */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]*recv_extent),
                                                       recvcnts[i], recvtype,
-                                                      i, MPIR_ALLTOALL_TAG,
-                                                      i, MPIR_ALLTOALL_TAG,
+                                                      i, MPIR_ALLTOALLV_TAG,
+                                                      i, MPIR_ALLTOALLV_TAG,
                                                       comm, &status);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
