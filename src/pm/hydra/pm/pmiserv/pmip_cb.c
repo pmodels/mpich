@@ -393,7 +393,13 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 
     status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
-    HYDU_ASSERT(!closed, status);
+
+    if (HYD_pmcd_pmip.user_global.auto_cleanup) {
+        HYDU_ASSERT(!closed, status);
+    }
+    else {
+        /* Ignore the error and drop the PMI response */
+    }
 
   fn_exit:
     if (pmi_cmd)
@@ -886,6 +892,9 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         int count;
 
         if (hdr.buflen) {
+            if (HYD_pmcd_pmip.downstream.in == HYD_FD_CLOSED)
+                goto fn_exit;
+
             HYDU_MALLOC(buf, char *, hdr.buflen, status);
             HYDU_ERR_POP(status, "unable to allocate memory\n");
 
@@ -897,7 +906,14 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             status = HYDU_sock_write(HYD_pmcd_pmip.downstream.in, buf, hdr.buflen, &count,
                                      &closed);
             HYDU_ERR_POP(status, "unable to write to downstream stdin\n");
-            HYDU_ASSERT(!closed, status);
+
+            if (HYD_pmcd_pmip.user_global.auto_cleanup) {
+                HYDU_ASSERT(!closed, status);
+            }
+            else {
+                close(HYD_pmcd_pmip.downstream.in);
+                HYD_pmcd_pmip.downstream.in = HYD_FD_CLOSED;
+            }
 
             HYDU_FREE(buf);
         }
