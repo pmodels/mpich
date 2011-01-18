@@ -267,7 +267,7 @@ int MPIR_Alltoallw_inter (
     int src, dst, rank, sendcount, recvcount;
     char *sendaddr, *recvaddr;
     MPI_Datatype sendtype, recvtype;
-    MPI_Aint send_size, recv_size;
+    MPI_Aint sendtype_size, recvtype_size;
     MPI_Comm comm;
     
     local_size = comm_ptr->local_size; 
@@ -306,12 +306,12 @@ int MPIR_Alltoallw_inter (
             sendtype = sendtypes[dst];
         }
 
-        MPID_Datatype_get_size_macro(sendtypes[dst], send_size);
-        MPID_Datatype_get_size_macro(recvtypes[src], recv_size);
+        MPID_Datatype_get_size_macro(sendtypes[dst], sendtype_size);
+        MPID_Datatype_get_size_macro(recvtypes[src], recvtype_size);
 
-        if (sendcount * send_size == 0)
+        if (sendcount * sendtype_size == 0)
             dst = MPI_PROC_NULL;
-        if (recvcount * recv_size == 0)
+        if (recvcount * recvtype_size == 0)
             src = MPI_PROC_NULL;
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, 
                                   dst, MPIR_ALLTOALLW_TAG, recvaddr, 
