@@ -651,8 +651,11 @@ static HYD_status launch_procs(void)
                     status = HYDT_dmx_register_fd(1, &pmi_fds[0], HYD_POLLIN, NULL, pmi_cb);
                     HYDU_ERR_POP(status, "unable to register fd\n");
 
-                    str = HYDU_int_to_str(pmi_fds[1]);
+                    status = HYDU_sock_cloexec(pmi_fds[0]);
+                    HYDU_ERR_POP(status, "unable to set socket to close on exec\n");
+
                     HYD_pmcd_pmip.downstream.pmi_fd[process_id] = pmi_fds[0];
+                    str = HYDU_int_to_str(pmi_fds[1]);
                 }
 
                 status = HYDU_append_env_to_list("PMI_FD", str, &force_env);
