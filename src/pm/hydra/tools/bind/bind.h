@@ -175,7 +175,7 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib);
  * This function cleans up any relevant state that the binding library
  * maintained.
  */
-void HYDT_bind_finalize(void);
+HYD_status HYDT_bind_finalize(void);
 
 
 /**

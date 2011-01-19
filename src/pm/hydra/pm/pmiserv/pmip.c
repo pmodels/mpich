@@ -57,6 +57,8 @@ static HYD_status init_params(void)
 
 static void cleanup_params(void)
 {
+    HYD_status status = HYD_SUCCESS;
+
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
     /* System global */
@@ -117,7 +119,7 @@ static void cleanup_params(void)
     /* Exec list */
     HYDU_free_exec_list(HYD_pmcd_pmip.exec_list);
 
-    HYDT_bind_finalize();
+    status = HYDT_bind_finalize();
 }
 
 static void signal_cb(int sig)

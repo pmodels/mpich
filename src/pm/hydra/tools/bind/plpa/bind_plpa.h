@@ -9,5 +9,6 @@
 
 HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level);
 HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset);
+HYD_status HYDT_bind_plpa_finalize(void);
 
 #endif /* BIND_PLPA_H_INCLUDED */

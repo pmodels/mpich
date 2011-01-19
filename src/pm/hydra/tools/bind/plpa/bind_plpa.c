@@ -188,3 +188,22 @@ HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset)
   fn_fail:
     goto fn_exit;
 }
+
+HYD_status HYDT_bind_plpa_finalize(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* FIXME: We do not check for the return value of this function,
+     * because it always seems to return an error. But not calling it
+     * is causing some resource leaks. */
+    PLPA_NAME(finalize) ();
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

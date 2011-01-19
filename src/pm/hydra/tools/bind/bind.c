@@ -98,11 +98,6 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
     /***************************** USER *****************************/
     if (!strncmp(binding, "user:", strlen("user:"))) {
-        /* Find the actual processing elements */
-        HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
-                    HYDT_bind_info.total_proc_units * sizeof(struct HYDT_bind_cpuset_t),
-                    status);
-
         /* Initialize all values to map to all CPUs */
         for (i = 0; i < HYDT_bind_info.total_proc_units; i++)
             for (j = 0; j < HYDT_bind_info.total_proc_units; j++)
@@ -124,6 +119,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             if (i >= HYDT_bind_info.total_proc_units)
                 break;
         }
+        HYDU_FREE(bindstr);
 
         goto fn_exit;
     }
@@ -169,6 +165,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
                 elem = strtok(NULL, ",");
             } while (elem);
         }
+        HYDU_FREE(bindstr);
 
         for (i = HYDT_BIND_OBJ_END - 1; i > HYDT_BIND_OBJ_MACHINE; i--) {
             /* If an object has to be used, its parent object is also
@@ -233,6 +230,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
                 elem = strtok(NULL, ",");
             } while (elem);
         }
+        HYDU_FREE(bindstr);
 
         topo_end = HYDT_BIND_OBJ_END;
         obj = &HYDT_bind_info.machine;
@@ -328,20 +326,11 @@ static void cleanup_topo_level(struct HYDT_bind_obj level)
 
     level.parent = NULL;
 
-    if (level.children)
+    if (level.children) {
         for (i = 0; i < level.num_children; i++)
             cleanup_topo_level(level.children[i]);
-}
-
-void HYDT_bind_finalize(void)
-{
-    if (HYDT_bind_info.bindmap)
-        HYDU_FREE(HYDT_bind_info.bindmap);
-
-    if (HYDT_bind_info.bindlib)
-        HYDU_FREE(HYDT_bind_info.bindlib);
-
-    cleanup_topo_level(HYDT_bind_info.machine);
+        HYDU_FREE(level.children);
+    }
 }
 
 HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
@@ -376,4 +365,41 @@ void HYDT_bind_pid_to_cpuset(int process_id, struct HYDT_bind_cpuset_t *cpuset)
 {
     HYDT_bind_cpuset_dup(HYDT_bind_info.bindmap[process_id % HYDT_bind_info.total_proc_units],
                          cpuset);
+}
+
+HYD_status HYDT_bind_finalize(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Finalize the binding library requested by the user */
+#if defined HAVE_PLPA
+    if (!strcmp(HYDT_bind_info.bindlib, "plpa")) {
+        status = HYDT_bind_plpa_finalize();
+        HYDU_ERR_POP(status, "unable to finalize plpa\n");
+    }
+#endif /* HAVE_PLPA */
+
+#if defined HAVE_HWLOC
+    if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
+        status = HYDT_bind_hwloc_finalize();
+        HYDU_ERR_POP(status, "unable to finalize hwloc\n");
+    }
+#endif /* HAVE_HWLOC */
+
+    if (HYDT_bind_info.bindmap)
+        HYDU_FREE(HYDT_bind_info.bindmap);
+
+    if (HYDT_bind_info.bindlib)
+        HYDU_FREE(HYDT_bind_info.bindlib);
+
+    cleanup_topo_level(HYDT_bind_info.machine);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }

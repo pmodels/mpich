@@ -238,7 +238,8 @@ HYD_status HYD_pmci_finalize(void)
     status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
-    HYDT_bind_finalize();
+    status = HYDT_bind_finalize();
+    HYDU_ERR_POP(status, "error returned from binding finalize\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
