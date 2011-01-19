@@ -18,4 +18,5 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_init.c \
 	$(top_srcdir)/tools/bootstrap/external/ll_query_proxy_id.c \
 	$(top_srcdir)/tools/bootstrap/external/lsf_query_node_list.c \
 	$(top_srcdir)/tools/bootstrap/external/sge_query_node_list.c \
-	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c
+	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c \
+	$(top_srcdir)/tools/bootstrap/external/pbs_query_job_id.c

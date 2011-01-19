@@ -26,8 +26,10 @@ static HYD_status external_rmk_init(void)
     if (!strcmp(HYDT_bsci_info.rmk, "sge"))
         HYDT_bsci_fns.query_node_list = HYDT_bscd_sge_query_node_list;
 
-    if (!strcmp(HYDT_bsci_info.rmk, "pbs"))
+    if (!strcmp(HYDT_bsci_info.rmk, "pbs")) {
         HYDT_bsci_fns.query_node_list = HYDT_bscd_pbs_query_node_list;
+        HYDT_bsci_fns.query_job_id = HYDT_bscd_pbs_query_job_id;
+    }
 
     /* for everything else, set default values */
     if (HYDT_bsci_fns.query_native_int == NULL)
