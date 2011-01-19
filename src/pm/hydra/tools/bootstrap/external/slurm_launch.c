@@ -64,7 +64,8 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
 {
     int num_hosts, idx, i, exec_idx;
     int *pid, *fd_list;
-    char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL, quoted_exec_string[HYD_TMP_STRLEN];
+    char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL,
+        quoted_exec_string[HYD_TMP_STRLEN];
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_node *node;
     struct HYDT_bind_cpuset_t cpuset;
