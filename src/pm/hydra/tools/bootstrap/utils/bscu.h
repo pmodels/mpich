@@ -18,7 +18,7 @@ extern int HYD_bscu_pid_count;
 HYD_status HYDT_bscu_rmk_finalize(void);
 HYD_status HYDT_bscu_launcher_finalize(void);
 HYD_status HYDT_bscu_query_node_list(struct HYD_node **node_list);
-HYD_status HYDT_bscu_query_job_id(char **job_id);
+HYD_status HYDT_bscu_query_jobid(char **jobid);
 HYD_status HYDT_bscu_query_usize(int *size);
 HYD_status HYDT_bscu_query_proxy_id(int *proxy_id);
 HYD_status HYDT_bscu_wait_for_completion(int timeout);

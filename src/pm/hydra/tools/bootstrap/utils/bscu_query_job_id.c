@@ -7,14 +7,14 @@
 #include "hydra.h"
 #include "bscu.h"
 
-HYD_status HYDT_bscu_query_job_id(char **job_id)
+HYD_status HYDT_bscu_query_jobid(char **jobid)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /* We don't know anything about job ID */
-    *job_id = NULL;
+    *jobid = NULL;
 
     HYDU_FUNC_EXIT();
 

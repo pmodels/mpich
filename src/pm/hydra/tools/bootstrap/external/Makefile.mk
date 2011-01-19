@@ -9,6 +9,7 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_init.c \
 	$(top_srcdir)/tools/bootstrap/external/external_finalize.c \
 	$(top_srcdir)/tools/bootstrap/external/external_env.c \
 	$(top_srcdir)/tools/bootstrap/external/external_query_native_int.c \
+	$(top_srcdir)/tools/bootstrap/external/external_query_jobid.c \
 	$(top_srcdir)/tools/bootstrap/external/ssh.c \
 	$(top_srcdir)/tools/bootstrap/external/slurm_launch.c \
 	$(top_srcdir)/tools/bootstrap/external/slurm_query_node_list.c \
@@ -18,5 +19,4 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_init.c \
 	$(top_srcdir)/tools/bootstrap/external/ll_query_proxy_id.c \
 	$(top_srcdir)/tools/bootstrap/external/lsf_query_node_list.c \
 	$(top_srcdir)/tools/bootstrap/external/sge_query_node_list.c \
-	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c \
-	$(top_srcdir)/tools/bootstrap/external/pbs_query_job_id.c
+	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c

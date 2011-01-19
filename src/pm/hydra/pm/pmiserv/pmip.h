@@ -16,7 +16,7 @@ struct HYD_pmcd_pmip {
     struct {
         int global_core_count;
         int global_process_count;
-        char *job_id;
+        char *jobid;
 
         /* PMI */
         char *pmi_fd;

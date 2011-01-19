@@ -6,15 +6,20 @@
 
 #include "hydra.h"
 #include "bsci.h"
-#include "pbs.h"
+#include "external.h"
 
-HYD_status HYDT_bscd_pbs_query_job_id(char **job_id)
+HYD_status HYDT_bscd_external_query_jobid(char **jobid)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    MPL_env2str("PBS_JOBID", (const char **) job_id);
+    if (!strcmp(HYDT_bsci_info.rmk, "pbs"))
+        MPL_env2str("PBS_JOBID", (const char **) jobid);
+    else if (!strcmp(HYDT_bsci_info.rmk, "slurm"))
+        MPL_env2str("SLURM_JOBID", (const char **) jobid);
+    else
+        *jobid = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();
