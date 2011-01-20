@@ -3470,6 +3470,8 @@ int MPIR_Barrier( MPID_Comm *comm_ptr);
 int MPIR_Barrier_intra( MPID_Comm *comm_ptr );
 int MPIR_Barrier_inter( MPID_Comm *comm_ptr);
 
+int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
+
 int MPIR_Setup_intercomm_localcomm( MPID_Comm * );
 
 int MPIR_Comm_create( MPID_Comm ** );
