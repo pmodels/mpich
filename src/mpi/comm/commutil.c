@@ -249,6 +249,7 @@ static int init_default_collops(void)
             case MPID_HIERARCHY_FLAT:
                 break;
             case MPID_HIERARCHY_PARENT:
+                ops->Ibcast = &MPIR_Ibcast_SMP;
                 break;
             case MPID_HIERARCHY_NODE:
                 break;
