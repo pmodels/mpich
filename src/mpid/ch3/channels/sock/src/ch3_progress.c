@@ -574,8 +574,6 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			    
 			if (nb > 0 && adjust_iov(&iovp, &sreq->dev.iov_count, nb))
 			{
-			    int complete;
-
 			    reqFn = sreq->dev.OnDataAvail;
 			    if (!reqFn) {
 				MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
