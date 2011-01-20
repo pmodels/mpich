@@ -3523,6 +3523,8 @@ int MPIR_Iexscan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Ibcast_inter(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ibarrier_intra(MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s);
 
 
 /* random initializers */

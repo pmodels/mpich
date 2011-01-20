@@ -6,7 +6,7 @@
    "MPIX_" functions (e.g. "MPIX_Ibcast").  All functions are provided and are
    available for device-level overrides, but only a subset of the functions have
    device-independent implementations at this time.  The current list of working
-   functions is: MPIX_Ibcast.
+   functions is: MPIX_Ibcast, MPIX_Ibarrier.
 
 
 ===============================================================================
