@@ -195,11 +195,145 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
     return mpi_errno;
 }
 
+/* holds default collop "vtables" for _intracomms_, where
+ * default[hierarchy_kind] is the pointer to the collop struct for that
+ * hierarchy kind */
+static struct MPID_Collops *default_collops[MPID_HIERARCHY_SIZE] = {NULL};
+/* default for intercomms */
+static struct MPID_Collops *ic_default_collops = NULL;
+
+#undef FUNCNAME
+#define FUNCNAME cleanup_default_collops
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int cleanup_default_collops(void *unused) {
+    int i;
+    for (i = 0; i < MPID_HIERARCHY_SIZE; ++i) {
+        if (default_collops[i]) {
+            MPIU_Assert(default_collops[i]->ref_count >= 1);
+            if (--default_collops[i]->ref_count == 0)
+                MPIU_Free(default_collops[i]);
+            default_collops[i] = NULL;
+        }
+    }
+    if (ic_default_collops) {
+        MPIU_Assert(ic_default_collops->ref_count >= 1);
+        if (--ic_default_collops->ref_count == 0)
+            MPIU_Free(ic_default_collops);
+    }
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME init_default_collops
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int init_default_collops(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    struct MPID_Collops *ops = NULL;
+    MPIU_CHKPMEM_DECL(MPID_HIERARCHY_SIZE+1);
+
+    /* first initialize the intracomms */
+    for (i = 0; i < MPID_HIERARCHY_SIZE; ++i) {
+        MPIU_CHKPMEM_CALLOC(ops, struct MPID_Collops *, sizeof(struct MPID_Collops), mpi_errno, "default intracomm collops");
+        ops->ref_count = 1; /* force existence until finalize time */
+
+        /* intracomm default defaults... */
+        /* TODO add other fns here as they are added */
+
+        /* override defaults, such as for SMP */
+        switch (i) {
+            case MPID_HIERARCHY_FLAT:
+                break;
+            case MPID_HIERARCHY_PARENT:
+                break;
+            case MPID_HIERARCHY_NODE:
+                break;
+            case MPID_HIERARCHY_NODE_ROOTS:
+                break;
+            default:
+                MPIU_Assertp(FALSE);
+                break;
+        }
+
+        default_collops[i] = ops;
+    }
+
+    /* now the intercomm table */
+    {
+        MPIU_CHKPMEM_CALLOC(ops, struct MPID_Collops *, sizeof(struct MPID_Collops), mpi_errno, "default intercomm collops");
+        ops->ref_count = 1; /* force existence until finalize time */
+
+        /* intracomm defaults */
+        ops->Ibcast = NULL;
+
+        ic_default_collops = ops;
+    }
+
+    /* run after MPID_Finalize to permit collective usage during finalize */
+    MPIR_Add_finalize(cleanup_default_collops, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+
+    MPIU_CHKPMEM_COMMIT();
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+/* Initializes the coll_fns field of comm to a sensible default.  It may re-use
+ * an existing structure, so any override by a lower level should _not_ change
+ * any of the fields but replace the coll_fns object instead.
+ *
+ * NOTE: for now we only initialize nonblocking collective routines, since the
+ * blocking collectives all contain fallback logic that correctly handles NULL
+ * override functions. */
+#undef FUNCNAME
+#define FUNCNAME set_collops
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int set_collops(MPID_Comm *comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    static int initialized = FALSE;
+
+    if (comm->coll_fns != NULL)
+        goto fn_exit;
+
+    if (unlikely(!initialized)) {
+        mpi_errno = init_default_collops();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        initialized = TRUE;
+    }
+
+    if (comm->comm_kind == MPID_INTRACOMM) {
+        /* FIXME MT what protects access to this structure and ic_default_collops? */
+        comm->coll_fns = default_collops[comm->hierarchy_kind];
+    }
+    else { /* intercomm */
+        comm->coll_fns = ic_default_collops;
+    }
+
+    comm->coll_fns->ref_count++;
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 /* Provides a hook for the top level functions to perform some manipulation on a
    communicator just before it is given to the application level.
   
    For example, we create sub-communicators for SMP-aware collectives at this
    step. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_commit
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Comm_commit(MPID_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -274,6 +408,9 @@ int MPIR_Comm_commit(MPID_Comm *comm)
                               &comm->node_comm->vcr[i] );
             }
 
+            mpi_errno = set_collops(comm->node_comm);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
             MPID_Dev_comm_create_hook( comm->node_comm );
             /* don't call MPIR_Comm_commit here */
         }
@@ -303,6 +440,9 @@ int MPIR_Comm_commit(MPID_Comm *comm)
                               &comm->node_roots_comm->vcr[i] );
             }
 
+            mpi_errno = set_collops(comm->node_roots_comm);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
             MPID_Dev_comm_create_hook( comm->node_roots_comm );
             /* don't call MPIR_Comm_commit here */
         }
@@ -311,6 +451,12 @@ int MPIR_Comm_commit(MPID_Comm *comm)
     }
 
 fn_exit:
+    if (!mpi_errno) {
+        /* catch all of the early-bail, non-error cases */
+        mpi_errno = set_collops(comm);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
     if (external_procs != NULL)
         MPIU_Free(external_procs);
     if (local_procs != NULL)
@@ -1039,6 +1185,8 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
     }
     MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 
+    /* FIXME do we want to copy coll_fns here? */
+
     /* Notify the device of the new communicator */
     MPID_Dev_comm_create_hook(newcomm_ptr);
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
@@ -1102,6 +1250,14 @@ static int comm_delete(MPID_Comm * comm_ptr, int isDisconnect)
         /* Notify the device that the communicator is about to be
            destroyed */
         MPID_Dev_comm_destroy_hook(comm_ptr);
+
+        /* release our reference to the collops structure, comes after the
+         * destroy_hook to allow the device to manage these vtables in a custom
+         * fashion */
+        if (comm_ptr->coll_fns && --comm_ptr->coll_fns->ref_count == 0) {
+            MPIU_Free(comm_ptr->coll_fns);
+            comm_ptr->coll_fns = NULL;
+        }
 
         /* Free the VCRT */
         mpi_errno = MPID_VCRT_Release(comm_ptr->vcrt, isDisconnect);
