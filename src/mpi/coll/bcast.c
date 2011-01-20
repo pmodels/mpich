@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "collutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Bcast */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -22,26 +23,6 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Bcast
 #define MPI_Bcast PMPI_Bcast
-
-/* FIXME move to somewhere else */
-/* Returns non-zero if val is a power of two.  If ceil_pof2 is non-NULL, it sets
-   *ceil_pof2 to the power of two that is just larger than or equal to val.
-   That is, it rounds up to the nearest power of two. */
-static inline int MPIU_is_pof2(int val, int *ceil_pof2)
-{
-    int pof2 = 1;
-
-    while (pof2 < val)
-        pof2 *= 2;
-    if (ceil_pof2)
-        *ceil_pof2 = pof2;
-
-    if (pof2 == val)
-        return 1;
-    else
-        return 0;
-}
-
 
 /* A binomial tree broadcast algorithm.  Good for short messages, 
    Cost = lgp.alpha + n.lgp.beta */
