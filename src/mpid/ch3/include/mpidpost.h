@@ -194,10 +194,10 @@ void MPIDI_CH3U_Request_destroy(MPID_Request * req);
 
 #define MPID_Request_release(req_)			\
 {							\
-    int inuse;					        \
+    int inuse_;					        \
 							\
-    MPIR_Request_release_ref((req_), &inuse);	        \
-    if (inuse == 0)					\
+    MPIR_Request_release_ref((req_), &inuse_);	        \
+    if (inuse_ == 0)					\
     {							\
 	MPIDI_CH3_Request_destroy(req_);		\
     }							\
