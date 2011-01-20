@@ -169,6 +169,16 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
     
     do
     {
+        int made_progress = FALSE;
+
+        /* make progress on NBC schedules, must come before we block on sock_wait */
+        mpi_errno = MPIDU_Sched_progress(&made_progress);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (made_progress) {
+            MPIDI_CH3_Progress_signal_completion();
+            break;
+        }
+
 #       ifdef MPICH_IS_THREADED
 
 	/* The logic for this case is just complicated enough that

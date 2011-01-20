@@ -59,6 +59,10 @@ typedef int32_t MPIR_Rank_t;
 typedef MPIR_Rank_t MPID_Node_id_t;
 
 
+/* provides "pre" typedefs and such for NBC scheduling mechanism */
+#include "mpid_sched_pre.h"
+
+
 /* For the typical communication system for which the ch3 channel is
    appropriate, 16 bits is sufficient for the rank.  By also using 16
    bits for the context, we can reduce the size of the match

@@ -11,7 +11,8 @@ mpi_sources = allreduce.c barrier.c op_create.c op_free.c \
 
 lib${MPILIBNAME}_a_SOURCES = $(mpi_sources) \
  helper_fns.c opsum.c opmax.c opmin.c opband.c opbor.c opbxor.c \
- opland.c oplor.c oplxor.c opprod.c opminloc.c opmaxloc.c
+ opland.c oplor.c oplxor.c opprod.c opminloc.c opmaxloc.c \
+ nbcutil.c
 
 INCLUDES = -I../../include -I${top_srcdir}/src/include -I${top_srcdir}/src/mpi/datatype
 profilelib_${MPILIBNAME} = ${PMPILIBNAME}

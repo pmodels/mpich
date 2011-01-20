@@ -31,28 +31,26 @@
 int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
+    int tag = -1;
+    MPID_Request *reqp = NULL;
+    MPID_Sched_t s = MPID_SCHED_NULL;
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Ibarrier != NULL) {
-        mpi_errno = comm_ptr->coll_fns->Ibarrier(comm_ptr, request);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-    else {
-        MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "default version of MPIX_Ibarrier not yet implemented");
-        MPIU_Assertp(0); /* never get here */
-        /* TODO implement the following functions and uncomment this code: */
-#if 0
-        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Ibarrier_intra(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-        else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Ibarrier_inter(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-#endif
-    }
+    *request = MPI_REQUEST_NULL;
+
+    mpi_errno = MPID_Sched_next_tag(&tag);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_Sched_create(&s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPIU_Assert(comm_ptr->coll_fns != NULL);
+    MPIU_Assert(comm_ptr->coll_fns->Ibarrier != NULL);
+    mpi_errno = comm_ptr->coll_fns->Ibarrier(comm_ptr, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
+    if (reqp)
+        *request = reqp->handle;
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;

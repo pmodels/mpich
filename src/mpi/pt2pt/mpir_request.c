@@ -218,6 +218,14 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 	    
 	    break;
 	}
+
+        case MPID_COLL_REQUEST:
+        {
+            MPIR_Request_extract_status(request_ptr, status);
+            MPID_Request_release(request_ptr);
+            *request = MPI_REQUEST_NULL;
+            break;
+        }
 	
 	default:
 	{

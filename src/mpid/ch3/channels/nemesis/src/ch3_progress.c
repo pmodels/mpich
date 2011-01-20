@@ -239,6 +239,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #if !defined(ENABLE_NO_YIELD) || defined(MPICH_IS_THREADED)
     int pollcount = 0;
 #endif
+    int made_progress = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
@@ -441,6 +442,13 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         {
             mpi_errno = MPID_nem_local_lmt_progress();
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+
+        /* make progress on NBC schedules */
+        mpi_errno = MPIDU_Sched_progress(&made_progress);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (made_progress) {
+            MPIDI_CH3_Progress_signal_completion();
         }
 
         /* in the case of progress_wait, bail out if anything completed (CC-1) */

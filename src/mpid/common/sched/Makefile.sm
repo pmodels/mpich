@@ -1,0 +1,7 @@
+lib${MPILIBNAME}_a_SOURCES = \
+    mpid_sched.c
+
+HEADERS = 
+# is this INCLUDES necessary?
+INCLUDES = -I${srcdir} -I${top_builddir}/src/include -I${master_top_srcdir}/src/include
+SUBDIRS = .

@@ -1305,6 +1305,7 @@ typedef enum MPID_Request_kind_t {
     MPID_PREQUEST_SEND,
     MPID_PREQUEST_RECV,
     MPID_UREQUEST,
+    MPID_COLL_REQUEST,
     MPID_LAST_REQUEST_KIND
 #ifdef MPID_DEV_REQUEST_KIND_DECL
     , MPID_DEV_REQUEST_KIND_DECL
@@ -1769,48 +1770,48 @@ typedef struct MPID_Collops {
                            MPID_Comm *);
 
     /* MPI-3 nonblocking collectives */
-    int (*Ibarrier)(MPID_Comm *comm_ptr, MPI_Request *request);
-    int (*Ibcast)(void *buffer, int count, MPI_Datatype datatype, MPID_Comm *comm_ptr,
-                  MPI_Request *request);
+    int (*Ibarrier)(MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ibcast)(void *buffer, int count, MPI_Datatype datatype, int root,
+                  MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Igather)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                    int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
-                   MPI_Request *request);
+                   MPID_Sched_t s);
     int (*Igatherv)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                     int *recvcounts, int *displs, MPI_Datatype recvtype, int root,
-                    MPID_Comm *comm_ptr, MPI_Request *request);
+                    MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Iscatter)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                     int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
-                    MPI_Request *request);
+                    MPID_Sched_t s);
     int (*Iscatterv)(void *sendbuf, int *sendcounts, int *displs, MPI_Datatype sendtype,
                      void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                     MPID_Comm *comm_ptr, MPI_Request *request);
+                     MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Iallgather)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
-                      MPI_Request *request);
+                      MPID_Sched_t s);
     int (*Iallgatherv)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                        int *recvcounts, int *displs, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
-                       MPI_Request *request);
+                       MPID_Sched_t s);
     int (*Ialltoall)(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                      int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
-                     MPI_Request *request);
+                     MPID_Sched_t s);
     int (*Ialltoallv)(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype sendtype,
                       void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype recvtype,
-                      MPID_Comm *comm_ptr, MPI_Request *request);
+                      MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Ialltoallw)(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *sendtypes,
                       void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype *recvtypes,
-                      MPID_Comm *comm_ptr, MPI_Request *request);
+                      MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Ireduce)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                   int root, MPID_Comm *comm_ptr, MPI_Request *request);
+                   int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Iallreduce)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                      MPID_Comm *comm_ptr, MPI_Request *request);
+                      MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Ireduce_scatter)(void *sendbuf, void *recvbuf, int *recvcounts, MPI_Datatype datatype,
-                           MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+                           MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Ireduce_scatter_block)(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype,
-                                 MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request);
+                                 MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Iscan)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                 MPID_Comm *comm_ptr, MPI_Request *request);
+                 MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Iexscan)(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                   MPID_Comm *comm_ptr, MPI_Request *request);
+                   MPID_Comm *comm_ptr, MPID_Sched_t s);
 } MPID_Collops;
 
 #define MPIR_BARRIER_TAG 1
@@ -3190,6 +3191,10 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr);
    processes may use different ids to identify the same target process
   @*/
 int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
+
+/* prototypes and declarations for the MPID_Sched interface for nonblocking
+ * collectives */
+#include "mpir_nbc.h"
 
 /* ------------------------------------------------------------------------- */
 /* Define a macro to allow us to select between statically selected functions
