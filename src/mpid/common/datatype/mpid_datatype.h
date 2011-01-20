@@ -536,6 +536,20 @@ do {									\
     }									\
 } while(0)
 
+/* helper macro: takes an MPI_Datatype handle value and returns TRUE in
+ * (*is_config_) if the type is contiguous */
+#define MPID_Datatype_is_contig(dtype_, is_contig_)                            \
+    do {                                                                       \
+        if (HANDLE_GET_KIND(dtype_) == HANDLE_KIND_BUILTIN) {                  \
+            *(is_contig_) = TRUE;                                              \
+        }                                                                      \
+        else {                                                                 \
+            MPID_Datatype *dtp_ = NULL;                                        \
+            MPID_Datatype_get_ptr((dtype_), dtp_);                             \
+            *(is_contig_) = dtp_->is_contig;                                   \
+        }                                                                      \
+    } while (0)
+
 /* Datatype functions */
 int MPID_Type_commit(MPI_Datatype *type);
 
