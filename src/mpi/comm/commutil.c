@@ -241,6 +241,7 @@ static int init_default_collops(void)
         ops->ref_count = 1; /* force existence until finalize time */
 
         /* intracomm default defaults... */
+        ops->Ibcast = &MPIR_Ibcast_intra;
         /* TODO add other fns here as they are added */
 
         /* override defaults, such as for SMP */
@@ -267,7 +268,7 @@ static int init_default_collops(void)
         ops->ref_count = 1; /* force existence until finalize time */
 
         /* intracomm defaults */
-        ops->Ibcast = NULL;
+        ops->Ibcast = &MPIR_Ibcast_inter;
 
         ic_default_collops = ops;
     }
