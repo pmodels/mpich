@@ -72,7 +72,6 @@ int MPIR_Alltoallw_intra (
     int outstanding_requests;
     int ii, ss, bblock;
     int type_size;
-    MPI_Aint size1, size2;
     MPIU_CHKLMEM_DECL(2);
     
     comm = comm_ptr->handle;
@@ -95,11 +94,7 @@ int MPIR_Alltoallw_intra (
         for (i = 0; i < comm_size; ++i) {
             /* start inner loop at i to avoid re-exchanging data */
             for (j = i; j < comm_size; ++j) {
-                /* Get size of recv types */
-                MPID_Datatype_get_size_macro(recvtypes[i], size1);
-                MPID_Datatype_get_size_macro(recvtypes[j], size2);
-
-                if (rank == i && (recvcnts[j] * size2)) {
+                if (rank == i) {
                     /* also covers the (rank == i && rank == j) case */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]),
                                                       recvcnts[j], recvtypes[j],
@@ -112,7 +107,7 @@ int MPIR_Alltoallw_intra (
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
                 }
-                else if (rank == j && (recvcnts[i] * size1)) {
+                else if (rank == j) {
                     /* same as above with i/j args reversed */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]),
                                                       recvcnts[i], recvtypes[i],
@@ -267,7 +262,6 @@ int MPIR_Alltoallw_inter (
     int src, dst, rank, sendcount, recvcount;
     char *sendaddr, *recvaddr;
     MPI_Datatype sendtype, recvtype;
-    MPI_Aint sendtype_size, recvtype_size;
     MPI_Comm comm;
     
     local_size = comm_ptr->local_size; 
@@ -306,13 +300,6 @@ int MPIR_Alltoallw_inter (
             sendtype = sendtypes[dst];
         }
 
-        MPID_Datatype_get_size_macro(sendtypes[dst], sendtype_size);
-        MPID_Datatype_get_size_macro(recvtypes[src], recvtype_size);
-
-        if (sendcount * sendtype_size == 0)
-            dst = MPI_PROC_NULL;
-        if (recvcount * recvtype_size == 0)
-            src = MPI_PROC_NULL;
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, 
                                   dst, MPIR_ALLTOALLW_TAG, recvaddr, 
                                   recvcount, recvtype, src,

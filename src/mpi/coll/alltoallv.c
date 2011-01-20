@@ -67,7 +67,7 @@ int MPIR_Alltoallv_intra (
 	MPID_Comm *comm_ptr )
 {
     int        comm_size, i, j;
-    MPI_Aint   send_extent, recv_extent, sendtype_size, recvtype_size;
+    MPI_Aint   send_extent, recv_extent;
     int        mpi_errno = MPI_SUCCESS;
     MPI_Status *starray;
     MPI_Status status;
@@ -86,8 +86,6 @@ int MPIR_Alltoallv_intra (
     /* Get extent of send and recv types */
     MPID_Datatype_get_extent_macro(sendtype, send_extent);
     MPID_Datatype_get_extent_macro(recvtype, recv_extent);
-    MPID_Datatype_get_size_macro(sendtype, sendtype_size);
-    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
     
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
@@ -105,7 +103,7 @@ int MPIR_Alltoallv_intra (
         for (i = 0; i < comm_size; ++i) {
             /* start inner loop at i to avoid re-exchanging data */
             for (j = i; j < comm_size; ++j) {
-                if (rank == i && (recvcnts[j] * recvtype_size)) {
+                if (rank == i) {
                     /* also covers the (rank == i && rank == j) case */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]*recv_extent),
                                                       recvcnts[j], recvtype,
@@ -114,7 +112,7 @@ int MPIR_Alltoallv_intra (
                                                       comm, &status);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
-                else if (rank == j && (recvcnts[i] * recvtype_size)) {
+                else if (rank == j) {
                     /* same as above with i/j args reversed */
                     mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]*recv_extent),
                                                       recvcnts[i], recvtype,
@@ -141,7 +139,7 @@ int MPIR_Alltoallv_intra (
             /* do the communication -- post ss sends and receives: */
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank+i+ii) % comm_size;
-                if (recvcnts[dst] * recvtype_size) {
+                if (recvcnts[dst]) {
                     MPID_Datatype_get_size_macro(recvtype, type_size);
                     if (type_size) {
                         MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
@@ -158,7 +156,7 @@ int MPIR_Alltoallv_intra (
 
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank-i-ii+comm_size) % comm_size;
-                if (sendcnts[dst] * sendtype_size) {
+                if (sendcnts[dst]) {
                     MPID_Datatype_get_size_macro(sendtype, type_size);
                     if (type_size) {
                         MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
@@ -230,7 +228,7 @@ int MPIR_Alltoallv_inter (
 
 */
     int local_size, remote_size, max_size, i;
-    MPI_Aint   send_extent, recv_extent, sendtype_size, recvtype_size;
+    MPI_Aint   send_extent, recv_extent;
     int        mpi_errno = MPI_SUCCESS;
     MPI_Status status;
     int src, dst, rank, sendcount, recvcount;
@@ -245,8 +243,6 @@ int MPIR_Alltoallv_inter (
     /* Get extent of send and recv types */
     MPID_Datatype_get_extent_macro(sendtype, send_extent);
     MPID_Datatype_get_extent_macro(recvtype, recv_extent);
-    MPID_Datatype_get_size_macro(sendtype, sendtype_size);
-    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
     
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
@@ -279,10 +275,6 @@ int MPIR_Alltoallv_inter (
             sendcount = sendcnts[dst];
         }
 
-        if (sendcount * sendtype_size == 0)
-            dst = MPI_PROC_NULL;
-        if (recvcount * recvtype_size == 0)
-            src = MPI_PROC_NULL;
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, dst, 
                                   MPIR_ALLTOALLV_TAG, recvaddr, recvcount, 
                                   recvtype, src, MPIR_ALLTOALLV_TAG,

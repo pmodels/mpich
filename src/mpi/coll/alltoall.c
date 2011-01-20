@@ -623,10 +623,6 @@ int MPIR_Alltoall_inter(
             sendaddr = (char *)sendbuf + dst*sendcount*sendtype_extent;
         }
 
-        if (sendcount == 0)
-            dst = MPI_PROC_NULL;
-        if (recvcount == 0)
-            src = MPI_PROC_NULL;
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, dst, 
                                   MPIR_ALLTOALL_TAG, recvaddr,
                                   recvcount, recvtype, src,
