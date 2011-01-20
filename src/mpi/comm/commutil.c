@@ -90,7 +90,7 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
     comm_p->topo_fns     = NULL;
     comm_p->name[0]      = '\0';
 
-    comm_p->is_node_aware   = 0;
+    comm_p->hierarchy_kind  = MPID_HIERARCHY_FLAT;
     comm_p->node_comm       = NULL;
     comm_p->node_roots_comm = NULL;
     comm_p->intranode_table = NULL;
@@ -259,6 +259,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             comm->node_comm->recvcontext_id = comm->node_comm->context_id;
             comm->node_comm->rank = local_rank;
             comm->node_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_comm->hierarchy_kind = MPID_HIERARCHY_NODE;
             comm->node_comm->local_comm = NULL;
 
             comm->node_comm->local_size  = num_local;
@@ -287,6 +288,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
             comm->node_roots_comm->rank = external_rank;
             comm->node_roots_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_roots_comm->hierarchy_kind = MPID_HIERARCHY_NODE_ROOTS;
             comm->node_roots_comm->local_comm = NULL;
 
             comm->node_roots_comm->local_size  = num_external;
@@ -305,7 +307,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             /* don't call MPIR_Comm_commit here */
         }
 
-        comm->is_node_aware = 1;
+        comm->hierarchy_kind = MPID_HIERARCHY_PARENT;
     }
 
 fn_exit:
@@ -325,7 +327,7 @@ fn_fail:
    collective communication, for example. */
 int MPIR_Comm_is_node_aware(MPID_Comm * comm)
 {
-    return comm->is_node_aware;
+    return (comm->hierarchy_kind == MPID_HIERARCHY_PARENT);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes
@@ -336,7 +338,7 @@ int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
 
-    if (!comm->is_node_aware)
+    if (!MPIR_Comm_is_node_aware(comm))
         return 0;
 
     for (; i < comm->local_size; i++)

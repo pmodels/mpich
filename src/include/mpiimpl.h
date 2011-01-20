@@ -1043,6 +1043,16 @@ int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr, i
 typedef enum MPID_Comm_kind_t { 
     MPID_INTRACOMM = 0, 
     MPID_INTERCOMM = 1 } MPID_Comm_kind_t;
+
+/* ideally we could add these to MPID_Comm_kind_t, but there's too much existing
+ * code that assumes that the only valid values are INTRACOMM or INTERCOMM */
+typedef enum MPID_Comm_hierarchy_kind_t {
+    MPID_HIERARCHY_FLAT = 0,        /* no hierarchy */
+    MPID_HIERARCHY_PARENT = 1,      /* has subcommunicators */
+    MPID_HIERARCHY_NODE_ROOTS = 2,  /* is the subcomm for node roots */
+    MPID_HIERARCHY_NODE = 3,        /* is the subcomm for a node */
+    MPID_HIERARCHY_SIZE             /* cardinality of this enum */
+} MPID_Comm_hierarchy_kind_t;
 /* Communicators */
 
 /*S
@@ -1128,8 +1138,8 @@ typedef struct MPID_Comm {
     MPID_Errhandler *errhandler; /* Pointer to the error handler structure */
     struct MPID_Comm    *local_comm; /* Defined only for intercomms, holds
 				        an intracomm for the local group */
-    int is_node_aware;           /* true if node topology info is available,
-                                    such as node_comm and node_roots_comm */
+
+    MPID_Comm_hierarchy_kind_t hierarchy_kind; /* flat, parent, node, or node_roots */
     struct MPID_Comm *node_comm; /* Comm of processes in this comm that are on
                                     the same node as this process. */
     struct MPID_Comm *node_roots_comm; /* Comm of root processes for other nodes. */
@@ -1140,6 +1150,7 @@ typedef struct MPID_Comm {
     int *internode_table;        /* internode_table[i] gives the rank in
                                     node_roots_comm of rank i in this comm.
                                     It is of size 'local_size'. */
+
     int           is_low_group;  /* For intercomms only, this boolean is
 				    set for all members of one of the 
 				    two groups of processes and clear for 
