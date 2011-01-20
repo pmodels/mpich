@@ -82,11 +82,10 @@ int MPIR_Alltoallv_intra (
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-    
-    /* Get extent of send and recv types */
-    MPID_Datatype_get_extent_macro(sendtype, send_extent);
+
+    /* Get extent of recv type, but send type is only valid if (sendbuf!=MPI_IN_PLACE) */
     MPID_Datatype_get_extent_macro(recvtype, recv_extent);
-    
+
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
@@ -127,6 +126,8 @@ int MPIR_Alltoallv_intra (
     else {
         bblock = MPIR_PARAM_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
+
+        MPID_Datatype_get_extent_macro(sendtype, send_extent);
 
         MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
         MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
