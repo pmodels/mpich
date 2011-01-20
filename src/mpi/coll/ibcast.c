@@ -63,7 +63,7 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPI_Allreduce
+#define FUNCNAME MPIX_Ibcast
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
