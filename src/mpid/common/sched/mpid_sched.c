@@ -265,7 +265,7 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
 
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
-    DL_APPEND(all_schedules.head, s);
+    MPL_DL_APPEND(all_schedules.head, s);
 
     dprintf(stderr, "started schedule s=%p\n", s); /* XXX DJG */
     MPIDU_Sched_dump(s);
@@ -512,7 +512,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
     if (made_progress)
         *made_progress = FALSE;
 
-    DL_FOREACH_SAFE(state->head, s, tmp) {
+    MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
         dprintf(stderr, "making progress on s=%p\n", s);
         /*MPIDU_Sched_dump(s);*/
 
@@ -561,7 +561,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
             dprintf(stderr, "completing and dequeuing s=%p r=%p\n", s, s->req);
 
             /* dequeue this schedule from the state, it's complete */
-            DL_DELETE(state->head, s);
+            MPL_DL_DELETE(state->head, s);
 
             /* TODO refactor into a sched_complete routine? */
             MPID_REQUEST_SET_COMPLETED(s->req);
