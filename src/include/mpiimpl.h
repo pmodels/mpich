@@ -3486,7 +3486,7 @@ void MPIR_Free_err_dyncodes( void );
 
 /* begin impl functions for NBC */
 int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request);
-int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, MPID_Comm *comm_ptr, MPI_Request *request);
+int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
 int MPIR_Igather_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
 int MPIR_Igatherv_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
 int MPIR_Iscatter_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request);

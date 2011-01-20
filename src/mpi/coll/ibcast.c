@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_Ibcast_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -43,12 +43,12 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, MPID_Comm *
 #if 0
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
             /* intracommunicator */
-            mpi_errno = MPIR_Ibcast_intra(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr);
+            mpi_errno = MPIR_Ibcast_intra(buffer, count, datatype, root, comm_ptr, request);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         else {
             /* intercommunicator */
-            mpi_errno = MPIR_Ibcast_inter(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr);
+            mpi_errno = MPIR_Ibcast_inter(buffer, count, datatype, root, comm_ptr, request);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 #endif
@@ -85,7 +85,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, MPI_Comm comm, MPI_Request *request)
+int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
@@ -135,7 +135,7 @@ int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, MPI_Comm comm, M
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, comm_ptr, request);
+    mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, request);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
