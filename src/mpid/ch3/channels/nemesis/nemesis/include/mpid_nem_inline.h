@@ -32,6 +32,12 @@ static inline void MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI
 static inline void MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                                     MPIDI_VC_t *vc, int *again);
 
+/* evaluates to TRUE if it is safe to block on recv operations in the progress
+ * loop, FALSE otherwise */
+#define MPID_nem_safe_to_block_recv()         \
+    (!MPID_nem_local_lmt_pending               && \
+     !MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] && \
+     !MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE))
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich2_send_header
@@ -904,8 +910,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int compl
 	    mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-            if (MPID_nem_local_lmt_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
-                || MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE))
+            if (!MPID_nem_safe_to_block_recv())
             {
                 *cell = NULL;
                 *in_fbox = 0;
