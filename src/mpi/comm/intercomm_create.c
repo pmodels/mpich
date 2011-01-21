@@ -238,6 +238,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     int is_low_group = 0;
     int i;
     MPID_Comm *newcomm_ptr;
+    int errflag = FALSE;
     MPIU_CHKLMEM_DECL(4);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_CREATE);
 
@@ -457,11 +458,13 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 	comm_info[1] = final_context_id;
 	comm_info[2] = is_low_group;
 	MPIU_DBG_MSG(COMM,VERBOSE,"About to bcast on local_comm");
-	mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, comm_ptr );
+	mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, comm_ptr, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	mpi_errno = MPIR_Bcast_impl( remote_gpids, 2*remote_size, MPI_INT, local_leader,
-                                     comm_ptr );
+                                     comm_ptr, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	MPIU_DBG_MSG_D(COMM,VERBOSE,"end of bcast on local_comm of size %d",
 		       comm_ptr->local_size );
     }
@@ -469,16 +472,18 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     {
 	/* we're the other processes */
 	MPIU_DBG_MSG(COMM,VERBOSE,"About to receive bcast on local_comm");
-	mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, comm_ptr );
+	mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, comm_ptr, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	remote_size = comm_info[0];
 	MPIU_CHKLMEM_MALLOC(remote_gpids,int*,2*remote_size*sizeof(int),
 			    mpi_errno,"remote_gpids");
 	MPIU_CHKLMEM_MALLOC(remote_lpids,int*,remote_size*sizeof(int),
 			    mpi_errno,"remote_lpids");
 	mpi_errno = MPIR_Bcast_impl( remote_gpids, 2*remote_size, MPI_INT, local_leader, 
-                                    comm_ptr );
+                                     comm_ptr, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
 	/* Extract the context and group sign informatin */
 	final_context_id = comm_info[1];

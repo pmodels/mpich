@@ -80,7 +80,8 @@ static int MPIR_Reduce_scatter_noncomm (
     int *recvcnts,
     MPI_Datatype datatype,
     MPI_Op op,
-    MPID_Comm *comm_ptr )
+    MPID_Comm *comm_ptr,
+    int *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -187,13 +188,14 @@ static int MPIR_Reduce_scatter_noncomm (
             send_offset += size;
         }
 
-        mpi_errno = MPIC_Sendrecv(outgoing_data + send_offset*true_extent,
-                                  size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
-                                  incoming_data + recv_offset*true_extent,
-                                  size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
-                                  comm, MPI_STATUS_IGNORE);
+        mpi_errno = MPIC_Sendrecv_ft(outgoing_data + send_offset*true_extent,
+                                     size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
+                                     incoming_data + recv_offset*true_extent,
+                                     size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
+                                     comm, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -229,6 +231,8 @@ fn_exit:
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -293,7 +297,8 @@ int MPIR_Reduce_scatter_intra (
     int *recvcnts, 
     MPI_Datatype datatype, 
     MPI_Op op, 
-    MPID_Comm *comm_ptr )
+    MPID_Comm *comm_ptr,
+    int *errflag )
 {
     int   rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb; 
@@ -413,11 +418,12 @@ int MPIR_Reduce_scatter_intra (
 
         if (rank < 2*rem) {
             if (rank % 2 == 0) { /* even */
-                mpi_errno = MPIC_Send(tmp_results, total_count, 
-                                      datatype, rank+1,
-                                      MPIR_REDUCE_SCATTER_TAG, comm);
+                mpi_errno = MPIC_Send_ft(tmp_results, total_count, 
+                                         datatype, rank+1,
+                                         MPIR_REDUCE_SCATTER_TAG, comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
+                    *errflag = TRUE;
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                     MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -428,12 +434,13 @@ int MPIR_Reduce_scatter_intra (
                 newrank = -1; 
             }
             else { /* odd */
-                mpi_errno = MPIC_Recv(tmp_recvbuf, total_count, 
-                                      datatype, rank-1,
-                                      MPIR_REDUCE_SCATTER_TAG, comm,
-                                      MPI_STATUS_IGNORE);
+                mpi_errno = MPIC_Recv_ft(tmp_recvbuf, total_count, 
+                                         datatype, rank-1,
+                                         MPIR_REDUCE_SCATTER_TAG, comm,
+                                         MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
+                    *errflag = TRUE;
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                     MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -513,30 +520,31 @@ int MPIR_Reduce_scatter_intra (
 */
                 /* Send data from tmp_results. Recv into tmp_recvbuf */ 
                 if ((send_cnt != 0) && (recv_cnt != 0)) 
-                    mpi_errno = MPIC_Sendrecv((char *) tmp_results +
-                                          newdisps[send_idx]*extent,
-                                          send_cnt, datatype,  
-                                          dst, MPIR_REDUCE_SCATTER_TAG, 
-                                          (char *) tmp_recvbuf +
-                                          newdisps[recv_idx]*extent,
-                                          recv_cnt, datatype, dst,
-                                          MPIR_REDUCE_SCATTER_TAG, comm,
-                                          MPI_STATUS_IGNORE); 
+                    mpi_errno = MPIC_Sendrecv_ft((char *) tmp_results +
+                                                 newdisps[send_idx]*extent,
+                                                 send_cnt, datatype,
+                                                 dst, MPIR_REDUCE_SCATTER_TAG,
+                                                 (char *) tmp_recvbuf +
+                                                 newdisps[recv_idx]*extent,
+                                                 recv_cnt, datatype, dst,
+                                                 MPIR_REDUCE_SCATTER_TAG, comm,
+                                                 MPI_STATUS_IGNORE, errflag);
                 else if ((send_cnt == 0) && (recv_cnt != 0))
-                    mpi_errno = MPIC_Recv((char *) tmp_recvbuf +
-                                          newdisps[recv_idx]*extent,
-                                          recv_cnt, datatype, dst,
-                                          MPIR_REDUCE_SCATTER_TAG, comm,
-                                          MPI_STATUS_IGNORE);
+                    mpi_errno = MPIC_Recv_ft((char *) tmp_recvbuf +
+                                             newdisps[recv_idx]*extent,
+                                             recv_cnt, datatype, dst,
+                                             MPIR_REDUCE_SCATTER_TAG, comm,
+                                             MPI_STATUS_IGNORE, errflag);
                 else if ((recv_cnt == 0) && (send_cnt != 0))
-                    mpi_errno = MPIC_Send((char *) tmp_results +
-                                          newdisps[send_idx]*extent,
-                                          send_cnt, datatype,  
-                                          dst, MPIR_REDUCE_SCATTER_TAG,
-                                          comm);  
+                    mpi_errno = MPIC_Send_ft((char *) tmp_results +
+                                             newdisps[send_idx]*extent,
+                                             send_cnt, datatype,
+                                             dst, MPIR_REDUCE_SCATTER_TAG,
+                                             comm, errflag);
 
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
+                    *errflag = TRUE;
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                     MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -583,12 +591,13 @@ int MPIR_Reduce_scatter_intra (
         if (rank < 2*rem) {
             if (rank % 2) { /* odd */
                 if (recvcnts[rank-1]) {
-                    mpi_errno = MPIC_Send((char *) tmp_results +
-                                      disps[rank-1]*extent, recvcnts[rank-1],
-                                      datatype, rank-1,
-                                      MPIR_REDUCE_SCATTER_TAG, comm);
+                    mpi_errno = MPIC_Send_ft((char *) tmp_results +
+                                             disps[rank-1]*extent, recvcnts[rank-1],
+                                             datatype, rank-1,
+                                             MPIR_REDUCE_SCATTER_TAG, comm, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
                         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
@@ -596,12 +605,13 @@ int MPIR_Reduce_scatter_intra (
             }
             else  {   /* even */
                 if (recvcnts[rank]) {
-                    mpi_errno = MPIC_Recv(recvbuf, recvcnts[rank],
-                                      datatype, rank+1,
-                                      MPIR_REDUCE_SCATTER_TAG, comm,
-                                      MPI_STATUS_IGNORE);
+                    mpi_errno = MPIC_Recv_ft(recvbuf, recvcnts[rank],
+                                             datatype, rank+1,
+                                             MPIR_REDUCE_SCATTER_TAG, comm,
+                                             MPI_STATUS_IGNORE, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
                         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
@@ -635,22 +645,23 @@ int MPIR_Reduce_scatter_intra (
             /* send the data that dst needs. recv data that this process
                needs from src into tmp_recvbuf */
             if (sendbuf != MPI_IN_PLACE) 
-                mpi_errno = MPIC_Sendrecv(((char *)sendbuf+disps[dst]*extent), 
-                                          recvcnts[dst], datatype, dst,
-                                          MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
-                                          recvcnts[rank], datatype, src,
-                                          MPIR_REDUCE_SCATTER_TAG, comm,
-                                          MPI_STATUS_IGNORE);
+                mpi_errno = MPIC_Sendrecv_ft(((char *)sendbuf+disps[dst]*extent), 
+                                             recvcnts[dst], datatype, dst,
+                                             MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
+                                             recvcnts[rank], datatype, src,
+                                             MPIR_REDUCE_SCATTER_TAG, comm,
+                                             MPI_STATUS_IGNORE, errflag);
             else
-                mpi_errno = MPIC_Sendrecv(((char *)recvbuf+disps[dst]*extent), 
-                                          recvcnts[dst], datatype, dst,
-                                          MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
-                                          recvcnts[rank], datatype, src,
-                                          MPIR_REDUCE_SCATTER_TAG, comm,
-                                          MPI_STATUS_IGNORE);
+                mpi_errno = MPIC_Sendrecv_ft(((char *)recvbuf+disps[dst]*extent), 
+                                             recvcnts[dst], datatype, dst,
+                                             MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
+                                             recvcnts[rank], datatype, src,
+                                             MPIR_REDUCE_SCATTER_TAG, comm,
+                                             MPI_STATUS_IGNORE, errflag);
             
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -755,8 +766,13 @@ int MPIR_Reduce_scatter_intra (
 
         if (pof2 == comm_size && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
-            mpi_errno = MPIR_Reduce_scatter_noncomm(sendbuf, recvbuf, recvcnts, datatype, op, comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Reduce_scatter_noncomm(sendbuf, recvbuf, recvcnts, datatype, op, comm_ptr, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
         else {
             /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
@@ -844,14 +860,15 @@ int MPIR_Reduce_scatter_intra (
                        received in tmp_recvbuf and then accumulated into
                        tmp_results. accumulation is done later below.   */ 
 
-                    mpi_errno = MPIC_Sendrecv(tmp_results, 1, sendtype, dst,
-                                              MPIR_REDUCE_SCATTER_TAG, 
-                                              tmp_recvbuf, 1, recvtype, dst,
-                                              MPIR_REDUCE_SCATTER_TAG, comm,
-                                              MPI_STATUS_IGNORE); 
+                    mpi_errno = MPIC_Sendrecv_ft(tmp_results, 1, sendtype, dst,
+                                                 MPIR_REDUCE_SCATTER_TAG, 
+                                                 tmp_recvbuf, 1, recvtype, dst,
+                                                 MPIR_REDUCE_SCATTER_TAG, comm,
+                                                 MPI_STATUS_IGNORE, errflag);
                     received = 1;
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
                         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
@@ -893,22 +910,28 @@ int MPIR_Reduce_scatter_intra (
                             (rank < tree_root + nprocs_completed)
                             && (dst >= tree_root + nprocs_completed)) {
                             /* send the current result */
-                            mpi_errno = MPIC_Send(tmp_recvbuf, 1, recvtype,
-                                                  dst, MPIR_REDUCE_SCATTER_TAG,
-                                                  comm);  
-                            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                            mpi_errno = MPIC_Send_ft(tmp_recvbuf, 1, recvtype,
+                                                     dst, MPIR_REDUCE_SCATTER_TAG,
+                                                     comm, errflag);
+                            if (mpi_errno) {
+                                /* for communication errors, just record the error but continue */
+                                *errflag = TRUE;
+                                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                            }
                         }
                         /* recv only if this proc. doesn't have data and sender
                            has data */
                         else if ((dst < rank) && 
                                  (dst < tree_root + nprocs_completed) &&
                                  (rank >= tree_root + nprocs_completed)) {
-                            mpi_errno = MPIC_Recv(tmp_recvbuf, 1, recvtype, dst,
-                                                  MPIR_REDUCE_SCATTER_TAG,
-                                                  comm, MPI_STATUS_IGNORE); 
+                            mpi_errno = MPIC_Recv_ft(tmp_recvbuf, 1, recvtype, dst,
+                                                     MPIR_REDUCE_SCATTER_TAG,
+                                                     comm, MPI_STATUS_IGNORE, errflag); 
                             received = 1;
                             if (mpi_errno) {
                                 /* for communication errors, just record the error but continue */
+                                *errflag = TRUE;
                                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                             }
@@ -919,7 +942,7 @@ int MPIR_Reduce_scatter_intra (
                 }
 
                 /* The following reduction is done here instead of after 
-                   the MPIC_Sendrecv or MPIC_Recv above. This is
+                   the MPIC_Sendrecv_ft or MPIC_Recv_ft above. This is
                    because to do it above, in the noncommutative 
                    case, we would need an extra temp buffer so as not to
                    overwrite temp_recvbuf, because temp_recvbuf may have
@@ -1001,6 +1024,8 @@ fn_exit:
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -1019,7 +1044,8 @@ int MPIR_Reduce_scatter_inter (
     int *recvcnts, 
     MPI_Datatype datatype, 
     MPI_Op op, 
-    MPID_Comm *comm_ptr )
+    MPID_Comm *comm_ptr,
+    int *errflag )
 {
 /* Intercommunicator Reduce_scatter.
    We first do an intercommunicator reduce to rank 0 on left group,
@@ -1068,9 +1094,10 @@ int MPIR_Reduce_scatter_inter (
         /* reduce from right group to rank 0*/
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_inter(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr);
+                                root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1078,9 +1105,10 @@ int MPIR_Reduce_scatter_inter (
         /* reduce to rank 0 of right group */
         root = 0;
         mpi_errno = MPIR_Reduce_inter(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr);
+                                root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1089,9 +1117,10 @@ int MPIR_Reduce_scatter_inter (
         /* reduce to rank 0 of left group */
         root = 0;
         mpi_errno = MPIR_Reduce_inter(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr);
+                                root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1099,9 +1128,10 @@ int MPIR_Reduce_scatter_inter (
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = MPIR_Reduce_inter(sendbuf, tmp_buf, total_count, datatype, op,
-                                root, comm_ptr);
+                                root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1116,9 +1146,10 @@ int MPIR_Reduce_scatter_inter (
     newcomm_ptr = comm_ptr->local_comm;
 
     mpi_errno = MPIR_Scatterv(tmp_buf, recvcnts, disps, datatype, recvbuf,
-                              recvcnts[rank], datatype, 0, newcomm_ptr);
+                              recvcnts[rank], datatype, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
+        *errflag = TRUE;
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
@@ -1127,6 +1158,8 @@ int MPIR_Reduce_scatter_inter (
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -1142,19 +1175,19 @@ int MPIR_Reduce_scatter_inter (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts,
-                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr)
+                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->comm_kind == MPID_INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Reduce_scatter_intra(sendbuf, recvbuf, recvcnts,
-                                              datatype, op, comm_ptr);
+                                              datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
         /* intercommunicator */
         mpi_errno = MPIR_Reduce_scatter_inter(sendbuf, recvbuf, recvcnts,
-                                              datatype, op, comm_ptr);
+                                              datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -1173,17 +1206,17 @@ int MPIR_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_impl(void *sendbuf, void *recvbuf, int *recvcnts,
-                             MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr)
+                             MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Reduce_scatter != NULL) {
 	mpi_errno = comm_ptr->coll_fns->Reduce_scatter(sendbuf, recvbuf, recvcnts,
-                                                       datatype, op, comm_ptr);
+                                                       datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
         mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcnts,
-                                        datatype, op, comm_ptr);
+                                        datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     
@@ -1235,6 +1268,7 @@ int MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_SCATTER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -1312,7 +1346,7 @@ int MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts,
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcnts,
-                                         datatype, op, comm_ptr);
+                                         datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

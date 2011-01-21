@@ -35,7 +35,8 @@ static int MPIR_Bcast_binomial(
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr)
+    MPID_Comm *comm_ptr,
+    int *errflag)
 {
     int        rank, comm_size, src, dst;
     int        relative_rank, mask;
@@ -131,13 +132,14 @@ static int MPIR_Bcast_binomial(
             src = rank - mask; 
             if (src < 0) src += comm_size;
             if (!is_contig || !is_homogeneous)
-                mpi_errno = MPIC_Recv(tmp_buf,nbytes,MPI_BYTE,src,
-                                      MPIR_BCAST_TAG,comm,MPI_STATUS_IGNORE);
+                mpi_errno = MPIC_Recv_ft(tmp_buf,nbytes,MPI_BYTE,src,
+                                         MPIR_BCAST_TAG,comm,MPI_STATUS_IGNORE, errflag);
             else
-                mpi_errno = MPIC_Recv(buffer,count,datatype,src,
-                                      MPIR_BCAST_TAG,comm,MPI_STATUS_IGNORE);
+                mpi_errno = MPIC_Recv_ft(buffer,count,datatype,src,
+                                         MPIR_BCAST_TAG,comm,MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -165,13 +167,14 @@ static int MPIR_Bcast_binomial(
             dst = rank + mask;
             if (dst >= comm_size) dst -= comm_size;
             if (!is_contig || !is_homogeneous)
-                mpi_errno = MPIC_Send(tmp_buf,nbytes,MPI_BYTE,dst,
-                                      MPIR_BCAST_TAG,comm);
+                mpi_errno = MPIC_Send_ft(tmp_buf,nbytes,MPI_BYTE,dst,
+                                         MPIR_BCAST_TAG,comm, errflag);
             else
-                mpi_errno = MPIC_Send(buffer,count,datatype,dst,
-                                      MPIR_BCAST_TAG,comm); 
+                mpi_errno = MPIC_Send_ft(buffer,count,datatype,dst,
+                                         MPIR_BCAST_TAG,comm, errflag); 
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -195,6 +198,8 @@ fn_exit:
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -223,7 +228,8 @@ static int scatter_for_bcast(
     int nbytes,
     void *tmp_buf,
     int is_contig,
-    int is_homogeneous)
+    int is_homogeneous,
+    int *errflag)
 {
     MPI_Status status;
     int        rank, comm_size, src, dst;
@@ -272,12 +278,13 @@ static int scatter_for_bcast(
             }
             else
             {
-                mpi_errno = MPIC_Recv(((char *)tmp_buf +
-                                       relative_rank*scatter_size),
-                                      recv_size, MPI_BYTE, src,
-                                      MPIR_BCAST_TAG, comm, &status);
+                mpi_errno = MPIC_Recv_ft(((char *)tmp_buf +
+                                          relative_rank*scatter_size),
+                                         recv_size, MPI_BYTE, src,
+                                         MPIR_BCAST_TAG, comm, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
+                    *errflag = TRUE;
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                     MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     curr_size = 0;
@@ -307,12 +314,13 @@ static int scatter_for_bcast(
             {
                 dst = rank + mask;
                 if (dst >= comm_size) dst -= comm_size;
-                mpi_errno = MPIC_Send (((char *)tmp_buf +
-                                        scatter_size*(relative_rank+mask)),
-                                       send_size, MPI_BYTE, dst,
-                                       MPIR_BCAST_TAG, comm);
+                mpi_errno = MPIC_Send_ft(((char *)tmp_buf +
+                                          scatter_size*(relative_rank+mask)),
+                                         send_size, MPI_BYTE, dst,
+                                         MPIR_BCAST_TAG, comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
+                    *errflag = TRUE;
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                     MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -326,6 +334,8 @@ static int scatter_for_bcast(
 fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -360,7 +370,8 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr)
+    MPID_Comm *comm_ptr,
+    int *errflag)
 {
     MPI_Status status;
     int rank, comm_size, dst;
@@ -439,9 +450,10 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
 
     mpi_errno = scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                  nbytes, tmp_buf, is_contig, is_homogeneous);
+                                  nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
+        *errflag = TRUE;
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
@@ -473,13 +485,14 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
         if (relative_dst < comm_size)
         {
-            mpi_errno = MPIC_Sendrecv(((char *)tmp_buf + send_offset),
-                                      curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG, 
-                                      ((char *)tmp_buf + recv_offset),
-                                      (nbytes-recv_offset < 0 ? 0 : nbytes-recv_offset), 
-                                      MPI_BYTE, dst, MPIR_BCAST_TAG, comm, &status);
+            mpi_errno = MPIC_Sendrecv_ft(((char *)tmp_buf + send_offset),
+                                         curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG, 
+                                         ((char *)tmp_buf + recv_offset),
+                                         (nbytes-recv_offset < 0 ? 0 : nbytes-recv_offset), 
+                                         MPI_BYTE, dst, MPIR_BCAST_TAG, comm, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                 recv_size = 0;
@@ -546,14 +559,15 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
                     /* printf("Rank %d, send to %d, offset %d, size %d\n", rank, dst, offset, recv_size);
                        fflush(stdout); */
-                    mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
-                                          recv_size, MPI_BYTE, dst,
-                                          MPIR_BCAST_TAG, comm); 
+                    mpi_errno = MPIC_Send_ft(((char *)tmp_buf + offset),
+                                             recv_size, MPI_BYTE, dst,
+                                             MPIR_BCAST_TAG, comm, errflag); 
                     /* recv_size was set in the previous
                        receive. that's the amount of data to be
                        sent now. */
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
                         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
@@ -566,14 +580,15 @@ static int MPIR_Bcast_scatter_doubling_allgather(
                 {
                     /* printf("Rank %d waiting to recv from rank %d\n",
                        relative_rank, dst); */
-                    mpi_errno = MPIC_Recv(((char *)tmp_buf + offset),
-                                          nbytes - offset, 
-                                          MPI_BYTE, dst, MPIR_BCAST_TAG,
-                                          comm, &status); 
+                    mpi_errno = MPIC_Recv_ft(((char *)tmp_buf + offset),
+                                             nbytes - offset, 
+                                             MPI_BYTE, dst, MPIR_BCAST_TAG,
+                                             comm, &status, errflag); 
                     /* nprocs_completed is also equal to the no. of processes
                        whose data we don't have */
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
                         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                         recv_size = 0;
@@ -608,6 +623,8 @@ fn_exit:
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -638,7 +655,8 @@ static int MPIR_Bcast_scatter_ring_allgather(
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr)
+    MPID_Comm *comm_ptr,
+    int *errflag)
 {
     int rank, comm_size;
     int relative_rank;
@@ -712,9 +730,10 @@ static int MPIR_Bcast_scatter_ring_allgather(
     scatter_size = (nbytes + comm_size - 1)/comm_size; /* ceiling division */
 
     mpi_errno = scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                  nbytes, tmp_buf, is_contig, is_homogeneous);
+                                  nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
+        *errflag = TRUE;
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
@@ -745,17 +764,18 @@ static int MPIR_Bcast_scatter_ring_allgather(
     for (i=1; i<comm_size; i++)
     {
         mpi_errno = 
-            MPIC_Sendrecv((char *)tmp_buf +
-                          displs[(j-root+comm_size)%comm_size],  
-                          recvcnts[(j-root+comm_size)%comm_size],
-                          MPI_BYTE, right, MPIR_BCAST_TAG, 
-                          (char *)tmp_buf +
-                          displs[(jnext-root+comm_size)%comm_size], 
-                          recvcnts[(jnext-root+comm_size)%comm_size],  
-                          MPI_BYTE, left,   
-                          MPIR_BCAST_TAG, comm, MPI_STATUS_IGNORE);
+            MPIC_Sendrecv_ft((char *)tmp_buf +
+                             displs[(j-root+comm_size)%comm_size],  
+                             recvcnts[(j-root+comm_size)%comm_size],
+                             MPI_BYTE, right, MPIR_BCAST_TAG, 
+                             (char *)tmp_buf +
+                             displs[(jnext-root+comm_size)%comm_size], 
+                             recvcnts[(jnext-root+comm_size)%comm_size],  
+                             MPI_BYTE, left,   
+                             MPIR_BCAST_TAG, comm, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -779,6 +799,8 @@ fn_exit:
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -789,21 +811,22 @@ fn_fail:
    Otherwise it invokes bcast_fn_ with the given args.
    
    NOTE: calls MPIU_ERR_POP on any failure, so a fn_fail label is needed. */
-#define MPIR_Bcast_fn_or_override(bcast_fn_,mpi_errno_,buffer_,count_,datatype_,root_,comm_ptr_) \
+#define MPIR_Bcast_fn_or_override(bcast_fn_,mpi_errno_,buffer_,count_,datatype_,root_,comm_ptr_,errflag_) \
     do {                                                                                         \
         if (comm_ptr_->coll_fns != NULL && comm_ptr_->coll_fns->Bcast != NULL)                   \
         {                                                                                        \
             /* --BEGIN USEREXTENSION-- */                                                        \
             mpi_errno_ = comm_ptr->coll_fns->Bcast(buffer_, count_,                              \
-                                                   datatype_, root_, comm_ptr_);                 \
+                                                   datatype_, root_, comm_ptr_, errflag_);       \
             /* --END USEREXTENSION-- */                                                          \
         }                                                                                        \
         else                                                                                     \
         {                                                                                        \
-            mpi_errno_ = bcast_fn_(buffer_, count_, datatype_, root_, comm_ptr_);                \
+            mpi_errno_ = bcast_fn_(buffer_, count_, datatype_, root_, comm_ptr_, errflag_);      \
         }                                                                                        \
         if (mpi_errno) {                                                                         \
             /* for communication errors, just record the error but continue */                   \
+            *(errflag_) = TRUE;                                                                  \
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");                                    \
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);                                              \
         }                                                                                        \
@@ -820,7 +843,8 @@ static int MPIR_SMP_Bcast(
         int count, 
         MPI_Datatype datatype, 
         int root, 
-        MPID_Comm *comm_ptr)
+        MPID_Comm *comm_ptr,
+        int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -859,15 +883,16 @@ static int MPIR_SMP_Bcast(
             MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
         {                                                /* and is on our node (!-1) */
             if (root == comm_ptr->rank) {
-                mpi_errno = MPIC_Send(buffer,count,datatype,0,
-                                      MPIR_BCAST_TAG,comm_ptr->node_comm->handle); 
+                mpi_errno = MPIC_Send_ft(buffer,count,datatype,0,
+                                         MPIR_BCAST_TAG,comm_ptr->node_comm->handle, errflag);
             }
             else if (0 == comm_ptr->node_comm->rank) {
-                mpi_errno = MPIC_Recv(buffer,count,datatype,MPIU_Get_intranode_rank(comm_ptr, root),
-                                      MPIR_BCAST_TAG,comm_ptr->node_comm->handle,MPI_STATUS_IGNORE);
+                mpi_errno = MPIC_Recv_ft(buffer,count,datatype,MPIU_Get_intranode_rank(comm_ptr, root),
+                                         MPIR_BCAST_TAG,comm_ptr->node_comm->handle,MPI_STATUS_IGNORE, errflag);
             }
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -879,14 +904,14 @@ static int MPIR_SMP_Bcast(
             MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
                                       buffer, count, datatype,
                                       MPIU_Get_internode_rank(comm_ptr, root),
-                                      comm_ptr->node_roots_comm);
+                                      comm_ptr->node_roots_comm, errflag);
         }
 
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL)
         {
             MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
-                                      buffer, count, datatype, 0, comm_ptr->node_comm);
+                                      buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
         }
     }
     else /* (nbytes > MPIR_PARAM_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_PARAM_BCAST_MIN_PROCS) */
@@ -908,7 +933,7 @@ static int MPIR_SMP_Bcast(
                 MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
                                           buffer, count, datatype,
                                           MPIU_Get_intranode_rank(comm_ptr, root),
-                                          comm_ptr->node_comm);
+                                          comm_ptr->node_comm, errflag);
             }
 
             /* perform the internode broadcast */
@@ -919,14 +944,14 @@ static int MPIR_SMP_Bcast(
                     MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_doubling_allgather, mpi_errno,
                                               buffer, count, datatype,
                                               MPIU_Get_internode_rank(comm_ptr, root),
-                                              comm_ptr->node_roots_comm);
+                                              comm_ptr->node_roots_comm, errflag);
                 }
                 else
                 {
                     MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_ring_allgather, mpi_errno,
                                               buffer, count, datatype,
                                               MPIU_Get_internode_rank(comm_ptr, root),
-                                              comm_ptr->node_roots_comm);
+                                              comm_ptr->node_roots_comm, errflag);
                 }
             }
 
@@ -938,7 +963,7 @@ static int MPIR_SMP_Bcast(
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
                 MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
-                                          buffer, count, datatype, 0, comm_ptr->node_comm);
+                                          buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
             }
         }
         else /* large msg or non-pof2 */
@@ -946,9 +971,10 @@ static int MPIR_SMP_Bcast(
             /* FIXME It would be good to have an SMP-aware version of this
                algorithm that (at least approximately) minimized internode
                communication. */
-            mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr);
+            mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -958,6 +984,8 @@ static int MPIR_SMP_Bcast(
 fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -1016,7 +1044,8 @@ int MPIR_Bcast_intra (
         int count, 
         MPI_Datatype datatype, 
         int root, 
-        MPID_Comm *comm_ptr )
+        MPID_Comm *comm_ptr,
+        int *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -1035,9 +1064,10 @@ int MPIR_Bcast_intra (
 
 #if defined(USE_SMP_COLLECTIVES)
     if (MPIR_Comm_is_node_aware(comm_ptr)) {
-        mpi_errno = MPIR_SMP_Bcast(buffer, count, datatype, root, comm_ptr);
+        mpi_errno = MPIR_SMP_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1070,9 +1100,10 @@ int MPIR_Bcast_intra (
 
     if ((nbytes < MPIR_PARAM_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_PARAM_BCAST_MIN_PROCS))
     {
-        mpi_errno = MPIR_Bcast_binomial(buffer, count, datatype, root, comm_ptr);
+        mpi_errno = MPIR_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1081,9 +1112,10 @@ int MPIR_Bcast_intra (
     {
         if ((nbytes < MPIR_PARAM_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL)))
         {
-            mpi_errno = MPIR_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr);
+            mpi_errno = MPIR_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -1093,9 +1125,10 @@ int MPIR_Bcast_intra (
             /* We want the ring algorithm whether or not we have a
                topologically aware communicator.  Doing inter/intra-node
                communication phases breaks the pipelining of the algorithm.  */
-            mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr);
+            mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -1110,6 +1143,8 @@ fn_exit:
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -1127,7 +1162,8 @@ int MPIR_Bcast_inter (
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr )
+    MPID_Comm *comm_ptr,
+    int *errflag)
 {
 /*  Intercommunicator broadcast.
     Root sends to rank 0 in remote group. Remote group does local
@@ -1153,10 +1189,11 @@ int MPIR_Bcast_inter (
     {
         /* root sends to rank 0 on remote group and returns */
         MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-        mpi_errno =  MPIC_Send(buffer, count, datatype, 0,
-                               MPIR_BCAST_TAG, comm); 
+        mpi_errno =  MPIC_Send_ft(buffer, count, datatype, 0,
+                                  MPIR_BCAST_TAG, comm, errflag); 
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1170,10 +1207,11 @@ int MPIR_Bcast_inter (
         
         if (rank == 0)
         {
-            mpi_errno = MPIC_Recv(buffer, count, datatype, root,
-                                  MPIR_BCAST_TAG, comm, &status);
+            mpi_errno = MPIC_Recv_ft(buffer, count, datatype, root,
+                                     MPIR_BCAST_TAG, comm, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
                 MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -1187,9 +1225,10 @@ int MPIR_Bcast_inter (
 
         /* now do the usual broadcast on this intracommunicator
            with rank 0 as root. */
-        mpi_errno = MPIR_Bcast_intra(buffer, count, datatype, 0, newcomm_ptr);
+        mpi_errno = MPIR_Bcast_intra(buffer, count, datatype, 0, newcomm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -1199,6 +1238,8 @@ fn_fail:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST_INTER);
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 }
 
@@ -1211,7 +1252,7 @@ fn_fail:
 #define FUNCNAME MPIR_Bcast_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr)
+int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1219,7 +1260,7 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
     {
 	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->coll_fns->Bcast(buffer, count,
-                                              datatype, root, comm_ptr);
+                                              datatype, root, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	/* --END USEREXTENSION-- */
     }
@@ -1228,14 +1269,14 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
         if (comm_ptr->comm_kind == MPID_INTRACOMM)
 	{
             /* intracommunicator */
-            mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr );
+            mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             
 	}
         else
 	{
             /* intercommunicator */
-            mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr );
+            mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr, errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
@@ -1254,18 +1295,18 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
 #define FUNCNAME MPIR_Bcast
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr)
+int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPID_INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr );
+        mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
     } else {
         /* intercommunicator */
-        mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr );
+        mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr, errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -1313,6 +1354,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -1370,7 +1412,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_Bcast_impl( buffer, count, datatype, root, comm_ptr );
+    mpi_errno = MPIR_Bcast_impl( buffer, count, datatype, root, comm_ptr, &errflag );
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

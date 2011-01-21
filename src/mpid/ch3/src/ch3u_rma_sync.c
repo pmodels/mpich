@@ -116,6 +116,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     MPID_Comm *comm_ptr;
     MPI_Win source_win_handle, target_win_handle;
     MPID_Progress_state progress_state;
+    int errflag = FALSE;
     MPIU_CHKLMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FENCE);
 
@@ -213,10 +214,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	win_ptr->my_counter = comm_size;
             
 	mpi_errno = MPIR_Reduce_scatter_block_impl(MPI_IN_PLACE, rma_target_proc, 1,
-                                                   MPI_INT, MPI_SUM, comm_ptr);
+                                                   MPI_INT, MPI_SUM, comm_ptr, &errflag);
 	MPIU_INSTR_DURATION_END(winfence_rs);
 	/* result is stored in rma_target_proc[0] */
 	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
 	/* Set the completion counter */
 	/* FIXME: MT: this needs to be done atomically because other

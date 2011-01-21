@@ -876,6 +876,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **tcp_cleanup_fail:Error while cleaning up failed connection
 **tmpvc_connect_fail:Failure during connection protocol
 
+**coll_fail:Failure during collective
+
 **blcr_mod:BLCR kernel module not present
 
 **envvarparse:Unable to parse environment variable

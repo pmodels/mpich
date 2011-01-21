@@ -764,7 +764,7 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
     int          own_mask = 0;
     int          testCount = 10; /* if you change this value, you need to also change 
 				    it below where it is reinitialized */
-
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -829,9 +829,9 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 	   other processes to enter the global or brief global critical section.
 	 */ 
 	mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
-                                         MPI_INT, MPI_BAND, comm_ptr );
+                                         MPI_INT, MPI_BAND, comm_ptr, &errflag );
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
          * narrow this region */
         MPIU_THREAD_CS_ENTER(CONTEXTID,);
@@ -889,8 +889,9 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
             /* we _must_ release the lock above in order to avoid deadlocking on
              * this blocking allreduce operation */
 	    mpi_errno = MPIR_Allreduce_impl( &hasNoId, &totalHasNoId, 1, MPI_INT,
-                                             MPI_MAX, comm_ptr );
+                                             MPI_MAX, comm_ptr, &errflag );
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	    if (totalHasNoId == 1) {
 		/* Release the mask for use by other threads */
 		if (own_mask) {
@@ -956,6 +957,7 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
 		        context instead?.  Or can we use the tag 
 		        provided in the intercomm routine? (not on a dup, 
 			but in that case it can use the collective context) */
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID);
@@ -983,9 +985,9 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
     /* Make sure that all of the local processes now have this
        id */
     mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
-                                 0, comm_ptr->local_comm );
+                                 0, comm_ptr->local_comm, &errflag );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     /* The recvcontext_id must be the one that was allocated out of the local
      * group, not the remote group.  Otherwise we could end up posting two
      * MPI_ANY_SOURCE,MPI_ANY_TAG recvs on the same context IDs even though we

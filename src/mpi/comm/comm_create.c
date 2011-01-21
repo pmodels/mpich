@@ -334,7 +334,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     int rinfo[2];
     MPID_VCR *mapping_vcr = NULL;
     MPID_VCR *remote_mapping_vcr = NULL;
-
+    int errflag = FALSE;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
 
@@ -418,19 +418,20 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
 
         /* Broadcast to the other members of the local group */
         mpi_errno = MPIR_Bcast_impl( rinfo, 2, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Bcast_impl( remote_mapping, remote_size, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
     else {
         /* The other processes */
         /* Broadcast to the other members of the local group */
         mpi_errno = MPIR_Bcast_impl( rinfo, 2, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         if (newcomm_ptr != NULL) {
             newcomm_ptr->context_id = rinfo[0];
         }
@@ -439,8 +440,9 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                             remote_size*sizeof(int),
                             mpi_errno,"remote_mapping");
         mpi_errno = MPIR_Bcast_impl( remote_mapping, remote_size, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
 
     if (group_ptr->rank != MPI_UNDEFINED) {
