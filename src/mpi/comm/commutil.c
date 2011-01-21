@@ -245,6 +245,7 @@ static int init_default_collops(void)
         ops->Ibarrier = &MPIR_Ibarrier_intra;
         ops->Ireduce = &MPIR_Ireduce_intra;
         ops->Ialltoallv = &MPIR_Ialltoallv_intra;
+        ops->Iallreduce = &MPIR_Iallreduce_intra;
         /* TODO add other fns here as they are added */
 
         /* override defaults, such as for SMP */
@@ -276,6 +277,7 @@ static int init_default_collops(void)
         ops->Ibarrier = &MPIR_Ibarrier_inter;
         ops->Ireduce = &MPIR_Ireduce_inter;
         ops->Ialltoallv = &MPIR_Ialltoallv_inter;
+        ops->Iallreduce = &MPIR_Iallreduce_inter;
 
         ic_default_collops = ops;
     }

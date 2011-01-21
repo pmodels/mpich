@@ -24,6 +24,133 @@
 
 /* any non-MPI functions go here, especially non-static ones */
 
+/* implements the naive intracomm allreduce, that is, reduce followed by bcast */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce_naive
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Iallreduce_naive(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ireduce_intra(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPID_Sched_barrier(s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Ibcast_intra(recvbuf, count, datatype, 0, comm_ptr, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce_intra
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Iallreduce_intra(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_homogeneous;
+
+    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+
+
+    is_homogeneous = TRUE;
+#ifdef MPID_HAS_HETERO
+    if (comm_ptr->is_hetero)
+        is_homogeneous = FALSE;
+#endif
+
+    MPIU_Assert(is_homogeneous); /* no hetero for the moment */
+
+    /* TODO port the better algorithms from MPIR_Allreduce_intra to augment the
+     * naive implementation */
+    mpi_errno = MPIR_Iallreduce_naive(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce_inter
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Iallreduce_inter(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
+{
+/* Intercommunicator Allreduce.
+   We first do an intercommunicator reduce to rank 0 on left group,
+   then an intercommunicator reduce to rank 0 on right group, followed
+   by local intracommunicator broadcasts in each group.
+
+   We don't do local reduces first and then intercommunicator
+   broadcasts because it would require allocation of a temporary buffer.
+*/
+    int mpi_errno = MPI_SUCCESS;
+    int rank, root;
+    MPID_Comm *lcomm_ptr = NULL;
+
+    MPIU_Assert(comm_ptr->comm_kind == MPID_INTERCOMM);
+
+    rank = comm_ptr->rank;
+
+    /* first do a reduce from right group to rank 0 in left group,
+       then from left group to rank 0 in right group*/
+    if (comm_ptr->is_low_group) {
+        /* reduce from right group to rank 0*/
+        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
+        mpi_errno = MPIR_Ireduce_inter(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* no barrier, these reductions can be concurrent */
+
+        /* reduce to rank 0 of right group */
+        root = 0;
+        mpi_errno = MPIR_Ireduce_inter(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else {
+        /* reduce to rank 0 of left group */
+        root = 0;
+        mpi_errno = MPIR_Ireduce_inter(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* no barrier, these reductions can be concurrent */
+
+        /* reduce from right group to rank 0 */
+        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
+        mpi_errno = MPIR_Ireduce_inter(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+    /* don't bcast until the reductions have finished */
+    mpi_errno = MPID_Sched_barrier(s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Get the local intracommunicator */
+    if (!comm_ptr->local_comm) {
+        MPIR_Setup_intercomm_localcomm( comm_ptr );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    lcomm_ptr = comm_ptr->local_comm;
+
+    MPIU_Assert(lcomm_ptr->coll_fns && lcomm_ptr->coll_fns->Ibcast);
+    mpi_errno = lcomm_ptr->coll_fns->Ibcast(recvbuf, count, datatype, 0, lcomm_ptr, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iallreduce_impl
 #undef FCNAME
