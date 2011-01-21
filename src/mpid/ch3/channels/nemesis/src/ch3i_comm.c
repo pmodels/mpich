@@ -8,7 +8,7 @@
 
 #define NULL_CONTEXT_ID -1
 
-static int barrier (MPID_Comm *comm_ptr);
+static int barrier (MPID_Comm *comm_ptr, int *errflag);
 static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars);
 
 static MPID_Collops collective_functions = {
@@ -142,7 +142,7 @@ static int msg_barrier (MPID_Comm *comm_ptr, int rank, int size, int *rank_array
 #define FUNCNAME barrier
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int barrier (MPID_Comm *comm_ptr)
+static int barrier (MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_barrier_vars_t *barrier_vars;

@@ -1738,7 +1738,7 @@ extern MPIU_Object_alloc_t MPID_Op_mem;
 typedef struct MPID_Collops {
     int ref_count;   /* Supports lazy copies */
     /* Contains pointers to the functions for the MPI collectives */
-    int (*Barrier) (MPID_Comm *);
+    int (*Barrier) (MPID_Comm *, int *);
     int (*Bcast) (void*, int, MPI_Datatype, int, MPID_Comm *, int *);
     int (*Gather) (void*, int, MPI_Datatype, void*, int, MPI_Datatype, 
                    int, MPID_Comm *, int *); 
@@ -3504,10 +3504,10 @@ int MPIR_Scatterv (void *sendbuf, int *sendcnts, int *displs,
                    MPI_Datatype sendtype, void *recvbuf, int recvcnt,
                    MPI_Datatype recvtype, int root, MPID_Comm
                    *comm_ptr, int *errflag);
-int MPIR_Barrier_impl( MPID_Comm *comm_ptr);
-int MPIR_Barrier( MPID_Comm *comm_ptr);
-int MPIR_Barrier_intra( MPID_Comm *comm_ptr);
-int MPIR_Barrier_inter( MPID_Comm *comm_ptr);
+int MPIR_Barrier_impl( MPID_Comm *comm_ptr, int *errflag);
+int MPIR_Barrier( MPID_Comm *comm_ptr, int *errflag);
+int MPIR_Barrier_intra( MPID_Comm *comm_ptr, int *errflag);
+int MPIR_Barrier_inter( MPID_Comm *comm_ptr, int *errflag);
 
 int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 

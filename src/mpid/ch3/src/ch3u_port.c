@@ -504,7 +504,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     }
 
     /*printf("connect:barrier\n");fflush(stdout);*/
-    mpi_errno = MPIR_Barrier_intra(comm_ptr);
+    mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -1091,7 +1091,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     }
 
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Barrier");
-    mpi_errno = MPIR_Barrier_intra(comm_ptr);
+    mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -1146,7 +1146,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
 			      MPID_Comm *intercomm )
 {
     int mpi_errno = MPI_SUCCESS, i;
-
+    int errflag = FALSE;
     /* FIXME: How much of this could/should be common with the
        upper level (src/mpi/comm/ *.c) code? For best robustness, 
        this should use the same routine (not copy/paste code) as
@@ -1181,7 +1181,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
     }
 
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Barrier");
-    mpi_errno = MPIR_Barrier_intra(comm_ptr);
+    mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
