@@ -690,6 +690,7 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 {
     int mpi_errno = MPI_SUCCESS;
     uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -712,8 +713,9 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
     /* Note that this is the unthreaded version */
     /* Comm must be an intracommunicator */
     mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK, 
-                                     MPI_INT, MPI_BAND, comm_ptr );
+                                     MPI_INT, MPI_BAND, comm_ptr, &errflag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     if (ignore_id) {
         *context_id = MPIR_Locate_context_bit(local_mask);
