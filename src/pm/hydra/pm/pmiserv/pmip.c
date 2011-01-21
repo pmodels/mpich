@@ -232,7 +232,13 @@ int main(int argc, char **argv)
         if (pid > 0)
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
-                    HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                    /* We store the new return status if either the
+                     * exit status is uninitialized, or if the return
+                     * status is non-zero. If the return status is
+                     * zero, and the exit status has already been set
+                     * to a different value, we use that. */
+                    if (ret_status || HYD_pmcd_pmip.downstream.exit_status[i] ==-1)
+                        HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
                     done++;
                 }
 

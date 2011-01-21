@@ -253,16 +253,23 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             status = HYDT_ftb_publish("FTB_MPI_PROCS_DEAD", ftb_event_payload);
             HYDU_ERR_POP(status, "FTB publish failed\n");
 
+            /* Store a temporary erroneous exit status. In case the
+             * application does not return a non-zero exit status, we
+             * will use this. */
+            HYD_pmcd_pmip.downstream.exit_status[pid] = 1;
+
+            /* Deregister failed socket */
+            status = HYDT_dmx_deregister_fd(fd);
+            HYDU_ERR_POP(status, "unable to deregister fd\n");
+            close(fd);
+
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
                 HYD_pmcd_pmip_kill_localprocs();
             }
             else {
                 /* If the user doesn't want to automatically cleanup,
-                 * deregister the socket, signal the remaining
-                 * processes, and send this information upstream */
-                status = HYDT_dmx_deregister_fd(fd);
-                HYDU_ERR_POP(status, "unable to deregister fd\n");
-                close(fd);
+                 * signal the remaining processes, and send this
+                 * information upstream */
 
                 /* FIXME: This code needs to change from sending the
                  * SIGUSR1 signal to a PMI-2 notification message. */
