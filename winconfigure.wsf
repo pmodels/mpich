@@ -2490,6 +2490,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef HAVE__BOOL */")
                                 Case "HAVE__COMPLEX"
                                         fout.WriteLine("/* #undef HAVE__COMPLEX */")
+                                Case "HAVE___TYPEOF"
+                                        fout.WriteLine("#define HAVE___TYPEOF 1")
                                 Case "HAVE_FLOAT__COMPLEX"
                                         fout.WriteLine("/* #undef HAVE_FLOAT__COMPLEX */")
                                 Case "HAVE_DOUBLE__COMPLEX"
