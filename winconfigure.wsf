@@ -6665,6 +6665,7 @@ Function GenBuild()
 	mfile.WriteLine(" /I..\src\mpi\romio\adio\include \")
 	mfile.WriteLine(" /I..\src\mpid\common\datatype \")
 	mfile.WriteLine(" /I..\src\mpid\common\locks \")
+	mfile.WriteLine(" /I..\src\mpid\common\sched \")
 	mfile.WriteLine(" /I..\src\mpi\datatype \")
 	mfile.WriteLine(" /I..\src\mpi\binding\f90 \")
 	mfile.WriteLine(" /I..\src\pm\smpd \")
@@ -6913,6 +6914,7 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\mpid\ch3\src"), trimlength
 	CreateRules f.GetFolder("src\mpid\common\locks"), trimlength
 	CreateRules f.GetFolder("src\mpid\common\sock\iocp"), trimlength
+	CreateRules f.GetFolder("src\mpid\common\sched"), trimlength
 	CreateRules f.GetFolder("src\util\info"), trimlength
 '	CreateRules f.GetFolder("src\util\timing"), trimlength
 	CreateRules f.GetFolder("src\util\logging\common"), trimlength
@@ -6956,6 +6958,7 @@ Function GenBuild()
 	CreateObjs "mpich2", f.GetFolder("src\mpid\ch3\src"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\mpid\common\locks"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\mpid\common\sock\iocp"), trimlength, false, false
+	CreateObjs "mpich2", f.GetFolder("src\mpid\common\sched"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\info"), trimlength, false, false
 '	CreateObjs "mpich2", f.GetFolder("src\util\timing"), trimlength, false, false
 	CreateObjs "mpich2", f.GetFolder("src\util\logging\common"), trimlength, false, false
