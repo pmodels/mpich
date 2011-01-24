@@ -552,7 +552,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sched;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -657,7 +657,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sched;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="WIN32;NDEBUG;USE_WINCONF_H;HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED;USE_LOGGING=MPID_LOGGING_RLOG;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -2266,7 +2266,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sched;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_WINCONF_H,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,MPICH_MULTITHREADED"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -2372,7 +2372,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\include;src\include\win32;src\mpl\include;src\mpid\common\datatype;src\mpid\common\sched;src\mpid\common\sock;src\mpid\common\sock\iocp;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\ch3\channels\sock\include;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;WIN32,NDEBUG,USE_WINCONF_H,HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED,USE_LOGGING=MPID_LOGGING_RLOG,MPIO_BUILD_PROFILING,HAVE_FORTRAN_BINDING,MPI_EXPORTS,MPICH_MULTITHREADED"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -3895,7 +3895,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include;src\openpa\src;src\openpa\src\win32;src\mpl\include"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\common\sched;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32;src\util\wrappers;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include;src\openpa\src;src\openpa\src\win32;src\mpl\include"
 				PreprocessorDefinitions="WIN32;_WIN32_WINNT=0x500;NDEBUG;USE_WINCONF_H;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN;MPICH_MULTITHREADED;ENABLE_NO_MACRO_VARARG_NAME"
 				RuntimeLibrary="0"
 				WarningLevel="0"
@@ -3969,7 +3969,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32;src\util\wrappers;src\openpa\src;src\openpa\src\win32;src\mpl\include;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include"
+				AdditionalIncludeDirectories="&quot;src\mpi\romio\mpi-io&quot;;src\mpi\romio\adio\include;src\mpi\spawn;src\include;src\include\win32;src\mpid\common\datatype;src\mpid\common\sock;src\mpid\ch3\include;src\mpid\common\locks;src\mpid\common\sched;src\mpi\datatype;src\mpi\binding\f90;src\mpi\binding\f90\win32;src\util\wrappers;src\openpa\src;src\openpa\src\win32;src\mpl\include;src\mpid\ch3\channels\nemesis\nemesis\include;src\mpid\ch3\channels\nemesis\include"
 				PreprocessorDefinitions="WIN32;_WIN32_WINNT=0x500;NDEBUG;USE_WINCONF_H;MPIO_BUILD_PROFILING;HAVE_FORTRAN_BINDING;MPI_EXPORTS;WORDS_LITTLEENDIAN;MPICH_MULTITHREADED;ENABLE_NO_MACRO_VARARG_NAME;HAVE_TIMING=MPID_TIMING_KIND_LOG_DETAILED;USE_LOGGING=MPID_LOGGING_RLOG"
 				RuntimeLibrary="0"
 				WarningLevel="0"
@@ -5569,7 +5569,51 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\mpi\coll\iallgather.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\iallgatherv.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\iallreduce.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\ialltoall.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\ialltoallv.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\ialltoallw.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\ibarrier.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\ibcast.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\pt2pt\ibsend.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\iexscan.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\igather.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\igatherv.c"
 				>
 			</File>
 			<File
@@ -5981,7 +6025,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\mpi\coll\ired_scat.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\ired_scat_block.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\ireduce.c"
+				>
+			</File>
+			<File
 				RelativePath=".\src\mpi\pt2pt\irsend.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\iscan.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\iscatter.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\iscatterv.c"
 				>
 			</File>
 			<File
@@ -6062,6 +6130,10 @@
 			</File>
 			<File
 				RelativePath=".\src\mpid\common\datatype\mpid_ext32_segment.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpid\common\sched\mpid_sched.c"
 				>
 			</File>
 			<File
@@ -6154,6 +6226,10 @@
 			</File>
 			<File
 				RelativePath=".\src\util\thread\mpiu_thread.c"
+				>
+			</File>
+			<File
+				RelativePath=".\src\mpi\coll\nbcutil.c"
 				>
 			</File>
 			<File
