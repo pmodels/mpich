@@ -45,6 +45,9 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
 #endif /* MPICH_IS_THREADED */
 /* NEMESIS MULTITHREADING - End block*/
 
+#ifdef HAVE_SIGNAL
+static void (*prev_sighandler) (int);
+#endif
 static volatile int sigusr1_count = 0;
 static int my_sigusr1_count = 0;
 
@@ -805,15 +808,11 @@ int MPIDI_CH3I_Progress_init(void)
     pktArray[MPIDI_NEM_PKT_NETMOD] = pkt_NETMOD_handler;
    
 #ifdef HAVE_SIGNAL
-    {
-        /* install signal handler for process failure notifications from hydra */
-        void *ret;
-        
-        ret = signal(SIGUSR1, &sigusr1_handler);
-        MPIU_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
-        /* Error if the app set its own SIGUSR1 handler. */
-        MPIU_ERR_CHKANDJUMP(ret != SIG_DFL, mpi_errno, MPI_ERR_OTHER, "**sigusr1");
-    }
+    /* install signal handler for process failure notifications from hydra */
+    prev_sighandler = signal(SIGUSR1, sigusr1_handler);
+    MPIU_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
+    /* Error if the app set its own SIGUSR1 handler. */
+    MPIU_ERR_CHKANDJUMP(prev_sighandler != SIG_DFL, mpi_errno, MPI_ERR_OTHER, "**sigusr1");
 #endif
 
  fn_exit:
@@ -829,10 +828,21 @@ int MPIDI_CH3I_Progress_init(void)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_finalize(void)
 {
+    int mpi_errno = MPI_SUCCESS;
     qn_ent_t *ent;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
+
+#ifdef HAVE_SIGNAL
+    {
+        /* replace signal handler */
+        void *ret;
+        
+        ret = signal(SIGUSR1, prev_sighandler);
+        MPIU_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
+    }
+#endif
 
     while(qn_head) {
         ent = qn_head->next;
@@ -840,8 +850,11 @@ int MPIDI_CH3I_Progress_finalize(void)
         qn_head = ent;
     }
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
-    return MPI_SUCCESS;
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 
