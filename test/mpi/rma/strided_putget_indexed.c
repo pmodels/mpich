@@ -1,3 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /* One-Sided MPI 2-D Strided Accumulate Test
  *
  * Author: James Dinan <dinan@mcs.anl.gov> 
@@ -48,7 +54,7 @@ int main(int argc, char **argv) {
 
     peer = (rank+1) % nranks;
 
-    // Perform ITERATIONS strided accumulate operations
+    /* Perform ITERATIONS strided accumulate operations */
 
     for (i = 0; i < ITERATIONS; i++) {
       MPI_Aint idx_loc[SUB_YDIM];
@@ -82,7 +88,7 @@ int main(int argc, char **argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    // Verify that the results are correct
+    /* Verify that the results are correct */
 
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, buf_win);
     errors = 0;

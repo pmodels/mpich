@@ -1,3 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /* One-Sided MPI 2-D Strided Get Test
  *
  * Author: James Dinan <dinan@mcs.anl.gov> 
@@ -49,7 +55,7 @@ int main(int argc, char **argv) {
 
     peer = (rank+1) % nranks;
 
-    // Build the datatype
+    /* Build the datatype */
 
     for (i = 0; i < SUB_YDIM; i++) {
       MPI_Get_address(&loc_buf[i*XDIM], &idx_loc[i]);
@@ -63,14 +69,14 @@ int main(int argc, char **argv) {
     MPI_Type_commit(&loc_type);
     MPI_Type_commit(&rem_type);
 
-    // Perform get operation
+    /* Perform get operation */
 
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
 
     MPI_Get(loc_buf, 1, loc_type, peer, 0, 1, rem_type, buf_win);
 
-    // Use the datatype only on the remote side (must have SUB_XDIM == XDIM)
-    // MPI_Get(loc_buf, SUB_XDIM*SUB_YDIM, MPI_DOUBLE, peer, 0, 1, rem_type, buf_win);
+    /* Use the datatype only on the remote side (must have SUB_XDIM == XDIM) */
+    /* MPI_Get(loc_buf, SUB_XDIM*SUB_YDIM, MPI_DOUBLE, peer, 0, 1, rem_type, buf_win); */
 
     MPI_Win_unlock(peer, buf_win);
 
@@ -79,7 +85,7 @@ int main(int argc, char **argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    // Verify that the results are correct
+    /* Verify that the results are correct */
 
     errors = 0;
     for (i = 0; i < SUB_XDIM; i++) {

@@ -1,3 +1,17 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+/* One-Sided MPI 2-D Strided Accumulate Test
+ *
+ * Author: James Dinan <dinan@mcs.anl.gov> 
+ * Date  : December, 2010
+ *
+ * This code performs one-sided accumulate into a 2d patch of a shared array.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
