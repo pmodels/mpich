@@ -3,6 +3,7 @@ DEPADD = @MPILIBLOC@ ../util/mtestf.o
 smvar_do_sharedlibs = 0
 
 cartcrf_SOURCES = cartcrf.f
+dgraph_wgtf_SOURCES = dgraph_wgtf.f
 dgraph_unwgtf_SOURCES = dgraph_unwgtf.f
 
 testing:
