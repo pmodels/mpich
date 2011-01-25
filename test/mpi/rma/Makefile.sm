@@ -62,6 +62,13 @@ rmanull_SOURCES    = rmanull.c
 mixedsync_SOURCES = mixedsync.c
 selfrma_SOURCES   = selfrma.c
 
+strided_acc_onelock_SOURCES    = strided_acc_onelock.c
+strided_putget_indexed_SOURCES = strided_putget_indexed.c
+strided_acc_indexed_SOURCES    = strided_acc_indexed.c
+strided_acc_subarray_SOURCES   = strided_acc_subarray.c
+strided_get_indexed_SOURCES    = strided_get_indexed.c
+window_creation_SOURCES        = window_creation.c
+
 ../util/mtest.o:
 	(cd ../util && $(MAKE) )
 
