@@ -61,24 +61,24 @@
       call MPI_Comm_size(MPI_COMM_WORLD, world_size, ierr)
  
       do idx = 1, src_sz
-          nbr_sep = abs(srcs(idx) - world_rank)
+          nbr_sep = iabs(srcs(idx) - world_rank)
           if (nbr_sep .ne. 1 .and. nbr_sep .ne. (world_size-1)) then
               validate_dgraph = .false.
               write(6,"('srcs[',I3,']=',I3,
      &                  ' is NOT a neighbor of my rank',I3)")
      &              idx, srcs(idx), world_rank
               return
-          endif 
+          endif
       enddo
       do idx = 1, dest_sz
-          nbr_sep = abs(dests(idx) - world_rank)
+          nbr_sep = iabs(dests(idx) - world_rank)
           if (nbr_sep .ne. 1 .and. nbr_sep .ne. (world_size-1)) then
               validate_dgraph = .false.
               write(6,"('dests[',I3,']=',I3,
      &                  ' is NOT a neighbor of my rank',I3)")
      &              idx, dests(idx), world_rank
               return
-          endif 
+          endif
       enddo
 
       validate_dgraph = .true.
