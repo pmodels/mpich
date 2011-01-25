@@ -16,6 +16,7 @@ topodup_SOURCES = topodup.c
 graphcr_SOURCES = graphcr.c
 graphcr2_SOURCES = graphcr2.c
 distgraph1_SOURCES = distgraph1.c
+dgraph_unwgt_SOURCES = dgraph_unwgt.c
 
 ../util/mtest.o: 
 	(cd ../util && make mtest.o)
