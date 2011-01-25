@@ -8,7 +8,8 @@
 #include "mpiimpl.h"
 
 #if !defined(MPID_REQUEST_PTR_ARRAY_SIZE)
-#define MPID_REQUEST_PTR_ARRAY_SIZE 16
+/* use a larger default size of 64 in order to enhance SQMR performance */
+#define MPID_REQUEST_PTR_ARRAY_SIZE 64
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Waitall */
@@ -45,8 +46,9 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     int rc;
     int n_greqs;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
+    int optimize = ignoring_statuses; /* see NOTE-O1 */
     MPIU_CHKLMEM_DECL(1);
-    
+
     /* Convert MPI request handles to a request object pointers */
     if (count > MPID_REQUEST_PTR_ARRAY_SIZE)
     {
@@ -71,6 +73,12 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
 		MPID_END_ERROR_CHECKS;
 	    }
 #           endif
+            if (request_ptrs[i]->kind != MPID_REQUEST_RECV &&
+                request_ptrs[i]->kind != MPID_REQUEST_SEND)
+            {
+                optimize = FALSE;
+            }
+
             if (request_ptrs[i]->kind == MPID_UREQUEST)
                 ++n_greqs;
 	}
@@ -80,6 +88,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
 	    MPIR_Status_set_empty(status_ptr);
 	    request_ptrs[i] = NULL;
 	    n_completed += 1;
+            optimize = FALSE;
 	}
     }
     
@@ -87,6 +96,34 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     {
 	goto fn_exit;
     }
+
+    /* NOTE-O1: high-message-rate optimization.  For simple send and recv
+     * operations and MPI_STATUSES_IGNORE we use a fastpath approach that strips
+     * out as many unnecessary jumps and error handling as possible.
+     *
+     * Possible variation: permit request_ptrs[i]==NULL at the cost of an
+     * additional branch inside the for-loop below. */
+    if (optimize) {
+        for (i = 0; i < count; ++i) {
+            while (!MPID_Request_is_complete(request_ptrs[i])) {
+                mpi_errno = MPID_Progress_wait(&progress_state);
+                /* must check and handle the error, can't guard with HAVE_ERROR_CHECKING, but it's
+                 * OK for the error case to be slower */
+                if (unlikely(mpi_errno)) {
+                    /* --BEGIN ERROR HANDLING-- */
+                    MPID_Progress_end(&progress_state);
+                    MPIU_ERR_POP(mpi_errno);
+                    /* --END ERROR HANDLING-- */
+                }
+            }
+            mpi_errno = MPIR_Request_complete_fastpath(&array_of_requests[i], request_ptrs[i]);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+
+        goto fn_exit;
+    }
+
+    /* ------ "slow" code path below ------ */
 
     /* Grequest_waitall may run the progress engine - thus, we don't 
        invoke progress_start until after running Grequest_waitall */

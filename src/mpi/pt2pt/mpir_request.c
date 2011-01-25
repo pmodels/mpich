@@ -44,7 +44,6 @@ fn_exit:
     return mpi_errno;
 }
 
-
 #undef FUNCNAME
 #define FUNCNAME MPIR_Request_complete
 #undef FCNAME
