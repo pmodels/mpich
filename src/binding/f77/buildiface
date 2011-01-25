@@ -552,10 +552,13 @@ foreach $_ (@ARGV) {
 		  'Register_datarep-3' => 'in:checkdatarep',
 # MPI-2.2 Functions
     'Op_commutative' => '2', 'Op_commutative-2' => 'out:logical',
-    'Dist_graph_create_adjacent' => '4:7',
-		 'Dist_graph_create_adjacent-4' => 'in:unweighted',
-		 'Dist_graph_create_adjacent-7' => 'in:unweighted',
-    'Dist_graph_create' => '6', 'Dist_graph_create-6' => 'in:unweighted',
+    'Dist_graph_create_adjacent' => '4:7:9',
+		'Dist_graph_create_adjacent-4' => 'in:unweighted',
+		'Dist_graph_create_adjacent-7' => 'in:unweighted',
+		'Dist_graph_create_adjacent-9' => 'in:logical',
+    'Dist_graph_create' => '6:8',
+		'Dist_graph_create-6' => 'in:unweighted',
+		'Dist_graph_create-8' => 'in:logical',
     'Dist_graph_neighbors_count' => '4',
 		'Dist_graph_neighbors_count-4' => 'out:logical',
     'Dist_graph_neighbors' => '4:7',
@@ -2392,7 +2395,7 @@ if ($write_mpif) {
     }
     #
     # Topology types
-    foreach $key (GRAPH, CART) {
+    foreach $key (GRAPH, CART, DIST_GRAPH) {
 	&print_mpif_int( "MPI_$key" );
     }
     #
