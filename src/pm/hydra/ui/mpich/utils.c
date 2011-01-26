@@ -688,20 +688,40 @@ static void binding_help_fn(void)
     printf("        none -- no binding\n");
     printf("        rr   -- round-robin as OS assigned processor IDs\n");
     printf("        user:0,1,3,2 -- user specified binding\n");
-    printf("        topo -- CPU topology-aware binding\n");
-    printf("        topomem -- memory topology-aware binding\n\n");
+    printf("        cpu -- CPU topology-aware binding\n");
+    printf("        cache -- Cache topology-aware binding\n");
+    printf("\n");
 
     printf("    CPU options (supported on topology-capable binding libs):\n");
-    printf("        topo (with no options) -- use all CPU resources\n");
-    printf("        topo:sockets,cores,threads -- use all CPU resources\n");
-    printf("        topo:sockets,cores -- avoid using multiple threads on a core\n");
-    printf("        topo:sockets -- avoid using multiple cores on a socket\n");
+    printf("        cpu --         pack processes as closely to each other as possible\n");
+    printf("                       with respect to CPU processing units\n");
+    printf("        cpu:sockets -- pack processes as closely to each other as possible\n");
+    printf("                       without sharing a socket (unless the number of\n");
+    printf("                       processes is more than the number of sockets)\n");
+    printf("        cpu:cores --   pack processes as closely to each other as possible\n");
+    printf("                       without sharing a core (unless the number of processes\n");
+    printf("                       is more than the number of cores)\n");
+    printf("        cpu:threads -- pack processes as closely to each other as possible\n");
+    printf("                       without sharing a hardware thread/SMT (unless the\n");
+    printf("                       number of processes is more than the number of hardware\n");
+    printf("                       threads/SMTs\n");
+    printf("\n");
 
-    printf("    Memory options (supported on memory topology aware binding libs):\n");
-    printf("        topomem:l1,l2,l3,mem -- use all memory resources\n");
-    printf("        topomem:l2,l3,mem -- avoid sharing l1 cache\n");
-    printf("        topomem:l3,mem -- avoid using l2 cache\n");
-    printf("        topomem:mem -- avoid using l3 cache\n");
+    printf("    Cache options (supported on cache topology aware binding libs):\n");
+    printf("        cache --    pack processes as closely to each other as possible with\n");
+    printf("                    respect to cache layout\n");
+    printf("        cache:l3 -- pack processes as closely to each other as possible\n");
+    printf("                    without sharing the L3 cache (unless the number of\n");
+    printf("                    processes is more than the number of the number of L3\n");
+    printf("                    cache regions)\n");
+    printf("        cache:l2 -- pack processes as closely to each other as possible\n");
+    printf("                    without sharing the L2 cache (unless the number of\n");
+    printf("                    processes is more than the number of the number of L2\n");
+    printf("                    cache regions)\n");
+    printf("        cache:l1 -- pack processes as closely to each other as possible\n");
+    printf("                    without sharing the L1 cache (unless the number of\n");
+    printf("                    processes is more than the number of the number of L1\n");
+    printf("                    cache regions)\n");
 }
 
 static HYD_status binding_fn(char *arg, char ***argv)
