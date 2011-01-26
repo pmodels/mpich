@@ -1178,6 +1178,13 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     HYDU_append_env_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y",
                             &HYD_server_info.user_global.global_env.system);
 
+    /* If auto-cleanup is disabled, ask MPICH2 to enabled
+     * FT-collective returns */
+    if (HYD_server_info.user_global.auto_cleanup == 0) {
+        HYDU_append_env_to_list("MPICH_ENABLE_COLL_FT_RET", "1",
+                                &HYD_server_info.user_global.global_env.system);
+    }
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
