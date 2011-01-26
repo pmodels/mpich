@@ -834,16 +834,6 @@ int MPIDI_CH3I_Progress_finalize(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
-#ifdef HAVE_SIGNAL
-    {
-        /* replace signal handler */
-        void *ret;
-        
-        ret = signal(SIGUSR1, prev_sighandler);
-        MPIU_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
-    }
-#endif
-
     while(qn_head) {
         ent = qn_head->next;
         MPIU_Free(qn_head);
