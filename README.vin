@@ -768,11 +768,6 @@ guidelines on what can be expected in this feature:
    returning MPI_SUCCESS on a given process means that the part of the
    collective performed by that process has been successful.
 
-       MPICH2 release specific note: There is currently a bug in
-       MPICH2 that might cause the collective operation to return
-       MPI_SUCCESS on a process even if data is corrupted on that
-       process.
-
  - PROCESS MANAGER: If used with the hydra process manager, hydra will
    detect failed processes and notify the MPICH2 library.  Users can
    query the list of failed processes using the
