@@ -82,6 +82,7 @@ do {										\
 int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
 int MPIDI_CH3I_Shm_send_progress(void);
+int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc);
 
 int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz );
 
@@ -91,6 +92,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
 int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie);
 int MPID_nem_lmt_shm_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_shm_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
+int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
 int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_cookie);
@@ -98,6 +100,7 @@ int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
 int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie);
 int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
+int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
 int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_cookie);
@@ -105,6 +108,7 @@ int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV
 int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie);
 int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
+int MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen);
 
@@ -167,6 +171,7 @@ typedef struct MPIDI_CH3I_VC
     int (* lmt_handle_cookie)(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV cookie);
     int (* lmt_done_send)(struct MPIDI_VC *vc, struct MPID_Request *req);
     int (* lmt_done_recv)(struct MPIDI_VC *vc, struct MPID_Request *req);
+    int (* lmt_vc_terminated)(struct MPIDI_VC *vc);
 
     /* LMT shared memory copy-buffer ptr */
     struct MPID_nem_copy_buf *lmt_copy_buf;

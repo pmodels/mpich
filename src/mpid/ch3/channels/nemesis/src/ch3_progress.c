@@ -893,6 +893,50 @@ fn_fail:
 }
 /* end MPIDI_CH3_Connection_terminate() */
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Complete_sendq_with_error
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request *req, *prev;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
+
+    req = MPIDI_CH3I_sendq_head[CH3_NORMAL_QUEUE];
+    prev = NULL;
+    while (req) {
+        if (req->ch.vc == vc) {
+            MPID_Request *next = req->dev.next;
+            if (prev)
+                prev->dev.next = next;
+            else
+                MPIDI_CH3I_sendq_head[CH3_NORMAL_QUEUE] = next;
+            if (MPIDI_CH3I_sendq_tail[CH3_NORMAL_QUEUE] == req)
+                MPIDI_CH3I_sendq_tail[CH3_NORMAL_QUEUE] = prev;
+
+            req->status.MPI_ERROR = MPI_SUCCESS;
+            MPIU_ERR_SET1(req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+            
+            MPID_Request_release(req); /* ref count was incremented when added to queue */
+            MPIDI_CH3U_Request_complete(req);
+            req = next;
+        } else {
+            prev = req;
+            req = req->dev.next;
+        }
+    }
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 
 #undef FUNCNAME
 #define FUNCNAME pkt_NETMOD_handler

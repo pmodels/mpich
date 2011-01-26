@@ -584,10 +584,28 @@ int MPID_nem_lmt_dma_progress(void)
                 }
                 break;
             case KNEM_STATUS_FAILED:
-                /* return an error for now, there might be something that's
-                   less heavy-handed to do later */
-                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**recv_status",
-                                     "**recv_status %d", *cur->status_p);
+                /* set the error status for the request, complete it then dequeue the entry */
+                cur->req->status.MPI_ERROR = MPI_SUCCESS;
+                MPIU_ERR_SET1(cur->req->status.MPI_ERROR, MPI_ERR_OTHER, "**recv_status", "**recv_status %d", *cur->status_p);
+
+                MPIDI_CH3U_Request_complete(cur->req);
+
+                if (cur == outstanding_head) {
+                    outstanding_head = cur->next;
+                    prev = NULL;
+                    free_me = cur;
+                    cur = cur->next;
+                }
+                else {
+                    prev->next = cur->next;
+                    free_me = cur;
+                    cur = cur->next;
+                }
+
+                if (free_me) MPIU_Free(free_me);
+                --MPID_nem_local_lmt_pending;
+                continue;
+                
                 break;
             case KNEM_STATUS_PENDING:
                 /* nothing to do here */
@@ -606,6 +624,26 @@ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_PROGRESS);
     return mpi_errno;
 fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_lmt_dma_vc_terminated
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
+
+    /* Do nothing.  KNEM should abort any ops with dead processes. */
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
+    return mpi_errno;
+ fn_fail:
     goto fn_exit;
 }
 

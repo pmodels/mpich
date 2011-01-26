@@ -72,6 +72,13 @@ int MPID_nem_vc_terminate(MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_VC_TERMINATE);
 
+    
+    mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->lmt_vc_terminated(vc);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    mpi_errno = MPIDI_CH3I_Complete_sendq_with_error(vc);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     mpi_errno = MPIU_SHMW_Hnd_finalize(&(((MPIDI_CH3I_VC *)vc->channel_private)->lmt_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     mpi_errno = MPIU_SHMW_Hnd_finalize(&(((MPIDI_CH3I_VC *)vc->channel_private)->lmt_recv_copy_buf_handle));

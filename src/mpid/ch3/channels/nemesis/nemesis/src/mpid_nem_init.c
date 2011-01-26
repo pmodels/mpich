@@ -413,6 +413,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_shm_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_shm_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_shm_done_recv;
+        vc_ch->lmt_vc_terminated = MPID_nem_lmt_shm_vc_terminated;
 #elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_DMA
         vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_dma_initiate_lmt;
         vc_ch->lmt_start_recv    = MPID_nem_lmt_dma_start_recv;
@@ -420,6 +421,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_dma_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_dma_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_dma_done_recv;
+        vc_ch->lmt_vc_terminated = MPID_nem_lmt_dma_vc_terminated;
 #elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_VMSPLICE
         vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_vmsplice_initiate_lmt;
         vc_ch->lmt_start_recv    = MPID_nem_lmt_vmsplice_start_recv;
@@ -427,6 +429,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_vmsplice_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_vmsplice_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_vmsplice_done_recv;
+        vc_ch->lmt_vc_terminated = MPID_nem_lmt_vmsplice_vc_terminated;
 #elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_NONE
         vc_ch->lmt_initiate_lmt  = NULL;
         vc_ch->lmt_start_recv    = NULL;
@@ -434,6 +437,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = NULL;
         vc_ch->lmt_done_send     = NULL;
         vc_ch->lmt_done_recv     = NULL;
+        vc_ch->lmt_vc_terminated = NULL;
 #else
 #  error Must select a valid local LMT implementation!
 #endif
@@ -464,6 +468,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = NULL;
         vc_ch->lmt_done_send     = NULL;
         vc_ch->lmt_done_recv     = NULL;
+        vc_ch->lmt_vc_terminated = NULL;
 
         /* FIXME: DARIUS set these to default for now */
         vc_ch->iStartContigMsg = NULL;

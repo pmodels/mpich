@@ -120,6 +120,8 @@ static int MPID_nem_delete_shm_region(MPID_nem_copy_buf_t **buf, MPIU_SHMW_Hnd_t
 
 /* number of iterations to wait for the other side to process a buffer */
 #define LMT_POLLS_BEFORE_YIELD 1000
+/* how many times we'll call yield before we give up waiting */
+#define LMT_YIELDS_BEFORE_GIVING_UP 1000
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_shm_initiate_lmt
@@ -379,7 +381,7 @@ static int get_next_req(MPIDI_VC_t *vc)
     {
         /* copy buf is owned by the remote side */
         /* remote side chooses next transfer */
-        int i = 0;
+        int p = 0, y = 0;
 
         OPA_read_barrier();
         
@@ -388,12 +390,17 @@ static int get_next_req(MPIDI_VC_t *vc)
             
         while (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
         {
-            if (i == LMT_POLLS_BEFORE_YIELD)
+            if (p == LMT_POLLS_BEFORE_YIELD)
             {
-                COND_Yield();
-                i = 0;
+                if (y < LMT_YIELDS_BEFORE_GIVING_UP) {
+                    COND_Yield();
+                    p = 0;
+                    ++y;
+                } else {
+                    goto fn_exit;
+                }
             }
-            ++i;
+            ++p;
         }
 
         OPA_read_barrier();
@@ -473,19 +480,20 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     do
     {
-        int i;
+        int p, y;
         /* If the buffer is full, wait.  If the receiver is actively
            working on this transfer, yield the processor and keep
            waiting, otherwise wait for a bounded amount of time. */
-        i = 0;
+        p = y = 0;
         while (copy_buf->len[buf_num].val != 0)
         {
-            if (i == LMT_POLLS_BEFORE_YIELD)
+            if (p == LMT_POLLS_BEFORE_YIELD)
             {
-                if (copy_buf->receiver_present.val)
+                if (copy_buf->receiver_present.val && y < LMT_YIELDS_BEFORE_GIVING_UP)
                 {
                     COND_Yield();
-                    i = 0;
+                    p = 0;
+                    ++y;
                 }
                 else
                 {
@@ -498,7 +506,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 }
             }
 
-            ++i;
+            ++p;
         }
 
         OPA_read_write_barrier();
@@ -572,18 +580,20 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     do
     {
+        int p, y;
         /* If the buffer is empty, wait.  If the sender is actively
            working on this transfer, yield the processor and keep
            waiting, otherwise wait for a bounded amount of time. */
-        i = 0;
+        p = y = 0;
         while ((len = copy_buf->len[buf_num].val) == 0)
         {
-            if (i == LMT_POLLS_BEFORE_YIELD)
+            if (p == LMT_POLLS_BEFORE_YIELD)
             {
-                if (copy_buf->sender_present.val)
+                if (copy_buf->sender_present.val && y < LMT_YIELDS_BEFORE_GIVING_UP)
                 {
                     COND_Yield();
-                    i = 0;
+                    p = 0;
+                    ++y;
                 }
                 else
                 {
@@ -597,7 +607,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 }
             }
 
-            ++i;
+            ++p;
         }
 
         OPA_read_barrier();
@@ -621,7 +631,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             MPIU_Assert(last - first > surfeit);
 
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "freed previous buffer");
-       }
+        }
 
         if (last < expected_last)
         {
@@ -744,6 +754,10 @@ static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
         if (vc_ch->lmt_active_lmt == NULL)
         {
             /* couldn't find an appropriate request, try again later */
+            
+            if (LMT_SHM_Q_EMPTY(vc_ch->lmt_queue))
+                *done = TRUE; /* There's nothing in the queue.  VC
+                                 must have terminated */
             goto fn_exit;
         }
     }
@@ -815,6 +829,43 @@ int MPID_nem_lmt_shm_progress(void)
  fn_fail:
     goto fn_exit;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_lmt_shm_vc_terminated
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPID_nem_lmt_shm_wait_element_t *we;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
+
+    /* We empty the vc queue, but don't remove the vc from the global
+       list.  That will eventually happen when lmt_shm_progress()
+       calls lmt_shm_progress_vc() and it finds an empty queue. */
+
+    if (vc_ch->lmt_active_lmt) {
+        MPIDI_CH3U_Request_complete(vc_ch->lmt_active_lmt->req);
+        MPIU_Free(vc_ch->lmt_active_lmt);
+        vc_ch->lmt_active_lmt = NULL;
+    }
+
+    while (!LMT_SHM_Q_EMPTY(vc_ch->lmt_queue)) {
+        LMT_SHM_Q_DEQUEUE(&vc_ch->lmt_queue, &we);
+        MPIDI_CH3U_Request_complete(we->req);
+        MPIU_Free(we);
+    }
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_allocate_shm_region

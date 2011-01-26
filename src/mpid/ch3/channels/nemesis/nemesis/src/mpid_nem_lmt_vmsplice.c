@@ -316,12 +316,14 @@ int MPID_nem_lmt_vmsplice_progress(void)
                 mpi_errno = do_readv(cur->req, cur->pipe_fd, cur->req->dev.iov,
                                      &cur->req->dev.iov_offset,
                                      &cur->req->dev.iov_count, &complete);
+                /* FIXME: set the error status of the req and complete it, rather than POP */
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 break;
             case MPIDI_REQUEST_TYPE_SEND:
                 mpi_errno = do_vmsplice(cur->req, cur->pipe_fd, cur->req->dev.iov,
                                         &cur->req->dev.iov_offset,
                                         &cur->req->dev.iov_count, &complete);
+                /* FIXME: set the error status of the req and complete it, rather than POP */
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 break;
             default:
@@ -411,6 +413,30 @@ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
     return mpi_errno;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+
+    /* FIXME: need to handle the case where a VC is terminated due to
+       a process failure.  We need to remove any outstanding LMT ops
+       for this VC. */
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 /* --------------------------------------------------------------------------
    The functions below are nops, stubs that might be used in later versions of
    this code.
