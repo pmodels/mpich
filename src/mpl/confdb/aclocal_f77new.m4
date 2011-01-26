@@ -52,3 +52,39 @@ rm -f conftest.F
 AC_LANG_POP([Fortran 77])
 AC_MSG_RESULT([$pac_cv_f77_accepts_F])
 ])
+
+
+dnl /*D 
+dnl PAC_PROG_F77_HAS_POINTER - Determine if Fortran allows pointer type
+dnl
+dnl Synopsis:
+dnl   PAC_PROG_F77_HAS_POINTER(action-if-true,action-if-false)
+dnl D*/
+AC_DEFUN([PAC_PROG_F77_HAS_POINTER],[
+AC_CACHE_CHECK([whether Fortran 77 supports Cray-style pointer],
+pac_cv_prog_f77_has_pointer,[
+AC_LANG_PUSH([Fortran 77])
+AC_LANG_CONFTEST([
+    AC_LANG_PROGRAM([],[
+        integer M
+        pointer (MPTR,M)
+        data MPTR/0/
+    ])
+])
+saved_FFLAGS="$FFLAGS"
+pac_cv_prog_f77_has_pointer=""
+for ptrflag in '' '-fcray-pointer' ; do
+    FFLAGS="$saved_FFLAGS $ptrflag"
+    AC_COMPILE_IFELSE([], [pac_cv_prog_f77_has_pointer="yes";break], [])
+done
+if test "$pac_cv_prog_f77_has_pointer" = "yes" -a "X$ptrflag" != "X" ; then
+    pac_cv_prog_f77_has_pointer="with $ptrflag"
+fi
+AC_LANG_POP([Fortran 77])
+])
+if test "X$pac_cv_prog_f77_has_pointer" != "X" ; then
+    ifelse([$1],,:,[$1])
+else
+    ifelse([$2],,:,[$2])
+fi
+])

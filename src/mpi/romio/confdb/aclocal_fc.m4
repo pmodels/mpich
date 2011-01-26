@@ -419,23 +419,28 @@ dnl Synopsis:
 dnl   PAC_PROG_FC_HAS_POINTER(action-if-true,action-if-false)
 dnl D*/
 AC_DEFUN([PAC_PROG_FC_HAS_POINTER],[
-AC_CACHE_CHECK([whether Fortran 90 has Cray-style pointer declaration],
+AC_CACHE_CHECK([whether Fortran 90 supports Cray-style pointer],
 pac_cv_prog_fc_has_pointer,[
 AC_LANG_PUSH(Fortran)
-AC_COMPILE_IFELSE([
+AC_LANG_CONFTEST([
     AC_LANG_PROGRAM([],[
         integer M
         pointer (MPTR,M)
         data MPTR/0/
     ])
-],[
-    pac_cv_prog_fc_has_pointer="yes"
-],[
-    pac_cv_prog_fc_has_pointer="no"
-]) dnl Endof AC_COMPILE_IFELSE
+])
+saved_FCFLAGS="$FCFLAGS"
+pac_cv_prog_fc_has_pointer=""
+for ptrflag in '' '-fcray-pointer' ; do
+    FCFLAGS="$saved_FCFLAGS $ptrflag"
+    AC_COMPILE_IFELSE([], [pac_cv_prog_fc_has_pointer="yes";break], [])
+done
+if test "$pac_cv_prog_fc_has_pointer" = "yes" -a "X$ptrflag" != "X" ; then
+    pac_cv_prog_fc_has_pointer="with $ptrflag"
+fi
 AC_LANG_POP(Fortran)
 ])
-if test "$pac_cv_prog_fc_has_pointer" = "yes" ; then
+if test "X$pac_cv_prog_fc_has_pointer" != "X" ; then
     ifelse([$1],,:,[$1])
 else
     ifelse([$2],,:,[$2])
