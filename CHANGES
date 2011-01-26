@@ -26,7 +26,7 @@
  # PM/PMI: Several fixes and improvements to Hydra's process binding
    capability.
 
- # PM/PMI: Upgrade the hwloc version to 1.1.1rc1.
+ # PM/PMI: Upgrade the hwloc version to 1.1.1.
 
  # PM/PMI: Allow users to sort node lists allocated by resource
    managers in Hydra.

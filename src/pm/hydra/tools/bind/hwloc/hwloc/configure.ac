@@ -147,8 +147,8 @@ LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
 
 # Setup libtool, but disable C++, F77, Java and Windows Resource
 # Compiler support -- we don't need that stuff.
-AM_DISABLE_SHARED
-AM_ENABLE_STATIC
+AM_ENABLE_SHARED
+AM_DISABLE_STATIC
 AM_PROG_LIBTOOL([win32-dll])
 LT_LANG([C])
 
