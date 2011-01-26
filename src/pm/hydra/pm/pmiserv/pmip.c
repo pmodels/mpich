@@ -237,7 +237,7 @@ int main(int argc, char **argv)
                      * status is non-zero. If the return status is
                      * zero, and the exit status has already been set
                      * to a different value, we use that. */
-                    if (ret_status || HYD_pmcd_pmip.downstream.exit_status[i] ==-1)
+                    if (ret_status || HYD_pmcd_pmip.downstream.exit_status[i] == -1)
                         HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
                     done++;
                 }
