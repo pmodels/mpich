@@ -887,6 +887,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **signal %s:signal() failed: %s
 **sigusr1:This version of MPICH requires the SIGUSR1 signal, but the application has already installed a handler
 
+**toomanynbc: too many outstanding nonblocking collectives detected
+
 #
 # mpi functions
 #

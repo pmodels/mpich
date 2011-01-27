@@ -96,6 +96,9 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
     comm_p->intranode_table = NULL;
     comm_p->internode_table = NULL;
 
+    /* abstractions bleed a bit here... :( */
+    comm_p->next_sched_tag = MPIR_FIRST_NBC_TAG;
+
     /* Fields not set include context_id, remote and local size, and
        kind, since different communicator construction routines need
        different values */

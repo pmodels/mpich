@@ -30,9 +30,6 @@ struct MPIDU_Sched_state {
 /* holds on to all incomplete schedules on which progress should be made */
 struct MPIDU_Sched_state all_schedules = {NULL};
 
-/* FIXME MT needs locking or atomic access for fine-grained threading */
-static int next_sched_tag = 0;
-
 /* returns TRUE if any schedules are currently pending completion by the
  * progress engine, FALSE otherwise */
 #undef FUNCNAME
@@ -48,14 +45,50 @@ int MPIDU_Sched_are_pending(void)
 #define FUNCNAME MPID_Sched_next_tag
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Sched_next_tag(int *tag)
+int MPID_Sched_next_tag(MPID_Comm *comm_ptr, int *tag)
 {
-    *tag = next_sched_tag;
-
+    int mpi_errno = MPI_SUCCESS;
     /* TODO there should be an internal accessor/utility macro for getting the
      * TAG_UB value that doesn't require using the attribute interface */
-    next_sched_tag = (next_sched_tag + 1) % MPIR_Process.attrs.tag_ub;
-    return MPI_SUCCESS;
+    int tag_ub = MPIR_Process.attrs.tag_ub;
+#if defined(HAVE_ERROR_CHECKING)
+    int start = MPI_UNDEFINED;
+    int end = MPI_UNDEFINED;
+    struct MPIDU_Sched *elt = NULL;
+#endif
+
+    *tag = comm_ptr->next_sched_tag;
+    ++comm_ptr->next_sched_tag;
+
+#if defined(HAVE_ERROR_CHECKING)
+    /* Upon entry into the second half of the tag space, ensure there are no
+     * outstanding schedules still using the second half of the space.  Check
+     * the first half similarly on wraparound. */
+    if (comm_ptr->next_sched_tag == (tag_ub / 2)) {
+        start = tag_ub / 2;
+        end = tag_ub;
+    }
+    else if (comm_ptr->next_sched_tag == (tag_ub)) {
+        start = MPIR_FIRST_NBC_TAG;
+        end = tag_ub / 2;
+    }
+    if (start != MPI_UNDEFINED) {
+        MPL_DL_FOREACH(all_schedules.head, elt) {
+            if (elt->tag >= start && elt->tag < end) {
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
+            }
+        }
+    }
+#endif
+
+    /* wrap the tag values around to the start, but don't allow it to conflict
+     * with the tags used by the blocking collectives */
+    if (comm_ptr->next_sched_tag == tag_ub) {
+        comm_ptr->next_sched_tag = MPIR_FIRST_NBC_TAG;
+    }
+
+fn_fail:
+    return mpi_errno;
 }
 
 #undef FUNCNAME

@@ -1166,6 +1166,7 @@ typedef struct MPID_Comm {
     struct MPID_TopoOps  *topo_fns; /* Pointer to a table of functions
 				       implementting the topology routines
 				    */
+    int next_sched_tag;             /* used by the NBC schedule code to allocate tags */
 #ifdef MPID_HAS_HETERO
     int is_hetero;
 #endif
@@ -3262,6 +3263,7 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_TOPO_B_TAG               27
 #define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
 #define MPIR_ERROR_TAG                29
+#define MPIR_FIRST_NBC_TAG            30
 
 /* These functions are used in the implementation of collective and
    other internal operations. They are wrappers around MPID send/recv

@@ -432,7 +432,7 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, M
 
     *request = MPI_REQUEST_NULL;
 
-    mpi_errno = MPID_Sched_next_tag(&tag);
+    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_Sched_create(&s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
