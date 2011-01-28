@@ -211,7 +211,7 @@ static int reinit_pmi(void)
     CHECK_ERR(pg_rank != MPIDI_Process.my_pg_rank, "pg rank differs after restart");
 
     /* get new pg_id */
-    ret = PMI_Get_id_length_max(&pg_id_sz);
+    ret = PMI_KVS_Get_name_length_max(&pg_id_sz);
     CHECK_ERR(ret, "pmi_get_id_length_max");
     
     MPIU_Free(MPIDI_Process.my_pg->id);
@@ -219,7 +219,7 @@ static int reinit_pmi(void)
     MPIDI_Process.my_pg->id = MPIU_Malloc(pg_id_sz + 1);
     CHECK_ERR(MPIDI_Process.my_pg->id == NULL, "malloc failed");
 
-    ret = PMI_Get_id(MPIDI_Process.my_pg->id, pg_id_sz);
+    ret = PMI_KVS_Get_name(MPIDI_Process.my_pg->id, pg_id_sz);
     CHECK_ERR(ret, "pmi_get_id");
 
     /* get new kvsname */
@@ -232,7 +232,7 @@ static int reinit_pmi(void)
     CHECK_ERR(MPIDI_Process.my_pg->connData == NULL, "malloc failed");
 
     ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->connData, kvs_name_sz);
-    CHECK_ERR(ret, "PMI_Get_id");
+    CHECK_ERR(ret, "PMI_Get_my_name");
 
     
     MPIDI_FUNC_EXIT(MPID_STATE_REINIT_PMI);

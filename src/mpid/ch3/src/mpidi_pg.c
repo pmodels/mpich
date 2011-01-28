@@ -938,7 +938,7 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 #ifdef USE_PMI2_API
         MPIU_Assertp(0); /* don't know what to do here for pmi2 yet.  DARIUS */
 #else
-	PMI_Get_id( pg->id, 256 );
+	PMI_KVS_Get_my_name( pg->id, 256 );
 #endif
     }
     
@@ -1264,7 +1264,7 @@ int MPIDI_PG_CheckForSingleton( void )
 	char buf[256];
 	/* Force an enroll */
 	PMI_KVS_Get( "foobar", "foobar", buf, sizeof(buf) );
-	PMI_Get_id( pg_world->id, 256 );
+	PMI_KVS_Get_my_name( pg_world->id, 256 );
 	PMI_KVS_Get_my_name( pg_world->connData, 256 );
     }
 #endif

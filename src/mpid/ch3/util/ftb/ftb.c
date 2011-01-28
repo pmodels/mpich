@@ -50,7 +50,7 @@ int MPIDU_Ftb_init(void)
     ret = PMI2_Job_GetId(ci.client_jobid, sizeof(ci.client_jobid));
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**pmi_jobgetid");
 #else
-    ret = PMI_Get_id(ci.client_jobid, sizeof(ci.client_jobid));
+    ret = PMI_KVS_Get_my_name(ci.client_jobid, sizeof(ci.client_jobid));
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**pmi_get_id");
 #endif
     

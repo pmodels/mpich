@@ -85,7 +85,6 @@ static int PMI_kvsname_max = 0;
 static int PMI_keylen_max = 0;
 static int PMI_vallen_max = 0;
 
-static int PMI_iter_next_idx = 0;
 static int PMI_debug = 0;
 static int PMI_debug_init = 0;    /* Set this to true to debug the init
 				     handshakes */
@@ -93,8 +92,6 @@ static int PMI_spawned = 0;
 
 /* Function prototypes for internal routines */
 static int PMII_getmaxes( int *kvsname_max, int *keylen_max, int *vallen_max );
-static int PMII_iter( const char *kvsname, const int idx, int *nextidx, 
-		      char *key, int key_len, char *val, int val_len );
 static int PMII_Set_from_port( int, int );
 static int PMII_Connect_to_pm( char *, int );
 
@@ -221,13 +218,13 @@ int PMI_Init( int *spawned )
     return( 0 );
 }
 
-int PMI_Initialized( PMI_BOOL *initialized )
+int PMI_Initialized( int *initialized )
 {
     /* Turn this into a logical value (1 or 0) .  This allows us
        to use PMI_initialized to distinguish between initialized with
        an PMI service (e.g., via mpiexec) and the singleton init, 
        which has no PMI service */
-    *initialized = PMI_initialized != 0 ? PMI_TRUE : PMI_FALSE;
+    *initialized = (PMI_initialized != 0);
     return PMI_SUCCESS;
 }
 
@@ -309,85 +306,6 @@ int PMI_Barrier( void )
     return err;
 }
 
-/* */
-static int clique_size=-2, *clique_ranks =0;
-
-/* pmiPrivateLocalRanks_<r> gets the local ranks for this process */
-int PMI_Get_clique_size( int *size )
-{
-#if 1
-    char buf[PMIU_MAXLINE];
-    char pmi_kvsname[1024];
-    int i, rc, err;
-
-    /* As the server for the information on the */
-    if (clique_size == -2 && PMI_initialized > SINGLETON_INIT_BUT_NO_PM)  {
-	PMI_KVS_Get_my_name( pmi_kvsname, sizeof(pmi_kvsname) );
-	rc = MPIU_Snprintf( buf, PMIU_MAXLINE, 
-			    "cmd=get kvsname=%s key=pmiPrivateLocalRanks_%d\n", 
-			    pmi_kvsname, PMI_rank );
-	if (rc < 0) return PMI_FAIL;
-
-	err = GetResponse( buf, "get_result", 0 );
-	if (err == PMI_SUCCESS) {
-	    PMIU_getval( "rc", buf, PMIU_MAXLINE );
-	    rc = atoi( buf );
-	    if ( rc == 0 ) {
-		char *p = buf, *p0;
-		/* Allocate clique_ranks and fill it in */
-		PMIU_getval( "value", buf, PMIU_MAXLINE );
-		/* Count the number of ranks and allocate the space for them */
-		clique_size = 1;
-		while (*p) {
-		    if (*p++ == ',') clique_size++;
-		}
-		clique_ranks = (int *)MPIU_Malloc( clique_size * sizeof(int) );
-		DBG_PRINTF( ("Clique_size = %d\n", clique_size) );
-		p0 = p = buf;
-		i  = 0;
-		while (*p) {
-		    while (*p && *p != ',') p++;
-		    if (*p == ',') *p++ = 0;
-		    clique_ranks[i++] = atoi(p0);
-		    p0 = p;
-		}
-	    }
-	    else {
-		/* Default case (PM did not understand request) */
-		clique_size = 1;
-	    }
-	}
-    }
-    if (clique_size < 0) *size = 1;
-    else                 *size = clique_size;
-#else
-    *size = 1;
-#endif
-    return PMI_SUCCESS;
-}
-
-int PMI_Get_clique_ranks( int ranks[], int length )
-{
-#if 1
-    int i;
-    if (length < 1) 
-	return PMI_ERR_INVALID_ARG;
-
-    if (clique_size > 0 && clique_ranks) {
-	for (i=0; i<length && i<clique_size; i++) 
-	    ranks[i] = clique_ranks[i];
-    }
-    else 
-	ranks[0] = PMI_rank;
-    return PMI_SUCCESS;
-#else
-    if ( length < 1 )
-	return PMI_ERR_INVALID_ARG;
-    else
-	return PMI_Get_rank( &ranks[0] );
-#endif
-}
-
 /* Inform the process manager that we're in finalize */
 int PMI_Finalize( void )
 {
@@ -398,8 +316,6 @@ int PMI_Finalize( void )
 	shutdown( PMI_fd, SHUT_RDWR );
 	close( PMI_fd );
     }
-    /* Free any memory that we've allocated */
-    if (clique_ranks) MPIU_Free( clique_ranks );
 
     return err;
 }
@@ -457,64 +373,6 @@ int PMI_KVS_Get_value_length_max( int *maxlen )
 	return PMI_ERR_INVALID_ARG;
     *maxlen = PMI_vallen_max;
     return PMI_SUCCESS;
-}
-
-/* We will use the default kvsname for both the kvs_domain_id and for the id */
-/* Hence the implementation of the following three functions */
-
-int PMI_Get_id_length_max( int *length )
-{
-    if (length == NULL)
-	return PMI_ERR_INVALID_ARG;
-    *length = PMI_kvsname_max;
-    return PMI_SUCCESS;
-}
-
-int PMI_Get_id( char id_str[], int length )
-{
-    int rc = PMI_KVS_Get_my_name( id_str, length );
-    return rc;
-}
-
-/* FIXME: What is this function?  How is it defined and used? */
-int PMI_Get_kvs_domain_id( char id_str[], int length )
-{
-    return PMI_KVS_Get_my_name( id_str, length );
-}
-
-/*FIXME: need to return an error if the value of the kvs name returned is 
-  truncated  because it is larger than length */
-int PMI_KVS_Create( char kvsname[], int length )
-{
-    int err = PMI_SUCCESS;
-    
-    if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
-	/* It is ok to pretend to *create* a kvs space */
-	return 0;
-    }
-
-    err = GetResponse( "cmd=create_kvs\n", "newkvs", 0 );
-    if (err == PMI_SUCCESS) {
-	PMIU_getval( "kvsname", kvsname, length );
-    }
-    return err;
-}
-
-int PMI_KVS_Destroy( const char kvsname[] )
-{
-    char buf[PMIU_MAXLINE];
-    int  err = PMI_SUCCESS;
-
-    if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
-	return 0;
-    }
-
-    /* FIXME: Check for tempbuf too short */
-    MPIU_Snprintf( buf, PMIU_MAXLINE, "cmd=destroy_kvs kvsname=%s\n", 
-		   kvsname );
-    err = GetResponse( buf, "kvs_destroyed", 1 );
-    return err;
-
 }
 
 int PMI_KVS_Put( const char kvsname[], const char key[], const char value[] )
@@ -579,27 +437,6 @@ int PMI_KVS_Get( const char kvsname[], const char key[], char value[],
     }
 
     return err;
-}
-
-int PMI_KVS_Iter_first(const char kvsname[], char key[], int key_len, 
-		       char val[], int val_len)
-{
-    int rc;
-
-    rc = PMII_iter( kvsname, 0, &PMI_iter_next_idx, key, key_len, val, val_len );
-    return( rc );
-}
-
-int PMI_KVS_Iter_next(const char kvsname[], char key[], int key_len, 
-		      char val[], int val_len)
-{
-    int rc;
-
-    rc = PMII_iter( kvsname, PMI_iter_next_idx, &PMI_iter_next_idx, 
-		    key, key_len, val, val_len );
-    if ( rc == -2 )
-	PMI_iter_next_idx = 0;
-    return( rc );
 }
 
 /*************************** Name Publishing functions **********************/
@@ -886,46 +723,6 @@ int PMI_Spawn_multiple(int count,
 }
 
 /***************** Internal routines not part of PMI interface ***************/
-
-/* get a keyval pair by specific index */
-
-static int PMII_iter( const char *kvsname, const int idx, int *next_idx, 
-		      char *key, int key_len, char *val, int val_len)
-{
-    char buf[PMIU_MAXLINE], cmd[PMIU_MAXLINE];
-    int  rc, err;
-
-    /* FIXME: Check for tempbuf too short */
-    rc = MPIU_Snprintf( buf, PMIU_MAXLINE, "cmd=getbyidx kvsname=%s idx=%d\n", 
-			kvsname, idx  );
-    if (rc < 0) {
-	return PMI_FAIL;
-    }
-    err = GetResponse( cmd, "getbyidx_results", 0 );
-    if (err == PMI_SUCCESS) {
-	PMIU_getval( "rc", buf, PMIU_MAXLINE );
-	rc = atoi( buf );
-	if ( rc == 0 ) {
-	    PMIU_getval( "nextidx", buf, PMIU_MAXLINE );
-	    *next_idx = atoi( buf );
-	    PMIU_getval( "key", key, key_len );
-	    PMIU_getval( "val", val, val_len );
-	    return( PMI_SUCCESS );
-	}
-	else {
-	    PMIU_getval( "reason", buf, PMIU_MAXLINE );
-	    if ( strncmp( buf, "no_more_keyvals", PMIU_MAXLINE ) == 0 ) {
-		key[0] = '\0';
-		return( PMI_SUCCESS );
-	    }
-	    else {
-		PMIU_printf( 1, "iter failed; reason = %s\n", buf );
-		return( PMI_FAIL );
-	    }
-	}
-    }
-    return err;
-}
 
 /* to get all maxes in one message */
 /* FIXME: This mixes init with get maxes */

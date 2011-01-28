@@ -191,8 +191,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     }
     else
     {
-	/*err = PMI_KVS_Create((*handle_ptr)->kvsname, length);*/
-	err = PMI_Get_kvs_domain_id((*handle_ptr)->kvsname, length);
+	err = PMI_KVS_Get_my_name((*handle_ptr)->kvsname, length);
 	/* --BEGIN ERROR HANDLING-- */
 	if (err != PMI_SUCCESS)
 	{
@@ -295,16 +294,6 @@ int MPID_NS_Free( MPID_NS_Handle *handle_ptr )
 {
     static const char FCNAME[] = "MPID_NS_Free";
     int err;
-
-    /*printf("free kvs: <%s>\n", (*handle_ptr)->kvsname);fflush(stdout);*/
-    err = PMI_KVS_Destroy((*handle_ptr)->kvsname);
-    /* --BEGIN ERROR HANDLING-- */
-    if (err != PMI_SUCCESS)
-    {
-	err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**pmi_kvs_destroy", 0 );
-	return err;
-    }
-    /* --END ERROR HANDLING-- */
 
     MPIU_Free( (*handle_ptr)->kvsname );
     MPIU_Free( *handle_ptr );

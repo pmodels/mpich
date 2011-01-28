@@ -409,7 +409,7 @@ static int InitPG( int *argc, char ***argv,
 	/*
 	 * Get the process group id
 	 */
-	pmi_errno = PMI_Get_id_length_max(&pg_id_sz);
+	pmi_errno = PMI_KVS_Get_name_length_max(&pg_id_sz);
 	if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
 				 "**pmi_get_id_length_max", 
@@ -426,7 +426,7 @@ static int InitPG( int *argc, char ***argv,
 	/* Note in the singleton init case, the pg_id is a dummy.
 	   We'll want to replace this value if we join an 
 	   Process manager */
-	pmi_errno = PMI_Get_id(pg_id, pg_id_sz);
+	pmi_errno = PMI_KVS_Get_my_name(pg_id, pg_id_sz);
 	if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_id",
 				 "**pmi_get_id %d", pmi_errno);
