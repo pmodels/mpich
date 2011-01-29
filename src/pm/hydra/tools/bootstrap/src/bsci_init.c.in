@@ -112,7 +112,7 @@ static const char *detect_rmk(int debug)
 HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
                           const char *user_launcher_exec, int enablex, int debug)
 {
-    int i;
+    int i, detected_rmk;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -130,26 +130,12 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
         MPL_env2str("HYDRA_RMK", (const char **) &HYDT_bsci_info.rmk);
 
     /* User didn't specify an RMK; try to detect one */
-    if (HYDT_bsci_info.rmk == NULL)
+    if (HYDT_bsci_info.rmk == NULL) {
+        detected_rmk = 0;
         HYDT_bsci_info.rmk = detect_rmk(debug);
-
-    if (HYDT_bsci_info.rmk == NULL)
-        HYDT_bsci_info.rmk = HYDU_strdup(HYDRA_DEFAULT_RMK);
-
-    /* Make sure the RMK we found is valid */
-    for (i = 0; rmk_array[i]; i++) {
-        if (!strcmp(HYDT_bsci_info.rmk, rmk_array[i])) {
-            status = (*rmk_init_array[i])();
-            HYDU_ERR_POP(status, "RMK init returned error\n");
-            break;
-        }
+        if (HYDT_bsci_info.rmk)
+            detected_rmk = 1;
     }
-    if (rmk_array[i] == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unrecognized RMK: %s\n", HYDT_bsci_info.rmk);
-
-    /* Set default values for the remaining functions */
-    set_rmk_defaults();
 
 
     /* See if the user specified a launcher */
@@ -162,7 +148,7 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
 
     /* User didn't specify a launcher; try to see if the RMK also
      * provides launcher capabilities */
-    if (HYDT_bsci_info.launcher == NULL) {
+    if (detected_rmk && HYDT_bsci_info.launcher == NULL) {
         for (i = 0; launcher_array[i]; i++)
             if (!strcmp(HYDT_bsci_info.rmk, launcher_array[i]))
                 break;
@@ -170,6 +156,25 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
             HYDT_bsci_info.launcher = HYDU_strdup(launcher_array[i]);
     }
 
+
+    /* If no RMK is provided or detected, use the default RMK */
+    if (HYDT_bsci_info.rmk == NULL)
+        HYDT_bsci_info.rmk = HYDU_strdup(HYDRA_DEFAULT_RMK);
+
+    /* Initialize the RMK */
+    for (i = 0; rmk_array[i]; i++) {
+        if (!strcmp(HYDT_bsci_info.rmk, rmk_array[i])) {
+            status = (*rmk_init_array[i])();
+            HYDU_ERR_POP(status, "RMK init returned error\n");
+            break;
+        }
+    }
+    if (rmk_array[i] == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unrecognized RMK: %s\n", HYDT_bsci_info.rmk);
+
+
+    /* If no launcher is provided or detected, use the default launcher */
     if (HYDT_bsci_info.launcher == NULL)
         HYDT_bsci_info.launcher = HYDU_strdup(HYDRA_DEFAULT_LAUNCHER);
 
@@ -198,7 +203,9 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unrecognized launcher: %s\n", HYDT_bsci_info.launcher);
 
+
     /* Set default values for the remaining functions */
+    set_rmk_defaults();
     set_launcher_defaults();
 
     /* This function is mandatory */

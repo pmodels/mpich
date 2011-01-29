@@ -105,6 +105,11 @@ HYD_status HYDT_bsci_launcher_ll_init(void)
     return external_launcher_init();
 }
 
+HYD_status HYDT_bsci_launcher_none_init(void)
+{
+    return external_launcher_init();
+}
+
 HYD_status HYDT_bsci_rmk_lsf_init(void)
 {
     return external_rmk_init();

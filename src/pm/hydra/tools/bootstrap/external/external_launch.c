@@ -172,7 +172,8 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
-        if (!strcmp(HYDT_bsci_info.launcher, "fork") || lh) {
+        if (!strcmp(HYDT_bsci_info.launcher, "fork") ||
+            !strcmp(HYDT_bsci_info.launcher, "none") || lh) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -220,6 +221,12 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
             HYDU_print_strlist(targs + offset);
         }
 
+        if (!strcmp(HYDT_bsci_info.launcher, "none")) {
+            HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH: ");
+            HYDU_print_strlist(targs + offset);
+            continue;
+        }
+
         /* The stdin pointer is a dummy value. We don't just pass it
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
@@ -249,6 +256,9 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
                                       (void *) (size_t) STDERR_FILENO, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
+
+    if (!strcmp(HYDT_bsci_info.launcher, "none"))
+        HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH_END\n");
 
   fn_exit:
     HYDU_free_strlist(targs);

@@ -145,9 +145,9 @@ fi
 #########################################################################
 AC_ARG_WITH(hydra-bss,
 	[AC_HELP_STRING([--with-hydra-bss=name],
-		[Bootstrap Server (none,ssh,rsh,fork,slurm,ll,lsf,sge,persist,pbs)])],
+		[Bootstrap Server (ssh,none,rsh,fork,slurm,ll,lsf,sge,persist,pbs)])],
 	[ hydra_bss=$withval ],
-	[ hydra_bss="none,ssh,rsh,fork,slurm,ll,lsf,sge,persist,pbs" ])
+	[ hydra_bss="ssh,none,rsh,fork,slurm,ll,lsf,sge,persist,pbs" ])
 AC_MSG_CHECKING(bootstrap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -210,6 +210,7 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	none|no)
 		hydra_bss_none=true
 		available_bss=`echo $available_bss none`
+		available_launchers=`echo $available_launchers none`
 		available_rmks=`echo $available_rmks none`
 		;;
 	*)
