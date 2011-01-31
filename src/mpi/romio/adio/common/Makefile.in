@@ -2,7 +2,6 @@ CC          = @CC@
 AR          = @AR@
 RANLIB      = @RANLIB@
 LIBNAME     = @LIBNAME@
-MPI         = @MPI@
 srcdir      = @srcdir@
 CC_SHL      = @CC_SHL@
 SHLIBNAME   = @SHLIBNAME@

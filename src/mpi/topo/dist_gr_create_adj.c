@@ -117,8 +117,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
                 if (sourceweights == MPI_UNWEIGHTED && destweights != MPI_UNWEIGHTED) {
                     MPIU_ERR_SET(mpi_errno, MPIR_ERR_RECOVERABLE, "**unweightedboth");
                 }
-                MPIR_ERRTEST_ARGNULL(sourceweights, "sourceweights", mpi_errno);
-                /* XXX DJG TODO check ranges for array elements too (**argarrayneg / **rankarray)*/
+                /* TODO check ranges for array elements too (**argarrayneg / **rankarray)*/
             }
             if (outdegree > 0) {
                 MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);

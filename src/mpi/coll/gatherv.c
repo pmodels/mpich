@@ -57,10 +57,12 @@ int MPIR_Gatherv (
 	int *displs, 
 	MPI_Datatype recvtype, 
 	int root, 
-	MPID_Comm *comm_ptr )
+	MPID_Comm *comm_ptr,
+        int *errflag )
 {
     int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Comm comm;
     MPI_Aint       extent;
     int            i, reqs;
@@ -103,16 +105,16 @@ int MPIR_Gatherv (
                     }
                 }
                 else {
-                    mpi_errno = MPIC_Irecv(((char *)recvbuf+displs[i]*extent), 
-                                           recvcnts[i], recvtype, i,
-                                           MPIR_GATHERV_TAG, comm,
-                                           &reqarray[reqs++]);
+                    mpi_errno = MPIC_Irecv_ft(((char *)recvbuf+displs[i]*extent), 
+                                              recvcnts[i], recvtype, i,
+                                              MPIR_GATHERV_TAG, comm,
+                                              &reqarray[reqs++]);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
             }
         }
         /* ... then wait for *all* of them to finish: */
-        mpi_errno = MPIR_Waitall_impl(reqs, reqarray, starray);
+        mpi_errno = MPIC_Waitall_ft(reqs, reqarray, starray, errflag);
         if (mpi_errno&& mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
         
         /* --BEGIN ERROR HANDLING-- */
@@ -120,7 +122,12 @@ int MPIR_Gatherv (
             for (i = 0; i < reqs; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
-                    MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
             }
         }
@@ -141,14 +148,24 @@ int MPIR_Gatherv (
                 MPIR_PARAM_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS,&min_procs);
 
             if (comm_size >= min_procs) {
-                mpi_errno = MPIC_Ssend(sendbuf, sendcnt, sendtype, root, 
-                                       MPIR_GATHERV_TAG, comm);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                mpi_errno = MPIC_Ssend_ft(sendbuf, sendcnt, sendtype, root, 
+                                          MPIR_GATHERV_TAG, comm, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag = TRUE;
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
             else {
-                mpi_errno = MPIC_Send(sendbuf, sendcnt, sendtype, root, 
-                                      MPIR_GATHERV_TAG, comm);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                mpi_errno = MPIC_Send_ft(sendbuf, sendcnt, sendtype, root, 
+                                         MPIR_GATHERV_TAG, comm, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag = TRUE;
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                    MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
         }
     }
@@ -158,6 +175,10 @@ fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     MPIU_CHKLMEM_FREEALL();
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -173,19 +194,19 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gatherv_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                       void *recvbuf, int *recvcnts, int *displs, MPI_Datatype recvtype,
-                      int root, MPID_Comm *comm_ptr)
+                      int root, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Gatherv != NULL) {
 	mpi_errno = comm_ptr->coll_fns->Gatherv(sendbuf, sendcnt, sendtype,
                                                 recvbuf, recvcnts, displs, recvtype,
-                                                root, comm_ptr);
+                                                root, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
         mpi_errno = MPIR_Gatherv(sendbuf, sendcnt, sendtype,
                                  recvbuf, recvcnts, displs, recvtype,
-                                 root, comm_ptr);
+                                 root, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -241,6 +262,7 @@ int MPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GATHERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -358,7 +380,7 @@ int MPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 
     mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcnt, sendtype,
                                   recvbuf, recvcnts, displs, recvtype,
-                                  root, comm_ptr);
+                                  root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

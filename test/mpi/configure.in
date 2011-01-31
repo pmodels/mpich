@@ -976,12 +976,6 @@ AC_SUBST(MPI_SOURCE)
 if test "$FROM_MPICH2" = yes ; then
     # Set compilers/flags to be substituted in output files, e.g. Makefiles.
     LDFLAGS="$saveLDFLAGS"
-    # As part of MPICH2 configure, set all xFLAGS to null
-    # as mpiXX already contains xFLAGS.
-    CFLAGS=""
-    CXXFLAGS=""
-    FFLAGS=""
-    FCFLAGS=""
     # note that the default definition of bindir is 
     #    '${exec_prefix}/bin'
     # so even if prefix is set, exec prefix is not until
@@ -1078,6 +1072,7 @@ AC_OUTPUT(maint/testmerge \
           cxx/pt2pt/Makefile \
           cxx/comm/Makefile \
           cxx/coll/Makefile \
+	  cxx/errhan/Makefile \
           cxx/info/Makefile \
           cxx/datatype/Makefile \
           cxx/io/Makefile \

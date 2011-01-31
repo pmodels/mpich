@@ -111,15 +111,14 @@ AC_SUBST(top_srcdir)
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
 		 sched.h sys/stat.h sys/param.h netinet/in.h netinet/tcp.h \
 		 sys/un.h netdb.h sys/time.h time.h ifaddrs.h arpa/inet.h \
-        errno.h poll.h fcntl.h netdb.h \
-        winsock2.h windows.h)
+		 errno.h poll.h fcntl.h netdb.h winsock2.h windows.h)
 
 AC_CHECK_LIB(socket,socket,LDFLAGS="$LDFLAGS -lsocket",)
 AC_CHECK_LIB(nsl,gethostbyname,LDFLAGS="$LDFLAGS -lnsl",)
 
 # Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
-	       strerror strsignal stat getifaddrs fcntl alarm)
+	       strerror strsignal stat getifaddrs fcntl alarm isatty)
 
 # Check what we need to do about the environ extern
 AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,
@@ -144,143 +143,124 @@ fi
 #########################################################################
 # Check what bootstrap server we should use
 #########################################################################
-AC_ARG_WITH(hydra-bss, [  --with-hydra-bss=name - Boot-strap Server (ssh,rsh,fork,slurm,ll,lsf,sge,persist)],
-		    [ hydra_bss=$withval ],
-		    [ hydra_bss="ssh,rsh,fork,slurm,ll,lsf,sge,persist" ])
-AC_MSG_CHECKING(boot-strap server)
+AC_ARG_WITH(hydra-bss,
+	[AC_HELP_STRING([--with-hydra-bss=name],
+		[Bootstrap Server (none,ssh,rsh,fork,slurm,ll,lsf,sge,persist,pbs)])],
+	[ hydra_bss=$withval ],
+	[ hydra_bss="none,ssh,rsh,fork,slurm,ll,lsf,sge,persist,pbs" ])
+AC_MSG_CHECKING(bootstrap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 hydra_bss_external=false
 hydra_bss_persist=false
+hydra_bss_pbs=false
+hydra_bss_none=false
 for hydra_bss_name in ${hydra_bss_names}; do
     case "$hydra_bss_name" in
     	ssh)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss ssh`
+		available_launchers=`echo $available_launchers ssh`
 		;;
     	rsh)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss rsh`
+		available_launchers=`echo $available_launchers rsh`
 		;;
     	fork)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss fork`
+		available_launchers=`echo $available_launchers fork`
 		;;
 	slurm)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss slurm`
+		available_launchers=`echo $available_launchers slurm`
+		available_rmks=`echo $available_rmks slurm`
 		;;
 	ll)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss ll`
+		available_launchers=`echo $available_launchers ll`
+		available_rmks=`echo $available_rmks ll`
 		;;
 	lsf)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss lsf`
+		available_launchers=`echo $available_launchers lsf`
+		available_rmks=`echo $available_rmks lsf`
 		;;
 	sge)
 		hydra_bss_external=true
 		available_bss=`echo $available_bss sge`
+		available_launchers=`echo $available_launchers sge`
+		available_rmks=`echo $available_rmks sge`
 		;;
 	persist)
 		hydra_bss_persist=true
 		available_bss=`echo $available_bss persist`
-		;;
-	*)
-		;;
-    esac
-done
-
-hydra_bss_names=$available_bss
-
-for hydra_bss_name in ${hydra_bss_names}; do
-    if test -z "${hydra_default_bss}" ; then
-       hydra_default_bss=$hydra_bss_name
-    fi
-    hydra_bss_init_decl="${hydra_bss_init_decl}
-HYD_status HYDT_bsci_${hydra_bss_name}_init(void);"
-    hydra_bss_name_array="${hydra_bss_name_array} \"${hydra_bss_name}\", "
-    hydra_bss_init_array="${hydra_bss_init_array} HYDT_bsci_${hydra_bss_name}_init, "
-done
-
-hydra_bss_name_array="${hydra_bss_name_array} NULL"
-hydra_bss_init_array="${hydra_bss_init_array} NULL"
-if test "$hydra_default_bss" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSS,"$hydra_default_bss",[Default bootstrap server])
-else
-   AC_DEFINE(HYDRA_DEFAULT_BSS,NULL,[Default bootstrap server])
-fi
-AM_SUBST_NOTMAKE(hydra_bss_init_decl)
-AM_SUBST_NOTMAKE(hydra_bss_name_array)
-AM_SUBST_NOTMAKE(hydra_bss_init_array)
-AC_SUBST(hydra_bss_init_decl)
-AC_SUBST(hydra_bss_name_array)
-AC_SUBST(hydra_bss_init_array)
-AM_CONDITIONAL([hydra_bss_external], [$hydra_bss_external])
-AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
-
-AC_DEFINE_UNQUOTED(HYDRA_BSS_NAMES,"$hydra_bss_names",[Definition of enabled bootstrap servers])
-AM_SUBST_NOTMAKE(hydra_bss_names)
-AC_SUBST(hydra_bss_names)
-
-
-#########################################################################
-# Check what resource management kernel we should use
-#########################################################################
-AC_ARG_WITH(hydra-rmk, [  --with-hydra-rmk=name - Resource Management Kernel (pbs)],
-		    [ hydra_rmk=$withval ],
-		    [ hydra_rmk="none,pbs" ])
-AC_MSG_CHECKING(resource management kernel)
-AC_MSG_RESULT($hydra_rmk)
-hydra_rmk_names="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
-
-for hydra_rmk_name in ${hydra_rmk_names}; do
-    case "$hydra_rmk_name" in
-	none)
-		hydra_rmk_done=true
-		available_rmk=`echo $available_rmk none`
+		available_launchers=`echo $available_launchers persist`
 		;;
 	pbs)
-		hydra_rmk_pbs=true
-		available_rmk=`echo $available_rmk pbs`
+		hydra_bss_pbs=true
+		available_bss=`echo $available_bss pbs`
+		available_rmks=`echo $available_rmks pbs`
+		;;
+	none|no)
+		hydra_bss_none=true
+		available_bss=`echo $available_bss none`
+		available_rmks=`echo $available_rmks none`
 		;;
 	*)
 		;;
     esac
 done
 
-hydra_rmk_names=$available_rmk
+## Bootstrap servers
+AM_CONDITIONAL([hydra_bss_external], [$hydra_bss_external])
+AM_CONDITIONAL([hydra_bss_persist], [$hydra_bss_persist])
+AM_CONDITIONAL([hydra_bss_pbs], [$hydra_bss_pbs])
+AM_CONDITIONAL([hydra_bss_none], [$hydra_bss_none])
 
-for hydra_rmk_name in ${hydra_rmk_names}; do
+## Launchers
+for hydra_launcher in ${available_launchers} ; do
+    hydra_launcher_array="${hydra_launcher_array} \"${hydra_launcher}\", "
+    if test -z "${hydra_default_launcher}" ; then
+       hydra_default_launcher=$hydra_launcher
+       AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_LAUNCHER,"$hydra_default_launcher",[Default launcher])
+    fi
+    hydra_launcher_init_decl="${hydra_launcher_init_decl}
+HYD_status HYDT_bsci_launcher_${hydra_launcher}_init(void);"
+    hydra_launcher_init_array="${hydra_launcher_init_array} HYDT_bsci_launcher_${hydra_launcher}_init, "
+done
+hydra_launcher_array="${hydra_launcher_array} NULL"
+hydra_launcher_init_array="${hydra_launcher_init_array} NULL"
+AM_SUBST_NOTMAKE(hydra_launcher_init_decl)
+AC_SUBST(hydra_launcher_array)
+AC_SUBST(hydra_launcher_init_array)
+AC_SUBST(hydra_launcher_init_decl)
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_LAUNCHERS,"$available_launchers",
+	[Definition of enabled launchers])
+
+## RMK
+for hydra_rmk in ${available_rmks} ; do
+    hydra_rmk_array="${hydra_rmk_array} \"${hydra_rmk}\", "
     if test -z "${hydra_default_rmk}" ; then
-       hydra_default_rmk=$hydra_rmk_name
+       hydra_default_rmk=$hydra_rmk
+       AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default RMK])
     fi
     hydra_rmk_init_decl="${hydra_rmk_init_decl}
-HYD_status HYDT_rmki_${hydra_rmk_name}_init(void);"
-    hydra_rmk_name_array="${hydra_rmk_name_array} \"${hydra_rmk_name}\", "
-    hydra_rmk_init_array="${hydra_rmk_init_array} HYDT_rmki_${hydra_rmk_name}_init, "
+HYD_status HYDT_bsci_rmk_${hydra_rmk}_init(void);"
+    hydra_rmk_init_array="${hydra_rmk_init_array} HYDT_bsci_rmk_${hydra_rmk}_init, "
 done
-
-AC_DEFINE_UNQUOTED(HYDRA_RMK_NAMES,"$hydra_rmk_names",[Enabled resource management kernels])
-AM_SUBST_NOTMAKE(hydra_rmk_names)
-AC_SUBST(hydra_rmk_names)
-
-hydra_rmk_name_array="${hydra_rmk_name_array} NULL"
+hydra_rmk_array="${hydra_rmk_array} NULL"
 hydra_rmk_init_array="${hydra_rmk_init_array} NULL"
-if test "$hydra_default_rmk" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default resource management kernel])
-else
-   AC_DEFINE(HYDRA_DEFAULT_RMK,NULL,[Default resource management kernel])
-fi
 AM_SUBST_NOTMAKE(hydra_rmk_init_decl)
-AM_SUBST_NOTMAKE(hydra_rmk_name_array)
-AM_SUBST_NOTMAKE(hydra_rmk_init_array)
-AC_SUBST(hydra_rmk_init_decl)
-AC_SUBST(hydra_rmk_name_array)
+AC_SUBST(hydra_rmk_array)
 AC_SUBST(hydra_rmk_init_array)
-AM_CONDITIONAL([hydra_rmk_none], [$hydra_rmk_none])
-AM_CONDITIONAL([hydra_rmk_pbs], [$hydra_rmk_pbs])
+AC_SUBST(hydra_rmk_init_decl)
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"$available_rmks",[Definition of enabled RMKS])
 
 
 #########################################################################
@@ -340,17 +320,17 @@ AM_CONDITIONAL([hydra_build_embedded_hwloc], [test "${with_hwloc_prefix}" = "emb
 # Process Binding
 #########################################################################
 AC_ARG_WITH(hydra-bindlib, [  --with-hydra-bindlib=name - Process Binding Library (hwloc, plpa)],
-			   [ hydra_bindlib=$withval ],
-			   [ hydra_bindlib=hwloc,plpa ])
+			   [ hydra_bindlib_list=$withval ],
+			   [ hydra_bindlib_list=hwloc,plpa ])
 AC_MSG_CHECKING([desired process binding libraries])
-AC_MSG_RESULT([$hydra_bindlib])
+AC_MSG_RESULT([$hydra_bindlib_list])
 
-hydra_bindlib_names="`echo $hydra_bindlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
+hydra_bindlibs="`echo $hydra_bindlib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 have_plpa=no
 have_hwloc=no
-for hydra_bindlib_name in ${hydra_bindlib_names}; do
-    case "$hydra_bindlib_name" in
+for hydra_bindlib in ${hydra_bindlibs}; do
+    case "$hydra_bindlib" in
     	plpa)
 		PAC_CONFIG_SUBDIR(tools/bind/plpa/plpa,plpa_works=yes,plpa_works=no)
 		if test "$plpa_works" = "no" ; then
@@ -373,14 +353,15 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 		LDFLAGS=$old_LDFLAGS
 		AC_MSG_RESULT($plpa_works)
 		if test "$plpa_works" = "yes" ; then
-		   available_bindlib=`echo $available_bindlib plpa`
+		   available_bindlibs=`echo $available_bindlibs plpa`
 		   have_plpa=yes
 		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
 		fi
 		;;		
 	hwloc)
 		if test "$with_hwloc_prefix" = "embedded" ; then
-		   PAC_CONFIG_SUBDIR([tools/bind/hwloc/hwloc],[have_hwloc=yes],[have_hwloc=no])
+		   PAC_CONFIG_SUBDIR_ARGS([tools/bind/hwloc/hwloc],[--enable-embedded-mode],
+			[have_hwloc=yes],[have_hwloc=no])
                 else
                     AC_CHECK_HEADERS([hwloc.h])
                     # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our minimum
@@ -399,7 +380,7 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
 
 		if test "$have_hwloc" = "yes" ; then
 		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-		   available_bindlib=`echo $available_bindlib hwloc`
+		   available_bindlibs=`echo $available_bindlibs hwloc`
 		fi
 		;;
 	*)
@@ -407,16 +388,13 @@ for hydra_bindlib_name in ${hydra_bindlib_names}; do
     esac
 done
 
-hydra_bindlib_names=$available_bindlib
-
-for hydra_bindlib_name in ${hydra_bindlib_names}; do
-    if test -z "${hydra_default_bindlib}" ; then
-       hydra_default_bindlib=$hydra_bindlib_name
-    fi
+for hydra_bindlib in ${available_bindlibs}; do
+    hydra_default_bindlib=${hydra_bindlib}
+    break
 done
 
-AC_DEFINE_UNQUOTED(HYDRA_BINDLIB_NAMES,"$hydra_bindlib_names",
-		[Definition of enabled binding libraries])
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_BINDLIBS,"$available_bindlibs",
+	[Definition of enabled binding libraries])
 if test "$hydra_default_bindlib" != "" ; then
    AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BINDLIB,"$hydra_default_bindlib",[Default binding library])
 else
@@ -426,30 +404,30 @@ AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
 AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
 
 AC_MSG_CHECKING([available process binding libraries])
-AC_MSG_RESULT([$hydra_bindlib_names])
+AC_MSG_RESULT([$available_bindlibs])
 
 
 #########################################################################
 # Checkpoint/Restart
 #########################################################################
 AC_ARG_WITH(hydra-ckpointlib, [  --with-hydra-ckpointlib=name - Checkpointing Library (blcr)],
-			   [ hydra_ckpointlib=$withval ],
-			   [ hydra_ckpointlib=none ])
+			   [ hydra_ckpointlib_list=$withval ],
+			   [ hydra_ckpointlib_list=none ])
 AC_MSG_CHECKING(checkpointing library)
-AC_MSG_RESULT($hydra_ckpointlib)
+AC_MSG_RESULT($hydra_ckpointlib_list)
 
-hydra_ckpointlib_names="`echo $hydra_ckpointlib | sed -e 's/:/ /g' -e 's/,/ /g'`"
+hydra_ckpointlibs="`echo $hydra_ckpointlib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 have_blcr=no
-for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
-    case "$hydra_ckpointlib_name" in
+for hydra_ckpointlib in ${hydra_ckpointlibs}; do
+    case "$hydra_ckpointlib" in
     	blcr)
 	    PAC_SET_HEADER_LIB_PATH(blcr)
 	    PAC_CHECK_HEADER_LIB(blcr, libcr.h, cr, cr_init, have_blcr=yes, have_blcr=no)
 	    # BLCR works
 	    if test "$have_blcr" = "yes" ; then
 	       AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
-	       available_ckpointlib=`echo $available_ckpointlib blcr`
+	       available_ckpointlibs=`echo $available_ckpointlibs blcr`
 	    fi
 	    ;;		
 	*)
@@ -457,15 +435,12 @@ for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
     esac
 done
 
-hydra_ckpointlib_names=$available_ckpointlib
-
-for hydra_ckpointlib_name in ${hydra_ckpointlib_names}; do
-    if test -z "${hydra_default_ckpointlib}" ; then
-       hydra_default_ckpointlib=$hydra_ckpointlib_name
-    fi
+for hydra_ckpointlib in ${available_ckpointlibs}; do
+    hydra_default_ckpointlib=${hydra_ckpointlib}
+    break
 done
 
-AC_DEFINE_UNQUOTED(HYDRA_CKPOINTLIB_NAMES,"$hydra_ckpointlib_names",
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_CKPOINTLIBS,"$available_ckpointlibs",
 		[Definition of enabled checkpointing libraries])
 if test "$hydra_default_ckpointlib" != "" ; then
    AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CKPOINTLIB,"$hydra_default_ckpointlib",
@@ -480,34 +455,34 @@ AM_CONDITIONAL([hydra_have_blcr], [test "${have_blcr}" = "yes"])
 # Demux engine
 #########################################################################
 AC_ARG_WITH(hydra-demux, [  --with-hydra-demux=name - Demux engine (poll, select, port)],
-			 [ hydra_demux=$withval ],
-			 [ hydra_demux=poll,select,port ])
+			 [ hydra_demux_list=$withval ],
+			 [ hydra_demux_list=poll,select,port ])
 AC_MSG_CHECKING(demux engine)
-AC_MSG_RESULT($hydra_demux)
+AC_MSG_RESULT($hydra_demux_list)
 
-hydra_demux_names="`echo $hydra_demux | sed -e 's/:/ /g' -e 's/,/ /g'`"
+hydra_demuxes="`echo $hydra_demux_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 have_poll=no
 have_select=no
 have_port=no
-for hydra_demux_name in ${hydra_demux_names}; do
-    case "$hydra_demux_name" in
+for hydra_demux in ${hydra_demuxes}; do
+    case "$hydra_demux" in
     	poll)
-		AC_CHECK_FUNCS(poll,have_poll=yes,have_poll=no)
+		AC_CHECK_FUNCS(poll,[have_poll=yes],[have_poll=no])
 		if test "$have_poll" = "yes" ; then
-		   available_demux_names=`echo $available_demux_names poll`
+		   available_demuxes=`echo $available_demuxes poll`
 		fi
 		;;
 	select)
-		AC_CHECK_FUNCS(select,have_select=yes,have_select=no)
+		AC_CHECK_FUNCS(select,[have_select=yes],[have_select=no])
 		if test "$have_select" = "yes" ; then
-		   available_demux_names=`echo $available_demux_names select`
+		   available_demuxes=`echo $available_demuxes select`
 		fi
 		;;
 	port)
 		# FIXME: Need to add a test for completion ports
 		if test "$have_port" = "yes" ; then
-		   available_demux_names=`echo $available_demux_names port`
+		   available_demuxes=`echo $available_demuxes port`
 		fi
 		;;
 	*)
@@ -515,18 +490,16 @@ for hydra_demux_name in ${hydra_demux_names}; do
     esac
 done
 
-hydra_demux_names=$available_demux_names
-
-for hydra_demux_name in ${hydra_demux_names}; do
-    if test -z "${hydra_default_demux}" ; then
-       hydra_default_demux=$hydra_demux_name
-    fi
+for hydra_demux in ${available_demuxes}; do
+    hydra_default_demux=${hydra_demux}
+    break
 done
 
 AM_CONDITIONAL([hydra_have_poll], [test "${have_poll}" = "yes"])
 AM_CONDITIONAL([hydra_have_select], [test "${have_select}" = "yes"])
 AM_CONDITIONAL([hydra_have_port], [test "${have_port}" = "yes"])
-AC_DEFINE_UNQUOTED(HYDRA_DEMUX_NAMES,"$hydra_demux_names",[Definition of enabled demux engines])
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_DEMUXES,"$available_demuxes",
+	[Definition of enabled demux engines])
 if test "$hydra_default_demux" != "" ; then
    AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_DEMUX,"$hydra_default_demux",[Default demux engine])
 else
@@ -678,7 +651,5 @@ fi
 AC_OUTPUT(Makefile
 	tools/bootstrap/src/bsci_init.c
 	tools/bootstrap/include/bsci.h
-	tools/rmk/src/rmki_init.c
-	tools/rmk/include/rmki.h
 	hydra-doxygen.cfg
 )

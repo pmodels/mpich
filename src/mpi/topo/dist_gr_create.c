@@ -81,6 +81,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     int *rout_idx;
     int *rs;
     int in_out_peers[2] = {-1, -1};
+    int errflag = FALSE;
     MPIU_CHKLMEM_DECL(9);
     MPIU_CHKPMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE);
@@ -252,8 +253,9 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     }
 
     /* compute the number of peers I will recv from */
-    mpi_errno = MPIR_Reduce_scatter_block_impl(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr);
+    mpi_errno = MPIR_Reduce_scatter_block_impl(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr, &errflag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     MPIU_Assert(in_out_peers[0] <= comm_size && in_out_peers[0] >= 0);
     MPIU_Assert(in_out_peers[1] <= comm_size && in_out_peers[1] >= 0);

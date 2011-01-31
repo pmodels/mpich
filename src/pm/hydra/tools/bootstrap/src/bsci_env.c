@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
 
@@ -15,7 +15,7 @@ HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *ret)
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_fns.query_env_inherit(env_name, ret);
-    HYDU_ERR_POP(status, "bootstrap device returned error querying env propagation\n");
+    HYDU_ERR_POP(status, "launcher returned error querying env propagation\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

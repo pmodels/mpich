@@ -298,8 +298,8 @@ AC_ARG_ENABLE(error-checking,
         no        - no error checking
         runtime   - error checking controllable at runtime through environment 
                     variables
-        all       - error checking always enabled
-],,enable_error_checking=all)
+        all       - error checking always enabled (default)
+],,enable_error_checking=default)
 
 AC_ARG_ENABLE(error-messages,
 [  --enable-error-messages=level - Control the amount of detail in error messages.
@@ -374,8 +374,7 @@ AC_ARG_ENABLE(check-compiler-flags,
 dnl We enable f77 and fc if we can find compilers for them.
 dnl In addition, we check whether f77 and fc can work together.
 AC_ARG_ENABLE(f77,
-	AC_HELP_STRING([--enable-f77], [Enable Fortran 77 bindings]),,
-	enable_f77=default;enable_f77_wasdefault=yes)
+	AC_HELP_STRING([--enable-f77], [Enable Fortran 77 bindings]),,enable_f77=yes)
 
 AC_ARG_ENABLE(fc,
 	AC_HELP_STRING([--enable-fc], [Enable Fortran 90 bindings]),,enable_fc=yes)
@@ -765,6 +764,10 @@ IFS="$save_IFS"
 # Process any enable or with values
 # We must do enable-fast first, because it changes the other enable values
 if test "$enable_fast_nochkmsg" = "yes" ; then
+    # 
+    if test "$enable_error_checking" != "default" ; then
+        AC_MSG_ERROR([enable-fast overrides enable-error-checking; error-checking option $enable_error_checking ignored])
+    fi
     enable_error_checking=no
     # Export a variable that will allow the test suite to detect that
     # MPICH has no error testing
@@ -773,9 +776,13 @@ if test "$enable_fast_nochkmsg" = "yes" ; then
 fi
 
 # error-checking
+# Change default into the specific value of the default
+if test "$enable_error_checking" = "default" ; then
+   enable_error_checking=all
+fi
 case "$enable_error_checking" in 
     no)
-    # if error checking has been diabled, then automatically diable the error
+    # if error checking has been disabled, then automatically disable the error
     # checking tests in the test suite
     ac_configure_args="${ac_configure_args} --disable-checkerrors"
     ;;
@@ -1725,20 +1732,8 @@ if test -n "$F90" -o -n "$F90FLAGS" ; then
 fi
 # ----------------------------------------------------------------------------
 # Handle default choices for the Fortran compilers
-if test "$enable_f77" = "default" ; then
-    enable_f77=no
+if test "$enable_f77" = "yes" ; then
     # Check for a Fortran compiler
-    # Warning: the PROG_F77 command aborts if it fails to 
-    # find a compiler.  We should first try to find a compiler, then
-    # check to see if it works (which the PROG_F77 command does as well)
-    # It also prefers g77 to f77, and doesn't know about other compilers
-    # Also handle the bug that autoconf sets FFLAGS for you
-    PAC_PROG_F77
-    if test -n "$F77" ; then 
-        enable_f77_wasdefault=yes
-        enable_f77=yes
-    fi
-elif test "$enable_f77" = "yes" ; then
     PAC_PROG_F77
 fi
 
@@ -1806,13 +1801,7 @@ information to configure with the FCFLAGS environment variable.])
         # If Fortran implicitly enabled, disable it now.  Otherwise,
 	# abort the configure since warning messages are often lost in
 	# the output.
-	if test "$enable_f77_wasdefault" = yes ; then
-	    AC_MSG_WARN([Turning off Fortran support because of mixed case names])
-	    enable_f77=no
-	    enable_fc=no
-	else
-	    AC_MSG_ERROR([Aborting configure because of mixed case names in Fortran.  Either select --disable-f77 or set FFLAGS to force the compiler to select monocase names])
-	fi
+	AC_MSG_ERROR([Aborting configure because of mixed case names in Fortran.  Either select --disable-f77 or set FFLAGS to force the compiler to select monocase names])
     fi
 
     # The MPI standard requires that MPI_Init in any language initialize
@@ -2081,6 +2070,7 @@ EOF
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
     # Also define the name FORTRAN_BINDING for use in #if @FORTRAN_BINDING@..
     FORTRAN_BINDING=1
+
 fi
 
 dnl By modifying mpif.h to use ! for comments, it can work with many f90 
@@ -2100,18 +2090,6 @@ if test "$has_fort_real8" = "yes" ; then
     mv src/include/mpif.h.new src/include/mpif.h
     cp src/include/mpif.h src/binding/f77/mpif.h
 fi
-# Save a copy of the original mpi_base.f90 file
-if test "$enable_fc" = "yes" ; then
-  if test ! -f "$master_top_srcdir/src/binding/f90/mpi_base.f90.orig" ; then
-    cp $master_top_srcdir/src/binding/f90/mpi_base.f90 $master_top_srcdir/src/binding/f90/mpi_base.f90.orig
-  fi
-  if test "$has_fort90_real8" = "yes" ; then
-    sed -e 's/DOUBLE PRECISION/REAL*8/g' $master_top_srcdir/src/binding/f90/mpi_base.f90.orig > $master_top_srcdir/src/binding/f90/mpi_base.f90.new
-    mv -f $master_top_srcdir/src/binding/f90/mpi_base.f90.new $master_top_srcdir/src/binding/f90/mpi_base.f90
-  else
-    cp -f $master_top_srcdir/src/binding/f90/mpi_base.f90.orig $master_top_srcdir/src/binding/f90/mpi_base.f90
-  fi
-fi
 
 if test ! -d bin  ; then mkdir bin ; fi 
 sed -e 's%includedir=.*%includedir='$includebuild_dir% \
@@ -2126,7 +2104,6 @@ enable_f77=$enable_f77
 enable_fc=$enable_fc
 has_exclaim=$has_exclaim
 has_fort_real8=$pac_cv_fort_real8
-has_fort90_real8=$pac_cv_fort90_real8
 includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
@@ -2912,14 +2889,8 @@ fi
 if test "$with_namepublisher" != no -a "$with_namepublisher" != "none" ; then
     case "$with_namepublisher" in 
     none|no) ;;
-    ldap*)
-        subsystems="$subsystems src/nameserv/ldap"
-	# The configure in the nameserv/ldap directory will look for 
-	# the ldap files.
-	AC_DEFINE(USE_LDAP_FOR_NAMEPUB,1,[Define if ldap should be used for name publishing])
-	nameserv_name="ldap"
-    ;;
-
+    # Removed ldap namepublisher hook - we no longer support or distribute
+    # the ldap-based name server
     file*)
     # Note that we always build the Makefile for the file version because
     # this name publisher is really too simple to require a 
@@ -2939,6 +2910,17 @@ if test "$with_namepublisher" != no -a "$with_namepublisher" != "none" ; then
 
     mpd)
     nameserv_name="mpd"
+    # The mpd nameserver is specific to the mpd process manager
+    foundMPD=no
+    for pm_name in $pm_names ; do
+        if test "$pm_name" = "mpd" ; then 
+	    foundMPD=yes
+	    break
+	fi
+    done
+    if test "$foundMPD" = no ; then
+        AC_MSG_ERROR([The mpd nameserver requires the mpd process manager])
+    fi
     ;;
 
     *)
@@ -4504,6 +4486,7 @@ EOF
 	        OFFSET_KIND=$simpleintkind
             fi
         fi
+	AC_LANG_PUSH([Fortran])
         AC_CACHE_CHECK([if real*8 is supported in Fortran 90],
                        [pac_cv_fort90_real8],[
             AC_COMPILE_IFELSE([
@@ -4514,6 +4497,14 @@ EOF
                 pac_cv_fort90_real8=no
             ])
         ])
+	AC_LANG_POP([Fortran])
+	WTIME_DOUBLE_TYPE="DOUBLE PRECISION"
+	# Save a copy of the original mpi_base.f90 file
+	if test "$enable_fc" = "yes" -a "$pac_cv_fort90_real8" = "yes" ; then
+	    WTIME_DOUBLE_TYPE="REAL*8"
+        fi
+	# WTIME_DOUBLE_TYPE is substituted into mpi_base.f90
+	AC_SUBST(WTIME_DOUBLE_TYPE)
     fi
     # Make sure that address kind and offset kind have values.
     if test -z "$ADDRESS_KIND" ; then
@@ -5033,6 +5024,10 @@ AC_CHECK_FUNCS(snprintf)
 if test "$ac_cv_func_snprintf" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
 fi
+
+# qsort will be used in MPI_Comm_split, if available
+AC_CHECK_FUNCS([qsort])
+
 # if we are using stdarg, we may need va_copy .  Test to see if we have it
 # Since it may be a built-in instead of a function, we must try to 
 # compile and link a program that uses it.
@@ -5180,23 +5175,26 @@ dnl We also allow --enable-timer-type=name to select a timer type
 AC_ARG_ENABLE(timer-type,
 [  --enable-timer-type=name - Select the timer to use for MPI_Wtime and
                              internal timestamps.
-        gethrtime        - Solaris timer (Solaris systems only)
-        clock_gettime    - Posix timer (where available)
-        gettimeofday     - Most Unix systems
-        linux86_cycle    - Linux x86; returns cycle counts, not time in seconds*
-        linuxalpha_cycle - Like linux86_cycle, but for Linux Alpha*
-        gcc_ia64_cycle   - IPF ar.itc timer*
+        gethrtime          - Solaris timer (Solaris systems only)
+        clock_gettime      - Posix timer (where available)
+        gettimeofday       - Most Unix systems
+        linux86_cycle      - Linux x86; returns cycle counts, not time in seconds*
+        gcc_ia64_cycle     - IPF ar.itc timer*
+	mach_absolute_time - Mach absolute time (alternative to clock_gettime
+                             for OSX)
         device - The timer is provided by the device
 
         *Note that the cycle timers are intended to be used by MPICH2
         developers for internal low-level timing.  Normal users should
         not use these as they are not guaranteed to be accurate in
-        certain situations
+        certain situations.
+
+        linuxalpha_cycle is no longer supported.
 ],timer_type=$enable_timer_type)
 
 if test -z "$timer_type" ; then 
     # Try to pick a timer based on what is available
-    AC_CHECK_FUNCS(clock_gettime clock_getres gethrtime gettimeofday)
+    AC_CHECK_FUNCS(clock_gettime clock_getres gethrtime mach_absolute_time gettimeofday)
     if test "$ac_cv_func_gethrtime" = "yes" ; then
         # Sigh.  The Solaris include files do not define hrtime_t
 	# Before we accept this choice, make sure that we can 
@@ -5220,6 +5218,8 @@ pac_cv_hrtime_works=yes,pac_cv_hrtime_works=no)])
 	 # Test on both because some systems (e.g., cygwin) provide
 	 # clock_gettime but not clock_getres
         timer_type=clock_gettime
+    elif test "$ac_cv_func_mach_absolute_time" = "yes" ; then 
+        timer_type=mach_absolute_time
     elif test "$ac_cv_func_gettimeofday" = "yes" ; then
         timer_type=gettimeofday
     fi
@@ -5424,16 +5424,13 @@ pac_cv_ia64_cycle,[
      ;;
 
     linuxalpha_cycle)
-    # See the code in mpidtime.c.  This is a trivial test for now.
-    AC_CACHE_CHECK([that linux alpha cycle counter is available],
-pac_cv_linuxalpha_cycle,[
-    AC_TRY_COMPILE(,[
-#error "LinuxAlpha cycle counter not supported"
-],pac_cv_linuxalpha_cycle=yes,pac_cv_linuxalpha_cycle=no)])
-    if test "$pac_cv_linuxalpha_cycle" != "yes" ; then
-        AC_MSG_ERROR([LinuxAlpha cycle counter is not available on this system  and/or with the $CC compiler])
-    fi
-    MPID_TIMER_TYPE="long"
+    AC_MSG_ERROR([linuxalpha_cycle is no longer supported])
+    ;;
+
+    mach_absolute_time)
+    AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
+    AC_CHECK_FUNC(mach_timebase_info,,[AC_MSG_ERROR([mach_timebase_info is not available])])
+    MPID_TIMER_TYPE="uint64_t"
     ;;
 
     device)
@@ -5615,8 +5612,8 @@ if test -f $devicedir/setup_device ; then
     echo sourcing $devicedir/setup_device
     . $devicedir/setup_device
 fi
-# See if we need to update the timer type
-if test "$timer_type" = "device" ; then
+# See if we need to update the timer type (which was converted to uppercase)
+if test "$timer_type" = "DEVICE" ; then
     # The device selected should export the datatype for the timer
     # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
     if test -n "$MPID_DEVICE_TIMER_TYPE" ; then 
@@ -6323,8 +6320,12 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/binding/f77/setbot.c \
 	  src/binding/f90/Makefile \
 	  src/binding/f90/mpi_sizeofs.f90 \
+	  src/binding/f90/mpi_base.f90 \
 	  src/packaging/Makefile \
-	  src/packaging/pkgconfig/mpich2-ch3.pc \
+	  src/packaging/pkgconfig/mpich2-c.pc \
+	  src/packaging/pkgconfig/mpich2-cxx.pc \
+	  src/packaging/pkgconfig/mpich2-f77.pc \
+	  src/packaging/pkgconfig/mpich2-f90.pc \
 	  src/packaging/pkgconfig/Makefile \
 	  src/packaging/envmods/mpich2.module \
 	  src/packaging/envmods/Makefile \

@@ -1,4 +1,6 @@
 .\" -*- nroff -*-
+.\" Copyright © 2010 INRIA
+.\" Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
 .TH HWLOC-CALC "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
 .SH NAME
 hwloc-calc \- Operate on cpu mask strings and objects
@@ -35,21 +37,50 @@ Use OS/physical indexes instead of logical indexes for output.
 \fB\-\-lo\fR \fB\-\-logical\-output\fR
 Use logical indexes instead of physical/OS indexes for output (default).
 .TP
-\fB\-\-PUlist\fR
-Report the comma-separated list of processing units' indexes instead of the cpu mask string.
+\fB\-\-intersect <type|depth>\fR
+Find the list of objects of the given type or depth that intersect the CPU set and
+report the comma-separated list of their indexes instead of the cpu mask string.
+This may be used for determining the list of objects above or below the input
+objects.
 When combined with \fB\-\-physical\fR, the list is convenient to pass to external
-tools such as taskset or numactl \fB\-\-physcpubind\fR.
+tools such as taskset or numactl \fB\-\-physcpubind\fR or \fB\-\-membind\fR.
+This is different from \-\-largest since the latter requires that all reported
+objects are strictly included inside the input objects.
 .TP
-\fB\-\-nodelist\fR
-Report the comma-separated list of memory nodes' indexes instead of the cpu mask string.
-When combined with \fB\-\-physical\fR, the list is convenient to pass to external
-tools such as numactl \fB\-\-membind\fR.
-.TP
-\fB\-\-objects\fR
-Report the list of highest objects instead of the cpu mask string.
+\fB\-\-largest\fR
+Report (in a human readable format) the list of largest objects which exactly
+include all input objects.
+None of these output objects intersect each other, and the sum of them is
+exactly equivalent to the input. No largest object is included in the input
+This is different from \-\-intersect where reported objects may not be
+strictly included in the input.
 .TP
 \fB\-\-single\fR
 Singlify the output to a single CPU.
+.TP
+\fB\-\-taskset\fR
+Manipulate CPU set strings in the format recognized by the taskset command-line
+program instead of hwloc-specific CPU set string format.
+.TP
+\fB\-i\fR <file>, \fB\-\-input\fR <file>
+Read topology from XML file <file> (instead of discovering the
+topology on the local machine).  If <file> is "\-", the standard input
+is used.  XML support must have been compiled in to hwloc for this
+option to be usable.
+.TP
+\fB\-i\fR <directory>, \fB\-\-input\fR <directory>
+Read topology from the chroot specified by <directory> (instead of
+discovering the topology on the local machine).  This option is
+generally only available on Linux.
+.TP
+\fB\-i\fR <specification>, \fB\-\-input\fR <specification>
+Simulate a fake hierarchy (instead of discovering the topology on the
+local machine). If <specification> is "node:2 pu:3", the topology will
+contain two NUMA nodes with 3 processing units in each of them.
+.TP
+\fB\-\-if\fR <format>, \fB\-\-input\-format\fR <format>
+Enforce the input in the given format, among \fBxml\fR, \fBfsroot\fR
+and \fBsynthetic\fR.
 .TP
 \fB\-v\fR
 Verbose output.
@@ -66,6 +97,22 @@ Report version and exit.
 hwloc-calc generates and manipulates CPU mask strings or objects.
 Both input and output may be either objects (with physical or logical
 indexes) or CPU mask strings (no logical or physical index involved).
+.
+.PP
+If objects or CPU mask strings are given on the command-line,
+they are combined and a single output is printed.
+If no object or CPU mask strings are given on the command-line,
+the program will read the standard input.
+It will combine multiple objects or CPU mask strings that are
+given on the same line of the standard input line with spaces
+as separators.
+Different input lines will be processed separately.
+.
+.PP
+Command-line arguments and options are processed in order.
+For instance, it means that changing the type of input indexes
+with \fB\-\-li\fR or changing the input topology with \fB\-i\fR
+only affects the processing the following arguments.
 .
 .PP
 .B NOTE:
@@ -101,23 +148,38 @@ To combine two CPU masks:
 To display the list of logical processors included in the second
 socket:
 
-    $ hwloc-calc --PUlist socket:1
+    $ hwloc-calc --intersect PU socket:1
     0,2,4,6
 
 To display the list of NUMA nodes, by physical indexes, that intersect a given CPU mask:
 
-    $ hwloc-calc --physical --nodelist 0xf0f0f0f0
+    $ hwloc-calc --physical --intersect NUMAnode 0xf0f0f0f0
     0,2
 
 To display the physical index of a processor given by its logical index:
 
-    $ hwloc-calc PU:2 --physical-output --PUlist
+    $ hwloc-calc PU:2 --physical-output --intersect PU
     3
 
 To combine both physical and logical indexes as input:
 
     $ hwloc-calc PU:2 --physical-input PU:3
     0x0000000c
+
+To synthetize a set of cores into largest objects on a 2-node 2-socket 2-core machine:
+
+    $ hwloc-calc core:0 --largest
+    Core:0
+    $ hwloc-calc core:0-1 --largest
+    Socket:0
+    $ hwloc-calc core:4-7 --largest
+    NUMANode:1
+    $ hwloc-calc core:2-6 --largest
+    Socket:1 Socket:2 Core:6
+    $ hwloc-calc socket:2 --largest
+    Socket:2
+    $ hwloc-calc socket:2-3 --largest
+    NUMANode:1
 
 .
 .\" **************************

@@ -56,7 +56,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
 
             # Set IFS so ac_configure_args can be tokenized
             # with extra " " tokens being skipped.
-            saved_IFS="$IFS"
+	    PAC_PUSH_FLAG([IFS])
             IFS="'"
             for pac_arg in $ac_configure_args ; do
                 case "$pac_arg" in
@@ -65,9 +65,9 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
                     ;;
                 *)
                     pac_pval=""
-                    # Restore saved IFS so ac_precious_vars which has
+                    # Restore IFS so ac_precious_vars which has
                     # " " as separator can be correctly tokenized
-                    IFS="$saved_IFS"
+		    PAC_POP_FLAG([IFS])
                     for pac_pvar in $ac_precious_vars ; do
                         # check if configure argument token contains the
                         # precious variable, i.e. "name_of_prec_var=".
@@ -92,13 +92,13 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
                         pac_subconfig_args="$pac_subconfig_args '$pac_arg'"
                     fi
                     # reset "'" as IFS to process ac_configure_args
-                    saved_IFS="$IFS"
+		    PAC_PUSH_FLAG([IFS])
                     IFS="'"
                     ;;
                 esac
             done
             # Restore IFS.
-            IFS="$saved_IFS"
+	    PAC_POP_FLAG([IFS])
             dnl echo "pac_subconfig_args = |$pac_subconfig_args|"
 
            dnl Add option to disable configure options checking

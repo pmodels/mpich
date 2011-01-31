@@ -7,7 +7,7 @@
 #ifndef LSF_H_INCLUDED
 #define LSF_H_INCLUDED
 
-#include "hydra_base.h"
+#include "hydra.h"
 
 HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list);
 

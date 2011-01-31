@@ -39,6 +39,7 @@ int MPIU_INSTR_AddHandle( void *handlePtr )
 	instrHead       = gPtr;
     }
     instrTail       = gPtr;
+    return 0;
 }
 
 #define MAX_INSTR_BUF 1024

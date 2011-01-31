@@ -441,6 +441,7 @@ fn_exit:
     return mpi_errno;
 
 fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
     MPIR_Process.initialized = MPICH_PRE_INIT;
 
@@ -449,6 +450,7 @@ fn_fail:
     }
     MPIU_THREAD_CS_FINALIZE;
     return mpi_errno;
+    /* --END ERROR HANDLING-- */
 }
 #endif
 

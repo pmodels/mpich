@@ -552,6 +552,7 @@ static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
     MPIU_Object_alloc_t *objmem = (MPIU_Object_alloc_t *)objmem_ptr;
     int i;
     MPIU_Handle_common *ptr;
+    int leaked_handles = FALSE;
     int   directSize = objmem->direct_size;
     char *direct = (char *)objmem->direct;
     char *directEnd = (char *)direct + directSize * objmem->size - 1;
@@ -608,16 +609,25 @@ static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
 		objmem->indirect_size );
     }
     if (nDirect != directSize) {
+        leaked_handles = TRUE;
 	printf( "In direct memory block for handle type %s, %d handles are still allocated\n", MPIR_ObjectName( objmem ), directSize - nDirect );
     }
     for (i=0; i<objmem->indirect_size; i++) {
 	if (nIndirect[i] != HANDLE_BLOCK_SIZE) {
+            leaked_handles = TRUE;
 	    printf( "In indirect memory block %d for handle type %s, %d handles are still allocated\n", i, MPIR_ObjectName( objmem ), HANDLE_BLOCK_SIZE - nIndirect[i] );
 	}
     }
 
     if (nIndirect) { 
 	MPIU_Free( nIndirect );
+    }
+
+    if (leaked_handles && MPIR_PARAM_ABORT_ON_LEAKED_HANDLES) {
+        /* comm_world has been (or should have been) destroyed by this point,
+         * pass comm=NULL */
+        MPID_Abort(NULL, MPI_ERR_OTHER, 1, "ERROR: leaked handles detected, aborting");
+        MPIU_Assert(0);
     }
 
     return 0;

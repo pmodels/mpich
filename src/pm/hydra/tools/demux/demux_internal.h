@@ -7,8 +7,7 @@
 #ifndef DEMUX_INTERNAL_H_INCLUDED
 #define DEMUX_INTERNAL_H_INCLUDED
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 
 struct HYDT_dmxu_callback {
     int num_fds;
@@ -22,11 +21,14 @@ struct HYDT_dmxu_callback {
 
 extern int HYDT_dmxu_num_cb_fds;
 extern struct HYDT_dmxu_callback *HYDT_dmxu_cb_list;
+extern int HYDT_dmxu_got_sigttin;
 
 struct HYDT_dmxu_fns {
     HYD_status(*wait_for_event) (int wtime);
     HYD_status(*stdin_valid) (int *out);
 };
+
+HYD_status HYDT_dmxi_stdin_valid(int *out);
 
 #if defined HAVE_POLL
 HYD_status HYDT_dmxu_poll_wait_for_event(int wtime);

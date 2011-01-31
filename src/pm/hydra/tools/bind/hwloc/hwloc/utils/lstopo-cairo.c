@@ -1,5 +1,7 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -33,6 +35,8 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #include <X11/cursorfont.h>
+/* Avoid Xwindow's definition conflict with Windows' use for fields names.  */
+#undef Status
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 
 #include <stdio.h>
@@ -91,11 +95,11 @@ topo_cairo_write(void *closure, const unsigned char *data, unsigned int length)
 #endif /* (CAIRO_HAS_PNG_FUNCTIONS + CAIRO_HAS_PDF_SURFACE + CAIRO_HAS_PS_SURFACE + CAIRO_HAS_SVG_SURFACE) */
 
 static void
-topo_cairo_paint(struct draw_methods *methods, int logical, hwloc_topology_t topology, cairo_surface_t *cs)
+topo_cairo_paint(struct draw_methods *methods, int logical, int legend, hwloc_topology_t topology, cairo_surface_t *cs)
 {
   cairo_t *c;
   c = cairo_create(cs);
-  output_draw(methods, logical, topology, c);
+  output_draw(methods, logical, legend, topology, c);
   cairo_show_page(c);
   cairo_destroy(c);
 }
@@ -203,15 +207,15 @@ move_x11(struct display *disp)
 }
 
 void
-output_x11(hwloc_topology_t topology, const char *filename __hwloc_attribute_unused, int logical, int verbose_mode __hwloc_attribute_unused)
+output_x11(hwloc_topology_t topology, const char *filename __hwloc_attribute_unused, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
-  struct display *disp = output_draw_start(&x11_draw_methods, logical, topology, NULL);
+  struct display *disp = output_draw_start(&x11_draw_methods, logical, legend, topology, NULL);
   int finish = 0;
   int state = 0;
   int x = 0, y = 0; /* shut warning down */
   int lastx = disp->x, lasty = disp->y;
 
-  topo_cairo_paint(&x11_draw_methods, logical, topology, disp->cs);
+  topo_cairo_paint(&x11_draw_methods, logical, legend, topology, disp->cs);
 
   while (!finish) {
     XEvent e;
@@ -227,7 +231,7 @@ output_x11(hwloc_topology_t topology, const char *filename __hwloc_attribute_unu
     switch (e.type) {
       case Expose:
 	if (e.xexpose.count < 1)
-	  topo_cairo_paint(&x11_draw_methods, logical, topology, disp->cs);
+	  topo_cairo_paint(&x11_draw_methods, logical, legend, topology, disp->cs);
 	break;
       case MotionNotify:
 	if (state) {
@@ -342,7 +346,7 @@ static struct draw_methods png_draw_methods = {
 };
 
 void
-output_png(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode __hwloc_attribute_unused)
+output_png(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output = open_file(filename, "w");
   cairo_surface_t *cs;
@@ -352,9 +356,9 @@ output_png(hwloc_topology_t topology, const char *filename, int logical, int ver
     return;
   }
 
-  cs = output_draw_start(&png_draw_methods, logical, topology, output);
+  cs = output_draw_start(&png_draw_methods, logical, legend, topology, output);
 
-  topo_cairo_paint(&png_draw_methods, logical, topology, cs);
+  topo_cairo_paint(&png_draw_methods, logical, legend, topology, cs);
   cairo_surface_write_to_png_stream(cs, topo_cairo_write, output);
   cairo_surface_destroy(cs);
   fclose(output);
@@ -379,7 +383,7 @@ static struct draw_methods pdf_draw_methods = {
 };
 
 void
-output_pdf(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode __hwloc_attribute_unused)
+output_pdf(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output = open_file(filename, "w");
   cairo_surface_t *cs;
@@ -389,9 +393,9 @@ output_pdf(hwloc_topology_t topology, const char *filename, int logical, int ver
     return;
   }
 
-  cs = output_draw_start(&pdf_draw_methods, logical, topology, output);
+  cs = output_draw_start(&pdf_draw_methods, logical, legend, topology, output);
 
-  topo_cairo_paint(&pdf_draw_methods, logical, topology, cs);
+  topo_cairo_paint(&pdf_draw_methods, logical, legend, topology, cs);
   cairo_surface_flush(cs);
   cairo_surface_destroy(cs);
   fclose(output);
@@ -416,7 +420,7 @@ static struct draw_methods ps_draw_methods = {
 };
 
 void
-output_ps(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode __hwloc_attribute_unused)
+output_ps(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output = open_file(filename, "w");
   cairo_surface_t *cs;
@@ -426,9 +430,9 @@ output_ps(hwloc_topology_t topology, const char *filename, int logical, int verb
     return;
   }
 
-  cs = output_draw_start(&ps_draw_methods, logical, topology, output);
+  cs = output_draw_start(&ps_draw_methods, logical, legend, topology, output);
 
-  topo_cairo_paint(&ps_draw_methods, logical, topology, cs);
+  topo_cairo_paint(&ps_draw_methods, logical, legend, topology, cs);
   cairo_surface_flush(cs);
   cairo_surface_destroy(cs);
   fclose(output);
@@ -453,19 +457,20 @@ static struct draw_methods svg_draw_methods = {
 };
 
 void
-output_svg(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode __hwloc_attribute_unused)
+output_svg(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
-  FILE *output = open_file(filename, "w");
+  FILE *output;
   cairo_surface_t *cs;
 
+  output = open_file(filename, "w");
   if (!output) {
     fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
     return;
   }
 
-  cs = output_draw_start(&svg_draw_methods, logical, topology, output);
+  cs = output_draw_start(&svg_draw_methods, logical, legend, topology, output);
 
-  topo_cairo_paint(&svg_draw_methods, logical, topology, cs);
+  topo_cairo_paint(&svg_draw_methods, logical, legend, topology, cs);
   cairo_surface_flush(cs);
   cairo_surface_destroy(cs);
   fclose(output);

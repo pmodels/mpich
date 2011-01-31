@@ -7,7 +7,7 @@
 #ifndef SSH_H_INCLUDED
 #define SSH_H_INCLUDED
 
-#include "hydra_base.h"
+#include "hydra.h"
 
 /* Modern sshd servers don't like more than a certain number of ssh
  * connections from the same IP address per minute. If we exceed that,

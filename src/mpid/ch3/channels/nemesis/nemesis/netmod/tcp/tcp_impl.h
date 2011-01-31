@@ -93,7 +93,8 @@ int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC 
 int MPID_nem_tcp_is_sock_connected(int fd);
 int MPID_nem_tcp_disconnect(struct MPIDI_VC *const vc);
 int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc);
-int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t *const vc);
+int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t *const vc, int req_errno);
+int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno);
 int MPID_nem_tcp_ckpt_cleanup(void);
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const l_plfd, sockconn_t *const l_sc);
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue);

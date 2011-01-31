@@ -1,6 +1,8 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
- * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -12,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include "lstopo.h"
 
@@ -334,7 +337,7 @@ static int
 lstopo_obj_snprintf(char *text, size_t textlen, hwloc_obj_t obj, int logical)
 {
   unsigned idx = logical ? obj->logical_index : obj->os_index;
-  const char *indexprefix = logical ? " #" : " p#";
+  const char *indexprefix = logical ? " L#" : " P#";
   char typestr[32];
   char indexstr[32]= "";
   char attrstr[256];
@@ -353,27 +356,27 @@ static void
 pu_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, hwloc_obj_t level, void *output, unsigned depth, unsigned x, unsigned *retwidth, unsigned y, unsigned *retheight)
 {
   unsigned myheight = (fontsize ? (fontsize + gridsize) : 0), totheight;
-  unsigned textwidth = fontsize ? (6-logical)*fontsize : gridsize;
+  unsigned textwidth = fontsize ? 6*fontsize : gridsize;
   unsigned mywidth = 0, totwidth;
 
   DYNA_CHECK();
 
   RECURSE_HORIZ(level, &null_draw_methods, 0, gridsize);
 
-  if (hwloc_cpuset_isset(level->online_cpuset, level->os_index))
-    if (!hwloc_cpuset_isset(level->allowed_cpuset, level->os_index))
+  if (hwloc_bitmap_isset(level->online_cpuset, level->os_index))
+    if (!hwloc_bitmap_isset(level->allowed_cpuset, level->os_index))
       methods->box(output, FORBIDDEN_R_COLOR, FORBIDDEN_G_COLOR, FORBIDDEN_B_COLOR, depth, x, *retwidth, y, *retheight);
     else {
-      hwloc_cpuset_t bind = hwloc_cpuset_alloc();
+      hwloc_bitmap_t bind = hwloc_bitmap_alloc();
       if (pid != (hwloc_pid_t) -1 && pid != 0)
         hwloc_get_proc_cpubind(topology, pid, bind, 0);
       else if (pid == 0)
         hwloc_get_cpubind(topology, bind, 0);
-      if (bind && hwloc_cpuset_isset(bind, level->os_index))
+      if (bind && hwloc_bitmap_isset(bind, level->os_index))
         methods->box(output, RUNNING_R_COLOR, RUNNING_G_COLOR, RUNNING_B_COLOR, depth, x, *retwidth, y, *retheight);
       else
         methods->box(output, THREAD_R_COLOR, THREAD_G_COLOR, THREAD_B_COLOR, depth, x, *retwidth, y, *retheight);
-      hwloc_cpuset_free(bind);
+      hwloc_bitmap_free(bind);
     }
   else
     methods->box(output, OFFLINE_R_COLOR, OFFLINE_G_COLOR, OFFLINE_B_COLOR, depth, x, *retwidth, y, *retheight);
@@ -381,7 +384,7 @@ pu_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, hw
   if (fontsize) {
     char text[64];
     lstopo_obj_snprintf(text, sizeof(text), level, logical);
-    if (hwloc_cpuset_isset(level->online_cpuset, level->os_index))
+    if (hwloc_bitmap_isset(level->online_cpuset, level->os_index))
       methods->text(output, 0, 0, 0, fontsize, depth-1, x + gridsize, y + gridsize, text);
     else
       methods->text(output, 0xff, 0xff, 0xff, fontsize, depth-1, x + gridsize, y + gridsize, text);
@@ -397,7 +400,7 @@ cache_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical,
 {
   unsigned myheight = gridsize + (fontsize ? (fontsize + gridsize) : 0) + gridsize, totheight;
   unsigned mywidth = 0, totwidth;
-  unsigned textwidth = fontsize ? ((logical ? level->logical_index : level->os_index) == (unsigned) -1 ? 7*fontsize : 9*fontsize) : 0;
+  unsigned textwidth = fontsize ? ((logical ? level->logical_index : level->os_index) == (unsigned) -1 ? 8*fontsize : 10*fontsize) : 0;
   /* Do not separate objects when in L1 (SMT) */
   unsigned separator = level->attr->cache.depth > 1 ? gridsize : 0;
 
@@ -479,7 +482,7 @@ node_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, 
   /* Currently filled width */
   unsigned totwidth;
   /* Width of the heading text, thus minimal width */
-  unsigned textwidth = 11*fontsize;
+  unsigned textwidth = 16*fontsize;
 
   /* Check whether dynamic programming can save us time */
   DYNA_CHECK();
@@ -511,7 +514,7 @@ machine_draw(hwloc_topology_t topology, struct draw_methods *methods, int logica
 {
   unsigned myheight = (fontsize ? (fontsize + gridsize) : 0), totheight;
   unsigned mywidth = 0, totwidth;
-  unsigned textwidth = 11*fontsize;
+  unsigned textwidth = 8*fontsize;
 
   DYNA_CHECK();
 
@@ -654,11 +657,65 @@ misc_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, 
 }
 
 static void
-fig(hwloc_topology_t topology, struct draw_methods *methods, int logical, hwloc_obj_t level, void *output, unsigned depth, unsigned x, unsigned y)
+fig(hwloc_topology_t topology, struct draw_methods *methods, int logical, int legend, hwloc_obj_t level, void *output, unsigned depth, unsigned x, unsigned y)
 {
-  unsigned totwidth, totheight;
+  unsigned totwidth, totheight, offset;
+  time_t t;
+  char text[128];
+  char hostname[128] = "";
+  unsigned long hostname_size = sizeof(hostname);
 
   system_draw(topology, methods, logical, level, output, depth, x, &totwidth, y, &totheight);
+
+  if (totwidth < 20*fontsize)
+    totwidth = 20*fontsize;
+
+  if (legend) {
+      /* Display the hostname, but only if we're showing *this*
+         system */
+    if (hwloc_topology_is_thissystem(topology)) {
+#ifdef HWLOC_WIN_SYS
+      GetComputerName(hostname, &hostname_size);
+#else
+      gethostname(hostname, hostname_size);
+#endif
+    }
+    if (*hostname) {
+      snprintf(text, sizeof(text), "Host: %s", hostname);
+      methods->box(output, 0xff, 0xff, 0xff, depth, 0, totwidth, totheight, gridsize*4 + fontsize*3);
+      methods->text(output, 0, 0, 0, fontsize, depth, gridsize, totheight + gridsize, text);
+      offset = gridsize + fontsize;
+    } else {
+      methods->box(output, 0xff, 0xff, 0xff, depth, 0, totwidth, totheight, gridsize*3 + fontsize*2);
+      offset = 0;
+    }
+
+    /* Display whether we're showing physical or logical IDs */
+    snprintf(text, sizeof(text), "Indexes: %s", logical ? "logical" : "physical");
+    methods->text(output, 0, 0, 0, fontsize, depth, gridsize, totheight + gridsize + offset, text);
+
+    /* Display timestamp */
+    t = time(NULL);
+#ifdef HAVE_STRFTIME
+    {
+      struct tm *tmp;
+      tmp = localtime(&t);
+      strftime(text, sizeof(text), "Date: %c", tmp);
+    }
+#else /* HAVE_STRFTIME */
+    {
+      char *date;
+      int n;
+      date = ctime(&t);
+      n = strlen(date);
+      if (n && date[n-1] == '\n') {
+        date[n-1] = 0;
+      }
+      snprintf(text, sizeof(text), "Date: %s", date);
+    }
+#endif /* HAVE_STRFTIME */
+    methods->text(output, 0, 0, 0, fontsize, depth, gridsize, totheight + gridsize + offset + fontsize + gridsize, text);
+  }
 }
 
 /*
@@ -729,10 +786,10 @@ static struct draw_methods getmax_draw_methods = {
 };
 
 void *
-output_draw_start(struct draw_methods *methods, int logical, hwloc_topology_t topology, void *output)
+output_draw_start(struct draw_methods *methods, int logical, int legend, hwloc_topology_t topology, void *output)
 {
   struct coords coords = { .x = 0, .y = 0};
-  fig(topology, &getmax_draw_methods, logical, hwloc_get_root_obj(topology), &coords, 100, 0, 0);
+  fig(topology, &getmax_draw_methods, logical, legend, hwloc_get_root_obj(topology), &coords, 100, 0, 0);
   output = methods->start(output, coords.x, coords.y);
   methods->declare_color(output, 0, 0, 0);
   methods->declare_color(output, NODE_R_COLOR, NODE_G_COLOR, NODE_B_COLOR);
@@ -751,7 +808,7 @@ output_draw_start(struct draw_methods *methods, int logical, hwloc_topology_t to
 }
 
 void
-output_draw(struct draw_methods *methods, int logical, hwloc_topology_t topology, void *output)
+output_draw(struct draw_methods *methods, int logical, int legend, hwloc_topology_t topology, void *output)
 {
-	fig(topology, methods, logical, hwloc_get_root_obj(topology), output, 100, 0, 0);
+	fig(topology, methods, logical, legend, hwloc_get_root_obj(topology), output, 100, 0, 0);
 }

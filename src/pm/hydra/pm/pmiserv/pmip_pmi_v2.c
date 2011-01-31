@@ -18,8 +18,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
     int i, j, sent, closed;
     char *tmp[HYD_NUM_TMP_STRINGS], *buf;
-    struct HYD_pmcd_pmi_hdr hdr;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -37,12 +36,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    cmd = PMI_CMD;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
-    HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
-    HYDU_ASSERT(!closed, status);
-
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = PMI_CMD;
     hdr.pid = fd;
     hdr.buflen = strlen(buf);
     hdr.pmi_version = 2;
@@ -52,8 +47,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "forwarding command (%s) upstream\n",
-                                buf);
+        HYDU_dump(stdout, "forwarding command (%s) upstream\n", buf);
     }
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);
@@ -79,10 +73,13 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
     HYDU_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
     status = HYDU_sock_write(fd, cmdlen, 6, &sent, &closed);
     HYDU_ERR_POP(status, "error writing PMI line\n");
+    /* FIXME: We cannot abort when we are not able to send data
+     * downstream. The upper layer needs to handle this based on
+     * whether we want to abort or not.*/
     HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "PMI response: %s\n", cmd);
+        HYDU_dump(stdout, "PMI response: %s\n", cmd);
     }
 
     status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);
@@ -168,12 +165,17 @@ static HYD_status fn_fullinit(int fd, char *args[])
     id = atoi(rank_str);
 
     /* Store the PMI_RANK to fd mapping */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-        if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id)
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+        if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id) {
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
+            HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 1;
+            break;
+        }
+    }
+    HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
     i = 0;
-    /* FIXME: add support for ranks_per_proc */
+    /* FIXME: allow for multiple ranks per PMI ID */
     tmp[i++] = HYDU_strdup("cmd=fullinit-response;pmi-version=2;pmi-subversion=0;rank=");
     tmp[i++] = HYDU_int_to_str(id);
 
@@ -417,7 +419,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
 
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
-    if (!strcmp(key, "PMI_process_mapping") && HYD_pmcd_pmip.system_global.pmi_process_mapping) {
+    if (!strcmp(key, "PMI_process_mapping")) {
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=info-getjobattr-response;");
         if (thrid) {

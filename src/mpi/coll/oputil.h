@@ -35,10 +35,15 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 
 /* op_macro_ is a 2-arg macro or function that preforms the reduction
    operation on a single element */
+/* Ideally "b" would be const, but xlc on POWER7 can't currently handle
+ * "const long double _Complex * restrict" as a valid pointer type.  It just
+ * emits a warning and generates invalid arithmetic code.  We could drop the
+ * restrict instead, but we are more likely to get an optimization from it than
+ * const.  [goodell@ 2010-12-15] */
 #define MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,op_macro_) \
     case (mpi_type_): {                                       \
         c_type_ * restrict a = (c_type_ *)inoutvec;           \
-        const c_type_ * restrict b = (c_type_ *)invec;        \
+        /*const*/ c_type_ * restrict b = (c_type_ *)invec;    \
         for ( i=0; i<len; i++ )                               \
             a[i] = op_macro_(a[i],b[i]);                      \
         break;                                                \

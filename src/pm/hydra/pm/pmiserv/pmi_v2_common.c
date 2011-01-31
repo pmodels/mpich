@@ -5,7 +5,6 @@
  */
 
 #include "hydra.h"
-#include "hydra_utils.h"
 #include "bsci.h"
 #include "pmiserv_pmi.h"
 #include "pmi_v2_common.h"

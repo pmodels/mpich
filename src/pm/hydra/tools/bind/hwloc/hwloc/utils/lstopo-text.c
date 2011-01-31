@@ -1,6 +1,8 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
- * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -43,7 +45,7 @@ output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
 {
   char type[32], attr[256], phys[32] = "";
   unsigned idx = logical ? l->logical_index : l->os_index;
-  const char *indexprefix = logical ? " #" :  " p#";
+  const char *indexprefix = logical ? " L#" :  " P#";
   if (show_cpuset < 2) {
     if (l->type == HWLOC_OBJ_MISC && l->name)
       fprintf(output, "%s", l->name);
@@ -55,7 +57,7 @@ output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
       fprintf(output, "%s%u", indexprefix, idx);
     if (logical && l->os_index != (unsigned) -1 &&
 	(verbose_mode >= 2 || l->type == HWLOC_OBJ_PU || l->type == HWLOC_OBJ_NODE))
-      snprintf(phys, sizeof(phys), "phys=%u", l->os_index);
+      snprintf(phys, sizeof(phys), "P#%u", l->os_index);
     hwloc_obj_attr_snprintf (attr, sizeof(attr), l, " ", verbose_mode-1);
     if (*phys || *attr) {
       const char *separator = *phys != '\0' && *attr!= '\0' ? " " : "";
@@ -71,7 +73,10 @@ output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
     fprintf(output, " cpuset=");
   if (show_cpuset) {
     char *cpusetstr;
-    hwloc_cpuset_asprintf(&cpusetstr, l->cpuset);
+    if (taskset)
+      hwloc_bitmap_taskset_asprintf(&cpusetstr, l->cpuset);
+    else
+      hwloc_bitmap_asprintf(&cpusetstr, l->cpuset);
     fprintf(output, "%s", cpusetstr);
     free(cpusetstr);
   }
@@ -85,7 +90,7 @@ output_topology (hwloc_topology_t topology, hwloc_obj_t l, hwloc_obj_t parent, F
   int group_identical = (verbose_mode <= 1) && !show_cpuset;
   if (group_identical
       && parent && parent->arity == 1
-      && l->cpuset && parent->cpuset && hwloc_cpuset_isequal(l->cpuset, parent->cpuset)) {
+      && l->cpuset && parent->cpuset && hwloc_bitmap_isequal(l->cpuset, parent->cpuset)) {
     /* in non-verbose mode, merge objects with their parent is they are exactly identical */
     fprintf(output, " + ");
   } else {
@@ -115,7 +120,7 @@ output_only (hwloc_topology_t topology, hwloc_obj_t l, FILE *output, int logical
     output_only (topology, l->children[x], output, logical, verbose_mode);
 }
 
-void output_console(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode)
+void output_console(hwloc_topology_t topology, const char *filename, int logical, int legend __hwloc_attribute_unused, int verbose_mode)
 {
   unsigned topodepth;
   FILE *output;
@@ -159,51 +164,51 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
   }
 
   if (verbose_mode > 1) {
-    hwloc_const_cpuset_t complete = hwloc_topology_get_complete_cpuset(topology);
-    hwloc_const_cpuset_t topo = hwloc_topology_get_topology_cpuset(topology);
-    hwloc_const_cpuset_t online = hwloc_topology_get_online_cpuset(topology);
-    hwloc_const_cpuset_t allowed = hwloc_topology_get_allowed_cpuset(topology);
+    hwloc_const_bitmap_t complete = hwloc_topology_get_complete_cpuset(topology);
+    hwloc_const_bitmap_t topo = hwloc_topology_get_topology_cpuset(topology);
+    hwloc_const_bitmap_t online = hwloc_topology_get_online_cpuset(topology);
+    hwloc_const_bitmap_t allowed = hwloc_topology_get_allowed_cpuset(topology);
 
-    if (!hwloc_cpuset_isequal(topo, complete)) {
-      hwloc_cpuset_t unknown = hwloc_cpuset_alloc();
+    if (!hwloc_bitmap_isequal(topo, complete)) {
+      hwloc_bitmap_t unknown = hwloc_bitmap_alloc();
       char *unknownstr;
-      hwloc_cpuset_copy(unknown, complete);
-      hwloc_cpuset_andnot(unknown, unknown, topo);
-      hwloc_cpuset_asprintf(&unknownstr, unknown);
-      fprintf (output, "%d processors not represented in topology: %s\n", hwloc_cpuset_weight(unknown), unknownstr);
+      hwloc_bitmap_copy(unknown, complete);
+      hwloc_bitmap_andnot(unknown, unknown, topo);
+      hwloc_bitmap_asprintf(&unknownstr, unknown);
+      fprintf (output, "%d processors not represented in topology: %s\n", hwloc_bitmap_weight(unknown), unknownstr);
       free(unknownstr);
-      hwloc_cpuset_free(unknown);
+      hwloc_bitmap_free(unknown);
     }
-    if (!hwloc_cpuset_isequal(online, complete)) {
-      hwloc_cpuset_t offline = hwloc_cpuset_alloc();
+    if (!hwloc_bitmap_isequal(online, complete)) {
+      hwloc_bitmap_t offline = hwloc_bitmap_alloc();
       char *offlinestr;
-      hwloc_cpuset_copy(offline, complete);
-      hwloc_cpuset_andnot(offline, offline, online);
-      hwloc_cpuset_asprintf(&offlinestr, offline);
-      fprintf (output, "%d processors offline: %s\n", hwloc_cpuset_weight(offline), offlinestr);
+      hwloc_bitmap_copy(offline, complete);
+      hwloc_bitmap_andnot(offline, offline, online);
+      hwloc_bitmap_asprintf(&offlinestr, offline);
+      fprintf (output, "%d processors offline: %s\n", hwloc_bitmap_weight(offline), offlinestr);
       free(offlinestr);
-      hwloc_cpuset_free(offline);
+      hwloc_bitmap_free(offline);
     }
-    if (!hwloc_cpuset_isequal(allowed, online)) {
-      if (!hwloc_cpuset_isincluded(online, allowed)) {
-        hwloc_cpuset_t forbidden = hwloc_cpuset_alloc();
+    if (!hwloc_bitmap_isequal(allowed, online)) {
+      if (!hwloc_bitmap_isincluded(online, allowed)) {
+        hwloc_bitmap_t forbidden = hwloc_bitmap_alloc();
         char *forbiddenstr;
-        hwloc_cpuset_copy(forbidden, online);
-        hwloc_cpuset_andnot(forbidden, forbidden, allowed);
-        hwloc_cpuset_asprintf(&forbiddenstr, forbidden);
-        fprintf(output, "%d processors online but not allowed: %s\n", hwloc_cpuset_weight(forbidden), forbiddenstr);
+        hwloc_bitmap_copy(forbidden, online);
+        hwloc_bitmap_andnot(forbidden, forbidden, allowed);
+        hwloc_bitmap_asprintf(&forbiddenstr, forbidden);
+        fprintf(output, "%d processors online but not allowed: %s\n", hwloc_bitmap_weight(forbidden), forbiddenstr);
         free(forbiddenstr);
-        hwloc_cpuset_free(forbidden);
+        hwloc_bitmap_free(forbidden);
       }
-      if (!hwloc_cpuset_isincluded(allowed, online)) {
-        hwloc_cpuset_t potential = hwloc_cpuset_alloc();
+      if (!hwloc_bitmap_isincluded(allowed, online)) {
+        hwloc_bitmap_t potential = hwloc_bitmap_alloc();
         char *potentialstr;
-        hwloc_cpuset_copy(potential, allowed);
-        hwloc_cpuset_andnot(potential, potential, online);
-        hwloc_cpuset_asprintf(&potentialstr, potential);
-        fprintf(output, "%d processors allowed but not online: %s\n", hwloc_cpuset_weight(potential), potentialstr);
+        hwloc_bitmap_copy(potential, allowed);
+        hwloc_bitmap_andnot(potential, potential, online);
+        hwloc_bitmap_asprintf(&potentialstr, potential);
+        fprintf(output, "%d processors allowed but not online: %s\n", hwloc_bitmap_weight(potential), potentialstr);
         free(potentialstr);
-        hwloc_cpuset_free(potential);
+        hwloc_bitmap_free(potential);
       }
     }
     if (!hwloc_topology_is_thissystem(topology))
@@ -601,7 +606,7 @@ static struct draw_methods text_draw_methods = {
   .text = text_text,
 };
 
-void output_text(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode __hwloc_attribute_unused)
+void output_text(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output;
   struct display *disp;
@@ -660,8 +665,8 @@ void output_text(hwloc_topology_t topology, const char *filename, int logical, i
   }
 #endif /* HWLOC_HAVE_LIBTERMCAP */
 
-  disp = output_draw_start(&text_draw_methods, logical, topology, output);
-  output_draw(&text_draw_methods, logical, topology, disp);
+  disp = output_draw_start(&text_draw_methods, logical, legend, topology, output);
+  output_draw(&text_draw_methods, logical, legend, topology, disp);
 
   lfr = lfg = lfb = -1;
   lbr = lbg = lbb = -1;

@@ -787,6 +787,8 @@ typedef struct MPIDI_VCRT * MPID_VCRT;
 typedef struct MPIDI_VC * MPID_VCR;
 #endif
 
+/* number of VCs that are in MORIBUND state */
+extern int MPIDI_Failed_vc_count;
 
 /* Initialize a new VC */
 int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
@@ -1427,6 +1429,9 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc);
    MPID_Comm_connect and accept */
 int MPIDI_CH3_Connect_to_root(const char *, MPIDI_VC_t **);
 
+/* keyval for COMM_WORLD attribute holding list of failed processes */
+extern int MPICH_ATTR_FAILED_PROCESSES;
+
 
 /*
  * Channel utility prototypes
@@ -1440,6 +1445,7 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq);
 MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 
 					   int * found);
 int MPIDI_CH3U_Recvq_count_unexp(void);
+int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc);
 
 
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
@@ -1583,6 +1589,9 @@ int MPIDI_CH3_Channel_close( void );
 #else
 #define MPIDI_CH3_Channel_close( )   MPI_SUCCESS
 #endif
+/* MPIDI_CH3U_Check_for_failed_procs() reads PMI_dead_processes key
+   and marks VCs to those processes as failed */
+int MPIDI_CH3U_Check_for_failed_procs(void);
 
 /*@
   MPIDI_CH3_Pre_init - Allows the channel to initialize before PMI_init is 

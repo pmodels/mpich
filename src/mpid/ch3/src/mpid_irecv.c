@@ -136,10 +136,11 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	else
 	{
 	    /* --BEGIN ERROR HANDLING-- */
-	    MPID_Request_release(rreq);
+            int msg_type = MPIDI_Request_get_msg_type(rreq);
+            MPID_Request_release(rreq);
 	    rreq = NULL;
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_INTERN, "**ch3|badmsgtype",
-		      "**ch3|badmsgtype %d", MPIDI_Request_get_msg_type(rreq));
+                                 "**ch3|badmsgtype %d", msg_type);
 	    /* --END ERROR HANDLING-- */
 	}
     }

@@ -5,6 +5,8 @@ allredmany 4
 allred2 4
 allred3 10
 allred4 4
+allred5 5
+allred5 10
 reduce 5
 reduce 10
 reduce_local 2 mpiversion=2.2
@@ -26,6 +28,7 @@ allgatherv2 10
 allgatherv3 10
 allgatherv4 4 timeLimit=600
 bcasttest 4
+bcasttest 8
 bcasttest 10
 bcast2 4
 # More that 8 processes are required to get bcast to switch to the long
@@ -52,12 +55,15 @@ redscat 6
 redscat2 4
 redscat2 5
 redscat2 10
+redscat3 8
 red_scat_block 4
 red_scat_block 5
 red_scat_block 8
 red_scat_block2 4
 red_scat_block2 5
 red_scat_block2 10
+redscatblk3 8
+redscatblk3 10
 scantst 4
 exscan 10
 exscan2 5

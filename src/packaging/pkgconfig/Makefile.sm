@@ -1,1 +1,1 @@
-optinstall_PKGCONFIG = mpich2-@DEVICE_NAME@.pc
+optinstall_PKGCONFIG = mpich2-c.pc mpich2-cxx.pc mpich2-f77.pc mpich2-f90.pc

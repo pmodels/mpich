@@ -630,7 +630,9 @@ sub TestStatus {
 	# Skip FORTRAN STOP
 	if (/FORTRAN STOP/) { next; }
 	$inline .= $_;
-	# ANY output is an error.
+	# ANY output is an error. We have the following output
+	# exception for the Hydra process manager.
+	if (/\[mpiexec@.*\] ONE OF THE PROCESSES TERMINATED BADLY: CLEANING UP/) { next; }
 	if (! /^\s*$/) {
 	    print STDERR "Unexpected output in $programname: $_";
 	    if (!$found_error) {
@@ -676,7 +678,7 @@ sub TestTimeout {
 	# Allow 'job ending due to env var MPIEXEC_TIMEOUT' (mpd)
 	if (/job ending due to env var MPIEXEC_TIMEOUT/) { next; }
 	# Allow 'EXIT STRING: Terminated \(signal 15\)' (hydra)
-	if (/APPLICATION TERMINATED WITH THE EXIT STRING: Hangup \(signal 1\)/) { next; }
+	if (/\[mpiexec@.*\] APPLICATION TIMED OUT/) { last; }
 	# ANY output is an error (other than timeout) 
 	if (! /^\s*$/) {
 	    print STDERR "Unexpected output in $programname: $_";

@@ -1,4 +1,4 @@
-SUBDIRS = util attr pt2pt init info comm coll datatype io rma spawn
+SUBDIRS = util attr pt2pt init info comm coll datatype errhan io rma spawn
 
 # A special testing target to simplify testing just the C++ code
 testing:

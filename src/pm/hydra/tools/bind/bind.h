@@ -9,12 +9,15 @@
 
 /** @file bind.h */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 /*! \cond */
 
 #define HYDT_BIND_OBJ_CHILD_ID(obj) \
     ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_bind_obj))
+
+/* This should be higher than the number of cache levels we support */
+#define HYDT_INVALID_CACHE_DEPTH (10)
 
 /*! \endcond */
 
@@ -172,7 +175,7 @@ HYD_status HYDT_bind_init(char *binding, char *bindlib);
  * This function cleans up any relevant state that the binding library
  * maintained.
  */
-void HYDT_bind_finalize(void);
+HYD_status HYDT_bind_finalize(void);
 
 
 /**

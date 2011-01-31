@@ -75,6 +75,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     MPID_Comm *newcomm_ptr;
     int  local_high, remote_high, i, j, new_size;
     MPIR_Context_id_t new_context_id;
+    int errflag = FALSE;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_MERGE);
 
@@ -137,8 +138,9 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 	     error to make */
 	    acthigh = high ? 1 : 0;   /* Clamp high into 1 or 0 */
 	    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &acthigh, 1, MPI_INT,
-                                             MPI_SUM, comm_ptr->local_comm );
-	    if (mpi_errno) goto fn_fail;
+                                             MPI_SUM, comm_ptr->local_comm, &errflag );
+	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	    /* acthigh must either == 0 or the size of the local comm */
 	    if (acthigh != 0 && acthigh != comm_ptr->local_size) {
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
@@ -196,9 +198,10 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
        value of local_high, which may have changed if both groups
        of processes had the same value for high
     */
-    mpi_errno = MPIR_Bcast_impl( &local_high, 1, MPI_INT, 0, 
-                                 comm_ptr->local_comm );
-    if (mpi_errno) goto fn_fail;
+    mpi_errno = MPIR_Bcast_impl( &local_high, 1, MPI_INT, 0,
+                                 comm_ptr->local_comm, &errflag );
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     mpi_errno = MPIR_Comm_create( &newcomm_ptr );
     if (mpi_errno) goto fn_fail;

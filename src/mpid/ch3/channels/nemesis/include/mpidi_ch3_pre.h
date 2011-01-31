@@ -14,6 +14,7 @@
     #include <winsock2.h>
     #include <windows.h>
 #endif
+#include "opa_primitives.h"
 
 /*#define MPID_USE_SEQUENCE_NUMBERS*/
 /*#define HAVE_CH3_PRE_INIT*/
@@ -129,6 +130,15 @@ typedef struct MPIDI_CH3I_Progress_state
 MPIDI_CH3I_Progress_state;
 
 #define MPIDI_CH3_PROGRESS_STATE_DECL MPIDI_CH3I_Progress_state ch;
+
+extern OPA_int_t MPIDI_CH3I_progress_completion_count;
+#define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT do {                                  \
+        OPA_write_barrier();                                                            \
+        OPA_incr_int(&MPIDI_CH3I_progress_completion_count);                            \
+        MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,                                            \
+                       "just incremented MPIDI_CH3I_progress_completion_count=%d",      \
+                       OPA_load_int(&MPIDI_CH3I_progress_completion_count));            \
+    } while(0)
 
 #endif /* !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED) */
 

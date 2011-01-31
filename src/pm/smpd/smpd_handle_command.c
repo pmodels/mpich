@@ -5617,7 +5617,7 @@ int smpd_handle_kill_command(smpd_context_t *context)
     
     result = smpd_kill_process(pmi_context->process, exit_code);
     if (result != SMPD_SUCCESS){
-	    smpd_err_printf("unable to kill process.\n");
+	    smpd_err_printf("unable to kill process. result = %d\n", result);
         pmi_context->state = SMPD_CLOSING;
         if(pmi_context->process->in){
             smpd_dbg_printf("Closing stdin ...\n");

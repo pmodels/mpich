@@ -1,5 +1,7 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009 Université Bordeaux 1
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -13,9 +15,9 @@
 
 #include "lstopo.h"
 
-void output_xml(hwloc_topology_t topology, const char *filename, int logical __hwloc_attribute_unused, int verbose_mode __hwloc_attribute_unused)
+void output_xml(hwloc_topology_t topology, const char *filename, int logical __hwloc_attribute_unused, int legend __hwloc_attribute_unused, int verbose_mode __hwloc_attribute_unused)
 {
-  if (!strcasecmp(filename, "-.xml"))
+  if (!filename || !strcasecmp(filename, "-.xml"))
     filename = "-";
 
   hwloc_topology_export_xml(topology, filename);

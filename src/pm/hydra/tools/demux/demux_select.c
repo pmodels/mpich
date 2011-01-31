@@ -101,17 +101,25 @@ HYD_status HYDT_dmxu_select_stdin_valid(int *out)
 
     HYDU_FUNC_ENTER();
 
-    FD_ZERO(&exceptfds);
-    FD_SET(STDIN_FILENO, &exceptfds);
+    status = HYDT_dmxi_stdin_valid(out);
+    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
-    /* Check if select on stdin returns any errors */
-    ret = select(STDIN_FILENO + 1, NULL, NULL, &exceptfds, &zero);
-    HYDU_ASSERT((ret >= 0), status);
+    if (*out) {
+        /* The generic test thinks that STDIN is valid. Try select
+         * specific tests. */
 
-    if (FD_ISSET(STDIN_FILENO, &exceptfds))
-        *out = 0;
-    else
-        *out = 1;
+        FD_ZERO(&exceptfds);
+        FD_SET(STDIN_FILENO, &exceptfds);
+
+        /* Check if select on stdin returns any errors */
+        ret = select(STDIN_FILENO + 1, NULL, NULL, &exceptfds, &zero);
+        HYDU_ASSERT((ret >= 0), status);
+
+        if (FD_ISSET(STDIN_FILENO, &exceptfds))
+            *out = 0;
+        else
+            *out = 1;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

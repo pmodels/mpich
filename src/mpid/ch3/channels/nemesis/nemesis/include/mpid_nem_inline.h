@@ -23,7 +23,7 @@ static inline void MPID_nem_mpich2_enqueue_fastbox (int local_rank);
 static inline int MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead);
 static inline int MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
-static inline int MPID_nem_mpich2_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox);
+static inline int MPID_nem_mpich2_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
 static inline int MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich2_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
 static inline void MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first,
@@ -863,10 +863,9 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int
-MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
+MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions)
 {
     int mpi_errno = MPI_SUCCESS;
-    unsigned completions = MPIDI_CH3I_progress_completion_count;
 #ifndef ENABLE_NO_YIELD
     int pollcount = 0;
 #endif
@@ -905,7 +904,7 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	    mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-            if (completions != MPIDI_CH3I_progress_completion_count || MPID_nem_local_lmt_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
+            if (MPID_nem_local_lmt_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
                 || MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE))
             {
                 *cell = NULL;
@@ -921,6 +920,12 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	}
 	++pollcount;
 #endif
+
+        if (completions != OPA_load_int(&MPIDI_CH3I_progress_completion_count)) {
+            *cell = NULL;
+            *in_fbox = 0;
+            goto exit_l;
+        }
     }
 
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_recvQ, cell);

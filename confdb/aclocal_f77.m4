@@ -1158,34 +1158,6 @@ fi
 ])
 
 
-dnl /*D 
-dnl PAC_PROG_F77_HAS_POINTER - Determine if Fortran allows pointer type
-dnl
-dnl Synopsis:
-dnl   PAC_PROG_F77_HAS_POINTER(action-if-true,action-if-false)
-dnl D*/
-AC_DEFUN([PAC_PROG_F77_HAS_POINTER],[
-AC_CACHE_CHECK([whether Fortran has pointer declaration],
-pac_cv_prog_f77_has_pointer,[
-AC_LANG_SAVE
-AC_LANG_FORTRAN77
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[
-        integer M
-        pointer (MPTR,M)
-        data MPTR/0/
-])],
-    pac_cv_prog_f77_has_pointer="yes",
-    pac_cv_prog_f77_has_pointer="no")
-AC_LANG_RESTORE
-])
-if test "$pac_cv_prog_f77_has_pointer" = "yes" ; then
-    ifelse([$1],,:,[$1])
-else
-    ifelse([$2],,:,[$2])
-fi
-])
-
-
 dnl pac_prog_f77_run_proc_from_c( c main program, fortran routine, 
 dnl                               action-if-works, action-if-fails, 
 dnl                               cross-action )

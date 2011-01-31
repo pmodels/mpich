@@ -4,83 +4,23 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "bind.h"
 #include "external.h"
 
-static int fd_stdin, fd_stdout, fd_stderr;
-
-static HYD_status is_local_host(char *host, int *bool)
-{
-    static int init = 1, localhost_len;
-    char localhost[MAX_HOSTNAME_LEN];
-    int host_len;
-    HYD_status status = HYD_SUCCESS;
-
-    *bool = 0;
-    if (!strcmp(host, "localhost")) {
-        *bool = 1;
-        goto fn_exit;
-    }
-
-    if (init) {
-        status = HYDU_gethostname(localhost);
-        HYDU_ERR_POP(status, "unable to get local hostname\n");
-
-        localhost_len = strlen(localhost);
-
-        init = 0;
-    }
-
-    if (!strcmp(host, localhost)) {
-        *bool = 1;
-        goto fn_exit;
-    }
-
-    /* If the two hostnames are not of the same length, it is possible
-     * that they differ in the domain information, and not the
-     * hostname */
-    host_len = strlen(host);
-    if (host_len != localhost_len) {
-        int shortlen;
-
-        if (host_len < localhost_len) {
-            shortlen = host_len;
-            if ((!MPL_strncmp(host, localhost, shortlen)) &&
-                (localhost[shortlen] == 0 || localhost[shortlen] == '.')) {
-                *bool = 1;
-                goto fn_exit;
-            }
-        }
-        else {
-            shortlen = localhost_len;
-            if ((!MPL_strncmp(host, localhost, shortlen)) &&
-                (host[shortlen] == 0 || host[shortlen] == '.')) {
-                *bool = 1;
-                goto fn_exit;
-            }
-        }
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
+static int fd_stdout, fd_stderr;
 
 HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
-                                           int *control_fd, int enable_stdin,
-                                           HYD_status(*stdout_cb) (void *buf, int buflen),
-                                           HYD_status(*stderr_cb) (void *buf, int buflen))
+                                           int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
     struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
+    char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
     struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
@@ -90,21 +30,21 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     /* We use the following priority order for the executable path:
      * (1) user-specified; (2) search in path; (3) Hard-coded
      * location */
-    if (HYDT_bsci_info.bootstrap_exec)
-        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+    if (HYDT_bsci_info.launcher_exec)
+        path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+    if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
         if (!path)
             path = HYDU_find_full_path("ssh");
         if (!path)
             path = HYDU_strdup("/usr/bin/ssh");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "rsh")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "rsh")) {
         if (!path)
             path = HYDU_find_full_path("rsh");
         if (!path)
             path = HYDU_strdup("/usr/bin/rsh");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
         char *bin_dir = NULL;
         int length;
 
@@ -119,7 +59,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         if (!path)
             path = HYDU_strdup("/usr/bin/blaunch");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         char *sge_root = NULL, *arc = NULL;
         int length;
 
@@ -151,7 +91,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     }
 
     /* Allow X forwarding only if explicitly requested */
-    if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+    if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
         if (HYDT_bsci_info.enablex == 1)
             targs[idx++] = HYDU_strdup("-X");
         else if (HYDT_bsci_info.enablex == 0)
@@ -159,10 +99,10 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         else    /* default mode is disable X */
             targs[idx++] = HYDU_strdup("-x");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
         targs[idx++] = HYDU_strdup("-n");
     }
-    else if (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+    else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         targs[idx++] = HYDU_strdup("-inherit");
         targs[idx++] = HYDU_strdup("-V");
     }
@@ -174,6 +114,14 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     exec_idx = idx;     /* Store the executable index */
     for (i = 0; args[i]; i++)
         targs[idx++] = HYDU_strdup(args[i]);
+
+    /* Store the original exec string */
+    original_exec_string = targs[exec_idx];
+
+    /* Create a quoted version of the exec string, which is only used
+     * when the executable is not launched directly, but through an
+     * external launcher */
+    HYDU_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
 
     /* pid_list might already have some PIDs */
     num_hosts = 0;
@@ -214,17 +162,17 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
          * quickly. If this happens, the ssh daemons disables ssh
          * connections causing the job to fail. This is basically a
          * hack to slow down ssh connections to the same node. */
-        if (!strcmp(HYDT_bsci_info.bootstrap, "ssh")) {
+        if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
             status = HYDT_bscd_ssh_store_launch_time(node->hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
 
-        status = is_local_host(node->hostname, &lh);
+        status = HYDU_sock_is_local(node->hostname, &lh);
         HYDU_ERR_POP(status, "error checking if node is localhost\n");
 
-        /* If bootstrap server is 'fork', or this is the localhost,
-         * use fork to launch the process */
-        if (!strcmp(HYDT_bsci_info.bootstrap, "fork") || lh) {
+        /* If launcher is 'fork', or this is the localhost, use fork
+         * to launch the process */
+        if (!strcmp(HYDT_bsci_info.launcher, "fork") || lh) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -251,13 +199,17 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
         else {
             offset = 0;
 
-            /* dummy is NULL only for bootstrap servers that can
-             * handle a closed stdin socket. Older versions of ssh and
-             * SGE seem to have problems when stdin is closed before
-             * they are launched. */
-            if (!strcmp(HYDT_bsci_info.bootstrap, "ssh") ||
-                !strcmp(HYDT_bsci_info.bootstrap, "rsh") ||
-                !strcmp(HYDT_bsci_info.bootstrap, "sge"))
+            /* We are not launching the executable directly; use the
+             * quoted version */
+            targs[exec_idx] = quoted_exec_string;
+
+            /* dummy is NULL only for launchers that can handle a
+             * closed stdin socket. Older versions of ssh and SGE seem
+             * to have problems when stdin is closed before they are
+             * launched. */
+            if (!strcmp(HYDT_bsci_info.launcher, "ssh") ||
+                !strcmp(HYDT_bsci_info.launcher, "rsh") ||
+                !strcmp(HYDT_bsci_info.launcher, "sge"))
                 dummy = &fd;
             else
                 dummy = NULL;
@@ -268,15 +220,17 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
             HYDU_print_strlist(targs + offset);
         }
 
-        /* The stdin pointer will be some value for process_id 0; for
-         * everyone else, it's a dummy value. We don't just pass it
+        /* The stdin pointer is a dummy value. We don't just pass it
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
-        status = HYDU_create_process(targs + offset, env,
-                                     ((i == 0 && enable_stdin) ? &fd_stdin : dummy),
-                                     &fd_stdout, &fd_stderr,
+        status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr,
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
         HYDU_ERR_POP(status, "create process returned error\n");
+
+        /* Reset to the original exec string */
+        targs[exec_idx] = original_exec_string;
+
+        /* Reset the exec string to the original value */
 
         if (offset && control_fd) {
             close(sockpair[1]);
@@ -284,23 +238,15 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
             env = NULL;
         }
 
-        /* We don't wait for stdin to close */
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
         HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
-        /* Register stdio callbacks for the spawned process */
-        if (i == 0 && enable_stdin) {
-            fd = STDIN_FILENO;
-            status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
-            HYDU_ERR_POP(status, "demux returned error registering fd\n");
-        }
-
-        status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, stdout_cb,
-                                      HYDT_bscu_inter_cb);
+        status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN,
+                                      (void *) (size_t) STDOUT_FILENO, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-        status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb,
-                                      HYDT_bscu_inter_cb);
+        status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN,
+                                      (void *) (size_t) STDERR_FILENO, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 

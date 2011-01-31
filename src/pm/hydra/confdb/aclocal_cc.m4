@@ -467,6 +467,9 @@ if test "$enable_strict_done" != "yes" ; then
     #	    values, but they are structs of a single basic type (used to enforce
     #	    type checking for relative vs. absolute ptrs), and with optimization
     #	    the aggregate value is converted to a scalar.
+    #   -Wdeclaration-after-statement -- This is a C89
+    #       requirement. When compiling with C99, this should be
+    #       disabled.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -483,7 +486,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wmissing-declarations
         -Wno-long-long
         -Wfloat-equal
-        -Wdeclaration-after-statement
         -Wundef
         -Wno-endif-labels
         -Wpointer-arith
@@ -567,6 +569,7 @@ if test "$enable_strict_done" != "yes" ; then
        	  PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
        elif test "${enable_c89}" = "yes" ; then
        	  PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
+       	  PAC_APPEND_FLAG([-Wdeclaration-after-statement],[pac_cc_strict_flags])
        fi
     fi
 

@@ -229,4 +229,9 @@ MPIDI_CH3I_Progress_state;
 
 #define MPIDI_CH3_PROGRESS_STATE_DECL MPIDI_CH3I_Progress_state ch;
 
+
+/* This variable is used in the definitions of the MPID_Progress_xxx macros,
+   and must be available to the routines in src/mpi */
+extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
+
 #endif /* !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED) */

@@ -33,6 +33,7 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     int mpi_errno=MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
     MPID_Comm *win_comm_ptr;
+    int errflag = FALSE;
     MPIU_CHKPMEM_DECL(4);
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_CREATE);
@@ -123,9 +124,11 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     tmp_buf, 3 * sizeof(MPI_Aint), MPI_BYTE,
-                                    comm_ptr);
+                                    comm_ptr, &errflag);
     MPIU_INSTR_DURATION_END(wincreate_allgather);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
 
     k = 0;
     for (i=0; i<comm_size; i++)
@@ -158,7 +161,7 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     int mpi_errno=MPI_SUCCESS, total_pt_rma_puts_accs;
     int in_use;
     MPID_Comm *comm_ptr;
-    
+    int errflag = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);
@@ -167,8 +170,9 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIU_INSTR_DURATION_START(winfree_rs);
     mpi_errno = MPIR_Reduce_scatter_block_impl((*win_ptr)->pt_rma_puts_accs, 
                                                &total_pt_rma_puts_accs, 1, 
-                                               MPI_INT, MPI_SUM, comm_ptr);
+                                               MPI_INT, MPI_SUM, comm_ptr, &errflag);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     MPIU_INSTR_DURATION_END(winfree_rs);
 
     if (total_pt_rma_puts_accs != (*win_ptr)->my_pt_rma_puts_accs)

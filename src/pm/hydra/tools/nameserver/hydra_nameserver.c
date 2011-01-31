@@ -4,8 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "demux.h"
 
 struct HYDT_ns_publish {

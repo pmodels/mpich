@@ -4,13 +4,13 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "bind.h"
 #include "slurm.h"
 
-static int fd_stdin, fd_stdout, fd_stderr;
+static int fd_stdout, fd_stderr;
 
 static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_str)
 {
@@ -60,13 +60,12 @@ static HYD_status node_list_to_str(struct HYD_node *node_list, char **node_list_
 }
 
 HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
-                                        int *control_fd, int enable_stdin,
-                                        HYD_status(*stdout_cb) (void *buf, int buflen),
-                                        HYD_status(*stderr_cb) (void *buf, int buflen))
+                                        int *control_fd)
 {
-    int num_hosts, idx, i, fd;
+    int num_hosts, idx, i, exec_idx;
     int *pid, *fd_list;
-    char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
+    char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL,
+        quoted_exec_string[HYD_TMP_STRLEN];
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_node *node;
     struct HYDT_bind_cpuset_t cpuset;
@@ -77,8 +76,8 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     /* We use the following priority order for the executable path:
      * (1) user-specified; (2) search in path; (3) Hard-coded
      * location */
-    if (HYDT_bsci_info.bootstrap_exec)
-        path = HYDU_strdup(HYDT_bsci_info.bootstrap_exec);
+    if (HYDT_bsci_info.launcher_exec)
+        path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
     if (!path)
         path = HYDU_find_full_path("srun");
     if (!path)
@@ -87,7 +86,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     idx = 0;
     targs[idx++] = HYDU_strdup(path);
 
-    if (HYDT_bscd_slurm_user_node_list) {
+    if (!strcmp(HYDT_bsci_info.rmk, "slurm")) {
         targs[idx++] = HYDU_strdup("--nodelist");
 
         status = node_list_to_str(node_list, &node_list_str);
@@ -116,8 +115,16 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     }
 
     /* Fill in the remaining arguments */
+    exec_idx = idx;
     for (i = 0; args[i]; i++)
         targs[idx++] = HYDU_strdup(args[i]);
+
+    /* Create a quoted version of the exec string, which is only used
+     * when the executable is not launched directly, but through an
+     * external launcher */
+    HYDU_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
+    HYDU_FREE(targs[exec_idx]);
+    targs[exec_idx] = quoted_exec_string;
 
     /* Increase pid list to accommodate the new pid */
     HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
@@ -143,26 +150,19 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_node *node_list,
     }
 
     HYDT_bind_cpuset_zero(&cpuset);
-    status = HYDU_create_process(targs, NULL,
-                                 enable_stdin ? &fd_stdin : NULL, &fd_stdout,
-                                 &fd_stderr, &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
+    status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr,
+                                 &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
     HYDU_ERR_POP(status, "create process returned error\n");
 
-    /* We don't wait for stdin to close */
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stdout;
     HYD_bscu_fd_list[HYD_bscu_fd_count++] = fd_stderr;
 
-    /* Register stdio callbacks for the spawned process */
-    if (enable_stdin) {
-        fd = STDIN_FILENO;
-        status = HYDT_dmx_register_fd(1, &fd, HYD_POLLIN, &fd_stdin, HYDT_bscu_stdin_cb);
-        HYDU_ERR_POP(status, "demux returned error registering fd\n");
-    }
-
-    status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN, stdout_cb, HYDT_bscu_inter_cb);
+    status = HYDT_dmx_register_fd(1, &fd_stdout, HYD_POLLIN,
+                                  (void *) (size_t) STDOUT_FILENO, HYDT_bscu_stdio_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
-    status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN, stderr_cb, HYDT_bscu_inter_cb);
+    status = HYDT_dmx_register_fd(1, &fd_stderr, HYD_POLLIN,
+                                  (void *) (size_t) STDERR_FILENO, HYDT_bscu_stdio_cb);
     HYDU_ERR_POP(status, "demux returned error registering fd\n");
 
   fn_exit:

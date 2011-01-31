@@ -9,11 +9,11 @@
 #include "bind.h"
 #include "ckpoint.h"
 #include "demux.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
-void HYD_pmcd_pmip_killjob(void)
+void HYD_pmcd_pmip_kill_localprocs(void)
 {
     int i;
 
@@ -68,14 +68,19 @@ static HYD_status debug_fn(char *arg, char ***argv)
     return HYDU_set_int(arg, argv, &HYD_pmcd_pmip.user_global.debug, 1);
 }
 
-static HYD_status bootstrap_fn(char *arg, char ***argv)
+static HYD_status rmk_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bootstrap);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.rmk);
 }
 
-static HYD_status bootstrap_exec_fn(char *arg, char ***argv)
+static HYD_status launcher_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.bootstrap_exec);
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.launcher);
+}
+
+static HYD_status launcher_exec_fn(char *arg, char ***argv)
+{
+    return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.launcher_exec);
 }
 
 static HYD_status demux_fn(char *arg, char ***argv)
@@ -86,16 +91,6 @@ static HYD_status demux_fn(char *arg, char ***argv)
 static HYD_status iface_fn(char *arg, char ***argv)
 {
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.iface);
-}
-
-static HYD_status prepend_rank_fn(char *arg, char ***argv)
-{
-    return HYDU_set_int(arg, argv, &HYD_pmcd_pmip.user_global.prepend_rank, 1);
-}
-
-static HYD_status enable_stdin_fn(char *arg, char ***argv)
-{
-    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.enable_stdin);
 }
 
 static HYD_status auto_cleanup_fn(char *arg, char ***argv)
@@ -388,12 +383,11 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"proxy-id", proxy_id_fn, NULL},
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
-    {"bootstrap", bootstrap_fn, NULL},
-    {"bootstrap-exec", bootstrap_exec_fn, NULL},
+    {"rmk", rmk_fn, NULL},
+    {"launcher", launcher_fn, NULL},
+    {"launcher-exec", launcher_exec_fn, NULL},
     {"demux", demux_fn, NULL},
     {"iface", iface_fn, NULL},
-    {"prepend-rank", prepend_rank_fn, NULL},
-    {"enable-stdin", enable_stdin_fn, NULL},
     {"auto-cleanup", auto_cleanup_fn, NULL},
 
     /* Executable parameters */
@@ -461,18 +455,22 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.debug == -1)
         HYD_pmcd_pmip.user_global.debug = 0;
 
-    if (HYD_pmcd_pmip.user_global.prepend_rank == -1)
-        HYD_pmcd_pmip.user_global.prepend_rank = 0;
-
-    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.bootstrap, NULL /* no bootstrap exec */ ,
+    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.rmk,
+                            HYD_pmcd_pmip.user_global.launcher,
+                            HYD_pmcd_pmip.user_global.launcher_exec,
                             0 /* disable x */ , HYD_pmcd_pmip.user_global.debug);
-    HYDU_ERR_POP(status, "proxy unable to initialize bootstrap\n");
+    HYDU_ERR_POP(status, "proxy unable to initialize bootstrap server\n");
 
     if (HYD_pmcd_pmip.local.id == -1) {
-        /* We didn't get a proxy ID during launch; query the bootstrap
-         * server for it. */
+        /* We didn't get a proxy ID during launch; query the launcher
+         * for it. */
         status = HYDT_bsci_query_proxy_id(&HYD_pmcd_pmip.local.id);
-        HYDU_ERR_POP(status, "unable to query bootstrap server for proxy ID\n");
+        HYDU_ERR_POP(status, "unable to query launcher for proxy ID\n");
+    }
+
+    if (HYD_pmcd_pmip.system_global.jobid == NULL) {
+        status = HYDT_bsci_query_jobid(&HYD_pmcd_pmip.system_global.jobid);
+        HYDU_ERR_POP(status, "unable to query launcher for job ID\n");
     }
 
     if (HYD_pmcd_pmip.local.id == -1)

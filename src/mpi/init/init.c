@@ -28,9 +28,10 @@
 /* MPI_Fint MPIR_F_TRUE, MPIR_F_FALSE; */
 
 /* Any internal routines can go here.  Make them static if possible */
-#endif
 
+/* must go inside this #ifdef block to prevent duplicate storage on darwin */
 int MPIR_async_thread_initialized = 0;
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Init

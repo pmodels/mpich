@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bsci.h"
 #include "external.h"
 
@@ -27,7 +27,7 @@ HYD_status HYDT_bscd_external_query_native_int(int *ret)
 
     *ret = 0;
 
-    while (!strcmp(HYDT_bsci_info.bootstrap, "lsf")) {
+    while (!strcmp(HYDT_bsci_info.rmk, "lsf")) {
         if (!env_is_avail("LSF_BINDIR"))
             break;
         if (!env_is_avail("LSB_MCPU_HOSTS"))
@@ -37,7 +37,7 @@ HYD_status HYDT_bscd_external_query_native_int(int *ret)
         goto fn_exit;
     }
 
-    while (!strcmp(HYDT_bsci_info.bootstrap, "sge")) {
+    while (!strcmp(HYDT_bsci_info.rmk, "sge")) {
         if (!env_is_avail("SGE_ROOT"))
             break;
         if (!env_is_avail("ARC"))
@@ -49,7 +49,7 @@ HYD_status HYDT_bscd_external_query_native_int(int *ret)
         goto fn_exit;
     }
 
-    while (!strcmp(HYDT_bsci_info.bootstrap, "slurm")) {
+    while (!strcmp(HYDT_bsci_info.rmk, "slurm")) {
         if (!env_is_avail("SLURM_NODELIST"))
             break;
         if (!env_is_avail("SLURM_JOB_CPUS_PER_NODE"))
@@ -61,10 +61,18 @@ HYD_status HYDT_bscd_external_query_native_int(int *ret)
         goto fn_exit;
     }
 
-    while (!strcmp(HYDT_bsci_info.bootstrap, "ll")) {
+    while (!strcmp(HYDT_bsci_info.rmk, "ll")) {
         if (!env_is_avail("LOADL_HOSTFILE"))
             break;
         if (!env_is_avail("MP_CHILD"))
+            break;
+
+        *ret = 1;
+        goto fn_exit;
+    }
+
+    while (!strcmp(HYDT_bsci_info.rmk, "pbs")) {
+        if (!env_is_avail("PBS_NODEFILE"))
             break;
 
         *ret = 1;

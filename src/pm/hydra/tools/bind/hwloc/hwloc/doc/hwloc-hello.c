@@ -1,12 +1,16 @@
 /* Example hwloc API program.
  *
- * Copyright © 2009 INRIA, Université Bordeaux 1
+ * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  *
- * hwloc-hello.c 
+ * hwloc-hello.c
  */
 
 #include <hwloc.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
 
 static void print_children(hwloc_topology_t topology, hwloc_obj_t obj, 
                            int depth)
@@ -24,7 +28,7 @@ static void print_children(hwloc_topology_t topology, hwloc_obj_t obj,
 int main(void)
 {
     int depth;
-    unsigned i;
+    unsigned i, n;
     unsigned long size;
     int levels;
     char string[128];
@@ -116,22 +120,45 @@ int main(void)
                    hwloc_get_nbobjs_by_depth(topology, depth) - 1);
     if (obj) {
         /* Get a copy of its cpuset that we may modify. */
-        cpuset = hwloc_cpuset_dup(obj->cpuset);
+        cpuset = hwloc_bitmap_dup(obj->cpuset);
 
         /* Get only one logical processor (in case the core is
            SMT/hyperthreaded). */
-        hwloc_cpuset_singlify(cpuset);
+        hwloc_bitmap_singlify(cpuset);
 
         /* And try to bind ourself there. */
         if (hwloc_set_cpubind(topology, cpuset, 0)) {
             char *str;
-            hwloc_cpuset_asprintf(&str, obj->cpuset);
-            printf("Couldn't bind to cpuset %s\n", str);
+            int error = errno;
+            hwloc_bitmap_asprintf(&str, obj->cpuset);
+            printf("Couldn't bind to cpuset %s: %s\n", str, strerror(error));
             free(str);
         }
 
         /* Free our cpuset copy */
-        hwloc_cpuset_free(cpuset);
+        hwloc_bitmap_free(cpuset);
+    }
+
+    /*****************************************************************
+     * Sixth example:
+     * Allocate some memory on the last NUMA node, bind some existing
+     * memory to the last NUMA node.
+     *****************************************************************/
+    /* Get last node. */
+    n = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE);
+    if (n) {
+        void *m;
+        size_t size = 1024*1024;
+
+        obj = hwloc_get_obj_by_type(topology, HWLOC_OBJ_NODE, n - 1);
+        m = hwloc_alloc_membind_nodeset(topology, size, obj->nodeset,
+                HWLOC_MEMBIND_DEFAULT, 0);
+        hwloc_free(topology, m, size);
+
+        m = malloc(size);
+        hwloc_set_area_membind_nodeset(topology, m, size, obj->nodeset,
+                HWLOC_MEMBIND_DEFAULT, 0);
+        free(m);
     }
 
     /* Destroy topology object. */

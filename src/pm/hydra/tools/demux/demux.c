@@ -11,6 +11,22 @@ int HYDT_dmxu_num_cb_fds = 0;
 struct HYDT_dmxu_callback *HYDT_dmxu_cb_list = NULL;
 struct HYDT_dmxu_fns HYDT_dmxu_fns = { 0 };
 
+static int got_sigttin = 0;
+
+#if defined(SIGTTIN) && defined(HAVE_ISATTY)
+static void signal_cb(int sig)
+{
+    HYDU_FUNC_ENTER();
+
+    if (sig == SIGTTIN)
+        got_sigttin = 1;
+    /* Ignore all other signals */
+
+    HYDU_FUNC_EXIT();
+    return;
+}
+#endif /* SIGTTIN and HAVE_ISATTY */
+
 HYD_status HYDT_dmx_init(char **demux)
 {
     HYD_status status = HYD_SUCCESS;
@@ -197,6 +213,59 @@ HYD_status HYDT_dmx_finalize(void)
 
     HYDU_FUNC_EXIT();
     return status;
+}
+
+HYD_status HYDT_dmxi_stdin_valid(int *out)
+{
+    int ret;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* This is an extremely round-about way of solving a simple
+     * problem. isatty(STDIN_FILENO) seems to return 1, even when
+     * mpiexec is run in the background. So, instead of relying on
+     * that, we catch SIGTTIN and ignore it. But that causes the
+     * read() call to return an error (with errno == EINTR) when we
+     * are not attached to the terminal. */
+#if defined(SIGTTIN) && defined(HAVE_ISATTY)
+    if (isatty(STDIN_FILENO)) {
+        status = HYDU_set_signal(SIGTTIN, signal_cb);
+        HYDU_ERR_POP(status, "unable to set SIGTTIN\n");
+    }
+#endif /* SIGTTIN and HAVE_ISATTY */
+
+    /* FIXME: The below read() check for STDIN validity is somehow
+     * interfering in the case where the application is run in the
+     * background, but expects some STDIN. The correct behavior is to
+     * close the STDIN socket for the application in that
+     * case. However, this seems to hang. I'm still investigating this
+     * case. In the meanwhile, I have commented out this check. PLEASE
+     * DO NOT DELETE. All other cases dealing with STDIN seem to be
+     * working correctly. */
+#if 0
+    ret = read(STDIN_FILENO, NULL, 0);
+#else
+    ret = 0;
+#endif
+    if (ret < 0 && errno == EINTR && got_sigttin)
+        *out = 0;
+    else
+        *out = 1;
+
+#if defined(SIGTTIN) && defined(HAVE_ISATTY)
+    if (isatty(STDIN_FILENO)) {
+        status = HYDU_set_signal(SIGTTIN, SIG_IGN);
+        HYDU_ERR_POP(status, "unable to set SIGTTIN\n");
+    }
+#endif /* SIGTTIN and HAVE_ISATTY */
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 HYD_status HYDT_dmx_stdin_valid(int *out)

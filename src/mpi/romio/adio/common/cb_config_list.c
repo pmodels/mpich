@@ -35,7 +35,7 @@
 #undef CB_CONFIG_LIST_DEBUG
 
 /* a couple of globals keep things simple */
-static int cb_config_list_keyval = MPI_KEYVAL_INVALID;
+int ADIOI_cb_config_list_keyval = MPI_KEYVAL_INVALID;
 static char *yylval;
 static char *token_ptr;
 
@@ -111,23 +111,16 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm,
     ADIO_cb_name_array array = NULL;
     int alloc_size;
 
-    if (cb_config_list_keyval == MPI_KEYVAL_INVALID) {
+    if (ADIOI_cb_config_list_keyval == MPI_KEYVAL_INVALID) {
+        /* cleaned up by ADIOI_End_call */
 	MPI_Keyval_create((MPI_Copy_function *) ADIOI_cb_copy_name_array, 
 			  (MPI_Delete_function *) ADIOI_cb_delete_name_array,
-			  &cb_config_list_keyval, NULL);
-	/* Need a hook so we can cleanup in Finalize */
-	MPI_Attr_put(MPI_COMM_SELF, cb_config_list_keyval, NULL);
+			  &ADIOI_cb_config_list_keyval, NULL);
     }
     else {
-	MPI_Attr_get(comm, cb_config_list_keyval, (void *) &array, &found);
-	/* see above: we put a cb_config_list_keyval with NULL array on
-	 * COMM_SELF so we can clean it up on exit.  So it's not enough
-	 * to find the keyval. we also need a non-null array (every mpi
-	 * program will have at least one element in the array --
-	 * itself.  Not doing this confuses the shared file ponters
-	 * routines.  I know it is ugly but I can't figure out a better
-	 * way... if we find the e*/
-	if (found && (array != NULL)) {
+	MPI_Attr_get(comm, ADIOI_cb_config_list_keyval, (void *) &array, &found);
+        if (found) {
+            ADIOI_Assert(array != NULL);
 	    *arrayp = array;
 	    return 0;
 	}
@@ -240,8 +233,8 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm,
      * it next time an open is performed on this same comm, and on the
      * dupcomm, so we can use it in I/O operations.
      */
-    MPI_Attr_put(comm, cb_config_list_keyval, array);
-    MPI_Attr_put(dupcomm, cb_config_list_keyval, array);
+    MPI_Attr_put(comm, ADIOI_cb_config_list_keyval, array);
+    MPI_Attr_put(dupcomm, ADIOI_cb_config_list_keyval, array);
     *arrayp = array;
     return 0;
 }
@@ -405,8 +398,7 @@ int ADIOI_cb_delete_name_array(MPI_Comm comm,
     ADIOI_UNREFERENCED_ARG(extra);
 
     array = (ADIO_cb_name_array) attr_val;
-    if (array == NULL)
-	    goto fn_exit;
+    ADIOI_Assert(array != NULL);
     array->refct--;
 
     if (array->refct <= 0) {
@@ -421,8 +413,6 @@ int ADIOI_cb_delete_name_array(MPI_Comm comm,
 	if (array->names != NULL) ADIOI_Free(array->names);
 	ADIOI_Free(array);
     }
-fn_exit:
-    MPI_Keyval_free(&keyval);
     return MPI_SUCCESS;
 }
 

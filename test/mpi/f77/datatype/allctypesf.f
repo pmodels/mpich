@@ -2,9 +2,9 @@
       include 'mpif.h'
       integer atype, ierr
 C
-      call mpi_init(ierr)
+      call mtest_init(ierr)
       call mpi_comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN, 
-     *     ierr )
+     *                              ierr )
 C
 C     Check that all Ctypes are available in Fortran (MPI 2.1, p 483, line 46)
 C
@@ -21,13 +21,21 @@ C
        call checkdtype( MPI_UNSIGNED_LONG, "MPI_UNSIGNED_LONG", ierr )
        call checkdtype( MPI_FLOAT, "MPI_FLOAT", ierr )
        call checkdtype( MPI_DOUBLE, "MPI_DOUBLE", ierr )
-       call checkdtype( MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE", ierr )
-       call checkdtype2( MPI_LONG_LONG_INT, "MPI_LONG_LONG_INT", 
-     *      "MPI_LONG_LONG", ierr )
-       call checkdtype( MPI_UNSIGNED_LONG_LONG, 
-     *      "MPI_UNSIGNED_LONG_LONG", ierr )
-       call checkdtype2( MPI_LONG_LONG, "MPI_LONG_LONG", 
-     *      "MPI_LONG_LONG_INT", ierr )
+       if (MPI_LONG_DOUBLE .ne. MPI_DATATYPE_NULL) then
+         call checkdtype( MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE", ierr )
+       endif
+       if (MPI_LONG_LONG_INT .ne. MPI_DATATYPE_NULL) then
+         call checkdtype2( MPI_LONG_LONG_INT, "MPI_LONG_LONG_INT", 
+     *                     "MPI_LONG_LONG", ierr )
+       endif
+       if (MPI_UNSIGNED_LONG_LONG .ne. MPI_DATATYPE_NULL) then
+         call checkdtype( MPI_UNSIGNED_LONG_LONG, 
+     *                    "MPI_UNSIGNED_LONG_LONG", ierr )
+       endif
+       if (MPI_LONG_LONG .ne. MPI_DATATYPE_NULL) then
+         call checkdtype2( MPI_LONG_LONG, "MPI_LONG_LONG", 
+     *                     "MPI_LONG_LONG_INT", ierr )
+       endif
        call checkdtype( MPI_PACKED, "MPI_PACKED", ierr )
        call checkdtype( MPI_LB, "MPI_LB", ierr )
        call checkdtype( MPI_UB, "MPI_UB", ierr )
@@ -36,7 +44,10 @@ C
        call checkdtype( MPI_LONG_INT, "MPI_LONG_INT", ierr )
        call checkdtype( MPI_SHORT_INT, "MPI_SHORT_INT", ierr )
        call checkdtype( MPI_2INT, "MPI_2INT", ierr )
-       call checkdtype( MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT",ierr)
+       if (MPI_LONG_DOUBLE_INT .ne. MPI_DATATYPE_NULL) then
+         call checkdtype( MPI_LONG_DOUBLE_INT, "MPI_LONG_DOUBLE_INT",
+     *                    ierr)
+       endif
 C
 C     Check that all Ctypes are available in Fortran (MPI 2.2)
 C     Note that because of implicit declarations in Fortran, this
@@ -52,28 +63,25 @@ C
           call checkdtype( MPI_UINT16_T, "MPI_UINT16_T", ierr )
           call checkdtype( MPI_UINT32_T, "MPI_UINT32_T", ierr )
           call checkdtype( MPI_UINT64_T, "MPI_UINT64_T", ierr )
-C other C99 types 
+C other C99 types
           call checkdtype( MPI_C_BOOL, "MPI_C_BOOL", ierr )
           call checkdtype( MPI_C_FLOAT_COMPLEX, "MPI_C_FLOAT_COMPLEX",
-     *         ierr)
+     *                     ierr)
           call checkdtype2( MPI_C_COMPLEX, "MPI_C_COMPLEX", 
-     *         "MPI_C_FLOAT_COMPLEX", ierr )
+     *                      "MPI_C_FLOAT_COMPLEX", ierr )
           call checkdtype( MPI_C_DOUBLE_COMPLEX, "MPI_C_DOUBLE_COMPLEX", 
-     *         ierr )
-          call checkdtype( MPI_C_LONG_DOUBLE_COMPLEX, 
-     *         "MPI_C_LONG_DOUBLE_COMPLEX", ierr )
+     *                     ierr )
+          if (MPI_C_LONG_DOUBLE_COMPLEX .ne. MPI_DATATYPE_NULL) then
+            call checkdtype( MPI_C_LONG_DOUBLE_COMPLEX, 
+     *                       "MPI_C_LONG_DOUBLE_COMPLEX", ierr )
+          endif
 C address/offset types 
           call checkdtype( MPI_AINT, "MPI_AINT", ierr )
           call checkdtype( MPI_OFFSET, "MPI_OFFSET", ierr )
        endif
 C
-       if (ierr .eq. 0) then
-          print *, " No Errors"
-       else
-          print *, " Found ", ierr, " errors"
-       endif
+       call mtest_finalize( ierr )
        call MPI_Finalize( ierr )
-       stop 
        end
 C
 C Check name of datatype

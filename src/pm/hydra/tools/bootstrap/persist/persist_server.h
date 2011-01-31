@@ -7,7 +7,7 @@
 #ifndef PERSIST_SERVER_H_INCLUDED
 #define PERSIST_SERVER_H_INCLUDED
 
-#include "hydra_base.h"
+#include "hydra.h"
 #include "demux.h"
 #include "persist.h"
 

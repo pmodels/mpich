@@ -18,9 +18,18 @@ Notes to developers:
   flavor of "make dist" will fail if these tools are not available):
 
   - doxygen with man, pdf and html support
-  - help2man
-  - fig2dev
-  - w3m
+  - a latex distribution with pdflatex, and the usually recommended
+    package files (such as float.sty) and fonts (such as ptmr8t)
+  - fig2dev (transfig package)
+  - gs (ghostscript package)
+  - epstopdf
+  - w3m or lynx (to generate the README)
+
+  On Debian systems, the following packages should be enough:
+    doxygen ghostscript texlive-latex-base texlive-latex-recommended 
+    texlive-fonts-recommended texlive-font-utils transfig w3m
+  On RedHat systems:
+    ghostscript doxygen transfig tetex tetex-latex w3m
 
 - *** BEFORE MAKING AN OFFICIAL RELEASE TARBALL: the release manager
   MUST update the VERSION file:
@@ -53,11 +62,15 @@ Notes to developers:
   "make check".
 
 - For the windows zipball, make sure you have Microsoft's lib tool in
-  PATH, and remember to copy README and NEWS at the root of the zip into
-  README.txt and NEWS.txt files with CRLF:
+  PATH, to pass --enable-static to ./configure, and remember to copy README and
+  NEWS at the root of the zip into README.txt and NEWS.txt files with CRLF:
 
   sed -e 's/$/'$'\015'/ < README > $prefix/README.txt
   sed -e 's/$/'$'\015'/ < NEWS > $prefix/NEWS.txt
+  sed -e 's/$/'$'\015'/ < COPYING > $prefix/COPYING.txt
+
+- For the 64bit version on windows, pass --host=x86_64-w64-mingw32 to
+  ./configure to use mingw-64
 
 - make maintainer-clean can be used to properly remove the generated
   documentations.

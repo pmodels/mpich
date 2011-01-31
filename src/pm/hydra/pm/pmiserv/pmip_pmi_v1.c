@@ -14,8 +14,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
     int i, j, sent, closed;
     char *tmp[HYD_NUM_TMP_STRINGS], *buf;
-    struct HYD_pmcd_pmi_hdr hdr;
-    enum HYD_pmcd_pmi_cmd cmd;
+    struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -33,12 +32,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    cmd = PMI_CMD;
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &cmd, sizeof(cmd), &sent, &closed);
-    HYDU_ERR_POP(status, "unable to send PMI_CMD command\n");
-    HYDU_ASSERT(!closed, status);
-
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = PMI_CMD;
     hdr.pid = fd;
     hdr.buflen = strlen(buf);
     hdr.pmi_version = 1;
@@ -48,13 +43,14 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ASSERT(!closed, status);
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "forwarding command (%s) upstream\n",
-                                buf);
+        HYDU_dump(stdout, "forwarding command (%s) upstream\n", buf);
     }
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
     HYDU_ASSERT(!closed, status);
+
+    HYDU_FREE(buf);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -72,11 +68,14 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
     HYDU_FUNC_ENTER();
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYD_pmcd_pmi_proxy_dump(status, STDOUT_FILENO, "PMI response: %s", cmd);
+        HYDU_dump(stdout, "PMI response: %s", cmd);
     }
 
     status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);
     HYDU_ERR_POP(status, "error writing PMI line\n");
+    /* FIXME: We cannot abort when we are not able to send data
+     * downstream. The upper layer needs to handle this based on
+     * whether we want to abort or not.*/
     HYDU_ASSERT(!closed, status);
 
   fn_exit:
@@ -140,28 +139,20 @@ static HYD_status fn_initack(int fd, char *args[])
     id = atoi(val);
 
     /* Store the PMI_ID to fd mapping */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
         if (HYD_pmcd_pmip.downstream.pmi_rank[i] == id) {
             HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
+            HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 1;
             break;
         }
-
-    /* The rank has not been previously stored */
-    if (i == HYD_pmcd_pmip.local.proxy_process_count) {
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-            if (HYD_pmcd_pmip.downstream.pmi_rank[i] == -1)
-                break;
-        HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
-
-        HYD_pmcd_pmip.downstream.pmi_rank[i] = id;
-        HYD_pmcd_pmip.downstream.pmi_fd[i] = fd;
     }
+    HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
     tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
 
-    /* FIXME: allow for ranks_per_proc */
+    /* FIXME: allow for multiple ranks per PMI ID */
     tmp[i++] = HYDU_strdup("\ncmd=set rank=");
     tmp[i++] = HYDU_int_to_str(id);
 
@@ -305,7 +296,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     status = HYDT_bsci_query_usize(&usize);
-    HYDU_ERR_POP(status, "unable to get bootstrap universe size\n");
+    HYDU_ERR_POP(status, "unable to get launcher universe size\n");
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=universe_size size=");
@@ -345,7 +336,7 @@ static HYD_status fn_get(int fd, char *args[])
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
                         "unable to find token: key\n");
 
-    if (!strcmp(key, "PMI_process_mapping") && HYD_pmcd_pmip.system_global.pmi_process_mapping) {
+    if (!strcmp(key, "PMI_process_mapping")) {
         i = 0;
         tmp[i++] = HYDU_strdup("cmd=get_result rc=0 msg=success value=");
         tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping);

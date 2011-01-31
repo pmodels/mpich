@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "ckpoint.h"
 #include "ckpoint_blcr.h"
 #include <libcr.h>
@@ -141,29 +141,33 @@ static HYD_status create_stdinouterr_sock(int *port)
     HYDU_FUNC_ENTER();
 
     listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    HYDU_ERR_CHKANDJUMP(status, ret < 0 , HYD_INTERNAL_ERROR, "socket() failed, %s\n", strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, ret < 0, HYD_INTERNAL_ERROR, "socket() failed, %s\n",
+                        strerror(errno));
 
-    memset ((void *)&sin, 0, sizeof(sin));
-    sin.sin_family      = AF_INET;
+    memset((void *) &sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin.sin_port        = htons(0);
-    
-    ret = bind(listen_fd, (struct sockaddr *)&sin, sizeof(sin));
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "bind() failed, %s\n", strerror(errno));
+    sin.sin_port = htons(0);
+
+    ret = bind(listen_fd, (struct sockaddr *) &sin, sizeof(sin));
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "bind() failed, %s\n",
+                        strerror(errno));
 
     ret = listen(listen_fd, SOMAXCONN);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "listen() failed, %s\n", strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "listen() failed, %s\n",
+                        strerror(errno));
 
     len = sizeof(sin);
-    ret = getsockname(listen_fd, (struct sockaddr *)&sin, &len);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "getsockname() failed, %s\n", strerror(errno));
+    ret = getsockname(listen_fd, (struct sockaddr *) &sin, &len);
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "getsockname() failed, %s\n",
+                        strerror(errno));
 
     *port = ntohs(sin.sin_port);
-    
- fn_exit:
+
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -177,24 +181,25 @@ typedef struct sock_ident {
    stdin/out/err sockets, then sets the appropriate entries in the in
    out and err arrays.  This also gets the pids of the restarted
    processes. */
-static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *in, int *out, int *err, int *pid)
+static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *in, int *out,
+                                               int *err, int *pid)
 {
     HYD_status status = HYD_SUCCESS;
     int ret;
     int fd;
     int i, c;
     sock_ident_t id;
-    int num_expected_connections = num_ranks * 2; /* wait for connections for stdout and err */
+    int num_expected_connections = num_ranks * 2;       /* wait for connections for stdout and err */
     HYDU_FUNC_ENTER();
 
     /* if one of the processes is rank 0, we should wait for an
-       additional connection for stdin */
+     * additional connection for stdin */
     for (i = 0; i < num_ranks; ++i)
         if (ranks[i] == 0) {
             ++num_expected_connections;
             break;
         }
-    
+
     for (c = 0; c < num_expected_connections; ++c) {
         size_t len;
         char *id_p;
@@ -202,31 +207,33 @@ static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *i
         do {
             struct sockaddr_in rmt_addr;
             socklen_t sa_len = sizeof(rmt_addr);;
-            fd = accept(listen_fd, (struct sockaddr *)&rmt_addr, &sa_len);
+            fd = accept(listen_fd, (struct sockaddr *) &rmt_addr, &sa_len);
         } while (fd && errno == EINTR);
-        HYDU_ERR_CHKANDJUMP(status, fd == -1, HYD_INTERNAL_ERROR, "accept failed, %s\n", strerror(errno));
+        HYDU_ERR_CHKANDJUMP(status, fd == -1, HYD_INTERNAL_ERROR, "accept failed, %s\n",
+                            strerror(errno));
 
         /* read the socket identifier */
         len = sizeof(id);
-        id_p = (char *)&id;
+        id_p = (char *) &id;
         do {
             do {
                 ret = read(fd, id_p, len);
             } while (ret == 0 || (ret == -1 && errno == EINTR));
-            HYDU_ERR_CHKANDJUMP(status, ret == -1, HYD_INTERNAL_ERROR, "read failed, %s\n", strerror(errno));
+            HYDU_ERR_CHKANDJUMP(status, ret == -1, HYD_INTERNAL_ERROR, "read failed, %s\n",
+                                strerror(errno));
             len -= ret;
             id_p += ret;
         } while (len);
 
         /* determine the index for this process in the stdout/err
-           arrays */
+         * arrays */
         for (i = 0; i < num_ranks; ++i)
             if (ranks[i] == id.rank)
                 break;
         HYDU_ASSERT(i < num_ranks, status);
 
         /* assign the fd */
-        switch(id.socktype) {
+        switch (id.socktype) {
         case IN_SOCK:
             HYDU_ASSERT(id.rank == 0, status);
             *in = fd;
@@ -247,13 +254,14 @@ static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *i
     }
 
     ret = close(listen_fd);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "close of listener port failed, %s\n", strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "close of listener port failed, %s\n",
+                        strerror(errno));
 
 
- fn_exit:
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -347,7 +355,7 @@ HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int c
     char filename[256];
     char port_str[64];
     int port;
-    
+
     HYDU_FUNC_ENTER();
 
     mypid = getpid();
@@ -364,9 +372,11 @@ HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int c
         HYDU_ERR_POP(status, "blcr restart\n");
 
     /* open the checkpoint file */
-    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid, id);
+    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid,
+                 id);
     context_fd = open(filename, O_RDONLY /* | O_LARGEFILE */);
-    HYDU_ERR_CHKANDJUMP(status, context_fd < 0, HYD_INTERNAL_ERROR, "open failed, %s\n", strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, context_fd < 0, HYD_INTERNAL_ERROR, "open failed, %s\n",
+                        strerror(errno));
 
     /* ... initialize the request structure */
     cr_initialize_restart_args_t(&args);
