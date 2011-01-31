@@ -34,32 +34,6 @@ static void init_launcher_fns(void)
     HYDT_bsci_fns.query_env_inherit = NULL;
 }
 
-static void set_rmk_defaults(void)
-{
-    if (HYDT_bsci_fns.query_native_int == NULL)
-        HYDT_bsci_fns.query_native_int = HYDT_bscu_query_native_int;
-    if (HYDT_bsci_fns.query_node_list == NULL)
-        HYDT_bsci_fns.query_node_list = HYDT_bscu_query_node_list;
-    if (HYDT_bsci_fns.query_jobid == NULL)
-        HYDT_bsci_fns.query_jobid = HYDT_bscu_query_jobid;
-    if (HYDT_bsci_fns.rmk_finalize == NULL)
-        HYDT_bsci_fns.rmk_finalize = HYDT_bscu_rmk_finalize;
-}
-
-static void set_launcher_defaults(void)
-{
-    if (HYDT_bsci_fns.launcher_finalize == NULL)
-        HYDT_bsci_fns.launcher_finalize = HYDT_bscu_launcher_finalize;
-    if (HYDT_bsci_fns.wait_for_completion == NULL)
-        HYDT_bsci_fns.wait_for_completion = HYDT_bscu_wait_for_completion;
-    if (HYDT_bsci_fns.query_usize == NULL)
-        HYDT_bsci_fns.query_usize = HYDT_bscu_query_usize;
-    if (HYDT_bsci_fns.query_proxy_id == NULL)
-        HYDT_bsci_fns.query_proxy_id = HYDT_bscu_query_proxy_id;
-    if (HYDT_bsci_fns.query_env_inherit == NULL)
-        HYDT_bsci_fns.query_env_inherit = HYDT_bscu_query_env_inherit;
-}
-
 static void init_bsci_info(void)
 {
     HYDT_bsci_info.rmk = NULL;
@@ -83,14 +57,13 @@ static const char *detect_rmk(int debug)
         status = (*rmk_init_array[i])();
         HYDU_ERR_POP(status, "bootstrap device returned error initializing\n");
 
-        /* Set default values for the RMK functions */
-        set_rmk_defaults();
-
-        status = HYDT_bsci_fns.query_native_int(&ret);
+        status = HYDT_bsci_query_native_int(&ret);
         HYDU_ERR_POP(status, "unable to query native environment\n");
 
-        status = HYDT_bsci_fns.rmk_finalize();
-        HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
+        if (HYDT_bsci_fns.rmk_finalize) {
+            status = HYDT_bsci_fns.rmk_finalize();
+            HYDU_ERR_POP(status, "unable to finalize bootstrap server\n");
+        }
 
         HYDU_FREE(HYDT_bsci_info.rmk);
         init_rmk_fns();
@@ -203,10 +176,6 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unrecognized launcher: %s\n", HYDT_bsci_info.launcher);
 
-
-    /* Set default values for the remaining functions */
-    set_rmk_defaults();
-    set_launcher_defaults();
 
     /* This function is mandatory */
     if (HYDT_bsci_fns.launch_procs == NULL)

@@ -14,8 +14,13 @@ HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *ret)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_fns.query_env_inherit(env_name, ret);
-    HYDU_ERR_POP(status, "launcher returned error querying env propagation\n");
+    if (HYDT_bsci_fns.query_env_inherit) {
+        status = HYDT_bsci_fns.query_env_inherit(env_name, ret);
+        HYDU_ERR_POP(status, "launcher returned error querying env propagation\n");
+    }
+    else {
+        *ret = 1;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

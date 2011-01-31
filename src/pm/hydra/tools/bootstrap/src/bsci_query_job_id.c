@@ -14,8 +14,14 @@ HYD_status HYDT_bsci_query_jobid(char **jobid)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_fns.query_jobid(jobid);
-    HYDU_ERR_POP(status, "RMK returned error while querying job ID\n");
+    if (HYDT_bsci_fns.query_jobid) {
+        status = HYDT_bsci_fns.query_jobid(jobid);
+        HYDU_ERR_POP(status, "RMK returned error while querying job ID\n");
+    }
+    else {
+        /* We don't know anything about job ID */
+        *jobid = NULL;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -14,7 +14,12 @@ HYD_status HYDT_bsci_wait_for_completion(int timeout)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_fns.wait_for_completion(timeout);
+    if (HYDT_bsci_fns.wait_for_completion) {
+        status = HYDT_bsci_fns.wait_for_completion(timeout);
+    }
+    else {
+        status = HYDT_bscu_wait_for_completion(timeout);
+    }
     HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
   fn_exit:

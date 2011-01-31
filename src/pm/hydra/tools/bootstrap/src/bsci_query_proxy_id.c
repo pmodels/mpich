@@ -14,8 +14,14 @@ HYD_status HYDT_bsci_query_proxy_id(int *proxy_id)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_fns.query_proxy_id(proxy_id);
-    HYDU_ERR_POP(status, "launcher returned error while querying proxy ID\n");
+    if (HYDT_bsci_fns.query_proxy_id) {
+        status = HYDT_bsci_fns.query_proxy_id(proxy_id);
+        HYDU_ERR_POP(status, "launcher returned error while querying proxy ID\n");
+    }
+    else {
+        /* We don't know anything about proxy IDs by default. */
+        *proxy_id = -1;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
