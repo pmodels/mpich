@@ -46,3 +46,10 @@ mixedsync 4
 epochtest 4
 locknull 2
 rmanull 2
+strided_acc_indexed 2
+strided_acc_onelock 2
+strided_acc_subarray 2
+strided_get_indexed 2
+strided_putget_indexed 2
+window_creation 2
+
