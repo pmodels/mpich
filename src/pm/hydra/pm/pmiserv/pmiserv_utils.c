@@ -103,10 +103,11 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
 static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_str)
 {
-    int i, node_id;
+    int i, is_equal;
     char *tmp[HYD_NUM_TMP_STRINGS];
-    struct HYD_proxy *proxy;
+    struct HYD_proxy *proxy, *tproxy;
     struct block {
+        int start_idx;
         int num_blocks;
         int block_size;
         struct block *next;
@@ -115,40 +116,102 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
     HYDU_FUNC_ENTER();
 
+    /*
+     * Blocks are of the format: (start node ID, number of blocks,
+     * block size)
+     *
+     *   1. If two contiguous blocks have the same start node ID, and
+     *      the block size, we merge them.
+     *
+     *   2. If two contiguous blocks are contiguous in node ID values,
+     *      and have the same block size, we merge them.
+     */
     blocklist_head = NULL;
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         if (blocklist_head == NULL) {
-            HYDU_MALLOC(blocklist_head, struct block *, sizeof(struct block), status);
-            blocklist_head->block_size = proxy->node.core_count;
-            blocklist_head->num_blocks = 1;
-            blocklist_head->next = NULL;
-            blocklist_tail = blocklist_head;
+            HYDU_MALLOC(block, struct block *, sizeof(struct block), status);
+            block->start_idx = proxy->proxy_id;
+            block->num_blocks = 1;
+            block->block_size = proxy->node.core_count;
+            block->next = NULL;
+
+            blocklist_tail = blocklist_head = block;
         }
-        else if (blocklist_tail->block_size == proxy->node.core_count) {
+        else if (blocklist_tail->start_idx == proxy->proxy_id &&
+                 blocklist_tail->block_size == proxy->node.core_count) {
             blocklist_tail->num_blocks++;
         }
         else {
-            HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block), status);
-            blocklist_tail = blocklist_tail->next;
-            blocklist_tail->block_size = proxy->node.core_count;
-            blocklist_tail->num_blocks = 1;
-            blocklist_tail->next = NULL;
+            /* Check if this proxy hostname existed earlier */
+            for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
+                if (!strcmp(proxy->node.hostname, tproxy->node.hostname))
+                    break;
+            }
+
+            if (blocklist_tail->start_idx + blocklist_tail->num_blocks == tproxy->proxy_id &&
+                blocklist_tail->block_size == proxy->node.core_count) {
+                blocklist_tail->num_blocks++;
+            }
+            else {
+                HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block),
+                            status);
+                blocklist_tail = blocklist_tail->next;
+                blocklist_tail->start_idx = tproxy ? tproxy->proxy_id : proxy->proxy_id;
+                blocklist_tail->num_blocks = 1;
+                blocklist_tail->block_size = proxy->node.core_count;
+                blocklist_tail->next = NULL;
+            }
         }
     }
 
+    /* See if there are any extra merging opportunities */
+
+    /* Case 1: If all the blocks are equivalent, just use one block */
+    is_equal = 1;
+    for (block = blocklist_head; block->next; block = block->next) {
+        if (block->start_idx != block->next->start_idx ||
+            block->block_size != block->next->block_size) {
+            is_equal = 0;
+            break;
+        }
+    }
+    if (is_equal) {
+        for (block = blocklist_head; block->next;) {
+            nblock = block->next;
+            block->next = nblock->next;
+            HYDU_FREE(nblock);
+        }
+        blocklist_tail = blocklist_head;
+    }
+
+    /* Case 2: If two contiguous blocks represent the same set of
+     * nodes, merge them */
+    for (block = blocklist_head; block->next;) {
+        blocklist_tail = block;
+        if (block->start_idx == block->next->start_idx &&
+            block->block_size == block->next->block_size) {
+            block->num_blocks += block->next->num_blocks;
+            nblock = block->next;
+            block->next = nblock->next;
+            HYDU_FREE(nblock);
+        }
+        else {
+            block = block->next;
+        }
+    }
+
+    /* Create the mapping out of the blocks */
     i = 0;
     tmp[i++] = HYDU_strdup("(");
     tmp[i++] = HYDU_strdup("vector,");
-    node_id = 0;
     for (block = blocklist_head; block; block = block->next) {
         tmp[i++] = HYDU_strdup("(");
-        tmp[i++] = HYDU_int_to_str(node_id);
+        tmp[i++] = HYDU_int_to_str(block->start_idx);
         tmp[i++] = HYDU_strdup(",");
         tmp[i++] = HYDU_int_to_str(block->num_blocks);
         tmp[i++] = HYDU_strdup(",");
         tmp[i++] = HYDU_int_to_str(block->block_size);
         tmp[i++] = HYDU_strdup(")");
-        node_id += (block->num_blocks * block->block_size);
         if (block->next)
             tmp[i++] = HYDU_strdup(",");
         HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
