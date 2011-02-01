@@ -85,7 +85,7 @@ static const char *detect_rmk(int debug)
 HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
                           const char *user_launcher_exec, int enablex, int debug)
 {
-    int i, detected_rmk;
+    int i, detected_rmk = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
