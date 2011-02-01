@@ -286,13 +286,9 @@ HYD_status HYDT_bind_hwloc_process(struct HYDT_bind_cpuset_t cpuset)
     if (count)
         hwloc_set_cpubind(topology, hwloc_cpuset, HWLOC_CPUBIND_THREAD);
 
-  fn_exit:
     hwloc_cpuset_free(hwloc_cpuset);
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 HYD_status HYDT_bind_hwloc_finalize(void)
@@ -303,10 +299,6 @@ HYD_status HYDT_bind_hwloc_finalize(void)
 
     /* Nothing to finalize for now */
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
