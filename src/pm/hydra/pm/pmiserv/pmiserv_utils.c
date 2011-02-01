@@ -118,13 +118,17 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
     /*
      * Blocks are of the format: (start node ID, number of blocks,
-     * block size)
+     * block size): (sid, nb, bz)
      *
-     *   1. If two contiguous blocks have the same start node ID, and
-     *      the block size, we merge them.
+     * Assume B1 and B2 are neighboring blocks. The following blocks
+     * can be merged:
      *
-     *   2. If two contiguous blocks are contiguous in node ID values,
-     *      and have the same block size, we merge them.
+     *   1. [B1(sid) + B1(nb) == B2(sid)] && [B1(bz) == B2(bz)]
+     *
+     *   2. [B1(sid) == B2(sid)] && [B1(nb) == 1]
+     *
+     * Special case: If all blocks are exactly the same, we delete all
+     *               except one.
      */
     blocklist_head = NULL;
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
@@ -137,10 +141,6 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
             blocklist_tail = blocklist_head = block;
         }
-        else if (blocklist_tail->start_idx == proxy->proxy_id &&
-                 blocklist_tail->block_size == proxy->node.core_count) {
-            blocklist_tail->num_blocks++;
-        }
         else {
             /* Check if this proxy hostname existed earlier */
             for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
@@ -150,7 +150,11 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
             if (blocklist_tail->start_idx + blocklist_tail->num_blocks == tproxy->proxy_id &&
                 blocklist_tail->block_size == proxy->node.core_count) {
-                blocklist_tail->num_blocks++;
+                    blocklist_tail->num_blocks++;
+            }
+            else if (blocklist_tail->start_idx == tproxy->proxy_id &&
+                     blocklist_tail->num_blocks == 1) {
+                blocklist_tail->block_size += proxy->node.core_count;
             }
             else {
                 HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block),
@@ -182,22 +186,6 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
             HYDU_FREE(nblock);
         }
         blocklist_tail = blocklist_head;
-    }
-
-    /* Case 2: If two contiguous blocks represent the same set of
-     * nodes, merge them */
-    for (block = blocklist_head; block->next;) {
-        blocklist_tail = block;
-        if (block->start_idx == block->next->start_idx &&
-            block->block_size == block->next->block_size) {
-            block->num_blocks += block->next->num_blocks;
-            nblock = block->next;
-            block->next = nblock->next;
-            HYDU_FREE(nblock);
-        }
-        else {
-            block = block->next;
-        }
     }
 
     /* Create the mapping out of the blocks */
