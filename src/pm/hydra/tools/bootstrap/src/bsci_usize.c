@@ -18,7 +18,7 @@ HYD_status HYDT_bsci_query_usize(int *size)
     if (HYDT_bsci_fns.query_usize)
         return HYDT_bsci_fns.query_usize(size);
 
-    status = HYDT_bsci_fns.query_node_list(&node_list);
+    status = HYDT_bsci_query_node_list(&node_list);
     HYDU_ERR_POP(status, "unable to query node list\n");
 
     if (node_list) {
