@@ -62,9 +62,6 @@ struct HYDT_bsci_fns {
     /** \brief Wait for launched processes to complete */
     HYD_status(*wait_for_completion) (int timeout);
 
-    /** \brief Query for the universe size */
-    HYD_status(*query_usize) (int *size);
-
     /** \brief Query the ID of a proxy */
     HYD_status(*query_proxy_id) (int *proxy_id);
 
@@ -161,19 +158,6 @@ HYD_status HYDT_bsci_query_node_list(struct HYD_node **node_list);
  * This function allows the upper layers to query the job ID.
  */
 HYD_status HYDT_bsci_query_jobid(char **jobid);
-
-
-/**
- * \brief HYDT_bsci_query_usize - Query for the universe size
- *
- * \param[out]  size       Maximum number of processes that can be launched
- *
- * If the underlying system allows for multitasking many processes on
- * a single processing element, the launcher should return "-1"
- * (representing infinite). If not, it should specify the number of
- * processes that can be spawned.
- */
-HYD_status HYDT_bsci_query_usize(int *size);
 
 
 /**

@@ -29,7 +29,6 @@ static void init_launcher_fns(void)
     HYDT_bsci_fns.launch_procs = NULL;
     HYDT_bsci_fns.launcher_finalize = NULL;
     HYDT_bsci_fns.wait_for_completion = NULL;
-    HYDT_bsci_fns.query_usize = NULL;
     HYDT_bsci_fns.query_proxy_id = NULL;
     HYDT_bsci_fns.query_env_inherit = NULL;
 }

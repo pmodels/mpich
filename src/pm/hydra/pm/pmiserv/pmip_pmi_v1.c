@@ -289,18 +289,15 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
 
 static HYD_status fn_get_usize(int fd, char *args[])
 {
-    int usize, i;
+    int i;
     char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_query_usize(&usize);
-    HYDU_ERR_POP(status, "unable to get launcher universe size\n");
-
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=universe_size size=");
-    tmp[i++] = HYDU_int_to_str(usize);
+    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_core_count);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
