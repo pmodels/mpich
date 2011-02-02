@@ -4,7 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-AM_CPPFLAGS += -I$(top_srcdir)/tools/bootstrap/include -I$(top_builddir)/tools/bootstrap/include
+AM_CPPFLAGS += -I$(top_srcdir)/tools/bootstrap/include
 
 include tools/bootstrap/src/Makefile.mk
 include tools/bootstrap/utils/Makefile.mk

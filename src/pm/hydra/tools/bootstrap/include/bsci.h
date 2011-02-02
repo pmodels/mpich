@@ -214,7 +214,26 @@ HYD_status HYDT_bsci_query_native_int(int *ret);
 /*! @} */
 
 /* Each launcher has to expose an initialization function */
-@hydra_launcher_init_decl@
-@hydra_rmk_init_decl@
+#if defined HAVE_BSS_EXTERNAL
+HYD_status HYDT_bsci_launcher_ssh_init(void);
+HYD_status HYDT_bsci_launcher_rsh_init(void);
+HYD_status HYDT_bsci_launcher_fork_init(void);
+HYD_status HYDT_bsci_launcher_slurm_init(void);
+HYD_status HYDT_bsci_launcher_ll_init(void);
+HYD_status HYDT_bsci_launcher_lsf_init(void);
+HYD_status HYDT_bsci_launcher_sge_init(void);
+HYD_status HYDT_bsci_launcher_none_init(void);
+
+HYD_status HYDT_bsci_rmk_slurm_init(void);
+HYD_status HYDT_bsci_rmk_ll_init(void);
+HYD_status HYDT_bsci_rmk_lsf_init(void);
+HYD_status HYDT_bsci_rmk_sge_init(void);
+HYD_status HYDT_bsci_rmk_pbs_init(void);
+HYD_status HYDT_bsci_rmk_none_init(void);
+#endif /* HAVE_BSS_EXTERNAL */
+
+#if defined HAVE_BSS_PERSIST
+HYD_status HYDT_bsci_launcher_persist_init(void);
+#endif /* HAVE_BSS_PERSIST */
 
 #endif /* BSCI_H_INCLUDED */
