@@ -89,6 +89,7 @@ static void init_node(struct HYD_node *node)
 {
     node->hostname = NULL;
     node->core_count = 0;
+    node->user = NULL;
     node->local_binding = NULL;
     node->next = NULL;
 }
@@ -110,6 +111,19 @@ HYD_status HYDU_alloc_node(struct HYD_node **node)
     goto fn_exit;
 }
 
+void HYDU_dup_node(struct HYD_node src, struct HYD_node *dest)
+{
+    HYDU_FUNC_ENTER();
+
+    dest->hostname = src.hostname ? HYDU_strdup(src.hostname) : NULL;
+    dest->core_count = src.core_count;
+    dest->user = src.user ? HYDU_strdup(src.user) : NULL;
+    dest->local_binding = src.local_binding ? HYDU_strdup(src.local_binding) : NULL;
+
+    HYDU_FUNC_EXIT();
+    return;
+}
+
 void HYDU_free_node_list(struct HYD_node *node_list)
 {
     struct HYD_node *node, *tnode;
@@ -120,6 +134,9 @@ void HYDU_free_node_list(struct HYD_node *node_list)
 
         if (node->hostname)
             HYDU_FREE(node->hostname);
+
+        if (node->user)
+            HYDU_FREE(node->user);
 
         if (node->local_binding)
             HYDU_FREE(node->local_binding);
@@ -395,6 +412,11 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
             proxy = proxy->next;
         }
 
+        proxy->proxy_id = i;
+        proxy->start_pid = start_pid;
+        HYDU_dup_node(*node, &proxy->node);
+        proxy->node.next = NULL;
+
         /* For the first node, use only the remaining cores. For the
          * last node, we need to make sure its not oversubscribed
          * since the first proxy we started on might repeat. */
@@ -404,13 +426,6 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
             proxy->node.core_count = node->core_count + offset;
         else
             proxy->node.core_count = node->core_count;
-
-        proxy->proxy_id = i;
-        proxy->start_pid = start_pid;
-        proxy->node.hostname = HYDU_strdup(node->hostname);
-        if (node->local_binding)
-            proxy->node.local_binding = HYDU_strdup(node->local_binding);
-        proxy->node.next = NULL;
 
         /* If we found enough proxies, break out */
         start_pid += proxy->node.core_count;

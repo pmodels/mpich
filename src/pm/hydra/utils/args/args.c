@@ -263,7 +263,7 @@ char *HYDU_getcwd(void)
 HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
 {
     int num_procs;
-    char *hostname, *procs, *binding, *tmp;
+    char *hostname, *procs, *binding, *tmp, *user;
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
@@ -286,6 +286,16 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
                                     "duplicate local binding setting\n");
 
             node->local_binding = HYDU_strdup(binding);
+        }
+        else if (!strcmp(tmp, "user")) {
+            user = strtok(NULL, "=");
+
+            for (node = *node_list; node->next; node = node->next);
+            if (node->user)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "duplicate username setting\n");
+
+            node->user = HYDU_strdup(user);
         }
         else {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,

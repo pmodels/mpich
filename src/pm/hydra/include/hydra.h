@@ -253,6 +253,9 @@ struct HYD_node {
     char *hostname;
     int core_count;
 
+    /* Username */
+    char *user;
+
     /* Node-specific binding information */
     char *local_binding;
 
@@ -416,6 +419,7 @@ void HYDU_finalize_user_global(struct HYD_user_global *user_global);
 void HYDU_init_global_env(struct HYD_env_global *global_env);
 void HYDU_finalize_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
+void HYDU_dup_node(struct HYD_node src, struct HYD_node *dest);
 void HYDU_free_node_list(struct HYD_node *node_list);
 void HYDU_init_pg(struct HYD_pg *pg, int pgid);
 HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid);

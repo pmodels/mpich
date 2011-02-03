@@ -15,7 +15,7 @@ static int fd_stdout, fd_stderr;
 HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
                                            int *control_fd)
 {
-    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh;
+    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
     struct HYD_node *node;
@@ -149,7 +149,15 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
 
         if (targs[host_idx])
             HYDU_FREE(targs[host_idx]);
-        targs[host_idx] = HYDU_strdup(node->hostname);
+        if (node->user == NULL) {
+            targs[host_idx] = HYDU_strdup(node->hostname);
+        }
+        else {
+            len = strlen(node->user) + strlen("@") + strlen(node->hostname) + 1;
+
+            HYDU_MALLOC(targs[host_idx], char *, len, status);
+            MPL_snprintf(targs[host_idx], len, "%s@%s", node->user, node->hostname);
+        }
 
         /* append proxy ID */
         if (targs[idx])

@@ -118,8 +118,7 @@ HYD_status HYD_pmci_launch_procs(void)
     node_count = 0;
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
         HYDU_alloc_node(&node);
-        node->hostname = HYDU_strdup(proxy->node.hostname);
-        node->core_count = proxy->node.core_count;
+        HYDU_dup_node(proxy->node, node);
         node->next = NULL;
 
         if (node_list == NULL) {
