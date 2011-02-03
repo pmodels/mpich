@@ -105,7 +105,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 {
     int i, is_equal;
     char *tmp[HYD_NUM_TMP_STRINGS];
-    struct HYD_proxy *proxy, *tproxy;
+    struct HYD_proxy *proxy;
     struct block {
         int start_idx;
         int num_blocks;
@@ -141,36 +141,25 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
             blocklist_tail = blocklist_head = block;
         }
+        else if (blocklist_tail->start_idx + blocklist_tail->num_blocks == proxy->proxy_id &&
+                 blocklist_tail->block_size == proxy->node.core_count) {
+            blocklist_tail->num_blocks++;
+        }
+        else if (blocklist_tail->start_idx == proxy->proxy_id &&
+                 blocklist_tail->num_blocks == 1) {
+            blocklist_tail->block_size += proxy->node.core_count;
+        }
         else {
-            /* Check if this proxy hostname existed earlier */
-            for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next) {
-                if (!strcmp(proxy->node.hostname, tproxy->node.hostname))
-                    break;
-            }
-
-            if (blocklist_tail->start_idx + blocklist_tail->num_blocks == tproxy->proxy_id &&
-                blocklist_tail->block_size == proxy->node.core_count) {
-                    blocklist_tail->num_blocks++;
-            }
-            else if (blocklist_tail->start_idx == tproxy->proxy_id &&
-                     blocklist_tail->num_blocks == 1) {
-                blocklist_tail->block_size += proxy->node.core_count;
-            }
-            else {
-                HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block),
-                            status);
-                blocklist_tail = blocklist_tail->next;
-                blocklist_tail->start_idx = tproxy ? tproxy->proxy_id : proxy->proxy_id;
-                blocklist_tail->num_blocks = 1;
-                blocklist_tail->block_size = proxy->node.core_count;
-                blocklist_tail->next = NULL;
-            }
+            HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block), status);
+            blocklist_tail = blocklist_tail->next;
+            blocklist_tail->start_idx = proxy->proxy_id;
+            blocklist_tail->num_blocks = 1;
+            blocklist_tail->block_size = proxy->node.core_count;
+            blocklist_tail->next = NULL;
         }
     }
 
-    /* See if there are any extra merging opportunities */
-
-    /* Case 1: If all the blocks are equivalent, just use one block */
+    /* If all the blocks are equivalent, just use one block */
     is_equal = 1;
     for (block = blocklist_head; block->next; block = block->next) {
         if (block->start_idx != block->next->start_idx ||
