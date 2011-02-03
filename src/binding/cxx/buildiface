@@ -1367,6 +1367,22 @@ sub printDefineChecks {
 #  endif
 # endif     
 #endif\n";
+
+    print $OUTFD "
+/* 
+ * Because the API is defined, some methods have parameters that are 
+ * not used.  The following definition allows us to suppress warnings
+ * about unused arguments in methods when -Wall -Wextra are specified.
+ * this definition is removed at the end of this file.
+ */
+#ifdef MPIR_ARGUNUSED
+#error MPIR_ARGUNUSED defined
+#endif
+#if __GNUC__ > 4 
+#define MPIR_ARGUNUSED __attribute__((unused))
+#else
+#define MPIR_ARGUNUSED
+#endif\n";
 }
 
 # Use this after the MPI namespace is defined
@@ -2854,6 +2870,8 @@ void MPIR_CXX_InitDatatypeNames( void )
 }\n";
 
     print $OUTFD "} // namespace MPI\n";
+    print $OUTFD "#undef MPIR_ARGUNUSED\n";
+
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, "${filename}.new" );
 }
@@ -3284,6 +3302,8 @@ sub Comm_methods {
     # To accommodate C++ compilers that don't support 
     print $OUTFD "    virtual Comm &Clone(void) const = 0;\n";
 
+    # The MPIR_ARGUNUSED provides a way to use __attribute__((unused)) for 
+    # the unused args
     # Typedefs
     print $OUTFD <<EOT;
     typedef int Copy_attr_function(const Comm& oldcomm, int comm_keyval, void* extra_state, void* attribute_val_in, void* attribute_val_out, bool& flag); 
@@ -3294,13 +3314,17 @@ sub Comm_methods {
     static int Create_keyval( Copy_attr_function *, Delete_attr_function *,
                               void * );
           
-    static int NULL_COPY_FN( const Comm &oldcomm, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 0; return 0;}
-    static int NULL_DELETE_FN( Comm &comm, int keyval, void * attr, void *ex )
-	{ return 0; }
-    static int DUP_FN( const Comm &oldcomm, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
-    *(void **)attr_out = attr_in; return 0;} 
+    static int NULL_COPY_FN( const Comm &oldcomm MPIR_ARGUNUSED, 
+           int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+           void *attr_in MPIR_ARGUNUSED, void *attr_out MPIR_ARGUNUSED, 
+	   bool &flag ) { flag = 0; return 0;}
+    static int NULL_DELETE_FN( Comm &comm MPIR_ARGUNUSED, 
+	   int keyval MPIR_ARGUNUSED, void * attr MPIR_ARGUNUSED, 
+	   void *ex MPIR_ARGUNUSED ) { return 0; }
+    static int DUP_FN( const Comm &oldcomm MPIR_ARGUNUSED, 
+           int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+           void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
+                    *(void **)attr_out = attr_in; return 0;} 
     static Errhandler Create_errhandler( Errhandler_function * );
 
 EOT
@@ -3334,14 +3358,17 @@ sub Win_methods {
                               void * );
     // These functions are *not* part of MPI-2 but are provided
     // because they should have been included
-    static int NULL_COPY_FN( const Win &oldwin, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; return 0;}
-    static int NULL_DELETE_FN( Win &win, int keyval, void * attr, 
-         void *ex ) { return 0; }
-    static int DUP_FN( const Win &oldwin, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
-    *(void **)attr_out = attr_in; return 0;} 
-
+    static int NULL_COPY_FN( const Win &oldwin MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in MPIR_ARGUNUSED, void *attr_out MPIR_ARGUNUSED, 
+        bool &flag ) { flag = 1; return 0;}
+    static int NULL_DELETE_FN( Win &win MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void * attr MPIR_ARGUNUSED, 
+        void *ex MPIR_ARGUNUSED ) { return 0; }
+    static int DUP_FN( const Win &oldwin MPIR_ARGUNUSED, 
+	int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
+            *(void **)attr_out = attr_in; return 0;} 
 
 EOT
 }
@@ -3482,7 +3509,7 @@ sub Datatype_methods {
     print $OUTFD "\
     void Unpack( const void *, int, void *, int, int &, const Comm & ) const;\n";
 #    void Pack( const void *, int, void *, int, int &, const Comm & ) const;\n";
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     typedef int Copy_attr_function(const Datatype& oldtype, int type_keyval, void* extra_state, void* attribute_val_in, void* attribute_val_out, bool& flag); 
     typedef int Delete_attr_function(Datatype& type, int type_keyval, void* attribute_val, void* extra_state); 
 
@@ -3490,15 +3517,19 @@ sub Datatype_methods {
                               void * );
     // These functions are *not* part of MPI-2 but are provided
     // because they should have been included
-    static int NULL_COPY_FN( const Datatype &oldtype, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; return 0;}
-    static int NULL_DELETE_FN( Datatype &type, int keyval, void * attr, 
-         void *ex ) { return 0; }
-    static int DUP_FN( const Datatype &oldtype, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
-    *(void **)attr_out = attr_in; return 0;} 
+    static int NULL_COPY_FN( const Datatype &oldtype MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in MPIR_ARGUNUSED, void *attr_out MPIR_ARGUNUSED, 
+        bool &flag ) { flag = 1; return 0;}
+    static int NULL_DELETE_FN( Datatype &type MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void * attr MPIR_ARGUNUSED, 
+        void *ex MPIR_ARGUNUSED ) { return 0; }
+    static int DUP_FN( const Datatype &oldtype MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
+            *(void **)attr_out = attr_in; return 0;} 
           
-\n";
+EOT
 }
 # ----------------------------------------------------------------------------
 # We may eventually want to build separate files for each class rather than
