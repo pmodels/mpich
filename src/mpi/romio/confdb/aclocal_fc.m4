@@ -273,9 +273,7 @@ AC_COMPILE_IFELSE([],[
         # cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
         _AC_MSG_LOG_CONFTEST
     fi
-    ],
-    []
-)
+],[])
 # Remove the conftest* after AC_LANG_CONFTEST
 rm -rf conftest.dSYM
 rm -f conftest.$ac_ext
@@ -421,7 +419,7 @@ dnl D*/
 AC_DEFUN([PAC_PROG_FC_HAS_POINTER],[
 AC_CACHE_CHECK([whether Fortran 90 supports Cray-style pointer],
 pac_cv_prog_fc_has_pointer,[
-AC_LANG_PUSH(Fortran)
+AC_LANG_PUSH([Fortran])
 AC_LANG_CONFTEST([
     AC_LANG_PROGRAM([],[
         integer M
@@ -438,7 +436,10 @@ done
 if test "$pac_cv_prog_fc_has_pointer" = "yes" -a "X$ptrflag" != "X" ; then
     pac_cv_prog_fc_has_pointer="with $ptrflag"
 fi
-AC_LANG_POP(Fortran)
+FCFLAGS="$saved_FCFLAGS"
+dnl remove conftest after ac_lang_conftest
+rm -f conftest.$ac_ext
+AC_LANG_POP([Fortran])
 ])
 if test "X$pac_cv_prog_fc_has_pointer" != "X" ; then
     ifelse([$1],,:,[$1])
