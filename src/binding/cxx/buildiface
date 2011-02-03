@@ -1378,7 +1378,7 @@ sub printDefineChecks {
 #ifdef MPIR_ARGUNUSED
 #error MPIR_ARGUNUSED defined
 #endif
-#if __GNUC__ > 4 
+#if defined(__GNUC__) && __GNUC__ >= 4 
 #define MPIR_ARGUNUSED __attribute__((unused))
 #else
 #define MPIR_ARGUNUSED
