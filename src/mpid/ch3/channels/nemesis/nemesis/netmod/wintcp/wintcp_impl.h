@@ -44,7 +44,7 @@ typedef enum{
 } MPID_Nem_newtcp_module_vc_state_t;
 
 extern char *MPID_nem_newtcp_module_recv_buf;
-#define MPID_NEM_NEWTCP_MODULE_RECV_MAX_PKT_LEN 1024
+#define MPID_NEM_NEWTCP_MODULE_RECV_MAX_PKT_LEN 2048
 #define MPID_NEM_NEWTCP_MODULE_RCVBUF_SZ    (128*1024)
 #define MPID_NEM_NEWTCP_MODULE_SNDBUF_SZ    (128*1024)
 
