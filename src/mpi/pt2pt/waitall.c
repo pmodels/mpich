@@ -104,6 +104,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
      * Possible variation: permit request_ptrs[i]==NULL at the cost of an
      * additional branch inside the for-loop below. */
     if (optimize) {
+        MPID_Progress_start(&progress_state);
         for (i = 0; i < count; ++i) {
             while (!MPID_Request_is_complete(request_ptrs[i])) {
                 mpi_errno = MPID_Progress_wait(&progress_state);
@@ -119,6 +120,8 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
             mpi_errno = MPIR_Request_complete_fastpath(&array_of_requests[i], request_ptrs[i]);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
+
+        MPID_Progress_end(&progress_state);
 
         goto fn_exit;
     }
