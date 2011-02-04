@@ -194,11 +194,16 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	   it here. */
 	if (*flag) {
             /* Use the internal pointer-sized-int for systems (e.g., BG/P)
- *             that define MPI_Aint as a different size that MPIR_Pint */
+               that define MPI_Aint as a different size than MPIR_Pint.
+	       The casts must be as they are:
+	       On the right, the value is a pointer to an int, so to 
+	       get the correct value, we need to extract the int.
+	       On the left, the output type is given by the argument 
+	       outAttrType - and the cast must match the intended results */
 	    if (outAttrType == MPIR_ATTR_AINT)
-		*(MPIR_Pint*)attr_val_p = *(MPIR_Pint*)*(void **)attr_val_p;
+		*(MPIR_Pint*)attr_val_p = *(int*)*(void **)attr_val_p;
 	    else if (outAttrType == MPIR_ATTR_INT)
-		*(MPIR_Pint*)attr_val_p = *(int *)*(void **)attr_val_p;
+		*(int*)attr_val_p = *(int *)*(void **)attr_val_p;
 	}
     }
     else {
