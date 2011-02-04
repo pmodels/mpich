@@ -72,6 +72,7 @@ MPID_Request * MPID_Request_create(void)
 	req->status.count	   = 0;
 	req->status.cancelled	   = FALSE;
 	req->comm		   = NULL;
+        req->greq_fns              = NULL;
 	req->dev.datatype_ptr	   = NULL;
 	req->dev.segment_ptr	   = NULL;
 	/* Masks and flags for channel device state in an MPID_Request */
@@ -143,6 +144,10 @@ void MPIDI_CH3_Request_destroy(MPID_Request * req)
        related ref count has become zero. */
     if (req->comm != NULL) {
 	MPIR_Comm_release(req->comm, 0);
+    }
+
+    if (req->greq_fns != NULL) {
+        MPIU_Free(req->greq_fns);
     }
 
     if (req->dev.datatype_ptr != NULL) {

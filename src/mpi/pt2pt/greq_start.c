@@ -76,7 +76,8 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
                              void *extra_state, MPID_Request **request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-        
+    MPIU_CHKPMEM_DECL(1);
+
     /* MT FIXME this routine is not thread-safe in the non-global case */
     
     *request_ptr = MPID_Request_create();
@@ -87,17 +88,21 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     (*request_ptr)->cc_ptr               = &(*request_ptr)->cc;
     MPID_cc_set((*request_ptr)->cc_ptr, 1);
     (*request_ptr)->comm                 = NULL;
-    (*request_ptr)->cancel_fn            = cancel_fn;
-    (*request_ptr)->free_fn              = free_fn;
-    (*request_ptr)->query_fn             = query_fn;
-    (*request_ptr)->poll_fn              = NULL;
-    (*request_ptr)->wait_fn              = NULL;
-    (*request_ptr)->grequest_extra_state = extra_state;
-    (*request_ptr)->greq_lang            = MPID_LANG_C;
+    (*request_ptr)->greq_fns             = NULL;
+    MPIU_CHKPMEM_MALLOC((*request_ptr)->greq_fns, struct MPID_Grequest_fns *, sizeof(struct MPID_Grequest_fns), mpi_errno, "greq_fns");
+    (*request_ptr)->greq_fns->cancel_fn            = cancel_fn;
+    (*request_ptr)->greq_fns->free_fn              = free_fn;
+    (*request_ptr)->greq_fns->query_fn             = query_fn;
+    (*request_ptr)->greq_fns->poll_fn              = NULL;
+    (*request_ptr)->greq_fns->wait_fn              = NULL;
+    (*request_ptr)->greq_fns->grequest_extra_state = extra_state;
+    (*request_ptr)->greq_fns->greq_lang            = MPID_LANG_C;
 
+    MPIU_CHKPMEM_COMMIT();
  fn_exit:
     return mpi_errno;
  fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -333,17 +338,17 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 	MPID_Request *lrequest_ptr;
 	MPID_Grequest_class *class_ptr;
 
-
+        *request = MPI_REQUEST_NULL;
 	MPID_Grequest_class_get_ptr(greq_class, class_ptr);
-	mpi_errno = MPI_Grequest_start(class_ptr->query_fn, 
-			class_ptr->free_fn, class_ptr->cancel_fn, 
-			extra_state, request);
+        mpi_errno = MPIR_Grequest_start_impl(class_ptr->query_fn, class_ptr->free_fn,
+                                             class_ptr->cancel_fn, extra_state,
+                                             &lrequest_ptr);
 	if (mpi_errno == MPI_SUCCESS)
 	{
-		MPID_Request_get_ptr(*request, lrequest_ptr);
-		lrequest_ptr->poll_fn     = class_ptr->poll_fn;
-		lrequest_ptr->wait_fn     = class_ptr->wait_fn;
-		lrequest_ptr->greq_class  = greq_class;  
+            *request = lrequest_ptr->handle;
+            lrequest_ptr->greq_fns->poll_fn     = class_ptr->poll_fn;
+            lrequest_ptr->greq_fns->wait_fn     = class_ptr->wait_fn;
+            lrequest_ptr->greq_fns->greq_class  = greq_class;
 	}
 	return mpi_errno;
 }
@@ -378,14 +383,14 @@ int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
     int mpi_errno;
     MPID_Request *lrequest_ptr;
 
-    mpi_errno = MPI_Grequest_start(query_fn, free_fn, cancel_fn, 
-		    extra_state, request);
+    *request = MPI_REQUEST_NULL;
+    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &lrequest_ptr);
 
     if (mpi_errno == MPI_SUCCESS)
-    { 
-	MPID_Request_get_ptr(*request, lrequest_ptr);
-        lrequest_ptr->poll_fn              = poll_fn;
-	lrequest_ptr->wait_fn              = wait_fn;
+    {
+        *request = lrequest_ptr->handle;
+        lrequest_ptr->greq_fns->poll_fn = poll_fn;
+        lrequest_ptr->greq_fns->wait_fn = wait_fn;
     }
 
     return mpi_errno;

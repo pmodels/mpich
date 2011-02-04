@@ -1351,6 +1351,19 @@ typedef void (MPIR_Grequest_f77_cancel_function)(void *, int*, int *);
 typedef void (MPIR_Grequest_f77_free_function)(void *, int *); 
 typedef void (MPIR_Grequest_f77_query_function)(void *, MPI_Status *, int *); 
 
+/* vtable-ish structure holding generalized request function pointers and other
+ * state.  Saves ~48 bytes in pt2pt requests on many platforms. */
+struct MPID_Grequest_fns {
+    MPI_Grequest_cancel_function *cancel_fn;
+    MPI_Grequest_free_function   *free_fn;
+    MPI_Grequest_query_function  *query_fn;
+    MPIX_Grequest_poll_function   *poll_fn;
+    MPIX_Grequest_wait_function   *wait_fn;
+    void             *grequest_extra_state;
+    MPIX_Grequest_class         greq_class;
+    MPID_Lang_t                  greq_lang;         /* language that defined
+                                                       the generalize req */
+};
 
 /* see mpiimplthread.h for the def of MPID_cc_t and related functions/macros */
 #define MPID_Request_is_complete(req_) (MPID_cc_is_complete((req_)->cc_ptr))
@@ -1386,17 +1399,11 @@ typedef struct MPID_Request {
     /* Persistent requests have their own "real" requests.  Receive requests
        have partnering send requests when src=dest. etc. */
     struct MPID_Request *partner_request;
-    /* User-defined request support */
-    MPI_Grequest_cancel_function *cancel_fn;
-    MPI_Grequest_free_function   *free_fn;
-    MPI_Grequest_query_function  *query_fn;
-    MPIX_Grequest_poll_function   *poll_fn;
-    MPIX_Grequest_wait_function   *wait_fn;
-    void             *grequest_extra_state;
-    MPIX_Grequest_class	        greq_class;
-    MPID_Lang_t                  greq_lang;         /* language that defined
-						       the generalize req */
-    
+
+    /* User-defined request support via a "vtable".  Saves space in the already
+     * bloated request for regular pt2pt and NBC requests. */
+    struct MPID_Grequest_fns *greq_fns;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL

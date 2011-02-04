@@ -48,6 +48,7 @@ MPID_Request * MPID_Request_create()
   req->status.count      = 0;
   req->status.cancelled  = FALSE;
   req->comm              = NULL;
+  req->greq_fns          = NULL;
 
   struct MPIDI_DCMF_Request* dcmf = &req->dcmf;
   if (DCQuad_sizeof(MPIDI_DCMF_MsgInfo) == 1)
@@ -80,6 +81,7 @@ static inline void MPIDI_Request_try_free(MPID_Request *req)
   if ( (req->ref_count == 0) && (MPID_Request_get_cc(req) == 0) )
     {
       if (req->comm)              MPIR_Comm_release(req->comm, 0);
+      if (req->greq_fns != NULL)  MPIU_Free(req->greq_fns);
       if (req->dcmf.datatype_ptr) MPID_Datatype_release(req->dcmf.datatype_ptr);
       MPIU_Handle_obj_free(&MPID_Request_mem, req);
     }

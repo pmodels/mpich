@@ -164,11 +164,11 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
     for (i = 0; i < incount; i++)
     {
 	if (request_ptrs[i] != NULL && 
-			request_ptrs[i]->kind == MPID_UREQUEST &&
-			request_ptrs[i]->poll_fn != NULL)
+            request_ptrs[i]->kind == MPID_UREQUEST &&
+            request_ptrs[i]->greq_fns->poll_fn != NULL)
 	{
-	    mpi_errno = (request_ptrs[i]->poll_fn)(request_ptrs[i]->grequest_extra_state, 
-			    array_of_statuses);
+            mpi_errno = (request_ptrs[i]->greq_fns->poll_fn)(request_ptrs[i]->greq_fns->grequest_extra_state,
+                                                             array_of_statuses);
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
 	if (request_ptrs[i] != NULL && MPID_Request_is_complete(request_ptrs[i]))

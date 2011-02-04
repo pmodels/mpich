@@ -319,6 +319,7 @@ extern MPIDI_Process_t MPIDI_Process;
     MPIU_Object_set_ref((sreq_), 2);				\
     (sreq_)->kind = MPID_REQUEST_SEND;				\
     (sreq_)->comm = comm;					\
+    (sreq_)->greq_fns = NULL;                                   \
     MPID_cc_set(&(sreq_)->cc, 1);                               \
     (sreq_)->cc_ptr		   = &(sreq_)->cc;              \
     (sreq_)->partner_request   = NULL;                          \
@@ -357,6 +358,7 @@ extern MPIDI_Process_t MPIDI_Process;
     MPIU_Object_set_ref((rreq_), 2);				\
     (rreq_)->kind = MPID_REQUEST_RECV;				\
     (rreq_)->comm = NULL;					\
+    (rreq_)->greq_fns = NULL;                                   \
     MPID_cc_set(&(rreq_)->cc, 1);                               \
     (rreq_)->cc_ptr		   = &(rreq_)->cc;              \
     (rreq_)->status.MPI_ERROR	   = MPI_SUCCESS;               \
