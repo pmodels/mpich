@@ -1177,18 +1177,51 @@ typedef struct MPID_Comm {
 } MPID_Comm;
 extern MPIU_Object_alloc_t MPID_Comm_mem;
 
-/* MPIR_Comm_release is a helper routine that releases references to a comm.
-   The second arg is false unless this is called as part of 
-   MPI_Comm_disconnect .
-*/
-int MPIR_Comm_release(MPID_Comm *, int );
-int MPIR_Comm_release_always(MPID_Comm *comm_ptr, int isDisconnect);
+/* this function should not be called by normal code! */
+int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect);
 
 #define MPIR_Comm_add_ref(_comm) \
     do { MPIU_Object_add_ref((_comm)); } while (0)
-
 #define MPIR_Comm_release_ref( _comm, _inuse ) \
     do { MPIU_Object_release_ref( _comm, _inuse ); } while (0)
+
+
+/* Release a reference to a communicator.  If there are no pending
+   references, delete the communicator and recover all storage and
+   context ids.
+
+   This routine has been inlined because keeping it as a separate routine
+   results in a >5% performance hit for the SQMR benchmark.
+*/
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_release
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int in_use;
+
+    MPIR_Comm_release_ref(comm_ptr, &in_use);
+    if (unlikely(!in_use)) {
+        /* the following routine should only be called by this function and its
+         * "_always" variant. */
+        mpi_errno = MPIR_Comm_delete_internal(comm_ptr, isDisconnect);
+        /* not ERR_POPing here to permit simpler inlining.  Our caller will
+         * still report the error from the comm_delete level. */
+    }
+
+ fn_exit:
+    return mpi_errno;
+}
+#undef FUNCNAME
+#undef FCNAME
+
+/* MPIR_Comm_release_always is the same as MPIR_Comm_release except it uses
+   MPIR_Comm_release_ref_always instead.
+*/
+int MPIR_Comm_release_always(MPID_Comm *comm_ptr, int isDisconnect);
+
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and 
    a private (non-user accessible) dup of comm world that is provided 

@@ -1225,18 +1225,21 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
  * helper function frees the actual MPID_Comm structure and any associated
  * storage.  It also releases any refernces to other objects, such as the VCRT.
  * This function should only be called when the communicator's reference count
- * has dropped to 0. */
+ * has dropped to 0.
+ *
+ * !!! This routine should *never* be called outside of MPIR_Comm_release{,_always} !!!
+ */
 #undef FUNCNAME
-#define FUNCNAME comm_delete
+#define FUNCNAME MPIR_Comm_delete_internal
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int comm_delete(MPID_Comm * comm_ptr, int isDisconnect)
+int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect)
 {
     int in_use;
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_COMM_DELETE);
+    MPID_MPI_STATE_DECL(MPID_STATE_COMM_DELETE_INTERNAL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_COMM_DELETE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_COMM_DELETE_INTERNAL);
 
     MPIU_Assert(MPIU_Object_get_ref(comm_ptr) == 0); /* sanity check */
 
@@ -1347,35 +1350,7 @@ static int comm_delete(MPID_Comm * comm_ptr, int isDisconnect)
     }
 
  fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_COMM_DELETE);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
-/* Release a reference to a communicator.  If there are no pending
-   references, delete the communicator and recover all storage and 
-   context ids */
-#undef FUNCNAME 
-#define FUNCNAME MPIR_Comm_release
-#undef FCNAME
-#define FCNAME "MPIR_Comm_release"
-int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int in_use;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_RELEASE);
-
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_RELEASE);
-
-    MPIR_Comm_release_ref(comm_ptr, &in_use);
-    if (!in_use) {
-        mpi_errno = comm_delete(comm_ptr, isDisconnect);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-
- fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_RELEASE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_COMM_DELETE_INTERNAL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -1401,7 +1376,7 @@ int MPIR_Comm_release_always(MPID_Comm *comm_ptr, int isDisconnect)
      * predefined communicators, such as MPI_COMM_WORLD or MPI_COMM_SELF. */
     MPIU_Object_release_ref_always(comm_ptr, &in_use);
     if (!in_use) {
-        mpi_errno = comm_delete(comm_ptr, isDisconnect);
+        mpi_errno = MPIR_Comm_delete_internal(comm_ptr, isDisconnect);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
