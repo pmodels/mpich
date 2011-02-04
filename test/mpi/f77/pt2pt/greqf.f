@@ -92,6 +92,9 @@ C
        call mpi_grequest_complete( request, ierr )
        call mpi_wait( request, MPI_STATUS_IGNORE, ierr )
 C       
+C      The following routine may prevent an optimizing compiler from 
+C      just remembering that extrastate was set in grequest_start
+       call dummyupdate(extrastate)
        if (extrastate .ne. 0) then
           errs = errs + 1
           if (freefncall .eq. 0) then
@@ -105,3 +108,4 @@ C
        call MTest_Finalize( errs )
        call mpi_finalize( ierr )
        end
+C
