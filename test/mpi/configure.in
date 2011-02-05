@@ -674,7 +674,10 @@ EOF
     # ALLOCMEMF is set in f77/ext/testlist if we can try this
     # Fortran extension
     ALLOCMEMF=""
-    PAC_PROG_F77_HAS_POINTER(ALLOCMEMF="allocmemf 1")
+    PAC_PROG_F77_CRAY_POINTER([
+        ALLOCMEMF="allocmemf 1"
+        FFLAGS="$FFLAGS $CRAYPTR_FFLAGS"
+    ])
     AC_SUBST(ALLOCMEMF)
     # See the f90 block of code for the Fortran 90 version of ALLOCMEMF,
     # i.e. ALLOCMEMFC.
@@ -745,7 +748,10 @@ if test "$enable_fc" = yes ; then
 
     # See if the compiler supports the Cray-style pointers
     ALLOCMEMFC=""
-    PAC_PROG_FC_HAS_POINTER(ALLOCMEMFC="allocmemf90 1")
+    PAC_PROG_FC_CRAY_POINTER([
+        ALLOCMEMFC="allocmemf90 1"
+        FCFLAGS="$FCFLAGS $CRAYPTR_FCFLAGS"
+    ])
     AC_SUBST(ALLOCMEMFC)
 
     if test -f f77/init/checksizes.c ; then

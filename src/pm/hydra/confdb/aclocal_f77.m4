@@ -1222,12 +1222,17 @@ AC_MSG_RESULT([$pac_cv_f77_accepts_F])
 ])
 dnl
 dnl /*D 
-dnl PAC_PROG_F77_HAS_POINTER - Check Fortran 77 supports Cray-style pointer
+dnl PAC_PROG_F77_CRAY_POINTER - Check if Fortran 77 supports Cray-style pointer.
+dnl                             If so, set pac_cv_prog_f77_has_pointer to yes
+dnl                             and find out if any extra compiler flag is
+dnl                             needed and set it as CRAYPTR_FFLAGS.
+dnl                             i.e. CRAYPTR_FFLAGS is meaningful only if
+dnl                             pac_cv_prog_f77_has_pointer = yes.
 dnl
 dnl Synopsis:
-dnl   PAC_PROG_F77_HAS_POINTER(action-if-true,action-if-false)
+dnl   PAC_PROG_F77_CRAY_POINTER([action-if-true],[action-if-false])
 dnl D*/
-AC_DEFUN([PAC_PROG_F77_HAS_POINTER],[
+AC_DEFUN([PAC_PROG_F77_CRAY_POINTER],[
 AC_CACHE_CHECK([whether Fortran 77 supports Cray-style pointer],
 pac_cv_prog_f77_has_pointer,[
 AC_LANG_PUSH([Fortran 77])
@@ -1239,22 +1244,31 @@ AC_LANG_CONFTEST([
     ])
 ])
 saved_FFLAGS="$FFLAGS"
-pac_cv_prog_f77_has_pointer=""
+pac_cv_prog_f77_has_pointer=no
+CRAYPTR_FFLAGS=""
 for ptrflag in '' '-fcray-pointer' ; do
     FFLAGS="$saved_FFLAGS $ptrflag"
-    AC_COMPILE_IFELSE([], [pac_cv_prog_f77_has_pointer="yes";break], [])
+    AC_COMPILE_IFELSE([], [
+        pac_cv_prog_f77_has_pointer=yes
+        CRAYPTR_FFLAGS="$ptrflag"
+        break
+    ])
 done
-if test "$pac_cv_prog_f77_has_pointer" = "yes" -a "X$ptrflag" != "X" ; then
-    pac_cv_prog_f77_has_pointer="with $ptrflag"
-fi
+dnl Restore FFLAGS first, since user may not want to modify FFLAGS
 FFLAGS="$saved_FFLAGS"
 dnl remove conftest after ac_lang_conftest
 rm -f conftest.$ac_ext
 AC_LANG_POP([Fortran 77])
 ])
-if test "X$pac_cv_prog_f77_has_pointer" != "X" ; then
-    ifelse([$1],,:,[$1])
+if test "$pac_cv_prog_f77_has_pointer" = "yes" ; then
+    AC_MSG_CHECKING([for Fortran 77 compiler flag for Cray-style pointer])
+    if test "X$CRAYPTR_FFLAGS" != "X" ; then
+        AC_MSG_RESULT([$CRAYPTR_FFLAGS])
+    else
+        AC_MSG_RESULT([none])
+    fi
+    ifelse([$1],[],[:],[$1])
 else
-    ifelse([$2],,:,[$2])
+    ifelse([$2],[],[:],[$2])
 fi
 ])
