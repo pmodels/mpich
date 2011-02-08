@@ -17,6 +17,7 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     nm_tag_t  match_info = 0;
     nm_tag_t  match_mask = NEM_NMAD_MATCH_FULL_MASK;
     nm_gate_t out_gate;
+    nm_gate_t in_gate;
     int mpi_errno = MPI_SUCCESS;
     int ret;
 
@@ -25,10 +26,14 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     {
        NEM_NMAD_SET_ANYSRC(match_info);
        NEM_NMAD_SET_ANYSRC(match_mask);
+       in_gate = NM_ANY_GATE;
     }
-   else
-     NEM_NMAD_SET_SRC(match_info,source);
- 
+    else
+    { 
+	NEM_NMAD_SET_SRC(match_info,source);
+	in_gate = VC_FIELD(vc,p_gate);
+    }
+   
     if (tag != MPI_ANY_TAG)
     {
         NEM_NMAD_SET_TAG(match_info,tag);
@@ -40,7 +45,7 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     }
 
     do {
-	ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info,match_mask);
+	ret = nm_sr_probe(mpid_nem_newmad_session,in_gate,&out_gate,match_info,match_mask);
     }
     while (ret != NM_ESUCCESS);
 
@@ -65,6 +70,7 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
     nm_tag_t  match_info = 0;
     nm_tag_t  match_mask = NEM_NMAD_MATCH_FULL_MASK;
     nm_gate_t out_gate;
+    nm_gate_t in_gate;
     int mpi_errno = MPI_SUCCESS;
     int ret;
 
@@ -73,9 +79,13 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
     {
        NEM_NMAD_SET_ANYSRC(match_info);
        NEM_NMAD_SET_ANYSRC(match_mask);
+       in_gate = NM_ANY_GATE;
     }
-   else
-     NEM_NMAD_SET_SRC(match_info,source);
+    else
+    {
+	NEM_NMAD_SET_SRC(match_info,source);
+	in_gate = VC_FIELD(vc,p_gate);
+    }
    
     if (tag != MPI_ANY_TAG)
     {
@@ -87,7 +97,7 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
        NEM_NMAD_SET_ANYTAG(match_mask);
     }
 
-    ret = nm_sr_probe(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),&out_gate,match_info,match_mask);
+    ret = nm_sr_probe(mpid_nem_newmad_session,in_gate,&out_gate,match_info,match_mask);
     if (ret == NM_ESUCCESS)
     {   
 	/*
