@@ -20,7 +20,15 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     int mpi_errno = MPI_SUCCESS;
     int ret;
 
-    NEM_NMAD_DIRECT_MATCH(match_info,0,source,comm->context_id + context_offset);
+    NEM_NMAD_SET_CTXT(match_info,comm->context_id + context_offset);
+    if( source  == MPI_ANY_SOURCE)
+    {
+       NEM_NMAD_SET_ANYSRC(match_info);
+       NEM_NMAD_SET_ANYSRC(match_mask);
+    }
+   else
+     NEM_NMAD_SET_SRC(match_info,source);
+ 
     if (tag != MPI_ANY_TAG)
     {
         NEM_NMAD_SET_TAG(match_info,tag);
@@ -60,7 +68,15 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
     int mpi_errno = MPI_SUCCESS;
     int ret;
 
-    NEM_NMAD_DIRECT_MATCH(match_info,0,source,comm->context_id + context_offset);
+    NEM_NMAD_SET_CTXT(match_info,comm->context_id + context_offset);
+    if( source  == MPI_ANY_SOURCE)
+    {
+       NEM_NMAD_SET_ANYSRC(match_info);
+       NEM_NMAD_SET_ANYSRC(match_mask);
+    }
+   else
+     NEM_NMAD_SET_SRC(match_info,source);
+   
     if (tag != MPI_ANY_TAG)
     {
         NEM_NMAD_SET_TAG(match_info,tag);
