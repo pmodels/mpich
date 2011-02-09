@@ -106,14 +106,16 @@ int MPI_File_read_shared(MPI_File mpi_fh, void *buf, int count,
            could be a concurrent noncontiguous request. On NFS, locking 
            is done in the ADIO_ReadContig.*/
 
-        if ((fh->atomicity) && (fh->file_system != ADIO_NFS))
+        if ((fh->atomicity) && (fh->file_system != ADIO_NFS)) {
             ADIOI_WRITE_LOCK(fh, off, SEEK_SET, bufsize);
+	 }
 
         ADIO_ReadContig(fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
                         off, status, &error_code); 
 
-        if ((fh->atomicity) && (fh->file_system != ADIO_NFS))
+        if ((fh->atomicity) && (fh->file_system != ADIO_NFS)) {
             ADIOI_UNLOCK(fh, off, SEEK_SET, bufsize);
+	 }
     }
     else
     {

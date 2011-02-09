@@ -160,7 +160,8 @@ FORTRAN_API void FORT_CALL mpi_file_get_view_( MPI_Fint *fh, MPI_Offset *disp, M
     
     tmprep = (char *) ADIOI_Malloc((MPI_MAX_DATAREP_STRING+1) * sizeof(char));
     fh_c = MPI_File_f2c(*fh);
-    *ierr = MPI_File_get_view(fh_c, disp, etype, filetype, tmprep);
+    *ierr = MPI_File_get_view(fh_c, disp, (MPI_Datatype*)etype,
+				  (MPI_Datatype*)filetype, tmprep);
 
     tmpreplen = strlen(tmprep);
     if (tmpreplen <= str_len) {

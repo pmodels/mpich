@@ -93,14 +93,16 @@ int MPI_File_iwrite_shared(MPI_File mpi_fh, void *buf, int count,
             /* to maintain strict atomicity semantics with other concurrent
               operations, lock (exclusive) and call blocking routine */
 
-            if (fh->file_system != ADIO_NFS)
+		if (fh->file_system != ADIO_NFS) {
                 ADIOI_WRITE_LOCK(fh, off, SEEK_SET, bufsize);
+		}
 
             ADIO_WriteContig(fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
 			     off, &status, &error_code);  
 
-            if (fh->file_system != ADIO_NFS)
+            if (fh->file_system != ADIO_NFS) {
                 ADIOI_UNLOCK(fh, off, SEEK_SET, bufsize);
+	     }
 
 	    MPIO_Completed_request_create(&fh, bufsize, &error_code, request);
 	}
