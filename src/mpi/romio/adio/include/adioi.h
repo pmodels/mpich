@@ -835,7 +835,7 @@ int  ADIOI_MPE_stat_b;
   #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
   #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) 
   #define ADIOI_Assert assert
-  #define MPIR_Upint unsigned int
+  #define MPIR_Upint unsigned long
   #define MPIU_THREADPRIV_DECL
 #endif
 
