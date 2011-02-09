@@ -43,9 +43,8 @@ int MPI_Type_create_subarray(int ndims, int *array_of_sizes,
                              int order, MPI_Datatype oldtype, 
                              MPI_Datatype *newtype)
 {
-    MPI_Aint extent, disps[3], size, size_with_aint;
-    int i, blklens[3], err;
-    MPI_Datatype tmp1, tmp2, types[3];
+    MPI_Aint extent, size_with_aint;
+    int i, err, error_code;
     MPI_Offset size_with_offset;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -49,9 +49,8 @@ int MPI_Type_create_darray(int size, int rank, int ndims,
                            MPI_Datatype *newtype) 
 {
     int err, error_code;
-    MPI_Datatype type_old, type_new, types[3];
-    int procs, tmp_rank, i, tmp_size, blklens[3], *coords;
-    MPI_Aint *st_offsets, orig_extent, disps[3], size_with_aint;
+    int i;
+    MPI_Aint orig_extent, size_with_aint;
     MPI_Offset size_with_offset;
     static char myname[] = "MPI_TYPE_CREATE_DARRAY";
 
