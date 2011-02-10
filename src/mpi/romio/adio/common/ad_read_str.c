@@ -126,9 +126,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
         readbuf_len = (unsigned) (ADIOI_MIN(max_bufsize, end_offset-readbuf_off+1));
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
-        if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS)) {
+        if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS))
             ADIOI_WRITE_LOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
-	 }
 
         ADIO_ReadContig(fd, readbuf, readbuf_len, MPI_BYTE, 
             ADIO_EXPLICIT_OFFSET, readbuf_off, &status1, error_code);
@@ -145,9 +144,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
               }
         }
 
-        if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS)) {
+        if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS))
             ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
-	 }
 
         if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = off;
 
@@ -267,9 +265,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	}
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
-	 if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS)) {
+        if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS))
             ADIOI_WRITE_LOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
-	}
 
 	readbuf_off = 0;
 	readbuf_len = 0;
@@ -385,9 +382,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	    }
 	}
 	
-	 if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS)) {
+        if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS))
             ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
-	 }
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = off;
 
