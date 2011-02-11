@@ -18,6 +18,37 @@ struct fwd_hash {
     struct fwd_hash *next;
 };
 
+static char localhost[MAX_HOSTNAME_LEN] = { 0 };
+static char shortlocal[MAX_HOSTNAME_LEN] = { 0 };
+
+static HYD_status sock_localhost_init(void)
+{
+    static int init = 1;
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    if (init) {
+        init = 0;
+
+        status = HYDU_gethostname(localhost);
+        HYDU_ERR_POP(status, "unable to get local hostname\n");
+
+        strcpy(shortlocal, localhost);
+        for (i = 0; shortlocal[i]; i++) {
+            if (shortlocal[i] == '.') {
+                shortlocal[i] = 0;
+                break;
+            }
+        }
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;
@@ -148,9 +179,12 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
      * return an error, but only print a warning message. The upper
      * layer can decide what to do with the return status. */
     if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        HYDU_error_printf("connect error (%s)\n", HYDU_strerror(errno));
-        status = HYD_SOCK_ERROR;
-        goto fn_fail;
+        status = sock_localhost_init();
+        HYDU_ERR_POP(status, "unable to initialize sock local information\n");
+
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR,
+                            "unable to connect from \"%s\" to \"%s\" (%s)\n",
+                            localhost, host, HYDU_strerror(errno));
     }
 
     /* Disable nagle */
@@ -463,9 +497,6 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     char *ip1 = NULL, *ip2 = NULL;
     char buf1[INET_ADDRSTRLEN], buf2[INET_ADDRSTRLEN];
     struct sockaddr_in *sa_ptr, sa;
-    static int init = 1;
-    static char localhost[MAX_HOSTNAME_LEN] = { 0 };
-    static char shortlocal[MAX_HOSTNAME_LEN] = { 0 };
     char shorthost[MAX_HOSTNAME_LEN] = { 0 };
     int i;
 
@@ -516,20 +547,8 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 #endif
 
     /* Direct comparison of host names */
-    if (init) {
-        init = 0;
-
-        status = HYDU_gethostname(localhost);
-        HYDU_ERR_POP(status, "unable to get local hostname\n");
-
-        strcpy(shortlocal, localhost);
-        for (i = 0; shortlocal[i]; i++) {
-            if (shortlocal[i] == '.') {
-                shortlocal[i] = 0;
-                break;
-            }
-        }
-    }
+    status = sock_localhost_init();
+    HYDU_ERR_POP(status, "unable to initialize sock local information\n");
 
     if (!strcmp(host, localhost)) {
         *is_local = 1;
