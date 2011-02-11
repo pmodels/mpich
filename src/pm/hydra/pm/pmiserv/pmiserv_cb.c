@@ -355,7 +355,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                         if (e->start == e->end)
                             HYDU_snprintf(run, PMI_MAXVALLEN, "%s,%d", str, e->start);
                         else
-                            HYDU_snprintf(run, PMI_MAXVALLEN, "%s,%d-%d", str, e->start, e->end);
+                            HYDU_snprintf(run, PMI_MAXVALLEN, "%s,%d-%d", str, e->start,
+                                          e->end);
                     }
                     else {
                         if (e->start == e->end)

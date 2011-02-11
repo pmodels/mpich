@@ -27,10 +27,10 @@ struct HYDT_bsci_info {
     const char *launcher_exec;
 
     /** \brief Enable/disable X-forwarding */
-    int  enablex;
+    int enablex;
 
     /** \brief Enable/disable debugging */
-    int  debug;
+    int debug;
 };
 
 /**
@@ -43,7 +43,7 @@ struct HYDT_bsci_fns {
     HYD_status(*query_native_int) (int *ret);
 
     /** \brief Query for node list information */
-    HYD_status(*query_node_list) (struct HYD_node **node_list);
+    HYD_status(*query_node_list) (struct HYD_node ** node_list);
 
     /** \brief Query for job ID information */
     HYD_status(*query_jobid) (char **jobid);
@@ -54,7 +54,7 @@ struct HYDT_bsci_fns {
 
     /* Launcher functions */
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (char **args, struct HYD_node *node_list, int *control_fd);
+    HYD_status(*launch_procs) (char **args, struct HYD_node * node_list, int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*launcher_finalize) (void);
@@ -89,8 +89,7 @@ extern struct HYDT_bsci_info HYDT_bsci_info;
  * pointers in this function to be used by later BSCI calls.
  */
 HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
-                          const char *launcher_exec, int enablex,
-                          int debug);
+                          const char *launcher_exec, int enablex, int debug);
 
 
 /**

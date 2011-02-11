@@ -11,10 +11,12 @@
 struct HYDT_bsci_fns HYDT_bsci_fns = { 0 };
 struct HYDT_bsci_info HYDT_bsci_info = { 0 };
 
+/* *INDENT-OFF* */
 static const char *launcher_array[] = { @hydra_launcher_array@ };
 static const char *rmk_array[] = { @hydra_rmk_array@ };
 static HYD_status(*launcher_init_array[])(void) = { @hydra_launcher_init_array@ };
 static HYD_status(*rmk_init_array[])(void) = { @hydra_rmk_init_array@ };
+/* *INDENT-ON* */
 
 static void init_rmk_fns(void)
 {
@@ -53,7 +55,7 @@ static const char *detect_rmk(int debug)
         HYDT_bsci_info.rmk = HYDU_strdup(rmk_array[i]);
         HYDT_bsci_info.debug = debug;
 
-        status = (*rmk_init_array[i])();
+        status = (*rmk_init_array[i]) ();
         HYDU_ERR_POP(status, "bootstrap device returned error initializing\n");
 
         status = HYDT_bsci_query_native_int(&ret);
@@ -136,7 +138,7 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
     /* Initialize the RMK */
     for (i = 0; rmk_array[i]; i++) {
         if (!strcmp(HYDT_bsci_info.rmk, rmk_array[i])) {
-            status = (*rmk_init_array[i])();
+            status = (*rmk_init_array[i]) ();
             HYDU_ERR_POP(status, "RMK init returned error\n");
             break;
         }
@@ -166,7 +168,7 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
     /* Make sure the launcher we found is valid */
     for (i = 0; launcher_array[i]; i++) {
         if (!strcmp(HYDT_bsci_info.launcher, launcher_array[i])) {
-            status = (*launcher_init_array[i])();
+            status = (*launcher_init_array[i]) ();
             HYDU_ERR_POP(status, "launcher init returned error\n");
             break;
         }
