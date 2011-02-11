@@ -550,7 +550,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     status = sock_localhost_init();
     HYDU_ERR_POP(status, "unable to initialize sock local information\n");
 
-    if (!strcmp(host, localhost)) {
+    if (!strcmp(host, localhost) || !strcmp(host, "localhost")) {
         *is_local = 1;
         goto fn_exit;
     }
@@ -567,7 +567,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
             }
         }
 
-        if (!strcmp(shorthost, shortlocal)) {
+        if (!strcmp(shorthost, shortlocal) || !strcmp(shorthost, "localhost")) {
             *is_local = 1;
             goto fn_exit;
         }
