@@ -25,6 +25,14 @@
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
+/* stdbool.h gives us the C boolean type */
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+/* complex.h gives us the C complex type */
+#ifdef HAVE_COMPLEX_H
+#include <complex.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #include <winsock2.h>
