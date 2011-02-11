@@ -12,6 +12,91 @@
 
 static int fd_stdout, fd_stderr;
 
+/* We use the following priority order for the executable path: (1)
+ * user-specified; (2) search in path; (3) Hard-coded location */
+static HYD_status ssh_get_path(char **path)
+{
+    if (HYDT_bsci_info.launcher_exec)
+        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+    if (*path == NULL)
+        *path = HYDU_find_full_path("ssh");
+    if (*path == NULL)
+        *path = HYDU_strdup("/usr/bin/ssh");
+
+    return HYD_SUCCESS;
+}
+
+static HYD_status rsh_get_path(char **path)
+{
+    if (HYDT_bsci_info.launcher_exec)
+        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+    if (*path == NULL)
+        *path = HYDU_find_full_path("rsh");
+    if (*path == NULL)
+        *path = HYDU_strdup("/usr/bin/rsh");
+
+    return HYD_SUCCESS;
+}
+
+static HYD_status lsf_get_path(char **path)
+{
+    char *bin_dir = NULL;
+    int length;
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYDT_bsci_info.launcher_exec)
+        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+
+    if (*path == NULL) {
+        MPL_env2str("LSF_BINDIR", (const char **) &bin_dir);
+        if (bin_dir) {
+            length = strlen(bin_dir) + 2 + strlen("blaunch");
+            HYDU_MALLOC(*path, char *, length, status);
+            MPL_snprintf(*path, length, "%s/blaunch", bin_dir);
+        }
+    }
+    if (*path == NULL)
+        *path = HYDU_find_full_path("blaunch");
+    if (*path == NULL)
+        *path = HYDU_strdup("/usr/bin/blaunch");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status sge_get_path(char **path)
+{
+    char *sge_root = NULL, *arc = NULL;
+    int length;
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYDT_bsci_info.launcher_exec)
+        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+
+    if (*path == NULL) {
+        MPL_env2str("SGE_ROOT", (const char **) &sge_root);
+        MPL_env2str("ARC", (const char **) &arc);
+        if (sge_root && arc) {
+            length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 + strlen("qrsh") + 1;
+            HYDU_MALLOC(*path, char *, length, status);
+            MPL_snprintf(*path, length, "%s/bin/%s/qrsh", sge_root, arc);
+        }
+    }
+    if (*path == NULL)
+        *path = HYDU_find_full_path("qrsh");
+    if (*path == NULL)
+        *path = HYDU_strdup("/usr/bin/qrsh");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
                                            int *control_fd)
 {
@@ -27,68 +112,30 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
 
     HYDU_FUNC_ENTER();
 
-    /* We use the following priority order for the executable path:
-     * (1) user-specified; (2) search in path; (3) Hard-coded
-     * location */
-    if (HYDT_bsci_info.launcher_exec)
-        path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
     if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
-        if (!path)
-            path = HYDU_find_full_path("ssh");
-        if (!path)
-            path = HYDU_strdup("/usr/bin/ssh");
+        status = ssh_get_path(&path);
+        HYDU_ERR_POP(status, "unable to get path to the ssh executable\n");
     }
     else if (!strcmp(HYDT_bsci_info.launcher, "rsh")) {
-        if (!path)
-            path = HYDU_find_full_path("rsh");
-        if (!path)
-            path = HYDU_strdup("/usr/bin/rsh");
+        status = rsh_get_path(&path);
+        HYDU_ERR_POP(status, "unable to get path to the rsh executable\n");
+    }
+    else if (!strcmp(HYDT_bsci_info.launcher, "fork")) {
+        /* fork is not an external launcher */
     }
     else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
-        char *bin_dir = NULL;
-        int length;
-
-        MPL_env2str("LSF_BINDIR", (const char **) &bin_dir);
-        if (bin_dir) {
-            length = strlen(bin_dir) + 2 + strlen("blaunch");
-            HYDU_MALLOC(path, char *, length, status);
-            MPL_snprintf(path, length, "%s/blaunch", bin_dir);
-        }
-        if (!path)
-            path = HYDU_find_full_path("blaunch");
-        if (!path)
-            path = HYDU_strdup("/usr/bin/blaunch");
+        status = lsf_get_path(&path);
+        HYDU_ERR_POP(status, "unable to get path to the blaunch executable\n");
     }
     else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
-        char *sge_root = NULL, *arc = NULL;
-        int length;
-
-        MPL_env2str("SGE_ROOT", (const char **) &sge_root);
-        MPL_env2str("ARC", (const char **) &arc);
-        if (sge_root && arc) {
-            length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 + strlen("qrsh") + 1;
-            HYDU_MALLOC(path, char *, length, status);
-            MPL_snprintf(path, length, "%s/bin/%s/qrsh", sge_root, arc);
-        }
-
-        if (!path)
-            path = HYDU_find_full_path("qrsh");
-        if (!path)
-            path = HYDU_strdup("/usr/bin/qrsh");
+        status = sge_get_path(&path);
+        HYDU_ERR_POP(status, "unable to get path to the qrsh executable\n");
     }
 
     idx = 0;
     if (path)
         targs[idx++] = HYDU_strdup(path);
-
-    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
-    if (extra_arg_list) {
-        extra_arg = strtok(extra_arg_list, " ");
-        while (extra_arg) {
-            targs[idx++] = HYDU_strdup(extra_arg);
-            extra_arg = strtok(NULL, " ");
-        }
-    }
+    targs[idx] = NULL;
 
     /* Allow X forwarding only if explicitly requested */
     if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
@@ -105,6 +152,15 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
     else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         targs[idx++] = HYDU_strdup("-inherit");
         targs[idx++] = HYDU_strdup("-V");
+    }
+
+    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
+    if (extra_arg_list) {
+        extra_arg = strtok(extra_arg_list, " ");
+        while (extra_arg) {
+            targs[idx++] = HYDU_strdup(extra_arg);
+            extra_arg = strtok(NULL, " ");
+        }
     }
 
     host_idx = idx++;   /* Hostname will come here */
