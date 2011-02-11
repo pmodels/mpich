@@ -553,6 +553,7 @@ HYD_status HYDU_sock_cloexec(int fd);
 
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
+        HYDU_ASSERT(size, status);                                      \
         (p) = (type) HYDU_malloc((size));                               \
         if ((p) == NULL)                                                \
             HYDU_ERR_SETANDJUMP((status), HYD_NO_MEM,                   \
