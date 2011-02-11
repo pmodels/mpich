@@ -24,15 +24,6 @@ HYD_status HYDT_bsci_finalize(void)
         HYDU_ERR_POP(status, "RMK returned error while finalizing\n");
     }
 
-    if (HYDT_bsci_info.rmk)
-        HYDU_FREE(HYDT_bsci_info.rmk);
-
-    if (HYDT_bsci_info.launcher)
-        HYDU_FREE(HYDT_bsci_info.launcher);
-
-    if (HYDT_bsci_info.launcher_exec)
-        HYDU_FREE(HYDT_bsci_info.launcher_exec);
-
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

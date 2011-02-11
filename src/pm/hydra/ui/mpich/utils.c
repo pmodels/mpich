@@ -1078,7 +1078,8 @@ static HYD_status set_default_values(void)
         MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
         HYD_server_info.user_global.debug = 0;
 
-    HYD_GET_ENV_STR_VAL(HYD_server_info.user_global.iface, "HYDRA_IFACE", NULL);
+    if (MPL_env2str("HYDRA_IFACE", (const char **) &HYD_server_info.user_global.iface) == 0)
+        HYD_server_info.user_global.iface = NULL;
 
     if (HYD_server_info.node_list == NULL &&
         MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {

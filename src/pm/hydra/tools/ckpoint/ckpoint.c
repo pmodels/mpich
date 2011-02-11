@@ -24,14 +24,15 @@ HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix,
 
     if (user_ckpointlib)
         HYDT_ckpoint_info.ckpointlib = user_ckpointlib;
-    else
-        HYD_GET_ENV_STR_VAL(HYDT_ckpoint_info.ckpointlib, "HYDRA_CKPOINTLIB",
-                            HYDRA_DEFAULT_CKPOINTLIB);
+    else if (MPL_env2str("HYDRA_CKPOINTLIB", (const char **) &HYDT_ckpoint_info.ckpointlib) ==
+             0)
+        HYDT_ckpoint_info.ckpointlib = HYDRA_DEFAULT_CKPOINTLIB;
 
     if (user_ckpoint_prefix)
         HYDT_ckpoint_info.ckpoint_prefix = user_ckpoint_prefix;
-    else
-        HYD_GET_ENV_STR_VAL(HYDT_ckpoint_info.ckpoint_prefix, "HYDRA_CKPOINT_PREFIX", NULL);
+    else if (MPL_env2str("HYDRA_CKPOINT_PREFIX",
+                         (const char **) &HYDT_ckpoint_info.ckpoint_prefix) == 0)
+        HYDT_ckpoint_info.ckpoint_prefix = NULL;
 
     if (HYDT_ckpoint_info.ckpoint_prefix == NULL)
         goto fn_exit;

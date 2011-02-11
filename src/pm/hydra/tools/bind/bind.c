@@ -20,7 +20,7 @@ struct HYDT_bind_info HYDT_bind_info = { 0 };
 HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {
     char *bindstr, *bindentry, *elem;
-    char *binding = NULL, *bindlib = NULL;
+    const char *binding = NULL, *bindlib = NULL;
     int i, j, k, use_topo_obj[HYDT_BIND_OBJ_END] = { 0 }, child_id;
     int use_cache_level = 0, break_out;
     HYDT_bind_obj_type_t topo_end = HYDT_BIND_OBJ_END;
@@ -31,19 +31,17 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
     if (user_binding)
         binding = user_binding;
-    else
-        HYD_GET_ENV_STR_VAL(binding, "HYDRA_BINDING", NULL);
+    else if (MPL_env2str("HYDRA_BINDING", &binding) == 0)
+        binding = NULL;
 
     if (user_bindlib)
         bindlib = HYDU_strdup(user_bindlib);
-    else
-        HYD_GET_ENV_STR_VAL(bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
+    else if (MPL_env2str("HYDRA_BINDLIB", &bindlib) == 0)
+        bindlib = HYDRA_DEFAULT_BINDLIB;
 
     HYDT_bind_info.support_level = HYDT_BIND_SUPPORT_NONE;
-    if (bindlib) {
+    if (bindlib)
         HYDT_bind_info.bindlib = HYDU_strdup(bindlib);
-        HYDU_FREE(bindlib);
-    }
     else
         HYDT_bind_info.bindlib = NULL;
     HYDT_bind_info.bindmap = NULL;
