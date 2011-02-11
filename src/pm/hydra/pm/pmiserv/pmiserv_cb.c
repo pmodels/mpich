@@ -264,8 +264,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
             if (pg_scratch->dead_process_count == 1) {
                 /* This is the first dead process */
                 HYDU_FREE(pg_scratch->dead_processes);
-                HYDU_MALLOC(pg_scratch->dead_processes, char *, MAXVALLEN, status);
-                HYDU_snprintf(pg_scratch->dead_processes, MAXVALLEN, "%d", hdr.pid);
+                HYDU_MALLOC(pg_scratch->dead_processes, char *, PMI_MAXVALLEN, status);
+                HYDU_snprintf(pg_scratch->dead_processes, PMI_MAXVALLEN, "%d", hdr.pid);
             }
             else {
                 /* FIXME: If the list of dead processes does not fit
@@ -350,18 +350,18 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
                 str = NULL;
                 for (e = list; e; e = e->next) {
-                    HYDU_MALLOC(run, char *, MAXVALLEN, status);
+                    HYDU_MALLOC(run, char *, PMI_MAXVALLEN, status);
                     if (str) {
                         if (e->start == e->end)
-                            HYDU_snprintf(run, MAXVALLEN, "%s,%d", str, e->start);
+                            HYDU_snprintf(run, PMI_MAXVALLEN, "%s,%d", str, e->start);
                         else
-                            HYDU_snprintf(run, MAXVALLEN, "%s,%d-%d", str, e->start, e->end);
+                            HYDU_snprintf(run, PMI_MAXVALLEN, "%s,%d-%d", str, e->start, e->end);
                     }
                     else {
                         if (e->start == e->end)
-                            HYDU_snprintf(run, MAXVALLEN, "%d", e->start);
+                            HYDU_snprintf(run, PMI_MAXVALLEN, "%d", e->start);
                         else
-                            HYDU_snprintf(run, MAXVALLEN, "%d-%d", e->start, e->end);
+                            HYDU_snprintf(run, PMI_MAXVALLEN, "%d-%d", e->start, e->end);
                     }
                     if (str)
                         HYDU_FREE(str);

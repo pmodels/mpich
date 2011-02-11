@@ -234,7 +234,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     HYDU_ASSERT(mapping, status);
 
     /* Make sure the mapping is within the size allowed by PMI */
-    if (strlen(mapping) > MAXVALLEN) {
+    if (strlen(mapping) > PMI_MAXVALLEN) {
         HYDU_FREE(mapping);
         mapping = NULL;
     }

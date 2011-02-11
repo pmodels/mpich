@@ -188,11 +188,11 @@ static HYD_status fn_get_maxes(int fd, char *args[])
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=maxes kvsname_max=");
-    tmp[i++] = HYDU_int_to_str(MAXKVSNAME);
+    tmp[i++] = HYDU_int_to_str(PMI_MAXKVSLEN);
     tmp[i++] = HYDU_strdup(" keylen_max=");
-    tmp[i++] = HYDU_int_to_str(MAXKEYLEN);
+    tmp[i++] = HYDU_int_to_str(PMI_MAXKEYLEN);
     tmp[i++] = HYDU_strdup(" vallen_max=");
-    tmp[i++] = HYDU_int_to_str(MAXVALLEN);
+    tmp[i++] = HYDU_int_to_str(PMI_MAXVALLEN);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 
