@@ -253,7 +253,7 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
 
         if (tmp < 0) {
             *recvd = tmp;
-            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "read errno (%s)\n",
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "read error (%s)\n",
                                 HYDU_strerror(errno));
         }
         else if (tmp == 0) {
