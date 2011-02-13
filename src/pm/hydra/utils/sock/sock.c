@@ -240,7 +240,7 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
         do {
             tmp = read(fd, (char *) buf + *recvd, maxlen - *recvd);
             if (tmp < 0) {
-                if ((errno == ECONNRESET) || (errno == EINTR && fd == STDIN_FILENO)) {
+                if (errno == ECONNRESET || fd == STDIN_FILENO) {
                     /* If the remote end closed the socket or if we
                      * get an EINTR on stdin, set the socket to be
                      * closed and jump out */
@@ -252,7 +252,6 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
         } while (tmp < 0 && errno == EINTR);
 
         if (tmp < 0) {
-            *recvd = tmp;
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "read error (%s)\n",
                                 HYDU_strerror(errno));
         }
@@ -260,7 +259,9 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
             *closed = 1;
             goto fn_exit;
         }
-        *recvd += tmp;
+        else {
+            *recvd += tmp;
+        }
 
         if (flag != HYDU_SOCK_COMM_MSGWAIT || *recvd == maxlen)
             break;
