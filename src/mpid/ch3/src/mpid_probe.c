@@ -38,18 +38,17 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
                 MPIU_THREAD_CS_ENTER(MSGQUEUE,);
                 found = MPIDI_CH3U_Recvq_FU(source, tag, context, status);
                 MPIU_THREAD_CS_EXIT(MSGQUEUE,);
-                if (found) break;
+                if (found) goto fn_exit;
 
                 mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                if (found) break;
+                if (found) goto fn_exit;
 
                 MPIU_THREAD_CS_YIELD(ALLFUNC,);
                 
                 mpi_errno = MPIDI_CH3_Progress_test();
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             } while (1);
-            goto fn_exit;
         } else {
             /* it's not anysource, see if this is for the netmod */
             MPIDI_VC_t * vc;
@@ -63,7 +62,7 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
                     mpi_errno = vc->comm_ops->iprobe(vc, source, tag, comm, context_offset, &found,
                                                      status);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                    if (found) break;
+                    if (found) goto fn_exit;
                     
                     MPIU_THREAD_CS_YIELD(ALLFUNC,);
                     
