@@ -624,12 +624,15 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 
     sum = 0;
     for (i=0; i<nprocs; i++) sum += count[i];
-    srt_off = (ADIO_Offset *) ADIOI_Malloc((sum+1)*sizeof(ADIO_Offset));
-    srt_len = (int *) ADIOI_Malloc((sum+1)*sizeof(int));
-    /* +1 to avoid a 0-size malloc */
+    /* valgrind-detcted optimization: if there is no work on this process we do
+     * not need to search for holes */
+    if (sum) {
+        srt_off = (ADIO_Offset *) ADIOI_Malloc(sum*sizeof(ADIO_Offset));
+        srt_len = (int *) ADIOI_Malloc(sum*sizeof(int));
 
-    ADIOI_Heap_merge(others_req, count, srt_off, srt_len, start_pos,
-                     nprocs, nprocs_recv, sum);
+        ADIOI_Heap_merge(others_req, count, srt_off, srt_len, start_pos,
+                         nprocs, nprocs_recv, sum);
+    }
 
 /* for partial recvs, restore original lengths */
     for (i=0; i<nprocs; i++) 
@@ -647,23 +650,25 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
      * recieved by everyone else. */
 
     *hole = 0;
-    if (off != srt_off[0]) /* hole at the front */
-        *hole = 1;
-    else { /* coalesce the sorted offset-length pairs */
-        for (i=1; i<sum; i++) {
-            if (srt_off[i] <= srt_off[0] + srt_len[0]) {
-		int new_len = srt_off[i] + srt_len[i] - srt_off[0];
-		if (new_len > srt_len[0]) srt_len[0] = new_len;
-	    }
-            else
-                break;
-        }
-        if (i < sum || size != srt_len[0]) /* hole in middle or end */
+    if (sum) {
+        if (off != srt_off[0]) /* hole at the front */
             *hole = 1;
-    }
+        else { /* coalesce the sorted offset-length pairs */
+            for (i=1; i<sum; i++) {
+                if (srt_off[i] <= srt_off[0] + srt_len[0]) {
+		    int new_len = srt_off[i] + srt_len[i] - srt_off[0];
+		    if (new_len > srt_len[0]) srt_len[0] = new_len;
+		}
+		else
+			break;
+	    }
+            if (i < sum || size != srt_len[0]) /* hole in middle or end */
+                *hole = 1;
+	}
 
-    ADIOI_Free(srt_off);
-    ADIOI_Free(srt_len);
+        ADIOI_Free(srt_off);
+        ADIOI_Free(srt_len);
+    }
 
     if (nprocs_recv) {
 	if (*hole) {
