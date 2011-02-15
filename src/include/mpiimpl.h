@@ -1766,6 +1766,8 @@ extern MPID_Op MPID_Op_builtin[MPID_OP_N_BUILTIN];
 extern MPID_Op MPID_Op_direct[];
 extern MPIU_Object_alloc_t MPID_Op_mem;
 
+#define MPIR_Op_add_ref(_op) \
+    do { MPIU_Object_add_ref(_op); } while (0)
 #define MPIR_Op_release_ref( _op, _inuse ) \
     do { MPIU_Object_release_ref( _op, _inuse ); } while (0)
 

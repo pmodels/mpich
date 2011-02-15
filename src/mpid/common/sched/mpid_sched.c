@@ -129,6 +129,11 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
             mpi_errno = MPIR_Reduce_local_impl(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
                                                e->u.reduce.datatype, e->u.reduce.op);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (HANDLE_GET_KIND(e->u.reduce.op) != HANDLE_KIND_BUILTIN) {
+                MPID_Op *op_ptr = NULL;
+                MPID_Op_get_ptr(e->u.reduce.op, op_ptr);
+                MPIR_Op_release(op_ptr);
+            }
             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             break;
         case MPIDU_SCHED_ENTRY_COPY:
@@ -380,6 +385,16 @@ int MPID_Sched_send(void *buf, int count, MPI_Datatype datatype, int dest, MPID_
     e->u.send.sreq = NULL; /* will be populated by _start_entry */
     e->u.send.comm = comm;
 
+    /* the user may free the comm & type after initiating but before the
+     * underlying send is actually posted, so we must add a reference here and
+     * release it at entry completion time */
+    MPIR_Comm_add_ref(comm);
+    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+        MPID_Datatype *dtp = NULL;
+        MPID_Datatype_get_ptr(datatype, dtp);
+        MPID_Datatype_add_ref(dtp);
+    }
+
 fn_exit:
     return mpi_errno;
 fn_fail:
@@ -408,6 +423,13 @@ int MPID_Sched_recv(void *buf, int count, MPI_Datatype datatype, int src, MPID_C
     e->u.recv.src = src;
     e->u.recv.rreq = NULL; /* will be populated by _start_entry */
     e->u.recv.comm = comm;
+
+    MPIR_Comm_add_ref(comm);
+    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+        MPID_Datatype *dtp = NULL;
+        MPID_Datatype_get_ptr(datatype, dtp);
+        MPID_Datatype_add_ref(dtp);
+    }
 
 fn_exit:
     return mpi_errno;
@@ -438,6 +460,17 @@ int MPID_Sched_reduce(void *inbuf, void *inoutbuf, int count, MPI_Datatype datat
     reduce->count = count;
     reduce->datatype = datatype;
     reduce->op = op;
+
+    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+        MPID_Datatype *dtp = NULL;
+        MPID_Datatype_get_ptr(datatype, dtp);
+        MPID_Datatype_add_ref(dtp);
+    }
+    if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
+        MPID_Op *op_ptr = NULL;
+        MPID_Op_get_ptr(op, op_ptr);
+        MPIR_Op_add_ref(op_ptr);
+    }
 
 fn_exit:
     return mpi_errno;
@@ -472,6 +505,17 @@ int MPID_Sched_copy(void *inbuf,  int incount,  MPI_Datatype intype,
     copy->outbuf = outbuf;
     copy->outcount = outcount;
     copy->outtype = outtype;
+
+    if (HANDLE_GET_KIND(intype) != HANDLE_KIND_BUILTIN) {
+        MPID_Datatype *dtp = NULL;
+        MPID_Datatype_get_ptr(intype, dtp);
+        MPID_Datatype_add_ref(dtp);
+    }
+    if (HANDLE_GET_KIND(outtype) != HANDLE_KIND_BUILTIN) {
+        MPID_Datatype *dtp = NULL;
+        MPID_Datatype_get_ptr(outtype, dtp);
+        MPID_Datatype_add_ref(dtp);
+    }
 
 fn_exit:
     return mpi_errno;
@@ -558,6 +602,12 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         dprintf(stderr, "completed SEND entry %d, sreq=%p\n", i, e->u.send.sreq);
                         e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                         MPID_Request_release(e->u.send.sreq);
+                        MPIR_Comm_release(e->u.send.comm, /*isDisconnect=*/FALSE);
+                        if (HANDLE_GET_KIND(e->u.send.datatype) != HANDLE_KIND_BUILTIN) {
+                            MPID_Datatype *dtp = NULL;
+                            MPID_Datatype_get_ptr(e->u.send.datatype, dtp);
+                            MPID_Datatype_release(dtp);
+                        }
                         e->u.send.sreq = NULL;
                     }
                     break;
@@ -567,6 +617,12 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                         MPID_Request_release(e->u.recv.rreq);
                         e->u.recv.rreq = NULL;
+                        MPIR_Comm_release(e->u.recv.comm, /*isDisconnect=*/FALSE);
+                        if (HANDLE_GET_KIND(e->u.recv.datatype) != HANDLE_KIND_BUILTIN) {
+                            MPID_Datatype *dtp = NULL;
+                            MPID_Datatype_get_ptr(e->u.recv.datatype, dtp);
+                            MPID_Datatype_release(dtp);
+                        }
                     }
                     break;
                 default:
