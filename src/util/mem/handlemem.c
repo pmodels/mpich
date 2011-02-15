@@ -440,6 +440,16 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 
     MPIU_THREAD_MPI_OBJ_FINALIZE(obj);
 
+#ifdef USE_MEMORY_TRACING
+    {
+        /* set the object memory to an invalid value (0xec), except for the handle field */
+        int tmp_handle;
+        tmp_handle = obj->handle;
+        memset(obj, 0xec, objmem->size);
+        obj->handle = tmp_handle;
+    }
+#endif
+
     MPL_VG_MEMPOOL_FREE(objmem, obj);
     /* MEMPOOL_FREE marks the object NOACCESS, so we have to make the
      * MPIU_Handle_common area that is used for internal book keeping
