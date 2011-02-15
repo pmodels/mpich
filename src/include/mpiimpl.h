@@ -1771,6 +1771,16 @@ extern MPIU_Object_alloc_t MPID_Op_mem;
 #define MPIR_Op_release_ref( _op, _inuse ) \
     do { MPIU_Object_release_ref( _op, _inuse ); } while (0)
 
+/* release and free-if-not-in-use helper */
+#define MPIR_Op_release(op_p_)                           \
+    do {                                                 \
+        int in_use_;                                     \
+        MPIR_Op_release_ref((op_p_), &in_use_);          \
+        if (!in_use_) {                                  \
+            MPIU_Handle_obj_free(&MPID_Op_mem, (op_p_)); \
+        }                                                \
+    } while (0)
+
 /* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
