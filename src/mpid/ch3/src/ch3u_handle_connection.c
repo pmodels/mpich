@@ -5,7 +5,11 @@
  */
 
 #include "mpidimpl.h"
+#ifdef USE_PMI2_API
+#include "pmi2.h"
+#else
 #include "pmi.h"
+#endif
 
 /* Count the number of outstanding close requests */
 static volatile int MPIDI_Outstanding_close_ops = 0;
@@ -420,13 +424,21 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvsname);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#ifdef USE_PMI2_API
+    {
+        int vallen = 0;
+        MPIU_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
+        pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", val, PMI2_MAX_VALLEN, &vallen);
+        MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+    }
+#else
     pmi_errno = PMI_KVS_Get_value_length_max(&len);
     MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_CHKLMEM_MALLOC(val, char *, len, mpi_errno, "val");
     pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", val, len);
     MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-
+#endif
+    
     MPIU_DBG_MSG_S(CH3_DISCONNECT, TYPICAL, "Received proc fail notification: %s", val);
     
     if (*val == '\0') {
