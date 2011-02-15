@@ -28,7 +28,7 @@
 static int verbose = 0;
 
 int main(int argc, char **argv) {
-    int i, j, rank, nranks, peer, bufsize, errors;
+    int itr, i, j, rank, nranks, peer, bufsize, errors;
     double *win_buf, *src_buf;
     MPI_Win buf_win;
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 
     /* Perform ITERATIONS strided accumulate operations */
 
-    for (i = 0; i < ITERATIONS; i++) {
+    for (itr = 0; itr < ITERATIONS; itr++) {
       MPI_Aint idx_loc[SUB_YDIM];
       int idx_rem[SUB_YDIM];
       int blk_len[SUB_YDIM];
