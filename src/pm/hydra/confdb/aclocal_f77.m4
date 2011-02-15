@@ -216,6 +216,7 @@ dnl message.  You can use '0' to specify undetermined.
 dnl
 dnl D*/
 AC_DEFUN([PAC_PROG_F77_CHECK_SIZEOF],[
+AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
 changequote(<<, >>)dnl
 dnl The name to #define.
@@ -243,7 +244,9 @@ AC_COMPILE_IFELSE([
     AC_LANG_PUSH([C])
     AC_RUN_IFELSE([
         AC_LANG_PROGRAM([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
 #ifdef F77_NAME_UPPER
 #define cisize_ CISIZE
 #define isize_ ISIZE
@@ -307,6 +310,7 @@ dnl The cache variable name.
 define(<<PAC_CV_NAME>>, translit(pac_cv_f77_sizeof_$1, [ *], [__]))dnl
 changequote([,])dnl
 AC_CACHE_CHECK([for size of Fortran type $1],PAC_CV_NAME,[
+AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
 dnl if test "$cross_compiling" = yes ; then
 dnl     ifelse([$2],[],
@@ -316,7 +320,9 @@ dnl fi
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
 #ifdef F77_NAME_UPPER
 #define cisize_ CISIZE
 #define isize_ ISIZE
@@ -691,6 +697,7 @@ dnl Fortran routine MUST be named ftest unless you include code
 dnl to select the appropriate Fortran name.
 dnl 
 AC_DEFUN([PAC_PROG_F77_RUN_PROC_FROM_C],[
+AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
 AC_LANG_PUSH([Fortran 77])
 AC_COMPILE_IFELSE([
@@ -704,7 +711,9 @@ AC_COMPILE_IFELSE([
     AC_LANG_PUSH([C])
     AC_RUN_IFELSE([
         AC_LANG_SOURCE([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
 #ifdef F77_NAME_UPPER
 #define ftest_ FTEST
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
@@ -742,6 +751,7 @@ dnl by trying to *run* a trivial program.  It only checks for *linking*.
 dnl 
 dnl
 AC_DEFUN([PAC_PROG_F77_IN_C_LIBS],[
+AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([AC_F77_LIBRARY_LDFLAGS])
 AC_MSG_CHECKING([for which Fortran libraries are needed to link C with Fortran])
 F77_IN_C_LIBS="invalid"
@@ -762,7 +772,9 @@ AC_COMPILE_IFELSE([
     # Create conftest for all link tests.
     AC_LANG_CONFTEST([
         AC_LANG_PROGRAM([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
         ],[
 #ifdef F77_NAME_UPPER
 #define ftest_ FTEST
@@ -951,6 +963,7 @@ dnl sometimes requires -lSystemStubs.  If another library is needed,
 dnl add it to F77_OTHER_LIBS
 dnl
 AC_DEFUN([PAC_PROG_F77_AND_C_STDIO_LIBS],[
+AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
 # To simply the code in the cache_check macro, chose the routine name
 # first, in case we need it
@@ -971,7 +984,9 @@ pac_cv_prog_f77_and_c_stdio_libs=unknown
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
 int $confname(int a) {
     printf( "The answer is %d\n", a ); fflush(stdout); return 0;
 }
@@ -1270,5 +1285,159 @@ if test "$pac_cv_prog_f77_has_pointer" = "yes" ; then
     ifelse([$1],[],[:],[$1])
 else
     ifelse([$2],[],[:],[$2])
+fi
+])
+dnl
+dnl
+dnl PAC_F77_INIT_WORKS_WITH_C
+dnl
+AC_DEFUN(PAC_F77_INIT_WORKS_WITH_C,[
+AC_REQUIRE([AC_HEADER_STDC])
+AC_MSG_CHECKING([whether Fortran init will work with C])
+pac_f_init_works_with_c=unknown
+AC_LANG_PUSH([Fortran 77])
+AC_COMPILE_IFELSE([
+    AC_LANG_SOURCE([
+        subroutine minit()
+        common /m1/ vc, vc2
+        character *1 vc(1,1), vc2(1)
+        common /m2/ vd
+        integer vd
+        save /m1/, /m2/
+        call minitc( vc, vc2, vd )
+        end
+    ])
+],[
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+    saved_LIBS="$LIBS"
+    LIBS="pac_f77conftest.$OBJEXT $FLIBS $LIBS"
+    AC_LANG_PUSH([C])
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
+#include <stdio.h>
+#endif
+#ifdef F77_NAME_UPPER
+#define minit_ MINIT
+#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
+#define minit_ minit
+#endif
+int main( int argc, char *argv )
+{
+    minit_();
+    return 0;
+}
+char *v1 = 0;
+char *vc2 = 0;
+int  v2 = 0;
+minitc_( char *dv1, int d, char *dv2, int d2, int dv3 )
+{
+v1 = dv1;
+v2 = dv3;
+vc2 = dv2;
+*vc2 = ' ';
+}
+        ])
+    ],[pac_f_init_works_with_c=yes],[pac_f_init_works_with_c=no])
+    AC_LANG_POP([C])
+    LIBS="$saved_LIBS"
+    rm -f pac_f77conftest.$OBJEXT
+])
+AC_LANG_POP([Fortran 77])
+AC_MSG_RESULT([$pac_f_init_works_with_c])
+])
+dnl
+dnl PAC_F77_LOGICALS_IN_C(MPI_FINT)
+dnl
+dnl where MPI_FINT is the C type for Fortran integer.
+dnl
+dnl Use a Fortran main program.  This simplifies some steps, 
+dnl since getting all of the Fortran libraries (including shared 
+dnl libraries that are not in the default library search path) can 
+dnl be tricky.  Specifically, The PROG_F77_RUN_PROC_FROM_C failed with 
+dnl some installations of the Portland group compiler.
+dnl
+dnl We'd also like to check other values for .TRUE. and .FALSE. to see
+dnl if the compiler allows (or uses) more than one value (some DEC compilers,
+dnl for example, used the high (sign) bit to indicate true and false; the 
+dnl rest of the bits were ignored.  For now, we'll assume that there are 
+dnl unique true and false values.
+dnl
+AC_DEFUN([PAC_F77_LOGICALS_IN_C],[
+AC_REQUIRE([AC_HEADER_STDC])
+AC_REQUIRE([PAC_PROG_F77_NAME_MANGLE])
+pac_mpi_fint="$1"
+AC_MSG_CHECKING([for values of Fortran logicals])
+AC_CACHE_VAL(pac_cv_prog_f77_true_false_value,[
+pac_cv_prog_f77_true_false_value=""
+AC_LANG_PUSH([C])
+AC_COMPILE_IFELSE([
+    AC_LANG_SOURCE([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
+#include <stdio.h>
+#endif
+#if defined(HAVE_STDLIB_H) || defined(STDC_HEADERS)
+#include <stdlib.h>
+#endif
+#ifdef F77_NAME_UPPER
+#define ftest_ FTEST
+#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
+#define ftest_ ftest
+#endif
+void ftest_( $pac_mpi_fint *, $pac_mpi_fint *);
+void ftest_( $pac_mpi_fint *itrue, $pac_mpi_fint *ifalse )
+{
+  FILE *f = fopen("conftestval","w");
+  if (!f) exit(1);
+  fprintf( f, "%d %d\n", *itrue, *ifalse );
+  fclose(f);
+}
+    ])
+],[
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    saved_LIBS="$LIBS"
+    LIBS="pac_conftest.$OBJEXT $saved_LIBS"
+    AC_LANG_PUSH([Fortran 77])
+    AC_RUN_IFELSE([
+        AC_LANG_SOURCE([
+            program main
+            logical itrue, ifalse
+            itrue = .TRUE.
+            ifalse = .FALSE.
+            call ftest( itrue, ifalse )
+            end
+        ])
+    ],[
+        pac_cv_prog_f77_true_false_value="`cat conftestval`"
+    ],[
+        AC_MSG_WARN([Failed to build/run program to determine Fortran logical values.])
+    ],[
+        # Cross-Compiling.  Allow the user to set the values
+        if test -n "$CROSS_F77_TRUE_VALUE" -a -n "$CROSS_F77_FALSE_VALUE" ; then
+            pac_cv_prog_f77_true_false_value="$CROSS_F77_TRUE_VALUE $CROSS_F77_FALSE_VALUE"
+        else
+            AC_MSG_WARN([Either CROSS_F77_TRUE_VALUE="$CROSS_F77_TRUE_VALUE" or CROSS_F77_FALSE_VALUE="$CROSS_F77_FALSE_VALUE" is not set.])
+        fi
+    ])
+    AC_LANG_POP([Fortran 77])
+    LIBS="$saved_LIBS"
+    rm -f pac_conftest.$OBJEXT
+])
+AC_LANG_POP([C])
+])
+dnl Endof ac_cache_val
+if test "X$pac_cv_prog_f77_true_false_value" != "X" ; then
+    true_val="`echo $pac_cv_prog_f77_true_false_value | sed -e 's/ .*//g'`"
+    false_val="`echo $pac_cv_prog_f77_true_false_value | sed -e 's/.*  *//g'`"
+    if test -n "$true_val" -a -n "$false_val" ; then
+        AC_MSG_RESULT([True is $true_val and False is $false_val])
+    else
+        AC_MSG_RESULT([could not determine])
+    fi
+fi
+if test -n "$true_val" -a -n "$false_val" ; then
+    AC_DEFINE(F77_TRUE_VALUE_SET,1,[Define if we know the value of Fortran true and false])
+    AC_DEFINE_UNQUOTED(F77_TRUE_VALUE,$true_val,[The value of true in Fortran])
+    AC_DEFINE_UNQUOTED(F77_FALSE_VALUE,$false_val,[The value of false in Fortran])
 fi
 ])
