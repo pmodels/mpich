@@ -3336,12 +3336,28 @@ if test "$ac_cv_c_uint64_t" != no ; then
     AC_DEFINE(HAVE_UINT64_T,1,[Define if uint64_t is supported by the C compiler])
 fi
 
-# Other C99 types.  stdbool.h and complex.h are not needed for the raw _Bool
-# and _Complex types, only to get the macros "bool" and "complex".
-AC_CHECK_SIZEOF([_Bool])
-AC_CHECK_SIZEOF([float _Complex])
-AC_CHECK_SIZEOF([double _Complex])
-AC_CHECK_SIZEOF([long double _Complex])
+# Other C99 types.
+AC_CHECK_HEADERS([stdbool.h complex.h])
+AC_CHECK_SIZEOF([_Bool],0,[
+#ifdef HAVE_STDBOOL_H
+#include <stdbool.h>
+#endif
+])
+AC_CHECK_SIZEOF([float _Complex],0,[
+#ifdef HAVE_COMPLEX_H
+#include <complex.h>
+#endif
+])
+AC_CHECK_SIZEOF([double _Complex],0,[
+#ifdef HAVE_COMPLEX_H
+#include <complex.h>
+#endif
+])
+AC_CHECK_SIZEOF([long double _Complex],0,[
+#ifdef HAVE_COMPLEX_H
+#include <complex.h>
+#endif
+])
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
@@ -4620,11 +4636,32 @@ if test "$enable_cxx" = "yes" ; then
     AC_LANG_CPLUSPLUS
     AC_CHECK_SIZEOF(bool)
 
-    if test "$ac_cv_type__Bool" = "yes" -a "$ac_cv_sizeof__Bool" = "$ac_cv_sizeof_bool" ; then
-        AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[_Bool],[a C type used to compute C++ bool reductions])
-    else
-        AC_MSG_ERROR([unable to determine matching C type for C++ bool])
-    fi
+    # Find a C type that matches the size of the C++ boolean type
+    case "$ac_cv_sizeof_bool" in
+    	 $ac_cv_sizeof__Bool)
+		bool_type=_Bool
+		;;
+    	 $ac_cv_sizeof_unsigned_char)
+		bool_type="unsigned char"
+		;;
+    	 $ac_cv_sizeof_unsigned_short)
+		bool_type="unsigned short"
+		;;
+    	 $ac_cv_sizeof_unsigned_int)
+		bool_type="unsigned int"
+		;;
+    	 $ac_cv_sizeof_unsigned_long)
+		bool_type="unsigned long"
+		;;
+    	 $ac_cv_sizeof_unsigned_long_long)
+		bool_type="unsigned long long"
+		;;
+         *)
+		AC_MSG_ERROR([unable to determine matching C type for C++ bool])
+		;;
+    esac
+    AC_DEFINE_UNQUOTED([MPIR_CXX_BOOL_CTYPE],[$bool_type],
+			[a C type used to compute C++ bool reductions])
 
     AC_CHECK_HEADER(complex)
     if test "$ac_cv_header_complex" = "yes" ; then 

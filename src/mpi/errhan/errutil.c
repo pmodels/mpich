@@ -1135,7 +1135,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
     char *begin, *end, *fmt;
     size_t len;
     MPI_Comm C;
-    MPI_Info I;
+    MPI_Info info;
     MPI_Datatype D;
     MPI_Win W;
     MPI_Group G;
@@ -1267,14 +1267,14 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    }
 	    break;
 	case (int)'I':
-	    I = va_arg(list, MPI_Info);
-	    if (I == MPI_INFO_NULL)
+	    info = va_arg(list, MPI_Info);
+	    if (info == MPI_INFO_NULL)
 	    {
 		MPIU_Strncpy(str, "MPI_INFO_NULL", maxlen);
 	    }
 	    else
 	    {
-		MPIU_Snprintf(str, maxlen, "info=0x%x", I);
+		MPIU_Snprintf(str, maxlen, "info=0x%x", info);
 	    }
 	    break;
 	case (int)'D':
