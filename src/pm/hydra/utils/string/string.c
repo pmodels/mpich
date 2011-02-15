@@ -143,7 +143,7 @@ char *HYDU_int_to_str_pad(int x, int maxlen)
 {
     int len = 1, max = 10, y;
     int actual_len, i;
-    char *str;
+    char *str = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
