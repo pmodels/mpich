@@ -465,6 +465,7 @@ dnl
 dnl
 dnl
 AC_DEFUN([PAC_PROG_FC_AND_C_STDIO_LIBS],[
+AC_REQUIRE([AC_HEADER_STDC])
 # To simply the code in the cache_check macro, chose the routine name
 # first, in case we need it
 confname=conf1_
@@ -484,7 +485,9 @@ pac_cv_prog_fc_and_c_stdio_libs=unknown
 AC_LANG_PUSH(C)
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
 int $confname( int a )
 { printf( "The answer is %d\n", a ); fflush(stdout); return 0; }
     ])
@@ -913,8 +916,6 @@ AC_MSG_CHECKING([for available integer ranges])
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
-#include <stdio.h>
-#include "confdefs.h"
 #ifdef F77_NAME_UPPER
 #define cisize_ CISIZE
 #define isize_ ISIZE
