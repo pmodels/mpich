@@ -310,7 +310,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
     goto fn_exit;
 }
 
-HYD_status HYDU_parse_hostfile(char *hostfile, struct HYD_node **node_list,
+HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list,
                                HYD_status(*process_token) (char *token, int newline,
                                                            struct HYD_node ** node_list))
 {

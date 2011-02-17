@@ -437,15 +437,29 @@ static void config_help_fn(void)
     printf("    launch, except ':' is replaced with a new line character\n");
 }
 
-static HYD_status config_fn(char *arg, char ***argv)
+static HYD_status parse_config_file(const char *config_file)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_parse_hostfile(**argv, NULL, process_config_token);
+    status = HYDU_parse_hostfile(config_file, NULL, process_config_token);
     HYDU_ERR_POP(status, "error parsing config file\n");
 
     status = parse_config_argv();
     HYDU_ERR_POP(status, "error parsing config args\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status config_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = parse_config_file(**argv);
+    HYDU_ERR_POP(status, "unable to parse config file %s\n", **argv);
 
   fn_exit:
     return status;
@@ -1114,10 +1128,11 @@ static HYD_status set_default_values(void)
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 {
-    int i;
+    int i, ret;
     char **argv = t_argv;
     char *progname = *argv;
-    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS];
+    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;
+    const char *home;
     struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
@@ -1156,6 +1171,29 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             exec->exec[i + 1] = NULL;
         } while (++argv && *argv);
     } while (1);
+
+    ret = MPL_env2str("HOME", &home);
+    if (ret) {
+        int len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
+
+        HYDU_MALLOC(conf_file, char *, len, status);
+        MPL_snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
+
+        ret = open(conf_file, O_RDONLY);
+        if (ret < 0) {
+            HYDU_FREE(conf_file);
+            conf_file = HYDU_strdup(HYDRA_CONF_FILE);
+            ret = open(conf_file, O_RDONLY);
+        }
+
+        if (ret >= 0) {
+            /* We have successfully opened the file */
+            close(ret);
+            parse_config_file(conf_file);
+        }
+
+        HYDU_FREE(conf_file);
+    }
 
     /* Get the base path */
     /* Find the last '/' in the executable name */
