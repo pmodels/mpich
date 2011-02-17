@@ -499,8 +499,8 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq)
 	else
 	{
 	    MPID_Segment_free(rreq->dev.segment_ptr);
-	    if (REQ_FIELD(req,iov) != NULL)
-	      MPIU_Free(REQ_FIELD(req,iov));	
+	    if (REQ_FIELD(rreq,iov) != NULL)
+	      MPIU_Free(REQ_FIELD(rreq,iov));	
 	}    
 	MPIU_Free(nmad_request);
     }    
