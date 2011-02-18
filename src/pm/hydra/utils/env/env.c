@@ -40,7 +40,7 @@ HYD_status HYDU_env_to_str(struct HYD_env *env, char **str)
 
 HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
 {
-    char *env_str, *env_name;
+    char *env_str = NULL, *env_name;
     int i, ret;
     HYD_status status = HYD_SUCCESS;
 
@@ -56,23 +56,22 @@ HYD_status HYDU_list_inherited_env(struct HYD_env **env_list)
         HYDU_ERR_POP(status, "error querying environment propagation\n");
 
         HYDU_FREE(env_str);
+        env_str = NULL;
 
         if (!ret) {
             i++;
             continue;
         }
 
-        env_str = HYDU_strdup(environ[i]);
-
-        status = HYDU_append_env_str_to_list(env_str, env_list);
+        status = HYDU_append_env_str_to_list(environ[i], env_list);
         HYDU_ERR_POP(status, "unable to add env to list\n");
-
-        HYDU_FREE(env_str);
 
         i++;
     }
 
   fn_exit:
+    if (env_str)
+        HYDU_FREE(env_str);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -239,19 +238,25 @@ HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
     goto fn_exit;
 }
 
-HYD_status HYDU_append_env_str_to_list(char *str, struct HYD_env **env_list)
+HYD_status HYDU_append_env_str_to_list(const char *str, struct HYD_env **env_list)
 {
+    char *my_str = NULL;
     char *env_name, *env_value;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    env_name = strtok(str, "=");
-    env_value = strtok(NULL, "=");
+    my_str = env_value = HYDU_strdup(str);
+    /* don't use strtok, it will mangle env values that contain '=' */
+    env_name = strsep(&env_value, "=");
+    HYDU_ASSERT(env_name != NULL, status);
+
     status = HYDU_append_env_to_list(env_name, env_value, env_list);
     HYDU_ERR_POP(status, "unable to append env to list\n");
 
   fn_exit:
+    if (my_str)
+        HYDU_FREE(my_str);
     HYDU_FUNC_EXIT();
     return status;
 
