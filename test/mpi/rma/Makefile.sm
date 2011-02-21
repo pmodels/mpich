@@ -68,6 +68,8 @@ strided_acc_indexed_SOURCES    = strided_acc_indexed.c
 strided_acc_subarray_SOURCES   = strided_acc_subarray.c
 strided_get_indexed_SOURCES    = strided_get_indexed.c
 window_creation_SOURCES        = window_creation.c
+contention_put_SOURCES         = contention_put.c
+contention_putget_SOURCES      = contention_putget.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) )

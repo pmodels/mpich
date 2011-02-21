@@ -52,3 +52,5 @@ strided_acc_subarray 2
 strided_get_indexed 2
 strided_putget_indexed 2
 window_creation 2
+contention_put 4
+contention_putget 4
