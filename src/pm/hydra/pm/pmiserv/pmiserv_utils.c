@@ -136,25 +136,25 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
             HYDU_MALLOC(block, struct block *, sizeof(struct block), status);
             block->start_idx = proxy->proxy_id;
             block->num_blocks = 1;
-            block->block_size = proxy->node.core_count;
+            block->block_size = proxy->node->core_count;
             block->next = NULL;
 
             blocklist_tail = blocklist_head = block;
         }
         else if (blocklist_tail->start_idx + blocklist_tail->num_blocks == proxy->proxy_id &&
-                 blocklist_tail->block_size == proxy->node.core_count) {
+                 blocklist_tail->block_size == proxy->node->core_count) {
             blocklist_tail->num_blocks++;
         }
         else if (blocklist_tail->start_idx == proxy->proxy_id &&
                  blocklist_tail->num_blocks == 1) {
-            blocklist_tail->block_size += proxy->node.core_count;
+            blocklist_tail->block_size += proxy->node->core_count;
         }
         else {
             HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block), status);
             blocklist_tail = blocklist_tail->next;
             blocklist_tail->start_idx = proxy->proxy_id;
             blocklist_tail->num_blocks = 1;
-            blocklist_tail->block_size = proxy->node.core_count;
+            blocklist_tail->block_size = proxy->node->core_count;
             blocklist_tail->next = NULL;
         }
     }
@@ -225,8 +225,10 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     struct HYD_exec *exec;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *mapping = NULL;
-    char *pmi_fd = NULL, *pmi_port = NULL;
-    int pmi_rank, ret;
+    char *pmi_fd = NULL, *pmi_port = NULL, *map = NULL;
+    int pmi_rank, ret, left_global_cores, right_global_cores;
+    int left_filler_processes, right_filler_processes;
+    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     status = pmi_process_mapping(pg, &mapping);
@@ -241,6 +243,14 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
     /* Create the arguments list for each proxy */
     process_id = 0;
+    right_global_cores = HYD_server_info.global_core_count;
+    left_global_cores = 0;
+
+    right_filler_processes = 0;
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+        right_filler_processes += proxy->filler_processes;
+    left_filler_processes = 0;
+
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         for (inherited_env_count = 0, env = HYD_server_info.user_global.global_env.inherited;
              env; env = env->next, inherited_env_count++);
@@ -277,10 +287,52 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--hostname");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node.hostname);
+        proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node->hostname);
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-count");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(HYD_server_info.global_core_count);
+        /* A map has three fields -- the entire system is considered
+         * to have three nodes; the nodes on the left of the current
+         * node are all grouped into one node, and the nodes to the
+         * right are grouped into another. */
+
+        /* Global core map */
+        right_global_cores -= proxy->node->core_count;
+
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-map");
+        tmp[0] = HYDU_int_to_str(left_global_cores);
+        tmp[1] = HYDU_strdup(",");
+        tmp[2] = HYDU_int_to_str(proxy->node->core_count);
+        tmp[3] = HYDU_strdup(",");
+        tmp[4] = HYDU_int_to_str(right_global_cores);
+        tmp[5] = NULL;
+        status = HYDU_str_alloc_and_join(tmp, &map);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+
+        proxy->exec_launch_info[arg++] = map;
+        HYDU_free_strlist(tmp);
+
+        left_global_cores += proxy->node->core_count;
+
+        /* Filler process map */
+        right_filler_processes -= proxy->filler_processes;
+
+        proxy->exec_launch_info[arg++] = HYDU_strdup("--filler-process-map");
+        tmp[0] = HYDU_int_to_str(left_filler_processes);
+        tmp[1] = HYDU_strdup(",");
+        tmp[2] = HYDU_int_to_str(proxy->filler_processes);
+        tmp[3] = HYDU_strdup(",");
+        tmp[4] = HYDU_int_to_str(right_filler_processes);
+        tmp[5] = NULL;
+        status = HYDU_str_alloc_and_join(tmp, &map);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+
+        HYDU_ASSERT(left_filler_processes >= 0, status);
+        HYDU_ASSERT(proxy->filler_processes >= 0, status);
+        HYDU_ASSERT(right_filler_processes >= 0, status);
+
+        proxy->exec_launch_info[arg++] = map;
+        HYDU_free_strlist(tmp);
+
+        left_filler_processes += proxy->filler_processes;
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--global-process-count");
         proxy->exec_launch_info[arg++] = HYDU_int_to_str(pg->pg_process_count);
@@ -355,9 +407,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-process-mapping");
         proxy->exec_launch_info[arg++] = HYDU_strdup(mapping);
 
-        if (proxy->node.local_binding) {
+        if (proxy->node->local_binding) {
             proxy->exec_launch_info[arg++] = HYDU_strdup("--local-binding");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node.local_binding);
+            proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node->local_binding);
         }
 
         if (HYD_server_info.user_global.binding) {
@@ -430,11 +482,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
                 HYDU_strdup(HYD_server_info.user_global.global_env.prop);
         }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--start-pid");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->start_pid);
-
         proxy->exec_launch_info[arg++] = HYDU_strdup("--proxy-core-count");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->node.core_count);
+        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->node->core_count);
         proxy->exec_launch_info[arg++] = NULL;
 
         /* Now pass the local executable information */

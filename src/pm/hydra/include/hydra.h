@@ -252,6 +252,9 @@ struct HYD_pg {
 struct HYD_node {
     char *hostname;
     int core_count;
+    int active_processes;
+
+    int node_id;
 
     /* Username */
     char *user;
@@ -264,7 +267,7 @@ struct HYD_node {
 
 /* Proxy information */
 struct HYD_proxy {
-    struct HYD_node node;
+    struct HYD_node *node;
 
     struct HYD_pg *pg;          /* Back pointer to the PG */
 
@@ -272,8 +275,10 @@ struct HYD_proxy {
 
     int proxy_id;
 
-    int start_pid;
     int proxy_process_count;
+
+    /* Filler processes that we are adding on this proxy */
+    int filler_processes;
 
     struct HYD_exec *exec_list;
 
@@ -419,17 +424,15 @@ void HYDU_finalize_user_global(struct HYD_user_global *user_global);
 void HYDU_init_global_env(struct HYD_env_global *global_env);
 void HYDU_finalize_global_env(struct HYD_env_global *global_env);
 HYD_status HYDU_alloc_node(struct HYD_node **node);
-void HYDU_dup_node(struct HYD_node src, struct HYD_node *dest);
 void HYDU_free_node_list(struct HYD_node *node_list);
 void HYDU_init_pg(struct HYD_pg *pg, int pgid);
 HYD_status HYDU_alloc_pg(struct HYD_pg **pg, int pgid);
 void HYDU_free_pg_list(struct HYD_pg *pg_list);
-HYD_status HYDU_alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg);
 void HYDU_free_proxy_list(struct HYD_proxy *proxy_list);
 HYD_status HYDU_alloc_exec(struct HYD_exec **exec);
 void HYDU_free_exec_list(struct HYD_exec *exec_list);
 HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  struct HYD_pg *pg, int proc_offset);
+                                  struct HYD_pg *pg);
 HYD_status HYDU_correct_wdir(char **wdir);
 
 /* args */
@@ -473,8 +476,6 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                struct HYDT_bind_cpuset_t cpuset);
 
 /* others */
-int HYDU_local_to_global_id(int local_id, int start_pid, int core_count,
-                            int global_core_count);
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
                                  struct HYD_node **node_list);
 HYD_status HYDU_gethostname(char *hostname);

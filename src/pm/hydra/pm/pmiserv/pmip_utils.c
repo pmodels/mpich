@@ -206,9 +206,87 @@ static HYD_status genv_prop_fn(char *arg, char ***argv)
     return HYDU_set_str_and_incr(arg, argv, &HYD_pmcd_pmip.user_global.global_env.prop);
 }
 
-static HYD_status global_core_count_fn(char *arg, char ***argv)
+static HYD_status split_map(char *map, int *left, int *current, int *right)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.system_global.global_core_count);
+    char *tmp;
+    HYD_status status = HYD_SUCCESS;
+
+    tmp = strtok(map, ",");
+    HYDU_ASSERT(tmp, status);
+    *left = atoi(tmp);
+
+    tmp = strtok(NULL, ",");
+    HYDU_ASSERT(tmp, status);
+    *current = atoi(tmp);
+
+    tmp = strtok(NULL, ",");
+    HYDU_ASSERT(tmp, status);
+    *right = atoi(tmp);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status global_core_map_fn(char *arg, char ***argv)
+{
+    char *map;
+    HYD_status status = HYD_SUCCESS;
+
+    /* Split the core map into three different segments */
+    map = HYDU_strdup(**argv);
+    HYDU_ASSERT(map, status);
+
+    status = split_map(map, &HYD_pmcd_pmip.system_global.global_core_map.left,
+                       &HYD_pmcd_pmip.system_global.global_core_map.current,
+                       &HYD_pmcd_pmip.system_global.global_core_map.right);
+    HYDU_ERR_POP(status, "unable to split the provided mapping\n");
+
+    HYD_pmcd_pmip.system_global.global_core_map.total =
+        HYD_pmcd_pmip.system_global.global_core_map.left +
+        HYD_pmcd_pmip.system_global.global_core_map.current +
+        HYD_pmcd_pmip.system_global.global_core_map.right;
+
+    (*argv)++;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status filler_process_map_fn(char *arg, char ***argv)
+{
+    char *map;
+    HYD_status status = HYD_SUCCESS;
+
+    /* Split the core map into three different segments */
+    map = HYDU_strdup(**argv);
+    HYDU_ASSERT(map, status);
+
+    status = split_map(map, &HYD_pmcd_pmip.system_global.filler_process_map.left,
+                       &HYD_pmcd_pmip.system_global.filler_process_map.current,
+                       &HYD_pmcd_pmip.system_global.filler_process_map.right);
+    HYDU_ERR_POP(status, "unable to split the provided mapping\n");
+
+    HYD_pmcd_pmip.system_global.filler_process_map.total =
+        HYD_pmcd_pmip.system_global.filler_process_map.left +
+        HYD_pmcd_pmip.system_global.filler_process_map.current +
+        HYD_pmcd_pmip.system_global.filler_process_map.right;
+
+    (*argv)++;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status global_process_count_fn(char *arg, char ***argv)
@@ -252,11 +330,6 @@ static HYD_status local_binding_fn(char *arg, char ***argv)
 static HYD_status proxy_core_count_fn(char *arg, char ***argv)
 {
     return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.local.proxy_core_count);
-}
-
-static HYD_status start_pid_fn(char *arg, char ***argv)
-{
-    return HYDU_set_int_and_incr(arg, argv, &HYD_pmcd_pmip.start_pid);
 }
 
 static HYD_status exec_fn(char *arg, char ***argv)
@@ -406,14 +479,14 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},
     {"genv-prop", genv_prop_fn, NULL},
-    {"global-core-count", global_core_count_fn, NULL},
+    {"global-core-map", global_core_map_fn, NULL},
+    {"filler-process-map", filler_process_map_fn, NULL},
     {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
     {"interface-env-name", interface_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
     {"local-binding", local_binding_fn, NULL},
     {"proxy-core-count", proxy_core_count_fn, NULL},
-    {"start-pid", start_pid_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},
     {"exec-proc-count", exec_proc_count_fn, NULL},

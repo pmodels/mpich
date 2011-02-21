@@ -97,13 +97,13 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
+HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                            int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
-    struct HYD_node *node;
+    struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
@@ -181,7 +181,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
 
     /* pid_list might already have some PIDs */
     num_hosts = 0;
-    for (node = node_list; node; node = node->next)
+    for (proxy = proxy_list; proxy; proxy = proxy->next)
         num_hosts++;
 
     /* Increase pid list to accommodate these new pids */
@@ -201,18 +201,19 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
 
     targs[idx] = NULL;
     HYDT_bind_cpuset_zero(&cpuset);
-    for (i = 0, node = node_list; node; node = node->next, i++) {
+    for (i = 0, proxy = proxy_list; proxy; proxy = proxy->next, i++) {
 
         if (targs[host_idx])
             HYDU_FREE(targs[host_idx]);
-        if (node->user == NULL) {
-            targs[host_idx] = HYDU_strdup(node->hostname);
+        if (proxy->node->user == NULL) {
+            targs[host_idx] = HYDU_strdup(proxy->node->hostname);
         }
         else {
-            len = strlen(node->user) + strlen("@") + strlen(node->hostname) + 1;
+            len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
 
             HYDU_MALLOC(targs[host_idx], char *, len, status);
-            MPL_snprintf(targs[host_idx], len, "%s@%s", node->user, node->hostname);
+            MPL_snprintf(targs[host_idx], len, "%s@%s", proxy->node->user,
+                         proxy->node->hostname);
         }
 
         /* append proxy ID */
@@ -227,11 +228,11 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_li
          * connections causing the job to fail. This is basically a
          * hack to slow down ssh connections to the same node. */
         if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
-            status = HYDT_bscd_ssh_store_launch_time(node->hostname);
+            status = HYDT_bscd_ssh_store_launch_time(proxy->node->hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
 
-        status = HYDU_sock_is_local(node->hostname, &lh);
+        status = HYDU_sock_is_local(proxy->node->hostname, &lh);
         HYDU_ERR_POP(status, "error checking if node is localhost\n");
 
         /* If launcher is 'fork', or this is the localhost, use fork

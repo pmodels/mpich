@@ -54,7 +54,7 @@ struct HYDT_bsci_fns {
 
     /* Launcher functions */
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (char **args, struct HYD_node * node_list, int *control_fd);
+    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*launcher_finalize) (void);
@@ -96,7 +96,7 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * \brief HYDT_bsci_launch_procs - Launch processes
  *
  * \param[in]   args            Arguments to be used for the launched processes
- * \param[in]   node_list       List of nodes to launch processes on
+ * \param[in]   proxy_list      List of proxies to launch
  * \param[out]  control_fd      Control socket to communicate with the launched process
  * \param[in]   stdout_cb       Stdout callback function
  * \param[in]   stderr_cb       Stderr callback function
@@ -112,7 +112,7 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * but allow proxies to query their ID information on each node using
  * the HYDT_bsci_query_proxy_id function.
  */
-HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_node *node_list, int *control_fd);
+HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int *control_fd);
 
 
 /**

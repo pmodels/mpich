@@ -150,9 +150,8 @@ void HYD_uiu_print_params(void)
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
         HYDU_dump_noprefix(stdout, "      Proxy ID: %2d\n", i++);
         HYDU_dump_noprefix(stdout, "      -----------------\n");
-        HYDU_dump_noprefix(stdout, "        Proxy name: %s\n", proxy->node.hostname);
-        HYDU_dump_noprefix(stdout, "        Process count: %d\n", proxy->node.core_count);
-        HYDU_dump_noprefix(stdout, "        Start PID: %d\n", proxy->start_pid);
+        HYDU_dump_noprefix(stdout, "        Proxy name: %s\n", proxy->node->hostname);
+        HYDU_dump_noprefix(stdout, "        Process count: %d\n", proxy->node->core_count);
         HYDU_dump_noprefix(stdout, "\n");
         HYDU_dump_noprefix(stdout, "        Proxy exec list:\n");
         HYDU_dump_noprefix(stdout, "        ....................\n");
@@ -231,7 +230,7 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
                     if (proxy->proxy_id == proxy_id)
                         break;
                 HYDU_ASSERT(proxy, status);
-                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node.hostname);
+                MPL_snprintf(tmp[i], HYD_TMP_STRLEN, "%s", proxy->node->hostname);
                 break;
             case '\0':
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,

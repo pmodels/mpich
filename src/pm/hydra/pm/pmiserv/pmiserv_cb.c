@@ -117,6 +117,10 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
     if (pg->pgid == 0)
         HYDT_dbg_free_procdesc();
 
+    /* Reset the node allocations for this PG */
+    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
+        tproxy->node->active_processes -= tproxy->proxy_process_count;
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

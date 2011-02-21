@@ -12,13 +12,14 @@
 
 static int fd_stdout, fd_stderr;
 
-HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list, int *control_fd)
+HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list,
+                                     int *control_fd)
 {
     int idx, i, total_procs, node_count;
     int *pid, *fd_list, exec_idx;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg, quoted_exec_string[HYD_TMP_STRLEN];
-    struct HYD_node *node;
+    struct HYD_proxy *proxy;
     struct HYDT_bind_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
@@ -47,7 +48,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_node *node_list, in
     HYDU_ERR_POP(status, "unable to query for the node count\n");
 
     node_count = 0;
-    for (node = node_list; node; node = node->next)
+    for (proxy = proxy_list; proxy; proxy = proxy->next)
         node_count++;
 
     if (total_procs != node_count)

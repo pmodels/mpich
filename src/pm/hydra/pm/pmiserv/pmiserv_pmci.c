@@ -99,7 +99,6 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
-    struct HYD_node *node_list = NULL, *node, *tnode;
     char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
     int node_count, i, *control_fd;
     HYD_status status = HYD_SUCCESS;
@@ -112,25 +111,6 @@ HYD_status HYD_pmci_launch_procs(void)
 
     status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
-
-    /* Copy the host list to pass to the launcher */
-    node_list = NULL;
-    node_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        HYDU_alloc_node(&node);
-        HYDU_dup_node(proxy->node, node);
-        node->next = NULL;
-
-        if (node_list == NULL) {
-            node_list = node;
-        }
-        else {
-            for (tnode = node_list; tnode->next; tnode = tnode->next);
-            tnode->next = node;
-        }
-
-        node_count++;
-    }
 
     status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
                                                  HYD_server_info.local_hostname,
@@ -147,6 +127,10 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
+    node_count = 0;
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
+        node_count++;
+
     HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
@@ -156,7 +140,8 @@ HYD_status HYD_pmci_launch_procs(void)
                        HYD_server_info.user_global.bindlib);
     HYDU_ERR_POP(status, "unable to initializing binding library");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, control_fd);
+    status =
+        HYDT_bsci_launch_procs(proxy_args, HYD_server_info.pg_list.proxy_list, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
@@ -174,7 +159,6 @@ HYD_status HYD_pmci_launch_procs(void)
     if (control_port)
         HYDU_FREE(control_port);
     HYDU_free_strlist(proxy_args);
-    HYDU_free_node_list(node_list);
     HYDU_FUNC_EXIT();
     return status;
 

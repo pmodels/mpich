@@ -19,7 +19,13 @@ static HYD_status init_params(void)
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
-    HYD_pmcd_pmip.system_global.global_core_count = -1;
+    HYD_pmcd_pmip.system_global.global_core_map.left = -1;
+    HYD_pmcd_pmip.system_global.global_core_map.current = -1;
+    HYD_pmcd_pmip.system_global.global_core_map.right = -1;
+    HYD_pmcd_pmip.system_global.filler_process_map.left = -1;
+    HYD_pmcd_pmip.system_global.filler_process_map.current = -1;
+    HYD_pmcd_pmip.system_global.filler_process_map.right = -1;
+
     HYD_pmcd_pmip.system_global.global_process_count = -1;
     HYD_pmcd_pmip.system_global.jobid = NULL;
     HYD_pmcd_pmip.system_global.pmi_port = NULL;
@@ -48,7 +54,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
 
-    HYD_pmcd_pmip.start_pid = -1;
     HYD_pmcd_pmip.exec_list = NULL;
 
     status = HYD_pmcd_pmi_allocate_kvs(&HYD_pmcd_pmip.local.kvs, -1);

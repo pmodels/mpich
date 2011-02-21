@@ -262,7 +262,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_node *node_list = NULL, *node, *tnode, *user_node_list = NULL;
+    struct HYD_node *user_node_list = NULL;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_token *tokens;
     struct HYD_exec *exec_list = NULL, *exec;
@@ -506,11 +506,11 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         offset += pg->pg_process_count;
 
     if (user_node_list) {
-        status = HYDU_create_proxy_list(exec_list, user_node_list, pg, 0);
+        status = HYDU_create_proxy_list(exec_list, user_node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     else {
-        status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg, offset);
+        status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     HYDU_free_exec_list(exec_list);
@@ -527,23 +527,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     /* Go to the last PG */
     for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next);
 
-    /* Copy the host list to pass to the launcher */
-    node_list = NULL;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        HYDU_alloc_node(&node);
-        node->hostname = HYDU_strdup(proxy->node.hostname);
-        node->core_count = proxy->node.core_count;
-        node->next = NULL;
-
-        if (node_list == NULL) {
-            node_list = node;
-        }
-        else {
-            for (tnode = node_list; tnode->next; tnode = tnode->next);
-            tnode->next = node;
-        }
-    }
-
     status = HYD_pmcd_pmi_fill_in_proxy_args(proxy_args, control_port, new_pgid);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
     HYDU_FREE(control_port);
@@ -551,9 +534,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_args, node_list, NULL);
+    status = HYDT_bsci_launch_procs(proxy_args, pg->proxy_list, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
-    HYDU_free_node_list(node_list);
 
     {
         char *cmd_str[HYD_NUM_TMP_STRINGS], *cmd;

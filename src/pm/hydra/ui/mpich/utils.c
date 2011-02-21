@@ -16,7 +16,6 @@ static void init_ui_mpich_info(void)
 {
     HYD_ui_mpich_info.ppn = -1;
     HYD_ui_mpich_info.ckpoint_int = -1;
-    HYD_ui_mpich_info.print_rank_map = -1;
     HYD_ui_mpich_info.print_all_exitcodes = -1;
     HYD_ui_mpich_info.ranks_per_proc = -1;
     HYD_ui_mpich_info.sort_order = NONE;
@@ -875,17 +874,6 @@ static HYD_status info_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void print_rank_map_help_fn(void)
-{
-    printf("\n");
-    printf("-print-rank-map: Print what ranks are allocated to what nodes\n\n");
-}
-
-static HYD_status print_rank_map_fn(char *arg, char ***argv)
-{
-    return HYDU_set_int(arg, argv, &HYD_ui_mpich_info.print_rank_map, 1);
-}
-
 static void print_all_exitcodes_help_fn(void)
 {
     printf("\n");
@@ -1048,7 +1036,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"debug", verbose_fn, verbose_help_fn},
     {"info", info_fn, info_help_fn},
     {"version", info_fn, info_help_fn},
-    {"print-rank-map", print_rank_map_fn, print_rank_map_help_fn},
     {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
     {"iface", iface_fn, iface_help_fn},
     {"nameserver", nameserver_fn, nameserver_help_fn},
@@ -1075,9 +1062,6 @@ static HYD_status set_default_values(void)
         status = HYDU_correct_wdir(&exec->wdir);
         HYDU_ERR_POP(status, "unable to correct wdir\n");
     }
-
-    if (HYD_ui_mpich_info.print_rank_map == -1)
-        HYD_ui_mpich_info.print_rank_map = 0;
 
     if (HYD_ui_mpich_info.print_all_exitcodes == -1)
         HYD_ui_mpich_info.print_all_exitcodes = 0;

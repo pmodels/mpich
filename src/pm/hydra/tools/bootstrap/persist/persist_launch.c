@@ -58,17 +58,17 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_list,
+HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                           int *control_fd)
 {
-    struct HYD_node *node;
+    struct HYD_proxy *proxy;
     int idx, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     HYDT_bscd_persist_node_count = 0;
-    for (node = node_list; node; node = node->next)
+    for (proxy = proxy_list; proxy; proxy = proxy->next)
         HYDT_bscd_persist_node_count++;
 
     for (idx = 0; args[idx]; idx++);
@@ -77,11 +77,11 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_node *node_lis
     HYDU_MALLOC(HYDT_bscd_persist_control_fd, int *,
                 HYDT_bscd_persist_node_count * sizeof(int), status);
 
-    for (node = node_list, i = 0; node; node = node->next, i++) {
+    for (proxy = proxy_list, i = 0; proxy; proxy = proxy->next, i++) {
         args[idx] = HYDU_int_to_str(i);
 
         /* connect to hydserv on each node */
-        status = HYDU_sock_connect(node->hostname, PERSIST_DEFAULT_PORT,
+        status = HYDU_sock_connect(proxy->node->hostname, PERSIST_DEFAULT_PORT,
                                    &HYDT_bscd_persist_control_fd[i]);
         HYDU_ERR_POP(status, "unable to connect to the main server\n");
 

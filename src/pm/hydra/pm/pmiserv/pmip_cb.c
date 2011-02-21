@@ -442,6 +442,34 @@ static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
+static int local_to_global_id(int local_id)
+{
+    int rem1, layer, rem2;
+    int ret;
+
+    if (local_id < HYD_pmcd_pmip.system_global.filler_process_map.current)
+        ret = HYD_pmcd_pmip.system_global.filler_process_map.left + local_id;
+    else {
+        /* rem1 gives the number of processes remaining after the
+         * filling the holes */
+        rem1 = local_id - HYD_pmcd_pmip.system_global.filler_process_map.current;
+
+        /* layer gives the layer of filling in which our process lies
+         * starting from layer 0; in each layer, we fill all proxies
+         * in the global list */
+        layer = rem1 / HYD_pmcd_pmip.system_global.global_core_map.current;
+
+        /* rem2 gives our relative index in the layer we belong to */
+        rem2 = rem1 % HYD_pmcd_pmip.system_global.global_core_map.current;
+
+        ret = (HYD_pmcd_pmip.system_global.filler_process_map.total +
+               (layer * HYD_pmcd_pmip.system_global.global_core_map.total) +
+               HYD_pmcd_pmip.system_global.global_core_map.left + rem2);
+    }
+
+    return ret;
+}
+
 static HYD_status launch_procs(void)
 {
     int i, j, arg, process_id;
@@ -491,10 +519,7 @@ static HYD_status launch_procs(void)
         HYD_pmcd_pmip.downstream.pmi_fd_active[i] = 0;
 
         if (HYD_pmcd_pmip.system_global.pmi_rank == -1)
-            HYD_pmcd_pmip.downstream.pmi_rank[i] =
-                HYDU_local_to_global_id(i, HYD_pmcd_pmip.start_pid,
-                                        HYD_pmcd_pmip.local.proxy_core_count,
-                                        HYD_pmcd_pmip.system_global.global_core_count);
+            HYD_pmcd_pmip.downstream.pmi_rank[i] = local_to_global_id(i);
         else
             HYD_pmcd_pmip.downstream.pmi_rank[i] = HYD_pmcd_pmip.system_global.pmi_rank;
     }
@@ -769,14 +794,26 @@ static HYD_status parse_exec_params(char **t_argv)
     } while (1);
 
     /* verify the arguments we got */
-    if (HYD_pmcd_pmip.system_global.global_core_count == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "global core count not available\n");
+    if (HYD_pmcd_pmip.system_global.global_core_map.left == -1 ||
+        HYD_pmcd_pmip.system_global.global_core_map.current == -1 ||
+        HYD_pmcd_pmip.system_global.global_core_map.right == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "cannot find global core map (%d,%d,%d)\n",
+                            HYD_pmcd_pmip.system_global.global_core_map.left,
+                            HYD_pmcd_pmip.system_global.global_core_map.current,
+                            HYD_pmcd_pmip.system_global.global_core_map.right);
+
+    if (HYD_pmcd_pmip.system_global.filler_process_map.left == -1 ||
+        HYD_pmcd_pmip.system_global.filler_process_map.current == -1 ||
+        HYD_pmcd_pmip.system_global.filler_process_map.right == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "cannot find available cores (%d,%d,%d)\n",
+                            HYD_pmcd_pmip.system_global.filler_process_map.left,
+                            HYD_pmcd_pmip.system_global.filler_process_map.current,
+                            HYD_pmcd_pmip.system_global.filler_process_map.right);
 
     if (HYD_pmcd_pmip.local.proxy_core_count == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy core count not available\n");
-
-    if (HYD_pmcd_pmip.start_pid == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "start PID not available\n");
 
     if (HYD_pmcd_pmip.exec_list == NULL && HYD_pmcd_pmip.user_global.ckpoint_prefix == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,

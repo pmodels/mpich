@@ -14,7 +14,7 @@
 #include "sge.h"
 #include "pbs.h"
 
-HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_node *node_list,
+HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                            int *control_fd);
 HYD_status HYDT_bscd_external_launcher_finalize(void);
 HYD_status HYDT_bscd_external_query_env_inherit(const char *env_name, int *ret);

@@ -12,7 +12,6 @@
 struct HYD_ui_mpich_info {
     int ppn;
     int ckpoint_int;
-    int print_rank_map;
     int print_all_exitcodes;
     int ranks_per_proc;
 
