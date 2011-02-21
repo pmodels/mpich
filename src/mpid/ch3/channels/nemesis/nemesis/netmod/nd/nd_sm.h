@@ -31,6 +31,13 @@ typedef enum {
 #define MPID_NEM_ND_IS_FC_PKT(pkt_type) ((pkt_type != MPID_NEM_ND_CRED_PKT) && \
                                         (pkt_type != MPID_NEM_ND_RD_AVAIL_PKT) && \
                                         (pkt_type != MPID_NEM_ND_RD_ACK_PKT))
+
+typedef enum{
+    MPID_NEM_ND_SR_PACK=0,
+    MPID_NEM_ND_ZCP_PACK,
+    MPID_NEM_ND_INVALID_PACK
+} MPID_Nem_nd_pack_t;
+
 /* We use a simple cookie to make sure that the connection
  * is an MPICH2 nd connection
  */
@@ -81,6 +88,7 @@ typedef struct MPID_Nem_nd_pg_info_hdr_{
 }while(0)
 #define MSGBUF_FREEQ_IS_EMPTY(_conn_hnd) (_conn_hnd->ssbuf_freeq.nbuf == 0)
 #define MSGBUF_FREEQ_DEQUEUE(_conn_hnd, _pmsg_buf) do{\
+    MPIU_Assert(!MSGBUF_FREEQ_IS_EMPTY(_conn_hnd)); \
     _pmsg_buf = &(_conn_hnd->ssbuf[_conn_hnd->ssbuf_freeq.head].msg);  \
     (_pmsg_buf)->hdr.type = MPID_NEM_ND_INVALID_PKT; \
     (_pmsg_buf)->hdr.credits = 0;   \

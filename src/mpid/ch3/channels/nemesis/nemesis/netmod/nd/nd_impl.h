@@ -35,9 +35,13 @@ typedef struct MPID_Nem_nd_dev_hnd_{
      * completion queue
      */
     INDCompletionQueue *p_cq;
+    int npending_rds;
+    volatile int zcp_pending;
 } *MPID_Nem_nd_dev_hnd_t;
 
 #define MPID_NEM_ND_DEV_HND_INVALID    NULL
+#define MPID_NEM_ND_DEV_RDMA_RD_MAX 2
+#define MPID_NEM_ND_DEV_IO_LIMIT(_dev_hnd) (_dev_hnd->ad_info.MaxOutboundLength - 1)
 
 /* Checks whether dev handle is initialized */
 #define MPID_NEM_ND_DEV_HND_IS_INIT(hnd)    ((hnd) != NULL)
@@ -58,23 +62,25 @@ typedef struct MPID_Nem_nd_dev_hnd_{
 
 #define MPID_NEM_ND_CONN_SENDQ_SZ (MPID_NEM_ND_CONN_FC_BUFS_MAX+MPID_NEM_ND_CONN_RDMA_RD_MAX+MPID_NEM_ND_CONN_FC_MSG_MAX)
 #define MPID_NEM_ND_CONN_RECVQ_SZ (MPID_NEM_ND_CONN_FC_BUFS_MAX+MPID_NEM_ND_CONN_RDMA_RD_MAX)
-#define MPID_NEM_ND_CONN_SGE_MAX 1
+#define MPID_NEM_ND_CONN_SGE_MAX 16
 
 /* We use bcopy for upto 1K of upper layer data - pkt + user data 
  * FIXME: Tune this value after some runtime exp
  */
-#define MPID_NEM_ND_CONN_UDATA_SZ   1024
+#define MPID_NEM_ND_CONN_UDATA_SZ   2048
 typedef struct MPID_Nem_nd_msg_mw_{
     /* The memory window descriptor of next data
      * i.e., upper layer data > MPID_NEM_ND_CONN_UDATA_SZ
      * - if any 
      */
+    /* FIXME: Only use/send the valid mw_datas */
     ND_MW_DESCRIPTOR mw_data;
     /* The memory window descriptor containing 
      * memory window descriptors of subsequent user data
      * eg: Non contig sends
      * - if any
      */
+    /* FIXME: Use this for multi-mws */
     ND_MW_DESCRIPTOR mw_mws;
 
 } MPID_Nem_nd_msg_mw_t;
@@ -131,6 +137,10 @@ typedef struct MPID_Nem_nd_conn_hnd_{
     INDEndpoint     *p_ep;
     INDConnector    *p_conn;
     MPIDI_VC_t      *vc;
+    /* Set if this conn loses in H-H */
+    int is_orphan;
+    /* Used by conns to store vc till 3-way handshake - i.e., LACK/CACK */
+    MPIDI_VC_t *tmp_vc;
     /* EX OV for Connect() */
     /* FIXME: Use this for Send() etc after extending Executive */
     MPIU_EXOVERLAPPED send_ov;
@@ -164,24 +174,32 @@ typedef struct MPID_Nem_nd_conn_hnd_{
 	 * FIXME: Can we get this info from send_credits ?
 	 */
 	int npending_ops;
+
+    /* FIXME : REMOVE ME ! */
+    int npending_rds;
     /* Is a Flow control pkt pending ? */
     int fc_pkt_pending;
 
-	/* FIXME: Make sure that we only have 1 pending RDMA read */
-    /* FIXME: Move rdma fields to another struct */
-    /* Once we finish invalidating a MW - use these credits as send_credits */
-
     /* RDMA Send side fields */
+    int zcp_send_offset;
+    int send_in_progress;
     int zcp_in_progress;
+    ND_SGE  zcp_send_sge;
+    /* MPID_Request *zcp_sreq; */
+    /* The ND memory window */
     INDMemoryWindow *zcp_send_mw;
+    /* The memory window desc sent in the ND message */
     MPID_Nem_nd_msg_mw_t zcp_msg_send_mw;
     ND_MR_HANDLE zcp_send_mr_hnd;
     MPID_Nem_nd_msg_result_t zcp_send_result;
 
     /* RDMA Recv side fields*/
-    int zcp_credits;
+    int cache_credits;
+    int zcp_recv_sge_count;
+    ND_SGE zcp_recv_sge[MPID_IOV_LIMIT];
+    MPID_Request *zcp_rreqp;
     MPID_Nem_nd_msg_mw_t zcp_msg_recv_mw;
-    ND_SGE zcp_recv_sge;
+    /* int zcp_recv_mw_offset; */
     /* MPID_Nem_nd_msg_result_t zcp_recv_result; */
 } *MPID_Nem_nd_conn_hnd_t;
 
@@ -190,6 +208,8 @@ typedef struct MPID_Nem_nd_block_op_hnd_{
     /* For EX blocking ops */
     MPIU_EXOVERLAPPED ex_ov;
 	MPID_Nem_nd_conn_hnd_t conn_hnd;
+    /* The number of blocking ops to wait before finalizing the hnd */
+    int npending_ops;
 } *MPID_Nem_nd_block_op_hnd_t;
 #define MPID_NEM_ND_BLOCK_OP_HND_INVALID NULL
 #define MPID_NEM_ND_BLOCK_OP_GET_OVERLAPPED_PTR(hnd) (MPIU_EX_GET_OVERLAPPED_PTR(&(hnd->ex_ov)))
@@ -200,7 +220,10 @@ typedef struct MPID_Nem_nd_block_op_hnd_{
 /* Checks whether conn handle is valid */
 #define MPID_NEM_ND_CONN_HND_IS_VALID(_hnd)   (((_hnd) != NULL) && \
     ((_hnd)->p_conn != NULL) && ((_hnd)->p_ep != NULL))
-#define MPID_NEM_ND_CONN_STATE_SET(_hnd, _state)  (_hnd->state = _state)
+#define MPID_NEM_ND_CONN_STATE_SET(_hnd, _state)  do{   \
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "conn[%p] %d - %d", (_hnd), (_hnd)->state, _state));    \
+    (_hnd->state = _state); \
+}while(0);
 /* Using an unused IANA protocol family */
 #define MPID_NEM_ND_PROT_FAMILY 234
 
@@ -218,10 +241,11 @@ enum{
 };
 
 #define MPID_NEM_ND_CONN_IS_CONNECTING(_conn_hnd) (_conn_hnd && ( (_conn_hnd->state > MPID_NEM_ND_CONN_QUIESCENT) && (_conn_hnd->state < MPID_NEM_ND_CONN_ACTIVE) ))
-
+#define MPID_NEM_ND_CONN_IS_CONNECTED(_conn_hnd) (_conn_hnd && (_conn_hnd->state == MPID_NEM_ND_CONN_ACTIVE))
 /* VC states */
 typedef enum{
     MPID_NEM_ND_VC_STATE_DISCONNECTED=0,
+    MPID_NEM_ND_VC_STATE_CONNECTING,
     MPID_NEM_ND_VC_STATE_CONNECTED
 } MPID_Nem_nd_vc_state_t;
 
@@ -230,6 +254,8 @@ typedef enum{
    on the network module */
 typedef struct {
     MPID_Nem_nd_conn_hnd_t conn_hnd;
+    /* Used by connect() to temperorily store the conn handle */
+    MPID_Nem_nd_conn_hnd_t tmp_conn_hnd;
     struct{
         struct MPID_Request *head;
         struct MPID_Request *tail;
@@ -241,9 +267,11 @@ typedef struct {
     MPID_Nem_nd_vc_state_t state;
 } MPID_Nem_nd_vc_area;
 
+#define MPID_NEM_ND_IS_BLOCKING_REQ(_reqp) ((_reqp)->dev.OnDataAvail != NULL)
 #define MPID_NEM_ND_VCCH_GET_ACTIVE_RECV_REQ(_vc) (((MPIDI_CH3I_VC *)((_vc)->channel_private))->recv_active)
 #define MPID_NEM_ND_VCCH_SET_ACTIVE_RECV_REQ(_vc, _req) (((MPIDI_CH3I_VC *)((_vc)->channel_private))->recv_active = _req)
 #define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_INIT(_vc) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd) = MPID_NEM_ND_CONN_HND_INVALID)
+#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_INIT(_vc) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->tmp_conn_hnd) = MPID_NEM_ND_CONN_HND_INVALID)
 #define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_INIT(_vc)  do{\
     (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq).head = NULL;        \
     (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq).tail = NULL;        \
@@ -254,6 +282,8 @@ typedef struct {
 #define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_TAIL(_vc) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq).tail)
 #define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_ENQUEUE(_vc, _reqp) GENERIC_Q_ENQUEUE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq), _reqp, dev.next)
 #define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_DEQUEUE(_vc, _reqp) GENERIC_Q_DEQUEUE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq), _reqp, dev.next)
+#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_REM_TAIL(_vc, _reqp) GENERIC_Q_SEARCH_REMOVE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq), ( (_reqp) && ((*_reqp)->dev.next == NULL) ), _reqp, MPID_Request, dev.next)
+
 #define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_INIT(_vc)  do{\
     (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq).head = NULL;        \
     (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq).tail = NULL;        \
@@ -269,25 +299,38 @@ typedef struct {
 #define MPID_NEM_ND_VCCH_NETMOD_FIELD_GET(_vc, _field) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->_field)
 #define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_SET(_vc, _conn_hnd) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd) = _conn_hnd)
 #define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd)
+#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_SET(_vc, _conn_hnd) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->tmp_conn_hnd) = _conn_hnd)
+#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->tmp_conn_hnd)
 #define MPID_NEM_ND_VCCH_NETMOD_STATE_SET(_vc, _state) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->state) = _state)
 #define MPID_NEM_ND_VCCH_NETMOD_STATE_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->state)
 
 /* VC Netmod util funcs */
-#define MPID_NEM_ND_VC_IS_CONNECTED(_vc) (\
+#define MPID_NEM_ND_VC_IS_CONNECTED(_vc) (  \
+    (_vc) &&                                \
+    (MPID_NEM_ND_VCCH_NETMOD_STATE_GET(_vc) == MPID_NEM_ND_VC_STATE_CONNECTED) &&   \
     (MPID_NEM_ND_CONN_HND_IS_VALID(MPID_NEM_ND_VCCH_NETMOD_FIELD_GET(_vc, conn_hnd))) &&     \
     (MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(_vc)->state == MPID_NEM_ND_CONN_ACTIVE)     \
+)
+
+#define MPID_NEM_ND_VC_IS_CONNECTING(_vc) (\
+    (_vc) &&    \
+    (MPID_NEM_ND_VCCH_NETMOD_STATE_GET(_vc) == MPID_NEM_ND_VC_STATE_CONNECTING) \
 )
 
 /* CONN is orphan if
  * - conn is not valid
  * - conn is related to a VC that is no longer related to it (eg: lost in head to head)
  */
+/*
 #define MPID_NEM_ND_CONN_IS_ORPHAN(_hnd) (\
     !MPID_NEM_ND_CONN_HND_IS_VALID(_hnd) ||                  \
     ((_hnd->vc) && (MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(_hnd->vc) != _hnd)) \
 )
+*/
+#define MPID_NEM_ND_CONN_IS_ORPHAN(_hnd) (_hnd->is_orphan)
 #define MPID_NEM_ND_CONN_HAS_SCREDITS(_hnd) (_hnd->send_credits > 0)
 #define MPID_NEM_ND_CONN_DECR_SCREDITS(_hnd) (_hnd->send_credits--)
+#define MPID_NEM_ND_CONN_DECR_CACHE_SCREDITS(_hnd) (_hnd->cache_credits--)
 /* #define MPID_NEM_ND_CONN_INCR_SCREDITS(_hnd) (_hnd->send_credits++) */
 
 /* #define MPID_NEM_ND_CONN_DECR_RCREDITS(_hnd) (_hnd->recv_credits--) */
@@ -310,18 +353,19 @@ int MPID_Nem_nd_resolve_head_to_head(int remote_rank, MPIDI_PG_t *remote_pg, cha
 int MPID_Nem_nd_dev_hnd_init(MPID_Nem_nd_dev_hnd_t *phnd, MPIU_ExSetHandle_t ex_hnd);
 int MPID_Nem_nd_dev_hnd_finalize(MPID_Nem_nd_dev_hnd_t *phnd);
 
-int MPID_Nem_nd_conn_hnd_init(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_conn_type_t conn_type, INDConnector *p_conn, MPID_Nem_nd_conn_hnd_t *pconn_hnd);
+int MPID_Nem_nd_conn_hnd_init(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_conn_type_t conn_type, INDConnector *p_conn, MPIDI_VC_t *vc, MPID_Nem_nd_conn_hnd_t *pconn_hnd);
 int MPID_Nem_nd_conn_hnd_finalize(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_conn_hnd_t *p_conn_hnd);
 
 int MPID_Nem_nd_sm_init(void );
 int MPID_Nem_nd_sm_finalize(void );
-int MPID_Nem_nd_sm_poll(void );
+int MPID_Nem_nd_sm_poll(int in_blocking_poll);
 int MPID_Nem_nd_conn_block_op_init(MPID_Nem_nd_conn_hnd_t conn_hnd);
 int MPID_Nem_nd_conn_msg_bufs_init(MPID_Nem_nd_conn_hnd_t conn_hnd);
 int MPID_Nem_nd_listen_for_conn(int pg_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_Nem_nd_conn_disc(MPID_Nem_nd_conn_hnd_t conn_hnd);
 int MPID_Nem_nd_conn_est(MPIDI_VC_t *vc);
-int MPID_Nem_nd_post_sendv(MPID_Nem_nd_conn_hnd_t conn_hnd, MPID_IOV *iov, int n_iov);
+int MPID_Nem_nd_post_sendv(MPID_Nem_nd_conn_hnd_t conn_hnd, MPID_Request *sreqp);
+int MPID_Nem_nd_post_sendbv(MPID_Nem_nd_conn_hnd_t conn_hnd, MPID_Request *sreqp);
 
 
 int MPID_Nem_nd_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
