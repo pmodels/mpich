@@ -27,3 +27,8 @@ spawntest_master, spawntest_child - A test of MPI_Comm_disconnect to ensure
 		  works correctly, the spawned children (4 by default), 
 		  should exit roughly 30 seconds before the master.
 
+segfault - a simple test that intentionally segfaults if its rank is 0,
+           otherwise does nothing.  The output from mpiexec should make it clear
+           that one of the processes segfaulted (not just terminated badly), and
+           ideally indicate which process.  Make sure to run it with a range of
+           comm_world sizes, including 1 and 2.
