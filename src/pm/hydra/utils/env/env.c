@@ -248,7 +248,7 @@ HYD_status HYDU_append_env_str_to_list(const char *str, struct HYD_env **env_lis
 
     my_str = env_value = HYDU_strdup(str);
     /* don't use strtok, it will mangle env values that contain '=' */
-    env_name = strsep(&env_value, "=");
+    env_name = MPL_strsep(&env_value, "=");
     HYDU_ASSERT(env_name != NULL, status);
 
     status = HYDU_append_env_to_list(env_name, env_value, env_list);
