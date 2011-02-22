@@ -391,7 +391,6 @@ int main(int argc, char **argv)
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
         if (proxy->exit_status == NULL) {
             /* We didn't receive the exit status for this proxy */
-            exit_status |= 1;
             continue;
         }
 
