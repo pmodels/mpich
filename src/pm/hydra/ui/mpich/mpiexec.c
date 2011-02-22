@@ -400,7 +400,12 @@ int main(int argc, char **argv)
 
         for (i = 0; i < proxy->proxy_process_count; i++) {
             if (HYD_ui_mpich_info.print_all_exitcodes) {
-                HYDU_dump_noprefix(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
+                if (WIFEXITED(proxy->exit_status[i])) {
+                    HYDU_dump_noprefix(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
+                }
+                else {
+                    HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[i]);
+                }
                 if (i < proxy->proxy_process_count - 1)
                     HYDU_dump_noprefix(stdout, ",");
             }
