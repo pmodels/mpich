@@ -36,6 +36,7 @@ char *MPL_strdup(const char *str);
 #endif /* MPL_HAVE_STRDUP */
 
 int MPL_strncpy(char *dest, const char *src, size_t n);
+char *MPL_strsep(char **stringp, const char *delim);
 
 #if defined MPL_NEEDS_STRNCMP_DECL
 extern int strncmp(const char *s1, const char *s2, size_t n);

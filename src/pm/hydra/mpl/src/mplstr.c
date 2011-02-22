@@ -256,3 +256,45 @@ int MPL_strncpy(char *dest, const char *src, size_t n)
         return 1;
     }
 }
+
+/* replacement for strsep.  Conforms to the following description (from the OS X
+ * 10.6 man page):
+ *
+ *   The strsep() function locates, in the string referenced by *stringp, the first occur-
+ *   rence of any character in the string delim (or the terminating `\0' character) and
+ *   replaces it with a `\0'.  The location of the next character after the delimiter
+ *   character (or NULL, if the end of the string was reached) is stored in *stringp.  The
+ *   original value of *stringp is returned.
+ *
+ *   An ``empty'' field (i.e., a character in the string delim occurs as the first charac-
+ *   ter of *stringp) can be detected by comparing the location referenced by the returned
+ *   pointer to `\0'.
+ *
+ *   If *stringp is initially NULL, strsep() returns NULL.
+ */
+char *MPL_strsep(char **stringp, const char *delim)
+{
+    int i, j;
+    char *ret;
+
+    if (!*stringp)
+        return NULL;
+
+    ret = *stringp;
+    i = 0;
+    while (1) {
+        if (!ret[i]) {
+            *stringp = NULL;
+            return ret;
+        }
+        for (j = 0; delim[j] != '\0'; ++j) {
+            if (ret[i] == delim[j]) {
+                ret[i] = '\0';
+                *stringp = &ret[i+1];
+                return ret;
+            }
+        }
+        ++i;
+    }
+}
+
