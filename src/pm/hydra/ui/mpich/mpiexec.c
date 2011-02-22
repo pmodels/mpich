@@ -399,12 +399,7 @@ int main(int argc, char **argv)
 
         for (i = 0; i < proxy->proxy_process_count; i++) {
             if (HYD_ui_mpich_info.print_all_exitcodes) {
-                if (WIFEXITED(proxy->exit_status[i])) {
-                    HYDU_dump_noprefix(stdout, "%d", WEXITSTATUS(proxy->exit_status[i]));
-                }
-                else {
-                    HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[i]);
-                }
+                HYDU_dump_noprefix(stdout, "%d", proxy->exit_status[i]);
                 if (i < proxy->proxy_process_count - 1)
                     HYDU_dump_noprefix(stdout, ",");
             }
@@ -450,10 +445,6 @@ int main(int argc, char **argv)
             printf("APPLICATION TERMINATED WITH THE EXIT STRING: %s (signal %d)\n",
                    strsignal(WTERMSIG(exit_status)), WTERMSIG(exit_status));
         }
-        else if (WIFEXITED(exit_status))
-            return (WEXITSTATUS(exit_status));
-        else if (WIFSTOPPED(exit_status))
-            return (WSTOPSIG(exit_status));
         return exit_status;
     }
 
