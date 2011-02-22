@@ -27,6 +27,8 @@ void HYD_pmcd_pmip_kill_localprocs(void)
         }
     }
 
+    HYD_pmcd_pmip.downstream.forced_cleanup = 1;
+
     HYDU_FUNC_EXIT();
 }
 

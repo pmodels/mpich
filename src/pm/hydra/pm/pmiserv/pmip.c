@@ -44,6 +44,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.downstream.exit_status = NULL;
     HYD_pmcd_pmip.downstream.pmi_rank = NULL;
     HYD_pmcd_pmip.downstream.pmi_fd = NULL;
+    HYD_pmcd_pmip.downstream.forced_cleanup = 0;
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
@@ -237,13 +238,19 @@ int main(int argc, char **argv)
         if (pid > 0)
             for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
                 if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
-                    /* We store the new return status if either the
-                     * exit status is uninitialized, or if the return
-                     * status is non-zero. If the return status is
-                     * zero, and the exit status has already been set
-                     * to a different value, we use that. */
-                    if (ret_status || HYD_pmcd_pmip.downstream.exit_status[i] == -1)
+                    if (HYD_pmcd_pmip.downstream.forced_cleanup) {
+                        /* If it is a forced cleanup, the exit status
+                         * is either already set or we have to ignore
+                         * it */
+                        if (HYD_pmcd_pmip.downstream.exit_status[i] == -1)
+                            HYD_pmcd_pmip.downstream.exit_status[i] = 0;
+                        else
+                            HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                    }
+                    else {
                         HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                    }
+
                     done++;
                 }
 

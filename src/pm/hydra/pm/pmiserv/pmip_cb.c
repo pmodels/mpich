@@ -253,10 +253,11 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             status = HYDT_ftb_publish("FTB_MPI_PROCS_DEAD", ftb_event_payload);
             HYDU_ERR_POP(status, "FTB publish failed\n");
 
-            /* Store a temporary erroneous exit status. In case the
-             * application does not return a non-zero exit status, we
-             * will use this. */
-            HYD_pmcd_pmip.downstream.exit_status[pid] = 1;
+            /* If this is not a forced cleanup, store a temporary
+             * erroneous exit status. In case the application does not
+             * return a non-zero exit status, we will use this. */
+            if (HYD_pmcd_pmip.downstream.forced_cleanup == 0)
+                HYD_pmcd_pmip.downstream.exit_status[pid] = 1;
 
             /* Deregister failed socket */
             status = HYDT_dmx_deregister_fd(fd);
