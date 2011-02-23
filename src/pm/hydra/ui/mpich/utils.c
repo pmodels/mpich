@@ -11,6 +11,10 @@
 #include "uiu.h"
 
 static int hostname_propagation = -1;
+static char *config_file = NULL;
+static char **config_argv = NULL;
+static int reading_config_file = 0;
+static struct HYD_arg_match_table match_table[];
 
 static void init_ui_mpich_info(void)
 {
@@ -122,15 +126,20 @@ static HYD_status genvlist_fn(char *arg, char ***argv)
     int len;
     HYD_status status = HYD_SUCCESS;
 
+    if (reading_config_file && HYD_server_info.user_global.global_env.prop) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
     HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.global_env.prop,
                         HYD_INTERNAL_ERROR, "duplicate environment setting\n");
 
     len = strlen("list:") + strlen(**argv) + 1;
     HYDU_MALLOC(HYD_server_info.user_global.global_env.prop, char *, len, status);
     HYDU_snprintf(HYD_server_info.user_global.global_env.prop, len, "list:%s", **argv);
-    (*argv)++;
 
   fn_exit:
+    (*argv)++;
     return status;
 
   fn_fail:
@@ -146,7 +155,21 @@ static void genvnone_help_fn(void)
 
 static HYD_status genvnone_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str(arg, argv, &HYD_server_info.user_global.global_env.prop, "none");
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.global_env.prop) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.global_env.prop, "none");
+    HYDU_ERR_POP(status, "error setting genvnone\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void genvall_help_fn(void)
@@ -158,7 +181,21 @@ static void genvall_help_fn(void)
 
 static HYD_status genvall_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str(arg, argv, &HYD_server_info.user_global.global_env.prop, "all");
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.global_env.prop) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.global_env.prop, "all");
+    HYDU_ERR_POP(status, "error setting genvall\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void mfile_help_fn(void)
@@ -170,6 +207,11 @@ static void mfile_help_fn(void)
 static HYD_status mfile_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.node_list) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
 
     HYDU_ERR_CHKANDJUMP(status, HYD_server_info.node_list, HYD_INTERNAL_ERROR,
                         "duplicate host file setting\n");
@@ -184,9 +226,8 @@ static HYD_status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
 
-    (*argv)++;
-
   fn_exit:
+    (*argv)++;
     return status;
 
   fn_fail:
@@ -204,6 +245,11 @@ static HYD_status hostlist_fn(char *arg, char ***argv)
     char *hostlist[HYD_NUM_TMP_STRINGS];
     int count = 0;
     HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.node_list) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
 
     HYDU_ERR_CHKANDJUMP(status, HYD_server_info.node_list, HYD_INTERNAL_ERROR,
                         "duplicate host file or host list setting\n");
@@ -227,9 +273,8 @@ static HYD_status hostlist_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
 
-    (*argv)++;
-
   fn_exit:
+    (*argv)++;
     return status;
 
   fn_fail:
@@ -244,7 +289,22 @@ static void ppn_help_fn(void)
 
 static HYD_status ppn_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYD_ui_mpich_info.ppn);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_mpich_info.ppn != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_ui_mpich_info.ppn, atoi(**argv));
+    HYDU_ERR_POP(status, "error setting ppn\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void profile_help_fn(void)
@@ -257,11 +317,16 @@ static HYD_status profile_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
+    if (reading_config_file && HYD_server_info.enable_profiling != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
 #if !defined ENABLE_PROFILING
     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "profiling support not compiled in\n");
 #endif /* ENABLE_PROFILING */
 
-    status = HYDU_set_int(arg, argv, &HYD_server_info.enable_profiling, 1);
+    status = HYDU_set_int(arg, &HYD_server_info.enable_profiling, 1);
     HYDU_ERR_POP(status, "error enabling profiling\n");
 
   fn_exit:
@@ -279,7 +344,21 @@ static void prepend_rank_help_fn(void)
 
 static HYD_status prepend_rank_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str(arg, argv, &HYD_ui_info.prepend_pattern, "[%r] ");
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_info.prepend_pattern) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_ui_info.prepend_pattern, "[%r] ");
+    HYDU_ERR_POP(status, "error setting prepend_rank field\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void pattern_info(void)
@@ -301,7 +380,22 @@ static void prepend_pattern_help_fn(void)
 
 static HYD_status prepend_pattern_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.prepend_pattern);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_info.prepend_pattern) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_ui_info.prepend_pattern, **argv);
+    HYDU_ERR_POP(status, "error setting prepend pattern\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void outfile_pattern_help_fn(void)
@@ -313,7 +407,22 @@ static void outfile_pattern_help_fn(void)
 
 static HYD_status outfile_pattern_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.outfile_pattern);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_info.outfile_pattern) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_ui_info.outfile_pattern, **argv);
+    HYDU_ERR_POP(status, "error setting outfile pattern\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void errfile_pattern_help_fn(void)
@@ -325,7 +434,22 @@ static void errfile_pattern_help_fn(void)
 
 static HYD_status errfile_pattern_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_ui_info.errfile_pattern);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_info.errfile_pattern) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_ui_info.errfile_pattern, **argv);
+    HYDU_ERR_POP(status, "error setting errfile pattern\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void wdir_help_fn(void)
@@ -342,85 +466,11 @@ static HYD_status wdir_fn(char *arg, char ***argv)
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_str_and_incr(arg, argv, &exec->wdir);
+    status = HYDU_set_str(arg, &exec->wdir, **argv);
     HYDU_ERR_POP(status, "error setting wdir for executable\n");
 
   fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static struct HYD_arg_match_table match_table[];
-
-static char **config_argv = NULL;
-
-static HYD_status parse_config_argv(void)
-{
-    struct HYD_exec *exec;
-    int i;
-    HYD_status status = HYD_SUCCESS;
-
-    do {
-        /* Get the mpiexec arguments  */
-        status = HYDU_parse_array(&config_argv, match_table);
-        HYDU_ERR_POP(status, "error parsing input array\n");
-
-        if (!(*config_argv))
-            break;
-
-        /* Get the executable information */
-        do {
-            status = get_current_exec(&exec);
-            HYDU_ERR_POP(status, "get_current_exec returned error\n");
-
-            i = 0;
-            while (exec->exec[i] != NULL)
-                i++;
-            exec->exec[i] = HYDU_strdup(*config_argv);
-            exec->exec[i + 1] = NULL;
-        } while (++config_argv && *config_argv);
-    } while (1);
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status process_config_token(char *token, int newline, struct HYD_node **node_list)
-{
-    struct HYD_exec *exec;
-    static int first_line = 1, idx = 0;
-    HYD_status status = HYD_SUCCESS;
-
-    if (config_argv == NULL)
-        HYDU_MALLOC(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
-
-    status = get_current_exec(&exec);
-    HYDU_ERR_POP(status, "get_current_exec returned error\n");
-
-    if (newline) {      /* The first entry gives the hostname and processes */
-        if (first_line)
-            first_line = 0;
-        else {
-            status = parse_config_argv();
-            HYDU_ERR_POP(status, "error parsing config args\n");
-
-            status = HYDU_alloc_exec(&exec->next);
-            HYDU_ERR_POP(status, "allocate_exec returned error\n");
-            exec->next->appnum = exec->appnum + 1;
-        }
-
-        idx = 0;
-    }
-
-    config_argv[idx++] = HYDU_strdup(token);
-    config_argv[idx] = NULL;
-
-  fn_exit:
+    (*argv)++;
     return status;
 
   fn_fail:
@@ -436,29 +486,12 @@ static void config_help_fn(void)
     printf("    launch, except ':' is replaced with a new line character\n");
 }
 
-static HYD_status parse_config_file(const char *config_file)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_parse_hostfile(config_file, NULL, process_config_token);
-    HYDU_ERR_POP(status, "error parsing config file\n");
-
-    status = parse_config_argv();
-    HYDU_ERR_POP(status, "error parsing config args\n");
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status config_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = parse_config_file(**argv);
-    HYDU_ERR_POP(status, "unable to parse config file %s\n", **argv);
+    HYDU_ASSERT(!config_file, status);
+    config_file = HYDU_strdup(**argv);
 
   fn_exit:
     return status;
@@ -570,7 +603,7 @@ static HYD_status envnone_fn(char *arg, char ***argv)
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_str(arg, argv, &exec->env_prop, "none");
+    status = HYDU_set_str(arg, &exec->env_prop, "none");
 
   fn_exit:
     return status;
@@ -594,7 +627,7 @@ static HYD_status envall_fn(char *arg, char ***argv)
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_str(arg, argv, &exec->env_prop, "all");
+    status = HYDU_set_str(arg, &exec->env_prop, "all");
 
   fn_exit:
     return status;
@@ -617,12 +650,13 @@ static HYD_status np_fn(char *arg, char ***argv)
     status = get_current_exec(&exec);
     HYDU_ERR_POP(status, "get_current_exec returned error\n");
 
-    status = HYDU_set_int_and_incr(arg, argv, &exec->proc_count);
+    status = HYDU_set_int(arg, &exec->proc_count, atoi(**argv));
     HYDU_ERR_POP(status, "error getting executable process count\n");
 
     HYD_server_info.pg_list.pg_process_count += exec->proc_count;
 
   fn_exit:
+    (*argv)++;
     return status;
 
   fn_fail:
@@ -639,7 +673,22 @@ static void launcher_help_fn(void)
 
 static HYD_status launcher_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.launcher);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.launcher) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.launcher, **argv);
+    HYDU_ERR_POP(status, "error setting launcher\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void launcher_exec_help_fn(void)
@@ -652,7 +701,22 @@ static void launcher_exec_help_fn(void)
 
 static HYD_status launcher_exec_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.launcher_exec);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.launcher_exec) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.launcher_exec, **argv);
+    HYDU_ERR_POP(status, "error setting launcher exec\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void enablex_help_fn(void)
@@ -664,8 +728,22 @@ static void enablex_help_fn(void)
 
 static HYD_status enablex_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYD_server_info.user_global.enablex,
-                        !strcmp(arg, "enable-x"));
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.enablex != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_server_info.user_global.enablex,
+                          !strcmp(arg, "enable-x"));
+    HYDU_ERR_POP(status, "error setting enable-x\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void rmk_help_fn(void)
@@ -678,7 +756,22 @@ static void rmk_help_fn(void)
 
 static HYD_status rmk_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.rmk);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.rmk) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.rmk, **argv);
+    HYDU_ERR_POP(status, "error setting rmk\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void ranks_per_proc_help_fn(void)
@@ -689,7 +782,22 @@ static void ranks_per_proc_help_fn(void)
 
 static HYD_status ranks_per_proc_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYD_ui_mpich_info.ranks_per_proc);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_mpich_info.ranks_per_proc != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_ui_mpich_info.ranks_per_proc, atoi(**argv));
+    HYDU_ERR_POP(status, "error setting ranks per process\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void binding_help_fn(void)
@@ -739,7 +847,22 @@ static void binding_help_fn(void)
 
 static HYD_status binding_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.binding);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.binding) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.binding, **argv);
+    HYDU_ERR_POP(status, "error setting binding\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void bindlib_help_fn(void)
@@ -752,7 +875,22 @@ static void bindlib_help_fn(void)
 
 static HYD_status bindlib_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.bindlib);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.bindlib) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.bindlib, **argv);
+    HYDU_ERR_POP(status, "error setting bindlib\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void ckpoint_interval_help_fn(void)
@@ -763,7 +901,22 @@ static void ckpoint_interval_help_fn(void)
 
 static HYD_status ckpoint_interval_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYD_ui_mpich_info.ckpoint_int);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_mpich_info.ckpoint_int != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_ui_mpich_info.ckpoint_int, atoi(**argv));
+    HYDU_ERR_POP(status, "error setting ckpoint interval\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void ckpoint_prefix_help_fn(void)
@@ -774,7 +927,22 @@ static void ckpoint_prefix_help_fn(void)
 
 static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.ckpoint_prefix);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.ckpoint_prefix) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.ckpoint_prefix, **argv);
+    HYDU_ERR_POP(status, "error setting ckpoint_prefix\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void ckpoint_num_help_fn(void)
@@ -785,7 +953,22 @@ static void ckpoint_num_help_fn(void)
 
 static HYD_status ckpoint_num_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYD_server_info.user_global.ckpoint_num);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.ckpoint_num != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_server_info.user_global.ckpoint_num, atoi(**argv));
+    HYDU_ERR_POP(status, "error setting ckpoint_num\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void ckpointlib_help_fn(void)
@@ -798,7 +981,22 @@ static void ckpointlib_help_fn(void)
 
 static HYD_status ckpointlib_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.ckpointlib);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.ckpointlib) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.ckpointlib, **argv);
+    HYDU_ERR_POP(status, "error setting ckpointlib\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void demux_help_fn(void)
@@ -811,7 +1009,22 @@ static void demux_help_fn(void)
 
 static HYD_status demux_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.demux);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.demux) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.demux, **argv);
+    HYDU_ERR_POP(status, "error setting demux\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void verbose_help_fn(void)
@@ -822,7 +1035,21 @@ static void verbose_help_fn(void)
 
 static HYD_status verbose_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYD_server_info.user_global.debug, 1);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.debug != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_server_info.user_global.debug, 1);
+    HYDU_ERR_POP(status, "error setting debug\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void info_help_fn(void)
@@ -882,7 +1109,21 @@ static void print_all_exitcodes_help_fn(void)
 
 static HYD_status print_all_exitcodes_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYD_ui_mpich_info.print_all_exitcodes, 1);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_ui_mpich_info.print_all_exitcodes != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_ui_mpich_info.print_all_exitcodes, 1);
+    HYDU_ERR_POP(status, "error setting print_all_exitcodes\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void iface_help_fn(void)
@@ -893,7 +1134,22 @@ static void iface_help_fn(void)
 
 static HYD_status iface_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.user_global.iface);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.iface) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.iface, **argv);
+    HYDU_ERR_POP(status, "error setting iface\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void nameserver_help_fn(void)
@@ -904,7 +1160,22 @@ static void nameserver_help_fn(void)
 
 static HYD_status nameserver_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &HYD_server_info.nameserver);
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.nameserver) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.nameserver, **argv);
+    HYDU_ERR_POP(status, "error setting nameserver\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void auto_cleanup_help_fn(void)
@@ -916,8 +1187,22 @@ static void auto_cleanup_help_fn(void)
 
 static HYD_status auto_cleanup_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYD_server_info.user_global.auto_cleanup,
-                        !strcmp(arg, "enable-auto-cleanup"));
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.auto_cleanup != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &HYD_server_info.user_global.auto_cleanup,
+                          !strcmp(arg, "enable-auto-cleanup"));
+    HYDU_ERR_POP(status, "error setting auto cleanup\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void hostname_propagation_help_fn(void)
@@ -929,8 +1214,22 @@ static void hostname_propagation_help_fn(void)
 
 static HYD_status hostname_propagation_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &hostname_propagation,
-                        strcmp(arg, "disable-hostname-propagation"));
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && hostname_propagation != -1) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_int(arg, &hostname_propagation,
+                          strcmp(arg, "disable-hostname-propagation"));
+    HYDU_ERR_POP(status, "error setting hostname propagation\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void order_nodes_help_fn(void)
@@ -944,6 +1243,11 @@ static HYD_status order_nodes_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
+    if (reading_config_file && HYD_ui_mpich_info.sort_order != NONE) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
     if (!strcmp(**argv, "ASCENDING") || !strcmp(**argv, "ascending") ||
         !strcmp(**argv, "UP") || !strcmp(**argv, "up"))
         HYD_ui_mpich_info.sort_order = ASCENDING;
@@ -953,9 +1257,240 @@ static HYD_status order_nodes_fn(char *arg, char ***argv)
     else
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized sort order\n");
 
+  fn_exit:
     (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status set_default_values(void)
+{
+    char *tmp;
+    struct HYD_exec *exec;
+    HYD_status status = HYD_SUCCESS;
+
+    /* If exec_list is not NULL, make sure local executable is set */
+    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
+        if (exec->exec[0] == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
+
+        status = HYDU_correct_wdir(&exec->wdir);
+        HYDU_ERR_POP(status, "unable to correct wdir\n");
+    }
+
+    if (HYD_ui_mpich_info.print_all_exitcodes == -1)
+        HYD_ui_mpich_info.print_all_exitcodes = 0;
+
+    if (HYD_ui_mpich_info.ranks_per_proc == -1)
+        HYD_ui_mpich_info.ranks_per_proc = 1;
+
+    if (HYD_server_info.enable_profiling == -1)
+        HYD_server_info.enable_profiling = 0;
+
+    if (HYD_server_info.user_global.debug == -1 &&
+        MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
+        HYD_server_info.user_global.debug = 0;
+
+    if (MPL_env2str("HYDRA_IFACE", (const char **) &HYD_server_info.user_global.iface) == 0)
+        HYD_server_info.user_global.iface = NULL;
+
+    if (HYD_server_info.node_list == NULL &&
+        MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
+        status =
+            HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
+        HYDU_ERR_POP(status, "error parsing hostfile\n");
+    }
+
+    /* Check environment for setting the inherited environment */
+    if (HYD_server_info.user_global.global_env.prop == NULL &&
+        MPL_env2str("HYDRA_ENV", (const char **) &tmp))
+        HYD_server_info.user_global.global_env.prop =
+            !strcmp(tmp, "all") ? HYDU_strdup("all") : HYDU_strdup("none");
+
+    if (HYD_server_info.user_global.auto_cleanup == -1)
+        HYD_server_info.user_global.auto_cleanup = 1;
+
+    /* Make sure this is either a restart or there is an executable to
+     * launch */
+    if (HYD_uii_mpx_exec_list == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
+
+    if (hostname_propagation || hostname_propagation == -1)
+        HYD_server_info.interface_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
 
   fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status process_config_token(char *token, int newline, struct HYD_node **node_list)
+{
+    static int idx = 0;
+
+    config_argv[idx++] = HYDU_strdup(token);
+    config_argv[idx] = NULL;
+
+    return HYD_SUCCESS;
+}
+
+static HYD_status parse_args(char **t_argv)
+{
+    char **argv = t_argv;
+    struct HYD_exec *exec;
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    do {
+        /* Get the mpiexec arguments  */
+        status = HYDU_parse_array(&argv, match_table);
+        HYDU_ERR_POP(status, "error parsing input array\n");
+
+        if (!(*argv))
+            break;
+
+        /* Get the executable information */
+        /* Read the executable till you hit the end of a ":" */
+        do {
+            status = get_current_exec(&exec);
+            HYDU_ERR_POP(status, "get_current_exec returned error\n");
+
+            if (!strcmp(*argv, ":")) {  /* Next executable */
+                status = HYDU_alloc_exec(&exec->next);
+                HYDU_ERR_POP(status, "allocate_exec returned error\n");
+                exec->next->appnum = exec->appnum + 1;
+                ++argv;
+                break;
+            }
+
+            i = 0;
+            while (exec->exec[i] != NULL)
+                i++;
+            exec->exec[i] = HYDU_strdup(*argv);
+            exec->exec[i + 1] = NULL;
+        } while (++argv && *argv);
+    } while (1);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
+{
+    int ret;
+    char **argv = t_argv;
+    char *progname = *argv;
+    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;
+    const char *home;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYD_uiu_init_params();
+    init_ui_mpich_info();
+
+    argv++;
+    status = parse_args(argv);
+    HYDU_ERR_POP(status, "unable to parse user arguments\n");
+
+    if (config_file == NULL) {
+        ret = MPL_env2str("HOME", &home);
+        if (ret) {
+            int len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
+
+            HYDU_MALLOC(conf_file, char *, len, status);
+            MPL_snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
+
+            ret = open(conf_file, O_RDONLY);
+            if (ret < 0) {
+                HYDU_FREE(conf_file);
+                conf_file = HYDU_strdup(HYDRA_CONF_FILE);
+                ret = open(conf_file, O_RDONLY);
+            }
+
+            if (ret >= 0) {
+                /* We have successfully opened the file */
+                close(ret);
+                config_file = conf_file;
+            }
+        }
+    }
+
+    if (config_file) {
+        HYDU_ASSERT(config_argv == NULL, status);
+        HYDU_MALLOC(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
+
+        status = HYDU_parse_hostfile(config_file, NULL, process_config_token);
+        HYDU_ERR_POP(status, "error parsing config file\n");
+
+        reading_config_file = 1;
+        status = parse_args(config_argv);
+        HYDU_ERR_POP(status, "error parsing config args\n");
+        reading_config_file = 0;
+
+        HYDU_FREE(config_file);
+    }
+
+    /* Get the base path */
+    /* Find the last '/' in the executable name */
+    post = HYDU_strdup(progname);
+    loc = strrchr(post, '/');
+    if (!loc) { /* If there is no path */
+        HYD_server_info.base_path = NULL;
+        status = HYDU_find_in_path(progname, &HYD_server_info.base_path);
+        HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
+    }
+    else {      /* There is a path */
+        *(++loc) = 0;
+
+        /* Check if its absolute or relative */
+        if (post[0] != '/') {   /* relative */
+            tmp[0] = HYDU_getcwd();
+            tmp[1] = HYDU_strdup("/");
+            tmp[2] = HYDU_strdup(post);
+            tmp[3] = NULL;
+            status = HYDU_str_alloc_and_join(tmp, &HYD_server_info.base_path);
+            HYDU_ERR_POP(status, "unable to join strings\n");
+            HYDU_free_strlist(tmp);
+        }
+        else {  /* absolute */
+            HYD_server_info.base_path = HYDU_strdup(post);
+        }
+    }
+    HYDU_FREE(post);
+
+    status = set_default_values();
+    HYDU_ERR_POP(status, "setting default values failed\n");
+
+    /* If the user set the checkpoint prefix, set env var to enable
+     * checkpointing on the processes  */
+    if (HYD_server_info.user_global.ckpoint_prefix)
+        HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1",
+                                &HYD_server_info.user_global.global_env.system);
+
+    /* Preset common environment options for disabling STDIO buffering
+     * in Fortran */
+    HYDU_append_env_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y",
+                            &HYD_server_info.user_global.global_env.system);
+
+    /* If auto-cleanup is disabled, ask MPICH2 to enabled
+     * FT-collective returns */
+    if (HYD_server_info.user_global.auto_cleanup == 0) {
+        HYDU_append_env_to_list("MPICH_ENABLE_COLL_FT_RET", "1",
+                                &HYD_server_info.user_global.global_env.system);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
     return status;
 
   fn_fail:
@@ -1047,191 +1582,3 @@ static struct HYD_arg_match_table match_table[] = {
 
     {"\0", NULL}
 };
-
-static HYD_status set_default_values(void)
-{
-    char *tmp;
-    struct HYD_exec *exec;
-    HYD_status status = HYD_SUCCESS;
-
-    /* If exec_list is not NULL, make sure local executable is set */
-    for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->exec[0] == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
-
-        status = HYDU_correct_wdir(&exec->wdir);
-        HYDU_ERR_POP(status, "unable to correct wdir\n");
-    }
-
-    if (HYD_ui_mpich_info.print_all_exitcodes == -1)
-        HYD_ui_mpich_info.print_all_exitcodes = 0;
-
-    if (HYD_ui_mpich_info.ranks_per_proc == -1)
-        HYD_ui_mpich_info.ranks_per_proc = 1;
-
-    if (HYD_server_info.enable_profiling == -1)
-        HYD_server_info.enable_profiling = 0;
-
-    if (HYD_server_info.user_global.debug == -1 &&
-        MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
-        HYD_server_info.user_global.debug = 0;
-
-    if (MPL_env2str("HYDRA_IFACE", (const char **) &HYD_server_info.user_global.iface) == 0)
-        HYD_server_info.user_global.iface = NULL;
-
-    if (HYD_server_info.node_list == NULL &&
-        MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
-        status =
-            HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
-        HYDU_ERR_POP(status, "error parsing hostfile\n");
-    }
-
-    /* Check environment for setting the inherited environment */
-    if (HYD_server_info.user_global.global_env.prop == NULL &&
-        MPL_env2str("HYDRA_ENV", (const char **) &tmp))
-        HYD_server_info.user_global.global_env.prop =
-            !strcmp(tmp, "all") ? HYDU_strdup("all") : HYDU_strdup("none");
-
-    if (HYD_server_info.user_global.auto_cleanup == -1)
-        HYD_server_info.user_global.auto_cleanup = 1;
-
-    /* Make sure this is either a restart or there is an executable to
-     * launch */
-    if (HYD_uii_mpx_exec_list == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
-
-    if (hostname_propagation || hostname_propagation == -1)
-        HYD_server_info.interface_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
-{
-    int i, ret;
-    char **argv = t_argv;
-    char *progname = *argv;
-    char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;
-    const char *home;
-    struct HYD_exec *exec;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYD_uiu_init_params();
-    init_ui_mpich_info();
-
-    argv++;
-    do {
-        /* Get the mpiexec arguments  */
-        status = HYDU_parse_array(&argv, match_table);
-        HYDU_ERR_POP(status, "error parsing input array\n");
-
-        if (!(*argv))
-            break;
-
-        /* Get the executable information */
-        /* Read the executable till you hit the end of a ":" */
-        do {
-            status = get_current_exec(&exec);
-            HYDU_ERR_POP(status, "get_current_exec returned error\n");
-
-            if (!strcmp(*argv, ":")) {  /* Next executable */
-                status = HYDU_alloc_exec(&exec->next);
-                HYDU_ERR_POP(status, "allocate_exec returned error\n");
-                exec->next->appnum = exec->appnum + 1;
-                ++argv;
-                break;
-            }
-
-            i = 0;
-            while (exec->exec[i] != NULL)
-                i++;
-            exec->exec[i] = HYDU_strdup(*argv);
-            exec->exec[i + 1] = NULL;
-        } while (++argv && *argv);
-    } while (1);
-
-    ret = MPL_env2str("HOME", &home);
-    if (ret) {
-        int len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
-
-        HYDU_MALLOC(conf_file, char *, len, status);
-        MPL_snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
-
-        ret = open(conf_file, O_RDONLY);
-        if (ret < 0) {
-            HYDU_FREE(conf_file);
-            conf_file = HYDU_strdup(HYDRA_CONF_FILE);
-            ret = open(conf_file, O_RDONLY);
-        }
-
-        if (ret >= 0) {
-            /* We have successfully opened the file */
-            close(ret);
-            parse_config_file(conf_file);
-        }
-
-        HYDU_FREE(conf_file);
-    }
-
-    /* Get the base path */
-    /* Find the last '/' in the executable name */
-    post = HYDU_strdup(progname);
-    loc = strrchr(post, '/');
-    if (!loc) { /* If there is no path */
-        HYD_server_info.base_path = NULL;
-        status = HYDU_find_in_path(progname, &HYD_server_info.base_path);
-        HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
-    }
-    else {      /* There is a path */
-        *(++loc) = 0;
-
-        /* Check if its absolute or relative */
-        if (post[0] != '/') {   /* relative */
-            tmp[0] = HYDU_getcwd();
-            tmp[1] = HYDU_strdup("/");
-            tmp[2] = HYDU_strdup(post);
-            tmp[3] = NULL;
-            status = HYDU_str_alloc_and_join(tmp, &HYD_server_info.base_path);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-            HYDU_free_strlist(tmp);
-        }
-        else {  /* absolute */
-            HYD_server_info.base_path = HYDU_strdup(post);
-        }
-    }
-    HYDU_FREE(post);
-
-    status = set_default_values();
-    HYDU_ERR_POP(status, "setting default values failed\n");
-
-    /* If the user set the checkpoint prefix, set env var to enable
-     * checkpointing on the processes  */
-    if (HYD_server_info.user_global.ckpoint_prefix)
-        HYDU_append_env_to_list("MPICH_ENABLE_CKPOINT", "1",
-                                &HYD_server_info.user_global.global_env.system);
-
-    /* Preset common environment options for disabling STDIO buffering
-     * in Fortran */
-    HYDU_append_env_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y",
-                            &HYD_server_info.user_global.global_env.system);
-
-    /* If auto-cleanup is disabled, ask MPICH2 to enabled
-     * FT-collective returns */
-    if (HYD_server_info.user_global.auto_cleanup == 0) {
-        HYDU_append_env_to_list("MPICH_ENABLE_COLL_FT_RET", "1",
-                                &HYD_server_info.user_global.global_env.system);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}

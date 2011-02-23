@@ -36,7 +36,13 @@ static void port_help_fn(void)
 
 static HYD_status port_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &private.port);
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_int(arg, &private.port, atoi(**argv));
+
+    (*argv)++;
+
+    return status;
 }
 
 static void debug_help_fn(void)
@@ -47,7 +53,7 @@ static void debug_help_fn(void)
 
 static HYD_status debug_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &private.debug, 1);
+    return HYDU_set_int(arg, &private.debug, 1);
 }
 
 static void demux_help_fn(void)
@@ -58,7 +64,13 @@ static void demux_help_fn(void)
 
 static HYD_status demux_fn(char *arg, char ***argv)
 {
-    return HYDU_set_str_and_incr(arg, argv, &private.demux);
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, &private.demux, **argv);
+
+    (*argv)++;
+
+    return status;
 }
 
 static struct HYD_arg_match_table match_table[] = {

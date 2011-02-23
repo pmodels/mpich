@@ -40,7 +40,12 @@ static void port_help_fn(void)
 
 static HYD_status port_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYDT_persist_handle.port);
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_int(arg, &HYDT_persist_handle.port, atoi(**argv));
+    (*argv)++;
+
+    return status;
 }
 
 static void debug_help_fn(void)
@@ -54,7 +59,7 @@ static void debug_help_fn(void)
 
 static HYD_status debug_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYDT_persist_handle.debug, 1);
+    return HYDU_set_int(arg, &HYDT_persist_handle.debug, 1);
 }
 
 static struct HYD_arg_match_table match_table[] = {

@@ -150,7 +150,7 @@ HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_tabl
     goto fn_exit;
 }
 
-HYD_status HYDU_set_str(char *arg, char ***argv, char **var, const char *val)
+HYD_status HYDU_set_str(char *arg, char **var, const char *val)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -168,26 +168,7 @@ HYD_status HYDU_set_str(char *arg, char ***argv, char **var, const char *val)
     goto fn_exit;
 }
 
-HYD_status HYDU_set_str_and_incr(char *arg, char ***argv, char **var)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (**argv == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
-
-    status = HYDU_set_str(arg, argv, var, **argv);
-    HYDU_ERR_POP(status, "unable to set int\n");
-
-    (*argv)++;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val)
+HYD_status HYDU_set_int(char *arg, int *var, int val)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -195,25 +176,6 @@ HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val)
                         "duplicate setting: %s\n", arg);
 
     *var = val;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (**argv == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
-
-    status = HYDU_set_int(arg, argv, var, atoi(**argv));
-    HYDU_ERR_POP(status, "unable to set int\n");
-
-    (*argv)++;
 
   fn_exit:
     return status;
