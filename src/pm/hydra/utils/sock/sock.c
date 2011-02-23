@@ -526,7 +526,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
 
     for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr->sa_family == AF_INET) {
+        if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
             sa_ptr = (struct sockaddr_in *) ifa->ifa_addr;
             ip2 = HYDU_strdup((char *)
                               inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf2,
