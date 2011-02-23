@@ -765,7 +765,7 @@ IFS="$save_IFS"
 # We must do enable-fast first, because it changes the other enable values
 if test "$enable_fast_nochkmsg" = "yes" ; then
     # 
-    if test "$enable_error_checking" != "default" ; then
+    if test "$enable_error_checking" != "default" -a "$enable_error_checking" != "no" ; then
         AC_MSG_ERROR([enable-fast overrides enable-error-checking; error-checking option $enable_error_checking ignored])
     fi
     enable_error_checking=no
