@@ -1291,7 +1291,7 @@ dnl
 dnl
 dnl PAC_F77_INIT_WORKS_WITH_C
 dnl
-AC_DEFUN(PAC_F77_INIT_WORKS_WITH_C,[
+AC_DEFUN([PAC_F77_INIT_WORKS_WITH_C],[
 AC_REQUIRE([AC_HEADER_STDC])
 AC_MSG_CHECKING([whether Fortran init will work with C])
 pac_f_init_works_with_c=unknown
