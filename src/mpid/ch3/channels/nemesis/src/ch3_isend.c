@@ -49,7 +49,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
     MPIU_THREAD_CS_ENTER(MPIDCOMM,);
     in_cs = TRUE;
 
-    if (MPIDI_CH3I_SendQ_empty (CH3_NORMAL_QUEUE))
+    if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
     {
 	MPIU_DBG_MSG_D (CH3_CHANNEL, VERBOSE, "iSend %d", (int) hdr_sz);
 	mpi_errno = MPID_nem_mpich2_send_header (hdr, hdr_sz, vc, &again);
@@ -103,12 +103,12 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
     sreq->ch.noncontig = FALSE;
     sreq->ch.vc = vc;
     
-    if (MPIDI_CH3I_SendQ_empty(CH3_NORMAL_QUEUE)) {
-        MPIDI_CH3I_SendQ_enqueue(sreq, CH3_NORMAL_QUEUE);
+    if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq)) {
+        MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
     } else {
         /* this is not the first send on the queue, enqueue it then
            check to see if we can send any now */
-        MPIDI_CH3I_SendQ_enqueue(sreq, CH3_NORMAL_QUEUE);
+        MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
         mpi_errno = MPIDI_CH3I_Shm_send_progress();
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }

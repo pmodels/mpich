@@ -51,9 +51,8 @@ static void (*prev_sighandler) (int);
 static volatile int sigusr1_count = 0;
 static int my_sigusr1_count = 0;
 
-struct MPID_Request *MPIDI_CH3I_sendq_head[CH3_NUM_QUEUES] = {0};
-struct MPID_Request *MPIDI_CH3I_sendq_tail[CH3_NUM_QUEUES] = {0};
-struct MPID_Request *MPIDI_CH3I_active_send[CH3_NUM_QUEUES] = {0};
+MPIDI_CH3I_shm_sendq_t MPIDI_CH3I_shm_sendq = {NULL, NULL};
+struct MPID_Request *MPIDI_CH3I_shm_active_send = NULL;
 
 static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
 
@@ -97,7 +96,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_SEND_PROGRESS);
 
-    sreq = MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE];
+    sreq = MPIDI_CH3I_shm_active_send;
     MPIU_DBG_STMT(CH3_CHANNEL, VERBOSE, {if (sreq) MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "Send: cont sreq");});
     if (sreq)
     {
@@ -139,7 +138,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     }
     else
     {
-        sreq = MPIDI_CH3I_SendQ_head (CH3_NORMAL_QUEUE);
+        sreq = MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq);
         MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, {if (sreq) MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "Send: new sreq ");});
 
         if (!sreq->ch.noncontig)
@@ -153,7 +152,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
             if (!again)
             {
-                MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] = sreq;
+                MPIDI_CH3I_shm_active_send = sreq;
                 while (!again && n_iov > 0)
                 {
                     mpi_errno = MPID_nem_mpich2_sendv(&iov, &n_iov, sreq->ch.vc, &again);
@@ -176,7 +175,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
                                             &sreq->dev.pending_pkt, sreq->ch.header_sz, sreq->ch.vc, &again);
             if (!again)
             {
-                MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] = sreq;
+                MPIDI_CH3I_shm_active_send = sreq;
                 while (!again && sreq->dev.segment_first < sreq->dev.segment_size)
                 {
                     MPID_nem_mpich2_send_seg(sreq->dev.segment_ptr, &sreq->dev.segment_first, sreq->dev.segment_size,
@@ -203,8 +202,8 @@ int MPIDI_CH3I_Shm_send_progress(void)
         MPIDI_CH3U_Request_complete(sreq);
 
         /* MT - clear the current active send before dequeuing/destroying the current request */
-        MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] = NULL;
-        MPIDI_CH3I_SendQ_dequeue(CH3_NORMAL_QUEUE);
+        MPIDI_CH3I_shm_active_send = NULL;
+        MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
     }
     else
@@ -215,8 +214,8 @@ int MPIDI_CH3I_Shm_send_progress(void)
 
         if (complete)
         {
-            MPIDI_CH3I_SendQ_dequeue(CH3_NORMAL_QUEUE);
-            MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] = NULL;
+            MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
+            MPIDI_CH3I_shm_active_send = NULL;
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
         }
     }
@@ -420,7 +419,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
 
 	/* make progress sending */
-        if (MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] || MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE)) {
+        if (MPIDI_CH3I_shm_active_send || MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq)) {
             mpi_errno = MPIDI_CH3I_Shm_send_progress();
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         } else {
@@ -781,12 +780,10 @@ int MPIDI_CH3I_Progress_init(void)
 #   endif
     MPIU_THREAD_CHECK_END
 
-    for (i = 0; i < CH3_NUM_QUEUES; ++i)
-    {
-	MPIDI_CH3I_sendq_head[i] = NULL;
-	MPIDI_CH3I_sendq_tail[i] = NULL;
-    }
-
+    MPIDI_CH3I_shm_sendq.head = NULL;
+    MPIDI_CH3I_shm_sendq.tail = NULL;
+    MPIDI_CH3I_shm_active_send = NULL;
+    
     /* Initialize the code to handle incoming packets */
     if (PKTARRAY_SIZE <= MPIDI_NEM_PKT_END) {
         MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_INTERN, "**ch3|pktarraytoosmall");
@@ -895,7 +892,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
 
-    req = MPIDI_CH3I_sendq_head[CH3_NORMAL_QUEUE];
+    req = MPIDI_CH3I_shm_sendq.head;
     prev = NULL;
     while (req) {
         if (req->ch.vc == vc) {
@@ -903,9 +900,9 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
             if (prev)
                 prev->dev.next = next;
             else
-                MPIDI_CH3I_sendq_head[CH3_NORMAL_QUEUE] = next;
-            if (MPIDI_CH3I_sendq_tail[CH3_NORMAL_QUEUE] == req)
-                MPIDI_CH3I_sendq_tail[CH3_NORMAL_QUEUE] = prev;
+                MPIDI_CH3I_shm_sendq.head = next;
+            if (MPIDI_CH3I_shm_sendq.tail == req)
+                MPIDI_CH3I_shm_sendq.tail = prev;
 
             req->status.MPI_ERROR = MPI_SUCCESS;
             MPIU_ERR_SET1(req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);

@@ -28,11 +28,7 @@ typedef enum{MPID_NEM_TCP_VC_STATE_DISCONNECTED,
 
 #define MPIDI_NEM_TCP_MAX_CONNECT_RETRIES 100
 
-typedef struct MPIDI_nem_tcp_request_queue
-{
-    struct MPID_Request *head;
-    struct MPID_Request *tail;
-} MPIDI_nem_tcp_request_queue_t;
+typedef GENERIC_Q_DECL(struct MPID_Request) MPIDI_nem_tcp_request_queue_t;
 
 /* The vc provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the VC struction
@@ -146,13 +142,6 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI
 #define Q_ENQUEUE_MULTIPLE(qp, ep0, ep1) GENERIC_Q_ENQUEUE_MULTIPLE (qp, ep0, ep1, next)
 #define Q_DEQUEUE(qp, ep) GENERIC_Q_DEQUEUE (qp, ep, next)
 #define Q_REMOVE_ELEMENTS(qp, ep0, ep1) GENERIC_Q_REMOVE_ELEMENTS (qp, ep0, ep1, next)
-
-/* Send queue macros */
-#define SENDQ_EMPTY(q) GENERIC_Q_EMPTY (q)
-#define SENDQ_HEAD(q) GENERIC_Q_HEAD (q)
-#define SENDQ_ENQUEUE(qp, ep) GENERIC_Q_ENQUEUE (qp, ep, dev.next)
-#define SENDQ_DEQUEUE(qp, ep) GENERIC_Q_DEQUEUE (qp, ep, dev.next)
-#define SENDQ_ENQUEUE_MULTIPLE(qp, ep0, ep1) GENERIC_Q_ENQUEUE_MULTIPLE(qp, ep0, ep1, dev.next)
 
 
 /* VC list macros */

@@ -16,10 +16,6 @@
 #include "mpid_nem_fbox.h"
 #include "mpid_nem_nets.h"
 #include "mpid_nem_queue.h"
-#include "mpid_nem_generic_queue.h"
-#include "mpiu_os_wrappers.h"
-
-
 
 #define MPID_NEM__BYPASS_Q_MAX_VAL  ((MPID_NEM_MPICH2_DATA_LEN) - (sizeof(MPIDI_CH3_Pkt_t)))
 
