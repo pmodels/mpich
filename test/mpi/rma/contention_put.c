@@ -1,3 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /** Contended RMA put test -- James Dinan <dinan@mcs.anl.gov>
   *
   * Each process issues COUNT put operations to non-overlapping locations on

@@ -23,7 +23,7 @@
 #define YDIM 1024
 #define SUB_XDIM 8
 #define SUB_YDIM 255
-#define ITERATIONS 1
+#define ITERATIONS 10
 
 static int verbose = 0;
 
@@ -62,10 +62,10 @@ int main(int argc, char **argv) {
       int blk_len[SUB_YDIM];
       MPI_Datatype src_type, dst_type;
 
-      for (i = 0; i < SUB_YDIM; i++) {
-        MPI_Get_address(&src_buf[i*XDIM], &idx_loc[i]);
-        idx_rem[i] = i*XDIM;
-        blk_len[i] = SUB_XDIM;
+      for (j = 0; j < SUB_YDIM; j++) {
+        MPI_Get_address(&src_buf[j*XDIM], &idx_loc[j]);
+        idx_rem[j] = j*XDIM;
+        blk_len[j] = SUB_XDIM;
       }
 
       MPI_Type_indexed(SUB_YDIM, blk_len, idx_rem, MPI_DOUBLE, &src_type);
