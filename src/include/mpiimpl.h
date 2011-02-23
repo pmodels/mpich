@@ -463,9 +463,11 @@ int MPIU_Handle_free( void *((*)[]), int );
 /* Check not only for a null pointer but for an invalid communicator,
    such as one that has been freed.  Let's try the ref_count as the test
    for now */
+/* ticket #1441: check (refcount<=0) to cover the case of 0, an "over-free" of
+ * -1 or similar, and the 0xecec... case when --enable-g=mem is used */
 #define MPID_Comm_valid_ptr(ptr,err) {                \
      MPID_Valid_ptr_class(Comm,ptr,MPI_ERR_COMM,err); \
-     if ((ptr) && MPIU_Object_get_ref(ptr) == 0) {    \
+     if ((ptr) && MPIU_Object_get_ref(ptr) <= 0) {    \
          MPIU_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
          ptr = 0;                                     \
      }                                                \
