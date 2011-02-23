@@ -47,6 +47,12 @@
 #            Values are string indicating processing:
 #            returnvalue-arg (0 if void, type if unique, position if not)
 #   Pass by reference to process routine
+# 
+# Notes:
+#   "NULL" isn't the rigth way to specify a NULL pointer in C++; use "0" (this 
+#   will have the correct type and some C++ compilers don't recognize NULL
+#   unless you include header files that needed it and are otherwise unneeded
+#   by the C++ interface)
 #    
 # TODO:
 #    The derived classes (such as Intracomm) must *not* have their own
@@ -2206,7 +2212,7 @@ MPIR_Comm_delete_attr_cxx_proxy(
     void* extra_state
     )
 {
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2257,7 +2263,7 @@ MPIR_Comm_copy_attr_cxx_proxy(
     int* flag
     )
 {
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2330,7 +2336,7 @@ MPIR_Type_delete_attr_cxx_proxy(
 {
     MPI::Datatype d = datatype;
     MPI::Datatype::Delete_attr_function* f = (MPI::Datatype::Delete_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2357,7 +2363,7 @@ MPIR_Type_copy_attr_cxx_proxy(
     *flag = 0;
     MPI::Datatype d = datatype;
     MPI::Datatype::Copy_attr_function* f = (MPI::Datatype::Copy_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2400,7 +2406,7 @@ MPIR_Win_delete_attr_cxx_proxy(
 {
     MPI::Win w = win;
     MPI::Win::Delete_attr_function* f = (MPI::Win::Delete_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2427,7 +2433,7 @@ MPIR_Win_copy_attr_cxx_proxy(
     *flag = 0;
     MPI::Win w = win;
     MPI::Win::Copy_attr_function* f = (MPI::Win::Copy_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
