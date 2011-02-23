@@ -746,6 +746,11 @@ if test "$enable_fc" = yes ; then
         AC_LANG_POP([Fortran])
     fi
 
+    # The Fortran90 tests rely on free-form input which needs to be tested
+    # before any test that may modify FCFLAGS, e.g. the cray-pointer test.
+    # The order of the tests is important in compiler like g95.
+    AC_FC_FREEFORM
+
     # See if the compiler supports the Cray-style pointers
     ALLOCMEMFC=""
     PAC_PROG_FC_CRAY_POINTER([
@@ -762,9 +767,6 @@ if test "$enable_fc" = yes ; then
         fi
         cp f77/init/checksizes.c f90/init
     fi
-
-    # The Fortran90 tests rely on free-form input
-    AC_FC_FREEFORM
 fi
 #
 if test "$FROM_MPICH2" = yes ; then
