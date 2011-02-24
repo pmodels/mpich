@@ -2224,13 +2224,13 @@ Function ReplaceAts( str, use_f77, b64 )
 			Case "@nemesis_nets_macro_defs@"
 				str = Replace(str, "@nemesis_nets_macro_defs@", "#define MPIDI_NEM_NEWTCP_MODULE 0" + vbCrLf + "#define MPIDI_NEM_ND_MODULE 1")
 			Case "@nemesis_nets_func_decl@"
-				str = Replace(str, "@nemesis_nets_func_decl@", "MPIDI_nem_newtcp_module_funcs, MPIDI_Nem_nd_funcs")
+				str = Replace(str, "@nemesis_nets_func_decl@", "MPIDI_nem_newtcp_module_funcs, MPIDI_Nem_nd_funcs, MPIDI_nem_none_funcs")
 			Case "@nemesis_nets_array_sz@"
-				str = Replace(str, "@nemesis_nets_array_sz@", "2")
+				str = Replace(str, "@nemesis_nets_array_sz@", "3")
 			Case "@nemesis_nets_func_array@"
-				str = Replace(str, "@nemesis_nets_func_array@", "&MPIDI_nem_newtcp_module_funcs, &MPIDI_Nem_nd_funcs")
+				str = Replace(str, "@nemesis_nets_func_array@", "&MPIDI_nem_newtcp_module_funcs, &MPIDI_Nem_nd_funcs, &MPIDI_nem_none_funcs")
 			Case "@nemesis_nets_strings@"
-				str = Replace(str, "@nemesis_nets_strings@", """newtcp"",""nd""")
+				str = Replace(str, "@nemesis_nets_strings@", """newtcp"",""nd"", ""none""")
 			Case Else
 			'	unhandled_ats = unhandled_ats & Match & vbNewLine
 			'	unhandled_ats_count = unhandled_ats_count + 1
@@ -7134,11 +7134,13 @@ Function GenBuild()
 '	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength
+	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\none"), trimlength
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength, true, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength, false, false
 '	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength, false, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, false
-	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength, false, true
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength, false, false
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\none"), trimlength, false, true
 
 
 	mfile.WriteLine

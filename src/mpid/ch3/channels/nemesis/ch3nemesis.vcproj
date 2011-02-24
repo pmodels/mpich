@@ -878,6 +878,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\nemesis\netmod\none\none.c"
+				>
+			</File>
+			<File
 				RelativePath=".\nemesis\netmod\wintcp\socksm.c"
 				>
 			</File>
