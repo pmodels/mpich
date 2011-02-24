@@ -414,10 +414,10 @@ int MPID_Nem_nd_listen_for_conn(int pg_rank, char **bc_val_p, int *val_max_sz_p)
      * override the default interface selected
      * FIXME: Do we need to change the override env var names ?
      */
-    ret = getenv_s(&len, NULL, 0, "MPICH_INTERFACE_HOSTNAME");
+    ret = getenv_s((size_t *)&len, NULL, 0, "MPICH_INTERFACE_HOSTNAME");
     if(ret == ERANGE){
         MPIU_Assert(sizeof(tmp_buf) >= len);
-        ret = getenv_s(&len, tmp_buf, sizeof(tmp_buf), "MPICH_INTERFACE_HOSTNAME");
+        ret = getenv_s((size_t *)&len, tmp_buf, sizeof(tmp_buf), "MPICH_INTERFACE_HOSTNAME");
         if(ret == 0){
             use_default_interface = 0;
             ret = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_ND_INTERFACE_KEY, tmp_buf);
@@ -426,11 +426,11 @@ int MPID_Nem_nd_listen_for_conn(int pg_rank, char **bc_val_p, int *val_max_sz_p)
     }
 
     MPIU_Snprintf(tmp_buf, sizeof(tmp_buf), "MPICH_INTERFACE_HOSTNAME_R%d", pg_rank);
-    ret = getenv_s(&len, NULL, 0, tmp_buf);
+    ret = getenv_s((size_t *)&len, NULL, 0, tmp_buf);
     if(ret == ERANGE){
         buf = MPIU_Strdup(tmp_buf);
         MPIU_Assert(sizeof(tmp_buf) >= len);
-        ret = getenv_s(&len, tmp_buf, sizeof(tmp_buf), buf);
+        ret = getenv_s((size_t *)&len, tmp_buf, sizeof(tmp_buf), buf);
         MPIU_Free(buf);
         if(ret == 0){
             use_default_interface = 0;
