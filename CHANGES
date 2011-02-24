@@ -11,6 +11,65 @@
 
 
 ===============================================================================
+                               Changes in 1.3.3
+===============================================================================
+
+ # OVERALL: Improvements to fault tolerance for collective
+   operations. Thanks to Rui Wang @ ICT for reporting several of these
+   issues.
+
+ # OVERALL: Improvements to the universe size detection. Thanks to
+   Yauheni Zelenko for reporting this issue.
+
+ # OVERALL: Bug fixes for Fortran attributes on some systems. Thanks
+   to Nicolai Stange for reporting this issue.
+
+ # PM/PMI: Support for a manual "none" launcher in Hydra to allow for
+   higher-level tools to be built on top of Hydra. Thanks to Justin
+   Wozniak for reporting this issue, for providing several patches for
+   the fix, and testing it.
+
+ # PM/PMI: Bug fixes in Hydra to handle non-uniform layouts of hosts
+   better. Thanks to the MVAPICH group at OSU for reporting this issue
+   and testing it.
+
+ # PM/PMI: Bug fixes in Hydra to handle cases where only a subset of
+   the available launchers or resource managers are compiled
+   in. Thanks to Satish Balay @ Argonne for reporting this issue.
+
+ # PM/PMI: Support for a different username to be provided for each
+   host; this only works for launchers that support this (such as
+   SSH).
+
+ # PM/PMI: Bug fixes for using Hydra on AIX machines. Thanks to
+   Kitrick Sheets @ NCSA for reporting this issue and providing the
+   first draft of the patch.
+
+ # PM/PMI: Bug fixes in memory allocation/management for environment
+   variables that was showing up on older platforms. Thanks to Steven
+   Sutphen for reporting the issue and providing detailed analysis to
+   track down the bug.
+
+ # PM/PMI: Added support for providing a configuration file to pick
+   the default options for Hydra. Thanks to Saurabh T. for reporting
+   the issues with the current implementation and working with us to
+   improve this option.
+
+ # PM/PMI: Improvements to the error code returned by Hydra.
+
+ # TEST SUITE: Several new tests for MPI RMA operations.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3.3rc1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3.3rc1?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
+
+
+===============================================================================
                                Changes in 1.3.2
 ===============================================================================
 
