@@ -65,9 +65,12 @@ void ADIO_Get_shared_fp(ADIO_File fd, int incr, ADIO_Offset *shared_fp,
 	}
     }
 
+    if (incr == 0) {goto done;}
+
     new_fp = *shared_fp + incr;
 
     ADIO_WriteContig(fd->shared_fp_fd, &new_fp, sizeof(ADIO_Offset), 
 		    MPI_BYTE, ADIO_EXPLICIT_OFFSET, 0, &status, error_code);
+done:
     ADIOI_UNLOCK(fd->shared_fp_fd, 0, SEEK_SET, sizeof(ADIO_Offset));
 }
