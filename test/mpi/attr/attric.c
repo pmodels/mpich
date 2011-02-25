@@ -104,7 +104,7 @@ int test_communicators( void )
 	MPI_Attr_put(comm, key_1, (void *) (MPI_Aint) world_rank );
 	MPI_Attr_put(comm, key_3, (void *)0 );
 	
-        MTestPrintfMsg(1, "Comm_dup\n", key_3, value);
+        MTestPrintfMsg(1, "Comm_dup\n" );
 	MPI_Comm_dup(comm, &dup_comm );
 
 	/* Note that if sizeof(int) < sizeof(void *), we can't use
