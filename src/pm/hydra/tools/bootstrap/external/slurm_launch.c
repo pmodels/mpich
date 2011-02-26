@@ -62,10 +62,9 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **no
 HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                         int *control_fd)
 {
-    int num_hosts, idx, i, exec_idx;
+    int num_hosts, idx, i;
     int *pid, *fd_list;
-    char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL,
-        quoted_exec_string[HYD_TMP_STRLEN];
+    char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg;
     struct HYD_proxy *proxy;
     struct HYDT_bind_cpuset_t cpuset;
@@ -115,16 +114,10 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     }
 
     /* Fill in the remaining arguments */
-    exec_idx = idx;
+    /* We do not need to create a quoted version of the string for
+     * SLURM. It seems to be internally quoting it anyway. */
     for (i = 0; args[i]; i++)
         targs[idx++] = HYDU_strdup(args[i]);
-
-    /* Create a quoted version of the exec string, which is only used
-     * when the executable is not launched directly, but through an
-     * external launcher */
-    HYDU_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
-    HYDU_FREE(targs[exec_idx]);
-    targs[exec_idx] = quoted_exec_string;
 
     /* Increase pid list to accommodate the new pid */
     HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
