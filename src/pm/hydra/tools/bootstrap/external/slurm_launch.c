@@ -85,7 +85,7 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
     idx = 0;
     targs[idx++] = HYDU_strdup(path);
 
-    if (!strcmp(HYDT_bsci_info.rmk, "slurm")) {
+    if (strcmp(HYDT_bsci_info.rmk, "slurm")) {
         targs[idx++] = HYDU_strdup("--nodelist");
 
         status = proxy_list_to_node_str(proxy_list, &node_list_str);
