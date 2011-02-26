@@ -440,11 +440,18 @@ int main(int argc, char **argv)
         return 0;
     else if (status != HYD_SUCCESS)
         return -1;
+    else if (WIFSIGNALED(exit_status)) {
+        printf("APPLICATION TERMINATED WITH THE EXIT STRING: %s (signal %d)\n",
+               strsignal(WTERMSIG(exit_status)), WTERMSIG(exit_status));
+        return exit_status;
+    }
+    else if (WIFEXITED(exit_status)) {
+        return WEXITSTATUS(exit_status);
+    }
+    else if (WIFSTOPPED(exit_status)) {
+        return WSTOPSIG(exit_status);
+    }
     else {
-        if (WIFSIGNALED(exit_status)) {
-            printf("APPLICATION TERMINATED WITH THE EXIT STRING: %s (signal %d)\n",
-                   strsignal(WTERMSIG(exit_status)), WTERMSIG(exit_status));
-        }
         return exit_status;
     }
 
