@@ -166,7 +166,7 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
     ht = gethostbyname(host);
     if (ht == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "unable to get host address (%s)\n", HYDU_strerror(errno));
+                            "unable to get host address (%s)\n", HYDU_herror(h_errno));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
     /* Create a socket and set the required options */

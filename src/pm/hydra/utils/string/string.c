@@ -181,21 +181,6 @@ char *HYDU_int_to_str_pad(int x, int maxlen)
     goto fn_exit;
 }
 
-
-char *HYDU_strerror(int error)
-{
-    char *str;
-
-#if defined HAVE_STRERROR
-    str = strerror(error);
-#else
-    str = HYDU_strdup("errno: %d", error);
-#endif /* HAVE_STRERROR */
-
-    return str;
-}
-
-
 int HYDU_strlist_lastidx(char **strlist)
 {
     int i;

@@ -586,7 +586,19 @@ HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep);
 HYD_status HYDU_strdup_list(char *src[], char **dest[]);
 char *HYDU_int_to_str(int x);
 char *HYDU_int_to_str_pad(int x, int maxlen);
-char *HYDU_strerror(int error);
+
+#if defined HAVE_STRERROR
+#define HYDU_strerror strerror
+#else
+#define HYDU_strerror HYDU_int_to_str
+#endif /* HAVE_STRERROR */
+
+#if defined HAVE_HERROR
+#define HYDU_herror herror
+#else
+#define HYDU_herror HYDU_int_to_str
+#endif /* HAVE_HERROR */
+
 int HYDU_strlist_lastidx(char **strlist);
 char **HYDU_str_to_strlist(char *str);
 
