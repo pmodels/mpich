@@ -38,11 +38,16 @@ attached.
 
 Input Parameters:
 + comm_old - input communicator (handle)
-. n - number of source nodes for which this process specifies edges (non-negative integer)
-. sources - array containing the n source nodes for which this process specifies edges (array of non-negative integers)
-. degrees - array specifying the number of destinations for each source node in the source node array (array of non-negative integers)
-. destinations - destination nodes for the source nodes in the source node array (array of non-negative integers)
-. weights - weights for source to destination edges (array of non-negative integers)
+. n - number of source nodes for which this process specifies edges 
+  (non-negative integer)
+. sources - array containing the n source nodes for which this process 
+  specifies edges (array of non-negative integers)
+. degrees - array specifying the number of destinations for each source node 
+  in the source node array (array of non-negative integers)
+. destinations - destination nodes for the source nodes in the source node 
+  array (array of non-negative integers)
+. weights - weights for source to destination edges (array of non-negative 
+  integers or MPI_UNWEIGHTED)
 . info - hints on optimization and interpretation of weights (handle)
 - reorder - the process may be reordered (true) or not (false) (logical)
 
@@ -55,6 +60,8 @@ Output Parameter:
 
 .N Errors
 .N MPI_SUCCESS
+.N MPI_ERR_ARG
+.N MPI_ERR_OTHER
 @*/
 int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
                           int degrees[], int destinations[], int weights[],

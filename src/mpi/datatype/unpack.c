@@ -108,13 +108,16 @@ int MPIR_Unpack_impl(void *inbuf, int insize, int *position,
 Input Parameters:
 + inbuf - input buffer start (choice)
 . insize - size of input buffer, in bytes (integer)
-. position - current position in bytes (integer)
 . outcount - number of items to be unpacked (integer)
 . datatype - datatype of each output data item (handle)
 - comm - communicator for packed message (handle)
 
 Output Parameter:
 . outbuf - output buffer start (choice)
+
+Inout/Output Parameter:
+. position - current position in bytes (integer)
+
 
 .N ThreadSafe
 
