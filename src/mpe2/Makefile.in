@@ -78,6 +78,9 @@ install: FORCE_TARGET
 	 if [ -n "$(PREFIX)" ] ; then \
 	     installopts="-prefix=$(PREFIX) $$installopts" ; \
 	 fi ; \
+	 if [ -n "$(prefix)" ] ; then \
+	     installopts="-prefix=$(prefix) $$installopts" ; \
+	 fi ; \
 	 ./sbin/mpeinstall $$installopts
 
 installcheck:
@@ -87,6 +90,9 @@ installcheck:
 	 fi ; \
 	 if [ -n "$(PREFIX)" ] ; then \
 	     installopts="-prefix=$(PREFIX) $$installopts" ; \
+	 fi ; \
+	 if [ -n "$(prefix)" ] ; then \
+	     installopts="-prefix=$(prefix) $$installopts" ; \
 	 fi ; \
 	 ./sbin/mpecheckinstall $$installopts
 
@@ -102,6 +108,9 @@ installcheck-all:
 	 fi ; \
 	 if [ -n "$(PREFIX)" ] ; then \
 	     installopts="-prefix=$(PREFIX) $$installopts" ; \
+	 fi ; \
+	 if [ -n "$(prefix)" ] ; then \
+	     installopts="-prefix=$(prefix) $$installopts" ; \
 	 fi ; \
 	 ./sbin/mpecheckinstall $$installopts
 
