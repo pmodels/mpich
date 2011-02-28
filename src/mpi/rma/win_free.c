@@ -45,6 +45,7 @@
 .N Errors
 .N MPI_SUCCESS
 .N MPI_ERR_WIN
+.N MPI_ERR_OTHER
 @*/
 int MPI_Win_free(MPI_Win *win)
 {
@@ -83,6 +84,12 @@ int MPI_Win_free(MPI_Win *win)
 	    /* If win_ptr is not valid, it will be reset to null */
 
             if (mpi_errno) goto fn_fail;
+	    /* Check for unterminated lock epoch */
+	    if (win_ptr->lockRank != -1) {
+		MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
+			     "**winfreewhilelocked",
+			     "**winfreewhilelocked %d", win_ptr->lockRank);
+	    }
         }
         MPID_END_ERROR_CHECKS;
     }

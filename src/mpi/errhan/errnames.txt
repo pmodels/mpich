@@ -367,8 +367,23 @@ be in the range 0 to %d
 **rmasize %d:Invalid size argument in RMA call (value is %d)
 **rmadisp:Invalid displacement argument in RMA call 
 **assert:Invalid assert argument
+**lockassertval:Invalid assert argument passed to MPI_Win_lock
+**lockassertval %d: Invalid assert argument (%d) passed to MPI_Win_lock
 **winunlockrank:Invalid rank argument
 **winunlockrank %d %d:Invalid rank argument %d, should be %d
+**mismatchedlockrank:Rank to unlock in MPI_Win_unlock was not locked with \
+ MPI_Win_lock
+**mismatchedlockrank %d %d:Rank to unlock (%d) in MPI_Win_unlock was not \
+ locked with MPI_Win_lock (rank %d was locked)
+**winunlockwithoutlock: Attempt to unlock in MPI_Win_unlock without \
+ first locking with MPI_Win_lock
+**winfreewhilelocked: MPI_Win_free called while holding an MPI_Win_lock on \
+ a window
+**winfreewhilelocked %d: MPI_Win_free called while holding an MPI_Win_lock on \
+ the process with rank %d
+**lockwhilelocked: Attempt to lock a process while holding a lock
+**lockwhilelocked %d: Attempt to lock a process while holding a lock on \
+ process %d
 **nomemreq:failure occurred while allocating memory for a request object
 **nomemuereq %d:Failed to allocate memory for an unexpected message. %d \
 unexpected messages queued.
@@ -395,6 +410,7 @@ unexpected messages queued.
 # Duplicates?
 #**argnull:Invalid null parameter
 #**argnull %s:Invalid null parameter %s
+**commstack:Internal overflow in stack used for MPI_Comm_split
 
 **cond_create:MPIU_Thread_cond_create failed
 **cond_create %s:MPIU_Thread_cond_create failed: %s

@@ -26,11 +26,13 @@ MPIU_INSTR_DURATION_DECL(winstart_clearlock);
 MPIU_INSTR_DURATION_DECL(wincomplete_issue);
 MPIU_INSTR_DURATION_DECL(wincomplete_complete);
 MPIU_INSTR_DURATION_DECL(wincomplete_recvsync);
+MPIU_INSTR_DURATION_DECL(wincomplete_block);
 MPIU_INSTR_DURATION_DECL(winwait_wait);
 MPIU_INSTR_DURATION_DECL(winlock_getlocallock);
 MPIU_INSTR_DURATION_DECL(winunlock_getlock);
 MPIU_INSTR_DURATION_DECL(winunlock_issue);
 MPIU_INSTR_DURATION_DECL(winunlock_complete);
+MPIU_INSTR_DURATION_DECL(winunlock_block);
 MPIU_INSTR_DURATION_DECL(lockqueue_alloc);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc_predef);
@@ -53,11 +55,13 @@ void MPIDI_CH3_RMA_InitInstr(void)
     MPIU_INSTR_DURATION_INIT(wincomplete_recvsync,1,"WIN_COMPLETE:Recv sync messages");
     MPIU_INSTR_DURATION_INIT(wincomplete_issue,2,"WIN_COMPLETE:Issue RMA ops");
     MPIU_INSTR_DURATION_INIT(wincomplete_complete,1,"WIN_COMPLETE:Complete RMA ops");
+    MPIU_INSTR_DURATION_INIT(wincomplete_block,0,"WIN_COMPLETE:Wait for any progress");
     MPIU_INSTR_DURATION_INIT(winwait_wait,1,"WIN_WAIT:Wait for ops from other processes");
     MPIU_INSTR_DURATION_INIT(winlock_getlocallock,0,"WIN_LOCK:Get local lock");
     MPIU_INSTR_DURATION_INIT(winunlock_issue,2,"WIN_UNLOCK:Issue RMA ops");
     MPIU_INSTR_DURATION_INIT(winunlock_complete,1,"WIN_UNLOCK:Complete RMA ops");
     MPIU_INSTR_DURATION_INIT(winunlock_getlock,0,"WIN_UNLOCK:Acquire lock");
+    MPIU_INSTR_DURATION_INIT(winunlock_block,0,"WIN_UNLOCK:Wait for any progress");
     MPIU_INSTR_DURATION_INIT(rmapkt_acc,0,"RMA:PKTHANDLER for Accumulate");
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_predef,0,"RMA:PKTHANDLER for Accumulate: predef dtype");
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_immed,0,"RMA:PKTHANDLER for Accum immed");
@@ -1508,7 +1512,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	       there was an incomplete request. */
 	    curr_ptr = win_ptr->rma_ops_list_head;
 	    if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
-		MPIU_INSTR_DURATION_START(winfence_block);
+		MPIU_INSTR_DURATION_START(wincomplete_block);
 		mpi_errno = MPID_Progress_wait(&progress_state);
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno != MPI_SUCCESS) {
@@ -1516,7 +1520,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
 		}
 		/* --END ERROR HANDLING-- */
-		MPIU_INSTR_DURATION_END(winfence_block);
+		MPIU_INSTR_DURATION_END(wincomplete_block);
 	    }
 	} /* While list of rma operation is non-empty */
 	    
@@ -1639,7 +1643,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
     if (dest == MPI_PROC_NULL) goto fn_exit;
         
     comm_ptr = win_ptr->comm_ptr;
-    
+
     if (dest == win_ptr->myrank) {
 	/* The target is this process itself. We must block until the lock
 	 * is acquired. */
@@ -1667,7 +1671,6 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 	/* local lock acquired. local puts, gets, accumulates will be done 
 	   directly without queueing. */
     }
-    
     else {
 	/* target is some other process. add the lock request to rma_ops_list */
 	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -1675,6 +1678,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 			    mpi_errno, "RMA operation entry");
 	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
             
+	MPIU_Assert( !win_ptr->rma_ops_list_head );
 	win_ptr->rma_ops_list_head = new_ptr;
 	win_ptr->rma_ops_list_tail = new_ptr;
         
@@ -1714,16 +1718,17 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
     if (dest == MPI_PROC_NULL) goto fn_exit;
         
-    comm_ptr = win_ptr->comm_ptr;
-        
     if (dest == win_ptr->myrank) {
 	/* local lock. release the lock on the window, grant the next one
 	 * in the queue, and return. */
+	MPIU_Assert(!win_ptr->rma_ops_list_head);
 	mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
 	if (mpi_errno != MPI_SUCCESS) goto fn_exit;
 	mpi_errno = MPID_Progress_poke();
 	goto fn_exit;
     }
+        
+    comm_ptr = win_ptr->comm_ptr;
         
     rma_op = win_ptr->rma_ops_list_head;
     
@@ -1749,20 +1754,21 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     single_op_opt = 0;
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, dest, &vc);
-   
+
     if (rma_op->next->next == NULL) {
 	/* Single put, get, or accumulate between the lock and unlock. If it
 	 * is of small size and predefined datatype at the target, we
 	 * do an optimization where the lock and the RMA operation are
 	 * sent in a single packet. Otherwise, we send a separate lock
 	 * request first. */
-	
+
 	curr_op = rma_op->next;
 	
 	MPID_Datatype_get_size_macro(curr_op->origin_datatype, type_size);
 	
 	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(curr_op->target_datatype, predefined);
 
+	/* msg_sz typically = 65480 */
 	if ( predefined &&
 	     (type_size * curr_op->origin_count <= vc->eager_max_msg_sz) ) {
 	    single_op_opt = 1;
@@ -1869,6 +1875,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 	win_ptr->lock_granted = 0; 
     
  fn_exit:
+    MPIU_Assert( !win_ptr->rma_ops_list_head );
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -2076,7 +2083,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 	       there was an incomplete request. */
 	    curr_ptr = win_ptr->rma_ops_list_head;
 	    if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
-		MPIU_INSTR_DURATION_START(winfence_block);
+		MPIU_INSTR_DURATION_START(winunlock_block);
 		mpi_errno = MPID_Progress_wait(&progress_state);
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno != MPI_SUCCESS) {
@@ -2084,7 +2091,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
 		}
 		/* --END ERROR HANDLING-- */
-		MPIU_INSTR_DURATION_END(winfence_block);
+		MPIU_INSTR_DURATION_END(winunlock_block);
 	    }
 	} /* While list of rma operation is non-empty */
 	    
@@ -2192,6 +2199,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
         iov[0].MPID_IOV_LEN = sizeof(*lock_accum_unlock_pkt);
     }
     else {
+	/* FIXME: Error return */
 	printf( "expected short accumulate...\n" );
 	/* */
     }
@@ -3016,6 +3024,9 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    }
 		}
 		mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
+		/* Without the following signal_completion call, we 
+		   sometimes hang */
+		MPIDI_CH3_Progress_signal_completion();
 	    }
 	}
 
@@ -3063,6 +3074,7 @@ int MPIDI_CH3_PktHandler_Lock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	/* queue the lock information */
 	MPIDI_Win_lock_queue *curr_ptr, *prev_ptr, *new_ptr;
 	
+	/* Note: This code is reached by the fechandadd rma tests */
 	/* FIXME: MT: This may need to be done atomically. */
 	
 	/* FIXME: Since we need to add to the tail of the list,

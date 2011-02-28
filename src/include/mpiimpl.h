@@ -1554,6 +1554,8 @@ typedef struct MPID_Win {
     MPID_Comm *comm_ptr;         /* Pointer to comm of window (dup) */
     int         myrank;          /* Rank of this process in comm (used to 
 				    detect operations on self) */
+    int lockRank;                /* If within an MPI_Win_lock epoch, 
+				    the rank that we locked */
 #ifdef USE_THREADED_WINDOW_CODE
     /* These were causing compilation errors.  We need to figure out how to
        integrate threads into MPICH2 before including these fields. */
