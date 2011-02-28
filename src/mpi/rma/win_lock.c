@@ -125,7 +125,7 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 	    if (win_ptr->lockRank != -1) {
 		MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
 			     "**lockwhilelocked", 
-			     "**lockwhillocked %d", win_ptr->lockRank );
+			     "**lockwhilelocked %d", win_ptr->lockRank );
 	    }
 	    comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
