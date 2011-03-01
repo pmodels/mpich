@@ -36,7 +36,7 @@ int MPIR_Ialltoallv_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
     int ii, ss, bblock;
     MPI_Aint send_extent, recv_extent, sendtype_size, recvtype_size;
     int dst, rank;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_SCHED_CHKPMEM_DECL(1);
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 
@@ -69,7 +69,7 @@ int MPIR_Ialltoallv_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
             max_count = MPIU_MAX(max_count, recvcounts[i]);
         }
 
-        MPIU_CHKPMEM_MALLOC(tmp_buf, void *, max_count*recv_extent, mpi_errno, "Ialltoallv tmp_buf");
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_count*recv_extent, mpi_errno, "Ialltoallv tmp_buf");
 
         for (i = 0; i < comm_size; ++i) {
             /* start inner loop at i to avoid re-exchanging data */
@@ -100,10 +100,7 @@ int MPIR_Ialltoallv_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
             }
         }
 
-        /* cleanup tmp_buf */
         mpi_errno = MPID_Sched_barrier(s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, tmp_buf, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
@@ -148,11 +145,11 @@ int MPIR_Ialltoallv_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
         }
     }
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 

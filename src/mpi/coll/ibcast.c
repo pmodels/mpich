@@ -43,7 +43,7 @@ static int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, 
     int relative_rank;
     int src, dst;
     void *tmp_buf = NULL;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -77,7 +77,7 @@ static int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, 
 
     if (!is_contig || !is_homogeneous)
     {
-        MPIU_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
@@ -172,17 +172,14 @@ static int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, 
 
             mpi_errno = MPID_Sched_barrier(s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-            mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, tmp_buf, s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 

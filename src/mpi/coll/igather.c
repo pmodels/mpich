@@ -64,7 +64,7 @@ int MPIR_Igather_binomial(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
     MPI_Aint extent=0;
     int copy_offset = 0, copy_blks = 0;
     MPI_Datatype types[2], tmp_type;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -124,7 +124,7 @@ int MPIR_Igather_binomial(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
             tmp_buf_size = 0;
 
         if (tmp_buf_size) {
-            MPIU_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
         }
 
         if (rank == root) {
@@ -363,16 +363,11 @@ int MPIR_Igather_binomial(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 #endif
 #endif /* MPID_HAS_HETERO */
 
-    if (tmp_buf) {
-        mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, tmp_buf, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 
@@ -405,7 +400,7 @@ int MPIR_Igather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     MPI_Aint extent, true_extent, true_lb = 0;
     void *tmp_buf = NULL;
     MPID_Comm *newcomm_ptr = NULL;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_SCHED_CHKPMEM_DECL(1);
 
 /*  Intercommunicator gather.
     For short messages, remote group does a local intracommunicator
@@ -456,8 +451,8 @@ int MPIR_Igather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void
                 MPID_Datatype_get_extent_macro(sendtype, extent);
 
                 MPID_Ensure_Aint_fits_in_pointer(sendcount*local_size*(MPIR_MAX(extent, true_extent)));
-                MPIU_CHKPMEM_MALLOC(tmp_buf, void *, sendcount*local_size*(MPIR_MAX(extent,true_extent)),
-                                    mpi_errno, "tmp_buf");
+                MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, sendcount*local_size*(MPIR_MAX(extent,true_extent)),
+                                          mpi_errno, "tmp_buf");
                 /* adjust for potential negative lower bound in datatype */
                 tmp_buf = (void *)((char*)tmp_buf - true_lb);
             }
@@ -502,16 +497,11 @@ int MPIR_Igather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void
         }
     }
 
-    if (tmp_buf) {
-        mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, tmp_buf, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 

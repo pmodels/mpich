@@ -36,9 +36,7 @@ int MPIR_Ireduce_binomial(void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     int mask, relrank, source, lroot;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
-    void *real_tmp_buf = NULL;
-    void *real_recvbuf = NULL;
-    MPIU_CHKPMEM_DECL(2);
+    MPIR_SCHED_CHKPMEM_DECL(2);
     MPIU_THREADPRIV_DECL;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
@@ -64,19 +62,17 @@ int MPIR_Ireduce_binomial(void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     /* should be buf+{this}? */
     MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
-    MPIU_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
     /* adjust for potential negative lower bound in datatype */
-    real_tmp_buf = tmp_buf;
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
     /* If I'm not the root, then my recvbuf may not be valid, therefore
        I have to allocate a temporary one */
     if (rank != root) {
-        MPIU_CHKPMEM_MALLOC(recvbuf, void *,
+        MPIR_SCHED_CHKPMEM_MALLOC(recvbuf, void *,
                             count*(MPIR_MAX(extent,true_extent)),
                             mpi_errno, "receive buffer");
-        real_recvbuf = recvbuf;
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
 
@@ -188,20 +184,11 @@ int MPIR_Ireduce_binomial(void *sendbuf, void *recvbuf, int count, MPI_Datatype 
         }
     }
 
-    if (real_tmp_buf) {
-        mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, real_tmp_buf, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-    if (rank != root && real_recvbuf) {
-        mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, real_recvbuf, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 
@@ -235,8 +222,7 @@ int MPIR_Ireduce_inter(void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
     int rank;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
-    void *real_tmp_buf = NULL;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_SCHED_CHKPMEM_DECL(1);
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTERCOMM);
 
@@ -269,11 +255,10 @@ int MPIR_Ireduce_inter(void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
             MPID_Datatype_get_extent_macro(datatype, extent);
             /* I think this is the worse case, so we can avoid an assert()
              * inside the for loop */
-            /* Should MPIU_CHKPMEM_MALLOC do this? */
+            /* Should MPIR_SCHED_CHKPMEM_MALLOC do this? */
             MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
-            MPIU_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
             /* adjust for potential negative lower bound in datatype */
-            real_tmp_buf = tmp_buf;
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }
 
@@ -292,19 +277,14 @@ int MPIR_Ireduce_inter(void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             mpi_errno = MPID_Sched_barrier(s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-            if (real_tmp_buf) {
-                mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, real_tmp_buf, s);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            }
         }
     }
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 
