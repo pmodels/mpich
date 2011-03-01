@@ -67,9 +67,19 @@ struct MPIDU_Sched_copy {
 
 /* nop entries have no args, so no structure is needed */
 
+enum MPIDU_Sched_cb_type {
+    MPIDU_SCHED_CB_TYPE_1 = 0, /* single state arg type --> MPID_Sched_cb_t */
+    MPIDU_SCHED_CB_TYPE_2      /* double state arg type --> MPID_Sched_cb2_t */
+};
+
 struct MPIDU_Sched_cb {
-    MPID_Sched_cb_t *cb_p;
+    enum MPIDU_Sched_cb_type cb_type;
+    union {
+        MPID_Sched_cb_t *cb_p;
+        MPID_Sched_cb2_t *cb2_p;
+    } u;
     void *cb_state;
+    void *cb_state2; /* unused for single-param callbacks */
 };
 
 enum MPIDU_Sched_entry_status {

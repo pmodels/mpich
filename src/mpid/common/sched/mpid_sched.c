@@ -157,8 +157,23 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
             /* nothing to be done */
             break;
         case MPIDU_SCHED_ENTRY_CB:
-            mpi_errno = e->u.cb.cb_p(r->comm, s->tag, e->u.cb.cb_state);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_1) {
+                mpi_errno = e->u.cb.u.cb_p(r->comm, s->tag, e->u.cb.cb_state);
+                if (mpi_errno) {
+                    e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                    MPIU_ERR_POP(mpi_errno);
+                }
+            }
+            else if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_2) {
+                mpi_errno = e->u.cb.u.cb2_p(r->comm, s->tag, e->u.cb.cb_state, e->u.cb.cb_state2);
+                if (mpi_errno) {
+                    e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                    MPIU_ERR_POP(mpi_errno);
+                }
+            }
+            else {
+                MPIU_Assert_fmt_msg(FALSE, ("unknown callback type, e->u.cb.cb_type=%d", e->u.cb.cb_type));
+            }
             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             break;
         default:
@@ -655,8 +670,40 @@ int MPID_Sched_cb(MPID_Sched_cb_t *cb_p, void *cb_state, MPID_Sched_t s)
     e->is_barrier = FALSE;
     cb = &e->u.cb;
 
-    cb->cb_p = cb_p;
+    cb->cb_type = MPIDU_SCHED_CB_TYPE_1;
+    cb->u.cb_p = cb_p;
     cb->cb_state = cb_state;
+    cb->cb_state2 = NULL;
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Sched_cb2
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+/* buffer management, fancy reductions, etc */
+int MPID_Sched_cb2(MPID_Sched_cb2_t *cb_p, void *cb_state, void *cb_state2, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct MPIDU_Sched_entry *e = NULL;
+    struct MPIDU_Sched_cb *cb = NULL;
+
+    mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    e->type = MPIDU_SCHED_ENTRY_CB;
+    e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
+    e->is_barrier = FALSE;
+    cb = &e->u.cb;
+
+    cb->cb_type = MPIDU_SCHED_CB_TYPE_2;
+    cb->u.cb2_p = cb_p;
+    cb->cb_state = cb_state;
+    cb->cb_state2 = cb_state2;
 
 fn_exit:
     return mpi_errno;

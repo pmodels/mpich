@@ -100,8 +100,10 @@ int MPID_Sched_recv_status(void *buf, int count, MPI_Datatype datatype, int src,
 /* callback entries must be used judiciously, otherwise they will prevent
  * caching opportunities */
 typedef int (MPID_Sched_cb_t)(MPID_Comm *comm, int tag, void *state);
+typedef int (MPID_Sched_cb2_t)(MPID_Comm *comm, int tag, void *state, void *state2);
 /* buffer management, fancy reductions, etc */
 int MPID_Sched_cb(MPID_Sched_cb_t *cb_p, void *cb_state, MPID_Sched_t s);
+int MPID_Sched_cb2(MPID_Sched_cb2_t *cb_p, void *cb_state, void *cb_state2, MPID_Sched_t s);
 
 /* TODO: develop a caching infrastructure for use by the upper level as well,
  * hopefully s.t. uthash can be used somehow */
