@@ -36,64 +36,6 @@ static int my_callback(void *arg)
     return 0;
 }
 
-static HYD_status create_fifo(const char *fname_template, int rank, int *fd)
-{
-    HYD_status status = HYD_SUCCESS;
-    char filename[256];
-    int ret;
-
-    MPL_snprintf(filename, sizeof(filename), fname_template, (int) getpid(), rank);
-
-    ret = mkfifo(filename, 0600);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "mkfifo failed: %s\n",
-                        strerror(errno));
-
-    *fd = open(filename, O_RDWR);
-    HYDU_ERR_CHKANDJUMP(status, *fd < 0, HYD_INTERNAL_ERROR, "open failed: %s\n",
-                        strerror(errno));
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-static HYD_status create_stdinouterr_fifos(int num_ranks, int ranks[], int *in, int *out,
-                                           int *err)
-{
-    HYD_status status = HYD_SUCCESS;
-    int r;
-
-    for (r = 0; r < num_ranks; ++r) {
-        if (in && ranks[r] == 0) {
-            status = create_fifo("/tmp/hydra-in-%d:%d", ranks[r], in);
-            if (status)
-                HYDU_ERR_POP(status, "create in fifo\n");
-        }
-        if (out) {
-            status = create_fifo("/tmp/hydra-out-%d:%d", ranks[r], &out[r]);
-            if (status)
-                HYDU_ERR_POP(status, "create out fifo\n");
-        }
-        if (err) {
-            status = create_fifo("/tmp/hydra-err-%d:%d", ranks[r], &err[r]);
-            if (status)
-                HYDU_ERR_POP(status, "create err fifo\n");
-        }
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
 static HYD_status create_env_file(const struct HYD_env *envlist, int num_ranks, int *ranks)
 {
     HYD_status status = HYD_SUCCESS;
@@ -141,7 +83,7 @@ static HYD_status create_stdinouterr_sock(int *port)
     HYDU_FUNC_ENTER();
 
     listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    HYDU_ERR_CHKANDJUMP(status, ret < 0, HYD_INTERNAL_ERROR, "socket() failed, %s\n",
+    HYDU_ERR_CHKANDJUMP(status, listen_fd < 0, HYD_INTERNAL_ERROR, "socket() failed, %s\n",
                         strerror(errno));
 
     memset((void *) &sin, 0, sizeof(sin));
@@ -340,7 +282,7 @@ HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix, int pgid, int id, int c
     goto fn_exit;
 }
 
-#define STDINOUTERR_PORT_NAME "HYDRA_STDINOUTERR_PORT"
+#define STDINOUTERR_PORT_NAME "CKPOINT_STDINOUTERR_PORT"
 
 HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int ckpt_num,
                                      struct HYD_env *envlist, int num_ranks, int ranks[],

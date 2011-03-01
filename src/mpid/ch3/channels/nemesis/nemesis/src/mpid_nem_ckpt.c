@@ -58,7 +58,6 @@ static enum {CKPT_NULL, CKPT_CONTINUE, CKPT_RESTART, CKPT_ERROR} ckpt_result = C
 static int reinit_pmi(void);
 static int restore_env(pid_t parent_pid, int rank);
 static int restore_stdinouterr(int rank);
-static int open_fifo(const char *fname_template, int rank, int restart_pid, int dupfd, int flags);
 
 static sem_t ckpt_sem;
 static sem_t cont_sem;
@@ -282,10 +281,10 @@ typedef struct sock_ident {
     int pid;
 } sock_ident_t;
     
-#define STDINOUTERR_PORT_NAME "HYDRA_STDINOUTERR_PORT"
+#define STDINOUTERR_PORT_NAME "CKPOINT_STDINOUTERR_PORT"
 
 #undef FUNCNAME
-#define FUNCNAME open_fifo
+#define FUNCNAME open_io_socket
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int open_io_socket(socktype_t socktype, int rank, int dupfd)
@@ -354,7 +353,6 @@ fn_exit:
 static int restore_stdinouterr(int rank)
 {
     int ret;
-    int fd;
     MPIDI_STATE_DECL(MPID_STATE_RESTORE_STDINOUTERR);
 
     MPIDI_FUNC_ENTER(MPID_STATE_RESTORE_STDINOUTERR);
