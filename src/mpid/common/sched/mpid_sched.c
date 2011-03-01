@@ -343,7 +343,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *index, struct MPIDU
 
     if (s->num_entries == s->size) {
         /* need to grow the entries array */
-        s->entries = MPIU_Realloc(s->entries, s->size * 2);
+        s->entries = MPIU_Realloc(s->entries, 2*s->size*sizeof(struct MPIDU_Sched_entry));
         if (s->entries == NULL) MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
         s->size *= 2;
     }
