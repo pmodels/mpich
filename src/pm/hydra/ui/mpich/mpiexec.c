@@ -281,6 +281,10 @@ int main(int argc, char **argv)
         }
     }
 
+    if (HYD_server_info.user_global.debug)
+        for (node = HYD_server_info.node_list; node; node = node->next)
+            HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
+
     /* Reset the host list to use only the number of processes per
      * node as specified by the ppn option. */
     if (HYD_ui_mpich_info.ppn != -1)
