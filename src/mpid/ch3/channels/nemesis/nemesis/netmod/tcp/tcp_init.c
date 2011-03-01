@@ -140,7 +140,6 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
 static int ckpt_restart(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_queue_ptr_t dummy ;
     char *publish_bc_orig = NULL;
     char *bc_val          = NULL;
     int val_max_sz;
