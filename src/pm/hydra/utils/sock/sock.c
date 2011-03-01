@@ -512,7 +512,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     ht = gethostbyname(host);
     if (ht == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "unable to get host address (%s)\n", HYDU_strerror(errno));
+                            "unable to get host address (%s)\n", HYDU_herror(h_errno));
 
     memset((char *) &sa, 0, sizeof(struct sockaddr_in));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
