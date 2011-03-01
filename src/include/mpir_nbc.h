@@ -87,4 +87,44 @@ int MPID_Sched_cb(MPID_Sched_cb_t *cb_p, void *cb_state, MPID_Sched_t s);
 /* common callback utility functions */
 int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state);
 
+/* an upgraded version of MPIU_CHKPMEM_MALLOC/_DECL/_REAP/_COMMIT that adds
+ * corresponding cleanup callbacks to the given schedule at _COMMIT time */
+#define MPIR_SCHED_CHKPMEM_DECL(n_)                               \
+    void *(mpir_sched_chkpmem_stk_[n_]);                          \
+    int mpir_sched_chkpmem_stk_sp_=0;                             \
+    MPIU_AssertDeclValue(const int mpir_sched_chkpmem_stk_sz_,n_)
+
+#define MPIR_SCHED_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_)  \
+    do {                                                                          \
+        (pointer_) = (type_)MPIU_Malloc(nbytes_);                                 \
+        if (pointer_) {                                                           \
+            MPIU_Assert(mpir_sched_chkpmem_stk_sp_ < mpir_sched_chkpmem_stk_sz_); \
+            mpir_sched_chkpmem_stk_[mpir_sched_chkpmem_stk_sp_++] = (pointer_);   \
+        } else if ((nbytes_) > 0) {                                               \
+            MPIU_CHKMEM_SETERR((rc_),(nbytes_),(name_));                          \
+            stmt_;                                                                \
+        }                                                                         \
+    } while (0)
+
+#define MPIR_SCHED_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
+    MPIR_SCHED_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
+
+/* just cleanup, don't add anything to the schedule */
+#define MPIR_SCHED_CHKPMEM_REAP(sched_)                                       \
+    do {                                                                      \
+        while (mpir_sched_chkpmem_stk_sp_ > 0) {                              \
+            MPIU_Free(mpir_sched_chkpmem_stk_[--mpir_sched_chkpmem_stk_sp_]); \
+        }                                                                     \
+    } while (0)
+
+#define MPIR_SCHED_CHKPMEM_COMMIT(sched_)                                                      \
+    do {                                                                                       \
+        while (mpir_sched_chkpmem_stk_sp_ > 0) {                                               \
+            mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf,                                 \
+                                      (mpir_sched_chkpmem_stk_[--mpir_sched_chkpmem_stk_sp_]), \
+                                      (sched_));                                               \
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);                                            \
+        }                                                                                      \
+    } while (0)
+
 #endif /* !defined(MPIR_NBC_H_INCLUDED) */
