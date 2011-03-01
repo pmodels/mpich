@@ -16,6 +16,15 @@ MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <libcr.h>
 #include <stdio.h>
 #include "pmi.h"
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
 
 #define CHECK_ERR(cond, msg) do {                                              \
         if (cond) {                                                            \
@@ -292,7 +301,7 @@ static int open_io_socket(socktype_t socktype, int rank, int dupfd)
     int fd;
     int ret;
     struct sockaddr_in sock_addr;
-    struct in_addr addr;
+    in_addr_t addr;
     sock_ident_t id;
     int port;
     int len;
@@ -305,12 +314,12 @@ static int open_io_socket(socktype_t socktype, int rank, int dupfd)
     memset(&addr, 0, sizeof(addr));
 
     MPL_env2int(STDINOUTERR_PORT_NAME, &port);
-    ret = inet_pton(AF_INET, "127.0.0.1", &addr);
-    CHECK_ERR_ERRNO(ret != 1, "inet_pton");
+    addr = inet_addr("127.0.0.1");
+    CHECK_ERR_ERRNO(addr == INADDR_NONE, "inet_addr");
 
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_port = htons((in_port_t)port);
-    sock_addr.sin_addr.s_addr = addr.s_addr;
+    sock_addr.sin_addr.s_addr = addr;
 
     do {
         fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
