@@ -166,7 +166,8 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
     ht = gethostbyname(host);
     if (ht == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "unable to get host address (%s)\n", HYDU_herror(h_errno));
+                            "unable to get host address for %s (%s)\n", host,
+                            HYDU_herror(h_errno));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
     /* Create a socket and set the required options */
@@ -512,7 +513,8 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     ht = gethostbyname(host);
     if (ht == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "unable to get host address (%s)\n", HYDU_herror(h_errno));
+                            "unable to get host address for %s (%s)\n", host,
+                            HYDU_herror(h_errno));
 
     memset((char *) &sa, 0, sizeof(struct sockaddr_in));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
