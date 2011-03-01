@@ -219,8 +219,8 @@ static int reinit_pmi(void)
     MPIDI_Process.my_pg->id = MPIU_Malloc(pg_id_sz + 1);
     CHECK_ERR(MPIDI_Process.my_pg->id == NULL, "malloc failed");
 
-    ret = PMI_KVS_Get_name(MPIDI_Process.my_pg->id, pg_id_sz);
-    CHECK_ERR(ret, "pmi_get_id");
+    ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->id, pg_id_sz);
+    CHECK_ERR(ret, "pmi_kvs_get_my_name");
 
     /* get new kvsname */
     ret = PMI_KVS_Get_name_length_max(&kvs_name_sz);
