@@ -73,6 +73,19 @@ int MPID_Sched_copy(void *inbuf,  int incount,  MPI_Datatype intype,
  * may begin to execute */
 int MPID_Sched_barrier(MPID_Sched_t s);
 
+/* Defers evaluating (*count) until the entry actually begins to execute.  This
+ * permits algorithms that accumulate/dissipate bytes as rounds progress without
+ * excessive (re)calculation of counts for/from other processes.
+ *
+ * A corresponding _recv_defer function is not currently provided because there
+ * is no known use case.  The recv count is just an upper bound, not an exact
+ * amount to be received, so an oversized recv is used instead of deferral. */
+int MPID_Sched_send_defer(void *buf, int *count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s);
+/* Just like MPID_Sched_recv except it populates the given status object with
+ * the received count and error information, much like a normal recv.  Often
+ * useful in conjunction with MPID_Sched_send_defer. */
+int MPID_Sched_recv_status(void *buf, int count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPI_Status *status, MPID_Sched_t s);
+
 /* Sched_cb_t funcitons take a comm parameter, the value of which will be the
  * comm passed to Sched_start */
 /* callback entries must be used judiciously, otherwise they will prevent

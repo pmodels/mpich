@@ -18,20 +18,20 @@
 enum MPIDU_Sched_entry_type {
     MPIDU_SCHED_ENTRY_INVALID_LB = 0,
     MPIDU_SCHED_ENTRY_SEND,
+    /* _SEND_DEFER is easily implemented via _SEND */
     MPIDU_SCHED_ENTRY_RECV,
+    /* _RECV_STATUS is easily implemented via _RECV */
     MPIDU_SCHED_ENTRY_REDUCE,
     MPIDU_SCHED_ENTRY_COPY,
     MPIDU_SCHED_ENTRY_NOP,
     MPIDU_SCHED_ENTRY_CB,
-    /* TODO remove these if they aren't needed
-    MPIDU_SCHED_ENTRY_TRANSPACK,
-    */
     MPIDU_SCHED_ENTRY_INVALID_UB
 };
 
 struct MPIDU_Sched_send {
     void *buf;
     int count;
+    int *count_p;
     MPI_Datatype datatype;
     int dest;
     MPID_Comm *comm;
@@ -45,6 +45,7 @@ struct MPIDU_Sched_recv {
     int src;
     MPID_Comm *comm;
     MPID_Request *rreq;
+    MPI_Status *status;
 };
 
 struct MPIDU_Sched_reduce {
