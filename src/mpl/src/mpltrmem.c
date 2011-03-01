@@ -440,6 +440,7 @@ $   Block at address %lx is corrupted
 int MPL_trvalid(const char str[])
 {
     TRSPACE *head;
+    TRSPACE *next;
     char *a;
     unsigned long *nend;
     int errs = 0;
@@ -463,6 +464,7 @@ int MPL_trvalid(const char str[])
              * SEGV or BUS  */
             goto fn_exit;
         }
+        /* FIXME why is this +1 here? */
         a = (char *) (((TrSPACE *) head) + 1);
         nend = (unsigned long *) (a + head->size);
 
@@ -490,9 +492,10 @@ int MPL_trvalid(const char str[])
         }
 
         /* set both regions back to NOACCESS */
+        next = head->next;
         MPL_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
         MPL_VG_MAKE_MEM_NOACCESS(nend, sizeof(*nend));
-        head = head->next;
+        head = next;
     }
   fn_exit:
     return errs;
@@ -756,18 +759,17 @@ void *MPL_trrealloc(void *p, int size, int lineno, const char fname[])
 
     pnew = MPL_trmalloc((unsigned) size, lineno, fname);
 
-    /* If trmalloc failed, p should be left alone and will not be freed.  So we
-     * need to mark the head as NOACCESS before returning. */
-    if (!pnew) {
-        MPL_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
-    }
-
     if (p && pnew) {
         nsize = size;
         if (head->size < (unsigned long) nsize)
             nsize = (int) (head->size);
         memcpy(pnew, p, nsize);
         MPL_trfree(p, lineno, fname);
+    }
+
+    /* Re-mark the head as NOACCESS before returning. */
+    if (head) {
+        MPL_VG_MAKE_MEM_NOACCESS(head, sizeof(*head));
     }
 
     /* If the MPL_trmalloc failed above pnew will be NULL, just like a
