@@ -73,6 +73,15 @@ int MPID_Sched_copy(void *inbuf,  int incount,  MPI_Datatype intype,
  * may begin to execute */
 int MPID_Sched_barrier(MPID_Sched_t s);
 
+/* A convenience macro for the extremely common case that "mpi_errno" is the
+ * variable used for tracking error state and MPIU_ERR_POP is needed.  This
+ * declutters the NBC code substantially. */
+#define MPID_SCHED_BARRIER(sched_)              \
+    do {                                        \
+        mpi_errno = MPID_Sched_barrier(sched_); \
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno); \
+    } while (0)
+
 /* Defers evaluating (*count) until the entry actually begins to execute.  This
  * permits algorithms that accumulate/dissipate bytes as rounds progress without
  * excessive (re)calculation of counts for/from other processes.
