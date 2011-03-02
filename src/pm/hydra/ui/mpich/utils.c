@@ -1575,6 +1575,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"iface", iface_fn, iface_help_fn},
     {"nameserver", nameserver_fn, nameserver_help_fn},
     {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
+    {"dac", auto_cleanup_fn, auto_cleanup_help_fn},
     {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
