@@ -469,9 +469,13 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
                             iface);
 
     sa = (struct sockaddr_in *) ifa->ifa_addr;
+#if defined HAVE_INET_NTOP
     (*ip) = HYDU_strdup((char *)
                         inet_ntop(AF_INET, (const void *) &(sa->sin_addr), buf,
                                   MAX_HOSTNAME_LEN));
+#else
+    (*ip) = NULL;
+#endif /* HAVE_INET_NTOP */
     if (!*ip)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unable to find IP for interface %s\n", iface);
@@ -518,9 +522,14 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
     memset((char *) &sa, 0, sizeof(struct sockaddr_in));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
+
+#if defined HAVE_INET_NTOP
     ip1 = HYDU_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf1,
                                          MAX_HOSTNAME_LEN));
     HYDU_ASSERT(ip1, status);
+#else
+    goto fn_exit;
+#endif /* HAVE_INET_NTOP */
 
 #if defined(HAVE_GETIFADDRS)
     /* Got the interface name; let's query for the IP address */
@@ -530,10 +539,13 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
             sa_ptr = (struct sockaddr_in *) ifa->ifa_addr;
+
+#if defined HAVE_INET_NTOP
             ip2 = HYDU_strdup((char *)
                               inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf2,
                                         MAX_HOSTNAME_LEN));
             HYDU_ASSERT(ip2, status);
+#endif /* HAVE_INET_NTOP */
 
             if (!strcmp(ip1, ip2)) {
                 *is_local = 1;
