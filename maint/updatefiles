@@ -579,19 +579,21 @@ fi
 
 
 ########################################################################
-## Checking if xargs accepts -r
+## Checking if xargs rm -rf works
 ########################################################################
 
-echo_n "Checking if xargs accepts -r... "
-if [ ! -z "`find . -name __random_file__`" ] ; then
-    error "found a file named __random_file__"
+echo_n "Checking if xargs rm -rf works... "
+if [ -d "`find . -name __random_dir__`" ] ; then
+    error "found a directory named __random_dir__"
     exit 1
 else
-    find . -name __random_file__ | xargs rm -rf > /dev/null 2>&1
+    mkdir __random_dir__
+    find . -name __random_dir__ | xargs rm -rf > /dev/null 2>&1
     if [ $? = 0 ] ; then
-	echo "accepted"
+	echo "yes"
     else
-	echo "not accepted (error)"
+	echo "no (error)"
+	rm -rf __random_dir__
 	exit 1
     fi
 fi
