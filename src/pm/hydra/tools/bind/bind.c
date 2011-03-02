@@ -341,6 +341,7 @@ HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
     if (!strcmp(HYDT_bind_info.bindlib, "plpa")) {
         status = HYDT_bind_plpa_process(cpuset);
         HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
+        goto fn_exit;
     }
 #endif /* HAVE_PLPA */
 
@@ -348,8 +349,11 @@ HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
     if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
         status = HYDT_bind_hwloc_process(cpuset);
         HYDU_ERR_POP(status, "HWLOC failure binding process to core\n");
+        goto fn_exit;
     }
 #endif /* HAVE_HWLOC */
+
+    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no binding library available\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
