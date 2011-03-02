@@ -75,6 +75,8 @@ static void sigusr1_handler(int sig)
     ++sigusr1_count;
     /* poke the progress engine in case we're waiting in a blocking recv */
     MPIDI_CH3_Progress_signal_completion();
+    if (prev_sighandler)
+        prev_sighandler(sig);
 }
 
 /* MPIDI_CH3I_Shm_send_progress() this function makes progress sending
@@ -807,8 +809,8 @@ int MPIDI_CH3I_Progress_init(void)
     /* install signal handler for process failure notifications from hydra */
     prev_sighandler = signal(SIGUSR1, sigusr1_handler);
     MPIU_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
-    /* Error if the app set its own SIGUSR1 handler. */
-    MPIU_ERR_CHKANDJUMP(prev_sighandler != SIG_DFL, mpi_errno, MPI_ERR_OTHER, "**sigusr1");
+    if (prev_sighandler == SIG_IGN || prev_sighandler == SIG_DFL || prev_sighandler == SIG_HOLD)
+        prev_sighandler = NULL;
 #endif
 
  fn_exit:
