@@ -809,7 +809,7 @@ int MPIDI_CH3I_Progress_init(void)
     /* install signal handler for process failure notifications from hydra */
     prev_sighandler = signal(SIGUSR1, sigusr1_handler);
     MPIU_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIU_Strerror(errno));
-    if (prev_sighandler == SIG_IGN || prev_sighandler == SIG_DFL || prev_sighandler == SIG_HOLD)
+    if (prev_sighandler == SIG_IGN || prev_sighandler == SIG_DFL)
         prev_sighandler = NULL;
 #endif
 
