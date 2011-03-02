@@ -77,7 +77,9 @@ echo "done"
 # autotools steps (such as libtoolize) will create the aux/macro dir.
 echo_n "Checking for svn checkout errors... "
 svn_externals_sanity_file="src/pm/hydra/VERSION"
-if test "!" -e $svn_externals_sanity_file ; then
+# Note that -e is not an available option for test in the Bourne shell, though
+# some systems that pretend that ksh is the same as sh will accept it.
+if test "!" -f $svn_externals_sanity_file ; then
     cat <<EOT
 
 ERROR: The file '$svn_externals_sanity_file'
