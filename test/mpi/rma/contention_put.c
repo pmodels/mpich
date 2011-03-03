@@ -33,7 +33,7 @@ void test_put() {
   for (i = 0; i < MAXELEMS; i++)
     src_buf[i] = me + 1.0;
 
-  MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, me, dst_win);
+  MPI_Win_lock(MPI_LOCK_EXCLUSIVE, me, 0, dst_win);
 
   for (i = 0; i < nproc*MAXELEMS; i++)
     dst_buf[i] = 0.0;
