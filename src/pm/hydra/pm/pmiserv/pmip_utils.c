@@ -260,15 +260,56 @@ static HYD_status ckpoint_num_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status parse_ckpoint_prefix(char *pathlist)
+{
+    int i, prefixes;
+    char *dummy;
+    HYD_status status = HYD_SUCCESS;
+
+    /* Find the number of prefixes provided */
+    prefixes = 1;
+    for (i = 0; pathlist[i]; i++)
+        if (pathlist[i] == ':')
+            prefixes++;
+
+    /* Add one more to the prefix list for a NULL ending string */
+    prefixes++;
+
+    HYDU_MALLOC(HYD_pmcd_pmip.local.ckpoint_prefix_list, char **, prefixes * sizeof(char *),
+                status);
+
+    dummy = strtok(pathlist, ":");
+    i = 0;
+    while (dummy) {
+        HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = HYDU_strdup(dummy);
+        dummy = strtok(NULL, ":");
+        i++;
+    }
+    HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = NULL;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.ckpoint_prefix, **argv);
+    HYDU_ERR_POP(status, "error setting checkpoint prefix\n");
 
+    status = parse_ckpoint_prefix(**argv);
+    HYDU_ERR_POP(status, "error setting checkpoint prefix\n");
+
+  fn_exit:
     (*argv)++;
-
     return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status global_env_fn(char *arg, char ***argv)

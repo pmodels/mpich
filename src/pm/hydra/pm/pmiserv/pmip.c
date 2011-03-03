@@ -54,6 +54,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.spawner_kvs_name = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
+    HYD_pmcd_pmip.local.ckpoint_prefix_list = NULL;
 
     HYD_pmcd_pmip.exec_list = NULL;
 
@@ -64,6 +65,7 @@ static HYD_status init_params(void)
 
 static void cleanup_params(void)
 {
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
@@ -122,6 +124,12 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.local.spawner_kvs_name)
         HYDU_FREE(HYD_pmcd_pmip.local.spawner_kvs_name);
+
+    if (HYD_pmcd_pmip.local.ckpoint_prefix_list) {
+        for (i = 0; HYD_pmcd_pmip.local.ckpoint_prefix_list[i]; i++)
+            HYDU_FREE(HYD_pmcd_pmip.local.ckpoint_prefix_list[i]);
+        HYDU_FREE(HYD_pmcd_pmip.local.ckpoint_prefix_list);
+    }
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 

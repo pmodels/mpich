@@ -922,7 +922,8 @@ static HYD_status ckpoint_interval_fn(char *arg, char ***argv)
 static void ckpoint_prefix_help_fn(void)
 {
     printf("\n");
-    printf("-ckpoint-prefix: Checkpoint file prefix to use\n\n");
+    printf("-ckpoint-prefix: Checkpoint file prefix to use\n");
+    printf("    You can have multiple backup prefixes separated by a ':'\n\n");
 }
 
 static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)

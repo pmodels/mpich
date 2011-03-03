@@ -71,6 +71,8 @@ struct HYD_pmcd_pmip {
 
         char *spawner_kvs_name;
         struct HYD_pmcd_pmi_kvs *kvs;   /* Node-level KVS space for node attributes */
+
+        char **ckpoint_prefix_list;
     } local;
 
     /* Process segmentation information for this proxy */
