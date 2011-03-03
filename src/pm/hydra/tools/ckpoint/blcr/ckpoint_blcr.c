@@ -210,7 +210,7 @@ static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *i
 
 
 
-HYD_status HYDT_ckpoint_blcr_suspend(const char *prefix, int pgid, int id, int ckpt_num)
+HYD_status HYDT_ckpoint_blcr_checkpoint(const char *prefix, int pgid, int id, int ckpt_num)
 {
     HYD_status status = HYD_SUCCESS;
     int ret;

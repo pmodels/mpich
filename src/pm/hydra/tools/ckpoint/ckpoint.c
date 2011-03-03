@@ -13,12 +13,9 @@
 
 struct HYDT_ckpoint_info HYDT_ckpoint_info;
 
-HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix,
-                             int user_ckpoint_num)
+HYD_status HYDT_ckpoint_init(char *user_ckpointlib, int user_ckpoint_num)
 {
     HYD_status status = HYD_SUCCESS;
-    int ret;
-    struct stat st;
 
     HYDU_FUNC_ENTER();
 
@@ -27,23 +24,6 @@ HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix,
     else if (MPL_env2str("HYDRA_CKPOINTLIB", (const char **) &HYDT_ckpoint_info.ckpointlib) ==
              0)
         HYDT_ckpoint_info.ckpointlib = HYDRA_DEFAULT_CKPOINTLIB;
-
-    if (user_ckpoint_prefix)
-        HYDT_ckpoint_info.ckpoint_prefix = user_ckpoint_prefix;
-    else if (MPL_env2str("HYDRA_CKPOINT_PREFIX",
-                         (const char **) &HYDT_ckpoint_info.ckpoint_prefix) == 0)
-        HYDT_ckpoint_info.ckpoint_prefix = NULL;
-
-    if (HYDT_ckpoint_info.ckpoint_prefix == NULL)
-        goto fn_exit;
-
-    ret = stat(HYDT_ckpoint_info.ckpoint_prefix, &st);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_FAILURE,
-                        "Failed to stat checkpoint prefix \"%s\": %s\n",
-                        HYDT_ckpoint_info.ckpoint_prefix, strerror(errno));
-    HYDU_ERR_CHKANDJUMP(status, !S_ISDIR(st.st_mode), HYD_FAILURE,
-                        "checkpoint prefix \"%s\" is not a directory.\n",
-                        HYDT_ckpoint_info.ckpoint_prefix);
 
     HYDT_ckpoint_info.ckpoint_num = (user_ckpoint_num == -1) ? 0 : user_ckpoint_num;
 
@@ -62,20 +42,30 @@ HYD_status HYDT_ckpoint_init(char *user_ckpointlib, char *user_ckpoint_prefix,
     goto fn_exit;
 }
 
-HYD_status HYDT_ckpoint_suspend(int pgid, int id)
+HYD_status HYDT_ckpoint_checkpoint(int pgid, int id, const char *user_ckpoint_prefix)
 {
     HYD_status status = HYD_SUCCESS;
-
+    struct stat st;
+    int ret;
+    
     HYDU_FUNC_ENTER();
 
-    HYDU_ERR_CHKANDJUMP(status, HYDT_ckpoint_info.ckpoint_prefix == NULL, HYD_INTERNAL_ERROR,
-                        "no checkpoint prefix defined\n");
+
+    HYDU_ASSERT(user_ckpoint_prefix, status);
+
+    ret = stat(user_ckpoint_prefix, &st);
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_FAILURE,
+                        "Failed to stat checkpoint prefix \"%s\": %s\n",
+                        user_ckpoint_prefix, strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, !S_ISDIR(st.st_mode), HYD_FAILURE,
+                        "checkpoint prefix \"%s\" is not a directory.\n",
+                        user_ckpoint_prefix);
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
         status =
-            HYDT_ckpoint_blcr_suspend(HYDT_ckpoint_info.ckpoint_prefix, pgid, id,
-                                      HYDT_ckpoint_info.ckpoint_num);
+            HYDT_ckpoint_blcr_checkpoint(user_ckpoint_prefix, pgid, id,
+                                         HYDT_ckpoint_info.ckpoint_num);
         HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
     }
 #endif /* HAVE_BLCR */
@@ -91,19 +81,29 @@ HYD_status HYDT_ckpoint_suspend(int pgid, int id)
 }
 
 HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int num_ranks,
-                                int ranks[], int *in, int *out, int *err, int *pid)
+                                int ranks[], int *in, int *out, int *err, int *pid,
+                                const char *user_ckpoint_prefix)
 {
     HYD_status status = HYD_SUCCESS;
+    struct stat st;
+    int ret;
 
     HYDU_FUNC_ENTER();
 
-    HYDU_ERR_CHKANDJUMP(status, HYDT_ckpoint_info.ckpoint_prefix == NULL, HYD_INTERNAL_ERROR,
-                        "no checkpoint prefix defined\n");
+    HYDU_ASSERT(user_ckpoint_prefix, status);
+    
+    ret = stat(user_ckpoint_prefix, &st);
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_FAILURE,
+                        "Failed to stat checkpoint prefix \"%s\": %s\n",
+                        user_ckpoint_prefix, strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, !S_ISDIR(st.st_mode), HYD_FAILURE,
+                        "checkpoint prefix \"%s\" is not a directory.\n",
+                        user_ckpoint_prefix);
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
         status =
-            HYDT_ckpoint_blcr_restart(HYDT_ckpoint_info.ckpoint_prefix, pgid, id,
+            HYDT_ckpoint_blcr_restart(user_ckpoint_prefix, pgid, id,
                                       HYDT_ckpoint_info.ckpoint_num, envlist, num_ranks, ranks,
                                       in, out, err, pid);
         HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
