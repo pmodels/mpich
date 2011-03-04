@@ -97,7 +97,7 @@ dnl it became necessary to define CC etc. before invoking AC_PROG_CC (and
 dnl the othe language compilers), because those commands now do much, much
 dnl more than just determining the compiler.
 dnl
-dnl To address the change, we still define the TESTCC ect. compilers where
+dnl To address the change, we still define the TESTCC etc. compilers where
 dnl possible to allow the use of AC_TRY_RUN when required, but we define
 dnl the CC etc variables and do not define ac_cv_prog_CC etc., as these 
 dnl cause autoconf to skip all of the other initialization code that 
@@ -250,6 +250,8 @@ case $ac_mpi_type in
 	    # Note that autoconf may unconditionally change the value of 
 	    # CC (!) in some other command. Thus, we define CCMASTER
 	    CCMASTER=$CC
+	    # Force autoconf to respect this choice
+	    ac_ct_CC=$CC
 	    # to permit configure codes to recover the correct CC.  This
 	    # is an ugly not-quite-correct workaround for the fact that 
 	    # does not want you to change the C compiler once you have set it
