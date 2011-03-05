@@ -1,4 +1,4 @@
-#! /usr/bin/env perl
+#! /usr/bin/env perl -w
 #
 # This file builds candidate interface files from the descriptions in 
 # mpi.h
@@ -39,6 +39,13 @@ $free   = "MPIU_Free";
 $header_file = "mpi_fortimpl.h";
 $debug = 0;
 $writeRoutineList = 0;   # Set to 1 to get a list of MPI routines
+$do_fint = 0;            # Set to 1 to support C and Fortran integers of a 
+                         # different size
+$within_fint = 0;        # This is set to 1 while generating code for the 
+                         # do_fint branch
+%fintToHandle = ( 'int' => 1, 'MPI_Request' => 1, 'MPI_Group' => 1, 
+		  'MPI_Win' => 1, 'MPI_Info' => 1, 'MPI_Errhandler' => 1, 
+		  'MPI_File' => 1, 'MPI_Op' => 1 );
 
 @arg_addresses = ();
 #
@@ -412,16 +419,27 @@ foreach $_ (@ARGV) {
 #    'Scan' => '1:2', 'Scan-1' => 'in:bufptr', 'Scan-2' => 'in:bufptr',
 #
     'Gather' => '1', 'Gather-1' => 'in:inplace', 
-    'Gatherv' => '1', 'Gatherv-1' => 'in:inplace',
+    'Gatherv' => '1:5:6', 'Gatherv-1' => 'in:inplace',
+                'Gatherv-5' => 'in:fint2int_array:_commsize(*v9)',
+                'Gatherv-6' => 'in:fint2int_array:_commsize',
     'Scatter' => '4', 'Scatter-4' => 'in:inplace',
-    'Scatterv' => '5', 'Scatterv-5' => 'in:inplace',
+    'Scatterv' => '2:3:5', 
+                 'Scatterv-2' => 'in:fint2int_array:_commsize(*v9)',
+                 'Scatterv-3' => 'in:fint2int_array:_commsize',
+                 'Scatterv-5' => 'in:inplace',
     'Allgather' => '1', 'Allgather-1' => 'in:inplace',
     'Allgatherv' => '1', 'Allgatherv-1' => 'in:inplace',
     'Reduce' => '1', 'Reduce-1' => 'in:inplace',
     'Allreduce' => '1', 'Allreduce-1' => 'in:inplace',
     'Reduce_scatter' => '1', 'Reduce_scatter-1' => 'in:inplace',
     'Scan' => '1', 'Scan-1' => 'in:inplace',
-
+    'Alltoallw' => '2:3:4:6:7:8', 
+                'Alltoallw-2' => 'in:fint2int_array:_commsize(*v9)',
+                'Alltoallw-3' => 'in:fint2int_array:_commsize',
+                'Alltoallw-6' => 'in:fint2int_array:_commsize',
+                'Alltoallw-7' => 'in:fint2int_array:_commsize',
+                'Alltoallw-4' => 'in:handle_array:_commsize:MPI_Datatype',
+                'Alltoallw-8' => 'in:handle_array:_commsize:MPI_Datatype',
   
     'Add_error_string' => '2', 'Add_error_string-2' => 'in:addnull',
     'Attr_put' => '3', 'Attr_put-3' => 'in:addrint',
@@ -437,9 +455,30 @@ foreach $_ (@ARGV) {
     'Win_get_attr' => '3:4', 'Win_get_attr-4' => 'out:logical',		   
 		  'Win_get_attr-3' => 'out:attraint:4',
     'Buffer_detach' => '1', 'Buffer_detach-1' => 'out:bufaddr',		 
-    'Cart_create' => '4:5', 'Cart_create-4' => 'in:logical_array:*v2', 
-    'Cart_create-5' => 'in:logical', 
-    'Cart_get' => '4', 'Cart_get-4' => 'out:logical_array:*v2',
+    'Cart_create' => '3:4:5:6', 
+                  'Cart_create-3' => 'in:fint2int_array:*v2',
+                  'Cart_create-4' => 'in:logical_array:*v2', 
+                  'Cart_create-5' => 'in:logical', 
+                  'Cart_create-6' => 'out:handle::MPI_Comm',
+    'Cart_get' => '3:4:5', 
+                  'Cart_get-3' => 'out:fint2int_array:*v2',
+                  'Cart_get-4' => 'out:logical_array:*v2',
+                  'Cart_get-5' => 'out:fint2int_array:*v2',
+
+    'Cart_sub' => '3', 'Cart_sub-3' => 'out:handle::MPI_Comm',
+    # FIXME: For cart_sub, need to update arg 2, in:finttoint_array, but 
+    # size is size of input cart 
+    'Dims_create' => '3', 
+                  'Dims_create-3' => 'inout:fint2int_array:*v2',
+    'Graph_create' => '3:4:5:6',
+                  'Graph_create-3' => 'in:fint2int_array:*v2',
+                  'Graph_create-4' => 'in:fint2int_array:*v2',
+                  'Graph_create-5' => 'in:logical',
+                  'Graph_create-6' => 'out:handle::MPI_Comm',
+    'Comm_create' => '3', 'Comm_create-3' => 'out:handle::MPI_Comm',
+    'Comm_dup' => '2', 'Comm_dup-2' => 'out:handle::MPI_Comm',
+    'Comm_split' => '4', 'Comm_split-4' => 'out:handle::MPI_Comm',
+    'Comm_free' => '1', 'Comm_free-1' => 'inout:handle::MPI_Comm',
     'Comm_accept' => '1', 'Comm_accept-1' => 'in:addnull',
     'Comm_connect' => '1', 'Comm_connect-1' => 'in:addnull',
     'Comm_get_name' => '2', 'Comm_get_name-2' => 'out:blankpad',
@@ -470,17 +509,21 @@ foreach $_ (@ARGV) {
     'Publish_name' => '1:3', 'Publish_name-1' => 'in:addnull',
 		  'Publish_name-3' => 'in:addnull',
 # comm spawn multiple needs slightly different routines
-    'Comm_spawn_multiple' => '2:3:9',
+    'Comm_spawn_multiple' => '2:3:4:5:8:9',
 		 'Comm_spawn_multiple-2' => 'in:chararray:*v1',
 		 'Comm_spawn_multiple-3' => 'in:chararray2:*v1',
-		  'Comm_spawn_multiple-9' => 'in:errcodesignore',
+		 'Comm_spawn_multiple-9' => 'in:errcodesignore',
+                 'Comm_spawn_multiple-4' => 'in:fint2int_array:*v1',
+                 'Comm_spawn_multiple-5' => 'in:handle_array:*v1:MPI_Info',
+                 'Comm_spawn_multiple-8' => 'out:handle::MPI_Comm',
     'Initialized' => '1', 'Initialized-1' => 'out:logical',
+    'Op_create' => '2', 'Op_create-2' => 'in:logical',
     'Iprobe' => '4:5', 'Iprobe-4' => 'out:logical',
-		 'Iprobe-5' => 'in:status',
-    'Probe' => '4', 'Probe-4' => 'in:status',
-    'Recv' => '7', 'Recv-7' => 'in:status',
-    'Sendrecv' => '12', 'Sendrecv-12' => 'in:status',
-    'Sendrecv_replace' => '9', 'Sendrecv_replace-9' => 'in:status',
+		 'Iprobe-5' => 'out:status',
+    'Probe' => '4', 'Probe-4' => 'out:status',
+    'Recv' => '7', 'Recv-7' => 'out:status',
+    'Sendrecv' => '12', 'Sendrecv-12' => 'out:status',
+    'Sendrecv_replace' => '9', 'Sendrecv_replace-9' => 'out:status',
 #    'Send' => '1', 'Send-1' => 'in:bufptr',
 #    'Ssend' => '1', 'Ssend-1' => 'in:bufptr',
 #    'Rsend' => '1', 'Rsend-1' => 'in:bufptr',
@@ -498,29 +541,75 @@ foreach $_ (@ARGV) {
 #    'Recv_init' => '1', 'Recv_init-1' => 'in:bufptr',
 #    'Sendrecv' => '1:6', 'Sendrecv-1' => 'in:bufptr', 'Sendrecv-6' => 'in:bufptr',
 #    'Sendrecv_replace' => '1', 'Sendrecv_replace-1' => 'in:bufptr',
-    'Test_cancelled' => '2', 'Test_cancelled-2' => 'out:logical',
-    'Test' => '2:3', 'Test-2' => 'out:logical',
-		 'Test-3' => 'in:status',
-    'Testall' => '3:4', 'Testall-3' => 'out:logical', 
-		 'Testall-4' => 'in:status_array',
-    'Testany' => '3:4:5', 'Testany-4' => 'out:logical',
+    'Test_cancelled' => '1:2', 
+                 'Test_cancelled-1' => 'in:status',
+                 'Test_cancelled-2' => 'out:logical',
+    'Test' => '1:2:3', 'Test-1' => 'inout:handle::MPI_Request', 
+                 'Test-2' => 'out:logical',
+		 'Test-3' => 'out:status',
+    'Testall' => '2:3:4', 'Testall-2' => 'inout:handle_array:*v1:MPI_Request',
+                 'Testall-3' => 'out:logical', 
+		 'Testall-4' => 'out:status_array:*v1',
+    'Testany' => '2:3:4:5', 'Testany-2' => 'inout:handle_array:*v1:MPI_Request',
+                 'Testany-4' => 'out:logical',
 		 'Testany-3' => 'out:index',
-		 'Testany-5' => 'in:status',
+		 'Testany-5' => 'out:status',
     'Testsome' => '4:5', 'Testsome-4' => 'out:index_array:*v3',
-		 'Testsome-5' => 'in:status_array',
+		 'Testsome-5' => 'out:status_array:*v3',
+    'Get_count' => '1', 'Get_count-1' => 'in:status',
+    'Type_contiguous' => '2:3', 
+                  'Type_contiguous-2' => 'in:handle::MPI_Datatype',
+                  'Type_contiguous-3' => 'out:handle::MPI_Datatype',
+    'Type_vector' => '4:5', 
+                  'Type_vector-4' => 'in:handle::MPI_Datatype',
+                  'Type_vector-5' => 'out:handle::MPI_Datatype',
+    'Type_hvector' => '3:4:5', 
+                  'Type_hvector-3' => 'in:intToAint',
+                  'Type_hvector-4' => 'in:handle::MPI_Datatype',
+                  'Type_hvector-5' => 'out:handle::MPI_Datatype',
+    'Type_indexed' => '4:5',
+                  'Type_indexed-4' => 'in:handle::MPI_Datatype',
+                  'Type_indexed-5' => 'out:handle::MPI_Datatype',
+    'Type_hindexed' => '3:4:5',
+                  'Type_hindexed-3' => 'in:intToAintArr:*v1',
+                  'Type_hindexed-4' => 'in:handle::MPI_Datatype',
+                  'Type_hindexed-5' => 'out:handle::MPI_Datatype',
+    'Type_struct' => '2:3:4:5',
+                  'Type_struct-2' => 'in:fint2int_array:*v1',
+                  'Type_struct-3' => 'in:intToAintArr:*v1',
+                  'Type_struct-4' => 'in:handle_array:*v1:MPI_Datatype',
+                  'Type_struct-5' => 'out:handle::MPI_Datatype',
+
+    'Type_commit' => '1', 
+                  'Type_commit-1' => 'inout:handle::MPI_Datatype',
+    'Type_free' => '1',
+                  'Type_free-1' => 'inout:handle::MPI_Datatype',
+    'Type_dup' => '2', 
+                  'Type_dup-2' => 'out:handle::MPI_Datatype',
+    'Get_elements' => 1, 
+                  'Get_elements-1' => 'in:status',
+    
     'Type_create_hvector' => 3, 'Type_create_hvector-3' => 'in:aintToVal',
     'Type_create_resized' => '2:3', 
 		  'Type_create_resized-2' => 'in:aintToVal', 
 		  'Type_create_resized-3' => 'in:aintToVal',
+    'Type_create_struct' => '2:4', 
+                  'Type_create_struct-2' => 'in:fint2int_array:*v1',
+                  'Type_create_struct-4' => 'in:handle_array:*v1:MPI_Datatype',
+    'Type_create_subarray' => '2:3:4:7',
+                  'Type_create_subarray-2' => 'in:fint2int_array:*v1',
+                  'Type_create_subarray-3' => 'in:fint2int_array:*v1',
+                  'Type_create_subarray-4' => 'in:fint2int_array:*v1',
+                  'Type_create_subarray-7' => 'out:handle::MPI_Datatype',
     'Type_get_name' => '2', 'Type_get_name-2' => 'out:blankpad',
     'Type_set_name' => '2', 'Type_set_name-2' => 'in:addnull',
+    'Type_get_contents' => '5:7',
+                  'Type_get_contents-5' => 'out:fint2int_array:*v2',
+                  'Type_get_contents-7' => 'out:handle_array:*v4:MPI_Datatype',
     'Type_extent' => '2', 'Type_extent-2' => 'out:aintToInt',	      
     'Type_lb' => '2', 'Type_lb-2' => 'out:aintToInt',	      
     'Type_ub' => '2', 'Type_ub-2' => 'out:aintToInt',	      
-    'Type_struct' => '3', 'Type_struct-3' => 'in:intToAintArr:*v1',
-    'Type_hindexed' => '3', 'Type_hindexed-3' => 'in:intToAintArr:*v1',
 # also need
-    'Type_hvector' => '3', 'Type_hvector-3' => 'in:intToAint',
     'Unpack_external' => '1:3', 'Unpack_external-1' => 'in:addnull',
 		  'Unpack_external-3' => 'in:aintToVal',
     'Unpublish_name' => '1:3', 'Unpublish_name-1' => 'in:addnull',
@@ -532,12 +621,19 @@ foreach $_ (@ARGV) {
     'Alloc_mem' => '1', 'Alloc_mem-1' => 'in:aintToVal', 
     'Win_get_name' => '2', 'Win_get_name-2' => 'out:blankpad',
     'Win_set_name' => '2', 'Win_set_name-2' => 'in:addnull',		  
-    'Wait' => '2', 'Wait-2' => 'in:status',
-    'Waitall' => '3', 'Waitall-3' => 'in:status_array',		 
-    'Waitany' => '3:4', 'Waitany-3' => 'out:index',
-		 'Waitany-4' => 'in:status',
-    'Waitsome' => '4:5', 'Waitsome-4' => 'out:index_array:*v3',
-		 'Waitsome-5' => 'in:status_array',
+    'Wait' => '1:2', 'Wait-1' => 'inout:handle::MPI_Request', 
+                 'Wait-2' => 'out:status',
+    'Waitall' => '2:3', 'Waitall-2' => 'inout:handle_array:*v1:MPI_Request', 
+                 'Waitall-3' => 'out:status_array:*v1',		 
+    'Waitany' => '2:3:4', 'Waitany-2' => 'inout:handle_array:*v1:MPI_Request',
+                 'Waitany-3' => 'out:index',
+		 'Waitany-4' => 'out:status',
+    'Waitsome' => '2:4:5', 
+                 'Waitsome-2' => 'inout:handle_array:*v1:MPI_Request',
+                 'Waitsome-4' => 'out:index_array:*v3',
+		 'Waitsome-5' => 'out:status_array:*v3',
+    'Startall' => '2',
+                 'Startall-2' => 'in:handle_array:*v1:MPI_Request',
 # File routines are separate
     'File_open' => '2:5', 'File_open-2' => 'in:addnull',
 		 'File_open-5' => 'out:FileToFint',
@@ -552,18 +648,26 @@ foreach $_ (@ARGV) {
 		  'Register_datarep-3' => 'in:checkdatarep',
 # MPI-2.2 Functions
     'Op_commutative' => '2', 'Op_commutative-2' => 'out:logical',
-    'Dist_graph_create_adjacent' => '4:7:9',
-		'Dist_graph_create_adjacent-4' => 'in:unweighted',
-		'Dist_graph_create_adjacent-7' => 'in:unweighted',
+    'Dist_graph_create_adjacent' => '3:4:6:7:9',
+                'Dist_graph_create_adjacent-3' => 'in:fint2int_array:*v2',
+		'Dist_graph_create_adjacent-4' => 'in:unweighted:*v2',
+		'Dist_graph_create_adjacent-6' => 'in:fint2int_array:*v5',
+		'Dist_graph_create_adjacent-7' => 'in:unweighted:*v5',
 		'Dist_graph_create_adjacent-9' => 'in:logical',
-    'Dist_graph_create' => '6:8',
-		'Dist_graph_create-6' => 'in:unweighted',
+    'Dist_graph_create' => '3:4:5:6:8:9',
+                'Dist_graph_create-3' => 'in:fint2int_array:*v2',
+                'Dist_graph_create-4' => 'in:fint2int_array:*v2',
+                'Dist_graph_create-5' => 'in:fint2int_array:_sum(v4,*v2)',
+		'Dist_graph_create-6' => 'in:unweighted:_ssize',
 		'Dist_graph_create-8' => 'in:logical',
+                'Dist_graph_create-9' => 'out:handle::MPI_Comm',
     'Dist_graph_neighbors_count' => '4',
 		'Dist_graph_neighbors_count-4' => 'out:logical',
-    'Dist_graph_neighbors' => '4:7',
-		'Dist_graph_neighbors-4' => 'in:unweighted',
-		'Dist_graph_neighbors-7' => 'in:unweighted',
+    'Dist_graph_neighbors' => '3:4:6:7',
+                'Dist_graph_neighbors-3' => 'out:fint2int_array:*v2',
+		'Dist_graph_neighbors-4' => 'out:unweighted:*v2',
+                'Dist_graph_neighbors-6' => 'out:fint2int_array:*v5',
+		'Dist_graph_neighbors-7' => 'out:unweighted:*v5',
     );
 
 # 
@@ -690,8 +794,9 @@ maint-clean:\
     print MAKEFD "install_INCLUDE = mpif.h\n";
 
     # Add the documentation
+    # Note that the mpif77 script is now in src/env
     print MAKEFD "# Documentation sources
-doc_sources = mpif77.txt
+doc_sources = 
 DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
 doc_HTML_SOURCES  = \${doc_sources}
 doc_MAN_SOURCES   = \${doc_sources}
@@ -1121,7 +1226,7 @@ sub print_args {
 # 		    $star_count++;
 # 		}
 		# If we have an array, and a type mapping to fortran
-		# We want to simply pretend that all is well (like int
+		# we want to simply pretend that all is well (like int
 		# above)
 		$star_count = 0;
 		$arg_addresses[$count] = $star_count;
@@ -1179,8 +1284,10 @@ sub print_args {
 # Handle the special arguments
 sub print_call_args {
     my @parms = split(/\s*,\s*/, $_[0] );
+    my $fintFix = 0;
     my $count = 1;
     my $first = 1;
+    if (defined($_[1])) { $fintFix = 1; }
     print $OUTFD "( ";
     # Special case: if the only parm is "void", remove it from the list
     if ($#parms == 0 && $parms[0] eq "void") {
@@ -1199,7 +1306,7 @@ sub print_call_args {
 
 	if (defined($special_args{"${routine_name}-$count"})) {
 	    # We must handle this argument specially
-	    &print_special_call_arg( $routine_name, $count );
+	    &print_special_call_arg( $routine_name, $count, $parm );
 	}
 	elsif ($parm =~ /!/) {
 	    # This parameter is a special case; the exclamation point
@@ -1211,7 +1318,7 @@ sub print_call_args {
 	    # Convert to/from object type as required.  
 	    #print "TMP: parm = $arg_qualifiers[$count]$parm\n";
 	    $fullparm="$arg_qualifiers[$count]$parm";
-	    if (defined($argsneedcast{$fullparm})) {
+	    if (!$fintFix && defined($argsneedcast{$fullparm})) {
 		$argval = "v$count";
 		if ($arg_addresses[$count] > 0) {
 		    $argval = "*$argval";
@@ -1219,6 +1326,18 @@ sub print_call_args {
 		$callparm = $argsneedcast{$fullparm};
 		$callparm =~ s/ARG/$argval/;
 		print $OUTFD "$callparm";
+	    }
+	    elsif ($fintFix && $parm =~ /^\s*([\w_]+)\s*\*\s*$/) {
+		$parmtype = $1;
+		if (defined($fintToHandle{$parmtype})) {
+		    print $OUTFD "\&l$count";
+		}
+		else {
+		    if ($arg_addresses[$count] > 0) {
+			print $OUTFD "*";
+		    }
+		    print $OUTFD "v$count";
+		}
 	    }
 	    else {
 		# Since MPICH objects are ints, we don't need to do 
@@ -1284,8 +1403,12 @@ sub print_weak_decl {
 # {
 # /* Special declarations needed for the variables */
 # <name>_<direction>_decl( <argnum> )
-# /* Special processing need for in variables */
+# /* Special processing needed for in and inout variables */
 # <name>_ftoc( <argnum> )
+# /* Special processing needed for out variables that may take a null value
+#    E.g., converting MPI_F_STATUS_IGNORE to MPI_STATUS_IGNORE
+#    May also be used to allocate arrays needed for in variables
+# <name>_<direction>_fnulltoc( <argnum> )
 # /* Call the function.  Replace special arguments with the output from */
 # <name>_<direction>_arg( <argnum> )
 # /* Special post call processing (for out variables) */
@@ -1293,6 +1416,7 @@ sub print_weak_decl {
 # 
 # Special case: For parameters that are arrays, the size of the
 # array is in $Array_size.
+# The fourth argument can be used for the native type
 # 
 # 
 # --------------------------------------------------------------------------
@@ -1337,18 +1461,59 @@ sub inplace_ctof {
     my $outvar  = $_[1];
 }
 # --------------------------------------------------------------------------
-# MPI_UNWEIGHTED pointers
-sub unweighted_ftoc {
+# MPI_UNWEIGHTED pointers.  Note that unweighted is only used to indicate
+# that an array is not provided - thus, if the array is provided and MPI_Fint
+# and int are not the same size, we need to include that processing as well.
+sub unweighted_in_ftoc {
     my $count = $_[0];
     &specialInitStatement( $OUTFD );
-    print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
+    if ($within_fint) {
+	print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) l$count = MPI_UNWEIGHTED;
+    else {
+        int li;
+        l$count = (int *)$malloc( $Array_size * sizeof(int) );
+        for (li=0; li<$Array_size; li++) l$count\[li\] = v$count\[li\];
+    }\n";
+	$clean_up .= "    if (l$count != MPI_UNWEIGHTED) {$free(l$count);}\n";
+    }
+    else {
+	print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
+    }
+}
+sub unweighted_out_ftoc {
+    my $count = $_[0];
+    &specialInitStatement( $OUTFD );
+    if ($within_fint) {
+	print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) l$count = MPI_UNWEIGHTED;\n";
+    }
+    else {
+	print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
+    }
 }
 sub unweighted_in_decl {
     my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int *l$count;\n";
+    }
+}
+sub unweighted_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int *l$count;\n";
+    }
 }
 sub unweighted_in_arg {
     my $count = $_[0];
-    print $OUTFD "v$count";
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
+sub unweighted_out_arg {
+    my $count = $_[0];
+    &unweighted_in_arg( $count );
 }
 # unweighted_ctof( cvar, fvar )
 sub unweighted_ctof {
@@ -1377,7 +1542,7 @@ sub logical_in_arg {
     }
 }
 # logical_ctof( cvar, fvar )
-sub logical_ctof {
+sub logical_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
     if ($do_logical) {
@@ -1403,7 +1568,8 @@ sub logical_out_arg {
 #
 # Logical variables, but for an array.  
 # Array args can use the global $Array_size and $Array_typedef if necessary
-sub logical_array_ftoc {
+sub logical_array_in_ftoc {
+    my $count = $_[0];
     print $OUTFD "\
     {int li; 
      for (li=0; li<$Array_size; li++) {
@@ -1422,22 +1588,37 @@ sub logical_array_in_arg {
     print $OUTFD "l$count";
 }
 
-sub logical_array_ctof {
+sub logical_array_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    # Special case if MPI_Fint == int: we use the input variable
+    # for space.
+    if (!$within_fint) {
+	$coutvar = $outvar;
+    }
     print $OUTFD "\
     {int li;
      for (li=0; li<$Array_size; li++) {
-        $outvar\[li\] = MPIR_TO_FLOG($outvar\[li\]);
+        $outvar\[li\] = MPIR_TO_FLOG($coutvar\[li\]);
      }
     }
 ";
 }
 sub logical_array_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int *l$count = (int *)$malloc($Array_size * sizeof(int));\n";
+	$clean_up .= "    $free( l$count );\n";
+    }
+    else {
+	; # Nothing required
+    }
 }
 sub logical_array_out_arg {
     my $count = $_[0];
-    print $OUTFD "v$count";
+    my $varname = "v$count";
+    if ($within_fint) { $varname = "l$count"; }
+    print $OUTFD $varname;
 }
 # --------------------------------------------------------------------------
 # 
@@ -1467,22 +1648,267 @@ sub index_out_arg {
 sub index_array_ftoc {
     my $count = $_[0];
 }
+sub index_array_out_ftoc {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    l$count = (int *)$malloc( $Array_size * sizeof(int) );\n";
+    }
+}
 sub index_array_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
-    print $OUTFD "\
+    if ($within_fint) {
+	print $OUTFD "\
+    {int li;
+     for (li=0; li<$Array_size; li++) {
+        if ($coutvar\[li\] >= 0) $outvar\[li\] = $coutvar\[li\] + 1;
+     }
+    }
+";
+	$clean_up .= "    $free( $coutvar );\n";
+    }
+    else {
+	print $OUTFD "\
     {int li;
      for (li=0; li<$Array_size; li++) {
         if ($outvar\[li\] >= 0) $outvar\[li\] += 1;
      }
     }
 "
+    }
 }
 sub index_array_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "   int *l$count=0;\n";
+    }
 }
 sub index_array_out_arg {
     my $count = $_[0];
-    print $OUTFD "v$count";
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
+# --------------------------------------------------------------------------
+# 
+# Handle variables.
+# Index variables are not optional, since the values of the variable
+# are changed.
+sub handle_ftoc {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    if ($within_fint) {
+	my $basetype = $nativeType;
+	$basetype =~ s/MPI_//;
+	if ($basetype eq "Datatype") { $basetype = "Type"; }
+	print $OUTFD "    l$count = MPI_".$basetype."_f2c( *v$count );\n";
+    }
+}
+sub handle_in_ftoc {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    if ($within_fint) {
+	my $basetype = $nativeType;
+	$basetype =~ s/MPI_//;
+	if ($basetype eq "Datatype") { $basetype = "Type"; }
+	print $OUTFD "    l$count = MPI_".$basetype."_f2c( *v$count );\n";
+    }
+}
+sub handle_inout_ftoc {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    &handle_in_ftoc( $count, $parm );
+}
+sub handle_out_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    if ($within_fint) {
+	print $OUTFD "    *$outvar = (MPI_Fint)$coutvar;\n";
+    }
+}
+sub handle_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    $nativeType l$count;\n";
+    }
+}
+sub handle_inout_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    $nativeType l$count;\n";
+    }
+}
+sub handle_in_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    $nativeType l$count;\n";
+    }
+}
+sub handle_out_arg {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    if ($within_fint) {
+	print $OUTFD " \&l$count";
+    }
+    else {
+	print $OUTFD "($parm)(v$count)";
+    }
+}
+sub handle_inout_arg {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    &handle_out_arg( $count, $parm );
+}
+sub handle_in_arg {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "($parm)(*v$count)";
+    }
+}
+#
+# Index variables, but for an array.  
+# Array args can use the global $Array_size and $Array_typedef if necessary
+sub handle_array_in_ftoc {
+    my $count = $_[0];
+    if ($within_fint) {
+	my $basetype = $nativeType;
+	$basetype =~ s/MPI_//;
+	if ($basetype eq "Datatype") { $basetype = "Type"; }
+	my $convfunc = "MPI_" . $basetype . "_f2c";
+	my $cvar = "l$count";
+	my $fvar = "v$count";
+	my $asize = $Array_size;
+	if ($Array_size =~ /_commsize/) {
+	    $asize = "_csize";
+	    if ($Array_size =~ /_commsize\((.*)\)/) {
+		my $comm = $1;
+		print $OUTFD "
+    if (_csize < 0) {
+        PMPI_Comm_size( $comm, &_csize );
+    }\n";
+	    }
+	}
+	print $OUTFD "\
+     /* handle_array_ftoc( $count ); */
+    {int li;
+     $cvar = ($nativeType *)$malloc( $asize * sizeof($nativeType) );
+     for (li=0; li<$asize; li++) {
+        $cvar\[li\] = $convfunc( $fvar\[li\] );
+     }
+    }
+";
+    }
+    else {
+    }
+}
+sub handle_array_inout_ftoc {
+    my $count = $_[0];
+    &handle_array_in_ftoc( $count );
+}
+
+sub handle_array_inout_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    &handle_array_ctof( $coutvar, $outvar );
+}
+
+sub handle_array_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    if ($within_fint) {
+	my $basetype = $nativeType;
+	$basetype =~ s/MPI_//;
+	if ($basetype eq "Datatype") { $basetype = "Type"; }
+	my $convfunc = "MPI_" . $basetype . "_c2f";
+	my $asize = $Array_size;
+	if ($Array_size =~ /_commsize/) {
+	    $asize = "_csize";
+	}
+	print $OUTFD "\
+        /* handle_array_ctof( $coutvar, $outvar ) */
+    {int li;
+     for (li=0; li<$asize; li++) {
+        $outvar\[li\] = $convfunc( $coutvar\[li\] );
+     }
+    }
+";
+    }
+    else {
+    }
+}
+
+sub handle_array_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    $nativeType *l$count;\n";
+	if ($Array_size =~ /_commsize\(/) {
+	    print $OUTFD "    int _csize=-1;\n";
+	}
+    }
+}
+sub handle_array_inout_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    $nativeType *l$count=0;\n";
+	if ($Array_size =~ /_commsize\(/) {
+	    print $OUTFD "    int _csize=-1;\n";
+	}
+    }
+}
+sub handle_array_in_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    $nativeType *l$count;\n";
+	if ($Array_size =~ /_commsize\(/) {
+	    print $OUTFD "    int _csize=-1;\n";
+	}
+    }
+}
+sub handle_array_out_arg {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	if ($parm =~ /\[\]/) {
+	    $parm =~ s/\[\]/\*/g;
+	}
+	print $OUTFD "($parm)(v$count)";
+    }
+}
+sub handle_array_inout_arg {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	if ($parm =~ /\[\]/) {
+	    $parm =~ s/\[\]/\*/g;
+	}
+	print $OUTFD "($parm)(v$count)";
+    }
+}
+sub handle_array_in_arg {
+    my $count = $_[0];
+    my $parm  = $_[1];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	if ($parm =~ /\[\]/) {
+	    $parm =~ s/\[\]/\*/g;
+	}
+	print $OUTFD "($parm)(v$count)";
+    }
 }
 # --------------------------------------------------------------------------
 #
@@ -1595,24 +2021,63 @@ sub bufaddr_ctof {
 # --------------------------------------------------------------------------
 # 
 # Handle MPI_STATUS_IGNORE and MPI_STATUSES_IGNORE
-sub status_ftoc {
+sub status_out_fnulltoc {
     my $count = $_[0];
     # Cast MPI_STATUS_IGNORE back to an MPI_Fint (we'll re-cast it back
     # to (MPI_Status *) in the call to the C version of the routine)
     &specialInitStatement( $OUTFD );
-    print $OUTFD "\
+    if ($within_fint) {
+	print $OUTFD "\
+    if (v$count == MPI_F_STATUS_IGNORE) { l$count = MPI_STATUS_IGNORE; }\n";
+    }
+    else {
+	print $OUTFD "\
     if (v$count == MPI_F_STATUS_IGNORE) { v$count = (MPI_Fint*)MPI_STATUS_IGNORE; }\n";
+    }
 }
+
+sub status_ftoc {
+}
+
 sub status_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    if ($within_fint) {
+	print $OUTFD 
+"    if ($coutvar != MPI_STATUS_IGNORE) {
+	MPI_Status_c2f($coutvar,$outvar);
+    }\n"
+    }
 }
 sub status_in_decl {
     my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    MPI_Status vtmp$count, *l$count = &vtmp$count;\n";
+    }
+}
+sub status_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    MPI_Status vtmp$count, *l$count = &vtmp$count;\n";
+    }
+}
+sub status_out_arg {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "(MPI_Status *)v$count";
+    }
 }
 sub status_in_arg {
     my $count = $_[0];
-    print $OUTFD "(MPI_Status *)v$count";
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "(MPI_Status *)(v$count)";
+    }
 }
 # --------------------------------------------------------------------------
 # 
@@ -1636,23 +2101,55 @@ sub errcodesignore_in_arg {
 }
 # --------------------------------------------------------------------------
 #
-# Index variables, but for an array.  
+# Arrays of status
 # Array args can use the global $Array_size and $Array_typedef if necessary
-sub status_array_ftoc {
+sub status_array_out_fnulltoc {
     my $count = $_[0];
     &specialInitStatement( $OUTFD );
+    my $varname = "v";
+    my $varcast = "(MPI_Fint *)";
+    if ($within_fint) { $varname = "l"; $varcast = ""; }
     print $OUTFD "\
-    if (v$count == MPI_F_STATUSES_IGNORE) { v$count = (MPI_Fint *)MPI_STATUSES_IGNORE; }\n";
+    if (v$count == MPI_F_STATUSES_IGNORE) { $varname$count = ${varcast}MPI_STATUSES_IGNORE; }\n";
 }
+sub status_array_out_ftoc {
+    my $count = $_[0];
+    
+    if ($within_fint) {
+	print $OUTFD "    if (l$count != MPI_STATUSES_IGNORE) l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status));\n";
+    }
+}
+
 sub status_array_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+
+    if ($within_fint) {
+	print $OUTFD 
+"    if ($coutvar != MPI_STATUSES_IGNORE) {
+        int li;
+        for (li=0; li<$Array_size; li++) {
+            MPI_Status_c2f($coutvar+li,$outvar+li);
+        }
+    }\n";
+	$clean_up .= "        $free($coutvar);\n";
+    }
 }
-sub status_array_in_decl {
-}
-sub status_array_in_arg {
+sub status_array_out_decl {
     my $count = $_[0];
-    print $OUTFD "(MPI_Status *)v$count";
+    if ($within_fint) {
+	print $OUTFD "    MPI_Status *l$count=0;\n";
+    }
+}
+sub status_array_out_arg {
+    my $count = $_[0];
+
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "(MPI_Status *)v$count";
+    }
 }
 # --------------------------------------------------------------------------
 # aintToint
@@ -1672,8 +2169,9 @@ sub aintToInt_out_arg {
 # --------------------------------------------------------------------------
 # aintToVal - Convert address of Aint to value
 sub aintToVal_ftoc {
-    my $coutvar = $_[0];
-    my $outvar  = $_[1];
+    my $count = $_[0];
+    my $coutvar = "l$count";
+    my $outvar  = "v$count";
 }
 sub aintToVal_in_decl {
     my $count = $_[0];
@@ -1682,6 +2180,192 @@ sub aintToVal_in_arg {
     my $count = $_[0];
     print $OUTFD "*v$count";
 }
+# --------------------------------------------------------------------------
+# Fint to/from int variables
+# In the case where an int is an fint, this code just generates the default
+# output.  If $within_fint is true (within special processing for fint to/from
+# int handling), then the necessary code is generated.
+sub fint2int_ftoc {
+    my $count = $_[0];
+    if ($within_fint) {
+    }
+}
+sub fint2int_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    if ($within_fint) {
+	print $OUTFD "    *$outvar = (MPI_Fint)$coutvar;\n";
+    }
+}
+sub fint2int_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int l$count;\n";
+    }
+}
+sub fint2int_out_arg {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD " \&l$count";
+    }
+    else {
+	print $OUTFD " v$count";
+    }
+}
+#
+# Array args can use the global $Array_size and $Array_typedef if necessary
+sub fint2int_array_in_ftoc {
+    my $count = $_[0];
+    if ($within_fint) {
+	my $coutvar = "l$count";
+	my $outvar  = "v$count";
+	my $asize = $Array_size;
+	if ($Array_size =~ /_commsize/) {
+	    $asize = "_csize";
+	    if ($Array_size =~ /_commsize\((.*)\)/) {
+		my $comm = $1;
+		print $OUTFD "
+    if (_csize < 0) {
+        PMPI_Comm_size( $comm, &_csize );
+    }\n";
+	    }
+	}
+	elsif ($Array_size =~ /_sum/) {
+	    $asize = "_ssize";
+	    if ($Array_size =~ /_sum\((.*),(.*)\)/) {
+		my $array = $1, $arraylen = $2;
+		print $OUTFD "
+    if (_ssize < 0) {
+        int li;
+        _ssize = 0; 
+        for (li=0; li<$arraylen; li++) _ssize += $array\[li\];
+    }\n";
+	    }
+	}    
+	print $OUTFD "\
+    {int li;
+     $coutvar = (int *)$malloc( $asize * sizeof(int) );
+     for (li=0; li<$asize; li++) {
+        $coutvar\[li\] = $outvar\[li\];
+     }
+    }
+";
+	$clean_up .= "     $free( $coutvar );\n";
+    }
+}
+sub fint2int_array_inout_ftoc {
+    my $count = $_[0];
+    &fint2int_array_in_ftoc( $count );
+}
+sub fint2int_array_out_ftoc {
+    my $count = $_[0];
+    if ($within_fint) {
+	my $coutvar = "l$count";
+	my $outvar  = "v$count";
+	my $asize = $Array_size;
+	if ($Array_size =~ /_commsize/) {
+	    $asize = "_csize";
+	    if ($Array_size =~ /_commsize\((.*)\)/) {
+		my $comm = $1;
+		print $OUTFD "
+    if (_csize < 0) {
+        PMPI_Comm_size( $comm, &_csize );
+    }\n";
+	    }
+	}
+	print $OUTFD "\
+    $coutvar = (int *)$malloc( $asize * sizeof(int) );
+";
+        $clean_up .= "     $free( $coutvar );\n";
+    }
+}
+
+sub fint2int_array_out_ctof {
+    my $coutvar = $_[0];
+    my $outvar  = $_[1];
+    if ($within_fint) {
+	my $asize = $Array_size;
+	if ($Array_size =~ /_commsize/) {
+	    $asize = "_csize";
+	    if ($Array_size =~ /_commsize\((.*)\)/) {
+		my $comm = $1;
+		print $OUTFD "
+    if (_csize < 0) {
+        PMPI_Comm_size( $comm, &_csize );
+    }\n";
+	    }
+	}
+	print $OUTFD "\
+    {int li;
+     for (li=0; li<$asize; li++) {
+        $outvar\[li\] = $coutvar\[li\];
+     }
+    }\n";
+    }
+}
+sub fint2int_array_out_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int *l$count=0;\n";
+	if ($Array_size =~ /_commsize\(/) {
+	    print $OUTFD "    int _csize=-1;\n";
+	}
+	elsif ($Array_size =~ /_sum\(/) {
+	    print $OUTFD "    int _ssize=-1;\n";
+	}
+    }
+}
+sub fint2int_array_in_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int *l$count=0;\n";
+	if ($Array_size =~ /_commsize\(/) {
+	    print $OUTFD "    int _csize=-1;\n";
+	}
+	elsif ($Array_size =~ /_sum\(/) {
+	    print $OUTFD "    int _ssize=-1;\n";
+	}
+    }
+}
+sub fint2int_array_out_arg {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
+sub fint2int_array_in_arg {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
+sub fint2int_array_inout_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int *l$count=0;\n";
+	if ($Array_size =~ /_commsize\(/) {
+	    print $OUTFD "    int _csize=-1;\n";
+	}
+	elsif ($Array_size =~ /_sum\(/) {
+	    print $OUTFD "    int _ssize=-1;\n";
+	}
+    }
+}
+sub fint2int_array_inout_arg {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "v$count";
+    }
+}
 # ---------------------------------------------------------------------------
 # This is the routine that handles the post-call processing
 sub print_post_call {
@@ -1689,23 +2373,38 @@ sub print_post_call {
     my $args = $_[1];
     if (defined($special_args{$routine_name})) { 
 	# Erg.  Special processing
-	foreach $count (split(/:/,$special_args{$routine_name})) {
+	foreach my $count (split(/:/,$special_args{$routine_name})) {
 	    $rule = $special_args{"${routine_name}-$count"};
-	    ($direction,$method,$Array_size) = split(/:/,$rule);
+	    ($direction,$method,$Array_size,$nativeType) = split(/:/,$rule);
 	    print STDERR "$routine_name: dir = $direction, method = $method\n" if $debug;
-	    $processing_in_routine = "${method}_in_ctof";
-	    if ($direction eq "out" || $direction eq "inout") {
-		$processing_routine = "${method}_ctof";
+	    # FIXME: Sometimes the "inout" and "out" directions need 
+	    # different processing (no data available for just the out)
+	    $processing_in_routine    = "${method}_in_ctof";
+	    $processing_inout_routine = "${method}_inout_ctof";
+	    $processing_out_routine   = "${method}_out_ctof";
+	    $processing_routine       = "${method}_${direction}_ctof";
+	    # Prefer a specific choice matching the direction
+	    if (defined(&$processing_routine)) {
 		&$processing_routine( "l$count", "v$count" );
 	    }
-	    elsif (defined(&$processing_in_routine)) {
-		# Invoke even for "in" args incase we need to free a temp
-		&$processing_in_routine( "l$count", "v$count" );
+	    elsif ($direction eq "inout" && 
+		   defined(&$processing_out_routine)) {
+		&$processing_out_routine( "l$count", "v$count" );
+		}
+	    else {
+		$processing_routine = "${method}_ctof";
+		if (defined(&$processing_routine)) {
+		    &$processing_routine( "l$count", "v$count" );
+		}
+		elsif ($direction ne "in") {
+		    print STDERR "Missing $processing_routine for $routine_name\n";
+		}
 	    }
-	    if ($clean_up ne "") {
-		print $OUTFD $clean_up;
-		$clean_up = "";
-	    }
+	}
+	# Cleanup must happen after all ctof processing
+	if ($clean_up ne "") {
+	    print $OUTFD $clean_up;
+	    $clean_up = "";
 	}
     }
     
@@ -1751,8 +2450,9 @@ sub blankpad_ctof {
     $strlen =~ s/^v/d/;
     my $cvar = $outvar; 
     $cvar =~ s/^v/p/;
+    # Only execute this code if there was no error
     print $OUTFD "\
-    {char *p = $outvar, *pc=$cvar;
+    if (!$errparmrval) {char *p = $outvar, *pc=$cvar;
         while (*pc) {*p++ = *pc++;}
         while ((p-$outvar) < $strlen) { *p++ = ' '; }
     }
@@ -1792,8 +2492,9 @@ sub blankpadonflag_ctof {
     $strlen =~ s/^v/d/;
     my $cvar = $outvar; 
     $cvar =~ s/^v/p/;
+    # Only execute this code if there was no error
     print $OUTFD "\
-    if ($Array_size) {char *p = $outvar, *pc=$cvar;
+    if ($Array_size && !$errparmrval) {char *p = $outvar, *pc=$cvar;
         while (*pc) {*p++ = *pc++;}
         while ((p-$outvar) < $strlen) { *p++ = ' '; }
     }
@@ -2074,8 +2775,18 @@ sub intToAintArr_in_decl {
 }
 sub intToAintArr_ftoc {
     my $count = $_[0];
-    print $OUTFD "
+    # FIXME: aint could be *smaller* than fint!  (needs fixing elsewhere?)
+    if ($within_fint) {
+	print $OUTFD "
+#ifdef HAVE_AINT_DIFFERENT_THAN_FINT
+";
+    }
+    else {
+	print $OUTFD "
 #ifdef HAVE_AINT_LARGER_THAN_FINT
+";
+    }
+    print $OUTFD "
     if ($Array_size > 0) {
         int li;
         l$count = (MPI_Aint *)$malloc( $Array_size * sizeof(MPI_Aint) );
@@ -2107,7 +2818,10 @@ sub intToAint_in_decl {
     my $count = $_[0];
     print $OUTFD "    MPI_Aint l$count;\n";
 }
-sub intToAint_ftoc {
+# In the in case, this is a no-op 
+sub intToAint_ctof {
+}
+sub intToAint_in_ftoc {
     my $count = $_[0];
     print $OUTFD "    l$count = (MPI_Aint)*v$count;\n";
 }
@@ -2186,36 +2900,44 @@ sub setF90Type_keyval {
     my $FD = $_[0];
     my $argnum = $_[1];
 
+    my $argname = "*v$argnum";
+    if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Keyval_set_proxy( *v$argnum, MPIR_Type_copy_attr_f90_proxy, MPIR_Type_delete_attr_f90_proxy );
+         MPIR_Keyval_set_proxy( $argname, MPIR_Type_copy_attr_f90_proxy, MPIR_Type_delete_attr_f90_proxy );
     }\n";
 }
 sub setF90Comm_keyval {
     my $FD = $_[0];
     my $argnum = $_[1];
 
+    my $argname = "*v$argnum";
+    if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Keyval_set_proxy( *v$argnum, MPIR_Comm_copy_attr_f90_proxy, MPIR_Comm_delete_attr_f90_proxy );
+         MPIR_Keyval_set_proxy( $argname, MPIR_Comm_copy_attr_f90_proxy, MPIR_Comm_delete_attr_f90_proxy );
     }\n";
 }
 sub setF90Win_keyval {
     my $FD = $_[0];
     my $argnum = $_[1];
 
+    my $argname = "*v$argnum";
+    if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Keyval_set_proxy( *v$argnum, MPIR_Win_copy_attr_f90_proxy, MPIR_Win_delete_attr_f90_proxy );
+         MPIR_Keyval_set_proxy( $argname, MPIR_Win_copy_attr_f90_proxy, MPIR_Win_delete_attr_f90_proxy );
     }\n";
 }
 sub setF77greq {
     my $FD = $_[0];
     my $argnum = $_[1];
+    my $argname = "*v$argnum";
+    if ($within_fint) { $argname = "l$argnum"; }
 
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Grequest_set_lang_f77( *v$argnum );
+         MPIR_Grequest_set_lang_f77( $argname );
     }\n";
 }
 
@@ -2225,12 +2947,13 @@ sub setF77greq {
 sub print_special_call_arg {
     my $routine_name = $_[0];
     my $count = $_[1];
+    my $parm = $_[2];
 
     $rule = $special_args{"${routine_name}-$count"};
-    ($direction,$method,$Array_size) = split(/:/,$rule);
+    ($direction,$method,$Array_size,$nativeType) = split(/:/,$rule);
 
     $processing_routine = "${method}_${direction}_arg";
-    &$processing_routine( $count );
+    &$processing_routine( $count, $parm );
 }
 
 # This routine prints any declarations that are needed 
@@ -2241,10 +2964,15 @@ sub print_special_decls {
 	print $OUTFD "    int $errparmrval;\n";
     }
     if (defined($special_args{$routine_name})) {
+	print STDOUT "Special args for $routine_name\n" if $debug;
 	# First do the declarations
-	foreach $count (split(/:/,$special_args{$routine_name})) {
+	foreach my $count (split(/:/,$special_args{$routine_name})) {
 	    $rule = $special_args{"${routine_name}-$count"};
-	    ($direction,$method,$Array_size) = split(/:/,$rule);
+	    if (!defined($rule)) {
+		print STDERR "${routine_name}-$count has no value!\n";
+	    }
+	    print STDOUT "Rules is $rule \n" if $debug;
+	    ($direction,$method,$Array_size,$nativeType) = split(/:/,$rule);
 	    # Sanity check: method and direction must be nonnull
 	    if ($method eq "" || $direction eq "") {
 		print STDERR "Error in special args for argument number $count of $routine_name\n";
@@ -2256,16 +2984,32 @@ sub print_special_decls {
     }
     if (defined($special_args{$routine_name})) {
 	# Then do the precall steps
-	foreach $count (split(/:/,$special_args{$routine_name})) {
+	foreach my $count (split(/:/,$special_args{$routine_name})) {
 	    $rule = $special_args{"${routine_name}-$count"};
-	    ($direction,$method,$Array_size) = split(/:/,$rule);
+	    ($direction,$method,$Array_size,$nativeType) = split(/:/,$rule);
+	    $processing_routine = "${method}_${direction}_fnulltoc";
+	    if (defined(&$processing_routine)) {
+		&$processing_routine( $count );
+	    }
 	    if ($direction eq "in") {
 		$processing_routine = "${method}_ftoc";
-		&$processing_routine( $count );
+		$processing_in_routine = "${method}_in_ftoc";
+		if (defined(&$processing_in_routine)) {
+		    &$processing_in_routine( $count );
+		}
+		else {
+		    &$processing_routine( $count );
+		}
 	    }
 	    else {
 		$processing_routine = "${method}_out_ftoc";
-		if (defined(&$processing_routine)) {
+		$processing_inout_routine = "${method}_inout_ftoc";
+		if ($direction eq "inout" && 
+		    defined(&$processing_inout_routine)) {
+		    &$processing_inout_routine( $count );
+		}
+		elsif (defined(&$processing_routine)) {
+		    # Use for both out and inout
 		    &$processing_routine( $count );
 		}
 	    }
@@ -2673,9 +3417,22 @@ sub build_specials {
     &print_routine_type_decl( $OUTFD, "init_thread" );
     &print_args( $OUTFD, $args, 0, "init_thread" );
     print $OUTFD "{\n";
+    if ($do_fint) {
+	print $OUTFD "\
+#ifndef HAVE_FINT_IS_INT
+    int l2;
+    mpirinitf_(); MPIR_F_NeedInit = 0;
+    *ierr = MPI_Init_thread( 0, 0, *v1, &l2 );
+    *v2 = (MPI_Fint)l2;
+#else
+";
+    }
     # See the discussion on MPIR_F_NeedInit at the head of this file
     print $OUTFD "    mpirinitf_(); MPIR_F_NeedInit = 0;\n";
     print $OUTFD "    *ierr = MPI_Init_thread( 0, 0, *v1, v2 );\n";
+    if ($do_fint) {
+	print $OUTFD "#endif\n";
+    }
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
@@ -2906,8 +3663,10 @@ MPIR_Comm_delete_attr_f77_proxy(
     &print_args( $OUTFD, $args, 0, "keyval_create" );
     #&print_attr;
     print $OUTFD "{
-        *ierr = MPI_Comm_create_keyval( v1, v2, v3, v4 );
+        int l3;
+        *ierr = MPI_Comm_create_keyval( v1, v2, &l3, v4 );
         if (!*ierr) {
+	    *v3 = l3;
             MPIR_Keyval_set_proxy(*v3, MPIR_Comm_copy_attr_f77_proxy, MPIR_Comm_delete_attr_f77_proxy);
         }
 }\n";
@@ -3118,8 +3877,23 @@ int MPI_Status_c2f( MPI_Status *c_status, MPI_Fint *f_status )
         mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 		 \"MPI_Status_c2f\", __LINE__, MPI_ERR_OTHER, \"**notcstatignore\", 0 );
 	return MPIR_Err_return_comm( 0, \"MPI_Status_c2f\",  mpi_errno );
-    }
+    }\n";
+    if ($do_fint) { 
+        print $OUTFD "\
+#ifdef HAVE_FINT_IS_INT
     *(MPI_Status *)f_status = *c_status;
+#else
+    f_status\[0\]   = c_status->count;
+    f_status\[1\]   = c_status->cancelled;
+    f_status\[3-1\] = c_status->MPI_SOURCE;
+    f_status\[4-1\] = c_status->MPI_TAG;
+    f_status\[5-1\] = c_status->MPI_ERROR;
+#endif\n";
+    }
+    else {
+        print $OUTFD "    *(MPI_Status *)f_status = *c_status;\n";
+    }
+    print $OUTFD "
     return MPI_SUCCESS;
 }\n";
     close ($OUTFD);
@@ -3306,6 +4080,13 @@ sub ReadAndProcessInterface {
 		if ($protectMPIO) {
 		    print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
  		}
+		# If enabled, generate the more complex code required to
+		# handle the case where MPI_Fint is not the same size
+		# as a C int.  THIS IS EXPERIMENTAL AND SHOULD NOT BE 
+		# RELEASED
+		if ($do_fint) {
+		    &printCallForFint( $routine_name, $args );
+		}
 		&print_special_decls( $routine_name );
 		if (defined($ChangeCall{$routine_name})) {
 		    my ($newName,$extraArgs) = 
@@ -3321,6 +4102,9 @@ sub ReadAndProcessInterface {
 		}
 		# Print any post call processing
 		&print_post_call( $routine_name, $args );
+		if ($do_fint) {
+		    print $OUTFD "#endif\n"
+		}
 		if ($protectMPIO) {
 		    print $OUTFD "#else\n$errparmlval = MPI_ERR_INTERN;\n#endif\n";
  		}
@@ -4002,4 +4786,148 @@ sub AddFwrapWeakName {
 
 #endif
 ";
+}
+
+#
+# For values that are MPI_Fints but need to be ints, add the declarations.
+# These are:
+#    int, MPI_Request, MPI_Win, MPI_Info, MPI_Group, ...
+sub print_fint_to_int_decls {
+    my @parms = split(/\s*,\s*/, $_[0] );
+    my $count = 1;
+
+    # Special case: if the only parm is "void", remove it from the list
+    if ($#parms == 0 && $parms[0] eq "void") {
+	$#parms = -1;
+    }
+
+    foreach $parm (@parms) {
+	$parm =~ s/^const\s//;  # Remove const if present
+	# Remove variable name if present in an array arg
+	if ($parm =~ /(.*)\s+(\w+)\[\]/) {
+	    $parm = "$1 \[\]";
+	}
+	# Compress multiple spaces
+	$parm =~ s/\s\s/ /g;
+
+	if (defined($special_args{"${routine_name}-$count"})) {
+	    # skip this argument
+	    $count ++;
+	    next;
+	}
+	elsif ($parm =~ /!/) {
+	    # skip this case
+	    $count ++;
+	    next;
+	}
+	# Extract type (foo *)
+	elsif ($parm =~ /^\s*([\w_]+)\s*\*\s*$/) {
+	    $parmtype = $1;
+	    if (defined($fintToHandle{$parmtype})) {
+		print STDOUT "Found $parm in $routine_name\n";
+		# Could use the MPI_<handle>_f2c routine here
+		# FIXME: We only need to initialize sometimes; 
+		# particularly for ints, rarely (int* is usually
+		# an output pointer, though there are exceptions,
+		# particularly in pack)
+		# FIXME: Could use MPI_<handle>_f2c to perform cast,
+		# except for int.
+		print $OUTFD "    int l$count=(int)*v$count;\n";
+	    }
+ 	}
+	$count++;
+    }
+}
+
+sub print_int_to_fint {
+    my $routine_name = $_[0];
+    my @parms = split(/\s*,\s*/, $_[1] );
+    my $count = 1;
+
+    # Special case: if the only parm is "void", remove it from the list
+    if ($#parms == 0 && $parms[0] eq "void") {
+	$#parms = -1;
+    }
+
+    foreach $parm (@parms) {
+	$parm =~ s/^const\s//;  # Remove const if present
+	# Remove variable name if present in an array arg
+	if ($parm =~ /(.*)\s+(\w+)\[\]/) {
+	    $parm = "$1 \[\]";
+	}
+	# Compress multiple spaces
+	$parm =~ s/\s\s/ /g;
+
+	if (defined($special_args{"${routine_name}-$count"})) {
+	    # skip this argument
+	    $count ++;
+	    next;
+	}
+	elsif ($parm =~ /!/) {
+	    # skip this case
+	    $count ++;
+	    next;
+	}
+	# Extract type (foo *)
+	elsif ($parm =~ /^\s*([\w_]+)\s*\*\s*$/) {
+	    $parmtype = $1;
+	    if (defined($fintToHandle{$parmtype})) {
+		print $OUTFD "    *v$count = (MPI_Fint)l$count;\n";
+	    }
+ 	}
+	elsif ($parm =~ /^\s*([\w_]+)\s*\[\]\s*$/) {
+	    $parmtype = $1;
+	    print STDOUT "Found array parm $parm in $routine_name, arg # $count\n";
+	    if ($parmtype eq "int") {
+		print STDOUT "int array to fix\n";
+	    }
+	    elsif (defined($fintToHandle{$parmtype})) {
+		print STDOUT "handle array to fix\n";
+	    }
+	}
+	$count++;
+    }
+}
+
+# Generate a special version that handles the case where Fint is not the same 
+# as int.
+sub printCallForFint {
+    my ($routine_name,$args) = @_;
+    
+    print $OUTFD "#ifndef HAVE_FINT_IS_INT\n";
+    $within_fint = 1;
+
+    # For each arg that is a pointer to integer, creates a copy;
+    &print_fint_to_int_decls( $args );
+    &print_special_decls( $routine_name );
+    if (defined($ChangeCall{$routine_name})) {
+	my ($newName,$extraArgs) = 
+	    split(/:/,$ChangeCall{$routine_name} );
+	print $OUTFD "   $errparmlval = $newName";
+	my $largs = $args . "," . $extraArgs;
+	&print_call_args( $largs, 1 );
+    }
+    else {
+	print $OUTFD "    $errparmlval = $routine_prefix$routine_name";
+	print "Printing call arguments for mpi_${lcname}_\n" if $debug;
+	&print_call_args( $args, 1 );
+    }
+    # Print any post call processing
+    &print_post_call( $routine_name, $args );
+    &print_int_to_fint( $routine_name, $args );
+    # Hack
+    if ($routine_name eq "Op_create") {
+	print $OUTFD "     MPIR_Op_set_fc( l3 );\n";
+    }
+    elsif ($routine_name eq "Comm_create_errhandler" ||
+	   $routine_name eq "Win_create_errhandler" ||
+	   $routine_name eq "File_create_errhandler" ||
+	   $routine_name eq "Errhandler_create") {
+	print $OUTFD "     MPIR_Errhandler_set_fc( l2 );\n";
+    }
+
+    $within_fint = 0;
+    print $OUTFD "\n#else\n";
+    # Make sure the init code is present in the int==Fint branch
+    &specialInitClear();
 }
