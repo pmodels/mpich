@@ -333,6 +333,7 @@ static void cleanup_topo_level(struct HYDT_bind_obj level)
 
 HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
 {
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -353,7 +354,11 @@ HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
     }
 #endif /* HAVE_HWLOC */
 
-    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no binding library available\n");
+    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++) {
+        if (cpuset.set[i]) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no binding library available\n");
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
