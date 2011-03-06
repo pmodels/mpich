@@ -35,7 +35,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         binding = NULL;
 
     if (user_bindlib)
-        bindlib = HYDU_strdup(user_bindlib);
+        bindlib = user_bindlib;
     else if (MPL_env2str("HYDRA_BINDLIB", &bindlib) == 0)
         bindlib = HYDRA_DEFAULT_BINDLIB;
 
@@ -46,6 +46,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         HYDT_bind_info.bindlib = NULL;
     HYDT_bind_info.bindmap = NULL;
 
+
+    HYDT_bind_init_obj(&HYDT_bind_info.machine);
 
     /***************************** NONE *****************************/
     if (!binding || !strcmp(binding, "none")) {
@@ -323,6 +325,12 @@ static void cleanup_topo_level(struct HYDT_bind_obj level)
     int i;
 
     level.parent = NULL;
+
+    if (level.mem.cache_size)
+        HYDU_FREE(level.mem.cache_size);
+
+    if (level.mem.cache_depth)
+        HYDU_FREE(level.mem.cache_depth);
 
     if (level.children) {
         for (i = 0; i < level.num_children; i++)

@@ -9,6 +9,7 @@
 #include "bind_hwloc.h"
 
 static hwloc_topology_t topology;
+static int hwloc_initialized = 0;
 
 #define dprint(d, ...)                           \
     do {                                         \
@@ -128,6 +129,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     hwloc_topology_init(&topology);
     hwloc_topology_load(topology);
 
+    hwloc_initialized = 1;
+
     /* Get the max number of processing elements */
     HYDT_bind_info.total_proc_units = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
 
@@ -152,8 +155,9 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     HYDT_bind_info.machine.num_children = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE);
     if (!HYDT_bind_info.machine.num_children)
         HYDT_bind_info.machine.num_children = 1;
-    HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_bind_obj *,
-                sizeof(struct HYDT_bind_obj) * HYDT_bind_info.machine.num_children, status);
+    status = HYDT_bind_alloc_objs(HYDT_bind_info.machine.num_children,
+                                  &HYDT_bind_info.machine.children);
+    HYDU_ERR_POP(status, "error allocating bind objects\n");
 
     /* Setup the nodes levels */
     for (node = 0; node < HYDT_bind_info.machine.num_children; node++) {
@@ -177,8 +181,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
         if (!node_ptr->num_children)
             node_ptr->num_children = 1;
 
-        HYDU_MALLOC(node_ptr->children, struct HYDT_bind_obj *,
-                    sizeof(struct HYDT_bind_obj) * node_ptr->num_children, status);
+        status = HYDT_bind_alloc_objs(node_ptr->num_children, &node_ptr->children);
+        HYDU_ERR_POP(status, "error allocating bind objects\n");
 
         /* Setup the socket level */
         for (sock = 0; sock < node_ptr->num_children; sock++) {
@@ -204,8 +208,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
             if (!sock_ptr->num_children)
                 sock_ptr->num_children = 1;
 
-            HYDU_MALLOC(sock_ptr->children, struct HYDT_bind_obj *,
-                        sizeof(struct HYDT_bind_obj) * sock_ptr->num_children, status);
+            status = HYDT_bind_alloc_objs(sock_ptr->num_children, &sock_ptr->children);
+            HYDU_ERR_POP(status, "error allocating bind objects\n");
 
             /* setup the core level */
             for (core = 0; core < sock_ptr->num_children; core++) {
@@ -232,8 +236,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                 if (!core_ptr->num_children)
                     core_ptr->num_children = 1;
 
-                HYDU_MALLOC(core_ptr->children, struct HYDT_bind_obj *,
-                            sizeof(struct HYDT_bind_obj) * core_ptr->num_children, status);
+                status = HYDT_bind_alloc_objs(core_ptr->num_children, &core_ptr->children);
+                HYDU_ERR_POP(status, "error allocating bind objects\n");
 
                 /* setup the thread level */
                 for (thread = 0; thread < core_ptr->num_children; thread++) {
@@ -297,7 +301,8 @@ HYD_status HYDT_bind_hwloc_finalize(void)
 
     HYDU_FUNC_ENTER();
 
-    /* Nothing to finalize for now */
+    if (hwloc_initialized)
+        hwloc_topology_destroy(topology);
 
     HYDU_FUNC_EXIT();
     return status;

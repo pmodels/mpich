@@ -1422,6 +1422,9 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
                 close(ret);
                 config_file = conf_file;
             }
+            else {
+                HYDU_FREE(conf_file);
+            }
         }
     }
 

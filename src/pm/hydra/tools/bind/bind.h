@@ -252,6 +252,37 @@ static inline void HYDT_bind_cpuset_dup(struct HYDT_bind_cpuset_t src,
         dest->set[i] = src.set[i];
 }
 
+static inline void HYDT_bind_init_obj(struct HYDT_bind_obj *obj)
+{
+    obj->type = HYDT_BIND_OBJ_END;
+    HYDT_bind_cpuset_zero(&obj->cpuset);
+    obj->num_children = 0;
+    obj->children = NULL;
+    obj->mem.local_mem_size = 0;
+    obj->mem.num_caches = 0;
+    obj->mem.cache_size = NULL;
+    obj->mem.cache_depth = NULL;
+}
+
+static inline HYD_status HYDT_bind_alloc_objs(int nobjs, struct HYDT_bind_obj **obj_list)
+{
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_MALLOC((*obj_list), struct HYDT_bind_obj *, nobjs * sizeof(struct HYDT_bind_obj),
+                status);
+
+    for (i = 0; i < nobjs; i++)
+        HYDT_bind_init_obj(&(*obj_list)[i]);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 /*!
  * @}
  */

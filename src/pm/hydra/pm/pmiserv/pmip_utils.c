@@ -395,6 +395,7 @@ static HYD_status global_core_map_fn(char *arg, char ***argv)
                        &HYD_pmcd_pmip.system_global.global_core_map.current,
                        &HYD_pmcd_pmip.system_global.global_core_map.right);
     HYDU_ERR_POP(status, "unable to split the provided mapping\n");
+    HYDU_FREE(map);
 
     HYD_pmcd_pmip.system_global.global_core_map.total =
         HYD_pmcd_pmip.system_global.global_core_map.left +
@@ -424,6 +425,7 @@ static HYD_status filler_process_map_fn(char *arg, char ***argv)
                        &HYD_pmcd_pmip.system_global.filler_process_map.current,
                        &HYD_pmcd_pmip.system_global.filler_process_map.right);
     HYDU_ERR_POP(status, "unable to split the provided mapping\n");
+    HYDU_FREE(map);
 
     HYD_pmcd_pmip.system_global.filler_process_map.total =
         HYD_pmcd_pmip.system_global.filler_process_map.left +
