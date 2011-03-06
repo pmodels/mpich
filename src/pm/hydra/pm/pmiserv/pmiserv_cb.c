@@ -197,17 +197,16 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 if (proxy->exit_status[i]) {
                     HYDU_dump_noprefix
                         (stdout, "\n====================================================");
-                    HYDU_dump_noprefix
-                        (stdout, "=================================\n");
+                    HYDU_dump_noprefix(stdout, "=================================\n");
                     HYDU_dump_noprefix
                         (stdout, "=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES\n");
                     HYDU_dump_noprefix(stdout, "=   EXIT CODE: %d\n", proxy->exit_status[i]);
                     HYDU_dump_noprefix(stdout, "=   CLEANING UP REMAINING PROCESSES\n");
-                    HYDU_dump_noprefix(stdout, "=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES\n");
-                    HYDU_dump_noprefix
-                        (stdout, "====================================================");
-                    HYDU_dump_noprefix
-                        (stdout, "=================================\n");
+                    HYDU_dump_noprefix(stdout,
+                                       "=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES\n");
+                    HYDU_dump_noprefix(stdout,
+                                       "====================================================");
+                    HYDU_dump_noprefix(stdout, "=================================\n");
 
                     status = HYD_pmcd_pmiserv_cleanup_pg(proxy->pg);
                     HYDU_ERR_POP(status, "unable to cleanup processes\n");

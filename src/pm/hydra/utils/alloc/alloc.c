@@ -352,8 +352,8 @@ static int dceil(int x, int y)
         return z + 1;
 }
 
-HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
-                                  struct HYD_pg *pg)
+HYD_status HYDU_create_proxy_list(struct HYD_exec * exec_list, struct HYD_node * node_list,
+                                  struct HYD_pg * pg)
 {
     struct HYD_proxy *proxy = NULL, *tproxy, *last_proxy;
     struct HYD_exec *exec;
@@ -488,7 +488,8 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
                 if (proxy->node->node_id == 0)
                     pcr++;
 
-                proxy_rem_cores = proxy->node->core_count * pcr - proxy->node->active_processes;
+                proxy_rem_cores =
+                    proxy->node->core_count * pcr - proxy->node->active_processes;
             }
         }
     }

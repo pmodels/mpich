@@ -56,7 +56,7 @@ static HYD_status group_to_nodes(char *str)
 
     /* Find the actual node sets */
     set[0] = strtok(nodes, ",");
-    for (i = 1; set[i-1]; i++)
+    for (i = 1; set[i - 1]; i++)
         set[i] = strtok(NULL, ",");
 
     for (i = 0; set[i]; i++) {
@@ -106,7 +106,7 @@ static HYD_status group_to_nodes(char *str)
  * "[host001-host012,host014-host020]", etc. */
 static HYD_status list_to_groups(char *str)
 {
-    char *tmp, group[3 * MAX_HOSTNAME_LEN]; /* maximum group size */
+    char *tmp, group[3 * MAX_HOSTNAME_LEN];     /* maximum group size */
     int nesting, i, arg;
     HYD_status status = HYD_SUCCESS;
 

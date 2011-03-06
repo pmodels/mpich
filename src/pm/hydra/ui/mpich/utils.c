@@ -735,8 +735,7 @@ static HYD_status enablex_fn(char *arg, char ***argv)
         goto fn_exit;
     }
 
-    status = HYDU_set_int(arg, &HYD_server_info.user_global.enablex,
-                          !strcmp(arg, "enable-x"));
+    status = HYDU_set_int(arg, &HYD_server_info.user_global.enablex, !strcmp(arg, "enable-x"));
     HYDU_ERR_POP(status, "error setting enable-x\n");
 
   fn_exit:

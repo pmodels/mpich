@@ -47,7 +47,7 @@ HYD_status HYDT_ckpoint_checkpoint(int pgid, int id, const char *user_ckpoint_pr
     HYD_status status = HYD_SUCCESS;
     struct stat st;
     int ret;
-    
+
     HYDU_FUNC_ENTER();
 
 
@@ -58,8 +58,7 @@ HYD_status HYDT_ckpoint_checkpoint(int pgid, int id, const char *user_ckpoint_pr
                         "Failed to stat checkpoint prefix \"%s\": %s\n",
                         user_ckpoint_prefix, strerror(errno));
     HYDU_ERR_CHKANDJUMP(status, !S_ISDIR(st.st_mode), HYD_FAILURE,
-                        "checkpoint prefix \"%s\" is not a directory.\n",
-                        user_ckpoint_prefix);
+                        "checkpoint prefix \"%s\" is not a directory.\n", user_ckpoint_prefix);
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
@@ -91,14 +90,13 @@ HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env *envlist, int n
     HYDU_FUNC_ENTER();
 
     HYDU_ASSERT(user_ckpoint_prefix, status);
-    
+
     ret = stat(user_ckpoint_prefix, &st);
     HYDU_ERR_CHKANDJUMP(status, ret, HYD_FAILURE,
                         "Failed to stat checkpoint prefix \"%s\": %s\n",
                         user_ckpoint_prefix, strerror(errno));
     HYDU_ERR_CHKANDJUMP(status, !S_ISDIR(st.st_mode), HYD_FAILURE,
-                        "checkpoint prefix \"%s\" is not a directory.\n",
-                        user_ckpoint_prefix);
+                        "checkpoint prefix \"%s\" is not a directory.\n", user_ckpoint_prefix);
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
