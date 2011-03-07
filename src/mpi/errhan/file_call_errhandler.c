@@ -113,7 +113,9 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 	   the value is really const (but MPI didn't define error handlers 
 	   with const), this preserves the intent */
 	{ void *fh1 = (void *)&fh;
-	(*e->errfn.F77_Handler_function)( fh1, &errorcode );
+	    MPI_Fint ferr = errorcode;  /* Needed if MPI_Fint and int aren't 
+					   the same size */
+	(*e->errfn.F77_Handler_function)( fh1, &ferr );
 	}
 	break;
 #endif

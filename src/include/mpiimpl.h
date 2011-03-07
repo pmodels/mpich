@@ -2129,6 +2129,9 @@ extern void MPIR_Keyval_set_cxx( int, void (*)(void), void (*)(void) );
 extern void MPIR_Op_set_cxx( MPI_Op, void (*)(void) );
 extern void MPIR_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
 #endif
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+void MPIR_Op_set_fc( MPI_Op );
+#endif
 
 int MPIR_Group_create( int, MPID_Group ** );
 int MPIR_Group_release(MPID_Group *group_ptr);

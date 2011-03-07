@@ -54,6 +54,9 @@ static int MPIR_Reduce_binomial (
 #ifdef HAVE_CXX_BINDING
     int is_cxx_uop = 0;
 #endif
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+    int is_f77_uop = 0;
+#endif
     MPIU_CHKLMEM_DECL(2);
     MPIU_THREADPRIV_DECL;
 
@@ -93,8 +96,12 @@ static int MPIR_Reduce_binomial (
 #endif
         if ((op_ptr->language == MPID_LANG_C))
             uop = (MPI_User_function *) op_ptr->function.c_function;
-        else
+        else {
             uop = (MPI_User_function *) op_ptr->function.f77_function;
+#ifndef HAVE_FINT_IS_INT
+	    is_f77_uop = 1;
+#endif
+	}
     }
 
     /* I think this is the worse case, so we can avoid an assert() 
@@ -185,9 +192,21 @@ static int MPIR_Reduce_binomial (
                         (*MPIR_Process.cxx_call_op_fn)( tmp_buf, recvbuf, 
                                                         count, datatype, uop );
                     }
-                    else 
+                    else {
 #endif
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+			if (is_f77_uop) {
+			    MPI_Fint lcount = (MPI_Fint)count;
+			    MPI_Fint ldtype = (MPI_Fint)datatype;
+			    (*uop)(tmp_buf, recvbuf, &lcount, &ldtype);
+			}
+			else {
+			    (*uop)(tmp_buf, recvbuf, &count, &datatype);
+			}
+#else
                         (*uop)(tmp_buf, recvbuf, &count, &datatype);
+#endif
+		    }
                 }
                 else {
 #ifdef HAVE_CXX_BINDING
@@ -195,9 +214,22 @@ static int MPIR_Reduce_binomial (
                         (*MPIR_Process.cxx_call_op_fn)( recvbuf, tmp_buf,
                                                         count, datatype, uop );
                     }
-                    else 
+                    else {
 #endif
-                        (*uop)(recvbuf, tmp_buf, &count, &datatype);
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+			if (is_f77_uop) {
+			    /* In this case, the integer types do not match */
+			    MPI_Fint lcount = (MPI_Fint)count;
+			    MPI_Fint ldtype = (MPI_Fint)datatype;
+			    (*uop)(recvbuf, tmp_buf, &lcount, &ldtype);
+			}
+			else {
+			    (*uop)(recvbuf, tmp_buf, &count, &datatype);
+			}
+#else
+			(*uop)(recvbuf, tmp_buf, &count, &datatype);
+#endif
+		    }
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                recvbuf, count, datatype);
                     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }

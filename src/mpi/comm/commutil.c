@@ -1336,16 +1336,16 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect)
             }
         }
 
+        /* Check for predefined communicators - these should not
+           be freed */
+        if (! (HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN) )
+            MPIU_Handle_obj_free( &MPID_Comm_mem, comm_ptr );
+
         /* Remove from the list of active communicators if
            we are supporting message-queue debugging.  We make this
            conditional on having debugger support since the
            operation is not constant-time */
         MPIR_COMML_FORGET( comm_ptr );
-
-        /* Check for predefined communicators - these should not
-           be freed */
-        if (! (HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN) )
-            MPIU_Handle_obj_free( &MPID_Comm_mem, comm_ptr );
     }
     else {
         /* If the user attribute free function returns an error,

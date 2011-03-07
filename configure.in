@@ -4120,13 +4120,18 @@ if test "$enable_f77" = yes ; then
         "$ac_cv_sizeof_void_p" -gt "$pac_cv_f77_sizeof_integer" ; then
         AC_DEFINE(HAVE_AINT_LARGER_THAN_FINT,1,[Define if addresses are larger than Fortran integers])
     fi
+    if test "$ac_cv_sizeof_void_p" != 0 -a \
+        "$ac_cv_sizeof_void_p" != "$pac_cv_f77_sizeof_integer" ; then
+	AC_DEFINE(HAVE_AINT_DIFFERENT_THAN_FINT,1,[Define if addresses are a different size than Fortran integers])
+    fi
+    
     # Include a defined value for Fint is int
     if test "$MPI_FINT" = "int" ; then
         AC_DEFINE(HAVE_FINT_IS_INT,1,[Define if Fortran integer are the same size as C ints])
     elif test "$SIZEOF_F77_INTEGER" != "$ac_cv_sizeof_int" ; then
         # Make this fatal because we do not want to build a broken fortran
-	# interface
-        AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-f77 on the configure line for MPICH2.])
+	# interface (was error)
+        AC_MSG_WARN([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-f77 on the configure line for MPICH2.])
     fi
 
     #
