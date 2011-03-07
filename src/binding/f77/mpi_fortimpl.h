@@ -5,24 +5,17 @@
  */
 #include "mpichconf.h"
 
-/* Handle different mechanisms for passing Fortran CHARACTER to routines.
- * 
- * In the case where MPI_Fint is a different size from int, it appears that
- * compilers use an int, rather than an MPI_Fint, for the length.  However,
- * there is no standard for this, so some compiler may choose to use
- * an MPI_Fint instead of an int.  In that case, we will need an additional
- * case.
- */
+/* Handle different mechanisms for passing Fortran CHARACTER to routines */
 #ifdef USE_FORT_MIXED_STR_LEN
-#define FORT_MIXED_LEN_DECL   , int
+#define FORT_MIXED_LEN_DECL   , MPI_Fint
 #define FORT_END_LEN_DECL
-#define FORT_MIXED_LEN(a)     , int a
+#define FORT_MIXED_LEN(a)     , MPI_Fint a
 #define FORT_END_LEN(a)
 #else
 #define FORT_MIXED_LEN_DECL
-#define FORT_END_LEN_DECL     , int
+#define FORT_END_LEN_DECL     , MPI_Fint
 #define FORT_MIXED_LEN(a)
-#define FORT_END_LEN(a)       , int a
+#define FORT_END_LEN(a)       , MPI_Fint a
 #endif
 
 /* ------------------------------------------------------------------------- */

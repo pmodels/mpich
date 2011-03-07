@@ -145,9 +145,6 @@ int MPIR_Allreduce_intra (
 #ifdef HAVE_CXX_BINDING
     int is_cxx_uop = 0;
 #endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-    int is_f77_uop = 0;
-#endif
     MPIU_CHKLMEM_DECL(3);
     
     /* check if multiple threads are calling this collective function */
@@ -287,12 +284,8 @@ int MPIR_Allreduce_intra (
 #endif
             if ((op_ptr->language == MPID_LANG_C))
                 uop = (MPI_User_function *) op_ptr->function.c_function;
-            else {
+            else
                 uop = (MPI_User_function *) op_ptr->function.f77_function;
-#ifndef HAVE_FINT_IS_INT
-		is_f77_uop = 1;
-#endif
-	    }
         }
         
         /* need to allocate temporary buffer to store incoming data*/

@@ -46,20 +46,6 @@ void MPIR_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
 				    MPI_Datatype, MPI_User_function *))opcall;
 }
 #endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-/* Normally, the C and Fortran versions are the same, by design in the
-   MPI Standard.  However, if MPI_Fint and int are not the same size (e.g.,
-   MPI_Fint was made 8 bytes but int is 4 bytes), then the C and Fortran
-   versions must be distinquished. */
-void MPIR_Op_set_fc( MPI_Op op )
-{
-    MPID_Op *op_ptr;
-    
-    MPID_Op_get_ptr( op, op_ptr );
-    op_ptr->language = MPID_LANG_FORTRAN;
-}
-#endif
-
 #endif
 
 #undef FUNCNAME

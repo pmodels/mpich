@@ -139,15 +139,8 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 #ifdef HAVE_FORTRAN_BINDING
     case MPID_LANG_FORTRAN90:
     case MPID_LANG_FORTRAN:
-	{
-	    /* If int and MPI_Fint aren't the same size, we need to 
-	       convert.  As this is not performance critical, we
-	       do this even if MPI_Fint and int are the same size. */
-	    MPI_Fint ferr=errorcode;
-	    MPI_Fint commhandle=comm_ptr->handle;
 	(*comm_ptr->errhandler->errfn.F77_Handler_function)( 
-					    &commhandle, &ferr );
-	}
+	    (MPI_Fint *)&comm_ptr->handle, &errorcode );
 	break;
 #endif
     }

@@ -138,16 +138,6 @@ void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 }
 #endif /* HAVE_CXX_BINDING */
 
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-void MPIR_Errhandler_set_fc( MPI_Errhandler errhand )
-{
-    MPID_Errhandler *errhand_ptr;
-    
-    MPID_Errhandler_get_ptr( errhand, errhand_ptr );
-    errhand_ptr->language = MPID_LANG_FORTRAN;
-}
-
-#endif
 /* ------------------------------------------------------------------------- */
 /* These routines are called on error exit from most top-level MPI routines
    to invoke the appropriate error handler.  Also included is the routine
@@ -265,15 +255,9 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 #ifdef HAVE_FORTRAN_BINDING
 	case MPID_LANG_FORTRAN90:
 	case MPID_LANG_FORTRAN:
-	{
-	    /* If int and MPI_Fint aren't the same size, we need to 
-	       convert.  As this is not performance critical, we
-	       do this even if MPI_Fint and int are the same size. */
-	    MPI_Fint ferr=errcode;
-	    MPI_Fint commhandle=comm_ptr->handle;
-	    (*comm_ptr->errhandler->errfn.F77_Handler_function)( &commhandle, 
-								 &ferr );
-	}
+	    /* FIXME: If an MPI_Fint isn't an int, this code is wrong */
+	    (*comm_ptr->errhandler->errfn.F77_Handler_function)( 
+		(MPI_Fint *)&comm_ptr->handle, &errcode );
 	    break;
 #endif /* FORTRAN_BINDING */
 	}
@@ -342,15 +326,8 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 #ifdef HAVE_FORTRAN_BINDING
 	    case MPID_LANG_FORTRAN90:
 	    case MPID_LANG_FORTRAN:
-		{
-		    /* If int and MPI_Fint aren't the same size, we need to 
-		       convert.  As this is not performance critical, we
-		       do this even if MPI_Fint and int are the same size. */
-		    MPI_Fint ferr=errcode;
-		    MPI_Fint winhandle=win_ptr->handle;
-		    (*win_ptr->errhandler->errfn.F77_Handler_function)( 
-						       &winhandle, &ferr );
-		}
+		(*win_ptr->errhandler->errfn.F77_Handler_function)( 
+		    (MPI_Fint *)&win_ptr->handle, &errcode );
 		break;
 #endif /* FORTRAN_BINDING */
 	}

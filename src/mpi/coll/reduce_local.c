@@ -37,9 +37,6 @@ int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype 
 #ifdef HAVE_CXX_BINDING
     int is_cxx_uop = 0;
 #endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-    int is_f77_uop = 0;
-#endif
     MPIU_THREADPRIV_DECL;
 
     if (count == 0) goto fn_exit;
@@ -62,15 +59,10 @@ int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype 
         else
 #endif
         {
-            if ((op_ptr->language == MPID_LANG_C)) {
+            if ((op_ptr->language == MPID_LANG_C))
                 uop = (MPI_User_function *) op_ptr->function.c_function;
-            }
-            else {
+            else
                 uop = (MPI_User_function *) op_ptr->function.f77_function;
-#ifndef HAVE_FINT_IS_INT
-                is_f77_uop = 1;
-#endif
-            }
         }
     }
 
@@ -82,18 +74,7 @@ int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype 
     else
 #endif
     {
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-        if (is_f77_uop) {
-            MPI_Fint lcount = (MPI_Fint)count;
-            MPI_Fint ldtype = (MPI_Fint)datatype;
-            (*uop)(inbuf, inoutbuf, &lcount, &ldtype);
-        }
-        else {
-            (*uop)(inbuf, inoutbuf, &count, &datatype);
-        }
-#else
         (*uop)(inbuf, inoutbuf, &count, &datatype);
-#endif
     }
 
     /* --BEGIN ERROR HANDLING-- */
