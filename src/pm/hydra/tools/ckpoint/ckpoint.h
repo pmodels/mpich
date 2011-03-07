@@ -23,10 +23,12 @@
  */
 struct HYDT_ckpoint_info {
     /** \brief Checkpointing library to use */
-    char *ckpointlib;
-
+    const char *ckpointlib;
+    const char *prefix;
     /** \brief checkpoint number to restart from*/
     int ckpoint_num;
+    int pgid;
+    int id;
 };
 
 /** \cond */
@@ -42,7 +44,7 @@ extern struct HYDT_ckpoint_info HYDT_ckpoint_info;
  * This function initializes the checkpointing library requested by
  * the user.
  */
-HYD_status HYDT_ckpoint_init(char *ckpointlib, int ckpoint_num);
+HYD_status HYDT_ckpoint_init(const char *ckpointlib, int ckpoint_num);
 
 
 /**

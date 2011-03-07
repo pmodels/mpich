@@ -921,11 +921,6 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
                      [HYD_pmcd_pmip.local.proxy_process_count - 1]);
         status = HYDT_ckpoint_checkpoint(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id,
                                          HYD_pmcd_pmip.local.ckpoint_prefix_list[0]);
-        if (status)
-            status = HYDT_ftb_publish("FTB_MPI_PROCS_CKPT_FAIL", ftb_event_payload);
-        else
-            status = HYDT_ftb_publish("FTB_MPI_PROCS_CKPTED", ftb_event_payload);
-        HYDU_ERR_POP(status, "FTB publishing failure\n");
 
         HYDU_ERR_POP(status, "checkpoint suspend failed\n");
         HYDU_dump(stdout, "checkpoint completed\n");

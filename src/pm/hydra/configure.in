@@ -411,11 +411,25 @@ AC_MSG_RESULT([$available_bindlibs])
 #########################################################################
 # Checkpoint/Restart
 #########################################################################
+
+# checkpoint requires pthreads
+AC_CHECK_HEADERS(pthread.h)
+AC_CHECK_LIB([pthread],[pthread_key_create],have_pthreads=yes)
+if test "$have_pthreads" = "yes" ; then
+    PAC_PREPEND_FLAG([-lpthread],[LIBS])
+    AC_DEFINE(HAVE_PTHREADS,1,[Define if pthreads is available])
+fi
+
 AC_ARG_WITH(hydra-ckpointlib, [  --with-hydra-ckpointlib=name - Checkpointing Library (blcr)],
 			   [ hydra_ckpointlib_list=$withval ],
 			   [ hydra_ckpointlib_list=none ])
 AC_MSG_CHECKING(checkpointing library)
-AC_MSG_RESULT($hydra_ckpointlib_list)
+
+if test "$have_pthreads" != "yes" -a "$hydra_ckpointlib_list" != "none" ; then
+    AC_MSG_ERROR([pthreads is required for checkpointing, but was not found])
+else
+    AC_MSG_RESULT($hydra_ckpointlib_list)
+fi
 
 hydra_ckpointlibs="`echo $hydra_ckpointlib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
