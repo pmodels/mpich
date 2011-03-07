@@ -79,6 +79,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_SEND_QUEUED);
 
+    MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "vc = %p", vc);
     MPIU_Assert(vc != NULL);
 
     if (MPIDI_CH3I_Sendq_empty(*send_queue))
@@ -668,6 +669,8 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tcp_SendNoncontig");
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));
     
@@ -799,6 +802,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     }
     
 fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
     return mpi_errno;
 fn_fail:
     MPIU_Object_set_ref(sreq, 0);

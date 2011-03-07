@@ -1501,8 +1501,13 @@ fn_exit:
 #define FUNCNAME MPID_nem_tcp_recv_handler
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
+static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
 {
+    /* as a result of handling a message, the sc table might get
+       expanded making the sc pointer invalid, so we save all the info
+       we need from sc here, and don't reference sc directly after
+       that. */
+    const int sc_fd = sc->fd;
     MPIDI_VC_t *const sc_vc = sc->vc;
     MPIU_AssertDeclValue(MPID_nem_tcp_vc_area *const sc_vc_tcp, VC_TCP(sc_vc));
     int mpi_errno = MPI_SUCCESS;
@@ -1514,7 +1519,7 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
     if (((MPIDI_CH3I_VC *)sc_vc->channel_private)->recv_active == NULL)
     {
         /* receive a new message */
-        CHECK_EINTR(bytes_recvd, recv(sc->fd, recv_buf, MPID_NEM_TCP_RECV_MAX_PKT_LEN, 0));
+        CHECK_EINTR(bytes_recvd, recv(sc_fd, recv_buf, MPID_NEM_TCP_RECV_MAX_PKT_LEN, 0));
         if (bytes_recvd <= 0)
         {
             if (bytes_recvd == -1 && errno == EAGAIN) /* handle this fast */
@@ -1553,7 +1558,7 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
             }
         }
     
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "New recv " MPIDI_MSG_SZ_FMT " (fd=%d, vc=%p, sc=%p)", bytes_recvd, sc->fd, sc_vc, sc));
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "New recv " MPIDI_MSG_SZ_FMT " (fd=%d, vc=%p, sc=%p)", bytes_recvd, sc_fd, sc_vc, sc));
 
         mpi_errno = MPID_nem_handle_pkt(sc_vc, recv_buf, bytes_recvd);
         if (mpi_errno) MPIU_ERR_POP_LABEL(mpi_errno, fn_noncomm_fail);
@@ -1570,7 +1575,7 @@ static int MPID_nem_tcp_recv_handler (struct pollfd *pfd, sockconn_t *const sc)
         MPIU_Assert(rreq->dev.iov_offset >= 0);
         MPIU_Assert(rreq->dev.iov_count + rreq->dev.iov_offset <= MPID_IOV_LIMIT);
 
-        CHECK_EINTR(bytes_recvd, readv(sc->fd, iov, rreq->dev.iov_count));
+        CHECK_EINTR(bytes_recvd, readv(sc_fd, iov, rreq->dev.iov_count));
         if (bytes_recvd <= 0)
         {
             if (bytes_recvd == -1 && errno == EAGAIN) /* handle this fast */
@@ -1655,19 +1660,23 @@ fn_noncomm_fail: /* NON-comm related failures jump here */
 static int state_commrdy_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
+    /* save references to sc->vc etc because if the sc table is
+       expanded inside recv_handler, this pointer to sc will be
+       invalid. */
+    MPIDI_VC_t *sc_vc = sc->vc;
+    MPID_nem_tcp_vc_area *sc_vc_tcp = VC_TCP(sc_vc);
     MPIDI_STATE_DECL(MPID_STATE_STATE_COMMRDY_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_STATE_COMMRDY_HANDLER);
 
+    MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "vc = %p", sc->vc);
     if (IS_READABLE(plfd))
     {
-        mpi_errno = MPID_nem_tcp_recv_handler(plfd, sc);
+        mpi_errno = MPID_nem_tcp_recv_handler(sc);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
     if (IS_WRITEABLE(plfd))
     {
-        MPIDI_VC_t *sc_vc = sc->vc;
-        MPID_nem_tcp_vc_area *sc_vc_tcp = VC_TCP(sc_vc);
         mpi_errno = MPID_nem_tcp_send_queued(sc_vc, &sc_vc_tcp->send_queue);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
@@ -1821,6 +1830,9 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
             
             mpi_errno = it_sc->handler(it_plfd, it_sc);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+            /* note that g_sc_tbl might have been expanded while
+               inside handler, so the it_plfd and it_sc pointers may
+               be invalid at this point. */
         }
     }
     
