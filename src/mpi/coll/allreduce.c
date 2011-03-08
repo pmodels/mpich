@@ -5,6 +5,7 @@
  */
 
 #include "mpiimpl.h"
+#include "collutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Allreduce */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -138,16 +139,7 @@ int MPIR_Allreduce_intra (
         send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps; 
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
-    MPI_User_function *uop;
-    MPID_Op *op_ptr;
     MPI_Comm comm;
-    MPIU_THREADPRIV_DECL;
-#ifdef HAVE_CXX_BINDING
-    int is_cxx_uop = 0;
-#endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-    int is_f77_uop = 0;
-#endif
     MPIU_CHKLMEM_DECL(3);
     
     /* check if multiple threads are calling this collective function */
@@ -156,17 +148,10 @@ int MPIR_Allreduce_intra (
     if (count == 0) goto fn_exit;
     comm = comm_ptr->handle;
 
-    MPIU_THREADPRIV_GET;
+    is_commutative = MPIR_Op_is_commutative(op);
 
 #if defined(USE_SMP_COLLECTIVES)
-    /* is the op commutative? We do SMP optimizations only if it is. */ 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
-    } else {
-        MPID_Op_get_ptr(op, op_ptr);
-        is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
-    }
-
+    /* is the op commutative? We do SMP optimizations only if it is. */
     if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
         /* on each node, do a reduce to the local root */ 
         if (comm_ptr->node_comm != NULL) {
@@ -260,41 +245,12 @@ int MPIR_Allreduce_intra (
 #endif /* MPID_HAS_HETERO */
     {
         /* homogeneous */
-        
-        /* set op_errno to 0. stored in perthread structure */
-        MPIU_THREADPRIV_FIELD(op_errno) = 0;
 
         comm_size = comm_ptr->local_size;
         rank = comm_ptr->rank;
-        
-        if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-            is_commutative = 1;
-            /* get the function by indexing into the op table */
-            uop = MPIR_Op_table[op%16 - 1];
-        }
-        else {
-            MPID_Op_get_ptr(op, op_ptr);
-            if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
-                is_commutative = 0;
-            else
-                is_commutative = 1;
-#ifdef HAVE_CXX_BINDING            
-            if (op_ptr->language == MPID_LANG_CXX) {
-                uop = (MPI_User_function *) op_ptr->function.c_function;
-		is_cxx_uop = 1;
-	    }
-	    else
-#endif
-            if ((op_ptr->language == MPID_LANG_C))
-                uop = (MPI_User_function *) op_ptr->function.c_function;
-            else {
-                uop = (MPI_User_function *) op_ptr->function.f77_function;
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-		is_f77_uop = 1;
-#endif
-	    }
-        }
-        
+
+        is_commutative = MPIR_Op_is_commutative(op);
+
         /* need to allocate temporary buffer to store incoming data*/
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPID_Datatype_get_extent_macro(datatype, extent);
@@ -359,31 +315,9 @@ int MPIR_Allreduce_intra (
                 /* do the reduction on received data. since the
                    ordering is right, it doesn't matter whether
                    the operation is commutative or not. */
-#ifdef HAVE_CXX_BINDING
-                if (is_cxx_uop) {
-                    (*MPIR_Process.cxx_call_op_fn)( tmp_buf, recvbuf, 
-                                                    count,
-                                                    datatype,
-                                                    uop ); 
-                }
-                else {
-#endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-		    if (is_f77_uop) {
-			MPI_Fint lcount = (MPI_Fint)count;
-			MPI_Fint ldtype = (MPI_Fint)datatype;
-			(*uop)(tmp_buf, recvbuf, &lcount, &ldtype);
-		    }
-		    else {
-			(*uop)(tmp_buf, recvbuf, &count, &datatype);
-		    }
-#else
-                    (*uop)(tmp_buf, recvbuf, &count, &datatype);
-#endif
-#ifdef HAVE_CXX_BINDING
-		}
-#endif
-                
+                mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
                 /* change the rank */
                 newrank = rank / 2;
             }
@@ -429,59 +363,14 @@ int MPIR_Allreduce_intra (
                     
                     if (is_commutative  || (dst < rank)) {
                         /* op is commutative OR the order is already right */
-#ifdef HAVE_CXX_BINDING
-                        if (is_cxx_uop) {
-                            (*MPIR_Process.cxx_call_op_fn)( tmp_buf, recvbuf, 
-                                                            count,
-                                                            datatype,
-                                                            uop ); 
-                        }
-                        else {
-#endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-			    if (is_f77_uop) {
-				MPI_Fint lcount = (MPI_Fint)count;
-				MPI_Fint ldtype = (MPI_Fint)datatype;
-				(*uop)(tmp_buf, recvbuf, &lcount, &ldtype);
-			    }
-			    else {
-				(*uop)(tmp_buf, recvbuf, &count, &datatype);
-			    }
-#else
-                            (*uop)(tmp_buf, recvbuf, &count, &datatype);
-#endif
-#ifdef HAVE_CXX_BINDING
-			}
-#endif
-
+                        mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     }
                     else {
                         /* op is noncommutative and the order is not right */
-#ifdef HAVE_CXX_BINDING
-                        if (is_cxx_uop) {
-                            (*MPIR_Process.cxx_call_op_fn)( recvbuf, tmp_buf, 
-                                                            count,
-                                                            datatype,
-                                                            uop ); 
-                        }
-                        else {
-#endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-			    if (is_f77_uop) {
-				MPI_Fint lcount = (MPI_Fint)count;
-				MPI_Fint ldtype = (MPI_Fint)datatype;
-				(*uop)(recvbuf, tmp_buf, &lcount, &ldtype);
-			    }
-			    else {
-				(*uop)(recvbuf, tmp_buf, &count, &datatype);
-			    }
-#else
-                            (*uop)(recvbuf, tmp_buf, &count, &datatype);
-#endif
-#ifdef HAVE_CXX_BINDING
-			}
-#endif
-                        
+                        mpi_errno = MPIR_Reduce_local_impl(recvbuf, tmp_buf, count, datatype, op);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
                         /* copy result back into recvbuf */
                         mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                    recvbuf, count, datatype);
@@ -559,11 +448,11 @@ int MPIR_Allreduce_intra (
                     
                     /* This algorithm is used only for predefined ops
                        and predefined ops are always commutative. */
+                    mpi_errno = MPIR_Reduce_local_impl(((char *) tmp_buf + disps[recv_idx]*extent),
+                                                       ((char *) recvbuf + disps[recv_idx]*extent),
+                                                       recv_cnt, datatype, op);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-		    (*uop)((char *) tmp_buf + disps[recv_idx]*extent,
-			   (char *) recvbuf + disps[recv_idx]*extent, 
-			   &recv_cnt, &datatype);
-                    
                     /* update send_idx for next iteration */
                     send_idx = recv_idx;
                     mask <<= 1;
@@ -646,9 +535,6 @@ int MPIR_Allreduce_intra (
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
         }
-
-        if (MPIU_THREADPRIV_FIELD(op_errno)) 
-	    mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
     }
 
   fn_exit:
