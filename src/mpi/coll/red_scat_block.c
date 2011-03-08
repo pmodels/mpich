@@ -12,6 +12,7 @@
 
 
 #include "mpiimpl.h"
+#include "collutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Reduce_scatter_block */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -29,29 +30,6 @@
 #undef MPI_Reduce_scatter_block
 #define MPI_Reduce_scatter_block PMPI_Reduce_scatter_block
 
-
-/* Implements the "mirror permutation" of "bits" bits of an integer "x".
-
-   positions 76543210, bits==3 yields 76543012.
-
-   This function could/should be moved to a common utility location for use in
-   other collectives as well. */
-ATTRIBUTE((const)) /* tells the compiler that this func only depends on its args
-                      and may be optimized much more aggressively, similar to "pure" */
-static inline int mirror_permutation(unsigned int x, int bits)
-{
-    /* a mask for the high order bits that should be copied as-is */
-    int high_mask = ~((0x1 << bits) - 1);
-    int retval = x & high_mask;
-    int i;
-
-    for (i = 0; i < bits; ++i) {
-        unsigned int bitval = (x & (0x1 << i)) >> i; /* 0x1 or 0x0 */
-        retval |= bitval << ((bits - i) - 1);
-    }
-
-    return retval;
-}
 
 /* FIXME should we be checking the op_errno here? */
 #ifdef HAVE_CXX_BINDING
@@ -166,7 +144,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
        permute the blocks as we go according to the mirror permutation. */
     for (i = 0; i < comm_size; ++i) {
         mpi_errno = MPIR_Localcopy((char *)(sendbuf == MPI_IN_PLACE ? recvbuf : sendbuf) + (i * true_extent * block_size), block_size, datatype,
-                                   (char *)tmp_buf0 + (mirror_permutation(i, log2_comm_size) * true_extent * block_size), block_size, datatype);
+                                   (char *)tmp_buf0 + (MPIU_Mirror_permutation(i, log2_comm_size) * true_extent * block_size), block_size, datatype);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     buf0_was_inout = 1;
