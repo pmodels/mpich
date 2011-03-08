@@ -509,4 +509,23 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     goto fn_exit;
 }
 
+/* for debugging */
+int MPIDI_CH3U_Dump_vc_states(void);
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Dump_vc_states
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Dump_vc_states(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
 
+    printf("VC States\n");
+    for (i = 0; i < MPIDI_Process.my_pg->size; ++i)
+        printf("  %3d   %s\n", i, MPIDI_VC_GetStateString(MPIDI_Process.my_pg->vct[i].state));
+        
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
