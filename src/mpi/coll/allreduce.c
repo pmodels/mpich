@@ -366,9 +366,23 @@ int MPIR_Allreduce_intra (
                                                     datatype,
                                                     uop ); 
                 }
-                else 
+                else {
 #endif
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+		    if (is_f77_uop) {
+			MPI_Fint lcount = (MPI_Fint)count;
+			MPI_Fint ldtype = (MPI_Fint)datatype;
+			(*uop)(tmp_buf, recvbuf, &lcount, &ldtype);
+		    }
+		    else {
+			(*uop)(tmp_buf, recvbuf, &count, &datatype);
+		    }
+#else
                     (*uop)(tmp_buf, recvbuf, &count, &datatype);
+#endif
+#ifdef HAVE_CXX_BINDING
+		}
+#endif
                 
                 /* change the rank */
                 newrank = rank / 2;
@@ -422,9 +436,24 @@ int MPIR_Allreduce_intra (
                                                             datatype,
                                                             uop ); 
                         }
-                        else 
+                        else {
 #endif
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+			    if (is_f77_uop) {
+				MPI_Fint lcount = (MPI_Fint)count;
+				MPI_Fint ldtype = (MPI_Fint)datatype;
+				(*uop)(tmp_buf, recvbuf, &lcount, &ldtype);
+			    }
+			    else {
+				(*uop)(tmp_buf, recvbuf, &count, &datatype);
+			    }
+#else
                             (*uop)(tmp_buf, recvbuf, &count, &datatype);
+#endif
+#ifdef HAVE_CXX_BINDING
+			}
+#endif
+
                     }
                     else {
                         /* op is noncommutative and the order is not right */
@@ -435,9 +464,23 @@ int MPIR_Allreduce_intra (
                                                             datatype,
                                                             uop ); 
                         }
-                        else 
+                        else {
 #endif
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+			    if (is_f77_uop) {
+				MPI_Fint lcount = (MPI_Fint)count;
+				MPI_Fint ldtype = (MPI_Fint)datatype;
+				(*uop)(recvbuf, tmp_buf, &lcount, &ldtype);
+			    }
+			    else {
+				(*uop)(recvbuf, tmp_buf, &count, &datatype);
+			    }
+#else
                             (*uop)(recvbuf, tmp_buf, &count, &datatype);
+#endif
+#ifdef HAVE_CXX_BINDING
+			}
+#endif
                         
                         /* copy result back into recvbuf */
                         mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,

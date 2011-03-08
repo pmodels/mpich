@@ -207,7 +207,9 @@ static int MPIR_Reduce_binomial (
 #else
                         (*uop)(tmp_buf, recvbuf, &count, &datatype);
 #endif
+#ifdef HAVE_CXX_BINDING
 		    }
+#endif
                 }
                 else {
 #ifdef HAVE_CXX_BINDING
@@ -231,7 +233,9 @@ static int MPIR_Reduce_binomial (
 #else
 			(*uop)(recvbuf, tmp_buf, &count, &datatype);
 #endif
+#ifdef HAVE_CXX_BINDING
 		    }
+#endif
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                recvbuf, count, datatype);
                     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
