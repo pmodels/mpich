@@ -250,6 +250,7 @@ static int init_default_collops(void)
         ops->Ialltoallv = &MPIR_Ialltoallv_intra;
         ops->Iallreduce = &MPIR_Iallreduce_intra;
         ops->Igather = &MPIR_Igather_intra;
+        ops->Igatherv = &MPIR_Igatherv;
         ops->Iscatter = &MPIR_Iscatter_intra;
         ops->Iscatterv = &MPIR_Iscatterv;
         ops->Ireduce_scatter = &MPIR_Ireduce_scatter_intra;
@@ -286,6 +287,7 @@ static int init_default_collops(void)
         ops->Ialltoallv = &MPIR_Ialltoallv_inter;
         ops->Iallreduce = &MPIR_Iallreduce_inter;
         ops->Igather = &MPIR_Igather_inter;
+        ops->Igatherv = &MPIR_Igatherv;
         ops->Iscatter = &MPIR_Iscatter_inter;
         ops->Iscatterv = &MPIR_Iscatterv;
         ops->Ireduce_scatter = &MPIR_Ireduce_scatter_inter;

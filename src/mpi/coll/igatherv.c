@@ -25,6 +25,80 @@
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Igatherv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Igatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    int comm_size, rank;
+    MPI_Aint extent;
+    int min_procs;
+
+    rank = comm_ptr->rank;
+
+    /* If rank == root, then I recv lots, otherwise I send */
+    if (((comm_ptr->comm_kind == MPID_INTRACOMM) && (root == rank)) ||
+        ((comm_ptr->comm_kind == MPID_INTERCOMM) && (root == MPI_ROOT)))
+    {
+        if (comm_ptr->comm_kind == MPID_INTRACOMM)
+            comm_size = comm_ptr->local_size;
+        else
+            comm_size = comm_ptr->remote_size;
+
+        MPID_Datatype_get_extent_macro(recvtype, extent);
+        /* each node can make sure it is not going to overflow aint */
+        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf + displs[rank] * extent);
+
+        for (i = 0; i < comm_size; i++) {
+            if (recvcounts[i]) {
+                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank)) {
+                    if (sendbuf != MPI_IN_PLACE) {
+                        mpi_errno = MPID_Sched_copy(sendbuf, sendcount, sendtype,
+                                                    ((char *)recvbuf+displs[rank]*extent),
+                                                    recvcounts[rank], recvtype, s);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    }
+                }
+                else {
+                    mpi_errno = MPID_Sched_recv(((char *)recvbuf+displs[i]*extent),
+                                                recvcounts[i], recvtype, i, comm_ptr, s);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+    }
+    else if (root != MPI_PROC_NULL)
+    {
+        /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
+        if (sendcount) {
+            /* we want local size in both the intracomm and intercomm cases
+               because the size of the root's group (group A in the standard) is
+               irrelevant here. */
+            comm_size = comm_ptr->local_size;
+
+            min_procs = MPIR_PARAM_GATHERV_INTER_SSEND_MIN_PROCS;
+            if (min_procs == -1)
+                min_procs = comm_size + 1; /* Disable ssend */
+            else if (min_procs == 0) /* backwards compatibility, use default value */
+                MPIR_PARAM_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS,&min_procs);
+
+            if (comm_size >= min_procs)
+                mpi_errno = MPID_Sched_ssend(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+            else
+                mpi_errno = MPID_Sched_send(sendbuf, sendcount, sendtype, root, comm_ptr, s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Igatherv_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
