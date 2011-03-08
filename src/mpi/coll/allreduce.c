@@ -289,7 +289,7 @@ int MPIR_Allreduce_intra (
                 uop = (MPI_User_function *) op_ptr->function.c_function;
             else {
                 uop = (MPI_User_function *) op_ptr->function.f77_function;
-#ifndef HAVE_FINT_IS_INT
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
 		is_f77_uop = 1;
 #endif
 	    }
