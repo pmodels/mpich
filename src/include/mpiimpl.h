@@ -3623,6 +3623,11 @@ int MPIR_Igather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 int MPIR_Iscatter_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Iscatter_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Iscatterv(void *sendbuf, int *sendcounts, int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ireduce_scatter_intra(void *sendbuf, void *recvbuf, int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ireduce_scatter_inter(void *sendbuf, void *recvbuf, int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ireduce_scatter_rec_dbl(void *sendbuf, void *recvbuf, int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ireduce_scatter_rec_hlv(void *sendbuf, void *recvbuf, int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ireduce_scatter_pairwise(void *sendbuf, void *recvbuf, int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
 
 
 /* random initializers */
