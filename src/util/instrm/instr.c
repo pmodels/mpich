@@ -6,6 +6,8 @@
 
 #include "mpiimpl.h"
 
+MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+
 #ifdef USE_MPIU_INSTR
 
 static int MPIU_INSTR_Printf( FILE *fp );
