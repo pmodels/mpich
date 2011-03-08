@@ -120,9 +120,16 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
                                        &e->u.send.sreq);
             }
             else {
-                mpi_errno = MPID_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                       e->u.send.dest, s->tag, r->comm, context_offset,
-                                       &e->u.send.sreq);
+                if (e->u.send.is_sync) {
+                    mpi_errno = MPID_Issend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
+                                            e->u.send.dest, s->tag, r->comm, context_offset,
+                                            &e->u.send.sreq);
+                }
+                else {
+                    mpi_errno = MPID_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
+                                           e->u.send.dest, s->tag, r->comm, context_offset,
+                                           &e->u.send.sreq);
+                }
             }
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
@@ -411,6 +418,49 @@ int MPID_Sched_send(void *buf, int count, MPI_Datatype datatype, int dest, MPID_
     e->u.send.dest = dest;
     e->u.send.sreq = NULL; /* will be populated by _start_entry */
     e->u.send.comm = comm;
+    e->u.send.is_sync = FALSE;
+
+    /* the user may free the comm & type after initiating but before the
+     * underlying send is actually posted, so we must add a reference here and
+     * release it at entry completion time */
+    MPIR_Comm_add_ref(comm);
+    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+        MPID_Datatype *dtp = NULL;
+        MPID_Datatype_get_ptr(datatype, dtp);
+        MPID_Datatype_add_ref(dtp);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Sched_ssend
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_Sched_ssend(void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct MPIDU_Sched_entry *e = NULL;
+
+    mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    e->type = MPIDU_SCHED_ENTRY_SEND;
+    e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
+    e->is_barrier = FALSE;
+
+    e->u.send.buf = buf;
+    e->u.send.count = count;
+    e->u.send.count_p = NULL;
+    e->u.send.datatype = datatype;
+    e->u.send.dest = dest;
+    e->u.send.sreq = NULL; /* will be populated by _start_entry */
+    e->u.send.comm = comm;
+    e->u.send.is_sync = TRUE;
 
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and
@@ -452,6 +502,7 @@ int MPID_Sched_send_defer(void *buf, int *count, MPI_Datatype datatype, int dest
     e->u.send.dest = dest;
     e->u.send.sreq = NULL; /* will be populated by _start_entry */
     e->u.send.comm = comm;
+    e->u.send.is_sync = FALSE;
 
     /* the user may free the comm & type after initiating but before the
      * underlying send is actually posted, so we must add a reference here and

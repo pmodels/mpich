@@ -36,6 +36,7 @@ struct MPIDU_Sched_send {
     int dest;
     MPID_Comm *comm;
     MPID_Request *sreq;
+    int is_sync; /* TRUE iff this send is an ssend */
 };
 
 struct MPIDU_Sched_recv {

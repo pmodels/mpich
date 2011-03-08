@@ -64,6 +64,9 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
 int MPID_Sched_send(void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s);
 int MPID_Sched_recv(void *buf, int count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPID_Sched_t s);
 
+/* just like MPI_Issend, can't complete until the matching recv is posted */
+int MPID_Sched_ssend(void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s);
+
 int MPID_Sched_reduce(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Sched_t s);
 /* packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype */
