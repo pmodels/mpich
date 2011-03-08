@@ -3622,6 +3622,7 @@ int MPIR_Igather_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 int MPIR_Igather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Iscatter_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Iscatter_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Iscatterv(void *sendbuf, int *sendcounts, int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 
 
 /* random initializers */

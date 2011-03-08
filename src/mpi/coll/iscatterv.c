@@ -24,6 +24,87 @@
 
 /* any non-MPI functions go here, especially non-static ones */
 
+/* This is the default implementation of scatterv. The algorithm is:
+
+   Algorithm: MPI_Scatterv
+
+   Since the array of sendcounts is valid only on the root, we cannot
+   do a tree algorithm without first communicating the sendcounts to
+   other processes. Therefore, we simply use a linear algorithm for the
+   scatter, which takes (p-1) steps versus lgp steps for the tree
+   algorithm. The bandwidth requirement is the same for both algorithms.
+
+   Cost = (p-1).alpha + n.((p-1)/p).beta
+
+   Possible improvements:
+
+   End Algorithm: MPI_Scatterv
+*/
+/* this routine handles both intracomms and intercomms */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iscatterv
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Iscatterv(void *sendbuf, int *sendcounts, int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int rank, comm_size;
+    MPI_Aint extent;
+    int i;
+
+    rank = comm_ptr->rank;
+
+    /* If I'm the root, then scatter */
+    if (((comm_ptr->comm_kind == MPID_INTRACOMM) && (root == rank)) ||
+        ((comm_ptr->comm_kind == MPID_INTERCOMM) && (root == MPI_ROOT)))
+    {
+        if (comm_ptr->comm_kind == MPID_INTRACOMM)
+            comm_size = comm_ptr->local_size;
+        else
+            comm_size = comm_ptr->remote_size;
+
+        MPID_Datatype_get_extent_macro(sendtype, extent);
+        /* We need a check to ensure extent will fit in a
+         * pointer. That needs extent * (max count) but we can't get
+         * that without looping over the input data. This is at least
+         * a minimal sanity check. Maybe add a global var since we do
+         * loop over sendcount[] in MPI_Scatterv before calling
+         * this? */
+        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
+
+        for (i = 0; i < comm_size; i++) {
+            if (sendcounts[i]) {
+                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank)) {
+                    if (recvbuf != MPI_IN_PLACE) {
+                        mpi_errno = MPID_Sched_copy(((char *)sendbuf+displs[rank]*extent),
+                                                    sendcounts[rank], sendtype,
+                                                    recvbuf, recvcount, recvtype, s);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    }
+                }
+                else {
+                    mpi_errno = MPID_Sched_send(((char *)sendbuf+displs[i]*extent),
+                                                sendcounts[i], sendtype, i, comm_ptr, s);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+    }
+
+    else if (root != MPI_PROC_NULL) {
+        /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
+        if (recvcount) {
+            mpi_errno = MPID_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iscatterv_impl
 #undef FCNAME
