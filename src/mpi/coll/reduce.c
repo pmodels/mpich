@@ -192,9 +192,8 @@ static int MPIR_Reduce_binomial (
                         (*MPIR_Process.cxx_call_op_fn)( tmp_buf, recvbuf, 
                                                         count, datatype, uop );
                     }
-                    else
+                    else {
 #endif
-                    {
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
 			if (is_f77_uop) {
 			    MPI_Fint lcount = (MPI_Fint)count;
@@ -217,9 +216,8 @@ static int MPIR_Reduce_binomial (
                         (*MPIR_Process.cxx_call_op_fn)( recvbuf, tmp_buf,
                                                         count, datatype, uop );
                     }
-                    else
+                    else {
 #endif
-                    {
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
 			if (is_f77_uop) {
 			    /* In this case, the integer types do not match */
@@ -382,7 +380,7 @@ static int MPIR_Reduce_redscat_gather (
         else
             is_commutative = 1;
         
-#ifdef HAVE_CXX_BINDING
+#ifdef HAVE_CXX_BINDING            
             if (op_ptr->language == MPID_LANG_CXX) {
                 uop = (MPI_User_function *) op_ptr->function.c_function;
                 is_cxx_uop = 1;
@@ -484,7 +482,7 @@ static int MPIR_Reduce_redscat_gather (
                                                 datatype,
                                                 uop ); 
             }
-            else
+            else 
 #endif
                 (*uop)(tmp_buf, recvbuf, &count, &datatype);
 
@@ -571,7 +569,7 @@ static int MPIR_Reduce_redscat_gather (
                                                disps[recv_idx]*extent, 
                                                recv_cnt, datatype, uop);
             }
-            else
+            else 
 #endif
                 (*uop)((char *) tmp_buf + disps[recv_idx]*extent,
                        (char *) recvbuf + disps[recv_idx]*extent, 
