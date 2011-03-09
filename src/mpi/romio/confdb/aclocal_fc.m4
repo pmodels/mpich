@@ -372,7 +372,7 @@ AC_COMPILE_IFELSE([
     ])
 ],[
     # pac_f77compile_ok=yes
-    mv conftest.$OBJEXT pac_f77conftest.$OBJEXT
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_f77conftest.$OBJEXT $LIBS"
@@ -493,7 +493,7 @@ int $confname( int a )
     ])
 ],[
     pac_compile_ok=yes
-    mv conftest.$OBJEXT pac_conftest.$OBJEXT
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     # Save LIBS and prepend object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_conftest.$OBJEXT $LIBS"
@@ -548,41 +548,17 @@ AC_DEFUN([PAC_FC_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether Fortran 90 compiler accepts option $1])
 pac_opt="$1"
 AC_LANG_PUSH(Fortran)
-dnl Instead of defining our own ac_link and ac_compile and do AC_TRY_EVAL
-dnl on these variables.  We modify ac_link and ac_compile used by AC_*_IFELSE
-dnl by piping the output of the command to a logfile.  The reason is that
-dnl 1) AC_TRY_EVAL is discouraged by Autoconf. 2) defining our ac_link and
-dnl ac_compile could mess up the usage and order of FCFLAGS, LDFLAGS
-dnl and LIBS in these commands, i.e. deviate from how GNU standard uses
-dnl these variables.
-dnl
-dnl Replace " >&AS_MESSAGE_LOG_FD" by "> file 2>&1" in ac_link and ac_compile
-pac_link="`echo $ac_link | sed -e 's|>.*$|> $pac_logfile 2>\&1|g'`"
-dnl echo "ac_link=\"$ac_link\""
-dnl echo "pac_link=\"$pac_link\""
-saved_ac_link="$ac_link"
-ac_link="$pac_link"
-dnl echo "ac_link=\"$ac_link\""
-
-pac_compile="`echo $ac_compile | sed -e 's|>.*$|> $pac_logfile 2>\&1|g'`"
-dnl echo "ac_compile=\"$ac_compile\""
-dnl echo "pac_compile=\"$pac_compile\""
-saved_ac_compile="$ac_compile"
-ac_compile="$pac_compile"
-dnl echo "ac_compile=\"$ac_compile\""
-
 FCFLAGS_orig="$FCFLAGS"
 FCFLAGS_opt="$pac_opt $FCFLAGS"
 pac_result="unknown"
+
 AC_LANG_CONFTEST([AC_LANG_PROGRAM()])
 FCFLAGS="$FCFLAGS_orig"
-pac_logfile="pac_test1.log"
-rm -f $pac_logfile
-AC_LINK_IFELSE([], [
+rm -f pac_test1.log
+PAC_LINK_IFELSE_LOG([pac_test1.log], [], [
     FCFLAGS="$FCFLAGS_opt"
-    pac_logfile="pac_test2.log"
-    rm -f $pac_logfile
-    AC_LINK_IFELSE([], [
+    rm -f pac_test2.log
+    PAC_LINK_IFELSE_LOG([pac_test2.log], [], [
         PAC_RUNLOG_IFELSE([diff -b pac_test1.log pac_test2.log],
                           [pac_result=yes], [pac_result=no])
     ],[
@@ -599,23 +575,20 @@ if test "$pac_result" = "yes" ; then
     AC_MSG_CHECKING([whether routines compiled with $pac_opt can be linked with ones compiled without $pac_opt])
     pac_result=unknown
     FCFLAGS="$FCFLAGS_orig"
-    pac_logfile="pac_test3.log"
-    rm -f $pac_logfile
-    AC_COMPILE_IFELSE([
+    rm -f pac_test3.log
+    PAC_COMPILE_IFELSE_LOG([pac_test3.log], [
         AC_LANG_SOURCE([
             subroutine try()
             end
         ])
     ],[
-        mv conftest.$OBJEXT pac_conftest.$OBJEXT
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $LIBS"
 
         FCFLAGS="$FCFLAGS_opt"
-        pac_logfile="pac_test4.log"
-        rm -f $pac_logfile
-        AC_LINK_IFELSE([AC_LANG_PROGRAM()], [
-            diffcmd='diff -b pac_test3.log pac_test4.log'
+        rm -f pac_test4.log
+        PAC_LINK_IFELSE_LOG([pac_test4.log], [AC_LANG_PROGRAM()], [
             PAC_RUNLOG_IFELSE([diff -b pac_test2.log pac_test4.log],
                               [pac_result=yes], [pac_result=no])
         ],[
@@ -631,11 +604,6 @@ if test "$pac_result" = "yes" ; then
 fi
 rm -f pac_test1.log pac_test2.log
 
-dnl Restore everything in AC that has been overwritten
-ac_link="$saved_ac_link"
-ac_compile="$saved_ac_compile"
-dnl echo "ac_link=\"$ac_link\""
-dnl echo "ac_compile=\"$ac_compile\""
 dnl Restore FCFLAGS before 2nd/3rd argument commands are executed,
 dnl as 2nd/3rd argument command could be modifying FCFLAGS.
 FCFLAGS="$FCFLAGS_orig"
@@ -644,10 +612,6 @@ if test "$pac_result" = "yes" ; then
 else
      ifelse([$3],[],[:],[$3])
 fi
-
-# This is needed for Mac OSX 10.5
-rm -rf conftest.dSYM
-rm -f conftest*
 AC_LANG_POP(Fortran)
 ])
 dnl /*D
