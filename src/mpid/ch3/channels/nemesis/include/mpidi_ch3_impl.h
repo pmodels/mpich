@@ -80,6 +80,9 @@ int MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen);
 
+/* macro to access the channel_private fields in the vc */
+#define VC_CH(vc) ((MPIDI_CH3I_VC *)(vc)->channel_private)
+
 struct MPIDI_VC;
 struct MPID_Request;
 struct MPID_nem_copy_buf;

@@ -37,7 +37,7 @@ static int nm_vc_destroy(MPIDI_VC_t *vc)
 
 static int nm_vc_terminate(MPIDI_VC_t *vc)
 {
-    return MPI_SUCCESS;
+    return MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
 }
 
 static int nm_poll(int in_blocking_poll)

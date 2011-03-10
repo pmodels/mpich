@@ -28,7 +28,6 @@ int MPID_nem_connect_to_root(const char *port_name, struct MPIDI_VC *new_vc);
 int MPID_nem_lmt_shm_progress(void);
 int MPID_nem_lmt_dma_progress(void);
 int MPID_nem_lmt_vmsplice_progress(void);
-int MPID_nem_vc_terminate(struct MPIDI_VC *vc);
 
 #ifdef ENABLE_CHECKPOINTING
 extern int MPIDI_nem_ckpt_start_checkpoint;

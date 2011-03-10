@@ -1675,10 +1675,16 @@ static int state_commrdy_handler(struct pollfd *const plfd, sockconn_t *const sc
         mpi_errno = MPID_nem_tcp_recv_handler(sc);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
     }
-    if (IS_WRITEABLE(plfd))
+    if (IS_WRITEABLE(plfd) && !MPIDI_CH3I_Sendq_empty(sc_vc_tcp->send_queue))
     {
         mpi_errno = MPID_nem_tcp_send_queued(sc_vc, &sc_vc_tcp->send_queue);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        /* check to see if this VC is waiting for outstanding sends to
+           finish in order to terminate */
+        if (sc_vc->state == MPIDI_VC_STATE_CLOSED && MPIDI_CH3I_Sendq_empty(sc_vc_tcp->send_queue)) {
+            mpi_errno = MPID_nem_tcp_vc_terminated(sc_vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_STATE_COMMRDY_HANDLER);

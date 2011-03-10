@@ -15,6 +15,18 @@
 #include <signal.h>
 #endif
 
+typedef struct vc_term_element
+{
+    struct vc_term_element *next;
+    MPIDI_VC_t *vc;
+    MPID_Request *req;
+} vc_term_element_t;
+
+static struct { vc_term_element_t *head, *tail; } vc_term_queue;
+#define TERMQ_EMPTY() GENERIC_Q_EMPTY(vc_term_queue)
+#define TERMQ_HEAD() GENERIC_Q_HEAD(vc_term_queue)
+#define TERMQ_ENQUEUE(ep) GENERIC_Q_ENQUEUE(&vc_term_queue, ep, next)
+#define TERMQ_DEQUEUE(epp) GENERIC_Q_DEQUEUE(&vc_term_queue, epp, next)
 
 #define PKTARRAY_SIZE (MPIDI_NEM_PKT_END+1)
 static MPIDI_CH3_PktHandler_Fcn *pktArray[PKTARRAY_SIZE];
@@ -55,6 +67,8 @@ MPIDI_CH3I_shm_sendq_t MPIDI_CH3I_shm_sendq = {NULL, NULL};
 struct MPID_Request *MPIDI_CH3I_shm_active_send = NULL;
 
 static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
+static int shm_connection_terminated(MPIDI_VC_t * vc);
+static int check_terminating_vcs(void);
 
 int (*MPID_nem_local_lmt_progress)(void) = NULL;
 int MPID_nem_local_lmt_pending = FALSE;
@@ -78,6 +92,34 @@ static void sigusr1_handler(int sig)
     if (prev_sighandler)
         prev_sighandler(sig);
 }
+
+#undef FUNCNAME
+#define FUNCNAME check_terminating_vcs
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int check_terminating_vcs(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_CHECK_TERMINATING_VCS);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_CHECK_TERMINATING_VCS);
+
+    while (!TERMQ_EMPTY() && MPID_Request_is_complete(TERMQ_HEAD()->req)) {
+        vc_term_element_t *ep;
+        TERMQ_DEQUEUE(&ep);
+        MPID_Request_release(ep->req);
+        mpi_errno = shm_connection_terminated(ep->vc);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_Free(ep);
+    }
+    
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_CHECK_TERMINATING_VCS);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 /* MPIDI_CH3I_Shm_send_progress() this function makes progress sending
    queued messages on the shared memory queues.  This function is
@@ -207,6 +249,8 @@ int MPIDI_CH3I_Shm_send_progress(void)
         MPIDI_CH3I_shm_active_send = NULL;
         MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+        mpi_errno = check_terminating_vcs();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else
     {
@@ -216,9 +260,11 @@ int MPIDI_CH3I_Shm_send_progress(void)
 
         if (complete)
         {
-            MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
             MPIDI_CH3I_shm_active_send = NULL;
+            MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+            mpi_errno = check_terminating_vcs();
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
         
@@ -845,14 +891,46 @@ int MPIDI_CH3I_Progress_finalize(void)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME shm_connection_terminated
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int shm_connection_terminated(MPIDI_VC_t * vc)
+{
+    /* This function is called after all sends have completed */
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_SHM_CONNECTION_TERMINATED);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_SHM_CONNECTION_TERMINATED);
+
+    mpi_errno = VC_CH(vc)->lmt_vc_terminated(vc);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIU_SHMW_Hnd_finalize(&(VC_CH(vc)->lmt_copy_buf_handle));
+    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    mpi_errno = MPIU_SHMW_Hnd_finalize(&(VC_CH(vc)->lmt_recv_copy_buf_handle));
+    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    
+    mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
+    if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPIU_DBG_MSG_D(CH3_DISCONNECT, TYPICAL, "Terminated VC %d", vc->pg_rank);
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_SHM_CONNECTION_TERMINATED);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Connection_terminate
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_Connection_terminate (MPIDI_VC_t * vc)
+int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
@@ -864,19 +942,60 @@ int MPIDI_CH3_Connection_terminate (MPIDI_VC_t * vc)
         vc->state == MPIDI_VC_STATE_INACTIVE_CLOSED)
         goto fn_exit;
 
-    if (((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
-        mpi_errno = MPID_nem_vc_terminate(vc);
-    else
+    if (VC_CH(vc)->is_local) {
+        MPIU_DBG_MSG(CH3_DISCONNECT, TYPICAL, "VC is local");
+
+        if (vc->state != MPIDI_VC_STATE_CLOSED) {
+            /* VC is terminated as a result of a fault.  Complete
+               outstanding sends with an error and terminate
+               connection immediately. */
+            MPIU_DBG_MSG(CH3_DISCONNECT, TYPICAL, "VC terminated due to fault");
+            mpi_errno = MPIDI_CH3I_Complete_sendq_with_error(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            mpi_errno = shm_connection_terminated(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        } else {
+            /* VC is terminated as a result of the close protocol.
+               Wait for sends to complete, then terminate. */
+
+            if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq)) {
+                /* The sendq is empty, so we can immediately terminate
+                   the connection. */
+                MPIU_DBG_MSG(CH3_DISCONNECT, TYPICAL, "Shm send queue empty, terminating immediately");
+                mpi_errno = shm_connection_terminated(vc);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            } else {
+                /* There may be sends from this VC on the send queue.
+                   Since there is one send queue, we don't want to
+                   search the queue to find the last send from this
+                   VC.  Instead, we use the last send in the queue,
+                   regardless of which VC it's from.  When that send
+                   completes, (since no new messages are sent on this
+                   VC anymore) we know that all sends on this VC must
+                   have completed.  */
+                vc_term_element_t *ep;
+                MPIU_DBG_MSG(CH3_DISCONNECT, TYPICAL, "Shm send queue not empty, waiting to terminate");
+                MPIU_CHKPMEM_MALLOC(ep, vc_term_element_t *, sizeof(vc_term_element_t), mpi_errno, "vc_term_element");
+                ep->vc = vc;
+                ep->req = MPIDI_CH3I_shm_sendq.tail;
+                MPIR_Request_add_ref(ep->req); /* make sure this doesn't get released before we can check it */
+                TERMQ_ENQUEUE(ep);
+            }
+        }
+    
+    } else {
+        MPIU_DBG_MSG(CH3_DISCONNECT, TYPICAL, "VC is remote");
         mpi_errno = MPID_nem_netmod_func->vc_terminate(vc);
-    if(mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIDI_CH3U_Handle_connection (vc, MPIDI_VC_EVENT_TERMINATED);
-    if(mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-fn_exit:
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    
+ fn_exit:
+    MPIU_CHKPMEM_COMMIT();
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
     return mpi_errno;
-fn_fail:
+ fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
 /* end MPIDI_CH3_Connection_terminate() */

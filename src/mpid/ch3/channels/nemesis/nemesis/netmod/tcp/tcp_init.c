@@ -553,28 +553,71 @@ int MPID_nem_tcp_bind (int sockfd)
     goto fn_exit;
 }
 
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_vc_terminate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_vc_terminate (MPIDI_VC_t *vc)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_tcp_vc_terminate(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     int req_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_NEM_TCP_VC_TERMINATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
 
-    MPIDI_FUNC_ENTER(MPID_NEM_TCP_VC_TERMINATE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
+
+    if (vc->state != MPIDI_VC_STATE_CLOSED) {
+        /* VC is terminated as a result of a fault.  Complete
+           outstanding sends with an error and terminate
+           connection immediately. */
+        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+        mpi_errno = MPID_nem_tcp_error_out_send_queue(vc, req_errno);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPID_nem_tcp_vc_terminated(vc);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+        MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+        /* VC is terminated as a result of the close protocol.
+           Wait for sends to complete, then terminate. */
+
+        if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
+            /* The sendq is empty, so we can immediately terminate
+               the connection. */
+            mpi_errno = MPID_nem_tcp_vc_terminated(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+        /* else: just return.  We'll call vc_terminated() from the
+           commrdy_handler once the sendq is empty. */
+    }
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_tcp_vc_terminated
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
+{
+    /* This is called when the VC is to be terminated once all queued
+       sends have been sent. */
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_NEM_TCP_VC_TERMINATED);
+
+    MPIDI_FUNC_ENTER(MPID_NEM_TCP_VC_TERMINATED);
 
     mpi_errno = MPID_nem_tcp_cleanup(vc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
-    MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
-    mpi_errno = MPID_nem_tcp_error_out_send_queue(vc, req_errno);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
+    if(mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_NEM_TCP_VC_TERMINATE);
+    MPIDI_FUNC_EXIT(MPID_NEM_TCP_VC_TERMINATED);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));

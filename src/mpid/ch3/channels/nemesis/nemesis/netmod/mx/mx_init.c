@@ -301,5 +301,7 @@ int MPID_nem_mx_vc_destroy(MPIDI_VC_t *vc)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_mx_vc_terminate (MPIDI_VC_t *vc)
 {
-    return MPI_SUCCESS;
+    /* FIXME: Check to make sure that it's OK to terminate the
+       connection without making sure that all sends have been sent */
+    return MPIDI_CH3U_Handle_connection (vc, MPIDI_VC_EVENT_TERMINATED);
 }

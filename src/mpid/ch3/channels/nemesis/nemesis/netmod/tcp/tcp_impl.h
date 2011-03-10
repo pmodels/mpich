@@ -107,6 +107,7 @@ void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc);
 
 int MPID_nem_tcp_socksm_finalize(void);
 int MPID_nem_tcp_socksm_init(void);
+int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc);
 
 
 int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
