@@ -131,7 +131,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, in
         iov_data_copied += data_iov[i].MPID_IOV_LEN;
     }
 
-    mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->iSendContig(vc, sreq, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN, sreq->dev.tmpbuf, data_sz);
+    mpi_errno = VC_CH(vc)->iSendContig(vc, sreq, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN, sreq->dev.tmpbuf, data_sz);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *sreq_ptr = sreq;

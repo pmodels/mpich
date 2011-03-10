@@ -414,7 +414,7 @@ int MPIDI_nem_ckpt_start(void)
             continue;
        
         MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, i, &vc);
-        vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
+        vc_ch = VC_CH(vc);
 
         MPIDI_Pkt_init(ckpt_pkt, MPIDI_NEM_PKT_CKPT_MARKER);
         ckpt_pkt->wave = current_wave;
@@ -480,7 +480,7 @@ int MPIDI_nem_ckpt_finish(void)
 
         if (ckpt_result == CKPT_CONTINUE) {
             MPIDI_PG_Get_vc(MPIDI_Process.my_pg, i, &vc);
-            vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
+            vc_ch = VC_CH(vc);
             if (!vc_ch->is_local) {
                 mpi_errno = vc_ch->ckpt_continue_vc(vc);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);

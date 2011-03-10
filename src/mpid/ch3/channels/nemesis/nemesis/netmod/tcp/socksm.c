@@ -1074,7 +1074,7 @@ int MPID_nem_tcp_ckpt_cleanup(void)
             continue;
         MPIDI_PG_Get_vc(MPIDI_Process.my_pg, i, &vc);
         {
-            MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+            MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
             MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
             if (vc_ch->is_local || vc_tcp->sc == NULL)
                 continue;
@@ -1516,7 +1516,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_RECV_HANDLER);
 
-    if (((MPIDI_CH3I_VC *)sc_vc->channel_private)->recv_active == NULL)
+    if (VC_CH(sc_vc)->recv_active == NULL)
     {
         /* receive a new message */
         CHECK_EINTR(bytes_recvd, recv(sc_fd, recv_buf, MPID_NEM_TCP_RECV_MAX_PKT_LEN, 0));
@@ -1566,7 +1566,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
     else
     {
         /* there is a pending receive, receive it directly into the user buffer */
-        MPIDI_CH3I_VC *const sc_vc_ch = (MPIDI_CH3I_VC *)sc_vc->channel_private;
+        MPIDI_CH3I_VC *const sc_vc_ch = VC_CH(sc_vc);
         MPID_Request *const rreq = sc_vc_ch->recv_active;
         MPID_IOV *iov = &rreq->dev.iov[rreq->dev.iov_offset];
         int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);

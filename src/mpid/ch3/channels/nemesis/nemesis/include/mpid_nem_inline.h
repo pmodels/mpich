@@ -50,7 +50,7 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_cell_ptr_t el;
     int my_rank;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     /*DO_PAPI (PAPI_reset (PAPI_EventSet)); */
 
@@ -175,7 +175,7 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     char *cell_buf;
     MPIDI_msg_sz_t payload_len;    
     int my_rank;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_SENDV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV);
@@ -277,7 +277,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     char *cell_buf;
     MPIDI_msg_sz_t payload_len;    
     int my_rank;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
@@ -425,7 +425,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
     MPIDI_msg_sz_t datalen;
     int my_rank;
     MPIDI_msg_sz_t last;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
     MPIU_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
@@ -551,7 +551,7 @@ MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, 
     MPIDI_msg_sz_t datalen;
     int my_rank;
     MPIDI_msg_sz_t last;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */    
     
@@ -972,7 +972,7 @@ static inline int
 MPID_nem_mpich2_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     DO_PAPI (PAPI_reset (PAPI_EventSet));
     MPID_nem_queue_enqueue (vc_ch->free_queue, cell);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet,PAPI_vvalues9));

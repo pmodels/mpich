@@ -35,13 +35,13 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 
     MPIU_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
-    if (((MPIDI_CH3I_VC *)vc->channel_private)->iStartContigMsg)
+    if (VC_CH(vc)->iStartContigMsg)
     {
-        mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->iStartContigMsg(vc, hdr, hdr_sz, NULL, 0, sreq_ptr);
+        mpi_errno = VC_CH(vc)->iStartContigMsg(vc, hdr, hdr_sz, NULL, 0, sreq_ptr);
         goto fn_exit;
     }
 
-    /*MPIU_Assert(((MPIDI_CH3I_VC *)vc->channel_private)->is_local);*/
+    /*MPIU_Assert(VC_CH(vc)->is_local);*/
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* This channel uses a fixed length header, the size of which is

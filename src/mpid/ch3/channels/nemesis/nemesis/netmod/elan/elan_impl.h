@@ -65,7 +65,7 @@ typedef struct
 } MPID_nem_elan_vc_area;
 
 /* accessor macro to private fields in VC */
-#define VC_FIELD(vc, field) (((MPID_nem_elan_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)->field)
+#define VC_FIELD(vc, field) (((MPID_nem_elan_vc_area *)VC_CH((vc))->netmod_area.padding)->field)
 
 typedef struct MPID_nem_elan_cell
 {   

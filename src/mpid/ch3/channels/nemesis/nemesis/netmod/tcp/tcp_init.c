@@ -177,7 +177,7 @@ static int ckpt_restart(void)
         if (i == MPIDI_Process.my_pg_rank)
             continue;
         MPIDI_PG_Get_vc(MPIDI_Process.my_pg, i, &vc);
-        vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
+        vc_ch = VC_CH(vc);
         if (!vc_ch->is_local) {
             mpi_errno = vc_ch->ckpt_restart_vc(vc);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -390,7 +390,7 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_VC_INIT);
 

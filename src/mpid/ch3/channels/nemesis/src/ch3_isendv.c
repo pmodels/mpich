@@ -23,7 +23,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV *iov, int n_i
     int again = 0;
     int j;
     int in_cs = FALSE;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISENDV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);

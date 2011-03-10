@@ -31,14 +31,14 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
         goto fn_fail;
     }
 
-    if (((MPIDI_CH3I_VC *)vc->channel_private)->iSendContig)
+    if (VC_CH(vc)->iSendContig)
     {
-        mpi_errno = ((MPIDI_CH3I_VC *)vc->channel_private)->iSendContig(vc, sreq, hdr, hdr_sz, NULL, 0);
+        mpi_errno = VC_CH(vc)->iSendContig(vc, sreq, hdr, hdr_sz, NULL, 0);
         if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         goto fn_exit;
     }
 
-    /* MPIU_Assert(((MPIDI_CH3I_VC *)vc->channel_private)->is_local); */
+    /* MPIU_Assert(VC_CH(vc)->is_local); */
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* This channel uses a fixed length header, the size of which

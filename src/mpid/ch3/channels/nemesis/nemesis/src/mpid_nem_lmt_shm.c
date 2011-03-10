@@ -175,7 +175,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
     MPIU_CHKPMEM_DECL(2);
     MPID_nem_lmt_shm_wait_element_t *e;
     int queue_initially_empty;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     char *ser_lmt_copy_buf_handle=NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_START_RECV);
 
@@ -254,7 +254,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
     int done = FALSE;
     int queue_initially_empty;
     MPID_nem_lmt_shm_wait_element_t *e;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIU_CHKPMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_START_SEND);
 
@@ -342,7 +342,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
 static int get_next_req(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPID_nem_copy_buf_t * const copy_buf = vc_ch->lmt_copy_buf;
     int prev_owner_rank;
     MPID_Request *req;
@@ -457,7 +457,7 @@ static int get_next_req(MPIDI_VC_t *vc)
 static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPID_nem_copy_buf_t * const copy_buf = vc_ch->lmt_copy_buf;
     MPIDI_msg_sz_t first;
     MPIDI_msg_sz_t last;
@@ -555,7 +555,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPID_nem_copy_buf_t * const copy_buf = vc_ch->lmt_copy_buf;
     MPIDI_msg_sz_t first;
     MPIDI_msg_sz_t last, expected_last;
@@ -739,7 +739,7 @@ static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
     int mpi_errno = MPI_SUCCESS;
     int done_req = FALSE;
     MPID_nem_lmt_shm_wait_element_t *we;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_LMT_SHM_PROGRESS_VC);
 
     MPIDI_FUNC_ENTER(MPID_STATE_LMT_SHM_PROGRESS_VC);
@@ -806,10 +806,10 @@ int MPID_nem_lmt_shm_progress(void)
         if (done)
         {
             lmt_shm_prog_element_t *f;
-            MPIU_Assert(LMT_SHM_Q_EMPTY(((MPIDI_CH3I_VC *)pe->vc->channel_private)->lmt_queue));
-            MPIU_Assert(((MPIDI_CH3I_VC *)pe->vc->channel_private)->lmt_active_lmt == NULL);
-            MPIU_Assert(((MPIDI_CH3I_VC *)pe->vc->channel_private)->lmt_enqueued);
-            ((MPIDI_CH3I_VC *)pe->vc->channel_private)->lmt_enqueued = FALSE;
+            MPIU_Assert(LMT_SHM_Q_EMPTY(VC_CH(pe->vc)->lmt_queue));
+            MPIU_Assert(VC_CH(pe->vc)->lmt_active_lmt == NULL);
+            MPIU_Assert(VC_CH(pe->vc)->lmt_enqueued);
+            VC_CH(pe->vc)->lmt_enqueued = FALSE;
 
             f = pe;
             pe = pe->next;
@@ -837,7 +837,7 @@ int MPID_nem_lmt_shm_progress(void)
 int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPID_nem_lmt_shm_wait_element_t *we;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
 

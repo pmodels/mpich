@@ -75,4 +75,7 @@ int MPIDU_Sock_get_conninfo_from_bc( const char *bc,
 int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t );
 int MPIDU_CH3I_ShutdownListener( void );
 
+/* macro to access the channel_private fields in the vc */
+#define VC_CH(vc) ((MPIDI_CH3I_VC *)(vc)->channel_private)
+
 #endif

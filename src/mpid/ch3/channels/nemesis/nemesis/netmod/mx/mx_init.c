@@ -230,7 +230,7 @@ int
 MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
 {
    uint32_t threshold;
-   MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+   MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
    int mpi_errno = MPI_SUCCESS;
 
    /* first make sure that our private fields in the vc fit into the area provided  */

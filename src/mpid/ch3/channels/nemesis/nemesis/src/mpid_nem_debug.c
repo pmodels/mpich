@@ -61,7 +61,7 @@ void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
     MPID_Request * sreq;
     int i;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     fprintf(stream, "..VC ptr=%p pg_rank=%d state=%s:\n", vc, vc->pg_rank, vc_state_to_str(vc->state));
     if (vc_ch->is_local) {

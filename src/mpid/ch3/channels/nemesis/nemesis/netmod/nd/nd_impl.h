@@ -268,41 +268,41 @@ typedef struct {
 } MPID_Nem_nd_vc_area;
 
 #define MPID_NEM_ND_IS_BLOCKING_REQ(_reqp) ((_reqp)->dev.OnDataAvail != NULL)
-#define MPID_NEM_ND_VCCH_GET_ACTIVE_RECV_REQ(_vc) (((MPIDI_CH3I_VC *)((_vc)->channel_private))->recv_active)
-#define MPID_NEM_ND_VCCH_SET_ACTIVE_RECV_REQ(_vc, _req) (((MPIDI_CH3I_VC *)((_vc)->channel_private))->recv_active = _req)
-#define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_INIT(_vc) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd) = MPID_NEM_ND_CONN_HND_INVALID)
-#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_INIT(_vc) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->tmp_conn_hnd) = MPID_NEM_ND_CONN_HND_INVALID)
+#define MPID_NEM_ND_VCCH_GET_ACTIVE_RECV_REQ(_vc) (VC_CH(((_vc)))->recv_active)
+#define MPID_NEM_ND_VCCH_SET_ACTIVE_RECV_REQ(_vc, _req) (VC_CH(((_vc)))->recv_active = _req)
+#define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_INIT(_vc) ((((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->conn_hnd) = MPID_NEM_ND_CONN_HND_INVALID)
+#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_INIT(_vc) ((((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->tmp_conn_hnd) = MPID_NEM_ND_CONN_HND_INVALID)
 #define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_INIT(_vc)  do{\
-    (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq).head = NULL;        \
-    (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq).tail = NULL;        \
+    (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq).head = NULL;        \
+    (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq).tail = NULL;        \
 }while(0)
 
-#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_EMPTY(_vc) GENERIC_Q_EMPTY (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq)
-#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_HEAD(_vc) GENERIC_Q_HEAD (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq)
-#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_TAIL(_vc) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq).tail)
-#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_ENQUEUE(_vc, _reqp) GENERIC_Q_ENQUEUE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq), _reqp, dev.next)
-#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_DEQUEUE(_vc, _reqp) GENERIC_Q_DEQUEUE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq), _reqp, dev.next)
-#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_REM_TAIL(_vc, _reqp) GENERIC_Q_SEARCH_REMOVE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->posted_sendq), ( (_reqp) && ((*_reqp)->dev.next == NULL) ), _reqp, MPID_Request, dev.next)
+#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_EMPTY(_vc) GENERIC_Q_EMPTY (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq)
+#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_HEAD(_vc) GENERIC_Q_HEAD (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq)
+#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_TAIL(_vc) ((((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq).tail)
+#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_ENQUEUE(_vc, _reqp) GENERIC_Q_ENQUEUE (&(((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq), _reqp, dev.next)
+#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_DEQUEUE(_vc, _reqp) GENERIC_Q_DEQUEUE (&(((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq), _reqp, dev.next)
+#define MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_REM_TAIL(_vc, _reqp) GENERIC_Q_SEARCH_REMOVE (&(((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->posted_sendq), ( (_reqp) && ((*_reqp)->dev.next == NULL) ), _reqp, MPID_Request, dev.next)
 
 #define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_INIT(_vc)  do{\
-    (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq).head = NULL;        \
-    (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq).tail = NULL;        \
+    (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->pending_sendq).head = NULL;        \
+    (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->pending_sendq).tail = NULL;        \
 }while(0)
 
-#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_EMPTY(_vc) GENERIC_Q_EMPTY (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq)
-#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_HEAD(_vc) GENERIC_Q_HEAD (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq)
-#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_ENQUEUE(_vc, _reqp) GENERIC_Q_ENQUEUE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq), _reqp, dev.next)
-#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_DEQUEUE(_vc, _reqp) GENERIC_Q_DEQUEUE (&(((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->pending_sendq), _reqp, dev.next)
+#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_EMPTY(_vc) GENERIC_Q_EMPTY (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->pending_sendq)
+#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_HEAD(_vc) GENERIC_Q_HEAD (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->pending_sendq)
+#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_ENQUEUE(_vc, _reqp) GENERIC_Q_ENQUEUE (&(((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->pending_sendq), _reqp, dev.next)
+#define MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_DEQUEUE(_vc, _reqp) GENERIC_Q_DEQUEUE (&(((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->pending_sendq), _reqp, dev.next)
 
 /* Accessor macro to channel private fields in VC */
 /* Netmod area accessors */
-#define MPID_NEM_ND_VCCH_NETMOD_FIELD_GET(_vc, _field) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->_field)
-#define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_SET(_vc, _conn_hnd) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd) = _conn_hnd)
-#define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->conn_hnd)
-#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_SET(_vc, _conn_hnd) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->tmp_conn_hnd) = _conn_hnd)
-#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->tmp_conn_hnd)
-#define MPID_NEM_ND_VCCH_NETMOD_STATE_SET(_vc, _state) ((((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->state) = _state)
-#define MPID_NEM_ND_VCCH_NETMOD_STATE_GET(_vc) (((MPID_Nem_nd_vc_area *)((MPIDI_CH3I_VC *)(_vc)->channel_private)->netmod_area.padding)->state)
+#define MPID_NEM_ND_VCCH_NETMOD_FIELD_GET(_vc, _field) (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->_field)
+#define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_SET(_vc, _conn_hnd) ((((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->conn_hnd) = _conn_hnd)
+#define MPID_NEM_ND_VCCH_NETMOD_CONN_HND_GET(_vc) (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->conn_hnd)
+#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_SET(_vc, _conn_hnd) ((((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->tmp_conn_hnd) = _conn_hnd)
+#define MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_GET(_vc) (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->tmp_conn_hnd)
+#define MPID_NEM_ND_VCCH_NETMOD_STATE_SET(_vc, _state) ((((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->state) = _state)
+#define MPID_NEM_ND_VCCH_NETMOD_STATE_GET(_vc) (((MPID_Nem_nd_vc_area *)VC_CH((_vc))->netmod_area.padding)->state)
 
 /* VC Netmod util funcs */
 #define MPID_NEM_ND_VC_IS_CONNECTED(_vc) (  \

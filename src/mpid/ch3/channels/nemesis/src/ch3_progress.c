@@ -419,9 +419,9 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
                     MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_FBOX_SOURCE(cell), &vc);
 		   
-		    MPIU_Assert(((MPIDI_CH3I_VC *)vc->channel_private)->recv_active == NULL &&
-                                ((MPIDI_CH3I_VC *)vc->channel_private)->pending_pkt_len == 0);
-                    vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+		    MPIU_Assert(VC_CH(vc)->recv_active == NULL &&
+                                VC_CH(vc)->pending_pkt_len == 0);
+                    vc_ch = VC_CH(vc);
 
                     /* invalid pkt data will result in unpredictable behavior */
                     MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_NEM_PKT_END);
@@ -617,7 +617,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *rreq = NULL;
     int complete;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_HANDLE_PKT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_HANDLE_PKT);
@@ -1053,7 +1053,7 @@ static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_netmod_t * const netmod_pkt = (MPID_nem_pkt_netmod_t *)pkt;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_PKT_NETMOD_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_PKT_NETMOD_HANDLER);
@@ -1191,7 +1191,7 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
             goto fn_exit;
 
         /* don't enqueue non-local processes */
-        if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+        if (!VC_CH(vc)->is_local)
             goto fn_exit;
 
         /* Translate the communicator rank to a local rank.  Note that there is an
@@ -1237,7 +1237,7 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq)
         /* don't use MPID_NEM_IS_LOCAL, it doesn't handle dynamic processes */
         MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.parts.rank, &vc);
         MPIU_Assert(vc != NULL);
-        if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+        if (!VC_CH(vc)->is_local)
             goto fn_exit;
 
         /* Translate the communicator rank to a local rank.  Note that there is an

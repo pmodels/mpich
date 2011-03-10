@@ -47,7 +47,7 @@ typedef struct
 } MPID_nem_tcp_vc_area;
 
 /* macro for tcp private in VC */
-#define VC_TCP(vc) ((MPID_nem_tcp_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)
+#define VC_TCP(vc) ((MPID_nem_tcp_vc_area *)VC_CH((vc))->netmod_area.padding)
 
 #define ASSIGN_SC_TO_VC(vc_tcp_, sc_) do {      \
         (vc_tcp_)->sc = (sc_);                  \

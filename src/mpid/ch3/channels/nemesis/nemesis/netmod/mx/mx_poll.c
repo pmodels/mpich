@@ -248,7 +248,7 @@ int MPID_nem_mx_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
   MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MX_DIRECTRECV);    
   MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MX_DIRECTRECV);    
   
-  if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+  if (!VC_CH(vc)->is_local)
   {
       uint64_t          match_info = NEM_MX_MATCH_DIRECT;
       uint64_t          match_mask = NEM_MX_MATCH_FULL_MASK;

@@ -86,7 +86,7 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_DIRECTRECV);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_DIRECTRECV);    
     
-    if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+    if (!VC_CH(vc)->is_local)
     {
 	nm_tag_t          match_info = 0; 
 	nm_tag_t          match_mask = NEM_NMAD_MATCH_FULL_MASK; 	    
