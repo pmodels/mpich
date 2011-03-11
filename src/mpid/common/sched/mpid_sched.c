@@ -666,7 +666,19 @@ int MPID_Sched_copy(void *inbuf,  int incount,  MPI_Datatype intype,
 
     dtype_add_ref_if_not_builtin(intype);
     dtype_add_ref_if_not_builtin(outtype);
+
+    /* some sanity checking up front */
+#if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
+    {
+        int intype_size, outtype_size;
+        MPID_Datatype_get_size_macro(intype, intype_size);
+        MPID_Datatype_get_size_macro(outtype, outtype_size);
+        if (incount * intype_size > outcount * outtype_size) {
+            MPIU_Error_printf("truncation: intype=%#x, intype_size=%d, incount=%d, outtype=%#x, outtype_size=%d outcount=%d\n",
+                              intype, intype_size, incount, outtype, outtype_size, outcount);
+        }
     }
+#endif
 
 fn_exit:
     return mpi_errno;
