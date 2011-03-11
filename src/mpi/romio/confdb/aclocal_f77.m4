@@ -538,7 +538,7 @@ AC_COMPILE_IFELSE([
     # pac_f77compile_ok=yes
     PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     PAC_RUNLOG([test -d conftestdir || mkdir conftestdir])
-    PAC_RUNLOG([${AR-ar} ${ARFLAGS-cr} conftestdir/libf77conftest.a pac_f77conftest.$OBJEXT])
+    PAC_RUNLOG([${AR-ar} ${AR_FLAGS-cr} conftestdir/libf77conftest.a pac_f77conftest.$OBJEXT])
     PAC_RUNLOG([${RANLIB-ranlib} conftestdir/libf77conftest.a])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
