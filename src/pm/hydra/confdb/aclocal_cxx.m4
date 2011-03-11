@@ -105,70 +105,71 @@ dnl variable containing the option name as the first argument.
 dnl D*/
 AC_DEFUN([PAC_CXX_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether C++ compiler accepts option $1])
-save_CXXFLAGS="$CXXFLAGS"
-CXXFLAGS="$1 $CXXFLAGS"
-rm -f conftest.out
-echo 'int foo(void);int foo(void){return 0;}' > conftest2.cpp
-echo 'int main(void);int main(void){return 0;}' > conftest.cpp
-if ${CXX-g++} $save_CXXFLAGS $CPPFLAGS -o conftest conftest.cpp $LDFLAGS >conftest.bas 2>&1 ; then
-   if ${CXX-g++} $CXXFLAGS $CPPFLAGS -o conftest conftest.cpp $LDFLAGS >conftest.out 2>&1 ; then
-      if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
-         AC_MSG_RESULT(yes)
-         AC_MSG_CHECKING([whether routines compiled with $1 can be linked with ones compiled without $1])       
-         rm -f conftest.out
-         rm -f conftest.bas
-         if ${CXX-g++} -c $save_CXXFLAGS $CPPFLAGS conftest2.cpp >conftest2.out 2>&1 ; then
-            if ${CXX-g++} $CXXFLAGS $CPPFLAGS -o conftest conftest2.o conftest.cpp $LDFLAGS >conftest.bas 2>&1 ; then
-               if ${CXX-g++} $CXXFLAGS $CPPFLAGS -o conftest conftest2.o conftest.cpp $LDFLAGS >conftest.out 2>&1 ; then
-                  if diff -b conftest.out conftest.bas >/dev/null 2>&1 ; then
-	             AC_MSG_RESULT(yes)	  
-		     CXXFLAGS="$save_CXXFLAGS"
-                     ifelse($2,,CXXOPTIONS="$CXXOPTIONS $1",$2)
-                  elif test -s conftest.out ; then
-	             cat conftest.out >&AC_FD_CC
-	             AC_MSG_RESULT(no)
-                     CXXFLAGS="$save_CXXFLAGS"
-	             $3
-                  else
-                     AC_MSG_RESULT(no)
-                     CXXFLAGS="$save_CXXFLAGS"
-	             $3
-                  fi  
-               else
-	          if test -s conftest.out ; then
-	             cat conftest.out >&AC_FD_CC
-	          fi
-                  AC_MSG_RESULT(no)
-                  CXXFLAGS="$save_CXXFLAGS"
-                  $3
-               fi
-	    else
-               # Could not link with the option!
-               AC_MSG_RESULT(no)
-            fi
-         else
-            if test -s conftest2.out ; then
-               cat conftest2.out >&AC_FD_CC
-            fi
-	    AC_MSG_RESULT(no)
-            CXXFLAGS="$save_CXXFLAGS"
-	    $3
-         fi
-      else
-         cat conftest.out >&AC_FD_CC
-         AC_MSG_RESULT(no)
-         $3
-         CXXFLAGS="$save_CXXFLAGS"         
-      fi
-   else
-      AC_MSG_RESULT(no)
-      $3
-      if test -s conftest.out ; then cat conftest.out >&AC_FD_CC ; fi    
-      CXXFLAGS="$save_CXXFLAGS"
-   fi
-else
-    # Could not compile without the option!
-    AC_MSG_RESULT(no)
+pac_opt="$1"
+AC_LANG_PUSH([C++])
+CXXFLAGS_orig="$CXXFLAGS"
+CXXFLAGS_opt="$pac_opt $CXXFLAGS"
+pac_result="unknown"
+
+AC_LANG_CONFTEST([AC_LANG_PROGRAM()])
+CXXFLAGS="$CXXFLAGS_orig"
+rm -f pac_test1.log
+PAC_LINK_IFELSE_LOG([pac_test1.log], [], [
+    CXXFLAGS="$CXXFLAGS_opt"
+    rm -f pac_test2.log
+    PAC_LINK_IFELSE_LOG([pac_test2.log], [], [
+        PAC_RUNLOG_IFELSE([diff -b pac_test1.log pac_test2.log],
+                          [pac_result=yes],[pac_result=no])
+    ],[
+        pac_result=no
+    ])
+], [
+    pac_result=no
+])
+AC_MSG_RESULT([$pac_result])
+dnl Delete the conftest created by AC_LANG_CONFTEST.
+rm -f conftest.$ac_ext
+
+if test "$pac_result" = "yes" ; then
+    AC_MSG_CHECKING([whether routines compiled with $pac_opt can be linked with ones compiled without $pac_opt])
+    pac_result=unknown
+    CXXFLAGS="$CXXFLAGS_orig"
+    rm -f pac_test3.log
+    PAC_COMPILE_IFELSE_LOG([pac_test3.log], [
+        AC_LANG_SOURCE([
+            int foo(void);
+            int foo(void){return 0;}
+        ])
+    ],[
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+        saved_LIBS="$LIBS"
+        LIBS="pac_conftest.$OBJEXT $LIBS"
+
+        CXXFLAGS="$CXXFLAGS_opt"
+        rm -f pac_test4.log
+        PAC_LINK_IFELSE_LOG([pac_test4.log], [AC_LANG_PROGRAM()], [
+            PAC_RUNLOG_IFELSE([diff -b pac_test2.log pac_test4.log],
+                              [pac_result=yes], [pac_result=no])
+        ],[
+            pac_result=no
+        ])
+        LIBS="$saved_LIBS"
+        rm -f pac_conftest.$OBJEXT
+    ],[
+        pac_result=no
+    ])
+    AC_MSG_RESULT([$pac_result])
+    rm -f pac_test3.log pac_test4.log
 fi
-rm -f conftest*
+rm -f pac_test1.log pac_test2.log
+
+dnl Restore CXXFLAGS before 2nd/3rd argument commands are executed,
+dnl as 2nd/3rd argument command could be modifying CXXFLAGS.
+CXXFLAGS="$CXXFLAGS_orig"
+if test "$pac_result" = "yes" ; then
+     ifelse([$2],[],[CXXOPTIONS="$CXXOPTIONS $1"],[$2])
+else
+     ifelse([$3],[],[:],[$3])
+fi
+AC_LANG_POP([C++])
 ])
