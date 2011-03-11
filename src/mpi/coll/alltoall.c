@@ -439,16 +439,12 @@ int MPIR_Alltoall_intra(
 	      and posting new isend/irecv as others complete.  This avoids
 	      synchronization delays at the end of each block (when
 	      there are only a few isend/irecvs left)
-	   Finally, the parameters used (MPIR_ALLTOALL_MEDIUM_MSG and
-	   MPIR_ALLTOALL_THROTTLE) need to be tunable.
 	 */
         int ii, ss, bblock;
 
         bblock = MPIR_PARAM_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
-	/* FIXME: This should use the memory macros (there are storage
-	   leaks here if there is an error, for example) */
         MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request *, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
 
         MPIU_CHKLMEM_MALLOC(starray, MPI_Status *, 2*bblock*sizeof(MPI_Status), mpi_errno, "starray");
