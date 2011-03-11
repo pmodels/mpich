@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# (C) 2010 by Argonne National Laboratory.
+# (C) 2011by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 #
 
@@ -26,6 +26,10 @@ use Getopt::Long;
 # to be true. [goodell@ 2010-04-26]
 use Digest::MD5 qw();
 
+# To format README file
+use Text::Wrap;
+$Text::Wrap::unexpand = 0; # disable hard tabs in output
+
 ##################################################
 
 # set true to enable debug output
@@ -43,6 +47,7 @@ my $param_file = "src/util/param/params.yml";
 # output source files
 my $header_file = "src/include/mpich_param_vals.h";
 my $c_file      = "src/util/param/param_vals.c";
+my $readme_file = "README.envvar";
 
 GetOptions(
     "help!"       => \&print_usage_and_exit,
@@ -52,6 +57,7 @@ GetOptions(
     "param-file"  => \$param_file,
     "header=s"    => \$header_file,
     "c-file=s"    => \$c_file,
+    "readme-file=s" => \$readme_file,
 ) or die "unable to parse options, stopped";
 
 sub print_usage_and_exit {
@@ -98,8 +104,9 @@ foreach my $p (@{$params->{parameters}}) {
 
 ########################################################################
 # setup output files
-open(PARAM_HDR, '>', $header_file);
-open(PARAM_C,   '>', $c_file);
+open(PARAM_HDR,    '>', $header_file);
+open(PARAM_C,      '>', $c_file);
+open(PARAM_README, '>', $readme_file);
 
 my $hdr_guard = header_to_incl_guard($header_file);
 my $param_file_md5 = md5sum($param_file);
@@ -107,7 +114,7 @@ my $param_file_md5 = md5sum($param_file);
 print PARAM_HDR <<EOT;
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2011 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 /* automatically generated
@@ -126,7 +133,7 @@ EOT
 print PARAM_C <<EOT;
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2011 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 /* automatically generated
@@ -138,6 +145,17 @@ print PARAM_C <<EOT;
  */
 
 #include "mpiimpl.h"
+
+EOT
+
+print PARAM_README <<EOT;
+(C) 2011 by Argonne National Laboratory.
+    See COPYRIGHT in top-level directory.
+
+This file lists the various environment variables available to change the
+behavior of the MPICH2 library.  These are intended to be used by advanced
+users.
+---------------------------------------------------------------------------
 
 EOT
 
@@ -342,6 +360,34 @@ fn_fail:
 
 EOT
 
+foreach my $p (@{$params->{parameters}}) {
+    my @env_names = ();
+    my $first;
+    my $alt;
+
+    # process extra envs first so the primary always wins
+    push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, "${uc_ns}_" . $p->{name};
+    push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
+
+    print PARAM_README "${alt_ns}_$p->{name}\n";
+
+    $first = 1;
+    foreach $alt (@env_names) {
+        if ($first) {
+            print PARAM_README "    Aliases: $alt\n";
+        } else {
+            print PARAM_README "             $alt\n";
+        }
+        $first = 0;
+    }
+
+    print PARAM_README wrap("    Description: ", "        ", $p->{description} . "\n");
+    print PARAM_README "\n";
+}
+
+
 ########################################################################
 # clean up
 
@@ -375,6 +421,17 @@ print PARAM_HDR <<EOT;
 #endif /* $hdr_guard */
 EOT
 close(PARAM_HDR);
+
+print PARAM_README <<EOT;
+---------------------------------------------------------------------------
+
+Automatically generated
+  by:   $0
+  at:   $run_timestamp
+  from: $param_file (md5sum $param_file_md5)
+
+EOT
+close(PARAM_README);
 
 ########################################################################
 # helper subroutines
