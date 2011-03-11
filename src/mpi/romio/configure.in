@@ -836,7 +836,7 @@ if test "$NOF77" = 0 ; then
         $FORTRAN_MPI_OFFSET j
         end
 EOF
-    if $F77 -o conftest conftest.f >>config.log 2>&1 && test -x conftest ; then
+    if $F77 -o conftest$EXEEXT conftest.f >>config.log 2>&1 && test -x conftest$EXEEXT ; then
         ac_cv_f77_offset_type_works=yes
     fi
     rm -f conftest*
@@ -851,7 +851,7 @@ EOF
         integer (kind=$MPI_OFFSET_KIND_VAL) j
         end
 EOF
-        if $F77 -o conftest conftest.f >>config.log 2>&1 && test -x conftest ; then
+        if $F77 -o conftest$EXEEXT conftest.f >>config.log 2>&1 && test -x conftest$EXEEXT ; then
             ac_cv_f77_allows_offset_kind=yes
         fi
         rm -f conftest*
@@ -947,7 +947,7 @@ extern int PFoo(int);
 int main(int argc, char **argv) {
 return PFoo(0);}
 EOF
-    ac_link2='${CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS conftest1.c conftest2.c $LIBS >conftest.out 2>&1'
+    ac_link2='${CC-cc} -o conftest$EXEEXT $CFLAGS $CPPFLAGS $LDFLAGS conftest1.c conftest2.c $LIBS >conftest.out 2>&1'
     if eval $ac_link2 ; then
         AC_MSG_RESULT(yes)
         AC_MSG_CHECKING([that the compiler correctly implements weak symbols])
