@@ -18,6 +18,24 @@
 #define dprintf(...) do{}while(0)
 #endif
 
+/* helper macros to improve code readability */
+#define dtype_add_ref_if_not_builtin(datatype_)                    \
+    do {                                                           \
+        if (HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN) { \
+            MPID_Datatype *dtp_ = NULL;                            \
+            MPID_Datatype_get_ptr((datatype_), dtp_);              \
+            MPID_Datatype_add_ref(dtp_);                           \
+        }                                                          \
+    } while (0)
+#define dtype_release_if_not_builtin(datatype_)                    \
+    do {                                                           \
+        if (HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN) { \
+            MPID_Datatype *dtp_ = NULL;                            \
+            MPID_Datatype_get_ptr((datatype_), dtp_);              \
+            MPID_Datatype_release(dtp_);                           \
+        }                                                          \
+    } while (0)
+
 /* TODO move to a header somewhere? */
 void MPIDU_Sched_dump(struct MPIDU_Sched *s);
 void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE *fh);
@@ -158,6 +176,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
             mpi_errno = MPIR_Localcopy(e->u.copy.inbuf, e->u.copy.incount, e->u.copy.intype,
                                        e->u.copy.outbuf, e->u.copy.outcount, e->u.copy.outtype);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            dtype_release_if_not_builtin(e->u.copy.intype);
+            dtype_release_if_not_builtin(e->u.copy.outtype);
             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             break;
         case MPIDU_SCHED_ENTRY_NOP:
@@ -424,11 +444,7 @@ int MPID_Sched_send(void *buf, int count, MPI_Datatype datatype, int dest, MPID_
      * underlying send is actually posted, so we must add a reference here and
      * release it at entry completion time */
     MPIR_Comm_add_ref(comm);
-    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(datatype, dtp);
-        MPID_Datatype_add_ref(dtp);
-    }
+    dtype_add_ref_if_not_builtin(datatype);
 
 fn_exit:
     return mpi_errno;
@@ -466,11 +482,7 @@ int MPID_Sched_ssend(void *buf, int count, MPI_Datatype datatype, int dest, MPID
      * underlying send is actually posted, so we must add a reference here and
      * release it at entry completion time */
     MPIR_Comm_add_ref(comm);
-    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(datatype, dtp);
-        MPID_Datatype_add_ref(dtp);
-    }
+    dtype_add_ref_if_not_builtin(datatype);
 
 fn_exit:
     return mpi_errno;
@@ -508,11 +520,7 @@ int MPID_Sched_send_defer(void *buf, int *count, MPI_Datatype datatype, int dest
      * underlying send is actually posted, so we must add a reference here and
      * release it at entry completion time */
     MPIR_Comm_add_ref(comm);
-    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(datatype, dtp);
-        MPID_Datatype_add_ref(dtp);
-    }
+    dtype_add_ref_if_not_builtin(datatype);
 
 fn_exit:
     return mpi_errno;
@@ -545,11 +553,7 @@ int MPID_Sched_recv_status(void *buf, int count, MPI_Datatype datatype, int src,
     e->u.recv.status = status;
 
     MPIR_Comm_add_ref(comm);
-    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(datatype, dtp);
-        MPID_Datatype_add_ref(dtp);
-    }
+    dtype_add_ref_if_not_builtin(datatype);
 
 fn_exit:
     return mpi_errno;
@@ -582,11 +586,7 @@ int MPID_Sched_recv(void *buf, int count, MPI_Datatype datatype, int src, MPID_C
     e->u.recv.status = MPI_STATUS_IGNORE;
 
     MPIR_Comm_add_ref(comm);
-    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(datatype, dtp);
-        MPID_Datatype_add_ref(dtp);
-    }
+    dtype_add_ref_if_not_builtin(datatype);
 
 fn_exit:
     return mpi_errno;
@@ -618,11 +618,7 @@ int MPID_Sched_reduce(void *inbuf, void *inoutbuf, int count, MPI_Datatype datat
     reduce->datatype = datatype;
     reduce->op = op;
 
-    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(datatype, dtp);
-        MPID_Datatype_add_ref(dtp);
-    }
+    dtype_add_ref_if_not_builtin(datatype);
     if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
         MPID_Op *op_ptr = NULL;
         MPID_Op_get_ptr(op, op_ptr);
@@ -639,8 +635,13 @@ fn_fail:
 #define FUNCNAME MPID_Sched_copy
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* packing/unpacking can be accomplished by passing MPI_PACKED as either intype
- * or outtype */
+/* Schedules a copy of "incount" copies of "intype" from "inbuf" to "outbuf" as
+ * specified by "outcount" and "outtype".  It is erroneous to attempt to copy
+ * more data than will fit into the (outbuf,outcount,outtype)-triple.  This
+ * corresponds naturally with the buffer sizing rules for send-recv.
+ *
+ * Packing/unpacking can be accomplished by passing MPI_PACKED as either intype
+ * or outtype. */
 int MPID_Sched_copy(void *inbuf,  int incount,  MPI_Datatype intype,
                     void *outbuf, int outcount, MPI_Datatype outtype, MPID_Sched_t s)
 {
@@ -663,15 +664,8 @@ int MPID_Sched_copy(void *inbuf,  int incount,  MPI_Datatype intype,
     copy->outcount = outcount;
     copy->outtype = outtype;
 
-    if (HANDLE_GET_KIND(intype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(intype, dtp);
-        MPID_Datatype_add_ref(dtp);
-    }
-    if (HANDLE_GET_KIND(outtype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype *dtp = NULL;
-        MPID_Datatype_get_ptr(outtype, dtp);
-        MPID_Datatype_add_ref(dtp);
+    dtype_add_ref_if_not_builtin(intype);
+    dtype_add_ref_if_not_builtin(outtype);
     }
 
 fn_exit:
@@ -794,11 +788,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         MPID_Request_release(e->u.send.sreq);
                         e->u.send.sreq = NULL;
                         MPIR_Comm_release(e->u.send.comm, /*isDisconnect=*/FALSE);
-                        if (HANDLE_GET_KIND(e->u.send.datatype) != HANDLE_KIND_BUILTIN) {
-                            MPID_Datatype *dtp = NULL;
-                            MPID_Datatype_get_ptr(e->u.send.datatype, dtp);
-                            MPID_Datatype_release(dtp);
-                        }
+                        dtype_release_if_not_builtin(e->u.send.datatype);
                         if (mpi_errno) {
                             e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                             MPIU_ERR_POP(mpi_errno);
@@ -816,11 +806,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         MPID_Request_release(e->u.recv.rreq);
                         e->u.recv.rreq = NULL;
                         MPIR_Comm_release(e->u.recv.comm, /*isDisconnect=*/FALSE);
-                        if (HANDLE_GET_KIND(e->u.recv.datatype) != HANDLE_KIND_BUILTIN) {
-                            MPID_Datatype *dtp = NULL;
-                            MPID_Datatype_get_ptr(e->u.recv.datatype, dtp);
-                            MPID_Datatype_release(dtp);
-                        }
+                        dtype_release_if_not_builtin(e->u.recv.datatype);
                         if (mpi_errno) {
                             e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                             MPIU_ERR_POP(mpi_errno);
