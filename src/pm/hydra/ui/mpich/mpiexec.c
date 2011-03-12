@@ -125,18 +125,16 @@ static void signal_cb(int signum)
 
     HYDU_FUNC_ENTER();
 
-    if (signum == SIGINT || signum == SIGQUIT || signum == SIGTERM) {
-        /* We don't want to send the abort signal directly to the
-         * proxies, since that would require two processes (this
-         * asynchronous process and the main process) to use the same
-         * control socket, potentially resulting in data
-         * corruption. The strategy we use is to set the abort flag
-         * and send a signal to ourselves. The signal callback does
-         * the process cleanup instead. */
+    if (signum == SIGINT) {
+        /* SIGINT is a special signal which we don't send to the
+         * proxies directly. This is our fallback path if something
+         * went wrong with Hydra and the user wants to abort. */
         cmd.type = HYD_CLEANUP;
         HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
-    else if (signum == SIGUSR1 || signum == SIGALRM) {
+    else if (signum == SIGALRM) {
+        /* SIGALRM is special signal that indicates that a checkpoint
+         * needs to be initiated */
         if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
             HYDU_dump(stderr, "No checkpoint prefix provided\n");
             return;
@@ -150,11 +148,11 @@ static void signal_cb(int signum)
         cmd.type = HYD_CKPOINT;
         HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
-    else if (signum == SIGKILL) {
+    else {
+        /* All other signals are forwarded to the user */
         cmd.type = HYD_SIGNAL;
         HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
-    /* Ignore all other signals */
 
     HYDU_FUNC_EXIT();
     return;

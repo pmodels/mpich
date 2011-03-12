@@ -15,15 +15,9 @@ struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
 void HYD_pmcd_pmip_kill_localprocs(void)
 {
-    int i;
-
-    HYDU_FUNC_ENTER();
-
     /* Kill all processes including the proxy */
     kill(0, SIGTERM);
     kill(0, SIGKILL);
-
-    HYDU_FUNC_EXIT();
 }
 
 static HYD_status control_port_fn(char *arg, char ***argv)
