@@ -32,7 +32,8 @@ static void usage(void)
     printf("    -genv {name} {value}             environment variable name and value\n");
     printf("    -genvlist {env1,env2,...}        environment variable list to pass\n");
     printf("    -genvnone                        do not pass any environment variables\n");
-    printf("    -genvall                         pass all environment variables (default)\n");
+    printf("    -genvall                         pass all environment variables not managed\n");
+    printf("                                          by the launcher (default)\n");
 
     printf("\n");
     printf("  Other global options:\n");
@@ -116,6 +117,11 @@ static void usage(void)
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
     printf("    -disable-hostname-propagation    let MPICH2 auto-detect the hostname\n");
     printf("    -order-nodes                     order nodes as ascending/descending cores\n");
+
+    printf("\n");
+    printf("Please see the intructions provided at\n");
+    printf("http://wiki.mcs.anl.gov/mpich2/index.php/Using_the_Hydra_Process_Manager\n");
+    printf("for further details\n\n");
 }
 
 static void signal_cb(int signum)
