@@ -118,7 +118,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status =
         HYDT_bind_init(HYD_server_info.user_global.binding,
                        HYD_server_info.user_global.bindlib);
-    HYDU_ERR_POP(status, "unable to initializing binding library");
+    HYDU_ERR_POP(status, "unable to initializing binding library\n");
 
     status =
         HYDT_bsci_launch_procs(proxy_args, HYD_server_info.pg_list.proxy_list, control_fd);

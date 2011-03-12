@@ -134,7 +134,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
 
     /***************************** CPU *****************************/
-    if (!strncmp(binding, "cpu", strlen("cpu"))) {
+    if (!strncmp(binding, "cpu:", strlen("cpu:"))) {
         /* If we reached here, the user requested for CPU topology
          * aware binding. */
         if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_CPUTOPO)
@@ -160,7 +160,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
                 else if (!strcmp(elem, "thread") || !strcmp(elem, "threads"))
                     use_topo_obj[HYDT_BIND_OBJ_THREAD] = 1;
                 else
-                    HYDU_ERR_POP(status, "unrecognized binding option\n");
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "unrecognized binding option %s\n", binding);
 
                 elem = strtok(NULL, ",");
             } while (elem);
@@ -190,7 +191,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
 
     /***************************** CACHE *****************************/
-    if (!strncmp(binding, "cache", strlen("cache"))) {
+    if (!strncmp(binding, "cache:", strlen("cache:"))) {
         /* If we reached here, the user requested for memory topology
          * aware binding. */
         if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_MEMTOPO)
