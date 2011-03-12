@@ -118,14 +118,14 @@ static void usage(void)
     printf("    -order-nodes                     order nodes as ascending/descending cores\n");
 }
 
-static void signal_cb(int sig)
+static void signal_cb(int signum)
 {
     struct HYD_cmd cmd;
     int sent, closed;
 
     HYDU_FUNC_ENTER();
 
-    if (sig == SIGINT || sig == SIGQUIT || sig == SIGTERM) {
+    if (signum == SIGINT || signum == SIGQUIT || signum == SIGTERM) {
         /* We don't want to send the abort signal directly to the
          * proxies, since that would require two processes (this
          * asynchronous process and the main process) to use the same
@@ -136,7 +136,7 @@ static void signal_cb(int sig)
         cmd.type = HYD_CLEANUP;
         HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
-    else if (sig == SIGUSR1 || sig == SIGALRM) {
+    else if (signum == SIGUSR1 || signum == SIGALRM) {
         if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
             HYDU_dump(stderr, "No checkpoint prefix provided\n");
             return;
@@ -148,6 +148,10 @@ static void signal_cb(int sig)
 #endif /* HAVE_ALARM */
 
         cmd.type = HYD_CKPOINT;
+        HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+    }
+    else if (signum == SIGKILL) {
+        cmd.type = HYD_SIGNAL;
         HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
     /* Ignore all other signals */

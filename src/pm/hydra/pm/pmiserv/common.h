@@ -34,7 +34,7 @@ struct HYD_pmcd_hdr {
         PROC_INFO,
         CKPOINT,
         PMI_RESPONSE,
-        SIGNAL_PROCESSES,
+        SIGNAL,
         STDIN,
 
         /* Proxy to UI commands */
@@ -57,6 +57,9 @@ struct HYD_pmcd_hdr {
     int pgid;
     int proxy_id;
     int rank;
+
+    /* SIGNAL */
+    int signum;
 };
 
 struct HYD_pmcd_token {

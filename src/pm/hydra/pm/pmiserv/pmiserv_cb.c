@@ -169,9 +169,30 @@ HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void)
     goto fn_exit;
 }
 
+HYD_status HYD_pmcd_pmiserv_send_signal(struct HYD_proxy *proxy, int signum)
+{
+    struct HYD_pmcd_hdr hdr;
+    int sent, closed;
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = SIGNAL;
+    hdr.signum = signum;
+
+    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+    HYDU_ASSERT(!closed, status);
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 {
-    int count, closed, sent, i;
+    int count, closed, i;
     struct HYD_pg *pg;
     struct HYD_pmcd_hdr hdr;
     struct HYD_proxy *proxy, *tproxy;
@@ -437,12 +458,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                         tproxy->proxy_id == proxy->proxy_id)
                         continue;
 
-                    HYD_pmcd_init_header(&hdr);
-                    hdr.cmd = SIGNAL_PROCESSES;
-                    status = HYDU_sock_write(tproxy->control_fd, &hdr, sizeof(hdr), &sent,
-                                             &closed);
-                    HYDU_ERR_POP(status, "unable to write data to proxy\n");
-                    HYDU_ASSERT(!closed, status);
+                    status = HYD_pmcd_pmiserv_send_signal(tproxy, SIGUSR1);
+                    HYDU_ERR_POP(status, "unable to send SIGUSR1 downstream\n");
                 }
             }
         }

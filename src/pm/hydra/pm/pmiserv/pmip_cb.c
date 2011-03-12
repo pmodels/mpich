@@ -929,12 +929,12 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         status = handle_pmi_response(fd, hdr);
         HYDU_ERR_POP(status, "unable to handle PMI response\n");
     }
-    else if (hdr.cmd == SIGNAL_PROCESSES) {
-        /* FIXME: This code needs to change from sending the SIGUSR1
-         * signal to a PMI-2 notification message. */
+    else if (hdr.cmd == SIGNAL) {
+        /* FIXME: This code needs to change from sending the signal to
+         * a PMI-2 notification message. */
         for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
             if (HYD_pmcd_pmip.downstream.pid[i] != -1)
-                kill(HYD_pmcd_pmip.downstream.pid[i], SIGUSR1);
+                kill(HYD_pmcd_pmip.downstream.pid[i], hdr.signum);
     }
     else if (hdr.cmd == STDIN) {
         int count;
