@@ -330,16 +330,13 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
      * that the operating system can select an available port in the ephemeral port range.
      */
     if (*port == 0) {
-	int portnum, low_port, high_port;
+	int portnum;
 	/* see if we actually want to find values within a range */
-	
-	low_port = high_port = 0;
-	/* Get range here.  These leave low_port, high_port unchanged
-	   if the env variable is not set */
-	/* FIXME: Use the parameter interface and document this */
-	MPL_env2range( "MPICH_PORT_RANGE", &low_port, &high_port );
 
-	for (portnum=low_port; portnum<=high_port; portnum++) {
+        MPIU_ERR_CHKANDJUMP(MPIR_PARAM_PORT_RANGE.low < 0 || MPIR_PARAM_PORT_RANGE.low > MPIR_PARAM_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+
+        /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
+        for (portnum = MPIR_PARAM_PORT_RANGE.low; portnum <= MPIR_PARAM_PORT_RANGE.high; ++portnum) {
 	    memset( (void *)&addr, 0, sizeof(addr) );
 	    addr.sin_family      = AF_INET;
 	    addr.sin_addr.s_addr = htonl(INADDR_ANY);

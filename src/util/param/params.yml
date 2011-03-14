@@ -38,6 +38,8 @@ categories:
       description : multi-threading parameters
     - name        : nemesis
       description : "parameters that control behavior of the ch3:nemesis channel"
+    - name        : sockets
+      description : control socket parameters
 
 parameters:
     ##############################################################
@@ -304,6 +306,20 @@ parameters:
         being reported.  MPICH2 must have been configure with
         "--enable-g=handlealloc" or better in order for this functionality to
         work.
+
+  ############################
+    # sockets parameters
+    - category    : sockets
+      name        : PORT_RANGE
+      alt-env     : 
+                    - PORTRANGE
+      type        : range
+      default     : "0:0"
+      description : >-
+        "The MPICH_PORT_RANGE environment variable allows you to
+        specify the range of TCP ports to be used by the process
+        manager and the MPICH2 library. The format of this variable is
+        <low>:<high>."
 
 ...
 
