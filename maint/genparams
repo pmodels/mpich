@@ -7,7 +7,6 @@
 # script TODO:
 # - generate initialization function to read vals from env vars
 # - deal with string escaping in generated C strings
-# - add support for "range" types (see MPL_env2range)
 # - sort/collate paramters by name/category
 
 use strict;
@@ -232,8 +231,14 @@ enum ${ns}_type_t {
     ${uc_ns}_TYPE_INT,
     ${uc_ns}_TYPE_DOUBLE,
     ${uc_ns}_TYPE_BOOLEAN,
-    ${uc_ns}_TYPE_STRING
+    ${uc_ns}_TYPE_STRING,
+    ${uc_ns}_TYPE_RANGE
 };
+
+typedef struct ${ns}_param_range_val {
+    int low;
+    int high;
+} ${ns}_param_range_val_t;
 
 /* used to represent default values */
 struct ${ns}_param_default_val_t {
@@ -243,6 +248,7 @@ struct ${ns}_param_default_val_t {
     const int i_val; /* also used for booleans */
     const double d_val;
     const char *s_val;
+    const ${ns}_param_range_val_t r_val;
 };
 
 struct ${ns}_t {
@@ -274,7 +280,7 @@ EOT
 # XXX DJG TODO collate and separate by category
 foreach my $p (@{$params->{parameters}}) {
     my $type_enum_val = "${uc_ns}_TYPE_".uc($p->{type});
-    my ($int_val, $str_val, $double_val) = (-1, qq(""), "0.0");
+    my ($int_val, $str_val, $double_val, $range_val) = (-1, qq(""), "0.0", "{0,0}");
 
     if ($p->{type} eq "string") {
         $str_val = fmt_default($p->{default}, $p->{type});
@@ -288,6 +294,9 @@ foreach my $p (@{$params->{parameters}}) {
     elsif ($p->{type} eq "boolean") {
         $int_val = fmt_default($p->{default}, $p->{type});
     }
+    elsif ($p->{type} eq "range") {
+        $range_val = fmt_default($p->{default}, $p->{type});
+    }
     else {
         die "unknown type $p->{type}, stopped";
     }
@@ -300,9 +309,9 @@ foreach my $p (@{$params->{parameters}}) {
         qq(      "%s",\n) .
         qq(      "%s",\n) .
         #          T    I   D   S
-        qq(      { %s, %d, %s, %s } },\n),
+        qq(      { %s, %d, %s, %s, %s } },\n),
         $p->{name}, $p->{name}, $desc,
-        $type_enum_val, $int_val, $double_val, $str_val;
+        $type_enum_val, $int_val, $double_val, $str_val, $range_val;
 }
 
 print PARAM_C <<EOT;
@@ -345,10 +354,17 @@ foreach my $p (@{$params->{parameters}}) {
     foreach my $env_name (@env_names) {
         # assumes rc is defined
         my $var_name = "${uc_ns}_" . $p->{name};
-        print PARAM_C <<EOT;
+        if ($p->{type} eq 'range') {
+            print PARAM_C <<EOT;
+    rc = MPL_env2${env_fn}("$env_name", &($var_name.low), &($var_name.high));
+    MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
+EOT
+        } else {
+            print PARAM_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name));
     MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
 EOT
+        }
     }
     print PARAM_C "\n";
 }
@@ -405,6 +421,7 @@ my @type_field = (
     ['DOUBLE','d_val'],
     ['BOOLEAN','i_val'],
     ['STRING','s_val'],
+    ['RANGE','r_val'],
 );
 foreach my $tuple (@type_field) {
     my ($type,$field) = @$tuple;
@@ -444,6 +461,7 @@ sub type2ctype {
         'double'  => 'double',
         'string'  => 'const char *',
         'boolean' => 'int',
+        'range'   => "${ns}_param_range_val_t",
     );
     die "unknown type '$type', stopped" unless exists $typemap{$type};
     return $typemap{$type};
@@ -465,6 +483,14 @@ sub fmt_default {
             warn "WARNING: type='$type', bad val='$val', continuing";
             return qq(0); # fail-false
         }
+    }
+    elsif ($type eq "range") {
+        if ($val !~ "-?[0-9]+:-?[0-9]+") {
+            die "Unable to parse range value '$val', stopped";
+        }
+
+        $val =~ s/:/,/;
+        return qq({$val});
     }
     else {
         return qq($val);
@@ -499,6 +525,7 @@ sub type_to_env_fn {
         'int' =>  'int',
         'string' => 'str',
         'boolean' => 'bool',
+        'range' => 'range',
     );
 
     die "unknown type '$type', stopped" unless exists $typemap{$type};
