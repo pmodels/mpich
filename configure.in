@@ -1321,8 +1321,9 @@ fi
 if test "$enable_append_ndebug" = "yes" ; then
     CFLAGS="$CFLAGS -DNDEBUG -DNVALGRIND"
     CXXFLAGS="$CXXFLAGS -DNDEBUG -DNVALGRIND"
-    FFLAGS="$FFLAGS -DNDEBUG -DNVALGRIND"
-    FCFLAGS="$FCFLAGS -DNDEBUG -DNVALGRIND"
+    # MPICH2 do NOT assume any preprocessing support from the Fortran compiler,
+    # so no Fortran files contain any preprocessing statements.
+    # Don't set FFLAGS or FCFLAGS with any -D.
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
