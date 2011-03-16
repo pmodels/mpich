@@ -4838,41 +4838,15 @@ if test "$enable_coverage" = "yes" ; then
     fi
     # On some platforms (e.g., Mac Darwin), we must also *link* 
     # with the -fprofile-args -ftest-coverage option.
-    # We cannot use TRY_LINK because that uses both the compilation and
-    # the linking flags.  
-    # This is needed for Mac OSX 10.5
-    rm -rf conftest.dSYM
-    rm -f conftest*
-    cat >>conftest.c <<EOF
-int main( int argc, char **argv ) { return 1; }
-EOF
-    #
-    compile_only='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext'
-    link_only='$CC -o conftest$ac_exeext $LDFLAGS conftest.$ac_objext $LIBS'
-    #
     AC_MSG_CHECKING([whether compilation with coverage analysis enabled works])
-    if AC_TRY_EVAL(compile_only) ; then
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([int main(int argc, char **argv){return 1;}])
+    ],[
         AC_MSG_RESULT(yes)
-	AC_MSG_CHECKING([if extra options needed to link when coverage analysis enabled])
-        if AC_TRY_EVAL(link_only) ; then 
-	    AC_MSG_RESULT(no)
-        else
-	    LDFLAGSsave="$LDFLAGS"
-	    LDFLAGS="$LDFLAGS -ftest-coverage -fprofile-arcs"
-	    if AC_TRY_EVAL(link_only) ; then 
-	        AC_MSG_RESULT([need -ftest-coverage -fprofile-arcs])
-            else
-	        AC_MSG_RESULT([Unable to determine])
-	        AC_MSG_ERROR([Cannot link programs when coverage analysis enabled])
-            fi
-        fi
-    else
+    ].[
         AC_MSG_RESULT(no)
-        AC_MSG_ERROR([Unable to compile programs when coverage analysis enabled])
-    fi
-    # This is needed for Mac OSX 10.5
-    rm -rf conftest.dSYM
-    rm -f conftest*
+        AC_MSG_ERROR([Unable to link programs when coverage analysis enabled])
+    ])
     
     # Test for the routines that we need to use to ensure that the
     # data files are (usually) written out
