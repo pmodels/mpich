@@ -11,3 +11,11 @@ throwtest_LDADD   = ../../../cxx/util/mtest.o
 
 ../../../cxx/util/mtest.o: 
 	(cd ../../../cxx/util && $(MAKE) mtest.o)
+
+# A special testing target to simplify running just the pt2pt tests
+testing:
+	../../../runtests -srcdir=$(srcdir) -tests=testlist \
+		   -mpiexec=@MPIEXEC@ \
+		   -xmlfile=summary.xml
+clean-local:
+	-rm -f summary.xml

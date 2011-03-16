@@ -58,7 +58,7 @@ int testCallErrhandler(T &obj, int errorClass, int errorCode, std::string errorS
 int main( int argc, char *argv[] )
 {
     int errs = 0;
-    MPI::Win win = MPI::WIN_NULL;
+    MPI::File file = MPI::FILE_NULL;
 
     MTest_Init( );
 
@@ -70,58 +70,36 @@ int main( int argc, char *argv[] )
     std::string errorString = "Internal-use Error Code";
     MPI::Add_error_string(errorCode, errorString.c_str());
 
-    win = MPI::Win::Create(NULL, 0, 1, MPI::INFO_NULL, MPI_COMM_WORLD);
+    file = MPI::File::Open(MPI::COMM_WORLD, "testfile", 
+	   MPI::MODE_WRONLY | MPI::MODE_CREATE | MPI::MODE_DELETE_ON_CLOSE, 
+	   MPI::INFO_NULL);
 
     // first sanity check that ERRORS_RETURN actually returns in erroneous
     // conditions and doesn't throw an exception
     MPI::COMM_WORLD.Set_errhandler(MPI::ERRORS_RETURN);
-    win.Set_errhandler(MPI::ERRORS_RETURN);
+    file.Set_errhandler(MPI::ERRORS_RETURN);
 
     try {
         // Do something that should cause an exception.
-        MPI::COMM_WORLD.Get_attr(MPI::KEYVAL_INVALID, NULL);
+        file.Write(NULL, -1, MPI_DATATYPE_NULL);
     }
     catch (...) {
-        std::cerr << "comm threw when it shouldn't have" << std::endl;
-        ++errs;
-    }
-
-    try {
-        // Do something that should cause an exception.
-        win.Get_attr(MPI::KEYVAL_INVALID, NULL);
-    }
-    catch (...) {
-        std::cerr << "win threw when it shouldn't have" << std::endl;
+        std::cerr << "file threw when it shouldn't have" << std::endl;
         ++errs;
     }
 
     // now test that when ERRORS_THROW_EXCEPTIONS actually throws an exception
     MPI::COMM_WORLD.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
-    win.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
+    file.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
 
     if (0 == rank) {
         errs += testCallErrhandler(MPI::COMM_WORLD, errorClass, errorCode, errorString);
-        errs += testCallErrhandler(win,             errorClass, errorCode, errorString);
+        errs += testCallErrhandler(file,            errorClass, errorCode, errorString);
 
-        // induce actual errors and make sure that they throw
         try {
-            char buf[10];
-            MPI::COMM_WORLD.Send(&buf, 1, MPI::CHAR, size+1, 1);
+            int buf[10];
+            file.Write_at(-2, &buf, 1, MPI::INT);
             std::cout << "Invalid Send did not throw" << std::endl;
-            errs++;
-        }
-        catch (MPI::Exception &ex) {
-            // expected
-        }
-        catch (...) {
-            std::cout << "Caught Unknown Exception" << std::endl;
-            errs++;
-        }
-
-        try {
-            char buf[10];
-            win.Get(&buf, 0, MPI::CHAR, size+1, 0, 0, MPI::CHAR);
-            std::cout << "Invalid Get did not throw" << std::endl;
             errs++;
         }
         catch (MPI::Exception &ex) {
@@ -135,7 +113,7 @@ int main( int argc, char *argv[] )
 
     MTest_Finalize( errs );
 
-    win.Free();
+    file.Close();
 
     MPI::Finalize();
 

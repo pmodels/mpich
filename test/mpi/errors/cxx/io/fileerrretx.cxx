@@ -45,6 +45,7 @@ int main( int argc, char *argv[] )
     filename = new char[10];
     strncpy( filename, "t1", 10 );
 
+    MPI::FILE_NULL.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
     sawErr = 0;
     try {
 	fh = MPI::File::Open(MPI::COMM_WORLD, filename, 
