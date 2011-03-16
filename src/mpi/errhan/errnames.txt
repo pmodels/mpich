@@ -935,7 +935,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_irecv:MPI_Irecv failed
 **mpi_irecv %p %d %D %i %t %C %p:MPI_Irecv(buf=%p, count=%d, %D, src=%i, tag=%t, %C, request=%p) failed
 **mpi_wait:MPI_Wait failed
-**mpi_wait %p %p:MPI_Wait(request=%p, status%p) failed
+**mpi_wait %p %p:MPI_Wait(request=%p, status=%p) failed
 **mpi_test:MPI_Test failed
 **mpi_test %p %p %p:MPI_Test(request=%p, flag=%p, status=%p) failed
 **mpi_request_free:MPI_Request_free failed
