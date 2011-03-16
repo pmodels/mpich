@@ -54,3 +54,5 @@ strided_putget_indexed 2
 window_creation 2
 contention_put 4
 contention_putget 4
+put_base 2
+put_bottom 2

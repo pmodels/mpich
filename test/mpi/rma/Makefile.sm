@@ -71,6 +71,9 @@ window_creation_SOURCES        = window_creation.c
 contention_put_SOURCES         = contention_put.c
 contention_putget_SOURCES      = contention_putget.c
 
+put_base_SOURCES   = put_base.c
+put_bottom_SOURCES = put_bottom.c
+
 ../util/mtest.o:
 	(cd ../util && $(MAKE) )
 
