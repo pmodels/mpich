@@ -96,6 +96,7 @@ int main( int argc, char *argv[] )
     MPI::COMM_WORLD.Barrier();
     
     merr = MPI::SUCCESS;
+    port_name_out[0] = 0;
     try {
 	MPI::Lookup_name( serv_name, MPI::INFO_NULL, port_name_out );
     } catch (MPI::Exception e) {
@@ -104,6 +105,7 @@ int main( int argc, char *argv[] )
     if (!merr) {
 	errs++;
 	cout << "Lookup name returned name after it was unpublished\n";
+	cout << "The name returned was " << port_name_out << "\n";
     }
     else {
 	/* Must be class MPI::ERR_NAME */
