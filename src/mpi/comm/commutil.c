@@ -256,6 +256,7 @@ static int init_default_collops(void)
         ops->Iscatterv = &MPIR_Iscatterv;
         ops->Ireduce_scatter = &MPIR_Ireduce_scatter_intra;
         ops->Ireduce_scatter_block = &MPIR_Ireduce_scatter_block_intra;
+        ops->Iallgather = &MPIR_Iallgather_intra;
         /* TODO add other fns here as they are added */
 
         /* override defaults, such as for SMP */
@@ -295,6 +296,7 @@ static int init_default_collops(void)
         ops->Iscatterv = &MPIR_Iscatterv;
         ops->Ireduce_scatter = &MPIR_Ireduce_scatter_inter;
         ops->Ireduce_scatter_block = &MPIR_Ireduce_scatter_block_inter;
+        ops->Iallgather = &MPIR_Iallgather_inter;
 
         ic_default_collops = ops;
     }
