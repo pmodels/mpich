@@ -92,6 +92,12 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     /* Note that, unlike the rest of MPICH2, MPI_File objects are pointers,
        not integers.  */
 
+    if (e->handle == MPI_ERRORS_RETURN) {
+	mpi_errno = errorcode;
+	goto fn_exit;
+    }
+
+
     switch (e->language) {
     case MPID_LANG_C:
 	(*e->errfn.C_File_Handler_function)( &fh, &errorcode );
@@ -128,7 +134,9 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     /* ... end of body of routine ... */
 
 #if defined(HAVE_CXX_BINDING) && defined(MPI_MODE_RDONLY)
-  fn_exit:
+ fn_exit:
+#else 
+ fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
     return mpi_errno;
