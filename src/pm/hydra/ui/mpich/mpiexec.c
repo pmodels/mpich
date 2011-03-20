@@ -157,6 +157,7 @@ static void signal_cb(int signum)
     else {
         /* All other signals are forwarded to the user */
         cmd.type = HYD_SIGNAL;
+        cmd.signum = signum;
         HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
     }
 

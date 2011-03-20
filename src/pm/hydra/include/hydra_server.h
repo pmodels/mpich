@@ -16,6 +16,8 @@ struct HYD_cmd {
         HYD_CKPOINT,
         HYD_SIGNAL
     } type;
+
+    int signum;
 };
 
 struct HYD_server_info {
