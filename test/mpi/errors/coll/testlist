@@ -3,4 +3,6 @@ rerr 2
 # MPICH2 currently fails the bcastlength test because it needs to do more
 # checking on the receive status, so for the 1.0.5 release, we are 
 # commenting out this test.
-#bcastlength 4
+# 3/20/2011.  Since this was commented out before 1.0.5 and we are now 
+# at 1.4, it is clear that this should not be commented out again
+bcastlength 4
