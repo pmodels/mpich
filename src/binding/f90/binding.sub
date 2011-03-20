@@ -36,7 +36,7 @@ sub ReadInterface {
 		print STDERR "Error in processing comment within interface file $prototype_file in line $origline";
 	    }
 	}
-	print $_ if $debug;
+	print "binding: read $_" if $gDebug;
 	if (/\/\*\s*End Prototypes/) { last; }
 	if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
 	    $routine_name = $1;
@@ -48,6 +48,8 @@ sub ReadInterface {
 	    $args =~ s/[\r\n]*//g;
 	    # remove qualifiers from args
 	    $args =~ s/\s*const\s+//g;
+	    
+	    print "binding: $routine_name ( $args )\n" if $gDebug;
 	    # Eventually, we'll create a new file here.  
 	    # For C++, we may create similar files by looking up 
 	    # the corresponding routines.
@@ -103,7 +105,7 @@ sub clean_args {
 	$newargs .= "$comma$parm";
 	$comma = ",";
     }
-    print STDERR "$newargs\n" if $debug;
+    print STDERR "$newargs\n" if $gDebug;
     $args = $newargs;
     return $args;
 }

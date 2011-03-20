@@ -20,7 +20,7 @@ $gDebug = 0;
 $prototype_file = "../../include/mpi.h.in";
 $is_MPI = 1;
 $routine_prefix = "MPI_";
-$routine_pattern = "[A-Z][a-z0-9]*";
+$routine_pattern = "[A-Z][a-z0-9_]*";
 $out_prefix="MPI_";
 $outfile_prefix = "mpi";
 %CtoFName = ();
@@ -149,6 +149,9 @@ $outfile_prefix = "mpi";
 		  'Graph_map-3' => 'int[]',
 		  'Graph_map-4' => 'int[]',
 		  'Graph_neighbors-4' => 'int[]',
+		  'Dist_graph_create-8' => 'bool',
+		  'Dist_graph_create_adjacent-9' => 'bool',
+		  'Dist_graph_neighbors_count-4' => 'bool',
 		  'Iprobe-4' => 'bool',
 		  'Test-2' => 'bool',
 		  'Testall-3' => 'bool',
@@ -156,6 +159,9 @@ $outfile_prefix = "mpi";
 		  'Test_cancelled-2' => 'bool',
 		  'Op_create-2' => 'bool',
 		  'Attr_get-4' => 'bool',
+		  'Comm_get_attr-4' => 'bool',
+		  'Type_get_attr-4' => 'bool',
+		  'Win_get_attr-4' => 'bool',
 		  'Comm_test_inter-2' => 'bool',
 		  'Intercomm_merge-2' => 'bool',
 		  'Cart_create-5' => 'bool',
@@ -181,6 +187,8 @@ $outfile_prefix = "mpi";
 		  'Type_create_hindexed-2' => 'int[]',
 		  'Type_create_hindexed-3' => 'MPI_Aint[]',
 		  'Op_commutative-2' => 'bool',
+		  'File_set_atomicity-2' => 'bool',
+		  'File_get_atomicity-2' => 'bool',
 		);
 
 # Some routines must be skipped (custom code is provided for them)
@@ -207,6 +215,9 @@ $outfile_prefix = "mpi";
 			  'Cart_map' => '3-2:4-2',
 			  'Cart_create' => '3-2:4-2',
 			  'Graph_create' => '3:4',
+			  'Dist_graph_create' => '6',
+			  'Dist_graph_create_adjacent' => '4:7',
+			  'Dist_graph_neighbors' => '4:7',
 			  'Group_translate_ranks' => '3-2:5-2',
 
     );
@@ -230,6 +241,7 @@ foreach $_ (@ARGV) {
 	$definition_file = $1;
 	$is_MPI = 0;
     }
+    elsif (/-debug/) { $gDebug = 1; }
     else {
 	print STDERR "Unrecognized argument $_\n";
 	exit 2;
@@ -298,6 +310,7 @@ foreach $routine (keys(%mpi_routines)) {
     $args   = $mpi_routines{$routine};
     @parms  = split(/,/, $args );
 
+    print "$routine\n" if $gDebug;
     # Check for a routine to skip
     if (defined($skip_routines{$routine})) {
 	next;
