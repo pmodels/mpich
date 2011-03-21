@@ -126,7 +126,7 @@ static char *get_error_string(int error_code)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 {
-    int mpi_errno;
+    int mpi_errno=MPI_SUCCESS;
     /*struct linger linger;*/
     int optval, len;
     SOCKET temp_sock;
@@ -223,7 +223,10 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
     /* Set the no-delay option */
     setsockopt(*sock, IPPROTO_TCP, TCP_NODELAY, (char *)&optval, sizeof(optval));
 
-    return MPI_SUCCESS;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
