@@ -84,6 +84,7 @@ typedef struct qn_ent
 
 static qn_ent_t *qn_head = NULL;
 
+#ifdef HAVE_SIGNAL
 static void sigusr1_handler(int sig)
 {
     ++sigusr1_count;
@@ -92,6 +93,7 @@ static void sigusr1_handler(int sig)
     if (prev_sighandler)
         prev_sighandler(sig);
 }
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME check_terminating_vcs
