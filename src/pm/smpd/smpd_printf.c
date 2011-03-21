@@ -64,11 +64,11 @@ char * get_sock_error_string(int error)
         return str;
     }
 
-    str[0] = '\0';
+    /* str[0] = '\0'; */
     /*
     SMPDR_Err_get_string(error, str, 1024, SMPDU_Sock_get_error_class_string);
     */
-    smpd_translate_win_error(error, str, 1024, "(error =", error, ") ");
+    /* smpd_translate_win_error(error, str, 1024, "(error =", error, ") "); */
     /*
     SMPDR_Err_get_string_ext(error, str, 1024, SMPDU_Sock_get_error_class_string);
     if (SMPDR_Err_print_stack_flag)
@@ -82,7 +82,7 @@ char * get_sock_error_string(int error)
     }
     */
 
-    return str;
+    /* return str; */
 }
 
 char * smpd_get_context_str(smpd_context_t *context)
