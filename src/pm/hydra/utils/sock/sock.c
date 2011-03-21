@@ -290,9 +290,9 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *
     while (1) {
         do {
             tmp = write(fd, (char *) buf + *sent, maxlen - *sent);
-        } while (tmp < 0 && errno == EINTR);
+        } while (tmp < 0 && (errno == EINTR || errno == EAGAIN));
 
-        if ((tmp < 0) || (*sent == 0 && tmp == 0)) {
+        if (tmp < 0 || tmp == 0) {
             *closed = 1;
             goto fn_exit;
         }
