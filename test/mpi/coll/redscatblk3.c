@@ -35,7 +35,7 @@ int main( int argc, char **argv )
 
     sendbuf = (int *) malloc( mycount * size * sizeof(int) );
     if (!sendbuf) {
-	fprintf( stderr, "Could not allocated %d ints for sendbuf\n", 
+	fprintf( stderr, "Could not allocate %d ints for sendbuf\n", 
 		 mycount * size );
 	MPI_Abort( MPI_COMM_WORLD, 1 );
     }
@@ -47,7 +47,7 @@ int main( int argc, char **argv )
     }
     recvbuf = (int *)malloc( mycount * sizeof(int) );
     if (!recvbuf) {
-	fprintf( stderr, "Could not allocated %d ints for recvbuf\n", 
+	fprintf( stderr, "Could not allocate %d ints for recvbuf\n", 
 		 mycount );
 	MPI_Abort( MPI_COMM_WORLD, 1 );
     }
@@ -61,7 +61,7 @@ int main( int argc, char **argv )
 	if (recvbuf[i] != sumval) {
 	    err++;
 	    fprintf( stdout, "Did not get expected value for reduce scatter\n" );
-	    fprintf( stdout, "[%d] Got %d expected %d\n", rank, recvbuf, sumval );
+	    fprintf( stdout, "[%d] Got %d expected %d\n", rank, recvbuf[i], sumval );
 	}
     }
 
@@ -74,7 +74,7 @@ int main( int argc, char **argv )
 	if (sendbuf[rank*mycount+i] != sumval) {
 	    err++;
 	    fprintf( stdout, "Did not get expected value for reduce scatter (in place)\n" );
-	    fprintf( stdout, "[%d] Got %d expected %d\n", rank, recvbuf, sumval );
+	    fprintf( stdout, "[%d] Got %d expected %d\n", rank, sendbuf[rank*mycount+i], sumval );
 	}
     }
 
