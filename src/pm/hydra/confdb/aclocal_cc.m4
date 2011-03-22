@@ -91,11 +91,16 @@ if test "$pac_result" = "yes" ; then
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $LIBS"
 
-        CFLAGS="$CFLAGS_opt"
         rm -f pac_test4.log
         PAC_LINK_IFELSE_LOG([pac_test4.log], [AC_LANG_PROGRAM()], [
-            PAC_RUNLOG_IFELSE([diff -b pac_test2.log pac_test4.log],
-                              [pac_result=yes], [pac_result=no])
+            CFLAGS="$CFLAGS_opt"
+            rm -f pac_test5.log
+            PAC_LINK_IFELSE_LOG([pac_test5.log], [AC_LANG_PROGRAM()], [
+                PAC_RUNLOG_IFELSE([diff -b pac_test4.log pac_test5.log],
+                                  [pac_result=yes], [pac_result=no])
+            ],[
+                pac_result=no
+            ])
         ],[
             pac_result=no
         ])
@@ -105,7 +110,7 @@ if test "$pac_result" = "yes" ; then
         pac_result=no
     ])
     AC_MSG_RESULT([$pac_result])
-    rm -f pac_test3.log pac_test4.log
+    rm -f pac_test3.log pac_test4.log pac_test5.log
 fi
 rm -f pac_test1.log pac_test2.log
 
