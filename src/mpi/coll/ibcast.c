@@ -660,6 +660,9 @@ fn_fail:
 }
 
 
+/* This routine purely handles the hierarchical version of bcast, and does not
+ * currently make any decision about which particular algorithm to use for any
+ * subcommunicator. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibcast_SMP
 #undef FCNAME
@@ -707,107 +710,38 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
 
     /* TODO insert packing here */
 
-    if ((nbytes < MPIR_PARAM_BCAST_SHORT_MSG_SIZE) || (comm_ptr->local_size < MPIR_PARAM_BCAST_MIN_PROCS))
-    {
-        /* send to intranode-rank 0 on the root's node */
-        if (comm_ptr->node_comm != NULL &&
-            MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
-        {                                                /* and is on our node (!-1) */
-            if (root == comm_ptr->rank) {
-                mpi_errno = MPID_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, s); 
-            }
-            else if (0 == comm_ptr->node_comm->rank) {
-                mpi_errno = MPID_Sched_recv(buffer, count, datatype, MPIU_Get_intranode_rank(comm_ptr, root),
-                                            comm_ptr->node_comm, s);
-            }
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+    /* send to intranode-rank 0 on the root's node */
+    if (comm_ptr->node_comm != NULL &&
+        MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
+    {                                                /* and is on our node (!-1) */
+        if (root == comm_ptr->rank) {
+            mpi_errno = MPID_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, s); 
         }
-
-        /* perform the internode broadcast */
-        if (comm_ptr->node_roots_comm != NULL)
-        {
-            mpi_errno = comm_ptr->node_roots_comm->coll_fns->Ibcast(buffer, count, datatype,
-                                                                    MPIU_Get_internode_rank(comm_ptr, root),
-                                                                    comm_ptr->node_roots_comm, s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-            /* don't allow the local ops for the intranode phase to start until this has completed */
-            MPID_SCHED_BARRIER(s);
+        else if (0 == comm_ptr->node_comm->rank) {
+            mpi_errno = MPID_Sched_recv(buffer, count, datatype, MPIU_Get_intranode_rank(comm_ptr, root),
+                                        comm_ptr->node_comm, s);
         }
-        /* perform the intranode broadcast on all except for the root's node */
-        if (comm_ptr->node_comm != NULL)
-        {
-            mpi_errno = comm_ptr->node_comm->coll_fns->Ibcast(buffer, count, datatype, 0, comm_ptr->node_comm, s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-    }
-    else /* (nbytes > MPIR_PARAM_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_PARAM_BCAST_MIN_PROCS) */
-    {
-        /* supposedly...
-           smp+doubling good for pof2
-           reg+ring better for non-pof2 */
-        if (nbytes < MPIR_PARAM_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm_ptr->local_size, NULL))
-        {
-            /* medium-sized msg and pof2 np */
-
-            /* perform the intranode broadcast on the root's node */
-            if (comm_ptr->node_comm != NULL &&
-                MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
-            {                                                /* and is on our node (!-1) */
-                /* was binomial */
-                mpi_errno = comm_ptr->node_comm->coll_fns->Ibcast(buffer, count, datatype,
-                                                                  MPIU_Get_intranode_rank(comm_ptr, root),
-                                                                  comm_ptr->node_comm, s);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                MPID_SCHED_BARRIER(s);
-            }
-
-            /* FIXME do we need barriers in here at all? */
-
-            /* perform the internode broadcast */
-            if (comm_ptr->node_roots_comm != NULL)
-            {
-#if 0
-                if (MPIU_is_pof2(comm_ptr->node_roots_comm->local_size, NULL))
-                {
-                    /* was scatter doubling allgather */
-                }
-                else
-                {
-                    /* was scatter ring allgather */
-                }
-#endif
-                mpi_errno = comm_ptr->node_roots_comm->coll_fns->Ibcast(buffer, count, datatype,
-                                                                        MPIU_Get_internode_rank(comm_ptr, root),
-                                                                        comm_ptr->node_roots_comm, s);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-                /* don't allow the local ops for the intranode phase to start until this has completed */
-                MPID_SCHED_BARRIER(s);
-            }
-
-            /* perform the intranode broadcast on all except for the root's node */
-            if (comm_ptr->node_comm != NULL &&
-                MPIU_Get_intranode_rank(comm_ptr, root) <= 0) /* 0 if root was local root too */
-            {                                                 /* -1 if different node than root */
-                /* was binomial */
-                mpi_errno = comm_ptr->node_comm->coll_fns->Ibcast(buffer, count, datatype, 0, comm_ptr->node_comm, s);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            }
-        }
-        else /* large msg or non-pof2 */
-        {
-            /* TODO port scatter_ring_allgather to NBC */
-            /*
-            mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            */
-            mpi_errno = MPIR_Ibcast_binomial(buffer, count, datatype, root, comm_ptr, s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
     }
 
+    /* perform the internode broadcast */
+    if (comm_ptr->node_roots_comm != NULL)
+    {
+        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Ibcast(buffer, count, datatype,
+                                                                MPIU_Get_internode_rank(comm_ptr, root),
+                                                                comm_ptr->node_roots_comm, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* don't allow the local ops for the intranode phase to start until this has completed */
+        MPID_SCHED_BARRIER(s);
+    }
+    /* perform the intranode broadcast on all except for the root's node */
+    if (comm_ptr->node_comm != NULL)
+    {
+        mpi_errno = comm_ptr->node_comm->coll_fns->Ibcast(buffer, count, datatype, 0, comm_ptr->node_comm, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
 fn_exit:
     return mpi_errno;
