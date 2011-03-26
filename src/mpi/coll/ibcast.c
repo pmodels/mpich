@@ -33,7 +33,7 @@
 #define FUNCNAME MPIR_Ibcast_binomial
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int mask;
@@ -83,8 +83,7 @@ static int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, 
         if (rank == root) {
             mpi_errno = MPID_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_PACKED, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            mpi_errno = MPID_Sched_barrier(s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
         }
     }
 
@@ -126,8 +125,7 @@ static int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, 
                 mpi_errno = MPID_Sched_recv(buffer, count, datatype, src, comm_ptr, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-            mpi_errno = MPID_Sched_barrier(s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
 
             break;
         }
@@ -164,14 +162,10 @@ static int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, 
 
     if (!is_contig || !is_homogeneous) {
         if (rank != root) {
-            mpi_errno = MPID_Sched_barrier(s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+            MPID_SCHED_BARRIER(s);
             mpi_errno = MPID_Sched_copy(tmp_buf, nbytes, MPI_PACKED, buffer, count, datatype, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-            mpi_errno = MPID_Sched_barrier(s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
         }
     }
 
@@ -244,9 +238,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
                                             comm_ptr->node_comm, s);
             }
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-            mpi_errno = MPID_Sched_barrier(s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
         }
 
         /* perform the internode broadcast */
@@ -258,9 +250,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             /* don't allow the local ops for the intranode phase to start until this has completed */
-            mpi_errno = MPID_Sched_barrier(s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+            MPID_SCHED_BARRIER(s);
         }
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL)
@@ -287,9 +277,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
                                                                   MPIU_Get_intranode_rank(comm_ptr, root),
                                                                   comm_ptr->node_comm, s);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-                mpi_errno = MPID_Sched_barrier(s);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                MPID_SCHED_BARRIER(s);
             }
 
             /* FIXME do we need barriers in here at all? */
@@ -313,8 +301,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
                 /* don't allow the local ops for the intranode phase to start until this has completed */
-                mpi_errno = MPID_Sched_barrier(s);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                MPID_SCHED_BARRIER(s);
             }
 
             /* perform the intranode broadcast on all except for the root's node */
