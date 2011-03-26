@@ -665,12 +665,12 @@ static int MPIR_Bcast_scatter_ring_allgather(
     int scatter_size, nbytes;
     int type_size, j, i, is_contig, is_homogeneous;
     int position;
-    int *recvcnts, *displs, left, right, jnext;
+    int left, right, jnext;
     void *tmp_buf;
     MPI_Comm comm;
     MPID_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
-    MPIU_CHKLMEM_DECL(3);
+    MPIU_CHKLMEM_DECL(1);
 
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
@@ -740,22 +740,6 @@ static int MPIR_Bcast_scatter_ring_allgather(
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */ 
 
-    MPIU_CHKLMEM_MALLOC(recvcnts, int *, comm_size*sizeof(int), mpi_errno, "recvcnts");
-    MPIU_CHKLMEM_MALLOC(displs,   int *, comm_size*sizeof(int), mpi_errno, "displs");
-
-    for (i=0; i<comm_size; i++)
-    {
-        recvcnts[i] = nbytes - i*scatter_size;
-        if (recvcnts[i] > scatter_size)
-            recvcnts[i] = scatter_size;
-        if (recvcnts[i] < 0)
-            recvcnts[i] = 0;
-    }
-
-    displs[0] = 0;
-    for (i=1; i<comm_size; i++)
-        displs[i] = displs[i-1] + recvcnts[i-1];
-
     left  = (comm_size + rank - 1) % comm_size;
     right = (rank + 1) % comm_size;
 
@@ -763,16 +747,24 @@ static int MPIR_Bcast_scatter_ring_allgather(
     jnext = left;
     for (i=1; i<comm_size; i++)
     {
-        mpi_errno = 
-            MPIC_Sendrecv_ft((char *)tmp_buf +
-                             displs[(j-root+comm_size)%comm_size],  
-                             recvcnts[(j-root+comm_size)%comm_size],
-                             MPI_BYTE, right, MPIR_BCAST_TAG, 
-                             (char *)tmp_buf +
-                             displs[(jnext-root+comm_size)%comm_size], 
-                             recvcnts[(jnext-root+comm_size)%comm_size],  
-                             MPI_BYTE, left,   
-                             MPIR_BCAST_TAG, comm, MPI_STATUS_IGNORE, errflag);
+        int left_count, right_count, left_disp, right_disp, rel_j, rel_jnext;
+
+        rel_j     = (j     - root + comm_size) % comm_size;
+        rel_jnext = (jnext - root + comm_size) % comm_size;
+        left_count = MPIR_MIN(scatter_size, (nbytes - rel_jnext * scatter_size));
+        if (left_count < 0)
+            left_count = 0;
+        left_disp = rel_jnext * scatter_size;
+        right_count = MPIR_MIN(scatter_size, (nbytes - rel_j * scatter_size));
+        if (right_count < 0)
+            right_count = 0;
+        right_disp = rel_j * scatter_size;
+
+        mpi_errno = MPIC_Sendrecv_ft((char *)tmp_buf + right_disp, right_count,
+                                     MPI_BYTE, right, MPIR_BCAST_TAG,
+                                     (char *)tmp_buf + left_disp, left_count,
+                                     MPI_BYTE, left, MPIR_BCAST_TAG,
+                                     comm, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = TRUE;
