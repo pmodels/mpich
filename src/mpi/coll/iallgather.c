@@ -373,8 +373,8 @@ int MPIR_Iallgather_ring(void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
     for (i=1; i<comm_size; i++) {
         mpi_errno = MPID_Sched_send(((char *)recvbuf + j*recvcount*recvtype_extent),
                                      recvcount, recvtype, right, comm_ptr, s);
-        /* concurrent, no barrier here */
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        /* concurrent, no barrier here */
         mpi_errno = MPID_Sched_recv(((char *)recvbuf + jnext*recvcount*recvtype_extent),
                                      recvcount, recvtype, left, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
