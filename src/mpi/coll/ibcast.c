@@ -712,10 +712,10 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
 
     /* send to intranode-rank 0 on the root's node */
     if (comm_ptr->node_comm != NULL &&
-        MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
+        MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */
     {                                                /* and is on our node (!-1) */
         if (root == comm_ptr->rank) {
-            mpi_errno = MPID_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, s); 
+            mpi_errno = MPID_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, s);
         }
         else if (0 == comm_ptr->node_comm->rank) {
             mpi_errno = MPID_Sched_recv(buffer, count, datatype, MPIU_Get_intranode_rank(comm_ptr, root),
