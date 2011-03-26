@@ -445,9 +445,6 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
 
     scatter_size = (nbytes + comm_size - 1)/comm_size; /* ceiling division */
-    curr_size = (rank == root) ? nbytes : 0; /* root starts with all the
-                                                data */
-
 
     mpi_errno = scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
                                   nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
@@ -457,6 +454,12 @@ static int MPIR_Bcast_scatter_doubling_allgather(
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
+
+    /* curr_size is the amount of data that this process now has stored in
+     * buffer at byte offset (relative_rank*scatter_size) */
+    curr_size = MPIU_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
+    if (curr_size < 0)
+        curr_size = 0;
 
     /* medium size allgather and pof2 comm_size. use recurive doubling. */
 
@@ -607,6 +610,10 @@ static int MPIR_Bcast_scatter_doubling_allgather(
         mask <<= 1;
         i++;
     }
+
+    /* if we kept track of everything correctly, we should have received the
+     * entire buffer by this point */
+    MPIU_Assert(curr_size == nbytes);
 
     if (!is_contig || !is_homogeneous)
     {
