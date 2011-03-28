@@ -659,6 +659,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **sock_init:unable to initialize the sock library
 **write:write failed
 **writev:writev failed
+**collective_size_mismatch:message sizes do not match across processes in the collective
 
 #
 # CH3:shm
