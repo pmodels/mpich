@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     MPIX_Ibarrier(comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ibcast(sbuf, NUM_INTS, MPI_INT, comm, &req);
+    MPIX_Ibcast(sbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     MPIX_Igather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);

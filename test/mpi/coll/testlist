@@ -118,8 +118,10 @@ opminloc 4
 opmax 5
 opmaxloc 5
 
-# this test is currently disabled since we know that we will currently always
-# fail it at runtime
-#nonblocking 4
-#nonblocking 5
-#nonblocking 10
+nonblocking 4
+nonblocking 5
+nonblocking 10
+nonblocking2 1
+nonblocking2 4
+nonblocking2 5
+nonblocking2 10
