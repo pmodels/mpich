@@ -170,6 +170,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
                 MPID_Op_get_ptr(e->u.reduce.op, op_ptr);
                 MPIR_Op_release(op_ptr);
             }
+            dtype_release_if_not_builtin(e->u.reduce.datatype);
             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             break;
         case MPIDU_SCHED_ENTRY_COPY:
