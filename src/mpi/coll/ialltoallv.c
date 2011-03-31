@@ -65,7 +65,6 @@ int MPIR_Ialltoallv_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
          * algorithm. */
         max_count = 0;
         for (i = 0; i < comm_size; ++i) {
-            max_count = MPIU_MAX(max_count, sendcounts[i]);
             max_count = MPIU_MAX(max_count, recvcounts[i]);
         }
 
@@ -310,7 +309,8 @@ int MPIX_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype s
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
+            if (sendbuf != MPI_IN_PLACE)
+                MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
             MPIR_ERRTEST_DATATYPE(recvtype, "recvtype", mpi_errno);
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
@@ -329,13 +329,15 @@ int MPIX_Ialltoallv(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype s
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(sendcounts,"sendcounts", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(sdispls,"sdispls", mpi_errno);
-            if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype *sendtype_ptr = NULL;
-                MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
-                MPID_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
-                MPID_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
+            if (sendbuf != MPI_IN_PLACE) {
+                MPIR_ERRTEST_ARGNULL(sendcounts,"sendcounts", mpi_errno);
+                MPIR_ERRTEST_ARGNULL(sdispls,"sdispls", mpi_errno);
+                if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
+                    MPID_Datatype *sendtype_ptr = NULL;
+                    MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
+                    MPID_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
+                    MPID_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
+                }
             }
 
             MPIR_ERRTEST_ARGNULL(recvcounts,"recvcounts", mpi_errno);

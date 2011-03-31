@@ -328,11 +328,18 @@ int MPIX_Ialltoallw(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(sendcounts,"sendcounts", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(sdispls,"sdispls", mpi_errno);
+            if (sendbuf != MPI_IN_PLACE) {
+                MPIR_ERRTEST_ARGNULL(sendcounts,"sendcounts", mpi_errno);
+                MPIR_ERRTEST_ARGNULL(sdispls,"sdispls", mpi_errno);
+                MPIR_ERRTEST_ARGNULL(sendtypes,"sendtypes", mpi_errno);
+            }
             MPIR_ERRTEST_ARGNULL(recvcounts,"recvcounts", mpi_errno);
             MPIR_ERRTEST_ARGNULL(rdispls,"rdispls", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(recvtypes,"recvtypes", mpi_errno);
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
+            if (comm_ptr->comm_kind == MPID_INTERCOMM && sendbuf == MPI_IN_PLACE) {
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPIR_ERR_RECOVERABLE, "**sendbuf_inplace");
+            }
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
