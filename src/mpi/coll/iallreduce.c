@@ -32,12 +32,20 @@
 int MPIR_Iallreduce_naive(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
+    int rank;
 
-    mpi_errno = MPIR_Ireduce_intra(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    rank = comm_ptr->rank;
 
-    mpi_errno = MPID_Sched_barrier(s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
+        mpi_errno = MPIR_Ireduce_intra(recvbuf, NULL, count, datatype, op, 0, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else {
+        mpi_errno = MPIR_Ireduce_intra(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+    MPID_SCHED_BARRIER(s);
 
     mpi_errno = MPIR_Ibcast_intra(recvbuf, count, datatype, 0, comm_ptr, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -259,6 +267,12 @@ int MPIX_Iallreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
             else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = ( * MPIR_Op_check_dtype_table[op%16 - 1] )(datatype);
             }
+
+            if (comm_ptr->comm_kind == MPID_INTERCOMM)
+                MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);
+
+            if (sendbuf != MPI_IN_PLACE)
+                MPIR_ERRTEST_USERBUFFER(sendbuf,count,datatype,mpi_errno);
 
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
