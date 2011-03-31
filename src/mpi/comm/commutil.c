@@ -259,6 +259,7 @@ static int init_default_collops(void)
         ops->Iallgather = &MPIR_Iallgather_intra;
         ops->Iallgatherv = &MPIR_Iallgatherv_intra;
         ops->Iscan = &MPIR_Iscan_rec_dbl;
+        ops->Iexscan = &MPIR_Iexscan;
         /* TODO add other fns here as they are added */
 
         /* override defaults, such as for SMP */
@@ -301,7 +302,7 @@ static int init_default_collops(void)
         ops->Ireduce_scatter_block = &MPIR_Ireduce_scatter_block_inter;
         ops->Iallgather = &MPIR_Iallgather_inter;
         ops->Iallgatherv = &MPIR_Iallgatherv_inter;
-        /* scan and exscan are not valid for intercommunicators */
+        /* scan and exscan are not valid for intercommunicators, leave them NULL */
 
         ic_default_collops = ops;
     }

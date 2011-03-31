@@ -5,6 +5,7 @@
  */
 
 #include "mpiimpl.h"
+#include "collutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPIX_Iexscan */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -23,6 +24,157 @@
 #define MPIX_Iexscan PMPIX_Iexscan
 
 /* any non-MPI functions go here, especially non-static ones */
+
+/* This is the default implementation of exscan. The algorithm is:
+
+   Algorithm: MPIX_Iexscan
+
+   We use a lgp recursive doubling algorithm. The basic algorithm is
+   given below. (You can replace "+" with any other scan operator.)
+   The result is stored in recvbuf.
+
+ .vb
+   partial_scan = sendbuf;
+   mask = 0x1;
+   flag = 0;
+   while (mask < size) {
+      dst = rank^mask;
+      if (dst < size) {
+         send partial_scan to dst;
+         recv from dst into tmp_buf;
+         if (rank > dst) {
+            partial_scan = tmp_buf + partial_scan;
+            if (rank != 0) {
+               if (flag == 0) {
+                   recv_buf = tmp_buf;
+                   flag = 1;
+               }
+               else
+                   recv_buf = tmp_buf + recvbuf;
+            }
+         }
+         else {
+            if (op is commutative)
+               partial_scan = tmp_buf + partial_scan;
+            else {
+               tmp_buf = partial_scan + tmp_buf;
+               partial_scan = tmp_buf;
+            }
+         }
+      }
+      mask <<= 1;
+   }
+.ve
+
+   End Algorithm: MPI_Exscan
+*/
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iexscan
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int rank, comm_size;
+    int mask, dst, is_commutative, flag;
+    MPI_Aint true_extent, true_lb, extent;
+    void *partial_scan, *tmp_buf;
+    MPIR_SCHED_CHKPMEM_DECL(2);
+
+    if (count == 0)
+        goto fn_exit;
+
+    comm_size = comm_ptr->local_size;
+    rank = comm_ptr->rank;
+
+    is_commutative = MPIR_Op_is_commutative(op);
+
+    /* need to allocate temporary buffer to store partial scan*/
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    MPID_Datatype_get_extent_macro(datatype, extent);
+
+    MPIR_SCHED_CHKPMEM_MALLOC(partial_scan, void *, (count*(MPIR_MAX(true_extent,extent))), mpi_errno, "partial_scan");
+    /* adjust for potential negative lower bound in datatype */
+    partial_scan = (void *)((char*)partial_scan - true_lb);
+
+    /* need to allocate temporary buffer to store incoming data*/
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, (count*(MPIR_MAX(true_extent,extent))), mpi_errno, "tmp_buf");
+    /* adjust for potential negative lower bound in datatype */
+    tmp_buf = (void *)((char*)tmp_buf - true_lb);
+
+    mpi_errno = MPID_Sched_copy((sendbuf == MPI_IN_PLACE ? recvbuf : sendbuf), count, datatype,
+                               partial_scan, count, datatype, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    flag = 0;
+    mask = 0x1;
+    while (mask < comm_size) {
+        dst = rank ^ mask;
+        if (dst < comm_size) {
+            /* Send partial_scan to dst. Recv into tmp_buf */
+            mpi_errno = MPID_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            /* sendrecv, no barrier here */
+            mpi_errno = MPID_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
+
+            if (rank > dst) {
+                mpi_errno = MPID_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                MPID_SCHED_BARRIER(s);
+
+                /* On rank 0, recvbuf is not defined.  For sendbuf==MPI_IN_PLACE
+                   recvbuf must not change (per MPI-2.2).
+                   On rank 1, recvbuf is to be set equal to the value
+                   in sendbuf on rank 0.
+                   On others, recvbuf is the scan of values in the
+                   sendbufs on lower ranks. */
+                if (rank != 0) {
+                    if (flag == 0) {
+                        /* simply copy data recd from rank 0 into recvbuf */
+                        mpi_errno = MPID_Sched_copy(tmp_buf, count, datatype,
+                                                    recvbuf, count, datatype, s);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        MPID_SCHED_BARRIER(s);
+
+                        flag = 1;
+                    }
+                    else {
+                        mpi_errno = MPID_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        MPID_SCHED_BARRIER(s);
+                    }
+                }
+            }
+            else {
+                if (is_commutative) {
+                    mpi_errno = MPID_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    MPID_SCHED_BARRIER(s);
+                }
+                else {
+                    mpi_errno = MPID_Sched_reduce(partial_scan, tmp_buf, count, datatype, op, s);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    MPID_SCHED_BARRIER(s);
+
+                    mpi_errno = MPID_Sched_copy(tmp_buf, count, datatype,
+                                                partial_scan, count, datatype, s);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    MPID_SCHED_BARRIER(s);
+                }
+            }
+        }
+        mask <<= 1;
+    }
+
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    MPIR_SCHED_CHKPMEM_REAP(s);
+    goto fn_exit;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iexscan_impl
@@ -117,6 +269,7 @@ int MPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype *datatype_ptr = NULL;
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
