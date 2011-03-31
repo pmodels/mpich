@@ -258,6 +258,7 @@ static int init_default_collops(void)
         ops->Ireduce_scatter_block = &MPIR_Ireduce_scatter_block_intra;
         ops->Iallgather = &MPIR_Iallgather_intra;
         ops->Iallgatherv = &MPIR_Iallgatherv_intra;
+        ops->Iscan = &MPIR_Iscan_rec_dbl;
         /* TODO add other fns here as they are added */
 
         /* override defaults, such as for SMP */
@@ -266,6 +267,7 @@ static int init_default_collops(void)
                 break;
             case MPID_HIERARCHY_PARENT:
                 ops->Ibcast = &MPIR_Ibcast_SMP;
+                ops->Iscan = &MPIR_Iscan_SMP;
                 break;
             case MPID_HIERARCHY_NODE:
                 break;
@@ -299,6 +301,7 @@ static int init_default_collops(void)
         ops->Ireduce_scatter_block = &MPIR_Ireduce_scatter_block_inter;
         ops->Iallgather = &MPIR_Iallgather_inter;
         ops->Iallgatherv = &MPIR_Iallgatherv_inter;
+        /* scan and exscan are not valid for intercommunicators */
 
         ic_default_collops = ops;
     }
