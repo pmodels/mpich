@@ -1,0 +1,112 @@
+#!/usr/bin/env perl
+#
+# (C) 2011 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+# A simple perl script that takes handle values as arguments and decodes them.
+# It can help minimize distraction in your brain during a marathon debugging
+# session that comes from manually decoding these values.
+
+use strict;
+use warnings;
+
+# the order here matters
+my @kind_table = qw(
+    INVALID
+    COMM
+    GROUP
+    DATATYPE
+    FILE
+    ERRHANDLER
+    OP
+    INFO
+    WIN
+    KEYVAL
+    ATTR
+    REQUEST
+    PROCGROUP
+    VCONN
+    GREQ_CLASS
+);
+
+my @type_table = qw(
+    INVALID
+    BUILTIN
+    DIRECT
+    INDIRECT
+);
+
+while (scalar @ARGV) {
+    my $arg = shift @ARGV;
+
+    # handle the (common) case of a hex value instead of a decimal integer
+    if ($arg =~ m/^0x[0-9a-fA-F]+$/) {
+        $arg = hex $arg;
+    }
+
+    my $kind = ($arg & 0x3c000000) >> 26;
+    my $type = ($arg & 0xc0000000) >> 30;
+
+    if ($kind_table[$kind] eq "DATATYPE" and $type_table[$type] eq "BUILTIN") {
+        my $datatype_size = ($arg & 0x0000ff00) >> 8;
+        printf("value=0x%08x kind=0x%x (%10s) type=0x%x (%8s) size=%d (0x%x)\n", $arg, $kind, $kind_table[$kind], $type, $type_table[$type], $datatype_size, $datatype_size);
+    }
+    else {
+        printf("value=0x%08x kind=0x%x (%10s) type=0x%x (%8s)\n", $arg, $kind, $kind_table[$kind], $type, $type_table[$type]);
+    }
+}
+
+## code from src/include/mpihandlemem.h from which this script was derived
+## ----8<----
+##  
+## typedef enum MPID_Object_kind { 
+##   MPID_COMM       = 0x1, 
+##   MPID_GROUP      = 0x2,
+##   MPID_DATATYPE   = 0x3,
+##   MPID_FILE       = 0x4,               /* This is not used */
+##   MPID_ERRHANDLER = 0x5,
+##   MPID_OP         = 0x6,
+##   MPID_INFO       = 0x7,
+##   MPID_WIN        = 0x8,
+##   MPID_KEYVAL     = 0x9,
+##   MPID_ATTR       = 0xa,
+##   MPID_REQUEST    = 0xb,
+##   MPID_PROCGROUP  = 0xc,               /* These are internal device objects */
+##   MPID_VCONN      = 0xd,
+##   MPID_GREQ_CLASS = 0xf
+##   } MPID_Object_kind;
+## 
+## #define HANDLE_MPI_KIND_SHIFT 26
+## #define HANDLE_GET_MPI_KIND(a) ( ((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT )
+## #define HANDLE_SET_MPI_KIND(a,kind) ((a) | ((kind) << HANDLE_MPI_KIND_SHIFT))
+## 
+## /* returns the name of the handle kind for debugging/logging purposes */
+## const char *MPIU_Handle_get_kind_str(int kind);
+## 
+## /* Handle types.  These are really 2 bits */
+## #define HANDLE_KIND_INVALID  0x0
+## #define HANDLE_KIND_BUILTIN  0x1
+## #define HANDLE_KIND_DIRECT   0x2
+## #define HANDLE_KIND_INDIRECT 0x3
+## /* Mask assumes that ints are at least 4 bytes */
+## #define HANDLE_KIND_MASK 0xc0000000
+## #define HANDLE_KIND_SHIFT 30
+## #define HANDLE_GET_KIND(a) (((unsigned)(a)&HANDLE_KIND_MASK)>>HANDLE_KIND_SHIFT)
+## #define HANDLE_SET_KIND(a,kind) ((a)|((kind)<<HANDLE_KIND_SHIFT))
+## 
+## /* For indirect, the remainder of the handle has a block and index */
+## #define HANDLE_INDIRECT_SHIFT 16
+## #define HANDLE_BLOCK(a) (((a)& 0x03FF0000) >> HANDLE_INDIRECT_SHIFT)
+## #define HANDLE_BLOCK_INDEX(a) ((a) & 0x0000FFFF)
+## 
+## /* Handle block is between 1 and 1024 *elements* */
+## #define HANDLE_BLOCK_SIZE 256
+## /* Index size is bewtween 1 and 65536 *elements* */
+## #define HANDLE_BLOCK_INDEX_SIZE 1024
+## 
+## /* For direct, the remainder of the handle is the index into a predefined 
+##    block */
+## #define HANDLE_MASK 0x03FFFFFF
+## #define HANDLE_INDEX(a) ((a)& HANDLE_MASK)
+## ----8<----
