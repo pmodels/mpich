@@ -197,6 +197,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     
     MPID_VCR_Dup(&pg->vct[pg_rank], &comm->vcr[0]);
 
+    MPID_Dev_comm_create_hook (comm);
+    mpi_errno = MPIR_Comm_commit(comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* Currently, mpidpre.h always defines MPID_NEEDS_ICOMM_WORLD. */
 #ifdef MPID_NEEDS_ICOMM_WORLD
     /*
