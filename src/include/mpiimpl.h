@@ -3658,6 +3658,8 @@ int MPIR_Iallgatherv_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
 int MPIR_Iscan_rec_dbl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Iscan_SMP(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ialltoallw_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *sendtypes, void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype *recvtypes, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ialltoallw_inter(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *sendtypes, void *recvbuf, int *recvcounts, int *rdispls, MPI_Datatype *recvtypes, MPID_Comm *comm_ptr, MPID_Sched_t s);
 
 
 /* random initializers */

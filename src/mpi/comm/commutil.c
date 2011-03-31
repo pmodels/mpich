@@ -249,6 +249,7 @@ static int init_default_collops(void)
         ops->Ireduce = &MPIR_Ireduce_intra;
         ops->Ialltoall = &MPIR_Ialltoall_intra;
         ops->Ialltoallv = &MPIR_Ialltoallv_intra;
+        ops->Ialltoallw = &MPIR_Ialltoallw_intra;
         ops->Iallreduce = &MPIR_Iallreduce_intra;
         ops->Igather = &MPIR_Igather_intra;
         ops->Igatherv = &MPIR_Igatherv;
@@ -293,6 +294,7 @@ static int init_default_collops(void)
         ops->Ireduce = &MPIR_Ireduce_inter;
         ops->Ialltoall = &MPIR_Ialltoall_inter;
         ops->Ialltoallv = &MPIR_Ialltoallv_inter;
+        ops->Ialltoallw = &MPIR_Ialltoallw_inter;
         ops->Iallreduce = &MPIR_Iallreduce_inter;
         ops->Igather = &MPIR_Igather_inter;
         ops->Igatherv = &MPIR_Igatherv;
