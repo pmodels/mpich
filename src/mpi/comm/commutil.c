@@ -284,7 +284,7 @@ static int init_default_collops(void)
         MPIU_CHKPMEM_CALLOC(ops, struct MPID_Collops *, sizeof(struct MPID_Collops), mpi_errno, "default intercomm collops");
         ops->ref_count = 1; /* force existence until finalize time */
 
-        /* intracomm defaults */
+        /* intercomm defaults */
         ops->Ibcast = &MPIR_Ibcast_inter;
         ops->Ibarrier = &MPIR_Ibarrier_inter;
         ops->Ireduce = &MPIR_Ireduce_inter;
