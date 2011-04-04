@@ -87,7 +87,7 @@ int main( int argc, char *argv[] )
     if (rank == 0) {
         if (!err) {
             errs++;
-            printf( "Did not detect aliased arguments in MPI_Scatter\n" );
+            printf( "Did not detect aliased arguments in MPI_Gather\n" );
         }
         else {
             /* Check that we can get a message for this error */
