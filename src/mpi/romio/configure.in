@@ -2012,6 +2012,13 @@ AC_CHECK_HEADERS(unistd.h,
                 AC_MSG_RESULT(none) )
         )
 
+
+# for BlueGene, this routine helps us know how much memory is left, and if we
+# need to fall back to less memory-intensive algorithms
+AC_CHECK_HEADERS(spi/kernel_interface.h)
+AC_CHECK_FUNCS(Kernel_GetMemorySize)
+
+		
 echo "setting SYSDEP_INC to $SYSDEP_INC"
 AC_SUBST(SYSDEP_INC)
 
