@@ -28,6 +28,8 @@ typedef struct {
     int cpuid;		/* my CPU id -- for virtual node mode (t coord)*/
     int rankInPset;	/* my relative rank in my PSET */
 
+    int __pad;          /* pad to 16 byte alignment */
+
 } ADIOI_BGL_ProcInfo_t __attribute__((aligned(16)));
 
 
