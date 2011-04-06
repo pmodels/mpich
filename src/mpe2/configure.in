@@ -92,7 +92,9 @@ AC_ARG_ENABLE( strict,
 dnl
 AC_ARG_ENABLE( g,
 [--enable-g                         - Turn on/off the compilation flag -g.
-                                     The default is enable=no.] )
+                                     The default is enable=no.],
+[if test "$enable_g" != "no" ; then enable_g=yes ; fi],
+[enable_g=no] )
 
 dnl MPE_BUILD_FORTRAN2C=yes means that ALL subpackages will be building
 dnl the fortran2c wrapper libraries.  This does not necessarily mean that
@@ -196,7 +198,7 @@ dnl
 dnl Check if -g is needed to appended to CFLAGS and FFLAGS
 dnl
 dnl Append "-g" to xFLAGS and MPI_xFLAGS if enable_g=yes
-if test "$enable_g" = "yes" -a "$FROM_MPICH2" != "yes" ; then
+if test "$enable_g" = "yes" ; then
     for flagname in CFLAGS FFLAGS MPI_CFLAGS MPI_FFLAGS ; do
         eval flagvalue=\$"$flagname"
         case " $flagvalue " in
