@@ -201,6 +201,17 @@ parameters:
         are located on another node.  For example, this disables shared
         memory communication hierarchical collectives.
 
+    - category    : intranode
+      name        : ODD_EVEN_CLIQUES
+      alt-env     :
+                    - EVEN_ODD_CLIQUES
+      type        : boolean
+      default     : false
+      description : >-
+        If true, odd procs on a node are seen as local to each other, and even
+        procs on a node are seen as local to each other.  Used for debugging on
+        a single machine.
+
     - category    : developer
       name        : MEMDUMP
       type        : boolean

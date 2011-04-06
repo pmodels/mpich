@@ -1102,8 +1102,6 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    int ret;
-    int val;
     int i, j;
     char *key;
     char *value;
@@ -1139,9 +1137,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_ODD_EVEN_CLIQUES
     odd_even_cliques = 1;
 #else
-    ret = MPL_env2bool("MPICH_ODD_EVEN_CLIQUES", &val);
-    if (ret == 1 && val)
-        odd_even_cliques = 1;
+    odd_even_cliques = MPIR_PARAM_ODD_EVEN_CLIQUES;
 #endif
 
     if (no_local) {
