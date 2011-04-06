@@ -8,11 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* This is a temporary test program that uses a special testing routine
-   to create a group that contains more processes than are in comm_world,
-   for ease of testing without requiring a parallel job run (since all
-   group routines are local) 
-*/
 int main( int argc, char *argv[] )
 {
     MPI_Group g1, g2, g4, g5, g45, selfgroup, g6;
