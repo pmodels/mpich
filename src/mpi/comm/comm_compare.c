@@ -123,7 +123,8 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
+        mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	/* If the groups are the same but the contexts are different, then
 	   the communicators are congruent */
 	if (*result == MPI_IDENT)
@@ -144,13 +145,15 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-	MPIR_Group_compare_impl(group_ptr1, group_ptr2, &lresult);
+        mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, &lresult);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr1, &rgroup_ptr1);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr2, &rgroup_ptr2);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-	MPIR_Group_compare_impl(rgroup_ptr1, rgroup_ptr2, &rresult);
+        mpi_errno = MPIR_Group_compare_impl(rgroup_ptr1, rgroup_ptr2, &rresult);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 	/* Choose the result that is "least" strong. This works 
 	   due to the ordering of result types in mpi.h */
