@@ -3763,7 +3763,7 @@ int MPIR_Type_indexed_impl(int count, int blocklens[], int indices[], MPI_Dataty
 void MPIR_Type_free_impl(MPI_Datatype *datatype);
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
 int MPIR_Type_struct_impl(int count, int blocklens[], MPI_Aint indices[], MPI_Datatype old_types[], MPI_Datatype *newtype);
-void MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, int *ranks1,
+int MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, int *ranks1,
                                      MPID_Group *group_ptr2, int *ranks2);
 int MPIR_Pack_impl(void *inbuf, int incount, MPI_Datatype datatype, void *outbuf, int outcount, int *position);
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, int *size);

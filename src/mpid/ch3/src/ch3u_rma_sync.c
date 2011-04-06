@@ -1088,8 +1088,9 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
 
-	MPIR_Group_translate_ranks_impl(post_grp_ptr, post_grp_size, ranks_in_post_grp,
-                                        win_grp_ptr, ranks_in_win_grp);
+        mpi_errno = MPIR_Group_translate_ranks_impl(post_grp_ptr, post_grp_size, ranks_in_post_grp,
+                                                    win_grp_ptr, ranks_in_win_grp);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
         rank = win_ptr->myrank;
 	
@@ -1245,10 +1246,11 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     mpi_errno = MPIR_Comm_group_impl(comm_ptr, &win_grp_ptr);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-    MPIR_Group_translate_ranks_impl(win_ptr->start_group_ptr, start_grp_size, 
-				    ranks_in_start_grp,
-                                    win_grp_ptr, ranks_in_win_grp);
-        
+    mpi_errno = MPIR_Group_translate_ranks_impl(win_ptr->start_group_ptr, start_grp_size,
+                                                ranks_in_start_grp,
+                                                win_grp_ptr, ranks_in_win_grp);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     rank = win_ptr->myrank;
 
     /* If MPI_MODE_NOCHECK was not specified, we need to check if
