@@ -110,7 +110,27 @@ int main( int argc, char *argv[] )
 	    errs += TestIntercomm( newcomm );
 	}
 
-	MPI_Comm_free( &newcomm );
+        if (newcomm != MPI_COMM_NULL) {
+            MPI_Comm_free(&newcomm);
+        }
+        /* test that an empty group in either side of the intercomm results in
+         * MPI_COMM_NULL for all members of the comm */
+        if (isLeft) {
+            /* left side reuses oldgroup, our local group in intercomm */
+            MPI_Comm_create(intercomm, oldgroup, &newcomm);
+        }
+        else {
+            /* right side passes MPI_GROUP_EMPTY */
+            MPI_Comm_create(intercomm, MPI_GROUP_EMPTY, &newcomm);
+        }
+        if (newcomm != MPI_COMM_NULL) {
+            printf("[%d] expected MPI_COMM_NULL, but got a different communicator\n", wrank); fflush(stdout);
+            errs++;
+        }
+
+        if (newcomm != MPI_COMM_NULL) {
+            MPI_Comm_free(&newcomm);
+        }
 	MPI_Group_free( &oldgroup );
 	MPI_Comm_free( &intercomm );
     }
