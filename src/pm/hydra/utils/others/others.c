@@ -6,6 +6,18 @@
 
 #include "hydra.h"
 
+int HYDU_dceil(int x, int y)
+{
+    int z;
+
+    z = x / y;
+
+    if (z * y == x)
+        return z;
+    else
+        return z + 1;
+}
+
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
                                  struct HYD_node **node_list)
 {

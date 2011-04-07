@@ -340,18 +340,6 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
     goto fn_exit;
 }
 
-static int dceil(int x, int y)
-{
-    int z;
-
-    z = x / y;
-
-    if (z * y == x)
-        return z;
-    else
-        return z + 1;
-}
-
 HYD_status HYDU_create_proxy_list(struct HYD_exec * exec_list, struct HYD_node * node_list,
                                   struct HYD_pg * pg)
 {
@@ -382,7 +370,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec * exec_list, struct HYD_node *
     global_core_count = 0;
     global_active_processes = 0;
     for (node = node_list; node; node = node->next) {
-        pcr = dceil(node->active_processes, node->core_count);
+        pcr = HYDU_dceil(node->active_processes, node->core_count);
         if (pcr > process_core_ratio)
             process_core_ratio = pcr;
         global_node_count++;

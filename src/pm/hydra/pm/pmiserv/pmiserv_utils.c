@@ -105,56 +105,56 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 {
     int i, is_equal;
     char *tmp[HYD_NUM_TMP_STRINGS];
-    struct HYD_proxy *proxy;
     struct block {
         int start_idx;
-        int num_blocks;
-        int block_size;
+        int num_nodes;
+        int core_count;
         struct block *next;
     } *blocklist_head, *blocklist_tail = NULL, *block, *nblock;
+    struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     /*
-     * Blocks are of the format: (start node ID, number of blocks,
-     * block size): (sid, nb, bz)
+     * Blocks are of the format: (start node ID, number of nodes,
+     * core count): (sid, nn, cc)
      *
      * Assume B1 and B2 are neighboring blocks. The following blocks
      * can be merged:
      *
-     *   1. [B1(sid) + B1(nb) == B2(sid)] && [B1(bz) == B2(bz)]
+     *   1. [B1(sid) + B1(nn) == B2(sid)] && [B1(cc) == B2(cc)]
      *
-     *   2. [B1(sid) == B2(sid)] && [B1(nb) == 1]
+     *   2. [B1(sid) == B2(sid)] && [B1(nn) == 1]
      *
      * Special case: If all blocks are exactly the same, we delete all
      *               except one.
      */
     blocklist_head = NULL;
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+    for (node = HYD_server_info.node_list; node; node = node->next) {
         if (blocklist_head == NULL) {
             HYDU_MALLOC(block, struct block *, sizeof(struct block), status);
-            block->start_idx = proxy->proxy_id;
-            block->num_blocks = 1;
-            block->block_size = proxy->node->core_count;
+            block->start_idx = node->node_id;
+            block->num_nodes = 1;
+            block->core_count = node->core_count;
             block->next = NULL;
 
             blocklist_tail = blocklist_head = block;
         }
-        else if (blocklist_tail->start_idx + blocklist_tail->num_blocks == proxy->proxy_id &&
-                 blocklist_tail->block_size == proxy->node->core_count) {
-            blocklist_tail->num_blocks++;
+        else if (blocklist_tail->start_idx + blocklist_tail->num_nodes == node->node_id &&
+                 blocklist_tail->core_count == node->core_count) {
+            blocklist_tail->num_nodes++;
         }
-        else if (blocklist_tail->start_idx == proxy->proxy_id &&
-                 blocklist_tail->num_blocks == 1) {
-            blocklist_tail->block_size += proxy->node->core_count;
+        else if (blocklist_tail->start_idx == node->node_id &&
+                 blocklist_tail->num_nodes == 1) {
+            blocklist_tail->core_count += node->core_count;
         }
         else {
             HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block), status);
             blocklist_tail = blocklist_tail->next;
-            blocklist_tail->start_idx = proxy->proxy_id;
-            blocklist_tail->num_blocks = 1;
-            blocklist_tail->block_size = proxy->node->core_count;
+            blocklist_tail->start_idx = node->node_id;
+            blocklist_tail->num_nodes = 1;
+            blocklist_tail->core_count = node->core_count;
             blocklist_tail->next = NULL;
         }
     }
@@ -163,7 +163,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
     is_equal = 1;
     for (block = blocklist_head; block->next; block = block->next) {
         if (block->start_idx != block->next->start_idx ||
-            block->block_size != block->next->block_size) {
+            block->core_count != block->next->core_count) {
             is_equal = 0;
             break;
         }
@@ -185,9 +185,9 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         tmp[i++] = HYDU_strdup("(");
         tmp[i++] = HYDU_int_to_str(block->start_idx);
         tmp[i++] = HYDU_strdup(",");
-        tmp[i++] = HYDU_int_to_str(block->num_blocks);
+        tmp[i++] = HYDU_int_to_str(block->num_nodes);
         tmp[i++] = HYDU_strdup(",");
-        tmp[i++] = HYDU_int_to_str(block->block_size);
+        tmp[i++] = HYDU_int_to_str(block->core_count);
         tmp[i++] = HYDU_strdup(")");
         if (block->next)
             tmp[i++] = HYDU_strdup(",");
