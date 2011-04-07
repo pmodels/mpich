@@ -1,5 +1,5 @@
 ===============================================================================
-                               Changes in 1.4
+                               Changes in 1.5
 ===============================================================================
 
  # MPI-3: the new MPI-3 nonblocking collectives functions are now available as
@@ -11,7 +11,7 @@
 
 
 ===============================================================================
-                               Changes in 1.3.3
+                               Changes in 1.4
 ===============================================================================
 
  # OVERALL: Improvements to fault tolerance for collective
@@ -23,6 +23,8 @@
 
  # OVERALL: Bug fixes for Fortran attributes on some systems. Thanks
    to Nicolai Stange for reporting this issue.
+
+ # FORTRAN: Bug fixes in the MPI_DIST_GRAPH_ Fortran bindings.
 
  # PM/PMI: Support for a manual "none" launcher in Hydra to allow for
    higher-level tools to be built on top of Hydra. Thanks to Justin
@@ -57,16 +59,28 @@
 
  # PM/PMI: Improvements to the error code returned by Hydra.
 
+ # PM/PMI: Bug fixes for handling "=" in environment variable values in
+   hydra.
+
+ # COLLECTIVES: Performance and memory usage improvements for MPI_Bcast
+   in certain cases.
+
+ # VALGRIND: Fix incorrect Valgrind client request usage when MPICH2 is
+   built for memory debugging.
+
+ # BUILD SYSTEM: "--enable-fast" and "--disable-error-checking" are once
+   again valid simultaneous options to configure.
+
  # TEST SUITE: Several new tests for MPI RMA operations.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
-     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3.3rc1
+     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.4
 
      ... or at the following link:
 
-     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3.3rc1?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.4?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
 
 
 ===============================================================================
