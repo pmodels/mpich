@@ -83,6 +83,7 @@ dnl PAC_C_STRUCT_ALIGNMENT
 dnl
 dnl Look for Standard headers
 AC_HEADER_STDC
+AC_CHECK_HEADERS(unistd.h)
 dnl
 MPILIBNAME=${MPILIBNAME:-"mpich"}
 AC_SUBST(MPILIBNAME)

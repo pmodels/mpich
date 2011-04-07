@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef HAVE_UNISTD_H
+/* Needed for unlink */
+#include <unistd.h>
+#endif
 #include <errno.h>
 #include <ctype.h> /* isdigit */
 #include "mpichconf.h" /* HAVE_SNPRINTF */
@@ -71,6 +75,26 @@ RecursionStruct *g_pLevel = NULL;
 FILE *g_fArrow = NULL;
 char g_pszArrowFilename[1024];
 RLOG_State_list *g_pList = NULL;
+
+/* Prototypes */
+BOOL GetNextArrow(IRLOG_IOStruct *pInput);
+void ReadAllArrows(IRLOG_IOStruct **ppInput, int nNumInputs);
+BOOL IsNumber(char *str);
+void GenerateNewArgv(int *pargc, char ***pargv, int n);
+int FindMinRank(RecursionStruct *pLevel);
+int FindMaxRank(RecursionStruct *pLevel);
+ArrowNode *GetArrowNode(int rank);
+EndArrowStruct *ExtractEndNode(ArrowNode *pNode, int src, int tag);
+StartArrowStruct *ExtractStartNode(ArrowNode *pNode, int src, int tag);
+void SaveArrow(RLOG_IARROW *pArrow);
+RecursionStruct *GetLevel(int rank, int recursion);
+void SaveEvent(RLOG_EVENT *pEvent);
+void SaveState(RLOG_STATE *pState);
+void AppendFile(FILE *fout, FILE *fin);
+RecursionStruct *FindMinLevel(RecursionStruct *pLevel);
+int FindMaxRecursion(RecursionStruct *pLevel, int rank);
+void RemoveLevel(int rank);
+
 
 static int ReadFileData(char *pBuffer, int length, FILE *fin)
 {
