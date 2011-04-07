@@ -62,6 +62,8 @@
  # PM/PMI: Bug fixes for handling "=" in environment variable values in
    hydra.
 
+ # PM/PMI: Upgrade the hwloc version to 1.1.2.
+
  # COLLECTIVES: Performance and memory usage improvements for MPI_Bcast
    in certain cases.
 
@@ -76,11 +78,11 @@
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
-     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.4
+     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.4rc2
 
      ... or at the following link:
 
-     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.4?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.4rc2?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
 
 
 ===============================================================================
