@@ -445,6 +445,8 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
         MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
 
+    MPIU_Assert(remote_size >= 0);
+
     if (group_ptr->rank != MPI_UNDEFINED) {
         newcomm_ptr->remote_size    = remote_size;
         /* Now, everyone has the remote_mapping, and can apply that to
@@ -469,7 +471,21 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
         mpi_errno = MPIR_Comm_commit(newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        *newcomm = newcomm_ptr->handle;
+        if (remote_size > 0) {
+            *newcomm = newcomm_ptr->handle;
+        }
+        else {
+            /* It's possible that no members of the other side of comm were
+             * members of the group that they passed, which we only know after
+             * receiving/bcasting the remote_size above.  We must return
+             * MPI_COMM_NULL in this case, but we can't free the newcomm_ptr
+             * immediately after the communication above because
+             * MPIR_Comm_release won't work correctly with a half-constructed
+             * comm. */
+            *newcomm = MPI_COMM_NULL;
+            mpi_errno = MPIR_Comm_release(newcomm_ptr, /*isDisconnect=*/FALSE);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
     else {
         /* This process is not in the group */
