@@ -112,9 +112,29 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         struct block *next;
     } *blocklist_head, *blocklist_tail = NULL, *block, *nblock;
     struct HYD_node *node;
+    struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    /* FIXME: For dynamic processes, we give a process mapping that
+     * does not provide any locality information. This is required as
+     * our calculation of the locality below is static and is only
+     * valid for PGID 0 */
+    if (pg->pgid) {
+        HYDU_MALLOC(block, struct block *, sizeof(struct block), status);
+        block->start_idx = 0;
+        block->core_count = 1;
+        block->next = NULL;
+
+        block->num_nodes = 0;
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+            block->num_nodes += proxy->node->core_count;
+
+        blocklist_tail = blocklist_head = block;
+
+        goto create_mapping_key;
+    }
 
     /*
      * Blocks are of the format: (start node ID, number of nodes,
@@ -177,6 +197,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         blocklist_tail = blocklist_head;
     }
 
+create_mapping_key:
     /* Create the mapping out of the blocks */
     i = 0;
     tmp[i++] = HYDU_strdup("(");
