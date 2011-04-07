@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2010 INRIA
+.\" Copyright © 2010 INRIA 
 .\" Copyright © 2010 Université of Bordeaux
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 .TH HWLOC "7" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
@@ -184,7 +184,7 @@ type can be used when several machines form an overall single system image
 .
 .PP
 Finally, note that an object can be denoted by its numeric "depth" in
-the topology graph.  See the Examples section for more information.
+the topology graph.
 .
 .SS Hwloc Indexes
 Indexes are integer values that uniquely specify a given object of a

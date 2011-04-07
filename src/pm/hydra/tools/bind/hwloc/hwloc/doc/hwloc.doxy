@@ -721,6 +721,9 @@ hierarchical topology map of the current system.  The output may be
 graphical or textual, and can also be exported to numerous file
 formats such as PDF, PNG, XML, and others.
 
+It can also display the processes currently bound to a part of the machine (--ps
+option).
+
 Note that lstopo can read XML files and/or alternate chroot
 filesystems and display topological maps representing those systems
 (e.g., use lstopo to output an XML file on one system, and then use
@@ -809,6 +812,14 @@ following environment variables.
   This can be used for efficiency reasons to first detect the topology once,
   save it to an XML file, and quickly reload it later through the XML
   backend, but still having binding functions actually do bind.
+  </dd>
+
+<dt>HWLOC_IGNORE_DISTANCES=0</dt>
+  <dd>disables objects grouping based on distances.
+  By default, hwloc uses distance matrices between objects (read
+  from the OS) to find groups of close objects.
+  These groups are described by adding intermediate Group objects in the topology.
+  Setting this environment variable to 1 will disable this grouping.
   </dd>
 
 </dl>

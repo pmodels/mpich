@@ -2,12 +2,12 @@
  * Copyright © 2009 CNRS
  * Copyright © 2009-2010 INRIA
  * Copyright © 2009-2010 Université Bordeaux 1
- * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * Copyright © 2010 IBM
  * See COPYING in top-level directory.
  */
 
-#include <private/config.h>
+#include <private/autogen/config.h>
 #include <hwloc.h>
 #include <hwloc/linux.h>
 #include <private/misc.h>
@@ -862,6 +862,13 @@ hwloc_linux_membind_mask_from_nodeset(hwloc_topology_t topology __hwloc_attribut
   unsigned max_os_index = 0; /* highest os_index + 1 */
   unsigned long *linuxmask;
   unsigned i;
+  hwloc_nodeset_t linux_nodeset = NULL;
+
+  if (hwloc_bitmap_isfull(nodeset)) {
+    linux_nodeset = hwloc_bitmap_alloc();
+    hwloc_bitmap_only(linux_nodeset, 0);
+    nodeset = linux_nodeset;
+  }
 
   max_os_index = hwloc_bitmap_last(nodeset);
   if (max_os_index == (unsigned) -1)
@@ -877,6 +884,9 @@ hwloc_linux_membind_mask_from_nodeset(hwloc_topology_t topology __hwloc_attribut
 
   for(i=0; i<max_os_index/HWLOC_BITS_PER_LONG; i++)
     linuxmask[i] = hwloc_bitmap_to_ith_ulong(nodeset, i);
+
+  if (linux_nodeset)
+    hwloc_bitmap_free(linux_nodeset);
 
   *max_os_index_p = max_os_index;
   *linuxmaskp = linuxmask;
@@ -1974,10 +1984,11 @@ static int
 look_powerpc_device_tree_discover_cache(device_tree_cpus_t *cpus,
     uint32_t ibm_phandle, unsigned int *level, hwloc_bitmap_t cpuset)
 {
+  unsigned int i;
   int ret = -1;
   if ((NULL == level) || (NULL == cpuset))
     return ret;
-  for (unsigned int i = 0; i < cpus->n; ++i) {
+  for (i = 0; i < cpus->n; ++i) {
     if (ibm_phandle != cpus->p[i].l2_cache)
       continue;
     if (NULL != cpus->p[i].cpuset) {
@@ -2033,6 +2044,7 @@ look_powerpc_device_tree(struct hwloc_topology *topology)
 {
   device_tree_cpus_t cpus = { .n = 0, .p = NULL, .allocated = 0 };
   const char ofroot[] = "/proc/device-tree/cpus";
+  unsigned int i;
 
   int root_fd = topology->backend_params.sysfs.root_fd;
   DIR *dt = hwloc_opendir(ofroot, root_fd);
@@ -2075,8 +2087,9 @@ look_powerpc_device_tree(struct hwloc_topology *topology)
 
       if (NULL != threads) {
         cpuset = hwloc_bitmap_alloc();
-        for (unsigned int i = 0; i < nthreads; ++i) {
-          hwloc_bitmap_set(cpuset, ntohl(threads[i]));
+        for (i = 0; i < nthreads; ++i) {
+          if (hwloc_bitmap_isset(topology->levels[0][0]->complete_cpuset, ntohl(threads[i])))
+            hwloc_bitmap_set(cpuset, ntohl(threads[i]));
         }
         free(threads);
       } else if ((unsigned int)-1 != reg) {
@@ -2111,7 +2124,7 @@ look_powerpc_device_tree(struct hwloc_topology *topology)
   }
 
 #ifdef HWLOC_DEBUG
-  for (unsigned int i = 0; i < cpus.n; ++i) {
+  for (i = 0; i < cpus.n; ++i) {
     hwloc_debug("%i: %s  ibm,phandle=%08X l2_cache=%08X ",
       i, cpus.p[i].name, cpus.p[i].ibm_phandle, cpus.p[i].l2_cache);
     if (NULL == cpus.p[i].cpuset) {
@@ -2123,7 +2136,7 @@ look_powerpc_device_tree(struct hwloc_topology *topology)
 #endif
 
   /* Scan L2/L3/... caches */
-  for (unsigned int i = 0; i < cpus.n; ++i) {
+  for (i = 0; i < cpus.n; ++i) {
     /* Skip real CPUs */
     if (NULL != cpus.p[i].cpuset)
       continue;
@@ -2143,7 +2156,7 @@ look_powerpc_device_tree(struct hwloc_topology *topology)
   }
 
   /* Do cleanup */
-  for (unsigned int i = 0; i < cpus.n; ++i) {
+  for (i = 0; i < cpus.n; ++i) {
     hwloc_bitmap_free(cpus.p[i].cpuset);
     free(cpus.p[i].name);
   }

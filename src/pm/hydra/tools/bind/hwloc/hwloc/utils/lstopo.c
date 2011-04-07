@@ -1,12 +1,12 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 INRIA
- * Copyright © 2009-2010 Université Bordeaux 1
- * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
-#include <private/config.h>
+#include <private/autogen/config.h>
 #include <hwloc.h>
 #ifdef HWLOC_LINUX_SYS
 #include <hwloc/linux.h>
@@ -208,14 +208,14 @@ void usage(const char *name, FILE *where)
   fprintf (where, "  -v --verbose          Include additional details\n");
   fprintf (where, "  -s --silent           Reduce the amount of details to show\n");
   fprintf (where, "  -c --cpuset           Show the cpuset of each object\n");
-  fprintf (where, "  -C --cpuset-only      Only show the cpuset of each ofbject\n");
+  fprintf (where, "  -C --cpuset-only      Only show the cpuset of each object\n");
   fprintf (where, "  --taskset             Show taskset-specific cpuset strings\n");
   fprintf (where, "Object filtering options:\n");
   fprintf (where, "  --ignore <type>       Ignore objects of the given type\n");
   fprintf (where, "  --no-caches           Do not show caches\n");
   fprintf (where, "  --no-useless-caches   Do not show caches which do not have a hierarchical\n"
                   "                        impact\n");
-  fprintf (where, "  --merge               Do not show levels that do not have a hierarcical\n"
+  fprintf (where, "  --merge               Do not show levels that do not have a hierarchical\n"
                   "                        impact\n");
   fprintf (where, "Input options:\n");
   hwloc_utils_input_format_usage(where, 6);
