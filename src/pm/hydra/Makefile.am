@@ -33,7 +33,7 @@ mpich2-build-uninstall: uninstall
 
 # Provide an alias for mpirun to support tools that assume that
 # mpiexec is called mpirun
-install-exec-local:
+install-exec-hook:
 	if [ -x ${DESTDIR}${bindir}/mpiexec.hydra ] ; then \
 	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpiexec ; \
 	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpirun ; \
