@@ -8,7 +8,7 @@ doc_LATEX_SOURCES = ${doc_sources}
 mpich2version_SOURCES = mpich2version.c
 mpich2version_LDADD = ../../lib/lib@MPILIBNAME@.a
 
-install_SCRIPT = mpicc parkill
+install_SCRIPT = mpicc
 install_BIN = mpich2version
 install_ETC = mpixxx_opts.conf mpicc.conf
 optinstall_SCRIPT = mpicxx mpif77 mpif90
