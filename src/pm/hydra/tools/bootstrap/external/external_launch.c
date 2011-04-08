@@ -299,10 +299,8 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_proxy *proxy_
                                      &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
         HYDU_ERR_POP(status, "create process returned error\n");
 
-        /* Reset to the original exec string */
-        targs[exec_idx] = original_exec_string;
-
         /* Reset the exec string to the original value */
+        targs[exec_idx] = original_exec_string;
 
         if (offset && control_fd) {
             close(sockpair[1]);
