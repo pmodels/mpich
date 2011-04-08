@@ -120,6 +120,8 @@
 
  # PM/PMI: The MPD process manager is deprecated.
 
+ # PM/PMI: The PLPA process binding library support is deprecated.
+
  # WINDOWS: Adding support for gfortran and 64-bit gcc libs.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
