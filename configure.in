@@ -6128,7 +6128,6 @@ AC_OUTPUT_COMMANDS([if grep 'dependencies:' Makefile >/dev/null 2>&1 ; then
 fi])
 
 AC_OUTPUT_COMMANDS([chmod +x doc/mansrc/createhtmlindex])
-AC_OUTPUT_COMMANDS([ln -f -s mpiexec bin/mpirun])
 
 dnl
 dnl If we rerun configure, place a file in the lib directory with the
