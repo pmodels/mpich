@@ -3245,8 +3245,8 @@ AC_TYPE_INT16_T
 AC_TYPE_INT32_T
 AC_TYPE_INT64_T
 
-# Temporary backwards compatiblity for the pre autoconf 2.62 integer
-# type checking
+# Temporary issue in autoconf integer type checking (remove when
+# autoconf fixes this or provides a workaround for it)
 if test "$ac_cv_c_int8_t" != no ; then
     AC_DEFINE(HAVE_INT8_T,1,[Define if int8_t is supported by the C compiler])
 fi
@@ -3271,8 +3271,8 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
 
-# Temporary backwards compatiblity for the pre autoconf 2.62 integer
-# type checking
+# Temporary issue in autoconf integer type checking (remove when
+# autoconf fixes this or provides a workaround for it)
 if test "$ac_cv_c_uint8_t" != no ; then
     AC_DEFINE(HAVE_UINT8_T,1,[Define if uint8_t is supported by the C compiler])
 fi
