@@ -34,13 +34,11 @@ install-exec-hook:
 	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpirun ; \
 	fi
 
-# A special alternate installation target when using multiple process managers
+# A special alternate installation target when using multiple process
+# managers; this is basically the install target, but without the
+# install-exec-hook
 install-alt: $(bin_PROGRAMS)
-	@for foo in $? ; do \
-		if test "$$foo" != "mpiexec" ; then \
-			$(MAKE) install $$foo ; \
-		fi ; \
-	done
+	@for foo in $? ; do $(MAKE) install $$foo ; done
 
 uninstall-local:
 	rm -f ${DESTDIR}${bindir}/mpirun ${DESTDIR}${bindir}/mpiexec
