@@ -150,17 +150,7 @@ install: all
 	    ${INSTALL} -m 755 mtv.so $(DESTDIR)${bindir}/mtv.so ;\
 	fi
 
-
-mpich2-build-install: mpich2-mpdroot install
-	-@if [ -n "`id | grep uid=0`" ] ; then \
-            ${INSTALL} -m 4755 mpich2-mpdroot $(DESTDIR)${bindir}/mpdroot ;\
-	else \
-            ${INSTALL} -m  755 mpich2-mpdroot $(DESTDIR)${bindir}/mpdroot ;\
-	fi
-	rm -f mpich2-mpdroot
-
-uninstall: mpich2-build-uninstall
-mpich2-build-uninstall:
+uninstall:
 	-rm -f $(DESTDIR)${bindir}/mpdroot
 	-rm -f $(DESTDIR)${bindir}/Zeroconf.py
 	-rm -f $(DESTDIR)${bindir}/mpd

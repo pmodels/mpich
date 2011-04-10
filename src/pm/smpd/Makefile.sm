@@ -29,7 +29,3 @@ all-postamble: mpiexec smpd
 install_BIN = mpiexec smpd
 distclean-local:
 	@-rm -f smpdconf.h
-
-mpich2-build-install: install
-
-mpich2-build-uninstall: uninstall

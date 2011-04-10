@@ -26,11 +26,6 @@ include ui/Makefile.mk
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .
 
-# Use the mpich2-build-install target to include mpiexec in the build bin
-# directory (all pm's require these targets)
-mpich2-build-install: install
-mpich2-build-uninstall: uninstall
-
 # Provide an alias for mpirun to support tools that assume that
 # mpiexec is called mpirun
 install-exec-hook:
