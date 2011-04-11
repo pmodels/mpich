@@ -3203,7 +3203,7 @@ sub TargetProfileLibraries {
 	if ($found_source_files) {
 	    # Add these files as objects to the archive
 	    # COMMAND PRINTING
-	    &PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$proflib_name.a \$?",
+	    &PrintVerboseOptionCommand( "\${AR} \${AR_FLAGS} ${libloc}lib$proflib_name.a \$?",
 					"  AR" );
 	    if ($ranliblib) { 
 		# COMMAND PRINTING
@@ -3245,7 +3245,7 @@ sub TargetProfileLibraries {
 	    if ($found_source_files) {
 		# Add these files as objects to the archive
 		# COMMAND PRINTING
-		&PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$proflib_name.la \$?",
+		&PrintVerboseOptionCommand( "\${AR} \${AR_FLAGS} ${libloc}lib$proflib_name.la \$?",
 					    "  AR" );
 		# To handle timestamp problems with recursive makes, 
 		# add a delay
