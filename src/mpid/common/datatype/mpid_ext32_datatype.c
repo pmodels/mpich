@@ -43,7 +43,11 @@ static external32_basic_size_t external32_basic_size_array[] =
     { MPI_UINT16_T, 2 },
     { MPI_UINT32_T, 4 },
     { MPI_UINT64_T, 8 },
-    { MPI_C_BOOL, 4 },
+
+    /* official MPI-2.2 doc says "4" for MPI_C_BOOL, but the MPI Forum
+     * immediately approved errata changing this to "1" */
+    { MPI_C_BOOL, 1 },
+
     { MPI_C_FLOAT_COMPLEX, 2*4 },
     { MPI_C_DOUBLE_COMPLEX, 2*8 },
     { MPI_C_LONG_DOUBLE_COMPLEX, 2*16 },
