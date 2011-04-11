@@ -98,7 +98,8 @@ int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int size, rank, root;
-    int buf = 0;
+    MPIR_SCHED_CHKPMEM_DECL(1);
+    char *buf = NULL;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTERCOMM);
 
@@ -112,50 +113,54 @@ int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
     }
 
     /* do a barrier on the local intracommunicator */
-    mpi_errno = MPIR_Ibarrier_intra(comm_ptr->local_comm, s);
+    MPIU_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibarrier);
+    mpi_errno = comm_ptr->local_comm->coll_fns->Ibarrier(comm_ptr->local_comm, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Sched_barrier(s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPID_SCHED_BARRIER(s);
 
     /* rank 0 on each group does an intercommunicator broadcast to the
        remote group to indicate that all processes in the local group
        have reached the barrier. We do a 1-byte bcast because a 0-byte
        bcast will just return without doing anything. */
 
+    MPIR_SCHED_CHKPMEM_MALLOC(buf, char *, 1, mpi_errno, "bcast buf");
+    buf[0] = 'D'; /* avoid valgrind warnings */
+
     /* first broadcast from left to right group, then from right to
        left group */
+    MPIU_Assert(comm_ptr->coll_fns && comm_ptr->coll_fns->Ibcast);
     if (comm_ptr->is_low_group) {
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Ibcast_inter(&buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = comm_ptr->coll_fns->Ibcast(buf, 1, MPI_BYTE, root, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Sched_barrier(s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
 
         /* receive bcast from right */
         root = 0;
-        mpi_errno = MPIR_Ibcast_inter(&buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = comm_ptr->coll_fns->Ibcast(buf, 1, MPI_BYTE, root, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
         /* receive bcast from left */
         root = 0;
-        mpi_errno = MPIR_Ibcast_inter(&buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = comm_ptr->coll_fns->Ibcast(buf, 1, MPI_BYTE, root, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Sched_barrier(s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
 
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Ibcast_inter(&buf, 1, MPI_BYTE, root, comm_ptr, s);
+        mpi_errno = comm_ptr->coll_fns->Ibcast(buf, 1, MPI_BYTE, root, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
+    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 
