@@ -413,8 +413,6 @@ int MPIR_Igather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     Cost: p.alpha + n.beta
 */
 
-    MPIU_Assertp(FALSE);
-
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
         goto fn_exit;
