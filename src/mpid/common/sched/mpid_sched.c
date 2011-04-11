@@ -19,9 +19,13 @@
 #endif
 
 /* helper macros to improve code readability */
+/* we pessimistically assume that MPI_TYPE_NULL may be passed as a "valid" type
+ * for send/recv when MPI_PROC_NULL is the destination/src */
 #define dtype_add_ref_if_not_builtin(datatype_)                    \
     do {                                                           \
-        if (HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN) { \
+        if ((datatype_) != MPI_DATATYPE_NULL &&                    \
+            HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
+        {                                                          \
             MPID_Datatype *dtp_ = NULL;                            \
             MPID_Datatype_get_ptr((datatype_), dtp_);              \
             MPID_Datatype_add_ref(dtp_);                           \
@@ -29,7 +33,9 @@
     } while (0)
 #define dtype_release_if_not_builtin(datatype_)                    \
     do {                                                           \
-        if (HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN) { \
+        if ((datatype_) != MPI_DATATYPE_NULL &&                    \
+            HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
+        {                                                          \
             MPID_Datatype *dtp_ = NULL;                            \
             MPID_Datatype_get_ptr((datatype_), dtp_);              \
             MPID_Datatype_release(dtp_);                           \
