@@ -550,6 +550,7 @@ int MPIR_Iallgather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
                                                    recvtype, root, comm_ptr, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
+        MPID_SCHED_BARRIER(s);
     }
     else {
         /* receive bcast from left */
@@ -569,6 +570,7 @@ int MPIR_Iallgather_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
                                                    sendtype, root, comm_ptr, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
+        MPID_SCHED_BARRIER(s);
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
