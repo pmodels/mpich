@@ -121,12 +121,14 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
     int mpi_errno = MPI_SUCCESS;
     int context_offset;
     MPID_Request *r = s->req;
+    MPID_Comm *comm;
 
     MPIU_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
 
     switch (e->type) {
         case MPIDU_SCHED_ENTRY_SEND:
-            context_offset = (e->u.send.comm->comm_kind == MPID_INTRACOMM) ?
+            comm = e->u.send.comm;
+            context_offset = (comm->comm_kind == MPID_INTRACOMM) ?
                 MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
             if (e->u.send.count_p) {
                 /* deferred send */
@@ -134,18 +136,18 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
                  * &send.count, but this requires patching up the pointers
                  * during realloc of entries, so this is easier */
                 mpi_errno = MPID_Isend(e->u.send.buf, *e->u.send.count_p, e->u.send.datatype,
-                                       e->u.send.dest, s->tag, r->comm, context_offset,
+                                       e->u.send.dest, s->tag, comm, context_offset,
                                        &e->u.send.sreq);
             }
             else {
                 if (e->u.send.is_sync) {
                     mpi_errno = MPID_Issend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                            e->u.send.dest, s->tag, r->comm, context_offset,
+                                            e->u.send.dest, s->tag, comm, context_offset,
                                             &e->u.send.sreq);
                 }
                 else {
                     mpi_errno = MPID_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                           e->u.send.dest, s->tag, r->comm, context_offset,
+                                           e->u.send.dest, s->tag, comm, context_offset,
                                            &e->u.send.sreq);
                 }
             }
@@ -153,10 +155,11 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPID
             e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             break;
         case MPIDU_SCHED_ENTRY_RECV:
-            context_offset = (e->u.recv.comm->comm_kind == MPID_INTRACOMM) ?
+            comm = e->u.recv.comm;
+            context_offset = (comm->comm_kind == MPID_INTRACOMM) ?
                 MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
             mpi_errno = MPID_Irecv(e->u.recv.buf, e->u.recv.count, e->u.recv.datatype,
-                                   e->u.recv.src, s->tag, r->comm, context_offset,
+                                   e->u.recv.src, s->tag, comm, context_offset,
                                    &e->u.recv.rreq);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
