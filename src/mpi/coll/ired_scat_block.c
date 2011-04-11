@@ -474,6 +474,8 @@ int MPIR_Ireduce_scatter_block_rec_dbl(void *sendbuf, void *recvbuf, int recvcou
         /* calculate sendtype */
         blklens[0] = my_tree_root * recvcount;
         blklens[1] = (comm_size - (my_tree_root + mask)) * recvcount;
+        if (blklens[1] < 0)
+            blklens[1] = 0;
 
         dis[0] = 0;
         dis[1] = blklens[0] + recvcount * (MPIR_MIN((my_tree_root + mask), comm_size) - my_tree_root);
@@ -487,6 +489,8 @@ int MPIR_Ireduce_scatter_block_rec_dbl(void *sendbuf, void *recvbuf, int recvcou
         /* calculate recvtype */
         blklens[0] = recvcount * MPIR_MIN(dst_tree_root, comm_size);
         blklens[1] = recvcount * (comm_size - (dst_tree_root + mask));
+        if (blklens[1] < 0)
+            blklens[1] = 0;
 
         dis[0] = 0;
         dis[1] = blklens[0];
