@@ -829,15 +829,21 @@ int MPIR_Ibcast_inter(void *buffer, int count, MPI_Datatype datatype, int root, 
     else
     {
         /* remote group. rank 0 on remote group receives from root */
-        mpi_errno = MPID_Sched_recv(buffer, count, datatype, root, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (comm_ptr->rank == 0) {
+            mpi_errno = MPID_Sched_recv(buffer, count, datatype, root, comm_ptr, s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
+        }
 
         if (comm_ptr->local_comm == NULL) {
             mpi_errno = MPIR_Setup_intercomm_localcomm(comm_ptr);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPIR_Ibcast_intra(buffer, count, datatype, root, comm_ptr->local_comm, s);
+        /* now do the usual broadcast on this intracommunicator
+           with rank 0 as root. */
+        MPIU_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibcast);
+        mpi_errno = comm_ptr->local_comm->coll_fns->Ibcast(buffer, count, datatype, root, comm_ptr->local_comm, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
