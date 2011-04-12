@@ -55,3 +55,28 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB_FATAL],[
 	   AC_MSG_ERROR(['$2 or lib$3 library not found. Did you specify --with-$1= or --with-$1-include= or --with-$1-lib=?'])
 	fi
 ])
+
+dnl PAC_CHECK_PREFIX(with_option,prefixvar)
+AC_DEFUN([PAC_CHECK_PREFIX],[
+	AC_ARG_WITH([$1-prefix],
+            [AS_HELP_STRING([[--with-$1-prefix[=DIR]]], [use the $1
+                            library installed in DIR, rather than the
+                            one included in the distribution.  Pass
+                            "embedded" to force usage of the included
+                            $1 source.])],
+            [if test "$withval" = "system" ; then
+                 :
+             elif test "$withval" = "embedded" ; then
+                 :
+             else
+                 PAC_APPEND_FLAG([-I${with_$1_prefix}/include],[CPPFLAGS])
+                 if test -d "${with_$1_prefix}/lib64" ; then
+                     PAC_APPEND_FLAG([-L${with_$1_prefix}/lib64],[LDFLAGS])
+                 fi
+                 PAC_APPEND_FLAG([-L${with_$1_prefix}/lib],[LDFLAGS])
+             fi
+             ],
+            [with_$1_prefix="embedded"])
+	    $2=${with_$1_prefix}
+	]
+)

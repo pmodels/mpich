@@ -289,32 +289,13 @@ AM_CONDITIONAL([hydra_ui_mpich], [test $hydra_ui = "mpich"])
 
 
 #########################################################################
-# System hwloc
+# System hwloc and plpa
 #########################################################################
+PAC_CHECK_PREFIX(hwloc,prefixvar)
+AM_CONDITIONAL([hydra_build_embedded_hwloc], [test "${prefixvar}" = "embedded"])
 
-dnl TODO: refactor this and similar code in MPICH2's configure.in (for openpa)
-dnl into a common m4 PAC_ macro
-AC_ARG_WITH([hwloc-prefix],
-            [AS_HELP_STRING([[--with-hwloc-prefix[=DIR]]],
-                            [use the hwloc library installed in DIR,
-                             rather than the one included in "tools/bind/hwloc/hwloc".
-                             Pass "embedded" to force usage of the hwloc source
-                             distributed with hydra.])],
-            [if test "$withval" = "system" ; then
-                 :
-             elif test "$withval" = "embedded" ; then
-                 :
-             else
-                 PAC_APPEND_FLAG([-I${with_hwloc_prefix}/include],[CPPFLAGS])
-                 if test -d "${with_hwloc_prefix}/lib64" ; then
-                     PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[LDFLAGS])
-                 fi
-                 PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib],[LDFLAGS])
-             fi
-             ],
-            [with_hwloc_prefix="embedded"])
-
-AM_CONDITIONAL([hydra_build_embedded_hwloc], [test "${with_hwloc_prefix}" = "embedded"])
+PAC_CHECK_PREFIX(plpa,prefixvar)
+AM_CONDITIONAL([hydra_build_embedded_plpa], [test "${prefixvar}" = "embedded"])
 
 
 #########################################################################
