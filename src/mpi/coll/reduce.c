@@ -210,7 +210,7 @@ fn_fail:
 }
 
 /* An implementation of Rabenseifner's reduce algorithm (see
-   http://www.hlrs.de/organization/par/services/models/mpi/myreduce.html).
+   http://www.hlrs.de/mpi/myreduce.html).
 
    This algorithm implements the reduce in two steps: first a
    reduce-scatter, followed by a gather to the root. A

@@ -52,7 +52,7 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
    For long messages and for builtin ops and if count >= pof2 (where
    pof2 is the nearest power-of-two less than or equal to the number
    of processes), we use Rabenseifner's algorithm (see 
-   http://www.hlrs.de/organization/par/services/models/mpi/myreduce.html ).
+   http://www.hlrs.de/mpi/myreduce.html).
    This algorithm implements the allreduce in two steps: first a
    reduce-scatter, followed by an allgather. A recursive-halving
    algorithm (beginning with processes that are distance 1 apart) is
