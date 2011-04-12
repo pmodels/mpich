@@ -24,6 +24,3 @@ INCLUDES = -I../../../include -I${master_top_srcdir}/src/include -I../../../mpi/
 install_BIN = printrlog printirlog irlog2rlog
 distclean-local:
 	@-rm -f rlogconf.h
-
-mpich2-build-install: install
-mpich2-build-uninstall: uninstall
