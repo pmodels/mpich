@@ -93,14 +93,11 @@ int MPI_Group_size(MPI_Group group, int *size)
     
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_SIZE);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -110,7 +107,6 @@ int MPI_Group_size(MPI_Group group, int *size)
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }
 

@@ -207,15 +207,12 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1,
 
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -226,7 +223,6 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1,
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }
 
