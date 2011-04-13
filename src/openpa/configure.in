@@ -12,7 +12,7 @@ dnl config.guess.  It also contains autoconf macro files.
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR([confdb])
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign color-tests])
 
 LT_PREREQ([2.2.6])
 
@@ -44,6 +44,9 @@ dnl Preps an opa_config.h with prefixed macros from config.h for output at
 dnl AC_OUTPUT time.  This way we can safely include opa_config.h in the
 dnl installation and include it in installed headers.
 AX_PREFIX_CONFIG_H([src/opa_config.h],[OPA])
+
+# Non-verbose make
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 ########################################################################
 

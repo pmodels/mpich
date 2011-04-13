@@ -13,7 +13,7 @@ DISTCLEANFILES = _configs.sed src/opa_config.h
 
 # files that automake doesn't know about by default that should be included in
 # the distribution
-EXTRA_DIST = COPYRIGHT CHANGELOG openpa.pc.in
+EXTRA_DIST = COPYRIGHT CHANGELOG openpa.pc.in VERSION
 
 # uses the highlight utility to color code the test output
 prettycheck:
