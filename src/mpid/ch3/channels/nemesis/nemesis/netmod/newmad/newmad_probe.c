@@ -75,7 +75,6 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
      status->MPI_TAG = out_tag;
    
    status->count = size;
-   *flag = TRUE;
    
  fn_exit:
     return mpi_errno;
