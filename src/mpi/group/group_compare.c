@@ -166,7 +166,6 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -176,6 +175,5 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }
