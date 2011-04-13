@@ -11,7 +11,6 @@
 struct HYDT_bind_info HYDT_bind_info;
 
 #include "plpa.h"
-#include "plpa_internal.h"
 
 static void set_cpuset_idx(int idx, struct HYDT_bind_obj *obj)
 {

@@ -77,6 +77,5 @@ AC_DEFUN([PAC_CHECK_PREFIX],[
              fi
              ],
             [with_$1_prefix="embedded"])
-	    $2=${with_$1_prefix}
 	]
 )

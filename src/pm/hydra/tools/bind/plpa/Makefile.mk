@@ -12,4 +12,4 @@ AM_CPPFLAGS += -I$(top_srcdir)/tools/bind/plpa/plpa/src/libplpa \
 # Append plpa to the external subdirs, so it gets built first
 external_subdirs += tools/bind/plpa/plpa
 external_ldflags += -L$(top_builddir)/tools/bind/plpa/plpa/src/libplpa
-external_libs += -lplpa
+external_libs += -lplpa_included

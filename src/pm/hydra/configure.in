@@ -291,11 +291,8 @@ AM_CONDITIONAL([hydra_ui_mpich], [test $hydra_ui = "mpich"])
 #########################################################################
 # System hwloc and plpa
 #########################################################################
-PAC_CHECK_PREFIX(hwloc,prefixvar)
-AM_CONDITIONAL([hydra_build_embedded_hwloc], [test "${prefixvar}" = "embedded"])
-
-PAC_CHECK_PREFIX(plpa,prefixvar)
-AM_CONDITIONAL([hydra_build_embedded_plpa], [test "${prefixvar}" = "embedded"])
+PAC_CHECK_PREFIX(hwloc)
+PAC_CHECK_PREFIX(plpa)
 
 
 #########################################################################
@@ -314,30 +311,23 @@ have_hwloc=no
 for hydra_bindlib in ${hydra_bindlibs}; do
     case "$hydra_bindlib" in
     	plpa)
-		PAC_CONFIG_SUBDIR(tools/bind/plpa/plpa,plpa_works=yes,plpa_works=no)
-		if test "$plpa_works" = "no" ; then
-		   continue
-		fi
+		if test "$with_plpa_prefix" = "embedded" ; then
+		   PAC_CONFIG_SUBDIR_ARGS([tools/bind/plpa/plpa],[--enable-included-mode],
+			[have_plpa=yes],[have_plpa=no])
+                else
+                    AC_CHECK_HEADERS([plpa.h])
+                    AC_CHECK_LIB([plpa],[api_probe])
+                    AC_MSG_CHECKING([if non-embedded plpa works])
+                    if test "$ac_cv_header_plpa_h" = "yes" -a \
+		       "$ac_cv_lib_plpa_api_probe" = "yes" ; then
+                        have_plpa=yes
+                    fi
+                    AC_MSG_RESULT([$have_plpa])
+                fi
 
-		AC_MSG_CHECKING(if plpa works correctly)
-		old_CFLAGS=$CFLAGS
-		old_LDFLAGS=$LDFLAGS
-		CFLAGS="$CFLAGS -I${srcdir}/tools/bind/plpa/plpa/src/libplpa \
-				-Itools/bind/plpa/plpa/src/libplpa"
-		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/src/libplpa/plpa_api_probe.c"
-		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/src/libplpa/plpa_runtime.c"
-		LDFLAGS="$LDFLAGS ${srcdir}/tools/bind/plpa/plpa/src/libplpa/plpa_map.c"
-		AC_TRY_LINK([#include <plpa_internal.h>],[
-				PLPA_NAME(api_type_t) p;
-				PLPA_NAME(api_probe)(&p);
-				],plpa_works=yes,plpa_works=no)
-		CFLAGS=$old_CFLAGS
-		LDFLAGS=$old_LDFLAGS
-		AC_MSG_RESULT($plpa_works)
-		if test "$plpa_works" = "yes" ; then
-		   available_bindlibs=`echo $available_bindlibs plpa`
-		   have_plpa=yes
+		if test "$have_plpa" = "yes" ; then
 		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
+		   available_bindlibs=`echo $available_bindlibs plpa`
 		fi
 		;;		
 	hwloc)
