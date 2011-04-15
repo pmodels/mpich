@@ -146,6 +146,7 @@ int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state);
 
 #define MPIR_SCHED_CHKPMEM_COMMIT(sched_)                                                      \
     do {                                                                                       \
+        MPID_SCHED_BARRIER(s);                                                                 \
         while (mpir_sched_chkpmem_stk_sp_ > 0) {                                               \
             mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf,                                 \
                                       (mpir_sched_chkpmem_stk_[--mpir_sched_chkpmem_stk_sp_]), \
