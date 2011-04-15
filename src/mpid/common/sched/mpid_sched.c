@@ -368,7 +368,7 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
      * progress engine can make progress on it */
     MPL_DL_APPEND(all_schedules.head, s);
 
-    dprintf(stderr, "started schedule s=%p\n", s); /* XXX DJG */
+    dprintf(stderr, "started schedule s=%p\n", s);
     MPIDU_Sched_dump(s);
 
 fn_exit:
