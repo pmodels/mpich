@@ -31,9 +31,12 @@ $print_line_len = 0;
 $write_mpif = 1;
 $is_MPI = 1;
 $do_profiling = 1;
-$routine_prefix = "MPI_";
 $routine_pattern = "[A-Z][a-z0-9_]*";
-$out_prefix="mpi_";
+
+# these two arrays must be kept in sync
+my @routine_prefixes = qw(MPI_ MPIX_);
+my @out_prefixes = qw(mpi_ mpix_);
+
 $malloc = "MPIU_Malloc";
 $free   = "MPIU_Free";
 $header_file = "mpi_fortimpl.h";
@@ -128,7 +131,7 @@ foreach $_ (@ARGV) {
 	$debug = 1;
     }
     elsif (/-prefix=(.*)/) {
-	$routine_prefix = $1;
+        @routine_prefixes = ($1);
 	$is_MPI = 0;
     }
     elsif (/-pattern=(.*)/) {
@@ -862,17 +865,18 @@ sub print_endline {
 
 # Print the header of the file, containing the definitions etc.
 sub print_header {
-    my $routine_name = $_[0];
-    my $lcname = $_[1];
-    my $args = $_[2];
-    my $extra = $_[3];
+    my $out_prefix = shift;
+    my $routine_name = shift;
+    my $lcname = shift;
+    my $args = shift;
+    my $extra = shift;
  
     &print_copyright( );
     if ($extra) {
 	print $OUTFD $extra;
     }
-    &print_profiling_block( $routine_name, $lcname, $args );
-    &print_name_map_block( $routine_name, $lcname );
+    &print_profiling_block( $out_prefix, $routine_name, $lcname, $args );
+    &print_name_map_block( $out_prefix, $routine_name, $lcname );
 
     my $fn = "HelperFor" . $routine_name ;
     if (defined(&$fn)) {
@@ -898,41 +902,44 @@ sub print_copyright {
 # generate an extern declaration of the routine *before* the pragma
 # 
 sub print_profiling_block {
-    my $routine_name = $_[0];
-    my $lcname = $_[1];
-    my $args   = $_[2];
+    my $out_prefix = shift;
+    my $routine_name = shift;
+    my $lcname = shift;
+    my $args   = shift;
     my $ucname = uc($lcname);
+    my $ucprefix = uc($out_prefix);
+    my $lcprefix = lc($out_prefix);
 
     if ($do_weak) {
 	print $OUTFD "\
 /* Begin MPI profiling block */\
 #if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) \
 #if defined(HAVE_MULTIPLE_PRAGMA_WEAK)\n";
-        &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname ); 
-	&print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
-	&print_weak_decl( $OUTFD, "mpi_${lcname}", $args, $lcname );
-	&print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
+        &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname ); 
+	&print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname );
+	&print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname );
+	&print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname );
 	print $OUTFD "\
 #if defined(F77_NAME_UPPER)
-#pragma weak MPI_$ucname = PMPI_${ucname}
-#pragma weak mpi_${lcname}__ = PMPI_${ucname}
-#pragma weak mpi_${lcname}_ = PMPI_${ucname}
-#pragma weak mpi_${lcname} = PMPI_${ucname}
+#pragma weak ${ucprefix}$ucname = P${ucprefix}${ucname}
+#pragma weak ${lcprefix}${lcname}__ = P${ucprefix}${ucname}
+#pragma weak ${lcprefix}${lcname}_ = P${ucprefix}${ucname}
+#pragma weak ${lcprefix}${lcname} = P${ucprefix}${ucname}
 #elif defined(F77_NAME_LOWER_2USCORE)
-#pragma weak MPI_$ucname = pmpi_${lcname}__
-#pragma weak mpi_${lcname}__ = pmpi_${lcname}__
-#pragma weak mpi_${lcname}_ = pmpi_${lcname}__
-#pragma weak mpi_${lcname} = pmpi_${lcname}__
+#pragma weak ${ucprefix}$ucname = p${lcprefix}${lcname}__
+#pragma weak ${lcprefix}${lcname}__ = p${lcprefix}${lcname}__
+#pragma weak ${lcprefix}${lcname}_ = p${lcprefix}${lcname}__
+#pragma weak ${lcprefix}${lcname} = p${lcprefix}${lcname}__
 #elif defined(F77_NAME_LOWER_USCORE)
-#pragma weak MPI_$ucname = pmpi_${lcname}_
-#pragma weak mpi_${lcname}__ = pmpi_${lcname}_
-#pragma weak mpi_${lcname}_ = pmpi_${lcname}_
-#pragma weak mpi_${lcname} = pmpi_${lcname}_
+#pragma weak ${ucprefix}$ucname = p${lcprefix}${lcname}_
+#pragma weak ${lcprefix}${lcname}__ = p${lcprefix}${lcname}_
+#pragma weak ${lcprefix}${lcname}_ = p${lcprefix}${lcname}_
+#pragma weak ${lcprefix}${lcname} = p${lcprefix}${lcname}_
 #else
-#pragma weak MPI_$ucname = pmpi_${lcname}
-#pragma weak mpi_${lcname}__ = pmpi_${lcname}
-#pragma weak mpi_${lcname}_ = pmpi_${lcname}
-#pragma weak mpi_${lcname} = pmpi_${lcname}
+#pragma weak ${ucprefix}$ucname = p${lcprefix}${lcname}
+#pragma weak ${lcprefix}${lcname}__ = p${lcprefix}${lcname}
+#pragma weak ${lcprefix}${lcname}_ = p${lcprefix}${lcname}
+#pragma weak ${lcprefix}${lcname} = p${lcprefix}${lcname}
 #endif
 \n\n";
 
@@ -940,49 +947,49 @@ sub print_profiling_block {
 #elif defined(HAVE_PRAGMA_WEAK)\
 
 #if defined(F77_NAME_UPPER)\n";
-        &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname );
+        &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname );
         print $OUTFD "\
-#pragma weak MPI_$ucname = PMPI_$ucname\
+#pragma weak ${ucprefix}$ucname = P${ucprefix}$ucname\
 #elif defined(F77_NAME_LOWER_2USCORE)\n";
-        &print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
+        &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname );
 	print $OUTFD "\
-#pragma weak mpi_${lcname}__ = pmpi_${lcname}__\
+#pragma weak ${lcprefix}${lcname}__ = p${lcprefix}${lcname}__\
 #elif !defined(F77_NAME_LOWER_USCORE)\n";
-        &print_weak_decl( $OUTFD, "mpi_$lcname", $args, $lcname );
+        &print_weak_decl( $OUTFD, "${lcprefix}$lcname", $args, $lcname );
 	print $OUTFD "\
-#pragma weak mpi_$lcname = pmpi_$lcname\
+#pragma weak ${lcprefix}$lcname = p${lcprefix}$lcname\
 #else\n";
-        &print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
+        &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname );
 	print $OUTFD "\
-#pragma weak mpi_${lcname}_ = pmpi_${lcname}_\
+#pragma weak ${lcprefix}${lcname}_ = p${lcprefix}${lcname}_\
 #endif\
 \
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)\
 #if defined(F77_NAME_UPPER)\
-#pragma _HP_SECONDARY_DEF PMPI_$ucname  MPI_$ucname\
+#pragma _HP_SECONDARY_DEF P${ucprefix}$ucname  ${ucprefix}$ucname\
 #elif defined(F77_NAME_LOWER_2USCORE)\
-#pragma _HP_SECONDARY_DEF pmpi_${lcname}__  mpi_${lcname}__\
+#pragma _HP_SECONDARY_DEF p${lcprefix}${lcname}__  ${lcprefix}${lcname}__\
 #elif !defined(F77_NAME_LOWER_USCORE)\
-#pragma _HP_SECONDARY_DEF pmpi_$lcname  mpi_$lcname\
+#pragma _HP_SECONDARY_DEF p${lcprefix}$lcname  ${lcprefix}$lcname\
 #else\
-#pragma _HP_SECONDARY_DEF pmpi_${lcname}_  mpi_${lcname}_\
+#pragma _HP_SECONDARY_DEF p${lcprefix}${lcname}_  ${lcprefix}${lcname}_\
 #endif\
 \
 #elif defined(HAVE_PRAGMA_CRI_DUP)\
 #if defined(F77_NAME_UPPER)\
-#pragma _CRI duplicate MPI_$ucname as PMPI_$ucname\
+#pragma _CRI duplicate ${ucprefix}$ucname as P${ucprefix}$ucname\
 #elif defined(F77_NAME_LOWER_2USCORE)\
-#pragma _CRI duplicate mpi_${lcname}__ as pmpi_${lcname}__\
+#pragma _CRI duplicate ${lcprefix}${lcname}__ as p${lcprefix}${lcname}__\
 #elif !defined(F77_NAME_LOWER_USCORE)\
-#pragma _CRI duplicate mpi_${lcname} as pmpi_${lcname}\
+#pragma _CRI duplicate ${lcprefix}${lcname} as p${lcprefix}${lcname}\
 #else\
-#pragma _CRI duplicate mpi_${lcname}_ as pmpi_${lcname}_\
+#pragma _CRI duplicate ${lcprefix}${lcname}_ as p${lcprefix}${lcname}_\
 #endif\
 #endif /* HAVE_PRAGMA_WEAK */\
 #endif /* USE_WEAK_SYMBOLS */\
 /* End MPI profiling block */\n\n";
 
-    &AddFwrapWeakName( $lcname, $ucname, $args );
+    &AddFwrapWeakName( $out_prefix, $lcname, $ucname, $args );
     }
 }
 
@@ -992,17 +999,19 @@ sub print_profiling_block {
 # name used in the function prototypes will match the one that is declared
 # in this file.
 sub print_name_map_block {
-    my $routine_name = $_[0];
-    my $lcname = $_[1];
+    my $out_prefix = shift;
+    my $routine_name = shift;
+    my $lcname = shift;
     my $ucname = uc($lcname);
+    my $lcprefix = lc($out_prefix);
+    my $ucprefix = uc($out_prefix);
     
     # This include the code to map names for the profiling interface,
     # using the same macro as for the rest of the MPI code
-    $uc_out_prefix = uc($out_prefix);
     if ($do_profiling) {
 	# Remove the leading MPI_ if the name has it.
-	if ($routine_name =~ /^MPI_/) {
-	    $routine_name =~ s/^MPI_//;
+	if ($routine_name =~ /^$ucprefix/) {
+	    $routine_name =~ s/^$ucprefix//;
 	}
 	print $OUTFD "
 /* Map the name to the correct form */
@@ -1010,43 +1019,43 @@ sub print_name_map_block {
 #if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
 /* Define the weak versions of the PMPI routine*/
 #ifndef F77_NAME_UPPER\n";
-	&print_weak_decl( $OUTFD, "PMPI_$ucname", $args, $lcname ); 
+	&print_weak_decl( $OUTFD, "P${ucprefix}$ucname", $args, $lcname ); 
 	print $OUTFD "#endif\n#ifndef F77_NAME_LOWER_2USCORE\n";
-	&print_weak_decl( $OUTFD, "pmpi_${lcname}__", $args, $lcname );
+	&print_weak_decl( $OUTFD, "p${lcprefix}${lcname}__", $args, $lcname );
 	print $OUTFD "#endif\n#ifndef F77_NAME_LOWER_USCORE\n";
-	&print_weak_decl( $OUTFD, "pmpi_${lcname}_", $args, $lcname );
+	&print_weak_decl( $OUTFD, "p${lcprefix}${lcname}_", $args, $lcname );
 	print $OUTFD "#endif\n#ifndef F77_NAME_LOWER\n";
-	&print_weak_decl( $OUTFD, "pmpi_${lcname}", $args, $lcname );
+	&print_weak_decl( $OUTFD, "p${lcprefix}${lcname}", $args, $lcname );
 	print $OUTFD "
 #endif
 
 #if defined(F77_NAME_UPPER)
-#pragma weak pmpi_${lcname}__ = PMPI_${ucname}
-#pragma weak pmpi_${lcname}_ = PMPI_${ucname}
-#pragma weak pmpi_${lcname} = PMPI_${ucname}
+#pragma weak p${lcprefix}${lcname}__ = P${ucprefix}${ucname}
+#pragma weak p${lcprefix}${lcname}_ = P${ucprefix}${ucname}
+#pragma weak p${lcprefix}${lcname} = P${ucprefix}${ucname}
 #elif defined(F77_NAME_LOWER_2USCORE)
-#pragma weak PMPI_$ucname = pmpi_${lcname}__
-#pragma weak pmpi_${lcname}_ = pmpi_${lcname}__
-#pragma weak pmpi_${lcname} = pmpi_${lcname}__
+#pragma weak P${ucprefix}$ucname = p${lcprefix}${lcname}__
+#pragma weak p${lcprefix}${lcname}_ = p${lcprefix}${lcname}__
+#pragma weak p${lcprefix}${lcname} = p${lcprefix}${lcname}__
 #elif defined(F77_NAME_LOWER_USCORE)
-#pragma weak PMPI_$ucname = pmpi_${lcname}_
-#pragma weak pmpi_${lcname}__ = pmpi_${lcname}_
-#pragma weak pmpi_${lcname} = pmpi_${lcname}_
+#pragma weak P${ucprefix}$ucname = p${lcprefix}${lcname}_
+#pragma weak p${lcprefix}${lcname}__ = p${lcprefix}${lcname}_
+#pragma weak p${lcprefix}${lcname} = p${lcprefix}${lcname}_
 #else
-#pragma weak PMPI_$ucname = pmpi_${lcname}
-#pragma weak pmpi_${lcname}__ = pmpi_${lcname}
-#pragma weak pmpi_${lcname}_ = pmpi_${lcname}
+#pragma weak P${ucprefix}$ucname = p${lcprefix}${lcname}
+#pragma weak p${lcprefix}${lcname}__ = p${lcprefix}${lcname}
+#pragma weak p${lcprefix}${lcname}_ = p${lcprefix}${lcname}
 #endif /* Test on name mapping */
 #endif /* Use multiple pragma weak */
 
 #ifdef F77_NAME_UPPER
-#define ${out_prefix}${lcname}_ PMPI_${ucname}
+#define ${lcprefix}${lcname}_ P${ucprefix}${ucname}
 #elif defined(F77_NAME_LOWER_2USCORE)
-#define ${out_prefix}${lcname}_ pmpi_${lcname}__
+#define ${lcprefix}${lcname}_ p${lcprefix}${lcname}__
 #elif !defined(F77_NAME_LOWER_USCORE)
-#define ${out_prefix}${lcname}_ pmpi_${lcname}
+#define ${lcprefix}${lcname}_ p${lcprefix}${lcname}
 #else
-#define ${out_prefix}${lcname}_ pmpi_${lcname}_
+#define ${lcprefix}${lcname}_ p${lcprefix}${lcname}_
 #endif /* Test on name mapping */
 
 /* This defines the routine that we call, which must be the PMPI version
@@ -1054,19 +1063,19 @@ sub print_name_map_block {
    must be undefined first to prevent any conflicts with previous renamings,
    such as those put in place by the globus device when it is building on
    top of a vendor MPI. */
-#undef MPI_${routine_name}
-#define MPI_${routine_name} PMPI_${routine_name} 
+#undef ${ucprefix}${routine_name}
+#define ${ucprefix}${routine_name} P${ucprefix}${routine_name} 
 
 #else
 ";
     }
     print $OUTFD "
 #ifdef F77_NAME_UPPER
-#define ${out_prefix}${lcname}_ ${uc_out_prefix}${ucname}
+#define ${lcprefix}${lcname}_ ${ucprefix}${ucname}
 #elif defined(F77_NAME_LOWER_2USCORE)
-#define ${out_prefix}${lcname}_ ${out_prefix}${lcname}__
+#define ${lcprefix}${lcname}_ ${lcprefix}${lcname}__
 #elif !defined(F77_NAME_LOWER_USCORE)
-#define ${out_prefix}${lcname}_ ${out_prefix}${lcname}
+#define ${lcprefix}${lcname}_ ${lcprefix}${lcname}
 /* Else leave name alone */
 #endif
 
@@ -3353,8 +3362,9 @@ sub clean_args {
 # print_type_decl( $FD, $lcname )
 
 sub print_routine_type_decl {
-    my $OUTFD = $_[0];
-    my $lcname = $_[1];
+    my $OUTFD = shift;
+    my $out_prefix = shift;
+    my $lcname = shift;
     # The name "FORT_DLL_SPEC" may be use to tell the compiler that
     # 
     if ($do_subdecls) {
@@ -3370,6 +3380,8 @@ sub print_routine_type_decl {
 # Build the special routines
 sub build_specials {
     my $filename = "";
+    my $out_prefix = $out_prefixes[0]; # realistically, always "mpi_"
+
     # The init routine contains some configure-time values.
     # We may not want to do this if we are supporting multiple
     # Fortran compilers with different values for Fortran .TRUE. and
@@ -3378,9 +3390,9 @@ sub build_specials {
     $filename = "initf.c";
     open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
-    &print_header( "MPI_Init", "init", "" );
+    &print_header( "mpi_", "MPI_Init", "init", "" );
 
-    &print_routine_type_decl( $OUTFD, "init" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "init" );
     $args = "";
     &print_args( $OUTFD, $args, 0, "init" );
     # If an attribute can be added before the code, then do that here.
@@ -3405,16 +3417,16 @@ sub build_specials {
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "init", $args );
+    &AddPrototype( $out_prefix, "init", $args );
 
     $OUTFD = "INITFFD";
     $filename = "initthreadf.c";
     open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "int, int *";
-    &print_header( "MPI_Init_thread", "init_thread", $args );
+    &print_header( "mpi_", "MPI_Init_thread", "init_thread", $args );
 
-    &print_routine_type_decl( $OUTFD, "init_thread" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "init_thread" );
     &print_args( $OUTFD, $args, 0, "init_thread" );
     print $OUTFD "{\n";
     if ($do_fint) {
@@ -3436,15 +3448,15 @@ sub build_specials {
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "init_thread", $args );
+    &AddPrototype( $out_prefix, "init_thread", $args );
 
     $OUTFD = "PCONTROLFFD";
     $filename = "pcontrolf.c";
     open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "int";
-    &print_header( "MPI_Pcontrol", "pcontrol", $args );
-    &print_routine_type_decl( $OUTFD, "pcontrol" );
+    &print_header( "mpi_", "MPI_Pcontrol", "pcontrol", $args );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "pcontrol" );
     &print_args( $OUTFD, $args, 0, "pcontrol" );
     #&print_attr;
     print $OUTFD "{\n";
@@ -3452,21 +3464,21 @@ sub build_specials {
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "pcontrol", $args );
+    &AddPrototype( $out_prefix, "pcontrol", $args );
 
     $OUTFD = "ADDRESSFFD";
     $filename = "addressf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "void *, int *";
-    &print_header( "MPI_Address", "address", $args );
+    &print_header( "mpi_", "MPI_Address", "address", $args );
     # Add the definitions needed for error reporting
     # (We could use mpiimpl.h, but mpierrs.h should be sufficient)
     # mpierror.h references FILE *, so needs stdio.h
     print $OUTFD "#include \"mpierrs.h\"\n"; 
     print $OUTFD "#include <stdio.h>\n"; 
     print $OUTFD "#include \"mpierror.h\"\n"; 
-    &print_routine_type_decl( $OUTFD, "address" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "address" );
     &print_args( $OUTFD, $args, 0, "address" );
     #&print_attr;
     print $OUTFD "{
@@ -3491,21 +3503,21 @@ sub build_specials {
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "address", $args );
+    &AddPrototype( $out_prefix, "address", $args );
 
     $OUTFD = "GETADDRESSFFD";
     $filename = "getaddressf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "void *, MPI_FAintp";
-    &print_header( "MPI_Get_address", "get_address", $args );
+    &print_header( "mpi_", "MPI_Get_address", "get_address", $args );
     # Add the definitions needed for error reporting
     # (We could use mpiimpl.h, but mpierrs.h should be sufficient)
     # mpierror.h references FILE *, so needs stdio.h
     print $OUTFD "#include \"mpierrs.h\"\n"; 
     print $OUTFD "#include <stdio.h>\n"; 
     print $OUTFD "#include \"mpierror.h\"\n"; 
-    &print_routine_type_decl( $OUTFD, "get_address" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "get_address" );
     &print_args( $OUTFD, $args, 0, "get_address" );
     #&print_attr;
     print $OUTFD "{
@@ -3520,7 +3532,7 @@ sub build_specials {
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "get_address", $args );
+    &AddPrototype( $out_prefix, "get_address", $args );
 
     $OUTFD = "WTIMEFD";
     $filename = "wtimef.c";
@@ -3529,11 +3541,11 @@ sub build_specials {
     $returnType = "double";
     &set_weak_decl( "MPI_Wtime", "void", "double" );
     &set_weak_decl( "PMPI_Wtime", "void", "double" );
-    &print_header( "MPI_Wtime", "wtime", "" );
+    &print_header( "mpi_", "MPI_Wtime", "wtime", "" );
     # mpichtimer.h is needed for the timer definitions
     print $OUTFD "#include \"mpichconf.h\"\n";
     print $OUTFD "#include \"mpichtimer.h\"\n";
-    &print_routine_type_decl( $OUTFD, "wtime" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "wtime" );
     print $OUTFD "( void ) ";
     #&print_attr;
     print $OUTFD "{\n";
@@ -3547,9 +3559,9 @@ sub build_specials {
 
     if ($build_prototypes) {
         print PROTOFD "extern ";
-        &print_routine_type_decl( PROTOFD, "wtime" );
+        &print_routine_type_decl( PROTOFD, $out_prefix, "wtime" );
 	print PROTOFD "( void )";
-	&print_attr( PROTOFD, "${out_prefix}wtime_" );
+	&print_attr( PROTOFD, $out_prefix."wtime_" );
         print PROTOFD ";\n";
     }
     $returnType = "void";
@@ -3561,11 +3573,11 @@ sub build_specials {
     $returnType = "double";
     &set_weak_decl( "MPI_Wtick", "void", "double" );
     &set_weak_decl( "PMPI_Wtick", "void", "double" );
-    &print_header( "MPI_Wtick", "wtick", "" );
+    &print_header( "mpi_", "MPI_Wtick", "wtick", "" );
     # mpichtimer.h is needed for the timer definitions
     print $OUTFD "#include \"mpichconf.h\"\n";
     print $OUTFD "#include \"mpichtimer.h\"\n";
-    &print_routine_type_decl( $OUTFD, "wtick" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "wtick" );
     print $OUTFD "( void ) ";
     #&print_attr;
     print $OUTFD "{\n";
@@ -3578,9 +3590,9 @@ sub build_specials {
     
     if ($build_prototypes) {
         print PROTOFD "extern ";
-        &print_routine_type_decl( PROTOFD, "wtick" );
+        &print_routine_type_decl( PROTOFD, $out_prefix, "wtick" );
 	print PROTOFD "( void )";
-	&print_attr( PROTOFD, "${out_prefix}wtick_" );
+	&print_attr( PROTOFD, $out_prefix."wtick_" );
         print PROTOFD ";\n";
     }
     $returnType = "void";
@@ -3590,7 +3602,7 @@ sub build_specials {
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "MPI_Copy_function , MPI_Delete_function , int *, void *";
-    &print_header( "MPI_Keyval_create", "keyval_create", $args );
+    &print_header( "mpi_", "MPI_Keyval_create", "keyval_create", $args );
     print $OUTFD " 
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_create_keyval
@@ -3659,7 +3671,7 @@ MPIR_Comm_delete_attr_f77_proxy(
 
 
 ";
-    &print_routine_type_decl( $OUTFD, "keyval_create" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "keyval_create" );
     &print_args( $OUTFD, $args, 0, "keyval_create" );
     #&print_attr;
     print $OUTFD "{
@@ -3672,7 +3684,7 @@ MPIR_Comm_delete_attr_f77_proxy(
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "keyval_create", $args );
+    &AddPrototype( $out_prefix, "keyval_create", $args );
 
     # Default attribute functions.  
     # We must create separate functions since we cannot rely on
@@ -3684,8 +3696,8 @@ MPIR_Comm_delete_attr_f77_proxy(
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "MPI_Fint, MPI_Fint *, void *, void **, void **, MPI_Fint *";
-    &print_header( "mpi_dup_fn", "dup_fn", $args );
-    &print_routine_type_decl( $OUTFD, "dup_fn" );
+    &print_header( "mpi_", "mpi_dup_fn", "dup_fn", $args );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "dup_fn" );
     &print_args( $OUTFD, $args, 0, "dup_fn" );
     #&print_attr;
     print $OUTFD "{
@@ -3695,15 +3707,15 @@ MPIR_Comm_delete_attr_f77_proxy(
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "dup_fn", $args );
+    &AddPrototype( $out_prefix, "dup_fn", $args );
 
     $OUTFD = "NULLDELFN";
     $filename = "null_del_fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "MPI_Fint *, MPI_Fint *, void *, void *";
-    &print_header( "mpi_null_delete_fn", "null_delete_fn", $args );
-    &print_routine_type_decl( $OUTFD, "null_delete_fn" );
+    &print_header( "mpi_", "mpi_null_delete_fn", "null_delete_fn", $args );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "null_delete_fn" );
     &print_args( $OUTFD, $args, 0, "null_delete_fn" );
     #&print_attr;
     print $OUTFD "{
@@ -3711,15 +3723,15 @@ MPIR_Comm_delete_attr_f77_proxy(
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "null_delete_fn", $args );
+    &AddPrototype( $out_prefix, "null_delete_fn", $args );
 
     $OUTFD = "NULLCOPYFN";
     $filename = "null_copy_fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "MPI_Fint *, MPI_Fint *, void *, void *, void *, int *";
-    &print_header( "mpi_null_copy_fn", "null_copy_fn", $args );
-    &print_routine_type_decl( $OUTFD, "null_copy_fn" );
+    &print_header( "mpi_", "mpi_null_copy_fn", "null_copy_fn", $args );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "null_copy_fn" );
     &print_args( $OUTFD, $args, 0, "null_copy_fn" );
     print $OUTFD "{
         *ierr = MPI_SUCCESS;
@@ -3727,7 +3739,7 @@ MPIR_Comm_delete_attr_f77_proxy(
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "null_copy_fn", $args );
+    &AddPrototype( $out_prefix, "null_copy_fn", $args );
 
     &WriteAttrDefaults( "comm_" );
     &WriteAttrDefaults( "win_" );
@@ -3746,7 +3758,7 @@ MPIR_Comm_delete_attr_f77_proxy(
 #    open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
 #    $files[$#files+1] = $filename;
 #    $args = "void *, MPI_Fint *, MPI_Fint *, void *, MPI_Offset *, MPI_Aint *, MPI_Fint *";
-#    &print_header( "mpi_conversion_fn_null", "conversion_fn_null", $args,
+#    &print_header( "mpi_", "mpi_conversion_fn_null", "conversion_fn_null", $args,
 #	   "#ifdef MPI_CONVERSION_FN_NULL\n#undef MPI_CONVERSION_FN_NULL\n#endif\n" );
 #    &print_routine_type_decl( $OUTFD, "conversion_fn_null" );
 #    &print_args( $OUTFD, $args, 0, "conversion_fn_null" );
@@ -3755,7 +3767,7 @@ MPIR_Comm_delete_attr_f77_proxy(
 #    print $OUTFD "\n{\n   return MPI_SUCCESS;\n}\n";
 #    close ($OUTFD);
 #    &ReplaceIfDifferent( $filename, $filename . ".new" );
-#    &AddPrototype( "conversion_fn_null", $args );
+#    &AddPrototype( $out_prefix, "conversion_fn_null", $args );
 
 
     # The status conversion functions.
@@ -3995,140 +4007,146 @@ sub ReadAndProcessInterface {
 	    }
 	}
 
-	if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
-	    $routine_name = $1;
-	    $args = $2;
-	    while (! ($args =~ /;/)) {
-		$args .= <FD>;
-		$linecount++;
-	    }
-	    $args =~ s/\)\s*;//g;
-	    $args =~ s/[\r\n]*//g;
-	    # remove qualifiers from args
+        PREFIX:
+        foreach my $i (0 .. $#routine_prefixes) {
+            my $routine_prefix = $routine_prefixes[$i];
+            my $out_prefix = $out_prefixes[$i];
+            if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
+                $routine_name = $1;
+                $args = $2;
+                while (! ($args =~ /;/)) {
+                    $args .= <FD>;
+                    $linecount++;
+                }
+                $args =~ s/\)\s*;//g;
+                $args =~ s/[\r\n]*//g;
+                # remove qualifiers from args
 ### TEMP - REMEMBER const because we may need it later	    
-	    #$args =~ s/\s*const\s+//g;
-	    # Convert MPIO_Request to MPI_Request (temporary)
+                #$args =~ s/\s*const\s+//g;
+                # Convert MPIO_Request to MPI_Request (temporary)
 #	    $args =~ s/MPIO_Request/MPI_Request/g;
 
-	    # Get the name of the Fortran routine (without the prefix).  
-	    # Normally, the name is just the lower-case version, but
-	    # some libraries (such as NetCDF) use "real" in Fortran
-	    # where C uses "float".
-	    $lcname = lc($routine_name);
-	    if (defined($CtoFName{$lcname})) {
-		$lcname = $CtoFName{$lcname};
-	    }
-	    # Eventually, we'll create a new file here.  
-	    # For C++, we may create similar files by looking up 
-	    # the corresponding routines.
-	    if (defined($special_routines{$routine_name})) {
-		print "Skipping $routine_name\n" if $debug;
-	    }
-	    else {
-		# Check for duplicates in the list of routines
-		if (defined($mpi_routines{$routine_name})) {
-		    my $found = "";
-		    if (defined($mpiRoutinesFile{$routine_name})) {
-			my $location = $mpiRoutinesFile{$routine_name};
-			$found = "previous prototoype found in $location\n";
-		    }
-		    print STDERR "Duplicate prototypes for $routine_name in $prototype_file:$linecount\n$found";
-		    next;
-		}
-		# Clear variables
-		&clean_args;
-		$mpi_routines{$routine_name} = $args;
-		$mpiRoutinesFile{$routine_name} = "$prototype_file:$linecount";
+                # Get the name of the Fortran routine (without the prefix).  
+                # Normally, the name is just the lower-case version, but
+                # some libraries (such as NetCDF) use "real" in Fortran
+                # where C uses "float".
+                $lcname = lc($routine_name);
+                if (defined($CtoFName{$lcname})) {
+                    $lcname = $CtoFName{$lcname};
+                }
+                # Eventually, we'll create a new file here.  
+                # For C++, we may create similar files by looking up 
+                # the corresponding routines.
+                if (defined($special_routines{$routine_name})) {
+                    print "Skipping $routine_name\n" if $debug;
+                }
+                else {
+                    # Check for duplicates in the list of routines
+                    if (defined($mpi_routines{$routine_name})) {
+                        my $found = "";
+                        if (defined($mpiRoutinesFile{$routine_name})) {
+                            my $location = $mpiRoutinesFile{$routine_name};
+                            $found = "previous prototoype found in $location\n";
+                        }
+                        print STDERR "Duplicate prototypes for $routine_name in $prototype_file:$linecount\n$found";
+                        next;
+                    }
+                    # Clear variables
+                    &clean_args;
+                    $mpi_routines{$routine_name} = $args;
+                    $mpiRoutinesFile{$routine_name} = "$prototype_file:$linecount";
 
-		$clean_up = "";
-		if ($buildfiles) {
-		    if (defined($name_map{$lcname})) {
-			$filename = $name_map{$lcname} . "f.c";
-		    }
-		    else {
-			$filename = $lcname . "f.c";
-		    }
-		    $OUTFD = OUTPUTFILED;   # Needed for pre 5.6 versions of perl
-		    $newfilename = $filename . ".new";
-		    open ($OUTFD, ">$newfilename" ) || die "Cannot open $newfilename\n";
-		    # Add the name to the list of files"
-		    $files[$#files+1] = $filename;
-		}
-		else {
-		    $OUTFD = STDOUT;
-		}
-		&print_header( $routine_name, $lcname, $args );
-		if ($do_subdecls) {
-		    print $OUTFD "FORT_DLL_SPEC $returnType FORT_CALL ";
-		}
-		else {
-		    print $OUTFD "$returnType ";
-		}
-		print $OUTFD "${out_prefix}${lcname}_ ";
-		# Print args not only prints the arguments but fills the
-		# array @arg_addresses to indicate the number of dereference
-		# operations are needed to recover the original value (since
-		# all Fortran parameters are passed either by value-result or
-		# by reference, many value parameters in the C calls are 
-		# replaced by reference parameters in the Fortran interface.
-		print "Printing arguments for $routine_prefix${lcname}_\n" if $debug;
-		&print_args( $OUTFD, $args, 0, $lcname );
+                    $clean_up = "";
+                    if ($buildfiles) {
+                        if (defined($name_map{$lcname})) {
+                            $filename = $name_map{$lcname} . "f.c";
+                        }
+                        else {
+                            $filename = $lcname . "f.c";
+                        }
+                        $OUTFD = OUTPUTFILED;   # Needed for pre 5.6 versions of perl
+                        $newfilename = $filename . ".new";
+                        open ($OUTFD, ">$newfilename" ) || die "Cannot open $newfilename\n";
+                        # Add the name to the list of files"
+                        $files[$#files+1] = $filename;
+                    }
+                    else {
+                        $OUTFD = STDOUT;
+                    }
+                    &print_header( $out_prefix, $routine_name, $lcname, $args );
+                    if ($do_subdecls) {
+                        print $OUTFD "FORT_DLL_SPEC $returnType FORT_CALL ";
+                    }
+                    else {
+                        print $OUTFD "$returnType ";
+                    }
+                    print $OUTFD "${out_prefix}${lcname}_ ";
+                    # Print args not only prints the arguments but fills the
+                    # array @arg_addresses to indicate the number of dereference
+                    # operations are needed to recover the original value (since
+                    # all Fortran parameters are passed either by value-result or
+                    # by reference, many value parameters in the C calls are 
+                    # replaced by reference parameters in the Fortran interface.
+                    print "Printing arguments for $routine_prefix${lcname}_\n" if $debug;
+                    &print_args( $OUTFD, $args, 0, $lcname );
 
-		#&print_attr;
-		print $OUTFD "{\n";
-		&specialInitClear;
-		if ($protectMPIO) {
-		    print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
- 		}
-		# If enabled, generate the more complex code required to
-		# handle the case where MPI_Fint is not the same size
-		# as a C int.  THIS IS EXPERIMENTAL AND SHOULD NOT BE 
-		# RELEASED
-		if ($do_fint) {
-		    &printCallForFint( $routine_name, $args );
-		}
-		&print_special_decls( $routine_name );
-		if (defined($ChangeCall{$routine_name})) {
-		    my ($newName,$extraArgs) = 
-			split(/:/,$ChangeCall{$routine_name} );
-		    print $OUTFD "   $errparmlval = $newName";
-		    my $largs = $args . "," . $extraArgs;
-		    &print_call_args( $largs );
-		}
-		else {
-		    print $OUTFD "    $errparmlval = $routine_prefix$routine_name";
-		    print "Printing call arguments for mpi_${lcname}_\n" if $debug;
-		    &print_call_args( $args );
-		}
-		# Print any post call processing
-		&print_post_call( $routine_name, $args );
-		if ($do_fint) {
-		    print $OUTFD "#endif\n"
-		}
-		if ($protectMPIO) {
-		    print $OUTFD "#else\n$errparmlval = MPI_ERR_INTERN;\n#endif\n";
- 		}
-		if ($returnErrval) {
-		    print $OUTFD "    return $errparmrval;\n";
-		}
-		print $OUTFD "}\n";
-		if ($buildfiles) {
-		    close ($OUTFD);
-		    &ReplaceIfDifferent( $filename, $newfilename );
-		}
-		if ($build_prototypes) {
-		    if ($do_subdecls) {
-			print PROTOFD "extern FORT_DLL_SPEC $returnType FORT_CALL ${out_prefix}${lcname}_ ";
-		    }
-		    else {
-			print PROTOFD "extern $returnType ${out_prefix}${lcname}_ ";
-		    }
-		    &print_args( PROTOFD, $args, 0, $lcname );
-		    &print_attr( PROTOFD, "${out_prefix}${lcname}_" );
-		    print PROTOFD ";\n";
-		}
-	    }
-	}
+                    #&print_attr;
+                    print $OUTFD "{\n";
+                    &specialInitClear;
+                    if ($protectMPIO) {
+                        print $OUTFD "#ifdef MPI_MODE_RDONLY\n";
+                    }
+                    # If enabled, generate the more complex code required to
+                    # handle the case where MPI_Fint is not the same size
+                    # as a C int.  THIS IS EXPERIMENTAL AND SHOULD NOT BE 
+                    # RELEASED
+                    if ($do_fint) {
+                        &printCallForFint( $routine_prefix, $routine_name, $args );
+                    }
+                    &print_special_decls( $routine_name );
+                    if (defined($ChangeCall{$routine_name})) {
+                        my ($newName,$extraArgs) = 
+                            split(/:/,$ChangeCall{$routine_name} );
+                        print $OUTFD "   $errparmlval = $newName";
+                        my $largs = $args . "," . $extraArgs;
+                        &print_call_args( $largs );
+                    }
+                    else {
+                        print $OUTFD "    $errparmlval = $routine_prefix$routine_name";
+                        print "Printing call arguments for mpi_${lcname}_\n" if $debug;
+                        &print_call_args( $args );
+                    }
+                    # Print any post call processing
+                    &print_post_call( $routine_name, $args );
+                    if ($do_fint) {
+                        print $OUTFD "#endif\n"
+                    }
+                    if ($protectMPIO) {
+                        print $OUTFD "#else\n$errparmlval = MPI_ERR_INTERN;\n#endif\n";
+                    }
+                    if ($returnErrval) {
+                        print $OUTFD "    return $errparmrval;\n";
+                    }
+                    print $OUTFD "}\n";
+                    if ($buildfiles) {
+                        close ($OUTFD);
+                        &ReplaceIfDifferent( $filename, $newfilename );
+                    }
+                    if ($build_prototypes) {
+                        if ($do_subdecls) {
+                            print PROTOFD "extern FORT_DLL_SPEC $returnType FORT_CALL ${out_prefix}${lcname}_ ";
+                        }
+                        else {
+                            print PROTOFD "extern $returnType ${out_prefix}${lcname}_ ";
+                        }
+                        &print_args( PROTOFD, $args, 0, $lcname );
+                        &print_attr( PROTOFD, "${out_prefix}${lcname}_" );
+                        print PROTOFD ";\n";
+                    }
+                }
+                last PREFIX; # bail out and start reading lines from FD again
+            }
+        }
     }
 }
 
@@ -4328,10 +4346,10 @@ sub SkipCPPIfdef {
 # ---------------------------------------------------------------------------
 # Add a prototype for (functionname, arguments)
 sub AddPrototype {
-    my ($funcname,$args) = @_;
+    my ($out_prefix, $funcname,$args) = @_;
     if ($build_prototypes) {
         print PROTOFD "extern ";
-	&print_routine_type_decl( PROTOFD, "$funcname" );
+	&print_routine_type_decl( PROTOFD, $out_prefix, "$funcname" );
 	&print_args( PROTOFD, $args, 1, "$funcname" );
 	&print_attr( PROTOFD, "${out_prefix}${funcname}_" );
 	print PROTOFD ";\n";
@@ -4344,6 +4362,7 @@ sub AddPrototype {
 sub WriteAttrDefaults {
     my $prefix =$_[0];
     my $ucprefix = uc($prefix);
+    my $out_prefix = $out_prefixes[0]; # realistically, always "mpi_"
     
     my $filename = "dup_${prefix}fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
@@ -4353,9 +4372,9 @@ sub WriteAttrDefaults {
     # its important to use an MPI_Aint * instead of a void **
 #    $args = "MPI_Fint, MPI_Fint *, void *, void **, void **, MPI_Fint *";
     $args = "MPI_Fint, MPI_Fint *, void *, MPI_FAintp, MPI_FAintp, MPI_Fint *";
-    &print_header( "mpi_${prefix}dup_fn", "${prefix}dup_fn", $args,
+    &print_header( "mpi_", "mpi_${prefix}dup_fn", "${prefix}dup_fn", $args,
 	   "#ifdef MPI_${ucprefix}DUP_FN\n#undef MPI_${ucprefix}DUP_FN\n#endif\n" );
-    &print_routine_type_decl( $OUTFD, "${prefix}dup_fn" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "${prefix}dup_fn" );
     &print_args( $OUTFD, $args, 0, "${prefix}dup_fn" );
     #&print_attr;
     print $OUTFD "{
@@ -4365,16 +4384,16 @@ sub WriteAttrDefaults {
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "${prefix}dup_fn", $args );
+    &AddPrototype( $out_prefix, "${prefix}dup_fn", $args );
 
     $OUTFD = "NULLDELFN";
     $filename = "null_${prefix}del_fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "MPI_Fint *, MPI_Fint *, MPI_FAintp, MPI_FAintp";
-    &print_header( "mpi_${prefix}null_delete_fn", "${prefix}null_delete_fn", $args,
+    &print_header( "mpi_", "mpi_${prefix}null_delete_fn", "${prefix}null_delete_fn", $args,
 	   "#ifdef MPI_${ucprefix}NULL_DELETE_FN\n#undef MPI_${ucprefix}NULL_DELETE_FN\n#endif\n" );
-    &print_routine_type_decl( $OUTFD, "${prefix}null_delete_fn" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "${prefix}null_delete_fn" );
     &print_args( $OUTFD, $args, 0, "${prefix}null_delete_fn" );
     #&print_attr;
     print $OUTFD "{
@@ -4382,16 +4401,16 @@ sub WriteAttrDefaults {
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( "${prefix}null_delete_fn", $args );
+    &AddPrototype( $out_prefix, "${prefix}null_delete_fn", $args );
 
     $OUTFD = "NULLCOPYFN";
     $filename = "null_${prefix}copy_fnf.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $args = "MPI_Fint *, MPI_Fint *, MPI_FAintp, MPI_FAintp, MPI_FAintp, int *";
-    &print_header( "mpi_${prefix}null_copy_fn", "${prefix}null_copy_fn", $args,
+    &print_header( "mpi_", "mpi_${prefix}null_copy_fn", "${prefix}null_copy_fn", $args,
 	   "#ifdef MPI_${ucprefix}NULL_COPY_FN\n#undef MPI_${ucprefix}NULL_COPY_FN\n#endif\n" );
-    &print_routine_type_decl( $OUTFD, "${prefix}null_copy_fn" );
+    &print_routine_type_decl( $OUTFD, $out_prefix, "${prefix}null_copy_fn" );
     &print_args( $OUTFD, $args, 0, "${prefix}null_copy_fn" );
     print $OUTFD "{
         *ierr = MPI_SUCCESS;
@@ -4400,7 +4419,7 @@ sub WriteAttrDefaults {
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
 
-    &AddPrototype( "${prefix}null_copy_fn", $args );
+    &AddPrototype( $out_prefix, "${prefix}null_copy_fn", $args );
 }
 
 #
@@ -4755,33 +4774,35 @@ sub AddFwrapBuild {
 # Allow multiple underscore versions of names
 # but without the PMPI versions (needed for the wrapper library)
 sub AddFwrapWeakName {
-    my ($lcname, $ucname, $args) = @_;
+    my ($out_prefix, $lcname, $ucname, $args) = @_;
+    my $ucprefix = uc($out_prefix);
+    my $lcprefix = lc($out_prefix);
 
     print $OUTFD "
 /* These definitions are used only for generating the Fortran wrappers */
 #if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK) && \\
     defined(USE_ONLY_MPI_NAMES)\n";
-    &print_weak_decl( $OUTFD, "MPI_$ucname", $args, $lcname ); 
-    &print_weak_decl( $OUTFD, "mpi_${lcname}__", $args, $lcname );
-    &print_weak_decl( $OUTFD, "mpi_${lcname}", $args, $lcname );
-    &print_weak_decl( $OUTFD, "mpi_${lcname}_", $args, $lcname );
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname ); 
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname );
     print $OUTFD "\
 #if defined(F77_NAME_UPPER)
-#pragma weak mpi_${lcname}__ = MPI_${ucname}
-#pragma weak mpi_${lcname}_ = MPI_${ucname}
-#pragma weak mpi_${lcname} = MPI_${ucname}
+#pragma weak ${lcprefix}${lcname}__ = ${ucprefix}${ucname}
+#pragma weak ${lcprefix}${lcname}_ = ${ucprefix}${ucname}
+#pragma weak ${lcprefix}${lcname} = ${ucprefix}${ucname}
 #elif defined(F77_NAME_LOWER_2USCORE)
-#pragma weak MPI_$ucname = mpi_${lcname}__
-#pragma weak mpi_${lcname}_ = mpi_${lcname}__
-#pragma weak mpi_${lcname} = mpi_${lcname}__
+#pragma weak ${ucprefix}$ucname = ${lcprefix}${lcname}__
+#pragma weak ${lcprefix}${lcname}_ = ${lcprefix}${lcname}__
+#pragma weak ${lcprefix}${lcname} = ${lcprefix}${lcname}__
 #elif defined(F77_NAME_LOWER_USCORE)
-#pragma weak MPI_$ucname = mpi_${lcname}_
-#pragma weak mpi_${lcname}__ = mpi_${lcname}_
-#pragma weak mpi_${lcname} = mpi_${lcname}_
+#pragma weak ${ucprefix}$ucname = ${lcprefix}${lcname}_
+#pragma weak ${lcprefix}${lcname}__ = ${lcprefix}${lcname}_
+#pragma weak ${lcprefix}${lcname} = ${lcprefix}${lcname}_
 #else
-#pragma weak MPI_$ucname = mpi_${lcname}
-#pragma weak mpi_${lcname}__ = mpi_${lcname}
-#pragma weak mpi_${lcname}_ = mpi_${lcname}
+#pragma weak ${ucprefix}$ucname = ${lcprefix}${lcname}
+#pragma weak ${lcprefix}${lcname}__ = ${lcprefix}${lcname}
+#pragma weak ${lcprefix}${lcname}_ = ${lcprefix}${lcname}
 #endif
 
 #endif
@@ -4892,7 +4913,7 @@ sub print_int_to_fint {
 # Generate a special version that handles the case where Fint is not the same 
 # as int.
 sub printCallForFint {
-    my ($routine_name,$args) = @_;
+    my ($routine_prefix, $routine_name,$args) = @_;
     
     print $OUTFD "#ifndef HAVE_FINT_IS_INT\n";
     $within_fint = 1;
