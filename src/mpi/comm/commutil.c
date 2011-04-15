@@ -273,6 +273,7 @@ static int init_default_collops(void)
                 ops->Ibcast = &MPIR_Ibcast_SMP;
                 ops->Iscan = &MPIR_Iscan_SMP;
                 ops->Iallreduce = &MPIR_Iallreduce_SMP;
+                ops->Ireduce = &MPIR_Ireduce_SMP;
                 break;
             case MPID_HIERARCHY_NODE:
                 break;

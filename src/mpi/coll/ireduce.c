@@ -568,6 +568,119 @@ fn_fail:
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Ireduce_SMP
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Ireduce_SMP(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_commutative;
+    MPI_Aint  true_lb, true_extent, extent;
+    void *tmp_buf = NULL;
+    MPID_Comm *nc;
+    MPID_Comm *nrc;
+    MPIR_SCHED_CHKPMEM_DECL(1);
+
+#if !defined(USE_SMP_COLLECTIVES)
+    MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
+#endif
+    MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
+    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+
+    nc = comm_ptr->node_comm;
+    nrc = comm_ptr->node_roots_comm;
+
+    /* is the op commutative? We do SMP optimizations only if it is. */
+    is_commutative = MPIR_Op_is_commutative(op);
+    if (!is_commutative) {
+        mpi_errno = MPIR_Ireduce_intra(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        goto fn_exit;
+    }
+
+    /* Create a temporary buffer on local roots of all nodes */
+    if (nrc != NULL) {
+
+        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+        MPID_Datatype_get_extent_macro(datatype, extent);
+
+        MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
+                                  mpi_errno, "temporary buffer");
+        /* adjust for potential negative lower bound in datatype */
+        tmp_buf = (void *)((char*)tmp_buf - true_lb);
+    }
+
+    /* do the intranode reduce on all nodes other than the root's node */
+    if (nc != NULL && MPIU_Get_intranode_rank(comm_ptr, root) == -1) {
+        MPIU_Assert(nc->coll_fns && nc->coll_fns->Ireduce);
+        mpi_errno = nc->coll_fns->Ireduce(sendbuf, tmp_buf, count, datatype, op, 0, nc, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
+    }
+
+    /* do the internode reduce to the root's node */
+    if (nrc != NULL) {
+        MPIU_Assert(nrc->coll_fns && nrc->coll_fns->Ireduce);
+        if (nrc->rank != MPIU_Get_internode_rank(comm_ptr, root)) {
+            /* I am not on root's node.  Use tmp_buf if we
+               participated in the first reduce, otherwise use sendbuf */
+            void *buf = (nc == NULL ? sendbuf : tmp_buf);
+            mpi_errno = nrc->coll_fns->Ireduce(buf, NULL, count, datatype,
+                                               op, MPIU_Get_internode_rank(comm_ptr, root),
+                                               nrc, s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
+        }
+        else { /* I am on root's node. I have not participated in the earlier reduce. */
+            if (comm_ptr->rank != root) {
+                /* I am not the root though. I don't have a valid recvbuf.
+                   Use tmp_buf as recvbuf. */
+
+                mpi_errno = nrc->coll_fns->Ireduce(sendbuf, tmp_buf, count, datatype,
+                                                   op, MPIU_Get_internode_rank(comm_ptr, root),
+                                                   nrc, s);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                MPID_SCHED_BARRIER(s);
+
+                /* point sendbuf at tmp_buf to make final intranode reduce easy */
+                sendbuf = tmp_buf;
+            }
+            else {
+                /* I am the root. in_place is automatically handled. */
+
+                mpi_errno = nrc->coll_fns->Ireduce(sendbuf, recvbuf, count, datatype,
+                                                   op, MPIU_Get_internode_rank(comm_ptr, root),
+                                                   nrc, s);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                MPID_SCHED_BARRIER(s);
+
+                /* set sendbuf to MPI_IN_PLACE to make final intranode reduce easy. */
+                sendbuf = MPI_IN_PLACE;
+            }
+        }
+    }
+
+    /* do the intranode reduce on the root's node */
+    if (nc != NULL && MPIU_Get_intranode_rank(comm_ptr, root) != -1) {
+        mpi_errno = nc->coll_fns->Ireduce(sendbuf, recvbuf, count, datatype,
+                                          op, MPIU_Get_intranode_rank(comm_ptr, root),
+                                          nc, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
+    }
+
+
+    MPIR_SCHED_CHKPMEM_COMMIT(s);
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    MPIR_SCHED_CHKPMEM_REAP(s);
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Ireduce_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
