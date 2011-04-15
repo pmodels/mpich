@@ -900,6 +900,10 @@ sub ReadMfile {
 	}
 	elsif (/^installdir_([\w-]*)\s*=\s*(.*)\s*$/) {
 	    $install_dirs{$1} .= "$2 ";
+	    $dirs_seen{'bindir'} = 1;   # For recursive make
+	    $dirs_seen{'execdir'} = 1;
+	    $dirs_seen{'includedir'} = 1;
+	    $dirs_seen{'libdir'} = 1;
 	}
 	elsif (/^optinstall_([\w-]*)\s*=\s*(.*)\s*$/) {
 	    # This is for files that will be installed only if present
@@ -916,6 +920,10 @@ sub ReadMfile {
 	elsif (/^optinstalldirs_([\w-]*)\s*=\s*(.*)\s*$/) {
 	    # This is for files that will be installed only if present
 	    $optinstall_dirs{$1} .= "$2 ";
+	    $dirs_seen{'bindir'} = 1;   # For recursive make
+	    $dirs_seen{'execdir'} = 1;
+	    $dirs_seen{'includedir'} = 1;
+	    $dirs_seen{'libdir'} = 1;
 	}
         elsif (/^SUBDIRS\s*=\s*(.*)\s*\r?$/) {
 	    # The \r is used to remove any \r in DOS-style files
@@ -2650,7 +2658,13 @@ sub TargetPostamble {
     my $name = $_[0];
     $name .= "-postamble";
     if (defined($usertargets{$name})) { 
-	print FD "\t\${MAKE} $name$newline";
+	# Problems with recursive make strike again
+	if ($_[0] eq "install") {
+	    print FD "\t\${MAKE} prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} $name$newline";
+	}
+	else {
+	    print FD "\t\${MAKE} $name$newline";
+	}
     }
 }
 # --------------------------------------------------------------------------
@@ -4109,11 +4123,13 @@ sub TargetInstall {
 	if ($extradir =~ /^@/) {
 	    print FD "\tfor dir in $extradir - ; do \\$newline";
 	    print FD "\t\tif [ \"\$\$dir\" = \"-\" ] ; then break ; fi ;\\$newline";
-	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) install) ;\\$newline";
+#	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) install) ;\\$newline";
+	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} install) ;\\$newline";
 	    print FD "\tdone$newline";
 	}
 	else {
-	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install)$newline";
+#	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install)$newline";
+	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} install)$newline";
 	}
     }
     &TargetPostamble( "install" );
