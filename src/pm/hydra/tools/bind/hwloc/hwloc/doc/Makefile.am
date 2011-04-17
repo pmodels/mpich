@@ -1,6 +1,7 @@
-# Copyright © 2009-2010 INRIA
+# Copyright © 2009-2011 INRIA.  All rights reserved.
 # Copyright © 2009-2010 Université Bordeaux 1
-# Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
+# Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+# See COPYING in top-level directory.
 
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
 
@@ -151,10 +152,8 @@ if HWLOC_DOXYGEN_BROKEN_SHORT_NAMES
 	-@mv -f $(DOX_DIR)/latex/threadsafety.tex $(DOX_DIR)/latex/a00006.tex
 	-@mv -f $(DOX_DIR)/html/embed.html $(DOX_DIR)/html/a00007.html
 	-@mv -f $(DOX_DIR)/latex/embed.tex $(DOX_DIR)/latex/a00007.tex
-	-@mv -f $(DOX_DIR)/html/switchfromplpa.html $(DOX_DIR)/html/a00008.html
-	-@mv -f $(DOX_DIR)/latex/switchfromplpa.tex $(DOX_DIR)/latex/a00008.tex
-	-@mv -f $(DOX_DIR)/html/faq.html $(DOX_DIR)/html/a00009.html
-	-@mv -f $(DOX_DIR)/latex/faq.tex $(DOX_DIR)/latex/a00009.tex
+	-@mv -f $(DOX_DIR)/html/faq.html $(DOX_DIR)/html/a00008.html
+	-@mv -f $(DOX_DIR)/latex/faq.tex $(DOX_DIR)/latex/a00008.tex
 endif
 endif
 
@@ -267,6 +266,8 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_PU.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SOCKET.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SYSTEM.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_MISC.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TYPE_DEPTH_MULTIPLE.3 \
@@ -303,6 +304,9 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_isset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_iszero.3 \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_last.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_bitmap_list_asprintf.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_bitmap_list_snprintf.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_bitmap_list_sscanf.3 \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_next.3 \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_not.3 \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_only.3 \
@@ -359,6 +363,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_depth_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_first_largest_obj_inside_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_largest_objs_inside_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_last_cpu_location.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_membind.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_membind_nodeset.3  \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_depth.3 \
@@ -380,6 +385,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_inside_cpuset_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_inside_cpuset_by_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_proc_cpubind.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_proc_last_cpu_location.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_proc_membind.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_proc_membind_nodeset.3  \
         $(DOX_MAN_DIR)/man3/hwloc_get_pu_obj_by_os_index.3 \
@@ -390,6 +396,10 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_type_depth_e.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_type_or_above_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_type_or_below_depth.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_whole_distance_matrix_by_depth.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_whole_distance_matrix_by_type.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_distance_matrix_covering_obj_by_depth.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_latency.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_linux_get_tid_cpubind.3 \
         $(DOX_MAN_DIR)/man3/hwloc_linux_parse_cpumap_file.3 \
@@ -410,6 +420,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_cache_attr_s.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_group_attr_s.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_distances_s.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_cpuset_snprintf.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_get_info_by_name.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_info_s.3 \
@@ -422,6 +433,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_obj_type_snprintf.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_type_string.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_type_t.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_restrict_flags_e.3 \
         $(DOX_MAN_DIR)/man3/hwloc_set_area_membind.3 \
         $(DOX_MAN_DIR)/man3/hwloc_set_area_membind_nodeset.3  \
         $(DOX_MAN_DIR)/man3/hwloc_set_cpubind.3 \
@@ -456,12 +468,14 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_is_thissystem.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_load.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_membind_support.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_restrict.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_flags.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_fsroot.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_pid.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_synthetic.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_xml.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_xmlbuffer.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_distance_matrix.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_t.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_api_version.3 \

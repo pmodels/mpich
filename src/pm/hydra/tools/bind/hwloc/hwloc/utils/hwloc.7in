@@ -1,7 +1,8 @@
 .\" -*- nroff -*-
-.\" Copyright © 2010 INRIA 
+.\" Copyright © 2010 INRIA.  All rights reserved.
 .\" Copyright © 2010 Université of Bordeaux
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+.\" See COPYING in top-level directory.
 .TH HWLOC "7" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
 .SH NAME
 hwloc - General information about hwloc ("hardware locality").
@@ -136,6 +137,10 @@ will be cleared instead of added to the current list of locations.  If
 prefixed with "x", the given location will be and'ed instead of added
 to the current list.  If prefixed with "^", the given location will be
 xor'ed.
+.
+.PP
+"all" and "root" are a special location consisting in the entire
+current topology.
 .
 More complex operations may be performed by using
 .R hwloc-calc

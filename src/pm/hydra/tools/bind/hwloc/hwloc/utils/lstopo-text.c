@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2010 INRIA.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -169,6 +169,37 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
   }
 
   if (verbose_mode > 1) {
+    const struct hwloc_distances_s * distances;
+    unsigned depth;
+
+    for (depth = 0; depth < topodepth; depth++) {
+      unsigned nbobjs;
+      unsigned i, j;
+
+      distances = hwloc_get_whole_distance_matrix_by_depth(topology, depth);
+      if (!distances || !distances->latency)
+        continue;
+      nbobjs = distances->nbobjs;
+
+      printf("depth %u distance matrix:\n", depth);
+      /* column header */
+      printf("  index");
+      for(j=0; j<nbobjs; j++)
+        printf(" % 5d", (int) j);
+      printf("\n");
+      /* each line */
+      for(i=0; i<nbobjs; i++) {
+        /* row header */
+        printf("  % 5d", (int) i);
+        /* each value */
+        for(j=0; j<nbobjs; j++)
+          printf(" %2.3f", distances->latency[i*nbobjs+j]);
+        printf("\n");
+      }
+    }
+  }
+
+  if (verbose_mode > 1) {
     hwloc_const_bitmap_t complete = hwloc_topology_get_complete_cpuset(topology);
     hwloc_const_bitmap_t topo = hwloc_topology_get_topology_cpuset(topology);
     hwloc_const_bitmap_t online = hwloc_topology_get_online_cpuset(topology);
@@ -220,7 +251,8 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
       fprintf (output, "Topology not from this system\n");
   }
 
-  fclose(output);
+  if (output != stdout)
+    fclose(output);
 }
 
 /*
@@ -446,47 +478,45 @@ from_directions(struct display *disp, int direction)
 {
 #ifdef HAVE_PUTWC
   if (disp->utf8) {
-    static const wchar_t chars[] = {
-      [down|right]	= L'\x250c',
-      [down|left]	= L'\x2510',
-      [up|right]	= L'\x2514',
-      [up|left]		= L'\x2518',
-      [left|right]	= L'\x2500',
-      [down|up]		= L'\x2502',
-      [down]		= L'\x2577',
-      [up]		= L'\x2575',
-      [right]		= L'\x2576',
-      [left]		= L'\x2574',
-      [down|up|right]	= L'\x251c',
-      [down|up|left]	= L'\x2524',
-      [down|left|right]	= L'\x252c',
-      [up|left|right]	= L'\x2534',
-      [down|up|left|right]	= L'\x253c',
-      [0]		= L' ',
+    switch (direction) {
+    case down|right:		return L'\x250c';
+    case down|left:		return L'\x2510';
+    case up|right:		return L'\x2514';
+    case up|left:		return L'\x2518';
+    case left|right:		return L'\x2500';
+    case down|up:		return L'\x2502';
+    case down:			return L'\x2577';
+    case up:			return L'\x2575';
+    case right:			return L'\x2576';
+    case left:			return L'\x2574';
+    case down|up|right:		return L'\x251c';
+    case down|up|left:		return L'\x2524';
+    case down|left|right:	return L'\x252c';
+    case up|left|right:		return L'\x2534';
+    case down|up|left|right:	return L'\x253c';
+    default:			return L' ';
     };
-    return chars[direction];
   } else
 #endif /* HAVE_PUTWC */
   {
-    static const char chars[] = {
-      [down|right]	= '/',
-      [down|left]	= '\\',
-      [up|right]	= '\\',
-      [up|left]		= '/',
-      [left|right]	= '-',
-      [down|up]		= '|',
-      [down]		= '|',
-      [up]		= '|',
-      [right]		= '-',
-      [left]		= '-',
-      [down|up|right]	= '+',
-      [down|up|left]	= '+',
-      [down|left|right]	= '+',
-      [up|left|right]	= '+',
-      [down|up|left|right]	= '+',
-      [0]		= ' ',
+    switch (direction) {
+    case down|right:		return '/';
+    case down|left:		return '\\';
+    case up|right:		return '\\';
+    case up|left:		return '/';
+    case left|right:		return '-';
+    case down|up:		return '|';
+    case down:			return '|';
+    case up:			return '|';
+    case right:			return '-';
+    case left:			return '-';
+    case down|up|right:		return '+';
+    case down|up|left:		return '+';
+    case down|left|right:	return '+';
+    case up|left|right:		return '+';
+    case down|up|left|right:	return '+';
+    default:			return ' ';
     };
-    return chars[direction];
   }
 }
 
@@ -495,12 +525,13 @@ static void
 merge(struct display *disp, int x, int y, int or, int andnot, int r, int g, int b)
 {
   character current;
+  int directions;
   if (x >= disp->width || y >= disp->height) {
     /* fprintf(stderr, "|%x &~%x overflowed to (%d,%d)\n", or, andnot, x, y); */
     return;
   }
   current = disp->cells[y][x].c;
-  int directions = (to_directions(disp, current) & ~andnot) | or;
+  directions = (to_directions(disp, current) & ~andnot) | or;
   put(disp, x, y, from_directions(disp, directions), -1, -1, -1, r, g, b);
 }
 
@@ -604,11 +635,11 @@ text_text(void *output, int r, int g, int b, int size __hwloc_attribute_unused, 
 }
 
 static struct draw_methods text_draw_methods = {
-  .start = text_start,
-  .declare_color = text_declare_color,
-  .box = text_box,
-  .line = text_line,
-  .text = text_text,
+  text_start,
+  text_declare_color,
+  text_box,
+  text_line,
+  text_text,
 };
 
 void output_text(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
@@ -712,4 +743,7 @@ void output_text(hwloc_topology_t topology, const char *filename, int logical, i
 #endif /* HWLOC_HAVE_LIBTERMCAP */
     putcharacter('\n', output);
   }
+
+  if (output != stdout)
+    fclose(output);
 }

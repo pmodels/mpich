@@ -1,6 +1,8 @@
-# Copyright © 2009-2010 INRIA
-# Copyright © 2009-2010 Université Bordeaux 1
-# Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+# Copyright © 2009-2010 INRIA.  All rights reserved.
+# Copyright © 2009-2011 Université Bordeaux 1
+# Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
+#
+# See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
@@ -29,6 +31,14 @@ lstopo_SOURCES += lstopo-windows.c
 endif
 lstopo_CFLAGS = $(HWLOC_CAIRO_CFLAGS) $(HWLOC_XML_CFLAGS)
 lstopo_LDADD = $(LDADD) $(HWLOC_CAIRO_LIBS) $(HWLOC_XML_LIBS) -lm $(HWLOC_TERMCAP_LIBS) $(HWLOC_X11_LIBS)
+if HWLOC_BUILD_UTILS
+if HWLOC_HAVE_WINDOWS
+bin_PROGRAMS += lstopo-win
+lstopo_win_SOURCES = $(lstopo_SOURCES)
+lstopo_win_CFLAGS = $(lstopo_CFLAGS) -mwindows
+lstopo_win_LDADD = $(lstopo_LDADD)
+endif
+endif
 
 hwloc_calc_SOURCES = hwloc-calc.c hwloc-calc.h
 
@@ -53,7 +63,7 @@ nodist_man_MANS += $(man1_pages)
 # Only install the gather-topology page if we're on Linux, but we need
 # to include it in the tarball, regardless of what OS we're building
 # on.
-hgt_page = hwloc-gather-topology.sh.1
+hgt_page = hwloc-gather-topology.1
 EXTRA_DIST += $(hgt_page:.1=.1in)
 if HWLOC_HAVE_LINUX
 nodist_man_MANS += $(hgt_page)

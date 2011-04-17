@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 INRIA.  All rights reserved.
  * Copyright © 2009 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -9,7 +9,7 @@
 #define _GNU_SOURCE
 #include <sched.h>
 #include <assert.h>
-#include <private/autogen/config.h>
+#include <private/autogen/config.h> /* for HWLOC_HAVE_OLD_SCHED_SETAFFINITY */
 #include <hwloc.h>
 #include <hwloc/glibc-sched.h>
 

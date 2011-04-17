@@ -56,6 +56,29 @@ FILE *open_file(const char *filename, const char *mode)
   return fopen(filename, mode);
 }
 
+static hwloc_obj_t insert_task(hwloc_topology_t topology, hwloc_const_cpuset_t cpuset, const char * name)
+{
+  hwloc_obj_t obj;
+
+  /* try to insert at exact position */
+  obj = hwloc_topology_insert_misc_object_by_cpuset(topology, cpuset, name);
+  if (!obj) {
+    /* try to insert in a larger parent */
+    char *s;
+    hwloc_bitmap_asprintf(&s, cpuset);
+    obj = hwloc_get_obj_covering_cpuset(topology, cpuset);
+    if (obj) {
+      obj = hwloc_topology_insert_misc_object_by_parent(topology, obj, name);
+      fprintf(stderr, "Inserted process `%s' below parent larger than cpuset %s\n", name, s);
+    } else {
+      fprintf(stderr, "Failed to insert process `%s' with cpuset %s\n", name, s);
+    }
+    free(s);
+  }
+
+  return obj;
+}
+
 static void add_process_objects(hwloc_topology_t topology)
 {
   hwloc_obj_t root;
@@ -100,14 +123,18 @@ static void add_process_objects(hwloc_topology_t topology)
 #ifdef HWLOC_LINUX_SYS
     {
       /* Get the process name */
-      char path[6 + strlen(dirent->d_name) + 1 + 7 + 1];
+      char *path;
+      unsigned pathlen = 6 + strlen(dirent->d_name) + 1 + 7 + 1;
       char cmd[64], *c;
       int file;
       ssize_t n;
 
-      snprintf(path, sizeof(path), "/proc/%s/cmdline", dirent->d_name);
+      path = malloc(pathlen);
+      snprintf(path, pathlen, "/proc/%s/cmdline", dirent->d_name);
+      file = open(path, O_RDONLY);
+      free(path);
 
-      if ((file = open(path, O_RDONLY)) >= 0) {
+      if (file >= 0) {
         n = read(file, cmd, sizeof(cmd) - 1);
         close(file);
 
@@ -124,13 +151,17 @@ static void add_process_objects(hwloc_topology_t topology)
 
     {
       /* Get threads */
-      char path[6+strlen(dirent->d_name) + 1 + 4 + 1];
+      char *path;
+      unsigned pathlen = 6+strlen(dirent->d_name) + 1 + 4 + 1;
       DIR *task_dir;
       struct dirent *task_dirent;
 
-      snprintf(path, sizeof(path), "/proc/%s/task", dirent->d_name);
+      path = malloc(pathlen);
+      snprintf(path, pathlen, "/proc/%s/task", dirent->d_name);
+      task_dir = opendir(path);
+      free(path);
 
-      if ((task_dir = opendir(path))) {
+      if (task_dir) {
         while ((task_dirent = readdir(task_dir))) {
           long local_tid;
           char *task_end;
@@ -149,7 +180,7 @@ static void add_process_objects(hwloc_topology_t topology)
 
           snprintf(task_name, sizeof(task_name), "%s %li", name, local_tid);
 
-          hwloc_topology_insert_misc_object_by_cpuset(topology, task_cpuset, task_name);
+          insert_task(topology, task_cpuset, task_name);
         }
         closedir(task_dir);
       }
@@ -162,7 +193,7 @@ static void add_process_objects(hwloc_topology_t topology)
     if (hwloc_bitmap_isincluded(root->cpuset, cpuset))
       continue;
 
-    hwloc_topology_insert_misc_object_by_cpuset(topology, cpuset, name);
+    insert_task(topology, cpuset, name);
   }
 
   hwloc_bitmap_free(cpuset);
@@ -217,8 +248,12 @@ void usage(const char *name, FILE *where)
                   "                        impact\n");
   fprintf (where, "  --merge               Do not show levels that do not have a hierarchical\n"
                   "                        impact\n");
+  fprintf (where, "  --restrict <cpuset>   Restrict the topology to processors listed in <cpuset>\n");
+  fprintf (where, "  --restrict binding    Restrict the topology to the current process binding\n");
   fprintf (where, "Input options:\n");
   hwloc_utils_input_format_usage(where, 6);
+  fprintf (where, "  --thissystem          Assume that the input topology provides the topology\n"
+		  "                        for the system on which we are running\n");
   fprintf (where, "  --pid <pid>           Detect topology as seen by process <pid>\n");
   fprintf (where, "  --whole-system        Do not consider administration limitations\n");
   fprintf (where, "Graphical output options:\n");
@@ -287,6 +322,7 @@ main (int argc, char *argv[])
   char * input = NULL;
   enum hwloc_utils_input_format input_format = HWLOC_UTILS_INPUT_DEFAULT;
   enum output_format output_format = LSTOPO_OUTPUT_DEFAULT;
+  char *restrictstring = NULL;
   int opt;
 
 #ifdef HAVE_SETLOCALE
@@ -349,7 +385,16 @@ main (int argc, char *argv[])
 	flags |= HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM;
       else if (!strcmp (argv[1], "--merge"))
 	merge = 1;
-      else if (!strcmp (argv[1], "--horiz"))
+      else if (!strcmp (argv[1], "--thissystem"))
+	flags |= HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM;
+      else if (!strcmp (argv[1], "--restrict")) {
+	if (argc <= 2) {
+	  usage (callname, stderr);
+	  exit(EXIT_FAILURE);
+	}
+	restrictstring = strdup(argv[2]);
+	opt = 1;
+      } else if (!strcmp (argv[1], "--horiz"))
         force_horiz = 1;
       else if (!strcmp (argv[1], "--vert"))
         force_vert = 1;
@@ -437,6 +482,25 @@ main (int argc, char *argv[])
 
   if (top)
     add_process_objects(topology);
+
+  if (restrictstring) {
+    hwloc_bitmap_t restrictset = hwloc_bitmap_alloc();
+    if (!strcmp (restrictstring, "binding")) {
+      if (pid != (hwloc_pid_t) -1 && pid != 0)
+	hwloc_get_proc_cpubind(topology, pid, restrictset, HWLOC_CPUBIND_PROCESS);
+      else
+	hwloc_get_cpubind(topology, restrictset, HWLOC_CPUBIND_PROCESS);
+    } else {
+      hwloc_bitmap_sscanf(restrictset, restrictstring);
+    }
+    err = hwloc_topology_restrict (topology, restrictset, 0);
+    if (err) {
+      perror("Restricting the topology");
+      /* fallthrough */
+    }
+    hwloc_bitmap_free(restrictset);
+    free(restrictstring);
+  }
 
   if (!filename && !strcmp(callname,"hwloc-info")) {
     /* behave kind-of plpa-info */

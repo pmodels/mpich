@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010 INRIA
+ * Copyright © 2010 INRIA.  All rights reserved.
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <libxml/xmlstring.h>
 #include <libxml/xmlmemory.h>
-#include <private/autogen/config.h>
 #include <hwloc.h>
 
 /* check the CUDA Driver API helpers */

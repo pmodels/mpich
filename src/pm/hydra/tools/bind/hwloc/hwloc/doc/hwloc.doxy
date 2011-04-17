@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2011 INRIA.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -32,12 +32,13 @@ code and/or data locality on modern computing platforms.
 *** Note that the hwloc project represents the merger of the
 libtopology project from INRIA and the Portable Linux Processor
 Affinity (PLPA) sub-project from Open MPI.  <em>Both of these prior
-projects are now deprecated.</em> The first hwloc release is essentially a
-"re-branding" of the libtopology code base, but with both a few
-genuinely new features and a few PLPA-like features added in.  More
-new features and more PLPA-like features will be added to hwloc over
-time. See \ref switchfromplpa for more details about converting
-your application from PLPA to hwloc.
+projects are now deprecated.</em> The first hwloc release was
+essentially a "re-branding" of the libtopology code base, but with
+both a few genuinely new features and a few PLPA-like features added
+in.  Prior releases of hwloc included documentation about switching
+from PLPA to hwloc; this documentation has been dropped on the
+assumption that everyone who was using PLPA has already switched to
+hwloc.
 
 hwloc supports the following operating systems:
 
@@ -596,7 +597,6 @@ The documentation chapters include
 <li> \ref interoperability
 <li> \ref threadsafety
 <li> \ref embed
-<li> \ref switchfromplpa
 <li> \ref faq
 </ul>
 
@@ -656,17 +656,21 @@ Make sure to have had a look at those too!
   <dd>The number of children of an object.</dd>
 
 <dt>Sibling objects</dt>
-  <dd>Objects of the same type which have the same parent.</dd>
+  <dd>Objects which have the same parent. They usually have the same type
+  (and hence are cousins, as well), but they may not if the topology
+  is asymmetric.</dd>
 
 <dt>Sibling rank</dt>
-  <dd>Index to uniquely identify objects of the same type which have
+  <dd>Index to uniquely identify objects which have
   the same parent, and is always in the range [0, parent_arity).</dd>
 
 <dt>Cousin objects</dt>
-  <dd>Objects of the same type as the current object.</dd>
+  <dd>Objects of the same type (and depth) as the current object,
+  even if they do not have the same parent.</dd>
 
 <dt>Level</dt>
-  <dd>Set of objects of the same type.</dd>
+  <dd>Set of objects of the same type and depth. All these objects
+  are cousins.</dd>
 
 <dt>OS or physical index</dt>
   <dd>The index that the operating system (OS) uses to identify the
@@ -677,7 +681,7 @@ Make sure to have had a look at those too!
   <dd>Nesting level in the object tree, starting from the 0th object.</dd>
 
 <dt>Logical index</dt>
-  <dd>Index to uniquely identify objects of the same type.  It
+  <dd>Index to uniquely identify objects of the same type and depth.  It
   expresses proximity in a generic way.  This index is always linear
   and in the range [0, num_objs_same_type_same_level).  Think of it
   as ``cousin rank.'' The ordering is based on topology first, and
@@ -697,7 +701,7 @@ by showing the example of a machine with two dual core sockets (with no
 hardware threads); thus, a topology with 4 levels. Each box with rounded corner
 corresponds to one hwloc_obj_t, containing the values of the different integer
 fields (depth, logical_index, etc.), and arrows show to which other hwloc_obj_t
-pointers point to (first_child, parent, etc.)
+pointers point to (first_child, parent, etc.). The L2 cache of the last core is intentionally missing to show how asymmetric topologies are handled.
 
 \image html diagram.png
 \image latex diagram.eps width=\textwidth
@@ -705,6 +709,7 @@ pointers point to (first_child, parent, etc.)
 It should be noted that for PU objects, the logical index -- as
 computed linearly by hwloc -- is not the same as the OS index.
 
+See also \ref faq_asymmetric for more details.
 
 
 \page tools Command-Line Tools 
@@ -721,8 +726,8 @@ hierarchical topology map of the current system.  The output may be
 graphical or textual, and can also be exported to numerous file
 formats such as PDF, PNG, XML, and others.
 
-It can also display the processes currently bound to a part of the machine (--ps
-option).
+This command can also display the processes currently bound to a part
+of the machine (via the --ps option).
 
 Note that lstopo can read XML files and/or alternate chroot
 filesystems and display topological maps representing those systems
@@ -770,6 +775,14 @@ currently running on the local machine.  By default, hwloc-ps only
 lists processes that are bound; unbound process (and Linux kernel
 threads) are not displayed.
 
+\section cli_hwloc_gather hwloc-gather-topology
+
+hwloc-gather-topology is a Linux-specific tool that saves the
+relevant topology files of the current machine into a tarball
+(and the corresponding lstopo output). These files may be used
+later (possibly offline) for simulating or debugging a machine
+without actually running on it.
+
 
 
 \page envvar Environment Variables
@@ -816,10 +829,26 @@ following environment variables.
 
 <dt>HWLOC_IGNORE_DISTANCES=0</dt>
   <dd>disables objects grouping based on distances.
-  By default, hwloc uses distance matrices between objects (read
-  from the OS) to find groups of close objects.
+  By default, hwloc uses distance matrices between objects (either read
+  from the OS or given by the user) to find groups of close objects.
   These groups are described by adding intermediate Group objects in the topology.
   Setting this environment variable to 1 will disable this grouping.
+  </dd>
+
+<dt>HWLOC_&lt;type&gt;_DISTANCES=index,...:X*Y</dt>
+<dt>HWLOC_&lt;type&gt;_DISTANCES=index,...:X*Y*Z</dt>
+<dt>HWLOC_&lt;type&gt;_DISTANCES=index,...:distance,...</dt>
+  <dd>sets a distance matrix for objects of the given type and physical indexes.
+  The type should be given as its case-sensitive stringified value
+  (e.g. <tt>NUMANode</tt>, <tt>Socket</tt>, <tt>Cache</tt>, <tt>Core</tt>, <tt>PU</tt>).
+  The variable value starts with a comma-separated list of the objects'
+  physical indexes. Distances are then specified after a colon.
+  <ul>
+  <li>If <tt>X*Y</tt> is given, X groups of Y close objects are specified.</li>
+  <li>If <tt>X*Y*Z</tt> is given, X groups of Y groups of Z close objects are specified.</li>
+  <li>Otherwise, the comma-separated list of distances should be given.
+  If N objects are considered, the i*N+j-th value gives the
+  distance from the i-th object to the j-th object.</li>
   </dd>
 
 </dl>
@@ -996,9 +1025,11 @@ For reference, \ref hwloc_topology_t modification operations include
   <dd><tt>hwloc_topology_insert_misc_object_by_*</tt> (see \ref
   hwlocality_tinker) may modify the topology significantly by adding
   objects inside the tree, changing the topology depth, etc.
+  <tt>hwloc_topology_restrict</tt> modifies the topology even more
+  dramatically by removing some objects.
 
   Although references to former objects <em>may</em> still be valid
-  after insertion, it is strongly advised to not rely on any such
+  after insertion or restriction, it is strongly advised to not rely on any such
   guarantee and always re-consult the topology to reacquire new
   instances of objects.  </dd>
 
@@ -1186,113 +1217,6 @@ than any system-provided copy of hwloc.
 
 
 
-\page switchfromplpa Switching from PLPA to hwloc
-
-Although PLPA and hwloc share some of the same ideas, their
-programming interfaces are quite different.  After much debate, it was
-decided <em>not</em> to emulate the PLPA API with hwloc's API because
-hwloc's API is already far more rich than PLPA's.  
-
-More specifically, exploiting modern computing architecture
-<em>requires</em> the flexible functionality provided by the hwloc API
--- the PLPA API is too rigid in its definitions and practices to
-handle the evolving server hardware landscape (e.g., PLPA only
-understands cores and sockets; hwloc understands a much larger set
-of hardware objects).
-
-As such, even though it is fully possible to emulate the PLPA API with
-hwloc (e.g., only deal with sockets and cores), and while the
-documentation below describes how to do this, we encourage any
-existing PLPA application authors to actually re-think their
-application in terms of more than just sockets and cores.  In short,
-we encourage you to use the full hwloc API to exploit <em>all</em> the
-hardware.
-
-
-\section switchfromplpa_caching Topology Context vs. Caching
-
-First, all hwloc functions take a \p topology parameter. This
-parameter serves as an internal storage for the result of the topology
-discovery. It replaces PLPA's caching abilities and even lets you
-manipulate multiple topologies as the same time, if needed.
-
-Thus, all programs should first run hwloc_topology_init() and
-hwloc_topology_destroy() as they did plpa_init() and plpa_finalize()
-in the past.
-
-
-\section switchfromplpa_hierarchy Hierarchy vs. Core@Socket
-
-PLPA was designed to understand only cores and sockets.  hwloc offers
-many more different types of objects (e.g., cores, sockets, hardware
-threads, NUMA nodes, and others) and stores them within a tree of
-resources.
-
-To emulate the PLPA model, it is possible to find sockets using
-functions such as hwloc_get_obj_by_type().  Iterating over sockets is
-also possible using hwloc_get_next_obj_by_type().  Then, finding a
-core within a socket may be done using
-hwloc_get_obj_inside_cpuset_by_type() or
-hwloc_get_next_obj_inside_cpuset_by_type().
-
-It is also possible to directly find an object "below" another object
-using hwloc_get_obj_below_by_type() (or
-hwloc_get_obj_below_array_by_type()).
-
-
-\section switchfromplpa_indexes Logical vs. Physical/OS Indexes
-
-hwloc manipulates logical indexes, meaning indexes specified with
-regard to the ordering of objects in the hwloc-provided hierarchical
-tree.  Physical or OS indexes may be entirely hidden if not strictly
-required.  The reason for this is that physical/OS indexes may change
-with the OS or with the BIOS version.  They may be non-consecutive,
-multiple objects may have the same physical/OS indexes, making their
-manipulation tricky and highly non-portable.
-
-Note that hwloc tries very hard to always present a hierarchical tree
-with the same logical ordering, regardless of physical or OS index
-ordering.
-
-It is still possible to retrieve physical/OS indexes through the \p
-os_index field of objects, but such practice should be avoided as much
-as possible for the reasons described above (except perhaps for
-prettyprinting / debugging purposes).
-
-::HWLOC_OBJ_PU objects are supposed to have different physical/OS
-indexes since the OS uses them for binding.  The \p os_index field of
-these objects provides the identifier that may be used for such
-binding, and hwloc_get_proc_obj_by_os_index() finds the object
-associated with a specific OS index.  
-
-But as mentioned above, we discourage the use of these conversion
-methods for actual binding.  Instead, hwloc offers its own binding
-model using the \p cpuset field of objects.  These cpusets may be
-duplicated, modified, combined, etc. (see hwloc/bitmap.h for details)
-and then passed to hwloc_set_cpubind() for binding.
-
-
-\section switchfromplpa_counting Counting Specification
-
-PLPA offers a countspec parameter to specify whether counting all
-CPUs, only the online ones or only the offline ones.  However, some
-operating systems do not expose the topology of offline CPUs (i.e.,
-offline CPUs are not reported at all by the OS).  Also, some
-processors may not be visible to the current application due to
-administrative restrictions.  Finally, some processors let you
-shutdown a single hardware thread in a core, making some of the PLPA
-features irrelevant.
-
-hwloc stores in the hierarchical tree of objects all CPUs that have
-known topology information.  It then provides the applications with
-several cpusets that contain the list of CPUs that are actually known,
-that have topology information, that are online, or that are available
-to the application.  These cpusets may be retrieved with
-hwloc_topology_get_online_cpuset() and other similar functions to
-filter the object that are relevant or not.
-
-
-
 \page faq Frequently Asked Questions
 
 \section faq_xml I do not want hwloc to rediscover my enormous machine topology every time I rerun a process
@@ -1315,6 +1239,129 @@ interface, and the import/export may also be directed to memory buffer
 (that may for instance be transmitted between applications through a socket).
 
 
+\section faq_onedim hwloc only has a one-dimensional view of the architecture, it ignores distances
+
+hwloc places all objects in a tree. Each level is a one-dimensional
+view of a set of similar objects. All children of the same object (siblings)
+are assumed to be equally interconnected (same distance between any of them),
+while the distance between children of different objects (cousins) is supposed
+to be larger.
+
+Modern machines exhibit complex hardware interconnects, so this tree
+may miss some information about the actual physical distances between objects.
+The hwloc topology may therefore be annotated with distance information that
+may be used to build a more realistic representation (multi-dimensional)
+of each level.
+For instance, the root object may contain a distance matrix that represents
+the latencies between any pairs of NUMA nodes if the BIOS and/or operating
+system reports them.
+
+
+\section faq_smt How may I ignore symmetric multithreading, hyper-threading, ... ?
+
+hwloc creates one PU (processing unit) object per hardware thread.
+If your machine supports symmetric multithreading, for instance Hyper-Threading,
+each Core object may contain multiple PU objects.
+\verbatim
+$ lstopo -
+...
+  Core L#1
+    PU L#2 (P#1)
+    PU L#3 (P#3)
+\endverbatim
+
+If you need to ignore symmetric multithreading, you should likely manipulate
+hwloc Core objects directly:
+\verbatim
+/* get the number of cores */
+unsigned nbcores = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_CORE);
+...
+/* get the third core below the first socket */
+hwloc_obj_t socket, core;
+socket = hwloc_get_obj_by_type(topology, HWLOC_OBJ_SOCKET, 0);
+core = hwloc_get_obj_inside_cpuset_by_type(topology, socket->cpuset,
+                                           HWLOC_OBJ_CORE, 2);
+\endverbatim
+
+Whenever you want to bind a process or thread to a core, make sure you
+singlify its cpuset first, so that the task is actually bound to a single
+thread within this core (to avoid useless migrations).
+\verbatim
+/* bind on the second core */
+hwloc_obj_t core = hwloc_get_obj_by_type(topology, HWLOC_OBJ_CORE, 1);
+hwloc_cpuset_t set = hwloc_bitmap_dup(core->cpuset);
+hwloc_bitmap_singlify(set);
+hwloc_set_cpubind(topology, set, 0);
+hwloc_bitmap_free(set);
+\endverbatim
+
+With hwloc-calc or hwloc-bind command-line tools, you may specify that
+you only want a single-thread within each core by asking for their first
+PU object:
+\verbatim
+$ hwloc-calc core:4-7
+0x0000ff00
+$ hwloc-calc core:4-7.pu:0
+0x00005500
+\endverbatim
+
+When binding a process on the command-line, you may either specify
+the exact thread that you want to use, or ask hwloc-bind to singlify
+the cpuset before binding
+\verbatim
+$ hwloc-bind core:3.pu:0 -- echo "hello from first thread on core #3"
+hello from first thread on core #3
+...
+$ hwloc-bind core:3 --single -- echo "hello from a single thread on core #3"
+hello from a single thread on core #3
+\endverbatim
+
+
+\section faq_asymmetric What happens if my topology is asymmetric?
+
+hwloc supports asymmetric topologies even if most platforms are usually
+symmetric. For example, there may be different types of processors
+in a single machine, each with different numbers of cores, symmetric
+multithreading, or levels of caches.
+
+To understand how hwloc manages such cases, one should first remember
+the meaning of levels and cousin objects. All objects of the same type
+are gathered as horizontal levels with a given depth. They are also
+connected through the cousin pointers of the hwloc_obj structure.
+Some types, such as Caches or Groups, are usually annotated with a
+depth or level attribute (for instance L2 cache). In this case, this
+attribute is also taken in account when gathering objects as
+horizontal levels.  To be clear: there will be one level for L1
+caches, another level for L2 caches, etc.
+
+If the topology is asymmetric (e.g., if a cache is missing in one of
+the processors), a given horizontal level will still exist if there
+exist any objects of that type.  However, some branches of the overall
+tree may not have an object located in that horizontal level.  Note
+that this specific hole within one horizontal level does not imply
+anything for other levels.  All objects of the same type are gathered
+in horizontal levels even if their parents or children have different
+depths and types.
+
+Moreover, it is important to understand that a same parent object may
+have children of different types (and therefore, different
+depths). <strong>These children are therefore siblings (because they
+have the same parent), but they are <em>not</em> cousins (because they
+do not belong to the same horizontal levels).</strong>
+
+
+\section faq_annotate How do I annotate the topology with private notes?
+
+Each hwloc object contains a <tt>userdata</tt> field that may be used by
+applications to store private pointers. This field is kept intact as long
+as the object is valid, which means as long as topology objects are not
+modified by reloading or restricting the topology.
+
+It is also possible to insert Misc objects with custom names anywhere
+in the topology (<tt>hwloc_topology_insert_misc_object_by_cpuset()</tt>)
+or as a leaf of the topology (<tt>hwloc_topology_insert_misc_object_by_parent()</tt>).
+
+
 \section faq_upgrade How do I handle API upgrades?
 
 The hwloc interface is extended with every new major release.
@@ -1322,15 +1369,15 @@ Any application using the hwloc API should be prepared to check at
 compile-time whether some features are available in the currently
 installed hwloc distribution.
 
-To check whether hwloc is at least 1.1, you should use:
+To check whether hwloc is at least 1.2, you should use:
 \verbatim
 #include <hwloc.h>
-#if HWLOC_API_VERSION >= 0x00010100
+#if HWLOC_API_VERSION >= 0x00010200
 ...
 #endif
 \endverbatim
 
-One of the major changes in hwloc 1.1 is the addition of the bitmap
+One of the major changes in hwloc 1.1 was the addition of the bitmap
 API. It supersedes the now deprecated cpuset API which will be removed
 in a future hwloc release. It is strongly recommended to switch existing
 codes to the bitmap API. Keeping support for older hwloc versions is easy.

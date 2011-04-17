@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 INRIA
+ * Copyright © 2009-2010 INRIA.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -91,11 +91,11 @@ static void null_line(void *output __hwloc_attribute_unused, int r __hwloc_attri
 static void null_text(void *output __hwloc_attribute_unused, int r __hwloc_attribute_unused, int g __hwloc_attribute_unused, int b __hwloc_attribute_unused, int size __hwloc_attribute_unused, unsigned depth __hwloc_attribute_unused, unsigned x __hwloc_attribute_unused, unsigned y __hwloc_attribute_unused, const char *text __hwloc_attribute_unused) { }
 
 static struct draw_methods null_draw_methods = {
-  .start = null_start,
-  .declare_color = null_declare_color,
-  .box = null_box,
-  .line = null_line,
-  .text = null_text,
+  null_start,
+  null_declare_color,
+  null_box,
+  null_line,
+  null_text,
 };
 
 /*
@@ -297,6 +297,8 @@ RECURSE_BEGIN(obj, border) \
 struct dyna_save {
   unsigned width;
   unsigned height;
+  unsigned fontsize;
+  unsigned gridsize;
 };
 
 /* Save the computed size */
@@ -305,6 +307,8 @@ struct dyna_save {
     struct dyna_save *save = malloc(sizeof(*save)); \
     save->width = *retwidth; \
     save->height = *retheight; \
+    save->fontsize = fontsize; \
+    save->gridsize = gridsize; \
     level->userdata = save; \
   } \
 } while (0)
@@ -313,8 +317,12 @@ struct dyna_save {
 #define DYNA_CHECK() do { \
   if (level->userdata && methods == &null_draw_methods) { \
     struct dyna_save *save = level->userdata; \
-    *retwidth = save->width; \
-    *retheight = save->height; \
+    if (save->fontsize == fontsize && save->gridsize == gridsize) { \
+      *retwidth = save->width; \
+      *retheight = save->height; \
+    } \
+    free(level->userdata); \
+    level->userdata = NULL; \
     return; \
   } \
 } while (0)
@@ -734,6 +742,7 @@ get_type_fun(hwloc_obj_type_t type)
     case HWLOC_OBJ_PU: return pu_draw;
     case HWLOC_OBJ_GROUP: return group_draw;
     case HWLOC_OBJ_MISC: return misc_draw;
+    case HWLOC_OBJ_TYPE_MAX: assert(0);
   }
   return NULL;
 }
@@ -778,17 +787,17 @@ getmax_line(void *output, int r __hwloc_attribute_unused, int g __hwloc_attribut
 }
 
 static struct draw_methods getmax_draw_methods = {
-  .start = null_start,
-  .declare_color = null_declare_color,
-  .box = getmax_box,
-  .line = getmax_line,
-  .text = null_text,
+  null_start,
+  null_declare_color,
+  getmax_box,
+  getmax_line,
+  null_text,
 };
 
 void *
 output_draw_start(struct draw_methods *methods, int logical, int legend, hwloc_topology_t topology, void *output)
 {
-  struct coords coords = { .x = 0, .y = 0};
+  struct coords coords = { 0, 0 };
   fig(topology, &getmax_draw_methods, logical, legend, hwloc_get_root_obj(topology), &coords, 100, 0, 0);
   output = methods->start(output, coords.x, coords.y);
   methods->declare_color(output, 0, 0, 0);

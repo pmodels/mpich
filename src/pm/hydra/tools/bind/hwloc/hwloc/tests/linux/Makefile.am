@@ -1,6 +1,7 @@
-# Copyright © 2009-2010 INRIA
-# Copyright © 2009-2010 Université Bordeaux 1
+# Copyright © 2009-2010 INRIA.  All rights reserved.
+# Copyright © 2009-2011 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+# See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
@@ -16,6 +17,7 @@ sysfs_outputs = \
 		256ppc-8n8s4t.output \
 		256ppc-8n8s4t-nocache.output \
 		256ppc-8n8s4t-nosys.output \
+		32ppc-4n4c2c.output \
 		8amd64-4n2c.output  \
 		8em64t-4c2t.output \
 		8em64t-2s2ca2c.output \
@@ -55,6 +57,7 @@ sysfs_tarballs = \
 		256ppc-8n8s4t.tar.bz2 \
 		256ppc-8n8s4t-nocache.source \
 		256ppc-8n8s4t-nosys.source \
+		32ppc-4n4c2c.tar.bz2 \
 		8amd64-4n2c.tar.bz2  \
 		8em64t-4c2t.tar.bz2 \
 		8em64t-2s2ca2c.tar.bz2 \
@@ -113,9 +116,9 @@ EXTRA_DIST = $(sysfs_outputs) $(sysfs_tarballs) $(sysfs_excludes) $(sysfs_option
 TESTS_ENVIRONMENT = $(builddir)/test-topology.sh
 
 
-bin_SCRIPTS = hwloc-gather-topology.sh
+bin_SCRIPTS = hwloc-gather-topology
 
 install-exec-hook:
-	$(SED) -e 's/abs_top_builddir\/utils/bindir/' -e '/abs_top_builddir/d' -i $(DESTDIR)$(bindir)/hwloc-gather-topology.sh
+	$(SED) -e 's/abs_top_builddir\/utils/bindir/' -e '/abs_top_builddir/d' -i $(DESTDIR)$(bindir)/hwloc-gather-topology
 
 SUBDIRS = gather
