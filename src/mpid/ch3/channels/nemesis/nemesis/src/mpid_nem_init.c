@@ -354,16 +354,15 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     vc_ch->pkt_handler = NULL;
     vc_ch->num_pkt_handlers = 0;
     
-    vc_ch->send_seqno      = 0;
-#ifdef ENABLE_CHECKPOINT
-    vc_ch->ckpt_msg_len    = 0;
-    vc_ch->ckpt_msg_buf    = NULL;
-    vc_ch->ckpt_pause_send = NULL;
-    vc_ch->ckpt_pause_recv = NULL;
-    vc_ch->ckpt_continue   = NULL;
-    vc_ch->ckpt_restart    = NULL;
+    vc_ch->send_seqno         = 0;
+#ifdef ENABLE_CHECKPOINTING
+    vc_ch->ckpt_msg_len       = 0;
+    vc_ch->ckpt_msg_buf       = NULL;
+    vc_ch->ckpt_pause_send_vc = NULL;
+    vc_ch->ckpt_continue_vc   = NULL;
+    vc_ch->ckpt_restart_vc    = NULL;
 #endif
-    vc_ch->pending_pkt_len = 0;
+    vc_ch->pending_pkt_len    = 0;
     MPIU_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_PktGeneric_t *, sizeof (MPIDI_CH3_PktGeneric_t), mpi_errno, "pending_pkt");
 
     /* We do different things for vcs in the COMM_WORLD pg vs other pgs
@@ -479,11 +478,11 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
                                        ((vc->pg == MPIDI_Process.my_pg) 
                                         ? "my_pg" 
                                         :   ((vc->pg)
-                                            ? ((char *)vc->pg->id)
-                                            : "unknown"
+                                             ? ((char *)vc->pg->id)
+                                             : "unknown"
                                             )
-                                        )
-                                    ));
+                                           )
+                             ));
         
         mpi_errno = MPID_nem_netmod_func->vc_init(vc);
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -504,7 +503,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     vc_ch->sendq_head = NULL;
 
     MPIU_CHKPMEM_COMMIT();
-fn_exit:
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_VC_INIT);
     return mpi_errno;
  fn_fail:
