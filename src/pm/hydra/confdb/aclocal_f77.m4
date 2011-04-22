@@ -1264,7 +1264,7 @@ AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
         subroutine minit()
         common /m1/ vc, vc2
-        character *1 vc(1,1), vc2(1)
+        character*1 vc(1,1), vc2(1)
         common /m2/ vd
         integer vd
         save /m1/, /m2/
@@ -1274,7 +1274,10 @@ AC_COMPILE_IFELSE([
 ],[
     PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     saved_LIBS="$LIBS"
-    LIBS="pac_f77conftest.$OBJEXT $FLIBS $LIBS"
+    # This test checks if Fortran init can be done in pure C environment,
+    # i.e. no FLIBS in linking, so don't put FLIBS in LIBS below
+    dnl LIBS="pac_f77conftest.$OBJEXT $FLIBS $LIBS"
+    LIBS="pac_f77conftest.$OBJEXT $LIBS"
     AC_LANG_PUSH([C])
     AC_LINK_IFELSE([
         AC_LANG_SOURCE([
@@ -1286,7 +1289,8 @@ AC_COMPILE_IFELSE([
 #elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
 #define minit_ minit
 #endif
-int main( int argc, char *argv )
+extern void minit_(void);
+int main( int argc, char **argv )
 {
     minit_();
     return 0;
@@ -1294,7 +1298,8 @@ int main( int argc, char *argv )
 char *v1 = 0;
 char *vc2 = 0;
 int  v2 = 0;
-minitc_( char *dv1, int d, char *dv2, int d2, int dv3 )
+void minitc_( char *dv1, int d, char *dv2, int d2, int dv3 );
+void minitc_( char *dv1, int d, char *dv2, int d2, int dv3 )
 {
 v1 = dv1;
 v2 = dv3;
