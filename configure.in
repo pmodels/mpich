@@ -1915,8 +1915,11 @@ if test "$enable_f77" = "yes" ; then
     fi
 
     # Once we have name mangle, we can try to limit the number of needed libs
-    PAC_PROG_F77_IN_C_LIBS
-    AC_SUBST(F77_IN_C_LIBS)
+    dnl F77_IN_C_LIBS is not needed currently because mpirinitf_() in setbotf.f
+    dnl is called in initthread.c only when FLIBS is not needed to initialize
+    dnl Fortran constants from a C main, See PAC_F77_INIT_WORKS_WITH_C.
+    dnl PAC_PROG_F77_IN_C_LIBS
+    dnl AC_SUBST(F77_IN_C_LIBS)
 
     # ------------------------------------------------
     # Shared library support
