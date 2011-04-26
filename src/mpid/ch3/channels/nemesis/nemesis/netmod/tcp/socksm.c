@@ -1819,7 +1819,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                    (Stevens Network Programming Vol 1, pg 184) */
                 rc = read(it_plfd->fd, &dummy, 1);
                 if (rc < 0)
-                    err_str = MPIU_Strerror(rc);
+                    err_str = MPIU_Strerror(errno);
                 
                 MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "error polling fd, closing sc");
                 if (it_sc->vc) {
