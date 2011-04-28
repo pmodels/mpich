@@ -282,8 +282,13 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
 
         if (HYD_server_info.node_list == NULL) {
+            char localhost[MAX_HOSTNAME_LEN] = { 0 };
+
             /* The RMK didn't give us anything back; use localhost */
-            status = HYDU_add_to_node_list("localhost", 1, &HYD_server_info.node_list);
+            status = HYDU_gethostname(localhost);
+            HYDU_ERR_POP(status, "unable to get local hostname\n");
+
+            status = HYDU_add_to_node_list(localhost, 1, &HYD_server_info.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
 
             reset_rmk = 1;

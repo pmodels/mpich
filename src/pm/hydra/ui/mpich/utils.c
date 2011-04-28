@@ -206,6 +206,7 @@ static void mfile_help_fn(void)
 
 static HYD_status mfile_fn(char *arg, char ***argv)
 {
+    char localhost[MAX_HOSTNAME_LEN] = { 0 };
     HYD_status status = HYD_SUCCESS;
 
     if (reading_config_file && HYD_server_info.node_list) {
@@ -222,7 +223,10 @@ static HYD_status mfile_fn(char *arg, char ***argv)
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
-        status = HYDU_add_to_node_list("localhost", 1, &HYD_server_info.node_list);
+        status = HYDU_gethostname(localhost);
+        HYDU_ERR_POP(status, "unable to get local hostname\n");
+
+        status = HYDU_add_to_node_list(localhost, 1, &HYD_server_info.node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
 
