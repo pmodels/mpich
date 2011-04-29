@@ -93,8 +93,6 @@ extern void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
 static int ADIOI_too_much_memory_for_alltoallv(int nprocs, 
 		int * send_size, int *recv_size);
-static int ADIOI_allsame_access(ADIO_File fd, ADIO_Offset *st_offsets, 
-		ADIO_Offset *end_offsets);
 
 void ADIOI_BGL_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			       MPI_Datatype datatype, int file_ptr_type,
@@ -259,8 +257,7 @@ void ADIOI_BGL_ReadStridedColl(ADIO_File fd, void *buf, int count,
      * config file, an initial mesh dataset, etc), then the full two-phase
      * algorithm is overkill and we should just read-and-broadcast */
 
-    if (ADIOI_allsame_access(fd, st_offsets, end_offsets)) {
-	*error_code = MPI_SUCCESS;
+    if (ADIOI_allsame_access(fd, count, datatype)) {
         if (myrank == fd->hints->ranklist[0])  {
             ADIO_ReadContig(fd, buf, count, datatype, file_ptr_type, 
 			    offset, status, error_code);
@@ -277,7 +274,6 @@ void ADIOI_BGL_ReadStridedColl(ADIO_File fd, void *buf, int count,
 #endif
 	return;
     }
-
 
 #if BGL_PROFILE 
     BGLMPIO_T_CIO_SET_GET( 0, r, 1, 1, 1, BGLMPIO_CIO_FD_PART, BGLMPIO_CIO_PATANA )
@@ -1218,29 +1214,4 @@ static int ADIOI_too_much_memory_for_alltoallv(int nprocs,
 
 	if (mem_required > threshold) return 1;
 	return 0;
-}
-
-static int ADIOI_allsame_access(ADIO_File fd, ADIO_Offset *st_offsets, 
-		ADIO_Offset *end_offsets) 
-{
-    /* TODO: The general solution would look at the file type and use this
-     * approach for any file view.  The list of start and end offsets, however,
-     * only gives us enough information to make this decision for
-     * contig-in-file. */
-    int filetype_is_contig;
-    int allsame=0, i, nprocs;
-
-    ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
-    MPI_Comm_size(fd->comm, &nprocs);
-
-    if (filetype_is_contig) {
-	for(i=1, allsame=1; i<nprocs; i++) {
-            if( (st_offsets[i-1] != st_offsets[i]) || 
-			    (end_offsets[i-1] != end_offsets[i]) ) {
-	        allsame=0;
-	        break;
-	    }
-	}
-    }
-    return (allsame);
 }

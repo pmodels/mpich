@@ -561,6 +561,7 @@ int ADIOI_End_call(MPI_Comm comm, int keyval, void *attribute_val, void *extra_s
 int MPIR_Status_set_bytes(MPI_Status *status, MPI_Datatype datatype, int nbytes);
 int ADIOI_Uses_generic_read(ADIO_File fd);
 int ADIOI_Uses_generic_write(ADIO_File fd);
+int ADIOI_allsame_access(ADIO_File fd, int count, MPI_Datatype datatype);
 
 
 int ADIOI_FAKE_IODone(ADIO_Request *request, ADIO_Status *status,
