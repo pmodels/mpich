@@ -255,7 +255,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
          * processes */
         if (HYD_server_info.user_global.auto_cleanup) {
             for (i = 0; i < proxy->proxy_process_count; i++) {
-                if (proxy->exit_status[i]) {
+                if (!WIFEXITED(proxy->exit_status[i])) {
                     HYDU_dump_noprefix
                         (stdout, "\n====================================================");
                     HYDU_dump_noprefix(stdout, "=================================\n");
