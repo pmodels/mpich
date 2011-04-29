@@ -82,3 +82,19 @@ HYD_status HYDU_gethostname(char *hostname)
   fn_fail:
     goto fn_exit;
 }
+
+void HYDU_delay(unsigned long delay)
+{
+    struct timeval start, end;
+
+    if (delay == 0)
+        return;
+
+    gettimeofday(&start, NULL);
+    while (1) {
+        gettimeofday(&end, NULL);
+        if ((1000000.0 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)) >
+            delay)
+            break;
+    }
+}

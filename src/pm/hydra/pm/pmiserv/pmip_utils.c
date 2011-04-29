@@ -144,6 +144,17 @@ static HYD_status auto_cleanup_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status retries_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_int(arg, &HYD_pmcd_pmip.local.retries, atoi(**argv));
+
+    (*argv)++;
+
+    return status;
+}
+
 static HYD_status pmi_port_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -662,6 +673,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"demux", demux_fn, NULL},
     {"iface", iface_fn, NULL},
     {"auto-cleanup", auto_cleanup_fn, NULL},
+    {"retries", retries_fn, NULL},
 
     /* Executable parameters */
     {"pmi-port", pmi_port_fn, NULL},
@@ -751,6 +763,9 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.local.pgid == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "PG ID not available\n");
+
+    if (HYD_pmcd_pmip.local.retries == -1)
+        HYD_pmcd_pmip.local.retries = 0;
 
     HYDU_dbg_finalize();
     HYDU_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",

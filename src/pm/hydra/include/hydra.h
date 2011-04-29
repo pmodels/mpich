@@ -116,6 +116,8 @@ extern char *HYD_dbg_prefix;
 #define HYD_TMP_STRLEN  1024
 #define HYD_NUM_TMP_STRINGS 1000
 
+#define HYD_DEFAULT_RETRY_COUNT (10)
+
 #define dprintf(...)
 
 #ifndef ATTRIBUTE
@@ -481,6 +483,7 @@ int HYDU_dceil(int x, int y);
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
                                  struct HYD_node **node_list);
 HYD_status HYDU_gethostname(char *hostname);
+void HYDU_delay(unsigned long delay);
 
 /* signals */
 #ifdef NEEDS_POSIX_FOR_SIGACTION
@@ -507,7 +510,10 @@ enum HYDU_sock_comm_flag {
 };
 
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
-HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd);
+
+/* delay is in microseconds */
+HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retries,
+                             unsigned long delay);
 HYD_status HYDU_sock_accept(int listen_fd, int *fd);
 HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed,
                           enum HYDU_sock_comm_flag flag);

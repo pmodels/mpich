@@ -82,7 +82,7 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_l
 
         /* connect to hydserv on each node */
         status = HYDU_sock_connect(proxy->node->hostname, PERSIST_DEFAULT_PORT,
-                                   &HYDT_bscd_persist_control_fd[i]);
+                                   &HYDT_bscd_persist_control_fd[i], 0, 0);
         HYDU_ERR_POP(status, "unable to connect to the main server\n");
 
         /* send information about the executable */

@@ -147,11 +147,12 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 }
 
 
-HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
+HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retries,
+                             unsigned long delay)
 {
     struct hostent *ht;
     struct sockaddr_in sa;
-    int one = 1;
+    int one = 1, ret, retry_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -179,7 +180,21 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd)
     /* Not being able to connect is not an error in all cases. So we
      * return an error, but only print a warning message. The upper
      * layer can decide what to do with the return status. */
-    if (connect(*fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+    retry_count = 0;
+    do {
+        ret = connect(*fd, (struct sockaddr *) &sa, sizeof(sa));
+        if (ret < 0 && errno == ECONNREFUSED) {
+            /* connection error; increase retry count and delay */
+            retry_count++;
+            if (retry_count > retries)
+                break;
+            HYDU_delay(delay);
+        }
+        else
+            break;
+    } while (1);
+
+    if (ret < 0) {
         status = sock_localhost_init();
         HYDU_ERR_POP(status, "unable to initialize sock local information\n");
 

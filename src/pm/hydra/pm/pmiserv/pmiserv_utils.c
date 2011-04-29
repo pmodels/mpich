@@ -12,7 +12,7 @@
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {
-    int i, arg, use_ddd, use_valgrind, use_strace;
+    int i, arg, use_ddd, use_valgrind, use_strace, retries, ret;
     char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
@@ -84,6 +84,13 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
     proxy_args[arg++] = HYDU_strdup("--pgid");
     proxy_args[arg++] = HYDU_int_to_str(pgid);
+
+    ret = MPL_env2int("HYDRA_RETRY_COUNT", &retries);
+    if (ret == 0)
+        retries = HYD_DEFAULT_RETRY_COUNT;
+
+    proxy_args[arg++] = HYDU_strdup("--retries");
+    proxy_args[arg++] = HYDU_int_to_str(retries);
 
     proxy_args[arg++] = HYDU_strdup("--proxy-id");
     proxy_args[arg++] = NULL;
