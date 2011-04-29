@@ -242,6 +242,9 @@ struct HYD_pg {
 
     struct HYD_pg *spawner_pg;
 
+    /* user-specified node-list */
+    struct HYD_node *user_node_list;
+
     /* scratch space for the PM */
     void *pg_scratch;
 

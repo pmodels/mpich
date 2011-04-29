@@ -138,6 +138,7 @@ void HYDU_init_pg(struct HYD_pg *pg, int pgid)
     pg->pg_process_count = 0;
     pg->barrier_count = 0;
     pg->spawner_pg = NULL;
+    pg->user_node_list = NULL;
     pg->pg_scratch = NULL;
     pg->next = NULL;
 }
@@ -169,6 +170,9 @@ void HYDU_free_pg_list(struct HYD_pg *pg_list)
 
         if (pg->proxy_list)
             HYDU_free_proxy_list(pg->proxy_list);
+
+        if (pg->user_node_list)
+            HYDU_free_node_list(pg->user_node_list);
 
         HYDU_FREE(pg);
 

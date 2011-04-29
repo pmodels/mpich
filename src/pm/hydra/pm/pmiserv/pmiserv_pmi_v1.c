@@ -262,7 +262,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_node *user_node_list = NULL;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_token *tokens;
     struct HYD_exec *exec_list = NULL, *exec;
@@ -406,12 +405,12 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                 exec->wdir = HYDU_strdup(info_val);
             }
             else if (!strcmp(info_key, "host")) {
-                status = HYDU_process_mfile_token(info_val, 1, &user_node_list);
+                status = HYDU_process_mfile_token(info_val, 1, &pg->user_node_list);
                 HYDU_ERR_POP(status, "error create node list\n");
             }
             else if (!strcmp(info_key, "hostfile")) {
                 status =
-                    HYDU_parse_hostfile(info_val, &user_node_list, HYDU_process_mfile_token);
+                    HYDU_parse_hostfile(info_val, &pg->user_node_list, HYDU_process_mfile_token);
                 HYDU_ERR_POP(status, "error parsing hostfile\n");
             }
             else {
@@ -501,8 +500,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next)
         offset += pg->pg_process_count;
 
-    if (user_node_list) {
-        status = HYDU_create_proxy_list(exec_list, user_node_list, pg);
+    if (pg->user_node_list) {
+        status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     else {
@@ -555,8 +554,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_free_strlist(proxy_args);
     if (segment_list)
         HYDU_FREE(segment_list);
-    if (user_node_list)
-        HYDU_free_node_list(user_node_list);
     HYDU_FUNC_EXIT();
     return status;
 
