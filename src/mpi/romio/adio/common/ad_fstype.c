@@ -615,6 +615,8 @@ void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype,
 	 * everyone else.  
 	 * - Note that we will not catch cases like
 	 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html
+	 * (edit: now http://lists.mcs.anl.gov/pipermail/mpich-discuss/2007-August/002648.html)
+	 *
 	 * where file systems are not mounted or available on other processes,
 	 * but we'll catch those a few functions later in ADIO_Open 
 	 * - Note that if we have NFS enabled, we might have a situation where,
@@ -644,7 +646,9 @@ void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype,
 		 * system type check below.  This case could happen if a full
 		 * path exists on one node but not on others, and no prefix
 		 * like ufs: was provided.  see discussion at
-		 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html 
+		 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html
+		 * (edit: now
+		 * http://lists.mcs.anl.gov/pipermail/mpich-discuss/2007-August/002648.html)
 	         */
 
 	        MPI_Allreduce(error_code, &max_code, 1, MPI_INT, MPI_MAX, comm);
