@@ -17,6 +17,7 @@ void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
     hdr->pgid = -1;
     hdr->proxy_id = -1;
     hdr->rank = -1;
+    hdr->signum = -1;
 }
 
 HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd,
