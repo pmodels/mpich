@@ -406,10 +406,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                 exec->wdir = HYDU_strdup(info_val);
             }
             else if (!strcmp(info_key, "host")) {
-                status = HYDU_alloc_node(&user_node_list);
-                HYDU_ERR_POP(status, "unable to allocate node\n");
-                user_node_list->hostname = HYDU_strdup(info_val);
-                user_node_list->core_count = 1;
+                status = HYDU_process_mfile_token(info_val, 1, &user_node_list);
+                HYDU_ERR_POP(status, "error create node list\n");
             }
             else if (!strcmp(info_key, "hostfile")) {
                 status =
