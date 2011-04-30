@@ -8,7 +8,7 @@
 #include "bsci.h"
 #include "bscu.h"
 #include "bind.h"
-#include "external.h"
+#include "common.h"
 
 static int fd_stdout, fd_stderr;
 
@@ -97,8 +97,8 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_proxy *proxy_list,
-                                           int *control_fd)
+HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list,
+                                         int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len;
     int *pid, *fd_list, *dummy;
@@ -121,7 +121,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_proxy *proxy_
         HYDU_ERR_POP(status, "unable to get path to the rsh executable\n");
     }
     else if (!strcmp(HYDT_bsci_info.launcher, "fork")) {
-        /* fork is not an external launcher */
+        /* fork has no separate launcher */
     }
     else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
         status = lsf_get_path(&path);
@@ -176,7 +176,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_proxy *proxy_
 
     /* Create a quoted version of the exec string, which is only used
      * when the executable is not launched directly, but through an
-     * external launcher */
+     * actual launcher */
     HYDU_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
 
     /* pid_list might already have some PIDs */
@@ -228,7 +228,7 @@ HYD_status HYDT_bscd_external_launch_procs(char **args, struct HYD_proxy *proxy_
          * connections causing the job to fail. This is basically a
          * hack to slow down ssh connections to the same node. */
         if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
-            status = HYDT_bscd_ssh_store_launch_time(proxy->node->hostname);
+            status = HYDTI_bscd_ssh_store_launch_time(proxy->node->hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
 

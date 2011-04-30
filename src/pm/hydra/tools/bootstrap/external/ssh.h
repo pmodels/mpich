@@ -28,6 +28,9 @@ struct HYDT_bscd_ssh_time {
 
 extern struct HYDT_bscd_ssh_time *HYDT_bscd_ssh_time;
 
-HYD_status HYDT_bscd_ssh_store_launch_time(char *hostname);
+HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname);
+
+HYD_status HYDT_bscd_ssh_query_env_inherit(const char *env_name, int *ret);
+HYD_status HYDT_bscd_ssh_launcher_finalize(void);
 
 #endif /* SSH_H_INCLUDED */
