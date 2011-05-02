@@ -739,17 +739,6 @@ static int MPIX_Type_marshal(const char *typerep,
 	    SHA1_Init(&context);
 	    SHA1_Update(&context, tmpbuf, out.bufpos);
 	    SHA1_Final(&context, outbuf);
-#if 1
-	    //p = SHA1(tmpbuf, 1024, outbuf);
-	    p = outbuf;
-	    printf("datatype hashed to %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-			    p[0], p[1], p[2], p[3],
-			    p[4], p[5], p[6], p[7],
-			    p[8], p[9], p[10], p[11],
-			    p[12], p[13], p[14], p[15],
-			    p[16], p[17], p[18], p[19] );
-
-#endif
 	    *num_written = 20;
 	}
 	ADIOI_Free(tmpbuf);
