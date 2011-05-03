@@ -6,7 +6,7 @@
 
 #include "sha1.h"
 
-// Maximum number of ints/addrs/types in a constructed type
+/* Maximum number of ints/addrs/types in a constructed type */
 #define MAX_ENTRIES     100000
 
 #ifndef FALSE
@@ -95,7 +95,7 @@ struct output_t
    char * buffer;
    size_t bufpos;
    size_t bufsize;
-   // Return false on error
+   /* Return false on error */
    int (*write) (output_t * out, const void * data, size_t size);
    int (*read) (output_t * out, void * data, size_t size);
 };
@@ -170,10 +170,10 @@ static void dtmarshal_size_setup (output_t * out)
    out->bufpos = 0;
 }
 
-// Returns nonzero if success
+/* Returns nonzero if success */
 static inline int write_xdr_uint32 (output_t * out, uint32_t i)
 {
-   // TODO: byteswap if needed
+   /* TODO: byteswap if needed */
    return out->write (out, &i, sizeof (i));
 }
 
@@ -184,8 +184,8 @@ static inline int read_xdr_uint32 (output_t * out, uint32_t * i)
 
 static inline int write_xdr_char (output_t * out, char c)
 {
-   // XDR spec states all items are multiple of 4 bytes in size;
-   // Requires zero-padding
+   /* XDR spec states all items are multiple of 4 bytes in size;
+    Requires zero-padding */
    return write_xdr_uint32 (out, c);
 }
 
@@ -209,7 +209,7 @@ static inline int read_xdr_int32 (output_t * out, int32_t * i)
 
 static inline int write_xdr_uint64 (output_t * out, uint64_t u)
 {
-   // TODO: byteswap if needed
+   /* TODO: byteswap if needed */
    return out->write (out, &u, sizeof(u));
 }
 
@@ -231,7 +231,7 @@ static void free_if_not_builtin (MPI_Datatype * type)
 }
 
 
-// Store passed data. If count < 0, also store number of items following
+/* Store passed data. If count < 0, also store number of items following */
 static int dtmarshal_marshal_helper (output_t * out, int intcount, int addrcount, int typecount, 
       int storeint, int storeaddr, int storetype,
       const int * ints, const MPI_Aint * addrs, const MPI_Datatype * types);
@@ -247,15 +247,15 @@ static int dtmarshal_marshal (MPI_Datatype type, output_t * out)
    int * ints = 0;
    size_t i;
 
-   // get type contents
+   /* get type contents */
    ret = MPI_Type_get_envelope (type, &intcount, &addrcount, &typecount, &combiner);
    if (ret != MPI_SUCCESS)
       return ret;
 
-   // store combiner
+   /* store combiner */
    if (!write_xdr_char (out, dtmarshal_lookup_combiner (combiner)))
    {
-      // TODO: set error
+      /* TODO: set error */
       return MPI_ERR_IO;
    }
 
@@ -298,8 +298,8 @@ static int dtmarshal_marshal (MPI_Datatype type, output_t * out)
             ret = dtmarshal_marshal_helper (out, 3, 0, 1, FALSE, FALSE, FALSE, ints, addrs, types);
             break;
          case MPI_COMBINER_HVECTOR_INTEGER:
-            // integer combiner is preserved but returns addrs instead (see pg
-            // 109 mpi22 standard)
+            /* integer combiner is preserved but returns addrs instead (see pg
+             109 mpi22 standard) */
            /* assert (typecount == 1);
             dtmarshal_marshal_helper (out, 3, 0, 1, FALSE, FALSE, FALSE, ints, addrs, types);
             break; */
@@ -309,13 +309,11 @@ static int dtmarshal_marshal (MPI_Datatype type, output_t * out)
             break;
          case MPI_COMBINER_INDEXED:
             assert (typecount == 1);
-            // count = ints[0]
             ret = dtmarshal_marshal_helper (out, ints[0]*2, 0, 1, TRUE, FALSE, FALSE, &ints[1], addrs, types);
             break;
          case MPI_COMBINER_HINDEXED:
          case MPI_COMBINER_HINDEXED_INTEGER:
             assert (typecount == 1);
-            // count = ints[0]
             assert (addrcount + 1 == intcount);
             ret = dtmarshal_marshal_helper (out, ints[0], ints[0], 1, TRUE, FALSE, FALSE, &ints[1], addrs, types);
             break;
@@ -338,7 +336,7 @@ static int dtmarshal_marshal (MPI_Datatype type, output_t * out)
          case MPI_COMBINER_DARRAY:
             assert (!addrcount);
             assert (typecount == 1);
-            // copy size to ndim place to avoid storing redundant info
+            /* copy size to ndim place to avoid storing redundant info */
             ints[2]=ints[0];
             ret = dtmarshal_marshal_helper (out, ints[0]*4+3, addrcount, typecount, TRUE, FALSE, FALSE, &ints[1], addrs, types);
             break;
@@ -495,20 +493,19 @@ static int dtmarshal_unmarshal_helper (output_t * out,
 
 static int dtmarshal_unmarshal (output_t * out, MPI_Datatype * t)
 {
-   // read combiner
+   /* read combiner */
    size_t i;
    char combiner;
    int ret = MPI_SUCCESS;
    int typecount = 0;
    int intcount = 0;
-   //int addrcount = 0;
    MPI_Aint * addrs = 0;
    MPI_Datatype * types = 0;
    int * ints = 0;
 
    if (!read_xdr_char (out, &combiner))
    {
-      return MPI_ERR_IO; // TODO return error
+      return MPI_ERR_IO; /* TODO return error */
    }
 
    if (combiner < 0 || combiner > sizeof (dt_translate)/sizeof(dt_translate[0]))
@@ -517,7 +514,7 @@ static int dtmarshal_unmarshal (output_t * out, MPI_Datatype * t)
       return MPI_ERR_UNSUPPORTED_OPERATION;
    }
 
-   // convert combiner into MPI combiner
+   /* convert combiner into MPI combiner */
    combiner = dt_translate[(int)combiner];
 
    switch (combiner)
@@ -577,7 +574,7 @@ static int dtmarshal_unmarshal (output_t * out, MPI_Datatype * t)
          typecount=1;
          ret = dtmarshal_unmarshal_helper (out, 0, 0, 1, &intcount, NULL, NULL, &ints, &addrs, &types);
          if (ret != MPI_SUCCESS) return ret;
-         assert (intcount >= 1);  // at the very least the blocklen
+         assert (intcount >= 1);  /* at the very least the blocklen */
          ret = MPI_Type_create_indexed_block (intcount-1, ints[0], &ints[1], types[0], t);
          if (ret != MPI_SUCCESS) return ret;
          break;
