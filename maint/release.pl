@@ -196,6 +196,12 @@ chdir("${root}/${pack}-${version}");
 }
 print("done\n");
 
+# Disable unnecessary tests in the release tarball
+print("===> Disabling unnecessary tests in the main package... ");
+chdir("${root}/${pack}-${version}");
+run_cmd("sed -i 's/^perf$/#perf/g' test/mpi/testlist.in");
+print("done\n");
+
 # Remove unnecessary files
 print("===> Removing unnecessary files in the main package... ");
 chdir("${root}/${pack}-${version}");
