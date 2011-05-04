@@ -326,9 +326,9 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
-    HYD_server_info.global_core_count = 0;
+    HYD_server_info.pg_list.pg_core_count = 0;
     for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++) {
-        HYD_server_info.global_core_count += node->core_count;
+        HYD_server_info.pg_list.pg_core_count += node->core_count;
         node->node_id = i;
     }
 
@@ -336,10 +336,10 @@ int main(int argc, char **argv)
      * available nodes to each executable */
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
         if (exec->proc_count == -1) {
-            if (HYD_server_info.global_core_count == 0)
+            if (HYD_server_info.pg_list.pg_core_count == 0)
                 exec->proc_count = 1;
             else
-                exec->proc_count = HYD_server_info.global_core_count;
+                exec->proc_count = HYD_server_info.pg_list.pg_core_count;
 
             /* If we didn't get anything from the user, take whatever
              * the RMK gave */

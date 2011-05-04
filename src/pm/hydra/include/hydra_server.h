@@ -34,7 +34,6 @@ struct HYD_server_info {
 
     /* All of the available nodes */
     struct HYD_node *node_list;
-    int global_core_count;
 
     /* Process groups */
     struct HYD_pg pg_list;

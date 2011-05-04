@@ -266,6 +266,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     struct HYD_pmcd_token *tokens;
     struct HYD_exec *exec_list = NULL, *exec;
     struct HYD_env *env;
+    struct HYD_node *node;
 
     char key[PMI_MAXKEYLEN], *val;
     int nprocs, preput_num, info_num, ret;
@@ -465,6 +466,17 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "unable to allocate pg scratch space\n");
+
+    if (pg->user_node_list) {
+        pg->pg_core_count = 0;
+        for (i = 0, node = pg->user_node_list; node; node = node->next, i++) {
+            pg->pg_core_count += node->core_count;
+            node->node_id = i;
+        }
+    }
+    else {
+        pg->pg_core_count = HYD_server_info.pg_list.pg_core_count;
+    }
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 

@@ -139,6 +139,7 @@ void HYDU_init_pg(struct HYD_pg *pg, int pgid)
     pg->barrier_count = 0;
     pg->spawner_pg = NULL;
     pg->user_node_list = NULL;
+    pg->pg_core_count = -1;
     pg->pg_scratch = NULL;
     pg->next = NULL;
 }

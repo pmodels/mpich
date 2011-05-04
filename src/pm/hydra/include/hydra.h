@@ -246,6 +246,7 @@ struct HYD_pg {
 
     /* user-specified node-list */
     struct HYD_node *user_node_list;
+    int pg_core_count;
 
     /* scratch space for the PM */
     void *pg_scratch;
