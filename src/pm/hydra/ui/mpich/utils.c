@@ -657,8 +657,6 @@ static HYD_status np_fn(char *arg, char ***argv)
     status = HYDU_set_int(arg, &exec->proc_count, atoi(**argv));
     HYDU_ERR_POP(status, "error getting executable process count\n");
 
-    HYD_server_info.pg_list.pg_process_count += exec->proc_count;
-
   fn_exit:
     (*argv)++;
     return status;

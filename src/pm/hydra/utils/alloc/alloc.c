@@ -139,7 +139,7 @@ void HYDU_init_pg(struct HYD_pg *pg, int pgid)
     pg->barrier_count = 0;
     pg->spawner_pg = NULL;
     pg->user_node_list = NULL;
-    pg->pg_core_count = -1;
+    pg->pg_core_count = 0;
     pg->pg_scratch = NULL;
     pg->next = NULL;
 }
@@ -351,17 +351,12 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec * exec_list, struct HYD_node *
     struct HYD_proxy *proxy = NULL, *tproxy, *last_proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int pg_process_count, process_core_ratio, c, global_core_count, filler_process_count;
+    int process_core_ratio, c, global_core_count, filler_process_count;
     int num_procs, proxy_rem_cores, exec_rem_procs, global_active_processes, included_cores;
     int proxy_id, global_node_count, pcr, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    pg_process_count = 0;
-    for (exec = exec_list; exec; exec = exec->next)
-        pg_process_count += exec->proc_count;
-    HYDU_ASSERT(pg_process_count, status);
 
     /*
      * Find the process/core ratio that we can go to. The minimum is
@@ -429,7 +424,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec * exec_list, struct HYD_node *
             last_proxy->next = proxy;
         last_proxy = proxy;
 
-        if (included_cores >= pg_process_count)
+        if (included_cores >= pg->pg_process_count)
             break;
 
         i++;

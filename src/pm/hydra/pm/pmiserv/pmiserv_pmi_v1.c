@@ -274,7 +274,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     struct HYD_pmcd_token_segment *segment_list = NULL;
 
-    int token_count, i, j, k, new_pgid, total_spawns, offset;
+    int token_count, i, j, k, new_pgid, total_spawns;
     int argcnt, num_segments;
     char *control_port, *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
     char *tmp[HYD_NUM_TMP_STRINGS];
@@ -338,7 +338,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to allocate process group\n");
 
     pg = pg->next;
-    pg->pg_process_count = 0;
 
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
@@ -478,6 +477,10 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         pg->pg_core_count = HYD_server_info.pg_list.pg_core_count;
     }
 
+    pg->pg_process_count = 0;
+    for (exec = exec_list; exec; exec = exec->next)
+        pg->pg_process_count += exec->proc_count;
+
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     /* Get the common keys and deal with them */
@@ -506,12 +509,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "unable to add keypair to kvs\n");
     }
 
-
     /* Create the proxy list */
-    offset = 0;
-    for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next)
-        offset += pg->pg_process_count;
-
     if (pg->user_node_list) {
         status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");

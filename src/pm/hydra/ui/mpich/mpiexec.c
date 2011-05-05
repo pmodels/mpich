@@ -334,17 +334,11 @@ int main(int argc, char **argv)
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
+    HYD_server_info.pg_list.pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->proc_count == -1) {
-            if (HYD_server_info.pg_list.pg_core_count == 0)
-                exec->proc_count = 1;
-            else
-                exec->proc_count = HYD_server_info.pg_list.pg_core_count;
-
-            /* If we didn't get anything from the user, take whatever
-             * the RMK gave */
-            HYD_server_info.pg_list.pg_process_count += exec->proc_count;
-        }
+        if (exec->proc_count == -1)
+            exec->proc_count = HYD_server_info.pg_list.pg_core_count;
+        HYD_server_info.pg_list.pg_process_count += exec->proc_count;
     }
 
     status = HYDU_list_inherited_env(&HYD_server_info.user_global.global_env.inherited);
