@@ -24,3 +24,5 @@ disconnect 3
 disconnect2 3
 disconnect3 3
 concurrent_spawns 1
+pgroup_connect_test 4
+pgroup_intercomm_test 4
