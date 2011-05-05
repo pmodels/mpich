@@ -29,7 +29,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
         user_path = HYDU_strdup(user_path);
 
     if (user_path) {    /* If the PATH environment exists */
-        test_loc = strtok(user_path, ";:");
+        test_loc = HYDU_get_abs_wd(strtok(user_path, ";:"));
         do {
             tmp[0] = HYDU_strdup(test_loc);
             tmp[1] = HYDU_strdup("/");
@@ -54,7 +54,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
             HYDU_FREE(path_loc);
             path_loc = NULL;
-        } while ((test_loc = strtok(NULL, ";:")));
+        } while ((test_loc = HYDU_get_abs_wd(strtok(NULL, ";:"))));
     }
 
     /* There is either no PATH environment or we could not find the
@@ -220,6 +220,21 @@ char *HYDU_getcwd(void)
 
   fn_fail:
     goto fn_exit;
+}
+
+char *HYDU_get_abs_wd(const char *wd)
+{
+    char *cwd, *retdir;
+
+    if (wd[0] != '.')
+        return (char *) wd;
+
+    cwd = HYDU_getcwd();
+    chdir(wd);
+    retdir = HYDU_getcwd();
+    chdir(cwd);
+
+    return retdir;
 }
 
 HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
