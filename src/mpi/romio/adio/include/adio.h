@@ -300,11 +300,16 @@ typedef struct {
 #define ADIO_FCNTL_GET_FSIZE     200
 
 /* file system feature tests */
-#define ADIO_LOCKS               300
-#define ADIO_SHARED_FP           301
-#define ADIO_ATOMIC_MODE         302
-#define ADIO_DATA_SIEVING_WRITES 303
-#define ADIO_SCALABLE_OPEN       304
+#define ADIO_LOCKS               300 /* file system supports fcntl()-style locking */
+#define ADIO_SHARED_FP           301 /* file system supports shared file pointers */
+#define ADIO_ATOMIC_MODE         302 /* file system supports atomic mode */
+#define ADIO_DATA_SIEVING_WRITES 303 /* file system supports data sieving for writes */
+#define ADIO_SCALABLE_OPEN       304 /* one process can open the file and
+					broadcast result to all other
+					processors */
+#define ADIO_UNLINK_AFTER_CLOSE  305 /* supports posix semantic of keeping a
+					deleted file around until all
+					processors have closed it */
 
 /* for default file permissions */
 #define ADIO_PERM_NULL           -1
