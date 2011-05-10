@@ -336,9 +336,7 @@ static int dtmarshal_marshal (MPI_Datatype type, output_t * out)
          case MPI_COMBINER_DARRAY:
             assert (!addrcount);
             assert (typecount == 1);
-            /* copy size to ndim place to avoid storing redundant info */
-            ints[2]=ints[0];
-            ret = dtmarshal_marshal_helper (out, ints[0]*4+3, addrcount, typecount, TRUE, FALSE, FALSE, &ints[1], addrs, types);
+            ret = dtmarshal_marshal_helper (out, ints[2]*4+3, addrcount, typecount, TRUE, FALSE, FALSE, &ints[0], addrs, types);
             break;
          case MPI_COMBINER_RESIZED:
             assert (typecount == 1);
@@ -725,18 +723,18 @@ static int MPIX_Type_marshal(const char *typerep,
    else if (!strcmp (typerep, "hashed") ) {
         output_t out;
 	MPI_Aint typesize;
-	SHA1_CTX context;
-	unsigned char *tmpbuf, *p;
+	unsigned char *tmpbuf;
+	uint32_t *p, *q;
 
 	MPIX_Type_marshal_size("external", type, &typesize);
 	tmpbuf = ADIOI_Calloc(typesize, 1);
 	dtmarshal_buffer_setup(&out, tmpbuf, typesize);
 	ret = dtmarshal_marshal(type, &out);
 	if (ret == MPI_SUCCESS) {
-	    SHA1_Init(&context);
-	    SHA1_Update(&context, tmpbuf, out.bufpos);
-	    SHA1_Final(&context, outbuf);
-	    *num_written = 20;
+	    p = outbuf;
+	    q = p + 1;
+	    hashlittle2(tmpbuf, out.bufpos, p, q);
+	    *num_written = 8;
 	}
 	ADIOI_Free(tmpbuf);
 
@@ -749,48 +747,35 @@ static int MPIX_Type_marshal(const char *typerep,
 }
 
 
-#define ADIOI_HASH_SIZE SHA1_DIGEST_SIZE
-struct request_hash{
+#define ADIOI_HASH_COUNT 2
+#define ADIOI_HASH_BYTES (ADIOI_HASH_COUNT*sizeof(uint32_t))
+typedef struct request_hash_t{
     MPI_Aint req_size;
-    unsigned char hash[ADIOI_HASH_SIZE];
-};
+    uint32_t hash[2];
+} ADIOI_request_hash;
 
 
-static int request_hash_equal(struct request_hash *a, struct request_hash *b)
+static int request_hash_equal(ADIOI_request_hash *a, ADIOI_request_hash *b)
 {
 	int i;
 	if (a->req_size != b->req_size) return 0;
-	for (i=0; i < ADIOI_HASH_SIZE; i++)
-	    if (a->hash[i] != b->hash[i]) return 0;
+	for(i=0; i<ADIOI_HASH_COUNT; i++) 
+		if (a->hash[i] != b->hash[i]) return 0;
+
 	return 1;
 }
 
-static int request_hash_maketype(struct request_hash *item, MPI_Datatype *type) {
-    int lengths[2], types[2];
-    MPI_Aint offsets[2];
-
-    lengths[0] = sizeof(item->req_size);
-    lengths[1] = sizeof(item->hash);
-
-    MPI_Address(&item->req_size, &offsets[0]);
-    MPI_Address(&item->hash,     &offsets[1]);
-
-    MPI_Type_create_hindexed(2, lengths, offsets, MPI_BYTE, type);
-    return (MPI_Type_commit(type));
-}
-
-static void ADIOI_dtype_hash(MPI_Datatype type, struct request_hash *hash)
+void ADIOI_dtype_hash(MPI_Datatype type, ADIOI_request_hash *hash)
 {
     MPI_Aint len;
     /* potential optimization: short-circuit the check here by looking at the
      * length of the marshaled representation.   */
-    MPIX_Type_marshal("hashed", type, hash->hash, ADIOI_HASH_SIZE, &len);
+    MPIX_Type_marshal("hashed", type, hash->hash, ADIOI_HASH_BYTES, &len);
 }
 
 int ADIOI_allsame_access(ADIO_File fd, int count, MPI_Datatype datatype)
 {
-    struct request_hash mine, max, min;
-    MPI_Datatype reqhash_t;
+    ADIOI_request_hash mine, max, min;
     MPI_Aint memtype_size;
 
     /* we determine equivalence of access this way:
@@ -802,17 +787,19 @@ int ADIOI_allsame_access(ADIO_File fd, int count, MPI_Datatype datatype)
 
     /* we hash the marshaled representation but maybe it's better to compare
      * the marshaled version? */
+    memset(&mine, 0, sizeof(mine));
 
     MPI_Type_size(datatype, &memtype_size);
     mine.req_size = memtype_size * count;
-
-    ADIOI_dtype_hash(fd->filetype, &mine);
 
     /* reduction of integers can be pretty fast on some platforms */
     MPI_Allreduce(&mine.req_size, &min.req_size, sizeof(min.req_size)/sizeof(int), 
 		    MPI_INT, MPI_MIN, fd->comm);
     MPI_Allreduce(&mine.req_size, &max.req_size, sizeof(max.req_size)/sizeof(int), 
 		    MPI_INT, MPI_MAX, fd->comm);
+    if (min.req_size != max.req_size) return 0;
+
+    ADIOI_dtype_hash(fd->filetype, &mine);
 
     MPI_Allreduce(&mine.hash, &min.hash, sizeof(min.hash)/sizeof(int), 
 		    MPI_INT, MPI_MIN, fd->comm);
