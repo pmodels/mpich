@@ -1,5 +1,5 @@
 SUBDIRS_mpe_dir = mpe2
-SUBDIRS = mpl mpid mpi util nameserv binding env packaging @mpe_dir@ pmi pm .
+SUBDIRS = mpl mpid mpi mpix util nameserv binding env packaging @mpe_dir@ pmi pm .
 # Add "include" to the directories used for creating the TAGS files
 TAGS_DIRS = include
 NOTSIMPLEMAKE_SUBDIRS = mpl mpe2 openpa

@@ -158,7 +158,7 @@ lib${MPILIBNAME}f90_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
 lib${MPICXXLIBNAME}_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
 lib${MPICXXLIBNAME}_so_LINKER = @CXX_SHL@
 
-install_INCLUDE = src/include/mpi.h
+install_INCLUDE = src/include/mpi.h $(srcdir)/src/include/mpix.h
 
 optinstall_LIB = lib/lib${PMPILIBNAME}.a
 optinstall_SHLIB = lib/lib${MPILIBNAME}.@SHLIB_EXT@

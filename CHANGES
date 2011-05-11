@@ -24,6 +24,9 @@
  # OVERALL: Bug fixes for Fortran attributes on some systems. Thanks
    to Nicolai Stange for reporting this issue.
 
+ # OVERALL: Added new MPIX_Group_comm_create function to allow
+   non-collective creation of sub-communicators.
+
  # FORTRAN: Bug fixes in the MPI_DIST_GRAPH_ Fortran bindings.
 
  # PM/PMI: Support for a manual "none" launcher in Hydra to allow for
