@@ -102,6 +102,12 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     MPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
     if (combiner != MPI_COMBINER_NAMED) MPI_Type_free(&(fd->filetype));
 
+    if (fd->etype_hash_key != MPI_KEYVAL_INVALID) 
+	    MPI_Keyval_free(&(fd->etype_hash_key));
+    if (fd->ftype_hash_key != MPI_KEYVAL_INVALID) 
+	    MPI_Keyval_free(&(fd->ftype_hash_key));
+
+
     MPI_Info_free(&(fd->info));
 
     /* memory for fd is freed in MPI_File_close */

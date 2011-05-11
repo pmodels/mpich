@@ -59,6 +59,9 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->filetype = filetype;    /* MPI_BYTE by default */
     fd->etype_size = 1;  /* default etype is MPI_BYTE */
 
+    fd->etype_hash_key = MPI_KEYVAL_INVALID;  /* will be set in file view (if called) */
+    fd->ftype_hash_key = MPI_KEYVAL_INVALID;
+
     fd->file_realm_st_offs = NULL;
     fd->file_realm_types = NULL;
 

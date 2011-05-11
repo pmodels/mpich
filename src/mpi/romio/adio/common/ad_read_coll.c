@@ -172,7 +172,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
      * config file, an initial mesh dataset, etc), then the full two-phase
      * algorithm is overkill and we should just read-and-broadcast */
 
-    if (ADIOI_allsame_access(fd, count, datatype)) {
+    if (ADIOI_allsame_access(fd, count, datatype, offset)) {
 	*error_code = MPI_SUCCESS;
         if (myrank == fd->hints->ranklist[0])  {
             ADIO_ReadContig(fd, buf, count, datatype, file_ptr_type, 
