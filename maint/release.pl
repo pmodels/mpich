@@ -199,8 +199,8 @@ print("done\n");
 # Disable unnecessary tests in the release tarball
 print("===> Disabling unnecessary tests in the main package... ");
 chdir("${root}/${pack}-${version}");
-run_cmd("sed -i 's/^perf$/\#perf/g' test/mpi/testlist.in");
-run_cmd("sed -i 's/^large_message$/\#large_message/g' test/mpi/pt2pt/testlist");
+run_cmd("sed -i 's/^perf\$/\#perf/g' test/mpi/testlist.in");
+run_cmd("sed -i 's/^large_message\$/\#large_message/g' test/mpi/pt2pt/testlist");
 print("done\n");
 
 # Remove unnecessary files
