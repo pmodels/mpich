@@ -3328,9 +3328,9 @@ for type in short int long long_long float double long_double wchar_t \
            if test $type != long_long -a \
                    $type != long_double -a \
                    $type != long_double_int -a \
-                   $type != _Bool \
-                   $type != float__Complex \
-                   $type != double__Complex \
+                   $type != _Bool -a \
+                   $type != float__Complex -a \
+                   $type != double__Complex -a \
                    $type != long_double__Complex ; then
                AC_MSG_ERROR([Configure was unable to determine the size of $type ; if cross compiling,
 use the environment variables CROSS_SIZEOF_typename, e.g., CROSS_SIZEOF_SHORT,
