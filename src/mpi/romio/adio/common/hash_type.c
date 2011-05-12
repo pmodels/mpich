@@ -88,7 +88,14 @@ static int dt_named_types[] = {
    MPI_BYTE,
    MPI_PACKED,
    MPI_UB,
-   MPI_LB
+   MPI_LB,
+   MPI_COMPLEX,
+   MPI_DOUBLE_COMPLEX,
+   MPI_LOGICAL,
+   MPI_REAL,
+   MPI_DOUBLE_PRECISION,
+   MPI_INTEGER,
+   MPI_2INTEGER
 };
 
 struct output_t;
