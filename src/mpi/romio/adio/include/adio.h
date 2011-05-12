@@ -233,11 +233,6 @@ typedef struct ADIOI_FileD {
     ADIO_Offset *file_realm_st_offs; /* file realm starting offsets */
     MPI_Datatype *file_realm_types;  /* file realm datatypes */
     int my_cb_nodes_index; /* my index into cb_config_list. -1 if N/A */
-
-    /* datatype hashes */
-    int etype_hash_key;
-    int ftype_hash_key;
-
 } ADIOI_FileD;
 
 typedef struct ADIOI_FileD *ADIO_File;

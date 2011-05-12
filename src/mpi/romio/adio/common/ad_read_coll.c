@@ -51,6 +51,7 @@ static void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 				   ADIO_Offset *fd_end,
 				   MPI_Aint buftype_extent);
 
+
 void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			       MPI_Datatype datatype, int file_ptr_type,
 			       ADIO_Offset offset, ADIO_Status *status, int
@@ -165,29 +166,6 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 	else ADIO_ReadStrided(fd, buf, count, datatype, file_ptr_type,
                        offset, status, error_code);
 
-	return;
-    }
-
-    /* one more check: if we have a "everyone reads the same data" workload (a
-     * config file, an initial mesh dataset, etc), then the full two-phase
-     * algorithm is overkill and we should just read-and-broadcast */
-
-    if (ADIOI_allsame_access(fd, count, datatype, offset)) {
-	*error_code = MPI_SUCCESS;
-        if (myrank == fd->hints->ranklist[0])  {
-            ADIO_ReadContig(fd, buf, count, datatype, file_ptr_type, 
-			    offset, status, error_code);
-	}
-	MPI_Bcast(buf, count, datatype, fd->hints->ranklist[0], fd->comm);
-#ifdef HAVE_STATUS_SET_BYTES
-	MPI_Type_size(datatype, &size);
-	bufsize = size * count;
-	MPIR_Status_set_bytes(status, datatype, bufsize);
-#endif
-	ADIOI_Free(offset_list);
-	ADIOI_Free(len_list);
-	ADIOI_Free(st_offsets);
-	ADIOI_Free(end_offsets);
 	return;
     }
 
@@ -1086,4 +1064,3 @@ static void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     ADIOI_Free(done_from_proc);
     ADIOI_Free(recv_buf_idx);
 }
-

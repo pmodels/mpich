@@ -35,8 +35,7 @@ AD_OBJECTS = ad_close.o ad_init.o ad_end.o ad_open.o flatten.o \
       ad_write_nolock.o \
       ad_coll_exch_new.o ad_coll_build_req_new.o ad_io_coll.o \
       ad_aggregate_new.o heap-sort.o \
-      ad_opencoll.o ad_opencoll_scalable.o ad_opencoll_failsafe.o ad_features.o \
-      hash_type.o same_dtype.o lookup3.o 
+      ad_opencoll.o ad_opencoll_scalable.o ad_opencoll_failsafe.o ad_features.o
 
 all: $(LIBNAME)
 	@if [ "@ENABLE_SHLIB@" != "none" ] ; then \
