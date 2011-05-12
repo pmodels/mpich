@@ -26,6 +26,7 @@ int hash_delete_fn(MPI_Datatype type, int type_keyval,
     if (hash->ref_count == 0) {
         ADIOI_Free(hash);
     }
+    return MPI_SUCCESS;
 }
 
 /* this used to be implemented in every file system as an fcntl.  It makes
@@ -80,6 +81,7 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
 	fd->disp = disp;
 
 	etype_hash = ADIOI_Calloc(1, sizeof(ADIOI_hashed_dtype));
+	etype_hash->ref_count = 1;
 	ADIOI_dtype_hash(fd->etype, etype_hash);
 	MPI_Type_create_keyval(hash_copy_fn, hash_delete_fn,
 			&key, etype_hash);
@@ -87,6 +89,7 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
 	MPI_Type_set_attr(fd->etype, key, etype_hash);
 
 	ftype_hash = ADIOI_Calloc(1, sizeof(ADIOI_hashed_dtype));
+	ftype_hash->ref_count = 1;
 	ADIOI_dtype_hash(fd->filetype, ftype_hash); 
 	MPI_Type_create_keyval(hash_copy_fn, hash_delete_fn,
 			&key, ftype_hash);
