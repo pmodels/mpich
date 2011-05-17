@@ -9,6 +9,7 @@
 #include "mpitest.h"
 #include "mpithreadtest.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MAX_THREADS 4
 /* #define LOOPS 10000 */
@@ -35,9 +36,10 @@ static MTEST_THREAD_LOCK_TYPE num_threads_lock;
 
 #define ABORT_MSG(msg_) do { printf("%s", (msg_)); MPI_Abort(MPI_COMM_WORLD, 1); } while (0)
 
+MTEST_THREAD_RETURN_TYPE run_test(void *arg);
 MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 {
-    int thread_id = (int) arg;
+    int thread_id = (int)(long) arg;
     int i, j, peer;
     MPI_Status status[WINDOW];
     MPI_Request req[WINDOW];
@@ -93,8 +95,10 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
     tp[thread_id].latency = 1000000.0 * (end - start) / (LOOPS * WINDOW);
 
     MTest_thread_barrier(num_threads);
+    return MTEST_THREAD_RETVAL_IGN;
 }
 
+void loops(void);
 void loops(void)
 {
     int i, nt;
@@ -113,7 +117,7 @@ void loops(void)
         MTest_thread_barrier_init();
 
         for (i = 1; i < nt; i++) {
-            err = MTest_Start_thread(run_test, (void *)i);
+            err = MTest_Start_thread(run_test, (void *)(long)i);
             if (err) {
                 /* attempt to continue with fewer threads, we may be on a
                  * thread-constrained platform like BG/P in DUAL mode */

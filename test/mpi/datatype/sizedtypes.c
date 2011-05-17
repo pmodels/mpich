@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of the sized types, supported in MPI-2";
+*/
 
 int main( int argc, char *argv[] )
 {

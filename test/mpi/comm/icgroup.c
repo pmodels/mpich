@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Get the group of an intercommunicator";
+*/
 
 int main( int argc, char *argv[] )
 {

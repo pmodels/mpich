@@ -9,13 +9,15 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Simple intercomm alltoall test";
+*/
 
 int main( int argc, char *argv[] )
 {
     int errs = 0, err;
     int *sendbuf = 0, *recvbuf = 0;
-    int leftGroup, i, j, idx, count, rank, rsize;
+    int leftGroup, i, j, idx, count, rrank, rsize;
     MPI_Comm comm;
     MPI_Datatype datatype;
 
@@ -27,7 +29,7 @@ int main( int argc, char *argv[] )
 	for (count = 1; count < 66000; count = 2 * count) {
 	    /* Get an intercommunicator */
 	    MPI_Comm_remote_size( comm, &rsize );
-	    MPI_Comm_rank( comm, &rank );
+	    MPI_Comm_rank( comm, &rrank );
 	    sendbuf = (int *)malloc( rsize * count * sizeof(int) );
 	    recvbuf = (int *)malloc( rsize * count * sizeof(int) );
 	    for (i=0; i<rsize*count; i++) recvbuf[i] = -1;
@@ -35,7 +37,7 @@ int main( int argc, char *argv[] )
 		idx = 0;
 		for (j=0; j<rsize; j++) {
 		    for (i=0; i<count; i++) {
-			sendbuf[idx++] = i + rank;
+			sendbuf[idx++] = i + rrank;
 		    }
 		}
 		err = MPI_Alltoall( sendbuf, count, datatype, 

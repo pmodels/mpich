@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <mpi.h>
+#include "mpi.h"
 #include "mpitest.h"
 
 #define BUFSIZE 128
@@ -23,8 +23,8 @@
 #define RESFAIL_ERROR    123
 #define INTERNAL_ERROR   123
 
-void
-if_error(char *function, char *data, int ret)
+void if_error(const char *function, const char *data, int ret);
+void if_error(const char *function, const char *data, int ret)
 {
     if (ret == 0)
         return;
@@ -37,8 +37,7 @@ if_error(char *function, char *data, int ret)
     exit(INTERNAL_ERROR);
 }
 
-int
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
     int ret,errs = 0;
     char *src, *sendrec;

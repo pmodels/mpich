@@ -19,7 +19,7 @@ int main( int argc, char **argv)
     int i, rank, reps, n;
     int bVerify = 1;
     int sizes[NUM_SIZES] = { 100, 64*1024, 128*1024, 1024*1024 };
-    int num_errors=0, tot_errors;
+    int num_errors=0;
     
     MTest_Init( &argc, &argv );
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

@@ -85,19 +85,19 @@ int main( int argc, char *argv[] )
 
 	/* Exclude everyone in our group */
 	{
-	    int i, *ranks, g1size;
+	    int ii, *lranks, g1size;
 
 	    MPI_Group_size( g1, &g1size );
 	    
-	    ranks = (int *)malloc( g1size * sizeof(int) );
-	    for (i=0; i<g1size; i++) ranks[i] = i;
-	    MPI_Group_excl( g1, g1size, ranks, &g6 );
+	    lranks = (int *)malloc( g1size * sizeof(int) );
+	    for (ii=0; ii<g1size; ii++) lranks[ii] = ii;
+	    MPI_Group_excl( g1, g1size, lranks, &g6 );
 	    if (g6 != MPI_GROUP_EMPTY) {
 		fprintf( stderr, "Group formed by excluding all ranks not empty\n" );
 		errs++;
 		MPI_Group_free( &g6 );
 	    }
-	    free( ranks );
+	    free( lranks );
 	}
 	
 	/* Add tests for additional group operations */

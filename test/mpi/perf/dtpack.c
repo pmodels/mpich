@@ -30,6 +30,7 @@ static int verbose = 0;
 #define VARIANCE_THRESHOLD ((THRESHOLD * THRESHOLD) / 2)
 #define NTRIALS 10
 
+double mean(double *list, int count);
 double mean(double *list, int count)
 {
 	double retval;
@@ -43,6 +44,7 @@ double mean(double *list, int count)
 	return retval;
 }
 
+double noise(double *list, int count);
 double noise(double *list, int count)
 {
 	double *margin, retval;
@@ -72,6 +74,9 @@ double noise(double *list, int count)
 /* We don't use restrict in the function args because assignments between
    restrict pointers is not valid in C and some compilers, such as the 
    IBM xlc compilers, flag that use as an error.*/
+int TestVecPackDouble( int n, int stride, 
+		       double *avgTimeUser, double *avgTimeMPI,
+		       double *dest, const double *src );
 int TestVecPackDouble( int n, int stride, 
 		       double *avgTimeUser, double *avgTimeMPI,
 		       double *dest, const double *src )
@@ -148,6 +153,9 @@ int TestVecPackDouble( int n, int stride,
 /* See above for why restrict is not used in the function args */
 int TestVecUnPackDouble( int n, int stride, 
 		       double *avgTimeUser, double *avgTimeMPI,
+		       double *dest, const double *src );
+int TestVecUnPackDouble( int n, int stride, 
+		       double *avgTimeUser, double *avgTimeMPI,
 		       double *dest, const double *src )
 {
 	double *restrict d_dest;
@@ -220,6 +228,9 @@ int TestVecUnPackDouble( int n, int stride,
 
 /* Test packing a vector of 2-individual doubles */
 /* See above for why restrict is not used in the function args */
+int TestVecPack2Double( int n, int stride, 
+			double *avgTimeUser, double *avgTimeMPI,
+			double *dest, const double *src );
 int TestVecPack2Double( int n, int stride, 
 			double *avgTimeUser, double *avgTimeMPI,
 			double *dest, const double *src )
@@ -300,6 +311,9 @@ int TestVecPack2Double( int n, int stride,
 /* See above for why restrict is not used in the function args */
 int TestIndexPackDouble( int n, int stride, 
 			 double *avgTimeUser, double *avgTimeMPI,
+			 double *dest, const double *src );
+int TestIndexPackDouble( int n, int stride, 
+			 double *avgTimeUser, double *avgTimeMPI,
 			 double *dest, const double *src )
 {
 	double *restrict d_dest;
@@ -374,6 +388,8 @@ int TestIndexPackDouble( int n, int stride,
 	return 0;
 }
 
+int Report( const char *name, const char *packname, 
+	    double avgTimeMPI, double avgTimeUser );
 int Report( const char *name, const char *packname, 
 	    double avgTimeMPI, double avgTimeUser )
 {

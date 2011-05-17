@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of send cancel (failure) calls";
+*/
 
 int main( int argc, char *argv[] )
 {

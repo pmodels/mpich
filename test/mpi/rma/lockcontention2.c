@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
     int rank, wsize, i, j, cnt;
     int *rmabuf, *localbuf, *localbuf2, *vals;
     MPI_Win win;
-    int toterrs = 0;
     int trank = 0;
     int windowsize;
 

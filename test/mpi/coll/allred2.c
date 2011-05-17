@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Allreduce with MPI_IN_PLACE";
+*/
 
 int main( int argc, char *argv[] )
 {

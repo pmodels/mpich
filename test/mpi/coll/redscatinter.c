@@ -20,12 +20,10 @@
 
 int main( int argc, char **argv )
 {
-    int      err = 0, toterr;
+    int      err = 0;
     int      *sendbuf, *recvbuf, *recvcounts;
-    int      size, rsize, rank, i, j, sumval;
-    int      count, /* Total number of elements to send; size of send
-		       buffer (same in both groups, as required by MPI spec) */
-	     recvcount, /* Each process receives this much data */
+    int      size, rsize, rank, i, sumval;
+    int      recvcount, /* Each process receives this much data */
              sendcount, /* Each process contributes this much data */
 	     basecount; /* Unit of elements - basecount *rsize is recvcount, 
 			   etc. */

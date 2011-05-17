@@ -3,6 +3,15 @@
  *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+/*
+   Define _ISOC99_SOURCE to get snprintf() prototype visible in <stdio.h>
+   when it is compiled with --enable-stricttest.
+*/
+#define _ISOC99_SOURCE
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>
@@ -10,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <mpi.h>
+#include "mpi.h"
 
 #include "connectstuff.h"
 
@@ -37,8 +46,9 @@ void safeSleep( double seconds ) {
 
 void printStackTrace() {
     static char cmd[512];
+    int  ierr;
     snprintf( cmd, 512, "/bin/sh -c \"/home/eellis/bin/pstack1 %d\"", getpid() );
-    system( cmd );
+    ierr = system( cmd );
     fflush( stdout );
 }
 
@@ -57,7 +67,8 @@ void msg( const char * fmt, ... ) {
 char * getPortFromFile( const char * fmt, ... ) {
     char fname[PATH_MAX];
     char dirname[PATH_MAX];
-    char * retPort;
+    char *retPort;
+    char *cerr;
     va_list ap;
     FILE * fp;
     int done = 0;
@@ -75,7 +86,7 @@ char * getPortFromFile( const char * fmt, ... ) {
         count += rand();
         fp = fopen( fname, "rt" );
         if( fp != NULL ) {
-            fgets( retPort, MPI_MAX_PORT_NAME, fp );
+            cerr = fgets( retPort, MPI_MAX_PORT_NAME, fp );
             fclose( fp );
             /* ignore bogus tag - assume that the real tag must be longer than 8
              * characters */

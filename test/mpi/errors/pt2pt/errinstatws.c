@@ -8,8 +8,10 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test err in status return, using truncated \
 messages for MPI_Waitsome";
+*/
 
 int main( int argc, char *argv[] )
 {

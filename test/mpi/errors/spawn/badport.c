@@ -18,7 +18,7 @@ int main( int argc, char *argv[] )
     MTest_Init( &argc, &argv );
 
     MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
-    ierr = MPI_Comm_connect( "myhost:27", MPI_INFO_NULL, 0, 
+    ierr = MPI_Comm_connect( (char*)"myhost:27", MPI_INFO_NULL, 0, 
 			     MPI_COMM_WORLD, &newcomm );
     if (ierr == MPI_SUCCESS) {
 	errs++;

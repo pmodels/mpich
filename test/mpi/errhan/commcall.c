@@ -8,11 +8,14 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test comm_call_errhandler";
+*/
 
 static int calls = 0;
 static int errs = 0;
 static MPI_Comm mycomm;
+void eh( MPI_Comm *comm, int *err, ... );
 void eh( MPI_Comm *comm, int *err, ... )
 {
     if (*err != MPI_ERR_OTHER) {

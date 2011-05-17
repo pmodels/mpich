@@ -131,7 +131,7 @@ int vector_of_vectors_test(void)
 
     MPI_Type_commit(&outer_vector);
 
-    MPI_Pack_external_size("external32", 1, outer_vector, &sizeoftype);
+    MPI_Pack_external_size((char*)"external32", 1, outer_vector, &sizeoftype);
     if (sizeoftype != 4*4) {
 	errs++;
 	if (verbose) fprintf(stderr, "size of type = %d; should be %d\n",
@@ -142,7 +142,7 @@ int vector_of_vectors_test(void)
     buf = (char *) malloc(sizeoftype);
 
     position = 0;
-    err = MPI_Pack_external("external32",
+    err = MPI_Pack_external((char*)"external32",
 			    array,
 			    1,
 			    outer_vector,
@@ -158,7 +158,7 @@ int vector_of_vectors_test(void)
 
     memset(array, 0, 9*sizeof(int));
     position = 0;
-    err = MPI_Unpack_external("external32",
+    err = MPI_Unpack_external((char*)"external32",
 			      buf,
 			      sizeoftype,
 			      &position,
@@ -221,7 +221,7 @@ int optimizable_vector_of_basics_test(void)
 
     int err, errs = 0;
 
-    MPI_Pack_external_size("external32", 1, MPI_INT, &sizeofint);
+    MPI_Pack_external_size((char*)"external32", 1, MPI_INT, &sizeofint);
 
     if (sizeofint != 4) {
 	errs++;
@@ -239,7 +239,7 @@ int optimizable_vector_of_basics_test(void)
 
     MPI_Type_commit(&parent_type);
 
-    MPI_Pack_external_size("external32", 1, parent_type, &sizeoftype);
+    MPI_Pack_external_size((char*)"external32", 1, parent_type, &sizeoftype);
 
 
     if (sizeoftype != 20 * sizeofint) {
@@ -251,7 +251,7 @@ int optimizable_vector_of_basics_test(void)
     buf = (char *) malloc(sizeoftype);
 
     position = 0;
-    err = MPI_Pack_external("external32",
+    err = MPI_Pack_external((char*)"external32",
 			    array,
 			    1,
 			    parent_type,
@@ -267,7 +267,7 @@ int optimizable_vector_of_basics_test(void)
 
     memset(array, 0, 20 * sizeof(int));
     position = 0;
-    err = MPI_Unpack_external("external32",
+    err = MPI_Unpack_external((char*)"external32",
 			      buf,
 			      sizeoftype,
 			      &position,
@@ -315,7 +315,7 @@ int struct_of_basics_test(void)
 
     int err, errs = 0;
 
-    MPI_Pack_external_size("external32", 1, MPI_INT, &sizeofint);
+    MPI_Pack_external_size((char*)"external32", 1, MPI_INT, &sizeofint);
 
     if (sizeofint != 4) {
 	errs++;
@@ -341,7 +341,7 @@ int struct_of_basics_test(void)
 
     MPI_Type_commit(&parent_type);
 
-    MPI_Pack_external_size("external32", 1, parent_type, &sizeoftype);
+    MPI_Pack_external_size((char*)"external32", 1, parent_type, &sizeoftype);
 
     if (sizeoftype != 20 * sizeofint) {
 	errs++;
@@ -352,7 +352,7 @@ int struct_of_basics_test(void)
     buf = (char *) malloc(sizeoftype);
 
     position = 0;
-    err = MPI_Pack_external("external32",
+    err = MPI_Pack_external((char*)"external32",
 			    array,
 			    1,
 			    parent_type,
@@ -368,7 +368,7 @@ int struct_of_basics_test(void)
 
     memset(array, 0, 20 * sizeof(int));
     position = 0;
-    err = MPI_Unpack_external("external32",
+    err = MPI_Unpack_external((char*)"external32",
 			      buf,
 			      sizeoftype,
 			      &position,

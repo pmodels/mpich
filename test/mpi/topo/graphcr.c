@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Create a communicator with a graph that contains no processes";
+*/
 
 int main( int argc, char *argv[] )
 {

@@ -62,8 +62,8 @@ int main( int argc, char *argv[] )
     /* Create my error class and code */
     MPI_Add_error_class( &myErrClass );
     MPI_Add_error_code( myErrClass, &myErrCode );
-    MPI_Add_error_string( myErrClass, "My error class" );
-    MPI_Add_error_string( myErrCode, "My error code" );
+    MPI_Add_error_string( myErrClass, (char*)"My error class" );
+    MPI_Add_error_string( myErrCode, (char*)"My error code" );
 
     MPI_Comm_dup( MPI_COMM_WORLD, &dupWorld );
 

@@ -9,7 +9,9 @@
 #include "mpitest.h"
 #include <stdlib.h>
 
+/*
 static char MTEST_Descrip[] = "";
+*/
 
 int main( int argc, char *argv[] )
 {

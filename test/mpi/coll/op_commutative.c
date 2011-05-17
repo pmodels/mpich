@@ -9,24 +9,25 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "A simple test of MPI_Op_create/commute/free";
+*/
 
 static int errs = 0;
 
-/* prototype to keep the compiler happy */
-static void comm_user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype);
-static void noncomm_user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype);
-static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype);
-
+/*
 static void comm_user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype)
 {
     user_op(invec, inoutvec, len, datatype);
 }
+*/
 
+/*
 static void noncomm_user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype)
 {
     user_op(invec, inoutvec, len, datatype);
 }
+*/
 
 static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype)
 {

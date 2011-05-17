@@ -7,10 +7,13 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
+/*
 static char MTEST_Descrip[] = "Creating communications concurrently in different threads";
+*/
 
 #ifdef HAVE_WINDOWS_H
 #define sleep(a) Sleep(a*1000)

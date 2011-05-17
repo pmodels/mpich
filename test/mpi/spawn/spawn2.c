@@ -9,7 +9,9 @@
 #include <string.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_spawn, called twice";
+*/
 
 /*
  * One bug report indicated that two calls to Spawn failed, even when 
@@ -36,7 +38,7 @@ int main( int argc, char *argv[] )
 	   Windows applications may need to use just spawn2 or
 	   spawn2.exe.  We can't rely on using info to place . in the
 	   path, since info is not required to be followed. */
-	MPI_Comm_spawn( "./spawn2", MPI_ARGV_NULL, np,
+	MPI_Comm_spawn( (char*)"./spawn2", MPI_ARGV_NULL, np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm, errcodes );
     }
@@ -108,7 +110,7 @@ int main( int argc, char *argv[] )
 	   Windows applications may need to use just spawn2 or
 	   spawn2.exe.  We can't rely on using info to place . in the
 	   path, since info is not required to be followed. */
-	MPI_Comm_spawn( "./spawn2", MPI_ARGV_NULL, np,
+	MPI_Comm_spawn( (char*)"./spawn2", MPI_ARGV_NULL, np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm2, MPI_ERRCODES_IGNORE );
     }

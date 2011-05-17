@@ -11,6 +11,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -21,7 +22,6 @@ int main(int argc, char* argv[])
     double t1[MAX_TIMER_TEST], tick[MAX_TIMER_TEST], tickval;
     double minDiff, maxDiff, diff;
     int i, nZeros = 0;
-    int nUnequalTick = 0;
     int errs = 0;
 
     MTest_Init(&argc,&argv);

@@ -10,7 +10,9 @@
 #include <string.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Probe() for an intercomm";
+*/
 #define MAX_DATA_LEN 100
 
 int main( int argc, char *argv[] )

@@ -7,20 +7,22 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpitest.h"
 #include <string.h>
+#include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "RMA to self";
+*/
 
 int main( int argc, char *argv[] )
 {
-    int errs = 0, err;
-    int rank, size, source, dest, i, j;
+    int errs = 0;
+    int rank, size, i, j;
     MPI_Comm      comm;
     MPI_Win       win;
     int           *winbuf, count;
     int           *sbuf, scount, vcount;
-    MPI_Datatype  vectype, itype;
+    MPI_Datatype  vectype;
 
     MTest_Init( &argc, &argv );
 

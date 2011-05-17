@@ -20,9 +20,6 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     int size, isLeft, wrank;
-    int lsize, lrank;
-    int count = 0;
-    int ranges[1][3];
     MPI_Comm intercomm, newcomm;
     MPI_Group oldgroup, newgroup;
 
@@ -51,7 +48,7 @@ int main( int argc, char *argv[] )
 	if (newcomm != MPI_COMM_NULL) {
 	    int new_rsize, new_size, flag, commok = 1;
 
-	    MPI_Comm_set_name( newcomm, "Single rank in each group" );
+	    MPI_Comm_set_name( newcomm, (char*)"Single rank in each group" );
 	    MPI_Comm_test_inter( intercomm, &flag );
 	    if (!flag) {
 		errs++;
@@ -88,7 +85,7 @@ int main( int argc, char *argv[] )
 	/* Now, do a sort of dup, using the original group */
 	MTestPrintfMsg( 1, "Creating a new intercomm (manual dup)\n" );
 	MPI_Comm_create( intercomm, oldgroup, &newcomm );
-	MPI_Comm_set_name( newcomm, "Dup of original" );
+	MPI_Comm_set_name( newcomm, (char*)"Dup of original" );
 	MTestPrintfMsg( 1, "Creating a new intercomm (manual dup (done))\n" );
 
 	MPI_Comm_compare( intercomm, newcomm, &result );

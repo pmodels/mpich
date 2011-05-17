@@ -20,7 +20,9 @@
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
+/*
 static char MTEST_Descrip[] = "Spawn jobs from multiple threads";
+*/
 
 #define NTHREADS 4
 #define NPERTHREAD 4
@@ -33,20 +35,19 @@ MTEST_THREAD_RETURN_TYPE spawnProcess(void *p);
 MTEST_THREAD_RETURN_TYPE spawnProcess(void *p)
 {
     int rank, i;
-    char buffer[100];
     int errcodes[NPERTHREAD];
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* The thread number is passed into this routine through the value of the
        argument */
-    i = (int)p;
+    i = (int)(long)p;
 
     /* Synchronize */
     MTest_thread_barrier(NTHREADS);
 
     /* Spawn */
-    MPI_Comm_spawn( "./multispawn", MPI_ARGV_NULL, NPERTHREAD, 
+    MPI_Comm_spawn( (char*)"./multispawn", MPI_ARGV_NULL, NPERTHREAD, 
 		    MPI_INFO_NULL, 0, MPI_COMM_SELF, &intercomms[i], errcodes );
 
     MPI_Bcast( &i, 1, MPI_INT, MPI_ROOT, intercomms[i] );
@@ -59,8 +60,6 @@ int main( int argc, char *argv[] )
     int rank, size, i, wasParent = 0;
     int provided;
     int err;
-    char buffer[100];
-    MPI_Status status;
     MPI_Comm   parentcomm;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
@@ -92,7 +91,7 @@ int main( int argc, char *argv[] )
         }
 
 	for (i=0; i<NTHREADS-1; i++) {
-            MTest_Start_thread(spawnProcess, (void *)i);
+            MTest_Start_thread(spawnProcess, (void *)(long)i);
 	}
 
 	/* spawn the processes */

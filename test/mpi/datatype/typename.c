@@ -168,7 +168,7 @@ int main( int argc, char **argv )
     }
 
     /* Try resetting the name */
-    MPI_Type_set_name( MPI_INT, "int" );
+    MPI_Type_set_name( MPI_INT, (char*)"int" );
     name[0] = 0;
     MPI_Type_get_name( MPI_INT, name, &namelen );
     if (strncmp( name, "int", MPI_MAX_OBJECT_NAME )) {

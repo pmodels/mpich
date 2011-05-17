@@ -13,7 +13,9 @@
 #define MAX_INT 0x7fffffff
 #endif
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Accumulate with fence";
+*/
 
 /* same as accfence2.c, but uses alloc_mem */
 

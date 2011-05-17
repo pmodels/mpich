@@ -13,7 +13,9 @@
 #include <string.h>
 #endif
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_spawn, with many arguments";
+*/
 
 #define MAX_ARGV 1024
 int worker( int argc, char *argv[], 
@@ -26,12 +28,10 @@ int main( int argc, char *argv[] )
     int np = 2;
     int errcodes[2];
     MPI_Comm      parentcomm, intercomm;
-    MPI_Status    status;
     char *inargv[MAX_ARGV];
     char *outargv[MAX_ARGV];
     int narg = 40;
     char *saveArgp = 0;
-    char *saveoutArgp = 0;
 
     MTest_Init( &argc, &argv );
 
@@ -65,7 +65,7 @@ int main( int argc, char *argv[] )
 	    /* ./ is unix specific .
 	       The more generic approach would be to specify "spawnmanyarg" as 
 	       the executable and pass an info with ("path", ".") */
-	    MPI_Comm_spawn( "./spawnmanyarg", inargv, np,
+	    MPI_Comm_spawn( (char*)"./spawnmanyarg", inargv, np,
 			    MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			    &intercomm, errcodes );
 	    inargv[narg] = saveArgp;

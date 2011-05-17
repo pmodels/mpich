@@ -20,7 +20,7 @@
 
 int main( int argc, char **argv )
 {
-    int      err = 0, toterr;
+    int      err = 0;
     int      *sendbuf, *recvbuf, *recvcounts;
     int      size, rank, i, j, idx, mycount, sumval;
     MPI_Comm comm;

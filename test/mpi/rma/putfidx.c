@@ -11,7 +11,11 @@
 #include <stdlib.h>
 #endif
 
+/*
 static char MTEST_Descrip[] = "Put with Fence for an indexed datatype";
+*/
+
+int CheckMPIErr( int err );
 
 int main( int argc, char *argv[] )
 {

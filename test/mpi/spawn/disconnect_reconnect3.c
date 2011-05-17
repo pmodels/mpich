@@ -31,14 +31,18 @@
 
 #define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_connect/accept/disconnect";
+*/
 
 /*
  * Reverse the order of the ranks in a communicator
  *
  * Thanks to Edric Ellis for contributing this portion of the test program.
  */
-void checkReverseMergedComm( MPI_Comm comm ) {
+void checkReverseMergedComm( MPI_Comm comm );
+void checkReverseMergedComm( MPI_Comm comm )
+{
     MPI_Group origGroup;
     MPI_Group newGroup;
     MPI_Comm newComm;
@@ -115,7 +119,8 @@ int main(int argc, char *argv[])
     {
 	IF_VERBOSE(("spawning %d processes\n", np));
 	/* Create 4 more processes */
-	MPI_Comm_spawn("./disconnect_reconnect3", /*MPI_ARGV_NULL*/&argv[1], np,
+	MPI_Comm_spawn((char*)"./disconnect_reconnect3",
+			/*MPI_ARGV_NULL*/&argv[1], np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm, MPI_ERRCODES_IGNORE);
 	MPI_Intercomm_merge(intercomm, 0, &intracomm);

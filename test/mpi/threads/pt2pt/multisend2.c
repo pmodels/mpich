@@ -22,10 +22,11 @@
 
 static int nthreads = -1;
 
+MTEST_THREAD_RETURN_TYPE run_test_send(void *arg);
 MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
 {
     int    cnt, j, *buf;
-    int    thread_num = (int)arg;
+    int    thread_num = (int)(long)arg;
     double t;
 
     for (cnt=1; cnt < MAX_CNT; cnt = 2*cnt) {
@@ -44,6 +45,8 @@ MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
     }
     return (MTEST_THREAD_RETURN_TYPE)NULL;
 }
+
+void run_test_recv( void );
 void run_test_recv( void )
 {
     int        cnt, j, *buf;
@@ -88,7 +91,7 @@ int main(int argc, char ** argv)
     if (rank == 0) {
 	nthreads = nprocs-1;
 	for (i=1; i<nprocs; i++) 
-	    MTest_Start_thread( run_test_send,  (void *)i );
+	    MTest_Start_thread( run_test_send,  (void *)(long)i );
 	MTest_Join_threads( );
     }
     else {

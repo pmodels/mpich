@@ -8,9 +8,12 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Simple test of generalized requests";
+*/
 
 
+int query_fn( void *extra_state, MPI_Status *status );
 int query_fn( void *extra_state, MPI_Status *status )
 {
     /* Set a default status */
@@ -20,6 +23,7 @@ int query_fn( void *extra_state, MPI_Status *status )
     MPI_Status_set_elements( status, MPI_BYTE, 0 );
     return 0;
 }
+int free_fn( void *extra_state );
 int free_fn( void *extra_state )
 {
     int *b = (int *)extra_state;
@@ -28,6 +32,7 @@ int free_fn( void *extra_state )
        returned by the wait/test function */
     return 0;
 }
+int cancel_fn( void *extra_state, int complete );
 int cancel_fn( void *extra_state, int complete )
 {
     return 0;

@@ -11,6 +11,7 @@
 
 /* tests multiple invocations of Keyval_free on the same keyval */
 
+int delete_fn(MPI_Comm comm, int keyval, void *attr, void *extra);
 int delete_fn(MPI_Comm comm, int keyval, void *attr, void *extra) {
     MPI_Keyval_free(&keyval);
     return MPI_SUCCESS;

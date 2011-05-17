@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_PROD operations on optional datatypes dupported by MPICH2";
+*/
 
 typedef struct { double r, i; } d_complex;
 

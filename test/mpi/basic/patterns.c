@@ -71,6 +71,7 @@ int IsendIrecvTest(int rank)
     return TRUE;
 }
 
+int IsendIrecvTest2(int rank, int buf_size);
 int IsendIrecvTest2(int rank, int buf_size)
 {
     int tag1 = 1;

@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Simple test that alloc_mem and free_mem work together";
+*/
 
 int main( int argc, char *argv[] )
 {

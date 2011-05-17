@@ -10,8 +10,11 @@
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
+/*
 static char MTEST_Descrip[] = "Send to self in a threaded program";
+*/
 
+MTEST_THREAD_RETURN_TYPE send_thread(void *p);
 MTEST_THREAD_RETURN_TYPE send_thread(void *p)
 {
     int rank;

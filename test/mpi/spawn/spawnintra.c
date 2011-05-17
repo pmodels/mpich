@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_spawn, followed by intercomm merge";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -26,7 +28,7 @@ int main( int argc, char *argv[] )
 
     if (parentcomm == MPI_COMM_NULL) {
 	/* Create 2 more processes */
-	MPI_Comm_spawn( "./spawnintra", MPI_ARGV_NULL, np,
+	MPI_Comm_spawn( (char*)"./spawnintra", MPI_ARGV_NULL, np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm, errcodes );
     }

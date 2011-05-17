@@ -17,7 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpi.h>
+#include "mpi.h"
 
 #define XDIM 16
 #define YDIM 16
@@ -25,7 +25,9 @@
 #define SUB_YDIM 8
 #define ITERATIONS 1
 
+/*
 static int verbose = 0;
+*/
 
 int main(int argc, char **argv) {
     int itr, i, j, rank, nranks, peer, bufsize, errors;
@@ -41,8 +43,11 @@ int main(int argc, char **argv) {
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &win_buf);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &src_buf);
 
+    /*
+    Commment this out to avoid gcc --enable-stricttest warning.
     if (rank == 0)
         if (verbose) ("MPI RMA Strided Accumulate Test:\n");
+    */
 
     for (i = 0; i < XDIM*YDIM; i++) {
         *(win_buf  + i) = 1.0 + rank;

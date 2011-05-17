@@ -4,6 +4,17 @@
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+
+/*
+   Define macro to override gcc strict flags,
+   -D_POSIX_C_SOURCE=199506L, -std=c89 and -std=c99,
+   that disallow pthread_barrier_t and friends.
+*/
+#if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200112L
+#endif
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>

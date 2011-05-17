@@ -13,7 +13,9 @@
 #include <string.h>
 #endif
 
+/*
 static char MTEST_Descrip[] = "Test file_set_view";
+*/
 
 /* 
  * access style is explicitly described as modifiable.  values include
@@ -38,8 +40,8 @@ int main( int argc, char *argv[] )
 
     MPI_Comm_rank( comm, &rank );
     MPI_Info_create( &infoin );
-    MPI_Info_set( infoin, "access_style", "write_once,random" );
-    MPI_File_open( comm, "testfile", MPI_MODE_RDWR | MPI_MODE_CREATE, infoin, &fh );
+    MPI_Info_set( infoin, (char*)"access_style", (char*)"write_once,random" );
+    MPI_File_open( comm, (char*)"testfile", MPI_MODE_RDWR | MPI_MODE_CREATE, infoin, &fh );
     buf[0] = rank;
     err = MPI_File_write_ordered( fh, buf, 1, MPI_INT, &status );
     if (err) {
@@ -47,7 +49,7 @@ int main( int argc, char *argv[] )
 	MTestPrintError( err );
     }
 
-    MPI_Info_set( infoin, "access_style", "read_once" );
+    MPI_Info_set( infoin, (char*)"access_style", (char*)"read_once" );
     err = MPI_File_seek_shared( fh, 0, MPI_SEEK_SET );
     if (err) {
 	errs ++;
@@ -82,7 +84,7 @@ int main( int argc, char *argv[] )
 	errs ++;
 	MTestPrintError( err );
     }
-    MPI_Info_get( infoout, "access_style", 1024, value, &flag );
+    MPI_Info_get( infoout, (char*)"access_style", 1024, value, &flag );
     /* Note that an implementation is allowed to ignore the set_info,
        so we'll accept either the original or the updated version */
     if (!flag) {
@@ -108,7 +110,7 @@ int main( int argc, char *argv[] )
     MPI_Barrier( comm );
     MPI_Comm_rank( comm, &rank );
     if (rank == 0) {
-	err = MPI_File_delete( "testfile", MPI_INFO_NULL );
+	err = MPI_File_delete( (char*)"testfile", MPI_INFO_NULL );
 	if (err) {
 	    errs ++;
 	    MTestPrintError( err );

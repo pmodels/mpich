@@ -25,15 +25,15 @@ int main( int argc, char *argv[] )
     MPI_Info_create( &i1 );
     MPI_Info_create( &i2 );
 
-    MPI_Info_set( i1, "key1", "value1" );
-    MPI_Info_set( i2, "key2", "value2" );
+    MPI_Info_set( i1, (char*)"key1", (char*)"value1" );
+    MPI_Info_set( i2, (char*)"key2", (char*)"value2" );
 
-    MPI_Info_get( i1, "key2", 64, value, &flag );
+    MPI_Info_get( i1, (char*)"key2", 64, value, &flag );
     if (flag) {
 	printf( "Found key2 in info1\n" );
 	errs ++;
     }
-    MPI_Info_get( i1, "key1", 64, value, &flag );
+    MPI_Info_get( i1, (char*)"key1", 64, value, &flag );
     if (!flag) {
 	errs++;
 	printf( "Did not find key1 in info1\n" );

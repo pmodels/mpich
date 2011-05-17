@@ -155,12 +155,12 @@ MPI_Fint c2finfo_ ( MPI_Fint *info )
     char value[100];
     MPI_Fint errs = 0;
 
-    MPI_Info_get( cInfo, "host", sizeof(value), value, &flag );
+    MPI_Info_get( cInfo, (char*)"host", sizeof(value), value, &flag );
     if (!flag || strcmp(value,"myname") != 0) {
 	fprintf( stderr, "Info: Wrong value or no value for host\n" );
 	errs++;
     }
-    MPI_Info_get( cInfo, "wdir", sizeof(value), value, &flag );
+    MPI_Info_get( cInfo, (char*)"wdir", sizeof(value), value, &flag );
     if (!flag || strcmp( value, "/rdir/foo" ) != 0) {
 	fprintf( stderr, "Info: Wrong value of no value for wdir\n" );
 	errs++;
@@ -234,8 +234,8 @@ void f2cinfo_( MPI_Fint * info )
     MPI_Info cinfo;
 
     MPI_Info_create( &cinfo );
-    MPI_Info_set( cinfo, "host", "myname" );
-    MPI_Info_set( cinfo, "wdir", "/rdir/foo" );
+    MPI_Info_set( cinfo, (char*)"host", (char*)"myname" );
+    MPI_Info_set( cinfo, (char*)"wdir", (char*)"/rdir/foo" );
 
     *info = MPI_Info_c2f( cinfo );
 }

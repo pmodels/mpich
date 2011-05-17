@@ -23,7 +23,9 @@
 
 const int verbose = 0;
 
-void PGroup_create(int count, int members[], MPI_Comm *group) {
+void PGroup_create(int count, int members[], MPI_Comm *group);
+void PGroup_create(int count, int members[], MPI_Comm *group)
+{
   int       i, me, nproc, is_member;
   char     *port;
   MPI_Comm  pgroup;

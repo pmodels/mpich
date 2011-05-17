@@ -9,7 +9,9 @@
 #include "mpitest.h"
 #include <assert.h>
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Allreduce with non-commutative user-defined operations";
+*/
 
 /* We make the error count global so that we can easily control the output
    of error information (in particular, limiting it after the first 10 

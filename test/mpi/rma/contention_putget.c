@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <mpi.h>
+#include "mpi.h"
 
 #define MAXELEMS      6400
 #define COUNT         1000
@@ -21,7 +21,9 @@
 static int me, nproc;
 static const int verbose = 0;
 
-void test_put() {
+void test_put(void);
+void test_put(void)
+{
   MPI_Win  dst_win;
   double  *dst_buf;
   double   src_buf[MAXELEMS];

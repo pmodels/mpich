@@ -16,7 +16,7 @@ int verbose = 0;
 
 int main( int argc, char *argv[] )
 {
-    int buf[10], ierr, errs=0, toterrs;
+    int buf[10], ierr, errs=0;
     int rank;
     char      str[MPI_MAX_ERROR_STRING+1];
     int       slen;

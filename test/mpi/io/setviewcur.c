@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test set_view with DISPLACEMENT_CURRENT";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -27,7 +29,7 @@ int main( int argc, char *argv[] )
        using a combination of collective and ordered writes */
        
     comm = MPI_COMM_WORLD;
-    err = MPI_File_open( comm, "test.ord", 
+    err = MPI_File_open( comm, (char*)"test.ord", 
 		   MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &fh );
     if (err) { errs++; MTestPrintErrorMsg( "Open(1)", err ); }
     MPI_Comm_size( comm, &size );
@@ -47,7 +49,7 @@ int main( int argc, char *argv[] )
     if (err) { errs++; MTestPrintErrorMsg( "Close(1)", err ); }
 
     /* Reopen the file as sequential */
-    err = MPI_File_open( comm, "test.ord", 
+    err = MPI_File_open( comm, (char*)"test.ord", 
 		   MPI_MODE_RDONLY | MPI_MODE_SEQUENTIAL | 
 			 MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh );
     if (err) { errs++; MTestPrintErrorMsg( "Open(Read)", err ); }
@@ -66,7 +68,7 @@ int main( int argc, char *argv[] )
     /* See MPI 2.1, 13.3 - DISPLACEMENT_CURRENT is *required* for 
        MODE_SEQUENTIAL files */
     err = MPI_File_set_view( fh, MPI_DISPLACEMENT_CURRENT, MPI_INT, 
-		       MPI_INT, "native", MPI_INFO_NULL );
+		       MPI_INT, (char*)"native", MPI_INFO_NULL );
     if (err) { 
 	errs++; 
 	MTestPrintErrorMsg( "Set_view (DISPLACEMENT_CURRENT)", err );

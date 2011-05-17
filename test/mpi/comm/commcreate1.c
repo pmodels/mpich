@@ -30,7 +30,7 @@ void abortMsg( const char *str, int code )
 int main( int argc, char *argv[] )
 {
     MPI_Comm  dupWorld;
-    int       wrank, wsize, gsize, key, err, errs = 0;
+    int       wrank, wsize, gsize, err, errs = 0;
     int       ranges[1][3];
     MPI_Group wGroup, godd, ghigh, geven;
 
@@ -68,7 +68,7 @@ int main( int argc, char *argv[] )
     if (err) abortMsg( "Failed to create even group:", err );
 
     MPI_Comm_dup( MPI_COMM_WORLD, &dupWorld );
-    MPI_Comm_set_name( dupWorld, "Dup of world" );
+    MPI_Comm_set_name( dupWorld, (char*)"Dup of world" );
     /* First, use the groups to create communicators from world and a dup
        of world */
     errs += BuildComm( MPI_COMM_WORLD, ghigh, "ghigh" );

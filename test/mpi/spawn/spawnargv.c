@@ -13,7 +13,9 @@
 #include <string.h>
 #endif
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_spawn, with complex arguments";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -23,8 +25,8 @@ int main( int argc, char *argv[] )
     int errcodes[2];
     MPI_Comm      parentcomm, intercomm;
     MPI_Status    status;
-    char * inargv[]  = { "a", "b=c", "d e", "-pf", " Ss", 0 };
-    char * outargv[] = { "a", "b=c", "d e", "-pf", " Ss", 0 };
+    char * inargv[]  = { (char*)"a", (char*)"b=c", (char*)"d e", (char*)"-pf", (char*)" Ss", 0 };
+    char * outargv[] = { (char*)"a", (char*)"b=c", (char*)"d e", (char*)"-pf", (char*)" Ss", 0 };
 
     MTest_Init( &argc, &argv );
 
@@ -35,7 +37,7 @@ int main( int argc, char *argv[] )
 	/* ./ is unix specific .
 	   The more generic approach would be to specify "spawnargv" as the 
 	   executable and pass an info with ("path", ".") */
-	MPI_Comm_spawn( "./spawnargv", inargv, np,
+	MPI_Comm_spawn( (char*)"./spawnargv", inargv, np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm, errcodes );
     }

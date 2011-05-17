@@ -9,8 +9,10 @@
 #include "mpi.h"
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test bsend message handling where \
 different messages are received in different orders";
+*/
 
 /*
  * Notes on the test.

@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define CLPTSTR const char *
 #define LPTSTR char *
 #define LPCTSTR char *
 #define _tcsicmp strcmp
@@ -21,10 +22,10 @@
 #define true 1
 #define false 0
 
-bool GetOpt(int *argc, char ***argv, char * flag);
-bool GetOptInt(int *argc, char ***argv, char * flag, int *n);
-bool GetOptLong(int *argc, char ***argv, char * flag, long *n);
-bool GetOptDouble(int *argc, char ***argv, char * flag, double *d);
-bool GetOptString(int *argc, char ***argv, char * flag, char *str);
+bool GetOpt(int *argc, char ***argv, const char * flag);
+bool GetOptInt(int *argc, char ***argv, const char * flag, int *n);
+bool GetOptLong(int *argc, char ***argv, const char * flag, long *n);
+bool GetOptDouble(int *argc, char ***argv, const char * flag, double *d);
+bool GetOptString(int *argc, char ***argv, const char * flag, char *str);
 
 #endif

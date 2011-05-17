@@ -11,7 +11,9 @@
 #include <string.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test the routines to access the Fortran 90 datatypes from C";
+*/
 
 #define check_err(fn_name_)                                   \
         do {                                                  \

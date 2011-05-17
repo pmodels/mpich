@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test that freed datatypes have reference count semantics";
+*/
 
 #define VEC_NELM 128
 #define VEC_STRIDE 8

@@ -17,7 +17,8 @@
 
 #define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
 
-void check_error(int error, char *fcname)
+void check_error(int error, const char *fcname);
+void check_error(int error, const char *fcname)
 {
     char err_string[MPI_MAX_ERROR_STRING] = "";
     int length;
@@ -34,8 +35,8 @@ int main(int argc, char *argv[])
 {
     int error;
     int rank, size, i;
-    char *argv1[2] = { "connector", NULL };
-    char *argv2[2] = { "acceptor", NULL };
+    char *argv1[2] = { (char*)"connector", NULL };
+    char *argv2[2] = { (char*)"acceptor", NULL };
     MPI_Comm comm_connector, comm_acceptor, comm_parent, comm;
     char port[MPI_MAX_PORT_NAME];
     MPI_Status status;
@@ -68,16 +69,16 @@ int main(int argc, char *argv[])
 	   specifying a particular directory format (e.g., this 
 	   should work with both Windows and Unix implementations) */
 	MPI_Info_create( &spawn_path );
-	MPI_Info_set( spawn_path, "path", "." );
+	MPI_Info_set( spawn_path, (char*)"path", (char*)"." );
 
 	IF_VERBOSE(("spawn connector.\n"));
-	error = MPI_Comm_spawn("spaconacc2", argv1, 1, spawn_path, 0, 
+	error = MPI_Comm_spawn((char*)"spaconacc2", argv1, 1, spawn_path, 0, 
 			       MPI_COMM_SELF, &comm_connector, 
 			       MPI_ERRCODES_IGNORE);
 	check_error(error, "MPI_Comm_spawn");
 
 	IF_VERBOSE(("spawn acceptor.\n"));
-	error = MPI_Comm_spawn("spaconacc2", argv2, 1, spawn_path, 0, 
+	error = MPI_Comm_spawn((char*)"spaconacc2", argv2, 1, spawn_path, 0, 
 			       MPI_COMM_SELF, &comm_acceptor, 
 			       MPI_ERRCODES_IGNORE);
 	check_error(error, "MPI_Comm_spawn");
@@ -198,10 +199,10 @@ int main(int argc, char *argv[])
     {
 	printf("invalid command line.\n");fflush(stdout);
 	{
-	    int i;
-	    for (i=0; i<argc; i++)
+	    int ii;
+	    for (ii=0; ii<argc; ii++)
 	    {
-		printf("argv[%d] = <%s>\n", i, argv[i]);
+		printf("argv[%d] = <%s>\n", ii, argv[ii]);
 	    }
 	}
 	fflush(stdout);

@@ -11,7 +11,9 @@
 
 /* tests noncontiguous reads/writes using nonblocking I/O */
 
+/*
 static char MTEST_Descrip[] = "Test nonblocking I/O";
+*/
 
 #define SIZE 5000
 
@@ -96,7 +98,7 @@ int main(int argc, char **argv)
     MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | 
              MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    MPI_File_set_view(fh, 0, MPI_INT, newtype, (char*)"native", MPI_INFO_NULL);
 
     for (i=0; i<SIZE; i++) buf[i] = i + mynod*SIZE;
     MPI_File_iwrite(fh, buf, 1, newtype, &req);
@@ -204,7 +206,7 @@ int main(int argc, char **argv)
     MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | 
              MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    MPI_File_set_view(fh, 0, MPI_INT, newtype, (char*)"native", MPI_INFO_NULL);
 
     for (i=0; i<SIZE; i++) buf[i] = i + mynod*SIZE;
     MPI_File_iwrite(fh, buf, SIZE, MPI_INT, &req);

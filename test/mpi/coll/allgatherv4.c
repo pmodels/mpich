@@ -123,7 +123,7 @@ fn_exit:
 void comm_tests(MPI_Comm comm)
 {
     int comm_size, comm_rank;
-    double time, max_time;
+    double rtime, max_time;
     long long msg_size;
 
     MPI_Comm_size(comm, &comm_size);
@@ -135,39 +135,39 @@ void comm_tests(MPI_Comm comm)
             fflush(stdout);
         }
 
-        time = run_test(msg_size, comm, REGULAR, &max_time);
+        rtime = run_test(msg_size, comm, REGULAR, &max_time);
         if (!comm_rank) {
-            dprintf("REGULAR:\tAVG: %.3f\tMAX: %.3f\n", time, max_time);
+            dprintf("REGULAR:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
             fflush(stdout);
         }
 
-        time = run_test(msg_size, comm, BCAST, &max_time);
+        rtime = run_test(msg_size, comm, BCAST, &max_time);
         if (!comm_rank) {
-            dprintf("BCAST:\tAVG: %.3f\tMAX: %.3f\n", time, max_time);
+            dprintf("BCAST:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
             fflush(stdout);
         }
 
-        time = run_test(msg_size, comm, SPIKE, &max_time);
+        rtime = run_test(msg_size, comm, SPIKE, &max_time);
         if (!comm_rank) {
-            dprintf("SPIKE:\tAVG: %.3f\tMAX: %.3f\n", time, max_time);
+            dprintf("SPIKE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
             fflush(stdout);
         }
 
-        time = run_test(msg_size, comm, HALF_FULL, &max_time);
+        rtime = run_test(msg_size, comm, HALF_FULL, &max_time);
         if (!comm_rank) {
-            dprintf("HALF_FULL:\tAVG: %.3f\tMAX: %.3f\n", time, max_time);
+            dprintf("HALF_FULL:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
             fflush(stdout);
         }
 
-        time = run_test(msg_size, comm, LINEAR_DECREASE, &max_time);
+        rtime = run_test(msg_size, comm, LINEAR_DECREASE, &max_time);
         if (!comm_rank) {
-            dprintf("LINEAR_DECREASE:\tAVG: %.3f\tMAX: %.3f\n", time, max_time);
+            dprintf("LINEAR_DECREASE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
             fflush(stdout);
         }
 
-        time = run_test(msg_size, comm, BELL_CURVE, &max_time);
+        rtime = run_test(msg_size, comm, BELL_CURVE, &max_time);
         if (!comm_rank) {
-            dprintf("BELL_CURVE:\tAVG: %.3f\tMAX: %.3f\n", time, max_time);
+            dprintf("BELL_CURVE:\tAVG: %.3f\tMAX: %.3f\n", rtime, max_time);
             fflush(stdout);
         }
     }

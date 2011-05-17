@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of Win_get_group";
+*/
 
 int main( int argc, char *argv[] )
 {

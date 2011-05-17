@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_MIN operations on optional datatypes dupported by MPICH2";
+*/
 
 /*
  * This test looks at the handling of char and types that  are not required 

@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Exscan (simple test)";
+*/
 
 int main( int argc, char *argv[] )
 {

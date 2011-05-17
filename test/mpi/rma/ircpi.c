@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[]) 
 { 
-    int n, myid, numprocs, i; 
+    int n, myid, numprocs, i, ierr; 
     double PI25DT = 3.141592653589793238462643; 
     double mypi, pi, h, sum, x; 
     MPI_Win nwin, piwin; 
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
         if (myid == 0) { 
             fprintf(stdout, "Enter the number of intervals: (0 quits) ");
 	    fflush(stdout); 
-            scanf("%d",&n); 
+            ierr=scanf("%d",&n); 
 	    pi = 0.0;			 
         } 
 	MPI_Win_fence(0, nwin); 

@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Use Spawn to create an intercomm, then create a new intercomm that includes processes not in the initial spawn intercomm";
+*/
 
 /*
  * This test ensures that spawned processes are able to communicate with 
@@ -34,7 +36,7 @@ int main( int argc, char *argv[] )
 	/* Create 2 more processes, from process 0 in the original 
 	   comm world */
 	if (wrank == 0) {
-	    MPI_Comm_spawn( "./spaiccreate", MPI_ARGV_NULL, np,
+	    MPI_Comm_spawn( (char*)"./spaiccreate", MPI_ARGV_NULL, np,
 			    MPI_INFO_NULL, 0, MPI_COMM_SELF,
 			    &intercomm, errcodes );
 	}

@@ -221,32 +221,32 @@ int main( int argc, char *argv[] )
 	int nPerfErrors = 0;
 	len = 1;
 	for (k=0; k<20; k++) {
-	    double t0,t1,t2;
-	    t0 = times[0][k] * 1.e6;
-	    t1 = times[1][k] * 1.e6;
-	    t2 = times[2][k] * 1.e6;
+	    double T0,T1,T2;
+	    T0 = times[0][k] * 1.e6;
+	    T1 = times[1][k] * 1.e6;
+	    T2 = times[2][k] * 1.e6;
 	    if (verbose)
-		printf( "%d\t%12.2f\t%12.2f\t%12.2f\n", len, t0, t1, t2 );
+		printf( "%d\t%12.2f\t%12.2f\t%12.2f\n", len, T0, T1, T2 );
 	    /* Lets look at long messages only */
 	    if (k > 10) {
-		double t0Old, t1Old, t2Old;
-		t0Old = times[0][k-1] * 1.0e6;
-		t1Old = times[1][k-1] * 1.0e6;
-		t2Old = times[2][k-1] * 1.0e6;
-		if (t0 > (2+ERROR_MARGIN) * t0Old) {
+		double T0Old, T1Old, T2Old;
+		T0Old = times[0][k-1] * 1.0e6;
+		T1Old = times[1][k-1] * 1.0e6;
+		T2Old = times[2][k-1] * 1.0e6;
+		if (T0 > (2+ERROR_MARGIN) * T0Old) {
 		    nPerfErrors++;
 		    if (verbose)
-			printf( "Irecv-Send:\t%d\t%12.2f\t%12.2f\n", len, t0Old, t0 );
+			printf( "Irecv-Send:\t%d\t%12.2f\t%12.2f\n", len, T0Old, T0 );
 		}
-		if (t1 > (2+ERROR_MARGIN) * t1Old) {
+		if (T1 > (2+ERROR_MARGIN) * T1Old) {
 		    nPerfErrors++;
 		    if (verbose)
-			printf( "Sendrecv:\t%d\t%12.2f\t%12.2f\n", len, t1Old, t1 );
+			printf( "Sendrecv:\t%d\t%12.2f\t%12.2f\n", len, T1Old, T1 );
 		}
-		if (t2 > (2+ERROR_MARGIN) * t2Old) {
+		if (T2 > (2+ERROR_MARGIN) * T2Old) {
 		    nPerfErrors++;
 		    if (verbose)
-			printf( "Pingpong:\t%d\t%12.2f\t%12.2f\n", len, t2Old, t2 );
+			printf( "Pingpong:\t%d\t%12.2f\t%12.2f\n", len, T2Old, T2 );
 		}
 	    }
 	    len *= 2;

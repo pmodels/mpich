@@ -10,8 +10,11 @@
 #include "mpitest.h"
 #include <string.h>
 
+/*
 static char MTEST_Descrip[] = "Mix synchronization types";
+*/
 
+void delay( double time );
 void delay( double time )
 {
     double t1;
@@ -21,7 +24,7 @@ void delay( double time )
 
 int main( int argc, char *argv[] )
 {
-    int      errs = 0, err;
+    int      errs = 0;
     int      crank, csize, source, dest, loop;
     int      *buf0, *buf1, *buf2, *inbuf2, count0, count1, count2, count, i;
     MPI_Comm comm;

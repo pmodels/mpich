@@ -7,7 +7,7 @@
 #include "GetOpt.h"
 #include <stdio.h>
 
-bool GetOpt(int *argc, LPTSTR **argv, LPTSTR flag)
+bool GetOpt(int *argc, LPTSTR **argv, CLPTSTR flag)
 {
   int i,j;
   if (flag == NULL)
@@ -28,7 +28,7 @@ bool GetOpt(int *argc, LPTSTR **argv, LPTSTR flag)
   return false;
 }
 
-bool GetOptInt(int *argc, LPTSTR **argv, LPTSTR flag, int *n)
+bool GetOptInt(int *argc, LPTSTR **argv, CLPTSTR flag, int *n)
 {
   int i,j;
   if (flag == NULL)
@@ -52,7 +52,7 @@ bool GetOptInt(int *argc, LPTSTR **argv, LPTSTR flag, int *n)
   return false;
 }
 
-bool GetOptLong(int *argc, LPTSTR **argv, LPTSTR flag, long *n)
+bool GetOptLong(int *argc, LPTSTR **argv, CLPTSTR flag, long *n)
 {
   int i;
   if (GetOptInt(argc, argv, flag, &i))
@@ -63,7 +63,7 @@ bool GetOptLong(int *argc, LPTSTR **argv, LPTSTR flag, long *n)
   return false;
 }
 
-bool GetOptDouble(int *argc, LPTSTR **argv, LPTSTR flag, double *d)
+bool GetOptDouble(int *argc, LPTSTR **argv, CLPTSTR flag, double *d)
 {
   int i,j;
 
@@ -88,7 +88,7 @@ bool GetOptDouble(int *argc, LPTSTR **argv, LPTSTR flag, double *d)
   return false;
 }
 
-bool GetOptString(int *argc, LPTSTR **argv, LPTSTR flag, char *str)
+bool GetOptString(int *argc, LPTSTR **argv, CLPTSTR flag, char *str)
 {
   int i,j;
 

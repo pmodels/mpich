@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define operations";
+*/
 /*
  * This tests that the reduce operation respects the noncommutative flag.
  * See red4.c for a version that can distinguish between P_{root} P_{root+1} 
@@ -26,6 +28,7 @@ static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define 
  */
 #define MAXCOL 256
 static int matSize = 0;  /* Must be < MAXCOL */
+void uop( void *cinPtr, void *coutPtr, int *count, MPI_Datatype *dtype );
 void uop( void *cinPtr, void *coutPtr, int *count, MPI_Datatype *dtype )
 {
     const int *cin = (const int *)cinPtr;

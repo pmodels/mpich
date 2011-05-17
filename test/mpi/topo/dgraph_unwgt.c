@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define RING_NUM_NEIGHBORS   2
 

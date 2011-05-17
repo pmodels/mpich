@@ -11,6 +11,7 @@
 
 int rank;
 
+MTEST_THREAD_RETURN_TYPE run_test(void * arg);
 MTEST_THREAD_RETURN_TYPE run_test(void * arg)
 {
     MPI_Status  reqstat;
@@ -36,7 +37,7 @@ MTEST_THREAD_RETURN_TYPE run_test(void * arg)
 
 int main(int argc, char ** argv)
 {
-    int i, zero = 0, pmode, nprocs;
+    int zero = 0, pmode, nprocs;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
     if (pmode != MPI_THREAD_MULTIPLE) {

@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of type_match_size";
+*/
 
 /*
  * type match size is part of the extended Fortran support, and may not

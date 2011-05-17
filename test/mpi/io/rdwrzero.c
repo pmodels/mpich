@@ -16,7 +16,9 @@
 #include <memory.h>
 #endif
 
+/*
 static char MTEST_Descrip[] = "Test reading and writing zero bytes (set status correctly)";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -29,7 +31,7 @@ int main( int argc, char *argv[] )
     MTest_Init( &argc, &argv );
 
     comm = MPI_COMM_WORLD;
-    MPI_File_open( comm, "test.ord", 
+    MPI_File_open( comm, (char*)"test.ord", 
 		   MPI_MODE_RDWR | MPI_MODE_CREATE |
 		   MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh );
 

@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Simple intercomm gather test";
+*/
 
 int main( int argc, char *argv[] )
 {

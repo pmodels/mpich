@@ -14,6 +14,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAX_COUNT 65536
 #define MAX_RMA_SIZE 16
@@ -46,12 +47,10 @@ void RunPutPSCW( MPI_Win win, int destRank, int cnt, int sz,
 
 int main( int argc, char *argv[] )
 {
-    int arraysize, i, k, cnt, sz, maxCount, *arraybuffer;
-    int one = 1;
+    int arraysize, i, cnt, sz, maxCount, *arraybuffer;
     int wrank, wsize, destRank, srcRank;
     MPI_Win win;
     MPI_Group wgroup, accessGroup, exposureGroup;
-    double t1[MAX_RUNS], t2[MAX_RUNS], t3[MAX_RUNS];
     timing t[MAX_RUNS];
     int    maxSz = MAX_RMA_SIZE;
 
