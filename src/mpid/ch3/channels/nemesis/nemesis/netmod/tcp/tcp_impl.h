@@ -172,6 +172,7 @@ typedef struct MPIDU_Sock_ifaddr_t {
     unsigned char ifaddr[16];
 } MPIDU_Sock_ifaddr_t;
 int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found );
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found);
 
 /* Keys for business cards */
 #define MPIDI_CH3I_PORT_KEY "port"

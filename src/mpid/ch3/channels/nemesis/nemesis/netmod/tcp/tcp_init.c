@@ -284,9 +284,23 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	    else
 		MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
 	}
+        else {
+            /* ifname_string may be an interface name like "en1", "ib0", or
+             * "eth2".  Look for the IP address associated with it. */
+            mpi_errno = MPIDI_Get_IP_for_iface(ifname_string, ifaddr, &ifaddrFound);
+            /* don't MPIU_ERR_POP, failure here can be safely ignored */
+            if (ifaddrFound && mpi_errno == MPI_SUCCESS) {
+                MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
+                                  "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%#08x",
+                                  ifaddr->type, ifaddr->len, *((unsigned int *)ifaddr->ifaddr)));
+            }
+        }
     }
 
-    return 0;
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 
