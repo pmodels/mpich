@@ -83,7 +83,7 @@ void PGroup_create(int count, int members[], MPI_Comm *group)
 
   /* I am not the leader */
   else {
-    int merged;
+    int merged=0;
     MPI_Comm pgroup_new;
 
     for (i = 0; i < count; i ++) {
