@@ -476,7 +476,7 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
 
     for (ifa = ifaddr; ifa; ifa = ifa->ifa_next)
-        if (!strcmp(ifa->ifa_name, iface) && (ifa->ifa_addr->sa_family == AF_INET))
+        if (!strcmp(ifa->ifa_name, iface) && (ifa->ifa_addr) && (ifa->ifa_addr->sa_family == AF_INET))
             break;
 
     if (!ifa)
