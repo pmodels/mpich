@@ -39,6 +39,8 @@ int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm
     int *granks, *ranks, rank_count;
     int ret = MPI_SUCCESS;
 
+    ranks = NULL;
+
     /* Create a group for all of old_comm and translate it to "group",
      * which should be a subset of old_comm's group. If implemented
      * inside MPI, the below translation can be done more efficiently,
@@ -133,7 +135,8 @@ int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm
     *new_comm = comm;
 
   fn_exit:
-    free(ranks);
+    if (ranks)
+        free(ranks);
     return ret;
 
   fn_fail:
