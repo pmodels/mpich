@@ -18,6 +18,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/* Limit the number of error reports */
+#define MAX_ERRORS 10
+
 int main( int argc, char **argv )
 {
     int      err = 0;
@@ -58,6 +61,9 @@ int main( int argc, char **argv )
 		 mycount );
 	MPI_Abort( MPI_COMM_WORLD, 1 );
     }
+    for (i=0; i<mycount; i++) {
+	recvbuf[i] = -1;
+    }
 
     MPI_Reduce_scatter( sendbuf, recvbuf, recvcounts, MPI_INT, MPI_SUM, comm );
 
@@ -66,8 +72,11 @@ int main( int argc, char **argv )
     for (i=0; i<mycount; i++) {
 	if (recvbuf[i] != sumval) {
 	    err++;
-	    fprintf( stdout, "Did not get expected value for reduce scatter\n" );
-	    fprintf( stdout, "[%d] Got %d expected %d\n", rank, recvbuf[i], sumval );
+	    if (err < MAX_ERRORS) {
+		fprintf( stdout, "Did not get expected value for reduce scatter\n" );
+		fprintf( stdout, "[%d] Got recvbuf[%] = %d expected %d\n", 
+			 rank, i, recvbuf[i], sumval );
+	    }
 	}
     }
 
@@ -79,8 +88,11 @@ int main( int argc, char **argv )
     for (i=0; i<mycount; i++) {
 	if (sendbuf[rank*mycount+i] != sumval) {
 	    err++;
-	    fprintf( stdout, "Did not get expected value for reduce scatter (in place)\n" );
-	    fprintf( stdout, "[%d] Got %d expected %d\n", rank, sendbuf[rank*mycount+i], sumval );
+	    if (err < MAX_ERRORS) {
+		fprintf( stdout, "Did not get expected value for reduce scatter (in place)\n" );
+		fprintf( stdout, "[%d] Got buf[%d] = %d expected %d\n", 
+			 rank, i, sendbuf[rank*mycount+i], sumval );
+	    }
 	}
     }
 

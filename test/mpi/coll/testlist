@@ -57,14 +57,14 @@ redscat2 5
 redscat2 10
 redscat3 8
 redscatinter 8
-red_scat_block 4
-red_scat_block 5
-red_scat_block 8
-red_scat_block2 4
-red_scat_block2 5
-red_scat_block2 10
-redscatblk3 8
-redscatblk3 10
+red_scat_block 4 mpiversion=2.2
+red_scat_block 5 mpiversion=2.2
+red_scat_block 8 mpiversion=2.2
+red_scat_block2 4 mpiversion=2.2
+red_scat_block2 5 mpiversion=2.2
+red_scat_block2 10 mpiversion=2.2
+redscatblk3 8 mpiversion=2.2
+redscatblk3 10 mpiversion=2.2
 scantst 4
 exscan 10
 exscan2 5
@@ -117,9 +117,9 @@ opmin 4
 opminloc 4
 opmax 5
 opmaxloc 5
-
-nonblocking 4
-nonblocking 5
+# Eventually, the nonblocking tests should be changed to use mpiversion=3.0
+nonblocking 4 
+nonblocking 5 
 nonblocking 10
 nonblocking2 1
 nonblocking2 4

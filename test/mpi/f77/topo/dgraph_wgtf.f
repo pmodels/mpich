@@ -156,7 +156,7 @@
           stop
       endif
       if (.not. validate_dgraph(dgraph_comm)) then
-          write(6,*) "MPI_Dist_graph_create() does not create"
+          write(6,*) "MPI_Dist_graph_create() does not create "
      &               //"a bidirectional ring graph!"
           call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
           stop
@@ -184,7 +184,7 @@
           stop
       endif
       if (.not. validate_dgraph(dgraph_comm)) then
-          write(6,*) "MPI_Dist_graph_create_adjacent() does not create"
+          write(6,*) "MPI_Dist_graph_create_adjacent() does not create "
      &               //"a bidirectional ring graph!"
           call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
           stop

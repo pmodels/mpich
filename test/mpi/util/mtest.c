@@ -319,8 +319,8 @@ static int MTestTypeContigCheckbuf( MTestDatatype *mtype )
 	    if (p[i] != expected) {
 		err++;
 		if (mtype->printErrors && err < 10) {
-		    printf( "Data expected = %x but got %x for %dth entry\n",
-			    expected, p[i], i );
+		    printf( "Data expected = %x but got p[%d] = %x\n",
+			    expected, i, p[i] );
 		    fflush( stdout );
 		}
 	    }
@@ -523,8 +523,8 @@ static int MTestTypeIndexedCheckbuf( MTestDatatype *mtype )
 		    if (p[offset+j] != expected) {
 			err++;
 			if (mtype->printErrors && err < 10) {
-			    printf( "Data expected = %x but got %x for %dth entry\n",
-				    expected, p[offset+j], k );
+			    printf( "Data expected = %x but got p[%d,%d] = %x\n",
+				    expected, i,j, p[offset+j] );
 			    fflush( stdout );
 			}
 		    }

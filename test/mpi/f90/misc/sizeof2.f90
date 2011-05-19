@@ -10,7 +10,6 @@
           real    d(20)
           double precision b
           complex c
-          character ch
 
           errs = 0
           call mpi_init(ierr)
@@ -41,14 +40,11 @@
              errs = errs + 1
              print *, "complex size is ", size2, " sizeof claims ", size1
           endif
-
-          call mpi_sizeof( ch, size1, ierr )
-          call mpi_type_size( MPI_CHARACTER, size2, ierr )
-          if (size1 .ne. size2) then
-             errs = errs + 1
-             print *, "character size is ", size2, " sizeof claims ", size1
-          endif
-
+!
+! A previous version of this test called mpi_sizeof with a character variable.
+! However, the MPI 2.2 standard, p 494, line 41, defines MPI_SIZEOF only 
+! for "numeric intrinsic type", so that test was removed.
+!
           call mpi_sizeof( d, size1, ierr )
           call mpi_type_size( MPI_REAL, size2, ierr )
           if (size1 .ne. size2) then
