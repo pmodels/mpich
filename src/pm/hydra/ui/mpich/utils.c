@@ -1295,8 +1295,12 @@ static HYD_status set_default_values(void)
         MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
         HYD_server_info.user_global.debug = 0;
 
-    if (MPL_env2str("HYDRA_IFACE", (const char **) &HYD_server_info.user_global.iface) == 0)
-        HYD_server_info.user_global.iface = NULL;
+    /* don't clobber existing iface values from the command line */
+    if (HYD_server_info.user_global.iface == NULL) {
+        if (MPL_env2str("HYDRA_IFACE", (const char **)&tmp) != 0)
+            HYD_server_info.user_global.iface = HYDU_strdup(tmp);
+        tmp = NULL;
+    }
 
     if (HYD_server_info.node_list == NULL &&
         MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
