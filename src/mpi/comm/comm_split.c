@@ -74,15 +74,22 @@ static void MPIU_Sort_inttable( sorttype *keytable, int size )
     else
 #endif
     {
-        /* fall through to bubble sort if qsort is unavailable/disabled */
-        for (i=0; i<size; i++) {
-            for (j=i+1; j<size; j++) {
-                if (keytable[i].key > keytable[j].key) {
-                    tmp         = keytable[i];
-                    keytable[i] = keytable[j];
-                    keytable[j] = tmp;
+        /* fall through to insertion sort if qsort is unavailable/disabled */
+        for (i = 1; i < size; ++i) {
+            tmp = keytable[i];
+            j = i - 1;
+            while (1) {
+                if (keytable[j].key > tmp.key) {
+                    keytable[j+1] = keytable[j];
+                    j = j - 1;
+                    if (j < 0)
+                        break;
+                }
+                else {
+                    break;
                 }
             }
+            keytable[j+1] = tmp;
         }
     }
 }
