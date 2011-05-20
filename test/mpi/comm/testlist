@@ -11,4 +11,5 @@ ctxalloc 2 timeLimit=300
 ctxsplit 4 timeLimit=300
 cmfree 4
 cmsplit 4
+cmsplit2 12
 probe-intercomm 2
