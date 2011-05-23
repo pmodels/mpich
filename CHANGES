@@ -24,6 +24,8 @@
  # OVERALL: Bug fixes for Fortran attributes on some systems. Thanks
    to Nicolai Stange for reporting this issue.
 
+ # OVERALL: Added new ARMCI API implementation (experimental).
+
  # OVERALL: Added new MPIX_Group_comm_create function to allow
    non-collective creation of sub-communicators.
 

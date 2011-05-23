@@ -123,7 +123,7 @@ MAKE=${MAKE-make}
 
 # externals are the directories for external packages that we have
 # included into MPICH2
-externals="src/mpe2 src/pm/hydra"
+externals="src/mpe2 src/pm/hydra src/mpix/armci"
 # ltdirs are the directories that make use of libtool and require
 # libtoolize
 ltdirs="src/mpl"
