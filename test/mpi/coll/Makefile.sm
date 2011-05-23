@@ -146,6 +146,7 @@ exscan2_SOURCES = exscan2.c
 exscan2_LDADD = ../util/mtest.o
 nonblocking_SOURCES = nonblocking.c
 nonblocking2_SOURCES = nonblocking2.c
+nonblocking3_SOURCES = nonblocking3.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE))
