@@ -258,6 +258,7 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
     {
 	case MPID_REQUEST_SEND:
 	case MPID_REQUEST_RECV:
+        case MPID_COLL_REQUEST:
 	{
 	    mpi_errno = request_ptr->status.MPI_ERROR;
 	    break;
