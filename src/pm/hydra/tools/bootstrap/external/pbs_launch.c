@@ -20,11 +20,8 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
 
     HYDU_FUNC_ENTER();
 
-/*
-    if (!strcmp(HYDT_bsci_info.rmk, "pbs"))
+    if (strcmp(HYDT_bsci_info.rmk, "pbs"))
         HYDU_ERR_POP(HYD_INTERNAL_ERROR, "Incorrect Launcher PBS for RMK=%s!\n", HYDT_bsci_info.rmk);
-
-*/
 
     proxy_count = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next)

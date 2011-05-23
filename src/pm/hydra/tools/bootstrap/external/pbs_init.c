@@ -18,6 +18,9 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
 
     HYDU_FUNC_ENTER();
 
+    if (strcmp(HYDT_bsci_info.rmk, "pbs"))
+        HYDU_ERR_POP(HYD_INTERNAL_ERROR, "Incorrect Launcher PBS for RMK=%s!\n", HYDT_bsci_info.rmk);
+
     HYDT_bsci_fns.launch_procs = HYDT_bscd_pbs_launch_procs;
     HYDT_bsci_fns.query_env_inherit = HYDT_bscd_pbs_query_env_inherit;
     HYDT_bsci_fns.wait_for_completion = HYDT_bscd_pbs_wait_for_completion;
@@ -25,8 +28,6 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
 
     HYDU_MALLOC(HYDT_bscd_pbs_sys, struct HYDT_bscd_pbs_sys *,
                 sizeof(struct HYDT_bscd_pbs_sys), status);
-
-    /* Initialize the PBS data structure */
 
      /*
         Initialize TM and Hydra's PBS data structure:
