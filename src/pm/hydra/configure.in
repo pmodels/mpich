@@ -139,10 +139,12 @@ else
     fi
 fi
 
-pac_has_tm_h=no
 pac_has_tm_lib=no
 AC_CHECK_HEADER([tm.h],[
-     AC_LANG_CONFTEST([
+     dnl Check if TM library is actually working as expected, given
+     dnl some versions of TM may have slightly different interface.
+     AC_MSG_CHECKING([if relevant TM symbols can be used and resolved])
+     AC_LINK_IFELSE([
         AC_LANG_PROGRAM([#include "tm.h"], [[
      struct tm_roots  tm_root;
      tm_node_id       nodeIDs[1];       /* Array of TM node IDs */
@@ -159,22 +161,9 @@ AC_CHECK_HEADER([tm.h],[
      ierr = tm_obit( taskIDs[0], &taskobits[0], &events[0] );
      ierr = tm_finalize();
         ]])
-    ])
-
-    dnl check if tm.h can be used as documented, some tm.h manpage is different.
-    AC_MSG_CHECKING([if selected TM functions in tm.h can be used as intended])
-    AC_COMPILE_IFELSE([], [pac_has_tm_h=yes])
-    AC_MSG_RESULT([$pac_has_tm_h])
-
-    if test "$pac_has_tm_h" = "yes" ; then
-        dnl check if TM library is actually working
-        AC_MSG_CHECKING([if TM symbols can be resolved])
-        AC_LINK_IFELSE([], [pac_has_tm_lib=yes])
-        AC_MSG_RESULT([$pac_has_tm_lib])
-    fi
-    rm -f conftest.$ac_ext
+    ], [pac_has_tm_lib=yes])
+    AC_MSG_RESULT([$pac_has_tm_lib])
 ])
-
 
 #########################################################################
 # Check what bootstrap server we should use
@@ -240,8 +229,7 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		;;
 	pbs)
 		hydra_bss_pbs=true
-                if test "$pac_has_tm_h" = "yes" \
-                     -a "$pac_has_tm_lib" = "yes" ; then
+                if test "$pac_has_tm_lib" = "yes" ; then
 		    available_launchers=`echo $available_launchers pbs`
                 fi
 		available_rmks=`echo $available_rmks pbs`
@@ -265,9 +253,8 @@ if test "$hydra_bss_persist" ; then
 fi
 
 if test "$hydra_bss_pbs" = "true" ; then
-    hydra_working_tm=no
-    if test "$pac_has_tm_h" = "yes" -a "$pac_has_tm_lib" = "yes" ; then
-        hydra_working_tm=yes
+    hydra_working_tm="$pac_has_tm_lib"
+    if test "$hydra_working_tm" = "yes" ; then
         AC_DEFINE(HAVE_TM_H, 1, [Define if tm.h and library are usable.])
     fi
     AC_SUBST([hydra_working_tm])
