@@ -35,7 +35,7 @@ int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm
 {
     int i, grp_me, me, nproc, merge_size;
     MPI_Comm comm, inter_comm;
-    MPI_Group old_group;
+    MPI_Group old_group = MPI_GROUP_NULL;
     int *granks, *ranks, rank_count;
     int ret = MPI_SUCCESS;
 
@@ -137,6 +137,12 @@ int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm
   fn_exit:
     if (ranks)
         free(ranks);
+    if (old_group != MPI_GROUP_NULL) {
+        if (ret) /* avoid squashing a more interesting error code */
+            MPI_Group_free(&old_group);
+        else
+            ret = MPI_Group_free(&old_group);
+    }
     return ret;
 
   fn_fail:
