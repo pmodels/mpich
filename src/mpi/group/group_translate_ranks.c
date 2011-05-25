@@ -31,6 +31,7 @@
 int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, int *ranks1,
                                     MPID_Group *gp2, int *ranks2)
 {
+    int mpi_errno = MPI_SUCCESS;
     int i, g2_idx, l1_pid, l2_pid;
 
     MPIU_DBG_MSG_S(OTHER,VERBOSE,"gp2->is_local_dense_monotonic=%s\n", (gp2->is_local_dense_monotonic ? "TRUE" : "FALSE"));
@@ -96,7 +97,6 @@ int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, int *ranks1,
             }
         }
     }
-    int mpi_errno = MPI_SUCCESS;
 fn_exit:
     return mpi_errno;
 fn_fail:
