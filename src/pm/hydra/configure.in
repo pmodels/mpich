@@ -187,55 +187,55 @@ hydra_bss_none=true
 
 ## Enable the "none" RMK at the start, so it is the default RMK if
 ## nothing else is found
-available_rmks=`echo $available_rmks none`
+available_rmks="$available_rmks none"
 
 for hydra_bss_name in ${hydra_bss_names}; do
     case "$hydra_bss_name" in
     	ssh)
 		hydra_bss_external=true
-		available_launchers=`echo $available_launchers ssh`
+		available_launchers="$available_launchers ssh"
 		;;
     	rsh)
 		hydra_bss_external=true
-		available_launchers=`echo $available_launchers rsh`
+		available_launchers="$available_launchers rsh"
 		;;
     	fork)
 		hydra_bss_external=true
-		available_launchers=`echo $available_launchers fork`
+		available_launchers="$available_launchers fork"
 		;;
 	slurm)
 		hydra_bss_external=true
-		available_launchers=`echo $available_launchers slurm`
-		available_rmks=`echo $available_rmks slurm`
+		available_launchers="$available_launchers slurm"
+		available_rmks="$available_rmks slurm"
 		;;
 	ll)
 		hydra_bss_external=true
-		available_launchers=`echo $available_launchers ll`
-		available_rmks=`echo $available_rmks ll`
+		available_launchers="$available_launchers ll"
+		available_rmks="$available_rmks ll"
 		;;
 	lsf)
 		hydra_bss_external=true
-		available_launchers=`echo $available_launchers lsf`
-		available_rmks=`echo $available_rmks lsf`
+		available_launchers="$available_launchers lsf"
+		available_rmks="$available_rmks lsf"
 		;;
 	sge)
 		hydra_bss_external=true
-		available_launchers=`echo $available_launchers sge`
-		available_rmks=`echo $available_rmks sge`
+		available_launchers="$available_launchers sge"
+		available_rmks="$available_rmks sge"
 		;;
 	persist)
 		hydra_bss_persist=true
-		available_launchers=`echo $available_launchers persist`
+		available_launchers="$available_launchers persist"
 		;;
 	pbs)
 		hydra_bss_pbs=true
                 if test "$pac_has_tm_lib" = "yes" ; then
-		    available_launchers=`echo $available_launchers pbs`
+		    available_launchers="$available_launchers pbs"
                 fi
-		available_rmks=`echo $available_rmks pbs`
+		available_rmks="$available_rmks pbs"
 		;;
 	none)
-		available_launchers=`echo $available_launchers none`
+		available_launchers="$available_launchers none"
 		;;
 	*)
 		;;
@@ -364,7 +364,7 @@ for hydra_bindlib in ${hydra_bindlibs}; do
 
 		if test "$have_plpa" = "yes" ; then
 		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
-		   available_bindlibs=`echo $available_bindlibs plpa`
+		   available_bindlibs="$available_bindlibs plpa"
 		fi
 		;;		
 	hwloc)
@@ -389,7 +389,7 @@ for hydra_bindlib in ${hydra_bindlibs}; do
 
 		if test "$have_hwloc" = "yes" ; then
 		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-		   available_bindlibs=`echo $available_bindlibs hwloc`
+		   available_bindlibs="$available_bindlibs hwloc"
 		fi
 		;;
 	*)
@@ -450,7 +450,7 @@ for hydra_ckpointlib in ${hydra_ckpointlibs}; do
 	    # BLCR works
 	    if test "$have_blcr" = "yes" ; then
 	       AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
-	       available_ckpointlibs=`echo $available_ckpointlibs blcr`
+	       available_ckpointlibs="$available_ckpointlibs blcr"
 	    fi
 	    ;;		
 	*)
@@ -493,19 +493,19 @@ for hydra_demux in ${hydra_demuxes}; do
     	poll)
 		AC_CHECK_FUNCS(poll,[have_poll=yes],[have_poll=no])
 		if test "$have_poll" = "yes" ; then
-		   available_demuxes=`echo $available_demuxes poll`
+		   available_demuxes="$available_demuxes poll"
 		fi
 		;;
 	select)
 		AC_CHECK_FUNCS(select,[have_select=yes],[have_select=no])
 		if test "$have_select" = "yes" ; then
-		   available_demuxes=`echo $available_demuxes select`
+		   available_demuxes="$available_demuxes select"
 		fi
 		;;
 	port)
 		# FIXME: Need to add a test for completion ports
 		if test "$have_port" = "yes" ; then
-		   available_demuxes=`echo $available_demuxes port`
+		   available_demuxes="$available_demuxes port"
 		fi
 		;;
 	*)
