@@ -18,8 +18,13 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
 
     HYDU_FUNC_ENTER();
 
+    /*
+    Pavan said this check of RMK=pbs is invalid
+    as PBS launcher can be used with non-PBS RMK, comment it out for now
+
     if (strcmp(HYDT_bsci_info.rmk, "pbs"))
         HYDU_ERR_POP(HYD_INTERNAL_ERROR, "Incorrect Launcher PBS for RMK=%s!\n", HYDT_bsci_info.rmk);
+    */
 
     HYDT_bsci_fns.launch_procs = HYDT_bscd_pbs_launch_procs;
     HYDT_bsci_fns.query_env_inherit = HYDT_bscd_pbs_query_env_inherit;

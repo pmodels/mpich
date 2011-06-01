@@ -73,7 +73,12 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
                 if (HYDT_bscd_pbs_sys->events[idx] == event) {
+                    if (HYDT_bsci_info.debug) {
+                        HYDU_dump(stdout, "PBS_DEBUG: Event %d received, task %d has started.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx]);
+                    /*
                     HYDU_error_printf("DEBUG: Event %d received, task %d has started.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx]);
+                    */
+                    }
                     events_count++;
                     break; /* break from for(idx<spawned_count) loop */
                 }

@@ -5,6 +5,7 @@
  */
 
 #include "hydra.h"
+#include "bsci.h"
 #include "pbs.h"
 
 HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
@@ -63,7 +64,12 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
                 if (HYDT_bscd_pbs_sys->events[idx] == event) {
+                    if (HYDT_bsci_info.debug) {
+                        HYDU_dump(stdout, "PBS_DEBUG: Event %d received, task %d exits with status %d.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx], HYDT_bscd_pbs_sys->taskobits[idx] );
+                    /*
                     HYDU_error_printf("DEBUG: Event %d received, task %d exits with status %d.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx], HYDT_bscd_pbs_sys->taskobits[idx] );
+                    */
+                    }
                     events_count++;
                     break;  /* break from for(idx<spawned_count) loop */
                 }
@@ -81,7 +87,9 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
         }
     }
 
-    printf( "\nDone with polling obit events!\n" );
+    if (HYDT_bsci_info.debug) {
+        HYDU_dump(stdout, "\nPBS_DEBUG: Done with polling obit events!\n");
+    }
 
     /* Loop till all sockets have closed */
     fn_exit:
