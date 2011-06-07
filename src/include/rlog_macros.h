@@ -21,7 +21,7 @@
 extern RLOG_Struct *g_pRLOG;
 
 /* state declaration macros */
-#define MPIDU_STATE_DECL(a) MPID_Time_t time_stamp_in##a = 0.0, time_stamp_out##a = 0.0
+#define MPIDU_STATE_DECL(a) MPID_Time_t time_stamp_in##a , time_stamp_out##a
 #define MPIDU_INIT_STATE_DECL(a)
 #define MPIDU_FINALIZE_STATE_DECL(a)
 
