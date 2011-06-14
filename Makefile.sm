@@ -156,7 +156,9 @@ lib${MPILIBNAME}_so_LIBS   = -L. @LDFLAGS_DEPS@ @LIB_DEPS@
 libf${MPILIBNAME}_so_LIBS   = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
 lib${MPILIBNAME}f90_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
 lib${MPICXXLIBNAME}_so_LIBS = -L. @LDFLAGS_DEPS@ -l$(MPILIBNAME) @LIB_DEPS@
-lib${MPICXXLIBNAME}_so_LINKER = @CXX_SHL@
+# Add CXXFLAGS to the linker incase the user has used the CXXFLAGS to 
+# change the architecture (e.g., -m64 to force 64-bit)
+lib${MPICXXLIBNAME}_so_LINKER = @CXX_SHL@ @CXXFLAGS@
 
 install_INCLUDE = src/include/mpi.h $(srcdir)/src/include/mpix.h
 
@@ -192,6 +194,13 @@ install-preamble:
 #   The debugger interface (the "Totalview" DLL)
 #   The "other" process managers when more that one are built
 install_local_DIR = libdir
+# 
+# The variables used in the make of install-alt below must be
+# the ones within the Makefile - otherwise, if those variables are
+# not defined in the shell, the command-line will cause the make step 
+# to attempt to install into / and the user's home directory
+# (This explanation is here to explain why values in the shell must not
+# be used.)
 install-local:
 	-if [ "@BUILD_TVDLL@" = "yes" ] ; then \
 	    $(INSTALL_DATA) src/mpi/debugger/libtvmpich2.@SHLIB_EXT@ \
@@ -200,7 +209,7 @@ install-local:
 	    for pm in @other_pm_names@ /dev/null ; do \
 		if [ -d src/pm/$$pm ] ; then \
 		     (cd src/pm/$$pm && \
-		$(MAKE) prefix=$${prefix} bindir=$${bindir} install-alt ) ; \
+		$(MAKE) prefix=${prefix} bindir=${bindir} install-alt ) ; \
 		fi ; \
 	    done ; \
 	fi
