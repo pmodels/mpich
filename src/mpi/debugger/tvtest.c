@@ -138,7 +138,7 @@ int init_dbr( void )
     }
 
     /* Do the initialization. */
-    memset( &cb, sizeof(cb), 0 );
+    memset( &cb, 0, sizeof(cb) );
     cb.mqs_malloc_fp           = malloc;
     cb.mqs_free_fp             = free;
     cb.mqs_dprints_fp          = 0;
