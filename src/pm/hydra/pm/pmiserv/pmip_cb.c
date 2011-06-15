@@ -646,9 +646,15 @@ static HYD_status launch_procs(void)
         /* Set the interface hostname based on what the user provided */
         if (HYD_pmcd_pmip.local.interface_env_name) {
             if (HYD_pmcd_pmip.user_global.iface) {
+                char *ip;
+
+                status = HYDU_sock_get_iface_ip(HYD_pmcd_pmip.user_global.iface, &ip);
+                HYDU_ERR_POP(status, "unable to get IP address for %s\n",
+                             HYD_pmcd_pmip.user_global.iface);
+
                 /* The user asked us to use a specific interface; let's find it */
                 status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.interface_env_name,
-                                                 HYD_pmcd_pmip.user_global.iface, &force_env);
+                                                 ip, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
             else if (HYD_pmcd_pmip.local.hostname) {
