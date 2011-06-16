@@ -23,9 +23,12 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Put with Fences used to separate epochs";
+*/
 
 #define MAX_PERR 10
 
@@ -184,4 +187,5 @@ int PrintRecvedError( const char *msg,
     /* Redo the test, with the errors printed */
     recvtypePtr->printErrors = 1;
     (void)MTestCheckRecv( 0, recvtypePtr );
+    return 0;
 }

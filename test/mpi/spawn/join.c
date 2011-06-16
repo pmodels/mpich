@@ -20,7 +20,9 @@
 #endif
 #include <string.h>
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_join";
+*/
 
 #define COUNT 1024
 

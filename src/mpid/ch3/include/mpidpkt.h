@@ -10,7 +10,11 @@
 /* Enable the use of data within the message packet for small messages */
 #define USE_EAGER_SHORT
 #define MPIDI_EAGER_SHORT_INTS 4
+/* FIXME: This appears to assume that sizeof(int) == 4 (or at least >= 4) */
 #define MPIDI_EAGER_SHORT_SIZE 16
+
+/* This is the number of ints that can be carried within an RMA packet */
+#define MPIDI_RMA_IMMED_INTS 1
 
 /*
  * MPIDI_CH3_Pkt_type_t
@@ -44,6 +48,8 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_LOCK_GET_UNLOCK, /* optimization for single gets */
     MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK, /* optimization for single accumulates */
                                      /* RMA Packets end here */
+    MPIDI_CH3_PKT_ACCUM_IMMED,     /* optimization for short accumulate */
+    /* FIXME: Add PUT, GET_IMMED packet types */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
     MPIDI_CH3_PKT_END_CH3
@@ -193,6 +199,26 @@ typedef struct MPIDI_CH3_Pkt_accum
 }
 MPIDI_CH3_Pkt_accum_t;
 
+typedef struct MPIDI_CH3_Pkt_accum_immed
+{
+    MPIDI_CH3_Pkt_type_t type;
+    void *addr;
+    int count;
+    /* FIXME: Compress datatype/op into a single word (immedate mode) */
+    MPI_Datatype datatype;
+    MPI_Op op;
+    /* FIXME: do we need these (use a regular accum packet if we do?) */
+    MPI_Win target_win_handle; /* Used in the last RMA operation in each
+                               * epoch for decrementing rma op counter in
+                               * active target rma and for unlocking window 
+                               * in passive target rma. Otherwise set to NULL*/
+    MPI_Win source_win_handle; /* Used in the last RMA operation in an
+                               * epoch in the case of passive target rma
+                               * with shared locks. Otherwise set to NULL*/
+    int data[MPIDI_RMA_IMMED_INTS];
+}
+MPIDI_CH3_Pkt_accum_immed_t;
+
 typedef struct MPIDI_CH3_Pkt_lock
 {
     MPIDI_CH3_Pkt_type_t type;
@@ -276,6 +302,7 @@ typedef union MPIDI_CH3_Pkt
     MPIDI_CH3_Pkt_get_t get;
     MPIDI_CH3_Pkt_get_resp_t get_resp;
     MPIDI_CH3_Pkt_accum_t accum;
+    MPIDI_CH3_Pkt_accum_immed_t accum_immed;
     MPIDI_CH3_Pkt_lock_t lock;
     MPIDI_CH3_Pkt_lock_granted_t lock_granted;
     MPIDI_CH3_Pkt_pt_rma_done_t pt_rma_done;    

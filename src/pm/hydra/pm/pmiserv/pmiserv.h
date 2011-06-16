@@ -7,11 +7,11 @@
 #ifndef PMISERV_H_INCLUDED
 #define PMISERV_H_INCLUDED
 
-#include "pmi_common.h"
+#include "common.h"
 
 HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *userp);
 HYD_status HYD_pmcd_pmiserv_control_listen_cb(int fd, HYD_event_t events, void *userp);
-HYD_status HYD_pmcd_pmiserv_cleanup(void);
-void HYD_pmcd_pmiserv_signal_cb(int signal);
+HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void);
+HYD_status HYD_pmcd_pmiserv_send_signal(struct HYD_proxy *proxy, int signum);
 
 #endif /* PMISERV_H_INCLUDED */

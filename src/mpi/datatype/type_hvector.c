@@ -73,12 +73,15 @@ int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatyp
 /*@
    MPI_Type_hvector - type_hvector
 
-   Arguments:
-+  int count - count
-.  int blocklen - blocklen
-.  MPI_Aint stride - stride
-.  MPI_Datatype old_type - old datatype
--  MPI_Datatype *newtype - new datatype
+Input Parameters:
++ count - number of blocks (nonnegative integer) 
+. blocklength - number of elements in each block 
+  (nonnegative integer)
+. stride - number of bytes between start of each block (integer) 
+- oldtype - old datatype (handle) 
+
+Output Parameter:
+. newtype_p - new datatype (handle) 
 
    Notes:
 

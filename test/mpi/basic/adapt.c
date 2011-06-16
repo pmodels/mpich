@@ -1160,10 +1160,11 @@ skip_12_trial:
 	if (!bSavePert)/* && g_nIproc == 0)*/
 	{
 	    /* if we didn't save all of the perturbation loops, find the max and save it */
-	    int index01 = 1, index12 = 1, index012 = 1;
+	    int index01 = 1, index12 = 1;
 	    double dmax01 = bwdata01[n-1].bps;
 	    double dmax12 = bwdata12[n-1].bps;
 #ifdef CREATE_SINGLE_CURVE
+	    int index012 = 1;
 	    double dmax012 = bwdata012[n-1].bps;
 #endif
 	    for (; ipert > 1; ipert--)

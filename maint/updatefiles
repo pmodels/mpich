@@ -77,7 +77,9 @@ echo "done"
 # autotools steps (such as libtoolize) will create the aux/macro dir.
 echo_n "Checking for svn checkout errors... "
 svn_externals_sanity_file="src/pm/hydra/VERSION"
-if test "!" -e $svn_externals_sanity_file ; then
+# Note that -e is not an available option for test in the Bourne shell, though
+# some systems that pretend that ksh is the same as sh will accept it.
+if test "!" -f $svn_externals_sanity_file ; then
     cat <<EOT
 
 ERROR: The file '$svn_externals_sanity_file'
@@ -121,7 +123,7 @@ MAKE=${MAKE-make}
 
 # externals are the directories for external packages that we have
 # included into MPICH2
-externals="src/mpe2 src/pm/hydra"
+externals="src/mpe2 src/pm/hydra src/mpix/armci"
 # ltdirs are the directories that make use of libtool and require
 # libtoolize
 ltdirs="src/mpl"
@@ -579,19 +581,21 @@ fi
 
 
 ########################################################################
-## Checking if xargs accepts -r
+## Checking if xargs rm -rf works
 ########################################################################
 
-echo_n "Checking if xargs accepts -r... "
-if [ ! -z "`find . -name __random_file__`" ] ; then
-    error "found a file named __random_file__"
+echo_n "Checking if xargs rm -rf works... "
+if [ -d "`find . -name __random_dir__`" ] ; then
+    error "found a directory named __random_dir__"
     exit 1
 else
-    find . -name __random_file__ | xargs rm -rf > /dev/null 2>&1
+    mkdir __random_dir__
+    find . -name __random_dir__ | xargs rm -rf > /dev/null 2>&1
     if [ $? = 0 ] ; then
-	echo "accepted"
+	echo "yes"
     else
-	echo "not accepted (error)"
+	echo "no (error)"
+	rm -rf __random_dir__
 	exit 1
     fi
 fi

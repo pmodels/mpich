@@ -991,7 +991,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.3775.18163, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiexec, Version=1.0.3979.22279, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_1EE41EF56BA143788490913B5A71E9C8"
@@ -1242,7 +1242,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.3775.18166, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiregister, Version=1.0.3979.22279, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_60D2EF188B7448598D171ECA07E6E2DE"
@@ -1773,7 +1773,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.3775.18166, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:wmpiconfig, Version=1.0.3979.22279, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_C63BA0B9501E409EB78C7834178927F3"
@@ -2303,12 +2303,12 @@
         "ProductName" = "8:MPICH2"
         "ProductCode" = "8:{77531C63-4A48-4EB7-BCD2-5F3E1EFCC405}"
         "PackageCode" = "8:{DD575BD9-0BC7-4074-9A24-1EF5FB3B0813}"
-        "UpgradeCode" = "8:{79DA0A3D-C7B5-4B12-85D4-231837D012E4}"
+        "UpgradeCode" = "8:{5A1CBD62-E632-45DC-AA17-05B770BADF7E}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.3"
+        "ProductVersion" = "8:1.3.2"
         "Manufacturer" = "8:Argonne National Lab"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:www.mcs.anl.gov/mpi/mpich2"

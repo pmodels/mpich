@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Head to head send-recv to test backoff in device when large messages are being transferred";
+*/
 
 #define  MAX_NMSGS 100
 int main( int argc, char *argv[] )

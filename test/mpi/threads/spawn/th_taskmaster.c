@@ -23,12 +23,15 @@ int comm_world_size;
     } \
 }
 
+void process_spawn(MPI_Comm * comm, int thread_id);
 void process_spawn(MPI_Comm * comm, int thread_id)
 {
-    CHECK_SUCCESS(MPI_Comm_spawn("./th_taskmaster", (char **) NULL, 1, MPI_INFO_NULL, 0,
+    CHECK_SUCCESS(MPI_Comm_spawn((char*)"./th_taskmaster", (char **)NULL,
+				 1, MPI_INFO_NULL, 0,
 				 MPI_COMM_WORLD, comm, NULL));
 }
 
+void process_disconnect(MPI_Comm * comm, int thread_id);
 void process_disconnect(MPI_Comm * comm, int thread_id)
 {
     if (comm_world_rank == 0) {
@@ -40,6 +43,7 @@ void process_disconnect(MPI_Comm * comm, int thread_id)
 }
 
 #ifdef USE_THREADS
+MTEST_THREAD_RETURN_TYPE main_thread(void * arg);
 MTEST_THREAD_RETURN_TYPE main_thread(void * arg)
 {
     MPI_Comm child_comm;

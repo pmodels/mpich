@@ -23,6 +23,11 @@ c2fmult_LDADD = ../../util/mtest.o
 # need to add this to get it to appear in ../../f90/ext/Makefile.sm
 c2f90mult_LDADD = ../../util/mtest.o
 
+testing:
+	../../runtests -srcdir=$(srcdir) -tests=testlist \
+			-mpiexec=$(bindir)/mpiexec \
+		   	-xmlfile=summary.xml
+
 ../util/mtestf.o: 
 	(cd ../util && $(MAKE) mtestf.o)
 

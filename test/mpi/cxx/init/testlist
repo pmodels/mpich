@@ -1,2 +1,3 @@
 baseenv 1
 initstatx 1
+initstat2x 1 arg=myarg1 arg=myarg2

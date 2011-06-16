@@ -28,11 +28,7 @@ typedef enum{MPID_NEM_TCP_VC_STATE_DISCONNECTED,
 
 #define MPIDI_NEM_TCP_MAX_CONNECT_RETRIES 100
 
-typedef struct MPIDI_nem_tcp_request_queue
-{
-    struct MPID_Request *head;
-    struct MPID_Request *tail;
-} MPIDI_nem_tcp_request_queue_t;
+typedef GENERIC_Q_DECL(struct MPID_Request) MPIDI_nem_tcp_request_queue_t;
 
 /* The vc provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the VC struction
@@ -51,7 +47,7 @@ typedef struct
 } MPID_nem_tcp_vc_area;
 
 /* macro for tcp private in VC */
-#define VC_TCP(vc) ((MPID_nem_tcp_vc_area *)((MPIDI_CH3I_VC *)(vc)->channel_private)->netmod_area.padding)
+#define VC_TCP(vc) ((MPID_nem_tcp_vc_area *)VC_CH((vc))->netmod_area.padding)
 
 #define ASSIGN_SC_TO_VC(vc_tcp_, sc_) do {      \
         (vc_tcp_)->sc = (sc_);                  \
@@ -93,7 +89,8 @@ int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC 
 int MPID_nem_tcp_is_sock_connected(int fd);
 int MPID_nem_tcp_disconnect(struct MPIDI_VC *const vc);
 int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc);
-int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t *const vc);
+int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t *const vc, int req_errno);
+int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno);
 int MPID_nem_tcp_ckpt_cleanup(void);
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const l_plfd, sockconn_t *const l_sc);
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue);
@@ -110,6 +107,7 @@ void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc);
 
 int MPID_nem_tcp_socksm_finalize(void);
 int MPID_nem_tcp_socksm_init(void);
+int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc);
 
 
 int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
@@ -146,13 +144,6 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI
 #define Q_DEQUEUE(qp, ep) GENERIC_Q_DEQUEUE (qp, ep, next)
 #define Q_REMOVE_ELEMENTS(qp, ep0, ep1) GENERIC_Q_REMOVE_ELEMENTS (qp, ep0, ep1, next)
 
-/* Send queue macros */
-#define SENDQ_EMPTY(q) GENERIC_Q_EMPTY (q)
-#define SENDQ_HEAD(q) GENERIC_Q_HEAD (q)
-#define SENDQ_ENQUEUE(qp, ep) GENERIC_Q_ENQUEUE (qp, ep, dev.next)
-#define SENDQ_DEQUEUE(qp, ep) GENERIC_Q_DEQUEUE (qp, ep, dev.next)
-#define SENDQ_ENQUEUE_MULTIPLE(qp, ep0, ep1) GENERIC_Q_ENQUEUE_MULTIPLE(qp, ep0, ep1, dev.next)
-
 
 /* VC list macros */
 #define VC_L_EMPTY(q) GENERIC_L_EMPTY (q)
@@ -181,24 +172,13 @@ typedef struct MPIDU_Sock_ifaddr_t {
     unsigned char ifaddr[16];
 } MPIDU_Sock_ifaddr_t;
 int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found );
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found);
 
 /* Keys for business cards */
 #define MPIDI_CH3I_PORT_KEY "port"
 #define MPIDI_CH3I_HOST_DESCRIPTION_KEY "description"
 #define MPIDI_CH3I_IFNAME_KEY "ifname"
 
-/* convenience macro for publishing FTB communication error events */
-#define MPIDU_FTB_COMMERR(event_name, vc) do {                                                          \
-        int ret_ = -1;                                                                                  \
-        char bc_[1024] = ""; /* FIXME: How do we find the max length of a bc? */                             \
-        char ifname_[1024] = "";                                                                        \
-                                                                                                        \
-        if (vc && vc->pg)  /* pg can be null for temp VCs (dynamic processes) */                        \
-            ret_ = vc->pg->getConnInfo((vc)->pg_rank, bc_, sizeof(bc_), (vc)->pg);                      \
-        if (!ret_)                                                                                      \
-            ret_ = MPIU_Str_get_string_arg(bc_, MPIDI_CH3I_IFNAME_KEY, ifname_, sizeof(ifname_));       \
-        MPIDU_Ftb_publish((event_name), ifname_);                                                       \
-    } while(0)
 
 
 /* tcp-local packet types */

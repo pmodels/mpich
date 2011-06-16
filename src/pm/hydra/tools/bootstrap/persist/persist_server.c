@@ -4,8 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bind.h"
 #include "persist_server.h"
 
@@ -22,7 +21,6 @@ static struct {
 
     /* client variables */
     int client_fd;
-    int stdin_fd;
     int stdout_fd;
     int stderr_fd;
     int app_pid;
@@ -42,7 +40,12 @@ static void port_help_fn(void)
 
 static HYD_status port_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int_and_incr(arg, argv, &HYDT_persist_handle.port);
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_int(arg, &HYDT_persist_handle.port, atoi(**argv));
+    (*argv)++;
+
+    return status;
 }
 
 static void debug_help_fn(void)
@@ -56,7 +59,7 @@ static void debug_help_fn(void)
 
 static HYD_status debug_fn(char *arg, char ***argv)
 {
-    return HYDU_set_int(arg, argv, &HYDT_persist_handle.debug, 1);
+    return HYDU_set_int(arg, &HYDT_persist_handle.debug, 1);
 }
 
 static struct HYD_arg_match_table match_table[] = {
@@ -73,19 +76,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
     HYDU_FUNC_ENTER();
 
-    if (fd == private.client_fd) {
-        /* stdin event */
-        status = HYDU_sock_forward_stdio(private.client_fd, private.stdin_fd, &closed);
-        HYDU_ERR_POP(status, "stdin forwarding error\n");
-
-        if (closed) {
-            status = HYDT_dmx_deregister_fd(private.client_fd);
-            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n",
-                                private.client_fd);
-            close(private.client_fd);
-        }
-    }
-    else if (fd == private.stdout_fd) {
+    if (fd == private.stdout_fd) {
         /* stdout event */
         status = HYDU_sock_read(private.stdout_fd, buf, HYD_TMPBUF_SIZE, &count,
                                 &closed, HYDU_SOCK_COMM_NONE);
@@ -208,7 +199,7 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 
     /* spawn process */
     HYDT_bind_cpuset_zero(&cpuset);
-    status = HYDU_create_process(args, NULL, &private.stdin_fd, &private.stdout_fd,
+    status = HYDU_create_process(args, NULL, NULL, &private.stdout_fd,
                                  &private.stderr_fd, &private.app_pid, cpuset);
     HYDU_ERR_POP(status, "unable to create process\n");
 

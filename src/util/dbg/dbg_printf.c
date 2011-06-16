@@ -349,7 +349,7 @@ void MPIU_dump_dbg_memlog(FILE * fp){
 
 int MPIU_DBG_ActiveClasses = 0;
 int MPIU_DBG_MaxLevel      = MPIU_DBG_TYPICAL;
-static enum {MPIU_DBG_UNINIT, MPIU_DBG_PREINIT, MPIU_DBG_INITIALIZED}
+static enum {MPIU_DBG_UNINIT, MPIU_DBG_PREINIT, MPIU_DBG_INITIALIZED, MPIU_DBG_ERROR}
     mpiu_dbg_initialized = MPIU_DBG_UNINIT;
 static char filePatternBuf[MAXPATHLEN] = "";
 static const char *filePattern = "-stdout-"; /* "log%d.log"; */
@@ -416,6 +416,7 @@ static void set_fp(FILE *fp)
 int MPIU_DBG_Outevent( const char *file, int line, int class, int kind, 
 		       const char *fmat, ... )
 {
+    int mpi_errno = MPI_SUCCESS;
     va_list list;
     char *str, stmp[MPIU_DBG_MAXLINE];
     int  i;
@@ -426,7 +427,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
     int pid = -1;
     FILE *dbg_fp = NULL;
 
-    if (mpiu_dbg_initialized == MPIU_DBG_UNINIT) return 0;
+    if (mpiu_dbg_initialized == MPIU_DBG_UNINIT || mpiu_dbg_initialized == MPIU_DBG_ERROR) goto fn_exit;
 
     dbg_fp = get_fp();
 
@@ -445,7 +446,8 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 #endif /* HAVE_GETPID */
 
     if (!dbg_fp) {
-	MPIU_DBG_OpenFile(&dbg_fp);
+	mpi_errno = MPIU_DBG_OpenFile(&dbg_fp);
+        if (mpi_errno) goto fn_fail;
         set_fp(dbg_fp);
     }
 
@@ -493,6 +495,9 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 	    break;
     }
     fflush(dbg_fp);
+
+ fn_exit:
+ fn_fail:
     return 0;
 }
 
@@ -723,7 +728,7 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
        return immediately.  Note that the device is then responsible
        for handling the file mode (e.g., reopen when the rank become 
        available) */
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED) return MPI_SUCCESS;
+    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED || mpiu_dbg_initialized == MPIU_DBG_ERROR) return MPI_SUCCESS;
 
     if (mpiu_dbg_initialized != MPIU_DBG_PREINIT)
         dbg_init_tls();
@@ -772,19 +777,25 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
             ret = rename(temp_filename, filename);
             if(ret){
                 MPIU_Error_printf("Could not rename temp log file to %s\n", filename );
+                goto fn_fail;
             }
             else{
                 dbg_fp = fopen(filename, "a+");
                 set_fp(dbg_fp);
                 if(dbg_fp == NULL){
                     MPIU_Error_printf("Error re-opening log file, %s\n", filename);
+                    goto fn_fail;
                 }
             }
         }
     }
 
     mpiu_dbg_initialized = MPIU_DBG_INITIALIZED;
+ fn_exit:
     return MPI_SUCCESS;
+ fn_fail:
+    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    goto fn_exit;
 }
 
 /* Print the usage statement to stderr */
@@ -833,25 +844,27 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     int ret;
     
     ret = MPIU_Strncpy(temp_filename, filePattern, MAXPATHLEN);
-    MPIU_ERR_CHKINTERNAL(ret, mpi_errno, "logfile path too long");
-
+    if (ret) goto fn_fail;
+    
     MPIU_Basename(temp_filename, &basename);
 
     /* make sure there's enough room in temp_filename to store temp_pattern */
-    MPIU_ERR_CHKINTERNAL(basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern), mpi_errno, "logfile path too long");
-
+    if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern)) goto fn_fail;
+    
     MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
     
     fd = mkstemp(temp_filename);
-    MPIU_ERR_CHKANDJUMP1(fd == -1, mpi_errno, MPI_ERR_OTHER, "**mkstemp", "**mkstemp %s", MPIU_Strerror(errno));
+    if (fd == -1) goto fn_fail;
 
     *dbg_fp = fdopen(fd, "a+");
-    MPIU_ERR_CHKANDJUMP1(*dbg_fp == NULL, mpi_errno, MPI_ERR_OTHER, "**fdopen", "**fdopen %s", MPIU_Strerror(errno));
+    if (*dbg_fp == NULL) goto fn_fail;
     
  fn_exit:
     return mpi_errno;
  fn_fail:
     MPIU_Error_printf( "Could not open log file %s\n", temp_filename );
+    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    mpi_errno = MPI_ERR_INTERN;
     goto fn_exit;
 }
 #elif defined(HAVE__MKTEMP_S) && defined(HAVE_FOPEN_S)
@@ -871,25 +884,27 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     errno_t ret_errno;
     
     ret = MPIU_Strncpy(temp_filename, filePattern, MAXPATHLEN);
-    MPIU_ERR_CHKINTERNAL(ret, mpi_errno, "logfile path too long");
+    if (ret) goto fn_fail;
 
     MPIU_Basename(temp_filename, &basename);
 
     /* make sure there's enough room in temp_filename to store temp_pattern */
-    MPIU_ERR_CHKINTERNAL(basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern), mpi_errno, "logfile path too long");
+    if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern)) goto fn_fail;
 
     MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
     
     ret_errno = _mktemp_s(temp_filename, MAXPATHLEN);
-    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**mktemp_s", "**mktemp_s %s", MPIU_Strerror(ret_errno));
+    if (ret_errno != 0) goto fn_fail;
 
     ret_errno = fopen_s(dbg_fp, temp_filename, "a+");
-    MPIU_ERR_CHKANDJUMP1(ret_errno != 0, mpi_errno, MPI_ERR_OTHER, "**fopen_s", "**fopen_s %s", MPIU_Strerror(ret_errno));
+    if (ret_errno != 0) goto fn_fail;
     
  fn_exit:
     return mpi_errno;
  fn_fail:
     MPIU_Error_printf( "Could not open log file %s\n", temp_filename );
+    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    mpi_errno = MPI_ERR_INTERN;
     goto fn_exit;
 }
 #else
@@ -914,15 +929,17 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     char *cret;
 
     cret = tmpnam(temp_filename);
-    MPIU_ERR_CHKANDJUMP1(cret == NULL, mpi_errno, MPI_ERR_OTHER, "**tmpnam", "**tmpnam %s", MPIU_Strerror(errno));
+    if (cret == NULL) goto fn_fail;
 
     *dbg_fp = fopen(temp_filename, "w");
-    MPIU_ERR_CHKANDJUMP1(*dbg_fp == NULL, mpi_errno, MPI_ERR_OTHER, "**fopen", "**fopen %s", MPIU_Strerror(errno));    
+    if (*dbg_fp == NULL) goto fn_fail;
     
  fn_exit:
     return mpi_errno;
  fn_fail:
     MPIU_Error_printf( "Could not open log file %s\n", temp_filename );
+    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    mpi_errno = MPI_ERR_INTERN;
     goto fn_exit;
 }
 
@@ -1065,6 +1082,7 @@ static int MPIU_DBG_Get_filename(char *filename, int len)
    calls. */
 static int MPIU_DBG_OpenFile(FILE **dbg_fp)
 {
+    int mpi_errno = MPI_SUCCESS;
     if (!filePattern || *filePattern == 0 ||
 	strcmp(filePattern, "-stdout-" ) == 0) {
 	*dbg_fp = stdout;
@@ -1079,19 +1097,27 @@ static int MPIU_DBG_OpenFile(FILE **dbg_fp)
            rank yet, so we create a temp file, to be renamed later */
         if (mpiu_dbg_initialized != MPIU_DBG_INITIALIZED) 
         {
-            MPIU_DBG_Open_temp_file(dbg_fp);
+            mpi_errno = MPIU_DBG_Open_temp_file(dbg_fp);
+            if (mpi_errno) goto fn_fail;
         }
         else 
         {
-            MPIU_DBG_Get_filename(filename, MAXPATHLEN);
-        
+            mpi_errno = MPIU_DBG_Get_filename(filename, MAXPATHLEN);
+            if (mpi_errno) goto fn_fail;
+
             *dbg_fp = fopen( filename, "w" );
             if (!*dbg_fp) {
                 MPIU_Error_printf( "Could not open log file %s\n", filename );
+                if (mpi_errno) goto fn_fail;
             }
         }
     }
-    return 0;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    mpi_errno = MPI_ERR_INTERN;
+    goto fn_exit;
 }
 
 /* Support routines for processing mpich-dbg values */

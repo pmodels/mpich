@@ -28,7 +28,7 @@ void abortMsg( const char *str, int code )
 int main( int argc, char *argv[] )
 {
     MPI_Comm  evencomm, lowcomm, newcomm;
-    int       wrank, wsize, gsize, key, err, errs = 0;
+    int       wrank, wsize, gsize, err, errs = 0;
     int       ranges[1][3], mygrank;
     MPI_Group wGroup, godd, ghigh, geven;
 

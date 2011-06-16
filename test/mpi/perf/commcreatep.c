@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 #define MAX_LOG_WSIZE 31
 #define MAX_LOOP 20

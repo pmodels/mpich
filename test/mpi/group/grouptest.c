@@ -8,11 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* This is a temporary test program that uses a special testing routine
-   to create a group that contains more processes than are in comm_world,
-   for ease of testing without requiring a parallel job run (since all
-   group routines are local) 
-*/
 int main( int argc, char *argv[] )
 {
     MPI_Group g1, g2, g4, g5, g45, selfgroup, g6;
@@ -90,19 +85,19 @@ int main( int argc, char *argv[] )
 
 	/* Exclude everyone in our group */
 	{
-	    int i, *ranks, g1size;
+	    int ii, *lranks, g1size;
 
 	    MPI_Group_size( g1, &g1size );
 	    
-	    ranks = (int *)malloc( g1size * sizeof(int) );
-	    for (i=0; i<g1size; i++) ranks[i] = i;
-	    MPI_Group_excl( g1, g1size, ranks, &g6 );
+	    lranks = (int *)malloc( g1size * sizeof(int) );
+	    for (ii=0; ii<g1size; ii++) lranks[ii] = ii;
+	    MPI_Group_excl( g1, g1size, lranks, &g6 );
 	    if (g6 != MPI_GROUP_EMPTY) {
 		fprintf( stderr, "Group formed by excluding all ranks not empty\n" );
 		errs++;
 		MPI_Group_free( &g6 );
 	    }
-	    free( ranks );
+	    free( lranks );
 	}
 	
 	/* Add tests for additional group operations */

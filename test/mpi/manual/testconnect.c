@@ -14,7 +14,7 @@
    where each instance has one process and N instances are run
 */
 
-#include <mpi.h>
+#include "mpi.h"
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -80,7 +80,8 @@ int main( int argc, char ** argv ) {
 	}
         comm = MPI_COMM_WORLD;
     } else {
-        fgets( port, MPI_MAX_PORT_NAME, fh );
+        char *cerr;
+        cerr = fgets( port, MPI_MAX_PORT_NAME, fh );
         fclose( fh );
 	if (doPrint) {
 	    printf( "[%d] about to connect: Port from %s is: %s\n", 

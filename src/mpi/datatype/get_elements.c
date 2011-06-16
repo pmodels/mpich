@@ -191,23 +191,10 @@ PMPI_LOCAL int MPIR_Type_get_elements(int *bytes_p,
 	MPI_Aint *aints;
 	MPI_Datatype *types;
 
-	/* Establish locations of arrays; perhaps this should be a fn. call or
-         * this fn. should be an MPID one?
-	 */
-	if (datatype_ptr->contents == NULL)
-	    return MPI_ERR_TYPE;
-	types = (MPI_Datatype *) (((char *) datatype_ptr->contents) +
-				  sizeof(MPID_Datatype_contents));
-	if (types == NULL)
-	    return MPI_ERR_TYPE;
-	ints  = (int *) (((char *) types) +
-			 datatype_ptr->contents->nr_types * sizeof(MPI_Datatype));
-	if (ints == NULL)
-	    return MPI_ERR_TYPE;
-	aints = (MPI_Aint *) (((char *) ints) +
-			      datatype_ptr->contents->nr_ints * sizeof(int));
-	if (aints == NULL)
-	    return MPI_ERR_TYPE;
+        /* Establish locations of arrays */
+        MPID_Type_access_contents(datatype_ptr->handle, &ints, &aints, &types);
+        if (!ints || !aints || !types)
+            return MPI_ERR_TYPE;
 
 	switch (datatype_ptr->contents->combiner) {
 	    case MPI_COMBINER_NAMED:

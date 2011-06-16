@@ -8,9 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-void check_error( int, char * );
-
-void check_error(int error, char *fcname)
+void check_error( int, const char * );
+void check_error(int error, const char *fcname)
 {
     char err_string[MPI_MAX_ERROR_STRING] = "";
     int length;

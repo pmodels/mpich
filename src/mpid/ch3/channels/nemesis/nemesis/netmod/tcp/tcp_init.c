@@ -31,7 +31,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_connect_to_root,
     MPID_nem_tcp_vc_init,
     MPID_nem_tcp_vc_destroy,
-    MPID_nem_tcp_vc_terminate
+    MPID_nem_tcp_vc_terminate,
+    NULL /* anysource iprobe */
 };
 
 /* in case there are no packet types defined (e.g., they're ifdef'ed out) make sure the array is not zero length */
@@ -139,7 +140,6 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
 static int ckpt_restart(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_queue_ptr_t dummy ;
     char *publish_bc_orig = NULL;
     char *bc_val          = NULL;
     int val_max_sz;
@@ -177,7 +177,7 @@ static int ckpt_restart(void)
         if (i == MPIDI_Process.my_pg_rank)
             continue;
         MPIDI_PG_Get_vc(MPIDI_Process.my_pg, i, &vc);
-        vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
+        vc_ch = VC_CH(vc);
         if (!vc_ch->is_local) {
             mpi_errno = vc_ch->ckpt_restart_vc(vc);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -284,9 +284,23 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	    else
 		MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
 	}
+        else {
+            /* ifname_string may be an interface name like "en1", "ib0", or
+             * "eth2".  Look for the IP address associated with it. */
+            mpi_errno = MPIDI_Get_IP_for_iface(ifname_string, ifaddr, &ifaddrFound);
+            /* don't MPIU_ERR_POP, failure here can be safely ignored */
+            if (ifaddrFound && mpi_errno == MPI_SUCCESS) {
+                MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
+                                  "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%#08x",
+                                  ifaddr->type, ifaddr->len, *((unsigned int *)ifaddr->ifaddr)));
+            }
+        }
     }
 
-    return 0;
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 
@@ -372,7 +386,8 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 
     mpi_errno = MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPID_nem_tcp_connect(new_vc);
+    mpi_errno = MPID_nem_tcp_connect(new_vc);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
@@ -389,7 +404,7 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_VC_INIT);
 
@@ -509,21 +524,16 @@ int MPID_nem_tcp_bind (int sockfd)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     struct sockaddr_in sin;
-    int port, low_port, high_port;
+    int port;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_BIND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_BIND);
    
-    low_port = 0;
-    high_port = 0;
+    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_PORT_RANGE.low < 0 || MPIR_PARAM_PORT_RANGE.low > MPIR_PARAM_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
-/*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
-    MPL_env2range( "MPICH_PORT_RANGE", &low_port, &high_port );
-    MPIU_ERR_CHKANDJUMP (low_port < 0 || low_port > high_port, mpi_errno, MPI_ERR_OTHER, "**badportrange");
-
-    /* if MPICH_PORT_RANGE is not set, low_port and high_port are 0 so bind will use any available port */
+    /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
     ret = 0;
-    for (port = low_port; port <= high_port; ++port)
+    for (port = MPIR_PARAM_PORT_RANGE.low; port <= MPIR_PARAM_PORT_RANGE.high; ++port)
     {
         memset ((void *)&sin, 0, sizeof(sin));
         sin.sin_family      = AF_INET;
@@ -552,23 +562,71 @@ int MPID_nem_tcp_bind (int sockfd)
     goto fn_exit;
 }
 
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_vc_terminate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tcp_vc_terminate (MPIDI_VC_t *vc)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_tcp_vc_terminate(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_NEM_TCP_VC_TERMINATE);
+    int req_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
 
-    MPIDI_FUNC_ENTER(MPID_NEM_TCP_VC_TERMINATE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
+
+    if (vc->state != MPIDI_VC_STATE_CLOSED) {
+        /* VC is terminated as a result of a fault.  Complete
+           outstanding sends with an error and terminate
+           connection immediately. */
+        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+        mpi_errno = MPID_nem_tcp_error_out_send_queue(vc, req_errno);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPID_nem_tcp_vc_terminated(vc);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+        MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+        /* VC is terminated as a result of the close protocol.
+           Wait for sends to complete, then terminate. */
+
+        if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
+            /* The sendq is empty, so we can immediately terminate
+               the connection. */
+            mpi_errno = MPID_nem_tcp_vc_terminated(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+        /* else: just return.  We'll call vc_terminated() from the
+           commrdy_handler once the sendq is empty. */
+    }
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_tcp_vc_terminated
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
+{
+    /* This is called when the VC is to be terminated once all queued
+       sends have been sent. */
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_NEM_TCP_VC_TERMINATED);
+
+    MPIDI_FUNC_ENTER(MPID_NEM_TCP_VC_TERMINATED);
 
     mpi_errno = MPID_nem_tcp_cleanup(vc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
+    mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
+    if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_NEM_TCP_VC_TERMINATE);
+    MPIDI_FUNC_EXIT(MPID_NEM_TCP_VC_TERMINATED);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));

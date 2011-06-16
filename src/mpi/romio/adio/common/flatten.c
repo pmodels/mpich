@@ -1023,6 +1023,12 @@ static void removezeros(ADIOI_Flatlist_node *flat_type)
     ADIO_Offset *opt_blocklens;
     ADIO_Offset *opt_indices;
 
+    /* short-circuit: there is nothing to do if there are
+     * 	- 1 block:  what can we remove?
+     * 	- 2 blocks: either both blocks are data (and not zero) 
+     * 		or one block is the UB or LB */
+    if (flat_type->count <= 2) return;
+
     opt_blocks = 2; /* LB and UB */
     for (i=1; i < flat_type->count -1; i++) {
         if(flat_type->blocklens[i] != 0)

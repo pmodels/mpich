@@ -50,11 +50,11 @@ $hasDemon   = 0;
 		  'g;none;all;handle;dbg;log;meminit',
 		  'fast',
 		  'f77',
-		  'f90',
+		  'fc',
 		  'cxx',
 		  'romio',
 		  'coverage',
-		  'strict',    #;posix
+		  'strict;c99;posix',    #;posix
 		  'debuginfo', # Message queues
 		  'weak_symbols;no;yes',
                   'threads;single;multiple',
@@ -416,12 +416,12 @@ sub RunTest {
 		print $OUTFD $MakeInstEnd;
 		if ($install_status == 0) {
 		    # FIXME: Get mpd status from the with args ...
-		    if (-x "bin/mpd") {
+		    if (-x "$instdir/bin/mpd") {
 			$hasDemon   = 1;
 			$StartDemon = "RunMPD";
 			$StopDemon  = "StopMPD";
 		    }
-		    elsif (-x "bin/smpd") {
+		    elsif (-x "$instdir/bin/smpd") {
 			$hasDemon   = 1;
 			$StartDemon = "RunSMPD";
 			$StopDemon  = "StopSMPD";

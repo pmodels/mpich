@@ -4,7 +4,7 @@ DEPADD = @MPILIBLOC@ ../util/mtest.o
 smvar_do_sharedlibs = 0
 
 attrtx_SOURCES = attrtx.cxx
-#attricx_SOURCES = attricx.cxx
+attricx_SOURCES = attricx.cxx
 #attrerrx_SOURCES = attrerrx.cxx
 #attrerrcommx_SOURCES = attrerrcommx.cxx
 #attrerrtypex_SOURCES = attrerrtypex.cxx
@@ -20,3 +20,9 @@ fkeyvaltypex_SOURCES = fkeyvaltypex.cxx
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
+testing:
+	../../runtests -srcdir=$(srcdir) -tests=testlist \
+			-mpiexec=@MPIEXEC@ \
+		   	-xmlfile=summary.xml
+clean-local:
+	-rm -f summary.xml

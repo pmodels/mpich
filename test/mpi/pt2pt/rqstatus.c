@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test Request_get_status";
+*/
 
 int main( int argc, char *argv[] )
 {

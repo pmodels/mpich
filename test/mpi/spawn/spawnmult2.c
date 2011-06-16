@@ -30,7 +30,7 @@ int main( int argc, char *argv[] )
     MPI_Comm_get_parent( &parentcomm );
     if (parentcomm == MPI_COMM_NULL) {
 	/* Create 2 more processes */
-	static char *cmds[2] = { "./spawnmult2", "./spawnmult2" };
+	static char *cmds[2] = { (char*)"./spawnmult2", (char*)"./spawnmult2" };
 	static MPI_Info infos[2] = { MPI_INFO_NULL, MPI_INFO_NULL };
 	int errcodes[2];
 

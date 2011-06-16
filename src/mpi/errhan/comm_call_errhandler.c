@@ -126,17 +126,28 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
     /* Process any user-defined error handling function */
     switch (comm_ptr->errhandler->language) {
     case MPID_LANG_C:
-#ifdef HAVE_CXX_BINDING
-    case MPID_LANG_CXX:
-#endif
 	(*comm_ptr->errhandler->errfn.C_Comm_Handler_function)( 
 	    &comm_ptr->handle, &errorcode );
 	break;
+#ifdef HAVE_CXX_BINDING
+    case MPID_LANG_CXX:
+	MPIR_Process.cxx_call_errfn( 0, &comm_ptr->handle, 
+				     &errorcode, 
+     (void (*)(void))comm_ptr->errhandler->errfn.C_Comm_Handler_function );
+	break;
+#endif
 #ifdef HAVE_FORTRAN_BINDING
     case MPID_LANG_FORTRAN90:
     case MPID_LANG_FORTRAN:
+	{
+	    /* If int and MPI_Fint aren't the same size, we need to 
+	       convert.  As this is not performance critical, we
+	       do this even if MPI_Fint and int are the same size. */
+	    MPI_Fint ferr=errorcode;
+	    MPI_Fint commhandle=comm_ptr->handle;
 	(*comm_ptr->errhandler->errfn.F77_Handler_function)( 
-	    (MPI_Fint *)&comm_ptr->handle, &errorcode );
+					    &commhandle, &ferr );
+	}
 	break;
 #endif
     }

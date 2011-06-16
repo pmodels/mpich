@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Use Spawn to create an intercomm, then create a new intercomm between processes from mixed worlds.";
+*/
 
 /*
  * This test is a regression test for ticket#114 based on a bug reported by Brad
@@ -23,6 +25,7 @@ int main( int argc, char *argv[] )
     int wrank, wsize, mrank, msize, inter_rank;
     int np = 2;
     int errcodes[2];
+    int rrank = -1;
     MPI_Comm      parentcomm, intercomm, intercomm2, even_odd_comm, merged_world;
 
     MTest_Init( &argc, &argv );
@@ -38,7 +41,7 @@ int main( int argc, char *argv[] )
     MPI_Comm_get_parent( &parentcomm );
 
     if (parentcomm == MPI_COMM_NULL) {
-        MPI_Comm_spawn( "./spaiccreate2", MPI_ARGV_NULL, np,
+        MPI_Comm_spawn( (char*)"./spaiccreate2", MPI_ARGV_NULL, np,
                         MPI_INFO_NULL, 0, MPI_COMM_WORLD,
                         &intercomm, errcodes );
     }
@@ -56,7 +59,6 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( intercomm2, &inter_rank );
     
     /* odds receive from evens */
-    int rrank = -1;
     MPI_Sendrecv( &inter_rank, 1, MPI_INT, inter_rank, 456,
                   &rrank, 1, MPI_INT, inter_rank, 456, intercomm2, MPI_STATUS_IGNORE );
     if (rrank != inter_rank) {

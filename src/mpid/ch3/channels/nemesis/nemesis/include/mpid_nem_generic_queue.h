@@ -11,10 +11,11 @@
    the next pointer field in the element (e.g., "ch.tcp_sendq_next") */
 
 #define PRINT_QUEUE(qp, next_field) do {        \
-    } while(0)       
-#define PRINTM_QUEUE(qp, next_field_macro, next_field) do {      \
-    } while(0)       
-        
+    } while(0)
+#define PRINTM_QUEUE(qp, next_field_macro, next_field) do {     \
+    } while(0)
+
+#define GENERIC_Q_DECL(type) struct { type *head, *tail; }
 
 #define GENERIC_Q_EMPTY(q) ((q).head == NULL)
 
@@ -78,6 +79,7 @@
         (qp)->head = (*(epp))->next_field;              \
         if ((qp)->head == NULL)                         \
             (qp)->tail = NULL;                          \
+        PRINT_QUEUE (qp, next_field);                   \
     } while (0)
 
 /* remove the elements from the top of the queue starting with ep0 through ep1 */
@@ -147,6 +149,8 @@
 /* queue macros that use another macro to find the 'next' field, e.g.,
    when the next field is in the channel private area of a request.
    The macro is of the form "macro_name(element_ptr, next_field)"*/
+#define GENERICM_Q_DECL(type, q_name) typedef struct { type *head, *tail; } q_name;
+
 #define GENERICM_Q_EMPTY(q) ((q).head == NULL)
 
 #define GENERICM_Q_HEAD(q) ((q).head)

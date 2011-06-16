@@ -15,7 +15,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_mx_funcs = {
     MPID_nem_mx_connect_to_root,
     MPID_nem_mx_vc_init,
     MPID_nem_mx_vc_destroy,
-    MPID_nem_mx_vc_terminate
+    MPID_nem_mx_vc_terminate,
+    MPID_nem_mx_anysource_iprobe
 };
 
 static MPIDI_Comm_ops_t comm_ops = {
@@ -229,7 +230,7 @@ int
 MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
 {
    uint32_t threshold;
-   MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+   MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
    int mpi_errno = MPI_SUCCESS;
 
    /* first make sure that our private fields in the vc fit into the area provided  */
@@ -240,15 +241,23 @@ MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
    VC_FIELD(vc, remote_connected) = 0;
 #else
    {
-       char business_card[MPID_NEM_MAX_NETMOD_STRING_LEN];
-       int ret;
-       
-       mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, MPID_NEM_MAX_NETMOD_STRING_LEN, vc->pg);
+       char *business_card;
+       int   val_max_sz;
+       int   ret;
+#ifdef USE_PMI2_API
+       val_max_sz = PMI2_MAX_VALLEN;
+#else
+       mpi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+#endif 
+       business_card = (char *)MPIU_Malloc(val_max_sz); 
+       mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card,val_max_sz, vc->pg);
        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
        
        mpi_errno = MPID_nem_mx_get_from_bc (business_card, &VC_FIELD(vc, remote_endpoint_id), &VC_FIELD(vc, remote_nic_id));
        if (mpi_errno)    MPIU_ERR_POP (mpi_errno);
- 
+
+       MPIU_Free(business_card);
+       
        ret = mx_connect(MPID_nem_mx_local_endpoint,VC_FIELD(vc, remote_nic_id),VC_FIELD(vc, remote_endpoint_id),
 			MPID_NEM_MX_FILTER,MX_INFINITE,&(VC_FIELD(vc, remote_endpoint_addr)));
        MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_connect", "**mx_connect %s", mx_strerror (ret));
@@ -292,5 +301,7 @@ int MPID_nem_mx_vc_destroy(MPIDI_VC_t *vc)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_mx_vc_terminate (MPIDI_VC_t *vc)
 {
-    return MPI_SUCCESS;
+    /* FIXME: Check to make sure that it's OK to terminate the
+       connection without making sure that all sends have been sent */
+    return MPIDI_CH3U_Handle_connection (vc, MPIDI_VC_EVENT_TERMINATED);
 }

@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_BOR operations on optional datatypes dupported by MPICH2";
+*/
 
 /*
  * This test looks at the handling of logical and for types that are not 

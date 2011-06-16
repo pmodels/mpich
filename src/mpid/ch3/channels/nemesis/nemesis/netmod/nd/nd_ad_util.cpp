@@ -49,10 +49,16 @@ static int MPID_Nem_nd_ad_init(MPID_Nem_nd_dev_hnd_t hnd, MPIU_ExSetHandle_t ex_
 
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Successfully created an ND CQ (sz=%d)", cq_sz);
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
-        "ND CQ : size = %d, msz = %d, mir = %d, mor = %d, mirl = %d, morl = %d",
+        "ND CQ : size = " MPIR_UPINT_FMT_DEC_SPEC ", mcq = " MPIR_UPINT_FMT_DEC_SPEC
+        ", mir = " MPIR_UPINT_FMT_DEC_SPEC ", mor = " MPIR_UPINT_FMT_DEC_SPEC
+        ", mirl = " MPIR_UPINT_FMT_DEC_SPEC ", morl = " MPIR_UPINT_FMT_DEC_SPEC
+        ", mol = " MPIR_UPINT_FMT_DEC_SPEC ", mreg_sz = " MPIR_UPINT_FMT_DEC_SPEC
+        ", lreq_thres = " MPIR_UPINT_FMT_DEC_SPEC,
         cq_sz, hnd->ad_info.MaxCqEntries,
         hnd->ad_info.MaxInboundRequests, hnd->ad_info.MaxOutboundRequests,
-        hnd->ad_info.MaxInboundReadLimit, hnd->ad_info.MaxOutboundReadLimit));
+        hnd->ad_info.MaxInboundReadLimit, hnd->ad_info.MaxOutboundReadLimit,
+        hnd->ad_info.MaxOutboundLength, hnd->ad_info.MaxRegistrationSize,
+        hnd->ad_info.LargeRequestThreshold));
 
     /* Associate the adapter with the Executive */
     MPIU_ExAttachHandle(ex_hnd, MPIU_EX_GENERIC_COMP_PROC_KEY, hnd->p_ad->GetFileHandle());
@@ -125,6 +131,9 @@ int MPID_Nem_nd_dev_hnd_init(MPID_Nem_nd_dev_hnd_t *phnd, MPIU_ExSetHandle_t ex_
     /* Initialize adapter */
     mpi_errno = MPID_Nem_nd_ad_init(*phnd, ex_hnd);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+    (*phnd)->npending_rds = 0;
+    (*phnd)->zcp_pending = 0;
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:

@@ -4,6 +4,8 @@
 #     See COPYRIGHT in top-level directory.
 #
 
+AM_CPPFLAGS += -I$(top_srcdir)/ui/include
+
 include ui/utils/Makefile.mk
 
 if hydra_ui_mpich

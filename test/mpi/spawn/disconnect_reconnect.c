@@ -17,7 +17,9 @@
 
 #define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_connect/accept/disconnect";
+*/
 
 int main(int argc, char *argv[])
 {
@@ -59,7 +61,8 @@ int main(int argc, char *argv[])
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank ); /* Get rank for verbose msg */
 	IF_VERBOSE(("[%d] spawning %d processes\n", rank, np));
 	/* Create 3 more processes */
-	MPI_Comm_spawn("./disconnect_reconnect", /*MPI_ARGV_NULL*/&argv[1], np,
+	MPI_Comm_spawn((char*)"./disconnect_reconnect",
+			/*MPI_ARGV_NULL*/&argv[1], np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm, MPI_ERRCODES_IGNORE);
     }

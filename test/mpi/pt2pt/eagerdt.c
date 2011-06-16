@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of a large number of derived-datatype messages eagerly, with no preposted receive so that an MPI implementation may have to queue up messages on the sending side";
+*/
 
 #define MAX_MSGS 30
 
@@ -46,8 +48,8 @@ int main( int argc, char *argv[] )
     for (i=0; i<MAX_MSGS; i++) {
 	bufs[i] = (int *)malloc( extent );
 	if (!bufs[i]) {
-	    fprintf( stderr, "Unable to allocate buffer %d of size %d\n", 
-		    	i, extent );
+	    fprintf( stderr, "Unable to allocate buffer %d of size %ld\n", 
+		    	i, (long)extent );
 	    MPI_Abort( MPI_COMM_WORLD, 1 );
 	}
     }

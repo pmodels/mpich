@@ -1,0 +1,6 @@
+group_comm_half 2
+group_comm_half 4
+group_comm_half 8
+group_comm_rand 2
+group_comm_rand 4
+group_comm_rand 8

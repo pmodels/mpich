@@ -13,7 +13,9 @@
 #define MAX_INT 0x7fffffff
 #endif
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Accumulate with fence";
+*/
 
 int main( int argc, char *argv[] )
 {

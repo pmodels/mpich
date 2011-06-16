@@ -83,24 +83,24 @@
 #endif
 
 /* Prototypes to keep compilers happy */
-int c2fcomm_( int * );
-int c2fgroup_( int * );
-int c2finfo_( int * );
-int c2frequest_( int * );
-int c2ftype_( int * );
-int c2fop_( int * );
-int c2ferrhandler_( int * );
+MPI_Fint c2fcomm_( MPI_Fint * );
+MPI_Fint c2fgroup_( MPI_Fint * );
+MPI_Fint c2finfo_( MPI_Fint * );
+MPI_Fint c2frequest_( MPI_Fint * );
+MPI_Fint c2ftype_( MPI_Fint * );
+MPI_Fint c2fop_( MPI_Fint * );
+MPI_Fint c2ferrhandler_( MPI_Fint * );
 
-void f2ccomm_( int * );
-void f2cgroup_( int * );
-void f2cinfo_( int * );
-void f2crequest_( int * );
-void f2ctype_( int * );
-void f2cop_( int * );
-void f2cerrhandler_( int * );
+void f2ccomm_( MPI_Fint * );
+void f2cgroup_( MPI_Fint * );
+void f2cinfo_( MPI_Fint * );
+void f2crequest_( MPI_Fint * );
+void f2ctype_( MPI_Fint * );
+void f2cop_( MPI_Fint * );
+void f2cerrhandler_( MPI_Fint * );
 
 
-int c2fcomm_ (int *comm)
+MPI_Fint c2fcomm_ (MPI_Fint *comm)
 {
     MPI_Comm cComm = MPI_Comm_f2c(*comm);
     int cSize, wSize, cRank, wRank;
@@ -118,7 +118,7 @@ int c2fcomm_ (int *comm)
     return 0;
 }
 
-int c2fgroup_ (int *group)
+MPI_Fint c2fgroup_ (MPI_Fint *group)
 {
     MPI_Group cGroup = MPI_Group_f2c(*group);
     int cSize, wSize, cRank, wRank;
@@ -137,7 +137,7 @@ int c2fgroup_ (int *group)
     return 0;
 }
 
-int c2ftype_ ( int *type )
+MPI_Fint c2ftype_ ( MPI_Fint *type )
 {
     MPI_Datatype dtype = MPI_Type_f2c( *type );
 
@@ -148,19 +148,19 @@ int c2ftype_ ( int *type )
     return 0;
 }
 
-int c2finfo_ ( int *info )
+MPI_Fint c2finfo_ ( MPI_Fint *info )
 {
     MPI_Info cInfo = MPI_Info_f2c( *info );
     int flag;
     char value[100];
-    int errs = 0;
+    MPI_Fint errs = 0;
 
-    MPI_Info_get( cInfo, "host", sizeof(value), value, &flag );
+    MPI_Info_get( cInfo, (char*)"host", sizeof(value), value, &flag );
     if (!flag || strcmp(value,"myname") != 0) {
 	fprintf( stderr, "Info: Wrong value or no value for host\n" );
 	errs++;
     }
-    MPI_Info_get( cInfo, "wdir", sizeof(value), value, &flag );
+    MPI_Info_get( cInfo, (char*)"wdir", sizeof(value), value, &flag );
     if (!flag || strcmp( value, "/rdir/foo" ) != 0) {
 	fprintf( stderr, "Info: Wrong value of no value for wdir\n" );
 	errs++;
@@ -169,7 +169,7 @@ int c2finfo_ ( int *info )
     return errs;
 }
 
-int c2frequest_ ( int *request )
+MPI_Fint c2frequest_ ( MPI_Fint *request )
 {
     MPI_Request req = MPI_Request_f2c( *request );
     MPI_Status status;
@@ -186,7 +186,7 @@ int c2frequest_ ( int *request )
     return 0;
 }
 
-int c2fop_ ( int *op )
+MPI_Fint c2fop_ ( MPI_Fint *op )
 {
     MPI_Op cOp = MPI_Op_f2c( *op );
     
@@ -197,7 +197,7 @@ int c2fop_ ( int *op )
     return 0;
 }
 
-int c2ferrhandler_ ( int *errh )
+MPI_Fint c2ferrhandler_ ( MPI_Fint *errh )
 {
     MPI_Errhandler errhand = MPI_Errhandler_f2c( *errh );
 
@@ -212,35 +212,35 @@ int c2ferrhandler_ ( int *errh )
 /* 
  * The following routines provide handles to the calling Fortran program
  */
-void f2ccomm_( int * comm )
+void f2ccomm_( MPI_Fint * comm )
 {
     *comm = MPI_Comm_c2f( MPI_COMM_WORLD );
 }
 
-void f2cgroup_( int * group )
+void f2cgroup_( MPI_Fint * group )
 {
     MPI_Group wgroup;
     MPI_Comm_group( MPI_COMM_WORLD, &wgroup );
     *group = MPI_Group_c2f( wgroup );
 }
 
-void f2ctype_( int * type )
+void f2ctype_( MPI_Fint * type )
 {
     *type = MPI_Type_c2f( MPI_INTEGER );
 }
 
-void f2cinfo_( int * info )
+void f2cinfo_( MPI_Fint * info )
 {
     MPI_Info cinfo;
 
     MPI_Info_create( &cinfo );
-    MPI_Info_set( cinfo, "host", "myname" );
-    MPI_Info_set( cinfo, "wdir", "/rdir/foo" );
+    MPI_Info_set( cinfo, (char*)"host", (char*)"myname" );
+    MPI_Info_set( cinfo, (char*)"wdir", (char*)"/rdir/foo" );
 
     *info = MPI_Info_c2f( cinfo );
 }
 
-void f2crequest_( int * req )
+void f2crequest_( MPI_Fint * req )
 {
     MPI_Request cReq;
 
@@ -251,12 +251,12 @@ void f2crequest_( int * req )
     
 }
 
-void f2cop_( int * op )
+void f2cop_( MPI_Fint * op )
 {
     *op = MPI_Op_c2f( MPI_SUM );
 }
 
-void f2cerrhandler_( int *errh )
+void f2cerrhandler_( MPI_Fint *errh )
 {
     *errh = MPI_Errhandler_c2f( MPI_ERRORS_RETURN );
 }

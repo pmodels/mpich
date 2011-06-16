@@ -3,7 +3,7 @@
  *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include <mpi.h>
+#include "mpi.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -127,4 +127,6 @@ int main( int argc, char ** argv ) {
         indicateConnectSucceeded();
     }
     MPI_Finalize();
+
+    return 0;
 }

@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Simple intercomm barrier test";
+*/
 
 /* This only checks that the Barrier operation accepts intercommunicators.
    It does not check for the semantics of a intercomm barrier (all processes

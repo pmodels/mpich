@@ -28,6 +28,9 @@ disconnect_SOURCES = disconnect.c
 disconnect2_SOURCES = disconnect2.c
 disconnect3_SOURCES = disconnect3.c
 concurrent_spawns_SOURCES = concurrent_spawns.c
+pgroup_connect_test_SOURCES = pgroup_connect_test.c
+pgroup_intercomm_test_SOURCES = pgroup_intercomm_test.c
+
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)

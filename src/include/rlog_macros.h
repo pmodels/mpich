@@ -10,6 +10,10 @@
 #include "rlog.h"
 #include "mpichtimer.h"
 
+#ifndef MPIDM_Wtime_todouble
+#error Failed to select a defintion for MPIDM_Wtime_todouble
+#endif
+
 /* structures, global variables */
 /* FIXME: All global names should follow the prefix rules to ensure that 
    there are no collisions with user-defined global names.  g_pRLOG should be

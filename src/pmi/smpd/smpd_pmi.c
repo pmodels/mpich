@@ -72,7 +72,7 @@ int PMI_Init(int *spawned)
 	    {
 		return PMI_FAIL;
 	    }
-	    fn.PMI_Initialized = (int (*)(PMI_BOOL *))PMIGetProcAddress(hModule, "PMI_Initialized");
+	    fn.PMI_Initialized = (int (*)(int *))PMIGetProcAddress(hModule, "PMI_Initialized");
 	    fn.PMI_Finalize = (int (*)(void))PMIGetProcAddress(hModule, "PMI_Finalize");
 	    fn.PMI_Get_size = (int (*)(int *))PMIGetProcAddress(hModule, "PMI_Get_size");
 	    fn.PMI_Get_rank = (int (*)(int *))PMIGetProcAddress(hModule, "PMI_Get_rank");
@@ -178,41 +178,6 @@ int PMI_Get_appnum(int *appnum)
     return fn.PMI_Get_appnum(appnum);
 }
 
-int PMI_Get_clique_size( int *size )
-{
-    if (fn.PMI_Get_clique_size == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Get_clique_size(size);
-}
-
-int PMI_Get_clique_ranks( int ranks[], int length )
-{
-    if (fn.PMI_Get_clique_ranks == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Get_clique_ranks(ranks, length);
-}
-
-int PMI_Get_id( char id_str[], int length )
-{
-    if (fn.PMI_Get_id == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Get_id(id_str, length);
-}
-
-int PMI_Get_kvs_domain_id( char id_str[], int length )
-{
-    if (fn.PMI_Get_kvs_domain_id == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Get_kvs_domain_id(id_str, length);
-}
-
-int PMI_Get_id_length_max(int *maxlen)
-{
-    if (fn.PMI_Get_id_length_max == NULL)
-	return PMI_FAIL;
-    return fn.PMI_Get_id_length_max(maxlen);
-}
-
 int PMI_Barrier()
 {
     if (fn.PMI_Barrier == NULL)
@@ -255,20 +220,6 @@ int PMI_KVS_Get_value_length_max(int *maxlen)
     return fn.PMI_KVS_Get_value_length_max(maxlen);
 }
 
-int PMI_KVS_Create(char kvsname[], int length)
-{
-    if (fn.PMI_KVS_Create == NULL)
-	return PMI_FAIL;
-    return fn.PMI_KVS_Create(kvsname, length);
-}
-
-int PMI_KVS_Destroy(const char kvsname[])
-{
-    if (fn.PMI_KVS_Destroy == NULL)
-	return PMI_FAIL;
-    return fn.PMI_KVS_Destroy(kvsname);
-}
-
 int PMI_KVS_Put(const char kvsname[], const char key[], const char value[])
 {
     if (fn.PMI_KVS_Put == NULL)
@@ -288,20 +239,6 @@ int PMI_KVS_Get(const char kvsname[], const char key[], char value[], int length
     if (fn.PMI_KVS_Get == NULL)
 	return PMI_FAIL;
     return fn.PMI_KVS_Get(kvsname, key, value, length);
-}
-
-int PMI_KVS_Iter_first(const char kvsname[], char key[], int key_len, char value[], int val_len)
-{
-    if (fn.PMI_KVS_Iter_first == NULL)
-	return PMI_FAIL;
-    return fn.PMI_KVS_Iter_first(kvsname, key, key_len, value, val_len);
-}
-
-int PMI_KVS_Iter_next(const char kvsname[], char key[], int key_len, char value[], int val_len)
-{
-    if (fn.PMI_KVS_Iter_next == NULL)
-	return PMI_FAIL;
-    return fn.PMI_KVS_Iter_next(kvsname, key, key_len, value, val_len);
 }
 
 int PMI_Spawn_multiple(int count,

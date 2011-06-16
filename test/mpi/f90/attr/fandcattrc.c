@@ -35,10 +35,8 @@
 #error 'Unrecognized Fortran name mapping'
 #endif
 
-/* Prototypes to keep compilers happy */
-int chkcomm2inc_( int *, const int *, int * );
-int chkckeyvals_( int *, int *, int * );
 
+int chkcomm2inc_ (int *keyval, const int *expected, int *ierr);
 int chkcomm2inc_ (int *keyval, const int *expected, int *ierr)
 {
     int      flag;
@@ -61,9 +59,12 @@ int chkcomm2inc_ (int *keyval, const int *expected, int *ierr)
 	    *ierr = *ierr + 1;
 	}
     }
+    return 0;
 }
 
 /* Attribute delete and copy functions for each type */
+int myCommCopyfn( MPI_Comm comm, int keyval, void *extra_state, 
+		  void *attr_val_in, void *attr_val_out, int *flag );
 int myCommCopyfn( MPI_Comm comm, int keyval, void *extra_state, 
 		  void *attr_val_in, void *attr_val_out, int *flag )
 {
@@ -72,11 +73,14 @@ int myCommCopyfn( MPI_Comm comm, int keyval, void *extra_state,
     return MPI_SUCCESS;
 }
 
+int myCommDelfn( MPI_Comm comm, int keyval, void *attr_val, void *extra_state );
 int myCommDelfn( MPI_Comm comm, int keyval, void *attr_val, void *extra_state )
 {
     return MPI_SUCCESS;
 }
 
+int myTypeCopyfn( MPI_Datatype dtype, int keyval, void *extra_state, 
+		  void *attr_val_in, void *attr_val_out, int *flag );
 int myTypeCopyfn( MPI_Datatype dtype, int keyval, void *extra_state, 
 		  void *attr_val_in, void *attr_val_out, int *flag )
 {
@@ -85,11 +89,14 @@ int myTypeCopyfn( MPI_Datatype dtype, int keyval, void *extra_state,
     return MPI_SUCCESS;
 }
 
+int myTypeDelfn( MPI_Datatype dtype, int keyval, void *attr_val, void *extra_state );
 int myTypeDelfn( MPI_Datatype dtype, int keyval, void *attr_val, void *extra_state )
 {
     return MPI_SUCCESS;
 }
 
+int myWinCopyfn( MPI_Win win, int keyval, void *extra_state, 
+		  void *attr_val_in, void *attr_val_out, int *flag );
 int myWinCopyfn( MPI_Win win, int keyval, void *extra_state, 
 		  void *attr_val_in, void *attr_val_out, int *flag )
 {
@@ -98,14 +105,17 @@ int myWinCopyfn( MPI_Win win, int keyval, void *extra_state,
     return MPI_SUCCESS;
 }
 
+int myWinDelfn( MPI_Win win, int keyval, void *attr_val, void *extra_state );
 int myWinDelfn( MPI_Win win, int keyval, void *attr_val, void *extra_state )
 {
     return MPI_SUCCESS;
 }
 
+int chkckeyvals_( int *comm_keyval, int *type_keyval, int *win_keyval );
 int chkckeyvals_( int *comm_keyval, int *type_keyval, int *win_keyval )
 {
     MPI_Comm_create_keyval( myCommCopyfn, myCommDelfn, comm_keyval, 0 );
     MPI_Type_create_keyval( myTypeCopyfn, myTypeDelfn, type_keyval, 0 );
     MPI_Win_create_keyval( myWinCopyfn, myWinDelfn, win_keyval, 0 );
+    return 0;
 }

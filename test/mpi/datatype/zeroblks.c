@@ -9,7 +9,7 @@
 
 int main( int argc, char *argv[] )
 {
-    int errs = 0, ierr;
+    int errs = 0;
     int position, pack_size, i;
     int dis[2], blklens[2];
     MPI_Datatype type;

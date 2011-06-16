@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define operations and arbitrary root";
+*/
 
 /*
  * This tests that the reduce operation respects the noncommutative flag.
@@ -28,6 +30,7 @@ static char MTEST_Descrip[] = "Test MPI_Reduce with non-commutative user-define 
 #define MAXCOL 256
 static int matSize = 0;  /* Must be < MAXCOL */
 
+void uop( void *cinPtr, void *coutPtr, int *count, MPI_Datatype *dtype );
 void uop( void *cinPtr, void *coutPtr, int *count, MPI_Datatype *dtype )
 {
     const int *cin;
@@ -88,6 +91,7 @@ static void initMat( MPI_Comm comm, int mat[] )
 }
 
 /* Compare a matrix with the identity matrix */
+/*
 static int isIdentity( MPI_Comm comm, int mat[] )
 {
     int i, j, size, rank, errs = 0;
@@ -115,6 +119,7 @@ static int isIdentity( MPI_Comm comm, int mat[] )
     }
     return errs;
 }
+*/
 
 /* Compare a matrix with the identity matrix with rows permuted to as rows
    1,size,2,3,4,5,...,size-1 */

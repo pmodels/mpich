@@ -10,7 +10,9 @@
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
+/*
 static char MTEST_Descrip[] = "Threaded Send-Recv";
+*/
 
 /* The buffer size needs to be large enough to cause the rndv protocol to be 
    used.
@@ -24,6 +26,7 @@ static char MTEST_Descrip[] = "Threaded Send-Recv";
    thread sets it.
 */
 static volatile int sendok = -1;
+MTEST_THREAD_RETURN_TYPE send_thread(void *p);
 MTEST_THREAD_RETURN_TYPE send_thread(void *p)
 {
     int err;
@@ -57,7 +60,7 @@ MTEST_THREAD_RETURN_TYPE send_thread(void *p)
     else {
 	sendok = 1;
     }
-    return (MTEST_THREAD_RETURN_TYPE )err;
+    return (MTEST_THREAD_RETURN_TYPE)(long)err;
 }
 
 int main( int argc, char *argv[] )

@@ -684,6 +684,9 @@ typedef struct MPIDI_Comm_ops
 		  int *flag, MPI_Status *status);
    
 } MPIDI_Comm_ops_t;
+
+extern int (*MPIDI_Anysource_iprobe_fn)(int tag, MPID_Comm * comm, int context_offset, int *flag,
+                                        MPI_Status * status);
 #endif
 
 typedef struct MPIDI_VC
@@ -784,6 +787,8 @@ typedef struct MPIDI_VCRT * MPID_VCRT;
 typedef struct MPIDI_VC * MPID_VCR;
 #endif
 
+/* number of VCs that are in MORIBUND state */
+extern int MPIDI_Failed_vc_count;
 
 /* Initialize a new VC */
 int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
@@ -1091,10 +1096,16 @@ typedef struct MPIDI_RMA_Ops {
 #define MPIDI_RMAFNS_VERSION 1
 int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns * );
 
+/* FIXME: These are specific to the RMA code and should be in the RMA 
+   header file. */
 #define MPIDI_RMA_PUT 23
 #define MPIDI_RMA_GET 24
 #define MPIDI_RMA_ACCUMULATE 25
 #define MPIDI_RMA_LOCK 26
+
+/* Special case RMA operations */
+#define MPIDI_RMA_ACC_CONTIG 27
+
 #define MPIDI_RMA_DATATYPE_BASIC 50
 #define MPIDI_RMA_DATATYPE_DERIVED 51
 
@@ -1418,6 +1429,9 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc);
    MPID_Comm_connect and accept */
 int MPIDI_CH3_Connect_to_root(const char *, MPIDI_VC_t **);
 
+/* keyval for COMM_WORLD attribute holding list of failed processes */
+extern int MPICH_ATTR_FAILED_PROCESSES;
+
 
 /*
  * Channel utility prototypes
@@ -1431,6 +1445,7 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq);
 MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 
 					   int * found);
 int MPIDI_CH3U_Recvq_count_unexp(void);
+int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc);
 
 
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
@@ -1574,6 +1589,9 @@ int MPIDI_CH3_Channel_close( void );
 #else
 #define MPIDI_CH3_Channel_close( )   MPI_SUCCESS
 #endif
+/* MPIDI_CH3U_Check_for_failed_procs() reads PMI_dead_processes key
+   and marks VCs to those processes as failed */
+int MPIDI_CH3U_Check_for_failed_procs(void);
 
 /*@
   MPIDI_CH3_Pre_init - Allows the channel to initialize before PMI_init is 
@@ -1700,6 +1718,8 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 			      MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
+				     MPIDI_msg_sz_t *, MPID_Request ** );
+int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 				     MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 			      MPIDI_msg_sz_t *, MPID_Request ** );

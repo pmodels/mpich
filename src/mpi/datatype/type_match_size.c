@@ -57,25 +57,33 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
     static const char FCNAME[] = "MPI_Type_match_size";
     int mpi_errno = MPI_SUCCESS;
     static const char *tname = 0;
-    static MPI_Datatype real_types[] = { MPI_FLOAT, MPI_DOUBLE
-#ifdef HAVE_LONG_DOUBLE
-					 ,MPI_LONG_DOUBLE
-#endif
+    /* Note that all of the datatype have values, even if the type is 
+       not available. We test for that case separately.  We also 
+       prefer the Fortran types to the C type, if they are available */
+    static MPI_Datatype real_types[] = { 
+	MPI_REAL4, MPI_REAL8, MPI_REAL16,
+	MPI_REAL, MPI_DOUBLE_PRECISION, 
+	MPI_FLOAT, MPI_DOUBLE, MPI_LONG_DOUBLE
     };
-    static MPI_Datatype int_types[] = { MPI_CHAR, MPI_SHORT, MPI_INT, 
-					MPI_LONG
-#ifdef HAVE_LONG_LONG_INT
-					, MPI_LONG_LONG
-#endif
+    static MPI_Datatype int_types[] = { 
+	MPI_INTEGER1, MPI_INTEGER2, MPI_INTEGER4, MPI_INTEGER8, MPI_INTEGER16,
+	MPI_INTEGER, 
+	MPI_CHAR, MPI_SHORT, MPI_INT, 
+	MPI_LONG, MPI_LONG_LONG
     };
-    static MPI_Datatype complex_types[] = { MPI_COMPLEX, MPI_DOUBLE_COMPLEX };
+    static MPI_Datatype complex_types[] = { 
+	MPI_COMPLEX8, MPI_COMPLEX16, MPI_COMPLEX32,
+	MPI_COMPLEX, MPI_DOUBLE_COMPLEX,
+	MPI_C_COMPLEX, MPI_C_DOUBLE_COMPLEX, MPI_C_LONG_DOUBLE_COMPLEX,
+    };
     MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
     int i, tsize;
     MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_MATCH_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
+    /* FIXME: This routine does not require the allfunc critical section */
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_MATCH_SIZE);
 
@@ -95,13 +103,14 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 
     /* ... body of routine ...  */
     
-    /* FIXME: Should make use of Fortran optional types (e.g., MPI_INTEGER2) */
-
     /* The following implementation follows the suggestion in the
        MPI-2 standard.  
        The version in the MPI-2 spec makes use of the Fortran optional types;
        currently, we don't support these from C (see mpi.h.in).  
        Thus, we look at the candidate types and make use of the first fit.
+       Note that the standard doesn't require that this routine return 
+       any particular choice of MPI datatype; e.g., it is not required
+       to return MPI_INTEGER4 if a 4-byte integer is requested.
     */
     switch (typeclass) {
     case MPI_TYPECLASS_REAL: 

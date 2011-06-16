@@ -350,7 +350,21 @@ fi
 AC_C_CONST
 AC_C_RESTRICT
 
+# Enable STRICT CFLAGS
+AC_ARG_ENABLE(stricttest,
+AC_HELP_STRING([--enable-stricttest], [Turn on strict GCC compilation]))
+dnl Initialize enable_strict_done so PAC_CC_STRICT won't exit right away
+dnl When it is configuring from within MPICH2, because enable_strict_done=yes
+dnl is set in the environment by MPICH2.
+enable_strict_done=no
+PAC_CC_STRICT($enable_stricttest)
+# -Wfloat-equal isn't meaningful in testsuite,
+# remove it if it is in strict flags.
+pac_cc_strict_flags="`echo $pac_cc_strict_flags | sed -e 's|-Wfloat-equal||g'`"
+CFLAGS="$CFLAGS $pac_cc_strict_flags"
+
 # General headers
+AC_HEADER_STDC
 dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
 dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
 AC_CHECK_HEADERS(stdarg.h sys/time.h)
@@ -388,12 +402,14 @@ fi
 # Check for h_addr or h_addr_list.  This is needed for the singjoin test
 # in manual/singjoin.c
 AC_CACHE_CHECK([whether struct hostent contains h_addr_list],
+dnl Use Double quote LANG_PROGRAM
+dnl so [] in h_addr_list[0] won't be ignored by IFELSE.
 pac_cv_have_haddr_list,[
 AC_COMPILE_IFELSE([
-   AC_LANG_PROGRAM([#include <netdb.h>],[
+   AC_LANG_PROGRAM([#include <netdb.h>],[[
       struct hostent hp;
       hp.h_addr_list[0]=0;
-   ])
+   ]])
 ],[pac_cv_have_haddr_list=yes],[pac_cv_have_haddr_list=no])
 ])
 if test "$pac_cv_have_haddr_list" = "yes" ; then
@@ -597,7 +613,6 @@ dnl         ])
 #include <stdio.h>
 int main( int argc, char **argv ) 
 {
-  int sizeof_aint, sizeof_offset;
   int fsizeof_aint   = $MPI_SIZEOF_AINT;
   int fsizeof_offset = $MPI_SIZEOF_OFFSET;
   int err = 0, rc = 0;
@@ -605,12 +620,12 @@ int main( int argc, char **argv )
   MPI_Init( &argc, &argv );
   if (sizeof(MPI_Aint) != fsizeof_aint) {
      printf( "Sizeof MPI_Aint is %d but Fortran thinks it is %d\n", 
-             sizeof(MPI_Aint), fsizeof_aint );
+             (int)sizeof(MPI_Aint), fsizeof_aint );
      err++;
   }
   if (sizeof(MPI_Offset) != fsizeof_offset) {
      printf( "Sizeof MPI_Offset is %d but Fortran thinks it is %d\n", 
-             sizeof(MPI_Offset), fsizeof_offset );
+             (int)sizeof(MPI_Offset), fsizeof_offset );
      err++;
   }
   MPI_Finalize( );
@@ -674,7 +689,10 @@ EOF
     # ALLOCMEMF is set in f77/ext/testlist if we can try this
     # Fortran extension
     ALLOCMEMF=""
-    PAC_PROG_F77_HAS_POINTER(ALLOCMEMF="allocmemf 1")
+    PAC_PROG_F77_CRAY_POINTER([
+        ALLOCMEMF="allocmemf 1"
+        FFLAGS="$FFLAGS $CRAYPTR_FFLAGS"
+    ])
     AC_SUBST(ALLOCMEMF)
     # See the f90 block of code for the Fortran 90 version of ALLOCMEMF,
     # i.e. ALLOCMEMFC.
@@ -743,9 +761,17 @@ if test "$enable_fc" = yes ; then
         AC_LANG_POP([Fortran])
     fi
 
+    # The Fortran90 tests rely on free-form input which needs to be tested
+    # before any test that may modify FCFLAGS, e.g. the cray-pointer test.
+    # The order of the tests is important in compiler like g95.
+    AC_FC_FREEFORM
+
     # See if the compiler supports the Cray-style pointers
     ALLOCMEMFC=""
-    PAC_PROG_FC_HAS_POINTER(ALLOCMEMFC="allocmemf90 1")
+    PAC_PROG_FC_CRAY_POINTER([
+        ALLOCMEMFC="allocmemf90 1"
+        FCFLAGS="$FCFLAGS $CRAYPTR_FCFLAGS"
+    ])
     AC_SUBST(ALLOCMEMFC)
 
     if test -f f77/init/checksizes.c ; then
@@ -756,9 +782,6 @@ if test "$enable_fc" = yes ; then
         fi
         cp f77/init/checksizes.c f90/init
     fi
-
-    # The Fortran90 tests rely on free-form input
-    AC_FC_FREEFORM
 fi
 #
 if test "$FROM_MPICH2" = yes ; then
@@ -976,12 +999,6 @@ AC_SUBST(MPI_SOURCE)
 if test "$FROM_MPICH2" = yes ; then
     # Set compilers/flags to be substituted in output files, e.g. Makefiles.
     LDFLAGS="$saveLDFLAGS"
-    # As part of MPICH2 configure, set all xFLAGS to null
-    # as mpiXX already contains xFLAGS.
-    CFLAGS=""
-    CXXFLAGS=""
-    FFLAGS=""
-    FCFLAGS=""
     # note that the default definition of bindir is 
     #    '${exec_prefix}/bin'
     # so even if prefix is set, exec prefix is not until
@@ -1078,6 +1095,7 @@ AC_OUTPUT(maint/testmerge \
           cxx/pt2pt/Makefile \
           cxx/comm/Makefile \
           cxx/coll/Makefile \
+	  cxx/errhan/Makefile \
           cxx/info/Makefile \
           cxx/datatype/Makefile \
           cxx/io/Makefile \

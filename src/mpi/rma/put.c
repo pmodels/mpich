@@ -122,7 +122,7 @@ int MPI_Put(void *origin_addr, int origin_count, MPI_Datatype
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
             }
 
-	    MPID_Comm_get_ptr(win_ptr->comm, comm_ptr);
+	    comm_ptr = win_ptr->comm_ptr;
 	    MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
 	    
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;

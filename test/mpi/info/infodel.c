@@ -18,9 +18,9 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     MPI_Info info;
-    char *keys[NKEYS] = { "file", "soft", "host" };
-    char *values[NKEYS] = { "runfile.txt", "2:1000:4,3:1000:7", 
-			    "myhost.myorg.org" };
+    char *keys[NKEYS] = { (char*)"file", (char*)"soft", (char*)"host" };
+    char *values[NKEYS] = { (char*)"runfile.txt", (char*)"2:1000:4,3:1000:7", 
+			    (char*)"myhost.myorg.org" };
     char value[MPI_MAX_INFO_VAL];
     int i, flag, nkeys;
 
@@ -55,7 +55,7 @@ int main( int argc, char *argv[] )
 	printf( "Deleting a key did not change the number of keys\n" );
     }
 
-    values[0] = "backfile.txt";
+    values[0] = (char*)"backfile.txt";
     MPI_Info_set( info, keys[0], values[0] );
     for (i=0; i<NKEYS-1; i++) {
 	MPI_Info_get( info, keys[i], MPI_MAX_INFO_VAL, value, &flag );

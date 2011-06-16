@@ -20,9 +20,6 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     int size, isLeft, wrank;
-    int lsize, lrank;
-    int count = 0;
-    int ranges[1][3];
     MPI_Comm intercomm, newcomm;
     MPI_Group oldgroup, newgroup;
 
@@ -51,7 +48,7 @@ int main( int argc, char *argv[] )
 	if (newcomm != MPI_COMM_NULL) {
 	    int new_rsize, new_size, flag, commok = 1;
 
-	    MPI_Comm_set_name( newcomm, "Single rank in each group" );
+	    MPI_Comm_set_name( newcomm, (char*)"Single rank in each group" );
 	    MPI_Comm_test_inter( intercomm, &flag );
 	    if (!flag) {
 		errs++;
@@ -88,7 +85,7 @@ int main( int argc, char *argv[] )
 	/* Now, do a sort of dup, using the original group */
 	MTestPrintfMsg( 1, "Creating a new intercomm (manual dup)\n" );
 	MPI_Comm_create( intercomm, oldgroup, &newcomm );
-	MPI_Comm_set_name( newcomm, "Dup of original" );
+	MPI_Comm_set_name( newcomm, (char*)"Dup of original" );
 	MTestPrintfMsg( 1, "Creating a new intercomm (manual dup (done))\n" );
 
 	MPI_Comm_compare( intercomm, newcomm, &result );
@@ -110,7 +107,27 @@ int main( int argc, char *argv[] )
 	    errs += TestIntercomm( newcomm );
 	}
 
-	MPI_Comm_free( &newcomm );
+        if (newcomm != MPI_COMM_NULL) {
+            MPI_Comm_free(&newcomm);
+        }
+        /* test that an empty group in either side of the intercomm results in
+         * MPI_COMM_NULL for all members of the comm */
+        if (isLeft) {
+            /* left side reuses oldgroup, our local group in intercomm */
+            MPI_Comm_create(intercomm, oldgroup, &newcomm);
+        }
+        else {
+            /* right side passes MPI_GROUP_EMPTY */
+            MPI_Comm_create(intercomm, MPI_GROUP_EMPTY, &newcomm);
+        }
+        if (newcomm != MPI_COMM_NULL) {
+            printf("[%d] expected MPI_COMM_NULL, but got a different communicator\n", wrank); fflush(stdout);
+            errs++;
+        }
+
+        if (newcomm != MPI_COMM_NULL) {
+            MPI_Comm_free(&newcomm);
+        }
 	MPI_Group_free( &oldgroup );
 	MPI_Comm_free( &intercomm );
     }

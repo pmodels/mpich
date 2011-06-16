@@ -39,9 +39,7 @@ static int MPE_Get_drag_region2 ( MPE_XGraph, int, int,
   this MPE window and the button that was pressed.
 
 @*/
-int MPE_Get_mouse_press( graph, x, y, button )
-MPE_XGraph graph;
-int *x, *y, *button;
+int MPE_Get_mouse_press( MPE_XGraph graph, int *x, int *y, int *button )
 {
   XEvent event;
 
@@ -100,9 +98,8 @@ it's a %s\n", eventNames[event.type] );
 
 
 @*/
-int MPE_Iget_mouse_press( graph, x, y, button, wasPressed )
-MPE_XGraph graph;
-int *x, *y, *button, *wasPressed;
+int MPE_Iget_mouse_press( MPE_XGraph graph, int *x, int *y, int *button, 
+			  int *wasPressed )
 {
   XEvent event;
 
@@ -138,10 +135,9 @@ int *x, *y, *button, *wasPressed;
 /* different transformations required for each dragVisual. */
 /* y_1 instead of y1 because y1 is a function in math.h (Bessel function
    of the second kind) */
-static int ConvertCoords( dragVisual, x1, y_1, x2, y_2, ratio,
-		      cx1, cy_1, cwidth, cheight )
-int dragVisual, x1, y_1, x2, y_2, *cx1, *cy_1, *cwidth, *cheight;
-double ratio;
+static int ConvertCoords( int dragVisual, int x1, int y_1, int x2, int y_2, 
+			  double ratio, int *cx1, int *cy_1, int *cwidth, 
+			  int *cheight )
 {
   int width, height, left, top, longestSide;
   double dist;
@@ -225,10 +221,8 @@ double ratio;
 
 /* ratio is in terms of height/width */
 
-static int DrawDragVisual( dragVisual, graph, x1, y_1, x2, y_2, ratio )
-int dragVisual, x1, y_1, x2, y_2;
-double ratio;
-MPE_XGraph graph;
+static int DrawDragVisual( int dragVisual, MPE_XGraph graph, int x1, int y_1, 
+			   int x2, int y_2, double ratio )
 {
   int width, height, top, left;
 
@@ -276,11 +270,9 @@ MPE_XGraph graph;
 
 
 
-static int MPE_Get_drag_region2( graph, button, dragVisual, pressx, pressy,
-			     releasex, releasey, ratio )
-MPE_XGraph graph;
-double ratio;
-int *pressx, *pressy, *releasex, *releasey, button, dragVisual;
+static int MPE_Get_drag_region2( MPE_XGraph graph, int button, int dragVisual,
+				 int *pressx, int *pressy, 
+				 int *releasex, int *releasey, double ratio )
 {
   int ispressed, isreleased, lastx=0, lasty=0, firstMotion, dashOffset,
       top, left, width, height;   /* Init lastx/y to keep compiler quiet */
@@ -383,10 +375,9 @@ int *pressx, *pressy, *releasex, *releasey, button, dragVisual;
 
 
 
-int MPE_Get_drag_region( graph, button, dragVisual, pressx, pressy, releasex,
-		      releasey )
-MPE_XGraph graph;
-int *pressx, *pressy, *releasex, *releasey, button, dragVisual;
+int MPE_Get_drag_region( MPE_XGraph graph, int button, int dragVisual, 
+			 int *pressx, int *pressy, int *releasex,
+			 int *releasey )
 {
   if (dragVisual != MPE_DRAG_NONE &&
       dragVisual != MPE_DRAG_LINE &&
@@ -405,11 +396,9 @@ int *pressx, *pressy, *releasex, *releasey, button, dragVisual;
 			      releasex, releasey, 1.0 );
 }
 
-int MPE_Get_drag_region_fixratio( graph, button, ratio, pressx, pressy, 
-				  releasex, releasey )
-MPE_XGraph graph;
-double ratio;
-int *pressx, *pressy, *releasex, *releasey, button;
+int MPE_Get_drag_region_fixratio( MPE_XGraph graph, int button, double ratio, 
+				  int *pressx, int *pressy, 
+				  int *releasex, int *releasey )
 {
   int returnVal, height, width;
 

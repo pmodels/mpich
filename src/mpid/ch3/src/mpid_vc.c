@@ -36,6 +36,8 @@
 typedef struct MPIDI_VCRT
 {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    int contains_failed_vc;
+    int last_check_for_failed_vc;
     int size;
     MPIDI_VC_t * vcr_table[1];
 }
@@ -81,6 +83,8 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
     MPIU_Object_set_ref(vcrt, 1);
     vcrt->size = size;
     *vcrt_ptr = vcrt;
+    vcrt->contains_failed_vc = FALSE;
+    vcrt->last_check_for_failed_vc = 0;
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();
@@ -253,6 +257,34 @@ int MPID_VCRT_Get_ptr(MPID_VCRT vcrt, MPID_VCR **vc_pptr)
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCRT_GET_PTR);
     return MPI_SUCCESS;
 }
+
+/*@
+  MPID_VCRT_Contains_failed_vc - returns TRUE iff a VC in this VCRT is in MORUBIND state
+  @*/
+#undef FUNCNAME
+#define FUNCNAME MPID_VCRT_Contains_failed_vc
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_VCRT_Contains_failed_vc(MPID_VCRT vcrt)
+{
+    if (vcrt->contains_failed_vc) {
+        /* We have already determined that this VCRT has a dead VC */
+        return TRUE;
+    } else if (vcrt->last_check_for_failed_vc < MPIDI_Failed_vc_count) {
+        /* A VC has failed since the last time we checked for dead VCs
+           in this VCRT */
+        int i;
+        for (i = 0; i < vcrt->size; ++i) {
+            if (vcrt->vcr_table[i]->state == MPIDI_VC_STATE_MORIBUND) {
+                vcrt->contains_failed_vc = TRUE;
+                return TRUE;
+            }
+        }
+        vcrt->last_check_for_failed_vc = MPIDI_Failed_vc_count;
+    }
+    return FALSE;
+}
+
 
 /*@
   MPID_VCR_Dup - Duplicate a virtual connection reference 
@@ -541,7 +573,8 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
     int i, allfound = 1, pgid, pgidWorld;
     MPIDI_PG_t *pg = 0;
     MPIDI_PG_iterator iter;
-
+    int errflag = FALSE;
+    
     /* Get the pgid for CommWorld (always attached to the first process 
        group) */
     MPIDI_PG_Get_iterator(&iter);
@@ -568,9 +601,10 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
     }
 
     /* See if everyone is happy */
-    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &allfound, 1, MPI_INT, MPI_LAND, comm_ptr );
+    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &allfound, 1, MPI_INT, MPI_LAND, comm_ptr, &errflag );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    
     if (allfound) return MPI_SUCCESS;
 
     /* FIXME: We need a cleaner way to handle this case than using an ifdef.
@@ -1068,8 +1102,6 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    int ret;
-    int val;
     int i, j;
     char *key;
     char *value;
@@ -1105,9 +1137,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_ODD_EVEN_CLIQUES
     odd_even_cliques = 1;
 #else
-    ret = MPL_env2bool("MPICH_ODD_EVEN_CLIQUES", &val);
-    if (ret == 1 && val)
-        odd_even_cliques = 1;
+    odd_even_cliques = MPIR_PARAM_ODD_EVEN_CLIQUES;
 #endif
 
     if (no_local) {

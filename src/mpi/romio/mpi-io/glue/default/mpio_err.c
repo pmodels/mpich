@@ -83,8 +83,6 @@ int MPIO_Err_return_comm(MPI_Comm mpi_comm, int error_code)
     {
 	MPI_Abort(mpi_comm, 1);
     }
-    else
-    {
-	return error_code;
-    }
+
+    return error_code;
 }

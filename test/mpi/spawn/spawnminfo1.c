@@ -19,7 +19,9 @@
 #include <unistd.h>
 #endif
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_spawn_multiple with info";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -31,11 +33,12 @@ int main( int argc, char *argv[] )
     MPI_Status    status;
     MPI_Info      spawninfos[2];
     char curdir[1024], wd[1024], childwd[1024];
-    char *commands[2] = { "spawnminfo1", "spawnminfo1" };
+    char *commands[2] = { (char*)"spawnminfo1", (char*)"spawnminfo1" };
+    char *cerr;
 
     MTest_Init( &argc, &argv );
 
-    getcwd( curdir, sizeof(curdir) );
+    cerr = getcwd( curdir, sizeof(curdir) );
 
     MPI_Comm_get_parent( &parentcomm );
 
@@ -50,11 +53,11 @@ int main( int argc, char *argv[] )
 	*p = 0;
 	
 	MPI_Info_create( &spawninfos[0] );
-	MPI_Info_set( spawninfos[0], "path", curdir );
-	MPI_Info_set( spawninfos[0], "wdir", wd );
+	MPI_Info_set( spawninfos[0], (char*)"path", curdir );
+	MPI_Info_set( spawninfos[0], (char*)"wdir", wd );
 	MPI_Info_create( &spawninfos[1] );
-	MPI_Info_set( spawninfos[1], "path", curdir );
-	MPI_Info_set( spawninfos[1], "wdir", curdir );
+	MPI_Info_set( spawninfos[1], (char*)"path", curdir );
+	MPI_Info_set( spawninfos[1], (char*)"wdir", curdir );
 	MPI_Comm_spawn_multiple( 2, commands, MPI_ARGVS_NULL, np,
 			spawninfos, 0, MPI_COMM_WORLD,
 			&intercomm, errcodes );

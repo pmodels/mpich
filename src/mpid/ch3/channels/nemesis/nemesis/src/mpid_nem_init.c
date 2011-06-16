@@ -345,7 +345,7 @@ int
 MPID_nem_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_VC_INIT);
 
@@ -354,16 +354,15 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     vc_ch->pkt_handler = NULL;
     vc_ch->num_pkt_handlers = 0;
     
-    vc_ch->send_seqno      = 0;
-#ifdef ENABLE_CHECKPOINT
-    vc_ch->ckpt_msg_len    = 0;
-    vc_ch->ckpt_msg_buf    = NULL;
-    vc_ch->ckpt_pause_send = NULL;
-    vc_ch->ckpt_pause_recv = NULL;
-    vc_ch->ckpt_continue   = NULL;
-    vc_ch->ckpt_restart    = NULL;
+    vc_ch->send_seqno         = 0;
+#ifdef ENABLE_CHECKPOINTING
+    vc_ch->ckpt_msg_len       = 0;
+    vc_ch->ckpt_msg_buf       = NULL;
+    vc_ch->ckpt_pause_send_vc = NULL;
+    vc_ch->ckpt_continue_vc   = NULL;
+    vc_ch->ckpt_restart_vc    = NULL;
 #endif
-    vc_ch->pending_pkt_len = 0;
+    vc_ch->pending_pkt_len    = 0;
     MPIU_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_PktGeneric_t *, sizeof (MPIDI_CH3_PktGeneric_t), mpi_errno, "pending_pkt");
 
     /* We do different things for vcs in the COMM_WORLD pg vs other pgs
@@ -413,6 +412,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_shm_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_shm_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_shm_done_recv;
+        vc_ch->lmt_vc_terminated = MPID_nem_lmt_shm_vc_terminated;
 #elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_DMA
         vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_dma_initiate_lmt;
         vc_ch->lmt_start_recv    = MPID_nem_lmt_dma_start_recv;
@@ -420,6 +420,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_dma_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_dma_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_dma_done_recv;
+        vc_ch->lmt_vc_terminated = MPID_nem_lmt_dma_vc_terminated;
 #elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_VMSPLICE
         vc_ch->lmt_initiate_lmt  = MPID_nem_lmt_vmsplice_initiate_lmt;
         vc_ch->lmt_start_recv    = MPID_nem_lmt_vmsplice_start_recv;
@@ -427,6 +428,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = MPID_nem_lmt_vmsplice_handle_cookie;
         vc_ch->lmt_done_send     = MPID_nem_lmt_vmsplice_done_send;
         vc_ch->lmt_done_recv     = MPID_nem_lmt_vmsplice_done_recv;
+        vc_ch->lmt_vc_terminated = MPID_nem_lmt_vmsplice_vc_terminated;
 #elif MPID_NEM_LOCAL_LMT_IMPL == MPID_NEM_LOCAL_LMT_NONE
         vc_ch->lmt_initiate_lmt  = NULL;
         vc_ch->lmt_start_recv    = NULL;
@@ -434,6 +436,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = NULL;
         vc_ch->lmt_done_send     = NULL;
         vc_ch->lmt_done_recv     = NULL;
+        vc_ch->lmt_vc_terminated = NULL;
 #else
 #  error Must select a valid local LMT implementation!
 #endif
@@ -464,6 +467,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_handle_cookie = NULL;
         vc_ch->lmt_done_send     = NULL;
         vc_ch->lmt_done_recv     = NULL;
+        vc_ch->lmt_vc_terminated = NULL;
 
         /* FIXME: DARIUS set these to default for now */
         vc_ch->iStartContigMsg = NULL;
@@ -474,11 +478,11 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
                                        ((vc->pg == MPIDI_Process.my_pg) 
                                         ? "my_pg" 
                                         :   ((vc->pg)
-                                            ? ((char *)vc->pg->id)
-                                            : "unknown"
+                                             ? ((char *)vc->pg->id)
+                                             : "unknown"
                                             )
-                                        )
-                                    ));
+                                           )
+                             ));
         
         mpi_errno = MPID_nem_netmod_func->vc_init(vc);
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -499,7 +503,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     vc_ch->sendq_head = NULL;
 
     MPIU_CHKPMEM_COMMIT();
-fn_exit:
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_VC_INIT);
     return mpi_errno;
  fn_fail:
@@ -515,7 +519,7 @@ int
 MPID_nem_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_VC_DESTROY);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_VC_DESTROY);

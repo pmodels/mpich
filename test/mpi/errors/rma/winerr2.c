@@ -8,7 +8,10 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test the routines to control error handlers on windows";
+*/
+
 static int calls = 0;
 static int errs = 0;
 static MPI_Win mywin;
@@ -16,6 +19,8 @@ static int expected_err_class = MPI_ERR_OTHER;
 
 static int w1Called = 0;
 static int w2Called = 0;
+
+void weh1( MPI_Win *win, int *err, ... );
 void weh1( MPI_Win *win, int *err, ... )
 {
     int errclass;
@@ -34,6 +39,7 @@ void weh1( MPI_Win *win, int *err, ... )
     return;
 }
 
+void weh2( MPI_Win *win, int *err, ... );
 void weh2( MPI_Win *win, int *err, ... )
 {
     int errclass;

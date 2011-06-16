@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* 
    The default behavior of the test routines should be to briefly indicate

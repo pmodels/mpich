@@ -22,17 +22,6 @@ int MPID_nem_mx_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int
     uint32_t result;
 
     NEM_MX_DIRECT_MATCH(match_info,0,source,comm->context_id + context_offset);
-    /*
-    NEM_MX_SET_CTXT(match_info,comm->context_id + context_offset);
-    if( source  == MPI_ANY_SOURCE)
-    {
-	NEM_MX_SET_ANYSRC(match_info);
-	NEM_MX_SET_ANYSRC(match_mask);	
-    }
-    else
-      NEM_MX_SET_SRC(match_info,source);	
-    */
-
     if (tag == MPI_ANY_TAG)
     {
 	NEM_MX_SET_ANYTAG(match_info);
@@ -71,8 +60,6 @@ int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, in
     mx_status_t mx_status;
     uint32_t result;
 
-    NEM_MX_DIRECT_MATCH(match_info,0,source,comm->context_id + context_offset);
-    /*
     NEM_MX_SET_CTXT(match_info,comm->context_id + context_offset);
     if( source  == MPI_ANY_SOURCE)
     {
@@ -81,8 +68,6 @@ int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, in
     }
     else
 	NEM_MX_SET_SRC(match_info,source);	
-    */
-
     if (tag == MPI_ANY_TAG)
     {
 	NEM_MX_SET_ANYTAG(match_info);
@@ -90,7 +75,6 @@ int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, in
     }
     else
         NEM_MX_SET_TAG(match_info,tag);
-
     
     ret = mx_iprobe(MPID_nem_mx_local_endpoint,match_info,match_mask,&mx_status,&result);
     MPIU_Assert(ret == MX_SUCCESS);
@@ -114,3 +98,11 @@ int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, in
 
 
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_mx_anysource_iprobe
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_mx_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
+{
+    return MPID_nem_mx_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
+}

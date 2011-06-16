@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test file views with MPI_Type_create_resized";
+*/
 
 int main(int argc, char **argv)
 {
@@ -74,7 +76,7 @@ int main(int argc, char **argv)
     MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | 
              MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
 
-    mpi_errno = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    mpi_errno = MPI_File_set_view(fh, 0, MPI_INT, newtype, (char*)"native", MPI_INFO_NULL);
     if (mpi_errno != MPI_SUCCESS) errs++;
 
     MPI_File_write(fh, buf, 2, MPI_INT, MPI_STATUS_IGNORE); 
@@ -86,7 +88,7 @@ int main(int argc, char **argv)
 
     MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
 
-    mpi_errno = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    mpi_errno = MPI_File_set_view(fh, 0, MPI_INT, newtype, (char*)"native", MPI_INFO_NULL);
     if (mpi_errno != MPI_SUCCESS) errs++;
 
     for (i=0; i<4; i++) newbuf[i] = 100;
@@ -106,7 +108,7 @@ int main(int argc, char **argv)
     MPI_File_get_size(fh, &size);
     if (size != 4*sizeof(int)) {
 	errs++;
-	fprintf(stderr, "file size is %lld, should be %d\n", size, 4*sizeof(int));
+	fprintf(stderr, "file size is %lld, should be %d\n", size, (int)(4*sizeof(int)));
     }
 
     for (i=0; i<4; i++) newbuf[i] = 100;

@@ -293,254 +293,6 @@ default process manager in MPICH2. More details on Hydra and its
 extensions to mpiexec can be found at
 \url{http://wiki.mcs.anl.gov/mpich2/index.php/Using\_the\_Hydra\_Process\_Manager}
 
-\subsection{\texttt{mpiexec} Extensions for the MPD Process Manager}
-\label{sec:extensions-various}
-
-\subsubsection{Basic \texttt{mpiexec} arguments for MPD}
-\label{sec:extensions-mpd}
-
-Before running MPD's \texttt{mpiexec}, the runtime environment must be
-established. In the case of MPD, the daemons must be running. See
-Section~\ref{sec:managing-mpd} for how to run and manage the MPD
-daemons.
-
-We assume that the MPD ring is up and the installation's \texttt{bin}
-directory is in your path; that is, you can do:
-\begin{verbatim}
-    mpdtrace
-\end{verbatim}
-and it will output a list of nodes on which you can run MPI programs.
-Now you are ready to run a program with \texttt{mpiexec}.  Let us assume
-that you have compiled and linked the program \texttt{cpi} (in the
-\texttt{installdir/examples} directory and that this directory is in your
-\texttt{PATH}.  Or that is your current working directory and
-`\texttt{.}' (``dot'') is in your PATH.   The simplest thing to do is
-\begin{verbatim}
-    mpiexec -n 5 cpi
-\end{verbatim}
-to run \texttt{cpi} on five nodes.  The process management system (such
-as MPD) will choose machines to run them on, and \texttt{cpi} will tell
-you where each is running.  
-
-You can use \texttt{mpiexec} to run non-MPI programs as well.  This is
-sometimes useful in making sure all the machines are up and ready for
-use.  Useful examples include
-\begin{verbatim}
-    mpiexec -n 10 hostname
-\end{verbatim}
-and
-\begin{verbatim}
-    mpiexec -n 10 printenv
-\end{verbatim}
-
-
-\subsubsection{Other Command-Line Arguments to \texttt{mpiexec} for MPD}
-\label{sec:environment}
-
-The MPI-2 standard specifies the syntax and semantics of the arguments
-\texttt{-n}, \texttt{-path},\texttt{-wdir}, \texttt{-host},
-\texttt{-file}, \texttt{-configfile}, and \texttt{-soft}.  All of these
-are currently implemented for MPD's \texttt{mpiexec}.
-Each of these is what we call a ``local'' option, since
-its scope is the processes in the set of processes described between
-colons, or on separate lines of the file specified by
-\texttt{-configfile}.  We add some extensions that are local in this way
-and some that are ``global'' in the sense that they apply to all the
-processes being started by the invocation of \texttt{mpiexec}.
-
-The MPI-2 Standard provides a way to pass different arguments to different
-application processes, but does not provide a way to pass environment
-variables.  MPICH2 provides an extension that supports environment
-variables.
-The local parameter \texttt{-env} does this for one set of
-processes.  That is,
-\begin{verbatim}
-   mpiexec -n 1 -env FOO BAR a.out : -n 2 -env BAZZ FAZZ b.out
-\end{verbatim}
-makes \texttt{BAR} the value of environment variable \texttt{FOO} on the
-first process, running the executable \texttt{a.out}, and gives the
-environment variable \texttt{BAZZ} the value \texttt{FAZZ} on the second
-two processes, running the executable \texttt{b.out}.  To set an
-environment variable without giving it a value, use \texttt{''} as the
-value in the above command line.
-
-The global parameter \texttt{-genv} can be used to pass the same
-environment variables to all processes.  That is,
-\begin{verbatim}
-    mpiexec -genv FOO BAR -n 2 a.out : -n 4 b.out
-\end{verbatim}
-makes \texttt{BAR} the value of the environment variable \texttt{FOO} on
-all six processes.  If \texttt{-genv} appears, it must appear in the
-first group.  If both \texttt{-genv} and \texttt{-env} are used, the
-\texttt{-env}'s add to the environment specified or added to by the
-\texttt{-genv} variables.  If there is only one set of processes (no
-``\texttt{:}''), the \texttt{-genv} and \texttt{-env} are equivalent.
-
-The local parameter \texttt{-envall} is an abbreviation for passing the
-entire environment in which \texttt{mpiexec} is executed.  The global
-version of it is \texttt{-genvall}.  This global version is implicitly
-present.  To pass no environment variables, use \texttt{-envnone} and
-\texttt{-genvnone}.  So, for example, to set \emph{only} the environment
-variable \texttt{FOO} and no others, regardless of the current
-environment, you would use 
-\begin{verbatim}
-    mpiexec -genvnone -env FOO BAR -n 50 a.out
-\end{verbatim}
-In the case of MPD, we currently make an exception for the \texttt{PATH}
-environment variable, which is always passed through.  This exception
-was added to make it unnecessary to explicitly pass this variable in the
-default case.
-
-A list of environment variable names whose values are
-to be copied from the current environment can be given with the
-\texttt{-envlist} (respectively, \texttt{-genvlist}) parameter; for example,
-\begin{verbatim}
-    mpiexec -genvnone -envlist HOME,LD_LIBRARY_PATH -n 50 a.out
-\end{verbatim}
-sets the \texttt{HOME} and \texttt{LD\_LIBRARY\_PATH} in the environment
-of the \texttt{a.out} processes to their values in the environment where
-\texttt{mpiexec} is being run.  In this situation you can't have commas
-in the environment variable names, although of course they are permitted
-in values.
-
-Some extension parameters have only global versions.  They are
-\begin{description}
-\item[\texttt{-l}] provides rank labels for lines of \texttt{stdout} and
-  \texttt{stderr}.  These are a bit obscure for processes that have
-  been explicitly spawned, but are still useful.
-\item[\texttt{-usize}] sets the ``universe size'' that is retrieved by the MPI
-  attribute \\
-\texttt{MPI\_UNIVERSE\_SIZE} on \texttt{MPI\_COMM\_WORLD}. 
-%% \item[\texttt{-gdb}] invokes \texttt{gdb} on the processes as they are
-%%   started.
-\item[\texttt{-bnr}] is used when one wants to run executables that have
-  been compiled and linked using the \texttt{ch\_p4mpd} or
-  \texttt{myrinet} device in MPICH1.  The MPD process manager provides
-  backward compatibility in this case.
-\item[\texttt{-machinefile}] can be used to specify information
-about each of a set of machines.  This information may include the
-number of processes to run on each host when executing user programs.
-For example, assume that a machinefile named \texttt{mf} contains:
-\begin{verbatim}
-    # comment line
-    hosta
-    hostb:2
-    hostc    ifhn=hostc-gige
-    hostd:4  ifhn=hostd-gige
-\end{verbatim}
-In addition to specifying hosts and number of processes to run on each,
-this machinefile indicates that processes running on hostc and hostd
-should use the \texttt{gige} interface on \texttt{hostc} and
-\texttt{hostd}
-respectively for MPI communications.  (\texttt{ifhn} stands for
-``interface host name'' and should be set to an alternate host name for
-the machine that is used to designate an alternate communication interface.)
-This interface information causes the MPI implementation to choose the
-alternate host name when making connections.  When the alternate
-hostname specifies a particular interface, MPICH communication will then
-travel over that interface.
-
-You might use this machinefile in the following way:
-\begin{verbatim}
-    mpiexec -machinefile mf -n 7 p0
-\end{verbatim}
-Process rank 0 is to run on \texttt{hosta}, ranks 1 and 2 on
-\texttt{hostb}, rank 3 on \texttt{hostc}, and ranks 4-6 on
-\texttt{hostd}.  Note that the file specifies information for up to 8
-ranks and we only used 7.  That is OK.  But, if we had used ``\texttt{-n
-  9}'', an error would be raised.  The file is not used as a pool of
-machines that are cycled through; the processes are mapped to the hosts
-in the order specified in the file.
-
-A more complex command-line example might be:
-\begin{verbatim}
-    mpiexec -l -machinefile mf -n 3 p1 : -n 2 p2 : -n 2 p3
-\end{verbatim}
-Here, ranks 0-2 all run program \texttt{p1} and are executed placing
-rank 0 on \texttt{hosta} and ranks 1-2 on \texttt{hostb}.  Similarly,
-ranks 3-4 run \texttt{p2} and are executed on \texttt{hostc} and
-\texttt{hostd}, respectively.  Ranks 5-6 run on \texttt{hostd} and
-execute \texttt{p3}.
-\item[\texttt{-s}] can be used to direct the \texttt{stdin} of
-  \texttt{mpiexec} to specific processes in a parallel job.  For
-  example:
-\begin{verbatim}
-    mpiexec -s all -n 5 a.out
-\end{verbatim}
-directs the \texttt{stdin} of \texttt{mpiexec} to all five processes.
-\begin{verbatim}
-    mpiexec -s 4 -n 5 a.out 
-\end{verbatim}
-directs it to just the process with rank 4, and 
-\begin{verbatim}
-    mpiexec -s 1,3 -n 5 a.out 
-\end{verbatim}
-sends it to processes 1 and 3, while
-\begin{verbatim}
-    mpiexec -s 0-3 -n 5 a.out 
-\end{verbatim}
-sends \texttt{stdin} to processes 0, 1, 2, and 3.
-
-The default, if \texttt{-s} is not specified, is to send
-\texttt{mpiexec}'s \texttt{stdin} to process 0 only.
-
-The redirection of \texttt{-stdin} through \texttt{mpiexec} to various MPI
-processes is intended primarily for interactive use.  Because of the
-complexity of buffering large amounts of data at various processes that
-may not have read it yet, the redirection of large amounts of data to
-\texttt{mpiexec}'s \texttt{stdin} is discouraged, and may cause
-unexpected results.  That is, 
-\begin{verbatim}
-    mpiexec -s all -n 5 a.out < bigfile
-\end{verbatim}
-should not be used if \texttt{bigfile} is more than a few lines long.
-Have one of the processes open the file and read it instead.  The
-functions in MPI-IO may be useful for this purpose.
-
-\end{description}
-
-A ``\texttt{:}'' can optionally be used between global args
-and normal argument sets, e.g.:
-\begin{verbatim}
-    mpiexec -l -n 1 -host host1 pgm1 : -n 4 -host host2 pgm2
-\end{verbatim}
-is equivalent to:
-\begin{verbatim}
-    mpiexec -l : -n 1 -host host1 pgm1 : -n 4 -host host2 pgm2
-\end{verbatim}
-This option implies that the global arguments can occur on a separate
-line in the file specified by \texttt{-configfile} when it is used to 
-replace a long command line.
-
-\subsubsection{Environment Variables Affecting \texttt{mpiexec} for MPD}
-\label{sec:mpd-mpiexec-env}
-
-A small number of environment variables affect the behavior of
-\texttt{mpiexec}. 
-
-\begin{description}
-\item[\texttt{MPIEXEC\_TIMEOUT}] The value of this environment variable is the
-  maximum number of seconds this job will be permitted to run.  When
-  time is up, the job is aborted.
-\item[\texttt{MPIEXEC\_PORT\_RANGE}] If this environment variable is
-  defined then the MPD system will restrict its usage of ports for
-  connecting its various processes to ports in this range.  If this
-  variable is not assigned, but \texttt{MPICH\_PORT\_RANGE} \emph{is}
-  assigned, then it will use the range specified by
-  \texttt{MPICH\_PORT\_RANGE} for its ports.  Otherwise, it will use
-  whatever ports are assigned to it by the system.  Port ranges are
-  given as a pair of integers separated by a colon.
-\item[\texttt{MPIEXEC\_BNR}] If this environment variable is defined
-  (its value, if any, is currently insignificant), then MPD will act in
-  backward-compatibility mode, supporting the BNR interface from the
-  original MPICH (e.g. versions 1.2.0 -- 1.2.7p1)
-  instead of its native PMI interface, as a way for application
-  processes to interact with the process management system.
-\item[\texttt{MPD\_CON\_EXT}] Adds a string to the default Unix socket
-  name used by \texttt{mpiexec} to find the local \texttt{mpd}.  This
-  allows one to run multiple mpd rings at the same time.
-\end{description}
-
 
 \subsection{Extensions for SMPD Process Management Environment}
 \label{sec:extensions-smpd}
@@ -761,8 +513,6 @@ processes can be run, one machine name per line.  There must be enough
 machines listed to satisfy the requested number of processes; you can list the
 same machine name multiple times if necessary.  
 
-For more complex needs or for faster startup, we recommend the use of the
-\texttt{mpd} process manager.
 
 \subsection{Using MPICH2 with SLURM and PBS}
 \label{sec:external_pm}
@@ -777,78 +527,18 @@ internal process management interface. To use this, you need to
 configure MPICH2 with SLURM support, and then use the {\texttt srun}
 job launching utility provided by SLURM.
 
-For PBS, MPICH2 jobs can be launched in three ways: (i) use Hydra's
-mpiexec with the appropriate options corresponding to PBS, (ii) using
-MPD or (iii) using the OSC mpiexec.
-
-\subsubsection{MPD in the PBS environment}
-\label{sec:pbs2mpd}
-
-PBS specifies the machines allocated to a particular job in the file
-{\texttt \$PBS\_NODEFILE}. But the format used by PBS is different from
-that of MPD. Specifically, PBS lists each node on a single line; if a
-node (n0) has two processors, it is listed twice. MPD on the other
-hand uses an identifier (ncpus) to describe how many processors a node
-has. So, if n0 has two processors, it is listed as {\texttt n0:2}.
-
-One way to convert the node file to the MPD format is as follows:
-
-\noindent {\texttt sort \$PBS\_NODEFILE $|$ uniq -C $|$ awk '\{
-  printf("\%s:\%s", \$2, \$1); \}' $>$ mpd.nodes}
-
-Once the PBS node file is converted, MPD can be normally started
-within the PBS job script using mpdboot and torn down using
-mpdallexit.
-
-\noindent{\texttt mpdboot -f mpd.hosts -n [NUM\_NODES\_REQUESTED]}\\
-\noindent{\texttt mpiexec -n [NUM\_PROCESSES] ./my\_test\_program}\\
-\noindent{\texttt mpdallexit}
+For PBS, MPICH2 jobs can be launched in two ways: (i) use Hydra's
+mpiexec with the appropriate options corresponding to PBS, or (ii)
+using the OSC mpiexec.
 
 
 \subsubsection{OSC mpiexec}
 \label{sec:osc_mpiexec}
 
 Pete Wyckoff from the Ohio Supercomputer Center provides a alternate
-utility called OSC mpiexec to launch MPICH2 jobs on PBS systems
-without using MPD. More information about this can be found here:
+utility called OSC mpiexec to launch MPICH2 jobs on PBS systems. More
+information about this can be found here:
 \url{http://www.osc.edu/~pw/mpiexec}
-
-
-\section{Managing the Process Management Environment}
-\label{sec:managing-pme}
-
-Some of the process managers supply user commands that can be used to
-interact with the process manager and to control jobs.  In this section
-we describe user commands that may be useful.
-
-\subsection{MPD}
-\label{sec:managing-mpd}
-
-\begin{description}
-\item[\texttt{mpd}]  starts an mpd daemon.
-\item[\texttt{mpdboot}] starts a set of mpd's on a list of machines.
-\item[\texttt{mpdtrace}] lists all the MPD daemons that are running.  The
-  \texttt{-l} option lists full hostnames and the port where the mpd is
-  listening.
-\item[\texttt{mpdlistjobs}] lists the jobs that the mpd's are running.
-  Jobs are identified by the name of the mpd where they were submitted
-  and a number.
-\item[\texttt{mpdkilljob}] kills a job specified by the name returned by
-  \texttt{mpdlistjobs }
-\item[\texttt{mpdsigjob}] delivers a signal to the named job.  Signals
-  are specified by name or number.
-\end{description}
-You can use keystrokes to provide signals in the usual way, where
-\texttt{mpiexec} stands in for the entire parallel application.  That
-is, if \texttt{mpiexec} is being run in a Unix shell in the foreground,
-you can use \verb+^C+ (control-C) to send a \texttt{SIGINT} to the
-processes, or \verb+^Z+ (control-Z) to suspend all of them.  A suspended
-job can be continued in the usual way.
-
-Precise argument formats can be obtained by passing any MPD command the
-\texttt{--help} or \texttt{-h} argument.  More details can be found in
-the \texttt{README} in the mpich2 top-level directory or the
-\texttt{README} file in the MPD directory \texttt{mpich2/src/pm/mpd}.
 
 
 \section{Debugging}
@@ -859,228 +549,36 @@ a number of approaches, some of which depend on the exact version of
 MPICH2 you are using. 
 
 
-\subsection{\texttt{gdb} via \texttt{mpiexec}}
-\label{sec:gdb via mpiexec}
-
-If you are using the MPD process manager, you can use the \texttt{-gdb}
-argument to \texttt{mpiexec} to execute a program with each process
-running under the control of the \texttt{gdb} sequential debugger.
-The \texttt{-gdb} option helps control the multiple instances of
-\texttt{gdb} by sending \texttt{stdin} either to all processes or to
-a selected process and by labeling and merging output.  The current
-implementation has some minor limitations.  For example, we do not
-support setting your own prompt.  This is because we capture the \texttt{gdb}
-output and examine it before processing it, e.g. merging identical lines.
-Also, we set a breakpoint at the beginning of \texttt{main} to get all
-processes synchronized at the beginning.  Thus, the user will have a
-duplicate, unusable breakpoint if he sets one at the very first executable
-line of \texttt{main}.  Otherwise, to the extent possible, we try to simply
-pass user input through to \texttt{gdb} and lets things progress normally.
-
-The following script of a \texttt{-gdb} session gives an idea of how
-this works.  Input keystrokes are sent to all processes unless specifially
-directed by the ``\texttt{z}'' command.
-
-%
-% We need to make this tiny; small is still too big for the line lengths
-% that are in this example.
-% But tiny makes it too hard to read, so I applied minor edits instead- RL
-\begin{small}
-\begin{verbatim}
-ksl2% mpiexec -gdb -n 10 cpi
-0-9:  (gdb) l
-0-9:  5 double f(double);
-0-9:  6 
-0-9:  7 double f(double a)
-0-9:  8 {
-0-9:  9     return (4.0 / (1.0 + a*a));
-0-9:  10        }
-0-9:  11        
-0-9:  12        int main(int argc,char *argv[])
-0-9:  13        {
-0-9:  14            int done = 0, n, myid, numprocs, i;
-0-9:  (gdb) 
-0-9:  15            double PI25DT = 3.141592653589793238462643;
-0-9:  16            double mypi, pi, h, sum, x;
-0-9:  17            double startwtime = 0.0, endwtime;
-0-9:  18            int  namelen;
-0-9:  19            char processor_name[MPI_MAX_PROCESSOR_NAME];
-0-9:  20        
-0-9:  21            MPI_Init(&argc,&argv);
-0-9:  22            MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
-0-9:  23            MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-0-9:  24            MPI_Get_processor_name(processor_name,&namelen);
-0-9:  (gdb) 
-0-9:  25        
-0-9:  26            fprintf(stdout,"Process %d of %d is on %s\n",
-0-9:  27                    myid, numprocs, processor_name);
-0-9:  28            fflush(stdout);
-0-9:  29        
-0-9:  30            n = 10000;       /* default # of rectangles */
-0-9:  31            if (myid == 0)
-0-9:  32                startwtime = MPI_Wtime();
-0-9:  33        
-0-9:  34            MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-0-9:  (gdb) b 30
-0-9:  Breakpoint 2 at 0x4000000000002541: 
-                      file /home/lusk/mpich2/examples/cpi.c, line 30.
-0-9:  (gdb) r
-0-9:  Continuing.
-0:  Process 0 of 10 is on ksl2
-1:  Process 1 of 10 is on ksl2
-2:  Process 2 of 10 is on ksl2
-3:  Process 3 of 10 is on ksl2
-4:  Process 4 of 10 is on ksl2
-5:  Process 5 of 10 is on ksl2
-6:  Process 6 of 10 is on ksl2
-7:  Process 7 of 10 is on ksl2
-8:  Process 8 of 10 is on ksl2
-9:  Process 9 of 10 is on ksl2
-0-9:  
-0-9:  Breakpoint 2, main (argc=1, argv=0x60000fffffffb4b8)
-0-9:      at /home/lusk/mpich2/examples/cpi.c:30
-0-9:  30            n = 10000;        * default # of rectangles */
-0-9:  (gdb) n
-0-9:  31            if (myid == 0)
-0-9:  (gdb) n
-0:  32          startwtime = MPI_Wtime();
-1-9:  34            MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-0-9:  (gdb) z 0
-0:  (gdb) n
-0:  34      MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-0:  (gdb) z
-0-9:  (gdb) where
-0-9:  #0  main (argc=1, argv=0x60000fffffffb4b8)
-0-9:      at /home/lusk/mpich2/examples/cpi.c:34
-0-9:  (gdb) n
-0-9:  36            h   = 1.0 / (double) n;
-0-9:  (gdb) 
-0-9:  37            sum = 0.0;
-0-9:  (gdb) 
-0-9:  39            for (i = myid + 1; i <= n; i += numprocs)
-0-9:  (gdb) 
-0-9:  41                x = h * ((double)i - 0.5);
-0-9:  (gdb) 
-0-9:  42                sum += f(x);
-0-9:  (gdb) 
-0-9:  39            for (i = myid + 1; i <= n; i += numprocs)
-0-9:  (gdb) 
-0-9:  41                x = h * ((double)i - 0.5);
-0-9:  (gdb) 
-0-9:  42                sum += f(x);
-0-9:  (gdb) 
-0-9:  39            for (i = myid + 1; i <= n; i += numprocs)
-0-9:  (gdb) 
-0-9:  41                x = h * ((double)i - 0.5);
-0-9:  (gdb) 
-0-9:  42                sum += f(x);
-0-9:  (gdb) 
-0-9:  39            for (i = myid + 1; i <= n; i += numprocs)
-0-9:  (gdb) 
-0-9:  41                x = h * ((double)i - 0.5);
-0-9:  (gdb) 
-0-9:  42                sum += f(x);
-0-9:  (gdb) 
-0-9:  39            for (i = myid + 1; i <= n; i += numprocs)
-0-9:  (gdb) 
-0-9:  41                x = h * ((double)i - 0.5);
-0-9:  (gdb) 
-0-9:  42                sum += f(x);
-0-9:  (gdb) 
-0-9:  39            for (i = myid + 1; i <= n; i += numprocs)
-0-9:  (gdb) 
-0-9:  41                x = h * ((double)i - 0.5);
-0-9:  (gdb) 
-0-9:  42                sum += f(x);
-0-9:  (gdb) p sum
-0:  $1 = 19.999875951497799
-1:  $1 = 19.999867551672725
-2:  $1 = 19.999858751863549
-3:  $1 = 19.999849552071328
-4:  $1 = 19.999839952297158
-5:  $1 = 19.999829952542203
-6:  $1 = 19.999819552807658
-7:  $1 = 19.999808753094769
-8:  $1 = 19.999797553404832
-9:  $1 = 19.999785953739192
-0-9:  (gdb) c
-0-9:  Continuing.
-0:  pi is approximately 3.1415926544231256, Error is 0.0000000008333325
-1-9:  
-1-9:  Program exited normally.
-1-9:  (gdb) 0:  wall clock time = 44.909412
-0:  
-0:  Program exited normally.
-0:  (gdb) q
-0-9:  MPIGDB ENDING
-ksl2% 
-\end{verbatim}
-\end{small}
-You can attach to a running job with
-\begin{verbatim}
-    mpiexec -gdba <jobid>
-\end{verbatim}
-where \texttt{<jobid>} comes from \texttt{mpdlistjobs}.
-
-
 \subsection{TotalView}
 \label{sec:totalview}
 
-MPICH2 supports use of the TotalView debugger from Etnus, through the
-MPD process manager only.  If 
-MPICH2 has been configured to enable debugging with TotalView
-(See the section on configuration of the MPD process manager in the
-\emph{Installer's Guide}) then one can debug an MPI program started
-with MPD by adding \texttt{-tv} to the global \texttt{mpiexec}
-arguments, as in
+MPICH2 supports use of the TotalView debugger from Etnus.  If MPICH2
+has been configured to enable debugging with TotalView then one can
+debug an MPI program using
+
 \begin{verbatim}
-    mpiexec -tv -n 3 cpi
+    totalview -a mpiexec -a -n 3 cpi
 \end{verbatim}
+
 You will get a popup window from TotalView asking whether you want to
-start the job in a stopped state.  If so,
-when the TotalView window appears, you may see assembly code in the
-source window.  Click on \texttt{main} in the stack window (upper left)
-to see the source of the \texttt{main} function.  TotalView will show
-that the program (all processes) are stopped in the call to
-\texttt{MPI\_Init}. 
+start the job in a stopped state.  If so, when the TotalView window
+appears, you may see assembly code in the source window.  Click on
+\texttt{main} in the stack window (upper left) to see the source of
+the \texttt{main} function.  TotalView will show that the program (all
+processes) are stopped in the call to \texttt{MPI\_Init}.
 
-When debugging with TotalView using the above startup sequence, MPICH2
-jobs cannot be restarted without exiting TotalView. In MPICH2 version
-1.0.6 or later, TotalView can be invoked on an MPICH2 job as follows: 
-\begin{verbatim}
-    totalview python -a `which mpiexec` -tvsu \
-                 <mpiexec args> <program> <program args>
-\end{verbatim}
-and the MPICH2 job will be fully restartable within TotalView.
+If you have TotalView 8.1.0 or later, you can use a TotalView feature
+called indirect launch with MPICH2. Invoke TotalView as:
 
-If you have MPICH2 version 1.0.6 or later and TotalView 8.1.0 or later,
-you can use a TotalView feature called indirect launch with
-MPICH2. Invoke TotalView as: 
 \begin{verbatim}
     totalview <program> -a <program args>
 \end{verbatim}
+
 Then select the Process/Startup Parameters command. Choose the
 Parallel tab in the resulting dialog box and choose MPICH2 as the
-parallel system. Then set the number of tasks using the Tasks field 
-and enter other needed mpiexec arguments into the Additional
-Starter Arguments field.  
-
-If you want to be able to attach to a running MPICH2 job using
-TotalView, you must use the \texttt{-tvsu} option to mpiexec when
-starting the job. Using this option will add a barrier inside
-\texttt{MPI\_Init} and hence may affect startup performance slightly. It
-will have no effect on the running of the job once all tasks have
-returned from \texttt{MPI\_Init}. In order to debug a running MPICH2
-job, you must attach TotalView to the instance of Python that is
-running the mpiexec script. If you have just one task running on the
-node where you invoked mpiexec, and no other Python scripts running,
-there will be three instances of Python running on the node. One of
-these is the parent of the MPICH2 task on that node, and one is the
-parent of that Python process. Neither of those is the instance of Python you
-want to attach to---they are both running the MPD script. The third
-instance of Python has no children and is not the child of a
-Python process. That is the one that is running mpiexec and is the one you
-want to attach to.
+parallel system. Then set the number of tasks using the Tasks field
+and enter other needed mpiexec arguments into the Additional Starter
+Arguments field.
 
 \section{Checkpointing}
 \label{sec:checkpointing}

@@ -227,10 +227,14 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < NUM_GRAPHS; i++) {
         create_graph_layout(i);
-        if (rank == 0) DPRINTF(("using graph layout '%s'\n", graph_layout_name));
+        if (rank == 0) {
+            DPRINTF(("using graph layout '%s'\n", graph_layout_name));
+        }
 
         /* MPI_Dist_graph_create_adjacent */
-        if (rank == 0) DPRINTF(("testing MPI_Dist_graph_create_adjacent\n"));
+        if (rank == 0) {
+            DPRINTF(("testing MPI_Dist_graph_create_adjacent\n"));
+        }
         indegree = 0;
         k = 0;
         for (j = 0; j < size; j++) {
@@ -260,10 +264,21 @@ int main(int argc, char *argv[])
             MPI_Comm_free(&comm);
         }
 
+        /* a weak check that passing MPI_UNWEIGHTED doesn't cause
+         * create_adjacent to explode */
+        MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, indegree, sources, MPI_UNWEIGHTED,
+                                       outdegree, destinations, MPI_UNWEIGHTED, MPI_INFO_NULL,
+                                       reorder, &comm);
+        MPI_Barrier(comm);
+        /* intentionally no verify here, weights won't match */
+        MPI_Comm_free(&comm);
+
 
         /* MPI_Dist_graph_create() where each process specifies its
          * outgoing edges */
-        if (rank == 0) DPRINTF(("testing MPI_Dist_graph_create w/ outgoing only\n"));
+        if (rank == 0) {
+            DPRINTF(("testing MPI_Dist_graph_create w/ outgoing only\n"));
+        }
         sources[0] = rank;
         k = 0;
         for (j = 0; j < size; j++) {
@@ -284,7 +299,9 @@ int main(int argc, char *argv[])
 
         /* MPI_Dist_graph_create() where each process specifies its
          * incoming edges */
-        if (rank == 0) DPRINTF(("testing MPI_Dist_graph_create w/ incoming only\n"));
+        if (rank == 0) {
+            DPRINTF(("testing MPI_Dist_graph_create w/ incoming only\n"));
+        }
         k = 0;
         for (j = 0; j < size; j++) {
             if (layout[j][rank]) {
@@ -305,7 +322,9 @@ int main(int argc, char *argv[])
 
         /* MPI_Dist_graph_create() where rank 0 specifies the entire
          * graph */
-        if (rank == 0) DPRINTF(("testing MPI_Dist_graph_create w/ rank 0 specifies only\n"));
+        if (rank == 0) {
+            DPRINTF(("testing MPI_Dist_graph_create w/ rank 0 specifies only\n"));
+        }
         p = 0;
         for (j = 0; j < size; j++) {
             for (k = 0; k < size; k++) {
@@ -327,7 +346,9 @@ int main(int argc, char *argv[])
 
 
         /* MPI_Dist_graph_create() with no graph */
-        if (rank == 0) DPRINTF(("testing MPI_Dist_graph_create w/ no graph\n"));
+        if (rank == 0) {
+            DPRINTF(("testing MPI_Dist_graph_create w/ no graph\n"));
+        }
         for (reorder = 0; reorder <= 1; reorder++) {
             MPI_Dist_graph_create(MPI_COMM_WORLD, 0, sources, degrees,
                                   destinations, sweights, MPI_INFO_NULL, reorder, &comm);

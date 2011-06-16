@@ -114,6 +114,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 {
     MPID_Request * request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
+    MPID_Comm * comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -161,7 +162,10 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    
+
+    /* save copy of comm because request will be freed */
+    if (request_ptr)
+        comm_ptr = request_ptr->comm;
     mpi_errno = MPIR_Wait_impl(request, status);
     if (mpi_errno) goto fn_fail;
 
@@ -180,7 +184,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 				     "**mpi_wait", "**mpi_wait %p %p", 
 				     request, status);
 #endif
-    mpi_errno = MPIR_Err_return_comm((request_ptr != NULL) ? request_ptr->comm : NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

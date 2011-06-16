@@ -95,12 +95,12 @@ for arg in "$@" ; do
        nextarg=$arg
        ;;
        -echo) set -x ;;
-       -dryrun) Show=echo ;;
+       -dryrun|--dryrun) Show=echo ;;
        # -cc and -clink allow us to override the commands used to 
        # build the shared library
-       -cc=*) CC_SHL=$option ;;
-       -clink=*) C_LINK_SHL=$option ;;
-       -libtype=*) libtype=$option ;;
+       -cc=*|--cc=*) CC_SHL=$option ;;
+       -clink=*|--clink=*) C_LINK_SHL=$option ;;
+       -libtype=*|--libtype=*) libtype=$option ;;
        -l*|-L*)
        dependentLibs="$dependentLibs $arg"
        ;;

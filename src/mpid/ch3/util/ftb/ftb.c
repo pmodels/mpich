@@ -50,7 +50,7 @@ int MPIDU_Ftb_init(void)
     ret = PMI2_Job_GetId(ci.client_jobid, sizeof(ci.client_jobid));
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**pmi_jobgetid");
 #else
-    ret = PMI_Get_id(ci.client_jobid, sizeof(ci.client_jobid));
+    ret = PMI_KVS_Get_my_name(ci.client_jobid, sizeof(ci.client_jobid));
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**pmi_get_id");
 #endif
     
@@ -92,6 +92,36 @@ void MPIDU_Ftb_publish(const char *event_name, const char *event_payload)
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_FTB_PUBLISH);
     return;
 }
+
+/* convenience function for publishing events associated with a particular vc */
+#undef FUNCNAME
+#define FUNCNAME MPIDU_Ftb_publish_vc
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void MPIDU_Ftb_publish_vc(const char *event_name, struct MPIDI_VC *vc)
+{
+    char payload[FTB_MAX_PAYLOAD_DATA] = "";
+
+    if (vc && vc->pg)  /* pg can be null for temp VCs (dynamic processes) */
+        MPIU_Snprintf(payload, sizeof(payload), "[id: {%s:{%d}}]", (char*)vc->pg->id, vc->pg_rank);
+    MPIDU_Ftb_publish(event_name, payload);
+    return;
+}
+
+/* convenience function for publishing events associated with this process */
+#undef FUNCNAME
+#define FUNCNAME MPIDU_Ftb_publish_me
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void MPIDU_Ftb_publish_me(const char *event_name)
+{
+    char payload[FTB_MAX_PAYLOAD_DATA] = "";
+
+    MPIU_Snprintf(payload, sizeof(payload), "[id: {%s:{%d}}]", (char *)MPIDI_Process.my_pg->id, MPIDI_Process.my_pg_rank);
+    MPIDU_Ftb_publish(event_name, payload);
+    return;
+}
+
 
 /* MPIDU_Ftb_finalize has no return code for the same reasons that
    MPIDU_Ftb_publish doesn't. */

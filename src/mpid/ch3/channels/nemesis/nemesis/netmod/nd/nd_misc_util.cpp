@@ -337,10 +337,12 @@ int MPID_Nem_nd_resolve_head_to_head(int remote_rank, MPIDI_PG_t *remote_pg, cha
     MPIU_Assert(plocal_won_flag != NULL);
     if(MPIDI_Process.my_pg == remote_pg){
         /* Same process group - compare ranks to determine the winning rank */
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Same process group, comparing ranks");
         *plocal_won_flag = (MPIDI_Process.my_pg_rank < remote_rank) ? 1 : 0;
     }
     else{
         /* Different process groups - compare pg ids to determine the winning rank */
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Diff process group, comparing ids");
         *plocal_won_flag = (strcmp((char *)MPIDI_Process.my_pg->id, remote_pg_id) < 0) ? 1 : 0;
     }
 

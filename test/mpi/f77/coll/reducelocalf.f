@@ -71,7 +71,7 @@ C        Check if the result is correct
             vin(ii) = ii
             vout(ii) = ii
          enddo
-         call mpi_reduce_Local( vin, vout, count,
+         call mpi_reduce_local( vin, vout, count,
      &                          MPI_INTEGER, myop, ierr )
 C        Check if the result is correct
          do ii = 1, count

@@ -8,8 +8,10 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTestDescrip[] = "Test creating and inserting attributes in \
 different orders to ensure that the list management code handles all cases.";
+*/
 
 int checkAttrs( MPI_Comm comm, int n, int key[], int attrval[] );
 int checkNoAttrs( MPI_Comm comm, int n, int key[] );

@@ -10,6 +10,9 @@
 #ifdef HAVE_CRTDBG_H
 #include <crtdbg.h>
 #endif
+#ifdef HAVE_USLEEP
+#include <unistd.h>
+#endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Init_thread */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -438,6 +441,7 @@ fn_exit:
     return mpi_errno;
 
 fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
     MPIR_Process.initialized = MPICH_PRE_INIT;
 
@@ -446,6 +450,7 @@ fn_fail:
     }
     MPIU_THREAD_CS_FINALIZE;
     return mpi_errno;
+    /* --END ERROR HANDLING-- */
 }
 #endif
 

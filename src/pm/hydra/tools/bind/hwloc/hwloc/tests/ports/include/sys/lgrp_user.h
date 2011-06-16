@@ -1,5 +1,6 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 Université Bordeaux 1
  * See COPYING in top-level directory.
  */
 
@@ -21,17 +22,23 @@ typedef enum lgrp_content {
 
 typedef enum lgrp_view {
 	LGRP_VIEW_CALLER,
-	LGRP_VIEW_OS,
+	LGRP_VIEW_OS
 } lgrp_view_t;
 
 typedef enum lgrp_mem_size_flag {
 	LGRP_MEM_SZ_FREE,
-	LGRP_MEM_SZ_INSTALLED,
+	LGRP_MEM_SZ_INSTALLED
 } lgrp_mem_size_flag_t;
 
 typedef enum lgrp_lat_between {
 	LGRP_LAT_CPU_TO_MEM
 } lgrp_lat_between_t;
+
+typedef enum lgrp_affinity {
+	LGRP_AFF_NONE,
+	LGRP_AFF_WEAK,
+	LGRP_AFF_STRONG
+} lgrp_affinity_t;
 
 lgrp_cookie_t lgrp_init(lgrp_view_t view);
 
@@ -41,7 +48,14 @@ int lgrp_cpus(lgrp_cookie_t cookie, lgrp_id_t lgrp, processorid_t *cpuids, unsig
 int lgrp_children(lgrp_cookie_t cookie, lgrp_id_t parent, lgrp_id_t *lgrp_array, unsigned int lgrp_array_size);
 lgrp_mem_size_t lgrp_mem_size(lgrp_cookie_t cookie, lgrp_id_t lgrp, lgrp_mem_size_flag_t type, lgrp_content_t content);
 int lgrp_latency_cookie(lgrp_cookie_t cookie, lgrp_id_t from, lgrp_id_t to, lgrp_lat_between_t between);
+int lgrp_affinity_set(idtype_t idtype, id_t id, lgrp_id_t lgrp, lgrp_affinity_t aff);
+lgrp_affinity_t lgrp_affinity_get(idtype_t idtype, id_t id, lgrp_id_t lgrp);
 
 int lgrp_fini(lgrp_cookie_t cookie);
+
+/* Should actually be in sys/mman.h, but don't want to interfere with the system one */
+#define MADV_ACCESS_DEFAULT 6
+#define MADV_ACCESS_LWP     7
+#define MADV_ACCESS_MANY    8
 
 #endif /* HWLOC_PORT_SYS_LGRP_USER_H */

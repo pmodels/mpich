@@ -280,6 +280,7 @@ be in the range 0 to %d
 **fileamoderead:Cannot use MPI_MODE_CREATE or MPI_MODE_EXCL with \
  MPI_MODE_RDONLY 
 **fileamodeseq:Cannot specify MPI_MODE_SEQUENTIAL with MPI_MODE_RDWR
+**fileamodediff:amode must be the same on all processors
 **filename:Invalid file name
 **filename %s:Invalid file name %s
 **filenamelong:Pathname too long
@@ -366,8 +367,23 @@ be in the range 0 to %d
 **rmasize %d:Invalid size argument in RMA call (value is %d)
 **rmadisp:Invalid displacement argument in RMA call 
 **assert:Invalid assert argument
+**lockassertval:Invalid assert argument passed to MPI_Win_lock
+**lockassertval %d: Invalid assert argument (%d) passed to MPI_Win_lock
 **winunlockrank:Invalid rank argument
 **winunlockrank %d %d:Invalid rank argument %d, should be %d
+**mismatchedlockrank:Rank to unlock in MPI_Win_unlock was not locked with \
+ MPI_Win_lock
+**mismatchedlockrank %d %d:Rank to unlock (%d) in MPI_Win_unlock was not \
+ locked with MPI_Win_lock (rank %d was locked)
+**winunlockwithoutlock: Attempt to unlock in MPI_Win_unlock without \
+ first locking with MPI_Win_lock
+**winfreewhilelocked: MPI_Win_free called while holding an MPI_Win_lock on \
+ a window
+**winfreewhilelocked %d: MPI_Win_free called while holding an MPI_Win_lock on \
+ the process with rank %d
+**lockwhilelocked: Attempt to lock a process while holding a lock
+**lockwhilelocked %d: Attempt to lock a process while holding a lock on \
+ process %d
 **nomemreq:failure occurred while allocating memory for a request object
 **nomemuereq %d:Failed to allocate memory for an unexpected message. %d \
 unexpected messages queued.
@@ -394,6 +410,7 @@ unexpected messages queued.
 # Duplicates?
 #**argnull:Invalid null parameter
 #**argnull %s:Invalid null parameter %s
+**commstack:Internal overflow in stack used for MPI_Comm_split
 
 **cond_create:MPIU_Thread_cond_create failed
 **cond_create %s:MPIU_Thread_cond_create failed: %s
@@ -642,6 +659,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **sock_init:unable to initialize the sock library
 **write:write failed
 **writev:writev failed
+**collective_size_mismatch:message sizes do not match across processes in the collective
 
 #
 # CH3:shm
@@ -875,6 +893,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **tcp_cleanup_fail:Error while cleaning up failed connection
 **tmpvc_connect_fail:Failure during connection protocol
 
+**coll_fail:Failure during collective
+
 **blcr_mod:BLCR kernel module not present
 
 **envvarparse:Unable to parse environment variable
@@ -882,6 +902,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 **signal:signal() failed
 **signal %s:signal() failed: %s
+**sigusr1:This version of MPICH requires the SIGUSR1 signal, but the application has already installed a handler
 
 #
 # mpi functions
@@ -913,7 +934,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_irecv:MPI_Irecv failed
 **mpi_irecv %p %d %D %i %t %C %p:MPI_Irecv(buf=%p, count=%d, %D, src=%i, tag=%t, %C, request=%p) failed
 **mpi_wait:MPI_Wait failed
-**mpi_wait %p %p:MPI_Wait(request=%p, status%p) failed
+**mpi_wait %p %p:MPI_Wait(request=%p, status=%p) failed
 **mpi_test:MPI_Test failed
 **mpi_test %p %p %p:MPI_Test(request=%p, flag=%p, status=%p) failed
 **mpi_request_free:MPI_Request_free failed

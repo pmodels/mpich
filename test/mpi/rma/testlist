@@ -20,6 +20,8 @@ test3 2
 test4 2
 test5 2
 lockcontention 3
+lockcontention2 4
+lockcontention2 8	       
 transpose4 2
 fetchandadd 7
 fetchandadd_tree 7
@@ -44,3 +46,13 @@ mixedsync 4
 epochtest 4
 locknull 2
 rmanull 2
+strided_acc_indexed 2
+strided_acc_onelock 2
+strided_acc_subarray 2
+strided_get_indexed 2
+strided_putget_indexed 2
+window_creation 2
+contention_put 4
+contention_putget 4
+put_base 2
+put_bottom 2

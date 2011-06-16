@@ -7,8 +7,7 @@
 #ifndef DEMUX_H_INCLUDED
 #define DEMUX_H_INCLUDED
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 
 /*! \addtogroup demux Demultiplexing Engine
  * @{
@@ -60,7 +59,7 @@ HYD_status HYDT_dmx_deregister_fd(int fd);
  * This function waits till either one of the registered fd's has had
  * one of its registered events, or till the timeout expires.
  */
-HYD_status HYDT_dmx_wait_for_event(int time);
+HYD_status HYDT_dmx_wait_for_event(int wtime);
 
 /**
  * \brief HYDT_dmx_finalize - Finalize demux engine

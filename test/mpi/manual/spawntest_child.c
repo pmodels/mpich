@@ -15,9 +15,7 @@
 int main(int argc, char **argv)
 {
   int my_rank; 
-  int partner;
-  int size, i,t;
-  char greeting[100];
+  int size;
   MPI_Comm parentcomm;
   MPI_Comm allcomm;
   

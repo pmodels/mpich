@@ -344,9 +344,11 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     /* A matching request was not found in the unexpected queue, so we 
        need to allocate a new request and add it to the posted queue */
     {
-	int mpi_errno=0;
-	MPIDI_Request_create_rreq( rreq, mpi_errno, 
-				   found = FALSE;goto lock_exit );
+	int mpi_errno = MPI_SUCCESS;
+
+        found = FALSE;
+
+	MPIDI_Request_create_rreq( rreq, mpi_errno, goto lock_exit );
 	rreq->dev.match.parts.tag	   = tag;
 	rreq->dev.match.parts.rank	   = source;
 	rreq->dev.match.parts.context_id   = context_id;
@@ -368,7 +370,26 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
         rreq->dev.user_buf         = user_buf;
         rreq->dev.user_count       = user_count;
         rreq->dev.datatype         = datatype;
-	rreq->dev.next		   = NULL;
+
+        /* check whether VC has failed, or this is an ANY_SOURCE in a
+           failed communicator */
+        if (source != MPI_ANY_SOURCE) {
+            MPIDI_VC_t *vc;
+            MPIDI_Comm_get_vc(comm, source, &vc);
+            if (vc->state == MPIDI_VC_STATE_MORIBUND) {
+                MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                rreq->status.MPI_ERROR = mpi_errno;
+                MPIDI_CH3U_Request_complete(rreq);
+                goto lock_exit;
+            }
+        } else if (MPID_VCRT_Contains_failed_vc(comm->vcrt)) {
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+            rreq->status.MPI_ERROR = mpi_errno;
+            MPIDI_CH3U_Request_complete(rreq);
+            goto lock_exit;
+        }
+        
+	rreq->dev.next = NULL;
 	if (recvq_posted_tail != NULL) {
 	    recvq_posted_tail->dev.next = rreq;
 	}
@@ -379,8 +400,6 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	MPIDI_POSTED_RECV_ENQUEUE_HOOK(rreq);
     }
     
-    found = FALSE;
-
   lock_exit:
 
     *foundp = found;
@@ -539,6 +558,121 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_RECVQ_FDP_OR_AEU);
     return rreq;
 }
+
+/* returns TRUE iff the request was sent on the vc */
+static inline int req_uses_vc(const MPID_Request* req, const MPIDI_VC_t *vc)
+{
+    MPIDI_VC_t *vc1;
+    
+    MPIDI_Comm_get_vc(req->comm, req->dev.match.parts.rank, &vc1);
+    return vc == vc1;
+}
+
+/* returns TRUE iff the vc is part of the comm*/
+static inline int is_vc_in_comm(const MPIDI_VC_t *vc, const MPID_Comm *comm)
+{
+    int i;
+
+    for (i = 0; i < comm->remote_size; ++i) {
+        MPIDI_VC_t *vc1;
+        MPIDI_Comm_get_vc(comm, i, &vc1);
+        if (vc == vc1)
+            return TRUE;
+    }
+    return FALSE;
+}
+
+#undef FUNCNAME
+#define FUNCNAME dequeue_and_set_error
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+/* This dequeues req from the posted recv queue, set req's error code to comm_fail, and updates the req pointer.
+   Note that this creates a new error code if one hasn't already been created (i.e., if *error is MPI_SUCCESS). */
+static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev_req, int *error, int rank)
+{
+    MPID_Request *next = (*req)->dev.next;
+
+    if (*error == MPI_SUCCESS)
+        MPIU_ERR_SET1(*error, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", rank);
+
+    /* remove from queue */
+    if (recvq_posted_head == *req)
+        recvq_posted_head = (*req)->dev.next;
+    else
+        prev_req->dev.next = (*req)->dev.next;
+    if (recvq_posted_tail == *req)
+        recvq_posted_tail = prev_req;
+    
+    /* set error and complete */
+    (*req)->status.MPI_ERROR = *error;
+    MPIDI_CH3U_Request_complete(*req);
+    *req = next;
+}
+
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDU_Complete_posted_with_error
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request *req, *prev_req;
+    int error = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDU_COMPLETE_POSTED_WITH_ERROR);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_COMPLETE_POSTED_WITH_ERROR);
+
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+
+    /* check each req to see if the VC is part of that communicator */
+    req = recvq_posted_head;
+    prev_req = NULL;
+    while (req) {
+        if (req->dev.match.parts.rank != MPI_ANY_SOURCE && req_uses_vc(req, vc)) {
+            /* this req is expected on the VC */
+            dequeue_and_set_error(&req, prev_req, &error, vc->pg_rank);
+        } else if (req->dev.match.parts.rank == MPI_ANY_SOURCE && is_vc_in_comm(vc, req->comm)) {
+            /* This req is an ANY_SOURCE and is expected on a communicator that includes the VC.
+               We need to dequeue all anysources posted in a communicator with a failed VC.  We
+               check whether the VC is in the communicator by iterating over the comm's VC table.
+               Since this may be expensive, now that we know the VC is in comm, we take the
+               opportunity to scan the rest of the posted recv queue for other anysources with
+               the same communicator.  Note that in the worst case this is O(N*M), where N is the
+               number of posted requests and M is the number of communicators.  This can happen
+               if every req is an anysource and uses a different communicator.  We can possibly
+               conditionally execute the optimization based on number of comms, number of posted
+               requests and communicator size. */
+            MPID_Request *as_req = req->dev.next;
+            MPID_Request *prev_as_req = req;
+            /* First remove any AS recvs on this comm that were posted AFTER this req */
+            while (as_req) {
+                if (as_req->comm == req->comm && as_req->dev.match.parts.rank == MPI_ANY_SOURCE) {
+                    dequeue_and_set_error(&as_req, prev_as_req, &error, vc->pg_rank);
+                } else {
+                    prev_as_req = as_req;
+                    as_req = as_req->dev.next;
+                }
+            }
+            /* Now remove this req.  We do this in this order to make it easier to keep track of
+               req and prev_req pointers */
+            dequeue_and_set_error(&req, prev_req, &error, vc->pg_rank);
+        } else {
+            prev_req = req;
+            req = req->dev.next;
+        }
+    }
+    
+ fn_exit:
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_COMPLETE_POSTED_WITH_ERROR);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 /* --BEGIN ERROR HANDLING-- */
 /* pretty prints tag, returns out for calling convenience */

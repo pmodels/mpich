@@ -24,6 +24,7 @@
 #define NTHREADS 4
 #endif /* ! NTHREADS */
 
+MTEST_THREAD_RETURN_TYPE do_thread(void *v);
 MTEST_THREAD_RETURN_TYPE do_thread(void *v)
 {
     int x;

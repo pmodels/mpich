@@ -28,22 +28,69 @@ typedef struct splittype {
     int color, key;
 } splittype;
 
+/* Same as splittype but with an additional field to stabilize the qsort.  We
+ * could just use one combined type, but using separate types simplifies the
+ * allgather step. */
+typedef struct sorttype {
+    int color, key;
+    int orig_idx;
+} sorttype;
+
+static int sorttype_compare(const void *v1, const void *v2) {
+    const sorttype *s1 = v1;
+    const sorttype *s2 = v2;
+
+    if (s1->key > s2->key)
+        return 1;
+    if (s1->key < s2->key)
+        return -1;
+
+    /* (s1->key == s2->key), maintain original order */
+    if (s1->orig_idx > s2->orig_idx)
+        return 1;
+    else if (s1->orig_idx < s2->orig_idx)
+        return -1;
+
+    return 0; /* should never happen */
+}
+
 /* Sort the entries in keytable into increasing order by key.  A stable
    sort should be used incase the key values are not unique. */
-static void MPIU_Sort_inttable( splittype *keytable, int size )
+static void MPIU_Sort_inttable( sorttype *keytable, int size )
 {
-    splittype tmp;
+    sorttype tmp;
     int i, j;
 
-    /* FIXME Bubble sort */
-    for (i=0; i<size; i++) {
-	for (j=i+1; j<size; j++) {
-	    if (keytable[i].key > keytable[j].key) {
-		tmp	    = keytable[i];
-		keytable[i] = keytable[j];
-		keytable[j] = tmp;
-	    }
-	}
+#if defined(HAVE_QSORT)
+    /* temporary switch for profiling performance differences */
+    if (MPIR_PARAM_COMM_SPLIT_USE_QSORT)
+    {
+        /* qsort isn't a stable sort, so we have to enforce stability by keeping
+         * track of the original indices */
+        for (i = 0; i < size; ++i)
+            keytable[i].orig_idx = i;
+        qsort(keytable, size, sizeof(sorttype), &sorttype_compare);
+    }
+    else
+#endif
+    {
+        /* fall through to insertion sort if qsort is unavailable/disabled */
+        for (i = 1; i < size; ++i) {
+            tmp = keytable[i];
+            j = i - 1;
+            while (1) {
+                if (keytable[j].key > tmp.key) {
+                    keytable[j+1] = keytable[j];
+                    j = j - 1;
+                    if (j < 0)
+                        break;
+                }
+                else {
+                    break;
+                }
+            }
+            keytable[j+1] = tmp;
+        }
     }
 }
 
@@ -55,11 +102,13 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *local_comm_ptr;
-    splittype *table, *remotetable=0, *keytable, *remotekeytable=0;
+    splittype *table, *remotetable=0;
+    sorttype *keytable, *remotekeytable=0;
     int rank, size, remote_size, i, new_size, new_remote_size,
 	first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm; /* TRUE iff *newcomm should be populated */
     MPIR_Context_id_t   new_context_id, remote_context_id;
+    int errflag = FALSE;
     MPIU_CHKLMEM_DECL(4);
 
     rank        = comm_ptr->rank;
@@ -84,8 +133,9 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	local_comm_ptr = comm_ptr;
     }
     /* Gather information on the local group of processes */
-    mpi_errno = MPIR_Allgather_impl( MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm_ptr );
+    mpi_errno = MPIR_Allgather_impl( MPI_IN_PLACE, 2, MPI_INT, table, 2, MPI_INT, local_comm_ptr, &errflag );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     /* Step 2: How many processes have our same color? */
     new_size = 0;
@@ -131,8 +181,9 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	mypair.color = color;
 	mypair.key   = key;
 	mpi_errno = MPIR_Allgather_impl( &mypair, 2, MPI_INT, remotetable, 2, MPI_INT,
-                                         comm_ptr );
+                                         comm_ptr, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         
 	/* Each process can now match its color with the entries in the table */
 	new_remote_size = 0;
@@ -178,13 +229,15 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
 				       0, 0, comm_ptr->handle, MPI_STATUS_IGNORE );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
-	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr );
+	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	}
 	else {
 	    /* Broadcast to the other members of the local group */
-	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr );
+	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	}
     }
 
@@ -206,7 +259,7 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	   extract the table into a smaller array and sort that.
 	   Also, store in the "color" entry the rank in the input communicator
 	   of the entry. */
-	MPIU_CHKLMEM_MALLOC(keytable,splittype*,new_size*sizeof(splittype),
+	MPIU_CHKLMEM_MALLOC(keytable,sorttype*,new_size*sizeof(sorttype),
 			    mpi_errno,"keytable");
 	for (i=0; i<new_size; i++) {
 	    keytable[i].key   = table[first_entry].key;
@@ -219,8 +272,8 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	MPIU_Sort_inttable( keytable, new_size );
 
 	if (comm_ptr->comm_kind == MPID_INTERCOMM) {
-	    MPIU_CHKLMEM_MALLOC(remotekeytable,splittype*,
-				new_remote_size*sizeof(splittype),
+	    MPIU_CHKLMEM_MALLOC(remotekeytable,sorttype*,
+				new_remote_size*sizeof(sorttype),
 				mpi_errno,"remote keytable");
 	    for (i=0; i<new_remote_size; i++) {
 		remotekeytable[i].key   = remotetable[first_remote_entry].key;

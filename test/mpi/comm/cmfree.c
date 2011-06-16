@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test that communicators have reference count semantics";
+*/
 
 #define NELM 128
 #define NCOMM 1020

@@ -3,6 +3,12 @@
  *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+/*
+   Define _ISOC99_SOURCE to get snprintf() prototype visible in <stdio.h>
+   when it is compiled with --enable-stricttest.
+*/
+#define _ISOC99_SOURCE
+
 #include <signal.h>
 #include <time.h>
 #include <pthread.h>
@@ -70,7 +76,7 @@ void strokeWatchdog() {
 }
 
 void installSegvHandler( void ) {
-    struct sigaction new_action, old_action;
+    struct sigaction new_action;
     new_action.sa_handler = segv_handler;
     sigemptyset( &new_action.sa_mask );
     new_action.sa_flags = 0;
@@ -80,7 +86,7 @@ void installSegvHandler( void ) {
 
 void installExitHandler( const char * fname ) {
     /* Install signal handler */
-    struct sigaction new_action, old_action;
+    struct sigaction new_action;
     if( strlen( fname ) > PATH_MAX ) {
         msg( "Fname: <%s> too long - aborting", fname );
         _exit( 12 );

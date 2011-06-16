@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test the handling of BSend operations when a detach occurs before the bsend data has been sent.";
+*/
 
 int main( int argc, char *argv[] )
 {

@@ -313,6 +313,8 @@ typedef OPA_int_t MPIU_Handle_ref_count;
  * It is also assumed that any object being reference counted via these macros
  * will have a valid value in the handle field, even if it is
  * HANDLE_SET_KIND(0, HANDLE_KIND_INVALID) */
+/* TODO profile and examine the assembly that is generated for this if() on Blue
+ * Gene (and elsewhere).  We may need to mark it unlikely(). */
 #define MPIU_Object_add_ref(objptr_)                           \
     do {                                                       \
         int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle); \

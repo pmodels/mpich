@@ -1,3 +1,4 @@
 errgetx 1
 errsetx 1
-#throwtest 1
+throwtest 1
+commerrx 2

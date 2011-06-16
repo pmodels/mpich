@@ -90,7 +90,7 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
     comm_p->topo_fns     = NULL;
     comm_p->name[0]      = '\0';
 
-    comm_p->is_node_aware   = 0;
+    comm_p->hierarchy_kind  = MPID_HIERARCHY_FLAT;
     comm_p->node_comm       = NULL;
     comm_p->node_roots_comm = NULL;
     comm_p->intranode_table = NULL;
@@ -164,6 +164,8 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm *intercomm_ptr )
     /* use the parent intercomm's recv ctx as the basis for our ctx */
     localcomm_ptr->recvcontext_id = MPID_CONTEXT_SET_FIELD(IS_LOCALCOMM, intercomm_ptr->recvcontext_id, 1);
     localcomm_ptr->context_id = localcomm_ptr->recvcontext_id;
+
+    MPIU_DBG_MSG_FMT(COMM,TYPICAL,(MPIU_DBG_FDEST, "setup_intercomm_localcomm ic=%p ic->context_id=%d ic->recvcontext_id=%d lc->recvcontext_id=%d", intercomm_ptr, intercomm_ptr->context_id, intercomm_ptr->recvcontext_id, localcomm_ptr->recvcontext_id));
 
     /* Duplicate the VCRT references */
     MPID_VCRT_Add_ref( intercomm_ptr->local_vcrt );
@@ -259,6 +261,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             comm->node_comm->recvcontext_id = comm->node_comm->context_id;
             comm->node_comm->rank = local_rank;
             comm->node_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_comm->hierarchy_kind = MPID_HIERARCHY_NODE;
             comm->node_comm->local_comm = NULL;
 
             comm->node_comm->local_size  = num_local;
@@ -287,6 +290,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
             comm->node_roots_comm->rank = external_rank;
             comm->node_roots_comm->comm_kind = MPID_INTRACOMM;
+            comm->node_roots_comm->hierarchy_kind = MPID_HIERARCHY_NODE_ROOTS;
             comm->node_roots_comm->local_comm = NULL;
 
             comm->node_roots_comm->local_size  = num_external;
@@ -305,7 +309,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             /* don't call MPIR_Comm_commit here */
         }
 
-        comm->is_node_aware = 1;
+        comm->hierarchy_kind = MPID_HIERARCHY_PARENT;
     }
 
 fn_exit:
@@ -325,7 +329,7 @@ fn_fail:
    collective communication, for example. */
 int MPIR_Comm_is_node_aware(MPID_Comm * comm)
 {
-    return comm->is_node_aware;
+    return (comm->hierarchy_kind == MPID_HIERARCHY_PARENT);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes
@@ -336,7 +340,7 @@ int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
 
-    if (!comm->is_node_aware)
+    if (!MPIR_Comm_is_node_aware(comm))
         return 0;
 
     for (; i < comm->local_size; i++)
@@ -532,6 +536,7 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 {
     int mpi_errno = MPI_SUCCESS;
     uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -554,8 +559,9 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
     /* Note that this is the unthreaded version */
     /* Comm must be an intracommunicator */
     mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK, 
-                                     MPI_INT, MPI_BAND, comm_ptr );
+                                     MPI_INT, MPI_BAND, comm_ptr, &errflag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     if (ignore_id) {
         *context_id = MPIR_Locate_context_bit(local_mask);
@@ -608,7 +614,7 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
     int          own_mask = 0;
     int          testCount = 10; /* if you change this value, you need to also change 
 				    it below where it is reinitialized */
-
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -673,9 +679,9 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 	   other processes to enter the global or brief global critical section.
 	 */ 
 	mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
-                                         MPI_INT, MPI_BAND, comm_ptr );
+                                         MPI_INT, MPI_BAND, comm_ptr, &errflag );
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
          * narrow this region */
         MPIU_THREAD_CS_ENTER(CONTEXTID,);
@@ -733,8 +739,9 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
             /* we _must_ release the lock above in order to avoid deadlocking on
              * this blocking allreduce operation */
 	    mpi_errno = MPIR_Allreduce_impl( &hasNoId, &totalHasNoId, 1, MPI_INT,
-                                             MPI_MAX, comm_ptr );
+                                             MPI_MAX, comm_ptr, &errflag );
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	    if (totalHasNoId == 1) {
 		/* Release the mask for use by other threads */
 		if (own_mask) {
@@ -800,6 +807,7 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
 		        context instead?.  Or can we use the tag 
 		        provided in the intercomm routine? (not on a dup, 
 			but in that case it can use the collective context) */
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID);
@@ -827,9 +835,9 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
     /* Make sure that all of the local processes now have this
        id */
     mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
-                                 0, comm_ptr->local_comm );
+                                 0, comm_ptr->local_comm, &errflag );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     /* The recvcontext_id must be the one that was allocated out of the local
      * group, not the remote group.  Otherwise we could end up posting two
      * MPI_ANY_SOURCE,MPI_ANY_TAG recvs on the same context IDs even though we
@@ -1154,16 +1162,16 @@ static int comm_delete(MPID_Comm * comm_ptr, int isDisconnect)
             }
         }
 
-        /* Check for predefined communicators - these should not
-           be freed */
-        if (! (HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN) )
-            MPIU_Handle_obj_free( &MPID_Comm_mem, comm_ptr );
-
         /* Remove from the list of active communicators if
            we are supporting message-queue debugging.  We make this
            conditional on having debugger support since the
            operation is not constant-time */
         MPIR_COMML_FORGET( comm_ptr );
+
+        /* Check for predefined communicators - these should not
+           be freed */
+        if (! (HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN) )
+            MPIU_Handle_obj_free( &MPID_Comm_mem, comm_ptr );
     }
     else {
         /* If the user attribute free function returns an error,

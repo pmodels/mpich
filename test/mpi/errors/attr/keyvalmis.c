@@ -15,7 +15,7 @@
 int main( int argc, char *argv[] )
 {
     int          comm_keyval, win_keyval, type_keyval;
-    int          comm_aval, win_aval, type_aval;
+    int          comm_aval;
     int          err, errs = 0;
     int          buf, flag;
     MPI_Win      win;

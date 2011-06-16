@@ -102,11 +102,13 @@ int MPIR_Exscan (
     int count, 
     MPI_Datatype datatype, 
     MPI_Op op, 
-    MPID_Comm *comm_ptr )
+    MPID_Comm *comm_ptr,
+    int *errflag )
 {
     MPI_Status status;
     int        rank, comm_size;
-    int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, is_commutative, flag; 
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
@@ -182,12 +184,17 @@ int MPIR_Exscan (
         dst = rank ^ mask;
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
-            mpi_errno = MPIC_Sendrecv(partial_scan, count, datatype,
-                                      dst, MPIR_EXSCAN_TAG, tmp_buf,
-                                      count, datatype, dst,
-                                      MPIR_EXSCAN_TAG, comm,
-                                      &status);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            mpi_errno = MPIC_Sendrecv_ft(partial_scan, count, datatype,
+                                         dst, MPIR_EXSCAN_TAG, tmp_buf,
+                                         count, datatype, dst,
+                                         MPIR_EXSCAN_TAG, comm,
+                                         &status, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
 
             if (rank > dst) {
                 call_uop(tmp_buf, partial_scan, count, datatype);
@@ -237,7 +244,11 @@ int MPIR_Exscan (
 
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    return (mpi_errno);
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    return mpi_errno;
 fn_fail:
     goto fn_exit;
 }
@@ -251,15 +262,15 @@ fn_fail:
 #define FUNCNAME MPIR_Exscan_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Exscan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr)
+int MPIR_Exscan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Exscan != NULL) {
-	mpi_errno = comm_ptr->coll_fns->Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+	mpi_errno = comm_ptr->coll_fns->Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
-	mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+	mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -316,6 +327,7 @@ int MPI_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_EXSCAN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -387,7 +399,7 @@ int MPI_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr);
+    mpi_errno = MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

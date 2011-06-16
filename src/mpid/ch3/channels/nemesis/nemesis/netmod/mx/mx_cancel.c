@@ -32,7 +32,7 @@ int MPID_nem_mx_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq)
     int mpi_errno = MPI_SUCCESS;
     int handled = FALSE;
    
-     if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+     if (!VC_CH(vc)->is_local)
      {
 	mx_request = &(REQ_FIELD(sreq,mx_request));
 	ret = mx_cancel(MPID_nem_mx_local_endpoint,mx_request,&result);

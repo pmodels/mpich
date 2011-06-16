@@ -1,10 +1,12 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
- * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA.  All rights reserved.
+ * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
-#include <private/config.h>
+#include <private/autogen/config.h>
 #include <hwloc.h>
 
 #include <stdlib.h>
@@ -41,10 +43,11 @@
 static void
 output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
 {
-  char type[32], attr[256], phys[32] = "";
+  char type[32], *attr, phys[32] = "";
   unsigned idx = logical ? l->logical_index : l->os_index;
-  const char *indexprefix = logical ? " #" :  " p#";
+  const char *indexprefix = logical ? " L#" :  " P#";
   if (show_cpuset < 2) {
+    int len;
     if (l->type == HWLOC_OBJ_MISC && l->name)
       fprintf(output, "%s", l->name);
     else {
@@ -55,13 +58,17 @@ output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
       fprintf(output, "%s%u", indexprefix, idx);
     if (logical && l->os_index != (unsigned) -1 &&
 	(verbose_mode >= 2 || l->type == HWLOC_OBJ_PU || l->type == HWLOC_OBJ_NODE))
-      snprintf(phys, sizeof(phys), "phys=%u", l->os_index);
-    hwloc_obj_attr_snprintf (attr, sizeof(attr), l, " ", verbose_mode-1);
+      snprintf(phys, sizeof(phys), "P#%u", l->os_index);
+    len = hwloc_obj_attr_snprintf (NULL, 0, l, " ", verbose_mode-1);
+    attr = malloc(len+1);
+    *attr = '\0';
+    len = hwloc_obj_attr_snprintf (attr, len+1, l, " ", verbose_mode-1);
     if (*phys || *attr) {
       const char *separator = *phys != '\0' && *attr!= '\0' ? " " : "";
       fprintf(output, " (%s%s%s)",
 	      phys, separator, attr);
     }
+    free(attr);
     if (verbose_mode >= 2 && l->name && l->type != HWLOC_OBJ_MISC)
       fprintf(output, " \"%s\"", l->name);
   }
@@ -71,7 +78,10 @@ output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
     fprintf(output, " cpuset=");
   if (show_cpuset) {
     char *cpusetstr;
-    hwloc_cpuset_asprintf(&cpusetstr, l->cpuset);
+    if (taskset)
+      hwloc_bitmap_taskset_asprintf(&cpusetstr, l->cpuset);
+    else
+      hwloc_bitmap_asprintf(&cpusetstr, l->cpuset);
     fprintf(output, "%s", cpusetstr);
     free(cpusetstr);
   }
@@ -85,7 +95,7 @@ output_topology (hwloc_topology_t topology, hwloc_obj_t l, hwloc_obj_t parent, F
   int group_identical = (verbose_mode <= 1) && !show_cpuset;
   if (group_identical
       && parent && parent->arity == 1
-      && l->cpuset && parent->cpuset && hwloc_cpuset_isequal(l->cpuset, parent->cpuset)) {
+      && l->cpuset && parent->cpuset && hwloc_bitmap_isequal(l->cpuset, parent->cpuset)) {
     /* in non-verbose mode, merge objects with their parent is they are exactly identical */
     fprintf(output, " + ");
   } else {
@@ -115,7 +125,7 @@ output_only (hwloc_topology_t topology, hwloc_obj_t l, FILE *output, int logical
     output_only (topology, l->children[x], output, logical, verbose_mode);
 }
 
-void output_console(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode)
+void output_console(hwloc_topology_t topology, const char *filename, int logical, int legend __hwloc_attribute_unused, int verbose_mode)
 {
   unsigned topodepth;
   FILE *output;
@@ -159,58 +169,90 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
   }
 
   if (verbose_mode > 1) {
-    hwloc_const_cpuset_t complete = hwloc_topology_get_complete_cpuset(topology);
-    hwloc_const_cpuset_t topo = hwloc_topology_get_topology_cpuset(topology);
-    hwloc_const_cpuset_t online = hwloc_topology_get_online_cpuset(topology);
-    hwloc_const_cpuset_t allowed = hwloc_topology_get_allowed_cpuset(topology);
+    const struct hwloc_distances_s * distances;
+    unsigned depth;
 
-    if (!hwloc_cpuset_isequal(topo, complete)) {
-      hwloc_cpuset_t unknown = hwloc_cpuset_alloc();
-      char *unknownstr;
-      hwloc_cpuset_copy(unknown, complete);
-      hwloc_cpuset_andnot(unknown, unknown, topo);
-      hwloc_cpuset_asprintf(&unknownstr, unknown);
-      fprintf (output, "%d processors not represented in topology: %s\n", hwloc_cpuset_weight(unknown), unknownstr);
-      free(unknownstr);
-      hwloc_cpuset_free(unknown);
-    }
-    if (!hwloc_cpuset_isequal(online, complete)) {
-      hwloc_cpuset_t offline = hwloc_cpuset_alloc();
-      char *offlinestr;
-      hwloc_cpuset_copy(offline, complete);
-      hwloc_cpuset_andnot(offline, offline, online);
-      hwloc_cpuset_asprintf(&offlinestr, offline);
-      fprintf (output, "%d processors offline: %s\n", hwloc_cpuset_weight(offline), offlinestr);
-      free(offlinestr);
-      hwloc_cpuset_free(offline);
-    }
-    if (!hwloc_cpuset_isequal(allowed, online)) {
-      if (!hwloc_cpuset_isincluded(online, allowed)) {
-        hwloc_cpuset_t forbidden = hwloc_cpuset_alloc();
-        char *forbiddenstr;
-        hwloc_cpuset_copy(forbidden, online);
-        hwloc_cpuset_andnot(forbidden, forbidden, allowed);
-        hwloc_cpuset_asprintf(&forbiddenstr, forbidden);
-        fprintf(output, "%d processors online but not allowed: %s\n", hwloc_cpuset_weight(forbidden), forbiddenstr);
-        free(forbiddenstr);
-        hwloc_cpuset_free(forbidden);
+    for (depth = 0; depth < topodepth; depth++) {
+      unsigned nbobjs;
+      unsigned i, j;
+
+      distances = hwloc_get_whole_distance_matrix_by_depth(topology, depth);
+      if (!distances || !distances->latency)
+        continue;
+      nbobjs = distances->nbobjs;
+
+      printf("depth %u distance matrix:\n", depth);
+      /* column header */
+      printf("  index");
+      for(j=0; j<nbobjs; j++)
+        printf(" % 5d", (int) j);
+      printf("\n");
+      /* each line */
+      for(i=0; i<nbobjs; i++) {
+        /* row header */
+        printf("  % 5d", (int) i);
+        /* each value */
+        for(j=0; j<nbobjs; j++)
+          printf(" %2.3f", distances->latency[i*nbobjs+j]);
+        printf("\n");
       }
-      if (!hwloc_cpuset_isincluded(allowed, online)) {
-        hwloc_cpuset_t potential = hwloc_cpuset_alloc();
+    }
+  }
+
+  if (verbose_mode > 1) {
+    hwloc_const_bitmap_t complete = hwloc_topology_get_complete_cpuset(topology);
+    hwloc_const_bitmap_t topo = hwloc_topology_get_topology_cpuset(topology);
+    hwloc_const_bitmap_t online = hwloc_topology_get_online_cpuset(topology);
+    hwloc_const_bitmap_t allowed = hwloc_topology_get_allowed_cpuset(topology);
+
+    if (!hwloc_bitmap_isequal(topo, complete)) {
+      hwloc_bitmap_t unknown = hwloc_bitmap_alloc();
+      char *unknownstr;
+      hwloc_bitmap_copy(unknown, complete);
+      hwloc_bitmap_andnot(unknown, unknown, topo);
+      hwloc_bitmap_asprintf(&unknownstr, unknown);
+      fprintf (output, "%d processors not represented in topology: %s\n", hwloc_bitmap_weight(unknown), unknownstr);
+      free(unknownstr);
+      hwloc_bitmap_free(unknown);
+    }
+    if (!hwloc_bitmap_isequal(online, complete)) {
+      hwloc_bitmap_t offline = hwloc_bitmap_alloc();
+      char *offlinestr;
+      hwloc_bitmap_copy(offline, complete);
+      hwloc_bitmap_andnot(offline, offline, online);
+      hwloc_bitmap_asprintf(&offlinestr, offline);
+      fprintf (output, "%d processors offline: %s\n", hwloc_bitmap_weight(offline), offlinestr);
+      free(offlinestr);
+      hwloc_bitmap_free(offline);
+    }
+    if (!hwloc_bitmap_isequal(allowed, online)) {
+      if (!hwloc_bitmap_isincluded(online, allowed)) {
+        hwloc_bitmap_t forbidden = hwloc_bitmap_alloc();
+        char *forbiddenstr;
+        hwloc_bitmap_copy(forbidden, online);
+        hwloc_bitmap_andnot(forbidden, forbidden, allowed);
+        hwloc_bitmap_asprintf(&forbiddenstr, forbidden);
+        fprintf(output, "%d processors online but not allowed: %s\n", hwloc_bitmap_weight(forbidden), forbiddenstr);
+        free(forbiddenstr);
+        hwloc_bitmap_free(forbidden);
+      }
+      if (!hwloc_bitmap_isincluded(allowed, online)) {
+        hwloc_bitmap_t potential = hwloc_bitmap_alloc();
         char *potentialstr;
-        hwloc_cpuset_copy(potential, allowed);
-        hwloc_cpuset_andnot(potential, potential, online);
-        hwloc_cpuset_asprintf(&potentialstr, potential);
-        fprintf(output, "%d processors allowed but not online: %s\n", hwloc_cpuset_weight(potential), potentialstr);
+        hwloc_bitmap_copy(potential, allowed);
+        hwloc_bitmap_andnot(potential, potential, online);
+        hwloc_bitmap_asprintf(&potentialstr, potential);
+        fprintf(output, "%d processors allowed but not online: %s\n", hwloc_bitmap_weight(potential), potentialstr);
         free(potentialstr);
-        hwloc_cpuset_free(potential);
+        hwloc_bitmap_free(potential);
       }
     }
     if (!hwloc_topology_is_thissystem(topology))
       fprintf (output, "Topology not from this system\n");
   }
 
-  fclose(output);
+  if (output != stdout)
+    fclose(output);
 }
 
 /*
@@ -436,47 +478,45 @@ from_directions(struct display *disp, int direction)
 {
 #ifdef HAVE_PUTWC
   if (disp->utf8) {
-    static const wchar_t chars[] = {
-      [down|right]	= L'\x250c',
-      [down|left]	= L'\x2510',
-      [up|right]	= L'\x2514',
-      [up|left]		= L'\x2518',
-      [left|right]	= L'\x2500',
-      [down|up]		= L'\x2502',
-      [down]		= L'\x2577',
-      [up]		= L'\x2575',
-      [right]		= L'\x2576',
-      [left]		= L'\x2574',
-      [down|up|right]	= L'\x251c',
-      [down|up|left]	= L'\x2524',
-      [down|left|right]	= L'\x252c',
-      [up|left|right]	= L'\x2534',
-      [down|up|left|right]	= L'\x253c',
-      [0]		= L' ',
+    switch (direction) {
+    case down|right:		return L'\x250c';
+    case down|left:		return L'\x2510';
+    case up|right:		return L'\x2514';
+    case up|left:		return L'\x2518';
+    case left|right:		return L'\x2500';
+    case down|up:		return L'\x2502';
+    case down:			return L'\x2577';
+    case up:			return L'\x2575';
+    case right:			return L'\x2576';
+    case left:			return L'\x2574';
+    case down|up|right:		return L'\x251c';
+    case down|up|left:		return L'\x2524';
+    case down|left|right:	return L'\x252c';
+    case up|left|right:		return L'\x2534';
+    case down|up|left|right:	return L'\x253c';
+    default:			return L' ';
     };
-    return chars[direction];
   } else
 #endif /* HAVE_PUTWC */
   {
-    static const char chars[] = {
-      [down|right]	= '/',
-      [down|left]	= '\\',
-      [up|right]	= '\\',
-      [up|left]		= '/',
-      [left|right]	= '-',
-      [down|up]		= '|',
-      [down]		= '|',
-      [up]		= '|',
-      [right]		= '-',
-      [left]		= '-',
-      [down|up|right]	= '+',
-      [down|up|left]	= '+',
-      [down|left|right]	= '+',
-      [up|left|right]	= '+',
-      [down|up|left|right]	= '+',
-      [0]		= ' ',
+    switch (direction) {
+    case down|right:		return '/';
+    case down|left:		return '\\';
+    case up|right:		return '\\';
+    case up|left:		return '/';
+    case left|right:		return '-';
+    case down|up:		return '|';
+    case down:			return '|';
+    case up:			return '|';
+    case right:			return '-';
+    case left:			return '-';
+    case down|up|right:		return '+';
+    case down|up|left:		return '+';
+    case down|left|right:	return '+';
+    case up|left|right:		return '+';
+    case down|up|left|right:	return '+';
+    default:			return ' ';
     };
-    return chars[direction];
   }
 }
 
@@ -485,12 +525,13 @@ static void
 merge(struct display *disp, int x, int y, int or, int andnot, int r, int g, int b)
 {
   character current;
+  int directions;
   if (x >= disp->width || y >= disp->height) {
     /* fprintf(stderr, "|%x &~%x overflowed to (%d,%d)\n", or, andnot, x, y); */
     return;
   }
   current = disp->cells[y][x].c;
-  int directions = (to_directions(disp, current) & ~andnot) | or;
+  directions = (to_directions(disp, current) & ~andnot) | or;
   put(disp, x, y, from_directions(disp, directions), -1, -1, -1, r, g, b);
 }
 
@@ -594,14 +635,14 @@ text_text(void *output, int r, int g, int b, int size __hwloc_attribute_unused, 
 }
 
 static struct draw_methods text_draw_methods = {
-  .start = text_start,
-  .declare_color = text_declare_color,
-  .box = text_box,
-  .line = text_line,
-  .text = text_text,
+  text_start,
+  text_declare_color,
+  text_box,
+  text_line,
+  text_text,
 };
 
-void output_text(hwloc_topology_t topology, const char *filename, int logical, int verbose_mode __hwloc_attribute_unused)
+void output_text(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output;
   struct display *disp;
@@ -660,8 +701,8 @@ void output_text(hwloc_topology_t topology, const char *filename, int logical, i
   }
 #endif /* HWLOC_HAVE_LIBTERMCAP */
 
-  disp = output_draw_start(&text_draw_methods, logical, topology, output);
-  output_draw(&text_draw_methods, logical, topology, disp);
+  disp = output_draw_start(&text_draw_methods, logical, legend, topology, output);
+  output_draw(&text_draw_methods, logical, legend, topology, disp);
 
   lfr = lfg = lfb = -1;
   lbr = lbg = lbb = -1;
@@ -702,4 +743,7 @@ void output_text(hwloc_topology_t topology, const char *filename, int logical, i
 #endif /* HWLOC_HAVE_LIBTERMCAP */
     putcharacter('\n', output);
   }
+
+  if (output != stdout)
+    fclose(output);
 }

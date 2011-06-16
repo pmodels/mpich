@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Put with Fence";
+*/
 
 int main( int argc, char *argv[] )
 {

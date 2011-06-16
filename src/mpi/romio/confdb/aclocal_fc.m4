@@ -273,9 +273,7 @@ AC_COMPILE_IFELSE([],[
         # cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
         _AC_MSG_LOG_CONFTEST
     fi
-    ],
-    []
-)
+],[])
 # Remove the conftest* after AC_LANG_CONFTEST
 rm -rf conftest.dSYM
 rm -f conftest.$ac_ext
@@ -374,7 +372,7 @@ AC_COMPILE_IFELSE([
     ])
 ],[
     # pac_f77compile_ok=yes
-    mv conftest.$OBJEXT pac_f77conftest.$OBJEXT
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_f77conftest.$OBJEXT $LIBS"
@@ -413,38 +411,61 @@ dnl
 dnl
 dnl
 dnl /*D 
-dnl PAC_PROG_FC_HAS_POINTER - Determine if Fortran allows pointer type
+dnl PAC_PROG_FC_CRAY_POINTER - Check if Fortran supports Cray-style pointer.
+dnl                            If so, set pac_cv_prog_fc_has_pointer to yes
+dnl                            and find out if any extra compiler flag is
+dnl                            needed and set it as CRAYPTR_FCFLAGS.
+dnl                            i.e. CRAYPTR_FCFLAGS is meaningful only if
+dnl                            pac_cv_prog_fc_has_pointer = yes.
 dnl
 dnl Synopsis:
-dnl   PAC_PROG_FC_HAS_POINTER(action-if-true,action-if-false)
+dnl   PAC_PROG_FC_CRAY_POINTER([action-if-true],[action-if-false])
 dnl D*/
-AC_DEFUN([PAC_PROG_FC_HAS_POINTER],[
-AC_CACHE_CHECK([whether Fortran 90 has Cray-style pointer declaration],
+AC_DEFUN([PAC_PROG_FC_CRAY_POINTER],[
+AC_CACHE_CHECK([whether Fortran 90 supports Cray-style pointer],
 pac_cv_prog_fc_has_pointer,[
-AC_LANG_PUSH(Fortran)
-AC_COMPILE_IFELSE([
+AC_LANG_PUSH([Fortran])
+AC_LANG_CONFTEST([
     AC_LANG_PROGRAM([],[
         integer M
         pointer (MPTR,M)
         data MPTR/0/
     ])
-],[
-    pac_cv_prog_fc_has_pointer="yes"
-],[
-    pac_cv_prog_fc_has_pointer="no"
-]) dnl Endof AC_COMPILE_IFELSE
-AC_LANG_POP(Fortran)
+])
+saved_FCFLAGS="$FCFLAGS"
+pac_cv_prog_fc_has_pointer=no
+CRAYPTR_FCFLAGS=""
+for ptrflag in '' '-fcray-pointer' ; do
+    FCFLAGS="$saved_FCFLAGS $ptrflag"
+    AC_COMPILE_IFELSE([],[
+        pac_cv_prog_fc_has_pointer=yes
+        CRAYPTR_FCFLAGS="$ptrflag"
+        break
+    ])
+done
+dnl Restore FCFLAGS first, since user may not want to modify FCFLAGS
+FCFLAGS="$saved_FCFLAGS"
+dnl remove conftest after ac_lang_conftest
+rm -f conftest.$ac_ext
+AC_LANG_POP([Fortran])
 ])
 if test "$pac_cv_prog_fc_has_pointer" = "yes" ; then
-    ifelse([$1],,:,[$1])
+    AC_MSG_CHECKING([for Fortran 90 compiler flag for Cray-style pointer])
+    if test "X$CRAYPTR_FCFLAGS" != "X" ; then
+        AC_MSG_RESULT([$CRAYPTR_FCFLAGS])
+    else
+        AC_MSG_RESULT([none])
+    fi
+    ifelse([$1],[],[:],[$1])
 else
-    ifelse([$2],,:,[$2])
+    ifelse([$2],[],[:],[$2])
 fi
 ])
 dnl
 dnl
 dnl
 AC_DEFUN([PAC_PROG_FC_AND_C_STDIO_LIBS],[
+AC_REQUIRE([AC_HEADER_STDC])
 # To simply the code in the cache_check macro, chose the routine name
 # first, in case we need it
 confname=conf1_
@@ -464,13 +485,15 @@ pac_cv_prog_fc_and_c_stdio_libs=unknown
 AC_LANG_PUSH(C)
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
 int $confname( int a )
 { printf( "The answer is %d\n", a ); fflush(stdout); return 0; }
     ])
 ],[
     pac_compile_ok=yes
-    mv conftest.$OBJEXT pac_conftest.$OBJEXT
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     # Save LIBS and prepend object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_conftest.$OBJEXT $LIBS"
@@ -525,41 +548,17 @@ AC_DEFUN([PAC_FC_CHECK_COMPILER_OPTION],[
 AC_MSG_CHECKING([whether Fortran 90 compiler accepts option $1])
 pac_opt="$1"
 AC_LANG_PUSH(Fortran)
-dnl Instead of defining our own ac_link and ac_compile and do AC_TRY_EVAL
-dnl on these variables.  We modify ac_link and ac_compile used by AC_*_IFELSE
-dnl by piping the output of the command to a logfile.  The reason is that
-dnl 1) AC_TRY_EVAL is discouraged by Autoconf. 2) defining our ac_link and
-dnl ac_compile could mess up the usage and order of FCFLAGS, LDFLAGS
-dnl and LIBS in these commands, i.e. deviate from how GNU standard uses
-dnl these variables.
-dnl
-dnl Replace " >&AS_MESSAGE_LOG_FD" by "> file 2>&1" in ac_link and ac_compile
-pac_link="`echo $ac_link | sed -e 's|>.*$|> $pac_logfile 2>\&1|g'`"
-dnl echo "ac_link=\"$ac_link\""
-dnl echo "pac_link=\"$pac_link\""
-saved_ac_link="$ac_link"
-ac_link="$pac_link"
-dnl echo "ac_link=\"$ac_link\""
-
-pac_compile="`echo $ac_compile | sed -e 's|>.*$|> $pac_logfile 2>\&1|g'`"
-dnl echo "ac_compile=\"$ac_compile\""
-dnl echo "pac_compile=\"$pac_compile\""
-saved_ac_compile="$ac_compile"
-ac_compile="$pac_compile"
-dnl echo "ac_compile=\"$ac_compile\""
-
 FCFLAGS_orig="$FCFLAGS"
 FCFLAGS_opt="$pac_opt $FCFLAGS"
 pac_result="unknown"
+
 AC_LANG_CONFTEST([AC_LANG_PROGRAM()])
 FCFLAGS="$FCFLAGS_orig"
-pac_logfile="pac_test1.log"
-rm -f $pac_logfile
-AC_LINK_IFELSE([], [
+rm -f pac_test1.log
+PAC_LINK_IFELSE_LOG([pac_test1.log], [], [
     FCFLAGS="$FCFLAGS_opt"
-    pac_logfile="pac_test2.log"
-    rm -f $pac_logfile
-    AC_LINK_IFELSE([], [
+    rm -f pac_test2.log
+    PAC_LINK_IFELSE_LOG([pac_test2.log], [], [
         PAC_RUNLOG_IFELSE([diff -b pac_test1.log pac_test2.log],
                           [pac_result=yes], [pac_result=no])
     ],[
@@ -576,23 +575,20 @@ if test "$pac_result" = "yes" ; then
     AC_MSG_CHECKING([whether routines compiled with $pac_opt can be linked with ones compiled without $pac_opt])
     pac_result=unknown
     FCFLAGS="$FCFLAGS_orig"
-    pac_logfile="pac_test3.log"
-    rm -f $pac_logfile
-    AC_COMPILE_IFELSE([
+    rm -f pac_test3.log
+    PAC_COMPILE_IFELSE_LOG([pac_test3.log], [
         AC_LANG_SOURCE([
             subroutine try()
             end
         ])
     ],[
-        mv conftest.$OBJEXT pac_conftest.$OBJEXT
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $LIBS"
 
         FCFLAGS="$FCFLAGS_opt"
-        pac_logfile="pac_test4.log"
-        rm -f $pac_logfile
-        AC_LINK_IFELSE([AC_LANG_PROGRAM()], [
-            diffcmd='diff -b pac_test3.log pac_test4.log'
+        rm -f pac_test4.log
+        PAC_LINK_IFELSE_LOG([pac_test4.log], [AC_LANG_PROGRAM()], [
             PAC_RUNLOG_IFELSE([diff -b pac_test2.log pac_test4.log],
                               [pac_result=yes], [pac_result=no])
         ],[
@@ -608,11 +604,6 @@ if test "$pac_result" = "yes" ; then
 fi
 rm -f pac_test1.log pac_test2.log
 
-dnl Restore everything in AC that has been overwritten
-ac_link="$saved_ac_link"
-ac_compile="$saved_ac_compile"
-dnl echo "ac_link=\"$ac_link\""
-dnl echo "ac_compile=\"$ac_compile\""
 dnl Restore FCFLAGS before 2nd/3rd argument commands are executed,
 dnl as 2nd/3rd argument command could be modifying FCFLAGS.
 FCFLAGS="$FCFLAGS_orig"
@@ -621,10 +612,6 @@ if test "$pac_result" = "yes" ; then
 else
      ifelse([$3],[],[:],[$3])
 fi
-
-# This is needed for Mac OSX 10.5
-rm -rf conftest.dSYM
-rm -f conftest*
 AC_LANG_POP(Fortran)
 ])
 dnl /*D
@@ -893,8 +880,6 @@ AC_MSG_CHECKING([for available integer ranges])
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([
-#include <stdio.h>
-#include "confdefs.h"
 #ifdef F77_NAME_UPPER
 #define cisize_ CISIZE
 #define isize_ ISIZE

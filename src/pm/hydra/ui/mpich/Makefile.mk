@@ -4,7 +4,7 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-AM_CPPFLAGS += -I$(top_srcdir)/ui/utils
+AM_CPPFLAGS += -I$(top_srcdir)/ui/utils -DHYDRA_CONF_FILE=\"@sysconfdir@/mpiexec.hydra.conf\"
 
 bin_PROGRAMS += mpiexec.hydra
 

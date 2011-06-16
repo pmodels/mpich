@@ -41,11 +41,12 @@ Input Parameters:
 . sources - ranks of processes for which the calling process is a
             destination (array of non-negative integers)
 . sourceweights - weights of the edges into the calling
-                  process (array of non-negative integers)
+                  process (array of non-negative integers or MPI_UNWEIGHTED)
 . outdegree - size of destinations and destweights arrays (non-negative integer)
 . destinations - ranks of processes for which the calling process is a
                  source (array of non-negative integers)
-. destweights - weights of the edges out of the calling process (array of non-negative integers)
+. destweights - weights of the edges out of the calling process 
+                (array of non-negative integers or MPI_UNWEIGHTED)
 . info - hints on optimization and interpretation of weights (handle)
 - reorder - the ranks may be reordered (true) or not (false) (logical)
 
@@ -58,8 +59,8 @@ Output Parameter:
 
 .N Errors
 .N MPI_SUCCESS
-.N MPI_ERR_TOPOLOGY
 .N MPI_ERR_ARG
+.N MPI_ERR_OTHER
 @*/
 int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
                                    int indegree, int sources[], int sourceweights[],
@@ -117,8 +118,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
                 if (sourceweights == MPI_UNWEIGHTED && destweights != MPI_UNWEIGHTED) {
                     MPIU_ERR_SET(mpi_errno, MPIR_ERR_RECOVERABLE, "**unweightedboth");
                 }
-                MPIR_ERRTEST_ARGNULL(sourceweights, "sourceweights", mpi_errno);
-                /* XXX DJG TODO check ranges for array elements too (**argarrayneg / **rankarray)*/
+                /* TODO check ranges for array elements too (**argarrayneg / **rankarray)*/
             }
             if (outdegree > 0) {
                 MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);

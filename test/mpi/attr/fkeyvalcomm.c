@@ -8,9 +8,11 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTestDescrip[] = "Test freeing keyvals while still attached to \
 a communicator, then make sure that the keyval delete and copy code are still \
 executed";
+*/
 
 /* Function prototypes to keep compilers happy */
 int copy_fn( MPI_Comm oldcomm, int keyval, void *extra_state,

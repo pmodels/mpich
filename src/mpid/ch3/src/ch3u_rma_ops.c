@@ -7,6 +7,18 @@
 #include "mpidi_ch3_impl.h"
 #include "mpidrma.h"
 
+static int enableShortACC=1;
+
+MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
+#ifdef USE_MPIU_INSTR
+MPIU_INSTR_DURATION_DECL(wincreate_allgather);
+MPIU_INSTR_DURATION_DECL(winfree_rs);
+MPIU_INSTR_DURATION_DECL(winfree_complete);
+MPIU_INSTR_DURATION_DECL(rmaqueue_alloc);
+extern void MPIDI_CH3_RMA_InitInstr(void);
+#endif
+extern void MPIDI_CH3_RMA_SetAccImmed( int );
+
 #define MPIDI_PASSIVE_TARGET_DONE_TAG  348297
 #define MPIDI_PASSIVE_TARGET_RMA_TAG 563924
 
@@ -18,9 +30,10 @@
 int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
 		     MPID_Comm *comm_ptr, MPID_Win **win_ptr )
 {
-    int mpi_errno=MPI_SUCCESS, i, comm_size, rank;
+    int mpi_errno=MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
     MPID_Comm *win_comm_ptr;
+    int errflag = FALSE;
     MPIU_CHKPMEM_DECL(4);
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_CREATE);
@@ -29,6 +42,26 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
 
     /* FIXME: There should be no unreferenced args */
     MPIU_UNREFERENCED_ARG(info);
+
+    if(initRMAoptions) {
+	int rc;
+	MPIU_THREADSAFE_INIT_BLOCK_BEGIN(initRMAoptions);
+	/* Default is to enable the use of the immediate accumulate feature */
+	if (!MPL_env2bool( "MPICH_RMA_ACC_IMMED", &rc ))
+	    rc = 1;
+	MPIDI_CH3_RMA_SetAccImmed(rc);
+#ifdef USE_MPIU_INSTR
+    /* Define all instrumentation handle used in the CH3 RMA here*/
+	MPIU_INSTR_DURATION_INIT(wincreate_allgather,0,"WIN_CREATE:Allgather");
+	MPIU_INSTR_DURATION_INIT(winfree_rs,0,"WIN_FREE:ReduceScatterBlock");
+	MPIU_INSTR_DURATION_INIT(winfree_complete,0,"WIN_FREE:Complete");
+	MPIU_INSTR_DURATION_INIT(rmaqueue_alloc,0,"Allocate RMA Queue element");
+	MPIDI_CH3_RMA_InitInstr();
+
+#endif    
+	MPIU_THREADSAFE_INIT_CLEAR(initRMAoptions);
+	MPIU_THREADSAFE_INIT_BLOCK_END(initRMAoptions);
+    }
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -46,7 +79,8 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     (*win_ptr)->start_group_ptr = NULL; 
     (*win_ptr)->start_assert = 0; 
     (*win_ptr)->attributes = NULL;
-    (*win_ptr)->rma_ops_list = NULL;
+    (*win_ptr)->rma_ops_list_head = NULL;
+    (*win_ptr)->rma_ops_list_tail = NULL;
     (*win_ptr)->lock_granted = 0;
     (*win_ptr)->current_lock_type = MPID_LOCK_NONE;
     (*win_ptr)->shared_lock_ref_cnt = 0;
@@ -56,8 +90,10 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     
     mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    (*win_ptr)->comm = win_comm_ptr->handle;
-    
+    (*win_ptr)->comm_ptr   = win_comm_ptr;
+    (*win_ptr)->myrank = rank;
+
+    MPIU_INSTR_DURATION_START(wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
        completion counters of all processes */ 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->base_addrs, void **,
@@ -82,20 +118,24 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
 			mpi_errno, "tmp_buf");
     
     /* FIXME: This needs to be fixed for heterogeneous systems */
-    tmp_buf[3*rank] = MPIU_PtrToAint(base);
+    tmp_buf[3*rank]   = MPIU_PtrToAint(base);
     tmp_buf[3*rank+1] = (MPI_Aint) disp_unit;
     tmp_buf[3*rank+2] = (MPI_Aint) (*win_ptr)->handle;
     
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     tmp_buf, 3 * sizeof(MPI_Aint), MPI_BYTE,
-                                    comm_ptr);
+                                    comm_ptr, &errflag);
+    MPIU_INSTR_DURATION_END(wincreate_allgather);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+
+    k = 0;
     for (i=0; i<comm_size; i++)
     {
-	(*win_ptr)->base_addrs[i] = MPIU_AintToPtr(tmp_buf[3*i]);
-	(*win_ptr)->disp_units[i] = (int) tmp_buf[3*i+1];
-	(*win_ptr)->all_win_handles[i] = (MPI_Win) tmp_buf[3*i+2];
+	(*win_ptr)->base_addrs[i] = MPIU_AintToPtr(tmp_buf[k++]);
+	(*win_ptr)->disp_units[i] = (int) tmp_buf[k++];
+	(*win_ptr)->all_win_handles[i] = (MPI_Win) tmp_buf[k++];
     }
         
  fn_exit:
@@ -121,23 +161,26 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     int mpi_errno=MPI_SUCCESS, total_pt_rma_puts_accs;
     int in_use;
     MPID_Comm *comm_ptr;
-    
+    int errflag = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);
         
-    MPID_Comm_get_ptr( (*win_ptr)->comm, comm_ptr );
-
+    comm_ptr = (*win_ptr)->comm_ptr;
+    MPIU_INSTR_DURATION_START(winfree_rs);
     mpi_errno = MPIR_Reduce_scatter_block_impl((*win_ptr)->pt_rma_puts_accs, 
                                                &total_pt_rma_puts_accs, 1, 
-                                               MPI_INT, MPI_SUM, comm_ptr);
+                                               MPI_INT, MPI_SUM, comm_ptr, &errflag);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    MPIU_INSTR_DURATION_END(winfree_rs);
 
     if (total_pt_rma_puts_accs != (*win_ptr)->my_pt_rma_puts_accs)
     {
 	MPID_Progress_state progress_state;
             
 	/* poke the progress engine until the two are equal */
+	MPIU_INSTR_DURATION_START(winfree_complete);
 	MPID_Progress_start(&progress_state);
 	while (total_pt_rma_puts_accs != (*win_ptr)->my_pt_rma_puts_accs)
 	{
@@ -151,6 +194,7 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
 	    /* --END ERROR HANDLING-- */
 	}
 	MPID_Progress_end(&progress_state);
+	MPIU_INSTR_DURATION_END(winfree_complete);
     }
 
     
@@ -187,11 +231,10 @@ int MPIDI_Put(void *origin_addr, int origin_count, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig, rank, predefined;
-    MPIDI_RMA_ops *curr_ptr, *prev_ptr, *new_ptr;
+    MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb;
     MPIDI_msg_sz_t data_sz;
-    MPID_Comm *win_comm_ptr;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
         
@@ -205,13 +248,7 @@ int MPIDI_Put(void *origin_addr, int origin_count, MPI_Datatype
 	goto fn_exit;
     }
 
-    /* FIXME: It makes sense to save the rank (and size) of the
-       communicator in the window structure to speed up these operations,
-       or to save a pointer to the communicator structure, rather than
-       just the handle 
-    */
-    MPID_Comm_get_ptr(win_ptr->comm, win_comm_ptr);
-    rank = MPIR_Comm_rank(win_comm_ptr);
+    rank = win_ptr->myrank;
     
     /* If the put is a local operation, do it here */
     if (target_rank == rank)
@@ -223,22 +260,18 @@ int MPIDI_Put(void *origin_addr, int origin_count, MPI_Datatype
     else
     {
 	/* queue it up */
-	curr_ptr = win_ptr->rma_ops_list;
-	prev_ptr = curr_ptr;
-	while (curr_ptr != NULL)
-	{
-	    prev_ptr = curr_ptr;
-	    curr_ptr = curr_ptr->next;
-	}
-
-	/* FIXME: Where does this memory get freed? */
+	/* FIXME: For short operations, should we use a (per-thread) pool? */
+	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
 	MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
 			    mpi_errno, "RMA operation entry");
-	if (prev_ptr != NULL)
-	    prev_ptr->next = new_ptr;
-	else 
-	    win_ptr->rma_ops_list = new_ptr;
-	
+	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+	if (win_ptr->rma_ops_list_tail) 
+	    win_ptr->rma_ops_list_tail->next = new_ptr;
+	else
+	    win_ptr->rma_ops_list_head = new_ptr;
+	win_ptr->rma_ops_list_tail = new_ptr;
+
+	/* FIXME: For contig and very short operations, use a streamlined op */
 	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_PUT;
 	new_ptr->origin_addr = origin_addr;
@@ -290,9 +323,8 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_msg_sz_t data_sz;
     int dt_contig, rank, predefined;
     MPI_Aint dt_true_lb;
-    MPIDI_RMA_ops *curr_ptr, *prev_ptr, *new_ptr;
+    MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
-    MPID_Comm *win_comm_ptr;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET);
         
@@ -306,10 +338,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 	goto fn_exit;
     }
 
-    /* FIXME: It makes sense to save the rank (and size) of the
-       communicator in the window structure to speed up these operations */
-    MPID_Comm_get_ptr(win_ptr->comm, win_comm_ptr);
-    rank = MPIR_Comm_rank(win_comm_ptr);
+    rank = win_ptr->myrank;
     
     /* If the get is a local operation, do it here */
     if (target_rank == rank)
@@ -323,25 +352,17 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     else
     {
 	/* queue it up */
-	curr_ptr = win_ptr->rma_ops_list;
-	prev_ptr = curr_ptr;
-	while (curr_ptr != NULL)
-	{
-	    prev_ptr = curr_ptr;
-	    curr_ptr = curr_ptr->next;
-	}
-	
+	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
 	MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
 			    mpi_errno, "RMA operation entry");
-	if (prev_ptr != NULL)
-	{
-	    prev_ptr->next = new_ptr;
-	}
+	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+	if (win_ptr->rma_ops_list_tail) 
+	    win_ptr->rma_ops_list_tail->next = new_ptr;
 	else
-	{
-	    win_ptr->rma_ops_list = new_ptr;
-	}
+	    win_ptr->rma_ops_list_head = new_ptr;
+	win_ptr->rma_ops_list_tail = new_ptr;
             
+	/* FIXME: For contig and very short operations, use a streamlined op */
 	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_GET;
 	new_ptr->origin_addr = origin_addr;
@@ -394,9 +415,8 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_msg_sz_t data_sz;
     int dt_contig, rank, origin_predefined, target_predefined;
     MPI_Aint dt_true_lb;
-    MPIDI_RMA_ops *curr_ptr, *prev_ptr, *new_ptr;
+    MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
-    MPID_Comm *win_comm_ptr;
     MPIU_CHKLMEM_DECL(2);
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
@@ -410,18 +430,13 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
     {
 	goto fn_exit;
     }
-    
-    /* FIXME: It makes sense to save the rank (and size) of the
-       communicator in the window structure to speed up these operations,
-       or to save a pointer to the communicator structure, rather than
-       just the handle 
-    */
-    MPID_Comm_get_ptr(win_ptr->comm, win_comm_ptr);
-    rank = MPIR_Comm_rank(win_comm_ptr);
+
+    rank = win_ptr->myrank;
     
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
+    /* Do =! rank first (most likely branch?) */
     if (target_rank == rank)
     {
 	MPI_User_function *uop;
@@ -440,7 +455,7 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 			     "**opnotpredefined %d", op );
 	
 	/* get the function by indexing into the op table */
-	uop = MPIR_Op_table[(op)%16 - 1];
+	uop = MPIR_Op_table[((op)&0xf) - 1];
 	
 	if (origin_predefined && target_predefined)
 	{    
@@ -524,25 +539,32 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
     else
     {
 	/* queue it up */
-	curr_ptr = win_ptr->rma_ops_list;
-	prev_ptr = curr_ptr;
-	while (curr_ptr != NULL)
-	{
-	    prev_ptr = curr_ptr;
-	    curr_ptr = curr_ptr->next;
-	}
-	
+	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
 	MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
 			    mpi_errno, "RMA operation entry");
-	if (prev_ptr != NULL)
-	{
-	    prev_ptr->next = new_ptr;
-	}
+	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+	if (win_ptr->rma_ops_list_tail) 
+	    win_ptr->rma_ops_list_tail->next = new_ptr;
 	else
-	{
-	    win_ptr->rma_ops_list = new_ptr;
+	    win_ptr->rma_ops_list_head = new_ptr;
+	win_ptr->rma_ops_list_tail = new_ptr;
+
+	/* If predefined and contiguous, use a simplified element */
+	if (origin_predefined && target_predefined && enableShortACC) {
+	    new_ptr->next = NULL;
+	    new_ptr->type = MPIDI_RMA_ACC_CONTIG;
+	    /* Only the information needed for the contig/predefined acc */
+	    new_ptr->origin_addr = origin_addr;
+	    new_ptr->origin_count = origin_count;
+	    new_ptr->origin_datatype = origin_datatype;
+	    new_ptr->target_rank = target_rank;
+	    new_ptr->target_disp = target_disp;
+	    new_ptr->target_count = target_count;
+	    new_ptr->target_datatype = target_datatype;
+	    new_ptr->op = op;
+	    goto fn_exit;
 	}
-        
+
 	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_ACCUMULATE;
 	new_ptr->origin_addr = origin_addr;

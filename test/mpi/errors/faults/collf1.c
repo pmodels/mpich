@@ -9,12 +9,14 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test survivability from faults with collective communication";
+*/
 
 int main( int argc, char *argv[] )
 {
     int wrank, wsize, rank, size, color;
-    int i, j, tmp;
+    int tmp;
     MPI_Comm newcomm;
 
     MPI_Init( &argc, &argv );

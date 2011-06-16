@@ -95,7 +95,7 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 /* This routine initializes Sock-specific elements of the VC */
 int MPIDI_VC_InitSock( MPIDI_VC_t *vc ) 
 {
-    MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vcch = VC_CH(vc);
     vcch->sock               = MPIDU_SOCK_INVALID_SOCK;
     vcch->conn               = NULL;
     return 0;

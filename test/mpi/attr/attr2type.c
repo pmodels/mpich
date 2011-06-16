@@ -18,7 +18,7 @@ int foo_copy_attr_function(MPI_Datatype type, int type_keyval,
 			   void *attribute_val_out, int *flag);
 int foo_delete_attr_function(MPI_Datatype type, int type_keyval,
 			     void *attribute_val, void *extra_state);
-static char *my_func = 0;
+static const char *my_func = 0;
 static int verbose = 0;
 static int delete_called = 0;
 static int copy_called = 0;

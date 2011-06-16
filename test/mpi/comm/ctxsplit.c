@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "mpitest.h"
 
 /*
@@ -17,7 +18,7 @@
  * available).
  */
 
-main(int argc, char** argv) {
+int main(int argc, char** argv) {
 
    int      i=0;
    int      randval;

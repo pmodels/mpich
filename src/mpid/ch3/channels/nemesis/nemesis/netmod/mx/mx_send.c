@@ -15,7 +15,7 @@ int MPID_nem_mx_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI
 {
     int mpi_errno = MPI_SUCCESS;
     mx_request_t  mx_request; 
-    mx_segment_t  mx_iov[3];
+    mx_segment_t  mx_iov[2];
     uint32_t      num_seg = 1;
     mx_return_t   ret;
     uint64_t      match_info = 0;        
@@ -127,16 +127,13 @@ int MPID_nem_mx_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_mx_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz)
 {
-    mx_segment_t  mx_iov[MX_MAX_SEGMENTS];
-    uint32_t      num_seg = 1;
-    int           mpi_errno = MPI_SUCCESS;
-    mx_request_t  mx_request;
-    mx_return_t   ret;
-    uint64_t      match_info;
-    MPIDI_msg_sz_t data_sz;
-    int            dt_contig;
-    MPI_Aint       dt_true_lb;
-    MPID_Datatype *dt_ptr;
+    mx_segment_t   mx_iov[2];
+    uint32_t       num_seg = 1;
+    int            mpi_errno = MPI_SUCCESS;
+    mx_request_t   mx_request;
+    mx_return_t    ret;
+    uint64_t       match_info;
+    MPIDI_msg_sz_t last;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MX_SENDNONCONTIGMSG);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MX_SENDNONCONTIGMSG);    
@@ -157,6 +154,19 @@ int MPID_nem_mx_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
     mx_iov[0].segment_length  = sizeof(MPIDI_CH3_PktGeneric_t);
     num_seg = 1;
 
+    MPIU_Assert(sreq->dev.segment_first == 0);
+    last = sreq->dev.segment_size;
+    if (last > 0)
+    {
+        sreq->dev.tmpbuf = MPIU_Malloc((size_t)sreq->dev.segment_size);
+        MPID_Segment_pack(sreq->dev.segment_ptr,sreq->dev.segment_first, &last,(char *)(sreq->dev.tmpbuf));
+        MPIU_Assert(last == sreq->dev.segment_size);
+        mx_iov[1].segment_ptr = (char *)(sreq->dev.tmpbuf);
+        mx_iov[1].segment_length = (uint32_t)last;
+        num_seg++;
+    }
+   
+    /*
     MPIDI_Datatype_get_info(sreq->dev.user_count,sreq->dev.datatype, dt_contig, data_sz, dt_ptr,dt_true_lb);
     if(data_sz)
     {
@@ -183,6 +193,7 @@ int MPID_nem_mx_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 	    num_seg++;
 	}
     }
+   */
    
     MPIU_Assert(num_seg <= MX_MAX_SEGMENTS);    
     ret = mx_isend(MPID_nem_mx_local_endpoint,mx_iov,num_seg,VC_FIELD(vc,remote_endpoint_addr),match_info,(void *)sreq,&mx_request);

@@ -138,6 +138,16 @@ void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 }
 #endif /* HAVE_CXX_BINDING */
 
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+void MPIR_Errhandler_set_fc( MPI_Errhandler errhand )
+{
+    MPID_Errhandler *errhand_ptr;
+    
+    MPID_Errhandler_get_ptr( errhand, errhand_ptr );
+    errhand_ptr->language = MPID_LANG_FORTRAN;
+}
+
+#endif
 /* ------------------------------------------------------------------------- */
 /* These routines are called on error exit from most top-level MPI routines
    to invoke the appropriate error handler.  Also included is the routine
@@ -255,9 +265,15 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 #ifdef HAVE_FORTRAN_BINDING
 	case MPID_LANG_FORTRAN90:
 	case MPID_LANG_FORTRAN:
-	    /* FIXME: If an MPI_Fint isn't an int, this code is wrong */
-	    (*comm_ptr->errhandler->errfn.F77_Handler_function)( 
-		(MPI_Fint *)&comm_ptr->handle, &errcode );
+	{
+	    /* If int and MPI_Fint aren't the same size, we need to 
+	       convert.  As this is not performance critical, we
+	       do this even if MPI_Fint and int are the same size. */
+	    MPI_Fint ferr=errcode;
+	    MPI_Fint commhandle=comm_ptr->handle;
+	    (*comm_ptr->errhandler->errfn.F77_Handler_function)( &commhandle, 
+								 &ferr );
+	}
 	    break;
 #endif /* FORTRAN_BINDING */
 	}
@@ -326,8 +342,15 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 #ifdef HAVE_FORTRAN_BINDING
 	    case MPID_LANG_FORTRAN90:
 	    case MPID_LANG_FORTRAN:
-		(*win_ptr->errhandler->errfn.F77_Handler_function)( 
-		    (MPI_Fint *)&win_ptr->handle, &errcode );
+		{
+		    /* If int and MPI_Fint aren't the same size, we need to 
+		       convert.  As this is not performance critical, we
+		       do this even if MPI_Fint and int are the same size. */
+		    MPI_Fint ferr=errcode;
+		    MPI_Fint winhandle=win_ptr->handle;
+		    (*win_ptr->errhandler->errfn.F77_Handler_function)( 
+						       &winhandle, &ferr );
+		}
 		break;
 #endif /* FORTRAN_BINDING */
 	}
@@ -520,6 +543,8 @@ int MPIR_Err_create_code( int lastcode, int fatal, const char fcname[],
     int rc;
     va_list Argp;
     va_start(Argp, specific_msg);
+    MPIU_DBG_MSG_FMT(ERRHAND, TYPICAL, (MPIU_DBG_FDEST, "%sError created: %s(%d) %s", fatal ? "Fatal " : "",
+                                        fcname, line, generic_msg));
     rc = MPIR_Err_create_code_valist( lastcode, fatal, fcname, line,
 				      error_class, generic_msg, specific_msg,
 				      Argp );
@@ -1133,7 +1158,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
     char *begin, *end, *fmt;
     size_t len;
     MPI_Comm C;
-    MPI_Info I;
+    MPI_Info info;
     MPI_Datatype D;
     MPI_Win W;
     MPI_Group G;
@@ -1265,14 +1290,14 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    }
 	    break;
 	case (int)'I':
-	    I = va_arg(list, MPI_Info);
-	    if (I == MPI_INFO_NULL)
+	    info = va_arg(list, MPI_Info);
+	    if (info == MPI_INFO_NULL)
 	    {
 		MPIU_Strncpy(str, "MPI_INFO_NULL", maxlen);
 	    }
 	    else
 	    {
-		MPIU_Snprintf(str, maxlen, "info=0x%x", I);
+		MPIU_Snprintf(str, maxlen, "info=0x%x", info);
 	    }
 	    break;
 	case (int)'D':

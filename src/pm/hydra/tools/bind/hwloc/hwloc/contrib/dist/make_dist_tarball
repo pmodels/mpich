@@ -23,8 +23,8 @@
 #
 
 AM_TARGET_VERSION=1.11.1
-AC_TARGET_VERSION=2.65
-LT_TARGET_VERSION=2.2.6b
+AC_TARGET_VERSION=2.68
+LT_TARGET_VERSION=2.4
 
 #
 # First things first -- check that the auto versions that we have are
@@ -169,12 +169,12 @@ fi
 echo "*** Removing svn version numbers..."
 svn_r="r`svnversion .`"
 version_files="`find . -name VERSION`"
-release_date=`date '+%b %d, %Y'`
+release_date=`export LANG=; export LC_ALL=; export LC_TIME=; date '+%b %d, %Y'`
 for file in $version_files; do
     echo " - $file"
-    sed -e 's/^want_svn=.*/want_svn=0/' \
+    sed -e 's/^want_repo_rev=.*/want_repo_rev=0/' \
         -e "s/^date=.*/date=\"$release_date\"/" \
-        -e 's/^svn_r=.*/'svn_r=$svn_r/ $file > $file.new
+        -e 's/^repo_rev=.*/'repo_rev=$svn_r/ $file > $file.new
     cp -f $file.new $file
     rm $file.new
 done

@@ -11,7 +11,7 @@
 #define FUNCNAME MPID_Nem_nd_conn_hnd_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_Nem_nd_conn_hnd_init(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_conn_type_t conn_type, INDConnector *p_conn, MPID_Nem_nd_conn_hnd_t *pconn_hnd)
+int MPID_Nem_nd_conn_hnd_init(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_conn_type_t conn_type, INDConnector *p_conn, MPIDI_VC_t *vc, MPID_Nem_nd_conn_hnd_t *pconn_hnd)
 {
     int mpi_errno = MPI_SUCCESS;
     HRESULT hr;
@@ -41,15 +41,44 @@ int MPID_Nem_nd_conn_hnd_init(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_conn_ty
 
     MPID_NEM_ND_CONN_STATE_SET((*pconn_hnd), MPID_NEM_ND_CONN_QUIESCENT);
     (*pconn_hnd)->vc = NULL;
+    if(vc != NULL){
+        /* Make sure that we set the tmp conn info in the vc before we block 
+         * We wait till 3-way handshake before setting vc info
+         * for this conn & conn info for the vc
+         * This info could be used by accept() side to signal that the conn
+         * is no longer valid - orphan
+         */
+        MPID_NEM_ND_VCCH_NETMOD_TMP_CONN_HND_SET(vc, (*pconn_hnd));
+    }
     MPIU_ExInitOverlapped(&((*pconn_hnd)->recv_ov), NULL, NULL);
     MPIU_ExInitOverlapped(&((*pconn_hnd)->send_ov), NULL, NULL);
 
+    (*pconn_hnd)->is_orphan = 0;
+    (*pconn_hnd)->tmp_vc = NULL;
+	(*pconn_hnd)->npending_ops = 0;
+    (*pconn_hnd)->send_in_progress = 0;
     (*pconn_hnd)->zcp_in_progress = 0;
+    (*pconn_hnd)->zcp_rreqp = NULL;
+
+    (*pconn_hnd)->npending_rds = 0;
+
+    (*pconn_hnd)->zcp_send_offset = 0;
 
     /* Create an endpoint - listen conns don't need an endpoint */
     if((conn_type == MPID_NEM_ND_CONNECT_CONN) || (conn_type == MPID_NEM_ND_ACCEPT_CONN)){
+        ND_ADAPTER_INFO info;
+        SIZE_T len = sizeof(info);
+
+        hr = dev_hnd->p_ad->Query(1, &info, &len);
+        MPIU_ERR_CHKANDJUMP2(FAILED(hr),
+            mpi_errno, MPI_ERR_OTHER, "**nd_ep_create", "**nd_ep_create %s %d",
+            _com_error(hr).ErrorMessage(), hr);
+
+        /* FIXME: Use MPID_NEM_ND_CONN_RECVQ_SZ, MPID_NEM_ND_CONN_SENDQ_SZ for
+         * number of inboud/outbound requests
+         */
         hr = (*pconn_hnd)->p_conn->CreateEndpoint(dev_hnd->p_cq, dev_hnd->p_cq,
-            MPID_NEM_ND_CONN_RECVQ_SZ, MPID_NEM_ND_CONN_SENDQ_SZ,
+            info.MaxInboundRequests, info.MaxOutboundRequests,
             MPID_NEM_ND_CONN_SGE_MAX, MPID_NEM_ND_CONN_SGE_MAX,
             MPID_NEM_ND_CONN_RDMA_RD_MAX, MPID_NEM_ND_CONN_RDMA_RD_MAX,
             NULL, &((*pconn_hnd)->p_ep));
@@ -87,6 +116,7 @@ int MPID_Nem_nd_conn_hnd_finalize(MPID_Nem_nd_dev_hnd_t dev_hnd, MPID_Nem_nd_con
      * allowed even if init() fails
      */
     MPIU_Assert(MPID_NEM_ND_CONN_HND_IS_INIT(*p_conn_hnd));
+
     if((*p_conn_hnd)->p_ep){
         /* Release endpoint */
         (*p_conn_hnd)->p_ep->Release();

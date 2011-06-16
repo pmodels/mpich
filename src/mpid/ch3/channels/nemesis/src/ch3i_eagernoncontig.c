@@ -30,7 +30,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 
     MPIU_THREAD_CS_ENTER(MPIDCOMM,);
 
-    if (!MPIDI_CH3I_SendQ_empty(CH3_NORMAL_QUEUE)) /* MT */
+    if (!MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq)) /* MT */
     {
         /* send queue is not empty, enqueue the request then check to
            see if we can send any now */
@@ -42,7 +42,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         sreq->ch.header_sz    = hdr_sz;
 	sreq->ch.vc           = vc;
 
-        MPIDI_CH3I_SendQ_enqueue(sreq, CH3_NORMAL_QUEUE);
+        MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
         mpi_errno = MPIDI_CH3I_Shm_send_progress();
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -66,10 +66,10 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         else
         {
             /* part of message was sent, make this req an active send */
-            MPIU_Assert(MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] == NULL);
-            MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE] = sreq;
+            MPIU_Assert(MPIDI_CH3I_shm_active_send == NULL);
+            MPIDI_CH3I_shm_active_send = sreq;
         }
-        MPIDI_CH3I_SendQ_enqueue(sreq, CH3_NORMAL_QUEUE);
+        MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
         goto fn_exit;
     }
 

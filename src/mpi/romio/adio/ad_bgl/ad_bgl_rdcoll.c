@@ -19,6 +19,10 @@
 #include "ad_bgl_pset.h"
 #include "ad_bgl_aggrs.h"
 
+#ifdef HAVE_SPI_KERNEL_INTERFACE_H
+#include <spi/kernel_interface.h>
+#endif
+
 #ifdef PROFILE
 #include "mpe.h"
 #endif
@@ -86,6 +90,9 @@ extern void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 			    **len_list_ptr, ADIO_Offset *start_offset_ptr,
 			    ADIO_Offset *end_offset_ptr, int
 			   *contig_access_count_ptr);
+
+static int ADIOI_too_much_memory_for_alltoallv(int nprocs, 
+		int * send_size, int *recv_size);
 
 void ADIOI_BGL_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			       MPI_Datatype datatype, int file_ptr_type,
@@ -1041,10 +1048,29 @@ static void ADIOI_R_Exchange_data_alltoallv(
     int  len;
     int  *sdispls, *rdispls;
     char *all_recv_buf, *all_send_buf;
+    int my_too_big, too_big;
 
   /* exchange send_size info so that each process knows how much to
      receive from whom and how much memory to allocate. */
     MPI_Alltoall(send_size, 1, MPI_INT, recv_size, 1, MPI_INT, fd->comm);
+    
+    /* we now have enough information to know how much memory we will allocate
+     * for this routine */
+    my_too_big = ADIOI_too_much_memory_for_alltoallv(nprocs, 
+			    send_size, recv_size);
+    MPI_Allreduce(&my_too_big, &too_big, 1, MPI_INT, MPI_MAX, fd->comm);
+    if (too_big) {
+	    /* fall back to point-to-point */
+	    ADIOI_R_Exchange_data(fd, buf, flat_buf, 
+			    offset_list, len_list, send_size, recv_size, 
+			    count, start_pos, partial_send, recd_from_proc, 
+			    nprocs, myrank, buftype_is_contig, 
+			    contig_access_count, min_st_offset, 
+			    fd_size, fd_start, fd_end, 
+			    others_req, iter, buftype_extent, buf_idx);
+	    return;
+    }
+
     
     nprocs_recv = 0;
     for (i=0; i<nprocs; i++) if (recv_size[i]) { nprocs_recv++; break; }
@@ -1140,5 +1166,30 @@ static void ADIOI_R_Exchange_data_alltoallv(
     
     ADIOI_Free( all_send_buf );
     ADIOI_Free( all_recv_buf );
+    ADIOI_Free( recv_buf  );
+    ADIOI_Free( sdispls );
+    ADIOI_Free( rdispls );
     return; 
 }   
+
+static int ADIOI_too_much_memory_for_alltoallv(int nprocs, 
+		int * send_size, int *recv_size) {
+
+	unsigned int threshold;
+#ifdef HAVE_KERNEL_GETMEMORYSIZE
+	Kernel_GetMemorySize(KERNEL_MEMSIZE_ESTHEAPAVAIL, &threshold);
+#else
+	threshold = 1024*1024*128; 
+#endif
+
+	int i, mem_required=0;
+
+	for (i=0; i< nprocs; i++)
+		/* the 'stail' and 'rtail' arrays */
+		mem_required += recv_size[i] + send_size[i];
+	/* the sdispl, recv_buf, and rdispls arrays */
+	mem_required += nprocs*sizeof(int)*3;
+
+	if (mem_required > threshold) return 1;
+	return 0;
+}

@@ -229,7 +229,7 @@ int contig_of_int_with_lb_ub_test(void)
     MPI_Datatype inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = "{ (LB,-3),4*(BYTE,0),(UB,6) }";
+    typemapstring = (char*)"{ (LB,-3),4*(BYTE,0),(UB,6) }";
     err = MPI_Type_struct(3, blocks, disps, types, &inttype);
     if (err != MPI_SUCCESS) {
 	errs++;
@@ -240,7 +240,7 @@ int contig_of_int_with_lb_ub_test(void)
 	return errs;
     }
 
-    typemapstring="{ (LB,-3),4*(BYTE,0),(UB,6),(LB,6),4*(BYTE,9),(UB,15),(LB,15),4*(BYTE,18),(UB,24)}";
+    typemapstring=(char*)"{ (LB,-3),4*(BYTE,0),(UB,6),(LB,6),4*(BYTE,9),(UB,15),(LB,15),4*(BYTE,18),(UB,24)}";
     err = MPI_Type_contiguous(3, inttype, &eviltype);
     if (err != MPI_SUCCESS) {
 	errs++;
@@ -356,7 +356,7 @@ int contig_negextent_of_int_with_lb_ub_test(void)
     MPI_Datatype inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = "{ (LB,6),4*(BYTE,0),(UB,-3) }";
+    typemapstring = (char*)"{ (LB,6),4*(BYTE,0),(UB,-3) }";
     err = MPI_Type_struct(3, blocks, disps, types, &inttype);
     if (err != MPI_SUCCESS) {
 	errs++;
@@ -367,7 +367,7 @@ int contig_negextent_of_int_with_lb_ub_test(void)
 	return errs;
     }
 
-    typemapstring = "{ (LB,6),4*(BYTE,0),(UB,-3),(LB,-3),4*(BYTE,-9),(UB,-12),(LB,-12),4*(BYTE,-18),(UB,-21) }";
+    typemapstring = (char*)"{ (LB,6),4*(BYTE,0),(UB,-3),(LB,-3),4*(BYTE,-9),(UB,-12),(LB,-12),4*(BYTE,-18),(UB,-21) }";
     err = MPI_Type_contiguous(3, inttype, &eviltype);
     if (err != MPI_SUCCESS) {
 	errs++;
@@ -723,7 +723,7 @@ int vector_blklen_stride_of_int_with_lb_ub_test(void)
     MPI_Datatype inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = "{ (LB,-3),4*(BYTE,0),(UB,6) }";
+    typemapstring = (char*)"{ (LB,-3),4*(BYTE,0),(UB,6) }";
     err = MPI_Type_struct(3, blocks, disps, types, &inttype);
     if (err != MPI_SUCCESS) {
 	errs++;
@@ -963,7 +963,7 @@ int int_with_negextent_test(void)
 
     MPI_Datatype eviltype;
 
-    typemapstring = "{ (LB,6),4*(BYTE,0),(UB,-3) }";
+    typemapstring = (char*)"{ (LB,6),4*(BYTE,0),(UB,-3) }";
     err = MPI_Type_struct(3, blocks, disps, types, &eviltype);
     if (err != MPI_SUCCESS) {
 	errs++;
@@ -1074,7 +1074,7 @@ int vector_blklen_stride_negextent_of_int_with_lb_ub_test(void)
     char *typemapstring = 0;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = "{ (LB,6),4*(BYTE,0),(UB,-3) }";
+    typemapstring = (char*)"{ (LB,6),4*(BYTE,0),(UB,-3) }";
     err = MPI_Type_struct(3, blocks, disps, types, &inttype);
     if (err != MPI_SUCCESS) {
 	errs++;

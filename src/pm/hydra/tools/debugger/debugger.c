@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "debugger.h"
 
 struct MPIR_PROCDESC *MPIR_proctable = NULL;
@@ -40,7 +40,7 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
         j = 0;
         for (exec = proxy->exec_list; exec; exec = exec->next) {
             for (np = 0; np < exec->proc_count; np++) {
-                MPIR_proctable[i].host_name = HYDU_strdup(proxy->node.hostname);
+                MPIR_proctable[i].host_name = HYDU_strdup(proxy->node->hostname);
                 MPIR_proctable[i].pid = proxy->pid[j++];
                 if (exec->exec[0])
                     MPIR_proctable[i].executable_name = HYDU_strdup(exec->exec[0]);

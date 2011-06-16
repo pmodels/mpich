@@ -95,7 +95,7 @@ int f2ctype_( MPI_Fint *, MPI_Fint * );
 /* */
 int f2ctype_( MPI_Fint *fhandle, MPI_Fint *typeidx )
 {
-    int i, errs = 0;
+    int errs = 0;
     MPI_Datatype ctype;
 
     /* printf( "Testing %s\n", mpi_names[*typeidx].name ); */

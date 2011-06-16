@@ -81,13 +81,13 @@ int MPID_nem_tcp_set_sockopts (int fd)
 
     option = 128*1024;
     len = sizeof(int);
-    setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &option, len);
+    ret = setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &option, len);
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIU_Strerror (errno), errno);
-    getsockopt (fd, SOL_SOCKET, SO_RCVBUF, &option, &len);
+    ret = getsockopt (fd, SOL_SOCKET, SO_RCVBUF, &option, &len);
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIU_Strerror (errno), errno);
-    setsockopt (fd, SOL_SOCKET, SO_SNDBUF, &option, len);
+    ret = setsockopt (fd, SOL_SOCKET, SO_SNDBUF, &option, len);
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIU_Strerror (errno), errno);
-    getsockopt (fd, SOL_SOCKET, SO_SNDBUF, &option, &len);
+    ret = getsockopt (fd, SOL_SOCKET, SO_SNDBUF, &option, &len);
     MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIU_Strerror (errno), errno);
     
     flags = fcntl(fd, F_GETFL, 0);

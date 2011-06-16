@@ -63,27 +63,21 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     MPI::Win win = MPI::WIN_NULL;
-    MPI::File file = MPI::FILE_NULL;
 
     MTest_Init( );
 
     const unsigned int rank = MPI::COMM_WORLD.Get_rank();
 
     win = MPI::Win::Create(NULL, 0, 1, MPI::INFO_NULL, MPI_COMM_WORLD);
-    file = MPI::File::Open(MPI::COMM_WORLD, "testfile", 
-	   MPI::MODE_WRONLY | MPI::MODE_CREATE | MPI::MODE_DELETE_ON_CLOSE, 
-	   MPI::INFO_NULL);
 
     if (0 == rank) {
         errs += testRetrieveErrhandler(MPI::COMM_WORLD);
         errs += testRetrieveErrhandler(win);
-        errs += testRetrieveErrhandler(file);
     }
 
     MTest_Finalize( errs );
 
     win.Free();
-    file.Close();
 
     MPI::Finalize();
 

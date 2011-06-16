@@ -1,5 +1,8 @@
-# Copyright 2009 INRIA, Université Bordeaux 1
-# Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+# Copyright © 2009-2010 INRIA.  All rights reserved.
+# Copyright © 2009-2011 Université Bordeaux 1
+# Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
+#
+# See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
@@ -9,9 +12,11 @@ LDADD = $(HWLOC_top_builddir)/src/libhwloc.la
 
 EXTRA_DIST = test-hwloc-distrib.output
 
+noinst_HEADERS = misc.h
+
 # Only build the utilities if we're building in standalone mode
 if HWLOC_BUILD_UTILS
-bin_PROGRAMS = lstopo hwloc-calc hwloc-bind hwloc-distrib
+bin_PROGRAMS = lstopo hwloc-calc hwloc-bind hwloc-distrib hwloc-ps
 endif
 
 lstopo_SOURCES = lstopo.h lstopo.c lstopo-color.c lstopo-text.c lstopo-draw.c lstopo-fig.c
@@ -26,6 +31,14 @@ lstopo_SOURCES += lstopo-windows.c
 endif
 lstopo_CFLAGS = $(HWLOC_CAIRO_CFLAGS) $(HWLOC_XML_CFLAGS)
 lstopo_LDADD = $(LDADD) $(HWLOC_CAIRO_LIBS) $(HWLOC_XML_LIBS) -lm $(HWLOC_TERMCAP_LIBS) $(HWLOC_X11_LIBS)
+if HWLOC_BUILD_UTILS
+if HWLOC_HAVE_WINDOWS
+bin_PROGRAMS += lstopo-win
+lstopo_win_SOURCES = $(lstopo_SOURCES)
+lstopo_win_CFLAGS = $(lstopo_CFLAGS) -mwindows
+lstopo_win_LDADD = $(lstopo_LDADD)
+endif
+endif
 
 hwloc_calc_SOURCES = hwloc-calc.c hwloc-calc.h
 
@@ -39,29 +52,40 @@ endif HWLOC_BUILD_TESTS
 
 # Only install man pages if we're building in standalone mode
 if HWLOC_BUILD_UTILS
-man1_pages = lstopo.1 hwloc-bind.1 hwloc-distrib.1 hwloc-calc.1
 man7_pages = hwloc.7
-man_pages = $(man7_pages) $(man1_pages)
-EXTRA_DIST += $(man1_pages:.1=.1in) $(man7_pages:.7=.7in)
-nodist_man_MANS = $(man_pages)
+EXTRA_DIST += $(man7_pages:.7=.7in)
+nodist_man_MANS = $(man7_pages)
+
+man1_pages = lstopo.1 hwloc-bind.1 hwloc-distrib.1 hwloc-calc.1 hwloc-ps.1
+EXTRA_DIST += $(man1_pages:.1=.1in)
+nodist_man_MANS += $(man1_pages)
+
+# Only install the gather-topology page if we're on Linux, but we need
+# to include it in the tarball, regardless of what OS we're building
+# on.
+hgt_page = hwloc-gather-topology.1
+EXTRA_DIST += $(hgt_page:.1=.1in)
+if HWLOC_HAVE_LINUX
+nodist_man_MANS += $(hgt_page)
+endif HWLOC_HAVE_LINUX
 
 .1in.1:
 	@ echo Creating $@ man page...
-	@ sed -e 's/#PACKAGE_NAME#/@PACKAGE_NAME@/g' \
+	@ $(SED) -e 's/#PACKAGE_NAME#/@PACKAGE_NAME@/g' \
 	  -e 's/#PACKAGE_VERSION#/@PACKAGE_VERSION@/g' \
 	  -e 's/#HWLOC_DATE#/@HWLOC_RELEASE_DATE@/g' \
 	  > $@ < $<
 
 .3in.3:
 	@ echo Creating $@ man page...
-	@ sed -e 's/#PACKAGE_NAME#/@PACKAGE_NAME@/g' \
+	@ $(SED) -e 's/#PACKAGE_NAME#/@PACKAGE_NAME@/g' \
 	  -e 's/#PACKAGE_VERSION#/@PACKAGE_VERSION@/g' \
 	  -e 's/#HWLOC_DATE#/@HWLOC_RELEASE_DATE@/g' \
 	  > $@ < $<
 
 .7in.7:
 	@ echo Creating $@ man page...
-	@ sed -e 's/#PACKAGE_NAME#/@PACKAGE_NAME@/g' \
+	@ $(SED) -e 's/#PACKAGE_NAME#/@PACKAGE_NAME@/g' \
 	  -e 's/#PACKAGE_VERSION#/@PACKAGE_VERSION@/g' \
 	  -e 's/#HWLOC_DATE#/@HWLOC_RELEASE_DATE@/g' \
 	  > $@ < $<
@@ -77,5 +101,5 @@ uninstall-local:
 	rm -f $(DESTDIR)$(man1dir)/hwloc-ls.1 $(DESTDIR)$(man1dir)/hwloc-info.1 $(DESTDIR)$(man1dir)/hwloc-mask.1
 
 distclean-local:
-	rm -f $(man_pages)
+	rm -f $(nodist_man_MANS)
 endif

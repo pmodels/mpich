@@ -44,7 +44,6 @@ double MPID_Wtick( void )
     return 1.0e-9;
 }
 
-
 #elif MPICH_TIMER_KIND == USE_CLOCK_GETTIME
 void MPID_Wtime( MPID_Time_t *timeval )
 {
@@ -219,7 +218,8 @@ void MPID_Wtime_acc( MPID_Time_t *t1,MPID_Time_t *t2, MPID_Time_t *t3 )
 }
 
 #elif MPICH_TIMER_KIND == USE_LINUXALPHA_CYCLE
-
+/* FIXME: This should have been fixed in the configure, rather than as a 
+   make-time error message */
 #error "LinuxAlpha cycle counter not supported"
 
 #elif (MPICH_TIMER_KIND == USE_WIN86_CYCLE) || (MPICH_TIMER_KIND == USE_WIN64_CYCLE)
@@ -335,6 +335,44 @@ void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
 }
 
 
+#elif MPICH_TIMER_KIND == USE_MACH_ABSOLUTE_TIME
+static double MPIR_Wtime_mult;
+int MPID_Wtime_init(void)
+{
+    mach_timebase_info_data_t info;
+    mach_timebase_info(&info);
+    MPIR_Wtime_mult = 1.0e-9 * ((double)info.numer / (double)info.denom);
+
+    return MPI_SUCCESS;
+}
+void MPID_Wtime( MPID_Time_t *timeval )
+{
+    *timeval = mach_absolute_time();  
+}
+void MPID_Wtime_diff( MPID_Time_t *t1, MPID_Time_t *t2, double *diff )
+{
+    *diff = (*t2 - *t1) * MPIR_Wtime_mult;
+}
+void MPID_Wtime_todouble( MPID_Time_t *t, double *val )
+{
+    *val = *t * MPIR_Wtime_mult;
+}
+void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
+{
+    *t3 = *t1 + *t2;
+}
+
+/* FIXME: We need to cleanup the use of the MPID_Generic_wtick prototype */
+double MPID_Generic_wtick(void);
+
+double MPID_Wtick( void )
+{
+    return MPID_Generic_wtick();
+}
+#define MPICH_NEEDS_GENERIC_WTICK
+/* Rename the function so that we can access it */
+#define MPID_Wtick MPID_Generic_wtick
+
 
 #endif
 
@@ -354,7 +392,7 @@ double MPID_Wtick( void )
 {
     MPIU_THREADSAFE_INIT_DECL(initTick);
     static double tickval = -1.0;
-    double timediff;
+    double timediff;  /* Keep compiler happy about timediff set before use*/
     MPID_Time_t t1, t2;
     int    cnt;
     int    icnt;
@@ -365,11 +403,14 @@ double MPID_Wtick( void )
 	for (icnt=0; icnt<10; icnt++) {
 	    cnt = 1000;
 	    MPID_Wtime( &t1 );
-	    while (cnt--) {
+	    /* Make it abundently clear to the compiler that this block is
+	       executed at least once. */
+	    do {
 		MPID_Wtime( &t2 );
 		MPID_Wtime_diff( &t1, &t2, &timediff );
 		if (timediff > 0) break;
-		}
+	    }
+	    while (cnt--);
 	    if (cnt && timediff > 0.0 && timediff < tickval) {
 		MPID_Wtime_diff( &t1, &t2, &tickval );
 	    }

@@ -1,13 +1,12 @@
 #!/usr/bin/env perl
 #
-# (C) 2010 by Argonne National Laboratory.
+# (C) 2011by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 #
 
 # script TODO:
 # - generate initialization function to read vals from env vars
 # - deal with string escaping in generated C strings
-# - add support for "range" types (see MPL_env2range)
 # - sort/collate paramters by name/category
 
 use strict;
@@ -26,6 +25,10 @@ use Getopt::Long;
 # to be true. [goodell@ 2010-04-26]
 use Digest::MD5 qw();
 
+# To format README file
+use Text::Wrap;
+$Text::Wrap::unexpand = 0; # disable hard tabs in output
+
 ##################################################
 
 # set true to enable debug output
@@ -43,6 +46,7 @@ my $param_file = "src/util/param/params.yml";
 # output source files
 my $header_file = "src/include/mpich_param_vals.h";
 my $c_file      = "src/util/param/param_vals.c";
+my $readme_file = "README.envvar";
 
 GetOptions(
     "help!"       => \&print_usage_and_exit,
@@ -52,6 +56,7 @@ GetOptions(
     "param-file"  => \$param_file,
     "header=s"    => \$header_file,
     "c-file=s"    => \$c_file,
+    "readme-file=s" => \$readme_file,
 ) or die "unable to parse options, stopped";
 
 sub print_usage_and_exit {
@@ -98,8 +103,9 @@ foreach my $p (@{$params->{parameters}}) {
 
 ########################################################################
 # setup output files
-open(PARAM_HDR, '>', $header_file);
-open(PARAM_C,   '>', $c_file);
+open(PARAM_HDR,    '>', $header_file);
+open(PARAM_C,      '>', $c_file);
+open(PARAM_README, '>', $readme_file);
 
 my $hdr_guard = header_to_incl_guard($header_file);
 my $param_file_md5 = md5sum($param_file);
@@ -107,7 +113,7 @@ my $param_file_md5 = md5sum($param_file);
 print PARAM_HDR <<EOT;
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2011 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 /* automatically generated
@@ -126,7 +132,7 @@ EOT
 print PARAM_C <<EOT;
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2011 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 /* automatically generated
@@ -138,6 +144,17 @@ print PARAM_C <<EOT;
  */
 
 #include "mpiimpl.h"
+
+EOT
+
+print PARAM_README <<EOT;
+(C) 2011 by Argonne National Laboratory.
+    See COPYRIGHT in top-level directory.
+
+This file lists the various environment variables available to change the
+behavior of the MPICH2 library.  These are intended to be used by advanced
+users.
+---------------------------------------------------------------------------
 
 EOT
 
@@ -214,8 +231,14 @@ enum ${ns}_type_t {
     ${uc_ns}_TYPE_INT,
     ${uc_ns}_TYPE_DOUBLE,
     ${uc_ns}_TYPE_BOOLEAN,
-    ${uc_ns}_TYPE_STRING
+    ${uc_ns}_TYPE_STRING,
+    ${uc_ns}_TYPE_RANGE
 };
+
+typedef struct ${ns}_param_range_val {
+    int low;
+    int high;
+} ${ns}_param_range_val_t;
 
 /* used to represent default values */
 struct ${ns}_param_default_val_t {
@@ -225,6 +248,7 @@ struct ${ns}_param_default_val_t {
     const int i_val; /* also used for booleans */
     const double d_val;
     const char *s_val;
+    const ${ns}_param_range_val_t r_val;
 };
 
 struct ${ns}_t {
@@ -256,7 +280,7 @@ EOT
 # XXX DJG TODO collate and separate by category
 foreach my $p (@{$params->{parameters}}) {
     my $type_enum_val = "${uc_ns}_TYPE_".uc($p->{type});
-    my ($int_val, $str_val, $double_val) = (-1, qq(""), "0.0");
+    my ($int_val, $str_val, $double_val, $range_val) = (-1, qq(""), "0.0", "{0,0}");
 
     if ($p->{type} eq "string") {
         $str_val = fmt_default($p->{default}, $p->{type});
@@ -270,6 +294,9 @@ foreach my $p (@{$params->{parameters}}) {
     elsif ($p->{type} eq "boolean") {
         $int_val = fmt_default($p->{default}, $p->{type});
     }
+    elsif ($p->{type} eq "range") {
+        $range_val = fmt_default($p->{default}, $p->{type});
+    }
     else {
         die "unknown type $p->{type}, stopped";
     }
@@ -282,9 +309,9 @@ foreach my $p (@{$params->{parameters}}) {
         qq(      "%s",\n) .
         qq(      "%s",\n) .
         #          T    I   D   S
-        qq(      { %s, %d, %s, %s } },\n),
+        qq(      { %s, %d, %s, %s, %s } },\n),
         $p->{name}, $p->{name}, $desc,
-        $type_enum_val, $int_val, $double_val, $str_val;
+        $type_enum_val, $int_val, $double_val, $str_val, $range_val;
 }
 
 print PARAM_C <<EOT;
@@ -327,10 +354,17 @@ foreach my $p (@{$params->{parameters}}) {
     foreach my $env_name (@env_names) {
         # assumes rc is defined
         my $var_name = "${uc_ns}_" . $p->{name};
-        print PARAM_C <<EOT;
+        if ($p->{type} eq 'range') {
+            print PARAM_C <<EOT;
+    rc = MPL_env2${env_fn}("$env_name", &($var_name.low), &($var_name.high));
+    MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
+EOT
+        } else {
+            print PARAM_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name));
     MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
 EOT
+        }
     }
     print PARAM_C "\n";
 }
@@ -342,14 +376,79 @@ fn_fail:
 
 EOT
 
+foreach my $p (@{$params->{parameters}}) {
+    my @env_names = ();
+    my $first;
+    my $alt;
+
+    # process extra envs first so the primary always wins
+    push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, "${uc_ns}_" . $p->{name};
+    push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
+
+    print PARAM_README "${alt_ns}_$p->{name}\n";
+
+    $first = 1;
+    foreach $alt (@env_names) {
+        if ($first) {
+            print PARAM_README "    Aliases: $alt\n";
+        } else {
+            print PARAM_README "             $alt\n";
+        }
+        $first = 0;
+    }
+
+    print PARAM_README wrap("    Description: ", "        ", $p->{description} . "\n");
+    print PARAM_README "\n";
+}
+
+
 ########################################################################
 # clean up
 
 close(PARAM_C);
 
-print PARAM_HDR "\n#endif /* $hdr_guard */\n";
+print PARAM_HDR <<EOT;
+
+/* TODO: this should be defined elsewhere */
+#define ${ns}_assert MPIU_Assert
+
+/* helper macros for safely getting the default value of a parameter */
+EOT
+my @type_field = (
+    ['INT','i_val'],
+    ['DOUBLE','d_val'],
+    ['BOOLEAN','i_val'],
+    ['STRING','s_val'],
+    ['RANGE','r_val'],
+);
+foreach my $tuple (@type_field) {
+    my ($type,$field) = @$tuple;
+    print PARAM_HDR <<EOT;
+#define ${uc_ns}_GET_DEFAULT_${type}(p_suffix_,out_ptr_)                                               \\
+    do {                                                                                               \\
+        ${ns}_assert(${uc_ns}_TYPE_${type} == ${ns}_params[${uc_ns}_ID_##p_suffix_].default_val.type); \\
+        *(out_ptr_) = ${ns}_params[${uc_ns}_ID_##p_suffix_].default_val.${field};                      \\
+    } while (0)
+EOT
+}
+print PARAM_HDR <<EOT;
+
+#endif /* $hdr_guard */
+EOT
 close(PARAM_HDR);
 
+print PARAM_README <<EOT;
+---------------------------------------------------------------------------
+
+Automatically generated
+  by:   $0
+  at:   $run_timestamp
+  from: $param_file (md5sum $param_file_md5)
+
+EOT
+close(PARAM_README);
 
 ########################################################################
 # helper subroutines
@@ -362,6 +461,7 @@ sub type2ctype {
         'double'  => 'double',
         'string'  => 'const char *',
         'boolean' => 'int',
+        'range'   => "${ns}_param_range_val_t",
     );
     die "unknown type '$type', stopped" unless exists $typemap{$type};
     return $typemap{$type};
@@ -383,6 +483,14 @@ sub fmt_default {
             warn "WARNING: type='$type', bad val='$val', continuing";
             return qq(0); # fail-false
         }
+    }
+    elsif ($type eq "range") {
+        if ($val !~ "-?[0-9]+:-?[0-9]+") {
+            die "Unable to parse range value '$val', stopped";
+        }
+
+        $val =~ s/:/,/;
+        return qq({$val});
     }
     else {
         return qq($val);
@@ -417,6 +525,7 @@ sub type_to_env_fn {
         'int' =>  'int',
         'string' => 'str',
         'boolean' => 'bool',
+        'range' => 'range',
     );
 
     die "unknown type '$type', stopped" unless exists $typemap{$type};

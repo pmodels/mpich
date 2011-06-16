@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Send flood test";
+*/
 
 #define MAX_MSG_SIZE 40000000
 #define MAX_COUNT    4000

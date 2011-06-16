@@ -262,6 +262,8 @@ typedef struct {
 #define ADIO_APPEND             128
 #define ADIO_SEQUENTIAL         256
 
+#define ADIO_AMODE_NOMATCH  ~(ADIO_CREATE|ADIO_RDONLY|ADIO_WRONLY|ADIO_RDWR|ADIO_DELETE_ON_CLOSE|ADIO_UNIQUE_OPEN|ADIO_EXCL|ADIO_APPEND|ADIO_SEQUENTIAL)
+
 /* file-pointer types */
 #define ADIO_EXPLICIT_OFFSET     100
 #define ADIO_INDIVIDUAL          101
@@ -298,11 +300,16 @@ typedef struct {
 #define ADIO_FCNTL_GET_FSIZE     200
 
 /* file system feature tests */
-#define ADIO_LOCKS               300
-#define ADIO_SHARED_FP           301
-#define ADIO_ATOMIC_MODE         302
-#define ADIO_DATA_SIEVING_WRITES 303
-#define ADIO_SCALABLE_OPEN       304
+#define ADIO_LOCKS               300 /* file system supports fcntl()-style locking */
+#define ADIO_SHARED_FP           301 /* file system supports shared file pointers */
+#define ADIO_ATOMIC_MODE         302 /* file system supports atomic mode */
+#define ADIO_DATA_SIEVING_WRITES 303 /* file system supports data sieving for writes */
+#define ADIO_SCALABLE_OPEN       304 /* one process can open the file and
+					broadcast result to all other
+					processors */
+#define ADIO_UNLINK_AFTER_CLOSE  305 /* supports posix semantic of keeping a
+					deleted file around until all
+					processors have closed it */
 
 /* for default file permissions */
 #define ADIO_PERM_NULL           -1

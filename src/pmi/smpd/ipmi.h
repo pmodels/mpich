@@ -46,7 +46,7 @@ extern "C" {
 int iPMI_Init( int *spawned );           /* initialize PMI for this process group
                                            The value of spawned indicates whether this process
                                            was created by PMI_Spawn_multiple. */
-int iPMI_Initialized( PMI_BOOL *initialized );            /* Return true if PMI has been initialized */
+int iPMI_Initialized( int *initialized );            /* Return true if PMI has been initialized */
 int iPMI_Finalize( void );               /* finalize PMI for this process group */
 int iPMI_Get_size( int *size );          /* get size of process group */
 int iPMI_Get_rank( int *rank );          /* get rank in process group */
@@ -106,7 +106,7 @@ int iPMI_Lookup_name( const char service_name[], char port[] );
 typedef struct ipmi_functions_t
 {
     int (*PMI_Init)( int * );
-    int (*PMI_Initialized)( PMI_BOOL *);
+    int (*PMI_Initialized)( int *);
     int (*PMI_Finalize)( void );
     int (*PMI_Get_size)( int * );
     int (*PMI_Get_rank)( int * );

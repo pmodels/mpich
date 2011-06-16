@@ -26,26 +26,19 @@ include ui/Makefile.mk
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .
 
-# Use the mpich2-build-install target to include mpiexec in the build bin
-# directory (all pm's require these targets)
-mpich2-build-install: install
-mpich2-build-uninstall: uninstall
-
 # Provide an alias for mpirun to support tools that assume that
 # mpiexec is called mpirun
-install-exec-local:
+install-exec-hook:
 	if [ -x ${DESTDIR}${bindir}/mpiexec.hydra ] ; then \
 	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpiexec ; \
 	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpirun ; \
 	fi
 
-# A special alternate installation target when using multiple process managers
+# A special alternate installation target when using multiple process
+# managers; this is basically the install target, but without the
+# install-exec-hook
 install-alt: $(bin_PROGRAMS)
-	@for foo in $? ; do \
-		if test "$$foo" != "mpiexec" ; then \
-			$(MAKE) install $$foo ; \
-		fi ; \
-	done
+	@for foo in $? ; do $(MAKE) install $$foo ; done
 
 uninstall-local:
 	rm -f ${DESTDIR}${bindir}/mpirun ${DESTDIR}${bindir}/mpiexec

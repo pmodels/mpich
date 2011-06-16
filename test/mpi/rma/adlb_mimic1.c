@@ -9,12 +9,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define NUM_TIMES 500
 #define MAX_BUF_SIZE (400 * 1024 * 1024) /* 400 MB */
 #define PUT_SIZE (1024 * 1024) /* 1MB */
 
+/*
 static char MTEST_Descrip[] = "ADLB mimic test";
+*/
 
 /*
  * ALGORITHM:

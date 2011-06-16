@@ -15,7 +15,7 @@
 
 int main( int argc, char *argv[] )
 {
-    int errs = 0, i;
+    int errs = 0;
     char port_name[MPI_MAX_PORT_NAME], serv_name[256];
 
     MTest_Init( &argc, &argv );

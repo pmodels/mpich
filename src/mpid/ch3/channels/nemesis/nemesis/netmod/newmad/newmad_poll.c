@@ -86,7 +86,7 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_DIRECTRECV);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_DIRECTRECV);    
     
-    if (!((MPIDI_CH3I_VC *)vc->channel_private)->is_local)
+    if (!VC_CH(vc)->is_local)
     {
 	nm_tag_t          match_info = 0; 
 	nm_tag_t          match_mask = NEM_NMAD_MATCH_FULL_MASK; 	    
@@ -499,6 +499,8 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq)
 	else
 	{
 	    MPID_Segment_free(rreq->dev.segment_ptr);
+	    if (REQ_FIELD(rreq,iov) != NULL)
+	      MPIU_Free(REQ_FIELD(rreq,iov));	
 	}    
 	MPIU_Free(nmad_request);
     }    

@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "A simple test of Reduce with all choices of root process";
+*/
 
 int main( int argc, char *argv[] )
 {

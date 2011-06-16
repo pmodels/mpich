@@ -82,6 +82,13 @@ int MPID_Nem_nd_vc_terminate (MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_ND_VC_TERMINATE);
 
+    /* Poll till no more pending/posted sends */
+    while(!MPID_NEM_ND_VCCH_NETMOD_POSTED_SENDQ_EMPTY(vc)
+        || !MPID_NEM_ND_VCCH_NETMOD_PENDING_SENDQ_EMPTY(vc)){
+        mpi_errno = MPID_Nem_nd_sm_poll(1);
+        if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
+
     vc_ch->next = NULL;
     vc_ch->prev = NULL;
     MPID_NEM_ND_VCCH_NETMOD_STATE_SET(vc, MPID_NEM_ND_VC_STATE_DISCONNECTED);

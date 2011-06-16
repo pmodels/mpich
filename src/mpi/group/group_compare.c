@@ -24,10 +24,11 @@
 #undef MPI_Group_compare
 #define MPI_Group_compare PMPI_Group_compare
 
-void MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result)
+int MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result)
 {
+    int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, size, i;
-    
+
     /* See if their sizes are equal */
     if (group_ptr1->size != group_ptr2->size) {
 	*result = MPI_UNEQUAL;
@@ -70,8 +71,10 @@ void MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int
     /* If we reach here, the groups are identical */
     *result = MPI_IDENT;
 
- fn_exit:
-    return;
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif
@@ -152,8 +155,9 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
 
     /* ... body of routine ...  */
 
-    MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
-   
+    mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -162,7 +166,6 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -172,6 +175,5 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }

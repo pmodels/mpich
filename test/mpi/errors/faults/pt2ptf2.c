@@ -7,17 +7,20 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test error reporting from faults with point to point communication";
+*/
 
 int ReportErr( int errcode, const char name[] );
 
 int main( int argc, char *argv[] )
 {
     int wrank, wsize, rank, size, color;
-    int i, j, tmp;
-    int err, errclass, toterrs, errs = 0;
+    int j, tmp;
+    int err, toterrs, errs = 0;
     MPI_Comm newcomm;
 
     MPI_Init( &argc, &argv );

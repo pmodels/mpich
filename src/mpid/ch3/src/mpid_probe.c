@@ -26,6 +26,54 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
 	goto fn_exit;
     }
 
+#ifdef ENABLE_COMM_OVERRIDES
+    if (MPIDI_Anysource_iprobe_fn) {
+        if (source == MPI_ANY_SOURCE) {
+            /* if it's anysource, loop while checking the shm recv
+               queue and iprobing the netmod, then do a progress
+               test to make some progress. */
+            do {
+                int found;
+                
+                MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+                found = MPIDI_CH3U_Recvq_FU(source, tag, context, status);
+                MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+                if (found) goto fn_exit;
+
+                mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (found) goto fn_exit;
+
+                MPIU_THREAD_CS_YIELD(ALLFUNC,);
+                
+                mpi_errno = MPIDI_CH3_Progress_test();
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            } while (1);
+        } else {
+            /* it's not anysource, see if this is for the netmod */
+            MPIDI_VC_t * vc;
+            MPIDI_Comm_get_vc_set_active(comm, source, &vc);
+            
+            if (vc->comm_ops && vc->comm_ops->iprobe) {
+                /* netmod has overridden iprobe */
+                do {
+                    int found;
+                    
+                    mpi_errno = vc->comm_ops->iprobe(vc, source, tag, comm, context_offset, &found,
+                                                     status);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (found) goto fn_exit;
+                    
+                    MPIU_THREAD_CS_YIELD(ALLFUNC,);
+                    
+                    mpi_errno = MPIDI_CH3_Progress_test();
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                } while (1);
+            }
+            /* fall-through to shm case */
+        }
+    }
+#endif
     MPIDI_CH3_Progress_start(&progress_state);
     do
     {
@@ -44,4 +92,6 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_PROBE);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }

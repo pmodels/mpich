@@ -23,7 +23,7 @@ static inline void MPID_nem_mpich2_enqueue_fastbox (int local_rank);
 static inline int MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead);
 static inline int MPID_nem_mpich2_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
-static inline int MPID_nem_mpich2_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox);
+static inline int MPID_nem_mpich2_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
 static inline int MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich2_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
 static inline void MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first,
@@ -43,7 +43,7 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_cell_ptr_t el;
     int my_rank;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     /*DO_PAPI (PAPI_reset (PAPI_EventSet)); */
 
@@ -168,7 +168,7 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     char *cell_buf;
     MPIDI_msg_sz_t payload_len;    
     int my_rank;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_SENDV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV);
@@ -270,7 +270,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     char *cell_buf;
     MPIDI_msg_sz_t payload_len;    
     int my_rank;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
@@ -418,7 +418,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
     MPIDI_msg_sz_t datalen;
     int my_rank;
     MPIDI_msg_sz_t last;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
     MPIU_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
@@ -544,7 +544,7 @@ MPID_nem_mpich2_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, 
     MPIDI_msg_sz_t datalen;
     int my_rank;
     MPIDI_msg_sz_t last;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */    
     
@@ -863,10 +863,9 @@ MPID_nem_mpich2_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int tim
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int
-MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
+MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions)
 {
     int mpi_errno = MPI_SUCCESS;
-    unsigned completions = MPIDI_CH3I_progress_completion_count;
 #ifndef ENABLE_NO_YIELD
     int pollcount = 0;
 #endif
@@ -905,8 +904,8 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	    mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-            if (completions != MPIDI_CH3I_progress_completion_count || MPID_nem_local_lmt_pending || MPIDI_CH3I_active_send[CH3_NORMAL_QUEUE]
-                || MPIDI_CH3I_SendQ_head(CH3_NORMAL_QUEUE))
+            if (MPID_nem_local_lmt_pending || MPIDI_CH3I_shm_active_send
+                || MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq))
             {
                 *cell = NULL;
                 *in_fbox = 0;
@@ -921,6 +920,12 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox)
 	}
 	++pollcount;
 #endif
+
+        if (completions != OPA_load_int(&MPIDI_CH3I_progress_completion_count)) {
+            *cell = NULL;
+            *in_fbox = 0;
+            goto exit_l;
+        }
     }
 
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_recvQ, cell);
@@ -961,7 +966,7 @@ static inline int
 MPID_nem_mpich2_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     DO_PAPI (PAPI_reset (PAPI_EventSet));
     MPID_nem_queue_enqueue (vc_ch->free_queue, cell);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet,PAPI_vvalues9));

@@ -112,14 +112,18 @@ int MPIR_Pack_impl(void *inbuf,
 /*@
     MPI_Pack - Packs a datatype into contiguous memory
 
-   Arguments:
-+  void *inbuf - input buffer
-.  int incount - input count
-.  MPI_Datatype datatype - datatype
-.  void *outbuf - output buffer
-.  int outcount - output count
-.  int *position - position
--  MPI_Commm comm - communicator
+   Input Parameters:
++  inbuf - input buffer start (choice)
+.  incount - number of input data items (non-negative integer)
+.  datatype - datatype of each input data item (handle)
+.  outcount - output buffer size, in bytes (non-negative integer)
+-  comm - communicator for packed message (handle)
+
+  Output Parameter:
+.  outbuf - output buffer start (choice)
+
+  Input/Output Parameter:
+.  position - current position in buffer, in bytes (integer)
 
   Notes (from the specifications):
 
@@ -135,6 +139,8 @@ int MPIR_Pack_impl(void *inbuf,
 
 .N Errors
 .N MPI_SUCCESS
+.N MPI_ERR_ARG
+.N MPI_ERR_OTHER
 @*/
 int MPI_Pack(void *inbuf,
 	     int incount,

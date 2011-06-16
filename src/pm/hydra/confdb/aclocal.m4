@@ -10,7 +10,9 @@ dnl too old to be useful, 07/14/2010.
 dnl builtin(include,aclocal_cross.m4)
 builtin(include,aclocal_cxx.m4)
 builtin(include,aclocal_f77.m4)
-builtin(include,aclocal_f77new.m4)
+dnl aclocal_f77old.m4 contains PAC_PROG_F77_CMDARGS which is NOT used in MPICH2
+dnl but it is still used by other packages, so leave it in confdb.
+dnl builtin(include,aclocal_f77old.m4)
 builtin(include,aclocal_util.m4)
 builtin(include,aclocal_subcfg.m4)
 builtin(include,aclocal_make.m4)

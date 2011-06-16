@@ -1,5 +1,6 @@
 SUBDIRS = ch3
 
+MPILIBNAME = @MPILIBNAME@
 # This is temporary
 # Don't build atomic by default
 EXTRA_PROGRAMS = atomic atomic_fai
@@ -7,9 +8,9 @@ EXTRA_PROGRAMS = atomic atomic_fai
 # Atomic tests (correctness and performance) some atomic operations.  This
 # is a temporary test.
 atomic_SOURCES = atomic.c
-atomic_LDADD = -L../../lib -lmpich
+atomic_LDADD = -L../../lib -l$(MPILIBNAME)
 atomic_fai_SOURCES = atomic_fai.c
-atomic_fai_LDADD = -L../../lib -lmpich
+atomic_fai_LDADD = -L../../lib -l$(MPILIBNAME)
 INCLUDES = -I../../src/include -I${top_srcdir}/src/include 
 
 #

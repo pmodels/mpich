@@ -10,7 +10,9 @@
 
 #define MAX_MSGS 30
 
+/*
 static char MTEST_Descrip[] = "One implementation delivered incorrect data when an MPI recieve uses both ANY_SOURCE and ANY_TAG";
+*/
 
 int main( int argc, char *argv[] )
 {

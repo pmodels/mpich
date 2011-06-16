@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of broadcast with various roots and datatypes and sizes that are not powers of two";
+*/
 
 int main( int argc, char *argv[] )
 {

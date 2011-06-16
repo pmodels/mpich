@@ -8,11 +8,14 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test win_call_errhandler";
+*/
 
 static int calls = 0;
 static int errs = 0;
 static MPI_Win mywin;
+void eh( MPI_Win *win, int *err, ... );
 void eh( MPI_Win *win, int *err, ... )
 {
     if (*err != MPI_ERR_OTHER) {

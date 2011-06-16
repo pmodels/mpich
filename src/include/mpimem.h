@@ -384,6 +384,24 @@ if (pointer_) { \
 #define MPIU_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
     MPIU_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
 
+/* now the CALLOC version for zeroed memory */
+#define MPIU_CHKPMEM_CALLOC(pointer_,type_,nbytes_,rc_,name_) \
+    MPIU_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
+#define MPIU_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
+    MPIU_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
+#define MPIU_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
+    do {                                                                   \
+        pointer_ = (type_)MPIU_Calloc(1, (nbytes_));                       \
+        if (pointer_) {                                                    \
+            MPIU_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);        \
+            mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;          \
+        }                                                                  \
+        else if (nbytes_ > 0) {                                            \
+            MPIU_CHKMEM_SETERR(rc_,nbytes_,name_);                         \
+            stmt_;                                                         \
+        }                                                                  \
+    } while (0)
+
 /* A special version for routines that only allocate one item */
 #define MPIU_CHKPMEM_MALLOC1(pointer_,type_,nbytes_,rc_,name_,stmt_) \
 {pointer_ = (type_)MPIU_Malloc(nbytes_); \

@@ -10,11 +10,13 @@
 #include "mpitest.h"
 #include <string.h>
 
+/*
 static char MTEST_Descrip[] = "Locks with no RMA operations";
+*/
 
 int main( int argc, char *argv[] )
 {
-    int errs = 0, err;
+    int errs = 0;
     int rank, size, i;
     MPI_Comm      comm;
     MPI_Win       win;

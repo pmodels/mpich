@@ -15,6 +15,7 @@ test3_SOURCES = test3.c
 test4_SOURCES = test4.c
 test5_SOURCES = test5.c
 lockcontention_SOURCES = lockcontention.c
+lockcontention2_SOURCES = lockcontention2.c
 locknull_SOURCES = locknull.c
 wintest_SOURCES = wintest.c
 transpose1_SOURCES = transpose1.c
@@ -60,6 +61,18 @@ rmanull_SOURCES    = rmanull.c
 
 mixedsync_SOURCES = mixedsync.c
 selfrma_SOURCES   = selfrma.c
+
+strided_acc_onelock_SOURCES    = strided_acc_onelock.c
+strided_putget_indexed_SOURCES = strided_putget_indexed.c
+strided_acc_indexed_SOURCES    = strided_acc_indexed.c
+strided_acc_subarray_SOURCES   = strided_acc_subarray.c
+strided_get_indexed_SOURCES    = strided_get_indexed.c
+window_creation_SOURCES        = window_creation.c
+contention_put_SOURCES         = contention_put.c
+contention_putget_SOURCES      = contention_putget.c
+
+put_base_SOURCES   = put_base.c
+put_bottom_SOURCES = put_bottom.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) )

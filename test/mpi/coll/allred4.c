@@ -9,7 +9,9 @@
 #include "mpitest.h"
 #include <assert.h>
 
+/*
 static char MTEST_Descrip[] = "Test MPI_Allreduce with non-commutative user-defined operations using matrix rotations";
+*/
 
 /* This example is similar to allred3.c, but uses only 3x3 matrics with 
    integer-valued entries.  This is an associative but not commutative

@@ -98,7 +98,7 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    MPID_Comm_get_ptr( win_ptr->comm, win_comm_ptr );
+    win_comm_ptr = win_ptr->comm_ptr;
 
     mpi_errno = MPIR_Comm_group_impl(win_comm_ptr, &group_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;

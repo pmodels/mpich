@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bind.h"
 
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,

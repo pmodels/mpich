@@ -194,8 +194,10 @@ GOTO END
 :BUILD_WIN64
 if "%CPU%" == "X64" goto AFTER_WIN64_SANITY_CHECK
 if "%CPU%" == "AMD64" goto AFTER_WIN64_SANITY_CHECK
-echo ERROR: WIN64 Build environment not setup correctly ...
-GOTO END
+echo WARNING: WIN64 Build environment setup manually ...
+set CPU=x64
+set NODEBUG=1
+set APPVER=5.02
 :AFTER_WIN64_SANITY_CHECK
 echo Building MPICH2 x64 ...
 REM Adding hpc sdk import libs to PATH so that VS can detect it 
@@ -209,6 +211,12 @@ echo Building MPICH2 examples ...
 devenv.com examples\examples.sln /project cpi /build "Release|x64" >> make_x64.log
 if %errorlevel% NEQ 0 goto BUILDERROR
 echo .....................................................SUCCESS
+echo Building GNU libs ...
+cd maint
+CALL makegcclibs_64.bat
+if %errorlevel% NEQ 0 goto BUILDERROR
+echo .....................................................SUCCESS
+cd ..
 echo Building Wrapper utils
 devenv.com mpich2.sln /build "wrapperUtilRelease" >> make_x64.log
 if %errorlevel% NEQ 0 goto BUILDERROR

@@ -18,6 +18,16 @@
             required = "false"
         />
         <unnamed
+            name = "--disable-fortran"
+            helpstring = "Don't include fortran tests in the test suite"
+            required = "false"
+        />
+        <unnamed
+            name = "--disable-dynamic-procs"
+            helpstring = "Don't include dynamic proc tests in the test suite"
+            required = "false"
+        />
+        <unnamed
             name = "--mpi-include-dir"
             helpstring = "Specify mpi include dir, --mpi-include-dir=c:\progra~1\mpich2\include"
             required = "false"
@@ -44,7 +54,16 @@ project_list = ""
 config_list = ""
 bWin64 = False
 bForce = False
+bDisableFortran = False
+bDisableDynamicProcs = False
 path_to_remove = f.GetAbsolutePathName(".") + "\"
+
+Dim fortran_test_dirs(2)
+fortran_test_dirs(0)="f77"
+fortran_test_dirs(1)="f90"
+
+Dim dynamic_procs_test_dirs(1)
+dynamic_procs_test_dirs(0)="spawn"
 
 vs_proj_include_sep=";"
 vs_proj_lib_sep=";"
@@ -65,6 +84,10 @@ For arg = 0 To argCount - 1
     bForce = True
   ElseIf argValue = "--force=no" Then
     bForce = False
+  ElseIf argValue = "--disable-fortran" Then
+    bDisableFortran = True
+  ElseIf argValue = "--disable-dynamic-procs" Then
+    bDisableDynamicProcs = True
   ElseIf argValue = "--help" Then
     WScript.Arguments.ShowUsage
     WScript.Quit
@@ -136,16 +159,36 @@ End Function
 
 ' find all the testlist files
 Function GetTestLists(folder, dotdot)
-	For Each sub_folder in folder.SubFolders
-		GetTestLists sub_folder, dotdot & "..\"
-	Next
-	For Each file in folder.Files
+        skip_folder = False
+        arr = Split(folder, "\", -1, 1)
+        If bDisableFortran Then
+            For i=0 to UBound(fortran_test_dirs, 1)
+                If arr(UBound(arr, 1)) = fortran_test_dirs(i) Then
+                    skip_folder = True
+                End If
+            Next
+        End If
+        If bDisableDynamicProcs Then
+            For i=0 to UBound(dynamic_procs_test_dirs, 1)
+                If arr(UBound(arr, 1)) = dynamic_procs_test_dirs(i) Then
+                    skip_folder = True
+                End If
+            Next
+        End If
+        If Not skip_folder Then
+            For Each sub_folder in folder.SubFolders
+                If Not skip_folder Then
+                    GetTestLists sub_folder, dotdot & "..\"
+                End If
+	    Next
+	    For Each file in folder.Files
 		If file.Name = "testlist" Then
 			files.Add num_files, file.Path
 			dotdots.Add num_files, dotdot
 			num_files = num_files + 1
 		End If
-	Next
+	    Next
+        End If
 End Function
 
 last_project = ""

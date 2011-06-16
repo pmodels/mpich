@@ -7,6 +7,7 @@
 #include "mpitest.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 /*
   This program tests MPI_Alltoallv by having processor i send different

@@ -65,9 +65,9 @@ int MPI_Foo( MPI_Comm comm, MPI_Datatype dataype, int a )
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FOO);
 
-    MPIR_ERRTEST_INITIALIZED_ORRETURN();
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_CS_ENTER();
+    MPIU_THREAD_CS_ENTER(ALLFUNC);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FOO);
 
     /* Validate handle parameters needing to be converted */
@@ -109,19 +109,11 @@ int MPI_Foo( MPI_Comm comm, MPI_Datatype dataype, int a )
 
     /* ... body of routine ...  */
     
-    /* Some routines must ensure only one thread modifies a communicator
-       at a time, e.g., MPI_Comm_set_attr.  */
-    MPID_Comm_thread_lock( comm_ptr );
-    {
-        ... actual code ...
-    }
-    MPID_Comm_thread_unlock( comm_ptr );
-    
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FOO);
-    MPID_CS_EXIT();
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
   fn_fail:

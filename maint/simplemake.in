@@ -194,6 +194,7 @@ if (defined($ENV{"DEBUG_SUBDIRVAR"})) { $gDebugSubdirVar = 1; }
 $quiet = 0;
 
 %libdir = ();
+%liblinker = ();
 #
 # While simplemake doesn't support ext->other (e.g., .c to .s), 
 # the rules have been added.
@@ -849,6 +850,13 @@ sub ReadMfile {
 	    print "Setting libdir{$1} to $2/\n" if $debug;
             $libdir{$1}  = "$2/";
         }
+	elsif (/^lib([@\${}\(\)\w-]*)_so_LINKER\s*=\s*(\S+)\s*$/) {
+	    $libLinker{$1} = $2;
+	    # This selects a specific format for specifing the linker 
+	    # when installing the shared library
+	    print "setting installExtraArgs $1 to --clink=$2\n" if $debug;
+	    $installExtraArgs{$1} = "--clink=\"$2\"";
+	}
 	elsif (/^install_local_DIR\s*=\s*(.*)\s*$/) {
 	    $install_local_dirs = $1;
 	}
@@ -892,6 +900,10 @@ sub ReadMfile {
 	}
 	elsif (/^installdir_([\w-]*)\s*=\s*(.*)\s*$/) {
 	    $install_dirs{$1} .= "$2 ";
+	    $dirs_seen{'bindir'} = 1;   # For recursive make
+	    $dirs_seen{'execdir'} = 1;
+	    $dirs_seen{'includedir'} = 1;
+	    $dirs_seen{'libdir'} = 1;
 	}
 	elsif (/^optinstall_([\w-]*)\s*=\s*(.*)\s*$/) {
 	    # This is for files that will be installed only if present
@@ -908,6 +920,10 @@ sub ReadMfile {
 	elsif (/^optinstalldirs_([\w-]*)\s*=\s*(.*)\s*$/) {
 	    # This is for files that will be installed only if present
 	    $optinstall_dirs{$1} .= "$2 ";
+	    $dirs_seen{'bindir'} = 1;   # For recursive make
+	    $dirs_seen{'execdir'} = 1;
+	    $dirs_seen{'includedir'} = 1;
+	    $dirs_seen{'libdir'} = 1;
 	}
         elsif (/^SUBDIRS\s*=\s*(.*)\s*\r?$/) {
 	    # The \r is used to remove any \r in DOS-style files
@@ -1241,6 +1257,10 @@ sub WriteMfile {
 
     # Unrecognized lines go here
     print FD $other_text;
+
+    # fix for ticket #1122, forces OpenSolaris make to pass variable overrides
+    # to recursive make invocations
+    print FD "${newline}.POSIX:${newline}";
 
     # Add a final target, used by gnumake
     print FD "${newline}FORCE_TARGET:${newline}${newline}";
@@ -1942,6 +1962,8 @@ sub ClearVars {
     $depadd_all = "";
     %altCompile = ();
     %altCompileSources = ();
+    %libLinker = ();
+    %installExtraArgs = ();
 
     $gSubdirSMVarsSeen = "";
 
@@ -2636,7 +2658,13 @@ sub TargetPostamble {
     my $name = $_[0];
     $name .= "-postamble";
     if (defined($usertargets{$name})) { 
-	print FD "\t\${MAKE} $name$newline";
+	# Problems with recursive make strike again
+	if ($_[0] eq "install") {
+	    print FD "\t\${MAKE} prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} $name$newline";
+	}
+	else {
+	    print FD "\t\${MAKE} $name$newline";
+	}
     }
 }
 # --------------------------------------------------------------------------
@@ -3189,7 +3217,7 @@ sub TargetProfileLibraries {
 	if ($found_source_files) {
 	    # Add these files as objects to the archive
 	    # COMMAND PRINTING
-	    &PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$proflib_name.a \$?",
+	    &PrintVerboseOptionCommand( "\${AR} \${AR_FLAGS} ${libloc}lib$proflib_name.a \$?",
 					"  AR" );
 	    if ($ranliblib) { 
 		# COMMAND PRINTING
@@ -3231,7 +3259,7 @@ sub TargetProfileLibraries {
 	    if ($found_source_files) {
 		# Add these files as objects to the archive
 		# COMMAND PRINTING
-		&PrintVerboseOptionCommand( "\${AR} cr ${libloc}lib$proflib_name.la \$?",
+		&PrintVerboseOptionCommand( "\${AR} \${AR_FLAGS} ${libloc}lib$proflib_name.la \$?",
 					    "  AR" );
 		# To handle timestamp problems with recursive makes, 
 		# add a delay
@@ -3369,6 +3397,10 @@ sub TargetSharedLibraryFinal {
     my $newlibname = $_[1];
     my $libdir = $_[2];
 
+    # Some shared libraries may need to be built with a compiler other than 
+    # the C compiler.  This will let us define that.
+    my $linkerOption = "";
+
     my $libbasename = $libname;
     $libbasename =~ s/^lib//;
     $libbasename =~ s/\.la$//;
@@ -3379,9 +3411,14 @@ sub TargetSharedLibraryFinal {
 	return;
     }
 
+    # If the linker should not be the C compiler, this selects it
+    if (defined($libLinker{$libbasename})) {
+	$linkerOption = "--clink=\"" . $libLinker{$libbasename} . "\"";
+    }
+
     if ($libdir eq "" || $newlibname eq "" || $libname eq "") {
 	# If we don't have these names, we cannot create a valid library
-	print STDOUT "Unable to create shared libary target (no directory\n\
+	print STDOUT "Unable to create shared library target (no directory\n\
 library, or new library name)\n" if $debug;
 	return;
     }
@@ -3409,7 +3446,7 @@ library, or new library name)\n" if $debug;
     if (!defined($usertargets{"$libdir/$newlibname"})) {
 	print FD "# Build the shared library from the shared object files\n";
 	print FD "$libdir/$newlibname: $libdir/$libname
-\t(cd $libdir && \$(CREATESHLIB) --mode=link -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs -ldflags \"\$(LDFLAGS)\" \$(LIBS))\n";
+\t(cd $libdir && \$(CREATESHLIB) --mode=link $linkerOption -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs -ldflags \"\$(LDFLAGS)\" \$(LIBS))\n";
     }
     # If there is a profiling library, we need to build it
     # now, as part of this target, to handle the case where the
@@ -3445,7 +3482,7 @@ library, or new library name)\n" if $debug;
 	    $otherlibs = $shared_libraries_libs{$libbasename};
 	}
 
-	print FD "\t(cd $libdir && \$(CREATESHLIB) --mode=link -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs);\\\n";
+	print FD "\t(cd $libdir && \$(CREATESHLIB) --mode=link $linkerOption -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs);\\\n";
 
 	print FD "\tfi\n";
     }
@@ -3967,7 +4004,22 @@ sub TargetInstall {
 	    if ($this_install_method eq "") {
 		$this_install_method = '$(INSTALL)';
 		}
-	    print FD "\t$this_install_method $file \${DESTDIR}\${$dir}/$destfile$newline";
+	    $extraArgs = "";
+	    #print STDOUT "DEBUG: file = $file\n";
+	    if (defined($installExtraArgs{$file})) {
+		$extraArgs = $installExtraArgs{$file};
+	    }
+	    if ($kind eq "SHLIB" && $extraArgs eq "") {
+		# This is a hack 
+		$basefile = $file;
+		$basefile =~ s/^.*\/lib//;
+		$basefile =~ s/\.[^\.]*$//;
+		#print STDOUT "DEBUG: basefile = $basefile\n";
+		if (defined($installExtraArgs{$basefile})) {
+		    $extraArgs = $installExtraArgs{$basefile};
+		}
+	    }
+	    print FD "\t$this_install_method $extraArgs $file \${DESTDIR}\${$dir}/$destfile$newline";
 	}
     }
 
@@ -4043,7 +4095,22 @@ sub TargetInstall {
 		else {
 		    $this_install_choice = $install_methods{$kind};
 		}
-		print FD "\tif [ -s $file ] ; then $this_install_choice $file \${DESTDIR}\${$dir}/$destfile ; fi$newline";
+		$extraArgs = "";
+		#print STDOUT "DEBUG: file = $file\n";
+		if (defined($installExtraArgs{$file})) {
+		    $extraArgs = $installExtraArgs{$file};
+		}
+		if ($kind eq "SHLIB" && $extraArgs eq "") {
+		    # This is a hack 
+		    $basefile = $file;
+		    $basefile =~ s/^.*\/lib//;
+		    $basefile =~ s/\.[^\.]*$//;
+		    #print STDOUT "DEBUG: basefile = $basefile\n";
+		    if (defined($installExtraArgs{$basefile})) {
+			$extraArgs = $installExtraArgs{$basefile};
+		    }
+		}
+		print FD "\tif [ -s $file ] ; then $this_install_choice $extraArgs $file \${DESTDIR}\${$dir}/$destfile ; fi$newline";
 	    }
 	}
     }
@@ -4056,11 +4123,13 @@ sub TargetInstall {
 	if ($extradir =~ /^@/) {
 	    print FD "\tfor dir in $extradir - ; do \\$newline";
 	    print FD "\t\tif [ \"\$\$dir\" = \"-\" ] ; then break ; fi ;\\$newline";
-	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) install) ;\\$newline";
+#	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) install) ;\\$newline";
+	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} install) ;\\$newline";
 	    print FD "\tdone$newline";
 	}
 	else {
-	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install)$newline";
+#	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install)$newline";
+	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} install)$newline";
 	}
     }
     &TargetPostamble( "install" );
@@ -4424,12 +4493,12 @@ in the build directory\n";
 	# We always use a "newalldeps" incase there is a failure 
 	# creating the new list of dependency files.
 	print FD "\trm -f \$(DEPS_DIR)/newalldeps$newline";
-	my %sawFile = ();
+	%sawFile = ();
 	foreach $lib (keys(%libraries)) {
 	    foreach $sourcefile (split(/\s+/,&ExpandMakeVars($libraries{$lib}))) {
 		if (defined($sawFile{$sourcefile})) { next; }
 		$sawFile{$sourcefile} = 1;
-		my $srcdirloc = '$(srcdir)/';
+		$srcdirloc = '$(srcdir)/';
 		$ext = $sourcefile;
 		$ext =~ s/^.*\.//g;
 		$sourcebasename = $sourcefile;

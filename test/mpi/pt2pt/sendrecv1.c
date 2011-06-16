@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Send-Recv";
+*/
 
 int main( int argc, char *argv[] )
 {

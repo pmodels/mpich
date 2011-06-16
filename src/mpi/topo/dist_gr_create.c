@@ -38,11 +38,16 @@ attached.
 
 Input Parameters:
 + comm_old - input communicator (handle)
-. n - number of source nodes for which this process specifies edges (non-negative integer)
-. sources - array containing the n source nodes for which this process specifies edges (array of non-negative integers)
-. degrees - array specifying the number of destinations for each source node in the source node array (array of non-negative integers)
-. destinations - destination nodes for the source nodes in the source node array (array of non-negative integers)
-. weights - weights for source to destination edges (array of non-negative integers)
+. n - number of source nodes for which this process specifies edges 
+  (non-negative integer)
+. sources - array containing the n source nodes for which this process 
+  specifies edges (array of non-negative integers)
+. degrees - array specifying the number of destinations for each source node 
+  in the source node array (array of non-negative integers)
+. destinations - destination nodes for the source nodes in the source node 
+  array (array of non-negative integers)
+. weights - weights for source to destination edges (array of non-negative 
+  integers or MPI_UNWEIGHTED)
 . info - hints on optimization and interpretation of weights (handle)
 - reorder - the process may be reordered (true) or not (false) (logical)
 
@@ -55,6 +60,8 @@ Output Parameter:
 
 .N Errors
 .N MPI_SUCCESS
+.N MPI_ERR_ARG
+.N MPI_ERR_OTHER
 @*/
 int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
                           int degrees[], int destinations[], int weights[],
@@ -81,6 +88,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     int *rout_idx;
     int *rs;
     int in_out_peers[2] = {-1, -1};
+    int errflag = FALSE;
     MPIU_CHKLMEM_DECL(9);
     MPIU_CHKPMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE);
@@ -252,8 +260,9 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     }
 
     /* compute the number of peers I will recv from */
-    mpi_errno = MPIR_Reduce_scatter_block_impl(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr);
+    mpi_errno = MPIR_Reduce_scatter_block_impl(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr, &errflag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     MPIU_Assert(in_out_peers[0] <= comm_size && in_out_peers[0] >= 0);
     MPIU_Assert(in_out_peers[1] <= comm_size && in_out_peers[1] >= 0);

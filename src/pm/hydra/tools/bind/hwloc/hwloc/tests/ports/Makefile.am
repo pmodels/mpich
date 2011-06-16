@@ -1,5 +1,7 @@
-# Copyright 2009 INRIA, Université Bordeaux 1
+# Copyright © 2009-2010 INRIA.  All rights reserved.
+# Copyright © 2009, 2011 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+# See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
@@ -43,6 +45,7 @@ libhwloc_ports_la_SOURCES = \
         include/sys/thread.h \
         include/sys/mpctl.h \
         include/sys/cpuset.h \
+        include/sys/systemcfg.h \
         include/radset.h \
         include/cpuset.h \
         include/numa.h \
@@ -53,7 +56,7 @@ libhwloc_ports_la_CPPFLAGS = \
         -I$(HWLOC_top_srcdir)/include \
         -I$(HWLOC_top_srcdir)/tests/ports/include \
         -DHWLOC_COMPILE_PORTS \
-        -DHWLOC_SOLARIS_SYS -DHAVE_LIBLGRP -DHAVE_LIBKSTAT \
+        -DHWLOC_SOLARIS_SYS -DHAVE_LIBLGRP -DHAVE_LIBKSTAT -DHAVE_LGRP_LATENCY_COOKIE \
         -DHWLOC_AIX_SYS \
         -DHWLOC_OSF_SYS \
         -DHWLOC_WIN_SYS \

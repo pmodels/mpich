@@ -50,6 +50,11 @@ int MPID_Type_indexed(int count,
 
     if (count == 0) return MPID_Type_zerolen(newtype);
 
+    /* sanity check that blocklens are all non-negative */
+    for (i = 0; i < count; ++i) {
+        DLOOP_Assert(blocklength_array[i] >= 0);
+    }
+
     /* allocate new datatype object and handle */
     new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */

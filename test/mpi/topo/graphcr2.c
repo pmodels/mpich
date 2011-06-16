@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Create a communicator with a graph that contains null edges and one that contains duplicate edges";
+*/
 
 int main( int argc, char *argv[] )
 {

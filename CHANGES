@@ -1,4 +1,172 @@
 ===============================================================================
+                               Changes in 1.5
+===============================================================================
+
+ # MPI-3: the new MPI-3 nonblocking collectives functions are now available as
+   "MPIX_" functions (e.g. "MPIX_Ibcast").  All functions are provided and are
+   available for device-level overrides, but only a subset of the functions have
+   device-independent implementations at this time.  The current list of working
+   functions is: MPIX_Ibcast, MPIX_Ibarrier, MPIX_Ireduce, MPIX_Ialltoallv,
+   MPIX_Iallreduce.
+
+
+===============================================================================
+                               Changes in 1.4
+===============================================================================
+
+ # OVERALL: Improvements to fault tolerance for collective
+   operations. Thanks to Rui Wang @ ICT for reporting several of these
+   issues.
+
+ # OVERALL: Improvements to the universe size detection. Thanks to
+   Yauheni Zelenko for reporting this issue.
+
+ # OVERALL: Bug fixes for Fortran attributes on some systems. Thanks
+   to Nicolai Stange for reporting this issue.
+
+ # OVERALL: Added new ARMCI API implementation (experimental).
+
+ # OVERALL: Added new MPIX_Group_comm_create function to allow
+   non-collective creation of sub-communicators.
+
+ # FORTRAN: Bug fixes in the MPI_DIST_GRAPH_ Fortran bindings.
+
+ # PM/PMI: Support for a manual "none" launcher in Hydra to allow for
+   higher-level tools to be built on top of Hydra. Thanks to Justin
+   Wozniak for reporting this issue, for providing several patches for
+   the fix, and testing it.
+
+ # PM/PMI: Bug fixes in Hydra to handle non-uniform layouts of hosts
+   better. Thanks to the MVAPICH group at OSU for reporting this issue
+   and testing it.
+
+ # PM/PMI: Bug fixes in Hydra to handle cases where only a subset of
+   the available launchers or resource managers are compiled
+   in. Thanks to Satish Balay @ Argonne for reporting this issue.
+
+ # PM/PMI: Support for a different username to be provided for each
+   host; this only works for launchers that support this (such as
+   SSH).
+
+ # PM/PMI: Bug fixes for using Hydra on AIX machines. Thanks to
+   Kitrick Sheets @ NCSA for reporting this issue and providing the
+   first draft of the patch.
+
+ # PM/PMI: Bug fixes in memory allocation/management for environment
+   variables that was showing up on older platforms. Thanks to Steven
+   Sutphen for reporting the issue and providing detailed analysis to
+   track down the bug.
+
+ # PM/PMI: Added support for providing a configuration file to pick
+   the default options for Hydra. Thanks to Saurabh T. for reporting
+   the issues with the current implementation and working with us to
+   improve this option.
+
+ # PM/PMI: Improvements to the error code returned by Hydra.
+
+ # PM/PMI: Bug fixes for handling "=" in environment variable values in
+   hydra.
+
+ # PM/PMI: Upgrade the hwloc version to 1.1.2.
+
+ # COLLECTIVES: Performance and memory usage improvements for MPI_Bcast
+   in certain cases.
+
+ # VALGRIND: Fix incorrect Valgrind client request usage when MPICH2 is
+   built for memory debugging.
+
+ # BUILD SYSTEM: "--enable-fast" and "--disable-error-checking" are once
+   again valid simultaneous options to configure.
+
+ # TEST SUITE: Several new tests for MPI RMA operations.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.4rc2
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.4rc2?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
+
+
+===============================================================================
+                               Changes in 1.3.2
+===============================================================================
+
+ # OVERALL: MPICH2 now recognizes the OSX mach_absolute_time as a
+   native timer type.
+
+ # OVERALL: Performance improvements to MPI_Comm_split on large
+   systems.
+
+ # OVERALL: Several improvements to error returns capabilities in the
+   presence of faults.
+
+ # PM/PMI: Several fixes and improvements to Hydra's process binding
+   capability.
+
+ # PM/PMI: Upgrade the hwloc version to 1.1.1.
+
+ # PM/PMI: Allow users to sort node lists allocated by resource
+   managers in Hydra.
+
+ # PM/PMI: Improvements to signal handling. Now Hydra respects Ctrl-Z
+   signals and passes on the signal to the application.
+
+ # PM/PMI: Improvements to STDOUT/STDERR handling including improved
+   support for rank prepending on output. Improvements to STDIN
+   handling for applications being run in the background.
+
+ # PM/PMI: Split the bootstrap servers into "launchers" and "resource
+   managers", allowing the user to pick a different resource manager
+   from the launcher. For example, the user can now pick the "SLURM"
+   resource manager and "SSH" as the launcher.
+
+ # PM/PMI: The MPD process manager is deprecated.
+
+ # PM/PMI: The PLPA process binding library support is deprecated.
+
+ # WINDOWS: Adding support for gfortran and 64-bit gcc libs.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r7457:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3.2
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3.2?action=follow_copy&rev=HEAD&stop_rev=7457&mode=follow_copy
+
+
+===============================================================================
+                               Changes in 1.3.1
+===============================================================================
+
+ # OVERALL: MPICH2 is now fully compliant with the CIFTS FTB standard
+   MPI events (based on the draft standard).
+
+ # OVERALL: Major improvements to RMA performance for long lists of
+   RMA operations.
+
+ # OVERALL: Performance improvements for Group_translate_ranks.
+
+ # COLLECTIVES: Collective algorithm selection thresholds can now be controlled
+   at runtime via environment variables.
+
+ # ROMIO: PVFS error codes are now mapped to MPI error codes.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r7350:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.3.1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.3.1?action=follow_copy&rev=HEAD&stop_rev=7350&mode=follow_copy
+
+
+===============================================================================
                                Changes in 1.3
 ===============================================================================
 

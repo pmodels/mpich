@@ -24,6 +24,89 @@
 #define MPI_Reduce_local PMPI_Reduce_local
 /* any utility functions should go here, usually prefixed with PMPI_LOCAL to
  * correctly handle weak symbols and the profiling interface */
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Reduce_local_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Op *op_ptr;
+    MPI_User_function *uop;
+#ifdef HAVE_CXX_BINDING
+    int is_cxx_uop = 0;
+#endif
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+    int is_f77_uop = 0;
+#endif
+    MPIU_THREADPRIV_DECL;
+
+    if (count == 0) goto fn_exit;
+
+    MPIU_THREADPRIV_GET;
+    MPIU_THREADPRIV_FIELD(op_errno) = MPI_SUCCESS;
+
+    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        /* get the function by indexing into the op table */
+        uop = MPIR_Op_table[op%16 - 1];
+    }
+    else {
+        MPID_Op_get_ptr(op, op_ptr);
+
+#ifdef HAVE_CXX_BINDING
+        if (op_ptr->language == MPID_LANG_CXX) {
+            uop = (MPI_User_function *) op_ptr->function.c_function;
+            is_cxx_uop = 1;
+        }
+        else
+#endif
+        {
+            if ((op_ptr->language == MPID_LANG_C)) {
+                uop = (MPI_User_function *) op_ptr->function.c_function;
+            }
+            else {
+                uop = (MPI_User_function *) op_ptr->function.f77_function;
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+                is_f77_uop = 1;
+#endif
+            }
+        }
+    }
+
+    /* actually perform the reduction */
+#ifdef HAVE_CXX_BINDING
+    if (is_cxx_uop) {
+        (*MPIR_Process.cxx_call_op_fn)(inbuf, inoutbuf, count, datatype, uop);
+    }
+    else
+#endif
+    {
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+        if (is_f77_uop) {
+            MPI_Fint lcount = (MPI_Fint)count;
+            MPI_Fint ldtype = (MPI_Fint)datatype;
+            (*uop)(inbuf, inoutbuf, &lcount, &ldtype);
+        }
+        else {
+            (*uop)(inbuf, inoutbuf, &count, &datatype);
+        }
+#else
+        (*uop)(inbuf, inoutbuf, &count, &datatype);
+#endif
+    }
+
+    /* --BEGIN ERROR HANDLING-- */
+    if (MPIU_THREADPRIV_FIELD(op_errno))
+        mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
+    /* --END ERROR HANDLING-- */
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
@@ -58,12 +141,7 @@ Output Parameter:
 int MPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_User_function *uop;
     MPID_Op *op_ptr;
-#ifdef HAVE_CXX_BINDING
-    int is_cxx_uop = 0;
-#endif
-    MPIU_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_LOCAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -98,48 +176,7 @@ int MPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype dataty
 
     /* ... body of routine ...  */
 
-    if (count == 0) goto fn_exit;
-
-    MPIU_THREADPRIV_GET;
-    MPIU_THREADPRIV_FIELD(op_errno) = MPI_SUCCESS;
-
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        /* get the function by indexing into the op table */
-        uop = MPIR_Op_table[op%16 - 1];
-    }
-    else {
-        MPID_Op_get_ptr(op, op_ptr);
-
-#ifdef HAVE_CXX_BINDING
-        if (op_ptr->language == MPID_LANG_CXX) {
-            uop = (MPI_User_function *) op_ptr->function.c_function;
-            is_cxx_uop = 1;
-        }
-        else
-#endif
-        {
-            if ((op_ptr->language == MPID_LANG_C))
-                uop = (MPI_User_function *) op_ptr->function.c_function;
-            else
-                uop = (MPI_User_function *) op_ptr->function.f77_function;
-        }
-    }
-
-    /* actually perform the reduction */
-#ifdef HAVE_CXX_BINDING
-    if (is_cxx_uop) {
-        (*MPIR_Process.cxx_call_op_fn)(inbuf, inoutbuf, count, datatype, uop);
-    }
-    else
-#endif
-    {
-        (*uop)(inbuf, inoutbuf, &count, &datatype);
-    }
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (MPIU_THREADPRIV_FIELD(op_errno))
-        mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
-    /* --END ERROR HANDLING-- */
+    mpi_errno = MPIR_Reduce_local_impl(inbuf, inoutbuf, count, datatype, op);
 
     /* ... end of body of routine ... */
 

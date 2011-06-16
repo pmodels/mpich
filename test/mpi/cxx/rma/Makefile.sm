@@ -8,7 +8,15 @@ getgroupx_SOURCES = getgroupx.cxx
 winfencex_SOURCES = winfencex.cxx
 winscale1x_SOURCES = winscale1x.cxx
 winscale2x_SOURCES = winscale2x.cxx
+wincallx_SOURCES = wincallx.cxx
 fkeyvalwinx_SOURCES = fkeyvalwinx.cxx 
 
 ../util/mtest.o:
 	cd ../util && $(MAKE) mtest.o
+
+testing:
+	../../runtests -srcdir=$(srcdir) -tests=testlist \
+			-mpiexec=@MPIEXEC@ \
+		   	-xmlfile=summary.xml
+clean-local:
+	-rm -f summary.xml

@@ -11,12 +11,6 @@ MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef ENABLE_CHECKPOINTING
 
-#define SENDQ_EMPTY(q) GENERIC_Q_EMPTY (q)
-#define SENDQ_HEAD(q) GENERIC_Q_HEAD (q)
-#define SENDQ_ENQUEUE(qp, ep) GENERIC_Q_ENQUEUE (qp, ep, dev.next)
-#define SENDQ_DEQUEUE(qp, ep) GENERIC_Q_DEQUEUE (qp, ep, dev.next)
-#define SENDQ_ENQUEUE_MULTIPLE(qp, ep0, ep1) GENERIC_Q_ENQUEUE_MULTIPLE(qp, ep0, ep1, dev.next)
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_ckpt_pause_send_vc
 #undef FCNAME
@@ -54,13 +48,13 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI
     vc_tcp->send_paused = FALSE;
 
     /* There may be a unpause message in the send queue.  If so, just enqueue everything on the send queue. */
-    if (SENDQ_EMPTY(vc_tcp->send_queue))
+    if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue))
         mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->paused_send_queue);
         
     /* if anything is left on the paused queue, put it on the send queue and wait for the reconnect */
-    if (!SENDQ_EMPTY(vc_tcp->paused_send_queue)) {
+    if (!MPIDI_CH3I_Sendq_empty(vc_tcp->paused_send_queue)) {
         
-        SENDQ_ENQUEUE_MULTIPLE(&vc_tcp->send_queue, vc_tcp->paused_send_queue.head, vc_tcp->paused_send_queue.tail);
+        MPIDI_CH3I_Sendq_enqueue_multiple_no_refcount(&vc_tcp->send_queue, vc_tcp->paused_send_queue.head, vc_tcp->paused_send_queue.tail);
         vc_tcp->paused_send_queue.head = vc_tcp->paused_send_queue.tail = NULL;
     }
 

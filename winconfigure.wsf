@@ -246,7 +246,11 @@ buildfiles_channel = "sock"
 ' Miscellaneous settings
 '
 MPI_MAX_PROCESSOR_NAME = "128"
-MPI_AINT64               = "__int64"
+' Use the decorated MPI_AINT64_TYPE with MPI_AINT64_TYPEDEF_BEGIN & *END decos
+' for user exposed headers
+MPI_AINT64_TYPE        = "MPI_AINT64_TYPE"
+' Use MPI_AINT64 for internal headers
+MPI_AINT64              = "__int64"
 MPI_AINT64_FMT_DEC_SPEC  = "%I64d"
 MPIR_PINT64_FMT_DEC_SPEC  = """%I64d"""
 MPIR_UPINT64_FMT_DEC_SPEC  = """%I64u"""
@@ -265,6 +269,8 @@ MPI_OFFSET             = "__int64"
 'MPI_OFFSET_TYPEDEF     = "typedef __int64 MPI_Offset;"
 'MPI_OFFSET_TYPEDEF     = "typedef long long MPI_Offset;"
 MPI_OFFSET_TYPEDEF     = "#if defined(USE_GCC) || defined(__GNUC__)" + vbCrLf + "typedef long long MPI_Offset;" + vbCrLf + "#else" + vbCrLf + "typedef __int64 MPI_Offset;" + vbCrLf + "#endif"
+MPI_AINT64_TYPEDEF_BEGIN    = "#ifdef MPI_AINT64_TYPE" + vbCrLf + "#undef MPI_AINT64_TYPE" + vbCrLf + "#endif" + vbCrLf + "#if defined(USE_GCC) || defined(__GNUC__)" + vbCrLf + "#define MPI_AINT64_TYPE long long" + vbCrLf + "#else" + vbCrLf + "#define MPI_AINT64_TYPE __int64" + vbCrLf + "#endif" + vbCrLf
+MPI_AINT64_TYPEDEF_END = vbCrLf + "#undef MPI_AINT64_TYPE" + vbCrLf
 EXTRA_STATUS_DECL      = ""
 HAVE_ROMIO             = "#include ""mpio.h"""
 mpi_dll_spec_definition = "#ifdef USE_MPI_STATIC_LIBRARY" + vbCrLf + "# define MPIU_DLL_SPEC" + vbCrLf + "#else" + vbCrLf + "# ifdef MPI_EXPORTS" + vbCrLf + "#  define MPIU_DLL_SPEC __declspec(dllexport)" + vbCrLf + "# else" + vbCrLf + "#  define MPIU_DLL_SPEC __declspec(dllimport)" + vbCrLf + "# endif" + vbCrLf + "#endif" + vbCrLf + "#define MPI_CALL __cdecl" + vbCrLf
@@ -1133,90 +1139,123 @@ Function ToInteger(c)
 	ToInteger = i
 End Function
 
-'first = true
-Function HexToInt(str)
-	Dim i, multiplier, index
-	i = 0
-	multiplier = 1
-	for index = len(str) to 3 step -1
-		i = i + (ToInteger(Mid(str, index, 1)) * multiplier)
-		multiplier = multiplier * 16
-		'if first then
-		'	MsgBox "char " & Mid(str, index, 1) & ", i = " & i
-		'end if
-	next
-	'first = false
-	HexToInt = i
+' eg: IsSignedInteger(0x8000, 4) = True
+Function IsSignedInteger(hex_str, nb)
+    Dim max_nibbles
+
+    IsSignedInteger = False
+    max_nibbles = nb/4
+
+    If (len(hex_str) > 2) AND (len(hex_str) - 2 <= max_nibbles) Then
+        If len(hex_str) - 2 < max_nibbles Then
+            ' IsSignedInteger = False
+        Else
+            If ToInteger(Mid(hex_str, 3, 1)) >= 8 Then
+                IsSignedInteger = True
+            End If
+        End If
+    Else
+        printMsg "ERROR", "Invalid HEX string provided , str=" & hex_str
+    End If
 End Function
 
-F77_MPI_DOUBLE_COMPLEX    = HexToInt(dtypes.Item("MPI_DOUBLE_COMPLEX"))
-F77_MPI_COMPLEX           = HexToInt(dtypes.Item("MPI_COMPLEX"))
-F77_MPI_LOGICAL_W32           = HexToInt(dtypes.Item("MPI_LOGICAL"))
-F77_MPI_LOGICAL_W64           = HexToInt(dtypes64.Item("MPI_LOGICAL"))
-F77_MPI_REAL_W32              = HexToInt(dtypes.Item("MPI_REAL"))
-F77_MPI_REAL_W64              = HexToInt(dtypes64.Item("MPI_REAL"))
-F77_MPI_DOUBLE_PRECISION  = HexToInt(dtypes.Item("MPI_DOUBLE_PRECISION"))
-F77_MPI_INTEGER_W32           = HexToInt(dtypes.Item("MPI_INTEGER"))
-F77_MPI_INTEGER_W64           = HexToInt(dtypes64.Item("MPI_INTEGER"))
-F77_MPI_2INTEGER          = HexToInt(dtypes.Item("MPI_2INTEGER"))
-F77_MPI_2COMPLEX          = HexToInt(dtypes.Item("MPI_2COMPLEX"))
-F77_MPI_2DOUBLE_COMPLEX   = HexToInt(dtypes.Item("MPI_2DOUBLE_COMPLEX"))
-F77_MPI_2REAL             = HexToInt(dtypes.Item("MPI_2REAL"))
-F77_MPI_2DOUBLE_PRECISION = HexToInt(dtypes.Item("MPI_2DOUBLE_PRECISION"))
-F77_MPI_CHARACTER         = HexToInt(dtypes.Item("MPI_CHARACTER"))
-F77_MPI_BYTE              = HexToInt(dtypes.Item("MPI_BYTE"))
-F77_MPI_LB                = HexToInt(dtypes.Item("MPI_LB"))
-F77_MPI_PACKED            = HexToInt(dtypes.Item("MPI_PACKED"))
-F77_MPI_UB                = HexToInt(dtypes.Item("MPI_UB"))
-F77_COMPLEX8              = HexToInt(dtypes.Item("MPI_COMPLEX8"))
-F77_COMPLEX16             = HexToInt(dtypes.Item("MPI_COMPLEX16"))
-F77_COMPLEX32             = HexToInt(dtypes.Item("MPI_COMPLEX32"))
-F77_INTEGER1              = HexToInt(dtypes.Item("MPI_INTEGER1"))
-F77_INTEGER2              = HexToInt(dtypes.Item("MPI_INTEGER2"))
-F77_INTEGER4              = HexToInt(dtypes.Item("MPI_INTEGER4"))
-F77_INTEGER8              = HexToInt(dtypes.Item("MPI_INTEGER8"))
-F77_INTEGER16             = HexToInt(dtypes.Item("MPI_INTEGER16"))
-F77_REAL4                 = HexToInt(dtypes.Item("MPI_REAL4"))
-F77_REAL8                 = HexToInt(dtypes.Item("MPI_REAL8"))
-F77_REAL16                = HexToInt(dtypes.Item("MPI_REAL16"))
-F77_CHAR					= HexToInt(dtypes.Item("MPI_CHAR"))
-F77_SIGNED_CHAR				= HexToInt(dtypes.Item("MPI_SIGNED_CHAR"))
-F77_UNSIGNED_CHAR			= HexToInt(dtypes.Item("MPI_UNSIGNED_CHAR"))
-F77_WCHAR					= HexToInt(dtypes.Item("MPI_WCHAR"))
-F77_SHORT					= HexToInt(dtypes.Item("MPI_SHORT"))
-F77_UNSIGNED_SHORT			= HexToInt(dtypes.Item("MPI_UNSIGNED_SHORT"))
-F77_INT						= HexToInt(dtypes.Item("MPI_INT"))
-F77_UNSIGNED				= HexToInt(dtypes.Item("MPI_UNSIGNED"))
-F77_LONG					= HexToInt(dtypes.Item("MPI_LONG"))
-F77_UNSIGNED_LONG			= HexToInt(dtypes.Item("MPI_UNSIGNED_LONG"))
-F77_FLOAT					= HexToInt(dtypes.Item("MPI_FLOAT"))
-F77_DOUBLE					= HexToInt(dtypes.Item("MPI_DOUBLE"))
-F77_LONG_DOUBLE				= HexToInt(dtypes.Item("MPI_LONG_DOUBLE"))
-F77_LONG_LONG_INT			= HexToInt(dtypes.Item("MPI_LONG_LONG_INT"))
-F77_UNSIGNED_LONG_LONG		= HexToInt(dtypes.Item("MPI_UNSIGNED_LONG_LONG"))
-F77_LONG_LONG				= HexToInt(dtypes.Item("MPI_LONG_LONG"))
-F77_FLOAT_INT				= HexToInt(dtypes.Item("MPI_FLOAT_INT"))
-F77_DOUBLE_INT				= HexToInt(dtypes.Item("MPI_DOUBLE_INT"))
-F77_LONG_INT				= HexToInt(dtypes.Item("MPI_LONG_INT"))
-F77_SHORT_INT				= HexToInt(dtypes.Item("MPI_SHORT_INT"))
-F77_2INT					= HexToInt(dtypes.Item("MPI_2INT"))
-F77_LONG_DOUBLE_INT			= HexToInt(dtypes.Item("MPI_LONG_DOUBLE_INT"))
-F77_INT8_T              = HexToInt(dtypes.Item("MPI_INT8_T"))
-F77_INT16_T             = HexToInt(dtypes.Item("MPI_INT16_T"))
-F77_INT32_T             = HexToInt(dtypes.Item("MPI_INT32_T"))
-F77_INT64_T             = HexToInt(dtypes.Item("MPI_INT64_T"))
-F77_UINT8_T             = HexToInt(dtypes.Item("MPI_UINT8_T"))
-F77_UINT16_T            = HexToInt(dtypes.Item("MPI_UINT16_T"))
-F77_UINT32_T            = HexToInt(dtypes.Item("MPI_UINT32_T"))
-F77_UINT64_T            = HexToInt(dtypes.Item("MPI_UINT64_T"))
-F77_C_BOOL              = HexToInt(dtypes.Item("MPI_C_BOOL"))
-F77_C_FLOAT_COMPLEX     = HexToInt(dtypes.Item("MPI_C_FLOAT_COMPLEX"))
-F77_C_COMPLEX           = HexToInt(dtypes.Item("MPI_C_COMPLEX"))
-F77_C_DOUBLE_COMPLEX    = HexToInt(dtypes.Item("MPI_C_DOUBLE_COMPLEX"))
-F77_C_LONG_DOUBLE_COMPLEX      = HexToInt(dtypes.Item("MPI_C_LONG_DOUBLE_COMPLEX"))
-F77_AINT_W32                = HexToInt(dtypes.Item("MPI_AINT_W32"))
-F77_AINT_W64                = HexToInt(dtypes64.Item("MPI_AINT_W64"))
-F77_OFFSET_W64              = HexToInt(dtypes.Item("MPI_OFFSET_W64"))
+'first = true
+' eg: HexToInt(0x1, 32) = 1, HexToInt(0x1f, 32)=31
+Function HexToInt(str, nb)
+        Dim i, multiplier, index, max_nibbles
+        i = 0
+        multiplier = 1
+        max_nibbles = nb/4
+        if len(str) - 2 > max_nibbles then
+            printMsg "ERROR", "Cannot convert hex to integer, hex=" & str
+            HexToInt = 0
+        else
+            for index = len(str) to 3 step -1
+                i = i + (ToInteger(Mid(str, index, 1)) * multiplier)
+                multiplier = multiplier * 16
+            next
+            If IsSignedInteger(str, nb) Then
+                HexToInt = i - 2^nb
+            Else
+                HexToInt = i
+            End If
+        end if
+End Function
+
+'Convert hex to a fortran integer
+Function HexToFint(str)
+    ' sizeof(fint) = 4 bytes
+    HexToFint = HexToInt(str, 32)
+End Function
+
+F77_MPI_DOUBLE_COMPLEX    = HexToFint(dtypes.Item("MPI_DOUBLE_COMPLEX"))
+F77_MPI_COMPLEX           = HexToFint(dtypes.Item("MPI_COMPLEX"))
+F77_MPI_LOGICAL_W32           = HexToFint(dtypes.Item("MPI_LOGICAL"))
+F77_MPI_LOGICAL_W64           = HexToFint(dtypes64.Item("MPI_LOGICAL"))
+F77_MPI_REAL_W32              = HexToFint(dtypes.Item("MPI_REAL"))
+F77_MPI_REAL_W64              = HexToFint(dtypes64.Item("MPI_REAL"))
+F77_MPI_DOUBLE_PRECISION  = HexToFint(dtypes.Item("MPI_DOUBLE_PRECISION"))
+F77_MPI_INTEGER_W32           = HexToFint(dtypes.Item("MPI_INTEGER"))
+F77_MPI_INTEGER_W64           = HexToFint(dtypes64.Item("MPI_INTEGER"))
+F77_MPI_2INTEGER          = HexToFint(dtypes.Item("MPI_2INTEGER"))
+F77_MPI_2COMPLEX          = HexToFint(dtypes.Item("MPI_2COMPLEX"))
+F77_MPI_2DOUBLE_COMPLEX   = HexToFint(dtypes.Item("MPI_2DOUBLE_COMPLEX"))
+F77_MPI_2REAL             = HexToFint(dtypes.Item("MPI_2REAL"))
+F77_MPI_2DOUBLE_PRECISION = HexToFint(dtypes.Item("MPI_2DOUBLE_PRECISION"))
+F77_MPI_CHARACTER         = HexToFint(dtypes.Item("MPI_CHARACTER"))
+F77_MPI_BYTE              = HexToFint(dtypes.Item("MPI_BYTE"))
+F77_MPI_LB                = HexToFint(dtypes.Item("MPI_LB"))
+F77_MPI_PACKED            = HexToFint(dtypes.Item("MPI_PACKED"))
+F77_MPI_UB                = HexToFint(dtypes.Item("MPI_UB"))
+F77_COMPLEX8              = HexToFint(dtypes.Item("MPI_COMPLEX8"))
+F77_COMPLEX16             = HexToFint(dtypes.Item("MPI_COMPLEX16"))
+F77_COMPLEX32             = HexToFint(dtypes.Item("MPI_COMPLEX32"))
+F77_INTEGER1              = HexToFint(dtypes.Item("MPI_INTEGER1"))
+F77_INTEGER2              = HexToFint(dtypes.Item("MPI_INTEGER2"))
+F77_INTEGER4              = HexToFint(dtypes.Item("MPI_INTEGER4"))
+F77_INTEGER8              = HexToFint(dtypes.Item("MPI_INTEGER8"))
+F77_INTEGER16             = HexToFint(dtypes.Item("MPI_INTEGER16"))
+F77_REAL4                 = HexToFint(dtypes.Item("MPI_REAL4"))
+F77_REAL8                 = HexToFint(dtypes.Item("MPI_REAL8"))
+F77_REAL16                = HexToFint(dtypes.Item("MPI_REAL16"))
+F77_CHAR					= HexToFint(dtypes.Item("MPI_CHAR"))
+F77_SIGNED_CHAR				= HexToFint(dtypes.Item("MPI_SIGNED_CHAR"))
+F77_UNSIGNED_CHAR			= HexToFint(dtypes.Item("MPI_UNSIGNED_CHAR"))
+F77_WCHAR					= HexToFint(dtypes.Item("MPI_WCHAR"))
+F77_SHORT					= HexToFint(dtypes.Item("MPI_SHORT"))
+F77_UNSIGNED_SHORT			= HexToFint(dtypes.Item("MPI_UNSIGNED_SHORT"))
+F77_INT						= HexToFint(dtypes.Item("MPI_INT"))
+F77_UNSIGNED				= HexToFint(dtypes.Item("MPI_UNSIGNED"))
+F77_LONG					= HexToFint(dtypes.Item("MPI_LONG"))
+F77_UNSIGNED_LONG			= HexToFint(dtypes.Item("MPI_UNSIGNED_LONG"))
+F77_FLOAT					= HexToFint(dtypes.Item("MPI_FLOAT"))
+F77_DOUBLE					= HexToFint(dtypes.Item("MPI_DOUBLE"))
+F77_LONG_DOUBLE				= HexToFint(dtypes.Item("MPI_LONG_DOUBLE"))
+F77_LONG_LONG_INT			= HexToFint(dtypes.Item("MPI_LONG_LONG_INT"))
+F77_UNSIGNED_LONG_LONG		= HexToFint(dtypes.Item("MPI_UNSIGNED_LONG_LONG"))
+F77_LONG_LONG				= HexToFint(dtypes.Item("MPI_LONG_LONG"))
+F77_FLOAT_INT				= HexToFint(dtypes.Item("MPI_FLOAT_INT"))
+F77_DOUBLE_INT				= HexToFint(dtypes.Item("MPI_DOUBLE_INT"))
+F77_LONG_INT				= HexToFint(dtypes.Item("MPI_LONG_INT"))
+F77_SHORT_INT				= HexToFint(dtypes.Item("MPI_SHORT_INT"))
+F77_2INT					= HexToFint(dtypes.Item("MPI_2INT"))
+F77_LONG_DOUBLE_INT			= HexToFint(dtypes.Item("MPI_LONG_DOUBLE_INT"))
+F77_INT8_T              = HexToFint(dtypes.Item("MPI_INT8_T"))
+F77_INT16_T             = HexToFint(dtypes.Item("MPI_INT16_T"))
+F77_INT32_T             = HexToFint(dtypes.Item("MPI_INT32_T"))
+F77_INT64_T             = HexToFint(dtypes.Item("MPI_INT64_T"))
+F77_UINT8_T             = HexToFint(dtypes.Item("MPI_UINT8_T"))
+F77_UINT16_T            = HexToFint(dtypes.Item("MPI_UINT16_T"))
+F77_UINT32_T            = HexToFint(dtypes.Item("MPI_UINT32_T"))
+F77_UINT64_T            = HexToFint(dtypes.Item("MPI_UINT64_T"))
+F77_C_BOOL              = HexToFint(dtypes.Item("MPI_C_BOOL"))
+F77_C_FLOAT_COMPLEX     = HexToFint(dtypes.Item("MPI_C_FLOAT_COMPLEX"))
+F77_C_COMPLEX           = HexToFint(dtypes.Item("MPI_C_COMPLEX"))
+F77_C_DOUBLE_COMPLEX    = HexToFint(dtypes.Item("MPI_C_DOUBLE_COMPLEX"))
+F77_C_LONG_DOUBLE_COMPLEX      = HexToFint(dtypes.Item("MPI_C_LONG_DOUBLE_COMPLEX"))
+F77_AINT_W32                = HexToFint(dtypes.Item("MPI_AINT_W32"))
+F77_AINT_W64                = HexToFint(dtypes64.Item("MPI_AINT_W64"))
+F77_OFFSET_W64              = HexToFint(dtypes.Item("MPI_OFFSET_W64"))
 
 if false then
 foo = ""
@@ -1574,6 +1613,27 @@ Function appendUniqueString(ByRef origString, ByVal appendString)
 	Else
 		appendUniqueString = False
 	End If
+End Function
+
+Function ReplaceAtsWithDecoration(ByVal str, use_f77, b64 )
+    Dim regEx, Match, Matches
+    Set regEx = New RegExp
+    regEx.Pattern = "@.[0-9a-z_]*@"
+    regEx.IgnoreCase = True
+    regEx.Global = True
+    Set Matches = regEx.Execute(str)
+    For Each Match in Matches
+        Select Case Match
+            Case "@MPI_AINT@"
+                if b64 then
+                    str = Replace(str, "@MPI_AINT@", MPI_AINT64_TYPE)
+                    str = MPI_AINT64_TYPEDEF_BEGIN & str & MPI_AINT64_TYPEDEF_END
+                else
+                    str = Replace(str, "@MPI_AINT@", MPI_AINT32)
+                end if
+        End Select
+    Next
+    ReplaceAtsWithDecoration = str
 End Function
 
 Function ReplaceAts( str, use_f77, b64 )
@@ -1999,6 +2059,8 @@ Function ReplaceAts( str, use_f77, b64 )
 				Else
 					str = Replace(str, "@F77_MPI_OFFSET@", "INTEGER (KIND=8)")
 				End If
+                        Case "@WTIME_DOUBLE_TYPE@"
+                                str = Replace(str, "@WTIME_DOUBLE_TYPE@", "DOUBLE PRECISION")
 			' FIXME: The size of int,... could depend on compiler options
                         ' These defns, *FC*, are specific to the Intel Fortran Compiler on Windows.
                         ' These values may not work for say gfortran
@@ -2162,13 +2224,13 @@ Function ReplaceAts( str, use_f77, b64 )
 			Case "@nemesis_nets_macro_defs@"
 				str = Replace(str, "@nemesis_nets_macro_defs@", "#define MPIDI_NEM_NEWTCP_MODULE 0" + vbCrLf + "#define MPIDI_NEM_ND_MODULE 1")
 			Case "@nemesis_nets_func_decl@"
-				str = Replace(str, "@nemesis_nets_func_decl@", "MPIDI_nem_newtcp_module_funcs, MPIDI_Nem_nd_funcs")
+				str = Replace(str, "@nemesis_nets_func_decl@", "MPIDI_nem_newtcp_module_funcs, MPIDI_Nem_nd_funcs, MPIDI_nem_none_funcs")
 			Case "@nemesis_nets_array_sz@"
-				str = Replace(str, "@nemesis_nets_array_sz@", "2")
+				str = Replace(str, "@nemesis_nets_array_sz@", "3")
 			Case "@nemesis_nets_func_array@"
-				str = Replace(str, "@nemesis_nets_func_array@", "&MPIDI_nem_newtcp_module_funcs, &MPIDI_Nem_nd_funcs")
+				str = Replace(str, "@nemesis_nets_func_array@", "&MPIDI_nem_newtcp_module_funcs, &MPIDI_Nem_nd_funcs, &MPIDI_nem_none_funcs")
 			Case "@nemesis_nets_strings@"
-				str = Replace(str, "@nemesis_nets_strings@", """newtcp"",""nd""")
+				str = Replace(str, "@nemesis_nets_strings@", """newtcp"",""nd"", ""none""")
 			Case Else
 			'	unhandled_ats = unhandled_ats & Match & vbNewLine
 			'	unhandled_ats_count = unhandled_ats_count + 1
@@ -2428,6 +2490,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef HAVE__BOOL */")
                                 Case "HAVE__COMPLEX"
                                         fout.WriteLine("/* #undef HAVE__COMPLEX */")
+                                Case "HAVE___TYPEOF"
+                                        fout.WriteLine("#define HAVE___TYPEOF 1")
                                 Case "HAVE_FLOAT__COMPLEX"
                                         fout.WriteLine("/* #undef HAVE_FLOAT__COMPLEX */")
                                 Case "HAVE_DOUBLE__COMPLEX"
@@ -3658,6 +3722,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef LINUX86_CYCLE_CPUID_RDTSC32 */")
                                 Case "LINUX86_CYCLE_CPUID_RDTSC64"
                                         fout.WriteLine("/* #undef LINUX86_CYCLE_CPUID_RDTSC64 */")
+                                Case "HAVE_MACH_ABSOLUTE_TIME"
+                                        fout.WriteLine("/* #undef HAVE_MACH_ABSOLUTE_TIME */")
 				Case "MPICH2_LIBDIR"
 					fout.WriteLine("#undef MPICH2_LIBDIR")
                                 Case "MPICH_DEBUG_MUTEXNESTING"
@@ -3802,6 +3868,10 @@ Sub AddDefinitions( fout, filename, b64 )
                                 ' LT_OBJDIR
                                 Case "LT_OBJDIR"
                                         fout.WriteLine("/* #undef LT_OBJDIR */")
+                                Case "USE_MPIU_INSTR"
+                                        fout.WriteLine("/* #undef USE_MPIU_INSTR */")
+                                Case "HAVE_QSORT"
+                                        fout.WriteLine("#define HAVE_QSORT 1")
 				Case Else
                                     Dim useCustomDefDict
                                     useCustomDefDict = False
@@ -3851,9 +3921,16 @@ printMsg "VERBOSE", "Creating src\include\win32\mpi.h"
 set fout32 = f.CreateTextFile("src\include\win32\mpi.h")
 set fin = f.OpenTextFile("src\include\mpi.h.in")
 
-contents32 = fin.ReadAll()
-contents64 = contents32
+contents32=""
+contents64=""
+do until fin.AtEndOfStream = True
+    line = fin.ReadLine()
+    contents32 = contents32 + ReplaceAtsWithDecoration(line, false, false) + vbCrLf
+    contents64 = contents64 + ReplaceAtsWithDecoration(line, false, true) + vbCrLf
+loop
+
 fin.Close()
+
 contents32 = ReplaceAts(contents32, false, false)
 contents64 = ReplaceAts(contents64, false, true)
 if bAddDllDecoration then
@@ -4444,6 +4521,8 @@ Function BuildIFaces()
 	If bForce Or Not f.FileExists("src\binding\cxx\mpicxx.h.in") Then
 
 		Set WshShell = CreateObject("WScript.Shell")
+                Set userEnv = WshShell.Environment("USER")
+                userEnv("nodosfilewarning") = 1
 		WshShell.CurrentDirectory = "src\binding\cxx"
 		printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface -nosep"
 		WshShell.Run "perl buildiface -nosep", 0, true
@@ -4515,6 +4594,8 @@ Function BuildIFaces()
 		If bForce Or Not f.FileExists("src\binding\mcxx\mpimcxx.h.in") Then
 	
 			Set WshShell = CreateObject("WScript.Shell")
+                        Set userEnv = WshShell.Environment("USER")
+                        userEnv("nodosfilewarning") = 1
 			WshShell.CurrentDirectory = "src\binding\mcxx"
 			printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface -nosep"
 			WshShell.Run "perl buildiface -nosep", 0, true
@@ -4557,6 +4638,8 @@ Function BuildIFaces()
 		If bForce Or Not f.FileExists("src\binding\f77\mpif.h.in") Then
 
 			Set WshShell = CreateObject("WScript.Shell")
+                        Set userEnv = WshShell.Environment("USER")
+                        userEnv("nodosfilewarning") = 1
 			WshShell.CurrentDirectory = "src\binding\f77"
 			printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface"
 			WshShell.Run "perl buildiface", 0, true
@@ -4648,6 +4731,8 @@ Function BuildIFaces()
 		If bForce Or Not f.FileExists("src\binding\f90\mpi.f90") Then
 
 			Set WshShell = CreateObject("WScript.Shell")
+                        Set userEnv = WshShell.Environment("USER")
+                        userEnv("nodosfilewarning") = 1
 			WshShell.CurrentDirectory = "src\binding\f90"
 			printMsg "VERBOSE", WshShell.CurrentDirectory & ">perl buildiface"
 			WshShell.Run "perl buildiface", 0, true
@@ -4720,6 +4805,16 @@ Function BuildIFaces()
 			printMsg "VERBOSE", "Creating src\binding\f90\mpif90model.h"
 			set fout = fs.CreateTextFile("mpif90model.h" , True)
 			set fin  = fs.OpenTextFile("mpif90model.h.in")
+			contents = fin.ReadAll()
+			contents = ReplaceAts(contents, false, false)
+			fout.Write(contents)
+			fin.Close()
+			fout.Close()
+
+			' Create mpi_base.f90 
+			printMsg "VERBOSE", "Creating src\binding\f90\mpi_base.f90"
+			set fout = fs.CreateTextFile("mpi_base.f90" , True)
+			set fin  = fs.OpenTextFile("mpi_base.f90.in")
 			contents = fin.ReadAll()
 			contents = ReplaceAts(contents, false, false)
 			fout.Write(contents)
@@ -6405,6 +6500,7 @@ Function GenBuild()
 	bfile.WriteLine("nmake %SILENT% /NOLOGO irlog2rlog")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO TraceInput")
 	bfile.WriteLine("nmake %SILENT% /NOLOGO gcc_libs")
+	bfile.WriteLine("nmake %SILENT% /NOLOGO impgen")
 	bfile.Close()
 
 	Set mfile = f.CreateTextFile("winbuild\makefile", true)
@@ -7035,11 +7131,13 @@ Function GenBuild()
 '	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength
 	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength
+	CreateRules f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\none"), trimlength
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\src"), trimlength, true, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\src"), trimlength, false, false
 '	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\utils"), trimlength, false, false
 	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\wintcp"), trimlength, false, false
-	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength, false, true
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\nd"), trimlength, false, false
+	CreateObjs "ch3nemesis", f.GetFolder("src\mpid\ch3\channels\nemesis\nemesis\netmod\none"), trimlength, false, true
 
 
 	mfile.WriteLine

@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of sending to self (with a preposted receive)";
+*/
 
 int main( int argc, char *argv[] )
 {

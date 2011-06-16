@@ -13,8 +13,6 @@
 #endif
 #include "mpitest.h"
 
-static int verbose = 0;
-
 static int ncalls = 0;
 void efn( MPI_File *fh, int *code, ... );
 void efn( MPI_File *fh, int *code, ... )

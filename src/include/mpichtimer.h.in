@@ -25,6 +25,7 @@
 /* The value "USE_DEVICE" means that the ADI device provides the timer */
 #define USE_DEVICE                  9
 #define USE_WIN64_CYCLE             10
+#define USE_MACH_ABSOLUTE_TIME      11
 #define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
 
 #if MPICH_TIMER_KIND == USE_GETHRTIME 
@@ -45,6 +46,8 @@
 #elif MPICH_TIMER_KIND == USE_QUERYPERFORMANCECOUNTER
 #include <winsock2.h>
 #include <windows.h>
+#elif MPICH_TIMER_KIND == USE_MACH_ABSOLUTE_TIME
+#include <mach/mach_time.h>
 #elif MPICH_TIMER_KIND == USE_WIN86_CYCLE
 #include <winsock2.h>
 #include <windows.h>
@@ -111,7 +114,7 @@ void MPID_Wtime( MPID_Time_t * timeval);
 
   Question:
   Instead of handling a null value of 't1', should we have a separate
-  routing 'MPID_Wtime_todouble' that converts a single timestamp to a 
+  routine 'MPID_Wtime_todouble' that converts a single timestamp to a 
   double value?  
 
   Module:
@@ -216,6 +219,9 @@ int MPID_Wtime_init(void);
    post-processsing step to convert the values to doubles.
    */
 
+/* The timer kind is set using AC_SUBST in the MPICH2 configure */
+#define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
+
 #if MPICH_TIMER_KIND == USE_GETHRTIME 
 #define MPID_Wtime_init() 0
 #define MPIDM_Wtime_todouble MPID_Wtime_todouble
@@ -295,6 +301,9 @@ extern double MPID_Seconds_per_tick;
 extern double MPID_Seconds_per_tick;
 #define MPIDM_Wtime_todouble(t, d) *d = (double)(__int64)*t * MPID_Seconds_per_tick
 #define MPIDM_Wtime_diff(t1,t2,diff) *diff = (double)((__int64)( *t2 - *t1 )) * MPID_Seconds_per_tick
+
+#elif MPICH_TIMER_KIND == USE_MACH_ABSOLUTE_TIME
+#define MPIDM_Wtime_todouble MPID_Wtime_todouble
 
 #endif
 

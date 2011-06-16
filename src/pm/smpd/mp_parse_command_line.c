@@ -2389,7 +2389,7 @@ configfile_loop:
         nemesis_netmod[0] = '\0';
 #ifdef HAVE_WINDOWS_H
         /* See if there is a netmod specified with the channel
-         * eg: -channel nemesis:newtcp | -channel nemesis:nd
+         * eg: -channel nemesis:newtcp | -channel nemesis:nd | -channel nemesis:none
          */
         if(strlen(channel) > 0){
             char seps[]=":";

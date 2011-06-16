@@ -1,6 +1,7 @@
 dnl -*- Autoconf -*-
 dnl
-dnl Copyright 2009 INRIA, Université Bordeaux 1
+dnl Copyright (c) 2009-2010 INRIA.  All rights reserved.
+dnl Copyright (c) 2009-2011 Université Bordeaux 1
 dnl Copyright (c) 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
 dnl                         Corporation.  All rights reserved.
@@ -8,7 +9,8 @@ dnl Copyright (c) 2004-2005 The Regents of the University of California.
 dnl                         All rights reserved.
 dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart, 
 dnl                         University of Stuttgart.  All rights reserved.
-dnl Copyright © 2006-2010  Cisco Systems, Inc.  All rights reserved.
+dnl Copyright © 2006-2011  Cisco Systems, Inc.  All rights reserved.
+dnl See COPYING in top-level directory.
 
 # Main hwloc m4 macro, to be invoked by the user
 #
@@ -21,7 +23,6 @@ dnl Copyright © 2006-2010  Cisco Systems, Inc.  All rights reserved.
 AC_DEFUN([HWLOC_SETUP_CORE],[
     AC_REQUIRE([AC_CANONICAL_TARGET])
     AC_REQUIRE([AC_PROG_CC])
-    AC_REQUIRE([AM_PROG_CC_C_O])
 
     AS_IF([test "x$4" != "x"],
           [cat <<EOF
@@ -30,9 +31,6 @@ AC_DEFUN([HWLOC_SETUP_CORE],[
 ### Configuring hwloc core
 ###
 EOF])
-
-    # We want new Libtool.  None of that old stuff.  Pfft.    
-    LT_PREREQ([2.2.6])
 
     # If no prefix was defined, set a good value
     m4_ifval([$1], 
@@ -93,12 +91,6 @@ EOF])
     AS_IF([test "$hwloc_debug" = "" -a "$enable_debug" = "yes"],
           [hwloc_debug=1
            hwloc_debug_msg="enabled"])
-    AS_IF([test "$hwloc_debug" = "" -a "$enable_debug" = "" -a -d .svn],
-          [hwloc_debug=1
-           hwloc_debug_msg="enabled (SVN checkout default)"])
-    AS_IF([test "$hwloc_debug" = "" -a "$enable_debug" = "" -a -d .hg],
-          [hwloc_debug=1
-           hwloc_debug_msg="enabled (HG clone default)"])
     AS_IF([test "$hwloc_debug" = ""],
           [hwloc_debug=0
            hwloc_debug_msg="disabled"])
@@ -114,11 +106,11 @@ EOF])
     AC_MSG_RESULT(m4_ifval([$1], hwloc_config_prefix, [(none)]))
 
     # Note that private/config.h *MUST* be listed first so that it
-    # becomes the "main" config header file.  Any AM_CONFIG_HEADERs
+    # becomes the "main" config header file.  Any AC-CONFIG-HEADERS
     # after that (hwloc/config.h) will only have selective #defines
     # replaced, not the entire file.
-    AM_CONFIG_HEADER(hwloc_config_prefix[include/private/config.h])
-    AM_CONFIG_HEADER(hwloc_config_prefix[include/hwloc/config.h])
+    AC_CONFIG_HEADERS(hwloc_config_prefix[include/private/autogen/config.h])
+    AC_CONFIG_HEADERS(hwloc_config_prefix[include/hwloc/autogen/config.h])
 
     # What prefix are we using?
     AC_MSG_CHECKING([for hwloc symbol prefix])
@@ -141,27 +133,6 @@ EOF])
     AS_IF([test "$hwloc_symbol_prefix_value" = "hwloc_"],
           [AC_DEFINE([HWLOC_SYM_TRANSFORM], [0])],
           [AC_DEFINE([HWLOC_SYM_TRANSFORM], [1])])
-
-    #
-    # Define C flags
-    #
-
-    # hwloc uses C99 style, so ensure that we can figure out which
-    # compiler flags will drive this.
-    hwloc_CC_save=$CC
-    hwloc_CFLAGS_save=$CFLAGS
-    AC_PROG_CC_C99
-    AS_IF([test x"$ac_cv_prog_cc_c99" = xno],
-          [AC_WARN([C99 support is required by hwloc])
-           $3],
-          [HWLOC_SETUP_CORE_AFTER_C99($1, $2, $3, $4)])
-])
-
-dnl Same order of parameters form HWLOC-SETUP-CORE
-AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
-    hwloc_CC_c99_flags=`echo $CC | sed -e "s;^$hwloc_CC_save;;"`
-    CC=$hwloc_CC_save
-    CFLAGS=$hwloc_CFLAGS_save
 
     # GCC specifics.
     if test "x$GCC" = "xyes"; then
@@ -245,7 +216,7 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
         AC_MSG_WARN([***********************************************************])
         AC_MSG_WARN([*** hwloc does not support this system.])
         AC_MSG_WARN([*** hwloc will *attempt* to build (but it may not work).])
-        AC_MSG_WARN([*** hwloc's run-time results may be reduced to showing just one processor.])
+        AC_MSG_WARN([*** hwloc run-time results may be reduced to showing just one processor.])
         AC_MSG_WARN([*** You have been warned.])
         AC_MSG_WARN([*** Pausing to give you time to read this message...])
         AC_MSG_WARN([***********************************************************])
@@ -278,8 +249,6 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
         esac
     esac
     
-    _HWLOC_CHECK_DIFF_U
-    
     AC_CHECK_SIZEOF([unsigned long])
     AC_DEFINE_UNQUOTED([HWLOC_SIZEOF_UNSIGNED_LONG], $ac_cv_sizeof_unsigned_long, [The size of `unsigned long', as computed by sizeof])
     AC_CHECK_SIZEOF([unsigned int])
@@ -292,7 +261,7 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     _HWLOC_CHECK_VISIBILITY
     HWLOC_CFLAGS="$HWLOC_FLAGS $HWLOC_VISIBILITY_CFLAGS"
     AS_IF([test "$HWLOC_VISIBILITY_CFLAGS" != ""],
-          [AC_MSG_WARN(["$HWLOC_VISIBILITY_CFLAGS" has been added to hwloc's CFLAGS])])
+          [AC_MSG_WARN(["$HWLOC_VISIBILITY_CFLAGS" has been added to the hwloc CFLAGS])])
 
     #
     # Check for inline compatibility support
@@ -319,39 +288,20 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
       ])
     ])
     AC_DEFINE_UNQUOTED(hwloc_strncasecmp, $hwloc_strncasecmp, [Define this to either strncasecmp or strncmp])
+
+    AC_CHECK_FUNCS([strftime])
+    AC_CHECK_FUNCS([setlocale])
     
     AC_CHECK_HEADER([stdint.h], [
       AC_DEFINE([HWLOC_HAVE_STDINT_H], [1], [Define to 1 if you have the <stdint.h> header file.])
     ])
+    AC_CHECK_HEADERS([sys/mman.h])
     
-    AC_CHECK_TYPES([wchar_t], [
-      AC_CHECK_FUNCS([putwc])
-    ], [], [[#include <wchar.h>]])
-    
-    AC_CHECK_HEADERS([locale.h], [
-      AC_CHECK_FUNCS([setlocale])
-    ])
-    AC_CHECK_HEADERS([langinfo.h], [
-      AC_CHECK_FUNCS([nl_langinfo])
-    ])
-    hwloc_old_LIBS="$LIBS"
-    LIBS=
-    AC_CHECK_HEADERS([curses.h], [
-      AC_CHECK_HEADERS([term.h], [
-        AC_SEARCH_LIBS([tparm], [termcap ncursesw ncurses curses], [
-            AC_SUBST([HWLOC_TERMCAP_LIBS], ["$LIBS"])
-            AC_DEFINE([HWLOC_HAVE_LIBTERMCAP], [1],
-                      [Define to 1 if you have a library providing the termcap interface])
-          ])
-      ], [], [[#include <curses.h>]])
-    ])
-    LIBS="$hwloc_old_LIBS"
-    unset hwloc_old_LIBS
-
     AC_CHECK_TYPES([KAFFINITY,
                     PROCESSOR_CACHE_TYPE,
                     CACHE_DESCRIPTOR,
                     LOGICAL_PROCESSOR_RELATIONSHIP,
+                    RelationProcessorPackage,
                     SYSTEM_LOGICAL_PROCESSOR_INFORMATION,
                     GROUP_AFFINITY,
                     PROCESSOR_RELATIONSHIP,
@@ -359,7 +309,9 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
                     CACHE_RELATIONSHIP,
                     PROCESSOR_GROUP_INFO,
                     GROUP_RELATIONSHIP,
-                    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX],
+                    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,
+		    PSAPI_WORKING_SET_EX_BLOCK,
+		    PSAPI_WORKING_SET_EX_INFORMATION],
                     [],[],[[#include <windows.h>]])
     AC_CHECK_LIB([gdi32], [main],
                  [HWLOC_LIBS="-lgdi32 $HWLOC_LIBS"
@@ -378,12 +330,6 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
       AC_CHECK_LIB([kstat], [main], 
                    [HWLOC_LIBS="-lkstat $HWLOC_LIBS"
                     AC_DEFINE([HAVE_LIBKSTAT], 1, [Define to 1 if we have -lkstat])])
-    ])
-    
-    AC_CHECK_HEADERS([infiniband/verbs.h], [
-      AC_CHECK_LIB([ibverbs], [ibv_open_device], 
-                   [HWLOC_LIBS="-libverbs $HWLOC_LIBS"
-                    AC_DEFINE([HAVE_LIBIBVERBS], 1, [Define to 1 if we have -libverbs])])
     ])
     
     AC_CHECK_DECLS([_SC_NPROCESSORS_ONLN,
@@ -430,36 +376,32 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     
     _HWLOC_CHECK_DECL([sched_setaffinity], [
       AC_MSG_CHECKING([for old prototype of sched_setaffinity])
-      AC_COMPILE_IFELSE(
+      AC_COMPILE_IFELSE([
         AC_LANG_PROGRAM([[
           #define _GNU_SOURCE
           #include <sched.h>
           static unsigned long mask;
-          ]], [[ sched_setaffinity(0, (void*) &mask);
-          ]]),
-        AC_DEFINE([HWLOC_HAVE_OLD_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides the old prototype of sched_setaffinity()])
-        AC_MSG_RESULT([yes]),
-        AC_MSG_RESULT([no])
-      )
+          ]], [[ sched_setaffinity(0, (void*) &mask); ]])],
+        [AC_DEFINE([HWLOC_HAVE_OLD_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides the old prototype of sched_setaffinity()])
+         AC_MSG_RESULT([yes])],
+        [AC_MSG_RESULT([no])])
     ], , [[
 #define _GNU_SOURCE
 #include <sched.h>
 ]])
     
     AC_MSG_CHECKING([for working CPU_SET])
-    AC_LINK_IFELSE(
+    AC_LINK_IFELSE([
       AC_LANG_PROGRAM([[
         #include <sched.h>
         cpu_set_t set;
-        ]], [[ CPU_ZERO(&set); CPU_SET(0, &set);
-        ]]),
-        AC_DEFINE([HWLOC_HAVE_CPU_SET], [1], [Define to 1 if the CPU_SET macro works])
-        AC_MSG_RESULT([yes]),
-        AC_MSG_RESULT([no])
-    )
+        ]], [[ CPU_ZERO(&set); CPU_SET(0, &set);]])],
+	[AC_DEFINE([HWLOC_HAVE_CPU_SET], [1], [Define to 1 if the CPU_SET macro works])
+         AC_MSG_RESULT([yes])],
+        [AC_MSG_RESULT([no])])
     
     AC_MSG_CHECKING([for working CPU_SET_S])
-    AC_LINK_IFELSE(
+    AC_LINK_IFELSE([
       AC_LANG_PROGRAM([[
           #include <sched.h>
           cpu_set_t *set;
@@ -468,14 +410,28 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
           CPU_ZERO_S(CPU_ALLOC_SIZE(1024), set);
           CPU_SET_S(CPU_ALLOC_SIZE(1024), 0, set);
           CPU_FREE(set);
-        ]]),
-        AC_DEFINE([HWLOC_HAVE_CPU_SET_S], [1], [Define to 1 if the CPU_SET_S macro works])
-        AC_MSG_RESULT([yes]),
-        AC_MSG_RESULT([no])
-    )
+        ]])],
+        [AC_DEFINE([HWLOC_HAVE_CPU_SET_S], [1], [Define to 1 if the CPU_SET_S macro works])
+         AC_MSG_RESULT([yes])],
+        [AC_MSG_RESULT([no])])
 
-    # check for kerrighed, but don't abort if not found
-    HWLOC_PKG_CHECK_MODULES([KERRIGHED], [kerrighed >= 2.0], [], [], [:])
+    AC_MSG_CHECKING([for working _syscall3])
+    AC_LINK_IFELSE([
+      AC_LANG_PROGRAM([[
+          #include <linux/unistd.h>
+          #include <errno.h>
+          #define __NR_hwloc_test 123
+          _syscall3(int, hwloc_test, int, param1, int, param2, int, param3);
+        ]], [[ hwloc_test(1, 2, 3); ]])],
+        [AC_DEFINE([HWLOC_HAVE__SYSCALL3], [1], [Define to 1 if the _syscall3 macro works])
+         AC_MSG_RESULT([yes])],
+        [AC_MSG_RESULT([no])])
+
+    # Check for kerrighed, but don't abort if not found.  It's illegal
+    # to pass in an empty 3rd argument, but we trust the output of
+    # pkg-config, so just give it a value that will always work:
+    # printf.
+    HWLOC_PKG_CHECK_MODULES([KERRIGHED], [kerrighed >= 2.0], [printf], [], [:])
 
     AC_PATH_PROGS([HWLOC_MS_LIB], [lib])
     AC_ARG_VAR([HWLOC_MS_LIB], [Path to Microsoft's Visual Studio `lib' tool])
@@ -522,10 +478,32 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     ])
     
     AC_CHECK_FUNCS([openat], [hwloc_have_openat=yes])
-    
-    AC_CHECK_DECL([numa_bitmask_alloc], [hwloc_have_linux_libnuma=yes], [],
-    	      [#include <numa.h>])
-    
+
+    AC_CHECK_HEADERS([malloc.h])
+    AC_CHECK_FUNCS([getpagesize memalign posix_memalign])
+
+    AC_CHECK_HEADERS([sys/utsname.h])
+    AC_CHECK_FUNCS([uname])
+
+    # set_mempolicy and mbind support   
+    AC_CHECK_HEADERS([numaif.h], [
+      AC_CHECK_LIB([numa], [set_mempolicy], [
+	enable_set_mempolicy=yes
+	AC_SUBST([HWLOC_LINUX_LIBNUMA_LIBS], ["-lnuma"])
+	AC_DEFINE([HWLOC_HAVE_SET_MEMPOLICY], [1], [Define to 1 if set_mempolicy is available.])
+      ])
+      AC_CHECK_LIB([numa], [mbind], [
+	enable_mbind=yes
+	AC_SUBST([HWLOC_LINUX_LIBNUMA_LIBS], ["-lnuma"])
+	AC_DEFINE([HWLOC_HAVE_MBIND], [1], [Define to 1 if mbind is available.])
+      ])
+      AC_CHECK_LIB([numa], [migrate_pages], [
+	enable_migrate_pages=yes
+	AC_SUBST([HWLOC_LINUX_LIBNUMA_LIBS], ["-lnuma"])
+	AC_DEFINE([HWLOC_HAVE_MIGRATE_PAGES], [1], [Define to 1 if migrate_pages is available.])
+      ])
+    ])
+
     AC_CHECK_HEADERS([pthread_np.h])
     AC_CHECK_DECLS([pthread_setaffinity_np],,[:],[[
       #include <pthread.h>
@@ -544,9 +522,22 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     AC_SEARCH_LIBS([pthread_getthrds_np], [pthread],
       AC_DEFINE([HWLOC_HAVE_PTHREAD_GETTHRDS_NP], 1, `Define to 1 if you have pthread_getthrds_np')
     )
-    
+
+    # XML support
+    if test "x$enable_xml" != "xno"; then
+        HWLOC_PKG_CHECK_MODULES([XML], [libxml-2.0], [xmlNewDoc], [:], [enable_xml="no"])
+    fi
+    if test "x$enable_xml" != "xno"; then
+        HWLOC_REQUIRES="libxml-2.0 $HWLOC_REQUIRES"
+        AC_DEFINE([HWLOC_HAVE_XML], [1], [Define to 1 if you have the `xml' library.])
+        AC_SUBST([HWLOC_HAVE_XML], [1])
+    else
+        AC_SUBST([HWLOC_HAVE_XML], [0])
+    fi
+    HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_XML_CFLAGS"    
+
     # Setup HWLOC's C, CPP, and LD flags, and LIBS
-    HWLOC_CFLAGS="$hwloc_CC_c99_flags $HWLOC_CFLAGS"
+    AC_SUBST(HWLOC_REQUIRES)
     AC_SUBST(HWLOC_CFLAGS)
     HWLOC_CPPFLAGS='-I$(HWLOC_top_srcdir)/include -I$(HWLOC_top_builddir)/include'
     AC_SUBST(HWLOC_CPPFLAGS)
@@ -570,7 +561,7 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
     AC_MSG_CHECKING([for cpuid])
     old_CPPFLAGS="$CPPFLAGS"
     CFLAGS="$CFLAGS -I$HWLOC_top_srcdir/include"
-    AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
         #include <stdio.h>
         #include <private/cpuid.h>
       ]], [[
@@ -580,13 +571,11 @@ AC_DEFUN([HWLOC_SETUP_CORE_AFTER_C99],[
           printf("highest cpuid %x\n", eax);
           return 0;
         }
-      ]]), [
-      AC_MSG_RESULT([yes])
-      AC_DEFINE(HWLOC_HAVE_CPUID, 1, [Define to 1 if you have cpuid])
-      hwloc_have_cpuid=yes
-    ], [
-      AC_MSG_RESULT([no])
-    ])
+      ]])],
+      [AC_MSG_RESULT([yes])
+       AC_DEFINE(HWLOC_HAVE_CPUID, 1, [Define to 1 if you have cpuid])
+       hwloc_have_cpuid=yes],
+      [AC_MSG_RESULT([no])])
     CPPFLAGS="$old_CPPFLAGS"
 
     # Always generate these files
@@ -627,8 +616,17 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
                        [test "x$hwloc_have_sched_setaffinity" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_LIBIBVERBS], 
                        [test "x$hwloc_have_libibverbs" = "xyes"])
+	AM_CONDITIONAL([HWLOC_HAVE_CUDA],
+		       [test "x$hwloc_have_cuda" = "xyes"])
+	AM_CONDITIONAL([HWLOC_HAVE_MYRIEXPRESS],
+		       [test "x$hwloc_have_myriexpress" = "xyes"])
+	AM_CONDITIONAL([HWLOC_HAVE_CUDART],
+		       [test "x$hwloc_have_cudart" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_CAIRO], [test "x$enable_cairo" != "xno"])
         AM_CONDITIONAL([HWLOC_HAVE_XML], [test "x$enable_xml" != "xno"])
+        AM_CONDITIONAL([HWLOC_HAVE_SET_MEMPOLICY], [test "x$enable_set_mempolicy" != "xno"])
+        AM_CONDITIONAL([HWLOC_HAVE_MBIND], [test "x$enable_mbind" != "xno"])
+        AM_CONDITIONAL([HWLOC_HAVE_BUNZIPP], [test "x$BUNZIPP" != "xfalse"])
 
         AM_CONDITIONAL([HWLOC_BUILD_DOXYGEN],
                        [test "x$hwloc_generate_doxs" = "xyes"])
@@ -646,8 +644,7 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_HAVE_OSF], [test "x$hwloc_osf" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_HPUX], [test "x$hwloc_hpux" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_WINDOWS], [test "x$hwloc_windows" = "xyes"])
-        AM_CONDITIONAL([HWLOC_HAVE_MINGW32], 
-                       [test "x$hwloc_target_os" = "xmingw32"])
+        AM_CONDITIONAL([HWLOC_HAVE_MINGW32], [test "x$target_os" = "xmingw32"])
 
         AM_CONDITIONAL([HWLOC_HAVE_X86_32], [test "x$hwloc_x86_32" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_64], [test "x$hwloc_x86_64" = "xyes"])

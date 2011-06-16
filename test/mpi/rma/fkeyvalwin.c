@@ -13,12 +13,17 @@
 #include <string.h>
 #endif
 
+/*
 static char MTestDescrip[] = "Test freeing keyvals while still attached to \
 a win, then make sure that the keyval delete code are still \
 executed";
+*/
 
 /* Copy increments the attribute value */
 /* Note that we can really ignore this because there is no win dup */
+int copy_fn( MPI_Win oldwin, int keyval, void *extra_state,
+	     void *attribute_val_in, void *attribute_val_out, 
+	     int *flag);
 int copy_fn( MPI_Win oldwin, int keyval, void *extra_state,
 	     void *attribute_val_in, void *attribute_val_out, 
 	     int *flag)
@@ -32,6 +37,8 @@ int copy_fn( MPI_Win oldwin, int keyval, void *extra_state,
 }
 
 /* Delete decrements the attribute value */
+int delete_fn( MPI_Win win, int keyval, void *attribute_val, 
+	       void *extra_state);
 int delete_fn( MPI_Win win, int keyval, void *attribute_val, 
 	       void *extra_state)
 {

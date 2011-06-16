@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 HYD_status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 {
@@ -135,8 +135,15 @@ HYD_status HYDU_strdup_list(char *src[], char **dest[])
 
 char *HYDU_int_to_str(int x)
 {
+    return HYDU_int_to_str_pad(x, 0);
+}
+
+
+char *HYDU_int_to_str_pad(int x, int maxlen)
+{
     int len = 1, max = 10, y;
-    char *str;
+    int actual_len, i;
+    char *str = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -153,10 +160,18 @@ char *HYDU_int_to_str(int x)
         max *= 10;
     }
 
-    HYDU_MALLOC(str, char *, len + 1, status);
+    if (len > maxlen)
+        actual_len = len + 1;
+    else
+        actual_len = maxlen + 1;
+
+    HYDU_MALLOC(str, char *, actual_len, status);
     HYDU_ERR_POP(status, "unable to allocate memory\n");
 
-    HYDU_snprintf(str, len + 1, "%d", x);
+    for (i = 0; i < actual_len; i++)
+        str[i] = '0';
+
+    HYDU_snprintf(str + actual_len - len - 1, len + 1, "%d", x);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -165,21 +180,6 @@ char *HYDU_int_to_str(int x)
   fn_fail:
     goto fn_exit;
 }
-
-
-char *HYDU_strerror(int error)
-{
-    char *str;
-
-#if defined HAVE_STRERROR
-    str = strerror(error);
-#else
-    str = HYDU_strdup("errno: %d", error);
-#endif /* HAVE_STRERROR */
-
-    return str;
-}
-
 
 int HYDU_strlist_lastidx(char **strlist)
 {

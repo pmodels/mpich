@@ -24,6 +24,8 @@ triangular-pack_LDADD = ../util/mtest.o
 
 get-elements-pairtype_SOURCES = get-elements-pairtype.c
 
+get-elements_SOURCES = get-elements.c
+
 simple-commit_SOURCES = simple-commit.c
 
 simple-commit_SOURCES = simple-commit.c

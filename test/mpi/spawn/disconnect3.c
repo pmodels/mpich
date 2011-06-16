@@ -21,7 +21,9 @@
 #define SENDER_RANK 1
 #define RECEIVER_RANK 2
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_disconnect";
+*/
 
 int main(int argc, char *argv[])
 {
@@ -48,7 +50,7 @@ int main(int argc, char *argv[])
     {
 	IF_VERBOSE(("spawning %d processes\n", np));
 	/* Create 3 more processes */
-	MPI_Comm_spawn("./disconnect3", MPI_ARGV_NULL, np,
+	MPI_Comm_spawn((char*)"./disconnect3", MPI_ARGV_NULL, np,
 			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 			&intercomm, MPI_ERRCODES_IGNORE);
     }

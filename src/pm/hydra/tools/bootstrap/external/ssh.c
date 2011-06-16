@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
 #include "ssh.h"
@@ -40,7 +40,7 @@ static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_ssh_store_launch_time(char *hostname)
+HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname)
 {
     int i, oldest, time_left;
     struct timeval now;

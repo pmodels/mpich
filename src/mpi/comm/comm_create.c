@@ -334,7 +334,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     int rinfo[2];
     MPID_VCR *mapping_vcr = NULL;
     MPID_VCR *remote_mapping_vcr = NULL;
-
+    int errflag = FALSE;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
 
@@ -418,19 +418,20 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
 
         /* Broadcast to the other members of the local group */
         mpi_errno = MPIR_Bcast_impl( rinfo, 2, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Bcast_impl( remote_mapping, remote_size, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
     else {
         /* The other processes */
         /* Broadcast to the other members of the local group */
         mpi_errno = MPIR_Bcast_impl( rinfo, 2, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         if (newcomm_ptr != NULL) {
             newcomm_ptr->context_id = rinfo[0];
         }
@@ -439,9 +440,12 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                             remote_size*sizeof(int),
                             mpi_errno,"remote_mapping");
         mpi_errno = MPIR_Bcast_impl( remote_mapping, remote_size, MPI_INT, 0,
-                                     comm_ptr->local_comm);
+                                     comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
+
+    MPIU_Assert(remote_size >= 0);
 
     if (group_ptr->rank != MPI_UNDEFINED) {
         newcomm_ptr->remote_size    = remote_size;
@@ -467,7 +471,21 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
         mpi_errno = MPIR_Comm_commit(newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        *newcomm = newcomm_ptr->handle;
+        if (remote_size > 0) {
+            *newcomm = newcomm_ptr->handle;
+        }
+        else {
+            /* It's possible that no members of the other side of comm were
+             * members of the group that they passed, which we only know after
+             * receiving/bcasting the remote_size above.  We must return
+             * MPI_COMM_NULL in this case, but we can't free the newcomm_ptr
+             * immediately after the communication above because
+             * MPIR_Comm_release won't work correctly with a half-constructed
+             * comm. */
+            *newcomm = MPI_COMM_NULL;
+            mpi_errno = MPIR_Comm_release(newcomm_ptr, /*isDisconnect=*/FALSE);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
     }
     else {
         /* This process is not in the group */

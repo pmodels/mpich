@@ -4,15 +4,22 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
-int HYDU_local_to_global_id(int local_id, int start_pid, int core_count, int global_core_count)
+int HYDU_dceil(int x, int y)
 {
-    return ((local_id / core_count) * global_core_count) + (local_id % core_count) + start_pid;
+    int z;
+
+    z = x / y;
+
+    if (z * y == x)
+        return z;
+    else
+        return z + 1;
 }
 
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
-                                 struct HYD_node ** node_list)
+                                 struct HYD_node **node_list)
 {
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
@@ -74,4 +81,20 @@ HYD_status HYDU_gethostname(char *hostname)
 
   fn_fail:
     goto fn_exit;
+}
+
+void HYDU_delay(unsigned long delay)
+{
+    struct timeval start, end;
+
+    if (delay == 0)
+        return;
+
+    gettimeofday(&start, NULL);
+    while (1) {
+        gettimeofday(&end, NULL);
+        if ((1000000.0 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)) >
+            delay)
+            break;
+    }
 }

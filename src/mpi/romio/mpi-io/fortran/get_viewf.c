@@ -150,6 +150,8 @@ FORTRAN_API void FORT_CALL mpi_file_get_view_( MPI_Fint *fh, MPI_Offset *disp, M
 #endif
     MPI_File fh_c;
     int i, tmpreplen;
+    MPI_Datatype etype_c filetype_c;
+
     char *tmprep;
 
 /* Initialize the string to all blanks */
@@ -160,7 +162,9 @@ FORTRAN_API void FORT_CALL mpi_file_get_view_( MPI_Fint *fh, MPI_Offset *disp, M
     
     tmprep = (char *) ADIOI_Malloc((MPI_MAX_DATAREP_STRING+1) * sizeof(char));
     fh_c = MPI_File_f2c(*fh);
-    *ierr = MPI_File_get_view(fh_c, disp, etype, filetype, tmprep);
+    etype_c = MPI_Type_f2c(*etype);
+    filetype_c = MPI_Type_f2c(*filetype);
+    *ierr = MPI_File_get_view(fh_c, disp, &etype_c, &filetype_c, tmprep);
 
     tmpreplen = strlen(tmprep);
     if (tmpreplen <= str_len) {

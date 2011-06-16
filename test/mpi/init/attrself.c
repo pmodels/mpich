@@ -8,8 +8,10 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTestDescrip[] = "Test creating and inserting attributes in \
 different orders to ensure that the list management code handles all cases.";
+*/
 
 int checkAttrs( MPI_Comm, int, int [], int [] );
 int delete_fn( MPI_Comm, int, void *, void *);
@@ -77,33 +79,31 @@ int main( int argc, char *argv[] )
   
 }
 
-int checkAttrs( MPI_Comm comm, int n, int key[], int attrval[] )
+int checkAttrs( MPI_Comm comm, int n, int lkey[], int attrval[] )
 {
-    int errs = 0;
+    int lerrs = 0;
     int i, flag, *val_p;
 
     for (i=0; i<n; i++) {
-	MPI_Comm_get_attr( comm, key[i], &val_p, &flag );
+	MPI_Comm_get_attr( comm, lkey[i], &val_p, &flag );
 	if (!flag) {
-	    errs++;
+	    lerrs++;
 	    fprintf( stderr, "Attribute for key %d not set\n", i );
 	}
 	else if (val_p != &attrval[i]) {
-	    errs++;
+	    lerrs++;
 	    fprintf( stderr, "Atribute value for key %d not correct\n",
 		     i );
 	}
     }
 
-    return errs;
+    return lerrs;
 }
 
 /* We *should* be deleting key[keyorder[nkeys-ncall]] */
 int delete_fn( MPI_Comm comm, int keyval, void *attribute_val, 
 	       void *extra_state)
 {
-    int world_rank;
-
     if (ncall >= nkeys) {
 	printf( "delete function called too many times!\n" );
 	errs++;
@@ -122,18 +122,20 @@ int delete_fn( MPI_Comm comm, int keyval, void *attribute_val,
     return MPI_SUCCESS;
 }
 
-int checkNoAttrs( MPI_Comm comm, int n, int key[] )
+/*
+int checkNoAttrs( MPI_Comm comm, int n, int lkey[] )
 {
-    int errs = 0;
+    int lerrs = 0;
     int i, flag, *val_p;
 
     for (i=0; i<n; i++) {
-	MPI_Comm_get_attr( comm, key[i], &val_p, &flag );
+	MPI_Comm_get_attr( comm, lkey[i], &val_p, &flag );
 	if (flag) {
-	    errs++;
+	    lerrs++;
 	    fprintf( stderr, "Attribute for key %d set but should be deleted\n", i );
 	}
     }
 
-    return errs;
+    return lerrs;
 }
+*/

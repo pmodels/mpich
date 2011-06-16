@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test of various send cancel calls";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -67,20 +69,20 @@ int main( int argc, char *argv[] )
 	}
 	else if (rank == dest)
 	{
-	    int n, tag;
+	    int nn, tag;
 	    char *btemp;
-	    MPI_Recv( &n, 1, MPI_INT, 0, 123, comm, &status );
+	    MPI_Recv( &nn, 1, MPI_INT, 0, 123, comm, &status );
 	    MPI_Recv( &tag, 1, MPI_INT, 0, 123, comm, &status );
-	    if (n > 0)
+	    if (nn > 0)
 	    {
 		/* If the message was not cancelled, receive it here */
-		btemp = (char*)malloc( n );
+		btemp = (char*)malloc( nn );
 		if (!btemp)
 		{
-		    fprintf( stderr, "Unable to allocate %d bytes\n", n);
+		    fprintf( stderr, "Unable to allocate %d bytes\n", nn );
 		    MPI_Abort( MPI_COMM_WORLD, 1 );
 		}
-		MPI_Recv( btemp, n, MPI_CHAR, 0, tag, comm, &status );
+		MPI_Recv( btemp, nn, MPI_CHAR, 0, tag, comm, &status );
 		free(btemp);
 	    }
 	}
@@ -128,20 +130,20 @@ int main( int argc, char *argv[] )
 	}
 	else if (rank == dest)
 	{
-	    int n, tag;
+	    int nn, tag;
 	    char *btemp;
-	    MPI_Recv( &n, 1, MPI_INT, 0, 123, comm, &status );
+	    MPI_Recv( &nn, 1, MPI_INT, 0, 123, comm, &status );
 	    MPI_Recv( &tag, 1, MPI_INT, 0, 123, comm, &status );
-	    if (n > 0)
+	    if (nn > 0)
 	    {
 		/* If the message was not cancelled, receive it here */
-		btemp = (char*)malloc( n );
+		btemp = (char*)malloc( nn );
 		if (!btemp)
 		{
-		    fprintf( stderr, "Unable to allocate %d bytes\n", n);
+		    fprintf( stderr, "Unable to allocate %d bytes\n", nn);
 		    MPI_Abort( MPI_COMM_WORLD, 1 );
 		}
-		MPI_Recv( btemp, n, MPI_CHAR, 0, tag, comm, &status );
+		MPI_Recv( btemp, nn, MPI_CHAR, 0, tag, comm, &status );
 		free(btemp);
 	    }
 	}
@@ -243,20 +245,20 @@ int main( int argc, char *argv[] )
 	}
 	else if (rank == dest)
 	{
-	    int n, tag;
+	    int nn, tag;
 	    char *btemp;
-	    MPI_Recv( &n, 1, MPI_INT, 0, 123, comm, &status );
+	    MPI_Recv( &nn, 1, MPI_INT, 0, 123, comm, &status );
 	    MPI_Recv( &tag, 1, MPI_INT, 0, 123, comm, &status );
-	    if (n > 0)
+	    if (nn > 0)
 	    {
 		/* If the message was not cancelled, receive it here */
-		btemp = (char*)malloc( n );
+		btemp = (char*)malloc( nn );
 		if (!btemp)
 		{
-		    fprintf( stderr, "Unable to allocate %d bytes\n", n);
+		    fprintf( stderr, "Unable to allocate %d bytes\n", nn);
 		    MPI_Abort( MPI_COMM_WORLD, 1 );
 		}
-		MPI_Recv( btemp, n, MPI_CHAR, 0, tag, comm, &status );
+		MPI_Recv( btemp, nn, MPI_CHAR, 0, tag, comm, &status );
 		free(btemp);
 	    }
 	}

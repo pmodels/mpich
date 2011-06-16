@@ -19,8 +19,10 @@
 # remove them as well.  Other routines return void.
 #
 # The replacement text will look something like
-#    void Name( args ) const {
-#      MPIX_CALL( MPI_Name( args, with (cast)((class).the_real_(class)) ); }
+#   void Name( args ) const {
+#     MPIX_CALLOBJ( obj, MPI_Name( args, with (cast)((class).the_real_(class)) ); }
+# (there is also a CALLREF for calls with a reference to an object and CALLWORLD
+# to use the error handler on COMM_WORLD).
 #
 # If coverage analysis is desired, consider using the -coverage
 # switch.  This (will, once done) allow generating crude coverage data.
@@ -47,6 +49,12 @@
 #            Values are string indicating processing:
 #            returnvalue-arg (0 if void, type if unique, position if not)
 #   Pass by reference to process routine
+# 
+# Notes:
+#   "NULL" isn't the rigth way to specify a NULL pointer in C++; use "0" (this 
+#   will have the correct type and some C++ compilers don't recognize NULL
+#   unless you include header files that needed it and are otherwise unneeded
+#   by the C++ interface)
 #    
 # TODO:
 #    The derived classes (such as Intracomm) must *not* have their own
@@ -1038,17 +1046,19 @@ $files[$#files+1] = "mpicxx.h";
 
 print $OUTFD "namespace MPI {\n";
 
-#
-# FIXME: This isn't correct - if the error handler is 
-# *not* errors_throw_exceptions, this causes the wrong thing to happen.  
-# Instead, we should throw only if that is the requested error handler.
-# This may mean changing this approach, and having the error call
-# interface call back into the C++ interface to invoke a throw routine.
+# Provide a way to invoke the error handler on the object
 print $OUTFD "#if \@HAVE_CXX_EXCEPTIONS\@
-#define MPIX_CALL( fnc ) \\
-{int err; err = fnc ; if (err) throw Exception(err);}
+#define MPIX_CALLREF( _objptr, fnc ) \\
+    { int err = fnc; if (err) { (_objptr)->Call_errhandler( err ); }}
+#define MPIX_CALLOBJ( _obj, fnc ) \\
+    { int err = fnc; if (err) { (_obj).Call_errhandler( err ); }}
+#define MPIX_CALLWORLD( fnc ) \\
+    { int err = fnc ; if (err) MPIR_Call_world_errhand( err ); }
+extern void MPIR_Call_world_errhand( int );
 #else
-#define MPIX_CALL( fnc ) (void)fnc
+#define MPIX_CALLREF( _objptr, fnc ) (void)fnc
+#define MPIX_CALLOBJ( _obj, fnc ) (void)fnc
+#define MPIX_CALLWORLD( fnc ) (void)fnc
 #endif\n";
 
 #
@@ -1070,6 +1080,7 @@ class Intercomm;
 class Intracomm;
 class Cartcomm;
 class Graphcomm;
+class File;
 \n";
 
 
@@ -1087,6 +1098,10 @@ foreach $routine (keys(%class_mpi1base)) {
     print $OUTFD "extern ";
     &PrintRoutineDef( $OUTFD, "base", $routine, $arginfo, 1 );
 }
+
+# Forward references for externals, used in error handling
+print $OUTFD "extern     Intracomm COMM_WORLD;\n";
+print $OUTFD "extern     File FILE_NULL;\n";
 
 # mpi2base adds a few routines which need definitions (Info), so
 # all of them are at the end, right before the extern declarations
@@ -1242,8 +1257,9 @@ maintainerclean-local:\
 install_INCLUDE = mpicxx.h $otherHeaders\n";
 
     # Add the documentation
+    # Note that the mpicxx script is now in src/env
     print MAKEFD "# Documentation sources
-doc_sources = mpicxx.txt
+doc_sources = 
 DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
 doc_HTML_SOURCES  = \${doc_sources}
 doc_MAN_SOURCES   = \${doc_sources}
@@ -1366,6 +1382,22 @@ sub printDefineChecks {
 #  error 'Please use the same version of GCC and g++ for compiling MPICH2 and user MPI programs'
 #  endif
 # endif     
+#endif\n";
+
+    print $OUTFD "
+/* 
+ * Because the API is defined, some methods have parameters that are 
+ * not used.  The following definition allows us to suppress warnings
+ * about unused arguments in methods when -Wall -Wextra are specified.
+ * this definition is removed at the end of this file.
+ */
+#ifdef MPIR_ARGUNUSED
+#error MPIR_ARGUNUSED defined
+#endif
+#if defined(__GNUC__) && __GNUC__ >= 4 
+#define MPIR_ARGUNUSED __attribute__((unused))
+#else
+#define MPIR_ARGUNUSED
 #endif\n";
 }
 
@@ -1784,7 +1816,7 @@ extern Datatype TWOINTEGER;
 	print $OUTFD "const Group GROUP_EMPTY(MPI_GROUP_EMPTY);\n";
     } 
     else {
-	print $OUTFD "extern Intracomm COMM_WORLD;\n";
+	#print $OUTFD "extern Intracomm COMM_WORLD;\n";
 	print $OUTFD "extern Intracomm COMM_SELF;\n";
 	print $OUTFD "extern const Group GROUP_EMPTY;\n";
     }
@@ -1818,8 +1850,11 @@ extern Datatype TWOINTEGER;
     # Predefined File and Win
     print $OUTFD "${extern}const Win WIN_NULL;\n";
     # Note that FILE_NULL cannot be const because you can set the 
-    # error handler on it.
-    print $OUTFD "${extern} File FILE_NULL;\n";
+    # error handler on it.  Also, because of that, we need to define it 
+    # earlier.
+    if ($extern ne "extern ") {
+	print $OUTFD "${extern}File FILE_NULL(MPI_FILE_NULL);\n";
+    }
 
     # Predefined integers
     foreach $int (BSEND_OVERHEAD, KEYVAL_INVALID, CART, GRAPH,
@@ -2045,7 +2080,7 @@ void operator delete[](void *p) {
     {\n";
     &printCoverageStart( $OUTFD, "Dims_create", 3 );
     print $OUTFD "\
-	MPIX_CALL( MPI_Dims_create( nnodes, ndims, dims ) );\n";
+	MPIX_CALLWORLD( MPI_Dims_create( nnodes, ndims, dims ) );\n";
     &printCoverageEnd( $OUTFD, "Dims_create", 3 );
     print $OUTFD "\
     }\n";
@@ -2054,7 +2089,7 @@ void operator delete[](void *p) {
     {\n";
     &printCoverageStart( $OUTFD, "Buffer_attach", 2 );
     print $OUTFD "\
-	MPIX_CALL( MPI_Buffer_attach( buffer, size ) );\n";
+	MPIX_CALLWORLD( MPI_Buffer_attach( buffer, size ) );\n";
     &printCoverageEnd( $OUTFD, "Buffer_attach", 2 );
     print $OUTFD "\
     }\n";
@@ -2064,7 +2099,7 @@ void operator delete[](void *p) {
 	int size;\n";
     &printCoverageStart( $OUTFD, "Buffer_detach", 2 );
     print $OUTFD "\
-	MPIX_CALL( MPI_Buffer_detach( &buffer, &size ) );\n";
+	MPIX_CALLWORLD( MPI_Buffer_detach( &buffer, &size ) );\n";
     &printCoverageEnd( $OUTFD, "Buffer_detach", 2 );
     print $OUTFD "\
 	return size;
@@ -2074,7 +2109,7 @@ void operator delete[](void *p) {
     {\n";
     &printCoverageStart( $OUTFD, "Get_processor_name", 2 );
     print $OUTFD "\
-    MPIX_CALL( MPI_Get_processor_name( name, &resultlen ) );\n";
+    MPIX_CALLWORLD( MPI_Get_processor_name( name, &resultlen ) );\n";
     &printCoverageEnd( $OUTFD, "Get_processor_name", 2 );
     print $OUTFD "\
     }\n";
@@ -2087,7 +2122,7 @@ void operator delete[](void *p) {
         va_start(ap,v);\n";
      &printCoverageStart( $OUTFD, "Pcontrol", -1 );
     print $OUTFD "\
-	MPIX_CALL( MPI_Pcontrol( (int)v, ap ) );\n";
+	MPIX_CALLWORLD( MPI_Pcontrol( (int)v, ap ) );\n";
      &printCoverageEnd( $OUTFD, "Pcontrol", -1 );
     print $OUTFD "\
     }\n";
@@ -2097,7 +2132,7 @@ void operator delete[](void *p) {
     int errclass;\n";
      &printCoverageStart( $OUTFD, "Error_class", 1 );
     print $OUTFD "\
-    MPIX_CALL( MPI_Error_class( errcode, &errclass ) );\n";
+    MPIX_CALLWORLD( MPI_Error_class( errcode, &errclass ) );\n";
      &printCoverageEnd( $OUTFD, "Error_class", 1 );
      print $OUTFD "\
     return errclass;
@@ -2107,7 +2142,7 @@ void operator delete[](void *p) {
     {\n";
      &printCoverageStart( $OUTFD, "Error_string", 3 );
      print $OUTFD "\
-    MPIX_CALL( MPI_Error_string( errcode, name, &resultlen ) );\n";
+    MPIX_CALLWORLD( MPI_Error_string( errcode, name, &resultlen ) );\n";
      &printCoverageEnd( $OUTFD, "Error_string", 3 );
      print $OUTFD "\
     }\n";
@@ -2129,7 +2164,7 @@ void operator delete[](void *p) {
         void *result;\n";
      &printCoverageStart( $OUTFD, "Alloc_mem", 2 );
      print $OUTFD "\
-        MPIX_CALL( MPI_Alloc_mem( size, (MPI_Info)info, &result ) );\n";
+        MPIX_CALLWORLD( MPI_Alloc_mem( size, (MPI_Info)info, &result ) );\n";
      &printCoverageEnd( $OUTFD, "Alloc_mem", 2 );
      print $OUTFD "\
         return result;
@@ -2139,7 +2174,7 @@ void operator delete[](void *p) {
     {\n";
      &printCoverageStart( $OUTFD, "Free_mem", 1 );
      print $OUTFD "\
-     MPIX_CALL( MPI_Free_mem( base ) );\n";
+     MPIX_CALLWORLD( MPI_Free_mem( base ) );\n";
      &printCoverageEnd( $OUTFD, "Free_mem", 1 );
      print $OUTFD "\
     }\n";
@@ -2168,8 +2203,8 @@ void Op::Init( User_function *f, bool commute )
     {\n";
 &printCoverageStart( $OUTFD, "Op_create", 2 );
      print $OUTFD "\
-	MPIX_CALL( MPI_Op_create( (MPI_User_function *)f, 
-				 (int) commute, &the_real_op ) ); 
+	MPIX_CALLWORLD( MPI_Op_create( (MPI_User_function *)f, 
+			(int) commute, &the_real_op ) ); 
 	MPIR_Op_set_cxx( the_real_op, (mpircallback) MPIR_Call_op_fn );\n";
 &printCoverageEnd( $OUTFD, "Op_create", 2 );
 print $OUTFD "\
@@ -2190,7 +2225,7 @@ MPIR_Comm_delete_attr_cxx_proxy(
     void* extra_state
     )
 {
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2241,7 +2276,7 @@ MPIR_Comm_copy_attr_cxx_proxy(
     int* flag
     )
 {
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2291,7 +2326,7 @@ int Comm::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void 
 EOT
     &printCoverageStart( $OUTFD, "Comm_create_keyval", 3 );
     print $OUTFD <<EOT;
-    MPIX_CALL( MPI_Comm_create_keyval( (MPI_Comm_copy_attr_function *)cf, 
+    MPIX_CALLWORLD( MPI_Comm_create_keyval( (MPI_Comm_copy_attr_function *)cf, 
 				       (MPI_Comm_delete_attr_function *)df,
 				      &keyval, extra_state ) );
     MPIR_Keyval_set_proxy( keyval, MPIR_Comm_copy_attr_cxx_proxy, MPIR_Comm_delete_attr_cxx_proxy );
@@ -2314,7 +2349,7 @@ MPIR_Type_delete_attr_cxx_proxy(
 {
     MPI::Datatype d = datatype;
     MPI::Datatype::Delete_attr_function* f = (MPI::Datatype::Delete_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2341,7 +2376,7 @@ MPIR_Type_copy_attr_cxx_proxy(
     *flag = 0;
     MPI::Datatype d = datatype;
     MPI::Datatype::Copy_attr_function* f = (MPI::Datatype::Copy_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2361,9 +2396,9 @@ int Datatype::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, v
 EOT
     &printCoverageStart( $OUTFD, "Type_create_keyval", 3 );
     print $OUTFD <<EOT;
-    MPIX_CALL( MPI_Type_create_keyval( (MPI_Type_copy_attr_function *)cf, 
-				       (MPI_Type_delete_attr_function *)df,
-				      &keyval, extra_state ) );
+    MPIX_CALLWORLD( MPI_Type_create_keyval( (MPI_Type_copy_attr_function *)cf, 
+			       (MPI_Type_delete_attr_function *)df,
+		 	       &keyval, extra_state ) );
     MPIR_Keyval_set_proxy( keyval, MPIR_Type_copy_attr_cxx_proxy, MPIR_Type_delete_attr_cxx_proxy );
 EOT
     &printCoverageEnd( $OUTFD, "Type_create_keyval", 3 );
@@ -2384,7 +2419,7 @@ MPIR_Win_delete_attr_cxx_proxy(
 {
     MPI::Win w = win;
     MPI::Win::Delete_attr_function* f = (MPI::Win::Delete_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2411,7 +2446,7 @@ MPIR_Win_copy_attr_cxx_proxy(
     *flag = 0;
     MPI::Win w = win;
     MPI::Win::Copy_attr_function* f = (MPI::Win::Copy_attr_function*)user_function;
-    void *value = NULL;
+    void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
     if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
@@ -2431,7 +2466,7 @@ int Win::Create_keyval( Copy_attr_function *cf, Delete_attr_function *df, void *
 EOT
     &printCoverageStart( $OUTFD, "Win_create_keyval", 3 );
     print $OUTFD <<EOT;
-    MPIX_CALL( MPI_Win_create_keyval( (MPI_Win_copy_attr_function *)cf, 
+    MPIX_CALLWORLD( MPI_Win_create_keyval( (MPI_Win_copy_attr_function *)cf, 
 				       (MPI_Win_delete_attr_function *)df,
 				      &keyval, extra_state ) );
     MPIR_Keyval_set_proxy( keyval, MPIR_Win_copy_attr_cxx_proxy, MPIR_Win_delete_attr_cxx_proxy );
@@ -2526,10 +2561,18 @@ Errhandler Win::Create_errhandler( Errhandler_function *f )
 // cover the ERRORS_THROW_EXCEPTIONS case.
 void Comm::Call_errhandler( int errorcode ) const
 {
+    int err;
     // we must free the Errhandler object returned from Get_errhandler because
     // Get_errhandler adds a reference (the MPI Standard says as though a new
     // object were created)
-    Errhandler current = Get_errhandler();
+    // First, be careful of the communicator.  
+    Errhandler current;
+    if (the_real_comm == MPI_COMM_NULL) {
+	current = MPI::COMM_WORLD.Get_errhandler();
+    }
+    else {
+	current = Get_errhandler();
+    }
     if (current == ERRORS_THROW_EXCEPTIONS) {
         current.Free();
         throw Exception(errorcode); // throw by value, catch by reference
@@ -2537,15 +2580,23 @@ void Comm::Call_errhandler( int errorcode ) const
     else {
         current.Free();
     }
-    MPIX_CALL( MPI_Comm_call_errhandler( (MPI_Comm) the_real_comm, errorcode ));
+    err = MPI_Comm_call_errhandler( (MPI_Comm) the_real_comm, errorcode );
 }
 
 void Win::Call_errhandler( int errorcode ) const
 {
+    int err;
     // we must free the Errhandler object returned from Get_errhandler because
     // Get_errhandler adds a reference (the MPI Standard says as though a new
     // object were created)
-    Errhandler current = Get_errhandler();
+    // First, be careful of the communicator.  
+    Errhandler current;
+    if (the_real_win == MPI_WIN_NULL) {
+	current = MPI::COMM_WORLD.Get_errhandler();
+    }
+    else {
+	current = Get_errhandler();
+    }
     if (current == ERRORS_THROW_EXCEPTIONS) {
         current.Free();
         throw Exception(errorcode); // throw by value, catch by reference
@@ -2553,15 +2604,17 @@ void Win::Call_errhandler( int errorcode ) const
     else {
         current.Free();
     }
-    MPIX_CALL( MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode ));
+    err = MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode );
 }
 
 #ifdef MPI_MODE_RDONLY
 void File::Call_errhandler( int errorcode ) const
 {
+    int err;
     // we must free the Errhandler object returned from Get_errhandler because
     // Get_errhandler adds a reference (the MPI Standard says as though a new
     // object were created)
+    // Note that we are allowed to set handlers on FILE_NULL
     Errhandler current = Get_errhandler();
     if (current == ERRORS_THROW_EXCEPTIONS) {
         current.Free();
@@ -2570,9 +2623,15 @@ void File::Call_errhandler( int errorcode ) const
     else {
         current.Free();
     }
-    MPIX_CALL( MPI_File_call_errhandler( (MPI_File) the_real_file, errorcode ));
+    err = MPI_File_call_errhandler( (MPI_File) the_real_file, errorcode );
 }
 #endif // IO
+
+// Helper function to invoke the comm_world C++ error handler.
+void MPIR_Call_world_errhand( int err )
+{
+    MPI::COMM_WORLD.Call_errhandler( err );
+}
 
 
 EOT
@@ -2634,7 +2693,7 @@ void Register_datarep( const char *datarep,
     ldata->write_fn         = write_fn;
     ldata->extent_fn        = extent_fn;
     ldata->orig_extra_state = orig_extra_state;
-    MPIX_CALL(MPI_Register_datarep( (char *)datarep, 
+    MPIX_CALLWORLD(MPI_Register_datarep( (char *)datarep, 
 				MPIR_Call_datarep_read_fn,
 				MPIR_Call_datarep_write_fn, 
 				MPIR_Call_datarep_extent_fn, (void *)ldata ));
@@ -2650,8 +2709,9 @@ void Datatype::Pack( const void *inbuf, int incount, void *outbuf,
 		     int outsize, int &position, const Comm &comm ) const {\n";
     &printCoverageStart( $OUTFD, "Pack", 6 );
     print $OUTFD "\
-	MPIX_CALL( MPI_Pack( (void *)inbuf, incount, the_real_datatype, outbuf, 
-			    outsize, &position, comm.the_real_comm ) );\n";
+	MPIX_CALLOBJ( comm, 
+                   MPI_Pack( (void *)inbuf, incount, the_real_datatype, 
+                   outbuf, outsize, &position, comm.the_real_comm ) );\n";
     &printCoverageEnd( $OUTFD, "Pack", 6 );
     print $OUTFD "\
     }\n";
@@ -2660,7 +2720,9 @@ int Datatype::Pack_size( int count, const Comm &comm ) const {\n";
     &printCoverageStart( $OUTFD, "Pack_size", 6 );
     print $OUTFD "\
         int size;
-	MPIX_CALL( MPI_Pack_size( count, the_real_datatype, comm.the_real_comm, &size ) );\n";
+	MPIX_CALLOBJ( comm, 
+                       MPI_Pack_size( count, the_real_datatype, 
+                       comm.the_real_comm, &size ) );\n";
     &printCoverageEnd( $OUTFD, "Pack_size", 6 );
     print $OUTFD "\
 	return size;
@@ -2670,8 +2732,9 @@ void Datatype::Unpack( const void *inbuf, int insize, void *outbuf,
                        int outcount, int &position, const Comm &comm ) const {\n";
     &printCoverageStart( $OUTFD, "Unpack", 6 );
     print $OUTFD "\
-	MPIX_CALL( MPI_Unpack( (void *)inbuf, insize, &position, outbuf, outcount, 
-			      the_real_datatype, comm.the_real_comm ) );\n";
+	MPIX_CALLOBJ( comm, MPI_Unpack( (void *)inbuf, insize, 
+                       &position, outbuf, outcount, 
+		       the_real_datatype, comm.the_real_comm ) );\n";
     &printCoverageEnd( $OUTFD, "Unpack", 6 );
     print $OUTFD "\
     }\n";
@@ -2695,7 +2758,9 @@ void Datatype::Unpack( const void *inbuf, int insize, void *outbuf,
          l5 = (v5 == true) ? 1 : 0;\n";
      &printCoverageStart( $OUTFD, "Cart_create", 5 );
      print $OUTFD "\
-        MPIX_CALL( MPI_Cart_create( (MPI_Comm) the_real_comm, v2, (int *)v3, l4, l5, &(v6.the_real_comm) ));\n";
+        MPIX_CALLREF( this, 
+                       MPI_Cart_create( (MPI_Comm) the_real_comm, v2, 
+                       (int *)v3, l4, l5, &(v6.the_real_comm) ));\n";
      &printCoverageEnd( $OUTFD, "Cart_create", 5 );
      print $OUTFD "\
             delete[] l4;
@@ -2710,7 +2775,9 @@ void Datatype::Unpack( const void *inbuf, int insize, void *outbuf,
          l5 = (v5 == true) ? 1 : 0;\n";
     &printCoverageStart( $OUTFD, "Graph_create", 6 );
     print $OUTFD "\
-        MPIX_CALL( MPI_Graph_create( (MPI_Comm) the_real_comm, v2, (int *)v3, (int *)v4, l5, &(v6.the_real_comm) ));\n";
+        MPIX_CALLREF( this, 
+                      MPI_Graph_create( (MPI_Comm) the_real_comm, 
+                      v2, (int *)v3, (int *)v4, l5, &(v6.the_real_comm) ));\n";
     &printCoverageEnd( $OUTFD, "Graph_create", 6 );
     print $OUTFD "\
         return v6;
@@ -2724,7 +2791,9 @@ void Datatype::Unpack( const void *inbuf, int insize, void *outbuf,
          l2 = (v2 == true) ? 1 : 0;\n";
     &printCoverageStart( $OUTFD, "Intercomm_merge", 3 );
     print $OUTFD "\
-        MPIX_CALL( MPI_Intercomm_merge( (MPI_Comm) the_real_comm, l2, &(v3.the_real_comm) ));\n";
+        MPIX_CALLREF( this,
+                       MPI_Intercomm_merge( (MPI_Comm) the_real_comm, l2, 
+                       &(v3.the_real_comm) ));\n";
     &printCoverageEnd( $OUTFD, "Intercomm_merge", 3 );
     print $OUTFD "\
         return v3;
@@ -2854,6 +2923,8 @@ void MPIR_CXX_InitDatatypeNames( void )
 }\n";
 
     print $OUTFD "} // namespace MPI\n";
+    print $OUTFD "#undef MPIR_ARGUNUSED\n";
+
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, "${filename}.new" );
 }
@@ -2876,7 +2947,7 @@ sub PrintWrapper {
     {
     $cdecls\n";
     &printCoverageStart( $OUTFD, $mpiroutine, $nargs );
-    print $OUTFD "    MPIX_CALL( MPI_$mpiroutine( $cArgs ) );\n";
+    print $OUTFD "    MPIX_CALLWORLD( MPI_$mpiroutine( $cArgs ) );\n";
     &printCoverageEnd( $OUTFD, $mpiroutine, $nargs );
     if ($returntype ne "void") {
 	print $OUTFD "    return $returnExp;\n";
@@ -3284,6 +3355,8 @@ sub Comm_methods {
     # To accommodate C++ compilers that don't support 
     print $OUTFD "    virtual Comm &Clone(void) const = 0;\n";
 
+    # The MPIR_ARGUNUSED provides a way to use __attribute__((unused)) for 
+    # the unused args
     # Typedefs
     print $OUTFD <<EOT;
     typedef int Copy_attr_function(const Comm& oldcomm, int comm_keyval, void* extra_state, void* attribute_val_in, void* attribute_val_out, bool& flag); 
@@ -3294,13 +3367,17 @@ sub Comm_methods {
     static int Create_keyval( Copy_attr_function *, Delete_attr_function *,
                               void * );
           
-    static int NULL_COPY_FN( const Comm &oldcomm, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 0; return 0;}
-    static int NULL_DELETE_FN( Comm &comm, int keyval, void * attr, void *ex )
-	{ return 0; }
-    static int DUP_FN( const Comm &oldcomm, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
-    *(void **)attr_out = attr_in; return 0;} 
+    static int NULL_COPY_FN( const Comm &oldcomm MPIR_ARGUNUSED, 
+           int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+           void *attr_in MPIR_ARGUNUSED, void *attr_out MPIR_ARGUNUSED, 
+	   bool &flag ) { flag = 0; return 0;}
+    static int NULL_DELETE_FN( Comm &comm MPIR_ARGUNUSED, 
+	   int keyval MPIR_ARGUNUSED, void * attr MPIR_ARGUNUSED, 
+	   void *ex MPIR_ARGUNUSED ) { return 0; }
+    static int DUP_FN( const Comm &oldcomm MPIR_ARGUNUSED, 
+           int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+           void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
+                    *(void **)attr_out = attr_in; return 0;} 
     static Errhandler Create_errhandler( Errhandler_function * );
 
 EOT
@@ -3334,14 +3411,17 @@ sub Win_methods {
                               void * );
     // These functions are *not* part of MPI-2 but are provided
     // because they should have been included
-    static int NULL_COPY_FN( const Win &oldwin, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; return 0;}
-    static int NULL_DELETE_FN( Win &win, int keyval, void * attr, 
-         void *ex ) { return 0; }
-    static int DUP_FN( const Win &oldwin, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
-    *(void **)attr_out = attr_in; return 0;} 
-
+    static int NULL_COPY_FN( const Win &oldwin MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in MPIR_ARGUNUSED, void *attr_out MPIR_ARGUNUSED, 
+        bool &flag ) { flag = 1; return 0;}
+    static int NULL_DELETE_FN( Win &win MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void * attr MPIR_ARGUNUSED, 
+        void *ex MPIR_ARGUNUSED ) { return 0; }
+    static int DUP_FN( const Win &oldwin MPIR_ARGUNUSED, 
+	int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
+            *(void **)attr_out = attr_in; return 0;} 
 
 EOT
 }
@@ -3386,14 +3466,16 @@ sub Intracomm_methods {
     print $OUTFD "\
 Intercomm Spawn(const char* command, const char* argv[], int maxprocs, const MPI::Info& info, int root) const {
     Intercomm ic;
-    MPIX_CALL( MPI_Comm_spawn( (char *)command, (char **)argv, 
+    MPIX_CALLREF( this, MPI_Comm_spawn( (char *)command, 
+                (char **)argv, 
                 maxprocs, info.the_real_info, root, the_real_comm, 
                 &(ic.the_real_comm), MPI_ERRCODES_IGNORE ) );
     return ic;
 }
 Intercomm Spawn(const char* command, const char* argv[], int maxprocs, const MPI::Info& info, int root, int array_of_errcodes[]) const {
     Intercomm ic;
-    MPIX_CALL( MPI_Comm_spawn( (char *)command, (char **)argv, 
+    MPIX_CALLREF( this, MPI_Comm_spawn( (char *)command, 
+                (char **)argv, 
                 maxprocs, info.the_real_info, root, the_real_comm, 
                 &(ic.the_real_comm), array_of_errcodes ) );
     return ic;
@@ -3405,10 +3487,11 @@ Intercomm Spawn_multiple(int count, const char* array_of_commands[], const char*
     for (i=0; i<count; i++) {
         li[i] = array_of_info[i].the_real_info;
     }
-    MPIX_CALL( MPI_Comm_spawn_multiple( count, (char **)array_of_commands, 
-          (char ***)array_of_argv, (int *)array_of_maxprocs, 
-                li, root, the_real_comm, &(ic.the_real_comm), 
-                MPI_ERRCODES_IGNORE ) );
+    MPIX_CALLREF( this, MPI_Comm_spawn_multiple( count, 
+                   (char **)array_of_commands, 
+                   (char ***)array_of_argv, (int *)array_of_maxprocs, 
+                   li, root, the_real_comm, &(ic.the_real_comm), 
+                   MPI_ERRCODES_IGNORE ) );
     delete [] li;
     return ic;
 }
@@ -3419,10 +3502,11 @@ Intercomm Spawn_multiple(int count, const char* array_of_commands[], const char*
     for (i=0; i<count; i++) {
         li[i] = array_of_info[i].the_real_info;
     }
-    MPIX_CALL( MPI_Comm_spawn_multiple( count, (char **)array_of_commands, 
-          (char ***)array_of_argv, (int *)array_of_maxprocs, 
-                li, root, the_real_comm, &(ic.the_real_comm), 
-                array_of_errcodes ) );
+    MPIX_CALLREF( this, MPI_Comm_spawn_multiple( count, 
+                   (char **)array_of_commands, 
+                   (char ***)array_of_argv, (int *)array_of_maxprocs, 
+                   li, root, the_real_comm, &(ic.the_real_comm), 
+                   array_of_errcodes ) );
     delete [] li;
     return ic;
 }
@@ -3482,7 +3566,7 @@ sub Datatype_methods {
     print $OUTFD "\
     void Unpack( const void *, int, void *, int, int &, const Comm & ) const;\n";
 #    void Pack( const void *, int, void *, int, int &, const Comm & ) const;\n";
-    print $OUTFD "\
+    print $OUTFD <<EOT;
     typedef int Copy_attr_function(const Datatype& oldtype, int type_keyval, void* extra_state, void* attribute_val_in, void* attribute_val_out, bool& flag); 
     typedef int Delete_attr_function(Datatype& type, int type_keyval, void* attribute_val, void* extra_state); 
 
@@ -3490,15 +3574,19 @@ sub Datatype_methods {
                               void * );
     // These functions are *not* part of MPI-2 but are provided
     // because they should have been included
-    static int NULL_COPY_FN( const Datatype &oldtype, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; return 0;}
-    static int NULL_DELETE_FN( Datatype &type, int keyval, void * attr, 
-         void *ex ) { return 0; }
-    static int DUP_FN( const Datatype &oldtype, int keyval, void *ex,
-    void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
-    *(void **)attr_out = attr_in; return 0;} 
+    static int NULL_COPY_FN( const Datatype &oldtype MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in MPIR_ARGUNUSED, void *attr_out MPIR_ARGUNUSED, 
+        bool &flag ) { flag = 1; return 0;}
+    static int NULL_DELETE_FN( Datatype &type MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void * attr MPIR_ARGUNUSED, 
+        void *ex MPIR_ARGUNUSED ) { return 0; }
+    static int DUP_FN( const Datatype &oldtype MPIR_ARGUNUSED, 
+        int keyval MPIR_ARGUNUSED, void *ex MPIR_ARGUNUSED,
+        void *attr_in, void *attr_out, bool &flag ) { flag = 1; 
+            *(void **)attr_out = attr_in; return 0;} 
           
-\n";
+EOT
 }
 # ----------------------------------------------------------------------------
 # We may eventually want to build separate files for each class rather than
@@ -3886,8 +3974,49 @@ sub PrintRoutineCall {
     my $cArgs            = $_[4];
     my $nArgs            = &GetArgCount( $cArgs );
 
+    my $useThis = 0;
+    my $TYPE = "OBJ", $obj = "COMM_WORLD";
+    if ($class eq "comm" || $class eq "inter" || $class eq "intra" ||
+	$class eq "cart" || $class eq "graph") {
+	$useThis = 1;
+	$TYPE = "REF";
+	$obj  = "this";
+	# Handle special cases
+	if ($mpi_routine_name eq "Comm_compare" || 
+	    $mpi_routine_name eq "Comm_free_keyval") {
+	    $useThis = 0;
+	}
+    }
+    elsif ($class eq "file") {
+	$useThis = 1;
+	$TYPE = "REF";
+	$obj = "this";
+	if ($mpi_routine_name eq "File_open" || 
+	    $mpi_routine_name eq "File_delete") {
+	    $obj  = "FILE_NULL";
+	    $TYPE = "OBJ"
+	}
+    }
+    elsif ($class eq "win") { 
+	$useThis = 1;
+	$TYPE = "REF";
+	$obj = "this";
+	if ($mpi_routine_name eq "Win_create") {
+	    $TYPE = "OBJ";
+	    $obj = "v5";
+	}
+	elsif ($mpi_routine_name eq "Win_free_keyval") {
+	    $useThis = 0;
+	}
+    }
     &printCoverageStart( $OUTFD, "$mpi_routine_name", $nArgs );
-    print $OUTFD "$indent    MPIX_CALL( MPI_$mpi_routine_name";
+    if ($useThis) {
+	print $OUTFD "$indent    MPIX_CALL$TYPE( $obj, MPI_$mpi_routine_name";
+    }
+    else {
+	# COMM_WORLD may not be defined yet, so indirect
+	print $OUTFD "$indent    MPIX_CALLWORLD( MPI_$mpi_routine_name";
+    }
     &print_call_args( $OUTFD, $cArgs, $class_type{$class}, $arginfo );
     print $OUTFD ");\n";
     &printCoverageEnd( $OUTFD, "$mpi_routine_name", $nArgs );

@@ -84,7 +84,7 @@ void f2cfile_( int *file )
 {
     MPI_File cFile;
     int rc;
-    rc = MPI_File_open( MPI_COMM_WORLD, "temp", 
+    rc = MPI_File_open( MPI_COMM_WORLD, (char*)"temp", 
 		   MPI_MODE_RDWR | MPI_MODE_DELETE_ON_CLOSE | MPI_MODE_CREATE, 
 		   MPI_INFO_NULL, &cFile );
     if (rc) {

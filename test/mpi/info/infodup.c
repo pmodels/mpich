@@ -26,9 +26,9 @@ int main( int argc, char *argv[] )
     MPI_Info_create( &info1 );
     /* Use only named keys incase the info implementation only supports
        the predefined keys (e.g., IBM) */
-    MPI_Info_set( info1, "host", "myhost.myorg.org" );
-    MPI_Info_set( info1, "file", "runfile.txt" );
-    MPI_Info_set( info1, "soft", "2:1000:4,3:1000:7" );
+    MPI_Info_set( info1, (char*)"host", (char*)"myhost.myorg.org" );
+    MPI_Info_set( info1, (char*)"file", (char*)"runfile.txt" );
+    MPI_Info_set( info1, (char*)"soft", (char*)"2:1000:4,3:1000:7" );
 
     MPI_Info_dup( info1, &infodup );
 
@@ -64,9 +64,9 @@ int main( int argc, char *argv[] )
 
     /* Change info and check that infodup does NOT have the new value 
        (ensure that lazy dups are still duped) */
-    MPI_Info_set( info1, "path", "/a:/b:/c/d" );
+    MPI_Info_set( info1, (char*)"path", (char*)"/a:/b:/c/d" );
 
-    MPI_Info_get( infodup, "path", vallen, value, &flag );
+    MPI_Info_get( infodup, (char*)"path", vallen, value, &flag );
     if (flag) {
 	errs++;
 	printf( "inserting path into info changed infodup\n" );

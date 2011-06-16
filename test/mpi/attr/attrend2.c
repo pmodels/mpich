@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         /* create the keyval for the exit handler */
         MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, delete_fn, &exit_keys[i], NULL);
         /* attach to comm_self */
-        MPI_Comm_set_attr(MPI_COMM_SELF, exit_keys[i], (void*)i);
+        MPI_Comm_set_attr(MPI_COMM_SELF, exit_keys[i], (void*)(long)i);
     }
 
     /* we can free the keys now */
@@ -93,7 +93,7 @@ int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 {
     int flag;
     int i;
-    int my_idx = (int)attribute_val;
+    int my_idx = (int)(long)attribute_val;
 
     if (my_idx < 0 || my_idx > NUM_TEST_ATTRS) {
         printf("internal error, my_idx=%d is invalid!\n", my_idx);
@@ -104,7 +104,7 @@ int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 
     MPI_Finalized(&flag);
     if (flag) {
-        printf("my_idx=%d, MPI_Finalized returned %d, should have been 0", flag);
+        printf("my_idx=%d, MPI_Finalized returned %d, should have been 0", my_idx, flag);
         foundError++;
     }
 

@@ -16,20 +16,30 @@
 categories:
     - name        : collective
       description : parameters that control collective communication behavior
+    - name        : communicator
+      description : parameters that control communicator construction and operation
     - name        : pt2pt
       description : parameters that control point-to-point communication behavior
     - name        : intranode
       description : intranode communication parameters
     - name        : developer
       description : useful for developers working on MPICH2 itself
+    - name        : memory
+      description : affects memory allocation and usage, including MPI object handles
     - name        : error_handling
       description : parameters that control error handling behavior (stack traces, aborts, etc)
     - name        : debugger
       description : parameters relevant to the "MPIR" debugger interface
+    - name        : checkpointing
+      description : parameters relevant to checkpointing
+    - name        : fault_tolerance
+      description : parameters that control fault tolerance behavior
     - name        : threads
       description : multi-threading parameters
     - name        : nemesis
       description : "parameters that control behavior of the ch3:nemesis channel"
+    - name        : sockets
+      description : control socket parameters
 
 parameters:
     ##############################################################
@@ -60,6 +70,124 @@ parameters:
         algorithms. Setting it to 0 causes all irecvs/isends to be
         posted at once.
 
+    - category    : collective
+      name        : REDSCAT_COMMUTATIVE_LONG_MSG_SIZE
+      type        : int
+      default     : 524288
+      description : >-
+        the long message algorithm will be used if the operation is commutative
+        and the send buffer size is >= this value (in bytes)
+
+    - category    : collective
+      name        : BCAST_MIN_PROCS
+      type        : int
+      default     : 8
+      description : >-
+        the minimum number of processes in a communicator to use a non-binomial
+        broadcast algorithm
+
+    - category    : collective
+      name        : BCAST_SHORT_MSG_SIZE
+      type        : int
+      default     : 12288
+      description : >-
+        the short message algorithm will be used if the send buffer size is <
+        this value (in bytes)
+
+    - category    : collective
+      name        : BCAST_LONG_MSG_SIZE
+      type        : int
+      default     : 524288
+      description : >-
+        the long message algorithm will be used if the send buffer size is >=
+        this value (in bytes)
+
+    - category    : collective
+      name        : ALLGATHER_SHORT_MSG_SIZE
+      type        : int
+      default     : 81920
+      description : >-
+        For MPI_Allgather and MPI_Allgatherv, the short message algorithm will
+        be used if the send buffer size is < this value (in bytes).
+
+    - category    : collective
+      name        : ALLGATHER_LONG_MSG_SIZE
+      type        : int
+      default     : 524288
+      description : >-
+        For MPI_Allgather and MPI_Allgatherv, the long message algorithm will be
+        used if the send buffer size is >= this value (in bytes)
+
+    - category    : collective
+      name        : REDUCE_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        the short message algorithm will be used if the send buffer size is <=
+        this value (in bytes)
+
+    - category    : collective
+      name        : ALLREDUCE_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        the short message algorithm will be used if the send buffer size is <=
+        this value (in bytes)
+
+    - category    : collective
+      name        : GATHER_VSMALL_MSG_SIZE
+      type        : int
+      default     : 1024
+      description : >-
+        use a temporary buffer for intracommunicator MPI_Gather if the send
+        buffer size is < this value (in bytes)
+
+    - category    : collective
+      name        : GATHER_INTER_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        use the short message algorithm for intercommunicator MPI_Gather if the
+        send buffer size is < this value (in bytes)
+
+    - category    : collective
+      name        : GATHERV_INTER_SSEND_MIN_PROCS
+      # backwards compatibility
+      abs-alt-env :
+                    - MPICH2_GATHERV_MIN_PROCS
+      type        : int
+      default     : 32
+      description : >-
+        Use Ssend (synchronous send) for intercommunicator MPI_Gatherv if the
+        "group B" size is >= this value.  Specifying "-1" always avoids using
+        Ssend.  For backwards compatibility, specifying "0" uses the default
+        value.
+
+    - category    : collective
+      name        : SCATTER_INTER_SHORT_MSG_SIZE
+      type        : int
+      default     : 2048
+      description : >-
+        use the short message algorithm for intercommunicator MPI_Scatter if the
+        send buffer size is < this value (in bytes)
+
+    - category    : collective
+      name        : ALLGATHERV_PIPELINE_MSG_SIZE
+      type        : int
+      default     : 32768
+      description : >-
+        The smallest message size that will be used for the pipelined, large-message,
+        ring algorithm in the MPI_Allgatherv implementation.
+
+    ##############################################################
+    # communicator parameters
+    - category    : communicator
+      name        : COMM_SPLIT_USE_QSORT
+      type        : boolean
+      default     : true
+      description : >-
+        Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
+
     ##############################################################
     # intranode communication parameters
     - category    : intranode
@@ -72,6 +200,17 @@ parameters:
         If true, force all processes to operate as though all processes
         are located on another node.  For example, this disables shared
         memory communication hierarchical collectives.
+
+    - category    : intranode
+      name        : ODD_EVEN_CLIQUES
+      alt-env     :
+                    - EVEN_ODD_CLIQUES
+      type        : boolean
+      default     : false
+      description : >-
+        If true, odd procs on a node are seen as local to each other, and even
+        procs on a node are seen as local to each other.  Used for debugging on
+        a single machine.
 
     - category    : developer
       name        : MEMDUMP
@@ -135,10 +274,67 @@ parameters:
       type        : boolean
       default     : false
       description : >-
-        If true causes processes to wait in MPI_Init and
+        If true, causes processes to wait in MPI_Init and
         MPI_Initthread for a debugger to be attached.  Once the
         debugger has attached, the variable 'hold' should be set to 0
         in order to allow the process to continue (e.g., in gdb, "set
         hold=0").
 
+  ##############################################################
+    # checkpointing parameters
+    - category    : checkpointing
+      name        : ENABLE_CKPOINT
+      type        : boolean
+      default     : false
+      description : >-
+        If true, enables checkpointing support and returns an error if
+        checkpointing library cannot be initialized.
+
+  ##############################################################
+    # fault-tolerance parameters
+    - category    : fault_tolerance
+      name        : ENABLE_COLL_FT_RET
+      type        : boolean
+      default     : false
+      description : >-
+        Collectives called on a communicator with a failed process
+        should not hang, however the result of the operation may be
+        invalid even though the function returns MPI_SUCCESS.  This
+        option enables an experimental feature that will return an
+        error if the result of the collective is invalid.
+
+  ##############################################################
+    # memory parameters
+    - category    : memory
+      name        : ABORT_ON_LEAKED_HANDLES
+      type        : boolean
+      default     : false
+      description : >-
+        If true, MPI will call MPI_Abort at MPI_Finalize if any MPI object
+        handles have been leaked.  For example, if MPI_Comm_dup is called
+        without calling a corresponding MPI_Comm_free.  For uninteresting
+        reasons, enabling this option may prevent all known object leaks from
+        being reported.  MPICH2 must have been configure with
+        "--enable-g=handlealloc" or better in order for this functionality to
+        work.
+
+  ############################
+    # sockets parameters
+    - category    : sockets
+      name        : PORT_RANGE
+      alt-env     : 
+                    - PORTRANGE
+      type        : range
+      default     : "0:0"
+      description : >-
+        "The MPICH_PORT_RANGE environment variable allows you to
+        specify the range of TCP ports to be used by the process
+        manager and the MPICH2 library. The format of this variable is
+        <low>:<high>."
+
 ...
+
+# Local Variables:
+# mode: conf-colon
+# indent-tabs-mode: nil
+# End:

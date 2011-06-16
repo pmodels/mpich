@@ -27,10 +27,11 @@
 static int ownerWaits = 0;
 static int nthreads = -1;
 
+MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg);
 MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
 {
     int    cnt, j, *buf, wsize;
-    int    thread_num = (int)arg;
+    int    thread_num = (int)(long)arg;
     double t;
     int    myrloc = 2*thread_num;
     static MPI_Request r[2*MAX_NTHREAD];
@@ -109,7 +110,7 @@ int main(int argc, char ** argv)
 	if (nt > MAX_NTHREAD) nt = MAX_NTHREAD;
 	nthreads = nt;
 	for (i=0; i<nt; i++) 
-	    MTest_Start_thread( run_test_sendrecv,  (void *)i );
+	    MTest_Start_thread( run_test_sendrecv,  (void *)(long)i );
     }
     MTest_Join_threads( );
     MTest_thread_barrier_free();

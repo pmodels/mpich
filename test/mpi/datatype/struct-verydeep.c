@@ -16,6 +16,7 @@
 extern int MPIDU_Datatype_debug(MPI_Datatype type, int depth);
 */
 
+int makeHDF5type0(MPI_Datatype *type);
 int makeHDF5type0(MPI_Datatype *type)
 {
     MPI_Datatype ctg, vect, structype, vec2, structype2,
@@ -77,6 +78,7 @@ int makeHDF5type0(MPI_Datatype *type)
     return 0;
 }
 
+int makeHDF5type1(MPI_Datatype *type);
 int makeHDF5type1(MPI_Datatype *type)
 {
     MPI_Datatype ctg, vect, structype, vec2, structype2,
@@ -138,6 +140,7 @@ int makeHDF5type1(MPI_Datatype *type)
     return 0;
 }
 
+int makeHDF5type(MPI_Datatype *type);
 int makeHDF5type(MPI_Datatype *type)
 {
     int i;

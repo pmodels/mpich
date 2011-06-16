@@ -57,9 +57,11 @@ int MPIR_Scatterv (
 	int recvcnt,  
 	MPI_Datatype recvtype, 
 	int root, 
-	MPID_Comm *comm_ptr )
+	MPID_Comm *comm_ptr,
+        int *errflag )
 {
     int rank, comm_size, mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
     MPI_Comm comm;
     MPI_Aint extent;
     int      i, reqs;
@@ -105,22 +107,27 @@ int MPIR_Scatterv (
                     }
                 }
                 else {
-                    mpi_errno = MPIC_Isend(((char *)sendbuf+displs[i]*extent), 
-                                           sendcnts[i], sendtype, i,
-                                           MPIR_SCATTERV_TAG, comm, &reqarray[reqs++]);
+                    mpi_errno = MPIC_Isend_ft(((char *)sendbuf+displs[i]*extent), 
+                                              sendcnts[i], sendtype, i,
+                                              MPIR_SCATTERV_TAG, comm, &reqarray[reqs++], errflag);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
             }
         }
         /* ... then wait for *all* of them to finish: */
-        mpi_errno = MPIR_Waitall_impl(reqs, reqarray, starray);
+        mpi_errno = MPIC_Waitall_ft(reqs, reqarray, starray, errflag);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
             for (i = 0; i < reqs; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
-                    MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
             }
         }
@@ -129,9 +136,14 @@ int MPIR_Scatterv (
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcnt) {
-            mpi_errno = MPIC_Recv(recvbuf,recvcnt,recvtype,root,
-                                  MPIR_SCATTERV_TAG,comm,MPI_STATUS_IGNORE);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            mpi_errno = MPIC_Recv_ft(recvbuf,recvcnt,recvtype,root,
+                                     MPIR_SCATTERV_TAG,comm,MPI_STATUS_IGNORE, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
+                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
     }
     
@@ -140,6 +152,10 @@ fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     MPIU_CHKLMEM_FREEALL();
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -155,19 +171,19 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatterv_impl(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr)
+                       int root, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scatter != NULL) {
 	mpi_errno = comm_ptr->coll_fns->Scatterv(sendbuf, sendcnts, displs,
                                                  sendtype, recvbuf, recvcnt,
-                                                 recvtype, root, comm_ptr);
+                                                 recvtype, root, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
         mpi_errno = MPIR_Scatterv(sendbuf, sendcnts, displs, sendtype,
                                   recvbuf, recvcnt, recvtype,
-                                  root, comm_ptr);
+                                  root, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -221,6 +237,7 @@ int MPI_Scatterv( void *sendbuf, int *sendcnts, int *displs,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
+    int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCATTERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -341,7 +358,7 @@ int MPI_Scatterv( void *sendbuf, int *sendcnts, int *displs,
 
     mpi_errno = MPIR_Scatterv_impl(sendbuf, sendcnts, displs, sendtype,
                                    recvbuf, recvcnt, recvtype,
-                                   root, comm_ptr);
+                                   root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

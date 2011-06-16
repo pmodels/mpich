@@ -1,13 +1,8 @@
-dnl PAC_F77_SEARCH_LIST - expands to a whitespace separated list of fortran 77
-dnl compilers for use with AC_PROG_F77 that is more suitable for HPC software
-dnl packages
-AC_DEFUN([PAC_F77_SEARCH_LIST],[ifort pgf77 af77 xlf frt cf77 fort77 fl32 fort ifc efc ftn gfortran f77 g77])
 dnl PAC_PROG_F77 - reprioritize the F77 compiler search order
-dnl NOTE: this macro suffers from a basically intractable "expanded before it
-dnl was required" problem when libtool is also used
 AC_DEFUN([PAC_PROG_F77],[
 PAC_PUSH_FLAG([FFLAGS])
-AC_PROG_F77([PAC_F77_SEARCH_LIST])
+AC_PROG_F77([ifort pgf77 af77 xlf frt cf77 fort77 fl32 fort ifc efc ftn \
+             gfortran f77 g77])
 PAC_POP_FLAG([FFLAGS])
 ])
 dnl
@@ -1260,7 +1255,7 @@ dnl
 dnl
 dnl PAC_F77_INIT_WORKS_WITH_C
 dnl
-AC_DEFUN([PAC_F77_INIT_WORKS_WITH_C],[
+AC_DEFUN(PAC_F77_INIT_WORKS_WITH_C,[
 AC_REQUIRE([AC_HEADER_STDC])
 AC_MSG_CHECKING([whether Fortran init will work with C])
 pac_f_init_works_with_c=unknown
@@ -1414,74 +1409,4 @@ if test -n "$true_val" -a -n "$false_val" ; then
     AC_DEFINE_UNQUOTED(F77_TRUE_VALUE,$true_val,[The value of true in Fortran])
     AC_DEFINE_UNQUOTED(F77_FALSE_VALUE,$false_val,[The value of false in Fortran])
 fi
-])
-dnl/*D
-dnl PAC_PROG_F77_MISMATCHED_ARGS([option],[AllOnly]) - Determine whether the 
-dnl Fortran compiler allows routines to be called with different 
-dnl argument types.  If not, attempts to determine a command-line argument 
-dnl that permits such use 
-dnl (The Fortran standard prohibits this usage)
-dnl
-dnl option is set to the compiler option to use.
-dnl if AllOnly is yes (literal, not variable with value), then only consider 
-dnl options that turn off checking
-dnl for all routines
-dnl
-dnl The NAG Fortran compiler, nagfor, is known to enforce this part of the
-dnl Fortran standard.
-dnl D*/
-AC_DEFUN([PAC_PROG_F77_MISMATCHED_ARGS],[
-AC_MSG_CHECKING([whether $F77 allows mismatched arguments])
-if test "X$pac_cv_prog_f77_mismatched_args" = X ; then
-    pac_cv_prog_f77_mismatched_args_parm=""
-    pac_cv_prog_f77_mismatched_args=no
-    AC_LANG_PUSH([Fortran 77])
-    AC_COMPILE_IFELSE([
-       AC_LANG_SOURCE([
-        program main
-        integer a
-        real b
-        character c
-        call foo1(a)
-        call foo1(b)
-        call foo1(c)
-        end
-])],[pac_cv_prog_f77_mismatched_args=yes])
-    if test "$pac_cv_prog_f77_mismatched_args" != "yes" ; then
-        # try again with -wmismatch=foo1
-        save_FFLAGS="$FFLAGS"
-	# The best solution is to turn off errors on particular routines
-	# if that isn't possible (e.g., too many of them), then
-	# just try arguments that turn off all checking
-	for flags in ifelse($2,yes,,"-wmismatch=foo1") "-mismatch" ; do
-            testok=no
-            FFLAGS="$FFLAGS $flags"
-            AC_COMPILE_IFELSE([
-            AC_LANG_SOURCE([
-        program main
-        integer a
-        real b
-        character c
-        call foo1(a)
-        call foo1(b)
-        call foo1(c)
-        end
-])],[testok=yes])
-            FFLAGS="$save_FFLAGS"
-            if test "$testok" = yes ; then break ; fi
-        done
-        if test "$testok" = yes ; then 
-	    pac_cv_prog_f77_mismatched_args_parm="$flags"
-            pac_cv_prog_f77_mismatched_args="yes, with $pac_cv_prog_f77_mismatched_args_parm"
-        fi
-    fi
-    AC_LANG_POP([Fortran 77])
-fi
-AC_MSG_RESULT($pac_cv_prog_f77_mismatched_args)
-if test "$pac_cv_prog_f77_mismatched_args" = no ; then
-    AC_MSG_ERROR([The Fortran compiler $F77 will not compile files that call 
-the same routine with arguments of different types.])
-fi
-
-ifelse($1,,,[$1=$pac_cv_prog_f77_mismatched_args_parm])
 ])

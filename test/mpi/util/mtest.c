@@ -7,8 +7,15 @@
 #include "mpi.h"
 #include "mpitestconf.h"
 #include "mpitest.h"
+#if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
+#endif
+#if defined(HAVE_STDLIB_H) || defined(STDC_HEADERS)
 #include <stdlib.h>
+#endif
+#if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
+#include <string.h>
+#endif
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif
@@ -312,8 +319,8 @@ static int MTestTypeContigCheckbuf( MTestDatatype *mtype )
 	    if (p[i] != expected) {
 		err++;
 		if (mtype->printErrors && err < 10) {
-		    printf( "Data expected = %x but got %x for %dth entry\n",
-			    expected, p[i], i );
+		    printf( "Data expected = %x but got p[%d] = %x\n",
+			    expected, i, p[i] );
 		    fflush( stdout );
 		}
 	    }
@@ -516,8 +523,8 @@ static int MTestTypeIndexedCheckbuf( MTestDatatype *mtype )
 		    if (p[offset+j] != expected) {
 			err++;
 			if (mtype->printErrors && err < 10) {
-			    printf( "Data expected = %x but got %x for %dth entry\n",
-				    expected, p[offset+j], k );
+			    printf( "Data expected = %x but got p[%d,%d] = %x\n",
+				    expected, i,j, p[offset+j] );
 			    fflush( stdout );
 			}
 		    }
@@ -593,11 +600,13 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
     case 3:
 	merr = MPI_Type_dup( MPI_INT, &sendtype->datatype );
 	if (merr) MTestPrintError( merr );
-	merr = MPI_Type_set_name( sendtype->datatype, "dup of MPI_INT" );
+	merr = MPI_Type_set_name( sendtype->datatype,
+                                  (char*)"dup of MPI_INT" );
 	if (merr) MTestPrintError( merr );
 	merr = MPI_Type_dup( MPI_INT, &recvtype->datatype );
 	if (merr) MTestPrintError( merr );
-	merr = MPI_Type_set_name( recvtype->datatype, "dup of MPI_INT" );
+	merr = MPI_Type_set_name( recvtype->datatype,
+                                  (char*)"dup of MPI_INT" );
 	if (merr) MTestPrintError( merr );
 	/* dup'ed types are already committed if the original type 
 	   was committed (MPI-2, section 8.8) */
@@ -614,7 +623,8 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	if (merr) MTestPrintError( merr );
         merr = MPI_Type_commit( &sendtype->datatype );
 	if (merr) MTestPrintError( merr );
-	merr = MPI_Type_set_name( sendtype->datatype, "int-vector" );
+	merr = MPI_Type_set_name( sendtype->datatype,
+                                  (char*)"int-vector" );
 	if (merr) MTestPrintError( merr );
 	sendtype->count    = 1;
  	recvtype->datatype = MPI_INT;
@@ -651,7 +661,8 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	if (merr) MTestPrintError( merr );
         merr = MPI_Type_commit( &sendtype->datatype );
 	if (merr) MTestPrintError( merr );
-	merr = MPI_Type_set_name( sendtype->datatype, "int-indexed(4-int)" );
+	merr = MPI_Type_set_name( sendtype->datatype,
+                                  (char*)"int-indexed(4-int)" );
 	if (merr) MTestPrintError( merr );
 	sendtype->count    = 1;
 	sendtype->InitBuf  = MTestTypeIndexedInit;
@@ -689,7 +700,8 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	if (merr) MTestPrintError( merr );
         merr = MPI_Type_commit( &sendtype->datatype );
 	if (merr) MTestPrintError( merr );
-	merr = MPI_Type_set_name( sendtype->datatype, "int-indexed(2 blocks)" );
+	merr = MPI_Type_set_name( sendtype->datatype,
+                                  (char*)"int-indexed(2 blocks)" );
 	if (merr) MTestPrintError( merr );
 	sendtype->count    = 1;
 	sendtype->InitBuf  = MTestTypeIndexedInit;
@@ -729,7 +741,8 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	if (merr) MTestPrintError( merr );
         merr = MPI_Type_commit( &recvtype->datatype );
 	if (merr) MTestPrintError( merr );
-	merr = MPI_Type_set_name( recvtype->datatype, "recv-int-indexed(4-int)" );
+	merr = MPI_Type_set_name( recvtype->datatype,
+                                  (char*)"recv-int-indexed(4-int)" );
 	if (merr) MTestPrintError( merr );
 	recvtype->count    = 1;
 	recvtype->InitBuf  = MTestTypeIndexedInitRecv;
@@ -1508,7 +1521,7 @@ int MTestGetWin( MPI_Win *win, int mustBePassive )
 	    buf = 0;
 	merr = MPI_Info_create( &info );
 	if (merr) MTestPrintError( merr );
-	merr = MPI_Info_set( info, "nolocks", "true" );
+	merr = MPI_Info_set( info, (char*)"nolocks", (char*)"true" );
 	if (merr) MTestPrintError( merr );
 	merr = MPI_Win_create( buf, n, 1, info, MPI_COMM_WORLD, win );
 	if (merr) MTestPrintError( merr );

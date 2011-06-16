@@ -29,7 +29,9 @@
 
 #define IF_VERBOSE(a) if (verbose) { printf a ; fflush(stdout); }
 
+/*
 static char MTEST_Descrip[] = "A test of concurrent MPI_Comm_spawn calls";
+*/
 
 #define MAX_NUM_SPAWNS 4
 
@@ -90,7 +92,7 @@ int main(int argc, char *argv[])
 	    sprintf(description, "%d", i);
 	}
 	IF_VERBOSE(("spawning %s\n", description));
-	MPI_Comm_spawn("./concurrent_spawns", argv1, 1,
+	MPI_Comm_spawn((char*)"./concurrent_spawns", argv1, 1,
 		MPI_INFO_NULL, 0, MPI_COMM_WORLD,
 		&intercomm[i], MPI_ERRCODES_IGNORE);
 

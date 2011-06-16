@@ -67,7 +67,8 @@ HYD_status HYDT_dmxu_poll_wait_for_event(int wtime)
                     events |= HYD_POLLHUP;
 
                 /* We only understand POLLIN/OUT/HUP */
-                HYDU_ASSERT(!(pollfds[i].revents & ~POLLIN & ~POLLOUT & ~POLLHUP), status);
+                HYDU_ASSERT(!(pollfds[i].revents & ~POLLIN & ~POLLOUT & ~POLLHUP & ~POLLERR),
+                            status);
 
                 if (run->callback == NULL)
                     HYDU_ERR_POP(status, "no registered callback found for socket\n");
@@ -107,18 +108,26 @@ HYD_status HYDT_dmxu_poll_stdin_valid(int *out)
 
     HYDU_FUNC_ENTER();
 
-    fd[0].fd = STDIN_FILENO;
-    fd[0].events = POLLIN;
+    status = HYDT_dmxi_stdin_valid(out);
+    HYDU_ERR_POP(status, "unable to check if stdin is valid\n");
 
-    /* Check if poll on stdin returns any errors; on Darwin this is
-     * broken */
-    ret = poll(fd, 1, 0);
-    HYDU_ASSERT((ret >= 0), status);
+    if (*out) {
+        /* The generic test thinks that STDIN is valid. Try poll
+         * specific tests. */
 
-    if (fd[0].revents & ~(POLLIN | POLLHUP))
-        *out = 0;
-    else
-        *out = 1;
+        fd[0].fd = STDIN_FILENO;
+        fd[0].events = POLLIN;
+
+        /* Check if poll on stdin returns any errors; on Darwin this
+         * is broken */
+        ret = poll(fd, 1, 0);
+        HYDU_ASSERT((ret >= 0), status);
+
+        if (fd[0].revents & ~(POLLIN | POLLHUP))
+            *out = 0;
+        else
+            *out = 1;
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

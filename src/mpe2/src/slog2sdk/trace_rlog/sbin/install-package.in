@@ -369,7 +369,9 @@ else
 fi
 
 # use autoconf variables, @...@, here, as they are set w.r.t. $prefix.
+# @_libdir_@ and @_bindir_@ depends on $exec_prefix, so update exec_prefix here.
 if [ "$prefix_override" = 1 -o "$package_override" = 1 ] ; then
+    exec_prefix=@exec_prefix@
     libdir=@libdir@
     bindir=@bindir@
     sbindir=@sbindir@

@@ -8,7 +8,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Use of MPI_BOTTOM in communication";
+*/
 
 int main( int argc, char *argv[] )
 {

@@ -148,14 +148,21 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgro
     }
     /* --END ERROR HANDLING-- */
     new_group_ptr->rank = MPI_UNDEFINED;
+    new_group_ptr->is_local_dense_monotonic = TRUE;
     k = 0;
     for (i=0; i<size1; i++) {
 	if (group_ptr1->lrank_to_lpid[i].flag) {
+            int lpid = group_ptr1->lrank_to_lpid[i].lpid;
 	    new_group_ptr->lrank_to_lpid[k].lrank = k;
-	    new_group_ptr->lrank_to_lpid[k].lpid = 
-		group_ptr1->lrank_to_lpid[i].lpid;
+	    new_group_ptr->lrank_to_lpid[k].lpid = lpid;
 	    if (i == group_ptr1->rank) 
 		new_group_ptr->rank = k;
+            if (lpid > MPIR_Process.comm_world->local_size ||
+                (k > 0 && new_group_ptr->lrank_to_lpid[k-1].lpid != (lpid-1)))
+            {
+                new_group_ptr->is_local_dense_monotonic = FALSE;
+            }
+
 	    k++;
 	}
     }

@@ -4,11 +4,12 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bind.h"
 #include "bind_hwloc.h"
 
 static hwloc_topology_t topology;
+static int hwloc_initialized = 0;
 
 #define dprint(d, ...)                           \
     do {                                         \
@@ -55,10 +56,10 @@ static int count_attached_caches(hwloc_obj_t hobj, hwloc_cpuset_t cpuset)
 }
 
 static void gather_attached_caches(struct HYDT_bind_obj *obj, hwloc_obj_t hobj,
-                                   hwloc_cpuset_t cpuset)
+                                   hwloc_cpuset_t cpuset, int cindex)
 {
     int i;
-    static int cidx = 0;
+    int cidx = cindex;
 
     if (hobj->type == HWLOC_OBJ_CACHE && !hwloc_cpuset_compare(hobj->cpuset, cpuset)) {
         obj->mem.cache_size[cidx] = hobj->attr->cache.size;
@@ -67,7 +68,7 @@ static void gather_attached_caches(struct HYDT_bind_obj *obj, hwloc_obj_t hobj,
     }
 
     for (i = 0; i < hobj->arity; i++)
-        gather_attached_caches(obj, hobj->children[i], cpuset);
+        gather_attached_caches(obj, hobj->children[i], cpuset, cidx);
 }
 
 static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hobj)
@@ -82,10 +83,15 @@ static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hob
     /* Check how many cache objects match out cpuset */
     obj->mem.num_caches = count_attached_caches(hobj, hobj->cpuset);
 
-    HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t), status);
-    HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int), status);
+    if (obj->mem.num_caches) {
+        HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t),
+                    status);
+        memset(obj->mem.cache_size, 0, obj->mem.num_caches * sizeof(size_t));
+        HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int), status);
+        memset(obj->mem.cache_depth, 0, obj->mem.num_caches * sizeof(int));
 
-    gather_attached_caches(obj, hobj, hobj->cpuset);
+        gather_attached_caches(obj, hobj, hobj->cpuset, 0);
+    }
 
   fn_exit:
     return status;
@@ -123,6 +129,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     hwloc_topology_init(&topology);
     hwloc_topology_load(topology);
 
+    hwloc_initialized = 1;
+
     /* Get the max number of processing elements */
     HYDT_bind_info.total_proc_units = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
 
@@ -147,8 +155,9 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     HYDT_bind_info.machine.num_children = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE);
     if (!HYDT_bind_info.machine.num_children)
         HYDT_bind_info.machine.num_children = 1;
-    HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_bind_obj *,
-                sizeof(struct HYDT_bind_obj) * HYDT_bind_info.machine.num_children, status);
+    status = HYDT_bind_alloc_objs(HYDT_bind_info.machine.num_children,
+                                  &HYDT_bind_info.machine.children);
+    HYDU_ERR_POP(status, "error allocating bind objects\n");
 
     /* Setup the nodes levels */
     for (node = 0; node < HYDT_bind_info.machine.num_children; node++) {
@@ -172,8 +181,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
         if (!node_ptr->num_children)
             node_ptr->num_children = 1;
 
-        HYDU_MALLOC(node_ptr->children, struct HYDT_bind_obj *,
-                    sizeof(struct HYDT_bind_obj) * node_ptr->num_children, status);
+        status = HYDT_bind_alloc_objs(node_ptr->num_children, &node_ptr->children);
+        HYDU_ERR_POP(status, "error allocating bind objects\n");
 
         /* Setup the socket level */
         for (sock = 0; sock < node_ptr->num_children; sock++) {
@@ -199,8 +208,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
             if (!sock_ptr->num_children)
                 sock_ptr->num_children = 1;
 
-            HYDU_MALLOC(sock_ptr->children, struct HYDT_bind_obj *,
-                        sizeof(struct HYDT_bind_obj) * sock_ptr->num_children, status);
+            status = HYDT_bind_alloc_objs(sock_ptr->num_children, &sock_ptr->children);
+            HYDU_ERR_POP(status, "error allocating bind objects\n");
 
             /* setup the core level */
             for (core = 0; core < sock_ptr->num_children; core++) {
@@ -227,8 +236,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                 if (!core_ptr->num_children)
                     core_ptr->num_children = 1;
 
-                HYDU_MALLOC(core_ptr->children, struct HYDT_bind_obj *,
-                            sizeof(struct HYDT_bind_obj) * core_ptr->num_children, status);
+                status = HYDT_bind_alloc_objs(core_ptr->num_children, &core_ptr->children);
+                HYDU_ERR_POP(status, "error allocating bind objects\n");
 
                 /* setup the thread level */
                 for (thread = 0; thread < core_ptr->num_children; thread++) {
@@ -281,11 +290,20 @@ HYD_status HYDT_bind_hwloc_process(struct HYDT_bind_cpuset_t cpuset)
     if (count)
         hwloc_set_cpubind(topology, hwloc_cpuset, HWLOC_CPUBIND_THREAD);
 
-  fn_exit:
     hwloc_cpuset_free(hwloc_cpuset);
     HYDU_FUNC_EXIT();
     return status;
+}
 
-  fn_fail:
-    goto fn_exit;
+HYD_status HYDT_bind_hwloc_finalize(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (hwloc_initialized)
+        hwloc_topology_destroy(topology);
+
+    HYDU_FUNC_EXIT();
+    return status;
 }

@@ -16,6 +16,15 @@ MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <libcr.h>
 #include <stdio.h>
 #include "pmi.h"
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
 
 #define CHECK_ERR(cond, msg) do {                                              \
         if (cond) {                                                            \
@@ -58,7 +67,6 @@ static enum {CKPT_NULL, CKPT_CONTINUE, CKPT_RESTART, CKPT_ERROR} ckpt_result = C
 static int reinit_pmi(void);
 static int restore_env(pid_t parent_pid, int rank);
 static int restore_stdinouterr(int rank);
-static int open_fifo(const char *fname_template, int rank, int restart_pid, int dupfd, int flags);
 
 static sem_t ckpt_sem;
 static sem_t cont_sem;
@@ -68,9 +76,12 @@ static int ckpt_cb(void *arg)
     int rc, ret;
     const struct cr_restart_info* ri;
 
-    if (MPIDI_Process.my_pg_rank == 0)
+    if (MPIDI_Process.my_pg_rank == 0) {
         MPIDI_nem_ckpt_start_checkpoint = TRUE;
-
+        /* poke the progress engine in case we're waiting in a blocking recv */
+        MPIDI_CH3_Progress_signal_completion();
+    }
+    
     ret = sem_wait(&ckpt_sem);
     CHECK_ERR(ret, "sem_wait");
 
@@ -131,6 +142,9 @@ int MPIDI_nem_ckpt_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_NEM_CKPT_INIT);
 
+    if (!MPIR_PARAM_ENABLE_CKPOINT)
+        goto fn_exit;
+    
     client_id = cr_init();
     MPIU_ERR_CHKANDJUMP(client_id < 0 && errno == ENOSYS, mpi_errno, MPI_ERR_OTHER, "**blcr_mod");
 
@@ -205,7 +219,7 @@ static int reinit_pmi(void)
     CHECK_ERR(pg_rank != MPIDI_Process.my_pg_rank, "pg rank differs after restart");
 
     /* get new pg_id */
-    ret = PMI_Get_id_length_max(&pg_id_sz);
+    ret = PMI_KVS_Get_name_length_max(&pg_id_sz);
     CHECK_ERR(ret, "pmi_get_id_length_max");
     
     MPIU_Free(MPIDI_Process.my_pg->id);
@@ -213,8 +227,8 @@ static int reinit_pmi(void)
     MPIDI_Process.my_pg->id = MPIU_Malloc(pg_id_sz + 1);
     CHECK_ERR(MPIDI_Process.my_pg->id == NULL, "malloc failed");
 
-    ret = PMI_Get_id(MPIDI_Process.my_pg->id, pg_id_sz);
-    CHECK_ERR(ret, "pmi_get_id");
+    ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->id, pg_id_sz);
+    CHECK_ERR(ret, "pmi_kvs_get_my_name");
 
     /* get new kvsname */
     ret = PMI_KVS_Get_name_length_max(&kvs_name_sz);
@@ -226,7 +240,7 @@ static int reinit_pmi(void)
     CHECK_ERR(MPIDI_Process.my_pg->connData == NULL, "malloc failed");
 
     ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->connData, kvs_name_sz);
-    CHECK_ERR(ret, "PMI_Get_id");
+    CHECK_ERR(ret, "PMI_Get_my_name");
 
     
     MPIDI_FUNC_EXIT(MPID_STATE_REINIT_PMI);
@@ -276,10 +290,10 @@ typedef struct sock_ident {
     int pid;
 } sock_ident_t;
     
-#define STDINOUTERR_PORT_NAME "HYDRA_STDINOUTERR_PORT"
+#define STDINOUTERR_PORT_NAME "CKPOINT_STDINOUTERR_PORT"
 
 #undef FUNCNAME
-#define FUNCNAME open_fifo
+#define FUNCNAME open_io_socket
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int open_io_socket(socktype_t socktype, int rank, int dupfd)
@@ -287,7 +301,7 @@ static int open_io_socket(socktype_t socktype, int rank, int dupfd)
     int fd;
     int ret;
     struct sockaddr_in sock_addr;
-    struct in_addr addr;
+    in_addr_t addr;
     sock_ident_t id;
     int port;
     int len;
@@ -300,12 +314,12 @@ static int open_io_socket(socktype_t socktype, int rank, int dupfd)
     memset(&addr, 0, sizeof(addr));
 
     MPL_env2int(STDINOUTERR_PORT_NAME, &port);
-    ret = inet_pton(AF_INET, "127.0.0.1", &addr);
-    CHECK_ERR_ERRNO(ret != 1, "inet_pton");
+    addr = inet_addr("127.0.0.1");
+    CHECK_ERR_ERRNO(addr == INADDR_NONE, "inet_addr");
 
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_port = htons((in_port_t)port);
-    sock_addr.sin_addr.s_addr = addr.s_addr;
+    sock_addr.sin_addr.s_addr = addr;
 
     do {
         fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -348,7 +362,6 @@ fn_exit:
 static int restore_stdinouterr(int rank)
 {
     int ret;
-    int fd;
     MPIDI_STATE_DECL(MPID_STATE_RESTORE_STDINOUTERR);
 
     MPIDI_FUNC_ENTER(MPID_STATE_RESTORE_STDINOUTERR);
@@ -401,7 +414,7 @@ int MPIDI_nem_ckpt_start(void)
             continue;
        
         MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, i, &vc);
-        vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
+        vc_ch = VC_CH(vc);
 
         MPIDI_Pkt_init(ckpt_pkt, MPIDI_NEM_PKT_CKPT_MARKER);
         ckpt_pkt->wave = current_wave;
@@ -467,7 +480,7 @@ int MPIDI_nem_ckpt_finish(void)
 
         if (ckpt_result == CKPT_CONTINUE) {
             MPIDI_PG_Get_vc(MPIDI_Process.my_pg, i, &vc);
-            vc_ch = ((MPIDI_CH3I_VC *)vc->channel_private);
+            vc_ch = VC_CH(vc);
             if (!vc_ch->is_local) {
                 mpi_errno = vc_ch->ckpt_continue_vc(vc);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);

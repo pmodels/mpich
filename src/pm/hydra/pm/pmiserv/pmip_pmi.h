@@ -7,8 +7,8 @@
 #ifndef PMIP_PMI_H_INCLUDED
 #define PMIP_PMI_H_INCLUDED
 
-#include "hydra_base.h"
-#include "pmi_common.h"
+#include "hydra.h"
+#include "common.h"
 
 /* PMI-1 specific definitions */
 extern struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_v1;

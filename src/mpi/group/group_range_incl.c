@@ -153,6 +153,8 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
 	    }
 	}
     }
+
+    /* TODO calculate is_local_dense_monotonic */
     MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */

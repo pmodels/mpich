@@ -20,6 +20,7 @@
 int err = 0;
 
 /* left(x,y) ==> x */
+void left(void *a, void *b, int *count, MPI_Datatype *type);
 void left(void *a, void *b, int *count, MPI_Datatype *type)
 {
     int *in = a;
@@ -35,6 +36,7 @@ void left(void *a, void *b, int *count, MPI_Datatype *type)
 }
 
 /* right(x,y) ==> y */
+void right(void *a, void *b, int *count, MPI_Datatype *type);
 void right(void *a, void *b, int *count, MPI_Datatype *type)
 {
     int *in = a;
@@ -51,6 +53,7 @@ void right(void *a, void *b, int *count, MPI_Datatype *type)
 
 /* Just performs a simple sum but can be marked as non-commutative to
    potentially tigger different logic in the implementation. */
+void nc_sum(void *a, void *b, int *count, MPI_Datatype *type);
 void nc_sum(void *a, void *b, int *count, MPI_Datatype *type)
 {
     int *in = a;
@@ -70,7 +73,7 @@ int main( int argc, char **argv )
     int      *sendbuf, *recvcounts;
     int      block_size;
     int      *recvbuf;
-    int      size, rank, i, sumval;
+    int      size, rank, i;
     MPI_Comm comm;
     MPI_Op left_op, right_op, nc_sum_op;
 

@@ -17,7 +17,7 @@
 #include "mpitest.h"
 
 int test_attrs ( void );
-void abort_msg ( char *, int );
+void abort_msg ( const char *, int );
 int copybomb_fn ( MPI_Datatype, int, void *, void *, void *, int * );
 int deletebomb_fn ( MPI_Datatype, int, void *, void * );
 
@@ -61,7 +61,7 @@ int deletebomb_fn( MPI_Datatype type, int keyval, void *attribute_val,
     return MPI_ERR_OTHER;
 }
 
-void abort_msg( char *str, int code )
+void abort_msg( const char *str, int code )
 {
     fprintf( stderr, "%s, err = %d\n", str, code );
     MPI_Abort( MPI_COMM_WORLD, code );

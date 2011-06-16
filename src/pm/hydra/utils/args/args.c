@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 
 static int exists(char *filename)
 {
@@ -29,7 +29,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
         user_path = HYDU_strdup(user_path);
 
     if (user_path) {    /* If the PATH environment exists */
-        test_loc = strtok(user_path, ";:");
+        test_loc = HYDU_get_abs_wd(strtok(user_path, ";:"));
         do {
             tmp[0] = HYDU_strdup(test_loc);
             tmp[1] = HYDU_strdup("/");
@@ -54,7 +54,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
             HYDU_FREE(path_loc);
             path_loc = NULL;
-        } while ((test_loc = strtok(NULL, ";:")));
+        } while ((test_loc = HYDU_get_abs_wd(strtok(NULL, ";:"))));
     }
 
     /* There is either no PATH environment or we could not find the
@@ -150,7 +150,7 @@ HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_tabl
     goto fn_exit;
 }
 
-HYD_status HYDU_set_str(char *arg, char ***argv, char **var, const char *val)
+HYD_status HYDU_set_str(char *arg, char **var, const char *val)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -168,26 +168,7 @@ HYD_status HYDU_set_str(char *arg, char ***argv, char **var, const char *val)
     goto fn_exit;
 }
 
-HYD_status HYDU_set_str_and_incr(char *arg, char ***argv, char **var)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (**argv == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
-
-    status = HYDU_set_str(arg, argv, var, **argv);
-    HYDU_ERR_POP(status, "unable to set int\n");
-
-    (*argv)++;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val)
+HYD_status HYDU_set_int(char *arg, int *var, int val)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -195,25 +176,6 @@ HYD_status HYDU_set_int(char *arg, char ***argv, int *var, int val)
                         "duplicate setting: %s\n", arg);
 
     *var = val;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYDU_set_int_and_incr(char *arg, char ***argv, int *var)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (**argv == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
-
-    status = HYDU_set_int(arg, argv, var, atoi(**argv));
-    HYDU_ERR_POP(status, "unable to set int\n");
-
-    (*argv)++;
 
   fn_exit:
     return status;
@@ -260,9 +222,74 @@ char *HYDU_getcwd(void)
     goto fn_exit;
 }
 
+char *HYDU_get_abs_wd(const char *wd)
+{
+    char *cwd, *retdir;
 
-HYD_status HYDU_parse_hostfile(char *hostfile,
-                               HYD_status(*process_token) (char *token, int newline))
+    if (wd[0] != '.')
+        return (char *) wd;
+
+    cwd = HYDU_getcwd();
+    chdir(wd);
+    retdir = HYDU_getcwd();
+    chdir(cwd);
+
+    return retdir;
+}
+
+HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
+{
+    int num_procs;
+    char *hostname, *procs, *binding, *tmp, *user;
+    struct HYD_node *node;
+    HYD_status status = HYD_SUCCESS;
+
+    if (newline) {      /* The first entry gives the hostname and processes */
+        hostname = strtok(token, ":");
+        procs = strtok(NULL, ":");
+        num_procs = procs ? atoi(procs) : 1;
+
+        status = HYDU_add_to_node_list(hostname, num_procs, node_list);
+        HYDU_ERR_POP(status, "unable to add to node list\n");
+    }
+    else {      /* Not a new line */
+        tmp = strtok(token, "=");
+        if (!strcmp(tmp, "binding")) {
+            binding = strtok(NULL, "=");
+
+            for (node = *node_list; node->next; node = node->next);
+            if (node->local_binding)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "duplicate local binding setting\n");
+
+            node->local_binding = HYDU_strdup(binding);
+        }
+        else if (!strcmp(tmp, "user")) {
+            user = strtok(NULL, "=");
+
+            for (node = *node_list; node->next; node = node->next);
+            if (node->user)
+                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                    "duplicate username setting\n");
+
+            node->user = HYDU_strdup(user);
+        }
+        else {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "token %s not supported at this time\n", token);
+        }
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list,
+                               HYD_status(*process_token) (char *token, int newline,
+                                                           struct HYD_node ** node_list))
 {
     char line[HYD_TMP_STRLEN], **tokens;
     FILE *fp;
@@ -275,6 +302,8 @@ HYD_status HYDU_parse_hostfile(char *hostfile,
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unable to open host file: %s\n", hostfile);
 
+    if (node_list)
+        *node_list = NULL;
     while (fgets(line, HYD_TMP_STRLEN, fp)) {
         char *linep = NULL;
 
@@ -294,7 +323,7 @@ HYD_status HYDU_parse_hostfile(char *hostfile,
                                 "Unable to convert host file entry to strlist\n");
 
         for (i = 0; tokens[i]; i++) {
-            status = process_token(tokens[i], !i);
+            status = process_token(tokens[i], !i, node_list);
             HYDU_ERR_POP(status, "unable to process token\n");
         }
 

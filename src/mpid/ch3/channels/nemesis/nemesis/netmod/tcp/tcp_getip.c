@@ -54,6 +54,10 @@ static int dbg_ifname = 0;
 /* Needed for SIOCGIFCONF on linux */
 #include <sys/ioctl.h>
 #endif
+/* needs sys/types.h first */
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
 
 /* We can only access the interfaces if we have a number of features.
    Test for these, otherwise define this routine to return false in the
@@ -241,4 +245,63 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
     *found = 0;
     return MPI_SUCCESS;
 }
+#endif
+
+
+#if defined(SIOCGIFADDR)
+
+/* 'ifname' is a string that might be the name of an interface (e.g., "eth0",
+ * "en1", "ib0", etc), not an "interface hostname" ("node1", "192.168.1.38",
+ * etc).  If that name is detected as a valid interface name then 'ifaddr' will
+ * be populated with the corresponding address and '*found' will be set to TRUE.
+ * Otherwise '*found' will be set to FALSE. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Get_IP_for_iface
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int fd, ret;
+    struct ifreq ifr;
+
+    if (found != NULL)
+        *found = FALSE;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    MPIU_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror(errno), errno);
+    ifr.ifr_addr.sa_family = AF_INET; /* just IPv4 for now */
+    MPIU_Strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
+    ret = ioctl(fd, SIOCGIFADDR, &ifr);
+    MPIU_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
+
+    *found = TRUE;
+    MPIU_Memcpy(ifaddr->ifaddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, 4);
+    ifaddr->len = 4;
+    ifaddr->type = AF_INET;
+
+fn_exit:
+    if (fd != -1) {
+        ret = close(fd);
+        if (ret < 0) {
+            MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**sock_close", "**sock_close %s %d", MPIU_Strerror(errno), errno);
+        }
+    }
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#else /* things needed to determine address for a given interface name */
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Get_IP_for_iface
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found)
+{
+    if (found != NULL)
+        *found = FALSE;
+}
+
 #endif

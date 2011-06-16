@@ -672,7 +672,7 @@ fn_fail:
     goto fn_exit;
 }
 
-int iPMI_Initialized(PMI_BOOL *initialized)
+int iPMI_Initialized(int *initialized)
 {
     if (initialized == NULL)
 	return PMI_ERR_INVALID_ARG;

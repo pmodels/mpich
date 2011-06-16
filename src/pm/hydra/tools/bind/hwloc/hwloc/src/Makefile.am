@@ -1,5 +1,7 @@
-# Copyright © 2009      INRIA, Université Bordeaux 1
+# Copyright © 2009-2010 INRIA.  All rights reserved.
+# Copyright © 2009-2010 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+# See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
@@ -21,6 +23,7 @@ endif
 sources = \
         topology.c \
         traversal.c \
+        distances.c \
         topology-synthetic.c \
         bind.c \
         cpuset.c \
@@ -98,13 +101,13 @@ endif HWLOC_HAVE_CPUID
 # Installable library
 
 libhwloc_la_SOURCES = $(sources)
-libhwloc_la_LDFLAGS = $(ldflags) -version-number $(libhwloc_so_version) $(HWLOC_XML_LIBS)
+libhwloc_la_LDFLAGS = $(ldflags) -version-number $(libhwloc_so_version) $(HWLOC_XML_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS)
 
 # Embedded library (note the lack of a .so version number -- that
 # intentionally only appears in the installable library)
 
 libhwloc_embedded_la_SOURCES = $(sources)
-libhwloc_embedded_la_LDFLAGS = $(ldflags) $(HWLOC_XML_LIBS)
+libhwloc_embedded_la_LDFLAGS = $(ldflags) $(HWLOC_XML_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS)
 
 # XML data (only install if we're building in standalone mode)
 

@@ -1,19 +1,22 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA.  All rights reserved.
+ * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
 #ifndef UTILS_LSTOPO_H
 #define UTILS_LSTOPO_H
 
-#include <private/config.h>
 #include <hwloc.h>
 
 extern hwloc_obj_type_t show_only;
 extern int show_cpuset;
+extern int taskset;
 extern hwloc_pid_t pid;
 
-typedef void output_method (struct hwloc_topology *topology, const char *output, int logical, int verbose_mode);
+typedef void output_method (struct hwloc_topology *topology, const char *output, int logical, int legend, int verbose_mode);
 
 FILE *open_file(const char *filename, const char *mode) __hwloc_attribute_malloc;
 
@@ -29,8 +32,8 @@ struct draw_methods {
 
 extern unsigned int gridsize, fontsize, force_horiz, force_vert;
 
-extern void *output_draw_start(struct draw_methods *draw_methods, int logical, struct hwloc_topology *topology, void *output);
-extern void output_draw(struct draw_methods *draw_methods, int logical, struct hwloc_topology *topology, void *output);
+extern void *output_draw_start(struct draw_methods *draw_methods, int logical, int legend, struct hwloc_topology *topology, void *output);
+extern void output_draw(struct draw_methods *draw_methods, int logical, int legend, struct hwloc_topology *topology, void *output);
 
 int rgb_to_color(int r, int g, int b) __hwloc_attribute_const;
 int declare_color(int r, int g, int b);

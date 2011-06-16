@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test MPI_LOR operations on optional datatypes dupported by MPICH2";
+*/
 
 /*
  * This test looks at the handling of logical and for types that are not 
@@ -19,7 +21,6 @@ static char MTEST_Descrip[] = "Test MPI_LOR operations on optional datatypes dup
 int main( int argc, char *argv[] )
 {
     int errs = 0, err;
-    int rc;
     int rank, size;
     MPI_Comm      comm;
     char cinbuf[3], coutbuf[3];

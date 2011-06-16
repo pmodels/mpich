@@ -4,6 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 #include <math.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"

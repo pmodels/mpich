@@ -19,7 +19,9 @@
 #include <unistd.h>
 #endif
 
+/*
 static char MTEST_Descrip[] = "A simple test of Comm_spawn with info";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -31,10 +33,11 @@ int main( int argc, char *argv[] )
     MPI_Status    status;
     MPI_Info      spawninfo;
     char curdir[1024], wd[1024], childwd[1024];
+    char *cerr;
 
     MTest_Init( &argc, &argv );
 
-    getcwd( curdir, sizeof(curdir) );
+    cerr = getcwd( curdir, sizeof(curdir) );
 
     MPI_Comm_get_parent( &parentcomm );
 
@@ -49,9 +52,9 @@ int main( int argc, char *argv[] )
 	*p = 0;
 	
 	MPI_Info_create( &spawninfo );
-	MPI_Info_set( spawninfo, "path", curdir );
-	MPI_Info_set( spawninfo, "wdir", wd );
-	MPI_Comm_spawn( "spawninfo1", MPI_ARGV_NULL, np,
+	MPI_Info_set( spawninfo, (char*)"path", curdir );
+	MPI_Info_set( spawninfo, (char*)"wdir", wd );
+	MPI_Comm_spawn( (char*)"spawninfo1", MPI_ARGV_NULL, np,
 			spawninfo, 0, MPI_COMM_WORLD,
 			&intercomm, errcodes );
 	MPI_Info_free( &spawninfo );

@@ -7,8 +7,7 @@
 #ifndef PMI_V2_COMMON_H_INCLUDED
 #define PMI_V2_COMMON_H_INCLUDED
 
-#include "hydra_base.h"
-#include "hydra_utils.h"
+#include "hydra.h"
 
 struct HYD_pmcd_pmi_v2_reqs {
     int fd;

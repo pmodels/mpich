@@ -25,8 +25,8 @@
 
 MPI_Datatype transpose_type(int M, int m, int n, MPI_Datatype type);
 MPI_Datatype submatrix_type(int N, int m, int n, MPI_Datatype type);
-void Transpose(float *localA, float *localB, int M, int N, 
-	       MPI_Comm comm)
+void Transpose(float *localA, float *localB, int M, int N, MPI_Comm comm);
+void Transpose(float *localA, float *localB, int M, int N, MPI_Comm comm)
 /* transpose MxN matrix A that is block distributed (1-D) on  
    processes of comm onto block distributed matrix B  */
 {
@@ -107,7 +107,8 @@ MPI_Datatype submatrix_type(int M, int m, int n, MPI_Datatype type)
 /* computes a datatype for an mxn submatrix within an MxN matrix 
    with entries of type type */
 {
-  MPI_Datatype subrow, submatrix;
+  /* MPI_Datatype subrow; */
+  MPI_Datatype submatrix;
 
   /* The book, MPI: The Complete Reference, has the wrong type constructor 
      here.  Since the stride in the vector type is relative to the input 
@@ -158,9 +159,9 @@ MPI_Datatype transpose_type(int N, int m, int n, MPI_Datatype type)
      n * m * sizeof(type) and the extent should be ((m-1)*N+n) * sizeof(type) */
   {
       int      tsize;
-      MPI_Aint textent, lb;
+      MPI_Aint textent, llb;
       MPI_Type_size( type, &tsize );
-      MPI_Type_get_true_extent( submatrix, &lb, &textent );
+      MPI_Type_get_true_extent( submatrix, &llb, &textent );
       
       if (textent != tsize * (N * (m-1)+n)) {
 	  fprintf( stderr, "Transpose Submatrix extent is %ld, expected %ld (%d,%d,%d)\n",

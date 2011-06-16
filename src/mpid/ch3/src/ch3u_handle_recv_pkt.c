@@ -585,6 +585,8 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
 	MPIDI_CH3_PktHandler_LockAccumUnlock;
     pktArray[MPIDI_CH3_PKT_LOCK_GET_UNLOCK] = 
 	MPIDI_CH3_PktHandler_LockGetUnlock;
+    pktArray[MPIDI_CH3_PKT_ACCUM_IMMED] = 
+	MPIDI_CH3_PktHandler_Accumulate_Immed;
     /* End of default RMA operations */
 
  fn_fail:

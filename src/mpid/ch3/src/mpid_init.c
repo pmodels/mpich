@@ -36,6 +36,9 @@ static int InitPG( int *argc_p, char ***argv_p,
 static int MPIDI_CH3I_PG_Compare_ids(void * id1, void * id2);
 static int MPIDI_CH3I_PG_Destroy(MPIDI_PG_t * pg );
 
+int MPICH_ATTR_FAILED_PROCESSES = MPI_KEYVAL_INVALID;
+static int failed_procs_delete_fn(MPI_Comm comm, int keyval, void *attr_val, void *extra_data);
+
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
 
@@ -53,6 +56,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     int pg_size;
     MPID_Comm * comm;
     int p;
+    int *attr_val = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPID_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_INIT);
@@ -193,6 +197,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     
     MPID_VCR_Dup(&pg->vct[pg_rank], &comm->vcr[0]);
 
+    MPID_Dev_comm_create_hook (comm);
+    mpi_errno = MPIR_Comm_commit(comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* Currently, mpidpre.h always defines MPID_NEEDS_ICOMM_WORLD. */
 #ifdef MPID_NEEDS_ICOMM_WORLD
     /*
@@ -276,6 +284,17 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	    MPICH_THREAD_LEVEL : requested;
     }
 
+    /* create attribute to list failed processes */
+    mpi_errno = MPIR_Comm_create_keyval_impl(MPI_COMM_NULL_COPY_FN,
+                                             failed_procs_delete_fn,
+                                             &MPICH_ATTR_FAILED_PROCESSES, 0);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    attr_val = MPIU_Malloc(sizeof(int));
+    if (!attr_val) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(int), "attr_val"); goto fn_fail; }
+    *attr_val = MPI_PROC_NULL;
+    mpi_errno = MPIR_Comm_set_attr_impl(MPIR_Process.comm_world, MPICH_ATTR_FAILED_PROCESSES, attr_val, MPIR_ATTR_PTR);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_INIT);
     return mpi_errno;
@@ -394,7 +413,7 @@ static int InitPG( int *argc, char ***argv,
 	/*
 	 * Get the process group id
 	 */
-	pmi_errno = PMI_Get_id_length_max(&pg_id_sz);
+	pmi_errno = PMI_KVS_Get_name_length_max(&pg_id_sz);
 	if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
 				 "**pmi_get_id_length_max", 
@@ -411,7 +430,7 @@ static int InitPG( int *argc, char ***argv,
 	/* Note in the singleton init case, the pg_id is a dummy.
 	   We'll want to replace this value if we join an 
 	   Process manager */
-	pmi_errno = PMI_Get_id(pg_id, pg_id_sz);
+	pmi_errno = PMI_KVS_Get_my_name(pg_id, pg_id_sz);
 	if (pmi_errno != PMI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_id",
 				 "**pmi_get_id %d", pmi_errno);
@@ -546,3 +565,17 @@ static int MPIDI_CH3I_PG_Destroy(MPIDI_PG_t * pg)
     
     return MPI_SUCCESS;
 }
+
+static int failed_procs_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
+                                  int keyval ATTRIBUTE((unused)),
+                                  void *attr_val,
+                                  void *extra_data ATTRIBUTE((unused)))
+{
+    MPIU_UNREFERENCED_ARG(comm);
+    MPIU_UNREFERENCED_ARG(keyval);
+    MPIU_UNREFERENCED_ARG(extra_data);
+
+    MPIU_Free(attr_val);
+    return MPI_SUCCESS;
+}
+

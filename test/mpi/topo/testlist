@@ -11,3 +11,4 @@ topodup 4
 graphcr 4
 graphcr2 4
 distgraph1 4 mpiversion=2.2
+dgraph_unwgt 4 mpiversion=2.2

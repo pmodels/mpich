@@ -39,7 +39,7 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
     /* Create a file to which to attach the handler */
-    rc = MPI_File_open( MPI_COMM_WORLD, "test.txt", 
+    rc = MPI_File_open( MPI_COMM_WORLD, (char*)"test.txt", 
 		MPI_MODE_CREATE | MPI_MODE_WRONLY | MPI_MODE_DELETE_ON_CLOSE, 
 			MPI_INFO_NULL, &fh );
     if (rc) {
@@ -50,20 +50,20 @@ int main( int argc, char *argv[] )
     rc = MPI_File_create_errhandler( user_handler, &ioerr_handler );
     if (rc) {
         errs++;
-        printf("MPI_Errhandler_create returned an error code: %d\n");
+        printf("MPI_File_create_Errhandler returned an error code: %d\n", rc);
     }
 
     rc = MPI_File_set_errhandler( fh, ioerr_handler );
     if (rc) {
         errs++;
-        printf("MPI_File_set_errhandler returned an error code: %d\n");
+        printf("MPI_File_set_errhandler returned an error code: %d\n", rc);
     }
 
     /* avoid leaking the errhandler, safe because they have refcount semantics */
     rc = MPI_Errhandler_free(&ioerr_handler);
     if (rc) {
         errs++;
-        printf("MPI_Errhandler_free returned an error code: %d\n");
+        printf("MPI_Errhandler_free returned an error code: %d\n", rc);
     }
 
     /* This should generate an error because the file mode is WRONLY */
@@ -76,7 +76,7 @@ int main( int argc, char *argv[] )
     rc = MPI_File_close( &fh );
     if (rc) {
         errs++;
-        printf("MPI_File_close returned an error code: %d\n");
+        printf("MPI_File_close returned an error code: %d\n",rc);
     }
 
     MTest_Finalize( errs );

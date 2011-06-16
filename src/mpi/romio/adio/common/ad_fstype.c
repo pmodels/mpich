@@ -204,15 +204,23 @@ static void ADIO_FileSysType_parentdir(char *filename, char **dirnamep)
 }
 #endif /* ROMIO_NTFS */
 
-#ifdef ROMIO_BGL   /* BlueGene support for pvfs through ufs */
+#ifdef ROMIO_BGL   /* BlueGene support for lockless i/o (necessary for PVFS.
+		      possibly beneficial for others, unless data sieving
+		      writes desired) */
+
+/* BlueGene environment variables can override lockless selection.*/
+extern void ad_bgl_get_env_vars();
+extern long bglocklessmpio_f_type;
+
 static void check_for_lockless_exceptions(long stat_type, int *fstype)
 {
-    /* exception for lockless PVFS file system.  PVFS is the only exception we
-     * make right now, but any future FS developers looking to override
-     * BlueGene fs detection can do it here */
-    if (stat_type == PVFS2_SUPER_MAGIC) 
-	/* use lock-free driver on bluegene to support pvfs */
-	*fstype = ADIO_BGLOCKLESS; 
+    /* exception for lockless file systems.  (PVFS2 is the default in ad_bgl_tuning.)
+     * The BGLOCKLESS_F_TYPE environment variable will override it by specifying 
+     * the appropriate file system magic number here. 
+     */ 
+    if (stat_type == bglocklessmpio_f_type) 
+      /* use lock-free driver on bluegene to support specified fs (defaults to pvfs2) */
+      *fstype = ADIO_BGLOCKLESS; 
 }
 #endif
 /*
@@ -332,6 +340,10 @@ static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code
 #  ifdef ROMIO_BGL 
     /* BlueGene is a special case: all file systems are AD_BGL, except for
      * certain exceptions */
+
+    /* Bluegene needs to read enviroment variables before selecting the file system*/
+    ad_bgl_get_env_vars();
+
     *fstype = ADIO_BGL;
     check_for_lockless_exceptions(fsbuf.f_type, fstype);
     *error_code = MPI_SUCCESS;
@@ -603,6 +615,8 @@ void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype,
 	 * everyone else.  
 	 * - Note that we will not catch cases like
 	 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html
+	 * (edit: now http://lists.mcs.anl.gov/pipermail/mpich-discuss/2007-August/002648.html)
+	 *
 	 * where file systems are not mounted or available on other processes,
 	 * but we'll catch those a few functions later in ADIO_Open 
 	 * - Note that if we have NFS enabled, we might have a situation where,
@@ -632,7 +646,9 @@ void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype,
 		 * system type check below.  This case could happen if a full
 		 * path exists on one node but not on others, and no prefix
 		 * like ufs: was provided.  see discussion at
-		 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html 
+		 * http://www.mcs.anl.gov/web-mail-archive/lists/mpich-discuss/2007/08/msg00042.html
+		 * (edit: now
+		 * http://lists.mcs.anl.gov/pipermail/mpich-discuss/2007-August/002648.html)
 	         */
 
 	        MPI_Allreduce(error_code, &max_code, 1, MPI_INT, MPI_MAX, comm);

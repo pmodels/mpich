@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bind.h"
 
 #if defined HAVE_PLPA
@@ -20,7 +20,7 @@ struct HYDT_bind_info HYDT_bind_info = { 0 };
 HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 {
     char *bindstr, *bindentry, *elem;
-    char *binding = NULL, *bindlib = NULL;
+    const char *binding = NULL, *bindlib = NULL;
     int i, j, k, use_topo_obj[HYDT_BIND_OBJ_END] = { 0 }, child_id;
     int use_cache_level = 0, break_out;
     HYDT_bind_obj_type_t topo_end = HYDT_BIND_OBJ_END;
@@ -31,13 +31,13 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
     if (user_binding)
         binding = user_binding;
-    else
-        HYD_GET_ENV_STR_VAL(binding, "HYDRA_BINDING", NULL);
+    else if (MPL_env2str("HYDRA_BINDING", &binding) == 0)
+        binding = NULL;
 
     if (user_bindlib)
         bindlib = user_bindlib;
-    else
-        HYD_GET_ENV_STR_VAL(bindlib, "HYDRA_BINDLIB", HYDRA_DEFAULT_BINDLIB);
+    else if (MPL_env2str("HYDRA_BINDLIB", &bindlib) == 0)
+        bindlib = HYDRA_DEFAULT_BINDLIB;
 
     HYDT_bind_info.support_level = HYDT_BIND_SUPPORT_NONE;
     if (bindlib)
@@ -46,6 +46,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         HYDT_bind_info.bindlib = NULL;
     HYDT_bind_info.bindmap = NULL;
 
+
+    HYDT_bind_init_obj(&HYDT_bind_info.machine);
 
     /***************************** NONE *****************************/
     if (!binding || !strcmp(binding, "none")) {
@@ -96,11 +98,6 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
     /***************************** USER *****************************/
     if (!strncmp(binding, "user:", strlen("user:"))) {
-        /* Find the actual processing elements */
-        HYDU_MALLOC(HYDT_bind_info.bindmap, struct HYDT_bind_cpuset_t *,
-                    HYDT_bind_info.total_proc_units * sizeof(struct HYDT_bind_cpuset_t),
-                    status);
-
         /* Initialize all values to map to all CPUs */
         for (i = 0; i < HYDT_bind_info.total_proc_units; i++)
             for (j = 0; j < HYDT_bind_info.total_proc_units; j++)
@@ -122,6 +119,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             if (i >= HYDT_bind_info.total_proc_units)
                 break;
         }
+        HYDU_FREE(bindstr);
 
         goto fn_exit;
     }
@@ -136,7 +134,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
 
     /***************************** CPU *****************************/
-    if (!strncmp(binding, "cpu", strlen("cpu"))) {
+    if (!strncmp(binding, "cpu:", strlen("cpu:"))) {
         /* If we reached here, the user requested for CPU topology
          * aware binding. */
         if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_CPUTOPO)
@@ -162,11 +160,13 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
                 else if (!strcmp(elem, "thread") || !strcmp(elem, "threads"))
                     use_topo_obj[HYDT_BIND_OBJ_THREAD] = 1;
                 else
-                    HYDU_ERR_POP(status, "unrecognized binding option\n");
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "unrecognized binding option %s\n", binding);
 
                 elem = strtok(NULL, ",");
             } while (elem);
         }
+        HYDU_FREE(bindstr);
 
         for (i = HYDT_BIND_OBJ_END - 1; i > HYDT_BIND_OBJ_MACHINE; i--) {
             /* If an object has to be used, its parent object is also
@@ -175,6 +175,10 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
             if (use_topo_obj[i])
                 use_topo_obj[i - 1] = 1;
         }
+        /* We should have at least one process on the node; otherwise,
+         * the mapping makes no sense */
+        for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_NODE; i++)
+            use_topo_obj[i] = 1;
 
         topo_end = HYDT_BIND_OBJ_END;
         for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_END; i++) {
@@ -187,7 +191,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
 
     /***************************** CACHE *****************************/
-    if (!strncmp(binding, "cache", strlen("cache"))) {
+    if (!strncmp(binding, "cache:", strlen("cache:"))) {
         /* If we reached here, the user requested for memory topology
          * aware binding. */
         if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_MEMTOPO)
@@ -198,7 +202,8 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         bindentry = strtok(bindstr, ":");
         bindentry = strtok(NULL, ":");
 
-        use_cache_level = 0;
+        /* Don't share any cache to start with */
+        use_cache_level = HYDT_INVALID_CACHE_DEPTH;
         if (bindentry == NULL) {
             /* No extension option specified; use all resources */
             use_cache_level = 1;
@@ -206,30 +211,37 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
         else {
             elem = strtok(bindentry, ",");
             do {
-                if (!strcmp(elem, "l3") || !strcmp(elem, "l3")) {
-                    if (!use_cache_level || use_cache_level > 3)
+                if (!strcmp(elem, "l3") || !strcmp(elem, "L3")) {
+                    if (use_cache_level > 3)
                         use_cache_level = 3;
                 }
-                else if (!strcmp(elem, "l2") || !strcmp(elem, "l2")) {
-                    if (!use_cache_level || use_cache_level > 2)
+                else if (!strcmp(elem, "l2") || !strcmp(elem, "L2")) {
+                    if (use_cache_level > 2)
                         use_cache_level = 2;
                 }
-                else if (!strcmp(elem, "l1") || !strcmp(elem, "l1")) {
-                    if (!use_cache_level || use_cache_level > 1)
+                else if (!strcmp(elem, "l1") || !strcmp(elem, "L1")) {
+                    if (use_cache_level > 1)
                         use_cache_level = 1;
                 }
-                else
-                    HYDU_ERR_POP(status, "unrecognized binding option\n");
+                else {
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "unrecognized binding option\n");
+                }
 
                 elem = strtok(NULL, ",");
             } while (elem);
         }
+        HYDU_FREE(bindstr);
 
         topo_end = HYDT_BIND_OBJ_END;
         obj = &HYDT_bind_info.machine;
         break_out = 0;
         for (i = HYDT_BIND_OBJ_MACHINE; i < HYDT_BIND_OBJ_END; i++) {
             for (j = 0; j < obj->mem.num_caches; j++) {
+                /* If the cache level is lower than what I'm allowed
+                 * to share, and there are more than one OS indices
+                 * below this level (there is actually sharing) mark
+                 * this as the lowest level I can get to */
                 if (obj->mem.cache_depth[j] == use_cache_level) {
                     topo_end = (HYDT_bind_obj_type_t) (i + 1);
                     break_out = 1;
@@ -315,24 +327,22 @@ static void cleanup_topo_level(struct HYDT_bind_obj level)
 
     level.parent = NULL;
 
-    if (level.children)
+    if (level.mem.cache_size)
+        HYDU_FREE(level.mem.cache_size);
+
+    if (level.mem.cache_depth)
+        HYDU_FREE(level.mem.cache_depth);
+
+    if (level.children) {
         for (i = 0; i < level.num_children; i++)
             cleanup_topo_level(level.children[i]);
-}
-
-void HYDT_bind_finalize(void)
-{
-    if (HYDT_bind_info.bindmap)
-        HYDU_FREE(HYDT_bind_info.bindmap);
-
-    if (HYDT_bind_info.bindlib)
-        HYDU_FREE(HYDT_bind_info.bindlib);
-
-    cleanup_topo_level(HYDT_bind_info.machine);
+        HYDU_FREE(level.children);
+    }
 }
 
 HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
 {
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -341,6 +351,7 @@ HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
     if (!strcmp(HYDT_bind_info.bindlib, "plpa")) {
         status = HYDT_bind_plpa_process(cpuset);
         HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
+        goto fn_exit;
     }
 #endif /* HAVE_PLPA */
 
@@ -348,8 +359,15 @@ HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset)
     if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
         status = HYDT_bind_hwloc_process(cpuset);
         HYDU_ERR_POP(status, "HWLOC failure binding process to core\n");
+        goto fn_exit;
     }
 #endif /* HAVE_HWLOC */
+
+    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++) {
+        if (cpuset.set[i]) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no binding library available\n");
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -363,4 +381,41 @@ void HYDT_bind_pid_to_cpuset(int process_id, struct HYDT_bind_cpuset_t *cpuset)
 {
     HYDT_bind_cpuset_dup(HYDT_bind_info.bindmap[process_id % HYDT_bind_info.total_proc_units],
                          cpuset);
+}
+
+HYD_status HYDT_bind_finalize(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Finalize the binding library requested by the user */
+#if defined HAVE_PLPA
+    if (!strcmp(HYDT_bind_info.bindlib, "plpa")) {
+        status = HYDT_bind_plpa_finalize();
+        HYDU_ERR_POP(status, "unable to finalize plpa\n");
+    }
+#endif /* HAVE_PLPA */
+
+#if defined HAVE_HWLOC
+    if (!strcmp(HYDT_bind_info.bindlib, "hwloc")) {
+        status = HYDT_bind_hwloc_finalize();
+        HYDU_ERR_POP(status, "unable to finalize hwloc\n");
+    }
+#endif /* HAVE_HWLOC */
+
+    if (HYDT_bind_info.bindmap)
+        HYDU_FREE(HYDT_bind_info.bindmap);
+
+    if (HYDT_bind_info.bindlib)
+        HYDU_FREE(HYDT_bind_info.bindlib);
+
+    cleanup_topo_level(HYDT_bind_info.machine);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }

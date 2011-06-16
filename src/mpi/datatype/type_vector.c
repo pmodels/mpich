@@ -90,6 +90,8 @@ Output Parameter:
 
 .N Errors
 .N MPI_SUCCESS
+.N MPI_ERR_ARG
+.N MPI_ERR_OTHER
 @*/
 int MPI_Type_vector(int count,
 		    int blocklength,

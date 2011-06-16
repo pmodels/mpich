@@ -9,15 +9,16 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test error reporting from faults with collective communication";
+*/
 
 int ReportErr( int errcode, const char name[] );
 
 int main( int argc, char *argv[] )
 {
     int wrank, wsize, rank, size, color;
-    int i, j, tmp;
-    int err, errs = 0, toterrs;
+    int tmp, errs = 0;
     MPI_Comm newcomm;
 
     MPI_Init( &argc, &argv );

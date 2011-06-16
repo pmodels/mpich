@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "Test the MPI_PROC_NULL is a valid target";
+*/
 
 int main( int argc, char *argv[] )
 {
@@ -19,7 +21,6 @@ int main( int argc, char *argv[] )
     int           *rmabuf, rsize, rcount;
     MPI_Comm      comm;
     MPI_Win       win;
-    MPI_Aint      extent;
 
     MTest_Init( &argc, &argv );
 

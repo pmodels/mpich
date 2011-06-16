@@ -4,14 +4,13 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bind.h"
 #include "bind_plpa.h"
 
 struct HYDT_bind_info HYDT_bind_info;
 
 #include "plpa.h"
-#include "plpa_internal.h"
 
 static void set_cpuset_idx(int idx, struct HYDT_bind_obj *obj)
 {
@@ -55,8 +54,9 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     HYDT_bind_cpuset_zero(&HYDT_bind_info.machine.cpuset);
     HYDT_bind_info.machine.parent = NULL;
     HYDT_bind_info.machine.num_children = 1;
-    HYDU_MALLOC(HYDT_bind_info.machine.children, struct HYDT_bind_obj *,
-                sizeof(struct HYDT_bind_obj), status);
+    status = HYDT_bind_alloc_objs(HYDT_bind_info.machine.num_children,
+                                  &HYDT_bind_info.machine.children);
+    HYDU_ERR_POP(status, "error allocating bind objects\n");
 
     /* Setup the node level */
     node = &HYDT_bind_info.machine.children[0];
@@ -68,8 +68,8 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
         HYDU_warn_printf("plpa get socket info failed\n");
         goto fn_fail;
     }
-    HYDU_MALLOC(node->children, struct HYDT_bind_obj *,
-                sizeof(struct HYDT_bind_obj) * node->num_children, status);
+    status = HYDT_bind_alloc_objs(node->num_children, &node->children);
+    HYDU_ERR_POP(status, "error allocating bind objects\n");
 
     /* Setup the socket level */
     total_cores = 0;
@@ -90,8 +90,8 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
             HYDU_warn_printf("plpa get core info failed\n");
             goto fn_fail;
         }
-        HYDU_MALLOC(sock->children, struct HYDT_bind_obj *,
-                    sizeof(struct HYDT_bind_obj) * sock->num_children, status);
+        status = HYDT_bind_alloc_objs(sock->num_children, &sock->children);
+        HYDU_ERR_POP(status, "error allocating bind objects\n");
 
         total_cores += sock->num_children;
     }
@@ -111,8 +111,8 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
             HYDT_bind_cpuset_zero(&core->cpuset);
             core->parent = sock;
             core->num_children = HYDT_bind_info.total_proc_units / total_cores;
-            HYDU_MALLOC(core->children, struct HYDT_bind_obj *,
-                        sizeof(struct HYDT_bind_obj) * core->num_children, status);
+            status = HYDT_bind_alloc_objs(core->num_children, &core->children);
+            HYDU_ERR_POP(status, "error allocating bind objects\n");
 
             for (k = 0; k < core->num_children; k++) {
                 thread = &core->children[k];
@@ -180,6 +180,25 @@ HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset)
         if (ret)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "plpa setaffinity failed\n");
     }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDT_bind_plpa_finalize(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* FIXME: We do not check for the return value of this function,
+     * because it always seems to return an error. But not calling it
+     * is causing some resource leaks. */
+    PLPA_NAME(finalize) ();
 
   fn_exit:
     HYDU_FUNC_EXIT();

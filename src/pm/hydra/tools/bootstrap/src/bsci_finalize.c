@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "hydra_utils.h"
+#include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
 
@@ -14,14 +14,15 @@ HYD_status HYDT_bsci_finalize(void)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_fns.finalize();
-    HYDU_ERR_POP(status, "bootstrap device returned error while finalizing\n");
+    if (HYDT_bsci_fns.rmk_finalize) {
+        status = HYDT_bsci_fns.rmk_finalize();
+        HYDU_ERR_POP(status, "RMK returned error while finalizing\n");
+    }
 
-    if (HYDT_bsci_info.bootstrap)
-        HYDU_FREE(HYDT_bsci_info.bootstrap);
-
-    if (HYDT_bsci_info.bootstrap_exec)
-        HYDU_FREE(HYDT_bsci_info.bootstrap_exec);
+    if (HYDT_bsci_fns.launcher_finalize) {
+        status = HYDT_bsci_fns.launcher_finalize();
+        HYDU_ERR_POP(status, "RMK returned error while finalizing\n");
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();

@@ -1,11 +1,14 @@
-#!/bin/bash -o pipefail
+#!/bin/bash
 #
 # Copyright © 2010 Cisco Systems, Inc.  All rights reserved.
+# See COPYING in top-level directory.
 #
 # Simple script to help test embedding:
 #
 #     ./run-embedded-tests.sh <tarball_name>
 #
+
+set -o pipefail
 
 tarball=$1
 if test "$tarball" = ""; then
@@ -41,6 +44,8 @@ try() {
 
 #---------------------------------------------------------------------
 
+# $1 = announcement banner
+# $2 = path to configure script
 do_build() {
     print Running $1 configure...
     try $2/configure 2>&1 | tee config.out

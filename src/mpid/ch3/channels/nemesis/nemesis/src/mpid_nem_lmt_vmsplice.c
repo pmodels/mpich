@@ -171,7 +171,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     int complete = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_INITIATE_LMT);
 
@@ -181,7 +181,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
     if (vc_ch->lmt_copy_buf_handle == NULL) {
         int err;
         char *pipe_name;
-        MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+        MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
         pipe_name = tempnam(NULL, "lmt_");
         MPIU_ERR_CHKANDJUMP2(!pipe_name, mpi_errno, MPI_ERR_OTHER, "**tempnam",
@@ -253,7 +253,7 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IO
     int i;
     int complete = 0;
     struct lmt_vmsplice_node *node = NULL;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     int pipe_fd;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
 
@@ -316,12 +316,14 @@ int MPID_nem_lmt_vmsplice_progress(void)
                 mpi_errno = do_readv(cur->req, cur->pipe_fd, cur->req->dev.iov,
                                      &cur->req->dev.iov_offset,
                                      &cur->req->dev.iov_count, &complete);
+                /* FIXME: set the error status of the req and complete it, rather than POP */
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 break;
             case MPIDI_REQUEST_TYPE_SEND:
                 mpi_errno = do_vmsplice(cur->req, cur->pipe_fd, cur->req->dev.iov,
                                         &cur->req->dev.iov_offset,
                                         &cur->req->dev.iov_count, &complete);
+                /* FIXME: set the error status of the req and complete it, rather than POP */
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 break;
             default:
@@ -375,7 +377,7 @@ int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IO
     int complete;
     struct lmt_vmsplice_node *node = NULL;
     int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
 
@@ -411,6 +413,30 @@ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
     return mpi_errno;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+
+    /* FIXME: need to handle the case where a VC is terminated due to
+       a process failure.  We need to remove any outstanding LMT ops
+       for this VC. */
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 /* --------------------------------------------------------------------------
    The functions below are nops, stubs that might be used in later versions of
    this code.

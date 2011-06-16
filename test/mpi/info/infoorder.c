@@ -18,9 +18,9 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     MPI_Info info;
-    char *keys1[NKEYS] = { "file", "soft", "host" };
-    char *values1[NKEYS] = { "runfile.txt", "2:1000:4,3:1000:7", 
-			    "myhost.myorg.org" };
+    char *keys1[NKEYS] = { (char*)"file", (char*)"soft", (char*)"host" };
+    char *values1[NKEYS] = { (char*)"runfile.txt", (char*)"2:1000:4,3:1000:7", 
+			     (char*)"myhost.myorg.org" };
 
     char value[MPI_MAX_INFO_VAL];
     int i, flag;

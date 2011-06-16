@@ -62,7 +62,7 @@ rm -f conftest.$ac_ext
 # triggered, it gives an error that the option is not recognized.  So we 
 # need to test with a conftest file that will generate warnings.
 # 
-# add an extra switch, pac_c_check_compiler_option_prototest, to
+# add an extra switch, pac_c_check_compiler_option_invalidprototest, to
 # disable this test just in case some new compiler does not like it.
 #
 # Linking with a program with an invalid prototype to ensure a compiler warning.
@@ -251,7 +251,7 @@ int Foo(int a) { return a; }
 # only within a single object file!  This tests that case.
 # Note that there is an extern int PFoo declaration before the
 # pragma.  Some compilers require this in order to make the weak symbol
-# externally visible.  
+# extenally visible.  
 if test "$has_pragma_weak" = yes ; then
     PAC_COMPLINK_IFELSE([
         AC_LANG_SOURCE([
@@ -466,17 +466,12 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wdeclaration-after-statement -- This is a C89
     #       requirement. When compiling with C99, this should be
     #       disabled.
-    #   -Wfloat-equal -- There are places in hwloc that set a float var to 0, then 
-    #       compare it to 0 later to see if it was updated.  Also when using strtod()
-    #       one needs to compare the return value with 0 to see whether a conversion
-    #       was performed.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
     pac_common_strict_flags="
         -Wall
         -Wextra
-        -Wshorten-64-to-32
         -Wno-missing-field-initializers
         -Wstrict-prototypes
         -Wmissing-prototypes
@@ -486,6 +481,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wshadow
         -Wmissing-declarations
         -Wno-long-long
+        -Wfloat-equal
         -Wundef
         -Wno-endif-labels
         -Wpointer-arith
@@ -507,7 +503,7 @@ if test "$enable_strict_done" != "yes" ; then
 
     enable_c89=yes
     enable_c99=no
-    enable_posix=2001
+    enable_posix=yes
     enable_opt=yes
     flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
     for flag in ${flags}; do
@@ -520,17 +516,9 @@ if test "$enable_strict_done" != "yes" ; then
 		enable_strict_done="yes"
 		enable_c99=yes
 		;;
-	     posix1995)
+	     posix)
 		enable_strict_done="yes"
-		enable_posix=1995
-		;;
-	     posix|posix2001)
-		enable_strict_done="yes"
-		enable_posix=2001
-		;;
-	     posix2008)
-		enable_strict_done="yes"
-		enable_posix=2008
+		enable_posix=yes
 		;;
 	     noposix)
 		enable_strict_done="yes"
@@ -547,7 +535,7 @@ if test "$enable_strict_done" != "yes" ; then
 	     all|yes)
 		enable_strict_done="yes"
 		enable_c89=yes
-		enable_posix=2001
+		enable_posix=yes
 		enable_opt=yes
 	        ;;
 	     no)
@@ -568,13 +556,9 @@ if test "$enable_strict_done" != "yes" ; then
        	  pac_cc_strict_flags="-O2"
        fi
        pac_cc_strict_flags="$pac_cc_strict_flags $pac_common_strict_flags"
-       case "$enable_posix" in
-            no)   : ;;
-            1995) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags]) ;;
-            2001) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200112L],[pac_cc_strict_flags]) ;;
-            2008) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200809L],[pac_cc_strict_flags]) ;;
-            *)    AC_MSG_ERROR([internal error, unexpected POSIX version: '$enable_posix']) ;;
-       esac
+       if test "${enable_posix}" = "yes" ; then
+       	  PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags])
+       fi
        # We only allow one of strict-C99 or strict-C89 to be
        # enabled. If C99 is enabled, we automatically disable C89.
        if test "${enable_c99}" = "yes" ; then
@@ -1303,6 +1287,7 @@ AC_SUBST(RANLIB_AFTER_INSTALL)
 
 #
 # determine if the compiler defines a symbol containing the function name
+# Inspired by checks within the src/mpid/globus/configure.in file in MPICH2
 #
 # These tests check not only that the compiler defines some symbol, such
 # as __FUNCTION__, but that the symbol correctly names the function.

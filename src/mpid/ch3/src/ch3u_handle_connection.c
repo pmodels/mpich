@@ -5,10 +5,15 @@
  */
 
 #include "mpidimpl.h"
+#ifdef USE_PMI2_API
+#include "pmi2.h"
+#else
+#include "pmi.h"
+#endif
 
 /* Count the number of outstanding close requests */
 static volatile int MPIDI_Outstanding_close_ops = 0;
-
+int MPIDI_Failed_vc_count = 0;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_connection
@@ -65,6 +70,19 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 
 		    break;
 
+                case MPIDI_VC_STATE_INACTIVE:
+                    /* VC was terminated before it was activated.
+                       This can happen if a failed process was
+                       detected before the process used the VC. */
+                    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL, "VC terminated before it was activated.  We probably got a failed"
+                                 " process notification.");
+                    MPIDI_CH3U_Complete_posted_with_error(vc);
+                    ++MPIDI_Failed_vc_count;
+                    MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
+
+                    break;
+
+                    
                 case MPIDI_VC_STATE_ACTIVE:
                 case MPIDI_VC_STATE_REMOTE_CLOSE:
                     /* This is a premature termination.  This process
@@ -74,6 +92,10 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
                     
  		    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL, "Connection closed prematurely.");
 
+                    MPIDI_CH3U_Complete_posted_with_error(vc);
+                    ++MPIDI_Failed_vc_count;
+                    
+                    MPIDU_Ftb_publish_vc(MPIDU_FTB_EV_UNREACHABLE, vc);
                     MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
 
                     break;
@@ -97,6 +119,11 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 
  		    MPIU_DBG_MSG_D(CH3_DISCONNECT,TYPICAL, "Connection closed prematurely during close protocol.  "
                                    "Outstanding close operations = %d", MPIDI_Outstanding_close_ops);
+
+                    MPIDI_CH3U_Complete_posted_with_error(vc);
+                    ++MPIDI_Failed_vc_count;
+
+                    MPIDU_Ftb_publish_vc(MPIDU_FTB_EV_UNREACHABLE, vc);
                     MPIDI_CHANGE_VC_STATE(vc, MORIBUND);
                     
 		    /* MT: this is not thread safe */
@@ -116,7 +143,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		    mpi_errno = MPIR_Err_create_code(
 			MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, 
                         MPI_ERR_INTERN, "**ch3|unhandled_connection_state",
-			"**ch3|unhandled_connection_state %p %d", vc, event);
+			"**ch3|unhandled_connection_state %p %d", vc, vc->state);
                     goto fn_fail;
 		    break;
 		}
@@ -364,3 +391,141 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     return mpi_errno;
 }
 
+#define parse_rank(r_p) do {                                                                    \
+        while (isspace(*c)) /* skip spaces */                                                   \
+            ++c;                                                                                \
+        MPIU_ERR_CHKINTERNAL(!isdigit(*c), mpi_errno, "error parsing failed process list");     \
+        *(r_p) = strtol(c, &c, 0);                                                              \
+        while (isspace(*c)) /* skip spaces */                                                   \
+            ++c;                                                                                \
+    } while (0)
+
+#define ALLOC_STEP 10
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Check_for_failed_procs
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Check_for_failed_procs(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    char *val;
+    int *attr_val = NULL, *ret;
+    char *c;
+    int len;
+    char *kvsname;
+    int rank, rank_hi;
+    int i;
+    int alloc_len;
+    MPIU_CHKLMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+    mpi_errno = MPIDI_PG_GetConnKVSname(&kvsname);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#ifdef USE_PMI2_API
+    {
+        int vallen = 0;
+        MPIU_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
+        pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", val, PMI2_MAX_VALLEN, &vallen);
+        MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+    }
+#else
+    pmi_errno = PMI_KVS_Get_value_length_max(&len);
+    MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
+    MPIU_CHKLMEM_MALLOC(val, char *, len, mpi_errno, "val");
+    pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", val, len);
+    MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+#endif
+    
+    MPIU_DBG_MSG_S(CH3_DISCONNECT, TYPICAL, "Received proc fail notification: %s", val);
+    
+    if (*val == '\0') {
+        /* there are no failed processes */
+        attr_val = MPIU_Malloc(sizeof(int));
+        if (!attr_val) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(int), "attr_val"); goto fn_fail; }
+        *attr_val = MPI_PROC_NULL;
+        mpi_errno = MPIR_Comm_set_attr_impl(MPIR_Process.comm_world, MPICH_ATTR_FAILED_PROCESSES, attr_val, MPIR_ATTR_PTR);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        goto fn_exit;
+    }
+
+    attr_val = MPIU_Malloc(sizeof(int) * ALLOC_STEP);
+    alloc_len = ALLOC_STEP;
+    
+    /* parse list of failed processes.  This is a comma separated list
+       of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
+    i = 0;
+    c = val;
+    while(1) {
+        parse_rank(&rank);
+        if (*c == '-') {
+            ++c; /* skip '-' */
+            parse_rank(&rank_hi);
+        } else
+            rank_hi = rank;
+        while (rank <= rank_hi) {
+            MPIDI_VC_t *vc;
+            /* terminate the VC */
+            MPIDI_PG_Get_vc(MPIDI_Process.my_pg, rank, &vc);
+            mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            /* update the dead node attribute list */
+            if (alloc_len <= i) {
+                /* allocate more space */
+                ret = MPIU_Realloc(attr_val, sizeof(int) * (alloc_len + ALLOC_STEP));
+                if (!ret) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(int) * (alloc_len + ALLOC_STEP), "attr_val"); goto fn_fail; }
+                attr_val = ret;
+            }
+            attr_val[i] = rank;
+            ++i;
+            ++rank;
+        }
+        MPIU_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno, "error parsing failed process list");
+        if (*c == '\0')
+            break;
+        ++c; /* skip ',' */
+    }
+    /* terminate dead node attribute list with an MPI_PROC_NULL */
+    if (alloc_len <= i) {
+        /* allocate more space */
+        ret = MPIU_Realloc(attr_val, alloc_len + ALLOC_STEP);
+        if (!ret) { MPIU_CHKMEM_SETERR(mpi_errno, alloc_len + ALLOC_STEP, attr_val); goto fn_fail; }
+        attr_val = ret;
+    }
+    attr_val[i] = MPI_PROC_NULL;
+
+    mpi_errno = MPIR_Comm_set_attr_impl(MPIR_Process.comm_world, MPICH_ATTR_FAILED_PROCESSES, attr_val, MPIR_ATTR_PTR);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+    return mpi_errno;
+ fn_fail:
+    if (attr_val)
+        MPIU_Free(attr_val);
+    goto fn_exit;
+}
+
+/* for debugging */
+int MPIDI_CH3U_Dump_vc_states(void);
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Dump_vc_states
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Dump_vc_states(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+
+    printf("VC States\n");
+    for (i = 0; i < MPIDI_Process.my_pg->size; ++i)
+        printf("  %3d   %s\n", i, MPIDI_VC_GetStateString(MPIDI_Process.my_pg->vct[i].state));
+        
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}

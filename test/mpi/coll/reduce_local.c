@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
+/*
 static char MTEST_Descrip[] = "A simple test of MPI_Reduce_local";
+*/
 
 #define MAX_BUF_ELEMENTS (65000)
 

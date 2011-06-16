@@ -76,8 +76,6 @@ static int g_socket_rbuffer_size = SOCKI_TCP_BUFFER_SIZE;
 static int g_socket_sbuffer_size = SOCKI_TCP_BUFFER_SIZE;
 static int g_init_called = 0;
 static int g_num_posted_accepts = SOCKI_NUM_PREPOSTED_ACCEPTS;
-static int g_min_port = 0;
-static int g_max_port = 0;
 
 static sock_state_t *g_sock_list = NULL;
 
@@ -128,7 +126,7 @@ static char *get_error_string(int error_code)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 {
-    int mpi_errno;
+    int mpi_errno=MPI_SUCCESS;
     /*struct linger linger;*/
     int optval, len;
     SOCKET temp_sock;
@@ -144,10 +142,11 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 	return mpi_errno;
     }
     
-    if (port == 0 && g_min_port != 0 && g_max_port != 0)
+    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_PORT_RANGE.low < 0 || MPIR_PARAM_PORT_RANGE.low > MPIR_PARAM_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+    if (port == 0 && MPIR_PARAM_PORT_RANGE.low != 0 && MPIR_PARAM_PORT_RANGE.high != 0)
     {
 	use_range = 1;
-	port = g_min_port;
+	port = MPIR_PARAM_PORT_RANGE.low;
     }
 
     memset(&sockAddr,0,sizeof(sockAddr));
@@ -163,7 +162,7 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 	    if (use_range)
 	    {
 		port++;
-		if (port > g_max_port)
+		if (port > MPIR_PARAM_PORT_RANGE.high)
 		{
 		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_FAIL, "**socket", 0);
 		    return mpi_errno;
@@ -224,7 +223,10 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
     /* Set the no-delay option */
     setsockopt(*sock, IPPROTO_TCP, TCP_NODELAY, (char *)&optval, sizeof(optval));
 
-    return MPI_SUCCESS;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -472,31 +474,6 @@ int MPIDU_Sock_init()
 	g_num_posted_accepts = atoi(szNum);
 	if (g_num_posted_accepts < 1)
 	    g_num_posted_accepts = SOCKI_NUM_PREPOSTED_ACCEPTS;
-    }
-
-    /* check to see if a port range was specified */
-    szRange = getenv("MPICH_PORT_RANGE");
-    if (szRange != NULL)
-    {
-	szNum = strtok(szRange, ",.:"); /* tokenize min,max and min..max and min:max */
-	if (szNum)
-	{
-	    g_min_port = atoi(szNum);
-	    szNum = strtok(NULL, ",.:");
-	    if (szNum)
-	    {
-		g_max_port = atoi(szNum);
-	    }
-	}
-	/* check for invalid values */
-	if (g_min_port < 0 || g_max_port < g_min_port)
-	{
-	    g_min_port = g_max_port = 0;
-	}
-	/*
-	printf("using min_port = %d, max_port = %d\n", g_min_port, g_max_port);
-	fflush(stdout);
-	*/
     }
 
     init_state_struct(&g_wakeup_state);

@@ -4,7 +4,7 @@ DEPADD = @MPILIBLOC@ ../util/mtestf.o
 smvar_do_sharedlibs = 0
 
 statusesf_SOURCES = statusesf.f
-greqf_SOURCES     = greqf.f
+greqf_SOURCES     = greqf.f dummyf.f
 
 testing:
 	../../runtests -srcdir=$(srcdir) -tests=testlist \

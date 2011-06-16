@@ -1,6 +1,8 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
- * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA.  All rights reserved.
+ * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -18,7 +20,7 @@
 #define HWLOC_OPENFABRICS_VERBS_H
 
 #include <hwloc.h>
-#include <hwloc/config.h>
+#include <hwloc/autogen/config.h>
 #include <hwloc/linux.h>
 
 #include <infiniband/verbs.h>
@@ -29,7 +31,7 @@ extern "C" {
 #endif
 
 
-/** \defgroup hwloc_openfabrics OpenFabrics-Specific Functions
+/** \defgroup hwlocality_openfabrics OpenFabrics-Specific Functions
  * @{
  */
 
@@ -63,7 +65,7 @@ hwloc_ibv_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
   fclose(sysfile);
 #else
   /* Non-Linux systems simply get a full cpuset */
-  hwloc_cpuset_copy(set, hwloc_topology_get_complete_cpuset(topology));
+  hwloc_bitmap_copy(set, hwloc_topology_get_complete_cpuset(topology));
 #endif
   return 0;
 }

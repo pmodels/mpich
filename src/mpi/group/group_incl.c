@@ -125,6 +125,7 @@ int MPI_Group_incl(MPI_Group group, int n, int *ranks, MPI_Group *newgroup)
     }
     new_group_ptr->size = n;
     new_group_ptr->idx_of_first_lpid = -1;
+    /* TODO calculate is_local_dense_monotonic */
 
     MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 

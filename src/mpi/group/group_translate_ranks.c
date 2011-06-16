@@ -28,52 +28,79 @@
 #define FUNCNAME MPIR_Group_translate_ranks_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-void MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, int *ranks1,
-                                    MPID_Group *group_ptr2, int *ranks2)
+int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, int *ranks1,
+                                    MPID_Group *gp2, int *ranks2)
 {
+    int mpi_errno = MPI_SUCCESS;
     int i, g2_idx, l1_pid, l2_pid;
-    
+
+    MPIU_DBG_MSG_S(OTHER,VERBOSE,"gp2->is_local_dense_monotonic=%s\n", (gp2->is_local_dense_monotonic ? "TRUE" : "FALSE"));
+
     /* Initialize the output ranks */
     for (i=0; i<n; i++)
-	ranks2[i] = MPI_UNDEFINED;
+        ranks2[i] = MPI_UNDEFINED;
 
-    /* We may want to optimize for the special case of group2 is 
-       a dup of MPI_COMM_WORLD, or more generally, has rank == lpid 
-       for everything within the size of group2.  NOT DONE YET */
-    g2_idx = group_ptr2->idx_of_first_lpid;
-    if (g2_idx < 0) {
-	MPIR_Group_setup_lpid_list( group_ptr2 );
-	g2_idx = group_ptr2->idx_of_first_lpid;
-    }
-    if (g2_idx >= 0) {
-	/* g2_idx can be < 0 if the g2 group is empty */
-	l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-	for (i=0; i<n; i++) {
-	    if (ranks1[i] == MPI_PROC_NULL) {
-		ranks2[i] = MPI_PROC_NULL;
-		continue;
-	    }
-	    l1_pid = group_ptr1->lrank_to_lpid[ranks1[i]].lpid;
-	    /* Search for this l1_pid in group2.  Use the following
-	       optimization: start from the last position in the lpid list
-	       if possible.  A more sophisticated version could use a 
-	       tree based or even hashed search to speed the translation. */
-	    if (l1_pid < l2_pid || g2_idx < 0) {
-		/* Start over from the beginning */
-		g2_idx = group_ptr2->idx_of_first_lpid;
-		l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-	    }
-	    while (g2_idx >= 0 && l1_pid > l2_pid) {
-		g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-		if (g2_idx >= 0)
-		    l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-		else
-		    l2_pid = -1;
+    if (gp2->size > 0 && gp2->is_local_dense_monotonic) {
+        /* g2 probably == group_of(MPI_COMM_WORLD); use fast, constant-time lookup */
+        int lpid_offset = gp2->lrank_to_lpid[0].lpid;
+
+        MPIU_Assert(lpid_offset >= 0);
+        for (i = 0; i < n; ++i) {
+            int g1_lpid;
+
+            if (ranks1[i] == MPI_PROC_NULL) {
+                ranks2[i] = MPI_PROC_NULL;
+                continue;
             }
-	    if (l1_pid == l2_pid)
-		ranks2[i] = group_ptr2->lrank_to_lpid[g2_idx].lrank;
-	}
+            /* "adjusted" lpid from g1 */
+            g1_lpid = gp1->lrank_to_lpid[ranks1[i]].lpid - lpid_offset;
+            if ((g1_lpid >= 0) && (g1_lpid < gp2->size)) {
+                ranks2[i] = g1_lpid;
+            }
+            /* else leave UNDEFINED */
+        }
     }
+    else {
+        /* general, slow path; lookup time is dependent on the user-provided rank values! */
+        g2_idx = gp2->idx_of_first_lpid;
+        if (g2_idx < 0) {
+            MPIR_Group_setup_lpid_list( gp2 );
+            g2_idx = gp2->idx_of_first_lpid;
+        }
+        if (g2_idx >= 0) {
+            /* g2_idx can be < 0 if the g2 group is empty */
+            l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
+            for (i=0; i<n; i++) {
+                if (ranks1[i] == MPI_PROC_NULL) {
+                    ranks2[i] = MPI_PROC_NULL;
+                    continue;
+                }
+                l1_pid = gp1->lrank_to_lpid[ranks1[i]].lpid;
+                /* Search for this l1_pid in group2.  Use the following
+                   optimization: start from the last position in the lpid list
+                   if possible.  A more sophisticated version could use a 
+                   tree based or even hashed search to speed the translation. */
+                if (l1_pid < l2_pid || g2_idx < 0) {
+                    /* Start over from the beginning */
+                    g2_idx = gp2->idx_of_first_lpid;
+                    l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
+                }
+                while (g2_idx >= 0 && l1_pid > l2_pid) {
+                    g2_idx = gp2->lrank_to_lpid[g2_idx].next_lpid;
+                    if (g2_idx >= 0)
+                        l2_pid = gp2->lrank_to_lpid[g2_idx].lpid;
+                    else
+                        l2_pid = -1;
+                }
+                if (l1_pid == l2_pid)
+                    ranks2[i] = gp2->lrank_to_lpid[g2_idx].lrank;
+            }
+        }
+    }
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 
@@ -174,20 +201,18 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    MPIR_Group_translate_ranks_impl(group_ptr1, n, ranks1, group_ptr2, ranks2);
-    
+
+    mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr1, n, ranks1, group_ptr2, ranks2);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -198,7 +223,6 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, int *ranks1,
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }
 

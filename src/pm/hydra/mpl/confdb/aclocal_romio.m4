@@ -787,7 +787,7 @@ EOF
   rm -f conftest$EXEEXT mpitest.c
 ])dnl
 define(PAC_TEST_MPIU_FUNCS,[
-  AC_MSG_CHECKING(support for MPICH memory macros)
+  AC_MSG_CHECKING(support for MPICH2 memory macros)
   rm -f mpitest.c
   cat > mpitest.c <<EOF
 #include "mpi.h"
@@ -801,7 +801,7 @@ EOF
   $CC $USER_CFLAGS -I$MPI_INCLUDE_DIR -o conftest$EXEEXT mpitest.c $MPI_LIB > /dev/null 2>&1
   if test -x conftest$EXEEXT ; then
      AC_MSG_RESULT(yes)
-     AC_DEFINE(HAVE_MPIU_FUNCS,1,[Define if MPICH memory tracing macros defined])
+     AC_DEFINE(HAVE_MPIU_FUNCS,1,[Define if MPICH2 memory tracing macros defined])
   else
      AC_MSG_RESULT(no)
   fi

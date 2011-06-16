@@ -53,13 +53,12 @@ int MPI_File_close(MPI_File *mpi_fh)
     if (ADIO_Feature(fh, ADIO_SHARED_FP)) 
     {
 	ADIOI_Free((fh)->shared_fp_fname);
-        /* need a barrier because the file containing the shared file
-        pointer is opened with COMM_SELF. We don't want it to be
-	deleted while others are still accessing it. */ 
-	/* FIXME: It is wrong to use MPI_Barrier; the user could choose to
-	   re-implement MPI_Barrier in an unexpected way.  Either use 
-	   MPIR_Barrier_impl as in MPICH2 or PMPI_Barrier */
-        MPI_Barrier((fh)->comm);
+	/* POSIX semantics say a deleted file remains available until all
+	 * processes close the file.  But since when was NFS posix-compliant?
+	 */
+	if (!ADIO_Feature(fh, ADIO_UNLINK_AFTER_CLOSE)) {
+		MPI_Barrier((fh)->comm);
+	}
 	if ((fh)->shared_fp_fd != ADIO_FILE_NULL) {
 	    MPI_File *mpi_fh_shared = &(fh->shared_fp_fd);
 	    ADIO_Close((fh)->shared_fp_fd, &error_code);

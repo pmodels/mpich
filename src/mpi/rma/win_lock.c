@@ -52,9 +52,9 @@
    be used portably only in such memory. 
 
    The 'assert' argument is used to indicate special conditions for the
-   fence that an implementation may use to optimize the 'MPI_Win_fence' 
+   fence that an implementation may use to optimize the 'MPI_Win_lock' 
    operation.  The value zero is always correct.  Other assertion values
-   may be or''ed together.  Assertions that are valid for 'MPI_Win_fence' are\:
+   may be or''ed together.  Assertions that are valid for 'MPI_Win_lock' are\:
 
 . MPI_MODE_NOCHECK - no other process holds, or will attempt to acquire a 
   conflicting lock, while the caller holds the window lock. This is useful 
@@ -70,6 +70,7 @@
 .N MPI_SUCCESS
 .N MPI_ERR_RANK
 .N MPI_ERR_WIN
+.N MPI_ERR_OTHER
 @*/
 int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 {
@@ -110,14 +111,23 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 	    /* If win_ptr is not value, it will be reset to null */
             if (mpi_errno) goto fn_fail;
 	    
-            if (lock_type != MPI_LOCK_SHARED && lock_type != MPI_LOCK_EXCLUSIVE)
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-						  MPIR_ERR_RECOVERABLE, 
-						  FCNAME, __LINE__, 
-						  MPI_ERR_OTHER, 
-						  "**locktype", 0 );
+	    if (assert != 0 && assert != MPI_MODE_NOCHECK) {
+		MPIU_ERR_SET1(mpi_errno,MPI_ERR_ARG,
+			      "**lockassertval", 
+			      "**lockassertval %d", assert );
+		if (mpi_errno) goto fn_fail;
+	    }
+            if (lock_type != MPI_LOCK_SHARED && 
+		lock_type != MPI_LOCK_EXCLUSIVE) {
+		MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER, "**locktype" );
+	    }
 
-            MPID_Comm_get_ptr( win_ptr->comm, comm_ptr );
+	    if (win_ptr->lockRank != -1) {
+		MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
+			     "**lockwhilelocked", 
+			     "**lockwhilelocked %d", win_ptr->lockRank );
+	    }
+	    comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
 
             if (mpi_errno) goto fn_fail;
@@ -131,6 +141,8 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
     mpi_errno = MPIU_RMA_CALL(win_ptr,
 			      Win_lock(lock_type, rank, assert, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    /* If the lock succeeded, remember which one with locked */
+    win_ptr->lockRank = rank;
 
     /* ... end of body of routine ... */
 

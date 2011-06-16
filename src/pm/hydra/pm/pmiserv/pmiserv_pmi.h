@@ -7,9 +7,9 @@
 #ifndef PMISERV_PMI_H_INCLUDED
 #define PMISERV_PMI_H_INCLUDED
 
-#include "hydra_base.h"
+#include "hydra.h"
 #include "demux.h"
-#include "pmi_common.h"
+#include "common.h"
 
 /* PMI-1 specific definitions */
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_v1;
@@ -32,6 +32,9 @@ struct HYD_pmcd_pmi_pg_scratch {
 
     int control_listen_fd;
     int pmi_listen_fd;
+
+    char *dead_processes;
+    int dead_process_count;
 
     struct HYD_pmcd_pmi_kvs *kvs;
 };

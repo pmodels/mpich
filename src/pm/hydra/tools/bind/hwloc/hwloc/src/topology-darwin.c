@@ -1,6 +1,8 @@
 /*
- * Copyright © 2009 CNRS, INRIA, Université Bordeaux 1
- * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2009 CNRS
+ * Copyright © 2009-2010 INRIA.  All rights reserved.
+ * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -9,7 +11,7 @@
 
 /* Apparently, Darwin people do not _want_ to provide binding functions.  */
 
-#include <private/config.h>
+#include <private/autogen/config.h>
 
 #include <sys/types.h>
 #include <sys/sysctl.h>
@@ -31,6 +33,7 @@ hwloc_look_darwin(struct hwloc_topology *topology)
   size_t size;
   int64_t l1cachesize;
   int64_t l2cachesize;
+  int64_t cachelinesize;
   int64_t memsize;
 
   if (hwloc_get_sysctlbyname("hw.ncpu", &_nprocs) || _nprocs <= 0)
@@ -60,11 +63,11 @@ hwloc_look_darwin(struct hwloc_topology *topology)
     if (nprocs == npackages * logical_per_package)
       for (i = 0; i < npackages; i++) {
         obj = hwloc_alloc_setup_object(HWLOC_OBJ_SOCKET, i);
-        obj->cpuset = hwloc_cpuset_alloc();
+        obj->cpuset = hwloc_bitmap_alloc();
         for (cpu = i*logical_per_package; cpu < (i+1)*logical_per_package; cpu++)
-          hwloc_cpuset_set(obj->cpuset, cpu);
+          hwloc_bitmap_set(obj->cpuset, cpu);
 
-        hwloc_debug_1arg_cpuset("package %u has cpuset %s\n",
+        hwloc_debug_1arg_bitmap("package %u has cpuset %s\n",
                    i, obj->cpuset);
         hwloc_insert_object_by_cpuset(topology, obj);
       }
@@ -76,13 +79,13 @@ hwloc_look_darwin(struct hwloc_topology *topology)
       if (!(logical_per_package % cores_per_package))
         for (i = 0; i < npackages * cores_per_package; i++) {
           obj = hwloc_alloc_setup_object(HWLOC_OBJ_CORE, i);
-          obj->cpuset = hwloc_cpuset_alloc();
+          obj->cpuset = hwloc_bitmap_alloc();
           for (cpu = i*(logical_per_package/cores_per_package);
                cpu < (i+1)*(logical_per_package/cores_per_package);
                cpu++)
-            hwloc_cpuset_set(obj->cpuset, cpu);
+            hwloc_bitmap_set(obj->cpuset, cpu);
 
-          hwloc_debug_1arg_cpuset("core %u has cpuset %s\n",
+          hwloc_debug_1arg_bitmap("core %u has cpuset %s\n",
                      i, obj->cpuset);
           hwloc_insert_object_by_cpuset(topology, obj);
         }
@@ -95,14 +98,30 @@ hwloc_look_darwin(struct hwloc_topology *topology)
   if (hwloc_get_sysctlbyname("hw.l2cachesize", &l2cachesize))
     l2cachesize = 0;
 
+  if (hwloc_get_sysctlbyname("hw.cachelinesize", &cachelinesize))
+    cachelinesize = 0;
+
   if (hwloc_get_sysctlbyname("hw.memsize", &memsize))
     memsize = 0;
 
   if (!sysctlbyname("hw.cacheconfig", NULL, &size, NULL, 0)) {
     unsigned n = size / sizeof(uint32_t);
-    uint64_t cacheconfig[n];
-    uint32_t cacheconfig32[n];
-    uint64_t cachesize[n];
+    uint64_t *cacheconfig = NULL;
+    uint64_t *cachesize = NULL;
+    uint32_t *cacheconfig32 = NULL;
+
+    cacheconfig = malloc(sizeof(uint64_t) * n);
+    if (NULL == cacheconfig) {
+        goto out;
+    }
+    cachesize = malloc(sizeof(uint64_t) * n);
+    if (NULL == cachesize) {
+        goto out;
+    }
+    cacheconfig32 = malloc(sizeof(uint32_t) * n);
+    if (NULL == cacheconfig32) {
+        goto out;
+    }
 
     if ((!sysctlbyname("hw.cacheconfig", cacheconfig, &size, NULL, 0))) {
       /* Yeech. Darwin seemingly has changed from 32bit to 64bit integers for
@@ -140,22 +159,23 @@ hwloc_look_darwin(struct hwloc_topology *topology)
         for (j = 0; j < (nprocs / cacheconfig[i]); j++) {
           obj = hwloc_alloc_setup_object(i?HWLOC_OBJ_CACHE:HWLOC_OBJ_NODE, j);
           if (!i) {
-            obj->nodeset = hwloc_cpuset_alloc();
-            hwloc_cpuset_set(obj->nodeset, j);
+            obj->nodeset = hwloc_bitmap_alloc();
+            hwloc_bitmap_set(obj->nodeset, j);
           }
-          obj->cpuset = hwloc_cpuset_alloc();
+          obj->cpuset = hwloc_bitmap_alloc();
           for (cpu = j*cacheconfig[i];
                cpu < ((j+1)*cacheconfig[i]);
                cpu++)
-            hwloc_cpuset_set(obj->cpuset, cpu);
+            hwloc_bitmap_set(obj->cpuset, cpu);
 
           if (i) {
-            hwloc_debug_2args_cpuset("L%ucache %u has cpuset %s\n",
+            hwloc_debug_2args_bitmap("L%ucache %u has cpuset %s\n",
                 i, j, obj->cpuset);
             obj->attr->cache.depth = i;
             obj->attr->cache.size = cachesize[i];
+            obj->attr->cache.linesize = cachelinesize;
           } else {
-            hwloc_debug_1arg_cpuset("node %u has cpuset %s\n",
+            hwloc_debug_1arg_bitmap("node %u has cpuset %s\n",
                 j, obj->cpuset);
 	    obj->memory.local_memory = cachesize[i];
 	    obj->memory.page_types_len = 2;
@@ -171,10 +191,23 @@ hwloc_look_darwin(struct hwloc_topology *topology)
         }
       }
     }
+  out:
+    if (NULL != cacheconfig) {
+        free(cacheconfig);
+    }
+    if (NULL != cachesize) {
+        free(cachesize);
+    }
+    if (NULL != cacheconfig32) {
+        free(cacheconfig32);
+    }
   }
+
 
   /* add PU objects */
   hwloc_setup_pu_level(topology, nprocs);
+
+  hwloc_add_object_info(topology->levels[0][0], "Backend", "Darwin");
 }
 
 void
