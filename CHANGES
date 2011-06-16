@@ -67,7 +67,7 @@
  # PM/PMI: Bug fixes for handling "=" in environment variable values in
    hydra.
 
- # PM/PMI: Upgrade the hwloc version to 1.1.2.
+ # PM/PMI: Upgrade the hwloc version to 1.2.
 
  # COLLECTIVES: Performance and memory usage improvements for MPI_Bcast
    in certain cases.
