@@ -236,6 +236,15 @@ parameters:
         (currently compile-time disabled by "#if 0")
 
     - category    : error_handling
+      name        : ERROR_CHECKING
+      type        : boolean
+      default     : true
+      description : >-
+        If true, perform checks for errors, typically to verify valid inputs
+        to MPI routines.  Only effective when MPICH2 is configured with
+        --enable-error-checking=runtime .
+
+    - category    : error_handling
       name        : PRINT_ERROR_STACK
       type        : boolean
       default     : true
