@@ -1791,7 +1791,7 @@ sub DefaultRules {
     # The following are general targets that can be used to run a program
     # specified on the make command line
     &TargetInit( "apply" );
-    print FD "\n";
+    print FD "$newline";
     print FD "\t\$(ACTION) \$(ACTION_INPUT)$newline";
     # ToDo: we could control the subdirectories over which the recursion
     # is applied.
@@ -2539,7 +2539,7 @@ sub TargetAll {
 	#  Create the final shared library (typically .so) from the .la file
 	if (defined($optinstall_files{'SHLIB'})) {
 	    # Conditionally create the shared libraries.
-	    print FD "\t\@if [ \"\@ENABLE_SHLIB\@\" != \"none\" ] ; then \\\n";
+	    print FD "\t\@if [ \"\@ENABLE_SHLIB\@\" != \"none\" ] ; then \\$newline";
 	    foreach $libspec (split(/\s+/,$optinstall_files{'SHLIB'})) {
 		if (defined($extra_libs{$libspec})) { next; }
 		# Be careful of library names that are related to
@@ -2562,18 +2562,18 @@ sub TargetAll {
 		    # Get the condition
 		    my $prereq = $libspec;
 		    $prereq =~ s/\.\@SHLIB_EXT\@/.la/;
-		    print FD "\t    if [ -s $prereq ] ; then \\\n";
-		    print FD "\t        echo \"make $libspec\" ;\\\n";
-		    print FD "\t        \${MAKE} $libspec ; \\\n";
-		    print FD "\t    fi ; \\\n";
+		    print FD "\t    if [ -s $prereq ] ; then \\$newline";
+		    print FD "\t        echo \"make $libspec\" ;\\$newline";
+		    print FD "\t        \${MAKE} $libspec ; \\$newline";
+		    print FD "\t    fi ; \\$newline";
 		}
 	    }
-	    print FD "\tfi\n";
+	    print FD "\tfi$newline";
 	}
 	if (defined($optinstall_files{'DLLLIB'})) {
 	    #print STDOUT "in optinstall_files dlllib\n";
 	    # Conditionally create the dynamically loadable shared libraries.
-	    print FD "\t\@if [ \"\@BUILD_DLLS\@\" = \"yes\" ] ; then \\\n";
+	    print FD "\t\@if [ \"\@BUILD_DLLS\@\" = \"yes\" ] ; then \\$newline";
 	    foreach $libspec (split(/\s+/,$optinstall_files{'DLLLIB'})) {
 		# Be careful of library names that are related to
 		# the profile library (those libraries are built
@@ -2595,13 +2595,13 @@ sub TargetAll {
 		    # Get the condition
 		    my $prereq = $libspec;
 		    $prereq =~ s/\.\@SHLIB_EXT\@/.la/;
-		    print FD "\t    if [ -s $prereq ] ; then \\\n";
-		    print FD "\t        echo \"make $libspec\" ;\\\n";
-		    print FD "\t        \${MAKE} $libspec ; \\\n";
-		    print FD "\t    fi ; \\\n";
+		    print FD "\t    if [ -s $prereq ] ; then \\$newline";
+		    print FD "\t        echo \"make $libspec\" ;\\$newline";
+		    print FD "\t        \${MAKE} $libspec ; \\$newline";
+		    print FD "\t    fi ; \\$newline";
 		}
 	    }
-	    print FD "\tfi\n";
+	    print FD "\tfi$newline";
 	}
 	&TargetPostamble( "all" );
     }
@@ -2616,14 +2616,14 @@ sub TargetAll {
 	if ($found_profilelib) {
 	    print_make_endline( FD );
 	    # Add a conditional step
-	    print FD "\t\@if [ -n \"\@NO_WEAK_SYM\@\" ] ; then \\\n";
+	    print FD "\t\@if [ -n \"\@NO_WEAK_SYM\@\" ] ; then \\$newline";
 	    foreach my $lib (keys(%profile_libraries)) {
 		my $proflib = $profile_libraries{$lib};
 		my $libstamp = ".libstamp" . $libnum{$proflib};
 #		my $libloc = &GetLibLoc( $lib );
 #		my $fullname = "${libloc}lib$proflib.a";
-#		print FD "\t    \${MAKE} $fullname ; \\\n";
-		print FD "\t    \${MAKE} $libstamp || exit 1; \\\n";
+#		print FD "\t    \${MAKE} $fullname ; \\$newline";
+		print FD "\t    \${MAKE} $libstamp || exit 1; \\$newline";
 	    }
 	    print FD "\tfi";
 	}
@@ -2681,7 +2681,7 @@ sub TargetPostamble {
 sub TargetAllCommandsForSharedLibs {
     if ($do_sharedlibs && $#allshlibtargets >= 0) {
 	# Add a conditional step
-	print FD "\t\@if [ \"\@ENABLE_SHLIB\@\" != \"none\" ] ; then \\\n";
+	print FD "\t\@if [ \"\@ENABLE_SHLIB\@\" != \"none\" ] ; then \\$newline";
 	foreach $shlib (@allshlibtargets) {
 	    if (defined($extra_libs{$shlib})) { next; }
 	    # Get the library stamp name from the lib name
@@ -2693,28 +2693,28 @@ sub TargetAllCommandsForSharedLibs {
 	    if (defined($libnum{$libbase})) {
 		$libstamp = ".libstamp" . $libnum{$libbase};
 	    }
-	    print FD "\t    \${MAKE} $libstamp || exit 1; \\\n";
+	    print FD "\t    \${MAKE} $libstamp || exit 1; \\$newline";
 	}
 	if ($found_profilelib) {
-	    print FD "\t    if [ -n \"\@NO_WEAK_SYM\@\" ] ; then \\\n";
+	    print FD "\t    if [ -n \"\@NO_WEAK_SYM\@\" ] ; then \\$newline";
 	    foreach my $lib (keys(%profile_libraries)) {
 		my $proflib = $profile_libraries{$lib};
 		my $libloc = &GetLibLoc( $lib );
 		my $fullname = "${libloc}lib$proflib.la";
 		my $libstamp = ".libstamp" . $libnum{$proflib.".la"};
-		print FD "\t        \${MAKE} $libstamp || exit 1; \\\n";
-#		print FD "\t        \${MAKE} $fullname ; \\\n";
+		print FD "\t        \${MAKE} $libstamp || exit 1; \\$newline";
+#		print FD "\t        \${MAKE} $fullname ; \\$newline";
 	    }
-	    print FD "\t    fi ; \\\n";
+	    print FD "\t    fi ; \\$newline";
 	}
-	print FD "\tfi\n";
+	print FD "\tfi$newline";
     }
 }
 
 sub TargetAllCommandsForDLLLibs {
     if ($do_sharedlibs && $#alldlllibtargets >= 0) {
 	# Add a conditional step
-	print FD "\t\@if [ \"\@BUILD_DLLS\@\" = \"yes\" ] ; then \\\n";
+	print FD "\t\@if [ \"\@BUILD_DLLS\@\" = \"yes\" ] ; then \\$newline";
 	foreach $shlib (@alldlllibtargets) {
 	    # Get the library stamp name from the lib name
 	    my $libbase = $shlib;
@@ -2725,9 +2725,9 @@ sub TargetAllCommandsForDLLLibs {
 	    if (defined($libnum{$libbase})) {
 		$libstamp = ".libstamp" . $libnum{$libbase};
 	    }
-	    print FD "\t    \${MAKE} $libstamp || exit 1; \\\n";
+	    print FD "\t    \${MAKE} $libstamp || exit 1; \\$newline";
 	}
-	print FD "\tfi\n";
+	print FD "\tfi$newline";
     }
 }
 
@@ -3122,7 +3122,7 @@ sub LibraryTimestampFix {
 	    if (defined($libnum{$lib})) {
 		my $num = "";
 		$num = $libnum{$lib};
-		print FD "\tdate > .libstamp$num\n";
+		print FD "\tdate > .libstamp$num$newline";
 	    }
 	}
     }
@@ -3134,7 +3134,7 @@ sub LibraryTimestampClean {
 	for( my $i=0; $i<$libcount; $i++) {
 	    print FD ".libstamp$i ";
 	}
-	print FD "\n";
+	print FD "$newline";
     }
 }
 
@@ -3426,7 +3426,7 @@ library, or new library name)\n" if $debug;
 	# Remember that we made this definition
 	$InitSharedLibraryFinal = 1;
 	my $rule = $extdef{"c:o"}; 
-	print FD "$rule\n";
+	print FD "$rule$newline";
     }
 
     # See if this library needs an exports list
@@ -3444,9 +3444,9 @@ library, or new library name)\n" if $debug;
 	$otherlibs = $shared_libraries_libs{$libbasename};
     }
     if (!defined($usertargets{"$libdir/$newlibname"})) {
-	print FD "# Build the shared library from the shared object files\n";
+	print FD "# Build the shared library from the shared object files$newline";
 	print FD "$libdir/$newlibname: $libdir/$libname
-\t(cd $libdir && \$(CREATESHLIB) --mode=link $linkerOption -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs -ldflags \"\$(LDFLAGS)\" \$(LIBS))\n";
+\t(cd $libdir && \$(CREATESHLIB) --mode=link $linkerOption -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs -ldflags \"\$(LDFLAGS)\" \$(LIBS))$newline";
     }
     # If there is a profiling library, we need to build it
     # now, as part of this target, to handle the case where the
@@ -3464,7 +3464,7 @@ library, or new library name)\n" if $debug;
 	    $newlibname = $1 . $newbase . $2;
 	}
 	print FD "\tif [ -n \"\@NO_WEAK_SYM\@\" -a \\
-\t\t\"$libbase\" != \"$newbase\" ] ; then \\\n";
+\t\t\"$libbase\" != \"$newbase\" ] ; then \\$newline";
 
 	my $libbasename = $libname;
 	$libbasename =~ s/^lib//;
@@ -3482,9 +3482,9 @@ library, or new library name)\n" if $debug;
 	    $otherlibs = $shared_libraries_libs{$libbasename};
 	}
 
-	print FD "\t(cd $libdir && \$(CREATESHLIB) --mode=link $linkerOption -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs);\\\n";
+	print FD "\t(cd $libdir && \$(CREATESHLIB) --mode=link $linkerOption -version-info \"\$(ABIVERSION)\" -o $libname $exports -rpath \$(libdir) $otherlibs);\\$newline";
 
-	print FD "\tfi\n";
+	print FD "\tfi$newline";
     }
 }
 #
@@ -3913,7 +3913,7 @@ sub InstallDocDirs {
     # Add target only at the top
     if (!$doc_attop) { return; }
 
-    print FD "htmldir         = \@htmldir\@\nmandir          = \@mandir\@\n";
+    print FD "htmldir         = \@htmldir\@${newline}mandir          = \@mandir\@$newline";
 }
 
 #
@@ -4147,7 +4147,7 @@ sub TargetInstall {
     # a file that will uninstall only the installed files (as MPICH-1
     # does).
     &TargetInit( "uninstall" );
-    print FD "\n";
+    print FD "$newline";
     foreach $kind (keys(%install_files)) {
 	$dir = $InstallDirFromKind{$kind};
 	foreach $file (split(/\s+/,$install_files{$kind})) {
