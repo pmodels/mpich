@@ -351,6 +351,10 @@ for hydra_bindlib in ${hydra_bindlibs}; do
 		if test "$with_plpa_prefix" = "embedded" ; then
 		   PAC_CONFIG_SUBDIR_ARGS([tools/bind/plpa/plpa],[--enable-included-mode],
 			[have_plpa=yes],[have_plpa=no])
+		   # Only build plpa in embedded mode
+		   if test "$have_plpa" = "yes" ; then
+		      hydra_use_embedded_plpa=yes
+		   fi
                 else
                     AC_CHECK_HEADERS([plpa.h])
                     AC_CHECK_LIB([plpa],[api_probe])
@@ -371,6 +375,10 @@ for hydra_bindlib in ${hydra_bindlibs}; do
 		if test "$with_hwloc_prefix" = "embedded" ; then
 		   PAC_CONFIG_SUBDIR_ARGS([tools/bind/hwloc/hwloc],[--enable-embedded-mode],
 			[have_hwloc=yes],[have_hwloc=no])
+		   # Only build hwloc in embedded mode
+		   if test "$have_hwloc" = "yes" ; then
+		      hydra_use_embedded_hwloc=yes
+		   fi
                 else
                     AC_CHECK_HEADERS([hwloc.h])
                     # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our minimum
@@ -410,7 +418,9 @@ else
    AC_DEFINE(HYDRA_DEFAULT_BINDLIB,NULL,[Default binding library])
 fi
 AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
+AM_CONDITIONAL([hydra_use_embedded_plpa], [test "${hydra_use_embedded_plpa}" = "yes"])
 AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
+AM_CONDITIONAL([hydra_use_embedded_hwloc], [test "${hydra_use_embedded_hwloc}" = "yes"])
 
 AC_MSG_CHECKING([available process binding libraries])
 AC_MSG_RESULT([$available_bindlibs])

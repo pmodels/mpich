@@ -6,6 +6,7 @@
 
 libhydra_la_SOURCES += $(top_srcdir)/tools/bind/plpa/bind_plpa.c
 
+if hydra_use_embedded_plpa
 AM_CPPFLAGS += -I$(top_srcdir)/tools/bind/plpa/plpa/src/libplpa \
 	-I$(top_builddir)/tools/bind/plpa/plpa/src/libplpa
 
@@ -13,3 +14,4 @@ AM_CPPFLAGS += -I$(top_srcdir)/tools/bind/plpa/plpa/src/libplpa \
 external_subdirs += tools/bind/plpa/plpa
 external_ldflags += -L$(top_builddir)/tools/bind/plpa/plpa/src/libplpa
 external_libs += -lplpa_included
+endif
