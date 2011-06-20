@@ -349,6 +349,36 @@ the \textit{User's Guide}.
 If you have completed all of the above steps, you have successfully
 installed MPICH2 and run an MPI example.  
 
+%
+% DO NOT REMOVE THE FOLLOWING SECTION.  IF NECESSARY, UPDATE IT.
+\subsection{Selecting the Compilers}
+\label{sec:compilers}
+The MPICH2 configure step will attempt to find the C, C++, and Fortran
+compilers for you, but if you either want to override the default or
+need to specify a compiler that configure doesn't recognize, you can
+specify them on the command line using these variables
+\begin{description}
+\item[CC]The C compiler.  
+\item[CXX]The C++ compiler.  Use \texttt{--disable-cxx} if you do not
+  want to build the MPI C++ interface
+\item[F77]The Fortran 77 compiler (for the original MPI Fortran
+  bindings).  Use \texttt{--disable-f77} if you do not want to build
+  either the Fortran 77 or Fortran 90 MPI interfaces
+\item[FC]The Fortran 90 (or later) compiler.  Use
+  \texttt{--disable-fc} if you do not want to build the Fortran 90 MPI
+  interfaces.  Note that in previous versions of MPICH2, the variable
+  name was \texttt{F90}.  As Fortran has had 3 major releases since
+  Fortran 90 (95, 2003, and 2008), most tools, including those built
+  with GNU autotools, have or are changing to use \texttt{FC} instead
+  of \texttt{F90}.
+\end{description}
+For example, to select the Intel compilers instead of the GNU
+compilers on a system with both, use
+\begin{verbatim}
+    ./configure CC=icc CXX=icpc F77=ifort FC=ifort ...
+\end{verbatim}
+Note the use of the same Fortran compiler, \texttt{ifort}, for both
+Fortran 77 and Fortran 90; this is an increasingly common choice.
 
 \subsection{Compiler Optimization Levels}
 
@@ -366,38 +396,42 @@ Both \texttt{xFLAGS} and \texttt{MPICH2LIB\_xFLAGS} affect the compilation
 of the MPICH2 libraries. However, only \texttt{xFLAGS} is appended to 
 MPI wrapper scripts, \texttt{mpicc} and friends.
 
-MPICH2 libraries are built with default compiler optimization, -O2,
-which can be modified by --enable-fast configure option.  For instance,
---disable-fast disables the default optimization option.
---enable-fast=O<n> sets default compiler optimization as -O<n>.
-For more details of --enable-fast, see the output of "configure --help".
+MPICH2 libraries are built with default compiler optimization, \texttt{-O2},
+which can be modified by \texttt{--enable-fast} configure option.  For instance,
+\texttt{--disable-fast} disables the default optimization option.
+\texttt{--enable-fast=O<n>} sets default compiler optimization as
+\texttt{-O<n>} (note that this assumes that the compiler accepts this
+format). 
+For more details of \texttt{--enable-fast}, see the output of
+\texttt{configure --help}. 
 Any other complicated optimization flags for MPICH2 libraries have
 to be set throught \texttt{MPICH2LIB\_xFLAGS}.  \texttt{CFLAGS} and friends
 are empty by default.
 
-For example, to build a "production" MPICH2 environment with -O3 for all
+For example, to build a production MPICH2 environment with \texttt{-O3} for all
 language bindings, one can simply do
 
 \begin{verbatim}
-  ./configure --enable-fast=O3
+  ./configure --enable-fast=all,O3
 \end{verbatim}
 
 or
 
 \begin{verbatim}
-  ./configure --disable-fast MPICH2LIB_CFLAGS=-O3 \
-                             MPICH2LIB_FFLAGS=-O3 \
-                             MPICH2LIB_CXXFLAGS=-O3 \
-                             MPICH2LIB_FCFLAGS=-O3
+  ./configure --enable-fast=all MPICH2LIB_CFLAGS=-O3 \
+                                MPICH2LIB_FFLAGS=-O3 \
+                                MPICH2LIB_CXXFLAGS=-O3 \
+                                MPICH2LIB_FCFLAGS=-O3
 \end{verbatim}
 
-This will cause the MPICH2 libraries to be built with -O3, and -O3 will
-not be included in the mpicc and other MPI wrapper script.
+This will cause the MPICH2 libraries to be built with \texttt{-O3},
+and \texttt{-O3} will
+not be included in the \texttt{mpicc} and other MPI wrapper script.
 
 There are certain compiler flags that should not be used with MPICH2's
-configure, e.g. gcc's -Werror which would confuse configure and cause
+configure, e.g. gcc's \texttt{-Werror} which would confuse configure and cause
 certain configure tests to fail to detect the correct system features.
-To use -Werror in building MPICH2 libraries, you can pass the compiler
+To use \texttt{-Werror} in building MPICH2 libraries, you can pass the compiler
 flags during the make step through the Makefile variable,
 \texttt{MPICH2\_MAKE\_CFLAGS} as follows:
 
@@ -539,10 +573,9 @@ defining an environment variable.  E.g., while MPICH1 allowed
 \end{verbatim}
 MPICH2 requires
 \begin{verbatim}
-    setenv CC pgcc
+    ./configure CC=pgcc
 \end{verbatim}
-(or \verb+export CC=pgcc+ for \texttt{ksh} or \verb+CC=pgcc ; export CC+
-for strict \texttt{sh}) before \texttt{./configure}.  Basically, every
+Basically, every
 option to the MPICH-1 configure that does not start with
 \texttt{--enable} or \texttt{--with} is not available as a configure
 option in MPICH2.  Instead, environment variables must be used.  This is
@@ -975,7 +1008,7 @@ Account Control.
 
 \begin{enumerate}
 \item
-    Right-click on the command prompt icon and choose "Run as administrator"
+    Right-click on the command prompt icon and choose ``Run as administrator''
 \item
     You can install MPICH from the administrator command prompt by executing 
 \begin{verbatim}
