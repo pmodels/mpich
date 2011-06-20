@@ -124,8 +124,8 @@ nonblocking 10
 nonblocking2 1
 nonblocking2 4
 nonblocking2 5
-nonblocking2 10
+nonblocking2 10 timeLimit=420
 nonblocking3 1
 nonblocking3 4
 nonblocking3 5
-nonblocking3 10
+nonblocking3 10 timeLimit=420
