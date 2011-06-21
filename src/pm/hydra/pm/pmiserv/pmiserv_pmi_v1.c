@@ -682,7 +682,7 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=lookup_result info=ok");
     if (value) {
-        tmp[i++] = HYDU_strdup("value=");
+        tmp[i++] = HYDU_strdup(" port=");
         tmp[i++] = HYDU_strdup(value);
         tmp[i++] = HYDU_strdup(" rc=0 msg=success\n");
     }

@@ -902,7 +902,7 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
         tmp[i++] = HYDU_strdup(";");
     }
     if (value) {
-        tmp[i++] = HYDU_strdup("value=");
+        tmp[i++] = HYDU_strdup("port=");
         tmp[i++] = HYDU_strdup(value);
         tmp[i++] = HYDU_strdup(";found=TRUE;rc=0;");
     }
