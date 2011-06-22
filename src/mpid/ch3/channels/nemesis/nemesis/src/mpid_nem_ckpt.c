@@ -471,14 +471,14 @@ int MPIDI_nem_ckpt_finish(void)
     mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
-        MPIDI_VC_t *vc;
-        MPIDI_CH3I_VC *vc_ch;
-        /* We didn't send a marker to ourselves. */
-        if (i == MPIDI_Process.my_pg_rank)
-            continue;
+    if (ckpt_result == CKPT_CONTINUE) {
+        for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
+            MPIDI_VC_t *vc;
+            MPIDI_CH3I_VC *vc_ch;
+            /* We didn't send a marker to ourselves. */
+            if (i == MPIDI_Process.my_pg_rank)
+                continue;
 
-        if (ckpt_result == CKPT_CONTINUE) {
             MPIDI_PG_Get_vc(MPIDI_Process.my_pg, i, &vc);
             vc_ch = VC_CH(vc);
             if (!vc_ch->is_local) {
