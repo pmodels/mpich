@@ -33,7 +33,7 @@ import base.drawable.NestingStacks;
 
 public class Parameters
 {
-    private static final String       VERSION_INFO             = "1.0.1.1";
+    private static final String       VERSION_INFO             = "1.0.2.0";
     private static       String       setupfile_path           = null;
 
     // Options: Zoomable window reinitialization (requires window restart)
@@ -46,7 +46,6 @@ public class Parameters
     // Options: All zoomable windows
     public  static       boolean      Y_AXIS_ROOT_VISIBLE      = true;
     public  static       boolean      ACTIVE_REFRESH           = false;
-    public  static       String       ROW_RESIZE_MODE          = "Row";
     public  static       Alias        BACKGROUND_COLOR
                                       = Const.COLOR_BLACK;
 
@@ -54,6 +53,7 @@ public class Parameters
     public  static       float        NESTING_HEIGHT_FACTOR    = 0.80f;
     public  static       Alias        ARROW_ANTIALIASING
                                       = Const.ANTIALIAS_DEFAULT;
+    public  static       int          Y_AXIS_MIN_ROW_HEIGHT    = 4;
     public  static       int          MIN_WIDTH_TO_DRAG        = 4;
     public  static       int          CLICK_RADIUS_TO_LINE     = 3;
     public  static       boolean      LEFTCLICK_INSTANT_ZOOM   = true;
@@ -163,7 +163,6 @@ public class Parameters
                            String.valueOf( Y_AXIS_ROOT_VISIBLE ) );
         pptys.setProperty( "ACTIVE_REFRESH",
                            String.valueOf( ACTIVE_REFRESH ) );
-        pptys.setProperty( "ROW_RESIZE_MODE", ROW_RESIZE_MODE );
         pptys.setProperty( "BACKGROUND_COLOR",
                            String.valueOf( BACKGROUND_COLOR ) );
 
@@ -173,6 +172,8 @@ public class Parameters
                            String.valueOf( NESTING_HEIGHT_FACTOR ) );
         pptys.setProperty( "ARROW_ANTIALIASING",
                            String.valueOf( ARROW_ANTIALIASING ) );
+        pptys.setProperty( "Y_AXIS_MIN_ROW_HEIGHT",
+                           String.valueOf( Y_AXIS_MIN_ROW_HEIGHT ) );
         pptys.setProperty( "MIN_WIDTH_TO_DRAG",
                            String.valueOf( MIN_WIDTH_TO_DRAG ) );
         pptys.setProperty( "CLICK_RADIUS_TO_LINE",
@@ -299,17 +300,9 @@ public class Parameters
             ACTIVE_REFRESH =    ppty_val.equalsIgnoreCase( "true" )
                              || ppty_val.equalsIgnoreCase( "yes" );
         */
-        ppty_val = pptys.getProperty( "ROW_RESIZE_MODE" );
-        if ( ppty_val != null )
-            ROW_RESIZE_MODE = ppty_val;
         ppty_val = pptys.getProperty( "BACKGROUND_COLOR" );
         if ( ppty_val != null )
             BACKGROUND_COLOR = Const.parseBackgroundColor( ppty_val );
-        /*
-        ppty_val = pptys.getProperty( "Y_AXIS_ROW_HEIGHT" );
-        if ( ppty_val != null )
-            Y_AXIS_ROW_HEIGHT = Integer.parseInt( ppty_val );
-        */
 
         ppty_val = pptys.getProperty( "STATE_HEIGHT_FACTOR" );
         if ( ppty_val != null )
@@ -320,6 +313,9 @@ public class Parameters
         ppty_val = pptys.getProperty( "ARROW_ANTIALIASING" );
         if ( ppty_val != null )
             ARROW_ANTIALIASING = Const.parseAntiAliasing( ppty_val );
+        ppty_val = pptys.getProperty( "Y_AXIS_MIN_ROW_HEIGHT" );
+        if ( ppty_val != null )
+            Y_AXIS_MIN_ROW_HEIGHT = Integer.parseInt( ppty_val );
         ppty_val = pptys.getProperty( "MIN_WIDTH_TO_DRAG" );
         if ( ppty_val != null )
             MIN_WIDTH_TO_DRAG = Integer.parseInt( ppty_val );
@@ -413,13 +409,12 @@ public class Parameters
 
         rep.append( "Y_AXIS_ROOT_VISIBLE = "   + Y_AXIS_ROOT_VISIBLE   + "\n" );
         rep.append( "ACTIVE_REFRESH = "        + ACTIVE_REFRESH        + "\n" );
-        rep.append( "ROW_RESIZE_MODE = "       + ROW_RESIZE_MODE       + "\n" );
         rep.append( "BACKGROUND_COLOR = "      + BACKGROUND_COLOR      + "\n" );
-    //  rep.append( "Y_AXIS_ROW_HEIGHT = "     + Y_AXIS_ROW_HEIGHT     + "\n" );
 
         rep.append( "STATE_HEIGHT_FACTOR = "   + STATE_HEIGHT_FACTOR   + "\n" );
         rep.append( "NESTING_HEIGHT_FACTOR = " + NESTING_HEIGHT_FACTOR + "\n" );
         rep.append( "ARROW_ANTIALIASING = "    + ARROW_ANTIALIASING    + "\n" );
+        rep.append( "Y_AXIS_MIN_ROW_HEIGHT = " + Y_AXIS_MIN_ROW_HEIGHT + "\n" );
         rep.append( "MIN_WIDTH_TO_DRAG = "     + MIN_WIDTH_TO_DRAG     + "\n" );
         rep.append( "CLICK_RADIUS_TO_LINE = "  + CLICK_RADIUS_TO_LINE  + "\n" );
         rep.append( "LEFTCLICK_INSTANT_ZOOM = "+ LEFTCLICK_INSTANT_ZOOM+ "\n" );

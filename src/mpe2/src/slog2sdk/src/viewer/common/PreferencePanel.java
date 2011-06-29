@@ -34,11 +34,11 @@ public class PreferencePanel extends JPanel
     private        LabeledComboBox        lst_Y_AXIS_ROOT_VISIBLE;
     private        LabeledComboBox        lst_ACTIVE_REFRESH;
     private        LabeledComboBox        lst_BACKGROUND_COLOR;
-    // private        LabeledTextField       fld_Y_AXIS_ROW_HEIGHT;
 
     private        LabeledFloatSlider     sdr_STATE_HEIGHT_FACTOR;
     private        LabeledFloatSlider     sdr_NESTING_HEIGHT_FACTOR;
     private        LabeledComboBox        lst_ARROW_ANTIALIASING;
+    private        LabeledTextField       fld_Y_AXIS_MIN_ROW_HEIGHT;
     private        LabeledTextField       fld_MIN_WIDTH_TO_DRAG;
     private        LabeledTextField       fld_CLICK_RADIUS_TO_LINE;
     private        LabeledComboBox        lst_LEFTCLICK_INSTANT_ZOOM;
@@ -226,6 +226,18 @@ public class PreferencePanel extends JPanel
           "Whether to draw arrow with antialiasing lines. Turning this on "
         + "will slow down the canvas drawing by a factor of ~3" );
         super.add( lst_ARROW_ANTIALIASING );
+
+        fld_Y_AXIS_MIN_ROW_HEIGHT = new LabeledTextField( true,
+                                        "Y_AXIS_MIN_ROW_HEIGHT",
+                                        Const.INTEGER_FORMAT );
+        fld_Y_AXIS_MIN_ROW_HEIGHT.setToolTipText(
+          "Minimum Y-axis row height in pixel.  Minimum row height is used "
+        + "to prevent timelines from being too short.  When row height < 1, "
+        + "various errors occur in Timeline Canvas and Row Adjustments." );
+        fld_Y_AXIS_MIN_ROW_HEIGHT.setHorizontalAlignment( JTextField.CENTER );
+        fld_Y_AXIS_MIN_ROW_HEIGHT.addSelfDocumentListener();
+        fld_Y_AXIS_MIN_ROW_HEIGHT.setEditable( true );
+        super.add( fld_Y_AXIS_MIN_ROW_HEIGHT );
 
         fld_MIN_WIDTH_TO_DRAG = new LabeledTextField( true,
                                     "MIN_WIDTH_TO_DRAG",
@@ -514,6 +526,8 @@ public class PreferencePanel extends JPanel
         sdr_STATE_HEIGHT_FACTOR.setFloat( Parameters.STATE_HEIGHT_FACTOR );
         sdr_NESTING_HEIGHT_FACTOR.setFloat( Parameters.NESTING_HEIGHT_FACTOR );
         lst_ARROW_ANTIALIASING.setSelectedItem( Parameters.ARROW_ANTIALIASING );
+        fld_Y_AXIS_MIN_ROW_HEIGHT.setInteger(
+                                  Parameters.Y_AXIS_MIN_ROW_HEIGHT );
         fld_MIN_WIDTH_TO_DRAG.setInteger( Parameters.MIN_WIDTH_TO_DRAG );
         fld_CLICK_RADIUS_TO_LINE.setInteger( Parameters.CLICK_RADIUS_TO_LINE );
         lst_LEFTCLICK_INSTANT_ZOOM.setSelectedBooleanItem(
@@ -589,6 +603,8 @@ public class PreferencePanel extends JPanel
                   = sdr_NESTING_HEIGHT_FACTOR.getFloat();
         Parameters.ARROW_ANTIALIASING
                   = (Alias) lst_ARROW_ANTIALIASING.getSelectedItem();
+        Parameters.Y_AXIS_MIN_ROW_HEIGHT
+                  = fld_Y_AXIS_MIN_ROW_HEIGHT.getInteger();
         Parameters.MIN_WIDTH_TO_DRAG
                   = fld_MIN_WIDTH_TO_DRAG.getInteger();
         Parameters.CLICK_RADIUS_TO_LINE

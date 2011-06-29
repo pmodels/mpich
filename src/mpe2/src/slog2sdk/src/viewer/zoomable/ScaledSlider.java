@@ -221,22 +221,26 @@ public class ScaledSlider extends JSlider
     {
         double   label_value  = a_val_label;
         if ( label_value > label_max ) {
-            System.err.println( "label_value(" + label_value
+            System.err.println( "ScaledSlider.setValLabel: "
+                              + "label_value(" + label_value
                               + ") > label_max(" + label_max + ")" );
             this.setMaxLabel( label_value );
         }
         else if ( label_value < label_min ) {
-            System.err.println( "label_value(" + label_value
+            System.err.println( "ScaledSlider.setValLabel: "
+                              + "label_value(" + label_value
                               + ") < label_min(" + label_min + ")" );
             this.setMinLabel( label_value );
         }
         int  model_value = this.getLabel2ModelValue( label_value );
 
         if ( model_value > MODEL_MAX )
-            System.err.println( "model_value(" + model_value
+            System.err.println( "ScaledSlider.setValLabel: "
+                              + "model_value(" + model_value
                               + ") > MODEL_MAX(" + MODEL_MAX + ")" );
         else if ( model_value < MODEL_MIN )
-            System.err.println( "model_value(" + model_value
+            System.err.println( "ScaledSlider.setValLabel: "
+                              + "model_value(" + model_value
                               + ") < MODEL_MIN(" + MODEL_MIN + ")" );
         // System.out.println( "model_value = " + model_value );
 
