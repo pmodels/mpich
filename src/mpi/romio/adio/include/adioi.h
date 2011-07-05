@@ -808,6 +808,10 @@ int  ADIOI_MPE_openinternal_a;
 int  ADIOI_MPE_openinternal_b;
 int  ADIOI_MPE_stat_a;
 int  ADIOI_MPE_stat_b;
+int  ADIOI_MPE_iread_a;
+int  ADIOI_MPE_iread_b;
+int  ADIOI_MPE_iwrite_a;
+int  ADIOI_MPE_iwrite_b;
 #endif
 
 #ifdef ROMIO_INSIDE_MPICH2
