@@ -150,7 +150,7 @@ FORTRAN_API void FORT_CALL mpi_file_get_view_( MPI_Fint *fh, MPI_Offset *disp, M
 #endif
     MPI_File fh_c;
     int i, tmpreplen;
-    MPI_Datatype etype_c filetype_c;
+    MPI_Datatype etype_c, filetype_c;
 
     char *tmprep;
 
