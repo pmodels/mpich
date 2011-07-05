@@ -1273,6 +1273,18 @@ static HYD_status set_default_values(void)
     struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
+    if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
+        if (MPL_env2str("HYDRA_CKPOINT_PREFIX", (const char **)&tmp) != 0)
+            HYD_server_info.user_global.ckpoint_prefix = HYDU_strdup(tmp);
+        tmp = NULL;
+    }
+
+    if (HYD_ui_mpich_info.ckpoint_int == -1) {
+        if (MPL_env2str("HYDRA_CKPOINT_INT", (const char **)&tmp) != 0)
+            HYD_ui_mpich_info.ckpoint_int = atoi(tmp);
+        tmp = NULL;
+    }
+
     /* If exec_list is not NULL, make sure local executable is set */
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
         if (exec->exec[0] == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
