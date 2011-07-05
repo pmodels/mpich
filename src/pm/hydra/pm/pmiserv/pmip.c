@@ -192,10 +192,10 @@ int main(int argc, char **argv)
     status = HYDT_ftb_init();
     HYDU_ERR_POP(status, "unable to initialize FTB\n");
 
-    /* See if HYDRA_CONTROL_FD is set before trying to connect upstream */
-    ret = MPL_env2int("HYDRA_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
+    /* See if HYDI_CONTROL_FD is set before trying to connect upstream */
+    ret = MPL_env2int("HYDI_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
     if (ret < 0) {
-        HYDU_ERR_POP(status, "error reading HYDRA_CONTROL_FD environment\n");
+        HYDU_ERR_POP(status, "error reading HYDI_CONTROL_FD environment\n");
     }
     else if (ret == 0) {
         /* FIXME: Have a non-zero delay in retries; possibly have a

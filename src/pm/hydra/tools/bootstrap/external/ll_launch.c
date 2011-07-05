@@ -56,7 +56,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list,
                             "processes to be launched have to cover all nodes\n");
 
 
-    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
+    MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list);
     if (extra_arg_list) {
         extra_arg = strtok(extra_arg_list, " ");
         while (extra_arg) {

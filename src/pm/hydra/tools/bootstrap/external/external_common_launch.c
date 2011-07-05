@@ -154,7 +154,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         targs[idx++] = HYDU_strdup("-V");
     }
 
-    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
+    MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list);
     if (extra_arg_list) {
         extra_arg = strtok(extra_arg_list, " ");
         while (extra_arg) {
@@ -248,7 +248,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
                 str = HYDU_int_to_str(sockpair[1]);
-                status = HYDU_env_create(&env, "HYDRA_CONTROL_FD", str);
+                status = HYDU_env_create(&env, "HYDI_CONTROL_FD", str);
                 HYDU_ERR_POP(status, "unable to create env\n");
                 HYDU_FREE(str);
 
