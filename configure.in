@@ -535,6 +535,9 @@ AC_ARG_WITH(namepublisher,
                                    mpd
 			           file[:directory] (optional directory)
                                    pmi],,with_namepublisher=default)
+AC_ARG_WITH(name-publisher,
+    [],
+    with_namepublisher=$with_name_publisher,)
 
 AC_SUBST(MPIFLIBNAME)
 AC_SUBST(PMPIFLIBNAME)
