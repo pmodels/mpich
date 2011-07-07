@@ -255,6 +255,8 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
 
     HYDU_FUNC_ENTER();
 
+    *value = NULL;
+
     if (HYD_server_info.nameserver == NULL) {
         /* no external nameserver available */
         for (publish = HYD_pmcd_pmi_publish_list; publish; publish = publish->next)
