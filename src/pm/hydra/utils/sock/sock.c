@@ -530,10 +530,11 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     *is_local = 0;
 
     ht = gethostbyname(host);
+    /* If we are unable to resolve the remote host name, it need not
+     * be an error. It could mean that the user is using an alias for
+     * the hostname (e.g., an ssh config alias) */
     if (ht == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INVALID_PARAM,
-                            "unable to get host address for %s (%s)\n", host,
-                            HYDU_herror(h_errno));
+        goto fn_exit;
 
     memset((char *) &sa, 0, sizeof(struct sockaddr_in));
     memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
