@@ -100,7 +100,7 @@ static HYD_status sge_get_path(char **path)
 HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                          int *control_fd)
 {
-    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len;
+    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
     struct HYD_proxy *proxy;
@@ -199,6 +199,11 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     HYDU_FREE(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
+    /* Check if the user disabled automatic forking */
+    rc = MPL_env2bool("HYDRA_LAUNCHER_AUTOFORK", &autofork);
+    if (rc == 0)
+        autofork = 1;
+
     targs[idx] = NULL;
     HYDT_bind_cpuset_zero(&cpuset);
     for (i = 0, proxy = proxy_list; proxy; proxy = proxy->next, i++) {
@@ -237,8 +242,8 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
-        if (!strcmp(HYDT_bsci_info.launcher, "fork") ||
-            !strcmp(HYDT_bsci_info.launcher, "none") || lh) {
+        if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") ||
+                         !strcmp(HYDT_bsci_info.launcher, "none") || lh)) {
             offset = exec_idx;
 
             if (control_fd) {
