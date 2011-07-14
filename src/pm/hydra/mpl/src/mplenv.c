@@ -50,13 +50,13 @@ int MPL_env2int(const char *envName, int *val)
     val_ptr = getenv(envName);
     if (val_ptr) {
         const char *p;
-        int hasSign = 0, value = 0;
+        int sign = 1, value = 0;
         p = val_ptr;
         while (*p && isspace(*p))
             p++;
         if (*p == '-') {
             p++;
-            hasSign = 1;
+            sign = -1;
         }
         if (*p == '+')
             p++;
@@ -66,7 +66,7 @@ int MPL_env2int(const char *envName, int *val)
             MPL_error_printf("Invalid character %c in %s\n", *p, envName);
             return -1;
         }
-        *val = value;
+        *val = sign * value;
         return 1;
     }
     return 0;
