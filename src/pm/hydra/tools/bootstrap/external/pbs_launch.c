@@ -27,24 +27,25 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
 
     /* Check if number of proxies > number of processes in this PBS job */
     if (proxy_count > (HYDT_bscd_pbs_sys->tm_root).tm_nnodes)
-        HYDU_ERR_POP(HYD_INTERNAL_ERROR, "Number of proxies(%d) > TM node count(%d)!\n", proxy_count, (HYDT_bscd_pbs_sys->tm_root).tm_nnodes );
+        HYDU_ERR_POP(HYD_INTERNAL_ERROR, "Number of proxies(%d) > TM node count(%d)!\n",
+                     proxy_count, (HYDT_bscd_pbs_sys->tm_root).tm_nnodes);
 
     /* Duplicate the args in local copy, targs */
     for (args_count = 0; args[args_count]; args_count++)
-	targs[args_count] = HYDU_strdup(args[args_count]);
-    
+        targs[args_count] = HYDU_strdup(args[args_count]);
+
     /* Allocate memory for taskIDs[] and events[] arrays */
-    HYDU_MALLOC(HYDT_bscd_pbs_sys->taskIDs, tm_task_id*,
+    HYDU_MALLOC(HYDT_bscd_pbs_sys->taskIDs, tm_task_id *,
                 HYDT_bscd_pbs_sys->size * sizeof(tm_task_id), status);
-    HYDU_MALLOC(HYDT_bscd_pbs_sys->events, tm_event_t*,
+    HYDU_MALLOC(HYDT_bscd_pbs_sys->events, tm_event_t *,
                 HYDT_bscd_pbs_sys->size * sizeof(tm_event_t), status);
 
     /*
-        Spawn a process on each allocated node through tm_spawn() which
-        returns a taskID for the process + a eventID for the spawning.
-        The returned taskID won't be ready for access until tm_poll()
-        has returned the corresponding eventID.
-    */
+     * Spawn a process on each allocated node through tm_spawn() which
+     * returns a taskID for the process + a eventID for the spawning.
+     * The returned taskID won't be ready for access until tm_poll()
+     * has returned the corresponding eventID.
+     */
     spawned_count = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next) {
         targs[args_count] = HYDU_int_to_str(spawned_count);
@@ -60,36 +61,39 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
     HYDT_bscd_pbs_sys->spawned_count = spawned_count;
 
     /*
-        Poll the TM for the spawning eventID returned by tm_spawn()
-        to determine if the spawned process has started.
-    */
+     * Poll the TM for the spawning eventID returned by tm_spawn()
+     * to determine if the spawned process has started.
+     */
     events_count = 0;
     while (events_count < spawned_count) {
-        tm_event_t  event = -1;
-        int         poll_err;
+        tm_event_t event = -1;
+        int poll_err;
         ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
         if (ierr != TM_SUCCESS)
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_poll(spawn_event) fails with TM err %d.\n", ierr );
+            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_poll(spawn_event) fails with TM err %d.\n",
+                         ierr);
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
                 if (HYDT_bscd_pbs_sys->events[idx] == event) {
                     if (HYDT_bsci_info.debug) {
-                        HYDU_dump(stdout, "PBS_DEBUG: Event %d received, task %d has started.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx]);
-                    /*
-                    HYDU_error_printf("DEBUG: Event %d received, task %d has started.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx]);
-                    */
+                        HYDU_dump(stdout,
+                                  "PBS_DEBUG: Event %d received, task %d has started.\n",
+                                  event, HYDT_bscd_pbs_sys->taskIDs[idx]);
+                        /*
+                         * HYDU_error_printf("DEBUG: Event %d received, task %d has started.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx]);
+                         */
                     }
                     events_count++;
-                    break; /* break from for(idx<spawned_count) loop */
+                    break;      /* break from for(idx<spawned_count) loop */
                 }
             }
         }
     }
 
-    fn_exit:
-        HYDU_FUNC_EXIT();
-        return status;
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
 
-    fn_fail:
-        goto fn_exit;
+  fn_fail:
+    goto fn_exit;
 }

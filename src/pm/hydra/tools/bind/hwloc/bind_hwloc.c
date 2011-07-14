@@ -4,9 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  *
  * Copyright © 2006-2011 Guillaume Mercier, Institut Polytechnique de
- * Bordeaux. All rights reserved. Permission is hereby granted to use, 
+ * Bordeaux. All rights reserved. Permission is hereby granted to use,
  * reproduce, prepare derivative works, and to redistribute to others.
- */ 
+ */
 
 
 

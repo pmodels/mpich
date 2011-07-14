@@ -172,8 +172,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
                  blocklist_tail->core_count == node->core_count) {
             blocklist_tail->num_nodes++;
         }
-        else if (blocklist_tail->start_idx == node->node_id &&
-                 blocklist_tail->num_nodes == 1) {
+        else if (blocklist_tail->start_idx == node->node_id && blocklist_tail->num_nodes == 1) {
             blocklist_tail->core_count += node->core_count;
         }
         else {
@@ -204,7 +203,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         blocklist_tail = blocklist_head;
     }
 
-create_mapping_key:
+  create_mapping_key:
     /* Create the mapping out of the blocks */
     i = 0;
     tmp[i++] = HYDU_strdup("(");

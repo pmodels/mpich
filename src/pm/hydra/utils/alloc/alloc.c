@@ -345,8 +345,8 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
     goto fn_exit;
 }
 
-HYD_status HYDU_create_proxy_list(struct HYD_exec * exec_list, struct HYD_node * node_list,
-                                  struct HYD_pg * pg)
+HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
+                                  struct HYD_pg *pg)
 {
     struct HYD_proxy *proxy = NULL, *tproxy, *last_proxy;
     struct HYD_exec *exec;

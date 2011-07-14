@@ -19,32 +19,34 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
     HYDU_FUNC_ENTER();
 
     /* Allocate memory for taskobits[] */
-    HYDU_MALLOC(HYDT_bscd_pbs_sys->taskobits, int*,
+    HYDU_MALLOC(HYDT_bscd_pbs_sys->taskobits, int *,
                 HYDT_bscd_pbs_sys->size * sizeof(int), status);
     spawned_count = HYDT_bscd_pbs_sys->spawned_count;
 
     /*
-      FIXME: We rely on gettimeofday here. This needs to detect the
-      timer type available and use that. Probably more of an MPL
-      functionality than Hydra's.
-    */
+     * FIXME: We rely on gettimeofday here. This needs to detect the
+     * timer type available and use that. Probably more of an MPL
+     * functionality than Hydra's.
+     */
     gettimeofday(&start_tval, NULL);
 
     /* Register with TM to be notified the obituary of the spawning process. */
     for (idx = 0; idx < spawned_count; idx++) {
         /*
-           Get a TM event which will be returned by tm_poll() when
-           the process labelled by taskID dies
-        */
+         * Get a TM event which will be returned by tm_poll() when
+         * the process labelled by taskID dies
+         */
         ierr = tm_obit(HYDT_bscd_pbs_sys->taskIDs[idx],
-                       HYDT_bscd_pbs_sys->taskobits + idx,
-                       HYDT_bscd_pbs_sys->events + idx);
+                       HYDT_bscd_pbs_sys->taskobits + idx, HYDT_bscd_pbs_sys->events + idx);
         if (ierr != TM_SUCCESS)
             HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_obit() fails with TM err=%d.\n", ierr);
         if (HYDT_bscd_pbs_sys->events[idx] == TM_ERROR_EVENT)
-            HYDU_error_printf("tm_obit(Task %d) returns error.\n", HYDT_bscd_pbs_sys->taskIDs[idx]);
-        if ( HYDT_bscd_pbs_sys->events[idx] == TM_NULL_EVENT )
-            HYDU_error_printf("Task %d already exits with status %d\n", HYDT_bscd_pbs_sys->taskIDs[idx], HYDT_bscd_pbs_sys->taskobits[idx] );
+            HYDU_error_printf("tm_obit(Task %d) returns error.\n",
+                              HYDT_bscd_pbs_sys->taskIDs[idx]);
+        if (HYDT_bscd_pbs_sys->events[idx] == TM_NULL_EVENT)
+            HYDU_error_printf("Task %d already exits with status %d\n",
+                              HYDT_bscd_pbs_sys->taskIDs[idx],
+                              HYDT_bscd_pbs_sys->taskobits[idx]);
     }
 
     /* Poll if the spawned process has exited */
@@ -56,22 +58,25 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
     }
     /* Polling for the remaining alive processes till they all exit */
     while (events_count < spawned_count) {
-        tm_event_t  event = -1;
-        int         poll_err;
-        ierr = tm_poll( TM_NULL_EVENT, &event, 0, &poll_err );
+        tm_event_t event = -1;
+        int poll_err;
+        ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
         if (ierr != TM_SUCCESS)
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_poll(obit_event) fails with err=%d.\n", ierr );
+            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_poll(obit_event) fails with err=%d.\n", ierr);
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
                 if (HYDT_bscd_pbs_sys->events[idx] == event) {
                     if (HYDT_bsci_info.debug) {
-                        HYDU_dump(stdout, "PBS_DEBUG: Event %d received, task %d exits with status %d.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx], HYDT_bscd_pbs_sys->taskobits[idx] );
-                    /*
-                    HYDU_error_printf("DEBUG: Event %d received, task %d exits with status %d.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx], HYDT_bscd_pbs_sys->taskobits[idx] );
-                    */
+                        HYDU_dump(stdout,
+                                  "PBS_DEBUG: Event %d received, task %d exits with status %d.\n",
+                                  event, HYDT_bscd_pbs_sys->taskIDs[idx],
+                                  HYDT_bscd_pbs_sys->taskobits[idx]);
+                        /*
+                         * HYDU_error_printf("DEBUG: Event %d received, task %d exits with status %d.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx], HYDT_bscd_pbs_sys->taskobits[idx]);
+                         */
                     }
                     events_count++;
-                    break;  /* break from for(idx<spawned_count) loop */
+                    break;      /* break from for(idx<spawned_count) loop */
                 }
             }
         }
@@ -92,10 +97,10 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
     }
 
     /* Loop till all sockets have closed */
-    fn_exit:
-        HYDU_FUNC_EXIT();
-        return status;
-  
-    fn_fail:
-        goto fn_exit;
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }

@@ -1274,13 +1274,13 @@ static HYD_status set_default_values(void)
     HYD_status status = HYD_SUCCESS;
 
     if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
-        if (MPL_env2str("HYDRA_CKPOINT_PREFIX", (const char **)&tmp) != 0)
+        if (MPL_env2str("HYDRA_CKPOINT_PREFIX", (const char **) &tmp) != 0)
             HYD_server_info.user_global.ckpoint_prefix = HYDU_strdup(tmp);
         tmp = NULL;
     }
 
     if (HYD_ui_mpich_info.ckpoint_int == -1) {
-        if (MPL_env2str("HYDRA_CKPOINT_INT", (const char **)&tmp) != 0)
+        if (MPL_env2str("HYDRA_CKPOINT_INT", (const char **) &tmp) != 0)
             HYD_ui_mpich_info.ckpoint_int = atoi(tmp);
         tmp = NULL;
     }
@@ -1309,7 +1309,7 @@ static HYD_status set_default_values(void)
 
     /* don't clobber existing iface values from the command line */
     if (HYD_server_info.user_global.iface == NULL) {
-        if (MPL_env2str("HYDRA_IFACE", (const char **)&tmp) != 0)
+        if (MPL_env2str("HYDRA_IFACE", (const char **) &tmp) != 0)
             HYD_server_info.user_global.iface = HYDU_strdup(tmp);
         tmp = NULL;
     }

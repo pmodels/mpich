@@ -32,7 +32,8 @@ static void usage(void)
     printf("    -genv {name} {value}             environment variable name and value\n");
     printf("    -genvlist {env1,env2,...}        environment variable list to pass\n");
     printf("    -genvnone                        do not pass any environment variables\n");
-    printf("    -genvall                         pass all environment variables not managed\n");
+    printf
+        ("    -genvall                         pass all environment variables not managed\n");
     printf("                                          by the launcher (default)\n");
 
     printf("\n");
