@@ -5,11 +5,11 @@
  */
 
 #include "hydra.h"
-#include "bind.h"
+#include "topo.h"
 
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid,
-                               struct HYDT_bind_cpuset_t cpuset)
+                               struct HYDT_topo_cpuset_t cpuset)
 {
     int inpipe[2], outpipe[2], errpipe[2], tpid;
     HYD_status status = HYD_SUCCESS;
@@ -58,7 +58,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 
-        status = HYDT_bind_process(cpuset);
+        status = HYDT_topo_bind(cpuset);
         HYDU_ERR_POP(status, "bind process failed\n");
 
         if (execvp(client_arg[0], client_arg) < 0) {

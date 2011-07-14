@@ -4,85 +4,85 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef BIND_H_INCLUDED
-#define BIND_H_INCLUDED
+#ifndef TOPO_H_INCLUDED
+#define TOPO_H_INCLUDED
 
-/** @file bind.h */
+/** @file topo.h */
 
 #include "hydra.h"
 
 /*! \cond */
 
-#define HYDT_BIND_OBJ_CHILD_ID(obj) \
-    ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_bind_obj))
+#define HYDT_TOPO_OBJ_CHILD_ID(obj) \
+    ((((char *) obj) - ((char *) obj->parent->children)) / sizeof(struct HYDT_topo_obj))
 
 /* This should be higher than the number of cache levels we support */
 #define HYDT_INVALID_CACHE_DEPTH (10)
 
 /*! \endcond */
 
-/*! \addtogroup bind Process Binding Interface
+/*! \addtogroup topo Process Topology Interface
  * @{
  */
 
 /**
- * \brief HYDT_bind_support_level_t
+ * \brief HYDT_topo_support_level_t
  *
- * Level of binding support offered by the binding library.
+ * Level of support offered by the topology library.
  */
 typedef enum {
     /** \brief No support is provided */
-    HYDT_BIND_SUPPORT_NONE = 0,
+    HYDT_TOPO_SUPPORT_NONE = 0,
 
     /** \brief Provides information on number of processing elements
-     * in the machine, and allows for process binding */
-    HYDT_BIND_SUPPORT_BASIC,
+     * in the machine */
+    HYDT_TOPO_SUPPORT_BASIC,
 
     /** \brief Provides information about the topology of the
      * processing elements (nodes, processors, cores, threads). */
-    HYDT_BIND_SUPPORT_CPUTOPO,
+    HYDT_TOPO_SUPPORT_CPUTOPO,
 
     /** \brief Provides information about the topology of the
      * processing elements (nodes, processors, cores, threads) as well
      * as the memory hierarchy (caches, memory). */
-    HYDT_BIND_SUPPORT_MEMTOPO
-} HYDT_bind_support_level_t;
+    HYDT_TOPO_SUPPORT_MEMTOPO
+} HYDT_topo_support_level_t;
 
 
 /**
- * \brief HYDT_bind_obj_type_t
+ * \brief HYDT_topo_obj_type_t
  *
  * Type of object in the hardware topology map.
  */
 typedef enum {
     /** \brief Cache coherent set of processors */
-    HYDT_BIND_OBJ_MACHINE = 0,
+    HYDT_TOPO_OBJ_MACHINE = 0,
 
     /** \brief Sockets sharing memory dimms */
-    HYDT_BIND_OBJ_NODE,
+    HYDT_TOPO_OBJ_NODE,
 
     /** \brief A physical socket, possibly comprising of many cores */
-    HYDT_BIND_OBJ_SOCKET,
+    HYDT_TOPO_OBJ_SOCKET,
 
     /** \brief A core, possibly comprising of many hardware threads */
-    HYDT_BIND_OBJ_CORE,
+    HYDT_TOPO_OBJ_CORE,
 
     /** \brief A hardware thread */
-    HYDT_BIND_OBJ_THREAD,
+    HYDT_TOPO_OBJ_THREAD,
 
     /** \brief Marker for the last element in the enum */
-    HYDT_BIND_OBJ_END
-} HYDT_bind_obj_type_t;
+    HYDT_TOPO_OBJ_END
+} HYDT_topo_obj_type_t;
 
 
-#define HYDT_BIND_MAX_CPU_COUNT (16384)
+#define HYDT_TOPO_MAX_CPU_COUNT (16384)
 
-#if (HYDT_BIND_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG)
+#if (HYDT_TOPO_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG)
 #error "Too small a CPU count"
 #endif /* (HYDT_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG) */
 
-struct HYDT_bind_cpuset_t {
-    unsigned long set[HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG];
+struct HYDT_topo_cpuset_t {
+    unsigned long set[HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG];
 };
 
 
@@ -95,24 +95,24 @@ struct HYDT_bind_cpuset_t {
  * object contains several sockets. Each socket contains several
  * cores. Each core contains several threads.
  */
-struct HYDT_bind_obj {
+struct HYDT_topo_obj {
     /** \brief Object type */
-    HYDT_bind_obj_type_t type;
+    HYDT_topo_obj_type_t type;
 
     /** \brief OS index set of this object type */
-    struct HYDT_bind_cpuset_t cpuset;
+    struct HYDT_topo_cpuset_t cpuset;
 
     /** \brief Parent object of which this is a part */
-    struct HYDT_bind_obj *parent;
+    struct HYDT_topo_obj *parent;
 
     /** \brief Number of children objects */
     int num_children;
 
     /** \brief Array of children objects */
-    struct HYDT_bind_obj *children;
+    struct HYDT_topo_obj *children;
 
     /** \brief Memory object attached to this topology object */
-    struct HYDT_bind_mem_obj {
+    struct HYDT_topo_mem_obj {
         /** \brief Local memory */
         size_t local_mem_size;
 
@@ -129,88 +129,88 @@ struct HYDT_bind_obj {
 
 
 /**
- * \brief Binding information
+ * \brief Topology information
  *
- * Contains private persistent information stored by the binding
+ * Contains private persistent information stored by the topology
  * library.
  */
-struct HYDT_bind_info {
-    /** \brief Support level provided by the binding library */
-    HYDT_bind_support_level_t support_level;
+struct HYDT_topo_info {
+    /** \brief Support level provided by the topology library */
+    HYDT_topo_support_level_t support_level;
 
-    /** \brief Binding library to use */
-    char *bindlib;
+    /** \brief Topology library to use */
+    char *topolib;
 
-    /** \brief Ordered OS index map to bind the processes */
-    struct HYDT_bind_cpuset_t *bindmap;
+    /** \brief Ordered OS index map */
+    struct HYDT_topo_cpuset_t *bindmap;
 
     /** \brief Total processing units available on the machine. This
-     * is needed for all binding levels, except "NONE" */
+     * is needed for all supported topology levels, except "NONE" */
     int total_proc_units;
 
     /** \brief Top-level topology object */
-    struct HYDT_bind_obj machine;
+    struct HYDT_topo_obj machine;
 };
 
 /*! \cond */
-extern struct HYDT_bind_info HYDT_bind_info;
+extern struct HYDT_topo_info HYDT_topo_info;
 /*! \endcond */
 
 /**
- * \brief HYDT_bind_init - Initialize the binding library
+ * \brief HYDT_topo_init - Initialize the topology library
  *
  * \param[in]  binding   Binding pattern to use
- * \param[in]  bindlib   Binding library to use
+ * \param[in]  topolib   Topology library to use
  *
- * This function initializes the binding library requested by the
+ * This function initializes the topology library requested by the
  * user. It also queries for the support provided by the library and
  * stores it for future calls.
  */
-HYD_status HYDT_bind_init(char *binding, char *bindlib);
+HYD_status HYDT_topo_init(char *binding, char *topolib);
 
 
 /**
- * \brief HYDT_bind_finalize - Finalize the binding library
+ * \brief HYDT_topo_finalize - Finalize the topology library
  *
- * This function cleans up any relevant state that the binding library
+ * This function cleans up any relevant state that the topology library
  * maintained.
  */
-HYD_status HYDT_bind_finalize(void);
+HYD_status HYDT_topo_finalize(void);
 
 
 /**
- * \brief HYDT_bind_process - Bind process to a processing element
+ * \brief HYDT_topo_bind - Bind process to a processing element
  *
  * \param[in] cpuset  The Operating System index set to bind the process to
  *
  * This function binds a process to an appropriate OS index set. If
  * the OS index does not contain any set OS index, no binding is done.
  */
-HYD_status HYDT_bind_process(struct HYDT_bind_cpuset_t cpuset);
+HYD_status HYDT_topo_bind(struct HYDT_topo_cpuset_t cpuset);
 
 
 /**
- * \brief HYDT_bind_pid_to_cpuset - Get the OS index set for a process ID
+ * \brief HYDT_topo_pid_to_cpuset - Get the OS index set for a process ID
  *
  * \param[in] process_id   The process index for which we need the OS index
- * \param[out] cpuset      The OS index set to which the process can bind
+ * \param[out] cpuset      The OS index set
  *
  * This function looks up the appropriate OS indices (by wrapping
  * around in cases where the process_id is larger than the number of
  * available processing units).
  */
-void HYDT_bind_pid_to_cpuset(int process_id, struct HYDT_bind_cpuset_t *cpuset);
+void HYDT_topo_pid_to_cpuset(int process_id, struct HYDT_topo_cpuset_t *cpuset);
 
 
-static inline void HYDT_bind_cpuset_zero(struct HYDT_bind_cpuset_t *cpuset)
+static inline void HYDT_topo_cpuset_zero(struct HYDT_topo_cpuset_t *cpuset)
 {
     int i;
 
-    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
         cpuset->set[i] = 0;
 }
 
-static inline void HYDT_bind_cpuset_clr(int os_index, struct HYDT_bind_cpuset_t *cpuset)
+static inline void HYDT_topo_cpuset_clr(int os_index, struct HYDT_topo_cpuset_t *cpuset)
 {
     int idx;
     unsigned long mask;
@@ -221,7 +221,7 @@ static inline void HYDT_bind_cpuset_clr(int os_index, struct HYDT_bind_cpuset_t 
     cpuset->set[idx] &= mask;
 }
 
-static inline void HYDT_bind_cpuset_set(int os_index, struct HYDT_bind_cpuset_t *cpuset)
+static inline void HYDT_topo_cpuset_set(int os_index, struct HYDT_topo_cpuset_t *cpuset)
 {
     int idx;
     unsigned long mask;
@@ -232,7 +232,7 @@ static inline void HYDT_bind_cpuset_set(int os_index, struct HYDT_bind_cpuset_t 
     cpuset->set[idx] |= mask;
 }
 
-static inline int HYDT_bind_cpuset_isset(int os_index, struct HYDT_bind_cpuset_t cpuset)
+static inline int HYDT_topo_cpuset_isset(int os_index, struct HYDT_topo_cpuset_t cpuset)
 {
     int idx;
     unsigned long mask;
@@ -243,19 +243,19 @@ static inline int HYDT_bind_cpuset_isset(int os_index, struct HYDT_bind_cpuset_t
     return (cpuset.set[idx] & mask);
 }
 
-static inline void HYDT_bind_cpuset_dup(struct HYDT_bind_cpuset_t src,
-                                        struct HYDT_bind_cpuset_t *dest)
+static inline void HYDT_topo_cpuset_dup(struct HYDT_topo_cpuset_t src,
+                                        struct HYDT_topo_cpuset_t *dest)
 {
     int i;
 
-    for (i = 0; i < HYDT_BIND_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
         dest->set[i] = src.set[i];
 }
 
-static inline void HYDT_bind_init_obj(struct HYDT_bind_obj *obj)
+static inline void HYDT_topo_init_obj(struct HYDT_topo_obj *obj)
 {
-    obj->type = HYDT_BIND_OBJ_END;
-    HYDT_bind_cpuset_zero(&obj->cpuset);
+    obj->type = HYDT_TOPO_OBJ_END;
+    HYDT_topo_cpuset_zero(&obj->cpuset);
     obj->num_children = 0;
     obj->children = NULL;
     obj->mem.local_mem_size = 0;
@@ -264,16 +264,16 @@ static inline void HYDT_bind_init_obj(struct HYDT_bind_obj *obj)
     obj->mem.cache_depth = NULL;
 }
 
-static inline HYD_status HYDT_bind_alloc_objs(int nobjs, struct HYDT_bind_obj **obj_list)
+static inline HYD_status HYDT_topo_alloc_objs(int nobjs, struct HYDT_topo_obj **obj_list)
 {
     int i;
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_MALLOC((*obj_list), struct HYDT_bind_obj *, nobjs * sizeof(struct HYDT_bind_obj),
+    HYDU_MALLOC((*obj_list), struct HYDT_topo_obj *, nobjs * sizeof(struct HYDT_topo_obj),
                 status);
 
     for (i = 0; i < nobjs; i++)
-        HYDT_bind_init_obj(&(*obj_list)[i]);
+        HYDT_topo_init_obj(&(*obj_list)[i]);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -287,4 +287,4 @@ static inline HYD_status HYDT_bind_alloc_objs(int nobjs, struct HYDT_bind_obj **
  * @}
  */
 
-#endif /* BIND_H_INCLUDED */
+#endif /* TOPO_H_INCLUDED */

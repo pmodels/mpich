@@ -8,7 +8,7 @@
 #include "pmip.h"
 #include "demux.h"
 #include "bsci.h"
-#include "bind.h"
+#include "topo.h"
 #include "hydt_ftb.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
@@ -138,7 +138,7 @@ static void cleanup_params(void)
     /* Exec list */
     HYDU_free_exec_list(HYD_pmcd_pmip.exec_list);
 
-    status = HYDT_bind_finalize();
+    status = HYDT_topo_finalize();
 }
 
 static void signal_cb(int sig)

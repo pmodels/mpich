@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
-#include "bind.h"
+#include "topo.h"
 #include "common.h"
 
 static int fd_stdout, fd_stderr;
@@ -107,7 +107,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
-    struct HYDT_bind_cpuset_t cpuset;
+    struct HYDT_topo_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -205,7 +205,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         autofork = 1;
 
     targs[idx] = NULL;
-    HYDT_bind_cpuset_zero(&cpuset);
+    HYDT_topo_cpuset_zero(&cpuset);
     for (i = 0, proxy = proxy_list; proxy; proxy = proxy->next, i++) {
 
         if (targs[host_idx])

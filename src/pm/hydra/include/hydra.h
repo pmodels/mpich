@@ -304,9 +304,9 @@ struct HYD_user_global {
     char *launcher;
     char *launcher_exec;
 
-    /* Process binding */
+    /* Processor topology */
     char *binding;
-    char *bindlib;
+    char *topolib;
 
     /* Checkpoint restart */
     char *ckpointlib;
@@ -475,10 +475,10 @@ HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwr
 HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 
 /* launch */
-struct HYDT_bind_cpuset_t;
+struct HYDT_topo_cpuset_t;
 HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
                                int *in, int *out, int *err, int *pid,
-                               struct HYDT_bind_cpuset_t cpuset);
+                               struct HYDT_topo_cpuset_t cpuset);
 
 /* others */
 int HYDU_dceil(int x, int y);

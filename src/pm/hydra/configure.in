@@ -333,23 +333,23 @@ PAC_CHECK_PREFIX(plpa)
 
 
 #########################################################################
-# Process Binding
+# Processor Topology
 #########################################################################
-AC_ARG_WITH(hydra-bindlib, [  --with-hydra-bindlib=name - Process Binding Library (hwloc, plpa)],
-			   [ hydra_bindlib_list=$withval ],
-			   [ hydra_bindlib_list=hwloc,plpa ])
-AC_MSG_CHECKING([desired process binding libraries])
-AC_MSG_RESULT([$hydra_bindlib_list])
+AC_ARG_WITH(hydra-topolib, [  --with-hydra-topolib=name - Processor Topology Library (hwloc, plpa)],
+			   [ hydra_topolib_list=$withval ],
+			   [ hydra_topolib_list=hwloc,plpa ])
+AC_MSG_CHECKING([desired processor topology libraries])
+AC_MSG_RESULT([$hydra_topolib_list])
 
-hydra_bindlibs="`echo $hydra_bindlib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
+hydra_topolibs="`echo $hydra_topolib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 have_plpa=no
 have_hwloc=no
-for hydra_bindlib in ${hydra_bindlibs}; do
-    case "$hydra_bindlib" in
+for hydra_topolib in ${hydra_topolibs}; do
+    case "$hydra_topolib" in
     	plpa)
 		if test "$with_plpa_prefix" = "embedded" ; then
-		   PAC_CONFIG_SUBDIR_ARGS([tools/bind/plpa/plpa],[--enable-included-mode],
+		   PAC_CONFIG_SUBDIR_ARGS([tools/topo/plpa/plpa],[--enable-included-mode],
 			[have_plpa=yes],[have_plpa=no])
 		   # Only build plpa in embedded mode
 		   if test "$have_plpa" = "yes" ; then
@@ -368,12 +368,12 @@ for hydra_bindlib in ${hydra_bindlibs}; do
 
 		if test "$have_plpa" = "yes" ; then
 		   AC_DEFINE(HAVE_PLPA,1,[Define if plpa is available])
-		   available_bindlibs="$available_bindlibs plpa"
+		   available_topolibs="$available_topolibs plpa"
 		fi
 		;;		
 	hwloc)
 		if test "$with_hwloc_prefix" = "embedded" ; then
-		   PAC_CONFIG_SUBDIR_ARGS([tools/bind/hwloc/hwloc],[--enable-embedded-mode],
+		   PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc],[--enable-embedded-mode],
 			[have_hwloc=yes],[have_hwloc=no])
 		   # Only build hwloc in embedded mode
 		   if test "$have_hwloc" = "yes" ; then
@@ -397,7 +397,7 @@ for hydra_bindlib in ${hydra_bindlibs}; do
 
 		if test "$have_hwloc" = "yes" ; then
 		   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-		   available_bindlibs="$available_bindlibs hwloc"
+		   available_topolibs="$available_topolibs hwloc"
 		fi
 		;;
 	*)
@@ -405,25 +405,26 @@ for hydra_bindlib in ${hydra_bindlibs}; do
     esac
 done
 
-for hydra_bindlib in ${available_bindlibs}; do
-    hydra_default_bindlib=${hydra_bindlib}
+for hydra_topolib in ${available_topolibs}; do
+    hydra_default_topolib=${hydra_topolib}
     break
 done
 
-AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_BINDLIBS,"$available_bindlibs",
-	[Definition of enabled binding libraries])
-if test "$hydra_default_bindlib" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BINDLIB,"$hydra_default_bindlib",[Default binding library])
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_TOPOLIBS,"$available_topolibs",
+	[Definition of enabled processor topology libraries])
+if test "$hydra_default_topolib" != "" ; then
+   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_TOPOLIB,"$hydra_default_topolib",
+	[Default processor topology library])
 else
-   AC_DEFINE(HYDRA_DEFAULT_BINDLIB,NULL,[Default binding library])
+   AC_DEFINE(HYDRA_DEFAULT_TOPOLIB,NULL,[Default processor topology library])
 fi
 AM_CONDITIONAL([hydra_have_plpa], [test "${have_plpa}" = "yes"])
 AM_CONDITIONAL([hydra_use_embedded_plpa], [test "${hydra_use_embedded_plpa}" = "yes"])
 AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
 AM_CONDITIONAL([hydra_use_embedded_hwloc], [test "${hydra_use_embedded_hwloc}" = "yes"])
 
-AC_MSG_CHECKING([available process binding libraries])
-AC_MSG_RESULT([$available_bindlibs])
+AC_MSG_CHECKING([available processor topology libraries])
+AC_MSG_RESULT([$available_topolibs])
 
 
 #########################################################################

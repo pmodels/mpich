@@ -5,78 +5,78 @@
  */
 
 #include "hydra.h"
-#include "bind.h"
-#include "bind_plpa.h"
+#include "topo.h"
+#include "topo_plpa.h"
 
-struct HYDT_bind_info HYDT_bind_info;
+struct HYDT_topo_info HYDT_topo_info;
 
 #include "plpa.h"
 
-static void set_cpuset_idx(int idx, struct HYDT_bind_obj *obj)
+static void set_cpuset_idx(int idx, struct HYDT_topo_obj *obj)
 {
-    struct HYDT_bind_obj *tmp = obj;
+    struct HYDT_topo_obj *tmp = obj;
 
     do {
-        HYDT_bind_cpuset_set(idx, &tmp->cpuset);
+        HYDT_topo_cpuset_set(idx, &tmp->cpuset);
         tmp = tmp->parent;
     } while (tmp);
 }
 
-HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
+HYD_status HYDT_topo_plpa_init(HYDT_topo_support_level_t * support_level)
 {
     PLPA_NAME(api_type_t) p;
     int ret, i, j, k, proc_id, socket_id, core_id, max, total_cores;
-    struct HYDT_bind_obj *node, *sock, *core, *thread;
+    struct HYDT_topo_obj *node, *sock, *core, *thread;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     if (!((PLPA_NAME(api_probe) (&p) == 0) && (p == PLPA_NAME_CAPS(PROBE_OK)))) {
-        /* If this failed, we just return without binding */
+        /* If this failed, we just return without initializing the topology */
         HYDU_warn_printf("plpa api runtime probe failed\n");
         goto fn_fail;
     }
 
     /* Find the maximum number of processing elements */
     ret = PLPA_NAME(get_processor_data) (PLPA_NAME_CAPS(COUNT_ONLINE),
-                                         &HYDT_bind_info.total_proc_units, &max);
+                                         &HYDT_topo_info.total_proc_units, &max);
     if (ret) {
         /* Unable to get number of processors */
         HYDU_warn_printf("plpa get processor data failed\n");
         goto fn_fail;
     }
 
-    /* We have qualified for basic binding support level */
-    *support_level = HYDT_BIND_SUPPORT_BASIC;
+    /* We have qualified for basic topology support level */
+    *support_level = HYDT_TOPO_SUPPORT_BASIC;
 
     /* Setup the machine level */
-    HYDT_bind_info.machine.type = HYDT_BIND_OBJ_MACHINE;
-    HYDT_bind_cpuset_zero(&HYDT_bind_info.machine.cpuset);
-    HYDT_bind_info.machine.parent = NULL;
-    HYDT_bind_info.machine.num_children = 1;
-    status = HYDT_bind_alloc_objs(HYDT_bind_info.machine.num_children,
-                                  &HYDT_bind_info.machine.children);
-    HYDU_ERR_POP(status, "error allocating bind objects\n");
+    HYDT_topo_info.machine.type = HYDT_TOPO_OBJ_MACHINE;
+    HYDT_topo_cpuset_zero(&HYDT_topo_info.machine.cpuset);
+    HYDT_topo_info.machine.parent = NULL;
+    HYDT_topo_info.machine.num_children = 1;
+    status = HYDT_topo_alloc_objs(HYDT_topo_info.machine.num_children,
+                                  &HYDT_topo_info.machine.children);
+    HYDU_ERR_POP(status, "error allocating topo objects\n");
 
     /* Setup the node level */
-    node = &HYDT_bind_info.machine.children[0];
-    node->type = HYDT_BIND_OBJ_NODE;
-    HYDT_bind_cpuset_zero(&node->cpuset);
-    node->parent = &HYDT_bind_info.machine;
+    node = &HYDT_topo_info.machine.children[0];
+    node->type = HYDT_TOPO_OBJ_NODE;
+    HYDT_topo_cpuset_zero(&node->cpuset);
+    node->parent = &HYDT_topo_info.machine;
     ret = PLPA_NAME(get_socket_info) (&node->num_children, &max);
     if (ret) {
         HYDU_warn_printf("plpa get socket info failed\n");
         goto fn_fail;
     }
-    status = HYDT_bind_alloc_objs(node->num_children, &node->children);
-    HYDU_ERR_POP(status, "error allocating bind objects\n");
+    status = HYDT_topo_alloc_objs(node->num_children, &node->children);
+    HYDU_ERR_POP(status, "error allocating topo objects\n");
 
     /* Setup the socket level */
     total_cores = 0;
     for (i = 0; i < node->num_children; i++) {
         sock = &node->children[i];
-        sock->type = HYDT_BIND_OBJ_SOCKET;
-        HYDT_bind_cpuset_zero(&sock->cpuset);
+        sock->type = HYDT_TOPO_OBJ_SOCKET;
+        HYDT_topo_cpuset_zero(&sock->cpuset);
         sock->parent = node;
 
         ret = PLPA_NAME(get_socket_id) (i, &socket_id);
@@ -90,13 +90,13 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
             HYDU_warn_printf("plpa get core info failed\n");
             goto fn_fail;
         }
-        status = HYDT_bind_alloc_objs(sock->num_children, &sock->children);
-        HYDU_ERR_POP(status, "error allocating bind objects\n");
+        status = HYDT_topo_alloc_objs(sock->num_children, &sock->children);
+        HYDU_ERR_POP(status, "error allocating topo objects\n");
 
         total_cores += sock->num_children;
     }
 
-    if (HYDT_bind_info.total_proc_units % total_cores) {
+    if (HYDT_topo_info.total_proc_units % total_cores) {
         HYDU_warn_printf("total processing units is not a multiple of total cores\n");
         goto fn_fail;
     }
@@ -107,17 +107,17 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 
         for (j = 0; j < sock->num_children; j++) {
             core = &sock->children[j];
-            core->type = HYDT_BIND_OBJ_CORE;
-            HYDT_bind_cpuset_zero(&core->cpuset);
+            core->type = HYDT_TOPO_OBJ_CORE;
+            HYDT_topo_cpuset_zero(&core->cpuset);
             core->parent = sock;
-            core->num_children = HYDT_bind_info.total_proc_units / total_cores;
-            status = HYDT_bind_alloc_objs(core->num_children, &core->children);
-            HYDU_ERR_POP(status, "error allocating bind objects\n");
+            core->num_children = HYDT_topo_info.total_proc_units / total_cores;
+            status = HYDT_topo_alloc_objs(core->num_children, &core->children);
+            HYDU_ERR_POP(status, "error allocating topo objects\n");
 
             for (k = 0; k < core->num_children; k++) {
                 thread = &core->children[k];
-                thread->type = HYDT_BIND_OBJ_THREAD;
-                HYDT_bind_cpuset_zero(&thread->cpuset);
+                thread->type = HYDT_TOPO_OBJ_THREAD;
+                HYDT_topo_cpuset_zero(&thread->cpuset);
                 thread->parent = core;
                 thread->num_children = 0;
                 thread->children = NULL;
@@ -125,7 +125,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
         }
     }
 
-    for (i = 0; i < HYDT_bind_info.total_proc_units; i++) {
+    for (i = 0; i < HYDT_topo_info.total_proc_units; i++) {
         ret = PLPA_NAME(get_processor_id) (i, PLPA_NAME_CAPS(COUNT_ONLINE), &proc_id);
         if (ret) {
             HYDU_warn_printf("plpa unable to get processor id\n");
@@ -140,14 +140,14 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
 
         /* We can't distinguish between threads on the same core, so
          * we assign both */
-        for (j = 0; j < HYDT_bind_info.total_proc_units / total_cores; j++) {
+        for (j = 0; j < HYDT_topo_info.total_proc_units / total_cores; j++) {
             thread = &node->children[socket_id].children[core_id].children[j];
             set_cpuset_idx(i, thread);
         }
     }
 
-    /* We have qualified for CPU topology-aware binding support level */
-    *support_level = HYDT_BIND_SUPPORT_CPUTOPO;
+    /* We have qualified for CPU topology support level */
+    *support_level = HYDT_TOPO_SUPPORT_CPUTOPO;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -157,7 +157,7 @@ HYD_status HYDT_bind_plpa_init(HYDT_bind_support_level_t * support_level)
     goto fn_exit;
 }
 
-HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset)
+HYD_status HYDT_topo_plpa_bind(struct HYDT_topo_cpuset_t cpuset)
 {
     int ret, i;
     int isset = 0;
@@ -168,15 +168,15 @@ HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset)
 
     PLPA_NAME_CAPS(CPU_ZERO) (&plpa_cpuset);
     isset = 0;
-    for (i = 0; i < HYDT_bind_info.total_proc_units; i++) {
-        if (HYDT_bind_cpuset_isset(i, cpuset)) {
+    for (i = 0; i < HYDT_topo_info.total_proc_units; i++) {
+        if (HYDT_topo_cpuset_isset(i, cpuset)) {
             PLPA_NAME_CAPS(CPU_SET) (i, &plpa_cpuset);
             isset = 1;
         }
     }
 
     if (isset) {
-        ret = PLPA_NAME(sched_setaffinity) (0, HYDT_bind_info.total_proc_units, &plpa_cpuset);
+        ret = PLPA_NAME(sched_setaffinity) (0, HYDT_topo_info.total_proc_units, &plpa_cpuset);
         if (ret)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "plpa setaffinity failed\n");
     }
@@ -189,7 +189,7 @@ HYD_status HYDT_bind_plpa_process(struct HYDT_bind_cpuset_t cpuset)
     goto fn_exit;
 }
 
-HYD_status HYDT_bind_plpa_finalize(void)
+HYD_status HYDT_topo_plpa_finalize(void)
 {
     HYD_status status = HYD_SUCCESS;
 

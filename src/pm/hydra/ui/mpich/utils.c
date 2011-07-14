@@ -814,7 +814,7 @@ static void binding_help_fn(void)
     printf("        cache -- Cache topology-aware binding\n");
     printf("\n");
 
-    printf("    CPU options (supported on topology-capable binding libs):\n");
+    printf("    CPU options (supported on CPU topology aware libs):\n");
     printf("        cpu --         pack processes as closely to each other as possible\n");
     printf("                       with respect to CPU processing units\n");
     printf("        cpu:sockets -- pack processes as closely to each other as possible\n");
@@ -829,7 +829,7 @@ static void binding_help_fn(void)
     printf("                       threads/SMTs\n");
     printf("\n");
 
-    printf("    Cache options (supported on cache topology aware binding libs):\n");
+    printf("    Cache options (supported on cache topology aware libs):\n");
     printf("        cache --    pack processes as closely to each other as possible with\n");
     printf("                    respect to cache layout\n");
     printf("        cache:l3 -- pack processes as closely to each other as possible\n");
@@ -866,25 +866,25 @@ static HYD_status binding_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void bindlib_help_fn(void)
+static void topolib_help_fn(void)
 {
     printf("\n");
-    printf("-bindlib: Binding library to use\n\n");
+    printf("-topolib: Topology library to use\n\n");
     printf("Notes:\n");
     printf("  * Use the -info option to see what all are compiled in\n\n");
 }
 
-static HYD_status bindlib_fn(char *arg, char ***argv)
+static HYD_status topolib_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (reading_config_file && HYD_server_info.user_global.bindlib) {
+    if (reading_config_file && HYD_server_info.user_global.topolib) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.bindlib, **argv);
-    HYDU_ERR_POP(status, "error setting bindlib\n");
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.topolib, **argv);
+    HYDU_ERR_POP(status, "error setting topolib\n");
 
   fn_exit:
     (*argv)++;
@@ -1082,8 +1082,8 @@ static HYD_status info_fn(char *arg, char ***argv)
                        "    Launchers available:                     %s\n",
                        HYDRA_AVAILABLE_LAUNCHERS);
     HYDU_dump_noprefix(stdout,
-                       "    Binding libraries available:             %s\n",
-                       HYDRA_AVAILABLE_BINDLIBS);
+                       "    Topology libraries available:             %s\n",
+                       HYDRA_AVAILABLE_TOPOLIBS);
     HYDU_dump_noprefix(stdout,
                        "    Resource management kernels available:   %s\n",
                        HYDRA_AVAILABLE_RMKS);
@@ -1573,9 +1573,9 @@ static struct HYD_arg_match_table match_table[] = {
     /* Hybrid programming options */
     {"ranks-per-proc", ranks_per_proc_fn, ranks_per_proc_help_fn},
 
-    /* Process-core binding options */
+    /* Topology options */
     {"binding", binding_fn, binding_help_fn},
-    {"bindlib", bindlib_fn, bindlib_help_fn},
+    {"topolib", topolib_fn, topolib_help_fn},
 
     /* Checkpoint/restart options */
     {"ckpoint-interval", ckpoint_interval_fn, ckpoint_interval_help_fn},

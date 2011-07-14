@@ -6,7 +6,7 @@
 
 #include "pmip.h"
 #include "bsci.h"
-#include "bind.h"
+#include "topo.h"
 #include "ckpoint.h"
 #include "demux.h"
 #include "hydra.h"
@@ -234,11 +234,11 @@ static HYD_status binding_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status bindlib_fn(char *arg, char ***argv)
+static HYD_status topolib_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.bindlib, **argv);
+    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.topolib, **argv);
 
     (*argv)++;
 
@@ -683,7 +683,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
     {"binding", binding_fn, NULL},
-    {"bindlib", bindlib_fn, NULL},
+    {"topolib", topolib_fn, NULL},
     {"ckpointlib", ckpointlib_fn, NULL},
     {"ckpoint-prefix", ckpoint_prefix_fn, NULL},
     {"ckpoint-num", ckpoint_num_fn, NULL},

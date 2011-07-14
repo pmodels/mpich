@@ -8,16 +8,14 @@
  * reproduce, prepare derivative works, and to redistribute to others.
  */
 
-
-
-#ifndef BIND_HWLOC_H_INCLUDED
-#define BIND_HWLOC_H_INCLUDED
+#ifndef TOPO_HWLOC_H_INCLUDED
+#define TOPO_HWLOC_H_INCLUDED
 
 #include <hwloc.h>
 #include <assert.h>
 
-HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level);
-HYD_status HYDT_bind_hwloc_process(struct HYDT_bind_cpuset_t cpuset);
-HYD_status HYDT_bind_hwloc_finalize(void);
+HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level);
+HYD_status HYDT_topo_hwloc_bind(struct HYDT_topo_cpuset_t cpuset);
+HYD_status HYDT_topo_hwloc_finalize(void);
 
-#endif /* BIND_HWLOC_H_INCLUDED */
+#endif /* TOPO_HWLOC_H_INCLUDED */

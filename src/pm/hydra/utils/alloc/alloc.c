@@ -13,7 +13,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->launcher_exec = NULL;
 
     user_global->binding = NULL;
-    user_global->bindlib = NULL;
+    user_global->topolib = NULL;
 
     user_global->ckpointlib = NULL;
     user_global->ckpoint_prefix = NULL;
@@ -44,8 +44,8 @@ void HYDU_finalize_user_global(struct HYD_user_global *user_global)
     if (user_global->binding)
         HYDU_FREE(user_global->binding);
 
-    if (user_global->bindlib)
-        HYDU_FREE(user_global->bindlib);
+    if (user_global->topolib)
+        HYDU_FREE(user_global->topolib);
 
     if (user_global->ckpointlib)
         HYDU_FREE(user_global->ckpointlib);

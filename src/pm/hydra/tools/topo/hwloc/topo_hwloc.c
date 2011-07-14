@@ -8,11 +8,9 @@
  * reproduce, prepare derivative works, and to redistribute to others.
  */
 
-
-
 #include "hydra.h"
-#include "bind.h"
-#include "bind_hwloc.h"
+#include "topo.h"
+#include "topo_hwloc.h"
 
 static hwloc_topology_t topology;
 static int hwloc_initialized = 0;
@@ -61,7 +59,7 @@ static int count_attached_caches(hwloc_obj_t hobj, hwloc_cpuset_t cpuset)
     return count;
 }
 
-static void gather_attached_caches(struct HYDT_bind_obj *obj, hwloc_obj_t hobj,
+static void gather_attached_caches(struct HYDT_topo_obj *obj, hwloc_obj_t hobj,
                                    hwloc_cpuset_t cpuset, int cindex)
 {
     int i;
@@ -77,7 +75,7 @@ static void gather_attached_caches(struct HYDT_bind_obj *obj, hwloc_obj_t hobj,
         gather_attached_caches(obj, hobj->children[i], cpuset, cidx);
 }
 
-static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hobj)
+static HYD_status load_mem_cache_info(struct HYDT_topo_obj *obj, hwloc_obj_t hobj)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -106,17 +104,17 @@ static HYD_status load_mem_cache_info(struct HYDT_bind_obj *obj, hwloc_obj_t hob
     goto fn_exit;
 }
 
-static void set_cpuset_idx(int idx, struct HYDT_bind_obj *obj)
+static void set_cpuset_idx(int idx, struct HYDT_topo_obj *obj)
 {
-    struct HYDT_bind_obj *tmp = obj;
+    struct HYDT_topo_obj *tmp = obj;
 
     do {
-        HYDT_bind_cpuset_set(idx, &tmp->cpuset);
+        HYDT_topo_cpuset_set(idx, &tmp->cpuset);
         tmp = tmp->parent;
     } while (tmp);
 }
 
-HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
+HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
 {
     int node, sock, core, thread;
 
@@ -126,7 +124,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     hwloc_obj_t obj_core;
     hwloc_obj_t obj_thread;
 
-    struct HYDT_bind_obj *node_ptr, *sock_ptr, *core_ptr, *thread_ptr;
+    struct HYDT_topo_obj *node_ptr, *sock_ptr, *core_ptr, *thread_ptr;
 
     HYD_status status = HYD_SUCCESS;
 
@@ -138,10 +136,10 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     hwloc_initialized = 1;
 
     /* Get the max number of processing elements */
-    HYDT_bind_info.total_proc_units = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
+    HYDT_topo_info.total_proc_units = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
 
-    /* We have qualified for basic binding support level */
-    *support_level = HYDT_BIND_SUPPORT_BASIC;
+    /* We have qualified for basic topology support level */
+    *support_level = HYDT_TOPO_SUPPORT_BASIC;
 
     /* Setup the machine level */
     obj_sys = hwloc_get_root_obj(topology);
@@ -150,26 +148,26 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     /* print_obj_info(obj_sys); */
 
     /* init Hydra structure */
-    HYDT_bind_info.machine.type = HYDT_BIND_OBJ_MACHINE;
-    HYDT_bind_cpuset_zero(&HYDT_bind_info.machine.cpuset);
-    HYDT_bind_info.machine.parent = NULL;
+    HYDT_topo_info.machine.type = HYDT_TOPO_OBJ_MACHINE;
+    HYDT_topo_cpuset_zero(&HYDT_topo_info.machine.cpuset);
+    HYDT_topo_info.machine.parent = NULL;
 
-    status = load_mem_cache_info(&HYDT_bind_info.machine, obj_sys);
+    status = load_mem_cache_info(&HYDT_topo_info.machine, obj_sys);
     HYDU_ERR_POP(status, "error loading memory/cache info\n");
 
     /* There is no real node, consider there is one */
-    HYDT_bind_info.machine.num_children = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE);
-    if (!HYDT_bind_info.machine.num_children)
-        HYDT_bind_info.machine.num_children = 1;
-    status = HYDT_bind_alloc_objs(HYDT_bind_info.machine.num_children,
-                                  &HYDT_bind_info.machine.children);
-    HYDU_ERR_POP(status, "error allocating bind objects\n");
+    HYDT_topo_info.machine.num_children = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE);
+    if (!HYDT_topo_info.machine.num_children)
+        HYDT_topo_info.machine.num_children = 1;
+    status = HYDT_topo_alloc_objs(HYDT_topo_info.machine.num_children,
+                                  &HYDT_topo_info.machine.children);
+    HYDU_ERR_POP(status, "error allocating topo objects\n");
 
     /* Setup the nodes levels */
-    for (node = 0; node < HYDT_bind_info.machine.num_children; node++) {
-        node_ptr = &HYDT_bind_info.machine.children[node];
-        node_ptr->type = HYDT_BIND_OBJ_NODE;
-        node_ptr->parent = &HYDT_bind_info.machine;
+    for (node = 0; node < HYDT_topo_info.machine.num_children; node++) {
+        node_ptr = &HYDT_topo_info.machine.children[node];
+        node_ptr->type = HYDT_TOPO_OBJ_NODE;
+        node_ptr->parent = &HYDT_topo_info.machine;
 
         obj_node = hwloc_get_obj_inside_cpuset_by_type(topology, obj_sys->cpuset,
                                                        HWLOC_OBJ_NODE, node);
@@ -179,7 +177,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
 
         if (!obj_node)
             obj_node = obj_sys;
-        HYDT_bind_cpuset_zero(&node_ptr->cpuset);
+        HYDT_topo_cpuset_zero(&node_ptr->cpuset);
         node_ptr->num_children =
             hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_node->cpuset,
                                                    HWLOC_OBJ_SOCKET);
@@ -187,13 +185,13 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
         if (!node_ptr->num_children)
             node_ptr->num_children = 1;
 
-        status = HYDT_bind_alloc_objs(node_ptr->num_children, &node_ptr->children);
-        HYDU_ERR_POP(status, "error allocating bind objects\n");
+        status = HYDT_topo_alloc_objs(node_ptr->num_children, &node_ptr->children);
+        HYDU_ERR_POP(status, "error allocating topo objects\n");
 
         /* Setup the socket level */
         for (sock = 0; sock < node_ptr->num_children; sock++) {
             sock_ptr = &node_ptr->children[sock];
-            sock_ptr->type = HYDT_BIND_OBJ_SOCKET;
+            sock_ptr->type = HYDT_TOPO_OBJ_SOCKET;
             sock_ptr->parent = node_ptr;
 
             obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology, obj_node->cpuset,
@@ -205,7 +203,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
             if (!obj_sock)
                 obj_sock = obj_node;
 
-            HYDT_bind_cpuset_zero(&sock_ptr->cpuset);
+            HYDT_topo_cpuset_zero(&sock_ptr->cpuset);
             sock_ptr->num_children =
                 hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_sock->cpuset,
                                                        HWLOC_OBJ_CORE);
@@ -214,13 +212,13 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
             if (!sock_ptr->num_children)
                 sock_ptr->num_children = 1;
 
-            status = HYDT_bind_alloc_objs(sock_ptr->num_children, &sock_ptr->children);
-            HYDU_ERR_POP(status, "error allocating bind objects\n");
+            status = HYDT_topo_alloc_objs(sock_ptr->num_children, &sock_ptr->children);
+            HYDU_ERR_POP(status, "error allocating topo objects\n");
 
             /* setup the core level */
             for (core = 0; core < sock_ptr->num_children; core++) {
                 core_ptr = &sock_ptr->children[core];
-                core_ptr->type = HYDT_BIND_OBJ_CORE;
+                core_ptr->type = HYDT_TOPO_OBJ_CORE;
                 core_ptr->parent = sock_ptr;
 
                 obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,
@@ -233,7 +231,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                 if (!obj_core)
                     obj_core = obj_sock;
 
-                HYDT_bind_cpuset_zero(&core_ptr->cpuset);
+                HYDT_topo_cpuset_zero(&core_ptr->cpuset);
                 core_ptr->num_children =
                     hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_core->cpuset,
                                                            HWLOC_OBJ_PU);
@@ -242,8 +240,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                 if (!core_ptr->num_children)
                     core_ptr->num_children = 1;
 
-                status = HYDT_bind_alloc_objs(core_ptr->num_children, &core_ptr->children);
-                HYDU_ERR_POP(status, "error allocating bind objects\n");
+                status = HYDT_topo_alloc_objs(core_ptr->num_children, &core_ptr->children);
+                HYDU_ERR_POP(status, "error allocating topo objects\n");
 
                 /* setup the thread level */
                 for (thread = 0; thread < core_ptr->num_children; thread++) {
@@ -251,12 +249,12 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
                                                                      obj_core->cpuset,
                                                                      HWLOC_OBJ_PU, thread);
                     thread_ptr = &core_ptr->children[thread];
-                    thread_ptr->type = HYDT_BIND_OBJ_THREAD;
+                    thread_ptr->type = HYDT_TOPO_OBJ_THREAD;
                     thread_ptr->parent = core_ptr;
                     thread_ptr->num_children = 0;
                     thread_ptr->children = NULL;
 
-                    HYDT_bind_cpuset_zero(&thread_ptr->cpuset);
+                    HYDT_topo_cpuset_zero(&thread_ptr->cpuset);
                     set_cpuset_idx(obj_thread->os_index, thread_ptr);
 
                     status = load_mem_cache_info(thread_ptr, obj_thread);
@@ -266,8 +264,8 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
         }
     }
 
-    /* We have qualified for memory topology-aware binding support level */
-    *support_level = HYDT_BIND_SUPPORT_MEMTOPO;
+    /* We have qualified for memory topology support level */
+    *support_level = HYDT_TOPO_SUPPORT_MEMTOPO;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -277,7 +275,7 @@ HYD_status HYDT_bind_hwloc_init(HYDT_bind_support_level_t * support_level)
     goto fn_exit;
 }
 
-HYD_status HYDT_bind_hwloc_process(struct HYDT_bind_cpuset_t cpuset)
+HYD_status HYDT_topo_hwloc_bind(struct HYDT_topo_cpuset_t cpuset)
 {
     hwloc_cpuset_t hwloc_cpuset = hwloc_cpuset_alloc();
     int i, count = 0;
@@ -286,8 +284,8 @@ HYD_status HYDT_bind_hwloc_process(struct HYDT_bind_cpuset_t cpuset)
     HYDU_FUNC_ENTER();
 
     hwloc_cpuset_zero(hwloc_cpuset);
-    for (i = 0; i < HYDT_bind_info.total_proc_units; i++) {
-        if (HYDT_bind_cpuset_isset(i, cpuset)) {
+    for (i = 0; i < HYDT_topo_info.total_proc_units; i++) {
+        if (HYDT_topo_cpuset_isset(i, cpuset)) {
             hwloc_cpuset_set(hwloc_cpuset, i);
             count++;
         }
@@ -301,7 +299,7 @@ HYD_status HYDT_bind_hwloc_process(struct HYDT_bind_cpuset_t cpuset)
     return status;
 }
 
-HYD_status HYDT_bind_hwloc_finalize(void)
+HYD_status HYDT_topo_hwloc_finalize(void)
 {
     HYD_status status = HYD_SUCCESS;
 

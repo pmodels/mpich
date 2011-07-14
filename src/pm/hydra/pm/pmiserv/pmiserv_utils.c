@@ -444,9 +444,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
             proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.binding);
         }
 
-        if (HYD_server_info.user_global.bindlib) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--bindlib");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.bindlib);
+        if (HYD_server_info.user_global.topolib) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--topolib");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.topolib);
         }
 
         if (HYD_server_info.user_global.ckpointlib) {

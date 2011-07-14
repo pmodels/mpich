@@ -83,10 +83,10 @@ static void usage(void)
     printf("    -ranks-per-proc                  assign so many ranks to each process\n");
 
     printf("\n");
-    printf("  Process-core binding options:\n");
+    printf("  Processor topology options:\n");
     printf("    -binding                         process-to-core binding mode\n");
-    printf("    -bindlib                         process-to-core binding library (%s)\n",
-           HYDRA_AVAILABLE_BINDLIBS);
+    printf("    -topolib                         processor topology library (%s)\n",
+           HYDRA_AVAILABLE_TOPOLIBS);
 
     printf("\n");
     printf("  Checkpoint/Restart options:\n");

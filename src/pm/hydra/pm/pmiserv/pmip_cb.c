@@ -9,7 +9,7 @@
 #include "pmip_pmi.h"
 #include "ckpoint.h"
 #include "demux.h"
-#include "bind.h"
+#include "topo.h"
 #include "hydt_ftb.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
@@ -480,7 +480,7 @@ static HYD_status launch_procs(void)
     struct HYD_exec *exec;
     struct HYD_pmcd_hdr hdr;
     int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
-    struct HYDT_bind_cpuset_t cpuset;
+    struct HYDT_topo_cpuset_t cpuset;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
@@ -525,11 +525,11 @@ static HYD_status launch_procs(void)
             HYD_pmcd_pmip.downstream.pmi_rank[i] = HYD_pmcd_pmip.system_global.pmi_rank;
     }
 
-    status = HYDT_bind_init(HYD_pmcd_pmip.local.local_binding ?
+    status = HYDT_topo_init(HYD_pmcd_pmip.local.local_binding ?
                             HYD_pmcd_pmip.local.local_binding :
                             HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.bindlib);
-    HYDU_ERR_POP(status, "unable to initialize process binding\n");
+                            HYD_pmcd_pmip.user_global.topolib);
+    HYDU_ERR_POP(status, "unable to initialize process topology\n");
 
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,
                                HYD_pmcd_pmip.user_global.ckpoint_num);
@@ -725,7 +725,7 @@ static HYD_status launch_procs(void)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
-            HYDT_bind_pid_to_cpuset(process_id, &cpuset);
+            HYDT_topo_pid_to_cpuset(process_id, &cpuset);
             status = HYDU_create_process(client_args, force_env,
                                          HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? NULL :
                                          &HYD_pmcd_pmip.downstream.in,
@@ -830,8 +830,8 @@ static HYD_status parse_exec_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.binding == NULL && HYD_pmcd_pmip.local.local_binding == NULL)
         HYD_pmcd_pmip.user_global.binding = HYDU_strdup("none");
 
-    if (HYD_pmcd_pmip.user_global.bindlib == NULL && HYDRA_DEFAULT_BINDLIB)
-        HYD_pmcd_pmip.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
+    if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
+        HYD_pmcd_pmip.user_global.topolib = HYDU_strdup(HYDRA_DEFAULT_TOPOLIB);
 
     if (HYD_pmcd_pmip.user_global.ckpointlib == NULL && HYDRA_DEFAULT_CKPOINTLIB)
         HYD_pmcd_pmip.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
