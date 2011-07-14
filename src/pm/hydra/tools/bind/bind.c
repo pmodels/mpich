@@ -134,7 +134,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
 
     /***************************** CPU *****************************/
-    if (!strncmp(binding, "cpu:", strlen("cpu:"))) {
+    if (!strncmp(binding, "cpu", strlen("cpu"))) {
         /* If we reached here, the user requested for CPU topology
          * aware binding. */
         if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_CPUTOPO)
@@ -191,7 +191,7 @@ HYD_status HYDT_bind_init(char *user_binding, char *user_bindlib)
 
 
     /***************************** CACHE *****************************/
-    if (!strncmp(binding, "cache:", strlen("cache:"))) {
+    if (!strncmp(binding, "cache", strlen("cache"))) {
         /* If we reached here, the user requested for memory topology
          * aware binding. */
         if (HYDT_bind_info.support_level < HYDT_BIND_SUPPORT_MEMTOPO)
