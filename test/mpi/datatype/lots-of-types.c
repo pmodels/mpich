@@ -58,7 +58,7 @@ int lots_of_types_test(void)
 {
     int err, errs = 0;
     int i;
-    MPI_Datatype mytypes[1024];
+    MPI_Datatype mytypes[1024] = {MPI_DATATYPE_NULL};
 
     int sendbuf[4] = { 1, 2, 3, 4 };
 
@@ -89,6 +89,8 @@ int lots_of_types_test(void)
 		fprintf(stderr, "MPI_Type_indexed returned error on type %d\n",
 			i);
 	    }
+            mytypes[i] = MPI_DATATYPE_NULL;
+            goto fn_exit;
 	}
 	
 	MPI_Type_commit(&mytypes[i]);
@@ -165,8 +167,10 @@ int lots_of_types_test(void)
 	}
     }
 
+ fn_exit:
     for (i=0; i < 1024; i++) {
-	MPI_Type_free(&mytypes[i]);
+        if (mytypes[i] != MPI_DATATYPE_NULL)
+            MPI_Type_free(&mytypes[i]);
     }
 
     return errs;
