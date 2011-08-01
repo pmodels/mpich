@@ -3187,9 +3187,11 @@ if ($write_mpif) {
     }
     #
     # Fortran 90 types
-    print MPIFFD "       INTEGER MPI_ADDRESS_KIND, MPI_OFFSET_KIND\n";
+    # MPI_INTEGER_KIND added in MPI 2.2
+    print MPIFFD "       INTEGER MPI_ADDRESS_KIND, MPI_OFFSET_KIND, MPI_INTEGER_KIND\n";
     print MPIFFD "       PARAMETER (MPI_ADDRESS_KIND=\@ADDRESS_KIND\@)\n";
     print MPIFFD "       PARAMETER (MPI_OFFSET_KIND=\@OFFSET_KIND\@)\n";
+    print MPIFFD "       PARAMETER (MPI_INTEGER_KIND=\@INTEGER_KIND\@)\n";
     # 
     # C Types.  Note that we need to convert the C hex constant
     # into a decimal constant for Fortran (there is no standard

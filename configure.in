@@ -3678,7 +3678,7 @@ export MPI_C_LONG_DOUBLE_COMPLEX
 #
 # In addition, we need to look at a few additional constants that depend
 # on how the compiler sizes some datatypes.  These are:
-#    STATUS_SIZE, ADDRESS_KIND, and OFFSET_KIND
+#    STATUS_SIZE, INTEGER_KIND, ADDRESS_KIND, and OFFSET_KIND
 # 
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
@@ -4312,7 +4312,7 @@ _EOF
         fi
     fi
 
-    # Get the ADDRESS_KIND and OFFSET_KIND if possible
+    # Get the INTEGER_KIND, ADDRESS_KIND and OFFSET_KIND if possible
     #
     # For Fortran 90, we'll also need MPI_ADDRESS_KIND and MPI_OFFSET_KIND
     # Since our compiler might BE a Fortran 90 compiler, try and determine the
@@ -4351,20 +4351,21 @@ _EOF
             PAC_PROG_FC_INT_KIND(OFFSET_KIND,8,$CROSS_F90_OFFSET_KIND)
         fi
         #
+        PAC_PROG_FC_INT_KIND(INTEGER_KIND,$pac_cv_f77_sizeof_integer,$CROSS_F90_INTEGER_KIND)
+        if test "$INTEGER_KIND" = "-1" ; then
+	    # Wild guess; probably means that Fortran 90 is not available
+	    AC_MSG_WARN([Unable to determine Fortran 90 KIND values for either address-sized integers or offset-sized integers.  Using 4 in that case.])
+            INTEGER_KIND=4
+        fi
+	#
         # Some compilers won't allow a -1 kind (e.g., absoft).  In this case, 
         # use a fallback (sizeof(int) kind)
         if test "$ADDRESS_KIND" = "-1" -o "$OFFSET_KIND" = "-1" ; then
-            PAC_PROG_FC_INT_KIND(simpleintkind,${pac_cv_f77_sizeof_integer})
-            if test "$simpleintkind" = "-1" ; then
-	        # Wild guess; probably means that Fortran 90 is not available
-		AC_MSG_WARN([Unable to determine Fortran 90 KIND values for either address-sized integers or offset-sized integers.  Using 4 in that case.])
-                simpleintkind=4
-            fi
             if test "$ADDRESS_KIND" = "-1" ; then
-	        ADDRESS_KIND=$simpleintkind
+	        ADDRESS_KIND=$INTEGER_KIND
             fi
             if test "$OFFSET_KIND" = "-1" ; then
-	        OFFSET_KIND=$simpleintkind
+	        OFFSET_KIND=$INTEGER_KIND
             fi
         fi
 	AC_LANG_PUSH([Fortran])
@@ -4407,6 +4408,7 @@ _EOF
     fi
     AC_SUBST(ADDRESS_KIND)
     AC_SUBST(OFFSET_KIND)
+    AC_SUBST(INTEGER_KIND)
 
     # Some compilers may require special directives to handle the common 
     # block in a library.  In particular, directives are needed for Microsoft 
