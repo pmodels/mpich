@@ -54,11 +54,13 @@ int main(int argc, char *argv[])
  * running this test; it appears to take ~25MB of memory at this time.
  * -- Rob Ross, 11/2/2005
  */
+#define NUM_DTYPES 1024
+#define NUM_BLOCKS 1024
 int lots_of_types_test(void)
 {
     int err, errs = 0;
     int i;
-    MPI_Datatype mytypes[1024] = {MPI_DATATYPE_NULL};
+    MPI_Datatype mytypes[NUM_DTYPES];
 
     int sendbuf[4] = { 1, 2, 3, 4 };
 
@@ -67,22 +69,24 @@ int lots_of_types_test(void)
     MPI_Status status;
 
     /* note: first element of struct has zero blklen and should be dropped */
-    int disps[1024];
-    int blks[1024];
+    int disps[NUM_BLOCKS];
+    int blks[NUM_BLOCKS];
 
+    for (i=0; i < NUM_DTYPES; i++)
+        mytypes[i] = MPI_DATATYPE_NULL;
 
-    for (i=0; i < 1024; i++) {
+    for (i=0; i < NUM_DTYPES; i++) {
 	int j;
 
 	disps[0] = 0;
 	blks[0]  = 4;
 	
-	for (j=1; j < 1024; j++) {
+	for (j=1; j < NUM_BLOCKS; j++) {
 	    disps[j] = 4 * j;
 	    blks[j]  = (j % 3) + 1;
 	}
 
-	err = MPI_Type_indexed(1024, blks, disps, MPI_INT, &mytypes[i]);
+	err = MPI_Type_indexed(NUM_BLOCKS, blks, disps, MPI_INT, &mytypes[i]);
 	if (err != MPI_SUCCESS) {
 	    errs++;
 	    if (verbose) {
@@ -96,7 +100,7 @@ int lots_of_types_test(void)
 	MPI_Type_commit(&mytypes[i]);
     }
 
-    for (i=0; i < 1024; i++) {
+    for (i=0; i < NUM_DTYPES; i++) {
 	int j;
 	int recvbuf[4] = { -1, -1, -1, -1 };
 
@@ -168,7 +172,7 @@ int lots_of_types_test(void)
     }
 
  fn_exit:
-    for (i=0; i < 1024; i++) {
+    for (i=0; i < NUM_DTYPES; i++) {
         if (mytypes[i] != MPI_DATATYPE_NULL)
             MPI_Type_free(&mytypes[i]);
     }
