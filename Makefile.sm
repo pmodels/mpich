@@ -209,7 +209,7 @@ install-local:
 	    for pm in @other_pm_names@ /dev/null ; do \
 		if [ -d src/pm/$$pm ] ; then \
 		     (cd src/pm/$$pm && \
-		$(MAKE) prefix=${prefix} bindir=${bindir} install-alt ) ; \
+		$(MAKE) DESTDIR=${DESTDIR} prefix=${prefix} bindir=${bindir} install-alt ) ; \
 		fi ; \
 	    done ; \
 	fi

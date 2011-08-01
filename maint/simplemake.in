@@ -194,7 +194,7 @@ if (defined($ENV{"DEBUG_SUBDIRVAR"})) { $gDebugSubdirVar = 1; }
 $quiet = 0;
 
 %libdir = ();
-%liblinker = ();
+%libLinker = ();
 #
 # While simplemake doesn't support ext->other (e.g., .c to .s), 
 # the rules have been added.
@@ -2660,7 +2660,7 @@ sub TargetPostamble {
     if (defined($usertargets{$name})) { 
 	# Problems with recursive make strike again
 	if ($_[0] eq "install") {
-	    print FD "\t\${MAKE} prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} $name$newline";
+	    print FD "\t\${MAKE} DESTDIR=\${DESTDIR} prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} $name$newline";
 	}
 	else {
 	    print FD "\t\${MAKE} $name$newline";
@@ -4124,12 +4124,12 @@ sub TargetInstall {
 	    print FD "\tfor dir in $extradir - ; do \\$newline";
 	    print FD "\t\tif [ \"\$\$dir\" = \"-\" ] ; then break ; fi ;\\$newline";
 #	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) install) ;\\$newline";
-	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} install) ;\\$newline";
+	    print FD "\t\t(cd \$\$dir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${DESTDIR}\${prefix} exec_prefix=\${DESTDIR}\${exec_prefix} bindir=\${DESTDIR}\${bindir} libdir=\${DESTDIR}\${libdir} includedir=\${DESTDIR}\${includedir} install) ;\\$newline";
 	    print FD "\tdone$newline";
 	}
 	else {
 #	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) install)$newline";
-	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${prefix} exec_prefix=\${exec_prefix} bindir=\${bindir} libdir=\${libdir} includedir=\${includedir} install)$newline";
+	    print FD "\t(cd $extradir && \$(MAKE) INSTALL_STRIP_FLAG=\$(INSTALL_STRIP_FLAG) PACKAGE=\$(PACKAGE) prefix=\${DESTDIR}\${prefix} exec_prefix=\${DESTDIR}\${exec_prefix} bindir=\${DESTDIR}\${bindir} libdir=\${DESTDIR}\${libdir} includedir=\${DESTDIR}\${includedir} install)$newline";
 	}
     }
     &TargetPostamble( "install" );
