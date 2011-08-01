@@ -2,4 +2,5 @@ structf_SOURCES    = structf.f90
 indtype_SOURCES    = indtype.f90
 createf90_SOURCES  = createf90.f90
 sizeof_SOURCES     = sizeof.f90
+kinds_SOURCES      = kinds.f90
 
