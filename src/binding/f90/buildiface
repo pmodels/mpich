@@ -71,9 +71,13 @@ $outfile_prefix = "mpi";
 	     'MPI_Grequest_query_function*' => 'EXTERNAL',
 	     'MPI_Grequest_free_function*' => 'EXTERNAL',
 	     'MPI_Grequest_cancel_function*' => 'EXTERNAL',
+	     'MPI_Datarep_conversion_function*' => 'EXTERNAL',
+	     'MPI_Datarep_extent_function*' => 'EXTERNAL',
 	     'MPI_Request' => 'INTEGER',
 	     'MPI_Request*' => 'INTEGER',
 	     'MPI_Request[]' => 'INTEGER %name%(*)',
+	     'MPIO_Request' => 'INTEGER',
+	     'MPIO_Request*' => 'INTEGER',
 	     'MPI_Datatype' => 'INTEGER',
 	     'MPI_Datatype*' => 'INTEGER',
 	     'MPI_Datatype[]' => 'INTEGER %name%(*)',
@@ -90,6 +94,8 @@ $outfile_prefix = "mpi";
 	     'MPI_Aint' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
 	     'MPI_Aint*' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
 	     'MPI_Aint[]' => 'INTEGER(KIND=MPI_ADDRESS_KIND) %name%(*)',
+	     'MPI_Offset' => 'INTEGER(KIND=MPI_OFFSET_KIND)',
+	     'MPI_Offset*' => 'INTEGER(KIND=MPI_OFFSET_KIND)',
 	     'MPI_Info' => 'INTEGER',
 	     'MPI_Info*' => 'INTEGER', # Never an array of info
 	     'MPI_Info[]' => 'INTEGER %name%(*)',
@@ -226,15 +232,16 @@ $outfile_prefix = "mpi";
 
     );
 
-# And we skip them byy default
+# And we skip them by default
 $buildScalarVector = 0;
+$build_io = 1;
 
 # Process any options
 foreach $_ (@ARGV) {
-    if (/-prototype=(.*)/) {
+    if (/--?prototype=(.*)/) {
 	$prototype_file = $1;
     }
-    elsif (/-sv/) {
+    elsif (/--?sv/) {
 	# This obscure argument enables the creation of an interface that
 	# includes the routines that can accept a scalar or a vector
 	# (e.g., a single request or an array of requests) on a single 
@@ -245,7 +252,10 @@ foreach $_ (@ARGV) {
 	$definition_file = $1;
 	$is_MPI = 0;
     }
-    elsif (/-debug/) { $gDebug = 1; }
+    elsif (/--?noio/) {
+	$build_io = 0;
+    }
+    elsif (/--?debug/) { $gDebug = 1; }
     else {
 	print STDERR "Unrecognized argument $_\n";
 	exit 2;
@@ -263,6 +273,14 @@ $ucoutfile_prefix = uc( $outfile_prefix );
 # Read the interface file (e.g., mpi.h.in) and file in the various 
 # data structures (they're in global variables)
 &ReadInterface( $prototype_file, $routine_prefix, $routine_pattern, "mpi_routines" );
+if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) { 
+#    %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1, 
+#		   'HAVE_MPI_INFO' => 1,
+#		    'MPICH2' => 1 );
+    &ReadInterface( "../../mpi/romio/include/mpio.h.in", $routine_prefix,
+	$routine_pattern, "mpi_routines" );
+#    %skipBlocks = ();
+}
 
 #
 # For some MPI routines, we need to distinguish between arguments that are 
