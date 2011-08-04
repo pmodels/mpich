@@ -268,7 +268,15 @@ for \texttt{csh} and \texttt{tcsh}, or
 \begin{verbatim}
     export PATH=/home/you/mpich2-install/bin:$PATH
 \end{verbatim}
-for \texttt{bash} and \texttt{sh}.  Check that everything is in order at
+for \texttt{bash}, and
+\begin{verbatim}
+    PATH=/home/you/mpich2-install/bin:$PATH
+    export PATH
+\end{verbatim}
+for \texttt{sh} (the \texttt{bash} syntax may work for more recent 
+implementations of \texttt{sh}).  % export var=value is an extension and
+                                  % is not in original sh
+Check that everything is in order at
 this point by doing
 \begin{verbatim}
     which mpicc
@@ -277,7 +285,8 @@ this point by doing
 All should refer to the commands in the \texttt{bin} subdirectory of your
 install directory.  It is at this point that you will need to
 duplicate this directory on your other machines if it is not
-in a shared file system such as NFS.
+in a shared file system. % Just having NFS doesn't mean that directories
+                         % are consistencly cross-mounted.
 
 \item Check that you can reach these machines with \texttt{ssh} or
 \texttt{rsh} without entering a password.  You can test by doing
@@ -447,8 +456,9 @@ is appended to the \texttt{CFLAGS} in almost all Makefiles.
 \subsection{Common Non-Default Configuration Options}
 \label{sec:non-default}
 
-A list of \texttt{configure} options is found in
-Section~\ref{configure-options}.  Here we comment on some of them.  
+A brief discussion of some of the \texttt{configure} options is found in
+Section~\ref{configure-options}.  Here we comment on some of the most
+commonly used options.  
 % FIXME: This section needs much more work.
 
 \subsubsection{The Most Important Configure Options}
@@ -469,13 +479,7 @@ Section~\ref{configure-options}.  Here we comment on some of them.
   production applications, and for benchmarking.
 \item[--enable-shared]Build MPICH2 with shared libraries. 
   MPICH2 will try to automatically detect the type of shared library
-  support required. For cases where you want to manually control this,
-  the following options can be used.
-\begin{description}
-\item[\texttt{--enable-sharedlibs=gcc}]for standard gcc on Linux  
-\item[\texttt{--enable-sharedlibs=osx-gcc}]for Mac OS X or
-\item[\texttt{--enable-sharedlibs=solaris-cc}]for cc on Solaris
-\end{description}
+  support required. See Section~\ref{sec:shared-libraries} for more details.
 \item[--with-pm]Select the process manager.  The default is
   \texttt{hydra}; also useful are \texttt{gforker} and \texttt{remshell}.  You can build with
   all three process managers by specifying
@@ -627,7 +631,7 @@ specified by providing the name of the method after a colon in the
 \texttt{--with-device} configure option.  For example,
 \texttt{--with-device=ch3:sock} selects the (older) socket-base communication
 method.
-The supported methods include:
+Methods supported by the MPICH2 group include:
 
 \begin{description}
 \item[ch3:nemesis]This method is our new, high performance method. It
@@ -645,6 +649,12 @@ The supported methods include:
 Most installations should use the default \texttt{ch3:nemesis} method
 for best performance. For platforms that are not supported by nemesis,
 the \texttt{ch3:sock} method is suggested.
+
+MPICH2 is designed to efficiently support all types of systems.  The
+\texttt{ch3:nemesis} device is the primary focus of the MPICH2 group,
+but other research groups and computer vendors can and have developed
+both their own ch3 ``channels'' as well as complete communication
+``devices'' in place of ch3.
 
 
 %
@@ -668,8 +678,8 @@ existing daemons on the system such as ssh, slurm, pbs.
 \item[smpd] This one can be used for both Linux and Windows.  It is the
   only process manager that supports the Windows version of MPICH2.
 \item[gforker] This is a simple process manager that creates all
-  processes on a single machine.  It is useful for both debugging and on
-  shared memory multiprocessors.
+  processes on a single machine.  It is useful both for debugging and
+  for running on shared memory multiprocessors.
 \end{description}
 
 \subsection{hydra} \label{sec:hydra} \texttt{hydra} is the default
@@ -786,8 +796,8 @@ Other MPI test suites are available from
 \url{http://www.mcs.anl.gov/mpi/mpi-test/tsuite.html}.  As part of the MPICH2
 development, we run the MPICH1, MPICH2, C++, and Intel test suites every night
 and post the results on
-\url{http://www.mcs.anl.gov/mpi/mpich1/micronotes/mpich2-status/}.  Other
-tests are run on an occasional basis.  
+\url{http://www.mcs.anl.gov/research/projects/mpich2/nightly/old/}.
+Other tests are run on an occasional basis.  
 
 % \subsection{Using the Intel Test Suite}
 % \label{sec:intel}
@@ -999,6 +1009,18 @@ distribution and the Unix commands described in previous sections.  This
 will not build the same libraries as described in this section.  It will 
 build a ``Unix'' distribution that runs under \texttt{cygwin}.
 
+It is best to use paths that do not contain embedded spaces when
+building MPICH2 under \texttt{cygwin}.  For example, consider using 
+\begin{verbatim}
+   c:\programFiles\mpich2%MPICH2_VERSION%
+\end{verbatim}
+instead of 
+\begin{verbatim}
+   c:\Program Files\mpich2%MPICH2_VERSION%
+\end{verbatim}
+It may also help to have \texttt{cygwin} installed into a path with no
+embedded blanks.
+
 \subsection{\texttt{Vista/Windows 7/Windows Server 2008 Users}}
 \label{sec:Vista_install}
 To install MPICH version \texttt{1.3} or later please follow the 
@@ -1026,6 +1048,9 @@ top-level configure, use:
 \end{verbatim}
 Not all of these options may be fully supported yet.  
 
+% Fixme:  Explain some of them, at least the ones that we ask the
+% users to try.
+
 \paragraph{Notes on the configure options.}
 The \texttt{--with-htmldir} and \texttt{--with-docdir} options specify the 
 directories into which the documentation will be installed by \texttt{make
@@ -1043,7 +1068,3 @@ directories into which the documentation will be installed by \texttt{make
 % There should also be a way to select ``all'' in such a way that the
 % document can still flow well, such as
 % \ifdevall ... \else \ifdevchiii \else \ifdevmm \fi \fi \fi
-
-
-
-
