@@ -111,6 +111,11 @@ static int external32_basic_convert(char *dest_buf,
     else
     {
         /* TODO */
+	MPIU_Error_printf( "Conversion of types whose size is not the same as the size in externa32 is not supported\n" );
+	MPID_Abort( 0, MPI_SUCCESS, 1, "Aborting with internal error" );
+	/* There is no way to return an error code, so an abort is the 
+	   only choice (the return value of this routine is not 
+	   an error code) */
     }
     return 0;
 }
@@ -154,6 +159,11 @@ static int external32_float_convert(char *dest_buf,
     else
     {
         /* TODO */
+	MPIU_Error_printf( "Conversion of types whose size is not the same as the size in externa32 is not supported\n" );
+	MPID_Abort( 0, MPI_SUCCESS, 1, "Aborting with internal error" );
+	/* There is no way to return an error code, so an abort is the 
+	   only choice (the return value of this routine is not 
+	   an error code) */
     }
     return 0;
 }
