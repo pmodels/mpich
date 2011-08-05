@@ -283,19 +283,19 @@ foreach my $p (@{$params->{parameters}}) {
     my ($int_val, $str_val, $double_val, $range_val) = (-1, qq(""), "0.0", "{0,0}");
 
     if ($p->{type} eq "string") {
-        $str_val = fmt_default($p->{default}, $p->{type});
+        $str_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
     }
     elsif ($p->{type} eq "int") {
-        $int_val = fmt_default($p->{default}, $p->{type});
+        $int_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
     }
     elsif ($p->{type} eq "double") {
-        $double_val = fmt_default($p->{default}, $p->{type});
+        $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
     }
     elsif ($p->{type} eq "boolean") {
-        $int_val = fmt_default($p->{default}, $p->{type});
+        $int_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
     }
     elsif ($p->{type} eq "range") {
-        $range_val = fmt_default($p->{default}, $p->{type});
+        $range_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
     }
     else {
         die "unknown type $p->{type}, stopped";
@@ -308,8 +308,8 @@ foreach my $p (@{$params->{parameters}}) {
         qq(${uc_ns}_ID_%s,\n) .
         qq(      "%s",\n) .
         qq(      "%s",\n) .
-        #          T    I   D   S
-        qq(      { %s, %d, %s, %s, %s } },\n),
+        #          T    I   D   S  R
+        qq(      { %s, %s, %s, %s, %s } },\n),
         $p->{name}, $p->{name}, $desc,
         $type_enum_val, $int_val, $double_val, $str_val, $range_val;
 }
@@ -323,7 +323,7 @@ foreach my $p (@{$params->{parameters}}) {
     printf PARAM_C "%s ${uc_ns}_%s = %s;\n",
         type2ctype($p->{type}),
         $p->{name},
-        fmt_default($p->{default}, $p->{type});
+        fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
 }
 
 # FIXME the mpi_errno bit is MPICH-specific
@@ -380,6 +380,7 @@ foreach my $p (@{$params->{parameters}}) {
     my @env_names = ();
     my $first;
     my $alt;
+    my $default;
 
     # process extra envs first so the primary always wins
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
@@ -400,6 +401,8 @@ foreach my $p (@{$params->{parameters}}) {
     }
 
     print PARAM_README wrap("    Description: ", "        ", $p->{description} . "\n");
+    $default = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+    print PARAM_README "    Default: $default\n";
     print PARAM_README "\n";
 }
 
@@ -469,8 +472,17 @@ sub type2ctype {
 
 # transform a default value into a C value
 sub fmt_default {
+    my $name = shift;
     my $val = shift;
+    my $literalval = shift;
     my $type = shift;
+
+    if (defined($literalval)) {
+        die "Both \"default\" and \"defaultliteral\" fields were specified for parameter \"$name\", stopped" if defined($val);
+        return qq($literalval);
+    }
+
+    die "Exactly one of \"default\" or \"defaultliteral\" fields must be specified for parameter \"$name\", stopped" unless defined($val);
 
     if ($type eq "string") {
         $val =~ s/"/\\"/g;
