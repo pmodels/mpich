@@ -104,16 +104,6 @@ static HYD_status load_mem_cache_info(struct HYDT_topo_obj *obj, hwloc_obj_t hob
     goto fn_exit;
 }
 
-static void set_cpuset_idx(int idx, struct HYDT_topo_obj *obj)
-{
-    struct HYDT_topo_obj *tmp = obj;
-
-    do {
-        HYDT_topo_cpuset_set(idx, &tmp->cpuset);
-        tmp = tmp->parent;
-    } while (tmp);
-}
-
 HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
 {
     int node, sock, core, thread;
@@ -125,6 +115,7 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
     hwloc_obj_t obj_thread;
 
     struct HYDT_topo_obj *node_ptr, *sock_ptr, *core_ptr, *thread_ptr;
+    struct HYDT_topo_obj *tmp;
 
     HYD_status status = HYD_SUCCESS;
 
@@ -255,7 +246,9 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
                     thread_ptr->children = NULL;
 
                     HYDT_topo_cpuset_zero(&thread_ptr->cpuset);
-                    set_cpuset_idx(obj_thread->os_index, thread_ptr);
+
+                    for (tmp = thread_ptr; tmp; tmp = tmp->parent)
+                        HYDT_topo_cpuset_set(obj_thread->os_index, &tmp->cpuset);
 
                     status = load_mem_cache_info(thread_ptr, obj_thread);
                     HYDU_ERR_POP(status, "error loading memory/cache info\n");
