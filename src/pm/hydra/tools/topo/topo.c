@@ -241,24 +241,24 @@ static HYD_status handle_cache_binding(const char *binding)
 
             elem = strtok(NULL, ",");
         } while (elem);
+
+        for (obj = &HYDT_topo_info.machine;;) {
+            /* see if the target cache depth is present in this object */
+            for (i = 0; i < obj->mem.num_caches; i++) {
+                if (obj->mem.cache_depth[i] == cache_depth)
+                    leaf = obj->type;
+                else if (obj->mem.cache_depth[i] < cache_depth && leaf == -1)
+                    leaf = obj->type;
+            }
+
+            /* if we are not at the end yet, move one level deeper */
+            if (obj->num_children)
+                obj = &obj->children[0];
+            else
+                break;
+        }
     }
     HYDU_FREE(bindstr);
-
-    for (obj = &HYDT_topo_info.machine;;) {
-        /* see if the target cache depth is present in this object */
-        for (i = 0; i < obj->mem.num_caches; i++) {
-            if (obj->mem.cache_depth[i] == cache_depth)
-                leaf = obj->type;
-            else if (obj->mem.cache_depth[i] < cache_depth && leaf == -1)
-                leaf = obj->type;
-        }
-
-        /* if we are not at the end yet, move one level deeper */
-        if (obj->num_children)
-            obj = &obj->children[0];
-        else
-            break;
-    }
 
     if (leaf == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
