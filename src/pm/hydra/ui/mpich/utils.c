@@ -1336,7 +1336,7 @@ static HYD_status set_default_values(void)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
 
     if (hostname_propagation || hostname_propagation == -1)
-        HYD_server_info.interface_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
+        HYD_server_info.iface_ip_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
 
   fn_exit:
     return status;

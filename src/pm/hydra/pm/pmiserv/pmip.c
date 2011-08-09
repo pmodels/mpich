@@ -48,7 +48,7 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
-    HYD_pmcd_pmip.local.interface_env_name = NULL;
+    HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.local_binding = NULL;
     HYD_pmcd_pmip.local.spawner_kvs_name = NULL;
@@ -114,8 +114,8 @@ static void cleanup_params(void)
 
 
     /* Local */
-    if (HYD_pmcd_pmip.local.interface_env_name)
-        HYDU_FREE(HYD_pmcd_pmip.local.interface_env_name);
+    if (HYD_pmcd_pmip.local.iface_ip_env_name)
+        HYDU_FREE(HYD_pmcd_pmip.local.iface_ip_env_name);
 
     if (HYD_pmcd_pmip.local.hostname)
         HYDU_FREE(HYD_pmcd_pmip.local.hostname);

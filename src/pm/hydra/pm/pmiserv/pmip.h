@@ -62,7 +62,7 @@ struct HYD_pmcd_pmip {
     struct {
         int id;
         int pgid;
-        char *interface_env_name;
+        char *iface_ip_env_name;
         char *hostname;
         char *local_binding;
 
