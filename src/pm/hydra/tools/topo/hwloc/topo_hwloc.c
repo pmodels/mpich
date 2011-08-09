@@ -46,67 +46,70 @@ static void print_obj_info(hwloc_obj_t obj)
         print_obj_info(obj->children[i]);
 }
 
-static int count_attached_caches(hwloc_obj_t hobj, hwloc_cpuset_t cpuset)
+static int hwloc_to_hydra_cpuset_dup(hwloc_cpuset_t hwloc_cpuset,
+                                     struct HYDT_topo_cpuset_t *hydra_cpuset)
 {
-    int count = 0, i;
+    int i, count = 0;
 
-    if (hobj->type == HWLOC_OBJ_CACHE && !hwloc_cpuset_compare(hobj->cpuset, cpuset))
-        count++;
-
-    for (i = 0; i < hobj->arity; i++)
-        count += count_attached_caches(hobj->children[i], cpuset);
+    HYDT_topo_cpuset_zero(hydra_cpuset);
+    for (i = 0; i < HYDT_topo_info.total_proc_units; i++) {
+        if (hwloc_cpuset_isset(hwloc_cpuset, i)) {
+            HYDT_topo_cpuset_set(i, hydra_cpuset);
+            count++;
+        }
+    }
 
     return count;
 }
 
-static void gather_attached_caches(struct HYDT_topo_obj *obj, hwloc_obj_t hobj,
-                                   hwloc_cpuset_t cpuset, int cindex)
+static int hydra_to_hwloc_cpuset_dup(struct HYDT_topo_cpuset_t hydra_cpuset,
+                                     hwloc_cpuset_t hwloc_cpuset)
+{
+    int i, count = 0;
+
+    hwloc_cpuset_zero(hwloc_cpuset);
+    for (i = 0; i < HYDT_topo_info.total_proc_units; i++) {
+        if (HYDT_topo_cpuset_isset(i, hydra_cpuset)) {
+            hwloc_cpuset_set(hwloc_cpuset, i);
+            count++;
+        }
+    }
+
+    return count;
+}
+
+static int get_cache_nbobjs(hwloc_obj_t hobj, hwloc_cpuset_t cpuset)
+{
+    int count = 0, i;
+
+    /* count all cache objects which have the target cpuset map */
+    if (hobj->type == HWLOC_OBJ_CACHE && !hwloc_cpuset_compare(hobj->cpuset, cpuset))
+        count++;
+
+    for (i = 0; i < hobj->arity; i++)
+        count += get_cache_nbobjs(hobj->children[i], cpuset);
+
+    return count;
+}
+
+static void load_cache_objs(hwloc_obj_t hobj, hwloc_cpuset_t cpuset,
+                            struct HYDT_topo_obj *obj, int *idx)
 {
     int i;
-    int cidx = cindex;
 
     if (hobj->type == HWLOC_OBJ_CACHE && !hwloc_cpuset_compare(hobj->cpuset, cpuset)) {
-        obj->mem.cache_size[cidx] = hobj->attr->cache.size;
-        obj->mem.cache_depth[cidx] = hobj->attr->cache.depth;
-        cidx++;
+        obj->mem.cache_size[*idx] = hobj->attr->cache.size;
+        obj->mem.cache_depth[*idx] = hobj->attr->cache.depth;
+        (*idx)++;
     }
 
     for (i = 0; i < hobj->arity; i++)
-        gather_attached_caches(obj, hobj->children[i], cpuset, cidx);
-}
-
-static HYD_status load_mem_cache_info(struct HYDT_topo_obj *obj, hwloc_obj_t hobj)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (obj == NULL || hobj == NULL)
-        goto fn_exit;
-
-    obj->mem.local_mem_size = hobj->memory.local_memory;
-
-    /* Check how many cache objects match out cpuset */
-    obj->mem.num_caches = count_attached_caches(hobj, hobj->cpuset);
-
-    if (obj->mem.num_caches) {
-        HYDU_MALLOC(obj->mem.cache_size, size_t *, obj->mem.num_caches * sizeof(size_t),
-                    status);
-        memset(obj->mem.cache_size, 0, obj->mem.num_caches * sizeof(size_t));
-        HYDU_MALLOC(obj->mem.cache_depth, int *, obj->mem.num_caches * sizeof(int), status);
-        memset(obj->mem.cache_depth, 0, obj->mem.num_caches * sizeof(int));
-
-        gather_attached_caches(obj, hobj, hobj->cpuset, 0);
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+        load_cache_objs(hobj->children[i], cpuset, obj, idx);
 }
 
 HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
 {
-    int node, sock, core, thread;
+    int node, sock, core, thread, idx;
 
     hwloc_obj_t obj_sys;
     hwloc_obj_t obj_node;
@@ -115,7 +118,6 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
     hwloc_obj_t obj_thread;
 
     struct HYDT_topo_obj *node_ptr, *sock_ptr, *core_ptr, *thread_ptr;
-    struct HYDT_topo_obj *tmp;
 
     HYD_status status = HYD_SUCCESS;
 
@@ -143,11 +145,8 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
     HYDT_topo_cpuset_zero(&HYDT_topo_info.machine.cpuset);
     HYDT_topo_info.machine.parent = NULL;
 
-    status = load_mem_cache_info(&HYDT_topo_info.machine, obj_sys);
-    HYDU_ERR_POP(status, "error loading memory/cache info\n");
-
-    /* There is no real node, consider there is one */
     HYDT_topo_info.machine.num_children = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE);
+    /* If there is no real node, consider there is one */
     if (!HYDT_topo_info.machine.num_children)
         HYDT_topo_info.machine.num_children = 1;
     status = HYDT_topo_alloc_objs(HYDT_topo_info.machine.num_children,
@@ -159,16 +158,31 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
         node_ptr = &HYDT_topo_info.machine.children[node];
         node_ptr->type = HYDT_TOPO_OBJ_NODE;
         node_ptr->parent = &HYDT_topo_info.machine;
-
-        obj_node = hwloc_get_obj_inside_cpuset_by_type(topology, obj_sys->cpuset,
-                                                       HWLOC_OBJ_NODE, node);
-
-        status = load_mem_cache_info(node_ptr, obj_node);
-        HYDU_ERR_POP(status, "error loading memory/cache info\n");
-
-        if (!obj_node)
-            obj_node = obj_sys;
         HYDT_topo_cpuset_zero(&node_ptr->cpuset);
+
+        if (!(obj_node = hwloc_get_obj_inside_cpuset_by_type(topology, obj_sys->cpuset,
+                                                             HWLOC_OBJ_NODE, node)))
+            obj_node = obj_sys;
+
+        /* copy the hwloc cpuset to hydra format */
+        hwloc_to_hydra_cpuset_dup(obj_node->cpuset, &node_ptr->cpuset);
+
+        /* memory information */
+        node_ptr->mem.local_mem_size = obj_node->memory.local_memory;
+
+        /* find the number of cache objects which match my cpuset */
+        node_ptr->mem.num_caches = get_cache_nbobjs(obj_sys, obj_node->cpuset);
+
+        /* add the actual cache objects that match my cpuset */
+        if (node_ptr->mem.num_caches) {
+            HYDU_MALLOC(node_ptr->mem.cache_size, size_t *,
+                        node_ptr->mem.num_caches * sizeof(size_t), status);
+            HYDU_MALLOC(node_ptr->mem.cache_depth, int *,
+                        node_ptr->mem.num_caches * sizeof(int), status);
+            idx = 0;
+            load_cache_objs(obj_sys, obj_node->cpuset, node_ptr, &idx);
+        }
+
         node_ptr->num_children =
             hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_node->cpuset,
                                                    HWLOC_OBJ_SOCKET);
@@ -184,17 +198,31 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
             sock_ptr = &node_ptr->children[sock];
             sock_ptr->type = HYDT_TOPO_OBJ_SOCKET;
             sock_ptr->parent = node_ptr;
+            HYDT_topo_cpuset_zero(&sock_ptr->cpuset);
 
-            obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology, obj_node->cpuset,
-                                                           HWLOC_OBJ_SOCKET, sock);
-
-            status = load_mem_cache_info(sock_ptr, obj_sock);
-            HYDU_ERR_POP(status, "error loading memory/cache info\n");
-
-            if (!obj_sock)
+            if (!(obj_sock = hwloc_get_obj_inside_cpuset_by_type(topology, obj_node->cpuset,
+                                                                 HWLOC_OBJ_SOCKET, sock)))
                 obj_sock = obj_node;
 
-            HYDT_topo_cpuset_zero(&sock_ptr->cpuset);
+            /* copy the hwloc cpuset to hydra format */
+            hwloc_to_hydra_cpuset_dup(obj_sock->cpuset, &sock_ptr->cpuset);
+
+            /* memory information */
+            sock_ptr->mem.local_mem_size = obj_sock->memory.local_memory;
+
+            /* find the number of cache objects which match my cpuset */
+            sock_ptr->mem.num_caches = get_cache_nbobjs(obj_sys, obj_sock->cpuset);
+
+            /* add the actual cache objects that match my cpuset */
+            if (sock_ptr->mem.num_caches) {
+                HYDU_MALLOC(sock_ptr->mem.cache_size, size_t *,
+                            sock_ptr->mem.num_caches * sizeof(size_t), status);
+                HYDU_MALLOC(sock_ptr->mem.cache_depth, int *,
+                            sock_ptr->mem.num_caches * sizeof(int), status);
+                idx = 0;
+                load_cache_objs(obj_sys, obj_sock->cpuset, sock_ptr, &idx);
+            }
+
             sock_ptr->num_children =
                 hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_sock->cpuset,
                                                        HWLOC_OBJ_CORE);
@@ -211,18 +239,32 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
                 core_ptr = &sock_ptr->children[core];
                 core_ptr->type = HYDT_TOPO_OBJ_CORE;
                 core_ptr->parent = sock_ptr;
+                HYDT_topo_cpuset_zero(&core_ptr->cpuset);
 
-                obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,
-                                                               obj_sock->cpuset,
-                                                               HWLOC_OBJ_CORE, core);
-
-                status = load_mem_cache_info(core_ptr, obj_core);
-                HYDU_ERR_POP(status, "error loading memory/cache info\n");
-
-                if (!obj_core)
+                if (!(obj_core = hwloc_get_obj_inside_cpuset_by_type(topology,
+                                                                     obj_sock->cpuset,
+                                                                     HWLOC_OBJ_CORE, core)))
                     obj_core = obj_sock;
 
-                HYDT_topo_cpuset_zero(&core_ptr->cpuset);
+                /* copy the hwloc cpuset to hydra format */
+                hwloc_to_hydra_cpuset_dup(obj_core->cpuset, &core_ptr->cpuset);
+
+                /* memory information */
+                core_ptr->mem.local_mem_size = obj_core->memory.local_memory;
+
+                /* find the number of cache objects which match my cpuset */
+                core_ptr->mem.num_caches = get_cache_nbobjs(obj_sys, obj_core->cpuset);
+
+                /* add the actual cache objects that match my cpuset */
+                if (core_ptr->mem.num_caches) {
+                    HYDU_MALLOC(core_ptr->mem.cache_size, size_t *,
+                                core_ptr->mem.num_caches * sizeof(size_t), status);
+                    HYDU_MALLOC(core_ptr->mem.cache_depth, int *,
+                                core_ptr->mem.num_caches * sizeof(int), status);
+                    idx = 0;
+                    load_cache_objs(obj_sys, obj_core->cpuset, core_ptr, &idx);
+                }
+
                 core_ptr->num_children =
                     hwloc_get_nbobjs_inside_cpuset_by_type(topology, obj_core->cpuset,
                                                            HWLOC_OBJ_PU);
@@ -236,22 +278,36 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
 
                 /* setup the thread level */
                 for (thread = 0; thread < core_ptr->num_children; thread++) {
-                    obj_thread = hwloc_get_obj_inside_cpuset_by_type(topology,
-                                                                     obj_core->cpuset,
-                                                                     HWLOC_OBJ_PU, thread);
                     thread_ptr = &core_ptr->children[thread];
                     thread_ptr->type = HYDT_TOPO_OBJ_THREAD;
                     thread_ptr->parent = core_ptr;
                     thread_ptr->num_children = 0;
                     thread_ptr->children = NULL;
-
                     HYDT_topo_cpuset_zero(&thread_ptr->cpuset);
 
-                    for (tmp = thread_ptr; tmp; tmp = tmp->parent)
-                        HYDT_topo_cpuset_set(obj_thread->os_index, &tmp->cpuset);
+                    if (!(obj_thread = hwloc_get_obj_inside_cpuset_by_type(topology,
+                                                                           obj_core->cpuset,
+                                                                           HWLOC_OBJ_PU, thread)))
+                        HYDU_ERR_POP(status, "unable to detect processing units\n");
 
-                    status = load_mem_cache_info(thread_ptr, obj_thread);
-                    HYDU_ERR_POP(status, "error loading memory/cache info\n");
+                    /* copy the hwloc cpuset to hydra format */
+                    hwloc_to_hydra_cpuset_dup(obj_thread->cpuset, &thread_ptr->cpuset);
+
+                    /* memory information */
+                    thread_ptr->mem.local_mem_size = obj_thread->memory.local_memory;
+
+                    /* find the number of cache objects which match my cpuset */
+                    thread_ptr->mem.num_caches = get_cache_nbobjs(obj_sys, obj_thread->cpuset);
+
+                    /* add the actual cache objects that match my cpuset */
+                    if (thread_ptr->mem.num_caches) {
+                        HYDU_MALLOC(thread_ptr->mem.cache_size, size_t *,
+                                    thread_ptr->mem.num_caches * sizeof(size_t), status);
+                        HYDU_MALLOC(thread_ptr->mem.cache_depth, int *,
+                                    thread_ptr->mem.num_caches * sizeof(int), status);
+                        idx = 0;
+                        load_cache_objs(obj_sys, obj_thread->cpuset, thread_ptr, &idx);
+                    }
                 }
             }
         }
@@ -271,20 +327,11 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
 HYD_status HYDT_topo_hwloc_bind(struct HYDT_topo_cpuset_t cpuset)
 {
     hwloc_cpuset_t hwloc_cpuset = hwloc_cpuset_alloc();
-    int i, count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    hwloc_cpuset_zero(hwloc_cpuset);
-    for (i = 0; i < HYDT_topo_info.total_proc_units; i++) {
-        if (HYDT_topo_cpuset_isset(i, cpuset)) {
-            hwloc_cpuset_set(hwloc_cpuset, i);
-            count++;
-        }
-    }
-
-    if (count)
+    if (hydra_to_hwloc_cpuset_dup(cpuset, hwloc_cpuset))
         hwloc_set_cpubind(topology, hwloc_cpuset, HWLOC_CPUBIND_THREAD);
 
     hwloc_cpuset_free(hwloc_cpuset);
