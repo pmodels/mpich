@@ -906,6 +906,12 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 **toomanynbc: too many outstanding nonblocking collectives detected
 
+**ifname_and_hostname:Only one of MPICH_INTERFACE_HOSTNAME and MPICH_NETWORK_IFACE environment variables are allowed, but both were set.
+**iface_notfound:The network interface specified in MPICH_NETWORK_IFACE was not found.
+**iface_notfound %s:The network interface, \"%s\", specified in MPICH_NETWORK_IFACE was not found.
+
+**procnamefailed:Failed to get processor name
+
 #
 # mpi functions
 #

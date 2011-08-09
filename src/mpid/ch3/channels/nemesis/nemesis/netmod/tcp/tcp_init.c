@@ -5,9 +5,18 @@
  */
 
 #include "tcp_impl.h"
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
@@ -218,19 +227,33 @@ fn_fail:
 static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
                                 MPIDU_Sock_ifaddr_t *ifaddr)
 {
-    char *ifname_string;
+    const char *ifname_string;
     int mpi_errno = MPI_SUCCESS;
     int ifaddrFound = 0;
 
+    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_INTERFACE_HOSTNAME && MPIR_PARAM_NETWORK_IFACE, mpi_errno, MPI_ERR_OTHER, "**ifname_and_hostname");
+    
     /* Set "not found" for ifaddr */
     ifaddr->len = 0;
 
-    /* Check for the name supplied through an environment variable */
-    ifname_string = getenv("MPICH_INTERFACE_HOSTNAME");
+    /* Check if user specified ethernet interface name, e.g., ib0, eth1 */
+    if (MPIR_PARAM_NETWORK_IFACE) {
+        mpi_errno = MPIDI_Get_IP_for_iface(MPIR_PARAM_NETWORK_IFACE, ifaddr, &ifaddrFound);
+        MPIU_ERR_CHKANDJUMP1(mpi_errno || !ifaddrFound, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_PARAM_NETWORK_IFACE);
+        
+        MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
+                                                "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%#08x",
+                                                ifaddr->type, ifaddr->len, *((unsigned int *)ifaddr->ifaddr)));
+        goto fn_exit;
+    }
+
+    /* Check for a host name supplied through an environment variable */
+    ifname_string = MPIR_PARAM_INTERFACE_HOSTNAME;
     if (!ifname_string) {
 	/* See if there is a per-process name for the interfaces (e.g.,
 	   the process manager only delievers the same values for the 
-	   environment to each process */
+	   environment to each process.  There's no way to do this with
+           the param interface, so we need to use getenv() here. */
 	char namebuf[1024];
 	MPIU_Snprintf( namebuf, sizeof(namebuf), 
 		       "MPICH_INTERFACE_HOSTNAME_R%d", myRank );
@@ -252,8 +275,10 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     if (!ifname_string) {
 	int len;
 
-	/* If we have nothing, then use the host name */
+	/* User did not specify a hostname.  Look it up. */
 	mpi_errno = MPID_Get_processor_name(ifname, maxIfname, &len );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
 	ifname_string = ifname;
 
 	/* If we didn't find a specific name, then try to get an IP address
@@ -261,6 +286,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	   this platform.  Otherwise, we'll drop into the next step that uses 
 	   the ifname */
 	mpi_errno = MPIDI_GetIPInterface( ifaddr, &ifaddrFound );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
 	/* Copy this name into the output name */
@@ -269,32 +295,27 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
     /* If we don't have an IP address, try to get it from the name */
     if (!ifaddrFound) {
-	struct hostent *info;
-	info = gethostbyname( ifname_string );
-	if (info && info->h_addr_list) {
-	    /* Use the primary address */
-	    ifaddr->len  = info->h_length;
-	    ifaddr->type = info->h_addrtype;
-	    if (ifaddr->len > sizeof(ifaddr->ifaddr)) {
-		/* If the address won't fit in the field, reset to
-		   no address */
-		ifaddr->len = 0;
-		ifaddr->type = -1;
-	    }
-	    else
-		MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
-	}
-        else {
-            /* ifname_string may be an interface name like "en1", "ib0", or
-             * "eth2".  Look for the IP address associated with it. */
-            mpi_errno = MPIDI_Get_IP_for_iface(ifname_string, ifaddr, &ifaddrFound);
-            /* don't MPIU_ERR_POP, failure here can be safely ignored */
-            if (ifaddrFound && mpi_errno == MPI_SUCCESS) {
-                MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
-                                  "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%#08x",
-                                  ifaddr->type, ifaddr->len, *((unsigned int *)ifaddr->ifaddr)));
-            }
+        int i;
+	struct hostent *info = NULL;
+        for (i = 0; i < MPIR_PARAM_HOST_LOOKUP_RETRIES; ++i) {
+            info = gethostbyname( ifname_string );
+            if (info || h_errno != TRY_AGAIN)
+                break;
         }
+        MPIU_ERR_CHKANDJUMP2(!info || !info->h_addr_list, mpi_errno, MPI_ERR_OTHER, "**gethostbyname", "**gethostbyname %s %d", ifname_string, h_errno);
+        
+        /* Use the primary address */
+        ifaddr->len  = info->h_length;
+        ifaddr->type = info->h_addrtype;
+        if (ifaddr->len > sizeof(ifaddr->ifaddr)) {
+            /* If the address won't fit in the field, reset to
+               no address */
+            ifaddr->len = 0;
+            ifaddr->type = -1;
+            MPIU_ERR_INTERNAL(mpi_errno, "Address too long to fit in field");
+        } else {
+            MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
+	}
     }
 
 fn_exit:

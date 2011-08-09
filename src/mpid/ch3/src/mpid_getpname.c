@@ -24,29 +24,26 @@ static inline void setupProcessorName( void );
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_Get_processor_name(char * name, int namelen, int * resultlen)
 {
+    int mpi_errno = MPI_SUCCESS;
     /* FIXME: Make thread safe */
     if (!setProcessorName) {
 	setupProcessorName( );
 	setProcessorName = 1;
     }
-    if (processorNameLen > 0)
-    {
-	/* MPIU_Strncpy only copies until (and including) the null, 
-	   unlike strncpy, it does not blank pad.  This is a good thing
-	   here, because users don't always allocated MPI_MAX_PROCESSOR_NAME
-	   characters */
-	MPIU_Strncpy(name, processorName, namelen );
-	if (resultlen) 
-	    *resultlen = processorNameLen;
-    }
-    /* --BEGIN ERROR HANDLING-- */
-    else
-    {
-	return MPI_ERR_UNKNOWN;
-    }
-    /* --END ERROR HANDLING-- */
+    MPIU_ERR_CHKANDJUMP(processorNameLen <= 0, mpi_errno, MPI_ERR_OTHER, "**procnamefailed");
 
-    return MPI_SUCCESS;
+    /* MPIU_Strncpy only copies until (and including) the null,
+       unlike strncpy, it does not blank pad.  This is a good thing
+       here, because users don't always allocated MPI_MAX_PROCESSOR_NAME
+       characters */
+    MPIU_Strncpy(name, processorName, namelen );
+    if (resultlen)
+        *resultlen = processorNameLen;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* Here we define an internal routine to get the processor name, based on 

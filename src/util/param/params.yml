@@ -276,6 +276,37 @@ parameters:
         If non-empty, this parameter specifies which network module
         should be used for communication.
   
+    - category    : nemesis
+      name        : INTERFACE_HOSTNAME
+      type        : string
+      defaultliteral : NULL
+      description : >-
+        If non-NULL, this parameter specifies the IP address that
+        other processes should use when connecting to this process.
+        This parameter is mutually exclusive with the
+        MPICH_NETWORK_IFACE parameter and it is an error to set them
+        both.
+
+    - category    : nemesis
+      name        : NETWORK_IFACE
+      type        : string
+      defaultliteral : NULL
+      description : >-
+        If non-NULL, this parameter specifies which pseudo-ethernet
+        interface the tcp netmod should use (e.g., "eth1", "ib0"). 
+        Note, this is a Linux-specific parameter.
+        This parameter is mutually exclusive with the
+        MPICH_INTERFACE_HOSTNAME parameter and it is an error to set
+        them both.
+
+    - category    : nemesis
+      name        : HOST_LOOKUP_RETRIES
+      type        : int
+      default     : 10
+      description : >-
+        This parameter controls the number of times to retry the 
+        gethostbyname() function before giving up.
+
   ##############################################################
     # debugging parameters
     - category    : debugger
