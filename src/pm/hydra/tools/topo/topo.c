@@ -233,12 +233,8 @@ static HYD_status handle_cache_binding(const char *binding)
     else {
         elem = strtok(bindentry, ",");
         do {
-            if (!strcmp(elem, "l3") || !strcmp(elem, "L3"))
-                cache_depth = 3;
-            else if (!strcmp(elem, "l2") || !strcmp(elem, "L2"))
-                cache_depth = 2;
-            else if (!strcmp(elem, "l1") || !strcmp(elem, "L1"))
-                cache_depth = 1;
+            if (elem[0] == 'l' || elem[0] == 'L')
+                cache_depth = atoi(&elem[1]);
             else
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "unrecognized binding option %s\n", binding);
@@ -250,9 +246,12 @@ static HYD_status handle_cache_binding(const char *binding)
 
     for (obj = &HYDT_topo_info.machine;;) {
         /* see if the target cache depth is present in this object */
-        for (i = 0; i < obj->mem.num_caches; i++)
+        for (i = 0; i < obj->mem.num_caches; i++) {
             if (obj->mem.cache_depth[i] == cache_depth)
                 leaf = obj->type;
+            else if (obj->mem.cache_depth[i] < cache_depth && leaf == -1)
+                leaf = obj->type;
+        }
 
         /* if we are not at the end yet, move one level deeper */
         if (obj->num_children)
@@ -261,7 +260,9 @@ static HYD_status handle_cache_binding(const char *binding)
             break;
     }
 
-    HYDU_ASSERT(leaf != -1, status);
+    if (leaf == -1)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unable to find L%d or lower level cache\n", cache_depth);
 
     status = assign_proc_units(leaf);
     HYDU_ERR_POP(status, "unable to assign processing units\n");
