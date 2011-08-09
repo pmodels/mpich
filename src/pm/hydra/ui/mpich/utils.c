@@ -1335,6 +1335,22 @@ static HYD_status set_default_values(void)
     if (HYD_uii_mpx_exec_list == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
 
+    /* If an interface is provided, set that */
+    if (HYD_server_info.user_global.iface) {
+        if (hostname_propagation == 1) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "cannot set iface and force hostname propagation");
+        }
+
+        HYDU_append_env_to_list("MPICH_NETWORK_IFACE", HYD_server_info.user_global.iface,
+                                &HYD_server_info.user_global.global_env.system);
+
+        /* Disable hostname propagation */
+        hostname_propagation = 0;
+    }
+
+    /* If hostname propagation is requested (or not set), set the
+     * environment variable for doing that */
     if (hostname_propagation || hostname_propagation == -1)
         HYD_server_info.iface_ip_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
 
