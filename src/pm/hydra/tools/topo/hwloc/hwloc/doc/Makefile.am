@@ -1,5 +1,5 @@
 # Copyright © 2009-2011 INRIA.  All rights reserved.
-# Copyright © 2009-2010 Université Bordeaux 1
+# Copyright © 2009-2011 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 
@@ -266,6 +266,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_PU.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SOCKET.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SYSTEM.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_TYPE_MAX.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_MISC.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM.3 \
@@ -486,6 +487,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwlocality_creation.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_cuda.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_cudart.3 \
+        $(DOX_MAN_DIR)/man3/hwlocality_distances.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_glibc_sched.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_helper_binding.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_helper_cpuset.3 \
