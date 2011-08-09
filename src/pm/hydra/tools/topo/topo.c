@@ -103,31 +103,69 @@ static HYD_status handle_user_binding(const char *binding)
     goto fn_exit;
 }
 
-static void search_leaf_pu(struct HYDT_topo_obj obj, int leaf, int *idx)
+static void search_leaf_pu(struct HYDT_topo_obj obj, struct HYDT_topo_cpuset_t *bindmap,
+                           int leaf, int *idx)
 {
     int i;
 
     if (obj.type == leaf) {
-        HYDT_topo_cpuset_dup(obj.cpuset, &HYDT_topo_info.bindmap[*idx]);
+        HYDT_topo_cpuset_dup(obj.cpuset, &bindmap[*idx]);
         (*idx)++;
     }
     else {
         for (i = 0; i < obj.num_children; i++)
-            search_leaf_pu(obj.children[i], leaf, idx);
+            search_leaf_pu(obj.children[i], bindmap, leaf, idx);
     }
 }
 
-static void assign_proc_units(int leaf)
+static HYD_status assign_proc_units(int leaf)
 {
-    int idx, i;
+    int idx, iter, i, j, k, m, pid;
+    unsigned long mask;
+    struct HYDT_topo_cpuset_t *bindmap;
+    HYD_status status = HYD_SUCCESS;
 
-    /* assign mappings for the first set of processing elements that
-     * the user requested for and then duplicate this to the remaining
-     * entries */
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC(bindmap, struct HYDT_topo_cpuset_t *,
+                HYDT_topo_info.total_proc_units * sizeof(struct HYDT_topo_cpuset_t), status);
+
     idx = 0;
-    search_leaf_pu(HYDT_topo_info.machine, leaf, &idx);
-    for (i = idx; i < HYDT_topo_info.total_proc_units; i++)
-        HYDT_topo_cpuset_dup(HYDT_topo_info.bindmap[i % idx], &HYDT_topo_info.bindmap[i]);
+    search_leaf_pu(HYDT_topo_info.machine, bindmap, leaf, &idx);
+
+    for (i = 0; i < HYDT_topo_info.total_proc_units; i++) {
+        /* find the iteration count we are in */
+        iter = (i / idx) + 1;
+
+        /* find the iter'th non-zero bit in the cpuset */
+        m = 0;
+        for (j = 0; j < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; j++) {
+            for (k = 0; k < SIZEOF_UNSIGNED_LONG; k++) {
+                mask = 1 << k;
+                if (bindmap[i % idx].set[j] & mask)
+                    m++;
+
+                if (m == iter)
+                    break;
+            }
+            if (m == iter)
+                break;
+        }
+
+        HYDU_ASSERT(m == iter, status);
+
+        /* found pid */
+        pid = j * (HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG) + k;
+        HYDT_topo_cpuset_set(pid, &HYDT_topo_info.bindmap[i]);
+    }
+
+  fn_exit:
+    HYDU_FREE(bindmap);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static HYD_status handle_cpu_binding(const char *binding)
@@ -164,7 +202,8 @@ static HYD_status handle_cpu_binding(const char *binding)
     }
     HYDU_FREE(bindstr);
 
-    assign_proc_units(leaf);
+    status = assign_proc_units(leaf);
+    HYDU_ERR_POP(status, "unable to assign processing units\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -176,7 +215,7 @@ static HYD_status handle_cpu_binding(const char *binding)
 
 static HYD_status handle_cache_binding(const char *binding)
 {
-    int i, leaf, cache_depth;
+    int i, leaf = -1, cache_depth;
     char *bindstr = HYDU_strdup(binding), *bindentry, *elem;
     struct HYDT_topo_obj *obj;
     HYD_status status = HYD_SUCCESS;
@@ -222,7 +261,10 @@ static HYD_status handle_cache_binding(const char *binding)
             break;
     }
 
-    assign_proc_units(leaf);
+    HYDU_ASSERT(leaf != -1, status);
+
+    status = assign_proc_units(leaf);
+    HYDU_ERR_POP(status, "unable to assign processing units\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
