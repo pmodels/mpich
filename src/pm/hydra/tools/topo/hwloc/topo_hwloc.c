@@ -285,9 +285,9 @@ HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level)
                     thread_ptr->children = NULL;
                     HYDT_topo_cpuset_zero(&thread_ptr->cpuset);
 
-                    if (!(obj_thread = hwloc_get_obj_inside_cpuset_by_type(topology,
-                                                                           obj_core->cpuset,
-                                                                           HWLOC_OBJ_PU, thread)))
+                    if (!(obj_thread =
+                          hwloc_get_obj_inside_cpuset_by_type(topology, obj_core->cpuset,
+                                                              HWLOC_OBJ_PU, thread)))
                         HYDU_ERR_POP(status, "unable to detect processing units\n");
 
                     /* copy the hwloc cpuset to hydra format */
