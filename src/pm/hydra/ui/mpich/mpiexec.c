@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, timeout, reset_rmk;
+    int exit_status = 0, i, timeout, reset_rmk, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -327,18 +327,20 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
-    HYD_server_info.pg_list.pg_core_count = 0;
-    for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++) {
-        HYD_server_info.pg_list.pg_core_count += node->core_count;
+    /* Assign a node ID to each node */
+    for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
         node->node_id = i;
-    }
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     HYD_server_info.pg_list.pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->proc_count == -1)
-            exec->proc_count = HYD_server_info.pg_list.pg_core_count;
+        if (exec->proc_count == -1) {
+            global_core_count = 0;
+            for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
+                global_core_count += node->core_count;
+            exec->proc_count = global_core_count;
+        }
         HYD_server_info.pg_list.pg_process_count += exec->proc_count;
     }
 
@@ -348,6 +350,11 @@ int main(int argc, char **argv)
     status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_server_info.node_list,
                                     &HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "unable to create proxy list\n");
+
+    /* calculate the core count used by the PG */
+    HYD_server_info.pg_list.pg_core_count = 0;
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
+        HYD_server_info.pg_list.pg_core_count += proxy->proxy_process_count;
 
     /* See if the node list contains a remotely accessible localhost */
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {

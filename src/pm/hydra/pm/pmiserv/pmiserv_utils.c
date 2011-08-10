@@ -270,7 +270,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
     /* Create the arguments list for each proxy */
     process_id = 0;
-    right_global_cores = pg->pg_core_count;
+    right_global_cores = 0;
+    for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+        right_global_cores += proxy->node->core_count;
     left_global_cores = 0;
 
     right_filler_processes = 0;

@@ -336,7 +336,6 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
         texec->appnum = exec->appnum;
     }
     proxy->proxy_process_count += num_procs;
-    proxy->node->active_processes += num_procs;
 
   fn_exit:
     return status;
