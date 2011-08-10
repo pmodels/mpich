@@ -68,7 +68,7 @@ static HYD_status handle_none_binding(void)
 
 static HYD_status handle_user_binding(const char *binding)
 {
-    int i, j;
+    int i;
     char *bindstr = HYDU_strdup(binding), *bindentry;
     HYD_status status = HYD_SUCCESS;
 
@@ -76,15 +76,14 @@ static HYD_status handle_user_binding(const char *binding)
 
     /* Initialize all values to map to all CPUs */
     for (i = 0; i < HYDT_topo_info.total_proc_units; i++)
-        for (j = 0; j < HYDT_topo_info.total_proc_units; j++)
-            HYDT_topo_cpuset_set(j, &HYDT_topo_info.bindmap[i]);
+        HYDT_topo_cpuset_zero(&HYDT_topo_info.bindmap[i]);
 
     i = 0;
     bindentry = strtok(bindstr, ",");
     while (bindentry) {
-        HYDT_topo_cpuset_zero(&HYDT_topo_info.bindmap[i]);
-        HYDT_topo_cpuset_set(atoi(bindentry) % HYDT_topo_info.total_proc_units,
-                             &HYDT_topo_info.bindmap[i]);
+        if (strcmp(bindentry, "-1"))
+            HYDT_topo_cpuset_set(atoi(bindentry) % HYDT_topo_info.total_proc_units,
+                                 &HYDT_topo_info.bindmap[i]);
         i++;
         bindentry = strtok(NULL, ",");
 
@@ -473,6 +472,53 @@ HYD_status HYDT_topo_get_topomap(char **topomap)
         status = topo_obj_to_str(HYDT_topo_info.machine, topomap);
         HYDU_ERR_POP(status, "unable to create topology map\n");
     }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDT_topo_get_processmap(char **processmap)
+{
+    int i, j, k, add_comma;
+    char *tmp[HYD_NUM_TMP_STRINGS];
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    i = 0;
+    tmp[i++] = HYDU_strdup("(");
+
+    for (j = 0; j < HYDT_topo_info.total_proc_units; j++) {
+        add_comma = 0;
+        for (k = 0; k < HYDT_topo_info.total_proc_units; k++) {
+            if (HYDT_topo_cpuset_isset(k, HYDT_topo_info.bindmap[j])) {
+                if (add_comma)
+                    tmp[i++] = HYDU_strdup(",");
+                tmp[i++] = HYDU_int_to_str(k);
+                add_comma = 1;
+            }
+        }
+        if (j < HYDT_topo_info.total_proc_units - 1)
+            tmp[i++] = HYDU_strdup(";");
+    }
+
+    tmp[i++] = HYDU_strdup(")");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, processmap);
+    HYDU_ERR_POP(status, "unable to append string list\n");
+
+    /* if it's a logically empty mapping, replace it with NULL */
+    if (!strcmp(*processmap, "()")) {
+        HYDU_FREE(*processmap);
+        *processmap = NULL;
+    }
+
+    HYDU_free_strlist(tmp);
 
   fn_exit:
     HYDU_FUNC_EXIT();

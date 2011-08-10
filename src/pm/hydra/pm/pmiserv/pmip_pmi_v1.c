@@ -378,6 +378,35 @@ static HYD_status fn_get(int fd, char *args[])
 
         HYDU_FREE(map);
     }
+    else if (!strcmp(key, "hydra_node_processmap")) {
+        char *map;
+
+        status = HYDT_topo_get_processmap(&map);
+        HYDU_ERR_POP(status, "error getting topology map\n");
+
+        i = 0;
+
+        tmp[i++] = HYDU_strdup("cmd=get_result rc=");
+        if (map) {
+            tmp[i++] = HYDU_strdup("0 msg=success value=");
+            tmp[i++] = HYDU_strdup(map);
+        }
+        else {
+            tmp[i++] = HYDU_strdup("-1 msg=hydra_node_processmap_not_found value=unknown");
+        }
+        tmp[i++] = HYDU_strdup("\n");
+        tmp[i++] = NULL;
+
+        status = HYDU_str_alloc_and_join(tmp, &cmd);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(tmp);
+
+        status = send_cmd_downstream(fd, cmd);
+        HYDU_ERR_POP(status, "error sending PMI response\n");
+        HYDU_FREE(cmd);
+
+        HYDU_FREE(map);
+    }
     else {
         status = send_cmd_upstream("cmd=get ", fd, args);
         HYDU_ERR_POP(status, "error sending command upstream\n");

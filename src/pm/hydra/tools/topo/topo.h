@@ -186,6 +186,14 @@ HYD_status HYDT_topo_get_topomap(char **topomap);
 
 
 /**
+ * \brief HYDT_topo_get_processmap - Get the process binding map
+ *
+ * This function returns the process binding map as a string.
+ */
+HYD_status HYDT_topo_get_processmap(char **processmap);
+
+
+/**
  * \brief HYDT_topo_bind - Bind process to a processing element
  *
  * \param[in] cpuset  The Operating System index set to bind the process to
