@@ -496,6 +496,7 @@ static HYD_status config_fn(char *arg, char ***argv)
 
     HYDU_ASSERT(!config_file, status);
     config_file = HYDU_strdup(**argv);
+    (*argv)++;
 
   fn_exit:
     return status;
