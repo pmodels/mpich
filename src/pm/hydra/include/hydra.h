@@ -596,6 +596,7 @@ void HYDU_free_strlist(char **args);
 HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin);
 HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep);
 HYD_status HYDU_strdup_list(char *src[], char **dest[]);
+char *HYDU_size_t_to_str(size_t x);
 char *HYDU_int_to_str(int x);
 char *HYDU_int_to_str_pad(int x, int maxlen);
 

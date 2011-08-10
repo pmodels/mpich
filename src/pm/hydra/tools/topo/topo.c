@@ -352,7 +352,7 @@ HYD_status HYDT_topo_init(char *user_binding, char *user_topolib)
      * binding. */
     if (HYDT_topo_info.support_level < HYDT_TOPO_SUPPORT_CPUTOPO)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "topology binding not supported on this platform\n");
+                            "CPU topology binding not supported on this platform\n");
 
 
     /* handle CPU topology aware binding */
@@ -361,6 +361,13 @@ HYD_status HYDT_topo_init(char *user_binding, char *user_topolib)
         HYDU_ERR_POP(status, "error handling cpu binding\n");
         goto fn_exit;
     }
+
+
+    /* If we reached here, the user requested for memory topology
+     * aware binding. */
+    if (HYDT_topo_info.support_level < HYDT_TOPO_SUPPORT_MEMTOPO)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "memory topology binding not supported on this platform\n");
 
     /* handle memory topology aware binding */
     if (!strncmp(binding, "cache", strlen("cache"))) {
@@ -379,23 +386,100 @@ HYD_status HYDT_topo_init(char *user_binding, char *user_topolib)
     goto fn_exit;
 }
 
-static void cleanup_topo_level(struct HYDT_topo_obj level)
+static const char *obj_type_to_str(HYDT_topo_obj_type_t type)
 {
-    int i;
+    if (type == HYDT_TOPO_OBJ_MACHINE)
+        return "MACHINE";
+    else if (type == HYDT_TOPO_OBJ_NODE)
+        return "NODE";
+    else if (type == HYDT_TOPO_OBJ_SOCKET)
+        return "SOCKET";
+    else if (type == HYDT_TOPO_OBJ_CORE)
+        return "CORE";
+    else if (type == HYDT_TOPO_OBJ_THREAD)
+        return "THREAD";
+    else
+        return NULL;
+}
 
-    level.parent = NULL;
+static HYD_status topo_obj_to_str(struct HYDT_topo_obj obj, char **str)
+{
+    int i, j;
+    char *tmp[HYD_NUM_TMP_STRINGS];
+    HYD_status status = HYD_SUCCESS;
 
-    if (level.mem.cache_size)
-        HYDU_FREE(level.mem.cache_size);
+    HYDU_FUNC_ENTER();
 
-    if (level.mem.cache_depth)
-        HYDU_FREE(level.mem.cache_depth);
+    i = 0;
+    tmp[i++] = HYDU_strdup("(");
+    tmp[i++] = HYDU_strdup(obj_type_to_str(obj.type));
 
-    if (level.children) {
-        for (i = 0; i < level.num_children; i++)
-            cleanup_topo_level(level.children[i]);
-        HYDU_FREE(level.children);
+    /* if this is the bottom layer, return a processor ID */
+    if (obj.type == HYDT_TOPO_OBJ_THREAD) {
+        tmp[i++] = HYDU_strdup(",pid:");
+        for (j = 0; j < HYDT_topo_info.total_proc_units; j++)
+            if (HYDT_topo_cpuset_isset(j, obj.cpuset))
+                tmp[i++] = HYDU_int_to_str(j);
     }
+
+    /* local memory */
+    if (obj.mem.local_mem_size) {
+        tmp[i++] = HYDU_strdup(",mem_size:");
+        tmp[i++] = HYDU_size_t_to_str(obj.mem.local_mem_size);
+    }
+
+    /* caches */
+    for (j = 0; j < obj.mem.num_caches; j++) {
+        tmp[i++] = HYDU_strdup(",cache_level:");
+        tmp[i++] = HYDU_int_to_str(obj.mem.cache_depth[j]);
+        tmp[i++] = HYDU_strdup(",cache_size:");
+        tmp[i++] = HYDU_size_t_to_str(obj.mem.cache_size[j]);
+    }
+
+    /* children */
+    for (j = 0; j < obj.num_children; j++) {
+        tmp[i++] = HYDU_strdup(",");
+
+        status = topo_obj_to_str(obj.children[j], &tmp[i++]);
+        HYDU_ERR_POP(status, "unable to find topology string for child\n");
+    }
+
+    tmp[i++] = HYDU_strdup(")");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, str);
+    HYDU_ERR_POP(status, "unable to append string list\n");
+
+    HYDU_free_strlist(tmp);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDT_topo_get_topomap(char **topomap)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (HYDT_topo_info.support_level < HYDT_TOPO_SUPPORT_CPUTOPO) {
+        *topomap = NULL;
+    }
+    else {
+        status = topo_obj_to_str(HYDT_topo_info.machine, topomap);
+        HYDU_ERR_POP(status, "unable to create topology map\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 HYD_status HYDT_topo_bind(struct HYDT_topo_cpuset_t cpuset)
@@ -439,6 +523,25 @@ void HYDT_topo_pid_to_cpuset(int process_id, struct HYDT_topo_cpuset_t *cpuset)
 {
     HYDT_topo_cpuset_dup(HYDT_topo_info.bindmap[process_id % HYDT_topo_info.total_proc_units],
                          cpuset);
+}
+
+static void cleanup_topo_level(struct HYDT_topo_obj level)
+{
+    int i;
+
+    level.parent = NULL;
+
+    if (level.mem.cache_size)
+        HYDU_FREE(level.mem.cache_size);
+
+    if (level.mem.cache_depth)
+        HYDU_FREE(level.mem.cache_depth);
+
+    if (level.children) {
+        for (i = 0; i < level.num_children; i++)
+            cleanup_topo_level(level.children[i]);
+        HYDU_FREE(level.children);
+    }
 }
 
 HYD_status HYDT_topo_finalize(void)

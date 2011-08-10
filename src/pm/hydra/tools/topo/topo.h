@@ -74,7 +74,6 @@ typedef enum {
     HYDT_TOPO_OBJ_END
 } HYDT_topo_obj_type_t;
 
-
 #define HYDT_TOPO_MAX_CPU_COUNT (16384)
 
 #if (HYDT_TOPO_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG)
@@ -176,6 +175,14 @@ HYD_status HYDT_topo_init(char *binding, char *topolib);
  * maintained.
  */
 HYD_status HYDT_topo_finalize(void);
+
+
+/**
+ * \brief HYDT_topo_get_topomap - Get the topology map
+ *
+ * This function returns the topology map as a string.
+ */
+HYD_status HYDT_topo_get_topomap(char **topomap);
 
 
 /**
