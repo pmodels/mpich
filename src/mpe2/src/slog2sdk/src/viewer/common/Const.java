@@ -12,6 +12,7 @@ package viewer.common;
 import java.awt.Font;
 import java.awt.Color;
 import java.awt.RenderingHints;
+import java.awt.Insets;
 
 public class Const
 {
@@ -51,6 +52,10 @@ public class Const
             = new Alias( Color.lightGray, "light gray" );
     public  static final Alias   COLOR_WHITE
             = new Alias( Color.white, "white" );
+
+    public  static final Insets  SQ_BTN0_INSETS = new Insets( 0, 0, 0, 0 );
+    public  static final Insets  SQ_BTN1_INSETS = new Insets( 1, 1, 1, 1 );
+    public  static final Insets  SQ_BTN2_INSETS = new Insets( 2, 2, 2, 2 );
 
     public  static final String  IMG_PATH = "/images/";
     public  static final String  DOC_PATH = "/html/";

@@ -20,8 +20,6 @@ import base.drawable.Drawable;
 
 public interface SearchableView
 {
-    public Rectangle localRectangleForDrawable( final Drawable dobj );
-
     // NEW search starting from the specified time
     public SearchPanel searchPreviousComponent( double searching_time );
 

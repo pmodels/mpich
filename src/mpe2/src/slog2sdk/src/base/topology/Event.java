@@ -53,7 +53,7 @@ public class Event
         last_drawn_pos.set( iPoint );
 
         boolean  isPointVtxInImg;
-        isPointVtxInImg = iPoint > 0 && iPoint < coord_xform.getImageWidth();
+        isPointVtxInImg = iPoint >= 0 && iPoint < coord_xform.getPixelWidth();
 
         if ( ! isPointVtxInImg )
             return 0;
@@ -69,17 +69,14 @@ public class Event
         }
 
         int  iCorner, jHeight;
-        iCorner = 0;
-        jHeight = 0;
+        iCorner = iPoint - Base_Half_Width;
+        jHeight = jPoint - jStart + 1;
 
         g.setColor( color );
         g.drawLine( iPoint, jPoint, iPoint, jFinal );
         /* Fill the ellipse first */
-        if ( jStart != jPoint ) {
-            iCorner = iPoint - Base_Half_Width;
-            jHeight = jPoint - jStart - 1;
+        if ( jHeight > 0 )
             g.fillArc( iCorner, jStart, Base_Width, jHeight, 0, 360 );
-        }
 
         g.setColor( Color.white );
         /* Draw the white ellipse boundray */

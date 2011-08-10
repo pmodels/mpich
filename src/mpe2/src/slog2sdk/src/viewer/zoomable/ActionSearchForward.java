@@ -13,13 +13,10 @@ import java.awt.event.*;
 
 public class ActionSearchForward implements ActionListener
 {
-    // private ToolBarStatus      toolbar;
     private ViewportTimeYaxis  canvas_vport;
 
-    public ActionSearchForward( ToolBarStatus      in_toolbar,
-                                ViewportTimeYaxis  in_vport )
+    public ActionSearchForward( ViewportTimeYaxis  in_vport )
     {
-        // toolbar       = in_toolbar;
         canvas_vport  = in_vport;
     }
 

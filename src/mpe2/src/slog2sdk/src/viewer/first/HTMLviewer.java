@@ -137,13 +137,11 @@ public class HTMLviewer extends JDialog
     private JToolBar createToolBar()
     {
         JToolBar     toolbar;
-        Insets       btn_insets;
         Dimension    small_spacer_size, medium_spacer_size, big_spacer_size;
         URL          icon_URL;
 
 
         toolbar             = new JToolBar();
-        btn_insets          = new Insets( 1, 1, 1, 1 );
         small_spacer_size   = new Dimension( 5, 5 );
         medium_spacer_size  = new Dimension( 10, 5 );
         big_spacer_size     = new Dimension( 20, 5 );
@@ -153,7 +151,7 @@ public class HTMLviewer extends JDialog
             backward_btn = new JButton( new ImageIcon( icon_URL ) );
         else
             backward_btn = new JButton( "Backward" );
-        backward_btn.setMargin( btn_insets );
+        backward_btn.setMargin( Const.SQ_BTN1_INSETS );
         backward_btn.setToolTipText( "Go Backward one page" );
         // backward_btn.setPreferredSize( btn_dim );
         backward_btn.addActionListener( new ActionListener() {
@@ -175,7 +173,7 @@ public class HTMLviewer extends JDialog
             forward_btn = new JButton( new ImageIcon( icon_URL ) );
         else
             forward_btn = new JButton( "Forward" );
-        forward_btn.setMargin( btn_insets );
+        forward_btn.setMargin( Const.SQ_BTN1_INSETS );
         forward_btn.setToolTipText( "Go Forward one page" );
         // forward_btn.setPreferredSize( btn_dim );
         forward_btn.addActionListener( new ActionListener() {
@@ -197,7 +195,7 @@ public class HTMLviewer extends JDialog
             refresh_btn = new JButton( new ImageIcon( icon_URL ) );
         else
             refresh_btn = new JButton( "Refresh" );
-        refresh_btn.setMargin( btn_insets );
+        refresh_btn.setMargin( Const.SQ_BTN1_INSETS );
         refresh_btn.setToolTipText( "Refresh the current page" );
         // refresh_btn.setPreferredSize( btn_dim );
         refresh_btn.addActionListener( new ActionListener() {
@@ -221,7 +219,7 @@ public class HTMLviewer extends JDialog
             close_btn = new JButton( new ImageIcon( icon_URL ) );
         else
             close_btn = new JButton( "Close" );
-        close_btn.setMargin( btn_insets );
+        close_btn.setMargin( Const.SQ_BTN1_INSETS );
         close_btn.setToolTipText( "Close the HTMLviewer window" );
         // close_btn.setPreferredSize( btn_dim );
         close_btn.addActionListener( new ActionListener() {

@@ -74,6 +74,11 @@ public class InfoDialogForTime extends InfoDialog
         scroller.setAlignmentX( Component.LEFT_ALIGNMENT );
         root_panel.add( scroller );
 
-        root_panel.add( super.getCloseButtonPanel() );
+        JPanel close_btn_panel = new JPanel();
+        super.initCloseButton();
+        close_btn_panel.add( super.getCloseButton() );
+        close_btn_panel.setAlignmentX( Component.LEFT_ALIGNMENT );
+        super.finalizeCloseButtonPanel( close_btn_panel );
+        root_panel.add( close_btn_panel );
     }
 }

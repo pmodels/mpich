@@ -43,7 +43,7 @@ public class PreviewEvent
         last_drawn_pos.set( iPoint );
 
         boolean  isPointVtxInImg;
-        isPointVtxInImg = iPoint > 0 && iPoint < coord_xform.getImageWidth();
+        isPointVtxInImg = iPoint >= 0 && iPoint < coord_xform.getPixelWidth();
 
         if ( ! isPointVtxInImg )
             return 0;

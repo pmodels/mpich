@@ -10,6 +10,7 @@
 package base.drawable;
 
 import java.awt.Graphics2D;
+import java.awt.Color;
 import java.awt.Point;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,10 @@ import base.topology.Line;
 import base.topology.Arrow;
 import base.topology.State;
 import base.topology.Event;
+import base.topology.Pointer;
+import base.topology.MarkerArrow;
+import base.topology.MarkerState;
+import base.topology.MarkerEvent;
 
 // Composite should be considered as an InfoBox of Primitive[]
 
@@ -435,9 +440,9 @@ public class Composite extends Drawable
     /*
         0.0f < nesting_ftr <= 1.0f
     */
-    public  int  drawState( Graphics2D g, CoordPixelXform coord_xform,
-                            Map map_line2row, DrawnBoxSet drawn_boxes,
-                            ColorAlpha color )
+    public  int  drawStateOnCanvas( Graphics2D g, CoordPixelXform coord_xform,
+                                    Map map_line2row, DrawnBoxSet drawn_boxes,
+                                    ColorAlpha color )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -465,9 +470,9 @@ public class Composite extends Drawable
     }
 
     //  assume this Primitive overlaps with coord_xform.TimeBoundingBox
-    public  int  drawArrow( Graphics2D g, CoordPixelXform coord_xform,
-                            Map map_line2row, DrawnBoxSet drawn_boxes,
-                            ColorAlpha color )
+    public  int  drawArrowOnCanvas( Graphics2D g, CoordPixelXform coord_xform,
+                                    Map map_line2row, DrawnBoxSet drawn_boxes,
+                                    ColorAlpha color )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -490,9 +495,9 @@ public class Composite extends Drawable
                            tStart, (float) iStart, tFinal, (float) iFinal );
     }
 
-    public  int  drawEvent( Graphics2D g, CoordPixelXform coord_xform,
-                            Map map_line2row, DrawnBoxSet drawn_boxes,
-                            ColorAlpha color )
+    public  int  drawEventOnCanvas( Graphics2D g, CoordPixelXform coord_xform,
+                                    Map map_line2row, DrawnBoxSet drawn_boxes,
+                                    ColorAlpha color )
     {
         Coord  vtx;
         vtx = this.getStartVertex();
@@ -593,6 +598,85 @@ public class Composite extends Drawable
 
         return Event.containsPixel( coord_xform, pix_pt,
                                     tPoint, rStart, rFinal );
+    }
+
+    public  int  drawStateOnViewport( Graphics2D      g,  
+                                      CoordPixelXform coord_xform,
+                                      Map             map_line2row,
+                                      ColorAlpha      color )
+    {
+        Coord  start_vtx, final_vtx;
+        start_vtx = this.getStartVertex();
+        final_vtx = this.getFinalVertex();
+
+        double tStart, tFinal;
+        tStart = start_vtx.time;  /* different from Shadow */
+        tFinal = final_vtx.time;  /* different form Shadow */
+
+        int    rowID;
+        float  nesting_ftr;
+        /* assume RowID and NestingFactor have been calculated */
+        rowID       = super.getRowID();
+        nesting_ftr = super.getNestingFactor();
+
+        // System.out.println( "\t" + this + " nestftr=" + nesting_ftr );
+
+        float  rStart, rFinal;
+        rStart = (float) rowID - nesting_ftr / 2.0f;
+        rFinal = rStart + nesting_ftr;
+
+        return MarkerState.draw( g, color, null, coord_xform,
+                                 tStart, rStart, tFinal, rFinal );
+    }
+
+    public  int  drawArrowOnViewport( Graphics2D      g,  
+                                      CoordPixelXform coord_xform,
+                                      Map             map_line2row,
+                                      ColorAlpha      color )
+    {
+        Coord  start_vtx, final_vtx;
+        start_vtx = this.getStartVertex();
+        final_vtx = this.getFinalVertex();
+
+        double tStart, tFinal;
+        tStart = start_vtx.time;
+        tFinal = final_vtx.time;
+
+        int    iStart, iFinal;
+        iStart = ( (Integer)
+                   map_line2row.get( new Integer(start_vtx.lineID) )
+                 ).intValue();
+        iFinal = ( (Integer)
+                   map_line2row.get( new Integer(final_vtx.lineID) )
+                 ).intValue();
+
+        return MarkerArrow.draw( g, color, null, coord_xform,
+                                 tStart, (float) iStart,
+                                 tFinal, (float) iFinal );
+    }
+
+    public  int  drawEventOnViewport( Graphics2D      g,  
+                                      CoordPixelXform coord_xform,
+                                      Map             map_line2row,
+                                      ColorAlpha      color )
+    {
+        Coord  vtx;
+        vtx = this.getStartVertex();
+
+        double tPoint;
+        tPoint = vtx.time;
+
+        int    rowID;
+        float  rPeak, rStart, rFinal;
+        rowID  = ( (Integer)
+                   map_line2row.get( new Integer(vtx.lineID) )
+                 ).intValue();
+        rPeak  = (float) rowID - 0.25f;
+        rStart = (float) rowID - 0.5f;
+        rFinal = rStart + 1.0f;
+
+        return MarkerEvent.draw( g, color, null, coord_xform,
+                                 tPoint, rPeak, rStart, rFinal );
     }
 
     public boolean containSearchable()

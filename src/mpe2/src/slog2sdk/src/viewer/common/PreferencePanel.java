@@ -11,6 +11,8 @@ package viewer.common;
 
 // import java.awt.Dimension;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.*;
 
 import base.topology.StateBorder;
@@ -18,6 +20,7 @@ import base.topology.PreviewState;
 // import base.topology.SummaryState;
 
 public class PreferencePanel extends JPanel
+                             implements ActionListener
 {
     private static final long             serialVersionUID    = 1500L;
 
@@ -51,14 +54,20 @@ public class PreferencePanel extends JPanel
 
     private        LabeledComboBox        lst_PREVIEW_STATE_DISPLAY;
     private        LabeledComboBox        lst_PREVIEW_STATE_BORDER;
-    private        LabeledTextField       fld_PREVIEW_STATE_BORDER_W;
-    private        LabeledTextField       fld_PREVIEW_STATE_BORDER_H;
-    private        LabeledTextField       fld_PREVIEW_STATE_LEGEND_H;
+    private        LabeledTextField       fld_PREVIEW_STATE_BORDER_WIDTH;
+    private        LabeledTextField       fld_PREVIEW_STATE_BORDER_HEIGHT;
+    private        LabeledTextField       fld_PREVIEW_STATE_LEGEND_HEIGHT;
     private        LabeledTextField       fld_PREVIEW_ARROW_LOG_BASE;
 
-    private        LabeledTextField       fld_SEARCH_ARROW_LENGTH;
-    private        LabeledTextField       fld_SEARCH_FRAME_THICKNESS;
-    private        LabeledComboBox        lst_SEARCHED_OBJECT_ON_TOP;
+    private        LabeledComboBox        lst_HIGHLIGHT_CLICKED_OBJECT;
+    private        LabeledComboBox        lst_POINTER_ON_CLICKED_OBJECT;
+    private        LabeledComboBox        lst_MARKER_STATE_STAYS_ON_TOP;
+    private        LabeledTextField       fld_MARKER_POINTER_MIN_LENGTH;
+    private        LabeledTextField       fld_MARKER_POINTER_MAX_LENGTH;
+    private        LabeledTextField       fld_MARKER_STATE_BORDER_WIDTH;
+    private        LabeledTextField       fld_MARKER_ARROW_BORDER_WIDTH;
+    private        LabeledTextField       fld_MARKER_LINE_BORDER_WIDTH;
+    private        LabeledTextField       fld_MARKER_EVENT_BORDER_WIDTH;
 
     // Options: Histogram zoomable window
     private        LabeledComboBox        lst_HISTOGRAM_ZERO_ORIGIN;
@@ -350,35 +359,38 @@ public class PreferencePanel extends JPanel
         "Border style of Preview state." );
         super.add( lst_PREVIEW_STATE_BORDER );
 
-        fld_PREVIEW_STATE_BORDER_W = new LabeledTextField( true,
-                                         "PREVIEW_STATE_BORDER_W",
+        fld_PREVIEW_STATE_BORDER_WIDTH = new LabeledTextField( true,
+                                         "PREVIEW_STATE_BORDER_WIDTH",
                                          Const.INTEGER_FORMAT );
-        fld_PREVIEW_STATE_BORDER_W.setToolTipText(
+        fld_PREVIEW_STATE_BORDER_WIDTH.setToolTipText(
         "The empty border insets' width in pixel for the Preview state." );
-        fld_PREVIEW_STATE_BORDER_W.setHorizontalAlignment( JTextField.CENTER );
-        fld_PREVIEW_STATE_BORDER_W.addSelfDocumentListener();
-        fld_PREVIEW_STATE_BORDER_W.setEditable( true );
-        super.add( fld_PREVIEW_STATE_BORDER_W );
+        fld_PREVIEW_STATE_BORDER_WIDTH.setHorizontalAlignment(
+                                       JTextField.CENTER );
+        fld_PREVIEW_STATE_BORDER_WIDTH.addSelfDocumentListener();
+        fld_PREVIEW_STATE_BORDER_WIDTH.setEditable( true );
+        super.add( fld_PREVIEW_STATE_BORDER_WIDTH );
 
-        fld_PREVIEW_STATE_BORDER_H = new LabeledTextField( true,
-                                         "PREVIEW_STATE_BORDER_H",
+        fld_PREVIEW_STATE_BORDER_HEIGHT = new LabeledTextField( true,
+                                         "PREVIEW_STATE_BORDER_HEIGHT",
                                          Const.INTEGER_FORMAT );
-        fld_PREVIEW_STATE_BORDER_H.setToolTipText(
+        fld_PREVIEW_STATE_BORDER_HEIGHT.setToolTipText(
         "The empty border insets' height in pixel for the Preview state." );
-        fld_PREVIEW_STATE_BORDER_H.setHorizontalAlignment( JTextField.CENTER );
-        fld_PREVIEW_STATE_BORDER_H.addSelfDocumentListener();
-        fld_PREVIEW_STATE_BORDER_H.setEditable( true );
-        super.add( fld_PREVIEW_STATE_BORDER_H );
+        fld_PREVIEW_STATE_BORDER_HEIGHT.setHorizontalAlignment(
+                                        JTextField.CENTER );
+        fld_PREVIEW_STATE_BORDER_HEIGHT.addSelfDocumentListener();
+        fld_PREVIEW_STATE_BORDER_HEIGHT.setEditable( true );
+        super.add( fld_PREVIEW_STATE_BORDER_HEIGHT );
 
-        fld_PREVIEW_STATE_LEGEND_H = new LabeledTextField( true,
-                                        "PREVIEW_STATE_LEGEND_H",
+        fld_PREVIEW_STATE_LEGEND_HEIGHT = new LabeledTextField( true,
+                                        "PREVIEW_STATE_LEGEND_HEIGHT",
                                         Const.INTEGER_FORMAT );
-        fld_PREVIEW_STATE_LEGEND_H.setToolTipText(
+        fld_PREVIEW_STATE_LEGEND_HEIGHT.setToolTipText(
         "Minimum height of the legend divison in pixel for the Preview state" );
-        fld_PREVIEW_STATE_LEGEND_H.setHorizontalAlignment( JTextField.CENTER );
-        fld_PREVIEW_STATE_LEGEND_H.addSelfDocumentListener();
-        fld_PREVIEW_STATE_LEGEND_H.setEditable( true );
-        super.add( fld_PREVIEW_STATE_LEGEND_H );
+        fld_PREVIEW_STATE_LEGEND_HEIGHT.setHorizontalAlignment(
+                                        JTextField.CENTER );
+        fld_PREVIEW_STATE_LEGEND_HEIGHT.addSelfDocumentListener();
+        fld_PREVIEW_STATE_LEGEND_HEIGHT.setEditable( true );
+        super.add( fld_PREVIEW_STATE_LEGEND_HEIGHT );
 
         fld_PREVIEW_ARROW_LOG_BASE = new LabeledTextField( true,
                                          "PREVIEW_ARROW_LOG_BASE",
@@ -393,34 +405,96 @@ public class PreferencePanel extends JPanel
 
         super.add( Box.createVerticalStrut( VERTICAL_GAP_HEIGHT ) );
 
-        fld_SEARCH_ARROW_LENGTH = new LabeledTextField( true,
-                                      "SEARCH_ARROW_LENGTH",
-                                      Const.INTEGER_FORMAT );
-        fld_SEARCH_ARROW_LENGTH.setToolTipText(
-        "Length of the search marker's arrow in pixel" );
-        fld_SEARCH_ARROW_LENGTH.setHorizontalAlignment( JTextField.CENTER );
-        fld_SEARCH_ARROW_LENGTH.addSelfDocumentListener();
-        fld_SEARCH_ARROW_LENGTH.setEditable( true );
-        super.add( fld_SEARCH_ARROW_LENGTH );
+        lst_HIGHLIGHT_CLICKED_OBJECT = new LabeledComboBox(
+                                            "HIGHLIGHT_CLICKED_OBJECT" );
+        lst_HIGHLIGHT_CLICKED_OBJECT.addItem( Boolean.TRUE );
+        lst_HIGHLIGHT_CLICKED_OBJECT.addItem( Boolean.FALSE );
+        lst_HIGHLIGHT_CLICKED_OBJECT.setToolTipText(
+        "Whether the clicked drawables should be highlighted." );
+        super.add( lst_HIGHLIGHT_CLICKED_OBJECT );
 
-        fld_SEARCH_FRAME_THICKNESS = new LabeledTextField( true,
-                                         "SEARCH_FRAME_THICKNESS",
-                                         Const.INTEGER_FORMAT );
-        fld_SEARCH_FRAME_THICKNESS.setToolTipText(
-          "Thickness in pixel of the popup frame that hightlights "
-        + "the searched drawable" );
-        fld_SEARCH_FRAME_THICKNESS.setHorizontalAlignment( JTextField.CENTER );
-        fld_SEARCH_FRAME_THICKNESS.addSelfDocumentListener();
-        fld_SEARCH_FRAME_THICKNESS.setEditable( true );
-        super.add( fld_SEARCH_FRAME_THICKNESS );
+        lst_POINTER_ON_CLICKED_OBJECT = new LabeledComboBox(
+                                            "POINTER_ON_CLICKED_OBJECT" );
+        lst_POINTER_ON_CLICKED_OBJECT.addItem( Boolean.TRUE );
+        lst_POINTER_ON_CLICKED_OBJECT.addItem( Boolean.FALSE );
+        lst_POINTER_ON_CLICKED_OBJECT.setToolTipText(
+        "Whether pointers are used to locate the ends of clicked drawable." );
+        super.add( lst_POINTER_ON_CLICKED_OBJECT );
 
-        lst_SEARCHED_OBJECT_ON_TOP = new LabeledComboBox(
-                                         "SEARCHED_OBJECT_ON_TOP" );
-        lst_SEARCHED_OBJECT_ON_TOP.addItem( Boolean.TRUE );
-        lst_SEARCHED_OBJECT_ON_TOP.addItem( Boolean.FALSE );
-        lst_SEARCHED_OBJECT_ON_TOP.setToolTipText(
-        "Whether to display the searched object on top of the search frame." );
-        super.add( lst_SEARCHED_OBJECT_ON_TOP );
+        lst_MARKER_STATE_STAYS_ON_TOP = new LabeledComboBox(
+                                            "MARKER_STATE_STAYS_ON_TOP" );
+        lst_MARKER_STATE_STAYS_ON_TOP.addItem( Boolean.TRUE );
+        lst_MARKER_STATE_STAYS_ON_TOP.addItem( Boolean.FALSE );
+        lst_MARKER_STATE_STAYS_ON_TOP.setToolTipText(
+          "Whether the clicked or searched STATE is shown on top of the nested "
+        + "stack, states that are on top of the clicked state will be hidden" );
+        super.add( lst_MARKER_STATE_STAYS_ON_TOP );
+
+        fld_MARKER_POINTER_MIN_LENGTH = new LabeledTextField( true,
+                                            "MARKER_POINTER_MIN_LENGTH",
+                                            Const.INTEGER_FORMAT );
+        fld_MARKER_POINTER_MIN_LENGTH.setToolTipText(
+        "Minimum Length of the Pointer marker's arrow in pixel" );
+        fld_MARKER_POINTER_MIN_LENGTH.setHorizontalAlignment(
+                                      JTextField.CENTER );
+        fld_MARKER_POINTER_MIN_LENGTH.addSelfDocumentListener();
+        fld_MARKER_POINTER_MIN_LENGTH.setEditable( true );
+        super.add( fld_MARKER_POINTER_MIN_LENGTH );
+
+        fld_MARKER_POINTER_MAX_LENGTH = new LabeledTextField( true,
+                                            "MARKER_POINTER_MAX_LENGTH",
+                                            Const.INTEGER_FORMAT );
+        fld_MARKER_POINTER_MAX_LENGTH.setToolTipText(
+        "Maximum Length of the Pointer marker's arrow in pixel" );
+        fld_MARKER_POINTER_MAX_LENGTH.setHorizontalAlignment(
+                                      JTextField.CENTER );
+        fld_MARKER_POINTER_MAX_LENGTH.addSelfDocumentListener();
+        fld_MARKER_POINTER_MAX_LENGTH.setEditable( true );
+        super.add( fld_MARKER_POINTER_MAX_LENGTH );
+
+        fld_MARKER_STATE_BORDER_WIDTH = new LabeledTextField( true,
+                                            "MARKER_STATE_BORDER_WIDTH",
+                                            Const.INTEGER_FORMAT );
+        fld_MARKER_STATE_BORDER_WIDTH.setToolTipText(
+        "Border width in pixel of the STATE highlight marker." );
+        fld_MARKER_STATE_BORDER_WIDTH.setHorizontalAlignment(
+                                      JTextField.CENTER );
+        fld_MARKER_STATE_BORDER_WIDTH.addSelfDocumentListener();
+        fld_MARKER_STATE_BORDER_WIDTH.setEditable( true );
+        super.add( fld_MARKER_STATE_BORDER_WIDTH );
+
+        fld_MARKER_ARROW_BORDER_WIDTH = new LabeledTextField( true,
+                                            "MARKER_ARROW_BORDER_WIDTH",
+                                            Const.INTEGER_FORMAT );
+        fld_MARKER_ARROW_BORDER_WIDTH.setToolTipText(
+        "Border width in pixel of the ARROW highlight marker." );
+        fld_MARKER_ARROW_BORDER_WIDTH.setHorizontalAlignment(
+                                      JTextField.CENTER );
+        fld_MARKER_ARROW_BORDER_WIDTH.addSelfDocumentListener();
+        fld_MARKER_ARROW_BORDER_WIDTH.setEditable( true );
+        super.add( fld_MARKER_ARROW_BORDER_WIDTH );
+
+        fld_MARKER_LINE_BORDER_WIDTH = new LabeledTextField( true,
+                                           "MARKER_LINE_BORDER_WIDTH",
+                                           Const.INTEGER_FORMAT );
+        fld_MARKER_LINE_BORDER_WIDTH.setToolTipText(
+        "Border width in pixel of the PREVIEW ARROW highlight marker." );
+        fld_MARKER_LINE_BORDER_WIDTH.setHorizontalAlignment(
+                                     JTextField.CENTER );
+        fld_MARKER_LINE_BORDER_WIDTH.addSelfDocumentListener();
+        fld_MARKER_LINE_BORDER_WIDTH.setEditable( true );
+        super.add( fld_MARKER_LINE_BORDER_WIDTH );
+
+        fld_MARKER_EVENT_BORDER_WIDTH = new LabeledTextField( true,
+                                            "MARKER_EVENT_BORDER_WIDTH",
+                                            Const.INTEGER_FORMAT );
+        fld_MARKER_EVENT_BORDER_WIDTH.setToolTipText(
+        "Border width in pixel of the Event highlight marker." );
+        fld_MARKER_EVENT_BORDER_WIDTH.setHorizontalAlignment(
+                                      JTextField.CENTER );
+        fld_MARKER_EVENT_BORDER_WIDTH.addSelfDocumentListener();
+        fld_MARKER_EVENT_BORDER_WIDTH.setEditable( true );
+        super.add( fld_MARKER_EVENT_BORDER_WIDTH );
 
         super.add( Box.createVerticalStrut( 2 * VERTICAL_GAP_HEIGHT ) );
 
@@ -543,20 +617,33 @@ public class PreferencePanel extends JPanel
                                   Parameters.PREVIEW_STATE_DISPLAY );
         lst_PREVIEW_STATE_BORDER.setSelectedItem(
                                  Parameters.PREVIEW_STATE_BORDER );
-        fld_PREVIEW_STATE_BORDER_W.setInteger(
-                                   Parameters.PREVIEW_STATE_BORDER_W );
-        fld_PREVIEW_STATE_BORDER_H.setInteger(
-                                   Parameters.PREVIEW_STATE_BORDER_H );
-        fld_PREVIEW_STATE_LEGEND_H.setInteger(
-                                   Parameters.PREVIEW_STATE_LEGEND_H );
+        fld_PREVIEW_STATE_BORDER_WIDTH.setInteger(
+                                   Parameters.PREVIEW_STATE_BORDER_WIDTH );
+        fld_PREVIEW_STATE_BORDER_HEIGHT.setInteger(
+                                   Parameters.PREVIEW_STATE_BORDER_HEIGHT );
+        fld_PREVIEW_STATE_LEGEND_HEIGHT.setInteger(
+                                   Parameters.PREVIEW_STATE_LEGEND_HEIGHT );
         fld_PREVIEW_ARROW_LOG_BASE.setInteger(
                                    Parameters.PREVIEW_ARROW_LOG_BASE );
 
-        fld_SEARCH_ARROW_LENGTH.setInteger( Parameters.SEARCH_ARROW_LENGTH );
-        fld_SEARCH_FRAME_THICKNESS.setInteger(
-                                   Parameters.SEARCH_FRAME_THICKNESS );
-        lst_SEARCHED_OBJECT_ON_TOP.setSelectedBooleanItem(
-                                   Parameters.SEARCHED_OBJECT_ON_TOP );
+        lst_HIGHLIGHT_CLICKED_OBJECT.setSelectedBooleanItem(
+                                     Parameters.HIGHLIGHT_CLICKED_OBJECT );
+        lst_POINTER_ON_CLICKED_OBJECT.setSelectedBooleanItem(
+                                      Parameters.POINTER_ON_CLICKED_OBJECT );
+        lst_MARKER_STATE_STAYS_ON_TOP.setSelectedBooleanItem(
+                                      Parameters.MARKER_STATE_STAYS_ON_TOP );
+        fld_MARKER_POINTER_MIN_LENGTH.setInteger(
+                                      Parameters.MARKER_POINTER_MIN_LENGTH );
+        fld_MARKER_POINTER_MAX_LENGTH.setInteger(
+                                      Parameters.MARKER_POINTER_MAX_LENGTH );
+        fld_MARKER_STATE_BORDER_WIDTH.setInteger(
+                                      Parameters.MARKER_STATE_BORDER_WIDTH );
+        fld_MARKER_ARROW_BORDER_WIDTH.setInteger(
+                                      Parameters.MARKER_ARROW_BORDER_WIDTH );
+        fld_MARKER_LINE_BORDER_WIDTH.setInteger(
+                                     Parameters.MARKER_LINE_BORDER_WIDTH );
+        fld_MARKER_EVENT_BORDER_WIDTH.setInteger(
+                                      Parameters.MARKER_EVENT_BORDER_WIDTH );
 
         // Options: Histogram zoomable window
         lst_HISTOGRAM_ZERO_ORIGIN.setSelectedBooleanItem(
@@ -626,21 +713,33 @@ public class PreferencePanel extends JPanel
                   = (String) lst_PREVIEW_STATE_DISPLAY.getSelectedItem();
         Parameters.PREVIEW_STATE_BORDER
                   = (StateBorder) lst_PREVIEW_STATE_BORDER.getSelectedItem();
-        Parameters.PREVIEW_STATE_BORDER_W
-                  = fld_PREVIEW_STATE_BORDER_W.getInteger();
-        Parameters.PREVIEW_STATE_BORDER_H
-                  = fld_PREVIEW_STATE_BORDER_H.getInteger();
-        Parameters.PREVIEW_STATE_LEGEND_H
-                  = fld_PREVIEW_STATE_LEGEND_H.getInteger();
+        Parameters.PREVIEW_STATE_BORDER_WIDTH
+                  = fld_PREVIEW_STATE_BORDER_WIDTH.getInteger();
+        Parameters.PREVIEW_STATE_BORDER_HEIGHT
+                  = fld_PREVIEW_STATE_BORDER_HEIGHT.getInteger();
+        Parameters.PREVIEW_STATE_LEGEND_HEIGHT
+                  = fld_PREVIEW_STATE_LEGEND_HEIGHT.getInteger();
         Parameters.PREVIEW_ARROW_LOG_BASE
                   = fld_PREVIEW_ARROW_LOG_BASE.getInteger();
 
-        Parameters.SEARCH_ARROW_LENGTH
-                  = fld_SEARCH_ARROW_LENGTH.getInteger();
-        Parameters.SEARCH_FRAME_THICKNESS
-                  = fld_SEARCH_FRAME_THICKNESS.getInteger();
-        Parameters.SEARCHED_OBJECT_ON_TOP
-                  = lst_SEARCHED_OBJECT_ON_TOP.getSelectedBooleanItem();
+        Parameters.HIGHLIGHT_CLICKED_OBJECT
+                  = lst_HIGHLIGHT_CLICKED_OBJECT.getSelectedBooleanItem();
+        Parameters.POINTER_ON_CLICKED_OBJECT
+                  = lst_POINTER_ON_CLICKED_OBJECT.getSelectedBooleanItem();
+        Parameters.MARKER_STATE_STAYS_ON_TOP
+                  = lst_MARKER_STATE_STAYS_ON_TOP.getSelectedBooleanItem();
+        Parameters.MARKER_POINTER_MIN_LENGTH
+                  = fld_MARKER_POINTER_MIN_LENGTH.getInteger();
+        Parameters.MARKER_POINTER_MAX_LENGTH
+                  = fld_MARKER_POINTER_MAX_LENGTH.getInteger();
+        Parameters.MARKER_STATE_BORDER_WIDTH
+                  = fld_MARKER_STATE_BORDER_WIDTH.getInteger();
+        Parameters.MARKER_ARROW_BORDER_WIDTH
+                  = fld_MARKER_ARROW_BORDER_WIDTH.getInteger();
+        Parameters.MARKER_LINE_BORDER_WIDTH
+                  = fld_MARKER_LINE_BORDER_WIDTH.getInteger();
+        Parameters.MARKER_EVENT_BORDER_WIDTH
+                  = fld_MARKER_EVENT_BORDER_WIDTH.getInteger();
 
         // Options: Histogram zoomable window
         Parameters.HISTOGRAM_ZERO_ORIGIN
@@ -655,5 +754,72 @@ public class PreferencePanel extends JPanel
                   = lst_LEGEND_PREVIEW_ORDER.getSelectedBooleanItem();
         Parameters.LEGEND_TOPOLOGY_ORDER
                   = lst_LEGEND_TOPOLOGY_ORDER.getSelectedBooleanItem();
+    }
+
+    // Since the ActionListener here updates ALL of the Parameters in memory
+    // even when only one of fields/commbobox is updated, so we canNOT do
+    // addActionListener() in the above creation function as the listener will
+    // be invoked before each of member fields/comboboxes is created. 
+    // Instead addAllActionListeners() has to be called after
+    // updateAllParametersFromFields() in PreferenceFrame.
+    public void addSelfActionListeners()
+    {
+        // Options: Zoomable window reinitialization (requires window restart)
+        fld_Y_AXIS_ROOT_LABEL.addActionListener( this );
+        fld_INIT_SLOG2_LEVEL_READ.addActionListener( this );
+        lst_AUTO_WINDOWS_LOCATION.addActionListener( this );
+        // sdr_SCREEN_HEIGHT_RATIO.addActionListener( this );
+        // sdr_TIME_SCROLL_UNIT_RATIO.addActionListener( this );
+
+        // Options: All zoomable windows
+        lst_Y_AXIS_ROOT_VISIBLE.addActionListener( this );
+        lst_ACTIVE_REFRESH.addActionListener( this );
+        lst_BACKGROUND_COLOR.addActionListener( this );
+
+        // sdr_STATE_HEIGHT_FACTOR.addActionListener( this );
+        // sdr_NESTING_HEIGHT_FACTOR.addActionListener( this );
+        lst_ARROW_ANTIALIASING.addActionListener( this );
+        fld_Y_AXIS_MIN_ROW_HEIGHT.addActionListener( this );
+        fld_MIN_WIDTH_TO_DRAG.addActionListener( this );
+        fld_CLICK_RADIUS_TO_LINE.addActionListener( this );
+        lst_LEFTCLICK_INSTANT_ZOOM.addActionListener( this );
+
+        // Options: Timeline zoomable window
+        lst_STATE_BORDER.addActionListener( this );
+        fld_ARROW_HEAD_LENGTH.addActionListener( this );
+        fld_ARROW_HEAD_WIDTH.addActionListener( this );
+        fld_EVENT_BASE_WIDTH.addActionListener( this );
+
+        lst_PREVIEW_STATE_DISPLAY.addActionListener( this );
+        lst_PREVIEW_STATE_BORDER.addActionListener( this );
+        fld_PREVIEW_STATE_BORDER_WIDTH.addActionListener( this );
+        fld_PREVIEW_STATE_BORDER_HEIGHT.addActionListener( this );
+        fld_PREVIEW_STATE_LEGEND_HEIGHT.addActionListener( this );
+        fld_PREVIEW_ARROW_LOG_BASE.addActionListener( this );
+
+        lst_HIGHLIGHT_CLICKED_OBJECT.addActionListener( this );
+        lst_POINTER_ON_CLICKED_OBJECT.addActionListener( this );
+        lst_MARKER_STATE_STAYS_ON_TOP.addActionListener( this );
+        fld_MARKER_POINTER_MIN_LENGTH.addActionListener( this );
+        fld_MARKER_POINTER_MAX_LENGTH.addActionListener( this );
+        fld_MARKER_STATE_BORDER_WIDTH.addActionListener( this );
+        fld_MARKER_ARROW_BORDER_WIDTH.addActionListener( this );
+        fld_MARKER_LINE_BORDER_WIDTH.addActionListener( this );
+        fld_MARKER_EVENT_BORDER_WIDTH.addActionListener( this );
+
+        // Options: Histogram zoomable window
+        lst_HISTOGRAM_ZERO_ORIGIN.addActionListener( this );
+        lst_SUMMARY_STATE_BORDER.addActionListener( this );
+        fld_SUMMARY_ARROW_LOG_BASE.addActionListener( this );
+
+        // Options: Legend window
+        lst_LEGEND_PREVIEW_ORDER.addActionListener( this );
+        lst_LEGEND_TOPOLOGY_ORDER.addActionListener( this );
+    }
+
+    public void actionPerformed( ActionEvent evt )
+    {
+        this.updateAllParametersFromFields();
+        Parameters.initStaticClasses();
     }
 }

@@ -31,13 +31,13 @@ public class ViewportTime extends JViewport
                                      KeyListener
 //                                     HierarchyBoundsListener
 {
-    private static final long    serialVersionUID = 3700L;
+    private   static final long    serialVersionUID = 3700L;
 
-    private static final Color   INFO_LINE_COLOR  = Color.green;
-    private static final Color   INFO_AREA_COLOR  = new Color(255,255,  0,64);
-    private static final Color   ZOOM_LINE_COLOR  = Color.white;
-    private static final Color   ZOOM_AREA_COLOR  = new Color(132,112,255,96);
-    private static final Color   FOCUS_LINE_COLOR = Color.red;
+    protected static final Color   INFO_LINE_COLOR  = Color.green;
+    private   static final Color   INFO_AREA_COLOR  = new Color(255,255,  0,64);
+    private   static final Color   ZOOM_LINE_COLOR  = Color.white;
+    private   static final Color   ZOOM_AREA_COLOR  = new Color(132,112,255,96);
+    private   static final Color   FOCUS_LINE_COLOR = Color.red;
 
     private   Point                     view_pt;
     // view_img is both a Component and ScrollableView object
@@ -52,7 +52,7 @@ public class ViewportTime extends JViewport
     private   TimeBoundingBox           info_timebox  = null;
 
     // info_dialogs list is used to keep track of all InfoDialog boxes.
-    private   List                      info_dialogs;
+    protected List                      info_dialogs;
 
     private   InfoDialogActionListener  info_action_listener;
     private   InfoDialogWindowListener  info_window_listener;
@@ -104,6 +104,8 @@ public class ViewportTime extends JViewport
             setPreferredSize( pref_sz );
         view_img     = (ScrollableView) view;
 
+        // Initialize coord_xform with View's TimeBoundingBox first,
+        // coord_xform will be updated with Viewport's TimeBoundBox before use.
         coord_xform  = new CoordPixelImage( (ScrollableObject) view_img );
         super.addMouseListener( this );
         super.addMouseMotionListener( this );
@@ -335,7 +337,7 @@ public class ViewportTime extends JViewport
         //  in JComponent's paint() method's paintChildren() ?!
         super.paint( g );
 
-        /*  Initialization  */
+        //  Initialization
         vport_timebox.setEarliestTime( time_model.getTimeViewPosition() );
         vport_timebox.setLatestFromEarliest( time_model.getTimeViewExtent() );
         coord_xform.resetTimeBounds( vport_timebox );
@@ -350,7 +352,7 @@ public class ViewportTime extends JViewport
             }
         }
 
-        /*  Draw zoom boundary  */
+        //  Draw zoom boundary
         if ( zoom_timebox != null )
             this.drawShadyTimeBoundingBox( g, zoom_timebox,
                                            ZOOM_LINE_COLOR,
@@ -361,7 +363,7 @@ public class ViewportTime extends JViewport
                                            INFO_LINE_COLOR,
                                            INFO_AREA_COLOR );
 
-        /*  Draw the InfoDialog marker  */
+        //  Draw the InfoDialog marker for selected Durations and Times
         itr = info_dialogs.iterator();
         while ( itr.hasNext() ) {
             info_popup = (InfoDialog) itr.next();
@@ -372,7 +374,7 @@ public class ViewportTime extends JViewport
                                                INFO_LINE_COLOR,
                                                INFO_AREA_COLOR );
             }
-            else {
+            else if ( info_popup instanceof InfoDialogForTime ) {
                 popup_time = info_popup.getClickedTime();
                 if ( coord_xform.contains( popup_time ) ) {
                     x_pos = coord_xform.convertTimeToPixel( popup_time );

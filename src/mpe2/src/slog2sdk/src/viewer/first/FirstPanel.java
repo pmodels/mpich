@@ -184,9 +184,6 @@ public class FirstPanel extends JPanel
         toolbar         = new JToolBar( orientation );
         toolbar.setFloatable( true );
 
-        Insets    btn_insets;
-        btn_insets      = new Insets( 1, 1, 1, 1 );
-
         URL     icon_URL;
 
             icon_URL = null;
@@ -197,7 +194,7 @@ public class FirstPanel extends JPanel
                 file_select_btn = new JButton( "SELECT" );
             file_select_btn.setToolTipText( "Select a new logfile" );
             // file_select_btn.setBorder( empty_border );
-            file_select_btn.setMargin( btn_insets );
+            file_select_btn.setMargin( Const.SQ_BTN1_INSETS );
             file_select_btn.addActionListener(
                             new FileSelectButtonListener() );
         toolbar.add( file_select_btn );
@@ -210,7 +207,7 @@ public class FirstPanel extends JPanel
                 file_convert_btn = new JButton( "CONVERT" );
             file_convert_btn.setToolTipText( "Invoke the Logfile Convertor" );
             // file_convert_btn.setBorder( empty_border );
-            file_convert_btn.setMargin( btn_insets );
+            file_convert_btn.setMargin( Const.SQ_BTN1_INSETS );
             file_convert_btn.addActionListener(
                              new FileConvertButtonListener() );
         toolbar.add( file_convert_btn );
@@ -225,7 +222,7 @@ public class FirstPanel extends JPanel
                 show_legend_btn = new JButton( "LEGEND" );
             show_legend_btn.setToolTipText( "Display the Legend window" );
             // show_legend_btn.setBorder( empty_border );
-            show_legend_btn.setMargin( btn_insets );
+            show_legend_btn.setMargin( Const.SQ_BTN1_INSETS );
             show_legend_btn.addActionListener( 
                             new ShowLegendButtonListener() );
         toolbar.add( show_legend_btn );
@@ -238,7 +235,7 @@ public class FirstPanel extends JPanel
                 show_timeline_btn = new JButton( "TIMELINE" );
             show_timeline_btn.setToolTipText( "Display the Timeline window" );
             // show_timeline_btn.setBorder( empty_border );
-            show_timeline_btn.setMargin( btn_insets );
+            show_timeline_btn.setMargin( Const.SQ_BTN1_INSETS );
             show_timeline_btn.addActionListener(
                               new ViewMapComboBoxListener() );
         toolbar.add( show_timeline_btn );
@@ -253,7 +250,7 @@ public class FirstPanel extends JPanel
                 edit_prefer_btn = new JButton( "PREFERENCE" );
             edit_prefer_btn.setToolTipText( "Open the Preference window" );
             // edit_prefer_btn.setBorder( empty_border );
-            edit_prefer_btn.setMargin( btn_insets );
+            edit_prefer_btn.setMargin( Const.SQ_BTN1_INSETS );
             edit_prefer_btn.addActionListener(
                             new EditPreferButtonListener() );
         toolbar.add( edit_prefer_btn );
@@ -268,7 +265,7 @@ public class FirstPanel extends JPanel
                 help_manual_btn = new JButton( "MANUAL" );
             help_manual_btn.setToolTipText( "Open the user's manual window" );
             // help_manual_btn.setBorder( empty_border );
-            help_manual_btn.setMargin( btn_insets );
+            help_manual_btn.setMargin( Const.SQ_BTN1_INSETS );
             help_manual_btn.addActionListener(
                             new HelpManualButtonListener() );
         toolbar.add( help_manual_btn );
@@ -281,7 +278,7 @@ public class FirstPanel extends JPanel
                 help_faq_btn = new JButton( "FAQ" );
             help_faq_btn.setToolTipText( "Open the FAQ window" );
             // help_faq_btn.setBorder( empty_border );
-            help_faq_btn.setMargin( btn_insets );
+            help_faq_btn.setMargin( Const.SQ_BTN1_INSETS );
             help_faq_btn.addActionListener(
                          new HelpFAQsButtonListener() );
         toolbar.add( help_faq_btn );
@@ -295,7 +292,7 @@ public class FirstPanel extends JPanel
                 help_about_btn = new JButton( "ABOUT" );
             help_about_btn.setToolTipText( "Open the About-This window" );
             // help_about_btn.setBorder( empty_border );
-            help_about_btn.setMargin( btn_insets );
+            help_about_btn.setMargin( Const.SQ_BTN1_INSETS );
             help_about_btn.addActionListener(
                            new HelpAboutButtonListener() );
 
@@ -308,7 +305,7 @@ public class FirstPanel extends JPanel
                 file_close_btn = new JButton( "CLOSE" );
             file_close_btn.setToolTipText( "Close the logfile" );
             // file_close_btn.setBorder( empty_border );
-            file_close_btn.setMargin( btn_insets );
+            file_close_btn.setMargin( Const.SQ_BTN1_INSETS );
             file_close_btn.addActionListener(
                            new FileCloseButtonListener() );
 

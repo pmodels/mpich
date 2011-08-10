@@ -40,8 +40,8 @@ public class SummaryArrow
         jFinal   = coord_xform.convertRowToPixel( final_ypos );
 
         boolean  isStartVtxInImg, isFinalVtxInImg;
-        isStartVtxInImg = iStart > 0 ;
-        isFinalVtxInImg = iFinal < coord_xform.getImageWidth();
+        isStartVtxInImg = iStart >= 0 ;
+        isFinalVtxInImg = iFinal <  coord_xform.getPixelWidth();
 
         double slope = 0.0;
         if ( !isStartVtxInImg || !isFinalVtxInImg )
@@ -67,7 +67,7 @@ public class SummaryArrow
             jTail = jFinal;
         }
         else {
-            iTail = coord_xform.getImageWidth();
+            iTail = coord_xform.getPixelWidth() - 1;
             jTail = (int) Math.rint( jFinal + slope * ( iTail - iFinal ) );
         }
 

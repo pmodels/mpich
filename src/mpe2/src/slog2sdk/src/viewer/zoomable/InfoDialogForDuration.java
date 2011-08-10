@@ -20,14 +20,14 @@ import viewer.common.Routines;
 
 public class InfoDialogForDuration extends InfoDialog
 {
-    private static final long            serialVersionUID = 3900L;
+    private static final long              serialVersionUID = 3900L;
 
-    private static final String          FORMAT = Const.INFOBOX_TIME_FORMAT;
-    private static       DecimalFormat   fmt    = null;
-    private static       TimeFormat      tfmt   = null;
+    private static final String            FORMAT = Const.INFOBOX_TIME_FORMAT;
+    private static       DecimalFormat     fmt    = null;
+    private static       TimeFormat        tfmt   = null;
 
-    private              TimeBoundingBox timebox;
-    private              ScrollableObject scrollable;
+    private              TimeBoundingBox   timebox;
+    private              ScrollableObject  scrollable;
 
     public InfoDialogForDuration( final Frame             frame,
                                   final TimeBoundingBox   times,
@@ -96,16 +96,28 @@ public class InfoDialogForDuration extends InfoDialog
         scroller.setAlignmentX( Component.LEFT_ALIGNMENT );
         root_panel.add( scroller );
 
+        JPanel close_btn_panel = new JPanel();
         if ( scrollable instanceof SummarizableView ) {
             SummarizableView  summarizable;
-            JPanel           ops4d_panel;
+            JButton          ops4d_btn;
             summarizable = (SummarizableView) scrollable;  // CanvasXXXXline
-            ops4d_panel  = new OperationDurationPanel( timebox, summarizable );
-            ops4d_panel.setAlignmentX( Component.LEFT_ALIGNMENT );
-            root_panel.add( ops4d_panel );
+            close_btn_panel.setLayout( new BoxLayout( close_btn_panel,
+                                                      BoxLayout.X_AXIS ) );
+            ops4d_btn  = new OperationDurationButton( timebox, summarizable );
+            ops4d_btn.setAlignmentX( Component.LEFT_ALIGNMENT );
+            ops4d_btn.setAlignmentY( Component.BOTTOM_ALIGNMENT );
+            close_btn_panel.add( InfoDialog.BOX_RIGID );
+            close_btn_panel.add( InfoDialog.BOX_GLUE );
+            close_btn_panel.add( ops4d_btn );
+            close_btn_panel.add( InfoDialog.BOX_GLUE );
         }
-
-        root_panel.add( super.getCloseButtonPanel() );
+        super.initCloseButton();
+        JButton  close_btn = super.getCloseButton();
+        close_btn.setAlignmentY( Component.BOTTOM_ALIGNMENT );
+        close_btn_panel.add( close_btn );
+        close_btn_panel.setAlignmentX( Component.LEFT_ALIGNMENT );
+        super.finalizeCloseButtonPanel( close_btn_panel );
+        root_panel.add( close_btn_panel );
     }
 
     public TimeBoundingBox getTimeBoundingBox()

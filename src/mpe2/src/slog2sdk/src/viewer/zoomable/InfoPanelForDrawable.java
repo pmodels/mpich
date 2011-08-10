@@ -7,7 +7,7 @@
  *  @author  Anthony Chan
  */
 
-package viewer.timelines;
+package viewer.zoomable;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -30,17 +30,17 @@ import viewer.common.Const;
 import viewer.common.Routines;
 import viewer.common.Parameters;
 import viewer.legends.CategoryLabel;
-import viewer.zoomable.TimeFormat;
-import viewer.zoomable.SearchPanel;
-import viewer.zoomable.YaxisTreeNode;
+// import viewer.zoomable.TimeFormat;
+// import viewer.zoomable.SearchPanel;
+// import viewer.zoomable.YaxisTreeNode;
 
 
 public class InfoPanelForDrawable extends SearchPanel // SearchPanel is JPanel
 {
     private static final long           serialVersionUID = 13100L;
 
-    private static final Component      STRUT = Box.createHorizontalStrut( 10 );
-    private static final Component      GLUE  = Box.createHorizontalGlue();
+    private static final Component  BOX_STRUT = Box.createHorizontalStrut( 10 );
+    private static final Component  BOX_GLUE  = Box.createHorizontalGlue();
 
     private static final String         FORMAT = Const.INFOBOX_TIME_FORMAT;
     private static       DecimalFormat  fmt    = null;
@@ -101,9 +101,9 @@ public class InfoPanelForDrawable extends SearchPanel // SearchPanel is JPanel
             label_type = new CategoryLabel( type );
             top_panel.setBorder( Normal_Border );
         }
-        top_panel.add( STRUT );
+        top_panel.add( BOX_STRUT );
         top_panel.add( label_type );
-        top_panel.add( GLUE );
+        top_panel.add( BOX_GLUE );
         top_panel.setAlignmentX( Component.LEFT_ALIGNMENT );
         panel_max_size        = top_panel.getPreferredSize();
         panel_max_size.width  = Short.MAX_VALUE;

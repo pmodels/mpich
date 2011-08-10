@@ -25,7 +25,7 @@ SRC     = ColorAlpha.java Topology.java Method.java \
           InfoType.java InfoValue.java \
           CategoryRatios.java CategorySummary.java \
           Category.java CategoryWeight.java \
-          DrawnBox.java DrawnBoxSet.java \
+          DrawnBox.java DrawnBoxSet.java Coord_TimeRowID.java \
           InfoBox.java Drawable.java NestingStacks.java \
           Primitive.java Shadow.java Composite.java \
           Kind.java YCoordMap.java InputAPI.java

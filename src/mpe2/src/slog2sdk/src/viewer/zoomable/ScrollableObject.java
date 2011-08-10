@@ -221,10 +221,23 @@ public abstract class ScrollableObject extends JComponent
             Debug.println( "ScrollableObject: createImage()'s image_sz = "
                          + image_sz );
 
-        if ( image_sz.width > 0 && image_sz.height > 0 )
-            return super.createImage( image_sz.width, image_sz.height );
-        else
+        if ( image_sz.width <=0 || image_sz.height <= 0 )
             return null;
+
+        Image new_img = null;
+        try {
+            new_img = super.createImage( image_sz.width, image_sz.height );
+        } catch ( OutOfMemoryError memerr ) {
+            long maxBytes, freeBytes;
+            System.err.println( "Failed to allocate an image of size "
+                              + image_sz.width + "x" + image_sz.height );
+            maxBytes = Runtime.getRuntime().maxMemory();
+            System.err.println("Max memory: " + maxBytes / (1024*1024) + "M");
+            freeBytes = Runtime.getRuntime().freeMemory();
+            System.err.println("Free memory: " + freeBytes / (1024*1024) + "M");
+            memerr.printStackTrace();
+        }
+        return new_img;
     }
 
     private int getNumImagesMoved()
@@ -289,12 +302,23 @@ public abstract class ScrollableObject extends JComponent
         if ( cur_tView_extent * NumViewsPerImage != tImage_extent ) {
             setImagesInitTimeBounds();
 
+            long stime = 0, etime = 0;
+            if ( Profile.isActive() )
+                stime = System.currentTimeMillis();
+
             initializeAllOffImages( tImages_all );
             for ( int img_idx = 0; img_idx < NumImages; img_idx++ )
             // for ( int img_idx = NumImages-1 ; img_idx >= 0 ; img_idx-- )
                 drawOneOffImage( offscreenImages[ img_idx ],
                                  tImages[ img_idx ] );
             finalizeAllOffImages( tImages_all );
+
+            if ( Profile.isActive() ) {
+                etime = System.currentTimeMillis();
+                Profile.println( "ScrollableObject: checkToZoomView()'s "
+                               + "drawAllImages takes "
+                               + (etime-stime) + " msec." );
+            }
         }
         if ( Debug.isActive() )
             Debug.println( "ScrollableObject: checkToZoomView()'s END: " );
@@ -362,6 +386,10 @@ public abstract class ScrollableObject extends JComponent
                     tImages_all.affectTimeBounds( tImages[ img_idx ] );
                 }
 
+                long stime = 0, etime = 0;
+                if ( Profile.isActive() )
+                    stime = System.currentTimeMillis();
+
                 // Update the offscreenImages[] of those scrolled
                 initializeAllOffImages( tImages_all );
                 if ( img_mv_dir > 0 ) 
@@ -383,6 +411,14 @@ public abstract class ScrollableObject extends JComponent
                     }
                 finalizeAllOffImages( tImages_all );
 
+                if ( Profile.isActive() ) {
+                    etime = System.currentTimeMillis();
+                    Profile.println( "ScrollableObject: "
+                                   + "Slow checkToScrollView()'s "
+                                   + "drawAllImages takes "
+                                   + (etime-stime) + " msec." );
+                }
+
                 // Update cur_img_idx in the offscreenImages[]
                 cur_img_idx = getValidImageIndex( cur_img_idx + Nimages_moved );
             }
@@ -395,12 +431,24 @@ public abstract class ScrollableObject extends JComponent
                 }
                 setImagesInitTimeBounds();
 
+                long stime = 0, etime = 0;
+                if ( Profile.isActive() )
+                    stime = System.currentTimeMillis();
+
                 initializeAllOffImages( tImages_all );
                 for ( img_idx = 0; img_idx < NumImages; img_idx++ )
                 // for ( img_idx = NumImages-1; img_idx >=0; img_idx-- )
                     drawOneOffImage( offscreenImages[ img_idx ],
                                      tImages[ img_idx ] );
                 finalizeAllOffImages( tImages_all );
+
+                if ( Profile.isActive() ) {
+                    etime = System.currentTimeMillis();
+                    Profile.println( "ScrollableObject: "
+                                   + "Fast checkToScrollView()'s "
+                                   + "drawAllImages takes "
+                                   + (etime-stime) + " msec." );
+                }
             } 
         }   // Endof if ( Nimages_moved != 0 )
         if ( Debug.isActive() )
@@ -581,6 +629,9 @@ public abstract class ScrollableObject extends JComponent
                                 image_size.height );
         setSize( component_size );
 
+        long stime = 0, etime = 0;
+        if ( Profile.isActive() )
+            stime = System.currentTimeMillis();
         // compute the last image index in the image buffer
         int img_idx = getValidImageIndex( cur_img_idx + half_NumImages + 1 );
         initializeAllOffImages( tImages_all );
@@ -591,6 +642,12 @@ public abstract class ScrollableObject extends JComponent
             img_idx = getNearFutureImageIndex( img_idx );
         }
         finalizeAllOffImages( tImages_all );
+        if ( Profile.isActive() ) {
+            etime = System.currentTimeMillis();
+            Profile.println( "ScrollableObject: componentResized()'s "
+                           + "drawAllImages takes "
+                           + (etime-stime) + " msec." );
+        }
  
         if ( Debug.isActive() )
             Debug.println( "ScrollableObject: componentResized()'s END: " );

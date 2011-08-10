@@ -168,7 +168,8 @@ public class TimelinePanel extends JPanel
                                                         y_model, y_maps,
                                                         y_colnames, methods );
                 time_canvas_vport = new ViewportTimeYaxis( time_model,
-                                                           y_model, y_tree );
+                                                           y_scrollbar,
+                                                           y_maps );
                 time_canvas_vport.setView( time_canvas );
                 time_canvas_panel = new ViewportTimePanel( time_canvas_vport );
                 time_canvas_panel.setBorderTitle( " TimeLines ",

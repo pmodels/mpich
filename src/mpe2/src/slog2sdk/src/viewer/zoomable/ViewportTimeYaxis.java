@@ -9,6 +9,8 @@
 
 package viewer.zoomable;
 
+import java.util.Map;
+import java.util.Iterator;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -20,43 +22,54 @@ import viewer.common.Parameters;
 import viewer.common.Routines;
 
 public class ViewportTimeYaxis extends ViewportTime
-                               implements AdjustmentListener
+                               implements AdjustmentListener,
+                                          MouseWheelListener
 {
     private static final long     serialVersionUID        = 4300L;
 
     private static final Color    SEARCH_LINE_COLOR       = Color.yellow;
+/*
     private static final int      SEARCH_ARROW_HALF_ANGLE = 15;          // deg
     private static final double   SEARCH_ARROW_ANGLE      = Math.PI/6.0; // rad
     private static final double   COS_SEARCH_ARROW_ANGLE
                                   = Math.cos( SEARCH_ARROW_ANGLE );
     private static final double   SIN_SEARCH_ARROW_ANGLE
                                   = Math.sin( SEARCH_ARROW_ANGLE );
+*/
 
-    private ModelTime             time_model      = null;
-    private BoundedRangeModel     y_model         = null;
-    private YaxisTree             tree_view       = null;
+    private ModelTime             time_model        = null;
+    private YaxisMaps             y_maps            = null;
+    private YaxisTree             tree_view         = null;
+    private JScrollBar            y_scrollbar       = null;
 
-    private Point                 view_pt         = null;
-    private ComponentEvent        resize_evt      = null;
+    private Point                 view_pt           = null;
+    private ComponentEvent        resize_evt        = null;
 
     // searchable = view_img is both a Component and ScrollableView object
-    private SearchableView        searchable      = null;
-    private SearchDialog          search_dialog   = null;
+    private SearchableView        searchable        = null;
+    private SearchDialog          search_dialog     = null;
 
-    private Drawable              searched_dobj   = null;
+    private Drawable              searched_dobj     = null;
     private double                searching_time;              
 
-    public ViewportTimeYaxis( final ModelTime time_axis_model, 
-                              BoundedRangeModel yaxis_model, YaxisTree y_tree )
+    public ViewportTimeYaxis( final ModelTime          time_axis_model, 
+                                    JScrollBar         yaxis_scrollbar,
+                                    YaxisMaps          yaxis_maps )
     {
         super( time_axis_model );
         time_model  = time_axis_model;
-        y_model     = yaxis_model;
-        tree_view   = y_tree;
+        y_maps      = yaxis_maps;
+        tree_view   = y_maps.getTreeView();
+        y_scrollbar = yaxis_scrollbar;
+        // BoundedRangeModel is not enough for both
+        // MouseInputListener (which needs BoundedRangeModel and
+        // MouseWheelListener (which needs JScrollbar's Unit/Block Increment
+        // y_model     = y_scrollbar.getModel();
         view_pt     = new Point( 0, 0 );
         resize_evt  = new ComponentEvent( this,
                                           ComponentEvent.COMPONENT_RESIZED );
         searching_time = time_model.getTimeGlobalMinimum();
+        this.addMouseWheelListener( this );
     }
 
     public void setView( Component view )
@@ -99,15 +112,17 @@ public class ViewportTimeYaxis extends ViewportTime
     }
 
 
-    private Rectangle  localRectangleForDrawable( final Drawable dobj )
+/*
+    // Local help function to facilitate the coordinate transform
+    // of a State's coordinate between Viewport and Canvas.
+    private Rectangle  localRectangleForStateDrawable( final Drawable dobj )
     {
         Rectangle  dobj_rect;
         Point      local_click; 
-        /*
-           SwingUtilities.convertPoint() has to be called after the
-           CanvasXXXXline has been scrolled, i.e. time_model.scroll().
-        */
-        dobj_rect = searchable.localRectangleForDrawable( dobj );
+
+        // SwingUtilities.convertPoint() has to be called after the
+        // CanvasXXXXline has been scrolled, i.e. time_model.scroll().
+        dobj_rect = searchable.localRectangleForStateDrawable( dobj );
         // Update dobj's location to be in ViewportTimeYaxis's coordinate system
         local_click = SwingUtilities.convertPoint( (Component) searchable,
                                                    dobj_rect.x, dobj_rect.y,
@@ -116,7 +131,7 @@ public class ViewportTimeYaxis extends ViewportTime
         return dobj_rect;
     }
 
-    private void drawMarkerForSearchedDrawable( Graphics g )
+    private void drawMarkerForSearchedStateDrawable( Graphics g )
     {
         Rectangle  dobj_rect;
         Color      dobj_color, dobj_brighter_color, dobj_darker_color;
@@ -128,9 +143,9 @@ public class ViewportTimeYaxis extends ViewportTime
 
         vport_width     = this.getWidth();
         vport_height    = this.getHeight();
-        dobj_rect       = this.localRectangleForDrawable( searched_dobj );
-        // Draw a vertical line along the searched_time;
+        dobj_rect       = this.localRectangleForStateDrawable( searched_dobj );
         if ( dobj_rect.x >= 0 && dobj_rect.x < vport_width ) {
+            // Draw the upper and lower arrowhead markers.
             dobj_color           = searched_dobj.getCategory().getColor();
             dobj_brighter_color  = dobj_color.brighter();
             dobj_darker_color    = dobj_color.darker();
@@ -210,17 +225,99 @@ public class ViewportTimeYaxis extends ViewportTime
             }
         }
     }
+*/
+
+
+
+    public void updateDrawableInfoDialogs()
+    {
+        Iterator    itr;
+        InfoDialog  info_popup;
+
+        itr = super.info_dialogs.iterator();
+        while ( itr.hasNext() ) {
+            info_popup = (InfoDialog) itr.next();
+            if ( info_popup instanceof InfoDialogForDrawable ) {
+                InfoDialogForDrawable  popup;
+                popup = (InfoDialogForDrawable) info_popup;
+                popup.updateMarkerVertex();
+            }
+        }
+    }
+
 
     public void paint( Graphics g )
     {
-        int   x_pos;
+        Map         map_line2row;
+        Iterator    itr;
+        InfoDialog  info_popup;
+        Drawable    dobj;
+        int         x_pos;
 
         if ( Debug.isActive() )
             Debug.println( "ViewportTimeYaxis: paint()'s START: " );
 
+        // ViewportTime.paint() has called
+        // ViewportTime.coord_xform.resetTimeBounds() which has called
+        // ViewportTime.coord_xform.resetXaxisPixelBounds().
         super.paint( g );
 
-        // Draw a line at searching_time
+        // Compute the Viewport's coordinates in Canvas, vport_rect.
+        // and set them as YaxisPixelBounds reference in coord_xform
+        Rectangle local_rect, vport_rect;
+        local_rect = SwingUtilities.getLocalBounds( this );
+        if ( Debug.isActive() )
+            Debug.println( "ViewportTimeYaxis.paint: local_bounds="
+                         + local_rect );
+        vport_rect = SwingUtilities.convertRectangle( this, local_rect,
+                                                      (Component) searchable );
+        if ( Debug.isActive() )
+            Debug.println( "ViewportTimeYaxis.paint: vport_bounds="
+                         + vport_rect );
+        super.coord_xform.resetYaxisPixelBounds( vport_rect.y,
+                                                 vport_rect.y
+                                               + vport_rect.height - 1 );
+        // Set the Canvas's row height in coord_xform
+        super.coord_xform.resetRowHeight( tree_view.getRowHeight() );
+
+        // Fetch the mapping of LineID to RowID.
+        map_line2row = y_maps.getMapOfLineIDToRowID();
+        if ( map_line2row == null ) {
+            if ( ! y_maps.update() )
+                Dialogs.error( SwingUtilities.windowForComponent( this ),
+                               "Error in updating YaxisMaps!" );
+            map_line2row = y_maps.getMapOfLineIDToRowID();
+        }
+        // System.out.println( "map_line2row = " + map_line2row );
+
+        //  Draw the InfoDialog marker for selected Drawables
+        InfoDialogForDrawable  popup;
+        double                 popup_time;
+        Graphics2D g2d   = (Graphics2D) g;
+        itr = super.info_dialogs.iterator();
+        while ( itr.hasNext() ) {
+            info_popup = (InfoDialog) itr.next();
+            if ( info_popup instanceof InfoDialogForDrawable ) {
+                popup = (InfoDialogForDrawable) info_popup;
+                // Draw INFO_LINE before drawable's highlight marker & pointers
+                // so the line won't cover markers or pointers.
+                popup_time = popup.getClickedTime();
+                if ( coord_xform.contains( popup_time ) ) {
+                    x_pos = coord_xform.convertTimeToPixel( popup_time );
+                    g.setColor( ViewportTime.INFO_LINE_COLOR );
+                    g.drawLine( x_pos, 0, x_pos, this.getHeight() );
+                }
+                // Draw drawable's highlight marker and pointers
+                dobj = popup.getDrawable();
+                if ( Parameters.HIGHLIGHT_CLICKED_OBJECT )
+                    dobj.drawOnViewport( g2d, super.coord_xform, map_line2row );
+                if ( Parameters.POINTER_ON_CLICKED_OBJECT )
+                    dobj.drawPointerOnViewport( g2d, super.coord_xform,
+                                                popup.getMarkerVertex() );
+            }
+        }
+
+        // Draw a vertical line at the searched_time;
         if ( super.coord_xform.contains( searching_time ) ) {
             x_pos = super.coord_xform.convertTimeToPixel( searching_time );
             g.setColor( SEARCH_LINE_COLOR );
@@ -228,7 +325,9 @@ public class ViewportTimeYaxis extends ViewportTime
         }
         // Draw marker around searched_dobj if it exists
         if ( searched_dobj != null )
-            this.drawMarkerForSearchedDrawable( g );
+            searched_dobj.drawSearchableOnViewport( g2d, super.coord_xform,
+                                                    map_line2row );
+            // this.drawMarkerForSearchedStateDrawable( g );
 
         if ( Debug.isActive() )
             Debug.println( "ViewportTimeYaxis: paint()'s END: " );
@@ -238,6 +337,7 @@ public class ViewportTimeYaxis extends ViewportTime
     {
         searched_dobj = null;
     }
+
 
 
     private static final double INVALID_TIME   = Double.NEGATIVE_INFINITY;
@@ -384,7 +484,8 @@ public class ViewportTimeYaxis extends ViewportTime
 
 
         /*
-            Interface to Overload MouseInputListener()
+            Interface to Overload MouseInputListener implemented
+            in parent class ViewportTime.
         */
         public void mouseClicked( MouseEvent mouse_evt )
         {
@@ -402,7 +503,7 @@ public class ViewportTimeYaxis extends ViewportTime
         }
 
         private int     mouse_last_Yloc;
-        private double  ratio_ymodel2vportH;
+        private double  ratio_ybar2vportH;
 
         /*
             In order to allow grasp & scroll along Y-axis, the change in
@@ -418,10 +519,10 @@ public class ViewportTimeYaxis extends ViewportTime
             super.mousePressed( mouse_evt );
             if ( Routines.isLeftMouseButton( mouse_evt ) ) {
                 if ( ! super.isLeftMouseClick4Zoom ) {  // Hand Mode
-                    vport_click          = mouse_evt.getPoint();
-                    mouse_last_Yloc      = vport_click.y;
-                    ratio_ymodel2vportH  = (double) y_model.getExtent()
-                                                  / this.getHeight();
+                    vport_click       = mouse_evt.getPoint();
+                    mouse_last_Yloc   = vport_click.y;
+                    ratio_ybar2vportH = (double) y_scrollbar.getVisibleAmount()
+                                                 / this.getHeight();
                 }
             }
         }
@@ -436,10 +537,10 @@ public class ViewportTimeYaxis extends ViewportTime
                 if ( ! super.isLeftMouseClick4Zoom ) {  // Hand Mode
                     vport_click = mouse_evt.getPoint();
                     y_change    = mouse_last_Yloc - vport_click.y; 
-                    sb_change   = (int) Math.round( ratio_ymodel2vportH
+                    sb_change   = (int) Math.round( ratio_ybar2vportH
                                                   * y_change );
                     // y_model.setValue() invokes adjustmentValueChanged() above
-                    y_model.setValue( y_model.getValue() + sb_change );
+                    y_scrollbar.setValue( y_scrollbar.getValue() + sb_change );
                     mouse_last_Yloc = vport_click.y;
                 }
             }
@@ -455,12 +556,36 @@ public class ViewportTimeYaxis extends ViewportTime
                 if ( ! super.isLeftMouseClick4Zoom ) {
                     vport_click = mouse_evt.getPoint();
                     y_change  = mouse_last_Yloc - vport_click.y; 
-                    sb_change = (int) Math.round( ratio_ymodel2vportH
+                    sb_change = (int) Math.round( ratio_ybar2vportH
                                                 * y_change );
                     // y_model.setValue() invokes adjustmentValueChanged() above
-                    y_model.setValue( y_model.getValue() + sb_change );
+                    y_scrollbar.setValue( y_scrollbar.getValue() + sb_change );
                     mouse_last_Yloc = vport_click.y;
                 }
             }
+            else if ( Routines.isRightMouseButton( mouse_evt ) ) {
+            }
+        }
+
+        //  MouseWheelListener Implementation
+        public void mouseWheelMoved(MouseWheelEvent mouse_evt)
+        {
+            if ( Debug.isActive() )
+                Debug.println( "ViewportTimeYaxis:mouseWheelMoved() -- "
+                             + mouse_evt );
+            
+            int sb_change;
+            if (   mouse_evt.getScrollType()
+                == MouseWheelEvent.WHEEL_UNIT_SCROLL ) {
+                sb_change = mouse_evt.getUnitsToScroll()
+                          * y_scrollbar.getUnitIncrement(1);
+            }
+            else { // e.getScrollType == MouseWheelEvent.WHEEL_BLOCK_SCROLL
+                if ( mouse_evt.getWheelRotation() < 0 )
+                    sb_change = y_scrollbar.getBlockIncrement(-1);
+                else
+                    sb_change = y_scrollbar.getBlockIncrement(1);
+            }
+            y_scrollbar.setValue( y_scrollbar.getValue() + sb_change );
         }
 }

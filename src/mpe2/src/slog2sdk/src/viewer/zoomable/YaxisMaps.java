@@ -136,13 +136,13 @@ public class YaxisMaps
             parent = y_treeroot;
             iary = (Integer[]) iarys.next();
             for ( idx = 0; idx < iary.length; idx++ ) {
-                 user_obj = iary[ idx ];
-                 child = parent.getChild( user_obj );
-                 if ( child == null ) {
-                     child = new YaxisTreeNode( user_obj );
-                     parent.add( child );
-                 }
-                 parent = child;
+                user_obj = iary[ idx ];
+                child = parent.getChild( user_obj );
+                if ( child == null ) {
+                    child = new YaxisTreeNode( user_obj );
+                    parent.add( child );
+                }
+                parent = child;
             }
         }
         // System.out.println( this.stringForSetOfUserObjs() );
@@ -164,19 +164,19 @@ public class YaxisMaps
             entry       = (Map.Entry) entries.next();
             iary        = (Integer[]) entry.getValue();
             for ( idx = 0; idx < iary.length; idx++ ) {
-                 user_obj = iary[ idx ];
-                 child = node.getChild( user_obj );
-                 if ( child == null ) {
-                     child = new YaxisTreeNode( user_obj );
-                     node.add( child );
-                     System.err.println( "YaxisMaps."
-                                       + "setMapOfLineIDToTreeLeaf(): "
-                                       + "Unexpected Error!\n"
-                                       + "\t user object " + user_obj
-                                       + " is NOT found under the root! " );
-                     isOK = false;
-                 }
-                 node       = child;
+                user_obj = iary[ idx ];
+                child = node.getChild( user_obj );
+                if ( child == null ) {
+                    child = new YaxisTreeNode( user_obj );
+                    node.add( child );
+                    System.err.println( "YaxisMaps."
+                                      + "setMapOfLineIDToTreeLeaf(): "
+                                      + "Unexpected Error!\n"
+                                      + "\t user object " + user_obj
+                                      + " is NOT found under the root! " );
+                    isOK = false;
+                }
+                node       = child;
             }
             map_line2treeleaf.put( entry.getKey(), node );
         }

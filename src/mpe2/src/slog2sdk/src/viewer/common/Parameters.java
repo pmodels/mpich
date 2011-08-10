@@ -28,12 +28,17 @@ import base.topology.PreviewState;
 import base.topology.PreviewEvent;
 import base.topology.SummaryState;
 import base.topology.SummaryArrow;
+import base.topology.Pointer;
+import base.topology.MarkerEvent;
+import base.topology.MarkerLine;
+import base.topology.MarkerArrow;
+import base.topology.MarkerState;
 import base.drawable.Shadow;
 import base.drawable.NestingStacks;
 
 public class Parameters
 {
-    private static final String       VERSION_INFO             = "1.0.2.0";
+    private static final String       VERSION_INFO             = "1.0.3.0";
     private static       String       setupfile_path           = null;
 
     // Options: Zoomable window reinitialization (requires window restart)
@@ -69,14 +74,20 @@ public class Parameters
                                       = PreviewState.CUMULATIVE_EXCLUSION;
     public  static       StateBorder  PREVIEW_STATE_BORDER
                                       = StateBorder.COLOR_XOR_BORDER;
-    public  static       int          PREVIEW_STATE_BORDER_W   = 3;
-    public  static       int          PREVIEW_STATE_BORDER_H   = 0;
-    public  static       int          PREVIEW_STATE_LEGEND_H   = 2;
-    public  static       int          PREVIEW_ARROW_LOG_BASE   = 5;
+    public  static       int          PREVIEW_STATE_BORDER_WIDTH  = 3;
+    public  static       int          PREVIEW_STATE_BORDER_HEIGHT = 0;
+    public  static       int          PREVIEW_STATE_LEGEND_HEIGHT = 2;
+    public  static       int          PREVIEW_ARROW_LOG_BASE      = 5;
 
-    public  static       int          SEARCH_ARROW_LENGTH      = 20;
-    public  static       int          SEARCH_FRAME_THICKNESS   = 3;
-    public  static       boolean      SEARCHED_OBJECT_ON_TOP   = false;
+    public  static       boolean      HIGHLIGHT_CLICKED_OBJECT  = true;
+    public  static       boolean      POINTER_ON_CLICKED_OBJECT = true;
+    public  static       int          MARKER_POINTER_MIN_LENGTH = 20;
+    public  static       int          MARKER_POINTER_MAX_LENGTH = 30;
+    public  static       boolean      MARKER_STATE_STAYS_ON_TOP = false;
+    public  static       int          MARKER_STATE_BORDER_WIDTH = 3;
+    public  static       int          MARKER_ARROW_BORDER_WIDTH = 4;
+    public  static       int          MARKER_LINE_BORDER_WIDTH  = 4;
+    public  static       int          MARKER_EVENT_BORDER_WIDTH = 4;
 
     // Options: Histogram zoomable window
     public  static       boolean      HISTOGRAM_ZERO_ORIGIN    = true;
@@ -104,8 +115,8 @@ public class Parameters
         LabeledTextField.setDefaultFont( Const.FONT );
         LabeledComboBox.setDefaultFont( Const.FONT );
         // Define the size of ArrowHead
-        Arrow.setHeadLength( Parameters.ARROW_HEAD_LENGTH );
-        Arrow.setHeadWidth( Parameters.ARROW_HEAD_WIDTH );
+        Arrow.setHeadProperty( Parameters.ARROW_HEAD_LENGTH,
+                               Parameters.ARROW_HEAD_WIDTH );
         // Define the size of EventBase
         Event.setBaseWidth( Parameters.EVENT_BASE_WIDTH ); 
         // Define how a pixel is considered to be lying on a Line/Arrow/Event
@@ -115,14 +126,15 @@ public class Parameters
         State.setBorderStyle( Parameters.STATE_BORDER );
         PreviewState.setBorderStyle( Parameters.PREVIEW_STATE_BORDER );
         PreviewState.setDisplayType( Parameters.PREVIEW_STATE_DISPLAY );
-        PreviewState.setMinCategoryHeight( Parameters.PREVIEW_STATE_LEGEND_H );
+        PreviewState.setMinCategoryHeight( Parameters.PREVIEW_STATE_LEGEND_HEIGHT );
         // PreviewEvent.setBaseWidth( Parameters.EVENT_BASE_WIDTH );
         PreviewEvent.setPixelClosenessTolerance(
                                       Parameters.CLICK_RADIUS_TO_LINE );
 
         // Define Shadow State's insets dimension
-        Shadow.setStateInsetsDimension( Parameters.PREVIEW_STATE_BORDER_W,
-                                        Parameters.PREVIEW_STATE_BORDER_H );
+        Shadow.setStateInsetsDimension(
+                             Parameters.PREVIEW_STATE_BORDER_WIDTH,
+                             Parameters.PREVIEW_STATE_BORDER_HEIGHT );
         // Define Shadow Arrow's thickness
         Shadow.setBaseOfLogOfObjectNumToArrowWidth(
                Parameters.PREVIEW_ARROW_LOG_BASE );
@@ -131,6 +143,20 @@ public class Parameters
                       Parameters.STATE_HEIGHT_FACTOR );
         NestingStacks.setNestingHeightReduction(
                       Parameters.NESTING_HEIGHT_FACTOR );
+
+        // Set various Markers' properties
+        Pointer.setProperty( Parameters.MARKER_POINTER_MIN_LENGTH,
+                             Parameters.MARKER_POINTER_MAX_LENGTH );
+        MarkerState.setProperty( Parameters.MARKER_STATE_STAYS_ON_TOP,
+                                 Parameters.MARKER_STATE_BORDER_WIDTH );
+        MarkerArrow.setHeadAndBorderProperty(
+                    Parameters.ARROW_HEAD_LENGTH,
+                    Parameters.ARROW_HEAD_WIDTH,
+                    Parameters.MARKER_ARROW_BORDER_WIDTH );
+        MarkerLine.setProperty( Parameters.MARKER_LINE_BORDER_WIDTH );
+        MarkerEvent.setBaseAndBorderProperty(
+                    Parameters.EVENT_BASE_WIDTH,
+                    Parameters.MARKER_EVENT_BORDER_WIDTH );
 
         // Define Histogram Dialog's drawing properties
         SummaryArrow.setBaseOfLogOfObjectNumToArrowWidth(
@@ -194,21 +220,33 @@ public class Parameters
         pptys.setProperty( "PREVIEW_STATE_DISPLAY", PREVIEW_STATE_DISPLAY );
         pptys.setProperty( "PREVIEW_STATE_BORDER",
                            String.valueOf( PREVIEW_STATE_BORDER ) );
-        pptys.setProperty( "PREVIEW_STATE_BORDER_W",
-                           String.valueOf( PREVIEW_STATE_BORDER_W ) );
-        pptys.setProperty( "PREVIEW_STATE_BORDER_H",
-                           String.valueOf( PREVIEW_STATE_BORDER_H ) );
-        pptys.setProperty( "PREVIEW_STATE_LEGEND_H",
-                           String.valueOf( PREVIEW_STATE_LEGEND_H ) );
+        pptys.setProperty( "PREVIEW_STATE_BORDER_WIDTH",
+                           String.valueOf( PREVIEW_STATE_BORDER_WIDTH ) );
+        pptys.setProperty( "PREVIEW_STATE_BORDER_HEIGHT",
+                           String.valueOf( PREVIEW_STATE_BORDER_HEIGHT ) );
+        pptys.setProperty( "PREVIEW_STATE_LEGEND_HEIGHT",
+                           String.valueOf( PREVIEW_STATE_LEGEND_HEIGHT ) );
         pptys.setProperty( "PREVIEW_ARROW_LOG_BASE",
                            String.valueOf( PREVIEW_ARROW_LOG_BASE ) );
 
-        pptys.setProperty( "SEARCH_ARROW_LENGTH",
-                           String.valueOf( SEARCH_ARROW_LENGTH ) );
-        pptys.setProperty( "SEARCH_FRAME_THICKNESS",
-                           String.valueOf( SEARCH_FRAME_THICKNESS ) );
-        pptys.setProperty( "SEARCHED_OBJECT_ON_TOP",
-                           String.valueOf( SEARCHED_OBJECT_ON_TOP ) );
+        pptys.setProperty( "HIGHLIGHT_CLICKED_OBJECT",
+                           String.valueOf( HIGHLIGHT_CLICKED_OBJECT ) );
+        pptys.setProperty( "POINTER_ON_CLICKED_OBJECT",
+                           String.valueOf( POINTER_ON_CLICKED_OBJECT ) );
+        pptys.setProperty( "MARKER_POINTER_MIN_LENGTH",
+                           String.valueOf( MARKER_POINTER_MIN_LENGTH ) );
+        pptys.setProperty( "MARKER_POINTER_MAX_LENGTH",
+                           String.valueOf( MARKER_POINTER_MAX_LENGTH ) );
+        pptys.setProperty( "MARKER_STATE_STAYS_ON_TOP",
+                           String.valueOf( MARKER_STATE_STAYS_ON_TOP ) );
+        pptys.setProperty( "MARKER_STATE_BORDER_WIDTH",
+                           String.valueOf( MARKER_STATE_BORDER_WIDTH ) );
+        pptys.setProperty( "MARKER_ARROW_BORDER_WIDTH",
+                           String.valueOf( MARKER_ARROW_BORDER_WIDTH ) );
+        pptys.setProperty( "MARKER_STATE_BORDER_WIDTH",
+                           String.valueOf( MARKER_STATE_BORDER_WIDTH ) );
+        pptys.setProperty( "MARKER_EVENT_BORDER_WIDTH",
+                           String.valueOf( MARKER_EVENT_BORDER_WIDTH ) );
 
         // Options: Histogram zoomable window
         pptys.setProperty( "HISTOGRAM_ZERO_ORIGIN",
@@ -347,29 +385,49 @@ public class Parameters
         ppty_val = pptys.getProperty( "PREVIEW_STATE_BORDER" );
         if ( ppty_val != null )
             PREVIEW_STATE_BORDER = StateBorder.parseString( ppty_val );
-        ppty_val = pptys.getProperty( "PREVIEW_STATE_BORDER_W" );
+        ppty_val = pptys.getProperty( "PREVIEW_STATE_BORDER_WIDTH" );
         if ( ppty_val != null )
-            PREVIEW_STATE_BORDER_W = Integer.parseInt( ppty_val );
-        ppty_val = pptys.getProperty( "PREVIEW_STATE_BORDER_H" );
+            PREVIEW_STATE_BORDER_WIDTH = Integer.parseInt( ppty_val );
+        ppty_val = pptys.getProperty( "PREVIEW_STATE_BORDER_HEIGHT" );
         if ( ppty_val != null )
-            PREVIEW_STATE_BORDER_H = Integer.parseInt( ppty_val );
-        ppty_val = pptys.getProperty( "PREVIEW_STATE_LEGEND_H" );
+            PREVIEW_STATE_BORDER_HEIGHT = Integer.parseInt( ppty_val );
+        ppty_val = pptys.getProperty( "PREVIEW_STATE_LEGEND_HEIGHT" );
         if ( ppty_val != null )
-            PREVIEW_STATE_LEGEND_H = Integer.parseInt( ppty_val );
+            PREVIEW_STATE_LEGEND_HEIGHT = Integer.parseInt( ppty_val );
         ppty_val = pptys.getProperty( "PREVIEW_ARROW_LOG_BASE" );
         if ( ppty_val != null )
             PREVIEW_ARROW_LOG_BASE = Integer.parseInt( ppty_val );
 
-        ppty_val = pptys.getProperty( "SEARCH_ARROW_LENGTH" );
+        ppty_val = pptys.getProperty( "HIGHLIGHT_CLICKED_OBJECT" );
         if ( ppty_val != null )
-            SEARCH_ARROW_LENGTH = Integer.parseInt( ppty_val );
-        ppty_val = pptys.getProperty( "SEARCH_FRAME_THICKNESS" );
+            HIGHLIGHT_CLICKED_OBJECT =    ppty_val.equalsIgnoreCase( "true" )
+                                       || ppty_val.equalsIgnoreCase( "yes" );
+        ppty_val = pptys.getProperty( "POINTER_ON_CLICKED_OBJECT" );
         if ( ppty_val != null )
-            SEARCH_FRAME_THICKNESS = Integer.parseInt( ppty_val );
-        ppty_val = pptys.getProperty( "SEARCHED_OBJECT_ON_TOP" );
+            POINTER_ON_CLICKED_OBJECT =    ppty_val.equalsIgnoreCase( "true" )
+                                        || ppty_val.equalsIgnoreCase( "yes" );
+        ppty_val = pptys.getProperty( "MARKER_POINTER_MIN_LENGTH" );
         if ( ppty_val != null )
-            SEARCHED_OBJECT_ON_TOP =    ppty_val.equalsIgnoreCase( "true" )
-                                     || ppty_val.equalsIgnoreCase( "yes" );
+            MARKER_POINTER_MIN_LENGTH = Integer.parseInt( ppty_val );
+        ppty_val = pptys.getProperty( "MARKER_POINTER_MAX_LENGTH" );
+        if ( ppty_val != null )
+            MARKER_POINTER_MAX_LENGTH = Integer.parseInt( ppty_val );
+        ppty_val = pptys.getProperty( "MARKER_STATE_STAYS_ON_TOP" );
+        if ( ppty_val != null )
+            MARKER_STATE_STAYS_ON_TOP =    ppty_val.equalsIgnoreCase( "true" )
+                                        || ppty_val.equalsIgnoreCase( "yes" );
+        ppty_val = pptys.getProperty( "MARKER_STATE_BORDER_WIDTH" );
+        if ( ppty_val != null )
+            MARKER_STATE_BORDER_WIDTH = Integer.parseInt( ppty_val );
+        ppty_val = pptys.getProperty( "MARKER_ARROW_BORDER_WIDTH" );
+        if ( ppty_val != null )
+            MARKER_ARROW_BORDER_WIDTH = Integer.parseInt( ppty_val );
+        ppty_val = pptys.getProperty( "MARKER_LINE_BORDER_WIDTH" );
+        if ( ppty_val != null )
+            MARKER_LINE_BORDER_WIDTH = Integer.parseInt( ppty_val );
+        ppty_val = pptys.getProperty( "MARKER_EVENT_BORDER_WIDTH" );
+        if ( ppty_val != null )
+            MARKER_EVENT_BORDER_WIDTH = Integer.parseInt( ppty_val );
 
         // Options: Histogram zoomable window
         ppty_val = pptys.getProperty( "HISTOGRAM_ZERO_ORIGIN" );
@@ -426,14 +484,33 @@ public class Parameters
         //
         rep.append( "PREVIEW_STATE_DISPLAY = " + PREVIEW_STATE_DISPLAY + "\n" );
         rep.append( "PREVIEW_STATE_BORDER = "  + PREVIEW_STATE_BORDER  + "\n" );
-        rep.append( "PREVIEW_STATE_BORDER_W = "+ PREVIEW_STATE_BORDER_W+ "\n" );
-        rep.append( "PREVIEW_STATE_BORDER_H = "+ PREVIEW_STATE_BORDER_H+ "\n" );
-        rep.append( "PREVIEW_STATE_LEGEND_H = "+ PREVIEW_STATE_LEGEND_H+ "\n" );
-        rep.append( "PREVIEW_ARROW_LOG_BASE = "+ PREVIEW_ARROW_LOG_BASE+ "\n" );
+        rep.append( "PREVIEW_STATE_BORDER_WIDTH = "
+                  + PREVIEW_STATE_BORDER_WIDTH + "\n" );
+        rep.append( "PREVIEW_STATE_BORDER_HEIGHT = "
+                  + PREVIEW_STATE_BORDER_HEIGHT + "\n" );
+        rep.append( "PREVIEW_STATE_LEGEND_HEIGHT = "
+                  + PREVIEW_STATE_LEGEND_HEIGHT + "\n" );
+        rep.append( "PREVIEW_ARROW_LOG_BASE = "
+                  + PREVIEW_ARROW_LOG_BASE + "\n" );
         //
-        rep.append( "SEARCH_ARROW_LENGTH = "   + SEARCH_ARROW_LENGTH   + "\n" );
-        rep.append( "SEARCH_FRAME_THICKNESS = "+ SEARCH_FRAME_THICKNESS+ "\n" );
-        rep.append( "SEARCHED_OBJECT_ON_TOP = "+ SEARCHED_OBJECT_ON_TOP+ "\n" );
+        rep.append( "HIGHLIGHT_CLICKED_OBJECT = "
+                  + HIGHLIGHT_CLICKED_OBJECT + "\n" );
+        rep.append( "POINTER_ON_CLICKED_OBJECT = "
+                  + POINTER_ON_CLICKED_OBJECT + "\n" );
+        rep.append( "MARKER_POINTER_MIN_LENGTH = "
+                  + MARKER_POINTER_MIN_LENGTH + "\n" );
+        rep.append( "MARKER_POINTER_MAX_LENGTH = "
+                  + MARKER_POINTER_MAX_LENGTH + "\n" );
+        rep.append( "MARKER_STATE_STAYS_ON_TOP = "
+                  + MARKER_STATE_STAYS_ON_TOP + "\n" );
+        rep.append( "MARKER_STATE_BORDER_WIDTH = "
+                  + MARKER_STATE_BORDER_WIDTH + "\n" );
+        rep.append( "MARKER_ARROW_BORDER_WIDTH = "
+                  + MARKER_ARROW_BORDER_WIDTH + "\n" );
+        rep.append( "MARKER_LINE_BORDER_WIDTH = "
+                  + MARKER_LINE_BORDER_WIDTH + "\n" );
+        rep.append( "MARKER_EVENT_BORDER_WIDTH = "
+                  + MARKER_EVENT_BORDER_WIDTH + "\n" );
 
         rep.append( "HISTOGRAM_ZERO_ORIGIN = " + HISTOGRAM_ZERO_ORIGIN + "\n" );
         rep.append( "SUMMARY_STATE_BORDER = "  + SUMMARY_STATE_BORDER  + "\n" );

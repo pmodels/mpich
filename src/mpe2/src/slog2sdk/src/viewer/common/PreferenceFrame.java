@@ -9,8 +9,10 @@
 
 package viewer.common;
 
+import java.net.URL;
+
 import java.awt.Container;
-// import java.awt.Component;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -39,9 +41,16 @@ public class PreferenceFrame extends JFrame
         Container root_panel = this.getContentPane();
         root_panel.setLayout( new BoxLayout( root_panel, BoxLayout.Y_AXIS ) );
 
+    // Since the ActionListener here updates ALL of the Parameters in memory
+    // even when only one of fields/commbobox is updated, so we canNOT do
+    // addActionListener() in the above creation function as the listener will
+    // be invoked before each of member fields/comboboxes is created. 
+    // Instead addAllActionListeners() has to be called after
+    // updateAllParametersFromFields() in PreferenceFrame.
         JScrollPane  scroller;
             pptys_panel = new PreferencePanel();
             pptys_panel.updateAllFieldsFromParameters();
+            pptys_panel.addSelfActionListeners();
             scroller   = new JScrollPane( pptys_panel );
             Dimension screen_size = Routines.getScreenSize();
             scroller.setMinimumSize(
@@ -54,6 +63,8 @@ public class PreferenceFrame extends JFrame
                                     screen_size.height * 3/5 ) );
         root_panel.add( scroller );
 
+        URL    icon_URL;
+        /*
         JPanel mid_panel = new JPanel();
         mid_panel.setLayout( new BoxLayout( mid_panel, BoxLayout.X_AXIS ) );
             mid_panel.add( Box.createHorizontalGlue() );
@@ -76,13 +87,35 @@ public class PreferenceFrame extends JFrame
 
             mid_panel.add( Box.createHorizontalGlue() );
         root_panel.add( mid_panel );
+        */
 
         JPanel end_panel = new JPanel();
         end_panel.setLayout( new BoxLayout( end_panel, BoxLayout.X_AXIS ) );
             end_panel.add( Box.createHorizontalGlue() );
 
-            close_btn = new JButton( "close" );
+            icon_URL = getURL( Const.IMG_PATH + "SaveAll24.gif" );
+            if ( icon_URL != null )
+                save_btn = new JButton( new ImageIcon( icon_URL ) );
+            else
+                save_btn = new JButton( "Save" );
+            save_btn.setMargin( Const.SQ_BTN2_INSETS );
+            save_btn.setToolTipText(
+            "Save preference to Jumpshot-4 setup file" );
+            save_btn.setAlignmentX( Component.LEFT_ALIGNMENT );
+            // save_btn.setAlignmentY( Component.CENTER_ALIGNMENT );
+            save_btn.addActionListener( this );
+            end_panel.add( save_btn );
+
+            end_panel.add( Box.createHorizontalGlue() );
+
+            icon_URL = getURL( Const.IMG_PATH + "Stop24.gif" );
+            if ( icon_URL != null )
+                close_btn = new JButton( new ImageIcon( icon_URL ) );
+            else
+                close_btn = new JButton( "Close" );
+            close_btn.setMargin( Const.SQ_BTN2_INSETS );
             close_btn.setToolTipText( "Close this window" );
+            close_btn.setAlignmentX( Component.RIGHT_ALIGNMENT );
             // close_btn.setAlignmentY( Component.CENTER_ALIGNMENT );
             close_btn.addActionListener( this );
             end_panel.add( close_btn );
@@ -113,14 +146,26 @@ public class PreferenceFrame extends JFrame
         pptys_panel.updateAllFieldsFromParameters();
     }
 
+    protected URL getURL( String filename )
+    {
+        URL url = null;
+        url = getClass().getResource( filename );
+        return url;
+    }
+
 
     public void actionPerformed( ActionEvent evt )
     {
+        /*
         if ( evt.getSource() == this.update_btn ) {
             pptys_panel.updateAllParametersFromFields();
+            Parameters.initStaticClasses();
         }
-        else if ( evt.getSource() == this.save_btn ) {
+        else
+        */
+        if ( evt.getSource() == this.save_btn ) {
             pptys_panel.updateAllParametersFromFields();
+            Parameters.initStaticClasses();
             Parameters.writeToSetupFile( this );
         }
         else if ( evt.getSource() == this.close_btn ) {

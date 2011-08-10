@@ -9,10 +9,12 @@
 
 package viewer.zoomable;
 
+import java.net.URL;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
+import viewer.common.Const;
 import viewer.common.TopWindow;
 
 public class SearchDialog extends JDialog 
@@ -26,6 +28,8 @@ public class SearchDialog extends JDialog
     private Container          root_panel;
     private JPanel             btn_panel;
     private JButton            close_btn;
+    private JButton            searchBack_btn;
+    private JButton            searchFore_btn;
 
     public SearchDialog( final Frame frame, ViewportTimeYaxis  vport )
     {
@@ -45,6 +49,13 @@ public class SearchDialog extends JDialog
     }
 */
 
+    private URL getURL( String filename )
+    {
+        URL url = null;
+        url = getClass().getResource( filename );
+        return url;
+    }
+
     private void init()
     {
         super.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
@@ -52,9 +63,48 @@ public class SearchDialog extends JDialog
         root_panel.setLayout( new BoxLayout( root_panel, BoxLayout.Y_AXIS ) );
 
         btn_panel = new JPanel();
-        close_btn = new JButton( "close" );
-        close_btn.addActionListener( this );
-        close_btn.setAlignmentX( Component.CENTER_ALIGNMENT );
+        btn_panel.setLayout( new BoxLayout( btn_panel, BoxLayout.X_AXIS ) );
+        btn_panel.add( InfoDialog.BOX_RIGID );
+        btn_panel.add( InfoDialog.BOX_GLUE );
+
+            URL  icon_URL;
+            icon_URL = getURL( Const.IMG_PATH + "FindBack24.gif" );
+            if ( icon_URL != null )
+                searchBack_btn = new JButton( new ImageIcon( icon_URL ) );
+            else
+                searchBack_btn = new JButton( "SearchBackward" );
+            searchBack_btn.setMargin( Const.SQ_BTN1_INSETS );
+            searchBack_btn.setToolTipText( "Search Backward in time" );
+            searchBack_btn.setAlignmentX( Component.LEFT_ALIGNMENT );
+            // searchBack_btn.setPreferredSize( btn_dim );
+            searchBack_btn.addActionListener(
+                           new ActionSearchBackward( viewport ) );
+            btn_panel.add( searchBack_btn );
+    
+            icon_URL = getURL( Const.IMG_PATH + "FindFore24.gif" );
+            if ( icon_URL != null )
+                searchFore_btn = new JButton( new ImageIcon( icon_URL ) );
+            else
+                searchFore_btn = new JButton( "SearchForward" );
+            searchFore_btn.setMargin( Const.SQ_BTN1_INSETS );
+            searchFore_btn.setToolTipText( "Search Forward in time" );
+            searchFore_btn.setAlignmentX( Component.RIGHT_ALIGNMENT );
+            // searchFore_btn.setPreferredSize( btn_dim );
+            searchFore_btn.addActionListener(
+                           new ActionSearchForward( viewport ) );
+            btn_panel.add( searchFore_btn );
+
+        btn_panel.add( InfoDialog.BOX_GLUE );
+
+            icon_URL = getURL( Const.IMG_PATH + "Stop24.gif" );
+            if ( icon_URL != null )
+                close_btn = new JButton( new ImageIcon( icon_URL ) );
+            else
+                close_btn = new JButton( "Close" );
+            close_btn.setMargin( Const.SQ_BTN1_INSETS );
+            close_btn.setToolTipText( "Close this dialog box." );
+            close_btn.setAlignmentX( Component.CENTER_ALIGNMENT );
+            close_btn.addActionListener( this );
         btn_panel.add( close_btn );
         btn_panel.setAlignmentX( Component.LEFT_ALIGNMENT );
         Dimension  panel_max_size;

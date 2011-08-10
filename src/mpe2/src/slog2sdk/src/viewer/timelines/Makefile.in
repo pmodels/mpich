@@ -21,7 +21,6 @@ RM           = @RM@
 TARGET    = $(libbuild_dir)/timeline_view.jar
 PACKAGE   = viewer.timelines
 SRC       = PreviewStateComboBox.java \
-            InfoPanelForDrawable.java InfoDialogForDrawable.java \
             SearchCriteria.java SearchTreeTrunk.java \
             CanvasTimeline.java TreeTrunkPanel.java \
             TimelineToolBar.java TimelinePanel.java TimelineFrame.java

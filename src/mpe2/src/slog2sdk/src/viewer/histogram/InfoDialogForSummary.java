@@ -11,6 +11,7 @@ package viewer.histogram;
 
 import java.awt.*;
 import javax.swing.BoxLayout;
+import javax.swing.JPanel;
 import javax.swing.JTree;
 
 import base.statistics.Summarizable;
@@ -34,6 +35,11 @@ public class InfoDialogForSummary extends InfoDialog
         root_panel.add( new InfoPanelForSummary( tree_view, y_colnames,
                                                  summarizable ) );
 
-        root_panel.add( super.getCloseButtonPanel() );
+        JPanel close_btn_panel = new JPanel();
+        super.initCloseButton();
+        close_btn_panel.add( super.getCloseButton() );
+        close_btn_panel.setAlignmentX( Component.LEFT_ALIGNMENT );
+        super.finalizeCloseButtonPanel( close_btn_panel );
+        root_panel.add( close_btn_panel );
     }
 }

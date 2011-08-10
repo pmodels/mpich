@@ -42,6 +42,8 @@ public class YaxisTree extends JTree
         super.putClientProperty("JTree.lineStyle", "Angled");
         // this.setRootVisible( false );
         // this.setEditable( true );
+        // Test if setting JTree's Large_Model_Property results in less memory
+        super.largeModel = true;
     }
 
     private void getAllLeavesForNode( named_vector nvtr,

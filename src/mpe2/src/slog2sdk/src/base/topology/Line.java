@@ -41,16 +41,18 @@ public class Line
         iFinal   = coord_xform.convertTimeToPixel( final_time );
 
         /* Determine if Arrow should be drawn */
-        if ( last_drawn_pos.coversArrow( iStart, iFinal ) )
-            return 0;  // Line has been drawn at the same location before
-        last_drawn_pos.set( iStart, iFinal );
+        if ( last_drawn_pos != null ) {
+            if ( last_drawn_pos.coversArrow( iStart, iFinal ) )
+                return 0;  // Line has been drawn at the same location before
+            last_drawn_pos.set( iStart, iFinal );
+        }
 
         jStart   = coord_xform.convertRowToPixel( start_ypos );
         jFinal   = coord_xform.convertRowToPixel( final_ypos );
 
         boolean  isStartVtxInImg, isFinalVtxInImg;
-        isStartVtxInImg = iStart > 0 ;
-        isFinalVtxInImg = iFinal < coord_xform.getImageWidth();
+        isStartVtxInImg = iStart >= 0 ;
+        isFinalVtxInImg = iFinal <  coord_xform.getPixelWidth();
 
         double slope = 0.0;
         if ( !isStartVtxInImg || !isFinalVtxInImg )
@@ -76,7 +78,7 @@ public class Line
             jTail = jFinal;
         }
         else {
-            iTail = coord_xform.getImageWidth();
+            iTail = coord_xform.getPixelWidth() - 1;
             jTail = (int) Math.rint( jFinal + slope * ( iTail - iFinal ) );
         }
 

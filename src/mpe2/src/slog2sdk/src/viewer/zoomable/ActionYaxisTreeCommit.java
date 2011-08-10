@@ -43,6 +43,7 @@ public class ActionYaxisTreeCommit implements ActionListener
         if ( ! y_maps.update() )
             Dialogs.error( root_window,
                            "Error in updating YaxisMaps!" );
+        canvas_vport.updateDrawableInfoDialogs();
         // y_maps.printMaps( System.out );
         canvas_vport.fireComponentResized();
         row_adjs.updateSlidersAfterTreeExpansion();

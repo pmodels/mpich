@@ -27,5 +27,7 @@ public interface CoordPixelXform
 
     public boolean overlaps( final TimeBoundingBox  timebox );
 
-    public int     getImageWidth();
+    public int     getPixelWidth();
+
+    public int     getPixelHeight();
 }

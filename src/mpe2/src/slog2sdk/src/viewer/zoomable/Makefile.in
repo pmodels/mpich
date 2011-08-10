@@ -27,8 +27,9 @@ SRC       = Diagnosis.java Debug.java Profile.java \
             ModelTime.java ScrollbarTime.java ModelTimePanel.java \
             TimeFormat.java InfoDialog.java InfoDialogForTime.java \
             InitializableDialog.java SummarizableView.java \
-            SearchPanel.java SearchableView.java \
-            OperationDurationPanel.java InfoDialogForDuration.java \
+            SearchPanel.java InfoPanelForDrawable.java \
+            SearchableView.java OperationDurationButton.java \
+            InfoDialogForDuration.java InfoDialogForDrawable.java \
             SearchableView.java ScrollableView.java ScrollableObject.java \
             ToolBarStatus.java ViewportTime.java \
             ViewportTimeYaxis.java SearchDialog.java \

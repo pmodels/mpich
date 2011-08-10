@@ -9,19 +9,26 @@
 
 package viewer.zoomable;
 
+import java.net.URL;
 import java.awt.*;
 // import java.awt.event.*;
 import javax.swing.*;
 
+import viewer.common.Const;
 // import viewer.common.Dialogs;
 
 public class InfoDialog extends JDialog
 {
     private static final long  serialVersionUID = 3800L;
 
-    private JPanel   btn_panel;
-    private JButton  close_btn;
-    private double   clicked_time;
+    public  static final Component  BOX_GLUE  = Box.createHorizontalGlue();
+    public  static final Component  BOX_STRUT = Box.createHorizontalStrut(10);
+    public  static final Component  BOX_RIGID = Box.createRigidArea(
+                                                    new Dimension(40,0));
+
+    private   JPanel   btn_panel;
+    private   JButton  close_btn;
+    private   double   clicked_time;
 
     public InfoDialog( final Frame   ancestor_frame,
                              String  title_str,
@@ -29,7 +36,6 @@ public class InfoDialog extends JDialog
     {
         super( ancestor_frame, title_str );
         clicked_time = time;
-        this.init();
     }
 
     public InfoDialog( final Dialog  ancestor_dialog,
@@ -38,33 +44,43 @@ public class InfoDialog extends JDialog
     {
         super( ancestor_dialog, title_str );
         clicked_time = time;
-        this.init();
     }
 
-    private void init()
+    public void initCloseButton()
     {
-        super.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
-        btn_panel = new JPanel();
-        close_btn = new JButton( "close" );
-        close_btn.setAlignmentX( Component.CENTER_ALIGNMENT );
-        btn_panel.add( close_btn );
-        btn_panel.setAlignmentX( Component.LEFT_ALIGNMENT );
-        Dimension  panel_max_size;
-        panel_max_size        = btn_panel.getPreferredSize();
-        panel_max_size.width  = Short.MAX_VALUE;
-        btn_panel.setMaximumSize( panel_max_size );
+        URL icon_URL;
 
-        // addWindowListener( new InfoDialogWindowListener( this ) );
+        super.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
+        /*
+           Create a Close Button here but its ActionListener will be
+           implemented in ViewportTime where List of InfoDialog lives
+           so the Close ActionListener can do the clean up.
+        */
+        icon_URL = getURL( Const.IMG_PATH + "Stop24.gif" );
+        if ( icon_URL != null )
+            close_btn = new JButton( new ImageIcon( icon_URL ) );
+        else
+            close_btn = new JButton( "Close" );
+        close_btn.setMargin( Const.SQ_BTN1_INSETS );
+        close_btn.setToolTipText( "Close this Dialog box." );
+        close_btn.setAlignmentX( Component.CENTER_ALIGNMENT );
     }
 
+    // Provides an handle to Close button so
+    // 1) ViewportTime can implement cleaning up ActionListener
+    // 2) subclass can decide where close button should locate.
     public JButton getCloseButton()
     {
         return close_btn;
     }
 
-    public JPanel getCloseButtonPanel()
+    public void finalizeCloseButtonPanel( JPanel btn_panel )
     {
-        return btn_panel;
+        Dimension  panel_max_size;
+        panel_max_size        = btn_panel.getPreferredSize();
+        panel_max_size.width  = Short.MAX_VALUE;
+        btn_panel.setMaximumSize( panel_max_size );
+        // addWindowListener( new InfoDialogWindowListener( this ) );
     }
 
     public double getClickedTime()
@@ -97,4 +113,11 @@ public class InfoDialog extends JDialog
         }
     }
     */
+
+    protected URL getURL( String filename )
+    {
+        URL url = null;
+        url = getClass().getResource( filename );
+        return url;
+    }
 }

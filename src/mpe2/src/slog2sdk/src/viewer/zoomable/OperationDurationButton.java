@@ -25,19 +25,17 @@ import viewer.common.Const;
 import viewer.common.Parameters;
 import viewer.common.SwingWorker;
 
-public class OperationDurationPanel extends JPanel
+public class OperationDurationButton extends JButton
 {
     private static final long                serialVersionUID = 4100;
-
-    private static       Border              Normal_Border = null;
 
     private              TimeBoundingBox     timebox;
     private              SummarizableView    summarizable;
     private              InitializableDialog summary_dialog;
     private              Dialog              root_dialog;
 
-    public OperationDurationPanel( final TimeBoundingBox   times,
-                                   final SummarizableView  summary )
+    public OperationDurationButton( final TimeBoundingBox   times,
+                                    final SummarizableView  summary )
     {
         super();
 
@@ -46,18 +44,6 @@ public class OperationDurationPanel extends JPanel
         summary_dialog  = null;
         root_dialog     = null;
 
-        if ( Normal_Border == null ) {
-            /*
-            Normal_Border = BorderFactory.createCompoundBorder(
-                            BorderFactory.createRaisedBevelBorder(),
-                            BorderFactory.createLoweredBevelBorder() );
-            Normal_Border = BorderFactory.createEtchedBorder();
-            */
-            Normal_Border = BorderFactory.createEmptyBorder();
-        }
-        super.setBorder( Normal_Border );
-
-        JButton     stat_btn   = null;
         URL         icon_URL   = getURL( Const.IMG_PATH + "Stat110x40.gif" );
         ImageIcon   icon, icon_shaded;
         Border  raised_border, lowered_border, big_border, huge_border;
@@ -65,26 +51,22 @@ public class OperationDurationPanel extends JPanel
             icon        = new ImageIcon( icon_URL );
             icon_shaded = new ImageIcon(
                           GrayFilter.createDisabledImage( icon.getImage() ) );
-            stat_btn = new JButton( icon );
-            stat_btn.setPressedIcon( icon_shaded );
+            super.setIcon( icon );
+            super.setPressedIcon( icon_shaded );
             raised_border  = BorderFactory.createRaisedBevelBorder();
             lowered_border = BorderFactory.createLoweredBevelBorder();
             big_border = BorderFactory.createCompoundBorder( raised_border,
                                                              lowered_border );
             huge_border = BorderFactory.createCompoundBorder( raised_border,
                                                               big_border );
-            stat_btn.setBorder( huge_border );
+            super.setBorder( huge_border );
         }
         else
-            stat_btn = new JButton( "Sumary Statistics" );
-        stat_btn.setMargin( Const.SQ_BTN2_INSETS );
-        stat_btn.setToolTipText(
+            super.setText( "Sumary Statistics" );
+        super.setMargin( Const.SQ_BTN2_INSETS );
+        super.setToolTipText(
         "Summary Statistics for the selected duration, timelines & legends" );
-        stat_btn.addActionListener( new StatBtnActionListener() );
-
-        // super.add( InfoDialog.BOX_GLUE );
-        super.add( stat_btn );
-        // super.add( InfoDialog.BOX_GLUE );
+        super.addActionListener( new StatBtnActionListener() );
     }
 
     private URL getURL( String filename )

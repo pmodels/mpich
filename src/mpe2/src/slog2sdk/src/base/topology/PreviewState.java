@@ -112,7 +112,7 @@ public class PreviewState
         }
 
         boolean  isStartVtxInImg, isFinalVtxInImg;
-        int      iImageWidth = coord_xform.getImageWidth();
+        int      iImageWidth = coord_xform.getPixelWidth();
         isStartVtxInImg = ( iStart >= 0 ) ;
         isFinalVtxInImg = ( iFinal <  iImageWidth );
 
@@ -373,7 +373,7 @@ public class PreviewState
             int iImageWidth, iRange;
             // iBoxXXXX : variables that twgt isn't cut by image border
             int iBoxHead, iBoxTail, iBoxWidth;
-            iImageWidth = coord_xform.getImageWidth();
+            iImageWidth = coord_xform.getPixelWidth();
             iRange      = iFinal - iStart + 1; // width uncut by image border
             jCenter     = jHead  + jHeight / 2;// i.e. jCenter % jHead & jTail
             iCenter     = iStart + iRange / 2; // i.e. iCenter % iStart & iFinal

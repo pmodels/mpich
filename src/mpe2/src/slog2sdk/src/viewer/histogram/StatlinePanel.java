@@ -156,7 +156,8 @@ public class StatlinePanel extends JPanel
                                                         y_model, y_maps,
                                                         y_colnames );
                 stat_canvas_vport = new ViewportTimeYaxis( time_model,
-                                                           y_model, y_tree );
+                                                           y_scrollbar,
+                                                           y_maps );
                 stat_canvas_vport.setView( stat_canvas );
                 stat_canvas_panel = new ViewportTimePanel( stat_canvas_vport );
                 stat_canvas_panel.setBorderTitle( " Statistics ",

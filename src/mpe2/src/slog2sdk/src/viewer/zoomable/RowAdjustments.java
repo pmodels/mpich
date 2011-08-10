@@ -61,7 +61,7 @@ public class RowAdjustments
         tree_view     = y_tree;
 
         debug         = new Diagnosis();
-        debug.setActive( true );
+        debug.setActive( false );
 
         // hasMinHeightBeenTouched = true ==> Huge Memory of Canvas Buffers
         hasMinHeightBeenTouched = false;

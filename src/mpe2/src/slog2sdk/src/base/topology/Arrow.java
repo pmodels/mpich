@@ -21,15 +21,10 @@ public class Arrow
     private static       int     Head_Length      = 15;
     private static       int     Head_Half_Width  = 5;
 
-    //  For Viewer 
-    public static void setHeadLength( int new_length )
+    //  For Viewer
+    public static void setHeadProperty( int new_length, int new_width )
     {
         Head_Length = new_length;
-    }
-
-    //  For Viewer 
-    public static void setHeadWidth( int new_width )
-    {
         Head_Half_Width = new_width / 2;
         if ( Head_Half_Width < 1 )
             Head_Half_Width = 1;
@@ -51,16 +46,18 @@ public class Arrow
         iFinal   = coord_xform.convertTimeToPixel( final_time );
 
         /* Determine if Arrow should be drawn */
-        if ( last_drawn_pos.coversArrow( iStart, iFinal ) )
-            return 0; // Arrow has been drawn at the same location before
-        last_drawn_pos.set( iStart, iFinal );
+        if ( last_drawn_pos != null ) {
+            if ( last_drawn_pos.coversArrow( iStart, iFinal ) )
+                return 0; // Arrow has been drawn at the same location before
+            last_drawn_pos.set( iStart, iFinal );
+        }
 
         jStart   = coord_xform.convertRowToPixel( start_ypos );
         jFinal   = coord_xform.convertRowToPixel( final_ypos );
 
         boolean  isStartVtxInImg, isFinalVtxInImg;
-        isStartVtxInImg = iStart > 0 ;
-        isFinalVtxInImg = iFinal < coord_xform.getImageWidth();
+        isStartVtxInImg = iStart >= 0;
+        isFinalVtxInImg = iFinal < coord_xform.getPixelWidth();
 
         boolean  isSlopeNonComputable = false;
         double   slope = 0.0;
@@ -101,7 +98,7 @@ public class Arrow
         else {
             if ( isSlopeNonComputable )
                 return 0; // Arrow NOT in image
-            iTail = coord_xform.getImageWidth();
+            iTail = coord_xform.getPixelWidth() - 1;
             jTail = (int) Math.rint( jFinal + slope * ( iTail - iFinal ) );
         }
 
@@ -152,15 +149,15 @@ public class Arrow
         // Draw the main line with possible characteristic from stroke
         g.drawLine( iHead, jHead, iTail, jTail );
 
-        if ( stroke != null )
-            g.setStroke( orig_stroke );
-
-        // Draw the arrow head without stroke's effect
+        // Draw the arrow head
         if ( isFinalVtxInImg ) {
             g.drawLine( iTail,  jTail,   iLeft,  jLeft );
             g.drawLine( iLeft,  jLeft,   iRight, jRight );
             g.drawLine( iRight, jRight,  iTail,  jTail );
         }
+
+        if ( stroke != null )
+            g.setStroke( orig_stroke );
 
         return 1;
     }
@@ -181,16 +178,18 @@ public class Arrow
         iFinal   = coord_xform.convertTimeToPixel( final_time );
 
         /* Determine if Arrow should be drawn */
-        if ( last_drawn_pos.coversArrow( iStart, iFinal ) )
-            return 0; // Arrow has been drawn at the same location before
-        last_drawn_pos.set( iStart, iFinal );
+        if ( last_drawn_pos != null ) {
+            if ( last_drawn_pos.coversArrow( iStart, iFinal ) )
+                return 0; // Arrow has been drawn at the same location before
+            last_drawn_pos.set( iStart, iFinal );
+        }
 
         jStart   = coord_xform.convertRowToPixel( start_ypos );
         jFinal   = coord_xform.convertRowToPixel( final_ypos );
 
         boolean  isStartVtxInImg, isFinalVtxInImg;
-        isStartVtxInImg = iStart < coord_xform.getImageWidth();
-        isFinalVtxInImg = iFinal > 0;
+        isStartVtxInImg = iStart < coord_xform.getPixelWidth();
+        isFinalVtxInImg = iFinal >= 0;
 
         boolean  isSlopeNonComputable = false;
         double   slope = 0.0;
@@ -219,7 +218,7 @@ public class Arrow
         else {
             if ( isSlopeNonComputable )
                 return 0; // Arrow NOT in image
-            iHead = coord_xform.getImageWidth();
+            iHead = coord_xform.getPixelWidth() - 1;
             jHead = (int) Math.rint( jStart + slope * ( iHead - iStart ) );
         }
 
@@ -277,10 +276,11 @@ public class Arrow
             orig_stroke = g.getStroke();
             g.setStroke( stroke );
         }
-        g.setColor( color );
 
-        // Draw the main line
+        g.setColor( color );
+        // Draw the main line with possible characteristic from stroke
         g.drawLine( iTail, jTail, iHead, jHead );
+
         // Draw the arrow head
         if ( isFinalVtxInImg ) {
             g.drawLine( iTail,  jTail,   iLeft,  jLeft );

@@ -42,6 +42,12 @@ public class ColorAlpha extends Color
     public static final ColorAlpha  YELLOW_OPAQUE
                                     = new ColorAlpha( ColorAlpha.yellow,
                                                       ColorAlpha.OPAQUE );
+    public static final ColorAlpha  ORANGE_OPAQUE
+                                    = new ColorAlpha( ColorAlpha.orange,
+                                                      ColorAlpha.OPAQUE );
+    public static final ColorAlpha  GRAY_OPAQUE
+                                    = new ColorAlpha( ColorAlpha.gray,
+                                                      ColorAlpha.OPAQUE );
 
     private boolean  isModifiable;
 
@@ -130,6 +136,31 @@ public class ColorAlpha extends Color
             return clr.getLengthSq() - this.getLengthSq();
         else
             return 0;
+    }
+
+    public ColorAlpha getHalfOpaque()
+    {
+       return new ColorAlpha( (Color) this, HALF_OPAQUE );
+    }
+
+    public ColorAlpha getDarkerContrast()
+    {
+        ColorAlpha contrast = new ColorAlpha( this.darker().darker(),
+                                              this.getAlpha() );
+        if ( contrast.equals( this ) )
+            contrast = new ColorAlpha( this.brighter().brighter(),
+                                       this.getAlpha() );
+        return contrast;
+    }
+
+    public ColorAlpha getBrighterContrast()
+    {
+        ColorAlpha contrast = new ColorAlpha( this.brighter().brighter(),
+                                              this.getAlpha() );
+        if ( contrast.equals( this ) )
+            contrast = new ColorAlpha( this.darker().darker(),
+                                       this.getAlpha() );
+        return contrast;
     }
 
     private static ColorAlpha colors[];

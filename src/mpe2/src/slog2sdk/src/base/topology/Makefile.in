@@ -21,6 +21,8 @@ RM           = @RM@
 TARGET  = $(libbuild_dir)/topology.jar
 PACKAGE = base.topology
 SRC     = Event.java Line.java Arrow.java StateBorder.java State.java \
+          Pointer.java MarkerEvent.java \
+          MarkerLine.java MarkerState.java MarkerArrow.java \
           PreviewEvent.java PreviewState.java \
           SummaryState.java SummaryArrow.java
 

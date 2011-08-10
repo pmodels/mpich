@@ -32,7 +32,7 @@ public class LegendTable extends JTable
     private static final long   serialVersionUID = 2500L;
 
     private static final Insets EMPTY_INSETS
-                                = new Insets( 0, 0, 0, 0 );
+                                = viewer.common.Const.SQ_BTN0_INSETS;
     /*
     private static final Color  CELL_BACKCOLOR
                                 = Const.CELL_BACKCOLOR;

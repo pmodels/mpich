@@ -58,7 +58,7 @@ public class State
 
         boolean  isStartVtxInImg, isFinalVtxInImg;
         isStartVtxInImg = ( iStart >= 0 ) ;
-        isFinalVtxInImg = ( iFinal <  coord_xform.getImageWidth() );
+        isFinalVtxInImg = ( iFinal <  coord_xform.getPixelWidth() );
 
         int iHead, iTail, jHead, jTail;
         // jHead = slope * ( iHead - iStart ) + jStart
@@ -66,15 +66,13 @@ public class State
             iHead = iStart;
         else
             iHead = 0;
-            // iHead = -1;
         jHead    = jStart;
 
         // jTail = slope * ( iTail - iFinal ) + jFinal
         if ( isFinalVtxInImg )
             iTail = iFinal;
         else
-            iTail = coord_xform.getImageWidth() - 1;
-            // iTail = coord_xform.getImageWidth();
+            iTail = coord_xform.getPixelWidth() - 1;
         jTail    = jFinal;
             
         // Fill the color of the rectangle
