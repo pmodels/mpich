@@ -467,17 +467,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_alloc_pg_scratch(pg);
     HYDU_ERR_POP(status, "unable to allocate pg scratch space\n");
 
-    if (pg->user_node_list) {
-        pg->pg_core_count = 0;
-        for (i = 0, node = pg->user_node_list; node; node = node->next, i++) {
-            pg->pg_core_count += node->core_count;
-            node->node_id = i;
-        }
-    }
-    else {
-        pg->pg_core_count = HYD_server_info.pg_list.pg_core_count;
-    }
-
     pg->pg_process_count = 0;
     for (exec = exec_list; exec; exec = exec->next)
         pg->pg_process_count += exec->proc_count;
@@ -520,6 +509,19 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
     HYDU_free_exec_list(exec_list);
+
+    if (pg->user_node_list) {
+        pg->pg_core_count = 0;
+        for (i = 0, node = pg->user_node_list; node; node = node->next, i++) {
+            pg->pg_core_count += node->core_count;
+            node->node_id = i;
+        }
+    }
+    else {
+        pg->pg_core_count = 0;
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
+            pg->pg_core_count += proxy->node->core_count;
+    }
 
     status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
                                                  HYD_server_info.local_hostname,

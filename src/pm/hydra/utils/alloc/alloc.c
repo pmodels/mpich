@@ -347,10 +347,10 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
 HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
                                   struct HYD_pg *pg)
 {
-    struct HYD_proxy *proxy = NULL, *tproxy, *last_proxy;
+    struct HYD_proxy *proxy = NULL, *last_proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int process_core_ratio, c, global_core_count, filler_process_count;
+    int process_core_ratio, c, global_core_count;
     int num_procs, proxy_rem_cores, exec_rem_procs, global_active_processes, included_cores;
     int proxy_id, global_node_count, pcr, i;
     HYD_status status = HYD_SUCCESS;
@@ -359,12 +359,12 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
 
     /*
      * Find the process/core ratio that we can go to. The minimum is
-     * one (meaning there are as many processes as cores in the
-     * system). But if one of the nodes is already oversubscribed, we
-     * take that as a hint to mean that the other nodes can also be
-     * oversubscribed to the same extent.
+     * zero (meaning there are no processes in the system). But if one
+     * of the nodes is already oversubscribed, we take that as a hint
+     * to mean that the other nodes can also be oversubscribed to the
+     * same extent.
      */
-    process_core_ratio = 1;
+    process_core_ratio = 0;
     global_node_count = 0;
     global_core_count = 0;
     global_active_processes = 0;
@@ -376,10 +376,6 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
         global_core_count += node->core_count;
         global_active_processes += node->active_processes;
     }
-
-    /* Find the number of filler processes before we need to increase
-     * the process/core ratio */
-    filler_process_count = global_core_count * process_core_ratio - global_active_processes;
 
     /* Create the list of proxies required to accommodate all the
      * processes. The proxy list follows these rules:
@@ -398,24 +394,25 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
     last_proxy = NULL;
     included_cores = 0;
     pcr = process_core_ratio;
+    proxy_id = 0;
     for (node = node_list, i = 0; i < global_node_count; node = node->next) {
         if (node == NULL) {
             node = node_list;
             pcr++;
         }
 
+        /* find the number of processes I can allocate on this proxy */
         c = (node->core_count * pcr - node->active_processes);
-
-        if (c == 0 && included_cores == 0)
+        if (c == 0)
             continue;
-
-        included_cores += c;
 
         /* create a proxy associated with this node */
         status = alloc_proxy(&proxy, pg, node);
         HYDU_ERR_POP(status, "error allocating proxy\n");
 
+        proxy->proxy_id = proxy_id++;
         proxy->filler_processes = c;
+        included_cores += c;
 
         if (pg->proxy_list == NULL)
             pg->proxy_list = proxy;
@@ -442,9 +439,9 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
         exec = exec_list;
         proxy = pg->proxy_list;
 
-        pcr = process_core_ratio;
+        pcr = process_core_ratio ? process_core_ratio : 1;
 
-        exec_rem_procs = exec_list->proc_count;
+        exec_rem_procs = exec->proc_count;
         proxy_rem_cores = proxy->node->core_count * pcr - proxy->node->active_processes;
 
         while (exec) {
@@ -476,31 +473,9 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
                     pcr++;
 
                 proxy_rem_cores =
-                    proxy->node->core_count * pcr - proxy->node->active_processes;
+                    proxy->node->core_count * pcr - proxy->node->active_processes -
+                    proxy->proxy_process_count;
             }
-        }
-    }
-
-    /* Get rid of the proxies that do not have any executables
-     * attached to them */
-    while (pg->proxy_list->exec_list == NULL) {
-        tproxy = pg->proxy_list;
-        pg->proxy_list = tproxy->next;
-        tproxy->next = NULL;
-        HYDU_free_proxy_list(tproxy);
-    }
-
-    pg->proxy_list->proxy_id = proxy_id = 0;
-    for (proxy = pg->proxy_list; proxy->next;) {
-        if (proxy->next->exec_list == NULL) {
-            tproxy = proxy->next;
-            proxy->next = tproxy->next;
-            tproxy->next = NULL;
-            HYDU_free_proxy_list(tproxy);
-        }
-        else {
-            proxy = proxy->next;
-            proxy->proxy_id = ++proxy_id;
         }
     }
 

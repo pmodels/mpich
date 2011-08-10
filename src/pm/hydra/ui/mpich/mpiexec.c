@@ -354,7 +354,7 @@ int main(int argc, char **argv)
     /* calculate the core count used by the PG */
     HYD_server_info.pg_list.pg_core_count = 0;
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
-        HYD_server_info.pg_list.pg_core_count += proxy->proxy_process_count;
+        HYD_server_info.pg_list.pg_core_count += proxy->node->core_count;
 
     /* See if the node list contains a remotely accessible localhost */
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
