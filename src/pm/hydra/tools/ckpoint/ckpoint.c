@@ -33,6 +33,10 @@ HYD_status HYDT_ckpoint_init(const char *user_ckpointlib, int user_ckpoint_num)
              0)
         HYDT_ckpoint_info.ckpointlib = HYDRA_DEFAULT_CKPOINTLIB;
 
+    /* If there is no default checkpointlib, we bail out */
+    if (HYDRA_DEFAULT_CKPOINTLIB == NULL)
+        goto fn_exit;
+
     HYDT_ckpoint_info.ckpoint_num = (user_ckpoint_num == -1) ? 0 : user_ckpoint_num;
     in_ckpt = HYDT_CKPOINT_NONE;
 
