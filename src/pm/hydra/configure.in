@@ -207,6 +207,8 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		PAC_SET_HEADER_LIB_PATH(pbs)
 		PAC_CHECK_HEADER_LIB(pbs, tm.h, torque, tm_init, have_pbs_launcher=yes,
 					  have_pbs_launcher=no)
+		# Force disable PBS for now
+		have_pbs_launcher=no
                 if test "$have_pbs_launcher" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
                 fi
