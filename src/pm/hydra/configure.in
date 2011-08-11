@@ -235,8 +235,9 @@ fi
 ## Launchers
 if test "$have_pbs_launcher" = "yes" ; then
    AC_DEFINE(HAVE_TM_H, 1, [Define if tm.h and library are usable.])
-   AM_CONDITIONAL([hydra_pbs_launcher], [true])
 fi
+AM_CONDITIONAL([hydra_pbs_launcher], [test "$have_pbs_launcher" = "yes"])
+
 for hydra_launcher in ${available_launchers} ; do
     hydra_launcher_array="${hydra_launcher_array} \"${hydra_launcher}\", "
     if test -z "${hydra_default_launcher}" ; then
