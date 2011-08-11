@@ -375,7 +375,8 @@ HYD_status HYDT_topo_init(char *user_binding, char *user_topolib)
         goto fn_exit;
     }
 
-    HYDU_dump(stderr, "unrecognized binding mode \"%s\"; ignoring\n", binding);
+    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                        "unrecognized binding mode \"%s\"\n", binding);
 
   fn_exit:
     HYDU_FUNC_EXIT();
