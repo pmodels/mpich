@@ -40,7 +40,7 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c 
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_jobid.c
 
-if hydra_has_working_tm
+if hydra_pbs_launcher
 libhydra_la_SOURCES += \
 	$(top_srcdir)/tools/bootstrap/external/pbs_finalize.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_launch.c \

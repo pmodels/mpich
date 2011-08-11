@@ -139,32 +139,6 @@ else
     fi
 fi
 
-pac_has_tm_lib=no
-AC_CHECK_HEADER([tm.h],[
-     dnl Check if TM library is actually working as expected, given
-     dnl some versions of TM may have slightly different interface.
-     AC_MSG_CHECKING([if relevant TM symbols can be used and resolved])
-     AC_LINK_IFELSE([
-        AC_LANG_PROGRAM([#include "tm.h"], [[
-     struct tm_roots  tm_root;
-     tm_node_id       nodeIDs[1];       /* Array of TM node IDs */
-     tm_task_id       taskIDs[1];       /* Array of TM task(process) IDs */
-     tm_event_t       events[1];        /* Array of TM event IDs */
-     int              taskobits[1];     /* Array of TM task exit codes */
-     tm_event_t       event = -1;
-     char            *argvs[] = {"/bin/sh", "-c", "echo \$HOSTNAME."};
-
-     int              ierr, poll_err;
-     ierr = tm_init((void*)0, &tm_root);
-     ierr = tm_spawn(3, argvs, (char**)0, nodeIDs[0], &taskIDs[0], &events[0]);
-     ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
-     ierr = tm_obit( taskIDs[0], &taskobits[0], &events[0] );
-     ierr = tm_finalize();
-        ]])
-    ], [pac_has_tm_lib=yes])
-    AC_MSG_RESULT([$pac_has_tm_lib])
-])
-
 #########################################################################
 # Check what bootstrap server we should use
 #########################################################################
@@ -229,7 +203,11 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		;;
 	pbs)
 		hydra_bss_pbs=true
-                if test "$pac_has_tm_lib" = "yes" ; then
+		# Check if TM library support is available
+		PAC_SET_HEADER_LIB_PATH(pbs)
+		PAC_CHECK_HEADER_LIB(pbs, tm.h, torque, tm_init, have_pbs_launcher=yes,
+					  have_pbs_launcher=no)
+                if test "$have_pbs_launcher" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
                 fi
 		available_rmks="$available_rmks pbs"
@@ -252,16 +230,11 @@ if test "$hydra_bss_persist" ; then
    AC_DEFINE(HAVE_BSS_PERSIST,1,[Define if persist bss is enabled])
 fi
 
-if test "$hydra_bss_pbs" = "true" ; then
-    hydra_working_tm="$pac_has_tm_lib"
-    if test "$hydra_working_tm" = "yes" ; then
-        AC_DEFINE(HAVE_TM_H, 1, [Define if tm.h and library are usable.])
-    fi
-    AC_SUBST([hydra_working_tm])
-    AM_CONDITIONAL([hydra_has_working_tm], [test "$hydra_working_tm" = "yes"])
-fi
-
 ## Launchers
+if test "$have_pbs_launcher" = "yes" ; then
+   AC_DEFINE(HAVE_TM_H, 1, [Define if tm.h and library are usable.])
+   AM_CONDITIONAL([hydra_pbs_launcher], [true])
+fi
 for hydra_launcher in ${available_launchers} ; do
     hydra_launcher_array="${hydra_launcher_array} \"${hydra_launcher}\", "
     if test -z "${hydra_default_launcher}" ; then
