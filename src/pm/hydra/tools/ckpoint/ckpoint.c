@@ -40,8 +40,11 @@ HYD_status HYDT_ckpoint_init(const char *user_ckpointlib, int user_ckpoint_num)
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
         status = HYDT_ckpoint_blcr_init();
         HYDU_ERR_POP(status, "blcr checkpoint returned error\n");
+        goto fn_exit;
     }
 #endif /* HAVE_BLCR */
+
+    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized ckpoint library\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
