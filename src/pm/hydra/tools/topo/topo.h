@@ -75,13 +75,14 @@ typedef enum {
 } HYDT_topo_obj_type_t;
 
 #define HYDT_TOPO_MAX_CPU_COUNT (16384)
+#define HYDT_BITS_PER_LONG (8 * SIZEOF_UNSIGNED_LONG)
 
-#if (HYDT_TOPO_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG)
+#if (HYDT_TOPO_MAX_CPU_COUNT < HYDT_BITS_PER_LONG)
 #error "Too small a CPU count"
-#endif /* (HYDT_MAX_CPU_COUNT < SIZEOF_UNSIGNED_LONG) */
+#endif /* (HYDT_MAX_CPU_COUNT < HYDT_BITS_PER_LONG) */
 
 struct HYDT_topo_cpuset_t {
-    unsigned long set[HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG];
+    unsigned long set[HYDT_TOPO_MAX_CPU_COUNT / HYDT_BITS_PER_LONG];
 };
 
 
@@ -221,7 +222,7 @@ static inline void HYDT_topo_cpuset_zero(struct HYDT_topo_cpuset_t *cpuset)
 {
     int i;
 
-    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / HYDT_BITS_PER_LONG; i++)
         cpuset->set[i] = 0;
 }
 
@@ -230,8 +231,8 @@ static inline void HYDT_topo_cpuset_clr(int os_index, struct HYDT_topo_cpuset_t 
     int idx;
     unsigned long mask;
 
-    idx = (os_index / SIZEOF_UNSIGNED_LONG);
-    mask = ~(1 << (os_index % SIZEOF_UNSIGNED_LONG));
+    idx = (os_index / HYDT_BITS_PER_LONG);
+    mask = ~(1 << (os_index % HYDT_BITS_PER_LONG));
 
     cpuset->set[idx] &= mask;
 }
@@ -241,8 +242,8 @@ static inline void HYDT_topo_cpuset_set(int os_index, struct HYDT_topo_cpuset_t 
     int idx;
     unsigned long mask;
 
-    idx = (os_index / SIZEOF_UNSIGNED_LONG);
-    mask = (1 << (os_index % SIZEOF_UNSIGNED_LONG));
+    idx = (os_index / HYDT_BITS_PER_LONG);
+    mask = (1 << (os_index % HYDT_BITS_PER_LONG));
 
     cpuset->set[idx] |= mask;
 }
@@ -252,8 +253,8 @@ static inline int HYDT_topo_cpuset_isset(int os_index, struct HYDT_topo_cpuset_t
     int idx;
     unsigned long mask;
 
-    idx = (os_index / SIZEOF_UNSIGNED_LONG);
-    mask = (1 << (os_index % SIZEOF_UNSIGNED_LONG));
+    idx = (os_index / HYDT_BITS_PER_LONG);
+    mask = (1 << (os_index % HYDT_BITS_PER_LONG));
 
     return (cpuset.set[idx] & mask);
 }
@@ -263,7 +264,7 @@ static inline void HYDT_topo_cpuset_dup(struct HYDT_topo_cpuset_t src,
 {
     int i;
 
-    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / HYDT_BITS_PER_LONG; i++)
         dest->set[i] = src.set[i];
 }
 

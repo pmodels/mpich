@@ -139,7 +139,7 @@ static HYD_status assign_proc_units(int leaf)
         /* find the iter'th non-zero bit in the cpuset */
         m = 0;
         for (j = 0; j < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; j++) {
-            for (k = 0; k < SIZEOF_UNSIGNED_LONG; k++) {
+            for (k = 0; k < HYDT_BITS_PER_LONG; k++) {
                 mask = 1 << k;
                 if (bindmap[i % idx].set[j] & mask)
                     m++;
@@ -154,7 +154,7 @@ static HYD_status assign_proc_units(int leaf)
         HYDU_ASSERT(m == iter, status);
 
         /* found pid */
-        pid = j * (HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG) + k;
+        pid = j * (HYDT_TOPO_MAX_CPU_COUNT / HYDT_BITS_PER_LONG) + k;
         HYDT_topo_cpuset_set(pid, &HYDT_topo_info.bindmap[i]);
     }
 
@@ -552,11 +552,9 @@ HYD_status HYDT_topo_bind(struct HYDT_topo_cpuset_t cpuset)
     }
 #endif /* HAVE_HWLOC */
 
-    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++) {
-        if (cpuset.set[i]) {
+    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+        if (cpuset.set[i])
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no topology library available\n");
-        }
-    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
