@@ -37,6 +37,21 @@ The following MPI implementations are known to fail with ARMCI-MPI:
  - OpenMPI
 
 ===============================================================================
+The ARMCI-MPI Test Suite
+===============================================================================
+
+ARMCI-MPI includes a set of testing and benchmark programs located under tests/
+and benchmarks/.  These programs can be compiled and run via:
+
+$ make check MPIEXEC="mpiexec -n 4"
+
+The MPIEXEC variable is optional and is used to override the default MPI launch
+command.  If you want only to build the test suite, the following target can be
+used:
+
+$ make checkprogs
+
+===============================================================================
 ARMCI-MPI Errata
 ===============================================================================
 
@@ -58,22 +73,34 @@ Progress semantics:
 Environment Variables:
 ===============================================================================
 
+Boolean environment variables are enabled when set to a value beginning with
+'t', 'T', 'y', 'Y', or '1'; any other value is interpreted as false.
+
  -------------------
 : Debugging Options :
  -------------------
 
-ARMCI_VERBOSE
+ARMCI_VERBOSE (boolean)
 
   Enable extra status output from ARMCI-MPI.
 
-ARMCI_DEBUG_ALLOC
+ARMCI_DEBUG_ALLOC (boolean)
 
   Turn on extra shared allocation debugging.
 
-ARMCI_NO_FLUSH_BARRIERS
+ARMCI_FLUSH_BARRIERS (boolean)
 
-  Don't do extra communication flushing in ARMCI_Barrier.  Extra flushes are
-  present to help make unsafe DLA safer.
+  Enable/disable extra communication flushing in ARMCI_Barrier.  Extra flushes
+  are present to help make unsafe DLA safer.
+
+ --------------------------
+: Noncollective Groups     :
+ --------------------------
+
+ARMCI_NONCOLLECTIVE_GROUPS (boolean)
+
+  Enable noncollective ARMCI group formation; group creation is collective on
+  the output group rather than the parent group.
 
  --------------------------
 : Shared Buffer Protection :
@@ -98,16 +125,17 @@ ARMCI_IOV_METHOD = { AUTO (default), CONSRV, BATCHED, DIRECT }
   direct implementation that generates datatypes for the origin and target and
   issues a single operation using them.
 
-ARMCI_IOV_DISABLE_CHECKS
+ARMCI_IOV_CHECKS (boolean)
 
-  Disable expensive IOV safety checks (recommended for performance).
+  Enable (expensive) IOV safety/debugging checks (not recommended for
+  performance runs).
 
 ARMCI_IOV_BATCHED_LIMIT = { 0 (default), 1, ... }
 
   Set the maximum number of one-sided operations per epoch for the BATCHED IOV
   method.  Zero (default) is unlimited.
   
-ARMCI_IOV_NO_MPI_BOTTOM
+ARMCI_IOV_NO_MPI_BOTTOM (boolean)
 
   Disable the use of MPI_BOTTOM in datatypes.  This is a workaround for MPI
   implementations that don't correctly handle MPI datatypes that are relative

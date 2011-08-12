@@ -30,17 +30,16 @@ void ARMCI_Group_create(int grp_size, int *pid_list, ARMCI_Group *group_out) {
   ARMCI_Group_create_child(grp_size, pid_list, group_out, &ARMCI_GROUP_DEFAULT);
 }
 
-#ifndef ARMCI_GROUP
 
 /** Create an ARMCI group that contains a subset of the nodes in the parent
-  * group. Collective across parent group.
+  * group. Collective across output group.
   *
   * @param[in]  grp_size         Number of entries in pid_list.
   * @param[in]  pid_list         List of process ids that will be in the new group.
   * @param[out] armci_grp_out    The new ARMCI group, only valid on group members.
   * @param[in]  armci_grp_parent The parent of the new ARMCI group.
   */
-void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
+static inline void ARMCI_Group_create_child_collective(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
     ARMCI_Group *armci_grp_parent) {
 
   MPI_Group mpi_grp_parent;
@@ -77,17 +76,16 @@ void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_gr
   MPI_Group_free(&mpi_grp_child);
 }
 
-#else /* ARMCI_GROUP */
 
 /** Create an ARMCI group that contains a subset of the nodes in the parent
-  * group. Collective across parent group.
+  * group. Collective across output group.
   *
   * @param[in]  grp_size         Number of entries in pid_list.
   * @param[in]  pid_list         Sorted list of process ids that will be in the new group.
   * @param[out] armci_grp_out    The new ARMCI group, only valid on group members.
   * @param[in]  armci_grp_parent The parent of the new ARMCI group.
   */
-void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
+static inline void ARMCI_Group_create_child_noncollective(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
     ARMCI_Group *armci_grp_parent) {
 
   const int INTERCOMM_TAG = 42;
@@ -120,6 +118,7 @@ void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_gr
 
   if (grp_me < 0) {
     armci_grp_out->comm = MPI_COMM_NULL;
+    armci_grp_out->noncoll_pgroup_comm = MPI_COMM_NULL;
     armci_grp_out->size = 0;
     armci_grp_out->rank = -1;
     return;
@@ -128,6 +127,7 @@ void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_gr
   /* CASE: Group size 1 */
   else if (grp_size == 1 && pid_list[0] == me) {
     MPI_Comm_dup(MPI_COMM_SELF, &armci_grp_out->comm);
+    MPI_Comm_dup(MPI_COMM_SELF, &armci_grp_out->noncoll_pgroup_comm);
     armci_grp_out->size = 1;
     armci_grp_out->rank = 0;
     return;
@@ -145,10 +145,10 @@ void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_gr
       if ((gid+1)*merge_size >= grp_size)
         continue;
 
-      MPI_Intercomm_create(pgroup, 0, armci_grp_parent->comm, pid_list[(gid+1)*merge_size], INTERCOMM_TAG, &inter_pgroup);
+      MPI_Intercomm_create(pgroup, 0, armci_grp_parent->noncoll_pgroup_comm, pid_list[(gid+1)*merge_size], INTERCOMM_TAG, &inter_pgroup);
       MPI_Intercomm_merge(inter_pgroup, 0 /* LOW */, &pgroup);
     } else {
-      MPI_Intercomm_create(pgroup, 0, armci_grp_parent->comm, pid_list[(gid-1)*merge_size], INTERCOMM_TAG, &inter_pgroup);
+      MPI_Intercomm_create(pgroup, 0, armci_grp_parent->noncoll_pgroup_comm, pid_list[(gid-1)*merge_size], INTERCOMM_TAG, &inter_pgroup);
       MPI_Intercomm_merge(inter_pgroup, 1 /* HIGH */, &pgroup);
     }
 
@@ -160,17 +160,44 @@ void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_gr
 
   MPI_Comm_size(armci_grp_out->comm, &armci_grp_out->size);
   MPI_Comm_rank(armci_grp_out->comm, &armci_grp_out->rank);
+
+  /* Create a separate communicator that can be used for noncollective group
+     creation.  This ensures that calls to MPI_Intercomm_create can't clash
+     with any user communication. */
+
+  MPI_Comm_dup(armci_grp_out->comm, &armci_grp_out->noncoll_pgroup_comm);
 }
 
-#endif /* ARMCI_GROUP */
+
+/** Create an ARMCI group that contains a subset of the nodes in the parent
+  * group. Collective.
+  *
+  * @param[in]  grp_size         Number of entries in pid_list.
+  * @param[in]  pid_list         Sorted list of process ids that will be in the new group.
+  * @param[out] armci_grp_out    The new ARMCI group, only valid on group members.
+  * @param[in]  armci_grp_parent The parent of the new ARMCI group.
+  */
+void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
+    ARMCI_Group *armci_grp_parent) {
+
+  if (ARMCII_GLOBAL_STATE.noncollective_groups)
+    ARMCI_Group_create_child_noncollective(grp_size, pid_list, armci_grp_out, armci_grp_parent);
+  else
+    ARMCI_Group_create_child_collective(grp_size, pid_list, armci_grp_out, armci_grp_parent);
+}
+
 
 /** Free an ARMCI group.  Collective across group.
   *
   * @param[in] group The group to be freed
   */
 void ARMCI_Group_free(ARMCI_Group *group) {
-  if (group->comm != MPI_COMM_NULL)
+  if (group->comm != MPI_COMM_NULL) {
     MPI_Comm_free(&group->comm);
+
+    if (ARMCII_GLOBAL_STATE.noncollective_groups)
+      MPI_Comm_free(&group->noncoll_pgroup_comm);
+  }
 
   group->rank = -1;
   group->size = 0;
@@ -272,6 +299,9 @@ int ARMCIX_Group_split(ARMCI_Group *parent, int color, int key, ARMCI_Group *new
 
   MPI_Comm_rank(new_group->comm, &new_group->rank);
   MPI_Comm_size(new_group->comm, &new_group->size);
+
+  if (ARMCII_GLOBAL_STATE.noncollective_groups)
+    MPI_Comm_dup(new_group->comm, &new_group->noncoll_pgroup_comm);
 
   return 0;
 }
