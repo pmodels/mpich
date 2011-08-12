@@ -13,7 +13,7 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
 {
     int proxy_count, spawned_count;
     int args_count, events_count;
-    int ierr, idx;
+    int ierr, idx, spawned_hostID;
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
@@ -46,16 +46,22 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
      * The returned taskID won't be ready for access until tm_poll()
      * has returned the corresponding eventID.
      */
-    spawned_count = 0;
+    spawned_count  = 0;
+    spawned_hostID = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next) {
         targs[args_count] = HYDU_int_to_str(spawned_count);
-        ierr = tm_spawn(args_count + 1, targs, NULL,
-                        proxy->node->node_id,
+        ierr = tm_spawn(args_count + 1, targs, NULL, spawned_hostID,
                         HYDT_bscd_pbs_sys->taskIDs + spawned_count,
                         HYDT_bscd_pbs_sys->events + spawned_count);
+        if (HYDT_bsci_info.debug)
+            HYDU_dump(stdout, "PBS_DEBUG: %d, tm_spawn(hostID=%d,name=%s)\n",
+                      spawned_count, spawned_hostID, 
+                      proxy->node->hostname);
         if (ierr != TM_SUCCESS) {
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_spawn() fails with TM err %d!\n", ierr);
+            HYDU_ERR_POP(HYD_INTERNAL_ERROR,
+                         "tm_spawn() fails with TM err %d!\n", ierr);
         }
+        spawned_hostID += proxy->node->core_count;
         spawned_count++;
     }
     HYDT_bscd_pbs_sys->spawned_count = spawned_count;
@@ -70,7 +76,8 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
         int poll_err;
         ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
         if (ierr != TM_SUCCESS)
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_poll(spawn_event) fails with TM err %d.\n",
+            HYDU_ERR_POP(HYD_INTERNAL_ERROR,
+                         "tm_poll(spawn_event) fails with TM err %d.\n",
                          ierr);
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
