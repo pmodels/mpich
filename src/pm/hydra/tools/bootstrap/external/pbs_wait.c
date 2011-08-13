@@ -39,7 +39,8 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
         ierr = tm_obit(HYDT_bscd_pbs_sys->taskIDs[idx],
                        HYDT_bscd_pbs_sys->taskobits + idx, HYDT_bscd_pbs_sys->events + idx);
         if (ierr != TM_SUCCESS)
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_obit() fails with TM err=%d.\n", ierr);
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "tm_obit() fails with TM err=%d.\n", ierr);
         if (HYDT_bscd_pbs_sys->events[idx] == TM_ERROR_EVENT)
             HYDU_error_printf("tm_obit(Task %d) returns error.\n",
                               HYDT_bscd_pbs_sys->taskIDs[idx]);
@@ -62,7 +63,8 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
         int poll_err;
         ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
         if (ierr != TM_SUCCESS)
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_poll(obit_event) fails with err=%d.\n", ierr);
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "tm_poll(obit_event) fails with err=%d.\n", ierr);
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
                 if (HYDT_bscd_pbs_sys->events[idx] == event) {

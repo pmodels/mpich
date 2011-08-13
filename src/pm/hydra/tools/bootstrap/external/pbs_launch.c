@@ -34,8 +34,9 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
 
     /* Check if number of proxies > number of processes in this PBS job */
     if (proxy_count > (HYDT_bscd_pbs_sys->tm_root).tm_nnodes)
-        HYDU_ERR_POP(HYD_INTERNAL_ERROR, "Number of proxies(%d) > TM node count(%d)!\n",
-                     proxy_count, (HYDT_bscd_pbs_sys->tm_root).tm_nnodes);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "Number of proxies(%d) > TM node count(%d)!\n", proxy_count,
+                            (HYDT_bscd_pbs_sys->tm_root).tm_nnodes);
 
     /* Duplicate the args in local copy, targs */
     for (args_count = 0; args[args_count]; args_count++)
@@ -62,7 +63,8 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
             HYDU_dump(stdout, "PBS_DEBUG: %d, tm_spawn(hostID=%d,name=%s)\n",
                       spawned_count, spawned_hostID, proxy->node->hostname);
         if (ierr != TM_SUCCESS) {
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_spawn() fails with TM err %d!\n", ierr);
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "tm_spawn() fails with TM err %d!\n", ierr);
         }
         spawned_hostID += proxy->node->core_count;
         spawned_count++;
@@ -77,8 +79,8 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
         int poll_err;
         ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
         if (ierr != TM_SUCCESS)
-            HYDU_ERR_POP(HYD_INTERNAL_ERROR,
-                         "tm_poll(spawn_event) fails with TM err %d.\n", ierr);
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "tm_poll(spawn_event) fails with TM err %d.\n", ierr);
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
                 if (HYDT_bscd_pbs_sys->events[idx] == event) {
