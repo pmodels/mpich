@@ -18,14 +18,6 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
 
     HYDU_FUNC_ENTER();
 
-    /*
-     * Pavan said this check of RMK=pbs is invalid
-     * as PBS launcher can be used with non-PBS RMK, comment it out for now
-     *
-     * if (strcmp(HYDT_bsci_info.rmk, "pbs"))
-     * HYDU_ERR_POP(HYD_INTERNAL_ERROR, "Incorrect Launcher PBS for RMK=%s!\n", HYDT_bsci_info.rmk);
-     */
-
     HYDT_bsci_fns.launch_procs = HYDT_bscd_pbs_launch_procs;
     HYDT_bsci_fns.query_env_inherit = HYDT_bscd_pbs_query_env_inherit;
     HYDT_bsci_fns.wait_for_completion = HYDT_bscd_pbs_wait_for_completion;
@@ -34,11 +26,9 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
     HYDU_MALLOC(HYDT_bscd_pbs_sys, struct HYDT_bscd_pbs_sys *,
                 sizeof(struct HYDT_bscd_pbs_sys), status);
 
-    /*
-     * Initialize TM and Hydra's PBS data structure:
-     * Nothing in the returned tm_root is useful except tm_root.tm_nnodes
-     * which is the number of processes allocated in this PBS job.
-     */
+    /* Initialize TM and Hydra's PBS data structure: Nothing in the
+     * returned tm_root is useful except tm_root.tm_nnodes which is
+     * the number of processes allocated in this PBS job. */
     ierr = tm_init(NULL, &(HYDT_bscd_pbs_sys->tm_root));
     if (ierr != TM_SUCCESS)
         HYDU_ERR_POP(HYD_INTERNAL_ERROR, "tm_init() fails with TM err=%d.\n", ierr);
