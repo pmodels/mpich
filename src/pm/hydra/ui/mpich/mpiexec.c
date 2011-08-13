@@ -302,9 +302,11 @@ int main(int argc, char **argv)
 
     /* Reset the host list to use only the number of processes per
      * node as specified by the ppn option. */
-    if (HYD_ui_mpich_info.ppn != -1)
+    if (HYD_ui_mpich_info.ppn != -1) {
         for (node = HYD_server_info.node_list; node; node = node->next)
             node->core_count = HYD_ui_mpich_info.ppn;
+        reset_rmk = 1;
+    }
 
     /* The RMK returned a node list. See if the user requested us to
      * manipulate it in some way */
