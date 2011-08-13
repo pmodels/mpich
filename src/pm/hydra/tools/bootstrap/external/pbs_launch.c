@@ -20,6 +20,13 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
 
     HYDU_FUNC_ENTER();
 
+    /* If the RMK is not PBS, error out for the time being. This needs
+     * to be modified to reparse the host file and find the spawn IDs
+     * separately. */
+    if (strcmp(HYDT_bsci_info.rmk, "pbs"))
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "using a non-PBS RMK with the PBS launcher is not supported\n");
+
     proxy_count = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next)
         proxy_count++;
