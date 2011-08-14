@@ -268,7 +268,6 @@ int MPI_Finalize( void )
 #endif
 
     /* ... end of body of routine ... */
-
   fn_exit:
     MPID_MPI_FINALIZE_FUNC_EXIT(MPID_STATE_MPI_FINALIZE);
     return mpi_errno;

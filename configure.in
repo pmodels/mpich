@@ -3826,15 +3826,59 @@ if test "$enable_f77" = yes ; then
        # We make the length 8
        len_double="08"
     fi
-    MPI_COMPLEX=0x4c00${len_double}1e
-    MPI_DOUBLE_PRECISION=0x4c00${len_double}1f
-    MPI_2INTEGER=0x4c00${len_double}20
-    MPI_2REAL=0x4c00${len_double}21
-    AC_SUBST(MPI_COMPLEX)
-    AC_SUBST(MPI_DOUBLE_PRECISION)
-    AC_SUBST(MPI_2INTEGER)
-    AC_SUBST(MPI_2REAL)
 
+    # Provide the corresponding C types for MPI_REAL and MPI_DOUBLE
+    AC_MSG_CHECKING([for C type matching Fortran real])
+    noval=yes
+    for c_type in float double "long_double" ; do
+        eval ctypelen=\$"ac_cv_sizeof_$c_type"
+        if test "$pac_cv_f77_sizeof_real" = "$ctypelen" -a \
+          "$ctypelen" -gt 0 ; then
+	    c_type=`echo $c_type | sed -e 's/_/ /g'`
+	    AC_MSG_RESULT($c_type)
+	    MPIR_FC_REAL_CTYPE=$c_type
+	    noval="no"
+	    break
+        fi
+    done
+    if test "$noval" = "yes" ; then
+        # Set a default
+        MPIR_RC_REAL_CTYPE="float"
+        AC_MSG_RESULT([unavailable])
+    fi
+
+    noval=yes
+    AC_MSG_CHECKING([for C type matching Fortran double])
+    for c_type in double "long_double" float ; do
+        eval ctypelen=\$"ac_cv_sizeof_$c_type"
+        if test "$pac_cv_f77_sizeof_double_precision" = "$ctypelen" -a \
+          "$ctypelen" -gt 0 ; then
+	    c_type=`echo $c_type | sed -e 's/_/ /g'`
+	    AC_MSG_RESULT($c_type)
+	    MPIR_FC_DOUBLE_CTYPE=$c_type
+	    noval="no"
+	    break
+        fi
+    done
+    if test "$noval" = "yes" ; then
+        # Set a default
+        MPIR_FC_DOUBLE_CTYPE="double"
+        AC_MSG_RESULT([unavailable])
+    fi
+
+    # These are needed to correctly implement the MPI reduction operations
+    AC_DEFINE_UNQUOTED([MPIR_FC_REAL_CTYPE],[$MPIR_FC_REAL_CTYPE],
+     [The C type for FORTRAN REAL])
+    AC_DEFINE_UNQUOTED([MPIR_FC_DOUBLE_CTYPE],[$MPIR_FC_DOUBLE_CTYPE],
+     [The C type for FORTRAN DOUBLE PRECISION])
+
+    # Use the proper length values for these items in case we are building
+    # with Fortran integers that are not the same size as C ints and 
+    # reals and double precision that are the same size (not valid Fortran,
+    # but used by some applications)
+
+    len_2integer=`expr 2 \* $len_integer`
+    len_2real=`expr 2 \* $len_integer`
     len_doublecplx=`expr $pac_cv_f77_sizeof_double_precision \* 2`
     if test "$len_doublecplx" = 0 ; then
         # We have a problem
@@ -3842,35 +3886,78 @@ if test "$enable_f77" = yes ; then
         # We make the length 8*2 (in hex)
         len_doublecplx="16"
     fi
-    len=$len_doublecplx
-    #
-    # Take len and turn it into two hex digits (there are 8 bits available
-    # in the built-in datatype handle for the length; see
-    # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
-    # from the code in mpich2/configure.in 
-    if test "$len" -gt 255 ; then
-        AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE COMPLEX is $len bytes)]) 
-    fi
-    tmplen=$len
-    hexlen=""
-    while test $tmplen -gt 0 ; do
-        lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
-        case $lowdigit in 
-        10) char=a ;;
-        11) char=b ;;
-        12) char=c ;;
-        13) char=d ;;
-        14) char=e ;;
-        15) char=f ;;
-         *) char=$lowdigit ;;
-        esac
-        hexlen="$char$hexlen"
-        tmplen=`expr $tmplen / 16`
+
+    for lenname in len_2integer len_2real len_doublecplx ; do
+        eval len=\$$lenname
+	if test "$len" -gt 255 ; then
+            AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type $lenname is $len bytes)]) 
+	fi	    
+    	tmplen=$len
+        hexlen=""
+        while test $tmplen -gt 0 ; do
+            lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
+            case $lowdigit in 
+            10) char=a ;;
+            11) char=b ;;
+            12) char=c ;;
+            13) char=d ;;
+            14) char=e ;;
+            15) char=f ;;
+            *) char=$lowdigit ;;
+            esac
+            hexlen="$char$hexlen"
+            tmplen=`expr $tmplen / 16`
+        done
+        if test $len -lt 16 ; then
+            hexlen="0$hexlen"
+        fi 
+        eval ${lenname}=$hexlen
+        if test "$hexlen" = 0 ; then
+           # We have a problem
+           AC_MSG_WARN([Unable to determine size of a $lenname type; using 8])
+           # We make the length 8
+           eval ${lenname}=$hexlen
+        fi
     done
-    if test $len -lt 16 ; then
-        hexlen="0$hexlen"
-    fi
-    len_doublecplx=$hexlen
+
+    MPI_DOUBLE_PRECISION=0x4c00${len_double}1f
+    MPI_2INTEGER=0x4c00${len_2integer}20
+    MPI_2REAL=0x4c00${len_2real}21
+    MPI_COMPLEX=0x4c00${len_2real}1e
+    AC_SUBST(MPI_COMPLEX)
+    AC_SUBST(MPI_DOUBLE_PRECISION)
+    AC_SUBST(MPI_2INTEGER)
+    AC_SUBST(MPI_2REAL)
+
+dnl     len=$len_doublecplx
+dnl     #
+dnl     # Take len and turn it into two hex digits (there are 8 bits available
+dnl     # in the built-in datatype handle for the length; see
+dnl     # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
+dnl     # from the code in mpich2/configure.in 
+dnl     if test "$len" -gt 255 ; then
+dnl         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE COMPLEX is $len bytes)]) 
+dnl     fi
+dnl     tmplen=$len
+dnl     hexlen=""
+dnl     while test $tmplen -gt 0 ; do
+dnl         lowdigit=`expr $tmplen - 16 \* \( $tmplen / 16 \)`
+dnl         case $lowdigit in 
+dnl         10) char=a ;;
+dnl         11) char=b ;;
+dnl         12) char=c ;;
+dnl         13) char=d ;;
+dnl         14) char=e ;;
+dnl         15) char=f ;;
+dnl          *) char=$lowdigit ;;
+dnl         esac
+dnl         hexlen="$char$hexlen"
+dnl         tmplen=`expr $tmplen / 16`
+dnl     done
+dnl     if test $len -lt 16 ; then
+dnl         hexlen="0$hexlen"
+dnl     fi
+dnl     len_doublecplx=$hexlen
 
     MPI_DOUBLE_COMPLEX=0x4c00${len_doublecplx}22
     MPI_2DOUBLE_PRECISION=0x4c00${len_doublecplx}23
@@ -3955,6 +4042,10 @@ if test "$enable_f77" = yes ; then
             value=`expr $value \* 16 + $char`
         done
         #echo "$fullvar = $value"
+	if test "X$value" = "X"; then
+            eval origvarvalue=\$$fullvar
+	    AC_MSG_ERROR([Internal Error: Failed to convert $fullvar value to hex!  Original value was $origvarvalue])
+        fi
         eval $fullvar=$value
     done
     AC_LANG_C
@@ -4135,7 +4226,13 @@ if test "$enable_f77" = yes ; then
     elif test "$SIZEOF_F77_INTEGER" != "$ac_cv_sizeof_int" ; then
         # Make this fatal because we do not want to build a broken fortran
 	# interface (was error)
-        AC_MSG_WARN([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-f77 on the configure line for MPICH2.])
+	# Check to see if the f77 binding has enabled the code to support
+	# the case of int != fint. 
+	if grep HAVE_FINT_IS_INT $master_top_srcdir/src/binding/f77/testf.c 2>&1 1>/dev/null ; then
+	    AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
+	else 
+            AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-f77 on the configure line for MPICH2.])
+	fi
     fi
 
     #
@@ -4190,6 +4287,8 @@ _EOF
         fi
     fi
     AC_SUBST(MPI_STATUS_SIZE)
+    MPIF_STATUS_SIZE=$MPI_STATUS_SIZE
+    AC_DEFINE_UNQUOTED(MPIF_STATUS_SIZE,$MPIF_STATUS_SIZE,[Size of an MPI_STATUS, in Fortran, in Fortran integers])
 
     # We must convert all hex values to decimal (!).
     # This is for the C types so they are also available in Fortran

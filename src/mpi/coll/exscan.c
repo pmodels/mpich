@@ -25,23 +25,6 @@
 
 /* NOTE: copied from red_scat.c, if we use this one more time we need to
  * refactor it into a common location */
-#ifdef HAVE_CXX_BINDING
-/* NOTE: assumes 'uop' is the operator function pointer and
-   that 'is_cxx_uop' is is a boolean indicating the obvious */
-#define call_uop(in_, inout_, count_, datatype_)                                     \
-do {                                                                                 \
-    if (is_cxx_uop) {                                                                \
-        (*MPIR_Process.cxx_call_op_fn)((in_), (inout_), (count_), (datatype_), uop); \
-    }                                                                                \
-    else {                                                                           \
-        (*uop)((in_), (inout_), &(count_), &(datatype_));                            \
-    }                                                                                \
-} while (0)
-
-#else
-#define call_uop(in_, inout_, count_, datatype_)      \
-    (*uop)((in_), (inout_), &(count_), &(datatype_))
-#endif
 
 /* This is the default implementation of exscan. The algorithm is:
    
@@ -88,7 +71,8 @@ do {                                                                            
 */
 
 
-/* not declared static because a machine-specific function may call this one in some cases */
+/* not declared static because a machine-specific function may call this 
+   one in some cases */
 /* MPIR_Exscan performs an exscan using point-to-point messages.  This
    is intended to be used by device-specific implementations of
    exscan.  In all other cases MPIR_Exscan_impl should be used. */
@@ -112,14 +96,10 @@ int MPIR_Exscan (
     int mask, dst, is_commutative, flag; 
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
-    MPI_User_function *uop;
     MPID_Op *op_ptr;
     MPI_Comm comm;
     MPIU_CHKLMEM_DECL(2);
     MPIU_THREADPRIV_DECL;
-#ifdef HAVE_CXX_BINDING
-    int is_cxx_uop = 0;
-#endif
     
     if (count == 0) return MPI_SUCCESS;
 
@@ -134,8 +114,6 @@ int MPIR_Exscan (
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         is_commutative = 1;
-        /* get the function by indexing into the op table */
-        uop = MPIR_Op_table[op%16 - 1];
     }
     else {
         MPID_Op_get_ptr(op, op_ptr);
@@ -143,18 +121,6 @@ int MPIR_Exscan (
             is_commutative = 0;
         else
             is_commutative = 1;
-        
-#ifdef HAVE_CXX_BINDING            
-            if (op_ptr->language == MPID_LANG_CXX) {
-                uop = (MPI_User_function *) op_ptr->function.c_function;
-		is_cxx_uop = 1;
-	    }
-	    else
-#endif
-	if ((op_ptr->language == MPID_LANG_C))
-            uop = (MPI_User_function *) op_ptr->function.c_function;
-        else
-            uop = (MPI_User_function *) op_ptr->function.f77_function;
     }
     
     /* need to allocate temporary buffer to store partial scan*/
@@ -197,7 +163,8 @@ int MPIR_Exscan (
             }
 
             if (rank > dst) {
-                call_uop(tmp_buf, partial_scan, count, datatype);
+		mpi_errno = MPIR_Reduce_local_impl( tmp_buf, partial_scan,
+						    count, datatype, op );
 
                 /* On rank 0, recvbuf is not defined.  For sendbuf==MPI_IN_PLACE
                    recvbuf must not change (per MPI-2.2).
@@ -215,16 +182,19 @@ int MPIR_Exscan (
                         flag = 1;
                     }
                     else {
-                        call_uop(tmp_buf, recvbuf, count, datatype);
+			mpi_errno = MPIR_Reduce_local_impl( tmp_buf,
+					    recvbuf, count, datatype, op );
                     }
                 }
             }
             else {
                 if (is_commutative) {
-                    call_uop(tmp_buf, partial_scan, count, datatype);
+		    mpi_errno = MPIR_Reduce_local_impl( tmp_buf, partial_scan,
+							count, datatype, op );
 		}
                 else {
-                    call_uop(partial_scan, tmp_buf, count, datatype);
+		    mpi_errno = MPIR_Reduce_local_impl( partial_scan,
+						tmp_buf, count, datatype, op );
 
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
                                                partial_scan,

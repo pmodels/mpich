@@ -256,14 +256,10 @@ static int MPIR_Reduce_redscat_gather (
     int mask, *cnts, *disps, i, j, send_idx=0;
     int recv_idx, last_idx=0, newdst;
     int dst, send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root; 
-    MPI_User_function *uop;
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
     MPID_Op *op_ptr;
     MPI_Comm comm;
-#ifdef HAVE_CXX_BINDING
-    int is_cxx_uop = 0;
-#endif
     MPIU_CHKLMEM_DECL(4);
     MPIU_THREADPRIV_DECL;
 
@@ -282,8 +278,6 @@ static int MPIR_Reduce_redscat_gather (
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         is_commutative = 1;
-        /* get the function by indexing into the op table */
-        uop = MPIR_Op_table[op%16 - 1];
     }
     else {
         MPID_Op_get_ptr(op, op_ptr);
@@ -291,18 +285,6 @@ static int MPIR_Reduce_redscat_gather (
             is_commutative = 0;
         else
             is_commutative = 1;
-        
-#ifdef HAVE_CXX_BINDING            
-            if (op_ptr->language == MPID_LANG_CXX) {
-                uop = (MPI_User_function *) op_ptr->function.c_function;
-                is_cxx_uop = 1;
-            }
-            else
-#endif
-        if ((op_ptr->language == MPID_LANG_C))
-            uop = (MPI_User_function *) op_ptr->function.c_function;
-        else
-            uop = (MPI_User_function *) op_ptr->function.f77_function;
     }
 
     /* I think this is the worse case, so we can avoid an assert() 
@@ -387,17 +369,8 @@ static int MPIR_Reduce_redscat_gather (
             /* do the reduction on received data. */
             /* This algorithm is used only for predefined ops
                and predefined ops are always commutative. */
-#ifdef HAVE_CXX_BINDING
-            if (is_cxx_uop) {
-                (*MPIR_Process.cxx_call_op_fn)( tmp_buf, recvbuf, 
-                                                count,
-                                                datatype,
-                                                uop ); 
-            }
-            else 
-#endif
-                (*uop)(tmp_buf, recvbuf, &count, &datatype);
-
+	    mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, 
+					       count, datatype, op);
             /* change the rank */
             newrank = rank / 2;
         }
@@ -473,20 +446,10 @@ static int MPIR_Reduce_redscat_gather (
             
             /* This algorithm is used only for predefined ops
                and predefined ops are always commutative. */
-#ifdef HAVE_CXX_BINDING
-            if (is_cxx_uop) {
-                (*MPIR_Process.cxx_call_op_fn)((char *) tmp_buf +
-                                               disps[recv_idx]*extent,
-                                               (char *) recvbuf + 
-                                               disps[recv_idx]*extent, 
-                                               recv_cnt, datatype, uop);
-            }
-            else 
-#endif
-                (*uop)((char *) tmp_buf + disps[recv_idx]*extent,
+	    mpi_errno = MPIR_Reduce_local_impl( 
+		       (char *) tmp_buf + disps[recv_idx]*extent,
                        (char *) recvbuf + disps[recv_idx]*extent, 
-                       &recv_cnt, &datatype);
-            
+                       recv_cnt, datatype, op );
             /* update send_idx for next iteration */
             send_idx = recv_idx;
             mask <<= 1;

@@ -226,10 +226,22 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 
    FIXME These are a hack in most cases, but they seem to work in practice
    and it's what we were doing prior to the oputil.h refactoring. */
-typedef struct {
+typedef struct { 
     float re;
     float im;
 } s_complex;
+
+#if defined(HAVE_FORTRAN_BINDING)
+typedef struct {
+    MPIR_FC_REAL_CTYPE re;
+    MPIR_FC_REAL_CTYPE im;
+} s_fc_complex;
+
+typedef struct {
+    MPIR_FC_DOUBLE_CTYPE re;
+    MPIR_FC_DOUBLE_CTYPE im;
+} d_fc_complex;
+#endif
 
 typedef struct {
     double re;
@@ -292,11 +304,13 @@ typedef struct {
     MPIR_OP_TYPE_MACRO_HAVE_INTEGER16_CTYPE(MPI_INTEGER16, MPIR_INTEGER16_CTYPE)
 
 /* floating point group */
+/* FIXME: REAL need not be float, nor DOUBLE_PRECISION be double.
+   Fortran types are not synonyms for the C types */
 #define MPIR_OP_TYPE_GROUP_FLOATING_POINT                             \
     MPIR_OP_TYPE_MACRO(MPI_FLOAT, float)                              \
     MPIR_OP_TYPE_MACRO(MPI_DOUBLE, double)                            \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_REAL, float)                  \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_PRECISION, double)     \
+    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_REAL, MPIR_FC_REAL_CTYPE)      \
+    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_PRECISION, MPIR_FC_DOUBLE_CTYPE)\
     MPIR_OP_TYPE_MACRO_HAVE_LONG_DOUBLE(MPI_LONG_DOUBLE, long double) \
 /* The MPI Standard doesn't include these types in the floating point group for
    predefined operations but MPICH2 supports them when possible. */
@@ -315,12 +329,12 @@ typedef struct {
 
 /* complex group */
 #define MPIR_OP_TYPE_GROUP_COMPLEX                          \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_COMPLEX, s_complex) \
+    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_COMPLEX, s_fc_complex) \
     MPIR_OP_TYPE_MACRO_HAVE_C_FLOAT_COMPLEX(MPI_C_FLOAT_COMPLEX, float _Complex)                    \
     MPIR_OP_TYPE_MACRO_HAVE_C_DOUBLE_COMPLEX(MPI_C_DOUBLE_COMPLEX, double _Complex)                 \
     MPIR_OP_TYPE_MACRO_HAVE_C_LONG_DOUBLE_COMPLEX(MPI_C_LONG_DOUBLE_COMPLEX, long double _Complex)
 #define MPIR_OP_TYPE_GROUP_COMPLEX_EXTRA                                                            \
-    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_COMPLEX, d_complex)                                  \
+    MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_DOUBLE_COMPLEX, d_fc_complex)                                  \
     MPIR_OP_TYPE_MACRO_HAVE_COMPLEX8(MPI_COMPLEX8, s_complex)                                       \
     MPIR_OP_TYPE_MACRO_HAVE_COMPLEX16(MPI_COMPLEX16, d_complex)                                     \
     MPIR_OP_TYPE_MACRO_HAVE_CXX_COMPLEX(MPIR_CXX_COMPLEX_VALUE, s_complex)                          \

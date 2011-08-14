@@ -1348,9 +1348,9 @@ typedef enum MPID_Request_kind_t {
 } MPID_Request_kind_t;
 
 /* Typedefs for Fortran generalized requests */
-typedef void (MPIR_Grequest_f77_cancel_function)(void *, int*, int *); 
-typedef void (MPIR_Grequest_f77_free_function)(void *, int *); 
-typedef void (MPIR_Grequest_f77_query_function)(void *, MPI_Status *, int *); 
+typedef void (MPIR_Grequest_f77_cancel_function)(void *, MPI_Fint*, MPI_Fint *); 
+typedef void (MPIR_Grequest_f77_free_function)(void *, MPI_Fint *); 
+typedef void (MPIR_Grequest_f77_query_function)(void *, MPI_Fint *, MPI_Fint *); 
 
 /* vtable-ish structure holding generalized request function pointers and other
  * state.  Saves ~48 bytes in pt2pt requests on many platforms. */
@@ -2128,9 +2128,6 @@ int MPIR_Comm_copy( MPID_Comm *, int, MPID_Comm ** );
 extern void MPIR_Keyval_set_cxx( int, void (*)(void), void (*)(void) );
 extern void MPIR_Op_set_cxx( MPI_Op, void (*)(void) );
 extern void MPIR_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
-#endif
-#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-void MPIR_Op_set_fc( MPI_Op );
 #endif
 
 int MPIR_Group_create( int, MPID_Group ** );

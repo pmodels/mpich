@@ -86,7 +86,9 @@ int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype 
         if (is_f77_uop) {
             MPI_Fint lcount = (MPI_Fint)count;
             MPI_Fint ldtype = (MPI_Fint)datatype;
-            (*uop)(inbuf, inoutbuf, &lcount, &ldtype);
+            MPIR_F77_User_function *uop_f77 = (MPIR_F77_User_function *)uop;
+
+            (*uop_f77)(inbuf, inoutbuf, &lcount, &ldtype);
         }
         else {
             (*uop)(inbuf, inoutbuf, &count, &datatype);

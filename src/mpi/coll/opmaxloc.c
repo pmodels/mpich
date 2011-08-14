@@ -101,9 +101,9 @@ void MPIR_MAXLOC(
     /* now the Fortran types */
 #ifdef HAVE_FORTRAN_BINDING
 #ifndef HAVE_NO_FORTRAN_MPI_TYPES_IN_C
-    case MPI_2INTEGER:          MPIR_MAXLOC_F_CASE(int);
-    case MPI_2REAL:             MPIR_MAXLOC_F_CASE(float);
-    case MPI_2DOUBLE_PRECISION: MPIR_MAXLOC_F_CASE(double);
+    case MPI_2INTEGER:          MPIR_MAXLOC_F_CASE(MPI_Fint);
+    case MPI_2REAL:             MPIR_MAXLOC_F_CASE(MPIR_FC_REAL_CTYPE);
+    case MPI_2DOUBLE_PRECISION: MPIR_MAXLOC_F_CASE(MPIR_FC_DOUBLE_CTYPE);
 #endif
 #endif
 	/* --BEGIN ERROR HANDLING-- */

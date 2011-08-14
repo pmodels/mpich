@@ -12,7 +12,8 @@ typesubf_SOURCES   = typesubf.f
 typem2f_SOURCES    = typem2f.f
 gaddressf_SOURCES  = gaddressf.f
 packef_SOURCES     = packef.f
-allctypesf_SOURCES  = allctypesf.f
+allctypesf_SOURCES = allctypesf.f
+hindex1f_SOURCES   = hindex1f.f 
 
 testing:
 	../../runtests -srcdir=$(srcdir) -tests=testlist \

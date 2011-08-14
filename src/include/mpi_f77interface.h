@@ -10,3 +10,8 @@
 void MPIR_Keyval_set_fortran( int );
 void MPIR_Keyval_set_fortran90( int );
 void MPIR_Grequest_set_lang_f77( MPI_Request greq );
+#if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
+void MPIR_Op_set_fc( MPI_Op );
+typedef void (MPIR_F77_User_function) ( void *, void *, MPI_Fint *, MPI_Fint * );
+void MPIR_Errhandler_set_fc( MPI_Errhandler );
+#endif

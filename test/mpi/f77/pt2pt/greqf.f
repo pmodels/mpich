@@ -12,7 +12,7 @@ C
 C    set a default status
       status(MPI_SOURCE) = MPI_UNDEFINED
       status(MPI_TAG)    = MPI_UNDEFINED
-      call mpi_status_set_cancelled( status, 0, ierr)
+      call mpi_status_set_cancelled( status, .false., ierr)
       call mpi_status_set_elements( status, MPI_BYTE, 0, ierr )
       ierr = MPI_SUCCESS
       end

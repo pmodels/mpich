@@ -185,6 +185,7 @@ $outfile_prefix = "mpi";
 		  'Type_create_subarray-3' => 'int[]',
 		  'Type_create_subarray-4' => 'int[]',
 		  'Request_get_status-2' => 'bool',
+		  'Status_set_cancelled-2' => 'bool',
 		  'Info_get-5' => 'bool',
 		  'Type_create_indexed_block-3' => 'int[]',
 		  'Type_create_darray-4' => 'int[]',
