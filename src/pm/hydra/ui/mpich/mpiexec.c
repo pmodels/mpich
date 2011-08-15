@@ -322,10 +322,8 @@ int main(int argc, char **argv)
         status = HYDT_bsci_finalize();
         HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
 
-        status = HYDT_bsci_init("none", HYD_server_info.user_global.launcher,
-                                HYD_server_info.user_global.launcher_exec,
-                                HYD_server_info.user_global.enablex,
-                                HYD_server_info.user_global.debug);
+        status = HYDT_bsci_init("none", HYDT_bsci_info.launcher, HYDT_bsci_info.launcher_exec,
+                                HYDT_bsci_info.enablex, HYDT_bsci_info.debug);
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 

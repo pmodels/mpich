@@ -59,19 +59,19 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (HYD_server_info.user_global.debug)
         proxy_args[arg++] = HYDU_strdup("--debug");
 
-    if (HYD_server_info.user_global.rmk) {
+    if (HYDT_bsci_info.rmk) {
         proxy_args[arg++] = HYDU_strdup("--rmk");
-        proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.rmk);
+        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.rmk);
     }
 
-    if (HYD_server_info.user_global.launcher) {
+    if (HYDT_bsci_info.launcher) {
         proxy_args[arg++] = HYDU_strdup("--launcher");
-        proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.launcher);
+        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.launcher);
     }
 
-    if (HYD_server_info.user_global.launcher_exec) {
+    if (HYDT_bsci_info.launcher_exec) {
         proxy_args[arg++] = HYDU_strdup("--launcher-exec");
-        proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.launcher_exec);
+        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.launcher_exec);
     }
 
     proxy_args[arg++] = HYDU_strdup("--demux");
