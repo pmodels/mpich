@@ -121,7 +121,7 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
 
     /* User didn't specify a launcher; try to see if the RMK also
      * provides launcher capabilities */
-    if (HYDT_bsci_info.launcher == NULL) {
+    if (HYDT_bsci_info.rmk && HYDT_bsci_info.launcher == NULL) {
         for (i = 0; launcher_array[i]; i++)
             if (!strcmp(HYDT_bsci_info.rmk, launcher_array[i]))
                 break;
