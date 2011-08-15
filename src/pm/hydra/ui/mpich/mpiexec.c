@@ -316,13 +316,13 @@ int main(int argc, char **argv)
     }
 
     if (reset_rmk) {
-        /* Reinitialize the bootstrap server with the "none" RMK, so
+        /* Reinitialize the bootstrap server with the "user" RMK, so
          * it knows that we are not using the node list provided by
          * the RMK */
         status = HYDT_bsci_finalize();
         HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
 
-        status = HYDT_bsci_init("none", HYDT_bsci_info.launcher, HYDT_bsci_info.launcher_exec,
+        status = HYDT_bsci_init("user", HYDT_bsci_info.launcher, HYDT_bsci_info.launcher_exec,
                                 HYDT_bsci_info.enablex, HYDT_bsci_info.debug);
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }

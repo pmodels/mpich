@@ -8,14 +8,7 @@
 #include "bsci.h"
 #include "common.h"
 
-HYD_status HYDT_bsci_launcher_none_init(void)
-{
-    HYDT_bsci_fns.launch_procs = HYDT_bscd_common_launch_procs;
-
-    return HYD_SUCCESS;
-}
-
-HYD_status HYDT_bsci_rmk_none_init(void)
+HYD_status HYDT_bsci_rmk_user_init(void)
 {
     return HYD_SUCCESS;
 }

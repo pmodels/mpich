@@ -108,7 +108,7 @@ HYD_status HYDT_bsci_launcher_ll_init(void)
     return external_launcher_init();
 }
 
-HYD_status HYDT_bsci_launcher_none_init(void)
+HYD_status HYDT_bsci_launcher_manual_init(void)
 {
     return external_launcher_init();
 }
@@ -138,7 +138,7 @@ HYD_status HYDT_bsci_rmk_pbs_init(void)
     return external_rmk_init();
 }
 
-HYD_status HYDT_bsci_rmk_none_init(void)
+HYD_status HYDT_bsci_rmk_user_init(void)
 {
     return external_rmk_init();
 }

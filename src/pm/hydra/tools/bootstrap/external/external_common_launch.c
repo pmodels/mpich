@@ -248,7 +248,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
         if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") ||
-                         !strcmp(HYDT_bsci_info.launcher, "none") || lh)) {
+                         !strcmp(HYDT_bsci_info.launcher, "manual") || lh)) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -296,7 +296,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             HYDU_print_strlist(targs + offset);
         }
 
-        if (!strcmp(HYDT_bsci_info.launcher, "none")) {
+        if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
             HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH: ");
             HYDU_print_strlist(targs + offset);
             continue;
@@ -330,7 +330,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
-    if (!strcmp(HYDT_bsci_info.launcher, "none"))
+    if (!strcmp(HYDT_bsci_info.launcher, "manual"))
         HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH_END\n");
 
   fn_exit:

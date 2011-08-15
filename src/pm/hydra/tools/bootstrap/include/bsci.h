@@ -203,15 +203,17 @@ HYD_status HYDT_bsci_launcher_slurm_init(void);
 HYD_status HYDT_bsci_launcher_ll_init(void);
 HYD_status HYDT_bsci_launcher_lsf_init(void);
 HYD_status HYDT_bsci_launcher_sge_init(void);
+#if defined HAVE_TM_H
 HYD_status HYDT_bsci_launcher_pbs_init(void);
-HYD_status HYDT_bsci_launcher_none_init(void);
+#endif /* HAVE_TM_H */
+HYD_status HYDT_bsci_launcher_manual_init(void);
 
 HYD_status HYDT_bsci_rmk_slurm_init(void);
 HYD_status HYDT_bsci_rmk_ll_init(void);
 HYD_status HYDT_bsci_rmk_lsf_init(void);
 HYD_status HYDT_bsci_rmk_sge_init(void);
 HYD_status HYDT_bsci_rmk_pbs_init(void);
-HYD_status HYDT_bsci_rmk_none_init(void);
+HYD_status HYDT_bsci_rmk_user_init(void);
 #endif /* HAVE_BSS_EXTERNAL */
 
 #if defined HAVE_BSS_PERSIST

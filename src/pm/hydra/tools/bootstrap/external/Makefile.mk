@@ -7,7 +7,8 @@
 libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c \
 	$(top_srcdir)/tools/bootstrap/external/external_common_launch.c \
 	$(top_srcdir)/tools/bootstrap/external/fork_init.c \
-	$(top_srcdir)/tools/bootstrap/external/none_init.c \
+	$(top_srcdir)/tools/bootstrap/external/user_init.c \
+	$(top_srcdir)/tools/bootstrap/external/manual_init.c \
 	$(top_srcdir)/tools/bootstrap/external/rsh_init.c \
 	$(top_srcdir)/tools/bootstrap/external/rsh_env.c \
 	$(top_srcdir)/tools/bootstrap/external/ssh_init.c \
