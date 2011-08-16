@@ -27,6 +27,7 @@
 #include <sched.h>
 #include <pthread.h>
 #include <sys/mman.h>
+#include <sys/syscall.h>
 #if defined HWLOC_HAVE_SET_MEMPOLICY || defined HWLOC_HAVE_MBIND
 #define migratepages migrate_pages /* workaround broken migratepages prototype in numaif.h before libnuma 2.0.2 */
 #include <numaif.h>
@@ -855,17 +856,27 @@ hwloc_linux_get_tid_last_cpu_location(hwloc_topology_t topology __hwloc_attribut
   FILE *file;
   int i;
 
-  if (!tid)
-    strcpy(name, "/proc/self/stat");
-  else
-    snprintf(name, sizeof(name), "/proc/%lu/stat", (unsigned long) tid);
+  if (!tid) {
+#ifdef SYS_gettid
+    tid = syscall(SYS_gettid);
+#else
+    errno = ENOSYS;
+    return -1;
+#endif
+  }
+
+  snprintf(name, sizeof(name), "/proc/%lu/stat", (unsigned long) tid);
   file = fopen(name, "r");
   if (!file) {
     errno = ENOSYS;
     return -1;
   }
-  fgets(buf, sizeof(buf), file);
+  tmp = fgets(buf, sizeof(buf), file);
   fclose(file);
+  if (!tmp) {
+    errno = ENOSYS;
+    return -1;
+  }
 
   tmp = strrchr(buf, ')');
   if (!tmp) {
@@ -950,7 +961,11 @@ hwloc_linux_get_thisproc_last_cpu_location(hwloc_topology_t topology, hwloc_bitm
 static int
 hwloc_linux_get_thisthread_last_cpu_location(hwloc_topology_t topology, hwloc_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
 {
-  return hwloc_linux_get_tid_last_cpu_location(topology, topology->pid, hwloc_set);
+  if (topology->pid) {
+    errno = ENOSYS;
+    return -1;
+  }
+  return hwloc_linux_get_tid_last_cpu_location(topology, 0, hwloc_set);
 }
 
 
