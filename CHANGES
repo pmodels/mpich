@@ -11,6 +11,29 @@
 
 
 ===============================================================================
+                               Changes in 1.4.1
+===============================================================================
+
+ # OVERALL: Several improvements to the ARMCI API implementation
+   within MPICH2.
+
+ # Build system: Added support for DESTDIR while installing MPICH2.
+
+ # PM/PMI: Upgrade hwloc to 1.2.1rc2.
+
+ # PM/PMI: Initial support for the PBS launcher.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available using:
+
+     svn log -r8675:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.4.1
+
+     ... or at the following link:
+
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.4.1?action=follow_copy&rev=HEAD&stop_rev=8675&mode=follow_copy
+
+
+===============================================================================
                                Changes in 1.4
 ===============================================================================
 
@@ -83,11 +106,11 @@
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
-     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.4rc2
+     svn log -r7838:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.4
 
      ... or at the following link:
 
-     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.4rc2?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.4?action=follow_copy&rev=HEAD&stop_rev=7838&mode=follow_copy
 
 
 ===============================================================================
