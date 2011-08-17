@@ -211,7 +211,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
 
     targs[idx] = NULL;
     HYDT_topo_cpuset_zero(&cpuset);
-    for (i = 0, proxy = proxy_list; proxy; proxy = proxy->next, i++) {
+    for (proxy = proxy_list; proxy; proxy = proxy->next) {
 
         if (targs[host_idx])
             HYDU_FREE(targs[host_idx]);
@@ -229,7 +229,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         /* append proxy ID */
         if (targs[idx])
             HYDU_FREE(targs[idx]);
-        targs[idx] = HYDU_int_to_str(i);
+        targs[idx] = HYDU_int_to_str(proxy->proxy_id);
         targs[idx + 1] = NULL;
 
         /* ssh has many types of security controls that do not allow a
@@ -262,11 +262,11 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                 HYDU_ERR_POP(status, "unable to create env\n");
                 HYDU_FREE(str);
 
-                control_fd[i] = sockpair[0];
+                control_fd[proxy->proxy_id] = sockpair[0];
 
                 /* make sure control_fd[i] is not shared by the
                  * processes spawned in the future */
-                status = HYDU_sock_cloexec(control_fd[i]);
+                status = HYDU_sock_cloexec(control_fd[proxy->proxy_id]);
                 HYDU_ERR_POP(status, "unable to set control socket to close on exec\n");
             }
 
