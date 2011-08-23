@@ -124,6 +124,13 @@ dnl Use the oldstyle AC_INIT instead
 
 AC_INIT(src/include/mpichconf.h.in)
 
+if test "x$prefix" != "xNONE" && test -d "$prefix"; then 
+    if test "x`(cd \"$prefix\"; echo \"$PWD\")`" = "x`(cd \"$srcdir\"; echo \"$PWD\")`" ||\
+       test "x`(cd \"$prefix\"; echo \"$PWD\")`" = "x$PWD"  ; then
+        AC_MSG_ERROR([The install directory (--prefix=) cannot be the same as the build or src directory.])
+    fi
+fi         
+
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
