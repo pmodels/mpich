@@ -107,6 +107,43 @@ MPIU_Thread_CS_enter_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIU_Thread_CS_try_lockname_recursive_impl_
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+/* these are inline functions instead of macros to avoid some of the
+ * MPIU_THREADPRIV_DECL scoping issues */
+MPIU_DBG_ATTRIBUTE_NOINLINE
+ATTRIBUTE((unused))
+static MPIU_DBG_INLINE_KEYWORD void
+MPIU_Thread_CS_try_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
+                                            const char *lockname,
+                                            MPID_Thread_mutex_t *mutex,
+                                            int *locked)
+{
+    int depth,local_try;
+    MPIU_THREADPRIV_DECL;
+    MPIU_THREADPRIV_GET;
+    depth = MPIU_THREADPRIV_FIELD(lock_depth)[kind];
+    MPIU_DBG_MSG_D(THREAD,TYPICAL,"recursive enter, depth=%d", depth);
+
+    MPIU_Assert(depth >= 0 && depth < 10); /* probably a mismatch if we hit this */
+
+    *locked = FALSE;
+
+    if (depth == 0) {
+        MPIU_DBG_MSG_S(THREAD,TYPICAL,"locking %s", lockname);
+        MPID_Thread_mutex_trylock(mutex,&local_try);
+        if (local_try == TRUE) {
+           MPIU_THREADPRIV_FIELD(lock_depth)[kind] += 1;
+           *locked = local_try;
+        }
+    } else {
+        MPIU_THREADPRIV_FIELD(lock_depth)[kind] += 1;
+        *locked = 1;
+   }
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIU_Thread_CS_exit_lockname_recursive_impl_
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)

@@ -4,7 +4,7 @@
 #
 
 # Version Information
-MPICH2_VERSION=1.4
+MPICH2_VERSION=1.4.1
 
 # Release date
 MPICH2_RELEASE_DATE="unreleased development copy"
@@ -23,4 +23,4 @@ MPICH2_RELEASE_DATE="unreleased development copy"
 #
 #     4. If any interfaces have been removed since the last public
 #     release, then set age to 0.
-libmpich_so_version=3:0
+libmpich_so_version=3:2

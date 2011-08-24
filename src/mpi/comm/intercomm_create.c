@@ -324,7 +324,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		     remote_leader >= peer_comm_ptr->remote_size)) {
 		    MPIU_ERR_SET2(mpi_errno,MPI_ERR_RANK, 
 				  "**rankremote", "**rankremote %d %d", 
-				  local_leader, comm_ptr->local_size );
+				  remote_leader, peer_comm_ptr->remote_size );
 		}
 		/* Check that the local leader and the remote leader are 
 		   different processes.  This test requires looking at

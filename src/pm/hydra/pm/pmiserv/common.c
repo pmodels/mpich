@@ -6,7 +6,7 @@
 
 #include "hydra.h"
 #include "common.h"
-#include "bind.h"
+#include "topo.h"
 
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
 {

@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
-#include "bind.h"
+#include "topo.h"
 #include "common.h"
 
 static int fd_stdout, fd_stderr;
@@ -100,14 +100,15 @@ static HYD_status sge_get_path(char **path)
 HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                          int *control_fd)
 {
-    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len;
+    int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
     struct HYD_proxy *proxy;
-    char *targs[HYD_NUM_TMP_STRINGS], *path = NULL, *extra_arg_list = NULL, *extra_arg;
+    char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list =
+        NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
-    struct HYDT_bind_cpuset_t cpuset;
+    struct HYDT_topo_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -130,6 +131,10 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         status = sge_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the qrsh executable\n");
+    }
+    else {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bad launcher type %s\n",
+                            HYDT_bsci_info.launcher);
     }
 
     idx = 0;
@@ -154,7 +159,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         targs[idx++] = HYDU_strdup("-V");
     }
 
-    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
+    MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list);
     if (extra_arg_list) {
         extra_arg = strtok(extra_arg_list, " ");
         while (extra_arg) {
@@ -199,8 +204,13 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     HYDU_FREE(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
+    /* Check if the user disabled automatic forking */
+    rc = MPL_env2bool("HYDRA_LAUNCHER_AUTOFORK", &autofork);
+    if (rc == 0)
+        autofork = 1;
+
     targs[idx] = NULL;
-    HYDT_bind_cpuset_zero(&cpuset);
+    HYDT_topo_cpuset_zero(&cpuset);
     for (i = 0, proxy = proxy_list; proxy; proxy = proxy->next, i++) {
 
         if (targs[host_idx])
@@ -237,8 +247,8 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
-        if (!strcmp(HYDT_bsci_info.launcher, "fork") ||
-            !strcmp(HYDT_bsci_info.launcher, "none") || lh) {
+        if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") ||
+                         !strcmp(HYDT_bsci_info.launcher, "manual") || lh)) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -248,7 +258,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
                 str = HYDU_int_to_str(sockpair[1]);
-                status = HYDU_env_create(&env, "HYDRA_CONTROL_FD", str);
+                status = HYDU_env_create(&env, "HYDI_CONTROL_FD", str);
                 HYDU_ERR_POP(status, "unable to create env\n");
                 HYDU_FREE(str);
 
@@ -286,7 +296,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             HYDU_print_strlist(targs + offset);
         }
 
-        if (!strcmp(HYDT_bsci_info.launcher, "none")) {
+        if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
             HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH: ");
             HYDU_print_strlist(targs + offset);
             continue;
@@ -320,7 +330,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
 
-    if (!strcmp(HYDT_bsci_info.launcher, "none"))
+    if (!strcmp(HYDT_bsci_info.launcher, "manual"))
         HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH_END\n");
 
   fn_exit:

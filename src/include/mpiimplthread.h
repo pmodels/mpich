@@ -429,6 +429,16 @@ M*/
   M*/
 #define MPIU_THREAD_CS_YIELD(_name,_context) MPIU_THREAD_CS_YIELD_##_name(_context)
 
+/*M MPIU_THREAD_CS_TRY - Trylock version of ENTER to a named critical section
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
+#define MPIU_THREAD_CS_TRY(_name,_locked,_context) MPIU_THREAD_CS_TRY_##_name(_context,_locked)
+
+
 /*M
   ... move the threadsafe init block
 
@@ -550,6 +560,11 @@ M*/
         MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to recursively YIELD lockname=%s", #name_);   \
         MPIU_Thread_CS_yield_lockname_recursive_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_); \
     } while (0)
+#define MPIU_THREAD_CS_TRY_LOCKNAME_RECURSIVE(name_,locked_)                                   \
+    do {                                                                                      \
+        MPIU_Thread_CS_try_lockname_recursive_impl_(MPIU_Nest_##name_, #name_, &MPIR_ThreadInfo.name_, locked_); \
+    } while (0)
+
 
 #define MPIU_THREAD_CS_ENTER_LOCKNAME(name_)                                                   \
     do {                                                                                       \
@@ -651,6 +666,12 @@ enum MPIU_Nest_mutexes {
     do {                                                       \
         MPIU_THREAD_CHECK_BEGIN                                \
         MPIU_THREAD_CS_YIELD_LOCKNAME_RECURSIVE(global_mutex); \
+        MPIU_THREAD_CHECK_END                                  \
+    } while (0)
+#define MPIU_THREAD_CS_TRY_ALLFUNC(_context,_locked)           \
+    do {                                                       \
+        MPIU_THREAD_CHECK_BEGIN                                \
+        MPIU_THREAD_CS_TRY_LOCKNAME_RECURSIVE(global_mutex,_locked);   \
         MPIU_THREAD_CHECK_END                                  \
     } while (0)
 

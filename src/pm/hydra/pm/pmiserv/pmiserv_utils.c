@@ -59,19 +59,19 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (HYD_server_info.user_global.debug)
         proxy_args[arg++] = HYDU_strdup("--debug");
 
-    if (HYD_server_info.user_global.rmk) {
+    if (HYDT_bsci_info.rmk) {
         proxy_args[arg++] = HYDU_strdup("--rmk");
-        proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.rmk);
+        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.rmk);
     }
 
-    if (HYD_server_info.user_global.launcher) {
+    if (HYDT_bsci_info.launcher) {
         proxy_args[arg++] = HYDU_strdup("--launcher");
-        proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.launcher);
+        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.launcher);
     }
 
-    if (HYD_server_info.user_global.launcher_exec) {
+    if (HYDT_bsci_info.launcher_exec) {
         proxy_args[arg++] = HYDU_strdup("--launcher-exec");
-        proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.launcher_exec);
+        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.launcher_exec);
     }
 
     proxy_args[arg++] = HYDU_strdup("--demux");
@@ -85,7 +85,7 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     proxy_args[arg++] = HYDU_strdup("--pgid");
     proxy_args[arg++] = HYDU_int_to_str(pgid);
 
-    ret = MPL_env2int("HYDRA_RETRY_COUNT", &retries);
+    ret = MPL_env2int("HYDRA_PROXY_RETRY_COUNT", &retries);
     if (ret == 0)
         retries = HYD_DEFAULT_RETRY_COUNT;
 
@@ -172,8 +172,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
                  blocklist_tail->core_count == node->core_count) {
             blocklist_tail->num_nodes++;
         }
-        else if (blocklist_tail->start_idx == node->node_id &&
-                 blocklist_tail->num_nodes == 1) {
+        else if (blocklist_tail->start_idx == node->node_id && blocklist_tail->num_nodes == 1) {
             blocklist_tail->core_count += node->core_count;
         }
         else {
@@ -204,7 +203,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         blocklist_tail = blocklist_head;
     }
 
-create_mapping_key:
+  create_mapping_key:
     /* Create the mapping out of the blocks */
     i = 0;
     tmp[i++] = HYDU_strdup("(");
@@ -309,9 +308,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         proxy->exec_launch_info[arg++] = HYDU_strdup("--version");
         proxy->exec_launch_info[arg++] = HYDU_strdup(HYDRA_VERSION);
 
-        if (HYD_server_info.interface_env_name) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--interface-env-name");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.interface_env_name);
+        if (HYD_server_info.iface_ip_env_name) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--iface-ip-env-name");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.iface_ip_env_name);
         }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--hostname");
@@ -445,9 +444,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
             proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.binding);
         }
 
-        if (HYD_server_info.user_global.bindlib) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--bindlib");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.bindlib);
+        if (HYD_server_info.user_global.topolib) {
+            proxy->exec_launch_info[arg++] = HYDU_strdup("--topolib");
+            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.topolib);
         }
 
         if (HYD_server_info.user_global.ckpointlib) {

@@ -7,7 +7,8 @@
 libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c \
 	$(top_srcdir)/tools/bootstrap/external/external_common_launch.c \
 	$(top_srcdir)/tools/bootstrap/external/fork_init.c \
-	$(top_srcdir)/tools/bootstrap/external/none_init.c \
+	$(top_srcdir)/tools/bootstrap/external/user_init.c \
+	$(top_srcdir)/tools/bootstrap/external/manual_init.c \
 	$(top_srcdir)/tools/bootstrap/external/rsh_init.c \
 	$(top_srcdir)/tools/bootstrap/external/rsh_env.c \
 	$(top_srcdir)/tools/bootstrap/external/ssh_init.c \
@@ -39,3 +40,11 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c 
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_native_int.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_jobid.c
+
+if hydra_pbs_launcher
+libhydra_la_SOURCES += \
+	$(top_srcdir)/tools/bootstrap/external/pbs_finalize.c \
+	$(top_srcdir)/tools/bootstrap/external/pbs_launch.c \
+	$(top_srcdir)/tools/bootstrap/external/pbs_wait.c \
+	$(top_srcdir)/tools/bootstrap/external/pbs_env.c
+endif

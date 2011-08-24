@@ -9,7 +9,7 @@
 #include "pmci.h"
 #include "pmiserv_pmi.h"
 #include "bsci.h"
-#include "bind.h"
+#include "topo.h"
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
@@ -118,17 +118,19 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     node_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
+        proxy->node->active_processes += proxy->proxy_process_count;
         node_count++;
+    }
 
     HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
     status =
-        HYDT_bind_init(HYD_server_info.user_global.binding,
-                       HYD_server_info.user_global.bindlib);
-    HYDU_ERR_POP(status, "unable to initializing binding library\n");
+        HYDT_topo_init(HYD_server_info.user_global.binding,
+                       HYD_server_info.user_global.topolib);
+    HYDU_ERR_POP(status, "unable to initializing topology library\n");
 
     status =
         HYDT_bsci_launch_procs(proxy_args, HYD_server_info.pg_list.proxy_list, control_fd);
@@ -211,8 +213,8 @@ HYD_status HYD_pmci_finalize(void)
     status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
 
-    status = HYDT_bind_finalize();
-    HYDU_ERR_POP(status, "error returned from binding finalize\n");
+    status = HYDT_topo_finalize();
+    HYDU_ERR_POP(status, "error returned from topology finalize\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

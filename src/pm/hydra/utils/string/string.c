@@ -133,6 +133,38 @@ HYD_status HYDU_strdup_list(char *src[], char **dest[])
 }
 
 
+char *HYDU_size_t_to_str(size_t x)
+{
+    int len = 1, i;
+    size_t max = 10;
+    char *str = NULL;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    while (x >= max) {
+        len++;
+        max *= 10;
+    }
+    len++;
+
+    HYDU_MALLOC(str, char *, len, status);
+    HYDU_ERR_POP(status, "unable to allocate memory\n");
+
+    for (i = 0; i < len; i++)
+        str[i] = '0';
+
+    HYDU_snprintf(str, len, "%llu", (unsigned long long) x);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return str;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 char *HYDU_int_to_str(int x)
 {
     return HYDU_int_to_str_pad(x, 0);

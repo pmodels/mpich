@@ -2,6 +2,10 @@
 /*
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
+ *
+ * Copyright © 2006-2011 Guillaume Mercier, Institut Polytechnique de
+ * Bordeaux. All rights reserved. Permission is hereby granted to use,
+ * reproduce, prepare derivative works, and to redistribute to others.
  */
 
 #ifndef NEWMAD_MODULE_IMPL_H

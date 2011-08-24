@@ -15,7 +15,7 @@ dnl It is believed that under HP-UX `fort77' is the name of the native
 dnl compiler.  On some Cray systems, fort77 is a native compiler.
 dnl frt is the Fujitsu F77 compiler.
 dnl pgf77 and pgf90 are the Portland Group F77 and F90 compilers.
-dnl xlf/xlf90/xlf95 are IBM (AIX) F77/F90/F95 compilers.
+dnl xlf/xlf90/xlf95/xlf2003 are IBM (AIX) F77/F90/F95/F2003 compilers.
 dnl lf95 is the Lahey-Fujitsu compiler.
 dnl fl32 is the Microsoft Fortran "PowerStation" compiler.
 dnl af77 is the Apogee F77 compiler for Intergraph hardware running CLIX.
@@ -28,12 +28,14 @@ dnl ifc - An older Intel compiler
 dnl fc  - A compiler on some unknown system.  This has been removed because
 dnl       it may also be the name of a command for something other than
 dnl       the Fortran compiler (e.g., fc=file system check!)
+dnl gfortran - The GNU Fortran compiler (not the same as g95) 
+dnl gfc - An alias for gfortran recommended in cygwin installations
 dnl D*/
 AC_DEFUN([PAC_PROG_FC],[
 PAC_PUSH_FLAG([FCFLAGS])
 AC_PROG_FC([m4_default([$1],
-           [ifort pgf90 pathf90 pathf95 xlf90 xlf95 f90 epcf90 f95 fort lf95 \
-            gfortran g95 ifc efc])])
+           [ifort pgf90 pathf90 pathf95 xlf90 xlf95 xlf2003 f90 epcf90 f95 fort lf95 \
+            gfortran g95 ifc efc gfc])])
 PAC_POP_FLAG([FCFLAGS])
 ])
 dnl

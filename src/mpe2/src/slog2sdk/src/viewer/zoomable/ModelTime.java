@@ -380,7 +380,7 @@ public class ModelTime extends DefaultBoundedRangeModel
             sb_block_incre = super.getExtent();
             if ( sb_block_incre <= 0 ) {
                 Dialogs.error( root_window,
-                               "You have reached the Zoom limit! "
+                               "You have reached the Zoom Limit of JScrollbar! "
                              + "Time ScrollBar has 0 BLOCK Increment. "
                              + "Zoom out or risk crashing the viewer." );
                 sb_block_incre = 0;
@@ -390,7 +390,7 @@ public class ModelTime extends DefaultBoundedRangeModel
                                        * Parameters.TIME_SCROLL_UNIT_RATIO );
             if ( sb_unit_incre <= 0 ) {
                 Dialogs.error( root_window,
-                               "You have reached the Zoom limit! "
+                               "You have reached the Zoom Limit of JScrollbar! "
                              + "Time ScrollBar has 0 UNIT Increment. "
                              + "Zoom out or risk crashing the viewer." );
                 sb_unit_incre = 0;

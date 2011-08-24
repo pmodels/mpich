@@ -2,6 +2,10 @@
 /*
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
+ *
+ * Copyright © 2006-2011 Guillaume Mercier, Institut Polytechnique de
+ * Bordeaux. All rights reserved. Permission is hereby granted to use,
+ * reproduce, prepare derivative works, and to redistribute to others.
  */
 
 #include "newmad_impl.h"
@@ -18,7 +22,7 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     nm_tag_t  match_mask = NEM_NMAD_MATCH_FULL_MASK;
     nm_gate_t out_gate;
     nm_gate_t in_gate;
-    int out_tag;
+    nm_tag_t  out_tag;
     int size;   
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -68,10 +72,9 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
    if (tag != MPI_ANY_TAG)
      status->MPI_TAG = tag;
    else
-     status->MPI_TAG = out_tag;
+     NEM_NMAD_MATCH_GET_TAG(out_tag,status->MPI_TAG);
    
    status->count = size;
-   *flag = TRUE;
    
  fn_exit:
     return mpi_errno;
@@ -91,8 +94,8 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
     nm_tag_t  match_mask = NEM_NMAD_MATCH_FULL_MASK;
     nm_gate_t out_gate;
     nm_gate_t in_gate;
+    nm_tag_t out_tag;
     int size;
-    int out_tag;
     int mpi_errno = MPI_SUCCESS;
     int ret;
 
@@ -139,7 +142,7 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
        if (tag != MPI_ANY_TAG)
 	 status->MPI_TAG = tag;
        else
-	 status->MPI_TAG = out_tag;
+	 NEM_NMAD_MATCH_GET_TAG(out_tag,status->MPI_TAG);  
        
        status->count = size;
        *flag = TRUE;

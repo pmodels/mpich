@@ -43,9 +43,10 @@ typedef struct {
   int           init_count;           /* Number of times ARMCI_Init has been called           */
   int           debug_alloc;          /* Do extra debuggin on memory allocation               */
   int           debug_flush_barriers; /* Flush all windows on a barrier                       */
-  int           iov_checks_disabled;  /* Disable IOV same allocation and overlapping checks   */
+  int           iov_checks;           /* Disable IOV same allocation and overlapping checks   */
   int           iov_batched_limit;    /* Max number of ops per epoch for BATCHED IOV method   */
   int           no_mpi_bottom;        /* Don't generate datatypes relative to MPI_BOTTOM      */
+  int           noncollective_groups; /* Use noncollective group creation algorithm           */
   int           verbose;              /* ARMCI should produce extra status output             */
 
   enum ARMCII_Strided_methods_e strided_method; /* Strided transfer method              */
@@ -69,8 +70,8 @@ extern global_state_t ARMCII_GLOBAL_STATE;
 
 void  ARMCII_Bzero(void *buf, int size);
 int   ARMCII_Log2(unsigned int val);
-int   ARMCII_Getenv_bool(char *varname);
 char *ARMCII_Getenv(char *varname);
+int   ARMCII_Getenv_bool(char *varname, int default_value);
 int   ARMCII_Getenv_int(char *varname, int default_value);
 
 /* Synchronization */

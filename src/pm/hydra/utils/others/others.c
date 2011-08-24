@@ -19,7 +19,7 @@ int HYDU_dceil(int x, int y)
 }
 
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
-                                 struct HYD_node **node_list)
+                                 struct HYD_node ** node_list)
 {
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
@@ -93,8 +93,7 @@ void HYDU_delay(unsigned long delay)
     gettimeofday(&start, NULL);
     while (1) {
         gettimeofday(&end, NULL);
-        if ((1000000.0 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)) >
-            delay)
+        if ((1000000.0 * (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec)) > delay)
             break;
     }
 }

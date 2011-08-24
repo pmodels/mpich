@@ -9,7 +9,7 @@
 #include "pmip_pmi.h"
 #include "ckpoint.h"
 #include "demux.h"
-#include "bind.h"
+#include "topo.h"
 #include "hydt_ftb.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
@@ -480,7 +480,7 @@ static HYD_status launch_procs(void)
     struct HYD_exec *exec;
     struct HYD_pmcd_hdr hdr;
     int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
-    struct HYDT_bind_cpuset_t cpuset;
+    struct HYDT_topo_cpuset_t cpuset;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
@@ -525,11 +525,27 @@ static HYD_status launch_procs(void)
             HYD_pmcd_pmip.downstream.pmi_rank[i] = HYD_pmcd_pmip.system_global.pmi_rank;
     }
 
-    status = HYDT_bind_init(HYD_pmcd_pmip.local.local_binding ?
+    status = HYDT_topo_init(HYD_pmcd_pmip.local.local_binding ?
                             HYD_pmcd_pmip.local.local_binding :
                             HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.bindlib);
-    HYDU_ERR_POP(status, "unable to initialize process binding\n");
+                            HYD_pmcd_pmip.user_global.topolib);
+    HYDU_ERR_POP(status, "unable to initialize process topology\n");
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        char *map;
+
+        status = HYDT_topo_get_topomap(&map);
+        HYDU_ERR_POP(status, "error reading topology map\n");
+        if (map)
+            HYDU_dump(stdout, "topomap: %s\n", map);
+        HYDU_FREE(map);
+
+        status = HYDT_topo_get_processmap(&map);
+        HYDU_ERR_POP(status, "error reading process map\n");
+        if (map)
+            HYDU_dump(stdout, "processmap: %s\n", map);
+        HYDU_FREE(map);
+    }
 
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,
                                HYD_pmcd_pmip.user_global.ckpoint_num);
@@ -644,16 +660,22 @@ static HYD_status launch_procs(void)
         }
 
         /* Set the interface hostname based on what the user provided */
-        if (HYD_pmcd_pmip.local.interface_env_name) {
+        if (HYD_pmcd_pmip.local.iface_ip_env_name) {
             if (HYD_pmcd_pmip.user_global.iface) {
+                char *ip;
+
+                status = HYDU_sock_get_iface_ip(HYD_pmcd_pmip.user_global.iface, &ip);
+                HYDU_ERR_POP(status, "unable to get IP address for %s\n",
+                             HYD_pmcd_pmip.user_global.iface);
+
                 /* The user asked us to use a specific interface; let's find it */
-                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.interface_env_name,
-                                                 HYD_pmcd_pmip.user_global.iface, &force_env);
+                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.iface_ip_env_name,
+                                                 ip, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
             else if (HYD_pmcd_pmip.local.hostname) {
                 /* The second choice is the hostname the user gave */
-                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.interface_env_name,
+                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.iface_ip_env_name,
                                                  HYD_pmcd_pmip.local.hostname, &force_env);
                 HYDU_ERR_POP(status, "unable to add env to list\n");
             }
@@ -719,7 +741,7 @@ static HYD_status launch_procs(void)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
-            HYDT_bind_pid_to_cpuset(process_id, &cpuset);
+            HYDT_topo_pid_to_cpuset(process_id, &cpuset);
             status = HYDU_create_process(client_args, force_env,
                                          HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? NULL :
                                          &HYD_pmcd_pmip.downstream.in,
@@ -824,8 +846,8 @@ static HYD_status parse_exec_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.binding == NULL && HYD_pmcd_pmip.local.local_binding == NULL)
         HYD_pmcd_pmip.user_global.binding = HYDU_strdup("none");
 
-    if (HYD_pmcd_pmip.user_global.bindlib == NULL && HYDRA_DEFAULT_BINDLIB)
-        HYD_pmcd_pmip.user_global.bindlib = HYDU_strdup(HYDRA_DEFAULT_BINDLIB);
+    if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
+        HYD_pmcd_pmip.user_global.topolib = HYDU_strdup(HYDRA_DEFAULT_TOPOLIB);
 
     if (HYD_pmcd_pmip.user_global.ckpointlib == NULL && HYDRA_DEFAULT_CKPOINTLIB)
         HYD_pmcd_pmip.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);

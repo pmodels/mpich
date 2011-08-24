@@ -270,10 +270,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 #   endif
 
 #ifdef HAVE_ERROR_CHECKING
-    /* Eventually this will support commandline and environment options
-     for controlling error checks.  It will use the routine 
-     MPIR_Err_init, which does as little as possible (e.g., it only 
-     determines the value of do_error_checks) */
+    /* Because the PARAM system has not been initialized, temporarily
+       uncondtionally enable error checks.  Once the PARAM system is
+       initialized, this may be reset */
     MPIR_Process.do_error_checks = 1;
 #else
     MPIR_Process.do_error_checks = 0;
@@ -373,6 +372,11 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 #endif
             ;
     }
+
+
+#if HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME
+    MPIR_Process.do_error_checks = MPIR_PARAM_ERROR_CHECKING;
+#endif
 
     /* define MPI as initialized so that we can use MPI functions within 
        MPID_Init if necessary */

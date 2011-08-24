@@ -18,7 +18,7 @@ int main( int argc, char *argv[] )
     int source, dest, i;
     int buf1[10], buf2[10], buf3[10];
     MPI_Request r[3];
-    volatile int hold = 1; 
+    volatile int hold = 0; 
     MPI_Comm dupcomm;
     MPI_Status status;
 
@@ -45,7 +45,7 @@ int main( int argc, char *argv[] )
     while (hold) ;
 
     MPI_Recv( buf1, 10, MPI_INT, source, 1, MPI_COMM_WORLD, &status );
-    MPI_Recv( buf1, 10, MPI_INT, source, 1, dupcomm, &status );
+    MPI_Recv( buf1, 10, MPI_INT, source, 2, dupcomm, &status );
 
     for (i=0; i<3; i++) {
 	MPI_Cancel( &r[i] );

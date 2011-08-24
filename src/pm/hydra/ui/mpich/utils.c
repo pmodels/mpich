@@ -496,6 +496,7 @@ static HYD_status config_fn(char *arg, char ***argv)
 
     HYDU_ASSERT(!config_file, status);
     config_file = HYDU_strdup(**argv);
+    (*argv)++;
 
   fn_exit:
     return status;
@@ -814,7 +815,7 @@ static void binding_help_fn(void)
     printf("        cache -- Cache topology-aware binding\n");
     printf("\n");
 
-    printf("    CPU options (supported on topology-capable binding libs):\n");
+    printf("    CPU options (supported on CPU topology aware libs):\n");
     printf("        cpu --         pack processes as closely to each other as possible\n");
     printf("                       with respect to CPU processing units\n");
     printf("        cpu:sockets -- pack processes as closely to each other as possible\n");
@@ -829,7 +830,7 @@ static void binding_help_fn(void)
     printf("                       threads/SMTs\n");
     printf("\n");
 
-    printf("    Cache options (supported on cache topology aware binding libs):\n");
+    printf("    Cache options (supported on cache topology aware libs):\n");
     printf("        cache --    pack processes as closely to each other as possible with\n");
     printf("                    respect to cache layout\n");
     printf("        cache:l3 -- pack processes as closely to each other as possible\n");
@@ -866,25 +867,25 @@ static HYD_status binding_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void bindlib_help_fn(void)
+static void topolib_help_fn(void)
 {
     printf("\n");
-    printf("-bindlib: Binding library to use\n\n");
+    printf("-topolib: Topology library to use\n\n");
     printf("Notes:\n");
     printf("  * Use the -info option to see what all are compiled in\n\n");
 }
 
-static HYD_status bindlib_fn(char *arg, char ***argv)
+static HYD_status topolib_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (reading_config_file && HYD_server_info.user_global.bindlib) {
+    if (reading_config_file && HYD_server_info.user_global.topolib) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.bindlib, **argv);
-    HYDU_ERR_POP(status, "error setting bindlib\n");
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.topolib, **argv);
+    HYDU_ERR_POP(status, "error setting topolib\n");
 
   fn_exit:
     (*argv)++;
@@ -1082,8 +1083,8 @@ static HYD_status info_fn(char *arg, char ***argv)
                        "    Launchers available:                     %s\n",
                        HYDRA_AVAILABLE_LAUNCHERS);
     HYDU_dump_noprefix(stdout,
-                       "    Binding libraries available:             %s\n",
-                       HYDRA_AVAILABLE_BINDLIBS);
+                       "    Topology libraries available:             %s\n",
+                       HYDRA_AVAILABLE_TOPOLIBS);
     HYDU_dump_noprefix(stdout,
                        "    Resource management kernels available:   %s\n",
                        HYDRA_AVAILABLE_RMKS);
@@ -1273,6 +1274,18 @@ static HYD_status set_default_values(void)
     struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
+    if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
+        if (MPL_env2str("HYDRA_CKPOINT_PREFIX", (const char **) &tmp) != 0)
+            HYD_server_info.user_global.ckpoint_prefix = HYDU_strdup(tmp);
+        tmp = NULL;
+    }
+
+    if (HYD_ui_mpich_info.ckpoint_int == -1) {
+        if (MPL_env2str("HYDRA_CKPOINT_INT", (const char **) &tmp) != 0)
+            HYD_ui_mpich_info.ckpoint_int = atoi(tmp);
+        tmp = NULL;
+    }
+
     /* If exec_list is not NULL, make sure local executable is set */
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
         if (exec->exec[0] == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
@@ -1297,7 +1310,7 @@ static HYD_status set_default_values(void)
 
     /* don't clobber existing iface values from the command line */
     if (HYD_server_info.user_global.iface == NULL) {
-        if (MPL_env2str("HYDRA_IFACE", (const char **)&tmp) != 0)
+        if (MPL_env2str("HYDRA_IFACE", (const char **) &tmp) != 0)
             HYD_server_info.user_global.iface = HYDU_strdup(tmp);
         tmp = NULL;
     }
@@ -1323,8 +1336,24 @@ static HYD_status set_default_values(void)
     if (HYD_uii_mpx_exec_list == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
 
+    /* If an interface is provided, set that */
+    if (HYD_server_info.user_global.iface) {
+        if (hostname_propagation == 1) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "cannot set iface and force hostname propagation");
+        }
+
+        HYDU_append_env_to_list("MPICH_NETWORK_IFACE", HYD_server_info.user_global.iface,
+                                &HYD_server_info.user_global.global_env.system);
+
+        /* Disable hostname propagation */
+        hostname_propagation = 0;
+    }
+
+    /* If hostname propagation is requested (or not set), set the
+     * environment variable for doing that */
     if (hostname_propagation || hostname_propagation == -1)
-        HYD_server_info.interface_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
+        HYD_server_info.iface_ip_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
 
   fn_exit:
     return status;
@@ -1561,9 +1590,9 @@ static struct HYD_arg_match_table match_table[] = {
     /* Hybrid programming options */
     {"ranks-per-proc", ranks_per_proc_fn, ranks_per_proc_help_fn},
 
-    /* Process-core binding options */
+    /* Topology options */
     {"binding", binding_fn, binding_help_fn},
-    {"bindlib", bindlib_fn, bindlib_help_fn},
+    {"topolib", topolib_fn, topolib_help_fn},
 
     /* Checkpoint/restart options */
     {"ckpoint-interval", ckpoint_interval_fn, ckpoint_interval_help_fn},

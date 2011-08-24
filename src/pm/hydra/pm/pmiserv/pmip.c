@@ -8,7 +8,7 @@
 #include "pmip.h"
 #include "demux.h"
 #include "bsci.h"
-#include "bind.h"
+#include "topo.h"
 #include "hydt_ftb.h"
 
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
@@ -48,7 +48,7 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
-    HYD_pmcd_pmip.local.interface_env_name = NULL;
+    HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.local_binding = NULL;
     HYD_pmcd_pmip.local.spawner_kvs_name = NULL;
@@ -114,8 +114,8 @@ static void cleanup_params(void)
 
 
     /* Local */
-    if (HYD_pmcd_pmip.local.interface_env_name)
-        HYDU_FREE(HYD_pmcd_pmip.local.interface_env_name);
+    if (HYD_pmcd_pmip.local.iface_ip_env_name)
+        HYDU_FREE(HYD_pmcd_pmip.local.iface_ip_env_name);
 
     if (HYD_pmcd_pmip.local.hostname)
         HYDU_FREE(HYD_pmcd_pmip.local.hostname);
@@ -138,7 +138,7 @@ static void cleanup_params(void)
     /* Exec list */
     HYDU_free_exec_list(HYD_pmcd_pmip.exec_list);
 
-    status = HYDT_bind_finalize();
+    status = HYDT_topo_finalize();
 }
 
 static void signal_cb(int sig)
@@ -192,10 +192,10 @@ int main(int argc, char **argv)
     status = HYDT_ftb_init();
     HYDU_ERR_POP(status, "unable to initialize FTB\n");
 
-    /* See if HYDRA_CONTROL_FD is set before trying to connect upstream */
-    ret = MPL_env2int("HYDRA_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
+    /* See if HYDI_CONTROL_FD is set before trying to connect upstream */
+    ret = MPL_env2int("HYDI_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
     if (ret < 0) {
-        HYDU_ERR_POP(status, "error reading HYDRA_CONTROL_FD environment\n");
+        HYDU_ERR_POP(status, "error reading HYDI_CONTROL_FD environment\n");
     }
     else if (ret == 0) {
         /* FIXME: Have a non-zero delay in retries; possibly have a

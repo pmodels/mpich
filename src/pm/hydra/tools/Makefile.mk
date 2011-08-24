@@ -6,7 +6,7 @@
 
 tools_libs =
 
-include tools/bind/Makefile.mk
+include tools/topo/Makefile.mk
 include tools/bootstrap/Makefile.mk
 include tools/ckpoint/Makefile.mk
 include tools/demux/Makefile.mk

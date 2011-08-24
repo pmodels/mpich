@@ -114,7 +114,7 @@ int ARMCI_Get(void *src, void *dst, int size, int target) {
   /* Local operation */
   if (target == ARMCI_GROUP_WORLD.rank) {
     if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
-      if (dst_mreg) gmr_dla_lock(dst_mreg);
+      if (dst_mreg) gmr_dla_lock(dst_mreg);  /* FIXME: Is this a hold-while wait?  Probably need an extra copy to be safe.. */
       gmr_dla_lock(src_mreg);
     }
 

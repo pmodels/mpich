@@ -914,6 +914,12 @@ Generic Environment Variables
          semantics, it might cause a small amount of performance
          overhead for regular MPI operations.
 
+               ************************************
+
+  MPICH_NAMEPUB_DIR - Allows the user to override where the publish
+         and lookup information is placed for connect/accept based
+         applications.
+
 -------------------------------------------------------------------------
 
 9. Developer Builds

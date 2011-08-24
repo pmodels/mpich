@@ -9,8 +9,8 @@ else
 fi
 
 (cd mpl && $autoreconf -vif)
-(cd tools/bind/hwloc/hwloc && $autoreconf -vif)
-(cd tools/bind/plpa/plpa && $autoreconf -vif)
+(cd tools/topo/hwloc/hwloc && $autoreconf -vif)
+(cd tools/topo/plpa/plpa && $autoreconf -vif)
 $autoreconf -vif
 
 # Remove the autom4te.cache folders for a release-like structure.

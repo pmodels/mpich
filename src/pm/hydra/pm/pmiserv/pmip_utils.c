@@ -6,7 +6,7 @@
 
 #include "pmip.h"
 #include "bsci.h"
-#include "bind.h"
+#include "topo.h"
 #include "ckpoint.h"
 #include "demux.h"
 #include "hydra.h"
@@ -234,11 +234,11 @@ static HYD_status binding_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status bindlib_fn(char *arg, char ***argv)
+static HYD_status topolib_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.bindlib, **argv);
+    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.topolib, **argv);
 
     (*argv)++;
 
@@ -479,11 +479,11 @@ static HYD_status version_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static HYD_status interface_env_name_fn(char *arg, char ***argv)
+static HYD_status iface_ip_env_name_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.interface_env_name, **argv);
+    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.iface_ip_env_name, **argv);
 
     (*argv)++;
 
@@ -683,7 +683,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},
     {"binding", binding_fn, NULL},
-    {"bindlib", bindlib_fn, NULL},
+    {"topolib", topolib_fn, NULL},
     {"ckpointlib", ckpointlib_fn, NULL},
     {"ckpoint-prefix", ckpoint_prefix_fn, NULL},
     {"ckpoint-num", ckpoint_num_fn, NULL},
@@ -695,7 +695,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"filler-process-map", filler_process_map_fn, NULL},
     {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
-    {"interface-env-name", interface_env_name_fn, NULL},
+    {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
     {"local-binding", local_binding_fn, NULL},
     {"proxy-core-count", proxy_core_count_fn, NULL},

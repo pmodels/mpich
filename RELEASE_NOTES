@@ -97,3 +97,11 @@
 
  * MPI::ERRORS_RETURN may still throw exceptions in the event of an
    error rather than silently returning.
+
+
+### Fortran 90:
+
+ * MPI-IO routines have been accidentally left out of the Fortran 90
+   module. This has been fixed in trunk (and will be reflected in
+   mpich2-1.5.x and later releases). It has not been fixed in the
+   1.4.x releases to avoid breaking ABI.

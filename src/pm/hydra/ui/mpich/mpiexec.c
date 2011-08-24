@@ -32,7 +32,8 @@ static void usage(void)
     printf("    -genv {name} {value}             environment variable name and value\n");
     printf("    -genvlist {env1,env2,...}        environment variable list to pass\n");
     printf("    -genvnone                        do not pass any environment variables\n");
-    printf("    -genvall                         pass all environment variables not managed\n");
+    printf
+        ("    -genvall                         pass all environment variables not managed\n");
     printf("                                          by the launcher (default)\n");
 
     printf("\n");
@@ -82,10 +83,10 @@ static void usage(void)
     printf("    -ranks-per-proc                  assign so many ranks to each process\n");
 
     printf("\n");
-    printf("  Process-core binding options:\n");
+    printf("  Processor topology options:\n");
     printf("    -binding                         process-to-core binding mode\n");
-    printf("    -bindlib                         process-to-core binding library (%s)\n",
-           HYDRA_AVAILABLE_BINDLIBS);
+    printf("    -topolib                         processor topology library (%s)\n",
+           HYDRA_AVAILABLE_TOPOLIBS);
 
     printf("\n");
     printf("  Checkpoint/Restart options:\n");
@@ -226,7 +227,7 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, timeout, reset_rmk;
+    int exit_status = 0, i, timeout, reset_rmk, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -301,9 +302,11 @@ int main(int argc, char **argv)
 
     /* Reset the host list to use only the number of processes per
      * node as specified by the ppn option. */
-    if (HYD_ui_mpich_info.ppn != -1)
+    if (HYD_ui_mpich_info.ppn != -1) {
         for (node = HYD_server_info.node_list; node; node = node->next)
             node->core_count = HYD_ui_mpich_info.ppn;
+        reset_rmk = 1;
+    }
 
     /* The RMK returned a node list. See if the user requested us to
      * manipulate it in some way */
@@ -313,31 +316,31 @@ int main(int argc, char **argv)
     }
 
     if (reset_rmk) {
-        /* Reinitialize the bootstrap server with the "none" RMK, so
+        /* Reinitialize the bootstrap server with the "user" RMK, so
          * it knows that we are not using the node list provided by
          * the RMK */
         status = HYDT_bsci_finalize();
         HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
 
-        status = HYDT_bsci_init("none", HYD_server_info.user_global.launcher,
-                                HYD_server_info.user_global.launcher_exec,
-                                HYD_server_info.user_global.enablex,
-                                HYD_server_info.user_global.debug);
+        status = HYDT_bsci_init("user", HYDT_bsci_info.launcher, HYDT_bsci_info.launcher_exec,
+                                HYDT_bsci_info.enablex, HYDT_bsci_info.debug);
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
-    HYD_server_info.pg_list.pg_core_count = 0;
-    for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++) {
-        HYD_server_info.pg_list.pg_core_count += node->core_count;
+    /* Assign a node ID to each node */
+    for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
         node->node_id = i;
-    }
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
     HYD_server_info.pg_list.pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->proc_count == -1)
-            exec->proc_count = HYD_server_info.pg_list.pg_core_count;
+        if (exec->proc_count == -1) {
+            global_core_count = 0;
+            for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
+                global_core_count += node->core_count;
+            exec->proc_count = global_core_count;
+        }
         HYD_server_info.pg_list.pg_process_count += exec->proc_count;
     }
 
@@ -347,6 +350,11 @@ int main(int argc, char **argv)
     status = HYDU_create_proxy_list(HYD_uii_mpx_exec_list, HYD_server_info.node_list,
                                     &HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "unable to create proxy list\n");
+
+    /* calculate the core count used by the PG */
+    HYD_server_info.pg_list.pg_core_count = 0;
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
+        HYD_server_info.pg_list.pg_core_count += proxy->node->core_count;
 
     /* See if the node list contains a remotely accessible localhost */
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {

@@ -44,7 +44,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     static const char FCNAME[] = "MPID_NS_Create";
     const char *dirname;
     struct stat st;
-    int        err;
+    int        err, ret;
 
     *handle_ptr = (MPID_NS_Handle)MPIU_Malloc( sizeof(struct MPID_NS_Handle) );
     /* --BEGIN ERROR HANDLING-- */
@@ -56,12 +56,17 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     (*handle_ptr)->nactive = 0;
     (*handle_ptr)->mypid   = getpid();
 
-    /* Get the dirname.  Currently, use HOME, but could use 
-       an info value of NAMEPUB_CONTACT */
-    dirname = getenv( "HOME" );
-    if (!dirname) {
-	dirname = ".";
+    /* Get the dirname.  Could use an info value of NAMEPUB_CONTACT */
+    ret = MPL_env2str("MPICH_NAMEPUB_DIR", &dirname);
+    if (!ret) {
+        /* user did not specify a directory, try using HOME */
+        ret = MPL_env2str("HOME", &dirname);
+        if (!ret) {
+            /* HOME not found ; use current directory */
+            dirname = ".";
+        }
     }
+
     MPIU_Strncpy( (*handle_ptr)->dirname, dirname, MAXPATHLEN );
     MPIU_Strnapp( (*handle_ptr)->dirname, "/.mpinamepub/", MAXPATHLEN );
 
@@ -170,6 +175,7 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     static const char FCNAME[] = "MPID_NS_Lookup";
     FILE *fp;
     char filename[MAXPATHLEN];
+    int  mpi_errno = MPI_SUCCESS;
     
     /* Determine file and directory name.  The file name is from
        the service name */
@@ -179,26 +185,33 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     fp = fopen( filename, "r" );
     if (!fp) {
 	/* --BEGIN ERROR HANDLING-- */
-	/* printf( "No file for service name %s\n", service_name ); */
 	port[0] = 0;
-	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-				     FCNAME, __LINE__, MPI_ERR_NAME, 
+	MPIU_ERR_SET1( mpi_errno, MPI_ERR_NAME, 
 		      "**namepubnotpub", "**namepubnotpub %s", service_name );
 	/* --END ERROR HANDLING-- */
     }
     else {
-	char *nl;
 	/* The first line is the name, the second is the
 	   process that published. We just read the name */
-	fgets( port, MPI_MAX_PORT_NAME, fp );
-	/* Remove the newline, if any.  We use fgets instead of fscanf
-	   to allow port names to contain blanks */
-	nl = strchr( port, '\n' );
-	if (nl) *nl = 0;
-	/* printf( "Read %s from %s\n", port, filename ); */
+	if (!fgets( port, MPI_MAX_PORT_NAME, fp )) {
+	    /* --BEGIN ERROR HANDLING-- */
+	    port[0] = 0;
+	    MPIU_ERR_SET1( mpi_errno, MPI_ERR_NAME, 
+			   "**namepubnotfound", "**namepubnotfound %s", 
+			   service_name );
+	    /* --END ERROR HANDLING-- */
+	}
+	else {
+	    char *nl;
+	    /* Remove the newline, if any.  We use fgets instead of fscanf
+	       to allow port names to contain blanks */
+	    nl = strchr( port, '\n' );
+	    if (nl) *nl = 0;
+	    /* printf( "Read %s from %s\n", port, filename ); */
+	}
+	fclose( fp );
     }
-    fclose( fp );
-    return 0;
+    return mpi_errno;
 }
 
 #undef FUNCNAME

@@ -21,9 +21,11 @@ import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.BoxLayout;
 import javax.swing.BorderFactory;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import viewer.common.Dialogs;
 import viewer.common.Const;
 import viewer.common.Routines;
 import viewer.common.Parameters;
@@ -32,8 +34,8 @@ import viewer.common.LabeledTextField;
 public class RowAdjustments
 {
     private static final Font      FONT              = Const.FONT;
-    private static final String    ROW_COUNT_RESIZE  = "Row";
-    private static final String    ROW_HEIGHT_RESIZE = "Height";
+    private static final String    ROW_COUNT_RESIZE  = "COUNT";
+    private static final String    ROW_HEIGHT_RESIZE = "HEIGHT";
 
     private ViewportTimeYaxis      canvas_vport;
     private YaxisTree              tree_view;
@@ -43,13 +45,14 @@ public class RowAdjustments
     private LabeledTextField       fld_VIS_ROW_HEIGHT;
     private ScaledSlider           slider_VIS_ROW_COUNT;
     private LabeledTextField       fld_VIS_ROW_COUNT;
-    private JButton                fitall_btn;
+    private JButton                fitmost_btn;
 
     private JPanel                 combo_panel;
     private JPanel                 txtfld_panel;
     private JPanel                 slider_panel;
     private JPanel                 misc_panel;
 
+    private boolean                hasMinHeightBeenTouched;
     private Diagnosis              debug;
 
     public RowAdjustments( ViewportTimeYaxis y_vport, YaxisTree y_tree )
@@ -58,7 +61,10 @@ public class RowAdjustments
         tree_view     = y_tree;
 
         debug         = new Diagnosis();
-        debug.setActive( false );
+        debug.setActive( true );
+
+        // hasMinHeightBeenTouched = true ==> Huge Memory of Canvas Buffers
+        hasMinHeightBeenTouched = false;
 
         combo_ROW_RESIZE  = new JComboBox();
         combo_ROW_RESIZE.setFont( FONT );
@@ -71,7 +77,7 @@ public class RowAdjustments
 
         // For constant row height during timeline canvas resizing
         slider_VIS_ROW_HEIGHT = new ScaledSlider( ScaledSlider.VERTICAL );
-        slider_VIS_ROW_HEIGHT.setLabelFormat( Const.INTEGER_FORMAT );
+        slider_VIS_ROW_HEIGHT.setLabelFormat( Const.FLOAT_FORMAT );
         slider_VIS_ROW_HEIGHT.setInverted( true );
         slider_VIS_ROW_HEIGHT.addChangeListener(
                               new RowHeightSliderListener() );
@@ -85,7 +91,7 @@ public class RowAdjustments
 
         // For constant visible row count during timeline canvas resizing
         slider_VIS_ROW_COUNT = new ScaledSlider( ScaledSlider.VERTICAL );
-        slider_VIS_ROW_COUNT.setLabelFormat( Const.INTEGER_FORMAT );
+        slider_VIS_ROW_COUNT.setLabelFormat( Const.FLOAT_FORMAT );
         slider_VIS_ROW_COUNT.setInverted( false );
         slider_VIS_ROW_COUNT.addChangeListener(
                              new RowCountSliderListener() );
@@ -114,20 +120,20 @@ public class RowAdjustments
                                                BoxLayout.X_AXIS ) );
         slider_panel.addComponentListener( new SliderComponentListener() );
 
-        fitall_btn  = new JButton( "Fit All Rows" );
-        fitall_btn.setFont( FONT );
-        fitall_btn.setBorder( BorderFactory.createRaisedBevelBorder() );
-        fitall_btn.setToolTipText(
-          "Compute the optimal row height that fits all the rows "
+        fitmost_btn  = new JButton( "Fit Most Rows" );
+        fitmost_btn.setFont( FONT );
+        fitmost_btn.setBorder( BorderFactory.createRaisedBevelBorder() );
+        fitmost_btn.setToolTipText(
+          "Compute the optimal row height that fits MOST of the rows "
         + "in the Timeline canvas" );
-        fitall_btn.addActionListener( new ButtonActionListener() );
-        fitall_btn.setAlignmentX( Component.LEFT_ALIGNMENT );
+        fitmost_btn.addActionListener( new ButtonActionListener() );
+        fitmost_btn.setAlignmentX( Component.LEFT_ALIGNMENT );
 
         misc_panel = new JPanel();
         misc_panel.setLayout( new BoxLayout( misc_panel, BoxLayout.Y_AXIS ) );
         // misc_panel.setBorder( BorderFactory.createEtchedBorder() );
         misc_panel.setBorder( BorderFactory.createEmptyBorder(1,1,1,1) );
-        misc_panel.add( fitall_btn );
+        misc_panel.add( fitmost_btn );
     }
 
     public void initYLabelTreeSize()
@@ -136,39 +142,61 @@ public class RowAdjustments
         int row_height;
         int row_count;
 
+        if ( debug.isActive() )
+            debug.println( "initYLabel: START" );
         tree_view.setRootVisible( Parameters.Y_AXIS_ROOT_VISIBLE );
         avail_screen_height = (int) ( Routines.getScreenSize().height
                                     * Parameters.SCREEN_HEIGHT_RATIO );
-        row_count           = tree_view.getRowCount();
-        row_height          = avail_screen_height / row_count;
+        row_height          = avail_screen_height / tree_view.getRowCount();
+        if ( row_height < Parameters.Y_AXIS_MIN_ROW_HEIGHT ) {
+            row_height = Parameters.Y_AXIS_MIN_ROW_HEIGHT;
+            hasMinHeightBeenTouched = true;
+        }
         tree_view.setRowHeight( row_height );
+        row_count = avail_screen_height / row_height; 
         tree_view.setVisibleRowCount( row_count );
+        if ( debug.isActive() ) {
+            debug.println( "initYLabel: screenH= " + avail_screen_height
+                         + ", h=" + row_height
+                         + ", N=" + row_count );
+            debug.println( "initYLabel: END" );
+        }
     }
 
     public void initSlidersAndTextFields()
     {
-        int row_count   = tree_view.getRowCount();
-        int row_height  = tree_view.getRowHeight();
+        int vport_height = canvas_vport.getHeight();
+        int row_count    = tree_view.getRowCount();
+        int row_height   = tree_view.getRowHeight();
         if ( debug.isActive() ) {
             debug.println( "initSliders: START" );
-            debug.println( "initSliders: N=" + row_count
+            debug.println( "initSliders: vportH=" + vport_height
+                         + ", N=" + row_count
                          + ", h=" + row_height );
         }
 
         // Assume SliderComponentListener will resize the Timeline canvas
         // to the size = row_height * row_count
-        slider_VIS_ROW_HEIGHT.setMinLabel( 0 );
-        slider_VIS_ROW_HEIGHT.setMaxLabel( row_height * row_count ); 
+        // slider_VIS_ROW_HEIGHT.setMaxLabel( row_height * row_count ); 
+        slider_VIS_ROW_HEIGHT.setMinLabel( Parameters.Y_AXIS_MIN_ROW_HEIGHT );
+        slider_VIS_ROW_HEIGHT.setMaxLabel( vport_height ); 
         if ( row_count > 1 ) {
             slider_VIS_ROW_COUNT.setMinLabel( 1 );
-            slider_VIS_ROW_COUNT.setMaxLabel( row_count );
+            double vis_row_count = (double) vport_height
+                                 / Parameters.Y_AXIS_MIN_ROW_HEIGHT;
+            if ( vis_row_count < row_count )
+                slider_VIS_ROW_COUNT.setMaxLabel( vis_row_count );
+            else
+                slider_VIS_ROW_COUNT.setMaxLabel( row_count );
         }
         else {
             slider_VIS_ROW_COUNT.setMinLabel( 0 );
             slider_VIS_ROW_COUNT.setMaxLabel( 1 );
         }
 
-        if ( Parameters.ROW_RESIZE_MODE.equals( ROW_COUNT_RESIZE ) ) {
+        // If hasMinHeightBeenTouched has NOT been set in the initialization,
+        // => no memory problem, so use COUNT view by default
+        if ( ! hasMinHeightBeenTouched ) {
             combo_ROW_RESIZE.setSelectedItem( ROW_COUNT_RESIZE );
             // Set one the component, e.g. fld_VIS_ROW_COUNT, then Invoke
             // fld_VIS_ROW_COUNT's listener to set other 3 components. i.e.
@@ -176,13 +204,20 @@ public class RowAdjustments
             fld_VIS_ROW_COUNT.setDouble( (double) row_count );
             fld_VIS_ROW_COUNT.fireActionPerformed();
         }
-        else if ( Parameters.ROW_RESIZE_MODE.equals( ROW_HEIGHT_RESIZE ) ) {
+        else {
             combo_ROW_RESIZE.setSelectedItem( ROW_HEIGHT_RESIZE );
             // Set one the component, e.g. fld_VIS_ROW_HEIGHT, then Invoke
             // fld_VIS_ROW_HEIGHT's listener to set other 3 components. i.e.
             // slider_VIS_ROW_HEIGHT, fld_VIS_ROW_COUNT,& slider_VIS_ROW_COUNT
             fld_VIS_ROW_HEIGHT.setDouble( (double) row_height );
             fld_VIS_ROW_HEIGHT.fireActionPerformed();
+        }
+        if ( hasMinHeightBeenTouched ) {
+            Dialogs.warn( SwingUtilities.windowForComponent( slider_panel ),
+              "Y_AXIS_MIN_ROW_HEIGHT is reached, your logfile may contain "
+            + "too many timelines to fit into the timeline canvas.\n"
+            + "Each timeline can be enlarged by increasing row_height slowly. "
+            + "If row_height is set too big, heap memory will be exhausted." );
         }
         if ( debug.isActive() )
             debug.println( "initSliders: END" );
@@ -240,29 +275,26 @@ public class RowAdjustments
                 debug.println( "ResizeModeActionListener: START" );
             String resize_mode = (String) combo_ROW_RESIZE.getSelectedItem();
             if ( resize_mode.equals( ROW_COUNT_RESIZE ) ) {
-                Parameters.ROW_RESIZE_MODE = ROW_COUNT_RESIZE;
                 initPanelsToRowCountMode();
             }
             else if ( resize_mode.equals( ROW_HEIGHT_RESIZE ) ) {
-                Parameters.ROW_RESIZE_MODE = ROW_HEIGHT_RESIZE;
                 initPanelsToRowHeightMode();
             }
-            if ( debug.isActive() )
+            if ( debug.isActive() ) {
+                debug.println( "display mode = " + resize_mode );
                 debug.println( "ResizeModeActionListener: END" );
+            }
         }
     }
 
         public void updateSlidersAfterTreeExpansion()
         {
-            String resize_mode = (String) combo_ROW_RESIZE.getSelectedItem();
-            if ( resize_mode.equals( ROW_COUNT_RESIZE ) ) {
-                int row_count   = tree_view.getRowCount();
-                slider_VIS_ROW_COUNT.setMaxLabel( row_count );
-                fld_VIS_ROW_COUNT.fireActionPerformed();
-            }
-            // else if ( resize_mode.equals( ROW_HEIGHT_RESIZE ) ) {
-            // }
-            fitall_btn.doClick();
+            int row_count   = tree_view.getRowCount();
+            slider_VIS_ROW_COUNT.setMaxLabel( row_count );
+            fld_VIS_ROW_COUNT.fireActionPerformed();
+            // fitmost could be wrong after y-axis expansion,
+            // User may want to retains its Row adjustment setting.
+            // fitmost_btn.doClick();
         }
 
 /*
@@ -295,25 +327,24 @@ public class RowAdjustments
             }
             slider_VIS_ROW_HEIGHT.setMaxLabel( canvas_vport.getHeight() );
 
-            String resize_mode = (String) combo_ROW_RESIZE.getSelectedItem();
-            if ( resize_mode.equals( ROW_COUNT_RESIZE ) ) {
-                double vis_row_count, row_height;
-                vis_row_count  = fld_VIS_ROW_COUNT.getDouble();
-                row_height     = (double) canvas_vport.getHeight()
-                               / vis_row_count;
-                // slider_VIS_ROW_HEIGHT.setValLabel( row_height );
-                tree_view.setRowHeight( (int) Math.round( row_height ) );
-                canvas_vport.fireComponentResized();
-                if ( debug.isActive() )
-                    debug.println( "ROW: row_height = " + row_height );
+            double vis_row_count, row_height;
+            vis_row_count  = fld_VIS_ROW_COUNT.getDouble();
+            row_height     = (double) canvas_vport.getHeight()
+                           / vis_row_count;
+            if ( row_height < Parameters.Y_AXIS_MIN_ROW_HEIGHT ) {
+                row_height = Parameters.Y_AXIS_MIN_ROW_HEIGHT;
+                hasMinHeightBeenTouched = true;
+                vis_row_count = (double) canvas_vport.getHeight() / row_height;
             }
-            else if ( resize_mode.equals( ROW_HEIGHT_RESIZE ) ) {
-                double  row_height;
-                row_height = fld_VIS_ROW_HEIGHT.getDouble();
-                slider_VIS_ROW_HEIGHT.setValLabel( row_height );
-            }
-            if ( debug.isActive() )
+            tree_view.setRowHeight( (int) Math.round( row_height ) );
+            canvas_vport.fireComponentResized();
+            slider_VIS_ROW_HEIGHT.setValLabel( row_height );
+            fld_VIS_ROW_COUNT.setDouble( vis_row_count );
+            slider_VIS_ROW_COUNT.setValLabelFully( vis_row_count );
+            if ( debug.isActive() ) {
+                debug.println( "ROW: row_height = " + row_height );
                 debug.println( "SliderComponentListener: END" );
+            }
         }
     }
 
@@ -329,11 +360,16 @@ public class RowAdjustments
 
             vis_row_count  = -1.0d;
             row_height     = slider_VIS_ROW_HEIGHT.getValLabel();
+
             fld_VIS_ROW_HEIGHT.setDouble( row_height );
             if ( ! slider_VIS_ROW_HEIGHT.getValueIsAdjusting() ) {
                 vport_height    = (double) canvas_vport.getHeight();
                 tree_row_count  = (double) tree_view.getRowCount();
                 min_row_height  = vport_height / tree_row_count;
+                if ( min_row_height < Parameters.Y_AXIS_MIN_ROW_HEIGHT ) {
+                    min_row_height = Parameters.Y_AXIS_MIN_ROW_HEIGHT;
+                    hasMinHeightBeenTouched = true;
+                }
                 max_row_height  = vport_height;
 
                 // Constraint: row_height * vis_row_count = tree_view_count
@@ -348,7 +384,7 @@ public class RowAdjustments
                 else {
                     if ( row_height < min_row_height ) {
                         row_height     = min_row_height;
-                        vis_row_count  = tree_row_count;
+                        vis_row_count  = vport_height / row_height;
                         fld_VIS_ROW_HEIGHT.setDouble( row_height );
                         slider_VIS_ROW_HEIGHT.setValLabelFully( row_height );
                     }
@@ -382,6 +418,10 @@ public class RowAdjustments
             vport_height    = (double) canvas_vport.getHeight();
             tree_row_count  = (double) tree_view.getRowCount();
             min_row_height  = vport_height / tree_row_count;
+            if ( min_row_height < Parameters.Y_AXIS_MIN_ROW_HEIGHT ) {
+                min_row_height = Parameters.Y_AXIS_MIN_ROW_HEIGHT;
+                hasMinHeightBeenTouched = true;
+            }
             max_row_height  = vport_height;
 
             vis_row_count   = -1.0d;
@@ -397,7 +437,7 @@ public class RowAdjustments
             else {
                 if ( row_height < min_row_height ) {
                     row_height     = min_row_height;
-                    vis_row_count  = tree_row_count;
+                    vis_row_count  = vport_height / row_height;
                     fld_VIS_ROW_HEIGHT.setDouble( row_height );
                 }
                 else // The valid range: min_ < vis_row_count < max_
@@ -508,6 +548,8 @@ public class RowAdjustments
             double row_height;
             row_height  = (double) canvas_vport.getHeight()
                         / tree_view.getRowCount();
+            if ( row_height < Parameters.Y_AXIS_MIN_ROW_HEIGHT )
+                row_height = Parameters.Y_AXIS_MIN_ROW_HEIGHT;
             slider_VIS_ROW_HEIGHT.setValLabel( row_height );
             fld_VIS_ROW_HEIGHT.setDouble( row_height );
         }

@@ -7,7 +7,7 @@
 #include "hydra.h"
 #include "bsci.h"
 #include "bscu.h"
-#include "bind.h"
+#include "topo.h"
 #include "ll.h"
 
 static int fd_stdout, fd_stderr;
@@ -20,7 +20,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list,
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg, quoted_exec_string[HYD_TMP_STRLEN];
     struct HYD_proxy *proxy;
-    struct HYDT_bind_cpuset_t cpuset;
+    struct HYDT_topo_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -56,7 +56,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list,
                             "processes to be launched have to cover all nodes\n");
 
 
-    MPL_env2str("HYDRA_LAUNCH_EXTRA_ARGS", (const char **) &extra_arg_list);
+    MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list);
     if (extra_arg_list) {
         extra_arg = strtok(extra_arg_list, " ");
         while (extra_arg) {
@@ -95,7 +95,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list,
     targs[idx++] = HYDU_int_to_str(-1);
     targs[idx++] = NULL;
 
-    HYDT_bind_cpuset_zero(&cpuset);
+    HYDT_topo_cpuset_zero(&cpuset);
     status = HYDU_create_process(targs, NULL, NULL, &fd_stdout, &fd_stderr,
                                  &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
     HYDU_ERR_POP(status, "create process returned error\n");
