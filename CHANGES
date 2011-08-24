@@ -17,7 +17,8 @@
  # OVERALL: Several improvements to the ARMCI API implementation
    within MPICH2.
 
- # Build system: Added support for DESTDIR while installing MPICH2.
+ # Build system: Added beta support for DESTDIR while installing
+   MPICH2.
 
  # PM/PMI: Upgrade hwloc to 1.2.1rc2.
 
