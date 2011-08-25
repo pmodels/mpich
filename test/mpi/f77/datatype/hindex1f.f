@@ -16,6 +16,7 @@ C
 C
 C     Test for hindexed; 
 C     
+      errs = 0
       call mtest_init( ierr )
 
       call mpi_type_size( MPI_INTEGER, intsize, ierr )
