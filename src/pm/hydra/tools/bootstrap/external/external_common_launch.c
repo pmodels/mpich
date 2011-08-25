@@ -132,6 +132,9 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         status = sge_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the qrsh executable\n");
     }
+    else if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
+        /* manual has no separate launcher */
+    }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bad launcher type %s\n",
                             HYDT_bsci_info.launcher);
