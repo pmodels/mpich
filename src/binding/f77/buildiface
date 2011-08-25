@@ -1515,7 +1515,7 @@ sub print_call_args {
 		# we don't need to do 
 		# anything unless MPI_Fint and int are different.
 		# print STDERR "XXX $count $#arg_addresses XXX\n";
-		if ($parm =~ /MPI_File/) {
+		if ($parm =~ /MPI_File\s/) {
 		    print $OUTFD "MPI_File_f2c(*v$count)";
 		}
 		else {
