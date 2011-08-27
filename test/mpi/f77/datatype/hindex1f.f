@@ -44,7 +44,7 @@ C
          len      = position
          position = 0
          call mpi_unpack( packbuf, len, position, outbuf, 10,
-     $        MPI_INTEGER,MPI_COMM_WORLD )
+     $        MPI_INTEGER, MPI_COMM_WORLD, ierr )
 C     
          do i=1, 10
             if (outbuf(i) .ne. 11-i) then
