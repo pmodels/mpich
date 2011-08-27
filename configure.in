@@ -6337,6 +6337,7 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
           src/mpi/topo/Makefile \
           src/mpix/Makefile \
           src/mpix/comm/Makefile \
+          src/mpix/mutex/Makefile \
           src/mpid/Makefile \
           src/mpid/common/Makefile \
           src/mpid/common/datatype/Makefile \
