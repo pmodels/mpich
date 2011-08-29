@@ -8,15 +8,31 @@
 #include "bsci.h"
 #include "pbs.h"
 
+/* #define TS_PROFILE 1 */
+
+#if defined(TS_PROFILE)
+#include <sys/time.h>
+double TS_Wtime( void );
+double TS_Wtime( void )
+{
+    struct timeval  tval;
+    gettimeofday( &tval, NULL );
+    return ( (double) tval.tv_sec + (double) tval.tv_usec * 0.000001 );
+}
+#endif
+
 HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                       int *control_fd)
 {
-    int proxy_count, spawned_count;
-    int args_count, events_count;
-    int ierr, idx, spawned_hostID;
+    int proxy_count, spawned_count, args_count;
+    int ierr, spawned_hostID;
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
+
+#if defined(TS_PROFILE)
+    double stime, etime;
+#endif
 
     HYDU_FUNC_ENTER();
 
@@ -35,7 +51,8 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
     /* Check if number of proxies > number of processes in this PBS job */
     if (proxy_count > (HYDT_bscd_pbs_sys->tm_root).tm_nnodes)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "Number of proxies(%d) > TM node count(%d)!\n", proxy_count,
+                            "Number of proxies(%d) > TM node count(%d)!\n",
+                            proxy_count,
                             (HYDT_bscd_pbs_sys->tm_root).tm_nnodes);
 
     /* Duplicate the args in local copy, targs */
@@ -48,14 +65,17 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
     HYDU_MALLOC(HYDT_bscd_pbs_sys->events, tm_event_t *,
                 HYDT_bscd_pbs_sys->size * sizeof(tm_event_t), status);
 
+#if defined(TS_PROFILE)
+    stime = TS_Wtime();
+#endif
     /* Spawn a process on each allocated node through tm_spawn() which
      * returns a taskID for the process + a eventID for the spawning.
      * The returned taskID won't be ready for access until tm_poll()
      * has returned the corresponding eventID. */
-    spawned_count = 0;
-    spawned_hostID = 0;
+    spawned_count   = 0;
+    spawned_hostID  = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next) {
-        targs[args_count] = HYDU_int_to_str(spawned_count);
+        targs[args_count] = HYDU_int_to_str(proxy->proxy_id);
         ierr = tm_spawn(args_count + 1, targs, NULL, spawned_hostID,
                         HYDT_bscd_pbs_sys->taskIDs + spawned_count,
                         HYDT_bscd_pbs_sys->events + spawned_count);
@@ -70,9 +90,17 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
         spawned_count++;
     }
     HYDT_bscd_pbs_sys->spawned_count = spawned_count;
+#if defined(TS_PROFILE)
+    etime = TS_Wtime();
+    HYDU_dump(stdout, "tm_spawn() loop takes %f\n", etime-stime );
+#endif
 
+#ifdef 0
     /* Poll the TM for the spawning eventID returned by tm_spawn() to
      * determine if the spawned process has started. */
+#if defined(TS_PROFILE)
+    stime = TS_Wtime();
+#endif
     events_count = 0;
     while (events_count < spawned_count) {
         tm_event_t event = -1;
@@ -80,7 +108,8 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
         ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
         if (ierr != TM_SUCCESS)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "tm_poll(spawn_event) fails with TM err %d.\n", ierr);
+                                "tm_poll(spawn_event) fails with TM err %d.\n",
+                                ierr);
         if (event != TM_NULL_EVENT) {
             for (idx = 0; idx < spawned_count; idx++) {
                 if (HYDT_bscd_pbs_sys->events[idx] == event) {
@@ -90,11 +119,16 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                   event, HYDT_bscd_pbs_sys->taskIDs[idx]);
                     }
                     events_count++;
-                    break;      /* break from for(idx<spawned_count) loop */
+                    break; /* break from for(idx<spawned_count) loop */
                 }
             }
         }
     }
+#if defined(TS_PROFILE)
+    etime = TS_Wtime();
+    HYDU_dump(stdout, "tm_poll(spawn_events) loop takes %f\n", etime-stime );
+#endif
+#endif
 
   fn_exit:
     HYDU_FUNC_EXIT();
