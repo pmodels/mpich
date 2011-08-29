@@ -54,9 +54,11 @@ MPIX_Mutex MPIX_Mutex_create(int my_count, MPI_Comm comm) {
 
   hdl->max_count = max_count;
   hdl->windows = malloc(sizeof(MPI_Win)*max_count);
+  assert(hdl->windows != NULL);
 
   if (my_count > 0) {
     hdl->bases = malloc(sizeof(uint8_t*)*my_count);
+    assert(hdl->bases != NULL);
   } else {
     hdl->bases = NULL;
   }
@@ -185,6 +187,7 @@ void MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc) {
   assert(proc >= 0 && proc < nproc);
 
   buf = malloc(nproc*sizeof(uint8_t));
+  assert(buf != NULL);
 
   buf[rank] = 0;
 
