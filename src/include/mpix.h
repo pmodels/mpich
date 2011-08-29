@@ -7,9 +7,6 @@
 #ifndef MPIX_H_INCLUDED
 #define MPIX_H_INCLUDED
 
-#include <stdint.h>
-#include <inttypes.h>
-
 #include "mpi.h"
 
 /* Prototypes in this file must be interpreted as C routines when this header
@@ -23,14 +20,7 @@ int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm
 
 /* RMA Mutexes extension declarations: */
 
-struct mpix_mutex_s {
-  int        my_count;
-  int        max_count;
-  MPI_Comm   comm;
-  MPI_Win   *windows;
-  uint8_t  **bases;
-};
-
+struct mpix_mutex_s;
 typedef struct mpix_mutex_s * MPIX_Mutex;
 
 MPIX_Mutex MPIX_Mutex_create (int count, MPI_Comm comm);

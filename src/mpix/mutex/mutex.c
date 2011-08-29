@@ -17,6 +17,7 @@
 
 #include <mpi.h>
 #include <mpix.h>
+#include <mpitypedefs.h>
 
 #define MPI_MUTEX_TAG 100
 
@@ -25,6 +26,14 @@
 #else
 #define debug_print(...)
 #endif
+
+struct mpix_mutex_s {
+  int        my_count;
+  int        max_count;
+  MPI_Comm   comm;
+  MPI_Win   *windows;
+  uint8_t  **bases;
+};
 
 /* TODO: Make these all no-ops for sequential runs */
 
