@@ -21,11 +21,19 @@ double TS_Wtime( void )
 }
 #endif
 
+/* Comparison function for bsearch() of array of pbs_node[] based on name. */
+static int cmp_pbsnode(const void *m1, const void *m2)
+{
+    struct HYDT_bscd_pbs_node *n1 = (struct HYDT_bscd_pbs_node *) m1;
+    struct HYDT_bscd_pbs_node *n2 = (struct HYDT_bscd_pbs_node *) m2;
+    return strcmp(n1->name, n2->name);
+}
+
 HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                       int *control_fd)
 {
     int proxy_count, spawned_count, args_count;
-    int ierr, spawned_hostID;
+    int ierr;
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
@@ -65,6 +73,9 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
     HYDU_MALLOC(HYDT_bscd_pbs_sys->events, tm_event_t *,
                 HYDT_bscd_pbs_sys->size * sizeof(tm_event_t), status);
 
+    /* Sort the pbs_node[] in ascending name order for bsearch() */
+    qsort(HYDT_bscd_pbs_sys->nodes, HYDT_bscd_pbs_sys->num_nodes,
+          sizeof(struct HYDT_bscd_pbs_node), cmp_pbsnode);
 #if defined(TS_PROFILE)
     stime = TS_Wtime();
 #endif
@@ -73,20 +84,29 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
      * The returned taskID won't be ready for access until tm_poll()
      * has returned the corresponding eventID. */
     spawned_count   = 0;
-    spawned_hostID  = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next) {
+        struct HYDT_bscd_pbs_node key, *found;
+        strncpy(key.name, proxy->node->hostname, HYDT_PBS_STRLEN);
+        found = bsearch(&key,
+                        HYDT_bscd_pbs_sys->nodes,
+                        HYDT_bscd_pbs_sys->num_nodes,
+                        sizeof(struct HYDT_bscd_pbs_node), cmp_pbsnode);
+        if (found == NULL) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "Cannot locate proxy, %s, in PBS nodefile\n",
+                                proxy->node->hostname);
+        }
         targs[args_count] = HYDU_int_to_str(proxy->proxy_id);
-        ierr = tm_spawn(args_count + 1, targs, NULL, spawned_hostID,
+        ierr = tm_spawn(args_count + 1, targs, NULL, found->id,
                         HYDT_bscd_pbs_sys->taskIDs + spawned_count,
                         HYDT_bscd_pbs_sys->events + spawned_count);
         if (HYDT_bsci_info.debug)
-            HYDU_dump(stdout, "PBS_DEBUG: %d, tm_spawn(hostID=%d,name=%s)\n",
-                      spawned_count, spawned_hostID, proxy->node->hostname);
+            HYDU_dump(stdout, "PBS_DEBUG: %d, tm_spawn(TM_nodeID=%d,name=%s)\n",
+                      spawned_count, found->id, proxy->node->hostname);
         if (ierr != TM_SUCCESS) {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "tm_spawn() fails with TM err %d!\n", ierr);
         }
-        spawned_hostID += proxy->node->core_count;
         spawned_count++;
     }
     HYDT_bscd_pbs_sys->spawned_count = spawned_count;
@@ -95,7 +115,7 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
     HYDU_dump(stdout, "tm_spawn() loop takes %f\n", etime-stime );
 #endif
 
-#ifdef 0
+#if defined(COMMENTED_OUT)
     /* Poll the TM for the spawning eventID returned by tm_spawn() to
      * determine if the spawned process has started. */
 #if defined(TS_PROFILE)

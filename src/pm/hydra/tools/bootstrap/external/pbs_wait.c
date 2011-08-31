@@ -14,13 +14,20 @@
 double TS_Wtime( void );
 #endif
 
+/* integer comparison function for tm_event_t[] */
+static int cmp_pbsevent( const void *p1, const void *p2 )
+{
+    return (*(tm_event_t*)p1) - (*(tm_event_t*)p2);
+}
+
 HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
 {
-    int time_elapsed;
-    int events_count, spawned_count;
-    int idx, ierr;
-    struct timeval start_tval, curr_tval;
-    HYD_status status = HYD_SUCCESS;
+    tm_event_t     *pollevents = NULL;
+    int             time_elapsed;
+    int             events_count, spawned_count;
+    int             mismatch, idx, ierr;
+    struct timeval  start_tval, curr_tval;
+    HYD_status      status = HYD_SUCCESS;
 
 #if defined(TS_PROFILE)
     double stime, etime;
@@ -28,10 +35,12 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
 
     HYDU_FUNC_ENTER();
 
-    /* Allocate memory for taskobits[] */
+    /* Allocate memory for taskobits[] and pollevents[]. */
     HYDU_MALLOC(HYDT_bscd_pbs_sys->taskobits, int *,
                 HYDT_bscd_pbs_sys->size * sizeof(int), status);
     spawned_count = HYDT_bscd_pbs_sys->spawned_count;
+    HYDU_MALLOC(pollevents, tm_event_t *,
+                spawned_count * sizeof(tm_event_t), status);
 
     /*
      * FIXME: We rely on gettimeofday here. This needs to detect the
@@ -47,26 +56,41 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
 #endif
     events_count = 0;
     while (events_count < spawned_count) {
-        tm_event_t event = -1;
         int poll_err;
-        ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
+        ierr = tm_poll(TM_NULL_EVENT, &pollevents[events_count], 0, &poll_err);
         if (ierr != TM_SUCCESS)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "tm_poll(spawn_event) fails with TM err %d.\n",
                                 ierr);
-        if (event != TM_NULL_EVENT) {
-            for (idx = 0; idx < spawned_count; idx++) {
-                if (HYDT_bscd_pbs_sys->events[idx] == event) {
-                    if (HYDT_bsci_info.debug) {
-                        HYDU_dump(stdout,
-                                  "PBS_DEBUG: Event %d received, task %d has started.\n",
-                                  event, HYDT_bscd_pbs_sys->taskIDs[idx]);
-                    }
-                    events_count++;
-                    break; /* break from for(idx<spawned_count) loop */
-                }
-            }
+        if (pollevents[events_count] != TM_NULL_EVENT) {
+            events_count++;
         }
+    }
+
+    /* Sort HYDT_bscd_pbs_sys->events[] and pollevents[] */
+    qsort(HYDT_bscd_pbs_sys->events, spawned_count,
+          sizeof(tm_event_t), cmp_pbsevent);
+    qsort(pollevents, spawned_count, sizeof(tm_event_t), cmp_pbsevent);
+    mismatch = 0;
+    for ( idx = 0; idx < spawned_count; idx++ ) {
+        if ( pollevents[idx] != HYDT_bscd_pbs_sys->events[idx] ) {
+             mismatch = 1;
+             break;
+        }
+    }
+    if ( mismatch ) {
+        /* Pavan: what is the correct HYDU macro to do this kind of fprintf ? */
+        fprintf(stderr, "tm_spawn()'s events[] = ");
+        for ( idx = 0; idx < spawned_count; idx++ )
+             fprintf(stderr, "%d ", HYDT_bscd_pbs_sys->events[idx]);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "pollevents[] = ");
+        for ( idx = 0; idx < spawned_count; idx++ )
+             fprintf(stderr, "%d ", pollevents[idx]);
+        fprintf(stderr, "\n");
+        fflush(stderr);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "Inconsistent pollevents[] & tm_spawn()'s events[]:\n");
     }
 #if defined(TS_PROFILE)
     etime = TS_Wtime();
@@ -104,37 +128,28 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
 #if defined(TS_PROFILE)
     stime = TS_Wtime();
 #endif
+    /* Sort HYDT_bscd_pbs_sys->events[] */
+    qsort(HYDT_bscd_pbs_sys->events, spawned_count,
+          sizeof(tm_event_t), cmp_pbsevent);
     /* Poll if the spawned process has exited */
     events_count = 0;
     /* Substract all the processes that have already exited */
     for (idx = 0; idx < spawned_count; idx++) {
-        if (HYDT_bscd_pbs_sys->events[idx] == TM_NULL_EVENT)
+        if (HYDT_bscd_pbs_sys->events[idx] == TM_NULL_EVENT) {
+            pollevents[events_count] = TM_NULL_EVENT;
             events_count++;
+        }
     }
     /* Polling for the remaining alive processes till they all exit */
     while (events_count < spawned_count) {
-        tm_event_t event = -1;
         int poll_err;
-        ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
+        ierr = tm_poll(TM_NULL_EVENT, &pollevents[events_count], 0, &poll_err);
         if (ierr != TM_SUCCESS)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "tm_poll(obit_event) fails with err=%d.\n", ierr);
-        if (event != TM_NULL_EVENT) {
-            for (idx = 0; idx < spawned_count; idx++) {
-                if (HYDT_bscd_pbs_sys->events[idx] == event) {
-                    if (HYDT_bsci_info.debug) {
-                        HYDU_dump(stdout,
-                                  "PBS_DEBUG: Event %d received, task %d exits with status %d.\n",
-                                  event, HYDT_bscd_pbs_sys->taskIDs[idx],
-                                  HYDT_bscd_pbs_sys->taskobits[idx]);
-                        /*
-                         * HYDU_error_printf("DEBUG: Event %d received, task %d exits with status %d.\n", event, HYDT_bscd_pbs_sys->taskIDs[idx], HYDT_bscd_pbs_sys->taskobits[idx]);
-                         */
-                    }
-                    events_count++;
-                    break;      /* break from for(idx<spawned_count) loop */
-                }
-            }
+                                "tm_poll(obit_event) fails with err=%d.\n",
+                                ierr);
+        if (pollevents[events_count] != TM_NULL_EVENT) {
+            events_count++;
         }
 
         /* Check if time is up */
@@ -146,6 +161,30 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
                 goto fn_exit;
             }
         }
+    }  /* while (events_count < spawned_count) */
+
+    /* Sort pollevents[] in sync with HYDT_bscd_pbs_sys->events[] */
+    qsort(pollevents, spawned_count, sizeof(tm_event_t), cmp_pbsevent);
+    mismatch = 0;
+    for ( idx = 0; idx < spawned_count; idx++ ) {
+        if ( pollevents[idx] != HYDT_bscd_pbs_sys->events[idx] ) {
+             mismatch = 1;
+             break;
+        }
+    }
+    if ( mismatch ) {
+        /* Pavan: what is the correct HYDU macro to do this kind of fprintf ? */
+        fprintf(stderr, "tm_obit()'s events[] = ");
+        for ( idx = 0; idx < spawned_count; idx++ )
+            fprintf(stderr, "%d ", HYDT_bscd_pbs_sys->events[idx]);
+        fprintf(stderr, "\n");
+        fprintf(stderr, "pollevents[] = ");
+        for ( idx = 0; idx < spawned_count; idx++ )
+            fprintf(stderr, "%d ", pollevents[idx]);
+        fprintf(stderr, "\n");
+        fflush(stderr);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "Inconsistent pollevents[] & tm_obit()'s events[]:\n");
     }
 #if defined(TS_PROFILE)
     etime = TS_Wtime();
@@ -155,6 +194,9 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
     if (HYDT_bsci_info.debug) {
         HYDU_dump(stdout, "\nPBS_DEBUG: Done with polling obit events!\n");
     }
+
+    if (pollevents)
+        HYDU_FREE(pollevents);
 
     /* Loop till all sockets have closed */
   fn_exit:
