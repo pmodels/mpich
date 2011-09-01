@@ -552,7 +552,7 @@ HYD_status HYDT_topo_bind(struct HYDT_topo_cpuset_t cpuset)
     }
 #endif /* HAVE_HWLOC */
 
-    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / SIZEOF_UNSIGNED_LONG; i++)
+    for (i = 0; i < HYDT_TOPO_MAX_CPU_COUNT / HYDT_BITS_PER_LONG; i++)
         if (cpuset.set[i])
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no topology library available\n");
 

@@ -454,6 +454,9 @@ int MPID_nem_newtcp_module_vc_terminate (MPIDI_VC_t *vc)
     mpi_errno = MPID_nem_newtcp_module_cleanup(vc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_NEM_NEWTCP_MODULE_VC_TERMINATE);
     return mpi_errno;

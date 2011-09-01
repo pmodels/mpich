@@ -1187,9 +1187,10 @@ static int gen_write_fail_handler(MPIU_EXOVERLAPPED *wr_ov)
 
         CHANGE_STATE(sc, CONN_STATE_TS_D_QUIESCENT);
 
+        mpi_errno = MPIDI_CH3U_Handle_connection(sc->vc, MPIDI_VC_EVENT_TERMINATED);
         /* FIXME: We should ideally do a shutdown() not close () */
         mpi_errno = MPID_nem_newtcp_module_post_close_ex(sc);
-    
+
         MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**write",
             "**write %s", MPIU_OSW_Strerror(MPIU_EX_STATUS_TO_ERRNO(MPIU_ExGetStatus(wr_ov))));
     }
