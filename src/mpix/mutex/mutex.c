@@ -37,11 +37,12 @@ struct mpixi_mutex_s {
 
 /* TODO: Make these all no-ops for sequential runs */
 
-/** Create a group of MPI mutexes.  Collective onthe MPI group.
+/** Create a group of MPI mutexes.  Collective on the given communicator.
   *
-  * @param[in] count  Number of mutexes on the local process.
-  * @param[in] comm   MPI communicator on which to create mutexes
-  * @return           Handle to the mutex group.
+  * @param[in]  count   Number of mutexes on the local process.
+  * @param[in]  comm    MPI communicator on which to create mutexes
+  * @param[out] hdl_out Handle to the mutex group
+  * @return             MPI status
   */
 int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex *hdl_out) {
   int rank, nproc, max_count, i;
@@ -95,10 +96,11 @@ int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex *hdl_out) {
 }
 
 
-/** Free a group of MPI mutexes.  Collective.
+/** Free a group of MPI mutexes.  Collective on communicator used at the
+  * time of creation.
   *
-  * @param[in] hdl Handle to the group that should be destroyed.
-  * @return        Zero on success, non-zero otherwise.
+  * @param[in] hdl Handle to the group that will be freed
+  * @return        MPI status
   */
 int MPIX_Mutex_free(MPIX_Mutex *hdl_ptr) {
   MPIX_Mutex hdl = *hdl_ptr;
@@ -125,9 +127,10 @@ int MPIX_Mutex_free(MPIX_Mutex *hdl_ptr) {
 
 /** Lock a mutex.
   * 
-  * @param[in] hdl        Mutex group that the mutex belongs to.
-  * @param[in] mutex      Desired mutex number [0..count-1]
-  * @param[in] proc       Rank of process where the mutex lives
+  * @param[in] hdl   Mutex group that the mutex belongs to
+  * @param[in] mutex Desired mutex number [0..count-1]
+  * @param[in] proc  Rank of process where the mutex lives
+  * @return          MPI status
   */
 int MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) {
   int       rank, nproc, already_locked, i;
@@ -188,6 +191,7 @@ int MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) {
   * @param[in] hdl   Mutex group that the mutex belongs to.
   * @param[in] mutex Desired mutex number [0..count-1]
   * @param[in] proc  Rank of process where the mutex lives
+  * @return          MPI status
   */
 int MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc) {
   int      rank, nproc, i;
