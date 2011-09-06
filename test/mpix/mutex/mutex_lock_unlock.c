@@ -44,7 +44,7 @@ int main(int argc, char ** argv) {
     fflush(NULL);
   }
 
-  MPIX_Mutex_destroy(mtx);
+  MPIX_Mutex_free(&mtx);
 
   if (rank == 0)
     printf(" No Errors\n");

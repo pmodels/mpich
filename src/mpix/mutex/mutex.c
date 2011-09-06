@@ -95,12 +95,13 @@ int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex *hdl_out) {
 }
 
 
-/** Destroy a group of MPI mutexes.  Collective.
+/** Free a group of MPI mutexes.  Collective.
   *
   * @param[in] hdl Handle to the group that should be destroyed.
   * @return        Zero on success, non-zero otherwise.
   */
-int MPIX_Mutex_destroy(MPIX_Mutex hdl) {
+int MPIX_Mutex_free(MPIX_Mutex *hdl_ptr) {
+  MPIX_Mutex hdl = *hdl_ptr;
   int i;
 
   for (i = 0; i < hdl->max_count; i++) {
@@ -116,6 +117,7 @@ int MPIX_Mutex_destroy(MPIX_Mutex hdl) {
 
   MPI_Comm_free(&hdl->comm);
   free(hdl);
+  hdl_ptr = NULL;
 
   return MPI_SUCCESS;
 }
