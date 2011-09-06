@@ -27,7 +27,7 @@
 #define debug_print(...)
 #endif
 
-struct mpix_mutex_s {
+struct mpixi_mutex_s {
   int        my_count;
   int        max_count;
   MPI_Comm   comm;
@@ -43,11 +43,11 @@ struct mpix_mutex_s {
   * @param[in] comm   MPI communicator on which to create mutexes
   * @return           Handle to the mutex group.
   */
-MPIX_Mutex MPIX_Mutex_create(int my_count, MPI_Comm comm) {
+int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex *hdl_out) {
   int rank, nproc, max_count, i;
   MPIX_Mutex hdl;
 
-  hdl = malloc(sizeof(struct mpix_mutex_s));
+  hdl = malloc(sizeof(struct mpixi_mutex_s));
   assert(hdl != NULL);
 
   MPI_Comm_dup(comm, &hdl->comm);
@@ -90,7 +90,8 @@ MPIX_Mutex MPIX_Mutex_create(int my_count, MPI_Comm comm) {
     MPI_Win_create(base, size, sizeof(uint8_t), MPI_INFO_NULL, hdl->comm, &hdl->windows[i]);
   }
 
-  return hdl;
+  *hdl_out = hdl;
+  return MPI_SUCCESS;
 }
 
 
@@ -116,7 +117,7 @@ int MPIX_Mutex_destroy(MPIX_Mutex hdl) {
   MPI_Comm_free(&hdl->comm);
   free(hdl);
 
-  return 0;
+  return MPI_SUCCESS;
 }
 
 
@@ -126,7 +127,7 @@ int MPIX_Mutex_destroy(MPIX_Mutex hdl) {
   * @param[in] mutex      Desired mutex number [0..count-1]
   * @param[in] proc       Rank of process where the mutex lives
   */
-void MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) {
+int MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) {
   int       rank, nproc, already_locked, i;
   uint8_t *buf;
 
@@ -175,6 +176,8 @@ void MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) {
 
   debug_print("lock acquired [proc = %d, mutex = %d]\n", proc, mutex);
   free(buf);
+
+  return MPI_SUCCESS;
 }
 
 
@@ -184,7 +187,7 @@ void MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) {
   * @param[in] mutex Desired mutex number [0..count-1]
   * @param[in] proc  Rank of process where the mutex lives
   */
-void MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc) {
+int MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc) {
   int      rank, nproc, i;
   uint8_t *buf;
 
@@ -232,4 +235,6 @@ void MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc) {
 
   debug_print("lock released [proc = %d, mutex = %d]\n", proc, mutex);
   free(buf);
+
+  return MPI_SUCCESS;
 }

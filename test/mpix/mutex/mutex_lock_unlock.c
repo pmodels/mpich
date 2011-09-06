@@ -31,7 +31,7 @@ int main(int argc, char ** argv) {
   if (rank == 0 && verbose)
     printf("Starting mutex test with %d processes\n", nproc);
 
-  mtx = MPIX_Mutex_create(NUM_MUTEXES, MPI_COMM_WORLD);
+  MPIX_Mutex_create(NUM_MUTEXES, MPI_COMM_WORLD, &mtx);
 
   for (i = 0; i < nproc; i++)
     for (j = 0; j < NUM_MUTEXES; j++) {

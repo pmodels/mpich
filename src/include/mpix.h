@@ -20,13 +20,13 @@ int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm
 
 /* RMA Mutexes extension declarations: */
 
-struct mpix_mutex_s;
-typedef struct mpix_mutex_s * MPIX_Mutex;
+struct mpixi_mutex_s;
+typedef struct mpixi_mutex_s * MPIX_Mutex;
 
-MPIX_Mutex MPIX_Mutex_create (int count, MPI_Comm comm);
-int        MPIX_Mutex_destroy(MPIX_Mutex hdl);
-void       MPIX_Mutex_lock   (MPIX_Mutex hdl, int mutex, int proc);
-void       MPIX_Mutex_unlock (MPIX_Mutex hdl, int mutex, int proc);
+int MPIX_Mutex_create (int count, MPI_Comm comm, MPIX_Mutex *hdl);
+int MPIX_Mutex_destroy(MPIX_Mutex hdl);
+int MPIX_Mutex_lock   (MPIX_Mutex hdl, int mutex, int proc);
+int MPIX_Mutex_unlock (MPIX_Mutex hdl, int mutex, int proc);
 
 #if defined(__cplusplus)
 }
