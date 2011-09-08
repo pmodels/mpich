@@ -9,6 +9,8 @@
    functions is: MPIX_Ibcast, MPIX_Ibarrier, MPIX_Ireduce, MPIX_Ialltoallv,
    MPIX_Iallreduce.
 
+ # PM/PMI: Upgrade hwloc to 1.3rc1.
+
 
 ===============================================================================
                                Changes in 1.4.1

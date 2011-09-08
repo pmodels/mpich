@@ -146,14 +146,16 @@ if HWLOC_DOXYGEN_BROKEN_SHORT_NAMES
 	-@mv -f $(DOX_DIR)/latex/envvar.tex $(DOX_DIR)/latex/a00003.tex
 	-@mv -f $(DOX_DIR)/html/cpu_mem_bind.html $(DOX_DIR)/html/a00004.html
 	-@mv -f $(DOX_DIR)/latex/cpu_mem_bind.tex $(DOX_DIR)/latex/a00004.tex
-	-@mv -f $(DOX_DIR)/html/interoperability.html $(DOX_DIR)/html/a00005.html
-	-@mv -f $(DOX_DIR)/latex/interoperability.tex $(DOX_DIR)/latex/a00005.tex
-	-@mv -f $(DOX_DIR)/html/threadsafety.html $(DOX_DIR)/html/a00006.html
-	-@mv -f $(DOX_DIR)/latex/threadsafety.tex $(DOX_DIR)/latex/a00006.tex
-	-@mv -f $(DOX_DIR)/html/embed.html $(DOX_DIR)/html/a00007.html
-	-@mv -f $(DOX_DIR)/latex/embed.tex $(DOX_DIR)/latex/a00007.tex
-	-@mv -f $(DOX_DIR)/html/faq.html $(DOX_DIR)/html/a00008.html
-	-@mv -f $(DOX_DIR)/latex/faq.tex $(DOX_DIR)/latex/a00008.tex
+	-@mv -f $(DOX_DIR)/html/iodevices.html $(DOX_DIR)/html/a00005.html
+	-@mv -f $(DOX_DIR)/latex/iodevices.tex $(DOX_DIR)/latex/a00005.tex
+	-@mv -f $(DOX_DIR)/html/interoperability.html $(DOX_DIR)/html/a00006.html
+	-@mv -f $(DOX_DIR)/latex/interoperability.tex $(DOX_DIR)/latex/a00006.tex
+	-@mv -f $(DOX_DIR)/html/threadsafety.html $(DOX_DIR)/html/a00007.html
+	-@mv -f $(DOX_DIR)/latex/threadsafety.tex $(DOX_DIR)/latex/a00007.tex
+	-@mv -f $(DOX_DIR)/html/embed.html $(DOX_DIR)/html/a00008.html
+	-@mv -f $(DOX_DIR)/latex/embed.tex $(DOX_DIR)/latex/a00008.tex
+	-@mv -f $(DOX_DIR)/html/faq.html $(DOX_DIR)/html/a00009.html
+	-@mv -f $(DOX_DIR)/latex/faq.tex $(DOX_DIR)/latex/a00009.tex
 endif
 endif
 
@@ -257,19 +259,33 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/HWLOC_MEMBIND_REPLICATE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_MEMBIND_STRICT.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_MEMBIND_THREAD.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_BRIDGE.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_BRIDGE_HOST.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_BRIDGE_PCI.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_CACHE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_CORE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_GROUP.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_MACHINE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_MISC.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_NODE.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OS_DEVICE.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_BLOCK.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_DMA.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_GPU.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_NETWORK.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_OPENFABRICS.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_PU.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_PCI_DEVICE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SOCKET.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SYSTEM.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_TYPE_MAX.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_IO.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_MISC.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_IO_BRIDGES.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_IO_DEVICES.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_WHOLE_IO.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TYPE_DEPTH_MULTIPLE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TYPE_DEPTH_UNKNOWN.3 \
@@ -327,6 +343,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_weight.3 \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_xor.3 \
         $(DOX_MAN_DIR)/man3/hwloc_bitmap_zero.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_bridge_covers_pcibus.3 \
         $(DOX_MAN_DIR)/man3/hwloc_compare_types.3 \
         $(DOX_MAN_DIR)/man3/hwloc_compare_types_e.3 \
         $(DOX_MAN_DIR)/man3/hwloc_const_bitmap_t.3 \
@@ -363,6 +380,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_cpubind.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_depth_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_first_largest_obj_inside_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_hostbridge_by_pcibus.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_largest_objs_inside_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_last_cpu_location.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_membind.3 \
@@ -371,6 +389,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_inside_cpuset_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_inside_cpuset_by_type.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_next_bridge.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_next_child.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_next_obj_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_next_obj_by_type.3 \
@@ -378,6 +397,9 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_next_obj_covering_cpuset_by_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_next_obj_inside_cpuset_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_next_obj_inside_cpuset_by_type.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_next_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_next_pcidev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_non_io_ancestor_obj.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_below_array_by_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_below_by_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_by_depth.3 \
@@ -385,6 +407,8 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_covering_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_inside_cpuset_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_obj_inside_cpuset_by_type.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_pcidev_by_busid.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_pcidev_by_busidstring.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_proc_cpubind.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_proc_last_cpu_location.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_proc_membind.3 \
@@ -419,9 +443,17 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_obj.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_snprintf.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_bridge_attr_s.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_cache_attr_s.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_group_attr_s.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_osdev_attr_s.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_attr_u_hwloc_pcidev_attr_s.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_bridge_type_e.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_bridge_type_t.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_osdev_type_e.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_osdev_type_t.3 \
         $(DOX_MAN_DIR)/man3/hwloc_distances_s.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_add_info.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_cpuset_snprintf.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_get_info_by_name.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_info_s.3 \
@@ -479,6 +511,7 @@ man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_distance_matrix.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_t.3 \
+        $(DOX_MAN_DIR)/man3/hwlocality_advanced_io.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_api_version.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_bitmap.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_configuration.3 \

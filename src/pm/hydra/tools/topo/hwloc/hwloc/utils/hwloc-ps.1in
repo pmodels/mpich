@@ -32,6 +32,9 @@ report logical indexes instead of physical/OS indexes (default)
 .TP
 \fB\-c\fR \fB\-\-cpuset\fR
 show process bindings as cpusets instead of objects.
+.TP
+\fB\-\-whole\-system\fR
+Do not consider administration limitations.
 .
 .\" **************************
 .\"    Description Section
@@ -42,9 +45,10 @@ By default, hwloc-ps lists only those currently-running processes that
 are bound; it displays their their identifier, command-line and
 binding.  The binding may be reported as objects or cpusets.
 .
-Process bindings are restricted to the currently available
+By default, process bindings are restricted to the currently available
 topology. If some processes are bound to processors that are not available
-to the current process, they are ignored.
+to the current process, they are ignored unless \fB\-\-whole\-system\fR
+is given.
 .
 The output is a plain list. If you wish to annotate the hierarchical
 topology with processes so as to see how they are actual distributed

@@ -11,17 +11,19 @@
 #include <private/debug.h>
 
 #include <float.h>
+#include <math.h>
 
 /* called during topology init */
 void hwloc_topology_distances_init(struct hwloc_topology *topology)
 {
   unsigned i;
-  for (i=0; i < HWLOC_OBJ_TYPE_MAX; i++) {
+  for (i = HWLOC_OBJ_SYSTEM; i < HWLOC_OBJ_TYPE_MAX; i++) {
     /* no distances yet */
     topology->os_distances[i].nbobjs = 0;
     topology->os_distances[i].objs = NULL;
     topology->os_distances[i].indexes = NULL;
     topology->os_distances[i].distances = NULL;
+    topology->os_distances[i].forced = 0;
   }
 }
 
@@ -32,7 +34,7 @@ void hwloc_topology_distances_init(struct hwloc_topology *topology)
 void hwloc_topology_distances_clear(struct hwloc_topology *topology)
 {
   unsigned i;
-  for (i=0; i < HWLOC_OBJ_TYPE_MAX; i++) {
+  for (i = HWLOC_OBJ_SYSTEM; i < HWLOC_OBJ_TYPE_MAX; i++) {
     /* remove final distance matrices, but keep physically-ordered ones */
     free(topology->os_distances[i].objs);
     topology->os_distances[i].objs = NULL;
@@ -43,7 +45,7 @@ void hwloc_topology_distances_clear(struct hwloc_topology *topology)
 void hwloc_topology_distances_destroy(struct hwloc_topology *topology)
 {
   unsigned i;
-  for (i=0; i < HWLOC_OBJ_TYPE_MAX; i++) {
+  for (i = HWLOC_OBJ_SYSTEM; i < HWLOC_OBJ_TYPE_MAX; i++) {
     /* remove final distance matrics AND physically-ordered ones */
     free(topology->os_distances[i].indexes);
     topology->os_distances[i].indexes = NULL;
@@ -58,8 +60,16 @@ void hwloc_topology_distances_destroy(struct hwloc_topology *topology)
  * the caller gives us those pointers, we take care of freeing them later and so on.
  */
 void hwloc_topology__set_distance_matrix(hwloc_topology_t __hwloc_restrict topology, hwloc_obj_type_t type,
-					 unsigned nbobjs, unsigned *indexes, hwloc_obj_t *objs, float *distances)
+					 unsigned nbobjs, unsigned *indexes, hwloc_obj_t *objs, float *distances,
+					 int force)
 {
+  if (topology->os_distances[type].forced && !force) {
+    free(indexes);
+    free(objs);
+    free(distances);
+    return;
+  }
+
   free(topology->os_distances[type].indexes);
   free(topology->os_distances[type].objs);
   free(topology->os_distances[type].distances);
@@ -67,6 +77,7 @@ void hwloc_topology__set_distance_matrix(hwloc_topology_t __hwloc_restrict topol
   topology->os_distances[type].indexes = indexes;
   topology->os_distances[type].objs = objs;
   topology->os_distances[type].distances = distances;
+  topology->os_distances[type].forced = force;
 }
 
 /* make sure a user-given distance matrix is sane */
@@ -109,6 +120,11 @@ static void hwloc_get_type_distances_from_string(struct hwloc_topology *topology
   unsigned *indexes;
   float *distances;
   unsigned nbobjs = 0, i, j, x, y, z;
+
+  if (!strcmp(string, "none")) {
+    hwloc_topology__set_distance_matrix(topology, type, 0, NULL, NULL, NULL, 1 /* force */);
+    return;
+  }
 
   /* count indexes */
   while (1) {
@@ -186,7 +202,7 @@ static void hwloc_get_type_distances_from_string(struct hwloc_topology *topology
     return;
   }
 
-  hwloc_topology__set_distance_matrix(topology, type, nbobjs, indexes, NULL, distances);
+  hwloc_topology__set_distance_matrix(topology, type, nbobjs, indexes, NULL, distances, 1 /* force */);
 }
 
 /* take distances in the environment, store them as is in the topology.
@@ -213,6 +229,12 @@ int hwloc_topology_set_distance_matrix(hwloc_topology_t __hwloc_restrict topolog
   unsigned *_indexes;
   float *_distances;
 
+  if (!nbobjs && !indexes && !distances)
+    hwloc_topology__set_distance_matrix(topology, type, 0, NULL, NULL, NULL, 1 /* force */);
+
+  if (!nbobjs || !indexes || !distances)
+    return -1;
+
   if (hwloc_topology__check_distance_matrix(topology, type, nbobjs, indexes, NULL, distances) < 0)
     return -1;
 
@@ -221,7 +243,7 @@ int hwloc_topology_set_distance_matrix(hwloc_topology_t __hwloc_restrict topolog
   memcpy(_indexes, indexes, nbobjs*sizeof(unsigned));
   _distances = malloc(nbobjs*nbobjs*sizeof(float));
   memcpy(_distances, distances, nbobjs*nbobjs*sizeof(float));
-  hwloc_topology__set_distance_matrix(topology, type, nbobjs, _indexes, NULL, _distances);
+  hwloc_topology__set_distance_matrix(topology, type, nbobjs, _indexes, NULL, _distances, 1 /* force */);
 
   return 0;
 }
@@ -430,7 +452,7 @@ static void hwloc_report_user_distance_error(const char *msg, int line)
 {
     static int reported = 0;
 
-    if (!reported) {
+    if (!reported && !hwloc_hide_errors()) {
         fprintf(stderr, "****************************************************************************\n");
         fprintf(stderr, "* Hwloc has encountered what looks like an error from user-given distances.\n");
         fprintf(stderr, "*\n");
@@ -444,6 +466,13 @@ static void hwloc_report_user_distance_error(const char *msg, int line)
     }
 }
 
+static int hwloc_compare_distances(float a, float b, float accuracy)
+{
+  if (accuracy != 0.0 && fabsf(a-b) < a * accuracy)
+    return 0;
+  return (int)(a - b);
+}
+
 /*
  * Place objects in groups if they are in a transitive graph of minimal distances.
  * Return how many groups were created, or 0 if some incomplete distance graphs were found.
@@ -451,7 +480,9 @@ static void hwloc_report_user_distance_error(const char *msg, int line)
 static unsigned
 hwloc_setup_group_from_min_distance(unsigned nbobjs,
 				    float *_distances,
-				    unsigned *groupids)
+				    float accuracy,
+				    unsigned *groupids,
+				    int verbose)
 {
   float min_distance = FLT_MAX;
   unsigned groupid = 1;
@@ -464,8 +495,8 @@ hwloc_setup_group_from_min_distance(unsigned nbobjs,
 
   /* find the minimal distance */
   for(i=0; i<nbobjs; i++)
-    for(j=i+1; j<nbobjs; j++)
-      if (DISTANCE(i, j) < min_distance)
+    for(j=0; j<nbobjs; j++) /* check the entire matrix, it may not be perfectly symmetric depending on the accuracy */
+      if (i != j && DISTANCE(i, j) < min_distance) /* no accuracy here, we want the real minimal */
         min_distance = DISTANCE(i, j);
   hwloc_debug("found minimal distance %f between objects\n", min_distance);
 
@@ -495,7 +526,7 @@ hwloc_setup_group_from_min_distance(unsigned nbobjs,
       for(j=firstfound; j<nbobjs; j++)
 	if (groupids[j] == groupid)
 	  for(k=0; k<nbobjs; k++)
-              if (!groupids[k] && DISTANCE(j, k) == min_distance) {
+              if (!groupids[k] && !hwloc_compare_distances(DISTANCE(j, k), min_distance, accuracy)) {
 	      groupids[k] = groupid;
 	      size++;
 	      if (newfirstfound == -1)
@@ -517,8 +548,9 @@ hwloc_setup_group_from_min_distance(unsigned nbobjs,
 
     /* valid this group */
     groupid++;
-    hwloc_debug("found transitive graph with %u objects with minimal distance %f\n",
-	       size, min_distance);
+    if (verbose)
+      fprintf(stderr, "Found transitive graph with %u objects with minimal distance %f accuracy %f\n",
+	      size, min_distance, accuracy);
   }
 
   if (groupid == 2 && !skipped)
@@ -529,23 +561,48 @@ hwloc_setup_group_from_min_distance(unsigned nbobjs,
   return groupid-1;
 }
 
+/* check that the matrix is ok */
+static int
+hwloc__check_grouping_matrix(unsigned nbobjs, float *_distances, float accuracy, int verbose)
+{
+  unsigned i,j;
+  for(i=0; i<nbobjs; i++) {
+    for(j=i+1; j<nbobjs; j++) {
+      /* should be symmetric */
+      if (hwloc_compare_distances(DISTANCE(i, j), DISTANCE(j, i), accuracy)) {
+	if (verbose)
+	  fprintf(stderr, "Distance matrix asymmetric ([%u,%u]=%f != [%u,%u]=%f), aborting\n",
+		  i, j, DISTANCE(i, j), j, i, DISTANCE(j, i));
+	return -1;
+      }
+      /* diagonal is smaller than everything else */
+      if (hwloc_compare_distances(DISTANCE(i, j), DISTANCE(i, i), accuracy) <= 0) {
+	if (verbose)
+	  fprintf(stderr, "Distance to self not strictly minimal ([%u,%u]=%f <= [%u,%u]=%f), aborting\n",
+		  i, j, DISTANCE(i, j), i, i, DISTANCE(i, i));
+	return -1;
+      }
+    }
+  }
+  return 0;
+}
+
 /*
- * Look at object physical distances to group them,
- * after having done some basic sanity checks.
+ * Look at object physical distances to group them.
  */
 static void
-hwloc__setup_groups_from_distances(struct hwloc_topology *topology,
-				   unsigned nbobjs,
-				   struct hwloc_obj **objs,
-				   float *_distances,
-				   int fromuser)
+hwloc_setup_groups_from_distances(struct hwloc_topology *topology,
+				  unsigned nbobjs,
+				  struct hwloc_obj **objs,
+				  float *_distances,
+				  unsigned nbaccuracies, float *accuracies,
+				  int fromuser,
+				  int needcheck,
+				  int verbose)
 {
   unsigned *groupids = NULL;
-  unsigned nbgroups;
+  unsigned nbgroups = 0;
   unsigned i,j;
-
-  hwloc_debug("trying to group %s objects into Group objects according to physical distances\n",
-	     hwloc_obj_type_string(objs[0]->type));
 
   if (nbobjs <= 2) {
       return;
@@ -556,10 +613,18 @@ hwloc__setup_groups_from_distances(struct hwloc_topology *topology,
       return;
   }
 
-  nbgroups = hwloc_setup_group_from_min_distance(nbobjs, _distances, groupids);
-  if (!nbgroups) {
-      goto outter_free;
+  for(i=0; i<nbaccuracies; i++) {
+    if (verbose)
+      fprintf(stderr, "Trying to group %u %s objects according to physical distances with accuracy %f\n",
+	      nbobjs, hwloc_obj_type_string(objs[0]->type), accuracies[i]);
+    if (needcheck && hwloc__check_grouping_matrix(nbobjs, _distances, accuracies[i], verbose) < 0)
+      continue;
+    nbgroups = hwloc_setup_group_from_min_distance(nbobjs, _distances, accuracies[i], groupids, verbose);
+    if (nbgroups)
+      break;
   }
+  if (!nbgroups)
+    goto outter_free;
 
   /* For convenience, put these declarations inside a block.  It's a
      crying shame we can't use C99 syntax here, and have to do a bunch
@@ -612,18 +677,18 @@ hwloc__setup_groups_from_distances(struct hwloc_topology *topology,
       hwloc_debug("%s", "generated new distance matrix between groups:\n");
       hwloc_debug("%s", "  index");
       for(j=0; j<nbgroups; j++)
-	hwloc_debug(" % 5d", (int) j); /* print index because os_index is -1 fro Groups */
+	hwloc_debug(" % 5d", (int) j); /* print index because os_index is -1 for Groups */
       hwloc_debug("%s", "\n");
       for(i=0; i<nbgroups; i++) {
 	hwloc_debug("  % 5d", (int) i);
 	for(j=0; j<nbgroups; j++)
-          hwloc_debug(" %2.3f", GROUP_DISTANCE(i, j));
+	  hwloc_debug(" %2.3f", GROUP_DISTANCE(i, j));
 	hwloc_debug("%s", "\n");
       }
 #endif
 
       topology->next_group_depth++;
-      hwloc__setup_groups_from_distances(topology, nbgroups, groupobjs, (float*) groupdistances, fromuser);
+      hwloc_setup_groups_from_distances(topology, nbgroups, groupobjs, (float*) groupdistances, nbaccuracies, accuracies, fromuser, 0 /* no need to check generated matrix */, verbose);
 
   inner_free:
       /* Safely free everything */
@@ -644,61 +709,43 @@ hwloc__setup_groups_from_distances(struct hwloc_topology *topology,
   }
 }
 
-/*
- * Look at object physical distances to group them.
- */
-static void
-hwloc_setup_groups_from_distances(struct hwloc_topology *topology,
-				  unsigned nbobjs,
-				  struct hwloc_obj **objs,
-				  float *_distances,
-				  int fromuser)
-{
-  unsigned i,j;
-
-  if (getenv("HWLOC_IGNORE_DISTANCES"))
-    return;
-
-#ifdef HWLOC_DEBUG
-  hwloc_debug("%s", "trying to group objects using distance matrix:\n");
-  hwloc_debug("%s", "  index");
-  for(j=0; j<nbobjs; j++)
-    hwloc_debug(" % 5d", (int) objs[j]->os_index);
-  hwloc_debug("%s", "\n");
-  for(i=0; i<nbobjs; i++) {
-    hwloc_debug("  % 5d", (int) objs[i]->os_index);
-    for(j=0; j<nbobjs; j++)
-      hwloc_debug(" %2.3f", DISTANCE(i, j));
-    hwloc_debug("%s", "\n");
-  }
-#endif
-
-  /* check that the matrix is ok */
-  for(i=0; i<nbobjs; i++) {
-    for(j=i+1; j<nbobjs; j++) {
-      /* should be symmetric */
-      if (DISTANCE(i, j) != DISTANCE(j, i)) {
-	hwloc_debug("distance matrix asymmetric ([%u,%u]=%f != [%u,%u]=%f), aborting\n",
-                    i, j, DISTANCE(i, j), j, i, DISTANCE(j, i));
-	return;
-      }
-      /* diagonal is smaller than everything else */
-      if (DISTANCE(i, j) <= DISTANCE(i, i)) {
-	hwloc_debug("distance to self not strictly minimal ([%u,%u]=%f <= [%u,%u]=%f), aborting\n",
-                    i, j, DISTANCE(i, j), i, i, DISTANCE(i, i));
-	return;
-      }
-    }
-  }
-
-  hwloc__setup_groups_from_distances(topology, nbobjs, objs, _distances, fromuser);
-}
-
 void
 hwloc_group_by_distances(struct hwloc_topology *topology)
 {
   unsigned nbobjs;
   hwloc_obj_type_t type;
+  char *env;
+  float accuracies[5] = { 0.0, 0.01, 0.02, 0.05, 0.1 };
+  unsigned nbaccuracies = 5;
+  int verbose = 0;
+#ifdef HWLOC_DEBUG
+  unsigned i,j;
+#endif
+
+  env = getenv("HWLOC_GROUPING");
+  if (env && !atoi(env))
+    return;
+  /* backward compat with v1.2 */
+  if (getenv("HWLOC_IGNORE_DISTANCES"))
+    return;
+
+  env = getenv("HWLOC_GROUPING_ACCURACY");
+  if (!env) {
+    /* only use 0.0 */
+    nbaccuracies = 1;
+  } else if (strcmp(env, "try")) {
+    /* use the given value */
+    nbaccuracies = 1;
+    accuracies[0] = atof(env);
+  } /* otherwise try all values */
+
+#ifdef HWLOC_DEBUG
+  verbose = 1;
+#else
+  env = getenv("HWLOC_GROUPING_VERBOSE");
+  if (env)
+    verbose = atoi(env);
+#endif
 
   for (type = HWLOC_OBJ_SYSTEM; type < HWLOC_OBJ_TYPE_MAX; type++) {
     nbobjs = topology->os_distances[type].nbobjs;
@@ -710,10 +757,28 @@ hwloc_group_by_distances(struct hwloc_topology *topology)
        * thanks to hwloc_convert_distances_indexes_into_objects()
        */
       assert(topology->os_distances[type].distances);
+
+#ifdef HWLOC_DEBUG
+      hwloc_debug("%s", "trying to group objects using distance matrix:\n");
+      hwloc_debug("%s", "  index");
+      for(j=0; j<nbobjs; j++)
+	hwloc_debug(" % 5d", (int) topology->os_distances[type].objs[j]->os_index);
+      hwloc_debug("%s", "\n");
+      for(i=0; i<nbobjs; i++) {
+	hwloc_debug("  % 5d", (int) topology->os_distances[type].objs[i]->os_index);
+	for(j=0; j<nbobjs; j++)
+	  hwloc_debug(" %2.3f", topology->os_distances[type].distances[i*nbobjs + j]);
+	hwloc_debug("%s", "\n");
+      }
+#endif
+
       hwloc_setup_groups_from_distances(topology, nbobjs,
 					topology->os_distances[type].objs,
 					topology->os_distances[type].distances,
-					topology->os_distances[type].indexes != NULL);
+					nbaccuracies, accuracies,
+					topology->os_distances[type].indexes != NULL,
+					1 /* check the first matrice */,
+					verbose);
     }
   }
 }

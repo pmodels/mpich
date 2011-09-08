@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 INRIA.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -470,6 +470,7 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
 	break;
       case HWLOC_OBJ_CACHE:
 	obj->attr->cache.size = _system_configuration.L2_cache_size;
+	obj->attr->cache.associativity = _system_configuration.L2_cache_asc;
 	obj->attr->cache.linesize = 0; /* TODO: ? */
 	obj->attr->cache.depth = 2;
 	break;
@@ -481,6 +482,7 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
 	hwloc_obj_t obj2 = hwloc_alloc_setup_object(HWLOC_OBJ_CACHE, i);
 	obj2->cpuset = hwloc_bitmap_dup(obj->cpuset);
 	obj2->attr->cache.size = _system_configuration.dcache_size;
+	obj2->attr->cache.associativity = _system_configuration.dcache_asc;
 	obj2->attr->cache.linesize = _system_configuration.dcache_line;
 	obj2->attr->cache.depth = 1;
 	hwloc_debug("Adding an L1 cache for core %d\n", i);
@@ -507,6 +509,9 @@ hwloc_look_aix(struct hwloc_topology *topology)
   /* TODO: R_LGPGDEF/R_LGPGFREE for large pages */
 
   hwloc_debug("Note: SMPSDL is at %d\n", rs_getinfo(NULL, R_SMPSDL, 0));
+#ifdef R_REF1SDL
+  hwloc_debug("Note: REF1SDL is at %d\n", rs_getinfo(NULL, R_REF1SDL, 0));
+#endif
 
   for (i=0; i<=rs_getinfo(NULL, R_MAXSDL, 0); i++)
     {
@@ -561,7 +566,7 @@ hwloc_look_aix(struct hwloc_topology *topology)
 	}
     }
 
-  hwloc_add_object_info(topology->levels[0][0], "Backend", "AIX");
+  hwloc_obj_add_info(topology->levels[0][0], "Backend", "AIX");
 }
 
 void

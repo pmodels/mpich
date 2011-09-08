@@ -518,10 +518,12 @@ hwloc_get_shared_cache_covering_obj (hwloc_topology_t topology __hwloc_attribute
 
 /** \brief Do a depth-first traversal of the topology to find and sort
  *
- *  all objects that are at the same depth than \p src.
- *  Report in \p objs up to \p max physically closest ones to \p src.
+ * all objects that are at the same depth than \p src.
+ * Report in \p objs up to \p max physically closest ones to \p src.
  *
- *  \return the number of objects returned in \p objs.
+ * \return the number of objects returned in \p objs.
+ *
+ * \return 0 if \p src is an I/O object.
  */
 /* TODO: rather provide an iterator? Provide a way to know how much should be allocated? By returning the total number of objects instead? */
 HWLOC_DECLSPEC unsigned hwloc_get_closest_objs (hwloc_topology_t topology, hwloc_obj_t src, hwloc_obj_t * __hwloc_restrict objs, unsigned max);
@@ -1069,6 +1071,132 @@ hwloc_get_latency(hwloc_topology_t topology,
 
   errno = ENOSYS;
   return -1;
+}
+
+/** @} */
+
+
+
+/** \defgroup hwlocality_advanced_io Advanced I/O object traversal helpers
+ * @{
+ */
+
+/** \brief Get the first non-I/O ancestor object.
+ *
+ * Given the I/O object \p ioobj, find the smallest non-I/O ancestor
+ * object. This regular object may then be used for binding because
+ * its locality is the same as \p ioobj.
+ */
+static __inline hwloc_obj_t
+hwloc_get_non_io_ancestor_obj(hwloc_topology_t topology __hwloc_attribute_unused,
+			      hwloc_obj_t ioobj)
+{
+  hwloc_obj_t obj = ioobj;
+  while (obj && !obj->cpuset) {
+    obj = obj->parent;
+  }
+  return obj;
+}
+
+/** \brief Get the next PCI device in the system.
+ *
+ * \return the first PCI device if \p prev is \c NULL.
+ */
+static __inline hwloc_obj_t
+hwloc_get_next_pcidev(hwloc_topology_t topology, hwloc_obj_t prev)
+{
+  return hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, prev);
+}
+
+/** \brief Find the PCI device object matching the PCI bus id
+ * given domain, bus device and function PCI bus id.
+ */
+static __inline hwloc_obj_t
+hwloc_get_pcidev_by_busid(hwloc_topology_t topology,
+			  unsigned domain, unsigned bus, unsigned dev, unsigned func)
+{
+  hwloc_obj_t obj = NULL;
+  while ((obj = hwloc_get_next_pcidev(topology, obj)) != NULL) {
+    if (obj->attr->pcidev.domain == domain
+	&& obj->attr->pcidev.bus == bus
+	&& obj->attr->pcidev.dev == dev
+	&& obj->attr->pcidev.func == func)
+      return obj;
+  }
+  return NULL;
+}
+
+/** \brief Find the PCI device object matching the PCI bus id
+ * given as a string xxxx:yy:zz.t or yy:zz.t.
+ */
+static __inline hwloc_obj_t
+hwloc_get_pcidev_by_busidstring(hwloc_topology_t topology, const char *busid)
+{
+  unsigned domain = 0; /* default */
+  unsigned bus, dev, func;
+
+  if (sscanf(busid, "%x:%x.%x", &bus, &dev, &func) != 3
+      && sscanf(busid, "%x:%x:%x.%x", &domain, &bus, &dev, &func) != 4) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return hwloc_get_pcidev_by_busid(topology, domain, bus, dev, func);
+}
+
+/** \brief Get the next OS device in the system.
+ *
+ * \return the first OS device if \p prev is \c NULL.
+ */
+static __inline hwloc_obj_t
+hwloc_get_next_osdev(hwloc_topology_t topology, hwloc_obj_t prev)
+{
+  return hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_OS_DEVICE, prev);
+}
+
+/** \brief Get the next bridge in the system.
+ *
+ * \return the first bridge if \p prev is \c NULL.
+ */
+static __inline hwloc_obj_t
+hwloc_get_next_bridge(hwloc_topology_t topology, hwloc_obj_t prev)
+{
+  return hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_BRIDGE, prev);
+}
+
+/* \brief Checks whether a given bridge covers a given PCI bus.
+ */
+static __inline int
+hwloc_bridge_covers_pcibus(hwloc_obj_t bridge,
+			   unsigned domain, unsigned bus)
+{
+  return bridge->type == HWLOC_OBJ_BRIDGE
+    && bridge->attr->bridge.downstream_type == HWLOC_OBJ_BRIDGE_PCI
+    && bridge->attr->bridge.downstream.pci.domain == domain
+    && bridge->attr->bridge.downstream.pci.secondary_bus <= bus
+    && bridge->attr->bridge.downstream.pci.subordinate_bus >= bus;
+}
+
+/** \brief Find the hostbridge that covers the given PCI bus.
+ *
+ * This is useful for finding the locality of a bus because
+ * it is the hostbridge parent cpuset.
+ */
+static __inline hwloc_obj_t
+hwloc_get_hostbridge_by_pcibus(hwloc_topology_t topology,
+			       unsigned domain, unsigned bus)
+{
+  hwloc_obj_t obj = NULL;
+  while ((obj = hwloc_get_next_bridge(topology, obj)) != NULL) {
+    if (hwloc_bridge_covers_pcibus(obj, domain, bus)) {
+      /* found bridge covering this pcibus, make sure it's a hostbridge */
+      assert(obj->attr->bridge.upstream_type == HWLOC_OBJ_BRIDGE_HOST);
+      assert(obj->parent->type != HWLOC_OBJ_BRIDGE);
+      assert(obj->parent->cpuset);
+      return obj;
+    }
+  }
+  return NULL;
 }
 
 /** @} */

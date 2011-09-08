@@ -69,12 +69,24 @@ exactly equivalent to the input. No largest object is included in the input
 This is different from \-\-intersect where reported objects may not be
 strictly included in the input.
 .TP
+\fB\-\-sep <sep>\fR
+Change the field separator in the output.
+By default, a space is used to separate output objects
+(for instance when \fB\-\-hierarchical\fR or \fB\-\-largest\fR is given)
+while a comma is used to separate indexes
+(for instance when \fB\-\-intersect\fR is given).
+.TP
 \fB\-\-single\fR
 Singlify the output to a single CPU.
 .TP
 \fB\-\-taskset\fR
-Manipulate CPU set strings in the format recognized by the taskset command-line
+Display CPU set strings in the format recognized by the taskset command-line
 program instead of hwloc-specific CPU set string format.
+This option has no impact on the format of input CPU set strings,
+both formats are always accepted.
+.TP
+\fB\-\-restrict\fR <cpuset>
+Restrict the topology to the given cpuset.
 .TP
 \fB\-i\fR <file>, \fB\-\-input\fR <file>
 Read topology from XML file <file> (instead of discovering the
@@ -183,6 +195,16 @@ To display the physical index of a processor given by its logical index:
 
     $ hwloc-calc PU:2 --physical-output --intersect PU
     3
+
+To display the set of CPUs near network interface eth0:
+
+    $ hwloc-calc os=eth0
+    0x00005555
+
+To display the indexes of sockets near PCI device whose bus ID is 0000:01:02.0:
+
+    $ hwloc-calc pci=0000:01:02.0 --intersect Socket
+    1
 
 To display the list of per-socket cores that intersect the input:
 

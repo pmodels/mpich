@@ -222,6 +222,9 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
     case HWLOC_OBJ_GROUP:
       break;
     case HWLOC_OBJ_SYSTEM:
+    case HWLOC_OBJ_BRIDGE:
+    case HWLOC_OBJ_PCI_DEVICE:
+    case HWLOC_OBJ_OS_DEVICE:
       /* Shouldn't happen.  */
       abort();
       break;
@@ -268,6 +271,9 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
       obj->attr->group.depth = topology->backend_params.synthetic.depth[level];
       break;
     case HWLOC_OBJ_SYSTEM:
+    case HWLOC_OBJ_BRIDGE:
+    case HWLOC_OBJ_PCI_DEVICE:
+    case HWLOC_OBJ_OS_DEVICE:
       abort();
       break;
     case HWLOC_OBJ_MACHINE:
@@ -330,6 +336,6 @@ hwloc_look_synthetic(struct hwloc_topology *topology)
 
   hwloc_bitmap_free(cpuset);
 
-  hwloc_add_object_info(topology->levels[0][0], "Backend", "Synthetic");
+  hwloc_obj_add_info(topology->levels[0][0], "Backend", "Synthetic");
 }
 

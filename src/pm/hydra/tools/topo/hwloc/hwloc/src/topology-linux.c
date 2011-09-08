@@ -2032,7 +2032,7 @@ look_sysfsnode(struct hwloc_topology *topology, const char *path, unsigned *foun
           hwloc_parse_node_distance(nodepath, nbnodes, distances+index_*nbnodes, topology->backend_params.sysfs.root_fd);
       }
 
-      hwloc_topology__set_distance_matrix(topology, HWLOC_OBJ_NODE, nbnodes, indexes, nodes, distances);
+      hwloc_topology__set_distance_matrix(topology, HWLOC_OBJ_NODE, nbnodes, indexes, nodes, distances, 0 /* OS cannot force */);
   }
 
  out:
@@ -2179,12 +2179,14 @@ try_add_cache_from_device_tree_cpu(struct hwloc_topology *topology,
   /* d-tlb-sets - ignore */
   /* d-tlb-size - ignore, always 0 on power6 */
   /* i-cache-* and i-tlb-* represent instruction cache, ignore */
-  uint32_t d_cache_line_size = 0, d_cache_size = 0;
+  uint32_t d_cache_line_size = 0, d_cache_size = 0, d_cache_sets = 0;
   struct hwloc_obj *c = NULL;
 
   hwloc_read_unit32be(cpu, "d-cache-line-size", &d_cache_line_size,
       topology->backend_params.sysfs.root_fd);
   hwloc_read_unit32be(cpu, "d-cache-size", &d_cache_size,
+      topology->backend_params.sysfs.root_fd);
+  hwloc_read_unit32be(cpu, "d-cache-sets", &d_cache_sets,
       topology->backend_params.sysfs.root_fd);
 
   if ( (0 == d_cache_line_size) && (0 == d_cache_size) )
@@ -2194,6 +2196,13 @@ try_add_cache_from_device_tree_cpu(struct hwloc_topology *topology,
   c->attr->cache.depth = level;
   c->attr->cache.linesize = d_cache_line_size;
   c->attr->cache.size = d_cache_size;
+  if (d_cache_sets == 1)
+    /* likely wrong, make it unknown */
+    d_cache_sets = 0;
+  if (d_cache_sets)
+    c->attr->cache.associativity = d_cache_size / (d_cache_sets * d_cache_line_size);
+  else
+    c->attr->cache.associativity = 0;
   c->cpuset = hwloc_bitmap_dup(cpuset);
   hwloc_debug_1arg_bitmap("cache depth %d has cpuset %s\n", level, c->cpuset);
   hwloc_insert_object_by_cpuset(topology, c);
@@ -2418,9 +2427,9 @@ look_sysfscpu(struct hwloc_topology *topology, const char *path)
   caches_added = 0;
   hwloc_bitmap_foreach_begin(i, cpuset)
     {
-      struct hwloc_obj *sock, *core, *thread;
-      hwloc_bitmap_t socketset, coreset, threadset, savedcoreset;
-      unsigned mysocketid, mycoreid;
+      struct hwloc_obj *sock, *core, *book, *thread;
+      hwloc_bitmap_t socketset, coreset, bookset, threadset, savedcoreset;
+      unsigned mysocketid, mycoreid, mybookid;
       int threadwithcoreid = 0;
 
       /* look at the socket */
@@ -2480,6 +2489,23 @@ look_sysfscpu(struct hwloc_topology *topology, const char *path)
         coreset = NULL; /* don't free it */
       }
 
+      /* look at the books */
+      mybookid = 0; /* shut-up the compiler */
+      sprintf(str, "%s/cpu%d/topology/book_id", path, i);
+      if (hwloc_parse_sysfs_unsigned(str, &mybookid, topology->backend_params.sysfs.root_fd) == 0) {
+
+        sprintf(str, "%s/cpu%d/topology/book_siblings", path, i);
+        bookset = hwloc_parse_cpumap(str, topology->backend_params.sysfs.root_fd);
+        if (bookset && hwloc_bitmap_first(bookset) == i) {
+          book = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, mybookid);
+          book->cpuset = bookset;
+          hwloc_debug_1arg_bitmap("os book %u has cpuset %s\n",
+                       mybookid, bookset);
+          hwloc_insert_object_by_cpuset(topology, book);
+          bookset = NULL; /* don't free it */
+        }
+      }
+
       /* look at the thread */
       threadset = hwloc_bitmap_alloc();
       hwloc_bitmap_only(threadset, i);
@@ -2500,6 +2526,7 @@ look_sysfscpu(struct hwloc_topology *topology, const char *path)
 	hwloc_bitmap_t cacheset;
 	unsigned long kB = 0;
 	unsigned linesize = 0;
+	unsigned sets = 0, lines_per_tag = 1;
 	int depth; /* 0 for L1, .... */
 
 	/* get the cache level depth */
@@ -2547,6 +2574,25 @@ look_sysfscpu(struct hwloc_topology *topology, const char *path)
 	  fclose(fd);
 	}
 
+	/* get the number of sets and lines per tag.
+	 * don't take the associativity directly in "ways_of_associativity" because
+	 * some archs (ia64, ppc) put 0 there when fully-associative, while others (x86) put something like -1 there.
+	 */
+	sprintf(mappath, "%s/cpu%d/cache/index%d/number_of_sets", path, i, j);
+	fd = hwloc_fopen(mappath, "r", topology->backend_params.sysfs.root_fd);
+	if (fd) {
+	  if (fgets(str2,sizeof(str2), fd))
+	    sets = atol(str2);
+	  fclose(fd);
+	}
+	sprintf(mappath, "%s/cpu%d/cache/index%d/physical_line_partition", path, i, j);
+	fd = hwloc_fopen(mappath, "r", topology->backend_params.sysfs.root_fd);
+	if (fd) {
+	  if (fgets(str2,sizeof(str2), fd))
+	    lines_per_tag = atol(str2);
+	  fclose(fd);
+	}
+
 	sprintf(mappath, "%s/cpu%d/cache/index%d/shared_cpu_map", path, i, j);
 	cacheset = hwloc_parse_cpumap(mappath, topology->backend_params.sysfs.root_fd);
         if (cacheset) {
@@ -2566,6 +2612,12 @@ look_sysfscpu(struct hwloc_topology *topology, const char *path)
             cache->attr->cache.size = kB << 10;
             cache->attr->cache.depth = depth+1;
             cache->attr->cache.linesize = linesize;
+	    if (!sets)
+	      cache->attr->cache.associativity = 0; /* unknown */
+	    else if (sets == 1)
+	      cache->attr->cache.associativity = 0; /* likely wrong, make it unknown */
+	    else
+	      cache->attr->cache.associativity = (kB << 10) / linesize / lines_per_tag / sets;
             cache->cpuset = cacheset;
             hwloc_debug_1arg_bitmap("cache depth %d has cpuset %s\n",
                        depth, cacheset);
@@ -2774,7 +2826,7 @@ hwloc__get_dmi_one_info(struct hwloc_topology *topology, hwloc_obj_t obj, const 
       if (tmp)
 	*tmp = '\0';
       hwloc_debug("found %s '%s'\n", hwloc_name, dmi_line);
-      hwloc_add_object_info(obj, hwloc_name, dmi_line);
+      hwloc_obj_add_info(obj, hwloc_name, dmi_line);
     }
   }
 }
@@ -2901,9 +2953,9 @@ hwloc_look_linux(struct hwloc_topology *topology)
     hwloc__get_dmi_info(topology, topology->levels[0][0]);
   }
 
-  hwloc_add_object_info(topology->levels[0][0], "Backend", "Linux");
+  hwloc_obj_add_info(topology->levels[0][0], "Backend", "Linux");
   if (cpuset_name) {
-    hwloc_add_object_info(topology->levels[0][0], "LinuxCgroup", cpuset_name);
+    hwloc_obj_add_info(topology->levels[0][0], "LinuxCgroup", cpuset_name);
     free(cpuset_name);
   }
 

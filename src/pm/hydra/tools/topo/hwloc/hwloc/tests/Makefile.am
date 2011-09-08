@@ -39,7 +39,9 @@ check_PROGRAMS = hwloc_bitmap \
 	hwloc_set_distances \
 	hwloc_groups \
 	hwloc_insert_misc \
-	hwloc_topology_restrict
+	hwloc_topology_restrict \
+	hwloc_obj_infos \
+	hwloc_iodevs
 
 if HWLOC_HAVE_LINUX_LIBNUMA
 check_PROGRAMS += linux-libnuma

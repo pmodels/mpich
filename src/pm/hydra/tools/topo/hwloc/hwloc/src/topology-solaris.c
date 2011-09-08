@@ -426,7 +426,7 @@ hwloc_look_lgrp(struct hwloc_topology *topology)
 	for (j = 0; j < curlgrp; j++)
           distances[i*curlgrp+j] = (float) lgrp_latency_cookie(cookie, glob_lgrps[i]->os_index, glob_lgrps[j]->os_index, LGRP_LAT_CPU_TO_MEM);
       }
-      hwloc_topology__set_distance_matrix(topology, HWLOC_OBJ_NODE, curlgrp, indexes, glob_lgrps, distances);
+      hwloc_topology__set_distance_matrix(topology, HWLOC_OBJ_NODE, curlgrp, indexes, glob_lgrps, distances, 0 /* OS cannot force */);
     }
 #endif /* HAVE_LGRP_LATENCY_COOKIE */
   }
@@ -637,7 +637,7 @@ hwloc_look_solaris(struct hwloc_topology *topology)
 #endif /* HAVE_LIBKSTAT */
   hwloc_setup_pu_level(topology, nbprocs);
 
-  hwloc_add_object_info(topology->levels[0][0], "Backend", "Solaris");
+  hwloc_obj_add_info(topology->levels[0][0], "Backend", "Solaris");
 }
 
 void

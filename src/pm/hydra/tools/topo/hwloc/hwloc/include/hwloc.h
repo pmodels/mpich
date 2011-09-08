@@ -45,7 +45,7 @@ extern "C" {
  */
 
 /** \brief Indicate at build time which hwloc API version is being used. */
-#define HWLOC_API_VERSION 0x00010200
+#define HWLOC_API_VERSION 0x00010300
 
 /** \brief Indicate at runtime which hwloc API version was used at build time. */
 HWLOC_DECLSPEC unsigned hwloc_get_api_version(void);
@@ -192,6 +192,24 @@ typedef enum {
 			  * added by the application for its own use.
 			  */
 
+  HWLOC_OBJ_BRIDGE,	/**< \brief Bridge.
+			  * Any bridge that connects the host or an I/O bus,
+			  * to another I/O bus.
+			  * Bridge objects have neither CPU sets nor node sets.
+			  * They are not added to the topology unless I/O discovery
+			  * is enabled with hwloc_topology_set_flags().
+			  */
+  HWLOC_OBJ_PCI_DEVICE,	/**< \brief PCI device.
+			  * These objects have neither CPU sets nor node sets.
+			  * They are not added to the topology unless I/O discovery
+			  * is enabled with hwloc_topology_set_flags().
+			  */
+  HWLOC_OBJ_OS_DEVICE,	/**< \brief Operating system device.
+			  * These objects have neither CPU sets nor node sets.
+			  * They are not added to the topology unless I/O discovery
+			  * is enabled with hwloc_topology_set_flags().
+			  */
+
   HWLOC_OBJ_TYPE_MAX    /**< \private Sentinel value */
 
     /* ***************************************************************
@@ -203,6 +221,26 @@ typedef enum {
        WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
        *************************************************************** */
 } hwloc_obj_type_t;
+
+/** \brief Type of one side (upstream or downstream) of an I/O bridge. */
+typedef enum hwloc_obj_bridge_type_e {
+  HWLOC_OBJ_BRIDGE_HOST,	/**< \brief Host-side of a bridge, only possible upstream. */
+  HWLOC_OBJ_BRIDGE_PCI		/**< \brief PCI-side of a bridge. */
+} hwloc_obj_bridge_type_t;
+
+/** \brief Type of a OS device. */
+typedef enum hwloc_obj_osdev_type_e {
+  HWLOC_OBJ_OSDEV_BLOCK,	/**< \brief Operating system block device.
+				  * For instance "sda" on Linux. */
+  HWLOC_OBJ_OSDEV_GPU,		/**< \brief Operating system GPU device.
+				  * For instance the "card0" DRM device on Linux. */
+  HWLOC_OBJ_OSDEV_NETWORK,	/**< \brief Operating system network device.
+				  * For instance the "eth0" interface on Linux. */
+  HWLOC_OBJ_OSDEV_OPENFABRICS,	/**< \brief Operating system openfabrics device.
+				  * For instance the "mlx4_0" InfiniBand HCA device on Linux. */
+  HWLOC_OBJ_OSDEV_DMA		/**< \brief Operating system dma engine device.
+				  * For instance the "dma0chan0" DMA channel on Linux. */
+} hwloc_obj_osdev_type_t;
 
 /** \brief Compare the depth of two object types
  *
@@ -400,11 +438,41 @@ union hwloc_obj_attr_u {
     hwloc_uint64_t size;			  /**< \brief Size of cache in bytes */
     unsigned depth;			  /**< \brief Depth of cache */
     unsigned linesize;			  /**< \brief Cache-line size in bytes */
+    int associativity;			  /**< \brief Ways of associativity,
+    					    *  -1 if fully associative, 0 if unknown */
   } cache;
   /** \brief Group-specific Object Attributes */
   struct hwloc_group_attr_s {
     unsigned depth;			  /**< \brief Depth of group object */
   } group;
+  /** \brief PCI Device specific Object Attributes */
+  struct hwloc_pcidev_attr_s {
+    unsigned short domain;
+    unsigned char bus, dev, func;
+    unsigned short class_id;
+    unsigned short vendor_id, device_id, subvendor_id, subdevice_id;
+    unsigned char revision;
+    float linkspeed; /* in GB/s */
+  } pcidev;
+  /** \brief Bridge specific Object Attribues */
+  struct hwloc_bridge_attr_s {
+    union {
+      struct hwloc_pcidev_attr_s pci;
+    } upstream;
+    hwloc_obj_bridge_type_t upstream_type;
+    union {
+      struct {
+	unsigned short domain;
+	unsigned char secondary_bus, subordinate_bus;
+      } pci;
+    } downstream;
+    hwloc_obj_bridge_type_t downstream_type;
+    unsigned depth;
+  } bridge;
+  /** \brief OS Device specific Object Attributes */
+  struct hwloc_osdev_attr_s {
+    hwloc_obj_osdev_type_t type;
+  } osdev;
 };
 
 /** \brief Distances between objects
@@ -520,6 +588,8 @@ HWLOC_DECLSPEC void hwloc_topology_check(hwloc_topology_t topology);
  * The bottom-level type HWLOC_OBJ_PU may not be ignored.
  * The top-level object of the hierarchy will never be ignored, even if this function
  * succeeds.
+ * I/O objects may not be ignored, topology flags should be used to configure
+ * their discovery instead.
  */
 HWLOC_DECLSPEC int hwloc_topology_ignore_type(hwloc_topology_t topology, hwloc_obj_type_t type);
 
@@ -528,6 +598,8 @@ HWLOC_DECLSPEC int hwloc_topology_ignore_type(hwloc_topology_t topology, hwloc_o
  * Ignore all objects from the given type as long as they do not bring any structure:
  * Each ignored object should have a single children or be the only child of its parent.
  * The bottom-level type HWLOC_OBJ_PU may not be ignored.
+ * I/O objects may not be ignored, topology flags should be used to configure
+ * their discovery instead.
  */
 HWLOC_DECLSPEC int hwloc_topology_ignore_type_keep_structure(hwloc_topology_t topology, hwloc_obj_type_t type);
 
@@ -535,6 +607,8 @@ HWLOC_DECLSPEC int hwloc_topology_ignore_type_keep_structure(hwloc_topology_t to
  *
  * Ignore all objects that do not bring any structure:
  * Each ignored object should have a single children or be the only child of its parent.
+ * I/O objects may not be ignored, topology flags should be used to configure
+ * their discovery instead.
  */
 HWLOC_DECLSPEC int hwloc_topology_ignore_all_keep_structure(hwloc_topology_t topology);
 
@@ -552,7 +626,7 @@ enum hwloc_topology_flags_e {
    * and ignore the fact that some resources may be offline.
    */
 
-  HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM = (1<<1)
+  HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM = (1<<1),
  /**< \brief Assume that the selected backend provides the topology for the
    * system on which we are running.
    * \hideinitializer
@@ -571,6 +645,33 @@ enum hwloc_topology_flags_e {
    * save it to an XML file, and quickly reload it later through the XML
    * backend, but still having binding functions actually do bind.
    */
+
+  /* \brief Detect PCI devices.
+   *
+   * By default, I/O devices are ignored. This flag enables I/O device
+   * detection using the libpci backend. Only the common PCI devices (GPUs,
+   * NICs, block devices, ...) and host bridges (objects that connect the host
+   * objects to an I/O subsystem) will be added to the topology.
+   * Uncommon devices and other bridges (such as PCI-to-PCI bridges) will be
+   * ignored.
+   */
+  HWLOC_TOPOLOGY_FLAG_IO_DEVICES = (1<<2),
+
+  /* \brief Detect PCI bridges.
+   *
+   * This flag should be combined with HWLOC_TOPOLOGY_FLAG_IO_DEVICES to enable
+   * the detection of both common devices and of all useful bridges (bridges that
+   * have at least one device behind them).
+   */
+  HWLOC_TOPOLOGY_FLAG_IO_BRIDGES = (1<<3),
+
+  /* \brief Detect the whole PCI hierarchy.
+   *
+   * This flag enables detection of all I/O devices (even the uncommon ones)
+   * and bridges (even those that have no device behind them) using the libpci
+   * backend.
+   */
+  HWLOC_TOPOLOGY_FLAG_WHOLE_IO = (1<<4)
 };
 
 /** \brief Set OR'ed flags to non-yet-loaded topology.
@@ -655,6 +756,12 @@ HWLOC_DECLSPEC int hwloc_topology_set_xmlbuffer(hwloc_topology_t __hwloc_restric
  * The objects are specified by their OS/physical index in the \p os_index
  * array. The \p distances matrix follows the same order.
  * The distance from object i to object j in the i*nbobjs+j.
+ *
+ * If another distance matrix already exists for the given type,
+ * either because the user specified it or because the OS offers it,
+ * it will be replaced by the given one.
+ * If \p nbobjs is \c 0, \p os_index is \c NULL and \p distances is \c NULL,
+ * the existing distance matrix for the given type is removed.
  */
 HWLOC_DECLSPEC int hwloc_topology_set_distance_matrix(hwloc_topology_t __hwloc_restrict topology,
 						      hwloc_obj_type_t type, unsigned nbobjs,
@@ -798,9 +905,14 @@ enum hwloc_restrict_flags_e {
    * If this flag is not set, distance matrices are removed.
    * \hideinitializer
    */
-  HWLOC_RESTRICT_FLAG_ADAPT_MISC = (1<<1)
+  HWLOC_RESTRICT_FLAG_ADAPT_MISC = (1<<1),
  /**< \brief Move Misc objects to ancestors if their parents are removed during restriction.
    * If this flag is not set, Misc objects are removed when their parents are removed.
+   * \hideinitializer
+   */
+  HWLOC_RESTRICT_FLAG_ADAPT_IO = (1<<2)
+ /**< \brief Move I/O objects to ancestors if their parents are removed during restriction.
+   * If this flag is not set, I/O devices and bridges are removed when their parents are removed.
    * \hideinitializer
    */
 };
@@ -827,7 +939,7 @@ HWLOC_DECLSPEC int hwloc_topology_restrict(hwloc_topology_t __hwloc_restrict top
  * @{
  */
 
-/** \brief Get the depth of the hierachical tree of objects.
+/** \brief Get the depth of the hierarchical tree of objects.
  *
  * This is the depth of HWLOC_OBJ_PU objects plus one.
  */
@@ -844,12 +956,22 @@ HWLOC_DECLSPEC unsigned hwloc_topology_get_depth(hwloc_topology_t __hwloc_restri
  *
  * If some objects of the given type exist in different levels, for instance
  * L1 and L2 caches, the function returns HWLOC_TYPE_DEPTH_MULTIPLE.
+ *
+ * If an I/O object type is given, the function returns a virtual value
+ * because I/O objects are stored in special levels that are not CPU-related.
+ * This virtual depth may be passed to other hwloc functions such as
+ * hwloc_get_obj_by_depth() but it should not be considered as an actual
+ * depth by the application. In particular, it should not be compared with
+ * any other object depth or with the entire topology depth.
  */
 HWLOC_DECLSPEC int hwloc_get_type_depth (hwloc_topology_t topology, hwloc_obj_type_t type);
 
 enum hwloc_get_type_depth_e {
-    HWLOC_TYPE_DEPTH_UNKNOWN = -1, /**< \brief No object of given type exists in the topology. \hideinitializer */
-    HWLOC_TYPE_DEPTH_MULTIPLE = -2 /**< \brief Objects of given type exist at different depth in the topology. \hideinitializer */
+    HWLOC_TYPE_DEPTH_UNKNOWN = -1,    /**< \brief No object of given type exists in the topology. \hideinitializer */
+    HWLOC_TYPE_DEPTH_MULTIPLE = -2,   /**< \brief Objects of given type exist at different depth in the topology. \hideinitializer */
+    HWLOC_TYPE_DEPTH_BRIDGE = -3,     /**< \brief Virtual depth for bridge object level. \hideinitializer */
+    HWLOC_TYPE_DEPTH_PCI_DEVICE = -4, /**< \brief Virtual depth for PCI device object level. \hideinitializer */
+    HWLOC_TYPE_DEPTH_OS_DEVICE = -5   /**< \brief Virtual depth for software device object level. \hideinitializer */
 };
 
 /** \brief Returns the type of objects at depth \p depth.
@@ -993,6 +1115,8 @@ HWLOC_DECLSPEC int hwloc_obj_cpuset_snprintf(char * __hwloc_restrict str, size_t
 
 /** \brief Search the given key name in object infos and return the corresponding value.
  *
+ * If multiple keys match the given name, only the first one is returned.
+ *
  * \return \c NULL if no such key exists.
  */
 static __hwloc_inline char * __hwloc_attribute_pure
@@ -1004,6 +1128,15 @@ hwloc_obj_get_info_by_name(hwloc_obj_t obj, const char *name)
       return obj->infos[i].value;
   return NULL;
 }
+
+/** \brief Add the given info name and value pair to the given object.
+ *
+ * The info is appended to the existing info array even if another key
+ * with the same name already exists.
+ *
+ * The input strings are copied before being added in the object infos.
+ */
+HWLOC_DECLSPEC void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const char *value);
 
 /** @} */
 
@@ -1187,6 +1320,7 @@ HWLOC_DECLSPEC int hwloc_get_last_cpu_location(hwloc_topology_t topology, hwloc_
 HWLOC_DECLSPEC int hwloc_get_proc_last_cpu_location(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_cpuset_t set, int flags);
 
 /** @} */
+
 
 
 /** \defgroup hwlocality_membinding Memory binding
@@ -1693,6 +1827,7 @@ HWLOC_DECLSPEC void *hwloc_alloc_membind(hwloc_topology_t topology, size_t len, 
 HWLOC_DECLSPEC int hwloc_free(hwloc_topology_t topology, void *addr, size_t len);
 
 /** @} */
+
 
 
 #ifdef __cplusplus

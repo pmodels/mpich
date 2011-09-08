@@ -127,6 +127,14 @@ hwloc__xml_import_object_attr(struct hwloc_topology *topology __hwloc_attribute_
       fprintf(stderr, "ignoring cache_linesize attribute for non-cache object type\n");
   }
 
+  else if (!strcmp(name, "cache_associativity")) {
+    unsigned long lvalue = strtoul(value, NULL, 10);
+    if (obj->type == HWLOC_OBJ_CACHE)
+      obj->attr->cache.associativity = lvalue;
+    else
+      fprintf(stderr, "ignoring cache_associativity attribute for non-cache object type\n");
+  }
+
   else if (!strcmp(name, "local_memory"))
     obj->memory.local_memory = strtoull(value, NULL, 10);
 
@@ -139,11 +147,128 @@ hwloc__xml_import_object_attr(struct hwloc_topology *topology __hwloc_attribute_
       case HWLOC_OBJ_GROUP:
 	obj->attr->group.depth = lvalue;
 	break;
+      case HWLOC_OBJ_BRIDGE:
+	obj->attr->bridge.depth = lvalue;
+	break;
       default:
 	fprintf(stderr, "ignoring depth attribute for object type without depth\n");
 	break;
     }
   }
+
+  else if (!strcmp(name, "pci_busid")) {
+    switch (obj->type) {
+    case HWLOC_OBJ_PCI_DEVICE:
+    case HWLOC_OBJ_BRIDGE: {
+      unsigned domain, bus, dev, func;
+      if (sscanf(value, "%04x:%02x:%02x.%01x",
+		 &domain, &bus, &dev, &func) != 4) {
+	fprintf(stderr, "ignoring invalid pci_busid format string %s\n", value);
+      } else {
+	obj->attr->pcidev.domain = domain;
+	obj->attr->pcidev.bus = bus;
+	obj->attr->pcidev.dev = dev;
+	obj->attr->pcidev.func = func;
+      }
+      break;
+    }
+    default:
+      fprintf(stderr, "ignoring pci_busid attribute for non-PCI object\n");
+      break;
+    }
+  }
+
+  else if (!strcmp(name, "pci_type")) {
+    switch (obj->type) {
+    case HWLOC_OBJ_PCI_DEVICE:
+    case HWLOC_OBJ_BRIDGE: {
+      unsigned classid, vendor, device, subvendor, subdevice, revision;
+      if (sscanf(value, "%04x [%04x:%04x] [%04x:%04x] %02x",
+		 &classid, &vendor, &device, &subvendor, &subdevice, &revision) != 6) {
+	fprintf(stderr, "ignoring invalid pci_type format string %s\n", value);
+      } else {
+	obj->attr->pcidev.class_id = classid;
+	obj->attr->pcidev.vendor_id = vendor;
+	obj->attr->pcidev.device_id = device;
+	obj->attr->pcidev.subvendor_id = subvendor;
+	obj->attr->pcidev.subdevice_id = subdevice;
+	obj->attr->pcidev.revision = revision;
+      }
+      break;
+    }
+    default:
+      fprintf(stderr, "ignoring pci_type attribute for non-PCI object\n");
+      break;
+    }
+  }
+
+  else if (!strcmp(name, "pci_link_speed")) {
+    switch (obj->type) {
+    case HWLOC_OBJ_PCI_DEVICE:
+    case HWLOC_OBJ_BRIDGE: {
+      obj->attr->pcidev.linkspeed = atof(value);
+      break;
+    }
+    default:
+      fprintf(stderr, "ignoring pci_link_speed attribute for non-PCI object\n");
+      break;
+    }
+  }
+
+  else if (!strcmp(name, "bridge_type")) {
+    switch (obj->type) {
+    case HWLOC_OBJ_BRIDGE: {
+      unsigned upstream_type, downstream_type;
+      if (sscanf(value, "%u-%u", &upstream_type, &downstream_type) != 2)
+	fprintf(stderr, "ignoring invalid bridge_type format string %s\n", value);
+      else {
+	obj->attr->bridge.upstream_type = upstream_type;
+	obj->attr->bridge.downstream_type = downstream_type;
+      };
+      break;
+    }
+    default:
+      fprintf(stderr, "ignoring bridge_type attribute for non-bridge object\n");
+      break;
+    }
+  }
+
+  else if (!strcmp(name, "bridge_pci")) {
+    switch (obj->type) {
+    case HWLOC_OBJ_BRIDGE: {
+      unsigned domain, secbus, subbus;
+      if (sscanf(value, "%04x:[%02x-%02x]",
+		 &domain, &secbus, &subbus) != 3) {
+	fprintf(stderr, "ignoring invalid bridge_pci format string %s\n", value);
+      } else {
+	obj->attr->bridge.downstream.pci.domain = domain;
+	obj->attr->bridge.downstream.pci.secondary_bus = secbus;
+	obj->attr->bridge.downstream.pci.subordinate_bus = subbus;
+      }
+      break;
+    }
+    default:
+      fprintf(stderr, "ignoring bridge_pci attribute for non-bridge object\n");
+      break;
+    }
+  }
+
+  else if (!strcmp(name, "osdev_type")) {
+    switch (obj->type) {
+    case HWLOC_OBJ_OS_DEVICE: {
+      unsigned osdev_type;
+      if (sscanf(value, "%u", &osdev_type) != 1)
+	fprintf(stderr, "ignoring invalid osdev_type format string %s\n", value);
+      else
+	obj->attr->osdev.type = osdev_type;
+      break;
+    }
+    default:
+      fprintf(stderr, "ignoring osdev_type attribute for non-osdev object\n");
+      break;
+    }
+  }
+
 
 
 
@@ -151,10 +276,10 @@ hwloc__xml_import_object_attr(struct hwloc_topology *topology __hwloc_attribute_
    * deprecated (from 1.0)
    */
   else if (!strcmp(name, "dmi_board_vendor")) {
-    hwloc_add_object_info(obj, "DMIBoardVendor", strdup(value));
+    hwloc_obj_add_info(obj, "DMIBoardVendor", strdup(value));
   }
   else if (!strcmp(name, "dmi_board_name")) {
-    hwloc_add_object_info(obj, "DMIBoardName", strdup(value));
+    hwloc_obj_add_info(obj, "DMIBoardName", strdup(value));
   }
 
   /*************************
@@ -404,7 +529,7 @@ hwloc__xml_import_info_node(struct hwloc_topology *topology __hwloc_attribute_un
 
   if (infoname)
     /* empty strings are ignored by libxml */
-    hwloc_add_object_info(obj, infoname, infovalue ? infovalue : "");
+    hwloc_obj_add_info(obj, infoname, infovalue ? infovalue : "");
   else
     fprintf(stderr, "ignoring info attribute without name\n");
 }
@@ -602,10 +727,47 @@ hwloc__xml_export_object (hwloc_topology_t topology, hwloc_obj_t obj, xmlNodePtr
     xmlNewProp(node, BAD_CAST "depth", BAD_CAST tmp);
     sprintf(tmp, "%u", (unsigned) obj->attr->cache.linesize);
     xmlNewProp(node, BAD_CAST "cache_linesize", BAD_CAST tmp);
+    sprintf(tmp, "%d", (unsigned) obj->attr->cache.associativity);
+    xmlNewProp(node, BAD_CAST "cache_associativity", BAD_CAST tmp);
     break;
   case HWLOC_OBJ_GROUP:
     sprintf(tmp, "%u", obj->attr->group.depth);
     xmlNewProp(node, BAD_CAST "depth", BAD_CAST tmp);
+    break;
+  case HWLOC_OBJ_BRIDGE:
+    sprintf(tmp, "%u-%u", obj->attr->bridge.upstream_type, obj->attr->bridge.downstream_type);
+    xmlNewProp(node, BAD_CAST "bridge_type", BAD_CAST tmp);
+    sprintf(tmp, "%u", obj->attr->bridge.depth);
+    xmlNewProp(node, BAD_CAST "depth", BAD_CAST tmp);
+    if (obj->attr->bridge.downstream_type == HWLOC_OBJ_BRIDGE_PCI) {
+      sprintf(tmp, "%04x:[%02x-%02x]",
+	      (unsigned) obj->attr->bridge.downstream.pci.domain,
+	      (unsigned) obj->attr->bridge.downstream.pci.secondary_bus,
+	      (unsigned) obj->attr->bridge.downstream.pci.subordinate_bus);
+      xmlNewProp(node, BAD_CAST "bridge_pci", BAD_CAST tmp);
+    }
+    if (obj->attr->bridge.upstream_type != HWLOC_OBJ_BRIDGE_PCI)
+      break;
+    /* fallthrough */
+  case HWLOC_OBJ_PCI_DEVICE:
+    sprintf(tmp, "%04x:%02x:%02x.%01x",
+	    (unsigned) obj->attr->pcidev.domain,
+	    (unsigned) obj->attr->pcidev.bus,
+	    (unsigned) obj->attr->pcidev.dev,
+	    (unsigned) obj->attr->pcidev.func);
+    xmlNewProp(node, BAD_CAST "pci_busid", BAD_CAST tmp);
+    sprintf(tmp, "%04x [%04x:%04x] [%04x:%04x] %02x",
+	    (unsigned) obj->attr->pcidev.class_id,
+	    (unsigned) obj->attr->pcidev.vendor_id, (unsigned) obj->attr->pcidev.device_id,
+	    (unsigned) obj->attr->pcidev.subvendor_id, (unsigned) obj->attr->pcidev.subdevice_id,
+	    (unsigned) obj->attr->pcidev.revision);
+    xmlNewProp(node, BAD_CAST "pci_type", BAD_CAST tmp);
+    sprintf(tmp, "%f", obj->attr->pcidev.linkspeed);
+    xmlNewProp(node, BAD_CAST "pci_link_speed", BAD_CAST tmp);
+    break;
+  case HWLOC_OBJ_OS_DEVICE:
+    sprintf(tmp, "%u", obj->attr->osdev.type);
+    xmlNewProp(node, BAD_CAST "osdev_type", BAD_CAST tmp);
     break;
   default:
     break;
