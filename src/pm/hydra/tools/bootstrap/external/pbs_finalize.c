@@ -29,8 +29,6 @@ HYD_status HYDT_bscd_pbs_launcher_finalize(void)
             HYDU_FREE(HYDT_bscd_pbs_sys->events);
         if (HYDT_bscd_pbs_sys->taskIDs)
             HYDU_FREE(HYDT_bscd_pbs_sys->taskIDs);
-        if (HYDT_bscd_pbs_sys->nodes)
-            HYDU_FREE(HYDT_bscd_pbs_sys->nodes);
         HYDU_FREE(HYDT_bscd_pbs_sys);
     }
 

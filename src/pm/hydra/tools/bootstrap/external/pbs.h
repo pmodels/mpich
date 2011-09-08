@@ -12,21 +12,13 @@
 #if defined(HAVE_TM_H)
 #include "tm.h"
 
-#define HYDT_PBS_STRLEN 160
-struct HYDT_bscd_pbs_node {
-    tm_node_id    id;
-    char          name[HYDT_PBS_STRLEN];
-};
-
 struct HYDT_bscd_pbs_sys {
-    struct tm_roots            tm_root;
-    int                        spawned_count;
-    int                        size;
-    tm_task_id                *taskIDs;     /* Array of TM task(process) IDs */
-    tm_event_t                *events;      /* Array of TM event IDs */
-    int                       *taskobits;   /* Array of TM task exit codes */
-    int                        num_nodes;   /* Number of elements in nodes[] */
-    struct HYDT_bscd_pbs_node *nodes;       /* Array of pbs_nodes[] */
+    struct tm_roots tm_root;
+    int spawned_count;
+    int size;
+    tm_task_id *taskIDs;        /* Array of TM task(process) IDs */
+    tm_event_t *events;         /* Array of TM event IDs */
+    int *taskobits;             /* Array of TM task exit codes */
 };
 
 extern struct HYDT_bscd_pbs_sys *HYDT_bscd_pbs_sys;

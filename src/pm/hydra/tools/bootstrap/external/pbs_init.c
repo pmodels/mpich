@@ -13,8 +13,8 @@ struct HYDT_bscd_pbs_sys *HYDT_bscd_pbs_sys;
 
 HYD_status HYDT_bsci_launcher_pbs_init(void)
 {
+    int ierr;
     HYD_status status = HYD_SUCCESS;
-    int        ierr;
 
     HYDU_FUNC_ENTER();
 
@@ -31,16 +31,13 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
      * the number of processes allocated in this PBS job. */
     ierr = tm_init(NULL, &(HYDT_bscd_pbs_sys->tm_root));
     if (ierr != TM_SUCCESS)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "tm_init() fails with TM err=%d.\n",
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "tm_init() fails with TM err=%d.\n",
                             ierr);
     HYDT_bscd_pbs_sys->spawned_count = 0;
     HYDT_bscd_pbs_sys->size = 0;
     HYDT_bscd_pbs_sys->taskIDs = NULL;
     HYDT_bscd_pbs_sys->events = NULL;
     HYDT_bscd_pbs_sys->taskobits = NULL;
-    HYDT_bscd_pbs_sys->num_nodes = 0;
-    HYDT_bscd_pbs_sys->nodes = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();
