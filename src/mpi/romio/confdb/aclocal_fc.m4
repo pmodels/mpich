@@ -34,8 +34,8 @@ dnl D*/
 AC_DEFUN([PAC_PROG_FC],[
 PAC_PUSH_FLAG([FCFLAGS])
 AC_PROG_FC([m4_default([$1],
-           [ifort pgf90 pathf90 pathf95 xlf90 xlf95 xlf2003 f90 epcf90 f95 fort lf95 \
-            gfortran g95 ifc efc gfc])])
+           [ifort pgf90 pathf90 pathf95 xlf90 xlf95 xlf2003 gfortran f90 epcf90 f95 fort lf95 \
+            g95 ifc efc gfc])])
 PAC_POP_FLAG([FCFLAGS])
 ])
 dnl
