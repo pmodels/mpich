@@ -1,0 +1,20 @@
+# this gives access to the mpich2 header files
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: mpich2
+Description: High Performance and portable MPI
+Version: @MPICH2_VERSION@
+URL: http://www.mcs.anl.gov/research/projects/mpich2
+Requires:
+Libs: @WRAPPER_LDFLAGS@ -L${libdir} @LPMPILIBNAME@ -l@MPILIBNAME@ @WRAPPER_LIBS@
+Cflags: @WRAPPER_CPPFLAGS@ @WRAPPER_CFLAGS@ -I${includedir}
+
+# pkg-config does not understand Cxxflags, etc. So we allow users to
+# query them using the --variable option
+
+cxxflags=@WRAPPER_CPPFLAGS@ @WRAPPER_CXXFLAGS@ -I${includedir}
+fflags=@WRAPPER_FFLAGS@ -I${includedir}
+fcflags=@WRAPPER_FCFLAGS@ -I${includedir}
