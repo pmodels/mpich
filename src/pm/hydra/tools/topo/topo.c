@@ -7,10 +7,6 @@
 #include "hydra.h"
 #include "topo.h"
 
-#if defined HAVE_PLPA
-#include "plpa/topo_plpa.h"
-#endif /* HAVE_PLPA */
-
 #if defined HAVE_HWLOC
 #include "hwloc/topo_hwloc.h"
 #endif /* HAVE_HWLOC */
@@ -24,13 +20,6 @@ static HYD_status init_topolib(void)
     HYDU_FUNC_ENTER();
 
     /* Initialize the topology library requested by the user */
-#if defined HAVE_PLPA
-    if (!strcmp(HYDT_topo_info.topolib, "plpa")) {
-        status = HYDT_topo_plpa_init(&HYDT_topo_info.support_level);
-        HYDU_ERR_POP(status, "unable to initialize plpa\n");
-    }
-#endif /* HAVE_PLPA */
-
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
         status = HYDT_topo_hwloc_init(&HYDT_topo_info.support_level);
@@ -536,14 +525,6 @@ HYD_status HYDT_topo_bind(struct HYDT_topo_cpuset_t cpuset)
 
     HYDU_FUNC_ENTER();
 
-#if defined HAVE_PLPA
-    if (!strcmp(HYDT_topo_info.topolib, "plpa")) {
-        status = HYDT_topo_plpa_bind(cpuset);
-        HYDU_ERR_POP(status, "PLPA failure binding process to core\n");
-        goto fn_exit;
-    }
-#endif /* HAVE_PLPA */
-
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
         status = HYDT_topo_hwloc_bind(cpuset);
@@ -596,13 +577,6 @@ HYD_status HYDT_topo_finalize(void)
     HYDU_FUNC_ENTER();
 
     /* Finalize the topology library requested by the user */
-#if defined HAVE_PLPA
-    if (!strcmp(HYDT_topo_info.topolib, "plpa")) {
-        status = HYDT_topo_plpa_finalize();
-        HYDU_ERR_POP(status, "unable to finalize plpa\n");
-    }
-#endif /* HAVE_PLPA */
-
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
         status = HYDT_topo_hwloc_finalize();
