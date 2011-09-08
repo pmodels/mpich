@@ -590,9 +590,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                 HYDU_ERR_POP(status, "error create node list\n");
             }
             else if (!strcmp(info_key, "hostfile")) {
-                status =
-                    HYDU_parse_hostfile(info_val, &pg->user_node_list,
-                                        HYDU_process_mfile_token);
+                status = HYDU_parse_hostfile(info_val, &pg->user_node_list,
+                                             HYDU_process_mfile_token);
                 HYDU_ERR_POP(status, "error parsing hostfile\n");
             }
             else {
@@ -692,10 +691,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     if (pg->user_node_list) {
         pg->pg_core_count = 0;
-        for (i = 0, node = pg->user_node_list; node; node = node->next, i++) {
+        for (i = 0, node = pg->user_node_list; node; node = node->next, i++)
             pg->pg_core_count += node->core_count;
-            node->node_id = i;
-        }
     }
     else {
         pg->pg_core_count = 0;

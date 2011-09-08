@@ -316,6 +316,10 @@ int main(int argc, char **argv)
     }
 
     if (reset_rmk) {
+        /* Reassign node IDs to each node */
+        for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
+            node->node_id = i;
+
         /* Reinitialize the bootstrap server with the "user" RMK, so
          * it knows that we are not using the node list provided by
          * the RMK */
@@ -326,10 +330,6 @@ int main(int argc, char **argv)
                                 HYDT_bsci_info.enablex, HYDT_bsci_info.debug);
         HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
-
-    /* Assign a node ID to each node */
-    for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
-        node->node_id = i;
 
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */

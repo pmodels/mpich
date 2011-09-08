@@ -32,6 +32,7 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
 
         (*node_list)->hostname = HYDU_strdup(hostname);
         (*node_list)->core_count = num_procs;
+        (*node_list)->node_id = 0;
     }
     else {
         for (node = *node_list; node->next; node = node->next);
@@ -40,6 +41,8 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
             /* If the hostname does not match, create a new node */
             status = HYDU_alloc_node(&node->next);
             HYDU_ERR_POP(status, "unable to allocate node\n");
+
+            node->next->node_id = node->node_id + 1;
 
             node = node->next;
             node->hostname = HYDU_strdup(hostname);
