@@ -13,12 +13,9 @@
 #include "tm.h"
 
 struct HYDT_bscd_pbs_sys {
-    struct tm_roots tm_root;
-    int spawned_count;
-    int size;
-    tm_task_id *taskIDs;        /* Array of TM task(process) IDs */
-    tm_event_t *events;         /* Array of TM event IDs */
-    int *taskobits;             /* Array of TM task exit codes */
+    int spawn_count;
+    tm_event_t *spawn_events;
+    tm_task_id *task_id;        /* Array of TM task(process) IDs */
 };
 
 extern struct HYDT_bscd_pbs_sys *HYDT_bscd_pbs_sys;

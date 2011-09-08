@@ -13,7 +13,8 @@ struct HYDT_bscd_pbs_sys *HYDT_bscd_pbs_sys;
 
 HYD_status HYDT_bsci_launcher_pbs_init(void)
 {
-    int ierr;
+    int err;
+    struct tm_roots tm_root;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -26,18 +27,13 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
     HYDU_MALLOC(HYDT_bscd_pbs_sys, struct HYDT_bscd_pbs_sys *,
                 sizeof(struct HYDT_bscd_pbs_sys), status);
 
-    /* Initialize TM and Hydra's PBS data structure: Nothing in the
-     * returned tm_root is useful except tm_root.tm_nnodes which is
-     * the number of processes allocated in this PBS job. */
-    ierr = tm_init(NULL, &(HYDT_bscd_pbs_sys->tm_root));
-    if (ierr != TM_SUCCESS)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "tm_init() fails with TM err=%d.\n",
-                            ierr);
-    HYDT_bscd_pbs_sys->spawned_count = 0;
-    HYDT_bscd_pbs_sys->size = 0;
-    HYDT_bscd_pbs_sys->taskIDs = NULL;
-    HYDT_bscd_pbs_sys->events = NULL;
-    HYDT_bscd_pbs_sys->taskobits = NULL;
+    /* Initialize TM and Hydra's PBS data structure */
+    err = tm_init(NULL, &tm_root);
+    HYDU_ERR_CHKANDJUMP(status, err != TM_SUCCESS, HYD_INTERNAL_ERROR,
+                        "tm_init() failed with TM error %d\n", err);
+    HYDT_bscd_pbs_sys->spawn_count = 0;
+    HYDT_bscd_pbs_sys->spawn_events = NULL;
+    HYDT_bscd_pbs_sys->task_id = NULL;
 
   fn_exit:
     HYDU_FUNC_EXIT();

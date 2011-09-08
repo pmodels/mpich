@@ -11,9 +11,7 @@
 HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                       int *control_fd)
 {
-    int proxy_count, spawned_count;
-    int args_count, events_count;
-    int ierr, idx, spawned_hostID;
+    int proxy_count, i, args_count, events_count, err, idx, hostid;
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
@@ -30,71 +28,34 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
     proxy_count = 0;
     for (proxy = proxy_list; proxy; proxy = proxy->next)
         proxy_count++;
-    HYDT_bscd_pbs_sys->size = proxy_count;
-
-    /* Check if number of proxies > number of processes in this PBS job */
-    if (proxy_count > (HYDT_bscd_pbs_sys->tm_root).tm_nnodes)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "Number of proxies(%d) > TM node count(%d)!\n", proxy_count,
-                            (HYDT_bscd_pbs_sys->tm_root).tm_nnodes);
 
     /* Duplicate the args in local copy, targs */
     for (args_count = 0; args[args_count]; args_count++)
         targs[args_count] = HYDU_strdup(args[args_count]);
 
-    /* Allocate memory for taskIDs[] and events[] arrays */
-    HYDU_MALLOC(HYDT_bscd_pbs_sys->taskIDs, tm_task_id *,
-                HYDT_bscd_pbs_sys->size * sizeof(tm_task_id), status);
-    HYDU_MALLOC(HYDT_bscd_pbs_sys->events, tm_event_t *,
-                HYDT_bscd_pbs_sys->size * sizeof(tm_event_t), status);
+    HYDU_MALLOC(HYDT_bscd_pbs_sys->task_id, tm_task_id *, proxy_count * sizeof(tm_task_id),
+                status);
+    HYDU_MALLOC(HYDT_bscd_pbs_sys->spawn_events, tm_event_t *,
+                proxy_count * sizeof(tm_event_t), status);
 
     /* Spawn a process on each allocated node through tm_spawn() which
-     * returns a taskID for the process + a eventID for the spawning.
-     * The returned taskID won't be ready for access until tm_poll()
-     * has returned the corresponding eventID. */
-    spawned_count = 0;
-    spawned_hostID = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
-        targs[args_count] = HYDU_int_to_str(spawned_count);
-        ierr = tm_spawn(args_count + 1, targs, NULL, spawned_hostID,
-                        HYDT_bscd_pbs_sys->taskIDs + spawned_count,
-                        HYDT_bscd_pbs_sys->events + spawned_count);
-        if (HYDT_bsci_info.debug)
-            HYDU_dump(stdout, "PBS_DEBUG: %d, tm_spawn(hostID=%d,name=%s)\n",
-                      spawned_count, spawned_hostID, proxy->node->hostname);
-        if (ierr != TM_SUCCESS) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "tm_spawn() fails with TM err %d!\n", ierr);
-        }
-        spawned_hostID += proxy->node->core_count;
-        spawned_count++;
-    }
-    HYDT_bscd_pbs_sys->spawned_count = spawned_count;
+     * returns a taskID for the process + a eventID for the
+     * spawning. */
+    hostid = 0;
+    for (i = 0, proxy = proxy_list; proxy; proxy = proxy->next, i++) {
+        targs[args_count] = HYDU_int_to_str(i);
 
-    /* Poll the TM for the spawning eventID returned by tm_spawn() to
-     * determine if the spawned process has started. */
-    events_count = 0;
-    while (events_count < spawned_count) {
-        tm_event_t event = -1;
-        int poll_err;
-        ierr = tm_poll(TM_NULL_EVENT, &event, 0, &poll_err);
-        if (ierr != TM_SUCCESS)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "tm_poll(spawn_event) fails with TM err %d.\n", ierr);
-        if (event != TM_NULL_EVENT) {
-            for (idx = 0; idx < spawned_count; idx++) {
-                if (HYDT_bscd_pbs_sys->events[idx] == event) {
-                    if (HYDT_bsci_info.debug) {
-                        HYDU_dump(stdout,
-                                  "PBS_DEBUG: Event %d received, task %d has started.\n",
-                                  event, HYDT_bscd_pbs_sys->taskIDs[idx]);
-                    }
-                    events_count++;
-                    break;      /* break from for(idx<spawned_count) loop */
-                }
-            }
-        }
+        /* The task_id field is not filled in during tm_spawn(). The
+         * TM library just stores this address and fills it in when
+         * the event is completed by a call to tm_poll(). */
+        err = tm_spawn(args_count + 1, targs, NULL, hostid, &HYDT_bscd_pbs_sys->task_id[i],
+                       &HYDT_bscd_pbs_sys->spawn_events[i]);
+        HYDU_ERR_CHKANDJUMP(status, err != TM_SUCCESS, HYD_INTERNAL_ERROR,
+                            "tm_spawn() failed with TM error %d\n", err);
+
+        hostid += proxy->node->core_count;
     }
+    HYDT_bscd_pbs_sys->spawn_count = i;
 
   fn_exit:
     HYDU_FUNC_EXIT();
