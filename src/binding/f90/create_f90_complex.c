@@ -7,7 +7,7 @@
 #include "create_f90_util.h"
 
 #include "mpiimpl.h"
-#ifdef HAVE_F90_TYPE_ROUTINES
+#ifdef HAVE_FC_TYPE_ROUTINES
 #include "mpif90model.h"
 #else
 /* Assume only 4 and 8 byte IEEE reals available */
