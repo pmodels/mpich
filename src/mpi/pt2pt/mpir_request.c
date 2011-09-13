@@ -330,7 +330,7 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 			&ierr );
 		    rc = (int) ierr;
 		    if (rc == MPI_SUCCESS)
-			MPI_Status_f2c( is, &request_ptr->status );
+			PMPI_Status_f2c( is, &request_ptr->status );
 		    MPIU_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno,
 			MPI_ERR_OTHER,;, "**user", "**userquery %d", rc);
 		    break;
@@ -460,7 +460,7 @@ int MPIR_Grequest_query(MPID_Request * request_ptr)
 		request_ptr->greq_fns->grequest_extra_state, is, &ierr );
 	    rc = (int)ierr;
 	    if (rc == MPI_SUCCESS) 
-		MPI_Status_f2c( is, &request_ptr->status );
+		PMPI_Status_f2c( is, &request_ptr->status );
 	    MPIU_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,
 		{;}, "**user", "**userquery %d", rc);
 	}
