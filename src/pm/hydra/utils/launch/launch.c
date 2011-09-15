@@ -31,7 +31,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
         close(STDIN_FILENO);
         if (in) {
             close(inpipe[1]);
-            if (dup2(inpipe[0], STDIN_FILENO) < 0)
+            if (inpipe[0] != STDIN_FILENO && dup2(inpipe[0], STDIN_FILENO) < 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                     HYDU_strerror(errno));
         }
@@ -39,7 +39,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
         close(STDOUT_FILENO);
         if (out) {
             close(outpipe[0]);
-            if (dup2(outpipe[1], STDOUT_FILENO) < 0)
+            if (outpipe[1] != STDOUT_FILENO && dup2(outpipe[1], STDOUT_FILENO) < 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                     HYDU_strerror(errno));
         }
@@ -47,7 +47,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
         close(STDERR_FILENO);
         if (err) {
             close(errpipe[0]);
-            if (dup2(errpipe[1], STDERR_FILENO) < 0)
+            if (dup2(errpipe[1] != STDERR_FILENO && errpipe[1], STDERR_FILENO) < 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
                                     HYDU_strerror(errno));
         }
