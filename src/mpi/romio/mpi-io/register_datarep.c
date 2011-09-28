@@ -96,6 +96,19 @@ int MPI_Register_datarep(const char *datarep,
 	}
     }
 
+    /* Check Non-NULL Read and Write conversion function pointer */
+    /* Read and Write conversions are currently not supported.   */
+    if ( (read_conversion_fn != NULL) || (write_conversion_fn != NULL) )
+    {
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__,
+                                          MPI_ERR_CONVERSION,
+                                          "**drconvnotsupported", 0);
+
+	error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+	goto fn_exit;
+    }
+
     /* check extent function pointer */
     if (dtype_file_extent_fn == NULL)
     {
