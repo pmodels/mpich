@@ -946,7 +946,7 @@ if ("$buildMakefile") {
     &AddFwrapDefs;
     print MAKEFD "\
 lib\${MPIFLIBNAME}_a_DIR = ROOTDIR/lib\
-lib\${MPIFLIBNAME}_a_SOURCES = \${mpi_sources} setbot.c setbotf.f\
+lib\${MPIFLIBNAME}_a_SOURCES = \${mpi_sources} setbot.c fdebug.c setbotf.f\
 \
 HEADERS = fproto.h mpi_fortimpl.h\
 profilelib_\${MPIFLIBNAME} = \${PMPIFLIBNAME}\
