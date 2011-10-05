@@ -60,7 +60,7 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
 
     /* Wait for all processes to terminate */
     for (events_count = 0, idx = 0; idx < HYDT_bscd_pbs_sys->spawn_count; idx++)
-        if (obit_events[idx] == TM_NULL_EVENT)
+        if (obit_events[idx] != TM_NULL_EVENT)
             events_count++;
     while (events_count) {
         err = tm_poll(TM_NULL_EVENT, &e, 0, &poll_err);
