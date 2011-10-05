@@ -851,7 +851,12 @@ static int hwloc_memory_page_type_compare(const void *_a, const void *_b)
   const struct hwloc_obj_memory_page_type_s *a = _a;
   const struct hwloc_obj_memory_page_type_s *b = _b;
   /* consider 0 as larger so that 0-size page_type go to the end */
-  return b->size ? (int)(a->size - b->size) : -1;
+  if (!b->size)
+    return -1;
+  /* don't cast a-b in int since those are ullongs */
+  if (b->size == a->size)
+    return 0;
+  return a->size < b->size ? -1 : 1;
 }
 
 /* Propagate memory counts */
@@ -1240,14 +1245,15 @@ remove_empty(hwloc_topology_t topology, hwloc_obj_t *pobj)
     remove_empty(topology, pchild);
 
   if (obj->type != HWLOC_OBJ_NODE
-      && obj->type != HWLOC_OBJ_PCI_DEVICE
+      && !obj->first_child /* only remove if all children were removed above, so that we don't remove parents of NUMAnode */
       && obj->type != HWLOC_OBJ_BRIDGE
-      && obj->cpuset /* FIXME: needed for PCI devices? */
+      && obj->type != HWLOC_OBJ_PCI_DEVICE
+      && obj->type != HWLOC_OBJ_OS_DEVICE
       && hwloc_bitmap_iszero(obj->cpuset)) {
     /* Remove empty children */
     hwloc_debug("%s", "\nRemoving empty object ");
     print_object(topology, 0, obj);
-    unlink_and_free_object_and_children(pobj);
+    unlink_and_free_single_object(pobj);
   }
 }
 
@@ -1473,62 +1479,109 @@ find_same_type(hwloc_obj_t root, hwloc_obj_t obj)
   return 0;
 }
 
-static int
-hwloc_levels_ignore_object(hwloc_obj_t obj)
-{
-  return obj->type != HWLOC_OBJ_MISC
-	 && obj->type != HWLOC_OBJ_BRIDGE
-	 && obj->type != HWLOC_OBJ_PCI_DEVICE
-	 && obj->type != HWLOC_OBJ_OS_DEVICE;
-}
-
 /* traverse the array of current object and compare them with top_obj.
  * if equal, take the object and put its children into the remaining objs.
  * if not equal, put the object into the remaining objs.
  */
 static int
-hwloc_level_take_objects(hwloc_topology_t topology,
-			 hwloc_obj_t top_obj,
+hwloc_level_take_objects(hwloc_obj_t top_obj,
 			 hwloc_obj_t *current_objs, unsigned n_current_objs,
 			 hwloc_obj_t *taken_objs, unsigned n_taken_objs __hwloc_attribute_unused,
 			 hwloc_obj_t *remaining_objs, unsigned n_remaining_objs __hwloc_attribute_unused)
 {
   unsigned taken_i = 0;
   unsigned new_i = 0;
-  unsigned ignored = 0;
   unsigned i, j;
 
   for (i = 0; i < n_current_objs; i++)
     if (hwloc_type_cmp(top_obj, current_objs[i]) == HWLOC_TYPE_EQUAL) {
       /* Take it, add children.  */
       taken_objs[taken_i++] = current_objs[i];
-      for (j = 0; j < current_objs[i]->arity; j++) {
-	hwloc_obj_t obj = current_objs[i]->children[j];
-	if (hwloc_levels_ignore_object(obj)) {
-	  remaining_objs[new_i++] = obj;
-	} else {
-	  ignored++;
-	  append_iodevs(topology, obj);
-	}
-      }
+      for (j = 0; j < current_objs[i]->arity; j++)
+	remaining_objs[new_i++] = current_objs[i]->children[j];
     } else {
       /* Leave it.  */
-      hwloc_obj_t obj = current_objs[i];
-      if (hwloc_levels_ignore_object(obj)) {
-	remaining_objs[new_i++] = obj;
-      } else {
-	ignored++;
-	append_iodevs(topology, obj);
-      }
+      remaining_objs[new_i++] = current_objs[i];
     }
 
 #ifdef HWLOC_DEBUG
   /* Make sure we didn't mess up.  */
   assert(taken_i == n_taken_objs);
-  assert(new_i + ignored == n_current_objs - n_taken_objs + n_remaining_objs);
+  assert(new_i == n_current_objs - n_taken_objs + n_remaining_objs);
 #endif
 
   return new_i;
+}
+
+/* Given an input object, copy it or its interesting children into the output array.
+ * If new_obj is NULL, we're just counting interesting ohjects.
+ */
+static unsigned
+hwloc_level_filter_object(hwloc_topology_t topology,
+			  hwloc_obj_t *new_obj, hwloc_obj_t old)
+{
+  unsigned i, total;
+  if (old->type == HWLOC_OBJ_BRIDGE
+      || old->type == HWLOC_OBJ_PCI_DEVICE
+      || old->type == HWLOC_OBJ_OS_DEVICE) {
+    if (new_obj)
+      append_iodevs(topology, old);
+    return 0;
+  }
+  if (old->type != HWLOC_OBJ_MISC) {
+    if (new_obj)
+      *new_obj = old;
+    return 1;
+  }
+  for(i=0, total=0; i<old->arity; i++) {
+    int nb = hwloc_level_filter_object(topology, new_obj, old->children[i]);
+    if (new_obj)
+      new_obj += nb;
+    total += nb;
+  }
+  return total;
+}
+
+/* Replace an input array of objects with an input array containing
+ * only interesting objects for levels.
+ * Misc objects are removed, their interesting children are added.
+ * I/O devices are removed and queue to their own lists.
+ */
+static int
+hwloc_level_filter_objects(hwloc_topology_t topology,
+			   hwloc_obj_t **objs, unsigned *n_objs)
+{
+  hwloc_obj_t *old = *objs, *new;
+  unsigned nold = *n_objs, nnew, i;
+
+  /* anything to filter? */
+  for(i=0; i<nold; i++)
+    if (old[i]->type == HWLOC_OBJ_BRIDGE
+	|| old[i]->type == HWLOC_OBJ_PCI_DEVICE
+	|| old[i]->type == HWLOC_OBJ_OS_DEVICE
+	|| old[i]->type == HWLOC_OBJ_MISC)
+      break;
+  if (i==nold)
+    return 0;
+
+  /* count interesting objects and allocate the new array */
+  for(i=0, nnew=0; i<nold; i++)
+    nnew += hwloc_level_filter_object(topology, NULL, old[i]);
+  new = malloc(nnew * sizeof(hwloc_obj_t));
+  if (!new) {
+    free(old);
+    errno = ENOMEM;
+    return -1;
+  }
+  /* copy them now */
+  for(i=0, nnew=0; i<nold; i++)
+    nnew += hwloc_level_filter_object(topology, new+nnew, old[i]);
+
+  /* use the new array */
+  *objs = new;
+  *n_objs = nnew;
+  free(old);
+  return 0;
 }
 
 static unsigned
@@ -1569,6 +1622,7 @@ hwloc_connect_levels(hwloc_topology_t topology)
   unsigned l, i=0;
   hwloc_obj_t *objs, *taken_objs, *new_objs, top_obj;
   unsigned n_objs, n_taken_objs, n_new_objs;
+  int err;
 
   /* reset non-root levels (root was initialized during init and will not change here) */
   for(l=1; l<HWLOC_DEPTH_MAX; l++)
@@ -1602,7 +1656,6 @@ hwloc_connect_levels(hwloc_topology_t topology)
   topology->type_depth[HWLOC_OBJ_OS_DEVICE] = HWLOC_TYPE_DEPTH_OS_DEVICE;
 
   /* Start with children of the whole system.  */
-  l = 0;
   n_objs = topology->levels[0][0]->arity;
   objs = malloc(n_objs * sizeof(objs[0]));
   if (!objs) {
@@ -1610,33 +1663,31 @@ hwloc_connect_levels(hwloc_topology_t topology)
     hwloc_topology_clear(topology);
     return -1;
   }
+  memcpy(objs, topology->levels[0][0]->children, n_objs*sizeof(objs[0]));
 
-  {
-    hwloc_obj_t dummy_taken_objs;
-    /* copy all root children that must go into levels,
-     * root will go into dummy_taken_objs but we don't need it anyway
-     * because it stays alone in first level.
-     */
-    n_objs = hwloc_level_take_objects(topology,
-				      topology->levels[0][0],
-				      topology->levels[0], 1,
-				      &dummy_taken_objs, 1,
-				      objs, n_objs);
-#ifdef HWLOC_DEBUG
-    assert(dummy_taken_objs == topology->levels[0][0]);
-#endif
+  /* Filter-out interesting objects */
+  err = hwloc_level_filter_objects(topology, &objs, &n_objs);
+  if (err < 0) {
+    errno = ENOMEM;
+    hwloc_topology_clear(topology);
+    return -1;
   }
 
   /* Keep building levels while there are objects left in OBJS.  */
   while (n_objs) {
+    /* At this point, the objs array contains only objects that may go into levels */
 
     /* First find which type of object is the topmost.
      * Don't use PU if there are other types since we want to keep PU at the bottom.
      */
+
+    /* Look for the first non-PU object, and use the first PU if we really find nothing else */
     for (i = 0; i < n_objs; i++)
       if (objs[i]->type != HWLOC_OBJ_PU)
         break;
     top_obj = i == n_objs ? objs[0] : objs[i];
+
+    /* See if this is actually the topmost object */
     for (i = 0; i < n_objs; i++) {
       if (hwloc_type_cmp(top_obj, objs[i]) != HWLOC_TYPE_EQUAL) {
 	if (find_same_type(objs[i], top_obj)) {
@@ -1664,13 +1715,12 @@ hwloc_connect_levels(hwloc_topology_t topology)
     /* New list of pending objects.  */
     new_objs = malloc((n_objs - n_taken_objs + n_new_objs) * sizeof(new_objs[0]));
 
-    n_new_objs = hwloc_level_take_objects(topology,
-					  top_obj,
+    n_new_objs = hwloc_level_take_objects(top_obj,
 					  objs, n_objs,
 					  taken_objs, n_taken_objs,
 					  new_objs, n_new_objs);
 
-    /* Ok, put numbers in the level.  */
+    /* Ok, put numbers in the level and link cousins.  */
     for (i = 0; i < n_taken_objs; i++) {
       taken_objs[i]->depth = topology->nb_levels;
       taken_objs[i]->logical_index = i;
@@ -1679,6 +1729,8 @@ hwloc_connect_levels(hwloc_topology_t topology)
 	taken_objs[i-1]->next_cousin = taken_objs[i];
       }
     }
+    taken_objs[0]->prev_cousin = NULL;
+    taken_objs[n_taken_objs-1]->next_cousin = NULL;
 
     /* One more level!  */
     if (top_obj->type == HWLOC_OBJ_CACHE)
@@ -1700,6 +1752,14 @@ hwloc_connect_levels(hwloc_topology_t topology)
     topology->nb_levels++;
 
     free(objs);
+
+    /* Switch to new_objs, after filtering-out interesting objects */
+    err = hwloc_level_filter_objects(topology, &new_objs, &n_new_objs);
+    if (err < 0) {
+      errno = ENOMEM;
+      hwloc_topology_clear(topology);
+      return -1;
+    }
     objs = new_objs;
     n_objs = n_new_objs;
   }
@@ -1831,6 +1891,8 @@ static void alloc_cpusets(hwloc_obj_t obj)
   obj->allowed_nodeset = hwloc_bitmap_alloc_full();
 }
 
+static void hwloc_topology_setup_defaults(struct hwloc_topology *topology);
+
 /* Main discovery loop */
 static int
 hwloc_discover(struct hwloc_topology *topology)
@@ -1838,10 +1900,11 @@ hwloc_discover(struct hwloc_topology *topology)
   if (topology->backend_type == HWLOC_BACKEND_SYNTHETIC) {
     alloc_cpusets(topology->levels[0][0]);
     hwloc_look_synthetic(topology);
-#ifdef HWLOC_HAVE_XML
   } else if (topology->backend_type == HWLOC_BACKEND_XML) {
-    hwloc_look_xml(topology);
-#endif
+    if (hwloc_look_xml(topology) < 0) {
+      hwloc_topology_clear(topology);
+      return -1;
+    }
   } else {
 
   /* Raw detection, from coarser levels to finer levels for more efficiency.  */
@@ -2041,11 +2104,9 @@ hwloc_discover(struct hwloc_topology *topology)
     if (topology->backend_type == HWLOC_BACKEND_SYNTHETIC) {
       /* TODO */
     }
-#ifdef HWLOC_HAVE_XML
     else if (topology->backend_type == HWLOC_BACKEND_XML) {
       /* TODO */
     }
-#endif
 #ifdef HWLOC_HAVE_LIBPCI
     else if (topology->is_thissystem) {
       hwloc_look_libpci(topology);
@@ -2072,8 +2133,13 @@ hwloc_discover(struct hwloc_topology *topology)
   }
 
   /*
-   * Now that objects are numbered, take distance matrices from backends and put them in the main topology
+   * Now that objects are numbered, take distance matrices from backends and put them in the main topology.
+   *
+   * Some objects may have disappeared (in removed_empty or removed_ignored) since we setup os distances
+   * (hwloc_convert_distances_indexes_into_objects()) above. Reset them so as to not point to disappeared objects anymore.
    */
+  hwloc_restrict_distances(topology, HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES);
+  hwloc_convert_distances_indexes_into_objects(topology);
   hwloc_finalize_logical_distances(topology);
 
 #  ifdef HWLOC_HAVE_XML
@@ -2286,11 +2352,9 @@ hwloc_backend_exit(struct hwloc_topology *topology)
     hwloc_backend_sysfs_exit(topology);
     break;
 #endif
-#ifdef HWLOC_HAVE_XML
   case HWLOC_BACKEND_XML:
     hwloc_backend_xml_exit(topology);
     break;
-#endif
   case HWLOC_BACKEND_SYNTHETIC:
     hwloc_backend_synthetic_exit(topology);
     break;
@@ -2341,15 +2405,10 @@ int
 hwloc_topology_set_xml(struct hwloc_topology *topology __hwloc_attribute_unused,
                        const char *xmlpath __hwloc_attribute_unused)
 {
-#ifdef HWLOC_HAVE_XML
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
 
   return hwloc_backend_xml_init(topology, xmlpath, NULL, 0);
-#else /* HWLOC_HAVE_XML */
-  errno = ENOSYS;
-  return -1;
-#endif /* !HWLOC_HAVE_XML */
 }
 
 int
@@ -2357,15 +2416,10 @@ hwloc_topology_set_xmlbuffer(struct hwloc_topology *topology __hwloc_attribute_u
                              const char *xmlbuffer __hwloc_attribute_unused,
                              int size __hwloc_attribute_unused)
 {
-#ifdef HWLOC_HAVE_XML
   /* cleanup existing backend */
   hwloc_backend_exit(topology);
 
   return hwloc_backend_xml_init(topology, NULL, xmlbuffer, size);
-#else /* HWLOC_HAVE_XML */
-  errno = ENOSYS;
-  return -1;
-#endif /* !HWLOC_HAVE_XML */
 }
 
 int
@@ -2492,7 +2546,6 @@ hwloc_topology_load (struct hwloc_topology *topology)
     }
   }
 #endif
-#ifdef HWLOC_HAVE_XML
   {
     char *xmlpath_env = getenv("HWLOC_FORCE_XMLFILE");
     if (xmlpath_env) {
@@ -2500,7 +2553,6 @@ hwloc_topology_load (struct hwloc_topology *topology)
       hwloc_backend_xml_init(topology, xmlpath_env, NULL, 0);
     }
   }
-#endif
 
   /* only apply non-FORCE variables if we have not changed the backend yet */
 #ifdef HWLOC_LINUX_SYS
@@ -2510,13 +2562,11 @@ hwloc_topology_load (struct hwloc_topology *topology)
       hwloc_backend_sysfs_init(topology, fsroot_path_env);
   }
 #endif
-#ifdef HWLOC_HAVE_XML
   if (topology->backend_type == HWLOC_BACKEND_NONE) {
     char *xmlpath_env = getenv("HWLOC_XMLFILE");
     if (xmlpath_env)
       hwloc_backend_xml_init(topology, xmlpath_env, NULL, 0);
   }
-#endif
 
   /* always apply non-FORCE THISSYSTEM since it was explicitly designed to override setups from other backends */
   local_env = getenv("HWLOC_THISSYSTEM");

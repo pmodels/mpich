@@ -229,8 +229,10 @@ int hwloc_topology_set_distance_matrix(hwloc_topology_t __hwloc_restrict topolog
   unsigned *_indexes;
   float *_distances;
 
-  if (!nbobjs && !indexes && !distances)
+  if (!nbobjs && !indexes && !distances) {
     hwloc_topology__set_distance_matrix(topology, type, 0, NULL, NULL, NULL, 1 /* force */);
+    return 0;
+  }
 
   if (!nbobjs || !indexes || !distances)
     return -1;
@@ -305,7 +307,7 @@ void hwloc_convert_distances_indexes_into_objects(struct hwloc_topology *topolog
 	    /** move beginning of (i+1)th line */
 	    memmove(NEWPOS(i,0), OLDPOS(i+1,0), i*sizeof(*distances));
 	    /** move end of jth line + beginning of (j+1)th line */
-	    for(j=i; j<nbobjs-1; j++)
+	    for(j=i; j<nbobjs-2; j++)
 	      memmove(NEWPOS(j,i), OLDPOS(j+1,i+1), (nbobjs-1)*sizeof(*distances));
 	    /** move end of (nbobjs-2)th line */
 	    memmove(NEWPOS(nbobjs-2,i), OLDPOS(nbobjs-1,i+1), (nbobjs-i-1)*sizeof(*distances));
@@ -470,7 +472,7 @@ static int hwloc_compare_distances(float a, float b, float accuracy)
 {
   if (accuracy != 0.0 && fabsf(a-b) < a * accuracy)
     return 0;
-  return (int)(a - b);
+  return a < b ? -1 : a == b ? 0 : 1;
 }
 
 /*
