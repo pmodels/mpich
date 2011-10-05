@@ -34,28 +34,24 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
     while (spawn_count) {
         /* For each task, we need to first wait for it to be spawned,
          * and then register its termination event */
-        err = tm_poll(TM_NULL_EVENT, &e, 0, &poll_err);
+        err = tm_poll(TM_NULL_EVENT, &e, 1, &poll_err);
         HYDU_ERR_CHKANDJUMP(status, err != TM_SUCCESS, HYD_INTERNAL_ERROR,
                             "tm_poll(obit_event) failed with TM error %d\n", err);
 
-        if (e != TM_NULL_EVENT) {
-            /* got some event; find the tm_spawn() call which created
-             * this event */
-            for (idx = 0; idx < HYDT_bscd_pbs_sys->spawn_count; idx++) {
-                if (HYDT_bscd_pbs_sys->spawn_events[idx] == e) {
-                    /* got a spawn event (task_id[idx] is now valid);
-                     * register this task for a termination event */
-                    err = tm_obit(HYDT_bscd_pbs_sys->task_id[idx], &taskobits[idx],
-                                  &obit_events[idx]);
-                    HYDU_ERR_CHKANDJUMP(status, err != TM_SUCCESS, HYD_INTERNAL_ERROR,
-                                        "tm_obit() failed with TM error %d\n", err);
-                    spawn_count--;
-                    break;
-                }
-                else if (obit_events[idx] == e) {
-                    /* got a task termination event */
-                    obit_events[idx] = TM_NULL_EVENT;
-                }
+        for (idx = 0; idx < HYDT_bscd_pbs_sys->spawn_count; idx++) {
+            if (HYDT_bscd_pbs_sys->spawn_events[idx] == e) {
+                /* got a spawn event (task_id[idx] is now valid);
+                 * register this task for a termination event */
+                err = tm_obit(HYDT_bscd_pbs_sys->task_id[idx], &taskobits[idx],
+                              &obit_events[idx]);
+                HYDU_ERR_CHKANDJUMP(status, err != TM_SUCCESS, HYD_INTERNAL_ERROR,
+                                    "tm_obit() failed with TM error %d\n", err);
+                spawn_count--;
+                break;
+            }
+            else if (obit_events[idx] == e) {
+                /* got a task termination event */
+                obit_events[idx] = TM_NULL_EVENT;
             }
         }
     }
@@ -66,7 +62,7 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
     for (events_count = 0, idx = 0; idx < HYDT_bscd_pbs_sys->spawn_count; idx++)
         if (obit_events[idx] == TM_NULL_EVENT)
             events_count++;
-    do {
+    while (events_count) {
         err = tm_poll(TM_NULL_EVENT, &e, 0, &poll_err);
         HYDU_ERR_CHKANDJUMP(status, err != TM_SUCCESS, HYD_INTERNAL_ERROR,
                             "tm_poll(obit_event) failed with TM error %d\n", err);
@@ -90,7 +86,7 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
                 goto fn_exit;
             }
         }
-    } while (events_count);
+    }
 
     if (HYDT_bsci_info.debug)
         HYDU_dump(stdout, "\nPBS_DEBUG: Done with polling obit events\n");
