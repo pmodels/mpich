@@ -307,6 +307,26 @@ parameters:
         This parameter controls the number of times to retry the 
         gethostbyname() function before giving up.
 
+    - category    : nemesis
+      name        : SHM_EAGER_MAX_SZ
+      type        : int
+      default     : -1
+      description : >-
+        This parameter controls the message size at which Nemesis 
+        switches from eager to rendezvous mode.  If this parameter 
+        is set to -1, then Nemesis will choose an appropriate value.
+
+    - category    : nemesis
+      name        : SHM_READY_EAGER_MAX_SZ
+      type        : int
+      default     : -2
+      description : >-
+        This parameter controls the message size at which Nemesis
+        switches from eager to rendezvous mode for ready-send
+        messages.  If this parameter is set to -1, then ready messages
+        will always be sent eagerly.  If this parameter is set to -2,
+        then Nemesis will choose an appropriate value.
+
   ##############################################################
     # debugging parameters
     - category    : debugger

@@ -100,27 +100,41 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 	goto fn_exit;
     }
     
-    if (dt_contig) {
-	mpi_errno = MPIDI_CH3_EagerContigIsend( &sreq, 
-						MPIDI_CH3_PKT_READY_SEND,
-						(char*)buf + dt_true_lb, 
-						data_sz, rank, tag, 
-						comm, context_offset );
-
-    }
-    else {
-	mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq, 
-                                                  MPIDI_CH3_PKT_READY_SEND,
-                                                  buf, count, datatype,
-                                                  data_sz, rank, tag, 
-                                                  comm, context_offset );
-	/* If we're not complete, then add a reference to the datatype */
-	if (sreq && sreq->dev.OnDataAvail) {
+    if (vc->ready_eager_max_msg_sz < 0 || data_sz + sizeof(MPIDI_CH3_Pkt_ready_send_t) <= vc->ready_eager_max_msg_sz) {
+        if (dt_contig) {
+            mpi_errno = MPIDI_CH3_EagerContigIsend( &sreq,
+                                                    MPIDI_CH3_PKT_READY_SEND,
+                                                    (char*)buf + dt_true_lb,
+                                                    data_sz, rank, tag,
+                                                    comm, context_offset );
+            
+        }
+        else {
+            mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq,
+                                                      MPIDI_CH3_PKT_READY_SEND,
+                                                      buf, count, datatype,
+                                                      data_sz, rank, tag,
+                                                      comm, context_offset );
+            /* If we're not complete, then add a reference to the datatype */
+            if (sreq && sreq->dev.OnDataAvail) {
+                sreq->dev.datatype_ptr = dt_ptr;
+                MPID_Datatype_add_ref(dt_ptr);
+            }
+        }
+    } else {
+ 	/* Do rendezvous.  This will be sent as a regular send not as
+           a ready send, so the receiver won't know to send an error
+           if the receive has not been posted */
+	MPIDI_Request_set_msg_type( sreq, MPIDI_REQUEST_RNDV_MSG );
+	mpi_errno = vc->rndvSend_fn( &sreq, buf, count, datatype, dt_contig,
+                                     data_sz, dt_true_lb, rank, tag, comm,
+                                     context_offset );
+	if (sreq && dt_ptr != NULL) {
 	    sreq->dev.datatype_ptr = dt_ptr;
 	    MPID_Datatype_add_ref(dt_ptr);
 	}
     }
- 
+
   fn_exit:
     *request = sreq;
 

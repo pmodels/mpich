@@ -740,6 +740,8 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
     vc->rndvSend_fn      = MPIDI_CH3_RndvSend;
     vc->rndvRecv_fn      = MPIDI_CH3_RecvRndv;
     vc->eager_max_msg_sz = MPIDI_CH3_EAGER_MAX_MSG_SIZE;
+    vc->ready_eager_max_msg_sz = -1; /* no limit */;
+
     vc->sendNoncontig_fn = MPIDI_CH3_SendNoncontig_iov;
 #ifdef ENABLE_COMM_OVERRIDES
     vc->comm_ops         = NULL;

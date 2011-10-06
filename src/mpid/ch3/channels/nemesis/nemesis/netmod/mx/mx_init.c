@@ -275,6 +275,7 @@ MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
    mx_get_info(MPID_nem_mx_local_endpoint, MX_COPY_SEND_MAX, NULL, 0, &threshold, sizeof(uint32_t));
 
    vc->eager_max_msg_sz = threshold;
+   vc->ready_eager_max_msg_sz = threshold;
    vc->rndvSend_fn      = NULL;
    vc->sendNoncontig_fn = MPID_nem_mx_SendNoncontig;
    vc->comm_ops         = &comm_ops;

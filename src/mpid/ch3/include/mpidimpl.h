@@ -747,7 +747,9 @@ typedef struct MPIDI_VC
 
     /* eager message threshold */
     int eager_max_msg_sz;
-    
+    /* eager message threshold for ready sends.  -1 means there's no limit */
+    int ready_eager_max_msg_sz;
+ 
     /* noncontiguous send function pointer.  Called to send a
        noncontiguous message.  Caller must initialize
        sreq->dev.segment, _first and _size.  Contiguous messages are
@@ -756,7 +758,7 @@ typedef struct MPIDI_VC
 			      void *header, MPIDI_msg_sz_t hdr_sz );
 
 #ifdef ENABLE_COMM_OVERRIDES
-    MPIDI_Comm_ops_t *comm_ops;    
+    MPIDI_Comm_ops_t *comm_ops;
 #endif
 
     /* Rather than have each channel define its own fields for the 

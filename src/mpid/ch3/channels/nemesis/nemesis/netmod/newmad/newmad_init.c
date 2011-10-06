@@ -262,6 +262,7 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
    
    vc->eager_max_msg_sz = 32768;
+   vc->ready_eager_max_msg_sz = 32768;
    vc->rndvSend_fn      = NULL;
    vc->sendNoncontig_fn = MPID_nem_newmad_SendNoncontig;
    vc->comm_ops         = &comm_ops;
