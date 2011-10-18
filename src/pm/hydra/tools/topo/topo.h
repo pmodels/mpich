@@ -232,7 +232,7 @@ static inline void HYDT_topo_cpuset_clr(int os_index, struct HYDT_topo_cpuset_t 
     unsigned long mask;
 
     idx = (os_index / HYDT_BITS_PER_LONG);
-    mask = ~(1 << (os_index % HYDT_BITS_PER_LONG));
+    mask = ~(1UL << (os_index % HYDT_BITS_PER_LONG));
 
     cpuset->set[idx] &= mask;
 }
@@ -243,18 +243,18 @@ static inline void HYDT_topo_cpuset_set(int os_index, struct HYDT_topo_cpuset_t 
     unsigned long mask;
 
     idx = (os_index / HYDT_BITS_PER_LONG);
-    mask = (1 << (os_index % HYDT_BITS_PER_LONG));
+    mask = (1UL << (os_index % HYDT_BITS_PER_LONG));
 
     cpuset->set[idx] |= mask;
 }
 
-static inline int HYDT_topo_cpuset_isset(int os_index, struct HYDT_topo_cpuset_t cpuset)
+static inline unsigned long HYDT_topo_cpuset_isset(int os_index, struct HYDT_topo_cpuset_t cpuset)
 {
     int idx;
     unsigned long mask;
 
     idx = (os_index / HYDT_BITS_PER_LONG);
-    mask = (1 << (os_index % HYDT_BITS_PER_LONG));
+    mask = (1UL << (os_index % HYDT_BITS_PER_LONG));
 
     return (cpuset.set[idx] & mask);
 }
