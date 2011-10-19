@@ -248,7 +248,8 @@ static inline void HYDT_topo_cpuset_set(int os_index, struct HYDT_topo_cpuset_t 
     cpuset->set[idx] |= mask;
 }
 
-static inline unsigned long HYDT_topo_cpuset_isset(int os_index, struct HYDT_topo_cpuset_t cpuset)
+static inline enum HYD_bool HYDT_topo_cpuset_isset(int os_index,
+                                                   struct HYDT_topo_cpuset_t cpuset)
 {
     int idx;
     unsigned long mask;
@@ -256,7 +257,7 @@ static inline unsigned long HYDT_topo_cpuset_isset(int os_index, struct HYDT_top
     idx = (os_index / HYDT_BITS_PER_LONG);
     mask = (1UL << (os_index % HYDT_BITS_PER_LONG));
 
-    return (cpuset.set[idx] & mask);
+    return ((enum HYD_bool) ((cpuset.set[idx] & mask) != 0));
 }
 
 static inline void HYDT_topo_cpuset_dup(struct HYDT_topo_cpuset_t src,

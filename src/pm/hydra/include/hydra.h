@@ -159,6 +159,11 @@ extern char **environ;
 
 #define HYDRA_NAMESERVER_DEFAULT_PORT 6392
 
+enum HYD_bool {
+    HYD_FALSE = 0,
+    HYD_TRUE = 1
+};
+
 /* fd state */
 enum HYD_fd_state {
     HYD_FD_UNSET = -1,
