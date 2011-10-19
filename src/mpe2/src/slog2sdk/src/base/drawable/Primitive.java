@@ -14,9 +14,10 @@ import java.awt.Stroke;
 import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+
+import cern.colt.map.OpenIntIntHashMap;
 
 import base.io.MixedDataInput;
 import base.io.MixedDataOutput;
@@ -349,9 +350,11 @@ public class Primitive extends Drawable
     /* 
         0.0f < nesting_ftr <= 1.0f
     */
-    public  int  drawStateOnCanvas( Graphics2D g, CoordPixelXform coord_xform,
-                                    Map map_line2row, DrawnBoxSet drawn_boxes,
-                                    ColorAlpha color )
+    public  int  drawStateOnCanvas( Graphics2D         g,
+                                    CoordPixelXform    coord_xform,
+                                    OpenIntIntHashMap  map_line2row,
+                                    DrawnBoxSet        drawn_boxes,
+                                    ColorAlpha         color )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -379,9 +382,11 @@ public class Primitive extends Drawable
     }
 
     //  assume this Primitive overlaps with coord_xform.TimeBoundingBox
-    public  int  drawArrowOnCanvas( Graphics2D g, CoordPixelXform coord_xform,
-                                    Map map_line2row, DrawnBoxSet drawn_boxes,
-                                    ColorAlpha color )
+    public  int  drawArrowOnCanvas( Graphics2D         g,
+                                    CoordPixelXform    coord_xform,
+                                    OpenIntIntHashMap  map_line2row,
+                                    DrawnBoxSet        drawn_boxes,
+                                    ColorAlpha         color )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -392,21 +397,19 @@ public class Primitive extends Drawable
         tFinal = final_vtx.time;
 
         int    iStart, iFinal;
-        iStart = ( (Integer)
-                   map_line2row.get( new Integer(start_vtx.lineID) )
-                 ).intValue();
-        iFinal = ( (Integer)
-                   map_line2row.get( new Integer(final_vtx.lineID) )
-                 ).intValue();
+        iStart = map_line2row.get( start_vtx.lineID );
+        iFinal = map_line2row.get( final_vtx.lineID );
 
         return Arrow.draw( g, color, null, coord_xform,
                            drawn_boxes.getLastArrowPos( iStart, iFinal ),
                            tStart, (float) iStart, tFinal, (float) iFinal );
     }
 
-    public  int  drawEventOnCanvas( Graphics2D g, CoordPixelXform coord_xform,
-                                    Map map_line2row, DrawnBoxSet drawn_boxes,
-                                    ColorAlpha color )
+    public  int  drawEventOnCanvas( Graphics2D         g,
+                                    CoordPixelXform    coord_xform,
+                                    OpenIntIntHashMap  map_line2row,
+                                    DrawnBoxSet        drawn_boxes,
+                                    ColorAlpha         color )
     {
         Coord  vtx;
         vtx = this.getStartVertex();
@@ -416,9 +419,7 @@ public class Primitive extends Drawable
 
         int    rowID;
         float  rPeak, rStart, rFinal;
-        rowID  = ( (Integer)
-                   map_line2row.get( new Integer(vtx.lineID) )
-                 ).intValue();
+        rowID  = map_line2row.get( vtx.lineID );
         // rPeak  = (float) rowID + NestingStacks.getHalfInitialNestingHeight();
         rPeak  = (float) rowID - 0.25f;
         rStart = (float) rowID - 0.5f;
@@ -434,8 +435,9 @@ public class Primitive extends Drawable
     /* 
         0.0f < nesting_ftr <= 1.0f
     */
-    public  boolean isPixelInState( CoordPixelXform coord_xform,
-                                    Map map_line2row, Point pix_pt )
+    public  boolean isPixelInState( CoordPixelXform    coord_xform,
+                                    OpenIntIntHashMap  map_line2row,
+                                    Point              pix_pt )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -448,9 +450,7 @@ public class Primitive extends Drawable
         int    rowID;
         float  nesting_ftr;
         /*
-        rowID  = ( (Integer)
-                   map_line2row.get( new Integer(start_vtx.lineID) )
-                 ).intValue();
+        rowID  = map_line2row.get( start_vtx.lineID );
         */
         /* assume RowID and NestingFactor have been calculated */
         rowID       = super.getRowID();
@@ -467,8 +467,9 @@ public class Primitive extends Drawable
     }
 
     //  assume this Primitive overlaps with coord_xform.TimeBoundingBox
-    public  boolean isPixelOnArrow( CoordPixelXform coord_xform,
-                                    Map map_line2row, Point pix_pt )
+    public  boolean isPixelOnArrow( CoordPixelXform    coord_xform,
+                                    OpenIntIntHashMap  map_line2row,
+                                    Point              pix_pt )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -479,19 +480,16 @@ public class Primitive extends Drawable
         tFinal = final_vtx.time;
 
         float  rStart, rFinal;
-        rStart = ( (Integer)
-                   map_line2row.get( new Integer(start_vtx.lineID) )
-                 ).floatValue();
-        rFinal = ( (Integer)
-                   map_line2row.get( new Integer(final_vtx.lineID) )
-                 ).floatValue();
+        rStart = (float) map_line2row.get( start_vtx.lineID );
+        rFinal = (float) map_line2row.get( final_vtx.lineID );
 
         return Line.containsPixel( coord_xform, pix_pt,
                                    tStart, rStart, tFinal, rFinal );
     }
 
-    public  boolean isPixelAtEvent( CoordPixelXform coord_xform,
-                                    Map map_line2row, Point pix_pt )
+    public  boolean isPixelAtEvent( CoordPixelXform    coord_xform,
+                                    OpenIntIntHashMap  map_line2row,
+                                    Point              pix_pt )
     {
         Coord  vtx;
         vtx = this.getStartVertex();
@@ -501,9 +499,7 @@ public class Primitive extends Drawable
 
         int    rowID;
         float  rStart, rFinal;
-        rowID  = ( (Integer)
-                   map_line2row.get( new Integer(vtx.lineID) )
-                 ).intValue();
+        rowID  = map_line2row.get( vtx.lineID );
         rStart = (float) rowID - 0.5f;
         rFinal = rStart + 1.0f;
 
@@ -511,10 +507,10 @@ public class Primitive extends Drawable
                                     tPoint, rStart, rFinal );
     }
 
-    public  int  drawStateOnViewport( Graphics2D      g,
-                                      CoordPixelXform coord_xform,
-                                      Map             map_line2row,
-                                      ColorAlpha      color )
+    public  int  drawStateOnViewport( Graphics2D         g,
+                                      CoordPixelXform    coord_xform,
+                                      OpenIntIntHashMap  map_line2row,
+                                      ColorAlpha         color )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -540,10 +536,10 @@ public class Primitive extends Drawable
                                  tStart, rStart, tFinal, rFinal );
     }
 
-    public  int  drawArrowOnViewport( Graphics2D      g,
-                                      CoordPixelXform coord_xform,
-                                      Map             map_line2row,
-                                      ColorAlpha      color )
+    public  int  drawArrowOnViewport( Graphics2D         g,
+                                      CoordPixelXform    coord_xform,
+                                      OpenIntIntHashMap  map_line2row,
+                                      ColorAlpha         color )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -554,22 +550,18 @@ public class Primitive extends Drawable
         tFinal = final_vtx.time;
 
         int    iStart, iFinal;
-        iStart = ( (Integer)
-                   map_line2row.get( new Integer(start_vtx.lineID) )
-                 ).intValue();
-        iFinal = ( (Integer)
-                   map_line2row.get( new Integer(final_vtx.lineID) )
-                 ).intValue();
+        iStart = map_line2row.get( start_vtx.lineID );
+        iFinal = map_line2row.get( final_vtx.lineID );
 
         return MarkerArrow.draw( g, color, null, coord_xform,
                                  tStart, (float) iStart,
                                  tFinal, (float) iFinal );
     }
 
-    public  int  drawEventOnViewport( Graphics2D      g,
-                                      CoordPixelXform coord_xform,
-                                      Map             map_line2row,
-                                      ColorAlpha      color )
+    public  int  drawEventOnViewport( Graphics2D         g,
+                                      CoordPixelXform    coord_xform,
+                                      OpenIntIntHashMap  map_line2row,
+                                      ColorAlpha         color )
     {
         Coord  vtx;
         vtx = this.getStartVertex();
@@ -579,9 +571,7 @@ public class Primitive extends Drawable
 
         int    rowID;
         float  rPeak, rStart, rFinal;
-        rowID  = ( (Integer)
-                   map_line2row.get( new Integer(vtx.lineID) )
-                 ).intValue();
+        rowID  = map_line2row.get( vtx.lineID );
         rPeak  = (float) rowID - 0.25f;
         rStart = (float) rowID - 0.5f;
         rFinal = rStart + 1.0f;

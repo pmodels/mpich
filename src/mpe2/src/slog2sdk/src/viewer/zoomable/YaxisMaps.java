@@ -21,6 +21,9 @@ import java.util.Iterator;
 import java.util.Enumeration;
 import java.io.PrintStream;
 
+import cern.colt.map.OpenIntIntHashMap;
+import cern.colt.function.IntIntProcedure;
+
 import logformat.slog2.LineIDMap;
 import viewer.common.Parameters;
 
@@ -53,7 +56,7 @@ public class YaxisMaps
 
     private Map                 map_line2treeleaf;
     private Map                 map_treepath2row;
-    private Map                 map_line2row;
+    private OpenIntIntHashMap   map_line2row;
 
     public YaxisMaps( final LineIDMap  in_linemap )
     {
@@ -107,7 +110,7 @@ public class YaxisMaps
         return map_treepath2row;
     }
 
-    public Map getMapOfLineIDToRowID()
+    public OpenIntIntHashMap getMapOfLineIDToRowID()
     {
         return map_line2row;
     }
@@ -211,8 +214,7 @@ public class YaxisMaps
         boolean        isOK;
 
         if ( map_line2row == null )
-            // map_line2row = new HashMap();
-            map_line2row = new TreeMap();
+            map_line2row = new OpenIntIntHashMap();
         else
             map_line2row.clear();
 
@@ -230,7 +232,7 @@ public class YaxisMaps
             }
             if ( rowID == null )
                 isOK = false;
-            map_line2row.put( lineID, rowID );
+            map_line2row.put( lineID.intValue(), rowID.intValue() );
         }
         // System.out.println( this.stringForMapOfLineIDToRowID() );
         return isOK;
@@ -291,6 +293,19 @@ public class YaxisMaps
         return rep.toString();
     }
 
+    public static String stringForIntIntMap( final OpenIntIntHashMap  iimap )
+    {
+        final StringBuffer rep = new StringBuffer();
+        iimap.forEachPair( new IntIntProcedure() {
+                               public boolean apply(int arg1, int arg2) {
+                                   rep.append( " [ " + arg1 + " ] => " + arg2
+                                             + "\n" );
+                                   return true;
+                               }
+                         } );
+        return rep.toString();
+    }
+
     public String stringForMapOfLineIDToTreeLeaf()
     {
         Map.Entry   entry;
@@ -318,7 +333,7 @@ public class YaxisMaps
 
     public String stringForMapOfLineIDToRowID()
     {
-        return "MapOfLineIDToRowID:\n" + stringForMap( map_line2row );
+        return "MapOfLineIDToRowID:\n" + stringForIntIntMap( map_line2row );
     }
 
     public void printMaps( PrintStream  pstm )

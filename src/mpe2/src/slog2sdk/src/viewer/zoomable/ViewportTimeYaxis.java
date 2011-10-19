@@ -9,12 +9,13 @@
 
 package viewer.zoomable;
 
-import java.util.Map;
 import java.util.Iterator;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 // import javax.swing.event.*;
+
+import cern.colt.map.OpenIntIntHashMap;
 
 import base.drawable.Drawable;
 import viewer.common.Dialogs;
@@ -248,11 +249,11 @@ public class ViewportTimeYaxis extends ViewportTime
 
     public void paint( Graphics g )
     {
-        Map         map_line2row;
-        Iterator    itr;
-        InfoDialog  info_popup;
-        Drawable    dobj;
-        int         x_pos;
+        OpenIntIntHashMap  map_line2row;
+        Iterator           itr;
+        InfoDialog         info_popup;
+        Drawable           dobj;
+        int                x_pos;
 
         if ( Debug.isActive() )
             Debug.println( "ViewportTimeYaxis: paint()'s START: " );

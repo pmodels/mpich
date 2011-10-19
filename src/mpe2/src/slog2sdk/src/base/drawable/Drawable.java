@@ -10,11 +10,11 @@
 package base.drawable;
 
 // import java.util.Comparator;
-import java.util.Map;
 import java.awt.Graphics2D;
 import java.awt.Color;
 import java.awt.Point;
 
+import cern.colt.map.OpenIntIntHashMap;
 import base.topology.Pointer;
 import base.topology.MarkerState;
 
@@ -44,7 +44,7 @@ public abstract class Drawable extends InfoBox
     private              int        row_ID;        // For SLOG-2 Input API
 
     // non-null parent => this Drawable is part of a Composite Drawable
-    private              Drawable parent;        // For SLOG-2 Input API
+    private              Drawable   parent;        // For SLOG-2 Input API
 
 
     public Drawable()
@@ -175,59 +175,59 @@ public abstract class Drawable extends InfoBox
 
     public abstract Coord     getFinalVertex();
 
-    public abstract int       drawStateOnCanvas( Graphics2D       g,
-                                                 CoordPixelXform  coord_xform,
-                                                 Map              map_line2row,
-                                                 DrawnBoxSet      drawn_boxes,
-                                                 ColorAlpha       color );
+    public abstract int       drawStateOnCanvas( Graphics2D        g,
+                                                 CoordPixelXform   coord_xform,
+                                                 OpenIntIntHashMap map_line2row,
+                                                 DrawnBoxSet       drawn_boxes,
+                                                 ColorAlpha        color );
 
-    public abstract int       drawArrowOnCanvas( Graphics2D       g,
-                                                 CoordPixelXform  coord_xform,
-                                                 Map              map_line2row,
-                                                 DrawnBoxSet      drawn_boxes,
-                                                 ColorAlpha       color );
+    public abstract int       drawArrowOnCanvas( Graphics2D        g,
+                                                 CoordPixelXform   coord_xform,
+                                                 OpenIntIntHashMap map_line2row,
+                                                 DrawnBoxSet       drawn_boxes,
+                                                 ColorAlpha        color );
 
-    public abstract int       drawEventOnCanvas( Graphics2D       g,
-                                                 CoordPixelXform  coord_xform,
-                                                 Map              map_line2row,
-                                                 DrawnBoxSet      drawn_boxes,
-                                                 ColorAlpha       color );
+    public abstract int       drawEventOnCanvas( Graphics2D        g,
+                                                 CoordPixelXform   coord_xform,
+                                                 OpenIntIntHashMap map_line2row,
+                                                 DrawnBoxSet       drawn_boxes,
+                                                 ColorAlpha        color );
 
-    public abstract boolean   isPixelInState( CoordPixelXform  coord_xform,
-                                              Map              map_line2row,
-                                              Point            pix_pt );
+    public abstract boolean   isPixelInState( CoordPixelXform   coord_xform,
+                                              OpenIntIntHashMap map_line2row,
+                                              Point             pix_pt );
 
-    public abstract boolean   isPixelOnArrow( CoordPixelXform  coord_xform,
-                                              Map              map_line2row,
-                                              Point            pix_pt );
+    public abstract boolean   isPixelOnArrow( CoordPixelXform   coord_xform,
+                                              OpenIntIntHashMap map_line2row,
+                                              Point             pix_pt );
 
-    public abstract boolean   isPixelAtEvent( CoordPixelXform  coord_xform,
-                                              Map              map_line2row,
-                                              Point            pix_pt );
+    public abstract boolean   isPixelAtEvent( CoordPixelXform   coord_xform,
+                                              OpenIntIntHashMap map_line2row,
+                                              Point             pix_pt );
 
-    public abstract int       drawStateOnViewport( Graphics2D      g,
-                                                   CoordPixelXform coord_xform,
-                                                   Map             map_line2row,
-                                                   ColorAlpha      color );
+    public abstract int       drawStateOnViewport( Graphics2D     g,
+                                                CoordPixelXform   coord_xform,
+                                                OpenIntIntHashMap map_line2row,
+                                                ColorAlpha        color );
 
-    public abstract int       drawArrowOnViewport( Graphics2D      g,
-                                                   CoordPixelXform coord_xform,
-                                                   Map             map_line2row,
-                                                   ColorAlpha      color );
+    public abstract int       drawArrowOnViewport( Graphics2D     g,
+                                                CoordPixelXform   coord_xform,
+                                                OpenIntIntHashMap map_line2row,
+                                                ColorAlpha        color );
 
-    public abstract int       drawEventOnViewport( Graphics2D      g,
-                                                   CoordPixelXform coord_xform,
-                                                   Map             map_line2row,
-                                                   ColorAlpha      color );
+    public abstract int       drawEventOnViewport( Graphics2D     g,
+                                                CoordPixelXform   coord_xform,
+                                                OpenIntIntHashMap map_line2row,
+                                                ColorAlpha        color );
 
     public abstract boolean   containSearchable();
 
     // Since Searchable is assumed to be a State drawable,
     // so no need to make drawSearchableOnViewport() as abstract interface.
     // That will change if Searchable can be any Drawable.
-    public int drawSearchableOnViewport( Graphics2D      g,
-                                         CoordPixelXform coord_xform,
-                                         Map             map_line2row )
+    public int drawSearchableOnViewport( Graphics2D        g,
+                                         CoordPixelXform   coord_xform,
+                                         OpenIntIntHashMap map_line2row )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -260,25 +260,22 @@ public abstract class Drawable extends InfoBox
 
 
 
-    private float getRowIDAtTimeOnEvent( Map map_line2row, double marker_time )
+    private float getRowIDAtTimeOnEvent( OpenIntIntHashMap map_line2row,
+                                         double            marker_time )
     {
         Coord vtx   = this.getStartVertex();
-        int   rowID = ( (Integer)
-                        map_line2row.get( new Integer(vtx.lineID) )
-                      ).intValue();
-        return (float) rowID;
+        return (float) map_line2row.get( vtx.lineID );
     }
 
-    private float getRowIDAtTimeOnState( Map map_line2row, double marker_time )
+    private float getRowIDAtTimeOnState( OpenIntIntHashMap map_line2row,
+                                         double            marker_time )
     {
         Coord vtx   = this.getStartVertex();
-        int   rowID = ( (Integer)
-                        map_line2row.get( new Integer(vtx.lineID) )
-                      ).intValue();
-        return (float) rowID;
+        return (float) map_line2row.get( vtx.lineID );
     }
 
-    private float getRowIDAtTimeOnArrow( Map map_line2row, double marker_time )
+    private float getRowIDAtTimeOnArrow( OpenIntIntHashMap map_line2row,
+                                         double            marker_time )
     {
         Coord  start_vtx, final_vtx;
         start_vtx = this.getStartVertex();
@@ -289,12 +286,8 @@ public abstract class Drawable extends InfoBox
         tFinal = final_vtx.time;
 
         double  rStart, rFinal;
-        rStart = ( (Integer)
-                   map_line2row.get( new Integer(start_vtx.lineID) )
-                 ).doubleValue();
-        rFinal = ( (Integer)
-                   map_line2row.get( new Integer(final_vtx.lineID) )
-                 ).doubleValue();
+        rStart = (double) map_line2row.get( start_vtx.lineID );
+        rFinal = (double) map_line2row.get( final_vtx.lineID );
 
         boolean  isSlopeNonComputable = false;
         double   slope = 0.0;
@@ -321,7 +314,8 @@ public abstract class Drawable extends InfoBox
         return (float) marker_rowID;
     }
 
-    public float getRowIDAtTime( Map  map_line2row, double marker_time )
+    public float getRowIDAtTime( OpenIntIntHashMap  map_line2row,
+                                 double             marker_time )
     {
         Category type = super.getCategory();
         Topology topo = type.getTopology();
@@ -420,9 +414,9 @@ public abstract class Drawable extends InfoBox
 
 
     /* Caller needs to be sure that the Drawable displayed is a State */
-    public void setStateRowAndNesting( CoordPixelXform  coord_xform,
-                                       Map              map_line2row,
-                                       NestingStacks    nesting_stacks )
+    public void setStateRowAndNesting( CoordPixelXform    coord_xform,
+                                       OpenIntIntHashMap  map_line2row,
+                                       NestingStacks      nesting_stacks )
     {
         Coord  start_vtx;
         start_vtx = this.getStartVertex();
@@ -431,19 +425,17 @@ public abstract class Drawable extends InfoBox
         final_vtx = this.getFinalVertex();
         */
 
-        row_ID  = ( (Integer)
-                    map_line2row.get( new Integer(start_vtx.lineID) )
-                  ).intValue();
+        row_ID      = map_line2row.get( start_vtx.lineID );
         nesting_ftr = nesting_stacks.getNestingFactorFor( this );
     }
 
     /* return number of primitives drawn */
     // drawOnCanvas() implementation DOES NOT check
     // if drawable is completely out of image bound.
-    public int       drawOnCanvas( Graphics2D      g,
-                                   CoordPixelXform coord_xform,
-                                   Map             map_line2row,
-                                   DrawnBoxSet     drawn_boxes )
+    public int       drawOnCanvas( Graphics2D         g,
+                                   CoordPixelXform    coord_xform,
+                                   OpenIntIntHashMap  map_line2row,
+                                   DrawnBoxSet        drawn_boxes )
     {
         Category type = super.getCategory();
         Topology topo = type.getTopology();
@@ -464,9 +456,9 @@ public abstract class Drawable extends InfoBox
         return 0;
     }
 
-    public Drawable getDrawableAt( CoordPixelXform  coord_xform,
-                                   Map              map_line2row,
-                                   Point            pix_pt )
+    public Drawable getDrawableAt( CoordPixelXform    coord_xform,
+                                   OpenIntIntHashMap  map_line2row,
+                                   Point              pix_pt )
     {
         Category type = super.getCategory();
         Topology topo = type.getTopology();
@@ -490,9 +482,9 @@ public abstract class Drawable extends InfoBox
     /* return number of primitives drawn */
     // drawOnViewport() implementation DOES check
     // if drawable is completely out of image bound.
-    public int       drawOnViewport( Graphics2D      g,
-                                     CoordPixelXform coord_xform,
-                                     Map             map_line2row )
+    public int       drawOnViewport( Graphics2D         g,
+                                     CoordPixelXform    coord_xform,
+                                     OpenIntIntHashMap  map_line2row )
     {
         Category type = super.getCategory();
         Topology topo = type.getTopology();

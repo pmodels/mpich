@@ -16,6 +16,8 @@ import java.awt.event.ActionListener;
 import java.util.Map;
 import java.net.URL;
 
+import cern.colt.map.OpenIntIntHashMap;
+
 import base.drawable.Coord;
 import base.drawable.Coord_TimeRowID;
 import base.drawable.Drawable;
@@ -30,15 +32,15 @@ public class InfoDialogForDrawable extends InfoDialog
 {
     private static final long       serialVersionUID = 13200L;
 
-    private ModelTime        time_model;
-    private YaxisMaps        y_maps;
-    private YaxisTree        tree_view;
-    private Drawable         clk_dobj;
-    private JButton          left_btn;
-    private JButton          home_btn;
-    private JButton          right_btn;
-    private Map              map_line2treeleaf;
-    private Map              map_line2row;
+    private ModelTime          time_model;
+    private YaxisMaps          y_maps;
+    private YaxisTree          tree_view;
+    private Drawable           clk_dobj;
+    private JButton            left_btn;
+    private JButton            home_btn;
+    private JButton            right_btn;
+    private Map                map_line2treeleaf;
+    private OpenIntIntHashMap  map_line2row;
 
     private Coord_TimeRowID  marker_vtx;
 
@@ -156,9 +158,7 @@ public class InfoDialogForDrawable extends InfoDialog
         {
             Coord start_vtx  = clk_dobj.getStartVertex();
             marker_vtx.time  = start_vtx.time;
-            marker_vtx.rowID = ( (Integer)
-                               map_line2row.get( new Integer(start_vtx.lineID) )
-                               ).floatValue();
+            marker_vtx.rowID = (float) map_line2row.get( start_vtx.lineID );
             time_model.centerTimeViewPosition( marker_vtx.time );
             tree_view.scrollRowToVisible( (int) marker_vtx.rowID );
             /*
@@ -196,9 +196,7 @@ public class InfoDialogForDrawable extends InfoDialog
         {
             Coord final_vtx = clk_dobj.getFinalVertex();
             marker_vtx.time = final_vtx.time;
-            marker_vtx.rowID = ( (Integer)
-                               map_line2row.get( new Integer(final_vtx.lineID) )
-                               ).floatValue();
+            marker_vtx.rowID = (float) map_line2row.get( final_vtx.lineID );
             time_model.centerTimeViewPosition( marker_vtx.time );
             tree_view.scrollRowToVisible( (int) marker_vtx.rowID );
             /*

@@ -52,6 +52,7 @@ $(TARGET): $(OBJ)
 	    $(JAR) $(JARFLAGS)uf $${jarfile} $${classdir_prefix}*.class ; \
 	done ; \
         cd ../src && \
+	$(JAR) $(JARFLAGS)uf $${jarfile} `find cern -name '*.class' -print` ; \
 	for dir in base/io/ base/drawable/ logformat/slog2/ \
 	           logformat/slog2/output/ $(PKGDIR)/ ; do \
 	    classdir_prefix=@JPATH_START@$${dir}@JPATH_FINAL@ ; \

@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import cern.colt.map.OpenIntIntHashMap;
+
 import base.drawable.TimeBoundingBox;
 import base.drawable.Topology;
 // import base.drawable.Category;
@@ -163,8 +165,9 @@ public class BufForTimeAveBoxes extends TimeBoundingBox
 
     /*  Drawing related API */
 
-    private static List  getLine2RowMappedKey( final Map   map_line2row,
-                                               final List  old_keylist )
+    private
+    static List  getLine2RowMappedKey( final OpenIntIntHashMap map_line2row,
+                                       final List              old_keylist )
     {
         List      new_keylist;
         Object[]  old_keys;
@@ -172,8 +175,8 @@ public class BufForTimeAveBoxes extends TimeBoundingBox
         new_keylist    = new ArrayList(); 
         old_keys       = old_keylist.toArray(); 
         new_keylist.add( old_keys[0] );  // Topology
-        new_keylist.add( map_line2row.get( (Integer) old_keys[1] ) );
-        new_keylist.add( map_line2row.get( (Integer) old_keys[2] ) );
+        new_keylist.add( new Integer( map_line2row.get( ((Integer) old_keys[1]).intValue() ) ) );
+        new_keylist.add( new Integer( map_line2row.get( ((Integer) old_keys[2]).intValue() ) ) );
         return new_keylist;
     }
 
@@ -183,11 +186,11 @@ public class BufForTimeAveBoxes extends TimeBoundingBox
     public void setDrawingArrows( boolean isDrawing )
     { drawArrows  = isDrawing; }
 
-    public void initializeDrawing( final Map      map_line2row,
-                                   final Color    background_color,
-                                         boolean  isZeroTimeOrigin,
-                                         float    init_state_height,
-                                         float    next_state_height )
+    public void initializeDrawing( final OpenIntIntHashMap  map_line2row,
+                                   final Color              background_color,
+                                         boolean            isZeroTimeOrigin,
+                                         float              init_state_height,
+                                         float              next_state_height )
     {
         Map.Entry          entry;
         Iterator           entry_itr, avebox_itr;

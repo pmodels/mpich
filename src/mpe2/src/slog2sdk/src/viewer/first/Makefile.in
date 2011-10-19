@@ -48,6 +48,7 @@ $(TARGET): $(OBJ)
 	echo "Main-Class: $(PACKAGE).FirstFrame" > $(PACKAGE).manifest ; \
 	jarfile=@JPATH_START@$@@JPATH_FINAL@ ; \
 	$(JAR) $(JARFLAGS)cfm $${jarfile} $(PACKAGE).manifest ; \
+	$(JAR) $(JARFLAGS)uf $${jarfile} `find cern -name '*.class' -print` ; \
 	for dir in base/io/ base/topology/ base/drawable/ base/statistics/ \
 	           logformat/slog2/ logformat/slog2/input/ \
 	           viewer/common/ viewer/convertor/ viewer/legends/ \

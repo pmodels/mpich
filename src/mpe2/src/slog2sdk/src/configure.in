@@ -408,7 +408,7 @@ fi
 AC_SUBST(libbuild_dir)
 
 # Define the "dirs" components
-base_dirs="base/io base/drawable base/statistics base/topology"
+base_dirs="cern base/io base/drawable base/statistics base/topology"
 logformat_clog_dirs="logformat/clog logformat/clogTOdrawable logformat/clog2 logformat/clog2TOdrawable"
 logformat_basic_dirs="logformat/trace logformat/slog2"
 logformat_slog2_dirs="logformat/slog2/output logformat/slog2/input logformat/slog2/pipe logformat/slog2/update"

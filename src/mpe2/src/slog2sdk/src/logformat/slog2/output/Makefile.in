@@ -48,6 +48,7 @@ $(TARGET1): $(OBJ)
 	echo "Main-Class: $(PACKAGE).ClogToSlog2" > $(PACKAGE).manifest ; \
 	jarfile=@JPATH_START@$@@JPATH_FINAL@ ; \
 	$(JAR) $(JARFLAGS)cfm $${jarfile} $(PACKAGE).manifest ; \
+	$(JAR) $(JARFLAGS)uf $${jarfile} `find cern -name '*.class' -print` ; \
 	for dir in base/io/ base/drawable/ logformat/slog2/ \
 	           logformat/clog/ logformat/clogTOdrawable/ $(PKGDIR)/ ; do \
 	    classdir_prefix=@JPATH_START@$${dir}@JPATH_FINAL@ ; \
@@ -61,6 +62,7 @@ $(TARGET2): $(OBJ)
 	echo "Main-Class: $(PACKAGE).Clog2ToSlog2" > $(PACKAGE).manifest ; \
 	jarfile=@JPATH_START@$@@JPATH_FINAL@ ; \
 	$(JAR) $(JARFLAGS)cfm $${jarfile} $(PACKAGE).manifest ; \
+	$(JAR) $(JARFLAGS)uf $${jarfile} `find cern -name '*.class' -print` ; \
 	for dir in base/io/ base/drawable/ logformat/slog2/ \
 	           logformat/clog2/ logformat/clog2TOdrawable/ $(PKGDIR)/ ; do \
 	    classdir_prefix=@JPATH_START@$${dir}@JPATH_FINAL@ ; \
@@ -74,6 +76,7 @@ $(TARGET3): $(OBJ)
 	echo "Main-Class: $(PACKAGE).TraceToSlog2" > $(PACKAGE).manifest ; \
 	jarfile=@JPATH_START@$@@JPATH_FINAL@ ; \
 	$(JAR) $(JARFLAGS)cfm $${jarfile} $(PACKAGE).manifest ; \
+	$(JAR) $(JARFLAGS)uf $${jarfile} `find cern -name '*.class' -print` ; \
 	for dir in base/io/ base/drawable/ logformat/slog2/ \
 	           logformat/trace/ $(PKGDIR)/ ; do \
 	    classdir_prefix=@JPATH_START@$${dir}@JPATH_FINAL@ ; \

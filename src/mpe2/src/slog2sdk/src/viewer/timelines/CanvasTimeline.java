@@ -16,6 +16,8 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import cern.colt.map.OpenIntIntHashMap;
+
 import base.drawable.TimeBoundingBox;
 import base.drawable.Coord;
 import base.drawable.Coord_TimeRowID;
@@ -79,7 +81,7 @@ public class CanvasTimeline extends ScrollableObject
     private int                num_rows;
     private int                row_height;
     private NestingStacks      nesting_stacks;
-    private Map                map_line2row;
+    private OpenIntIntHashMap  map_line2row;
     private DrawnBoxSet        drawn_boxes;
 
     private boolean            isConnectedComposite;
@@ -416,7 +418,7 @@ public class CanvasTimeline extends ScrollableObject
         // Determine the timeframe of the current view by vport_timeframe
         // System.out.println( "CurrView's timeframe = " + vport_timeframe );
 
-        Map map_line2row = y_maps.getMapOfLineIDToRowID();
+        OpenIntIntHashMap map_line2row = y_maps.getMapOfLineIDToRowID();
         if ( map_line2row == null ) {
             if ( ! y_maps.update() )
                 Dialogs.error( root_frame, "Error in updating YaxisMaps!" );

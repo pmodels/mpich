@@ -78,6 +78,7 @@ $(TS_TARGET): $(OBJ) $(TS_OBJ)
 	echo "Main-Class: $(PACKAGE).TestMainFrame" > $(PACKAGE).manifest ; \
 	jarfile=@JPATH_START@$@@JPATH_FINAL@ ; \
 	$(JAR) $(JARFLAGS)cfm $${jarfile} $(PACKAGE).manifest ; \
+	$(JAR) $(JARFLAGS)uf $${jarfile} `find cern -name '*.class' -print` ; \
 	for dir in base/drawable/ viewer/common/ $(PKGDIR)/ ; do \
 	    classdir_prefix=@JPATH_START@$${dir}@JPATH_FINAL@ ; \
 	    $(JAR) $(JARFLAGS)uf $${jarfile} $${classdir_prefix}*.class ; \

@@ -10,10 +10,11 @@
 package viewer.histogram;
 
 import java.util.Date;
-import java.util.Map;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.event.*;
+
+import cern.colt.map.OpenIntIntHashMap;
 
 import base.drawable.TimeBoundingBox;
 import base.statistics.Summarizable;
@@ -55,7 +56,7 @@ public class CanvasStatline extends ScrollableObject
 
     private int                num_rows;
     private int                row_height;
-    private Map                map_line2row;
+    private OpenIntIntHashMap  map_line2row;
 
     private Date               zero_time, init_time, final_time;
 
