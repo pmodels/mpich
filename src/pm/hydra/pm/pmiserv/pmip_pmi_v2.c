@@ -355,7 +355,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
                 tmp[i++] = HYDU_strdup(";");
             }
             tmp[i++] = HYDU_strdup("found=TRUE;value=");
-            tmp[i++] = HYDU_strdup(run->val);
+            tmp[i++] = HYDU_strdup(map);
             tmp[i++] = HYDU_strdup(";rc=0;");
             tmp[i++] = NULL;
 
@@ -386,7 +386,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
                 tmp[i++] = HYDU_strdup(";");
             }
             tmp[i++] = HYDU_strdup("found=TRUE;value=");
-            tmp[i++] = HYDU_strdup(run->val);
+            tmp[i++] = HYDU_strdup(map);
             tmp[i++] = HYDU_strdup(";rc=0;");
             tmp[i++] = NULL;
 
