@@ -10,13 +10,16 @@
  * RMA Declarations.  We should move these into something separate from
  * a Request.
  */
+
 /* to send derived datatype across in RMA ops */
 typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
     int           is_contig; 
     int           max_contig_blocks;
     int           size;     
     MPI_Aint      extent;   
-    int           dataloop_size; /* not needed because this info is sent in packet header. remove it after lock/unlock is implemented in the device */
+    int           dataloop_size; /* not needed because this info is sent in 
+				    packet header. remove it after lock/unlock 
+				    is implemented in the device */
     void          *dataloop;  /* pointer needed to update pointers
                                  within dataloop on remote side */
     int           dataloop_depth; 
@@ -66,7 +69,8 @@ typedef struct MPIDI_Win_lock_queue {
     int lock_type;
     MPI_Win source_win_handle;
     MPIDI_VC_t * vc;
-    struct MPIDI_PT_single_op *pt_single_op;  /* to store info for lock-put-unlock optimization */
+    struct MPIDI_PT_single_op *pt_single_op;  /* to store info for 
+						 lock-put-unlock optimization */
 } MPIDI_Win_lock_queue;
 
 /* Routine use to tune RMA optimizations */
