@@ -299,7 +299,8 @@ open (MPIFD, ">${outfile_prefix}.f90.new" ) || die "Could not open ${outfile_pre
 #       USE MPI_CONSTANTS,                                               &
 #     &      BASE_MPI_WTIME => MPI_WTIME, BASE_MPI_WTICK => MPI_WTICK
 # but this caused problems with the pg compiler.  Need to understand and fix
-print MPIFD "!  (C) 2008 by Argonne National Laboratory.
+print MPIFD "!     -*- Mode: Fortran; -*-
+!  (C) 2008 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
        MODULE $ucoutfile_prefix
 !      This module was created by the script buildiface
@@ -316,7 +317,8 @@ close (MPIFD);
 # An example of a choice argument is a "void *buf" input argument to 
 # MPI_Send, which allows any buffer address, both numeric and character.
 open ( MPIBASEFD, ">${outfile_prefix}_base.f90.in.new" ) || die "Could not open ${outfile_prefix}_base.f90.in.new\n";
-print MPIBASEFD "!  (C) 2008 by Argonne National Laboratory.
+print MPIBASEFD "!     -*- Mode: Fortran; -*-
+!  (C) 2008 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.       
        MODULE ${ucoutfile_prefix}_BASE
        IMPLICIT NONE
@@ -547,7 +549,8 @@ close MPIBASEFD;
 &ReplaceIfDifferent( "${outfile_prefix}_base.f90.in", "${outfile_prefix}_base.f90.in.new" );
 
 open ( MPIFD, ">${outfile_prefix}_constants.f90.new" ) || die "Cannot open ${outfile_prefix}_constants.f90.new\n";
-print MPIFD "!  (C) 2008 by Argonne National Laboratory.
+print MPIFD "!     -*- Mode: Fortran; -*-
+!  (C) 2008 by Argonne National Laboratory.
 !       See COPYRIGHT in top-level directory.
         MODULE ${ucoutfile_prefix}_CONSTANTS
         IMPLICIT NONE
@@ -579,7 +582,8 @@ close MPIFD;
 # Finally, the module name needs to be distinct for each choice of
 # <type>, <dims>, <type1>, and <dims1>
 open( MPIFD, ">${outfile_prefix}_t1.f90.new" ) || die "Cannot open ${outfile_prefix}_t1.f90.new\n";
-print MPIFD "!  (C) 2008 by Argonne National Laboratory.
+print MPIFD "!     -*- Mode: Fortran; -*-
+!  (C) 2008 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
         MODULE ${ucoutfile_prefix}_t1_s
         IMPLICIT NONE
