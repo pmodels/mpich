@@ -118,6 +118,8 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
 			mpi_errno, "tmp_buf");
     
     /* FIXME: This needs to be fixed for heterogeneous systems */
+    /* FIXME: If we wanted to validate the transfer as within range at the
+       origin, we'd also need the window size. */
     tmp_buf[3*rank]   = MPIU_PtrToAint(base);
     tmp_buf[3*rank+1] = (MPI_Aint) disp_unit;
     tmp_buf[3*rank+2] = (MPI_Aint) (*win_ptr)->handle;
