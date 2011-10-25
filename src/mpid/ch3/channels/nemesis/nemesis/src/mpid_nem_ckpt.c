@@ -81,8 +81,10 @@ static int ckpt_cb(void *arg)
         /* poke the progress engine in case we're waiting in a blocking recv */
         MPIDI_CH3_Progress_signal_completion();
     }
-    
-    ret = sem_wait(&ckpt_sem);
+
+    do {
+        ret = sem_wait(&ckpt_sem);
+    } while (ret == -1 && errno == EINTR);
     CHECK_ERR(ret, "sem_wait");
 
     if (MPID_nem_netmod_func->ckpt_precheck) {
@@ -121,8 +123,10 @@ static int ckpt_cb(void *arg)
             CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_continue failed");
         }
     }
-
-    ret = sem_post(&cont_sem);
+    
+    do {
+        ret = sem_post(&cont_sem);
+    } while (ret == -1 && errno == EINTR);
     CHECK_ERR(ret, "sem_post");
 
     return 0;
@@ -462,10 +466,14 @@ int MPIDI_nem_ckpt_finish(void)
     mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    ret = sem_post(&ckpt_sem);
+    do {
+        ret = sem_post(&ckpt_sem);
+    } while (ret == -1 && errno == EINTR);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_post", "**sem_post %s", MPIU_Strerror(errno));
 
-    ret = sem_wait(&cont_sem);
+    do {
+        ret = sem_wait(&cont_sem);
+    } while (ret == -1 && errno == EINTR);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_wait", "**sem_wait %s", MPIU_Strerror(errno));
 
     mpi_errno = MPID_nem_barrier();
