@@ -5,7 +5,7 @@
  *
  */
 
-/* style allow:fprintf:21 sig:0 */
+/* style: allow:fprintf:21 sig:0 */
 
 #include "mpi_fortimpl.h"
 
