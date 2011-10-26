@@ -6,6 +6,9 @@
 
 /* Fixme: include the mpichconf.h file? */
 
+/* Allow fprintf in debug statements */
+/* style: allow:fprintf:5 sig:0 */
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>

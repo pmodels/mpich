@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* style: allow:calloc:1 sig:0 */
+/* style: allow:fprintf:2 sig:0 */
+/* style: allow:printf:2 sig:0 */
+
 /* 
  * This program provides a convienient way to test some of the debugger
  * interface functionality, including message queues and named communicators
