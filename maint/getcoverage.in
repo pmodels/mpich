@@ -89,6 +89,7 @@ $lineLeader3 = '^\s*-:\s*\d+:\s*[\{\}]?\s*';
 # Keep track of coverage amounts
 $GrandTotal       = 0;
 $GrandTotalMissed = 0;
+$GrandTotalExec   = 0;
 
 # gfilename is used to hold the current open file for READING, so
 # that error messages can be more specific
@@ -159,13 +160,15 @@ for my $filename (@TopFilenames) {
 	# *every* file within the directory tree. 
 	@files = &ExpandDir( $filename );
 	foreach my $file (@files) {
-	    ($missed_lines,$total_lines) = &CountUncoveredLines( $file );
+	    ($missed_lines,$total_lines,$execLines) = 
+		&CountUncoveredLines( $file );
 	    $GrandTotal       += $total_lines;
 	    $GrandTotalMissed += $missed_lines;
-	    $AnnoteMissed{$file} = "$missed_lines;$total_lines";
+	    $GrandTotalExec   += $execLines;
+	    $AnnoteMissed{$file} = "$missed_lines;$total_lines;$execLines";
 	    if ($missed_lines) {
 		print "$missed_lines line(s) not covered by tests in $file\n";
-		&WriteAnnoteFile( $file );
+		&WriteAnnoteFile( $file, $total_lines, $execLines, $missed_lines );
 	    }
 	    else {
 		print "All code covered by tests in $file\n";
@@ -174,14 +177,16 @@ for my $filename (@TopFilenames) {
 	}
     }
     elsif (-s $filename) {
-	($missed_lines,$total_lines) = &CountUncoveredLines( $filename );
+	($missed_lines,$total_lines,$execLines) = 
+	    &CountUncoveredLines( $filename );
 	$GrandTotal       += $total_lines;
 	$GrandTotalMissed += $missed_lines;
-	$AnnoteMissed{$filename} = "$missed_lines;$total_lines";
+	$GrandTotalExec   += $execLines;
+	$AnnoteMissed{$filename} = "$missed_lines;$total_lines;$execLines";
 	print "$filename - $missed_lines missed lines\n" if $gDebug;
 	if ($missed_lines) {
 	    print "$missed_lines line(s) not covered by tests in $filename\n";
-	    &WriteAnnoteFile( $filename );
+	    &WriteAnnoteFile( $filename, $total_lines, $execLines, $missed_lines );
 	}
 	else {
 	    print "All code covered by tests in $filename\n";
@@ -215,6 +220,7 @@ sub CountUncoveredLines {
     my $headerOutput = 0;
     my $linecount    = 0;    # Line in the coverage file
     my $fileline     = 0;    # Line in the original file
+    my $executableLines = 0; # Number of lines that could be executed
     my $lastLineOut  = -1;
     my ($lineincr, $filelineincr); # Used to update linecount,fileline
     my $oldLine;
@@ -266,9 +272,13 @@ L:  while (<FD>) {
 	}
 
 	# If requested, skip obvious error checking lines
+	# The errflag set should really be an MPIU_ERR macro; the
+	# test is designed to accept only lines that set that flag
+	# and nothing else.
 	if ($skipErrExits && 
 	    (/FUNC_EXIT.*STATE/ || /MPIR_Err_return_/ || 
 	     /MPIU_ERR_SET/ || /MPIU_ERR_POP/ || /goto\s+fn_fail/ ||
+	     /MPIU_ERR_ADD/ || /^\s*\*errflag\s*=\s*[^;]*;\s*$/ || 
 	     /fn_fail:/ || /MPIR_Err_create_code/)) {
 	    next;
 	}
@@ -284,6 +294,7 @@ L:  while (<FD>) {
 	    }
 
 	    $missed_lines++;
+	    $executableLines++;  # This missed line is executable 
 		
 	    # The char\s+.* allows char or const char (or other 
 	    # things, but nothing else should use FCNAME).
@@ -308,6 +319,14 @@ L:  while (<FD>) {
 		$lastLineOut = $linecount;
 	    }
 	}
+	elsif (/^\s*-:/) {
+	    ;
+	    # Not (at least to gcov) an executable line
+	}
+	elsif (/^\s*\d+:/) {
+	    # A line that was executed at least once
+	    $executableLines++;
+	}
 	if ($includeFileInOutput) {
 	    print $_;
 	}
@@ -315,7 +334,7 @@ L:  while (<FD>) {
 	$lastLine = $_;
     }
     close (FD);
-    return ($missed_lines,$fileline);
+    return ($missed_lines,$fileline,$executableLines);
 }
 
 # ----------------------------------------------------------------------------
@@ -372,6 +391,7 @@ L2: while (<FD>) {
 	if ($skipErrExits && 
 	    (/FUNC_EXIT.*STATE/ || /MPIR_Err_return_/ || 
 	     /MPIU_ERR_SET/ || /MPIU_ERR_POP/ || /goto\s+fn_fail/ ||
+	     /MPIU_ERR_ADD/ || /^\s*\*errflag\s*=\s*[^;]*;\s*$/ || 
             /fn_fail:/ || /MPIR_Err_create_code/)) {
 	    # If requested, skip obvious error checking lines
 	    $newstate = "skip";
@@ -477,12 +497,15 @@ L2: while (<FD>) {
 # (returns immediately if annotations are not requested)
 # To aid in navigating the annotation pages
 # 
-# WriteAnnoteFile( filename )
+# WriteAnnoteFile( filename, total_lines, exec_lines, missed_lines )
 # Also inserts the generated filename to the hash %AnnoteFilesMap
 # with key the base filename (e.g., foo.c) and the value the
 # full directory path (e.g., $annoteSrcDir/foo.c.htm)
 sub WriteAnnoteFile {
     my $filename = $_[0];
+    my $totalLines = $_[1];
+    my $execLines  = $_[2];
+    my $missedLines = $_[3];
 
     print "Writing (if $annoteFiles) annotated file $filename\n" if $gDebug;
     if ($annoteFiles) {
@@ -507,6 +530,9 @@ sub WriteAnnoteFile {
 	    print $OUTFD "<TITLE>Coverage for $filename</TITLE>$newline";
 	    print $OUTFD "</HEAD>$newline";
 	    print $OUTFD "<BODY BGCOLOR=\"FFFFFF\">$newline";
+	    my $percent = sprintf( "%2d", 100 * $missedLines / $execLines );
+	    print $OUTFD "For $filename, $missedLines lines of code out of $execLines executable lines were not executed ($percent\% missed)<P>$newline";
+	    
 	    &AnnotateUncoveredLines( $filename, "red", $OUTFD );
 	    print $OUTFD "</BODY></HTML>$newline";
 	    close( $OUTFD );
@@ -548,6 +574,15 @@ sub WriteAnnoteFileMap {
         $percent = sprintf( "%.2f", $percent );
 	$covered = sprintf( "%.2f", $covered );
 	print IFD "or $percent% missed ($covered% covered)\n";
+	# Do the same, but for the executable lines
+	print IFD "<br>Of $GrandTotalExec executable lines in code, $GrandTotalMissed lines were not covered\n";
+	$percent = (100 * $GrandTotalMissed) / $GrandTotalExec;
+	$covered = 100 - $percent;
+	# convert to strings
+        $percent = sprintf( "%.2f", $percent );
+	$covered = sprintf( "%.2f", $covered );
+	print IFD "or $percent% missed ($covered% covered)\n";
+	
 	my $date = `date "+%Y-%m-%d-%H-%M"`;
 	print IFD "<br>This index created on $date\n";
 	if ($CoverageMessage ne "") { 
