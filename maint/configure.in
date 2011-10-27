@@ -27,7 +27,7 @@ if test "$xargs_out" != "0" ; then
 fi
 AC_SUBST(XARGS_NODATA_OPT)
 
-AC_OUTPUT_COMMANDS([chmod a+x simplemake checkbuilds getcoverage genstates clmake f77tof90 extractstrings extractstates extractfixme createcoverage])
+AC_OUTPUT_COMMANDS([chmod a+x simplemake checkbuilds getcoverage genstates clmake f77tof90 extractstrings extractstates extractfixme createcoverage gcovmerge])
 # We have to redefine the variables that autoconf always substitutes and that
 # are used in simplemake
 CFLAGS='@CFLAGS@'
