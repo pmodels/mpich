@@ -12,4 +12,5 @@ ctxsplit 4 timeLimit=300
 cmfree 4
 cmsplit 4
 cmsplit2 12
+cmsplit_type 4
 probe-intercomm 2

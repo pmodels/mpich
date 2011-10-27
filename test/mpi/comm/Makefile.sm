@@ -17,6 +17,7 @@ cmfree_SOURCES      = cmfree.c
 icm_SOURCES         = icm.c
 cmsplit_SOURCES     = cmsplit.c
 cmsplit2_SOURCES     = cmsplit2.c
+cmsplit_type_SOURCES     = cmsplit_type.c
 probe-intercomm_SOURCES = probe-intercomm.c
 
 ../util/mtest.o:
