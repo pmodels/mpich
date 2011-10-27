@@ -818,11 +818,8 @@ MPICH2 supports checkpointing and restart fault-tolerance using BLCR.
 CONFIGURATION
 
 First, you need to have BLCR version 0.8.2 or later installed on your
-machine.  If it's installed in the default system location, add the
-following two options to your configure command:
-
-  --enable-checkpointing 
-  --with-hydra-ckpointlib=blcr
+machine.  If it's installed in the default system location, you don't
+need to do anything.
 
 If BLCR is not installed in the default system location, you'll need
 to tell MPICH2's configure where to find it. You might also need to
@@ -830,8 +827,6 @@ set the LD_LIBRARY_PATH environment variable so that BLCR's shared
 libraries can be found.  In this case add the following options to
 your configure command:
 
-  --enable-checkpointing 
-  --with-hydra-ckpointlib=blcr 
   --with-blcr=<BLCR_INSTALL_DIR> 
   LD_LIBRARY_PATH=<BLCR_INSTALL_DIR>/lib
 
