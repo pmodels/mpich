@@ -296,6 +296,21 @@ int main(int argc, char **argv)
         }
     }
 
+    /*
+     * If this is a checkpoint-restart, if the user specified the
+     * number of processes, we already have a dummy executable. If the
+     * number of processes came from the RMK, our executable list is
+     * still NULL; a dummy executable needs to be created.
+     */
+    if (HYD_uii_mpx_exec_list == NULL) {
+        HYDU_ASSERT(HYD_server_info.user_global.ckpoint_prefix, status);
+
+        /* create a dummy executable */
+        status = HYDU_alloc_exec(&HYD_uii_mpx_exec_list);
+        HYDU_ERR_POP(status, "unable to allocate exec\n");
+        HYD_uii_mpx_exec_list->appnum = 0;
+    }
+
     if (HYD_server_info.user_global.debug)
         for (node = HYD_server_info.node_list; node; node = node->next)
             HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
