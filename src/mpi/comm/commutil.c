@@ -21,6 +21,9 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
 				      sizeof(MPID_Comm), MPID_Comm_direct,
                                       MPID_COMM_PREALLOC};
 
+/* Communicator creation functions */
+struct MPID_CommOps  *MPID_Comm_fns = NULL;
+
 /* utility function to pretty print a context ID for debugging purposes, see
  * mpiimpl.h for more info on the various fields */
 #ifdef USE_DBG_LOGGING

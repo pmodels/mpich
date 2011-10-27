@@ -1901,6 +1901,12 @@ typedef struct MPID_TopoOps {
 /* ------------------------------------------------------------------------- */
 
 
+typedef struct MPID_CommOps {
+    int (*split_type)(MPID_Comm *, int, int, MPID_Info *, MPID_Comm **);
+} MPID_CommOps;
+extern struct MPID_CommOps  *MPID_Comm_fns; /* Communicator creation functions */
+
+
 /* Per process data */
 typedef enum MPIR_MPI_State_t { MPICH_PRE_INIT=0, MPICH_WITHIN_MPI=1,
                MPICH_POST_FINALIZED=2 } MPIR_MPI_State_t;
@@ -3731,6 +3737,8 @@ void MPIR_Comm_get_name_impl(MPID_Comm *comm, char *comm_name, int *resultlen);
 int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
 int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
 int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr);
+int MPIR_Comm_split_type_impl(MPID_Comm *comm_ptr, int split_type, int key, MPID_Info *info_ptr,
+                              MPID_Comm **newcomm_ptr);
 int MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result);
 int MPIR_Group_free_impl(MPID_Group *group_ptr);
 void MPIR_Get_count_impl(MPI_Status *status, MPI_Datatype datatype, int *count);

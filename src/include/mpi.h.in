@@ -368,6 +368,9 @@ typedef int MPI_Info;
 #define MPI_MODE_NOPRECEDE    8192
 #define MPI_MODE_NOSUCCEED   16384 
 
+/* predefined types for MPIX_Comm_split_type */
+#define MPIX_COMM_TYPE_SHARED    1
+
 /* Definitions that are determined by configure. */
 typedef @MPI_AINT@ MPI_Aint;
 typedef @MPI_FINT@ MPI_Fint;
@@ -900,6 +903,9 @@ int MPIX_Ireduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_
 int MPIX_Iscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int MPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 
+/* MPI-3 shared memory */
+int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
+
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
 
@@ -1202,6 +1208,7 @@ int PMPIX_Ireduce_scatter(void *sendbuf, void *recvbuf, int *recvcounts, MPI_Dat
 int PMPIX_Ireduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Iscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
 

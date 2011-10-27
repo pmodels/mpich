@@ -43,6 +43,37 @@ MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
 
 #undef FUNCNAME
+#define FUNCNAME split_type
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int split_type(MPID_Comm * comm_ptr, int split_type, int key,
+                      MPID_Info *info_ptr, MPID_Comm ** newcomm_ptr)
+{
+    MPID_Node_id_t id;
+    MPIR_Rank_t nid;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &id);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    nid = id;
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, nid, key, newcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+static MPID_CommOps comm_fns = {
+    split_type
+};
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
@@ -127,6 +158,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /* Initialize FTB after PMI init */
     mpi_errno = MPIDU_Ftb_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Override split_type */
+    MPID_Comm_fns = &comm_fns;
     
     /*
      * Let the channel perform any necessary initialization
