@@ -9,6 +9,9 @@
    functions is: MPIX_Ibcast, MPIX_Ibarrier, MPIX_Ireduce, MPIX_Ialltoallv,
    MPIX_Iallreduce.
 
+ # MPI-3: the new MPI-3 MPI_Comm_split_type function is now available
+   as an "MPIX_" function.
+
  # PM/PMI: Upgrade hwloc to 1.3.
 
 
