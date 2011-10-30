@@ -2908,10 +2908,10 @@ fi
 # find the source for the doctext LaTeX style files.  Use "false" if
 # doctext is not found
 AC_PATH_PROG(DOCTEXT,doctext,false)
-if test -n "$DOCTEXT" ; then
+if test -n "$DOCTEXT" -a "$DOCTEXT" != "false" ; then
     if test -z "$DOCTEXTSYTLE" ; then
         AC_MSG_CHECKING([for location of doctext style files])
-        dpath=`doctext -debug_paths 2>&1 | grep 'default path' | \
+        dpath=`$DOCTEXT -debug_paths 2>&1 | grep 'default path' | \
 	      sed -e 's%.*default path\(.*\),%\1:%g'`
         saveIFS="$IFS"
         IFS=": "
