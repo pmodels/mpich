@@ -6,15 +6,6 @@ has all MPI 2.2 functions and features required by the standard with
 the exception of support for the "external32" portable I/O format and
 user-defined data representations for I/O.
 
-The distribution has been tested by us on a variety of machines in our
-environments as well as our partner institutes. If you have problems
-with the installation or usage of MPICH2, please send an email to
-mpich-discuss@mcs.anl.gov (you need to subscribe to this list
-(https://lists.mcs.anl.gov/mailman/listinfo/mpich-discuss) before
-sending an email). If you have found a bug in MPICH2, we request that
-you report it at our bug tracking system:
-(https://trac.mcs.anl.gov/projects/mpich2/newticket).
-
 This README file should contain enough information to get you started
 with MPICH2. More extensive installation and user guides can be found
 in the doc/installguide/install.pdf and doc/userguide/user.pdf files
@@ -25,18 +16,19 @@ detailed. Finally, the MPICH2 web site,
 http://www.mcs.anl.gov/research/projects/mpich2, contains information
 on bug fixes and new releases.
 
-  
+
 1.  Getting Started
-2.  Compiler Flags
-3.  Alternate Channels and Devices
-4.  Alternate Process Managers
-5.  Alternate Configure Options
-6.  Testing the MPICH2 installation
-7.  Fault Tolerance
-8.  Environment Variables
-9.  Developer Builds
-10. Installing MPICH2 on windows
-11. Multiple Fortran compiler support
+2.  Reporting Installation or Usage Problems
+3.  Compiler Flags
+4.  Alternate Channels and Devices
+5.  Alternate Process Managers
+6.  Alternate Configure Options
+7.  Testing the MPICH2 installation
+8.  Fault Tolerance
+9.  Environment Variables
+10. Developer Builds
+11. Installing MPICH2 on windows
+12. Multiple Fortran compiler support
 
 
 -------------------------------------------------------------------------
@@ -120,7 +112,7 @@ shared memory), Hydra process management) of MPICH2 up and running.
     need to either install one, or disable Fortran support in MPICH2.
 
     If you are unable to understand what went wrong, please go to step
-    1(i) below, for reporting the issue to the MPICH2 developers and
+    (2) below, for reporting the issue to the MPICH2 developers and
     other users.
 
 (e) Build MPICH2:
@@ -143,7 +135,7 @@ shared memory), Hydra process management) of MPICH2 up and running.
 
       make V=1 2>&1 | tee m.txt   (for bash and sh)
 
-    Then go to step 1(i) below, for reporting the issue to the MPICH2
+    Then go to step (2) below, for reporting the issue to the MPICH2
     developers and other users.
 
 (f) Install the MPICH2 commands:
@@ -243,7 +235,56 @@ the doc subdirectory.
 
 -------------------------------------------------------------------------
 
-2. Compiler Flags
+2. Reporting Installation or Usage Problems
+===========================================
+
+The distribution has been tested by us on a variety of machines in our
+environments as well as our partner institutes.
+
+If you have problems with the installation or usage of MPICH2, please
+follow these steps:
+
+1. First see the Frequently Asked Questions (FAQ) page at
+http://wiki.mcs.anl.gov/mpich2/index.php/Frequently_Asked_Questions to
+see if the problem you are facing has a simple solution. Many common
+problems and their solutions are listed here.
+
+2. If you cannot find an answer on the FAQ page, please send an email
+to mpich-discuss@mcs.anl.gov (you need to subscribe to this list
+(https://lists.mcs.anl.gov/mailman/listinfo/mpich-discuss) before
+sending an email).
+
+Your email should contain the following files.  PLEASE COMPRESS BEFORE
+SENDING, AS THE FILES CAN BE LARGE.  Note that, depending on which
+step the build failed, some of the files might not exist.
+
+    mpich2-%VERSION%/c.txt (generated in step 1(d) above)
+    mpich2-%VERSION%/m.txt (generated in step 1(e) above)
+    mpich2-%VERSION%/mi.txt (generated in step 1(f) above)
+    mpich2-%VERSION%/config.log (generated in step 1(d) above)
+    mpich2-%VERSION%/src/openpa/config.log (generated in step 1(d) above)
+
+If you have compiled MPICH2 and are having trouble running an
+application, please provide the output of the following command in
+your email.
+
+    mpiexec -info
+
+Finally, please include the actual error you are seeing when running
+the application, including the mpiexec command used, and the host
+file. If possible, please try to reproduce the error with a smaller
+application or benchmark and send that along in your bug report.
+
+3. If you have found a bug in MPICH2, we request that you report it at
+our bug tracking system:
+(https://trac.mcs.anl.gov/projects/mpich2/newticket). Even if you
+believe you have found a bug, we recommend you sending an email to
+mpich-discuss@mcs.anl.gov first.
+
+
+-------------------------------------------------------------------------
+
+3. Compiler Flags
 =================
 
 MPICH2 allows several sets of compiler flags to be used. The first
@@ -358,7 +399,7 @@ relevant Makefiles.
 
 -------------------------------------------------------------------------
 
-3. Alternate Channels and Devices
+4. Alternate Channels and Devices
 =================================
 
 The communication mechanisms in MPICH2 are called "devices". MPICH2
@@ -535,7 +576,7 @@ command-line for MPICH2:
 
 -------------------------------------------------------------------------
 
-4. Alternate Process Managers
+5. Alternate Process Managers
 =============================
 
 hydra
@@ -576,7 +617,7 @@ with SLURM. To enable this support, use "--with-pmi=slurm
 
 -------------------------------------------------------------------------
 
-5. Alternate Configure Options
+6. Alternate Configure Options
 ==============================
 
 MPICH2 has a number of other features. If you are exploring MPICH2 as
@@ -723,7 +764,7 @@ Compilation options for development:
 
 -------------------------------------------------------------------------
 
-6. Testing the MPICH2 installation
+7. Testing the MPICH2 installation
 ==================================
 
 To test MPICH2, we package the MPICH2 test suite in the MPICH2
@@ -735,7 +776,7 @@ The results summary will be placed in test/summary.xml
 
 -------------------------------------------------------------------------
 
-7. Fault Tolerance
+8. Fault Tolerance
 ==================
 
 MPICH2 has some tolerance to process failures, and supports
@@ -877,7 +918,7 @@ These instructions can also be found on the MPICH2 wiki:
 
 -------------------------------------------------------------------------
 
-8. Environment Variables
+9. Environment Variables
 ========================
 
 MPICH2 provides several environment variables that have different
@@ -917,8 +958,8 @@ Generic Environment Variables
 
 -------------------------------------------------------------------------
 
-9. Developer Builds
-===================
+10. Developer Builds
+====================
 For MPICH2 developers who want to directly work on the svn, there are
 a few additional steps involved (people using the release tarballs do
 not have to follow these steps). Details about these steps can be
@@ -927,7 +968,7 @@ http://wiki.mcs.anl.gov/mpich2/index.php/Getting_And_Building_MPICH2
 
 -------------------------------------------------------------------------
 
-10. Installing MPICH2 on Windows
+11. Installing MPICH2 on Windows
 ================================
 
 Here are the instructions for setting up MPICH2 on a Windows machine:
@@ -1006,7 +1047,7 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
 
 -------------------------------------------------------------------------
 
-11. Multiple Fortran compiler support
+12. Multiple Fortran compiler support
 =====================================
 
 If the C compiler that is used to build MPICH2 libraries supports both
