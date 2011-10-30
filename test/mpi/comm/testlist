@@ -12,5 +12,6 @@ ctxsplit 4 timeLimit=300
 cmfree 4
 cmsplit 4
 cmsplit2 12
-cmsplit_type 4
 probe-intercomm 2
+# The new comm_split_type is proposed for MPI 3.0
+cmsplit_type 4 mpiversion=3.0
