@@ -476,8 +476,10 @@ int main(int argc, char **argv)
     else if (status != HYD_SUCCESS)
         return -1;
     else if (WIFSIGNALED(exit_status)) {
-        printf("APPLICATION TERMINATED WITH THE EXIT STRING: %s (signal %d)\n",
+        printf("YOUR APPLICATION TERMINATED WITH THE EXIT STRING: %s (signal %d)\n",
                strsignal(WTERMSIG(exit_status)), WTERMSIG(exit_status));
+        printf("This typically refers to a problem with your application.\n");
+        printf("Please see the FAQ page for debugging suggestions\n");
         return exit_status;
     }
     else if (WIFEXITED(exit_status)) {
