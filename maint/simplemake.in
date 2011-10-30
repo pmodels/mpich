@@ -33,6 +33,9 @@ $do_dependencies = "dynamic"; # set to no, static, or dynamic to attempt
 			      # recursive ops) but no actions
 $dependenciesDummy = "no";    # set to yes to create a dummy target for
                               # dependencies
+$allowGcovMerge = 0;          # Set to 1 to include code needed to merge
+                              # gcov output on systems that do not support
+                              # weak symbols
 $makeInclude = "include";     # set to the include command to use.
                               # This is more robust if it ignores missing files
                               # (e.g., the gnumake "-include")
@@ -154,6 +157,16 @@ if (defined($ENV{"RANLIBNEEDED"})) {
 	$ranliblib = 0;
     }
 }
+
+if (defined($ENV{'SM_GCOVMERGE'})) {
+    my $val = $ENV{'SM_GCOVMERGE'};
+    $allowGcovMerge = 0;          # Set to 1 to include code needed to merge
+                                  # gcov output
+    if ($val eq "YES" || $val eq "yes" || $val eq "true" || $val eq "TRUE") {
+	$allowGcovMerge = 1;
+    }
+}
+
 
 #
 # Output File end-of-line character
@@ -4980,13 +4993,37 @@ sub GcovClean {
 # coverage target
 sub TargetGcov {
     if (!$maint_targets) { return; }
+    if ($allowGcovMerge) {
+	print FD "# Run gcov on the source.  Merge output from PMPI and MPI files\n";
+    }
     &TargetInit( "coverage" );
     print FD "$newline";
     foreach $lib (keys(%libraries)) {
 	$sourcefiles = $libraries{$lib};
 	PrintMakeLongline( FD, 
 	   "\t-${quietmake}for file in $sourcefiles ; do \\", "last" );
-	print FD "\t\tgcov -b -f \$\$file ; done$newline";
+	print FD "\t\tgcov -b -f \$\$file ; \\$newline";
+	#
+	# If we use the object renaming for the profiling versions,
+	# we may need to merge the coverage output files from several
+	# input files.  This is ugly enough that we make it an option.
+	# To simplify testing the merge code, we save the original gcov file
+	if ($allowGcovMerge) {
+	    print FD "\t\tbfile=`basename \$\$file .c` ;\\
+\t\tif test -f _\$\$bfile.o ; then \\
+\t\t    mv \$\$file.gcov \$\$file.orig.gcov ;\\
+\t\t    gcov -b -f _\$\$bfile ; \\
+\t\t    if test -f \$\$bfile.c.gcov ; then \\
+\t\t\t\${master_top_srcdir}/maint/gcovmerge.pl \$\$file.orig.gcov \$\$bfile.c.gcov > t2.gcov ; \\
+\t\t\tmv t2.gcov \$\$file.gcov ; \\
+\t\t    else \\
+\t\t\techo \"Unable to create gcov file for _\$\$bfile\"\\
+\t\t\texit 1; \\
+\t\t    fi ; \\
+\t\tfi ; \\
+";
+	}
+	print FD "\tdone$newline";
     }
     &RecursiveOp( "coverage" );
     &TargetPostamble( "coverage" );
