@@ -218,18 +218,6 @@ shared memory), Hydra process management) of MPICH2 up and running.
 If you have completed all of the above steps, you have successfully
 installed MPICH2 and run an MPI example.
 
-(i) If you run into any errors configuring, building or running
-MPICH2, please send the below files to mpich-discuss@mcs.anl.gov.
-PLEASE COMPRESS BEFORE SENDING, AS THE FILES CAN BE LARGE. Note that,
-depending on which step the build failed, some of the files might not
-exist.
-
-    mpich2-%VERSION%/c.txt (generated in step 1(d) above)
-    mpich2-%VERSION%/m.txt (generated in step 1(e) above)
-    mpich2-%VERSION%/mi.txt (generated in step 1(f) above)
-    mpich2-%VERSION%/config.log (generated in step 1(d) above)
-    mpich2-%VERSION%/src/openpa/config.log (generated in step 1(d) above)
-
 More details on arguments to mpiexec are given in the User's Guide in
 the doc subdirectory.
 
@@ -238,31 +226,44 @@ the doc subdirectory.
 2. Reporting Installation or Usage Problems
 ===========================================
 
-The distribution has been tested by us on a variety of machines in our
-environments as well as our partner institutes.
+[VERY IMPORTANT: PLEASE COMPRESS ALL FILES BEFORE SENDING THEM TO
+US. DO NOT SPAM THE MAILING LIST WITH LARGE ATTACHMENTS.]
 
-If you have problems with the installation or usage of MPICH2, please
-follow these steps:
+The distribution has been tested by us on a variety of machines in our
+environments as well as our partner institutes. If you have problems
+with the installation or usage of MPICH2, please follow these steps:
 
 1. First see the Frequently Asked Questions (FAQ) page at
 http://wiki.mcs.anl.gov/mpich2/index.php/Frequently_Asked_Questions to
 see if the problem you are facing has a simple solution. Many common
 problems and their solutions are listed here.
 
-2. If you cannot find an answer on the FAQ page, please send an email
-to mpich-discuss@mcs.anl.gov (you need to subscribe to this list
-(https://lists.mcs.anl.gov/mailman/listinfo/mpich-discuss) before
-sending an email).
+2. If you cannot find an answer on the FAQ page, look through previous
+email threads on the mpich-discuss mailing list archive
+(http://lists.mcs.anl.gov/pipermail/mpich-discuss/). It is likely
+someone else had a similar problem, which has already been resolved
+before.
 
-Your email should contain the following files.  PLEASE COMPRESS BEFORE
-SENDING, AS THE FILES CAN BE LARGE.  Note that, depending on which
-step the build failed, some of the files might not exist.
+3. If neither of the above steps work, please send an email to
+mpich-discuss@mcs.anl.gov. You need to subscribe to this list
+(https://lists.mcs.anl.gov/mailman/listinfo/mpich-discuss) before
+sending an email.
+
+Your email should contain the following files.  ONCE AGAIN, PLEASE
+COMPRESS BEFORE SENDING, AS THE FILES CAN BE LARGE.  Note that,
+depending on which step the build failed, some of the files might not
+exist.
 
     mpich2-%VERSION%/c.txt (generated in step 1(d) above)
     mpich2-%VERSION%/m.txt (generated in step 1(e) above)
     mpich2-%VERSION%/mi.txt (generated in step 1(f) above)
     mpich2-%VERSION%/config.log (generated in step 1(d) above)
     mpich2-%VERSION%/src/openpa/config.log (generated in step 1(d) above)
+    mpich2-%VERSION%/src/mpl/config.log (generated in step 1(d) above)
+    mpich2-%VERSION%/src/pm/hydra/config.log (generated in step 1(d) above)
+    mpich2-%VERSION%/src/pm/hydra/tools/topo/hwloc/hwloc/config.log (generated in step 1(d) above)
+
+    DID WE MENTION? DO NOT FORGET TO COMPRESS THESE FILES!
 
 If you have compiled MPICH2 and are having trouble running an
 application, please provide the output of the following command in
@@ -275,7 +276,7 @@ the application, including the mpiexec command used, and the host
 file. If possible, please try to reproduce the error with a smaller
 application or benchmark and send that along in your bug report.
 
-3. If you have found a bug in MPICH2, we request that you report it at
+4. If you have found a bug in MPICH2, we request that you report it at
 our bug tracking system:
 (https://trac.mcs.anl.gov/projects/mpich2/newticket). Even if you
 believe you have found a bug, we recommend you sending an email to
