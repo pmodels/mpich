@@ -1366,6 +1366,13 @@ static HYD_status process_config_token(char *token, int newline, struct HYD_node
 {
     static int idx = 0;
 
+    if (idx && newline && strcmp(config_argv[idx - 1], ":")) {
+        /* If this is a newline, but not the first one, and the
+         * previous token was not a ":", add an executable delimiter
+         * ':' */
+        config_argv[idx++] = HYDU_strdup(":");
+    }
+
     config_argv[idx++] = HYDU_strdup(token);
     config_argv[idx] = NULL;
 
