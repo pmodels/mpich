@@ -11,7 +11,7 @@
 
 /*@
 
-MPIX_Group_comm_create - Creates a new communicator from a group
+MPIX_Comm_create_group - Creates a new communicator from a group
 
 Input Parameters:
 + comm - communicator (handle)
@@ -31,7 +31,7 @@ Output Parameter:
 .N MPI_ERR_GROUP
 
 @*/
-int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm * new_comm)
+int MPIX_Comm_create_group(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm * new_comm)
 {
     int i, grp_me, me, nproc, merge_size;
     MPI_Comm comm, inter_comm;

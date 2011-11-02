@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-int MPIX_Group_comm_create(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm * new_comm);
+int MPIX_Comm_create_group(MPI_Comm old_comm, MPI_Group group, int tag, MPI_Comm * new_comm);
 
 /* RMA Mutexes extension declarations: */
 
