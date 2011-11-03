@@ -17,3 +17,9 @@ probe-intercomm 2
 cmsplit_type 4 mpiversion=3.0
 comm_create_group 4 mpiversion=3.0
 comm_create_group 8 mpiversion=3.0
+comm_group_half 2 mpiversion=3.0
+comm_group_half 4 mpiversion=3.0
+comm_group_half 8 mpiversion=3.0
+comm_group_rand 2 mpiversion=3.0
+comm_group_rand 4 mpiversion=3.0
+comm_group_rand 8 mpiversion=3.0

@@ -41,7 +41,7 @@ int main(int argc, char **argv)
         MPI_Group_incl(full_group, count, ranks, &sub_group);
 
         if (included[rank]) {
-            MPIX_Group_comm_create(MPI_COMM_WORLD, sub_group, 0, &comm);
+            MPIX_Comm_create_group(MPI_COMM_WORLD, sub_group, 0, &comm);
             MPI_Barrier(comm);
             MPI_Comm_free(&comm);
         }

@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     MPI_Group_range_incl(full_group, 1, range, &half_group);
 
     if (rank <= size / 2) {
-        MPIX_Group_comm_create(MPI_COMM_WORLD, half_group, 0, &comm);
+        MPIX_Comm_create_group(MPI_COMM_WORLD, half_group, 0, &comm);
         MPI_Barrier(comm);
         MPI_Comm_free(&comm);
     }

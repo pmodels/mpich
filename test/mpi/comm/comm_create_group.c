@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
     MPI_Group_free(&even_group);
     MPI_Barrier(MPI_COMM_WORLD);
 
-    printf(" No errors\n");
+    if (rank == 0)
+        printf(" No errors\n");
 
     MPI_Finalize();
     return 0;

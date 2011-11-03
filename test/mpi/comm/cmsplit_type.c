@@ -25,7 +25,8 @@ int main(int argc, char *argv[])
 
     MPI_Comm_free(&comm);
 
-    printf(" No errors\n");
+    if (rank == 0)
+        printf(" No errors\n");
 
     MPI_Finalize();
 
