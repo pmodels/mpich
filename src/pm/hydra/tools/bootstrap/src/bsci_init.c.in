@@ -85,7 +85,7 @@ static const char *detect_rmk(int debug)
 HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
                           const char *user_launcher_exec, int enablex, int debug)
 {
-    int i, detected_rmk = 0;
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -103,12 +103,8 @@ HYD_status HYDT_bsci_init(const char *user_rmk, const char *user_launcher,
         MPL_env2str("HYDRA_RMK", (const char **) &HYDT_bsci_info.rmk);
 
     /* User didn't specify an RMK; try to detect one */
-    if (HYDT_bsci_info.rmk == NULL) {
-        detected_rmk = 0;
+    if (HYDT_bsci_info.rmk == NULL)
         HYDT_bsci_info.rmk = detect_rmk(debug);
-        if (HYDT_bsci_info.rmk)
-            detected_rmk = 1;
-    }
 
 
     /* See if the user specified a launcher */

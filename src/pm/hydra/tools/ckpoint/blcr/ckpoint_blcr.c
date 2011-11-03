@@ -241,7 +241,8 @@ HYD_status HYDT_ckpoint_blcr_checkpoint(const char *prefix, int pgid, int id, in
     ret = cr_request_checkpoint(&my_args, &my_handle);
     if (ret < 0) {
         HYDU_ERR_CHKANDJUMP(status, errno == CR_ENOSUPPORT, HYD_INTERNAL_ERROR,
-                            "Checkpointing failed.  Make sure BLCR kernel module is loaded.\n", strerror(errno));
+                            "Checkpointing failed.  Make sure BLCR kernel module is loaded. %s\n",
+                            strerror(errno));
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cr_request_checkpoint failed, %s\n",
                             strerror(errno));
     }
@@ -289,7 +290,6 @@ HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int c
                                      int *in, int *out, int *err, int *pid)
 {
     HYD_status status = HYD_SUCCESS;
-    pid_t mypid;
     int ret;
     int context_fd;
     cr_restart_handle_t cr_handle;
@@ -299,8 +299,6 @@ HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int c
     int port;
 
     HYDU_FUNC_ENTER();
-
-    mypid = getpid();
 
     /* create listener socket for stdin/out/err */
     status = create_stdinouterr_sock(&port);

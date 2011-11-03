@@ -123,7 +123,7 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
 {
     int len, recvd, closed, list_len;
     char *cmd, *name;
-    struct HYDT_ns_publish *publish, *tmp, *r;
+    struct HYDT_ns_publish *publish, *tmp;
     int success = 0;
     HYD_status status = HYD_SUCCESS;
 
@@ -219,7 +219,6 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
                 for (tmp = publish_list; tmp->next && strcmp(tmp->next->name, name);
                      tmp = tmp->next);
                 if (tmp->next) {
-                    r = tmp->next;
                     tmp->next = tmp->next->next;
                     free_publish_element(tmp->next);
                     success = 1;

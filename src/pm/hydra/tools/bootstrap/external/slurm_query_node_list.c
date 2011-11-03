@@ -107,13 +107,12 @@ static HYD_status group_to_nodes(char *str)
 static HYD_status list_to_groups(char *str)
 {
     char *tmp, group[3 * MAX_HOSTNAME_LEN];     /* maximum group size */
-    int nesting, i, arg;
+    int nesting, i;
     HYD_status status = HYD_SUCCESS;
 
     tmp = str;
     i = 0;
     nesting = 0;
-    arg = 0;
 
     while (1) {
         group[i] = *tmp;
