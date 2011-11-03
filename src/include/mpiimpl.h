@@ -3740,7 +3740,16 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 int MPIR_Comm_split_type_impl(MPID_Comm *comm_ptr, int split_type, int key, MPID_Info *info_ptr,
                               MPID_Comm **newcomm_ptr);
 int MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result);
+int MPIR_Group_difference_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr);
+int MPIR_Group_excl_impl(MPID_Group *group_ptr, int n, int *ranks, MPID_Group **new_group_ptr);
 int MPIR_Group_free_impl(MPID_Group *group_ptr);
+int MPIR_Group_incl_impl(MPID_Group *group_ptr, int n, int *ranks, MPID_Group **new_group_ptr);
+int MPIR_Group_intersection_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr);
+int MPIR_Group_range_excl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr);
+int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr);
+int MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, int *ranks1,
+                                     MPID_Group *group_ptr2, int *ranks2);
+int MPIR_Group_union_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr);
 void MPIR_Get_count_impl(MPI_Status *status, MPI_Datatype datatype, int *count);
 void MPIR_Grequest_complete_impl(MPID_Request *request_ptr);
 int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
@@ -3773,8 +3782,6 @@ int MPIR_Type_indexed_impl(int count, int blocklens[], int indices[], MPI_Dataty
 void MPIR_Type_free_impl(MPI_Datatype *datatype);
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
 int MPIR_Type_struct_impl(int count, int blocklens[], MPI_Aint indices[], MPI_Datatype old_types[], MPI_Datatype *newtype);
-int MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, int *ranks1,
-                                     MPID_Group *group_ptr2, int *ranks2);
 int MPIR_Pack_impl(void *inbuf, int incount, MPI_Datatype datatype, void *outbuf, int outcount, int *position);
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, int *size);
 int MPIR_Unpack_impl(void *inbuf, int insize, int *position,

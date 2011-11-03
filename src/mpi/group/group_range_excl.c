@@ -23,11 +23,97 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Group_range_excl
 #define MPI_Group_range_excl PMPI_Group_range_excl
+#undef FUNCNAME
+#define FUNCNAME MPIR_Group_range_excl_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Group_range_excl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int size, i, j, k, nnew, first, last, stride;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
+    /* Compute size, assuming that included ranks are valid (and distinct) */
+    size = group_ptr->size;
+    nnew = 0;
+    for (i = 0; i < n; i++) {
+        first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
+        /* works for stride of either sign.  Error checking above
+           has already guaranteed stride != 0 */
+        nnew += 1 + (last - first) / stride;
+    }
+    nnew = size - nnew;
+
+    if (nnew == 0) {
+        *new_group_ptr = NULL;
+        goto fn_exit;
+    }
+
+    /* Allocate a new group and lrank_to_lpid array */
+    mpi_errno = MPIR_Group_create( nnew, new_group_ptr );
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno)
+    {
+        goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
+    (*new_group_ptr)->rank = MPI_UNDEFINED;
+
+    /* Group members are taken in rank order from the original group,
+       with the specified members removed. Use the flag array for that
+       purpose.  If this was a critical routine, we could use the
+       flag values set in the error checking part, if the error checking
+       was enabled *and* we are not MPI_THREAD_MULTIPLE, but since this
+       is a low-usage routine, we haven't taken that optimization.  */
+
+    /* First, mark the members to exclude */
+    for (i = 0; i < size; i++)
+        group_ptr->lrank_to_lpid[i].flag = 0;
+    
+    for (i = 0; i < n; i++) {
+        first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
+        if (stride > 0) {
+            for (j = first; j <= last; j += stride) {
+                group_ptr->lrank_to_lpid[j].flag = 1;
+            }
+        }
+        else {
+            for (j = first; j >= last; j += stride) {
+                group_ptr->lrank_to_lpid[j].flag = 1;
+            }
+        }
+    }
+    /* Now, run through the group and pick up the members that were
+       not excluded */
+    k = 0;
+    for (i = 0; i < size; i++) {
+        if (!group_ptr->lrank_to_lpid[i].flag) {
+            (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
+            (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr->lrank_to_lpid[i].lpid;
+            if (group_ptr->rank == i) {
+                (*new_group_ptr)->rank = k;
+            }
+            k++;
+        }
+    }
+
+    /* TODO calculate is_local_dense_monotonic */
+
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GROUP_RANGE_EXCL_IMPL);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
 
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_range_excl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 
@@ -66,10 +152,8 @@ function is erroneous.
 int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3], 
                          MPI_Group *newgroup)
 {
-    static const char FCNAME[] = "MPI_Group_range_excl";
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL, *new_group_ptr;
-    int size, i, j, k, nnew, first, last, stride;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_RANGE_EXCL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -115,74 +199,13 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3],
 
     /* ... body of routine ...  */
     
-    /* Compute size, assuming that included ranks are valid (and distinct) */
-    size = group_ptr->size;
-    nnew = 0;
-    for (i=0; i<n; i++) {
-	first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
-	/* works for stride of either sign.  Error checking above 
-	   has already guaranteed stride != 0 */
-	nnew += 1 + (last - first) / stride;
-    }
-    nnew = size - nnew;
+    mpi_errno = MPIR_Group_range_excl_impl(group_ptr, n, ranges, &new_group_ptr);
+    if (mpi_errno) goto fn_fail;
 
-    if (nnew == 0) {
-	*newgroup = MPI_GROUP_EMPTY;
-	goto fn_exit;
-    }
-
-    /* Allocate a new group and lrank_to_lpid array */
-    mpi_errno = MPIR_Group_create( nnew, &new_group_ptr );
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno)
-    {
-	goto fn_fail;
-    }
-    /* --END ERROR HANDLING-- */
-    new_group_ptr->rank = MPI_UNDEFINED;
-
-    /* Group members are taken in rank order from the original group,
-       with the specified members removed. Use the flag array for that
-       purpose.  If this was a critical routine, we could use the 
-       flag values set in the error checking part, if the error checking 
-       was enabled *and* we are not MPI_THREAD_MULTIPLE, but since this
-       is a low-usage routine, we haven't taken that optimization.  */
-
-    /* First, mark the members to exclude */
-    for (i=0; i<size; i++) 
-	group_ptr->lrank_to_lpid[i].flag = 0;
-    
-    for (i=0; i<n; i++) {
-	first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
-	if (stride > 0) {
-	    for (j=first; j<=last; j += stride) {
-		group_ptr->lrank_to_lpid[j].flag = 1;
-	    }
-	}
-	else {
-	    for (j=first; j>=last; j += stride) {
-		group_ptr->lrank_to_lpid[j].flag = 1;
-	    }
-	}
-    }
-    /* Now, run through the group and pick up the members that were 
-       not excluded */
-    k = 0;
-    for (i=0; i<size; i++) {
-	if (!group_ptr->lrank_to_lpid[i].flag) {
-	    new_group_ptr->lrank_to_lpid[k].lrank = k;
-	    new_group_ptr->lrank_to_lpid[k].lpid = 
-		group_ptr->lrank_to_lpid[i].lpid;
-	    if (group_ptr->rank == i) {
-		new_group_ptr->rank = k;
-	    }
-	    k++;
-	}
-    }
-
-    /* TODO calculate is_local_dense_monotonic */
-
-    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    if (new_group_ptr)
+        MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    else
+        *newgroup = MPI_GROUP_EMPTY;
 
     /* ... end of body of routine ... */
 

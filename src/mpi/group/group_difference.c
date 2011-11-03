@@ -24,10 +24,91 @@
 #undef MPI_Group_difference
 #define MPI_Group_difference PMPI_Group_difference
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Group_difference_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Group_difference_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+    /* Return a group consisting of the members of group1 that are *not*
+       in group2 */
+    size1 = group_ptr1->size;
+    /* Insure that the lpid lists are setup */
+    MPIR_Group_setup_lpid_pairs( group_ptr1, group_ptr2 );
+
+    for (i = 0; i < size1; i++)
+        group_ptr1->lrank_to_lpid[i].flag = 0;
+    
+    g1_idx = group_ptr1->idx_of_first_lpid;
+    g2_idx = group_ptr2->idx_of_first_lpid;
+    
+    nnew = size1;
+    while (g1_idx >= 0 && g2_idx >= 0) {
+        l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
+        l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
+        if (l1_pid < l2_pid) {
+            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
+        }
+        else if (l1_pid > l2_pid) {
+            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+        }
+        else {
+            /* Equal */
+            group_ptr1->lrank_to_lpid[g1_idx].flag = 1;
+            g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
+            g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
+            nnew --;
+        }
+    }
+    /* Create the group */
+    if (nnew == 0) {
+        /* See 5.3.2, Group Constructors.  For many group routines,
+           the standard explicitly says to return MPI_GROUP_EMPTY;
+           for others it is implied */
+        *new_group_ptr = NULL;
+        goto fn_exit;
+    }
+    else {
+        mpi_errno = MPIR_Group_create( nnew, new_group_ptr );
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+        /* --END ERROR HANDLING-- */
+        (*new_group_ptr)->rank = MPI_UNDEFINED;
+        k = 0;
+        for (i=0; i<size1; i++) {
+            if (!group_ptr1->lrank_to_lpid[i].flag) {
+                (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
+                (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr1->lrank_to_lpid[i].lpid;
+                if (i == group_ptr1->rank)
+                    (*new_group_ptr)->rank = k;
+                k++;
+            }
+        }
+        /* TODO calculate is_local_dense_monotonic */
+    }
+
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_difference
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 
@@ -56,12 +137,10 @@ The generated group containc the members of 'group1' that are not in 'group2'.
 @*/
 int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
 {
-    static const char FCNAME[] = "MPI_Group_difference";
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr1 = NULL;
     MPID_Group *group_ptr2 = NULL;
     MPID_Group *new_group_ptr;
-    int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -103,67 +182,13 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 
     /* ... body of routine ...  */
     
-    /* Return a group consisting of the members of group1 that are *not*
-       in group2 */
-    size1 = group_ptr1->size;
-    /* Insure that the lpid lists are setup */
-    MPIR_Group_setup_lpid_pairs( group_ptr1, group_ptr2 );
+    mpi_errno = MPIR_Group_difference_impl(group_ptr1, group_ptr2, &new_group_ptr);
+    if (mpi_errno) goto fn_fail;
 
-    for (i=0; i<size1; i++) {
-	group_ptr1->lrank_to_lpid[i].flag = 0;
-    }
-    g1_idx = group_ptr1->idx_of_first_lpid;
-    g2_idx = group_ptr2->idx_of_first_lpid;
-    
-    nnew = size1;
-    while (g1_idx >= 0 && g2_idx >= 0) {
-	l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
-	l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
-	if (l1_pid < l2_pid) {
-	    g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-	}
-	else if (l1_pid > l2_pid) {
-	    g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-	}
-	else {
-	    /* Equal */
-	    group_ptr1->lrank_to_lpid[g1_idx].flag = 1;
-	    g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-	    g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-	    nnew --;
-	}
-    }
-    /* Create the group */
-    if (nnew == 0) {
-	/* See 5.3.2, Group Constructors.  For many group routines,
-	   the standard explicitly says to return MPI_GROUP_EMPTY; 
-	   for others it is implied */
-	*newgroup = MPI_GROUP_EMPTY;
-	goto fn_exit;
-    }
-    else {
-	mpi_errno = MPIR_Group_create( nnew, &new_group_ptr );
-	/* --BEGIN ERROR HANDLING-- */
-	if (mpi_errno) {
-	    goto fn_fail;
-	}
-	/* --END ERROR HANDLING-- */
-	new_group_ptr->rank = MPI_UNDEFINED;
-	k = 0;
-	for (i=0; i<size1; i++) {
-	    if (!group_ptr1->lrank_to_lpid[i].flag) {
-		new_group_ptr->lrank_to_lpid[k].lrank = k;
-		new_group_ptr->lrank_to_lpid[k].lpid = 
-		    group_ptr1->lrank_to_lpid[i].lpid;
-		if (i == group_ptr1->rank) 
-		    new_group_ptr->rank = k;
-		k++;
-	    }
-	}
-        /* TODO calculate is_local_dense_monotonic */
-    }
-
-    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    if (new_group_ptr)
+        MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    else
+        *newgroup = MPI_GROUP_EMPTY;
 
     /* ... end of body of routine ... */
 

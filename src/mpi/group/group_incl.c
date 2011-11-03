@@ -24,10 +24,53 @@
 #undef MPI_Group_incl
 #define MPI_Group_incl PMPI_Group_incl
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Group_incl_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Group_incl_impl(MPID_Group *group_ptr, int n, int *ranks, MPID_Group **new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GROUP_INCL_IMPL);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GROUP_INCL_IMPL);
+
+    if (n == 0) {
+        *new_group_ptr = NULL;
+        goto fn_exit;
+    }
+
+    /* Allocate a new group and lrank_to_lpid array */
+    mpi_errno = MPIR_Group_create( n, new_group_ptr );
+    if (mpi_errno) goto fn_fail;
+    
+    (*new_group_ptr)->rank = MPI_UNDEFINED;
+    for (i = 0; i < n; i++) {
+        (*new_group_ptr)->lrank_to_lpid[i].lrank = i;
+        (*new_group_ptr)->lrank_to_lpid[i].lpid = group_ptr->lrank_to_lpid[ranks[i]].lpid;
+        if (ranks[i] == group_ptr->rank)
+            (*new_group_ptr)->rank = i;
+    }
+    (*new_group_ptr)->size = n;
+    (*new_group_ptr)->idx_of_first_lpid = -1;
+    /* TODO calculate is_local_dense_monotonic */
+
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GROUP_INCL_IMPL);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_incl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 
@@ -59,10 +102,8 @@ Output Parameter:
 @*/
 int MPI_Group_incl(MPI_Group group, int n, int *ranks, MPI_Group *newgroup)
 {
-    static const char FCNAME[] = "MPI_Group_incl";
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL, *new_group_ptr = NULL;
-    int i;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_INCL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -111,22 +152,9 @@ int MPI_Group_incl(MPI_Group group, int n, int *ranks, MPI_Group *newgroup)
 	goto fn_exit;
     }
 
-    /* Allocate a new group and lrank_to_lpid array */
-    mpi_errno = MPIR_Group_create( n, &new_group_ptr );
+    mpi_errno = MPIR_Group_incl_impl(group_ptr, n, ranks, &new_group_ptr);
     if (mpi_errno) goto fn_fail;
     
-    new_group_ptr->rank = MPI_UNDEFINED;
-    for (i=0; i<n; i++)
-    {
-	new_group_ptr->lrank_to_lpid[i].lrank = i;
-	new_group_ptr->lrank_to_lpid[i].lpid  = 
-	    group_ptr->lrank_to_lpid[ranks[i]].lpid;
-	if (ranks[i] == group_ptr->rank) new_group_ptr->rank = i;
-    }
-    new_group_ptr->size = n;
-    new_group_ptr->idx_of_first_lpid = -1;
-    /* TODO calculate is_local_dense_monotonic */
-
     MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */

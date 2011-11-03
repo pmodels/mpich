@@ -24,10 +24,81 @@
 #undef MPI_Group_range_incl
 #define MPI_Group_range_incl PMPI_Group_range_incl
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Group_range_incl_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int first, last, stride, nnew, i, j, k;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+
+    /* Compute size, assuming that included ranks are valid (and distinct) */
+    nnew = 0;
+    for (i=0; i<n; i++) {
+        first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
+        /* works for stride of either sign.  Error checking above 
+           has already guaranteed stride != 0 */
+        nnew += 1 + (last - first) / stride;
+    }
+
+    if (nnew == 0) {
+        *new_group_ptr = NULL;
+        goto fn_exit;
+    }
+        
+    /* Allocate a new group and lrank_to_lpid array */
+    mpi_errno = MPIR_Group_create( nnew, new_group_ptr );
+    if (mpi_errno) goto fn_fail;
+    (*new_group_ptr)->rank = MPI_UNDEFINED;
+
+    /* Group members taken in order specified by the range array */
+    /* This could be integrated with the error checking, but since this
+       is a low-usage routine, we haven't taken that optimization */
+    k = 0;
+    for (i=0; i<n; i++) {
+        first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
+        if (stride > 0) {
+            for (j=first; j<=last; j += stride) {
+                (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
+                (*new_group_ptr)->lrank_to_lpid[k].lpid = 
+                    group_ptr->lrank_to_lpid[j].lpid;
+                if (j == group_ptr->rank) 
+                    (*new_group_ptr)->rank = k;
+                k++;
+            }
+        }
+        else {
+            for (j=first; j>=last; j += stride) {
+                (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
+                (*new_group_ptr)->lrank_to_lpid[k].lpid = 
+                    group_ptr->lrank_to_lpid[j].lpid;
+                if (j == group_ptr->rank) 
+                    (*new_group_ptr)->rank = k;
+                k++;
+            }
+        }
+    }
+
+    /* TODO calculate is_local_dense_monotonic */
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_range_incl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
 
@@ -61,10 +132,8 @@ order defined by  'ranges' (handle)
 int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3], 
                          MPI_Group *newgroup)
 {
-    static const char FCNAME[] = "MPI_Group_range_incl";
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL, *new_group_ptr;
-    int first, last, stride, nnew, i, j, k;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_RANGE_INCL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -107,55 +176,13 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
 
     /* ... body of routine ...  */
     
-    /* Compute size, assuming that included ranks are valid (and distinct) */
-    nnew = 0;
-    for (i=0; i<n; i++) {
-	first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
-	/* works for stride of either sign.  Error checking above 
-	   has already guaranteed stride != 0 */
-	nnew += 1 + (last - first) / stride;
-    }
-
-    if (nnew == 0) {
-	*newgroup = MPI_GROUP_EMPTY;
-	goto fn_exit;
-    }
-	
-    /* Allocate a new group and lrank_to_lpid array */
-    mpi_errno = MPIR_Group_create( nnew, &new_group_ptr );
+    mpi_errno = MPIR_Group_range_incl_impl(group_ptr, n, ranges, &new_group_ptr);
     if (mpi_errno) goto fn_fail;
-    new_group_ptr->rank = MPI_UNDEFINED;
 
-    /* Group members taken in order specified by the range array */
-    /* This could be integrated with the error checking, but since this
-       is a low-usage routine, we haven't taken that optimization */
-    k = 0;
-    for (i=0; i<n; i++) {
-	first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
-	if (stride > 0) {
-	    for (j=first; j<=last; j += stride) {
-		new_group_ptr->lrank_to_lpid[k].lrank = k;
-		new_group_ptr->lrank_to_lpid[k].lpid = 
-		    group_ptr->lrank_to_lpid[j].lpid;
-		if (j == group_ptr->rank) 
-		    new_group_ptr->rank = k;
-		k++;
-	    }
-	}
-	else {
-	    for (j=first; j>=last; j += stride) {
-		new_group_ptr->lrank_to_lpid[k].lrank = k;
-		new_group_ptr->lrank_to_lpid[k].lpid = 
-		    group_ptr->lrank_to_lpid[j].lpid;
-		if (j == group_ptr->rank) 
-		    new_group_ptr->rank = k;
-		k++;
-	    }
-	}
-    }
-
-    /* TODO calculate is_local_dense_monotonic */
-    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    if (new_group_ptr)
+        MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    else
+        *newgroup = MPI_GROUP_EMPTY;
 
     /* ... end of body of routine ... */
 
