@@ -19,6 +19,7 @@ cmsplit_SOURCES     = cmsplit.c
 cmsplit2_SOURCES     = cmsplit2.c
 cmsplit_type_SOURCES     = cmsplit_type.c
 probe-intercomm_SOURCES = probe-intercomm.c
+comm_create_group_SOURCES = comm_create_group.c
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o )

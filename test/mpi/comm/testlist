@@ -15,3 +15,5 @@ cmsplit2 12
 probe-intercomm 2
 # The new comm_split_type is proposed for MPI 3.0
 cmsplit_type 4 mpiversion=3.0
+comm_create_group 4 mpiversion=3.0
+comm_create_group 8 mpiversion=3.0
