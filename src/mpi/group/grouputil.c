@@ -18,6 +18,8 @@ MPIU_Object_alloc_t MPID_Group_mem = { 0, 0, 0, 0, MPID_GROUP,
 				      sizeof(MPID_Group), MPID_Group_direct,
 				       MPID_GROUP_PREALLOC};
 
+MPID_Group * const MPID_Group_empty = &MPID_Group_builtin[0];
+
 int MPIR_Group_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

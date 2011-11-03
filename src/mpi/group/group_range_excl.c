@@ -46,7 +46,7 @@ int MPIR_Group_range_excl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MP
     nnew = size - nnew;
 
     if (nnew == 0) {
-        *new_group_ptr = NULL;
+        *new_group_ptr = MPID_Group_empty;
         goto fn_exit;
     }
 
@@ -202,10 +202,7 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3],
     mpi_errno = MPIR_Group_range_excl_impl(group_ptr, n, ranges, &new_group_ptr);
     if (mpi_errno) goto fn_fail;
 
-    if (new_group_ptr)
-        MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
-    else
-        *newgroup = MPI_GROUP_EMPTY;
+    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */
 

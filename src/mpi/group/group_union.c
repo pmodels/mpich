@@ -88,7 +88,7 @@ int MPIR_Group_union_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_G
     }
 
     if (nnew == 0) {
-        *new_group_ptr = NULL;
+        *new_group_ptr = MPID_Group_empty;
         goto fn_exit;
     }
     
@@ -219,10 +219,6 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
     mpi_errno = MPIR_Group_union_impl(group_ptr1, group_ptr2, &new_group_ptr);
     if (mpi_errno) goto fn_fail;
 
-    if (new_group_ptr)
-        MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
-    else
-        *newgroup = MPI_GROUP_EMPTY;
     MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */

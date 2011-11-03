@@ -37,7 +37,7 @@ int MPIR_Group_incl_impl(MPID_Group *group_ptr, int n, int *ranks, MPID_Group **
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GROUP_INCL_IMPL);
 
     if (n == 0) {
-        *new_group_ptr = NULL;
+        *new_group_ptr = MPID_Group_empty;
         goto fn_exit;
     }
 

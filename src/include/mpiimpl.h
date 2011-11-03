@@ -1028,6 +1028,9 @@ extern MPIU_Object_alloc_t MPID_Group_mem;
 extern MPID_Group MPID_Group_builtin[MPID_GROUP_N_BUILTIN];
 extern MPID_Group MPID_Group_direct[];
 
+/* Object for empty group */
+extern MPID_Group * const MPID_Group_empty;
+
 #define MPIR_Group_add_ref( _group ) \
     do { MPIU_Object_add_ref( _group ); } while (0)
 
