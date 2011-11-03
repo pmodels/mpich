@@ -50,10 +50,12 @@ do {                                               \
 } while (0)
 
 #if !defined(MPID_THREAD_DEBUG)
-#define MPID_Thread_mutex_lock(mutex_)		\
-do {                                               \
-    MPIU_Thread_mutex_lock((mutex_), NULL);	\
-} while (0)
+#define MPID_Thread_mutex_lock(mutex_)                  \
+    do {                                                \
+        int err_;                                       \
+        MPIU_Thread_mutex_lock((mutex_), &err_);	\
+        MPIU_Assert(err_ == 0);                         \
+    } while (0)
 #else
 #define MPID_Thread_mutex_lock(mutex_)		\
 do {                                               \
@@ -65,10 +67,12 @@ do {                                               \
 #endif
 
 #if !defined(MPID_THREAD_DEBUG)
-#define MPID_Thread_mutex_unlock(mutex_)	\
-do {                                               \
-    MPIU_Thread_mutex_unlock((mutex_), NULL);	\
-} while (0)
+#define MPID_Thread_mutex_unlock(mutex_)                \
+    do {                                                \
+        int err_;                                       \
+        MPIU_Thread_mutex_unlock((mutex_), &err_);      \
+        MPIU_Assert(err_ == 0);                         \
+    } while (0)
 #else
 #define MPID_Thread_mutex_unlock(mutex_)	\
 do {                                               \
@@ -80,10 +84,12 @@ do {                                               \
 #endif
 
 #if !defined(MPID_THREAD_DEBUG)
-#define MPID_Thread_mutex_trylock(mutex_, flag_)	\
-do {                                                       \
-    MPIU_Thread_mutex_trylock((mutex_), (flag_), NULL);	\
-} while (0)
+#define MPID_Thread_mutex_trylock(mutex_, flag_)                \
+    do {                                                        \
+        int err_;                                               \
+        MPIU_Thread_mutex_trylock((mutex_), (flag_), &err_);	\
+        MPIU_Assert(err_ == 0);                                 \
+    } while (0)
 #else
 #define MPID_Thread_mutex_trylock(mutex_, flag_)		\
 do {                                                               \
