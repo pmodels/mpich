@@ -18,3 +18,9 @@ gtranksperf_LDADD = ../util/mtest.o
 
 ../util/mtest.o:
 	(cd ../util && $(MAKE) mtest.o)
+testing:
+	../runtests -srcdir=$(srcdir) -tests=testlist \
+			-mpiexec=@MPIEXEC@ \
+		   	-xmlfile=summary.xml
+clean-local:
+	-rm -f summary.xml
