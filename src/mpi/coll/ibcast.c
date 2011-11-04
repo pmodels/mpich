@@ -555,7 +555,7 @@ fn_fail:
 int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, rank, relative_rank;
+    int comm_size, rank;
     int is_contig, is_homogeneous, type_size, nbytes;
     int scatter_size;
     int i, j, jnext, left, right;
@@ -566,7 +566,6 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-    relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
     /* If there is only one process, return */
     if (comm_size == 1)
@@ -671,7 +670,6 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
 {
     int mpi_errno = MPI_SUCCESS;
     int type_size, is_homogeneous;
-    int nbytes=0;
 
 #if !defined(USE_SMP_COLLECTIVES)
     MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
@@ -705,8 +703,6 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
         MPID_Datatype_get_size_macro(datatype, type_size);
     else
         MPIR_Pack_size_impl(1, datatype, &type_size);
-
-    nbytes = type_size * count;
 
     /* TODO insert packing here */
 

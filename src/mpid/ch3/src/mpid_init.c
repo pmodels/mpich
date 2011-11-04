@@ -46,7 +46,7 @@ MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
 #define FUNCNAME split_type
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int split_type(MPID_Comm * comm_ptr, int split_type, int key,
+static int split_type(MPID_Comm * comm_ptr, int stype, int key,
                       MPID_Info *info_ptr, MPID_Comm ** newcomm_ptr)
 {
     MPID_Node_id_t id;

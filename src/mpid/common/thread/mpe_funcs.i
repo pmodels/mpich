@@ -116,10 +116,12 @@ do {                                               \
 } while (0)
 
 #if !defined(MPID_THREAD_DEBUG)
-#define MPID_Thread_cond_wait(cond_, mutex_)		\
-do {                                                       \
-    MPIU_Thread_cond_wait((cond_), (mutex_), NULL);	\
-} while (0)
+#define MPID_Thread_cond_wait(cond_, mutex_)                    \
+    do {                                                        \
+        int err_;                                               \
+        MPIU_Thread_cond_wait((cond_), (mutex_), &err_);        \
+        MPIU_Assert(err_ == 0);                                 \
+    } while (0)
 #else
 #define MPID_Thread_cond_wait(cond_, mutex_)		\
 do {                                                       \
@@ -131,10 +133,12 @@ do {                                                       \
 #endif
 
 #if !defined(MPID_THREAD_DEBUG)
-#define MPID_Thread_cond_broadcast(cond_)	\
-do {                                               \
-    MPIU_Thread_cond_broadcast(cond_, NULL);	\
-} while (0)
+#define MPID_Thread_cond_broadcast(cond_)               \
+    do {                                                \
+        int err_;                                       \
+        MPIU_Thread_cond_broadcast(cond_, &err_);	\
+        MPIU_Assert(err_ == 0);                         \
+    } while (0)
 #else
 #define MPID_Thread_cond_broadcast(cond_)	\
 do {                                               \
@@ -147,9 +151,11 @@ do {                                               \
 
 #if !defined(MPID_THREAD_DEBUG)
 #define MPID_Thread_cond_signal(cond_)		\
-do {                                               \
-    MPIU_Thread_cond_signal(cond_, NULL);	\
-} while (0)
+    do {                                        \
+        int err_;                               \
+        MPIU_Thread_cond_signal(cond_, &err_);	\
+        MPIU_Assert(err_ == 0);                 \
+    } while (0)
 #else
 #define MPID_Thread_cond_signal(cond_)		\
 do {                                               \
@@ -176,10 +182,12 @@ do {                                               \
 } while (0)
 
 #if !defined(MPID_THREAD_DEBUG)
-#define MPID_Thread_tls_set(tls_, value_)	\
-do {                                               \
-    MPIU_Thread_tls_set((tls_), (value_), NULL);	\
-} while (0)
+#define MPID_Thread_tls_set(tls_, value_)               \
+    do {                                                \
+        int err_;                                       \
+        MPIU_Thread_tls_set((tls_), (value_), &err_);	\
+        MPIU_Assert(err_ == 0);                         \
+    } while (0)
 #else
 #define MPID_Thread_tls_set(tls_, value_)		\
 do {                                                       \
@@ -191,10 +199,12 @@ do {                                                       \
 #endif
 
 #if !defined(MPID_THREAD_DEBUG)
-#define MPID_Thread_tls_get(tls_, value_)	\
-do {                                               \
-    MPIU_Thread_tls_get((tls_), (value_), NULL);	\
-} while (0)
+#define MPID_Thread_tls_get(tls_, value_)               \
+    do {                                                \
+        int err_;                                       \
+        MPIU_Thread_tls_get((tls_), (value_), &err_);	\
+        MPI_Assert(err_ == 0);                          \
+    } while (0)
 #else
 #define MPID_Thread_tls_get(tls_, value_)		\
 do {                                                       \

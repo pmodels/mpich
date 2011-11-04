@@ -42,7 +42,7 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
     }
     else {
         mpi_errno =
-            MPID_Comm_fns->split_type(comm_ptr, split_type, info_ptr, key, newcomm_ptr);
+            MPID_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
     }
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);

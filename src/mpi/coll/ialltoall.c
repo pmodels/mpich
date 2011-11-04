@@ -110,7 +110,7 @@ int MPIR_Ialltoall_bruck(void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    int nbytes, sendtype_size, recvtype_size, recvbuf_extent, newtype_size;
+    int nbytes, recvtype_size, recvbuf_extent, newtype_size;
     int rank, comm_size;
     void *tmp_buf = NULL;
     MPI_Aint sendtype_extent, recvtype_extent, recvtype_true_lb, recvtype_true_extent;
@@ -126,7 +126,6 @@ int MPIR_Ialltoall_bruck(void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_size_macro(sendtype, sendtype_size);
     MPID_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPID_Datatype_get_size_macro(recvtype, recvtype_size);
     MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);

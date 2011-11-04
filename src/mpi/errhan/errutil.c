@@ -186,9 +186,8 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 {
     const int error_class = ERROR_GET_CLASS(errcode);
     MPID_Errhandler *errhandler = NULL;
-    int rc;
 
-    rc = checkValidErrcode( error_class, fcname, &errcode );
+    checkValidErrcode( error_class, fcname, &errcode );
 
     if (MPIR_Process.initialized == MPICH_PRE_INIT ||
         MPIR_Process.initialized == MPICH_POST_FINALIZED)
@@ -290,7 +289,6 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 {
     const int error_class = ERROR_GET_CLASS(errcode);
-    int rc ;
 
     if (win_ptr == NULL || win_ptr->errhandler == NULL)
 	return MPIR_Err_return_comm(NULL, fcname, errcode);
@@ -298,7 +296,7 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
     /* We don't test for MPI initialized because to call this routine,
        we will have had to call an MPI routine that would make that test */
 
-    rc = checkValidErrcode( error_class, fcname, &errcode );
+    checkValidErrcode( error_class, fcname, &errcode );
 
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_win(win_ptr=%p, fcname=%s, errcode=%d)", win_ptr, fcname, errcode));
 

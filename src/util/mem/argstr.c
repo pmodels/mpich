@@ -31,7 +31,6 @@ static int encode_buffer(char *dest, int dest_length, const char *src,
 {
     int num_used;
     int n = 0;
-    char ch;
     if (src_length == 0)
     {
 	if (dest_length > 2)
@@ -51,7 +50,6 @@ static int encode_buffer(char *dest, int dest_length, const char *src,
     }
     while (src_length && dest_length)
     {
-	ch = *src;
 	num_used = MPIU_Snprintf(dest, dest_length, "%02X", 
 				 (unsigned char)*src);
 	if (num_used < 0)
@@ -806,12 +804,10 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 {
     int num_chars;
     char **orig_str_ptr;
-    int orig_maxlen;
 
     if (maxlen_ptr == NULL)
 	return MPIU_STR_FAIL;
 
-    orig_maxlen = *maxlen_ptr;
     orig_str_ptr = str_ptr;
 
     if (*maxlen_ptr < 1)
@@ -946,12 +942,10 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     int result;
     int num_chars;
     char **orig_str_ptr;
-    int orig_maxlen;
 
     if (maxlen_ptr == NULL)
 	return MPIU_STR_FAIL;
 
-    orig_maxlen = *maxlen_ptr;
     orig_str_ptr = str_ptr;
 
     if (*maxlen_ptr < 1)

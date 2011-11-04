@@ -70,7 +70,6 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     int       mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *comm_dist_graph_ptr = NULL;
-    MPID_Info *info_ptr = NULL;
     MPIR_Topology *topo_ptr = NULL;
     MPIR_Dist_graph_topology *dist_graph_ptr = NULL;
     MPIU_CHKPMEM_DECL(5);
@@ -96,7 +95,6 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     /* Convert MPI object handles to object pointers */
     MPID_Comm_get_ptr(comm_old, comm_ptr);
-    MPID_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING

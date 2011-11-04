@@ -33,7 +33,7 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Keyval *keyval_ptr = NULL;
-    MPID_Attribute *p, **old_p;
+    MPID_Attribute *p;
 
     MPIU_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, MPI_ERR_KEYVAL, "**keyvalinvalid");
 
@@ -46,7 +46,6 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
     MPIU_Assert(keyval_ptr != NULL);
 
     /* printf( "Setting attr val to %x\n", attribute_val ); */
-    old_p = &comm_ptr->attributes;
     p     = comm_ptr->attributes;
     while (p) {
 	if (p->keyval->handle == keyval_ptr->handle) {
@@ -62,7 +61,6 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
 	    /* Does not change the reference count on the keyval */
 	    break;
 	}
-	old_p = &p->next;
 	p = p->next;
     }
     /* CHANGE FOR MPI 2.2: If not found, add at the beginning */

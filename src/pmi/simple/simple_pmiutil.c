@@ -113,7 +113,6 @@ int PMIU_readline( int fd, char *buf, int maxlen )
     static char readbuf[MAX_READLINE];
     static char *nextChar = 0, *lastChar = 0;  /* lastChar is really one past 
 						  last char */
-    static int  lastErrno = 0;
     static int lastfd = -1;
     int curlen, n;
     char *p, ch;
@@ -143,7 +142,6 @@ int PMIU_readline( int fd, char *buf, int maxlen )
 		/* Error.  Return a negative value if there is no
 		   data.  Save the errno in case we need to return it
 		   later. */
-		lastErrno = errno;
 		if (curlen == 1) {
 		    curlen = 0;
 		}

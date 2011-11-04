@@ -108,16 +108,9 @@ static void k_select_r(const int k, int a[], const int n, int *value)
 /* Returns the value of the kth smallest element in array a of size
  * n. Allocates an array and calls the recursive function k_select_r
  * which does all the work */
-static int k_select(const int k, int a[], const int n, int *value)
+static void k_select(const int k, int a[], const int n, int *value)
 {
-    int mpi_errno = MPI_SUCCESS;
-    int ngroups;
-
-    ngroups = (n + GROUPSIZE-1) / GROUPSIZE;
-
     k_select_r(k - 1, a, n, value);
-
-    return mpi_errno;
 }
 
 /* silence "no previous prototype" warnings */

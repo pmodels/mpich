@@ -226,7 +226,7 @@ fn_fail:
 int MPIR_Ireduce_redscat_gather(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, j, comm_size, rank, type_size, pof2, is_commutative;
+    int i, j, comm_size, rank, pof2, is_commutative;
     int rem, dst, newrank, newdst, mask, send_idx, recv_idx, last_idx;
     int send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root;
     void *tmp_buf = NULL;
@@ -243,7 +243,6 @@ int MPIR_Ireduce_redscat_gather(void *sendbuf, void *recvbuf, int count, MPI_Dat
     MPIU_Assert(is_commutative);
 
     /* Create a temporary buffer */
-    MPID_Datatype_get_size_macro(datatype, type_size);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
@@ -533,12 +532,11 @@ fn_fail:
 int MPIR_Ireduce_intra(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_commutative, pof2, type_size, comm_size;
+    int pof2, type_size, comm_size;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 
     comm_size = comm_ptr->local_size;
-    is_commutative = MPIR_Op_is_commutative(op);
 
     MPID_Datatype_get_size_macro(datatype, type_size);
 

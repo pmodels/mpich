@@ -538,7 +538,6 @@ int MPIDI_CH3_ReqHandler_ReloadIOV( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
 {
     MPIDI_RMA_dtype_info *dtype_info;
-    void *dataloop;
     MPID_Datatype *new_dtp;
     int mpi_errno=MPI_SUCCESS;
     MPI_Aint ptrdiff;
@@ -547,8 +546,6 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
     MPIDI_FUNC_ENTER(MPID_STATE_CREATE_DERIVED_DATATYPE);
 
     dtype_info = req->dev.dtype_info;
-    /* FIXME: What is this variable for (it is never referenced)? */
-    dataloop   = req->dev.dataloop;
 
     /* allocate new datatype object and handle */
     new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);

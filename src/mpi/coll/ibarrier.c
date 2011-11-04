@@ -97,13 +97,12 @@ fn_fail:
 int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int size, rank, root;
+    int rank, root;
     MPIR_SCHED_CHKPMEM_DECL(1);
     char *buf = NULL;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTERCOMM);
 
-    size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
     /* Get the local intracommunicator */

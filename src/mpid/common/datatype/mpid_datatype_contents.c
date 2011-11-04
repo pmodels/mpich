@@ -173,7 +173,7 @@ void MPIDI_Datatype_get_contents_aints(MPID_Datatype_contents *cp,
 {
     char *ptr;
     int align_sz = 8, epsilon;
-    int struct_sz, ints_sz, aints_sz, types_sz;
+    int struct_sz, ints_sz, types_sz;
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
     if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
@@ -184,8 +184,6 @@ void MPIDI_Datatype_get_contents_aints(MPID_Datatype_contents *cp,
     struct_sz = sizeof(MPID_Datatype_contents);
     types_sz  = cp->nr_types * sizeof(MPI_Datatype);
     ints_sz   = cp->nr_ints * sizeof(int);
-    /* FIXME: Why is this here?  The value is never used.  Should it be? */
-    aints_sz  = cp->nr_aints * sizeof(MPI_Aint);
 
     /* pad the struct, types, and ints before we allocate.
      *

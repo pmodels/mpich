@@ -65,7 +65,7 @@ fn_fail:
 int MPIR_Iallreduce_redscat_allgather(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, rank, newrank, pof2, rem, is_commutative, type_size;
+    int comm_size, rank, newrank, pof2, rem;
     int i, send_idx, recv_idx, last_idx, mask, newdst, dst, send_cnt, recv_cnt;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
@@ -79,8 +79,6 @@ int MPIR_Iallreduce_redscat_allgather(void *sendbuf, void *recvbuf, int count, M
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-
-    is_commutative = MPIR_Op_is_commutative(op);
 
     /* need to allocate temporary buffer to store incoming data*/
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -99,8 +97,6 @@ int MPIR_Iallreduce_redscat_allgather(void *sendbuf, void *recvbuf, int count, M
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
     }
-
-    MPID_Datatype_get_size_macro(datatype, type_size);
 
     /* find nearest power-of-two less than or equal to comm_size */
     pof2 = 1;
@@ -294,7 +290,7 @@ fn_fail:
 int MPIR_Iallreduce_rec_dbl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pof2, rem, comm_size, is_commutative, rank, type_size;
+    int pof2, rem, comm_size, is_commutative, rank;
     int newrank, mask, newdst, dst;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
@@ -322,8 +318,6 @@ int MPIR_Iallreduce_rec_dbl(void *sendbuf, void *recvbuf, int count, MPI_Datatyp
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
     }
-
-    MPID_Datatype_get_size_macro(datatype, type_size);
 
     /* find nearest power-of-two less than or equal to comm_size */
     pof2 = 1;
@@ -439,7 +433,7 @@ fn_fail:
 int MPIR_Iallreduce_intra(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous, pof2, rem, type_size;
+    int comm_size, is_homogeneous, pof2, type_size;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 
@@ -463,8 +457,6 @@ int MPIR_Iallreduce_intra(void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     pof2 = 1;
     while (pof2 <= comm_size) pof2 <<= 1;
     pof2 >>=1;
-
-    rem = comm_size - pof2;
 
     /* If op is user-defined or count is less than pof2, use
        recursive doubling algorithm. Otherwise do a reduce-scatter

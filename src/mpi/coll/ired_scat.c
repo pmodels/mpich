@@ -40,7 +40,7 @@ int MPIR_Ireduce_scatter_rec_hlv(void *sendbuf, void *recvbuf, int *recvcnts,
     MPI_Aint extent, true_extent, true_lb;
     int  *disps;
     void *tmp_recvbuf, *tmp_results;
-    int type_size, total_count, nbytes, dst;
+    int type_size, total_count, dst;
     int mask;
     int *newcnts, *newdisps, rem, newdst, send_idx, recv_idx,
         last_idx, send_cnt, recv_cnt;
@@ -68,7 +68,6 @@ int MPIR_Ireduce_scatter_rec_hlv(void *sendbuf, void *recvbuf, int *recvcnts,
     }
 
     MPID_Datatype_get_size_macro(datatype, type_size);
-    nbytes = total_count * type_size;
 
     /* allocate temp. buffer to receive incoming data */
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_recvbuf, void *, total_count*(MPIR_MAX(true_extent,extent)), mpi_errno, "tmp_recvbuf");
@@ -405,7 +404,7 @@ int MPIR_Ireduce_scatter_rec_dbl(void *sendbuf, void *recvbuf, int *recvcnts,
     MPI_Aint extent, true_extent, true_lb;
     int  *disps;
     void *tmp_recvbuf, *tmp_results;
-    int type_size, dis[2], blklens[2], total_count, nbytes, dst;
+    int type_size, dis[2], blklens[2], total_count, dst;
     int mask, dst_tree_root, my_tree_root, j, k;
     int received;
     MPI_Datatype sendtype, recvtype;
@@ -432,7 +431,6 @@ int MPIR_Ireduce_scatter_rec_dbl(void *sendbuf, void *recvbuf, int *recvcnts,
     }
 
     MPID_Datatype_get_size_macro(datatype, type_size);
-    nbytes = total_count * type_size;
 
     /* total_count*extent eventually gets malloced. it isn't added to
      * a user-passed in buffer */
@@ -668,14 +666,13 @@ static int MPIR_Ireduce_scatter_noncomm(void *sendbuf, void *recvbuf, int *recvc
     int i, k;
     int recv_offset, send_offset;
     int block_size, total_count, size;
-    MPI_Aint extent, true_extent, true_lb;
+    MPI_Aint true_extent, true_lb;
     int buf0_was_inout;
     void *tmp_buf0;
     void *tmp_buf1;
     void *result_ptr;
     MPIR_SCHED_CHKPMEM_DECL(3);
 
-    MPID_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     pof2 = 1;

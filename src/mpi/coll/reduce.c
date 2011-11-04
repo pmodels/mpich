@@ -252,13 +252,12 @@ static int MPIR_Reduce_redscat_gather (
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size, rank, is_commutative, type_size, pof2, rem, newrank;
+    int comm_size, rank, type_size, pof2, rem, newrank;
     int mask, *cnts, *disps, i, j, send_idx=0;
     int recv_idx, last_idx=0, newdst;
     int dst, send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root; 
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
-    MPID_Op *op_ptr;
     MPI_Comm comm;
     MPIU_CHKLMEM_DECL(4);
     MPIU_THREADPRIV_DECL;
@@ -275,17 +274,6 @@ static int MPIR_Reduce_redscat_gather (
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
-
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
-    }
-    else {
-        MPID_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
-            is_commutative = 0;
-        else
-            is_commutative = 1;
-    }
 
     /* I think this is the worse case, so we can avoid an assert() 
      * inside the for loop */

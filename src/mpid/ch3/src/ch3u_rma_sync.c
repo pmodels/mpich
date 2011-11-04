@@ -1212,7 +1212,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, *nops_to_proc, src, new_total_op_count;
-    int i, j, dst, done, total_op_count, *curr_ops_cnt;
+    int i, j, dst, total_op_count, *curr_ops_cnt;
     MPIDI_RMA_ops *curr_ptr, *tmpptr, **prevNextPtr;
     MPID_Comm *comm_ptr;
     MPI_Win source_win_handle, target_win_handle;
@@ -1465,7 +1465,6 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     {
 	MPID_Progress_state progress_state;
 	
-	done = 1;
 	MPIU_INSTR_DURATION_START(wincomplete_complete);
 	MPID_Progress_start(&progress_state);
 	while (win_ptr->rma_ops_list_head) {
@@ -1628,7 +1627,6 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_RMA_ops *new_ptr;
-    MPID_Comm *comm_ptr;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK);
 
@@ -1644,8 +1642,6 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 
     if (dest == MPI_PROC_NULL) goto fn_exit;
         
-    comm_ptr = win_ptr->comm_ptr;
-
     if (dest == win_ptr->myrank) {
 	/* The target is this process itself. We must block until the lock
 	 * is acquired. */
@@ -1894,9 +1890,8 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, 
 					    int *wait_for_rma_done_pkt)
 {
-    int mpi_errno = MPI_SUCCESS, done, i, nops;
+    int mpi_errno = MPI_SUCCESS, i, nops;
     MPIDI_RMA_ops *curr_ptr;
-    MPID_Comm *comm_ptr;
     MPIDI_RMA_ops **prevNextPtr, *tmpptr;
     MPI_Win source_win_handle, target_win_handle;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
@@ -1943,8 +1938,6 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
             }
         }
     }
-
-    comm_ptr = win_ptr->comm_ptr;
 
     /* Ignore the first op in the list because it is a win_lock and do
        the rest */
@@ -2036,7 +2029,6 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     {
 	MPID_Progress_state progress_state;
 	
-	done = 1;
 	MPIU_INSTR_DURATION_START(winunlock_complete);
 	MPID_Progress_start(&progress_state);
 	while (win_ptr->rma_ops_list_head) {

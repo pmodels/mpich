@@ -45,11 +45,10 @@ int PREPEND_PREFIX(Dataloop_create_contiguous)(int icount,
     }
     else
     {
-	int old_loop_sz = 0, old_loop_depth = 0;
+	int old_loop_depth = 0;
 	DLOOP_Offset old_size = 0, old_extent = 0;
 	DLOOP_Dataloop *old_loop_ptr;
 
-	DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
 	DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth, flag);
 	DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
 	DLOOP_Handle_get_size_macro(oldtype, old_size);

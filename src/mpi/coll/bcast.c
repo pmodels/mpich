@@ -681,7 +681,6 @@ static int MPIR_Bcast_scatter_ring_allgather(
     int *errflag)
 {
     int rank, comm_size;
-    int relative_rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int scatter_size, nbytes;
@@ -700,7 +699,6 @@ static int MPIR_Bcast_scatter_ring_allgather(
     comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-    relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
     /* If there is only one process, return */
     if (comm_size == 1) goto fn_exit;
@@ -1100,7 +1098,6 @@ int MPIR_Bcast_intra (
     int comm_size;
     int nbytes=0;
     int type_size, is_homogeneous;
-    MPI_Comm comm;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST);
@@ -1123,7 +1120,6 @@ int MPIR_Bcast_intra (
     }
 #endif
 
-    comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
 
     is_homogeneous = 1;

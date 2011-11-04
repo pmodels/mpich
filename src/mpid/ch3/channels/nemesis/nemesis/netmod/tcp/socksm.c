@@ -1886,7 +1886,6 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
     int connfd;
     socklen_t len;
     SA_IN rmt_addr;
-    struct pollfd *l_plfd;
     sockconn_t *l_sc;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_STATE_LISTENING_HANDLER);
 
@@ -1894,7 +1893,6 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
 
     while (1) {
         l_sc = &g_sc_tbl[0];  /* N3 Important */
-        l_plfd = &MPID_nem_tcp_plfd_tbl[0];
         len = sizeof(SA_IN);
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "before accept"));
         if ((connfd = accept(l_sc->fd, (SA *) &rmt_addr, &len)) < 0) {

@@ -51,30 +51,15 @@ static int MPIR_Reduce_scatter_noncomm (
     int i, k;
     int recv_offset, send_offset;
     int block_size, total_count, size;
-    MPI_Aint extent, true_extent, true_lb;
-    int is_commutative;
+    MPI_Aint true_extent, true_lb;
     int buf0_was_inout;
     void *tmp_buf0;
     void *tmp_buf1;
     void *result_ptr;
     MPI_Comm comm = comm_ptr->handle;
-    MPID_Op *op_ptr;
     MPIU_CHKLMEM_DECL(3);
 
-    MPID_Datatype_get_extent_macro(datatype, extent);
-
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
-    }
-    else {
-        MPID_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
-            is_commutative = 0;
-        else
-            is_commutative = 1;
-    }
 
     pof2 = 1;
     log2_comm_size = 0;
