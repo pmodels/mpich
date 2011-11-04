@@ -302,18 +302,18 @@ extern MPICH_PerThread_t MPIR_ThreadSingle;
 /* common definitions when using MPID_Thread-based TLS */
 #define MPIU_THREADPRIV_DECL MPICH_PerThread_t *MPIR_Thread=NULL
 #define MPIU_THREADPRIV_FIELD(a_) (MPIR_Thread->a_)
-#define MPIU_THREADPRIV_FINALIZE                                        \
-    do {                                                                \
-        MPIU_THREADPRIV_DECL;                                           \
-        if (MPIU_ISTHREADED) {                                          \
-            int err_;                                                   \
-            MPIU_THREADPRIV_GET;                                        \
-            MPIU_Free(MPIR_Thread);                                     \
-            MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,&err_); \
-            MPIU_Assert(err_ == 0);                                     \
-            MPID_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,&err_); \
-            MPIU_Assert(err_ == 0);                                     \
-        }                                                               \
+#define MPIU_THREADPRIV_FINALIZE                                                        \
+    do {                                                                                \
+        MPIU_THREADPRIV_DECL;                                                           \
+        if (MPIU_ISTHREADED) {                                                          \
+            int tpf_err_; /* unique name to not conflict with vars in called macros */  \
+            MPIU_THREADPRIV_GET;                                                        \
+            MPIU_Free(MPIR_Thread);                                                     \
+            MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,&tpf_err_);             \
+            MPIU_Assert(tpf_err_ == 0);                                                 \
+            MPID_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,&tpf_err_);         \
+            MPIU_Assert(tpf_err_ == 0);                                                 \
+        }                                                                               \
     } while (0)
 
 #else /* defined(MPIU_TLS_SPECIFIER) */
