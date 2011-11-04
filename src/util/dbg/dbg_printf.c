@@ -376,7 +376,10 @@ static FILE *static_dbg_fp = 0;
 static void dbg_init_tls(void)
 {
 #ifdef MPICH_IS_THREADED
-    MPID_Thread_tls_create(NULL, &dbg_tls_key, NULL);
+    int err;
+
+    MPID_Thread_tls_create(NULL, &dbg_tls_key, &err);
+    MPIU_Assert(err == 0);
 #endif
 }
 

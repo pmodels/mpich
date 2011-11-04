@@ -138,12 +138,14 @@ void MPIR_CleanupThreadStorage( void *a )
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Thread_CS_Init( void )
 {
+    int err;
     MPIU_THREADPRIV_DECL;
 
     MPIU_Assert(MPICH_MAX_LOCKS >= MPIU_Nest_NUM_MUTEXES);
 
     /* we create this at all granularities right now */
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.memalloc_mutex, NULL);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.memalloc_mutex, &err);
+    MPIU_Assert(err == 0);
 
     /* must come after memalloc_mutex creation */
     MPIU_THREADPRIV_INITKEY;
@@ -151,17 +153,25 @@ static int MPIR_Thread_CS_Init( void )
 
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, NULL);
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.handle_mutex, NULL);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.handle_mutex, &err);
+    MPIU_Assert(err == 0);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     /* MPIU_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, NULL);
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.handle_mutex, NULL);
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.msgq_mutex, NULL);
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.completion_mutex, NULL);
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.ctx_mutex, NULL);
-    MPID_Thread_mutex_create(&MPIR_ThreadInfo.pmi_mutex, NULL);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.global_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.handle_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.msgq_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.completion_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.ctx_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_ThreadInfo.pmi_mutex, &err);
+    MPIU_Assert(err == 0);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
@@ -184,20 +194,29 @@ static int MPIR_Thread_CS_Init( void )
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Thread_CS_Finalize( void )
 {
+    int err;
+
     MPIU_DBG_MSG(THREAD,TYPICAL,"Freeing global mutex and private storage");
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, NULL);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, &err);
+    MPIU_Assert(err == 0);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     /* MPIU_THREAD_GRANULARITY_PER_OBJECT: There are multiple locks,
      * one for each logical class (e.g., each type of object) */
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, NULL);
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.handle_mutex, NULL);
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.msgq_mutex, NULL);
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.completion_mutex, NULL);
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.ctx_mutex, NULL);
-    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.pmi_mutex, NULL);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.handle_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.msgq_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.completion_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.ctx_mutex, &err);
+    MPIU_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.pmi_mutex, &err);
+    MPIU_Assert(err == 0);
 
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_LOCK_FREE
