@@ -3737,6 +3737,10 @@ void MPIR_Comm_free_keyval_impl(int keyval);
 void MPIR_Comm_get_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler **errhandler_ptr);
 void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhandler_ptr);
 void MPIR_Comm_get_name_impl(MPID_Comm *comm, char *comm_name, int *resultlen);
+int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_intracomm_ptr);
+int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
+                               MPID_Comm *peer_comm_ptr, int remote_leader, int tag,
+                               MPID_Comm **new_intercomm_ptr);
 int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
 int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
 int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr);
