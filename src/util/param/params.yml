@@ -355,7 +355,7 @@ parameters:
     - category    : fault_tolerance
       name        : ENABLE_COLL_FT_RET
       type        : boolean
-      default     : false
+      default     : true
       description : >-
         Collectives called on a communicator with a failed process
         should not hang, however the result of the operation may be
