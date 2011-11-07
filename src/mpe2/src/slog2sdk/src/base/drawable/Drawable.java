@@ -223,40 +223,18 @@ public abstract class Drawable extends InfoBox
     public abstract boolean   containSearchable();
 
     // Since Searchable is assumed to be a State drawable,
-    // so no need to make drawSearchableOnViewport() as abstract interface.
-    // That will change if Searchable can be any Drawable.
-    public int drawSearchableOnViewport( Graphics2D        g,
-                                         CoordPixelXform   coord_xform,
-                                         OpenIntIntHashMap map_line2row )
-    {
-        Coord  start_vtx, final_vtx;
-        start_vtx = this.getStartVertex();
-        final_vtx = this.getFinalVertex();
-
-        double tStart, tFinal;
-        tStart = start_vtx.time;
-        tFinal = final_vtx.time;
-
-        int    rowID;
-        float  nestingftr;
-        /* assume RowID and NestingFactor have been calculated */
-        rowID       = this.getRowID();
-        nestingftr  = this.getNestingFactor();
-
-        // System.out.println( "\t" + this + " nestftr=" + nestingftr );
-        
-        float  rStart, rFinal;
-        rStart = (float) rowID - nestingftr / 2.0f;
-        rFinal = rStart + nestingftr;
-
-        Color color = super.getCategory().getColor();
-        Pointer.drawUpper( g, color, null, coord_xform,
-                           tStart, rStart, -MarkerState.Border_Width );
-        Pointer.drawLower( g, Color.yellow, null, coord_xform,
-                           tStart, rFinal, MarkerState.Border_Width );
-        return MarkerState.draw( g, color, null, coord_xform,
-                                 tStart, rStart, tFinal, rFinal );
-    }
+    // drawSearchableOnViewport() still needs to be an abstract interface.
+    // Because State drawable can be Shadow or Primitive which have different
+    // way of obtaining the start and final timestamps.  In the simplest
+    // possible scenario, when there is no Composite drawable, Shadow and
+    // Primitive, could have identical GET timestamp methods, i.e.
+    // getEarliestTime() and getLatestTime().  But just to be consistent with
+    // drawStateOnViewport() which is an abstract interface, 
+    // drawSearchableOnViewport() should be made abstract interface.
+    public abstract int  drawSearchableOnViewport( Graphics2D     g,
+                                                CoordPixelXform   coord_xform,
+                                                OpenIntIntHashMap map_line2row
+                                                 );
 
 
 
