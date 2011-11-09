@@ -203,7 +203,7 @@ do {                                                       \
     do {                                                \
         int err_;                                       \
         MPIU_Thread_tls_get((tls_), (value_), &err_);	\
-        MPI_Assert(err_ == 0);                          \
+        MPIU_Assert(err_ == 0);                          \
     } while (0)
 #else
 #define MPID_Thread_tls_get(tls_, value_)		\
