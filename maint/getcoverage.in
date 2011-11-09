@@ -64,10 +64,12 @@ $gDebugDetail = 0;
 # the begining of a line.  This matches the output from the gcov tools.
 # There are two of these because the output from the tools associtated with
 # gcc version 2.x and 3.x are different.
+# As, apparently is 4.x.
 # We also permit an isolated open or close brace on the line (a non-executable
 # statement)
 $lineLeader2 = '^\s*[\{\}]?\s*';
 $lineLeader3 = '^\s*-:\s*\d+:\s*[\{\}]?\s*';
+$lineLeader4 = '^\s*[0-9-]+:\s*\d+:\s*[\{\}]?\s*';
 #
 # This is the list of known block names.  They represent several types of
 # code for which it may be desirable not to count in coverage analysis.
@@ -141,6 +143,10 @@ for (@ARGV) {
     elsif (/-coveredmsg=(.*)/) {
 	$CoverageMessage = $1;
 	next;
+    }
+    elsif (/-debugall/) {
+	$gDebugDetail = 1;
+	$gDebug       = 1;
     }
     elsif (/-debug/) { 
     	$gDebug = 1;
@@ -257,7 +263,8 @@ L:  while (<FD>) {
 	# code 
 	foreach my $name (@BlockNames) {
 	    if (/$lineLeader2\/\*\s+--BEGIN $name--\s+\*\// ||
-		/$lineLeader3\/\*\s+--BEGIN $name--\s+\*\//) {
+		/$lineLeader3\/\*\s+--BEGIN $name--\s+\*\// ||
+		/$lineLeader4\/\*\s+--BEGIN $name--\s+\*\//) {
 		# It is usually an error to encounter a block begin 
 		# within another block.  The exception is the
 		# EXPERIMENTAL block, which may contain ERROR HANDLING blocks
@@ -425,7 +432,8 @@ L2: while (<FD>) {
 	else {
 	    foreach my $name (@BlockNames) {
 		if (/$lineLeader2\/\*\s+--BEGIN $name--\s+\*\// ||
-		    /$lineLeader3\/\*\s+--BEGIN $name--\s+\*\//) {
+		    /$lineLeader3\/\*\s+--BEGIN $name--\s+\*\// ||
+		    /$lineLeader4\/\*\s+--BEGIN $name--\s+\*\//) {
 		    $newstate = "skip";
 		    $substate = $name;
 		    last;
@@ -481,7 +489,8 @@ L2: while (<FD>) {
 	# code 
 	foreach my $name (@BlockNames) {
 	    if (/$lineLeader2\/\*\s+--BEGIN $name--\s+\*\// ||
-		/$lineLeader3\/\*\s+--BEGIN $name--\s+\*\//) {
+		/$lineLeader3\/\*\s+--BEGIN $name--\s+\*\// ||
+		/$lineLeader4\/\*\s+--BEGIN $name--\s+\*\//) {
 		&skipBlockAndAnnotate( $outfile, $name );
 		next L2;	       
 	    }
@@ -899,7 +908,8 @@ sub skipBlockAndAnnotate {
     while (<FD>) {
 	if (/^\s/) { print $outfile &HTMLify($_); }
 	if (/^$lineLeader2\/\*\s+--END $blockName--\s+\*\// ||
-	    /^$lineLeader3\/\*\s+--END $blockName--\s+\*\//) {
+	    /^$lineLeader3\/\*\s+--END $blockName--\s+\*\// ||
+	    /^$lineLeader4\/\*\s+--END $blockName--\s+\*\//) {
 	    $sawend = 1;
 	    last; 
 	}
@@ -924,7 +934,8 @@ sub skipBlock {
 	if (/^\s/) { $fileline++; }
 	if (! $allowNested) {
 	    if (/^$lineLeader2\/\*\s+--BEGIN/ ||
-		/^$lineLeader3\/\*\s+--BEGIN/) {
+		/^$lineLeader3\/\*\s+--BEGIN/ ||
+		/^$lineLeader4\/\*\s+--BEGIN/) {
 		my $cleanline = $_;
 		$cleanline =~ s/^\s*//;
 		chop $cleanline;
@@ -943,7 +954,8 @@ sub skipBlock {
 # 	    }
 # 	}
 	if (/^$lineLeader2\/\*\s+--END $blockName--\s+\*\// ||
-	    /^$lineLeader3\/\*\s+--END $blockName--\s+\*\//) {
+	    /^$lineLeader3\/\*\s+--END $blockName--\s+\*\// ||
+	    /^$lineLeader4\/\*\s+--END $blockName--\s+\*\//) {
 	    last; 
 	}
 	# If we match the following but not the preceeding, there are extra 
