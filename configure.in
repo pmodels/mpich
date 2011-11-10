@@ -681,6 +681,9 @@ fi
 
 # ----------------------------------------------------------------------------
 # Set default library names if names haven't already been provided
+AC_ARG_VAR([MPILIBNAME],[can be used to override the name of the MPI library (default: "mpich")])
+AC_ARG_VAR([PMPILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPILIBNAME")])
+AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
 MPILIBNAME=${MPILIBNAME:-"mpich"}
 PMPILIBNAME_set=no
 if test -n "$PMPILIBNAME" ; then 
