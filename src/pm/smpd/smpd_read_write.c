@@ -119,7 +119,7 @@ int smpd_decode_buffer(const char *str, char *dest, int length, int *num_decoded
 int smpd_read(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len)
 {
     int result;
-    SMPDU_Size_t num_read;
+    SMPDU_Sock_size_t num_read;
 
     smpd_enter_fn(FCNAME);
 
@@ -165,7 +165,7 @@ int smpd_read(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len)
 int smpd_write(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len)
 {
     int result;
-    SMPDU_Size_t num_written;
+    SMPDU_Sock_size_t num_written;
 
     smpd_enter_fn(FCNAME);
 
@@ -214,7 +214,7 @@ int smpd_write(SMPDU_Sock_t sock, void *buf, SMPDU_Sock_size_t len)
 int smpd_write_string(SMPDU_Sock_t sock, char *str)
 {
     int result;
-    SMPDU_Size_t len, num_written;
+    SMPDU_Sock_size_t len, num_written;
 
     smpd_enter_fn(FCNAME);
 
@@ -251,7 +251,7 @@ static int read_string(SMPDU_Sock_t sock, char *str, int maxlen)
 {
     char ch;
     int result;
-    SMPDU_Size_t num_bytes;
+    SMPDU_Sock_size_t num_bytes;
     int total = 0;
 
     if (maxlen < 1)

@@ -231,7 +231,7 @@ int smpd_handle_stdin_command(smpd_context_t *context)
     smpd_process_t *piter;
     smpd_stdin_write_node_t *node, *iter;
     int result;
-    SMPDU_Size_t num_written, num_decoded;
+    SMPDU_Sock_size_t num_written, num_decoded;
     int nd;
 
     smpd_enter_fn(FCNAME);

@@ -33,7 +33,7 @@ void timeout_thread(void *p)
 #ifdef SIGALRM
 void timeout_function(int signo)
 {
-    SMPDU_Size_t num_written;
+    SMPDU_Sock_size_t num_written;
     char ch = -1;
     static int alarmed = 0;
     if (signo == SIGALRM)

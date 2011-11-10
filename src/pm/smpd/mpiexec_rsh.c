@@ -380,14 +380,14 @@ static int root_smpd(void *p)
 
     result = SMPDU_Sock_create_set(&set);
     if (result != SMPD_SUCCESS){
-	    smpd_err_printf(result, "SMPDU_Sock_create_set failed.\n");
+	    smpd_err_printf("SMPDU_Sock_create_set failed.\n");
 	    return SMPD_FAIL;
     }
     smpd_process.set = set;
     smpd_dbg_printf("created a set for the listener: %d\n", SMPDU_Sock_get_sock_set_id(set));
     result = SMPDU_Sock_listen(set, NULL, &rootPort, &listener); 
     if (result != SMPD_SUCCESS){
-	    smpd_err_printf(result, "SMPDU_Sock_listen failed.\n");
+	    smpd_err_printf("SMPDU_Sock_listen failed.\n");
 	    return SMPD_FAIL;
     }
     smpd_dbg_printf("smpd listening on port %d\n", rootPort);
@@ -400,7 +400,7 @@ static int root_smpd(void *p)
 
     result = SMPDU_Sock_set_user_ptr(listener, smpd_process.listener_context);
     if (result != SMPD_SUCCESS){
-	    smpd_err_printf(result, "SMPDU_Sock_set_user_ptr failed.\n");
+	    smpd_err_printf("SMPDU_Sock_set_user_ptr failed.\n");
 	    return SMPD_FAIL;
     }
     smpd_process.listener_context->state = SMPD_SMPD_LISTENING;

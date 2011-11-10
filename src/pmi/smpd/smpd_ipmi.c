@@ -586,7 +586,7 @@ static int PMIi_InitSingleton(void ){
         /* Connect to PM */
 		result = uPMI_ConnectToHost(pmi_process.root_host, pmi_process.root_port, SMPD_CONNECTING_RPMI);
 		if (result != SMPD_SUCCESS){ 
-            MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "uPMI_ConnectToHost failed: error: %s\n", result);
+            MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "uPMI_ConnectToHost failed: error: %d\n", result);
     	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
 		}
 

@@ -703,7 +703,7 @@ int smpd_state_reading_stdin(smpd_context_t *context, SMPDU_Sock_event_t *event_
 {
     int result;
     smpd_command_t *cmd_ptr;
-    SMPDU_Size_t num_read;
+    SMPDU_Sock_size_t num_read;
     char buffer[SMPD_MAX_CMD_LENGTH];
     int num_encoded;
 
@@ -762,7 +762,7 @@ int smpd_state_reading_stdin(smpd_context_t *context, SMPDU_Sock_event_t *event_
     else if (context->type == SMPD_CONTEXT_MPIEXEC_STDIN_RSH)
     {
 	unsigned char *buf;
-	SMPDU_Size_t total, num_written;
+	SMPDU_Sock_size_t total, num_written;
 	smpd_dbg_printf("read from %s\n", smpd_get_context_str(context));
 
 	/* one byte read, attempt to read up to the buffer size */
@@ -970,7 +970,7 @@ int smpd_state_reading_stdouterr(smpd_context_t *context, SMPDU_Sock_event_t *ev
 {
     int result;
     smpd_command_t *cmd_ptr;
-    SMPDU_Size_t num_read;
+    SMPDU_Sock_size_t num_read;
     char buffer[SMPD_MAX_CMD_LENGTH];
     int num_encoded;
     SMPD_BOOL ends_in_cr = SMPD_FALSE;
