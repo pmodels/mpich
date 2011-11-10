@@ -46,6 +46,21 @@ ProgHomeDir() {
     eval $2=$proghome
 }
 
+########################################################################
+## Run any local pre-update hooks
+########################################################################
+if test -d maint/hooks/pre ; then
+    for hook in `ls maint/hooks/pre/* 2>/dev/null` ; do
+        if test -x "$hook" ; then
+            echo_n "executing pre-update hook '$hook'... "
+            ./$hook
+            echo done
+        else
+            warn "unable to execute pre-update hook: '$hook'"
+        fi
+    done
+fi
+
 echo
 echo "##################################"
 echo "## Checking user environment"
@@ -281,7 +296,6 @@ done
 # Reset the arguments.  Note that this doesn't handle arguments that
 # contain blanks.  I hope that we don't need those.
 set -- $temp_args
-
 
 ########################################################################
 ## Check for the location of autotools
