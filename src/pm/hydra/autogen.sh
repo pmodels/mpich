@@ -8,7 +8,9 @@ else
     autoreconf=${AUTORECONF:-autoreconf}
 fi
 
+echo "=== running autoreconf in 'mpl' ==="
 (cd mpl && $autoreconf -vif)
+echo "=== running autoreconf in 'tools/topo/hwloc/hwloc' ==="
 (cd tools/topo/hwloc/hwloc && $autoreconf -vif)
 $autoreconf -vif
 
