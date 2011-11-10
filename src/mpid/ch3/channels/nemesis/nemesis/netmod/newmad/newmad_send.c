@@ -46,7 +46,8 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 	num_iov += 1;
     }
     REQ_FIELD(sreq,iov) = newmad_iov;
-
+    REQ_FIELD(sreq,iov_to_delete) = 1;
+   
     nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
     mpid_nem_newmad_pending_send_req++;
@@ -99,7 +100,7 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 	num_iov += 1;
     }
     REQ_FIELD(sreq,iov) = newmad_iov;    
-
+    REQ_FIELD(sreq,iov_to_delete) = 1;    
     nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
     mpid_nem_newmad_pending_send_req++;
@@ -159,6 +160,7 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     }
 
     REQ_FIELD(sreq,iov) = newmad_iov;        
+    REQ_FIELD(sreq,iov_to_delete) = 1;
 
     /*
     MPIDI_Datatype_get_info(sreq->dev.user_count,sreq->dev.datatype, dt_contig, data_sz, dt_ptr,dt_true_lb);
@@ -243,13 +245,15 @@ int  MPID_nem_newmad_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI
 #endif
 	nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 				 newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
-	REQ_FIELD(sreq,iov) = newmad_iov;        
+	REQ_FIELD(sreq,iov) = newmad_iov;
+        REQ_FIELD(sreq,iov_to_delete) = 1;
     }
     else
     {
 	nm_sr_isend_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     NULL, 0, &(REQ_FIELD(sreq,newmad_req)),(void*)sreq);    
 	REQ_FIELD(sreq,iov) = NULL;
+        REQ_FIELD(sreq,iov_to_delete) = 0;
     }
     mpid_nem_newmad_pending_send_req++;
 
@@ -307,13 +311,15 @@ int  MPID_nem_newmad_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MP
 	}
 	nm_sr_issend_iov(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			 newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)));    
-	REQ_FIELD(sreq,iov) = newmad_iov;        
+	REQ_FIELD(sreq,iov) = newmad_iov;
+        REQ_FIELD(sreq,iov_to_delete) = 1;
     }
     else
     {
 	nm_sr_issend(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 		     NULL, 0, &(REQ_FIELD(sreq,newmad_req)));    
 	REQ_FIELD(sreq,iov) = NULL;
+        REQ_FIELD(sreq,iov_to_delete) = 0;
     }
     mpid_nem_newmad_pending_send_req++;
 

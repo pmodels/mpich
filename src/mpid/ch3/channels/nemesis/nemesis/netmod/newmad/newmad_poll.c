@@ -126,6 +126,7 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 					      (char*)(rreq->dev.user_buf) + dt_true_lb,data_sz,
 					      &(REQ_FIELD(rreq,newmad_req)),(void*)rreq);
 	    REQ_FIELD(rreq,iov) = NULL;
+      	    REQ_FIELD(rreq,iov_to_delete) = 0;
 	}
 	else
 	{
@@ -148,6 +149,7 @@ int MPID_nem_newmad_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
 	    ret = nm_sr_irecv_iov_with_ref_tagged(mpid_nem_newmad_session,VC_FIELD(vc,p_gate),match_info,match_mask,
 						  newmad_iov,num_seg,&(REQ_FIELD(rreq,newmad_req)),(void*)rreq);	
 	    REQ_FIELD(rreq,iov) = newmad_iov;
+	    REQ_FIELD(rreq,iov_to_delete) = 1;
 	}
     }
     else
@@ -307,7 +309,7 @@ MPID_nem_newmad_handle_sreq(MPID_Request *req)
 	   MPIU_Assert(complete == TRUE);
 	}
     }
-    if (REQ_FIELD(req,iov) != NULL)
+    if (REQ_FIELD(req,iov_to_delete))
 	MPIU_Free((REQ_FIELD(req,iov)));
     mpid_nem_newmad_pending_send_req--;
 }
@@ -372,7 +374,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_tag_t match_info, size_t size)
 	}
     }
 
-    if (REQ_FIELD(req,iov) != NULL)
+    if (REQ_FIELD(req,iov_to_delete))
 	MPIU_Free(REQ_FIELD(req,iov));	
 
     MPIDI_Comm_get_vc_set_active(req->comm, req->status.MPI_SOURCE, &vc);
@@ -450,6 +452,7 @@ void MPID_nem_newmad_anysource_posted(MPID_Request *rreq)
     ret = nm_sr_irecv_iov_with_ref_tagged(mpid_nem_newmad_session,NM_ANY_GATE,match_info,match_mask,
 					  newmad_iov,num_seg,newmad_req,(void*)rreq);	
     REQ_FIELD(rreq,iov) = newmad_iov;    
+    REQ_FIELD(rreq,iov_to_delete) = 1;
     MPID_MEM_NMAD_ADD_REQ_IN_HASH(rreq,newmad_req);  
     /*
       #ifdef DEBUG
@@ -503,7 +506,7 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq)
 	else
 	{
 	    MPID_Segment_free(rreq->dev.segment_ptr);
-	    if (REQ_FIELD(rreq,iov) != NULL)
+   	    if (REQ_FIELD(rreq,iov_to_delete))
 	      MPIU_Free(REQ_FIELD(rreq,iov));	
 	}    
 	MPIU_Free(nmad_request);
