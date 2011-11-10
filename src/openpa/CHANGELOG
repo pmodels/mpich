@@ -1,9 +1,58 @@
 =============
+OpenPA v1.0.3
+=============
+Major Changes:
+      * Libtool shared library support for OPA, avoiding shared/static mixed linking problems on some platforms.
+      * The build system should now work more portably with broken/exotic shells.
+      * pkg-config support
+      * Emulated atomics can now be detected by the presence of an OPA_EXPLICIT_EMULATION #define in opa_config.h.
+      * PPC types are now correctly aligned to 8 bytes instead of 16 bytes.
+      * many more tests for "make check", fixed missing memory barriers in one test
+
+Individual Change Summary By Developer:
+
+balaji (2):
+      * Shared-library support for OPA.
+      * Initial draft of shared library versioning support for OPA.
+
+buntinas (1):
+      * added svn:ignores
+
+fortnern (3):
+      * Added tests for OPA_swap_int and OPA_swap_ptr.  Other minor cleanup in the test suite.
+      * Added tests for queue, and fixed bugs in queue implementation.  Other misc cleanup.
+      * Add tests for OPA_LL_int, OPA_SC_int, OPA_LL_ptr and OPA_SC_ptr (skipped test 4 from plan).
+
+goodell (16):
+      * Fix const usage in OPA_load_xxx
+      * Change PPC type sizes back to 8-bytes.
+      * Add pkg-config support.
+      * Add configure check for stddef.h, fixes ticket #15.
+      * AC_DEFINE OPA_EXPLICIT_EMULATION upon --with-atomic-primitives=no
+      * remove nonsense "bit" word in configure message
+      * fix AX_PREFIX_CONFIG_H to work with dash
+      * redo r113 with printf to be more portable
+      * fix AX_PREFIX_CONFIG sed issue with AS_ECHO this time
+      * include VERSION in EXTRA_DIST to avoid "make distcheck" errors
+      * add "color-tests" option for automake
+      * use "silent rules" by default, like other MPICH2 projects
+      * ensure that config.status has a dependency on the VERSION file
+      * make the age=0 field explicit in the VERSION file
+      * update CHANGELOG, etc. for the upcoming 1.0.3 release
+      * add missing memory barriers to test_primitive.c's stack tests
+
+jayesh (1):
+      * Fixing the type casts of atomic func params for 64-bit builds on windows
+
+
+=============
 OpenPA v1.0.2
 =============
 Major Changes:
       * Add support for 64-bit PPC.
       * Static initializer macros for OPA types.
+
+Individual Change Summary By Developer:
 
 balaji (1):
       * Fix pthread_mutex usage for inter-process shared memory regions.

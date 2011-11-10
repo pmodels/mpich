@@ -4234,11 +4234,17 @@ static void *threaded_llsc_int_stack_push(void *_udata)
         do {
             tmp_head = OPA_load_int(udata->head);
             OPA_store_int(&obj->next, tmp_head);
+            /* don't let the "on_stack" CAS or the "next" store pass the "head" CAS */
+            OPA_write_barrier();
         } while(tmp_head != OPA_cas_int(udata->head, tmp_head, udata->obj));
 
-        /* Incremen the number of successful pushes */
+        /* Increment the number of successful pushes */
         udata->nsuccess++;
     } /* end for */
+
+    /* don't allow npusher's decr to be perceived as happening before the pushes
+     * are visible */
+    OPA_write_barrier();
 
     /* Mark this thread as having completed */
     OPA_decr_int(udata->npushers);
@@ -4285,6 +4291,10 @@ static void *threaded_llsc_int_stack_pop(void *_udata)
 
         /* Store conditional the "next" object as the new head */
         if(OPA_SC_int(udata->head, tmp_obj)) {
+            /* ensure that the head data is perceived as stored before reading
+             * the on_stack variable */
+            OPA_read_write_barrier();
+
             /* Make sure this object was marked as on the stack */
             if(!OPA_load_int(&obj->on_stack)) {
                 OP_SUPPRESS(printf("    Popped object was not on the stack\n"),
@@ -4305,6 +4315,11 @@ static void *threaded_llsc_int_stack_pop(void *_udata)
             /* Increment the number of successful pops */
             udata->nsuccess++;
         } /* end if */
+
+        /* We could include a read_write_barrier here to enforce ordering
+         * between pop attempt above and the npushers load below, but leaving it
+         * out is safe because npushers starts at max and monotonically
+         * decreases.  Worst case is a few extra iterations. */
     } while(OPA_load_int(udata->npushers) && !OPA_load_int(udata->failed));
 
     pthread_exit(NULL);
@@ -4556,11 +4571,17 @@ static void *threaded_llsc_ptr_stack_push(void *_udata)
         do {
             tmp_head = OPA_load_ptr(udata->head);
             OPA_store_ptr(&obj->next, tmp_head);
+            /* don't let the "on_stack" CAS or the "next" store pass the "head" CAS */
+            OPA_write_barrier();
         } while(tmp_head != OPA_cas_ptr(udata->head, tmp_head, obj));
 
-        /* Incremen the number of successful pushes */
+        /* Increment the number of successful pushes */
         udata->nsuccess++;
     } /* end for */
+
+    /* don't allow npusher's decr to be perceived as happening before the pushes
+     * are visible */
+    OPA_write_barrier();
 
     /* Mark this thread as having completed */
     OPA_decr_int(udata->npushers);
@@ -4606,6 +4627,10 @@ static void *threaded_llsc_ptr_stack_pop(void *_udata)
 
         /* Store conditional the "next" object as the new head */
         if(OPA_SC_ptr(udata->head, next)) {
+            /* ensure that the head data is perceived as stored before reading
+             * the on_stack variable */
+            OPA_read_write_barrier();
+
             /* Make sure this object was marked as on the stack */
             if(!OPA_load_int(&obj->on_stack)) {
                 OP_SUPPRESS(printf("    Popped object was not on the stack\n"),
@@ -4626,6 +4651,11 @@ static void *threaded_llsc_ptr_stack_pop(void *_udata)
             /* Increment the number of successful pops */
             udata->nsuccess++;
         } /* end if */
+
+        /* We could include a read_write_barrier here to enforce ordering
+         * between pop attempt above and the npushers load below, but leaving it
+         * out is safe because npushers starts at max and monotonically
+         * decreases.  Worst case is a few extra iterations. */
     } while(OPA_load_int(udata->npushers) && !OPA_load_int(udata->failed));
 
     pthread_exit(NULL);

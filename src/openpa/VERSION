@@ -18,4 +18,4 @@
 #
 #     4. If any interfaces have been removed since the last public
 #     release, then set age to 0.
-libopa_so_version=1:0
+libopa_so_version=1:0:0

@@ -6,7 +6,7 @@
 
 AC_PREREQ(2.62)
 
-AC_INIT([OpenPA], [1.0.2], [https://trac.mcs.anl.gov/projects/openpa/newticket])
+AC_INIT([OpenPA], [1.0.3], [https://trac.mcs.anl.gov/projects/openpa/newticket])
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess.  It also contains autoconf macro files.
 AC_CONFIG_AUX_DIR(confdb)
@@ -23,10 +23,13 @@ CFLAGS=$save_cflags
 
 if test -s "$srcdir/VERSION" ; then
    . $srcdir/VERSION
-   AC_SUBST(libopa_so_version)
+   AC_SUBST([libopa_so_version])
 else
    AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
+
+dnl force configure to be re-run if $top_srcdir/VERSION changes
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES],['$(top_srcdir)/VERSION'])
 
 # FIXME this header needs to end up in the installation include directory in some form,
 # so we probably need to change its name to something that won't collide in the
@@ -247,20 +250,20 @@ AC_DEFUN([OPA_PRIMITIVE_TEST_PGM], [AC_LANG_PROGRAM([[
 dnl OPA_TRY_PRIMITIVE_HEADER([header file from src/ dir], [HAVE_ macro suffix], [feature description])
 dnl Does an AC_LINK_IFELSE() to see if the header file works
 AC_DEFUN([OPA_TRY_PRIMITIVE_HEADER],[
-if test     "$with_atomic_primitives" = "auto"                 \
-         -o "$with_atomic_primitives" = "auto_allow_emulation" \
-         -o "$with_atomic_primitives" = "$1"
-    then
+if test "$with_atomic_primitives" = "auto"                 || \
+   test "$with_atomic_primitives" = "auto_allow_emulation" || \
+   test "$with_atomic_primitives" = "$1"
+then
     checked_specified_primitive=yes
     AC_MSG_CHECKING([for support for $3])
     SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS -I${srcdir}/src"
-    AC_LINK_IFELSE(OPA_PRIMITIVE_TEST_PGM($1),
-        AC_DEFINE(HAVE_$2, 1, [define to 1 if we have support for $3])
-        non_emulated_primitives_available=yes
-        AC_MSG_RESULT([yes])
+    AC_LINK_IFELSE([OPA_PRIMITIVE_TEST_PGM([$1])],
+        [AC_DEFINE([HAVE_$2], [1], [define to 1 if we have support for $3])
+        non_emulated_primitives_available=yes]
+        [AC_MSG_RESULT([yes])]
     ,
-        AC_MSG_RESULT([no])
+        [AC_MSG_RESULT([no])]
     )
     CFLAGS="$SAVE_CFLAGS"
 fi
@@ -270,27 +273,27 @@ dnl OPA_TRY_RUN_PRIMITIVE_HEADER([header file from src/ dir], [HAVE_ macro suffi
 dnl Does an AC_RUN_IFELSE() to see if the header file works, but falls back to AC_LINK_IFELSE() 
 dnl if we're cross-compiling
 AC_DEFUN([OPA_TRY_RUN_PRIMITIVE_HEADER],[
-if test     "$with_atomic_primitives" = "auto"                 \
-         -o "$with_atomic_primitives" = "auto_allow_emulation" \
-         -o "$with_atomic_primitives" = "$1"
+if test "$with_atomic_primitives" = "auto"                 || \
+   test "$with_atomic_primitives" = "auto_allow_emulation" || \
+   test "$with_atomic_primitives" = "$1"
 then
     checked_specified_primitive=yes
     AC_MSG_CHECKING([for support for $3])
     SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS -I${srcdir}/src"
-    AC_RUN_IFELSE(OPA_PRIMITIVE_TEST_PGM($1),
-        AC_DEFINE(HAVE_$2, 1, [define to 1 if we have support for $3])
+    AC_RUN_IFELSE([OPA_PRIMITIVE_TEST_PGM([$1])],[
+        AC_DEFINE([HAVE_$2], [1], [define to 1 if we have support for $3])
         non_emulated_primitives_available=yes
-        AC_MSG_RESULT([yes])
+        AC_MSG_RESULT([yes])]
     ,
-        AC_MSG_RESULT([no])
+        [AC_MSG_RESULT([no])]
     ,
-        [AC_LINK_IFELSE(OPA_PRIMITIVE_TEST_PGM($1),
-            AC_DEFINE(HAVE_$2, 1, [define to 1 if we have support for $3])
+        [AC_LINK_IFELSE([OPA_PRIMITIVE_TEST_PGM([$1])],[
+            AC_DEFINE([HAVE_$2], [1], [define to 1 if we have support for $3])
             non_emulated_primitives_available=yes
-            AC_MSG_RESULT([yes])
+            AC_MSG_RESULT([yes])]
         ,
-            AC_MSG_RESULT([no])
+            [AC_MSG_RESULT([no])]
         )]
     )
     CFLAGS="$SAVE_CFLAGS"
