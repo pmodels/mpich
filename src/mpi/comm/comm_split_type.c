@@ -91,12 +91,12 @@ int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT_TYPE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPLIT);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPLIT_TYPE);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -144,7 +144,7 @@ int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPLIT);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPLIT_TYPE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
@@ -152,6 +152,8 @@ int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     {
+        /* FIXME this error code is wrong, it's the error code for
+         * regular MPI_Comm_split */
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
                                  MPI_ERR_OTHER, "**mpi_comm_split",
