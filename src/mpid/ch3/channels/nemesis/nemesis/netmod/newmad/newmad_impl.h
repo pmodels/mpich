@@ -21,7 +21,6 @@
 #include <nm_public.h>
 #include <nm_sendrecv_interface.h>
 #include <nm_sampling.h>
-#include <pm2_common.h>
 #include "mpid_nem_impl.h"
 
 int MPID_nem_newmad_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);

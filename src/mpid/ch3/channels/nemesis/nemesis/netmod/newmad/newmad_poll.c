@@ -239,9 +239,9 @@ MPID_nem_newmad_poll(int in_blocking_poll)
 	       MPID_nem_handle_pkt(adi_req->vc,(char *)(adi_req->tmpbuf),(MPIDI_msg_sz_t)(adi_req->tmpbuf_sz));
 	       MPIU_Free(adi_req->tmpbuf);
 	    }
-	    nm_core_disable_progression(mpid_nem_newmad_session->p_core);
+	    /* nm_core_disable_progression(mpid_nem_newmad_session->p_core); */
 	    MPID_nem_newmad_internal_req_enqueue(adi_req);
-	    nm_core_enable_progression(mpid_nem_newmad_session->p_core);
+	    /* nm_core_enable_progression(mpid_nem_newmad_session->p_core); */
 	 }
 	 else
 	 {
