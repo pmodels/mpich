@@ -5995,6 +5995,44 @@ if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
 fi
 
+########################################################################
+
+# cause libtool script to be built now so that we can use it to test one last
+# linking issue on Darwin
+LT_OUTPUT
+
+if test "X$enable_f77" = "Xyes" -a "X$enable_shared" = "Xyes" ; then
+    AS_CASE([$host],
+        [*-*-darwin*],
+        [
+         # TODO, move this into a PAC macro with real autoconf caching
+         pac_cv_wl_commons_use_dylibs_works=no
+         AC_MSG_CHECKING([if the F77 compiler accepts -Wl,-commons,use_dylibs])
+         AC_LANG_PUSH([Fortran 77])
+         PAC_PUSH_FLAG([LDFLAGS])
+         PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [LDFLAGS])
+         AC_LINK_IFELSE([AC_LANG_PROGRAM([],[      INTEGER i])],
+                        [AC_MSG_RESULT([yes])
+                         pac_cv_wl_commons_use_dylibs_works=yes],
+                        [AC_MSG_RESULT([no])])
+         PAC_POP_FLAG([LDFLAGS])
+         AC_LANG_POP([Fortran 77])
+
+         # Add the flag to the WRAPPER_LDFLAGS, since this common block issue
+         # is really only a problem for dynamically linked user programs.
+         #
+         # Technically we may not be able to use the same form of the argument
+         # for all four compilers (CC/CXX/F77/FC).  But we only think this is
+         # necessary for Darwin for now, so this unconditional, single-var
+         # approximation will work for now.
+         if test "X$pac_cv_wl_commons_use_dylibs_works" = "Xyes" ; then
+             PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [WRAPPER_LDFLAGS])
+         fi
+        ]
+    )
+fi
+
+########################################################################
 
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
