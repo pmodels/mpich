@@ -276,7 +276,7 @@ int main( int argc, char *argv[], char *envp[] )
 void mpiexec_usage( const char *msg )
 {
     if (msg) {
-	MPIU_Error_printf( msg );
+	MPIU_Error_printf( "%s", msg );
 	if (msg[strlen(msg)-1] != '\n') {
 	    MPIU_Error_printf( "\n" );
 	}
