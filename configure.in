@@ -2411,6 +2411,8 @@ if test -z "$AR" ; then
     AC_MSG_ERROR([The program ar is required for building MPICH2.  Make sure that your path includes ar])
 fi
 
+# FIXME: this is probably unnecessary now that we only do one "ar" at the end
+# (via libtool).  If anything, it's likely to cause problems instead.
 # AR_FLAGS provides a way to potentially improve build performance on Mac OSX
 AR_FLAGS=cr
 # this logic is lame, should really write a real test at some point
