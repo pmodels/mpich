@@ -2331,7 +2331,7 @@ public:
   mytest(void) : a(1) {}
   ~mytest(void) {}
 };],[mytest a;],
- pac_cv_cxx_builds_exe=yes, ac_cv_builds_exe=no)
+ pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
  AC_LANG_RESTORE
 ])
     if test "$pac_cv_cxx_builds_exe" != yes ; then
