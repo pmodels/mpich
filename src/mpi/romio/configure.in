@@ -2217,7 +2217,6 @@ AC_CONFIG_FILES([
     test/fcoll_test.f
     test/pfcoll_test.f
     test/fperf.f
-    common/dataloop/Makefile
 ])
 AC_OUTPUT
 
