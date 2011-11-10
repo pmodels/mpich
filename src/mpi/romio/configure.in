@@ -34,8 +34,7 @@ BITS=0
 FROM_MPICH=${FROM_MPICH:-no}
 FROM_MPICH2=${FROM_MPICH2:-no}
 if test "$FROM_MPICH" = yes -a "$FROM_MPICH2" = yes ; then
-    AC_MSG_WARN([Both FROM_MPICH and FROM_MPICH set to yes; at most one should  be yes])
-    
+    AC_MSG_WARN([Both FROM_MPICH and FROM_MPICH2 set to yes; at most one should be yes])
 fi
 FROM_LAM=${FROM_LAM:-no}
 if test "$FROM_LAM" = 1 ; then FROM_LAM=yes ; fi
