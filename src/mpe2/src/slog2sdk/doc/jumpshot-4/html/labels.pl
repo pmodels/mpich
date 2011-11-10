@@ -1,4 +1,4 @@
-# LaTeX2HTML 2002-2-1 (1.70)
+# LaTeX2HTML 2008 (1.71)
 # Associate labels original text with physical files.
 
 
@@ -205,7 +205,7 @@ $noresave{$key} = "$nosave";
 1;
 
 
-# LaTeX2HTML 2002-2-1 (1.70)
+# LaTeX2HTML 2008 (1.71)
 # labels from external_latex_labels array.
 
 
@@ -313,6 +313,10 @@ $key = q/fig:convertor_done/;
 $external_latex_labels{$key} = q|3.5|; 
 $noresave{$key} = "$nosave";
 
+$key = q/table:preference_zoomable_timeline_b/;
+$external_latex_labels{$key} = q|3.22|; 
+$noresave{$key} = "$nosave";
+
 $key = q/fig:openmpi_4_3/;
 $external_latex_labels{$key} = q|4.8|; 
 $noresave{$key} = "$nosave";
@@ -341,16 +345,16 @@ $key = q/fig:histogram_arrow/;
 $external_latex_labels{$key} = q|3.26|; 
 $noresave{$key} = "$nosave";
 
-$key = q/table:preference_zoomable_timeline/;
-$external_latex_labels{$key} = q|3.20|; 
-$noresave{$key} = "$nosave";
-
 $key = q/fig:mouse_zoom_mode/;
 $external_latex_labels{$key} = q|3.11|; 
 $noresave{$key} = "$nosave";
 
 $key = q/sub:Zoomable-and-Scrollable/;
 $external_latex_labels{$key} = q|3.4.1|; 
+$noresave{$key} = "$nosave";
+
+$key = q/table:preference_zoomable_timeline_a/;
+$external_latex_labels{$key} = q|3.20|; 
 $noresave{$key} = "$nosave";
 
 $key = q/table:main_toolbar/;
@@ -374,7 +378,7 @@ $external_latex_labels{$key} = q|3.19|;
 $noresave{$key} = "$nosave";
 
 $key = q/table:preference_legend/;
-$external_latex_labels{$key} = q|3.24|; 
+$external_latex_labels{$key} = q|3.26|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:timeline_search_preview/;
@@ -398,7 +402,7 @@ $external_latex_labels{$key} = q|3.12|;
 $noresave{$key} = "$nosave";
 
 $key = q/table:preference_zoomable_histogram/;
-$external_latex_labels{$key} = q|3.22|; 
+$external_latex_labels{$key} = q|3.24|; 
 $noresave{$key} = "$nosave";
 
 $key = q/fig:main/;

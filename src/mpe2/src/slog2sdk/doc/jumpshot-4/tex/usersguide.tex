@@ -1,10 +1,10 @@
-%% LyX 1.4.4 created this file.  For more info, see http://www.lyx.org/.
+%% LyX 2.0.1 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[12pt,oneside,english]{book}
-\usepackage[]{fontenc}
-\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
 \usepackage{geometry}
-\geometry{verbose,letterpaper,tmargin=0.7in,bmargin=0.7in,lmargin=0.7in,rmargin=0.7in}
+\geometry{verbose,tmargin=0.7in,bmargin=0.7in,lmargin=0.7in,rmargin=0.7in}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \setcounter{secnumdepth}{3}
@@ -13,7 +13,6 @@
 \setlength{\parindent}{0pt}
 \usepackage{array}
 \usepackage{longtable}
-\usepackage{subfigure}
 \usepackage{graphicx}
 
 \makeatletter
@@ -26,8 +25,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 \usepackage[bookmarksopen=true,pdftex]{hyperref}
 
-\usepackage{babel}
+\@ifundefined{showcaptionsetup}{}{%
+ \PassOptionsToPackage{caption=false}{subfig}}
+\usepackage{subfig}
 \makeatother
+
+\usepackage{babel}
 \begin{document}
 
 \title{Jumpshot-4 Users Guide}
@@ -132,8 +135,8 @@ the SLOG-2 format. The renormalized object provides a high-level description
 of what is going on within the (timeline vs time) region where the
 preview object spans. The preview drawable is designed to amalgamate
 real drawables of the same topological type, for example, a preview
-state is a \char`\"{}state amalgamates only\char`\"{} object. Hence,
-a preview drawable is always a primitive drawable in the renormalization
+state is a \textquotedbl{}state amalgamates only\textquotedbl{} object.
+Hence, a preview drawable is always a primitive drawable in the renormalization
 scheme. There are currently three different types of preview drawables:
 \emph{Preview\_State, Preview\_Arrow, and Preview\_Event.} Therefore,
 one preview drawable is for each supported topology of primitive drawable.
@@ -157,11 +160,9 @@ are still buried inside their preview drawables. In the figure are
 preview arrows, preview states in the front, and some long-running
 real states in the back.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/timeline_preview_detail_0}
-
 
 \caption{\label{fig:timeline_preview_detail_0} Typical zoomed-out view of
 preview states and arrows. The region marked by a pair of white lines
@@ -188,7 +189,7 @@ real arrows; rather, it means that the numbers of real arrows contained
 in the preview objects are within the same order of magnitude, that
 is, within a constant multiplicative factor as defined by PREVIEW\_ARROW\_LOG\_BASE
 in the Preference window shown in Figure \ref{fig:preference_pview_state}
-and in Table \ref{table:preference_zoomable_timeline}. Different
+and in Table \ref{table:preference_zoomable_timeline_a}. Different
 thickness in preview arrows indicates more than one multiple of the
 constant factor difference in the number of real arrows between the
 preview objects.
@@ -200,10 +201,10 @@ time range of the preview state. Depending on the PREVIEW\_STATE\_DISPLAY
 value selected in the pulldown menu at the top of the left side of
 the y-axis label,%
 \footnote{In the Preference window, as shown in Figure \ref{fig:preference_pview_state}
-and in Table \ref{table:preference_zoomable_timeline}, there is also
-a PREVIEW\_STATE\_DISPLAY variable. The variable determines the initial
-PREVIEW\_STATE\_DISPLAY used when the Timeline window is first made
-visible.%
+and in Table \ref{table:preference_zoomable_timeline_a}, there is
+also a PREVIEW\_STATE\_DISPLAY variable. The variable determines the
+initial PREVIEW\_STATE\_DISPLAY used when the Timeline window is first
+made visible.%
 } the distribution and the heights of the strips can be changed dramatically.
 One of the display options for the preview state is \emph{CumulativeInclusionRatio}.
 With this option, the strips are arranged in order of decreasing height
@@ -221,12 +222,11 @@ the older version of Jumpshot. For example, the new preview states
 retain timeline ID information, which  may enable early detection
 of load-balancing problems before zooming in to see all the real states. 
 
-\noindent %
+\noindent 
 \begin{figure}[!htbp]
 \centering
 
 \includegraphics[scale=0.6]{pic/timeline_preview_detail_1}
-
 
 \caption{\label{fig:timeline_preview_detail_1} Zoomed-in view of Figure \ref{fig:timeline_preview_detail_0}.}
 \end{figure}
@@ -259,12 +259,10 @@ This configuration indicates that the white, turquoise, and gray real
 states are all nested inside the long-running orange and dark royal-blue
 states.
 
-%
 \begin{figure}[!htbp]
 \centering
 
 \includegraphics[scale=0.6]{pic/timeline_preview_detail_2}
-
 
 \caption{\label{fig:timeline_preview_detail_2} Zoomed-in view of Figure \ref{fig:timeline_preview_detail_1}.}
 \end{figure}
@@ -293,12 +291,10 @@ find out the exact number of real drawables amalgamated by the preview
 objects within the zoomed-in region. This can be achieved by right
 clicking on the preview drawable. The result is shown in Figure \ref{fig:timeline_infobox_preview_state}.
 
-%
 \begin{figure}[!htbp]
 \centering
 
 \includegraphics[scale=0.6]{pic/timeline_preview_detail_3}
-
 
 \caption{\label{fig:timeline_preview_detail_3} Zoomed-in view of Figure \ref{fig:timeline_preview_detail_2}.}
 \end{figure}
@@ -313,12 +309,10 @@ white lines marked region in Figure \ref{fig:timeline_preview_detail_3}
 enlarges the real drawables into easily separable objects, as shown
 in Figure \ref{fig:timeline_preview_detail_4}.
 
-%
 \begin{figure}[h]
 \centering
 
 \includegraphics[scale=0.6]{pic/timeline_preview_detail_4}
-
 
 \caption{\label{fig:timeline_preview_detail_4} Zoomed-in view of Figure \ref{fig:timeline_preview_detail_3}.}
 \end{figure}
@@ -371,11 +365,9 @@ ratios for the innermost nested states (i.e., MPI states) tend to
 dominate all state exclusion ratios. So the exclusion ratio highlights
 the innermost nested states at a very high preview level.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/timeline_nesting_detail}
-
 
 \caption{\label{fig:timeline_nesting_detail}Zoomed-in view of some nested
 states where the duration of the orange state is 1.0 sec, the duration
@@ -390,40 +382,22 @@ nested in the navy-blue state, which is in turn nested in the orange
 state. The pair of green lines mark the region where a preview state
 is being created.
 
-%
 \begin{table}[!htbp]
 \begin{longtable}{|c|c|c|c|c|}
 \hline 
-Icon&
-Description&
-Duration&
-Inclusion Ratio&
-Exclusion Ratio\tabularnewline
-\hline
+Icon & Description & Duration & Inclusion Ratio & Exclusion Ratio\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/timeline_nesting_legend_innermost}&
-Innermost Nested State&
-0.5 sec&
-50\%&
-50\%\tabularnewline
 \hline 
-\multicolumn{1}{|c|}{\includegraphics[scale=0.8]{pic/timeline_nesting_legend_middle}}&
-Intermediate Nested State&
-0.8 sec&
-80\%&
-30\%\tabularnewline
+\includegraphics[scale=0.8]{pic/timeline_nesting_legend_innermost} & Innermost Nested State & 0.5 sec & 50\% & 50\%\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/timeline_nesting_legend_outermost}&
-Outermost Enclosing State&
-1.0 sec&
-100\%&
-20\%\tabularnewline
-\hline
+\multicolumn{1}{|c|}{\includegraphics[scale=0.8]{pic/timeline_nesting_legend_middle}} & Intermediate Nested State & 0.8 sec & 80\% & 30\%\tabularnewline
+\hline 
+\includegraphics[scale=0.8]{pic/timeline_nesting_legend_outermost} & Outermost Enclosing State & 1.0 sec & 100\% & 20\%\tabularnewline
+\hline 
 \end{longtable}
 
-
-\caption{\label{table:legend_nesting_detail}Contributions of real states
-to a preview state of duration 1.0 sec as marked by the pair of green
+\caption{\label{table:legend_nesting_detail}Contributions of real states to
+a preview state of duration 1.0 sec as marked by the pair of green
 lines in Figure \ref{fig:timeline_nesting_detail}.}
 \end{table}
 
@@ -437,11 +411,9 @@ dominant state in inclusion ratios. One obvious observation is that
 the inclusion and exclusion ratios of the innermost state category
 are the same.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/timeline_nesting_preview_all}
-
 
 \caption{\label{fig:timeline_nesting_preview_all} Different preview state
 displays of the zoomed-in view of the Figure \ref{fig:timeline_nesting_detail}.
@@ -507,22 +479,18 @@ view provides an extra dimension of information compared with its
 inclusion ratio counterpart, at the expense of being a bit more complicated
 visually.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/timeline_preview_detail_0_excl}
-
 
 \caption{\label{fig:timeline_preview_detail_0_excl}\emph{CumulativeExclusionRatio}
 view of Figure \ref{fig:timeline_preview_detail_0}.}
 \end{figure}
 
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/timeline_preview_detail_1_excl}
-
 
 \caption{\label{fig:timeline_preview_detail_1_excl}\emph{CumulativeExclusionRatio}
 view of Figure \ref{fig:timeline_preview_detail_1}; also, a zoomed-in
@@ -539,11 +507,9 @@ shot of Figure \ref{fig:timeline_preview_detail_0_excl}.}
 
 \section{Main Window}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/main}
-
 
 \caption{\label{fig:main} Main control window of Jumpshot-4.}
 \end{figure}
@@ -568,45 +534,27 @@ ViewMaps, e.g. a CLOG-2 logfile generated from a multi-threaded MPI
 program contains the Process-Thread and Communicator-Thread ViewMaps
 besides the Identity Map.
 
-%
 \begin{table}[!htbp]
 \begin{longtable}{|c|c|c|}
 \hline 
-Icon&
-Description&
-Function\tabularnewline
-\hline
+Icon & Description & Function\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Open24}&
-File Selection &
-display a File Chooser dialog to select logfile to be processed\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Convert24}&
-Logfile Conversion&
-invoke the Logfile Convertor to convert non-slog2 file to slog2 format\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Open24} & File Selection  & display a File Chooser dialog to select logfile to be processed\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Properties24}&
-Show Legend Window&
-display the Legend window of the selected logfile if it is hidden\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Convert24} & Logfile Conversion & invoke the Logfile Convertor to convert non-slog2 file to slog2 format\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/New24}&
-Show Timeline Window&
-display the Timeline window of the selected logfile if it is hidden\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Properties24} & Show Legend Window & display the Legend window of the selected logfile if it is hidden\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Preferences24}&
-Edit Preferences&
-display the Preference window that adjusts Jumpshot's properties\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/New24} & Show Timeline Window & display the Timeline window of the selected logfile if it is hidden\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Help24}&
-Show Users Manual&
-show the Users Manual of this program\tabularnewline
-\hline
-\includegraphics[scale=0.8]{pic/gif2png/Information24}&
-Show FAQs&
-show the FAQs of this program\tabularnewline
-\hline
+\includegraphics[scale=0.8]{pic/gif2png/Preferences24} & Edit Preferences & display the Preference window that adjusts Jumpshot's properties\tabularnewline
+\hline 
+\includegraphics[scale=0.8]{pic/gif2png/Help24} & Show Users Manual & show the Users Manual of this program\tabularnewline
+\hline 
+\includegraphics[scale=0.8]{pic/gif2png/Information24} & Show FAQs & show the FAQs of this program\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:main_toolbar} Functions of the toolbar buttons}
 \end{table}
@@ -615,11 +563,9 @@ show the FAQs of this program\tabularnewline
 
 \section{Logfile Convertor Window}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/convertor_init}
-
 
 \caption{\label{fig:convertor_init}Logfile Convertor window allowing conversion
 of supported trace file format to SLOG-2 format.}
@@ -629,10 +575,9 @@ of supported trace file format to SLOG-2 format.}
 If a non-slog2 file is selected in the Main window, the Logfile Convertor,
 as shown in Figure \ref{fig:convertor_init}, will be invoked to prompt
 user to convert the file to SLOG-2 format readable by this viewer.
-Currently, five convertors are supported: \emph{CLOG} --\textgreater{}
-\emph{SLOG-2}, \emph{CLOG-2 --\textgreater{} SLOG-2, RLOG} --\textgreater{}
-\emph{SLOG-2,} \emph{UTE} --\textgreater{} \emph{SLOG-2} and \emph{TXT
---\textgreater{} SLOG-2.} The convertor is generally selected based
+Currently, five convertors are supported: \emph{CLOG} --> \emph{SLOG-2},
+\emph{CLOG-2 --> SLOG-2, RLOG} --> \emph{SLOG-2,} \emph{UTE} --> \emph{SLOG-2}
+and \emph{TXT --> SLOG-2.} The convertor is generally selected based
 on the input file's file extension. If the wrong file convertor is
 selected, the user can correct it through the pale-blue pulldown menu
 located at the top of the window. The Logfile Convertor window can
@@ -646,37 +591,23 @@ of the Output File Name field with the default name. The Logfile Convertor
 has five major functions, each is associated with a button in the
 lower panel of the window. They are listed in Table \ref{table:convertor_buttons}.
 
-%
 \begin{table}[!htbp]
 \begin{longtable}{|c|c|c|}
 \hline 
-Icon&
-Description&
-Function\tabularnewline
-\hline
+Icon & Description & Function\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Convert24}&
-Convert&
-Start the logfile conversion of the selected convertor\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Stop24}&
-Stop&
-Stop the ongoing logfile conversion of the selected convertor\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Convert24} & Convert & Start the logfile conversion of the selected convertor\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/About24}&
-Usage&
-Print the usage information of the selected convertor\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Stop24} & Stop & Stop the ongoing logfile conversion of the selected convertor\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/ConvertCancel24}&
-Cancel&
-Close the window without doing anything\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/About24} & Usage & Print the usage information of the selected convertor\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/ConvertOk24}&
-OK&
-Display the last converted SLOG-2 file and close the window\tabularnewline
-\hline
+\includegraphics[scale=0.8]{pic/gif2png/ConvertCancel24} & Cancel & Close the window without doing anything\tabularnewline
+\hline 
+\includegraphics[scale=0.8]{pic/gif2png/ConvertOk24} & OK & Display the last converted SLOG-2 file and close the window\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:convertor_buttons}Major functions in the Logfile Convertor
 window.}
@@ -692,11 +623,9 @@ all the parameters used to launch the Java process, as in Figure \ref{table:conv
 On the rare occasion that the default parameters are not correct,
 the text fields can be modified to reflect the situation. 
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/convertor_parameters}
-
 
 \caption{\label{fig:convertor_parameters}Hidden parameters panel of the Logfile
 Convertor.}
@@ -713,11 +642,9 @@ size, as in Figure \ref{fig:convertor_progress}. During the conversion,
 only the \emph{Stop} button is enabled for the case that user wants
 to stop the ongoing conversion.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/convertor_progress}
-
 
 \caption{\label{fig:convertor_progress} Logfile conversion in progress.}
 \end{figure}
@@ -729,10 +656,8 @@ in the text area for diagnosis or a bug report. As shown in Figure
 the logfile conversion is terminated normally and the \emph{STOP}
 button has not been clicked during the conversion.
 
-%
 \begin{figure}[!htbp]
 \centering\includegraphics[scale=0.5]{pic/convertor_done}
-
 
 \caption{\label{fig:convertor_done}The \emph{OK} button is enabled when the
 logfile conversion finishes normally, i.e with exit status 0.}
@@ -757,11 +682,13 @@ for visualization, the Legend window like the one shown in Figure
 going to be discussed in the Legend window affect both the Timeline
 and the Histogram windows.
 
-%
 \begin{figure}[!htbp]
 \centering
-\subfigure[Legend Window's initial view]{\includegraphics[scale=0.6]{pic/legend_popup}}~~~~~~~~~~~~~~~\subfigure[Fully extended Legend window that shows statistics sumary]{\includegraphics[scale=0.6]{pic/legend_popup_full}}
+\subfloat[Legend Window's initial view]{
 
+\includegraphics[scale=0.6]{pic/legend_popup}}~~~~~~~~~~~~~~~\subfloat[Fully extended Legend window that shows statistics sumary]{
+
+\includegraphics[scale=0.6]{pic/legend_popup_full}}
 
 \caption{\label{fig:legend_popup} Typical Legend window when a slog2 file
 is first loaded into Jumpshot-4. The Legend window can be expanded
@@ -775,53 +702,28 @@ The Legend window contains mainly a seven-column legend table. The
 seven columns are labeled \emph{Topo, Name, V, S, count, incl and
 excl} as in Table \ref{table:legend_column_ops}.
 
-%
 \begin{table}[!htbp]
-\centering\begin{longtable}{|c|c|>{\centering}p{2in}|>{\centering}p{2in}|}
+\centering%
+\begin{longtable}{|c|c|>{\centering}p{2in}|>{\centering}p{2in}|}
 \hline 
-Icon&
-Description&
-Left Mouse Click on Column Cell&
-Right Mouse Click on Column Cell or Left Mouse Click on Column Title\tabularnewline
-\hline
+Icon & Description & Left Mouse Click on Column Cell & Right Mouse Click on Column Cell or Left Mouse Click on Column Title\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/legend_topo}&
-Topology&
-Pick new Color (Figure \ref{fig:legend_color_chooser})&
-None\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/legend_name}&
-Name&
-Edit Name&
-String Sort Order Menu (Figure \ref{fig:legend_sort_orders}(a))\tabularnewline
+\includegraphics[scale=0.8]{pic/legend_topo} & Topology & Pick new Color (Figure \ref{fig:legend_color_chooser}) & None\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/legend_v}&
-Visibility&
-Check or Uncheck&
-Checkbox Operations Menu (Figure \ref{fig:legend_checkbox_ops})\tabularnewline
+\includegraphics[scale=0.8]{pic/legend_name} & Name & Edit Name & String Sort Order Menu (Figure \ref{fig:legend_sort_orders}(a))\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/legend_s}&
-Searchability&
-Check or Uncheck&
-Checkbox Operations Menu (Figure \ref{fig:legend_checkbox_ops})\tabularnewline
+\includegraphics[scale=0.8]{pic/legend_v} & Visibility & Check or Uncheck & Checkbox Operations Menu (Figure \ref{fig:legend_checkbox_ops})\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/legend_count}&
-Count&
-Non-editable&
-Number Sort Order Menu(Figure\ref{fig:legend_sort_orders}(b))\tabularnewline
+\includegraphics[scale=0.8]{pic/legend_s} & Searchability & Check or Uncheck & Checkbox Operations Menu (Figure \ref{fig:legend_checkbox_ops})\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/legend_incl}&
-Inclusion Ratio&
-Non-editable&
-Number Sort Order Menu(Figure\ref{fig:legend_sort_orders}(b))\tabularnewline
+\includegraphics[scale=0.8]{pic/legend_count} & Count & Non-editable & Number Sort Order Menu(Figure\ref{fig:legend_sort_orders}(b))\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/legend_excl}&
-Exclusion Ratio&
-Non-editable&
-Number Sort Order Menu(Figure\ref{fig:legend_sort_orders}(b))\tabularnewline
-\hline
+\includegraphics[scale=0.8]{pic/legend_incl} & Inclusion Ratio & Non-editable & Number Sort Order Menu(Figure\ref{fig:legend_sort_orders}(b))\tabularnewline
+\hline 
+\includegraphics[scale=0.8]{pic/legend_excl} & Exclusion Ratio & Non-editable & Number Sort Order Menu(Figure\ref{fig:legend_sort_orders}(b))\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:legend_column_ops} Operations on the Legend window's
 columns.}
@@ -833,11 +735,9 @@ operations that are provided in each column. The operations are (1)
 left mouse clicking on the column title icon and on the column cell
 and (2) right mouse clicking in any column cell. 
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/legend_color_chooser}
-
 
 \caption{\label{fig:legend_color_chooser} Color Chooser Dialog for column
 Category Topology}
@@ -851,11 +751,13 @@ selecting a new color from the dialog, the new color will be used
 to update the icon button. The update won't be carried out in the
 timeline canvas automatically; an explicit screen redraw is needed.
 
-%
 \begin{figure}[!htbp]
 \centering
-\subfigure[Sort Order menu for Name]{\includegraphics[scale=0.6]{pic/legend_sort_string_menu}}~~~~~~~~~~~~~~~\subfigure[Sort Order menu for count, inclusion and exclusion ratios]{\includegraphics[scale=0.6]{pic/legend_sort_number_menu}}
+\subfloat[Sort Order menu for Name]{
 
+\includegraphics[scale=0.6]{pic/legend_sort_string_menu}}~~~~~~~~~~~~~~~\subfloat[Sort Order menu for count, inclusion and exclusion ratios]{
+
+\includegraphics[scale=0.6]{pic/legend_sort_number_menu}}
 
 \caption{\label{fig:legend_sort_orders} Sort Order operation menu for the
 column \emph{Name, count, incl} and \emph{excl} in the Legend window.}
@@ -873,35 +775,26 @@ when the right mouse button is clicked somewhere in the column. The
 popup dialog box contains a menu which will be described later in
 Table \ref{table:legend_sort_number_orders}.
 
-%
 \begin{table}[!htbp]
 \centering
 \begin{longtable}{|c|c|}
 \hline 
-Ordering&
-Description\tabularnewline
-\hline
+Ordering & Description\tabularnewline
 \hline 
-\emph{A...Z a...z}&
-case-sensitive alphabetical ordering\tabularnewline
 \hline 
-\emph{z...a Z...A}&
-reverse-case-sensitive alphabetical ordering\tabularnewline
+\emph{A...Z a...z} & case-sensitive alphabetical ordering\tabularnewline
 \hline 
-\emph{Aa...Zz}&
-case-insensitive alphabetical ordering\tabularnewline
+\emph{z...a Z...A} & reverse-case-sensitive alphabetical ordering\tabularnewline
 \hline 
-\emph{zZ...aA}&
-reverse-case-insensitive alphabetical ordering\tabularnewline
+\emph{Aa...Zz} & case-insensitive alphabetical ordering\tabularnewline
 \hline 
-Creation&
-category storage ordering in the slog2 file\tabularnewline
+\emph{zZ...aA} & reverse-case-insensitive alphabetical ordering\tabularnewline
 \hline 
-Reverse Creation&
-reverse of Creation order\tabularnewline
-\hline
+Creation & category storage ordering in the slog2 file\tabularnewline
+\hline 
+Reverse Creation & reverse of Creation order\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:legend_sort_string_orders}Description of the alphabetical
 Sort Order operation menu for column \emph{Name} in the Legend window.}
@@ -920,22 +813,18 @@ all the real drawable categories of the same topology. The other is
 is ahead of state). The Preview and Topo sort orders can be turned
 on or off through the Preference window in Table \ref{table:preference_legend}.
 
-%
 \begin{table}[!htbp]
-\centering\begin{longtable}{|c|c|}
+\centering%
+\begin{longtable}{|c|c|}
 \hline 
-Ordering&
-Description\tabularnewline
-\hline
+Ordering & Description\tabularnewline
 \hline 
-9 ... 1&
-Decreasing numerical ordering\tabularnewline
 \hline 
-1 ... 9&
-Increasing numerical ordering\tabularnewline
-\hline
+9 ... 1 & Decreasing numerical ordering\tabularnewline
+\hline 
+1 ... 9 & Increasing numerical ordering\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:legend_sort_number_orders}Description of the numerical
 Sort Order operation menu for columns \emph{count}, i\emph{ncl} and
@@ -946,11 +835,9 @@ Sort Order operation menu for columns \emph{count}, i\emph{ncl} and
 Table \ref{table:legend_sort_number_orders} shows the only two orderings
 allowed for all numerical entries in the Legend window.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/legend_checkbox_menu}
-
 
 \caption{\label{fig:legend_checkbox_ops} Checkbox Operation menu for column
 Category Visibility and Searchability }
@@ -978,39 +865,32 @@ the column Name can be edited. This feature allows the user to correct
 undesirable category names set during logfile creation and even facilitates
 sorting of the names for selection purposes.
 
-%
 \begin{table}[!htbp]
 \begin{longtable}{|c|>{\centering}m{4in}|}
 \hline 
-Left Mouse Operation&
-Action\tabularnewline
-\hline
+Left Mouse Operation & Action\tabularnewline
 \hline 
-\noun{Click}&
-\emph{Click} on an object deselects any existing selection and selects
+\hline 
+\noun{Click} & \emph{Click} on an object deselects any existing selection and selects
 the object.\tabularnewline
 \hline 
-\noun{Control-Click}&
-\emph{Control-click} on an object toggles its selection without affecting
+\noun{Control-Click} & \emph{Control-click} on an object toggles its selection without affecting
 the selection of any other objects\tabularnewline
 \hline 
-\noun{Shift-Click}&
-\emph{Shift-click} on an object extends the selection from the most
+\noun{Shift-Click} & \emph{Shift-click} on an object extends the selection from the most
 recently selected object to the current object.\tabularnewline
 \hline 
-\noun{Dragging }&
-\emph{Dragging} (that is, moving the mouse while holding down left
+\noun{Dragging } & \emph{Dragging} (that is, moving the mouse while holding down left
 mouse button) through a range of \noun{text} deselects any existing
 selection and selects the range of text.\tabularnewline
-\hline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:selection_rules} Standard selection rules.}
 \end{table}
 
 
-\noun{Note:} Any change done in the Legend window that alters the
+\noun{Note: }Any change done in the Legend window that alters the
 appearance of drawables will not be automatically updated in the Timeline
 canvas until the CanvasReDraw button in the Timeline window is pressed.
 
@@ -1020,11 +900,9 @@ canvas until the CanvasReDraw button in the Timeline window is pressed.
 
 \section{Timeline \emph{Zoomable} Window}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/timeline_popup}
-
 
 \caption{\label{fig:timeline_popup} Initial display of the Timeline window
 of a 514 MB 16-process slog2 file with default preview resolution.}
@@ -1083,22 +961,18 @@ cursor over the ruler canvas. Also, the scrolling can be done by simply
 dragging on the scrollbar's knob, clicking the end buttons and in
 the space between the knob and scrollbar's end buttons.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics{pic/mouse_zoom_mode}
-
 
 \caption{\label{fig:mouse_zoom_mode} Canvas's left mouse click is in zoom
 mode.}
 \end{figure}
 
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics{pic/mouse_hand_mode}
-
 
 \caption{\label{fig:mouse_hand_mode} Canvas's left mouse click is in hand
 mode.}
@@ -1108,11 +982,9 @@ mode.}
 
 \subsubsection{Dragged Zoom}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics{pic/gif2png/ZoomPlusUpLeft25}
-
 
 \caption{\label{fig:zoom_plus_cursor} Zoom-plus cursor that indicates the
 left mouse clicking is ready for zooming in.}
@@ -1141,11 +1013,9 @@ display panel.
 
 \subsubsection{Instant Zoom}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics{pic/gif2png/ZoomMinusUpLeft25}
-
 
 \caption{\label{fig:zoom_minus_cursor} Zoom-minus cursor that indicates the
 left mouse clicking is ready for zooming out.}
@@ -1167,25 +1037,21 @@ The zoom factor is 2 in this case.
 
 \subsubsection{Grasp and Scroll}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics{pic/gif2png/HandOpenUpLeft25}
-
 
 \caption{\label{fig:hand_open_cursor} Open-hand cursor indicates that the
 left mouse click is ready to grasp and scroll.}
 \end{figure}
 
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics{pic/gif2png/HandCloseUpLeft25}
 
-
-\caption{\label{fig:hand_close_cursor} Closed-hand cursor indicates that
-the left mouse click is scrolling.}
+\caption{\label{fig:hand_close_cursor} Closed-hand cursor indicates that the
+left mouse click is scrolling.}
 \end{figure}
 
 
@@ -1229,12 +1095,14 @@ and one for real drawable.
 
 \subparagraph{Drawable Info Box for Preview Drawable}
 
-%
 \begin{figure}[!htbp]
 \centering
 
-\includegraphics[scale=0.6]{pic/timeline_infobox_preview_state}
 
+
+
+
+\includegraphics[scale=0.6]{pic/timeline_infobox_preview_state}
 
 \caption{\label{fig:timeline_infobox_preview_state} Drawable Info Box for
 Preview State}
@@ -1246,39 +1114,40 @@ canvas shown in Figure \ref{fig:timeline_preview_detail_1_excl} will
 pop up two Drawable Info Boxes for the preview states. They are displayed
 in Figure \ref{fig:timeline_infobox_preview_state}. The popup Info
 Box's upper-left-hand corner will be positioned at exactly where right
-mouse click is detected, and a green line marker will appear on the
-canvas to indicate what time has been clicked, in case the dialog
-box is moved from its original popup location. To illustrate what
-information is presented by the Drawable Info Box, we take the highlighted
-Drawable Info Box in Figure \ref{fig:timeline_infobox_preview_state}
-as an example. The Drawable Info Box for the preview state contains
-a pink label {}``Preview State'', and the icon inside the dialog
-box shows the color and shape of the drawable. Below the icon is a
-big text area that prints all the detailed statistical information
-about this preview state. There are six timestamps in the text area:
-maximum duration, minimum starttime, maximum endtime, average duration,
-average starttime, and average endtime. Here {}``{[}0]'' refers
-to starting point, and {}``{[}1]'' refers to the ending point. The
-three {}``average'' timestamps are averaged over all the real drawables
-represented by this preview drawable. Besides timestamps, the info
-box also tells the{}``Number of Real Drawables'' represented by
-the preview object. In this case, 136 real states are amalgamated
-by the pure white preview state. Also, the text area lists all the
-categories of real drawables amalgamated and their ratios of the total
-duration of all real drawables to the duration of the preview states.
-In this case, there is only one category of real states in the preview
-state, so the 136 states are all PACKs. The sum of the durations of
-all PACKs is about half of the duration of the preview state, as indicated
-by {}``ratio=0.5021433''. 
+mouse click is detected, and a green line with a upper and lower 3D
+triangular markers will appear on the canvas to indicate what time
+has been clicked, in case the dialog box is moved from its original
+popup location. The clicked preview state will also be highlighted
+by a 3D rectangular box. To illustrate what information is presented
+by the Drawable Info Box, we take the highlighted Drawable Info Box
+in Figure \ref{fig:timeline_infobox_preview_state} as an example.
+The Drawable Info Box for the preview state contains a pink label
+``Preview State'', and the icon inside the dialog box shows the
+color and shape of the drawable. Below the icon is a big text area
+that prints all the detailed statistical information about this preview
+state. There are six timestamps in the text area: maximum duration,
+minimum starttime, maximum endtime, average duration, average starttime,
+and average endtime. Here ``{[}0{]}'' refers to starting point,
+and ``{[}1{]}'' refers to the ending point. The three ``average''
+timestamps are averaged over all the real drawables represented by
+this preview drawable. Besides timestamps, the info box also tells
+the``Number of Real Drawables'' represented by the preview object.
+In this case, 136 real states are amalgamated by the pure white preview
+state. Also, the text area lists all the categories of real drawables
+amalgamated and their ratios of the total duration of all real drawables
+to the duration of the preview states. In this case, there is only
+one category of real states in the preview state, so the 136 states
+are all PACKs. The sum of the durations of all PACKs is about half
+of the duration of the preview state, as indicated by ``ratio=0.5021433''. 
 
 Another Drawable Info Box, shown in Figure \ref{fig:timeline_infobox_preview_state},
-has its upper left hand pointed at a preview state that has four different
-strips of colors: yellow, royal blue, white, and purple. Right mouse
-clicking at the yellow strip pops up a Drawable Info Box with a yellow
-state icon with label BARRIER. As shown in the figure, this preview
-state amalgamated four categories of real states: ALLREDUCE, PACK,
-SSEND, and BARRIER; the statistically most significant one is BARRIER.
-It proportionally and exclusively occupies 55\% of the length of the
+corresponds to the preview state that has four different strips of
+colors: yellow, royal blue, white, and purple. Right mouse clicking
+at the yellow strip pops up a Drawable Info Box with a yellow state
+icon with label BARRIER. As shown in the figure, this preview state
+amalgamated four categories of real states: ALLREDUCE, PACK, SSEND,
+and BARRIER; the statistically most significant one is BARRIER. It
+proportionally and exclusively occupies 55\% of the length of the
 preview state. Hence  the BARRIER strip is the tallest of all the
 color strips shown in the preview state. Clicking on a different color
 strip in the same preview state will pop up a drawable info box with
@@ -1293,7 +1162,7 @@ state in the Preference window that does not rely on the category
 ratio%
 \footnote{That is, by setting the PREVIEW\_STATE\_DISPLAY pulldown menu in the
 Timeline window or Preference window to the \emph{FitMostLegends}
-message, as listed in Table \ref{table:preference_zoomable_timeline}
+message, as listed in Table \ref{table:preference_zoomable_timeline_a}
 .%
 }. As indicated, there are 58 real drawables in the preview state,
 but no information is provided about how many real drawables are in
@@ -1302,11 +1171,9 @@ each real category.
 
 \subparagraph{Drawable Info Box for Real Drawable}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/timeline_infobox_real_primitive}
-
 
 \caption{\label{fig:timeline_infobox_real_primitive} Drawable Info Box for
 real state and arrow. The Drawable Info Box for the arrow shows the
@@ -1317,7 +1184,7 @@ message size, 1600 bytes, and tag ID, 454.}
 Similarly for real drawables, the Drawable Info Box can be brought
 up by right mouse clicking on the real drawables. In Figure \ref{fig:timeline_infobox_real_primitive},
 Drawable Info Boxes for a real arrow and a real state are shown. The
-Drawable Info Box for the arrow is invoked by clicking anywhere within
+Drawable Info Box for the arrow is created by clicking anywhere within
 the vicinity of the arrow body.%
 \footnote{The vicinity width can be adjusted by modifying the parameter CLICK\_RADIUS\_TO\_LINE
 in the Preference window as listed in Table \ref{table:preference_zoomable_all}
@@ -1326,16 +1193,27 @@ The default is 3 pixels.%
 ending timeline ID, as well as some extra information implemented
 by the native format. In this example, the extra information is the
 message size carried by the specific arrow. The message size is 1600
-bytes.
+bytes. Both the clicked arrow and state are highlighted by 3D raised
+border%
+\footnote{The display properties of the hightlighted border for arrow, state
+and event can be adjusted through Preference Panel as defined in Table
+\ref{table:preference_zoomable_timeline_b}.%
+}. The highlighted border is used to tell where clicked drawable is
+when viewport has been scrolled far away from the original clicked
+location. Also, there are a set of three navigation buttons at the
+bottom of the Drawable Info Box that navigate the viewport back to
+the starting or ending positions of the drawable as well as a home
+button that brings the viewport back to original clicked position
+of the drawable. The navigation buttons are meant to ease the task
+of identifying the very long drawable(relative to the viewport) in
+a busy logfile with large number of timelines.
 
 
 \paragraph{Duration Info Box}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/timeline_infobox_duration}
-
 
 \caption{\label{fig:timeline_infobox_duration} Duration Info Box shows the
 duration, starttime, and endtime of a time region marked by a pair
@@ -1353,16 +1231,14 @@ the total duration of a collection of subroutine calls. For instance,
 in Figure \ref{fig:timeline_infobox_duration}, the Duration Info
 Box marks all consecutive green states on the fifth timelines. The
 Duration Info Box says the total duration of the nine green states
-is about 1.74 msec.
+is about 1.77 msec.
 
 
 \paragraph{Time Info Box}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/timeline_infobox_time}
-
 
 \caption{\label{fig:timeline_infobox_time} Time Info Box displays the time
 of where it pops up.}
@@ -1380,122 +1256,57 @@ The buttons in the toolbar of the Timeline window provide various
 basic services to the Timeline window. Table \ref{table:timeline_toolbar}
 contains the list of functionalities of the buttons found in the toolbar.
 
-%
 \begin{table}[!htbp]
 \begin{longtable}{|c|c|c|>{\centering}m{3.5in}|}
 \hline 
-Icon&
-Description&
-Shortcut&
-Function\tabularnewline
-\hline
+Icon & Description & Shortcut & Function\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Up24}&
-Up&
-Alt-UP&
-Scroll upward by half a screen\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Down24}&
-Down&
-Alt-DOWN&
-Scroll downward by half of a screen\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Up24} & Up & Alt-UP & Scroll upward by half a screen\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Edit24}&
-LabelMark&
-none&
-Mark the timeline(s)\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Down24} & Down & Alt-DOWN & Scroll downward by half of a screen\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Paste24}&
-LabelMove&
-none&
-Move the marked timeline(s)\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Edit24} & LabelMark & none & Mark the timeline(s)\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Delete24}&
-LabelDelete&
-none&
-Delete the marked timeline(s)\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Paste24} & LabelMove & none & Move the marked timeline(s)\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/TreeExpand24}&
-LabelExpand&
-Alt-E&
-Expand the y-axis tree label by 1 level. Useful in Process-Thread
+\includegraphics[scale=0.8]{pic/gif2png/Delete24} & LabelDelete & none & Delete the marked timeline(s)\tabularnewline
+\hline 
+\includegraphics[scale=0.8]{pic/gif2png/TreeExpand24} & LabelExpand & Alt-E & Expand the y-axis tree label by 1 level. Useful in Process-Thread
 or Communicator-Thread view to expand each process timeline into multiple
 thread timelines in multi-threaded slog2 file.\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/TreeCollapse24}&
-LabelCollapse&
-Alt-C&
-Collapse the y-axis tree label by 1 level. Useful in collapsing multiple
+\includegraphics[scale=0.8]{pic/gif2png/TreeCollapse24} & LabelCollapse & Alt-C & Collapse the y-axis tree label by 1 level. Useful in collapsing multiple
 thread timelines into single process timeline.\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Backward24}&
-Backward&
-Alt-LEFT&
-Scroll Backward by half a screen\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Backward24} & Backward & Alt-LEFT & Scroll Backward by half a screen\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Forward24}&
-Forward&
-Alt-RIGHT&
-Scroll Forward by half a screen\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Forward24} & Forward & Alt-RIGHT & Scroll Forward by half a screen\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/WinUndo}&
-ZoomUndo&
-Alt-U&
-Undo the previous zoom operation\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/WinUndo} & ZoomUndo & Alt-U & Undo the previous zoom operation\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/ZoomOut24}&
-ZoomOut&
-Alt-O&
-Zoom Out by 1 level in time\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/ZoomOut24} & ZoomOut & Alt-O & Zoom Out by 1 level in time\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Home24}&
-ZoomHome&
-Alt-H&
-Reset zoom to the initial resolution in time\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Home24} & ZoomHome & Alt-H & Reset zoom to the initial resolution in time\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/ZoomIn24}&
-ZoomIn&
-Alt-I&
-Zoom In by 1 level in time\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/ZoomIn24} & ZoomIn & Alt-I & Zoom In by 1 level in time\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/WinRedo}&
-ZoomRedo&
-Alt-R&
-Redo the previous zoom operation\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/WinRedo} & ZoomRedo & Alt-R & Redo the previous zoom operation\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/FindBack24}&
-SearchBackward&
-Alt-B&
-Search backward in time\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/FindBack24} & SearchBackward & Alt-B & Search backward in time\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Find24}&
-SeachInitialize&
-Alt-S&
-Search initialization from last popup InfoBox's time\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Find24} & SeachInitialize & Alt-S & Search initialization from last popup InfoBox's time\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/FindFore24}&
-SearchForward&
-Alt-F&
-Search forward in time\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/FindFore24} & SearchForward & Alt-F & Search forward in time\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Refresh24}&
-CanvasReDraw&
-Alt-D&
-Redraw canvas to synchronize changes from Preference/Legend window
+\includegraphics[scale=0.8]{pic/gif2png/Refresh24} & CanvasReDraw & Alt-D & Redraw canvas to synchronize changes from Preference/Legend window
 or y-axis label panel.\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Print24}&
-Print&
-none&
-Print the Timeline window\tabularnewline
+\includegraphics[scale=0.8]{pic/gif2png/Print24} & Print & none & Print the Timeline window\tabularnewline
 \hline 
-\includegraphics[scale=0.8]{pic/gif2png/Stop24}&
-Exit&
-none&
-Exit the Timeline window\tabularnewline
-\hline
+\includegraphics[scale=0.8]{pic/gif2png/Stop24} & Exit & none & Exit the Timeline window\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:timeline_toolbar} Toolbar functionalities.}
 \end{table}
@@ -1521,11 +1332,9 @@ carried out passively; that is, the user needs to press the CanvasReDraw
 button in the toolbar to update the Timeline window with the changes
 from the label panel.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/yaxis_label_panel_simple}~~~~~~~~~~~~~~~\includegraphics[scale=0.6]{pic/yaxis_label_panel_expanded}
-
 
 \caption{\label{fig:yaxis_label_panel} Simple one-level y-axis label tree.
 The blue highlighted labels are those that have been selected. The
@@ -1563,11 +1372,13 @@ in the row count slider after the user hits the CanvasReDraw button.
 Together with window resize, the row adjustment panel allows the user
 to magnify or shrink the height of the timeline as desired.
 
-%
 \begin{figure}[!htbp]
 \centering
-\subfigure[Row Count mode]{\includegraphics[scale=0.6]{pic/adj_row_count}}~~~~~~~~~~~~~~~\subfigure[Row Height mode]{\includegraphics[scale=0.6]{pic/adj_row_height}}
+\subfloat[Row Count mode]{
 
+\includegraphics[scale=0.6]{pic/adj_row_count}}~~~~~~~~~~~~~~~\subfloat[Row Height mode]{
+
+\includegraphics[scale=0.6]{pic/adj_row_height}}
 
 \caption{\label{fig:row_adjustment_panel} Row Adjustment Panel determines
 the Timeline window's resize scheme. When one of the mode sliders
@@ -1579,11 +1390,9 @@ simultaneously.}
 
 \section{Histogram \emph{Zoomable} Window}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/histogram_state_all_cumu_excl}
-
 
 \caption{\label{fig:histogram_state_all_cumu_excl}Histogram window of the
 whole duration shown in Figure \ref{fig:timeline_popup}.}
@@ -1634,14 +1443,12 @@ both summary states and arrows are displayed.
 
 \subsection{Summary States}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/histogram_state_infobox}
 
-
-\caption{\label{fig:histogram_state_infobox} Summary state info boxes of
-the Histogram window.}
+\caption{\label{fig:histogram_state_infobox} Summary state info boxes of the
+Histogram window.}
 \end{figure}
 
 
@@ -1678,11 +1485,9 @@ duration at the end of each timeline is unaccounted for. In this particular
 logfile, the remaining time could be thought of as being used for
 computation.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/histogram_state_over_incl}
-
 
 \caption{\label{fig:histogram_state_over_incl} \emph{OverlapInclusionRatio}
 view of Figure \ref{fig:histogram_state_infobox}.}
@@ -1712,11 +1517,9 @@ contribution among different timelines.
 
 \subsection{Summary Arrows}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/histogram_arrow}
-
 
 \caption{\label{fig:histogram_arrow} \emph{Arrows Only} view of the Figure
 \ref{fig:histogram_state_all_cumu_excl}.}
@@ -1731,11 +1534,9 @@ place between the ordered pair of timelines within the duration of
 the canvas. Notice that the duration of summary arrow may be longer
 than that of the canvas. 
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/histogram_arrow_infobox}
-
 
 \caption{\label{fig:histogram_arrow_infobox} Arrow Summary Info Box of Figure
 \ref{fig:histogram_arrow}.}
@@ -1752,11 +1553,9 @@ ordered pair of timelines communicates the most.
 
 \section{Preference Window}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.6]{pic/preference_pview_state}
-
 
 \caption{\label{fig:preference_pview_state} Preference window showing the
 PREVIEW\_STATE\_DISPLAY.}
@@ -1767,232 +1566,182 @@ As shown in Figure \ref{fig:preference_pview_state}, the Preference
 window adjusts the various display properties of the visualization
 program. The parameters and their definitions are listed in Tables
 \ref{table:preference_zoomable_reinit}, \ref{table:preference_zoomable_all},
- \ref{table:preference_zoomable_timeline},  \ref{table:preference_zoomable_histogram}
-, and \ref{table:preference_legend}.
+ \ref{table:preference_zoomable_timeline_a}, \ref{table:preference_zoomable_timeline_b}
+\ref{table:preference_zoomable_histogram} , and \ref{table:preference_legend}.
 
-%
 \begin{table}[!htbp]
 \centering
 \begin{longtable}{|l|>{\centering}p{1.1in}|p{3.5in}|}
 \hline 
-Parameter&
-Values&
-Description\tabularnewline
-\hline
+Parameter & Values & Description\tabularnewline
 \hline 
-{\small Y\_AXIS\_ROOT\_LABEL}&
-any text&
-Label for the root node of the y-axis tree label in the left panel.\tabularnewline
 \hline 
-INIT\_SLOG2\_LEVEL\_READ&
-+ve integer&
-The number of slog2 levels being read into memory when the Timeline
+{\small Y\_AXIS\_ROOT\_LABEL} & any text & Label for the root node of the y-axis tree label in the left panel.\tabularnewline
+\hline 
+INIT\_SLOG2\_LEVEL\_READ & +ve integer & The number of slog2 levels being read into memory when the Timeline
 window is initialized, the integer affects the zooming and scrolling
 performance exponentially (in an asymptotic sense).\tabularnewline
 \hline 
-AUTO\_WINDOWS\_LOCATION&
-true, false&
-Whether to let Jumpshot-4 automatically set windows placement\tabularnewline
+AUTO\_WINDOWS\_LOCATION & true, false & Whether to let Jumpshot-4 automatically set windows placement\tabularnewline
 \hline 
-SCREEN\_HEIGHT\_RATIO&
-0.0 ... 1.0&
-Ratio of the initial timeline canvas height to the screen height\tabularnewline
+SCREEN\_HEIGHT\_RATIO & 0.0 ... 1.0 & Ratio of the initial timeline canvas height to the screen height\tabularnewline
 \hline 
-TIME\_SCROLL\_UNIT\_RATIO&
-0.0 ... 1.0&
-Unit increment of the horizontal scrollbar in the fraction of timeline
+TIME\_SCROLL\_UNIT\_RATIO & 0.0 ... 1.0 & Unit increment of the horizontal scrollbar in the fraction of timeline
 canvas's width.\tabularnewline
-\hline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:preference_zoomable_reinit}Parameters for the section
 of \emph{Zoomable Window Reinitialization} in the Preference window.}
 \end{table}
 
 
-%
 \begin{table}[!htbp]
 \centering
 \begin{longtable}{|l|>{\centering}p{1.1in}|p{3.5in}|}
 \hline 
-Parameter&
-Values&
-Description\tabularnewline
-\hline
+Parameter & Values & Description\tabularnewline
 \hline 
-Y\_AXIS\_ROOT\_VISIBLE&
-true, false&
-Whether to show the top of the y-axis tree-styled directory label.\tabularnewline
 \hline 
-ACTIVE\_REFRESH&
-false&
-Whether to let Jumpshot-4 actively update the timeline canvas.\tabularnewline
+Y\_AXIS\_ROOT\_VISIBLE & true, false & Whether to show the top of the y-axis tree-styled directory label.\tabularnewline
 \hline 
-BACKGROUND\_COLOR&
-Black, DarkGray, Gray, LightGray, White&
-Background color of the timeline canvas\tabularnewline
+ACTIVE\_REFRESH & false & Whether to let Jumpshot-4 actively update the timeline canvas.\tabularnewline
 \hline 
-STATE\_HEIGHT\_FACTOR&
-0.0 ... 1.0&
-Ratio of the outermost rectangle height to row height. The larger
+BACKGROUND\_COLOR & Black, DarkGray, Gray, LightGray, White & Background color of the timeline canvas\tabularnewline
+\hline 
+STATE\_HEIGHT\_FACTOR & 0.0 ... 1.0 & Ratio of the outermost rectangle height to row height. The larger
 the factor is, the larger the outermost rectangle will be with respect
 to the row height.\tabularnewline
 \hline 
-NESTING\_HEIGHT\_FACTOR&
-0.0 ... 1.0 &
-The gap ratio between successive nesting rectangles. The larger the
+NESTING\_HEIGHT\_FACTOR & 0.0 ... 1.0  & The gap ratio between successive nesting rectangles. The larger the
 factor is, the smaller the gap will be.\tabularnewline
 \hline 
-ARROW\_ANTIALIASING&
-default, on, off&
-Whether to draw arrow with anti-aliasing lines. Turning this on will
+ARROW\_ANTIALIASING & default, on, off & Whether to draw arrow with anti-aliasing lines. Turning this on will
 slow down the canvas drawing by a factor of 3.\tabularnewline
 \hline 
-MIN\_WIDTH\_TO\_DRAG&
-integer&
-Minimum width in pixels to be considered a dragged operation.\tabularnewline
+MIN\_WIDTH\_TO\_DRAG & integer & Minimum width in pixels to be considered a dragged operation.\tabularnewline
 \hline 
-CLICK\_RADIUS\_TO\_LINE&
-+ve integer&
-Radius in pixels for a click to be considered on the arrow.\tabularnewline
+CLICK\_RADIUS\_TO\_LINE & integer & Radius in pixels for a click to be considered on the arrow.\tabularnewline
 \hline 
-LEFTCLICK\_INSTANT\_ZOOM&
-true, false&
-Whether to zoom in immediately after left mouse click on canvas.\tabularnewline
-\hline
+LEFTCLICK\_INSTANT\_ZOOM & true, false & Whether to zoom in immediately after left mouse click on canvas.\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:preference_zoomable_all} Parameters for the section
-of \emph{All Zoomable Windows} in the Preference window. }
+of \emph{All Zoomable Windows} in the Preference window, where integers
+are assumed to be positive.}
 \end{table}
 
 
-%
 \begin{table}[!htbp]
 \centering
-\begin{longtable}{|l|>{\centering}p{1.9in}|p{2.7in}|}
+\begin{longtable}{|l|>{\centering}p{2in}|p{2in}|}
 \hline 
-Parameter&
-Values&
-Description\tabularnewline
-\hline
+Parameter & Values & Description\tabularnewline
 \hline 
-STATE\_BORDER&
-ColorRaised, ColorLowered, WhiteRaised, WhiteLowered, WhitePlain,
-Empty&
-Border style of real states.\tabularnewline
 \hline 
-ARROW\_HEAD\_LENGTH&
-+ve integer&
-Length of arrow head in pixels.\tabularnewline
+STATE\_BORDER & ColorRaised, ColorLowered, WhiteRaised, WhiteLowered, WhitePlain,
+Empty & Border style of real states.\tabularnewline
 \hline 
-ARROW\_HEAD\_HALF\_WIDTH&
-+ve integer&
-Half-width of arrow head's base in pixels.\tabularnewline
+ARROW\_HEAD\_LENGTH & integer & Length of the arrow head in pixels.\tabularnewline
 \hline 
-PREVIEW\_STATE\_DISPLAY&
-FitMostLegends, OverlapInclusionRatio, CumulativeInclusionRatio, OverlapExclusionRatio,
-CumulativeExclusionRatio, BaseAlignedCumulativeExclusionRatio&
-Display option of Preview state when Timeline window starts up.\tabularnewline
+ARROW\_HEAD\_WIDTH & integer & Width of the arrow head's base in pixels(Even number).\tabularnewline
 \hline 
-PREVIEW\_STATE\_BORDER&
-ColorRaised, ColorLowered, ColorXOR, WhiteRaised, WhiteLowered, WhitePlain,
-Empty&
-Border style of preview state.\tabularnewline
+EVENT\_BASE\_WIDTH & integer & Width of the event triangle's base in pixels\tabularnewline
 \hline 
-PREVIEW\_STATE\_BORDER\_W&
-integer&
-The empty border insets' width in pixels for the Preview state.\tabularnewline
+PREVIEW\_STATE\_DISPLAY & FitMostLegends, OverlapInclusionRatio, CumulativeInclusionRatio, OverlapExclusionRatio,
+CumulativeExclusionRatio, BaseAlignedCumulativeExclusionRatio & Display option of Preview state when Timeline window starts up.\tabularnewline
 \hline 
-PREVIEW\_STATE\_BORDER\_H&
-integer&
-The empty border insets' height in pixels for the Preview state.\tabularnewline
+PREVIEW\_STATE\_BORDER & ColorRaised, ColorLowered, ColorXOR, WhiteRaised, WhiteLowered, WhitePlain,
+Empty & Border style of preview state.\tabularnewline
 \hline 
-PREVIEW\_STATE\_LEGEND\_H&
-integer&
-Minimum height of the legend division (category strip) in pixels inside
+PREVIEW\_STATE\_BORDER\_WIDTH & integer & The empty border insets' width in pixels for the Preview state.\tabularnewline
+\hline 
+PREVIEW\_STATE\_BORDER\_HEIGHT & integer & The empty border insets' height in pixels for the Preview state.\tabularnewline
+\hline 
+PREVIEW\_STATE\_LEGEND\_HEIGHT & integer & Minimum height of the legend division (category strip) in pixels inside
 THICKNESS the Preview state\tabularnewline
 \hline 
-PREVIEW\_ARROW\_LOG\_BASE&
-integer&
-The logarithmic base of the number of real arrows amalgamated in preview
-arrow. Hence, this determines the Preview arrow's thickness.\tabularnewline
+PREVIEW\_ARROW\_LOG\_BASE & integer & The logarithmic base of the number of real arrows amalgamated in preview
+arrow. This determines the Preview arrow's width.\tabularnewline
 \hline 
-SEARCH\_ARROW\_LENGTH&
-integer&
-Length of the search marker's arrow in pixels\tabularnewline
-\hline 
-SEARCH\_FRAME\_THICKNESS&
-integer&
-Thickness in pixels of the popup frame that highlights the searched
-drawable\tabularnewline
-\hline 
-SEARCHED\_OBJECT\_ON\_TOP&
-true, false&
-Whether to display the searched object on top of the search frame.\tabularnewline
-\hline
 \end{longtable}
 
-
-\caption{\label{table:preference_zoomable_timeline}Parameters for the section
-of \emph{Timeline Zoomable Window} in the Preference window.}
+\caption{\label{table:preference_zoomable_timeline_a}Parameters for the section
+of \emph{Timeline Zoomable Window} in the Preference window, all integers
+are assumed to be positive.}
 \end{table}
 
 
-%
 \begin{table}[!htbp]
 \centering
-\begin{longtable}{|l|>{\centering}p{1.6in}|p{3in}|}
+
+
+\begin{longtable}{|c|>{\centering}p{1in}|>{\centering}p{3in}|}
 \hline 
-Parameter&
-Values&
-Description\tabularnewline
-\hline
+Parameter & Values & Description\tabularnewline
 \hline 
-HISTOGRAM\_ZERO\_ORIGIN&
-true, false&
-Whether the time ruler is in duration, i.e. starts with 0.0 seconds.\tabularnewline
+HIGHLIGHT\_CLICKED\_OBJECT & true, false & Whether the clicked drawables should be highlighted.\tabularnewline
 \hline 
-SUMMARY\_STATE\_BORDER&
-ColorRaised, ColorLowered, ColorXOR, WhiteRaised, WhiteLowered, WhitePlain,
-Empty&
-Border style of summary state when Histogram window starts up.\tabularnewline
+POINTER\_ON\_CLICKED\_OBJECT & true, false & Whether pointers are used to locate the ends of clicked drawable.\tabularnewline
 \hline 
-SUMMARY\_ARROW\_LOG\_BASE&
-integer&
-The logarithmic base of the number of real arrows amalgamated in summary
-arrow. Hence, this determines the summary arrow's thickness.\tabularnewline
-\hline
+MARKER\_STATE\_STAYS\_ON\_TOP & true, false & Whether the clicked or searched STATE is shown on top of the nested
+stack, states that are on top of the clicked state will be hidden.\tabularnewline
+\hline 
+MARKER\_POINTER\_MIN\_LENGTH & integer & Minimum Length of the Pointer marker's arrow in pixels\tabularnewline
+\hline 
+MARKER\_POINTER\_MAX\_LENGTH & integer & Maximum Length of the Pointer marker's arrow in pixels\tabularnewline
+\hline 
+MARKER\_STATE\_BORDER\_WIDTH & integer & Border width in pixels of the STATE highlight marker.\tabularnewline
+\hline 
+MARKER\_ARROW\_BORDER\_WIDTH & integer & Border width in pixels of the ARROW highlight marker.\tabularnewline
+\hline 
+MARKER\_LINE\_BORDER\_WIDTH & integer & Border width in pixels of the PREVIEW ARROW highlight marker.\tabularnewline
+\hline 
+MARKER\_EVENT\_BORDER\_WIDTH & integer & Border width in pixels of the EVENT highlight marker\tabularnewline
+\hline 
 \end{longtable}
 
+\caption{\label{table:preference_zoomable_timeline_b}Parameters for the section
+of \emph{Timeline Zoomable Window} in the Preference window, all integers
+are assumed to be positive. }
+\end{table}
+
+
+\begin{table}[!htbp]
+\centering
+\begin{longtable}{|l|>{\centering}p{1.6in}|p{2.8in}|}
+\hline 
+Parameter & Values & Description\tabularnewline
+\hline 
+\hline 
+HISTOGRAM\_ZERO\_ORIGIN & true, false & Whether the time ruler is in duration, i.e. starts with 0.0 seconds.\tabularnewline
+\hline 
+SUMMARY\_STATE\_BORDER & ColorRaised, ColorLowered, ColorXOR, WhiteRaised, WhiteLowered, WhitePlain,
+Empty & Border style of summary state when Histogram window starts up.\tabularnewline
+\hline 
+SUMMARY\_ARROW\_LOG\_BASE & integer & The logarithmic base of the number of real arrows amalgamated in summary
+arrow. Hence, this determines the summary arrow's thickness.\tabularnewline
+\hline 
+\end{longtable}
 
 \caption{\label{table:preference_zoomable_histogram}Parameters for the section
 of \emph{Histogram Zoomable Window} in the Preference window.}
 \end{table}
 
 
-%
 \begin{table}[!htbp]
 \centering
 \begin{longtable}{|l|>{\centering}p{1.6in}|p{3in}|}
 \hline 
-Parameter&
-Values&
-Description\tabularnewline
-\hline
+Parameter & Values & Description\tabularnewline
 \hline 
-LEGEND\_PREVIEW\_ORDER&
-true, false&
-Whether to arrange the legends with a hidden preview order.\tabularnewline
 \hline 
-LEGEND\_TOPOLOGY\_ORDER&
-true, false&
-Whether to arrange the legends with a hidden topology order.\tabularnewline
-\hline
+LEGEND\_PREVIEW\_ORDER & true, false & Whether to arrange the legends with a hidden preview order.\tabularnewline
+\hline 
+LEGEND\_TOPOLOGY\_ORDER & true, false & Whether to arrange the legends with a hidden topology order.\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{table:preference_legend}Parameters for the section of the\emph{Legend
 window} in the Preference window.}
@@ -2014,7 +1763,6 @@ in the Legend window as in Figure \ref{fig:legend_popup}. In Jumpshot-4,
 a search and scan facility is provided to facilitate this goal. There
 are three search criteria: search time, searchable timeline IDs, and
 searchable categories. 
-
 \begin{enumerate}
 \item \emph{Search time} is the time that search starts. It is marked by
 a yellow line called the search cursor. There are two different ways
@@ -2040,11 +1788,9 @@ checkboxes enabled as in Figure \ref{fig:legend_checkbox_ops}. Only
 a drawable with a searchable category can be returned by the search
 facility. By default, all categories in the Legend window are searchable. 
 \end{enumerate}
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/timeline_search_preview}
-
 
 \caption{\label{fig:timeline_search_preview} Search of state \emph{eos} in
 preview stage. The returned state is a preview state containing state
@@ -2075,11 +1821,9 @@ In the figure, the real \emph{eos} is located in the middle of the
 original 3D bordered box, and it is pointed to by the Drawable Info
 Box.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/timeline_search_preview_zoomed}
-
 
 \caption{\label{fig:timeline_search_preview_zoomed} Dragged zoom performed
 around the 3D raised bordered box in Figure \ref{fig:timeline_search_preview}
@@ -2104,11 +1848,9 @@ process will be automated in a later version of Jumpshot-4.
 
 \section{Tuning of the Timeline Window}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/timeline_popup_finer}
-
 
 \caption{\label{fig:timeline_popup_finer} Initial Timeline window with finer
 preview resolution.}
@@ -2152,11 +1894,9 @@ not recommended.
 
 \section{Estimation of MPI Communication Overhead}
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/timeline_mpi_overhead}
-
 
 \caption{\label{fig:timeline_mpi_overhead} Graphical MPI overhead profiling
 through the use of the \emph{BaseAlignedCumulativeExclusionRatio}
@@ -2190,11 +1930,9 @@ duration of the timeline canvas can be obtained, as shown in Figure
 \ref{fig:histogram_mpi_overhead}. The empty region in each timeline
 is assumed to be for user computation.
 
-%
 \begin{figure}[!htbp]
 \centering
 \includegraphics[scale=0.5]{pic/histogram_mpi_overhead}
-
 
 \caption{\label{fig:histogram_mpi_overhead} Overall MPI overhead histogram
 for Figure \ref{fig:timeline_mpi_overhead}.}
@@ -2248,50 +1986,27 @@ very bad as the node becomes oversubscribed, i.e. when there are 5
 or more child threads. Now we are going to use MPE logging and Jumpshot
 to find out what happens. 
 
-%
 \begin{table}[!htbp]
 \centering
 
 \begin{longtable}{|c|c|c|c|}
 \hline 
-child thread count&
-MPICH2&
-OpenMPI+progress\_thread&
-OpenMPI\tabularnewline
-\hline
+child thread count & MPICH2 & OpenMPI+progress\_thread & OpenMPI\tabularnewline
 \hline 
-1&
-0.025299&
-0.029545&
-0.029230\tabularnewline
 \hline 
-2&
-0.026213 &
-0.030872 &
-0.032966 \ref{fig:openmpi_4_2}\tabularnewline
+1 & 0.025299 & 0.029545 & 0.029230\tabularnewline
 \hline 
-3&
-0.028916 &
-0.038964 &
-0.050484 \ref{fig:openmpi_4_3}\tabularnewline
+2 & 0.026213  & 0.030872  & 0.032966 \ref{fig:openmpi_4_2}\tabularnewline
 \hline 
-4&
-0.030145 &
-0.045354 &
-0.054791 \ref{fig:openmpi_4_4}\tabularnewline
+3 & 0.028916  & 0.038964  & 0.050484 \ref{fig:openmpi_4_3}\tabularnewline
 \hline 
-5&
-0.031977 &
-0.058039 &
-0.149200 \ref{fig:openmpi_4_5}\tabularnewline
+4 & 0.030145  & 0.045354  & 0.054791 \ref{fig:openmpi_4_4}\tabularnewline
 \hline 
-6&
-0.034462 &
-0.058505 &
-0.193399 \ref{fig:openmpi_4_6}\tabularnewline
-\hline
+5 & 0.031977  & 0.058039  & 0.149200 \ref{fig:openmpi_4_5}\tabularnewline
+\hline 
+6 & 0.034462  & 0.058505  & 0.193399 \ref{fig:openmpi_4_6}\tabularnewline
+\hline 
 \end{longtable}
-
 
 \caption{\label{tab:runtime_pthread_sendrecv}The total runtime (in second)
 of the 4-process run of pthread\_sendrecv with various number of child
@@ -2310,15 +2025,13 @@ shown in Figures \ref{fig:openmpi_4_2}, \ref{fig:openmpi_4_3},\ref{fig:openmpi_4
 and \ref{fig:openmpi_4_6}. The legend for these pictures are shown
 in Figure\ref{fig:pthread_sendrecv_legend}. 
 
-%
 \begin{figure}[!htbp]
 \centering
 
 \includegraphics[scale=0.7]{pic/pthread_sendrecv_legend}
 
-
-\caption{\label{fig:pthread_sendrecv_legend} The legend table of all the
-pthread\_sendrecv runs.}
+\caption{\label{fig:pthread_sendrecv_legend} The legend table of all the pthread\_sendrecv
+runs.}
 \end{figure}
 
 
@@ -2355,103 +2068,112 @@ progress thread. Without alternating between communicator-thread and
 process-thread views, it would be difficult to identify the existence
 of a progress engine problem.
 
-%
 \begin{figure}[!htbp]
 \centering
 
-\subfigure[process-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_2_procthd}}
+\subfloat[process-thread view]{
+
+\includegraphics[scale=0.4]{pic/openmpi_4_2_procthd}}
 
 \centering
 
-\subfigure[communicator-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_2_commthd}}
+\subfloat[communicator-thread view]{
 
+\includegraphics[scale=0.4]{pic/openmpi_4_2_commthd}}
 
-\caption{\label{fig:openmpi_4_2}OpenMPI without progress thread: 2 child
-threads per process. As shown in both the Process-Thread view and
-Communicator-Thread views here, everything performs as expected.}
+\caption{\label{fig:openmpi_4_2}OpenMPI without progress thread: 2 child threads
+per process. As shown in both the Process-Thread view and Communicator-Thread
+views here, everything performs as expected.}
 \end{figure}
 
 
-%
 \begin{figure}[!htbp]
 \centering
 
-\subfigure[process-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_3_procthd}}
+\subfloat[process-thread view]{
+
+\includegraphics[scale=0.4]{pic/openmpi_4_3_procthd}}
 
 \centering
 
-\subfigure[communicator-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_3_commthd}}
+\subfloat[communicator-thread view]{
 
+\includegraphics[scale=0.4]{pic/openmpi_4_3_commthd}}
 
-\caption{\label{fig:openmpi_4_3}OpenMPI without progress thread: 3 child
-threads per process where there are 3 MPI\_Comm\_dup() calls in the
-master thread 0. As shown in the expanded Process-Thread view, the
-3rd MPI\_Comm\_dup() call takes significantly longer than the first
-two MPI\_Comm\_dup(). The expanded Communicator-Thread view also suggests
-that the delayed 3rd MPI\_Comm\_dup() is blocking MPI point-to-point
-communication in the first two duplicated MPI\_COMM\_WORLD. As soon
-as the delayed MPI\_Comm\_dup() exits, the MPI point-to-point communication
-is restored. }
+\caption{\label{fig:openmpi_4_3}OpenMPI without progress thread: 3 child threads
+per process where there are 3 MPI\_Comm\_dup() calls in the master
+thread 0. As shown in the expanded Process-Thread view, the 3rd MPI\_Comm\_dup()
+call takes significantly longer than the first two MPI\_Comm\_dup().
+The expanded Communicator-Thread view also suggests that the delayed
+3rd MPI\_Comm\_dup() is blocking MPI point-to-point communication
+in the first two duplicated MPI\_COMM\_WORLD. As soon as the delayed
+MPI\_Comm\_dup() exits, the MPI point-to-point communication is restored. }
 \end{figure}
 
 
-%
 \begin{figure}[!htbp]
 \centering
 
-\subfigure[process-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_4_procthd}}
+\subfloat[process-thread view]{
+
+\includegraphics[scale=0.4]{pic/openmpi_4_4_procthd}}
 
 \centering
 
-\subfigure[communicator-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_4_commthd}}
+\subfloat[communicator-thread view]{
 
+\includegraphics[scale=0.4]{pic/openmpi_4_4_commthd}}
 
-\caption{\label{fig:openmpi_4_4}OpenMPI without progress thread: 4 child
-threads per process. Similar to Fig. \ref{fig:openmpi_4_3}, the 3rd
-MPI\_Comm\_dup() is delayed but not the 4th MPI\_Comm\_dup(). The
-interference between the delayed 3rd MPI\_Comm\_dup() and the other
-dup MPI\_COMM\_WORLD seen in Fig. \ref{fig:openmpi_4_3} is not observed
-here. So the communication in first two dup MPI\_COMM\_WORLD finishes
-much earlier than the communication in the last two communicators.}
+\caption{\label{fig:openmpi_4_4}OpenMPI without progress thread: 4 child threads
+per process. Similar to Fig. \ref{fig:openmpi_4_3}, the 3rd MPI\_Comm\_dup()
+is delayed but not the 4th MPI\_Comm\_dup(). The interference between
+the delayed 3rd MPI\_Comm\_dup() and the other dup MPI\_COMM\_WORLD
+seen in Fig. \ref{fig:openmpi_4_3} is not observed here. So the communication
+in first two dup MPI\_COMM\_WORLD finishes much earlier than the communication
+in the last two communicators.}
 \end{figure}
 
 
-%
 \begin{figure}[!htbp]
 \centering
 
-\subfigure[process-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_5_procthd}}
+\subfloat[process-thread view]{
+
+\includegraphics[scale=0.4]{pic/openmpi_4_5_procthd}}
 
 \centering
 
-\subfigure[communicator-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_5_commthd}}
+\subfloat[communicator-thread view]{
 
+\includegraphics[scale=0.4]{pic/openmpi_4_5_commthd}}
 
-\caption{\label{fig:openmpi_4_5}OpenMPI without progress thread: 5 child
-threads per process. Again, the last MPI\_Comm\_dup() takes longer
-than previous MPI\_Comm\_dup()s in finishing up. The feature that
-we observed in Fig. \ref{fig:openmpi_4_3} that the delayed MPI\_Comm\_dup()
-is blocking other communicator's communication occurs here. However,
-even long after all MPI\_Comm\_dup() are done, there are many regions
-in the communicator-thread view that MPI communication is not progressing,
+\caption{\label{fig:openmpi_4_5}OpenMPI without progress thread: 5 child threads
+per process. Again, the last MPI\_Comm\_dup() takes longer than previous
+MPI\_Comm\_dup()s in finishing up. The feature that we observed in
+Fig. \ref{fig:openmpi_4_3} that the delayed MPI\_Comm\_dup() is blocking
+other communicator's communication occurs here. However, even long
+after all MPI\_Comm\_dup() are done, there are many regions in the
+communicator-thread view that MPI communication is not progressing,
 i.e. some kind of temporary deadlock in the MPI progress engine may
 be happening here.}
 \end{figure}
 
 
-%
 \begin{figure}[!htbp]
 \centering
 
-\subfigure[process-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_6_procthd}}
+\subfloat[process-thread view]{
+
+\includegraphics[scale=0.4]{pic/openmpi_4_6_procthd}}
 
 \centering
 
-\subfigure[communicator-thread view]{\includegraphics[scale=0.4]{pic/openmpi_4_6_commthd}}
+\subfloat[communicator-thread view]{
 
+\includegraphics[scale=0.4]{pic/openmpi_4_6_commthd}}
 
-\caption{\label{fig:openmpi_4_6}OpenMPI without progress thread: 6 child
-threads per process. This is very similar to Fig. \ref{fig:openmpi_4_5}.}
+\caption{\label{fig:openmpi_4_6}OpenMPI without progress thread: 6 child threads
+per process. This is very similar to Fig. \ref{fig:openmpi_4_5}.}
 \end{figure}
 
 

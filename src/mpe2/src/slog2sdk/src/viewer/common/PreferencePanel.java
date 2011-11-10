@@ -197,7 +197,7 @@ public class PreferencePanel extends JPanel
                                     "Y_AXIS_ROW_HEIGHT",
                                     Const.INTEGER_FORMAT );
         fld_Y_AXIS_ROW_HEIGHT.setToolTipText(
-        "Row height of Y-axis tree in pixel, i.e. height for each timeline." );
+        "Row height of Y-axis tree in pixels, i.e. height for each timeline." );
         fld_Y_AXIS_ROW_HEIGHT.setHorizontalAlignment( JTextField.CENTER );;
         fld_Y_AXIS_ROW_HEIGHT.addSelfDocumentListener();
         fld_Y_AXIS_ROW_HEIGHT.setEditable( true );
@@ -240,7 +240,7 @@ public class PreferencePanel extends JPanel
                                         "Y_AXIS_MIN_ROW_HEIGHT",
                                         Const.INTEGER_FORMAT );
         fld_Y_AXIS_MIN_ROW_HEIGHT.setToolTipText(
-          "Minimum Y-axis row height in pixel.  Minimum row height is used "
+          "Minimum Y-axis row height in pixels.  Minimum row height is used "
         + "to prevent timelines from being too short.  When row height < 1, "
         + "various errors occur in Timeline Canvas and Row Adjustments." );
         fld_Y_AXIS_MIN_ROW_HEIGHT.setHorizontalAlignment( JTextField.CENTER );
@@ -252,7 +252,7 @@ public class PreferencePanel extends JPanel
                                     "MIN_WIDTH_TO_DRAG",
                                     Const.INTEGER_FORMAT );
         fld_MIN_WIDTH_TO_DRAG.setToolTipText(
-        "Minimum width in pixel to be considered a dragged operation." );
+        "Minimum width in pixels to be considered a dragged operation." );
         fld_MIN_WIDTH_TO_DRAG.setHorizontalAlignment( JTextField.CENTER );
         fld_MIN_WIDTH_TO_DRAG.addSelfDocumentListener();
         fld_MIN_WIDTH_TO_DRAG.setEditable( true );
@@ -262,7 +262,7 @@ public class PreferencePanel extends JPanel
                                        "CLICK_RADIUS_TO_LINE",
                                        Const.INTEGER_FORMAT );
         fld_CLICK_RADIUS_TO_LINE.setToolTipText(
-        "Radius in pixel for a click to be considered on the arrow." );
+        "Radius in pixels for a click to be considered on the arrow." );
         fld_CLICK_RADIUS_TO_LINE.setHorizontalAlignment( JTextField.CENTER );
         fld_CLICK_RADIUS_TO_LINE.addSelfDocumentListener();
         fld_CLICK_RADIUS_TO_LINE.setEditable( true );
@@ -305,7 +305,7 @@ public class PreferencePanel extends JPanel
                                     "ARROW_HEAD_LENGTH",
                                     Const.INTEGER_FORMAT );
         fld_ARROW_HEAD_LENGTH.setToolTipText(
-        "Length of the arrow head in pixel." );
+        "Length of the arrow head in pixels." );
         fld_ARROW_HEAD_LENGTH.setHorizontalAlignment( JTextField.CENTER );
         fld_ARROW_HEAD_LENGTH.addSelfDocumentListener();
         fld_ARROW_HEAD_LENGTH.setEditable( true );
@@ -315,7 +315,7 @@ public class PreferencePanel extends JPanel
                                    "ARROW_HEAD_WIDTH",
                                    Const.INTEGER_FORMAT );
         fld_ARROW_HEAD_WIDTH.setToolTipText(
-        "Width of the arrow head's base in pixel(Even number)." );
+        "Width of the arrow head's base in pixels(Even number)." );
         fld_ARROW_HEAD_WIDTH.setHorizontalAlignment( JTextField.CENTER );
         fld_ARROW_HEAD_WIDTH.addSelfDocumentListener();
         fld_ARROW_HEAD_WIDTH.setEditable( true );
@@ -325,7 +325,7 @@ public class PreferencePanel extends JPanel
                                    "EVENT_BASE_WIDTH",
                                    Const.INTEGER_FORMAT );
         fld_EVENT_BASE_WIDTH.setToolTipText(
-        "Width of the event triangle's base in pixel(Even number)." );
+        "Width of the event triangle's base in pixels(Even number)." );
         fld_EVENT_BASE_WIDTH.setHorizontalAlignment( JTextField.CENTER );
         fld_EVENT_BASE_WIDTH.addSelfDocumentListener();
         fld_EVENT_BASE_WIDTH.setEditable( true );
@@ -363,7 +363,7 @@ public class PreferencePanel extends JPanel
                                          "PREVIEW_STATE_BORDER_WIDTH",
                                          Const.INTEGER_FORMAT );
         fld_PREVIEW_STATE_BORDER_WIDTH.setToolTipText(
-        "The empty border insets' width in pixel for the Preview state." );
+        "The empty border insets' width in pixels for the Preview state." );
         fld_PREVIEW_STATE_BORDER_WIDTH.setHorizontalAlignment(
                                        JTextField.CENTER );
         fld_PREVIEW_STATE_BORDER_WIDTH.addSelfDocumentListener();
@@ -374,7 +374,7 @@ public class PreferencePanel extends JPanel
                                          "PREVIEW_STATE_BORDER_HEIGHT",
                                          Const.INTEGER_FORMAT );
         fld_PREVIEW_STATE_BORDER_HEIGHT.setToolTipText(
-        "The empty border insets' height in pixel for the Preview state." );
+        "The empty border insets' height in pixels for the Preview state." );
         fld_PREVIEW_STATE_BORDER_HEIGHT.setHorizontalAlignment(
                                         JTextField.CENTER );
         fld_PREVIEW_STATE_BORDER_HEIGHT.addSelfDocumentListener();
@@ -385,7 +385,7 @@ public class PreferencePanel extends JPanel
                                         "PREVIEW_STATE_LEGEND_HEIGHT",
                                         Const.INTEGER_FORMAT );
         fld_PREVIEW_STATE_LEGEND_HEIGHT.setToolTipText(
-        "Minimum height of the legend divison in pixel for the Preview state" );
+        "Minimum height of the legend divison in pixels for the Preview state" );
         fld_PREVIEW_STATE_LEGEND_HEIGHT.setHorizontalAlignment(
                                         JTextField.CENTER );
         fld_PREVIEW_STATE_LEGEND_HEIGHT.addSelfDocumentListener();
@@ -434,7 +434,7 @@ public class PreferencePanel extends JPanel
                                             "MARKER_POINTER_MIN_LENGTH",
                                             Const.INTEGER_FORMAT );
         fld_MARKER_POINTER_MIN_LENGTH.setToolTipText(
-        "Minimum Length of the Pointer marker's arrow in pixel" );
+        "Minimum Length of the Pointer marker's arrow in pixels." );
         fld_MARKER_POINTER_MIN_LENGTH.setHorizontalAlignment(
                                       JTextField.CENTER );
         fld_MARKER_POINTER_MIN_LENGTH.addSelfDocumentListener();
@@ -445,7 +445,7 @@ public class PreferencePanel extends JPanel
                                             "MARKER_POINTER_MAX_LENGTH",
                                             Const.INTEGER_FORMAT );
         fld_MARKER_POINTER_MAX_LENGTH.setToolTipText(
-        "Maximum Length of the Pointer marker's arrow in pixel" );
+        "Maximum Length of the Pointer marker's arrow in pixels." );
         fld_MARKER_POINTER_MAX_LENGTH.setHorizontalAlignment(
                                       JTextField.CENTER );
         fld_MARKER_POINTER_MAX_LENGTH.addSelfDocumentListener();
@@ -456,7 +456,7 @@ public class PreferencePanel extends JPanel
                                             "MARKER_STATE_BORDER_WIDTH",
                                             Const.INTEGER_FORMAT );
         fld_MARKER_STATE_BORDER_WIDTH.setToolTipText(
-        "Border width in pixel of the STATE highlight marker." );
+        "Border width in pixels of the STATE highlight marker." );
         fld_MARKER_STATE_BORDER_WIDTH.setHorizontalAlignment(
                                       JTextField.CENTER );
         fld_MARKER_STATE_BORDER_WIDTH.addSelfDocumentListener();
@@ -467,7 +467,7 @@ public class PreferencePanel extends JPanel
                                             "MARKER_ARROW_BORDER_WIDTH",
                                             Const.INTEGER_FORMAT );
         fld_MARKER_ARROW_BORDER_WIDTH.setToolTipText(
-        "Border width in pixel of the ARROW highlight marker." );
+        "Border width in pixels of the ARROW highlight marker." );
         fld_MARKER_ARROW_BORDER_WIDTH.setHorizontalAlignment(
                                       JTextField.CENTER );
         fld_MARKER_ARROW_BORDER_WIDTH.addSelfDocumentListener();
@@ -478,7 +478,7 @@ public class PreferencePanel extends JPanel
                                            "MARKER_LINE_BORDER_WIDTH",
                                            Const.INTEGER_FORMAT );
         fld_MARKER_LINE_BORDER_WIDTH.setToolTipText(
-        "Border width in pixel of the PREVIEW ARROW highlight marker." );
+        "Border width in pixels of the PREVIEW ARROW highlight marker." );
         fld_MARKER_LINE_BORDER_WIDTH.setHorizontalAlignment(
                                      JTextField.CENTER );
         fld_MARKER_LINE_BORDER_WIDTH.addSelfDocumentListener();
@@ -489,7 +489,7 @@ public class PreferencePanel extends JPanel
                                             "MARKER_EVENT_BORDER_WIDTH",
                                             Const.INTEGER_FORMAT );
         fld_MARKER_EVENT_BORDER_WIDTH.setToolTipText(
-        "Border width in pixel of the Event highlight marker." );
+        "Border width in pixels of the Event highlight marker." );
         fld_MARKER_EVENT_BORDER_WIDTH.setHorizontalAlignment(
                                       JTextField.CENTER );
         fld_MARKER_EVENT_BORDER_WIDTH.addSelfDocumentListener();
