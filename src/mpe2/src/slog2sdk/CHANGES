@@ -73,3 +73,16 @@ of TRACE-API in trace_sample/
 
 6/2/05 added slog2updater that updates the older slog2 format to the latest
        one.
+
+......
+
+10/1/11 relaxed initial display condition so several thousand-timelines logfile
+        can be displayed as long as there is enough physical and video memories.
+        A 2-thousand timeline logfile has been tested OK.
+
+11/1/11 added Hightlighted border, 3D-raised, support for all drawables.
+        This support is needed for a right-clicked drawable in a busy logfile.
+        Either it is a very long drawable (relative to viewport) or a logfile
+        with many timelines.  Also new navigation buttons are added to
+        Drawable InfoBox so user can scroll far away from a chosen drawable
+        and be able to rapidly scroll back to the right-clicked drawable.
