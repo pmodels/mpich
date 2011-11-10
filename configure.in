@@ -6065,6 +6065,7 @@ AC_OUTPUT(Makefile \
 	  src/env/mpif90 \
 	  src/env/mpif90.conf \
 	  src/env/mpif90.bash \
+          src/env/parkill \
 	  src/util/dbg/getfuncstack \
           src/include/mpi.h \
 	  test/commands/cmdtests \
