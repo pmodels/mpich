@@ -131,11 +131,16 @@ AS_IF([test "$enable_embedded_mode" != "yes"],
 # Setup the hwloc core
 HWLOC_SETUP_CORE([], [], [AC_MSG_ERROR([Cannot build hwloc core])], [1])
 
-# Setup hwloc's docs, utils, and tests
-AS_IF([test "$hwloc_mode" = "standalone"],
-      [HWLOC_SETUP_DOCS
-       HWLOC_SETUP_UTILS
-       HWLOC_SETUP_TESTS])
+dnl MPICH2 modification: don't expand these macros, even inside a shell-if,
+dnl because we have deleted the directories that these macros configure.
+dnl Therefore numerous ".in" files listed in AC_CONFIG_FILES are no longer
+dnl present and cause errors at automake time.
+dnl
+dnl # Setup hwloc's docs, utils, and tests
+dnl AS_IF([test "$hwloc_mode" = "standalone"],
+dnl       [HWLOC_SETUP_DOCS
+dnl        HWLOC_SETUP_UTILS
+dnl        HWLOC_SETUP_TESTS])
 
 # Run the AM_CONDITIONALs
 HWLOC_DO_AM_CONDITIONALS
