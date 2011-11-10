@@ -1,3 +1,9 @@
+## vim: set ft=automake :
+
+BUILT_SOURCES = c2f902c.c ctypesfromc.c
+
+# FIXME what's up with these rules?  They appear to copy a file to itself in
+# non-VPATH builds...
 c2f902c.c: $(srcdir)/../../f90/ext/c2f902c.c
 	cp $(srcdir)/../../f90/ext/c2f902c.c c2f902c.c
 ctypesfromc.c: $(srcdir)/../../f77/ext/ctypesfromc.c

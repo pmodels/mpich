@@ -4,7 +4,8 @@ AC_PREREQ(2.62)
 #     See COPYRIGHT in top-level directory.
 #
 
-AC_INIT([Hydra], [0])
+m4_include([version.m4])
+AC_INIT([Hydra], MPICH2_VERSION_m4)
 
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
@@ -54,11 +55,10 @@ AS_CASE([$host],
 )
 
 # Build information
-if test -s "$srcdir/VERSION" ; then
-    . $srcdir/VERSION
-    HYDRA_VERSION="$MPICH2_VERSION"
-    HYDRA_RELEASE_DATE="$MPICH2_RELEASE_DATE"
-else
+# these values come from the m4_include above
+HYDRA_VERSION="MPICH2_VERSION_m4"
+HYDRA_RELEASE_DATE="MPICH2_RELEASE_DATE_m4"
+if test -z "$HYDRA_VERSION" ; then
     AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
 AC_SUBST(HYDRA_VERSION)
@@ -96,11 +96,17 @@ AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Confi
 # Hydra.
 if test "$FROM_MPICH2" = "yes" ; then
    mpl_srcdir="../../mpl"
+   mpl_dist_srcdir=
 else
    mpl_srcdir="mpl"
+   mpl_dist_srcdir="mpl"
    PAC_CONFIG_SUBDIR(mpl,,AC_ERROR(MPL configure failed))
 fi
 AC_SUBST(mpl_srcdir)
+# Controls whether we recurse into the MPL dir when running "dist" rules like
+# "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
+# superset of SUBDIRS, but we don't want to double-distclean and similar.
+AC_SUBST(mpl_dist_srcdir)
 
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)

@@ -1,4 +1,0 @@
-# Commented out the installation of mpich2.module till Deji has a
-# complete solution how mpich2.module could be used with modules.
-# optinstall_ETC = mpich2.module
-optinstall_ETC =

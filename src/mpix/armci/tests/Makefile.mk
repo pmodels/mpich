@@ -1,6 +1,6 @@
-#
-# Copyright (C) 2010. See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) 2010. See COPYRIGHT in top-level directory.
+##
 
 include tests/mpi/Makefile.mk
 

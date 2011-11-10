@@ -1,4 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = dl.c
-HEADERS = 
-INCLUDES = -I../../include -I${top_srcdir}/src/include
-

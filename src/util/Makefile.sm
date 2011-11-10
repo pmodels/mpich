@@ -1,4 +1,0 @@
-SUBDIRS = mem info msgs instrm thread dbg param osserv procmap other @logging_dir@ .
-SUBDIRS_logging_dir = logging
-NOTSIMPLEMAKE_SUBDIRS = ex
-# Note info requires the PMPILIBNAME definition

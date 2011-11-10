@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "pmutilconf.h"
+#include "mpichconf.h"
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H

@@ -1,0 +1,17 @@
+# -*- Mode: Makefile; -*-
+# vim: set ft=automake :
+#
+# (C) 2011 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+include $(top_srcdir)/Makefile.mtest
+
+# FIXME should "datatype" be included in this list?  It was not in the
+# simplemake version for some reason and is also missing from the testlist
+# file
+static_subdirs = attr coll comm datatype group pt2pt rma spawn topo basic faults
+all_lang_subdirs = cxx f77 f90
+SUBDIRS = $(static_subdirs) $(iodir) $(otherlangs)
+DIST_SUBDIRS = $(static_subdirs) io $(all_lang_subdirs)
+

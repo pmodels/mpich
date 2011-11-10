@@ -1,8 +1,18 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+## -*- Mode: Makefile; -*-
+##
+## (C) 2008 by Argonne National Laboratory.
+##     See COPYRIGHT in top-level directory.
+##
+
+noinst_HEADERS +=                     \
+    tools/bootstrap/external/common.h \
+    tools/bootstrap/external/ll.h     \
+    tools/bootstrap/external/lsf.h    \
+    tools/bootstrap/external/pbs.h    \
+    tools/bootstrap/external/rsh.h    \
+    tools/bootstrap/external/sge.h    \
+    tools/bootstrap/external/slurm.h  \
+    tools/bootstrap/external/ssh.h
 
 libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c \
 	$(top_srcdir)/tools/bootstrap/external/external_common_launch.c \

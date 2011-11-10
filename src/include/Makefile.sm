@@ -1,5 +1,0 @@
-# This Makefile supports the TAGS target
-HEADERS = mpi.h mpiimpl.h mpiatomic.h mpichtimer.h mpierror.h mpierrs.h \
-	mpihandlemem.h mpimem.h mpistates.h mpisysstates.h mpitimerimpl.h \
-	mpitypedefs.h mpiutil.h mpiallstates.h mpiimplthread.h \
-	mpiiov.h mpiu_monitors.h mpichtimer.h mpich_param_vals.h

@@ -1,3 +1,8 @@
+dnl PAC_FC_SEARCH_LIST - expands to a whitespace separated list of modern
+dnl fortran compilers for use with AC_PROG_FC that is more suitable for HPC
+dnl software packages
+AC_DEFUN([PAC_FC_SEARCH_LIST],
+         [ifort pgf90 pathf90 pathf95 xlf90 xlf95 xlf2003 gfortran f90 epcf90 f95 fort lf95 g95 ifc efc gfc])
 dnl /*D
 dnl PAC_PROG_FC([COMPILERS])
 dnl
@@ -31,11 +36,11 @@ dnl       the Fortran compiler (e.g., fc=file system check!)
 dnl gfortran - The GNU Fortran compiler (not the same as g95) 
 dnl gfc - An alias for gfortran recommended in cygwin installations
 dnl D*/
+dnl NOTE: this macro suffers from a basically intractable "expanded before it
+dnl was required" problem when libtool is also used
 AC_DEFUN([PAC_PROG_FC],[
 PAC_PUSH_FLAG([FCFLAGS])
-AC_PROG_FC([m4_default([$1],
-           [ifort pgf90 pathf90 pathf95 xlf90 xlf95 xlf2003 gfortran f90 epcf90 f95 fort lf95 \
-            g95 ifc efc gfc])])
+AC_PROG_FC([m4_default([$1],[PAC_FC_SEARCH_LIST])])
 PAC_POP_FLAG([FCFLAGS])
 ])
 dnl
@@ -241,9 +246,9 @@ dnl
 dnl
 dnl PAC_FC_MODULE_INCFLAG
 AC_DEFUN([PAC_FC_MODULE_INCFLAG],[
+AC_REQUIRE([PAC_FC_MODULE_EXT])
 AC_CACHE_CHECK([for Fortran 90 module include flag],
 pac_cv_fc_module_incflag,[
-AC_REQUIRE([PAC_FC_MODULE_EXT])
 AC_LANG_PUSH(Fortran)
 AC_LANG_CONFTEST([
     AC_LANG_SOURCE([
@@ -343,7 +348,93 @@ dnl
 AC_DEFUN([PAC_FC_MODULE],[
 PAC_FC_MODULE_EXT
 PAC_FC_MODULE_INCFLAG
+PAC_FC_MODULE_OUTFLAG
 ])
+dnl
+dnl PAC_FC_MODULE_OUTFLAG
+AC_DEFUN([PAC_FC_MODULE_OUTFLAG],[
+AC_REQUIRE([PAC_FC_MODULE_EXT])
+AC_CACHE_CHECK([for Fortran 90 module output directory flag],
+               [pac_cv_fc_module_outflag],
+[
+AC_LANG_PUSH([Fortran])
+AC_LANG_CONFTEST([
+    AC_LANG_SOURCE([
+        module conf
+        integer n
+        parameter (n=1)
+        end module conf
+    ])
+])
+pac_madedir="no"
+if test ! -d conf ; then mkdir conftestdir ; pac_madedir="yes"; fi
+if test "$pac_cv_fc_module_case" = "upper" ; then
+    pac_module="CONF.$pac_cv_fc_module_ext"
+else
+    pac_module="conf.$pac_cv_fc_module_ext"
+fi
+
+# check base case that the compiler can create modules and that they endup in
+# the current directory
+AC_COMPILE_IFELSE([],[
+    if test -s "$pac_module" ; then
+        rm -f "$pac_module"
+        # Remove any temporary files, and hide the work.pc file
+        # (if the compiler generates them)
+        if test -f work.pc ; then 
+            mv -f work.pc conftest.pc
+        fi
+        rm -f work.pcl
+    else
+        AC_MSG_WARN([Unable to build a simple Fortran 90 module])
+        # echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+        # cat conftest.$ac_ext >&AS_MESSAGE_LOG_FD
+        _AC_MSG_LOG_CONFTEST
+    fi
+],[])
+
+# known flags for reasonably recent versions of various f90 compilers:
+#   gfortran -J${dir}
+#   xlf -qmoddir=${dir}
+#   pgf90 -module ${dir}
+#   ifort -module ${dir}
+#   nagfor -mdir ${dir}
+#   ftn -J ${dir}   ## the Cray fortran compiler
+#   f95 -YMOD_OUT_DIR=${dir}   ## the Absoft fortran compiler
+#   lf95 -Am -mod ${dir}    ## the Lahey/Fujitsu fortran compiler
+#
+# If there are any compilers still out there that are totally brain-dead and
+# don't support an output directory flag, we can write a wrapper script to tell
+# users to use.  Alternatively they can use an older version of MPICH2.
+
+pac_cv_fc_module_outflag=
+for mod_flag in '-J' '-J ' '-qmoddir=' '-module ' '-YMOD_OUT_DIR=' '-mdir ' ; do
+    rm -f conftestdir/NONEXISTENT conftestdir/*
+    PAC_PUSH_FLAG([FCFLAGS])
+    FCFLAGS="$FCFLAGS ${mod_flag}conftestdir"
+    AC_COMPILE_IFELSE([],[pac_build_success=yes],[pac_build_success=no])
+    AS_IF([test "X$pac_build_success" = Xyes],
+          [AS_IF([test -s "conftestdir/${pac_module}"],
+                 [pac_cv_fc_module_outflag="$mod_flag"])])
+    PAC_POP_FLAG([FCFLAGS])
+    AS_IF([test "X$pac_cv_fc_module_outflag" = X],[:],[break])
+done
+
+# Remove the conftest* after AC_LANG_CONFTEST
+rm -rf conftest.dSYM
+rm -f conftest.$ac_ext
+
+if test "$pac_madedir" = "yes" ; then rm -rf conftestdir ; fi
+AS_UNSET([pac_madedir])
+# Remove the conftest* after AC_LANG_CONFTEST
+# This is needed for Mac OSX 10.5
+rm -rf conftest.dSYM
+rm -f conftest*
+AC_LANG_POP(Fortran)
+])dnl end AC_CACHE_CHECK
+
+AC_SUBST([FCMODOUTFLAG],[$pac_cv_fc_module_outflag])
+])dnl end AC_DEFUN([PAC_FC_MODULE_OUTFLAG])
 dnl
 dnl PAC_FC_AND_F77_COMPATIBLE([action-if-true],[action-if-false])
 dnl

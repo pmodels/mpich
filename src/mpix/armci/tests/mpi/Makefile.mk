@@ -1,6 +1,6 @@
-#
-# Copyright (C) 2010. See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) 2010. See COPYRIGHT in top-level directory.
+##
 
 check_PROGRAMS += \
                   tests/mpi/ping-pong-mpi               \

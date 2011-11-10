@@ -3,7 +3,7 @@
  *  (C) 2003 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #include <sys/types.h>
 #ifdef HAVE_UNISTD_H
 /* To get the prototype for getsid in gcc environments, 

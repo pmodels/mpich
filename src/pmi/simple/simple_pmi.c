@@ -17,7 +17,7 @@
  */
 /***************************************************************************/
 
-#include "pmiconf.h" 
+#include "mpichconf.h"
 
 #define PMI_VERSION    1
 #define PMI_SUBVERSION 1

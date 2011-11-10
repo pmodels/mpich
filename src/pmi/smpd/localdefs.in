@@ -1,3 +1,0 @@
-#! /bin/sh
-# Add any libraries needed by the SMPD pmi implementation
-LIBS="$LIBS @SMPD_PMI_LIBS@"

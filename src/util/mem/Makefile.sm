@@ -1,7 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = trmem.c handlemem.c safestr.c argstr.c strerror.c
-HEADERS = 
-INCLUDES = -I../../include -I${top_srcdir}/src/include
-
-EXTRA_PROGRAMS = check
-# check is a program to test MPIU_Snprintf
-check_SOURCES = safestr.c check.c

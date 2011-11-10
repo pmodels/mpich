@@ -10,7 +10,7 @@
  * "server" end of the interface defined in mpich2/src/pmi/simple .
  */
 
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #include <stdio.h>
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>

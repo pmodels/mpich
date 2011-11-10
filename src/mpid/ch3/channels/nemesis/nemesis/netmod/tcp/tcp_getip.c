@@ -8,7 +8,7 @@
  *   names
  */
 
-#include "../../../include/mpidi_ch3i_nemesis_conf.h"
+#include "mpichconf.h"
 
 /* FIXME: This should use the standard debug/logging routines and macros */
 static int dbg_ifname = 0;

@@ -1,5 +1,0 @@
-# SUBDIRS_logging_name are the names that @ logging_name @ can take in SUBDIRS
-SUBDIRS_logging_subdirs = rlog slog_api
-SUBDIRS = @logging_subdirs@ common .
-NOTSIMPLEMAKE_SUBDIRS = slog_api
-

@@ -19,7 +19,7 @@
 /* Allow printf in label output */
 /* style: allow:printf:1 sig:0 */
 
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H

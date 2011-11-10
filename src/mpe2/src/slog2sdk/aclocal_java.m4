@@ -538,6 +538,10 @@ dnl
     else
         ifelse([$5],, :,[$5])
     fi
+    # cleanup the copied class file, if any
+    if test "$srcdir" != . ; then
+        rm -f $jac_basename
+    fi
 ])dnl
 dnl
 dnl JAC_TRY_RUNJAR - test the execution of a java jar file
@@ -571,6 +575,10 @@ dnl
         ifelse([$4],, :,[$4])
     else
         ifelse([$5],, :,[$5])
+    fi
+    # cleanup the copied jar file, if any
+    if test "$srcdir" != . ; then
+        rm -f $jac_basename
     fi
 ])dnl
 dnl

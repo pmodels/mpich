@@ -1,3 +1,0 @@
-SUBDIRS_nemesis_nets_dirs = elan gm mx tcp none psm newmad
-SUBDIRS = @nemesis_nets_dirs@
-

@@ -1,0 +1,64 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2011 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#ifndef GLUE_ROMIO_H_INCLUDED
+#define GLUE_ROMIO_H_INCLUDED
+
+/* TODO we should probaly eliminate this type entirely and just patch up the
+ * environment so that intptr_t and uintptr_t always work. */
+#define MPIR_Pint @MPIR_PINT@
+#define MPIR_Upint unsigned @MPIR_PINT@
+
+#if @USE_DBG_LOGGING@
+#define USE_DBG_LOGGING 1
+#endif
+
+/* used by ROMIO, should be handled by a romio-private version of this macro
+ * instead */
+#ifdef HAVE_WINDOWS_H
+#define MPIU_UNREFERENCED_ARG(a) a
+#else
+#define MPIU_UNREFERENCED_ARG(a)
+#endif
+
+int MPIR_Ext_assert_fail(const char *cond, const char *file_name, int line_num);
+
+#if (!defined(NDEBUG) && (@HAVE_ERROR_CHECKING@))
+#define MPIR_Ext_assert(a_)                                \
+    do {                                                   \
+        if (!(a_)) {                                       \
+            MPIR_Ext_assert_fail(#a_, __FILE__, __LINE__); \
+        }                                                  \
+    } while (0)
+#else
+#define MPIR_Ext_assert(a_) do {} while(0)
+#endif
+
+
+extern int MPIR_Ext_dbg_romio_terse_enabled;
+extern int MPIR_Ext_dbg_romio_typical_enabled;
+extern int MPIR_Ext_dbg_romio_verbose_enabled;
+
+/* a copy of MPID_Ensure_Aint_fits_in_pointer for external use */
+#define MPIR_Ext_ensure_Aint_fits_in_pointer(aint) \
+  MPIR_Ext_assert((aint) == (MPI_Aint)(MPIR_Upint) MPI_AINT_CAST_TO_VOID_PTR(aint));
+
+/* to be called early by ROMIO's initialization process in order to setup init-time
+ * glue code that cannot be initialized statically */
+int MPIR_Ext_init(void);
+
+void MPIR_Ext_cs_enter_allfunc(void);
+void MPIR_Ext_cs_exit_allfunc(void);
+
+/* prototypes for the mem tracing routines */
+void *MPIU_trmalloc(unsigned int a, int lineno, const char fname[]);
+void MPIU_trfree(void *a_ptr, int line, const char fname[]);
+void *MPIU_trcalloc(unsigned int nelem, unsigned int elsize, int lineno, const char fname[]);
+void *MPIU_trrealloc(void *p, int size, int lineno, const char fname[]);
+void *MPIU_trstrdup(const char *str, int lineno, const char fname[]);
+
+#endif /* defined(GLUE_ROMIO_H_INCLUDED) */
+

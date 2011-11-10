@@ -1,6 +1,6 @@
-#
-# Copyright (C) 2010. See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) 2010. See COPYRIGHT in top-level directory.
+##
 
 check_PROGRAMS += tests/ctree/ctree_test        \
                   tests/ctree/ctree_test_rand   \

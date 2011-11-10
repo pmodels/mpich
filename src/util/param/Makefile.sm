@@ -1,3 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = param_vals.c
-INCLUDES = -I../../include -I${top_srcdir}/src/include
-

@@ -1,8 +1,0 @@
-SUBDIRS = io errhan
-
-# A special testing target to simplify testing just the C++ code
-testing:
-	../../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=$(bindir)/mpiexec \
-		   -xmlfile=summary.xml
-

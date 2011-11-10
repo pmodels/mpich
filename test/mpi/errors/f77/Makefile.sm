@@ -1,8 +1,0 @@
-SUBDIRS = 
-
-# A special testing target to simplify testing just the F77 code
-testing:
-	../../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=$(bindir)/mpiexec \
-		   -xmlfile=summary.xml
-

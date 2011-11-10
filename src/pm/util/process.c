@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #ifdef NEEDS_POSIX_FOR_SIGACTION
 #define _POSIX_SOURCE
 #endif

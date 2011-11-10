@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #include <stdio.h>
 /* Note that we need _XOPEN_SOURCE or some BSD source to get a prototype
    for gethostname from unistd.h */

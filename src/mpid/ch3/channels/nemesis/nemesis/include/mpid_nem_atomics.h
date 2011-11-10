@@ -7,9 +7,7 @@
 #ifndef MPID_NEM_ATOMICS_H
 #define MPID_NEM_ATOMICS_H
 
-#include <mpichconf.h>
-#include <mpidi_ch3i_nemesis_conf.h>
-
-#include <opa_primitives.h>
+#include "mpichconf.h"
+#include "opa_primitives.h"
 
 #endif /* MPID_NEM_ATOMICS_H */

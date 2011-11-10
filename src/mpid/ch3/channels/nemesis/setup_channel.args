@@ -1,6 +1,0 @@
-
-if test -z "${channel_args}" ; then
-    nemesis_networks="tcp"
-else
-    nemesis_networks=`echo ${channel_args} | sed -e 's/,/ /g'`
-fi

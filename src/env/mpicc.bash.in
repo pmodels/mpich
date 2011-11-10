@@ -38,7 +38,6 @@ libdir=@libdir@
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
 CC="@CC@"
-C_LINKPATH_SHL="@C_LINKPATH_SHL@"
 CFLAGS="@WRAPPER_CFLAGS@"
 CPPFLAGS="@WRAPPER_CPPFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
@@ -48,7 +47,10 @@ PMPILIBNAME="@PMPILIBNAME@"
 NEEDSPLIB="@NEEDSPLIB@"
 # MPICH2_VERSION is the version of the MPICH2 library that mpicc is intended for
 MPICH2_VERSION="@MPICH2_VERSION@"
-#
+
+enable_rpath="@enable_rpath@"
+@cc_shlib_conf@
+
 # Internal variables
 # Show is set to echo to cause the compilation command to be echoed instead 
 # of executed.
@@ -245,9 +247,14 @@ fi
 # file or an object file.  Instead, we just check for an option that
 # suppressing linking, such as -c or -M.
 if [ "$linking" = yes ] ; then
-    if [ -n "$C_LINKPATH_SHL" ] ; then
-	# prepend the path for the shared libraries to the library list
-	mpilibs="$C_LINKPATH_SHL$libdir $mpilibs"
+    # Attempt to encode rpath info into the executable if the user has not
+    # disabled rpath usage and some flavor of rpath makes sense on this
+    # platform.
+    # TODO configure and config.rpath are computing more sophisticated rpath
+    # schemes than this simple one.  Consider updating this logic accordingly.
+    if test "X$enable_rpath" = "Xyes" -a -n "$CC_hardcode_libdir_flag_spec" ; then
+        # prepend the path for the shared libraries to the library list
+        mpilibs="${CC_wl}${CC_hardcode_libdir_flag_spec}$libdir $mpilibs"
     fi
 
     path_list=""

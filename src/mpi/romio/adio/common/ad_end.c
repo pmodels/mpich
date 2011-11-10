@@ -6,9 +6,6 @@
 
 #include "adio.h"
 #include "adio_extern.h"
-#ifdef ROMIO_INSIDE_MPICH2
-#include "mpiimpl.h"
-#endif
 
 void ADIO_End(int *error_code)
 {
@@ -43,11 +40,7 @@ void ADIO_End(int *error_code)
     datarep = ADIOI_Datarep_head;
     while (datarep) {
         datarep_next = datarep->next;
-#ifdef HAVE_MPIU_FUNCS
-        MPIU_Free(datarep->name);
-#else
         ADIOI_Free(datarep->name);
-#endif
         ADIOI_Free(datarep);
         datarep = datarep_next;
     }

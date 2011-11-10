@@ -40,7 +40,6 @@ libdir=@libdir@
 # Determined by a combination of environment variables and tests within
 # configure (e.g., determining whehter -lsocket is needee)
 F77="@F77@"
-F77_LINKPATH_SHL="@F77_LINKPATH_SHL@"
 F77CPP="@F77CPP@"
 FFLAGS="@WRAPPER_FFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
@@ -51,7 +50,10 @@ NEEDSPLIB="@NEEDSPLIB@"
 
 # MPICH2_VERSION is the version of the MPICH2 library for which mpif77 is intended
 MPICH2_VERSION="@MPICH2_VERSION@"
-#
+
+enable_rpath="@enable_rpath@"
+@f77_shlib_conf@
+
 # Internal variables
 # Show is set to echo to cause the compilation command to be echoed instead 
 # of executed.
@@ -314,9 +316,13 @@ fi
 # libraries
 #
 if [ "$linking" = yes ] ; then
-    if [ -n "$F77_LINKPATH_SHL" ] ; then
-        # Prepend the path for the shared libraries to the library list
-        mpilibs="$F77_LINKPATH_SHL$libdir $mpilibs"
+    # Attempt to encode rpath info into the executable if the user has not
+    # disabled rpath usage and some flavor of rpath makes sense on this
+    # platform.
+    # TODO configure and config.rpath are computing more sophisticated rpath
+    # schemes than this simple one.  Consider updating this logic accordingly.
+    if test "X$enable_rpath" = "Xyes" ; then
+        mpilibs="${hardcode_libdir_flag_spec} $mpilibs"
     fi
 
     path_list=""

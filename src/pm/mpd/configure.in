@@ -1,6 +1,16 @@
-dnl Process this file with autoconf to produce a configure script.
+
+dnl Set the directory that contains support scripts such as install-sh and
+dnl config.guess
+AC_CONFIG_AUX_DIR(../../../confdb)
+
 # Autoconf initialization:
-AC_INIT(mpdroot.h)
+m4_include([../../../maint/version.m4])
+dnl 2nd arg is intentionally underquoted
+AC_INIT([MPD],
+        MPICH2_VERSION_m4,
+        [mpich-discuss@mcs.anl.gov],
+        [mpd],
+        [http://www.mcs.anl.gov/research/projects/mpich2/])
 
 # Autoconf header:
 rm -f ${srcdir}/mpdconf.h mpdconf.h
@@ -15,9 +25,9 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 ])
 AH_BOTTOM([#endif])
 
-dnl Set the directory that contains support scripts such as install-sh and
-dnl config.guess
-AC_CONFIG_AUX_DIR(../../../confdb)
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11 silent-rules subdir-objects no-installinfo no-installman])
+# first_pm_name is set and exported by the top level configure
+AM_CONDITIONAL([PRIMARY_PM_MPD],[test "X$first_pm_name" = "Xmpd"])
 
 dnl Process configure arguments
 AC_ARG_ENABLE(echo,

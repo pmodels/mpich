@@ -9,7 +9,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "mpidi_ch3i_nemesis_conf.h"
 
 /* for ATTRIBUTE */
 #include "mpichconf.h"

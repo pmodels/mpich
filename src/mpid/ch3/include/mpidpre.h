@@ -10,8 +10,6 @@
 #if !defined(MPICH_MPIDPRE_H_INCLUDED)
 #define MPICH_MPIDPRE_H_INCLUDED
 
-#include "mpidi_ch3_conf.h"
-
 /* Tell the compiler that we're going to declare struct MPID_Request later */
 struct MPID_Request;
 

@@ -1,5 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = smpd_util_sock.c
-INCLUDES = -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/pm/smpd/sock -I${master_top_srcdir}/src/pm/smpd/sock/include -I${master_top_srcdir}/src/pm/smpd -I${top_builddir}/src/include -I${top_builddir}/src/pm/smpd
-HEADERS = smpd_sock_init.i smpd_sock_set.i smpd_sock_post.i smpd_sock_immed.i smpd_sock_misc.i smpd_sock_wait.i smpd_socki_util.i smpd_util_socki.h
-smpd_util_sock.o: smpd_util_sock.c $(HEADERS) ../include/smpd_util_sock.h
-

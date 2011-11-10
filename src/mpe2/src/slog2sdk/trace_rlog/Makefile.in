@@ -3,6 +3,8 @@ RM           = @RM@
 SHELL        = @SHELL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 
+sharebuild_dir = @sharebuild_dir@
+
 all:	
 	cd src && $(MAKE) $(MAKEOPTS)
 
@@ -29,11 +31,12 @@ rmprog:
 
 distclean: rmprog
 	@-cd src && $(MAKE) $(MAKEOPTS) distclean
-	@-$(RM) sbin/install-package
-	@-$(RM) Makefile libtool
-	@-$(RM) trace_impl.h
-	@-$(RM) config.log config.status
-	@-$(RM) -r autom4te*.cache
+	-$(RM) sbin/install-package
+	-$(RM) Makefile libtool
+	-$(RM) trace_impl.h
+	-$(RM) config.log config.status
+	-$(RM) -r autom4te*.cache
+	-$(RM) -f $(sharebuild_dir)/logfiles/*.rlog
 
 maintainer-clean: distclean
 	@-$(RM) trace_impl.h.in

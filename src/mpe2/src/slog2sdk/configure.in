@@ -275,21 +275,21 @@ done
 
 # VPATH build: Set the libbuild_dir
 if test ! -d $libbuild_dir -a -d $srcdir/lib ; then
-    echo "creating $libbuild_dir from source"
+    AC_MSG_NOTICE([creating $libbuild_dir from source])
     $CPRP -pr $srcdir/lib $libbuild_dir
 fi
 AC_SUBST(libbuild_dir)
 
 # VPATH: Set the binbuild_dir
 if test ! -d $binbuild_dir ; then
-    echo "creating directory $binbuild_dir"
+    AC_MSG_NOTICE([creating directory $binbuild_dir])
     $MKDIR $binbuild_dir
 fi
 AC_SUBST(binbuild_dir)
 
 # VPATH build: Set the docbuild_dir
 if test ! -d $docbuild_dir -a -d $srcdir/doc ; then
-    echo "creating $docbuild_dir from source"
+    AC_MSG_NOTICE([creating $docbuild_dir from source])
     $CPRP -pr $srcdir/doc $docbuild_dir
     $RM -r $docbuild_dir/old
 fi
@@ -304,7 +304,7 @@ AC_SUBST(etcbuild_dir)
 
 # VPATH build: Set the sharebuild_dir
 if test ! -d $sharebuild_dir ; then
-    echo "creating $sharebuild_dir"
+    AC_MSG_NOTICE([creating $sharebuild_dir])
     $MKDIR $sharebuild_dir
     if test ! -d $sharebuild_dir/logfiles ; then
         echo "creating $sharebuild_dir/logfiles"
@@ -315,7 +315,7 @@ AC_SUBST(sharebuild_dir)
 
 # Copying $srcdir/logfiles to sharebuild_dir
 if test -d $srcdir/logfiles ; then
-    echo "creating sample logfiles from source"
+    AC_MSG_NOTICE([creating sample logfiles from source])
     $CPRP -pr $srcdir/logfiles/*.clog* $sharebuild_dir/logfiles
     $CPRP -pr $srcdir/logfiles/*.slog* $sharebuild_dir/logfiles
 fi

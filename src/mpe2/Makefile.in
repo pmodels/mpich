@@ -81,7 +81,7 @@ install: FORCE_TARGET
 	 if [ -n "$(prefix)" ] ; then \
 	     installopts="-prefix=$(prefix) $$installopts" ; \
 	 fi ; \
-	 ./sbin/mpeinstall $$installopts
+	 env DESTDIR=$(DESTDIR) ./sbin/mpeinstall $$installopts
 
 installcheck:
 	@installopts="" ; \
@@ -94,7 +94,7 @@ installcheck:
 	 if [ -n "$(prefix)" ] ; then \
 	     installopts="-prefix=$(prefix) $$installopts" ; \
 	 fi ; \
-	 ./sbin/mpecheckinstall $$installopts
+	 env DESTDIR=$(DESTDIR) ./sbin/mpecheckinstall $$installopts
 
 installcheck-all:
 	@installopts="" ; \
@@ -112,10 +112,17 @@ installcheck-all:
 	 if [ -n "$(prefix)" ] ; then \
 	     installopts="-prefix=$(prefix) $$installopts" ; \
 	 fi ; \
-	 ./sbin/mpecheckinstall $$installopts
+	 env DESTDIR=$(DESTDIR) ./sbin/mpecheckinstall $$installopts
 
 uninstall:
-	@./sbin/mpeuninstall
+	@env DESTDIR=$(DESTDIR) ./sbin/mpeuninstall
+
+##### standard automake targets that may be invoked by MPICH2's make
+
+# for now we just crudely copy everything from the source directory to the
+# distdir given to us by the upper level makefile
+distdir:
+	cp -a $(srcdir)/* $(distdir)/
 
 ########  Cleaning
 # when "$(top_srcdir)" = ".", it is a non-VPATH build.
@@ -152,18 +159,19 @@ clean: clean_lib
 	@-$(RM) -f work.pc work.pcl
 
 distclean-misc: clean_include clean_etc
-	@-$(RM) -f sbin/mpetestlink sbin/mpetestexec sbin/mpetestexeclog
-	@-$(RM) -f sbin/mpecheckinstall sbin/mpecheckbuild
-	@-$(RM) -f sbin/mpeinstall sbin/mpeuninstall
-	@-$(RM) -f Makefile
-	@-$(RM) -f mpe_conf.h
-	@-$(RM) -r f77tmpdir
-	@-$(RM) -f config.log config.status
-	@-$(RM) -rf autom4te*.cache
+	-$(RM) -f sbin/mpetestlink sbin/mpetestexec sbin/mpetestexeclog
+	-$(RM) -f sbin/mpecheckinstall sbin/mpecheckbuild
+	-$(RM) -f sbin/mpeinstall sbin/mpeuninstall
+	-$(RM) -f Makefile
+	-$(RM) -f mpe_conf.h
+	-$(RM) -r f77tmpdir
+	-$(RM) -f config.log config.status
+	-$(RM) -rf autom4te*.cache
 
 distclean: clean_bin clean_lib distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
+	          echo "making distclean in $$pkg" ; \
 	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) distclean ) ; \
 	      fi ; \
 	  done
@@ -171,6 +179,7 @@ distclean: clean_bin clean_lib distclean-misc
 maintainer-clean: clean_bin clean_lib distclean-misc
 	@-for pkg in $(PKGS) ; do \
 	      if [ -n "$$pkg" -a -s $$pkg/Makefile ] ; then \
+	          echo "making maintainer-clean in $$pkg" ; \
 	          ( cd $$pkg && $(MAKE) $(MAKEOPTS) maintainer-clean ) ; \
 	      fi ; \
 	  done
@@ -199,3 +208,17 @@ coverage:
 # Allow a tags target
 tags: TAGS
 TAGS:
+ctags: tags
+
+
+################################################################################
+# unimplemented targets that MPICH2's automake may recursively invoke; see
+# "Third-Party Makefiles" in the automake manual
+
+EMPTY_AUTOMAKE_TARGETS = install-data install-exec install-dvi install-html \
+                         install-info install-ps install-pdf installdirs    \
+                         mostlyclean dvi pdf ps info html
+.PHONY: $(EMPTY_AUTOMAKE_TARGETS)
+$(EMPTY_AUTOMAKE_TARGETS):
+
+

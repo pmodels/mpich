@@ -1,7 +1,0 @@
-mpi_sources = fileutil.c
-lib${MPILIBNAME}_a_SOURCES = ${mpi_sources}
-#profilelib_${MPILIBNAME} = ${PMPILIBNAME}
-#profilelib_${MPILIBNAME}_SOURCES = ${mpi_sources}
-
-INCLUDES = -I../../include -I${top_srcdir}/src/include
-

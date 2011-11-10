@@ -81,10 +81,11 @@ clean: clean_bin clean_lib
 
 distclean: clean_include clean_bin clean_lib clean_etc
 	@-( cd src && $(MAKE) $(MAKEOPTS) distclean )
-	@-$(RM) -f mpe_logging_conf.h
-	@-$(RM) -f Makefile 
-	@-$(RM) -f config.log config.status
-	@-$(RM) -rf autom4te*.cache
+	-$(RM) -f mpe_logging_conf.h
+	-$(RM) -f Makefile 
+	-$(RM) -f config.log config.status
+	-$(RM) -rf autom4te*.cache
+	-$(RM) -f include/clog_inttypes.h include/mpe_log_thread.h include/mpi_null.h
 
 maintainer-clean: distclean
 	@-$(RM) -f mpe_logging_conf.h.in

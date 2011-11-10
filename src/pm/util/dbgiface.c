@@ -11,7 +11,7 @@
  * available in a standard format (separate from that in the data structures 
  * defined in process.h)
  */
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #include "pmutil.h"
 #include <stdio.h>
 #include "mpibase.h"

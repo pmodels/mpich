@@ -1,10 +1,12 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+## -*- Mode: Makefile; -*-
+##
+## (C) 2008 by Argonne National Laboratory.
+##     See COPYRIGHT in top-level directory.
+##
 
 AM_CPPFLAGS += -I$(top_srcdir)/ui/utils -DHYDRA_CONF_FILE=\"@sysconfdir@/mpiexec.hydra.conf\"
+
+noinst_HEADERS += ui/mpich/mpiexec.h
 
 bin_PROGRAMS += mpiexec.hydra
 

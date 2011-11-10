@@ -1,10 +1,19 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+## -*- Mode: Makefile; -*-
+##
+## (C) 2008 by Argonne National Laboratory.
+##     See COPYRIGHT in top-level directory.
+##
 
 AM_CPPFLAGS += -I$(top_srcdir)/pm/utils
+
+noinst_HEADERS +=              \
+    pm/pmiserv/common.h        \
+    pm/pmiserv/pmi_v2_common.h \
+    pm/pmiserv/pmip.h          \
+    pm/pmiserv/pmip_pmi.h      \
+    pm/pmiserv/pmiserv.h       \
+    pm/pmiserv/pmiserv_pmi.h   \
+    pm/pmiserv/pmiserv_utils.h
 
 bin_PROGRAMS += hydra_pmi_proxy
 

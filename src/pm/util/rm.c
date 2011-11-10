@@ -22,7 +22,7 @@
  */
 /* ----------------------------------------------------------------------- */
 
-#include "pmutilconf.h"
+#include "mpichconf.h"
 
 #include <stdio.h>
 #include <ctype.h>

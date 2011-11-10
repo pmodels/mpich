@@ -15,3 +15,4 @@ MPID_File MPID_File_direct[MPID_FILE_PREALLOC] = { {0} };
 MPIU_Object_alloc_t MPID_File_mem = { 0, 0, 0, 0, MPID_FILE, 
 				      sizeof(MPID_File), MPID_File_direct,
                                       MPID_FILE_PREALLOC};
+

@@ -1,9 +1,0 @@
-INCLUDES = -I../../include -I${srcdir}/../../include
-
-createf90types_SOURCES   = createf90types.c
-createf90types_LDADD     = ../../util/mtest.o
-createf90types_DEPADD    = ../../util/mtest.o
-
-../../util/mtest.o: 
-	(cd ../../util && $(MAKE) mtest.o)
-

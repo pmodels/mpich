@@ -199,7 +199,7 @@ else
         if [ $failmode = "hard" ] ; then exit $rc ; fi
     else
         # store the destination installed filename
-        filelist="$filelist $destfile"
+        filelist="$filelist "'${DESTDIR}'"$destfile"
     fi
 fi
 }
@@ -323,7 +323,7 @@ else
             if [ $failmode = "hard" ] ; then exit $rc ; fi
         else
             # store the destination installed filename
-            filelist="$filelist $destfile"
+            filelist="$filelist "'${DESTDIR}'"$destfile"
         fi
     else
         if [ $verbose = 1 ] ; then echo "Fixup $1.in and install to $dest" ; fi
@@ -427,7 +427,7 @@ fi
 
 cd $libbuild_dir/../src \
 && $MAKE INSTALL_LIBSO LIBDIR=$libdir/$pkgname \
-&& filelist="$filelist $libdir/$pkgname/libTraceInput.*"
+&& filelist="$filelist "'${DESTDIR}'"$libdir/$pkgname/libTraceInput.*"
 
 EXEFILES="@EXEFILES@"
 

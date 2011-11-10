@@ -1,5 +1,0 @@
-smvar_do_sharedlibs = 0
-mtestthread.o: mtestthread.c
-all-local: mtestthread.o
-INCLUDES = -I../../../../src/include -I${top_srcdir}/src/include \
-	 -I../../include -I${srcdir}/../../include

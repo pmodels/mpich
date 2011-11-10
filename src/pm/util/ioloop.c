@@ -14,7 +14,7 @@
    is discarding it or the reader (mpiexec) is failing to finish reading from 
    all of the sockets before exiting.
  */
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H

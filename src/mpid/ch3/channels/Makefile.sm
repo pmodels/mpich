@@ -1,5 +1,0 @@
-# SUBDIRS_channel_name contains the list of all possible channel
-# implementations
-SUBDIRS_channel_name = sock nemesis sctp dllchan 
-SUBDIRS = @channel_name@ .
-

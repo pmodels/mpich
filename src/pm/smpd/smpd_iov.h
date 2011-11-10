@@ -1,7 +1,7 @@
 #ifndef SMPD_IOV_H_INCLUDED
 #define SMPD_IOV_H_INCLUDED
 
-#include "smpdconf.h"
+#include "mpichconf.h"
 /* IOVs */
 /* The basic channel interface uses IOVs */
 #define SMPD_IOV_BUF_CAST void *

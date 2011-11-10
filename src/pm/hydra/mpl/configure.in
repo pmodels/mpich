@@ -5,6 +5,10 @@ AC_PREREQ(2.63)
 #
 
 AC_INIT([MPL], [0.1])
+
+# sanity check that --srcdir was specified correctly
+AC_CONFIG_SRCDIR([src/mplstr.c])
+
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.10])
@@ -34,6 +38,10 @@ AC_C_CONST
 AC_C_RESTRICT
 
 PAC_C_MACRO_VA_ARGS
+
+# TODO: could add a --enable-embedded or similar to also control this
+AC_ARG_VAR([FROM_MPICH2],[set to "yes" if building MPL inside of MPICH2])
+AM_CONDITIONAL([MPL_EMBEDDED_MODE],[test "x$FROM_MPICH2" = "xyes"])
 
 # check for compiler support for the __typeof() extension
 AC_CACHE_CHECK([whether the compiler supports __typeof(variable)],

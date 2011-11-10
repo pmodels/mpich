@@ -1,8 +1,13 @@
+dnl PAC_F77_SEARCH_LIST - expands to a whitespace separated list of fortran 77
+dnl compilers for use with AC_PROG_F77 that is more suitable for HPC software
+dnl packages
+AC_DEFUN([PAC_F77_SEARCH_LIST],[ifort pgf77 af77 xlf frt cf77 fort77 fl32 fort ifc efc ftn gfortran f77 g77])
 dnl PAC_PROG_F77 - reprioritize the F77 compiler search order
+dnl NOTE: this macro suffers from a basically intractable "expanded before it
+dnl was required" problem when libtool is also used
 AC_DEFUN([PAC_PROG_F77],[
 PAC_PUSH_FLAG([FFLAGS])
-AC_PROG_F77([ifort pgf77 af77 xlf frt cf77 fort77 fl32 fort ifc efc ftn \
-             gfortran f77 g77])
+AC_PROG_F77([PAC_F77_SEARCH_LIST])
 PAC_POP_FLAG([FFLAGS])
 ])
 dnl

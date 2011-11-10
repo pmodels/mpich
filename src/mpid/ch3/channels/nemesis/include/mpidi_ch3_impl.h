@@ -7,7 +7,6 @@
 #if !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED)
 #define MPICH_MPIDI_CH3_IMPL_H_INCLUDED
 
-#include "mpidi_ch3_conf.h"
 #include "mpidimpl.h"
 #include "mpiu_os_wrappers.h"
 #include "mpid_nem_generic_queue.h"

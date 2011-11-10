@@ -76,7 +76,7 @@ echo "done"
 # Check for a particular file, not just the directory because several
 # autotools steps (such as libtoolize) will create the aux/macro dir.
 echo_n "Checking for svn checkout errors... "
-svn_externals_sanity_file="src/pm/hydra/VERSION"
+svn_externals_sanity_file="src/pm/hydra/version.m4"
 # Note that -e is not an available option for test in the Bourne shell, though
 # some systems that pretend that ksh is the same as sh will accept it.
 if test "!" -f $svn_externals_sanity_file ; then
@@ -123,12 +123,12 @@ MAKE=${MAKE-make}
 
 # externals are the directories for external packages that we have
 # included into MPICH2
-externals="src/mpe2 src/pm/hydra src/mpix/armci"
+externals="src/mpe2 src/pm/hydra src/mpi/romio src/mpix/armci src/pm/mpd"
 # ltdirs are the directories that make use of libtool and require
 # libtoolize
 ltdirs="src/mpl"
 # amdirs are the directories that make use of autoreconf
-amdirs="src/openpa src/mpl"
+amdirs=". src/openpa src/mpl"
 
 
 ########################################################################
@@ -610,6 +610,20 @@ echo "###########################################################"
 echo
 
 ########################################################################
+## Building maint/Version
+########################################################################
+
+# build a substitute maint/Version script now that we store the single copy of
+# this information in an m4 file for autoconf's benefit
+echo_n "Generating a helper maint/Version... "
+if $autom4te -l M4sugar maint/Version.base.m4 > maint/Version ; then
+    echo "done"
+else
+    echo "error"
+    error "unable to correctly generate maint/Version shell helper"
+fi
+
+########################################################################
 ## Building the README
 ########################################################################
 
@@ -869,7 +883,8 @@ if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
         if [ ! -d test/mpi/f90/$leafDir ] ; then
 	    mkdir test/mpi/f90/$leafDir
         fi
-        maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.sm Makefile.ap
+        maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.am Makefile.ap
+        echo "timestamp" > test/mpi/f90/$leafDir/stamp-Makefile.am
     done
     echo "done"
 fi
@@ -892,23 +907,25 @@ if [ $do_depend = no ] ; then
     otherargs="$otherargs -nodepend"
 fi
 
-echo
-echo "---------------------------------------------------------------"
-echo "Initiating simplemake"
-if ./maint/simplemake -common=maint/makedefs \
-    -docnamedefs='${master_top_srcdir}/maint/docnotes' \
-    -autoconf="$acIncDirFlag ROOTDIR/confdb" \
-    -libdir='${MPILIBNAME}'=ROOTDIR/lib \
-    -smroot='${master_top_srcdir}/maint' $otherargs \
-    Makefile.sm ; then
-    :
-    echo "Done running simplemake"
-    echo "---------------------------------------------------------------"
-    echo
-else
-    echo "Simplemake step failed!"
-    exit 1
-fi
+## FIXME need to take a cleanup pass through this script and remove all of the
+## simplemake code
+##echo
+##echo "---------------------------------------------------------------"
+##echo "Initiating simplemake"
+##if ./maint/simplemake -common=maint/makedefs \
+##    -docnamedefs='${master_top_srcdir}/maint/docnotes' \
+##    -autoconf="$acIncDirFlag ROOTDIR/confdb" \
+##    -libdir='${MPILIBNAME}'=ROOTDIR/lib \
+##    -smroot='${master_top_srcdir}/maint' $otherargs \
+##    Makefile.sm ; then
+##    :
+##    echo "Done running simplemake"
+##    echo "---------------------------------------------------------------"
+##    echo
+##else
+##    echo "Simplemake step failed!"
+##    exit 1
+##fi
 
 
 ########################################################################

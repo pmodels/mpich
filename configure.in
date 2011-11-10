@@ -105,8 +105,6 @@ dnl The file name here refers to a file in the source being configured
 dnl In later versions of autoconf, the binding of AC_INIT changed (!!!)
 dnl The original version was AC_INIT(a source file)
 dnl The later version is AC_INIT(package,version,[bug-report],[tarname])
-dnl Here we use the original version
-dnl AC_INIT(src/include/mpiimpl.h)
 dnl
 dnl Note that no executable statements are allowed (and any are silently 
 dnl dropped) before AC_INIT.
@@ -122,7 +120,13 @@ dnl define([AC_PACKAGE_STRING],[MPICH2 1.0.6])
 dnl AC_INIT(mpich2,1.0.6,mpich2-maint@mcs.anl.gov,mpich2-1.0.6)
 dnl Use the oldstyle AC_INIT instead
 
-AC_INIT(src/include/mpichconf.h.in)
+m4_include([maint/version.m4])
+dnl 2nd arg is intentionally underquoted
+AC_INIT([MPICH2],
+        MPICH2_VERSION_m4,
+        [mpich-discuss@mcs.anl.gov],
+        [mpich2],
+        [http://www.mcs.anl.gov/research/projects/mpich2/])
 
 if test "x$prefix" != "xNONE" && test -d "$prefix"; then 
     if test "x`(cd \"$prefix\"; echo \"$PWD\")`" = "x`(cd \"$srcdir\"; echo \"$PWD\")`" ||\
@@ -134,14 +138,18 @@ fi
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
-# Try to find the version and release date
-if test -s "$srcdir/maint/Version" ; then
-    . $srcdir/maint/Version
-    export MPICH2_VERSION
-else
-    AC_MSG_ERROR([Version information not found. Configuration aborted.])
+# these values come from the m4_include above
+MPICH2_VERSION=MPICH2_VERSION_m4
+AC_SUBST([MPICH2_VERSION])
+MPICH2_RELEASE_DATE="MPICH2_RELEASE_DATE_m4"
+AC_SUBST([MPICH2_RELEASE_DATE])
+libmpich_so_version="libmpich_so_version_m4"
+AC_SUBST([libmpich_so_version])
+
+
+if test -z "$MPICH2_VERSION" ; then
+    AC_MSG_ERROR([MPICH2_VERSION is empty, check maint/version.m4 for errors])
 fi
-AC_SUBST(MPICH2_RELEASE_DATE)
 # Produce a numeric version assuming the following format:
 # Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]
 # Example: 1.0.7rc1 has
@@ -187,7 +195,6 @@ if test "$V5" -le 9 ; then V5=0$V5 ; fi
 
 MPICH2_NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
 AC_SUBST(MPICH2_NUMVERSION)
-AC_SUBST(MPICH2_VERSION)
 
 # ABIVERSION is the name used by simplemake, so we reassign the
 # libmpich_so_version number to it
@@ -211,26 +218,58 @@ echo "Running on system: `uname -a`"
 dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADER(src/include/mpichconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
+/*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 #ifndef MPICHCONF_H_INCLUDED
 #define MPICHCONF_H_INCLUDED
 ])
-AH_BOTTOM([#endif])
+
+# We use an #include strategy here because all of the alternative strategies for
+# quashing these variables have various drawbacks.  The alternatives are listed
+# here to avoid rediscovery of these problems by someone else in the future:
+#
+# 1) Strategy: Rewrite mpichconf.h.in with sed at maint/updatefiles time.
+#    Problem: Automatic remaking of config.status and friends will re-run
+#             autoheader and blow away our sed changes without an opportunity to
+#             patch the resulting file again.
+# 2) Strategy: Add literal "#undef PACKAGE" lines to the AH_BOTTOM text.
+#    Problem: These lines get rewritten by config.status to be "#define" lines,
+#             so the intended quashing never actually occurs.
+# 3) Strategy: Use AC_CONFIG_COMMANDS to run a sed rewrite command on
+#              mpichconf.h at config.status time.
+#    Problem: Causes mpichconf.h to always be rewritten, first by the normal
+#             config.status commands and then by sed.  This can cause
+#             unnecessary remaking of object files since nearly every C source
+#             file includes this header (see the Autoconf Manual, "Automatic
+#             Remaking")
+#
+# The only other plausible strategy would seem to be rewriting config.status
+# itself via AC_CONFIG_COMMANDS_POST, but that seems error prone.  The best
+# solution would be to stop all subconfigures from including config.h headers
+# from other packages.  Then all of this nonsense can be eliminated.
+# [goodell@ 2011-08-26]
+AH_BOTTOM([
+/* Include nopackage.h to undef autoconf-defined macros that cause conflicts in
+ * subpackages.  This should not be necessary, but some packages are too
+ * tightly intertwined right now (such as ROMIO and the MPICH2 core) */
+#include "nopackage.h"
+
+#endif /* !defined(MPICHCONF_H_INCLUDED) */
+])
 
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess
 AC_CONFIG_AUX_DIR(confdb)
+dnl our macro dir is the same as our aux dir
+AC_CONFIG_MACRO_DIR([confdb])
 
 # Set the FROM_MPICH2 variable to tell subconfigures that they are
 # built from within MPICH2
 FROM_MPICH2=yes
 export FROM_MPICH2
-AC_ARG_VAR(FROM_MPICH2,
-	[internal flag to tell subconfigures that
-	they are built from within MPICH2])
+AC_SUBST([FROM_MPICH2])
 
 # Save a copy of precious flags as USER_* before any of these flags
 # are being modified by configure tests.
@@ -282,7 +321,16 @@ FCFLAGS="$FCFLAGS $MPICH2LIB_FCFLAGS"
 LDFLAGS="$LDFLAGS $MPICH2LIB_LDFLAGS"
 LIBS="$LIBS $MPICH2LIB_LIBS"
 
+dnl include all subsystem m4 fragments now that the core autoconf functionality
+dnl has been setup.  No fragment should do anything except define
+dnl PAC_SUBCFG_{PREREQ,BODY} macros which will be expanded later as
+dnl appropriate
+# begin subsys includes
+m4_include([subsys_include.m4])
+# end subsys includes
 
+dnl ----------------------------------------------------------------------------
+dnl setup top-level argument handling
 AC_ARG_ENABLE(lib-depend,
 	AC_HELP_STRING([--enable-lib-depend], [Turn on library dependencies (experimental)]),,
 	[enable_lib_depend=no])
@@ -395,7 +443,7 @@ use --enable-fc or --disable-fc instead])]
 )
 
 AC_ARG_ENABLE(cxx,
-	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=default)
+	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
 AC_ARG_ENABLE(romio,
 	AC_HELP_STRING([--enable-romio], [Enable ROMIO MPI I/O implementation]),,
@@ -529,6 +577,18 @@ AC_ARG_ENABLE(multi-aliases,
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
 
+AC_ARG_ENABLE([rpath],
+              [AC_HELP_STRING([--enable-rpath],
+                             [Determine whether the rpath is set when programs are
+                             compiled and linked when shared libraries are built.
+                             The default is yes; use --disable-rpath to turn this
+                             feature off; in that case, shared libraries will be
+                             found according to the rules for your system (e.g., in
+                             LD_LIBRARY_PATH)])],
+              [],[enable_rpath=yes])
+AC_SUBST([enable_rpath])
+
+
 AC_ARG_WITH(cross,
 	AC_HELP_STRING([--with-cross=file],
 		[Specify the values of variables that configure cannot
@@ -560,6 +620,7 @@ AC_SUBST(FWRAPNAME)
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 PAC_PROG_CC
+AC_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
 AC_PROG_CPP
 # Bug in autoconf.  Restore cross settings
@@ -573,6 +634,33 @@ if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
 fi
 PAC_POP_FLAG([CFLAGS])
 
+dnl now that autoconf and core compilers are setup, init automake and libtool
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11 silent-rules subdir-objects])
+AM_MAINTAINER_MODE([enable])
+LT_INIT([disable-shared])
+# Non-verbose make by default
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+dnl AC_PROG_{CXX,F77,FC} must come early in configure.in in order to avoid some
+dnl esoteric autoconf macro expansion errors
+dnl
+dnl Also, DO NOT attempt to place shell conditionals (either manually or via
+dnl AS_IF) around these macros in an effort to save configure time.  It will
+dnl lead to weird AM_CONDITIONAL errors and potentially other problems.
+
+# suppress default "-g -O2" from AC_PROG_CXX
+: ${CXXFLAGS=""}
+AC_PROG_CXX([PAC_CXX_SEARCH_LIST])
+
+# suppress default "-g -O2" from AC_PROG_F77
+: ${FFLAGS=""}
+AC_PROG_F77([PAC_F77_SEARCH_LIST])
+
+# suppress default "-g -O2" from AC_PROG_FC
+: ${FCFLAGS=""}
+AC_PROG_FC([PAC_FC_SEARCH_LIST])
+
+
 # compute canonical system types
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
@@ -584,10 +672,6 @@ PAC_ARG_CACHING
 # Set CFLAGS for enable strict if necessary.  Do this *first* because
 # it may influence the output of the other tests
 PAC_ARG_STRICT
-
-# Check for shared library support
-PAC_ARG_SHAREDLIBS
-
 
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
@@ -678,6 +762,9 @@ AC_SUBST(INCLUDE_MPIDDEFS_H)
 if test -f $devicedir/mpich2prereq ; then
     . $devicedir/mpich2prereq
 fi
+
+# expand all of the prereq macros in the correct order
+m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
 
 # ----------------------------------------------------------------------------
 # Set default library names if names haven't already been provided
@@ -804,11 +891,14 @@ case "$enable_error_checking" in
     tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
     error_checking_kind=MPID_ERROR_LEVEL_$error_checking_kind
     AC_DEFINE_UNQUOTED(HAVE_ERROR_CHECKING,$error_checking_kind,[Define to enable error checking])
+    HAVE_ERROR_CHECKING=1
     ;;
     *)
     AC_MSG_WARN([Unknown value $enable_error_checking for enable-error-checking])
     ;;
 esac
+# permit @HAVE_ERROR_CHECKING@ substitution in glue_romio.h */
+AC_SUBST([HAVE_ERROR_CHECKING])
 
 # error-messages
 case "$enable_error_messages" in 
@@ -844,6 +934,7 @@ AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable e
 # particularly when other logging options are selected (e.g., logging is not
 # rlog).
 # ----------------------------------------------------------------------------
+AM_CONDITIONAL([BUILD_LOGGING_RLOG],[test "X$with_logging" = "Xrlog"])
 collect_stats=false
 logging_required=false
 if test "$enable_timing" = "default" ; then
@@ -1023,7 +1114,7 @@ if test "$MPID_NO_SPAWN" = yes ; then
 fi
 
 # MPL
-PAC_CONFIG_SUBDIR(src/mpl,,AC_ERROR(MPL configure failed))
+PAC_CONFIG_SUBDIR(src/mpl,,AC_MSG_ERROR(MPL configure failed))
 PAC_PREPEND_FLAG([-lmpl], [WRAPPER_LIBS])
 PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
 PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
@@ -1076,7 +1167,7 @@ if test "$with_openpa_prefix" = "embedded" ; then
         if test "$with_atomic_primitives" = "not_specified" ; then
             opa_subdir_args="--with-atomic-primitives=auto_allow_emulation"
         fi
-        PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_ERROR([OpenPA configure failed])])
+        PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
         PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
 
         other_install_dirs="$other_install_dirs src/openpa"
@@ -1109,6 +1200,7 @@ fi
 # Threads must be supported by the device.  First, set the default to
 # be the highest supported by the device
 if test "$enable_threads" = default ; then
+    # XXX DJG bug is here, PREREQ is not being used right now
     if test -n "$MPID_MAX_THREAD_LEVEL" ; then
         case $MPID_MAX_THREAD_LEVEL in
             MPI_THREAD_SINGLE)     enable_threads=single ;;
@@ -1358,13 +1450,17 @@ fi
 if test -n "$perform_mutexnesting" ; then 
     AC_DEFINE(MPICH_DEBUG_MUTEXNESTING,1,[Define to check nesting in mutexes])
 fi
+USE_DBG_LOGGING=0
 if test -n "$perform_dbglog" ; then
    if test "$with_logging" != "none" ; then
        AC_MSG_WARN([--with-logging overrides --enable-g=log])
    else
        AC_DEFINE(USE_DBG_LOGGING,1,[Define to enable logging macros])
+       USE_DBG_LOGGING=1
    fi
 fi
+# allow @USE_DBG_LOGGING@ substitution in glue_romio.h
+AC_SUBST([USE_DBG_LOGGING])
 
 if test -n "$perform_dbgmutex" ; then 
    AC_DEFINE(MPICH_DEBUG_MUTEX,1,[Define to enable mutex debugging])
@@ -1403,6 +1499,14 @@ if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
        subsystems="$subsystems src/mpi/romio"
        AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
+
+       # make it possible to "#include" mpio.h at build time
+       #
+       # This ought to be sufficient, but there is also a symlink setup in
+       # src/include to accomodate current mpicc and MPE2 limitations.  See
+       # src/mpi/Makefile.mk for more info.
+       PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
+
        # Set environment variables that the romio configure expects
        romio_dir=romio
        AC_SUBST(romio_dir)
@@ -1419,13 +1523,17 @@ if test "$enable_romio" = "yes" ; then
        AC_MSG_WARN([ROMIO src directory is not available])
    fi
 fi
+
+AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
+
 #
 # FIXME: If an external device, don't necessarily complain (e.g.,
 # if the device is already built)
 if test ! -d $devicedir ; then
-dnl     WAIT UNTIL WE INCLUDE A DEVICE
-dnl     AC_MSG_ERROR([Device $device_name is unknown)]
-    AC_MSG_WARN([Device $device_name is unknown])
+    AC_MSG_ERROR([Device $device_name is unknown])
+elif test -f $devicedir/subconfigure.m4 ; then
+    # this is a new-style subconfigure device, don't add it as a subsystem
+    :
 elif test ! -x $devicedir/configure ; then
     if test -s $devicedir/configure ; then
         AC_MSG_WARN([The configure in $devicedir exists but is not executable])
@@ -1500,6 +1608,7 @@ hasError=no
 for pm_name in $pm_names ; do
     if test -z "$first_pm_name" ; then
        first_pm_name=$pm_name
+       export first_pm_name
     else 
        # Only add to other_pm_names if the directory exists,
        # since the Makefile in src/pm/Makefile will try to cd to
@@ -1511,11 +1620,12 @@ for pm_name in $pm_names ; do
     if test ! -d $use_top_srcdir/src/pm/$pm_name ; then
         AC_MSG_WARN([$use_top_srcdir/src/pm/$pm_name does not exist. PM is unknown])
 	hasError=yes
-    elif test ! -x $use_top_srcdir/src/pm/$pm_name/configure ; then
+    elif test ! -x $use_top_srcdir/src/pm/$pm_name/configure -a \
+              ! -f $use_top_srcdir/src/pm/$pm_name/subconfigure.m4 ; then
         if test -s $use_top_srcdir/src/pm/$pm_name/configure ; then
 	    AC_MSG_WARN([The configure in $use_top_srcdir/src/pm/$pm_name exists but is not executable])
         else
-            AC_MSG_WARN([pm $pm_name has no configure])
+            AC_MSG_WARN([pm $pm_name has no configure or subconfigure.m4])
         fi
         pm_name=""
 	hasError=yes
@@ -1581,9 +1691,12 @@ elif test "$with_pmi" != "no" ; then
     if test ! -d $use_top_srcdir/src/pmi/$pmi_name ; then
         AC_MSG_WARN([$use_top_srcdir/src/pmi/$pmi_name does not exist. PMI is unknown])
     elif test ! -x $use_top_srcdir/src/pmi/$pmi_name/configure ; then
-        AC_MSG_WARN([pmi $pmi_name has no configure or Makefile])
-        pmi_name=""
+        if test ! -f $use_top_srcdir/src/pmi/$pmi_name/subconfigure.m4 ; then
+            AC_MSG_WARN([pmi $pmi_name has no configure or subconfigure.m4])
+            pmi_name=""
+        fi
     else
+        # only add to subsystems if a full configure is present
         subsystems="$subsystems src/pmi/$pmi_name"
     fi
 else
@@ -1597,7 +1710,11 @@ AC_SUBST(pmi_name)
 # Note that this uses this_pm_name because pm_name must be the *first*
 # of the PM names
 for this_pm_name in $pm_names ; do
-    subsystems="$subsystems src/pm/$this_pm_name"
+    # only add the PM to the subsystems if it has a full configure to be
+    # executed
+    if test -f $use_top_srcdir/src/pm/$this_pm_name/configure ; then
+        subsystems="$subsystems src/pm/$this_pm_name"
+    fi
     if test -f $use_top_srcdir/src/pm/$this_pm_name/setup_pm ; then 
 	echo sourcing $use_top_srcdir/src/pm/$this_pm_name/setup_pm
 	. $use_top_srcdir/src/pm/$this_pm_name/setup_pm
@@ -1620,6 +1737,10 @@ if test $with_mpe != no ; then
         subsystems="$subsystems src/mpe2"
 	other_install_dirs="$other_install_dirs src/mpe2"
 	mpe_dir=mpe2
+
+        # for AM_CONDITIONAL
+        build_src_mpe2=yes
+
 	# Temporarily replace the default NONE value for exec_prefix
 	# and prefix with the actual, default values.
 	savePrefix=$prefix
@@ -1634,14 +1755,14 @@ if test $with_mpe != no ; then
 	#eval actuallibdir=$libdir
 	#MPI_LIBS="-L$actuallibdir -lmpich -lpmpich"
 	buildbindir=`pwd`/bin
-	MPI_CC=$buildbindir/mpicc
-	MPI_F77=$buildbindir/mpif77
+	#MPI_CC=$buildbindir/mpicc
+	#MPI_F77=$buildbindir/mpif77
 	prefix=$savePrefix
 	exec_prefix=$saveExecprefix
 	# NOTE: You must append LIBS to MPI_LIBS before invoking the mpe
 	# configure
-	export MPI_CC
-	export MPI_F77
+	#export MPI_CC
+	#export MPI_F77
 	#export MPI_LIBS
         export use_top_srcdir
         top_build_dir=`pwd`
@@ -1650,21 +1771,7 @@ if test $with_mpe != no ; then
 fi
 AC_SUBST(mpe_dir)
 AC_SUBST(other_install_dirs)
-
-# Check whether shared libraries are enabled.  We need to know this
-# before we start chosing the Fortran, Fortran 90, and C++ compilers
-ENABLE_SHLIB=$enable_sharedlibs
-if test -z "$ENABLE_SHLIB" -o "$ENABLE_SHLIB" = "no" ; then
-    ENABLE_SHLIB=none
-fi
-# We need the script that is used to create shared libraries if either
-# we are creating shared libraries for MPICH2 or we are creating the
-# dynamically loadable library for the debugger interface
-CREATESHLIB=false
-if test "$ENABLE_SHLIB" != "none" -o "$enable_debuginfo" != "no" ; then
-   CREATESHLIB=`pwd`/src/util/createshlib
-fi
-AC_SUBST(CREATESHLIB)
+AM_CONDITIONAL([BUILD_SRC_MPE2],[test "X$build_src_mpe2" = "Xyes"])
 
 # Check for whether the compiler defines a symbol that contains the 
 # function name.  The MPICH2 code, for greater portability, defines
@@ -1717,6 +1824,16 @@ AC_SUBST(NO_WEAK_SYM)
 AC_SUBST(NO_WEAK_SYM_TARGET)
 AC_SUBST(PROFILE_DEF_MPI)
 
+AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+
+# ---------------------------------------------------------------------------
+# determine rpath and other shared library flags for CC
+# src/env may not exist yet in a vpath build
+$MKDIR_P src/env
+cc_shlib_conf=src/env/cc_shlib.conf
+PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
+AC_SUBST_FILE([cc_shlib_conf])
+
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
 #
@@ -1748,7 +1865,9 @@ fi
 # Handle default choices for the Fortran compilers
 if test "$enable_f77" = "yes" ; then
     # Check for a Fortran compiler
-    PAC_PROG_F77
+    # FIXME already done earlier
+    dnl PAC_PROG_F77
+    :
 fi
 
 if test "$enable_f77" = "yes" -a "$F77" = "" ; then
@@ -1840,14 +1959,12 @@ fi
 fc_with_f77=yes
 if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
     enable_fc=no
-    # Check for a Fortran compiler.  Work around bug in autoconf that 
-    # adds -g to FCFLAGS
-    saveFCFLAGS="$FCFLAGS"
-    PAC_PROG_FC
-    FCFLAGS=$saveFCFLAGS
     if test -n "$FC" ; then 
         if test -z "$F77" ; then
-	    PAC_PROG_F77
+            dnl FIXME this logic needs to happen at the early spot where we
+            dnl invoke AC_PROG_F77 and AC_PROG_FC
+	    dnl PAC_PROG_F77
+            :
 	fi
 	#
 	# If we allow multiple weak symbols, we should test a name
@@ -1902,6 +2019,11 @@ fi
 # Now test for Fortran compiler characteristics
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = "yes" ; then
+    # determine rpath and other shared library flags for F77
+    f77_shlib_conf=src/env/f77_shlib.conf
+    PAC_COMPILER_SHLIB_FLAGS([F77],[$f77_shlib_conf])
+    AC_SUBST_FILE([f77_shlib_conf])
+
     AC_LANG_FORTRAN77
     PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
     PAC_PROG_F77_HAS_INCDIR(src)
@@ -1934,94 +2056,6 @@ if test "$enable_f77" = "yes" ; then
     dnl PAC_PROG_F77_IN_C_LIBS
     dnl AC_SUBST(F77_IN_C_LIBS)
 
-    # ------------------------------------------------
-    # Shared library support
-    # ------------------------------------------------
-# Note that USE_GCC_G77_DECLS is not used anywhere within the code, so
-# this check has been commented out.
-dnl    # If both C and Fortran are gnu, define the following to simplify 
-dnl    # shared library support.  
-dnl    AC_MSG_CHECKING([whether using gcc and g77 together])
-dnl    if test "$ac_cv_prog_gcc" = "yes" -a "$ac_cv_prog_g77" = "yes" ; then
-dnl        # FIXME: Who uses this definition?
-dnl        AC_DEFINE(USE_GCC_G77_DECLS,1,[Define if using gcc and g77 together])
-dnl        AC_MSG_RESULT(yes)
-dnl    else 
-dnl        AC_MSG_RESULT(no)
-dnl    fi
-    AC_SUBST(F77_SHL)
-    AC_SUBST(F77_LINKPATH_SHL)
-    case "$ENABLE_SHLIB" in
-	 gcc-osx|osx-gcc)
-	 F77_SHL="$F77 -fPIC"
-	 F77_LINKPATH_SHL=""
-	 ;;
-	 gcc)
-	 # Assume that the compiler is g77 if gcc style shared libraries chosen
-	 # (unfortunately, the name may be g77 or f77)
-	 # To make this a little more robust, only add the -shared
-	 # if the compiler allows it (e.g., building with gcc but
-	 # a different Fortran compiler. Another option is to
-	 # *require* g77.
-         AC_LANG_PUSH([Fortran 77])
-         AC_LANG_CONFTEST([
-             AC_LANG_SOURCE([
-                program main
-                end
-             ])
-         ])
-         saved_FFLAGS="$FFLAGS"
-         F77_SHL=false
-         for sh_arg in "-shared -fPIC" "-fPIC" "-shared -fpic" "-fpic" "-KPIC" ; do
- 	     AC_MSG_CHECKING([whether $F77 allows $sh_arg])
-             FFLAGS="$sh_arg $saved_FFLAGS"
-             AC_LINK_IFELSE([],[
-	         F77_SHL="$F77 $sh_arg"
-                 AC_MSG_RESULT(yes)
-                 break
-             ],[
-                 AC_MSG_RESULT(no)
-             ])
-	 done
-         FFLAGS="$saved_FFLAGS"
-	 if test "$F77_SHL" = "false" ; then
-	     AC_ERROR([Cannot build shared libraries for Fortran with this compiler])
-         fi
-         rm -f confest.$ac_ext
-         AC_LANG_POP([Fortran 77])
-	 if test "$enable_rpath" = yes ; then 
-	      F77_LINKPATH_SHL="-Wl,-rpath -Wl,"
-	 fi
-	 ;;
-
-	 cygwin|cygwin-gcc)
-	 F77_SHL="$F77 -shared"
-	 F77_LINKPATH_SHL=""
-	 ;;
-
-	 solaris|solaris-cc)
-	 F77_SHL="$F77 -xcode=pic32"
-	 if test "$enable_rpath" = yes ; then 
-             F77_LINKPATH_SHL=-R
-         fi
-	 ;;
-
-	 # Do we need a solaris-64 with -xcode=pic64?
-
-	 libtool)
-	 F77_SHL='${LIBTOOL} --mode=compile ${F77}'
-	 if test "$enable_rpath" = yes ; then 
-             F77_LINKPATH_SHL="-rpath "
-         fi
-	 ;;
-
-	 *)
-	 F77_SHL=false
-	 ;;
-    esac
-    # ------------------------------------------------
-
-    #
     # Most systems allow the Fortran compiler to process .F and .F90 files
     # using the C preprocessor.  However, some systems either do not
     # allow this or have serious bugs (OSF Fortran compilers have a bug
@@ -2043,8 +2077,6 @@ dnl By modifying mpif.h to use ! for comments, it can work with many f90
 dnl compilers without creating a separate version.  
 dnl Note that this is run AFTER the AC_OUTPUT actions
 AC_OUTPUT_COMMANDS([if test "$enable_f77" = yes ; then 
-if test "$bashWorks" = yes ; then cp -f src/env/mpif77.bash src/env/mpif77 ; fi
-chmod a+x src/env/mpif77
 if test "$has_exclaim" = "yes" ; then
     sed -e 's/^C/\!/g' src/binding/f77/mpif.h > src/include/mpif.h
 	cp src/include/mpif.h src/binding/f77/mpif.h
@@ -2056,14 +2088,6 @@ if test "$has_fort_real8" = "yes" ; then
     mv src/include/mpif.h.new src/include/mpif.h
     cp src/include/mpif.h src/binding/f77/mpif.h
 fi
-
-if test ! -d bin  ; then mkdir bin ; fi 
-sed -e 's%includedir=.*%includedir='$includebuild_dir% \
-    -e 's%libdir=.*%libdir='$libbuild_dir% \
-    src/env/mpif77 > bin/mpif77 ;
-chmod a+x bin/mpif77
-else
-    rm -f src/env/mpif77 src/env/mpif77.conf
 fi],
 master_top_srcdir=$master_top_srcdir
 enable_f77=$enable_f77
@@ -2093,11 +2117,18 @@ MPICONSTMODNAME=mpi_constants
 MPISIZEOFMODNAME=mpi_sizeofs
 MPIBASEMODNAME=mpi_base
 if test "$enable_fc" = "yes" ; then
+    # determine rpath and other shared library flags for FC
+    fc_shlib_conf=src/env/fc_shlib.conf
+    PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
+    AC_SUBST_FILE([fc_shlib_conf])
+
     # Determine characteristics of the Fortran 90 compiler
     # Find a Fortran 90 compiler.  Sets FC
     # Work around bug in autoconf that adds -g to FCFLAGS
     saveFCFLAGS="$FCFLAGS"
-    PAC_PROG_FC
+    dnl FIXME XXX DJG this needs to be reconciled with our separate use of
+    dnl AC_PROG_FC earlier
+    dnl PAC_PROG_FC
     PAC_PROG_FC_WORKS
     FCFLAGS=$saveFCFLAGS
     if test "$pac_cv_prog_fc_works" = no ; then 
@@ -2176,143 +2207,19 @@ if test "$enable_fc" = "yes" ; then
     # Check whether additional libraries are needed when linking with C
     PAC_PROG_FC_AND_C_STDIO_LIBS
     AC_SUBST(FC_OTHER_LIBS)
-
-    # ------------------------------------------------
-    # ------------------------------------------------
-    # Here are the commands to substitute the compilers to be used to create
-    # shared libraries.  The choices for the first two come down from the
-    # top-level configure.  FC_SHL must be determined in this configure
-    AC_SUBST(FC_SHL)
-    AC_SUBST(FC_LINKPATH_SHL)
-
-    # Try to get a version string for the F90 compiler.  We may
-    # need this to find likely command-line arguments for accessing
-    # shared libraries
-    PAC_FC_VENDOR
-
-    if test "$ENABLE_SHLIB" != none ; then
-        AC_MSG_CHECKING([for how to build shared libraries for Fortran 90])
-        case "$ENABLE_SHLIB" in
-	 gcc-osx|osx-gcc)
-	 FC_SHL="$FC -fPIC"
-	 FC_LINKPATH_SHL=""
-	 ;;
-         gcc)
-         if test "$pac_cv_fc_vendor" = gnu -o "$FC" = "g95" ; then
-            # If we have the GNU Fortran 95 compiler (untested)
-            FC_SHL="$FC -shared -fPIC"
-	    if test "$enable_rpath" = yes ; then 
-                FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
-            fi
-         else
-            case "$pac_cv_fc_vendor" in 
-	        absoft)
-	        FC_SHL="$FC -fPIC"
-		if test "$enable_rpath" = yes ; then 
-                    FC_LINKPATH_SHL="-X -rpath -X "
-                fi
-	        ;;
-
-	        intel)
-	        # Intel implements the GNU options
-	        FC_SHL="$FC -shared -fPIC"
-		if test "$enable_rpath" = yes ; then 
-                    FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
-		fi
-	        ;;
-
-	        pgi)
-	        # Portland Group implements the GNU options
-	        FC_SHL="$FC -shared -fPIC"
-		if test "$enable_rpath" = yes ; then 
-                    FC_LINKPATH_SHL="-Wl,-rpath -Wl,"
-		fi
-	        ;;
-		
-		sun)
-		# Sun studio compiler on Linux
-		FC_SHL="$FC -KPIC"
-		if test "$enable_rpath" = yes ; then 
-		    FC_LINKPATH_SHL="-Qoption ld -rpath,"
-		fi
-		;;
-
-	        *)
-	        # Unknown, ignore
-	        ;;
-            esac
-            fi
-            ;;
-         solaris|solaris-cc)
-            # Assume the Solaris F90 compiler, in 32-bit mode
-            FC_SHL="$FC -xcode=pic32"
-            FC_LINKPATH_SHL=-R
-         ;;
-
-	 libtool)
-	 FC_SHL='${LIBTOOL} --mode=compile ${FC}'
-	 if test "$enable_rpath" = yes ; then 
-             FC_LINKPATH_SHL="-rpath "
-         fi
-	 ;;
-
-         *)
-         # Unknown, ignore
-         ;;
-        esac
-	if test -n "$FC_SHL" ; then 
-	    AC_MSG_RESULT([Compile with $FC_SHL and link using path argument $FC_LINKPATH_SHL])
-        else
-            AC_MSG_WARN([Unable to determine how to link Fortran 90 compiler with shared libraries])
- 	    FC_SHL=false
-	fi
-    fi
-
-dnl  Some systems don't require or accept linkpath arguments.
-dnl    if test "$ENABLE_SHLIB" != "none" -a -z "$FC_LINKPATH_SHL" -a \
-dnl        -n "$C_LINKPATH_SHL" ; then
-dnl        AC_MSG_WARN([Unable to determine how to pass the shared-library link path to the Fortran 90 compiler $FC.  Set the environment variable FC_LINKPATH_SHL and rerun configure (the corresponding value for the C compiler is $C_LINKPATH_SHL)])
-dnl    fi
     # ------------------------------------------------
 fi
-
-AC_OUTPUT_COMMANDS([if test $enable_fc = yes ; then 
-if test "$bashWorks" = yes ; then cp -f src/env/mpif90.bash src/env/mpif90 ; fi
-chmod a+x src/env/mpif90
-if test ! -d bin  ; then mkdir bin ; fi 
-sed -e 's%includedir=.*%includedir='$includebuild_dir% \
-    -e 's%modincdir=.*%modincdir='$modincbuild_dir% \
-    -e 's%libdir=.*%libdir='$libbuild_dir% \
-    src/env/mpif90 > bin/mpif90 ;
-chmod a+x bin/mpif90 
-else
-    rm -f src/env/mpif90 src/env/mpif90.conf bin/mpif90
-fi
-],
-enable_fc=$enable_fc
-modincbuild_dir=$modincbuild_dir
-includebuild_dir=$includebuild_dir
-libbuild_dir=$libbuild_dir
-bashWorks=$bashWorks)
 
 # ----------------------------------------------------------------------------
-# By default, only build C++ if there is a C++ compiler (if we don't 
-# test here, the configure can fail if there is no C++ compiler available)
+# We previously allowed "default" as a valid value for $enable_cxx.  Now we
+# assume its available by default and error out if it doesn't work (just like
+# F77 & FC).  The user must pass "--disable-cxx" in order to successfully
+# complete configure in this case.
 if test "$enable_cxx" = "default" ; then
-    # This test uses the list from a recent PROG_CXX, but with the
-    # addition of the Portland group, IBM, and Intel C++ compilers
-    # (While the Intel icc compiler will compile C++ programs, it will
-    # not *link* C++ object files unless there is at least one C++ source
-    # file present on the command that performs the linking.  icpc is the
-    # Intel C++ compiler that both compiles and links C++ programs)
-    AC_CHECK_PROGS(CXX,$CCC c++ g++ gcc CC cxx cc++ cl pgCC xlC icpc pathCC)
-    if test -n "$CXX" ; then
-        enable_cxx=yes
-    fi
+    AC_MSG_ERROR([aborting because "--enable-cxx=default" is no longer a supported value])
 fi
 
 if test "$enable_cxx" = "yes" ; then
-    PAC_PROG_CXX
     # Another bug in autoconf.  The checks for the C++ compiler do not
     # ensure that you can link a program that is built with the C++ 
     # compiler.  We've seen this error with gcc and icc, particularly
@@ -2322,8 +2229,7 @@ if test "$enable_cxx" = "yes" ; then
     # an executable.
     AC_CACHE_CHECK([whether the C++ compiler $CXX can build an executable],
     pac_cv_cxx_builds_exe,[
- AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
+ AC_LANG_PUSH([C++])
  AC_TRY_LINK([
 class mytest { 
   int a;
@@ -2332,7 +2238,7 @@ public:
   ~mytest(void) {}
 };],[mytest a;],
  pac_cv_cxx_builds_exe=yes, pac_cv_cxx_builds_exe=no)
- AC_LANG_RESTORE
+ AC_LANG_POP([C++])
 ])
     if test "$pac_cv_cxx_builds_exe" != yes ; then
         AC_MSG_ERROR([Aborting because C++ compiler does not work.  If you do not need a C++ compiler, configure with --disable-cxx])
@@ -2340,19 +2246,18 @@ public:
     # Recent failures have come when a standard header is loaded
     # The Intel icpc 10.x compiler fails with <string> if gcc 4.2 is installed. 
     AC_CACHE_CHECK([whether C++ compiler works with string],pac_cv_cxx_compiles_string,[
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
+    AC_LANG_PUSH([C++])
     AC_TRY_COMPILE([#include <string>],[return 0;],pac_cv_cxx_compiles_string=yes,pac_cv_cxx_compiles_string=no)
-    AC_LANG_RESTORE
+    AC_LANG_POP([C++])
 ])
     if test "$pac_cv_cxx_compiles_string" != yes ; then 
         AC_MSG_WARN([The C++ compiler $CXX cannot compile a program containing the <string> header - this may indicate a problem with the C++ installation.  Consider configuing with --disable-cxx])
     fi
 
     AC_LANG_CPLUSPLUS
-    AC_CXX_EXCEPTIONS
-    AC_CXX_BOOL
-    AC_CXX_NAMESPACES
+    AX_CXX_EXCEPTIONS
+    AX_CXX_BOOL
+    AX_CXX_NAMESPACES
     if test "$ac_cv_cxx_namespaces" != "yes" ; then
         AC_MSG_ERROR([Namespaces are required for the MPI C++ interface])
     fi
@@ -2369,7 +2274,7 @@ public:
     if test "$pac_cv_cxx_has_iostream" = yes ; then
         CXX_DEFS="$CXX_DEFS -DHAVE_CXX_IOSTREAM"
     fi
-    AC_CXX_NAMESPACE_STD
+    AX_CXX_NAMESPACE_STD
     if test "$ac_cv_cxx_namespace_std" = "yes" ; then
         CXX_DEFS="$CXX_DEFS -DHAVE_NAMESPACE_STD"
     fi
@@ -2383,42 +2288,6 @@ public:
     fi
     AC_SUBST(CXX_DEFS)
 
-    # Add support for shared libraries if possible
-    AC_SUBST(CXX_SHL)
-    AC_SUBST(CXX_LINKPATH_SHL)
-    case "$ENABLE_SHLIB" in
-        gcc-osx|osx-gcc)
-        # Assume that the compiler is g++ if gcc style shared libraries chosen
-        CXX_SHL="$CXX -fPIC -dynamiclib -undefined suppress -single_module -flat_namespace"
-        CXX_LINKPATH_SHL=""
-	;;
-	gcc)
-        # Assume that the compiler is g++ if gcc style shared libraries chosen
-        CXX_SHL="$CXX -shared -fPIC"
-	if test "$enable_rpath" = yes ; then 
-            CXX_LINKPATH_SHL="-Wl,-rpath -Wl,"
-        fi
-	;;
-	cygwin|cygwin-gcc)
-        CXX_SHL="$CXX -shared"
-        CXX_LINKPATH_SHL=""
-	;;
-	solaris|solaris-cc)
-        CXX_SHL="$CXX -xcode=pic32"
-	if test "$enable_rpath" = yes ; then 
-            CXX_LINKPATH_SHL=-R
-        fi
-	;;
-	libtool)
-	CXX_SHL='${LIBTOOL} --mode=compile ${CXX}'
-        if test "$enable_rpath" = yes ; then 
-	    CXX_LINKPATH_SHL="-rpath "
-        fi
-	;;
-	*)
-	CXX_SHL=false
-	;;
-    esac
     # GNU changed the calling conventions between minor releases (!!!)
     # This is too hard to detect, but we should be able to detect
     # the version mismatch.  By default, we set the GNU version to 0.
@@ -2494,6 +2363,10 @@ int main() {
     AC_SUBST(MPIR_CXX_DOUBLE_COMPLEX)
     AC_SUBST(MPIR_CXX_LONG_DOUBLE_COMPLEX)
 
+    # determine rpath and other shared library flags for CXX
+    cxx_shlib_conf=src/env/cxx_shlib.conf
+    PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
+    AC_SUBST_FILE([cxx_shlib_conf])
 fi
 
 if test "$enable_cxx" = yes; then
@@ -2509,26 +2382,6 @@ if test "$enable_cxx" = yes; then
         fi
     fi
 fi
-
-# Copy the mpicxx.h file to the main include directory
-# Move a working version of the mpicxx script to the bin directory
-AC_OUTPUT_COMMANDS([if test $enable_cxx = yes ; then 
-if test "$bashWorks" = yes ; then cp -f src/env/mpicxx.bash src/env/mpicxx ; fi
-chmod a+x src/env/mpicxx 
-cp src/binding/cxx/mpicxx.h src/include 
-if test ! -d bin  ; then mkdir bin ; fi 
-sed -e 's%includedir=.*%includedir='$includebuild_dir% \
-    -e 's%libdir=.*%libdir='$libbuild_dir% \
-    src/env/mpicxx > bin/mpicxx ;
-chmod a+x bin/mpicxx
-else
-    rm -f src/env/mpicxx src/env/mpicxx.conf
-fi
-],
-enable_cxx=$enable_cxx
-includebuild_dir=$includebuild_dir
-libbuild_dir=$libbuild_dir
-bashWorks=$bashWorks)
 
 AC_SUBST(bindings)
 # Bindings dirs is used for the installation target
@@ -2587,7 +2440,8 @@ AC_PROG_INSTALL
 PAC_PROG_CHECK_INSTALL_WORKS
 #
 # On Mac OS/X, install breaks libraries unless used with the -p switch
-PAC_PROG_INSTALL_BREAKS_LIBS
+dnl FIXME not necessary now that we are using libtool
+dnl PAC_PROG_INSTALL_BREAKS_LIBS
 # We also need mkdir -p.
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
@@ -2679,62 +2533,6 @@ dnl         fi
     AC_DEFINE_UNQUOTED(MPICH2_LIBDIR,$MPICH2_LIBDIR,[Name of installation directory intended for MPICH2])
 fi
 
-# Special restrictions for some shared libraries
-# It is difficult to import/export symbols from some shared libraries, so
-# in that case, we require PMPILIBNAME and MPILIBNAME be the same
-case $ENABLE_SHLIB in 
-     osx-gcc)
-         # By default OSX doesn't resolve symbols in dynamic libraries the same
-         # way that Linux does, especially in the presence of a mixture of
-         # static and dynamic.  If we have a dynamic lib "libA.dylib" that needs
-         # a symbol "foo" from a static lib "libB.a" and we build a program with
-         # a command like "$CC main.o -lA -lB" then we will get a linking
-         # error at *runtime* that looks like this:
-         #
-         # -------8<-------
-         # dyld: lazy symbol binding failed: Symbol not found: _foo
-         #   Referenced from: /path/to/lib/libA.dylib
-         #   Expected in: flat namespace
-         # -------8<-------
-         #
-         # There might be a better solution for this, but what I've found seems
-         # to work so far is to force the OSX static linker to use a "flat
-         # namespace" model instead of the default "two-level namespace" model.
-         # See the ld(1) and dyld(1) man pages, as well as this Apple document:
-         #
-         # http://developer.apple.com/mac/library/DOCUMENTATION/DeveloperTools/Conceptual/MachOTopics/1-Articles/executing_files.html
-         #
-         # The alternative solution is to avoid our mixture of static and
-         # dynamic libraries altogether and make sure that we provide all
-         # dynamic libs for all libraries (including MPL and OPA).
-         #
-         # [goodell@ 2010-02-09]
-         PAC_APPEND_FLAG([-Wl,-flat_namespace], [LDFLAGS])
-     ;;
-     cygwin-gcc)
-	if test "$PMPILIBNAME_set" = "no" ; then
-            # Rename PMPILIBNAME
-            PMPILIBNAME=$MPILIBNAME
-        else
-            if test "$PMPILIBNAME" != "$MPILIBNAME" ; then
-                AC_MSG_ERROR([The PMPI and MPI libraries must have the same name when building shared libraries of type $ENABLE_SHLIB])
-            fi
-        fi
-    ;;
-esac
-AC_SUBST(ENABLE_SHLIB)
-AC_SUBST(C_LINKPATH_SHL)
-# Now that CC is defined, get these values 
-# eval C_LINK_SHL=$C_LINK_SHL
-# eval CC_SHL=$CC_SHL
-# Ensure that all subdir configures get the shared library items
-export CC_SHL
-export C_LINK_SHL
-export C_LINKPATH_SHL
-export SHLIB_EXT
-export ENABLE_SHLIB
-export LIBTOOL
-
 # ----------------------------------------------------------------------------
 # At this point, we've finally settled on the value of PMPILIBNAME.  We
 # can now set NEEDSPLIB.
@@ -2755,32 +2553,13 @@ fi
 BUILD_TVDLL=no
 if test "$enable_debuginfo" = "yes" ; then
    # We can build the Totalview interface DLL only if we know how to build
-   # shared libraries.  For now, require that enable_sharedlibs is not none
-   # Also, we may want to put some of this into a configure in the debugger
-   # directory
-   if test "$ENABLE_SHLIB" != "none" ; then
-        BUILD_TVDLL=yes
-	CC_SHL_DBG="$CC_SHL"
-	C_LINK_SHL_DBG="$C_LINK_SHL"
-	DBG_SHLIB_TYPE=$ENABLE_SHLIB
-   else
-        # Try to determine how to build the tv shared library
-	AC_MSG_RESULT([for how to build shared library for debugger interface])
-        PAC_CC_SHAREDLIBS(,CC_SHL_DBG,C_LINK_SHL_DBG,DBG_SHLIB_TYPE)
-	PAC_CC_SHLIB_EXT
-	if test "$SHLIB_EXT" = "unknown" ; then
-	    # Guess that the extension is .so
-	    SHLIB_EXT=so
-	fi
-	if test "$CC_SHL_DBG" = true ; then
-	    AC_MSG_RESULT([none found])
-            AC_MSG_WARN([Debugger support requires shared libraries])      
-	else
-	    AC_MSG_RESULT([Use this to build the debugger shared library: $CC_SHL_DBG])
-	    BUILD_TVDLL=yes
-        fi
+   # shared libraries.
+   
+   # FIXME is this really the right test?
+   if test "X$enable_shared" = "Xyes" ; then
+       BUILD_TVDLL=yes
    fi
-   AC_SUBST(DBG_SHLIB_TYPE)
+
    # One more nasty problem.  Totalview relies on debugger symbols 
    # being present in the executable.  Some experimental versions of
    # gcc (3.2 20020329 for ia64) do *not* include the object symbols
@@ -2797,8 +2576,6 @@ option
 on all link lines (consider adding it to LDFLAGS)])
    fi
    AC_SUBST(BUILD_TVDLL)
-   AC_SUBST(CC_SHL_DBG)
-   AC_SUBST(C_LINK_SHL_DBG)
 
     # The debugger library name cannot be set until we know the extension
     # of shared libraries - the name is so on most Unix system, dylib on OS X.
@@ -2814,9 +2591,19 @@ on all link lines (consider adding it to LDFLAGS)])
     ## The default name is libtvmpich2.$SHLIB_EXT (e.g., libtvmpich2.so for
     ## most Unix versions, libtvmpich2.dylib for Mac OSX).
     ##ENVVAR END:
+
+    # We are cheating a bit here and reaching inside of the libtool macros to
+    # extract the correct shared library extension.  It would be nice if this
+    # were publicly available in at least the same way that $libext is.
+    eval SHLIB_EXT='"'$shrext_cmds'"'
+
     if test -z "$MPICH_DEBUGLIBNAME" ; then
         DEBUGLIBNAME=libtvmpich2.$SHLIB_EXT
     else
+        # FIXME DJG I don't think this can be supported arbitrarily by the new
+        # build system (I'm not sure it was supported correctly by the old
+        # system either)
+        AC_MSG_WARN([overriding MPICH_DEBUGLIBNAME is currently untested and probably does not work])
         DEBUGLIBNAME=$MPICH_DEBUGLIBNAME
     fi
     if test "x$exec_prefix" = xNONE ; then
@@ -2831,6 +2618,9 @@ on all link lines (consider adding it to LDFLAGS)])
     AC_DEFINE_UNQUOTED(MPICH_INFODLL_LOC,$dlldir,[Define as the name of the debugger support library])
 fi
 AC_SUBST(debugger_dir)
+
+# used by automakefiles to conditionally build the DLL
+AM_CONDITIONAL([BUILD_DEBUGGER_DLL], [test x$BUILD_TVDLL = xyes])
 
 # ----------------------------------------------------------------------------
 
@@ -2906,6 +2696,9 @@ fi
 if test -n "$nameserv_name" ; then
    AC_DEFINE(HAVE_NAMEPUB_SERVICE,1,[Define if a name publishing service is available])
 fi
+AM_CONDITIONAL([BUILD_NAMEPUB_FILE],[test "X$nameserv_name" = "Xfile"])
+AM_CONDITIONAL([BUILD_NAMEPUB_MPD],[test "X$nameserv_name" = "Xmpd"])
+AM_CONDITIONAL([BUILD_NAMEPUB_PMI],[test "X$nameserv_name" = "Xpmi"])
 
 # In case the documentation targets are used, find doctext and attempt to 
 # find the source for the doctext LaTeX style files.  Use "false" if
@@ -4967,8 +4760,12 @@ if test "$enable_coverage" = "yes" ; then
     # FIXME: Some versions of Linux provide usleep, but it rounds times
     # up to the next second (!)
     AC_CHECK_FUNCS(usleep)
+    use_coverage=yes
     AC_DEFINE(USE_COVERAGE,1,[Define if performing coverage tests])
 fi
+AM_CONDITIONAL([BUILD_COVERAGE],[test "X$use_coverage" = "Xyes"])
+
+
 # -----------------------------------------------------------------------------
 # Look for Standard headers
 AC_HEADER_STDC
@@ -5137,6 +4934,7 @@ fi
 # fields.  For now, we've split this so that there is an update to the timer
 # after the setup_device script is loaded, but we should consider moving
 # this entire block.
+# FIXME DJG setup_device has been eliminated in favor of subconfigure.m4 files
 # ----------------------------------------------------------------------------
 # Default type for timer stamp.
 MPID_TIMER_TYPE=long
@@ -5534,6 +5332,9 @@ for type in int long long_long short ; do
     fi
 done
 AC_DEFINE_UNQUOTED(MPIR_Pint,$MPIR_PINT,[MPIR_Pint is a pointer-sized integer])
+# allow @MPIR_PINT@ substitution in glue_romio.h
+AC_SUBST([MPIR_PINT])
+
 AC_DEFINE_UNQUOTED(MPIR_PINT_FMT_DEC_SPEC,
     $MPIR_PINT_FMT_DEC_SPEC,[MPIR_PINT_FMT_DEC_SPEC is the format
     specifier for printing Pint as a decimal])
@@ -5584,27 +5385,6 @@ if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
     AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
 fi
 #
-# If it is necessary for the device to update some of the variables,
-# this step allows that to happen.  Possible variables to update are
-#   LIBS - Add libraries needed for linking
-#   LDFLAGS - Add other LD flags (e.g., search paths for libraries)
-#   CPPFLAGS - Add C preprocessor flags, including -Idir
-#   DEFS  - Add C preprocessor definitions, e.g., -Dfoo
-# These must be updated, not replaced, so the setup_device script should
-# do, e.g., 
-#   LIBS="$LIBS -lmywierdlib",
-# not
-#   LIBS="-lmywierdlib"
-# In some cases (particularly for LIBS), we want to perform this update
-# *after* the configure step.  This is done by including the file
-# localdefs if it exists.  Note that the use of a file *after* the configure
-# of subdirectories means that the subdir configures will not get the 
-# value.  This is normally ok for libraries but not for include paths,
-# which is why there is a pre and post step
-if test -f $devicedir/setup_device ; then
-    echo sourcing $devicedir/setup_device
-    . $devicedir/setup_device
-fi
 # See if we need to update the timer type (which was converted to uppercase)
 if test "$timer_type" = "DEVICE" ; then
     # The device selected should export the datatype for the timer
@@ -5884,8 +5664,14 @@ user_specified_atomic_primitives=no
 if test "$DEBUG_SUBDIR_CACHE" = yes ; then 
     set -x
 fi
+
+dnl "configure" the device here via subconfigure.m4 files
+m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
+
+# now configure any actual recursively configures subsystems, such as ROMIO and
+# hydra, or older components that haven't been updated to a subconfigure.m4 yet
 for subsys in $devsubsystems $subsystems ; do 
-    PAC_CONFIG_SUBDIR($subsys,,AC_ERROR($subsys configure failed))
+    PAC_CONFIG_SUBDIR([$subsys],[],[AC_MSG_ERROR([$subsys configure failed])])
 done 
 if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then 
     set +x
@@ -5904,6 +5690,7 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 #done
 #
 # Make subsystems available to makefiles.
+# FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
 AC_SUBST(subsystems)
 
@@ -6050,65 +5837,13 @@ export MPI_F77_OFFSET
 dnl Extra status information, from device subsystem, to be included in the
 dnl declaration of MPI_Status in mpi.h.in
 AC_SUBST(EXTRA_STATUS_DECL)
-#
-# See if we can support the type create functions that take 
-# precision and exponent range.  These need are determined by running
-# a configure script in the f90 test directory
-if test "$enable_f77" = yes -a "$enable_fc" = yes ; then
-    # Create the local directory
-    if test ! -d src ; then mkdir src ; fi
-    if test ! -d src/binding ; then mkdir src/binding ; fi
-    if test ! -d src/binding/f90 ; then mkdir src/binding/f90 ; fi
-    export F77
-    export FC
-    echo "Running Configure for Fortran 90 Type routines"
-    # Include any options passed to the top-level configure
-    ac_sub_configure_args=""
-    # Strip off the args that we need to update
-    for ac_arg in $ac_configure_args ; do
-	# Remove any quotes around the args (added by configure)
-	ac_narg=`expr x$ac_arg : 'x'"'"'\(.*\)'"'"`
-	if test -n "$ac_narg" ; then ac_arg=$ac_narg ; fi	    
-	case $ac_arg in 
-	    -cache-file=* | --cache-file=* | --cache-fil=* | --cache-fi=* \
-               | --cache-f=* | --cache-=* | --cache=* | --cach=* | --cac=* | --ca=* \
-               | --c=*) ;;
-               --config-cache | -C)
-	    ;;
-            -srcdir=* | --srcdir=* | --srcdi=* | --srcd=* | --src=* | --sr=*) ;;
-	    -prefix=* | --prefix=* | --prefi=* | --pref=* | --pre=* | --pr=* | --p=*)
-    	    ;;
-	-*)
-        ac_sub_configure_args="$ac_sub_configure_args $ac_arg" 
-	;;
 
-dnl Here's the problem.  If the user sets a few of the special variables
-dnl such as CPPFLAGS, those original settings will override the
-dnl updated values.  Here's an attempt at a fix
-        CPPFLAGS=*)
-	ac_sub_configure_args="$ac_sub_configure_args 'CPPFLAGS=$CPPFLAGS'"
-        ;;
+dnl FIXME XXX DJG does this need to actually be conditional on something?
+dnl previously it was conditional on the successful execution of
+dnl "src/binding/f90/configure" but that would only fail if FC couldn't be
+dnl determined or a bad VPATH build env was detected
+AC_DEFINE(HAVE_FC_TYPE_ROUTINES,1,[Define if Fortran 90 type routines available])
 
-    	*) 
-	    ac_sub_configure_args="$ac_sub_configure_args $ac_arg" ;;
-	    esac
-        done
-
-	# add in the correct prefix argument
-        ac_sub_configure_args="--prefix=$prefix $ac_sub_configure_args"
-    
-    # The eval below is needed to properly quote the sub-configure arguments.
-    # Thanks to Steve Oyanagi at Cray for spotting it when it was missing.
-    (cd src/binding/f90 && \
-     eval $master_top_srcdir/src/binding/f90/configure $ac_sub_configure_args)
-    rc=$?
-    if test $rc = 0 ; then
-        AC_DEFINE(HAVE_FC_TYPE_ROUTINES,1,
-                  [Define if Fortran 90 type routines available])
-    else
-        AC_MSG_WARN([Unable to determine Fortran 90 type support; defaults used])
-    fi
-fi
 # -----------------------------------------------------------------------------
 # Get the value of MPI_MAX_PROCESSOR_NAME
 if test -z "$MPID_MAX_PROCESSOR_NAME" ; then
@@ -6140,6 +5875,10 @@ MPICH2_ENABLE_FC=$enable_fc
 export MPICH2_ENABLE_CXX
 export MPICH2_ENABLE_F77
 export MPICH2_ENABLE_FC
+AM_CONDITIONAL([BUILD_CXX_LIB],[test "$enable_cxx" = "yes"])
+AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
+dnl FIXME DJG this has been moved to the f90 bindings subconfigure.m4 for now
+dnl AM_CONDITIONAL([BUILD_F90_LIB],[test "$enable_fc" = "yes"])
 # MPI_SRCDIR gives the test/mpi configure the location of the source
 # files for an MPI implementation
 if test -n "$ac_abs_srcdir" ; then
@@ -6150,7 +5889,8 @@ MPI_NO_SPAWN=$MPID_NO_SPAWN
 export MPI_NO_SPAWN
 MPI_NO_RMA=$MPID_NO_RMA
 export MPI_NO_RMA
-AC_CONFIG_SUBDIRS(test/mpi)
+
+AC_CONFIG_SUBDIRS([test/mpi])
 dnl
 dnl Generate the Makefiles from Makefile.in
 dnl Also generate mpi.h from mpi.h.in so that we can eliminate all ifdefs
@@ -6172,13 +5912,11 @@ MPILIBNAME="$MPILIBNAME"
 PMPILIBNAME="$PMPILIBNAME"
 AR="$AR"
 CC="$CC"
-CC_SHL="$CC_SHL"
 CPPFLAGS="$CPPFLAGS"
 CFLAGS="$CFLAGS"
-ENABLE_SHLIB="$ENABLE_SHLIB"
 export LIBDIR ; export MPILIBNAME ; export AR ; export CC ; export CPPFLAGS 
 export PMPILIBNAME 
-export CFLAGS ; export CC_SHL ; export ENABLE_SHLIB ; export C_LINKPATH_SHL
+export CFLAGS
 # For test/mpi/configure
 MPI_SRCDIR=$MPI_SRCDIR
 MPI_NO_SPAWN=$MPID_NO_SPAWN
@@ -6197,20 +5935,6 @@ if test -z "$modincbuild_dir" ; then
     modincbuild_dir=`pwd`/src/binding/f90
 fi
 
-dnl create a copy of mpicc in the build directory that will work for compiling
-dnl MPI programs without requiring installation
-AC_OUTPUT_COMMANDS([
-if test "$bashWorks" = yes ; then cp -f src/env/mpicc.bash src/env/mpicc ; fi
-chmod a+x src/env/mpicc ;
-if test ! -d bin  ; then mkdir bin ; fi 
-sed -e 's%includedir=.*%includedir='$includebuild_dir% \
-    -e 's%libdir=.*%libdir='$libbuild_dir% \
-    src/env/mpicc > bin/mpicc ;
-chmod a+x bin/mpicc ],
-includebuild_dir=$includebuild_dir
-libbuild_dir=$libbuild_dir
-bashWorks=$bashWorks)
-
 # Move the mpio.h file into the build directories for testing
 #export top_srcdir
 #export enable_romio
@@ -6219,26 +5943,6 @@ AC_OUTPUT_COMMANDS([if test "$enable_romio" = "yes" ; then
   cp src/mpi/romio/include/mpio.h src/include ; fi],enable_romio=$enable_romio
 top_srcdir=$top_srcdir)
 
-dnl
-dnl If dependencies are enabled in the updatefiles/simplemake step, then
-dnl we must generate the dependency directories.  We do this by detecting 
-dnl the dependencies target.  Note that this refers to the Makefile,
-dnl in case we are building with VPATH
-dnl Grr. Finds differ on how they handle {} in a string.  We could use
-dnl xargs, but that may not be standard enough.  Instead we fall back on 
-dnl the old standby of using find with -print, then sed to
-dnl construct the line, which is fed to sh
-dnl
-dnl Note that once dependencies are enabled, we always try to
-dnl update the dependencies (that is usually the desired behavior)
-dnl    find . -type d -exec sh -c '(cd {} && grep MAKE_DEPEND_C Makefile >/dev/null 2>&1 && ( test -d .deps || mkdir .deps ) && touch .deps/alldeps )' \;
-dnl We only apply this to src, as that is the only directory that 
-dnl contains the source files for MPICH2; this avoids running through the
-dnl test directories, for example.
-AC_OUTPUT_COMMANDS([if grep 'dependencies:' Makefile >/dev/null 2>&1 ; then
-    echo "Updating dependency directories .deps" 
-    find src -type d -print | sed -e 's%\(.*\)%(cd \1 \&\& grep MAKE_DEPEND_C Makefile >/dev/null 2>\&1 \&\& ( test -d .deps || mkdir .deps) \&\& touch .deps/alldeps)%g' | sh
-fi])
 
 AC_OUTPUT_COMMANDS([chmod +x doc/mansrc/createhtmlindex])
 
@@ -6249,7 +5953,6 @@ dnl a build aborts due to an error (this is intended to help developers)
 AC_OUTPUT_COMMANDS([if [ ! -d lib ] ; then mkdir lib ; fi 
 date > lib/newconfig])
 
-AC_OUTPUT_COMMANDS([chmod +x src/util/createshlib])
 AC_OUTPUT_COMMANDS([chmod a+x src/util/dbg/getfuncstack])
 
 AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
@@ -6276,7 +5979,7 @@ WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"
 # Setup required inter-library dependencies
 LIB_DEPS=""
 LDFLAGS_DEPS=""
-if test "$ENABLE_SHLIB" != "none" -a "$enable_lib_depend" = "yes" ; then
+if test "X$enable_shared" = "Xyes" -a "$enable_lib_depend" = "yes" ; then
    LIB_DEPS="$WRAPPER_LIBS"
    WRAPPER_LIBS=""
    LDFLAGS_DEPS="$WRAPPER_LDFLAGS"
@@ -6290,27 +5993,25 @@ if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
 fi
 
+
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
-AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
-	  src/include/mpich2info.h \
+AC_OUTPUT(Makefile \
+          examples/Makefile \
+          test/Makefile \
+          test/commands/Makefile \
+          src/include/mpich2info.h \
 	  mpich2-doxygen \
+          src/include/glue_romio.h \
           src/include/mpichtimer.h \
-          src/binding/Makefile \
-          src/binding/cxx/Makefile \
           src/binding/cxx/mpicxx.h \
-	  src/binding/f77/Makefile \
 	  src/binding/f77/mpif.h \
 	  src/binding/f77/setbotf.f \
 	  src/binding/f77/setbot.c \
-	  src/binding/f90/Makefile \
 	  src/binding/f90/mpi_sizeofs.f90 \
 	  src/binding/f90/mpi_base.f90 \
-	  src/packaging/Makefile \
 	  src/packaging/pkgconfig/mpich2.pc \
-	  src/packaging/pkgconfig/Makefile \
 	  src/packaging/envmods/mpich2.module \
-	  src/packaging/envmods/Makefile \
           src/env/mpixxx_opts.conf \
           src/env/mpicc \
 	  src/env/mpicc.conf \
@@ -6324,73 +6025,9 @@ AC_OUTPUT(Makefile src/Makefile src/include/Makefile \
 	  src/env/mpif90 \
 	  src/env/mpif90.conf \
 	  src/env/mpif90.bash \
-	  src/env/Makefile\
-	  src/util/createshlib \
-          src/mpi/Makefile \
-          src/mpi/attr/Makefile \
-	  src/mpi/coll/Makefile \
-          src/mpi/comm/Makefile \
-	  src/mpi/datatype/Makefile \
-	  src/mpi/debugger/Makefile \
-          src/mpi/errhan/Makefile \
-          src/mpi/group/Makefile \
-          src/mpi/init/Makefile \
-          src/mpi/misc/Makefile \
-          src/mpi/pt2pt/Makefile \
-          src/mpi/rma/Makefile \
-          src/mpi/spawn/Makefile \
-          src/mpi/timer/Makefile \
-          src/mpi/topo/Makefile \
-          src/mpix/Makefile \
-          src/mpix/comm/Makefile \
-          src/mpix/mutex/Makefile \
-          src/mpid/Makefile \
-          src/mpid/common/Makefile \
-          src/mpid/common/datatype/Makefile \
-          src/mpid/common/datatype/dataloop/Makefile \
-          src/mpid/common/sched/Makefile \
-          src/pm/Makefile \
-          src/pmi/Makefile \
-          src/pmi/${pmi_name}/Makefile \
-	  src/nameserv/Makefile \
-	  src/nameserv/file/Makefile \
-	  src/nameserv/mpd/Makefile \
-	  src/nameserv/pmi/Makefile \
-	  src/nameserv/test/Makefile \
-	  src/util/Makefile \
-	  src/util/info/Makefile \
-	  src/util/instrm/Makefile \
-	  src/util/thread/Makefile \
-	  src/util/mem/Makefile \
-	  src/util/msgs/Makefile \
-	  src/util/param/Makefile \
-          src/util/dbg/Makefile \
 	  src/util/dbg/getfuncstack \
-	  src/util/osserv/Makefile \
-	  src/util/procmap/Makefile \
-	  src/util/other/Makefile \
           src/include/mpi.h \
-	  test/Makefile test/util/Makefile \
-	  test/basic/Makefile \
-	  test/commands/Makefile \
 	  test/commands/cmdtests \
-	  test/mpid/Makefile \
-	  test/mpid/ch3/Makefile \
-	  test/util/timer/Makefile \
-	  examples/Makefile \
-	  examples/f77/Makefile \
-	  examples/f90/Makefile \
-	  examples/cxx/Makefile \
-          src/util/logging/Makefile \
-          src/util/logging/common/Makefile \
-	  doc/Makefile doc/mansrc/Makefile \
-	  doc/mansrc/createhtmlindex \
-	  doc/refman/Makefile \
-	  doc/installguide/Makefile \
-	  doc/userguide/Makefile \
-	  doc/logging/Makefile \
-	  doc/design/Makefile \
-	  doc/smpd/Makefile \
-	  doc/windev/Makefile )
+	  doc/mansrc/createhtmlindex)
 
 echo 'Configuration completed.'

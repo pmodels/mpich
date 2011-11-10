@@ -1,0 +1,31 @@
+## -*- Mode: Makefile; -*-
+## vim: set ft=automake :
+##
+## (C) 2011 by Argonne National Laboratory.
+##     See COPYRIGHT in top-level directory.
+##
+
+## This is an automake makefile fragment that should be included by:
+##
+##   include $(top_srcdir)/Makefile_cxx.mtest
+##
+## see Makefile.mtest for a description why this file exists, but for C++
+
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
+LDADD = $(top_builddir)/cxx/util/mtest.o
+
+## FIXME "DEPADD" is a simplemake concept, which we can handle on a per-target
+## prog_DEPENDENCIES variable, but it would be better to figure out the right
+## way to do this
+##DEPADD = @MPILIBLOC@ ../util/cxx/mtest.o
+
+$(top_builddir)/cxx/util/mtest.o: $(top_srcdir)/cxx/util/mtest.cxx
+	(cd $(top_builddir)/cxx/util && $(MAKE) mtest.o)
+
+testing:
+	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
+			-mpiexec=@MPIEXEC@ \
+			-xmlfile=summary.xml
+
+CLEANFILES = summary.xml
+

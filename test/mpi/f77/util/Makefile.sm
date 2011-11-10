@@ -1,3 +1,0 @@
-smvar_do_sharedlibs = 0
-mtestf.o: $(srcdir)/mtestf.f
-all-local: mtestf.o

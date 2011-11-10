@@ -1,9 +1,0 @@
-smpd_sock_dir = ${master_top_srcdir}/src/pm/smpd/sock/poll
-
-EXTRA_DIRS = ${smpd_sock_dir}
-lib${MPILIBNAME}_a_SOURCES = smpd_pmi.c smpd_ipmi.c
-
-INCLUDES = -I${master_top_srcdir}/src/include -I${master_top_srcdir}/src/pm/smpd -I${master_top_srcdir}/src/pm/smpd/sock/include -I${master_top_srcdir}/src/pm/smpd/sock/poll -I${top_builddir}/src/include -I${top_builddir}/src/pm/smpd -I${top_builddir}/src/pm/smpd/sock/poll
-
-distclean-local:
-	@-rm -f pmiconf.h

@@ -621,23 +621,23 @@ for pkg in logging graphics ; do
     dirname=${pkg}_dirname
     examplesdir=$sharedir/examples_${pkg}
     if [ -s $DESTDIR$examplesdir/Makefile ] ; then
-       echo "( cd $examplesdir && $MAKE clean )" >> $UNINSTALLFILE
+       echo "( cd \${DESTDIR}$examplesdir && $MAKE clean )" >> $UNINSTALLFILE
     fi
 done
 
 # Add the files to be removed to the UNINSTALLFILE
 for file in $filelist ; do
-    echo "$RM -f $file" >> $UNINSTALLFILE
+    echo "$RM -f \${DESTDIR}$file" >> $UNINSTALLFILE
 done
 
 if [ "$appendUninstall" = 0 ] ; then
-    echo "$RM -f $sbindir/mpeuninstall" >> $UNINSTALLFILE
+    echo "$RM -f \${DESTDIR}$sbindir/mpeuninstall" >> $UNINSTALLFILE
     echo "$RM -f $UNINSTALLFILE" >> $UNINSTALLFILE
 fi
 
 # Add the directory removes to the UNINSTALL file
 for dir in $dirlist ; do
-    echo "if [ -d $dir ] ; then rmdir $dir ; fi" >> $UNINSTALLFILE
+    echo "if [ -d \${DESTDIR}$dir ] ; then rmdir \${DESTDIR}$dir || true ; fi" >> $UNINSTALLFILE
 done
 
 if [ "$appendUninstall" = 0 ] ; then

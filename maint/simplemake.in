@@ -3412,7 +3412,7 @@ sub TargetSharedLibraryFinal {
 
     # Some shared libraries may need to be built with a compiler other than 
     # the C compiler.  This will let us define that.
-    my $linkerOption = "";
+    my $linkerOption = "\$(CC)";
 
     my $libbasename = $libname;
     $libbasename =~ s/^lib//;

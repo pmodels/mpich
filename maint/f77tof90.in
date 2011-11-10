@@ -32,7 +32,7 @@ $newline = "\n";
 
 %excludePrograms = ();
 $debugReplace = 0;
-$reportSkipped = 0;
+$reportSkipped = 1;
 # --------------------------------------------------------------------------
 # Check the input arguments
 if ($indir eq "" || $outdir eq "") {
@@ -61,7 +61,10 @@ while ($file = readdir(DIR)) {
 	# Special handling for C files, if any
 	if ($ext eq "c") {
 	    my $name90 = $name;
-	    $name90 =~ s/f/f90/g;
+            # don't transform "ctypesfromc" to "ctypesf90romc"
+            if ($name ne "ctypesfromc") {
+                $name90 =~ s/f/f90/g;
+            }
 	    &ConvertCFile( "$indir/$file", "$outdir/$name90.c.new" );
 	    &ReplaceIfDifferent( "$outdir/$name90.c", 
 				 "$outdir/$name90.c.new" );
@@ -88,6 +91,12 @@ if (defined($makeTemplate) && $makeTemplate ne "" &&
     }
     &ReplaceIfDifferent( "$outdir/$makeTemplate", 
 			 "$outdir/$makeTemplate.new" );
+
+    # unconditionally update the stamp file to assist the maintainer rebuild
+    # rules
+    open(STAMP, '>', "$outdir/Makefile.am-stamp");
+    print STAMP localtime()."\n";
+    close(STAMP);
 }
 if (-s "$indir/testlist" || -s "$indir/testlist.in") {
     # We allow both testlist.in and testlist as source files;
@@ -236,26 +245,49 @@ sub CreateMakefile {
 sub ConvertMakefile {
     my ($indir, $outdir, $filename) = @_;
     %excludePrograms = ();
+    my $saw_maintainercleanfiles = 0;
+    my $saw_extra_dist = 0;
 
     open( INF, "<$indir/$filename" ) || die "Cannot open $indir/$filename\n";
     open( OUTF, ">$outdir/$filename.new" ) || die "Cannot open $outdir/$filename.new\n";
     print OUTF "# This $filename generated automatically by f77tof90\n";
     print OUTF "# from $indir/$filename.  DO NOT EDIT\n"; 
     while (<INF>) {
+        if (not m/^\s*#/ and m/MAINTAINERCLEANFILES/) {
+            $saw_maintainercleanfiles = 1;
+        }
+        if (not m/^\s*#/ and m/EXTRA_DIST/) {
+            $saw_extra_dist = 1;
+        }
+
         # First, check for sources that are not present.  These
 	# may be derived files (see f77/io for an example).  For now,
-	# we'll skip these
-	if (/^(\w+)_SOURCES\s*=\s*(\w+\.f)/) {
-	    my $sourcebase = $1;
-	    my $sourcename = $2;
-	    if (! -s "$indir/$sourcename") {
+	# we'll skip these unless they are explicitly expected to not be present
+        # (by the presence of a "nodist_" prefix.
+	if (/^(nodist_)?(\w+)_SOURCES\s*=\s*(\w+\.f)/) {
+            my $nodist     = $1;
+	    my $sourcebase = $2;
+	    my $sourcename = $3;
+	    if (not $nodist and ! -s "$indir/$sourcename") {
 		print "Skipping source file $indir/$sourcename because it is not present\n" if $reportSkipped;
 		$excludePrograms{$sourcebase} = 1;
 		next; 
 	    }
 	}
+
+        # Headers like f77/spawn/type1aints.h are not used in the f90 tests.
+        # They are instead replaced with appropriate "kind=" type declarations
+        # in a different part of this script.  So we drop any lines that add
+        # dependencies on a header.
+        if (m/^\w+f\.\$\(OBJEXT\):.*\.h/) {
+            my $chomped = $_;
+            chomp $_;
+            next;
+        }
+
         # convert program names from foof.f to foof90.f90
         s/f_SOURCES/f90_SOURCES/g;
+        s/f_DEPENDENCIES/f90_DEPENDENCIES/g;
 	if (/f\.f/) {
 	    s/f\.f/f90.f90/g;
 	}
@@ -276,24 +308,90 @@ sub ConvertMakefile {
 	s/c2f2ciof90_SOURCES.*/c2f2ciof90_SOURCES = c2f2ciof90.f90 c2f902cio.c/;
 #	s/c2f2ciof90_LDADD/c2f2cfio90_LDADD/g;
 	s/c2f2cwinf90_SOURCES.*/c2f2cwinf90_SOURCES = c2f2cwinf90.f90 c2f902cwin.c/;
+        s/c2fmult/c2f90mult/g;
 
 	if (/EXTRA_PROGRAMS/) {
 	    s/allocmemf/allocmemf90/;   # allocmemf test is special 
 	}
-	# Handle the special case of C programs (used for f2d/c2f testing)
-	if (/(\w+)_SOURCES(\s*=\s*)(\w+)\.c\s*$/) {
+	# Handle the special case of C programs (used for f2c/c2f testing)
+	if (/^(\w+)_SOURCES(\s*=\s*)(\w+)\.c\s*$/) {
 	    my $progname = $1;
 	    my $spacing  = $2;
 	    my $name     = $3;
-	    $name =~ s/f/f90/;
-	    $progname =~ s/f/f90/;
-	    $_ = "$progname" . "_SOURCES" . $spacing . $name . ".c\n";
+            if ($name !~ m/ctypesfromc/) {
+                $name =~ s/f(?!90)/f90/;
+                $progname =~ s/f(?!90)/f90/;
+                $_ = "$progname" . "_SOURCES" . $spacing . $name . ".c\n";
+            }
 	}
+
+        # Catch any bare "Xf" tests listed in noinst_PROGRAMS or
+        # EXTRA_PROGRAMS.  Check for "Xf.f" to avoid substituting any random
+        # word that ends in "f".  We also cheat a bit and look into the
+        # ioharness.defn in the outdir directory for valid file names.
+        if (not m/^\s*#/) {
+            while (m/\b(\w+f)\b/g) {
+                my $word = $1;
+                next if $word eq "if" or $word eq "rf"; # filter out some noise
+                if (-e "$indir/${word}.f" or
+                    0 == system(qq(grep 'TESTDEFN filename="${word}90\\.f90"' '$outdir/ioharness.defn' >/dev/null 2>&1)))
+                {
+                    s/\b${word}\b/${word}90/g;
+                }
+                else
+                {
+                    print "Skipping word '${word}' because file $indir/${word}.f is not present\n" if $reportSkipped;
+                }
+            }
+        }
+
+        # f90 makefiles should use the corresponding common automake fragment
+        s/Makefile_f77.mtest/Makefile_f90.mtest/g;
 
 	# Eventually need some way to update directory paths (particularly
 	# relative ones) and add F90 compile rules when not present.
 	print OUTF $_;
     }
+
+    my $mcf_plus = '';
+    if ($saw_maintainercleanfiles) {
+        $mcf_plus = '+';
+    }
+    my $ed_plus = '';
+    if ($saw_extra_dist) {
+        $ed_plus = '+';
+    }
+
+    my $testlist_ap = '';
+    if (-f "${outdir}/testlist.ap") {
+        $testlist_ap = 'testlist.ap';
+    }
+    my $makefile_ap = '';
+    if (-f "${outdir}/Makefile.ap") {
+        $makefile_ap = 'Makefile.ap';
+    }
+
+    # append a rule to help remake the f90 Makefile.am if the f77 Makefile.am is
+    # updated
+    print OUTF <<EOT;
+
+if MAINTAINER_MODE
+
+# f77tof90 only replaces output files if the contents differ, so we must use a
+# separate timestamp file in order avoid constantly trying to remake the f90
+# copy of the Makefile when the f77 copy is updated in a way that does not
+# change its contents
+\$(srcdir)/Makefile.am: \$(srcdir)/Makefile.am-stamp
+
+\$(srcdir)/Makefile.am-stamp: \$(master_top_srcdir)/${indir}/Makefile.am \$(master_top_srcdir)/maint/f77tof90
+\t( cd \$(master_top_srcdir) && ./maint/f77tof90 ${indir} ${outdir} Makefile.am Makefile.ap )
+
+MAINTAINERCLEANFILES ${mcf_plus}= Makefile.am-stamp
+EXTRA_DIST ${ed_plus}= Makefile.am-stamp ${testlist_ap} ${makefile_ap}
+
+endif MAINTAINER_MODE
+
+EOT
 
     close( INF );
     close( OUTF );

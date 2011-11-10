@@ -1,4 +1,0 @@
-#! /bin/sh
-
-# Add any libraries needed by the SMPD process manager
-LIBS="$LIBS @SMPD_LIBS@"

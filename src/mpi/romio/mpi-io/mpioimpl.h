@@ -15,11 +15,13 @@
 #include "adio.h"
 #include "mpio.h"
 
-/* FIXME: We should be more restricted in what we include from MPICH2
-   into ROMIO */
 #ifdef ROMIO_INSIDE_MPICH2
-#include "mpiimpl.h"
-#include "mpiimplthread.h"
+#include "glue_romio.h"
+
+#define MPIU_THREAD_CS_ENTER(name_,ctx_) MPIU_THREAD_CS_ENTER_##name_(ctx_)
+#define MPIU_THREAD_CS_EXIT(name_,ctx_)  MPIU_THREAD_CS_EXIT_##name_(ctx_)
+#define MPIU_THREAD_CS_ENTER_ALLFUNC(ctx_) MPIR_Ext_cs_enter_allfunc()
+#define MPIU_THREAD_CS_EXIT_ALLFUNC(ctx_) MPIR_Ext_cs_exit_allfunc()
 
 #else /* not ROMIO_INSIDE_MPICH2 */
 /* Any MPI implementation that wishes to follow the thread-safety and

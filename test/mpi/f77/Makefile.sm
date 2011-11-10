@@ -1,7 +1,0 @@
-SUBDIRS = util attr datatype coll pt2pt info init comm topo rma spawn io ext
-
-# A special testing target to simplify testing just the F77 code
-testing:
-	../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=@MPIEXEC@ \
-		   -xmlfile=summary.xml

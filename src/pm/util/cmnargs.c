@@ -9,7 +9,7 @@
 /* Allow fprintf in informational routines */
 /* style: allow:fprintf:8 sig:0 */
 
-#include "pmutilconf.h"
+#include "mpichconf.h"
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

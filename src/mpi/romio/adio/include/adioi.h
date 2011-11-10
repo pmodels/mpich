@@ -822,7 +822,7 @@ int  ADIOI_MPE_iwrite_b;
 /* Should work even on 64bit or old 32bit configs                 */
   /* Use MPID_Ensure_Aint_fits_in_pointer from mpiutil.h and 
          MPI_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
-  #include "mpiimpl.h"
+  #include "glue_romio.h"
 
   #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(MPIR_Pint)
   /* The next two casts are only used when you don't want sign extension
@@ -830,8 +830,8 @@ int  ADIOI_MPE_iwrite_b;
   #define ADIOI_AINT_CAST_TO_LONG_LONG (long long)
   #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
 
-  #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) MPID_Ensure_Aint_fits_in_pointer(aint_value)
-  #define ADIOI_Assert MPIU_Assert
+  #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) MPIR_Ext_ensure_Aint_fits_in_pointer(aint_value)
+  #define ADIOI_Assert MPIR_Ext_assert
 #else
   #include <assert.h>
   #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)
@@ -845,14 +845,14 @@ int  ADIOI_MPE_iwrite_b;
 
 #ifdef USE_DBG_LOGGING    /*todo fix dependency on mpich?*/
 /* DBGT_FPRINTF terse level printing */
-#define DBGT_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
-if (MPIU_DBG_SELECTED(ROMIO,TERSE)) fprintf
+#define DBGT_FPRINTF if (MPIR_Ext_dbg_romio_verbose_enabled) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
+if (MPIR_Ext_dbg_romio_terse_enabled) fprintf
 /* DBG_FPRINTF default (typical level) printing */
-#define DBG_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
-if (MPIU_DBG_SELECTED(ROMIO,TYPICAL)) fprintf
+#define DBG_FPRINTF if (MPIR_Ext_dbg_romio_verbose_enabled) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
+if (MPIR_Ext_dbg_romio_typical_enabled) fprintf
 /* DBGV_FPRINTF verbose level printing */
-#define DBGV_FPRINTF if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
- if (MPIU_DBG_SELECTED(ROMIO,VERBOSE)) fprintf
+#define DBGV_FPRINTF if (MPIR_Ext_dbg_romio_verbose_enabled) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
+ if (MPIR_Ext_dbg_romio_verbose_enabled) fprintf
 #else /* compile it out */
 #define DBGT_FPRINTF if (0) fprintf
 #define DBG_FPRINTF if (0) fprintf

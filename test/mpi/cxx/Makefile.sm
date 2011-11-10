@@ -1,8 +1,0 @@
-SUBDIRS = util attr pt2pt init info comm coll datatype errhan io rma spawn
-
-# A special testing target to simplify testing just the C++ code
-testing:
-	../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=@MPIEXEC@ \
-		   -xmlfile=summary.xml
-

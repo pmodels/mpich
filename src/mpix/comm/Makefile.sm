@@ -1,9 +1,0 @@
-mpi_sources = group_comm.c
-
-lib${MPILIBNAME}_a_SOURCES = $(mpi_sources)
-
-INCLUDES = -I../../include -I${top_srcdir}/src/include
-
-doc_HTML_SOURCES  = ${mpi_sources}
-doc_MAN_SOURCES   = ${mpi_sources}
-doc_LATEX_SOURCES = ${mpi_sources}

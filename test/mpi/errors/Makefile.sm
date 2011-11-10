@@ -1,7 +1,0 @@
-SUBDIRS_otherlangs = cxx f77 f90
-SUBDIRS = attr coll comm group pt2pt rma spawn topo io @otherlangs@ basic faults
-
-testing:
-	../runtests -srcdir=$(srcdir) -tests=testlist \
-		   -mpiexec=@MPIEXEC@ \
-		   -xmlfile=summary.xml

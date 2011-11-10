@@ -7,7 +7,7 @@
 #ifndef IPMI_H
 #define IPMI_H
 
-#include "pmiconf.h" 
+#include "mpichconf.h"
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H

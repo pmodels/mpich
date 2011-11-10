@@ -142,13 +142,18 @@ fi
 #    name of library
 #    shared library suffix (typically .so or .dylib)
 #    a version number
-# The version number is not the same as the version number of the
-# of the library.  Instead, it is the version number of the ABI for the
-# library.  That allows applications to use any version of the library that
-# has the same ABI.
-# In cases where there are major changes in behavior but not in the ABI,
-# it makes sense to note those as a minor version number.  Thus, we prefer
-# to have a ABIversion number with which to create the soname
+# The version number is not the same as the version number of the of the
+# library.  Instead, it is based on the version number of the ABI for the
+# library according to libtool versioning conventions:
+#
+#   http://www.gnu.org/software/libtool/manual/libtool.html#Libtool-versioning
+# 
+# Briefly, the version-info string is a triple of current:revision:age.  Current
+# and age refer to "interfaces", while revision refers to successive instances
+# of a given interface or interface range.  If we have a version-info tuple of
+# x:y:z, then the library is advertising that supports a range of interfaces
+# [x,x-z] and that this is the y'th release of the software supporting interface
+# x.  Read the link above for a more rigorous discussion of libtool versioning.
 #
 # In addition, it is common to have a primary name that includes some
 # (or all) version information and then one or more soft links to a 
@@ -160,10 +165,9 @@ fi
 #   libfoo.so
 # with only the "libfoo.so.1.2.2" being a file; the others are links.
 # Under OSX, the name scheme is a little different, 
-#   libfoo.1.2.3.dylib
 #   libfoo.1.dylib
 #   libfoo.dylib
-# where again the "libfoo.1.2.2.dylib" is the file and the others are links.
+# where the "libfoo.1.dylib" is the file and the other is a link.
 # These links need to be established during the installation phase.
 #
 # To handle this, we fill in three variables:
@@ -186,14 +190,17 @@ fi
 if [ -z "$ABIVersion" ] ; then ABIVersion="1:1" ; fi
 # Extract the version numbers from the ABIVersion (needed in creating
 # the library names)
-majorVersion=`expr $ABIVersion : '\(.*\):.*'`
-minorVersion=`expr $ABIVersion : '.*:\(.*\)'`
-if [ -z "$majorVersion" ] ; then
-    echo "Invalid ABIVerion $ABIVersion - should be n:m"
-    exit 1
-fi
-if [ -z "$minorVersion" ] ; then
-    echo "Invalid ABIVerion $ABIVersion - should be n:m"
+#
+# expr's syntax stinks, but basically match this PCRE: /^\d+:\d+(:\d+)?$/
+if expr "$ABIVersion" : '^\([0-9]\+:[0-9]\+\(:[0-9]\+\)\?\)$' >/dev/null 2>&1 ; then
+    current=`echo $ABIVersion | cut -f1 -d:`
+    revision=`echo $ABIVersion | cut -f2 -d:`
+    age=`echo $ABIVersion | cut -f3 -d:`
+    if test -z "$age" ; then
+        age="0"
+    fi
+else
+    echo "Invalid ABIVersion $ABIVersion - should be c:r:a"
     exit 1
 fi
 dottedVersion=`echo $ABIVersion | sed -e 's/:/./g'`
@@ -204,25 +211,31 @@ soName=
 altNames=
 case $libtype in 
     gcc-osx|osx-gcc)
-    soname=$srclibbase.$majorVersion.$SHLIB_EXT
-    realName=$srclibbase.$dottedVersion.$SHLIB_EXT
-    altNames="$srclibbase.$SHLIB_EXT"
-    if [ -n "$majorVersion" ] ; then
-	altNames="$altNames $srclibbase.$majorVersion.$SHLIB_EXT"
-    fi
-    # Version numbers extracted above
-    minorVersionArg="-current_version $minorVersion"
-    ;;
+        # FIXME check your darwin book and understand what is correct, also
+        # check libtool behavior
+        soname=$srclibbase.$current.$SHLIB_EXT
+        realName=$srclibbase.$current.$SHLIB_EXT
+        altNames="$srclibbase.$SHLIB_EXT"
+        if [ -n "$current" ] ; then
+            altNames="$altNames $srclibbase.$current.$SHLIB_EXT"
+        fi
+        # Version numbers extracted above
+        compat_version=`expr "$current" - "$age"`
+        # FIXME do we need to also specify "-install_name $srclibbase.$compat_version.$SHLIB_EXT"?
+        # FIXME the compar_version below seems wrong compared to what libtool is doing
+        # http://thread.gmane.org/gmane.comp.gnu.libtool.patches/1348
+        minorVersionArg="-current_version $current -compatibility_version $compat_version"
+        ;;
 
     *)
-    # Typical Unix default
-    soName=$srclibbase.$SHLIB_EXT.$majorVersion
-    realName=$srclibbase.$SHLIB_EXT.$dottedVersion
-    altNames="$srclibbase.$SHLIB_EXT"
-    if [ -n "$majorVersion" ] ; then
-	altNames="$altNames $srclibbase.$SHLIB_EXT.$majorVersion"
-    fi
-    ;;
+        # Typical Unix default
+        soName=$srclibbase.$SHLIB_EXT.$current
+        realName=$srclibbase.$SHLIB_EXT.$dottedVersion
+        altNames="$srclibbase.$SHLIB_EXT"
+        if [ -n "$current" ] ; then
+            altNames="$altNames $srclibbase.$SHLIB_EXT.$current"
+        fi
+        ;;
 esac
 
 # Now, process the steps

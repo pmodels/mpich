@@ -1,9 +1,0 @@
-INCLUDES = -I../../../../include -I${master_top_srcdir}/src/include \
- -I.. -I${master_top_srcdir}/src/mpid/common/sock
-lib${MPILIBNAME}_a_SOURCES = sock.c
-HEADERS = sock_init.i sock_set.i sock_post.i sock_immed.i sock_misc.i sock_wait.i socki_util.i mpidu_socki.h
-sock.o: sock.c $(HEADERS) ../mpidu_sock.h
-
-# Create a local library as an option
-EXTRA_LIBS = libmpich2sock.a
-libmpich2sock_a_SOURCES = sock.c

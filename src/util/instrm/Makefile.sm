@@ -1,2 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = states.c instr.c
-INCLUDES = -I../../include -I${top_srcdir}/src/include

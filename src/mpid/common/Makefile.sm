@@ -1,9 +1,0 @@
-# Other_dirs have Makefile.in built
-OTHER_DIRS = sock
-
-# "sched" is in SUBDIRS for now, because nobody is building it conditionally at
-# this point.  If someone wants to use their own MPID_Sched_ implementation, we
-# can move it up to OTHER_DIRS
-#
-# Subdirs are *always* built
-SUBDIRS = datatype sched .
