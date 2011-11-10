@@ -62,7 +62,7 @@ rm -f conftest.$ac_ext
 # triggered, it gives an error that the option is not recognized.  So we 
 # need to test with a conftest file that will generate warnings.
 # 
-# add an extra switch, pac_c_check_compiler_option_invalidprototest, to
+# add an extra switch, pac_c_check_compiler_option_prototest, to
 # disable this test just in case some new compiler does not like it.
 #
 # Linking with a program with an invalid prototype to ensure a compiler warning.
