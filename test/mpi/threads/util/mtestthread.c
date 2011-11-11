@@ -224,7 +224,7 @@ int MTest_thread_barrier( int nt )
 #else
 static MTEST_THREAD_LOCK_TYPE barrierLock;
 static volatile int   phase=0;
-static int            c[2] = {-1,-1};
+static volatile int   c[2] = {-1,-1};
 int MTest_thread_barrier_init( void )
 {
     return MTest_thread_lock_create( &barrierLock );
