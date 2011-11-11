@@ -138,6 +138,9 @@ check_package("autoconf");
 check_package("automake");
 print("\n");
 
+## IMPORTANT: Changing the autotools versions can result in ABI
+## breakage. So make sure the ABI string in the release tarball is
+## updated when you do that.
 check_autotools_version("autoconf", "2.68");
 check_autotools_version("automake", "1.11.1");
 check_autotools_version("libtool", "2.4");
