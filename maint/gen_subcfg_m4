@@ -1,0 +1,31 @@
+#!/usr/bin/env perl
+
+# preorder traverse the "src" directory (any other dirs too?) and add any
+# subconfigure.m4 files that you find to an existence hash, processing each one
+# for dependencies as you go.
+#
+# Then emit a topological traversal of the resulting DAG into subsys_include.m4,
+# once emitting "m4_include" statements and once (twice?) emitting a single
+# (two?) "m4_define" statement(s) that contains just the component names in the
+# same topological order.
+#
+#
+# Finding a "dnl MPICH2_SUBCFG_BEFORE=BAR" statement inside of
+# FOO/subconfigure.m4 means that FOO depends on BAR and that FOO's macros should
+# be emitted *before* BAR's macros so that FOO can influence BAR's
+# configuration.
+#
+# Finding a "dnl MPICH2_SUBCFG_AFTER=QUUX" statement inside of
+# BAZ/subconfigure.m4 means that BAZ uses QUUX and that BAZ's macros be emitted
+# *after* QUUX's macros so that BAZ can utilize information exported by QUUX's
+# configuration macros.
+#
+# We have both forms of macros because some subsystems know their consumers
+# explicitly and some packages only know what they consume explicitly, and some
+# packages are a blend.  For example, ch3 depends on the mpid/common/sched code
+# in order to support NBC ops so a BEFORE statement is used in the
+# ch3/subconfigure.m4 in order to "enable_mpid_common_sched=yes".
+#
+print "UNIMPLEMENTED FOR NOW\n";
+exit 1;
+
