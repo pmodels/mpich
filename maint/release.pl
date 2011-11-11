@@ -88,6 +88,18 @@ sub check_package
     print "done\n";
 }
 
+sub check_autotools_version
+{
+    my $tool = shift;
+    my $req_ver = shift;
+    my $curr_ver;
+
+    $curr_ver = `$tool --version | head -1 | cut -f4 -d' ' | xargs echo -n`;
+    if ("$curr_ver" ne "$req_ver") {
+	print("\tWARNING: $tool version mismatch ($req_ver) required\n\n");
+    }
+}
+
 sub run_cmd
 {
     my $cmd = shift;
@@ -124,6 +136,11 @@ check_package("svn");
 check_package("latex");
 check_package("autoconf");
 check_package("automake");
+print("\n");
+
+check_autotools_version("autoconf", "2.68");
+check_autotools_version("automake", "1.11.1");
+check_autotools_version("libtool", "2.4");
 print("\n");
 
 my $current_ver = `svn cat ${source}/maint/version.m4 | grep MPICH2_VERSION_m4 | \
