@@ -328,13 +328,13 @@ sub ConvertMakefile {
         # Catch any bare "Xf" tests listed in noinst_PROGRAMS or
         # EXTRA_PROGRAMS.  Check for "Xf.f" to avoid substituting any random
         # word that ends in "f".  We also cheat a bit and look into the
-        # ioharness.defn in the outdir directory for valid file names.
+        # ioharness.defn in the indir directory for valid file names.
         if (not m/^\s*#/) {
             while (m/\b(\w+f)\b/g) {
                 my $word = $1;
                 next if $word eq "if" or $word eq "rf"; # filter out some noise
                 if (-e "$indir/${word}.f" or
-                    0 == system(qq(grep 'TESTDEFN filename="${word}90\\.f90"' '$outdir/ioharness.defn' >/dev/null 2>&1)))
+                    0 == system(qq(grep 'TESTDEFN filename="${word}\\.f"' '$indir/ioharness.defn' >/dev/null 2>&1)))
                 {
                     s/\b${word}\b/${word}90/g;
                 }
