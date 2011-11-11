@@ -126,7 +126,8 @@ check_package("autoconf");
 check_package("automake");
 print("\n");
 
-my $current_ver = `svn cat ${source}/maint/Version | grep ^MPICH2_VERSION | cut -f2 -d'='`;
+my $current_ver = `svn cat ${source}/maint/version.m4 | grep MPICH2_VERSION_m4 | \
+                   sed -e 's/^.*\\[MPICH2_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
 }
@@ -160,8 +161,8 @@ chdir("${root}/${pack}-${version}");
 
 my $date = `date`;
 chomp $date;
-system(qq(perl -p -i -e 's/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE="$date"/g' ./maint/Version));
-system(qq(perl -p -i -e 's/MPICH2_RELEASE_DATE=.*/MPICH2_RELEASE_DATE="$date"/g' ./src/pm/hydra/VERSION));
+system(qq(perl -p -i -e 's/\[MPICH2_RELEASE_DATE_m4\],\[unreleased development copy\]/\[MPICH2_RELEASE_DATE_m4\],\["$date"\]/g' ./maint/version.m4));
+system(qq(perl -p -i -e 's/\[MPICH2_RELEASE_DATE_m4\],\[unreleased development copy\]/\[MPICH2_RELEASE_DATE_m4\],\["$date"\]/g' ./src/pm/hydra/version.m4));
 print("done\n");
 
 # Remove packages that are not being released
