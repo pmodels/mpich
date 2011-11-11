@@ -211,49 +211,49 @@ run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt sr
 run_cmd("find . -name autom4te.cache | xargs rm -rf");
 print("done\n");
 
-# Get docs
-print("===> Creating secondary package for the docs... ");
-chdir("${root}");
-run_cmd("cp -a ${pack}-${version} ${pack}-${version}-tmp");
-print("done\n");
+# # Get docs
+# print("===> Creating secondary package for the docs... ");
+# chdir("${root}");
+# run_cmd("cp -a ${pack}-${version} ${pack}-${version}-tmp");
+# print("done\n");
 
-print("===> Configuring and making the secondary package... ");
-chdir("${root}/${pack}-${version}-tmp");
-{
-    my $cmd = "./maint/updatefiles";
-    $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
-    $cmd .= " --with-automake=$with_automake" if $with_automake;
-    run_cmd($cmd);
-}
-run_cmd("./configure --disable-mpe --disable-fc --disable-f77 --disable-cxx");
-run_cmd("(make mandoc && make htmldoc && make latexdoc)");
-print("done\n");
+# print("===> Configuring and making the secondary package... ");
+# chdir("${root}/${pack}-${version}-tmp");
+# {
+#     my $cmd = "./maint/updatefiles";
+#     $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
+#     $cmd .= " --with-automake=$with_automake" if $with_automake;
+#     run_cmd($cmd);
+# }
+# run_cmd("./configure --disable-mpe --disable-fc --disable-f77 --disable-cxx");
+# run_cmd("(make mandoc && make htmldoc && make latexdoc)");
+# print("done\n");
 
-print("===> Copying docs over... ");
-chdir("${root}/${pack}-${version}-tmp");
-run_cmd("cp -a man ${root}/${pack}-${version}");
-run_cmd("cp -a www ${root}/${pack}-${version}");
-run_cmd("cp -a doc/userguide/user.pdf ${root}/${pack}-${version}/doc/userguide");
-run_cmd("cp -a doc/installguide/install.pdf ${root}/${pack}-${version}/doc/installguide");
-run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${root}/${pack}-${version}/doc/smpd");
-run_cmd("cp -a doc/logging/logging.pdf ${root}/${pack}-${version}/doc/logging");
-run_cmd("cp -a doc/windev/windev.pdf ${root}/${pack}-${version}/doc/windev");
-chdir("${root}");
-run_cmd("rm -rf ${pack}-${version}-tmp");
-print("done\n");
+# print("===> Copying docs over... ");
+# chdir("${root}/${pack}-${version}-tmp");
+# run_cmd("cp -a man ${root}/${pack}-${version}");
+# run_cmd("cp -a www ${root}/${pack}-${version}");
+# run_cmd("cp -a doc/userguide/user.pdf ${root}/${pack}-${version}/doc/userguide");
+# run_cmd("cp -a doc/installguide/install.pdf ${root}/${pack}-${version}/doc/installguide");
+# run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${root}/${pack}-${version}/doc/smpd");
+# run_cmd("cp -a doc/logging/logging.pdf ${root}/${pack}-${version}/doc/logging");
+# run_cmd("cp -a doc/windev/windev.pdf ${root}/${pack}-${version}/doc/windev");
+# chdir("${root}");
+# run_cmd("rm -rf ${pack}-${version}-tmp");
+# print("done\n");
 
-print("===> Creating ROMIO docs... ");
-chdir("${root}/${pack}-${version}/src/mpi");
-chdir("romio/doc");
-run_cmd("make");
-run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
-print("done\n");
+# print("===> Creating ROMIO docs... ");
+# chdir("${root}/${pack}-${version}/src/mpi");
+# chdir("romio/doc");
+# run_cmd("make");
+# run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
+# print("done\n");
 
-print( "===> Creating MPE docs... ");
-chdir("${root}/${pack}-${version}/src");
-chdir("mpe2/maint");
-run_cmd("make -f Makefile4man");
-print("done\n");
+# print( "===> Creating MPE docs... ");
+# chdir("${root}/${pack}-${version}/src");
+# chdir("mpe2/maint");
+# run_cmd("make -f Makefile4man");
+# print("done\n");
 
 # Create the tarball
 print("===> Creating the final ${pack} tarball... ");
