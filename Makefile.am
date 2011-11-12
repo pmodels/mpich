@@ -29,6 +29,7 @@ DISTCLEANFILES =
 MAINTAINERCLEANFILES =
 SUFFIXES = 
 EXTRA_DIST =
+DOC_SUBDIRS =
 
 # used by nodist_pkgconfig_DATA
 pkgconfigdir = $(libdir)/pkgconfig
@@ -114,43 +115,6 @@ if BUILD_PROFILING_LIB
 lib_lib@PMPILIBNAME@_la_SOURCES += $(mpi_sources)
 endif BUILD_PROFILING_LIB
 
-# FIXME this is the simplemake way, translate to the automake way if it's different
-#doc_HTML_SOURCES  = ${mpi_sources}
-#doc_MAN_SOURCES   = ${mpi_sources}
-#doc_LATEX_SOURCES = ${mpi_sources}
-
-# FIXME do we want to make this conditional on actually finding a working
-# doctext installation?
-#
-# FIXME also: the doctext program expects the output directories to exit
-#
-# the automake way to add new suffixes for suffix rules is to use the SUFFIXES
-# variable and allow automake to generate the appropriate .SUFFIXES rule for us
-SUFFIXES += .man .html .latex
-.c.man:
-	$(DOCTEXT) -man -mpath man/man3 -ext 3 -heading MPI \
-		-quotefmt ${top_srcdir}/maint/docnotes $<
-.c.html:
-	$(DOCTEXT) -html -mpath www/www3  -heading MPI \
-		-quotefmt ${top_srcdir}/maint/docnotes $<
-.c.latex:
-	$(DOCTEXT) -latex -mpath doc/refman  -heading MPI \
-		-quotefmt ${top_srcdir}/maint/docnotes $<
-
-mandoc: $(mpi_sources:.c=.man)
-htmldoc: $(mpi_sources:.c=.man)
-latexdoc: $(mpi_sources:.c=.man)
-
-# FIXME is this what we want to do here?  What about for html and latex
-# use the "dist_" prefix to cause the man pages to be included in a "make dist"
-# tarball
-#
-# double FIXME: we are lying to make... the doctext program does not create any
-# ".man" files, instead it creates ".3" files that are named after the C routine
-# instead of being named after the C source file ("MPI_Comm_create.3" instead of
-# "comm_create.3" or "comm_create.man").
-#dist_man3_MANS = $(mpi_sources:.c=.man)
-
 # build the current directory and then the examples directory after everything else
 SUBDIRS += . examples
 DIST_SUBDIRS += . examples test
@@ -185,4 +149,47 @@ distclean-local:
 DISTCLEANFILES += config.system
 # created by configure
 DISTCLEANFILES += .mpich2
+
+# --------------------------------------------------------------------------
+#  documentation rules
+# --------------------------------------------------------------------------
+
+# Tell make (via the automake SUFFIXES var) that our phony suffixes exist and
+# should be considered when dissecting suffix-based implicit rules.  These phony
+# suffix files should NOT be added to a .PHONY target, otherwise make will not
+# use the implicit rules to attempt to build them.
+SUFFIXES += .man-phony .html-phony
+
+# "make V=1" support for our documentation recipes
+doctextman_verbose = $(doctextman_verbose_$(V))
+doctextman_verbose_ = $(doctextman_verbose_$(AM_DEFAULT_VERBOSITY))
+doctextman_verbose_0 = @echo "   DOCTEXTMAN  " $@;
+doctexthtml_verbose = $(doctexthtml_verbose_$(V))
+doctexthtml_verbose_ = $(doctexthtml_verbose_$(AM_DEFAULT_VERBOSITY))
+doctexthtml_verbose_0 = @echo "   DOCTEXTHTML  " $@;
+
+# Implicit suffix rules to cause the docs to be built.  These are a bit of a
+# hack, but using the implicit rules like this instead of a shell for loop
+# permits make -jN to work.
+.c.man-phony:
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath man/man3 -ext 3 -heading MPI \
+		-quotefmt ${top_srcdir}/maint/docnotes $<
+.c.html-phony:
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath www/www3  -heading MPI \
+		-quotefmt ${top_srcdir}/maint/docnotes $<
+mandir-create:
+	$(MKDIR_P) $(top_builddir)/man/man3
+htmldir-create:
+	$(MKDIR_P) $(top_builddir)/www/www3
+mandoc: mandir-create $(mpi_sources:.c=.man-phony)
+htmldoc: htmldir-create $(mpi_sources:.c=.html-phony)
+.PHONY: mandir-create htmldir-create mandoc htmldoc 
+
+
+# build the latex docs in the old style
+latexdoc:
+	for dir in $(DOC_SUBDIRS) ; do \
+		(cd $$dir && ${MAKE} latexdoc ) ; done
+
+include $(top_srcdir)/doc/Makefile.mk
 

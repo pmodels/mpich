@@ -6068,6 +6068,13 @@ AC_OUTPUT(Makefile \
           src/env/parkill \
 	  src/util/dbg/getfuncstack \
           src/include/mpi.h \
+          doc/design/Makefile \
+          doc/installguide/Makefile \
+          doc/logging/Makefile \
+          doc/refman/Makefile \
+          doc/smpd/Makefile \
+          doc/userguide/Makefile \
+          doc/windev/Makefile \
 	  test/commands/cmdtests \
 	  doc/mansrc/createhtmlindex)
 
