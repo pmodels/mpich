@@ -139,9 +139,6 @@ MAKE=${MAKE-make}
 # externals are the directories for external packages that we have
 # included into MPICH2
 externals="src/mpe2 src/pm/hydra src/mpi/romio src/mpix/armci src/pm/mpd"
-# ltdirs are the directories that make use of libtool and require
-# libtoolize
-ltdirs="src/mpl"
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/openpa src/mpl"
 
@@ -976,7 +973,7 @@ if [ $do_build_configure = yes ] ; then
         dir=`dirname $dir`
 
 	found=0
-	for d in $amdirs $ltdirs $externals ; do
+	for d in $amdirs $externals ; do
 	    foo=`echo $dir | sed -e 's%.*'"$d"'.*%FOUNDDIR%'`
 	    if [ "$foo" = "FOUNDDIR" ] ; then
 		# We'll use autoreconf later in this script for these
@@ -1097,14 +1094,6 @@ if [ "$do_build_configure" = "yes" ] ; then
            echo "running third-party initialization in $external"
            (cd $external && ./autogen.sh) || exit 1
        fi
-    done
-
-    for ltdir in $ltdirs ; do
-	if [ -d "$ltdir" -o -L "$ltdir" ] ; then
-            echo "------------------------------------------------------------------------"
-	    echo "running $libtoolize in $ltdir"
-	    (cd $ltdir && $libtoolize) || exit 1
-	fi
     done
 
     for amdir in $amdirs ; do
