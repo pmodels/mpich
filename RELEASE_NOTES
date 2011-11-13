@@ -54,13 +54,6 @@
    SCTP stack for Windows currently exists.
 
 
-### Other configure options
-
- * --enable-sharedlibs requires specific options (gcc, gcc-osx,
-     solaris-cc) to tell the build system the compiler and platform
-     being used.
-
-
 ### Process Managers
 
  * The MPD process manager can only handle relatively small amounts of

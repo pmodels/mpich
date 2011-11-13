@@ -684,19 +684,7 @@ Language bindings:
 
 Shared library support:
 
-  --enable-shared - Enable shared library support. Shared libraries
-                    are currently only supported for gcc (and gcc-like
-                    compilers) on Linux and Mac and for cc on
-                    Solaris.
-
-		    This option tries to auto-detect the architecture
-		    you are using, and build the appropriate shared
-		    libraries. You can also manually control the
-		    platform detection using:
-
-  --enable-sharedlibs=gcc         (on Linux)
-  --enable-sharedlibs=osx-gcc     (on Mac OS X)
-  --enable-sharedlibs=solaris-cc  (on Solaris)
+  --enable-shared - Enable shared library support.
 
 Cross compilation:
 

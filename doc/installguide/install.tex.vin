@@ -524,24 +524,12 @@ setenv FCFLAGS "-YALL_NAMES=LCS -YEXT_SFX=_"
 \subsection{Shared Libraries}
 \label{sec:shared-libraries}
 
-Shared libraries are currently only supported for gcc (and gcc-like
-compilers) on Linux and Mac and for cc on Solaris. To have shared
-libraries created when MPICH2 is built, specify the following when
-MPICH2 is configured:
+To have shared libraries created when MPICH2 is built, specify the
+following when MPICH2 is configured:
 
 \begin{verbatim}
     configure --enable-shared
 \end{verbatim}
-
-For users who wish to manually control the linker parameters, this can
-be done using:
-
-\begin{verbatim}
-    configure --enable-sharedlibs=gcc         (on Linux)
-    configure --enable-sharedlibs=osx-gcc     (on Mac OS X)
-    configure --enable-sharedlibs=solaris-cc  (on Solaris)
-\end{verbatim}
-
 
 
 
