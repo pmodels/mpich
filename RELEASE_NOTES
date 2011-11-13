@@ -3,6 +3,13 @@
 			KNOWN ISSUES
 ----------------------------------------------------------------------
 
+### Known runtime failures
+
+ * MPI_Alltoall might fail in some cases because of the newly added
+   fault-tolerance features. If you are seeing this error, try setting
+   the environment variable MPICH_ENABLE_COLL_FT_RET=0.
+
+
 ### Threads
 
  * ch3:sock does not (and will not) support fine-grained threading.
