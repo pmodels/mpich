@@ -218,9 +218,6 @@ shared memory), Hydra process management) of MPICH2 up and running.
 If you have completed all of the above steps, you have successfully
 installed MPICH2 and run an MPI example.
 
-More details on arguments to mpiexec are given in the User's Guide in
-the doc subdirectory.
-
 -------------------------------------------------------------------------
 
 2. Reporting Installation or Usage Problems
