@@ -848,6 +848,12 @@ int MPIC_Waitall_ft(int numreq, MPI_Request requests[], MPI_Status statuses[], i
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
+    /* The MPI_TAG field is not set for send oeprations, so if we want
+       to check for MPIR_ERROR_TAG below, we should initialize all tag
+       fields here. */
+    for (i = 0; i < numreq; ++i)
+        statuses[i].MPI_TAG = 0;
+    
     mpi_errno = MPIR_Waitall_impl(numreq, requests, statuses);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
