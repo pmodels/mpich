@@ -5,9 +5,9 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-if BUILD_CH3_SOCK
-
 include $(top_srcdir)/src/mpid/ch3/channels/sock/src/Makefile.mk
+
+if BUILD_CH3_SOCK
 
 AM_CPPFLAGS +=                                           \
     -I$(top_srcdir)/src/mpid/ch3/channels/sock/include   \

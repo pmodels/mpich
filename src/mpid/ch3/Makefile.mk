@@ -5,6 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+errnames_txt_files += src/mpid/ch3/errnames.txt
+
 # note that the includes always happen but the effects of their contents are
 # affected by "if BUILD_CH3"
 if BUILD_CH3
@@ -19,8 +21,6 @@ noinst_HEADERS +=                      \
     src/mpid/ch3/include/mpidpost.h    \
     src/mpid/ch3/include/mpidpre.h     \
     src/mpid/ch3/include/mpidrma.h
-
-errnames_txt_files += src/mpid/ch3/errnames.txt
 
 include $(top_srcdir)/src/mpid/ch3/src/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/util/Makefile.mk

@@ -5,6 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+errnames_txt_files += src/mpid/common/sock/poll/errnames.txt
+
 ## this whole file is also already guarded by "if BUILD_MPID_COMMON_SOCK"
 if BUILD_MPID_COMMON_SOCK_POLL
 
@@ -29,8 +31,6 @@ noinst_HEADERS += \
 AM_CPPFLAGS +=                                  \
     -I${top_srcdir}/src/mpid/common/sock/poll   \
     -I${top_builddir}/src/mpid/common/sock/poll
-
-errnames_txt_files += src/mpid/common/sock/poll/errnames.txt
 
 endif BUILD_MPID_COMMON_SOCK_POLL
 
