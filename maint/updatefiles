@@ -30,7 +30,7 @@ error() {
 }
 
 echo_n() {
-    # "echo_n" isn't portable, must portably implement with printf
+    # "echo -n" isn't portable, must portably implement with printf
     printf "%s" "$*"
 }
 
