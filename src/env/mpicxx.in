@@ -260,7 +260,7 @@ if [ "$linking" = yes ] ; then
     # TODO configure and config.rpath are computing more sophisticated rpath
     # schemes than this simple one.  Consider updating this logic accordingly.
     if test "X$enable_rpath" = "Xyes" ; then
-        mpilibs="${hardcode_libdir_flag_spec} $mpilibs"
+        eval mpilibs=\"${hardcode_libdir_flag_spec} \$mpilibs\"
     fi
 
     path_list=""

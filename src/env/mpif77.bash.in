@@ -299,9 +299,9 @@ if [ "$linking" = yes ] ; then
     # platform.
     # TODO configure and config.rpath are computing more sophisticated rpath
     # schemes than this simple one.  Consider updating this logic accordingly.
-    if test "X$enable_rpath" = "Xyes" -a -n "$F77_hardcode_libdir_flag_spec" ; then
+    if test "X$enable_rpath" = "Xyes" ; then
         # prepend the path for the shared libraries to the library list
-        mpilibs="${F77_wl}${F77_hardcode_libdir_flag_spec}$libdir $mpilibs"
+        eval mpilibs=\"${hardcode_libdir_flag_spec} \$mpilibs\"
     fi
 
     path_list=""
