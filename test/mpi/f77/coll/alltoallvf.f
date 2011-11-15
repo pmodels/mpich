@@ -67,7 +67,7 @@ C
             stypes(i)  = MPI_INTEGER
             sbuf(i) = -1
             rcounts(i) = 0
-            rdispls(i) = 
+            rdispls(i) = 0
             rtypes(i)  = MPI_INTEGER
             rbuf(i) = -1
          enddo
