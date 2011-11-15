@@ -8,7 +8,7 @@
 #if !defined(SOCKI_H_INCLUDED)
 #define SOCKI_H_INCLUDED
 
-#include "mpidu_socki_conf.h"
+#include "mpichconf.h"
 
 #if defined(HAVE_SYS_UIO_H)
 #include <sys/uio.h>

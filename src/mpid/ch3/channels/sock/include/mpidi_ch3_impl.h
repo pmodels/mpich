@@ -7,8 +7,6 @@
 #if !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED)
 #define MPICH_MPIDI_CH3_IMPL_H_INCLUDED
 
-#include "mpidi_ch3i_sock_conf.h"
-#include "mpidi_ch3_conf.h"
 #include "mpidimpl.h"
 #include "ch3usock.h"
 

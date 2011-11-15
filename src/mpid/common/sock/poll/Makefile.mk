@@ -15,14 +15,14 @@ lib_lib@MPILIBNAME@_la_SOURCES +=    \
 # cobbled together via "#include" into sock.c.  They are not idempotent ".h"
 # files, but rather a giant ".c" file that has been split into several files
 # that should be compiled only once, and only together.
-noinst_HEADERS += 
-    src/mpid/common/sock/poll/sock_init.i
-    src/mpid/common/sock/poll/sock_set.i
-    src/mpid/common/sock/poll/sock_post.i
-    src/mpid/common/sock/poll/sock_immed.i
-    src/mpid/common/sock/poll/sock_misc.i
-    src/mpid/common/sock/poll/sock_wait.i
-    src/mpid/common/sock/poll/socki_util.i
+noinst_HEADERS += \
+    src/mpid/common/sock/poll/sock_init.i \
+    src/mpid/common/sock/poll/sock_set.i \
+    src/mpid/common/sock/poll/sock_post.i \
+    src/mpid/common/sock/poll/sock_immed.i \
+    src/mpid/common/sock/poll/sock_misc.i \
+    src/mpid/common/sock/poll/sock_wait.i \
+    src/mpid/common/sock/poll/socki_util.i \
     src/mpid/common/sock/poll/mpidu_socki.h
 
 # FIXME is top_builddir the right way to handle VPATH builds?

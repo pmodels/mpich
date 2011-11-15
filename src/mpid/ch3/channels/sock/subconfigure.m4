@@ -4,10 +4,11 @@ dnl MPICH2_SUBCFG_BEFORE=src_mpid_ch3_util_sock
 
 dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_ch3_channels_sock],[
-    AM_CONDITIONAL([BUILD_CH3_SOCK],[test "X$device_name" = "ch3" -a "X$channel_name" = "Xsock"])
+    AM_CONDITIONAL([BUILD_CH3_SOCK],[test "X$device_name" = "Xch3" -a "X$channel_name" = "Xsock"])
     AM_COND_IF([BUILD_CH3_SOCK],[
         AC_MSG_NOTICE([RUNNING PREREQ FOR ch3:sock])
         # this channel depends on the sock utilities
+        build_mpid_common_sock=yes
         build_ch3u_sock=yes
 
         # code that formerly lived in setup_args

@@ -1,4 +1,5 @@
 [#] start of __file__
+dnl MPICH2_SUBCFG_AFTER=src_mpid_common_sock
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_common_sock_poll],[
     AM_CONDITIONAL([BUILD_MPID_COMMON_SOCK_POLL],[test "X$build_mpid_common_sock_poll" = "Xyes"])

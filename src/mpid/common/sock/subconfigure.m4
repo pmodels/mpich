@@ -2,6 +2,11 @@
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_common_sock],[
     AM_CONDITIONAL([BUILD_MPID_COMMON_SOCK],[test "X$build_mpid_common_sock" = "Xyes"])
+    AM_COND_IF([BUILD_MPID_COMMON_SOCK],[
+        # we unconditionally enable the "poll" implementation because we don't
+        # use this build system on windows right now
+        build_mpid_common_sock_poll=yes
+    ])
 ])
 
 dnl _BODY handles the former role of configure in the subsystem
