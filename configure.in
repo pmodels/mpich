@@ -5937,15 +5937,6 @@ if test -z "$modincbuild_dir" ; then
     modincbuild_dir=`pwd`/src/binding/f90
 fi
 
-# Move the mpio.h file into the build directories for testing
-#export top_srcdir
-#export enable_romio
-AC_OUTPUT_COMMANDS([if test "$enable_romio" = "yes" ; then
-  rm -f src/include/mpio.h "${use_top_srcdir}/include/mpio.h"
-  cp src/mpi/romio/include/mpio.h src/include ; fi],enable_romio=$enable_romio
-top_srcdir=$top_srcdir)
-
-
 AC_OUTPUT_COMMANDS([chmod +x doc/mansrc/createhtmlindex])
 
 dnl
