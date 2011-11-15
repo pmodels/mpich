@@ -80,6 +80,7 @@ static struct {
         (sc)->vc = NULL;                        \
         (sc)->pg_is_set = FALSE;                \
         (sc)->is_tmpvc = FALSE;                 \
+        (sc)->state.cstate = CONN_STATE_UNDEFINED;      \
         CHANGE_STATE(sc, CONN_STATE_TS_CLOSED); \
     } while (0)
 

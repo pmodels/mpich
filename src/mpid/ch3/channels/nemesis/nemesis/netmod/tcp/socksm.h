@@ -56,6 +56,7 @@ typedef enum {
 */
 
 #define CONN_STATE_                             \
+    M_(CONN_STATE_UNDEFINED),                   \
     M_(CONN_STATE_TS_CLOSED),                   \
     M_(CONN_STATE_TC_C_CNTING),                 \
     M_(CONN_STATE_TC_C_CNTD),                   \
