@@ -401,13 +401,14 @@ if [ "$acSubversion" -gt 0 ] ; then
         # 2.65's AC_TYPE_INT*_T always returns 0.
         # 2.66 is broken with AC_CHECK_SIZEOF and AC_CONFIG_SUBDIRS.
         case "$acSubversion" in
-            63|64|67)
+            67)
                 ;;
             68)
-                warn "autoconf-2.68 emits massive amount of warnings on certain uses of AC_*_IFELSE."
+                # this is true, but only when used with a buggy libtool (e.g. 2.2.6b)
+                #warn "autoconf-2.68 emits massive amount of warnings on certain uses of AC_*_IFELSE."
                 ;;
             *)
-                echo "autoconf version 2.63, 2.64, 2.67 or 2.68 is required"
+                error "autoconf version 2.67 or 2.68 is required"
 		exit 1
                 ;;
         esac
