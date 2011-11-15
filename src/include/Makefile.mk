@@ -27,9 +27,6 @@ nodist_noinst_HEADERS +=     \
 ## dependencies, but that's not true for SUBDIRS packages
 BUILT_SOURCES += src/include/glue_romio.h
 
-# ensure our symlink to mpio.h gets built
-BUILT_SOURCES += src/include/mpio.h
-
 noinst_HEADERS +=                   \
     src/include/bsocket.h           \
     src/include/mpi_attr.h          \
