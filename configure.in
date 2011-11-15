@@ -641,6 +641,13 @@ LT_INIT([disable-shared])
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+# Disable rpath if shared libraries are disabled, since rpath makes no sense in
+# the context of static libraries.  This also disables any attempt to add rpath
+# flags in the compiler wrappers
+if test "X$enable_shared" = "Xno" ; then
+    enable_rpath=no
+fi
+
 dnl AC_PROG_{CXX,F77,FC} must come early in configure.in in order to avoid some
 dnl esoteric autoconf macro expansion errors
 dnl
