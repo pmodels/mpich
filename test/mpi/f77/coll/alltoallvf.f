@@ -8,7 +8,7 @@ C
       include 'mpif.h'
       integer ierr, errs
       integer i, ans, size, rank, color, comm, newcomm
-      integer maxSize
+      integer maxSize, displ
       parameter (maxSize=128)
       integer scounts(maxSize), sdispls(maxSize), stypes(maxSize)
       integer rcounts(maxSize), rdispls(maxSize), rtypes(maxSize)
@@ -76,22 +76,22 @@ C
          if (rank .gt. 0) then
             scounts(rank-1) = 1
             rcounts(rank-1) = 1
-            sdispl(rank-1)  = displ
-            rdispl(rank-1)  = rank - 1
+            sdispls(rank-1)  = displ
+            rdispls(rank-1)  = rank - 1
             sbuf(displ)     = rank - 1
             displ           = displ + 1
          endif
          scounts(rank)   = 1
          rcounts(rank)   = 1
-         sdispl(rank)    = displ
-         rdispl(rank)    = rank
+         sdispls(rank)    = displ
+         rdispls(rank)    = rank
          sbuf(displ)     = rank
          displ           = displ + 1
          if (rank .lt. size-1) then
             scounts(rank+1) = 1 
             rcounts(rank+1) = 1
-            sdispl(rank+1)  = displ
-            rdispl(rank+1)  = rank+1
+            sdispls(rank+1)  = displ
+            rdispls(rank+1)  = rank+1
             sbuf(rank+1)    = rank + 1
             displ           = displ + 1
          endif
