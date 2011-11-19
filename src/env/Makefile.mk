@@ -14,6 +14,8 @@ bin_PROGRAMS += src/env/mpich2version
 src_env_mpich2version_SOURCES = src/env/mpich2version.c
 src_env_mpich2version_LDADD = lib/lib@MPILIBNAME@.la
 
+sysconf_DATA += src/env/mpicc.conf
+
 if BUILD_F77_BINDING
 bin_SCRIPTS += src/env/mpif77
 sysconf_DATA += src/env/mpif77.conf
