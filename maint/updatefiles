@@ -896,7 +896,7 @@ if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
 	    mkdir test/mpi/f90/$leafDir
         fi
         maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.am Makefile.ap
-        echo "timestamp" > test/mpi/f90/$leafDir/stamp-Makefile.am
+        echo "timestamp" > test/mpi/f90/$leafDir/Makefile.am-stamp
     done
     echo "done"
 fi
