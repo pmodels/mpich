@@ -156,24 +156,6 @@ for net in $nemesis_networks ; do
 done
 nemesis_nets_array_sz=$net_index
 
-## FIXME this variable does not appear to be defined anywhere...
-case "${nemesis_network}" in
-     elan )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_ELAN, [Choose netmod]) ;;
-     gm )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_GM, [Choose netmod]) ;;
-     mx )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_MX, [Choose netmod]) ;;
-     newmad )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_NEWMAD, [Choose netmod]) ;;
-     tcp )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_TCP, [Choose netmod]) ;;
-     psm )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_PSM, [Choose netmod]) ;;
-     * )
-          AC_DEFINE(MPID_NEM_NET_MODULE, MPID_NEM_NONE, [Choose netmod]) ;;
-esac
-
 AC_ARG_ENABLE(nemesis-dbg-nolocal, [--enable-nemesis-dbg-nolocal - enables debugging mode where shared-memory communication is disabled],
     AC_DEFINE(ENABLED_NO_LOCAL, 1, [Define to disable shared-memory communication for debugging]))
 
@@ -451,9 +433,6 @@ AC_SUBST(nemesis_nets_macro_defs)
 AC_SUBST(mmx_copy_s)
 AC_SUBST(PAPI_INCLUDE)
 AC_SUBST(AS, [as])
-
-dnl FIXME automake has builtin support for this, need to convert to that
-dnl AC_SUBST(ETAGS)
 
 AC_CONFIG_FILES([
 src/mpid/ch3/channels/nemesis/nemesis/include/mpid_nem_net_module_defs.h
