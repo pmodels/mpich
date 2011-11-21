@@ -257,5 +257,5 @@ dnl "foo/bar/baz/subconfigure.m4"
 dnl
 dnl This is useful for reducing copy-paste errors when defining PREREQ and BODY
 dnl macros.  If you tinker with this macro, watch the quoting carefully.
-AC_DEFUN([PAC_SUBCFG_AUTO_SUFFIX],[m4_translit(m4_bpatsubst(m4_dquote(__file__),[[^/]+.m4],[]),[/],[_])])
+AC_DEFUN([PAC_SUBCFG_AUTO_SUFFIX],[m4_translit(m4_bpatsubst(m4_dquote(__file__),[/[^/]+.m4],[]),[/],[_])])
 
