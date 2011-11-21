@@ -1,6 +1,6 @@
-##
-## Copyright (C) 2010. See COPYRIGHT in top-level directory.
-##
+#
+# Copyright (C) 2010. See COPYRIGHT in top-level directory.
+#
 
 include tests/mpi/Makefile.mk
 
@@ -129,3 +129,4 @@ tests_test_igop_LDADD = -larmci
 tests_test_igop_DEPENDENCIES = libarmci.la
 
 include tests/ctree/Makefile.mk
+-include tests/contrib/Makefile.mk
