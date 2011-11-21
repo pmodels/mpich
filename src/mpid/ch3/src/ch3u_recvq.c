@@ -58,6 +58,16 @@ MPID_Request ** const MPID_Recvq_posted_head_ptr     = &recvq_posted_head;
 MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
 #endif
 
+/* TODO decide control this independently via configure or with the existing
+ * --enable-timing option (#ifdef COLLECT_STATS) */
+#define ENABLE_RECVQ_STATISTICS 1
+#ifdef ENABLE_RECVQ_STATISTICS
+static unsigned int posted_qlen = 0;
+static unsigned int unexpected_qlen = 0;
+/* TODO add some code here and probably elsewhere to make these show up in the
+ * MPIX_T_pvar_ interface */
+#endif /* defined(ENABLE_RECVQ_STATISTICS) */
+
 /* If the MPIDI_Message_match structure fits into a pointer size, we
  * can directly work on it */
 /* MATCH_WITH_NO_MASK compares the match values without masking
@@ -90,6 +100,65 @@ MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
       (((match1).parts.tag & (mask).parts.tag) == ((match2).parts.tag & (mask).parts.tag)) && \
       ((match1).parts.context_id == (match2).parts.context_id)))
 
+/* will be invoked to populate the custom parts of pvar_handle objects */
+static int simple_uint_creator(void *obj_handle,
+                               struct MPIR_T_pvar_handle *handle,
+                               int *countp)
+{
+    /* the IMPL_SIMPLE code reads/writes "bytes" bytes from the location given
+     * by the "handle_state" pointer */
+    handle->handle_state = handle->info->var_state;
+    handle->bytes = sizeof(unsigned int);
+
+    /* a single unsigned int should be read/written */
+    *countp = 1;
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Recvq_FU
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Recvq_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+#ifdef ENABLE_RECVQ_STATISTICS
+    int index = -1;
+    mpi_errno = MPIR_T_pvar_add("posted_recvq_length",
+                                MPIX_T_VERBOSITY_USER_DETAIL,
+                                MPIX_T_PVAR_CLASS_LEVEL,
+                                MPI_UNSIGNED,
+                                MPIX_T_ENUM_NULL,
+                                "length of the posted message receive queue",
+                                MPIX_T_BIND_NO_OBJECT,
+                                /*readonly=*/TRUE,
+                                /*continuous=*/TRUE,
+                                /*atomic=*/FALSE,
+                                MPIR_T_PVAR_IMPL_SIMPLE,
+                                /*var_state=*/&posted_qlen,
+                                &simple_uint_creator,
+                                &index);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_T_pvar_add("unexpected_recvq_length",
+                                MPIX_T_VERBOSITY_USER_DETAIL,
+                                MPIX_T_PVAR_CLASS_LEVEL,
+                                MPI_UNSIGNED,
+                                MPIX_T_ENUM_NULL,
+                                "length of the unexpected messsage receive queue",
+                                MPIX_T_BIND_NO_OBJECT,
+                                /*readonly=*/TRUE,
+                                /*continuous=*/TRUE,
+                                /*atomic=*/FALSE,
+                                MPIR_T_PVAR_IMPL_SIMPLE,
+                                /*var_state=*/&unexpected_qlen,
+                                &simple_uint_creator,
+                                &index);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#endif
+fn_fail:
+    return mpi_errno;
+}
 
 /* FIXME: If this routine is only used by probe/iprobe, then we don't need
    to set the cancelled field in status (only set for nonblocking requests) */
@@ -231,6 +300,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 	    recvq_unexpected_tail = matching_prev_rreq;
 	}
 
+#ifdef ENABLE_RECVQ_STATISTICS
+        --unexpected_qlen;
+#endif
 	rreq = matching_cur_rreq;
     }
     else {
@@ -296,6 +368,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 		    if (rreq->dev.next == NULL) {
 			recvq_unexpected_tail = prev_rreq;
 		    }
+#ifdef ENABLE_RECVQ_STATISTICS
+                    --unexpected_qlen;
+#endif
 
 		    rreq->comm = comm;
 		    MPIR_Comm_add_ref(comm);
@@ -327,6 +402,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 		    if (rreq->dev.next == NULL) {
 			recvq_unexpected_tail = prev_rreq;
 		    }
+#ifdef ENABLE_RECVQ_STATISTICS
+                    --unexpected_qlen;
+#endif
 		    rreq->comm                 = comm;
 		    MPIR_Comm_add_ref(comm);
 		    rreq->dev.user_buf         = user_buf;
@@ -397,6 +475,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	    recvq_posted_head = rreq;
 	}
 	recvq_posted_tail = rreq;
+#ifdef ENABLE_RECVQ_STATISTICS
+        ++posted_qlen;
+#endif
 	MPIDI_POSTED_RECV_ENQUEUE_HOOK(rreq);
     }
     
@@ -448,6 +529,9 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 	    if (cur_rreq->dev.next == NULL) {
 		recvq_posted_tail = prev_rreq;
 	    }
+#ifdef ENABLE_RECVQ_STATISTICS
+            --posted_qlen;
+#endif
             /* Notify channel that rreq has been dequeued and check if
                it has already matched rreq, fail if so */
 	    dequeue_failed = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
@@ -518,6 +602,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	    if (rreq->dev.next == NULL) {
 		recvq_posted_tail = prev_rreq;
 	    }
+#ifdef ENABLE_RECVQ_STATISTICS
+            --posted_qlen;
+#endif
 
             /* give channel a chance to match the request, try again if so */
 	    channel_matched = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
@@ -548,6 +635,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	    recvq_unexpected_head = rreq;
 	}
 	recvq_unexpected_tail = rreq;
+#ifdef ENABLE_RECVQ_STATISTICS
+        ++unexpected_qlen;
+#endif
     }
     
     found = FALSE;
@@ -603,7 +693,11 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
         prev_req->dev.next = (*req)->dev.next;
     if (recvq_posted_tail == *req)
         recvq_posted_tail = prev_req;
-    
+
+#ifdef ENABLE_RECVQ_STATISTICS
+    --posted_qlen;
+#endif
+
     /* set error and complete */
     (*req)->status.MPI_ERROR = *error;
     MPIDI_CH3U_Request_complete(*req);

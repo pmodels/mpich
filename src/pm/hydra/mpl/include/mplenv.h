@@ -24,6 +24,7 @@ int MPL_env2int(const char *envName, int *val);
 int MPL_env2range(const char *envName, int *lowPtr, int *highPtr);
 int MPL_env2bool(const char *envName, int *val);
 int MPL_env2str(const char *envName, const char **val);
+int MPL_env2double(const char *envName, double *val);
 int MPL_putenv(char *name_val);
 
 /* *INDENT-ON* */

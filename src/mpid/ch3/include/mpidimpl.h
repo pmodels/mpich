@@ -1442,6 +1442,7 @@ extern int MPICH_ATTR_FAILED_PROCESSES;
 /*
  * Channel utility prototypes
  */
+int MPIDI_CH3U_Recvq_init(void);
 int MPIDI_CH3U_Recvq_FU(int, int, int, MPI_Status * );
 MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request, MPIDI_Message_match *);
 MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag, 

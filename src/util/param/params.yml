@@ -275,7 +275,7 @@ parameters:
       description : >-
         If non-empty, this parameter specifies which network module
         should be used for communication.
-  
+
     - category    : nemesis
       name        : INTERFACE_HOSTNAME
       type        : string
@@ -387,10 +387,10 @@ parameters:
       type        : range
       default     : "0:0"
       description : >-
-        "The MPICH_PORT_RANGE environment variable allows you to
+        The MPICH_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
         manager and the MPICH2 library. The format of this variable is
-        <low>:<high>."
+        <low>:<high>.
 
 ...
 

@@ -397,6 +397,96 @@ typedef struct MPI_Status {
     @EXTRA_STATUS_DECL@
 } MPI_Status;
 
+/* types for the MPIX_T_ interface */
+struct MPIR_T_enum;
+typedef struct MPIR_T_enum * MPIX_T_enum;
+struct MPIR_T_cvar_handle;
+typedef struct MPIR_T_cvar_handle * MPIX_T_cvar_handle;
+struct MPIR_T_pvar_handle;
+typedef struct MPIR_T_pvar_handle * MPIX_T_pvar_handle;
+struct MPIR_T_pvar_session;
+typedef struct MPIR_T_pvar_session * MPIX_T_pvar_session;
+
+/* extra const at front would be safer, but is incompatible with MPIX_T_ prototypes */
+extern struct MPIR_T_pvar_handle * const MPIX_T_PVAR_ALL_HANDLES;
+
+#define MPIX_T_ENUM_NULL         ((MPIX_T_enum)NULL)
+#define MPIX_T_CVAR_HANDLE_NULL  ((MPIX_T_cvar_handle)NULL)
+#define MPIX_T_PVAR_HANDLE_NULL  ((MPIX_T_pvar_handle)NULL)
+#define MPIX_T_PVAR_SESSION_NULL ((MPIX_T_pvar_session)NULL)
+
+/* the MPI_T_ interface requires that these VERBOSITY constants occur in this
+ * relative order with increasing values */
+enum MPIR_T_verbosity_t {
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+     * extension */
+    MPIX_T_VERBOSITY_INVALID = 0,
+
+    /* arbitrarily shift values to aid debugging and reduce accidental errors */
+    MPIX_T_VERBOSITY_USER_BASIC = 221,
+    MPIX_T_VERBOSITY_USER_DETAIL,
+    MPIX_T_VERBOSITY_USER_ALL,
+
+    MPIX_T_VERBOSITY_TUNER_BASIC,
+    MPIX_T_VERBOSITY_TUNER_DETAIL,
+    MPIX_T_VERBOSITY_TUNER_ALL,
+
+    MPIX_T_VERBOSITY_MPIDEV_BASIC,
+    MPIX_T_VERBOSITY_MPIDEV_DETAIL,
+    MPIX_T_VERBOSITY_MPIDEV_ALL,
+};
+
+enum MPIR_T_bind_t {
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+     * extension */
+    MPIX_T_BIND_INVALID = 0,
+
+    /* arbitrarily shift values to aid debugging and reduce accidental errors */
+    MPIX_T_BIND_NO_OBJECT = 9700,
+    MPIX_T_BIND_MPI_COMM,
+    MPIX_T_BIND_MPI_DATATYPE,
+    MPIX_T_BIND_MPI_ERRHANDLER,
+    MPIX_T_BIND_MPI_FILE,
+    MPIX_T_BIND_MPI_GROUP,
+    MPIX_T_BIND_MPI_OP,
+    MPIX_T_BIND_MPI_REQUEST,
+    MPIX_T_BIND_MPI_WIN,
+    MPIX_T_BIND_MPI_MESSAGE,
+    MPIX_T_BIND_MPI_INFO
+};
+
+enum MPIR_T_scope_t {
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+     * extension */
+    MPIX_T_SCOPE_INVALID = 0,
+
+    /* arbitrarily shift values to aid debugging and reduce accidental errors */
+    MPIX_T_SCOPE_READONLY = 60439,
+    MPIX_T_SCOPE_LOCAL,
+    MPIX_T_SCOPE_GROUP,
+    MPIX_T_SCOPE_GROUP_EQ,
+    MPIX_T_SCOPE_ALL,
+    MPIX_T_SCOPE_ALL_EQ
+};
+
+enum MPIR_T_pvar_class_t {
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+     * extension */
+    MPIX_T_PVAR_CLASS_INVALID = 0,
+
+    /* arbitrarily shift values to aid debugging and reduce accidental errors */
+    MPIX_T_PVAR_CLASS_STATE = 240,
+    MPIX_T_PVAR_CLASS_LEVEL,
+    MPIX_T_PVAR_CLASS_SIZE,
+    MPIX_T_PVAR_CLASS_PERCENTAGE,
+    MPIX_T_PVAR_CLASS_HIGHWATERMARK,
+    MPIX_T_PVAR_CLASS_LOWWATERMARK,
+    MPIX_T_PVAR_CLASS_COUNTER,
+    MPIX_T_PVAR_CLASS_AGGREGATE,
+    MPIX_T_PVAR_CLASS_TIMER,
+    MPIX_T_PVAR_CLASS_GENERIC
+};
+
 /* Handle conversion types/functions */
 
 /* Programs that need to convert types used in MPICH should use these */
@@ -906,6 +996,36 @@ int MPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 /* MPI-3 shared memory */
 int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
 
+/* MPI-3 MPI_T interface, currently available as MPIX_T extensions */
+int MPIX_T_init_thread(int required, int *provided);
+int MPIX_T_finalize(void);
+int MPIX_T_enum_get_info(MPIX_T_enum enumtype, int num, char *name, int *name_len);
+int MPIX_T_enum_get_item(MPIX_T_enum enumtype, int num, int *value, char *name, int *name_len);
+int MPIX_T_cvar_get_num(int *num_cvar);
+int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *scope);
+int MPIX_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPIX_T_cvar_handle *handle, int *count);
+int MPIX_T_cvar_handle_free(MPIX_T_cvar_handle *handle);
+int MPIX_T_cvar_read(MPIX_T_cvar_handle handle, void *buf);
+int MPIX_T_cvar_write(MPIX_T_cvar_handle handle, void *buf);
+int MPIX_T_pvar_get_num(int *num_pvar);
+int MPIX_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *readonly, int *continuous, int *atomic);
+int MPIX_T_pvar_session_create(MPIX_T_pvar_session *session);
+int MPIX_T_pvar_session_free(MPIX_T_pvar_session *session);
+int MPIX_T_pvar_handle_alloc(MPIX_T_pvar_session session, int pvar_index, void *obj_handle, MPIX_T_pvar_handle *handle, int *count);
+int MPIX_T_pvar_handle_free(MPIX_T_pvar_session session, MPIX_T_pvar_handle *handle);
+int MPIX_T_pvar_start(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
+int MPIX_T_pvar_stop(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
+int MPIX_T_pvar_read(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
+int MPIX_T_pvar_write(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
+int MPIX_T_pvar_reset(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
+int MPIX_T_pvar_readreset(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
+int MPIX_T_category_get_num(int *num_cat);
+int MPIX_T_category_get_info(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_controlvars, int *num_pvars, int *num_categories);
+int MPIX_T_category_get_cvars(int cat_index, int len, int indices[]);
+int MPIX_T_category_get_pvars(int cat_index[], int len, int indices[]);
+int MPIX_T_category_get_categories(int cat_index, int len, int indices[]);
+int MPIX_T_category_changed(int *stamp);
+
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
 
@@ -1209,6 +1329,34 @@ int PMPIX_Ireduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI
 int PMPIX_Iscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
+int PMPIX_T_init_thread(int required, int *provided);
+int PMPIX_T_finalize(void);
+int PMPIX_T_enum_get_info(MPIX_T_enum enumtype, int num, char *name, int *name_len);
+int PMPIX_T_enum_get_item(MPIX_T_enum enumtype, int num, int *value, char *name, int *name_len);
+int PMPIX_T_cvar_get_num(int *num_cvar);
+int PMPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *scope);
+int PMPIX_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPIX_T_cvar_handle *handle, int *count);
+int PMPIX_T_cvar_handle_free(MPIX_T_cvar_handle *handle);
+int PMPIX_T_cvar_read(MPIX_T_cvar_handle handle, void *buf);
+int PMPIX_T_cvar_write(MPIX_T_cvar_handle handle, void *buf);
+int PMPIX_T_pvar_get_num(int *num_pvar);
+int PMPIX_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *readonly, int *continuous, int *atomic);
+int PMPIX_T_pvar_session_create(MPIX_T_pvar_session *session);
+int PMPIX_T_pvar_session_free(MPIX_T_pvar_session *session);
+int PMPIX_T_pvar_handle_alloc(MPIX_T_pvar_session session, int pvar_index, void *obj_handle, MPIX_T_pvar_handle *handle, int *count);
+int PMPIX_T_pvar_handle_free(MPIX_T_pvar_session session, MPIX_T_pvar_handle *handle);
+int PMPIX_T_pvar_start(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
+int PMPIX_T_pvar_stop(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
+int PMPIX_T_pvar_read(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
+int PMPIX_T_pvar_write(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
+int PMPIX_T_pvar_reset(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
+int PMPIX_T_pvar_readreset(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
+int PMPIX_T_category_get_num(int *num_cat);
+int PMPIX_T_category_get_info(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_controlvars, int *num_pvars, int *num_categories);
+int PMPIX_T_category_get_cvars(int cat_index, int len, int indices[]);
+int PMPIX_T_category_get_pvars(int cat_index[], int len, int indices[]);
+int PMPIX_T_category_get_categories(int cat_index, int len, int indices[]);
+int PMPIX_T_category_changed(int *stamp);
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
 

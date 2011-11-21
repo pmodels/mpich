@@ -1,0 +1,166 @@
+/*
+ *  Copyright (c) 2011 by Argonne National Laboratory
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to
+ *  deal in the Software without restriction, including without limitation the
+ *  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ *  sell copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ *  IN THE SOFTWARE.
+ */
+
+/* A simple test of the proposed MPI_T_ interface (as "MPIX_T") that assumes the
+ * presence of two performance variables: "posted_recvq_length" and
+ * "unexpected_recvq_length".  Some information about these variables is printed
+ * to stdout and then a few messages are sent/received to show that theses
+ * variables are reporting useful information.
+ *
+ * Author: Dave Goodell <goodell@mcs.anl.gov.
+ */
+
+#include "mpi.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <math.h>
+#include <string.h>
+
+int main(int argc, char **argv)
+{
+    int i;
+    int num;
+    int rank, size;
+/*#define STR_SZ (15)*/
+#define STR_SZ (50)
+    int name_len = STR_SZ;
+    char name[STR_SZ] = "";
+    int desc_len = STR_SZ;
+    char desc[STR_SZ] = "";
+    int verb;
+    MPI_Datatype dtype;
+    int count;
+    int bind;
+    int varclass;
+    int readonly, continuous, atomic;
+    int provided;
+    MPIX_T_pvar_session session;
+    MPIX_T_enum enumtype;
+    int pq_idx = -1, uq_idx = -1;
+    int posted_qlen, unexpected_qlen;
+    MPIX_T_pvar_handle pq_handle, uq_handle;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    provided = 0xdeadbeef;
+    MPIX_T_init_thread(MPI_THREAD_SINGLE, &provided);
+    assert(provided != 0xdeadbeef);
+
+    num = 0xdeadbeef;
+    MPIX_T_pvar_get_num(&num);
+    printf("get_num=%d\n", num);
+    assert(num != 0xdeadbeef);
+    for (i = 0; i < num; ++i) {
+        name_len = desc_len = STR_SZ;
+        MPIX_T_pvar_get_info(i, name, &name_len, &verb, &varclass, &dtype, &enumtype, desc, &desc_len, &bind, &readonly, &continuous, &atomic);
+        printf("index=%d\n", i);
+        printf("--> name='%s' name_len=%d desc='%s' desc_len=%d\n", name, name_len, desc, desc_len);
+        printf("--> verb=%d varclass=%d dtype=%#x bind=%d readonly=%d continuous=%d atomic=%d\n",
+               verb, varclass, dtype, bind, readonly, continuous, atomic);
+
+        if (0 == strcmp(name, "posted_recvq_length")) {
+            pq_idx = i;
+        }
+        else if (0 == strcmp(name, "unexpected_recvq_length")) {
+            uq_idx = i;
+        }
+    }
+
+    printf("pq_idx=%d uq_idx=%d\n", pq_idx, uq_idx);
+
+    /* setup a session and handles for the PQ and UQ length variables */
+    session = MPIX_T_PVAR_SESSION_NULL;
+    MPIX_T_pvar_session_create(&session);
+    assert(session != MPIX_T_PVAR_SESSION_NULL);
+
+    pq_handle = MPIX_T_PVAR_HANDLE_NULL;
+    MPIX_T_pvar_handle_alloc(session, pq_idx, NULL, &pq_handle, &count);
+    assert(count = 1);
+    assert(pq_handle != MPIX_T_PVAR_HANDLE_NULL);
+
+    uq_handle = MPIX_T_PVAR_HANDLE_NULL;
+    MPIX_T_pvar_handle_alloc(session, uq_idx, NULL, &uq_handle, &count);
+    assert(count = 1);
+    assert(uq_handle != MPIX_T_PVAR_HANDLE_NULL);
+
+    /* now send/recv some messages and track the lengths of the queues */
+    {
+        int buf1, buf2, buf3, buf4;
+        MPI_Request r1, r2, r3, r4;
+
+        buf1 = buf2 = buf3 = buf4 = 0xfeedface;
+        r1 = r2 = r3 = r4 = MPI_REQUEST_NULL;
+
+        posted_qlen = 0x0123abcd;
+        unexpected_qlen = 0x0123abcd;
+        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+        printf("(1) posted_qlen=%d unexpected_qlen=%d\n", posted_qlen, unexpected_qlen);
+
+        MPI_Isend(&buf1, 1, MPI_INT, 0, /*tag=*/11, MPI_COMM_SELF, &r1);
+        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+        printf("(2) posted_qlen=%d unexpected_qlen=%d (should be 0,1)\n", posted_qlen, unexpected_qlen);
+
+        MPI_Isend(&buf1, 1, MPI_INT, 0, /*tag=*/22, MPI_COMM_SELF, &r2);
+        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+        printf("(3) posted_qlen=%d unexpected_qlen=%d (should be 0,2)\n", posted_qlen, unexpected_qlen);
+
+        MPI_Irecv(&buf2, 1, MPI_INT, 0, /*tag=*/33, MPI_COMM_SELF, &r3);
+        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+        printf("(4) posted_qlen=%d unexpected_qlen=%d (should be 1,2)\n", posted_qlen, unexpected_qlen);
+
+        MPI_Recv(&buf3, 1, MPI_INT, 0, /*tag=*/22, MPI_COMM_SELF, MPI_STATUS_IGNORE);
+        MPI_Wait(&r2, MPI_STATUS_IGNORE);
+        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+        printf("(5) posted_qlen=%d unexpected_qlen=%d (should be 1,1)\n", posted_qlen, unexpected_qlen);
+
+        MPI_Recv(&buf3, 1, MPI_INT, 0, /*tag=*/11, MPI_COMM_SELF, MPI_STATUS_IGNORE);
+        MPI_Wait(&r1, MPI_STATUS_IGNORE);
+        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+        printf("(6) posted_qlen=%d unexpected_qlen=%d (should be 1,0)\n", posted_qlen, unexpected_qlen);
+
+        MPI_Send(&buf3, 1, MPI_INT, 0, /*tag=*/33, MPI_COMM_SELF);
+        MPI_Wait(&r3, MPI_STATUS_IGNORE);
+        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+        printf("(7) posted_qlen=%d unexpected_qlen=%d (should be 0,0)\n", posted_qlen, unexpected_qlen);
+    }
+
+    /* cleanup */
+    MPIX_T_pvar_handle_free(session, &uq_handle);
+    MPIX_T_pvar_handle_free(session, &pq_handle);
+    MPIX_T_pvar_session_free(&session);
+
+    MPIX_T_finalize();
+    MPI_Finalize();
+
+    return 0;
+}
+

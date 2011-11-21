@@ -130,3 +130,33 @@ int MPL_putenv(char *name_val)
 {
     return putenv(name_val);
 }
+
+/*
+ * Returns the value for a given envName in val if present, returns -1 if
+ * there is an error, 0 for no value, and 1 for value found (note that this
+ * isn't the same as GetEnvRange).  val is changed only if envName is
+ * found and is a valid double.
+ */
+int MPL_env2double(const char *envName, double *val)
+{
+    const char *val_ptr;
+    char *end_ptr = NULL;
+    double tmp;
+
+    val_ptr = getenv(envName);
+    if (val_ptr) {
+        /* just use strtod for now, we can patch it up with configury if we
+         * encounter any platforms that don't actually have it */
+        tmp = strtod(val_ptr, &end_ptr);
+        if (tmp == 0.0 && val_ptr == end_ptr) {
+            /* no conversion was performed by strtod */
+            return -1;
+        }
+        else {
+            *val = tmp;
+            return 1;
+        }
+    }
+    return 0;
+}
+

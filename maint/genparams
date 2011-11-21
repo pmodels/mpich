@@ -226,6 +226,8 @@ print PARAM_HDR <<EOT;
 /* initializes parameter values from the environment */
 int ${ns}_init_params(void);
 
+int ${ns}_finalize(void);
+
 enum ${ns}_type_t {
     ${uc_ns}_TYPE_INVALID = 0,
     ${uc_ns}_TYPE_INT,
@@ -256,7 +258,7 @@ struct ${ns}_t {
     const char *name;
     const char *description;
     const struct ${ns}_param_default_val_t default_val;
-    /* TODO other fields here */
+    void *val_p; /* ptr to the actual value */
 };
 
 /* array of parameter info for runtime usage */
@@ -308,10 +310,10 @@ foreach my $p (@{$params->{parameters}}) {
         qq(${uc_ns}_ID_%s,\n) .
         qq(      "%s",\n) .
         qq(      "%s",\n) .
-        #          T    I   D   S  R
-        qq(      { %s, %s, %s, %s, %s } },\n),
+        #          T    I   D   S  R     ptr
+        qq(      { %s, %s, %s, %s, %s }, %s },\n),
         $p->{name}, $p->{name}, $desc,
-        $type_enum_val, $int_val, $double_val, $str_val, $range_val;
+        $type_enum_val, $int_val, $double_val, $str_val, $range_val, "&${uc_ns}_".$p->{name};
 }
 
 print PARAM_C <<EOT;
@@ -337,12 +339,19 @@ int ${ns}_init_params(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
+    static int initialized = FALSE;
+
+    /* FIXME any MT issues here? */
+    if (initialized)
+        return MPI_SUCCESS;
+    initialized = TRUE;
 
 EOT
 
 foreach my $p (@{$params->{parameters}}) {
     my $env_fn = type_to_env_fn($p->{type});
     my @env_names = ();
+    my $var_name = "${uc_ns}_" . $p->{name};
 
     # process extra envs first so the primary always wins
     push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
@@ -353,7 +362,6 @@ foreach my $p (@{$params->{parameters}}) {
 
     foreach my $env_name (@env_names) {
         # assumes rc is defined
-        my $var_name = "${uc_ns}_" . $p->{name};
         if ($p->{type} eq 'range') {
             print PARAM_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name.low), &($var_name.high));
@@ -366,8 +374,54 @@ EOT
 EOT
         }
     }
+    if ($p->{type} eq "string") {
+        # We've only assigned string constants or unmodifiable getenv values up
+        # to this point.  Now strdup whatever value "won", even if it's the
+        # default.  NULL will be preserved as-is.
+print PARAM_C <<EOT;
+    if (${var_name} != NULL) {
+        const char *tmp = ${var_name};
+        ${var_name} = MPIU_Strdup(tmp);
+        ${ns}_assert(${var_name});
+        if (${var_name} == NULL) {
+            MPIU_CHKMEM_SETERR(mpi_errno, strlen(tmp), "dup of string for ${var_name}");
+            goto fn_fail;
+        }
+    }
+EOT
+    }
     print PARAM_C "\n";
 }
+
+print PARAM_C <<EOT;
+fn_fail:
+    return mpi_errno;
+}
+
+EOT
+
+print PARAM_C <<EOT;
+int ${ns}_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+EOT
+
+foreach my $p (@{$params->{parameters}}) {
+    my $var_name = "${uc_ns}_" . $p->{name};
+
+    if ($p->{type} eq "string") {
+        # need to cleanup after whatever was strduped by the init routine
+print PARAM_C <<EOT;
+    if (${var_name} != NULL) {
+        MPIU_Free(${var_name});
+        ${var_name} = NULL;
+    }
+
+EOT
+    }
+}
+
 
 print PARAM_C <<EOT;
 fn_fail:
@@ -416,6 +470,9 @@ print PARAM_HDR <<EOT;
 
 /* TODO: this should be defined elsewhere */
 #define ${ns}_assert MPIU_Assert
+
+/* arbitrary, simplifies interaction with external interfaces like MPI_T_ */
+#define ${uc_ns}_MAX_STRLEN (4096)
 
 /* helper macros for safely getting the default value of a parameter */
 EOT
@@ -537,6 +594,7 @@ sub type_to_env_fn {
         'int' =>  'int',
         'string' => 'str',
         'boolean' => 'bool',
+        'double' => 'double',
         'range' => 'range',
     );
 

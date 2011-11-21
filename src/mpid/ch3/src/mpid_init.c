@@ -173,6 +173,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
 
+    /* setup receive queue statistics */
+    mpi_errno = MPIDI_CH3U_Recvq_init();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /*
      * Initialize the MPI_COMM_WORLD object
      */

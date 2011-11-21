@@ -8,7 +8,8 @@
 include $(top_srcdir)/Makefile.mtest
 
 noinst_PROGRAMS = singjoin testconnect testconnectserial dimsbalanced \
-                  spawntest_master spawntest_child segfault
+                  spawntest_master spawntest_child segfault \
+                  mpit_test mpit_test2
 
 testconnectserial_SOURCES = testconnectserial.c tchandlers.c tcutil.c
 testconnectserial_LDADD   = $(LDADD) -lm
