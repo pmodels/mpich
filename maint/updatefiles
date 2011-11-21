@@ -149,7 +149,7 @@ amdirs=". src/openpa src/mpl"
 
 # List of steps that we will consider (We do not include depend
 # because the values for depend are not just yes/no)
-AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates makefiles smpdversion getparms"
+AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates smpdversion getparms"
 stepsCleared=no
 
 # Extract the arguments intended for updatefiles.  Any others are
@@ -183,7 +183,6 @@ for arg in "$@" ; do
 	    opt=`echo A$arg | sed -e 's/^A--*do=//'`
 	    case $opt in 
 		build-configure|configure) opt=build_configure ;;
-		makefile|Makefile|Makefiles) opt=makefiles;;
 	    esac
 	    var=do_$opt
 
