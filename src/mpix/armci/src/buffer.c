@@ -21,7 +21,7 @@
   * @param[in]  size      The size of the buffers (all are of the same size).
   * @return               Number of buffers that were moved.
   */
-int ARMCII_Buf_prepare_putv(void **orig_bufs, void ***new_bufs_ptr, int count, int size) {
+int ARMCII_Buf_prepare_read_vec(void **orig_bufs, void ***new_bufs_ptr, int count, int size) {
   int num_moved = 0;
 
   if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
@@ -70,7 +70,7 @@ int ARMCII_Buf_prepare_putv(void **orig_bufs, void ***new_bufs_ptr, int count, i
   * @param[in]  count     Number of entries in the buffer list.
   * @param[in]  size      The size of the buffers (all are of the same size).
   */
-void ARMCII_Buf_finish_putv(void **orig_bufs, void **new_bufs, int count, int size) {
+void ARMCII_Buf_finish_read_vec(void **orig_bufs, void **new_bufs, int count, int size) {
   if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
     int i;
 
@@ -97,7 +97,7 @@ void ARMCII_Buf_finish_putv(void **orig_bufs, void **new_bufs, int count, int si
   * @param[in]  scale     Scaling constant to apply to each buffer.
   * @return               Number of buffers that were moved.
   */
-int ARMCII_Buf_prepare_accv(void **orig_bufs, void ***new_bufs_ptr, int count, int size,
+int ARMCII_Buf_prepare_acc_vec(void **orig_bufs, void ***new_bufs_ptr, int count, int size,
                             int datatype, void *scale) {
 
   void **new_bufs;
@@ -109,28 +109,29 @@ int ARMCII_Buf_prepare_accv(void **orig_bufs, void ***new_bufs_ptr, int count, i
   scaled = ARMCII_Buf_acc_is_scaled(datatype, scale);
 
   for (i = 0; i < count; i++) {
-    gmr_t *mreg;
+    gmr_t *mreg = NULL;
 
     // Check if the source buffer is within a shared region.
-    mreg = gmr_lookup(orig_bufs[i], ARMCI_GROUP_WORLD.rank);
+    if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD)
+      mreg = gmr_lookup(orig_bufs[i], ARMCI_GROUP_WORLD.rank);
 
     if (scaled) {
       MPI_Alloc_mem(size, MPI_INFO_NULL, &new_bufs[i]);
       ARMCII_Assert(new_bufs[i] != NULL);
 
       // Lock if needed so we can directly access the buffer
-      if (mreg != NULL && ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD)
+      if (mreg != NULL)
         gmr_dla_lock(mreg);
 
       ARMCII_Buf_acc_scale(orig_bufs[i], new_bufs[i], size, datatype, scale);
 
-      if (mreg != NULL && ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD)
+      if (mreg != NULL)
         gmr_dla_unlock(mreg);
     } else {
       new_bufs[i] = orig_bufs[i];
     }
 
-    if (mreg != NULL && ARMCII_GLOBAL_STATE.shr_buf_method == ARMCII_SHR_BUF_COPY) {
+    if (mreg != NULL) {
       // If the buffer wasn't copied, we should copy it into a private buffer
       if (new_bufs[i] == orig_bufs[i]) {
         MPI_Alloc_mem(size, MPI_INFO_NULL, &new_bufs[i]);
@@ -161,7 +162,7 @@ int ARMCII_Buf_prepare_accv(void **orig_bufs, void ***new_bufs_ptr, int count, i
   * @param[in]  count     Number of entries in the buffer list.
   * @param[in]  size      The size of the buffers (all are of the same size).
   */
-void ARMCII_Buf_finish_accv(void **orig_bufs, void **new_bufs, int count, int size) {
+void ARMCII_Buf_finish_acc_vec(void **orig_bufs, void **new_bufs, int count, int size) {
   int i;
 
   for (i = 0; i < count; i++) {
@@ -184,7 +185,7 @@ void ARMCII_Buf_finish_accv(void **orig_bufs, void **new_bufs, int count, int si
   * @param[in]  size      The size of the buffers (all are of the same size).
   * @return               Number of buffers that were moved.
   */
-int ARMCII_Buf_prepare_getv(void **orig_bufs, void ***new_bufs_ptr, int count, int size) {
+int ARMCII_Buf_prepare_write_vec(void **orig_bufs, void ***new_bufs_ptr, int count, int size) {
   int num_moved = 0;
 
   if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
@@ -226,7 +227,7 @@ int ARMCII_Buf_prepare_getv(void **orig_bufs, void ***new_bufs_ptr, int count, i
   * @param[in]  count     Number of entries in the buffer list.
   * @param[in]  size      The size of the buffers (all are of the same size).
   */
-void ARMCII_Buf_finish_getv(void **orig_bufs, void **new_bufs, int count, int size) {
+void ARMCII_Buf_finish_write_vec(void **orig_bufs, void **new_bufs, int count, int size) {
   if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
     int i;
 

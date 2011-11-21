@@ -107,27 +107,24 @@ int ARMCI_Get(void *src, void *dst, int size, int target) {
   gmr_t *src_mreg, *dst_mreg;
 
   src_mreg = gmr_lookup(src, target);
-  dst_mreg = gmr_lookup(dst, ARMCI_GROUP_WORLD.rank);
+
+  /* If NOGUARD is set, assume the buffer is not shared */
+  if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD)
+    dst_mreg = gmr_lookup(dst, ARMCI_GROUP_WORLD.rank);
+  else
+    dst_mreg = NULL;
 
   ARMCII_Assert_msg(src_mreg != NULL, "Invalid remote pointer");
 
   /* Local operation */
-  if (target == ARMCI_GROUP_WORLD.rank) {
-    if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
-      if (dst_mreg) gmr_dla_lock(dst_mreg);  /* FIXME: Is this a hold-while wait?  Probably need an extra copy to be safe.. */
-      gmr_dla_lock(src_mreg);
-    }
-
+  if (target == ARMCI_GROUP_WORLD.rank && dst_mreg == NULL) {
+    gmr_dla_lock(src_mreg);
     ARMCI_Copy(src, dst, size);
-    
-    if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
-      if (dst_mreg) gmr_dla_unlock(dst_mreg);
-      gmr_dla_unlock(src_mreg);
-    }
+    gmr_dla_unlock(src_mreg);
   }
 
   /* Origin buffer is private */
-  else if (dst_mreg == NULL || ARMCII_GLOBAL_STATE.shr_buf_method == ARMCII_SHR_BUF_NOGUARD) {
+  else if (dst_mreg == NULL) {
     gmr_lock(src_mreg, target);
     gmr_get(src_mreg, src, dst, size, target);
     gmr_unlock(src_mreg, target);
@@ -167,28 +164,25 @@ int ARMCI_Get(void *src, void *dst, int size, int target) {
 int ARMCI_Put(void *src, void *dst, int size, int target) {
   gmr_t *src_mreg, *dst_mreg;
 
-  src_mreg = gmr_lookup(src, ARMCI_GROUP_WORLD.rank);
   dst_mreg = gmr_lookup(dst, target);
+
+  /* If NOGUARD is set, assume the buffer is not shared */
+  if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD)
+    src_mreg = gmr_lookup(src, ARMCI_GROUP_WORLD.rank);
+  else
+    src_mreg = NULL;
 
   ARMCII_Assert_msg(dst_mreg != NULL, "Invalid remote pointer");
 
   /* Local operation */
-  if (target == ARMCI_GROUP_WORLD.rank) {
-    if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
-      gmr_dla_lock(dst_mreg);
-      if (src_mreg) gmr_dla_lock(src_mreg);
-    }
-
+  if (target == ARMCI_GROUP_WORLD.rank && src_mreg == NULL) {
+    gmr_dla_lock(dst_mreg);
     ARMCI_Copy(src, dst, size);
-    
-    if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
-      gmr_dla_unlock(dst_mreg);
-      if (src_mreg) gmr_dla_unlock(src_mreg);
-    }
+    gmr_dla_unlock(dst_mreg);
   }
 
   /* Origin buffer is private */
-  else if (src_mreg == NULL || ARMCII_GLOBAL_STATE.shr_buf_method == ARMCII_SHR_BUF_NOGUARD) {
+  else if (src_mreg == NULL) {
     gmr_lock(dst_mreg, target);
     gmr_put(dst_mreg, src, dst, size, target);
     gmr_unlock(dst_mreg, target);
@@ -235,7 +229,12 @@ int ARMCI_Acc(int datatype, void *scale, void *src, void *dst, int bytes, int pr
   MPI_Datatype type;
   gmr_t *src_mreg, *dst_mreg;
 
-  src_mreg = gmr_lookup(src, ARMCI_GROUP_WORLD.rank);
+  /* If NOGUARD is set, assume the buffer is not shared */
+  if (ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD)
+    src_mreg = gmr_lookup(src, ARMCI_GROUP_WORLD.rank);
+  else
+    src_mreg = NULL;
+
   dst_mreg = gmr_lookup(dst, proc);
 
   ARMCII_Assert_msg(dst_mreg != NULL, "Invalid remote pointer");
@@ -245,7 +244,7 @@ int ARMCI_Acc(int datatype, void *scale, void *src, void *dst, int bytes, int pr
 
   scaled = ARMCII_Buf_acc_is_scaled(datatype, scale);
 
-  if (src_mreg && ARMCII_GLOBAL_STATE.shr_buf_method != ARMCII_SHR_BUF_NOGUARD) {
+  if (src_mreg) {
     gmr_dla_lock(src_mreg);
     src_is_locked = 1;
   }

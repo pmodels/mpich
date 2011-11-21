@@ -31,6 +31,7 @@ int ARMCIX_Mode_get(void *ptr);
   */
 
 int ARMCIX_Group_split(ARMCI_Group *parent, int color, int key, ARMCI_Group *new_group);
+int ARMCIX_Group_dup(ARMCI_Group *parent, ARMCI_Group *new_group);
 
 /** Mutex handles: These improve on basic ARMCI mutexes by allowing you to
   * create multiple batches of mutexes.  This is needed to allow libraries access to
@@ -38,11 +39,11 @@ int ARMCIX_Group_split(ARMCI_Group *parent, int color, int key, ARMCI_Group *new
   */
 
 struct armcix_mutex_hdl_s {
-  int        my_count;
-  int        max_count;
-  MPI_Comm   comm;
-  MPI_Win   *windows;
-  uint8_t  **bases;
+  int         my_count;
+  int         max_count;
+  ARMCI_Group grp;
+  MPI_Win    *windows;
+  uint8_t   **bases;
 };
 
 typedef struct armcix_mutex_hdl_s * armcix_mutex_hdl_t;

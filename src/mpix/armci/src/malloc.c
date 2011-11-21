@@ -44,7 +44,9 @@ int ARMCI_Free(void *ptr) {
 int ARMCI_Malloc_group(void **base_ptrs, int size, ARMCI_Group *group) {
   int i;
   gmr_t *mreg;
- 
+
+  ARMCII_Assert(ARMCI_Initialized());
+
   mreg = gmr_create(size, base_ptrs, group);
 
   if (DEBUG_CAT_ENABLED(DEBUG_CAT_ALLOC)) {

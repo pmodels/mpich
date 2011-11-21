@@ -23,18 +23,18 @@ configuring the source tree, the code can be built and installed by running:
 
 ARMCI-MPI can be used with GA 5.0 and later by substituting this directory for
 the "armci" directory in the GA distribution.  The quality of MPI-RMA
-implementations varies.  As of May, 2011 the following MPI implementations are
+implementations varies.  As of August, 2011 the following MPI implementations are
 known to work correctly with ARMCI-MPI:
 
  + MVAPICH2 1.6
  + MPICH2
  + Cray MPI on Cray XE6
- + IBM MPI on BG/P (set ARMCI_IOV_METHOD=BATCHED)
+ + IBM MPI on BG/P (set ARMCI_STRIDED_METHOD=IOV and ARMCI_IOV_METHOD=BATCHED)
+ + OpenMPI 1.5.4 (set ARMCI_STRIDED_METHOD=IOV and ARMCI_IOV_METHOD=BATCHED)
 
 The following MPI implementations are known to fail with ARMCI-MPI:
 
  - MVAPICH2 prior to 1.6
- - OpenMPI
 
 ===============================================================================
 The ARMCI-MPI Test Suite
@@ -93,6 +93,14 @@ ARMCI_FLUSH_BARRIERS (boolean)
   Enable/disable extra communication flushing in ARMCI_Barrier.  Extra flushes
   are present to help make unsafe DLA safer.
 
+ ---------------------
+: Performance Options :
+ ---------------------
+
+ARMCI_CACHE_RANK_TRANSLATION (boolean)
+
+  Create a table to more quickly translate between absolute and group ranks.
+
  --------------------------
 : Noncollective Groups     :
  --------------------------
@@ -135,16 +143,10 @@ ARMCI_IOV_BATCHED_LIMIT = { 0 (default), 1, ... }
   Set the maximum number of one-sided operations per epoch for the BATCHED IOV
   method.  Zero (default) is unlimited.
   
-ARMCI_IOV_NO_MPI_BOTTOM (boolean)
-
-  Disable the use of MPI_BOTTOM in datatypes.  This is a workaround for MPI
-  implementations that don't correctly handle MPI datatypes that are relative
-  to BOTTOM.
-
  -----------------
 : Strided Options :
  -----------------
 
-ARMCI_STRIDED_METHOD = { DIRECT, IOV (default) }
+ARMCI_STRIDED_METHOD = { DIRECT (default), IOV }
 
   Select the method for processing strided operations.

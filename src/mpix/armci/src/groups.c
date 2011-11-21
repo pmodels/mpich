@@ -18,6 +18,64 @@ ARMCI_Group ARMCI_GROUP_WORLD   = {0};
 ARMCI_Group ARMCI_GROUP_DEFAULT = {0};
 
 
+/** Initialize an ARMCI group's remaining fields using the communicator field.
+  */
+static void ARMCI_Group_init_from_comm(ARMCI_Group *group) {
+  if (group->comm != MPI_COMM_NULL) {
+    MPI_Comm_size(group->comm, &group->size);
+    MPI_Comm_rank(group->comm, &group->rank);
+
+  } else {
+    group->rank = -1;
+    group->size =  0;
+  }
+
+  /* If noncollective groups are in use, create a separate communicator that
+    can be used for noncollective group creation with this group as the parent.
+    This ensures that calls to MPI_Intercomm_create can't clash with any user
+    communication. */
+
+  if (ARMCII_GLOBAL_STATE.noncollective_groups && group->comm != MPI_COMM_NULL)
+    MPI_Comm_dup(group->comm, &group->noncoll_pgroup_comm);
+  else
+    group->noncoll_pgroup_comm = MPI_COMM_NULL;
+
+  /* Check if translation caching is enabled */
+  if (ARMCII_GLOBAL_STATE.cache_rank_translation) {
+    if (group->comm != MPI_COMM_NULL) {
+      int      *ranks, i;
+      MPI_Group world_group, sub_group;
+
+      group->abs_to_grp = malloc(sizeof(int)*ARMCI_GROUP_WORLD.size);
+      group->grp_to_abs = malloc(sizeof(int)*group->size);
+      ranks = malloc(sizeof(int)*ARMCI_GROUP_WORLD.size);
+
+      ARMCII_Assert(group->abs_to_grp != NULL && group->grp_to_abs != NULL && ranks != NULL);
+
+      for (i = 0; i < ARMCI_GROUP_WORLD.size; i++)
+        ranks[i] = i;
+
+      MPI_Comm_group(ARMCI_GROUP_WORLD.comm, &world_group);
+      MPI_Comm_group(group->comm, &sub_group);
+
+      MPI_Group_translate_ranks(sub_group, group->size, ranks, world_group, group->grp_to_abs);
+      MPI_Group_translate_ranks(world_group, ARMCI_GROUP_WORLD.size, ranks, sub_group, group->abs_to_grp);
+
+      MPI_Group_free(&world_group);
+      MPI_Group_free(&sub_group);
+
+      free(ranks);
+    }
+  }
+  
+  /* Translation caching is disabled */
+  else {
+    group->abs_to_grp = NULL;
+    group->grp_to_abs = NULL;
+  }
+}
+
+
 /** Create an ARMCI group that contains a subset of the nodes in the current
   * default group.  Collective across the default group.
   *
@@ -39,39 +97,17 @@ void ARMCI_Group_create(int grp_size, int *pid_list, ARMCI_Group *group_out) {
   * @param[out] armci_grp_out    The new ARMCI group, only valid on group members.
   * @param[in]  armci_grp_parent The parent of the new ARMCI group.
   */
-static inline void ARMCI_Group_create_child_collective(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
+static inline void ARMCI_Group_create_comm_collective(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
     ARMCI_Group *armci_grp_parent) {
 
   MPI_Group mpi_grp_parent;
   MPI_Group mpi_grp_child;
-
-  if (DEBUG_CAT_ENABLED(DEBUG_CAT_GROUPS)) {
-#define BUF_LEN 1000
-    char string[BUF_LEN];
-    int  i, count = 0;
-
-    for (i = 0; i < grp_size && count < BUF_LEN; i++)
-      count += snprintf(string+count, BUF_LEN-count, (i == grp_size-1) ? "%d" : "%d ", pid_list[i]);
-
-    ARMCII_Dbg_print(DEBUG_CAT_GROUPS, "%d procs [%s]\n", grp_size, string);
-#undef BUF_LEN
-  }
 
   MPI_Comm_group(armci_grp_parent->comm, &mpi_grp_parent);
   MPI_Group_incl(mpi_grp_parent, grp_size, pid_list, &mpi_grp_child);
 
   MPI_Comm_create(armci_grp_parent->comm, mpi_grp_child, &armci_grp_out->comm);
  
-  // ARMCI group is only valid on new group members
-  if (armci_grp_out->comm != MPI_COMM_NULL) {
-    MPI_Comm_size(armci_grp_out->comm, &armci_grp_out->size);
-    MPI_Comm_rank(armci_grp_out->comm, &armci_grp_out->rank);
-
-  } else {
-    armci_grp_out->rank = -1;
-    armci_grp_out->size =  0;
-  }
-
   MPI_Group_free(&mpi_grp_parent);
   MPI_Group_free(&mpi_grp_child);
 }
@@ -85,24 +121,12 @@ static inline void ARMCI_Group_create_child_collective(int grp_size, int *pid_li
   * @param[out] armci_grp_out    The new ARMCI group, only valid on group members.
   * @param[in]  armci_grp_parent The parent of the new ARMCI group.
   */
-static inline void ARMCI_Group_create_child_noncollective(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
+static inline void ARMCI_Group_create_comm_noncollective(int grp_size, int *pid_list, ARMCI_Group *armci_grp_out,
     ARMCI_Group *armci_grp_parent) {
 
   const int INTERCOMM_TAG = 42;
   int       i, grp_me, me, nproc, merge_size;
   MPI_Comm  pgroup, inter_pgroup;
-
-  if (DEBUG_CAT_ENABLED(DEBUG_CAT_GROUPS)) {
-#define BUF_LEN 1000
-    char string[BUF_LEN];
-    int  i, count = 0;
-
-    for (i = 0; i < grp_size && count < BUF_LEN; i++)
-      count += snprintf(string+count, BUF_LEN-count, (i == grp_size-1) ? "%d" : "%d ", pid_list[i]);
-
-    ARMCII_Dbg_print(DEBUG_CAT_GROUPS, "%d procs [%s]\n", grp_size, string);
-#undef BUF_LEN
-  }
 
   me    = armci_grp_parent->rank;
   nproc = armci_grp_parent->size;
@@ -118,18 +142,12 @@ static inline void ARMCI_Group_create_child_noncollective(int grp_size, int *pid
 
   if (grp_me < 0) {
     armci_grp_out->comm = MPI_COMM_NULL;
-    armci_grp_out->noncoll_pgroup_comm = MPI_COMM_NULL;
-    armci_grp_out->size = 0;
-    armci_grp_out->rank = -1;
     return;
   }
 
   /* CASE: Group size 1 */
   else if (grp_size == 1 && pid_list[0] == me) {
     MPI_Comm_dup(MPI_COMM_SELF, &armci_grp_out->comm);
-    MPI_Comm_dup(MPI_COMM_SELF, &armci_grp_out->noncoll_pgroup_comm);
-    armci_grp_out->size = 1;
-    armci_grp_out->rank = 0;
     return;
   }
 
@@ -157,15 +175,6 @@ static inline void ARMCI_Group_create_child_noncollective(int grp_size, int *pid
   }
 
   armci_grp_out->comm = pgroup;
-
-  MPI_Comm_size(armci_grp_out->comm, &armci_grp_out->size);
-  MPI_Comm_rank(armci_grp_out->comm, &armci_grp_out->rank);
-
-  /* Create a separate communicator that can be used for noncollective group
-     creation.  This ensures that calls to MPI_Intercomm_create can't clash
-     with any user communication. */
-
-  MPI_Comm_dup(armci_grp_out->comm, &armci_grp_out->noncoll_pgroup_comm);
 }
 
 
@@ -181,9 +190,11 @@ void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_gr
     ARMCI_Group *armci_grp_parent) {
 
   if (ARMCII_GLOBAL_STATE.noncollective_groups)
-    ARMCI_Group_create_child_noncollective(grp_size, pid_list, armci_grp_out, armci_grp_parent);
+    ARMCI_Group_create_comm_noncollective(grp_size, pid_list, armci_grp_out, armci_grp_parent);
   else
-    ARMCI_Group_create_child_collective(grp_size, pid_list, armci_grp_out, armci_grp_parent);
+    ARMCI_Group_create_comm_collective(grp_size, pid_list, armci_grp_out, armci_grp_parent);
+
+  ARMCI_Group_init_from_comm(armci_grp_out);
 }
 
 
@@ -198,6 +209,12 @@ void ARMCI_Group_free(ARMCI_Group *group) {
     if (ARMCII_GLOBAL_STATE.noncollective_groups)
       MPI_Comm_free(&group->noncoll_pgroup_comm);
   }
+
+  /* If the group has translation caches, free them */
+  if (group->abs_to_grp == NULL)
+    free(group->abs_to_grp);
+  if (group->grp_to_abs == NULL)
+    free(group->grp_to_abs);
 
   group->rank = -1;
   group->size = 0;
@@ -267,15 +284,32 @@ int ARMCI_Absolute_id(ARMCI_Group *group, int group_rank) {
   int       world_rank;
   MPI_Group world_group, sub_group;
 
-  MPI_Comm_group(ARMCI_GROUP_WORLD.comm, &world_group);
-  MPI_Comm_group(group->comm, &sub_group);
+  ARMCII_Assert(group_rank >= 0 && group_rank < group->size);
 
-  MPI_Group_translate_ranks(sub_group, 1, &group_rank, world_group, &world_rank);
+  /* Check if group is the world group */
+  if (group->comm == ARMCI_GROUP_WORLD.comm)
+    world_rank = group_rank;
 
-  MPI_Group_free(&world_group);
-  MPI_Group_free(&sub_group);
+  /* Check for translation cache */
+  else if (group->grp_to_abs != NULL)
+    world_rank = group->grp_to_abs[group_rank];
 
-  return world_rank;
+  else {
+    /* Translate the rank */
+    MPI_Comm_group(ARMCI_GROUP_WORLD.comm, &world_group);
+    MPI_Comm_group(group->comm, &sub_group);
+
+    MPI_Group_translate_ranks(sub_group, 1, &group_rank, world_group, &world_rank);
+
+    MPI_Group_free(&world_group);
+    MPI_Group_free(&sub_group);
+  }
+
+  /* Check if translation failed */
+  if (world_rank == MPI_UNDEFINED)
+    return -1;
+  else
+    return world_rank;
 }
 
 
@@ -297,11 +331,30 @@ int ARMCIX_Group_split(ARMCI_Group *parent, int color, int key, ARMCI_Group *new
   if (err != MPI_SUCCESS)
     return err;
 
-  MPI_Comm_rank(new_group->comm, &new_group->rank);
-  MPI_Comm_size(new_group->comm, &new_group->size);
+  ARMCI_Group_init_from_comm(new_group);
 
-  if (ARMCII_GLOBAL_STATE.noncollective_groups)
-    MPI_Comm_dup(new_group->comm, &new_group->noncoll_pgroup_comm);
+  return 0;
+}
+
+
+/** Duplicate an ARMCI group.  Collective across the parent group.
+  *
+  * @param[in]  parent The parent group.
+  * @param[in]  color  The id number of the new group.  Processes are grouped
+  *                    together so allthat give the same color will be placed
+  *                    in the same new group.
+  * @param[in]  key    Relative ordering of processes in the new group.
+  * @param[out] new_group Pointer to a handle where group info will be stored.
+  */
+int ARMCIX_Group_dup(ARMCI_Group *parent, ARMCI_Group *new_group) {
+  int err;
+
+  err = MPI_Comm_dup(parent->comm, &new_group->comm);
+
+  if (err != MPI_SUCCESS)
+    return err;
+
+  ARMCI_Group_init_from_comm(new_group);
 
   return 0;
 }

@@ -10,10 +10,14 @@
 #include <armci.h>
 
 #define DATA_SZ 100
+#define SHARED_BUF 1
 
 int main(int argc, char ** argv) {
   int    rank, nproc, i;
   int   *buf;
+#ifdef SHARED_BUF
+  void **base_ptrs;
+#endif
 
   MPI_Init(&argc, &argv);
   ARMCI_Init();
@@ -23,7 +27,13 @@ int main(int argc, char ** argv) {
 
   if (rank == 0) printf("Starting ARMCI GOP test with %d processes\n", nproc);
 
+#ifdef SHARED_BUF
+  base_ptrs = malloc(nproc*sizeof(void*));
+  ARMCI_Malloc(base_ptrs, DATA_SZ*sizeof(int));
+  buf = base_ptrs[rank];
+#else
   buf = malloc(DATA_SZ*sizeof(int));
+#endif
 
   if (rank == 0) printf(" - Testing ABSMIN\n");
 
@@ -51,7 +61,12 @@ int main(int argc, char ** argv) {
       ARMCI_Error("Fail", 1);
     }
 
+#ifdef SHARED_BUF
+  ARMCI_Free(base_ptrs[rank]);
+  free(base_ptrs);
+#else
   free(buf);
+#endif
 
   if (rank == 0) printf("Pass.\n");
 

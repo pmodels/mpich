@@ -47,8 +47,8 @@ void armci_msg_group_bcast_scope(int scope, void *buf, int len, int root, ARMCI_
 /* TODO */ void armci_msg_reduce(void *x, int n, char *op, int type); 
 /* TODO */ void armci_msg_reduce_scope(int scope, void *x, int n, char *op, int type); 
 
-/* TODO */ void armci_msg_sel(void *x, int n, char *op, int type, int contribute);
-/* TODO */ void armci_msg_sel_scope(int scope, void *x, int n, char *op, int type, int contribute);
+void armci_msg_sel(void *x, int n, char *op, int type, int contribute);
+void armci_msg_sel_scope(int scope, void *x, int n, char *op, int type, int contribute);
 
 /* TODO */ void armci_exchange_address(void *ptr_ar[], int n);
 

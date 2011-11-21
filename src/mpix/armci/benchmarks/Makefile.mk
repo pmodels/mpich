@@ -1,11 +1,12 @@
-##
-## Copyright (C) 2010. See COPYRIGHT in top-level directory.
-##
+#
+# Copyright (C) 2010. See COPYRIGHT in top-level directory.
+#
 
 check_PROGRAMS += benchmarks/ping-pong          \
                   benchmarks/ring-flood         \
                   benchmarks/contiguous-bench   \
                   benchmarks/strided-bench      \
+                  benchmarks/bench_groups       \
                   # end
 
 TESTS          += benchmarks/ping-pong          \
@@ -29,3 +30,7 @@ benchmarks_contiguous_bench_DEPENDENCIES = libarmci.la
 benchmarks_strided_bench_SOURCES = $(top_srcdir)/benchmarks/strided-bench.c
 benchmarks_strided_bench_LDADD = -larmci -lm
 benchmarks_strided_bench_DEPENDENCIES = libarmci.la
+
+benchmarks_bench_groups_SOURCES = $(top_srcdir)/benchmarks/bench_groups.c
+benchmarks_bench_groups_LDADD = -larmci -lm
+benchmarks_bench_groups_DEPENDENCIES = libarmci.la

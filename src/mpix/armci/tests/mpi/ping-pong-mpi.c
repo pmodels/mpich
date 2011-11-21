@@ -9,8 +9,9 @@
 
 #include <mpi.h>
 
-#define MAX_SIZE   262144
-#define NUM_ROUNDS 1000
+#define MAX_SIZE   (128*1024)
+#define NUM_ROUNDS 10000
+#define PROBE_PROGRESS
 
 int main(int argc, char **argv) {
   int        me, nproc, target;
@@ -72,14 +73,19 @@ int main(int argc, char **argv) {
             uint8_t val;
 
             do {
-              //MPI_Iprobe(0, 0, MPI_COMM_WORLD, &val, MPI_STATUS_IGNORE);
+#ifdef PROBE_PROGRESS
+              /* Needed for progress in many MPI implementations.. */
+              MPI_Iprobe(0, 0, MPI_COMM_WORLD, (void*) &val, MPI_STATUS_IGNORE);
+#endif
               MPI_Win_lock(MPI_LOCK_EXCLUSIVE, me, 0, window);
               val = ((volatile uint8_t*)rcv_buf)[0];
               MPI_Win_unlock(me, window);
             } while (val == 0);
 
             do {
-              //MPI_Iprobe(0, 0, MPI_COMM_WORLD, &val, MPI_STATUS_IGNORE);
+#ifdef PROBE_PROGRESS
+              MPI_Iprobe(0, 0, MPI_COMM_WORLD, (void*) &val, MPI_STATUS_IGNORE);
+#endif
               MPI_Win_lock(MPI_LOCK_EXCLUSIVE, me, 0, window);
               val = ((volatile uint8_t*)rcv_buf)[msg_length-1];
               MPI_Win_unlock(me, window);

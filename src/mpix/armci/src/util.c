@@ -76,7 +76,20 @@ int ARMCI_Uses_shm_grp(ARMCI_Group *group) {
   * @param[in]  size Number of bytes to copy
   */
 void ARMCI_Copy(void *src, void *dst, int size) {
+#ifndef COPY_WITH_SENDRECV
   memcpy(dst, src, size);
+#else
+  static MPI_Comm copy_comm = MPI_COMM_NULL;
+
+  if (copy_comm == MPI_COMM_NULL)
+    MPI_Comm_dup(MPI_COMM_SELF, &copy_comm);
+
+  MPI_Sendrecv(src, size, MPI_BYTE,
+      0 /* rank */, 0 /* tag */,
+      dst, size, MPI_BYTE,
+      0 /* rank */, 0 /* tag */,
+      copy_comm, MPI_STATUS_IGNORE);
+#endif
 }
 
 

@@ -135,7 +135,7 @@ void ARMCII_Absv_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatyp
   * @param[in]    group Group on which to perform the GOP
   */
 void armci_msg_group_gop_scope(int scope, void *x, int n, char *op, int type, ARMCI_Group *group) {
-  void        *out;
+  void        *out, **x_buf;
   MPI_Op       mpi_op;
   MPI_Datatype mpi_type;
   MPI_Comm     comm;
@@ -186,22 +186,27 @@ void armci_msg_group_gop_scope(int scope, void *x, int n, char *op, int type, AR
       return;
   }
 
+  MPI_Type_size(mpi_type, &mpi_type_size);
+
+  ARMCII_Buf_prepare_read_vec(&x, &x_buf, 1, n*mpi_type_size);
+
   // ABS MAX/MIN are unary as well as binary.  We need to also apply abs in the
   // single processor case when reduce would normally just be a no-op.
   if (group->size == 1 && (mpi_op == MPI_ABSMAX_OP || mpi_op == MPI_ABSMIN_OP)) {
-    ARMCII_Absv_op(x, x, &n, &mpi_type);
-    return;
+    ARMCII_Absv_op(x_buf[0], x_buf[0], &n, &mpi_type);
   }
 
-  MPI_Type_size(mpi_type, &mpi_type_size);
+  else {
+    out = malloc(n*mpi_type_size);
+    ARMCII_Assert(out != NULL);
 
-  out = malloc(n*mpi_type_size);
-  ARMCII_Assert(out != NULL);
+    MPI_Allreduce(x_buf[0], out, n, mpi_type, mpi_op, group->comm);
 
-  MPI_Allreduce(x, out, n, mpi_type, mpi_op, group->comm);
+    ARMCI_Copy(out, x_buf[0], n*mpi_type_size);
+    free(out);
+  }
 
-  ARMCI_Copy(out, x, n*mpi_type_size);
-  free(out);
+  ARMCII_Buf_finish_write_vec(&x, x_buf, 1, n*mpi_type_size);
 }
 
 void armci_msg_group_igop(int *x, int n, char *op, ARMCI_Group *group) {

@@ -10,4 +10,8 @@
 #define MP_MYID(X)           MPI_Comm_rank(MPI_COMM_WORLD,X)
 #define MP_TIMER()           MPI_Wtime()
 
+#define GA_INIT(ARGC,ARGV)    GA_Initialize()
+#define ARMCI_INIT(ARGC,ARGV) ARMCI_Init()
+
+
 #endif /* _MP3_H_ */

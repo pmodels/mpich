@@ -28,15 +28,15 @@ armcix_mutex_hdl_t ARMCIX_Create_mutexes_hdl(int my_count, ARMCI_Group *pgroup) 
   hdl = malloc(sizeof(struct armcix_mutex_hdl_s));
   ARMCII_Assert(hdl != NULL);
 
-  MPI_Comm_dup(pgroup->comm, &hdl->comm);
+  ARMCIX_Group_dup(pgroup, &hdl->grp);
 
-  MPI_Comm_rank(hdl->comm, &rank);
-  MPI_Comm_size(hdl->comm, &nproc);
+  MPI_Comm_rank(hdl->grp.comm, &rank);
+  MPI_Comm_size(hdl->grp.comm, &nproc);
 
   hdl->my_count = my_count;
 
   /* Find the max. count to determine how many windows we need. */
-  MPI_Allreduce(&my_count, &max_count, 1, MPI_INT, MPI_MAX, hdl->comm);
+  MPI_Allreduce(&my_count, &max_count, 1, MPI_INT, MPI_MAX, hdl->grp.comm);
   ARMCII_Assert_msg(max_count > 0, "Invalid number of mutexes");
 
   hdl->max_count = max_count;
@@ -63,7 +63,7 @@ armcix_mutex_hdl_t ARMCIX_Create_mutexes_hdl(int my_count, ARMCI_Group *pgroup) 
       size = nproc;
     }
 
-    MPI_Win_create(base, size, sizeof(uint8_t), MPI_INFO_NULL, hdl->comm, &hdl->windows[i]);
+    MPI_Win_create(base, size, sizeof(uint8_t), MPI_INFO_NULL, hdl->grp.comm, &hdl->windows[i]);
   }
 
   return hdl;
@@ -89,7 +89,7 @@ int ARMCIX_Destroy_mutexes_hdl(armcix_mutex_hdl_t hdl) {
     free(hdl->bases);
   }
 
-  MPI_Comm_free(&hdl->comm);
+  ARMCI_Group_free(&hdl->grp);
   free(hdl);
 
   return 0;
@@ -108,11 +108,11 @@ void ARMCIX_Lock_hdl(armcix_mutex_hdl_t hdl, int mutex, int world_proc) {
 
   ARMCII_Assert(mutex >= 0 && mutex < hdl->max_count);
 
-  MPI_Comm_rank(hdl->comm, &rank);
-  MPI_Comm_size(hdl->comm, &nproc);
+  MPI_Comm_rank(hdl->grp.comm, &rank);
+  MPI_Comm_size(hdl->grp.comm, &nproc);
 
   /* User gives us the absolute ID.  Translate to the rank in the mutex's group. */
-  proc = ARMCII_Translate_absolute_to_group(hdl->comm, world_proc);
+  proc = ARMCII_Translate_absolute_to_group(&hdl->grp, world_proc);
   ARMCII_Assert(proc >= 0);
 
   buf = malloc(nproc*sizeof(uint8_t));
@@ -148,7 +148,7 @@ void ARMCIX_Lock_hdl(armcix_mutex_hdl_t hdl, int mutex, int world_proc) {
   if (already_locked) {
     MPI_Status status;
     ARMCII_Dbg_print(DEBUG_CAT_MUTEX, "waiting for notification [proc = %d, mutex = %d]\n", proc, mutex);
-    MPI_Recv(NULL, 0, MPI_BYTE, MPI_ANY_SOURCE, ARMCI_MUTEX_TAG+mutex, hdl->comm, &status);
+    MPI_Recv(NULL, 0, MPI_BYTE, MPI_ANY_SOURCE, ARMCI_MUTEX_TAG+mutex, hdl->grp.comm, &status);
   }
 
   ARMCII_Dbg_print(DEBUG_CAT_MUTEX, "lock acquired [proc = %d, mutex = %d]\n", proc, mutex);
@@ -183,10 +183,10 @@ void ARMCIX_Unlock_hdl(armcix_mutex_hdl_t hdl, int mutex, int world_proc) {
 
   ARMCII_Assert(mutex >= 0 && mutex < hdl->max_count);
 
-  MPI_Comm_rank(hdl->comm, &rank);
-  MPI_Comm_size(hdl->comm, &nproc);
+  MPI_Comm_rank(hdl->grp.comm, &rank);
+  MPI_Comm_size(hdl->grp.comm, &nproc);
 
-  proc = ARMCII_Translate_absolute_to_group(hdl->comm, world_proc);
+  proc = ARMCII_Translate_absolute_to_group(&hdl->grp, world_proc);
   ARMCII_Assert(proc >= 0);
 
   buf = malloc(nproc*sizeof(uint8_t));
@@ -218,7 +218,7 @@ void ARMCIX_Unlock_hdl(armcix_mutex_hdl_t hdl, int mutex, int world_proc) {
     int p = (rank + i) % nproc;
     if (buf[p] == 1) {
       ARMCII_Dbg_print(DEBUG_CAT_MUTEX, "notifying %d [proc = %d, mutex = %d]\n", p, proc, mutex);
-      MPI_Send(NULL, 0, MPI_BYTE, p, ARMCI_MUTEX_TAG+mutex, hdl->comm);
+      MPI_Send(NULL, 0, MPI_BYTE, p, ARMCI_MUTEX_TAG+mutex, hdl->grp.comm);
       break;
     }
   }

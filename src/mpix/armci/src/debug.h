@@ -7,6 +7,7 @@
 
 #include <stdarg.h>
 #include <armciconf.h>
+#include <armci_internals.h>
 
 enum debug_cats_e {
   DEBUG_CAT_ALL        =  -1,
@@ -29,8 +30,8 @@ extern  unsigned DEBUG_CATS_ENABLED;
 #define ARMCII_Assert_msg(X,MSG) ((void)0)
 #else
 void    ARMCII_Assert_fail(const char *expr, const char *msg, const char *file, int line, const char *func);
-#define ARMCII_Assert(EXPR)          do { if (!(EXPR)) ARMCII_Assert_fail(#EXPR, NULL, __FILE__, __LINE__, __func__); } while(0)
-#define ARMCII_Assert_msg(EXPR, MSG) do { if (!(EXPR)) ARMCII_Assert_fail(#EXPR, MSG,  __FILE__, __LINE__, __func__); } while(0)
+#define ARMCII_Assert(EXPR)          do { if (unlikely(!(EXPR))) ARMCII_Assert_fail(#EXPR, NULL, __FILE__, __LINE__, __func__); } while(0)
+#define ARMCII_Assert_msg(EXPR, MSG) do { if (unlikely(!(EXPR))) ARMCII_Assert_fail(#EXPR, MSG,  __FILE__, __LINE__, __func__); } while(0)
 #endif /* NO_SEATBELTS    */
 
 

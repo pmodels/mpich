@@ -154,11 +154,7 @@ int ARMCII_Iov_op_dispatch(enum ARMCII_Op_e op, void **src, void **dst, int coun
 
   else if (   ARMCII_GLOBAL_STATE.iov_method == ARMCII_IOV_DIRECT
            || ARMCII_GLOBAL_STATE.iov_method == ARMCII_IOV_AUTO  ) {
-    if (ARMCII_GLOBAL_STATE.no_mpi_bottom == 1) {
-      return ARMCII_Iov_op_datatype_no_bottom(op, src, dst, count, type_count, type, proc);
-    } else {
-      return ARMCII_Iov_op_datatype(op, src, dst, count, type_count, type, proc);
-    }
+    return ARMCII_Iov_op_datatype(op, src, dst, count, type_count, type, proc);
 
   } else if (ARMCII_GLOBAL_STATE.iov_method == ARMCII_IOV_BATCHED) {
     return ARMCII_Iov_op_batched(op, src, dst, count, type_count, type, proc);
@@ -340,7 +336,9 @@ int ARMCII_Iov_op_datatype(enum ARMCII_Op_e op, void **src, void **dst, int coun
 
     MPI_Type_create_hindexed(count, block_len, disp_loc, type, &type_loc);
     MPI_Type_create_indexed_block(count, elem_count, disp_rem, type, &type_rem);
-    //MPI_Type_indexed(count, block_len, disp_rem, type, &type_rem);
+
+    /* MPI_Type_create_indexed_block should be more efficient than this:
+       MPI_Type_indexed(count, block_len, disp_rem, type, &type_rem); */
 
     MPI_Type_commit(&type_loc);
     MPI_Type_commit(&type_rem);
@@ -356,99 +354,6 @@ int ARMCII_Iov_op_datatype(enum ARMCII_Op_e op, void **src, void **dst, int coun
         break;
       case ARMCII_OP_GET:
         gmr_get_typed(mreg, MPI_BOTTOM, 1, type_rem, MPI_BOTTOM, 1, type_loc, proc);
-        break;
-      default:
-        ARMCII_Error("unknown operation (%d)", op);
-        return 1;
-    }
-
-    gmr_unlock(mreg, proc);
-
-    MPI_Type_free(&type_loc);
-    MPI_Type_free(&type_rem);
-
-    return 0;
-}    
-
-
-/** Optimized implementation of the ARMCI IOV operation that uses an MPI
-  * datatype to achieve a one-sided gather/scatter.  Does not use MPI_BOTTOM.
-  */
-int ARMCII_Iov_op_datatype_no_bottom(enum ARMCII_Op_e op, void **src, void **dst, int count, int elem_count,
-    MPI_Datatype type, int proc) {
-
-    gmr_t *mreg;
-    MPI_Datatype  type_loc, type_rem;
-    MPI_Aint      disp_loc[count];
-    int           disp_rem[count];
-    int           block_len[count];
-    void         *dst_win_base;
-    int           dst_win_size, i, type_size;
-    void        **buf_rem, **buf_loc;
-    MPI_Aint      base_rem;
-    MPI_Aint      base_loc;
-    void         *base_loc_ptr;
-
-    switch(op) {
-      case ARMCII_OP_ACC:
-      case ARMCII_OP_PUT:
-        buf_rem = dst;
-        buf_loc = src;
-        break;
-      case ARMCII_OP_GET:
-        buf_rem = src;
-        buf_loc = dst;
-        break;
-      default:
-        ARMCII_Error("unknown operation (%d)", op);
-        return 1;
-    }
-
-    MPI_Type_size(type, &type_size);
-
-    mreg = gmr_lookup(buf_rem[0], proc);
-    ARMCII_Assert_msg(mreg != NULL, "Invalid remote pointer");
-
-    dst_win_base = mreg->slices[proc].base;
-    dst_win_size = mreg->slices[proc].size;
-
-    MPI_Get_address(dst_win_base, &base_rem);
-
-    /* Pick a base address for the start of the origin's datatype */
-    base_loc_ptr = buf_loc[0];
-    MPI_Get_address(base_loc_ptr, &base_loc);
-
-    for (i = 0; i < count; i++) {
-      MPI_Aint target_rem, target_loc;
-      MPI_Get_address(buf_loc[i], &target_loc);
-      MPI_Get_address(buf_rem[i], &target_rem);
-      disp_loc[i]  =  target_loc - base_loc;
-      disp_rem[i]  = (target_rem - base_rem)/type_size;
-      block_len[i] = elem_count;
-
-      ARMCII_Assert_msg((target_rem - base_rem) % type_size == 0, "Transfer size is not a multiple of type size");
-      ARMCII_Assert_msg(disp_rem[i] >= 0 && disp_rem[i] < dst_win_size, "Invalid remote pointer");
-      ARMCII_Assert_msg(((uint8_t*)buf_rem[i]) + block_len[i] <= ((uint8_t*)dst_win_base) + dst_win_size, "Transfer exceeds buffer length");
-    }
-
-    MPI_Type_create_hindexed(count, block_len, disp_loc, type, &type_loc);
-    MPI_Type_create_indexed_block(count, elem_count, disp_rem, type, &type_rem);
-    //MPI_Type_indexed(count, block_len, disp_rem, type, &type_rem);
-
-    MPI_Type_commit(&type_loc);
-    MPI_Type_commit(&type_rem);
-
-    gmr_lock(mreg, proc);
-
-    switch(op) {
-      case ARMCII_OP_ACC:
-        gmr_accumulate_typed(mreg, base_loc_ptr, 1, type_loc, MPI_BOTTOM, 1, type_rem, proc);
-        break;
-      case ARMCII_OP_PUT:
-        gmr_put_typed(mreg, base_loc_ptr, 1, type_loc, MPI_BOTTOM, 1, type_rem, proc);
-        break;
-      case ARMCII_OP_GET:
-        gmr_get_typed(mreg, MPI_BOTTOM, 1, type_rem, base_loc_ptr, 1, type_loc, proc);
         break;
       default:
         ARMCII_Error("unknown operation (%d)", op);
@@ -484,9 +389,9 @@ int ARMCI_PutV(armci_giov_t *iov, int iov_len, int proc) {
     overlapping = ARMCII_Iov_check_overlap(iov[v].dst_ptr_array, iov[v].ptr_array_len, iov[v].bytes);
     same_alloc  = ARMCII_Iov_check_same_allocation(iov[v].dst_ptr_array, iov[v].ptr_array_len, proc);
 
-    ARMCII_Buf_prepare_putv(iov[v].src_ptr_array, &src_buf, iov[v].ptr_array_len, iov[v].bytes);
+    ARMCII_Buf_prepare_read_vec(iov[v].src_ptr_array, &src_buf, iov[v].ptr_array_len, iov[v].bytes);
     ARMCII_Iov_op_dispatch(ARMCII_OP_PUT, src_buf, iov[v].dst_ptr_array, iov[v].ptr_array_len, iov[v].bytes, 0, overlapping, same_alloc, proc);
-    ARMCII_Buf_finish_putv(iov[v].src_ptr_array, src_buf, iov[v].ptr_array_len, iov[v].bytes);
+    ARMCII_Buf_finish_read_vec(iov[v].src_ptr_array, src_buf, iov[v].ptr_array_len, iov[v].bytes);
   }
 
   return 0;
@@ -514,9 +419,9 @@ int ARMCI_GetV(armci_giov_t *iov, int iov_len, int proc) {
     overlapping = ARMCII_Iov_check_overlap(iov[v].dst_ptr_array, iov[v].ptr_array_len, iov[v].bytes);
     same_alloc  = ARMCII_Iov_check_same_allocation(iov[v].src_ptr_array, iov[v].ptr_array_len, proc);
 
-    ARMCII_Buf_prepare_getv(iov[v].dst_ptr_array, &dst_buf, iov[v].ptr_array_len, iov[v].bytes);
+    ARMCII_Buf_prepare_write_vec(iov[v].dst_ptr_array, &dst_buf, iov[v].ptr_array_len, iov[v].bytes);
     ARMCII_Iov_op_dispatch(ARMCII_OP_GET, iov[v].src_ptr_array, dst_buf, iov[v].ptr_array_len, iov[v].bytes, 0, overlapping, same_alloc, proc);
-    ARMCII_Buf_finish_getv(iov[v].dst_ptr_array, dst_buf, iov[v].ptr_array_len, iov[v].bytes);
+    ARMCII_Buf_finish_write_vec(iov[v].dst_ptr_array, dst_buf, iov[v].ptr_array_len, iov[v].bytes);
   }
 
   return 0;
@@ -543,9 +448,9 @@ int ARMCI_AccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int pr
     overlapping = ARMCII_Iov_check_overlap(iov[v].dst_ptr_array, iov[v].ptr_array_len, iov[v].bytes);
     same_alloc  = ARMCII_Iov_check_same_allocation(iov[v].dst_ptr_array, iov[v].ptr_array_len, proc);
 
-    ARMCII_Buf_prepare_accv(iov[v].src_ptr_array, &src_buf, iov[v].ptr_array_len, iov[v].bytes, datatype, scale);
+    ARMCII_Buf_prepare_acc_vec(iov[v].src_ptr_array, &src_buf, iov[v].ptr_array_len, iov[v].bytes, datatype, scale);
     ARMCII_Iov_op_dispatch(ARMCII_OP_ACC, src_buf, iov[v].dst_ptr_array, iov[v].ptr_array_len, iov[v].bytes, datatype, overlapping, same_alloc, proc);
-    ARMCII_Buf_finish_accv(iov[v].src_ptr_array, src_buf, iov[v].ptr_array_len, iov[v].bytes);
+    ARMCII_Buf_finish_acc_vec(iov[v].src_ptr_array, src_buf, iov[v].ptr_array_len, iov[v].bytes);
   }
 
   return 0;

@@ -182,7 +182,7 @@ void gmr_destroy(gmr_t *mreg, ARMCI_Group *group) {
     return;
 
   /* Translate world rank to group rank */
-  search_proc_out_grp = ARMCII_Translate_absolute_to_group(group->comm, search_proc_out);
+  search_proc_out_grp = ARMCII_Translate_absolute_to_group(group, search_proc_out);
 
   /* Broadcast the base address */
   MPI_Bcast(&search_base, sizeof(void*), MPI_BYTE, search_proc_out_grp, group->comm);
@@ -310,7 +310,7 @@ int gmr_put_typed(gmr_t *mreg, void *src, int src_count, MPI_Datatype src_type,
   int disp, grp_proc;
   MPI_Aint lb, extent;
 
-  grp_proc = ARMCII_Translate_absolute_to_group(mreg->group.comm, proc);
+  grp_proc = ARMCII_Translate_absolute_to_group(&mreg->group, proc);
   ARMCII_Assert(grp_proc >= 0);
 
   // Calculate displacement from beginning of the window
@@ -365,7 +365,7 @@ int gmr_get_typed(gmr_t *mreg, void *src, int src_count, MPI_Datatype src_type,
   int disp, grp_proc;
   MPI_Aint lb, extent;
 
-  grp_proc = ARMCII_Translate_absolute_to_group(mreg->group.comm, proc);
+  grp_proc = ARMCII_Translate_absolute_to_group(&mreg->group, proc);
   ARMCII_Assert(grp_proc >= 0);
 
   // Calculate displacement from beginning of the window
@@ -421,7 +421,7 @@ int gmr_accumulate_typed(gmr_t *mreg, void *src, int src_count, MPI_Datatype src
   int disp, grp_proc;
   MPI_Aint lb, extent;
 
-  grp_proc = ARMCII_Translate_absolute_to_group(mreg->group.comm, proc);
+  grp_proc = ARMCII_Translate_absolute_to_group(&mreg->group, proc);
   ARMCII_Assert(grp_proc >= 0);
 
   // Calculate displacement from beginning of the window
@@ -449,8 +449,8 @@ int gmr_accumulate_typed(gmr_t *mreg, void *src, int src_count, MPI_Datatype src
   * @return             0 on success, non-zero on failure
   */
 void gmr_lock(gmr_t *mreg, int proc) {
-  int grp_proc = ARMCII_Translate_absolute_to_group(mreg->group.comm, proc);
-  int grp_me   = ARMCII_Translate_absolute_to_group(mreg->group.comm, ARMCI_GROUP_WORLD.rank);
+  int grp_proc = ARMCII_Translate_absolute_to_group(&mreg->group, proc);
+  int grp_me   = ARMCII_Translate_absolute_to_group(&mreg->group, ARMCI_GROUP_WORLD.rank);
   int lock_assert, lock_mode;
 
   ARMCII_Assert(grp_proc >= 0 && grp_me >= 0);
@@ -500,8 +500,8 @@ void gmr_lock(gmr_t *mreg, int proc) {
   * @return             0 on success, non-zero on failure
   */
 void gmr_unlock(gmr_t *mreg, int proc) {
-  int grp_proc = ARMCII_Translate_absolute_to_group(mreg->group.comm, proc);
-  int grp_me   = ARMCII_Translate_absolute_to_group(mreg->group.comm, ARMCI_GROUP_WORLD.rank);
+  int grp_proc = ARMCII_Translate_absolute_to_group(&mreg->group, proc);
+  int grp_me   = ARMCII_Translate_absolute_to_group(&mreg->group, ARMCI_GROUP_WORLD.rank);
 
   ARMCII_Assert(grp_proc >= 0 && grp_me >= 0);
   ARMCII_Assert(mreg->lock_state == GMR_LOCK_EXCLUSIVE || mreg->lock_state == GMR_LOCK_SHARED);
@@ -532,7 +532,7 @@ void gmr_unlock(gmr_t *mreg, int proc) {
   * @return             0 on success, non-zero on failure
   */
 void gmr_dla_lock(gmr_t *mreg) {
-  int grp_proc = ARMCII_Translate_absolute_to_group(mreg->group.comm, ARMCI_GROUP_WORLD.rank);
+  int grp_proc = ARMCII_Translate_absolute_to_group(&mreg->group, ARMCI_GROUP_WORLD.rank);
 
   ARMCII_Assert(grp_proc >= 0);
   ARMCII_Assert(mreg->lock_state == GMR_LOCK_UNLOCKED || mreg->lock_state == GMR_LOCK_DLA);
@@ -558,7 +558,7 @@ void gmr_dla_lock(gmr_t *mreg) {
   * @param[in] mreg     Memory region
   */
 void gmr_dla_unlock(gmr_t *mreg) {
-  int grp_proc = ARMCII_Translate_absolute_to_group(mreg->group.comm, ARMCI_GROUP_WORLD.rank);
+  int grp_proc = ARMCII_Translate_absolute_to_group(&mreg->group, ARMCI_GROUP_WORLD.rank);
 
   ARMCII_Assert(grp_proc >= 0);
   ARMCII_Assert(mreg->lock_state == GMR_LOCK_DLA);
