@@ -37,12 +37,14 @@ int main(int argc, char *argv[])
     MPI_Group_excl(world_group, size / 2, excl, &even_group);
     MPI_Group_free(&world_group);
 
+#ifdef USE_STRICT_MPI
     if (rank % 2 == 0) {
         /* Even processes create a group for themselves */
         MPIX_Comm_create_group(MPI_COMM_WORLD, even_group, 0, &even_comm);
         MPI_Barrier(even_comm);
         MPI_Comm_free(&even_comm);
     }
+#endif /* USE_STRICT_MPI */
 
     MPI_Group_free(&even_group);
     MPI_Barrier(MPI_COMM_WORLD);

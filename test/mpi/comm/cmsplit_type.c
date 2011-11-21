@@ -16,7 +16,12 @@ int main(int argc, char *argv[])
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
 
+#ifdef USE_STRICT_MPI
     MPIX_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
+#else
+    MPI_Comm_split(MPI_COMM_WORLD, 0, 0, &comm);
+#endif /* USE_STRICT_MPI */
+
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 

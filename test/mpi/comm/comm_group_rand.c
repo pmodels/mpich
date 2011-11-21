@@ -40,11 +40,13 @@ int main(int argc, char **argv)
 
         MPI_Group_incl(full_group, count, ranks, &sub_group);
 
+#ifdef USE_STRICT_MPI
         if (included[rank]) {
             MPIX_Comm_create_group(MPI_COMM_WORLD, sub_group, 0, &comm);
             MPI_Barrier(comm);
             MPI_Comm_free(&comm);
         }
+#endif /* USE_STRICT_MPI */
 
         MPI_Group_free(&sub_group);
     }
