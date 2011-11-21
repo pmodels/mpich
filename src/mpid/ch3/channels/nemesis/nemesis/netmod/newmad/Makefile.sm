@@ -1,5 +1,0 @@
-INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
-           -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = \
-  newmad_finalize.c  newmad_init.c  newmad_poll.c      newmad_send.c \
-  newmad_register.c  newmad_test.c  newmad_cancel.c    newmad_probe.c 	newmad_alloc.c

@@ -1,5 +1,0 @@
-INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
-           -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = \
-  gm_finalize.c  gm_init.c  gm_poll.c      gm_send.c \
-  gm_getput.c    gm_lmt.c   gm_register.c  gm_test.c

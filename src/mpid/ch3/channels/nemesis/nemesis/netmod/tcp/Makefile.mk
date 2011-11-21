@@ -5,7 +5,9 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                       \
+if BUILD_NEMESIS_NETMOD_TCP
+
+lib_lib@MPILIBNAME@_la_SOURCES +=                                   \
     src/mpid/ch3/channels/nemesis/nemesis/netmod/tcp/tcp_finalize.c \
     src/mpid/ch3/channels/nemesis/nemesis/netmod/tcp/tcp_init.c     \
     src/mpid/ch3/channels/nemesis/nemesis/netmod/tcp/tcp_send.c     \
@@ -18,4 +20,6 @@ noinst_HEADERS +=                                                \
     src/mpid/ch3/channels/nemesis/nemesis/netmod/tcp/socksm.h    \
     src/mpid/ch3/channels/nemesis/nemesis/netmod/tcp/tcp_impl.h  \
     src/mpid/ch3/channels/nemesis/nemesis/netmod/tcp/tcp_queue.h
+
+endif BUILD_NEMESIS_NETMOD_TCP
 

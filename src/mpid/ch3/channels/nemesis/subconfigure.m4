@@ -1,21 +1,11 @@
 [#] start of __file__
 dnl
 dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
-dnl AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_ch3_channels_nemesis],[
-dnl AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_ch3_channels_nemesis],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_CH3_NEMESIS],[test "X$device_name" = "Xch3" -a "X$channel_name" = "Xnemesis"])
 AM_COND_IF([BUILD_CH3_NEMESIS],[
+AC_MSG_NOTICE([RUNNING PREREQ FOR ch3:nemesis])
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
-
-])dnl end AM_COND_IF(BUILD_CH3_NEMESIS,...)
-])dnl
-dnl
-dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_mpid_ch3_channels_nemesis],[
-
-AM_COND_IF([BUILD_CH3_NEMESIS],[
-AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis])
 
 ## code that formerly lived in setup_channel.args
 # Variables of interest...
@@ -32,20 +22,16 @@ if test -z "${channel_args}" ; then
 else
     nemesis_networks=`echo ${channel_args} | sed -e 's/,/ /g'`
 fi
+export nemesis_networks
 
-## code that formerly lived in setup_channel
-pathlist=""
-pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
-pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/include"
-pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/nemesis/utils/monitor"
-pathlist="$pathlist src/util/wrappers"
+])dnl end AM_COND_IF(BUILD_CH3_NEMESIS,...)
+])dnl
+dnl
+dnl _BODY handles the former role of configure in the subsystem
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
-## TODO delete all of this, these -I directives now live in the AM_CPPFLAGS in
-## Makefile.mk files
-##for path in $pathlist ; do
-##    PAC_APPEND_FLAG([-I${master_top_builddir}/${path}], [CPPFLAGS])
-##    PAC_APPEND_FLAG([-I${master_top_srcdir}/${path}], [CPPFLAGS])
-##done
+AM_COND_IF([BUILD_CH3_NEMESIS],[
+AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis])
 
 ## below is code that formerly lived in configure.in
 
@@ -53,8 +39,6 @@ pathlist="$pathlist src/util/wrappers"
 ##if test -n "${papi_dir}" ; then
 ##    PAC_APPEND_FLAG([-I${papi_dir}/include], [CPPFLAGS])
 ##fi
-
-export nemesis_networks
 
 dnl AC_CHECK_HEADER(net/if.h) fails on Solaris; extra header files needed
 AC_TRY_COMPILE([
@@ -116,12 +100,6 @@ PAC_SET_HEADER_LIB_PATH(mx)
 PAC_SET_HEADER_LIB_PATH(elan)
 PAC_SET_HEADER_LIB_PATH(psm)
 
-#check for NewMadeleine options 
-AC_ARG_WITH(newmad, [--with-newmad=path - specify path where pm2 software can be found],
-if test "${with_newmad}" != "yes" -a "${with_newmad}" != "no" ; then
-    LDFLAGS="$LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
-    CPPFLAGS="$CPPFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
-fi,)
 
 nemesis_nets_dirs=""
 nemesis_nets_strings=""
@@ -174,50 +152,6 @@ for net in $nemesis_networks ; do
     fi
 
     net_index=`expr $net_index + 1`
-
-    if test "${net}" = "gm" ; then
-       PAC_CHECK_HEADER_LIB_FATAL(gm, gm.h, gm, gm_init)
-    elif test "${net}" = "elan" ; then 
-       echo "=== You're about to use the experimental Nemesis/Elan network module." 
-       echo "=== This module has not been thoroughly tested and some performance issues remain."
-       PAC_CHECK_HEADER_LIB_FATAL(elan, elan/elan.h, elan, elan_baseInit)
-    elif test "${net}" = "psm" ; then 
-       PAC_CHECK_HEADER_LIB_FATAL(psm, psm.h, psm_infinipath, psm_init)
-    elif test "${net}" = "mx" ; then
-       PAC_CHECK_HEADER_LIB_FATAL(mx, myriexpress.h, myriexpress, mx_finalize)
-       AC_CHECK_HEADER([mx_extensions.h], , [
-                AC_MSG_ERROR(['mx_extensions.h not found. Are you running a recent version of MX (at least 1.2.1)?'])
-        ])
-        AC_TRY_COMPILE([
-        #include "myriexpress.h"
-        #include "mx_extensions.h"
-        #if MX_API < 0x301             
-        #error You need at least MX 1.2.1 (MX_API >= 0x301)
-        #endif],
-        [int a=0;],
-        mx_api_version=yes,
-        mx_api_version=no)
-        if test "$mx_api_version" = no ; then
-           AC_MSG_ERROR(['MX API version Problem.  Are you running a recent version of MX (at least 1.2.1)?'])
-        fi;
-        AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
-    elif test "${net}" = "newmad" ; then
-       AC_CHECK_HEADER([nm_public.h], , [
-          AC_MSG_ERROR(['nm_public.h not found.  Did you specify --with-newmad= ?'])
-       ])                                      
-       AC_CHECK_HEADER([nm_sendrecv_interface.h], , [
-          AC_MSG_ERROR(['nm_sendrecv_interface.h not found.  Did you specify --with-newmad= ?'])
-       ])
-       AC_CHECK_LIB(nmad,nm_core_init, , [
-          AC_MSG_ERROR(['nmad library not found.  Did you specify --with-newmad= ?'])
-       ])
-       AC_ARG_ENABLE(newmad-multirail,
-       [--enable-newmad-multirail -  enables multirail support in newmad module],,enable_multi=no)
-       if test "$enable_multi" = "yes" ; then
-           AC_DEFINE(MPID_MAD_MODULE_MULTIRAIL, 1, [Define to enable multirail support in newmad module])
-       fi                 
-       AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions]) 
-    fi; 
 
 done
 nemesis_nets_array_sz=$net_index
