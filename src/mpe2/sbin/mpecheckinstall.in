@@ -126,7 +126,7 @@ fi
 
 # Set up Examples directory for the MPE Logging programs
 for pkg in logging graphics collchk ; do
-    examplesdir=$sharedir/examples_${pkg}
+    examplesdir=$sharedir/examples/${pkg}
     if [ -f $examplesdir/Makefile ] ; then
         echo "Running installation $make_target for C $pkg program..."
         $Show "( cd $examplesdir && $MAKE ${make_target}_C $make_mperun )"

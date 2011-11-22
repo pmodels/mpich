@@ -547,7 +547,7 @@ for pkg in logging graphics collchk ; do
     dirname=${pkg}_dirname
     eval dirvalue=\$"$dirname"
     if [ -f $libbuild_dir/../$dirvalue/Makefile ] ; then
-        examplesdir=$sharedir/examples_${pkg}
+        examplesdir=$sharedir/examples/${pkg}
         MkDir $examplesdir
 #       Install example C and Fortran programs
         InstallDirRecur $top_srcdir/$dirvalue $examplesdir
@@ -619,7 +619,7 @@ fi
 #  Clean up the example directories
 for pkg in logging graphics ; do
     dirname=${pkg}_dirname
-    examplesdir=$sharedir/examples_${pkg}
+    examplesdir=$sharedir/examples/${pkg}
     if [ -s $DESTDIR$examplesdir/Makefile ] ; then
        echo "( cd \${DESTDIR}$examplesdir && $MAKE clean )" >> $UNINSTALLFILE
     fi
