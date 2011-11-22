@@ -8,6 +8,9 @@
  # MPI-3: the new MPI-3 MPI_Comm_split_type function is now available
    as an "MPIX_" function.
 
+ # MPI-3: the new MPI-3 tools interface is now available as "MPIX_T_"
+   functions.
+
  # Build system: Completely revamped build system to rely fully on
    autotools.
 
