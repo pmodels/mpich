@@ -13,6 +13,7 @@ C
       integer scounts(maxSize), sdispls(maxSize), stypes(maxSize)
       integer rcounts(maxSize), rdispls(maxSize), rtypes(maxSize)
       integer sbuf(maxSize), rbuf(maxSize)
+
       errs = 0
       
       call mtest_init( ierr )
@@ -72,74 +73,68 @@ C
             rbuf(i) = -1
          enddo
 
+C
+C     Note that the arrays are 1-origin
          displ = 0
          if (rank .gt. 0) then
-            scounts(rank-1) = 1
-            rcounts(rank-1) = 1
-            sdispls(rank-1)  = displ
-            rdispls(rank-1)  = rank - 1
-            sbuf(displ)     = rank - 1
-            displ           = displ + 1
+            scounts(1+rank-1) = 1
+            rcounts(1+rank-1) = 1
+            sdispls(1+rank-1) = displ
+            rdispls(1+rank-1) = rank - 1
+            sbuf(1+displ)     = rank
+            displ             = displ + 1
          endif
-         scounts(rank)   = 1
-         rcounts(rank)   = 1
-         sdispls(rank)    = displ
-         rdispls(rank)    = rank
-         sbuf(displ)     = rank
+         scounts(1+rank)   = 1
+         rcounts(1+rank)   = 1
+         sdispls(1+rank)   = displ
+         rdispls(1+rank)   = rank
+         sbuf(1+displ)     = rank
          displ           = displ + 1
          if (rank .lt. size-1) then
-            scounts(rank+1) = 1 
-            rcounts(rank+1) = 1
-            sdispls(rank+1)  = displ
-            rdispls(rank+1)  = rank+1
-            sbuf(rank+1)    = rank + 1
-            displ           = displ + 1
+            scounts(1+rank+1) = 1 
+            rcounts(1+rank+1) = 1
+            sdispls(1+rank+1) = displ
+            rdispls(1+rank+1) = rank+1
+            sbuf(1+displ)     = rank
+            displ             = displ + 1
          endif
-         
+
          call mpi_alltoallv( sbuf, scounts, sdispls, stypes,
      &        rbuf, rcounts, rdispls, rtypes, comm, ierr )
 C
-C check rbuf(i) = data from the ith location of the ith send buf, or
-C       rbuf(i) = (i-1) * size + i   
+C   Check the neighbor values are correctly moved
+C
          if (rank .gt. 0) then
-            if (rbuf(rank-1) .ne. rank-1) then
+            if (rbuf(1+rank-1) .ne. rank-1) then
                errs = errs + 1
-               print *, rank, ' rbuf(', rank-1, ') = ', rbuf(rank-1),
+               print *, rank, ' rbuf(',1+rank-1, ') = ', rbuf(1+rank-1),
      &              'expected ', rank-1
             endif
          endif
-         if (rbuf(rank) .ne. rank) then
+         if (rbuf(1+rank) .ne. rank) then
             errs = errs + 1
-            print *, rank, ' rbuf(', rank, ') = ', rbuf(rank),
+            print *, rank, ' rbuf(', 1+rank, ') = ', rbuf(1+rank),
      &           'expected ', rank
          endif
          if (rank .lt. size-1) then
-            if (rbuf(rank+1) .ne. rank+1) then
+            if (rbuf(1+rank+1) .ne. rank+1) then
                errs = errs + 1
-               print *, rank, ' rbuf(', rank+1, ') = ', rbuf(rank+1),
+               print *, rank, ' rbuf(', 1+rank+1, ') = ',rbuf(1+rank+1),
      &              'expected ', rank+1
             endif
          endif
          do i=0,rank-2
-            if (rbuf(i) .ne. -1) then
+            if (rbuf(1+i) .ne. -1) then
                errs = errs + 1
-               print *, rank, ' rbuf(', i, ') = ', rbuf(i), 
+               print *, rank, ' rbuf(', 1+i, ') = ', rbuf(1+i), 
      &              'expected -1'
             endif
          enddo
          do i=rank+2,size-1
-            if (rbuf(i) .ne. -1) then
+            if (rbuf(1+i) .ne. -1) then
                errs = errs + 1
-               print *, rank, ' rbuf(', i, ') = ', rbuf(i), 
+               print *, rank, ' rbuf(', i, ') = ', rbuf(1+i), 
      &              'expected -1'
-            endif
-         enddo
-         do i=1, size
-            ans = (i-1) * size + rank + 1
-            if (rbuf(i) .ne. ans) then
-               errs = errs + 1
-               print *, rank, ' rbuf(', i, ') = ', rbuf(i), 
-     &               ' expected ', ans
             endif
          enddo
       endif
