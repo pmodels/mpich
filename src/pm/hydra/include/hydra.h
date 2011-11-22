@@ -569,6 +569,7 @@ HYD_status HYDU_sock_cloexec(int fd);
 
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
+        (p) = NULL; /* initialize p in case assert fails */             \
         HYDU_ASSERT(size, status);                                      \
         (p) = (type) HYDU_malloc((size));                               \
         if ((p) == NULL)                                                \
