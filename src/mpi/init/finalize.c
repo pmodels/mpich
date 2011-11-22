@@ -222,6 +222,23 @@ int MPI_Finalize( void )
     /* If memory debugging is enabled, check the memory here, after all
        finalize callbacks */
 
+    /* basically safe, since the Param_finalize is idempotent, even
+     * though the MPIX_T_finalize routine will also call it */
+    mpi_errno = MPIR_Param_finalize();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* FIXME will cause problems with MPIX_T_finalize when it is used
+     * after MPI_Finalize.  The init/finalize paths in general need a
+     * big overhaul in order to account for the new MPIX_T_ code, and
+     * also to examine the feasibility of the proposed "allow calling
+     * init/finalize multiple times" in the MPI Forum. */
+    MPIR_T_finalize_pvars();
+
+    /* basically safe, since the Param_finalize is idempotent, even
+     * though the MPIX_T_finalize routine will also call it */
+    mpi_errno = MPIR_Param_finalize();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPIR_Process.initialized = MPICH_POST_FINALIZED;
 
