@@ -27,6 +27,7 @@ typedef struct MPIR_Dist_graph_topology {
     int outdegree;
     int *out;
     int *out_weights;
+    int is_weighted;
 } MPIR_Dist_graph_topology;
 
 typedef struct MPIR_Topology { 

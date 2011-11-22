@@ -105,10 +105,10 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     MPIU_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree*sizeof(int));
     MPIU_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree*sizeof(int));
 
-    if (sourceweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.in_weights) {
+    if (sourceweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
         MPIU_Memcpy(sourceweights, topo_ptr->topo.dist_graph.in_weights, maxindegree*sizeof(int));
     }
-    if (destweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.out_weights) {
+    if (destweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
         MPIU_Memcpy(destweights, topo_ptr->topo.dist_graph.out_weights, maxoutdegree*sizeof(int));
     }
 

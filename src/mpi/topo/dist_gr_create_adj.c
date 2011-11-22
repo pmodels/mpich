@@ -153,13 +153,14 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     dist_graph_ptr->outdegree = outdegree;
     dist_graph_ptr->out = NULL;
     dist_graph_ptr->out_weights = NULL;
+    dist_graph_ptr->is_weighted = (sourceweights != MPI_UNWEIGHTED);
 
     MPIU_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree*sizeof(int), mpi_errno, "dist_graph_ptr->in");
     MPIU_CHKPMEM_MALLOC(dist_graph_ptr->out, int *, outdegree*sizeof(int), mpi_errno, "dist_graph_ptr->out");
     MPIU_Memcpy(dist_graph_ptr->in, sources, indegree*sizeof(int));
     MPIU_Memcpy(dist_graph_ptr->out, destinations, outdegree*sizeof(int));
 
-    if (sourceweights != MPI_UNWEIGHTED) {
+    if (dist_graph_ptr->is_weighted) {
         MPIU_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, int *, indegree*sizeof(int), mpi_errno, "dist_graph_ptr->in_weights");
         MPIU_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, int *, outdegree*sizeof(int), mpi_errno, "dist_graph_ptr->out_weights");
         MPIU_Memcpy(dist_graph_ptr->in_weights, sourceweights, indegree*sizeof(int));

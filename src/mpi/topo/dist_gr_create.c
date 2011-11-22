@@ -138,8 +138,6 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
                 }
                 if (have_degrees) {
                     MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);
-                    /* in practice this check is currently silly, since
-                     * MPI_UNWEIGHTED==NULL */
                     if (weights != MPI_UNWEIGHTED)
                         MPIR_ERRTEST_ARGNULL(weights, "weights", mpi_errno);
                 }
@@ -293,15 +291,16 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     dist_graph_ptr->outdegree = 0;
     dist_graph_ptr->out = NULL;
     dist_graph_ptr->out_weights = NULL;
+    dist_graph_ptr->is_weighted = (weights != MPI_UNWEIGHTED);
 
     /* can't use CHKPMEM macros for this b/c we need to realloc */
     in_capacity = 10; /* arbitrary */
     dist_graph_ptr->in = MPIU_Malloc(in_capacity*sizeof(int));
-    if (weights != MPI_UNWEIGHTED)
+    if (dist_graph_ptr->is_weighted)
         dist_graph_ptr->in_weights = MPIU_Malloc(in_capacity*sizeof(int));
     out_capacity = 10; /* arbitrary */
     dist_graph_ptr->out = MPIU_Malloc(out_capacity*sizeof(int));
-    if (weights != MPI_UNWEIGHTED)
+    if (dist_graph_ptr->is_weighted)
         dist_graph_ptr->out_weights = MPIU_Malloc(out_capacity*sizeof(int));
 
     for (i = 0; i < in_out_peers[0]; ++i) {
@@ -324,11 +323,11 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
             if (deg >= in_capacity) {
                 in_capacity *= 2;
                 MPIU_REALLOC_ORJUMP(dist_graph_ptr->in, in_capacity*sizeof(int), mpi_errno);
-                if (weights != MPI_UNWEIGHTED)
+                if (dist_graph_ptr->is_weighted)
                     MPIU_REALLOC_ORJUMP(dist_graph_ptr->in_weights, in_capacity*sizeof(int), mpi_errno);
             }
             dist_graph_ptr->in[deg] = buf[2*j];
-            if (weights != MPI_UNWEIGHTED)
+            if (dist_graph_ptr->is_weighted)
                 dist_graph_ptr->in_weights[deg] = buf[2*j+1];
         }
         MPIU_Free(buf);
@@ -354,11 +353,11 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
             if (deg >= out_capacity) {
                 out_capacity *= 2;
                 MPIU_REALLOC_ORJUMP(dist_graph_ptr->out, out_capacity*sizeof(int), mpi_errno);
-                if (weights != MPI_UNWEIGHTED)
+                if (dist_graph_ptr->is_weighted)
                     MPIU_REALLOC_ORJUMP(dist_graph_ptr->out_weights, out_capacity*sizeof(int), mpi_errno);
             }
             dist_graph_ptr->out[deg] = buf[2*j];
-            if (weights != MPI_UNWEIGHTED)
+            if (dist_graph_ptr->is_weighted)
                 dist_graph_ptr->out_weights[deg] = buf[2*j+1];
         }
         MPIU_Free(buf);
@@ -370,7 +369,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     /* remove any excess memory allocation */
     MPIU_REALLOC_ORJUMP(dist_graph_ptr->in, dist_graph_ptr->indegree*sizeof(int), mpi_errno);
     MPIU_REALLOC_ORJUMP(dist_graph_ptr->out, dist_graph_ptr->outdegree*sizeof(int), mpi_errno);
-    if (weights != MPI_UNWEIGHTED) {
+    if (dist_graph_ptr->is_weighted) {
         MPIU_REALLOC_ORJUMP(dist_graph_ptr->in_weights, dist_graph_ptr->indegree*sizeof(int), mpi_errno);
         MPIU_REALLOC_ORJUMP(dist_graph_ptr->out_weights, dist_graph_ptr->outdegree*sizeof(int), mpi_errno);
     }

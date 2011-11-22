@@ -98,7 +98,7 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
     MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPIR_ERR_RECOVERABLE, "**notdistgraphtopo");
     *indegree = topo_ptr->topo.dist_graph.indegree;
     *outdegree = topo_ptr->topo.dist_graph.outdegree;
-    *weighted = (topo_ptr->topo.dist_graph.in_weights || topo_ptr->topo.dist_graph.out_weights);
+    *weighted = topo_ptr->topo.dist_graph.is_weighted;
 
     /* ... end of body of routine ... */
 
