@@ -30,6 +30,12 @@ $fcname = "f77";
 # Set whether the C++ and Fortran bindings have been built.  
 $has_f77 = 1;
 $has_cxx = 1;
+
+# Set this for the make option to enable the execution of multiple job
+# steps at once.  Do not use this if the archive step (ar) is not setup
+# to avoid concurrent, conflicting updates to the same archive.
+$parallelBuild = "-j 8";
+#$parallelBuild = "";
 #
 # Some process managers require separate startup and rundown steps.  The 
 # following variables are used to handle this
@@ -392,11 +398,14 @@ sub RunTest {
 	    # Remove mpd and smpd just in case (see below)
 	    unlink "bin/mpd";
 	    unlink "bin/smpd";
-	    $rc = &RunProgram( $makepgm );
+	    $rc = &RunProgram( "$makepgm $parallelBuild" );
 	    print $OUTFD $MakeEnd;
 	    $make_status = $rc;
 	    if ($rc == 0) {
 		# Only perform these steps if the make succeeded
+
+# FIXME: Restore the tests for nonconforming global systems and for 
+# minimum memory and routing footprint
 
 # Deleted this test because it is no longer a design goal for MPICH
 # that it have no nonconforming global symbols
