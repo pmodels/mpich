@@ -24,7 +24,7 @@ int MPIR_T_pvar_add(const char *name,
                     MPI_Datatype dtype,
                     struct MPIR_T_enum *enumtype,
                     const char *desc,
-                    enum MPIR_T_bind_t bind,
+                    enum MPIR_T_bind_t binding,
                     int readonly,
                     int continuous,
                     int atomic,
@@ -50,7 +50,7 @@ int MPIR_T_pvar_add(const char *name,
     info->etype = enumtype;
     info->desc = MPIU_Strdup((desc ? desc : ""));
     MPIU_Assert(info->desc);
-    info->bind = bind;
+    info->binding = binding;
     info->readonly = readonly;
     info->continuous = continuous;
     info->atomic = atomic;
@@ -135,7 +135,7 @@ void MPIU_Tool_strncpy(char *dst, const char *src, int *len)
 
     if (!dst || !len) {
         /* just return the space needed to hold src, including the terminator */
-        *len == strlen(src);
+        *len = strlen(src);
     }
     else {
         /* MPL_strncpy will always terminate the string */

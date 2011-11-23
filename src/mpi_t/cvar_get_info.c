@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_cvar_get_info_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *scope)
+int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_Param_t *p = NULL;
@@ -68,7 +68,7 @@ int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *ve
             break;
     }
 
-    *bind = MPIX_T_BIND_NO_OBJECT;
+    *binding = MPIX_T_BIND_NO_OBJECT;
 
     /* FIXME a bit of a fib, may not actually be true for any given cvar */
     *scope = MPIX_T_SCOPE_LOCAL;
@@ -101,7 +101,7 @@ Output Parameters:
 . datatype - MPI datatype of the information stored in the control variable (handle)
 . enumtype - optional descriptor for enumeration information (handle)
 . desc - buffer to return the string containing a description of the control variable (string)
-. bind - type of MPI object this variable is associated with
+. binding - type of MPI object this variable is associated with
 - scope - scope of when changes to this variable are possible (integer)
 
 .N ThreadSafe
@@ -110,7 +110,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *scope)
+int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_CVAR_GET_INFO);
@@ -141,7 +141,7 @@ int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosi
             MPIR_ERRTEST_ARGNULL(name_len, "name_len", mpi_errno);
             MPIR_ERRTEST_ARGNULL(verbosity, "verbosity", mpi_errno);
             MPIR_ERRTEST_ARGNULL(desc_len, "desc_len", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(bind, "bind", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(binding, "binding", mpi_errno);
             MPIR_ERRTEST_ARGNULL(scope, "scope", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
@@ -152,7 +152,7 @@ int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosi
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_cvar_get_info_impl(cvar_index, name, name_len, verbosity, datatype, enumtype, desc, desc_len, bind, scope);
+    mpi_errno = MPIR_T_cvar_get_info_impl(cvar_index, name, name_len, verbosity, datatype, enumtype, desc, desc_len, binding, scope);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
@@ -168,7 +168,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_t_cvar_get_info", "**mpix_t_cvar_get_info %d %p %p %p %p %p %p %p %p %p", cvar_index, name, name_len, verbosity, datatype, enumtype, desc, desc_len, bind, scope);
+            "**mpix_t_cvar_get_info", "**mpix_t_cvar_get_info %d %p %p %p %p %p %p %p %p %p", cvar_index, name, name_len, verbosity, datatype, enumtype, desc, desc_len, binding, scope);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

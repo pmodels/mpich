@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_pvar_get_info_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *readonly, int *continuous, int *atomic)
+int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *readonly, int *continuous, int *atomic)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_T_pvar_info *info = NULL;
@@ -45,7 +45,7 @@ int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *ve
     *var_class  = info->varclass;
     *datatype   = info->dtype;
     *enumtype   = info->etype;
-    *bind       = info->bind;
+    *binding    = info->binding;
     *readonly   = info->readonly;
     *continuous = info->continuous;
     *atomic     = info->atomic;
@@ -79,7 +79,7 @@ Output Parameters:
 . datatype - MPI type of the information stored in the performance variable (handle)
 . enumtype - optional descriptor for enumeration information (handle)
 . desc - buffer to return the string containing a description of the performance variable (string)
-. bind - type of MPI object to which this variable must be bound (integer)
+. binding - type of MPI object to which this variable must be bound (integer)
 . readonly - flag indicating whether the variable can be written/reset (integer)
 . continuous - flag indicating whether the variable can be started and stopped or is continuously active (integer)
 - atomic - flag indicating whether the variable can be atomically read and reset (integer)
@@ -90,7 +90,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *readonly, int *continuous, int *atomic)
+int MPIX_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *readonly, int *continuous, int *atomic)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_PVAR_GET_INFO);
@@ -122,7 +122,7 @@ int MPIX_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosi
             MPIR_ERRTEST_ARGNULL(verbosity, "verbosity", mpi_errno);
             MPIR_ERRTEST_ARGNULL(var_class, "var_class", mpi_errno);
             MPIR_ERRTEST_ARGNULL(desc_len, "desc_len", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(bind, "bind", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(binding, "binding", mpi_errno);
             MPIR_ERRTEST_ARGNULL(readonly, "readonly", mpi_errno);
             MPIR_ERRTEST_ARGNULL(continuous, "continuous", mpi_errno);
             MPIR_ERRTEST_ARGNULL(atomic, "atomic", mpi_errno);
@@ -135,7 +135,7 @@ int MPIX_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosi
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_pvar_get_info_impl(pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, bind, readonly, continuous, atomic);
+    mpi_errno = MPIR_T_pvar_get_info_impl(pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, binding, readonly, continuous, atomic);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
@@ -151,7 +151,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_t_pvar_get_info", "**mpix_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p", pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, bind, readonly, continuous, atomic);
+            "**mpix_t_pvar_get_info", "**mpix_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p", pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, binding, readonly, continuous, atomic);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

@@ -3110,7 +3110,7 @@ struct MPIR_T_pvar_info {
     MPI_Datatype dtype;
     struct MPIR_T_enum *etype;
     char *desc;
-    enum MPIR_T_bind_t bind;
+    enum MPIR_T_bind_t binding;
     int readonly;
     int continuous;
     int atomic;
@@ -3173,6 +3173,7 @@ int MPIR_T_pvar_add(const char *name,
 int MPIR_T_get_num_pvars(int *num);
 int MPIR_T_get_pvar_info_by_idx(int idx, struct MPIR_T_pvar_info **info_p);
 int MPIR_T_finalize_pvars(void);
+void MPIU_Tool_strncpy(char *dst, const char *src, int *len);
 
 /*TTopoOverview.tex
  *
@@ -3786,13 +3787,13 @@ int MPIR_T_finalize_impl(void);
 int MPIR_T_enum_get_info_impl(MPIX_T_enum enumtype, int num, char *name, int *name_len);
 int MPIR_T_enum_get_item_impl(MPIX_T_enum enumtype, int num, int *value, char *name, int *name_len);
 int MPIR_T_cvar_get_num_impl(int *num_cvar);
-int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *scope);
+int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope);
 int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPIX_T_cvar_handle *handle, int *count);
 int MPIR_T_cvar_handle_free_impl(MPIX_T_cvar_handle *handle);
 int MPIR_T_cvar_read_impl(MPIX_T_cvar_handle handle, void *buf);
 int MPIR_T_cvar_write_impl(MPIX_T_cvar_handle handle, void *buf);
 int MPIR_T_pvar_get_num_impl(int *num_pvar);
-int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *bind, int *readonly, int *continuous, int *atomic);
+int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *readonly, int *continuous, int *atomic);
 int MPIR_T_pvar_session_create_impl(MPIX_T_pvar_session *session);
 int MPIR_T_pvar_session_free_impl(MPIX_T_pvar_session *session);
 int MPIR_T_pvar_handle_alloc_impl(MPIX_T_pvar_session session, int pvar_index, void *obj_handle, MPIX_T_pvar_handle *handle, int *count);
