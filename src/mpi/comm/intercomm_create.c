@@ -565,8 +565,8 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 	    }
 	    MPID_END_ERROR_CHECKS;
 	}
-    }
 #       endif /* HAVE_ERROR_CHECKING */
+    }
 
         /* ... body of routine ... */
     mpi_errno = MPIR_Intercomm_create_impl(local_comm_ptr, local_leader, peer_comm_ptr,
