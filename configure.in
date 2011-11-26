@@ -887,6 +887,8 @@ fi
 if test "$enable_error_checking" = "default" ; then
    enable_error_checking=all
 fi
+# glue_romio.h needs the variable HAVE_ERROR_CHECKING to have the value 0 or 1
+HAVE_ERROR_CHECKING=0
 case "$enable_error_checking" in 
     no)
     # if error checking has been disabled, then automatically disable the error
@@ -904,7 +906,7 @@ case "$enable_error_checking" in
     AC_MSG_WARN([Unknown value $enable_error_checking for enable-error-checking])
     ;;
 esac
-# permit @HAVE_ERROR_CHECKING@ substitution in glue_romio.h */
+# permit @HAVE_ERROR_CHECKING@ substitution in glue_romio.h 
 AC_SUBST([HAVE_ERROR_CHECKING])
 
 # error-messages
