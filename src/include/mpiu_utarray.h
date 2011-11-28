@@ -55,7 +55,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define utarray_realloc_(x_,y_) MPIU_Realloc(x_,y_)
 #define utarray_strdup_(x_)     MPIU_Strdup(x_)
 
-#define oom() exit(-1)
+#ifndef utarray_oom
+#define utarray_oom() exit(-1)
+#endif
 
 typedef void (ctor_f)(void *dst, const void *src);
 typedef void (dtor_f)(void *elt);
@@ -93,6 +95,7 @@ typedef struct {
 
 #define utarray_new(a,_icd) do {                                              \
   a=(UT_array*)utarray_malloc_(sizeof(UT_array));                             \
+  if (a == NULL) utarray_oom();                                               \
   utarray_init(a,_icd);                                                       \
 } while(0)
 
@@ -103,8 +106,11 @@ typedef struct {
 
 #define utarray_reserve(a,by) do {                                            \
   if (((a)->i+by) > ((a)->n)) {                                               \
+    void * d_;                                                                \
     while(((a)->i+by) > ((a)->n)) { (a)->n = ((a)->n ? (2*(a)->n) : 8); }     \
-    if ( ((a)->d=(char*)utarray_realloc_((a)->d, (a)->n*(a)->icd->sz)) == NULL) oom(); \
+    d_=(char*)utarray_realloc_((a)->d, (a)->n*(a)->icd->sz);                  \
+    if (d_ == NULL) utarray_oom();                                            \
+    (a)->d = d_;                                                              \
   }                                                                           \
 } while(0)
 
@@ -238,8 +244,15 @@ static void utarray_str_dtor(void *elt) {
 static const UT_icd ut_str_icd _UNUSED_ = {sizeof(char*),NULL,utarray_str_cpy,utarray_str_dtor};
 static const UT_icd ut_int_icd _UNUSED_ = {sizeof(int),NULL,NULL,NULL};
 
-/* MPICH2 addition: */
+/* MPICH2 additions: */
 static const UT_icd ut_ptr_icd _UNUSED_ = {sizeof(void*),NULL,NULL,NULL};
+
+/* These are convenience macros for directly accessing the array.
+   Care should be taken when using the returned pointer as the pointer
+   can be invalidated by other utarray operations. */
+#define ut_int_array(a) ((int*)(a)->d)
+#define ut_str_array(a) ((char**)(a)->d)
+#define ut_ptr_array(a) ((void**)(a)->d)
 
 
 #endif /* MPIU_UTARRAY_H */
