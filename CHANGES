@@ -12,7 +12,7 @@
    functions.
 
  # Build system: Completely revamped build system to rely fully on
-   autotools.
+   autotools.  Parallel builds ("make -j8" and similar) are now supported.
 
  # PM/PMI: Upgrade hwloc to 1.3.
 
