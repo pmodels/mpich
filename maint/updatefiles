@@ -130,6 +130,7 @@ do_genstates=yes
 do_smpdversion=yes
 do_atdir_check=no
 do_atver_check=yes
+do_subcfg_m4=yes
 
 export do_build_configure
 
@@ -667,6 +668,14 @@ EOF
     echo "done"
 fi
 
+########################################################################
+## Building subsys_include.m4
+########################################################################
+if [ "X$do_subcfg_m4" = Xyes ] ; then
+    echo_n "Creating subsys_include.m4... "
+    ./maint/gen_subcfg_m4
+    echo "done"
+fi
 
 ########################################################################
 ## Building non-C interfaces

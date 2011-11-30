@@ -1,14 +1,12 @@
 #!/usr/bin/env perl
+# (C) 2011 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
 
-# preorder traverse the "src" directory (any other dirs too?) and add any
-# subconfigure.m4 files that you find to an existence hash, processing each one
-# for dependencies as you go.
-#
-# Then emit a topological traversal of the resulting DAG into subsys_include.m4,
-# once emitting "m4_include" statements and once (twice?) emitting a single
-# (two?) "m4_define" statement(s) that contains just the component names in the
-# same topological order.
-#
+# This script scavenges the MPICH2 source tree looking for "subconfigure.m4"
+# files.  It then analyzes the dependencies between them and emits a
+# "subsys_include.m4" file that "m4_include"s them all in the correct order and
+# writes an autoconf macro that is suitable for expanding subsys macros in the
+# correct order.
 #
 # Finding a "dnl MPICH2_SUBCFG_BEFORE=BAR" statement inside of
 # FOO/subconfigure.m4 means that FOO depends on BAR and that FOO's macros should
@@ -24,8 +22,357 @@
 # explicitly and some packages only know what they consume explicitly, and some
 # packages are a blend.  For example, ch3 depends on the mpid/common/sched code
 # in order to support NBC ops so a BEFORE statement is used in the
-# ch3/subconfigure.m4 in order to "enable_mpid_common_sched=yes".
+# ch3/subconfigure.m4 in order to "enable_mpid_common_sched=yes".  The nemesis
+# netmods all depend on the core nemesis configuration happening first, so they
+# use an AFTER statement in each of their subconfigure.m4 files.
+
+# Script TODO:
+# - We are currently being very sloppy about "_" and "/" being interchangeable,
+#   but this isn't a valid assumption.  We need to clean this up and only output
+#   the "_" characters at the very end of the process when writing the m4 file.
+
+################################################################################
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Data::Dumper;
+
+################################################################################
+# Default global settings and constants
+
+# unlikely to change, since this name is assumed in lots of other pieces of the
+# build system
+my $SUBCFG_NAME = "subconfigure.m4";
+my $OUTPUT_FILE = "subsys_include.m4";
+
+# if true, add a dependency (ancestor-->child) when $SUBCFG_NAME files are
+# encountered and they have an ancestor $SUBCFG_NAME file in an enclosing
+# directory
+my $USE_IMPLICIT_EDGES = 1;
+
+# the existence of this file means we should stop recursing down
+# the enclosing directory tree
+my $stop_sentinel = ".no_subcfg_recursion";
+
+# which directories should be recursively searched for "subconfigure.m4" files
+my @root_dirs = qw( src );
+
+# coloring constants for the graph algorithms later on
+my ($WHITE, $GRAY, $BLACK) = (1, 2, 3);
+
+################################################################################
+# Option processing: here's a great place to permit overriding the default
+# global settings from above if we ever need to in the future.
+
+my $do_bist = 0;
+GetOptions(
+    "--help" => \&print_usage,
+    "--bist" => \$do_bist,
+) or die "unable to process options, stopped";
+
+sub print_usage {
+    print <<EOT;
+This script builds '$OUTPUT_FILE' from '$SUBCFG_NAME' files.
+
+Usage: $0 [--help] [--bist]
+
+    --bist - Run simple self tests on this script.
+    --help - This message.
+EOT
+    exit 0;
+}
+
+if ($do_bist) {
+    bist();
+}
+
+################################################################################
+# preorder traverse the root dirs looking for files named $SUBCFG_NAME
+
+# stack for recursion, contains dirs that must yet be visited
+my @dirstack = ( @root_dirs );
+# Parallel stack that keeps track of the nearest ancestor with a subconfigure.m4
+# file.  All root dirs have no ancestors.
+my @anc_stack = map { '' } @root_dirs;
+
+# keys are the full path to the found file, value is the nearest ancestor (in
+# the directory hierarchy sense) subconfigure.m4 file, or '' if none exists.
+my %found_files = ();
+
+while (my $dir = pop @dirstack) {
+    my $anc = pop @anc_stack;
+
+    # check for a $SUBCFG_NAME before recursing in order to correctly propagate
+    # ancestor information for subdirectories
+    my $fp = "$dir/$SUBCFG_NAME";
+    if (-e $fp) {
+        # found a subconfigure.m4 file
+        $found_files{$fp} = $anc;
+        # override our parent's ancestor for all of our descendants
+        $anc = $fp;
+    }
+
+    if (-e "$dir/$stop_sentinel") {
+        # the existence of this file means we should stop recursing down
+        # this particular directory tree
+        next;
+    }
+
+    # now that we've visited the current vertex, push all of our child dirs onto
+    # the stack to continue the traversal
+    opendir DH, $dir
+        or die "unable to open dir='$dir', stopped";
+    my @contents = readdir DH;
+    foreach my $f (@contents) {
+        # avoid endless recursion
+        next if $f eq "." || $f eq "..";
+
+        if (-d "$dir/$f") {
+            push @dirstack, "$dir/$f";
+            push @anc_stack, $anc;
+        }
+    }
+    closedir DH;
+}
+
+################################################################################
+# We now have a list of all $SUBCFG_NAME files in @found_files.  Process each of
+# the files and build a DAG.
+
+# A DAG where the vertices are full path filenames for $SUBCFG_NAME files and the
+# edges are dependencies between the $SUBCFG_NAME files (A-->B indicates that
+# A should come before B in a topo sort).  We concretely express this DAG as an
+# adjacency list stored in a hash.  Keys of the hash are filenames, values are
+# refs to hashes whose keys are outbound edge filenames.
+# IOW:
+#     ( a => {b=>1,c=>1}, b => {c=>1}, c => {} )
+# represents the following (crudely drawn) graph:
+#     a-->b-->c
+#      \------^
+my %dag = ();
+
+# Helper routine, adds a new edge to the given dag hash (passed by reference),
+# automatically creating src or dst vertices as necessary.  A cute bit of calling
+# syntax is that the src and dst args can be separated by "=>" because it's just
+# a fancy comma in perl.
+sub add_edge {
+    my $dag_ref = shift;
+    my $src = shift;
+    my $dst = shift;
+
+    die "\$dag_ref is invalid, stopped" unless ref($dag_ref) eq "HASH";
+    die "\$src is invalid, stopped" unless $src;
+    die "\$dst is invalid, stopped" unless $dst;
+
+    $dag_ref->{$src} = {} unless exists $dag_ref->{$src};
+    $dag_ref->{$src}->{$dst} = 1;
+}
+
+foreach my $k (keys %found_files) {
+    # add the vertex to the graph with no edges to start
+    $dag{$k} = {} unless exists $dag{$k};
+
+    my $anc = $found_files{$k};
+    if ($anc and $USE_IMPLICIT_EDGES) {
+        # need to add the implicit edge from the ancestor to $k
+        add_edge(\%dag, $anc => $k);
+    }
+
+    # now process the file and add any explicit edges
+    open FILE, '<', $k;
+    while (my $line = <FILE>) {
+        if ($line =~ m/^\s*dnl +MPICH2_SUBCFG_([A-Z_]*)=(.*)\s*$/) {
+            my $bef_aft = $1;
+            my $arg = $2;
+
+            # normalize the $arg first
+            # TODO now that we have the automatic suffix macro and this script,
+            # should we modify the structured comment to also be valid if the
+            # path is specified with "/" separators instead of "_" separators?
+            # In fact, it would be safer and unambiguous to require "/" instead.
+            $arg =~ s+_+/+g;
+            $arg .= "/$SUBCFG_NAME";
+
+            if ($bef_aft eq "BEFORE") {
+                add_edge(\%dag, $k => $arg);
+            }
+            elsif ($bef_aft eq "AFTER") {
+                add_edge(\%dag, $arg => $k);
+            }
+            else {
+                die "unrecognized structured comment ('MPICH2_SUBCFG_${bef_aft}')\n".
+                    "at $k:$., possible typo?  Stopped";
+            }
+        }
+    }
+    close FILE;
+}
+
+################################################################################
+# We now have a DAG expressing the dependency information between the various
+# subconfigure.m4 files.  Now we need to topologically sort it.
+# 
+# We use the topo sort algorithm given in "Introduction to Algorithms" (1st
+# ed.), page 486 with a small modification to detect cycles in the digraph.  We
+# perform a DFS on the DAG, coloring vertices as we go.  We could compute
+# discovery and finishing times, as well as predecessors, but we don't need that
+# information for topological sorting or cycle detection.  As each vertex is
+# finished (colored BLACK) we prepend it to an array.  The resulting array is
+# sorted in "ascending" topological order (a,b,c in our previous example).
+
+# the output array in which the sorted results will be stored
+my @tsorted = ();
+topo_sort(\%dag, \@tsorted);
+
+################################################################################
+# Now just emit the $OUTPUT_FILE in the correct format.
+
+open OUTFD, '>', $OUTPUT_FILE;
+
+my $datestamp = scalar(localtime);
+
+print OUTFD <<EOT;
+dnl generated by $0 at $datestamp
+dnl DO NOT EDIT BY HAND!!!
+dnl re-run ./maint/updatefiles instead
+
+EOT
+foreach my $file (@tsorted) {
+    print OUTFD "m4_include([$file])\n";
+}
+print OUTFD <<EOT;
+
+dnl a macro suitable for use as m4_map([some_unary_macro],[PAC_SUBCFG_MODULE_LIST])
+m4_define([PAC_SUBCFG_MODULE_LIST],
+m4_dquote(
+EOT
+
+foreach my $file (@tsorted[0 .. $#tsorted-1]) {
+    my $mod_name = $file;
+    $mod_name =~ s+/$SUBCFG_NAME$++;
+    $mod_name =~ tr+/+_+;
+    print OUTFD "[$mod_name],\n";
+}
+my $mod_name = $tsorted[-1];
+$mod_name =~ s+/$SUBCFG_NAME$++g;
+$mod_name =~ tr+/+_+;
+print OUTFD "[$mod_name]dnl <--- this dnl is important\n";
+print OUTFD "))\n\n";
+
+close OUTFD;
+
+
+################################################################################
+# SUBROUTINES
+################################################################################
+
+# The DFS-Visit(u) algorithm specialized for topo sorting.  Currently a
+# subroutine to permit recursive invocation, but could be converted to use an
+# explicit stack and the subroutine could be eliminated.
 #
-print "UNIMPLEMENTED FOR NOW\n";
-exit 1;
+# takes four arguments: a ref to the DAG hash, a ref to a colors hash, the
+# vertex $u, and an output array reference to be populated as vertices are
+# finished.
+sub dfs_visit {
+    my $dag_ref = shift;
+    my $colors_ref = shift;
+    my $u = shift;
+    my $out_arr_ref = shift;
+
+    $colors_ref->{$u} = $GRAY;
+    foreach my $v (keys %{$dag_ref->{$u}}) {
+        # detect cycles in the graph at this point, see ("Classification of edges"
+        # in CLR)
+        if ($colors_ref->{$v} == $GRAY) {
+            # We are already exploring the tree from $v, so this is a "back edge",
+            # indicating a cycle is present in the digraph.  This is erroneous in
+            # our usage, since we cannot topologically sort a cyclic graph.
+            die "A back edge was found in the digraph but a DAG is required.\n".
+                "The back edge was from\n".
+                "  $u\n".
+                "to\n".
+                "  $v\n".
+                "Stopped";
+        }
+        elsif ($colors_ref->{$v} == $WHITE) {
+            dfs_visit($dag_ref, $colors_ref, $v, $out_arr_ref);
+        }
+    }
+    $colors_ref->{$u} = $BLACK;
+
+    # append $u to the output
+    unshift @$out_arr_ref, $u;
+}
+
+# Takes two arguments, a ref to a DAG hash and a reference to an output array.
+# Returns in the output array a valid topological sort of the given DAG.
+sub topo_sort {
+    my $dag_ref = shift;
+    my $out_arr_ref = shift;
+
+    # helper hash that is indexed by vertex name in order to avoid building a
+    # complicated set of nested structures inside the main DAG
+    my $colors_ref = {}; # values are one of $WHITE, $GRAY, or $BLACK
+
+    # a simplified version of the DFS(G) algorithm
+    foreach my $u (keys %$dag_ref) {
+        $colors_ref->{$u} = $WHITE;
+    }
+    foreach my $u (keys %$dag_ref) {
+        if ($colors_ref->{$u} == $WHITE) {
+            dfs_visit($dag_ref, $colors_ref, $u, $out_arr_ref);
+        }
+    }
+}
+
+################################################################################
+# self tests
+
+# run this subroutine to self-test portions of this script
+sub bist {
+    bist_topo_sort();
+    print "all self-tests PASSED\n";
+    exit 0;
+}
+
+sub bist_topo_sort {
+    my $dag;
+    my $out_arr;
+    my $expected;
+
+    $dag = { a => {b=>1,c=>1}, b => {c=>1}, c => {} };
+    $out_arr = [];
+    $expected = [ qw(a b c) ];
+    topo_sort($dag, $out_arr);
+    cmp_arrays($out_arr, $expected);
+
+    $dag = { a => {}, b => {}, c => {} };
+    $out_arr = [];
+    topo_sort($dag, $out_arr);
+    # this DAG has no single expected result, so just check lengths
+    unless (scalar @$out_arr eq scalar @$expected) {
+        die "\$out_arr and \$expected differ in length, stopped\n";
+    }
+
+    my $routine = (caller(0))[3];
+    print "$routine PASSED\n";
+}
+
+sub cmp_arrays {
+    my $out_arr = shift;
+    my $expected = shift;
+
+    #print "out_arr=".Dumper($out_arr)."\n";
+    #print "expected=".Dumper($expected)."\n";
+    unless (scalar @$out_arr eq scalar @$expected) {
+        die "\$out_arr and \$expected differ in length, stopped\n";
+    }
+    for (my $i = 0; $i < @$out_arr; ++$i) {
+        unless ($out_arr->[$i] eq $expected->[$i]) {
+            die "element $i of \$out_arr differs from the expected value (".
+                $out_arr->[$i]." ne ".$expected->[$i]."), stopped\n";
+        }
+    }
+}
 
