@@ -653,8 +653,8 @@ fi
 ## Update SMPD version
 ########################################################################
 
-echo_n "Creating src/pm/smpd/smpd_version.h... "
 if [ "$do_smpdversion" = yes ] ; then
+    echo_n "Creating src/pm/smpd/smpd_version.h... "
     smpdVersion=${MPICH2_VERSION}
     cat >src/pm/smpd/smpd_version.h <<EOF
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
@@ -664,8 +664,8 @@ if [ "$do_smpdversion" = yes ] ; then
  */
 #define SMPD_VERSION "$smpdVersion"
 EOF
+    echo "done"
 fi
-echo "done"
 
 
 ########################################################################
