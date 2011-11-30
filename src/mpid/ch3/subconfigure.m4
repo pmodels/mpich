@@ -5,7 +5,7 @@ dnl MPICH2_SUBCFG_BEFORE=src_mpid_common_thread
 
 dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_ch3],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_CH3],[test "$device_name" = "ch3"])
 
 dnl this subconfigure.m4 handles the configure work for the ftb subdir too
@@ -64,7 +64,7 @@ build_mpid_common_thread=yes
 
 ])dnl end AM_COND_IF(BUILD_CH3,...)
 ])dnl end PREREQ
-AC_DEFUN([PAC_SUBCFG_BODY_src_mpid_ch3],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH3],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR CH3 DEVICE])
 

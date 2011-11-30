@@ -1,11 +1,11 @@
 [#] start of __file__
 dnl MPICH2_SUBCFG_BEFORE=src_pm_util
 
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_pm_gforker],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])
 
 dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_pm_gforker],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 # the pm_names variable is set by the top level configure
 build_gforker=no

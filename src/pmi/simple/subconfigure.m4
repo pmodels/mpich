@@ -1,9 +1,9 @@
 [#] start of __file__
 
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_pmi_simple],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])
 
-AC_DEFUN([PAC_SUBCFG_BODY_src_pmi_simple],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AM_CONDITIONAL([BUILD_PMI_SIMPLE],[test "x$pmi_name" = "xsimple"])
 

@@ -1,6 +1,6 @@
 [#] start of __file__
 
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_pm_smpd],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AC_ARG_WITH([smpd-sock],
                 [AS_HELP_STRING([--with-smpd-sock=SOCK_IMPL],[selects a socket implementation for SMPD])],
                 [],
@@ -8,7 +8,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_src_pm_smpd],[
 ])
 
 dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_pm_smpd],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 # the pm_names variable is set by the top level configure
 build_smpd=no

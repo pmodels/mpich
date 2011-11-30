@@ -1,11 +1,11 @@
 [#] start of __file__
 
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_pm_util],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])
 
 dnl
 dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_pm_util],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AM_CONDITIONAL([BUILD_PM_UTIL],[test "X$build_pm_util" = "Xyes"])
 

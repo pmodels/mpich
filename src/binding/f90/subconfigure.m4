@@ -2,12 +2,11 @@
 dnl This configure is used ONLY to determine the Fortran 90 features
 dnl that are needed to implement the create_type_xxx routines.
 
-dnl AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_binding_f90],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_F90_LIB],[test "X$enable_fc" = "Xyes"])
 ])
 
-AC_DEFUN([PAC_SUBCFG_BODY_src_binding_f90],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AM_COND_IF([BUILD_F90_LIB],[
 # FIXME XXX DJG this code came from a sub-configure in src/binding/f90.  Why

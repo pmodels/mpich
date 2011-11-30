@@ -3,7 +3,7 @@ dnl MPICH2_SUBCFG_BEFORE=src_mpid_common_sock
 dnl MPICH2_SUBCFG_BEFORE=src_mpid_ch3_util_sock
 
 dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_ch3_channels_sock],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_CONDITIONAL([BUILD_CH3_SOCK],[test "X$device_name" = "Xch3" -a "X$channel_name" = "Xsock"])
     AM_COND_IF([BUILD_CH3_SOCK],[
         AC_MSG_NOTICE([RUNNING PREREQ FOR ch3:sock])
@@ -56,7 +56,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_ch3_channels_sock],[
 ])dnl
 dnl
 dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_mpid_ch3_channels_sock],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH3_SOCK],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:sock])
 # code that formerly lived in configure.in

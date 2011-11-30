@@ -1,12 +1,12 @@
 [#] start of __file__
 dnl MPICH2_SUBCFG_AFTER=src_mpid_common_sock
 
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_common_sock_poll],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_CONDITIONAL([BUILD_MPID_COMMON_SOCK_POLL],[test "X$build_mpid_common_sock_poll" = "Xyes"])
 ])
 
 dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_mpid_common_sock_poll],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_MPID_COMMON_SOCK_POLL],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR src/mpid/common/sock/poll])
 

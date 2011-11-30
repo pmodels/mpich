@@ -1,7 +1,7 @@
 [#] start of __file__
 dnl MPICH2_SUBCFG_AFTER=src_pm_smpd
 
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_pm_smpd_sock_poll],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AC_ARG_ENABLE([sock-debug],
               [--enable-sock-debug - Turn on tests of the socket data structures],
               [],
@@ -9,7 +9,7 @@ AC_ARG_ENABLE([sock-debug],
 ])
 
 dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_pm_smpd_sock_poll],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AM_CONDITIONAL([SMPD_SOCK_IS_POLL],[test "X$with_smpd_sock" = "Xpoll"])
 

@@ -1,13 +1,13 @@
 [#] start of __file__
 
 dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_mpid_ch3_util_sock],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     # channels (like ch3:sock) that want to use this package should set build_ch3u_sock=yes
     AM_CONDITIONAL([BUILD_CH3_UTIL_SOCK],[test "x$build_ch3u_sock" = "xyes"])
 ])
 
 dnl _BODY handles the former role of configure in the subsystem
-AC_DEFUN([PAC_SUBCFG_BODY_src_mpid_ch3_util_sock],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_COND_IF([BUILD_CH3_UTIL_SOCK],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR CH3U SOCK CODE])
 

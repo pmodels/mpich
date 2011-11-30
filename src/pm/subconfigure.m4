@@ -1,10 +1,9 @@
 [#] start of __file__
 
-AC_DEFUN([PAC_SUBCFG_PREREQ_src_pm],[
+AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])
 
-dnl
-AC_DEFUN([PAC_SUBCFG_BODY_src_pm],[
+AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 dnl we handle the AM_CONDITIONAL for hydra to keep hydra buildable as a
 dnl standalone package
