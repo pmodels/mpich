@@ -26,11 +26,6 @@
 # netmods all depend on the core nemesis configuration happening first, so they
 # use an AFTER statement in each of their subconfigure.m4 files.
 
-# Script TODO:
-# - We are currently being very sloppy about "_" and "/" being interchangeable,
-#   but this isn't a valid assumption.  We need to clean this up and only output
-#   the "_" characters at the very end of the process when writing the m4 file.
-
 ################################################################################
 use strict;
 use warnings;
@@ -186,12 +181,11 @@ foreach my $k (keys %found_files) {
             my $bef_aft = $1;
             my $arg = $2;
 
-            # normalize the $arg first
-            # TODO now that we have the automatic suffix macro and this script,
-            # should we modify the structured comment to also be valid if the
-            # path is specified with "/" separators instead of "_" separators?
-            # In fact, it would be safer and unambiguous to require "/" instead.
-            $arg =~ s+_+/+g;
+            if ($arg !~ m|/|) {
+                print "WARNING: no '/' characters detected in '$arg', possible old-style structured comment still present\n";
+            }
+
+            # normalize the $arg to match our DAG
             $arg .= "/$SUBCFG_NAME";
 
             if ($bef_aft eq "BEFORE") {

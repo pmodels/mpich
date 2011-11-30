@@ -1,7 +1,7 @@
 [#] start of __file__
-dnl MPICH2_SUBCFG_BEFORE=src_mpid_common_sched
-dnl MPICH2_SUBCFG_BEFORE=src_mpid_common_datatype
-dnl MPICH2_SUBCFG_BEFORE=src_mpid_common_thread
+dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/sched
+dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/datatype
+dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/thread
 
 dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX

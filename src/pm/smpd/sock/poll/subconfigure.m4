@@ -1,5 +1,5 @@
 [#] start of __file__
-dnl MPICH2_SUBCFG_AFTER=src_pm_smpd
+dnl MPICH2_SUBCFG_AFTER=src/pm/smpd
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AC_ARG_ENABLE([sock-debug],

@@ -1,6 +1,6 @@
 [#] start of __file__
-dnl MPICH2_SUBCFG_BEFORE=src_mpid_common_sock
-dnl MPICH2_SUBCFG_BEFORE=src_mpid_ch3_util_sock
+dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/sock
+dnl MPICH2_SUBCFG_BEFORE=src/mpid/ch3/util/sock
 
 dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[

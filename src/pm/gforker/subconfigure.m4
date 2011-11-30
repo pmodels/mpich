@@ -1,5 +1,5 @@
 [#] start of __file__
-dnl MPICH2_SUBCFG_BEFORE=src_pm_util
+dnl MPICH2_SUBCFG_BEFORE=src/pm/util
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])
