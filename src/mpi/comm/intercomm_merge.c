@@ -165,8 +165,6 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     (*new_intracomm_ptr)->context_id = new_context_id;
     (*new_intracomm_ptr)->recvcontext_id = new_context_id;
 
-    /* Notify the device of this new communicator */
-    MPID_Dev_comm_create_hook( (*new_intracomm_ptr) );
     mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

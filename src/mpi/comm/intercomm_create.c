@@ -398,8 +398,6 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     }
     MPIU_THREAD_CS_EXIT(MPI_OBJ, local_comm_ptr);
 
-    /* Notify the device of this new communicator */
-    MPID_Dev_comm_create_hook( *new_intercomm_ptr );
     mpi_errno = MPIR_Comm_commit(*new_intercomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

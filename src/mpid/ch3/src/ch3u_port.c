@@ -303,6 +303,11 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
     /* FIXME: Why do we do a dup here? */
     MPID_VCR_Dup(vc_ptr, tmp_comm->vcr);
 
+    /* Even though this is a tmp comm and we don't call
+       MPI_Comm_commit, we still need to call the creation hook
+       because the destruction hook will be called in comm_release */
+    MPID_Dev_comm_create_hook(tmp_comm);
+
     *comm_pptr = tmp_comm;
 
 fn_exit:
@@ -1180,6 +1185,9 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
 			 remote_translation[i].pg_rank, &intercomm->vcr[i]);
     }
 
+    mpi_errno = MPIR_Comm_commit(intercomm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Barrier");
     mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {

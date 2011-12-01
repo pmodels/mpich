@@ -207,7 +207,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	MPID_VCR_Dup(&pg->vct[p], &comm->vcr[p]);
     }
 
-    MPID_Dev_comm_create_hook (comm);
     mpi_errno = MPIR_Comm_commit(comm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -235,7 +234,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     
     MPID_VCR_Dup(&pg->vct[pg_rank], &comm->vcr[0]);
 
-    MPID_Dev_comm_create_hook (comm);
     mpi_errno = MPIR_Comm_commit(comm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -254,7 +252,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->vcrt = MPIR_Process.comm_world->vcrt;
     comm->vcr  = MPIR_Process.comm_world->vcr;
     
-    MPID_Dev_comm_create_hook (comm);
     mpi_errno = MPIR_Comm_commit(comm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #endif
@@ -305,7 +302,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	MPIR_Process.comm_parent = comm;
 	MPIU_Assert(MPIR_Process.comm_parent != NULL);
 	MPIU_Strncpy(comm->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-	
+        
 	/* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
 	   if not already freed.  */
     }

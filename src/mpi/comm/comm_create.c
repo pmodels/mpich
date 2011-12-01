@@ -285,8 +285,6 @@ PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                                                          &newcomm_ptr->vcr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        /* Notify the device of this new communicator */
-        MPID_Dev_comm_create_hook( newcomm_ptr );
         mpi_errno = MPIR_Comm_commit(newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -466,8 +464,6 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                                                          &newcomm_ptr->vcrt,
                                                          &newcomm_ptr->vcr);
 
-        /* Notify the device of this new communicator */
-        MPID_Dev_comm_create_hook( newcomm_ptr );
         mpi_errno = MPIR_Comm_commit(newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

@@ -455,6 +455,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             mpi_errno = set_collops(comm->node_comm);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+            /* Notify device of communicator creation */
             MPID_Dev_comm_create_hook( comm->node_comm );
             /* don't call MPIR_Comm_commit here */
         }
@@ -487,6 +488,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             mpi_errno = set_collops(comm->node_roots_comm);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+            /* Notify device of communicator creation */
             MPID_Dev_comm_create_hook( comm->node_roots_comm );
             /* don't call MPIR_Comm_commit here */
         }
@@ -497,6 +499,10 @@ int MPIR_Comm_commit(MPID_Comm *comm)
 fn_exit:
     if (!mpi_errno) {
         /* catch all of the early-bail, non-error cases */
+
+        /* Notify device of communicator creation */
+        MPID_Dev_comm_create_hook(comm);
+
         mpi_errno = set_collops(comm);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -1235,8 +1241,6 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
 
     /* FIXME do we want to copy coll_fns here? */
 
-    /* Notify the device of the new communicator */
-    MPID_Dev_comm_create_hook(newcomm_ptr);
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

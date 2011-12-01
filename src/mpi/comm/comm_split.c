@@ -347,8 +347,6 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	}
         MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 
-        /* Notify the device of this new communicator */
-	MPID_Dev_comm_create_hook( *newcomm_ptr );
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
