@@ -102,19 +102,8 @@ MPIDI_CH3I_comm_t;
 
 #ifdef ENABLED_SHM_COLLECTIVES
 #define HAVE_DEV_COMM_HOOK
-#define MPID_Dev_comm_create_hook(comm_) do {           \
-        int _mpi_errno;                                 \
-        _mpi_errno = MPIDI_CH3I_comm_create (comm_);    \
-        if (_mpi_errno) MPIU_ERR_POP (_mpi_errno);      \
-    } while(0)
-
-
-#define MPID_Dev_comm_destroy_hook(comm_) do {          \
-        int _mpi_errno;                                 \
-        _mpi_errno = MPIDI_CH3I_comm_destroy (comm_);   \
-        if (_mpi_errno) MPIU_ERR_POP (_mpi_errno);      \
-    } while(0)
-
+#define MPID_Dev_comm_create_hook(comm_) MPIDI_CH3I_comm_create (comm_)
+#define MPID_Dev_comm_destroy_hook(comm_) MPIDI_CH3I_comm_destroy (comm_)
 #endif
 #define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t ch;
 

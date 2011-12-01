@@ -2052,8 +2052,8 @@ void MPIR_Err_print_stack(FILE *, int);
 /* FIXME: Move these to the communicator block; make sure that all 
    objects have such hooks */
 #ifndef HAVE_DEV_COMM_HOOK
-#define MPID_Dev_comm_create_hook( a )
-#define MPID_Dev_comm_destroy_hook( a )
+#define MPID_Dev_comm_create_hook( a ) MPI_SUCCESS
+#define MPID_Dev_comm_destroy_hook( a ) MPI_SUCCESS
 #endif
 
 /* ------------------------------------------------------------------------- */

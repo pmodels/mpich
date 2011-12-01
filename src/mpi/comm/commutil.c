@@ -456,7 +456,8 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             /* Notify device of communicator creation */
-            MPID_Dev_comm_create_hook( comm->node_comm );
+            mpi_errno = MPID_Dev_comm_create_hook( comm->node_comm );
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
         }
 
@@ -489,7 +490,8 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             /* Notify device of communicator creation */
-            MPID_Dev_comm_create_hook( comm->node_roots_comm );
+            mpi_errno = MPID_Dev_comm_create_hook( comm->node_roots_comm );
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
         }
 
@@ -500,10 +502,11 @@ fn_exit:
     if (!mpi_errno) {
         /* catch all of the early-bail, non-error cases */
 
-        /* Notify device of communicator creation */
-        MPID_Dev_comm_create_hook(comm);
-
         mpi_errno = set_collops(comm);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* Notify device of communicator creation */
+        mpi_errno = MPID_Dev_comm_create_hook(comm);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -1304,8 +1307,9 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect)
 
         /* Notify the device that the communicator is about to be
            destroyed */
-        MPID_Dev_comm_destroy_hook(comm_ptr);
-
+        mpi_errno = MPID_Dev_comm_destroy_hook(comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        
         /* release our reference to the collops structure, comes after the
          * destroy_hook to allow the device to manage these vtables in a custom
          * fashion */
