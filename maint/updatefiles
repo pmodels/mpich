@@ -121,7 +121,6 @@ echo "done"
 # Default choices
 do_bindings=yes
 do_geterrmsgs=yes
-do_depend=yes
 do_getparms=yes
 do_f77=yes
 do_f77tof90=yes
@@ -153,9 +152,7 @@ amdirs=". src/openpa src/mpl"
 AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates smpdversion getparms"
 stepsCleared=no
 
-# Extract the arguments intended for updatefiles.  Any others are
-# given to simplemake.
-temp_args=""
+# Extract the arguments intended for updatefiles.
 for arg in "$@" ; do
     case $arg in 
 	-echo)
@@ -241,12 +238,6 @@ for arg in "$@" ; do
 	    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
 	    ;;
 
-	-distrib)
-	    do_depend=no
-	    do_build_configure=no
-	    temp_args="$temp_args $arg"
-	    ;;
-
 	-help|--help|-usage|--usage)
 	    cat <<EOF
     updatefiles [ --with-autotools=dir ] \\
@@ -285,14 +276,12 @@ EOF
 	    ;;
 
 	*)
-	    temp_args="$temp_args $arg"
+	    echo "unknown argument $arg"
+	    exit 1
 	    ;;
 
     esac
 done
-# Reset the arguments.  Note that this doesn't handle arguments that
-# contain blanks.  I hope that we don't need those.
-set -- $temp_args
 
 ########################################################################
 ## Check for the location of autotools
@@ -878,36 +867,6 @@ echo "###########################################################"
 echo "## Generating configure in simplemake directories"
 echo "###########################################################"
 echo
-
-########################################################################
-## Running simplemake
-########################################################################
-
-otherargs="$@"
-if [ $do_depend = no ] ; then 
-    otherargs="$otherargs -nodepend"
-fi
-
-## FIXME need to take a cleanup pass through this script and remove all of the
-## simplemake code
-##echo
-##echo "---------------------------------------------------------------"
-##echo "Initiating simplemake"
-##if ./maint/simplemake -common=maint/makedefs \
-##    -docnamedefs='${master_top_srcdir}/maint/docnotes' \
-##    -autoconf="$acIncDirFlag ROOTDIR/confdb" \
-##    -libdir='${MPILIBNAME}'=ROOTDIR/lib \
-##    -smroot='${master_top_srcdir}/maint' $otherargs \
-##    Makefile.sm ; then
-##    :
-##    echo "Done running simplemake"
-##    echo "---------------------------------------------------------------"
-##    echo
-##else
-##    echo "Simplemake step failed!"
-##    exit 1
-##fi
-
 
 ########################################################################
 ## Creating configures in simplemake directories
