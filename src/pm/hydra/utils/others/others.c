@@ -59,10 +59,9 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
     goto fn_exit;
 }
 
-static char local_hostname[MAX_HOSTNAME_LEN] = { 0 };
-
 HYD_status HYDU_gethostname(char *hostname)
 {
+    static char local_hostname[MAX_HOSTNAME_LEN] = { 0 };
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();

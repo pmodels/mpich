@@ -1268,6 +1268,32 @@ static HYD_status order_nodes_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void localhost_help_fn(void)
+{
+    printf("\n");
+    printf("-localhost: Local hostname to use for the launching node\n\n");
+}
+
+static HYD_status localhost_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.local_hostname) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.local_hostname, **argv);
+    HYDU_ERR_POP(status, "error setting local hostname\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status set_default_values(void)
 {
     char *tmp;
@@ -1618,6 +1644,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"order-nodes", order_nodes_fn, order_nodes_help_fn},
+    {"localhost", localhost_fn, localhost_help_fn},
 
     {"\0", NULL}
 };

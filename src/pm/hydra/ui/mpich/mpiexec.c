@@ -118,6 +118,7 @@ static void usage(void)
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
     printf("    -disable-hostname-propagation    let MPICH2 auto-detect the hostname\n");
     printf("    -order-nodes                     order nodes as ascending/descending cores\n");
+    printf("    -localhost                       local hostname for the launching node\n");
 
     printf("\n");
     printf("Please see the intructions provided at\n");
@@ -378,25 +379,34 @@ int main(int argc, char **argv)
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
         HYD_server_info.pg_list.pg_core_count += proxy->node->core_count;
 
-    /* See if the node list contains a remotely accessible localhost */
-    for (node = HYD_server_info.node_list; node; node = node->next) {
-        int is_local, remote_access;
+    /* If the user didn't specify a local hostname, try to find one in
+     * the list of nodes passed to us */
+    if (HYD_server_info.local_hostname == NULL) {
+        /* See if the node list contains a remotely accessible localhost */
+        for (node = HYD_server_info.node_list; node; node = node->next) {
+            int is_local, remote_access;
 
-        status = HYDU_sock_is_local(node->hostname, &is_local);
-        HYDU_ERR_POP(status, "unable to check if %s is local\n", node->hostname);
+            status = HYDU_sock_is_local(node->hostname, &is_local);
+            HYDU_ERR_POP(status, "unable to check if %s is local\n", node->hostname);
 
-        if (is_local) {
-            status = HYDU_sock_remote_access(node->hostname, &remote_access);
-            HYDU_ERR_POP(status, "unable to check if %s is remotely accessible\n",
-                         node->hostname);
+            if (is_local) {
+                status = HYDU_sock_remote_access(node->hostname, &remote_access);
+                HYDU_ERR_POP(status, "unable to check if %s is remotely accessible\n",
+                             node->hostname);
 
-            if (remote_access)
-                break;
+                if (remote_access)
+                    break;
+            }
+        }
+
+        if (node)
+            HYD_server_info.local_hostname = HYDU_strdup(node->hostname);
+        else {
+            HYDU_MALLOC(HYD_server_info.local_hostname, char *, MAX_HOSTNAME_LEN, status);
+            status = HYDU_gethostname(HYD_server_info.local_hostname);
+            HYDU_ERR_POP(status, "unable to get local hostname\n");
         }
     }
-
-    if (node)
-        HYD_server_info.local_hostname = HYDU_strdup(node->hostname);
 
     if (HYD_server_info.user_global.debug)
         HYD_uiu_print_params();
