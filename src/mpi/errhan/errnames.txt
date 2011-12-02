@@ -1093,6 +1093,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_dup %C %p:MPI_Comm_dup(%C, new_comm=%p) failed
 **mpi_comm_create:MPI_Comm_create failed
 **mpi_comm_create %C %G %p:MPI_Comm_create(%C, %G, new_comm=%p) failed
+**mpi_comm_create_group:MPIX_Comm_create_group failed
+**mpi_comm_create_group %C %G %d %p:MPIX_Comm_create_group(%C, %G, %d, new_comm=%p) failed
 **mpi_comm_split:MPI_Comm_split failed
 **mpi_comm_split %C %d %d %p:MPI_Comm_split(%C, color=%d, key=%d, new_comm=%p) failed
 **mpi_comm_free:MPI_Comm_free failed

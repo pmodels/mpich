@@ -996,6 +996,9 @@ int MPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 /* MPI-3 shared memory */
 int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
 
+/* MPI-3 noncollective communicator creation */
+int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm);
+
 /* MPI-3 MPI_T interface, currently available as MPIX_T extensions */
 int MPIX_T_init_thread(int required, int *provided);
 int MPIX_T_finalize(void);
@@ -1329,6 +1332,7 @@ int PMPIX_Ireduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI
 int PMPIX_Iscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
+int PMPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm);
 int PMPIX_T_init_thread(int required, int *provided);
 int PMPIX_T_finalize(void);
 int PMPIX_T_enum_get_info(MPIX_T_enum enumtype, int num, char *name, int *name_len);

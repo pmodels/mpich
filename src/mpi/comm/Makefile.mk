@@ -8,6 +8,7 @@
 mpi_sources +=                       \
     src/mpi/comm/comm_compare.c      \
     src/mpi/comm/comm_create.c       \
+    src/mpi/comm/comm_create_group.c \
     src/mpi/comm/comm_dup.c          \
     src/mpi/comm/comm_free.c         \
     src/mpi/comm/comm_get_name.c     \

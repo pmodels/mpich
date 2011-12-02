@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpix.h>
+#include <mpi.h>
 
 #define LOOPS 100
 

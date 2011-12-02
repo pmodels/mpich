@@ -5,7 +5,7 @@
  */
 
 #include <stdio.h>
-#include <mpix.h>
+#include <mpi.h>
 
 int main(int argc, char **argv)
 {
