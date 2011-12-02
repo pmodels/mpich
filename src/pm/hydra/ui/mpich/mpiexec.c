@@ -379,24 +379,24 @@ int main(int argc, char **argv)
         HYD_server_info.pg_list.pg_core_count += proxy->node->core_count;
 
     /* See if the node list contains a remotely accessible localhost */
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
+    for (node = HYD_server_info.node_list; node; node = node->next) {
         int is_local, remote_access;
 
-        status = HYDU_sock_is_local(proxy->node->hostname, &is_local);
-        HYDU_ERR_POP(status, "unable to check if %s is local\n", proxy->node->hostname);
+        status = HYDU_sock_is_local(node->hostname, &is_local);
+        HYDU_ERR_POP(status, "unable to check if %s is local\n", node->hostname);
 
         if (is_local) {
-            status = HYDU_sock_remote_access(proxy->node->hostname, &remote_access);
+            status = HYDU_sock_remote_access(node->hostname, &remote_access);
             HYDU_ERR_POP(status, "unable to check if %s is remotely accessible\n",
-                         proxy->node->hostname);
+                         node->hostname);
 
             if (remote_access)
                 break;
         }
     }
 
-    if (proxy)
-        HYD_server_info.local_hostname = HYDU_strdup(proxy->node->hostname);
+    if (node)
+        HYD_server_info.local_hostname = HYDU_strdup(node->hostname);
 
     if (HYD_server_info.user_global.debug)
         HYD_uiu_print_params();
