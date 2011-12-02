@@ -18,12 +18,9 @@ void HYD_pmcd_pmip_kill_localprocs(void)
     int i;
 
     /* Send the kill signal to all processes */
-    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-        if (HYD_pmcd_pmip.downstream.pid[i] != -1) {
-            kill(HYD_pmcd_pmip.downstream.pid[i], SIGTERM);
+    for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+        if (HYD_pmcd_pmip.downstream.pid[i] != -1)
             kill(HYD_pmcd_pmip.downstream.pid[i], SIGKILL);
-        }
-    }
 
     HYD_pmcd_pmip.downstream.forced_cleanup = 1;
 }

@@ -128,20 +128,14 @@ static void usage(void)
 static void signal_cb(int signum)
 {
     struct HYD_cmd cmd;
+    static int sigint_count = 0;
     int sent, closed;
 
     HYDU_FUNC_ENTER();
 
-    if (signum == SIGINT) {
-        /* SIGINT is a special signal which we don't send to the
-         * proxies directly. This is our fallback path if something
-         * went wrong with Hydra and the user wants to abort. */
-        cmd.type = HYD_CLEANUP;
-        HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
-    }
-    else if (signum == SIGALRM) {
-        /* SIGALRM is special signal that indicates that a checkpoint
-         * needs to be initiated */
+    /* SIGALRM is a special signal that indicates that a checkpoint
+     * needs to be initiated */
+    if (signum == SIGALRM) {
         if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
             HYDU_dump(stderr, "No checkpoint prefix provided\n");
             return;
@@ -153,15 +147,28 @@ static void signal_cb(int signum)
 #endif /* HAVE_ALARM */
 
         cmd.type = HYD_CKPOINT;
-        HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
-    }
-    else {
-        /* All other signals are forwarded to the user */
-        cmd.type = HYD_SIGNAL;
-        cmd.signum = signum;
-        HYDU_sock_write(HYD_server_info.cleanup_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+        HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+
+        goto fn_exit;
     }
 
+    cmd.type = HYD_SIGNAL;
+    cmd.signum = signum;
+
+    /* SIGINT is a partially special signal. The first time we see it,
+     * we will send it to the processes. The next time, we will treat
+     * it as a SIGKILL (user convenience to force kill processes). */
+    if (signum == SIGINT && ++sigint_count > 1)
+        cmd.type = HYD_CLEANUP;
+    else if (signum == SIGINT) {
+        /* First Ctrl-C */
+        HYDU_dump(stdout, "Sending Ctrl-C to processes as requested\n");
+        HYDU_dump(stdout, "Press Ctrl-C again to force abort\n");
+    }
+
+    HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed);
+
+  fn_exit:
     HYDU_FUNC_EXIT();
     return;
 }
@@ -240,7 +247,7 @@ int main(int argc, char **argv)
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
-    if (pipe(HYD_server_info.cleanup_pipe) < 0)
+    if (pipe(HYD_server_info.cmd_pipe) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
     status = HYDT_ftb_init();

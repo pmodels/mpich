@@ -39,7 +39,7 @@ struct HYD_server_info {
     struct HYD_pg pg_list;
 
     /* Cleanup */
-    int cleanup_pipe[2];
+    int cmd_pipe[2];
 
 #if defined ENABLE_PROFILING
     int enable_profiling;
