@@ -908,24 +908,8 @@ These instructions can also be found on the MPICH2 wiki:
 ========================
 
 MPICH2 provides several environment variables that have different
-purposes.
-
-Generic Environment Variables
------------------------------
-
-  MPICH_NO_LOCAL - Disable shared-memory communication. With this
-         option, even communication within a node will use the network
-         stack.
-
-               ************************************
-
-  MPICH_PORT_RANGE - Port range to use for MPICH2 internal TCP
-         connections. This is useful when some of the host ports are
-         blocked by a firewall. For example, setting MPICH_PORT_RANGE
-         to "2000:3000" will ensure that MPICH2 will internally only
-         uses ports between 2000 and 3000.
-
-               ************************************
+purposes. Many of these environment variables are listed in the
+README.envvar file. Some more are listed below.
 
   MPICH_ASYNC_PROGRESS - Initiates a spare thread to provide
          asynchronous progress. This improves progress semantics for
