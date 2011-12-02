@@ -600,7 +600,6 @@ see mpich2-%VERSION%/src/pm/smpd/README.
 
 gforker
 -------
-
 gforker is a process manager that creates processes on a single
 machine, by having mpiexec directly fork and exec them. gforker is
 mostly meant as a research platform and for debugging purposes, as it
@@ -609,9 +608,14 @@ is only meant for single-node systems.
 slurm
 -----
 SLURM is an external process manager not distributed with
-MPICH2. However, we provide configure options that allow integration
-with SLURM. To enable this support, use "--with-pmi=slurm
---with-pm=no" option with configure.
+MPICH2. MPICH2's default process manager, hydra, has native support
+for slurm and you can directly use it in slurm environments (it will
+automatically detect slurm and use slurm capabilities). However, if
+you want to use the slurm provided "srun" process manager, you can use
+the "--with-pmi=slurm --with-pm=no" option with configure. Note that
+the "srun" process manager that comes with slurm uses an older PMI
+standard which does not have some of the performance enhancements that
+hydra provides in slurm environments.
 
 -------------------------------------------------------------------------
 
