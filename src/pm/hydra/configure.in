@@ -238,43 +238,53 @@ if test "$have_pbs_launcher" = "yes" ; then
 fi
 AM_CONDITIONAL([hydra_pbs_launcher], [test "$have_pbs_launcher" = "yes"])
 
+tmp_list=
 for hydra_launcher in ${available_launchers} ; do
     hydra_launcher_array="${hydra_launcher_array} \"${hydra_launcher}\", "
     if test -z "${hydra_default_launcher}" ; then
        hydra_default_launcher=$hydra_launcher
        AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_LAUNCHER,"$hydra_default_launcher",[Default launcher])
+       tmp_list="${hydra_launcher}"
+    else
+       tmp_list="${tmp_list} ${hydra_launcher}"
     fi
     hydra_launcher_init_decl="${hydra_launcher_init_decl}
 HYD_status HYDT_bsci_launcher_${hydra_launcher}_init(void);"
     hydra_launcher_init_array="${hydra_launcher_init_array} HYDT_bsci_launcher_${hydra_launcher}_init, "
 done
+available_launchers=$tmp_list
 hydra_launcher_array="${hydra_launcher_array} NULL"
 hydra_launcher_init_array="${hydra_launcher_init_array} NULL"
 AM_SUBST_NOTMAKE(hydra_launcher_init_decl)
 AC_SUBST(hydra_launcher_array)
 AC_SUBST(hydra_launcher_init_array)
 AC_SUBST(hydra_launcher_init_decl)
-AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_LAUNCHERS,"$available_launchers",
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_LAUNCHERS,"${available_launchers}",
 	[Definition of enabled launchers])
 
 ## RMK
+tmp_list=
 for hydra_rmk in ${available_rmks} ; do
     hydra_rmk_array="${hydra_rmk_array} \"${hydra_rmk}\", "
     if test -z "${hydra_default_rmk}" ; then
        hydra_default_rmk=$hydra_rmk
        AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default RMK])
+       tmp_list="${hydra_rmk}"
+    else
+       tmp_list="${tmp_list} ${hydra_rmk}"
     fi
     hydra_rmk_init_decl="${hydra_rmk_init_decl}
 HYD_status HYDT_bsci_rmk_${hydra_rmk}_init(void);"
     hydra_rmk_init_array="${hydra_rmk_init_array} HYDT_bsci_rmk_${hydra_rmk}_init, "
 done
+available_rmks=$tmp_list
 hydra_rmk_array="${hydra_rmk_array} NULL"
 hydra_rmk_init_array="${hydra_rmk_init_array} NULL"
 AM_SUBST_NOTMAKE(hydra_rmk_init_decl)
 AC_SUBST(hydra_rmk_array)
 AC_SUBST(hydra_rmk_init_array)
 AC_SUBST(hydra_rmk_init_decl)
-AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"$available_rmks",[Definition of enabled RMKS])
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"${available_rmks}",[Definition of enabled RMKS])
 
 
 #########################################################################
@@ -362,10 +372,16 @@ for hydra_topolib in ${hydra_topolibs}; do
     esac
 done
 
+tmp_list=
 for hydra_topolib in ${available_topolibs}; do
-    hydra_default_topolib=${hydra_topolib}
-    break
+    if test -z "$hydra_default_topolib" ; then
+       hydra_default_topolib=${hydra_topolib}
+       tmp_list="${hydra_topolib}"
+    else
+       tmp_list="$tmp_list ${hydra_topolib}"
+    fi
 done
+available_topolibs=$tmp_list
 
 AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_TOPOLIBS,"$available_topolibs",
 	[Definition of enabled processor topology libraries])
@@ -426,10 +442,16 @@ for hydra_ckpointlib in ${hydra_ckpointlibs}; do
     esac
 done
 
+tmp_list=
 for hydra_ckpointlib in ${available_ckpointlibs}; do
-    hydra_default_ckpointlib=${hydra_ckpointlib}
-    break
+    if test -z "$hydra_default_ckpointlib" ; then
+       hydra_default_ckpointlib=${hydra_ckpointlib}
+       tmp_list="${hydra_ckpointlib}"
+    else
+       tmp_list="$tmp_list ${hydra_ckpointlib}"
+    fi
 done
+available_ckpointlibs=$tmp_list
 
 AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_CKPOINTLIBS,"$available_ckpointlibs",
 		[Definition of enabled checkpointing libraries])
@@ -481,10 +503,16 @@ for hydra_demux in ${hydra_demuxes}; do
     esac
 done
 
+tmp_list=
 for hydra_demux in ${available_demuxes}; do
-    hydra_default_demux=${hydra_demux}
-    break
+    if test -z "$hydra_default_demux" ; then
+       hydra_default_demux=${hydra_demux}
+       tmp_list="${hydra_demux}"
+    else
+       tmp_list="$tmp_list ${hydra_demux}"
+    fi
 done
+available_demuxes=$tmp_list
 
 AM_CONDITIONAL([hydra_have_poll], [test "${have_poll}" = "yes"])
 AM_CONDITIONAL([hydra_have_select], [test "${have_select}" = "yes"])

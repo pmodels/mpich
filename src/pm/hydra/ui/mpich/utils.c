@@ -1083,7 +1083,7 @@ static HYD_status info_fn(char *arg, char ***argv)
                        "    Launchers available:                     %s\n",
                        HYDRA_AVAILABLE_LAUNCHERS);
     HYDU_dump_noprefix(stdout,
-                       "    Topology libraries available:             %s\n",
+                       "    Topology libraries available:            %s\n",
                        HYDRA_AVAILABLE_TOPOLIBS);
     HYDU_dump_noprefix(stdout,
                        "    Resource management kernels available:   %s\n",
