@@ -16,10 +16,12 @@
 
  # PM/PMI: Upgrade hwloc to 1.3.
 
- # JUMPSHOT: added new support so jumpshot can handle slog2 file with couple
-   thousand timelines.  Added navigation support to locate chosen drawable's
-   ends when viewport has been scrolled far from the drawable.  Improved
-   performance for wide slog2 file (with thousand timelines).
+ # JUMPSHOT: Improvements to Jumpshot to handle thousands of
+   timelines, including performance improvements to slog2 in such
+   cases.
+
+ # JUMPSHOT: Added navigation support to locate chosen drawable's ends
+   when viewport has been scrolled far from the drawable.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
