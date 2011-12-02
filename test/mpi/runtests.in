@@ -84,7 +84,7 @@ my $program_wrapper = '';
 #                            executable.  Tools like valgrind may be inserted
 #                            this way.)
 #---------------------------------------------------------------------------
-if ( defined($ENV{"VERBOSE"}) || defined($ENV{"RUNTESTS_VERBOSE"}) ) {
+if ( defined($ENV{"VERBOSE"}) || defined($ENV{"V"}) || defined($ENV{"RUNTESTS_VERBOSE"}) ) {
     $verbose = 1;
 }
 if ( defined($ENV{"RUNTESTS_SHOWPROGRESS"} ) ) {
