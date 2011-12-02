@@ -1965,14 +1965,14 @@ elif test $FROM_MPICH2 = yes ; then
    #CC=${top_build_dir}/bin/mpicc
    #
    # set the compilers to the ones in MPICH2 bin directory (master_top_builddir/bin)
-   TEST_CC='$(bindir)/bin/mpicc'
-   TEST_F77='$(bindir)/bin/mpif77'
+   TEST_CC='$(bindir)/mpicc'
+   TEST_F77='$(bindir)/mpif77'
    MPI_H_INCLUDE="-I${master_top_builddir}/src/include"
    ROMIO_INCLUDE=""
    USER_CFLAGS=""
    USER_FFLAGS=""
    TEST_LIBNAME=""
-   MPIRUN='$(bindir)/bin/mpiexec'
+   MPIRUN='$(bindir)/mpiexec'
    #
    # Turn off the building of the Fortran interface and the Info routines
    EXTRA_DIRS=""
