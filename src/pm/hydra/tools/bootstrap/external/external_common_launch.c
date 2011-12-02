@@ -235,16 +235,6 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         targs[idx] = HYDU_int_to_str(proxy->proxy_id);
         targs[idx + 1] = NULL;
 
-        /* ssh has many types of security controls that do not allow a
-         * user to ssh to the same node multiple times very
-         * quickly. If this happens, the ssh daemons disables ssh
-         * connections causing the job to fail. This is basically a
-         * hack to slow down ssh connections to the same node. */
-        if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
-            status = HYDTI_bscd_ssh_store_launch_time(proxy->node->hostname);
-            HYDU_ERR_POP(status, "error storing launch time\n");
-        }
-
         status = HYDU_sock_is_local(proxy->node->hostname, &lh);
         HYDU_ERR_POP(status, "error checking if node is localhost\n");
 
@@ -303,6 +293,19 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH: ");
             HYDU_print_strlist(targs + offset);
             continue;
+        }
+
+        /* ssh has many types of security controls that do not allow a
+         * user to ssh to the same node multiple times very
+         * quickly. If this happens, the ssh daemons disables ssh
+         * connections causing the job to fail. This is basically a
+         * hack to slow down ssh connections to the same node. We
+         * check for offset == 0 before applying this hack, so we only
+         * slow down the cases where ssh is being used, and not the
+         * cases where we fall back to fork. */
+        if (!strcmp(HYDT_bsci_info.launcher, "ssh") && !offset) {
+            status = HYDTI_bscd_ssh_store_launch_time(proxy->node->hostname);
+            HYDU_ERR_POP(status, "error storing launch time\n");
         }
 
         /* The stdin pointer is a dummy value. We don't just pass it
