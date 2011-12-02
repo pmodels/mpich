@@ -372,57 +372,25 @@ fi
 ## Verify autoconf version
 ########################################################################
 
-recreate_tmp
-
-acSubversion=-1
-acIncDirFlag=-I
-# Try to keep at least one version ahead of autoconf (e.g., if current
-# is 2.65, include a test for 2.66)
 echo_n "Checking for autoconf version... "
-acver_min=59
-acver_max=68
-ver="$acver_max"
-while [ "$ver" -ge "$acver_min" ] ; do
-    recreate_tmp
-    cat >.tmp/configure.in <<EOF
-AC_PREREQ(2.$ver)
+recreate_tmp
+ver=2.67
+cat > .tmp/configure.in<<EOF
+AC_PREREQ($ver)
 EOF
-    if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
-	acSubversion=$ver
-	break
-    fi
-    ver="`expr $ver - 1`"
-done
-rm -rf .tmp
-if [ "$acSubversion" -gt 0 ] ; then
-    echo "2.$acSubversion"
-    if [ "$do_atver_check" = "yes" ] ; then
-        # 2.62 has bug in AC_C_BIGENDIAN.
-        # 2.65's AC_TYPE_INT*_T always returns 0.
-        # 2.66 is broken with AC_CHECK_SIZEOF and AC_CONFIG_SUBDIRS.
-        case "$acSubversion" in
-            67)
-                ;;
-            68)
-                # this is true, but only when used with a buggy libtool (e.g. 2.2.6b)
-                #warn "autoconf-2.68 emits massive amount of warnings on certain uses of AC_*_IFELSE."
-                ;;
-            *)
-                error "autoconf version 2.67 or 2.68 is required"
-		exit 1
-                ;;
-        esac
-    fi
+if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
+    echo ">= $ver"
 else
+    echo "bad autoconf installation"
     cat <<EOF
+You either do not have autoconf in your path or it is too old (version
+$ver or higher required). You may be able to use
 
-You either do not have autoconf in your path or updatefiles was unable to 
-determine which version of autoconf you have.  You may be able to use
      autoconf --version
-to see the version of autoconf (unfortunately, there is no standard 
-format for the version output and it changes between autoconf versions.
-In addition, some versions of autoconf choose among many versions and
-provide incorrect output).
+
+Unfortunately, there is no standard format for the version output and
+it changes between autotools versions.  In addition, some versions of
+autoconf choose among many versions and provide incorrect output).
 EOF
     exit 1
 fi
@@ -434,39 +402,35 @@ fi
 
 echo_n "Checking for automake version... "
 recreate_tmp
-if [ ! -d .tmp/m4 ] ; then
-    mkdir .tmp/m4 >/dev/null 2>&1
-fi
-cat <<EOF >.tmp/configure.ac
+ver=1.11
+cat > .tmp/configure.in<<EOF
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([AM_INIT_AUTOMAKE],,[m4_fatal([AM_INIT_AUTOMAKE not defined])])
-AM_INIT_AUTOMAKE([1.11 foreign])
+AM_INIT_AUTOMAKE([$ver foreign])
 AC_MSG_RESULT([A message])
 AC_OUTPUT([Makefile])
 EOF
 cat <<EOF >.tmp/Makefile.am
 ACLOCAL_AMFLAGS = -I m4
 EOF
-automakeVerOk=no
-# We have to do it this way because not all automake versions accept
-# a command line argument to provide the version number.
+if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
 if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
-    automakeVerOk=yes
-fi
-rm -rf .tmp
-if [ "$automakeVerOk" = "yes" ] ; then
-    echo ">= 1.11"
+    echo ">= $ver"
 else
-    echo "too old"
-    if [ "$do_atver_check" = "yes" ] ; then
-        echo "Unable to build a configure that uses automake.  automake version 1.11"
-        echo "or later is required; for some automake instances, the command"
-        echo "   automake --version"
-        echo "will provide the version number."
-        exit 1
-    fi
+    echo "bad automake installation"
+    cat <<EOF
+You either do not have automake in your path or it is too old (version
+$ver or higher required). You may be able to use
+
+     automake --version
+
+Unfortunately, there is no standard format for the version output and
+it changes between autotools versions.  In addition, some versions of
+autoconf choose among many versions and provide incorrect output).
+EOF
+    exit 1
 fi
 
 
@@ -476,38 +440,35 @@ fi
 
 echo_n "Checking for libtool version... "
 recreate_tmp
+ver=2.4
 cat <<EOF >.tmp/configure.ac
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([LT_PREREQ],,[m4_fatal([LT_PREREQ not defined])])
-LT_PREREQ(2.2.6)
+LT_PREREQ($ver)
 LT_INIT()
 AC_MSG_RESULT([A message])
 EOF
 cat <<EOF >.tmp/Makefile.am
 ACLOCAL_AMFLAGS = -I m4
 EOF
-libtoolVerOk=no
-# We have to do it this way because not all libtool versions accept 
-# a command line argument to provide the version number.
-if (cd .tmp && $libtoolize >/dev/null 2>&1 ) ; then
-    if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
-        libtoolVerOk=yes
-    fi
-fi
-rm -rf .tmp
-if [ "$libtoolVerOk" = "yes" ] ; then
-    echo ">= 2.2.6"
+if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
+if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
+    echo ">= $ver"
 else
-    echo "too old"
-    if [ "$do_atver_check" = "yes" ] ; then
-        echo "Unable to build a configure that uses Libtool.  Libtool version 2.2.6"
-        echo "or later is required; for some libtool instances, the command"
-        echo "   libtool --version"
-        echo "will provide the version number."
-        exit 1
-    fi
+    echo "bad libtool installation"
+    cat <<EOF
+You either do not have libtool in your path or it is too old
+(version $ver or higher required). You may be able to use
+
+     libtool --version
+
+Unfortunately, there is no standard format for the version output and
+it changes between autotools versions.  In addition, some versions of
+autoconf choose among many versions and provide incorrect output).
+EOF
+    exit 1
 fi
 
 
