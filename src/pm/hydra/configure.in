@@ -318,13 +318,20 @@ AC_MSG_RESULT([$hydra_topolib_list])
 
 hydra_topolibs="`echo $hydra_topolib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
+# Unconditionally include the hwloc macros, even if we are using an
+# external hwloc (or hwloc is disabled). This is needed for the
+# AM_CONDITIONALS that we will set later.
+m4_include([tools/topo/hwloc/hwloc/config/hwloc.m4])
+m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_attributes.m4])
+m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_visibility.m4])
+m4_include([tools/topo/hwloc/hwloc/config/hwloc_pkg.m4])
+
 have_hwloc=no
 for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in
 	hwloc)
 		if test "$with_hwloc_prefix" = "embedded" ; then
-		   PAC_CONFIG_SUBDIR_ARGS([tools/topo/hwloc/hwloc],[--enable-embedded-mode],
-			[have_hwloc=yes],[have_hwloc=no])
+		   HWLOC_SETUP_CORE([tools/topo/hwloc/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
 		   # Only build hwloc in embedded mode
 		   if test "$have_hwloc" = "yes" ; then
 		      hydra_use_embedded_hwloc=yes
@@ -368,6 +375,8 @@ if test "$hydra_default_topolib" != "" ; then
 else
    AC_DEFINE(HYDRA_DEFAULT_TOPOLIB,NULL,[Default processor topology library])
 fi
+
+HWLOC_DO_AM_CONDITIONALS
 AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
 AM_CONDITIONAL([hydra_use_embedded_hwloc], [test "${hydra_use_embedded_hwloc}" = "yes"])
 
