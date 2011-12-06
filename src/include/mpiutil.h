@@ -37,7 +37,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #   define MPIU_AssertDeclValue(_a,_b) _a = _b
 #   define MPIU_Assert(a_)                             \
     do {                                               \
-        if (!(a_)) {                                   \
+        if (unlikely(!(a_))) {                         \
             MPIR_Assert_fail(#a_, __FILE__, __LINE__); \
         }                                              \
     } while (0)
@@ -59,7 +59,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  */
 #define MPIU_Assertp(a_)                                             \
     do {                                                             \
-        if (!(a_)) {                                                 \
+        if (unlikely(!(a_))) {                                       \
             MPIR_Assert_fail(#a_, __FILE__, __LINE__);               \
         }                                                            \
     } while (0)
@@ -95,7 +95,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 /* newlines are added internally by the impl function, callers do not need to include them */
 #    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                         \
     do {                                                                       \
-        if (!(cond_)) {                                                        \
+        if (unlikely(!(cond_))) {                                              \
             MPIR_Assert_fail_fmt(#cond_, __FILE__, __LINE__,                   \
                                  MPIU_Assert_fmt_msg_expand_ fmt_arg_parens_); \
         }                                                                      \
@@ -107,7 +107,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 
 #    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                                                   \
     do {                                                                                                 \
-        if (!(cond_)) {                                                                                  \
+        if (unlikely(!(cond_))) {                                                                        \
             MPIR_Assert_fail_fmt(#cond_, __FILE__, __LINE__,                                             \
                                  "%s", "macro __VA_ARGS__ not supported, unable to print user message"); \
         }                                                                                                \
