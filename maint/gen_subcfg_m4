@@ -181,8 +181,11 @@ foreach my $k (keys %found_files) {
             my $bef_aft = $1;
             my $arg = $2;
 
-            if ($arg !~ m|/|) {
-                print "WARNING: no '/' characters detected in '$arg', possible old-style structured comment still present\n";
+            # users can set GEN_SUBCFG_NO_ERROR=1 in the environment to prevent
+            # this script from complaining about missing '/' chars
+            if ($arg !~ m|/| and not $ENV{GEN_SUBCFG_NO_ERROR}) {
+                print "ERROR: no '/' characters detected in '$arg', possible old-style structured comment still present\n";
+                exit 1;
             }
 
             # normalize the $arg to match our DAG
