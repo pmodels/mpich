@@ -72,7 +72,6 @@ int MPID_nem_mx_process_rdtype(MPID_Request **rreq_p, MPID_Datatype * dt_ptr, MP
 int MPID_nem_mx_send_conn_info (MPIDI_VC_t *vc);
 
 extern mx_endpoint_t MPID_nem_mx_local_endpoint;
-extern int           MPID_nem_mx_pending_send_req;
 extern uint32_t      MPID_NEM_MX_FILTER;
 extern uint64_t      MPID_nem_mx_local_nic_id;
 extern uint32_t      MPID_nem_mx_local_endpoint_id;
@@ -90,7 +89,8 @@ typedef struct
     /* The following is used to actually send messages */
     mx_endpoint_addr_t remote_endpoint_addr;
     /* Poster recv pointer for anysource management*/
-    int             (* recv_posted)(MPID_Request *req, void *vc);
+    /* int             (* recv_posted)(MPID_Request *req, void *vc); */
+    int                pending_sends;
 } MPID_nem_mx_vc_area;
 
 /* accessor macro to private fields in VC */

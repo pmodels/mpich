@@ -55,7 +55,7 @@ int MPID_nem_mx_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI
    
     ret = mx_isend(MPID_nem_mx_local_endpoint,mx_iov,num_seg,VC_FIELD(vc,remote_endpoint_addr),match_info,(void*)sreq,&mx_request);
     MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_isend", "**mx_isend %s", mx_strerror (ret));
-    MPID_nem_mx_pending_send_req++;
+    (VC_FIELD(vc,pending_sends)) += 1;
     sreq->ch.vc = vc;
 
  fn_exit:
@@ -114,7 +114,7 @@ int MPID_nem_mx_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz
    
     ret = mx_isend(MPID_nem_mx_local_endpoint,mx_iov,num_seg,VC_FIELD(vc,remote_endpoint_addr),match_info,(void *)sreq,&mx_request);
     MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_isend", "**mx_isend %s", mx_strerror (ret));
-    MPID_nem_mx_pending_send_req++;
+    (VC_FIELD(vc,pending_sends)) += 1;
     sreq->ch.vc = vc;    
     
  fn_exit:
@@ -205,7 +205,7 @@ int MPID_nem_mx_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
     ret = mx_isend(MPID_nem_mx_local_endpoint,mx_iov,num_seg,VC_FIELD(vc,remote_endpoint_addr),match_info,(void *)sreq,&mx_request);
     MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_isend", "**mx_isend %s", mx_strerror (ret));
 
-    MPID_nem_mx_pending_send_req++;
+    (VC_FIELD(vc,pending_sends)) += 1;
     sreq->ch.vc = vc;
 
  fn_exit:
@@ -304,7 +304,8 @@ int  MPID_nem_mx_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI_Dat
     ret = mx_isend(MPID_nem_mx_local_endpoint,mx_iov,num_seg,VC_FIELD(vc,remote_endpoint_addr),
 		   mx_matching,(void *)sreq,&(REQ_FIELD(sreq,mx_request)));
     MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_isend", "**mx_isend %s", mx_strerror (ret));
-    MPID_nem_mx_pending_send_req++;
+    (VC_FIELD(vc,pending_sends)) += 1;
+
  fn_exit:
     *request = sreq;
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MX_DIRECTSEND);
@@ -392,7 +393,7 @@ int  MPID_nem_mx_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MPI_Da
     ret = mx_issend(MPID_nem_mx_local_endpoint,mx_iov,num_seg,VC_FIELD(vc,remote_endpoint_addr),
 		    mx_matching,(void *)sreq,&(REQ_FIELD(sreq,mx_request)));
     MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_isend", "**mx_isend %s", mx_strerror (ret));	
-    MPID_nem_mx_pending_send_req++;
+    (VC_FIELD(vc,pending_sends)) += 1;
 
  fn_exit:
    *request = sreq;

@@ -52,7 +52,6 @@ static MPIDI_Comm_ops_t comm_ops = {
 #define MPIDI_CH3I_ENDPOINT_KEY "endpoint_id"
 #define MPIDI_CH3I_NIC_KEY      "nic_id"
 
-int           MPID_nem_mx_pending_send_req = 0;
 uint32_t      MPID_NEM_MX_FILTER = 0xabadbada;
 uint64_t      MPID_nem_mx_local_nic_id;
 uint32_t      MPID_nem_mx_local_endpoint_id;
@@ -103,7 +102,9 @@ static int init_mx( MPIDI_PG_t *pg_p )
    ret = mx_open_endpoint(MX_ANY_NIC,MX_ANY_ENDPOINT,MPID_NEM_MX_FILTER,NULL,0,&MPID_nem_mx_local_endpoint);
 #endif
    MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_open_endpoint", "**mx_open_endpoint %s", mx_strerror (ret));
-      
+
+   mx_register_unexp_handler(MPID_nem_mx_local_endpoint,MPID_nem_mx_get_adi_msg,NULL);
+
    ret = mx_get_endpoint_addr(MPID_nem_mx_local_endpoint,&local_endpoint_addr);
    MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_get_endpoint_addr", "**mx_get_endpoint_addr %s", mx_strerror (ret));   
    
@@ -151,8 +152,6 @@ MPID_nem_mx_init (MPIDI_PG_t *pg_p, int pg_rank,
 
    mpi_errno = MPID_nem_mx_get_business_card (pg_rank, bc_val_p, val_max_sz_p);
    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
-   mx_register_unexp_handler(MPID_nem_mx_local_endpoint,MPID_nem_mx_get_adi_msg,NULL);
 
    mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_mx_anysource_posted, 
 							  MPID_nem_mx_anysource_matched);
@@ -273,6 +272,7 @@ MPID_nem_mx_vc_init (MPIDI_VC_t *vc)
    }
 #endif
    mx_get_info(MPID_nem_mx_local_endpoint, MX_COPY_SEND_MAX, NULL, 0, &threshold, sizeof(uint32_t));
+   VC_FIELD(vc,pending_sends) = 0;
 
    vc->eager_max_msg_sz = threshold;
    vc->ready_eager_max_msg_sz = threshold;
@@ -310,5 +310,8 @@ int MPID_nem_mx_vc_terminate (MPIDI_VC_t *vc)
 {
     /* FIXME: Check to make sure that it's OK to terminate the
        connection without making sure that all sends have been sent */
+     while((VC_FIELD(vc,pending_sends)) > 0)                                                                                                                           
+	 MPID_nem_mx_poll(FALSE);   
+  
     return MPIDI_CH3U_Handle_connection (vc, MPIDI_VC_EVENT_TERMINATED);
 }

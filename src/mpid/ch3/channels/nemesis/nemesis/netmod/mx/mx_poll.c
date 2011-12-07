@@ -509,6 +509,8 @@ MPID_nem_mx_handle_sreq(MPID_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
     int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+
+    (VC_FIELD(req->ch.vc,pending_sends)) -= 1;
     if ((req->dev.datatype_ptr != NULL) && (req->dev.tmpbuf != NULL))
     {
       MPIU_Free(req->dev.tmpbuf);
@@ -530,7 +532,7 @@ MPID_nem_mx_handle_sreq(MPID_Request *req)
 	 MPIU_Assert(complete == TRUE);
       }
     }
-    MPID_nem_mx_pending_send_req--;
+
  fn_exit:
     return mpi_errno;
  fn_fail:

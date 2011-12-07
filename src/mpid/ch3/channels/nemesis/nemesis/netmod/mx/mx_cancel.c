@@ -48,8 +48,8 @@ int MPID_nem_mx_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 	{
 	   sreq->status.cancelled = TRUE;
 	   sreq->cc = 0;
-	   MPIU_Object_set_ref(sreq, 1);       
-	   MPID_nem_mx_pending_send_req--;
+	   MPIU_Object_set_ref(sreq, 1);     
+	   (VC_FIELD(vc,pending_sends)) -= 1;
 	}
 	else
         {	    
