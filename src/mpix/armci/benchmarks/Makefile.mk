@@ -15,22 +15,8 @@ TESTS          += benchmarks/ping-pong          \
                   benchmarks/strided-bench      \
                   # end
 
-benchmarks_ping_pong_SOURCES = $(top_srcdir)/benchmarks/ping-pong.c
-benchmarks_ping_pong_LDADD = -larmci
-benchmarks_ping_pong_DEPENDENCIES = libarmci.la
-
-benchmarks_ring_flood_SOURCES = $(top_srcdir)/benchmarks/ring-flood.c
-benchmarks_ring_flood_LDADD = -larmci
-benchmarks_ring_flood_DEPENDENCIES = libarmci.la
-
-benchmarks_contiguous_bench_SOURCES = $(top_srcdir)/benchmarks/contiguous-bench.c
-benchmarks_contiguous_bench_LDADD = -larmci -lm
-benchmarks_contiguous_bench_DEPENDENCIES = libarmci.la
-
-benchmarks_strided_bench_SOURCES = $(top_srcdir)/benchmarks/strided-bench.c
-benchmarks_strided_bench_LDADD = -larmci -lm
-benchmarks_strided_bench_DEPENDENCIES = libarmci.la
-
-benchmarks_bench_groups_SOURCES = $(top_srcdir)/benchmarks/bench_groups.c
-benchmarks_bench_groups_LDADD = -larmci -lm
-benchmarks_bench_groups_DEPENDENCIES = libarmci.la
+benchmarks_ping_pong_LDADD = libarmci.la
+benchmarks_ring_flood_LDADD = libarmci.la
+benchmarks_contiguous_bench_LDADD = libarmci.la -lm
+benchmarks_strided_bench_LDADD = libarmci.la -lm
+benchmarks_bench_groups_LDADD = libarmci.la -lm
