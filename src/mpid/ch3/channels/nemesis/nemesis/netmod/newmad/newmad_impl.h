@@ -76,6 +76,7 @@ typedef struct
 {
     char                     url[MPID_NEM_NMAD_MAX_SIZE];
     mpid_nem_newmad_p_gate_t p_gate;
+    int                      pending_sends;
 } MPID_nem_newmad_vc_area;
 /* accessor macro to private fields in VC */
 #define VC_FIELD(vcp, field) (((MPID_nem_newmad_vc_area *)VC_CH(((vcp)))->netmod_area.padding)->field)
@@ -199,7 +200,6 @@ typedef int16_t Nmad_Nem_tag_t;
 #define NEM_NMAD_ADI_MATCH(_match)                        NEM_NMAD_SET_MATCH(_match,0,0,NEM_NMAD_INTRA_CTXT)
 
 extern nm_session_t mpid_nem_newmad_session;
-extern int          mpid_nem_newmad_pending_send_req;
 
 #define NMAD_IOV_MAX_DEPTH (256) /* NM_SO_PREALLOC_IOV_LEN */
 /*#define DEBUG*/

@@ -51,7 +51,6 @@ static int         mpid_nem_newmad_myrank;
 static const char *label="mpich2";
 static const char *local_session_url = NULL;
 nm_session_t       mpid_nem_newmad_session;
-int                mpid_nem_newmad_pending_send_req = 0;
 
 #undef FUNCNAME
 #define FUNCNAME init_mad
@@ -72,6 +71,10 @@ static int init_mad( MPIDI_PG_t *pg_p )
     ret = nm_session_init(mpid_nem_newmad_session, &dummy_argc,dummy_argv, &local_session_url);
     MPIU_Assert( ret == NM_ESUCCESS);
 
+    ret = nm_sr_monitor(mpid_nem_newmad_session, NM_SR_EVENT_RECV_UNEXPECTED,
+       		        &MPID_nem_newmad_get_adi_msg);
+    MPIU_Assert( ret == NM_ESUCCESS);
+ 
     ret = nm_sr_init(mpid_nem_newmad_session);
     if(ret != NM_ESUCCESS) {
 	fprintf(stdout,"nm_sr_init return err = %d\n", ret);
@@ -92,12 +95,13 @@ MPID_nem_newmad_init_completed(void)
 {
    
    int mpi_errno = MPI_SUCCESS ;
+   /*
    int ret;
    
    ret = nm_sr_monitor(mpid_nem_newmad_session, NM_SR_EVENT_RECV_UNEXPECTED,
 		       &MPID_nem_newmad_get_adi_msg);
    MPIU_Assert( ret == NM_ESUCCESS);
-   
+   */
 fn_exit:
        return mpi_errno;
 fn_fail:
@@ -249,6 +253,7 @@ MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
    
    /* Very important */
    memset(VC_FIELD(vc, url),0,MPID_NEM_NMAD_MAX_SIZE);
+   VC_FIELD(vc,pending_sends) = 0;
    
    mpi_errno = MPID_nem_newmad_get_from_bc (business_card, VC_FIELD(vc, url));
    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -298,6 +303,10 @@ int MPID_nem_newmad_vc_terminate (MPIDI_VC_t *vc)
 {
     /* FIXME: Check to make sure that it's OK to terminate the
        connection without making sure that all sends have been sent */
+   
+    while((VC_FIELD(vc,pending_sends)) > 0)                                                                                            \
+             MPID_nem_newmad_poll(FALSE);   
+   
     return MPIDI_CH3U_Handle_connection (vc, MPIDI_VC_EVENT_TERMINATED);
 }
 

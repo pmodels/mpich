@@ -295,6 +295,10 @@ MPID_nem_newmad_handle_sreq(MPID_Request *req)
 #ifdef DEBUG
     fprintf(stdout,"========> Completing Send req  %p \n",req);
 #endif
+   (VC_FIELD(req->ch.vc,pending_sends)) -= 1;
+   if (REQ_FIELD(req,iov_to_delete) == 1)
+     MPIU_Free((REQ_FIELD(req,iov)));
+   
     reqFn = req->dev.OnDataAvail;
     if (!reqFn){
 	MPIDI_CH3U_Request_complete(req);
@@ -309,9 +313,6 @@ MPID_nem_newmad_handle_sreq(MPID_Request *req)
 	   MPIU_Assert(complete == TRUE);
 	}
     }
-    if (REQ_FIELD(req,iov_to_delete))
-	MPIU_Free((REQ_FIELD(req,iov)));
-    mpid_nem_newmad_pending_send_req--;
 }
 
 #undef FUNCNAME
@@ -374,7 +375,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_tag_t match_info, size_t size)
 	}
     }
 
-    if (REQ_FIELD(req,iov_to_delete))
+    if (REQ_FIELD(req,iov_to_delete) == 1)
 	MPIU_Free(REQ_FIELD(req,iov));	
 
     MPIDI_Comm_get_vc_set_active(req->comm, req->status.MPI_SOURCE, &vc);
@@ -506,7 +507,7 @@ int MPID_nem_newmad_anysource_matched(MPID_Request *rreq)
 	else
 	{
 	    MPID_Segment_free(rreq->dev.segment_ptr);
-   	    if (REQ_FIELD(rreq,iov_to_delete))
+   	    if (REQ_FIELD(rreq,iov_to_delete) == 1)
 	      MPIU_Free(REQ_FIELD(rreq,iov));	
 	}    
 	MPIU_Free(nmad_request);

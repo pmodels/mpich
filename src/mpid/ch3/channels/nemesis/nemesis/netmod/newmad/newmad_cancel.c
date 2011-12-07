@@ -27,7 +27,7 @@ int MPID_nem_newmad_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq)
     if (ret ==  NM_ESUCCESS)
     {
         sreq->status.cancelled = TRUE;
-	mpid_nem_newmad_pending_send_req--;
+       (VC_FIELD(vc,pending_sends)) -= 1;
     }
     else
     {	    
