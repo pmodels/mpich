@@ -53,7 +53,6 @@ static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 }
 
 #define MPID_NEM_USE_SHADOW_HEAD
-#define MPID_NEM_USE_MACROS
 
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t val)
 {
@@ -70,7 +69,6 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_CAS_REL_NULL (MPID_nem_cell_rel_p
     return ret;
 }
 
-#ifndef MPID_NEM_USE_MACROS
 static inline void
 MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
 {
@@ -88,38 +86,16 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
 	MPID_NEM_REL_TO_ABS (r_prev)->next = r_element;
     }
 }
-#else /*MPID_NEM_USE_MACROS */
-#define MPID_nem_queue_enqueue(qhead, element) do {			\
-    MPID_nem_cell_rel_ptr_t r_prev;					\
-    MPID_nem_cell_rel_ptr_t r_element = MPID_NEM_ABS_TO_REL (element);	\
-									\
-    r_prev = MPID_NEM_SWAP_REL (&((qhead)->tail), r_element);		\
-									\
-    if (MPID_NEM_IS_REL_NULL (r_prev))					\
-    {									\
-	(qhead)->head = r_element;					\
-    }									\
-    else								\
-    {									\
-	MPID_NEM_REL_TO_ABS (r_prev)->next = r_element;			\
-    }									\
-} while (0)
-#endif /*MPID_NEM_USE_MACROS */
 
 /* This operation is only safe because this is a single-dequeuer queue impl.
    Assumes that MPID_nem_queue_empty was called immediately prior to fix up any
    shadow head issues. */
-#ifndef MPID_NEM_USE_MACROS
 static inline MPID_nem_cell_ptr_t
 MPID_nem_queue_head (MPID_nem_queue_ptr_t qhead)
 {
     return MPID_NEM_REL_TO_ABS(qhead->my_head);
 }
-#else /*MPID_NEM_USE_MACROS */
-#define MPID_nem_queue_head(qhead_) MPID_NEM_REL_TO_ABS((qhead_)->my_head)
-#endif
 
-#ifndef MPID_NEM_USE_MACROS
 static inline int
 MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
 {
@@ -136,18 +112,7 @@ MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
     return 0;
 }
 
-#else /*MPID_NEM_USE_MACROS */
-#define MPID_nem_queue_empty(qhead)                                                     \
-    (                                                                                   \
-     MPID_NEM_IS_REL_NULL((qhead)->my_head) ? (                                         \
-      MPID_NEM_IS_REL_NULL((qhead)->head) ? 1                                           \
-      : ( (qhead)->my_head = (qhead)->head, MPID_NEM_SET_REL_NULL((qhead)->head), 0 )   \
-     )                                                                                  \
-     : 0                                                                                \
-    )
-#endif /* MPID_NEM_USE_MACROS */
 
-#ifndef MPID_NEM_USE_MACROS
 /* Gets the head */
 static inline void
 MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
@@ -182,40 +147,6 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
     MPID_NEM_SET_REL_NULL (_e->next);
     *e = _e;
 }
-
-#else /* MPID_NEM_USE_MACROS */
-#define MPID_nem_queue_dequeue(qhead, e) do {				\
-    MPID_nem_cell_ptr_t _e;					\
-    MPID_nem_cell_rel_ptr_t _r_e;				\
-									\
-    _r_e = (qhead)->my_head;						\
-    _e = MPID_NEM_REL_TO_ABS (_r_e);					\
-									\
-    if (!MPID_NEM_IS_REL_NULL (_e->next))				\
-    {									\
-	(qhead)->my_head = _e->next;					\
-    }									\
-    else								\
-    {									\
-	MPID_nem_cell_rel_ptr_t old_tail;				\
-									\
-	MPID_NEM_SET_REL_NULL ((qhead)->my_head);			\
-									\
-	old_tail = MPID_NEM_CAS_REL_NULL (&((qhead)->tail), _r_e);	\
-									\
-	if (!MPID_NEM_REL_ARE_EQUAL (old_tail, _r_e))			\
-	{								\
-	    while (MPID_NEM_IS_REL_NULL (_e->next))			\
-	    {								\
-		SKIP;							\
-	    }								\
-	    (qhead)->my_head = _e->next;				\
-	}								\
-    }									\
-    MPID_NEM_SET_REL_NULL (_e->next);					\
-    *(e) = _e;								\
-} while (0)                                             
-#endif /* MPID_NEM_USE_MACROS */
 
 #else /* !defined(MPID_NEM_USE_LOCK_FREE_QUEUES) */
 
