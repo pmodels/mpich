@@ -142,6 +142,7 @@ externals="src/mpe2 src/pm/hydra src/mpi/romio src/mpix/armci src/pm/mpd"
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/openpa src/mpl"
 
+autoreconf_args="-if"
 
 ########################################################################
 ## Read the command-line arguments
@@ -202,6 +203,10 @@ for arg in "$@" ; do
 	    fi
 	    ;;
 
+        -verbose-autoreconf|--verbose-autoreconf)
+            autoreconf_args="-vif"
+            ;;
+
 	-with-genstates|--with-genstates)
 	    do_genstates=yes
 	    ;;
@@ -243,6 +248,7 @@ for arg in "$@" ; do
     updatefiles [ --with-autotools=dir ] \\
                 [ -atdircheck=[yes|no] ] \\
                 [ -atvercheck=[yes|no] ] \\
+                [ --verbose-autoreconf ] \\
                 [ --do=stepname ] [ -distrib ] [ args for simplemake ]
     Update the files in the MPICH2 build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the simplemake
@@ -367,7 +373,7 @@ ver=2.67
 cat > .tmp/configure.in<<EOF
 AC_PREREQ($ver)
 EOF
-if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
+if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
     echo ">= $ver"
 else
     echo "bad autoconf installation"
@@ -405,7 +411,7 @@ cat <<EOF >.tmp/Makefile.am
 ACLOCAL_AMFLAGS = -I m4
 EOF
 if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
-if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
+if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
     echo ">= $ver"
 else
     echo "bad automake installation"
@@ -443,7 +449,7 @@ cat <<EOF >.tmp/Makefile.am
 ACLOCAL_AMFLAGS = -I m4
 EOF
 if [ ! -d .tmp/m4 ] ; then mkdir .tmp/m4 >/dev/null 2>&1 ; fi
-if (cd .tmp && $autoreconf -vif >/dev/null 2>&1 ) ; then
+if (cd .tmp && $autoreconf $autoreconf_args >/dev/null 2>&1 ) ; then
     echo ">= $ver"
 else
     echo "bad libtool installation"
@@ -1029,7 +1035,7 @@ if [ "$do_build_configure" = "yes" ] ; then
 	if [ -d "$amdir" -o -L "$amdir" ] ; then
 	    echo "------------------------------------------------------------------------"
 	    echo "running $autoreconf in $amdir"
-	    (cd $amdir && $autoreconf -vif) || exit 1
+            (cd $amdir && $autoreconf $autoreconf_args) || exit 1
 	fi
     done
 fi
