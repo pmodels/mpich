@@ -181,8 +181,8 @@ chdir("${root}/${pack}-${version}");
 
 my $date = `date`;
 chomp $date;
-system(qq(perl -p -i -e 's/\[MPICH2_RELEASE_DATE_m4\],\[unreleased development copy\]/\[MPICH2_RELEASE_DATE_m4\],\["$date"\]/g' ./maint/version.m4));
-system(qq(perl -p -i -e 's/\[MPICH2_RELEASE_DATE_m4\],\[unreleased development copy\]/\[MPICH2_RELEASE_DATE_m4\],\["$date"\]/g' ./src/pm/hydra/version.m4));
+system(qq(perl -p -i -e 's/\\[MPICH2_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH2_RELEASE_DATE_m4],[$date]/g' ./maint/version.m4));
+system(qq(perl -p -i -e 's/\\[MPICH2_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH2_RELEASE_DATE_m4],[$date]/g' ./src/pm/hydra/version.m4));
 print("done\n");
 
 # Remove packages that are not being released
