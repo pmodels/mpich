@@ -18,7 +18,7 @@
 use strict;
 use warnings;
 
-use Cwd qw( realpath );
+use Cwd qw( getcwd realpath );
 use Getopt::Long;
 
 my $arg = 0;
@@ -104,7 +104,7 @@ sub run_cmd
 {
     my $cmd = shift;
 
-    # FIXME: Allow for verbose output
+    #print("===> running cmd=|$cmd| from ".getcwd()."\n");
     system("$cmd >> $root/$logfile 2>&1");
     if ($?) {
         die "unable to execute ($cmd), \$?=$?.  Stopped";
@@ -192,10 +192,10 @@ run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py");
 
 chdir("${root}/${pack}-${version}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
 my @nem_modules = qw(elan psm);
-run_cmd("rm -rf ".join(' ', map({$_ . "/*"} @nem_modules)));
+run_cmd("rm -rf ".join(' ', @nem_modules));
 for my $module (@nem_modules) {
-    # system to avoid problems with shell redirect in run_cmd
-    system(qq(echo "# Stub Makefile" > ${module}/Makefile.sm));
+    run_cmd("rm -rf $module");
+    run_cmd(q{perl -p -i -e '$_="" if m|^\s*include \$.*netmod/}.${module}.q{/Makefile.mk|' Makefile.mk});
 }
 print("done\n");
 
