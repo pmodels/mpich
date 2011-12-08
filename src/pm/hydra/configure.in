@@ -10,6 +10,12 @@ AC_INIT([Hydra], MPICH2_VERSION_m4)
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
 
+# needed by hwloc in embedded mode.  Must come very early to avoid
+# bizarre expansion ordering warnings
+AC_CANONICAL_TARGET
+AC_ARG_PROGRAM
+AC_USE_SYSTEM_EXTENSIONS
+
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
 AC_CONFIG_HEADER(include/hydra_config.h)
