@@ -30,12 +30,14 @@ int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int array
 int MPID_nem_register_initcomp_cb(int (* callback)(void));
 int MPID_nem_choose_netmod(void);
 
+/* FIXME is a memory barrier needed here too? (I think not) */
 #define MPID_nem_mpich2_release_fbox(cell) (MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich2.source]->mpich2.flag.value = 0, \
 					    MPI_SUCCESS)
 
 /* initialize shared-memory MPI_Barrier variables */
 int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region);
 
+/* FIXME is a memory barrier needed here too? */
 static inline int
 MPID_nem_islocked (MPID_nem_fbox_common_ptr_t pbox, int value, int count)
 {

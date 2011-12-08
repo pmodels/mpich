@@ -43,6 +43,7 @@ static inline int poll_active_fboxes(MPID_nem_cell_ptr_t *cell)
             if (fbox->flag.value == 1 &&
                 fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank])
             {
+                OPA_read_barrier(); /* ensure flag/payload are read in correct order */
                 ++MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank];
                 *cell = &fbox->cell;
                 found = TRUE;
@@ -70,6 +71,7 @@ static inline int poll_every_fbox(MPID_nem_cell_ptr_t *cell)
         fbox = MPID_nem_curr_fbox_all_poll->fbox;
         if (fbox && fbox->flag.value == 1 &&
             fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank]) {
+            OPA_read_barrier(); /* ensure flag/payload are read in correct order */
             ++MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank];
             *cell = &fbox->cell;
             found = TRUE;
@@ -90,6 +92,7 @@ static inline int poll_every_fbox(MPID_nem_cell_ptr_t *cell)
     fbox = MPID_nem_curr_fbox_all_poll->fbox;											\
     if (fbox && fbox->flag.value == 1 && fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank])	\
     {															\
+        OPA_read_barrier(); /* ensure flag/payload are read in correct order */ \
 	++MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank];									\
 	*(_cell) = &fbox->cell;												\
 	do_found;													\
