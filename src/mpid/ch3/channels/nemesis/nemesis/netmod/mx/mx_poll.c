@@ -511,7 +511,8 @@ MPID_nem_mx_handle_sreq(MPID_Request *req)
     int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
 
     (VC_FIELD(req->ch.vc,pending_sends)) -= 1;
-    if ((req->dev.datatype_ptr != NULL) && (req->dev.tmpbuf != NULL))
+    if (((req->dev.datatype_ptr != NULL) && (req->dev.tmpbuf != NULL))
+	|| ((REQ_FIELD(req,deltmpbuf)) == TMP_DEL_VALUE))
     {
       MPIU_Free(req->dev.tmpbuf);
     }	   
@@ -598,7 +599,8 @@ MPID_nem_mx_handle_rreq(MPID_Request *req, mx_status_t status)
     data_sz = userbuf_sz;
   }
   
-  if ((!dt_contig)&&(req->dev.tmpbuf != NULL))
+  if (((!dt_contig)&&(req->dev.tmpbuf != NULL))
+      || ((REQ_FIELD(req,deltmpbuf)) == TMP_DEL_VALUE))
   {
     MPIDI_msg_sz_t last;
     last = req->dev.recv_data_sz;
@@ -807,6 +809,7 @@ c");
     MPIR_Pack_size_impl(rreq->dev.user_count, rreq->dev.datatype, &packsize);
     rreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
     MPIU_Assert(rreq->dev.tmpbuf);
+    (REQ_FIELD(rreq,deltmpbuf)) = TMP_DEL_VALUE;
     rreq->dev.tmpbuf_sz = packsize;
     mx_iov[0].segment_ptr = (char *)  rreq->dev.tmpbuf;
     mx_iov[0].segment_length = (uint32_t) packsize;

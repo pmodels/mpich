@@ -167,9 +167,10 @@ int MPID_nem_mx_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         sreq->dev.tmpbuf = MPIU_Malloc((size_t)sreq->dev.segment_size);
         MPID_Segment_pack(sreq->dev.segment_ptr,sreq->dev.segment_first, &last,(char *)(sreq->dev.tmpbuf));
         MPIU_Assert(last == sreq->dev.segment_size);
-        mx_iov[1].segment_ptr = (char *)(sreq->dev.tmpbuf);
+        mx_iov[1].segment_ptr = (char *)(sreq->dev.tmpbuf);        
         mx_iov[1].segment_length = (uint32_t)last;
         num_seg++;
+        (REQ_FIELD(sreq,deltmpbuf)) = TMP_DEL_VALUE;
     }
    
     /*
@@ -286,7 +287,8 @@ int  MPID_nem_mx_directSend(MPIDI_VC_t *vc, const void * buf, int count, MPI_Dat
 		MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 		MPIR_Pack_size_impl(count, datatype, &packsize);
 		sreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
-		MPIU_Assert(sreq->dev.tmpbuf);	
+		MPIU_Assert(sreq->dev.tmpbuf);
+	        (REQ_FIELD(sreq,deltmpbuf)) = TMP_DEL_VALUE;
 		MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
 		last = data_sz;
 		MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, sreq->dev.tmpbuf);
@@ -375,7 +377,8 @@ int  MPID_nem_mx_directSsend(MPIDI_VC_t *vc, const void * buf, int count, MPI_Da
 		MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 		MPIR_Pack_size_impl(count, datatype, &packsize);
 		sreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
-		MPIU_Assert(sreq->dev.tmpbuf);	
+		MPIU_Assert(sreq->dev.tmpbuf);
+  	        (REQ_FIELD(sreq,deltmpbuf)) = TMP_DEL_VALUE;
 		MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
 		last = data_sz;
 		MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, sreq->dev.tmpbuf);
@@ -470,6 +473,7 @@ int MPID_nem_mx_process_sdtype(MPID_Request **sreq_p,  MPI_Datatype datatype,  M
 	}
 	sreq->dev.tmpbuf = MPIU_Malloc(size_to_copy);
 	MPIU_Assert(sreq->dev.tmpbuf);
+        (REQ_FIELD(sreq,deltmpbuf)) = TMP_DEL_VALUE; 
 	for(index = last_entry; index < n_iov; index++)
 	{
 	    MPIU_Memcpy((char *)(sreq->dev.tmpbuf) + offset, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);

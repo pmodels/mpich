@@ -102,8 +102,10 @@ typedef struct
 typedef struct 
 {
     mx_request_t mx_request; 
+    int          deltmpbuf;
 } MPID_nem_mx_req_area;
 
+#define TMP_DEL_VALUE 111
 /* accessor macro to private fields in REQ */
 #define REQ_FIELD(reqp, field) (((MPID_nem_mx_req_area *)((reqp)->ch.netmod_area.padding))->field)
 
