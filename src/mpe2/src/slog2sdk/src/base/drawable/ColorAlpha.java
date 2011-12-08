@@ -121,6 +121,28 @@ public class ColorAlpha extends Color
              + super.getBlue() * super.getBlue();
     }
 
+    /*
+    http://www.had2know.com/technology/color-contrast-calculator-web-design.html
+    */
+    public int getBrightness()
+    {
+        return (int) ( 0.299 * (double)super.getRed()
+                     + 0.587 * (double)super.getGreen()
+                     + 0.114 * (double)super.getBlue());
+    }
+
+    public int getBrightContrast( final ColorAlpha clr )
+    {
+        return Math.abs(this.getBrightness() - clr.getBrightness());
+    }
+
+    public int getHueContrast( final ColorAlpha clr )
+    {
+        return Math.abs(super.getRed() - clr.getRed())
+             + Math.abs(super.getGreen() - clr.getGreen())
+             + Math.abs(super.getBlue() - clr.getBlue());
+    }
+
     public boolean equals( final ColorAlpha clr )
     {
         return    ( super.getRed()   == clr.getRed() )
@@ -130,10 +152,13 @@ public class ColorAlpha extends Color
 
     public int compareTo( Object obj )
     {
+        // Since human is more sensitive to brightness, place more emphasis on
+        // brightness, i.e. 4 to 1, relative to hue.
         ColorAlpha clr = (ColorAlpha) obj;
         if ( ! this.equals( clr ) )
             // return this.getLengthSq() - clr.getLengthSq();
-            return clr.getLengthSq() - this.getLengthSq();
+            // return clr.getLengthSq() - this.getLengthSq();
+            return 4 * this.getBrightContrast(clr) + this.getHueContrast(clr);
         else
             return 0;
     }
@@ -164,6 +189,7 @@ public class ColorAlpha extends Color
     }
 
     private static ColorAlpha colors[];
+    private static int        colors_step;
     private static int        next_color_index;
 
     /*
@@ -172,21 +198,30 @@ public class ColorAlpha extends Color
     */
     private static void initDefaultColors()
     {
+        int         vals[] = { 0x0, 0x33, 0x66, 0x99, 0xCC, 0xFF };
         int         ired, igreen, iblue;
         int         vals_length, colors_length, idx;
-        int         vals[] = { 0x0, 0x33, 0x66, 0x99, 0xCC, 0xFF };
+        boolean     is_beg, is_end;
 
         vals_length    = vals.length;
-        colors_length  = vals_length * vals_length * vals_length;
+        colors_length  = vals_length * vals_length * vals_length - 2;
+        // colors_step    = vals_length * vals_length * vals_length / 3 - 1;
+        colors_step    = vals_length * vals_length * vals_length / 2;
         colors         = new ColorAlpha[ colors_length ];
         idx = 0;
         for ( ired = 0; ired < vals_length; ired++ ) {
             for ( igreen = 0; igreen < vals_length; igreen++ ) {
                 for ( iblue = 0; iblue < vals_length; iblue++ ) {
-                    colors[ idx ] = new ColorAlpha( vals[ ired ],
-                                                    vals[ igreen ],
-                                                    vals[ iblue ] );
-                    idx++;
+                    // Exclude the begining BLACK and ending WHITE
+                    is_beg = (ired == 0 && igreen == 0 && iblue == 0);
+                    is_end = (ired == vals_length-1
+                           && igreen == ired && iblue == ired);
+                    if ( !is_beg && !is_end ) {
+                        colors[ idx ] = new ColorAlpha( vals[ ired ],
+                                                        vals[ igreen ],
+                                                        vals[ iblue ] );
+                        idx++;
+                    }
                 }
             }
         }
@@ -199,7 +234,7 @@ public class ColorAlpha extends Color
         Arrays.sort( colors );
     
         // Initialize the next available color index, to avoid white;
-        next_color_index = 1;
+        next_color_index = 10;
     }
 
     public static ColorAlpha getNextDefaultColor()
@@ -209,9 +244,9 @@ public class ColorAlpha extends Color
         if ( colors == null )
             ColorAlpha.initDefaultColors();
 
-        // "%(colors.lenth-1)" ignores the last color in colors[], black.
-        returning_color_index = next_color_index % ( colors.length - 1 );
-        next_color_index++;
+        returning_color_index = next_color_index %  colors.length;
+        next_color_index     += colors_step;
+        // next_color_index     += 1;
         return colors[ returning_color_index ];
     }
 
@@ -219,8 +254,20 @@ public class ColorAlpha extends Color
 
     public static final void main( String[] args )
     {
-        for ( int idx = 0; idx < 500; idx++ )
-            System.out.println( ColorAlpha.getNextDefaultColor() );
+        ColorAlpha clr, prev;
+        clr = ColorAlpha.getNextDefaultColor();
+        System.out.println( clr );
+        prev = clr;
+        for ( int idx = 1; idx < 214; idx++ ) {
+            clr = ColorAlpha.getNextDefaultColor();
+            int bcontrast = clr.getBrightContrast(prev);
+            int hcontrast = clr.getHueContrast(prev);
+            boolean is_contrast = (bcontrast > 125) && (hcontrast > 500);
+            System.out.println( idx + ": \t" + clr
+                              + "\t" + bcontrast + "\t" + hcontrast
+                              + "\t" + is_contrast);
+            clr = prev;
+        }
     }
 /*
     public static final void main( String[] args )

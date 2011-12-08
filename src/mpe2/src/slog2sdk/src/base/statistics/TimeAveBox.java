@@ -133,6 +133,7 @@ public class TimeAveBox extends TimeBoundingBox
             set_timeblocks.add( shade );
     }
 
+    // mergedWithXXX() = addWithXXX()
     public void mergeWithTimeAveBox( final TimeAveBox  avebox )
     {
         Category          abox_type;
@@ -171,6 +172,20 @@ public class TimeAveBox extends TimeBoundingBox
         if ( list_nestables != null )
             set_timeblocks.add( avebox );
     }
+
+    public void rescaleAllRatios( float ftr )
+    {
+        Iterator          this_twgfs;
+        CategoryWeightF   this_twgf;
+        
+        this_twgfs = this.map_type2twgf.values().iterator();
+        while ( this_twgfs.hasNext() ) {
+            this_twgf = (CategoryWeightF) this_twgfs.next();
+            this_twgf.rescaleAllRatios( ftr );
+        }
+    }
+
+
 
     private void patchSetOfTimeBlocks()
     {

@@ -20,7 +20,7 @@ public abstract class ScrollableObject extends JComponent
 {
     //  The least number of images for this class to work is "3"
     private   static final int   NumImages = 3;
-    protected static final int   NumViewsPerImage = 2;
+    protected static final int   NumViewsPerImage = 1;
     protected static final int   NumViewsTotal = NumImages * NumViewsPerImage;
 
     private   ModelTime          model = null;

@@ -24,7 +24,7 @@ public class CategoryWeightF extends CategorySummaryF
 
     public  static final Comparator  INDEX_ORDER     = new IndexOrder();
 
-    private static final int INVALID_INDEX = Integer.MIN_VALUE;
+    private static final int         INVALID_INDEX   = Integer.MIN_VALUE;
 
     private int        type_idx;
     private Category   type;
