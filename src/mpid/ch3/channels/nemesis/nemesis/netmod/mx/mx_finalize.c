@@ -23,9 +23,6 @@ MPID_nem_mx_finalize()
     int mpi_errno = MPI_SUCCESS;
     int ret ;
     
-    while(MPID_nem_mx_pending_send_req > 0)
-	MPID_nem_mx_poll(FALSE);
-
     ret = mx_close_endpoint(MPID_nem_mx_local_endpoint);
     MPIU_ERR_CHKANDJUMP1 (ret != MX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mx_close_endpoint", "**mx_close_endpoint %s", mx_strerror (ret));
     
