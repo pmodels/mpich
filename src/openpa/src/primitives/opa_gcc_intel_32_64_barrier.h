@@ -7,8 +7,18 @@
 #ifndef OPA_GCC_INTEL_32_64_BARRIER_H_INCLUDED
 #define OPA_GCC_INTEL_32_64_BARRIER_H_INCLUDED
 
-#define OPA_write_barrier()      __asm__ __volatile__  ( "sfence" ::: "memory" )
-#define OPA_read_barrier()       __asm__ __volatile__  ( "lfence" ::: "memory" )
+
+/* For all regular memory (write-back cacheable, not driver/graphics
+ * memory), there is only one general ordering relaxation permitted by
+ * x86/x86_64 processors: earlier stores may be retired after later
+ * stores.  The "clflush" and "movnt*" instructions also don't follow
+ * general ordering constraints, although any code using these
+ * instructions should be responsible for ensuring proper ordering
+ * itself.  So our read and write barriers may be implemented as simple
+ * compiler barriers. */
+#define OPA_write_barrier() __asm__ __volatile__ ( "" ::: "memory" )
+#define OPA_read_barrier()  __asm__ __volatile__ ( "" ::: "memory" )
+
 #define OPA_read_write_barrier() __asm__ __volatile__  ( "mfence" ::: "memory" )
 
 

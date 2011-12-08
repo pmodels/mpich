@@ -184,7 +184,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[
   AC_MSG_RESULT([yes])
 )
 
-AC_ARG_WITH(atomic-primitives, AC_HELP_STRING([--with-atomic-primitives],
+AC_ARG_WITH([atomic-primitives], [AC_HELP_STRING([--with-atomic-primitives],
     [Force OPA to use a specific atomic primitives implementation file (default
      is auto).  A value of 'no' forces the use of locks to implement atomic
      primitives.  A value of 'auto_allow_emulation' will attempt to detect
@@ -192,8 +192,8 @@ AC_ARG_WITH(atomic-primitives, AC_HELP_STRING([--with-atomic-primitives],
      available.  Note that using locks to implement atomic primitives will have
      a substantial impact on performance and is intended for testing only.  A
      value of 'unsafe' will use a non-atomic version of the primitives for performance
-     in single-threaded code and meta-testing.]),
-    AS_IF([test "$with_atomic_primitives" = "yes"], [with_atomic_primitives=auto]),
+     in single-threaded code and meta-testing.])],
+    [AS_IF([test "$with_atomic_primitives" = "yes"], [with_atomic_primitives=auto])],
     [with_atomic_primitives=auto]
 )
 
