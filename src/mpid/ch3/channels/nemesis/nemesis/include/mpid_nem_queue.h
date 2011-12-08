@@ -114,7 +114,7 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
         /* order SWAP and head store, as well as payload stores and head
          * store */
         OPA_write_barrier();
-	qhead->head = r_element;
+        qhead->head = r_element;
     }
     else
     {
@@ -125,7 +125,7 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
         /* order SWAP and r_prev->next store, as well as payload stores
          * and r_prev->next store */
         OPA_write_barrier();
-	MPID_NEM_REL_TO_ABS (r_prev)->next = r_element;
+        MPID_NEM_REL_TO_ABS (r_prev)->next = r_element;
     }
 }
 
@@ -151,19 +151,19 @@ MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
     {
         /* the order of comparison between my_head and head does not
          * matter, no read barrier needed here */
-	if (MPID_NEM_IS_REL_NULL (qhead->head))
+        if (MPID_NEM_IS_REL_NULL (qhead->head))
         {
             /* both null, nothing in queue */
-	    return 1;
+            return 1;
         }
-	else
-	{
+        else
+        {
             /* shadow head null and head has value, move the value to
              * our private shadow head and zero the real head */
-	    qhead->my_head = qhead->head;
+            qhead->my_head = qhead->head;
             /* no barrier needed, my_head is entirely private to consumer */
-	    MPID_NEM_SET_REL_NULL (qhead->head);
-	}
+            MPID_NEM_SET_REL_NULL (qhead->head);
+        }
     }
 
     /* the following assertions are present at the beginning of _dequeue:
@@ -192,7 +192,7 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
      * head/my_head and _e->next are ordered by a data dependency */
     if (!MPID_NEM_IS_REL_NULL(_e->next))
     {
-	qhead->my_head = _e->next;
+        qhead->my_head = _e->next;
 
         /* ensure that loads from the queue's head are ordered before any
          * loads from the cell */
@@ -200,27 +200,27 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
     }
     else
     {
-	MPID_nem_cell_rel_ptr_t old_tail;
+        MPID_nem_cell_rel_ptr_t old_tail;
 
-	MPID_NEM_SET_REL_NULL (qhead->my_head);
+        MPID_NEM_SET_REL_NULL (qhead->my_head);
         /* no barrier needed for my_head+CAS, my_head entirely private to consumer */
 
         /* ensure that loads from the queue's head are ordered before
          * any loads from the cell and that the _e->next==NULL and
          * CAS(qhead->tail) operations are ordered */
         OPA_read_barrier();
-	old_tail = MPID_NEM_CAS_REL_NULL (&(qhead->tail), _r_e);
+        old_tail = MPID_NEM_CAS_REL_NULL (&(qhead->tail), _r_e);
 
-	if (!MPID_NEM_REL_ARE_EQUAL (old_tail, _r_e))
-	{
+        if (!MPID_NEM_REL_ARE_EQUAL (old_tail, _r_e))
+        {
             /* FIXME is a barrier needed here because of the control-only dependency? */
-	    while (MPID_NEM_IS_REL_NULL (_e->next))
-	    {
-		SKIP;
-	    }
+            while (MPID_NEM_IS_REL_NULL (_e->next))
+            {
+                SKIP;
+            }
             /* no read barrier needed between loads from the same location */
-	    qhead->my_head = _e->next;
-	}
+            qhead->my_head = _e->next;
+        }
     }
     MPID_NEM_SET_REL_NULL (_e->next);
     *e = _e;
