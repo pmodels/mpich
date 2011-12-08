@@ -3,11 +3,11 @@ dnl MPICH2_SUBCFG_AFTER=src/mpid/ch3/channels/nemesis
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     #check for NewMadeleine options 
-    AC_ARG_WITH(newmad, [--with-newmad=path - specify path where pm2 software can be found],
-    if test "${with_newmad}" != "yes" -a "${with_newmad}" != "no" ; then
-        LDFLAGS="$LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
-        CPPFLAGS="$CPPFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
-    fi,)
+    #AC_ARG_WITH(newmad, [--with-newmad=path - specify path where pm2 software can be found],
+    #if test "${with_newmad}" != "yes" -a "${with_newmad}" != "no" ; then
+    #    LDFLAGS="$LDFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --libs`"
+    #    CPPFLAGS="$CPPFLAGS `${with_newmad}/bin/pm2-config  --flavor=$PM2_FLAVOR --cflags`"
+    #fi,)
 
     AM_COND_IF([BUILD_CH3_NEMESIS],[
         for net in $nemesis_networks ; do
@@ -21,6 +21,9 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_NEMESIS_NETMOD_NEWMAD],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:newmad])
+    LDFLAGS="$LDFLAGS pkg-config nmad --libs"
+    CPPFLAGS="$CPPFLAGS pkg-config nmad  --cflags"
+    WRAPPER_CFLAGS="$WRAPPER_CFLAGS pkg-config nmad  --cflags"
     AC_CHECK_HEADER([nm_public.h], , [
        AC_MSG_ERROR(['nm_public.h not found.  Did you specify --with-newmad= ?'])
     ])                                      
