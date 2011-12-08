@@ -88,8 +88,12 @@ typedef struct
 {
     nm_sr_request_t newmad_req;
     struct iovec   *iov;
-   int              iov_to_delete;
+    int             iov_to_delete;
+    int             deltmpbuf;
 } MPID_nem_newmad_req_area;
+
+#define TMP_DEL_VALUE 111
+
 /* accessor macro to private fields in REQ */
 #define REQ_FIELD(reqp, field) (((MPID_nem_newmad_req_area *)((reqp)->ch.netmod_area.padding))->field)
 

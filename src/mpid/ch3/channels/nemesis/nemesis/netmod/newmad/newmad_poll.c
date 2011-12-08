@@ -295,9 +295,11 @@ MPID_nem_newmad_handle_sreq(MPID_Request *req)
 #ifdef DEBUG
     fprintf(stdout,"========> Completing Send req  %p \n",req);
 #endif
-   (VC_FIELD(req->ch.vc,pending_sends)) -= 1;
-   if (REQ_FIELD(req,iov_to_delete) == 1)
-     MPIU_Free((REQ_FIELD(req,iov)));
+    (VC_FIELD(req->ch.vc,pending_sends)) -= 1;
+    if ((REQ_FIELD(req,deltmpbuf)) == TMP_DEL_VALUE)
+     {	
+	MPIU_Free(req->dev.tmpbuf);
+     }
    
     reqFn = req->dev.OnDataAvail;
     if (!reqFn){
@@ -376,7 +378,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_tag_t match_info, size_t size)
     }
 
     if (REQ_FIELD(req,iov_to_delete) == 1)
-	MPIU_Free(REQ_FIELD(req,iov));	
+      MPIU_Free(REQ_FIELD(req,iov));	
 
     MPIDI_Comm_get_vc_set_active(req->comm, req->status.MPI_SOURCE, &vc);
     MPIDI_CH3U_Handle_recv_req(vc, req, &complete);
