@@ -37,6 +37,38 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
     ptr->v = val;
 }
 
+static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t *ptr)
+{
+    volatile int i = 0;
+    int tmp;
+    tmp = ptr->v;
+    __sync_lock_test_and_set(&i, 1); /* guarantees acquire semantics */
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_int(OPA_int_t *ptr, int val)
+{
+    volatile int i = 1;
+    __sync_lock_release(&i); /* guarantees release semantics */
+    ptr->v = val;
+}
+
+static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr)
+{
+    volatile int i = 0;
+    void *tmp;
+    tmp = ptr->v;
+    __sync_lock_test_and_set(&i, 1); /* guarantees acquire semantics */
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
+{
+    volatile int i = 1;
+    __sync_lock_release(&i); /* guarantees release semantics */
+    ptr->v = val;
+}
+
 
 /* gcc atomic intrinsics accept an optional list of variables to be
    protected by a memory barrier.  These variables are labeled
@@ -88,6 +120,7 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 #define OPA_write_barrier()      __sync_synchronize()
 #define OPA_read_barrier()       __sync_synchronize()
 #define OPA_read_write_barrier() __sync_synchronize()
+#define OPA_compiler_barrier()   __asm__ __volatile__  ( ""  ::: "memory" )
 
 
 

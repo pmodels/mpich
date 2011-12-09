@@ -4,12 +4,14 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* FIXME needs to be converted to the new OPA_int_t-style of functions */
+/* NOTE: We (@ANL) do not have easy access to any ia64 hosts, so it is difficult
+ * to develop and test updates to this file.  Any help in this regard is greatly
+ * appreciated. */
 
 #ifndef OPA_GCC_IA64_H_INCLUDED
 #define OPA_GCC_IA64_H_INCLUDED
 
-/* XXX DJG FIXME do we need to align these? */
+/* FIXME do we need to align these? */
 typedef struct { volatile int v;    } OPA_int_t;
 typedef struct { void * volatile v; } OPA_ptr_t;
 
@@ -39,6 +41,60 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
 {
     ptr->v = val;
 }
+
+
+/* NOTE-IA64-1 ia64 suports half-fence suffixes to ld/st instructions.  It seems
+ * that compilers also treat any C-language load/store from/to a volatile
+ * variable as acquire/release and append the corresponding suffix accordingly.
+ * But we don't have extensive testing to back this up, so we'll explicitly
+ * force these instructions for now.  When using the C-level approach, it's not
+ * clear what instructions the compiler is allowed to reorder. */
+
+#if 0
+/* acquire means operations after the acquire will see any memory opeations
+ * performed before the corresponding paired release operation */
+static _opa_inline int   OPA_load_acquire_int(_opa_const OPA_int_t *ptr)
+{
+    int tmp;
+    __asm__ __volatile__ ("ld.acq %0=[%1]"
+                          : "=r" (tmp)
+                          : "r"  (ptr->v)
+                          : "memory");
+    return tmp;
+}
+static _opa_inline void  OPA_store_release_int(OPA_int_t *ptr, int val)
+{
+    __asm__ __volatile__ ("st.rel [%0]=%1"
+                          : "=m"  (ptr->v)
+                          : "r" (val)
+                          : "memory");
+}
+static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr)
+{
+    int tmp;
+    __asm__ __volatile__ ("ld.acq %0=[%1]"
+                          : "=r" (tmp)
+                          : "r"  (ptr->v)
+                          : "memory");
+    return tmp;
+}
+static _opa_inline void  OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
+{
+    __asm__ __volatile__ ("st.rel [%0]=%1"
+                          : "=m"  (ptr->v)
+                          : "r" (val)
+                          : "memory");
+}
+#else
+/* FIXME because we can't test these implementations, they are currently
+ * disabled.  The above impls are rough starting points, but probably won't
+ * compile/assemble correctly as-is.  Patches are welcome :) */
+#define OPA_load_acquire_int(ptr_)       ::"choke me"
+#define OPA_store_release_int(ptr_,val_) ::"choke me"
+#define OPA_load_acquire_ptr(ptr_)       ::"choke me"
+#define OPA_store_release_ptr(ptr_,val_) ::"choke me"
+#endif
+
 
 #define OPA_add_int_by_faa OPA_add_int
 #define OPA_incr_int_by_faa OPA_incr_int
@@ -153,6 +209,7 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 #define OPA_write_barrier()      __asm__ __volatile__  ("mf" ::: "memory" )
 #define OPA_read_barrier()       __asm__ __volatile__  ("mf" ::: "memory" )
 #define OPA_read_write_barrier() __asm__ __volatile__  ("mf" ::: "memory" )
+#define OPA_compiler_barrier()   __asm__ __volatile__  (""   ::: "memory" )
 
 #include "opa_emulated.h"
 

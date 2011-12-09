@@ -77,6 +77,7 @@ typedef struct {
  *             Wednesday, April 1, 2009
  *
  * Modifications:
+ *     goodell@, December 1, 2011: load-acquire/store-release sanity test
  *
  *-------------------------------------------------------------------------
  */
@@ -84,6 +85,9 @@ static int test_barriers_sanity(void)
 {
     OPA_int_t   a;
     int         b;
+    OPA_ptr_t   op;
+    void       *p;
+    struct {int i;} obj = {0xabcdef};
 
     TESTING("memory barrier sanity", 0);
 
@@ -156,6 +160,24 @@ static int test_barriers_sanity(void)
     if(OPA_load_int(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
     OPA_write_barrier();
     if(b != OPA_load_int(&a)) TEST_ERROR;
+
+    /* now provide a quick sanity check that the load-acquire/store-release code
+     * works (as in, successfully compiles and runs single-threaded, no
+     * multithreading is checked here) */
+
+    OPA_store_int(&a, 5);
+    b = OPA_load_acquire_int(&a);
+    if (b != 5) TEST_ERROR;
+    OPA_store_release_int(&a, 0);
+    b = OPA_load_acquire_int(&a);
+    if (b != 0) TEST_ERROR;
+
+    OPA_store_ptr(&op, &obj);
+    p = OPA_load_acquire_ptr(&op);
+    if (p != &obj) TEST_ERROR;
+    OPA_store_release_ptr(&op, NULL);
+    p = OPA_load_acquire_ptr(&op);
+    if (p != NULL) TEST_ERROR;
 
     PASSED();
     return 0;

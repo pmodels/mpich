@@ -52,6 +52,42 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
     ptr->v = val;
 }
 
+/* NOTE-X86-1 x86 and x86_64 processors execute instructions such that their
+ * effects are visible in issue order, with one exception:  earlier stores may
+ * pass later loads.  Also, non-temporal stores (with the "movnt*" instructions)
+ * do not follow these ordering constraints.  So all normal load/store
+ * instructions on x86(_64) already have acquire/release semantics.  We just
+ * have to make sure that the compiler does not reorder the instructions. */
+
+static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t *ptr)
+{
+    int tmp;
+    tmp = ptr->v;
+    OPA_compiler_barrier(); /* NOTE-X86-1 */
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_int(OPA_int_t *ptr, int val)
+{
+    OPA_compiler_barrier(); /* NOTE-X86-1 */
+    ptr->v = val;
+}
+
+static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr)
+{
+    void *tmp;
+    tmp = ptr->v;
+    OPA_compiler_barrier(); /* NOTE-X86-1 */
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
+{
+    OPA_compiler_barrier(); /* NOTE-X86-1 */
+    ptr->v = val;
+}
+
+
 static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val)
 {
     __asm__ __volatile__ ("lock ; add"OPA_SS" %1,%0"

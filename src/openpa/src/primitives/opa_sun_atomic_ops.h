@@ -36,6 +36,34 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
     ptr->v = val;
 }
 
+static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t *ptr)
+{
+    int tmp;
+    tmp = ptr->v;
+    membar_enter();
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_int(OPA_int_t *ptr, int val)
+{
+    membar_exit();
+    ptr->v = val;
+}
+
+static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr)
+{
+    void *tmp;
+    tmp = ptr->v;
+    membar_enter();
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
+{
+    membar_exit();
+    ptr->v = val;
+}
+
 
 static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val)
 {
@@ -100,5 +128,8 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 #define OPA_write_barrier()      membar_producer()
 #define OPA_read_barrier()       membar_consumer()
 #define OPA_read_write_barrier() do { membar_consumer(); membar_producer(); } while (0)
+
+/* is this portable enough? */
+#define OPA_compiler_barrier()   __asm__ __volatile__  ( ""  ::: "memory" )
 
 #endif /* OPA_SUN_ATOMIC_OPS_H_INCLUDED */

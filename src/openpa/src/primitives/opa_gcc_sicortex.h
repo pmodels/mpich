@@ -18,6 +18,11 @@ typedef struct { int * volatile v; } OPA_ptr_t;
 #define OPA_INT_T_INITIALIZER(val_) { (val_) }
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
 
+#define OPA_write_barrier()      __asm__ __volatile__  ("sync" ::: "memory" )
+#define OPA_read_barrier()       __asm__ __volatile__  ("sync" ::: "memory" )
+#define OPA_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
+#define OPA_compiler_barrier()   __asm__ __volatile__  ( ""    ::: "memory" )
+
 /* Aligned loads and stores are atomic. */
 static _opa_inline int OPA_load_int(_opa_const OPA_int_t *ptr)
 {
@@ -39,6 +44,38 @@ static _opa_inline void *OPA_load_ptr(_opa_const OPA_ptr_t *ptr)
 /* Aligned loads and stores are atomic. */
 static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
 {
+    ptr->v = val;
+}
+
+/* NOTE: these acquire/release operations have not been optimized, I just threw
+ * down a full memory barrier.  Spending much time working on the SiCortex platform
+ * doesn't really make a lot of sense since there are so few machines in
+ * existence and no more will ever be built. */
+static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t *ptr)
+{
+    int tmp;
+    tmp = ptr->v;
+    OPA_read_write_barrier();
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_int(OPA_int_t *ptr, int val)
+{
+    OPA_read_write_barrier();
+    ptr->v = val;
+}
+
+static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr)
+{
+    void *tmp;
+    tmp = ptr->v;
+    OPA_read_write_barrier();
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
+{
+    OPA_read_write_barrier();
     ptr->v = val;
 }
 
@@ -402,9 +439,5 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 {
     return(OPA_shmemi_swap_4(&ptr->v, val));
 }
-
-#define OPA_write_barrier()      __asm__ __volatile__  ("sync" ::: "memory" )
-#define OPA_read_barrier()       __asm__ __volatile__  ("sync" ::: "memory" )
-#define OPA_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory" )
 
 #endif /* OPA_GCC_SICORTEX_H */

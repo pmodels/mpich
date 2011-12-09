@@ -20,6 +20,13 @@ typedef struct { void * volatile v; } OPA_ptr_t;
 #define OPA_INT_T_INITIALIZER(val_) { (val_) }
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
 
+#define OPA_write_barrier()      _WriteBarrier()
+#define OPA_read_barrier()       _ReadBarrier()
+#define OPA_read_write_barrier() _ReadWriteBarrier()
+/* FIXME there mut be a more efficient way to implement this.  Is "asm {};"
+ * sufficient? */
+#define OPA_compiler_barrier()   _ReadWriteBarrier()
+
 static _opa_inline int OPA_load_int(_opa_const OPA_int_t *ptr)
 {
     return ((int)ptr->v);
@@ -39,6 +46,39 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
 {
     ptr->v = val;
 }
+
+/* NOTE: these acquire/release operations have not been optimized, I just threw
+ * down a full memory barrier.  Someone with more Windows expertise should feel
+ * free to improve these (for Windows on x86/x86_64 these almost certainly only
+ * need to be compiler barriers). */
+static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t *ptr)
+{
+    int tmp;
+    tmp = ptr->v;
+    OPA_read_write_barrier();
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_int(OPA_int_t *ptr, int val)
+{
+    OPA_read_write_barrier();
+    ptr->v = val;
+}
+
+static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr)
+{
+    void *tmp;
+    tmp = ptr->v;
+    OPA_read_write_barrier();
+    return tmp;
+}
+
+static _opa_inline void OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
+{
+    OPA_read_write_barrier();
+    ptr->v = val;
+}
+
 
 static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val)
 {
@@ -108,10 +148,6 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 /* Implement fetch_and_incr/decr using fetch_and_add (*_faa) */
 #define OPA_fetch_and_incr_int_by_faa OPA_fetch_and_incr_int
 #define OPA_fetch_and_decr_int_by_faa OPA_fetch_and_decr_int
-
-#define OPA_write_barrier()      _WriteBarrier()
-#define OPA_read_barrier()       _ReadBarrier()
-#define OPA_read_write_barrier() _ReadWriteBarrier()
 
 #include "opa_emulated.h"
 

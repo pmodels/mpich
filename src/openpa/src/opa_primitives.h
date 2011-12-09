@@ -35,7 +35,7 @@
 
        OPA_int_t atomic_var;
 
-   Then in order for the emulation functions compile the underlying value of
+   Then in order for the emulation functions to compile, the underlying value of
    atomic_var should be accessible via:
 
        atomic_var.v;
@@ -64,26 +64,32 @@
    static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val);
    static _opa_inline int   OPA_swap_int(OPA_int_t *ptr, int val);
 
-   (the memory barriers may be macros instead of inline functions)
+   // (the memory barriers may be macros instead of inline functions)
    static _opa_inline void OPA_write_barrier();
    static _opa_inline void OPA_read_barrier();
    static _opa_inline void OPA_read_write_barrier();
 
+   // Loads and stores with memory ordering guarantees (also may be macros):
+   static _opa_inline int   OPA_load_acquire_int(_opa_const OPA_int_t *ptr);
+   static _opa_inline void  OPA_store_release_int(OPA_int_t *ptr, int val);
+   static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr);
+   static _opa_inline void  OPA_store_release_ptr(OPA_ptr_t *ptr, void *val);
 
-   The following need to be ported only for architectures supporting LL/SC:
+   // Compiler barrier, only preventing compiler reordering, *not* CPU
+   // reordering (may be a macro):
+   static _opa_inline void OPA_compiler_barrier();
 
+   // The following need to be ported only for architectures supporting LL/SC:
    static _opa_inline int OPA_LL_int(OPA_int_t *ptr);
    static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val);
    static _opa_inline void *OPA_LL_ptr(OPA_ptr_t *ptr);
    static _opa_inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val);
 
-
-   Additionally, the following initializer macros must be defined:
-
+   // Additionally, the following initializer macros must be defined:
    #define OPA_INT_T_INITIALIZER(val_) ...
    #define OPA_PTR_T_INITIALIZER(val_) ...
 
-   They should be useable as C89 static initializers like so:
+   // They should be useable as C89 static initializers like so:
 
    struct { int x; OPA_int_t y; OPA_ptr_t z; } foo = { 35, OPA_INT_T_INITIALIZER(1), OPA_PTR_T_INITIALIZER(NULL) };
 */
@@ -134,8 +140,6 @@
       isLeader - This boolean value should be set to true for exactly one
                  thread/process of the group that calls this function.
 */
-/* FIXME We need to extricate ourselves from MPIDU_Process_locks because they
-   are hopelessly broken and OPA no longer lives inside of MPICH2. */
 #if defined(OPA_HAVE_PTHREAD_H)
 #  include <pthread.h>
 typedef pthread_mutex_t OPA_emulation_ipl_t;

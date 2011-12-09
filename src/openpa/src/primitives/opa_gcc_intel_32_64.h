@@ -7,8 +7,8 @@
 #ifndef OPA_GCC_INTEL_32_64_H_INCLUDED
 #define OPA_GCC_INTEL_32_64_H_INCLUDED
 
-#include "primitives/opa_gcc_intel_32_64_ops.h"
 #include "primitives/opa_gcc_intel_32_64_barrier.h"
+#include "primitives/opa_gcc_intel_32_64_ops.h"
 
 #include "opa_emulated.h"
 
