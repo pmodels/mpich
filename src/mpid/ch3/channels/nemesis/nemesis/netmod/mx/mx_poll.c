@@ -515,6 +515,7 @@ MPID_nem_mx_handle_sreq(MPID_Request *req)
 	|| ((REQ_FIELD(req,deltmpbuf)) == TMP_DEL_VALUE))
     {
       MPIU_Free(req->dev.tmpbuf);
+      REQ_FIELD(req,deltmpbuf) = 0;  
     }	   
     reqFn = req->dev.OnDataAvail;
     if (!reqFn){
