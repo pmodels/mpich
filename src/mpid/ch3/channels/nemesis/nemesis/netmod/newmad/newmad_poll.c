@@ -296,11 +296,14 @@ MPID_nem_newmad_handle_sreq(MPID_Request *req)
     fprintf(stdout,"========> Completing Send req  %p \n",req);
 #endif
     (VC_FIELD(req->ch.vc,pending_sends)) -= 1;
-    if ((REQ_FIELD(req,deltmpbuf)) == TMP_DEL_VALUE)
-     {	
+    if (((req->dev.datatype_ptr != NULL) && (req->dev.tmpbuf != NULL))
+        || (REQ_FIELD(req,deltmpbuf) = TMP_DEL_VALUE))
+     {
+	
 	MPIU_Free(req->dev.tmpbuf);
+	REQ_FIELD(req,deltmpbuf) = 0;
      }
-   
+      
     reqFn = req->dev.OnDataAvail;
     if (!reqFn){
 	MPIDI_CH3U_Request_complete(req);
