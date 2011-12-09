@@ -45,7 +45,7 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
 	newmad_iov[1].iov_len  = data_sz;
 	num_iov += 1;
     }
-    REQ_FIELD(sreq,iov) = NULL
+    REQ_FIELD(sreq,iov) = NULL;
     REQ_FIELD(sreq,iov_to_delete) = 0;
    
     nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
@@ -99,7 +99,7 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 	newmad_iov[1].iov_len  = data_sz;
 	num_iov += 1;
     }
-    REQ_FIELD(sreq,iov) = NULL
+    REQ_FIELD(sreq,iov) = NULL;
     REQ_FIELD(sreq,iov_to_delete) = 0;    
     nm_sr_isend_iov_with_ref(mpid_nem_newmad_session, VC_FIELD(vc, p_gate), match_info, 
 			     newmad_iov, num_iov, &(REQ_FIELD(sreq,newmad_req)),(void *)sreq);    
