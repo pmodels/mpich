@@ -246,7 +246,7 @@ typedef struct MPID_nem_queue
 /* Fast Boxes*/ 
 typedef union
 {
-    volatile int value;
+    OPA_int_t value;
 #if MPID_NEM_CACHE_LINE_LEN != 0
     char padding[MPID_NEM_CACHE_LINE_LEN];
 #endif

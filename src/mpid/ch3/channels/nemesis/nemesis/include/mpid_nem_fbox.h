@@ -40,10 +40,9 @@ static inline int poll_active_fboxes(MPID_nem_cell_ptr_t *cell)
 
             fbox = MPID_nem_curr_fboxq_elem->fbox;
             MPIU_Assert(fbox != NULL);
-            if (fbox->flag.value == 1 &&
+            if (OPA_load_acquire_int(&fbox->flag.value) &&
                 fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank])
             {
-                OPA_read_barrier(); /* ensure flag/payload are read in correct order */
                 ++MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank];
                 *cell = &fbox->cell;
                 found = TRUE;
@@ -69,9 +68,8 @@ static inline int poll_every_fbox(MPID_nem_cell_ptr_t *cell)
 
     do {
         fbox = MPID_nem_curr_fbox_all_poll->fbox;
-        if (fbox && fbox->flag.value == 1 &&
+        if (fbox && OPA_load_acquire_int(&fbox->flag.value) &&
             fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank]) {
-            OPA_read_barrier(); /* ensure flag/payload are read in correct order */
             ++MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank];
             *cell = &fbox->cell;
             found = TRUE;
@@ -85,22 +83,23 @@ static inline int poll_every_fbox(MPID_nem_cell_ptr_t *cell)
     return found;
 }
 
-     
-#define poll_next_fbox(_cell, do_found) do {										\
-    MPID_nem_fbox_mpich2_t *fbox;													\
-															\
-    fbox = MPID_nem_curr_fbox_all_poll->fbox;											\
-    if (fbox && fbox->flag.value == 1 && fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank])	\
-    {															\
-        OPA_read_barrier(); /* ensure flag/payload are read in correct order */ \
-	++MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank];									\
-	*(_cell) = &fbox->cell;												\
-	do_found;													\
-    }															\
-    ++MPID_nem_curr_fbox_all_poll;												\
-    if (MPID_nem_curr_fbox_all_poll > MPID_nem_fboxq_elem_list_last)									\
-	MPID_nem_curr_fbox_all_poll = MPID_nem_fboxq_elem_list;										\
-} while(0)
+
+#define poll_next_fbox(_cell, do_found)                                                             \
+    do {                                                                                            \
+        MPID_nem_fbox_mpich2_t *fbox;                                                               \
+                                                                                                    \
+        fbox = MPID_nem_curr_fbox_all_poll->fbox;                                                   \
+        if (fbox && OPA_load_acquire_int(&fbox->flag.value) &&                                      \
+            fbox->cell.pkt.mpich2.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank]) \
+        {                                                                                           \
+            ++MPID_nem_recv_seqno[MPID_nem_curr_fbox_all_poll->grank];                              \
+            *(_cell) = &fbox->cell;                                                                 \
+            do_found;                                                                               \
+        }                                                                                           \
+        ++MPID_nem_curr_fbox_all_poll;                                                              \
+        if (MPID_nem_curr_fbox_all_poll > MPID_nem_fboxq_elem_list_last)                            \
+        MPID_nem_curr_fbox_all_poll = MPID_nem_fboxq_elem_list;                                     \
+    } while(0)
 
 #endif /* MPID_NEM_FBOX_H */
 

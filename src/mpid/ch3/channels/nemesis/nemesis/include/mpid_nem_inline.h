@@ -62,11 +62,11 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 #ifdef USE_FASTBOX
     {
 	MPID_nem_fbox_mpich2_t *pbox = vc_ch->fbox_out;
-	int count = 10;
 
-	if (MPID_nem_islocked ((MPID_nem_fbox_common_ptr_t)pbox, 0, count))
-	    goto usequeue_l;
-        
+        /* _is_full contains acquire barrier */
+        if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
+            goto usequeue_l;
+
         pbox->cell.pkt.mpich2.source  = MPID_nem_mem_region.local_rank;
         pbox->cell.pkt.mpich2.datalen = size;
         pbox->cell.pkt.mpich2.seqno   = vc_ch->send_seqno++;
@@ -74,10 +74,9 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
         MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, pbox->cell.pkt.mpich2.type = MPID_NEM_PKT_MPICH2_HEAD);
         
         MPIU_Memcpy((void *)pbox->cell.pkt.mpich2.payload, buf, size);
-        
-        OPA_write_barrier();
-        pbox->flag.value = 1;
-        
+
+        OPA_store_release_int(&pbox->flag.value, 1);
+
         MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent fbox ");
         MPIU_DBG_STMT (CH3_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
         
@@ -293,11 +292,10 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
     if (*n_iov == 2 && (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich2_t *pbox = vc_ch->fbox_out;
-	int count = 10;
 
-	if (MPID_nem_islocked ((MPID_nem_fbox_common_ptr_t)pbox, 0, count))
-	    goto usequeue_l;
-        
+        if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
+            goto usequeue_l;
+
         pbox->cell.pkt.mpich2.source  = MPID_nem_mem_region.local_rank;
         pbox->cell.pkt.mpich2.datalen = (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t);
         pbox->cell.pkt.mpich2.seqno   = vc_ch->send_seqno++;
@@ -306,8 +304,7 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
         MPIU_Memcpy((void *)pbox->cell.pkt.mpich2.payload, (*iov)[0].MPID_IOV_BUF, (*iov)[0].MPID_IOV_LEN);
         MPIU_Memcpy ((char *)pbox->cell.pkt.mpich2.payload + (*iov)[0].MPID_IOV_LEN, (*iov)[1].MPID_IOV_BUF, (*iov)[1].MPID_IOV_LEN);
         
-        OPA_write_barrier();
-        pbox->flag.value = 1;
+        OPA_store_release_int(&pbox->flag.value, 1);
         *n_iov = 0;
 
         MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "--> Sent fbox ");
@@ -440,10 +437,10 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
     if (sizeof(MPIDI_CH3_Pkt_t) + segment_size <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich2_t *pbox = vc_ch->fbox_out;
-	int count = 10;
 
-	if (MPID_nem_islocked ((MPID_nem_fbox_common_ptr_t)pbox, 0, count))
-	    goto usequeue_l;
+        if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
+            goto usequeue_l;
+
 	{
 	    pbox->cell.pkt.mpich2.source  = MPID_nem_mem_region.local_rank;
 	    pbox->cell.pkt.mpich2.datalen = sizeof(MPIDI_CH3_Pkt_t) + segment_size;
@@ -458,8 +455,7 @@ MPID_nem_mpich2_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_
             MPID_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.mpich2.payload + sizeof(MPIDI_CH3_Pkt_t));
             MPIU_Assert(last == segment_size);
 
-	    OPA_write_barrier();
-	    pbox->flag.value = 1;
+            OPA_store_release_int(&pbox->flag.value, 1);
 
             *segment_first = last;
 
