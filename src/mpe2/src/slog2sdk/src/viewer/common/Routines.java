@@ -17,6 +17,8 @@ import java.awt.event.MouseEvent;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
+import java.util.ArrayList;
+
 public class Routines
 {
     private static final String UnitIndentStr = "   ";
@@ -186,5 +188,35 @@ public class Routines
         return    SwingUtilities.isRightMouseButton( mouse_evt )
                || ( SwingUtilities.isLeftMouseButton( mouse_evt )
                  && mouse_evt.isControlDown() );
+    }
+
+    /*
+       String Split() with single delimiter
+       which consists of multiple characters.
+    */
+    public static String[] stringSplit( String str, String delim )
+    {
+        int delimlen, strlen, begin, end;
+
+        // The following checks are not here to protect against careless use.
+        if ( delim == null )
+            return new String[] {str};
+        delimlen = delim.length();
+        if ( delimlen == 0 )
+            return new String[] {str};
+    
+        ArrayList  tokenlist = new ArrayList(10);
+    
+        // Extract the tokens from the str based on count.
+        strlen = str.length();
+        begin  = 0;
+        while ((end = str.indexOf(delim, begin)) != -1) {
+            tokenlist.add( str.substring(begin, end) );
+            begin = end + delimlen;
+        }
+        end = strlen;
+        tokenlist.add( str.substring(begin, end) );
+    
+        return (String[]) tokenlist.toArray();
     }
 }

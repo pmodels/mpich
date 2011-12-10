@@ -9,13 +9,13 @@
 
 package viewer.zoomable;
 
+import java.awt.*;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
-import java.awt.*;
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.tree.TreeNode;
-import java.util.Map;
 
 import base.drawable.Coord;
 import base.drawable.Topology;
@@ -312,20 +312,29 @@ public class InfoPanelForDrawable extends SearchPanel // SearchPanel is JPanel
         {
             this.setCoordsText( prime.getVertices(), "" );
     
-            String   info_str;
+            String  info_str;
             info_str = prime.toInfoBoxString().trim();
             if ( info_str.length() > 0 ) {
-                strbuf.append( "\n" + info_str );
-                num_rows++;
+                // Split info_str into multiple rows using delimiter "\n".
+                String[] info_lines;
+                info_lines = Routines.stringSplit( info_str, "\\n" );
+                for ( int idx = 0; idx < info_lines.length; idx++ ) {
+                    strbuf.append( "\n" + info_lines[idx] );
+                    num_rows++;
+                }
             }
     
             Drawable prime_parent;
             prime_parent = prime.getParent();
             if ( prime_parent != null ) {
-                info_str = prime_parent.toInfoBoxString().trim();
                 if ( info_str.length() > 0 ) {
-                    strbuf.append( "\n" + info_str );
-                    num_rows++;
+                    // Split info_str into multiple rows using delimiter "\n".
+                    String[] info_lines;
+                    info_lines = Routines.stringSplit( info_str, "\\n" );
+                    for ( int idx = 0; idx < info_lines.length; idx++ ) {
+                        strbuf.append( "\n" + info_lines[idx] );
+                        num_rows++;
+                    }
                 }
             }
         }
@@ -408,8 +417,13 @@ public class InfoPanelForDrawable extends SearchPanel // SearchPanel is JPanel
             String   info_str;
             info_str = cmplx.toInfoBoxString().trim();
             if ( info_str.length() > 0 ) {
-                strbuf.append( "\n" + info_str );
-                num_rows++;
+                // Split info_str into multiple rows using delimiter "\n".
+                String[] info_lines;
+                info_lines = Routines.stringSplit( info_str, "\\n" );
+                for ( int idx = 0; idx < info_lines.length; idx++ ) {
+                    strbuf.append( "\n" + info_lines[idx] );
+                    num_rows++;
+                }
             }
     
             Drawable cmplx_parent;
@@ -417,8 +431,13 @@ public class InfoPanelForDrawable extends SearchPanel // SearchPanel is JPanel
             if ( cmplx_parent != null ) {
                 info_str = cmplx_parent.toInfoBoxString().trim();
                 if ( info_str.length() > 0 ) {
-                    strbuf.append( "\n" + info_str );
-                    num_rows++;
+                    // Split info_str into multiple rows using delimiter "\n".
+                    String[] info_lines;
+                    info_lines = Routines.stringSplit( info_str, "\\n" );
+                    for ( int idx = 0; idx < info_lines.length; idx++ ) {
+                        strbuf.append( "\n" + info_lines[idx] );
+                        num_rows++;
+                    }
                 }
             }
         }
