@@ -309,8 +309,7 @@ extern MPICH_PerThread_t MPIR_ThreadSingle;
             int tpf_err_; /* unique name to not conflict with vars in called macros */  \
             MPIU_THREADPRIV_GET;                                                        \
             MPIU_Free(MPIR_Thread);                                                     \
-            MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,&tpf_err_);             \
-            MPIU_Assert(tpf_err_ == 0);                                                 \
+            MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,NULL);                  \
             MPID_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,&tpf_err_);         \
             MPIU_Assert(tpf_err_ == 0);                                                 \
         }                                                                               \
