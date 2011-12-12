@@ -72,3 +72,8 @@ noinst_PROGRAMS =          \
     strided_get_indexed    \
     window_creation
 
+strided_acc_indexed_LDADD       = -lm
+strided_acc_onelock_LDADD       = -lm
+strided_acc_subarray_LDADD      = -lm
+strided_get_indexed_LDADD       = -lm
+strided_putget_indexed_LDADD    = -lm
