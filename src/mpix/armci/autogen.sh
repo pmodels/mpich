@@ -8,4 +8,4 @@ else
     autoreconf=${AUTORECONF:-autoreconf}
 fi
 
-$autoreconf -vif
+$autoreconf ${autoreconf_args:-"-vif"}

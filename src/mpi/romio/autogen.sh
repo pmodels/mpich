@@ -1,4 +1,4 @@
 #!/bin/sh
 
-${AUTORECONF:-autoreconf} -vif -I confdb
+${AUTORECONF:-autoreconf} ${autoreconf_args:-"-vif"} -I confdb
 

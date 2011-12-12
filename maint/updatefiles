@@ -143,6 +143,7 @@ externals="src/mpe2 src/pm/hydra src/mpi/romio src/mpix/armci src/pm/mpd"
 amdirs=". src/openpa src/mpl"
 
 autoreconf_args="-if"
+export autoreconf_args
 
 ########################################################################
 ## Read the command-line arguments
@@ -205,6 +206,7 @@ for arg in "$@" ; do
 
         -verbose-autoreconf|--verbose-autoreconf)
             autoreconf_args="-vif"
+            export autoreconf_args
             ;;
 
 	-with-genstates|--with-genstates)
