@@ -31,8 +31,35 @@ bin_SCRIPTS += src/env/mpicxx
 sysconf_DATA += src/env/mpicxx.conf
 endif BUILD_CXX_LIB
 
-DISTCLEANFILES += ./src/env/cc_shlib.conf ./src/env/cxx_shlib.conf \
-                  ./src/env/f77_shlib.conf ./src/env/fc_shlib.conf
+# create a local copy of the compiler wrapper that will actually be installed
+if BUILD_BASH_SCRIPTS
+$(top_builddir)/src/env/mpicc: $(top_builddir)/src/env/mpicc.bash
+	cp -p $? $@
+$(top_builddir)/src/env/mpicxx: $(top_builddir)/src/env/mpicxx.bash
+	cp -p $? $@
+$(top_builddir)/src/env/mpif77: $(top_builddir)/src/env/mpif77.bash
+	cp -p $? $@
+$(top_builddir)/src/env/mpif90: $(top_builddir)/src/env/mpif90.bash
+	cp -p $? $@
+else !BUILD_BASH_SCRIPTS
+$(top_builddir)/src/env/mpicc: $(top_builddir)/src/env/mpicc.sh
+	cp -p $? $@
+$(top_builddir)/src/env/mpicxx: $(top_builddir)/src/env/mpicxx.sh
+	cp -p $? $@
+$(top_builddir)/src/env/mpif77: $(top_builddir)/src/env/mpif77.sh
+	cp -p $? $@
+$(top_builddir)/src/env/mpif90: $(top_builddir)/src/env/mpif90.sh
+	cp -p $? $@
+endif !BUILD_BASH_SCRIPTS
+
+DISTCLEANFILES += $(top_builddir)/src/env/cc_shlib.conf  \
+                  $(top_builddir)/src/env/cxx_shlib.conf \
+                  $(top_builddir)/src/env/f77_shlib.conf \
+                  $(top_builddir)/src/env/fc_shlib.conf  \
+                  $(top_builddir)/src/env/mpicc          \
+                  $(top_builddir)/src/env/mpicxx         \
+                  $(top_builddir)/src/env/mpif77         \
+                  $(top_builddir)/src/env/mpif90
 
 # FIXME do this the automake way
 #doc_sources = mpicc.txt mpif77.txt mpicxx.txt mpif90.txt mpiexec.txt

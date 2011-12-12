@@ -2487,11 +2487,8 @@ changequote([,])dnl
     rm -f conftest*
     AC_MSG_RESULT($bashWorks)
 fi
-BUILD_BASH_SCRIPTS=no
-if test "$bashWorks" = yes ; then
-    BUILD_BASH_SCRIPTS=yes
-fi
-AC_SUBST(BUILD_BASH_SCRIPTS)
+dnl BUILD_BASH_SCRIPTS used to be an AC_SUBST
+AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
 
 # ----------------------------------------------------------------------------
 # Check for the routines and libraries needed for accessing dynamically
@@ -6053,16 +6050,16 @@ AC_OUTPUT(Makefile \
 	  src/packaging/pkgconfig/mpich2.pc \
 	  src/packaging/envmods/mpich2.module \
           src/env/mpixxx_opts.conf \
-          src/env/mpicc \
+          src/env/mpicc.sh \
 	  src/env/mpicc.conf \
 	  src/env/mpicc.bash \
-          src/env/mpicxx \
+          src/env/mpicxx.sh \
 	  src/env/mpicxx.conf \
 	  src/env/mpicxx.bash \
-	  src/env/mpif77 \
+	  src/env/mpif77.sh \
 	  src/env/mpif77.conf \
 	  src/env/mpif77.bash \
-	  src/env/mpif90 \
+	  src/env/mpif90.sh \
 	  src/env/mpif90.conf \
 	  src/env/mpif90.bash \
           src/env/parkill \
