@@ -145,6 +145,9 @@ int MPIR_Finalize_async_thread(void)
     MPIU_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
     MPIU_Assert(!mpi_errno);
 
+    mpi_errno = MPIR_Comm_free_impl(progress_comm_ptr);
+    MPIU_Assert(!mpi_errno);
+
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
     MPIU_Thread_cond_destroy(&progress_cond, &mpi_errno);
