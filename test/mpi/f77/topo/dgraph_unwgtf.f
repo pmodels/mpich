@@ -1,6 +1,11 @@
-!     This program is Fortran version of dgraph_unwgt.c
-!     Specify a distributed graph of a bidirectional ring of the MPI_COMM_WORLD,
-!     i.e. everyone only talks to left and right neighbors.
+C -*- Mode: Fortran; -*- 
+C
+C  (C) 2010 by Argonne National Laboratory.
+C      See COPYRIGHT in top-level directory.
+C
+C     This program is Fortran version of dgraph_unwgt.c
+C     Specify a distributed graph of a bidirectional ring of the MPI_COMM_WORLD,
+C     i.e. everyone only talks to left and right neighbors.
 
       logical function validate_dgraph(dgraph_comm)
       implicit none
@@ -55,8 +60,8 @@
           return
       endif
 
-!     Check if the neighbors returned from MPI are really
-!     the nearest neighbors that within a ring.
+C     Check if the neighbors returned from MPI are really
+C     the nearest neighbors that within a ring.
       call MPI_Comm_rank(MPI_COMM_WORLD, world_rank, ierr)
       call MPI_Comm_size(MPI_COMM_WORLD, world_size, ierr)
  
