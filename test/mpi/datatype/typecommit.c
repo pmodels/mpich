@@ -1,9 +1,16 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2006 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
 #include <stdio.h>
 #include <mpi.h>
 #include "mpitest.h"
 
-void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, MPI_Datatype recvtype);
-void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, MPI_Datatype recvtype)
+void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, 
+	 MPI_Datatype recvtype);
+void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf, 
+	 MPI_Datatype recvtype)
 {
     int blocks[2];
     MPI_Aint struct_displs[2];
