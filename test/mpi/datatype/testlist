@@ -3,6 +3,7 @@ gaddress 1
 lbub 1
 localpack 1
 simple-pack 1
+simple-pack-external 1
 transpose-pack 1
 slice-pack 1
 struct-pack 1
