@@ -9,6 +9,10 @@
 
 package viewer.common;
 
+/*
+   This class maps a selectable representation in Preference Window
+   to an Object that can be used for programming.
+*/
 public class Alias
 {
     private Object  obj;

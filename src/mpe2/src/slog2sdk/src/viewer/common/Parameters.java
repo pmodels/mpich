@@ -38,7 +38,7 @@ import base.drawable.NestingStacks;
 
 public class Parameters
 {
-    private static final String       VERSION_INFO             = "1.0.3.0";
+    private static final String       VERSION_INFO             = "1.0.4.0";
     private static       String       setupfile_path           = null;
 
     // Options: Zoomable window reinitialization (requires window restart)
@@ -62,6 +62,9 @@ public class Parameters
     public  static       int          MIN_WIDTH_TO_DRAG        = 4;
     public  static       int          CLICK_RADIUS_TO_LINE     = 3;
     public  static       boolean      LEFTCLICK_INSTANT_ZOOM   = true;
+    public  static       boolean      POPUP_BOX_MINIMAL_VIEW   = true;
+    public  static       String       LARGE_DURATION_FORMAT
+                                      = TimeFormat.LARGE_DURATION_AUTO;
 
     // Options: Timeline zoomable window
     public  static       StateBorder  STATE_BORDER
@@ -162,6 +165,8 @@ public class Parameters
         SummaryArrow.setBaseOfLogOfObjectNumToArrowWidth(
                      Parameters.SUMMARY_ARROW_LOG_BASE );
         SummaryState.setBorderStyle( Parameters.SUMMARY_STATE_BORDER );
+
+        TimeFormat.setLargeDurationFormat( Parameters.LARGE_DURATION_FORMAT );
     }
 
     public static final void writeToSetupFile( Component parent_window )
@@ -206,6 +211,9 @@ public class Parameters
                            String.valueOf( CLICK_RADIUS_TO_LINE ) );
         pptys.setProperty( "LEFTCLICK_INSTANT_ZOOM",
                            String.valueOf( LEFTCLICK_INSTANT_ZOOM ) );
+        pptys.setProperty( "POPUP_BOX_MINIMAL_VIEW",
+                           String.valueOf( POPUP_BOX_MINIMAL_VIEW ) );
+        pptys.setProperty( "LARGE_DURATION_FORMAT", LARGE_DURATION_FORMAT );
 
         // Options: Timeline zoomable window
         pptys.setProperty( "STATE_BORDER",
@@ -364,6 +372,13 @@ public class Parameters
         if ( ppty_val != null )
             LEFTCLICK_INSTANT_ZOOM =    ppty_val.equalsIgnoreCase( "true" )
                                      || ppty_val.equalsIgnoreCase( "yes" );
+        ppty_val = pptys.getProperty( "POPUP_BOX_MINIMAL_VIEW" );
+        if ( ppty_val != null )
+            POPUP_BOX_MINIMAL_VIEW =    ppty_val.equalsIgnoreCase( "true" )
+                                     || ppty_val.equalsIgnoreCase( "yes" );
+        ppty_val = pptys.getProperty( "LARGE_DURATION_FORMAT" );
+        if ( ppty_val != null )
+            LARGE_DURATION_FORMAT = ppty_val;
 
         // Options: Timeline zoomable window
         ppty_val = pptys.getProperty( "STATE_BORDER" );
@@ -476,6 +491,8 @@ public class Parameters
         rep.append( "MIN_WIDTH_TO_DRAG = "     + MIN_WIDTH_TO_DRAG     + "\n" );
         rep.append( "CLICK_RADIUS_TO_LINE = "  + CLICK_RADIUS_TO_LINE  + "\n" );
         rep.append( "LEFTCLICK_INSTANT_ZOOM = "+ LEFTCLICK_INSTANT_ZOOM+ "\n" );
+        rep.append( "POPUP_BOX_MINIMAL_VIEW = "+ POPUP_BOX_MINIMAL_VIEW+ "\n" );
+        rep.append( "LARGE_DURATION_FORMAT = " + LARGE_DURATION_FORMAT + "\n" );
 
         rep.append( "STATE_BORDER = "          + STATE_BORDER          + "\n" );
         rep.append( "ARROW_HEAD_LENGTH = "     + ARROW_HEAD_LENGTH     + "\n" );

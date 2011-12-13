@@ -216,7 +216,8 @@ public class Routines
         }
         end = strlen;
         tokenlist.add( str.substring(begin, end) );
-    
-        return (String[]) tokenlist.toArray();
+
+        String[]  strs = new String[tokenlist.size()];
+        return (String[]) tokenlist.toArray( strs );
     }
 }

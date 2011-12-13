@@ -21,8 +21,9 @@ RM           = @RM@
 TARGET    =
 PACKAGE   = viewer.common
 SRC       = SwingWorker.java Dialogs.java RuntimeExecCommand.java \
-            ActableTextField.java CustomCursor.java Routines.java \
-            TopControl.java LabeledTextField.java LabeledFloatSlider.java \
+            ActableTextField.java CustomCursor.java \
+            TimeFormat.java Routines.java TopControl.java \
+            LabeledTextField.java LabeledFloatSlider.java \
             Alias.java Const.java LabeledComboBox.java Parameters.java \
             PreferencePanel.java TopWindow.java PreferenceFrame.java \
             LogPermitDirFilter.java LogRefuseDirFilter.java LogFileChooser.java

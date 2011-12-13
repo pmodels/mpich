@@ -17,6 +17,7 @@ import javax.swing.*;
 import base.drawable.TimeBoundingBox;
 import viewer.common.Const;
 import viewer.common.Routines;
+import viewer.common.TimeFormat;
 
 public class InfoDialogForDuration extends InfoDialog
 {

@@ -25,7 +25,7 @@ SRC       = Diagnosis.java Debug.java Profile.java \
             named_vector.java YaxisTree.java \
             TimeEvent.java TimeListener.java \
             ModelTime.java ScrollbarTime.java ModelTimePanel.java \
-            TimeFormat.java InfoDialog.java InfoDialogForTime.java \
+            InfoDialog.java InfoDialogForTime.java \
             InitializableDialog.java SummarizableView.java \
             SearchPanel.java InfoPanelForDrawable.java \
             SearchableView.java OperationDurationButton.java \

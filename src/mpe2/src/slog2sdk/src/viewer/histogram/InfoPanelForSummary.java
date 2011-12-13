@@ -23,8 +23,8 @@ import base.statistics.Summarizable;
 import base.topology.SummaryState;
 import viewer.common.Const;
 import viewer.common.Routines;
+import viewer.common.TimeFormat;
 import viewer.legends.CategoryLabel;
-import viewer.zoomable.TimeFormat;
 
 
 public class InfoPanelForSummary extends JPanel

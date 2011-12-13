@@ -29,8 +29,8 @@ import base.topology.PreviewState;
 import viewer.common.Const;
 import viewer.common.Routines;
 import viewer.common.Parameters;
+import viewer.common.TimeFormat;
 import viewer.legends.CategoryLabel;
-// import viewer.zoomable.TimeFormat;
 // import viewer.zoomable.SearchPanel;
 // import viewer.zoomable.YaxisTreeNode;
 
@@ -174,10 +174,14 @@ public class InfoPanelForDrawable extends SearchPanel // SearchPanel is JPanel
             int num_lines;
             strbuf2str = strbuf.toString();
             num_lines  = this.getNumOfLines();
-            if ( num_lines <= 3 )
-                num_rows = 3;
+            if (Parameters.POPUP_BOX_MINIMAL_VIEW) {
+                if ( num_lines <= 3 )
+                    num_rows = 3;
+                else
+                    num_rows = 4;
+            }
             else
-                num_rows = 4;
+                num_rows = num_lines;
         }
 
         public int getColumnCount()

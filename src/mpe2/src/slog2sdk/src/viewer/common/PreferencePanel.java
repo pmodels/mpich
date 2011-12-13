@@ -45,6 +45,8 @@ public class PreferencePanel extends JPanel
     private        LabeledTextField       fld_MIN_WIDTH_TO_DRAG;
     private        LabeledTextField       fld_CLICK_RADIUS_TO_LINE;
     private        LabeledComboBox        lst_LEFTCLICK_INSTANT_ZOOM;
+    private        LabeledComboBox        lst_POPUP_BOX_MINIMAL_VIEW;
+    private        LabeledComboBox        lst_LARGE_DURATION_FORMAT;
 
     // Options: Timeline zoomable window
     private        LabeledComboBox        lst_STATE_BORDER;
@@ -275,6 +277,23 @@ public class PreferencePanel extends JPanel
         lst_LEFTCLICK_INSTANT_ZOOM.setToolTipText(
         "Whether to zoom in immediately after left mouse click on canvas." );
         super.add( lst_LEFTCLICK_INSTANT_ZOOM );
+
+        lst_POPUP_BOX_MINIMAL_VIEW = new LabeledComboBox(
+                                         "POPUP_BOX_MINIMAL_VIEW" );
+        lst_POPUP_BOX_MINIMAL_VIEW.addItem( Boolean.TRUE );
+        lst_POPUP_BOX_MINIMAL_VIEW.addItem( Boolean.FALSE );
+        lst_POPUP_BOX_MINIMAL_VIEW.setToolTipText(
+        "Whether to have minimal view of the initial popup dialog box." );
+        super.add( lst_POPUP_BOX_MINIMAL_VIEW );
+
+        lst_LARGE_DURATION_FORMAT = new LabeledComboBox(
+                                        "LARGE_DURATION_FORMAT" );
+        lst_LARGE_DURATION_FORMAT.addItem( TimeFormat.LARGE_DURATION_AUTO);
+        lst_LARGE_DURATION_FORMAT.addItem( TimeFormat.LARGE_DURATION_HHMMSS );
+        lst_LARGE_DURATION_FORMAT.addItem( TimeFormat.LARGE_DURATION_SEC );
+        lst_LARGE_DURATION_FORMAT.setToolTipText(
+        "Display formats for the large duration(> 1 sec) in popup info box." );
+        super.add( lst_LARGE_DURATION_FORMAT );
 
         super.add( Box.createVerticalStrut( 2 * VERTICAL_GAP_HEIGHT ) );
 
@@ -606,6 +625,10 @@ public class PreferencePanel extends JPanel
         fld_CLICK_RADIUS_TO_LINE.setInteger( Parameters.CLICK_RADIUS_TO_LINE );
         lst_LEFTCLICK_INSTANT_ZOOM.setSelectedBooleanItem(
                                    Parameters.LEFTCLICK_INSTANT_ZOOM );
+        lst_POPUP_BOX_MINIMAL_VIEW.setSelectedBooleanItem(
+                                   Parameters.POPUP_BOX_MINIMAL_VIEW );
+        lst_LARGE_DURATION_FORMAT.setSelectedItem(
+                                  Parameters.LARGE_DURATION_FORMAT );
 
         // Options: Timeline zoomable window
         lst_STATE_BORDER.setSelectedItem( Parameters.STATE_BORDER );
@@ -698,6 +721,10 @@ public class PreferencePanel extends JPanel
                   = fld_CLICK_RADIUS_TO_LINE.getInteger();
         Parameters.LEFTCLICK_INSTANT_ZOOM
                   = lst_LEFTCLICK_INSTANT_ZOOM.getSelectedBooleanItem();
+        Parameters.POPUP_BOX_MINIMAL_VIEW
+                  = lst_POPUP_BOX_MINIMAL_VIEW.getSelectedBooleanItem();
+        Parameters.LARGE_DURATION_FORMAT
+                  = (String) lst_LARGE_DURATION_FORMAT.getSelectedItem();
 
         // Options: Timeline zoomable window
         Parameters.STATE_BORDER
@@ -783,6 +810,8 @@ public class PreferencePanel extends JPanel
         fld_MIN_WIDTH_TO_DRAG.addActionListener( this );
         fld_CLICK_RADIUS_TO_LINE.addActionListener( this );
         lst_LEFTCLICK_INSTANT_ZOOM.addActionListener( this );
+        lst_POPUP_BOX_MINIMAL_VIEW.addActionListener( this );
+        lst_LARGE_DURATION_FORMAT.addActionListener( this );
 
         // Options: Timeline zoomable window
         lst_STATE_BORDER.addActionListener( this );
