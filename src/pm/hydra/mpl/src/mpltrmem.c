@@ -8,6 +8,11 @@
  * are used, the caller is concerned about correctness, not performance. */
 #define MPL_VG_ENABLED 1
 
+/* style: allow:calloc:1 sig:0 */
+/* style: allow:free:2 sig:0 */
+/* style: allow:malloc:2 sig:0 */
+/* style: allow:strdup:1 sig:0 */
+
 #include "mpl.h"
 
 #ifdef malloc
