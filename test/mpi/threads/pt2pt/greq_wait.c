@@ -1,3 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2006 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
 /* Based on test code provided by Lisandro Dalcí. */
 #include <mpi.h>
 #include <stdio.h>
