@@ -2564,8 +2564,14 @@ if test "$enable_debuginfo" = "yes" ; then
    # shared libraries.
    
    # FIXME is this really the right test?
+   # No.  Before MPICH2 1.5, there was the capability to build the debugger
+   # libraries without forcing the build of shared libraries for everything.
+   # There may be some way to restore this capability, but until then, we
+   # at least cause the configure to cleanly fail with a clear error message 
    if test "X$enable_shared" = "Xyes" ; then
        BUILD_TVDLL=yes
+   else
+       AC_MSG_ERROR([Building with --enable-debuginfo now requires building with shared library support.  Add --enable-shared and reconfigure])
    fi
 
    # One more nasty problem.  Totalview relies on debugger symbols 
