@@ -10,6 +10,14 @@
 #include "mpi_fortimpl.h"
 
 #if defined(HAVE_PRAGMA_WEAK) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
+void mpir_is_bottom_( void *a, int *ierr );
+void mpir_is_in_place_( void *a, int *ierr );
+void mpir_is_unweighted_( void *a, int *ierr );
+void mpir_is_status_ignore_( void *a, int *ierr );
+void mpir_is_statuses_ignore_( void *a, int *ierr );
+void mpir_is_errcodes_ignore_( void *a, int *ierr );
+void mpir_is_argvs_null_( void *a, int *ierr );
+
   #pragma weak MPIR_IS_BOTTOM   = mpir_is_bottom_
   #pragma weak mpir_is_bottom   = mpir_is_bottom_
   #pragma weak mpir_is_bottom__ = mpir_is_bottom_
@@ -57,6 +65,15 @@
     #define mpir_is_errcodes_ignore_ mpir_is_errcodes_ignore
     #define mpir_is_argvs_null_ mpir_is_argvs_null
   #endif
+
+void mpir_is_bottom_( void *a, int *ierr );
+void mpir_is_in_place_( void *a, int *ierr );
+void mpir_is_unweighted_( void *a, int *ierr );
+void mpir_is_status_ignore_( void *a, int *ierr );
+void mpir_is_statuses_ignore_( void *a, int *ierr );
+void mpir_is_errcodes_ignore_( void *a, int *ierr );
+void mpir_is_argvs_null_( void *a, int *ierr );
+
 #endif
 
 #include <stdio.h>
@@ -66,7 +83,6 @@
    to check if the Fortran constants, MPI_<NAME>, are recognized by the MPI
    implementation (in C library).
 */
-void mpir_is_bottom_( void *a, int *ierr );
 void mpir_is_bottom_( void *a, int *ierr )
 {
      *ierr = ( a == MPIR_F_MPI_BOTTOM ? 1 : 0 );
@@ -78,7 +94,6 @@ void mpir_is_bottom_( void *a, int *ierr )
              MPIR_F_MPI_BOTTOM, a);
 }
 
-void mpir_is_in_place_( void *a, int *ierr );
 void mpir_is_in_place_( void *a, int *ierr )
 {
      *ierr = ( a == MPIR_F_MPI_IN_PLACE ? 1 : 0 );
@@ -90,7 +105,6 @@ void mpir_is_in_place_( void *a, int *ierr )
              MPIR_F_MPI_IN_PLACE, a);
 }
 
-void mpir_is_unweighted_( void *a, int *ierr );
 void mpir_is_unweighted_( void *a, int *ierr )
 {
      *ierr = ( a == MPIR_F_MPI_UNWEIGHTED ? 1 : 0 );
@@ -102,7 +116,6 @@ void mpir_is_unweighted_( void *a, int *ierr )
              MPIR_F_MPI_UNWEIGHTED, a);
 }
 
-void mpir_is_status_ignore_( void *a, int *ierr );
 void mpir_is_status_ignore_( void *a, int *ierr )
 {
      *ierr = ( a == MPI_F_STATUS_IGNORE ? 1 : 0 );
@@ -114,7 +127,6 @@ void mpir_is_status_ignore_( void *a, int *ierr )
              MPI_F_STATUS_IGNORE, a);
 }
 
-void mpir_is_statuses_ignore_( void *a, int *ierr );
 void mpir_is_statuses_ignore_( void *a, int *ierr )
 {
      *ierr = ( a == MPI_F_STATUSES_IGNORE ? 1 : 0 );
@@ -126,7 +138,6 @@ void mpir_is_statuses_ignore_( void *a, int *ierr )
              MPI_F_STATUSES_IGNORE, a);
 }
 
-void mpir_is_errcodes_ignore_( void *a, int *ierr );
 void mpir_is_errcodes_ignore_( void *a, int *ierr )
 {
      *ierr = ( a == MPI_F_ERRCODES_IGNORE ? 1 : 0 );
@@ -138,7 +149,6 @@ void mpir_is_errcodes_ignore_( void *a, int *ierr )
              MPI_F_ERRCODES_IGNORE, a);
 }
 
-void mpir_is_argvs_null_( void *a, int *ierr );
 void mpir_is_argvs_null_( void *a, int *ierr )
 {
      *ierr = ( a == MPI_F_ARGVS_NULL ? 1 : 0 );
