@@ -528,10 +528,10 @@ foreach $_ (@ARGV) {
     'Group_excl' => '3:4', 'Group_excl-3' => 'in:fint2int_array:*v2',
                  'Group_excl-4' => 'out:handle::MPI_Group',
     'Group_range_incl' => '3:4', 
-                 'Group_range_incl-3' => 'in:fint2int_array:(*v2*3)',
+                 'Group_range_incl-3' => 'in:fint2int_rangearray:(*v2*3)',
                  'Group_range_incl-4' => 'out:handle::MPI_Group',
     'Group_range_excl' => '3:4',
-                 'Group_range_excl-3' => 'in:fint2int_array:(*v2*3)',
+                 'Group_range_excl-3' => 'in:fint2int_rangearray:(*v2*3)',
                  'Group_range_excl-4' => 'out:handle::MPI_Group',
     'Group_translate_ranks' => '3:5', 
                  'Group_translate_ranks-3' => 'in:fint2int_array:*v2',
@@ -2760,6 +2760,52 @@ sub fint2int_array_inout_arg {
 	print $OUTFD "v$count";
     }
 }
+#
+# This is a special version for the range include/exclude arguments, 
+# which have a C type of int [][3].  This eliminates a warning message
+# that may sometimes be issued by the compiler.
+# Array args can use the global $Array_size and $Array_typedef if necessary
+sub fint2int_rangearray_in_ftoc {
+    my $count = $_[0];
+    if ($within_fint) {
+	my $coutvar = "l$count";
+	my $outvar  = "v$count";
+	my $asize = $Array_size;
+
+	# Check for the special case of an array index element as the
+	# array size
+	my $extraCondition = "";
+	if ($asize =~ /\[(.*)\]/) {
+	    $extraCondition = "($1 >= 0) && ";
+	}
+	print $OUTFD "\
+    if ($extraCondition$asize > 0) {int li;
+     $coutvar = (int *)$malloc( $asize * sizeof(int) );
+     for (li=0; li<$asize; li++) {
+        $coutvar\[li\] = $outvar\[li\];
+     }
+    }
+";
+	$clean_up .= "     if ($coutvar) { $free( $coutvar ); }\n";
+    }
+}
+sub fint2int_rangearray_in_decl {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "    int *l$count=0;\n";
+    }
+}
+sub fint2int_rangearray_in_arg {
+    my $count = $_[0];
+    if ($within_fint) {
+	print $OUTFD "(int (*)[3]) l$count";
+    }
+    else {
+	print $OUTFD "(int (*)[3]) v$count";
+    }
+}
+
+
 # ---------------------------------------------------------------------------
 # This is the routine that handles the post-call processing
 sub print_post_call {
