@@ -322,6 +322,14 @@ print PARAM_C <<EOT;
 /* actual storage for parameters */
 EOT
 foreach my $p (@{$params->{parameters}}) {
+    my $default;
+    if ($p->{type} eq "string") {
+        # handle strings specially to avoid various const issues
+        $default = fmt_default($p->{name}, undef, "NULL", $p->{type});
+    }
+    else {
+        $default = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+    }
     printf PARAM_C "%s ${uc_ns}_%s = %s;\n",
         type2ctype($p->{type}),
         $p->{name},
@@ -339,6 +347,7 @@ int ${ns}_init_params(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
+    const char *tmp_str;
     static int initialized = FALSE;
 
     /* FIXME any MT issues here? */
@@ -352,6 +361,7 @@ foreach my $p (@{$params->{parameters}}) {
     my $env_fn = type_to_env_fn($p->{type});
     my @env_names = ();
     my $var_name = "${uc_ns}_" . $p->{name};
+    my $var_suffix = $p->{name};
 
     # process extra envs first so the primary always wins
     push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
@@ -360,6 +370,11 @@ foreach my $p (@{$params->{parameters}}) {
     push @env_names, "${alt_ns}_" . $p->{name};
     push @env_names, "${uc_ns}_" . $p->{name};
 
+    if ($p->{type} eq 'string') {
+        print PARAM_C <<EOT;
+    ${uc_ns}_GET_DEFAULT_STRING($var_suffix, &tmp_str);
+EOT
+    }
     foreach my $env_name (@env_names) {
         # assumes rc is defined
         if ($p->{type} eq 'range') {
@@ -367,24 +382,27 @@ foreach my $p (@{$params->{parameters}}) {
     rc = MPL_env2${env_fn}("$env_name", &($var_name.low), &($var_name.high));
     MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
 EOT
-        } else {
+        }
+        elsif ($p->{type} eq 'string') {
+            print PARAM_C <<EOT;
+    rc = MPL_env2${env_fn}("$env_name", &tmp_str);
+    MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
+EOT
+        }
+        else {
             print PARAM_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name));
     MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
 EOT
         }
     }
-    if ($p->{type} eq "string") {
-        # We've only assigned string constants or unmodifiable getenv values up
-        # to this point.  Now strdup whatever value "won", even if it's the
-        # default.  NULL will be preserved as-is.
-print PARAM_C <<EOT;
+    if ($p->{type} eq 'string') {
+        print PARAM_C <<EOT;
     if (${var_name} != NULL) {
-        const char *tmp = ${var_name};
-        ${var_name} = MPIU_Strdup(tmp);
+        ${var_name} = MPIU_Strdup(tmp_str);
         ${ns}_assert(${var_name});
         if (${var_name} == NULL) {
-            MPIU_CHKMEM_SETERR(mpi_errno, strlen(tmp), "dup of string for ${var_name}");
+            MPIU_CHKMEM_SETERR(mpi_errno, strlen(tmp_str), "dup of string for ${var_name}");
             goto fn_fail;
         }
     }
@@ -519,7 +537,7 @@ sub type2ctype {
     my %typemap = (
         'int'     => 'int',
         'double'  => 'double',
-        'string'  => 'const char *',
+        'string'  => 'char *',
         'boolean' => 'int',
         'range'   => "${ns}_param_range_val_t",
     );
