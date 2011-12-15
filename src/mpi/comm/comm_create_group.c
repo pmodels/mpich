@@ -202,12 +202,12 @@ int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * n
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_Group *group_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_COMM_CREATE_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_CREATE_GROUP);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #ifdef HAVE_ERROR_CHECKING
@@ -265,7 +265,7 @@ int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * n
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_CREATE_GROUP);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
