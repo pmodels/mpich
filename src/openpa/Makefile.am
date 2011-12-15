@@ -32,5 +32,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = openpa.pc
 $(pkgconfig_DATA): config.status
 
+# make MPICH2 happy
+coverage:
 
-.PHONY: prettycheck all-executable
+.PHONY: prettycheck all-executable coverage
