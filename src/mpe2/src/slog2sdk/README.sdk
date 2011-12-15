@@ -7,6 +7,33 @@
  *  @author  Anthony Chan
  */
 
+   *********************************************************************
+   *  Prefered reference for slog2sdk tools including Jumpshot-4 for   *
+   *  publications:                                                    *
+   *                                                                   *
+   *     An Efficient Format for Nearly Constant-Time Access to        *
+   *        Arbitrary Time Intervals in Large Trace Files.             *
+   *     Anthony Chan, William Gropp, and Ewing Lusk.                  *
+   *     Scientific Programming, Volume 16, Number 2-3,                *
+   *     pages 155-165, 2008.                                          *
+   *                                                                   *
+   *     Bibtex entry:                                                 *
+   *     @article{slog2,                                               *
+   *     author    = {Anthony Chan and William Gropp and Ewing Lusk},  *
+   *     title     = {An Efficient Format for Nearly Constant-Time     *
+   *                  Access to Arbitrary Time Intervals in Large      *
+   *                  Trace Files},                                    *
+   *     journal   = {Scientific Programming},                         *
+   *     volume    = {16},                                             *
+   *     number    = {2-3},                                            *
+   *     year      = {2008},                                           *
+   *     issn      = {1058-9244},                                      *
+   *     pages     = {155--165},                                       *
+   *     publisher = {IOS Press},                                      *
+   *     address   = {Amsterdam, The Netherlands, The Netherlands},    *
+   *     }                                                             *
+   *********************************************************************
+
 
 This package provides both the Runtime and the Software Development
 environment for SLOG-2.  The runtime environment includes a visualization

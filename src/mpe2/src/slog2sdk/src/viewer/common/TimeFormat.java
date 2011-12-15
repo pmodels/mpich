@@ -71,7 +71,7 @@ public class TimeFormat
         strbuf.append( min + ":" );
         if ( sec < 10 )
             strbuf.append( "0" );
-        strbuf.append( sec + " (HH:MM:SS)hr");
+        strbuf.append( sec );
         return strbuf.toString();
     }
 
