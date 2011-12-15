@@ -48,12 +48,12 @@ PAC_ENABLE_COVERAGE
 
 # check for compiler support for the __typeof() extension
 AC_CACHE_CHECK([whether the compiler supports __typeof(variable)],
-               [pac_cv_have__typeof],
+               [pac_cv_have___typeof],
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],[[double foo = 0.0; __typeof(foo) bar = 1.0;]])],
                   [pac_cv_have___typeof=yes],
                   [pac_cv_have___typeof=no])]
 )
-if test "$pac_cv_have__typeof" = "yes" ; then
+if test "$pac_cv_have___typeof" = "yes" ; then
     AC_DEFINE([HAVE___TYPEOF],[1],[defined if the C compiler supports __typeof(variable)])
 fi
 
