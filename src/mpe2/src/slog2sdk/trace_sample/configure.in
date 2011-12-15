@@ -8,8 +8,9 @@ define([AC_CACHE_SAVE], )dnl
 dnl
 dnl
 dnl Process this file with autoconf to produce a configure script.
+dnl Prerequsite autoconf-2.60 for AC_TYPE_INT*_T and AC_TYPE_UINT*_T
 AC_INIT()
-AC_PREREQ(2.52)
+AC_PREREQ(2.60)
 AC_CONFIG_MACRO_DIR([confdb])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_HEADER([trace_impl.h])
@@ -138,6 +139,31 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(__int64)
+
+dnl Check for C99 integer types for info bytearray support.
+AC_TYPE_INT8_T
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_INT64_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+
+dnl If autoconf cannot define C99 integer types, we abort
+for bw in 8 16 32 64 ; do
+    eval pac_cv_c_intx_val=\$"ac_cv_c_int${bw}_t"
+    dnl echo "int${bw}_t = $pac_cv_c_intx_val"
+    if test "$pac_cv_c_intx_val" = no ; then
+        PAC_MSG_ERROR([int${bw}_t cannot be defined!])
+    fi
+    eval pac_cv_c_uintx_val=\$"ac_cv_c_uint${bw}_t"
+    dnl echo "uint${bw}_t = $pac_cv_c_uintx_val"
+    if test "$pac_cv_c_uintx_val" = no ; then
+        PAC_MSG_ERROR([uint${bw}_t cannot be defined!])
+    fi
+done
+
 dnl   -- Check if byteswapping needs to be done.
 if test "$cross_compiling" = "yes" -o "$cross_compiling" = 1 ; then
     AC_MSG_CHECKING([for byte ordering])
@@ -279,7 +305,7 @@ fi
 if test -d $srcdir/logfiles ; then
     echo "creating sample logfiles from source"
     $CPRP -pr $srcdir/logfiles/*.txt $sharebuild_dir/logfiles
-    $CPRP -pr $srcdir/logfiles/*.slog* $sharebuild_dir/logfiles
+    dnl $CPRP -pr $srcdir/logfiles/*.slog* $sharebuild_dir/logfiles
 fi
 
 AC_SUBST(libbuild_dir)

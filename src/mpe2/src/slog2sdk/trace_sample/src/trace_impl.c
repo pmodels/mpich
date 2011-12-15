@@ -17,19 +17,22 @@
 #if defined( STDC_HEADERS ) || defined( HAVE_STRING_H )
 #include <string.h>
 #endif
+#if defined( HAVE_STDINT_H )
+#include <stdint.h>
+#endif
+#if defined( HAVE_INTTYPES_H )
+#include <inttypes.h>
+#endif
 #include "trace_API.h"
 
 #define DRAW_TRUE    1
 #define DRAW_FALSE   0
 
+/* Copied from clog_util.c's CLOG_Util_swap_bytes */
 static
-void bswp_byteswap( const int    Nelem,
-                    const int    elem_sz,
-                          char  *bytes );
-static
-void bswp_byteswap( const int    Nelem,
-                    const int    elem_sz,
-                          char  *bytes )
+void info_byteswap( char  *bytes,
+                    int    elem_sz,
+                    int    Nelem )
 {
     char *bptr;
     char  btmp;
@@ -48,16 +51,140 @@ void bswp_byteswap( const int    Nelem,
     }
 }
 
+/*
+   pack an integer of size of token_sz,
+   such that token_sz = sizeof(typeof(*intxbuf)),
+   into bytebuf[] at bytebuf[*pos]
+*/
+static
+int info_packintx( int num_bytes, char *bytebuf, int *pos,
+                   int token_sz, const void *intxbuf )
+{
+    if ( *pos + token_sz <= num_bytes ) {
+        void     *vptr;
+        vptr = ( (char *) bytebuf + *pos );
+        memcpy( vptr, intxbuf, token_sz );
+#if !defined( WORDS_BIGENDIAN )
+        info_byteswap( vptr, token_sz, 1 );
+#endif
+        *pos += token_sz;
+        return token_sz;
+    }
+    fprintf( stderr,
+             "info_packintx(): Error: Exceeding the bytebuf[] boundary!\n" );
+    return 0;
+}
+
+
+/*
+     pack a null-terminated string at bytebuf[*pos].
+*/
+static
+int info_packstr( int num_bytes, char *bytebuf, int *pos, const void *strbuf )
+{
+    int       len, token_sz;
+    len       = strlen(strbuf);
+    token_sz  = sizeof(int16_t) + len;
+    if ( *pos + token_sz <= num_bytes ) {
+        void     *vptr;
+        vptr = ( (char *) bytebuf + *pos );
+        *((int16_t *) vptr) = (int16_t) len;
+#if !defined( WORDS_BIGENDIAN )
+        info_byteswap( vptr, sizeof(int16_t), 1 );
+#endif
+        vptr = (void *)( (char *) vptr + sizeof(int16_t) );
+        memcpy( vptr, strbuf, len );
+        *pos += token_sz;
+        return token_sz;
+    }
+    fprintf( stderr,
+             "info_packstr(): Error: Exceeding the bytebuf[] boundary!\n" );
+    return 0;
+}
+
+/*
+   info_scanpack() - pack text string, textstr, designed by 'tokentype' into
+                     byte buffer at bytebuf[*pos] which is a byte array of
+                     size of num_bytes.  *pos will be updated to next
+                     available empty location upon return of the function.
+
+   On success, return number of bytes packed.
+   On failure, return 0.
+*/
+static
+int info_scanpack( int num_bytes, char *bytebuf, int *pos,
+                   char tokentype, const char *textstr )
+{
+    int16_t   int2;
+    int32_t   int4;
+    int64_t   int8;
+    uint32_t  uint4;
+    uint64_t  uint8;
+    float     float4;
+    double    float8;
+
+    /* Do the byte swapping here for now  */
+    switch (tokentype) {
+        case 's':  /* STR */
+            return info_packstr( num_bytes, bytebuf, pos, textstr );
+            break;
+        case 'h':  /* INT2 */
+            /* sscanf( textstr, "%"PRId16, &int2 ); */
+            int2 = (int16_t) strtol( textstr, NULL, 10 );
+            return info_packintx( num_bytes, bytebuf, pos, 2, &int2 );
+            break;
+        case 'd': /* INT4 */
+            /* sscanf( textstr, "%"PRId32, &int4 ); */
+            int4 = (int32_t) strtol( textstr, NULL, 10 );
+            return info_packintx( num_bytes, bytebuf, pos, 4, &int4 );
+            break;
+        case 'x': /* BYTE4 */
+            /* sscanf( textstr, "%"PRIx32, &uint4 ); */
+            uint4 = (uint32_t) strtol( textstr, NULL, 16 );
+            return info_packintx( num_bytes, bytebuf, pos, 4, &uint4 );
+            break;
+        case 'e': /* FLT4 */
+            /* sscanf( textstr, "%f", &float4 ); */
+            float4 = (float) strtof( textstr, NULL );
+            return info_packintx( num_bytes, bytebuf, pos, 4, &float4 );
+            break;
+        case 'l': /* INT8 */
+            /* sscanf( textstr, "%"PRId64, &int8 ); */
+            int8 = (int64_t) strtoll( textstr, NULL, 10 );
+            return info_packintx( num_bytes, bytebuf, pos, 8, &int8 );
+            break;
+        case 'X': /* BYTE8 */
+            /* sscanf( textstr, "%"PRIx64, &uint8 ); */
+            uint8 = (int64_t) strtoll( textstr, NULL, 16 );
+            return info_packintx( num_bytes, bytebuf, pos, 8, &uint8 );
+            break;
+        case 'E': /* FLT8 */
+            /* sscanf( textstr, "%lf", &float8 ); */
+            float8 = (double) strtod( textstr, NULL );
+            return info_packintx( num_bytes, bytebuf, pos, 8, &float8 );
+            break;
+    }
+    fprintf( stderr,
+             "info_scanpack(): Unknown tokentype %%%c and text %s\n",
+             tokentype, textstr );
+    return 0;
+}
+
+#define  INFOVALS_DELIM  ";;"
+#define  MAX_INFOVALS    1024
+#define  MAX_INFOTYPES   64
+#define  MAX_COLNAMES    10
+#define  MAX_NAME_LEN    128
+
 typedef struct {
     TRACE_Category_head_t *hdr;
     char                  *legend;
     char                  *label;
+    int                    num_infotypes;
+    char                   infotypes[MAX_INFOTYPES];
     int                    num_methods;
     int                   *methods;
 } DRAW_Category;
-
-#define  MAX_COLNAMES    10
-#define  MAX_NAME_LEN    128
 
 typedef struct {
     int               num_rows;
@@ -93,7 +220,7 @@ typedef struct {
     int               idx2prime;
 } DRAW_Composite;
 
-#define  MAX_CATEGORIES  128
+#define  MAX_CATEGORIES  512
 #define  MAX_LINE_LEN    1024
 
 typedef struct _trace_file {
@@ -111,8 +238,6 @@ typedef struct _trace_file {
 #define  MAX_LABEL_LEN   512
 
 static
-DRAW_YCoordMap *YCoordMap_alloc( int Nrows, int Ncols, int Nmethods );
-static
 DRAW_YCoordMap *YCoordMap_alloc( int Nrows, int Ncols, int Nmethods )
 {
     DRAW_YCoordMap   *map;
@@ -122,20 +247,18 @@ DRAW_YCoordMap *YCoordMap_alloc( int Nrows, int Ncols, int Nmethods )
     map->num_rows     = Nrows;
     map->num_columns  = Ncols;
     if ( Nrows * Ncols > 0 )
-        map->elems    = (int *) malloc( Nrows * Ncols * sizeof( int ) );
+        map->elems    = (int *) malloc( Nrows * Ncols * sizeof(int) );
     else
         map->elems    = NULL;
 
     map->num_methods  = Nmethods;
     if ( Nmethods > 0 )
-        map->methods  = (int *) malloc( Nmethods * sizeof( int ) );
+        map->methods  = (int *) malloc( Nmethods * sizeof(int) );
     else
         map->methods  = NULL;
     return map;
 }
 
-static
-void YCoordMap_free( DRAW_YCoordMap *map );
 static
 void YCoordMap_free( DRAW_YCoordMap *map )
 {
@@ -153,8 +276,6 @@ void YCoordMap_free( DRAW_YCoordMap *map )
 }
 
 /* legend_len & label_len are lengths of the string withOUT counting NULL */
-static
-DRAW_Category *Category_alloc( int legend_len, int label_len, int Nmethods );
 static
 DRAW_Category *Category_alloc( int legend_len, int label_len, int Nmethods )
 {
@@ -176,14 +297,12 @@ DRAW_Category *Category_alloc( int legend_len, int label_len, int Nmethods )
 
     type->num_methods  = Nmethods;
     if ( Nmethods > 0 )
-        type->methods = (int *) malloc( Nmethods * sizeof( int ) );
+        type->methods = (int *) malloc( Nmethods * sizeof(int) );
     else
         type->methods = NULL;
     return type;
 }
 
-static
-void Category_free( DRAW_Category *type );
 static
 void Category_free( DRAW_Category *type )
 {
@@ -210,9 +329,6 @@ void Category_free( DRAW_Category *type )
 
 static
 void Category_head_copy(       TRACE_Category_head_t *hdr_copy,
-                         const TRACE_Category_head_t *hdr_copier );
-static
-void Category_head_copy(       TRACE_Category_head_t *hdr_copy,
                          const TRACE_Category_head_t *hdr_copier )
 {
     if ( hdr_copy != NULL && hdr_copier != NULL ) {
@@ -226,8 +342,6 @@ void Category_head_copy(       TRACE_Category_head_t *hdr_copy,
     }
 }
 
-static
-DRAW_Primitive *Primitive_alloc( int num_vtxs );
 static
 DRAW_Primitive *Primitive_alloc( int num_vtxs )
 {
@@ -243,8 +357,6 @@ DRAW_Primitive *Primitive_alloc( int num_vtxs )
     return prime;
 }
 
-static
-void Primitive_free( DRAW_Primitive *prime );
 static
 void Primitive_free( DRAW_Primitive *prime )
 {
@@ -268,8 +380,6 @@ void Primitive_free( DRAW_Primitive *prime )
     }
 }
 
-static
-DRAW_Composite *Composite_alloc( int Nprimes );
 static
 DRAW_Composite *Composite_alloc( int Nprimes )
 {
@@ -303,8 +413,6 @@ int Composite_setPrimitiveAt( DRAW_Composite *cmplx,
 }
 */
 
-static
-void Composite_free( DRAW_Composite *cmplx );
 static
 void Composite_free( DRAW_Composite *cmplx )
 {
@@ -384,6 +492,11 @@ char *TRACE_Get_err_string( int ierr )
         case 36:
             return "TRACE_Get_next_primitive(): Memory violation "
                    "detected after writing Yaxis coordinates.\n";
+        case 37:
+            return "TRACE_Peek_next_primitive(): Internal error.\n";
+        case 38:
+            return "TRACE_Peek_next_primitive(): Unmatch between "
+                   "number of %% conv specifiers and values in bytebuf[].\n";
         case 40:
             return "Cannot locate COMPOSITE in the internal table.";
         case 41:
@@ -392,6 +505,11 @@ char *TRACE_Get_err_string( int ierr )
         case 42:
             return "TRACE_Get_next_composite(): Memory violation "
                    "detected after writing ByteInfo.\n";
+        case 47:
+            return "TRACE_Peek_next_composite(): Internal error.\n";
+        case 48:
+            return "TRACE_Peek_next_composite(): Unmatch between "
+                   "number of %% conv specifiers and values in bytebuf[].\n";
         case 49:
             return "TRACE_Peek_next_composite(): Unexpected EOF detected.";
         case 60:
@@ -440,7 +558,7 @@ int TRACE_Open( const char filespec[], TRACE_file *fp )
     tr->ymap       = NULL; 
     tr->prime      = NULL;
     tr->cmplx      = NULL;
-	*fp            = tr;
+    *fp            = tr;
     return 0;
 }
 
@@ -521,6 +639,7 @@ int TRACE_Peek_next_category( const TRACE_file fp,
     int             legend_len;
     char            label[MAX_LABEL_LEN];
     int             label_len;
+    char            infotypes[MAX_INFOTYPES];
     char            str4methods[MAX_LABEL_LEN];
     int             methods_len;
 
@@ -536,19 +655,19 @@ int TRACE_Peek_next_category( const TRACE_file fp,
     newline     = (char *) (fp->line + line_pos);
 
 
-    /* Set InfoKeys */
+    /* Set label string */
     info_A = NULL;
     info_B = NULL;
-    if (    ( info_A = strstr( newline, "< " ) ) != NULL
-         && ( info_B = strstr( info_A, " >" ) ) != NULL ) {
-        info_A = (char *) (info_A + 2);
+    if (    ( info_A = strstr( newline, "<" ) ) != NULL
+         && ( info_B = strstr( info_A, ">" ) ) != NULL ) {
+        info_A = (char *) (info_A + 1);
         sprintf( info_B, "%c", '\0' );
         strncpy( label, info_A, MAX_LABEL_LEN );
 #if defined( DEBUG )
         printf( "<%s>", label );
         fflush( NULL );
 #endif
-        newline = (char *) (info_B + 2);
+        newline = (char *) (info_B + 1);
         label_len = strlen( label );
     }
     else
@@ -632,7 +751,8 @@ int TRACE_Get_next_category( const TRACE_file fp,
                              int *method_pos, const int method_max )
 {
     DRAW_Category  *type;
-    int             legend_len, label_len;
+    char           *label_ptr;
+    int             legend_len, label_len, idx;
 
     type  = fp->types[ fp->num_types ];
     if ( type == NULL ) {
@@ -651,7 +771,7 @@ int TRACE_Get_next_category( const TRACE_file fp,
             if ( *legend_pos >= legend_max )
                 return 21;
             memcpy( &(legend_base[ *legend_pos ]), type->legend,
-                    sizeof( char ) * legend_len );
+                    sizeof(char) * legend_len );
             *num_legend  = legend_len;
             *legend_pos += *num_legend;
             if ( *legend_pos > legend_max )
@@ -665,19 +785,39 @@ int TRACE_Get_next_category( const TRACE_file fp,
             if ( *label_pos >= label_max )
                 return 23;
             memcpy( &(label_base[ *label_pos ]), type->label,
-                    sizeof( char ) * label_len );
+                    sizeof(char) * label_len );
             *num_label  = label_len;
             *label_pos += *num_label;
             if ( *label_pos > label_max )
                 return 24;
         }
+
+        /* Set InfoTypes[] */
+        idx = 0;
+        label_ptr = type->label;
+#if defined(DEBUG)
+        printf("Category %s's infotypes[] are", type->legend);
+#endif
+        while (label_ptr = strchr(label_ptr, '%')) {
+            /* ++label_ptr to access the conversion specifier after % */
+            type->infotypes[idx] = *(++label_ptr);
+#if defined(DEBUG)
+            printf(" %%%c", type->infotypes[idx]);
+#endif
+            idx++;
+            label_ptr++;
+        }
+        type->num_infotypes = idx;    
     }
+#if defined(DEBUG)
+    printf("\n");
+#endif
 
     if ( type->num_methods > 0 ) {
         if ( *method_pos >= method_max )
             return 25;
         memcpy( &(method_base[ *method_pos ]), type->methods,
-                sizeof( int ) * type->num_methods );
+                sizeof(int) * type->num_methods );
         *num_methods = type->num_methods;
         *method_pos += *num_methods;
         if ( *method_pos > method_max )
@@ -844,7 +984,7 @@ int TRACE_Get_next_ycoordmap( TRACE_file fp,
     if ( *coordmap_pos >= coordmap_max )
         return 63;
     memcpy( &(coordmap_base[ *coordmap_pos ]), ymap->elems,
-            sizeof( int ) * ymap->num_rows * ymap->num_columns );
+            sizeof(int) * ymap->num_rows * ymap->num_columns );
     *coordmap_sz   = ymap->num_rows * ymap->num_columns;
     *coordmap_pos += *coordmap_sz;
     if ( *coordmap_pos > coordmap_max )
@@ -854,7 +994,7 @@ int TRACE_Get_next_ycoordmap( TRACE_file fp,
         if ( *method_pos >= method_max )
             return 65;
         memcpy( &(method_base[ *method_pos ]), ymap->methods,
-                sizeof( int ) * ymap->num_methods );
+                sizeof(int) * ymap->num_methods );
         *num_methods = ymap->num_methods;
         *method_pos += *num_methods;
         if ( *method_pos > method_max )
@@ -882,14 +1022,18 @@ int TRACE_Peek_next_primitive( const  TRACE_file fp,
     char           *newline;
     char           *info_A, *info_B;
 
-    char            coord_format[] = "(%lf, %d) %n";
     char            primitive_format[] = "%s TimeBBox(%lf,%lf) Category=%d %n";
+    char            coord_format[] = "(%lf, %d) %n";
     double          starttime, endtime;
     double          tcoords[ MAX_VERTICES ];
     int             ycoords[ MAX_VERTICES ];
     int             num_vertices;
-    int             infovals[2];
+
+    int             pos;
+    char            infovals[ MAX_INFOVALS ];
+    char           *token;
     int             idx;
+
 
     /* Check if this Primitive is part of the Composite */
     if ( fp->cmplx != NULL ) {
@@ -934,27 +1078,47 @@ int TRACE_Peek_next_primitive( const  TRACE_file fp,
             break;
         }
     }
-/*
     if ( type == NULL ) {
         fprintf( stderr, "TRACE_Peek_next_primitive(): Cannot locate "
                          "CATEGORY in catgeory table.\n" );
         return 20;
     }
-*/
 
     *num_bytes = 0;
     info_A = NULL;
     info_B = NULL;
-    if (    ( info_A = strstr( newline, "< " ) ) != NULL
-         && ( info_B = strstr( info_A, " >" ) ) != NULL
+    if (    ( info_A = strstr( newline, "<" ) ) != NULL
+         && ( info_B = strstr( info_A, ">" ) ) != NULL
          && type != NULL ) {
-        info_A = (char *) (info_A + 2);
+        info_A = (char *) (info_A + 1);
         sprintf( info_B, "%c", '\0' );
-        sscanf( info_A, type->label, &infovals[0], &infovals[1] );
-#if defined( DEBUG )
-        printf( "<[0]=%d [1]=%d>", infovals[0], infovals[1] );
-#endif
-        *num_bytes = 8;
+
+        idx = 0;
+        pos = 0;
+        token = strtok( info_A, INFOVALS_DELIM );
+        do {
+            if ( idx < type->num_infotypes ) {
+                if ( info_scanpack( MAX_INFOVALS, infovals, &pos,
+                                    type->infotypes[idx], token ) > 0 ) {
+                    idx++;
+                }
+                else {
+                    fprintf( stderr,
+                             "info_scanpack() fails for token %s."
+                             "Either unknown conv specifier or "
+                             "internal infovals[%d] is too small for %s.\n",
+                             token, MAX_INFOVALS, info_A );
+                    return 37;
+                }
+            }
+            else {
+                fprintf( stderr,
+                         "%s exceeds number of %% conv specifiers in %s:\n",
+                         info_A, type->label);
+                return 38;
+            }
+        } while (token = strtok( NULL, INFOVALS_DELIM) );
+        *num_bytes = pos;
     }
 #if defined( DEBUG )
     printf( "\n" );
@@ -974,9 +1138,6 @@ int TRACE_Peek_next_primitive( const  TRACE_file fp,
         prime->num_info  = *num_bytes;
         prime->info      = (char *) malloc( prime->num_info * sizeof(char) );
         memcpy( prime->info, infovals, prime->num_info );
-#if ! defined( WORDS_BIGENDIAN )
-        bswp_byteswap( 2, sizeof( int ), prime->info );
-#endif
     }
     prime->num_tcoords = num_vertices;
     prime->num_ycoords = num_vertices;
@@ -1016,7 +1177,7 @@ int TRACE_Get_next_primitive( const TRACE_file fp,
         if ( *byte_pos >= byte_max )
             return 31;
         memcpy( &(byte_base[ *byte_pos ]), prime->info,
-                sizeof( char ) * prime->num_info );
+                sizeof(char) * prime->num_info );
         *num_bytes = prime->num_info;
         *byte_pos += *num_bytes;
         if ( *byte_pos > byte_max )
@@ -1026,7 +1187,7 @@ int TRACE_Get_next_primitive( const TRACE_file fp,
     if ( *tcoord_pos >= tcoord_max )
         return 33;
     memcpy( &(tcoord_base[ *tcoord_pos ]), prime->tcoords,
-            sizeof( double ) * prime->num_tcoords );
+            sizeof(double) * prime->num_tcoords );
     *num_tcoords = prime->num_tcoords;
     *tcoord_pos += *num_tcoords;
     if ( *tcoord_pos > tcoord_max )
@@ -1035,7 +1196,7 @@ int TRACE_Get_next_primitive( const TRACE_file fp,
     if ( *ycoord_pos >= ycoord_max )
         return 35;
     memcpy( &(ycoord_base[ *ycoord_pos ]), prime->ycoords,
-            sizeof( int ) * prime->num_ycoords );
+            sizeof(int) * prime->num_ycoords );
     *num_ycoords = prime->num_ycoords;
     *ycoord_pos += *num_ycoords;
     if ( *ycoord_pos > ycoord_max )
@@ -1061,7 +1222,10 @@ int TRACE_Peek_next_composite( const TRACE_file fp,
                                          "NumPrimes=%d %n";
     double          starttime, endtime;
     int             num_primes;
-    int             infovals[2];
+
+    int             pos;
+    char            infovals[ MAX_INFOVALS ];
+    char           *token;
     int             idx;
 
     sscanf( fp->line, composite_format, typename, &starttime, &endtime,
@@ -1080,27 +1244,47 @@ int TRACE_Peek_next_composite( const TRACE_file fp,
             break;
         }
     }
-/*
     if ( type == NULL ) {
         fprintf( stderr, "TRACE_Peek_next_composite(): Cannot locate "
                          "CATEGORY in catgeory table.\n" );
         return 20;
     }
-*/
 
     *num_bytes = 0;
     info_A = NULL;
     info_B = NULL;
-    if (    ( info_A = strstr( newline, "< " ) ) != NULL
-         && ( info_B = strstr( info_A, " >" ) ) != NULL
+    if (    ( info_A = strstr( newline, "<" ) ) != NULL
+         && ( info_B = strstr( info_A, ">" ) ) != NULL
          && type != NULL ) {
-        info_A = (char *) (info_A + 2);
+        info_A = (char *) (info_A + 1);
         sprintf( info_B, "%c", '\0' );
-        sscanf( info_A, type->label, &infovals[0], &infovals[1] );
-#if defined( DEBUG )
-        printf( "<[0]=%d [1]=%d>", infovals[0], infovals[1] );
-#endif
-        *num_bytes = 8;
+
+        idx = 0;
+        pos = 0;
+        token = strtok( info_A, INFOVALS_DELIM );
+        do {
+            if ( idx < type->num_infotypes ) {
+                if ( info_scanpack( MAX_INFOVALS, infovals, &pos,
+                                    type->infotypes[idx], token ) > 0 ) {
+                    idx++;
+                }
+                else {
+                    fprintf( stderr,
+                             "info_scanpack() fails for token %s."
+                             "Either unknown conv specifier or "
+                             "internal infovals[%d] is too small for %s.\n",
+                             token, MAX_INFOVALS, info_A );
+                    return 47;
+                }
+            }
+            else {
+                fprintf( stderr,
+                         "%s exceeds number of %% conv specifiers in %s:\n",
+                         info_A, type->label);
+                return 48;
+            }
+        } while (token = strtok( NULL, INFOVALS_DELIM) );
+        *num_bytes = pos;
     }
 #if defined( DEBUG )
     printf( "\n" );
@@ -1119,9 +1303,6 @@ int TRACE_Peek_next_composite( const TRACE_file fp,
         cmplx->num_info  = *num_bytes;
         cmplx->info      = (char *) malloc( cmplx->num_info * sizeof(char) );
         memcpy( cmplx->info, infovals, cmplx->num_info );
-#if ! defined( WORDS_BIGENDIAN )
-        bswp_byteswap( 2, sizeof( int ), cmplx->info );
-#endif
     }
     cmplx->num_primes = num_primes;
 
@@ -1164,7 +1345,7 @@ int TRACE_Get_next_composite( const TRACE_file fp,
         if ( *byte_pos >= byte_max )
             return 41;
         memcpy( &(byte_base[ *byte_pos ]), cmplx->info,
-                sizeof( char ) * cmplx->num_info );
+                sizeof(char) * cmplx->num_info );
         *num_bytes = cmplx->num_info;
         *byte_pos += *num_bytes;
         if ( *byte_pos > byte_max )
