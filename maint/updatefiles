@@ -1038,6 +1038,14 @@ if [ "$do_build_configure" = "yes" ] ; then
 	    echo "------------------------------------------------------------------------"
 	    echo "running $autoreconf in $amdir"
             (cd $amdir && $autoreconf $autoreconf_args) || exit 1
+
+            # fix depcomp to support pgcc correctly
+            if grep "pgcc)" confdb/depcomp 2>&1 >/dev/null ; then :
+            else
+                echo "------------------------------------------------------------------------"
+                echo 'patching "confdb/depcomp" to support pgcc'
+                patch -f -p0 < confdb/depcomp_pgcc.patch
+            fi
 	fi
     done
 fi
