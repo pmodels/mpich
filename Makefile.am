@@ -150,6 +150,64 @@ DISTCLEANFILES += config.system
 # created by configure
 DISTCLEANFILES += .mpich2
 
+# we can only have one clean-local, so we hook into it via conditionally
+# defined variables in the dependencies section
+clean-local: $(COVERAGE_CLEAN_TARGET)
+
+# --------------------------------------------------------------------------
+#  coverage rules
+# --------------------------------------------------------------------------
+
+.PHONY: coverage
+
+if BUILD_COVERAGE
+
+# $(lib_lib@MPILIBNAME@_la_SOURCES) already contains $(mpi_sources)
+# We don't include the $(lib_lib@PMPILIBNAME@_la_SOURCES) here because of gcov's
+# inability to correctly handle multiple object files with the same source file.
+gcov_sources = $(lib_lib@MPILIBNAME@_la_SOURCES)
+
+# local var meaning (for profiling foo/bar/baz.c):
+#   dir=foo/bar
+#   bname=baz.c
+#   aux=baz
+#
+# Note that we delete all extra ".gcov" files that were not the direct goal,
+# even though they contain useful information.  A more robust solution is needed
+# in the long run, probably one that uses "--long-file-names --preserve-paths"
+# and some postprocessing in a perl script.
+#
+# Gcov has no good way to deal with source files that have been compiled twice
+# into two different object files, such as
+#   bcast.c --> {bcast.o,lib_libpmpich_la-bcast.o}
+# It still generates a bcast.c.gcov output for each object file.  Long file
+# names and preserved paths do not help with this problem.
+coverage:
+	@for file in $(gcov_sources) ; do \
+	    dir=`dirname $$file` ; \
+	    bname=`basename $$file` ; \
+	    aux=`echo $$bname | sed -e 's,\.*$$,,'` ; \
+	    echo "( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir )" ; \
+	    ( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir ) ; \
+	    rm -f *.gcov ; \
+	done
+	for subdir in $(SUBDIRS) - ; do \
+	    if test $$subdir = "-" ; then break ; fi ; \
+	    ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+	done
+
+COVERAGE_CLEAN_TARGET=coverage-clean
+# heavy handed, but it gets the job done
+coverage-clean:
+	-find $(top_builddir) -name "*.gcda" -o -name "*.gcno" -o -name "*.gcov" | \
+	    xargs -n 10 rm -f
+
+else !BUILD_COVERAGE
+coverage:
+	@echo 'ERROR: MPICH2 was not configured with "--enable-coverage"'
+	exit 1
+endif !BUILD_COVERAGE
+
 # --------------------------------------------------------------------------
 #  documentation rules
 # --------------------------------------------------------------------------

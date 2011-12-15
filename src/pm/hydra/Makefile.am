@@ -57,3 +57,25 @@ htmldoc:
 
 # created by confdb/aclocal_cache.m4
 DISTCLEANFILES += config.system
+
+# --------------------------------------------------------------------------
+.PHONY: coverage
+gcov_sources = $(libmpl_la_SOURCES)
+# assumes that these sources were compiled appropriately ("-fprofile-arcs"
+# and "-ftest-coverage")
+coverage:
+	@for file in $(gcov_sources) ; do \
+	    dir=`dirname $$file` ; \
+	    bname=`basename $$file` ; \
+	    aux=`echo $$bname | sed -e 's,\.*$$,,'` ; \
+	    echo "( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir )" ; \
+	    ( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir ) ; \
+	    rm -f *.gcov ; \
+	done
+## we don't recurse into SUBDIRS in hydra, since they are only really
+## external packages like hwloc
+##	for subdir in $(SUBDIRS) ; do \
+##	    ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+##	done
+# --------------------------------------------------------------------------
+

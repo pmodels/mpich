@@ -43,6 +43,9 @@ PAC_C_MACRO_VA_ARGS
 AC_ARG_VAR([FROM_MPICH2],[set to "yes" if building MPL inside of MPICH2])
 AM_CONDITIONAL([MPL_EMBEDDED_MODE],[test "x$FROM_MPICH2" = "xyes"])
 
+# support gcov test coverage information
+PAC_ENABLE_COVERAGE
+
 # check for compiler support for the __typeof() extension
 AC_CACHE_CHECK([whether the compiler supports __typeof(variable)],
                [pac_cv_have__typeof],

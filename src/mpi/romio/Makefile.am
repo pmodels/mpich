@@ -87,3 +87,24 @@ else !BUILD_ROMIO_EMBEDDED
 ## TODO build a libromio.la (non-convenience) and possibly a libglue.la or something?
 
 endif
+
+# --------------------------------------------------------------------------
+.PHONY: coverage
+gcov_sources = $(libmpl_la_SOURCES)
+# assumes that these sources were compiled appropriately ("-fprofile-arcs"
+# and "-ftest-coverage")
+coverage:
+	@for file in $(gcov_sources) ; do \
+	    dir=`dirname $$file` ; \
+	    bname=`basename $$file` ; \
+	    aux=`echo $$bname | sed -e 's,\.*$$,,'` ; \
+	    echo "( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir )" ; \
+	    ( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir ) ; \
+	    rm -f *.gcov ; \
+	done
+	for subdir in $(SUBDIRS) - ; do \
+	    if test $$subdir = "-" ; then break ; fi ; \
+	    ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+	done
+# --------------------------------------------------------------------------
+

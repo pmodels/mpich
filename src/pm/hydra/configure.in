@@ -119,6 +119,9 @@ AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
 AC_SUBST(DOXYGEN)
 AC_SUBST(top_srcdir)
 
+# support gcov test coverage information
+PAC_ENABLE_COVERAGE
+
 # Check if the necessary headers are available
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
 		 sched.h sys/stat.h sys/param.h netinet/in.h netinet/tcp.h \

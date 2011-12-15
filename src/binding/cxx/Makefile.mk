@@ -43,6 +43,7 @@ AM_CPPFLAGS += -I$(top_builddir)/src/binding/cxx
 #doc_LATEX_SOURCES = \${doc_sources}
 
 if BUILD_COVERAGE
+# FIXME does anything cause mpicovsimple.o to be built?
 mpicovsimple.o: mpicovsimple.cxx mpicovsimple.h
 	$(CXXCOMPILE) -c -DCOVERAGE_DIR='"@builddir@"' ${srcdir}/mpicovsimple.cxx
 endif BUILD_COVERAGE

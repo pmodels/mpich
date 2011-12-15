@@ -184,6 +184,8 @@ mpich2-mpdroot.o: ${srcdir}/mpdroot.c ${srcdir}/mpdroot.h mpdconf.h
 htmldoc:
 latexdoc:
 
+# make MPICH2 happy
+coverage:
 
 # EXPERIMENTAL TOTALVIEW STUFF
 

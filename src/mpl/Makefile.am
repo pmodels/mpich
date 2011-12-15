@@ -32,6 +32,26 @@ else !MPL_EMBEDDED_MODE
 include_HEADERS = $(mpl_headers)
 endif !MPL_EMBEDDED_MODE
 
+# --------------------------------------------------------------------------
+.PHONY: coverage
+gcov_sources = $(libmpl_la_SOURCES)
+# assumes that these sources were compiled appropriately ("-fprofile-arcs"
+# and "-ftest-coverage")
+coverage:
+	@for file in $(gcov_sources) ; do \
+	    dir=`dirname $$file` ; \
+	    bname=`basename $$file` ; \
+	    aux=`echo $$bname | sed -e 's,\.*$$,,'` ; \
+	    echo "( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir )" ; \
+	    ( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir ) ; \
+	    rm -f *.gcov ; \
+	done
+	for subdir in $(SUBDIRS) - ; do \
+	    if test $$subdir = "-" ; then break ; fi ; \
+	    ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+	done
+# --------------------------------------------------------------------------
+
 # files that automake doesn't know about by default that should be included in
 # the distribution
 EXTRA_DIST = VERSION
