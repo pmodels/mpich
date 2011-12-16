@@ -466,6 +466,10 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wdeclaration-after-statement -- This is a C89
     #       requirement. When compiling with C99, this should be
     #       disabled.
+    #   -Wfloat-equal -- There are places in hwloc that set a float var to 0, then 
+    #       compare it to 0 later to see if it was updated.  Also when using strtod()
+    #       one needs to compare the return value with 0 to see whether a conversion
+    #       was performed.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -481,7 +485,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wshadow
         -Wmissing-declarations
         -Wno-long-long
-        -Wfloat-equal
         -Wundef
         -Wno-endif-labels
         -Wpointer-arith
