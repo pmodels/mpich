@@ -50,12 +50,13 @@ void PREPEND_PREFIX(Dataloop_create)(MPI_Datatype type,
              combiner == MPI_COMBINER_F90_COMPLEX ||
              combiner == MPI_COMBINER_F90_INTEGER)
     {
-        /* the unnamed predefined types are created at runtime as
-         * contigs, but they don't need a dataloop and they have
-         * (intentionally) different envelopes/contents */
-        *dlp_p = NULL;
-        *dlsz_p = 0;
-        *dldepth_p = 0;
+        MPI_Datatype f90basetype;
+        DLOOP_Handle_get_basic_type_macro(type, f90basetype);
+        PREPEND_PREFIX(Dataloop_create_contiguous)(1 /* count */,
+                                                   f90basetype,
+                                                   dlp_p, dlsz_p,
+                                                   dldepth_p,
+                                                   flag);
         return;
     }
 

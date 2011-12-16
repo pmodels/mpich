@@ -104,6 +104,20 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 					       NULL, NULL );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+        /* FIXME should we be setting type->is_permanent=TRUE here too?  If so,
+         * will the cleanup code handle it correctly and not freak out? */
+
+#ifndef NDEBUG
+        {
+            MPI_Datatype old_basic = MPI_DATATYPE_NULL;
+            /* we used MPID_Type_contiguous and then stomped it's contents
+             * information, so make sure that the eltype is usable by
+             * MPID_Type_commit */
+            MPID_Datatype_get_basic_type(old, old_basic);
+            MPIU_Assert(new_dtp->eltype == old_basic);
+        }
+#endif
+
         /* the MPI Standard requires that these types are pre-committed
          * (MPI-2.2, sec 16.2.5, pg 492) */
         mpi_errno = MPID_Type_commit(&type->d);
