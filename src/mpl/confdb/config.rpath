@@ -682,7 +682,7 @@ LC_ALL=C sed -e 's/^\([a-zA-Z0-9_]*\)=/'"$PAC_CC_PREFIX"'\1=/' <<EOF
 
 # MPICH2 ADDITION
 # Shared library suffix, including any period (normally "so").
-shrext="shrext"
+shrext="$shrext"
 
 # How to pass a linker flag through the compiler.
 wl="$escaped_wl"
