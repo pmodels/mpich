@@ -330,10 +330,7 @@ foreach my $p (@{$params->{parameters}}) {
     else {
         $default = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
     }
-    printf PARAM_C "%s ${uc_ns}_%s = %s;\n",
-        type2ctype($p->{type}),
-        $p->{name},
-        fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+    printf PARAM_C "%s ${uc_ns}_%s = %s;\n", type2ctype($p->{type}), $p->{name}, $default;
 }
 
 # FIXME the mpi_errno bit is MPICH-specific
