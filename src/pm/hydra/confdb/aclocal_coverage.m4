@@ -80,7 +80,7 @@ if test "$enable_coverage" = "yes" ; then
     # NOTE: using a "pac_cv_" prefix but not caching because of xFLAGS "side effects"
     pac_cv_use_coverage=yes
     AC_DEFINE([USE_COVERAGE],[1],[Define if performing coverage tests])
-    AM_CONDITIONAL([BUILD_COVERAGE],[test "X$pac_cv_use_coverage" = "Xyes"])
 fi
+AM_CONDITIONAL([BUILD_COVERAGE],[test "X$pac_cv_use_coverage" = "Xyes"])
 ])
 
