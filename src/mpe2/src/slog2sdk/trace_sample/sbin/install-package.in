@@ -252,7 +252,7 @@ fi
 # Make the given directory.  This handles building intermediate directories
 # as required, and maintains a list of created directories in dirlist.
 MkDir() {
-dest=$DESTDIR$1
+dest=$1
 if [ ! -d $dest ] ; then
     dir=`echo $dest | sed 's%/% /%g'`
     path_to_date=''
@@ -285,6 +285,7 @@ if [ ! -d $dest ] ; then
     done
 fi
 }
+
 
 
 #
