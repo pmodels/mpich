@@ -20,6 +20,10 @@ MPERUN_DEF=${MPERUN_DEF:-"$MPE_BINDIR/mpiexec -n 4"}
 MPERUN=${MPERUN:-${MPERUN_DEF}}
 CLOG2TOSLOG2=${CLOG2TOSLOG2:-"$MPE_BINDIR/clog2TOslog2"}
 
+# Assume user's PATH does not have ".", prefix it with "."
+PATH=".:$PATH"
+export PATH
+
 pgm=$1
 message=$2
 
