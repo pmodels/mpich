@@ -252,31 +252,33 @@ fi
 # Make the given directory.  This handles building intermediate directories
 # as required, and maintains a list of created directories in dirlist.
 MkDir() {
-dest=$DESTDIR$1
+dest=$1
 if [ ! -d $dest ] ; then
     dir=`echo $dest | sed 's%/% /%g'`
     path_to_date=''
     for path in $dir ; do
         path_to_date="$path_to_date$path"
-        if [ ! -d $path_to_date ] ; then
-            if [ $verbose = 1 ] ; then echo "Creating directory $dest" ; fi
-            $Show "mkdir $path_to_date"
+        if [ ! -d $DESTDIR$path_to_date ] ; then
+            if [ $verbose = 1 ] ; then
+                echo "Creating directory $DESTDIR$path_to_date"
+            fi
+            $Show "mkdir $DESTDIR$path_to_date"
             rc=$?
             if [ $rc != 0 ] ; then
-                echo "*** Error making directory $dest. ***"
+                echo "*** Error making directory $DESTDIR$path_to_date. ***"
                 errs=`expr $errs + 1`
                 if [ $failmode = "hard" ] ; then exit $rc ; fi
-                echo "Failed to create directory $path_to_date"
+                echo "Failed to create directory $DESTDIR$path_to_date"
                 exit 1
             else
                 # Note that we store in inverse order
-                dirlist="$1 $dirlist"
+                dirlist="$path_to_date $dirlist"
             fi
             if [ "X$DMODE" != "X" ] ; then
-                $Show chmod $DMODE $path_to_date
+                $Show chmod $DMODE $DESTDIR$path_to_date
                 rc=$?
                 if [ $rc != 0 ] ; then
-                    echo "*** Error setting mode to $DMODE on directory $path_to_date. ***"
+                    echo "*** Error setting mode to $DMODE on directory $DESTDIR$path_to_date. ***"
                     errs=`expr $errs + 1`
                     if [ $chmodfailmode = "hard" ] ; then exit $rc ; fi
                 fi
@@ -285,7 +287,6 @@ if [ ! -d $dest ] ; then
     done
 fi
 }
-
 
 
 #
