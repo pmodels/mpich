@@ -261,30 +261,33 @@ changequote([,])
 
 # VPATH build: Set the libbuild_dir
 if test ! -d $libbuild_dir ; then
-    echo "creating directory $libbuild_dir"
+    AC_MSG_NOTICE([creating directory $libbuild_dir])
     $MKDIR $libbuild_dir
 fi
 
 # VPATH build: Set the sharebuild_dir
 if test ! -d $sharebuild_dir ; then
-    echo "creating $sharebuild_dir"
+    AC_MSG_NOTICE([creating directory $sharebuild_dir])
     $MKDIR $sharebuild_dir
-    if test ! -d $sharebuild_dir/logfiles ; then
-        echo "creating $sharebuild_dir/logfiles"
-        $MKDIR $sharebuild_dir/logfiles
-    fi
 fi
 
-# Copying $srcdir/logfiles to sharebuild_dir
+logfilesbuild_dir="$sharebuild_dir/examples/logfiles"
+if test ! -d $logfilesbuild_dir ; then
+    AC_MSG_NOTICE([creating directory $logfilesbuild_dir])
+    AS_MKDIR_P($logfilesbuild_dir)
+fi
+
+# Copying $srcdir/logfiles to logfilesbuild_dir
 if test -d $srcdir/logfiles ; then
-    echo "creating sample logfiles from source"
-    $CPRP -pr $srcdir/logfiles/*.rlog $sharebuild_dir/logfiles
+    AC_MSG_NOTICE([creating sample logfiles from source])
+    $CPRP -pr $srcdir/logfiles/*.rlog $logfilesbuild_dir
 fi
 
 AC_SUBST(libbuild_dir)
 AC_SUBST(binbuild_dir)
 AC_SUBST(sbinbuild_dir)
 AC_SUBST(sharebuild_dir)
+AC_SUBST(logfilesbuild_dir)
 AC_SUBST(gui_libbuild_dir)
 
 # Define bindir's executables, and pass them down to sbindir's install-package

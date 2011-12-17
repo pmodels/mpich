@@ -297,27 +297,29 @@ AC_SUBST(docbuild_dir)
 
 # VPATH build: Set the etcbuild_dir
 if test ! -d $etcbuild_dir -a -d $srcdir/etc ; then
-    echo "creating $etcbuild_dir from source"
+    AC_MSG_NOTICE([creating $etcbuild_dir from source])
     $CPRP -pr $srcdir/etc $etcbuild_dir
 fi
 AC_SUBST(etcbuild_dir)
 
 # VPATH build: Set the sharebuild_dir
 if test ! -d $sharebuild_dir ; then
-    AC_MSG_NOTICE([creating $sharebuild_dir])
+    AC_MSG_NOTICE([creating directory $sharebuild_dir])
     $MKDIR $sharebuild_dir
-    if test ! -d $sharebuild_dir/logfiles ; then
-        echo "creating $sharebuild_dir/logfiles"
-        $MKDIR $sharebuild_dir/logfiles
-    fi
 fi
 AC_SUBST(sharebuild_dir)
+
+logfilesbuild_dir="$sharebuild_dir/examples/logfiles"
+if test ! -d $logfilesbuild_dir ; then
+    AC_MSG_NOTICE([creating directory $logfilesbuild_dir])
+    AS_MKDIR_P($logfilesbuild_dir)
+fi
 
 # Copying $srcdir/logfiles to sharebuild_dir
 if test -d $srcdir/logfiles ; then
     AC_MSG_NOTICE([creating sample logfiles from source])
-    $CPRP -pr $srcdir/logfiles/*.clog* $sharebuild_dir/logfiles
-    $CPRP -pr $srcdir/logfiles/*.slog* $sharebuild_dir/logfiles
+    $CPRP -pr $srcdir/logfiles/*.clog* $logfilesbuild_dir
+    $CPRP -pr $srcdir/logfiles/*.slog* $logfilesbuild_dir
 fi
 
 AC_SUBST(sbinbuild_dir)
