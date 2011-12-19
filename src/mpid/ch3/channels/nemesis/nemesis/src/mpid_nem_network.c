@@ -27,6 +27,7 @@ int MPID_nem_choose_netmod(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
 
+    MPIU_Assert(MPIR_PARAM_NEMESIS_NETMOD != NULL);
     if (strcmp(MPIR_PARAM_NEMESIS_NETMOD, "") == 0)
     {
         /* netmod not specified, using the default */
