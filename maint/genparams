@@ -395,13 +395,16 @@ EOT
     }
     if ($p->{type} eq 'string') {
         print PARAM_C <<EOT;
-    if (${var_name} != NULL) {
+    if (tmp_str != NULL) {
         ${var_name} = MPIU_Strdup(tmp_str);
         ${ns}_assert(${var_name});
         if (${var_name} == NULL) {
             MPIU_CHKMEM_SETERR(mpi_errno, strlen(tmp_str), "dup of string for ${var_name}");
             goto fn_fail;
         }
+    }
+    else {
+        ${var_name} = NULL;
     }
 EOT
     }
