@@ -32,14 +32,16 @@ typedef struct
     /* Fields in MPID_Request (including structures within the request) */
     int req_status_offs;
     int req_cc_offs;
-    int req_dev_offs;
+    int req_mpid_offs;
     int req_next_offs;
     int req_tag_offs;
     int req_rank_offs;
     int req_context_id_offs;
-    int req_user_buf_offs;
-    int req_user_count_offs;
+    int req_userbuf_offs;
+    int req_userbufcount_offs;
     int req_datatype_offs;
+    int req_uebuf_offs;
+    int req_uebuflen_offs;
     
     /* Fields in MPIR_Sendq */
     int sendq_next_offs;
