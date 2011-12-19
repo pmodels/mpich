@@ -736,7 +736,7 @@ if BUILD_F90_LIB
 # We need to tell some compilers (e.g., Solaris f90) to look for modules in the
 # current directory when the source file is not in the working directory (i.e.,
 # in a VPATH build)
-AM_FCFLAGS += \@FCINCFLAG\@src/mpi/binding/f90
+AM_FCFLAGS += \@FCINCFLAG\@src/binding/f90
 
 lib_LTLIBRARIES += lib/lib\@MPILIBNAME\@f90.la
 
