@@ -2483,6 +2483,34 @@ int MPID_Comm_spawn_multiple(int, char *[], char* *[], int [], MPID_Info* [],
                              int, MPID_Comm *, MPID_Comm **, int []);
 
 /*@
+  MPID_Comm_group_failed - MPID entry point for MPI_Comm_group_failed
+
+  Input Parameters:
+. comm - communicator
+
+  Output Parameters
+. failed_group_ptr - group of failed processes
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr);
+
+/*@
+  MPID_Comm_remote_group_failed - MPID entry point for MPI_Comm_remote_group_failed
+
+  Input Parameters:
+. comm - intercommunicator
+
+  Output Parameters
+. failed_group_ptr - group of failed processes in comm's remote group
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_remote_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr);
+
+/*@
   MPID_Send - MPID entry point for MPI_Send
 
   Notes:
@@ -3882,6 +3910,8 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
                                MPID_Comm **new_intercomm_ptr);
 int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
 int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr);
+int MPIR_Comm_group_failed_impl(MPID_Comm *comm, MPID_Group **failed_group_ptr);
+int MPIR_Comm_remote_group_failed_impl(MPID_Comm *comm, MPID_Group **failed_group_ptr);
 int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **newcomm_ptr);
 int MPIR_Comm_split_type_impl(MPID_Comm *comm_ptr, int split_type, int key, MPID_Info *info_ptr,
                               MPID_Comm **newcomm_ptr);

@@ -1105,6 +1105,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_remote_size %C %p:MPI_Comm_remote_size(%C, size=%p) failed
 **mpi_comm_remote_group:MPI_Comm_remote_group failed
 **mpi_comm_remote_group %C %p:MPI_Comm_remote_group(%C, group=%p) failed
+**mpi_comm_remote_group_failed:MPIX_Comm_remote_group_failed failed
+**mpi_comm_remote_group_failed %C %p:MPIX_Comm_remote_group_failed(%C, group=%p) failed
+**mpi_comm_group_failed:MPIX_Comm_group_failed failed
+**mpi_comm_group_failed %C %p:MPIX_Comm_group_failed(%C, group=%p) failed
 **mpi_intercomm_create:MPI_Intercomm_create failed
 **mpi_intercomm_create %C %d %C %d %d %p:MPI_Intercomm_create(%C, local_leader=%d, %C, remote_leader=%d, tag=%d, newintercomm=%p) failed
 **mpi_intercomm_merge:MPI_Intercomm_merge failed

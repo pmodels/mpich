@@ -801,22 +801,11 @@ guidelines on what can be expected in this feature:
 
  - PROCESS MANAGER: If used with the hydra process manager, hydra will
    detect failed processes and notify the MPICH2 library.  Users can
-   query the list of failed processes using the
-   MPICH_ATTR_FAILED_PROCESSES predefined attribute on MPI_COMM_WORLD.
-   The attribute value is an integer array containing the ranks of the
-   failed processes.  The array is terminated by MPI_PROC_NULL.
-
-       MPICH2 release specific note: The user needs to declare the
-       following extern within the application in order to use the
-       attribute (this ideally should be added to mpi.h, but has not
-       been done so, to preserve ABI compatibility in the 1.3.x
-       release series):
-
-             extern int MPICH_ATTR_FAILED_PROCESSES;
-
-       MPICH2 release specific note: The MPICH_ATTR_FAILED_PROCESSES
-       attribute is currently only defined on MPI_COMM_WORLD, but not
-       on other communicators.
+   query the list of failed processes using MPIX_Comm_group_failed().
+   This functions returns a group consisting of the failed processes
+   in the communicator.  The function MPIX_Comm_remote_group_failed()
+   is provided for querying failed processes in the remote processes
+   of an intercommunicator.
 
    Note that hydra by default will abort the entire application when
    any process terminates before calling MPI_Finalize.  In order to
@@ -831,15 +820,8 @@ guidelines on what can be expected in this feature:
    this signal to be notified of failed processes.  If the application
    replaces the library's signal handler with its own, the application
    must be sure to call the library's handler from it's own
-   handler. Note that you cannot call any MPI function from inside a
+   handler.  Note that you cannot call any MPI function from inside a
    signal handler.
-
-   In future releases, the plan is to provide a call such as
-   MPIX_Failure_notify that will allow the user to register a callback
-   function that will be called on process failures. This mechanism
-   has not been added yet to preserve ABI compatibility in the 1.3.x
-   release series.
-
 
 Checkpoint and Restart
 ----------------------

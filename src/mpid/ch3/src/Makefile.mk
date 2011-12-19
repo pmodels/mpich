@@ -9,7 +9,7 @@
 ## MPID_THREAD_SOURCES was in this list in the simplemake world, but it's
 ## forbidden in automake: @MPID_THREAD_SOURCES@
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                              \
+lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/ch3/src/ch3u_buffer.c                         \
     src/mpid/ch3/src/ch3u_comm_spawn_multiple.c            \
     src/mpid/ch3/src/ch3u_handle_connection.c              \
@@ -28,6 +28,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                              \
     src/mpid/ch3/src/mpid_cancel_recv.c                    \
     src/mpid/ch3/src/mpid_cancel_send.c                    \
     src/mpid/ch3/src/mpid_comm_disconnect.c                \
+    src/mpid/ch3/src/mpid_comm_group_failed.c              \
     src/mpid/ch3/src/mpid_comm_spawn_multiple.c            \
     src/mpid/ch3/src/mpid_finalize.c                       \
     src/mpid/ch3/src/mpid_get_universe_size.c              \

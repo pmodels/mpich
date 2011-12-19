@@ -122,9 +122,6 @@ int MPID_Finalize(void)
     mpi_errno = MPIDI_CH3_Finalize();
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-    MPIR_Comm_free_keyval_impl(MPICH_ATTR_FAILED_PROCESSES);
-    MPICH_ATTR_FAILED_PROCESSES = MPI_KEYVAL_INVALID;
-    
     /* Tell the process group code that we're done with the process groups.
        This will notify PMI (with PMI_Finalize) if necessary.  It
        also frees all PG structures, including the PG for COMM_WORLD, whose 

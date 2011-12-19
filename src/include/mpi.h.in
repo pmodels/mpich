@@ -206,9 +206,6 @@ typedef int MPI_Op;
 /* Upper bound on the overhead in bsend for each message buffer */
 #define MPI_BSEND_OVERHEAD @BSEND_OVERHEAD@
 
-/* keyval for COMM_WORLD attribute holding list of failed processes */
-extern int MPICH_ATTR_FAILED_PROCESSES;
-
 /* Topology types */
 typedef enum MPIR_Topo_type { MPI_GRAPH=1, MPI_CART=2, MPI_DIST_GRAPH=3 } MPIR_Topo_type;
 
@@ -996,6 +993,10 @@ int MPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 /* MPI-3 shared memory */
 int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
 
+/* MPI-3 FT */
+int MPIX_Comm_group_failed(MPI_Comm, MPI_Group *);
+int MPIX_Comm_remote_group_failed(MPI_Comm, MPI_Group *);
+
 /* MPI-3 noncollective communicator creation */
 int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm);
 
@@ -1108,6 +1109,8 @@ int PMPI_Group_size(MPI_Group, int *);
 int PMPI_Group_rank(MPI_Group, int *);
 int PMPI_Group_translate_ranks (MPI_Group, int, int *, MPI_Group, int *);
 int PMPI_Group_compare(MPI_Group, MPI_Group, int *);
+int PMPIX_Comm_group_failed(MPI_Comm, MPI_Group *);
+int PMPIX_Comm_remote_group_failed(MPI_Comm, MPI_Group *);
 int PMPI_Comm_group(MPI_Comm, MPI_Group *);
 int PMPI_Group_union(MPI_Group, MPI_Group, MPI_Group *);
 int PMPI_Group_intersection(MPI_Group, MPI_Group, MPI_Group *);

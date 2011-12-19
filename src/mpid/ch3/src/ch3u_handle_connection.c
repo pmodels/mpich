@@ -10,10 +10,14 @@
 #else
 #include "pmi.h"
 #endif
+#define utarray_oom() do { goto fn_oom; } while (0)
+#include "mpiu_utarray.h"
 
 /* Count the number of outstanding close requests */
 static volatile int MPIDI_Outstanding_close_ops = 0;
 int MPIDI_Failed_vc_count = 0;
+
+MPID_Group *MPIDI_Failed_procs_group = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_connection
@@ -400,8 +404,6 @@ int MPIDI_CH3U_VC_WaitForClose( void )
             ++c;                                                                                \
     } while (0)
 
-#define ALLOC_STEP 10
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Check_for_failed_procs
 #undef FCNAME
@@ -411,17 +413,22 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
     char *val;
-    int *attr_val = NULL, *ret;
     char *c;
     int len;
     char *kvsname;
     int rank, rank_hi;
     int i;
-    int alloc_len;
+    UT_array *failed_procs = NULL;
+    MPID_Group *local_group;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+
+    /* FIXME: Currently this only handles failed processes in
+       comm_world.  We need to fix hydra to include the pgid along
+       with the rank, then we need to create the failed group from
+       something bigger than comm_world. */
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvsname);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #ifdef USE_PMI2_API
@@ -443,16 +450,11 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     
     if (*val == '\0') {
         /* there are no failed processes */
-        attr_val = MPIU_Malloc(sizeof(int));
-        if (!attr_val) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(int), "attr_val"); goto fn_fail; }
-        *attr_val = MPI_PROC_NULL;
-        mpi_errno = MPIR_Comm_set_attr_impl(MPIR_Process.comm_world, MPICH_ATTR_FAILED_PROCESSES, attr_val, MPIR_ATTR_PTR);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIDI_Failed_procs_group = MPID_Group_empty;
         goto fn_exit;
     }
 
-    attr_val = MPIU_Malloc(sizeof(int) * ALLOC_STEP);
-    alloc_len = ALLOC_STEP;
+    utarray_new(failed_procs, &ut_int_icd);
     
     /* parse list of failed processes.  This is a comma separated list
        of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
@@ -471,14 +473,7 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
             MPIDI_PG_Get_vc(MPIDI_Process.my_pg, rank, &vc);
             mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            /* update the dead node attribute list */
-            if (alloc_len <= i) {
-                /* allocate more space */
-                ret = MPIU_Realloc(attr_val, sizeof(int) * (alloc_len + ALLOC_STEP));
-                if (!ret) { MPIU_CHKMEM_SETERR(mpi_errno, sizeof(int) * (alloc_len + ALLOC_STEP), "attr_val"); goto fn_fail; }
-                attr_val = ret;
-            }
-            attr_val[i] = rank;
+            utarray_push_back(failed_procs, &rank);
             ++i;
             ++rank;
         }
@@ -487,25 +482,34 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
             break;
         ++c; /* skip ',' */
     }
-    /* terminate dead node attribute list with an MPI_PROC_NULL */
-    if (alloc_len <= i) {
-        /* allocate more space */
-        ret = MPIU_Realloc(attr_val, alloc_len + ALLOC_STEP);
-        if (!ret) { MPIU_CHKMEM_SETERR(mpi_errno, alloc_len + ALLOC_STEP, attr_val); goto fn_fail; }
-        attr_val = ret;
-    }
-    attr_val[i] = MPI_PROC_NULL;
 
-    mpi_errno = MPIR_Comm_set_attr_impl(MPIR_Process.comm_world, MPICH_ATTR_FAILED_PROCESSES, attr_val, MPIR_ATTR_PTR);
+    /* free old group */
+    if (MPIDI_Failed_procs_group != MPID_Group_empty) {
+        mpi_errno = MPIR_Group_free_impl(MPIDI_Failed_procs_group);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+    /* Create group of failed processes for comm_world.  Failed groups
+       for other communicators can be created from this one using group_intersection. */
+    mpi_errno = MPIR_Comm_remote_group_impl(MPIR_Process.comm_world, &local_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_incl_impl(local_group, i, ut_int_array(failed_procs), &MPIDI_Failed_procs_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_free_impl(local_group);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
+    if (failed_procs)
+        utarray_free(failed_procs);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
     return mpi_errno;
+
+ fn_oom: /* out-of-memory handler for utarray operations */
+    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
  fn_fail:
-    if (attr_val)
-        MPIU_Free(attr_val);
     goto fn_exit;
 }
 

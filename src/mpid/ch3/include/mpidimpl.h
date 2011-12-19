@@ -45,6 +45,10 @@
 int gethostname(char *name, size_t len);
 # endif
 
+/* group of processes detected to have failed.  This is a subset of
+   comm_world group. */
+extern MPID_Group *MPIDI_Failed_procs_group;
+
 extern int MPIDI_Use_pmi2_api;
 
 #define MPIDI_CHANGE_VC_STATE(vc, new_state) do {               \
@@ -1434,10 +1438,6 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc);
    for connecting to a process through a port, used in implementing
    MPID_Comm_connect and accept */
 int MPIDI_CH3_Connect_to_root(const char *, MPIDI_VC_t **);
-
-/* keyval for COMM_WORLD attribute holding list of failed processes */
-extern int MPICH_ATTR_FAILED_PROCESSES;
-
 
 /*
  * Channel utility prototypes
