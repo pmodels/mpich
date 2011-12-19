@@ -6,3 +6,4 @@
 ##
 
 include $(top_srcdir)/src/mpix/mutex/Makefile.mk
+include $(top_srcdir)/src/mpix/comm/Makefile.mk
