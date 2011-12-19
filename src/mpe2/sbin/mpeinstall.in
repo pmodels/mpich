@@ -634,7 +634,7 @@ done
 
 if [ "$appendUninstall" = 0 ] ; then
     echo "$RM -f \${DESTDIR}$sbindir/mpeuninstall" >> $UNINSTALLFILE
-    echo "$RM -f $UNINSTALLFILE" >> $UNINSTALLFILE
+    echo "$RM -f \${DESTDIR}$UNINSTALLFILE" >> $UNINSTALLFILE
 fi
 
 # Add the directory removes to the UNINSTALL file

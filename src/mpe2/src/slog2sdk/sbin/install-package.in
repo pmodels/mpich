@@ -215,7 +215,7 @@ else
         if [ $failmode = "hard" ] ; then exit $rc ; fi
     else
         # store the destination installed filename 
-        filelist="$filelist "'${DESTDIR}'"$destfile"
+        filelist="$filelist $destfile"
     fi
 fi
 }
@@ -333,7 +333,7 @@ else
             if [ $failmode = "hard" ] ; then exit $rc ; fi
         else
             # store the destination fixed filename
-            filelist="$filelist "'${DESTDIR}'"$destfile"
+            filelist="$filelist $destfile"
         fi
     else
         if [ $verbose = 1 ] ; then echo "Fixup $1.in and install to $dest" ; fi
@@ -507,13 +507,13 @@ fi
 
 # Add the files to be removed to the UNINSTALLFILE
 for file in $filelist ; do
-    echo "$RM $file" >> $UNINSTALLFILE
+    echo "$RM \${DESTDIR}$file" >> $UNINSTALLFILE
 done
-echo "$RM $UNINSTALLFILE" >> $UNINSTALLFILE
+echo "$RM \${DESTDIR}$UNINSTALLFILE" >> $UNINSTALLFILE
 
 # Add the directories to be removed to the UNINSTALLFILE
 for dir in $dirlist ; do
-    echo "if [ -d $dir ] ; then rmdir $dir ; fi" >> $UNINSTALLFILE
+    echo "if [ -d \${DESTDIR}$dir ] ; then rmdir \${DESTDIR}$dir || true ; fi" >> $UNINSTALLFILE
 done
 
 #
