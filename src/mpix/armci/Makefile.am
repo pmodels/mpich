@@ -7,6 +7,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 
 lib_LTLIBRARIES = libarmci.la
 
+# Needed to connect with the GA build system
+noinst_LTLIBRARIES = libarmcii.la
+
 libarmci_la_SOURCES = $(top_srcdir)/src/buffer.c        \
                       $(top_srcdir)/src/debug.c         \
                       $(top_srcdir)/src/groups.c        \
@@ -29,6 +32,9 @@ libarmci_la_SOURCES = $(top_srcdir)/src/buffer.c        \
                       $(top_srcdir)/src/conflict_tree.c
 
 libarmci_la_LDFLAGS = -version-info $(libarmci_abi_version)
+
+libarmcii_la_SOURCES = $(libarmci_la_SOURCES)
+libarmcii_la_LDFLAGS = $(libarmci_abi_version)
 
 include_HEADERS = $(top_srcdir)/src/armci.h $(top_srcdir)/src/message.h \
         $(top_srcdir)/src/armcix.h

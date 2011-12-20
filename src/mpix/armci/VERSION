@@ -1,4 +1,5 @@
 # Version
+# ARMCI-MPI Revision number: 459
 ARMCI_VERSION=0.1
 
 # For libtool ABI versioning rules see:
