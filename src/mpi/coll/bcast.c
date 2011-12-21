@@ -840,8 +840,9 @@ fn_fail:
    Otherwise it invokes bcast_fn_ with the given args.
    
    NOTE: calls MPIU_ERR_POP on any failure, so a fn_fail label is needed. */
-#define MPIR_Bcast_fn_or_override(bcast_fn_,mpi_errno_,buffer_,count_,datatype_,root_,comm_ptr_,errflag_) \
+#define MPIR_Bcast_fn_or_override(bcast_fn_,mpi_errno_ret_,buffer_,count_,datatype_,root_,comm_ptr_,errflag_) \
     do {                                                                                         \
+        int mpi_errno_ = MPI_SUCCESS;                                                            \
         if (comm_ptr_->coll_fns != NULL && comm_ptr_->coll_fns->Bcast != NULL)                   \
         {                                                                                        \
             /* --BEGIN USEREXTENSION-- */                                                        \
@@ -853,11 +854,11 @@ fn_fail:
         {                                                                                        \
             mpi_errno_ = bcast_fn_(buffer_, count_, datatype_, root_, comm_ptr_, errflag_);      \
         }                                                                                        \
-        if (mpi_errno) {                                                                         \
+        if (mpi_errno_) {                                                                        \
             /* for communication errors, just record the error but continue */                   \
             *(errflag_) = TRUE;                                                                  \
-            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");                                    \
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);                                              \
+            MPIU_ERR_SET(mpi_errno_, MPI_ERR_OTHER, "**fail");                                   \
+            MPIU_ERR_ADD(mpi_errno_ret_, mpi_errno);                                             \
         }                                                                                        \
     } while (0)
 
@@ -867,6 +868,10 @@ fn_fail:
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_SMP_Bcast
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_SMP_Bcast(
         void *buffer, 
         int count, 
@@ -947,7 +952,7 @@ static int MPIR_SMP_Bcast(
         /* perform the internode broadcast */
         if (comm_ptr->node_roots_comm != NULL)
         {
-            MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
+            MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
                                       buffer, count, datatype,
                                       MPIU_Get_internode_rank(comm_ptr, root),
                                       comm_ptr->node_roots_comm, errflag);
@@ -956,7 +961,7 @@ static int MPIR_SMP_Bcast(
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL)
         {
-            MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
+            MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
                                       buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
         }
     }
@@ -976,7 +981,7 @@ static int MPIR_SMP_Bcast(
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
+                MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
                                           buffer, count, datatype,
                                           MPIU_Get_intranode_rank(comm_ptr, root),
                                           comm_ptr->node_comm, errflag);
@@ -987,14 +992,14 @@ static int MPIR_SMP_Bcast(
             {
                 if (MPIU_is_pof2(comm_ptr->node_roots_comm->local_size, NULL))
                 {
-                    MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_doubling_allgather, mpi_errno,
+                    MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_doubling_allgather, mpi_errno_ret,
                                               buffer, count, datatype,
                                               MPIU_Get_internode_rank(comm_ptr, root),
                                               comm_ptr->node_roots_comm, errflag);
                 }
                 else
                 {
-                    MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_ring_allgather, mpi_errno,
+                    MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_ring_allgather, mpi_errno_ret,
                                               buffer, count, datatype,
                                               MPIU_Get_internode_rank(comm_ptr, root),
                                               comm_ptr->node_roots_comm, errflag);
@@ -1008,7 +1013,7 @@ static int MPIR_SMP_Bcast(
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno,
+                MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
                                           buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
             }
         }

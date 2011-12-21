@@ -541,8 +541,8 @@ int MPIR_Err_create_code( int lastcode, int fatal, const char fcname[],
     int rc;
     va_list Argp;
     va_start(Argp, specific_msg);
-    MPIU_DBG_MSG_FMT(ERRHAND, TYPICAL, (MPIU_DBG_FDEST, "%sError created: %s(%d) %s", fatal ? "Fatal " : "",
-                                        fcname, line, generic_msg));
+    MPIU_DBG_MSG_FMT(ERRHAND, TYPICAL, (MPIU_DBG_FDEST, "%sError created: last=%#010x class=%#010x %s(%d) %s",
+                                        fatal ? "Fatal " : "", lastcode, error_class, fcname, line, generic_msg));
     rc = MPIR_Err_create_code_valist( lastcode, fatal, fcname, line,
 				      error_class, generic_msg, specific_msg,
 				      Argp );
@@ -874,6 +874,9 @@ static int checkErrcodeIsValid( int errcode )
     if (errcode <= MPIR_MAX_ERROR_CLASS_INDEX && errcode >= 0) return 0;
 
     convertErrcodeToIndexes( errcode, &ring_idx, &ring_id, &generic_idx );
+    MPIU_DBG_MSG_FMT(ERRHAND, VERBOSE, (MPIU_DBG_FDEST, "code=%#010x ring_idx=%d ring_id=%#010x generic_idx=%d",
+                                        errcode, ring_idx, ring_id, generic_idx));
+
     if (ring_idx < 0 || ring_idx >= MAX_ERROR_RING ||
 	ring_idx > max_error_ring_loc) return 1;
     if (ErrorRing[ring_idx].id != ring_id) return 2;
@@ -1715,6 +1718,12 @@ int MPIR_Err_create_code_valist( int lastcode, int fatal, const char fcname[],
 	    {
 		ErrorRing[ring_idx].location[0] = '\0';
 	    }
+            {
+                MPIU_DBG_MSG_FMT(ERRHAND,VERBOSE,(MPIU_DBG_FDEST, "New ErrorRing[%d]", ring_idx));
+                MPIU_DBG_MSG_FMT(ERRHAND,VERBOSE,(MPIU_DBG_FDEST, "    id         = %#010x", ErrorRing[ring_idx].id));
+                MPIU_DBG_MSG_FMT(ERRHAND,VERBOSE,(MPIU_DBG_FDEST, "    prev_error = %#010x", ErrorRing[ring_idx].prev_error));
+                MPIU_DBG_MSG_FMT(ERRHAND,VERBOSE,(MPIU_DBG_FDEST, "    user=%d", ErrorRing[ring_idx].use_user_error_code));
+            }
 	}
 	error_ring_mutex_unlock();
 
