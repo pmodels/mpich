@@ -97,7 +97,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
             int req_errno = MPI_SUCCESS;
 
             MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-            MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+            MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
             mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             goto fn_exit; /* this vc is closed now, just bail out */
@@ -112,7 +112,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
             } else {
                 int req_errno = MPI_SUCCESS;
                 MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 goto fn_exit; /* this vc is closed now, just bail out */
@@ -262,7 +262,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                     int req_errno = MPI_SUCCESS;
 
                     MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                    MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     goto fn_fail;
@@ -274,7 +274,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                     else {
                         int req_errno = MPI_SUCCESS;
                         MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                        MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                         goto fn_fail;
@@ -401,7 +401,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
                 int req_errno = MPI_SUCCESS;
 
                 MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 goto fn_fail;
@@ -413,7 +413,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
                 else {
                     int req_errno = MPI_SUCCESS;
                     MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                    MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -536,7 +536,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                     int req_errno = MPI_SUCCESS;
 
                     MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                    MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     goto fn_fail;
@@ -548,7 +548,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                     else {
                         int req_errno = MPI_SUCCESS;
                         MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                        MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                         goto fn_fail;
@@ -695,7 +695,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                     int req_errno = MPI_SUCCESS;
 
                     MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                    MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     goto fn_fail;
@@ -707,7 +707,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                     else {
                         int req_errno = MPI_SUCCESS;
                         MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                        MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
                         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                         goto fn_fail;

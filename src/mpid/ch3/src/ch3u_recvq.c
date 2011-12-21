@@ -455,13 +455,13 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
             MPIDI_VC_t *vc;
             MPIDI_Comm_get_vc(comm, source, &vc);
             if (vc->state == MPIDI_VC_STATE_MORIBUND) {
-                MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                MPIU_ERR_SET1(mpi_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 rreq->status.MPI_ERROR = mpi_errno;
                 MPIDI_CH3U_Request_complete(rreq);
                 goto lock_exit;
             }
         } else if (MPID_VCRT_Contains_failed_vc(comm->vcrt)) {
-            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**comm_fail");
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail");
             rreq->status.MPI_ERROR = mpi_errno;
             MPIDI_CH3U_Request_complete(rreq);
             goto lock_exit;
@@ -684,7 +684,7 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
     MPID_Request *next = (*req)->dev.next;
 
     if (*error == MPI_SUCCESS)
-        MPIU_ERR_SET1(*error, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", rank);
+        MPIU_ERR_SET1(*error, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", rank);
 
     /* remove from queue */
     if (recvq_posted_head == *req)

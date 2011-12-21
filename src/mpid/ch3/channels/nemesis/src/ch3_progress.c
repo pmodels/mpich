@@ -1029,7 +1029,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
                 MPIDI_CH3I_shm_sendq.tail = prev;
 
             req->status.MPI_ERROR = MPI_SUCCESS;
-            MPIU_ERR_SET1(req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+            MPIU_ERR_SET1(req->status.MPI_ERROR, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
             
             MPID_Request_release(req); /* ref count was incremented when added to queue */
             MPIDI_CH3U_Request_complete(req);

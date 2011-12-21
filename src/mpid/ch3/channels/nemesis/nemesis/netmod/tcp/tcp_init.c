@@ -599,7 +599,7 @@ int MPID_nem_tcp_vc_terminate(MPIDI_VC_t *vc)
         /* VC is terminated as a result of a fault.  Complete
            outstanding sends with an error and terminate
            connection immediately. */
-        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+        MPIU_ERR_SET1(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
         mpi_errno = MPID_nem_tcp_error_out_send_queue(vc, req_errno);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         mpi_errno = MPID_nem_tcp_vc_terminated(vc);

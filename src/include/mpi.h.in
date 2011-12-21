@@ -626,9 +626,11 @@ typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
 #define MPI_ERR_DISP        52      /* */
 #define MPI_ERR_ASSERT      53      /* */
 
+#define MPI_ERR_PROC_FAIL_STOP 54   /* Process failure */
+
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 53     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 54     /* It is also helpful to know the
 				       last valid class */
 /* End of MPI's error classes */
 
