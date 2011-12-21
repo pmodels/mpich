@@ -180,5 +180,4 @@ C     the nearest neighbors that within a ring.
 
       call MTEST_Finalize(errs)
       call MPI_Finalize(ierr)
-      stop
       end
