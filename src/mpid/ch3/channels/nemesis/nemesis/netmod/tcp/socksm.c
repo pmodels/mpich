@@ -1643,7 +1643,7 @@ fn_exit:
 fn_fail: /* comm related failures jump here */
     {
 
-        MPIU_ERR_SET1(mpi_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", sc_vc->pg_rank);
+        MPIU_ERR_SET1(mpi_errno, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", sc_vc->pg_rank);
         mpi_errno = MPID_nem_tcp_cleanup_on_error(sc_vc, mpi_errno);
         if (mpi_errno) {
             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**tcp_cleanup_fail");
@@ -1824,11 +1824,11 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                 
                 MPIU_DBG_MSG(NEM_SOCK_DET, VERBOSE, "error polling fd, closing sc");
                 if (it_sc->vc) {
-                    MPIU_ERR_SET2(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d %s", it_sc->vc->pg_rank, err_str);
+                    MPIU_ERR_SET2(req_errno, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d %s", it_sc->vc->pg_rank, err_str);
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(it_sc->vc, req_errno);
                     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**tcp_cleanup_fail");
                 } else {
-                    MPIU_ERR_SET2(req_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail_conn", "**comm_fail_conn %s %s", CONN_STATE_STR[it_sc->state.cstate], err_str);
+                    MPIU_ERR_SET2(req_errno, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail_conn", "**comm_fail_conn %s %s", CONN_STATE_STR[it_sc->state.cstate], err_str);
                     mpi_errno = close_cleanup_and_free_sc_plfd(it_sc);
                     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**tcp_cleanup_fail");
                 }
