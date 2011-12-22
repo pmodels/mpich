@@ -7,6 +7,7 @@
 
 mpi_sources +=					\
     src/mpix/comm/comm_group_failed.c		\
+    src/mpix/comm/comm_reenable_anysource.c     \
     src/mpix/comm/comm_remote_group_failed.c
 
 noinst_HEADERS += src/mpi/comm/mpicomm.h

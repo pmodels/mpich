@@ -11,6 +11,7 @@
 
 lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/ch3/src/ch3u_buffer.c                         \
+    src/mpid/ch3/src/ch3u_comm.c                           \
     src/mpid/ch3/src/ch3u_comm_spawn_multiple.c            \
     src/mpid/ch3/src/ch3u_handle_connection.c              \
     src/mpid/ch3/src/ch3u_handle_recv_pkt.c                \
@@ -29,6 +30,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/ch3/src/mpid_cancel_send.c                    \
     src/mpid/ch3/src/mpid_comm_disconnect.c                \
     src/mpid/ch3/src/mpid_comm_group_failed.c              \
+    src/mpid/ch3/src/mpid_comm_reenable_anysource.c        \
     src/mpid/ch3/src/mpid_comm_spawn_multiple.c            \
     src/mpid/ch3/src/mpid_finalize.c                       \
     src/mpid/ch3/src/mpid_get_universe_size.c              \

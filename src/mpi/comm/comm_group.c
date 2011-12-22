@@ -34,7 +34,9 @@ int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
     MPID_VCR   *local_vcr;
     int i, lpid, n;
     int comm_world_size = MPIR_Process.comm_world->local_size;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_GROUP_IMPL);
 
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_GROUP_IMPL);
     /* Create a group if necessary and populate it with the
        local process ids */
     if (!comm_ptr->local_group) {
@@ -77,6 +79,7 @@ int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
     MPIR_Group_add_ref( comm_ptr->local_group );
 
  fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_GROUP_IMPL);
     return mpi_errno;
  fn_fail:
 

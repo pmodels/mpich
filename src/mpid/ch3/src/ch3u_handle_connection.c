@@ -395,6 +395,35 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME terminate_failed_VCs
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int terminate_failed_VCs(MPID_Group *new_failed_group)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIDI_STATE_DECL(MPID_STATE_TERMINATE_FAILED_VCS);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_TERMINATE_FAILED_VCS);
+
+    for (i = 0; i < new_failed_group->size; ++i) {
+        MPIDI_VC_t *vc;
+        /* terminate the VC */
+        /* FIXME: This won't work for dynamic procs */
+        MPIDI_PG_Get_vc(MPIDI_Process.my_pg, new_failed_group->lrank_to_lpid[i].lpid, &vc);
+        mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_TERMINATE_FAILED_VCS);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #define parse_rank(r_p) do {                                                                    \
         while (isspace(*c)) /* skip spaces */                                                   \
             ++c;                                                                                \
@@ -419,7 +448,7 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     int rank, rank_hi;
     int i;
     UT_array *failed_procs = NULL;
-    MPID_Group *local_group;
+    MPID_Group *world_group, *prev_failed_group, *new_failed_group;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
 
@@ -468,11 +497,6 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
         } else
             rank_hi = rank;
         while (rank <= rank_hi) {
-            MPIDI_VC_t *vc;
-            /* terminate the VC */
-            MPIDI_PG_Get_vc(MPIDI_Process.my_pg, rank, &vc);
-            mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             utarray_push_back(failed_procs, &rank);
             ++i;
             ++rank;
@@ -483,22 +507,38 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
         ++c; /* skip ',' */
     }
 
-    /* free old group */
-    if (MPIDI_Failed_procs_group != MPID_Group_empty) {
-        mpi_errno = MPIR_Group_free_impl(MPIDI_Failed_procs_group);
+    /* save reference to previous group so we can identify new failures */
+    prev_failed_group = MPIDI_Failed_procs_group;
+
+    /* Create group of failed processes for comm_world.  Failed groups for other
+       communicators can be created from this one using group_intersection. */
+    mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world, &world_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_incl_impl(world_group, i, ut_int_array(failed_procs), &MPIDI_Failed_procs_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_free_impl(world_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* get group of newly failed processes */
+    mpi_errno = MPIR_Group_difference_impl(MPIDI_Failed_procs_group, prev_failed_group, &new_failed_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_CH3I_Comm_handle_failed_procs(new_failed_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = terminate_failed_VCs(new_failed_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
+    mpi_errno = MPIR_Group_free_impl(new_failed_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* free prev group */
+    if (prev_failed_group != MPID_Group_empty) {
+        mpi_errno = MPIR_Group_free_impl(prev_failed_group);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-
-    /* Create group of failed processes for comm_world.  Failed groups
-       for other communicators can be created from this one using group_intersection. */
-    mpi_errno = MPIR_Comm_remote_group_impl(MPIR_Process.comm_world, &local_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Group_incl_impl(local_group, i, ut_int_array(failed_procs), &MPIDI_Failed_procs_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Group_free_impl(local_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();

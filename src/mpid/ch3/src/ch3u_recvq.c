@@ -460,7 +460,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                 MPIDI_CH3U_Request_complete(rreq);
                 goto lock_exit;
             }
-        } else if (MPID_VCRT_Contains_failed_vc(comm->vcrt)) {
+        } else if (!MPIDI_CH3I_Comm_AS_enabled(comm)) {
             MPIU_ERR_SET(mpi_errno, MPI_ERR_PROC_FAIL_STOP, "**comm_fail");
             rreq->status.MPI_ERROR = mpi_errno;
             MPIDI_CH3U_Request_complete(rreq);
@@ -659,20 +659,6 @@ static inline int req_uses_vc(const MPID_Request* req, const MPIDI_VC_t *vc)
     return vc == vc1;
 }
 
-/* returns TRUE iff the vc is part of the comm*/
-static inline int is_vc_in_comm(const MPIDI_VC_t *vc, const MPID_Comm *comm)
-{
-    int i;
-
-    for (i = 0; i < comm->remote_size; ++i) {
-        MPIDI_VC_t *vc1;
-        MPIDI_Comm_get_vc(comm, i, &vc1);
-        if (vc == vc1)
-            return TRUE;
-    }
-    return FALSE;
-}
-
 #undef FUNCNAME
 #define FUNCNAME dequeue_and_set_error
 #undef FCNAME
@@ -683,9 +669,13 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
 {
     MPID_Request *next = (*req)->dev.next;
 
-    if (*error == MPI_SUCCESS)
-        MPIU_ERR_SET1(*error, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", rank);
-
+    if (*error == MPI_SUCCESS) {
+        if (rank == MPI_PROC_NULL)
+            MPIU_ERR_SET(*error, MPI_ERR_PROC_FAIL_STOP, "**comm_fail");
+        else
+            MPIU_ERR_SET1(*error, MPI_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", rank);
+    }
+    
     /* remove from queue */
     if (recvq_posted_head == *req)
         recvq_posted_head = (*req)->dev.next;
@@ -701,9 +691,48 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
     /* set error and complete */
     (*req)->status.MPI_ERROR = *error;
     MPIDI_CH3U_Request_complete(*req);
+    MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
+                     (MPIU_DBG_FDEST, "set error of req %p (%#08x) to %#x and completing.",
+                      *req, (*req)->handle, *error));
     *req = next;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Complete_disabled_anysources
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Complete_disabled_anysources(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request *req, *prev_req;
+    int error = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
+    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+    
+    /* Check each request in the posted queue, and complete-with-error any
+       anysource requests posted on communicators that have disabled
+       anysources */
+    req = recvq_posted_head;
+    prev_req = NULL;
+    while (req) {
+        if (req->dev.match.parts.rank == MPI_ANY_SOURCE && !MPIDI_CH3I_Comm_AS_enabled(req->comm)) {
+            dequeue_and_set_error(&req, prev_req, &error, MPI_PROC_NULL); /* we don't know the rank of the failed proc */
+        } else {
+            prev_req = req;
+            req = req->dev.next;
+        }
+    }
+
+ fn_exit:
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
 
 
 #undef FUNCNAME
@@ -721,37 +750,12 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
 
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
 
-    /* check each req to see if the VC is part of that communicator */
+    /* check each req in the posted queue and complete-with-error any requests
+       using this VC. */
     req = recvq_posted_head;
     prev_req = NULL;
     while (req) {
         if (req->dev.match.parts.rank != MPI_ANY_SOURCE && req_uses_vc(req, vc)) {
-            /* this req is expected on the VC */
-            dequeue_and_set_error(&req, prev_req, &error, vc->pg_rank);
-        } else if (req->dev.match.parts.rank == MPI_ANY_SOURCE && is_vc_in_comm(vc, req->comm)) {
-            /* This req is an ANY_SOURCE and is expected on a communicator that includes the VC.
-               We need to dequeue all anysources posted in a communicator with a failed VC.  We
-               check whether the VC is in the communicator by iterating over the comm's VC table.
-               Since this may be expensive, now that we know the VC is in comm, we take the
-               opportunity to scan the rest of the posted recv queue for other anysources with
-               the same communicator.  Note that in the worst case this is O(N*M), where N is the
-               number of posted requests and M is the number of communicators.  This can happen
-               if every req is an anysource and uses a different communicator.  We can possibly
-               conditionally execute the optimization based on number of comms, number of posted
-               requests and communicator size. */
-            MPID_Request *as_req = req->dev.next;
-            MPID_Request *prev_as_req = req;
-            /* First remove any AS recvs on this comm that were posted AFTER this req */
-            while (as_req) {
-                if (as_req->comm == req->comm && as_req->dev.match.parts.rank == MPI_ANY_SOURCE) {
-                    dequeue_and_set_error(&as_req, prev_as_req, &error, vc->pg_rank);
-                } else {
-                    prev_as_req = as_req;
-                    as_req = as_req->dev.next;
-                }
-            }
-            /* Now remove this req.  We do this in this order to make it easier to keep track of
-               req and prev_req pointers */
             dequeue_and_set_error(&req, prev_req, &error, vc->pg_rank);
         } else {
             prev_req = req;

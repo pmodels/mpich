@@ -39,11 +39,6 @@ int  MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq);
 
 #include "mpid_nem_post.h"
 
-/* communicator creation/descruction hooks */
-
-int MPIDI_CH3I_comm_create (MPID_Comm *new_comm);
-int MPIDI_CH3I_comm_destroy (MPID_Comm *new_comm);
-
 /* rendezvous hooks */
 int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count, MPI_Datatype datatype, int dt_contig,
                           MPIDI_msg_sz_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPID_Comm * comm, int context_offset);

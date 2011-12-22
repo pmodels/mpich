@@ -35,7 +35,8 @@ static MPID_Collops collective_functions = {
 #define FUNCNAME MPIDI_CH3I_comm_create
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_comm_create (MPID_Comm *comm)
+ATTRIBUTE((unused))
+static int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
@@ -62,7 +63,8 @@ int MPIDI_CH3I_comm_create (MPID_Comm *comm)
 #define FUNCNAME MPIDI_CH3I_comm_destroy
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_comm_destroy (MPID_Comm *comm)
+ATTRIBUTE((unused))
+static int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
@@ -317,9 +319,13 @@ int MPID_nem_coll_barrier_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_COLL_BARRIER_INIT);
 
-/*     mpi_errno = MPIDI_CH3I_comm_create (MPIR_Process.comm_world); */
-/*     if (mpi_errno) MPIU_ERR_POP (mpi_errno); */
-
+#ifdef ENABLED_SHM_COLLECTIVES
+    mpi_errno = MPIDI_CH3U_Comm_register_create_hook(MPIDI_CH3I_comm_create, NULL);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(MPIDI_CH3I_comm_destroy, NULL);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#endif
+    
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_COLL_BARRIER_INIT);
     return mpi_errno;
 }

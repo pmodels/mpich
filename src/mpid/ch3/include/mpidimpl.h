@@ -1453,6 +1453,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 					   int * found);
 int MPIDI_CH3U_Recvq_count_unexp(void);
 int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc);
+int MPIDI_CH3U_Complete_disabled_anysources(void);
 
 
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
@@ -1470,6 +1471,18 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreqp);
 int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreqp);
 int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete);
 int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete);
+
+/* Initialization routine for ch3u_comm.c */
+int MPIDI_CH3I_Comm_init(void);
+
+int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs);
+
+/* The functions below allow channels to register functions to be
+   called immediately after a communicator has been created, and
+   immediately before a communicator is to be destroyed.
+ */
+int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPID_Comm *, void *), void *param);
+int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPID_Comm *, void *), void *param);
 
 /* FIXME: This is a macro! */
 #ifndef MPIDI_CH3_Request_add_ref

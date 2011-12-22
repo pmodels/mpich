@@ -2511,6 +2511,20 @@ int MPID_Comm_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr);
 int MPID_Comm_remote_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr);
 
 /*@
+  MPID_Comm_reenable_anysource - MPID entry point for MPI_Comm_reenable_anysource
+
+  Input Parameters:
+. comm - communicator
+
+  Output Parameters
+. failed_group_ptr - group of failed processes
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_reenable_anysource(MPID_Comm *comm, MPID_Group **failed_group_ptr);
+
+/*@
   MPID_Send - MPID entry point for MPI_Send
 
   Notes:
@@ -3372,11 +3386,6 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect);
   MPID_VCRT_Get_ptr - 
   @*/
 int MPID_VCRT_Get_ptr(MPID_VCRT vcrt, MPID_VCR **vc_pptr);
-
-/*@
-  MPID_VCRT_Contains_failed_vc - returns TRUE iff a VC in this VCRT is in MORUBIND state
-  @*/
-int MPID_VCRT_Contains_failed_vc(MPID_VCRT vcrt);
 
 /*@
   MPID_VCR_Dup - Create a duplicate reference to a virtual connection

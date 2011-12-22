@@ -102,10 +102,14 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_INIT);
 
+    /* initialization routine for ch3u_comm.c */
+    mpi_errno = MPIDI_CH3I_Comm_init();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     /* init group of failed processes, and set finalize callback */
     MPIDI_Failed_procs_group = MPID_Group_empty;
     MPIR_Add_finalize(finalize_failed_procs_group, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
-    
+
     /* FIXME: This is a good place to check for environment variables
        and command line options that may control the device */
     MPIDI_Use_pmi2_api = FALSE;

@@ -32,7 +32,9 @@ int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, lpid, n;
-            
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
     /* Create a group and populate it with the local process ids */
     if (!comm_ptr->remote_group) {
         n = comm_ptr->remote_size;
@@ -56,6 +58,7 @@ int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
     MPIR_Group_add_ref( comm_ptr->remote_group );
 
  fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
     return mpi_errno;
  fn_fail:
 

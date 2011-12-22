@@ -995,12 +995,13 @@ int MPIX_Iexscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 /* MPI-3 shared memory */
 int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
 
+/* MPI-3 noncollective communicator creation */
+int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm);
+
 /* MPI-3 FT */
 int MPIX_Comm_group_failed(MPI_Comm, MPI_Group *);
 int MPIX_Comm_remote_group_failed(MPI_Comm, MPI_Group *);
-
-/* MPI-3 noncollective communicator creation */
-int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm);
+int MPIX_Comm_reenable_anysource(MPI_Comm, MPI_Group *);
 
 /* MPI-3 MPI_T interface, currently available as MPIX_T extensions */
 int MPIX_T_init_thread(int required, int *provided);
@@ -1112,6 +1113,7 @@ int PMPI_Group_rank(MPI_Group, int *);
 int PMPI_Group_translate_ranks (MPI_Group, int, int *, MPI_Group, int *);
 int PMPI_Group_compare(MPI_Group, MPI_Group, int *);
 int PMPIX_Comm_group_failed(MPI_Comm, MPI_Group *);
+int PMPIX_Comm_reenable_anysource(MPI_Comm, MPI_Group *);
 int PMPIX_Comm_remote_group_failed(MPI_Comm, MPI_Group *);
 int PMPI_Comm_group(MPI_Comm, MPI_Group *);
 int PMPI_Group_union(MPI_Group, MPI_Group, MPI_Group *);

@@ -149,6 +149,34 @@ typedef struct MPIDI_CH3_PktGeneric { int32_t kind; int32_t *pktptrs[1]; int32_t
  * by the channel instance.
  */
 
+#define HAVE_DEV_COMM_HOOK
+#define MPID_Dev_comm_create_hook(comm_) MPIDI_CH3I_Comm_create_hook(comm_)
+#define MPID_Dev_comm_destroy_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
+
+#define MPIDI_CH3I_Comm_AS_enabled(comm) ((comm)->ch.anysource_enabled)
+
+typedef struct MPIDI_CH3I_comm
+{
+    /* FIXME we should really use the copy of these values that is stored in the
+       MPID_Comm structure */
+    int local_size;      /* number of local procs in this comm */
+    int local_rank;      /* my rank among local procs in this comm */
+    int *local_ranks;    /* list of ranks of procs local to this node */
+    int external_size;   /* number of procs in external set */
+    int external_rank;   /* my rank among external set, or -1 if I'm not in external set */
+    int *external_ranks; /* list of ranks of procs in external set */
+    int *intranode_table;
+    int *internode_table;
+    int coll_active;        /* TRUE iff this communicator is collectively active */
+    int anysource_enabled;  /* TRUE iff this anysource recvs can be posted on this communicator */
+    struct MPID_nem_barrier_vars *barrier_vars; /* shared memory variables used in barrier */
+    struct MPID_Comm *next; /* next pointer for list of communicators */
+    struct MPID_Comm *prev; /* prev pointer for list of communicators */
+}
+MPIDI_CH3I_comm_t;
+
+#define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t ch;
+
 #ifndef HAVE_MPIDI_VCRT
 #define HAVE_MPIDI_VCRT
 typedef struct MPIDI_VCRT * MPID_VCRT;
