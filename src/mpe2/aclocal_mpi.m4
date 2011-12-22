@@ -4,7 +4,7 @@ dnl                       HEADERS, MPI_VARS, MPI_FUNC,
 dnl                       [action if working], [action if not working] )
 dnl - MPI_CC     is the MPI parallel compiler, like mpich/mpicc, AIX/mpcc
 dnl - MPI_CFLAGS is the CFLAGS to MPI_CC, like "-I/usr/include" for mpi.h
-dnl - MPI_CLIBS  is the LIBS to MPI_CC, like "-L/usr/lib -lmpi" for libmpi.a
+dnl - MPI_LIBS   is the LIBS to MPI_CC, like "-L/usr/lib -lmpi" for libmpi.a
 dnl - HEADERS    is the headers, e.g. <pthread.h>.
 dnl - MPI_VARS   is the the declaration of variables needed to call MPI_FUNC
 dnl - MPI_FUNC   is the body of MPI function call to be checked for existence
@@ -19,17 +19,17 @@ dnl   so input variables can be CC, CFLAGS or LIBS
     pac_MPI_CC="$1"
     pac_MPI_CFLAGS="$2"
     pac_MPI_LIBS="$3"
-    AC_LANG_SAVE
-    AC_LANG_C
 dnl - save the original environment
     pac_saved_CC="$CC"
     pac_saved_CFLAGS="$CFLAGS"
     pac_saved_LIBS="$LIBS"
 dnl - set the parallel compiler environment
+    AC_LANG_PUSH([C])
     CC="$pac_MPI_CC"
     CFLAGS="$pac_MPI_CFLAGS"
     LIBS="$pac_MPI_LIBS"
-    AC_LINK_IFELSE( [ AC_LANG_PROGRAM( [
+    AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([
 /* <stdlib.h> is included to get NULL defined */
 #if defined( STDC_HEADERS ) || defined( HAVE_STDLIB_H )
 #include <stdlib.h>
@@ -42,21 +42,22 @@ dnl - set the parallel compiler environment
 $4
 #include "mpi.h"
 
-    ], [
+        ],[
     int argc; char **argv;
     $5 ; 
     MPI_Init(&argc, &argv);
     $6 ;
     MPI_Finalize();
-                    ] ) ], pac_mpi_working=yes, pac_mpi_working=no )
+        ])
+    ],[pac_mpi_working=yes],[pac_mpi_working=no])
     CC="$pac_saved_CC"
     CFLAGS="$pac_saved_CFLAGS"
     LIBS="$pac_saved_LIBS"
-    AC_LANG_RESTORE
+    AC_LANG_POP([C])
     if test "$pac_mpi_working" = "yes" ; then
-       ifelse([$7],,:,[$7])
+        ifelse([$7],,:,[$7])
     else
-       ifelse([$8],,:,[$8])
+        ifelse([$8],,:,[$8])
     fi
 ])dnl
 dnl
@@ -79,28 +80,30 @@ dnl   so input variables can be F77, FFLAGS or LIBS
     pac_MPI_F77="$1"
     pac_MPI_FFLAGS="$2"
     pac_MPI_LIBS="$3"
-    AC_LANG_SAVE
-    AC_LANG_FORTRAN77
 dnl - save the original environment
     pac_saved_F77="$F77"
     pac_saved_FFLAGS="$FFLAGS"
     pac_saved_LIBS="$LIBS"
 dnl - set the parallel compiler environment for TRY_LINK
+    AC_LANG_PUSH([Fortran 77])
     F77="$pac_MPI_F77"
     FFLAGS="$pac_MPI_FFLAGS"
     LIBS="$pac_MPI_LIBS"
-    AC_LINK_IFELSE( [ AC_LANG_PROGRAM( [], [
+    AC_LINK_IFELSE([
+        AC_LANG_SOURCE([
 	include 'mpif.h'
 	integer pac_ierr
 	$4
 	call MPI_Init( pac_ierr )
 	$5
 	call MPI_Finalize( pac_ierr )
-                    ] ) ], pac_mpi_working=yes, pac_mpi_working=no )
+	end
+        ])
+    ],[pac_mpi_working=yes],[pac_mpi_working=no])
     F77="$pac_saved_F77"
     FFLAGS="$pac_saved_FFLAGS"
     LIBS="$pac_saved_LIBS"
-    AC_LANG_RESTORE
+    AC_LANG_POP([Fortran 77])
     if test "$pac_mpi_working" = "yes" ; then
        ifelse([$6],,:,[$6])
     else
@@ -129,8 +132,7 @@ dnl   so input variables can be CC, CFLAGS or LIBS
     pac_SER_CC="$3"
     pac_SER_CFLAGS="$4"
     pac_SER_LIBS="$5"
-    AC_LANG_SAVE
-    AC_LANG_C
+    AC_LANG_PUSH([C])
 dnl - save the original environment
     pac_saved_CC="$CC"
     pac_saved_CFLAGS="$CFLAGS"
@@ -139,31 +141,26 @@ dnl - set the parallel compiler environment
     CC="$pac_MPI_CC"
     CFLAGS="$pac_MPI_CFLAGS"
 dnl
-    rm -rf conftest*
-    cat > conftest.c <<EOF
-#include "confdefs.h"
-$6
-EOF
-dnl
-    pac_compile='${CC-cc} -c $CFLAGS conftest.c 1>&AC_FD_CC'
-    if AC_TRY_EVAL(pac_compile) && test -s conftest.${ac_objext} ; then
+    pac_mpi_working=no
+    AC_COMPILE_IFELSE([
+        AC_LANG_SOURCE([$6])
+    ], [
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         CC="$pac_SER_CC"
         CFLAGS="$pac_SER_CFLAGS"
-        LIBS="$pac_SER_LIBS"
-	pac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $LDFLAGS conftest.${ac_objext} $LIBS 1>&AC_FD_CC'
-        if AC_TRY_EVAL(pac_link) && test -s conftest${ac_exeext} && (./conftest${ac_exeext} ; exit) 2>/dev/null ; then
-	    pac_mpi_working=yes
-	else
-	    pac_mpi_working=no
-	fi
-    else
-        pac_mpi_working=no
-    fi
-    rm -rf conftest*
+        LIBS="pac_conftest.$OBJEXT $pac_SER_LIBS"
+dnl -   To use pac_conftest.$OBJEXT as a main, a conftest.c is needed.
+dnl -   Theoretically, a blank source file is all we need, but some compiler
+dnl -   may complain, so use a irrelevent function here. 
+        AC_RUN_IFELSE([
+            AC_LANG_SOURCE([void foo(){}])
+        ], [pac_mpi_working=yes])
+        rm -f pac_conftest.$OBJEXT
+    ])
     CC="$pac_saved_CC"
     CFLAGS="$pac_saved_CFLAGS"
     LIBS="$pac_saved_LIBS"
-    AC_LANG_RESTORE
+    AC_LANG_POP([C])
     if test "$pac_mpi_working" = "yes" ; then
        ifelse([$7],,:,[$7])
     else
@@ -192,8 +189,7 @@ dnl   so input variables can be F77, FFLAGS or LIBS
     pac_SER_F77="$3"
     pac_SER_FFLAGS="$4"
     pac_SER_LIBS="$5"
-    AC_LANG_SAVE
-    AC_LANG_FORTRAN77
+    AC_LANG_PUSH([Fortran 77])
 dnl - save the original environment
     pac_saved_F77="$F77"
     pac_saved_FFLAGS="$FFLAGS"
@@ -202,30 +198,31 @@ dnl - set the parallel compiler environment
     F77="$pac_MPI_F77"
     FFLAGS="$pac_MPI_FFLAGS"
 dnl
-    rm -rf conftest*
-    cat > conftest.f <<EOF
-	$6
-EOF
-dnl
-    pac_compile='${F77-f77} -c $FFLAGS conftest.f 1>&AC_FD_CC'
-    if AC_TRY_EVAL(pac_compile) && test -s conftest.${ac_objext} ; then
+    pac_mpi_working=no
+    AC_COMPILE_IFELSE([
+        AC_LANG_SOURCE([
+        $6
+        ])
+    ], [
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
         F77="$pac_SER_F77"
         FFLAGS="$pac_SER_FFLAGS"
-        LIBS="$pac_SER_LIBS"
-	pac_link='${F77-f77} -o conftest${ac_exeext} $FFLAGS $LDFLAGS conftest.${ac_objext} $LIBS 1>&AC_FD_CC'
-        if AC_TRY_EVAL(pac_link) && test -s conftest${ac_exeext} && (./conftest${ac_exeext} ; exit) 2>/dev/null ; then
-	    pac_mpi_working=yes
-	else
-	    pac_mpi_working=no
-	fi
-    else
-        pac_mpi_working=no
-    fi
-    rm -rf conftest*
+        LIBS="pac_f77conftest.$OBJEXT $pac_SER_LIBS"
+dnl -   To use pac_f77conftest.$OBJEXT as a main, a conftest.f is needed.
+dnl -   Theoretically, a blank source file is all we need, but some compiler
+dnl -   may complain, e.g. af77/af90, so use a irrelevent subroutine here. 
+        AC_RUN_IFELSE([
+            AC_LANG_SOURCE([
+                subroutine foo()
+                end
+            ])
+        ], [pac_mpi_working=yes])
+        rm -f pac_f77conftest.$OBJEXT
+    ])
     F77="$pac_saved_F77"
     FFLAGS="$pac_saved_FFLAGS"
     LIBS="$pac_saved_LIBS"
-    AC_LANG_RESTORE
+    AC_LANG_POP([Fortran 77])
     if test "$pac_mpi_working" = "yes" ; then
        ifelse([$7],,:,[$7])
     else
@@ -265,8 +262,6 @@ dnl   so input variables can be CC, CFLAGS or LIBS
     pac_SER_CFLAGS="$6"
     pac_SER_LIBS="$7"
 dnl
-    AC_LANG_SAVE
-    AC_LANG_FORTRAN77
 dnl - save the original environment
     pac_saved_F77="$F77"
     pac_saved_FFLAGS="$FFLAGS"
@@ -275,49 +270,43 @@ dnl - set the parallel compiler environment
     F77="$pac_MPI_F77"
     FFLAGS="$pac_MPI_FFLAGS"
 dnl
-    rm -f conftest*
-    cat > conftestf.f <<EOF
+    AC_LANG_PUSH([Fortran 77])
+    AC_COMPILE_IFELSE([
+        AC_LANG_SOURCE([
 	$8
-EOF
-dnl - try compile f77 program
-    pac_Fcompile='${F77-f77} -c $FFLAGS conftestf.f 1>&AC_FD_CC'
-    if AC_TRY_EVAL(pac_Fcompile) && test -s conftestf.${ac_objext} ; then
-        pac_mpi_working=yes
-    else
+        ])
+    ], [
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+dnl   - set the parallel compiler environment
+        AC_LANG_PUSH([C])
+        CC="$pac_MPI_CC"
+        CFLAGS="$pac_MPI_CFLAGS"
         pac_mpi_working=no
-    fi
+        AC_COMPILE_IFELSE([
+            AC_LANG_SOURCE([$9])
+        ], [
+            PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+            CC="$pac_SER_CC"
+            CFLAGS="$pac_SER_CFLAGS"
+            LIBS="pac_conftest.$OBJEXT pac_f77conftest.$OBJEXT $pac_SER_LIBS"
+dnl -       To use pac_conftest.$OBJEXT as a main, a conftest.c is needed.
+dnl -       Theoretically, a blank source file is all we need, but some compiler
+dnl -       may complain, so use a irrelevent function here. 
+            AC_RUN_IFELSE([
+                AC_LANG_SOURCE([ void foo(){} ])
+            ], [pac_mpi_working=yes])
+            rm -f pac_conftest.$OBJEXT
+        ])
+        CC="$pac_saved_CC"
+        CFLAGS="$pac_saved_CFLAGS"
+        LIBS="$pac_saved_LIBS"
+        AC_LANG_POP([C])
+        rm -f pac_f77conftest.$OBJEXT
+    ])
+    AC_LANG_POP([Fortran 77])
     F77="$pac_saved_F77"
     FFLAGS="$pac_saved_FFLAGS"
 dnl
-    AC_LANG_C
-dnl - set the parallel compiler environment
-    CC="$pac_MPI_CC"
-    CFLAGS="$pac_MPI_CFLAGS"
-dnl
-    cat > conftestc.c <<EOF
-#include "confdefs.h"
-$9
-EOF
-    pac_Ccompile='${CC-cc} -c $CFLAGS conftestc.c 1>&AC_FD_CC'
-dnl - try compile C program
-    if test "$pac_mpi_working" = "yes" && AC_TRY_EVAL(pac_Ccompile) && test -s conftestc.${ac_objext} ; then
-        CC="$pac_SER_CC"
-	CFLAGS="$pac_SER_CFLAGS"
-	LIBS="$pac_SER_LIBS"
-        pac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $LDFLAGS conftestc.${ac_objext} conftestf.${ac_objext} $LIBS 1>&AC_FD_CC'
-	if AC_TRY_EVAL(pac_link) && test -s conftest${ac_exeext} && (./conftest${ac_exeext} ; exit) 2>/dev/null ; then
-            pac_mpi_working=yes
-        else
-            pac_mpi_working=no
-        fi
-    else
-        pac_mpi_working=no
-    fi
-    rm -f conftest*
-    CC="$pac_saved_CC"
-    CFLAGS="$pac_saved_CFLAGS"
-    LIBS="$pac_saved_LIBS"
-    AC_LANG_RESTORE
     if test "$pac_mpi_working" = "yes" ; then
         ifelse([$10],,:,[$10])
     else
