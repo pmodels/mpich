@@ -92,7 +92,7 @@ appropriate libraries are determined.  These variables are first substituted
 in the Makefiles in the directories, mpe2/src/wrappers/test,
 mpe2/src/graphics/contrib/test and mpe2/src/collchk/test.  The Makefiles for
 mpe2/src/wrappers/test and mpe2/src/graphics/contrib/test are then installed
-into directory share/ as examples_logging/ and examples_graphics/ during the 
+into directory share/ as examples/logging/ and examples/graphics/ during the 
 final installation process.  The following are some of the crucial variables:
 
 LOG_LIBS     = library flag that links with the logging libraries
@@ -151,8 +151,9 @@ The final install directory contains the following subdirectories.
     bin/     contains all the utility programs that user needs to use.
     doc/     contains available MPE documentation, e.g. Jumpshot-4's userguide.
     sbin/    contains the MPE uninstall script to uninstall the installation.
-    share/   contains user read-only data.  Besides share/examples_logging/
-             and share/examples_graphics/, user usually does NOT need to know
+    share/   contains user read-only data.  Besides share/examples/logging/,
+             share/examples/graphics/, share/examples/collchk, and
+             share/examples/logfiles, user usually does NOT need to know
              the details of other subdirectories.
 
 In terms of usage of MPE, user usually only need to know about the files
@@ -221,7 +222,7 @@ MPE_Init_log() and MPE_Finish_log() need to be used before and after all
 the MPE calls.   Sample programs cpilog.c and fpilog.f are available to 
 illustrate the use of these MPE routines.  They are in the MPE 
 source directory, mpe2/src/wrappers/test or the installed directory, 
-share/examples_logging to illustrate the use of these MPE routines.  
+share/examples/logging to illustrate the use of these MPE routines.  
 For futher linking information, see section "Convenient Compiler Wrappers".
 
 For undefined user-defined state, i.e. corresponding MPE_Describe_state() 
@@ -366,11 +367,11 @@ DISPLAY: determines where MPE X11 graphics on each process is connected to.
 VI. c) EXAMPLE MAKEFILE 
 -----------------------
 
-The install directories, share/examples_logging, share/example_graphics and
-share/example_collchk contain some very useful and simple example programs.
+The install directories, share/examples/logging, share/examples/graphics and
+share/examples/collchk contain some very useful and simple example programs.
 The Makefiles in these directories illustrate the usage of MPE routines
 and how to link with various MPE libraries. In most cases, users can simply
-copy the share/examples_logging/Makefile to their home directory, and do a
+copy the share/examples/logging/Makefile to their home directory, and do a
 "make" to compile the suggested targets.  Users don't need to copy the
 .c and .f files when MPE has been compiled with a MAKE that has VPATH
 support.  The created executables can be launched with mpiexec or mpirun
