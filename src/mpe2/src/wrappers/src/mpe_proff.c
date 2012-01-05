@@ -1390,16 +1390,19 @@ void mpi_testany_( MPI_Fint *count, MPI_Fint array_of_requests[],
 
     *__ierr = MPI_Testany((int)*count,lrequest,&lindex,&lflag,&c_status);
     if (lindex != -1) {
-        if (lflag && !*__ierr) {
+        /* When flag = false, *index = MPI_UNDEFINED, redundant test. */
+        if (!*__ierr && lflag && lindex != MPI_UNDEFINED) {
             array_of_requests[lindex] = MPI_Request_c2f(lrequest[lindex]);
         }
-     }
+    }
     if ((int)*count > MPIR_USE_LOCAL_ARRAY) 
         FREE( lrequest );
     
     *flag = MPIR_TO_FLOG(lflag);
-    /* See the description of waitany in the standard; the Fortran index ranges
-       are from 1, not zero */
+    /*
+       See the description of waitany in the standard;
+       Fortran index starts from 1, not 0.  Convert C index to Fortran index
+    */
     *index = (MPI_Fint)lindex;
     if ((int)*index >= 0)
         *index = *index + 1;
@@ -1489,20 +1492,22 @@ void mpi_testsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
 
         /* By checking for lrequest[l_indices[i] =  0, 
            we handle persistant requests */
-        for (i=0; i<(int)*incount; i++) {
-            if ( i < loutcount ) {
-                array_of_requests[l_indices[i]]
-                = MPI_Request_c2f(lrequest[l_indices[i]] );
-            }
-            else {
-                found = 0;
-                j = 0;
-                while ( (!found) && (j<loutcount) ) {
-                    if (l_indices[j++] == i)
-                        found = 1;
+        if (loutcount != MPI_UNDEFINED) {
+            for (i=0; i<(int)*incount; i++) {
+                if ( i < loutcount ) {
+                    array_of_requests[l_indices[i]]
+                    = MPI_Request_c2f(lrequest[l_indices[i]] );
                 }
-                if (!found)
-                    array_of_requests[i] = MPI_Request_c2f( lrequest[i] );
+                else {
+                    found = 0;
+                    j = 0;
+                    while ( (!found) && (j<loutcount) ) {
+                        if (l_indices[j++] == i)
+                            found = 1;
+                    }
+                    if (!found)
+                        array_of_requests[i] = MPI_Request_c2f( lrequest[i] );
+                }
             }
         }
     }
@@ -1510,15 +1515,17 @@ void mpi_testsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
         *__ierr = MPI_Testsome( (int)*incount, (MPI_Request *)0, &loutcount, 
                                 l_indices, c_status );
 
-    f_status = array_of_statuses;
-    for (i=0; i<loutcount; i++) {
-        if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
-        {
-            MPI_Status_c2f(&c_status[i], f_status );
-            f_status += MPER_F_MPI_STATUS_SIZE;
+    if (loutcount != MPI_UNDEFINED) {
+        f_status = array_of_statuses;
+        for (i=0; i<loutcount; i++) {
+            if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
+            {
+                MPI_Status_c2f(&c_status[i], f_status );
+                f_status += MPER_F_MPI_STATUS_SIZE;
+            }
+            if (l_indices[i] >= 0)
+                array_of_indices[i] = l_indices[i] + 1;
         }
-        if (l_indices[i] >= 0)
-            array_of_indices[i] = l_indices[i] + 1;
     }
     *outcount = (MPI_Fint)loutcount;
     if ((int)*incount > MPIR_USE_LOCAL_ARRAY) {
@@ -1898,7 +1905,7 @@ void mpi_waitany_( MPI_Fint *count, MPI_Fint array_of_requests[],
     *__ierr = MPI_Waitany((int)*count,lrequest,&lindex,&c_status);
 
     if (lindex != -1) {
-        if (!*__ierr) {
+        if (!*__ierr && lindex != MPI_UNDEFINED) {
             array_of_requests[lindex] = MPI_Request_c2f(lrequest[lindex]);
         }
     }
@@ -1907,8 +1914,10 @@ void mpi_waitany_( MPI_Fint *count, MPI_Fint array_of_requests[],
         FREE( lrequest );
     }
 
-    /* See the description of waitany in the standard; the Fortran index ranges
-       are from 1, not zero */
+    /* 
+       See the description of waitany in the standard;
+       Fortran index starts from 1, not 0.  Convert C index to Fortran index. 
+    */
     *index = (MPI_Fint)lindex;
     if ((int)*index >= 0) *index = (MPI_Fint)*index + 1;
     if ( status != MPER_F_MPI_STATUS_IGNORE )
@@ -1982,22 +1991,24 @@ void mpi_waitsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
 
 /* By checking for lrequest[l_indices[i]] = 0, 
    we handle persistant requests */
-        for (i=0; i<(int)*incount; i++) {
-            if ( i < loutcount) {
-                if (l_indices[i] >= 0) {
-                    array_of_requests[l_indices[i]]
-                    = MPI_Request_c2f( lrequest[l_indices[i]] );
+        if (loutcount != MPI_UNDEFINED) {
+            for (i=0; i<(int)*incount; i++) {
+                if ( i < loutcount) {
+                    if (l_indices[i] >= 0) {
+                        array_of_requests[l_indices[i]]
+                        = MPI_Request_c2f( lrequest[l_indices[i]] );
+                    }
                 }
-            }
-            else {
-                found = 0;
-                j = 0;
-                while ( (!found) && (j<loutcount) ) {
-                    if (l_indices[j++] == i)
-                        found = 1;
+                else {
+                    found = 0;
+                    j = 0;
+                    while ( (!found) && (j<loutcount) ) {
+                        if (l_indices[j++] == i)
+                            found = 1;
+                    }
+                    if (!found)
+                        array_of_requests[i] = MPI_Request_c2f( lrequest[i] );
                 }
-                if (!found)
-                    array_of_requests[i] = MPI_Request_c2f( lrequest[i] );
             }
         }
     }
@@ -2005,15 +2016,17 @@ void mpi_waitsome_( MPI_Fint *incount, MPI_Fint array_of_requests[],
         *__ierr = MPI_Waitsome( (int)*incount, (MPI_Request *)0, &loutcount,
                                 l_indices, c_status );
 
-    f_status = array_of_statuses;
-    for (i=0; i<loutcount; i++) {
-        if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
-        {
-            MPI_Status_c2f( &c_status[i], f_status );
-            f_status += MPER_F_MPI_STATUS_SIZE;
+    if (loutcount != MPI_UNDEFINED) {
+        f_status = array_of_statuses;
+        for (i=0; i<loutcount; i++) {
+            if ( array_of_statuses != MPER_F_MPI_STATUSES_IGNORE )
+            {
+                MPI_Status_c2f( &c_status[i], f_status );
+                f_status += MPER_F_MPI_STATUS_SIZE;
+            }
+            if (l_indices[i] >= 0)
+                array_of_indices[i] = l_indices[i] + 1;
         }
-        if (l_indices[i] >= 0)
-            array_of_indices[i] = l_indices[i] + 1;
     }
     *outcount = (MPI_Fint)loutcount;
     if ((int)*incount > MPIR_USE_LOCAL_ARRAY) {

@@ -687,7 +687,11 @@ int          is_logging_on;
     }
 #endif
 
-    if (status->MPI_TAG != MPI_ANY_TAG || (rq->status & RQ_SEND) ) {
+    /*
+       NonBlocking Send may not set MPI_Status->MPI_TAG, so
+       check MPI_TAG only if rq is NOT RQ_SEND, i.e. RQ_RECV.
+    */
+    if ((rq->status & RQ_SEND) || status->MPI_TAG != MPI_ANY_TAG) {
         /* if the request was not invalid */
 
         if (rq->status & RQ_CANCEL) {
@@ -5496,8 +5500,19 @@ MPI_Status * status;
 #endif
 
     MPE_LOG_THREAD_LOCK
-    if (*flag && count <= MPE_MAX_REQUESTS) 
-        MPE_REQ_WAIT_TEST( req[*index], status, "MPI_Testany" )
+    /* When flag = false, *index = MPI_UNDEFINED, redundant test. */
+    if (*flag && *index != MPI_UNDEFINED) {
+        if (*index <= MPE_MAX_REQUESTS) {
+            MPE_REQ_WAIT_TEST( req[*index], status, "MPI_Testany" )
+        }
+        else {
+            fprintf( stderr, __FILE__":MPI_Testany() - "
+                         "Array Index Out of Bound Exception !"
+                         "\t""*index(%d) > MPE_MAX_REQUESTS(%d)\n",
+                         *index, MPE_MAX_REQUESTS );
+            fflush( stderr );
+        }
+    }
 
     MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
     MPE_LOG_THREAD_UNLOCK
@@ -5605,7 +5620,7 @@ MPI_Status * array_of_statuses;
 #endif
 
     MPE_LOG_THREAD_LOCK
-    if (incount <= MPE_MAX_REQUESTS) {
+    if (incount <= MPE_MAX_REQUESTS && *outcount != MPI_UNDEFINED) {
         for (i=0; i < *outcount; i++) {
              MPE_REQ_WAIT_TEST( req[array_of_indices[i]], &array_of_statuses[i], "MPI_Testsome" )
         }
@@ -6269,15 +6284,17 @@ MPI_Status * status;
 #endif
 
     MPE_LOG_THREAD_LOCK
-    if (*index <= MPE_MAX_REQUESTS) {
-        MPE_REQ_WAIT_TEST( req[*index], status, "MPI_Waitany" )
-    }
-    else {
-        fprintf( stderr, __FILE__":MPI_Waitany() - "
-                         "Array Index Out of Bound Exception !"
-                         "\t""*index(%d) > MPE_MAX_REQUESTS(%d)\n",
-                         *index, MPE_MAX_REQUESTS );
-        fflush( stderr );
+    if (*index != MPI_UNDEFINED) {
+        if (*index <= MPE_MAX_REQUESTS) {
+            MPE_REQ_WAIT_TEST( req[*index], status, "MPI_Waitany" )
+        }
+        else {
+            fprintf( stderr, __FILE__":MPI_Waitany() - "
+                             "Array Index Out of Bound Exception !"
+                             "\t""*index(%d) > MPE_MAX_REQUESTS(%d)\n",
+                             *index, MPE_MAX_REQUESTS );
+            fflush( stderr );
+        }
     }
 
     MPE_LOG_STATE_END(MPE_COMM_NULL,NULL)
@@ -6351,7 +6368,7 @@ MPI_Status * array_of_statuses;
 #endif
 
     MPE_LOG_THREAD_LOCK
-    if (incount <= MPE_MAX_REQUESTS) {
+    if (incount <= MPE_MAX_REQUESTS && *outcount != MPI_UNDEFINED) {
         for (i=0; i < *outcount; i++) {
             MPE_REQ_WAIT_TEST( req[array_of_indices[i]], &array_of_statuses[i], "MPI_Waitsome" )
         }
