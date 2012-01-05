@@ -630,6 +630,8 @@ typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
+
+/* WARNING: this is also defined in mpishared.h.  Update both locations */
 #define MPICH_ERR_LAST_CLASS 54     /* It is also helpful to know the
 				       last valid class */
 /* End of MPI's error classes */
