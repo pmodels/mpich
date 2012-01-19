@@ -217,7 +217,7 @@ fn_fail:
  *
  * We return the following items:
  *
- *    ifname - name of the interface.  This may or may not be the same
+ *    ifname - hostname of the interface.  This may or may not be the same
  *             as the name returned by gethostname  (in Unix)
  *    ifaddr - This structure includes the interface IP address (as bytes),
  *             and the type (e.g., AF_INET or AF_INET6).  Only 
@@ -231,6 +231,9 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     int mpi_errno = MPI_SUCCESS;
     int ifaddrFound = 0;
 
+    MPIU_Assert(maxIfname);
+    ifname[0] = '\0';
+
     MPIU_ERR_CHKANDJUMP(MPIR_PARAM_INTERFACE_HOSTNAME && MPIR_PARAM_NETWORK_IFACE, mpi_errno, MPI_ERR_OTHER, "**ifname_and_hostname");
     
     /* Set "not found" for ifaddr */
@@ -238,12 +241,17 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
     /* Check if user specified ethernet interface name, e.g., ib0, eth1 */
     if (MPIR_PARAM_NETWORK_IFACE) {
+	int len;
         mpi_errno = MPIDI_Get_IP_for_iface(MPIR_PARAM_NETWORK_IFACE, ifaddr, &ifaddrFound);
         MPIU_ERR_CHKANDJUMP1(mpi_errno || !ifaddrFound, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_PARAM_NETWORK_IFACE);
         
         MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
                                                 "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%#08x",
                                                 ifaddr->type, ifaddr->len, *((unsigned int *)ifaddr->ifaddr)));
+
+        /* In this case, ifname is only used for debugging purposes */
+	mpi_errno = MPID_Get_processor_name(ifname, maxIfname, &len );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
     }
 
