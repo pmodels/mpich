@@ -1965,13 +1965,6 @@ fc_with_f77=yes
 if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
     enable_fc=no
     if test -n "$FC" ; then 
-        if test -z "$F77" ; then
-            dnl FIXME this logic needs to happen at the early spot where we
-            dnl invoke AC_PROG_F77 and AC_PROG_FC
-	    dnl PAC_PROG_F77
-            :
-	fi
-	#
 	# If we allow multiple weak symbols, we should test a name
 	# that does not contain an underscore.  The Fortran binding uses
 	# this rule for enabling multiple weak symbols:
@@ -1988,7 +1981,7 @@ if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
         PAC_FC_AND_F77_COMPATIBLE(fc_with_f77=yes,fc_with_f77=no,$testRoutine)
         if test "$fc_with_f77" != yes ; then
 	    enable_fc=no
-	    AC_MSG_WARN([The selected Fortran 90 compiler $FC does not work with the selected Fortran 77 compiler $F77.  Use the environment variables FC and F77 respectively to select compatible Fortran compilers.  The check here tests to see if a main program compiled with the Fortran 90 compiler can link with a subroutine compiled with the Fortran 77 compiler.])
+	    AC_MSG_ERROR([The selected Fortran 90 compiler $FC does not work with the selected Fortran 77 compiler $F77.  Use the environment variables FC and F77 respectively to select compatible Fortran compilers.  The check here tests to see if a main program compiled with the Fortran 90 compiler can link with a subroutine compiled with the Fortran 77 compiler.])
         elif test "$fc_with_f77" = "yes" ; then
             # If we got here, there is a Fortran 90 compiler that we can use
             enable_fc=yes
