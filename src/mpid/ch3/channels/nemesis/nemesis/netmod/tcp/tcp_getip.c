@@ -13,29 +13,14 @@
 /* FIXME: This should use the standard debug/logging routines and macros */
 static int dbg_ifname = 0;
 
-/* FIXME: This more-or-less duplicates the code in 
-   ch3/util/sock/ch3u_getintefaces.c , which is already more thoroughly 
-   tested and more portable than the code here.
- */
-#ifdef USE_NOPOSIX_FOR_IFCONF
-/* This is a very special case.  Allow the use of some extensions for 
-   just the rest of this file so that we can get the ifconf structure */
-#undef _POSIX_C_SOURCE
-#endif
-
-#ifdef USE_SVIDSOURCE_FOR_IFCONF
-/* This is a very special case.  Allow the use of some extensions for just
-   the rest of this file so that we can get the ifconf structure */
-#define _SVID_SOURCE
-#endif
-
-#ifdef USE_ALL_SOURCE_FOR_IFCONF
-/* This is a very special case.  Allow the use of some extensions for just
-   the rest of this file so that we can get the ifconf structure 
-   This is needed for AIX.
- */
-#define _ALL_SOURCE
-#endif
+/* NOTE: We previously used configure tests to decide if defining/undefining
+ * macros like _POSIX_C_SOURCE, _SVID_SOURCE, and _ALL_SOURCE would give us
+ * access to the ifconf structure.  If so, we would define them here.  However
+ * this was a problem because all of the other tests done by configure were
+ * effectively invalidated once we made those definitions.  This manifested
+ * itself as problems on Mac OS X 10.7 (Lion) related to
+ * "__builtin___snprintf_chk", and probably can cause various other bugs on
+ * other platforms.  Related to ticket #1568. */
 
 #include "tcp_impl.h"
 #include <sys/types.h>
@@ -248,7 +233,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 #endif
 
 
-#if defined(SIOCGIFADDR)
+#if defined(SIOCGIFADDR) && defined(HAVE_STRUCT_IFREQ)
 
 /* 'ifname' is a string that might be the name of an interface (e.g., "eth0",
  * "en1", "ib0", etc), not an "interface hostname" ("node1", "192.168.1.38",
