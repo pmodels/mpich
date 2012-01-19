@@ -22,7 +22,7 @@ extern int snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,
 #if defined MPL_HAVE_SNPRINTF
 #define MPL_snprintf snprintf
 #else
-int MPL_snprintf(char *, size_t, const char *, ...);
+int MPL_snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,3,4)));
 #endif /* MPL_HAVE_SNPRINTF */
 
 #if defined MPL_NEEDS_STRDUP_DECL && !defined strdup
