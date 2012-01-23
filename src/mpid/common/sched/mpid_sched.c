@@ -119,10 +119,10 @@ fn_fail:
 #define FUNCNAME MPIDU_Sched_start_entry
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* initiates the schedule entry "e" in the NBC described by "r" and "s", where
- * "e" is at "index" in "s".  This means posting nonblocking sends/recvs,
+/* initiates the schedule entry "e" in the NBC described by "s", where
+ * "e" is at "idx" in "s".  This means posting nonblocking sends/recvs,
  * performing reductions, calling callbacks, etc. */
-static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int index, struct MPIDU_Sched_entry *e)
+static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int idx, struct MPIDU_Sched_entry *e)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_offset;
@@ -394,8 +394,8 @@ fn_fail:
 #define FUNCNAME MPIDU_Sched_add_entry
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-/* index and e are permitted to be NULL */
-static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *index, struct MPIDU_Sched_entry **e)
+/* idx and e are permitted to be NULL */
+static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_Sched_entry **e)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -414,8 +414,8 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *index, struct MPIDU
     i = s->num_entries++;
     ei = &s->entries[i];
 
-    if (index != NULL)
-        *index = i;
+    if (idx != NULL)
+        *idx = i;
     if (e != NULL)
         *e = ei;
 fn_exit:

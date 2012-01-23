@@ -152,7 +152,7 @@ static inline int is_same_connection(sockconn_t *sc1, sockconn_t *sc2)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int alloc_sc_plfd_tbls (void)
 {
-    int i, mpi_errno = MPI_SUCCESS, index = -1;
+    int i, mpi_errno = MPI_SUCCESS, idx = -1;
     MPIU_CHKPMEM_DECL (2);
 
     MPIU_Assert(g_sc_tbl == NULL);
@@ -176,14 +176,14 @@ static int alloc_sc_plfd_tbls (void)
     }
     MPIU_CHKPMEM_COMMIT();
 
-    mpi_errno = find_free_entry(&index);
+    mpi_errno = find_free_entry(&idx);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
 
-    MPIU_Assert(0 == index); /* assumed in other parts of this file */
-    MPIU_Memcpy (&g_sc_tbl[index], &MPID_nem_tcp_g_lstn_sc, sizeof(MPID_nem_tcp_g_lstn_sc));
-    MPIU_Memcpy (&MPID_nem_tcp_plfd_tbl[index], &MPID_nem_tcp_g_lstn_plfd, sizeof(MPID_nem_tcp_g_lstn_plfd));
-    MPIU_Assert(MPID_nem_tcp_plfd_tbl[index].fd == g_sc_tbl[index].fd);
-    MPIU_Assert(MPID_nem_tcp_plfd_tbl[index].events == POLLIN);
+    MPIU_Assert(0 == idx); /* assumed in other parts of this file */
+    MPIU_Memcpy (&g_sc_tbl[idx], &MPID_nem_tcp_g_lstn_sc, sizeof(MPID_nem_tcp_g_lstn_sc));
+    MPIU_Memcpy (&MPID_nem_tcp_plfd_tbl[idx], &MPID_nem_tcp_g_lstn_plfd, sizeof(MPID_nem_tcp_g_lstn_plfd));
+    MPIU_Assert(MPID_nem_tcp_plfd_tbl[idx].fd == g_sc_tbl[idx].fd);
+    MPIU_Assert(MPID_nem_tcp_plfd_tbl[idx].events == POLLIN);
 
  fn_exit:
     return mpi_errno;
@@ -304,14 +304,14 @@ static int expand_sc_plfd_tbls (void)
 #define FUNCNAME find_free_entry
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int find_free_entry(int *index)
+static int find_free_entry(int *idx)
 {
     int mpi_errno = MPI_SUCCESS;
     freenode_t *node;
 
     if (!Q_EMPTY(freeq)) {
         Q_DEQUEUE(&freeq, ((freenode_t **)&node)); 
-        *index = node->index;
+        *idx = node->index;
         MPIU_Free(node);
         goto fn_exit;
     }
@@ -323,15 +323,15 @@ static int find_free_entry(int *index)
     }
 
     MPIU_Assert(g_tbl_capacity > g_tbl_size);
-    *index = g_tbl_size;
+    *idx = g_tbl_size;
     ++g_tbl_size;
 
  fn_exit:
     /* This function is the closest thing we have to a constructor, so we throw
        in a couple of initializers here in case the caller is sloppy about his
        assumptions. */
-    INIT_SC_ENTRY(&g_sc_tbl[*index], *index);
-    INIT_POLLFD_ENTRY(&MPID_nem_tcp_plfd_tbl[*index]);
+    INIT_SC_ENTRY(&g_sc_tbl[*idx], *idx);
+    INIT_POLLFD_ENTRY(&MPID_nem_tcp_plfd_tbl[*idx]);
     return mpi_errno;
  fn_fail:
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
@@ -768,7 +768,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     MPID_nem_tcp_vc_area *const vc_tcp = VC_TCP(vc);
     sockconn_t *sc = NULL;
     struct pollfd *plfd = NULL;
-    int index = -1;
+    int idx = -1;
     int mpi_errno = MPI_SUCCESS;
 
     MPIU_CHKLMEM_DECL(1);
@@ -805,11 +805,11 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         ++vc_tcp->connect_retry_count;
 
         MPIU_Assert(vc_tcp->sc == NULL);
-        mpi_errno = find_free_entry(&index);
+        mpi_errno = find_free_entry(&idx);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
 
-        sc = &g_sc_tbl[index];
-        plfd = &MPID_nem_tcp_plfd_tbl[index];
+        sc = &g_sc_tbl[idx];
+        plfd = &MPID_nem_tcp_plfd_tbl[idx];
 
         /* FIXME:
            We need to set addr and port using bc.
@@ -910,8 +910,8 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CONNECT);
     return mpi_errno;
  fn_fail:
-    if (index != -1)
-        close_cleanup_and_free_sc_plfd(&g_sc_tbl[index]); /* ignore error return */
+    if (idx != -1)
+        close_cleanup_and_free_sc_plfd(&g_sc_tbl[idx]); /* ignore error return */
     MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
@@ -925,7 +925,7 @@ static int cleanup_and_free_sc_plfd(sockconn_t *const sc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *const sc_vc = sc->vc;
     MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
-    const int index = sc->index;
+    const int idx = sc->index;
     struct pollfd *const plfd = &MPID_nem_tcp_plfd_tbl[sc->index];
     freenode_t *node;
     MPIU_CHKPMEM_DECL(1);
@@ -950,11 +950,11 @@ static int cleanup_and_free_sc_plfd(sockconn_t *const sc)
 
     CHANGE_STATE(sc, CONN_STATE_TS_CLOSED);
 
-    INIT_SC_ENTRY(sc, index);
+    INIT_SC_ENTRY(sc, idx);
     INIT_POLLFD_ENTRY(plfd);
 
     MPIU_CHKPMEM_MALLOC(node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node");
-    node->index = index;
+    node->index = idx;
     Q_ENQUEUE(&freeq, node);
 
     MPIU_CHKPMEM_COMMIT();
@@ -1907,15 +1907,15 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
             MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s", MPIU_Strerror(save_errno));
         }
         else {
-            int index = -1;
+            int idx = -1;
             struct pollfd *plfd;
             sockconn_t *sc;
 
             MPID_nem_tcp_set_sockopts(connfd); /* (N2) */
-            mpi_errno = find_free_entry(&index);
+            mpi_errno = find_free_entry(&idx);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
-            sc = &g_sc_tbl[index];
-            plfd = &MPID_nem_tcp_plfd_tbl[index];
+            sc = &g_sc_tbl[idx];
+            plfd = &MPID_nem_tcp_plfd_tbl[idx];
             
             sc->fd = plfd->fd = connfd;
             sc->pg_rank = CONN_INVALID_RANK;

@@ -123,7 +123,7 @@ int MPIDI_CH3U_Recvq_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef ENABLE_RECVQ_STATISTICS
-    int index = -1;
+    int idx = -1;
     mpi_errno = MPIR_T_pvar_add("posted_recvq_length",
                                 MPIX_T_VERBOSITY_USER_DETAIL,
                                 MPIX_T_PVAR_CLASS_LEVEL,
@@ -137,7 +137,7 @@ int MPIDI_CH3U_Recvq_init(void)
                                 MPIR_T_PVAR_IMPL_SIMPLE,
                                 /*var_state=*/&posted_qlen,
                                 &simple_uint_creator,
-                                &index);
+                                &idx);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_T_pvar_add("unexpected_recvq_length",
@@ -153,7 +153,7 @@ int MPIDI_CH3U_Recvq_init(void)
                                 MPIR_T_PVAR_IMPL_SIMPLE,
                                 /*var_state=*/&unexpected_qlen,
                                 &simple_uint_creator,
-                                &index);
+                                &idx);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #endif
 fn_fail:

@@ -49,7 +49,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     int    num_local       = -1;
     int   *local_procs     = NULL;
     int    local_rank      = -1;
-    int    index;
+    int    idx;
     int    i;
     char  *publish_bc_orig = NULL;
     char  *bc_val          = NULL;
@@ -111,22 +111,22 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region.ext_ranks, int *, MPID_nem_mem_region.ext_procs * sizeof(int), mpi_errno, "mem_region ext ranks");
     MPID_nem_mem_region.next           = NULL;
 
-    for (index = 0 ; index < num_procs; index++)
+    for (idx = 0 ; idx < num_procs; idx++)
     {
-	MPID_nem_mem_region.local_ranks[index] = MPID_NEM_NON_LOCAL;
+	MPID_nem_mem_region.local_ranks[idx] = MPID_NEM_NON_LOCAL;
     }
-    for (index = 0; index < num_local; index++)
+    for (idx = 0; idx < num_local; idx++)
     {
-	grank = local_procs[index];
-	MPID_nem_mem_region.local_ranks[grank] = index;
+	grank = local_procs[idx];
+	MPID_nem_mem_region.local_ranks[grank] = idx;
     }
 
-    index = 0;
+    idx = 0;
     for(grank = 0 ; grank < num_procs ; grank++)
     {
 	if(!MPID_NEM_IS_LOCAL(grank))
 	{
-	    MPID_nem_mem_region.ext_ranks[index++] = grank;
+	    MPID_nem_mem_region.ext_ranks[idx++] = grank;
 	}
     }
 
@@ -219,10 +219,10 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPID_nem_queue_init(MPID_nem_mem_region.FreeQ[pg_rank]);
     
     /* Init and enqueue our free cells */
-    for (index = 0; index < MPID_NEM_NUM_CELLS; ++index)
+    for (idx = 0; idx < MPID_NEM_NUM_CELLS; ++idx)
     {
-	MPID_nem_cell_init(&(MPID_nem_mem_region.Elements[index]));
-	MPID_nem_queue_enqueue(MPID_nem_mem_region.FreeQ[pg_rank], &(MPID_nem_mem_region.Elements[index]));
+	MPID_nem_cell_init(&(MPID_nem_mem_region.Elements[idx]));
+	MPID_nem_queue_enqueue(MPID_nem_mem_region.FreeQ[pg_rank], &(MPID_nem_mem_region.Elements[idx]));
     }
 
     /* network init */
@@ -235,21 +235,21 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     }
 
     /* set default route for external processes through network */
-    for (index = 0 ; index < MPID_nem_mem_region.ext_procs ; index++)
+    for (idx = 0 ; idx < MPID_nem_mem_region.ext_procs ; idx++)
     {
-	grank = MPID_nem_mem_region.ext_ranks[index];
+	grank = MPID_nem_mem_region.ext_ranks[idx];
 	MPID_nem_mem_region.FreeQ[grank] = NULL;
 	MPID_nem_mem_region.RecvQ[grank] = NULL;
     }
 
 
     /* set route for local procs through shmem */
-    for (index = 0; index < num_local; index++)
+    for (idx = 0; idx < num_local; idx++)
     {
-	grank = local_procs[index];
-	MPID_nem_mem_region.FreeQ[grank] = &free_queues_p[index];
-	MPID_nem_mem_region.RecvQ[grank] = &recv_queues_p[index];
-        
+	grank = local_procs[idx];
+	MPID_nem_mem_region.FreeQ[grank] = &free_queues_p[idx];
+	MPID_nem_mem_region.RecvQ[grank] = &recv_queues_p[idx];
+
 	MPIU_Assert(MPID_NEM_ALIGNED(MPID_nem_mem_region.FreeQ[grank], MPID_NEM_CACHE_LINE_LEN));
 	MPIU_Assert(MPID_NEM_ALIGNED(MPID_nem_mem_region.RecvQ[grank], MPID_NEM_CACHE_LINE_LEN));
     }

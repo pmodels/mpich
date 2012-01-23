@@ -266,12 +266,12 @@ fn_fail:
 
 static void free_port_name_tag(int tag)
 {
-    int index, rem_tag;
+    int idx, rem_tag;
 
-    index = tag / (sizeof(int) * 8);
-    rem_tag = tag - (index * sizeof(int) * 8);
+    idx = tag / (sizeof(int) * 8);
+    rem_tag = tag - (idx * sizeof(int) * 8);
 
-    port_name_tag_mask[index] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
+    port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
 }
 
 /*

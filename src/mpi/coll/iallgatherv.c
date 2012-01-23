@@ -414,7 +414,7 @@ int MPIR_Iallgatherv_ring(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
     int soffset, roffset;
     int torecv, tosend, min;
     int sendnow, recvnow;
-    int sindex, rindex;
+    int sidx, ridx;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -453,15 +453,15 @@ int MPIR_Iallgatherv_ring(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
     if (!min)
         min = 1;
 
-    sindex = rank;
-    rindex = left;
+    sidx = rank;
+    ridx = left;
     soffset = 0;
     roffset = 0;
     while (tosend || torecv) { /* While we have data to send or receive */
-        sendnow = ((recvcounts[sindex] - soffset) > min) ? min : (recvcounts[sindex] - soffset);
-        recvnow = ((recvcounts[rindex] - roffset) > min) ? min : (recvcounts[rindex] - roffset);
-        sbuf = (char *)recvbuf + ((displs[sindex] + soffset) * recvtype_extent);
-        rbuf = (char *)recvbuf + ((displs[rindex] + roffset) * recvtype_extent);
+        sendnow = ((recvcounts[sidx] - soffset) > min) ? min : (recvcounts[sidx] - soffset);
+        recvnow = ((recvcounts[ridx] - roffset) > min) ? min : (recvcounts[ridx] - roffset);
+        sbuf = (char *)recvbuf + ((displs[sidx] + soffset) * recvtype_extent);
+        rbuf = (char *)recvbuf + ((displs[ridx] + roffset) * recvtype_extent);
 
         /* Protect against wrap-around of indices */
         if (!tosend)
@@ -484,13 +484,13 @@ int MPIR_Iallgatherv_ring(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 
         soffset += sendnow;
         roffset += recvnow;
-        if (soffset == recvcounts[sindex]) {
+        if (soffset == recvcounts[sidx]) {
             soffset = 0;
-            sindex = (sindex + comm_size - 1) % comm_size;
+            sidx = (sidx + comm_size - 1) % comm_size;
         }
-        if (roffset == recvcounts[rindex]) {
+        if (roffset == recvcounts[ridx]) {
             roffset = 0;
-            rindex = (rindex + comm_size - 1) % comm_size;
+            ridx = (ridx + comm_size - 1) % comm_size;
         }
     }
 

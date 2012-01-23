@@ -51,11 +51,11 @@ void MPID_nem_dump_cell_mpich ( MPID_nem_cell_ptr_t cell, int master)
 		cell_buf[1],
 		cell_buf[4]);
 	{
-	    int index;
+	    int idx;
 	    char *buf = (char *)cell_buf;
 
-	    for (index = 0 ; index < 40 ; index++)
-		fprintf(stdout," -- %i ",buf[index]);
+	    for (idx = 0 ; idx < 40 ; idx++)
+		fprintf(stdout," -- %i ",buf[idx]);
 	    fprintf(stdout,"\n");
 	}
 

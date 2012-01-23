@@ -75,7 +75,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     MPIR_Dist_graph_topology *dist_graph_ptr = NULL;
     int i;
     int j;
-    int index;
+    int idx;
     int comm_size = 0;
     int in_capacity;
     int out_capacity;
@@ -185,16 +185,16 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     memset(rout_idx,   0, comm_size*sizeof(int));
 
     /* compute array sizes */
-    index = 0;
+    idx = 0;
     for (i = 0; i < n; ++i) {
         MPIU_Assert(sources[i] < comm_size);
         for (j = 0; j < degrees[i]; ++j) {
-            MPIU_Assert(destinations[index] < comm_size);
+            MPIU_Assert(destinations[idx] < comm_size);
             /* rout_sizes[i] is twice as long as the number of edges to be
              * sent to rank i by this process */
             rout_sizes[sources[i]] += 2;
-            rin_sizes[destinations[index]] += 2;
-            ++index;
+            rin_sizes[destinations[idx]] += 2;
+            ++idx;
         }
     }
 
@@ -210,7 +210,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     }
 
     /* populate arrays */
-    index = 0;
+    idx = 0;
     for (i = 0; i < n; ++i) {
         /* TODO add this assert as proper error checking above */
         int s_rank = sources[i];
@@ -218,8 +218,8 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
         MPIU_Assert(s_rank >= 0);
 
         for (j = 0; j < degrees[i]; ++j) {
-            int d_rank = destinations[index];
-            int weight = (weights == MPI_UNWEIGHTED ? 0 : weights[index]);
+            int d_rank = destinations[idx];
+            int weight = (weights == MPI_UNWEIGHTED ? 0 : weights[idx]);
             /* TODO add this assert as proper error checking above */
             MPIU_Assert(d_rank < comm_size);
             MPIU_Assert(d_rank >= 0);
@@ -239,7 +239,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
             rin[d_rank][rin_idx[d_rank]++] = s_rank;
             rin[d_rank][rin_idx[d_rank]++] = weight;
 
-            ++index;
+            ++idx;
         }
     }
 
@@ -263,23 +263,23 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     MPIU_Assert(in_out_peers[0] <= comm_size && in_out_peers[0] >= 0);
     MPIU_Assert(in_out_peers[1] <= comm_size && in_out_peers[1] >= 0);
 
-    index = 0;
+    idx = 0;
     /* must be 2*comm_size requests because we will possibly send inbound and
      * outbound edges to everyone in our communicator */
     MPIU_CHKLMEM_MALLOC(reqs, MPI_Request *, 2*comm_size*sizeof(MPI_Request), mpi_errno, "temp request array");
     for (i = 0; i < comm_size; ++i) {
         if (rin_sizes[i]) {
             /* send edges where i is a destination to process i */
-            mpi_errno = MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_old, &reqs[index++]);
+            mpi_errno = MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_old, &reqs[idx++]);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         if (rout_sizes[i]) {
             /* send edges where i is a source to process i */
-            mpi_errno = MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_old, &reqs[index++]);
+            mpi_errno = MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_old, &reqs[idx++]);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
-    MPIU_Assert(index <= (2 * comm_size));
+    MPIU_Assert(idx <= (2 * comm_size));
 
     /* Create the topology structure */
     MPIU_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr");
@@ -363,7 +363,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
         MPIU_Free(buf);
     }
 
-    mpi_errno = MPIR_Waitall_impl(index, reqs, MPI_STATUSES_IGNORE);
+    mpi_errno = MPIR_Waitall_impl(idx, reqs, MPI_STATUSES_IGNORE);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* remove any excess memory allocation */
