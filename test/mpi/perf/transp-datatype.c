@@ -3,12 +3,20 @@
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+/*    modified 01/23/2011 by Jim Hoekstra - ISU
+ *      changed test to follow mtest_init/mtest_finalize convention
+ *      The following changes are based on suggestions from Chris Sadlo:
+ *        variable row changed to col.
+ *        manual transpose - code added to perform 'swap'.
+ *        MPI_Send/MPI_Recv involving xpose changed.
+ */
 
 /* This is based on an example in the MPI standard and a bug report submitted
    by Alexandr Konovalov of Intel */
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define SIZE 100
 #define ITER 100
@@ -18,13 +26,14 @@ int main(int argc, char* argv[])
     int i, j, k;
     static double a[SIZE][SIZE],b[SIZE][SIZE];
     double t1,t2,t,ts,tst;
+    double temp;
     int myrank, mysize, errs = 0;
     MPI_Status status;
     MPI_Aint sizeofreal;
 
-    MPI_Datatype row, xpose;
+    MPI_Datatype col, xpose;
 
-    MPI_Init(&argc,&argv);
+    MTest_Init( &argc, &argv );
     MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
     MPI_Comm_size( MPI_COMM_WORLD, &mysize );
     if (mysize != 2) {
@@ -34,8 +43,8 @@ int main(int argc, char* argv[])
 
     MPI_Type_extent(MPI_DOUBLE, &sizeofreal);
  
-    MPI_Type_vector(SIZE, 1, SIZE, MPI_DOUBLE, &row);
-    MPI_Type_hvector(SIZE, 1, sizeofreal, row, &xpose);
+    MPI_Type_vector(SIZE, 1, SIZE, MPI_DOUBLE, &col);
+    MPI_Type_hvector(SIZE, 1, sizeofreal, col, &xpose);
     MPI_Type_commit(&xpose);
 
     /* Preset the arrays so that they're in memory */
@@ -52,9 +61,9 @@ int main(int argc, char* argv[])
     for(i=0;i< ITER; i++)
 	{
 	    if(myrank==0)
-		MPI_Send(&a[0][0],1,xpose,1,0,MPI_COMM_WORLD);
+		MPI_Send(&a[0][0],SIZE*SIZE,MPI_DOUBLE,1,0,MPI_COMM_WORLD);
 	    else 
-		MPI_Recv(&b[0][0],SIZE*SIZE,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&status);
+		MPI_Recv(&b[0][0],1,xpose,0,0,MPI_COMM_WORLD,&status);
 	}
     t2=MPI_Wtime();
     t=(t2-t1)/ITER;
@@ -86,8 +95,11 @@ int main(int argc, char* argv[])
 	else {
 		MPI_Recv(&b[0][0],sizeof(b),MPI_BYTE,0,0,MPI_COMM_WORLD,&status);
 		for(i=0;i<SIZE;i++)
-		    for(j=0;j<SIZE;j++)
-			b[i][j]=b[j][i]; 
+		    for(j=i;j<SIZE;j++) {
+			temp=b[j][i];
+			b[j][i]=b[i][j];
+			b[i][j]=temp;
+		}
 	}
     }
     t2=MPI_Wtime();
@@ -103,17 +115,12 @@ int main(int argc, char* argv[])
 	    fprintf( stderr, "Transpose time with datatypes is more than twice time without datatypes\n" );
 	    fprintf( stderr, "%f\t%f\t%f\n", t, ts, tst );
 	}
-	if (errs) {
-	    printf( " Found %d errors\n", errs );
-	}
-	else {
-	    printf( " No Errors\n" );
-	}
     }
 
-    MPI_Type_free(&row);
+    MPI_Type_free(&col);
     MPI_Type_free(&xpose);
 
+    MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
 }
