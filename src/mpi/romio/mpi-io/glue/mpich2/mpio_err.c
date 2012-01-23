@@ -23,6 +23,12 @@ void MPIR_Get_file_error_routine( MPI_Errhandler,
 int MPIR_File_call_cxx_errhandler( MPI_File *, int *, 
 				   void (*)(MPI_File *, int *, ... ) );
 
+typedef int (* MPIR_Err_get_class_string_func_t)(int error, char *str, int length);
+void MPIR_Err_get_string( int, char *, int, MPIR_Err_get_class_string_func_t );
+
+struct MPID_Comm;
+int MPID_Abort(struct MPID_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
+
 int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
 			 int line, int error_class, const char generic_msg[],
 			 const char specific_msg[], ... )
