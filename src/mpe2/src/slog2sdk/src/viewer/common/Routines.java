@@ -220,4 +220,23 @@ public class Routines
         String[]  strs = new String[tokenlist.size()];
         return (String[]) tokenlist.toArray( strs );
     }
+
+    public static final int MEGA = 1024*1024;
+
+    public static String toMemoryStatusString( String prefix )
+    {
+        long maxBytes, allocBytes, freeBytes;
+        Runtime runtime = Runtime.getRuntime();
+        StringBuffer strbuf = new StringBuffer();
+
+        maxBytes = runtime.maxMemory();
+        strbuf.append(prefix + "Maximum memory: " + maxBytes/MEGA + "M\n");
+        allocBytes = runtime.totalMemory();
+        strbuf.append(prefix + "Allocated memory: " + allocBytes/MEGA + "M\n");
+        freeBytes = runtime.freeMemory();
+        strbuf.append(prefix + "Free memory: " + freeBytes/MEGA + "M\n");
+        strbuf.append(prefix + "Total Free memory: "
+                     + (freeBytes + maxBytes - allocBytes)/MEGA + "M\n");
+        return strbuf.toString();
+    }
 }

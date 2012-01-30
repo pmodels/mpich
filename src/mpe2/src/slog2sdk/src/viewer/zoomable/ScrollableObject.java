@@ -14,6 +14,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import base.drawable.TimeBoundingBox;
+import viewer.common.Routines;
 
 public abstract class ScrollableObject extends JComponent
                                        implements ScrollableView
@@ -228,13 +229,9 @@ public abstract class ScrollableObject extends JComponent
         try {
             new_img = super.createImage( image_sz.width, image_sz.height );
         } catch ( OutOfMemoryError memerr ) {
-            long maxBytes, freeBytes;
             System.err.println( "Failed to allocate an image of size "
                               + image_sz.width + "x" + image_sz.height );
-            maxBytes = Runtime.getRuntime().maxMemory();
-            System.err.println("Max memory: " + maxBytes / (1024*1024) + "M");
-            freeBytes = Runtime.getRuntime().freeMemory();
-            System.err.println("Free memory: " + freeBytes / (1024*1024) + "M");
+            System.err.println(Routines.toMemoryStatusString("JVM: "));
             memerr.printStackTrace();
         }
         return new_img;
@@ -308,7 +305,6 @@ public abstract class ScrollableObject extends JComponent
 
             initializeAllOffImages( tImages_all );
             for ( int img_idx = 0; img_idx < NumImages; img_idx++ )
-            // for ( int img_idx = NumImages-1 ; img_idx >= 0 ; img_idx-- )
                 drawOneOffImage( offscreenImages[ img_idx ],
                                  tImages[ img_idx ] );
             finalizeAllOffImages( tImages_all );
@@ -393,7 +389,6 @@ public abstract class ScrollableObject extends JComponent
                 // Update the offscreenImages[] of those scrolled
                 initializeAllOffImages( tImages_all );
                 if ( img_mv_dir > 0 ) 
-                    //for ( idx = 1; idx <= Math.abs( Nimages_moved ); idx++ ) {
                     for ( idx = Math.abs( Nimages_moved ); idx >=1; idx-- ) {
                         img_idx = getValidImageIndex( start_idx
                                                     + img_mv_dir * idx );
@@ -437,7 +432,6 @@ public abstract class ScrollableObject extends JComponent
 
                 initializeAllOffImages( tImages_all );
                 for ( img_idx = 0; img_idx < NumImages; img_idx++ )
-                // for ( img_idx = NumImages-1; img_idx >=0; img_idx-- )
                     drawOneOffImage( offscreenImages[ img_idx ],
                                      tImages[ img_idx ] );
                 finalizeAllOffImages( tImages_all );
