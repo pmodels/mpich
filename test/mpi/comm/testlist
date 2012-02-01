@@ -3,6 +3,8 @@ dupic 4
 commcreate1 8
 commname 4
 ic1 4
+# ic2 needs an unusually large number of processes (>= 33)
+ic2 33
 icgroup 8
 icm 8
 icsplit 8

@@ -54,18 +54,20 @@ PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1,
 	if (lpids2[i] > maxlpid) maxlpid = lpids2[i];
     }
 
-    /* Compute the max index and zero the pids array */
-    maxi = (maxlpid + 31) / 32;
+    /* Compute the max index */
+    maxi = (maxlpid + 31) / 32; /* round-up division */
 
     if (maxi >= MAX_LPID32_ARRAY) {
-	MPIU_CHKLMEM_MALLOC(lpidmask,int32_t*,maxi*sizeof(int32_t),
+        /* maxi+1 elements b/c maxi is the last index, not size */
+	MPIU_CHKLMEM_MALLOC(lpidmask,int32_t*,(maxi+1)*sizeof(int32_t),
 			    mpi_errno,"lpidmask");
     }
     else {
 	lpidmask = lpidmaskPrealloc;
     }
-    
-    for (i=0; i<maxi; i++) lpidmask[i] = 0;
+
+    /* zero the bitvector array */
+    memset(lpidmask, 0x00, (maxi+1)*sizeof(*lpidmask));
 
     /* Set the bits for the first array */
     for (i=0; i<n1; i++) {

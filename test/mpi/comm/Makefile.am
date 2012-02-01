@@ -17,6 +17,7 @@ noinst_PROGRAMS =     \
     dup               \
     dupic             \
     ic1               \
+    ic2               \
     commname          \
     ctxalloc          \
     ctxsplit          \
