@@ -4582,6 +4582,7 @@ MPI_Comm comm;
 MPI_Request * request;
 {
   int  returnVal;
+  int  size;
   MPE_LOG_STATE_DECL
   MPE_LOG_THREADSTM_DECL
 
@@ -4593,6 +4594,9 @@ MPI_Request * request;
   MPE_LOG_THREADSTM_GET
   MPE_LOG_THREAD_LOCK
   MPE_LOG_STATE_BEGIN(comm,MPE_IRSEND_ID)
+
+  PMPI_Type_size( datatype, &size );
+  MPE_LOG_COMM_SEND( comm, dest, tag, size * count )
   MPE_LOG_THREAD_UNLOCK
 
 #if defined( MAKE_SAFE_PMPI_CALL )
