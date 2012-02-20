@@ -193,8 +193,13 @@ coverage:
 	    rm -f *.gcov ; \
 	done
 	for subdir in $(SUBDIRS) - ; do \
-	    if test $$subdir = "-" ; then break ; fi ; \
-	    ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+	    if test "x$$subdir" = "x-" ; then break ; fi ; \
+## SUBDIRS contains "."
+	    if test "x$$subdir" = "x." ; then \
+	        : ; \
+	    else \
+	        ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+	    fi \
 	done
 
 COVERAGE_CLEAN_TARGET=coverage-clean
