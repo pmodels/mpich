@@ -41,9 +41,11 @@ endif BUILD_PROFILING_LIB
 # of MPICH2/mpio.h --> ROMIO/mpio.h --> ROMIO/mpio.h.in --> ROMIO/config.status --> ...MORE_AUTOTOOLS...
 BUILT_SOURCES += $(top_builddir)/src/include/mpio.h
 $(top_builddir)/src/include/mpio.h: $(top_builddir)/src/mpi/romio/include/mpio.h
-	(cd $(top_builddir)/src/include &&        \
-	    test ! -e mpio.h &&                   \
-	    $(LN_S) ../mpi/romio/include/mpio.h )
+	if test ! -h $(top_builddir)/src/include/mpio.h ; then \
+	    rm -f $(top_builddir)/src/include/mpio.h ; \
+	    ( cd $(top_builddir)/src/include &&       \
+	        $(LN_S) ../mpi/romio/include/mpio.h ) ; \
+	fi
 
 DISTCLEANFILES += $(top_builddir)/src/include/mpio.h
 
