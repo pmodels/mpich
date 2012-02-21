@@ -444,6 +444,14 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
  	    /* Copy the payload. We could optimize this if recv_data_sz & 0x3 == 0 
 	       (copy (recv_data_sz >> 2) ints, inline that since data size is 
 	       currently limited to 4 ints */
+            /* We actually could optimize this a lot of ways, including just
+             * putting a memcpy here.  Modern compilers will inline fast
+             * versions of the memcpy here (__builtin_memcpy, etc).  Another
+             * option is a classic word-copy loop with a switch block at the end
+             * for a remainder.  Alternatively a Duff's device loop could work.
+             * Any replacement should be profile driven, and no matter what
+             * we're likely to pick something suboptimal for at least one
+             * compiler out there. [goodell@ 2012-02-10] */
 	    {
 		unsigned char const * restrict p = 
 		    (unsigned char *)eagershort_pkt->data;
