@@ -127,7 +127,7 @@ int MPIR_Comm_create( MPID_Comm **newcomm_ptr )
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE);
 
     newptr = (MPID_Comm *)MPIU_Handle_obj_alloc( &MPID_Comm_mem );
-    MPIU_ERR_CHKANDJUMP(!newptr, mpi_errno, MPI_ERR_OTHER, "**nomem")
+    MPIU_ERR_CHKANDJUMP(!newptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     *newcomm_ptr = newptr;
 
