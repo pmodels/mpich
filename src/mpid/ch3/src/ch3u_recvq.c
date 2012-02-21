@@ -313,6 +313,103 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     return rreq;
 }
 
+/* TODO rename the old FDU and use that name for this one */
+/* This is the routine that you expect to be named "_FDU".  It implements the
+ * behavior needed for improbe; specifically, searching the receive queue for
+ * the first matching request and dequeueing it. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Recvq_FDU_matchonly
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_id, MPID_Comm *comm, int *foundp)
+{
+    int found = FALSE;
+    MPID_Request *rreq, *prev_rreq;
+    MPIDI_Message_match match;
+    MPIDI_Message_match mask;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_MATCHONLY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_MATCHONLY);
+
+    MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
+
+    /* Optimize this loop for an empty unexpected receive queue */
+    rreq = recvq_unexpected_head;
+    if (rreq) {
+        prev_rreq = NULL;
+
+        match.parts.context_id = context_id;
+        match.parts.tag = tag;
+        match.parts.rank = source;
+
+        if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE) {
+            do {
+                if (MATCH_WITH_NO_MASK(rreq->dev.match, match)) {
+                    if (prev_rreq != NULL) {
+                        prev_rreq->dev.next = rreq->dev.next;
+                    }
+                    else {
+                        recvq_unexpected_head = rreq->dev.next;
+                    }
+
+                    if (rreq->dev.next == NULL) {
+                        recvq_unexpected_tail = prev_rreq;
+                    }
+#ifdef ENABLE_RECVQ_STATISTICS
+                    --unexpected_qlen;
+#endif
+
+                    rreq->comm = comm;
+                    MPIR_Comm_add_ref(comm);
+                    /* don't have the (buf,count,type) info right now, can't add
+                     * it to the request */
+                    found = TRUE;
+                    goto lock_exit;
+                }
+                prev_rreq = rreq;
+                rreq      = rreq->dev.next;
+            } while (rreq);
+        }
+        else {
+            mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
+            if (tag == MPI_ANY_TAG)
+                match.parts.tag = mask.parts.tag = 0;
+            if (source == MPI_ANY_SOURCE)
+                match.parts.rank = mask.parts.rank = 0;
+
+            do {
+                if (MATCH_WITH_LEFT_MASK(rreq->dev.match, match, mask)) {
+                    if (prev_rreq != NULL) {
+                        prev_rreq->dev.next = rreq->dev.next;
+                    }
+                    else {
+                        recvq_unexpected_head = rreq->dev.next;
+                    }
+                    if (rreq->dev.next == NULL) {
+                        recvq_unexpected_tail = prev_rreq;
+                    }
+#ifdef ENABLE_RECVQ_STATISTICS
+                    --unexpected_qlen;
+#endif
+                    rreq->comm                 = comm;
+                    MPIR_Comm_add_ref(comm);
+                    /* don't have the (buf,count,type) info right now, can't add
+                     * it to the request */
+                    found = TRUE;
+                    goto lock_exit;
+                }
+                prev_rreq = rreq;
+                rreq = rreq->dev.next;
+            } while (rreq);
+        }
+    }
+
+lock_exit:
+    *foundp = found;
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_MATCHONLY);
+    return rreq;
+}
 
 /*
  * MPIDI_CH3U_Recvq_FDU_or_AEP()

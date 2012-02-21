@@ -1329,6 +1329,12 @@ void MPIR_Free_contextid( MPIR_Context_id_t );
 /* Requests */
 /* This currently defines a single structure type for all requests.  
    Eventually, we may want a union type, as used in MPICH-1 */
+/* NOTE-R1: MPID_REQUEST_MPROBE signifies that this is a request created by
+ * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
+ * MPI_Message objects, we use this separate kind in order to provide stronger
+ * error checking.  Once a message (backed by a request) is promoted to a real
+ * request by calling MPI_Mrecv/MPI_Imrecv, we actually modify the kind to be
+ * MPID_REQUEST_RECV in order to keep completion logic as simple as possible. */
 /*E
   MPID_Request_kind - Kinds of MPI Requests
 
@@ -1344,6 +1350,7 @@ typedef enum MPID_Request_kind_t {
     MPID_PREQUEST_RECV,
     MPID_UREQUEST,
     MPID_COLL_REQUEST,
+    MPID_REQUEST_MPROBE, /* see NOTE-R1 */
     MPID_LAST_REQUEST_KIND
 #ifdef MPID_DEV_REQUEST_KIND_DECL
     , MPID_DEV_REQUEST_KIND_DECL
@@ -2903,6 +2910,118 @@ int MPID_Probe(int, int, MPID_Comm *, int, MPI_Status *);
 
   @*/
 int MPID_Iprobe(int, int, MPID_Comm *, int, int *, MPI_Status *);
+
+/*@
+   MPID_Mprobe - Block until a matching request is found and return information
+   about it, including a message handle for later reception.
+
+  Input Parameters:
++ source - rank to match (or 'MPI_ANY_SOURCE')
+. tag - Tag to match (or 'MPI_ANY_TAG')
+. comm - communicator to match.
+- context_offset - context id offset of communicator to match
+
+  Output Parameter:
++ message - 'MPID_Request' (logically a message) set as defined by 'MPI_Mprobe'
+- status - 'MPI_Status' set as defined by 'MPI_Mprobe'
+
+  Return Value:
+  Error code.
+
+  Providing the 'context_offset' is necessary at this level to support the
+  way in which the MPICH implementation uses context ids in the implementation
+  of other operations.  The communicator is present to allow the device
+  to use message-queues attached to particular communicators or connections
+  between processes.
+
+  Module:
+  Request
+
+  @*/
+int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
+                MPID_Request **message, MPI_Status *status);
+
+/*@
+   MPID_Improbe - Look for a matching request in the receive queue and return
+   information about it, including a message handle for later reception.
+
+  Input Parameters:
++ source - rank to match (or 'MPI_ANY_SOURCE')
+. tag - Tag to match (or 'MPI_ANY_TAG')
+. comm - communicator to match.
+- context_offset - context id offset of communicator to match
+
+  Output Parameter:
++ flag - 'flag' set as defined by 'MPI_Improbe'
+. message - 'MPID_Request' (logically a message) set as defined by 'MPI_Improbe'
+- status - 'MPI_Status' set as defined by 'MPI_Improbe'
+
+  Return Value:
+  Error code.
+
+  Providing the 'context_offset' is necessary at this level to support the
+  way in which the MPICH implementation uses context ids in the implementation
+  of other operations.  The communicator is present to allow the device
+  to use message-queues attached to particular communicators or connections
+  between processes.
+
+  Module:
+  Request
+
+  @*/
+int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
+                 int *flag, MPID_Request **message, MPI_Status *status);
+
+/*@
+   MPID_Imrecv - Begin receiving the message indicated by the given message
+   handle and return a request object for later completion.
+
+  Input Parameters:
++ count - number of elements to receive
+. datatype - datatype of each recv buffer element
+- message - 'MPID_Request' (logically a message) set as defined by 'MPI_Mprobe'
+
+  Output Parameter:
++ buf - receive buffer
+- request - request object for completing the recv
+
+  Return Value:
+  Error code.
+
+  Module:
+  Request
+
+  NOTE: under most implementations the request object returned will
+  probably be some modified version of the "message" object passed in.
+
+  @*/
+int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
+                MPID_Request *message, MPID_Request **rreqp);
+
+/*@
+   MPID_Mrecv - Receive the message indicated by the given message handle.
+
+  Input Parameters:
++ count - number of elements to receive
+. datatype - datatype of each recv buffer element
+- message - 'MPID_Request' (logically a message) set as defined by 'MPI_Mprobe'
+
+  Output Parameter:
++ buf - receive buffer
+- status - 'MPI_Status' set as defined by 'MPI_Mrecv'
+
+  Return Value:
+  Error code.
+
+  Module:
+  Request
+
+  NOTE: under most implementations the request object returned will
+  probably be some modified version of the "message" object passed in.
+
+  @*/
+int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
+               MPID_Request *message, MPI_Status *status);
 
 /*@
   MPID_Cancel_send - Cancel the indicated send request

@@ -269,6 +269,9 @@ be in the range 0 to %d
 **request_invalid_kind %d:The supplied request was invalid (kind=%d)
 **request_invalid_kind %d %d:The supplied request in array element %d was \
  invalid (kind=%d)
+**reqnotmsg: Invalid MPIX_Message (MPI_Request passed)
+**msgnotreq: Invalid MPI_Request (MPIX_Message passed)
+**msgnotreq %d: Invalid MPI_Request at array index %d (MPIX_Message passed)
 **requestnull:Null MPI_Request 
 **requestnotpersist:Request is not persistent in MPI_Start or MPI_Startall.
 **requestpersistactive:Persistent request passed to MPI_Start or MPI_Startall is already active.
@@ -1447,6 +1450,16 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_type_get_attr %D %d %p %p:MPIR_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
 **mpir_wingetattr:MPIR_WinGetAttr failed
 **mpir_wingetattr %W %d %p %p:MPIR_WinGetAttr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
+
+## MPI-3 Mprobe routines
+**mpix_improbe: MPIX_Improbe failed
+**mpix_improbe %d %d %C %p %p %p: MPIX_Improbe(source=%d, tag=%d, comm=%C, flag=%p, message=%p, status=%p)
+**mpix_mprobe: MPIX_Mprobe failed
+**mpix_mprobe %d %d %C %p %p: MPIX_Mprobe(source=%d, tag=%d, comm=%C, message=%p, status=%p)
+**mpix_mrecv: MPIX_Mrecv failed
+**mpix_mrecv %p %d %D %p %p: MPIX_Mrecv(buf=%p, count=%d, datatype=%D, message=%p, status=%p)
+**mpix_imrecv: MPIX_Imrecv failed
+**mpix_imrecv %p %d %D %p %p: MPIX_Imrecv(buf=%p, count=%d, datatype=%D, message=%p, request=%p)
 
 ## MPI-3 nonblocking collectives
 **mpix_ibarrier: MPIX_Ibarrier failed

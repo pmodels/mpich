@@ -47,5 +47,6 @@ noinst_PROGRAMS =  \
     inactivereq    \
     waittestnull   \
     sendall        \
-    large_message
+    large_message  \
+    mprobe
 

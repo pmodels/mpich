@@ -14,11 +14,15 @@ mpi_sources +=                           \
     src/mpi/pt2pt/greq_start.c           \
     src/mpi/pt2pt/greq_complete.c        \
     src/mpi/pt2pt/ibsend.c               \
+    src/mpi/pt2pt/improbe.c              \
+    src/mpi/pt2pt/imrecv.c               \
     src/mpi/pt2pt/iprobe.c               \
     src/mpi/pt2pt/irecv.c                \
     src/mpi/pt2pt/irsend.c               \
     src/mpi/pt2pt/isend.c                \
     src/mpi/pt2pt/issend.c               \
+    src/mpi/pt2pt/mprobe.c               \
+    src/mpi/pt2pt/mrecv.c                \
     src/mpi/pt2pt/probe.c                \
     src/mpi/pt2pt/recv.c                 \
     src/mpi/pt2pt/recv_init.c            \

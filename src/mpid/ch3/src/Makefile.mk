@@ -35,12 +35,16 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/ch3/src/mpid_finalize.c                       \
     src/mpid/ch3/src/mpid_get_universe_size.c              \
     src/mpid/ch3/src/mpid_getpname.c                       \
+    src/mpid/ch3/src/mpid_improbe.c                        \
+    src/mpid/ch3/src/mpid_imrecv.c                         \
     src/mpid/ch3/src/mpid_init.c                           \
     src/mpid/ch3/src/mpid_iprobe.c                         \
     src/mpid/ch3/src/mpid_irecv.c                          \
     src/mpid/ch3/src/mpid_irsend.c                         \
     src/mpid/ch3/src/mpid_isend.c                          \
     src/mpid/ch3/src/mpid_issend.c                         \
+    src/mpid/ch3/src/mpid_mprobe.c                         \
+    src/mpid/ch3/src/mpid_mrecv.c                          \
     src/mpid/ch3/src/mpid_port.c                           \
     src/mpid/ch3/src/mpid_probe.c                          \
     src/mpid/ch3/src/mpid_recv.c                           \

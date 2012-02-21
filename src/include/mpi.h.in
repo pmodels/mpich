@@ -192,6 +192,7 @@ typedef int MPI_Op;
 #define MPI_DATATYPE_NULL  ((MPI_Datatype)0x0c000000)
 #define MPI_REQUEST_NULL   ((MPI_Request)0x2c000000)
 #define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
+#define MPIX_MESSAGE_NULL   ((MPIX_Message)MPI_REQUEST_NULL)
 
 /* These are only guesses; make sure you change them in mpif.h as well */
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@
@@ -271,6 +272,9 @@ typedef int MPI_Errhandler;
 
 /* MPI request opjects */
 typedef int MPI_Request;
+
+/* MPI message objects for Mprobe and related functions */
+typedef int MPIX_Message;
 
 /* User combination function */
 typedef void (MPI_User_function) ( void *, void *, int *, MPI_Datatype * ); 
@@ -975,6 +979,12 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int [], int [], int [], int 
 int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted);
 int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int [], int [], int maxoutdegree, int [], int []);
 
+/* MPI-3 matched probe functionality, currently MPIX_ extensions */
+int MPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *message, MPI_Status *status);
+int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *message, MPI_Request *request);
+int MPIX_Mprobe(int source, int tag, MPI_Comm comm, MPIX_Message *message, MPI_Status *status);
+int MPIX_Mrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *message, MPI_Status *status);
+
 /* MPI-3 nonblocking collectives, currently MPIX_ extensions */
 int MPIX_Ibarrier(MPI_Comm comm, MPI_Request *request);
 int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request *request);
@@ -1323,6 +1333,10 @@ int PMPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, int [], int
 int PMPI_Dist_graph_create(MPI_Comm comm_old, int n, int [], int [], int [], int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
 int PMPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted);
 int PMPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int [], int [], int maxoutdegree, int [], int []);
+int PMPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *message, MPI_Status *status);
+int PMPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *message, MPI_Request *request);
+int PMPIX_Mprobe(int source, int tag, MPI_Comm comm, MPIX_Message *message, MPI_Status *status);
+int PMPIX_Mrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *message, MPI_Status *status);
 int PMPIX_Ibarrier(MPI_Comm comm, MPI_Request *request);
 int PMPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Igather(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
