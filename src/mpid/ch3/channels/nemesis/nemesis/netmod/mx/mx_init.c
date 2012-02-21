@@ -22,7 +22,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_mx_funcs = {
     MPID_nem_mx_vc_init,
     MPID_nem_mx_vc_destroy,
     MPID_nem_mx_vc_terminate,
-    MPID_nem_mx_anysource_iprobe
+    MPID_nem_mx_anysource_iprobe,
+    MPID_nem_mx_anysource_improbe
 };
 
 static MPIDI_Comm_ops_t comm_ops = {
@@ -45,7 +46,8 @@ static MPIDI_Comm_ops_t comm_ops = {
     MPID_nem_mx_cancel_recv, /* cancel_recv */
     
     MPID_nem_mx_probe, /* probe */
-    MPID_nem_mx_iprobe /* iprobe */
+    MPID_nem_mx_iprobe, /* iprobe */
+    MPID_nem_mx_improbe /* improbe */
 };
 
 

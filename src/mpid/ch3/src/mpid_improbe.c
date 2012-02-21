@@ -6,8 +6,9 @@
 
 #include "mpidimpl.h"
 
-/* FIXME I think we still need to handle the anysource probe case for
- * channel/netmod override.  See MPID_Iprobe for more info. */
+int (*MPIDI_Anysource_improbe_fn)(int tag, MPID_Comm * comm, int context_offset,
+                                  int *flag, MPID_Request **message,
+                                  MPI_Status * status) = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPID_Improbe
@@ -27,6 +28,51 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
         *flag = TRUE;
         goto fn_exit;
     }
+
+#ifdef ENABLE_COMM_OVERRIDES
+    if (MPIDI_Anysource_improbe_fn) {
+        if (source == MPI_ANY_SOURCE) {
+            /* if it's anysource, check shm, then check the network.
+               If still not found, call progress, and check again. */
+
+            /* check shm*/
+            MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+            *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);
+            MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+            if (!*flag) {
+                /* not found, check network */
+                mpi_errno = MPIDI_Anysource_improbe_fn(tag, comm, context_offset, flag, message, status);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (!*flag) {
+                    /* still not found, make some progress*/
+                    mpi_errno = MPIDI_CH3_Progress_poke();
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    /* check shm again */
+                    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+                    *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);
+                    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+                    if (!*flag) {
+                        /* check network again */
+                        mpi_errno = MPIDI_Anysource_improbe_fn(tag, comm, context_offset, flag, message, status);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    }
+                }
+            }
+            goto fn_exit;
+        }
+        else {
+            /* it's not anysource, check if the netmod has overridden it */
+            MPIDI_VC_t * vc;
+            MPIDI_Comm_get_vc_set_active(comm, source, &vc);
+            if (vc->comm_ops && vc->comm_ops->probe) {
+                mpi_errno = vc->comm_ops->improbe_fn(vc, source, tag, comm, context_offset, flag, message, status);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                goto fn_exit;
+            }
+            /* fall-through to shm case */
+        }
+    }
+#endif
 
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
     *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);

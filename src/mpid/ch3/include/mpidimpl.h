@@ -690,11 +690,15 @@ typedef struct MPIDI_Comm_ops
 		                  MPI_Status *status);
     int (*iprobe)(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
 		  int *flag, MPI_Status *status);
-   
+    int (*improbe)(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
+                   int *flag, MPID_Request **message, MPI_Status *status);
 } MPIDI_Comm_ops_t;
 
 extern int (*MPIDI_Anysource_iprobe_fn)(int tag, MPID_Comm * comm, int context_offset, int *flag,
                                         MPI_Status * status);
+extern int (*MPIDI_Anysource_improbe_fn)(int tag, MPID_Comm * comm, int context_offset,
+                                         int *flag, MPID_Request **message,
+                                         MPI_Status * status);
 #endif
 
 typedef struct MPIDI_VC

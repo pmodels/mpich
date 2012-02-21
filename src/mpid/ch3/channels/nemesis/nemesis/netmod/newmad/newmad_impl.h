@@ -51,6 +51,7 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
 			  int context_offset, MPI_Status *status);
 int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, 
 			   int context_offset, int *flag, MPI_Status *status);
+int MPID_nem_newmad_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPID_Request **message, MPI_Status *status);
 /* Any source management */
 void MPID_nem_newmad_anysource_posted(MPID_Request *rreq);
 int MPID_nem_newmad_anysource_matched(MPID_Request *rreq);
