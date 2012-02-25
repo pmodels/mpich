@@ -5916,19 +5916,6 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS"
 WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"
 
-# Setup required inter-library dependencies
-LIB_DEPS=""
-LDFLAGS_DEPS=""
-if test "X$enable_shared" = "Xyes" -a "$enable_lib_depend" = "yes" ; then
-   LIB_DEPS="$WRAPPER_LIBS"
-   WRAPPER_LIBS=""
-   LDFLAGS_DEPS="$WRAPPER_LDFLAGS"
-   # WRAPPER_LDFLAGS are not reset as they point to the position of
-   # the dependency libraries when rpath builds are not enabled
-fi
-AC_SUBST(LIB_DEPS)
-AC_SUBST(LDFLAGS_DEPS)
-
 if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
 fi
