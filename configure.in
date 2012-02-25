@@ -2900,8 +2900,6 @@ elif test "$pac_cv_c_max_integer_align" = "four" ; then
     pac_cv_c_struct_align_nr=4
 elif test "$pac_cv_c_max_integer_align" = "eight" ; then
     pac_cv_c_struct_align_nr=8
-elif test "$pac_cv_c_max_integer_align" = "largest" ; then
-    AC_DEFINE(HAVE_LARGEST_STRUCT_ALIGNMENT,1,[Define when alignment of structures is based on largest component])
 fi
 
 if test -n "$pac_cv_c_struct_align_nr" ; then
@@ -4504,23 +4502,8 @@ using namespace std;
     
 fi
 
-# ----------------------------------------------------------------------------
 
-# Is char * the byte address?
-AC_CACHE_CHECK([if char * pointers use byte addresses],
-pac_cv_c_char_p_is_byte,[
-AC_TRY_RUN([
-int main(int argc, char **argv ){
-char *a, buf;
-a = &buf;
-if ((long)(a-(char*)0) == (long)(a)) return 0; return 1;
-}],pac_cv_c_char_p_is_byte=yes,pac_cv_char_p_is_byte=no,
-pac_cv_char_p_is_byte=unknown)])
-if test "$pac_cv_char_p_is_byte" = "yes" ; then
-    AC_DEFINE(CHAR_PTR_IS_BYTE,1,[define if char * is byte pointer])
-fi
 # ----------------------------------------------------------------------------
-#
 # Check for the alignment rules moves with types int64_t etc.  These
 # are used in the datatype code to perform pack and unpack operations.  
 # These only determine if different alignments *work*, not whether they
