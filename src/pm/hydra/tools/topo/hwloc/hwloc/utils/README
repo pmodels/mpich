@@ -1,0 +1,4 @@
+The contents of this directory have been deleted from the MPICH2 repository.
+Because we build hwloc in "embedded" mode, these directories cause problems with
+the tarballs resulting from "make dist".  The directory itself is left in place
+to keep automake happy and hold this README.
