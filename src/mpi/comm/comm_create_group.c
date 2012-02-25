@@ -161,7 +161,7 @@ PMPI_LOCAL int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_p
             mpi_errno = MPIR_Group_free_impl(comm_group_ptr);
     }
     MPIU_CHKLMEM_FREEALL();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTER);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
     return mpi_errno;
 
   fn_fail:
