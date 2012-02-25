@@ -404,9 +404,13 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             else if (!strcmp(info_key, "wdir")) {
                 exec->wdir = HYDU_strdup(info_val);
             }
-            else if (!strcmp(info_key, "host")) {
-                status = HYDU_process_mfile_token(info_val, 1, &pg->user_node_list);
-                HYDU_ERR_POP(status, "error create node list\n");
+            else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
+                char *host = strtok(info_val, ",");
+                while (host) {
+                    status = HYDU_process_mfile_token(host, 1, &pg->user_node_list);
+                    HYDU_ERR_POP(status, "error creating node list\n");
+                    host = strtok(NULL, ",");
+                }
             }
             else if (!strcmp(info_key, "hostfile")) {
                 status = HYDU_parse_hostfile(info_val, &pg->user_node_list,
