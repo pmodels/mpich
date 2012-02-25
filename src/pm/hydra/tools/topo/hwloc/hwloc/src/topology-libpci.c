@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * See COPYING in top-level directory.
  */
@@ -113,8 +113,8 @@ hwloc_linux_class_readdir(struct hwloc_topology *topology, struct hwloc_obj *pci
 	  fillinfo(topology, obj, path);
 	}
       }
+      closedir(dir);
     }
-    closedir(dir);
   }
 }
 
@@ -513,11 +513,9 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_o
   /* restrict to the existing topology cpuset to avoid errors later */
   hwloc_bitmap_and(cpuset, cpuset, topology->levels[0][0]->cpuset);
 
-  /* why not inserting a group and let the core remove it if useless?
-   * 1) we need to make sure that the group is above all objects
-   * with same cpuset (to avoid attaching to caches or so)
-   * 2) the merge-keep-structure code is already done when coming here
-   */
+  /* if the remaining cpuset is empty, take the root */
+  if (hwloc_bitmap_iszero(cpuset))
+    hwloc_bitmap_copy(cpuset, hwloc_topology_get_topology_cpuset(topology));
 
   /* attach the hostbridge now that it contains the right objects */
   parent = hwloc_get_obj_covering_cpuset(topology, cpuset);
@@ -560,6 +558,11 @@ hwloc_pci_error(char *msg, ...)
   longjmp(err_buf, 1);
 }
 
+static void
+hwloc_pci_warning(char *msg __hwloc_attribute_unused, ...)
+{
+}
+
 void
 hwloc_look_libpci(struct hwloc_topology *topology)
 {
@@ -576,6 +579,7 @@ hwloc_look_libpci(struct hwloc_topology *topology)
 
   pciaccess = pci_alloc();
   pciaccess->error = hwloc_pci_error;
+  pciaccess->warning = hwloc_pci_warning;
 
   if (setjmp(err_buf)) {
     pci_cleanup(pciaccess);

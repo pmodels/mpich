@@ -1,10 +1,11 @@
-# Copyright © 2009-2010 INRIA.  All rights reserved.
-# Copyright © 2009-2010 Université Bordeaux 1
+# Copyright © 2009-2010 inria.  All rights reserved.
+# Copyright © 2009-2010, 2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
+# Copyright © 2011      Oracle and/or its affiliates.  All rights reserved.
 # See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
-AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
+AM_CPPFLAGS = $(HWLOC_CPPFLAGS) -DHWLOC_INSIDE_LIBHWLOC
 AM_LDFLAGS = $(HWLOC_LDFLAGS)
 
 EXTRA_DIST = dolib.c
@@ -39,6 +40,8 @@ endif HWLOC_HAVE_LIBPCI
 
 if HWLOC_HAVE_SOLARIS
 sources += topology-solaris.c
+sources += topology-solaris-chiptype.c
+ldflags += -lpicl
 endif HWLOC_HAVE_SOLARIS
 
 if HWLOC_HAVE_LINUX
@@ -83,32 +86,31 @@ ldflags += -Xlinker --output-def -Xlinker .libs/libhwloc.def
 
 if HWLOC_HAVE_MS_LIB
 .libs/libhwloc.lib: libhwloc.la dolib
-	./dolib "$(HWLOC_MS_LIB)" X86 .libs/libhwloc.def libhwloc-$(HWLOC_SOVERSION) .libs/libhwloc.lib
+	[ ! -r .libs/libhwloc.def ] || ./dolib "$(HWLOC_MS_LIB)" $(HWLOC_MS_LIB_ARCH) .libs/libhwloc.def $(libhwloc_so_version) .libs/libhwloc.lib
 all-local: .libs/libhwloc.lib
 endif HWLOC_HAVE_MS_LIB
 
 install-exec-hook:
-	$(INSTALL) .libs/libhwloc.def $(DESTDIR)$(libdir)
+	[ ! -r .libs/libhwloc.def ] || $(INSTALL) .libs/libhwloc.def $(DESTDIR)$(libdir)
 if HWLOC_HAVE_MS_LIB
-	$(INSTALL) .libs/libhwloc.lib $(DESTDIR)$(libdir)
-	$(INSTALL) .libs/libhwloc.exp $(DESTDIR)$(libdir)
+	[ ! -r .libs/libhwloc.def ] || $(INSTALL) .libs/libhwloc.lib $(DESTDIR)$(libdir)
+	[ ! -r .libs/libhwloc.def ] || $(INSTALL) .libs/libhwloc.exp $(DESTDIR)$(libdir)
 endif HWLOC_HAVE_MS_LIB
 endif HWLOC_HAVE_WINDOWS
 
-if HWLOC_HAVE_CPUID
 sources += topology-x86.c
-endif HWLOC_HAVE_CPUID
 
 # Installable library
 
 libhwloc_la_SOURCES = $(sources)
-libhwloc_la_LDFLAGS = $(ldflags) -version-number $(libhwloc_so_version) $(HWLOC_LIBXML2_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS) $(HWLOC_PCI_LIBS)
+libhwloc_la_LDFLAGS = $(ldflags) -version-info $(libhwloc_so_version) $(HWLOC_LIBS)
 
 # Embedded library (note the lack of a .so version number -- that
-# intentionally only appears in the installable library)
+# intentionally only appears in the installable library).  Also note
+# the lack of _LDFLAGS -- all libs are added by the upper layer (via
+# HWLOC_EMBEDDED_LIBS).
 
 libhwloc_embedded_la_SOURCES = $(sources)
-libhwloc_embedded_la_LDFLAGS = $(ldflags) $(HWLOC_LIBXML2_LIBS) $(HWLOC_LINUX_LIBNUMA_LIBS)
 
 # XML data (only install if we're building in standalone mode)
 

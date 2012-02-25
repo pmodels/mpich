@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -313,7 +313,7 @@ hwloc_look_osf(struct hwloc_topology *topology)
       }
     }
 
-    hwloc_topology__set_distance_matrix(topology, HWLOC_OBJ_NODE, nbnodes, indexes, nodes, distances, 0 /* OS cannot force */);
+    hwloc_distances_set(topology, HWLOC_OBJ_NODE, nbnodes, indexes, nodes, distances, 0 /* OS cannot force */);
   }
   radsetdestroy(&radset2);
   radsetdestroy(&radset);

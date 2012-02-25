@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 INRIA.  All rights reserved.
+ * Copyright © 2009-2010 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -21,7 +21,7 @@
 #include <hwloc/helper.h>
 #include <assert.h>
 
-#if !defined _GNU_SOURCE || !defined _SCHED_H || !defined CPU_SETSIZE
+#if !defined _GNU_SOURCE || !defined _SCHED_H || (!defined CPU_SETSIZE && !defined sched_priority)
 #error Please make sure to include sched.h before including glibc-sched.h, and define _GNU_SOURCE before any inclusion of sched.h
 #endif
 
@@ -78,8 +78,9 @@ static __hwloc_inline int
 hwloc_cpuset_from_glibc_sched_affinity(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_cpuset_t hwlocset,
                                        const cpu_set_t *schedset, size_t schedsetsize)
 {
+  int cpu;
 #ifdef CPU_ZERO_S
-  int cpu, count;
+  int count;
 #endif
   hwloc_bitmap_zero(hwlocset);
 #ifdef CPU_ZERO_S
@@ -96,7 +97,6 @@ hwloc_cpuset_from_glibc_sched_affinity(hwloc_topology_t topology __hwloc_attribu
   /* sched.h does not support dynamic cpu_set_t (introduced in glibc 2.7),
    * assume we have a very old interface without CPU_COUNT (added in 2.6)
    */
-  int cpu;
   assert(schedsetsize == sizeof(cpu_set_t));
   for(cpu=0; cpu<CPU_SETSIZE; cpu++)
     if (CPU_ISSET(cpu, schedset))

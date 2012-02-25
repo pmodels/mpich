@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -40,8 +40,13 @@ extern "C" {
  * If no object of this type is present on the underlying architecture, the
  * function returns the depth of the first "present" object typically found
  * inside \p type.
+ *
+ * If some objects of the given type exist in different levels, for instance
+ * L1 and L2 caches, the function returns HWLOC_TYPE_DEPTH_MULTIPLE.
  */
-static __hwloc_inline int __hwloc_attribute_pure
+static __hwloc_inline int
+hwloc_get_type_or_below_depth (hwloc_topology_t topology, hwloc_obj_type_t type) __hwloc_attribute_pure;
+static __hwloc_inline int
 hwloc_get_type_or_below_depth (hwloc_topology_t topology, hwloc_obj_type_t type)
 {
   int depth = hwloc_get_type_depth(topology, type);
@@ -63,8 +68,13 @@ hwloc_get_type_or_below_depth (hwloc_topology_t topology, hwloc_obj_type_t type)
  * If no object of this type is present on the underlying architecture, the
  * function returns the depth of the first "present" object typically
  * containing \p type.
+ *
+ * If some objects of the given type exist in different levels, for instance
+ * L1 and L2 caches, the function returns HWLOC_TYPE_DEPTH_MULTIPLE.
  */
-static __hwloc_inline int __hwloc_attribute_pure
+static __hwloc_inline int
+hwloc_get_type_or_above_depth (hwloc_topology_t topology, hwloc_obj_type_t type) __hwloc_attribute_pure;
+static __hwloc_inline int
 hwloc_get_type_or_above_depth (hwloc_topology_t topology, hwloc_obj_type_t type)
 {
   int depth = hwloc_get_type_depth(topology, type);
@@ -100,14 +110,18 @@ hwloc_get_type_or_above_depth (hwloc_topology_t topology, hwloc_obj_type_t type)
  * for complex topologies.  This function replaces the old deprecated
  * hwloc_get_system_obj().
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_root_obj (hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_root_obj (hwloc_topology_t topology)
 {
   return hwloc_get_obj_by_depth (topology, 0, 0);
 }
 
 /** \brief Returns the ancestor object of \p obj at depth \p depth. */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_ancestor_obj_by_depth (hwloc_topology_t topology __hwloc_attribute_unused, unsigned depth, hwloc_obj_t obj) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_ancestor_obj_by_depth (hwloc_topology_t topology __hwloc_attribute_unused, unsigned depth, hwloc_obj_t obj)
 {
   hwloc_obj_t ancestor = obj;
@@ -119,7 +133,9 @@ hwloc_get_ancestor_obj_by_depth (hwloc_topology_t topology __hwloc_attribute_unu
 }
 
 /** \brief Returns the ancestor object of \p obj with type \p type. */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_ancestor_obj_by_type (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_type_t type, hwloc_obj_t obj) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_ancestor_obj_by_type (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_type_t type, hwloc_obj_t obj)
 {
   hwloc_obj_t ancestor = obj->parent;
@@ -166,7 +182,9 @@ hwloc_get_next_obj_by_type (hwloc_topology_t topology, hwloc_obj_type_t type,
  * processors.
  * However, using CPU sets to hide this complexity should often be preferred.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_pu_obj_by_os_index(hwloc_topology_t topology, unsigned os_index) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_pu_obj_by_os_index(hwloc_topology_t topology, unsigned os_index)
 {
   hwloc_obj_t obj = NULL;
@@ -191,7 +209,9 @@ hwloc_get_next_child (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_
 }
 
 /** \brief Returns the common parent object to objects lvl1 and lvl2 */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_common_ancestor_obj (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj1, hwloc_obj_t obj2) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_common_ancestor_obj (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj1, hwloc_obj_t obj2)
 {
   /* the loop isn't so easy since intermediate ancestors may have
@@ -216,7 +236,9 @@ hwloc_get_common_ancestor_obj (hwloc_topology_t topology __hwloc_attribute_unuse
  *
  * \note This function assumes that both \p obj and \p subtree_root have a \p cpuset.
  */
-static __hwloc_inline int __hwloc_attribute_pure
+static __hwloc_inline int
+hwloc_obj_is_in_subtree (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj, hwloc_obj_t subtree_root) __hwloc_attribute_pure;
+static __hwloc_inline int
 hwloc_obj_is_in_subtree (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj, hwloc_obj_t subtree_root)
 {
   return hwloc_bitmap_isincluded(obj->cpuset, subtree_root->cpuset);
@@ -237,13 +259,15 @@ hwloc_obj_is_in_subtree (hwloc_topology_t topology __hwloc_attribute_unused, hwl
  * This is convenient for iterating over all largest objects within a CPU set
  * by doing a loop getting the first largest object and clearing its CPU set
  * from the remaining CPU set.
+ *
+ * \note This function cannot work if the root object does not have a CPU set,
+ * e.g. if the topology is made of different machines.
  */
 static __hwloc_inline hwloc_obj_t
 hwloc_get_first_largest_obj_inside_cpuset(hwloc_topology_t topology, hwloc_const_cpuset_t set)
 {
   hwloc_obj_t obj = hwloc_get_root_obj(topology);
-  /* FIXME: what if !root->cpuset? */
-  if (!hwloc_bitmap_intersects(obj->cpuset, set))
+  if (!obj->cpuset || !hwloc_bitmap_intersects(obj->cpuset, set))
     return NULL;
   while (!hwloc_bitmap_isincluded(obj->cpuset, set)) {
     /* while the object intersects without being included, look at its children */
@@ -265,6 +289,9 @@ hwloc_get_first_largest_obj_inside_cpuset(hwloc_topology_t topology, hwloc_const
 /** \brief Get the set of largest objects covering exactly a given cpuset \p set
  *
  * \return the number of objects returned in \p objs.
+ *
+ * \note This function cannot work if the root object does not have a CPU set,
+ * e.g. if the topology is made of different machines.
  */
 HWLOC_DECLSPEC int hwloc_get_largest_objs_inside_cpuset (hwloc_topology_t topology, hwloc_const_cpuset_t set,
 						 hwloc_obj_t * __hwloc_restrict objs, int max);
@@ -274,13 +301,17 @@ HWLOC_DECLSPEC int hwloc_get_largest_objs_inside_cpuset (hwloc_topology_t topolo
  * If \p prev is \c NULL, return the first object at depth \p depth
  * included in \p set.  The next invokation should pass the previous
  * return value in \p prev so as to obtain the next object in \p set.
+ *
+ * \note This function cannot work if objects at the given depth do
+ * not have CPU sets or if the topology is made of different machines.
  */
 static __hwloc_inline hwloc_obj_t
 hwloc_get_next_obj_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_const_cpuset_t set,
 					   unsigned depth, hwloc_obj_t prev)
 {
   hwloc_obj_t next = hwloc_get_next_obj_by_depth(topology, depth, prev);
-  /* no need to check next->cpuset because objects in levels always have a cpuset */
+  if (!next || !next->cpuset)
+    return NULL;
   while (next && !hwloc_bitmap_isincluded(next->cpuset, set))
     next = next->next_cousin;
   return next;
@@ -291,6 +322,9 @@ hwloc_get_next_obj_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_cons
  * If there are multiple or no depth for given type, return \c NULL
  * and let the caller fallback to
  * hwloc_get_next_obj_inside_cpuset_by_depth().
+ *
+ * \note This function cannot work if objects of the given type do
+ * not have CPU sets or if the topology is made of different machines.
  */
 static __hwloc_inline hwloc_obj_t
 hwloc_get_next_obj_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_cpuset_t set,
@@ -303,15 +337,22 @@ hwloc_get_next_obj_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const
 }
 
 /** \brief Return the (logically) \p idx -th object at depth \p depth included in CPU set \p set.
+ *
+ * \note This function cannot work if objects at the given depth do
+ * not have CPU sets or if the topology is made of different machines.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_obj_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_const_cpuset_t set,
+				      unsigned depth, unsigned idx) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_obj_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_const_cpuset_t set,
 				      unsigned depth, unsigned idx)
 {
-  unsigned count = 0;
   hwloc_obj_t obj = hwloc_get_obj_by_depth (topology, depth, 0);
+  unsigned count = 0;
+  if (!obj || !obj->cpuset)
+    return NULL;
   while (obj) {
-    /* no need to check obj->cpuset because objects in levels always have a cpuset */
     if (hwloc_bitmap_isincluded(obj->cpuset, set)) {
       if (count == idx)
 	return obj;
@@ -327,8 +368,14 @@ hwloc_get_obj_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_const_cpu
  * If there are multiple or no depth for given type, return \c NULL
  * and let the caller fallback to
  * hwloc_get_obj_inside_cpuset_by_depth().
+ *
+ * \note This function cannot work if objects of the given type do
+ * not have CPU sets or if the topology is made of different machines.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_obj_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_cpuset_t set,
+				     hwloc_obj_type_t type, unsigned idx) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_obj_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_cpuset_t set,
 				     hwloc_obj_type_t type, unsigned idx)
 {
@@ -338,15 +385,23 @@ hwloc_get_obj_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_cpus
   return hwloc_get_obj_inside_cpuset_by_depth(topology, set, depth, idx);
 }
 
-/** \brief Return the number of objects at depth \p depth included in CPU set \p set. */
-static __hwloc_inline unsigned __hwloc_attribute_pure
+/** \brief Return the number of objects at depth \p depth included in CPU set \p set.
+ *
+ * \note This function cannot work if objects at the given depth do
+ * not have CPU sets or if the topology is made of different machines.
+ */
+static __hwloc_inline unsigned
+hwloc_get_nbobjs_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_const_cpuset_t set,
+					 unsigned depth) __hwloc_attribute_pure;
+static __hwloc_inline unsigned
 hwloc_get_nbobjs_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_const_cpuset_t set,
 					 unsigned depth)
 {
   hwloc_obj_t obj = hwloc_get_obj_by_depth (topology, depth, 0);
-  int count = 0;
+  unsigned count = 0;
+  if (!obj || !obj->cpuset)
+    return 0;
   while (obj) {
-    /* no need to check obj->cpuset because objects in levels always have a cpuset */
     if (hwloc_bitmap_isincluded(obj->cpuset, set))
       count++;
     obj = obj->next_cousin;
@@ -359,8 +414,14 @@ hwloc_get_nbobjs_inside_cpuset_by_depth (hwloc_topology_t topology, hwloc_const_
  * If no object for that type exists inside CPU set \p set, 0 is
  * returned.  If there are several levels with objects of that type
  * inside CPU set \p set, -1 is returned.
+ *
+ * \note This function cannot work if objects of the given type do
+ * not have CPU sets or if the topology is made of different machines.
  */
-static __hwloc_inline int __hwloc_attribute_pure
+static __hwloc_inline int
+hwloc_get_nbobjs_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_cpuset_t set,
+					hwloc_obj_type_t type) __hwloc_attribute_pure;
+static __hwloc_inline int
 hwloc_get_nbobjs_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_cpuset_t set,
 					hwloc_obj_type_t type)
 {
@@ -370,6 +431,31 @@ hwloc_get_nbobjs_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_c
   if (depth == HWLOC_TYPE_DEPTH_MULTIPLE)
     return -1; /* FIXME: agregate nbobjs from different levels? */
   return hwloc_get_nbobjs_inside_cpuset_by_depth(topology, set, depth);
+}
+
+/** \brief Return the logical index among the objects included in CPU set \p set.
+ *
+ * Consult all objects in the same level as \p obj and inside CPU set \p set
+ * in the logical order, and return the index of \p obj within them.
+ * If \p set covers the entire topology, this is the logical index of \p obj.
+ * Otherwise, this is similar to a logical index within the part of the topology
+ * defined by CPU set \p set.
+ */
+static __hwloc_inline int
+hwloc_get_obj_index_inside_cpuset (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_cpuset_t set,
+				   hwloc_obj_t obj) __hwloc_attribute_pure;
+static __hwloc_inline int
+hwloc_get_obj_index_inside_cpuset (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_cpuset_t set,
+				   hwloc_obj_t obj)
+{
+  int index = 0;
+  if (!hwloc_bitmap_isincluded(obj->cpuset, set))
+    return -1;
+  /* count how many objects are inside the cpuset on the way from us to the beginning of the level */
+  while ((obj = obj->prev_cousin) != NULL)
+    if (hwloc_bitmap_isincluded(obj->cpuset, set))
+      index++;
+  return index;
 }
 
 /** @} */
@@ -383,16 +469,19 @@ hwloc_get_nbobjs_inside_cpuset_by_type (hwloc_topology_t topology, hwloc_const_c
 /** \brief Get the child covering at least CPU set \p set.
  *
  * \return \c NULL if no child matches or if \p set is empty.
+ *
+ * \note This function cannot work if parent does not have a CPU set.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_child_covering_cpuset (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_cpuset_t set,
+				hwloc_obj_t parent) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_child_covering_cpuset (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_const_cpuset_t set,
 				hwloc_obj_t parent)
 {
   hwloc_obj_t child;
-
-  if (hwloc_bitmap_iszero(set))
+  if (!parent->cpuset || hwloc_bitmap_iszero(set))
     return NULL;
-
   child = parent->first_child;
   while (child) {
     if (child->cpuset && hwloc_bitmap_isincluded(set, child->cpuset))
@@ -405,19 +494,18 @@ hwloc_get_child_covering_cpuset (hwloc_topology_t topology __hwloc_attribute_unu
 /** \brief Get the lowest object covering at least CPU set \p set
  *
  * \return \c NULL if no object matches or if \p set is empty.
+ *
+ * \note This function cannot work if the root object does not have a CPU set,
+ * e.g. if the topology is made of different machines.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_obj_covering_cpuset (hwloc_topology_t topology, hwloc_const_cpuset_t set) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_obj_covering_cpuset (hwloc_topology_t topology, hwloc_const_cpuset_t set)
 {
   struct hwloc_obj *current = hwloc_get_root_obj(topology);
-
-  if (hwloc_bitmap_iszero(set))
+  if (hwloc_bitmap_iszero(set) || !current->cpuset || !hwloc_bitmap_isincluded(set, current->cpuset))
     return NULL;
-
-  /* FIXME: what if !root->cpuset? */
-  if (!hwloc_bitmap_isincluded(set, current->cpuset))
-    return NULL;
-
   while (1) {
     hwloc_obj_t child = hwloc_get_child_covering_cpuset(topology, set, current);
     if (!child)
@@ -441,13 +529,17 @@ hwloc_get_obj_covering_cpuset (hwloc_topology_t topology, hwloc_const_cpuset_t s
  * depth covering at least part of CPU set \p set.  The next
  * invokation should pass the previous return value in \p prev so as
  * to obtain the next object covering at least another part of \p set.
+ *
+ * \note This function cannot work if objects at the given depth do
+ * not have CPU sets or if the topology is made of different machines.
  */
 static __hwloc_inline hwloc_obj_t
 hwloc_get_next_obj_covering_cpuset_by_depth(hwloc_topology_t topology, hwloc_const_cpuset_t set,
 					    unsigned depth, hwloc_obj_t prev)
 {
   hwloc_obj_t next = hwloc_get_next_obj_by_depth(topology, depth, prev);
-  /* no need to check next->cpuset because objects in levels always have a cpuset */
+  if (!next || !next->cpuset)
+    return NULL;
   while (next && !hwloc_bitmap_intersects(set, next->cpuset))
     next = next->next_cousin;
   return next;
@@ -464,6 +556,9 @@ hwloc_get_next_obj_covering_cpuset_by_depth(hwloc_topology_t topology, hwloc_con
  * If there are no or multiple depths for type \p type, \c NULL is returned.
  * The caller may fallback to hwloc_get_next_obj_covering_cpuset_by_depth()
  * for each depth.
+ *
+ * \note This function cannot work if objects of the given type do
+ * not have CPU sets or if the topology is made of different machines.
  */
 static __hwloc_inline hwloc_obj_t
 hwloc_get_next_obj_covering_cpuset_by_type(hwloc_topology_t topology, hwloc_const_cpuset_t set,
@@ -485,9 +580,14 @@ hwloc_get_next_obj_covering_cpuset_by_type(hwloc_topology_t topology, hwloc_cons
 
 /** \brief Get the first cache covering a cpuset \p set
  *
- * \return \c NULL if no cache matches
+ * \return \c NULL if no cache matches.
+ *
+ * \note This function cannot work if the root object does not have a CPU set,
+ * e.g. if the topology is made of different machines.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_cache_covering_cpuset (hwloc_topology_t topology, hwloc_const_cpuset_t set) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_cache_covering_cpuset (hwloc_topology_t topology, hwloc_const_cpuset_t set)
 {
   hwloc_obj_t current = hwloc_get_obj_covering_cpuset(topology, set);
@@ -503,7 +603,9 @@ hwloc_get_cache_covering_cpuset (hwloc_topology_t topology, hwloc_const_cpuset_t
  *
  * \return \c NULL if no cache matches or if an invalid object is given.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_shared_cache_covering_obj (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_shared_cache_covering_obj (hwloc_topology_t topology __hwloc_attribute_unused, hwloc_obj_t obj)
 {
   hwloc_obj_t current = obj->parent;
@@ -539,6 +641,8 @@ hwloc_get_shared_cache_covering_obj (hwloc_topology_t topology __hwloc_attribute
  * \return the number of objects returned in \p objs.
  *
  * \return 0 if \p src is an I/O object.
+ *
+ * \note This function requires the \p src object to have a CPU set.
  */
 /* TODO: rather provide an iterator? Provide a way to know how much should be allocated? By returning the total number of objects instead? */
 HWLOC_DECLSPEC unsigned hwloc_get_closest_objs (hwloc_topology_t topology, hwloc_obj_t src, hwloc_obj_t * __hwloc_restrict objs, unsigned max);
@@ -552,18 +656,22 @@ HWLOC_DECLSPEC unsigned hwloc_get_closest_objs (hwloc_topology_t topology, hwloc
  *
  * For instance, if type1 is SOCKET, idx1 is 2, type2 is CORE and idx2
  * is 3, return the fourth core object below the third socket.
+ *
+ * \note This function requires these objects to have a CPU set.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_obj_below_by_type (hwloc_topology_t topology,
+			     hwloc_obj_type_t type1, unsigned idx1,
+			     hwloc_obj_type_t type2, unsigned idx2) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_obj_below_by_type (hwloc_topology_t topology,
 			     hwloc_obj_type_t type1, unsigned idx1,
 			     hwloc_obj_type_t type2, unsigned idx2)
 {
   hwloc_obj_t obj;
-
   obj = hwloc_get_obj_by_type (topology, type1, idx1);
-  if (!obj)
+  if (!obj || !obj->cpuset)
     return NULL;
-
   return hwloc_get_obj_inside_cpuset_by_type(topology, obj->cpuset, type2, idx2);
 }
 
@@ -581,20 +689,22 @@ hwloc_get_obj_below_by_type (hwloc_topology_t topology,
  * For instance, if nr is 3, typev contains NODE, SOCKET and CORE,
  * and idxv contains 0, 1 and 2, return the third core object below
  * the second socket below the first NUMA node.
+ *
+ * \note This function requires all these objects and the root object
+ * to have a CPU set.
  */
-static __hwloc_inline hwloc_obj_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_obj_t
+hwloc_get_obj_below_array_by_type (hwloc_topology_t topology, int nr, hwloc_obj_type_t *typev, unsigned *idxv) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
 hwloc_get_obj_below_array_by_type (hwloc_topology_t topology, int nr, hwloc_obj_type_t *typev, unsigned *idxv)
 {
   hwloc_obj_t obj = hwloc_get_root_obj(topology);
   int i;
-
-  /* FIXME: what if !root->cpuset? */
   for(i=0; i<nr; i++) {
-    obj = hwloc_get_obj_inside_cpuset_by_type(topology, obj->cpuset, typev[i], idxv[i]);
-    if (!obj)
+    if (!obj || !obj->cpuset)
       return NULL;
+    obj = hwloc_get_obj_inside_cpuset_by_type(topology, obj->cpuset, typev[i], idxv[i]);
   }
-
   return obj;
 }
 
@@ -618,6 +728,8 @@ hwloc_get_obj_below_array_by_type (hwloc_topology_t topology, int nr, hwloc_obj_
  *
  * The caller may typically want to also call hwloc_bitmap_singlify()
  * before binding a thread so that it does not move at all.
+ *
+ * \note This function requires the \p root object to have a CPU set.
  */
 static __hwloc_inline void
 hwloc_distributev(hwloc_topology_t topology, hwloc_obj_t *root, unsigned n_roots, hwloc_cpuset_t *cpuset, unsigned n, unsigned until);
@@ -625,15 +737,12 @@ static __hwloc_inline void
 hwloc_distribute(hwloc_topology_t topology, hwloc_obj_t root, hwloc_cpuset_t *cpuset, unsigned n, unsigned until)
 {
   unsigned i;
-
-  /* FIXME: what if !root->cpuset? */
   if (!root->arity || n == 1 || root->depth >= until) {
     /* Got to the bottom, we can't split any more, put everything there.  */
     for (i=0; i<n; i++)
       cpuset[i] = hwloc_bitmap_dup(root->cpuset);
     return;
   }
-
   hwloc_distributev(topology, root->children, root->arity, cpuset, n, until);
 }
 
@@ -641,6 +750,8 @@ hwloc_distribute(hwloc_topology_t topology, hwloc_obj_t root, hwloc_cpuset_t *cp
  *
  * This is the same as hwloc_distribute, but takes an array of roots instead of
  * just one root.
+ *
+ * \note This function requires the \p roots objects to have a CPU set.
  */
 static __hwloc_inline void
 hwloc_distributev(hwloc_topology_t topology, hwloc_obj_t *roots, unsigned n_roots, hwloc_cpuset_t *cpuset, unsigned n, unsigned until)
@@ -719,7 +830,9 @@ hwloc_alloc_membind_policy(hwloc_topology_t topology, size_t len, hwloc_const_cp
  * \note The returned cpuset is not newly allocated and should thus not be
  * changed or freed; hwloc_cpuset_dup must be used to obtain a local copy.
  */
-static __hwloc_inline hwloc_const_cpuset_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_const_cpuset_t
+hwloc_topology_get_complete_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_complete_cpuset(hwloc_topology_t topology)
 {
   return hwloc_get_root_obj(topology)->complete_cpuset;
@@ -735,7 +848,9 @@ hwloc_topology_get_complete_cpuset(hwloc_topology_t topology)
  * \note The returned cpuset is not newly allocated and should thus not be
  * changed or freed; hwloc_cpuset_dup must be used to obtain a local copy.
  */
-static __hwloc_inline hwloc_const_cpuset_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_const_cpuset_t
+hwloc_topology_get_topology_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_topology_cpuset(hwloc_topology_t topology)
 {
   return hwloc_get_root_obj(topology)->cpuset;
@@ -750,7 +865,9 @@ hwloc_topology_get_topology_cpuset(hwloc_topology_t topology)
  * \note The returned cpuset is not newly allocated and should thus not be
  * changed or freed; hwloc_cpuset_dup must be used to obtain a local copy.
  */
-static __hwloc_inline hwloc_const_cpuset_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_const_cpuset_t
+hwloc_topology_get_online_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_online_cpuset(hwloc_topology_t topology)
 {
   return hwloc_get_root_obj(topology)->online_cpuset;
@@ -765,7 +882,9 @@ hwloc_topology_get_online_cpuset(hwloc_topology_t topology)
  * \note The returned cpuset is not newly allocated and should thus not be
  * changed or freed, hwloc_cpuset_dup must be used to obtain a local copy.
  */
-static __hwloc_inline hwloc_const_cpuset_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_const_cpuset_t
+hwloc_topology_get_allowed_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_allowed_cpuset(hwloc_topology_t topology)
 {
   return hwloc_get_root_obj(topology)->allowed_cpuset;
@@ -787,7 +906,9 @@ hwloc_topology_get_allowed_cpuset(hwloc_topology_t topology)
  * \note The returned nodeset is not newly allocated and should thus not be
  * changed or freed; hwloc_nodeset_dup must be used to obtain a local copy.
  */
-static __hwloc_inline hwloc_const_nodeset_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_const_nodeset_t
+hwloc_topology_get_complete_nodeset(hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_const_nodeset_t
 hwloc_topology_get_complete_nodeset(hwloc_topology_t topology)
 {
   return hwloc_get_root_obj(topology)->complete_nodeset;
@@ -803,7 +924,9 @@ hwloc_topology_get_complete_nodeset(hwloc_topology_t topology)
  * \note The returned nodeset is not newly allocated and should thus not be
  * changed or freed; hwloc_nodeset_dup must be used to obtain a local copy.
  */
-static __hwloc_inline hwloc_const_nodeset_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_const_nodeset_t
+hwloc_topology_get_topology_nodeset(hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_const_nodeset_t
 hwloc_topology_get_topology_nodeset(hwloc_topology_t topology)
 {
   return hwloc_get_root_obj(topology)->nodeset;
@@ -818,7 +941,9 @@ hwloc_topology_get_topology_nodeset(hwloc_topology_t topology)
  * \note The returned nodeset is not newly allocated and should thus not be
  * changed or freed, hwloc_nodeset_dup must be used to obtain a local copy.
  */
-static __hwloc_inline hwloc_const_nodeset_t __hwloc_attribute_pure
+static __hwloc_inline hwloc_const_nodeset_t
+hwloc_topology_get_allowed_nodeset(hwloc_topology_t topology) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_const_nodeset_t
 hwloc_topology_get_allowed_nodeset(hwloc_topology_t topology)
 {
   return hwloc_get_root_obj(topology)->allowed_nodeset;
@@ -1018,7 +1143,7 @@ hwloc_get_whole_distance_matrix_by_type(hwloc_topology_t topology, hwloc_obj_typ
 /** \brief Get distances for the given depth and covering some objects
  *
  * Return a distance matrix that describes depth \p depth and covers at
- * least object \p obj and all its ancestors.
+ * least object \p obj and all its children.
  *
  * When looking for the distance between some objects, a common ancestor should
  * be passed in \p obj.
@@ -1102,7 +1227,7 @@ hwloc_get_latency(hwloc_topology_t topology,
  * object. This regular object may then be used for binding because
  * its locality is the same as \p ioobj.
  */
-static __inline hwloc_obj_t
+static __hwloc_inline hwloc_obj_t
 hwloc_get_non_io_ancestor_obj(hwloc_topology_t topology __hwloc_attribute_unused,
 			      hwloc_obj_t ioobj)
 {
@@ -1117,7 +1242,7 @@ hwloc_get_non_io_ancestor_obj(hwloc_topology_t topology __hwloc_attribute_unused
  *
  * \return the first PCI device if \p prev is \c NULL.
  */
-static __inline hwloc_obj_t
+static __hwloc_inline hwloc_obj_t
 hwloc_get_next_pcidev(hwloc_topology_t topology, hwloc_obj_t prev)
 {
   return hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_PCI_DEVICE, prev);
@@ -1126,7 +1251,7 @@ hwloc_get_next_pcidev(hwloc_topology_t topology, hwloc_obj_t prev)
 /** \brief Find the PCI device object matching the PCI bus id
  * given domain, bus device and function PCI bus id.
  */
-static __inline hwloc_obj_t
+static __hwloc_inline hwloc_obj_t
 hwloc_get_pcidev_by_busid(hwloc_topology_t topology,
 			  unsigned domain, unsigned bus, unsigned dev, unsigned func)
 {
@@ -1144,7 +1269,7 @@ hwloc_get_pcidev_by_busid(hwloc_topology_t topology,
 /** \brief Find the PCI device object matching the PCI bus id
  * given as a string xxxx:yy:zz.t or yy:zz.t.
  */
-static __inline hwloc_obj_t
+static __hwloc_inline hwloc_obj_t
 hwloc_get_pcidev_by_busidstring(hwloc_topology_t topology, const char *busid)
 {
   unsigned domain = 0; /* default */
@@ -1163,7 +1288,7 @@ hwloc_get_pcidev_by_busidstring(hwloc_topology_t topology, const char *busid)
  *
  * \return the first OS device if \p prev is \c NULL.
  */
-static __inline hwloc_obj_t
+static __hwloc_inline hwloc_obj_t
 hwloc_get_next_osdev(hwloc_topology_t topology, hwloc_obj_t prev)
 {
   return hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_OS_DEVICE, prev);
@@ -1173,7 +1298,7 @@ hwloc_get_next_osdev(hwloc_topology_t topology, hwloc_obj_t prev)
  *
  * \return the first bridge if \p prev is \c NULL.
  */
-static __inline hwloc_obj_t
+static __hwloc_inline hwloc_obj_t
 hwloc_get_next_bridge(hwloc_topology_t topology, hwloc_obj_t prev)
 {
   return hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_BRIDGE, prev);
@@ -1181,7 +1306,7 @@ hwloc_get_next_bridge(hwloc_topology_t topology, hwloc_obj_t prev)
 
 /* \brief Checks whether a given bridge covers a given PCI bus.
  */
-static __inline int
+static __hwloc_inline int
 hwloc_bridge_covers_pcibus(hwloc_obj_t bridge,
 			   unsigned domain, unsigned bus)
 {
@@ -1197,7 +1322,7 @@ hwloc_bridge_covers_pcibus(hwloc_obj_t bridge,
  * This is useful for finding the locality of a bus because
  * it is the hostbridge parent cpuset.
  */
-static __inline hwloc_obj_t
+static __hwloc_inline hwloc_obj_t
 hwloc_get_hostbridge_by_pcibus(hwloc_topology_t topology,
 			       unsigned domain, unsigned bus)
 {

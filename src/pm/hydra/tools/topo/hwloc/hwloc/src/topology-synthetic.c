@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -28,6 +28,11 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
   int cache_depth = 0, group_depth = 0;
   int nb_machine_levels = 0, nb_node_levels = 0;
   int nb_pu_levels = 0;
+  int verbose = 0;
+  char *env = getenv("HWLOC_SYNTHETIC_VERBOSE");
+
+  if (env)
+    verbose = atoi(env);
 
   assert(topology->backend_type == HWLOC_BACKEND_NONE);
 
@@ -58,12 +63,13 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
 	type = HWLOC_OBJ_MISC;
       else if (!hwloc_namecoloncmp(pos, "group", 2))
 	type = HWLOC_OBJ_GROUP;
-      else
-        fprintf(stderr, "Unknown object type `%s'\n", pos);
+      else if (verbose)
+        fprintf(stderr, "Synthetic string with unknown object type `%s'\n", pos);
 
       next_pos = strchr(pos, ':');
       if (!next_pos) {
-	fprintf(stderr,"synthetic string doesn't have a `:' after object type at '%s'\n", pos);
+	if (verbose)
+	  fprintf(stderr,"Synthetic string doesn't have a `:' after object type at '%s'\n", pos);
 	errno = EINVAL;
 	return -1;
       }
@@ -71,18 +77,21 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
     }
     item = strtoul(pos, (char **)&next_pos, 0);
     if (next_pos == pos) {
-      fprintf(stderr,"synthetic string doesn't have a number of objects at '%s'\n", pos);
+      if (verbose)
+	fprintf(stderr,"Synthetic string doesn't have a number of objects at '%s'\n", pos);
       errno = EINVAL;
       return -1;
     }
 
     if (count + 1 >= HWLOC_SYNTHETIC_MAX_DEPTH) {
-      fprintf(stderr,"Too many synthetic levels, max %d\n", HWLOC_SYNTHETIC_MAX_DEPTH);
+      if (verbose)
+	fprintf(stderr,"Too many synthetic levels, max %d\n", HWLOC_SYNTHETIC_MAX_DEPTH);
       errno = EINVAL;
       return -1;
     }
     if (item > UINT_MAX) {
-      fprintf(stderr,"Too big arity, max %u\n", UINT_MAX);
+      if (verbose)
+	fprintf(stderr,"Too big arity, max %u\n", UINT_MAX);
       errno = EINVAL;
       return -1;
     }
@@ -93,7 +102,8 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
   }
 
   if (count <= 0) {
-    fprintf(stderr,"synthetic string doesn't contain any object\n");
+    if (verbose)
+      fprintf(stderr, "Synthetic string doesn't contain any object\n");
     errno = EINVAL;
     return -1;
   }
@@ -125,9 +135,10 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
     switch (type) {
       case HWLOC_OBJ_PU:
 	if (nb_pu_levels) {
-	    fprintf(stderr,"synthetic string can not have several PU levels\n");
-	    errno = EINVAL;
-	    return -1;
+	  if (verbose)
+	    fprintf(stderr, "Synthetic string can not have several PU levels\n");
+	  errno = EINVAL;
+	  return -1;
 	}
 	nb_pu_levels++;
 	break;
@@ -149,23 +160,27 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
   }
 
   if (!nb_pu_levels) {
-    fprintf(stderr,"synthetic string missing ending number of PUs\n");
+    if (verbose)
+      fprintf(stderr, "Synthetic string missing ending number of PUs\n");
     errno = EINVAL;
     return -1;
   }
 
   if (nb_pu_levels > 1) {
-    fprintf(stderr,"synthetic string can not have several PU levels\n");
+    if (verbose)
+      fprintf(stderr, "Synthetic string can not have several PU levels\n");
     errno = EINVAL;
     return -1;
   }
   if (nb_node_levels > 1) {
-    fprintf(stderr,"synthetic string can not have several NUMA node levels\n");
+    if (verbose)
+      fprintf(stderr, "Synthetic string can not have several NUMA node levels\n");
     errno = EINVAL;
     return -1;
   }
   if (nb_machine_levels > 1) {
-    fprintf(stderr,"synthetic string can not have several machine levels\n");
+    if (verbose)
+      fprintf(stderr, "Synthetic string can not have several machine levels\n");
     errno = EINVAL;
     return -1;
   }
@@ -191,6 +206,7 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
   }
 
   topology->backend_type = HWLOC_BACKEND_SYNTHETIC;
+  topology->backend_params.synthetic.string = strdup(description);
   topology->backend_params.synthetic.arity[count-1] = 0;
   topology->is_thissystem = 0;
 
@@ -201,6 +217,7 @@ void
 hwloc_backend_synthetic_exit(struct hwloc_topology *topology)
 {
   assert(topology->backend_type == HWLOC_BACKEND_SYNTHETIC);
+  free(topology->backend_params.synthetic.string);
   topology->backend_type = HWLOC_BACKEND_NONE;
 }
 
@@ -343,5 +360,6 @@ hwloc_look_synthetic(struct hwloc_topology *topology)
   hwloc_bitmap_free(cpuset);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Synthetic");
+  hwloc_obj_add_info(topology->levels[0][0], "SyntheticDescription", topology->backend_params.synthetic.string);
 }
 

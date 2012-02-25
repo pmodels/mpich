@@ -1,8 +1,9 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2011      Oracle and/or its affiliates.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -10,6 +11,7 @@
 #include <hwloc.h>
 #include <private/private.h>
 #include <private/debug.h>
+#include <private/solaris-chiptype.h>
 
 #include <stdio.h>
 #include <errno.h>
@@ -426,7 +428,7 @@ hwloc_look_lgrp(struct hwloc_topology *topology)
 	for (j = 0; j < curlgrp; j++)
           distances[i*curlgrp+j] = (float) lgrp_latency_cookie(cookie, glob_lgrps[i]->os_index, glob_lgrps[j]->os_index, LGRP_LAT_CPU_TO_MEM);
       }
-      hwloc_topology__set_distance_matrix(topology, HWLOC_OBJ_NODE, curlgrp, indexes, glob_lgrps, distances, 0 /* OS cannot force */);
+      hwloc_distances_set(topology, HWLOC_OBJ_NODE, curlgrp, indexes, glob_lgrps, distances, 0 /* OS cannot force */);
     }
 #endif /* HAVE_LGRP_LATENCY_COOKIE */
   }
@@ -440,6 +442,10 @@ hwloc_look_lgrp(struct hwloc_topology *topology)
 static int
 hwloc_look_kstat(struct hwloc_topology *topology)
 {
+  /* FIXME this assumes that all sockets are identical */
+  char *CPUType = hwloc_solaris_get_chip_type();
+  char *CPUModel = hwloc_solaris_get_chip_model();
+
   kstat_ctl_t *kc = kstat_open();
   kstat_t *ksp;
   kstat_named_t *stat;
@@ -608,8 +614,22 @@ hwloc_look_kstat(struct hwloc_topology *topology)
        * however. */
     }
 
-  if (look_chips)
-    hwloc_setup_level(procid_max, numsockets, osphysids, proc_physids, topology, HWLOC_OBJ_SOCKET);
+  if (look_chips) {
+    struct hwloc_obj *obj;
+    unsigned j;
+    hwloc_debug("%d Sockets\n", numsockets);
+    for (j = 0; j < numsockets; j++) {
+      obj = hwloc_alloc_setup_object(HWLOC_OBJ_SOCKET, osphysids[j]);
+      if (CPUType)
+	hwloc_obj_add_info(obj, "CPUType", CPUType);
+      if (CPUModel)
+	hwloc_obj_add_info(obj, "CPUModel", CPUModel);
+      hwloc_object_cpuset_from_array(obj, j, proc_physids, procid_max);
+      hwloc_debug_1arg_bitmap("Socket %d has cpuset %s\n", j, obj->cpuset);
+      hwloc_insert_object_by_cpuset(topology, obj);
+    }
+    hwloc_debug("%s", "\n");
+  }
 
   if (look_cores)
     hwloc_setup_level(procid_max, numcores, oscoreids, proc_coreids, topology, HWLOC_OBJ_CORE);

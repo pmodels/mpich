@@ -1,6 +1,6 @@
 /*
- * Copyright © 2010-2011 INRIA.  All rights reserved.
- * Copyright © 2010-2011 Université Bordeaux 1
+ * Copyright © 2010-2011 inria.  All rights reserved.
+ * Copyright © 2010-2012 Université Bordeaux 1
  * Copyright © 2010-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  *
@@ -18,8 +18,10 @@
 #include <hwloc.h>
 #include <private/private.h>
 #include <private/debug.h>
-#include <private/cpuid.h>
 #include <private/misc.h>
+
+#if defined(HWLOC_HAVE_CPUID)
+#include <private/cpuid.h>
 
 struct cacheinfo {
   unsigned type;
@@ -162,7 +164,6 @@ static void look_proc(struct procinfo *infos, unsigned highest_cpuid, unsigned h
 
   /* AMD doesn't actually provide 0x04 information */
   if (cpuid_type != amd && highest_cpuid >= 0x04) {
-    cachenum = 0;
     for (cachenum = 0; ; cachenum++) {
       unsigned type;
       eax = 0x04;
@@ -212,7 +213,7 @@ static void look_proc(struct procinfo *infos, unsigned highest_cpuid, unsigned h
       else
         cache->ways = ways = ((ebx >> 22) & 0x3ff) + 1;
       cache->sets = sets = ecx + 1;
-      cache->size = linesize * linepart * ways * sets;
+      cache->size = linesize * linepart * ways * sets; /* FIXME: what if ways == -1 ? */
 
       hwloc_debug("cache %u type %u L%u t%u c%u linesize %u linepart %u ways %u sets %u, size %uKB\n", cachenum, cache->type, cache->level, cache->nbthreads_sharing, infos->max_nbcores, linesize, linepart, ways, sets, cache->size >> 10);
       infos->max_nbthreads = infos->max_log_proc / infos->max_nbcores;
@@ -458,8 +459,9 @@ static void summarize(hwloc_topology_t topology, struct procinfo *infos, unsigne
 #define AMD_EBX ('A' | ('u'<<8) | ('t'<<16) | ('h'<<24))
 #define AMD_EDX ('e' | ('n'<<8) | ('t'<<16) | ('i'<<24))
 #define AMD_ECX ('c' | ('A'<<8) | ('M'<<16) | ('D'<<24))
+#endif
 
-void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs)
+void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs __hwloc_attribute_unused)
 {
     /* This function must always be here, but it's ok if it's empty. */
 #if defined(HWLOC_HAVE_CPUID)
@@ -536,8 +538,10 @@ void hwloc_look_x86(struct hwloc_topology *topology, unsigned nbprocs)
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "x86");
 
+#if defined(HWLOC_HAVE_CPUID)
  free:
   if (NULL != infos) {
       free(infos);
   }
+#endif
 }

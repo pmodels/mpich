@@ -31,21 +31,30 @@
 
 # HWLOC_PKG_PROG_PKG_CONFIG([MIN-VERSION])
 # ----------------------------------
+# hwloc note: Per https://svn.open-mpi.org/trac/hwloc/ticket/55, keep
+# the environment variable $PKG_CONFIG (vs. renaming it
+# $HWLOC_PKG_CONFIG).  Short explanation: $PKG_CONFIG is a well-known
+# environment variable that can be set by users to override what these
+# .m4 macros do.  There's no reason we should have a different env
+# variable name (e.g., $HWLOC_PKG_CONFIG).  So leave it named
+# $PKG_CONFIG both here in this specific macro, and all the other
+# macros that use it.
 AC_DEFUN([HWLOC_PKG_PROG_PKG_CONFIG],
 [m4_pattern_forbid([^_?PKG_[A-Z_]+$])
-m4_pattern_allow([^HWLOC_PKG_CONFIG(_PATH)?$])
-AC_ARG_VAR([HWLOC_PKG_CONFIG], [path to pkg-config utility])dnl
-if test "x$ac_cv_env_HWLOC_PKG_CONFIG_set" != "xset"; then
-	AC_PATH_TOOL([HWLOC_PKG_CONFIG], [pkg-config])
+m4_pattern_allow([^PKG_CONFIG(_PATH)?$])
+AC_ARG_VAR([PKG_CONFIG], [path to pkg-config utility])dnl
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
 fi
-if test -n "$HWLOC_PKG_CONFIG"; then
+if test -n "$PKG_CONFIG"; then
 	HWLOC_pkg_min_version=m4_default([$1], [0.9.0])
 	AC_MSG_CHECKING([pkg-config is at least version $HWLOC_pkg_min_version])
-	if $HWLOC_PKG_CONFIG --atleast-pkgconfig-version $HWLOC_pkg_min_version; then
+	if $PKG_CONFIG --atleast-pkgconfig-version $HWLOC_pkg_min_version; then
 		AC_MSG_RESULT([yes])
 	else
 		AC_MSG_RESULT([no])
-		HWLOC_PKG_CONFIG=""
+		PKG_CONFIG=""
 	fi
 		
 fi[]dnl
@@ -63,8 +72,8 @@ fi[]dnl
 # --------------------------------------------------------------
 AC_DEFUN([HWLOC_PKG_CHECK_EXISTS],
 [AC_REQUIRE([HWLOC_PKG_PROG_PKG_CONFIG])dnl
-if test -n "$HWLOC_PKG_CONFIG" && \
-    AC_RUN_LOG([$HWLOC_PKG_CONFIG --exists --silence-errors "$1"]); then
+if test -n "$PKG_CONFIG" && \
+    AC_RUN_LOG([$PKG_CONFIG --exists --silence-errors "$1"]); then
     m4_ifval([$2], [$2], [:])
     m4_ifvaln([$3], [else
                      $3])dnl
@@ -74,12 +83,12 @@ fi])
 # _HWLOC_PKG_CONFIG([VARIABLE], [COMMAND], [MODULES])
 # ---------------------------------------------
 m4_define([_HWLOC_PKG_CONFIG],
-[if test -n "$HWLOC_PKG_CONFIG"; then
+[if test -n "$PKG_CONFIG"; then
     if test -n "$$1"; then
         HWLOC_pkg_cv_[]$1="$$1"
     else
         HWLOC_PKG_CHECK_EXISTS([$3],
-                         [HWLOC_pkg_cv_[]$1=`$HWLOC_PKG_CONFIG --[]$2 "$3" 2>/dev/null`],
+                         [HWLOC_pkg_cv_[]$1=`$PKG_CONFIG --[]$2 "$3" 2>/dev/null`],
 			 [HWLOC_pkg_failed=yes])
     fi
 else
@@ -91,7 +100,7 @@ fi[]
 # -----------------------------
 AC_DEFUN([_HWLOC_PKG_SHORT_ERRORS_SUPPORTED],
 [AC_REQUIRE([HWLOC_PKG_PROG_PKG_CONFIG])
-if $HWLOC_PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         HWLOC_pkg_short_errors_supported=yes
 else
         HWLOC_pkg_short_errors_supported=no
@@ -128,9 +137,9 @@ See the pkg-config man page for more details.])
     if test $HWLOC_pkg_failed = yes; then
         _HWLOC_PKG_SHORT_ERRORS_SUPPORTED
         if test $HWLOC_pkg_short_errors_supported = yes; then
-            HWLOC_[]$1[]_PKG_ERRORS=`$HWLOC_PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$2" 2>&1`
+            HWLOC_[]$1[]_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "$2" 2>&1`
         else 
-            HWLOC_[]$1[]_PKG_ERRORS=`$HWLOC_PKG_CONFIG --errors-to-stdout --print-errors "$2" 2>&1`
+            HWLOC_[]$1[]_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "$2" 2>&1`
         fi
         # Put the nasty error message in config.log where it belongs
 	echo "$HWLOC_[]$1[]_PKG_ERRORS" >&AS_MESSAGE_LOG_FD
@@ -138,9 +147,9 @@ See the pkg-config man page for more details.])
 	ifelse([$5], , [AC_MSG_ERROR(dnl
 [Package requirements ($2) were not met:
 
-$HWLOCC_$1_PKG_ERRORS
+$HWLOC_$1_PKG_ERRORS
 
-Consider adjusting the HWLOC_PKG_CONFIG_PATH environment variable if you
+Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
 _HWLOC_PKG_TEXT
@@ -150,7 +159,7 @@ _HWLOC_PKG_TEXT
     elif test $HWLOC_pkg_failed = untried; then
         ifelse([$5], , [AC_MSG_FAILURE(dnl
 [The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the HWLOC_PKG_CONFIG environment variable to the full
+is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
 _HWLOC_PKG_TEXT

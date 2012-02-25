@@ -1,8 +1,8 @@
 # -*- shell-script -*-
 #
 # Copyright © 2009      CNRS
-# Copyright © 2009-2010 INRIA.  All rights reserved.
-# Copyright © 2009, 2011      Université Bordeaux 1
+# Copyright © 2009-2010 inria.  All rights reserved.
+# Copyright © 2009, 2011-2012      Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 #
 # See COPYING in top-level directory.
@@ -14,7 +14,7 @@
 
 AC_INIT([hwloc], 
         [m4_normalize(esyscmd([config/hwloc_get_version.sh VERSION --base]))],
-        [http://www.open-mpi.org/community/help/], [hwloc])
+        [http://www.open-mpi.org/projects/hwloc/], [hwloc])
 AC_PREREQ(2.63)
 AC_CONFIG_AUX_DIR(./config)
 # Note that this directory must *exactly* match what was specified via
@@ -85,7 +85,7 @@ AC_SUBST([libhwloc_so_version])
 # Setup the header file
 AH_TOP([/* -*- c -*-
  *
- * Copyright © 2009 CNRS, INRIA., Université Bordeaux 1  All rights reserved.
+ * Copyright © 2009 CNRS, inria., Université Bordeaux 1  All rights reserved.
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * $COPYRIGHT$
  * 
@@ -131,16 +131,11 @@ AS_IF([test "$enable_embedded_mode" != "yes"],
 # Setup the hwloc core
 HWLOC_SETUP_CORE([], [], [AC_MSG_ERROR([Cannot build hwloc core])], [1])
 
-dnl MPICH2 modification: don't expand these macros, even inside a shell-if,
-dnl because we have deleted the directories that these macros configure.
-dnl Therefore numerous ".in" files listed in AC_CONFIG_FILES are no longer
-dnl present and cause errors at automake time.
-dnl
-dnl # Setup hwloc's docs, utils, and tests
-dnl AS_IF([test "$hwloc_mode" = "standalone"],
-dnl       [HWLOC_SETUP_DOCS
-dnl        HWLOC_SETUP_UTILS
-dnl        HWLOC_SETUP_TESTS])
+# Setup hwloc's docs, utils, and tests
+AS_IF([test "$hwloc_mode" = "standalone"],
+      [HWLOC_SETUP_DOCS
+       HWLOC_SETUP_UTILS
+       HWLOC_SETUP_TESTS])
 
 # Run the AM_CONDITIONALs
 HWLOC_DO_AM_CONDITIONALS
@@ -159,3 +154,44 @@ LT_LANG([C])
 
 # Party on
 AC_OUTPUT
+
+# Create a comma-delimited list in an environment variable.
+# $1 = variable name
+# $2 = value to append
+append_env() {
+    # Tricky shell/m4 quoting here -- not for the meek.
+    var=[$]1
+    # Note: quotes *NOT* needed in this assignment
+    eval initial_value=\$$var
+
+    AS_IF([test "$initial_value" != ""], 
+          [new_value="$initial_value, [$]2"],
+          [new_value="[$]2]")
+    eval "[$]1=\"$new_value\""
+}
+
+# Show which optional support we'll be building
+hwloc_xml_status=basic
+AS_IF([test "$hwloc_libxml2_happy" = "yes"], [hwloc_xml_status=full])
+
+# Beginning of generic support
+cat <<EOF
+
+-----------------------------------------------------------------------------
+Hwloc optional build support status (more details can be found above):
+
+Probe / display PCI devices: $hwloc_pci_happy
+Graphical output (Cairo):    $hwloc_cairo_happy
+XML input / output:          $hwloc_xml_status
+EOF
+
+# Linux specific support
+AS_IF([test "$hwloc_linux" = "yes"], [cat <<EOF
+libnuma memory support:      $hwloc_linux_libnuma_happy
+EOF])
+
+# End of generic support
+cat <<EOF
+-----------------------------------------------------------------------------
+
+EOF

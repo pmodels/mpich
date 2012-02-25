@@ -1,11 +1,11 @@
 dnl -*- Autoconf -*-
 dnl
-dnl Copyright (c) 2009-2010 INRIA.  All rights reserved.
-dnl Copyright (c) 2009-2011 Université Bordeaux 1
+dnl Copyright (c) 2009-2010 inria.  All rights reserved.
+dnl Copyright (c) 2009-2012 Université Bordeaux 1
 dnl Copyright (c) 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
 dnl                         Corporation.  All rights reserved.
-dnl Copyright (c) 2004-2005 The Regents of the University of California.
+dnl Copyright (c) 2004-2012 The Regents of the University of California.
 dnl                         All rights reserved.
 dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart, 
 dnl                         University of Stuttgart.  All rights reserved.
@@ -21,7 +21,6 @@ dnl See COPYING in top-level directory.
 # 4. If non-empty, print the announcement banner
 #
 AC_DEFUN([HWLOC_SETUP_CORE],[
-    AC_REQUIRE([AC_USE_SYSTEM_EXTENSIONS])
     AC_REQUIRE([AC_CANONICAL_TARGET])
     AC_REQUIRE([AC_PROG_CC])
 
@@ -142,6 +141,7 @@ EOF])
     fi
 
     # Enample system extensions for O_DIRECTORY, fdopen, fssl, etc.
+    AC_USE_SYSTEM_EXTENSIONS
     AH_VERBATIM([USE_HPUX_SYSTEM_EXTENSIONS],
 [/* Enable extensions on HP-UX. */
 #ifndef _HPUX_SOURCE
@@ -234,20 +234,28 @@ EOF])
           4)
             AC_DEFINE(HWLOC_X86_32_ARCH, 1, [Define to 1 on x86_32])
             hwloc_x86_32=yes
+	    HWLOC_MS_LIB_ARCH=X86
             AC_MSG_RESULT([x86_32])
             ;;
           8)
             AC_DEFINE(HWLOC_X86_64_ARCH, 1, [Define to 1 on x86_64])
             hwloc_x86_64=yes
+	    HWLOC_MS_LIB_ARCH=X64
             AC_MSG_RESULT([x86_64])
             ;;
           *)
             AC_DEFINE(HWLOC_X86_64_ARCH, 1, [Define to 1 on x86_64])
             hwloc_x86_64=yes
+	    HWLOC_MS_LIB_ARCH=X64
             AC_MSG_RESULT([unknown -- assuming x86_64])
             ;;
         esac
+        ;;
+      *)
+        AC_MSG_RESULT([unknown])
+        ;;
     esac
+    AC_SUBST(HWLOC_MS_LIB_ARCH)
     
     AC_CHECK_SIZEOF([unsigned long])
     AC_DEFINE_UNQUOTED([HWLOC_SIZEOF_UNSIGNED_LONG], $ac_cv_sizeof_unsigned_long, [The size of `unsigned long', as computed by sizeof])
@@ -257,26 +265,53 @@ EOF])
     #
     # Check for compiler attributes and visibility
     #
+    _HWLOC_C_COMPILER_VENDOR([hwloc_c_vendor])
     _HWLOC_CHECK_ATTRIBUTES
     _HWLOC_CHECK_VISIBILITY
     HWLOC_CFLAGS="$HWLOC_FLAGS $HWLOC_VISIBILITY_CFLAGS"
     AS_IF([test "$HWLOC_VISIBILITY_CFLAGS" != ""],
           [AC_MSG_WARN(["$HWLOC_VISIBILITY_CFLAGS" has been added to the hwloc CFLAGS])])
 
-    #
-    # Check for inline compatibility support
-    #
-    AC_MSG_CHECKING([for inline compatibility keyword])
-    AC_TRY_COMPILE([static void __inline__ f(void) { }], [],
-      [__hwloc_inline=__inline__],
-      [AC_TRY_COMPILE([static void __inline f(void) {}], [],
-        [__hwloc_inline=__inline],
-        [__hwloc_inline=]
-      )]
-    )
-    AC_MSG_RESULT([$__hwloc_inline])
-    AC_DEFINE_UNQUOTED(__hwloc_inline, $__hwloc_inline, [Define this to a keyword that can safely replace inline in installed headers])
-    
+    # Make sure the compiler returns an error code when function arg
+    # count is wrong, otherwise sched_setaffinity checks may fail.
+    HWLOC_STRICT_ARGS_CFLAGS=
+    hwloc_args_check=0
+    AC_MSG_CHECKING([whether the C compiler rejects function calls with too many arguments])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        extern int one_arg(int x);
+        int foo(void) { return one_arg(1, 2); }
+      ]])],
+      [AC_MSG_RESULT([no])],
+      [hwloc_args_check=1
+       AC_MSG_RESULT([yes])])
+    AC_MSG_CHECKING([whether the C compiler rejects function calls with too few arguments])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        extern int two_arg(int x, int y);
+        int foo(void) { return two_arg(3); }
+      ]])],
+      [AC_MSG_RESULT([no])],
+      [hwloc_args_check=`expr $hwloc_args_check + 1`
+       AC_MSG_RESULT([yes])])
+    AS_IF([test "$hwloc_args_check" != "2"],[
+         AC_MSG_WARN([Your C compiler does not consider incorrect argument counts to be a fatal error.])
+        case "$hwloc_c_vendor" in
+        ibm)
+            HWLOC_STRICT_ARGS_CFLAGS="-qhalt=e"
+            ;;
+        intel)
+            HWLOC_STRICT_ARGS_CFLAGS="-we140"
+            ;;
+        *)
+            HWLOC_STRICT_ARGS_CFLAGS=FAIL
+            AC_MSG_WARN([Please report this warning and configure using a different C compiler if possible.])
+            ;;
+        esac
+        AS_IF([test "$HWLOC_STRICT_ARGS_CFLAGS" != "FAIL"],[
+            AC_MSG_WARN([Configure will append '$HWLOC_STRICT_ARGS_CFLAGS' to the value of CFLAGS when needed.])
+             AC_MSG_WARN([Alternatively you may configure with a different compiler.])
+        ])
+    ])
+
     #
     # Now detect support
     #
@@ -297,6 +332,8 @@ EOF])
     ])
     AC_CHECK_HEADERS([sys/mman.h])
     
+    old_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -D_WIN32_WINNT=0x0601"
     AC_CHECK_TYPES([KAFFINITY,
                     PROCESSOR_CACHE_TYPE,
                     CACHE_DESCRIPTOR,
@@ -313,6 +350,7 @@ EOF])
 		    PSAPI_WORKING_SET_EX_BLOCK,
 		    PSAPI_WORKING_SET_EX_INFORMATION],
                     [],[],[[#include <windows.h>]])
+    CPPFLAGS="$old_CPPFLAGS"
     AC_CHECK_LIB([gdi32], [main],
                  [HWLOC_LIBS="-lgdi32 $HWLOC_LIBS"
                   AC_DEFINE([HAVE_LIBGDI32], 1, [Define to 1 if we have -lgdi32])])
@@ -331,7 +369,11 @@ EOF])
                    [HWLOC_LIBS="-lkstat $HWLOC_LIBS"
                     AC_DEFINE([HAVE_LIBKSTAT], 1, [Define to 1 if we have -lkstat])])
     ])
-    
+    AC_CHECK_LIB([m], [fabsf],
+                 [HWLOC_LIBS="-lm $HWLOC_LIBS"])
+
+    AC_CHECK_HEADERS([picl.h])
+
     AC_CHECK_DECLS([_SC_NPROCESSORS_ONLN,
     		_SC_NPROCESSORS_CONF,
     		_SC_NPROC_ONLN,
@@ -375,16 +417,25 @@ EOF])
     fi
     
     _HWLOC_CHECK_DECL([sched_setaffinity], [
+      AC_DEFINE([HWLOC_HAVE_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides a prototype of sched_setaffinity()])
+      AS_IF([test "$HWLOC_STRICT_ARGS_CFLAGS" = "FAIL"],[
+        AC_MSG_WARN([Support for sched_setaffinity() requires a C compiler which])
+        AC_MSG_WARN([considers incorrect argument counts to be a fatal error.])
+        AC_MSG_ERROR([Cannot continue.])
+      ])
       AC_MSG_CHECKING([for old prototype of sched_setaffinity])
+      hwloc_save_CFLAGS=$CFLAGS
+      CFLAGS="$CFLAGS $HWLOC_STRICT_ARGS_CFLAGS"
       AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([[
-          #define _GNU_SOURCE
-          #include <sched.h>
-          static unsigned long mask;
-          ]], [[ sched_setaffinity(0, (void*) &mask); ]])],
-        [AC_DEFINE([HWLOC_HAVE_OLD_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides the old prototype of sched_setaffinity()])
-         AC_MSG_RESULT([yes])],
-        [AC_MSG_RESULT([no])])
+          AC_LANG_PROGRAM([[
+              #define _GNU_SOURCE
+              #include <sched.h>
+              static unsigned long mask;
+              ]], [[ sched_setaffinity(0, (void*) &mask); ]])],
+          [AC_DEFINE([HWLOC_HAVE_OLD_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides the old prototype (without length) of sched_setaffinity()])
+           AC_MSG_RESULT([yes])],
+          [AC_MSG_RESULT([no])])
+      CFLAGS=$hwloc_save_CFLAGS
     ], , [[
 #define _GNU_SOURCE
 #include <sched.h>
@@ -443,6 +494,19 @@ EOF])
         AC_DEFINE([HWLOC_HAVE_DECL_FFS], [1], [Define to 1 if function `ffs' is declared by system headers])
       ])
       AC_DEFINE([HWLOC_HAVE_FFS], [1], [Define to 1 if you have the `ffs' function.])
+      if ( $CC --version | grep gccfss ) >/dev/null 2>&1 ; then
+        dnl May be broken due to
+        dnl    https://forums.oracle.com/forums/thread.jspa?threadID=1997328
+        dnl TODO: a more selective test, since bug may be version dependent.
+        dnl We can't use AC_TRY_LINK because the failure does not appear until
+        dnl run/load time and there is currently no precedent for AC_TRY_RUN
+        dnl use in hwloc.  --PHH
+	dnl For now, we're going with "all gccfss compilers are broken". 
+	dnl Better to be safe and correct; it's not like this is
+	dnl performance-critical code, after all.
+        AC_DEFINE([HWLOC_HAVE_BROKEN_FFS], [1], 
+                  [Define to 1 if your `ffs' function is known to be broken.])
+      fi
     ])
     AC_CHECK_FUNCS([ffsl], [
       _HWLOC_CHECK_DECL([ffsl],[
@@ -485,25 +549,6 @@ EOF])
     AC_CHECK_HEADERS([sys/utsname.h])
     AC_CHECK_FUNCS([uname])
 
-    # set_mempolicy and mbind support   
-    AC_CHECK_HEADERS([numaif.h], [
-      AC_CHECK_LIB([numa], [set_mempolicy], [
-	enable_set_mempolicy=yes
-	AC_SUBST([HWLOC_LINUX_LIBNUMA_LIBS], ["-lnuma"])
-	AC_DEFINE([HWLOC_HAVE_SET_MEMPOLICY], [1], [Define to 1 if set_mempolicy is available.])
-      ])
-      AC_CHECK_LIB([numa], [mbind], [
-	enable_mbind=yes
-	AC_SUBST([HWLOC_LINUX_LIBNUMA_LIBS], ["-lnuma"])
-	AC_DEFINE([HWLOC_HAVE_MBIND], [1], [Define to 1 if mbind is available.])
-      ])
-      AC_CHECK_LIB([numa], [migrate_pages], [
-	enable_migrate_pages=yes
-	AC_SUBST([HWLOC_LINUX_LIBNUMA_LIBS], ["-lnuma"])
-	AC_DEFINE([HWLOC_HAVE_MIGRATE_PAGES], [1], [Define to 1 if migrate_pages is available.])
-      ])
-    ])
-
     AC_CHECK_HEADERS([pthread_np.h])
     AC_CHECK_DECLS([pthread_setaffinity_np],,[:],[[
       #include <pthread.h>
@@ -522,6 +567,41 @@ EOF])
     AC_SEARCH_LIBS([pthread_getthrds_np], [pthread],
       AC_DEFINE([HWLOC_HAVE_PTHREAD_GETTHRDS_NP], 1, `Define to 1 if you have pthread_getthrds_np')
     )
+
+    # Linux libnuma support
+    hwloc_linux_libnuma_happy=no
+    if test "x$enable_libnuma" != "xno"; then
+        hwloc_linux_libnuma_happy=yes
+        AC_CHECK_HEADERS([numaif.h], [
+            AC_CHECK_LIB([numa], [numa_available], [HWLOC_LINUX_LIBNUMA_LIBS="-lnuma"], [hwloc_linux_libnuma_happy=no])
+        ], [hwloc_linux_libnuma_happy=no])
+    fi
+    AC_SUBST(HWLOC_LINUX_LIBNUMA_LIBS)
+    # If we asked for Linux libnuma support but couldn't deliver, fail
+    HWLOC_LIBS="$HWLOC_LIBS $HWLOC_LINUX_LIBNUMA_LIBS"
+    AS_IF([test "$enable_libnuma" = "yes" -a "$hwloc_linux_libnuma_happy" = "no"],
+          [AC_MSG_WARN([Specified --enable-libnuma switch, but could not])
+           AC_MSG_WARN([find appropriate support])
+           AC_MSG_ERROR([Cannot continue])])
+    if test "x$hwloc_linux_libnuma_happy" = "xyes"; then
+      tmp_save_LIBS="$LIBS"
+      LIBS="$LIBS $HWLOC_LINUX_LIBNUMA_LIBS"
+
+      AC_CHECK_LIB([numa], [set_mempolicy], [
+	enable_set_mempolicy=yes
+	AC_DEFINE([HWLOC_HAVE_SET_MEMPOLICY], [1], [Define to 1 if set_mempolicy is available.])
+      ])
+      AC_CHECK_LIB([numa], [mbind], [
+	enable_mbind=yes
+	AC_DEFINE([HWLOC_HAVE_MBIND], [1], [Define to 1 if mbind is available.])
+      ])
+      AC_CHECK_LIB([numa], [migrate_pages], [
+	enable_migrate_pages=yes
+	AC_DEFINE([HWLOC_HAVE_MIGRATE_PAGES], [1], [Define to 1 if migrate_pages is available.])
+      ])
+
+      LIBS="$tmp_save_LIBS"
+    fi
 
     # PCI support
     hwloc_pci_happy=no
@@ -567,12 +647,18 @@ EOF])
         ])
     fi
     AC_SUBST(HWLOC_PCI_LIBS)
+    HWLOC_LIBS="$HWLOC_LIBS $HWLOC_PCI_LIBS"
     # If we asked for pci support but couldn't deliver, fail
     AS_IF([test "$enable_pci" = "yes" -a "$hwloc_pci_happy" = "no"],
           [AC_MSG_WARN([Specified --enable-pci switch, but could not])
            AC_MSG_WARN([find appropriate support])
            AC_MSG_ERROR([Cannot continue])])
     if test "x$hwloc_pci_happy" = "xyes"; then
+      tmp_save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $HWLOC_PCI_CFLAGS"
+      tmp_save_LIBS="$LIBS"
+      LIBS="$LIBS $HWLOC_PCI_LIBS"
+      AC_CHECK_DECLS([PCI_LOOKUP_NO_NUMBERS],,[:],[[#include <pci/pci.h>]])
       AC_CHECK_DECLS([PCI_LOOKUP_NO_NUMBERS],,[:],[[#include <pci/pci.h>]])
       AC_CHECK_LIB([pci], [pci_find_cap], [enable_pci_caps=yes], [enable_pci_caps=no], [$HWLOC_PCI_ADDITIONAL_LIBS])
       if test "x$enable_pci_caps" = "xyes"; then
@@ -600,6 +686,8 @@ EOF])
       HWLOC_REQUIRES="libpci $HWLOC_REQUIRES"
       AC_DEFINE([HWLOC_HAVE_LIBPCI], [1], [Define to 1 if you have the `libpci' library.])
       AC_SUBST([HWLOC_HAVE_LIBPCI], [1])
+      CFLAGS="$tmp_save_CFLAGS"
+      LIBS="$tmp_save_LIBS"
     else
       AC_SUBST([HWLOC_HAVE_LIBPCI], [0])
     fi
@@ -623,11 +711,12 @@ EOF])
                AC_MSG_ERROR([Cannot continue])])
     fi
     HWLOC_CFLAGS="$HWLOC_CFLAGS $HWLOC_LIBXML2_CFLAGS"    
+    HWLOC_LIBS="$HWLOC_LIBS $HWLOC_LIBXML2_LIBS"
 
     # Setup HWLOC's C, CPP, and LD flags, and LIBS
     AC_SUBST(HWLOC_REQUIRES)
     AC_SUBST(HWLOC_CFLAGS)
-    HWLOC_CPPFLAGS='-I$(HWLOC_top_srcdir)/include -I$(HWLOC_top_builddir)/include'
+    HWLOC_CPPFLAGS='-I$(HWLOC_top_builddir)/include -I$(HWLOC_top_srcdir)/include'
     AC_SUBST(HWLOC_CPPFLAGS)
     HWLOC_LDFLAGS='-L$(HWLOC_top_builddir)/src'
     AC_SUBST(HWLOC_LDFLAGS)
@@ -635,22 +724,30 @@ EOF])
 
     # Set these values explicitly for embedded builds.  Exporting
     # these values through *_EMBEDDED_* values gives us the freedom to
-    # do something different someday if we ever need to.
-    HWLOC_EMBEDDED_CFLAGS=$HWLOC_CFLAGS
+    # do something different someday if we ever need to.  There's no
+    # need to fill these values in unless we're in embedded mode.
+    # Indeed, if we're building in embedded mode, we want HWLOC_LIBS
+    # to be empty so that nothing is linked into libhwloc_embedded.la
+    # itself -- only the upper-layer will link in anything required.
+
+    AS_IF([test "$hwloc_mode" = "embedded"],
+          [HWLOC_EMBEDDED_CFLAGS=$HWLOC_CFLAGS
+           HWLOC_EMBEDDED_CPPFLAGS=$HWLOC_CPPFLAGS
+           HWLOC_EMBEDDED_LDADD='$(HWLOC_top_builddir)/src/libhwloc_embedded.la'
+           HWLOC_EMBEDDED_LIBS=$HWLOC_LIBS
+           HWLOC_LIBS=])
     AC_SUBST(HWLOC_EMBEDDED_CFLAGS)
-    HWLOC_EMBEDDED_CPPFLAGS=$HWLOC_CPPFLAGS
     AC_SUBST(HWLOC_EMBEDDED_CPPFLAGS)
-    HWLOC_EMBEDDED_LDADD='$(HWLOC_top_builddir)/src/libhwloc_embedded.la'
     AC_SUBST(HWLOC_EMBEDDED_LDADD)
-    HWLOC_EMBEDDED_LIBS=$HWLOC_LIBS
     AC_SUBST(HWLOC_EMBEDDED_LIBS)
 
     # Try to compile the cpuid inlines
     AC_MSG_CHECKING([for cpuid])
     old_CPPFLAGS="$CPPFLAGS"
-    CFLAGS="$CFLAGS -I$HWLOC_top_srcdir/include"
+    CPPFLAGS="$CPPFLAGS -I$HWLOC_top_srcdir/include"
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
         #include <stdio.h>
+        #define __hwloc_inline
         #include <private/cpuid.h>
       ]], [[
         if (hwloc_have_cpuid()) {

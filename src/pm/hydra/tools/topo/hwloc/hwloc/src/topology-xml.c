@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 INRIA.  All rights reserved.
+ * Copyright © 2009-2011 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -116,7 +116,7 @@ hwloc_backend_xml_init(struct hwloc_topology *topology, const char *xmlpath, con
     fclose(file);
 
     topology->backend_params.xml.buffer = buffer;
-    buflen = offset+1;
+    /* buflen = offset+1; */
   }
 
   topology->is_thissystem = 0;
@@ -491,10 +491,10 @@ hwloc__xml_import_next_attr(hwloc__xml_import_state_t state, char **namep, char 
 	if (hwloc__xml_verbose())
 	  fprintf(stderr, "ignoring unexpected xml attr type %u\n", attr->type);
       }
-    return -1;
 #else
     assert(0);
 #endif
+    return -1;
   } else {
     int namelen;
     size_t len, escaped;
@@ -577,14 +577,14 @@ hwloc__xml_import_find_child(hwloc__xml_import_state_t state,
 	if (child->content && child->content[0] != '\0' && child->content[0] != '\n')
 	  if (hwloc__xml_verbose())
 	    fprintf(stderr, "ignoring object text content %s\n", (const char*) child->content);
-      } else {
+      } else if (child->type != XML_COMMENT_NODE) {
 	if (hwloc__xml_verbose())
 	  fprintf(stderr, "ignoring unexpected xml node type %u\n", child->type);
       }
-    return 0;
 #else
     assert(0);
 #endif
+    return 0;
   } else {
     char *buffer = state->tagbuffer;
     char *end;
@@ -643,10 +643,10 @@ hwloc__xml_import_close_tag(hwloc__xml_import_state_t state)
   if (state->use_libxml) {
 #ifdef HWLOC_HAVE_LIBXML2
     /* nothing */
-    return 0;
 #else
     assert(0);
 #endif
+    return 0;
   } else {
     char *buffer = state->tagbuffer;
     char *end;
@@ -768,17 +768,16 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
   }
 
   if (nbobjs && reldepth && latbase) {
-    int idx = obj->distances_count;
     unsigned i;
     float *matrix, latmax = 0;
+    struct hwloc_xml_imported_distances_s *distances;
 
-    obj->distances = realloc(obj->distances, (idx+1)*sizeof(*obj->distances));
-    obj->distances_count = idx+1;
-    obj->distances[idx] = malloc(sizeof(**obj->distances));
-    obj->distances[idx]->relative_depth = reldepth;
-    obj->distances[idx]->nbobjs = nbobjs;
-    obj->distances[idx]->latency = matrix = malloc(nbobjs*nbobjs*sizeof(float));
-    obj->distances[idx]->latency_base = latbase;
+    distances = malloc(sizeof(*distances));
+    distances->root = obj;
+    distances->distances.relative_depth = reldepth;
+    distances->distances.nbobjs = nbobjs;
+    distances->distances.latency = matrix = malloc(nbobjs*nbobjs*sizeof(float));
+    distances->distances.latency_base = latbase;
 
     for(i=0; i<nbobjs*nbobjs; i++) {
       struct hwloc__xml_import_state_s childstate;
@@ -788,17 +787,15 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
       ret = hwloc__xml_import_find_child(state, &childstate, &tag);
       if (ret <= 0 || strcmp(tag, "latency")) {
 	/* a latency child is needed */
-	free(obj->distances[idx]->latency);
-	free(obj->distances[idx]);
-	obj->distances_count--;
+	free(distances->distances.latency);
+	free(distances);
 	return -1;
       }
 
       ret = hwloc__xml_import_next_attr(&childstate, &attrname, &attrvalue);
       if (ret < 0 || strcmp(attrname, "value")) {
-	free(obj->distances[idx]->latency);
-	free(obj->distances[idx]);
-	obj->distances_count--;
+	free(distances->distances.latency);
+	free(distances);
 	return -1;
       }
 
@@ -814,7 +811,14 @@ hwloc__xml_import_distances(hwloc_topology_t topology __hwloc_attribute_unused, 
       hwloc__xml_import_close_child(&childstate);
     }
 
-    obj->distances[idx]->latency_max = latmax;
+    distances->distances.latency_max = latmax;
+
+    if (topology->backend_params.xml.last_distances)
+      topology->backend_params.xml.last_distances->next = distances;
+    else
+      topology->backend_params.xml.first_distances = distances;
+    distances->prev = topology->backend_params.xml.last_distances;
+    distances->next = NULL;
   }
 
   return hwloc__xml_import_close_tag(state);
@@ -879,6 +883,49 @@ hwloc__xml_import_object(hwloc_topology_t topology, hwloc_obj_t obj,
  ********* main XML import *********
  ***********************************/
 
+static void
+hwloc_xml__handle_distances(struct hwloc_topology *topology)
+{
+  struct hwloc_xml_imported_distances_s *xmldist, *next = topology->backend_params.xml.first_distances;
+
+  if (!next)
+    return;
+
+  /* connect things now because we need levels to check/build, they'll be reconnected properly later anyway */
+  hwloc_connect_children(topology->levels[0][0]);
+  hwloc_connect_levels(topology);
+
+  while ((xmldist = next) != NULL) {
+    hwloc_obj_t root = xmldist->root;
+    unsigned depth = root->depth + xmldist->distances.relative_depth;
+    unsigned nbobjs = hwloc_get_nbobjs_inside_cpuset_by_depth(topology, root->cpuset, depth);
+    if (nbobjs != xmldist->distances.nbobjs) {
+      /* distances invalid, drop */
+      if (hwloc__xml_verbose())
+	fprintf(stderr, "ignoring invalid distance matrix with %u objs instead of %u\n",
+		xmldist->distances.nbobjs, nbobjs);
+      free(xmldist->distances.latency);
+    } else {
+      /* distances valid, add it to the internal OS distances list for grouping */
+      unsigned *indexes = malloc(nbobjs * sizeof(unsigned));
+      hwloc_obj_t child, *objs = malloc(nbobjs * sizeof(hwloc_obj_t));
+      unsigned j;
+      for(j=0, child = hwloc_get_next_obj_inside_cpuset_by_depth(topology, root->cpuset, depth, NULL);
+	  j<nbobjs;
+	  j++, child = hwloc_get_next_obj_inside_cpuset_by_depth(topology, root->cpuset, depth, child)) {
+	indexes[j] = child->os_index;
+	objs[j] = child;
+      }
+      for(j=0; j<nbobjs*nbobjs; j++)
+	xmldist->distances.latency[j] *= xmldist->distances.latency_base;
+      hwloc_distances_set(topology, objs[0]->type, nbobjs, indexes, objs, xmldist->distances.latency, 0 /* XML cannot force */);
+    }
+
+    next = xmldist->next;
+    free(xmldist);
+  }
+}
+
 /* this canNOT be the first XML call */
 int
 hwloc_look_xml(struct hwloc_topology *topology)
@@ -892,6 +939,8 @@ hwloc_look_xml(struct hwloc_topology *topology)
 
   state.use_libxml = 0;
   state.parent = NULL;
+
+  topology->backend_params.xml.first_distances = topology->backend_params.xml.last_distances = NULL;
 
 #ifdef HWLOC_HAVE_LIBXML2
   env = getenv("HWLOC_NO_LIBXML_IMPORT");
@@ -963,6 +1012,9 @@ hwloc_look_xml(struct hwloc_topology *topology)
   /* keep the "Backend" information intact */
   /* we could add "BackendSource=XML" to notify that XML was used between the actual backend and here */
 
+  /* if we added some distances, we must check them, and make them groupable */
+  hwloc_xml__handle_distances(topology);
+  topology->backend_params.xml.first_distances = topology->backend_params.xml.last_distances = NULL;
   topology->support.discovery->pu = 1;
 
   return 0;
@@ -973,41 +1025,6 @@ hwloc_look_xml(struct hwloc_topology *topology)
     fprintf(stderr, "Failed to parse XML input with the minimalistic parser. If it was not\n"
 	    "generated by hwloc, try enabling full XML support with libxml2.\n");
   return -1;
-}
-
-static void
-hwloc_xml__check_distances(struct hwloc_topology *topology, hwloc_obj_t obj)
-{
-  hwloc_obj_t child;
-  unsigned i=0;
-  while (i<obj->distances_count) {
-    unsigned depth = obj->depth + obj->distances[i]->relative_depth;
-    unsigned nbobjs = hwloc_get_nbobjs_inside_cpuset_by_depth(topology, obj->cpuset, depth);
-    if (nbobjs != obj->distances[i]->nbobjs) {
-      if (hwloc__xml_verbose())
-	fprintf(stderr, "ignoring invalid distance matrix with %u objs instead of %u\n",
-		obj->distances[i]->nbobjs, nbobjs);
-      hwloc_free_logical_distances(obj->distances[i]);
-      memmove(&obj->distances[i], &obj->distances[i+1], (obj->distances_count-i-1)*sizeof(*obj->distances));
-      obj->distances_count--;
-    } else
-      i++;
-  }
-
-  child = obj->first_child;
-  while (child != NULL) {
-    hwloc_xml__check_distances(topology, child);
-    child = child->next_sibling;
-  }
-}
-
-/* this canNOT be the first XML call */
-void
-hwloc_xml_check_distances(struct hwloc_topology *topology)
-{
-  /* now that the topology tree has been properly setup,
-   * check that our distance matrice sizes make sense */
-  hwloc_xml__check_distances(topology, topology->levels[0][0]);
 }
 
 /************************************************
@@ -1088,7 +1105,7 @@ hwloc__xml_export_escape_string(const char *src)
     case '<':  strcpy(dst, "&lt;");   replen=4; break;
     case '>':  strcpy(dst, "&gt;");   replen=4; break;
     case '&':  strcpy(dst, "&amp;");  replen=5; break;
-    default: break;
+    default: replen=0; break;
     }
     dst+=replen; src++;
 
@@ -1163,8 +1180,10 @@ hwloc__xml_export_object (hwloc__xml_export_output_t output, hwloc_topology_t to
 
   hwloc__xml_export_new_child(output, "object");
   hwloc__xml_export_new_prop(output, "type", hwloc_obj_type_string(obj->type));
-  sprintf(tmp, "%d", obj->os_level);
-  hwloc__xml_export_new_prop(output, "os_level", tmp);
+  if (obj->os_level != -1) {
+    sprintf(tmp, "%d", obj->os_level);
+    hwloc__xml_export_new_prop(output, "os_level", tmp);
+  }
   if (obj->os_index != (unsigned) -1) {
     sprintf(tmp, "%u", obj->os_index);
     hwloc__xml_export_new_prop(output, "os_index", tmp);
@@ -1329,7 +1348,6 @@ hwloc__libxml2_prepare_export(hwloc_topology_t topology)
   struct hwloc__xml_export_output_s output;
   xmlDocPtr doc = NULL;       /* document pointer */
   xmlNodePtr root_node = NULL; /* root pointer */
-  xmlDtdPtr dtd = NULL;       /* DTD pointer */
 
   LIBXML_TEST_VERSION;
   hwloc_libxml2_disable_stderrwarnings();
@@ -1340,7 +1358,7 @@ hwloc__libxml2_prepare_export(hwloc_topology_t topology)
   xmlDocSetRootElement(doc, root_node);
 
   /* Creates a DTD declaration. Isn't mandatory. */
-  dtd = xmlCreateIntSubset(doc, BAD_CAST "topology", NULL, BAD_CAST "hwloc.dtd");
+  (void) xmlCreateIntSubset(doc, BAD_CAST "topology", NULL, BAD_CAST "hwloc.dtd");
 
   output.use_libxml = 1;
   output.current_node = root_node;
