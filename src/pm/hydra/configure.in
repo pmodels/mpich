@@ -344,6 +344,7 @@ hydra_topolibs="`echo $hydra_topolib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 m4_include([tools/topo/hwloc/hwloc/config/hwloc.m4])
 m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_attributes.m4])
 m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_visibility.m4])
+m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_vendor.m4])
 m4_include([tools/topo/hwloc/hwloc/config/hwloc_pkg.m4])
 
 have_hwloc=no
