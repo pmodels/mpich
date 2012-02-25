@@ -137,6 +137,25 @@ install-exec-local:
 	    $(INSTALL_DATA) src/mpi/debugger/libtvmpich2.$(SHLIB_EXT) \
 			${DESTDIR}${libdir}/libtvmpich2.$(SHLIB_EXT) ; fi
 
+## FIXME: this should live in src/env/Makefile.mk. Moving it there
+## will not cause a problem, but it will break the build if another
+## Makefile.mk also decides to create a install-exec-hook target. A
+## better approach might be to have each Makefile.mk append to a
+## common set of rules.
+install-exec-hook:
+	for e in ${DESTDIR}${bindir}/mpicc ${DESTDIR}${bindir}/mpicxx \
+		${DESTDIR}${bindir}/mpif77 ${DESTDIR}${bindir}/mpif90 ; do \
+		if test -e $${e} ; then \
+			sed -e "s+^prefix=.*+prefix=${prefix}+g" \
+				-e "s+^exec_prefix=.*+exec_prefix=${exec_prefix}+g" \
+				-e "s+^sysconfdir=.*+sysconfdir=${sysconfdir}+g" \
+				-e "s+^includdir=.*+includedir=${includedir}+g" \
+				-e "s+^libdir=.*+libdir=${libdir}+g" $${e} > $${e}.tmp ; \
+			$(INSTALL_SCRIPT) $${e}.tmp $${e} ; \
+			rm -f $${e}.tmp ; \
+		fi ; \
+	done
+
 # the configure step checks for the 'lib' dir to decide whether a source
 # directory has been previously used for an in-path build before allowing a
 # VPATH build to continue
