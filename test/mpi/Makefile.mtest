@@ -28,8 +28,6 @@ $(top_builddir)/util/mtest.o: $(top_srcdir)/util/mtest.c
 
 testing:
 	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=@MPIEXEC@ \
-			-xmlfile=summary.xml
+		-mpiexec=${MPIEXEC} -xmlfile=summary.xml
 
 CLEANFILES = summary.xml
-

@@ -21,8 +21,6 @@ $(top_builddir)/f90/util/mtestf90.o: $(top_srcdir)/f90/util/mtestf90.f90
 
 testing:
 	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=@MPIEXEC@ \
-			-xmlfile=summary.xml
+		-mpiexec=${MPIEXEC} -xmlfile=summary.xml
 
 CLEANFILES = summary.xml
-

@@ -31,8 +31,6 @@ $(top_builddir)/f77/util/mtestf.o: $(top_srcdir)/f77/util/mtestf.f
 
 testing:
 	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
-			-mpiexec=@MPIEXEC@ \
-			-xmlfile=summary.xml
+		-mpiexec=${MPIEXEC} -xmlfile=summary.xml
 
 CLEANFILES = summary.xml
-
