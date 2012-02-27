@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* This is a temporary #ifdef to control whether we test this functionality.  A
  * configure-test or similar would be better.  Eventually the MPI-3 standard
@@ -34,7 +35,9 @@ int main(int argc, char **argv)
     int rank, size;
     int sendbuf[8], recvbuf[8];
     int count;
+#ifdef TEST_MPROBE_ROUTINES
     MPIX_Message msg;
+#endif
     MPI_Request rreq;
     MPI_Status s1, s2;
 
