@@ -19,8 +19,8 @@ EXTRA_PROGRAMS = checksizes
 # configure has correctly computed the sizes of MPI_Aint and MPI_Offset
 # for Fortran.  This is not run by default but can be used to check
 # that configure found the correct values.
-checksizes_SOURCES = checksizes.c
 checksizes_LDADD = 
+nodist_checksizes_SOURCES = checksizes.c
 
 DISTCLEANFILES = checksizes.c
 
