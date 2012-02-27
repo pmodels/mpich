@@ -12,11 +12,10 @@ EXTRA_DIST = testlist
 ## for all programs that are just built from the single corresponding source
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly
+## We must not list the EXTRA_PROGRAMS in the noinst_PROGRAMS list because
+## doing so will include them in the default targets
 noinst_PROGRAMS = \
     adderr        \
-    errstring     \
-    errcode       \
-    errring       \
     commcall      \
     errfatal
 
