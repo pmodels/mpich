@@ -24,7 +24,9 @@ int main( int argc, char ** argv ) {
     int rankToAccept = 1;
 
     /* Debug - print out where we picked up the MPICH build from */
+#ifdef MPICHLIBSTR
     msg( "MPICH library taken from: %s\n", MPICHLIBSTR );
+#endif
 
     if( argc != 4 ) {
         printf( "Usage: %s <fname> <totalSize> <idx-1-based>\n", argv[0] );

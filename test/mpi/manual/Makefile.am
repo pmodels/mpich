@@ -11,12 +11,11 @@ noinst_PROGRAMS = singjoin testconnect testconnectserial dimsbalanced \
                   spawntest_master spawntest_child segfault \
                   mpit_test mpit_test2
 
-testconnectserial_SOURCES = testconnectserial.c tchandlers.c tcutil.c
+# testconnectserial would like MPICHLIBSTR to be defined as the installation
+# directory of the MPI library.  This definition is not required.
+noinst_HEADERS = connectstuff.h
+testconnectserial_SOURCES = testconnectserial.c tchandlers.c tcutil.c 
 testconnectserial_LDADD   = $(LDADD) -lm
-
-## why does this override rule exist in the simplemake version?
-##testconnectserial.o: testconnectserial.c
-##	$(C_COMPILE) -c -DMPICHLIBSTR=\"$(MPIDIR)\" $<
 
 CLEANFILES += test-port
 
