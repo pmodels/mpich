@@ -90,7 +90,7 @@ int main( int argc, char *argv[] )
                     *p++ = j * size + rank + i;
                 }
             }
-            MPI_Alltoall( MPI_IN_PLACE, 0/*ignored*/, MPI_INT/*ignored*/,
+            MPI_Alltoall( MPI_IN_PLACE, -1/*ignored*/, MPI_DATATYPE_NULL/*ignored*/,
                           recvbuf, recvcount, recvtype, comm );
             p = recvbuf;
             for (j=0; j<size; j++) {
