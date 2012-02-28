@@ -981,7 +981,7 @@ lib_lib\@PMPILIBNAME\@_la_SOURCES += \$(mpi_f77_sources)
 endif BUILD_PROFILING_LIB
 
 # config.status copies src/binding/f77/mpif.h to src/include (see the relevant
-# AC_OUTPUT_COMMANDS in configure.in), so we need to delete it at distclean time
+# AC_OUTPUT_COMMANDS in configure.ac), so we need to delete it at distclean time
 # too.  More work is needed in this Makefile.mk to keep src/include/mpif.h up to
 # date w.r.t. the src/binding/f77 version.
 DISTCLEANFILES += src/binding/f77/mpif.h src/include/mpif.h
@@ -4709,8 +4709,8 @@ sub ReadInterfaceForDefinitions {
 # Check for a working autoconf
 #
 # Try the following first
-# in a new directory, create configure.in containing:
-# AC_INIT(configure.in)
+# in a new directory, create configure.ac containing:
+# AC_INIT(configure.ac)
 # AC_LANG_FORTRAN77
 # AC_TRY_COMPILE(,[integer a],a=1,a=0)
 # Then run autoconf
@@ -4722,8 +4722,8 @@ sub CheckAutoconf {
     if (! -d "tmp") {
         mkdir "tmp", 0777 || die "Cannot create temporary directory\n";
     }
-    open (ACFD, ">tmp/configure.in" ) || die "Cannot create test configure.in\n";
-    print ACFD "AC_INIT(configure.in)\nAC_LANG_FORTRAN77\n";
+    open (ACFD, ">tmp/configure.ac" ) || die "Cannot create test configure.ac\n";
+    print ACFD "AC_INIT(configure.ac)\nAC_LANG_FORTRAN77\n";
     print ACFD "AC_TRY_COMPILE(,[integer a],a=1,a=0)\n";
     close ACFD;
 

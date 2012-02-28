@@ -2,7 +2,7 @@
  *  (C) 2011 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-/* See comments in MPICH2's configure.in for an explanation of what this file is
+/* See comments in MPICH2's configure.ac for an explanation of what this file is
  * and why it exists. */
 
 /* intentionally omitting any #ifndef guard, repeated inclusion is intentional */

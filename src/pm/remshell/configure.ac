@@ -56,7 +56,7 @@ fi
 
 PAC_LOAD_BASE_CACHE
 
-dnl The recommended order for items in a configure.in file is
+dnl The recommended order for items in a configure.ac file is
 dnl     check for programs
 dnl     check for libraries
 dnl     check for header files

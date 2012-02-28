@@ -126,7 +126,7 @@ needs to modify variable IMPL_CSRC in trace_sample/src/Makefile.in.
 IMPL_CSRC defines the C programs needed to build a TRACE-API implementation.
 If you are interested to modify the name of the utility program like
 traceprint and traceTOslog2 to something more meaningful, you need
-to change TRACE_NAME define configure.in.  The TRACE_NAME replaces
+to change TRACE_NAME define configure.ac.  The TRACE_NAME replaces
 the prefix "trace" in traceprint and traceTOslog2.  Remember to run
 autoconf afterward.  If you need to add extra system header files to
 be checked by autoconf, e.g. through AC_CHECK_HEAEDERS, you need to

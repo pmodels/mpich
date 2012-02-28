@@ -11,8 +11,8 @@ if test -s .tmp ; then rm -f .tmp ; fi
 if test ! -d .tmp ; then
     mkdir .tmp 2>&1 >/dev/null
 fi
-rm -f .tmp/configure.in .tmp/configure
-cat >.tmp/configure.in <<EOF
+rm -f .tmp/configure.ac .tmp/configure
+cat >.tmp/configure.ac <<EOF
 AC_PREREQ(2.52)
 EOF
 if (cd .tmp && $MPE_AUTOCONF >/dev/null 2>&1 ) ; then
@@ -42,7 +42,7 @@ if [ "$acWorks" != yes ] ; then
 fi
 rm -rf .tmp
 
-# We cannot use "find . -name 'configre.in'" to locate configure.ins
+# We cannot use "find . -name 'configre.in'" to locate configure.acs
 # because "." is the working directory not the top-level MPE2 source
 # directory.  So we use the full-pathname of this script to locate the
 # MPE2's top-level directory.  'dirname' does not return the full-pathname
@@ -64,8 +64,8 @@ for atg in $atgs ; do
     fi
 done
 
-# Locate all the configure.in and invoke autoconf if no configure is found.
-cfgins=`find $master_dir -name 'configure.in' -print`
+# Locate all the configure.ac and invoke autoconf if no configure is found.
+cfgins=`find $master_dir -name 'configure.ac' -print`
 for cfgin in $cfgins ; do
     dir="`dirname $cfgin`"
     if [ ! -x "$dir/configure" ] ; then

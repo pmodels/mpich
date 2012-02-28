@@ -25,7 +25,7 @@ dnl
 dnl The subconfigure argument list is created based on "ac_precious_vars"
 dnl instead of explicitly use of well-known Makefile variables, like
 dnl CC/CFLAGS/CPPFLAGS..., this generalization is effective as long as
-dnl calling configure.in declares the needed variables to be passed down
+dnl calling configure.ac declares the needed variables to be passed down
 dnl to subconfigure as "precious" appropriately.  The precious variable
 dnl can be created in the following ways:
 dnl 1) implicit declaration through use of autoconf macros, like
@@ -34,7 +34,7 @@ dnl    AC_PROG_F77 (declares F77/FFLAGS/FLIBS) ...
 dnl    which are in turns invoked by other subconfigure.
 dnl    When in doubt, check "ac_precious_var" in the calling configure.
 dnl 2) explicit "precious" declaration through AC_ARG_VAR.
-dnl Without correct "precious" declaration in the calling configure.in,
+dnl Without correct "precious" declaration in the calling configure.ac,
 dnl there would be variables not being included in the subconfigure
 dnl argument list.
 dnl
@@ -159,7 +159,7 @@ dnl        _AS_ECHO([$pac_msg])
           pac_sub_configure=$ac_srcdir/configure.gnu
         elif test -f "$ac_srcdir/configure"; then
           pac_sub_configure=$ac_srcdir/configure
-        elif test -f "$ac_srcdir/configure.in"; then
+        elif test -f "$ac_srcdir/configure.ac"; then
           # This should be Cygnus configure.
           pac_sub_configure=$ac_aux_dir/configure
         else

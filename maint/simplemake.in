@@ -188,7 +188,7 @@ $smdir =~ s/\/?simplemake$//;
 $debug = 0;                 # General debugging
 $debug_dirs = 0;            # Debug the choice of directories
 $debug_confdir = 0;         # Track the directory containing the controlling
-                            # configure.in
+                            # configure.ac
 $gDebugWhy = 0;             # Provide an explanation of why certain
                             # targets are created
 $gDebugSubdirVar = 0;       # Track changes to internal variables that 
@@ -1641,7 +1641,7 @@ sub DefaultRules {
     &RuleDocs;
 
     # Configure update targets
-    if ( -s "configure.in" && $maint_targets ) {
+    if ( -s "configure.ac" && $maint_targets ) {
 	# Convert ROOTDIR as necessary
 	$aargs = $autoconf_args;
 	if (!$rootdirpath || $rootdirpath eq "") {
@@ -1677,8 +1677,8 @@ sub DefaultRules {
 		close (AFD);
 	    }
 	}
-	# Extract includes from configure.in
-	open (AFD, "<configure.in" );
+	# Extract includes from configure.ac
+	open (AFD, "<configure.ac" );
 	while (<AFD>) {
 	    if (/^\s*builtin\(include,([\w\-\/\.]*\.m4)\)\s*$/)
 	    {
@@ -1703,7 +1703,7 @@ sub DefaultRules {
 		print "Adding $header_depend to configure target\n";
 	    }
 	}
-	&print_make_longline( FD,  "$header_depend \${srcdir}/configure: \${srcdir}/configure.in $autoconf_deps" );
+	&print_make_longline( FD,  "$header_depend \${srcdir}/configure: \${srcdir}/configure.ac $autoconf_deps" );
 	&print_make_setpos( 8 );
 	&FindWorkingAutoconf ;
 	# Use autoheader only if AC_CONFIG_HEADER is in the configure file
@@ -2102,9 +2102,9 @@ sub ProcessFile {
     &ResetFileName( "$curdir$file" );
     print "Processing $curdir$file\n" if (!$quiet && $debug_dirs);
     $configure_has_config_headers = "no";
-    if (-s "configure.in") {
+    if (-s "configure.ac") {
 	&ReadAutoconf;
-	print "Found configure.in in $curdir, set last_config_dir to $curdir\n" if $debug_confdir;
+	print "Found configure.ac in $curdir, set last_config_dir to $curdir\n" if $debug_confdir;
 	if ($curdir eq "") { $last_config_dir = "."; }
 	else {	$last_config_dir = $curdir; }
     }
@@ -4586,7 +4586,7 @@ sub DistCleanDependencies {
 # ===========================================================================
 #
 # Routines to support autoconf and configure, including extracting information
-# from the configure file and rebuilding configure from configure.in
+# from the configure file and rebuilding configure from configure.ac
 #
 #
 # Extract derived files from autoconf
@@ -4602,7 +4602,7 @@ sub DistCleanDependencies {
 sub ReadAutoconf {
     $configure_has_config_headers = "no";
     %confvars = ();
-    open FDCONF, "configure.in" || die "Could not open configure.in file";
+    open FDCONF, "configure.ac" || die "Could not open configure.ac file";
     while (<FDCONF>) {
 	#if (/^\s*#/) { next; }
 	if (/^\s*AC_CONFIG_HEADER\((.*)\)/) {
@@ -4627,7 +4627,7 @@ sub ReadAutoconf {
 		chop($_); # remove the backslash
 		$line .= $_;
 		$_ = <FDCONF>;
-		die "unexpected EOF in configure.in, aborting" unless defined $_;
+		die "unexpected EOF in configure.ac, aborting" unless defined $_;
 		# Remove any M4 dnl line
 		s/\sdnl\s.*//;
 		# Remove any shell comment line
@@ -4642,7 +4642,7 @@ sub ReadAutoconf {
 	    # If there's no closing paren yet, keep reading
 	    while (! ($line =~ /\)/)) {
 		$_ = <FDCONF>;
-		die "unexpected EOF in configure.in, aborting" unless defined $_;
+		die "unexpected EOF in configure.ac, aborting" unless defined $_;
 		s/\r?\n$//; # Removes eol on both Unix and Windows
 		# Remove any M4 dnl line
 		s/\sdnl\s.*//;

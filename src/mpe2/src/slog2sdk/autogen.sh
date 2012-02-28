@@ -16,8 +16,8 @@ if test -s .tmp ; then rm -f .tmp ; fi
 if test ! -d .tmp ; then
     mkdir .tmp 2>&1 >/dev/null
 fi
-rm -f .tmp/configure.in .tmp/configure
-cat >.tmp/configure.in <<EOF
+rm -f .tmp/configure.ac .tmp/configure
+cat >.tmp/configure.ac <<EOF
 AC_PREREQ(2.52)
 EOF
 if (cd .tmp && $SLOG2_AUTOCONF >/dev/null 2>&1 ) ; then
@@ -50,9 +50,9 @@ rm -rf .tmp
 # The parent directory of where this script is located
 pgmdir="`dirname $0`"
 master_dir=`(cd $pgmdir && pwd)`
-cfgins=`find $master_dir -name 'configure.in' -print`
+cfgins=`find $master_dir -name 'configure.ac' -print`
 
-# Locate all configure.ins that need libtoolize.
+# Locate all configure.acs that need libtoolize.
 for cfgin in $cfgins ; do
     dir="`dirname $cfgin`"
     if [ -n "`grep AC_PROG_LIBTOOL $cfgin`" ] ; then
@@ -61,7 +61,7 @@ for cfgin in $cfgins ; do
     fi
 done
 
-# Locate all the configure.in under master_dir to invoke autoconf.
+# Locate all the configure.ac under master_dir to invoke autoconf.
 for cfgin in $cfgins ; do
     dir="`dirname $cfgin`"
     if [ -n "`grep AC_CONFIG_HEADER $cfgin`" ] ; then

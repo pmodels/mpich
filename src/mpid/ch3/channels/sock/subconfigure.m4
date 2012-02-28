@@ -59,7 +59,7 @@ dnl _BODY handles the former role of configure in the subsystem
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH3_SOCK],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:sock])
-# code that formerly lived in configure.in
+# code that formerly lived in configure.ac
 
 # FIXME this must be namespaced now that we've flattened things
 #

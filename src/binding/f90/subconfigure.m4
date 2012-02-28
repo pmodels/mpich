@@ -11,7 +11,7 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_F90_LIB],[
 # FIXME XXX DJG this code came from a sub-configure in src/binding/f90.  Why
 # isn't this just all up in the top-level configure?  Alternatively, why doesn't
-# most/all of the f90 configure code from the top level configure.in live here
+# most/all of the f90 configure code from the top level configure.ac live here
 # instead?  Is it because of the c/f77/f90 interplay?
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR F90 CODE])
 

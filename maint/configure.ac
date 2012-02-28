@@ -37,5 +37,5 @@ CXXFLAGS='@CXXFLAGS@'
 # simplemake manufactures these in a way that avoids triggering the 
 # autoconf replacement.
 # Note that top_srcdir and srcdir are special cases (they must not
-# be changed in configure.in because configure uses them to find other files)
+# be changed in configure.ac because configure uses them to find other files)
 AC_OUTPUT(simplemake checkbuilds getcoverage genstates clmake f77tof90 extractstrings extractstates extractfixme createcoverage gcovmerge)

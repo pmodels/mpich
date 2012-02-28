@@ -323,7 +323,7 @@ fi
 #
 # Fixup files with various xxxxbuild_dir to xxxxdir, install directory.
 #
-#   The MPE_CLINKER/MPE_FLINKER need to sync with mpe2/configure.in
+#   The MPE_CLINKER/MPE_FLINKER need to sync with mpe2/configure.ac
 #
 FixInstallFile() {
 if [ -d $DESTDIR$2 ] ; then

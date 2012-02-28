@@ -238,7 +238,7 @@ if test -n "$F77" -a "$MPE_BUILD_FORTRAN2C" = "yes" ; then
     FINC_PATH_LEADER=$F77_INCDIR
 
 dnl Determine MPI_Fint
-dnl (same test done in graphics's configure.in)
+dnl (same test done in graphics's configure.ac)
     AC_MSG_CHECKING( [for MPI_Fint] )
     PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Fint aa=1 ], ,

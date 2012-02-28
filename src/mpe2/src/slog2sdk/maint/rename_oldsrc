@@ -19,7 +19,7 @@ for arg in "$@" ; do
         -help|-u|-usage|-h)
 cat <<EOF
 
-   Rename configure.in, Makefile.in's, and *.java in the provided
+   Rename configure.ac, Makefile.in's, and *.java in the provided
    old java slog2sdk's src directory to avoid namespace collision
    with the existing slog2sdk's src directory.
 
@@ -119,8 +119,8 @@ else
     exit 1
 fi
 
-# Fixup configure.in
-file="configure.in"
+# Fixup configure.ac
+file="configure.ac"
 echo "Fixing $file ...."
 $Show mv ${file} ${file}~
 $Show FixConfigureIn ${file}~ ${file} 

@@ -380,7 +380,7 @@ AC_DEFUN([PAC_CC_SUBDIR_SHLIBS],[
             fi
 	    # Libtool needs master_top_builddir
 	    if test "X$master_top_builddir" = "X" ; then
-	        AC_MSG_ERROR([Libtool requires master_top_builddir - check configure.in sources])
+	        AC_MSG_ERROR([Libtool requires master_top_builddir - check configure.ac sources])
 	    fi
 	    AC_SUBST(master_top_builddir)
 	fi

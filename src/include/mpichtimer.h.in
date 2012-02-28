@@ -10,7 +10,7 @@
  * timer calls, including the definition of the time stamp type and 
  * any inlined timer calls.
  *
- * The include file timerconf.h (created by autoheader from configure.in)
+ * The include file timerconf.h (created by autoheader from configure.ac)
  * is needed only to build the function versions of the timers.
  */
 /* Include the appropriate files */

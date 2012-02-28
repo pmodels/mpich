@@ -161,8 +161,8 @@ fi
 acSubversion=-1
 acIncDirFlag=-I
 for ver in 62 61 60 59 ; do
-    rm -f .tmp/configure.in .tmp/configure
-    cat >.tmp/configure.in <<EOF
+    rm -f .tmp/configure.ac .tmp/configure
+    cat >.tmp/configure.ac <<EOF
 AC_PREREQ(2.$ver)
 EOF
     if (cd .tmp && $autoconf >/dev/null 2>&1 ) ; then
@@ -170,7 +170,7 @@ EOF
 	break
     fi
 done
-rm -f .tmp/configure.in .tmp/configure
+rm -f .tmp/configure.ac .tmp/configure
 if [ "$acSubversion" -gt 0 ] ; then
     acVersion="2.$acSubversion"
     echo "You have autoconf version $acVersion."
@@ -204,7 +204,7 @@ run_configure=no
 # autom4te*.cache file; since this cache is not accurate, we delete it.
 if [ ! -x maint/configure ] ; then
     (cd maint && $autoconf && rm -rf autom4te*.cache )
-elif find maint -name 'configure.in' -newer 'maint/configure' >/dev/null 2>&1 ; then
+elif find maint -name 'configure.ac' -newer 'maint/configure' >/dev/null 2>&1 ; then
     # The above relies on the Unix find command
     (cd maint && $autoconf && rm -rf autom4te*.cache)
 fi
@@ -276,7 +276,7 @@ otherargs="$otherargs -nodepend"
 #
 # Just to make this even more interesting, the cygwin version of 
 # autoconf selects a version.  But the code to so this causes --version 
-# (and --help!) to fail unless there is a configure.in file in the current
+# (and --help!) to fail unless there is a configure.ac file in the current
 # directory.  
 if [ $do_makefiles = yes ] ; then
     if $mpich2dir/maint/simplemake -common=$mpich2dir/maint/makedefs \
@@ -294,7 +294,7 @@ fi
 #
 # Create the configure files and run autoheader
 # Eventually, make this a test for find available.  Perhaps
-# find . -name configure.in > /dev/null 2>&1
+# find . -name configure.ac > /dev/null 2>&1
 # The problem is that even though cygwin has find, the DOS find
 # is identified first.  We probably need a test for this case
 fixBackWhackCtrlMBug=no
@@ -309,7 +309,7 @@ if [ $do_build_configure = yes ] ; then
     $autoconf $acIncDirFlag $mpich2dir/confdb && rm -rf autom4te*.cache
     if [ ! -x configure ] ; then 
         # Check for a few allowed exceptions
-        echo "Could not build configure from configure.in in $dir"
+        echo "Could not build configure from configure.ac in $dir"
 	echo "Aborting updatefiles!"
 	exit 1
     fi

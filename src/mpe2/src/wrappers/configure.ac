@@ -716,7 +716,7 @@ if test "${F2CMPI_LIBS}" = "-l${F2CMPI_LIBNAME}" \
      -a "$MPI_IMPL" != "MPICH2" ; then
 
 dnl Determine MPI_Fint
-dnl (same test done in graphics's configure.in)
+dnl (same test done in graphics's configure.ac)
     AC_MSG_CHECKING( [for MPI_Fint] )
     PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Fint aa=1 ], ,
@@ -759,7 +759,7 @@ if test "$mpe_link_ok" = "yes" ; then
 fi
 
 dnl Determmine if MPI_Comm_f2c() and MPI_Comm_c2f() are there
-dnl (same test done in graphics's configure.in)
+dnl (same test done in graphics's configure.ac)
     AC_MSG_CHECKING( [for MPI_Comm_c2f() and MPI_Comm_f2c()] )
     PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
                           [ MPI_Comm comm; ${MPI_FINT_TYPE} aa; ],

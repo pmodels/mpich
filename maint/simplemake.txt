@@ -178,7 +178,7 @@ from source files in C, C++, Fortran, Fortran 90, and assembler.
 Maintenance Targets:
 These are targets included for use by the developer of the package.  They 
 include targets to rebuild files created by simplemake or by autoheader
-and autoconf.  These are created in part by reading the configure.in file.
+and autoconf.  These are created in part by reading the configure.ac file.
 simplemake read the AC_CONFIG_HEADER and AC_OUTPUT commands.  If the AC_OUTPUT
 command includes a shell variable, the possible values of that shell variable
 can be provided to simplemake by assigning a literal string to the variable name with _VALUE postpended.  E.g., if AC_OUTPUT references $otherfiles, and $otherfiles might have the values "foo/Makefile" and "bar/Makefile", then include

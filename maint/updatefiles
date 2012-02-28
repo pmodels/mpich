@@ -439,7 +439,7 @@ echo_n "Checking for autoconf version... "
 recreate_tmp
 ver=2.67
 # petsc.mcs.anl.gov's /usr/bin/autoreconf is version 2.65 which returns OK
-# if configure.in has AC_PREREQ() withOUT AC_INIT.
+# if configure.ac has AC_PREREQ() withOUT AC_INIT.
 #
 # ~/> hostname
 # petsc
@@ -455,7 +455,7 @@ ver=2.67
 # rc=63
 # ~/> /usr/bin/autoreconf ; echo "rc=$?"
 # rc=0
-cat > .tmp/configure.in<<EOF
+cat > .tmp/configure.ac<<EOF
 AC_INIT
 AC_PREREQ($ver)
 AC_OUTPUT
@@ -485,7 +485,7 @@ fi
 echo_n "Checking for automake version... "
 recreate_tmp
 ver=1.11
-cat > .tmp/configure.in<<EOF
+cat > .tmp/configure.ac<<EOF
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
@@ -559,7 +559,7 @@ fi
 ########################################################################
 
 echo_n "Checking for UNIX find... "
-find . -name 'configure.in' > /dev/null 2>&1
+find . -name 'configure.ac' > /dev/null 2>&1
 if [ $? = 0 ] ; then
     echo "done"
 else
@@ -789,7 +789,7 @@ run_configure=no
 # file; since this cache is not accurate, we delete it.
 if [ ! -x maint/configure ] ; then
     (cd maint && $autoconf && rm -rf autom4te*.cache )
-elif find maint -name 'configure.in' -newer 'maint/configure' >/dev/null 2>&1 ; then
+elif find maint -name 'configure.ac' -newer 'maint/configure' >/dev/null 2>&1 ; then
     # The above relies on the Unix find command
     (cd maint && $autoconf && rm -rf autom4te*.cache)
 fi
@@ -924,7 +924,7 @@ if [ $do_build_configure = yes ] ; then
     echo
     echo "---------------------------------------------------------------"
     echo "Generating configure scripts"
-    for dir in `find . -name 'configure.in' -print` ; do
+    for dir in `find . -name 'configure.ac' -print` ; do
         dir=`dirname $dir`
 
 	found=0
@@ -953,7 +953,7 @@ if [ $do_build_configure = yes ] ; then
 	    # First, check for a configure target in Makefile.in
 	    # FIXME: this check is completely broken for Makefiles
 	    # that have multiple targets on the same line (e.g.,
-	    # configure config.h: configure.in)
+	    # configure config.h: configure.ac)
 	    if grep 'configure:' $dir/Makefile.in >/dev/null 2>&1 ; then
 		# The make -q checks whether the target is upto date first;
 		# if it isn't, we remake it.
@@ -969,7 +969,7 @@ if [ $do_build_configure = yes ] ; then
                      sed -e 's%@SHELL@%/bin/sh%' -e "s%@srcdir@%.%g" \
                          -e '/include .*alldeps/d' -e '/@SET_MAKE@/d' \
                          -e 's%@VPATH@%%' Makefile.in > mf.tmp ; \
-                 echo "Found $dir/configure.in; executing ${MAKE} -f mf.tmp ./configure" ; \
+                 echo "Found $dir/configure.ac; executing ${MAKE} -f mf.tmp ./configure" ; \
                  if ${MAKE} -q -f mf.tmp ./configure >mf.out 2>&1 ; then \
                      : ; \
                  else \

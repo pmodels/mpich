@@ -194,7 +194,7 @@ owner-clean: clean_bin clean_lib distclean-misc
 	@-$(RM) -f mpe_conf.h.in
 	@-$(RM) -f configure
 
-configure: configure.in aclocal_core.m4 aclocal_f77.m4 aclocal_make.m4 \
+configure: configure.ac aclocal_core.m4 aclocal_f77.m4 aclocal_make.m4 \
 	aclocal_mpi.m4 aclocal.m4
 	autoheader
 	autoconf

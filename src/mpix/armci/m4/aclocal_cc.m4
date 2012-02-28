@@ -1283,7 +1283,7 @@ AC_SUBST(RANLIB_AFTER_INSTALL)
 
 #
 # determine if the compiler defines a symbol containing the function name
-# Inspired by checks within the src/mpid/globus/configure.in file in MPICH2
+# Inspired by checks within the src/mpid/globus/configure.ac file in MPICH2
 #
 # These tests check not only that the compiler defines some symbol, such
 # as __FUNCTION__, but that the symbol correctly names the function.

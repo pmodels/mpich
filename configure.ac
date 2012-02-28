@@ -644,7 +644,7 @@ if test "X$enable_shared" = "Xno" ; then
     enable_rpath=no
 fi
 
-dnl AC_PROG_{CXX,F77,FC} must come early in configure.in in order to avoid some
+dnl AC_PROG_{CXX,F77,FC} must come early in configure.ac in order to avoid some
 dnl esoteric autoconf macro expansion errors
 dnl
 dnl Also, DO NOT attempt to place shell conditionals (either manually or via
@@ -3486,7 +3486,7 @@ export MPI_C_LONG_DOUBLE_COMPLEX
 # 
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
-    # Up to size checking code in master configure.in (where it tries to 
+    # Up to size checking code in master configure.ac (where it tries to 
     # find the matching C sizes) as part of defining mpi_integer8 etc.
     # The results are available in pac_cv_sizeof_f77_<type>
     # Size is 0 if unknown or unavailable (or cross-compiling)
@@ -3553,7 +3553,7 @@ if test "$enable_f77" = yes ; then
     # Take len and turn it into two hex digits (there are 8 bits available
     # in the built-in datatype handle for the length; see
     # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
-    # from the code in mpich2/configure.in 
+    # from the code in mpich2/configure.ac 
     if test "$len" -gt 255 ; then
         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type INTEGER is $len bytes)]) 
     fi
@@ -3600,7 +3600,7 @@ if test "$enable_f77" = yes ; then
     # Take len and turn it into two hex digits (there are 8 bits available
     # in the built-in datatype handle for the length; see
     # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
-    # from the code in mpich2/configure.in 
+    # from the code in mpich2/configure.ac 
     if test "$len" -gt 255 ; then
         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE is $len bytes)]) 
     fi
@@ -3738,7 +3738,7 @@ dnl     #
 dnl     # Take len and turn it into two hex digits (there are 8 bits available
 dnl     # in the built-in datatype handle for the length; see
 dnl     # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
-dnl     # from the code in mpich2/configure.in 
+dnl     # from the code in mpich2/configure.ac 
 dnl     if test "$len" -gt 255 ; then
 dnl         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE COMPLEX is $len bytes)]) 
 dnl     fi

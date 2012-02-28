@@ -1,6 +1,6 @@
 # -*- Mode: shell-script -*-
 # build with
-# autoconf --localdir=../confdb configure.in
+# autoconf --localdir=../confdb configure.ac
 # (or wherever the confdb is)
 #
 AC_PREREQ([2.63])
@@ -44,7 +44,7 @@ AH_TOP([/*
 #define ROMIOCONF_H_INCLUDED
 ])
 AH_BOTTOM([
-/* quash PACKAGE and PACKAGE_* vars, see MPICH2 top-level configure.in for
+/* quash PACKAGE and PACKAGE_* vars, see MPICH2 top-level configure.ac for
  * more info */
 #include "nopackage.h"
 
@@ -335,7 +335,7 @@ fi
 # We must first select the C and Fortran compilers.  Because of the 
 # way that the PROG_CC autoconf macro works (and all of the macros that
 # require it, including CHECK_HEADERS), that macro must occur exactly
-# once in the configure.in file, at least as of autoconf 2.57 .  
+# once in the configure.ac file, at least as of autoconf 2.57 .  
 # Unfortunately, this requirement is not enforced.  To handle this,
 # we first case on the architecture; then use PROG_CC, then case on the
 # architecture again for any arch-specific features.  We also set the
@@ -439,7 +439,7 @@ esac
 
 PAC_PROG_CC
 
-dnl AC_PROG_{CXX,F77,FC} must come early in configure.in in order to control
+dnl AC_PROG_{CXX,F77,FC} must come early in configure.ac in order to control
 dnl compiler search order and avoid some esoteric autoconf macro expansion
 dnl errors
 if test "$enable_f77" = "yes" ; then

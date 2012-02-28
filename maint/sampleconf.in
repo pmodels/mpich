@@ -27,7 +27,7 @@ CFLAGS="$CFLAGS -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes")
 dnl
 dnl
 PAC_ARG_SHAREDLIBS
-dnl The recommended order for items in a configure.in file is
+dnl The recommended order for items in a configure.ac file is
 dnl     check for programs
 dnl     check for libraries
 dnl     check for header files
@@ -39,7 +39,7 @@ dnl     check for system services
 dnl Here are some sample tests
 dnl
 dnl Find a C compiler (choose gcc first)
-dnl Here are some example calls.  See mpich/configure.in for others
+dnl Here are some example calls.  See mpich/configure.ac for others
 AC_PROG_CC
 AC_PATH_PROG(AR,ar)
 AC_SUBST(AR_FLAGS)

@@ -1,4 +1,4 @@
-AC_INIT(configure.in)
+AC_INIT(configure.ac)
 
 dnl
 dnl Set the directory that contains support scripts such as install-sh and

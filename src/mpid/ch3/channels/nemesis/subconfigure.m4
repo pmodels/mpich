@@ -33,7 +33,7 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH3_NEMESIS],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis])
 
-## below is code that formerly lived in configure.in
+## below is code that formerly lived in configure.ac
 
 ### Only include papi in CPPFLAGS configure will handle libs, and checking that it exists, etc.
 ##if test -n "${papi_dir}" ; then

@@ -534,10 +534,10 @@ End Function
 ' Create a dictionary of all the datatype handles
 '
 unmatched_size_strs = ""
-set fin = f.OpenTextFile("configure.in")
+set fin = f.OpenTextFile("configure.ac")
 contents = fin.ReadAll()
 fin.Close()
-'set fin = f.OpenTextFile("src\binding\f77\configure.in")
+'set fin = f.OpenTextFile("src\binding\f77\configure.ac")
 'contents = contents + fin.ReadAll()
 'fin.Close()
 'set dtypes = CreateDtypeDictionary(contents, false)
@@ -1083,7 +1083,7 @@ else
     missing_datatypes = missing_datatypes & "MPI_C_LONG_DOUBLE_COMPLEX" & vbCrLf
     MPI_C_LONG_DOUBLE_COMPLEX = "0x" + mpi_datatype_prefix + len_long_double__Complex + "42"
 end if
-' Note that in configure.in MPI_AINT is named as MPI_AINT_DATATYPE - due to name collision
+' Note that in configure.ac MPI_AINT is named as MPI_AINT_DATATYPE - due to name collision
 if dtypes.Exists("MPI_AINT_DATATYPE") then
     MPI_AINT_W32 = dtypes.Item("MPI_AINT_DATATYPE")
 else
@@ -1100,7 +1100,7 @@ else
 end if
 dtypes64.Add "MPI_AINT_W64", MPI_AINT_W64
 
-' Note that in configure.in MPI_OFFSET is named as MPI_OFFSET_DATATYPE - due to name collision
+' Note that in configure.ac MPI_OFFSET is named as MPI_OFFSET_DATATYPE - due to name collision
 if dtypes.Exists("MPI_OFFSET_DATATYPE") then
     MPI_OFFSET_W64 = dtypes.Item("MPI_OFFSET_DATATYPE")
 else

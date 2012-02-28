@@ -60,7 +60,7 @@ fi
  
 echo "Configuring $pkgname with $ac_configure_args"
 #
-# Cannot use JAVA_HOME here in this configure.in.
+# Cannot use JAVA_HOME here in this configure.ac.
 # Because JAVA_HOME is used in Blackdown's .java_wrapper in jdk117_v3
 # Using JAVA_HOME here would mistakenly set some variable in .java_wrapper
 # when .java_wrapper is invoked.  i.e. causes mysterious error in tests.

@@ -1,4 +1,4 @@
-The MPE-2 has a top level configure.in and all the C source files are
+The MPE-2 has a top level configure.ac and all the C source files are
 splitted into 4 subpackages, each has its own include and source directory
 and configure.  Because of this structure, the install and build include
 directory contains only relevant user .h files, i.e. mpe.h,

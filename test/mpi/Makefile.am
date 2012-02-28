@@ -41,7 +41,7 @@ nodist_noinst_HEADERS = include/mpitestconf.h
 ##	    svn export https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
 ##	cd .tmp/mpi2test && \
 ##	    sed -e 's/AC_CONFIG_AUX_DIR.*/AC_CONFIG_AUX_DIR(confdb)/' \
-##	        configure.in > conftmp.in && mv conftmp.in configure.in
+##	        configure.ac > conftmp.in && mv conftmp.in configure.ac
 ##	cd .tmp/mpi2test && maint/updatefiles -mpich2dir=@mpich2_top_srcdir@
 ##	cd .tmp/mpi2test && @mpich2_top_srcdir@/maint/simplemake Makefile.sm
 ##	cd .tmp && tar cf mpi2test.tar mpi2test && gzip -9 mpi2test.tar 

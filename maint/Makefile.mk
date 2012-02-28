@@ -9,7 +9,7 @@
 # properly when we "make dist"
 
 dist_noinst_SCRIPTS +=                \
-    maint/configure.in                \
+    maint/configure.ac                \
     maint/checkbuilds.in              \
     maint/checkmake                   \
     maint/clmake.in                   \
