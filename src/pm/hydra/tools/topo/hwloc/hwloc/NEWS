@@ -1,6 +1,6 @@
 Copyright © 2009 CNRS
 Copyright © 2009-2011 inria.  All rights reserved.
-Copyright © 2009-2011 Université Bordeaux 1
+Copyright © 2009-2012 Université Bordeaux 1
 Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 
 $COPYRIGHT$
@@ -20,11 +20,16 @@ in v0.9.1).
 Version 1.4.1
 -------------
 * This release contains all changes from v1.3.2.
+* Fix hwloc_alloc_membind, thanks Karl Napf for reporting the issue.
+* Fix memory leaks in some get_membind() functions.
+* Fix helpers converting from Linux libnuma to hwloc (hwloc/linux-libnuma.h)
+  in case of out-of-order NUMA node ids.
 * Fix some overzealous assertions in the distance grouping code.
 * Workaround BIOS reporting empty I/O locality in cuda and openfabrics
   helpers on Linux. Thanks to Albert Solernou for reporting the problem.
-* Fix helpers converting from Linux libnuma to hwloc (hwloc/linux-libnuma.h)
-  in case of out-of-order NUMA node ids.
+* Install a valgrind suppressions file hwloc-valgrind.supp (see the FAQ).
+* Fix memory binding documentation. Thanks to Karl Napf for reporting the
+  issues.
 
 
 Version 1.4.0 (does not contain all v1.3.2 changes)

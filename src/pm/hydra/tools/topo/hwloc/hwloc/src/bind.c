@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2011 inria.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2010, 2012 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -327,6 +327,7 @@ hwloc_get_membind(hwloc_topology_t topology, hwloc_cpuset_t set, hwloc_membind_p
   if (!ret)
     hwloc_cpuset_from_nodeset(topology, set, nodeset);
 
+  hwloc_bitmap_free(nodeset);
   return ret;
 }
 
@@ -382,6 +383,7 @@ hwloc_get_proc_membind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_cpuset_
   if (!ret)
     hwloc_cpuset_from_nodeset(topology, set, nodeset);
 
+  hwloc_bitmap_free(nodeset);
   return ret;
 }
 
@@ -436,6 +438,7 @@ hwloc_get_area_membind(hwloc_topology_t topology, const void *addr, size_t len, 
   if (!ret)
     hwloc_cpuset_from_nodeset(topology, set, nodeset);
 
+  hwloc_bitmap_free(nodeset);
   return ret;
 }
 
@@ -531,7 +534,7 @@ hwloc_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_cpuset_t 
   hwloc_nodeset_t nodeset = hwloc_bitmap_alloc();
   void *ret;
 
-  if (!hwloc_fix_membind_cpuset(topology, nodeset, set)) {
+  if (hwloc_fix_membind_cpuset(topology, nodeset, set)) {
     if (flags & HWLOC_MEMBIND_STRICT)
       ret = NULL;
     else
