@@ -226,6 +226,9 @@ char *HYDU_get_abs_wd(const char *wd)
 {
     char *cwd, *retdir;
 
+    if (wd == NULL)
+        return NULL;
+
     if (wd[0] != '.')
         return (char *) wd;
 
