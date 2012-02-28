@@ -356,6 +356,9 @@ for hydra_topolib in ${hydra_topolibs}; do
 		   # Only build hwloc in embedded mode
 		   if test "$have_hwloc" = "yes" ; then
 		      hydra_use_embedded_hwloc=yes
+		      CFLAGS="$HWLOC_EMBEDDED_CFLAGS $CFLAGS"
+		      CPPFLAGS="$HWLOC_EMBEDDED_CPPFLAGS $CPPFLAGS"
+		      LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
 		   fi
                 else
                     AC_CHECK_HEADERS([hwloc.h])
