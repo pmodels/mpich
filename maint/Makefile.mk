@@ -37,7 +37,6 @@ dist_noinst_SCRIPTS +=                \
     maint/testbuild                   \
     maint/update_windows_version      \
     maint/testpmpi                    \
-    maint/updatefiles                 \
     maint/smlib/libadd.smlib
 
 dist_noinst_DATA +=                        \

@@ -71,7 +71,7 @@ echo
 ## Checks to make sure we are running from the correct location
 ########################################################################
 
-echo_n "Verifying the location of updatefiles... "
+echo_n "Verifying the location of autogen.sh... "
 if [ ! -d maint -o ! -s maint/simplemake.in ] ; then
     echo "must execute at top level directory for now"
     exit 1
@@ -154,7 +154,6 @@ export autoreconf_args
 AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates smpdversion getparms"
 stepsCleared=no
 
-# Extract the arguments intended for updatefiles.
 for arg in "$@" ; do
     case $arg in 
 	-echo)
@@ -247,7 +246,7 @@ for arg in "$@" ; do
 
 	-help|--help|-usage|--usage)
 	    cat <<EOF
-    updatefiles [ --with-autotools=dir ] \\
+   ./autogen.sh [ --with-autotools=dir ] \\
                 [ -atdircheck=[yes|no] ] \\
                 [ -atvercheck=[yes|no] ] \\
                 [ --verbose-autoreconf ] \\
@@ -269,9 +268,9 @@ for arg in "$@" ; do
     targets for updating the Makefile.in from Makefile.sm or rebuilding the
     autotools targets).  This does not create the configure files because
     some of those depend on rules in the Makefile.in in that directory.  
-    Thus, to build all of the files for a distribution, run maint/updatefiles
+    Thus, to build all of the files for a distribution, run autogen.sh
     twice, as in 
-         maint/updatefiles && maint/updatefiles -distrib
+         autogen.sh && autogen.sh -distrib
 
     Use --do=stepname to update only a single step.  For example, 
     --do=build_configure only updates the configure scripts.  The available
@@ -944,7 +943,7 @@ if [ $do_build_configure = yes ] ; then
 	qtestmaint=`echo $dir | sed -e 's%.*test/mpi/maint.*%FOUNDTESTMAINT%'`
 	if [ "$qtestmaint" = "FOUNDTESTMAINT" ] ; then
 	    # echo "Found test/maint directory; skipping"
-	    # test/maint has its own updatefiles script, which should
+	    # test/maint has its own autogen.sh script, which should
 	    # be used instead of this one when building that configure
 	    continue
         fi

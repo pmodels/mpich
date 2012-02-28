@@ -17,7 +17,7 @@ nodist_noinst_HEADERS =
 BUILT_SOURCES =
 bin_PROGRAMS =
 bin_SCRIPTS =
-dist_noinst_SCRIPTS =
+dist_noinst_SCRIPTS = autogen.sh
 noinst_DATA =
 dist_noinst_DATA =
 noinst_HEADERS =
@@ -123,7 +123,7 @@ DIST_SUBDIRS += . examples test
 EXTRA_DIST += README CHANGES COPYRIGHT README.envvar
 
 # README.vin is tricky, we don't actually distribute it when we use release.pl,
-# but we do need to distribute it in order for ./maint/updatefiles to work
+# but we do need to distribute it in order for ./autogen.sh to work
 # correctly on a distribution tarball.  For now we distribute it when we "make
 # dist".
 EXTRA_DIST += README.vin

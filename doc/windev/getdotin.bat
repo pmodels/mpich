@@ -15,7 +15,7 @@ REM  ssh in your path
 GOTO END
 :AFTERHELP
 set CVS_RSH=ssh
-REM bash -c "echo cd `pwd` && echo maint/updatefiles" > bashcmds.txt
+REM bash -c "echo cd `pwd` && echo autogen.sh" > bashcmds.txt
 REM bash --login < bashcmds.txt
 echo cd /sandbox/%USERNAME% > sshcmds.txt
 echo mkdir dotintmp >> sshcmds.txt
@@ -27,7 +27,7 @@ GOTO AFTER_EXPORT_HEAD
 echo cvs -d /home/MPI/cvsMaster export -r HEAD mpich2allWithMPE >> sshcmds.txt
 :AFTER_EXPORT_HEAD
 echo cd mpich2 >> sshcmds.txt
-echo maint/updatefiles >> sshcmds.txt
+echo autogen.sh >> sshcmds.txt
 echo tar cvf dotin.tar `find . -name "*.h.in"` >> sshcmds.txt
 echo gzip dotin.tar >> sshcmds.txt
 echo exit >> sshcmds.txt

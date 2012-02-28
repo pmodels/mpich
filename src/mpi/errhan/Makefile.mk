@@ -54,7 +54,7 @@ BUILT_SOURCES += $(top_srcdir)/src/mpi/errhan/defmsg.h
 MAINTAINERCLEANFILES += $(top_srcdir)/src/mpi/errhan/defmsg.h
 
 # FIXME DUPLICATION
-# This code is lifted from maint/updatefiles.  This extra logic should just be
+# This code is lifted from autogen.sh.  This extra logic should just be
 # rolled up into the extracterrmsgs script itself.
 $(top_srcdir)/src/mpi/errhan/defmsg.h: $(errnames_txt_files) src/mpi/errhan/baseerrnames.txt
 	( cd $(top_srcdir) && rm -f .err unusederr.txt ; rm -rf .tmp )

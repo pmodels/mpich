@@ -230,7 +230,7 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 # quashing these variables have various drawbacks.  The alternatives are listed
 # here to avoid rediscovery of these problems by someone else in the future:
 #
-# 1) Strategy: Rewrite mpichconf.h.in with sed at maint/updatefiles time.
+# 1) Strategy: Rewrite mpichconf.h.in with sed at autogen.sh time.
 #    Problem: Automatic remaking of config.status and friends will re-run
 #             autoheader and blow away our sed changes without an opportunity to
 #             patch the resulting file again.
@@ -2803,7 +2803,7 @@ AC_ARG_ENABLE(dependencies,
 	AC_HELP_STRING([--enable-dependencies],
 		[Generate dependencies for sourcefiles.  This requires
 		that the Makefile.in files are also created to support
-		dependencies (see maint/updatefiles)]),,enable_dependencies=default)
+		dependencies (see autogen.sh)]),,enable_dependencies=default)
 
 if test -z "$enable_dependencies" ; then 
    enable_dependencies=default

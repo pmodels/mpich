@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # PWD is not guaranteed to be set to the current directory in all cases
-# (e.g., in /bin/sh, (cd src/mpe2 && maint/updatefiles won't set PWD to
+# (e.g., in /bin/sh, (cd src/mpe2 && autogen.sh won't set PWD to
 # .../src/mpe2) The parent directory of where this script is located
 saved_wd=`pwd`
 cd `dirname $0`/.. && master_dir=`pwd`

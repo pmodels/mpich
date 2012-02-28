@@ -946,7 +946,7 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
 
     Bring up a cygwin bash shell.
     cd mpich2
-    maint/updatefiles
+    ./autogen.sh
     exit
 
 (d) Execute winconfigure.wsf

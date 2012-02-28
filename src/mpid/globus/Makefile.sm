@@ -157,7 +157,7 @@ distclean-local:
 	-rm -f mpiexec
 
 #
-# clean up files created by maint/updatefiles (autoheader, autoconf, etc.)
+# clean up files created by autogen.sh (autoheader, autoconf, etc.)
 #
 maintainer-clean-local:
 	-rm -f mpidconf.h.in

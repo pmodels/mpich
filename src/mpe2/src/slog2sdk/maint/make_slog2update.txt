@@ -4,7 +4,7 @@ mkdir src_205
 
 cp -a /home/chan/slog2/slog2sdk-032705/src/* /home/chan/slog2/slog2sdk/src_205
 maint/rename_oldsrc src_205
-maint/updatefiles
+autogen.sh
 
 cd /home/chan/slog2/build
 /home/chan/slog2/slog2sdk/configure --with-oldsource=src_205 \

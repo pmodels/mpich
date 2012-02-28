@@ -2185,14 +2185,14 @@ if not bTestOnly then
 		' check out mpich2 locally
 		CheckOut("mpich2")
 		WshShell.CurrentDirectory = "mpich2"
-		' check out mpich2 remotely, run maint/updatefiles and tar up the .h.in files
+		' check out mpich2 remotely, run autogen.sh and tar up the .h.in files
 		set fout = f.CreateTextFile("sshcmds.txt")
 		fout.WriteLine( "cd /sandbox/" & username )
 		fout.WriteLine( "mkdir " & hostname & "dotintmp" )
 		fout.WriteLine( "cd " & hostname & "dotintmp" )
 		fout.WriteLine( "cvs -d " & cvs_root_dir & " export -r " & cvsTag & " mpich2allWithMPE" )
 		fout.WriteLine( "cd mpich2" )
-		fout.WriteLine( "maint/updatefiles" )
+		fout.WriteLine( "autogen.sh" )
 		fout.WriteLine( "tar cvf dotin.tar `find . -name ""*.h.in""`" )
 		fout.WriteLine( "gzip dotin.tar" )
 		fout.WriteLine( "exit" )
