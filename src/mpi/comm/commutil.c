@@ -282,9 +282,12 @@ static int init_default_collops(void)
                 break;
             case MPID_HIERARCHY_NODE_ROOTS:
                 break;
+
+                /* --BEGIN ERROR HANDLING-- */
             default:
                 MPIU_Assertp(FALSE);
                 break;
+                /* --END ERROR HANDLING-- */
         }
 
         default_collops[i] = ops;
@@ -322,9 +325,11 @@ static int init_default_collops(void)
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
     return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
 fn_fail:
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 /* Initializes the coll_fns field of comm to a sensible default.  It may re-use
@@ -401,6 +406,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
                                                  &num_local,    &local_rank,    &local_procs,
                                                  &num_external, &external_rank, &external_procs,
                                                  &comm->intranode_table, &comm->internode_table);
+        /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno) {
             if (MPIR_Err_is_fatal(mpi_errno)) MPIU_ERR_POP(mpi_errno);
 
@@ -415,6 +421,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             mpi_errno = MPI_SUCCESS;
             goto fn_exit;
         }
+        /* --END ERROR HANDLING-- */
 
         /* defensive checks */
         MPIU_Assert(num_local > 0);
@@ -940,6 +947,7 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	    if (totalHasNoId == 1) {
+                /* --BEGIN ERROR HANDLING-- */
 		/* Release the mask for use by other threads */
 		if (own_mask) {
                     MPIU_THREAD_CS_ENTER(CONTEXTID,);
@@ -947,6 +955,7 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
                     MPIU_THREAD_CS_EXIT(CONTEXTID,);
 		}
 		MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm");
+                /* --END ERROR HANDLING-- */
 	    }
 	    else { /* reinitialize testCount */
 		testCount = 10;
@@ -961,12 +970,15 @@ fn_exit:
     MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
     return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
 fn_fail:
     /* Release the masks */
     if (own_mask) {
         mask_in_use = 0;
     }
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 #endif
 
@@ -1067,6 +1079,7 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
 	MPID_Abort( 0, MPI_ERR_INTERN, 1, 
 		    "In MPIR_Free_contextid, idx is out of range" );
     }
+    /* --END ERROR HANDLING-- */
 
     /* The low order bits for dynamic context IDs don't have meaning the
      * same way that low bits of non-dynamic ctx IDs do.  So we have to
@@ -1094,6 +1107,7 @@ void MPIR_Free_contextid( MPIR_Context_id_t context_id )
         }
     }
 
+    /* --BEGIN ERROR HANDLING-- */
     /* Check that this context id has been allocated */
     if ( (context_mask[idx] & (0x1 << bitpos)) != 0 ) {
 #ifdef USE_DBG_LOGGING

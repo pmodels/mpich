@@ -51,7 +51,9 @@ static int sorttype_compare(const void *v1, const void *v2) {
     else if (s1->orig_idx < s2->orig_idx)
         return -1;
 
+    /* --BEGIN ERROR HANDLING-- */
     return 0; /* should never happen */
+    /* --END ERROR HANDLING-- */
 }
 
 /* Sort the entries in keytable into increasing order by key.  A stable
@@ -74,6 +76,7 @@ static void MPIU_Sort_inttable( sorttype *keytable, int size )
     else
 #endif
     {
+        /* --BEGIN USEREXTENSION-- */
         /* fall through to insertion sort if qsort is unavailable/disabled */
         for (i = 1; i < size; ++i) {
             tmp = keytable[i];
@@ -91,6 +94,7 @@ static void MPIU_Sort_inttable( sorttype *keytable, int size )
             }
             keytable[j+1] = tmp;
         }
+        /* --END USEREXTENSION-- */
     }
 }
 

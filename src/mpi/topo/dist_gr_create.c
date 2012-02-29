@@ -397,6 +397,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
+    /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     if (dist_graph_ptr && dist_graph_ptr->in)
         MPIU_Free(dist_graph_ptr->in);
@@ -407,7 +408,6 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
     if (dist_graph_ptr && dist_graph_ptr->out_weights)
         MPIU_Free(dist_graph_ptr->out_weights);
     MPIU_CHKPMEM_REAP();
-    /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(
         mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
