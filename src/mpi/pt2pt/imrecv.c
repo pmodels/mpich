@@ -75,6 +75,7 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
+    MPID_Request_get_ptr(*message, msgp);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING

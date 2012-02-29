@@ -16,14 +16,13 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req_handle; /* dummy for MPIR_Request_complete */
     int active_flag; /* dummy for MPIR_Request_complete */
-    MPID_Request *msgp = NULL;
     MPID_Request *rreq = NULL;
 
     /* There is no optimized MPID_Mrecv at this time because there is no real
      * optimization potential in that case.  MPID_Recv exists to prevent
      * creating a request unnecessarily for messages that are already present
      * and eligible for immediate completion. */
-    mpi_errno = MPID_Imrecv(buf, count, datatype, msgp, &rreq);
+    mpi_errno = MPID_Imrecv(buf, count, datatype, message, &rreq);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (!MPID_Request_is_complete(rreq)) {
