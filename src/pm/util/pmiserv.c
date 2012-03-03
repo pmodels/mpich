@@ -1121,7 +1121,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	    argnum = atoi( cmdPtr + 3 ) - 1;
 	    if (argnum < 0 || argnum >= PMI_MAX_ARGS) {
 		MPIU_Error_printf( "Malformed PMI Spawn command; the index of an argument in the command is %d but must be between 0 and %d\n",
-				   argnum, PMI_MAX_ARGS );
+				   argnum, PMI_MAX_ARGS-1 );
 		return 1;
 	    }
 	    args[argnum] = MPIU_Strdup( valPtr );
