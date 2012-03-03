@@ -1454,6 +1454,9 @@ void MPIR_CommL_forget( MPID_Comm * );
 #define MPIR_COMML_FORGET(_a) 
 #endif
 
+/* must come after MPID_Comm is declared/defined */
+int MPIR_Get_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcommp, MPID_Request **req);
+int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcommp, MPID_Request **req);
 
 /* ------------------------------------------------------------------------- */
 /* Prototypes and definitions for the node ID code.  This is used to support
@@ -2139,6 +2142,8 @@ void MPIR_Add_finalize( int (*routine)( void * ), void *extra, int priority );
 /*int MPIR_Comm_attr_dup(MPID_Comm *, MPID_Attribute **);
   int MPIR_Comm_attr_delete(MPID_Comm *, MPID_Attribute *);*/
 int MPIR_Comm_copy( MPID_Comm *, int, MPID_Comm ** );
+int MPIR_Comm_copy_data(MPID_Comm *comm_ptr, MPID_Comm **outcomm_ptr);
+
 /* Fortran keyvals are set with functions in mpi_f77interface.h */
 #ifdef HAVE_CXX_BINDING
 extern void MPIR_Keyval_set_cxx( int, void (*)(void), void (*)(void) );
@@ -3854,6 +3859,8 @@ int MPIR_Comm_is_node_aware( MPID_Comm * );
 int MPIR_Comm_is_node_consecutive( MPID_Comm *);
 
 void MPIR_Free_err_dyncodes( void );
+
+int MPIR_Comm_idup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm, MPID_Request **reqp);
 
 /* begin impl functions for NBC */
 int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request);

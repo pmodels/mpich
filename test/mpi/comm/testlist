@@ -26,3 +26,6 @@ comm_group_half 8
 comm_group_rand 2
 comm_group_rand 4
 comm_group_rand 8
+comm_idup 2
+comm_idup 4
+comm_idup 9

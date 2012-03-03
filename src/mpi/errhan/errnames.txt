@@ -918,6 +918,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 **procnamefailed:Failed to get processor name
 
+**notsuppmultithread:this functionality is not supported when the thread level is greater than MPI_THREAD_SINGLE
+
 #
 # mpi functions
 #
@@ -1462,6 +1464,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpix_mrecv %p %d %D %p %p: MPIX_Mrecv(buf=%p, count=%d, datatype=%D, message=%p, status=%p)
 **mpix_imrecv: MPIX_Imrecv failed
 **mpix_imrecv %p %d %D %p %p: MPIX_Imrecv(buf=%p, count=%d, datatype=%D, message=%p, request=%p)
+
+## MPI-3 nonblocking comm dup
+**mpix_comm_idup: MPIX_Comm_idup failed
+**mpix_comm_idup %C %p %p: MPIX_Comm_idup(comm=%C, newcomm=%p, request=%p)
 
 ## MPI-3 nonblocking collectives
 **mpix_ibarrier: MPIX_Ibarrier failed

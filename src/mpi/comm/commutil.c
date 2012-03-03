@@ -980,7 +980,186 @@ fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
+
 #endif
+
+struct gcn_state {
+    MPIR_Context_id_t *ctx0;
+    MPIR_Context_id_t *ctx1;
+    uint32_t local_mask[MPIR_MAX_CONTEXT_MASK];
+};
+
+#undef FUNCNAME
+#define FUNCNAME gcn_helper
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int gcn_helper(MPID_Comm *comm, int tag, void *state)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct gcn_state *st = state;
+    MPIR_Context_id_t newctxid;
+
+    newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
+    MPIU_ERR_CHKANDJUMP(!newctxid, mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
+
+    if (st->ctx0)
+        *st->ctx0 = newctxid;
+    if (st->ctx1)
+        *st->ctx1 = newctxid;
+
+fn_fail:
+    return mpi_errno;
+}
+
+
+/* Does the meat of the algorithm, adds the relevant entries to the schedule.
+ * Assigns the resulting value to *ctx0 and *ctx1, as long as those respective
+ * pointers are non-NULL. */
+/* FIXME this version only works for single-threaded code, it will totally fail
+ * for any multithreaded communicator creation */
+#undef FUNCNAME
+#define FUNCNAME gcn_sch
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int gcn_sch(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0, MPIR_Context_id_t *ctx1, MPID_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct gcn_state *st = NULL;
+    MPIU_CHKPMEM_DECL(1);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
+
+    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+
+    MPIU_ERR_CHKANDJUMP(MPIR_ThreadInfo.isThreaded, mpi_errno, MPI_ERR_INTERN, "**notsuppmultithread");
+
+    /* first do as much local setup as we can */
+    if (initialize_context_mask) {
+        MPIR_Init_contextid();
+    }
+
+    MPIU_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
+    st->ctx0 = ctx0;
+    st->ctx1 = ctx1;
+    MPIU_Memcpy(st->local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(uint32_t));
+
+    mpi_errno = comm_ptr->coll_fns->Iallreduce(MPI_IN_PLACE, st->local_mask, MPIR_MAX_CONTEXT_MASK,
+                                               MPI_UINT32_T, MPI_BAND, comm_ptr, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPID_SCHED_BARRIER(s);
+
+    mpi_errno = MPID_Sched_cb(&gcn_helper, st, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPID_SCHED_BARRIER(s);
+
+    mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, st, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPIU_CHKPMEM_COMMIT();
+fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Get_contextid_nonblock
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Get_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcommp, MPID_Request **req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int tag;
+    MPID_Sched_t s;
+
+    /* now create a schedule */
+    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_Sched_create(&s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* add some entries to it */
+    mpi_errno = gcn_sch(comm_ptr, &newcommp->context_id, &newcommp->recvcontext_id, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* finally, kick off the schedule and give the caller a request */
+    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, req);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Get_intercomm_contextid_nonblock
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcommp, MPID_Request **req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int tag;
+    MPID_Sched_t s;
+    MPID_Comm *lcomm = NULL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
+
+    /* do as much local setup as possible */
+    if (!comm_ptr->local_comm) {
+        mpi_errno = MPIR_Setup_intercomm_localcomm(comm_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    lcomm = comm_ptr->local_comm;
+
+    /* now create a schedule */
+    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPID_Sched_create(&s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* add some entries to it */
+
+    /* first get a context ID over the local comm */
+    mpi_errno = gcn_sch(lcomm, &newcommp->context_id, NULL, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPID_SCHED_BARRIER(s);
+
+    if (comm_ptr->rank == 0) {
+        newcommp->recvcontext_id = -1;
+        mpi_errno = MPID_Sched_recv(&newcommp->recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPID_Sched_send(&newcommp->context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
+    }
+
+    mpi_errno = lcomm->coll_fns->Ibcast(&newcommp->recvcontext_id, 1,
+                                        MPIR_CONTEXT_ID_T_DATATYPE, 0, lcomm, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* finally, kick off the schedule and give the caller a request */
+    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, req);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_fail:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
+    return mpi_errno;
+}
+
 
 /* Get a context for a new intercomm.  There are two approaches 
    here (for MPI-1 codes only)
@@ -1273,6 +1452,75 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
     return mpi_errno;
 }
 
+/* Copy a communicator, including copying the virtual connection tables and
+ * clearing the various fields.  Does *not* allocate a context ID or commit the
+ * communicator.  Does *not* copy attributes.
+ *
+ * Used by comm_idup.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_copy_data
+#undef FCNAME
+#define FCNAME "MPIR_Comm_copy"
+int MPIR_Comm_copy_data(MPID_Comm *comm_ptr, MPID_Comm **outcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *newcomm_ptr = NULL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COPY_DATA);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_COPY_DATA);
+
+    mpi_errno = MPIR_Comm_create(&newcomm_ptr);
+    if (mpi_errno) goto fn_fail;
+
+    /* use a large garbage value to ensure errors are caught more easily */
+    newcomm_ptr->context_id     = 32767;
+    newcomm_ptr->recvcontext_id = 32767;
+
+    /* Save the kind of the communicator */
+    newcomm_ptr->comm_kind  = comm_ptr->comm_kind;
+    newcomm_ptr->local_comm = 0;
+
+    /* Duplicate the VCRT references */
+    MPID_VCRT_Add_ref(comm_ptr->vcrt);
+    newcomm_ptr->vcrt = comm_ptr->vcrt;
+    newcomm_ptr->vcr  = comm_ptr->vcr;
+
+    /* If it is an intercomm, duplicate the local vcrt references */
+    if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+        MPID_VCRT_Add_ref(comm_ptr->local_vcrt);
+        newcomm_ptr->local_vcrt = comm_ptr->local_vcrt;
+        newcomm_ptr->local_vcr  = comm_ptr->local_vcr;
+    }
+
+    /* Set the sizes and ranks */
+    newcomm_ptr->rank         = comm_ptr->rank;
+    newcomm_ptr->local_size   = comm_ptr->local_size;
+    newcomm_ptr->remote_size  = comm_ptr->remote_size;
+    newcomm_ptr->is_low_group = comm_ptr->is_low_group; /* only relevant for intercomms */
+
+    /* Inherit the error handler (if any) */
+    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+    newcomm_ptr->errhandler = comm_ptr->errhandler;
+    if (comm_ptr->errhandler) {
+        MPIR_Errhandler_add_ref(comm_ptr->errhandler);
+    }
+    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+
+    /* FIXME do we want to copy coll_fns here? */
+
+    mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Start with no attributes on this communicator */
+    newcomm_ptr->attributes = 0;
+    *outcomm_ptr = newcomm_ptr;
+
+fn_fail:
+fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COPY);
+    return mpi_errno;
+}
 /* Common body between MPIR_Comm_release and MPIR_comm_release_always.  This
  * helper function frees the actual MPID_Comm structure and any associated
  * storage.  It also releases any refernces to other objects, such as the VCRT.

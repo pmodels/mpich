@@ -13,6 +13,7 @@ mpi_sources +=                       \
     src/mpi/comm/comm_free.c         \
     src/mpi/comm/comm_get_name.c     \
     src/mpi/comm/comm_group.c        \
+    src/mpi/comm/comm_idup.c         \
     src/mpi/comm/comm_rank.c         \
     src/mpi/comm/comm_size.c         \
     src/mpi/comm/comm_remote_group.c \
