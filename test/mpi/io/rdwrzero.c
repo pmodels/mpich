@@ -23,7 +23,7 @@ static char MTEST_Descrip[] = "Test reading and writing zero bytes (set status c
 int main( int argc, char *argv[] )
 {
     int errs = 0;
-    int size, rank, i, *buf, count;
+    int size, rank, i, *buf, count, rc;
     MPI_File fh;
     MPI_Comm comm;
     MPI_Status status;
@@ -31,20 +31,33 @@ int main( int argc, char *argv[] )
     MTest_Init( &argc, &argv );
 
     comm = MPI_COMM_WORLD;
-    MPI_File_open( comm, (char*)"test.ord", 
-		   MPI_MODE_RDWR | MPI_MODE_CREATE |
-		   MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh );
+    rc = MPI_File_open( comm, (char*)"test.ord", 
+			MPI_MODE_RDWR | MPI_MODE_CREATE |
+			MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh );
+    if (rc) {
+	MTestPrintErrorMsg( "File_open", rc );
+	errs++;
+	/* If the open fails, there isn't anything else that we can do */
+	goto fn_fail;
+    }
+
 
     MPI_Comm_size( comm, &size );
     MPI_Comm_rank( comm, &rank );
     buf = (int *)malloc( size * sizeof(int) );
     buf[0] = rank;
     /* Write to file */
-    MPI_File_write_ordered( fh, buf, 1, MPI_INT, &status );
-    MPI_Get_count( &status, MPI_INT, &count );
-    if (count != 1) {
+    rc = MPI_File_write_ordered( fh, buf, 1, MPI_INT, &status );
+    if (rc) {
+	MTestPrintErrorMsg( "File_write_ordered", rc );
 	errs++;
-	fprintf( stderr, "Wrong count (%d) on write-ordered\n", count );
+    }
+    else {
+	MPI_Get_count( &status, MPI_INT, &count );
+	if (count != 1) {
+	    errs++;
+	    fprintf( stderr, "Wrong count (%d) on write-ordered\n", count );
+	}
     }
 
     /* Set the individual pointer to 0, since we want to use a read_all */
@@ -100,6 +113,7 @@ int main( int argc, char *argv[] )
 
     MPI_File_close( &fh );
 
+ fn_fail:
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
