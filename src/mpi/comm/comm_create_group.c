@@ -42,7 +42,7 @@ PMPI_LOCAL int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_p
     MPID_Group *comm_group_ptr = NULL;
     int *granks = NULL, *ranks = NULL, rank_count;
     int mpi_errno = MPI_SUCCESS;
-    MPIU_CHKLMEM_DECL(1);
+    MPIU_CHKLMEM_DECL(2);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_GROUP);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_GROUP);
