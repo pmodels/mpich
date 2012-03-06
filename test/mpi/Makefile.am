@@ -45,10 +45,6 @@ nodist_noinst_HEADERS = include/mpitestconf.h
 # see automake et al attempt to rebuild the autotools, which is likely to 
 # fail unless the user has the correct versions of all of the tools
 dist-hook:
-	if [ ! -d "@mpich2_top_srcdir@" ] ; then \
-	    echo "The dist target requires that the mpich2 source directory be provided" ; \
-	    exit 1 ; \
-	fi
 	cd $(distdir) && \
 	    svn export https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
 	cd $(distdir) && \

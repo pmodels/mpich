@@ -1,3 +1,9 @@
+MPICH2 Test Suite
+
+This test suite is a *supplement* to other test suites, including the
+original MPICH testsuite, the Intel testsuite, and the IBM MPI test suite 
+(or test suites derived from that test, including the MPI C++ tests).
+
 In many cases, configure will find the MPI implementation
 automatically.  In some cases, it will need some help.  For example:
 
@@ -23,6 +29,31 @@ You may need to add MPI_SIZEOF_OFFSET=8 .
 The option "-cpp" is needed for at least some versions of mpCC to define the
 C++ bindings of the MPI routines.
 
+For implementations that do not implement all of MPI-2, there are --disable
+options, including --disable-spawn and --disable-cxx.  To restrict tests to 
+just what is defined in the MPI specification, use --enable-strictmpi .
+
 The script that runs the tests assumes that the MPI implementation
 supports mpiexec; you should consider this the first test of the implementation.
+
+For systems that run applications through a batch system, the option "-batch"
+to the runtests script will create a script file that can be edited and 
+submitted to the batch system.  The script checktests can be run to 
+summarize the results.  
+
+Specifically, (assuming the bash shell, and that the directory "btest", a
+subdirectory of the test suite directory, is used for running the tests):
+
+export MPITEST_BATCH_DIR=`pwd`/btest
+runtests -batch -tests=testlist
+... edit btest/runtests.batch to make it a value batch submissions script
+... run that script and wait for the batch job to complete
+cd btest && ../checktests 
+
+Note that some programs that are used to run MPI programs add extra output, 
+which can confuse any tool that depends on clean output in STDOUT.  Since
+such unfortunate behavior is common, the option -ignorebogus can be given 
+to checktests:
+
+cd btest && ../checktests --ignorebogus
 

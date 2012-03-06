@@ -46,7 +46,6 @@ AC_PROG_RANLIB
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # XXX DJG FIXME is this needed still?
-# mpich2_top_srcdir is used only to build the distribution target (dist)
 if test -z "$mpich2_top_srcdir" ; then 
     if test -z "$top_srcdir" ; then
        use_top_srcdir=$srcdir   
@@ -86,6 +85,12 @@ AC_ARG_ENABLE(romio,
 AC_ARG_ENABLE(spawn,
 [--enable-spawn - Enable tests of the dynamic process parts of MPI-2 (default)],
 ,enable_spawn=yes)
+AC_ARG_ENABLE(rma,
+[--enable-rma - Enable tests of the one sided parts of MPI-2 (default)],
+,enable_rma=yes)
+AC_ARG_ENABLE(long-double-complex,
+[--enable-long-double-complex - Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)],
+,enable_long_double_complex=yes)
 AC_ARG_ENABLE(checkerrors,
 [--enable-checkerrors - Add some tests for checking for errors in user programs],,enable_checkerrors=default)
 AC_ARG_ENABLE(checkfaults,
@@ -270,7 +275,9 @@ AC_SUBST(spawndir)
 # Also allow rma to be disabled
 AC_ARG_VAR([MPI_NO_RMA],[set to "yes" to disable one-sided tests])
 rmadir=rma
-if test "$MPI_NO_RMA"  = yes ; then
+if test "$enable_rma" != yes ; then
+    rmadir="#"
+elif test "$MPI_NO_RMA"  = yes ; then
     rmadir="#"
 else
     AC_DEFINE(HAVE_MPI_WIN_CREATE,1,[Define if MPI_Win_create is available])
@@ -286,6 +293,7 @@ AC_SUBST(faultsdir)
 if test "$enable_strictmpi" = "yes" ; then
     AC_DEFINE(USE_STRICT_MPI,1,[Define if only operations defined in MPI should be tested])
 fi
+
 
 # preserve these values across a reconfigure
 AC_ARG_VAR([WRAPPER_CFLAGS],[])
@@ -403,6 +411,12 @@ AC_TYPE_UINT64_T
 
 # Check for availability of C99 types
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
+
+# Only run the long double complex tests if that type is available
+if test "$enable_long_double_complex" != "no" -a \
+   "x$ac_cv_type_long_double__Complex" = "xyes" ; then
+   AC_DEFINE(USE_LONG_DOUBLE_COMPLEX,1,[Define if tests with long double complex should be included])
+fi
 
 # Headers needed for threads tests
 if test "$threadsdir" = "threads" ; then
@@ -1070,15 +1084,20 @@ if test "$FROM_MPICH2" = yes ; then
     FFLAGS="$CRAYPTR_FFLAGS"
     FCFLAGS="$CRAYPTR_FCFLAGS"
     CXXFLAGS=""
+else
+    # We need either mpiexec or mpirun.  If we don't find them,
+    # the user will need to determine how to run a program
+    AC_PATH_PROG(MPIEXEC,mpiexec)
 fi
 
 AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])
-AC_OUTPUT_COMMANDS([chmod a+x runtests])
+AC_OUTPUT_COMMANDS([chmod a+x runtests checktests])
 AC_OUTPUT_COMMANDS([chmod a+x manual/manyconnect])
 dnl Note that this format for AC_OUTPUT can cause problems for autoconf
 dnl run under cygwin
 AC_OUTPUT(maint/testmerge \
           runtests \
+          checktests \
           Makefile \
           basic/Makefile \
           attr/Makefile \

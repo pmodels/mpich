@@ -1,0 +1,89 @@
+#! @PERL@
+
+$debug   = 1;
+$verbose = 1;
+$ignoreBogusOutput = 0;
+$filePattern = "runtests.*.status";
+
+$testsPassed = 0;
+$testsFailed = 0;
+
+foreach $_ (@ARGV) {
+    if (/^--?ignorebogus/) {
+	$ignoreBogusOutput = 1;
+    }
+    else {
+	print STDERR "checktests [ -ignorebogus ]\n";
+	exit(1);
+    }
+}
+
+open( RESULTS, "ls -1 $filePattern |" ) || die "Cannot list directory using ls -1 $filePattern\n";
+
+while (<RESULTS>) {
+    chop;
+    $statusFile = $_;
+    $resultsFile = $statusFile;
+    $resultsFile =~ s/\.status/.out/;
+
+    if ($resultsFile =~ /runtests\.([0-9]+)\.out/) {
+	$count = $1;
+    }
+    else {
+	$count = -1;
+	print STDERR "Unable to determine test number from $resultsFile!\n";
+	$testsFailed ++;
+	next;
+    }
+    open (SFD, "<$statusFile" );
+    while (<SFD>) {
+	chop;
+	$testStatus = $_;
+    }
+    close (SFD);
+    
+    if (-s $resultsFile) {
+	open (RFD, "<$resultsFile");
+	$runLine = <RFD>;
+	$sawNoerrors = 0;
+	# Successful output should contain ONLY the line No Errors
+	while (<RFD>) {
+	    chop;
+	    $outLine = $_;
+	    if ($outLine =~ /^\s+No [Ee]rrors\s*$/) {
+		$sawNoerrors = 1;
+	    }
+	    else {
+		# To filter out output that may be added to STDOUT
+		# by a badly behaved runtime system, you can either
+		# add a specific filter here (preferred) or set the
+		# -ignorebogus option (considered a workaround)
+	        if (!$ignoreBogusOutput) {
+		    # Any extraneous output is an error
+		    $sawNoerrors = 0;
+		}
+	    }
+	}
+	close (RFD);
+	if ($sawNoerrors == 1 && $testStatus == 0) {
+	    $testsPassed ++;
+	}
+	else {
+	    # Test wrote No Errors but then exited with a non-zero status
+	    $testsFailed ++;
+	    # Output the errors
+	    if ($verbose) {
+		print STDOUT "Test $count failed:\n";
+		print STDOUT "Test status: $testStatus\n";
+		print STDOUT "Test output:\n";
+		system ("cat $resultsFile" );
+	    }
+	}
+    }
+    else {
+	print STDERR "No $resultsFile\n" if $debug;
+	$testsFailed ++;
+    }
+}
+
+print "Tests passed: $testsPassed; test failed: $testsFailed\n";
