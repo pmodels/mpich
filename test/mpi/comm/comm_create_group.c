@@ -4,6 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 #include "mpi.h"
+/* USE_STRICT_MPI may be defined in mpitestconf.h */
+#include "mpitestconf.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -37,7 +39,7 @@ int main(int argc, char *argv[])
     MPI_Group_excl(world_group, size / 2, excl, &even_group);
     MPI_Group_free(&world_group);
 
-#ifdef USE_STRICT_MPI
+#if !defined(USE_STRICT_MPI) && defined(MPICH2)
     if (rank % 2 == 0) {
         /* Even processes create a group for themselves */
         MPIX_Comm_create_group(MPI_COMM_WORLD, even_group, 0, &even_comm);

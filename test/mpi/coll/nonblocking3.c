@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+/* USE_STRICT_MPI may be defined in mpitestconf.h */
+#include "mpitestconf.h"
 
 static int errs = 0;
 

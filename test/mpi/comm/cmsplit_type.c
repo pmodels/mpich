@@ -4,6 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 #include "mpi.h"
+/* USE_STRICT_MPI may be defined in mpitestconf.h */
+#include "mpitestconf.h"
 #include <stdio.h>
 
 int main(int argc, char *argv[])
@@ -16,7 +18,7 @@ int main(int argc, char *argv[])
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
 
-#ifdef USE_STRICT_MPI
+#if !defined(USE_STRICT_MPI) && defined(MPICH2)
     MPIX_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 #else
     MPI_Comm_split(MPI_COMM_WORLD, 0, 0, &comm);

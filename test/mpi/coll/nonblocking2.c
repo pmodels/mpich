@@ -14,6 +14,8 @@
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
+/* USE_STRICT_MPI may be defined in mpitestconf.h */
+#include "mpitestconf.h"
 
 #define COUNT (10)
 #define PRIME (17)

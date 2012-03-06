@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 #include <mpi.h>
+/* USE_STRICT_MPI may be defined in mpitestconf.h */
+#include "mpitestconf.h"
 
 int main(int argc, char **argv)
 {
@@ -24,7 +26,7 @@ int main(int argc, char **argv)
     range[0][2] = 1;
     MPI_Group_range_incl(full_group, 1, range, &half_group);
 
-#ifdef USE_STRICT_MPI
+#if !defined(USE_STRICT_MPI) && defined(MPICH2)
     if (rank <= size / 2) {
         MPIX_Comm_create_group(MPI_COMM_WORLD, half_group, 0, &comm);
         MPI_Barrier(comm);
