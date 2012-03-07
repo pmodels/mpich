@@ -1032,7 +1032,7 @@ static int gcn_sch(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0, MPIR_Context_id
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 
-    MPIU_ERR_CHKANDJUMP(MPIR_ThreadInfo.isThreaded, mpi_errno, MPI_ERR_INTERN, "**notsuppmultithread");
+    MPIU_ERR_CHKANDJUMP(MPIU_ISTHREADED, mpi_errno, MPI_ERR_INTERN, "**notsuppmultithread");
 
     /* first do as much local setup as we can */
     if (initialize_context_mask) {
