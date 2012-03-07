@@ -345,6 +345,38 @@ elif test -n "$with_mpi" ; then
     if test -z "$MPIEXEC" ; then
         MPIEXEC=$with_mpi/bin/mpiexec
     fi
+else
+    # Try to use mpicc etc names
+    if test -z "$MPICC" ; then
+        AC_PATH_PROG(MPICC,mpicc mpcc)
+    fi
+    if test "x$MPICC" != "x" ; then
+        CC=$MPICC
+    fi 
+    if test -z "$MPIF77" ; then
+        AC_PATH_PROG(MPIF77,mpif77 mpf77)
+    fi
+    if test "x$MPIF77" != "x" ; then 
+        F77=$MPIF77
+    fi
+    if test -z "$MPIFC" ; then
+        AC_PATH_PROG(MPIFC,mpif90 mpftn)
+    fi
+    if test "x$MPIFC" != "x" ; then
+        FC=$MPIFC
+    fi
+    if test -z "$MPICXX" ; then
+        # We left mpiCC off of this list because mpicc and mpiCC are the 
+        # same on Mac OSX systems.
+        AC_PATH_PROG(MPICXX,mpicxx mpCC)
+        CXX=$with_mpi/bin/mpicxx
+    fi
+    if test "x$MPICXX" != "x" ; then
+        CXX=$MPICXX
+    fi 
+    if test -z "$MPIEXEC" ; then
+        AC_PATH_PROG(MPIEXEC,mpiexec)
+    fi
 fi
 
 # Running C compiler tests
@@ -353,6 +385,22 @@ PAC_PROG_CC
 # Note that some versions of autoconf will insist that the compiler 
 # produce executables at this point, which is why we must do something
 # special for building within MPICH2
+
+# Ensure that we can compile an MPI program before we go any further
+# We don't use a cached value here because this is a sanity check
+# The exception is if we are executing this configure from within the 
+# MPICH2 configure - in that case, the 
+if test "$FROM_MPICH2" != "yes" ; then
+    AC_MSG_CHECKING([whether we can compile and link MPI programs in C])
+    AC_LINK_IFELSE([
+AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finalize();])
+    ],[mpi_compile_works=yes],[mpi_compiler_works=no])
+AC_MSG_RESULT($mpi_compile_works)
+
+    if test "$mpi_compile_works" != "yes" ; then
+       AC_MSG_ERROR([Unable to compile and/or link an MPI program!  Check config.log])
+    fi
+fi
 dnl We cannot use AC_C_LONG_DOUBLE
 dnl because it does not support cross-compilation.  Instead, we use the
 dnl same test in the MPICH2 configure.
