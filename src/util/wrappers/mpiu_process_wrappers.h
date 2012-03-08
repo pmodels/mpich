@@ -15,20 +15,22 @@
 #endif
 
 /* MPIU_PW_SCHED_YIELD() - Yield the processor to OS scheduler */
-#if defined(HAVE_SWITCHTOTHREAD)
+#if defined(USE_SWITCHTOTHREAD_FOR_YIELD)
     #define MPIU_PW_Sched_yield() SwitchToThread()
-#elif defined(HAVE_WIN32_SLEEP)
+#elif defined(USE_WIN32_SLEEP_FOR_YIELD)
     #define MPIU_PW_Sched_yield() Sleep(0)
-#elif defined(HAVE_SCHED_YIELD)
+#elif defined(USE_SCHED_YIELD_FOR_YIELD)
     #define MPIU_PW_Sched_yield() sched_yield()
-#elif defined(HAVE_YIELD)
+#elif defined(USE_YIELD_FOR_YIELD)
     #define MPIU_PW_Sched_yield() yield()
-#elif defined (HAVE_SELECT)
+#elif defined (USE_SELECT_FOR_YIELD)
     #define MPIU_PW_Sched_yield() do { struct timeval t; t.tv_sec = 0; t.tv_usec = 0; select(0,0,0,0,&t); } while (0)
-#elif defined (HAVE_USLEEP)
+#elif defined (USE_USLEEP_FOR_YIELD)
     #define MPIU_PW_Sched_yield() usleep(0)
-#elif defined (HAVE_SLEEP)
+#elif defined (USE_SLEEP_FOR_YIELD)
     #define MPIU_PW_Sched_yield() sleep(0)
+#elif defined (USE_NOTHING_FOR_YIELD)
+    #define MPIU_PW_Sched_yield() do {} while (0)
 #else
     #error "No mechanism available to yield"
 #endif

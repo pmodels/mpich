@@ -5509,8 +5509,70 @@ AC_DEFINE_UNQUOTED([MPIU_THREAD_PACKAGE_NAME],[$MPIU_THREAD_PACKAGE_NAME],[set t
 # check for compiler-support for thread-local storage (MPIU_TLS_SPECIFIER)
 AX_TLS
 
+AC_CHECK_FUNCS(getpid)
+
+# Choose a method to yield the procesor.
+
+# If the user specified a method to use, we check if it's available.
+# If a method was not specified, we make a guess based on the OS.  The
+# default is to use sched_yield() or yield() if one is available,
+# otherwise, default to nothing.  After that we define the appropriate
+# macro.
+
 AC_CHECK_HEADERS(sched.h)
-AC_CHECK_FUNCS(sched_yield yield usleep sleep select getpid)
+AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_FUNCS(sched_yield yield usleep sleep select)
+
+AC_ARG_ENABLE([yield], 
+    [AS_HELP_STRING([--enable-yield], [choose a method to yield the processor in busy loops.  Available methods are: sched_yield, yield, select, usleep, sleep, nothing])], 
+    [AS_CASE([$enableval],
+        [sched_yield], [AS_IF([test "x$ac_cv_func_sched_yield" != "xyes"], [enable_yield=unavail])],
+        [yield],       [AS_IF([test "x$ac_cv_func_yield"       != "xyes"], [enable_yield=unavail])],
+        [select],      [AS_IF([test "x$ac_cv_func_select"      != "xyes"], [enable_yield=unavail])],
+        [usleep],      [AS_IF([test "x$ac_cv_func_usleep"      != "xyes"], [enable_yield=unavail])],
+        [sleep],       [AS_IF([test "x$ac_cv_func_sleep"       != "xyes"], [enable_yield=unavail])],
+        [nothing|no],  [],
+        [AC_MSG_ERROR([Invalid option $enableval for --enable-yield])])
+
+     AS_IF([test "x$enable_yield" = "xunavail"], 
+              [AC_MSG_ERROR([Yield method $enableval is not available on this platform.])])
+    ],
+    [# none specified by user; make a guess based on os
+     AS_CASE([$host],
+        [*-*-darwin*], 
+            [# In Lion, sched_yield worked but none of the other options had any effect
+             AS_IF([test "x$ac_cv_func_sched_yield" = "xyes"], [enable_yield=sched_yield],
+                   [enable_yield=nothing])],
+        [*-*-linux*], 
+            [# sched_yield() has been broken in linux since 2.6.23, usleep(0) has a the desired 
+             # effect, but with higher latency.
+             AS_IF([test "x$ac_cv_func_usleep" = "xyes"], [enable_yield=usleep],
+                   [enable_yield=nothing])],
+
+        [# default: just use sched_yield() or yield()
+         AS_IF([test "x$ac_cv_func_sched_yield" = "xyes"], [enable_yield=sched_yield],
+               [test "x$ac_cv_func_yield" = "xyes"], [enable_yield=yield],
+               [enable_yield=nothing])])
+    ]
+)
+
+# set the appropriate macro
+AS_CASE([$enable_yield],
+    [sched_yield], 
+        [AC_DEFINE(USE_SCHED_YIELD_FOR_YIELD,1,[Define to use sched_yield to yield processor])],
+    [yield],
+        [AC_DEFINE(USE_YIELD_FOR_YIELD,1,[Define to use yield to yield processor])],
+    [select],
+        [AC_DEFINE(USE_SELECT_FOR_YIELD,1,[Define to use select to yield processor])],
+    [usleep],
+        [AC_DEFINE(USE_USLEEP_FOR_YIELD,1,[Define to use usleep to yield processor])],
+    [sleep],
+        [AC_DEFINE(USE_SLEEP_FOR_YIELD,1,[Define to use sleep to yield processor])],
+    [nothing|no],
+        [AC_DEFINE(USE_NOTHING_FOR_YIELD,1,[Define to use nothing to yield processor])],
+    [AC_MSG_ERROR([Invalid value $enable_yield for enable_yield.])]
+)
 
 # Check for the Linux functions for controlling processor affinity.
 # LINUX: sched_setaffinity
