@@ -205,10 +205,9 @@ extern MPICH_PerThread_t MPIR_Thread;
 */
 #define MPIU_THREADPRIV_INITKEY
 #define MPIU_THREADPRIV_INIT
-/* Empty declarations are not allowed in C. However multiple decls are allowed */
-/* FIXME it might be better to just use a dummy variable here like we do when
- * real TLS is available to reduce the amount of compiler warnings. */
-#define MPIU_THREADPRIV_DECL extern MPICH_PerThread_t MPIR_Thread
+/* Empty declarations are not allowed in C, so we just define a dummy
+ * variable and tell the compiler it is unused. */
+#define MPIU_THREADPRIV_DECL int MPIU_THREADPRIV_LOCAL_DUMMY_VAR ATTRIBUTE((unused))
 #define MPIU_THREADPRIV_GET
 #define MPIU_THREADPRIV_FIELD(a_) (MPIR_Thread.a_)
 
@@ -919,9 +918,9 @@ enum MPIU_Nest_mutexes {
 #elif !defined(MPID_DEVICE_DEFINES_THREAD_CS) /* && !defined(MPICH_IS_THREADED) */
 #define MPIU_THREAD_CS_INIT
 #define MPIU_THREAD_CS_FINALIZE
-#define MPIU_THREAD_CS_ENTER(_name,_context)
-#define MPIU_THREAD_CS_EXIT(_name,_context)
-#define MPIU_THREAD_CS_YIELD(_name,_context)
+#define MPIU_THREAD_CS_ENTER(_name,_context) do{/*nothing*/}while(0)
+#define MPIU_THREAD_CS_EXIT(_name,_context)  do{/*nothing*/}while(0)
+#define MPIU_THREAD_CS_YIELD(_name,_context) do{/*nothing*/}while(0)
 #endif /* MPICH_IS_THREADED */
 
 /* catch-all */

@@ -10,6 +10,7 @@
 
 #ifndef MPICH_MPI_FROM_PMPI
 
+#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
 static MPID_Comm *progress_comm_ptr;
 static MPIU_Thread_id_t progress_thread_id;
 static MPIU_Thread_mutex_t progress_mutex;
@@ -24,7 +25,6 @@ static volatile int progress_thread_done = 0;
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static void progress_fn(void * data)
 {
-#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *request_ptr = NULL;
     MPI_Request request;
@@ -65,9 +65,10 @@ static void progress_fn(void * data)
 
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
-#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
     return;
 }
+
+#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Init_async_thread

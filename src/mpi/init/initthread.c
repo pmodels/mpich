@@ -393,7 +393,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     }
 
 
-#if HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME
+#if defined(HAVE_ERROR_CHECKING) && (HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME)
     MPIR_Process.do_error_checks = MPIR_PARAM_ERROR_CHECKING;
 #endif
 
