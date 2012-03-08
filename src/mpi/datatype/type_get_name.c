@@ -166,7 +166,7 @@ int MPIR_Datatype_init_names(void)
 		}
 	    if (!datatype_ptr) {
 		MPIU_ERR_SETFATALANDJUMP1(mpi_errno,MPI_ERR_INTERN,
-			      "**typeinitfail", "**typeinitfail %d", i - 1)
+			      "**typeinitfail", "**typeinitfail %d", i - 1);
 	    }
 
 	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,

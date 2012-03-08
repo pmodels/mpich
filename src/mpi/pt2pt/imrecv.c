@@ -94,7 +94,7 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
                 MPID_Request_valid_ptr(msgp, mpi_errno);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 MPIU_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
-                                     mpi_errno, MPI_ERR_ARG, "**reqnotmsg")
+                                     mpi_errno, MPI_ERR_ARG, "**reqnotmsg");
 
             }
 

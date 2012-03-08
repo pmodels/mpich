@@ -144,7 +144,7 @@ int MPI_Cart_rank(MPI_Comm comm, int *coords, int *rank)
 		    coord = coords[i];
 		    MPIU_ERR_CHKANDJUMP3(
 			(coord < 0 || coord >= cart_ptr->topo.cart.dims[i] ), mpi_errno, MPI_ERR_ARG, "**cartcoordinvalid",
-			"**cartcoordinvalid %d %d %d",i, coords[i], cart_ptr->topo.cart.dims[i]-1 )
+			"**cartcoordinvalid %d %d %d",i, coords[i], cart_ptr->topo.cart.dims[i]-1 );
 		}
 	    }
 	}

@@ -219,7 +219,7 @@ int MPI_Pack(void *inbuf,
 	    if (*position < 0) {
 		MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_ARG,
 				     "**argposneg","**argposneg %d",
-				     *position)
+				     *position);
 	    }
 	    else if (outcount < 0) {
 		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argneg",

@@ -70,7 +70,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
 		    MPID_Request_valid_ptr( request_ptrs[i], mpi_errno );
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     MPIU_ERR_CHKANDJUMP1((request_ptrs[i]->kind == MPID_REQUEST_MPROBE),
-                                         mpi_errno, MPI_ERR_ARG, "**msgnotreq", "**msgnotreq %d", i)
+                                         mpi_errno, MPI_ERR_ARG, "**msgnotreq", "**msgnotreq %d", i);
 		}
 		MPID_END_ERROR_CHECKS;
 	    }
