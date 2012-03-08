@@ -75,11 +75,14 @@ int main(int argc, char **argv)
         check(s1.MPI_SOURCE == 0);
         check(s1.MPI_TAG == 5);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPIX_MESSAGE_NULL);
 
         count = -1;
         MPI_Get_count(&s1, MPI_INT, &count);
         check(count == 2);
 
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
         MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
         check(recvbuf[0] == 0xdeadbeef);
         check(recvbuf[1] == 0xfeedface);
@@ -107,12 +110,15 @@ int main(int argc, char **argv)
         check(s1.MPI_SOURCE == 0);
         check(s1.MPI_TAG == 5);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPIX_MESSAGE_NULL);
 
         count = -1;
         MPI_Get_count(&s1, MPI_INT, &count);
         check(count == 2);
 
         rreq = MPI_REQUEST_NULL;
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
         MPIX_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
         check(rreq != MPI_REQUEST_NULL);
         MPI_Wait(&rreq, &s2);
@@ -151,6 +157,8 @@ int main(int argc, char **argv)
         MPI_Get_count(&s1, MPI_INT, &count);
         check(count == 2);
 
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
         MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
         check(recvbuf[0] == 0xdeadbeef);
         check(recvbuf[1] == 0xfeedface);
