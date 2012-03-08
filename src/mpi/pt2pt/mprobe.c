@@ -94,7 +94,13 @@ int MPIX_Mprobe(int source, int tag, MPI_Comm comm, MPIX_Message *message, MPI_S
     mpi_errno = MPID_Mprobe(source, tag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &msgp, status);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    *message = msgp->handle;
+    if (msgp == NULL) {
+	MPIU_Assert(source == MPI_PROC_NULL);
+	*message = MPIX_MESSAGE_NO_PROC;
+    }
+    else {
+	*message = msgp->handle;
+    }
 
     /* ... end of body of routine ... */
 

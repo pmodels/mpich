@@ -26,6 +26,7 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
     {
         MPIR_Status_set_procnull(status);
         *flag = TRUE;
+        *message = NULL; /* should be interpreted as MPIX_MESSAGE_NO_PROC */
         goto fn_exit;
     }
 

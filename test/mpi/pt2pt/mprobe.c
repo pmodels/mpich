@@ -31,7 +31,7 @@
 int main(int argc, char **argv)
 {
     int errs = 0;
-    int found;
+    int found, completed;
     int rank, size;
     int sendbuf[8], recvbuf[8];
     int count;
@@ -205,6 +205,154 @@ int main(int argc, char **argv)
         check(s2.MPI_TAG == 5);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
         check(msg == MPIX_MESSAGE_NULL);
+    }
+
+    /* test 4: mprobe+mrecv with MPI_PROC_NULL */
+    {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPIX_MESSAGE_NULL;
+        MPIX_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == MPI_PROC_NULL);
+        check(s1.MPI_TAG == MPI_ANY_TAG);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg == MPIX_MESSAGE_NO_PROC);
+
+        count = -1;
+        MPI_Get_count(&s1, MPI_INT, &count);
+        check(count == 0);
+
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
+        MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        /* recvbuf should remain unmodified */
+        check(recvbuf[0] == 0x01234567);
+        check(recvbuf[1] == 0x89abcdef);
+        /* should get back "proc null status" */
+        check(s2.MPI_SOURCE == MPI_PROC_NULL);
+        check(s2.MPI_TAG == MPI_ANY_TAG);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPIX_MESSAGE_NULL);
+        count = -1;
+        MPI_Get_count(&s2, MPI_INT, &count);
+        check(count == 0);
+    }
+
+    /* test 5: mprobe+imrecv with MPI_PROC_NULL */
+    {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPIX_MESSAGE_NULL;
+        MPIX_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == MPI_PROC_NULL);
+        check(s1.MPI_TAG == MPI_ANY_TAG);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg == MPIX_MESSAGE_NO_PROC);
+        count = -1;
+        MPI_Get_count(&s1, MPI_INT, &count);
+        check(count == 0);
+
+        rreq = MPI_REQUEST_NULL;
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
+        MPIX_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
+        check(rreq != MPI_REQUEST_NULL);
+        completed = 0;
+        MPI_Test(&rreq, &completed, &s2); /* single test should always succeed */
+        check(completed);
+        /* recvbuf should remain unmodified */
+        check(recvbuf[0] == 0x01234567);
+        check(recvbuf[1] == 0x89abcdef);
+        /* should get back "proc null status" */
+        check(s2.MPI_SOURCE == MPI_PROC_NULL);
+        check(s2.MPI_TAG == MPI_ANY_TAG);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPIX_MESSAGE_NULL);
+        count = -1;
+        MPI_Get_count(&s2, MPI_INT, &count);
+        check(count == 0);
+    }
+
+    /* test 6: improbe+mrecv with MPI_PROC_NULL */
+    {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPIX_MESSAGE_NULL;
+        found = 0;
+        MPIX_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &found, &msg, &s1);
+        check(found);
+        check(msg == MPIX_MESSAGE_NO_PROC);
+        check(s1.MPI_SOURCE == MPI_PROC_NULL);
+        check(s1.MPI_TAG == MPI_ANY_TAG);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        count = -1;
+        MPI_Get_count(&s1, MPI_INT, &count);
+        check(count == 0);
+
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
+        MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        /* recvbuf should remain unmodified */
+        check(recvbuf[0] == 0x01234567);
+        check(recvbuf[1] == 0x89abcdef);
+        /* should get back "proc null status" */
+        check(s2.MPI_SOURCE == MPI_PROC_NULL);
+        check(s2.MPI_TAG == MPI_ANY_TAG);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPIX_MESSAGE_NULL);
+        count = -1;
+        MPI_Get_count(&s2, MPI_INT, &count);
+        check(count == 0);
+    }
+
+    /* test 7: improbe+imrecv */
+    {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPIX_MESSAGE_NULL;
+        MPIX_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &found, &msg, &s1);
+        check(found);
+        check(msg == MPIX_MESSAGE_NO_PROC);
+        check(s1.MPI_SOURCE == MPI_PROC_NULL);
+        check(s1.MPI_TAG == MPI_ANY_TAG);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        count = -1;
+        MPI_Get_count(&s1, MPI_INT, &count);
+        check(count == 0);
+
+        rreq = MPI_REQUEST_NULL;
+        MPIX_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
+        check(rreq != MPI_REQUEST_NULL);
+        completed = 0;
+        MPI_Test(&rreq, &completed, &s2); /* single test should always succeed */
+        check(completed);
+        /* recvbuf should remain unmodified */
+        check(recvbuf[0] == 0x01234567);
+        check(recvbuf[1] == 0x89abcdef);
+        /* should get back "proc null status" */
+        check(s2.MPI_SOURCE == MPI_PROC_NULL);
+        check(s2.MPI_TAG == MPI_ANY_TAG);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPIX_MESSAGE_NULL);
+        count = -1;
+        MPI_Get_count(&s2, MPI_INT, &count);
+        check(count == 0);
     }
 
     /* TODO MPI_ANY_SOURCE and MPI_ANY_TAG should be tested as well */

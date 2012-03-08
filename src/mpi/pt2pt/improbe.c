@@ -97,12 +97,13 @@ int MPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *me
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (*flag) {
-        *message = msgp->handle;
-    }
-    else {
-        /* the standard says that if flag is false then message and status are
-         * undefined */
-        *message = MPIX_MESSAGE_NULL;
+	if (msgp == NULL) {
+	    MPIU_Assert(source == MPI_PROC_NULL);
+	    *message = MPIX_MESSAGE_NO_PROC;
+	}
+	else {
+	    *message = msgp->handle;
+	}
     }
 
     /* ... end of body of routine ... */

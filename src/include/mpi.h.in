@@ -193,6 +193,7 @@ typedef int MPI_Op;
 #define MPI_REQUEST_NULL   ((MPI_Request)0x2c000000)
 #define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
 #define MPIX_MESSAGE_NULL   ((MPIX_Message)MPI_REQUEST_NULL)
+#define MPIX_MESSAGE_NO_PROC ((MPIX_Message)0x6c000000)
 
 /* These are only guesses; make sure you change them in mpif.h as well */
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@

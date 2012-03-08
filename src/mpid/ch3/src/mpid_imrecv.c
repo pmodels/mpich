@@ -18,6 +18,16 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     MPID_Comm *comm;
     MPIDI_VC_t *vc = NULL;
 
+    /* message==NULL is equivalent to MPIX_MESSAGE_NO_PROC being passed at the
+     * upper level */
+    if (message == NULL)
+    {
+        MPIDI_Request_create_null_rreq(rreq, mpi_errno, fn_fail);
+        *rreqp = rreq;
+        goto fn_exit;
+    }
+
+    MPIU_Assert(message != NULL);
     MPIU_Assert(message->kind == MPID_REQUEST_MPROBE);
 
     /* promote the request object to be a "real" recv request */

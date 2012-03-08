@@ -89,10 +89,14 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
             }
 
-            MPID_Request_valid_ptr(msgp, mpi_errno);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            MPIU_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
-                                 mpi_errno, MPI_ERR_ARG, "**reqnotmsg")
+            /* MPIX_MESSAGE_NO_PROC should yield a "proc null" status */
+            if (*message != MPIX_MESSAGE_NO_PROC) {
+                MPID_Request_valid_ptr(msgp, mpi_errno);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                MPIU_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
+                                     mpi_errno, MPI_ERR_ARG, "**reqnotmsg")
+
+            }
 
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
