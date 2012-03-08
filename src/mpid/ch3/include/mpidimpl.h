@@ -378,6 +378,23 @@ extern MPIDI_Process_t MPIDI_Process;
      MPIDI_CH3_REQUEST_INIT(rreq_);\
 }
 
+/* creates a new, trivially complete recv request that is suitable for
+ * returning when a user passed MPI_PROC_NULL */
+#define MPIDI_Request_create_null_rreq(rreq_, mpi_errno_, FAIL_)           \
+    do {                                                                   \
+        (rreq_) = MPID_Request_create();                                   \
+        if ((rreq_) != NULL) {                                             \
+            MPIU_Object_set_ref((rreq_), 1);                               \
+            /* MT FIXME should these be handled by MPID_Request_create? */ \
+            MPID_cc_set(&(rreq_)->cc, 0);                                  \
+            (rreq_)->kind = MPID_REQUEST_RECV;                             \
+            MPIR_Status_set_procnull(&(rreq_)->status);                    \
+        }                                                                  \
+        else {                                                             \
+            MPIU_ERR_SETANDJUMP(mpi_errno_,MPI_ERR_OTHER,"**nomemreq");    \
+        }                                                                  \
+    } while (0)
+
 #define MPIDI_REQUEST_MSG_MASK (0x3 << MPIDI_REQUEST_MSG_SHIFT)
 #define MPIDI_REQUEST_MSG_SHIFT 0
 #define MPIDI_REQUEST_NO_MSG 0

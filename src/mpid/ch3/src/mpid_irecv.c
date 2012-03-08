@@ -24,23 +24,11 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 			"rank=%d, tag=%d, context=%d", 
 			rank, tag, comm->recvcontext_id + context_offset));
-    
+
     if (rank == MPI_PROC_NULL)
     {
-	rreq = MPID_Request_create();
-	if (rreq != NULL)
-	{
-            /* MT FIXME should these be handled by MPID_Request_create? */
-	    MPIU_Object_set_ref(rreq, 1);
-            MPID_cc_set(&rreq->cc, 0);
-	    rreq->kind = MPID_REQUEST_RECV;
-	    MPIR_Status_set_procnull(&rreq->status);
-	}
-	else
-	{
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
-	}
-	goto fn_exit;
+        MPIDI_Request_create_null_rreq(rreq, mpi_errno, fn_fail);
+        goto fn_exit;
     }
 
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
