@@ -158,7 +158,7 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mx_improbe
+#define FUNCNAME MPID_nem_newmad_improbe
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_newmad_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPID_Request **message, MPI_Status *status)
@@ -182,5 +182,15 @@ int MPID_nem_newmad_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *com
 int MPID_nem_newmad_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
 {   
     return MPID_nem_newmad_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_newmad_anysource_improbe
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_newmad_anysource_improbe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPID_Request **message, MPI_Status *status)
+{   
+   return MPID_nem_newmad_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset,flag, message, status);
 }
 

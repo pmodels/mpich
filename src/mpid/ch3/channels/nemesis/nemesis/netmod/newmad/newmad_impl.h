@@ -56,7 +56,7 @@ int MPID_nem_newmad_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *com
 void MPID_nem_newmad_anysource_posted(MPID_Request *rreq);
 int MPID_nem_newmad_anysource_matched(MPID_Request *rreq);
 int MPID_nem_newmad_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status);
-int MPID_nem_newmad_anysource_miprobe(int tag, MPID_Comm *comm, int context_offset, int *flag,
+int MPID_nem_newmad_anysource_improbe(int tag, MPID_Comm *comm, int context_offset, int *flag,
 				      MPID_Request **message,MPI_Status *status);
 /* Callbacks for events */
 void MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info);
