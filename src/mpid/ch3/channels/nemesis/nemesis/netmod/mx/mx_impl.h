@@ -56,7 +56,7 @@ int MPID_nem_mx_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, i
 			MPID_Request **message, MPI_Status *status);
 
 int MPID_nem_mx_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status);
-int MPID_nem_mx_anysource_miprobe(int tag, MPID_Comm *comm, int context_offset, int *flag,
+int MPID_nem_mx_anysource_improbe(int tag, MPID_Comm *comm, int context_offset, int *flag,
 				  MPID_Request **message,MPI_Status *status);
 /* Callback routine for unex msgs in MX */
 mx_unexp_handler_action_t MPID_nem_mx_get_adi_msg(void *context,mx_endpoint_addr_t source,
