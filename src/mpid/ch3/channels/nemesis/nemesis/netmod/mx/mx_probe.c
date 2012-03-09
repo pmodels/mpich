@@ -134,7 +134,7 @@ int MPID_nem_mx_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, i
 #define FUNCNAME MPID_nem_mx_anysource_iprobe
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_mx_anysource_improbe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
+int MPID_nem_mx_anysource_improbe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPID_Request **message, MPI_Status *status)
 {
     return MPID_nem_mx_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message, status);
 }
