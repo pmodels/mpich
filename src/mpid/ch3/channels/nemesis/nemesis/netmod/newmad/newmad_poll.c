@@ -297,7 +297,7 @@ MPID_nem_newmad_handle_sreq(MPID_Request *req)
 #endif
     (VC_FIELD(req->ch.vc,pending_sends)) -= 1;
     if (((req->dev.datatype_ptr != NULL) && (req->dev.tmpbuf != NULL))
-        || (REQ_FIELD(req,deltmpbuf) = TMP_DEL_VALUE))
+        || (REQ_FIELD(req,deltmpbuf) == TMP_DEL_VALUE))
      {
 	
 	MPIU_Free(req->dev.tmpbuf);
