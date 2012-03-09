@@ -66,7 +66,7 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
             MPIDI_VC_t * vc;
             MPIDI_Comm_get_vc_set_active(comm, source, &vc);
             if (vc->comm_ops && vc->comm_ops->probe) {
-                mpi_errno = vc->comm_ops->improbe_fn(vc, source, tag, comm, context_offset, flag, message, status);
+                mpi_errno = vc->comm_ops->improbe(vc, source, tag, comm, context_offset, flag, message, status);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 goto fn_exit;
             }

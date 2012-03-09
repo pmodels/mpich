@@ -36,7 +36,7 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
                test to make some progress. */
             do {
                 MPIU_THREAD_CS_ENTER(MSGQUEUE,);
-                *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);
+                *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm,&found);
                 MPIU_THREAD_CS_EXIT(MSGQUEUE,);
                 if (found) goto fn_exit;
 
