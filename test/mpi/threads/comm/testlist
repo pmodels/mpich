@@ -1,2 +1,5 @@
 ctxdup 4
 dup_leak_test 2
+comm_dup_deadlock 4
+comm_create_threads 4
+comm_create_group_threads 4

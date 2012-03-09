@@ -138,7 +138,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
      * Set global process attributes.  These can be overridden by the channel 
      * if necessary.
      */
-    MPIR_Process.attrs.tag_ub          = MPIDI_TAG_UB;
+    MPIR_Process.attrs.tag_ub = MPIDI_TAG_UB; /* see also mpidpre.h:NOTE-T1 */
 
     /* If the channel requires any setup before making any other 
        channel calls (including CH3_PG_Init), the channel will define

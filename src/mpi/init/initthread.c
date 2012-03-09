@@ -410,6 +410,16 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 			  &has_args, &has_env);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* Assert: tag_ub should be a power of 2 minus 1 */
+    MPIU_Assert(((unsigned)MPIR_Process.attrs.tag_ub & ((unsigned)MPIR_Process.attrs.tag_ub + 1)) == 0);
+
+    /* Set aside tag space for tagged collectives */
+    MPIR_Process.attrs.tag_ub     >>= 1;
+    MPIR_Process.tagged_coll_mask   = MPIR_Process.attrs.tag_ub + 1;
+
+    /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
+    MPIU_Assert( MPIR_Process.attrs.tag_ub >= 32767 );
+
     /* Capture the level of thread support provided */
     MPIR_ThreadInfo.thread_provided = thread_provided;
     if (provided) *provided = thread_provided;

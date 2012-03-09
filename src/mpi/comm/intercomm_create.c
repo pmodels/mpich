@@ -184,12 +184,16 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     int local_size, *local_gpids=0, *local_lpids=0;
     int comm_info[3];
     int is_low_group = 0;
+    int cts_tag;
     int i;
     int errflag = FALSE;
     MPIU_CHKLMEM_DECL(4);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
+
+    /* Shift tag into the tagged coll space */
+    cts_tag = tag | MPIR_Process.tagged_coll_mask;
 
     /*
      * Error checking for this routine requires care.  Because this
@@ -217,9 +221,9 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
         MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,"rank %d sendrecv to rank %d", peer_comm_ptr->rank,
                                        remote_leader));
         mpi_errno = MPIC_Sendrecv( &local_size,  1, MPI_INT,
-                                   remote_leader, tag,
+                                   remote_leader, cts_tag,
                                    &remote_size, 1, MPI_INT,
-                                   remote_leader, tag,
+                                   remote_leader, cts_tag,
                                    peer_comm_ptr->handle, MPI_STATUS_IGNORE );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -237,9 +241,9 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
 
         /* Exchange the lpid arrays */
         mpi_errno = MPIC_Sendrecv( local_gpids, 2*local_size, MPI_INT,
-                                   remote_leader, tag,
+                                   remote_leader, cts_tag,
                                    remote_gpids, 2*remote_size, MPI_INT,
-                                   remote_leader, tag, peer_comm_ptr->handle, MPI_STATUS_IGNORE );
+                                   remote_leader, cts_tag, peer_comm_ptr->handle, MPI_STATUS_IGNORE );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* Convert the remote gpids to the lpids */
@@ -283,6 +287,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
                                     local_comm_ptr->local_size, local_comm_ptr->rank ));
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
+    /* TODO: Make sure this is tag-safe */
     mpi_errno = MPIR_Get_contextid( local_comm_ptr, &recvcontext_id );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(recvcontext_id != 0);
@@ -293,8 +298,8 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     if (local_comm_ptr->rank == local_leader) {
         MPIR_Context_id_t remote_context_id;
 
-        mpi_errno = MPIC_Sendrecv( &recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
-                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
+        mpi_errno = MPIC_Sendrecv( &recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
+                                   &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
                                    peer_comm_ptr->handle, MPI_STATUS_IGNORE );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -488,6 +493,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPIR_ERRTEST_COMM_TAG(tag, mpi_errno);
 	    MPIR_ERRTEST_COMM(local_comm, mpi_errno);
             if (mpi_errno) goto fn_fail;
 	}

@@ -20,17 +20,6 @@
 
 /* prototypes to make the compiler happy in the case that PMPI_LOCAL expands to
  * nothing instead of "static" */
-PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
-                                                  MPID_Comm   *comm_ptr,
-                                                  MPID_VCR   **mapping_vcr_out,
-                                                  int        **mapping_out);
-
-PMPI_LOCAL int MPIR_Comm_create_create_and_map_vcrt(int n,
-                                                    int *mapping,
-                                                    MPID_VCR *mapping_vcr,
-                                                    MPID_VCRT *out_vcrt,
-                                                    MPID_VCR **out_vcr);
-
 PMPI_LOCAL int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
                                       MPID_Comm **newcomm_ptr);
 PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
@@ -53,10 +42,10 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
 #define FUNCNAME MPIR_Comm_create_calculate_mapping
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-PMPI_LOCAL int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
-                                                  MPID_Comm   *comm_ptr,
-                                                  MPID_VCR   **mapping_vcr_out,
-                                                  int        **mapping_out)
+int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
+                                       MPID_Comm   *comm_ptr,
+                                       MPID_VCR   **mapping_vcr_out,
+                                       int        **mapping_out)
 {
     int mpi_errno = MPI_SUCCESS;
     int subsetOfWorld = 0;
@@ -192,11 +181,11 @@ fn_fail:
 #define FUNCNAME MPIR_Comm_create_and_map_vcrt
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-PMPI_LOCAL int MPIR_Comm_create_create_and_map_vcrt(int         n,
-                                                    int        *mapping,
-                                                    MPID_VCR   *mapping_vcr,
-                                                    MPID_VCRT  *out_vcrt,
-                                                    MPID_VCR  **out_vcr)
+int MPIR_Comm_create_create_and_map_vcrt(int         n,
+                                         int        *mapping,
+                                         MPID_VCR   *mapping_vcr,
+                                         MPID_VCRT  *out_vcrt,
+                                         MPID_VCR  **out_vcr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -538,45 +527,39 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE);
 
-    /* Validate parameters, and convert MPI object handles to object pointers */
+    /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS;
+        MPID_BEGIN_ERROR_CHECKS
         {
-	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno) goto fn_fail;
-	}
-        MPID_END_ERROR_CHECKS;
-	
-	MPID_Comm_get_ptr( comm, comm_ptr );
-	
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-            /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
-	    /* If comm_ptr is not valid, it will be reset to null */
-
-	    MPIR_ERRTEST_GROUP(group, mpi_errno);
-            if (mpi_errno) goto fn_fail;
-	}
-        MPID_END_ERROR_CHECKS;
-	
-	MPID_Group_get_ptr( group, group_ptr );
-
-        MPID_BEGIN_ERROR_CHECKS;
-        {
-	    /* Check the group ptr */
-	    MPID_Group_valid_ptr( group_ptr, mpi_errno );
+            MPIR_ERRTEST_COMM(comm, mpi_errno);
+            MPIR_ERRTEST_GROUP(group, mpi_errno);
             if (mpi_errno) goto fn_fail;
         }
-        MPID_END_ERROR_CHECKS;
-    }
-#   else
-    {
-	MPID_Comm_get_ptr( comm, comm_ptr );
-	MPID_Group_get_ptr( group, group_ptr );
+        MPID_END_ERROR_CHECKS
     }
 #   endif
+
+    /* Get handles to MPI objects. */
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPID_Group_get_ptr(group, group_ptr);
+
+    /* Validate parameters and objects (post conversion) */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS
+        {
+            /* If comm_ptr is not valid, it will be reset to null */
+            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
+            if (mpi_errno) goto fn_fail;
+
+            MPID_Group_valid_ptr(group_ptr, mpi_errno);
+            if (mpi_errno) goto fn_fail;
+        }
+        MPID_END_ERROR_CHECKS
+    }
+#   endif
+
 
     /* ... body of routine ...  */
     if (comm_ptr->comm_kind == MPID_INTRACOMM) {

@@ -1322,6 +1322,7 @@ extern MPID_Comm MPID_Comm_direct[];
    the device may need to create a new contextid */
 int MPIR_Get_contextid( MPID_Comm *, MPIR_Context_id_t *context_id );
 int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id);
+int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Context_id_t *context_id, int ignore_id);
 void MPIR_Free_contextid( MPIR_Context_id_t );
 
 /* ------------------------------------------------------------------------- */
@@ -1947,6 +1948,7 @@ typedef struct MPICH_PerProcess_t {
 					   that is separate from user's 
 					   versions */
     PreDefined_attrs  attrs;            /* Predefined attribute values */
+    int               tagged_coll_mask; /* Tag space mask for tagged collectives */
 
     /* The topology routines dimsCreate is independent of any communicator.
        If this pointer is null, the default routine is used */
@@ -3852,6 +3854,17 @@ int MPIR_Setup_intercomm_localcomm( MPID_Comm * );
 
 int MPIR_Comm_create( MPID_Comm ** );
 
+/* comm_create helper functions, used by both comm_create and comm_create_group */
+int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
+                                       MPID_Comm   *comm_ptr,
+                                       MPID_VCR   **mapping_vcr_out,
+                                       int        **mapping_out);
+int MPIR_Comm_create_create_and_map_vcrt(int n,
+                                         int *mapping,
+                                         MPID_VCR *mapping_vcr,
+                                         MPID_VCRT *out_vcrt,
+                                         MPID_VCR **out_vcr);
+
 int MPIR_Comm_commit( MPID_Comm * );
 
 int MPIR_Comm_is_node_aware( MPID_Comm * );
@@ -3861,6 +3874,12 @@ int MPIR_Comm_is_node_consecutive( MPID_Comm *);
 void MPIR_Free_err_dyncodes( void );
 
 int MPIR_Comm_idup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm, MPID_Request **reqp);
+
+int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
+                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                         MPID_Group *group_ptr, int tag, int *errflag);
+
+int MPIR_Barrier_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, int *errflag);
 
 /* begin impl functions for NBC */
 int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request);

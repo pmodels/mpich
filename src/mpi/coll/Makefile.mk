@@ -49,6 +49,8 @@ mpi_sources +=                     \
     src/mpi/coll/iscatterv.c
 
 lib_lib@MPILIBNAME@_la_SOURCES += \
+    src/mpi/coll/allred_group.c   \
+    src/mpi/coll/barrier_group.c  \
     src/mpi/coll/helper_fns.c     \
     src/mpi/coll/opsum.c          \
     src/mpi/coll/opmax.c          \

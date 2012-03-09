@@ -1,0 +1,34 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "mpiimpl.h"
+
+/* This is the group-collective implementation of the barrier operation.  It
+   currently is built on group allreduce.
+
+   This is an intracommunicator barrier only!
+*/
+
+int MPIR_Barrier_group( MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, int *errflag )
+{
+    int src, dst, mpi_errno = MPI_SUCCESS;
+
+    /* Trivial barriers return immediately */
+    if (comm_ptr->local_size == 1) goto fn_exit;
+
+    mpi_errno = MPIR_Allreduce_group(&src, &dst, 1, MPI_INT, MPI_BAND, 
+                                      comm_ptr, group_ptr, tag, errflag);
+
+    if (mpi_errno != MPI_SUCCESS)
+      *errflag = TRUE;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+

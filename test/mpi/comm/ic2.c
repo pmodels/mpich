@@ -83,10 +83,10 @@ int main(int argc, char **argv)
                1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         if (errs) {
-            printf("found %d errors\n");
+            printf("found %d errors\n", errs);
         }
         else {
-            printf(" No errors");
+            printf(" No errors\n");
         }
     }
     MPI_Finalize();

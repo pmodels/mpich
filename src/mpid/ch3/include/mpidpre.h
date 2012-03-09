@@ -92,6 +92,10 @@ typedef union {
     MPIDI_Message_match_parts_t parts;
     MPIR_Upint whole;
 } MPIDI_Message_match;
+/* NOTE-T1: We set MPIR_Process.attrs.tag_ub to this value during MPID_Init, but
+ * upper level code may then modify this value after MPID_Init and before the
+ * end of MPIR_Init_thread.  Don't use this value directly, always check the
+ * runtime global value. */
 #define MPIDI_TAG_UB (0x7fffffff)
 
 /* Packet types are defined in mpidpkt.h .  The intent is to remove the

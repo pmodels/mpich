@@ -738,6 +738,15 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id)
 {
+    return MPIR_Get_contextid_sparse_group(comm_ptr, NULL /* group_ptr */, MPIR_Process.attrs.tag_ub /* tag */, context_id, ignore_id);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Get_contextid_sparse_group
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Context_id_t *context_id, int ignore_id)
+{
     int mpi_errno = MPI_SUCCESS;
     uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
     int errflag = FALSE;
@@ -762,8 +771,15 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
 
     /* Note that this is the unthreaded version */
     /* Comm must be an intracommunicator */
-    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK, 
-                                     MPI_INT, MPI_BAND, comm_ptr, &errflag);
+    if (group_ptr != NULL) {
+        int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
+        mpi_errno = MPIR_Allreduce_group( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
+                                            MPI_INT, MPI_BAND, comm_ptr, group_ptr, coll_tag, &errflag );
+    } else {
+        mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
+                                            MPI_INT, MPI_BAND, comm_ptr, &errflag );
+    }
+
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -795,6 +811,18 @@ static volatile int mask_in_use = 0;
    are contending for the mask */
 #define MPIR_MAXID (1 << 30)
 static volatile int lowestContextId = MPIR_MAXID;
+static volatile int lowestTag       = -1;
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Get_contextid_sparse
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id)
+{
+    return MPIR_Get_contextid_sparse_group(comm_ptr, NULL /*group_ptr*/,
+                                           MPIR_Process.attrs.tag_ub /*tag*/,
+                                           context_id, ignore_id);
+}
 
 /* Allocates a new context ID collectively over the given communicator.  This
  * routine is "sparse" in the sense that while it is collective, some processes
@@ -806,48 +834,68 @@ static volatile int lowestContextId = MPIR_MAXID;
  *
  * Processes that pass ignore_id==TRUE will receive
  * (*context_id==MPIR_INVALID_CONTEXT_ID) and should not attempt to use it.
+ *
+ * If a group pointer is given, the call is _not_ sparse, and only processes
+ * in the group should call this routine.  That is, it is collective only over
+ * the given group.
  */
+/* NOTE-C1: We need a special test in this loop for the case where some process
+ * has exhausted its supply of context ids.  In the single threaded case, this
+ * is simple, because the algorithm is deterministic (see above).  In the
+ * multithreaded case, it is more complicated, because we may get a zero for the
+ * context mask because some other thread holds the mask.  In addition, we can't
+ * check for the case where this process did not select MPI_THREAD_MULTIPLE,
+ * because one of the other processes may have selected MPI_THREAD_MULTIPLE.  To
+ * handle this case, after a fixed number of failures, we test to see if some
+ * process has exhausted its supply of context ids.  If so, all processes can
+ * invoke the out-of-context-id error.  That fixed number of tests is in
+ * testCount */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid_sparse
+#define FUNCNAME MPIR_Get_contextid_sparse_group
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id)
+int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Context_id_t *context_id, int ignore_id)
 {
-    int          mpi_errno = MPI_SUCCESS;
-    uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
-    int          own_mask = 0;
-    int          testCount = 10; /* if you change this value, you need to also change 
-				    it below where it is reinitialized */
+    int mpi_errno = MPI_SUCCESS;
+    uint32_t local_mask[MPIR_MAX_CONTEXT_MASK];
+    int own_mask = 0;
+    static const int NUM_CTX_TESTS = 10;
+    int testCount = NUM_CTX_TESTS;
     int errflag = FALSE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
 
+    /* Group-collective and ignore_id should never be combined */
+    MPIU_Assert(! (group_ptr != NULL && ignore_id) );
+
     *context_id = 0;
 
-    /* We lock only around access to the mask.  If another thread is
-       using the mask, we take a mask of zero */
     MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST,
-         "Entering; shared state is %d:%d, my ctx id is %d",
-         mask_in_use, lowestContextId, comm_ptr->context_id));
-    /* We need a special test in this loop for the case where some process
-     has exhausted its supply of context ids.  In the single threaded case, 
-     this is simple, because the algorithm is deterministic (see above).  In 
-     the multithreaded case, it is more complicated, because we may get a
-     zero for the context mask because some other thread holds the mask.  
-     In addition, we can't check for the case where this process did not
-     select MPI_THREAD_MULTIPLE, because one of the other processes
-     may have selected MPI_THREAD_MULTIPLE.  To handle this case, after a 
-     fixed number of failures, we test to see if some process has exhausted 
-     its supply of context ids.  If so, all processes can invoke the 
-     out-of-context-id error.  That fixed number of tests is in testCount */
+         "Entering; shared state is %d:%d:%d, my ctx id is %d, tag=%d",
+         mask_in_use, lowestContextId, lowestTag, comm_ptr->context_id, tag));
+
+
+    /* Deadlock avoidance: Only enter the context id allocation loop when all
+     * processes have called this routine.
+     */
+    if (group_ptr != NULL) {
+        int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
+        mpi_errno = MPIR_Barrier_group( comm_ptr, group_ptr, coll_tag, &errflag );
+    } else {
+        mpi_errno = MPIR_Barrier_impl( comm_ptr, &errflag );
+    }
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+    /* see NOTE-C1 for info about the "exhausted IDs" test */
     while (*context_id == 0) {
-	/* In all but the global-critical-section case, we must ensure that
-	   only one thread access the context id mask at a time */
-	MPIU_THREAD_CS_ENTER(CONTEXTID,);
-	if (initialize_context_mask) {
-	    MPIR_Init_contextid();
-	}
+        /* We lock only around access to the mask (except in the global locking
+         * case).  If another thread is using the mask, we take a mask of zero. */
+        MPIU_THREAD_CS_ENTER(CONTEXTID,);
+        if (initialize_context_mask) {
+            MPIR_Init_contextid();
+        }
         if (ignore_id) {
             /* We are not participating in the resulting communicator, so our
              * context ID space doesn't matter.  Set the mask to "all available". */
@@ -857,35 +905,45 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
              * doesn't ever need to "win" the mask */
         }
         else {
-            if (mask_in_use || comm_ptr->context_id > lowestContextId) {
-                memset( local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
-                own_mask        = 0;
-                if (comm_ptr->context_id < lowestContextId) {
-                    lowestContextId = comm_ptr->context_id;
-                }
-                MPIU_DBG_MSG_D( COMM, VERBOSE, 
-                   "In in-use, set lowestContextId to %d", lowestContextId );
+            /* lowestTag breaks ties when contextIds are the same (happens only
+               in calls to MPI_Comm_create_group. */
+            if (comm_ptr->context_id < lowestContextId ||
+                    (comm_ptr->context_id == lowestContextId && tag < lowestTag)) {
+                lowestContextId = comm_ptr->context_id;
+                lowestTag       = tag;
+            }
+
+            if (mask_in_use || ! (comm_ptr->context_id == lowestContextId && tag == lowestTag)) {
+                memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+                own_mask = 0;
+                MPIU_DBG_MSG_D(COMM, VERBOSE, "In in-use, set lowestContextId to %d", lowestContextId);
             }
             else {
-                MPIU_Memcpy( local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int) );
+                MPIU_Memcpy(local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                 mask_in_use     = 1;
                 own_mask        = 1;
-                lowestContextId = comm_ptr->context_id;
-                MPIU_DBG_MSG( COMM, VERBOSE, "Copied local_mask" );
+                MPIU_DBG_MSG(COMM, VERBOSE, "Copied local_mask");
             }
         }
-	MPIU_THREAD_CS_EXIT(CONTEXTID,);
-	
-	/* Now, try to get a context id */
+        MPIU_THREAD_CS_EXIT(CONTEXTID,);
+
+        /* Now, try to get a context id */
         MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
-	/* In the global and brief-global cases, note that this routine will
-	   release that global lock when it needs to wait.  That will allow 
-	   other processes to enter the global or brief global critical section.
-	 */ 
-	mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
-                                         MPI_INT, MPI_BAND, comm_ptr, &errflag );
-	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        /* In the global and brief-global cases, note that this routine will
+           release that global lock when it needs to wait.  That will allow
+           other processes to enter the global or brief global critical section.
+         */
+        if (group_ptr != NULL) {
+            int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
+            mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
+                                             MPI_INT, MPI_BAND, comm_ptr, group_ptr, coll_tag, &errflag);
+        } else {
+            mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
+                                            MPI_INT, MPI_BAND, comm_ptr, &errflag);
+        }
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
         /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
          * narrow this region */
         MPIU_THREAD_CS_ENTER(CONTEXTID,);
@@ -896,73 +954,73 @@ int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id
             /* used later in out-of-context ids check and outer while loop condition */
         }
         else if (own_mask) {
-	    /* There is a chance that we've found a context id */
-	    /* Find_and_allocate_context_id updates the context_mask if it finds a match */
-	    *context_id = MPIR_Find_and_allocate_context_id(local_mask);
-	    MPIU_DBG_MSG_D( COMM, VERBOSE, 
-			    "Context id is now %hd", *context_id );
-	    if (*context_id > 0) {
-		/* If we were the lowest context id, reset the value to
-		   allow the other threads to compete for the mask */
-		if (lowestContextId == comm_ptr->context_id) {
-		    lowestContextId = MPIR_MAXID;
-		    /* Else leave it alone; there is another thread waiting */
-		}
-	    }
-	    else {
-		/* else we did not find a context id. Give up the mask in case
-                   there is another thread (with a lower input context id)
-                   waiting for it.
-
-		   We need to ensure that any other threads have the 
-		   opportunity to run.  We do this by releasing the single
-		   mutex, yielding, and then reaquiring the mutex.
-		   We might want to do something more sophisticated, such
-		   as using a condition variable (if we know for sure that
-		   there is another thread on this process that is waiting).
-		*/
-		MPIU_THREAD_CS_YIELD(CONTEXTID,);
-	    }
-	    mask_in_use = 0;
-	}
-	else {
-	    /* As above, force this thread to yield */
-	    MPIU_THREAD_CS_YIELD(CONTEXTID,);
-	}
+            /* There is a chance that we've found a context id */
+            /* Find_and_allocate_context_id updates the context_mask if it finds a match */
+            *context_id = MPIR_Find_and_allocate_context_id(local_mask);
+            MPIU_DBG_MSG_D(COMM, VERBOSE, "Context id is now %hd", *context_id);
+            if (*context_id > 0) {
+                /* If we were the lowest context id, reset the value to
+                   allow the other threads to compete for the mask */
+                if (lowestContextId == comm_ptr->context_id && lowestTag == tag) {
+                    lowestContextId = MPIR_MAXID;
+                    lowestTag       = -1;
+                    /* Else leave it alone; there is another thread waiting */
+                }
+            }
+            else {
+                /* else we did not find a context id. Give up the mask in case
+                 * there is another thread (with a lower input context id)
+                 * waiting for it.  We need to ensure that any other threads
+                 * have the opportunity to run, hence yielding */
+                MPIU_THREAD_CS_YIELD(CONTEXTID,);
+            }
+            mask_in_use = 0;
+        }
+        else {
+            /* As above, force this thread to yield */
+            MPIU_THREAD_CS_YIELD(CONTEXTID,);
+        }
         MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
-	/* Here is the test for out-of-context ids */
+        /* Here is the test for out-of-context ids */
         /* FIXME we may be able to "rotate" this a half iteration up to the top
          * where we already have to grab the lock */
-	if ((testCount-- == 0) && (*context_id == 0)) {
-	    int hasNoId, totalHasNoId;
+        if ((testCount-- == 0) && (*context_id == 0)) {
+            int hasNoId, totalHasNoId;
             MPIU_THREAD_CS_ENTER(CONTEXTID,);
-	    hasNoId = MPIR_Locate_context_bit(context_mask) == 0;
+            hasNoId = MPIR_Locate_context_bit(context_mask) == 0;
             MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
             /* we _must_ release the lock above in order to avoid deadlocking on
              * this blocking allreduce operation */
-	    mpi_errno = MPIR_Allreduce_impl( &hasNoId, &totalHasNoId, 1, MPI_INT,
-                                             MPI_MAX, comm_ptr, &errflag );
-	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (group_ptr != NULL) {
+                int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
+                mpi_errno = MPIR_Allreduce_group(&hasNoId, &totalHasNoId, 1, MPI_INT,
+                                                 MPI_MAX, comm_ptr, group_ptr, coll_tag, &errflag);
+            } else {
+                mpi_errno = MPIR_Allreduce_impl(&hasNoId, &totalHasNoId, 1, MPI_INT,
+                                                MPI_MAX, comm_ptr, &errflag);
+            }
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-	    if (totalHasNoId == 1) {
+            if (totalHasNoId == 1) {
                 /* --BEGIN ERROR HANDLING-- */
-		/* Release the mask for use by other threads */
-		if (own_mask) {
+                /* Release the mask for use by other threads */
+                if (own_mask) {
                     MPIU_THREAD_CS_ENTER(CONTEXTID,);
-		    mask_in_use = 0;
+                    mask_in_use = 0;
                     MPIU_THREAD_CS_EXIT(CONTEXTID,);
-		}
-		MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm");
+                }
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm");
                 /* --END ERROR HANDLING-- */
-	    }
-	    else { /* reinitialize testCount */
-		testCount = 10;
+            }
+            else { /* reinitialize testCount */
+                testCount = NUM_CTX_TESTS;
                 MPIU_DBG_MSG_D(COMM, VERBOSE, "reinitialized testCount to %d", testCount);
-	    }
-	}
+            }
+        }
     }
+
 
 fn_exit:
     if (ignore_id)
@@ -975,6 +1033,7 @@ fn_exit:
 fn_fail:
     /* Release the masks */
     if (own_mask) {
+        /* is it safe to access this without holding the CS? */
         mask_in_use = 0;
     }
     goto fn_exit;
