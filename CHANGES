@@ -23,6 +23,8 @@
  # JUMPSHOT: Added navigation support to locate chosen drawable's ends
    when viewport has been scrolled far from the drawable.
 
+ # PM/PMI: Upgraded to hwloc-1.4.1
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
