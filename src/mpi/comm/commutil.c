@@ -958,6 +958,9 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = MPIR_Find_and_allocate_context_id(local_mask);
             MPIU_DBG_MSG_D(COMM, VERBOSE, "Context id is now %hd", *context_id);
+
+            mask_in_use = 0;
+
             if (*context_id > 0) {
                 /* If we were the lowest context id, reset the value to
                    allow the other threads to compete for the mask */
@@ -974,7 +977,6 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
                  * have the opportunity to run, hence yielding */
                 MPIU_THREAD_CS_YIELD(CONTEXTID,);
             }
-            mask_in_use = 0;
         }
         else {
             /* As above, force this thread to yield */
