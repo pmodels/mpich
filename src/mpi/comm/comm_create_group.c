@@ -162,39 +162,48 @@ int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * n
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_CREATE_GROUP);
 
-    /* Validate parameters, especially handles needing to be converted */
+    /* Validate parameters, and convert MPI object handles to object pointers */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_ERRTEST_COMM_TAG(tag, mpi_errno);
             MPIR_ERRTEST_COMM(comm, mpi_errno);
-            MPIR_ERRTEST_GROUP(group, mpi_errno);
             if (mpi_errno) goto fn_fail;
         }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif
+        MPID_END_ERROR_CHECKS;
 
-    /* Get handles to MPI objects. */
-    MPID_Comm_get_ptr(comm, comm_ptr);
-    MPID_Group_get_ptr(group, group_ptr);
+        MPID_Comm_get_ptr( comm, comm_ptr );
 
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
+            /* Validate comm_ptr */
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
             /* If comm_ptr is not valid, it will be reset to null */
-            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
-            if (mpi_errno) goto fn_fail;
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
             if (mpi_errno) goto fn_fail;
 
-            MPID_Group_valid_ptr(group_ptr, mpi_errno);
+            /* only test for MPI_GROUP_NULL after attempting to convert the comm
+             * so that any errhandlers on comm will (correctly) be invoked */
+            MPIR_ERRTEST_GROUP(group, mpi_errno);
+            MPIR_ERRTEST_COMM_TAG(tag, mpi_errno);
             if (mpi_errno) goto fn_fail;
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
+
+        MPID_Group_get_ptr( group, group_ptr );
+
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+            /* Check the group ptr */
+            MPID_Group_valid_ptr( group_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
+        }
+        MPID_END_ERROR_CHECKS;
+    }
+#   else
+    {
+        MPID_Comm_get_ptr( comm, comm_ptr );
+        MPID_Group_get_ptr( group, group_ptr );
     }
 #   endif
 
