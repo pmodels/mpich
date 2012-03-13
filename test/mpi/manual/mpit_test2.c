@@ -73,6 +73,7 @@ int main(int argc, char **argv)
     int provided;
     MPIX_T_enum enumtype;
     int pq_idx = -1, uq_idx = -1, pqm_idx = -1, uqm_idx = -1;
+    int pqm_writable = -1, uqm_writable = -1;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -102,9 +103,11 @@ int main(int argc, char **argv)
         }
         else if (0 == strcmp(name, "posted_recvq_match_attempts")) {
             pqm_idx = i;
+            pqm_writable = !readonly;
         }
         else if (0 == strcmp(name, "unexpected_recvq_match_attempts")) {
             uqm_idx = i;
+            uqm_writable = !readonly;
         }
     }
 
@@ -176,6 +179,16 @@ int main(int argc, char **argv)
         print_vars(7);
         printf("expected (posted_qlen,unexpected_qlen) = (0,0)\n");
     }
+
+    if (pqm_writable) {
+        posted_queue_match_attempts = 0;
+        MPIX_T_pvar_write(session, pqm_handle, &posted_queue_match_attempts);
+    }
+    if (uqm_writable) {
+        unexpected_queue_match_attempts = 0;
+        MPIX_T_pvar_write(session, uqm_handle, &unexpected_queue_match_attempts);
+    }
+    print_vars(8);
 
     /* cleanup */
     MPIX_T_pvar_handle_free(session, &uqm_handle);
