@@ -32,10 +32,16 @@ int MPIR_T_pvar_write_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handl
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* TODO implement this function */
     MPIU_Assert(!handle->info->readonly);
 
-    MPIU_Assertp(FALSE); /* currently unimplemented */
+    /* the extra indirection through "info" might be too costly for some tools,
+     * consider moving this value to or caching it in the handle itself */
+    if (likely(handle->info->impl_kind == MPIR_T_PVAR_IMPL_SIMPLE)) {
+        MPIU_Memcpy(handle->handle_state, buf, handle->bytes);
+    }
+    else {
+        MPIU_Assertp(FALSE); /* _IMPL_CB not yet implemented */
+    }
 
 fn_exit:
     return mpi_errno;
