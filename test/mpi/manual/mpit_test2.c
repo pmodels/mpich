@@ -36,6 +36,23 @@
 #include <math.h>
 #include <string.h>
 
+static int posted_qlen, unexpected_qlen;
+static MPI_Aint posted_queue_match_attempts, unexpected_queue_match_attempts;
+static MPIX_T_pvar_handle pq_handle, uq_handle, pqm_handle, uqm_handle;
+static MPIX_T_pvar_session session;
+
+static void print_vars(int idx)
+{
+    MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
+    MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
+    MPIX_T_pvar_read(session, pqm_handle, &posted_queue_match_attempts);
+    MPIX_T_pvar_read(session, uqm_handle, &unexpected_queue_match_attempts);
+
+    printf("(%d) posted_qlen=%d unexpected_qlen=%d ", idx, posted_qlen, unexpected_qlen);
+    printf("posted_queue_match_attempts=%lu unexpected_queue_match_attempts=%lu\n",
+           posted_queue_match_attempts, unexpected_queue_match_attempts);
+}
+
 int main(int argc, char **argv)
 {
     int i;
@@ -54,11 +71,8 @@ int main(int argc, char **argv)
     int varclass;
     int readonly, continuous, atomic;
     int provided;
-    MPIX_T_pvar_session session;
     MPIX_T_enum enumtype;
-    int pq_idx = -1, uq_idx = -1;
-    int posted_qlen, unexpected_qlen;
-    MPIX_T_pvar_handle pq_handle, uq_handle;
+    int pq_idx = -1, uq_idx = -1, pqm_idx = -1, uqm_idx = -1;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -86,9 +100,15 @@ int main(int argc, char **argv)
         else if (0 == strcmp(name, "unexpected_recvq_length")) {
             uq_idx = i;
         }
+        else if (0 == strcmp(name, "posted_recvq_match_attempts")) {
+            pqm_idx = i;
+        }
+        else if (0 == strcmp(name, "unexpected_recvq_match_attempts")) {
+            uqm_idx = i;
+        }
     }
 
-    printf("pq_idx=%d uq_idx=%d\n", pq_idx, uq_idx);
+    printf("pq_idx=%d uq_idx=%d pqm_idx=%d uqm_idx=%d\n", pq_idx, uq_idx, pqm_idx, uqm_idx);
 
     /* setup a session and handles for the PQ and UQ length variables */
     session = MPIX_T_PVAR_SESSION_NULL;
@@ -105,6 +125,16 @@ int main(int argc, char **argv)
     assert(count = 1);
     assert(uq_handle != MPIX_T_PVAR_HANDLE_NULL);
 
+    pqm_handle = MPIX_T_PVAR_HANDLE_NULL;
+    MPIX_T_pvar_handle_alloc(session, pqm_idx, NULL, &pqm_handle, &count);
+    assert(count = 1);
+    assert(pqm_handle != MPIX_T_PVAR_HANDLE_NULL);
+
+    uqm_handle = MPIX_T_PVAR_HANDLE_NULL;
+    MPIX_T_pvar_handle_alloc(session, uqm_idx, NULL, &uqm_handle, &count);
+    assert(count = 1);
+    assert(uqm_handle != MPIX_T_PVAR_HANDLE_NULL);
+
     /* now send/recv some messages and track the lengths of the queues */
     {
         int buf1, buf2, buf3, buf4;
@@ -115,45 +145,41 @@ int main(int argc, char **argv)
 
         posted_qlen = 0x0123abcd;
         unexpected_qlen = 0x0123abcd;
-        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-        printf("(1) posted_qlen=%d unexpected_qlen=%d\n", posted_qlen, unexpected_qlen);
+        posted_queue_match_attempts = 0x0123abcd;
+        unexpected_queue_match_attempts = 0x0123abcd;
+        print_vars(1);
 
         MPI_Isend(&buf1, 1, MPI_INT, 0, /*tag=*/11, MPI_COMM_SELF, &r1);
-        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-        printf("(2) posted_qlen=%d unexpected_qlen=%d (should be 0,1)\n", posted_qlen, unexpected_qlen);
+        print_vars(2);
+        printf("expected (posted_qlen,unexpected_qlen) = (0,1)\n");
 
         MPI_Isend(&buf1, 1, MPI_INT, 0, /*tag=*/22, MPI_COMM_SELF, &r2);
-        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-        printf("(3) posted_qlen=%d unexpected_qlen=%d (should be 0,2)\n", posted_qlen, unexpected_qlen);
+        print_vars(3);
+        printf("expected (posted_qlen,unexpected_qlen) = (0,2)\n");
 
         MPI_Irecv(&buf2, 1, MPI_INT, 0, /*tag=*/33, MPI_COMM_SELF, &r3);
-        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-        printf("(4) posted_qlen=%d unexpected_qlen=%d (should be 1,2)\n", posted_qlen, unexpected_qlen);
+        print_vars(4);
+        printf("expected (posted_qlen,unexpected_qlen) = (1,2)\n");
 
         MPI_Recv(&buf3, 1, MPI_INT, 0, /*tag=*/22, MPI_COMM_SELF, MPI_STATUS_IGNORE);
         MPI_Wait(&r2, MPI_STATUS_IGNORE);
-        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-        printf("(5) posted_qlen=%d unexpected_qlen=%d (should be 1,1)\n", posted_qlen, unexpected_qlen);
+        print_vars(5);
+        printf("expected (posted_qlen,unexpected_qlen) = (1,1)\n");
 
         MPI_Recv(&buf3, 1, MPI_INT, 0, /*tag=*/11, MPI_COMM_SELF, MPI_STATUS_IGNORE);
         MPI_Wait(&r1, MPI_STATUS_IGNORE);
-        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-        printf("(6) posted_qlen=%d unexpected_qlen=%d (should be 1,0)\n", posted_qlen, unexpected_qlen);
+        print_vars(6);
+        printf("expected (posted_qlen,unexpected_qlen) = (1,0)\n");
 
         MPI_Send(&buf3, 1, MPI_INT, 0, /*tag=*/33, MPI_COMM_SELF);
         MPI_Wait(&r3, MPI_STATUS_IGNORE);
-        MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-        MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-        printf("(7) posted_qlen=%d unexpected_qlen=%d (should be 0,0)\n", posted_qlen, unexpected_qlen);
+        print_vars(7);
+        printf("expected (posted_qlen,unexpected_qlen) = (0,0)\n");
     }
 
     /* cleanup */
+    MPIX_T_pvar_handle_free(session, &uqm_handle);
+    MPIX_T_pvar_handle_free(session, &pqm_handle);
     MPIX_T_pvar_handle_free(session, &uq_handle);
     MPIX_T_pvar_handle_free(session, &pq_handle);
     MPIX_T_pvar_session_free(&session);
@@ -163,4 +189,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
