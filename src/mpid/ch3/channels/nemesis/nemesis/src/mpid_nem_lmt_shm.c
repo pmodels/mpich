@@ -471,7 +471,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         while (copy_buf->len[buf_num].val != 0) {
             int p = 0;
             
-            if (!copy_buf->receiver_present.val && p == LMT_POLLS_BEFORE_GIVING_UP) {
+            if (!copy_buf->receiver_present.val || p == LMT_POLLS_BEFORE_GIVING_UP) {
                 req->dev.segment_first = first;
                 vc_ch->lmt_buf_num = buf_num;
                 *done = FALSE;
@@ -560,7 +560,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         while ((len = copy_buf->len[buf_num].val) == 0) {
             int p = 0;
             
-            if (!copy_buf->sender_present.val && p == LMT_POLLS_BEFORE_GIVING_UP) {
+            if (!copy_buf->sender_present.val || p == LMT_POLLS_BEFORE_GIVING_UP) {
                 req->dev.segment_first = first;
                 vc_ch->lmt_buf_num = buf_num;
                 vc_ch->lmt_surfeit = surfeit;
