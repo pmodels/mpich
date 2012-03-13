@@ -212,6 +212,16 @@ parameters:
         procs on a node are seen as local to each other.  Used for debugging on
         a single machine.
 
+    - category    : intranode
+      name        : POLLS_BEFORE_YIELD
+      type        : int
+      default     : 1000
+      description : >-
+        When MPICH is in a busy waiting loop, it will periodically
+        call a function to yield the processor.  This parameter sets
+        the number of loops before the yield function is called.  A 
+        value of 0 disables yielding.
+
     - category    : developer
       name        : MEMDUMP
       type        : boolean

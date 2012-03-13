@@ -288,7 +288,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
 int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
     int mpi_errno = MPI_SUCCESS;
-#if !defined(ENABLE_NO_YIELD) || defined(MPICH_IS_THREADED)
+#ifdef MPICH_IS_THREADED
     int pollcount = 0;
 #endif
     int made_progress = FALSE;
@@ -331,41 +331,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 	int                  in_fbox = 0;
 	MPIDI_VC_t          *vc;
 
-#ifdef MPICH_IS_THREADED
-        MPIU_THREAD_CHECK_BEGIN;
-        {
-	    /* In the case of threads, we poll for lesser number of
-	     * iterations than the case with only processes, as
-	     * threads contend for CPU and the lock, while processes
-	     * only contend for the CPU. */
-            if (pollcount >= MPID_NEM_THREAD_POLLS_BEFORE_YIELD)
-            {
-                pollcount = 0;
-                MPIDI_CH3I_progress_blocked = TRUE;
-                MPIU_THREAD_CS_YIELD(ALLFUNC,);
-                /* MPIDCOMM yield is needed because at least the send functions
-                 * acquire MPIDCOMM to put things into the send queues.  Failure
-                 * to yield could result in a deadlock.  This thread needs the
-                 * send from another thread to be posted, but the other thread
-                 * can't post it while this CS is held. */
-                /* assertion: we currently do not hold any other critical
-                 * sections besides the MPIDCOMM CS at this point.  Violating
-                 * this will probably lead to lock-ordering deadlocks. */
-                MPIU_THREAD_CS_YIELD(MPIDCOMM,);
-                MPIDI_CH3I_progress_blocked = FALSE;
-                MPIDI_CH3I_progress_wakeup_signalled = FALSE;
-            }
-            ++pollcount;
-        }
-        MPIU_THREAD_CHECK_END;
-#elif !defined(ENABLE_NO_YIELD)
-        if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
-        {
-            pollcount = 0;
-            MPIU_PW_Sched_yield();
-        }
-        ++pollcount;
-#endif
         do /* receive progress */
         {
 
@@ -515,6 +480,37 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 break;
             }
         }
+
+#ifdef MPICH_IS_THREADED
+        MPIU_THREAD_CHECK_BEGIN;
+        {
+	    /* In the case of threads, we poll for lesser number of
+	     * iterations than the case with only processes, as
+	     * threads contend for CPU and the lock, while processes
+	     * only contend for the CPU. */
+            if (pollcount >= MPID_NEM_THREAD_POLLS_BEFORE_YIELD)
+            {
+                pollcount = 0;
+                MPIDI_CH3I_progress_blocked = TRUE;
+                MPIU_THREAD_CS_YIELD(ALLFUNC,);
+                /* MPIDCOMM yield is needed because at least the send functions
+                 * acquire MPIDCOMM to put things into the send queues.  Failure
+                 * to yield could result in a deadlock.  This thread needs the
+                 * send from another thread to be posted, but the other thread
+                 * can't post it while this CS is held. */
+                /* assertion: we currently do not hold any other critical
+                 * sections besides the MPIDCOMM CS at this point.  Violating
+                 * this will probably lead to lock-ordering deadlocks. */
+                MPIU_THREAD_CS_YIELD(MPIDCOMM,);
+                MPIDI_CH3I_progress_blocked = FALSE;
+                MPIDI_CH3I_progress_wakeup_signalled = FALSE;
+            }
+            ++pollcount;
+        }
+        MPIU_THREAD_CHECK_END;
+#else
+        MPIU_Busy_wait();
+#endif
     }
     while (is_blocking);
 

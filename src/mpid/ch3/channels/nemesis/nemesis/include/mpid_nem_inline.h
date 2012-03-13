@@ -7,7 +7,6 @@
 #ifndef _MPID_NEM_INLINE_H
 #define _MPID_NEM_INLINE_H
 
-#define MPID_NEM_POLLS_BEFORE_YIELD 1000
 #define MPID_NEM_THREAD_POLLS_BEFORE_YIELD 10
 
 #include "my_papi_defs.h"
@@ -869,9 +868,6 @@ static inline int
 MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifndef ENABLE_NO_YIELD
-    int pollcount = 0;
-#endif
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
 #ifdef MPICH_IS_THREADED
@@ -914,20 +910,13 @@ MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int compl
                 goto exit_l;
             }
 	}
-#if !defined ENABLE_NO_YIELD
-	if (pollcount >= MPID_NEM_POLLS_BEFORE_YIELD)
-	{
-	    pollcount = 0;
-	    MPIU_PW_Sched_yield();
-	}
-	++pollcount;
-#endif
 
         if (completions != OPA_load_int(&MPIDI_CH3I_progress_completion_count)) {
             *cell = NULL;
             *in_fbox = 0;
             goto exit_l;
         }
+        MPIU_Busy_wait();
     }
 
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_recvQ, cell);

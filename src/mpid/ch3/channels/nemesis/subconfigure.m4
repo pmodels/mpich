@@ -86,9 +86,6 @@ fi
 
 AC_ARG_ENABLE(fast, [--enable-fast - pick the appropriate options for fast execution.
 This turns off error checking and timing collection],,enable_fast=no)
-if test "$enable_fast" = "yes" ; then
-    AC_DEFINE(ENABLE_NO_YIELD,1,[Define to remove yield()s in polling loops])
-fi
 
 # make sure we support signal
 AC_CHECK_HEADERS(signal.h)

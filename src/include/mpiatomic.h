@@ -72,9 +72,6 @@
 
 /* FIXME anything labeled MPIDU_ here should really be MPIU_ */
 
-/* TODO need actual yield and an busy wait impls */
-#define MPIDU_Busy_wait() do {} while (0)
-
 /* ======================================================
    Ownership Mechanisms
    ======================================================
@@ -520,7 +517,7 @@ int MPIDU_Shm_barrier_simple(MPIDU_Shm_barrier_t *barrier, int num_processes, in
     else {
         /* wait for the last arriving process to release us from the barrier */
         while (OPA_load_int(&barrier->sig) == cur_sig) {
-            MPIDU_Busy_wait();
+            MPIU_Busy_wait();
         }
     }
 
@@ -549,7 +546,7 @@ int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
 
     if (rank == boss_rank) {
         while (0 == OPA_load_int(&barrier->sig_boss))
-            MPIDU_Busy_wait();
+            MPIU_Busy_wait();
     }
     else {
         cur_sig = OPA_load_int(&barrier->sig);
@@ -564,7 +561,7 @@ int MPIDU_Shm_barrier_enter(MPIDU_Shm_barrier_t *barrier,
 
         /* wait to be released by the boss */
         while (OPA_load_int(&barrier->sig) == cur_sig)
-            MPIDU_Busy_wait();
+            MPIU_Busy_wait();
     }
 
 fn_exit:

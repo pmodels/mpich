@@ -14,12 +14,6 @@
 #define DBG_LMT(x)
 #endif
 
-#ifdef ENABLE_NO_YIELD
-#define COND_Yield() do { } while(0)
-#else
-#define COND_Yield() MPIU_PW_Sched_yield()
-#endif
-
 /* Progress queue */
 
 typedef struct lmt_shm_prog_element
@@ -119,9 +113,7 @@ static int MPID_nem_detach_shm_region(MPID_nem_copy_buf_t **buf, MPIU_SHMW_Hnd_t
 static int MPID_nem_delete_shm_region(MPID_nem_copy_buf_t **buf, MPIU_SHMW_Hnd_t *handle_p);
 
 /* number of iterations to wait for the other side to process a buffer */
-#define LMT_POLLS_BEFORE_YIELD 1000
-/* how many times we'll call yield before we give up waiting */
-#define LMT_YIELDS_BEFORE_GIVING_UP 1000
+#define LMT_POLLS_BEFORE_GIVING_UP 5000
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_shm_initiate_lmt
@@ -381,26 +373,19 @@ static int get_next_req(MPIDI_VC_t *vc)
     {
         /* copy buf is owned by the remote side */
         /* remote side chooses next transfer */
-        int p = 0, y = 0;
 
         OPA_read_barrier();
         
         MPIU_DBG_STMT(CH3_CHANNEL, VERBOSE, if (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
                                                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "waiting for owner rank=%d", vc->pg_rank));
             
-        while (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
-        {
-            if (p == LMT_POLLS_BEFORE_YIELD)
-            {
-                if (y < LMT_YIELDS_BEFORE_GIVING_UP) {
-                    COND_Yield();
-                    p = 0;
-                    ++y;
-                } else {
-                    goto fn_exit;
-                }
-            }
+        while (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL) {
+            int p = 0;
+            
+            if (p == LMT_POLLS_BEFORE_GIVING_UP)
+                goto fn_exit;
             ++p;
+            MPIU_Busy_wait();
         }
 
         OPA_read_barrier();
@@ -480,33 +465,22 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     do
     {
-        int p, y;
         /* If the buffer is full, wait.  If the receiver is actively
            working on this transfer, yield the processor and keep
            waiting, otherwise wait for a bounded amount of time. */
-        p = y = 0;
-        while (copy_buf->len[buf_num].val != 0)
-        {
-            if (p == LMT_POLLS_BEFORE_YIELD)
-            {
-                if (copy_buf->receiver_present.val && y < LMT_YIELDS_BEFORE_GIVING_UP)
-                {
-                    COND_Yield();
-                    p = 0;
-                    ++y;
-                }
-                else
-                {
-                    req->dev.segment_first = first;
-                    vc_ch->lmt_buf_num = buf_num;
-                    *done = FALSE;
-                    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz="MPIDI_MSG_SZ_FMT, first, data_sz));        
-                    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Waiting on full buffer %d", buf_num);
-                    goto fn_exit;
-                }
+        while (copy_buf->len[buf_num].val != 0) {
+            int p = 0;
+            
+            if (!copy_buf->receiver_present.val && p == LMT_POLLS_BEFORE_GIVING_UP) {
+                req->dev.segment_first = first;
+                vc_ch->lmt_buf_num = buf_num;
+                *done = FALSE;
+                MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz="MPIDI_MSG_SZ_FMT, first, data_sz));        
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Waiting on full buffer %d", buf_num);
+                goto fn_exit;
             }
-
             ++p;
+            MPIU_Busy_wait();
         }
 
         OPA_read_write_barrier();
@@ -580,34 +554,23 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     do
     {
-        int p, y;
         /* If the buffer is empty, wait.  If the sender is actively
            working on this transfer, yield the processor and keep
            waiting, otherwise wait for a bounded amount of time. */
-        p = y = 0;
-        while ((len = copy_buf->len[buf_num].val) == 0)
-        {
-            if (p == LMT_POLLS_BEFORE_YIELD)
-            {
-                if (copy_buf->sender_present.val && y < LMT_YIELDS_BEFORE_GIVING_UP)
-                {
-                    COND_Yield();
-                    p = 0;
-                    ++y;
-                }
-                else
-                {
-                    req->dev.segment_first = first;
-                    vc_ch->lmt_buf_num = buf_num;
-                    vc_ch->lmt_surfeit = surfeit;
-                    *done = FALSE;
-                    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, first, data_sz));
-                    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Waiting on empty buffer %d", buf_num);
-                    goto fn_exit;
-                }
+        while ((len = copy_buf->len[buf_num].val) == 0) {
+            int p = 0;
+            
+            if (!copy_buf->sender_present.val && p == LMT_POLLS_BEFORE_GIVING_UP) {
+                req->dev.segment_first = first;
+                vc_ch->lmt_buf_num = buf_num;
+                vc_ch->lmt_surfeit = surfeit;
+                *done = FALSE;
+                MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, first, data_sz));
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Waiting on empty buffer %d", buf_num);
+                goto fn_exit;
             }
-
             ++p;
+            MPIU_Busy_wait();
         }
 
         OPA_read_barrier();
