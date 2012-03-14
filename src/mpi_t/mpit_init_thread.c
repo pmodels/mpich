@@ -28,6 +28,12 @@
  * MPIX_T_init_thread and MPIX_T_finalize */
 int MPIR_T_init_balance = 0;
 
+/* returns true iff the MPIX_T_ interface is currently initialized */
+int MPIR_T_is_initialized(void)
+{
+    return (MPIR_T_init_balance > 0);
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_T_init_thread_impl
 #undef FCNAME

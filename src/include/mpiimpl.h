@@ -3994,6 +3994,8 @@ int MPIR_T_category_get_categories_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_changed_impl(int *stamp);
 /* end impl functions for MPI_T (MPIX_T_ right now) */
 
+int MPIR_T_is_initialized(void);
+
 /* random initializers */
 int MPIR_Group_init(void);
 int MPIR_Comm_init(MPID_Comm *);

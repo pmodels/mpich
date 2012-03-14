@@ -36,7 +36,8 @@ int MPIR_T_finalize_impl(void)
     int mpi_errno = MPI_SUCCESS;
 
     --MPIR_T_init_balance;
-    if (MPIR_T_init_balance == 0) {
+    MPIU_Assert(MPIR_T_init_balance >= 0);
+    if (MPIR_T_init_balance == 0 && MPIR_Process.initialized != MPICH_WITHIN_MPI) {
         MPIR_T_finalize_pvars();
 
         mpi_errno = MPIR_Param_finalize();
