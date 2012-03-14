@@ -36,7 +36,6 @@ int MPIR_T_finalize_impl(void)
     int mpi_errno = MPI_SUCCESS;
 
     --MPIR_T_init_balance;
-    MPIU_Assert(MPIR_T_init_balance >= 0);
     if (MPIR_T_init_balance == 0) {
         MPIR_T_finalize_pvars();
 

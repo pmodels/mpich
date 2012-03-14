@@ -89,17 +89,15 @@ int MPIR_T_get_pvar_info_by_idx(int idx, struct MPIR_T_pvar_info **info_p)
 int MPIR_T_finalize_pvars(void)
 {
     struct MPIR_T_pvar_info **info_p;
-    if (all_pvars) {
-        for (info_p = (struct MPIR_T_pvar_info **)utarray_front(all_pvars);
-             info_p != NULL;
-             info_p = (struct MPIR_T_pvar_info **)utarray_next(all_pvars, info_p))
-        {
-            MPIU_Free((*info_p)->name);
-            MPIU_Free((*info_p)->desc);
-            MPIU_Free((*info_p));
-        }
-        utarray_free(all_pvars);
+    for (info_p = (struct MPIR_T_pvar_info **)utarray_front(all_pvars);
+         info_p != NULL;
+         info_p = (struct MPIR_T_pvar_info **)utarray_next(all_pvars, info_p))
+    {
+        MPIU_Free((*info_p)->name);
+        MPIU_Free((*info_p)->desc);
+        MPIU_Free((*info_p));
     }
+    utarray_free(all_pvars);
 
     return MPI_SUCCESS;
 }
