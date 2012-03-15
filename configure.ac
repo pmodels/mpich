@@ -5532,7 +5532,7 @@ AC_ARG_ENABLE([yield],
         [select],      [AS_IF([test "x$ac_cv_func_select"      != "xyes"], [enable_yield=unavail])],
         [usleep],      [AS_IF([test "x$ac_cv_func_usleep"      != "xyes"], [enable_yield=unavail])],
         [sleep],       [AS_IF([test "x$ac_cv_func_sleep"       != "xyes"], [enable_yield=unavail])],
-        [nothing|no],  [],
+        [nothing|no|none], [],
         [AC_MSG_ERROR([Invalid option $enableval for --enable-yield])])
 
      AS_IF([test "x$enable_yield" = "xunavail"], 
@@ -5569,7 +5569,7 @@ AS_CASE([$enable_yield],
         [AC_DEFINE(USE_USLEEP_FOR_YIELD,1,[Define to use usleep to yield processor])],
     [sleep],
         [AC_DEFINE(USE_SLEEP_FOR_YIELD,1,[Define to use sleep to yield processor])],
-    [nothing|no],
+    [nothing|no|none],
         [AC_DEFINE(USE_NOTHING_FOR_YIELD,1,[Define to use nothing to yield processor])],
     [AC_MSG_ERROR([Invalid value $enable_yield for enable_yield.])]
 )
