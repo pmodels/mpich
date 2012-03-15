@@ -2,6 +2,11 @@
                                Changes in 1.5
 ===============================================================================
 
+ # OVERALL: nemesis now supports an "--enable-yield=..." configure option for
+   better performance/behavior when oversubscribing processes to cores.  Some
+   form of this option is enabled by default on Linux, Darwin, and systems that
+   support sched_yield().
+
  # MPI-3: the new MPI-3 nonblocking collectives functions are now available as
    "MPIX_" functions (e.g. "MPIX_Ibcast").
 
@@ -9,10 +14,30 @@
    as an "MPIX_" function.
 
  # MPI-3: the new MPI-3 tools interface is now available as "MPIX_T_"
-   functions.
+   functions.  This is a beta implementation right now with several limitations,
+   including no support for multithreading.  Several performance variables
+   related to CH3's message matching are exposed through this interface.
+
+ # MPI-3: the new MPI-3 matched probe functionality is supported via the new
+   routines MPIX_Mprobe, MPIX_Improbe, MPIX_Mrecv, and MPIX_Imrecv.
+
+ # MPI-3: the new MPI-3 nonblocking communicator duplication routine,
+   MPIX_Comm_idup, is now supported.  It will only work for single-threaded
+   programs at this time.
+
+ # MPI-3: MPIX_Comm_reenable_anysource support
+
+ # MPI-3: native MPIX_Comm_create_group support (updated version of the prior
+   MPIX_Group_comm_create routine).
+
+ # MPI-3: eliminated the possibility of interference between
+   MPI_Intercomm_create and point-to-point messaging operations.
 
  # Build system: Completely revamped build system to rely fully on
    autotools.  Parallel builds ("make -j8" and similar) are now supported.
+
+ # Build system: rename "./maint/updatefiles" --> "./autogen.sh" and
+   "configure.in" --> "configure.ac"
 
  # PM/PMI: Upgrade hwloc to 1.3.
 
