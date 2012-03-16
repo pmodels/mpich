@@ -62,7 +62,7 @@ int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype 
         else
 #endif
         {
-            if ((op_ptr->language == MPID_LANG_C)) {
+            if (op_ptr->language == MPID_LANG_C) {
                 uop = (MPI_User_function *) op_ptr->function.c_function;
             }
             else {
