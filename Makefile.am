@@ -98,7 +98,7 @@ lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 ## FIXME XXX DJG is this "-DMPICH..." flag is in CFLAGS now, should it really be in CPPFLAGS?
 lib_lib@PMPILIBNAME@_la_CFLAGS = $(AM_CFLAGS) -DMPICH_MPI_FROM_PMPI
 lib_lib@PMPILIBNAME@_la_SOURCES =
-lib_lib@PMPILIBNAME@_la_LIBADD =
+lib_lib@PMPILIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(lib_lib@MPILIBNAME@_la_LIBADD)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = -version-info $(ABIVERSION)
 endif BUILD_PROFILING_LIB
 
