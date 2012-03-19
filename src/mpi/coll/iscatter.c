@@ -633,6 +633,7 @@ int MPIX_Iscatter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *rec
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (comm_ptr->comm_kind == MPID_INTRACOMM) {
                 MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);
 

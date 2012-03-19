@@ -848,6 +848,7 @@ int MPIX_Ireduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype *datatype_ptr = NULL;
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
@@ -864,7 +865,6 @@ int MPIX_Ireduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 mpi_errno = ( * MPIR_Op_check_dtype_table[op%16 - 1] )(datatype);
             }
 
-            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;

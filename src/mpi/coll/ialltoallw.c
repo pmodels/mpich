@@ -329,6 +329,7 @@ int MPIX_Ialltoallw(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (sendbuf != MPI_IN_PLACE) {
                 MPIR_ERRTEST_ARGNULL(sendcounts,"sendcounts", mpi_errno);
                 MPIR_ERRTEST_ARGNULL(sdispls,"sdispls", mpi_errno);
@@ -337,7 +338,6 @@ int MPIX_Ialltoallw(void *sendbuf, int *sendcounts, int *sdispls, MPI_Datatype *
             MPIR_ERRTEST_ARGNULL(recvcounts,"recvcounts", mpi_errno);
             MPIR_ERRTEST_ARGNULL(rdispls,"rdispls", mpi_errno);
             MPIR_ERRTEST_ARGNULL(recvtypes,"recvtypes", mpi_errno);
-            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (comm_ptr->comm_kind == MPID_INTERCOMM && sendbuf == MPI_IN_PLACE) {
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPIR_ERR_RECOVERABLE, "**sendbuf_inplace");
             }

@@ -606,6 +606,7 @@ int MPIX_Ialltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *re
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (sendbuf != MPI_IN_PLACE && HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype *sendtype_ptr = NULL;
                 MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
@@ -620,7 +621,6 @@ int MPIX_Ialltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *re
                 MPID_Datatype_committed_ptr(recvtype_ptr, mpi_errno);
             }
 
-            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;

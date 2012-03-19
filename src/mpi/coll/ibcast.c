@@ -940,6 +940,7 @@ int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Co
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype *datatype_ptr = NULL;
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
@@ -947,7 +948,6 @@ int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Co
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
             }
 
-            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
