@@ -91,7 +91,7 @@ int MPIR_Iscatter_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPI_Aint extent = 0;
     int rank, comm_size, is_homogeneous, sendtype_size;
     int relative_rank;
-    int mask, recvtype_size=0, src, dst, position;
+    int mask, recvtype_size=0, src, dst;
     int tmp_buf_size = 0;
     void *tmp_buf = NULL;
     struct shared_state *ss = NULL;
@@ -154,8 +154,6 @@ int MPIR_Iscatter_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
             if (root != 0) {
                 tmp_buf_size = ss->nbytes*comm_size;
                 MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
-
-                position = 0;
 
                 if (recvbuf != MPI_IN_PLACE)
                     mpi_errno = MPID_Sched_copy(((char *) sendbuf + extent*sendcount*rank),
@@ -282,6 +280,7 @@ int MPIR_Iscatter_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
     }
 #ifdef MPID_HAS_HETERO
     else { /* communicator is heterogeneous */
+        int position;
         MPIU_Assertp(FALSE); /* hetero case not yet implemented */
 
         if (rank == root) {

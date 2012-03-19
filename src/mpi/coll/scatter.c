@@ -65,7 +65,7 @@ int MPIR_Scatter_intra (
     MPI_Aint   extent=0;
     int        rank, comm_size, is_homogeneous, sendtype_size;
     int curr_cnt, relative_rank, nbytes, send_subtree_cnt;
-    int mask, recvtype_size=0, src, dst, position;
+    int mask, recvtype_size=0, src, dst;
     int tmp_buf_size = 0;
     void *tmp_buf=NULL;
     int        mpi_errno = MPI_SUCCESS;
@@ -133,8 +133,6 @@ int MPIR_Scatter_intra (
             if (root != 0) {
 		tmp_buf_size = nbytes*comm_size;
                 MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
-
-                position = 0;
 
                 if (recvbuf != MPI_IN_PLACE)
                     mpi_errno = MPIR_Localcopy(((char *) sendbuf + extent*sendcnt*rank),
@@ -259,6 +257,7 @@ int MPIR_Scatter_intra (
     
 #ifdef MPID_HAS_HETERO
     else { /* communicator is heterogeneous */
+        int position;
         if (rank == root) {
             MPIR_Pack_size_impl(sendcnt*comm_size, sendtype, &tmp_buf_size);
 
