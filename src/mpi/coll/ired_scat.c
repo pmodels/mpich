@@ -770,6 +770,7 @@ static int MPIR_Ireduce_scatter_noncomm(void *sendbuf, void *recvbuf, int *recvc
     result_ptr = (char *)(buf0_was_inout ? tmp_buf0 : tmp_buf1) + recv_offset * true_extent;
     mpi_errno = MPID_Sched_copy(result_ptr, size, datatype,
                                 recvbuf, size, datatype, s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;

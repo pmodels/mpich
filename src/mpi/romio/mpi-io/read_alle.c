@@ -83,6 +83,6 @@ int MPIOI_File_read_all_end(MPI_File mpi_fh,
 fn_exit:
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
-    return MPI_SUCCESS;
+    return error_code;
 }
 #endif

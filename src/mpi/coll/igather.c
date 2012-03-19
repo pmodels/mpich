@@ -248,8 +248,8 @@ int MPIR_Igather_binomial(void *sendbuf, int sendcount, MPI_Datatype sendtype, v
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
                     mpi_errno = MPID_Sched_send(MPI_BOTTOM, 1, tmp_type, dst, comm_ptr, s);
-                    mpi_errno = MPID_Sched_barrier(s);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    MPID_SCHED_BARRIER(s);
 
                     /* this "premature" free is safe b/c the sched holds an actual ref to keep it alive */
                     MPIR_Type_free_impl(&tmp_type);

@@ -87,20 +87,18 @@ int MPIR_Ialltoallv_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     mpi_errno = MPID_Sched_recv(tmp_buf, recvcounts[dst], recvtype, dst, comm_ptr, s);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                    mpi_errno = MPID_Sched_barrier(s);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    MPID_SCHED_BARRIER(s);
 
                     mpi_errno = MPID_Sched_copy(tmp_buf, recvcounts[dst], recvtype,
                                                 ((char *)recvbuf + rdispls[dst]*recv_extent),
                                                 recvcounts[dst], recvtype, s);
-                    mpi_errno = MPID_Sched_barrier(s);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    MPID_SCHED_BARRIER(s);
                 }
             }
         }
 
-        mpi_errno = MPID_Sched_barrier(s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
     }
     else {
         bblock = MPIR_PARAM_ALLTOALL_THROTTLE;
@@ -139,8 +137,7 @@ int MPIR_Ialltoallv_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
             }
 
             /* force our block of sends/recvs to complete before starting the next block */
-            mpi_errno = MPID_Sched_barrier(s);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(s);
         }
     }
 

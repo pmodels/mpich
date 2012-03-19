@@ -200,6 +200,7 @@ int MPIR_Ireduce_scatter_block_rec_hlv(void *sendbuf, void *recvbuf, int recvcou
                 mpi_errno = MPID_Sched_reduce(((char *)tmp_recvbuf + newdisps[recv_idx]*extent),
                                               ((char *)tmp_results + newdisps[recv_idx]*extent),
                                               recv_cnt, datatype, op, s);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 MPID_SCHED_BARRIER(s);
             }
 

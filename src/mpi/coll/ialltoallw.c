@@ -114,6 +114,7 @@ int MPIR_Ialltoallw_intra(void *sendbuf, int *sendcounts, int *sdispls, MPI_Data
                     mpi_errno = MPID_Sched_copy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
                                                 ((char *)recvbuf + rdispls[dst]),
                                                 recvcounts[dst], recvtypes[dst], s);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     MPID_SCHED_BARRIER(s);
                 }
             }

@@ -151,11 +151,13 @@ int MPI_Finalize( void )
     if (MPIR_Process.attr_free && MPIR_Process.comm_self->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_SELF,
 					    &MPIR_Process.comm_self->attributes);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	MPIR_Process.comm_self->attributes = 0;
     }
     if (MPIR_Process.attr_free && MPIR_Process.comm_world->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_WORLD, 
                                             &MPIR_Process.comm_world->attributes);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	MPIR_Process.comm_world->attributes = 0;
     }
 

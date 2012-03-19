@@ -138,6 +138,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
                      incoming_data + recv_offset*true_extent,
                      outgoing_data + recv_offset*true_extent,
                      size, datatype, op);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             buf0_was_inout = buf0_was_inout;
         }
         else {
@@ -146,6 +147,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
                      outgoing_data + recv_offset*true_extent,
                      incoming_data + recv_offset*true_extent,
                      size, datatype, op);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             buf0_was_inout = !buf0_was_inout;
         }
 

@@ -446,6 +446,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                                                          mapping_vcr,
                                                          &((*newcomm_ptr)->local_vcrt),
                                                          &((*newcomm_ptr)->local_vcr));
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* Setup the communicator's vc table.  This is for the remote group */
         mpi_errno = MPIR_Comm_create_create_and_map_vcrt(remote_size,
@@ -453,6 +454,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                                                          remote_mapping_vcr,
                                                          &((*newcomm_ptr)->vcrt),
                                                          &((*newcomm_ptr)->vcr));
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);

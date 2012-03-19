@@ -165,17 +165,21 @@ static int MPIR_Scan_generic (
             if (rank > dst) {
 		mpi_errno = MPIR_Reduce_local_impl( 
 			   tmp_buf, partial_scan, count, datatype, op);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		mpi_errno = MPIR_Reduce_local_impl( 
 			   tmp_buf, recvbuf, count, datatype, op);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             else {
                 if (is_commutative) {
 		    mpi_errno = MPIR_Reduce_local_impl( 
 			       tmp_buf, partial_scan, count, datatype, op);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		}
                 else {
 		    mpi_errno = MPIR_Reduce_local_impl( 
 			       partial_scan, tmp_buf, count, datatype, op);
+                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 		    mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
 					       partial_scan,
 					       count, datatype);

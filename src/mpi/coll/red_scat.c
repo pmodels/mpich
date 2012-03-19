@@ -133,6 +133,7 @@ static int MPIR_Reduce_scatter_noncomm (
 		     incoming_data + recv_offset*true_extent,
                      outgoing_data + recv_offset*true_extent,
                      size, datatype, op );
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             buf0_was_inout = buf0_was_inout;
         }
         else {
@@ -141,6 +142,7 @@ static int MPIR_Reduce_scatter_noncomm (
 		     outgoing_data + recv_offset*true_extent,
                      incoming_data + recv_offset*true_extent,
                      size, datatype, op);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             buf0_was_inout = !buf0_was_inout;
         }
 
@@ -155,6 +157,8 @@ static int MPIR_Reduce_scatter_noncomm (
     result_ptr = (char *)(buf0_was_inout ? tmp_buf0 : tmp_buf1) + recv_offset * true_extent;
     mpi_errno = MPIR_Localcopy(result_ptr, size, datatype,
                                recvbuf, size, datatype);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)

@@ -341,6 +341,7 @@ int MPIR_Iallgatherv_bruck(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
         /* sendrecv, no barrier */
         mpi_errno = MPID_Sched_recv(((char *)tmp_buf + curr_count*recvtype_extent),
                                     incoming_count, recvtype, src, comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
 
         /* we will send everything we had plus what we just got to next round's dst */

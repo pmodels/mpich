@@ -1051,6 +1051,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     {
 	mpi_errno = ReceivePGAndDistribute( tmp_comm, comm_ptr, root, &recvtag,
 					    n_remote_pgs, remote_pg );
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
     /* Broadcast out the remote rank translation array */
