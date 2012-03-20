@@ -746,9 +746,8 @@ MPE_XGraph handle;
       /* Place into a file */
       char cmdbuf[1024];
       if ((handle->capture_num % handle->capture_freq) == 0) {
-	  /* This will need to be configured for the location of xwd ... */
-	  sprintf( cmdbuf, "%sxwd -display %s -id %ld > %s%.3d.xwd\n", 
-		   "/usr/local/X11R5/bin/", 
+	  /* Assume xwd is in user's PATH... */
+	  sprintf( cmdbuf, "xwd -display %s -id %ld > %s%.3d.xwd\n", 
 		   handle->display_name, 
 		   (long) handle->xwin->win, handle->capture_file, 
 		   handle->capture_cnt++ );
