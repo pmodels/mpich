@@ -30,9 +30,9 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 #undef MPI_Intercomm_create
 #define MPI_Intercomm_create PMPI_Intercomm_create
 
-/* 128 allows us to handle up to 4k processes */
 #ifdef HAVE_ERROR_CHECKING
-#define MAX_LPID32_ARRAY 128
+/* 128 allows us to handle up to 4k processes */
+#define N_STATIC_LPID32 128
 #undef FUNCNAME
 #define FUNCNAME MPIR_CheckDisjointLpids
 #undef FCNAME
@@ -40,10 +40,10 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1, 
 					 int lpids2[], int n2 )
 {
-    int i, maxi, idx, bit, maxlpid = -1;
+    int i, mask_size, idx, bit, maxlpid = -1;
     int mpi_errno = MPI_SUCCESS;
-    int32_t lpidmaskPrealloc[MAX_LPID32_ARRAY];
-    int32_t *lpidmask;
+    uint32_t lpidmaskPrealloc[N_STATIC_LPID32];
+    uint32_t *lpidmask;
     MPIU_CHKLMEM_DECL(1);
 
     /* Find the max lpid */
@@ -54,12 +54,10 @@ PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1,
 	if (lpids2[i] > maxlpid) maxlpid = lpids2[i];
     }
 
-    /* Compute the max index */
-    maxi = (maxlpid + 31) / 32; /* round-up division */
+    mask_size = (maxlpid / 32) + 1;
 
-    if (maxi >= MAX_LPID32_ARRAY) {
-        /* maxi+1 elements b/c maxi is the last index, not size */
-	MPIU_CHKLMEM_MALLOC(lpidmask,int32_t*,(maxi+1)*sizeof(int32_t),
+    if (mask_size > N_STATIC_LPID32) {
+	MPIU_CHKLMEM_MALLOC(lpidmask,uint32_t*,mask_size*sizeof(uint32_t),
 			    mpi_errno,"lpidmask");
     }
     else {
@@ -67,13 +65,14 @@ PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1,
     }
 
     /* zero the bitvector array */
-    memset(lpidmask, 0x00, (maxi+1)*sizeof(*lpidmask));
+    memset(lpidmask, 0x00, mask_size*sizeof(*lpidmask));
 
     /* Set the bits for the first array */
     for (i=0; i<n1; i++) {
 	idx = lpids1[i] / 32;
 	bit = lpids1[i] % 32;
 	lpidmask[idx] = lpidmask[idx] | (1 << bit);
+        MPIU_Assert(idx < mask_size);
     }    
 
     /* Look for any duplicates in the second array */
@@ -87,6 +86,7 @@ PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1,
 	}
 	/* Add a check on duplicates *within* group 2 */
 	lpidmask[idx] = lpidmask[idx] | (1 << bit);
+        MPIU_Assert(idx < mask_size);
     }
 
     /* Also fall through for normal return */
