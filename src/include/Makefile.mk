@@ -62,6 +62,7 @@ noinst_HEADERS +=                   \
     src/include/mpiu_ex.h           \
     src/include/mpiu_monitors.h     \
     src/include/mpiu_thread.h       \
+    src/include/mpiu_utarray.h      \
     src/include/mpiutil.h           \
     src/include/nopackage.h         \
     src/include/pmi.h               \
