@@ -15,7 +15,7 @@ if ((fh <= (ADIO_File) 0) ||					\
     error_code = MPIO_Err_create_code(MPI_SUCCESS,		\
 				      MPIR_ERR_RECOVERABLE,	\
 				      myname, __LINE__,		\
-				      MPI_ERR_ARG,		\
+				      MPI_ERR_FILE,		\
 				      "**iobadfh", 0);		\
     error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);\
     goto fn_exit;                                               \
