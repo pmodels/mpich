@@ -7,6 +7,7 @@
 /* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
