@@ -32,7 +32,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include "mpitestconf.h"
 
+#if !defined(USE_STRICT_MPI) && defined(MPICH2)
 int main(int argc, char **argv)
 {
     int i;
@@ -119,3 +121,14 @@ int main(int argc, char **argv)
     return 0;
 }
 
+#else
+/* Simple null program to allow building this file with non-MPICH2 
+   implementations */
+int main(int argc, char **argv)
+{
+  MPI_Init( arc, argv );
+  printf( " No Errors\n" );
+  MPI_Finalize();
+  return 0;
+}
+#endif

@@ -749,7 +749,9 @@ int main(int argc, char **argv)
     int wrank, wsize;
     unsigned int seed = 0x10bc;
     unsigned int post_seq, complete_seq;
+#if defined(TEST_NBC_ROUTINES)
     struct laundry larr[WINDOW];
+#endif
     MPI_Request reqs[WINDOW];
     int outcount;
     int indices[WINDOW];

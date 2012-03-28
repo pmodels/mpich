@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+/* USE_STRICT_MPI may be defined in mpitestconf.h */
+#include "mpitestconf.h"
 
 #define NUM_INTS (2)
 
@@ -49,6 +51,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(comm, &size);
     MPI_Comm_rank(comm, &rank);
 
+#if !defined(USE_STRICT_MPI) && defined(MPICH2)
     /* enough space for every process to contribute at least NUM_INTS ints to any
      * collective operation */
     sbuf = malloc(NUM_INTS*size*sizeof(int));
@@ -82,7 +85,6 @@ int main(int argc, char **argv)
      * been officially passed in its entirety by the MPI Forum.  This #ifndef
      * change to a version check for >=3.0 once MPI-3 is official and these
      * names change to an "MPI_" prefix.. */
-#ifndef USE_STRICT_MPI
     /* int MPIX_Ibarrier(MPI_Comm comm, MPI_Request *request); */
     MPIX_Ibarrier(comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
