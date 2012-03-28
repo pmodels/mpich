@@ -58,6 +58,13 @@ while (<RESULTS>) {
 		# by a badly behaved runtime system, you can either
 		# add a specific filter here (preferred) or set the
 		# -ignorebogus option (considered a workaround)
+		# The following is an example that accepts certain
+		# kinds of output once "No Errors" is seen.
+	        if ($sawNoerrors) {
+		    if ( /^Application [0-9]+ resources: utime .*/) {
+		        last;
+                    }
+                }
 	        if (!$ignoreBogusOutput) {
 		    # Any extraneous output is an error
 		    $sawNoerrors = 0;
