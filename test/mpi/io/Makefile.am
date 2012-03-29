@@ -24,5 +24,5 @@ noinst_PROGRAMS = \
     userioerr     \
     resized
 
-clean-hook:
+clean-local:
 	-rm -f testfile testfile.*
