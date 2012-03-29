@@ -1,3 +1,5 @@
 adderr 1
 commcall 2
 errfatal 1 resultTest=TestErrFatal
+predef_eh 1
+predef_eh 2

@@ -17,7 +17,8 @@ EXTRA_DIST = testlist
 noinst_PROGRAMS = \
     adderr        \
     commcall      \
-    errfatal
+    errfatal      \
+    predef_eh
 
 EXTRA_PROGRAMS = errcode errring errstring
 
