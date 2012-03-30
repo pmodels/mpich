@@ -616,7 +616,7 @@ AC_SUBST(FWRAPNAME)
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 PAC_PROG_CC
-AC_PROG_CC_C_O dnl needed for automake "silent-rules"
+AM_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
 AC_PROG_CPP
 # Bug in autoconf.  Restore cross settings
