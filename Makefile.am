@@ -22,6 +22,7 @@ noinst_DATA =
 dist_noinst_DATA =
 noinst_HEADERS =
 noinst_LIBRARIES =
+noinst_LTLIBRARIES =
 sysconf_DATA =
 nodist_pkgconfig_DATA =
 CLEANFILES =
@@ -130,12 +131,6 @@ EXTRA_DIST += README.vin
 
 testing:
 	( cd test && $(MAKE) testing )
-
-install-exec-local:
-## FIXME this should live in src/mpi/debugger/Makefile.mk, right?
-	-if [ "$(BUILD_TVDLL)" = "yes" ] ; then \
-	    $(INSTALL_DATA) src/mpi/debugger/libtvmpich2.$(SHLIB_EXT) \
-			${DESTDIR}${libdir}/libtvmpich2.$(SHLIB_EXT) ; fi
 
 ## FIXME: this should live in src/env/Makefile.mk. Moving it there
 ## will not cause a problem, but it will break the build if another
