@@ -140,8 +140,6 @@ static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, s
 #endif
 
 #include "mpiimplthread.h"
-/* #include "mpiu_monitors.h" */
-
 #include "mpiutil.h"
 
 /* ------------------------------------------------------------------------- */

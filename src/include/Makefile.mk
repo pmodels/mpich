@@ -34,7 +34,6 @@ noinst_HEADERS +=                   \
     src/include/mpi_fortlogical.h   \
     src/include/mpi_lang.h          \
     src/include/mpiallstates.h      \
-    src/include/mpiatomic.h         \
     src/include/mpibase.h           \
     src/include/mpibsend.h          \
     src/include/mpich_param_vals.h  \
@@ -56,11 +55,9 @@ noinst_HEADERS +=                   \
     src/include/mpir_nbc.h          \
     src/include/mpishared.h         \
     src/include/mpistates.h         \
-    src/include/mpisysstates.h      \
     src/include/mpitimerimpl.h      \
     src/include/mpitypedefs.h       \
     src/include/mpiu_ex.h           \
-    src/include/mpiu_monitors.h     \
     src/include/mpiu_thread.h       \
     src/include/mpiu_utarray.h      \
     src/include/mpiutil.h           \
