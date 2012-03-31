@@ -180,19 +180,6 @@ static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, s
 #define MPIU_DBG_PRINTF(e)
 #define MPIU_DBG_PRINTF_CLASS(_c,_l,_e)
 #endif
-/* FIXME: These should use the MPIU_DBG_STMT macros and not be defined
-   as macros themselves (to make it clear that they are macros, and not
-   always called) */
-#ifdef USE_MPIU_DBG_PRINT_VC
-void MPIU_DBG_PrintVC(MPIDI_VC_t *vc);
-void MPIU_DBG_PrintVCState2(MPIDI_VC_t *vc, MPIDI_VC_State_t new_state);
-void MPIU_DBG_PrintVCState(MPIDI_VC_t *vc);
-#else
-#define MPIU_DBG_PrintVC(vc)
-#define MPIU_DBG_PrintVCState2(vc, new_state)
-#define MPIU_DBG_PrintVCState(vc)
-#endif
-
 
 /* The follow is temporarily provided for backward compatibility.  Any code
    using dbg_printf should be updated to use MPIU_DBG_PRINTF. */

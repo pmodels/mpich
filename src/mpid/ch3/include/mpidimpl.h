@@ -532,11 +532,21 @@ extern MPIDI_Process_t MPIDI_Process;
   ------------------*/
 #define MPIDI_Comm_get_vc(comm_, rank_, vcp_) *(vcp_) = (comm_)->vcr[(rank_)]
 
+#ifdef USE_MPIDI_DBG_PRINT_VC
+void MPIDI_DBG_PrintVC(MPIDI_VC_t *vc);
+void MPIDI_DBG_PrintVCState2(MPIDI_VC_t *vc, MPIDI_VC_State_t new_state);
+void MPIDI_DBG_PrintVCState(MPIDI_VC_t *vc);
+#else
+#define MPIDI_DBG_PrintVC(vc)
+#define MPIDI_DBG_PrintVCState2(vc, new_state)
+#define MPIDI_DBG_PrintVCState(vc)
+#endif
+
 #define MPIDI_Comm_get_vc_set_active(comm_, rank_, vcp_) do {           \
         *(vcp_) = (comm_)->vcr[(rank_)];                                \
         if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)                \
         {                                                               \
-            MPIU_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
+            MPIDI_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
             MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                   \
         }                                                               \
     } while(0)
@@ -621,7 +631,7 @@ do {                                            \
         *(vcp_) = &(pg_)->vct[rank_];                                   \
         if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)                \
         {                                                               \
-            MPIU_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
+            MPIDI_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
             MPIDI_CHANGE_VC_STATE((*(vcp_)), ACTIVE);                   \
         }                                                               \
     } while(0)
@@ -1004,8 +1014,8 @@ void MPIDI_dbg_printf(int, char *, char *, ...);
 void MPIDI_err_printf(char *, char *, ...);
 
 /* FIXME: This does not belong here */
-#ifdef USE_MPIU_DBG_PRINT_VC
-extern char *MPIU_DBG_parent_str;
+#ifdef USE_MPIDI_DBG_PRINT_VC
+extern char *MPIDI_DBG_parent_str;
 #endif
 
 #if defined(MPICH_DBG_OUTPUT)

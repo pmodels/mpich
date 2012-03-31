@@ -724,7 +724,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
     }
 #endif /* MPIU_THREAD_GRANULARITY */
     MPIU_CALL(MPIDI_CH3,VC_Init( vc ));
-    MPIU_DBG_PrintVCState(vc);
+    MPIDI_DBG_PrintVCState(vc);
 
     return MPI_SUCCESS;
 }

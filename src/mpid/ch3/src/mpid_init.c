@@ -16,8 +16,8 @@
 #endif
 
 /* FIXME: This does not belong here */
-#ifdef USE_MPIU_DBG_PRINT_VC
-char *MPIU_DBG_parent_str = "?";
+#ifdef USE_MPIDI_DBG_PRINT_VC
+char *MPIDI_DBG_parent_str = "?";
 #endif
 
 /* FIXME: the PMI init function should ONLY do the PMI operations, not the 
@@ -514,8 +514,8 @@ static int InitPG( int *argc, char ***argv,
     }
 
     /* FIXME: Who is this for and where does it belong? */
-#ifdef USE_MPIU_DBG_PRINT_VC
-    MPIU_DBG_parent_str = (*has_parent) ? "+" : "";
+#ifdef USE_MPIDI_DBG_PRINT_VC
+    MPIDI_DBG_parent_str = (*has_parent) ? "+" : "";
 #endif
 
     /* FIXME: has_args and has_env need to come from PMI eventually... */
