@@ -210,10 +210,10 @@ if test -s $srcdir/util/tarch -a ! -x $srcdir/util/tarch ; then
     chmod a+x $srcdir/util/tarch
 fi
 if test -z "$ARCH" -a -x $srcdir/util/tarch ; then
-    AC_MSG_CHECKING(for architecture)
+    AC_MSG_CHECKING([for architecture])
     ARCH=`$srcdir/util/tarch | sed s/-/_/g`
     if test -z "$ARCH" ; then
-       AC_MSG_RESULT(Unknown!)
+       AC_MSG_RESULT([Unknown!])
        AC_MSG_ERROR([Error: Could not guess target architecture, you must 
 set an architecture type with the environment variable ARCH]) 
     fi 
@@ -226,7 +226,7 @@ fi
 #### WE SHOULD REMOVE THIS SOON
 grep __"$ARCH"_ $srcdir/.config_params > /dev/null 2>&1
 if test $? != 0 ; then
-   AC_MSG_WARN([Unknown architecture $arch... proceeding anyway])
+   AC_MSG_WARN([Unknown architecture $ARCH... proceeding anyway])
 fi
 #
 #
