@@ -1195,7 +1195,7 @@ mpig_recvq_ras_op_t;
 #endif
 
 /* include the macros that set the enter/exit macros to call MPIR_ENTER/EXIT_FUNC */
-#include "mpifunclog.h"
+#include "mpifunc.h"
 
 #elif FALSE && defined(USE_DBG_LOGGING)
 /* XXX: if the MPICH layer debugging has been enabled, then enable the device layer debugging as well? */

@@ -43,8 +43,7 @@ noinst_HEADERS +=                   \
     src/include/mpierror.h          \
     src/include/mpierrs.h           \
     src/include/mpiext.h            \
-    src/include/mpifunclog.h        \
-    src/include/mpifuncmem.h        \
+    src/include/mpifunc.h           \
     src/include/mpihandlemem.h      \
     src/include/mpiimpl.h           \
     src/include/mpiimplthread.h     \

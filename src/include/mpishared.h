@@ -65,13 +65,8 @@
 #define MPICH_ERR_LAST_CLASS 54     /* It is also helpful to know the
 				       last valid class */
 
-/* Add support for the states and function enter/exit macros */
-/* #include "mpitimerimpl.h" */
-#if defined(MPICH_DEBUG_MEMARENA)
-#   include "mpifuncmem.h"
-#elif defined(USE_DBG_LOGGING)
-#   include "mpifunclog.h"
-#elif !defined(NEEDS_FUNC_ENTER_EXIT_DEFS)
+#include "mpifunc.h"
+#if !defined(NEEDS_FUNC_ENTER_EXIT_DEFS)
     /* If no timing choice is selected, this sets the entry/exit macros 
        to empty */
 #   include "mpitimerimpl.h"
