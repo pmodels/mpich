@@ -28,6 +28,11 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
     /* Fork off the process */
     tpid = fork();
     if (tpid == 0) {    /* Child process */
+
+#if defined HAVE_SETSID
+        setsid();
+#endif /* HAVE_SETSID */
+
         close(STDIN_FILENO);
         if (in) {
             close(inpipe[1]);

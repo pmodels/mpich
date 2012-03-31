@@ -265,7 +265,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             close(fd);
 
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
-                HYD_pmcd_pmip_kill_localprocs();
+                /* kill all processes */
+                HYD_pmcd_pmip_send_signal(SIGKILL);
             }
             else {
                 /* If the user doesn't want to automatically cleanup,
@@ -274,9 +275,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
                 /* FIXME: This code needs to change from sending the
                  * SIGUSR1 signal to a PMI-2 notification message. */
-                for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-                    if (HYD_pmcd_pmip.downstream.pid[i] != -1)
-                        kill(HYD_pmcd_pmip.downstream.pid[i], SIGUSR1);
+                HYD_pmcd_pmip_send_signal(SIGUSR1);
 
                 hdr.cmd = PROCESS_TERMINATED;
                 hdr.pid = HYD_pmcd_pmip.downstream.pmi_rank[pid];
@@ -914,7 +913,7 @@ static HYD_status procinfo(int fd)
 
 HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
-    int cmd_len, closed, i;
+    int cmd_len, closed;
     struct HYD_pmcd_hdr hdr;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     char *buf;
@@ -954,9 +953,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
     else if (hdr.cmd == SIGNAL) {
         /* FIXME: This code needs to change from sending the signal to
          * a PMI-2 notification message. */
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-            if (HYD_pmcd_pmip.downstream.pid[i] != -1)
-                kill(HYD_pmcd_pmip.downstream.pid[i], hdr.signum);
+        HYD_pmcd_pmip_send_signal(hdr.signum);
     }
     else if (hdr.cmd == STDIN) {
         int count;

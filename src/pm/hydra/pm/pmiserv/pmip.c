@@ -142,18 +142,14 @@ static void cleanup_params(void)
 
 static void signal_cb(int sig)
 {
-    int i;
-
     HYDU_FUNC_ENTER();
 
     if (sig == SIGPIPE) {
         /* Upstream socket closed; kill all processes */
-        HYD_pmcd_pmip_kill_localprocs();
+        HYD_pmcd_pmip_send_signal(SIGKILL);
     }
     else if (sig == SIGTSTP) {
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
-            if (HYD_pmcd_pmip.downstream.pid[i] != -1)
-                kill(HYD_pmcd_pmip.downstream.pid[i], sig);
+        HYD_pmcd_pmip_send_signal(sig);
     }
     /* Ignore other signals for now */
 
@@ -311,6 +307,7 @@ int main(int argc, char **argv)
     return status;
 
   fn_fail:
-    HYD_pmcd_pmip_kill_localprocs();
+    /* kill all processes */
+    HYD_pmcd_pmip_send_signal(SIGKILL);
     goto fn_exit;
 }
