@@ -5524,6 +5524,10 @@ AC_CHECK_HEADERS(unistd.h)
 AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_FUNCS(sched_yield yield usleep sleep select)
 
+if test "$ac_cv_func_usleep" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],usleep)
+fi
+
 AC_ARG_ENABLE([yield], 
     [AS_HELP_STRING([--enable-yield], [choose a method to yield the processor in busy loops.  Available methods are: sched_yield, yield, select, usleep, sleep, nothing])], 
     [AS_CASE([$enableval],

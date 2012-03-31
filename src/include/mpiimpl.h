@@ -59,6 +59,13 @@
 #include <sys/param.h>
 #endif
 
+#if defined (HAVE_USLEEP)
+#include <unistd.h>
+#if defined (NEEDS_USLEEP_DECL)
+int usleep(useconds_t usec);
+#endif
+#endif
+
 #if (!defined MAXHOSTNAMELEN) && (!defined MAX_HOSTNAME_LEN)
 #define MAX_HOSTNAME_LEN 256
 #elif !defined MAX_HOSTNAME_LEN
