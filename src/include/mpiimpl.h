@@ -185,9 +185,6 @@ static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, s
    using dbg_printf should be updated to use MPIU_DBG_PRINTF. */
 #define dbg_printf MPIU_dbg_printf
 
-/* MPIR_IDebug withdrawn because the MPIU_DBG_MSG interface provides 
-   a more flexible, integrated, and documented mechanism */
-
 /* ------------------------------------------------------------------------- */
 /* end of mpidebug.h */
 /* ------------------------------------------------------------------------- */
