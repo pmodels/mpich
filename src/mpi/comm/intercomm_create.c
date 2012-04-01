@@ -518,7 +518,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		     local_leader >= local_comm_ptr->local_size)) {
 		    MPIU_ERR_SET2(mpi_errno,MPI_ERR_RANK, 
 				  "**ranklocal", "**ranklocal %d %d", 
-				  local_leader, local_comm_ptr->local_size );
+				  local_leader, local_comm_ptr->local_size - 1 );
 		}
 		if (local_comm_ptr->rank == local_leader) {
 		    MPIR_ERRTEST_COMM(peer_comm, mpi_errno);
@@ -550,7 +550,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		     remote_leader >= peer_comm_ptr->remote_size)) {
 		    MPIU_ERR_SET2(mpi_errno,MPI_ERR_RANK, 
 				  "**rankremote", "**rankremote %d %d", 
-				  remote_leader, peer_comm_ptr->remote_size );
+				  remote_leader, peer_comm_ptr->remote_size - 1 );
 		}
 		/* Check that the local leader and the remote leader are 
 		   different processes.  This test requires looking at
