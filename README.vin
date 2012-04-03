@@ -685,7 +685,11 @@ Language bindings:
 
 Shared library support:
 
-  --enable-shared - Enable shared library support.
+  --enable-shared - Enable shared library support.  Note that "rpath"
+                    linking is used by default in stock MPICH2
+                    distributions.  Re-running ./autogen.sh with a
+                    patched libtool can eliminate rpath usage.  See
+                    http://wiki.debian.org/RpathIssue for more info.
 
 Cross compilation:
 
