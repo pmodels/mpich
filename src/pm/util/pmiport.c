@@ -299,8 +299,8 @@ int PMIServAcceptFromPort( int fd, int rdwr, void *data )
 /*
  * Setup a port and register the handler on which to listen.
  * Input Parameter:
- *   pUniv - Pointer to a process universe.  This is passed to the
- *           routine that is called to handle connection requests to the port
+ *   mypUniv - Pointer to a process universe.  This is passed to the
+ *             routine that is called to handle connection requests to the port
  *
  * Output Parameter:
  *   portString - Name of the port (of maximum size portLen)
@@ -312,19 +312,19 @@ int PMIServAcceptFromPort( int fd, int rdwr, void *data )
  * The listenfd is global to simplify closing it once all processes have 
  * exited.
  */
-int PMIServSetupPort( ProcessUniverse *pUniv, char *portString, int portLen )
+int PMIServSetupPort( ProcessUniverse *mypUniv, char *portString, int portLen )
 {
     int rc = 0;
     
     rc = PMIServGetPort( &listenfd, portString, portLen );
     if (rc) return rc;
-    rc = MPIE_IORegister( listenfd, IO_READ, PMIServAcceptFromPort, pUniv );
-    if (pUniv->OnNone) {
+    rc = MPIE_IORegister( listenfd, IO_READ, PMIServAcceptFromPort, mypUniv );
+    if (mypUniv->OnNone) {
 	MPIU_Internal_error_printf( "pUniv.OnNone already set; cannot set to PMIServEndPort\n" );
 	return -1;
     }
     else {
-	pUniv->OnNone = PMIServEndPort;
+	mypUniv->OnNone = PMIServEndPort;
     }
     return rc;
 }

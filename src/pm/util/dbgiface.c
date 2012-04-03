@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include "mpibase.h"
 #include "process.h"
+#include "pmiserv.h" /* for MPIE_GetMyHostName */
 
 #ifndef MAX_HOST_NAME
 #define MAX_HOST_NAME 1024
@@ -157,4 +158,3 @@ int MPIE_PrintDebuggerInfo( FILE *fp )
     fflush( fp );
     return 0;
 }
-

@@ -69,7 +69,7 @@ static int ReadConfigFile( const char *, ProcessUniverse * );
 -   extraData - Pointer passed to 'ProcessArg' routine
 
     Output Parameter:
-.   pUniv - The elements of the 'ProcessUniverse' structure are filled in.
+.   mypUniv - The elements of the 'ProcessUniverse' structure are filled in.
 
     Notes:
     This routine may be called to parse the arguments for an implementation of
@@ -99,7 +99,7 @@ static int ReadConfigFile( const char *, ProcessUniverse * );
   The routine 'mpiexec_usage' may be called to provide usage information 
   if this routine detects an erroneous argument specification.
  @*/
-int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv, 
+int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv, 
 		 int (*ProcessArg)( int, char *[], void *), void *extraData )
 {
     int         i;
@@ -123,15 +123,15 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
        override the environment */
 
     /* Allocate the members of the ProcessUniverse structure */
-    pUniv->worlds = (ProcessWorld*) MPIU_Malloc( sizeof(ProcessWorld) );
-    pUniv->worlds->nApps     = 0;
-    pUniv->worlds->nProcess  = 0;
-    pUniv->worlds->nextWorld = 0;
-    pUniv->worlds->worldNum  = 0;
-    pUniv->worlds->genv      = 0;
-    pUniv->nWorlds           = 1;
-    pUniv->giveExitInfo      = 0;
-    nextAppPtr = &(pUniv->worlds->apps); /* Pointer to set with the next app */
+    mypUniv->worlds = (ProcessWorld*) MPIU_Malloc( sizeof(ProcessWorld) );
+    mypUniv->worlds->nApps     = 0;
+    mypUniv->worlds->nProcess  = 0;
+    mypUniv->worlds->nextWorld = 0;
+    mypUniv->worlds->worldNum  = 0;
+    mypUniv->worlds->genv      = 0;
+    mypUniv->nWorlds           = 1;
+    mypUniv->giveExitInfo      = 0;
+    nextAppPtr = &(mypUniv->worlds->apps); /* Pointer to set with the next app */
 
     for (i=1; i<argc; i++) {
 	if ( strncmp( argv[i], "-n",  strlen( argv[i] ) ) == 0 ||
@@ -179,7 +179,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 	else if ( strncmp( argv[i], "-configfile", 12 ) == 0) {
 	    if ( i+1 < argc ) {
 		/* Ignore the other command line arguments */
-		ReadConfigFile( argv[++i], pUniv );
+		ReadConfigFile( argv[++i], mypUniv );
 	    }
 	    else
 		mpiexec_usage( "Missing argument to -configfile" );
@@ -188,11 +188,11 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 /* Here begins the MPICH2 mpiexec extension for singleton init */	
  	else if ( strncmp( argv[i], "-pmi_args", 8 ) == 0) {
 	    if (i+4 < argc ) {
-		pUniv->fromSingleton   = 1;
-		pUniv->portKey         = MPIU_Strdup( argv[i+3] );
-		pUniv->singletonIfname = MPIU_Strdup( argv[i+2] );
-		pUniv->singletonPID    = atoi(argv[i+4] );
-		pUniv->singletonPort   = atoi(argv[i+1] );
+		mypUniv->fromSingleton   = 1;
+		mypUniv->portKey         = MPIU_Strdup( argv[i+3] );
+		mypUniv->singletonIfname = MPIU_Strdup( argv[i+2] );
+		mypUniv->singletonPID    = atoi(argv[i+4] );
+		mypUniv->singletonPort   = atoi(argv[i+1] );
 		i += 4;
 	    }
 	    else 
@@ -218,7 +218,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 		 specific mpiexec. 
 */
 	else if (strcmp( argv[i], "-usize" ) == 0) {
-	    pUniv->size = getInt( i+1, argc, argv );
+	    mypUniv->size = getInt( i+1, argc, argv );
 	    optionArgs = 1;
 	    i++;
 	}
@@ -227,12 +227,12 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 	    optionArgs = 1;
 	}
 	else if (strcmp( argv[i], "-maxtime" ) == 0) {
-	    pUniv->timeout = getInt( i+1, argc, argv );
+	    mypUniv->timeout = getInt( i+1, argc, argv );
 	    optionArgs = 1;
 	    i++;
 	}
 	else if (strcmp( argv[i], "-exitinfo" ) == 0) {
-	    pUniv->giveExitInfo = 1;
+	    mypUniv->giveExitInfo = 1;
 	    optionArgs = 1;
 	}
 	else if ( strncmp( argv[i], "-stdoutbuf=",  11) == 0) {
@@ -248,7 +248,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 	    char envstring[256];
 	    MPIU_Snprintf( envstring, sizeof(envstring), "MPICH_CH3CHANNEL=%s",
 			   channame );
-	    MPIE_Putenv( pUniv->worlds, envstring );
+	    MPIE_Putenv( mypUniv->worlds, envstring );
 	}
 /* End of the MPICH2 mpiexec common extentions */
 
@@ -277,8 +277,8 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 	    *nextAppPtr = pApp;
 	    nextAppPtr = &(pApp->nextApp);
 	    pApp->nextApp = 0;
-	    pUniv->worlds[0].nApps++;
-	    pApp->pWorld = &pUniv->worlds[0];
+	    mypUniv->worlds[0].nApps++;
+	    pApp->pWorld = &mypUniv->worlds[0];
 	    if (appEnv) {
 		/* Initialize the env items */
 		MPIE_EnvInitData( appEnv->envPairs, 0 );
@@ -317,7 +317,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 		pApp->nProcess    = np;
 		pApp->soft.nelm   = 0;
 		pApp->soft.tuples = 0;
-		pUniv->worlds[0].nProcess += np;
+		mypUniv->worlds[0].nProcess += np;
 	    }
 	    pApp->myAppNum = appnum++;
 
@@ -330,7 +330,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
 	    int incr = 0;
 	    /* Unrecognized argument.  First check for environment variable 
 	       controls */
-	    incr = MPIE_ArgsCheckForEnv( argc-i, &argv[i], &pUniv->worlds[0], 
+	    incr = MPIE_ArgsCheckForEnv( argc-i, &argv[i], &mypUniv->worlds[0], 
 					 &appEnv );
 	    if (incr == 0) {
 		/* Use the callback routine to handle any unknown arguments
@@ -354,9 +354,9 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
     }
 
     /* Initialize the genv items */
-    if (pUniv->worlds->genv) {
-	MPIE_EnvInitData( pUniv->worlds->genv->envPairs, 0 );
-	MPIE_EnvInitData( pUniv->worlds->genv->envNames, 1 );
+    if (mypUniv->worlds->genv) {
+	MPIE_EnvInitData( mypUniv->worlds->genv->envPairs, 0 );
+	MPIE_EnvInitData( mypUniv->worlds->genv->envNames, 1 );
     }
 
     if (optionArgs && optionCmdline) {
@@ -370,12 +370,12 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *pUniv,
   MPIE_CheckEnv - Check the environment for parameters and default values
 
   Output Parameter:
-. pUniv - Process universe structure; some fields are set (see notes)
+. mypUniv - Process universe structure; some fields are set (see notes)
 
   Notes:
 
   @*/
-int MPIE_CheckEnv( ProcessUniverse *pUniv, 
+int MPIE_CheckEnv( ProcessUniverse *mypUniv, 
 		   int (*processEnv)( ProcessUniverse *, void * ), 
 		   void *extraData )
 {
@@ -383,9 +383,9 @@ int MPIE_CheckEnv( ProcessUniverse *pUniv,
     const char *s;
 
     /* A negative universe size is none set */
-    pUniv->size    = GetIntValue( "MPIEXEC_UNIVERSE_SIZE", -1 );
+    mypUniv->size    = GetIntValue( "MPIEXEC_UNIVERSE_SIZE", -1 );
     /* A negative timeout is infinite */
-    pUniv->timeout = GetIntValue( "MPIEXEC_TIMEOUT", -1 );
+    mypUniv->timeout = GetIntValue( "MPIEXEC_TIMEOUT", -1 );
 
     if (getenv( "MPIEXEC_DEBUG" )) {
 	/* Any value of MPIEXEC_DEBUG turns on debugging */
@@ -413,7 +413,7 @@ int MPIE_CheckEnv( ProcessUniverse *pUniv,
     }
 
     if (processEnv) {
-	rc = (*processEnv)( pUniv, extraData );
+	rc = (*processEnv)( mypUniv, extraData );
     }
 
     return rc;
@@ -442,14 +442,14 @@ const char *MPIE_ArgDescription( void )
     
     Input Parameters:
 +   fp - File for output
--   pUniv - Process Univers
+-   mypUniv - Process Univers
  @*/
-void MPIE_PrintProcessUniverse( FILE *fp, ProcessUniverse *pUniv )
+void MPIE_PrintProcessUniverse( FILE *fp, ProcessUniverse *mypUniv )
 {
     ProcessWorld    *pWorld;
     int              nWorld = 0;
 
-    pWorld = pUniv->worlds;
+    pWorld = mypUniv->worlds;
     while (pWorld) {
 	fprintf(fp,"Apps for world %d\n", nWorld );
 	MPIE_PrintProcessWorld( fp, pWorld );
@@ -646,7 +646,7 @@ int MPIE_ParseSoftspec( const char *str, ProcessSoftSpec *sspec )
 #define MAXARGV    256
 static int LineToArgv( char *buf, char *(argv[]), int maxargc );
 
-static int ReadConfigFile( const char *filename, ProcessUniverse *pUniv)
+static int ReadConfigFile( const char *filename, ProcessUniverse *mypUniv)
 {
     FILE *fp = 0;
     int curplist = 0;
@@ -670,7 +670,7 @@ static int ReadConfigFile( const char *filename, ProcessUniverse *pUniv)
 	   command line (this allows slightly more than the standard
 	   requires for configfile, but the extension (allowing :)
 	   is not prohibited by the standard */
-	newplist = MPIE_Args( argc, argv, pUniv, 0, 0 );
+	newplist = MPIE_Args( argc, argv, mypUniv, 0, 0 );
 	if (newplist > 0) 
 	    curplist += newplist;
 	else 

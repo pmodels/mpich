@@ -597,7 +597,7 @@ void MPIE_ProcessInit( void )
  * the signal handler in charge avoids race conditions and possible loss
  * of information).
  */
-int MPIE_WaitForProcesses( ProcessUniverse *pUniv, int timeout )
+int MPIE_WaitForProcesses( ProcessUniverse *mypUniv, int timeout )
 {
     ProcessWorld *world;
     ProcessApp   *app;
@@ -609,7 +609,7 @@ int MPIE_WaitForProcesses( ProcessUniverse *pUniv, int timeout )
     TimeoutInit( timeout );
     nactive = 0;
     do {
-	world = pUniv->worlds;
+	world = mypUniv->worlds;
 	while (world) {
 	    app = world->apps;
 	    while (app) {
@@ -828,11 +828,11 @@ int MPIE_KillWorld( ProcessWorld *world )
 /*@
   MPIE_KillUniverse - Kill all of the processes in a universe
   @*/
-int MPIE_KillUniverse( ProcessUniverse *pUniv )
+int MPIE_KillUniverse( ProcessUniverse *mypUniv )
 {
     ProcessWorld *world;
 
-    world = pUniv->worlds;
+    world = mypUniv->worlds;
     while (world) {
 	MPIE_KillWorld( world );
 	world = world->nextWorld;
@@ -984,13 +984,13 @@ void MPIE_IgnoreSigPipe( void )
  * 
  * Note that MPIE_Args already allocated a pWorld.
  */
-int MPIE_SetupSingleton( ProcessUniverse *pUniv )
+int MPIE_SetupSingleton( ProcessUniverse *mypUniv )
 {
     ProcessApp   *pApp;
     ProcessWorld *pWorld;
     ProcessState *pState;
 
-    pWorld		  = &pUniv->worlds[0];
+    pWorld		  = &mypUniv->worlds[0];
     pWorld->nProcess      = 1;
     pApp		  = (ProcessApp *) MPIU_Malloc( sizeof(ProcessApp) );
     pApp->nextApp	  = 0;
@@ -1014,7 +1014,7 @@ int MPIE_SetupSingleton( ProcessUniverse *pUniv )
     pState[0].id	  = UniqId++;
     pState[0].initWithEnv = 0;
     pState[0].status	  = PROCESS_ALIVE;  /* The process is already running */
-    pState[0].pid	  = pUniv->singletonPID;
+    pState[0].pid	  = mypUniv->singletonPID;
     pState[0].exitStatus.exitReason = EXIT_NOTYET;
 
     return 0;
