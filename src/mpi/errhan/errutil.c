@@ -156,6 +156,7 @@ void MPIR_Errhandler_set_fc( MPI_Errhandler errhand )
 /* ------------------------------------------------------------------------- */
 /* Special error handler to call if we are not yet initialized, or if we
    have finalized */
+/* --BEGIN ERROR HANDLING-- */
 void MPIR_Err_preOrPostInit( void )
 {
     if (MPIR_Process.initialized == MPICH_PRE_INIT) {
@@ -169,6 +170,7 @@ void MPIR_Err_preOrPostInit( void )
     }
     exit(1);
 }
+/* --END ERROR HANDLING-- */
 
 /* Return true if the error code indicates a fatal error */
 int MPIR_Err_is_fatal(int errcode)
@@ -396,6 +398,7 @@ static int checkValidErrcode( int error_class, const char fcname[],
 
     if (error_class > MPICH_ERR_LAST_CLASS)
     {
+	/* --BEGIN ERROR HANDLING-- */
 	if (errcode & ~ERROR_CLASS_MASK)
 	{
 	    MPIU_Error_printf("INTERNAL ERROR: Invalid error class (%d) encountered while returning from\n"
@@ -415,6 +418,7 @@ static int checkValidErrcode( int error_class, const char fcname[],
 	   and discard the rest of the bits */
 	errcode = (errcode & ~ERROR_CLASS_MASK) | MPI_ERR_UNKNOWN;
 	rc = 1;
+	/* --END ERROR HANDLING-- */
     }
     *errcode_p = errcode;
     return rc;
@@ -627,7 +631,9 @@ static const char *get_class_msg( int error_class )
 #endif
     }
     else {
+	/* --BEGIN ERROR HANDLING-- */
 	return "Unknown error class";
+	/* --END ERROR HANDLING-- */
     }
 #else 
     /* FIXME: Not internationalized */
@@ -885,6 +891,8 @@ static int checkErrcodeIsValid( int errcode )
     if (generic_idx < -1 || generic_idx > generic_msgs_len) return 3;
     return 0;
 }
+
+/* --BEGIN ERROR HANDLING-- */
 static const char *ErrcodeInvalidReasonStr( int reason )
 {
     const char *str = 0;
@@ -904,6 +912,8 @@ static const char *ErrcodeInvalidReasonStr( int reason )
     }
     return str;
 }
+/* --END ERROR HANDLING-- */
+
 /* Check to see if the error code is a user-specified error code
    (e.g., from the attribute delete function) and if so, set the error code
    to the value provide by the user */
@@ -918,9 +928,11 @@ static int checkForUserErrcode( int errcode )
 	    
 	    if (convertErrcodeToIndexes( errcode, &ring_idx, &ring_id,
 					 &generic_idx ) != 0) {
+		/* --BEGIN ERROR HANDLING-- */
 		MPIU_Error_printf( 
 		  "Invalid error code (%d) (error ring index %d invalid)\n", 
 		  errcode, ring_idx );
+		/* --END ERROR HANDLING-- */
 	    }
 	    else {
 		/* Can we get a more specific error message */
@@ -1537,10 +1549,12 @@ int MPIR_Err_create_code_valist( int lastcode, int fatal, const char fcname[],
 	int reason;
 	reason = checkErrcodeIsValid(lastcode);
 	if (reason) {
+	    /* --BEGIN ERROR HANDLING-- */
 	    MPIU_Error_printf( "Internal Error: invalid error code %x (%s) in %s:%d\n", 
 			       lastcode, ErrcodeInvalidReasonStr( reason ), 
 			       fcname, line );
 	    lastcode = MPI_SUCCESS;
+	    /* --END ERROR HANDLING-- */
 	}
     }
 
@@ -1693,9 +1707,11 @@ int MPIR_Err_create_code_valist( int lastcode, int fatal, const char fcname[],
 		if (convertErrcodeToIndexes( lastcode, &last_ring_idx, 
 					     &last_ring_id,
 					     &last_generic_idx ) != 0) {
+		    /* --BEGIN ERROR HANDLING-- */
 		    MPIU_Error_printf( 
 		  "Invalid error code (%d) (error ring index %d invalid)\n", 
 		  lastcode, last_ring_idx );
+		    /* --END ERROR HANDLING-- */
 		}
 		else {
 		    if (last_generic_idx >= 0 && 
@@ -1818,10 +1834,12 @@ void MPIR_Err_print_stack(FILE * fp, int errcode)
 	    
 	    if (convertErrcodeToIndexes( errcode, &ring_idx, &ring_id,
 					 &generic_idx ) != 0) {
+		/* --BEGIN ERROR HANDLING-- */
 		MPIU_Error_printf( 
 		    "Invalid error code (%d) (error ring index %d invalid)\n", 
 		    errcode, ring_idx );
 		break;
+		/* --END ERROR HANDLING-- */
 	    }
 	    
 	    if (generic_idx < 0)
@@ -1904,10 +1922,12 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
 	    
 	    if (convertErrcodeToIndexes( tmp_errcode, &ring_idx, &ring_id,
 					 &generic_idx ) != 0) {
+		/* --BEGIN ERROR HANDLING-- */
 		MPIU_Error_printf( 
 		    "Invalid error code (%d) (error ring index %d invalid)\n", 
 		    errcode, ring_idx );
 		break;
+		/* --END ERROR HANDLING-- */
 	    }
 
 	    if (generic_idx < 0) {
@@ -1935,9 +1955,11 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
 	    
 	    if (convertErrcodeToIndexes( errcode, &ring_idx, &ring_id,
 					 &generic_idx ) != 0) {
+		/* --BEGIN ERROR HANDLING-- */
 		MPIU_Error_printf( 
 		    "Invalid error code (%d) (error ring index %d invalid)\n", 
 		    errcode, ring_idx );
+		/* --END ERROR HANDLING-- */
 	    }
 	    
 	    if (generic_idx < 0)
@@ -2111,10 +2133,12 @@ static int ErrGetInstanceString( int errorcode, char *msg, int num_remaining )
 		if (convertErrcodeToIndexes( errorcode, &ring_idx, 
 					     &ring_id,
 					     &generic_idx ) != 0) {
+		    /* --BEGIN ERROR HANDLING-- */
 		    MPIU_Error_printf( 
 	      "Invalid error code (%d) (error ring index %d invalid)\n", 
 	      errorcode, ring_idx );
 		    break;
+		    /* --END ERROR HANDLING-- */
 		}
 		
 		if (generic_idx < 0) {
