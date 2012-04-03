@@ -281,7 +281,7 @@ int        is_collective;
 #endif
 
   if (0 == myid) {
-    successful = !XBQuickWindow( new->xwin, display, "MPE", x, y, w, h );
+    successful = !XBQuickWindow( new->xwin, display, (char *)"MPE", x, y, w, h );
     /* ALWAYS send the local host */
     if (successful) {
 
@@ -1137,9 +1137,7 @@ MPE_Color *mapping;
 
 
 
-int MPE_Xerror( returnVal, functionName )
-int returnVal;
-char *functionName;
+int MPE_Xerror( int returnVal, const char *functionName )
 {
   if (returnVal) {
     switch (returnVal) {

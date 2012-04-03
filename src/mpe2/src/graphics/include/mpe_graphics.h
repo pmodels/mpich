@@ -167,7 +167,7 @@ extern int MPE_Dash_offset ( MPE_XGraph, int );
 
 extern int MPE_Add_RGB_color ( MPE_XGraph, int, int, int, MPE_Color * );
 
-extern int MPE_Xerror ( int, char * );
+extern int MPE_Xerror ( int, const char * );
 
 /* xmouse */
 extern int MPE_Get_mouse_press ( MPE_XGraph, int *, int *, int * );

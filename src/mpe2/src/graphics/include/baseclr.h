@@ -25,10 +25,11 @@
 
 /* Had a "ifndef lint around this, but that is wrong for using gcc with
    string checking and -Dlint to remove the "vcid" not used */
-static char *(colornames[]) = { "white", "black", "red", "yellow", "green", 
-			      "cyan", "blue", "magenta", "aquamarine",
-			      "forestgreen", "orange", "marroon", "brown",
-			      "pink", "coral", "gray" };
+static const char *(colornames[]) = { "white", "black", "red", "yellow", 
+				      "green", "cyan", "blue", "magenta", 
+				      "aquamarine", "forestgreen", "orange", 
+				      "marroon", "brown", "pink", "coral", 
+				      "gray" };
 
 /*I "xtools/baseclr.h" I*/
 

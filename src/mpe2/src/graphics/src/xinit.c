@@ -35,15 +35,13 @@
 
 
 static void ArgSqueeze ( int *, char ** );
-static int ArgFindName ( int, char **, char * );
-static int ArgGetString ( int *, char **, int, char *, char *, int );
+static int ArgFindName ( int, char **, const char * );
+static int ArgGetString ( int *, char **, int, const char *, char *, int );
 /*
    ArgSqueeze - Remove all null arguments from an arg vector; 
    update the number of arguments.
 */
-static void ArgSqueeze( Argc, argv )
-int  *Argc;
-char **argv;
+static void ArgSqueeze( int *Argc, char **argv )
 {
     int argc, i, j;
     
@@ -72,10 +70,7 @@ char **argv;
    Returns:
    index in argv of name; -1 if name is not in argv
 */
-static int ArgFindName( argc, argv, name )
-int  argc;
-char **argv;
-char *name;
+static int ArgFindName( int argc, char **argv, const char *name )
 {
     int  i;
 
@@ -99,9 +94,8 @@ char *name;
   Returns:
   1 on success
 */
-static int ArgGetString( Argc, argv, rflag, name, val, vallen )
-int  *Argc, rflag, vallen;
-char **argv, *name, *val;
+static int ArgGetString( int *Argc, char **argv, int rflag, const char *name, 
+			 char *val, int vallen )
 {
     int idx;
 
@@ -127,7 +121,7 @@ char **argv, *name, *val;
   XBWinCreate - Create an XBWin structure that can be used by all other XB
   routines
   */
-XBWindow *XBWinCreate()
+XBWindow *XBWinCreate(void)
 {
     XBWindow *w;
 
@@ -159,8 +153,7 @@ XBWindow *XBWinCreate()
   Input parameter:
 . w  - XB window structure to destroy.  
 */
-void XBWinDestroy( w )
-XBWindow *w;
+void XBWinDestroy( XBWindow *w )
 {
 /* Should try to recover X resources ... */
 /* Needs to close window ! */
@@ -176,9 +169,7 @@ XBWindow *w;
   XBWin        - pointer to base window structure
   display_name - either null ("") or of the form "host:0"
   */
-int XBOpenDisplay( XBWin, display_name )
-XBWindow *XBWin;
-char     *display_name;
+int XBOpenDisplay( XBWindow *XBWin, char *display_name )
 {
     int i;
     if (display_name && display_name[0] == 0)
@@ -292,8 +283,7 @@ return 0;
     other tools and applications.  In particular, it needs to know
     whether to use the default visual or another window's colormap.
   */
-int XBOpenWindow( XBWin )
-XBWindow *XBWin;
+int XBOpenWindow( XBWindow *XBWin )
 {
 return 0;
 }
