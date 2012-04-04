@@ -24,7 +24,7 @@
 /* style: allow:fprintf:8 sig:0 */
 /* style: allow:printf:15 sig:0 */
 
-int showQueues(void);
+int showQueues( int, int );
 int init_dbr(void);
 
 int main( int argc, char *argv[] )
@@ -54,7 +54,7 @@ int main( int argc, char *argv[] )
 
     /* Access the queues */
     printf( "Should see pending recv with tag 17, 19 on dupworld and send with tag 18 on world\n" );
-    showQueues();
+    showQueues( 3, 3 );
     MPI_Barrier( MPI_COMM_WORLD );
 
     /* Match up some of the messages */
@@ -67,14 +67,14 @@ int main( int argc, char *argv[] )
     /* Access the queues again */
     printf( "\nAfter a few send/receives\n" );
     printf( "Should see recv with tag 19 on dupworld\n" );
-    showQueues();
+    showQueues( 3, 1 );
 
     MPI_Barrier( MPI_COMM_WORLD );
     MPI_Send( &sbuf, 1, MPI_INT, (wrank + wsize - 1) % wsize, 19, dupworld );
 
     /* Access the queues again */
     printf( "\nAfter a few send/receives\n" );
-    showQueues();
+    showQueues( 3, 2 );
 
     /* Shut down */
 
@@ -177,11 +177,12 @@ int init_dbr( void )
     return 0;
 }
 
-int showQueues( void )
+int showQueues( int nComm, int expected )
 {
     mqs_communicator comm;
     mqs_pending_operation op;
     int rc;
+    int nFound = 0, nCommFound = 0;
 
     /* Get a stable copy of the active communicators */
     mqs_update_communicator_list( &process );
@@ -189,6 +190,7 @@ int showQueues( void )
     mqs_setup_communicator_iterator( &process );
     while (mqs_get_communicator( &process, &comm ) == mqs_ok) {
 	printf( "Communicator %s\n", comm.name );
+	nCommFound++;
 	rc = mqs_setup_operation_iterator( &process, mqs_pending_receives );
 	if (rc == mqs_ok) {
 	    printf( "Pending receives for communicator %s\n", comm.name );
@@ -196,6 +198,7 @@ int showQueues( void )
 		printf( "tag = %d, rank = %d, length = %d\n",
 			(int)op.desired_tag, (int)op.desired_local_rank, 
 			(int)op.desired_length );
+		nFound++;
 	    }
 	}
 	else if (rc == mqs_end_of_list) {
@@ -218,6 +221,7 @@ int showQueues( void )
 		printf( "tag = %d, rank = %d, length = %d\n",
 			(int)op.desired_tag, (int)op.desired_local_rank, 
 			(int)op.desired_length );
+		nFound++;
 	    }
 	}
 	else if (rc == mqs_end_of_list) {
@@ -240,6 +244,7 @@ int showQueues( void )
 		printf( "tag = %d, rank = %d, length = %d\n",
 			(int)op.desired_tag, (int)op.desired_local_rank, 
 			(int)op.desired_length );
+		nFound++;
 	    }
 	}
 	else if (rc == mqs_end_of_list) {
@@ -257,6 +262,15 @@ int showQueues( void )
 
 	mqs_next_communicator( &process );
     }
+
+    if (nFound < expected) {
+	fprintf( stderr, "Error: expected to find %d queue entries but only saw %d\n", expected, nFound );
+    }
+    if (nCommFound < nComm) {
+	fprintf( stderr, "Error: expected to find %d comms but only saw %d\n",
+		 nComm, nCommFound );
+    }
+	
     fflush(stdout); fflush(stderr);
     return 0;
 }
