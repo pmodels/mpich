@@ -472,7 +472,7 @@ do {                                                   \
     do {err_ = MPIR_Err_create_code( err_,MPIR_ERR_FATAL,FCNAME,\
 	    __LINE__, class_, gmsg_, smsg_, arg1_, arg2_, arg3_, arg4_ ); stmt_ ;} while (0)
 #define MPIU_ERR_ADD(err_, newerr_) \
-    do {(err_) = MPIR_Err_combine_codes((newerr_), (err_));} while (0)
+    do {(err_) = MPIR_Err_combine_codes((err_), (newerr_));} while (0)
 #else
 /* Simply set the class, being careful not to override a previously
    set class. */

@@ -588,12 +588,15 @@ int MPIR_Err_combine_codes(int error1, int error2)
     int error1_code = error1;
     int error2_code = error2;
     int error2_class;
-    
-    if (error2_code == MPI_SUCCESS) return error1_code;
-    /* Return the error2 code if either it is a user-defined error or
-       error 1 is no-error */
-    if (error2_code & ERROR_DYN_MASK) return error2_code;
+
+    /* If either error code is success, return the other */
     if (error1_code == MPI_SUCCESS) return error2_code;
+    if (error2_code == MPI_SUCCESS) return error1_code;
+
+    /* If an error code is dynamic, return that.  If both are, we choose
+       error1. */
+    if (error1_code & ERROR_DYN_MASK) return error1_code;
+    if (error2_code & ERROR_DYN_MASK) return error2_code;
 	    
     error2_class = MPIR_ERR_GET_CLASS(error2_code);
     if (MPIR_ERR_GET_CLASS(error2_class) < MPI_SUCCESS ||
@@ -1768,10 +1771,15 @@ int MPIR_Err_combine_codes(int error1, int error2)
     int error2_code = error2;
     int error2_class;
     
-    if (error2_code == MPI_SUCCESS) return error1_code;
-    if (error2_code & ERROR_DYN_MASK) return error2_code;
+    /* If either error code is success, return the other */
     if (error1_code == MPI_SUCCESS) return error2_code;
-	    
+    if (error2_code == MPI_SUCCESS) return error1_code;
+
+    /* If an error code is dynamic, return that.  If both are, we choose
+       error1. */
+    if (error1_code & ERROR_DYN_MASK) return error1_code;
+    if (error2_code & ERROR_DYN_MASK) return error2_code;
+
     error2_class = MPIR_ERR_GET_CLASS(error2_code);
     if (MPIR_ERR_GET_CLASS(error2_class) < MPI_SUCCESS ||
 	MPIR_ERR_GET_CLASS(error2_class) > MPICH_ERR_LAST_CLASS)
