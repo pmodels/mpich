@@ -460,11 +460,6 @@ fi
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to
 dnl override the default name of the library that the debugger will
 dnl load to access the MPICH2 internal data structures.
-AC_ARG_ENABLE(nmpi-as-mpi,
-	AC_HELP_STRING([--enable-nmpi-as-mpi], [Use MPI rather than PMPI routines for MPI
-                       routines, such as the collectives, that may be
-                       implemented in terms of other MPI routines]),,
-	enable_nmpi_as_mpi=no)
 
 dnl "default" is a special device that allows MPICH to choose one
 dnl based on the environment.
