@@ -563,6 +563,19 @@ AC_ARG_ENABLE(weak-symbols,
 			[Use weak symbols to implement PMPI routines (default)]),,
 		enable_weak_symbols=yes)
 
+AC_ARG_ENABLE([two-level-namespace],
+              [AS_HELP_STRING([--enable-two-level-namespace],
+                              [(Darwin only) Build shared libraries and programs
+                               built with the mpicc/mpif77/etc. compiler
+                               wrappers with '-Wl,-commons,use_dylibs' and
+                               without '-Wl,-flat_namespace'.  This may make the
+                               MPICH2 installation and MPI programs more
+                               compatible with other libraries.  Only enable
+                               this option if you really know what these linker
+                               options imply.])],
+              [],
+              [enable_two_level_namespace=no])
+
 AC_ARG_ENABLE(multi-aliases,
 	AC_HELP_STRING([--enable-multi-aliases],
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
@@ -5951,33 +5964,65 @@ fi
 # linking issue on Darwin
 LT_OUTPUT
 
-if test "X$enable_f77" = "Xyes" -a "X$enable_shared" = "Xyes" ; then
+# see ticket #1590 for some more background on these Darwin linking issues
+if test "X$enable_shared" = "Xyes" ; then
     AS_CASE([$host],
         [*-*-darwin*],
         [
-         # TODO, move this into a PAC macro with real autoconf caching
-         pac_cv_wl_commons_use_dylibs_works=no
-         AC_MSG_CHECKING([if the F77 compiler accepts -Wl,-commons,use_dylibs])
-         AC_LANG_PUSH([Fortran 77])
-         PAC_PUSH_FLAG([LDFLAGS])
-         PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [LDFLAGS])
-         AC_LINK_IFELSE([AC_LANG_PROGRAM([],[      INTEGER i])],
-                        [AC_MSG_RESULT([yes])
-                         pac_cv_wl_commons_use_dylibs_works=yes],
-                        [AC_MSG_RESULT([no])])
-         PAC_POP_FLAG([LDFLAGS])
-         AC_LANG_POP([Fortran 77])
+        # sanity check that -Wl,-flat_namespace works on darwin, unless the user
+        # asked us not to add it
+        if test "X$enable_two_level_namespace" = "Xno"; then
+            # TODO, move this into a PAC macro with real autoconf caching
+            pac_cv_wl_flat_namespace_works=no
+            AC_MSG_CHECKING([if the C compiler accepts -Wl,-flat_namespace])
+            PAC_PUSH_FLAG([LDFLAGS])
+            PAC_APPEND_FLAG([-Wl,-flat_namespace],[LDFLAGS])
+            AC_LINK_IFELSE([AC_LANG_PROGRAM([],[int i;])],
+                           [AC_MSG_RESULT([yes])
+                            pac_cv_wl_flat_namespace_works=yes],
+                           [AC_MSG_RESULT([no])])
+            PAC_POP_FLAG([LDFLAGS])
 
-         # Add the flag to the WRAPPER_LDFLAGS, since this common block issue
-         # is really only a problem for dynamically linked user programs.
-         #
-         # Technically we may not be able to use the same form of the argument
-         # for all four compilers (CC/CXX/F77/FC).  But we only think this is
-         # necessary for Darwin for now, so this unconditional, single-var
-         # approximation will work for now.
-         if test "X$pac_cv_wl_commons_use_dylibs_works" = "Xyes" ; then
-             PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [WRAPPER_LDFLAGS])
-         fi
+            # Technically we may not be able to use the same form of the argument
+            # for all four compilers (CC/CXX/F77/FC).  But we only think this is
+            # necessary for Darwin for now, so this unconditional, single-var
+            # approximation will work for now.
+            if test "X$pac_cv_wl_flat_namespace_works" = "Xyes" ; then
+                PAC_APPEND_FLAG([-Wl,-flat_namespace], [LDFLAGS])
+                PAC_APPEND_FLAG([-Wl,-flat_namespace], [WRAPPER_LDFLAGS])
+            fi
+        fi
+
+        # We only need to bother with -Wl,-commons,-use_dylibs if we are
+        # building fortran bindings (no common block usage in our C libs).
+        if test "X$enable_f77" = "Xyes" ; then
+            # We also don't need this argument if flat_namespace is used.
+            if test "X$enable_two_level_namespace" != "Xno" ; then
+                # TODO, move this into a PAC macro with real autoconf caching
+                pac_cv_wl_commons_use_dylibs_works=no
+                AC_MSG_CHECKING([if the F77 compiler accepts -Wl,-commons,use_dylibs])
+                AC_LANG_PUSH([Fortran 77])
+                PAC_PUSH_FLAG([LDFLAGS])
+                PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [LDFLAGS])
+                AC_LINK_IFELSE([AC_LANG_PROGRAM([],[      INTEGER i])],
+                               [AC_MSG_RESULT([yes])
+                                pac_cv_wl_commons_use_dylibs_works=yes],
+                               [AC_MSG_RESULT([no])])
+                PAC_POP_FLAG([LDFLAGS])
+                AC_LANG_POP([Fortran 77])
+
+                # Add the flag to the WRAPPER_LDFLAGS, since this common block issue
+                # is really only a problem for dynamically linked user programs.
+                #
+                # Technically we may not be able to use the same form of the argument
+                # for all four compilers (CC/CXX/F77/FC).  But we only think this is
+                # necessary for Darwin for now, so this unconditional, single-var
+                # approximation will work for now.
+                if test "X$pac_cv_wl_commons_use_dylibs_works" = "Xyes" ; then
+                    PAC_APPEND_FLAG([-Wl,-commons,use_dylibs], [WRAPPER_LDFLAGS])
+                fi
+            fi
+        fi
         ]
     )
 fi
