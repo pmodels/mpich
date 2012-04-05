@@ -13,6 +13,9 @@ bin_PROGRAMS += src/env/mpich2version
 
 src_env_mpich2version_SOURCES = src/env/mpich2version.c
 src_env_mpich2version_LDADD = lib/lib@MPILIBNAME@.la
+if BUILD_PROFILING_LIB
+src_env_mpich2version_LDADD += lib/lib@PMPILIBNAME@.la
+endif BUILD_PROFILING_LIB
 
 sysconf_DATA += src/env/mpicc.conf
 

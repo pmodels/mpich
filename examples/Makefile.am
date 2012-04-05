@@ -39,8 +39,8 @@ LDFLAGS += -L../lib
 LDFLAGS += -L../src/mpl -L../src/openpa/src
 external_libs = -lmpl -lopa
 if BUILD_PROFILING_LIB
-LIBS += -lp@MPILIBNAME@
-cpi_DEPENDENCIES += ../lib/libp@MPILIBNAME@.la
+LIBS += -l@PMPILIBNAME@
+cpi_DEPENDENCIES += ../lib/lib@PMPILIBNAME@.la
 endif BUILD_PROFILING_LIB
 LIBS += -l@MPILIBNAME@ $(external_libs)
 cpi_DEPENDENCIES += ../lib/lib@MPILIBNAME@.la
