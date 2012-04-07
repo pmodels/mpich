@@ -248,6 +248,12 @@ int dbgrI_find_symbol( mqs_image *image, char *name, mqs_taddr_t * loc )
 {
     if (strcmp( name, "MPIR_All_communicators" ) == 0) {
 	*loc = (mqs_taddr_t)&MPIR_All_communicators;
+	/* The following printfs can help is diagnosing problems when the
+	   extern variable MPIR_All_communicators appears not to be 
+	   correctly resolved. */
+	printf( "all communicators head at %p\n", *loc );
+	printf( "all communicators head as pointer %p\n", &MPIR_All_communicators );
+	printf( "head is %p\n", MPIR_All_communicators.head );
 	return mqs_ok;
     }
     else if (strcmp( name, "MPID_Recvq_posted_head_ptr" ) == 0) {

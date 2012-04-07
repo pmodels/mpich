@@ -446,6 +446,8 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
 {   
     MPIU_DBG_MSG_P(COMM,VERBOSE,
 		   "Adding communicator %p to remember list",comm_ptr);
+    MPIU_DBG_MSG_P(COMM,VERBOSE,
+		   "Remember list structure address is %p",&MPIR_All_communicators);
     MPIU_THREAD_CS_ENTER(HANDLE,comm_ptr);
     if (comm_ptr == MPIR_All_communicators.head) {
 	MPIU_Internal_error_printf( "Internal error: communicator is already on free list\n" );
@@ -454,6 +456,9 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
     comm_ptr->comm_next = MPIR_All_communicators.head;
     MPIR_All_communicators.head = comm_ptr;
     MPIR_All_communicators.sequence_number++;
+    MPIU_DBG_MSG_P(COMM,VERBOSE,
+		   "master head is %p", MPIR_All_communicators.head );
+
     MPIU_THREAD_CS_EXIT(HANDLE,comm_ptr);
 }
 

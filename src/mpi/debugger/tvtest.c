@@ -73,8 +73,8 @@ int main( int argc, char *argv[] )
     MPI_Send( &sbuf, 1, MPI_INT, (wrank + wsize - 1) % wsize, 19, dupworld );
 
     /* Access the queues again */
-    printf( "\nAfter a few send/receives\n" );
-    showQueues( 3, 2 );
+    printf( "\nAfter a few send/receives (all now matched)\n" );
+    showQueues( 3, 0 );
 
     /* Shut down */
 
