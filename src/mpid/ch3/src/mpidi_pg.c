@@ -218,7 +218,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     /* We may first need to initialize the channel before calling the channel 
        VC init functions.  This routine may be a no-op; look in the 
        ch3_init.c file in each channel */
-    MPIU_CALL(MPIDI_CH3,PG_Init( pg ));
+    MPIDI_CH3_PG_Init(pg);
 
     /* These are now done in MPIDI_VC_Init */
 #if 0
@@ -317,7 +317,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		   use.  Alternately, if the PG is able to recreate a VC, 
 		   and can thus free unused (or idle) VCs, it should be allowed
 		   to do so.  [wdg 2008-08-31] */
-                mpi_errno = MPIU_CALL(MPIDI_CH3,VC_Destroy(&(pg->vct[i])));
+                mpi_errno = MPIDI_CH3_VC_Destroy(&(pg->vct[i]));
                 if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
             }
 
@@ -331,7 +331,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		    MPIU_Free(pg->connData);
 		}
 	    }
-	    mpi_errno = MPIU_CALL(MPIDI_CH3,PG_Destroy(pg));
+	    mpi_errno = MPIDI_CH3_PG_Destroy(pg);
 	    MPIU_Free(pg);
 
 	    goto fn_exit;

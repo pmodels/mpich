@@ -129,7 +129,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
        temporary intercommunicator between the two roots so that
        we can use MPI functions to communicate data between them. */
 
-    mpi_errno = MPIU_CALL(MPIDI_CH3,Connect_to_root(port_name, &connect_vc));
+    mpi_errno = MPIDI_CH3_Connect_to_root(port_name, &connect_vc);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
@@ -529,7 +529,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     {
         int mpi_errno2 = MPI_SUCCESS;
         if (new_vc) {
-	    mpi_errno2 = MPIU_CALL(MPIDI_CH3,VC_Destroy(new_vc));
+	    mpi_errno2 = MPIDI_CH3_VC_Destroy(new_vc);
             if (mpi_errno2) MPIU_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**fail");
         }
 
@@ -1231,7 +1231,7 @@ static int FreeNewVC( MPIDI_VC_t *new_vc )
 	MPID_Progress_end(&progress_state);
     }
 
-    MPIU_CALL(MPIDI_CH3,VC_Destroy(new_vc));
+    MPIDI_CH3_VC_Destroy(new_vc);
     MPIU_Free(new_vc);
 
  fn_fail:

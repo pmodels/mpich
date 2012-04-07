@@ -186,7 +186,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
      * the basic information about the job has been extracted from PMI (e.g.,
      * the size and rank of this process, and the process group id)
      */
-    mpi_errno = MPIU_CALL(MPIDI_CH3,Init(has_parent, pg, pg_rank));
+    mpi_errno = MPIDI_CH3_Init(has_parent, pg, pg_rank);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
@@ -352,7 +352,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 int MPID_InitCompleted( void )
 {
     int mpi_errno;
-    mpi_errno = MPIU_CALL(MPIDI_CH3,InitCompleted());
+    mpi_errno = MPIDI_CH3_InitCompleted();
     return mpi_errno;
 }
 

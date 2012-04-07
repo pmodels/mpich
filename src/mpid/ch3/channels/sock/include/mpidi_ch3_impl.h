@@ -10,12 +10,6 @@
 #include "mpidimpl.h"
 #include "ch3usock.h"
 
-/* Redefine MPIU_CALL since the sock channel should be self-contained.
-   This only affects the building of a dynamically loadable library for 
-   the sock channel, and then only when debugging is enabled */
-#undef MPIU_CALL
-#define MPIU_CALL(context,funccall) context##_##funccall
-
 /* Define the channel-private data structures; these are overlaid on the
    channel_private scratchpads */
 typedef struct MPIDI_CH3I_VC

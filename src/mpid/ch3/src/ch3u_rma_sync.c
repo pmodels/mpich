@@ -644,7 +644,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
             iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
             iovcnt = 2;
 	    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-            mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, iovcnt, request));
+            mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, iovcnt, request);
 	    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
@@ -795,7 +795,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops *rma_op,
 	comm_ptr = win_ptr->comm_ptr;
 	MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, accumi_pkt, sizeof(*accumi_pkt), request));
+	mpi_errno = MPIDI_CH3_iStartMsg(vc, accumi_pkt, sizeof(*accumi_pkt), request);
 	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 	goto fn_exit;
@@ -833,7 +833,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops *rma_op,
     iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
     iovcnt = 2;
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-    mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, iovcnt, request));
+    mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, iovcnt, request);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
@@ -927,7 +927,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
     {
         /* basic datatype on target. simply send the get_pkt. */
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-        mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, get_pkt, sizeof(*get_pkt), &req));
+        mpi_errno = MPIDI_CH3_iStartMsg(vc, get_pkt, sizeof(*get_pkt), &req);
 	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     }
     else
@@ -972,7 +972,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         iov[2].MPID_IOV_LEN = dtp->dataloop_size;
 
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-        mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, 3, &req));
+        mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 3, &req);
 	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 
         /* release the target datatype */
@@ -1424,9 +1424,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    MPIDI_Comm_get_vc_set_active(comm_ptr, dst, &vc);
 	    
 	    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-	    mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, put_pkt,
-						      sizeof(*put_pkt),
-						      &request));
+	    mpi_errno = MPIDI_CH3_iStartMsg(vc, put_pkt, sizeof(*put_pkt), &request);
 	    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg" );
@@ -1798,7 +1796,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 	win_ptr->lock_granted = 0;
 	
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req));
+	mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req);
 	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
@@ -2223,7 +2221,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
         iovcnt = 2;
 
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-        mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsgv(vc, iov, iovcnt, &request));
+        mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, iovcnt, &request);
 	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
         if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
@@ -2379,8 +2377,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-    mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, lock_get_unlock_pkt, 
-				      sizeof(*lock_get_unlock_pkt), &sreq));
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_get_unlock_pkt, sizeof(*lock_get_unlock_pkt), &sreq);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
@@ -2457,8 +2454,7 @@ int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
     lock_granted_pkt->source_win_handle = source_win_handle;
 
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-    mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, lock_granted_pkt,
-				      sizeof(*lock_granted_pkt), &req));
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_granted_pkt, sizeof(*lock_granted_pkt), &req);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
     if (mpi_errno) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
@@ -2697,7 +2693,7 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	iov[1].MPID_IOV_LEN = get_pkt->count * type_size;
 
         MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-	mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(vc, req, iov, 2));
+	mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, 2);
         MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
@@ -3305,7 +3301,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPID_Datatype_get_size_macro(lock_get_unlock_pkt->datatype, type_size);
 	iov[1].MPID_IOV_LEN = lock_get_unlock_pkt->count * type_size;
 	
-	mpi_errno = MPIU_CALL(MPIDI_CH3,iSendv(vc, req, iov, 2));
+	mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, 2);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{

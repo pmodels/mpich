@@ -3520,31 +3520,6 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
  * collectives */
 #include "mpir_nbc.h"
 
-/* ------------------------------------------------------------------------- */
-/* Define a macro to allow us to select between statically selected functions
- * and dynamically loaded ones.  If USE_DYNAMIC_LIBRARIES is defined,
- * the macro MPIU_CALL(context,funccall) expands into
- *    MPIU_CALL##context.funccall.
- * For example,
- *    err = MPIU_CALL(MPIDI_CH3,iSend(...))
- * will expand into
- *    err = MPIU_CALL_MPIDI_CH3.iSend(...)
- * If USE_DYNAMIC_LIBS is not selected, then it expands into
- *    err = MPIDI_CH3_iSend(...)
- * 
- * In the case where dynamic libraries are used, a variable named 
- * MPIU_CALL_context must be defined that contains the function pointers;
- * initializing the function pointers must be done before the first use.
- * Typically, this variable will be the single instance of a structure that
- * contains the function pointers.
- */
-/* ------------------------------------------------------------------------- */
-#ifdef USE_DYNAMIC_LIBRARIES
-#define MPIU_CALL(context,funccall) MPIU_CALL_##context.funccall
-#else
-#define MPIU_CALL(context,funccall) context##_##funccall
-#endif
-
 #include "mpiimplthreadpost.h"
 
 /* Include definitions from the device which require items defined by this 

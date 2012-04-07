@@ -213,7 +213,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
 			     vc, i, MPIDI_VC_GetStateString(vc->state)));
 		}
 
-                /* NOTE: we used to * MPIU_CALL(MPIDI_CH3,VC_Destroy(&(pg->vct[i])))
+                /* NOTE: we used to * MPIDI_CH3_VC_Destroy(&(pg->vct[i])))
                    here but that is incorrect.  According to the standard, it's
                    entirely possible (likely even) that this VC might still be
                    connected.  VCs are now destroyed when the PG that "owns"
@@ -723,7 +723,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
         MPIU_Assert(err == 0);
     }
 #endif /* MPIU_THREAD_GRANULARITY */
-    MPIU_CALL(MPIDI_CH3,VC_Init( vc ));
+    MPIDI_CH3_VC_Init(vc);
     MPIDI_DBG_PrintVCState(vc);
 
     return MPI_SUCCESS;

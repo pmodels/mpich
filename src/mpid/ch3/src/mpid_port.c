@@ -51,7 +51,7 @@ int MPID_Open_port(MPID_Info *info_ptr, char *port_name)
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
     if (setupPortFunctions) {
-	MPIU_CALL(MPIDI_CH3,PortFnsInit( &portFns ));
+	MPIDI_CH3_PortFnsInit( &portFns );
 	setupPortFunctions = 0;
     }
 
@@ -102,7 +102,7 @@ int MPID_Close_port(const char *port_name)
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
     if (setupPortFunctions) {
-	MPIU_CALL(MPIDI_CH3,PortFnsInit( &portFns ));
+	MPIDI_CH3_PortFnsInit( &portFns );
 	setupPortFunctions = 0;
     }
 
@@ -139,7 +139,7 @@ int MPID_Comm_accept(char * port_name, MPID_Info * info, int root,
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
     if (setupPortFunctions) {
-	MPIU_CALL(MPIDI_CH3,PortFnsInit( &portFns ));
+	MPIDI_CH3_PortFnsInit( &portFns );
 	setupPortFunctions = 0;
     }
 
@@ -177,7 +177,7 @@ int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root,
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
     if (setupPortFunctions) {
-	MPIU_CALL(MPIDI_CH3,PortFnsInit( &portFns ));
+	MPIDI_CH3_PortFnsInit( &portFns );
 	setupPortFunctions = 0;
     }
 
@@ -309,7 +309,7 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
        connections between processes that are started separately (e.g.,
        may not use shared memory).  We may need a channel-specific 
        function to create an exportable connection string.  */
-    mpi_errno = MPIU_CALL(MPIDI_CH3,Get_business_card(myRank, port_name, len));
+    mpi_errno = MPIDI_CH3_Get_business_card(myRank, port_name, len);
     MPIU_DBG_MSG_FMT(CH3, VERBOSE, (MPIU_DBG_FDEST, "port_name = %s", port_name));
 
 fn_exit:

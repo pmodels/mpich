@@ -249,8 +249,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
         MPIDI_CHANGE_VC_STATE(vc, CLOSE_ACKED);
     }
 		
-    mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, close_pkt, 
-					      sizeof(*close_pkt), &sreq));
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, close_pkt, sizeof(*close_pkt), &sreq);
     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|send_close_ack");
     
     if (sreq != NULL) {
@@ -291,8 +290,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	
 	MPIU_DBG_MSG_D(CH3_DISCONNECT,TYPICAL,"sending close(TRUE) to %d",
 		       vc->pg_rank);
-	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, resp_pkt, 
-					  sizeof(*resp_pkt), &resp_sreq));
+	mpi_errno = MPIDI_CH3_iStartMsg(vc, resp_pkt, sizeof(*resp_pkt), &resp_sreq);
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|send_close_ack");
 	
 	if (resp_sreq != NULL)
@@ -337,7 +335,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         MPIDI_CHANGE_VC_STATE(vc, CLOSED);
 	/* For example, with sockets, Connection_terminate will close
 	   the socket */
-	mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
+	mpi_errno = MPIDI_CH3_Connection_terminate(vc);
     }
     
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -412,7 +410,7 @@ static int terminate_failed_VCs(MPID_Group *new_failed_group)
         /* terminate the VC */
         /* FIXME: This won't work for dynamic procs */
         MPIDI_PG_Get_vc(MPIDI_Process.my_pg, new_failed_group->lrank_to_lpid[i].lpid, &vc);
-        mpi_errno = MPIU_CALL(MPIDI_CH3,Connection_terminate(vc));
+        mpi_errno = MPIDI_CH3_Connection_terminate(vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     

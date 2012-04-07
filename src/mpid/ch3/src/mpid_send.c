@@ -94,8 +94,7 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
 	MPIDI_Pkt_set_seqnum(eager_pkt, seqnum);
 	
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-	mpi_errno = MPIU_CALL(MPIDI_CH3,iStartMsg(vc, eager_pkt, 
-						  sizeof(*eager_pkt), &sreq));
+	mpi_errno = MPIDI_CH3_iStartMsg(vc, eager_pkt, sizeof(*eager_pkt), &sreq);
 	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
