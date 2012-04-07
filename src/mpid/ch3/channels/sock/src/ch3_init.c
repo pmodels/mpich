@@ -128,8 +128,6 @@ int MPIDI_CH3_VC_Destroy( struct MPIDI_VC *vc ATTRIBUTE((unused)) )
     return MPI_SUCCESS;
 }
 
-/* A dummy function so that all channels provide the same set of functions, 
-   enabling dll channels */
 int MPIDI_CH3_InitCompleted( void )
 {
     return MPI_SUCCESS;

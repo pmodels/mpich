@@ -413,8 +413,7 @@ ch3 device
 **********
 The ch3 device contains different internal communication options
 called "channels". We currently support nemesis (default) and sock
-channels, and experimentally provide a dllchan channel within the ch3
-device.
+channels.
 
 nemesis channel
 ---------------

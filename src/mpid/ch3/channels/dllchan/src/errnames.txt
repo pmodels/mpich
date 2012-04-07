@@ -1,6 +1,0 @@
-# Special error strings for the dll channel
-**nodllversion: Channel DLL Library does not contain a version string
-**dllversionmismatch: The version of the channel DLL Library does not match \
- the version expected by the executable. 
-**dllversionmismatch %s %s: The verison of the channel DLL Library is %s \
- but the executable requires version %s

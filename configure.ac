@@ -2469,57 +2469,6 @@ dnl BUILD_BASH_SCRIPTS used to be an AC_SUBST
 AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
 
 # ----------------------------------------------------------------------------
-# Check for the routines and libraries needed for accessing dynamically
-# loaded libraries.
-# This is very approximate for now; it is enough to allow use to experiment
-# with this feature under Linux.
-# ----------------------------------------------------------------------------
-BUILD_DLLS=no
-if test "$enable_dynamiclibs" = "yes" ; then
-    AC_CHECK_HEADERS(dlfcn.h)
-    AC_SEARCH_LIBS(dlopen,dl)
-    AC_CHECK_FUNCS(dlopen dlsym)
-    if test "$ac_cv_func_dlopen" = yes -a \
-            "$ac_cv_func_dlsym"  = yes -a \
-	    "$ac_cv_header_dlfcn_h" = yes ; then
-        AC_DEFINE(USE_DYNAMIC_LIBRARIES,1,[Define if dynamic libraries are available and should be used])
-	if test "$enable_sharedlibs" = no -o "$enable_sharedlibs" = none -o \
-	   -z "$enable_sharedlibs" ; then
-            AC_MSG_ERROR([You must specify --enable-sharedlibs=type when building with dynamic libraries])
-dnl 	    # We still need to determine how to build shared libraries
-dnl   	    AC_MSG_CHECKING([for how to build shared library for dynamically loaded libraries])
-dnl         PAC_CC_SHAREDLIBS(,CC_SHL,C_LINK_SHL)
-dnl 	    PAC_CC_SHLIB_EXT
-dnl 	    if test "$SHLIB_EXT" = "unknown" ; then
-dnl 	        # Guess that the extension is .so
-dnl 	        SHLIB_EXT=so
-dnl 	    fi
-dnl 	    if test "$CC_SHL" = true ; then
-dnl 	        AC_MSG_RESULT([none found])
-dnl                 AC_MSG_WARN([Dynamic library support requires shared libraries])      
-dnl 	    else
-dnl 	        AC_MSG_RESULT($CC_SHL)
-dnl 	        BUILD_DLLS=yes
-dnl         fi
-        fi
-    fi
-    AC_SUBST(BUILD_DLLS)
-
-    # Let the DLL code know where we plan to install the libraries. 
-    # This will make it easier for the user, who may not need 
-    # to set a search path for the library.
-    savePrefix=$prefix
-    saveExecprefix=$exec_prefix
-    test "x$prefix" = xNONE && prefix=$ac_default_prefix
-    test "x$exec_prefix" = xNONE && exec_prefix=$prefix
-    eval MPICH2_LIBDIR=$libdir
-    prefix=$savePrefix
-    exec_prefix=$saveExecprefix
-    MPICH2_LIBDIR='"'$MPICH2_LIBDIR'"'
-    AC_DEFINE_UNQUOTED(MPICH2_LIBDIR,$MPICH2_LIBDIR,[Name of installation directory intended for MPICH2])
-fi
-
-# ----------------------------------------------------------------------------
 # At this point, we've finally settled on the value of PMPILIBNAME.  We
 # can now set NEEDSPLIB.
 if test "$NEEDSPLIB" = yes -a "$PMPILIBNAME" = "$MPILIBNAME" ; then

@@ -39,7 +39,6 @@ noinst_HEADERS +=                   \
     src/include/mpich_param_vals.h  \
     src/include/mpichconfconst.h    \
     src/include/mpidbg.h            \
-    src/include/mpidll.h            \
     src/include/mpierror.h          \
     src/include/mpierrs.h           \
     src/include/mpiext.h            \

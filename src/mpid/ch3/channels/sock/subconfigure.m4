@@ -63,8 +63,7 @@ AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:sock])
 
 # FIXME this must be namespaced now that we've flattened things
 #
-# ABIVERSION is needed when a separate sock dll library is built (e.g., for
-# dllchan)
+# ABIVERSION is needed when a separate sock dll library is built
 if test "X$ABIVERSION" = "X" ; then
    if test "X$libmpich_so_version" != X ; then 
       ABIVERSION="$libmpich_so_version"

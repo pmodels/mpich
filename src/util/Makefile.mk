@@ -11,7 +11,6 @@ include $(top_srcdir)/src/util/instrm/Makefile.mk
 include $(top_srcdir)/src/util/logging/Makefile.mk
 include $(top_srcdir)/src/util/mem/Makefile.mk
 include $(top_srcdir)/src/util/msgs/Makefile.mk
-include $(top_srcdir)/src/util/osserv/Makefile.mk
 include $(top_srcdir)/src/util/other/Makefile.mk
 include $(top_srcdir)/src/util/param/Makefile.mk
 include $(top_srcdir)/src/util/procmap/Makefile.mk

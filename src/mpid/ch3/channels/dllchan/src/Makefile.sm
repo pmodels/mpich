@@ -1,2 +1,0 @@
-INCLUDES = -I../../../../../include -I${master_top_srcdir}/src/include
-lib${MPILIBNAME}_a_SOURCES = ch3impl.c

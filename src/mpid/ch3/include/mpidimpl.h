@@ -1242,9 +1242,7 @@ int MPIDI_CH3I_Progress_finalize(void);
  */
 
 /* This allows the channel to define an alternate to the 
-   completion counter.  The dllchannel uses this to access the 
-   counter through a pointer.  Others could use this to provide
-   more complex operations */
+   completion counter.  */
 #ifndef MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT
 #define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT                                \
     do {                                                                         \
