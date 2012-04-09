@@ -95,8 +95,8 @@ void ARMCI_Copy(void *src, void *dst, int size) {
 
 /** Zero out the given buffer.
   */
-void ARMCII_Bzero(void *buf, int size) {
-  int      i;
+void ARMCII_Bzero(void *buf, armci_size_t size) {
+  armci_size_t i;
   uint8_t *buf_b = (uint8_t *)buf;
 
   for (i = 0; i < size; i++)

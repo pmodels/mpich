@@ -22,10 +22,10 @@ void  ARMCI_Cleanup(void);
 
 void  ARMCI_Error(char *msg, int code);
 
-int   ARMCI_Malloc(void **base_ptrs, int size);
+int   ARMCI_Malloc(void **base_ptrs, armci_size_t size);
 int   ARMCI_Free(void *ptr);
 
-void *ARMCI_Malloc_local(int size);
+void *ARMCI_Malloc_local(armci_size_t size);
 int   ARMCI_Free_local(void *ptr);
 
 void  ARMCI_Barrier(void);
@@ -171,7 +171,7 @@ void ARMCI_Group_get_world(ARMCI_Group *group_out);
 
 int ARMCI_Absolute_id(ARMCI_Group *group,int group_rank);
 
-int ARMCI_Malloc_group(void **ptr_arr, int bytes, ARMCI_Group *group);
+int ARMCI_Malloc_group(void **ptr_arr, armci_size_t bytes, ARMCI_Group *group);
 int ARMCI_Free_group(void *ptr, ARMCI_Group *group);
 
 /** ARMCI Message API is in another file:

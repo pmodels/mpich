@@ -95,7 +95,7 @@ extern global_state_t ARMCII_GLOBAL_STATE;
 
 /* Utility functions */
 
-void  ARMCII_Bzero(void *buf, int size);
+void  ARMCII_Bzero(void *buf, armci_size_t size);
 int   ARMCII_Log2(unsigned int val);
 char *ARMCII_Getenv(char *varname);
 int   ARMCII_Getenv_bool(char *varname, int default_value);

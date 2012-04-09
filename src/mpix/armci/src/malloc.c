@@ -20,7 +20,7 @@
   *                       segment.
   * @param[in]       size Number of bytes to allocate on the local process.
   */
-int ARMCI_Malloc(void **ptr_arr, int bytes) {
+int ARMCI_Malloc(void **ptr_arr, armci_size_t bytes) {
   return ARMCI_Malloc_group(ptr_arr, bytes, &ARMCI_GROUP_WORLD);
 }
 
@@ -41,7 +41,7 @@ int ARMCI_Free(void *ptr) {
   *                       equal to the number of processes in the group.
   * @param[in]       size Number of bytes to allocate on the local process.
   */
-int ARMCI_Malloc_group(void **base_ptrs, int size, ARMCI_Group *group) {
+int ARMCI_Malloc_group(void **base_ptrs, armci_size_t size, ARMCI_Group *group) {
   int i;
   gmr_t *mreg;
 
@@ -96,10 +96,10 @@ int ARMCI_Free_group(void *ptr, ARMCI_Group *group) {
   * @param[in] size Number of bytes to allocate
   * @return         Pointer to the local buffer
   */
-void *ARMCI_Malloc_local(int size) {
+void *ARMCI_Malloc_local(armci_size_t size) {
   void *buf;
 
-  MPI_Alloc_mem(size, MPI_INFO_NULL, &buf);
+  MPI_Alloc_mem((MPI_Aint) size, MPI_INFO_NULL, &buf);
   ARMCII_Assert(buf != NULL);
 
   if (ARMCII_GLOBAL_STATE.debug_alloc) {

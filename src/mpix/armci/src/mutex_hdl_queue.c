@@ -90,6 +90,7 @@ int ARMCIX_Destroy_mutexes_hdl(armcix_mutex_hdl_t hdl) {
   }
 
   ARMCI_Group_free(&hdl->grp);
+  free(hdl->windows);
   free(hdl);
 
   return 0;

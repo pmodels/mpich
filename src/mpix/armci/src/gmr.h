@@ -10,6 +10,8 @@
 #include <armci.h>
 #include <armcix.h>
 
+typedef armci_size_t gmr_size_t;
+
 enum gmr_lock_states_e { 
   GMR_LOCK_UNLOCKED,    /* Mem region is unlocked */
   GMR_LOCK_EXCLUSIVE,   /* Mem region is locked for exclusive access */
@@ -19,8 +21,8 @@ enum gmr_lock_states_e {
 };
 
 typedef struct {
-  void *base;
-  int   size;
+  void       *base;
+  gmr_size_t  size;
 } gmr_slice_t;
 
 typedef struct gmr_s {
@@ -41,7 +43,7 @@ typedef struct gmr_s {
 
 extern gmr_t *gmr_list;
 
-gmr_t *gmr_create(int local_size, void **base_ptrs, ARMCI_Group *group);
+gmr_t *gmr_create(gmr_size_t local_size, void **base_ptrs, ARMCI_Group *group);
 void   gmr_destroy(gmr_t *mreg, ARMCI_Group *group);
 int    gmr_destroy_all(void);
 gmr_t *gmr_lookup(void *ptr, int proc);

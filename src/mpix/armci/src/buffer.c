@@ -244,6 +244,8 @@ void ARMCII_Buf_finish_write_vec(void **orig_bufs, void **new_bufs, int count, i
         MPI_Free_mem(new_bufs[i]);
       }
     }
+
+    free(new_bufs);
   }
 }
 
