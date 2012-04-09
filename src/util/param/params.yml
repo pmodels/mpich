@@ -365,13 +365,14 @@ parameters:
     - category    : fault_tolerance
       name        : ENABLE_COLL_FT_RET
       type        : boolean
-      default     : true
+      default     : false
       description : >-
+        NOT COMPATIBLE WITH NONBLOCKING COLLECTIVES (see tt#1601)!!!
         Collectives called on a communicator with a failed process
         should not hang, however the result of the operation may be
         invalid even though the function returns MPI_SUCCESS.  This
-        option enables an experimental feature that will return an
-        error if the result of the collective is invalid.
+        option enables an experimental feature that will return an error
+        if the result of the collective is invalid.
 
   ##############################################################
     # memory parameters
