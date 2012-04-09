@@ -99,11 +99,15 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
     /* the _dequeue can break if this does not hold */
     MPID_nem_q_assert(MPID_NEM_IS_REL_NULL(element->next));
 
-    /* The SWAP does not actually cause an enqueue that the consumer can
-     * perceive, so we do not need a barrier between the payload stores
-     * and the SWAP.  r_prev->next=NULL should also be ordered w.r.t.
-     * the SWAP, but this is done by the consumer so it will not be seen
-     * out of order by the consumer. */
+    /* Orders payload and e->next=NULL w.r.t. the SWAP, updating head, and
+     * updating prev->next.  We assert e->next==NULL above, but it may have been
+     * done by us in the preceding _dequeue operation.
+     *
+     * The SWAP itself does not need to be ordered w.r.t. the payload because
+     * the consumer does not directly inspect the tail.  But the subsequent
+     * update to the head or e->next field does need to be ordered w.r.t. the
+     * payload or the consumer may read incorrect data. */
+    OPA_write_barrier();
 
     /* enqueue at tail */
     r_prev = MPID_NEM_SWAP_REL (&(qhead->tail), r_element);
@@ -111,9 +115,9 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
     {
         /* queue was empty, element is the new head too */
 
-        /* order SWAP and head store, as well as payload stores and head
-         * store */
-        OPA_write_barrier();
+        /* no write barrier needed, we believe atomic SWAP with a control
+         * dependence (if) will enforce ordering between the SWAP and the head
+         * assignment */
         qhead->head = r_element;
     }
     else
@@ -122,9 +126,9 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
          * our element */
         MPID_nem_q_assert(MPID_NEM_IS_REL_NULL(MPID_NEM_REL_TO_ABS(r_prev)->next));
 
-        /* order SWAP and r_prev->next store, as well as payload stores
-         * and r_prev->next store */
-        OPA_write_barrier();
+        /* no write barrier needed, we believe atomic SWAP with a control
+         * dependence (if/else) will enforce ordering between the SWAP and the
+         * prev->next assignment */
         MPID_NEM_REL_TO_ABS (r_prev)->next = r_element;
     }
 }
@@ -193,22 +197,15 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
     if (!MPID_NEM_IS_REL_NULL(_e->next))
     {
         qhead->my_head = _e->next;
-
-        /* ensure that loads from the queue's head are ordered before any
-         * loads from the cell */
-        OPA_read_barrier();
     }
     else
     {
+        /* we've reached the end (tail) of the queue */
         MPID_nem_cell_rel_ptr_t old_tail;
 
         MPID_NEM_SET_REL_NULL (qhead->my_head);
-        /* no barrier needed for my_head+CAS, my_head entirely private to consumer */
-
-        /* ensure that loads from the queue's head are ordered before
-         * any loads from the cell and that the _e->next==NULL and
-         * CAS(qhead->tail) operations are ordered */
-        OPA_read_barrier();
+        /* no barrier needed, the caller doesn't need any ordering w.r.t.
+         * my_head or the tail */
         old_tail = MPID_NEM_CAS_REL_NULL (&(qhead->tail), _r_e);
 
         if (!MPID_NEM_REL_ARE_EQUAL (old_tail, _r_e))
@@ -223,6 +220,15 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
         }
     }
     MPID_NEM_SET_REL_NULL (_e->next);
+
+    /* Conservative read barrier here to ensure loads from head are ordered
+     * w.r.t. payload reads by the caller.  The McKenney "whymb" document's
+     * Figure 11 indicates that we don't need a barrier, but we are currently
+     * unconvinced of this.  Further work, ideally using more formal methods,
+     * should justify removing this.  (note that this barrier won't cost us
+     * anything on many platforms, esp. x86) */
+    OPA_read_barrier();
+
     *e = _e;
 }
 
