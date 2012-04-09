@@ -74,7 +74,7 @@ int main( int argc, char **argv )
 	    err++;
 	    if (err < MAX_ERRORS) {
 		fprintf( stdout, "Did not get expected value for reduce scatter\n" );
-		fprintf( stdout, "[%d] Got recvbuf[%] = %d expected %d\n", 
+		fprintf( stdout, "[%d] Got recvbuf[%d] = %d expected %d\n",
 			 rank, i, recvbuf[i], sumval );
 	    }
 	}
