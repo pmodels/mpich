@@ -5487,11 +5487,8 @@ AC_ARG_ENABLE([yield],
              AS_IF([test "x$ac_cv_func_sched_yield" = "xyes"], [enable_yield=sched_yield],
                    [enable_yield=nothing])],
         [*-*-linux*], 
-            [# sched_yield() has been broken in linux since 2.6.23, usleep(0) has a the desired 
-             # effect, but with higher latency.
-             AS_IF([test "x$ac_cv_func_usleep" = "xyes"], [enable_yield=usleep],
-                   [enable_yield=nothing])],
-
+            [# sched_yield() has been broken in linux since 2.6.23, and no good alternative exists.
+             enable_yield=nothing],
         [# default: just use sched_yield() or yield()
          AS_IF([test "x$ac_cv_func_sched_yield" = "xyes"], [enable_yield=sched_yield],
                [test "x$ac_cv_func_yield" = "xyes"], [enable_yield=yield],
