@@ -51,7 +51,7 @@ NEEDSPLIB="@NEEDSPLIB@"
 # MPICH2_VERSION is the version of the MPICH2 library for which mpif77 is intended
 MPICH2_VERSION="@MPICH2_VERSION@"
 
-enable_rpath="@enable_rpath@"
+enable_wrapper_rpath="@enable_wrapper_rpath@"
 @f77_shlib_conf@
 
 # Internal variables
@@ -321,7 +321,7 @@ if [ "$linking" = yes ] ; then
     # platform.
     # TODO configure and config.rpath are computing more sophisticated rpath
     # schemes than this simple one.  Consider updating this logic accordingly.
-    if test "X$enable_rpath" = "Xyes" ; then
+    if test "X$enable_wrapper_rpath" = "Xyes" ; then
         eval mpilibs=\"${hardcode_libdir_flag_spec} \$mpilibs\"
     fi
 

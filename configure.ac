@@ -581,6 +581,18 @@ AC_ARG_ENABLE(multi-aliases,
 		[Multiple aliasing to support multiple fortran compilers (default)]),,
 		enable_multi_aliases=yes)
 
+AC_ARG_ENABLE([wrapper-rpath],
+              [AC_HELP_STRING([--enable-wrapper-rpath],
+                              [Determine whether the rpath is set when programs
+                               are linked by mpicc compiler wrappers.  This only
+                               applies when shared libraries are built.  The
+                               default is yes; use --disable-wrapper-rpath to
+                               turn this feature off.  In that case, shared
+                               libraries will be found according to the rules
+                               for your system (e.g., in LD_LIBRARY_PATH)])],
+              [],[enable_wrapper_rpath=yes])
+AC_SUBST([enable_wrapper_rpath])
+
 AC_ARG_WITH(cross,
 	AC_HELP_STRING([--with-cross=file],
 		[Specify the values of variables that configure cannot
@@ -632,6 +644,12 @@ AM_MAINTAINER_MODE([enable])
 LT_INIT([disable-shared])
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+# Disable rpath in the compiler wrappers if shared libraries are disabled, since
+# rpath makes no sense in the context of static libraries.
+if test "X$enable_shared" = "Xno" ; then
+    enable_wrapper_rpath=no
+fi
 
 dnl AC_PROG_{CXX,F77,FC} must come early in configure.ac in order to avoid some
 dnl esoteric autoconf macro expansion errors
