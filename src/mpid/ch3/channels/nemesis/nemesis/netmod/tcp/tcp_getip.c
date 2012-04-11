@@ -10,9 +10,6 @@
 
 #include "mpichconf.h"
 
-/* FIXME: This should use the standard debug/logging routines and macros */
-static int dbg_ifname = 0;
-
 /* NOTE: We previously used configure tests to decide if defining/undefining
  * macros like _POSIX_C_SOURCE, _SVID_SOURCE, and _ALL_SOURCE would give us
  * access to the ifconf structure.  If so, we would define them here.  However
@@ -51,6 +48,9 @@ static int dbg_ifname = 0;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
+
+/* FIXME: This should use the standard debug/logging routines and macros */
+static int dbg_ifname = 0;
 
 #define NUM_IFREQS 10
 
@@ -287,6 +287,7 @@ int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int 
 {
     if (found != NULL)
         *found = FALSE;
+    return MPI_SUCCESS;
 }
 
 #endif

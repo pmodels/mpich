@@ -22,6 +22,8 @@
 #include <private/private.h>
 #include <private/debug.h>
 
+int getpagesize(void);
+
 void
 hwloc_look_darwin(struct hwloc_topology *topology)
 {

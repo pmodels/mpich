@@ -27,23 +27,24 @@ static int hwloc_initialized = 0;
 static void print_obj_info(hwloc_obj_t obj) ATTRIBUTE((unused));
 static void print_obj_info(hwloc_obj_t obj)
 {
-    int i;
+    /* commented out to eliminate warnings in format strings */
+    /* int i; */
 
-    if (obj->type == HWLOC_OBJ_CACHE)
-        dprint(obj->depth, "[%s] L%u cache size: %lu\n",
-               hwloc_obj_type_string(obj->type), obj->attr->cache.depth,
-               obj->attr->cache.size);
-    else {
-        if (obj->memory.total_memory || obj->memory.local_memory)
-            dprint(obj->depth, "[%s:%u] total memory: %lu; local memory: %lu\n",
-                   hwloc_obj_type_string(obj->type), obj->os_index, obj->memory.total_memory,
-                   obj->memory.local_memory);
-        else
-            dprint(obj->depth, "[%s:%u]\n", hwloc_obj_type_string(obj->type), obj->os_index);
-    }
+    /* if (obj->type == HWLOC_OBJ_CACHE) */
+    /*     dprint(obj->depth, "[%s] L%u cache size: %lu\n", */
+    /*            hwloc_obj_type_string(obj->type), obj->attr->cache.depth, */
+    /*            obj->attr->cache.size); */
+    /* else { */
+    /*     if (obj->memory.total_memory || obj->memory.local_memory) */
+    /*         dprint(obj->depth, "[%s:%u] total memory: %lu; local memory: %lu\n", */
+    /*                hwloc_obj_type_string(obj->type), obj->os_index, obj->memory.total_memory, */
+    /*                obj->memory.local_memory); */
+    /*     else */
+    /*         dprint(obj->depth, "[%s:%u]\n", hwloc_obj_type_string(obj->type), obj->os_index); */
+    /* } */
 
-    for (i = 0; i < obj->arity; i++)
-        print_obj_info(obj->children[i]);
+    /* for (i = 0; i < obj->arity; i++) */
+    /*     print_obj_info(obj->children[i]); */
 }
 
 static int hwloc_to_hydra_cpuset_dup(hwloc_cpuset_t hwloc_cpuset,

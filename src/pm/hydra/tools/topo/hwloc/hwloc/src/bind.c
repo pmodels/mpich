@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
+int getpagesize(void);
+
 /* TODO: HWLOC_GNU_SYS, HWLOC_IRIX_SYS,
  *
  * IRIX: see MP_MUSTRUN / _DSM_MUSTRUN, pthread_setrunon_np, /hw, procss_cpulink, numa_create
