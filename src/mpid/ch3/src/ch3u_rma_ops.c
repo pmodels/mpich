@@ -232,10 +232,10 @@ int MPIDI_Put(void *origin_addr, int origin_count, MPI_Datatype
             int target_count, MPI_Datatype target_datatype, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int dt_contig, rank, predefined;
+    int dt_contig ATTRIBUTE((unused)), rank, predefined;
     MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
-    MPI_Aint dt_true_lb;
+    MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
@@ -323,8 +323,8 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
-    int dt_contig, rank, predefined;
-    MPI_Aint dt_true_lb;
+    int dt_contig ATTRIBUTE((unused)), rank, predefined;
+    MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
     MPIU_CHKPMEM_DECL(1);
@@ -415,8 +415,8 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 {
     int mpi_errno=MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
-    int dt_contig, rank, origin_predefined, target_predefined;
-    MPI_Aint dt_true_lb;
+    int dt_contig ATTRIBUTE((unused)), rank, origin_predefined, target_predefined;
+    MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
     MPIU_CHKLMEM_DECL(2);

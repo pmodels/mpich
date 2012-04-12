@@ -420,7 +420,7 @@ void CLOG_Preamble_read( CLOG_Preamble_t *preamble, int fd )
 {
     char  buffer[ CLOG_PREAMBLE_SIZE ];
     char  value_str[ CLOG_PREAMBLE_STRLEN ];
-    char *buf_ptr, *buf_tail;
+    char *buf_ptr;
     int   fptr_giga, fptr_rmdr, fptr_unit;
     int   ierr;
 
@@ -434,7 +434,6 @@ void CLOG_Preamble_read( CLOG_Preamble_t *preamble, int fd )
     }
 
     buf_ptr  = (char *) buffer;
-    buf_tail = buf_ptr + CLOG_PREAMBLE_SIZE - 1;
 
     /* Read the CLOG version ID */
     buf_ptr = CLOG_Util_strbuf_get( preamble->version,

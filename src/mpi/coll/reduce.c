@@ -45,7 +45,7 @@ static int MPIR_Reduce_binomial (
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    int comm_size, rank, is_commutative, type_size;
+    int comm_size, rank, is_commutative, type_size ATTRIBUTE((unused));
     int mask, relrank, source, lroot;
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
@@ -252,7 +252,7 @@ static int MPIR_Reduce_redscat_gather (
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size, rank, type_size, pof2, rem, newrank;
+    int comm_size, rank, type_size ATTRIBUTE((unused)), pof2, rem, newrank;
     int mask, *cnts, *disps, i, j, send_idx=0;
     int recv_idx, last_idx=0, newdst;
     int dst, send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root; 

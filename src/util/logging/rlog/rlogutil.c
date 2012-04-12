@@ -60,7 +60,7 @@ static int WriteFileData(const char *pBuffer, int length, FILE *fout)
 
 /* style: allow:vprintf:1 sig:0 */
 
-int rlog_err_printf(char *str, ...)
+int rlog_err_printf(const char *str, ...)
 {
     int n;
     va_list list;

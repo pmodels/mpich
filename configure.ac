@@ -5428,6 +5428,8 @@ void f1(void *a) { return; }],
                       [Define to an expression that will result in an error checking mutex type.])
         fi
 
+	PAC_FUNC_NEEDS_DECL([#include <pthread.h>],pthread_mutexattr_settype)
+
 	MPICH2_THREAD_PACKAGE=pthreads
         MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_POSIX
 	;;

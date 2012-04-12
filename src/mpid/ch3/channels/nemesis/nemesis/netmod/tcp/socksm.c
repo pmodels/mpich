@@ -980,12 +980,11 @@ int close_cleanup_and_free_sc_plfd(sockconn_t *const sc)
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno2 = MPI_SUCCESS;
     int rc;
-    MPIDI_VC_t *const sc_vc = sc->vc;
     MPIDI_STATE_DECL(MPID_STATE_CLOSE_CLEANUP_AND_FREE_SC_PLFD);
 
     MPIDI_FUNC_ENTER(MPID_STATE_CLOSE_CLEANUP_AND_FREE_SC_PLFD);
 
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "vc=%p, sc=%p, closing fd=%d", sc_vc, sc, sc->fd));
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "vc=%p, sc=%p, closing fd=%d", sc->vc, sc, sc->fd));
 
     if (sc == NULL)
         goto fn_exit;

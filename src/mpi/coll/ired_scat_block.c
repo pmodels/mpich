@@ -38,7 +38,7 @@ int MPIR_Ireduce_scatter_block_rec_hlv(void *sendbuf, void *recvbuf, int recvcou
     MPI_Aint extent, true_extent, true_lb;
     int  *disps;
     void *tmp_recvbuf, *tmp_results;
-    int type_size, total_count, dst;
+    int type_size ATTRIBUTE((unused)), total_count, dst;
     int mask;
     int *newcnts, *newdisps, rem, newdst, send_idx, recv_idx,
         last_idx, send_cnt, recv_cnt;
@@ -395,7 +395,7 @@ int MPIR_Ireduce_scatter_block_rec_dbl(void *sendbuf, void *recvbuf, int recvcou
     MPI_Aint extent, true_extent, true_lb;
     int  *disps;
     void *tmp_recvbuf, *tmp_results;
-    int type_size, dis[2], blklens[2], total_count, dst;
+    int type_size ATTRIBUTE((unused)), dis[2], blklens[2], total_count, dst;
     int mask, dst_tree_root, my_tree_root, j, k;
     int received;
     MPI_Datatype sendtype, recvtype;

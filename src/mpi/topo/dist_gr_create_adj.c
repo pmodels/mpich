@@ -171,6 +171,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPIU_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
+    MPIU_CHKPMEM_COMMIT();
     /* ... end of body of routine ... */
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
@@ -179,6 +180,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
+    MPIU_CHKPMEM_REAP();
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(
         mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,

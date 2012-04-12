@@ -481,7 +481,7 @@ TRACE_EXPORT int TRACE_Set_position( TRACE_file fp, TRACE_int64_t offset )
     return TRACEINPUT_FAIL;
 }
 
-TRACE_EXPORT char *TRACE_Get_err_string( int ierr )
+TRACE_EXPORT const char *TRACE_Get_err_string( int ierr )
 {
     return "Failure in RLOG file processing.";
 }

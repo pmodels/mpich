@@ -159,7 +159,6 @@ void CLOG_BlockData_patch_comm(       CLOG_BlockData_t *data,
                                 const CLOG_CommIDs_t   *commtable )
 {
     CLOG_Rec_Header_t     *hdr;
-    CLOG_Rec_Timeshift_t  *tshift;
     CLOG_Rec_CommEvt_t    *comm;
     CLOG_Rec_MsgEvt_t     *msg;
     int                    rectype;
@@ -208,7 +207,6 @@ void CLOG_BlockData_patch_comm(       CLOG_BlockData_t *data,
                 hdr->icomm   = commtable[ hdr->icomm ].local_ID;
                 break;
             case CLOG_REC_TIMESHIFT:
-                tshift                = (CLOG_Rec_Timeshift_t *) hdr->rest;
                 hdr->icomm            = commtable[ hdr->icomm ].local_ID;
                 break;
             default:

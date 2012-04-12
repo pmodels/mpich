@@ -61,8 +61,10 @@ int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int array
 #define FUNCNAME MPID_nem_lmt_RndvSend
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count, MPI_Datatype datatype, int dt_contig,
-                          MPIDI_msg_sz_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPID_Comm * comm, int context_offset)
+int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
+                          MPI_Datatype datatype, int dt_contig ATTRIBUTE((unused)),
+                          MPIDI_msg_sz_t data_sz, MPI_Aint dt_true_lb ATTRIBUTE((unused)),
+                          int rank, int tag, MPID_Comm * comm, int context_offset)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(upkt, MPID_nem_pkt_lmt_rts_t, rts_pkt);
@@ -492,8 +494,8 @@ static int do_cts(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
-    int dt_contig;
-    MPI_Aint dt_true_lb;
+    int dt_contig ATTRIBUTE((unused));
+    MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype * dt_ptr;
     MPID_IOV s_cookie;
     MPIDI_STATE_DECL(MPID_STATE_DO_CTS);

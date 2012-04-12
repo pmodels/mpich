@@ -128,8 +128,8 @@ int MPIR_Allreduce_intra (
     MPID_Comm *comm_ptr,
     int *errflag )
 {
-    int is_homogeneous;
 #ifdef MPID_HAS_HETERO
+    int is_homogeneous;
     int rc;
 #endif
     int        comm_size, rank, type_size;
@@ -214,10 +214,11 @@ int MPIR_Allreduce_intra (
 #endif
             
     
-    is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
     if (comm_ptr->is_hetero)
         is_homogeneous = 0;
+    else
+        is_homogeneous = 1;
 #endif
     
 #ifdef MPID_HAS_HETERO

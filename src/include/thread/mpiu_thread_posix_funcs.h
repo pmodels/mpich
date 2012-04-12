@@ -25,6 +25,10 @@
 #error 'Unable to determine pthrad mutex recursive value'
 #endif /* pthread mutex recursive value */
 
+#if defined(NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL)
+int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int kind);
+#endif /* NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL */
+
 /* MPIU_Thread_create() defined in mpiu_thread.c */
 
 #define MPIU_Thread_exit()			\

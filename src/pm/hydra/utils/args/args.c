@@ -17,6 +17,39 @@ static int exists(char *filename)
     return 1;
 }
 
+static HYD_status get_abs_wd(const char *wd, char **abs_wd)
+{
+    int ret;
+    char *cwd;
+    HYD_status status = HYD_SUCCESS;
+
+    if (wd == NULL) {
+        *abs_wd = NULL;
+        goto fn_exit;
+    }
+
+    if (wd[0] != '.') {
+        *abs_wd = (char *) wd;
+        goto fn_exit;
+    }
+
+    cwd = HYDU_getcwd();
+    ret = chdir(wd);
+    if (ret < 0)
+        HYDU_ERR_POP(status, "error calling chdir\n");
+
+    *abs_wd = HYDU_getcwd();
+    ret = chdir(cwd);
+    if (ret < 0)
+        HYDU_ERR_POP(status, "error calling chdir\n");
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status HYDU_find_in_path(const char *execname, char **path)
 {
     char *tmp[HYD_NUM_TMP_STRINGS], *path_loc = NULL, *test_loc, *user_path;
@@ -29,7 +62,8 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
         user_path = HYDU_strdup(user_path);
 
     if (user_path) {    /* If the PATH environment exists */
-        test_loc = HYDU_get_abs_wd(strtok(user_path, ";:"));
+        status = get_abs_wd(strtok(user_path, ";:"), &test_loc);
+        HYDU_ERR_POP(status, "error getting absolute working dir\n");
         do {
             tmp[0] = HYDU_strdup(test_loc);
             tmp[1] = HYDU_strdup("/");
@@ -54,7 +88,10 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
             HYDU_FREE(path_loc);
             path_loc = NULL;
-        } while ((test_loc = HYDU_get_abs_wd(strtok(NULL, ";:"))));
+
+            status = get_abs_wd(strtok(NULL, ";:"), &test_loc);
+            HYDU_ERR_POP(status, "error getting absolute working dir\n");
+        } while (test_loc);
     }
 
     /* There is either no PATH environment or we could not find the
@@ -220,24 +257,6 @@ char *HYDU_getcwd(void)
 
   fn_fail:
     goto fn_exit;
-}
-
-char *HYDU_get_abs_wd(const char *wd)
-{
-    char *cwd, *retdir;
-
-    if (wd == NULL)
-        return NULL;
-
-    if (wd[0] != '.')
-        return (char *) wd;
-
-    cwd = HYDU_getcwd();
-    chdir(wd);
-    retdir = HYDU_getcwd();
-    chdir(cwd);
-
-    return retdir;
 }
 
 HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node ** node_list)

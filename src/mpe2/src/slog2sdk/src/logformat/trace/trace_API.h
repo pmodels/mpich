@@ -194,7 +194,7 @@ TRACE_EXPORT
 int TRACE_Set_position( TRACE_file fp, TRACE_int64_t offset );
 
 TRACE_EXPORT
-char *TRACE_Get_err_string( int ierr );
+const char *TRACE_Get_err_string( int ierr );
 
 #if defined(__cplusplus)
 }
