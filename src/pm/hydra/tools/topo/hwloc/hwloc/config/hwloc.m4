@@ -546,6 +546,8 @@ EOF])
     AC_CHECK_HEADERS([malloc.h])
     AC_CHECK_FUNCS([getpagesize memalign posix_memalign])
 
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getpagesize)
+
     AC_CHECK_HEADERS([sys/utsname.h])
     AC_CHECK_FUNCS([uname])
 
