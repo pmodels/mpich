@@ -64,10 +64,11 @@ DISTCLEANFILES += $(top_builddir)/src/env/cc_shlib.conf  \
                   $(top_builddir)/src/env/mpif77         \
                   $(top_builddir)/src/env/mpif90
 
-# FIXME do this the automake way
-#doc_sources = mpicc.txt mpif77.txt mpicxx.txt mpif90.txt mpiexec.txt
-#DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
-#doc_HTML_SOURCES  = ${doc_sources}
-#doc_MAN_SOURCES   = ${doc_sources}
-#doc_LATEX_SOURCES = ${doc_sources}
+wrapper_doc_src = src/env/mpicc.txt \
+                  src/env/mpif77.txt \
+                  src/env/mpicxx.txt \
+                  src/env/mpif90.txt \
+                  src/env/mpiexec.txt
+doc1_src_txt += $(wrapper_doc_src)
+EXTRA_DIST += $(wrapper_doc_src)
 
