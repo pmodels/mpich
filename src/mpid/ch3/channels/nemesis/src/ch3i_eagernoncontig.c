@@ -37,7 +37,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 
         MPIDI_DBG_PRINTF((55, FCNAME, "enqueuing"));
 
-	sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)header;
+	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
         sreq->ch.noncontig    = TRUE;
         sreq->ch.header_sz    = hdr_sz;
 	sreq->ch.vc           = vc;
@@ -60,7 +60,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         sreq->ch.vc = vc;
         if (sreq->dev.segment_first == 0) /* nothing was sent, save header */
         {
-            sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)header;
+            sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
             sreq->ch.header_sz    = hdr_sz;
         }
         else

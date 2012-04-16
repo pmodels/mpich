@@ -117,7 +117,7 @@ struct MPID_nem_mx_internal_req
 {
    MPIU_OBJECT_HEADER; /* adds (unused) handle and ref_count fields */
    MPID_Request_kind_t    kind;       /* used   */
-   MPIDI_CH3_PktGeneric_t pending_pkt;
+   MPIDI_CH3_Pkt_t        pending_pkt;
    MPIDI_VC_t            *vc;
    void                  *tmpbuf;
    MPIDI_msg_sz_t         tmpbuf_sz;

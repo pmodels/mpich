@@ -62,7 +62,7 @@ MPID_nem_newmad_get_adi_msg(nm_sr_event_t event, const nm_sr_event_info_t*info)
         rreq->kind = MPID_REQUEST_RECV;   
         rreq->vc = nm_gate_ref_get(from);
        
-        if(length <=  sizeof(MPIDI_CH3_PktGeneric_t)) 
+        if(length <= sizeof(MPIDI_CH3_Pkt_t))
 	{
 	  data = (char*)&(rreq->pending_pkt);
 	}
@@ -232,7 +232,7 @@ MPID_nem_newmad_poll(int in_blocking_poll)
 	 MPID_nem_newmad_internal_req_t *adi_req = &(ref->nem_newmad_req);
 	 if (kind == MPID_REQUEST_RECV)
 	 {
-	    if (size <= sizeof(MPIDI_CH3_PktGeneric_t))
+	    if (size <= sizeof(MPIDI_CH3_Pkt_t))
 	    {
 	       MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(size));
 	    }

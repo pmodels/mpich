@@ -60,7 +60,6 @@ typedef MPIR_Rank_t MPID_Node_id_t;
 /* provides "pre" typedefs and such for NBC scheduling mechanism */
 #include "mpid_sched_pre.h"
 
-
 /* For the typical communication system for which the ch3 channel is
    appropriate, 16 bits is sufficient for the rank.  By also using 16
    bits for the context, we can reduce the size of the match
@@ -98,14 +97,8 @@ typedef union {
  * runtime global value. */
 #define MPIDI_TAG_UB (0x7fffffff)
 
-/* Packet types are defined in mpidpkt.h .  The intent is to remove the
-   need for packet definitions outside of the device directories.
-   Currently, the request contains a block of storage in which a 
-   packet header can be copied in the event that a message cannot be
-   send immediately.  
-*/
-typedef struct MPIDI_CH3_PktGeneric { int32_t kind; int32_t *pktptrs[1]; int32_t pktwords[6]; } 
-    MPIDI_CH3_PktGeneric_t;
+/* Provides MPIDI_CH3_Pkt_t.  Must come after MPIDI_Message_match definition. */
+#include "mpidpkt.h"
 
 /*
  * THIS IS OBSOLETE AND UNUSED, BUT RETAINED FOR ITS DESCRIPTIONS OF THE
@@ -319,7 +312,7 @@ typedef struct MPIDI_Request {
        message packet. This field provide a generic location for that.
        Question: do we want to make this a link instead of reserving 
        a fixed spot in the request? */
-    MPIDI_CH3_PktGeneric_t pending_pkt;
+    MPIDI_CH3_Pkt_t pending_pkt;
     struct MPID_Request * next;
 } MPIDI_Request;
 #define MPID_REQUEST_DECL MPIDI_Request dev;

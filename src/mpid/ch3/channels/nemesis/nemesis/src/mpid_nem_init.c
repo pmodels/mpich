@@ -68,7 +68,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
        packet.  This is needed because we no longer include channel
        packet types in the CH3 packet types to allow dynamic channel
        loading. */
-    MPIU_Assert(sizeof(MPIDI_CH3_nem_pkt_t) <= sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Assert(sizeof(MPIDI_CH3_nem_pkt_t) <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The MPID_nem_cell_rel_ptr_t defined in mpid_nem_datatypes.h
        should only contain a OPA_ptr_t.  This is to check that
@@ -363,7 +363,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     vc_ch->ckpt_restart_vc    = NULL;
 #endif
     vc_ch->pending_pkt_len    = 0;
-    MPIU_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_PktGeneric_t *, sizeof (MPIDI_CH3_PktGeneric_t), mpi_errno, "pending_pkt");
+    MPIU_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_Pkt_t *, sizeof (MPIDI_CH3_Pkt_t), mpi_errno, "pending_pkt");
 
     /* We do different things for vcs in the COMM_WORLD pg vs other pgs
        COMM_WORLD vcs may use shared memory, and already have queues allocated

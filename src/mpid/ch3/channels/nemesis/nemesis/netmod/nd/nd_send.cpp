@@ -33,9 +33,9 @@ int MPID_Nem_nd_istart_contig_msg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_
     sreqp->ch.vc = vc;
     sreqp->dev.iov_offset = 0;
 
-    sreqp->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)hdr;
+    sreqp->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)hdr;
     sreqp->dev.iov[0].MPID_IOV_BUF = (char *)&sreqp->dev.pending_pkt;
-    sreqp->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+    sreqp->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
 
     if(data_sz > 0){
         sreqp->dev.iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST )data;
@@ -118,9 +118,9 @@ int MPID_Nem_nd_send_contig(MPIDI_VC_t *vc, MPID_Request *sreqp, void *hdr, MPID
      */
     sreqp->ch.vc = vc;
     sreqp->dev.iov_offset = 0;
-    sreqp->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)hdr;
+    sreqp->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)hdr;
     sreqp->dev.iov[0].MPID_IOV_BUF = (char *)&sreqp->dev.pending_pkt;
-    sreqp->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+    sreqp->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
 
     if(data_sz > 0){
         sreqp->dev.iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST )data;
@@ -210,9 +210,9 @@ int MPID_Nem_nd_send_noncontig(MPIDI_VC_t *vc, MPID_Request *sreqp, void *header
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreqp, &(iov[1]), &iov_cnt);
     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
 
-    sreqp->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)header;
+    sreqp->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
     iov[0].MPID_IOV_BUF = (char *)&sreqp->dev.pending_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+    iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
 
     iov_cnt += 1;
 

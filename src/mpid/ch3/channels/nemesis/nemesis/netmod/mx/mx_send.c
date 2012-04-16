@@ -42,9 +42,9 @@ int MPID_nem_mx_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI
 #endif
 
     NEM_MX_ADI_MATCH(match_info); 
-    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_Pkt_t));
     mx_iov[0].segment_ptr     = (char *)&(sreq->dev.pending_pkt);
-    mx_iov[0].segment_length  = sizeof(MPIDI_CH3_PktGeneric_t);
+    mx_iov[0].segment_length  = sizeof(MPIDI_CH3_Pkt_t);
     num_seg = 1;
     if(data_sz)
     {
@@ -101,9 +101,9 @@ int MPID_nem_mx_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz
     NEM_MX_ADI_MATCH(match_info); 
     /*fprintf(stdout,"[%i]=== Startcontigmsg  sending  (%lx) to %i... \n",MPID_nem_mem_region.rank,match_info,vc->lpid); */
     
-    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_Pkt_t));
     mx_iov[0].segment_ptr     = (char *)&(sreq->dev.pending_pkt);
-    mx_iov[0].segment_length  = sizeof(MPIDI_CH3_PktGeneric_t);    
+    mx_iov[0].segment_length  = sizeof(MPIDI_CH3_Pkt_t);    
     num_seg = 1;
     if (data_sz)
     {
@@ -155,9 +155,9 @@ int MPID_nem_mx_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 #endif
 
     NEM_MX_ADI_MATCH(match_info); 
-    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_Pkt_t));
     mx_iov[0].segment_ptr     = (char *)&(sreq->dev.pending_pkt);
-    mx_iov[0].segment_length  = sizeof(MPIDI_CH3_PktGeneric_t);
+    mx_iov[0].segment_length  = sizeof(MPIDI_CH3_Pkt_t);
     num_seg = 1;
 
     MPIU_Assert(sreq->dev.segment_first == 0);

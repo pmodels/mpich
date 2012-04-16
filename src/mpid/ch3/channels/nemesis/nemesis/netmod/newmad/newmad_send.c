@@ -26,7 +26,7 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_ISENDCONTIG);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_ISENDCONTIG);    
 
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "newmad_iSendContig");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
@@ -36,9 +36,9 @@ int MPID_nem_newmad_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
     fprintf(stdout,"iSendContig ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
 #endif
 
-    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_Pkt_t));
     newmad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
-    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
+    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_Pkt_t);
     if(data_sz)
     {
 	newmad_iov[1].iov_base = data;
@@ -74,7 +74,7 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_ISTARTCONTIGMSG);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_ISTARTCONTIGMSG);    
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "newmad_iSendContig");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
@@ -90,9 +90,9 @@ int MPID_nem_newmad_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hd
     fprintf(stdout,"StartcontigMsg ========> Sending ADI msg  for req %p (match is %lx) \n",sreq,match_info);
 #endif
 
-    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)hdr,sizeof(MPIDI_CH3_Pkt_t));
     newmad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
-    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
+    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_Pkt_t);
     if (data_sz)
     {
 	newmad_iov[1].iov_base = (char *)data;
@@ -138,14 +138,14 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_NEWMAD_SENDNONCONTIGMSG);    
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWMAD_SENDNONCONTIGMSG);    
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));   
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));   
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "MPID_nem_newmad_iSendNoncontig");    
     
     NEM_NMAD_ADI_MATCH(match_info);
 
-    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Memcpy(&(sreq->dev.pending_pkt),(char *)header,sizeof(MPIDI_CH3_Pkt_t));
     newmad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
-    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_PktGeneric_t);
+    newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_Pkt_t);
 
     MPIU_Assert(sreq->dev.segment_first == 0);
     last = sreq->dev.segment_size;

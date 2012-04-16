@@ -132,7 +132,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPID_IOV *iov, int n_iov, MPID_Request
 	    if ( iov == remaining_iov )
 	    {
 		/* header was not sent, so iov[0] might point to something on the stack */
-		sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *) iov[0].MPID_IOV_BUF;
+		sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPID_IOV_BUF;
 		sreq->dev.iov[0].MPID_IOV_BUF = (char *) &sreq->dev.pending_pkt;
 		sreq->dev.iov[0].MPID_IOV_LEN = iov[0].MPID_IOV_LEN;
 	    }
@@ -152,7 +152,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPID_IOV *iov, int n_iov, MPID_Request
 	MPIU_Object_set_ref(sreq, 2);
 	sreq->kind = MPID_REQUEST_SEND;
 
-	sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *) iov[0].MPID_IOV_BUF;
+	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPID_IOV_BUF;
 	sreq->dev.iov[0].MPID_IOV_BUF = (char *) &sreq->dev.pending_pkt;
 	sreq->dev.iov[0].MPID_IOV_LEN = iov[0].MPID_IOV_LEN;
 

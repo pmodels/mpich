@@ -127,8 +127,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 #if 1
     /* This is a sanity check because we define a generic packet size
      */
-    if (sizeof(MPIDI_CH3_PktGeneric_t) < sizeof(MPIDI_CH3_Pkt_t)) {
-	fprintf( stderr, "Internal error - packet definition is too small.  Generic is %ld bytes, MPIDI_CH3_Pkt_t is %ld\n", (long int)sizeof(MPIDI_CH3_PktGeneric_t),
+    if (sizeof(MPIDI_CH3_Pkt_t) < sizeof(MPIDI_CH3_Pkt_t)) {
+	fprintf( stderr, "Internal error - packet definition is too small.  Generic is %ld bytes, MPIDI_CH3_Pkt_t is %ld\n", (long int)sizeof(MPIDI_CH3_Pkt_t),
 		 (long int)sizeof(MPIDI_CH3_Pkt_t) );
 	exit(1);
     }

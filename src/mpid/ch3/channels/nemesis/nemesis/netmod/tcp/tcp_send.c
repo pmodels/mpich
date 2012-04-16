@@ -253,7 +253,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 MPID_IOV iov[2];
                 
                 iov[0].MPID_IOV_BUF = hdr;
-                iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+                iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
                 iov[1].MPID_IOV_BUF = data;
                 iov[1].MPID_IOV_LEN = data_sz;
                 
@@ -282,7 +282,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 }
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
                 
-                if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
+                if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz)
                 {
                     /* sent whole message */
                     *sreq_ptr = NULL;
@@ -312,11 +312,11 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
 
-    if (offset < sizeof(MPIDI_CH3_PktGeneric_t))
+    if (offset < sizeof(MPIDI_CH3_Pkt_t))
     {
-        sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)hdr;
+        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)hdr;
         sreq->dev.iov[0].MPID_IOV_BUF = (char *)&sreq->dev.pending_pkt + offset;
-        sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t) - offset ;
+        sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset ;
         if (data_sz)
         {
             sreq->dev.iov[1].MPID_IOV_BUF = data;
@@ -328,8 +328,8 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     }
     else
     {
-        sreq->dev.iov[0].MPID_IOV_BUF = (char *)data + (offset - sizeof(MPIDI_CH3_PktGeneric_t));
-        sreq->dev.iov[0].MPID_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_PktGeneric_t));
+        sreq->dev.iov[0].MPID_IOV_BUF = (char *)data + (offset - sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.iov[0].MPID_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
         sreq->dev.iov_count = 1;
     }
     
@@ -392,7 +392,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
             MPID_IOV iov[2];
                 
             iov[0].MPID_IOV_BUF = hdr;
-            iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+            iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
             iov[1].MPID_IOV_BUF = data;
             iov[1].MPID_IOV_LEN = data_sz;
                 
@@ -422,7 +422,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
             }
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
                 
-            if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
+            if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz)
             {
                 /* sent whole message */
                 *sreq_ptr = NULL;
@@ -451,11 +451,11 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
 
-    if (offset < sizeof(MPIDI_CH3_PktGeneric_t))
+    if (offset < sizeof(MPIDI_CH3_Pkt_t))
     {
-        sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)hdr;
+        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)hdr;
         sreq->dev.iov[0].MPID_IOV_BUF = (char *)&sreq->dev.pending_pkt + offset;
-        sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t) - offset ;
+        sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset ;
         if (data_sz)
         {
             sreq->dev.iov[1].MPID_IOV_BUF = data;
@@ -467,8 +467,8 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
     }
     else
     {
-        sreq->dev.iov[0].MPID_IOV_BUF = (char *)data + (offset - sizeof(MPIDI_CH3_PktGeneric_t));
-        sreq->dev.iov[0].MPID_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_PktGeneric_t));
+        sreq->dev.iov[0].MPID_IOV_BUF = (char *)data + (offset - sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.iov[0].MPID_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
         sreq->dev.iov_count = 1;
     }
     
@@ -527,7 +527,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                 MPID_IOV iov[2];
                 
                 iov[0].MPID_IOV_BUF = hdr;
-                iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+                iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
                 iov[1].MPID_IOV_BUF = data;
                 iov[1].MPID_IOV_LEN = data_sz;
                 
@@ -556,7 +556,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                 }
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
                 
-                if (offset == sizeof(MPIDI_CH3_PktGeneric_t) + data_sz)
+                if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz)
                 {
                     /* sent whole message */
                     int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
@@ -599,11 +599,11 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
 
 
     /* save iov */
-    if (offset < sizeof(MPIDI_CH3_PktGeneric_t))
+    if (offset < sizeof(MPIDI_CH3_Pkt_t))
     {
-        sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)hdr;
+        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)hdr;
         sreq->dev.iov[0].MPID_IOV_BUF = (char *)&sreq->dev.pending_pkt + offset;
-        sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t) - offset;
+        sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset;
         if (data_sz)
         {
             sreq->dev.iov[1].MPID_IOV_BUF = data;
@@ -615,8 +615,8 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
     }
     else
     {
-        sreq->dev.iov[0].MPID_IOV_BUF = (char *)data + (offset - sizeof(MPIDI_CH3_PktGeneric_t));
-        sreq->dev.iov[0].MPID_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_PktGeneric_t));
+        sreq->dev.iov[0].MPID_IOV_BUF = (char *)data + (offset - sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.iov[0].MPID_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
         sreq->dev.iov_count = 1;
     }
 
@@ -672,10 +672,10 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tcp_SendNoncontig");
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_PktGeneric_t));
+    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
     iov[0].MPID_IOV_BUF = header;
-    iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+    iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
 
     iov_n = MPID_IOV_LIMIT - 1;
 
@@ -729,9 +729,9 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     if (offset < iov[0].MPID_IOV_LEN)
     {
         /* header was not yet sent, save it in req */
-        sreq->dev.pending_pkt = *(MPIDI_CH3_PktGeneric_t *)header;
+        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)&sreq->dev.pending_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_PktGeneric_t);
+        iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     }
 
     /* check if whole iov was sent, and save any unsent portion of iov */

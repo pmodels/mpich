@@ -205,7 +205,7 @@ if(type == NEM_MX_DIRECT_TYPE)
       mx_get_endpoint_addr_context(source,(void **)(&vc));	    
       rreq->vc = vc;
 
-      if(length <=  sizeof(MPIDI_CH3_PktGeneric_t)) {
+      if(length <= sizeof(MPIDI_CH3_Pkt_t)) {
 	iov.segment_ptr = (char*)&(rreq->pending_pkt);
       }
       else{
@@ -268,7 +268,7 @@ int MPID_nem_mx_directRecv(MPIDI_VC_t *vc, MPID_Request *rreq)
       int               dt_contig;
       MPI_Aint          dt_true_lb;
       MPID_Datatype    *dt_ptr;   
-      /*int            threshold = (vc->eager_max_msg_sz - sizeof(MPIDI_CH3_PktGeneric_t));*/
+      /*int            threshold = (vc->eager_max_msg_sz - sizeof(MPIDI_CH3_Pkt_t));*/
       
       NEM_MX_DIRECT_MATCH(match_info,0,source,context);
       if (tag == MPI_ANY_TAG)
@@ -338,7 +338,7 @@ MPID_nem_mx_poll(int in_blocking_poll)
        MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
        if(adi_req->vc == NULL)
 	  mx_get_endpoint_addr_context(status.source,(void **)(&(adi_req->vc))); 
-       if (status.msg_length <= sizeof(MPIDI_CH3_PktGeneric_t))
+       if (status.msg_length <= sizeof(MPIDI_CH3_Pkt_t))
        {
 	 MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
        }
@@ -442,7 +442,7 @@ MPID_nem_mx_poll(int in_blocking_progress)
 	 MPIU_Assert(status.code != MX_STATUS_TRUNCATED);	       	
 	 if(adi_req->vc == NULL)
 	   mx_get_endpoint_addr_context(status.source,(void **)(&(adi_req->vc))); 
-	 if (status.msg_length <= sizeof(MPIDI_CH3_PktGeneric_t))
+	 if (status.msg_length <= sizeof(MPIDI_CH3_Pkt_t))
 	 {
 	   MPID_nem_handle_pkt(adi_req->vc,(char *)&(adi_req->pending_pkt),(MPIDI_msg_sz_t)(status.msg_length));
 	 }
