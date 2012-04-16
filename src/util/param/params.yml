@@ -403,6 +403,18 @@ parameters:
         manager and the MPICH2 library. The format of this variable is
         <low>:<high>.
 
+  ############################
+    # threads parameters
+    - category    : threads
+      name        : CTXID_EAGER_SIZE
+      type        : int
+      default     : 2
+      description : >-
+        The MPICH_CTXID_EAGER_SIZE environment variable allows you to
+        specify how many words in the context ID mask will be set aside
+        for the eager allocation protocol.  If the application is running
+        out of context IDs, reducing this value may help.
+
 ...
 
 # Local Variables:

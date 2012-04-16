@@ -805,10 +805,21 @@ fn_fail:
 
 #else /* MPICH_IS_THREADED is set and true */
 
+/* EAGER CONTEXT ID ALLOCATION: Attempt to allocate the context ID during the
+ * initial synchronization step.  If eager protocol fails, threads fall back to
+ * the base algorithm.
+ */
+static volatile int eager_nelem     = -1;
+static volatile int eager_in_use    = 0;
+
 /* Additional values needed to maintain thread safety */
-static volatile int mask_in_use = 0;
-/* lowestContextId is used to break ties when multiple threads
-   are contending for the mask */
+static volatile int mask_in_use     = 0;
+
+/* lowestContextId is used to prioritize access when multiple threads
+ * are contending for the mask.  lowestTag is used to break ties when
+ * MPI_Comm_create_group is invoked my multiple threads on the same parent
+ * communicator.
+ */
 #define MPIR_MAXID (1 << 30)
 static volatile int lowestContextId = MPIR_MAXID;
 static volatile int lowestTag       = -1;
@@ -859,9 +870,11 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
     int mpi_errno = MPI_SUCCESS;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK];
     int own_mask = 0;
+    int own_eager_mask = 0;
     static const int NUM_CTX_TESTS = 10;
     int testCount = NUM_CTX_TESTS;
     int errflag = FALSE;
+    int first_iter = 1;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -876,26 +889,23 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
          mask_in_use, lowestContextId, lowestTag, comm_ptr->context_id, tag));
 
 
-    /* Deadlock avoidance: Only enter the context id allocation loop when all
-     * processes have called this routine.
-     */
-    if (group_ptr != NULL) {
-        int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
-        mpi_errno = MPIR_Barrier_group( comm_ptr, group_ptr, coll_tag, &errflag );
-    } else {
-        mpi_errno = MPIR_Barrier_impl( comm_ptr, &errflag );
-    }
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-
     /* see NOTE-C1 for info about the "exhausted IDs" test */
     while (*context_id == 0) {
         /* We lock only around access to the mask (except in the global locking
          * case).  If another thread is using the mask, we take a mask of zero. */
         MPIU_THREAD_CS_ENTER(CONTEXTID,);
+
         if (initialize_context_mask) {
             MPIR_Init_contextid();
         }
+
+        if (eager_nelem < 0) {
+            /* Ensure that at least one word of deadlock-free context IDs is
+               always set aside for the base protocol */
+            MPIU_Assert( MPIR_PARAM_CTXID_EAGER_SIZE >= 0 && MPIR_PARAM_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK-1 );
+            eager_nelem = MPIR_PARAM_CTXID_EAGER_SIZE;
+        }
+
         if (ignore_id) {
             /* We are not participating in the resulting communicator, so our
              * context ID space doesn't matter.  Set the mask to "all available". */
@@ -904,6 +914,26 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
             /* don't need to touch mask_in_use/lowestContextId b/c our thread
              * doesn't ever need to "win" the mask */
         }
+
+        /* Deadlock avoidance: Only participate in context id loop when all
+         * processes have called this routine.  On the first iteration, use the
+         * "eager" allocation protocol.
+         */
+        else if (first_iter) {
+            memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+            own_eager_mask = 0;
+
+            /* Attempt to reserve the eager mask segment */
+            if (!eager_in_use && eager_nelem > 0) {
+                int i;
+                for (i = 0; i < eager_nelem; i++)
+                    local_mask[i] = context_mask[i];
+
+                eager_in_use   = 1;
+                own_eager_mask = 1;
+            }
+        }
+
         else {
             /* lowestTag breaks ties when contextIds are the same (happens only
                in calls to MPI_Comm_create_group. */
@@ -919,7 +949,14 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
                 MPIU_DBG_MSG_D(COMM, VERBOSE, "In in-use, set lowestContextId to %d", lowestContextId);
             }
             else {
-                MPIU_Memcpy(local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+                int i;
+
+                /* Copy safe mask segment to local_mask */
+                for (i = 0; i < eager_nelem; i++)
+                    local_mask[i] = 0;
+                for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
+                    local_mask[i] = context_mask[i];
+
                 mask_in_use     = 1;
                 own_mask        = 1;
                 MPIU_DBG_MSG(COMM, VERBOSE, "Copied local_mask");
@@ -952,6 +989,23 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
              * who did care agreed on a value */
             *context_id = MPIR_Locate_context_bit(local_mask);
             /* used later in out-of-context ids check and outer while loop condition */
+        }
+        else if (own_eager_mask) {
+            /* There is a chance that we've found a context id */
+            /* Find_and_allocate_context_id updates the context_mask if it finds a match */
+            *context_id = MPIR_Find_and_allocate_context_id(local_mask);
+            MPIU_DBG_MSG_D(COMM, VERBOSE, "Context id is now %hd", *context_id);
+
+            own_eager_mask = 0;
+            eager_in_use   = 0;
+
+            if (*context_id <= 0) {
+                /* else we did not find a context id. Give up the mask in case
+                 * there is another thread (with a lower input context id)
+                 * waiting for it.  We need to ensure that any other threads
+                 * have the opportunity to run, hence yielding */
+                MPIU_THREAD_CS_YIELD(CONTEXTID,);
+            }
         }
         else if (own_mask) {
             /* There is a chance that we've found a context id */
@@ -989,8 +1043,16 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
          * where we already have to grab the lock */
         if ((testCount-- == 0) && (*context_id == 0)) {
             int hasNoId, totalHasNoId;
+            int i;
             MPIU_THREAD_CS_ENTER(CONTEXTID,);
-            hasNoId = MPIR_Locate_context_bit(context_mask) == 0;
+
+            /* Copy safe mask segment to local_mask */
+            for (i = 0; i < eager_nelem; i++)
+                local_mask[i] = 0;
+            for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
+                local_mask[i] = context_mask[i];
+
+            hasNoId = MPIR_Locate_context_bit(local_mask) == 0;
             MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
             /* we _must_ release the lock above in order to avoid deadlocking on
@@ -1021,6 +1083,8 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
                 MPIU_DBG_MSG_D(COMM, VERBOSE, "reinitialized testCount to %d", testCount);
             }
         }
+
+        first_iter = 0;
     }
 
 
@@ -1087,9 +1151,6 @@ static int gcn_sch(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0, MPIR_Context_id
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = NULL;
     MPIU_CHKPMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
-
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 
@@ -1121,7 +1182,6 @@ static int gcn_sch(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0, MPIR_Context_id
 
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
@@ -1140,6 +1200,10 @@ int MPIR_Get_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcommp, MPID_R
     int mpi_errno = MPI_SUCCESS;
     int tag;
     MPID_Sched_t s;
+
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID_NONBLOCK);
 
     /* now create a schedule */
     mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
@@ -1579,7 +1643,7 @@ int MPIR_Comm_copy_data(MPID_Comm *comm_ptr, MPID_Comm **outcomm_ptr)
 
 fn_fail:
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COPY);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
     return mpi_errno;
 }
 /* Common body between MPIR_Comm_release and MPIR_comm_release_always.  This
