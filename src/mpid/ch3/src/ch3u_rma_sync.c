@@ -2453,6 +2453,10 @@ int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
     MPIDI_Pkt_init(lock_granted_pkt, MPIDI_CH3_PKT_LOCK_GRANTED);
     lock_granted_pkt->source_win_handle = source_win_handle;
 
+    MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,
+                     (MPIU_DBG_FDEST, "sending lock granted pkt on vc=%p, source_win_handle=%#08x",
+                      vc, lock_granted_pkt->source_win_handle));
+
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_granted_pkt, sizeof(*lock_granted_pkt), &req);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
@@ -3568,7 +3572,7 @@ int MPIDI_CH3_PktHandler_LockGranted( MPIDI_VC_t *vc ATTRIBUTE((unused)),
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGRANTED);
 
     MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"received lock granted pkt");
-    
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPID_Win_get_ptr(lock_granted_pkt->source_win_handle, win_ptr);
