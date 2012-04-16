@@ -505,8 +505,11 @@ foreach $_ (@ARGV) {
     'Graph_neighbors' => '4',
                 'Graph_neighbors-4' => 'out:fint2int_array:*v3',
     'Comm_create' => '3', 'Comm_create-3' => 'out:handle::MPI_Comm',
+    'Comm_create_group' => '4', 'Comm_create_group-4' => 'out:handle::MPI_Comm',
     'Comm_dup' => '2', 'Comm_dup-2' => 'out:handle::MPI_Comm',
+    'Comm_idup' => '2', 'Comm_idup-2' => 'out:handle::MPI_Comm',
     'Comm_split' => '4', 'Comm_split-4' => 'out:handle::MPI_Comm',
+    'Comm_split_type' => '5', 'Comm_split_type-5' => 'out:handle::MPI_Comm',
     'Comm_free' => '1', 'Comm_free-1' => 'inout:handle::MPI_Comm',
     'Comm_accept' => '1:5', 'Comm_accept-1' => 'in:addnull',
                  'Comm_accept-5' => 'out:handle::MPI_Comm',
@@ -580,6 +583,10 @@ foreach $_ (@ARGV) {
 		 'Iprobe-5' => 'out:status::l4',
     'Probe' => '4', 'Probe-4' => 'out:status',
     'Recv' => '7', 'Recv-7' => 'out:status',
+    'Mprobe' => '5', 'Mprobe-5' => 'out:status',
+    'Mrecv' => '5', 'Mrecv-5' => 'out:status', 
+    'Improbe' => '4:6', 'Improbe-4' => 'out:logical', 
+        'Improbe-6' => 'out:status',
     'Sendrecv' => '12', 'Sendrecv-12' => 'out:status',
     'Sendrecv_replace' => '9', 'Sendrecv_replace-9' => 'out:status',
 #    'Send' => '1', 'Send-1' => 'in:bufptr',
@@ -1525,9 +1532,11 @@ sub print_call_args {
 	    print $OUTFD $parm;
 	}
 	else {
+	    print "Processing parameter $count: $parm ($fintFix)\n" if $debug;
 	    # Convert to/from object type as required.  
 	    #print "TMP: parm = $arg_qualifiers[$count]$parm\n";
 	    $fullparm="$arg_qualifiers[$count]$parm";
+	    print "Full param is $fullparm\n" if $debug;
 	    if (!$fintFix && defined($argsneedcast{$fullparm})) {
 		$argval = "v$count";
 		if ($arg_addresses[$count] > 0) {
@@ -1536,9 +1545,11 @@ sub print_call_args {
 		$callparm = $argsneedcast{$fullparm};
 		$callparm =~ s/ARG/$argval/;
 		print $OUTFD "$callparm";
+		print "Param $parm needs cast to $callparm\n" if $debug;
 	    }
 	    elsif ($fintFix && $parm =~ /^\s*([\w_]+)\s*\*\s*$/) {
 		$parmtype = $1;
+		print "parm = $parm and parmtype = $parmtype\n" if $debug;
 		if (defined($fintToHandle{$parmtype})) {
 		    print $OUTFD "\&l$count";
 		}
@@ -1549,13 +1560,25 @@ sub print_call_args {
 		    print $OUTFD "v$count";
 		}
 	    }
+	    elsif ($fintFix && defined($argsneedcast{$fullparm})) {
+		# We expect to have only value types here
+		$argval = "v$count";
+		if ($arg_addresses[$count] > 0) {
+		    $argval = "*$argval";
+		}
+		$callparm = $argsneedcast{$fullparm};
+		$callparm =~ s/ARG/$argval/;
+		print $OUTFD "$callparm";
+		print "Param $parm needs cast to $callparm\n" if $debug;
+	    }
 	    else {
 		#print "$routine_name ( $parm )\n";
 		# Since MPICH objects are ints (except for MPI_File), 
 		# we don't need to do 
 		# anything unless MPI_Fint and int are different.
 		# print STDERR "XXX $count $#arg_addresses XXX\n";
-		if ($parm =~ /MPI_File\s/) {
+		print "Parm = :$parm:\n" if $debug;
+		if ($parm =~ /^MPI_File$/) {
 		    print $OUTFD "MPI_File_f2c(*v$count)";
 		}
 		else {
@@ -2244,7 +2267,7 @@ sub attrint_ctof {
 
 sub attrint_out_decl {
     my $count = $_[0];
-    print $OUTFD "    void *attrv$count;\n";
+    print $OUTFD "    int attrv$count;\n";
 }
 
 sub attrint_out_arg {
@@ -4435,6 +4458,8 @@ sub ReadAndProcessInterface {
 	print $_ if $debug;
 	# In some packages (not MPI but in Parallel netCDF) not all prototypes
 	# have Fortran equivalents.  The following lets us skip over them
+	# (MPI, as of MPI 3, has the MPI_T routines, which do not have
+	# Fortran interfaces)
 	if (/\/\*\s*Begin Skip Prototypes/) {
 	    while (<FD>) {
 		if (/\/\*\s*End Skip Prototypes/) { last; }

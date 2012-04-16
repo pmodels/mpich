@@ -59,7 +59,7 @@ void *MPIR_F_MPI_UNWEIGHTED = 0;
 void *MPI_F_STATUS_IGNORE   = 0;
 void *MPI_F_STATUSES_IGNORE = 0;
 */
-int  *MPI_F_ERRCODES_IGNORE = 0;
+MPI_Fint  *MPI_F_ERRCODES_IGNORE = 0;
 void *MPI_F_ARGVS_NULL      = 0;
 #endif
 
@@ -74,7 +74,7 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *si, void *ssi,
     MPIR_F_MPI_BOTTOM     = bt;
     MPIR_F_MPI_IN_PLACE   = ip;
     MPIR_F_MPI_UNWEIGHTED = uw;
-    MPI_F_ERRCODES_IGNORE = (int *)ecsi;
+    MPI_F_ERRCODES_IGNORE = (MPI_Fint *)ecsi;
     MPI_F_ARGVS_NULL      = asn;
 }
 /* Initialize the Fortran ARGV_NULL to a blank.  Using this routine
