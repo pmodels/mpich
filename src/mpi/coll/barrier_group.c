@@ -15,8 +15,8 @@
 
 int MPIR_Barrier_group( MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, int *errflag )
 {
-    int src, dst, mpi_errno = MPI_SUCCESS;
-    int junk;
+    int src = 0;
+    int dst, mpi_errno = MPI_SUCCESS;
 
     /* Trivial barriers return immediately */
     if (comm_ptr->local_size == 1) goto fn_exit;
