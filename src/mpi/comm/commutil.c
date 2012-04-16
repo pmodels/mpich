@@ -1586,7 +1586,7 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_copy_data
 #undef FCNAME
-#define FCNAME "MPIR_Comm_copy"
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Comm_copy_data(MPID_Comm *comm_ptr, MPID_Comm **outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
