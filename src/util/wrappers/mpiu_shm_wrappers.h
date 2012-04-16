@@ -216,7 +216,7 @@ static inline int MPIU_SHMW_Hnd_alloc(MPIU_SHMW_Hnd_t *hnd_ptr)
     MPIU_Assert(hnd_ptr);
     *hnd_ptr = (MPIU_SHMW_Hnd_t) MPIU_Malloc(MPIU_SHMW_HND_SZ);
     if(*hnd_ptr){
-        (*hnd_ptr)->flag |= MPIU_SHMW_FLAG_GHND_STATIC;
+        (*hnd_ptr)->flag = MPIU_SHMW_FLAG_GHND_STATIC;
     }
     else{
         return -1;
