@@ -121,6 +121,7 @@ int MPI_Win_free(MPI_Win *win)
     }
     
     mpi_errno = MPIU_RMA_CALL(win_ptr,Win_free(&win_ptr));
+    if (mpi_errno) goto fn_fail;
     *win = MPI_WIN_NULL;
 
     /* ... end of body of routine ... */
