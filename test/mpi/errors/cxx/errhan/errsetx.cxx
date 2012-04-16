@@ -62,6 +62,8 @@ int main( int argc, char *argv[] )
 	cout << "Did not invoke error handler when invoking iprobe with an invalid rank" << endl;
     }
 
+    eh.Free();
+
     // Find out how many errors we saw
 
     MTest_Finalize( errs );

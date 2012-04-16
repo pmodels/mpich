@@ -19,6 +19,7 @@ int main (int argc, char **argv)
     MPI_Comm_create_errhandler((MPI_Comm_errhandler_function*)errf, &errh);
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, errh);
     MPI_Comm_set_errhandler(MPI_COMM_SELF, errh);
+    MPI_Errhandler_free(&errh);
     MPI_Finalize();
     printf(" No Errors\n");
     return 0;
