@@ -4287,7 +4287,7 @@ MPIR_Comm_delete_attr_f77_proxy(
 
 int MPI_Status_f2c( MPI_Fint *f_status, MPI_Status *c_status )
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;\n";
     &specialInitStatement( $OUTFD );
 print $OUTFD "\    
     if (f_status == MPI_F_STATUS_IGNORE) {
