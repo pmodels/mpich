@@ -2267,7 +2267,13 @@ sub attrint_ctof {
 
 sub attrint_out_decl {
     my $count = $_[0];
-    print $OUTFD "    int attrv$count;\n";
+    print $OUTFD "    void *attrv$count;\n";
+    # Unfortunately, the common attribute routines in comm_get_attr.c 
+    # assume that the output is a pointer variable; this isn't really the 
+    # case when MPIR_ATTR_INT is the attribute type.  Instead of providing
+    # the correct type (see the code that handles the MPIR_ATTR_INT case), 
+    # we'll need to extract the int out of this void pointer.
+    # print $OUTFD "    int attrv$count;\n";
 }
 
 sub attrint_out_arg {
@@ -4282,7 +4288,6 @@ MPIR_Comm_delete_attr_f77_proxy(
 int MPI_Status_f2c( MPI_Fint *f_status, MPI_Status *c_status )
 {
     int mpi_errno = MPI_SUCCESS;
-    /* This code assumes that the ints are the same size */\n";
     &specialInitStatement( $OUTFD );
 print $OUTFD "\    
     if (f_status == MPI_F_STATUS_IGNORE) {
@@ -4357,7 +4362,6 @@ print $OUTFD "\
 int MPI_Status_c2f( MPI_Status *c_status, MPI_Fint *f_status )
 {
     int mpi_errno = MPI_SUCCESS;
-    /* This code assumes that the ints are the same size */
     if (c_status == MPI_STATUS_IGNORE ||
 	c_status == MPI_STATUSES_IGNORE) {
 	/* The call is erroneous (see 4.12.5 in MPI-2) */
