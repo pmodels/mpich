@@ -549,7 +549,7 @@ EOF])
     # when autoheader is run, it doesn't know about
     # PAC_FUNC_NEEDS_DECL, so it doesn't generate an appropriate line
     # in config.h.in.  We need to fool it with a dummy AC_DEFINE().
-    if [ false ] ; then
+    if false ; then
         AC_DEFINE([NEEDS_GETPAGESIZE_DECL], 1, [Define to 1 if getpagesize needs a declaration])
     fi
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getpagesize)
