@@ -264,20 +264,19 @@ doctexthtml_verbose_0 = @echo "   DOCTEXTHTML  " $@;
 	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath www/www1  -heading MPI \
 		-quotefmt ${top_srcdir}/maint/docnotes $<
 
-mandir-create:
-	$(MKDIR_P) $(top_builddir)/man/man1
-	$(MKDIR_P) $(top_builddir)/man/man3
-htmldir-create:
-	$(MKDIR_P) $(top_builddir)/www/www1
-	$(MKDIR_P) $(top_builddir)/www/www3
+# use mandoc-local target to force directory creation before running DOCTEXT
+mandoc:
+	test -d $(top_builddir)/man/man1 || $(MKDIR_P) $(top_builddir)/man/man1
+	test -d $(top_builddir)/man/man3 || $(MKDIR_P) $(top_builddir)/man/man3
+	$(MAKE) $(AM_MAKEFLAGS) mandoc-local
+mandoc-local: $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony)
 
-# FIXME: This mandir-create rule technically isn't ordered before the doctext
-# commands, so we have a bug.  Need to fiddle with the dependencies to get this
-# right, although sadly the "obvious" fix of making the suffix rule depend on
-# mandir-create won't work because adding a dependency to a suffix rule prevents
-# it from being considered a suffix rule by make.
-mandoc: mandir-create $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony)
-htmldoc: htmldir-create $(mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony)
+# use htmldoc-local target to force directory creation before running DOCTEXT
+htmldoc:
+	test -d $(top_builddir)/www/www1 || $(MKDIR_P) $(top_builddir)/www/www1
+	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
+	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
+htmldoc-local: $(mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony)
 
 # install-man does not have a special "-local" target for some reason
 INSTALL_DATA_LOCAL_TARGETS += install-man-local
