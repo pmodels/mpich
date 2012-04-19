@@ -522,39 +522,12 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
 #if defined(HAVE_GETIFADDRS)
     struct ifaddrs *ifaddr, *ifa;
+    int remote_access;
 #endif /* HAVE_GETIFADDRS */
 
     HYD_status status = HYD_SUCCESS;
 
     *is_local = 0;
-
-    /* If the host name is "localhost", return immediately */
-    if (!strcmp(host, "localhost")) {
-        *is_local = 1;
-        goto fn_exit;
-    }
-
-    /* If the host name is "localhost" followed by some domain name,
-     * return immediately */
-    if (!strncmp(host, "localhost.", strlen("localhost."))) {
-        *is_local = 1;
-        goto fn_exit;
-    }
-
-    /* Find the local hostname and see if that matches what the user
-     * provided */
-    status = sock_localhost_init();
-    HYDU_ERR_POP(status, "unable to initialize sock local information\n");
-
-    if (!strcmp(host, local_hostname) || !strcmp(host, short_local_hostname)) {
-        *is_local = 1;
-        goto fn_exit;
-    }
-
-
-    /* None of the obvious searches worked. Let's try to find all the
-     * IP addresses this host has and compare them to the user
-     * provided host IP address. */
 
     /* If we are unable to resolve the remote host name, it need not
      * be an error. It could mean that the user is using an alias for
@@ -569,6 +542,14 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     ip1 = HYDU_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf1,
                                          MAX_HOSTNAME_LEN));
     HYDU_ASSERT(ip1, status);
+
+    status = HYDU_sock_remote_access(ip1, &remote_access);
+    HYDU_ERR_POP(status, "unable to check if the IP is remotely accessible\n");
+
+    if (!remote_access) {
+        *is_local = 1;
+        goto fn_exit;
+    }
 #else
     goto fn_exit;
 #endif /* HAVE_INET_NTOP */
@@ -616,12 +597,30 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
 HYD_status HYDU_sock_remote_access(char *host, int *remote_access)
 {
+    struct hostent *ht;
+    char *ip = NULL, buf[INET_ADDRSTRLEN];
+    struct sockaddr_in sa;
     HYD_status status = HYD_SUCCESS;
+
+    if ((ht = gethostbyname(host))) {
+        memset((char *) &sa, 0, sizeof(struct sockaddr_in));
+        memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
+
+#if defined HAVE_INET_NTOP
+        ip = HYDU_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf,
+                                            MAX_HOSTNAME_LEN));
+        HYDU_ASSERT(ip, status);
+#else
+        strcpy(ip, host);
+#endif
+    }
+    else {
+        strcpy(ip, host);
+    }
 
     /* FIXME: Comparing the hostname to "127.*" does not seem like a
      * good way of checking if a hostname is remotely accessible */
-    if (!MPL_strncmp(host, "127.", strlen("127.")) || !strcmp(host, "localhost") ||
-        !MPL_strncmp(host, "localhost.", strlen("localhost.")))
+    if (!MPL_strncmp(ip, "127.", strlen("127.")))
         *remote_access = 0;
     else
         *remote_access = 1;
