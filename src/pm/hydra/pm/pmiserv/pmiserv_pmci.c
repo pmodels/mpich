@@ -65,6 +65,11 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
         status = HYD_pmcd_pmiserv_cleanup_all_pgs();
         HYDU_ERR_POP(status, "cleanup of processes failed\n");
+
+        /* Force kill all bootstrap processes that we launched */
+        status = HYDT_bsci_wait_for_completion(0);
+        HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
+
         exit(1);
     }
     else if (cmd.type == HYD_SIGNAL) {
@@ -161,9 +166,13 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
 {
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    int time_elapsed, time_left;
+    struct timeval start, now;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    gettimeofday(&start, NULL);
 
     /* We first wait for the exit statuses to arrive till the timeout
      * period */
@@ -171,12 +180,28 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
         while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
-            status = HYDT_dmx_wait_for_event(timeout);
-            if (status == HYD_TIMED_OUT) {
-                HYDU_dump(stdout, "APPLICATION TIMED OUT\n");
-                status = HYD_pmcd_pmiserv_cleanup_all_pgs();
-                HYDU_ERR_POP(status, "cleanup of processes failed\n");
+            gettimeofday(&now, NULL);
+            time_elapsed = (now.tv_sec - start.tv_sec);
+            if (timeout > 0) {
+                if (time_elapsed > timeout) {
+                    HYDU_dump(stdout, "APPLICATION TIMED OUT\n");
+
+                    status = HYD_pmcd_pmiserv_cleanup_all_pgs();
+                    HYDU_ERR_POP(status, "cleanup of processes failed\n");
+
+                    /* Force kill all bootstrap processes that we launched */
+                    status = HYDT_bsci_wait_for_completion(0);
+                    HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
+                }
+                else
+                    time_left = timeout - time_elapsed;
             }
+            else
+                time_left = timeout;
+
+            status = HYDT_dmx_wait_for_event(time_left);
+            if (status == HYD_TIMED_OUT)
+                continue;
             HYDU_ERR_POP(status, "error waiting for event\n");
         }
 
@@ -184,9 +209,19 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
         HYDU_ERR_POP(status, "error freeing PG scratch space\n");
     }
 
-    /* Either all application processes exited or we have timed
-     * out. We now wait for all the proxies to terminate. */
-    status = HYDT_bsci_wait_for_completion(-1);
+    /* Either all application processes exited or we have timed out.
+     * We now wait for all the proxies to terminate. */
+    gettimeofday(&now, NULL);
+    time_elapsed = (now.tv_sec - start.tv_sec);
+    if (timeout > 0) {
+        time_left = timeout - time_elapsed;
+        if (time_left < 0)
+            time_left = 0;
+    }
+    else
+        time_left = timeout;
+
+    status = HYDT_bsci_wait_for_completion(time_left);
     HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
   fn_exit:

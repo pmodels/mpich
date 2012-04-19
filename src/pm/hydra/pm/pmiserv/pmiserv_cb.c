@@ -81,17 +81,16 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
          * find the wrong proxy */
         proxy->control_fd = HYD_FD_CLOSED;
     }
-    else {
-        /* We go through the following cleanup only if we actually
-         * cleaned up a proxy. Otherwise, once all the proxies in a PG
-         * are cleaned up, every time this function is called, we
-         * might try to cleanup the resources. */
-        goto fn_exit;
-    }
 
+    /* If there is an active proxy, don't clean up the PG */
     for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
-        if (tproxy->control_fd != HYD_FD_CLOSED)
+        if (tproxy->control_fd != HYD_FD_UNSET && tproxy->control_fd != HYD_FD_CLOSED)
             goto fn_exit;
+
+    /* If there is no active proxy, ignore the proxies that haven't
+     * connected back to us yet. */
+    for (tproxy = pg->proxy_list; tproxy; tproxy = tproxy->next)
+        tproxy->control_fd = HYD_FD_CLOSED;
 
     /* All proxies in this process group have terminated */
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
