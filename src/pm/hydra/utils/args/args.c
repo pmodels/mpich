@@ -259,7 +259,7 @@ char *HYDU_getcwd(void)
     goto fn_exit;
 }
 
-HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node ** node_list)
+HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
 {
     int num_procs;
     char *hostname, *procs, *binding, *tmp, *user;
