@@ -129,36 +129,19 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
     goto fn_exit;
 }
 
-static HYD_status cleanup_pg(struct HYD_pg *pg)
+HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void)
 {
+    struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        status = cleanup_proxy(proxy);
-        HYDU_ERR_POP(status, "unable to cleanup proxy\n");
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_pmcd_pmiserv_cleanup_all_pgs(void)
-{
-    struct HYD_pg *pg;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
     for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
-        status = cleanup_pg(pg);
-        HYDU_ERR_POP(status, "unable to cleanup PG\n");
+        for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+            status = cleanup_proxy(proxy);
+            HYDU_ERR_POP(status, "unable to cleanup proxy\n");
+        }
     }
 
   fn_exit:
