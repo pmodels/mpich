@@ -5,4 +5,10 @@ rerr 2
 # commenting out this test.
 # 3/20/2011.  Since this was commented out before 1.0.5 and we are now 
 # at 1.4, it is clear that this should not be commented out again
-bcastlength 4
+#
+# 2012-04-20 Commenting out again. r9686 disabled the functionality that detects
+# this because it was broken when nonblocking collectives are used.  Darius has
+# a plan for how to fix this, but it will take some effort to implement.  It
+# would be better if the mpich2 test suite had an XFAIL type of feature, but
+# we don't so commenting is what we are stuck with for now. [goodell@]
+#bcastlength 4
