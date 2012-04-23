@@ -30,6 +30,10 @@
  # MPI-3: native MPIX_Comm_create_group support (updated version of the prior
    MPIX_Group_comm_create routine).
 
+ # MPI-3: MPI_Intercomm_create's internal communication no longer interferes
+   with point-to-point communication, even if point-to-point operations on the
+   parent communicator use the same tag or MPI_ANY_TAG.
+
  # MPI-3: eliminated the possibility of interference between
    MPI_Intercomm_create and point-to-point messaging operations.
 
