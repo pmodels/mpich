@@ -9,41 +9,36 @@
 #include <mpi.h>
 #include <armci.h>
 
-#define VERBOSE        0
 #define DATA_NELTS     1000
 #define NUM_ITERATIONS 10
 #define DATA_SZ        (DATA_NELTS*sizeof(int))
+
+       int armci_calls = 0;
+extern int parmci_calls;
 
 int main(int argc, char ** argv) {
   int    rank, nproc, i, test_iter;
   int   *my_data, *buf;
   void **base_ptrs;
-  void **buf_shared;
 
   MPI_Init(&argc, &argv);
   ARMCI_Init();
+  armci_calls++;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
   if (rank == 0) printf("Starting ARMCI test with %d processes\n", nproc);
 
-  base_ptrs  = malloc(sizeof(void*)*nproc);
-  buf_shared = malloc(sizeof(void*)*nproc);
+  buf = malloc(DATA_SZ);
+  base_ptrs = malloc(sizeof(void*)*nproc);
 
   for (test_iter = 0; test_iter < NUM_ITERATIONS; test_iter++) {
     if (rank == 0) printf(" + iteration %d\n", test_iter);
 
-    if (rank == 0 && VERBOSE) printf("   - Allocating shared buffers\n");
-
     /*** Allocate the shared array ***/
-    ARMCI_Malloc(base_ptrs,  DATA_SZ);
-    ARMCI_Malloc(buf_shared, DATA_SZ);
-
-    buf     = buf_shared[rank];
+    ARMCI_Malloc(base_ptrs, DATA_SZ);
     my_data = base_ptrs[rank];
-
-    if (rank == 0 && VERBOSE) printf("   - Testing one-sided get\n");
 
     /*** Get from our right neighbor and verify correct data ***/
     ARMCI_Access_begin(my_data);
@@ -51,10 +46,10 @@ int main(int argc, char ** argv) {
     ARMCI_Access_end(my_data);
 
     ARMCI_Barrier(); // Wait for all updates to data to complete
+    armci_calls++;
 
     ARMCI_Get(base_ptrs[(rank+1) % nproc], buf, DATA_SZ, (rank+1) % nproc);
-
-    ARMCI_Access_begin(buf);
+    armci_calls++;
 
     for (i = 0; i < DATA_NELTS; i++) {
       if (buf[i] != ((rank+1) % nproc)*test_iter) {
@@ -63,17 +58,16 @@ int main(int argc, char ** argv) {
       }
     }
 
-    ARMCI_Access_end(buf);
-
     ARMCI_Barrier(); // Wait for all gets to complete
-
-    if (rank == 0 && VERBOSE) printf("   - Testing one-sided put\n");
+    armci_calls++;
 
     /*** Put to our left neighbor and verify correct data ***/
     for (i = 0; i < DATA_NELTS; i++) buf[i] = rank*test_iter;
     ARMCI_Put(buf, base_ptrs[(rank+nproc-1) % nproc], DATA_SZ, (rank+nproc-1) % nproc);
+    armci_calls++;
 
     ARMCI_Barrier(); // Wait for all updates to data to complete
+    armci_calls++;
 
     ARMCI_Access_begin(my_data);
     for (i = 0; i < DATA_NELTS; i++) {
@@ -85,23 +79,22 @@ int main(int argc, char ** argv) {
     ARMCI_Access_end(my_data);
 
     ARMCI_Barrier(); // Wait for all gets to complete
-
-    if (rank == 0 && VERBOSE) printf("   - Testing one-sided accumlate\n");
+    armci_calls++;
 
     /*** Accumulate to our left neighbor and verify correct data ***/
-    ARMCI_Access_begin(buf);
     for (i = 0; i < DATA_NELTS; i++) buf[i] = rank;
-    ARMCI_Access_end(buf);
     
     ARMCI_Access_begin(my_data);
     for (i = 0; i < DATA_NELTS; i++) my_data[i] = rank;
     ARMCI_Access_end(my_data);
     ARMCI_Barrier();
+    armci_calls++;
 
     int scale = test_iter;
     ARMCI_Acc(ARMCI_ACC_INT, &scale, buf, base_ptrs[(rank+nproc-1) % nproc], DATA_SZ, (rank+nproc-1) % nproc);
 
     ARMCI_Barrier(); // Wait for all updates to data to complete
+    armci_calls++;
 
     ARMCI_Access_begin(my_data);
     for (i = 0; i < DATA_NELTS; i++) {
@@ -112,18 +105,25 @@ int main(int argc, char ** argv) {
     }
     ARMCI_Access_end(my_data);
 
-    if (rank == 0 && VERBOSE) printf("   - Freeing shared buffers\n");
-
     ARMCI_Free(my_data);
-    ARMCI_Free(buf);
   }
 
+  free(buf);
   free(base_ptrs);
-  free(buf_shared);
-
-  if (rank == 0) printf("Test complete: PASS.\n");
+  
+  if (armci_calls == parmci_calls) {
+    if (rank == 0) {
+      printf("Profiling check ok: %d recorded == %d profiled calls\n", armci_calls, parmci_calls);
+      printf("Test complete: PASS.\n");
+    }
+  } else {
+    printf("%d: Profiling check failed -- %d recorded != %d profiled calls\n", rank, armci_calls, parmci_calls);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
 
   ARMCI_Finalize();
+  armci_calls++;
+
   MPI_Finalize();
 
   return 0;

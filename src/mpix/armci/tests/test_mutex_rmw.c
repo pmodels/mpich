@@ -68,6 +68,7 @@ int main(int argc, char ** argv) {
 
   ARMCI_Free(base_ptrs[rank]);
   ARMCI_Destroy_mutexes();
+  free(base_ptrs);
 
   ARMCI_Finalize();
   MPI_Finalize();

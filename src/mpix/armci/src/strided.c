@@ -76,6 +76,16 @@ void ARMCII_Strided_to_dtype(int stride_array[/*stride_levels*/], int count[/*st
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_PutS = PARMCI_PutS
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_PutS ARMCI_PutS
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_PutS as PARMCI_PutS
+#endif
+/* -- end weak symbols block -- */
+
 /** Blocking operation that transfers data from the calling process to the
   * memory of the remote process.  The data transfer is strided and blocking.
   *
@@ -90,7 +100,7 @@ void ARMCII_Strided_to_dtype(int stride_array[/*stride_levels*/], int count[/*st
   *
   * @return                    Zero on success, error code otherwise.
   */
-int ARMCI_PutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
+int PARMCI_PutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
                void *dst_ptr, int dst_stride_ar[/*stride_levels*/], 
                int count[/*stride_levels+1*/], int stride_levels, int proc) {
 
@@ -154,7 +164,7 @@ int ARMCI_PutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
     armci_giov_t iov;
 
     ARMCII_Strided_to_iov(&iov, src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels);
-    err = ARMCI_PutV(&iov, 1, proc);
+    err = PARMCI_PutV(&iov, 1, proc);
 
     free(iov.src_ptr_array);
     free(iov.dst_ptr_array);
@@ -163,6 +173,16 @@ int ARMCI_PutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
   return err;
 }
 
+
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_GetS = PARMCI_GetS
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_GetS ARMCI_GetS
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_GetS as PARMCI_GetS
+#endif
+/* -- end weak symbols block -- */
 
 /** Blocking operation that transfers data from the remote process to the
   * memory of the calling process.  The data transfer is strided and blocking.
@@ -178,7 +198,7 @@ int ARMCI_PutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
   *
   * @return                    Zero on success, error code otherwise.
   */
-int ARMCI_GetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
+int PARMCI_GetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
                void *dst_ptr, int dst_stride_ar[/*stride_levels*/], 
                int count[/*stride_levels+1*/], int stride_levels, int proc) {
 
@@ -242,7 +262,7 @@ int ARMCI_GetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
     armci_giov_t iov;
 
     ARMCII_Strided_to_iov(&iov, src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels);
-    err = ARMCI_GetV(&iov, 1, proc);
+    err = PARMCI_GetV(&iov, 1, proc);
 
     free(iov.src_ptr_array);
     free(iov.dst_ptr_array);
@@ -251,6 +271,16 @@ int ARMCI_GetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
   return err;
 }
 
+
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_AccS = PARMCI_AccS
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_AccS ARMCI_AccS
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_AccS as PARMCI_AccS
+#endif
+/* -- end weak symbols block -- */
 
 /** Blocking operation that accumulates data from the local process into the
   * memory of the remote process.  The data transfer is strided and blocking.
@@ -268,7 +298,7 @@ int ARMCI_GetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
   *
   * @return                    Zero on success, error code otherwise.
   */
-int ARMCI_AccS(int datatype, void *scale,
+int PARMCI_AccS(int datatype, void *scale,
                void *src_ptr, int src_stride_ar[/*stride_levels*/],
                void *dst_ptr, int dst_stride_ar[/*stride_levels*/],
                int count[/*stride_levels+1*/], int stride_levels, int proc) {
@@ -374,7 +404,7 @@ int ARMCI_AccS(int datatype, void *scale,
     armci_giov_t iov;
 
     ARMCII_Strided_to_iov(&iov, src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels);
-    err = ARMCI_AccV(datatype, scale, &iov, 1, proc);
+    err = PARMCI_AccV(datatype, scale, &iov, 1, proc);
 
     free(iov.src_ptr_array);
     free(iov.dst_ptr_array);
@@ -383,6 +413,16 @@ int ARMCI_AccS(int datatype, void *scale,
   return err;
 }
 
+
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_NbPutS = PARMCI_NbPutS
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_NbPutS ARMCI_NbPutS
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_NbPutS as PARMCI_NbPutS
+#endif
+/* -- end weak symbols block -- */
 
 /** Non-blocking operation that transfers data from the calling process to the
   * memory of the remote process.  The data transfer is strided and blocking.
@@ -398,13 +438,23 @@ int ARMCI_AccS(int datatype, void *scale,
   *
   * @return                    Zero on success, error code otherwise.
   */
-int ARMCI_NbPutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
+int PARMCI_NbPutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
                void *dst_ptr, int dst_stride_ar[/*stride_levels*/], 
                int count[/*stride_levels+1*/], int stride_levels, int proc, armci_hdl_t *hdl) {
 
-  return ARMCI_PutS(src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
+  return PARMCI_PutS(src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
 }
 
+
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_NbGetS = PARMCI_NbGetS
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_NbGetS ARMCI_NbGetS
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_NbGetS as PARMCI_NbGetS
+#endif
+/* -- end weak symbols block -- */
 
 /** Non-blocking operation that transfers data from the remote process to the
   * memory of the calling process.  The data transfer is strided and blocking.
@@ -420,13 +470,23 @@ int ARMCI_NbPutS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
   *
   * @return                    Zero on success, error code otherwise.
   */
-int ARMCI_NbGetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
+int PARMCI_NbGetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
                void *dst_ptr, int dst_stride_ar[/*stride_levels*/], 
                int count[/*stride_levels+1*/], int stride_levels, int proc, armci_hdl_t *hdl) {
 
-  return ARMCI_GetS(src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
+  return PARMCI_GetS(src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
 }
 
+
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_NbAccS = PARMCI_NbAccS
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_NbAccS ARMCI_NbAccS
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_NbAccS as PARMCI_NbAccS
+#endif
+/* -- end weak symbols block -- */
 
 /** Non-blocking operation that accumulates data from the local process into the
   * memory of the remote process.  The data transfer is strided and blocking.
@@ -444,12 +504,12 @@ int ARMCI_NbGetS(void *src_ptr, int src_stride_ar[/*stride_levels*/],
   *
   * @return                    Zero on success, error code otherwise.
   */
-int ARMCI_NbAccS(int datatype, void *scale,
+int PARMCI_NbAccS(int datatype, void *scale,
                void *src_ptr, int src_stride_ar[/*stride_levels*/],
                void *dst_ptr, int dst_stride_ar[/*stride_levels*/],
                int count[/*stride_levels+1*/], int stride_levels, int proc, armci_hdl_t *hdl) {
 
-  return ARMCI_AccS(datatype, scale, src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
+  return PARMCI_AccS(datatype, scale, src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
 }
 
 
@@ -650,6 +710,16 @@ int ARMCII_Iov_iter_next(armcii_iov_iter_t *it, void **src, void **dst) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_PutS_flag = PARMCI_PutS_flag
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_PutS_flag ARMCI_PutS_flag
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_PutS_flag as PARMCI_PutS_flag
+#endif
+/* -- end weak symbols block -- */
+
 /** Blocking operation that transfers data from the calling process to the
   * memory of the remote process.  The data transfer is strided and blocking.
   * After the transfer completes, the given flag is set on the remote process.
@@ -667,14 +737,14 @@ int ARMCII_Iov_iter_next(armcii_iov_iter_t *it, void **src, void **dst) {
   *
   * @return                    Zero on success, error code otherwise.
   */
-int ARMCI_PutS_flag(void *src_ptr, int src_stride_ar[/*stride_levels*/],
+int PARMCI_PutS_flag(void *src_ptr, int src_stride_ar[/*stride_levels*/],
                  void *dst_ptr, int dst_stride_ar[/*stride_levels*/], 
                  int count[/*stride_levels+1*/], int stride_levels, 
                  int *flag, int value, int proc) {
 
-  ARMCI_PutS(src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
-  ARMCI_Fence(proc);
-  ARMCI_Put(&value, flag, sizeof(int), proc);
+  PARMCI_PutS(src_ptr, src_stride_ar, dst_ptr, dst_stride_ar, count, stride_levels, proc);
+  PARMCI_Fence(proc);
+  PARMCI_Put(&value, flag, sizeof(int), proc);
 
   return 1;
 }

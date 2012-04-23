@@ -369,6 +369,16 @@ int ARMCII_Iov_op_datatype(enum ARMCII_Op_e op, void **src, void **dst, int coun
 }    
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_PutV = PARMCI_PutV
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_PutV ARMCI_PutV
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_PutV as PARMCI_PutV
+#endif
+/* -- end weak symbols block -- */
+
 /** Generalized I/O vector one-sided put.
   *
   * @param[in] iov      Vector of transfer information.
@@ -376,7 +386,7 @@ int ARMCII_Iov_op_datatype(enum ARMCII_Op_e op, void **src, void **dst, int coun
   * @param[in] proc     Target process.
   * @return             Success 0, otherwise non-zero.
   */
-int ARMCI_PutV(armci_giov_t *iov, int iov_len, int proc) {
+int PARMCI_PutV(armci_giov_t *iov, int iov_len, int proc) {
   int v;
 
   for (v = 0; v < iov_len; v++) {
@@ -398,6 +408,16 @@ int ARMCI_PutV(armci_giov_t *iov, int iov_len, int proc) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_GetV = PARMCI_GetV
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_GetV ARMCI_GetV
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_GetV as PARMCI_GetV
+#endif
+/* -- end weak symbols block -- */
+
 /** Generalized I/O vector one-sided get.
   *
   * @param[in] iov      Vector of transfer information.
@@ -405,7 +425,7 @@ int ARMCI_PutV(armci_giov_t *iov, int iov_len, int proc) {
   * @param[in] proc     Target process.
   * @return             Success 0, otherwise non-zero.
   */
-int ARMCI_GetV(armci_giov_t *iov, int iov_len, int proc) {
+int PARMCI_GetV(armci_giov_t *iov, int iov_len, int proc) {
   int v;
 
   for (v = 0; v < iov_len; v++) {
@@ -428,6 +448,16 @@ int ARMCI_GetV(armci_giov_t *iov, int iov_len, int proc) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_AccV = PARMCI_AccV
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_AccV ARMCI_AccV
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_AccV as PARMCI_AccV
+#endif
+/* -- end weak symbols block -- */
+
 /** Generalized I/O vector one-sided accumulate.
   *
   * @param[in] iov      Vector of transfer information.
@@ -435,7 +465,7 @@ int ARMCI_GetV(armci_giov_t *iov, int iov_len, int proc) {
   * @param[in] proc     Target process.
   * @return             Success 0, otherwise non-zero.
   */
-int ARMCI_AccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int proc) {
+int PARMCI_AccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int proc) {
   int v;
 
   for (v = 0; v < iov_len; v++) {
@@ -457,16 +487,46 @@ int ARMCI_AccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int pr
 }
 
 
-int ARMCI_NbPutV(armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle) {
-  return ARMCI_PutV(iov, iov_len, proc);
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_NbPutV = PARMCI_NbPutV
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_NbPutV ARMCI_NbPutV
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_NbPutV as PARMCI_NbPutV
+#endif
+/* -- end weak symbols block -- */
+
+int PARMCI_NbPutV(armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle) {
+  return PARMCI_PutV(iov, iov_len, proc);
 }
 
-int ARMCI_NbGetV(armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle) {
-  return ARMCI_GetV(iov, iov_len, proc);
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_NbGetV = PARMCI_NbGetV
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_NbGetV ARMCI_NbGetV
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_NbGetV as PARMCI_NbGetV
+#endif
+/* -- end weak symbols block -- */
+
+int PARMCI_NbGetV(armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle) {
+  return PARMCI_GetV(iov, iov_len, proc);
 }
 
-int ARMCI_NbAccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle) {
-  return ARMCI_AccV(datatype, scale, iov, iov_len, proc);
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_NbAccV = PARMCI_NbAccV
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_NbAccV ARMCI_NbAccV
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_NbAccV as PARMCI_NbAccV
+#endif
+/* -- end weak symbols block -- */
+
+int PARMCI_NbAccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle) {
+  return PARMCI_AccV(datatype, scale, iov, iov_len, proc);
 }
 
 

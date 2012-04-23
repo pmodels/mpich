@@ -128,10 +128,10 @@ void ARMCII_Absv_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatyp
 /** General ARMCI global operation (reduction).  Collective on group.
   *
   * @param[in]    scope Scope in which to perform the GOP (only SCOPE_ALL is supported)
-  * @param[inout] x     Vector of n doubles, contains input and will contain output.
+  * @param[inout] x     Vector of n data elements, contains input and will contain output.
   * @param[in]    n     Length of x
   * @param[in]    op    One of '+', '*', 'max', 'min', 'absmax', 'absmin'
-  * @param[in]    type  Data type of x
+  * @param[in]    type  Data type of x (e.g. ARMCI_INT, ...)
   * @param[in]    group Group on which to perform the GOP
   */
 void armci_msg_group_gop_scope(int scope, void *x, int n, char *op, int type, ARMCI_Group *group) {

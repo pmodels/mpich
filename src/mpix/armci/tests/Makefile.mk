@@ -22,6 +22,8 @@ check_PROGRAMS += tests/test_onesided         \
                   tests/test_puts_gets_dla    \
                   tests/test_assert           \
                   tests/test_igop             \
+                  tests/test_rmw_fadd         \
+                  tests/test_parmci           \
                   # end
 
 TESTS          += tests/test_onesided         \
@@ -43,6 +45,8 @@ TESTS          += tests/test_onesided         \
                   tests/test_puts_gets        \
                   tests/test_puts_gets_dla    \
                   tests/test_igop             \
+                  tests/test_rmw_fadd         \
+                  tests/test_parmci           \
                   # end
 
 XFAIL_TESTS    += tests/test_assert           \
@@ -68,6 +72,9 @@ tests_test_puts_gets_LDADD = libarmci.la
 tests_test_puts_gets_dla_LDADD = libarmci.la
 tests_test_assert_LDADD = libarmci.la
 tests_test_igop_LDADD = libarmci.la
+tests_test_rmw_fadd_LDADD = libarmci.la
+tests_test_parmci_LDADD = libarmci.la
+tests_test_parmci_SOURCES = tests/test_parmci.c tests/test_parmci_lib.c
 
 include tests/mpi/Makefile.mk
 include tests/ctree/Makefile.mk

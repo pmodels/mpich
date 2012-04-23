@@ -34,6 +34,11 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks);
 
+    if (nranks < 2) {
+        printf("%s: Must be run with at least 2 processes\n", argv[0]);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
     ARMCI_Init_args(&argc, &argv);
 
     buffer = (double **) malloc(sizeof(double *) * nranks);
@@ -218,6 +223,7 @@ int main(int argc, char **argv)
 
     ARMCI_Free((void *) buffer[rank]);
     ARMCI_Free_local(src_buf);
+    free(buffer);
 
     ARMCI_Finalize();
 

@@ -13,12 +13,22 @@
 #include <gmr.h>
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Access_begin = PARMCI_Access_begin
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Access_begin ARMCI_Access_begin
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Access_begin as PARMCI_Access_begin
+#endif
+/* -- end weak symbols block -- */
+
 /** Declare the start of a local access epoch.  This allows direct access to
   * data in local memory.
   *
   * @param[in] ptr Pointer to the allocation that will be accessed directly 
   */
-void ARMCI_Access_begin(void *ptr) {
+void PARMCI_Access_begin(void *ptr) {
   gmr_t *mreg;
 
   mreg = gmr_lookup(ptr, ARMCI_GROUP_WORLD.rank);
@@ -31,6 +41,16 @@ void ARMCI_Access_begin(void *ptr) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Access_end = PARMCI_Access_end
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Access_end ARMCI_Access_end
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Access_end as PARMCI_Access_end
+#endif
+/* -- end weak symbols block -- */
+
 /** Declare the end of a local access epoch.
   *
   * \note MPI-2 does not allow multiple locks at once, so you can have only one
@@ -39,7 +59,7 @@ void ARMCI_Access_begin(void *ptr) {
   *
   * @param[in] ptr Pointer to the allocation that was accessed directly 
   */
-void ARMCI_Access_end(void *ptr) {
+void PARMCI_Access_end(void *ptr) {
   gmr_t *mreg;
 
   mreg = gmr_lookup(ptr, ARMCI_GROUP_WORLD.rank);
@@ -95,6 +115,16 @@ int ARMCIX_Mode_get(void *ptr) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Get = PARMCI_Get
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Get ARMCI_Get
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Get as PARMCI_Get
+#endif
+/* -- end weak symbols block -- */
+
 /** One-sided get operation.
   *
   * @param[in] src    Source address (remote)
@@ -103,7 +133,7 @@ int ARMCIX_Mode_get(void *ptr) {
   * @param[in] target Process id to target
   * @return           0 on success, non-zero on failure
   */
-int ARMCI_Get(void *src, void *dst, int size, int target) {
+int PARMCI_Get(void *src, void *dst, int size, int target) {
   gmr_t *src_mreg, *dst_mreg;
 
   src_mreg = gmr_lookup(src, target);
@@ -153,6 +183,16 @@ int ARMCI_Get(void *src, void *dst, int size, int target) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Put = PARMCI_Put
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Put ARMCI_Put
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Put as PARMCI_Put
+#endif
+/* -- end weak symbols block -- */
+
 /** One-sided put operation.
   *
   * @param[in] src    Source address (remote)
@@ -161,7 +201,7 @@ int ARMCI_Get(void *src, void *dst, int size, int target) {
   * @param[in] target Process id to target
   * @return           0 on success, non-zero on failure
   */
-int ARMCI_Put(void *src, void *dst, int size, int target) {
+int PARMCI_Put(void *src, void *dst, int size, int target) {
   gmr_t *src_mreg, *dst_mreg;
 
   dst_mreg = gmr_lookup(dst, target);
@@ -212,6 +252,16 @@ int ARMCI_Put(void *src, void *dst, int size, int target) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Acc = PARMCI_Acc
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Acc ARMCI_Acc
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Acc as PARMCI_Acc
+#endif
+/* -- end weak symbols block -- */
+
 /** One-sided accumulate operation.
   *
   * @param[in] datatype ARMCI data type for the accumulate operation (see armci.h)
@@ -223,7 +273,7 @@ int ARMCI_Put(void *src, void *dst, int size, int target) {
   * @param[in] proc     Process id to target
   * @return             0 on success, non-zero on failure
   */
-int ARMCI_Acc(int datatype, void *scale, void *src, void *dst, int bytes, int proc) {
+int PARMCI_Acc(int datatype, void *scale, void *src, void *dst, int bytes, int proc) {
   void  *src_buf;
   int    count, type_size, scaled, src_is_locked = 0;
   MPI_Datatype type;
@@ -296,6 +346,16 @@ int ARMCI_Acc(int datatype, void *scale, void *src, void *dst, int bytes, int pr
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Put_flag = PARMCI_Put_flag
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Put_flag ARMCI_Put_flag
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Put_flag as PARMCI_Put_flag
+#endif
+/* -- end weak symbols block -- */
+
 /** One-sided copy of data from the source to the destination.  Set a flag on
   * the remote process when the transfer is complete.
   *
@@ -307,10 +367,10 @@ int ARMCI_Acc(int datatype, void *scale, void *src, void *dst, int bytes, int pr
   * @param[in] proc  Process id of the target
   * @return          0 on success, non-zero on failure
   */
-int ARMCI_Put_flag(void *src, void* dst, int size, int *flag, int value, int proc) {
-  ARMCI_Put(src, dst, size, proc);
-  ARMCI_Fence(proc);
-  ARMCI_Put(&value, flag, sizeof(int), proc);
+int PARMCI_Put_flag(void *src, void* dst, int size, int *flag, int value, int proc) {
+  PARMCI_Put(src, dst, size, proc);
+  PARMCI_Fence(proc);
+  PARMCI_Put(&value, flag, sizeof(int), proc);
 
   return 0;
 }

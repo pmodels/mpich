@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
     ARMCI_Free((void *) buffer[rank]);
     ARMCI_Free_local(src_buf);
     ARMCI_Free_local(dst_buf);
+    free(buffer);
 
     ARMCI_Finalize();
     MPI_Finalize();

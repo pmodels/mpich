@@ -114,9 +114,10 @@ void ARMCII_Msg_sel_min_op(void *data_in, void *data_inout, int *len, MPI_Dataty
 void ARMCII_Msg_sel_max_op(void *data_in, void *data_inout, int *len, MPI_Datatype *datatype);
 
 
-/* Translate between ARMCI and MPI ranks */
+/* Group helper routines */
 
 int  ARMCII_Translate_absolute_to_group(ARMCI_Group *group, int world_rank);
+void ARMCII_Group_init_from_comm(ARMCI_Group *group);
 
 
 /* I/O Vector data management and implementation */

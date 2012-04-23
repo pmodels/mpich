@@ -88,7 +88,7 @@ int main(int argc, char ** argv) {
     for (i = 0; i < DATA_NELTS; i++) {
       if (my_data[i] != rank + ((rank+1) % nproc)*test_iter) {
         printf("%d: ACC expected %d, got %d\n", rank, (rank+1) % nproc, my_data[i]);
-        //MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(MPI_COMM_WORLD, 1);
       }
     }
     ARMCI_Access_end(my_data);

@@ -23,11 +23,21 @@ void ARMCI_Error(char *msg, int code) {
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Barrier = PARMCI_Barrier
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Barrier ARMCI_Barrier
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Barrier as PARMCI_Barrier
+#endif
+/* -- end weak symbols block -- */
+
 /** Barrier synchronization.  Collective on the world group (not the default
   * group!).
   */
-void ARMCI_Barrier(void) {
-  ARMCI_AllFence();
+void PARMCI_Barrier(void) {
+  PARMCI_AllFence();
   MPI_Barrier(ARMCI_GROUP_WORLD.comm);
 
   if (ARMCII_GLOBAL_STATE.debug_flush_barriers) {
@@ -35,21 +45,41 @@ void ARMCI_Barrier(void) {
   }
 }
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_Fence = PARMCI_Fence
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_Fence ARMCI_Fence
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_Fence as PARMCI_Fence
+#endif
+/* -- end weak symbols block -- */
+
 /** Wait for remote completion on one-sided operations targeting process proc.
   * In MPI-2, this is a no-op since get/put/acc already guarantee remote
   * completion.
   *
   * @param[in] proc Process to target
   */
-void ARMCI_Fence(int proc) {
+void PARMCI_Fence(int proc) {
   return;
 }
 
 
+/* -- begin weak symbols block -- */
+#if defined(HAVE_PRAGMA_WEAK)
+#  pragma weak ARMCI_AllFence = PARMCI_AllFence
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF)
+#  pragma _HP_SECONDARY_DEF PARMCI_AllFence ARMCI_AllFence
+#elif defined(HAVE_PRAGMA_CRI_DUP)
+#  pragma _CRI duplicate ARMCI_AllFence as PARMCI_AllFence
+#endif
+/* -- end weak symbols block -- */
+
 /** Wait for remote completion on all one-sided operations.  In MPI-2, this is
   * a no-op since get/put/acc already guarantee remote completion.
   */
-void ARMCI_AllFence(void) {
+void PARMCI_AllFence(void) {
   return;
 }
 

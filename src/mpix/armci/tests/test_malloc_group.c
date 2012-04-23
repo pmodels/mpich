@@ -50,6 +50,8 @@ int main(int argc, char **argv) {
 
   if (me == 0) printf(" + done\n");
 
+  free(base_ptrs);
+
   ARMCI_Finalize();
   MPI_Finalize();
 

@@ -20,7 +20,7 @@ ARMCI_Group ARMCI_GROUP_DEFAULT = {0};
 
 /** Initialize an ARMCI group's remaining fields using the communicator field.
   */
-static void ARMCI_Group_init_from_comm(ARMCI_Group *group) {
+void ARMCII_Group_init_from_comm(ARMCI_Group *group) {
   if (group->comm != MPI_COMM_NULL) {
     MPI_Comm_size(group->comm, &group->size);
     MPI_Comm_rank(group->comm, &group->rank);
@@ -194,7 +194,7 @@ void ARMCI_Group_create_child(int grp_size, int *pid_list, ARMCI_Group *armci_gr
   else
     ARMCI_Group_create_comm_collective(grp_size, pid_list, armci_grp_out, armci_grp_parent);
 
-  ARMCI_Group_init_from_comm(armci_grp_out);
+  ARMCII_Group_init_from_comm(armci_grp_out);
 }
 
 
@@ -211,9 +211,9 @@ void ARMCI_Group_free(ARMCI_Group *group) {
   }
 
   /* If the group has translation caches, free them */
-  if (group->abs_to_grp == NULL)
+  if (group->abs_to_grp != NULL)
     free(group->abs_to_grp);
-  if (group->grp_to_abs == NULL)
+  if (group->grp_to_abs != NULL)
     free(group->grp_to_abs);
 
   group->rank = -1;
@@ -331,7 +331,7 @@ int ARMCIX_Group_split(ARMCI_Group *parent, int color, int key, ARMCI_Group *new
   if (err != MPI_SUCCESS)
     return err;
 
-  ARMCI_Group_init_from_comm(new_group);
+  ARMCII_Group_init_from_comm(new_group);
 
   return 0;
 }
@@ -354,7 +354,7 @@ int ARMCIX_Group_dup(ARMCI_Group *parent, ARMCI_Group *new_group) {
   if (err != MPI_SUCCESS)
     return err;
 
-  ARMCI_Group_init_from_comm(new_group);
+  ARMCII_Group_init_from_comm(new_group);
 
   return 0;
 }

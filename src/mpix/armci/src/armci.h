@@ -202,4 +202,81 @@ int  ARMCI_Uses_shm(void);
 void ARMCI_Set_shm_limit(unsigned long shmemlimit);
 int  ARMCI_Uses_shm_grp(ARMCI_Group *group);
 
+/** PARMCI -- Profiling Interface
+  */
+
+int     PARMCI_Init(void);
+int     PARMCI_Init_args(int *argc, char ***argv);
+int     PARMCI_Initialized(void);
+int     PARMCI_Finalize(void);
+
+int     PARMCI_Malloc(void **base_ptrs, armci_size_t size);
+int     PARMCI_Free(void *ptr);
+void   *PARMCI_Malloc_local(armci_size_t size);
+int     PARMCI_Free_local(void *ptr);
+
+void    PARMCI_Barrier(void);
+void    PARMCI_Fence(int proc);
+void    PARMCI_AllFence(void);
+void    PARMCI_Access_begin(void *ptr);
+void    PARMCI_Access_end(void *ptr);
+
+int     PARMCI_Get(void *src, void *dst, int size, int target);
+int     PARMCI_Put(void *src, void *dst, int size, int target);
+int     PARMCI_Acc(int datatype, void *scale, void *src, void *dst, int bytes, int proc);
+
+int     PARMCI_PutS(void *src_ptr, int src_stride_ar[], void *dst_ptr, int dst_stride_ar[], 
+                 int count[], int stride_levels, int proc);
+int     PARMCI_GetS(void *src_ptr, int src_stride_ar[], void *dst_ptr, int dst_stride_ar[], 
+                 int count[], int stride_levels, int proc);
+int     PARMCI_AccS(int datatype, void *scale, void *src_ptr, int src_stride_ar[],
+                 void *dst_ptr, int dst_stride_ar[], int count[], int stride_levels, int proc);
+int     PARMCI_Put_flag(void *src, void* dst, int size, int *flag, int value, int proc);
+int     PARMCI_PutS_flag(void *src_ptr, int src_stride_ar[], void *dst_ptr, int dst_stride_ar[], 
+                 int count[], int stride_levels, int *flag, int value, int proc);
+
+int     PARMCI_PutV(armci_giov_t *iov, int iov_len, int proc);
+int     PARMCI_GetV(armci_giov_t *iov, int iov_len, int proc);
+int     PARMCI_AccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int proc);
+
+int     PARMCI_Wait(armci_hdl_t* hdl);
+int     PARMCI_Test(armci_hdl_t* hdl);
+int     PARMCI_WaitAll(void);
+
+int     PARMCI_NbPut(void *src, void *dst, int bytes, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbGet(void *src, void *dst, int bytes, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbAcc(int datatype, void *scale, void *src, void *dst, int bytes, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbPutS(void *src_ptr, int src_stride_ar[], void *dst_ptr, int dst_stride_ar[], 
+                   int count[], int stride_levels, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbGetS(void *src_ptr, int src_stride_ar[], void *dst_ptr, int dst_stride_ar[], 
+                   int count[], int stride_levels, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbAccS(int datatype, void *scale, void *src_ptr, int src_stride_ar[],
+                   void *dst_ptr, int dst_stride_ar[], int count[], int stride_levels, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbPutV(armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle);
+int     PARMCI_NbGetV(armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle);
+int     PARMCI_NbAccV(int datatype, void *scale, armci_giov_t *iov, int iov_len, int proc, armci_hdl_t* handle);
+
+int     PARMCI_PutValueInt(int src, void *dst, int proc);
+int     PARMCI_PutValueLong(long src, void *dst, int proc);
+int     PARMCI_PutValueFloat(float src, void *dst, int proc);
+int     PARMCI_PutValueDouble(double src, void *dst, int proc);
+int     PARMCI_NbPutValueInt(int src, void *dst, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbPutValueLong(long src, void *dst, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbPutValueFloat(float src, void *dst, int proc, armci_hdl_t *hdl);
+int     PARMCI_NbPutValueDouble(double src, void *dst, int proc, armci_hdl_t *hdl);
+
+int     PARMCI_GetValueInt(void *src, int proc);
+long    PARMCI_GetValueLong(void *src, int proc);
+float   PARMCI_GetValueFloat(void *src, int proc);
+double  PARMCI_GetValueDouble(void *src, int proc);
+
+int     PARMCI_Create_mutexes(int count);
+int     PARMCI_Destroy_mutexes(void);
+void    PARMCI_Lock(int mutex, int proc);
+void    PARMCI_Unlock(int mutex, int proc);
+int     PARMCI_Rmw(int op, void *ploc, void *prem, int value, int proc);
+
+void    parmci_msg_barrier(void);
+void    parmci_msg_group_barrier(ARMCI_Group *group);
+
 #endif /* _ARMCI_H_ */

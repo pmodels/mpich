@@ -119,6 +119,7 @@ int main(int argc, char ** argv) {
   }
 
   free(base_ptrs);
+  free(buf_shared);
 
   if (rank == 0) printf("Test complete: PASS.\n");
 
