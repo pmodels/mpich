@@ -630,9 +630,16 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
         status = HYDU_sock_get_iface_ip(iface, &ip);
         HYDU_ERR_POP(status, "unable to get network interface IP\n");
     }
-    else {
-        HYDU_ASSERT(hostname, status);
+    else if (hostname) {
         ip = HYDU_strdup(hostname);
+    }
+    else {
+        char localhost[MAX_HOSTNAME_LEN] = { 0 };
+
+        status = HYDU_gethostname(localhost);
+        HYDU_ERR_POP(status, "unable to get local hostname\n");
+
+        ip = HYDU_strdup(localhost);
     }
 
     sport = HYDU_int_to_str(port);
