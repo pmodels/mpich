@@ -43,8 +43,6 @@
  # Build system: rename "./maint/updatefiles" --> "./autogen.sh" and
    "configure.in" --> "configure.ac"
 
- # PM/PMI: Upgrade hwloc to 1.4.1.
-
  # JUMPSHOT: Improvements to Jumpshot to handle thousands of
    timelines, including performance improvements to slog2 in such
    cases.
