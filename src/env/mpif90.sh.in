@@ -14,7 +14,6 @@
 #    WRAPPER_FCFLAGS    - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS    - Any special flags needed to link
 #    WRAPPER_LIBS       - Any special libraries needed in order to link
-#    MPILIBNAME         - Name of the MPI library
 #    FC_OTHER_LIBS      - Yet more libraries, needed just with FC
 #    
 # We assume that (a) the C compiler can both compile and link programs
@@ -57,10 +56,6 @@ FCEXT="@FCEXT@"
 FCFLAGS="@WRAPPER_FCFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
 LIBS="@WRAPPER_LIBS@ @FC_OTHER_LIBS@"
-MPILIBNAME="@MPILIBNAME@"
-PMPILIBNAME="@PMPILIBNAME@"
-NEEDSPLIB="@NEEDSPLIB@"
-# MPICH2_VERSION is the version of the MPICH2 library for which mpif90 is intended
 MPICH2_VERSION="@MPICH2_VERSION@"
 
 enable_wrapper_rpath="@enable_wrapper_rpath@"
@@ -289,16 +284,7 @@ fi
 # Derived variables.  These are assembled from variables set from the
 # default, environment, configuration file (if any) and command-line
 # options (if any)
-
-#
-# The library lib${MPILIBNAME}f90 contains the f90-specific features,
-# such as the module objects and the routines defined by them
-# (MPI_SIZEOF is handled in lib${MPILIBNAME)f90, for example).
-if [ "$NEEDSPLIB" = yes ] ; then
-    mpilibs="-l${MPILIBNAME}f90 -l$PMPILIBNAME -l$MPILIBNAME"
-else
-    mpilibs="-l${MPILIBNAME}f90 -l$MPILIBNAME"
-fi
+mpilibs="@LPMPILIBNAME@ -l@MPILIBNAME@"
 
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
@@ -350,7 +336,7 @@ fi
 # Handle the specification of the directory containing the modules
 # For now, these are in the includedir (no choice argument supported)
 moduledir=$modincdir
-modulelib=${MPILIBNAME}f90
+modulelib="@MPILIBNAME@f90"
 if [ -n "$FCMODINCSPEC" ] ; then
     newarg=`echo A"$FCMODINCSPEC" | \
 	sed -e 's/^A//' -e 's%<dir>%'"$moduledir%g" -e 's/<file>/mpi/g'`

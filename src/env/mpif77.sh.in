@@ -14,7 +14,6 @@
 #    WRAPPER_FFLAGS     - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS    - Any special flags needed to link
 #    WRAPPER_LIBS       - Any special libraries needed in order to link
-#    MPILIBNAME         - Name of the MPI library
 #    F77_OTHER_LIBS     - Yet more libraries, needed just with F77
 #    
 #    
@@ -44,11 +43,6 @@ F77CPP="@F77CPP@"
 FFLAGS="@WRAPPER_FFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
 LIBS="@WRAPPER_LIBS@ @F77_OTHER_LIBS@"
-MPILIBNAME="@MPILIBNAME@"
-PMPILIBNAME="@PMPILIBNAME@"
-NEEDSPLIB="@NEEDSPLIB@"
-
-# MPICH2_VERSION is the version of the MPICH2 library for which mpif77 is intended
 MPICH2_VERSION="@MPICH2_VERSION@"
 
 enable_wrapper_rpath="@enable_wrapper_rpath@"
@@ -278,11 +272,7 @@ fi
 # Derived variables.  These are assembled from variables set from the
 # default, environment, configuration file (if any) and command-line
 # options (if any)
-if [ "$NEEDSPLIB" = yes ] ; then
-    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME"
-else
-    mpilibs="-l$MPILIBNAME"
-fi
+mpilibs="@LPMPILIBNAME@ -l@MPILIBNAME@"
 
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then

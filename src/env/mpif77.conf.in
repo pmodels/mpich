@@ -21,11 +21,6 @@ F77CPP="@F77CPP@"
 FFLAGS="@WRAPPER_FFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
 LIBS="@WRAPPER_LIBS@"
-MPILIBNAME="@MPILIBNAME@"
-PMPILIBNAME="@PMPILIBNAME@"
-NEEDSPLIB="@NEEDSPLIB@"
-#
-# MPICH2_VERSION is the version of the MPICH2 library that mpif77 is intended for
 MPICH2_VERSION="@MPICH2_VERSION@"
 #
 # ----------------------------------------------------------------------------

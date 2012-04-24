@@ -14,7 +14,6 @@
 #    WRAPPER_CFLAGS        - Any special flags needed to compile 
 #    WRAPPER_LDFLAGS       - Any special flags needed to link
 #    WRAPPER_LIBS          - Any special libraries needed in order to link
-#    MPILIBNAME         - Name of the MPI library
 #    
 # We assume that (a) the C compiler can both compile and link programs
 #
@@ -42,10 +41,6 @@ CFLAGS="@WRAPPER_CFLAGS@"
 CPPFLAGS="@WRAPPER_CPPFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
 LIBS="@WRAPPER_LIBS@"
-MPILIBNAME="@MPILIBNAME@"
-PMPILIBNAME="@PMPILIBNAME@"
-NEEDSPLIB="@NEEDSPLIB@"
-# MPICH2_VERSION is the version of the MPICH2 library that mpicc is intended for
 MPICH2_VERSION="@MPICH2_VERSION@"
 
 enable_wrapper_rpath="@enable_wrapper_rpath@"
@@ -211,11 +206,7 @@ fi
 # Derived variables.  These are assembled from variables set from the
 # default, environment, configuration file (if any) and command-line
 # options (if any)
-if [ "$NEEDSPLIB" = yes ] ; then
-    mpilibs="-l$PMPILIBNAME -l$MPILIBNAME"
-else
-    mpilibs="-l$MPILIBNAME"
-fi
+mpilibs="@LPMPILIBNAME@ -l@MPILIBNAME@"
 
 # Handle the case of a profile switch
 if [ -n "$profConf" ] ; then
