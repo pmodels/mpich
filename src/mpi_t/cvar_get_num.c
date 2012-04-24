@@ -34,7 +34,10 @@ int MPIR_T_cvar_get_num_impl(int *num_cvar)
 
     *num_cvar = MPIR_PARAM_NUM_PARAMS;
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

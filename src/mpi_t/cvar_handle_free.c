@@ -35,7 +35,10 @@ int MPIR_T_cvar_handle_free_impl(MPIX_T_cvar_handle *handle)
     MPIU_Free(*handle);
     *handle = MPIX_T_CVAR_HANDLE_NULL;
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

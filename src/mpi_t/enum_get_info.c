@@ -34,7 +34,10 @@ int MPIR_T_enum_get_info_impl(MPIX_T_enum enumtype, int num, char *name, int *na
 
     /* TODO implement this function */
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

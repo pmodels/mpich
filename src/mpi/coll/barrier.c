@@ -93,6 +93,8 @@ int MPIR_Barrier_intra( MPID_Comm *comm_ptr, int *errflag )
     else if (*errflag)
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* A simple utility function to that calls the comm_ptr->coll_fns->Barrier

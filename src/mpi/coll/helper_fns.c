@@ -589,8 +589,11 @@ int MPIC_Send_ft(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
     else
         mpi_errno = MPIC_Send(buf, count, datatype, dest, tag, comm);
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SEND_FT);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -657,8 +660,11 @@ int MPIC_Ssend_ft(void *buf, int count, MPI_Datatype datatype, int dest, int tag
     else
         mpi_errno = MPIC_Ssend(buf, count, datatype, dest, tag, comm);
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SSEND_FT);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -794,8 +800,11 @@ int MPIC_Isend_ft(void *buf, int count, MPI_Datatype datatype, int dest, int tag
     else
         mpi_errno = MPIC_Isend(buf, count, datatype, dest, tag, comm, request);
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_ISEND_FT);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -815,8 +824,11 @@ int MPIC_Irecv_ft(void *buf, int count, MPI_Datatype datatype, int source,
     else
         mpi_errno = MPIC_Irecv(buf, count, datatype, source, tag, comm, request);
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_IRECV_FT);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 

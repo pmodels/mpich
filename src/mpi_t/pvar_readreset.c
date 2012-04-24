@@ -34,7 +34,10 @@ int MPIR_T_pvar_readreset_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle h
 
     /* TODO implement this function */
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

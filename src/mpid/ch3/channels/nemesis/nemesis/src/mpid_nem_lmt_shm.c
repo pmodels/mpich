@@ -822,8 +822,11 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
         MPIU_Free(we);
     }
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 

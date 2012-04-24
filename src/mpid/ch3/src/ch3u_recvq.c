@@ -870,10 +870,13 @@ int MPIDI_CH3U_Complete_disabled_anysources(void)
         }
     }
 
+ fn_exit:
     MPIU_THREAD_CS_EXIT(MSGQUEUE,);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 
@@ -905,10 +908,13 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
         }
     }
     
+ fn_exit:
     MPIU_THREAD_CS_EXIT(MSGQUEUE,);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_COMPLETE_POSTED_WITH_ERROR);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 

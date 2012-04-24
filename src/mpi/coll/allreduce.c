@@ -644,12 +644,16 @@ int MPIR_Allreduce_inter (
         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
+  fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag)
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 /* MPIR_Allreduce performs an allreduce using point-to-point messages.

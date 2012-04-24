@@ -43,7 +43,10 @@ int MPIR_T_pvar_write_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handl
         MPIU_Assertp(FALSE); /* _IMPL_CB not yet implemented */
     }
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

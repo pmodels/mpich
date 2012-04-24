@@ -104,4 +104,6 @@ int MPID_Iprobe(int source, int tag, MPID_Comm *comm, int context_offset,
  fn_exit:    
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_IPROBE);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }

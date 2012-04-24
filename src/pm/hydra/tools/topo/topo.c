@@ -83,8 +83,12 @@ static HYD_status handle_user_binding(const char *binding)
     }
     HYDU_FREE(bindstr);
 
+  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void search_leaf_pu(struct HYDT_topo_obj obj, struct HYDT_topo_cpuset_t *bindmap,

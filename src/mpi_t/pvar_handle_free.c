@@ -42,7 +42,10 @@ int MPIR_T_pvar_handle_free_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle
 
     (*handle) = MPIX_T_PVAR_HANDLE_NULL;
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

@@ -34,7 +34,10 @@ int MPIR_T_category_get_info_impl(int cat_index, char *name, int *name_len, char
 
     /* TODO implement this function */
 
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

@@ -105,6 +105,7 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
     /* Fields not set include context_id, remote and local size, and
        kind, since different communicator construction routines need
        different values */
+fn_fail:
     return mpi_errno;
 }
 
@@ -1641,6 +1642,7 @@ int MPIR_Comm_copy_data(MPID_Comm *comm_ptr, MPID_Comm **outcomm_ptr)
     *outcomm_ptr = newcomm_ptr;
 
 fn_fail:
+fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
     return mpi_errno;
 }

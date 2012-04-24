@@ -105,6 +105,8 @@ int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype 
 
 fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #endif
