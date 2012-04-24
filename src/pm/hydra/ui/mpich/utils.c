@@ -1278,12 +1278,12 @@ static HYD_status localhost_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    if (reading_config_file && HYD_server_info.local_hostname) {
+    if (reading_config_file && HYD_server_info.localhost) {
         /* global variable already set; ignore */
         goto fn_exit;
     }
 
-    status = HYDU_set_str(arg, &HYD_server_info.local_hostname, **argv);
+    status = HYDU_set_str(arg, &HYD_server_info.localhost, **argv);
     HYDU_ERR_POP(status, "error setting local hostname\n");
 
   fn_exit:

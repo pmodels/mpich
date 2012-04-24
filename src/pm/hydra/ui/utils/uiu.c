@@ -25,7 +25,7 @@ void HYD_uiu_init_params(void)
     HYD_server_info.iface_ip_env_name = NULL;
 
     HYD_server_info.nameserver = NULL;
-    HYD_server_info.local_hostname = NULL;
+    HYD_server_info.localhost = NULL;
 
     HYD_server_info.stdout_cb = NULL;
     HYD_server_info.stderr_cb = NULL;
@@ -67,8 +67,8 @@ void HYD_uiu_free_params(void)
     if (HYD_server_info.nameserver)
         HYDU_FREE(HYD_server_info.nameserver);
 
-    if (HYD_server_info.local_hostname)
-        HYDU_FREE(HYD_server_info.local_hostname);
+    if (HYD_server_info.localhost)
+        HYDU_FREE(HYD_server_info.localhost);
 
     if (HYD_server_info.node_list)
         HYDU_free_node_list(HYD_server_info.node_list);

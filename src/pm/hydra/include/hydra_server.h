@@ -27,7 +27,7 @@ struct HYD_server_info {
     char *port_range;
     char *iface_ip_env_name;
     char *nameserver;
-    char *local_hostname;
+    char *localhost;
 
      HYD_status(*stdout_cb) (int pgid, int proxy_id, int rank, void *buf, int buflen);
      HYD_status(*stderr_cb) (int pgid, int proxy_id, int rank, void *buf, int buflen);

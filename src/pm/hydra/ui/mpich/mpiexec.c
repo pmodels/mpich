@@ -381,7 +381,7 @@ int main(int argc, char **argv)
 
     /* If the user didn't specify a local hostname, try to find one in
      * the list of nodes passed to us */
-    if (HYD_server_info.local_hostname == NULL) {
+    if (HYD_server_info.localhost == NULL) {
         /* See if the node list contains a remotely accessible localhost */
         for (node = HYD_server_info.node_list; node; node = node->next) {
             int is_local, remote_access;
@@ -400,10 +400,10 @@ int main(int argc, char **argv)
         }
 
         if (node)
-            HYD_server_info.local_hostname = HYDU_strdup(node->hostname);
+            HYD_server_info.localhost = HYDU_strdup(node->hostname);
         else {
-            HYDU_MALLOC(HYD_server_info.local_hostname, char *, MAX_HOSTNAME_LEN, status);
-            status = HYDU_gethostname(HYD_server_info.local_hostname);
+            HYDU_MALLOC(HYD_server_info.localhost, char *, MAX_HOSTNAME_LEN, status);
+            status = HYDU_gethostname(HYD_server_info.localhost);
             HYDU_ERR_POP(status, "unable to get local hostname\n");
         }
     }

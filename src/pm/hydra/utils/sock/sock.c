@@ -18,37 +18,6 @@ struct fwd_hash {
     struct fwd_hash *next;
 };
 
-static char local_hostname[MAX_HOSTNAME_LEN] = { 0 };
-static char short_local_hostname[MAX_HOSTNAME_LEN] = { 0 };
-
-static HYD_status sock_localhost_init(void)
-{
-    static int init = 1;
-    int i;
-    HYD_status status = HYD_SUCCESS;
-
-    if (init) {
-        init = 0;
-
-        status = HYDU_gethostname(local_hostname);
-        HYDU_ERR_POP(status, "unable to get local hostname\n");
-
-        strcpy(short_local_hostname, local_hostname);
-        for (i = 0; short_local_hostname[i]; i++) {
-            if (short_local_hostname[i] == '.') {
-                short_local_hostname[i] = 0;
-                break;
-            }
-        }
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;
@@ -195,12 +164,14 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
     } while (1);
 
     if (ret < 0) {
-        status = sock_localhost_init();
-        HYDU_ERR_POP(status, "unable to initialize sock local information\n");
+        char localhost[MAX_HOSTNAME_LEN] = { 0 };
+
+        status = HYDU_gethostname(localhost);
+        HYDU_ERR_POP(status, "unable to get local hostname\n");
 
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR,
                             "unable to connect from \"%s\" to \"%s\" (%s)\n",
-                            local_hostname, host, HYDU_strerror(errno));
+                            localhost, host, HYDU_strerror(errno));
     }
 
     /* Disable nagle */
