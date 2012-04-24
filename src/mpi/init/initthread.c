@@ -469,7 +469,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     if (mpi_errno == MPI_SUCCESS) 
 	mpi_errno = MPID_InitCompleted();
 
-fn_exit:
     MPIU_THREAD_CS_EXIT(INIT,required);
     return mpi_errno;
 

@@ -294,7 +294,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
         HYDU_ERR_POP(status, "unable to allocate memory\n");
 
-        HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed, 0);
+        HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed,
+                       HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "error reading from stdin\n");
 
         hdr.buflen = count;

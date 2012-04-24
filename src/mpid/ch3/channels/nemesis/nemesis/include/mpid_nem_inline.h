@@ -147,8 +147,6 @@ MPID_nem_mpich2_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     goto fn_exit;
  fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 
@@ -257,8 +255,6 @@ MPID_nem_mpich2_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_SENDV);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 /* MPID_nem_mpich2_sendv_header (struct iovec **iov, int *n_iov, int dest)
@@ -392,8 +388,6 @@ MPID_nem_mpich2_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *a
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_SENDV_HEADER);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 /* send the header and data described by the segment in one cell.  If

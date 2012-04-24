@@ -413,7 +413,8 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
     *closed = 0;
     if (fwd_hash->buf_count == 0) {
         /* there is no data in the buffer, read something into it */
-        status = HYDU_sock_read(in, fwd_hash->buf, HYD_TMPBUF_SIZE, &count, closed, 0);
+        status = HYDU_sock_read(in, fwd_hash->buf, HYD_TMPBUF_SIZE, &count, closed,
+                                HYDU_SOCK_COMM_NONE);
         HYDU_ERR_POP(status, "read error\n");
 
         if (!*closed) {

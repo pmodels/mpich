@@ -184,11 +184,8 @@ static int register_hook_finalize(void *param)
         MPIU_Free(elt);
     }
     
- fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_REGISTER_HOOK_FINALIZE);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 
@@ -208,11 +205,8 @@ int comm_created(MPID_Comm *comm, void *param)
 
     COMM_ADD(comm);
 
- fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_COMM_CREATED);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -230,11 +224,8 @@ int comm_destroyed(MPID_Comm *comm, void *param)
     comm->ch.next = NULL;
     comm->ch.prev = NULL;
 
- fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_COMM_DESTROYED);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 
@@ -279,8 +270,6 @@ static int nonempty_intersection(MPID_Comm *comm, MPID_Group *group, int *flag)
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_NONEMPTY_INTERSECTION);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 

@@ -77,16 +77,19 @@ static void *ckpoint_thread(void *arg)
 
     ++HYDT_ckpoint_info.ckpoint_num;
 
+#if defined HAVE_BLCR
   fn_exit:
+#endif /* HAVE_BLCR */
     in_ckpt = HYDT_CKPOINT_FINISHED;
     return (void *) status;
 
+#if defined HAVE_BLCR
   fn_fail:
     HYDT_ftb_publish("FTB_MPI_PROCS_CKPT_FAIL", ftb_event_payload);
     goto fn_exit;
-
+#endif /* HAVE_BLCR */
 }
-#endif
+#endif /* HAVE_PTHREADS */
 
 
 HYD_status HYDT_ckpoint_checkpoint(int pgid, int id, const char *user_ckpoint_prefix)

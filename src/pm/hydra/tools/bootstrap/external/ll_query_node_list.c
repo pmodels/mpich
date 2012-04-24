@@ -45,11 +45,7 @@ static HYD_status process_mfile_count(char *token, int newline, struct HYD_node 
     if (newline)
         total_node_count++;
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 HYD_status HYDTI_bscd_ll_query_node_count(int *count)

@@ -342,14 +342,11 @@ static int scatter_for_bcast(
         mask >>= 1;
     }
 
-fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag)
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 /*
@@ -1032,14 +1029,11 @@ static int MPIR_SMP_Bcast(
         }
     }
 
-fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag)
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 
@@ -1195,8 +1189,6 @@ fn_exit:
     else if (*errflag)
         MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 
@@ -1283,7 +1275,6 @@ int MPIR_Bcast_inter (
         }
     }
 
-fn_fail:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST_INTER);
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

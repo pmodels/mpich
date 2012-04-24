@@ -22,10 +22,6 @@ HYD_status HYDT_bscd_slurm_query_jobid(char **jobid)
     else
         *jobid = NULL;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

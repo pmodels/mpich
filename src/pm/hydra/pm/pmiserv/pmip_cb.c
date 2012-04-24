@@ -30,7 +30,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 
     stdfd = (int) (size_t) userp;
 
-    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &recvd, &closed, 0);
+    status = HYDU_sock_read(fd, buf, HYD_TMPBUF_SIZE, &recvd, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "sock read error\n");
 
     if (recvd) {
@@ -224,7 +224,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
      * them. When we don't have a full PMI command, we store the
      * rest. */
     status = HYDU_sock_read(fd, storage + storage_len, HYD_TMPBUF_SIZE - storage_len,
-                            &linelen, &closed, 0);
+                            &linelen, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
 
     /* Try to find the PMI FD */

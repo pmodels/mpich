@@ -842,9 +842,6 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
         MPIDI_CH3U_Request_complete(req);
     }
 
- fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_ERROR_OUT_SEND_QUEUE);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }

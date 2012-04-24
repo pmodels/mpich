@@ -168,7 +168,7 @@ MPI_Info PMPI_Info_f2c(MPI_Fint info);
 char *strdup(const char *s);
 # endif
 #if defined(HAVE_READLINK) && defined(NEEDS_READLINK_DECL) && !defined(readlink)
-int readlink(const char *path, char *buf, size_t bufsiz);
+ssize_t readlink(const char *path, char *buf, size_t bufsiz);
 # endif
 #if defined(HAVE_LSTAT) && defined(NEEDS_LSTAT_DECL) && !defined(lstat)
 int lstat(const char *file_name, struct stat *buf);

@@ -29,7 +29,4 @@ int MPIR_Barrier_group( MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, int
 
  fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
-

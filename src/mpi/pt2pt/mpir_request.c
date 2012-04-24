@@ -39,8 +39,7 @@ int MPIR_Progress_wait_request(MPID_Request *req)
         }
         MPID_Progress_end(&progress_state);
     }
-fn_fail: /* no special err handling at this level */
-fn_exit:
+fn_fail:
     return mpi_errno;
 }
 
