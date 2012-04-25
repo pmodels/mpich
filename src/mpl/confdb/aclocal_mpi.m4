@@ -420,6 +420,7 @@ fi
 dnl
 dnl This uses the selected CC etc to check for include paths and libraries
 AC_DEFUN([PAC_MPI_CHECK_MPI_LIB],[
+AC_REQUIRE([AC_PROG_CC])
 case $ac_mpi_type in
     mpich)
 	;;
