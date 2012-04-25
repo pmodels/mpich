@@ -34,6 +34,10 @@ DOC_SUBDIRS =
 INSTALL_DATA_LOCAL_TARGETS =
 doc1_src_txt =
 
+# add (+=) target names to this variable to add them to the dependencies of the
+# 'clean-local' target
+CLEAN_LOCAL_TARGETS =
+
 # used by nodist_pkgconfig_DATA
 pkgconfigdir = $(libdir)/pkgconfig
 
@@ -131,7 +135,11 @@ EXTRA_DIST += README CHANGES COPYRIGHT README.envvar
 EXTRA_DIST += README.vin
 
 testing:
-	( cd test && $(MAKE) testing )
+	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing )
+
+test-clean:
+	( cd test && $(MAKE) $(AM_MAKEFLAGS) clean )
+CLEAN_LOCAL_TARGETS += test-clean
 
 ## FIXME: this should live in src/env/Makefile.mk. Moving it there
 ## will not cause a problem, but it will break the build if another
@@ -168,7 +176,7 @@ DISTCLEANFILES += .mpich2
 
 # we can only have one clean-local, so we hook into it via conditionally
 # defined variables in the dependencies section
-clean-local: $(COVERAGE_CLEAN_TARGET)
+clean-local: $(CLEAN_LOCAL_TARGETS)
 
 # --------------------------------------------------------------------------
 #  coverage rules
@@ -217,7 +225,7 @@ coverage:
 	    fi \
 	done
 
-COVERAGE_CLEAN_TARGET=coverage-clean
+CLEAN_LOCAL_TARGETS += coverage-clean
 # heavy handed, but it gets the job done
 coverage-clean:
 	-find $(top_builddir) -name "*.gcda" -o -name "*.gcno" -o -name "*.gcov" | \
