@@ -3839,6 +3839,10 @@ int MPIR_Comm_idup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm, MPID_Request *
 int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
                          MPID_Group *group_ptr, int tag, int *errflag);
+int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
+                               MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                               MPID_Group *group_ptr, int tag, int *errflag);
+
 
 int MPIR_Barrier_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, int *errflag);
 

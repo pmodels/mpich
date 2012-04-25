@@ -7,6 +7,10 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
+int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
+                               MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                               MPID_Group *group_ptr, int tag, int *errflag);
+
 /* Local utility macro: takes an two args and sets lvalue cr_ equal to the rank
  * in comm_ptr corresponding to rvalue gr_ */
 #define to_comm_rank(cr_, gr_)                                                                                \
@@ -25,7 +29,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                                MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
                                MPID_Group *group_ptr, int tag, int *errflag)
 {
-    int comm_size, comm_rank, type_size;
+    int type_size;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     /* newrank is a rank in group_ptr */
@@ -45,8 +49,6 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 
     /* homogeneous case */
 
-    comm_size = comm_ptr->local_size;
-    comm_rank = comm_ptr->rank;
     group_rank = group_ptr->rank;
     group_size = group_ptr->size;
     MPIU_ERR_CHKANDJUMP(group_rank == MPI_UNDEFINED, mpi_errno, MPI_ERR_OTHER, "**rank");
