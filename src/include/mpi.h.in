@@ -1020,6 +1020,10 @@ int MPIX_Comm_remote_group_failed(MPI_Comm, MPI_Group *);
 int MPIX_Comm_reenable_anysource(MPI_Comm, MPI_Group *);
 
 /* MPI-3 MPI_T interface, currently available as MPIX_T extensions */
+
+/* The MPI_T routines are available only in C bindings - tell tools that they
+   can skip these prototypes */
+/* Begin Skip Prototypes */
 int MPIX_T_init_thread(int required, int *provided);
 int MPIX_T_finalize(void);
 int MPIX_T_enum_get_info(MPIX_T_enum enumtype, int num, char *name, int *name_len);
@@ -1048,7 +1052,7 @@ int MPIX_T_category_get_cvars(int cat_index, int len, int indices[]);
 int MPIX_T_category_get_pvars(int cat_index[], int len, int indices[]);
 int MPIX_T_category_get_categories(int cat_index, int len, int indices[]);
 int MPIX_T_category_changed(int *stamp);
-
+/* End Skip Prototypes */
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
 
@@ -1425,7 +1429,6 @@ int PMPIX_T_category_changed(int *stamp);
 #endif
 
 /* BEGIN: non-standard but public extensions to MPI */
-
 /* Generalized requests extensions as proposed in "Extending the MPI-2
  * Generalized Request Interface" */
 typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
