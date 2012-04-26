@@ -206,6 +206,12 @@ gcov_sources = $(lib_lib@MPILIBNAME@_la_SOURCES)
 #   bcast.c --> {bcast.o,lib_libpmpich_la-bcast.o}
 # It still generates a bcast.c.gcov output for each object file.  Long file
 # names and preserved paths do not help with this problem.
+# What we can do in this case is to move the second files to a separate 
+# directory, rename name, and run the GCOV on the new files.
+# For the web-based coverage reports, the gcov output for the two files
+# needs to be merged; see maint/gcovmerge .  
+# To make it easier to re-run the coverage generation, we copy, rather than 
+# move, when there are two object files for each source file.
 coverage:
 	@for file in $(gcov_sources) ; do \
 	    dir=`dirname $$file` ; \
@@ -213,6 +219,19 @@ coverage:
 	    aux=`echo $$bname | sed -e 's,\.*$$,,'` ; \
 	    echo "( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir )" ; \
 	    ( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir ) ; \
+	    sname=`echo $$bname | sed -e 's/\.[^\.]*$$//'` ;\
+	    if [ -s "$$dir/lib_lib@PMPILIBNAME@_la-$$sname.o" ] ; then \
+	        if [ ! -d $$dir-pmpi ] ; then mkdir $$dir-pmpi ; fi ; \
+		for pfile in $$dir/lib_lib@PMPILIBNAME@_la-$$sname.* ; do \
+		     nfile=`echo $$pfile | sed -e 's/lib_lib@PMPILIBNAME@_la-//'` ;\
+		     nfile=`basename $$nfile` ; \
+		     cp $$pfile $$dir-pmpi/$$nfile ; \
+		     echo "( cd $$dir-pmpi && $(GCOV) -b -f $$nfile )" ; \
+		     ( cd $$dir-pmpi && $(GCOV) -b -f $$nfile ) ; \
+		     $(srcdir)/maint/gcovmerge $$dir-pmpi/$$bname.gcov \
+				$$dir/$$bname.gcov > $$dir/$$bname.gcov.merge ;\
+		done ; \
+	    fi ; \
 	    rm -f *.gcov ; \
 	done
 	for subdir in $(SUBDIRS) - ; do \
@@ -221,7 +240,9 @@ coverage:
 	    if test "x$$subdir" = "x." ; then \
 	        : ; \
 	    else \
-	        ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+		if grep coverage: $$subdir/Makefile >/dev/null 2>&1 ; then  \
+	           ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
+		fi \
 	    fi \
 	done
 

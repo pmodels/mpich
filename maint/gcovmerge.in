@@ -1,4 +1,5 @@
 #! @PERL@
+# -*- Mode: perl; -*-
 #
 # This script merges output from two files that should be applied to the
 # same source file.  This is needed for MPICH2 on systems that support
@@ -103,7 +104,12 @@ while (!eof(I1) && !eof(I2)) {
 	    if ($s1count > 0) { $nlines += $s1count; }
 	    if ($s2count > 0) { $nlines += $s2count; }
 	    # Format line: number of characters in leader (9:5:.*)
-	    $nlineTxt = sprintf( "%9d", $nlines );
+	    if ($nlines == 0) {
+	        $nlineTxt = "    #####";
+	    }
+	    else {
+	        $nlineTxt = sprintf( "%9d", $nlines );
+	    }
 	    $linenumTxt = sprintf( "%5d", $s1linenum );
 	    $out = "$nlineTxt:$linenumTxt:$s1line\n";
 	    #$out = "$nlines:$s1linenum:$s1line\n";

@@ -161,6 +161,9 @@ for (@ARGV) {
 
 for my $filename (@TopFilenames) {
     if (-d $filename) {
+	# Check for a "pmpi" directory - one that was used to merge 
+	# PMPI and MPI outputs.  If found, we skip to the next directory
+	if ($filename =~ /\-pmpi$/) { next; }
 	# Expand the directory into a list of files.  If there are 
 	# subdirectories, expand them too (e.g., get a list of 
 	# *every* file within the directory tree. 
@@ -520,6 +523,7 @@ sub WriteAnnoteFile {
     if ($annoteFiles) {
 	# Make a file name
 	my $basefile = $filename;
+	$basefile =~ s/\.merge$//;    # Remove "merge" from filename
 	$basefile =~ s/\.gcov//;
 	$basefile =~ s/$annoteBaseDir//;
 	my $OUTFD = OUTFD;
@@ -755,6 +759,9 @@ sub MakeDirs {
     return 1;
 }
 # Get all of the .gcov files from the named directory, including any subdirs
+# If there is a "merge" version of the gcov file, prefer that.  These are
+# used when the same source file is compiled for both the MPI and PMPI 
+# interfaces, 
 sub ExpandDir {
     my $dir = $_[0];
     my @otherdirs = ();
@@ -765,10 +772,18 @@ sub ExpandDir {
 	    next;
 	}
 	elsif (-d "$dir/$filename") {
+	    # Skip pmpi directories used for mergeing gcov output
+	    if ($filename =~ /\-pmpi$/) { next; }
 	    $otherdirs[$#otherdirs+1] = "$dir/$filename";
 	}
 	elsif ($filename =~ /(.*\.gcov)$/) {
-	    $files[$#files + 1] = "$dir/$filename";
+	    # Check for the presense of a "merged" gcov file and use instead
+	    if (-f "$dir/$filename.merge") {
+		$files[$#files + 1] = "$dir/$filename.merge";
+	    }
+	    else {
+		$files[$#files + 1] = "$dir/$filename";
+	    }
 	}
     }
     closedir DIR;
