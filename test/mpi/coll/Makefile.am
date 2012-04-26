@@ -98,4 +98,3 @@ noinst_PROGRAMS =      \
     scatterv
 
 allgatherv4_LDADD = $(LDADD) -lm
-

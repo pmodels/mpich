@@ -22,6 +22,7 @@ noinst_PROGRAMS =          \
     test5                  \
     lockcontention         \
     lockcontention2        \
+    lockcontention3        \
     contention_put         \
     contention_putget      \
     put_base               \
@@ -72,8 +73,8 @@ noinst_PROGRAMS =          \
     strided_get_indexed    \
     window_creation
 
-strided_acc_indexed_LDADD       = -lm
-strided_acc_onelock_LDADD       = -lm
-strided_acc_subarray_LDADD      = -lm
-strided_get_indexed_LDADD       = -lm
-strided_putget_indexed_LDADD    = -lm
+strided_acc_indexed_LDADD       = $(LDADD) -lm
+strided_acc_onelock_LDADD       = $(LDADD) -lm
+strided_acc_subarray_LDADD      = $(LDADD) -lm
+strided_get_indexed_LDADD       = $(LDADD) -lm
+strided_putget_indexed_LDADD    = $(LDADD) -lm

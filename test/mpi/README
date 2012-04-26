@@ -4,6 +4,8 @@ This test suite is a *supplement* to other test suites, including the
 original MPICH testsuite, the Intel testsuite, and the IBM MPI test suite 
 (or test suites derived from that test, including the MPI C++ tests).
 
+Building the Test
+=================
 In many cases, configure will find the MPI implementation
 automatically.  In some cases, it will need some help.  For example:
 
@@ -36,6 +38,22 @@ just what is defined in the MPI specification, use --enable-strictmpi .
 The script that runs the tests assumes that the MPI implementation
 supports mpiexec; you should consider this the first test of the implementation.
 
+Setting Options
+===============
+The following environment variables will modify the behavior of the tests
+
+MPITEST_DEBUG - if set, output information for debugging the test suite
+MPITEST_VERBOSE - if set to an integer value, output messages whose
+                  level is at least that value (0 is a good choice here)
+MPITEST_RETURN_WITH_CODE - Set the return code from the test programs based on
+			 success or failure, with a zero for success and one
+			 for failure (value must be yes, YES, true, or TRUE to 
+			 turn this on)
+MPITEST_THREADLEVEL_DEFAULT - Set the default thread level.  Values are 
+			      multiple, serialized, funneled, and single.
+
+Batch Systems
+=============
 For systems that run applications through a batch system, the option "-batch"
 to the runtests script will create a script file that can be edited and 
 submitted to the batch system.  The script checktests can be run to 

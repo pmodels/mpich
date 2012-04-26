@@ -56,5 +56,5 @@ int main( int argc, char **argv )
 
     MTest_Finalize( errors );
     MPI_Finalize();
-    return errors;
+    return MTestReturnValue( errors );
 }

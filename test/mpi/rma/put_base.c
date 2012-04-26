@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     double  *win_buf, *src_buf, *dst_buf;
     MPI_Win buf_win;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks);
@@ -145,14 +145,8 @@ int main(int argc, char **argv) {
     MPI_Free_mem(src_buf);
     MPI_Free_mem(dst_buf);
 
+    MTest_Finalize( errors );
     MPI_Finalize();
 
-    if (errors == 0) {
-      if (rank == 0)
-        printf(" No Errors\n");
-      return 0;
-    } else {
-      printf("%d: Fail\n", rank);
-      return 1;
-    }
+    return 0;
 }

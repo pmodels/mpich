@@ -12,6 +12,7 @@ From: hook@nas.nasa.gov (Edward C. Hook)
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 #include <string.h>
 #include <errno.h>
@@ -29,7 +30,7 @@ int main( int argc, char *argv[] )
     int *rb;
     int status, gstatus;
 
-    MPI_Init(&argc,&argv);
+    MTest_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD,&size);
 
@@ -71,21 +72,14 @@ int main( int argc, char *argv[] )
 			  MPI_COMM_WORLD);
 
     /* fputs("Before MPI_Allreduce\n",stdout); */
-    MPI_Allreduce( &status, &gstatus, 1, MPI_INT, MPI_SUM, 
-		   MPI_COMM_WORLD );
 
-    /* fputs("After MPI_Allreduce\n",stdout); */
-    if (rank == 0) {
-	if (gstatus == 0) printf( " No Errors\n" );
-	else 
-	    printf("all_to_all returned %d\n",gstatus);
-    }
+    MTest_Finalize( status );
 
     free(sb);
     free(rb);
 
     MPI_Finalize();
 
-    return(EXIT_SUCCESS);
+    return MTestReturnValue( status );
 }
 

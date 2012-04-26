@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define TABLE_SIZE 2
 
@@ -18,7 +19,7 @@ int main( int argc, char **argv )
   int    errors = 0, toterrors;
 
   /* Initialize the environment and some variables */
-  MPI_Init( &argc, &argv );
+  MTest_Init( &argc, &argv );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
   MPI_Comm_size( MPI_COMM_WORLD, &size );
 
@@ -66,15 +67,7 @@ int main( int argc, char **argv )
       }
 
   /* Finish up! */
-  MPI_Allreduce( &errors, &toterrors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
-  if (toterrors) {
-      if (errors)
-	  printf( "[%d] done with ERRORS(%d)!\n", rank, errors );
-  }
-  else {
-      if (rank == 0) printf( " No Errors\n" );
-  }
-      
+  MTest_Finalize( errors );
   MPI_Finalize();
-  return errors;
+  return MTestReturnValue( errors );
 }

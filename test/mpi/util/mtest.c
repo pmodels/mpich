@@ -39,6 +39,9 @@ static void MTestRMACleanup( void );
 static int dbgflag = 0;         /* Flag used for debugging */
 static int wrank = -1;          /* World rank */
 static int verbose = 0;         /* Message level (0 is none) */
+static int returnWithVal = 0;   /* Allow programs to return with a non-zero 
+				   if there was an error (may cause problems
+				   with some runtime systems) */
 
 /* Provide backward portability to MPI 1 */
 #ifndef MPI_VERSION
@@ -108,6 +111,27 @@ void MTest_Init_thread( int *argc, char ***argv, int required, int *provided )
 	    }
 	}
     }
+    envval = getenv( "MPITEST_RETURN_WITH_CODE" );
+    if (envval) {
+	if (strcmp( envval, "yes" ) == 0 ||
+	    strcmp( envval, "YES" ) == 0 ||
+	    strcmp( envval, "true" ) == 0 ||
+	    strcmp( envval, "TRUE" ) == 0) {
+	    returnWithVal = 1;
+	}
+	else if (strcmp( envval, "no" ) == 0 ||
+	    strcmp( envval, "NO" ) == 0 ||
+	    strcmp( envval, "false" ) == 0 ||
+	    strcmp( envval, "FALSE" ) == 0) {
+	    returnWithVal = 0;
+	}
+	else {
+	    fprintf( stderr, 
+		     "Warning: %s not valid for MPITEST_RETURN_WITH_CODE\n", 
+		     envval );
+	    fflush( stderr );
+	}
+    }
 }
 /* 
  * Initialize the tests, using an MPI-1 style init.  Supports 
@@ -122,6 +146,7 @@ void MTest_Init( int *argc, char ***argv )
 
     threadLevel = MPI_THREAD_SINGLE;
     str = getenv( "MTEST_THREADLEVEL_DEFAULT" );
+    if (!str) str = getenv( "MPITEST_THREADLEVEL_DEFAULT" );
     if (str && *str) {
 	if (strcmp(str,"MULTIPLE") == 0 || strcmp(str,"multiple") == 0) {
 	    threadLevel = MPI_THREAD_MULTIPLE;
@@ -178,6 +203,16 @@ void MTest_Finalize( int errs )
     /* Clean up any persistent objects that we allocated */
     MTestRMACleanup();
 }
+/* ------------------------------------------------------------------------ */
+/* This routine may be used instead of "return 0;" at the end of main; 
+   it allows the program to use the return value to signal success or failure. 
+ */
+int MTestReturnValue( errors )
+{
+    if (returnWithVal) return errors ? 1 : 0;
+    return 0;
+}
+/* ------------------------------------------------------------------------ */
 
 /*
  * Miscellaneous utilities, particularly to eliminate OS dependencies

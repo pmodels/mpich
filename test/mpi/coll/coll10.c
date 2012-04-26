@@ -5,6 +5,8 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
+
 #define BAD_ANSWER 100000
 
 int assoc ( int *, int *, int *, MPI_Datatype * );
@@ -41,7 +43,7 @@ int main( int argc, char **argv )
     int              result = -100;
     MPI_Op           op;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
 
@@ -53,14 +55,7 @@ int main( int argc, char **argv )
     MPI_Op_free( &op );
     if (result == BAD_ANSWER) errors++;
 
-    if (errors)
-      printf( "[%d] done with ERRORS(%d)!\n", rank, errors );
-    else {
-	if (rank == 0) 
-	    printf(" No Errors\n");
-    }
-
+    MTest_Finalize( errors );
     MPI_Finalize();
-
-    return errors;
+    return MTestReturnValue( errors );
 }

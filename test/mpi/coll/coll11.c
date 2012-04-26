@@ -5,6 +5,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 void addem ( int *, int *, int *, MPI_Datatype * );
 void assoc ( int *, int *, int *, MPI_Datatype * );
@@ -50,7 +51,7 @@ int main( int argc, char **argv )
     int              correct_result;
     MPI_Op           op_assoc, op_addem;
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
 
@@ -101,13 +102,7 @@ int main( int argc, char **argv )
     MPI_Op_free( &op_assoc );
     MPI_Op_free( &op_addem );
 
-    if (errors)
-        printf( "[%d] done with ERRORS(%d)!\n", rank, errors );
-    else {
-	if (rank == 0) 
-	    printf(" No Errors\n");
-    }
-
+    MTest_Finalize( errors );
     MPI_Finalize();
-    return errors;
+    return MTestReturnValue( errors );
 }

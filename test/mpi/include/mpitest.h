@@ -19,6 +19,7 @@ void MTestPrintError( int );
 void MTestPrintErrorMsg( const char [], int );
 void MTestPrintfMsg( int, const char [], ... );
 void MTestError( const char [] );
+int MTestReturnValue( int );
 
 /*
  * Utilities

@@ -12,7 +12,7 @@ EXTRA_DIST = testlist
 # avoid having to write many "foo_SOURCES = foo.f" lines
 AM_DEFAULT_SOURCE_EXT = .f
 
-noinst_PROGRAMS = statusesf greqf
+noinst_PROGRAMS = allpairf statusesf greqf
 
 greqf_SOURCES = greqf.f dummyf.f
 

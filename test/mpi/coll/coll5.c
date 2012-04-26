@@ -5,6 +5,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define MAX_PROCESSES 10
 
@@ -18,7 +19,7 @@ int main( int argc, char **argv )
     int              displs[MAX_PROCESSES];
     int              send_counts[MAX_PROCESSES];
 
-    MPI_Init( &argc, &argv );
+    MTest_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
 
@@ -47,12 +48,7 @@ int main( int argc, char **argv )
 	if ( row[i] != i+rank ) errors++;
     } 
 
+    MTest_Finalize( errors );
     MPI_Finalize();
-    if (errors)
-        printf( "[%d] done with ERRORS(%d)!\n", rank, errors );
-    else {
-	if (rank == 0) 
-	    printf(" No Errors\n");
-	}
-    return errors;
+    return MTestReturnValue( errors );
 }
