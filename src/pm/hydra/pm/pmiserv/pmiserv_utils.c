@@ -110,7 +110,7 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
 static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_str)
 {
-    int i, is_equal;
+    int i, is_equal, filler_round, core_count;
     char *tmp[HYD_NUM_TMP_STRINGS];
     struct block {
         int start_idx;
@@ -123,25 +123,6 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
-
-    /* FIXME: For dynamic processes, we give a process mapping that
-     * does not provide any locality information. This is required as
-     * our calculation of the locality below is static and is only
-     * valid for PGID 0 */
-    if (pg->pgid) {
-        HYDU_MALLOC(block, struct block *, sizeof(struct block), status);
-        block->start_idx = 0;
-        block->core_count = 1;
-        block->next = NULL;
-
-        block->num_nodes = 0;
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-            block->num_nodes += proxy->node->core_count;
-
-        blocklist_tail = blocklist_head = block;
-
-        goto create_mapping_key;
-    }
 
     /*
      * Blocks are of the format: (start node ID, number of nodes,
@@ -158,29 +139,44 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
      *               except one.
      */
     blocklist_head = NULL;
-    for (node = HYD_server_info.node_list; node; node = node->next) {
+
+    filler_round = 1;
+    for (proxy = pg->proxy_list;; proxy = proxy->next) {
+        if (filler_round && proxy == NULL) {
+            proxy = pg->proxy_list;
+            filler_round = 0;
+        }
+        else if (proxy == NULL)
+            break;
+
+        if (filler_round && proxy->filler_processes == 0)
+            continue;
+
+        node = proxy->node;
+        core_count = filler_round ? proxy->filler_processes : proxy->node->core_count;
+
         if (blocklist_head == NULL) {
             HYDU_MALLOC(block, struct block *, sizeof(struct block), status);
             block->start_idx = node->node_id;
             block->num_nodes = 1;
-            block->core_count = node->core_count;
+            block->core_count = core_count;
             block->next = NULL;
 
             blocklist_tail = blocklist_head = block;
         }
         else if (blocklist_tail->start_idx + blocklist_tail->num_nodes == node->node_id &&
-                 blocklist_tail->core_count == node->core_count) {
+                 blocklist_tail->core_count == core_count) {
             blocklist_tail->num_nodes++;
         }
         else if (blocklist_tail->start_idx == node->node_id && blocklist_tail->num_nodes == 1) {
-            blocklist_tail->core_count += node->core_count;
+            blocklist_tail->core_count += core_count;
         }
         else {
             HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block), status);
             blocklist_tail = blocklist_tail->next;
             blocklist_tail->start_idx = node->node_id;
             blocklist_tail->num_nodes = 1;
-            blocklist_tail->core_count = node->core_count;
+            blocklist_tail->core_count = core_count;
             blocklist_tail->next = NULL;
         }
     }
