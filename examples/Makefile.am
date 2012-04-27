@@ -13,7 +13,7 @@ CFLAGS   = $(WRAPPER_CFLAGS)
 CXXFLAGS = $(WRAPPER_CXXFLAGS)
 FFLAGS   = $(WRAPPER_FFLAGS)
 FCFLAGS  = $(WRAPPER_FCFLAGS)
-LDFLAGS  = $(WRAPPER_LDFLAGS)
+LDFLAGS  =
 CPPFLAGS = $(WRAPPER_CPPFLAGS)
 #DEFS     = 
 
@@ -37,6 +37,12 @@ cpi_DEPENDENCIES =
 LDFLAGS += -L../lib
 # the make-time instances of libmpl.la and libopa.la live here
 LDFLAGS += -L../src/mpl -L../src/openpa/src
+
+# Wrapper LDFLAGS need to be added at the end to make sure we link
+# with the libraries we just built, and not any previously installed
+# libraries.
+LDFLAGS += $(WRAPPER_LDFLAGS)
+
 external_libs = -lmpl -lopa
 if BUILD_PROFILING_LIB
 LIBS += -l@PMPILIBNAME@
