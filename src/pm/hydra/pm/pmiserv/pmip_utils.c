@@ -161,39 +161,6 @@ static HYD_status retries_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status pmi_port_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.system_global.pmi_port, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status pmi_fd_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.system_global.pmi_fd, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status pmi_rank_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.system_global.pmi_rank, atoi(**argv));
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
 {
     HYDU_snprintf(HYD_pmcd_pmip.local.kvs->kvs_name, PMI_MAXKVSLEN, "%s", **argv);
@@ -659,9 +626,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"retries", retries_fn, NULL},
 
     /* Executable parameters */
-    {"pmi-port", pmi_port_fn, NULL},
-    {"pmi-fd", pmi_fd_fn, NULL},
-    {"pmi-rank", pmi_rank_fn, NULL},
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
     {"pmi-spawner-kvsname", pmi_spawner_kvsname_fn, NULL},
     {"pmi-process-mapping", pmi_process_mapping_fn, NULL},

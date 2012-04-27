@@ -21,7 +21,6 @@ static void init_ui_mpich_info(void)
     HYD_ui_mpich_info.ppn = -1;
     HYD_ui_mpich_info.ckpoint_int = -1;
     HYD_ui_mpich_info.print_all_exitcodes = -1;
-    HYD_ui_mpich_info.ranks_per_proc = -1;
     HYD_ui_mpich_info.sort_order = NONE;
 }
 
@@ -776,32 +775,6 @@ static HYD_status rmk_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void ranks_per_proc_help_fn(void)
-{
-    printf("\n");
-    printf("-ranks-per-proc: MPI ranks to assign per launched process\n\n");
-}
-
-static HYD_status ranks_per_proc_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_ui_mpich_info.ranks_per_proc != -1) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_int(arg, &HYD_ui_mpich_info.ranks_per_proc, atoi(**argv));
-    HYDU_ERR_POP(status, "error setting ranks per process\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void binding_help_fn(void)
 {
     printf("\n");
@@ -1324,9 +1297,6 @@ static HYD_status set_default_values(void)
     if (HYD_ui_mpich_info.print_all_exitcodes == -1)
         HYD_ui_mpich_info.print_all_exitcodes = 0;
 
-    if (HYD_ui_mpich_info.ranks_per_proc == -1)
-        HYD_ui_mpich_info.ranks_per_proc = 1;
-
     if (HYD_server_info.enable_profiling == -1)
         HYD_server_info.enable_profiling = 0;
 
@@ -1612,9 +1582,6 @@ static struct HYD_arg_match_table match_table[] = {
 
     /* Resource management kernel options */
     {"rmk", rmk_fn, rmk_help_fn},
-
-    /* Hybrid programming options */
-    {"ranks-per-proc", ranks_per_proc_fn, ranks_per_proc_help_fn},
 
     /* Topology options */
     {"binding", binding_fn, binding_help_fn},

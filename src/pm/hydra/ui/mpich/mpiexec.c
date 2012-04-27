@@ -79,10 +79,6 @@ static void usage(void)
            HYDRA_AVAILABLE_RMKS);
 
     printf("\n");
-    printf("  Hybrid programming options:\n");
-    printf("    -ranks-per-proc                  assign so many ranks to each process\n");
-
-    printf("\n");
     printf("  Processor topology options:\n");
     printf("    -binding                         process-to-core binding mode\n");
     printf("    -topolib                         processor topology library (%s)\n",

@@ -13,7 +13,6 @@ struct HYD_ui_mpich_info {
     int ppn;
     int ckpoint_int;
     int print_all_exitcodes;
-    int ranks_per_proc;
 
     enum HYD_sort_order {
         NONE = 0,

@@ -27,7 +27,6 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.system_global.global_process_count = -1;
     HYD_pmcd_pmip.system_global.jobid = NULL;
-    HYD_pmcd_pmip.system_global.pmi_port = NULL;
     HYD_pmcd_pmip.system_global.pmi_fd = NULL;
     HYD_pmcd_pmip.system_global.pmi_rank = -1;
     HYD_pmcd_pmip.system_global.pmi_process_mapping = NULL;
@@ -75,9 +74,6 @@ static void cleanup_params(void)
 
     if (HYD_pmcd_pmip.system_global.pmi_fd)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_fd);
-
-    if (HYD_pmcd_pmip.system_global.pmi_port)
-        HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_port);
 
     if (HYD_pmcd_pmip.system_global.pmi_process_mapping)
         HYDU_FREE(HYD_pmcd_pmip.system_global.pmi_process_mapping);

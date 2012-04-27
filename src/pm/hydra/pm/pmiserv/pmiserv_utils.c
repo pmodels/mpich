@@ -240,13 +240,13 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
     int i, arg, inherited_env_count, user_env_count, system_env_count, exec_count;
-    int total_args, proxy_count, pmi_rank, ret, total_filler_processes, total_core_count;
+    int total_args, proxy_count, total_filler_processes, total_core_count;
     int pmi_id, *filler_pmi_ids, *nonfiller_pmi_ids;
     struct HYD_env *env;
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    char *mapping = NULL, *pmi_fd = NULL, *pmi_port = NULL, *map = NULL;
+    char *mapping = NULL, *map = NULL;
     char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
@@ -354,59 +354,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         proxy->exec_launch_info[arg++] = HYDU_strdup("--auto-cleanup");
         proxy->exec_launch_info[arg++] =
             HYDU_int_to_str(HYD_server_info.user_global.auto_cleanup);
-
-        /* Check if we are running in embedded mode */
-        ret = MPL_env2str("PMI_FD", (const char **) &pmi_fd);
-        if (ret) {      /* PMI_FD already set */
-            if (HYD_server_info.user_global.debug)
-                HYDU_dump(stdout, "someone else already set PMI FD\n");
-            pmi_fd = HYDU_strdup(pmi_fd);
-
-            ret = MPL_env2int("PMI_RANK", &pmi_rank);
-            if (!ret)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "PMI_FD set but not PMI_RANK\n");
-        }
-        else {
-            pmi_rank = -1;
-        }
-
-        ret = MPL_env2str("PMI_PORT", (const char **) &pmi_port);
-        if (ret) {      /* PMI_FD already set */
-            if (HYD_server_info.user_global.debug)
-                HYDU_dump(stdout, "someone else already set PMI PORT\n");
-            pmi_port = HYDU_strdup(pmi_port);
-
-            ret = MPL_env2int("PMI_ID", &pmi_rank);
-            if (!ret)
-                HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                    "PMI_PORT set but not PMI_ID\n");
-        }
-        else {
-            pmi_rank = -1;
-        }
-
-        if (pmi_fd && pmi_port)
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "both PMI_FD and PMI_PORT have been set\n");
-
-        if (HYD_server_info.user_global.debug)
-            HYDU_dump(stdout, "PMI FD: %s; PMI PORT: %s; PMI ID/RANK: %d\n", pmi_fd, pmi_port,
-                      pmi_rank);
-
-        if (pmi_fd) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-fd");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_fd);
-        }
-
-        if (pmi_port) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-port");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(pmi_port);
-        }
-
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-rank");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(pmi_rank);
-
 
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-kvsname");
@@ -553,10 +500,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     }
 
   fn_exit:
-    if (pmi_fd)
-        HYDU_FREE(pmi_fd);
-    if (pmi_port)
-        HYDU_FREE(pmi_port);
     if (mapping)
         HYDU_FREE(mapping);
     return status;
