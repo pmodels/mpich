@@ -370,50 +370,28 @@ static HYD_status genv_prop_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status split_map(char *map, int *left, int *current, int *right)
-{
-    char *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    tmp = strtok(map, ",");
-    HYDU_ASSERT(tmp, status);
-    *left = atoi(tmp);
-
-    tmp = strtok(NULL, ",");
-    HYDU_ASSERT(tmp, status);
-    *current = atoi(tmp);
-
-    tmp = strtok(NULL, ",");
-    HYDU_ASSERT(tmp, status);
-    *right = atoi(tmp);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status global_core_map_fn(char *arg, char ***argv)
 {
-    char *map;
+    char *map, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     /* Split the core map into three different segments */
     map = HYDU_strdup(**argv);
     HYDU_ASSERT(map, status);
 
-    status = split_map(map, &HYD_pmcd_pmip.system_global.global_core_map.left,
-                       &HYD_pmcd_pmip.system_global.global_core_map.current,
-                       &HYD_pmcd_pmip.system_global.global_core_map.right);
-    HYDU_ERR_POP(status, "unable to split the provided mapping\n");
-    HYDU_FREE(map);
+    tmp = strtok(map, ",");
+    HYDU_ASSERT(tmp, status);
+    HYD_pmcd_pmip.system_global.global_core_map.local_filler = atoi(tmp);
 
-    HYD_pmcd_pmip.system_global.global_core_map.total =
-        HYD_pmcd_pmip.system_global.global_core_map.left +
-        HYD_pmcd_pmip.system_global.global_core_map.current +
-        HYD_pmcd_pmip.system_global.global_core_map.right;
+    tmp = strtok(NULL, ",");
+    HYDU_ASSERT(tmp, status);
+    HYD_pmcd_pmip.system_global.global_core_map.local_count = atoi(tmp);
+
+    tmp = strtok(NULL, ",");
+    HYDU_ASSERT(tmp, status);
+    HYD_pmcd_pmip.system_global.global_core_map.global_count = atoi(tmp);
+
+    HYDU_FREE(map);
 
     (*argv)++;
 
@@ -425,25 +403,24 @@ static HYD_status global_core_map_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static HYD_status filler_process_map_fn(char *arg, char ***argv)
+static HYD_status pmi_id_map_fn(char *arg, char ***argv)
 {
-    char *map;
+    char *map, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     /* Split the core map into three different segments */
     map = HYDU_strdup(**argv);
     HYDU_ASSERT(map, status);
 
-    status = split_map(map, &HYD_pmcd_pmip.system_global.filler_process_map.left,
-                       &HYD_pmcd_pmip.system_global.filler_process_map.current,
-                       &HYD_pmcd_pmip.system_global.filler_process_map.right);
-    HYDU_ERR_POP(status, "unable to split the provided mapping\n");
-    HYDU_FREE(map);
+    tmp = strtok(map, ",");
+    HYDU_ASSERT(tmp, status);
+    HYD_pmcd_pmip.system_global.pmi_id_map.filler_start = atoi(tmp);
 
-    HYD_pmcd_pmip.system_global.filler_process_map.total =
-        HYD_pmcd_pmip.system_global.filler_process_map.left +
-        HYD_pmcd_pmip.system_global.filler_process_map.current +
-        HYD_pmcd_pmip.system_global.filler_process_map.right;
+    tmp = strtok(NULL, ",");
+    HYDU_ASSERT(tmp, status);
+    HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start = atoi(tmp);
+
+    HYDU_FREE(map);
 
     (*argv)++;
 
@@ -698,7 +675,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"global-user-env", global_env_fn, NULL},
     {"genv-prop", genv_prop_fn, NULL},
     {"global-core-map", global_core_map_fn, NULL},
-    {"filler-process-map", filler_process_map_fn, NULL},
+    {"pmi-id-map", pmi_id_map_fn, NULL},
     {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
     {"iface-ip-env-name", iface_ip_env_name_fn, NULL},

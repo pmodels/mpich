@@ -122,10 +122,8 @@ HYD_status HYD_pmci_launch_procs(void)
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
     node_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
-        proxy->node->active_processes += proxy->proxy_process_count;
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
         node_count++;
-    }
 
     HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)

@@ -19,12 +19,11 @@ static HYD_status init_params(void)
 
     HYDU_init_user_global(&HYD_pmcd_pmip.user_global);
 
-    HYD_pmcd_pmip.system_global.global_core_map.left = -1;
-    HYD_pmcd_pmip.system_global.global_core_map.current = -1;
-    HYD_pmcd_pmip.system_global.global_core_map.right = -1;
-    HYD_pmcd_pmip.system_global.filler_process_map.left = -1;
-    HYD_pmcd_pmip.system_global.filler_process_map.current = -1;
-    HYD_pmcd_pmip.system_global.filler_process_map.right = -1;
+    HYD_pmcd_pmip.system_global.global_core_map.local_filler = -1;
+    HYD_pmcd_pmip.system_global.global_core_map.local_count = -1;
+    HYD_pmcd_pmip.system_global.global_core_map.global_count = -1;
+    HYD_pmcd_pmip.system_global.pmi_id_map.filler_start = -1;
+    HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start = -1;
 
     HYD_pmcd_pmip.system_global.global_process_count = -1;
     HYD_pmcd_pmip.system_global.jobid = NULL;

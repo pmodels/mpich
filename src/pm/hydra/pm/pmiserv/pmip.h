@@ -21,8 +21,16 @@ struct HYD_pmcd_pmip {
     struct HYD_user_global user_global;
 
     struct {
-        struct HYD_pmcd_pmip_map global_core_map;
-        struct HYD_pmcd_pmip_map filler_process_map;
+        struct {
+            int local_filler;
+            int local_count;
+            int global_count;
+        } global_core_map;
+
+        struct {
+            int filler_start;
+            int non_filler_start;
+        } pmi_id_map;
 
         int global_process_count;
         char *jobid;

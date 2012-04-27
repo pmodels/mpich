@@ -95,6 +95,10 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
     /* All proxies in this process group have terminated */
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
+    /* If this PG has already been closed, exit */
+    if (pg_scratch->pmi_listen_fd == HYD_FD_CLOSED)
+        goto fn_exit;
+
     /* If the PMI listen fd has been initialized, deregister it */
     if (pg_scratch->pmi_listen_fd != HYD_FD_UNSET &&
         pg_scratch->pmi_listen_fd != HYD_FD_CLOSED) {
