@@ -130,3 +130,8 @@ nonblocking3 4
 nonblocking3 5
 nonblocking3 10 timeLimit=600
 iallred 2
+# run some of the tests, relinked with the nbc_pmpi_adaptor.o file
+nballtoall1 8 strict=false
+nbcoll2 5     strict=false
+nbredscat 4   strict=false
+nbredscat 6   strict=false

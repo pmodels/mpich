@@ -65,9 +65,32 @@ fi
 AC_SUBST(mpich2_top_srcdir)
 
 # these (in particular master_top_srcdir) are needed to regenerate
-# Makefile.in files after Makfile.sm files change
+# the f90 files from the f77 files
 AC_ARG_VAR([master_top_builddir],[path to the MPICH2 top-level build directory (if present)])
 AC_ARG_VAR([master_top_srcdir],[path to the MPICH2 top-level source directory (if present)])
+
+# Ensure that master_top_srcdir is set if maintainer mode for is set, 
+# since some of the Makefile targets require it.
+if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
+    if test -z "$top_srcdir" ; then
+       use_top_srcdir=$srcdir   
+    else
+       use_top_srcdir=$top_srcdir
+    fi
+    # Make use_top_srcdir absolute
+    case "$use_top_srcdir" in
+    /*) ;;
+    *)
+        use_top_srcdir=`(cd $use_top_srcdir && pwd)`
+        ;;        
+    esac
+    # Now, see if we can find the f77tof90 routine
+    if test -x $use_top_srcdir/../../maint/f77tof90 ; then 
+        master_top_srcdir=`cd $use_top_srcdir && cd ../.. && pwd`
+    else 
+        AC_MSG_ERROR([Unable to find master source file - reconfigure using --disable-maintainer_mode])
+    fi
+fi
 
 AC_ARG_ENABLE(echo, 
 [--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
@@ -290,7 +313,10 @@ if test "$enable_checkfaults" = "yes" ; then
 fi
 AC_SUBST(faultsdir)
 #
+MPI_IS_STRICT=false
 if test "$enable_strictmpi" = "yes" ; then
+    MPI_IS_STRICT=true
+    AC_SUBST(MPI_IS_STRICT)
     AC_DEFINE(USE_STRICT_MPI,1,[Define if only operations defined in MPI should be tested])
 fi
 

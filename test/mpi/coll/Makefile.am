@@ -95,6 +95,20 @@ noinst_PROGRAMS =      \
     scatter2           \
     scatter3           \
     scattern           \
-    scatterv
+    scatterv           \
+    nballtoall1        \
+    nbredscat          \
+    nbcoll2            
 
 allgatherv4_LDADD = $(LDADD) -lm
+nballtoall1_SOURCES = alltoall1.c
+nballtoall1_LDADD   = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbredscat_SOURCES   = redscat.c
+nbredscat_LDADD     = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbcoll2_SOURCES = coll2.c
+nbcoll2_LDADD   = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+
+# This is here instead of Makefile.mtest because it is only used in this 
+# set of tests
+$(top_builddir)/util/nbc_pmpi_adapter.$(OBJEXT): $(top_srcdir)/util/nbc_pmpi_adapter.c
+	(cd $(top_builddir)/util && $(MAKE) nbc_pmpi_adapter.$(OBJEXT))
