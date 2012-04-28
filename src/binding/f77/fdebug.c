@@ -78,6 +78,7 @@ void mpir_is_argvs_null_( void *a, int *ierr );
 
 #include <stdio.h>
 
+/* --BEGIN DEBUG-- */
 /*
    Define Fortran functions MPIR_IS_<NAME>() that are callable in Fortran
    to check if the Fortran constants, MPI_<NAME>, are recognized by the MPI
@@ -159,3 +160,5 @@ void mpir_is_argvs_null_( void *a, int *ierr )
      fprintf(stderr,"MPI_F_ARGVS_NULL=%p, MPI_ARGVS_NULL=%p\n",
              MPI_F_ARGVS_NULL, a);
 }
+
+/* --END DEBUG-- */
