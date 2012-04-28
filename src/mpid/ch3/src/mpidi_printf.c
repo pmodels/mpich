@@ -23,6 +23,7 @@
  * Common_thread_lock/unlock has been removed.
  */
 
+/* --BEGIN DEBUG-- */
 #undef MPIDI_dbg_printf
 void MPIDI_dbg_printf(int level, char * func, char * fmt, ...)
 {
@@ -392,3 +393,5 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt )
 
     return pktmsg;
 }
+
+/* --END DEBUG-- */
