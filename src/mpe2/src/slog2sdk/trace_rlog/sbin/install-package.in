@@ -253,7 +253,7 @@ fi
 # as required, and maintains a list of created directories in dirlist.
 MkDir() {
 dest=$1
-if [ ! -d $dest ] ; then
+if [ ! -d $DESTDIR$dest ] ; then
     dir=`echo $dest | sed 's%/% /%g'`
     path_to_date=''
     for path in $dir ; do
@@ -475,7 +475,12 @@ fi
 for file in $filelist ; do
     echo "$RM \${DESTDIR}$file" >> $UNINSTALLFILE
 done
-echo "$RM \${DESTDIR}$UNINSTALLFILE" >> $UNINSTALLFILE
+if [ -n "${DESTDIR}" ] ; then
+    uninstallfilename=`echo $UNINSTALLFILE| sed -e "s|^${DESTDIR}||g"`
+    echo "$RM \${DESTDIR}$uninstallfilename" >> $UNINSTALLFILE
+else
+    echo "$RM \${DESTDIR}$UNINSTALLFILE" >> $UNINSTALLFILE
+fi
 
 # Add the directories to be removed to the UNINSTALLFILE
 for dir in $dirlist ; do

@@ -283,7 +283,7 @@ fi
 # as required, and maintains a list of created directories in dirlist.
 MkDir() {
 dest=$1
-if [ ! -d $dest ] ; then
+if [ ! -d $DESTDIR$dest ] ; then
     dir=`echo $dest | sed 's%/% /%g'`
     path_to_date=''
     for path in $dir ; do
@@ -633,8 +633,12 @@ for file in $filelist ; do
 done
 
 if [ "$appendUninstall" = 0 ] ; then
-    echo "$RM -f \${DESTDIR}$sbindir/mpeuninstall" >> $UNINSTALLFILE
-    echo "$RM -f \${DESTDIR}$UNINSTALLFILE" >> $UNINSTALLFILE
+    if [ -n "${DESTDIR}" ] ; then
+        uninstallfilename=`echo $UNINSTALLFILE| sed -e "s|^${DESTDIR}||g"`
+        echo "$RM -f \${DESTDIR}$uninstallfilename" >> $UNINSTALLFILE
+    else
+        echo "$RM -f \${DESTDIR}$UNINSTALLFILE" >> $UNINSTALLFILE
+    fi
 fi
 
 # Add the directory removes to the UNINSTALL file
