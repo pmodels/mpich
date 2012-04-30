@@ -116,6 +116,8 @@ AC_ARG_ENABLE(long-double-complex,
 ,enable_long_double_complex=yes)
 AC_ARG_ENABLE(checkerrors,
 [--enable-checkerrors - Add some tests for checking for errors in user programs],,enable_checkerrors=default)
+AC_ARG_ENABLE(perftest,
+[--enable-perftest - Include tests for basic performance consistency (default)],,enable_perftest=yes)
 AC_ARG_ENABLE(checkfaults,
 [--enable-checkfaults - Add some tests for checking on handling of faults in user programs],,enable_checkfaults=no)
 AC_ARG_ENABLE(fast,
@@ -247,6 +249,13 @@ if test "$enable_checkerrors" = "yes" ; then
     errordir=errors
 fi
 AC_SUBST(errordir)
+
+# The performance tests are not part of the MPI standard
+perfdir="perf"
+if test "$enable_strictmpi" = "yes" -o "$enable_perftest" = "no" ; then
+     perfdir="#"
+fi
+AC_SUBST(perfdir)
 # 
 # Only run the threads tests if multiple is specified
 if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then

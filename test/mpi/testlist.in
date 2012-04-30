@@ -13,7 +13,7 @@ pt2pt
 @rmadir@
 @spawndir@
 topo
-perf
+@perfdir@
 @iodir@
 @f77dir@
 @cxxdir@
