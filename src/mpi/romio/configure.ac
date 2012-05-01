@@ -1972,7 +1972,7 @@ elif test $FROM_MPICH2 = yes ; then
    USER_CFLAGS=""
    USER_FFLAGS=""
    TEST_LIBNAME=""
-   MPIRUN='$(bindir)/mpiexec'
+   MPIRUN='${bindir}/mpiexec'
    #
    # Turn off the building of the Fortran interface and the Info routines
    EXTRA_DIRS=""
