@@ -1058,8 +1058,13 @@ AM_CONDITIONAL([BUILD_MPIO_ERRHAN],[false])
 # library in order to provide the "PMPI_" symbols
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "x$HAVE_WEAK_SYMBOLS" = "x0"])
 
+# weird: we have conflated "buid ROMIO's versions of the fortran bindings" and
+# "build ROMIO"s fortran I/O tests". Of course the common situaiton is that we
+# are building as part of MPICH2, which builds its own fortran bindings, but we
+# still want tests built
 AM_CONDITIONAL([BUILD_F77_BINDINGS],[test "x$NOF77" != "x1" && test "x$FROM_MPICH2" != "xyes"])
 
+AM_CONDITIONAL([BUILD_F77_TESTS],[test "x$NOF77" != "x1"])
 
 #
 # Check whether the MPI Offset type is compatible with struct flock
