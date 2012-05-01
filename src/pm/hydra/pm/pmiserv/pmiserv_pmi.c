@@ -112,7 +112,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
         else
             ns_port = HYDRA_NAMESERVER_DEFAULT_PORT;
 
-        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, 0);
+        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status, "error connecting to the nameserver\n");
 
         i = 0;
@@ -210,7 +210,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
         else
             ns_port = HYDRA_NAMESERVER_DEFAULT_PORT;
 
-        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, 0);
+        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status, "error connecting to the nameserver\n");
 
         i = 0;
@@ -283,7 +283,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
         else
             ns_port = HYDRA_NAMESERVER_DEFAULT_PORT;
 
-        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, 0);
+        status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status, "error connecting to the nameserver\n");
 
         i = 0;

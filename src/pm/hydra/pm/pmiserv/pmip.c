@@ -188,12 +188,10 @@ int main(int argc, char **argv)
         HYDU_ERR_POP(status, "error reading HYDI_CONTROL_FD environment\n");
     }
     else if (ret == 0) {
-        /* FIXME: Have a non-zero delay in retries; possibly have a
-         * larger delay for larger ranks */
         status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
                                    HYD_pmcd_pmip.upstream.server_port,
                                    &HYD_pmcd_pmip.upstream.control,
-                                   HYD_pmcd_pmip.local.retries, 0);
+                                   HYD_pmcd_pmip.local.retries, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status,
                      "unable to connect to server %s at port %d (check for firewalls!)\n",
                      HYD_pmcd_pmip.upstream.server_name, HYD_pmcd_pmip.upstream.server_port);

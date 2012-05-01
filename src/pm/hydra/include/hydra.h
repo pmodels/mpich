@@ -123,6 +123,7 @@ extern char *HYD_dbg_prefix;
 #define HYD_NUM_TMP_STRINGS 1000
 
 #define HYD_DEFAULT_RETRY_COUNT (10)
+#define HYD_CONNECT_DELAY (10)
 
 #define dprintf(...)
 
