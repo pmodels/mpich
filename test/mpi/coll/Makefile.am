@@ -98,13 +98,23 @@ noinst_PROGRAMS =      \
     scatterv           \
     nballtoall1        \
     nbredscat          \
+    nbredscat3	       \
+    nbredscatinter     \
     nbcoll2            
 
 allgatherv4_LDADD = $(LDADD) -lm
+
+# Create tests of the nonblocking collectives by reusing the blocking tests,
+# using the MPI profiling interface to intercept the blocking call and
+# replace it with a MPI_Ixxx/MPI_Wait pair.
 nballtoall1_SOURCES = alltoall1.c
 nballtoall1_LDADD   = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
 nbredscat_SOURCES   = redscat.c
 nbredscat_LDADD     = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbredscat3_SOURCES   = redscat3.c
+nbredscat3_LDADD     = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbredscatinter_SOURCES   = redscatinter.c
+nbredscatinter_LDADD     = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
 nbcoll2_SOURCES = coll2.c
 nbcoll2_LDADD   = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
 
