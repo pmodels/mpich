@@ -766,9 +766,7 @@ AC_SUBST(DEVICE_ARGS)
 INCLUDE_MPIDDEFS_H='/* ... no device specific definitions ... */'
 AC_SUBST(INCLUDE_MPIDDEFS_H)
 
-#
-# See if the device wants to say something about the compilers (for example,
-# the globus device may need to do this)
+# See if the device wants to say something about the compilers
 if test -f $devicedir/mpich2prereq ; then
     . $devicedir/mpich2prereq
 fi

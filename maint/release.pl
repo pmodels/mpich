@@ -188,7 +188,7 @@ print("done\n");
 # Remove packages that are not being released
 print("===> Removing packages that are not being released... ");
 chdir("${root}/${pack}-${version}");
-run_cmd("rm -rf src/mpid/globus doc/notes src/pm/mpd/Zeroconf.py");
+run_cmd("rm -rf doc/notes src/pm/mpd/Zeroconf.py");
 
 chdir("${root}/${pack}-${version}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
 my @nem_modules = qw(elan psm);

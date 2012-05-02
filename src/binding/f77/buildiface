@@ -1283,9 +1283,7 @@ sub print_name_map_block {
 
 /* This defines the routine that we call, which must be the PMPI version
    since we're renaming the Fortran entry as the pmpi version.  The MPI name
-   must be undefined first to prevent any conflicts with previous renamings,
-   such as those put in place by the globus device when it is building on
-   top of a vendor MPI. */
+   must be undefined first to prevent any conflicts with previous renamings. */
 #undef ${ucprefix}${routine_name}
 #define ${ucprefix}${routine_name} P${ucprefix}${routine_name} 
 

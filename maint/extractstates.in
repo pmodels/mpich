@@ -55,7 +55,6 @@ require "$maintdir/extractstrings";
                     'MPID_STATE_READV'  => 'readv', 
                     'MPID_STATE_WRITEV' => 'writev', 
                     'MPID_STATE_MEMCPY' => 'memcpy',
-                    'MPID_STATE_memcpy' => 'memcpy',  # used in mpid/globus
                     'MPID_STATE_MPIDU_SOCK_LISTEN',   # used in sock code
                     'MPID_STATE_MPIDU_SOCK_ACCEPT',
                     'MPID_STATE_POLL'   => 'poll',
@@ -73,7 +72,7 @@ require "$maintdir/extractstrings";
                   );
 
 # Set the default directories
-$dirs = "src/include src/mpi src/mpid/ch3 src/mpid/globus src/mpid/common src/util src/pmi src/binding src/nameserv";
+$dirs = "src/include src/mpi src/mpid/ch3 src/mpid/common src/util src/pmi src/binding src/nameserv";
 # Add mm for debugging
 #$dirs .= " src/mpid/mm";
 
