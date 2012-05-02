@@ -63,14 +63,15 @@ void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
 {
     int nsec, sec;
     
-    nsec = t1->tv_nsec + t2->tv_nsec;
-    sec  = t1->tv_sec + t2->tv_sec;
-    if (nsec > 1.0e9) {
-	nsec -= 1.0e9;
-	sec++;
+    nsec = t2->tv_nsec - t1->tv_nsec;
+    sec  = t2->tv_sec - t1->tv_sec;
+
+    t3->tv_sec  += sec;
+    t3->tv_nsec += nsec;
+    while (t3->tv_nsec > 1000000000) {
+	t3->tv_nsec -= 1000000000;
+	t3->tv_sec ++;
     }
-    t3->tv_sec = sec;
-    t3->tv_nsec = nsec;
 }
 
 /* FIXME: We need to cleanup the use of the MPID_Generic_wtick prototype */
@@ -123,8 +124,8 @@ void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
     t3->tv_usec += usec;
     t3->tv_sec += sec;
     /* Handle carry to the integer seconds field */
-    if (t3->tv_usec > 1.0e6) {
-	t3->tv_usec -= 1.0e6;
+    while (t3->tv_usec > 1000000) {
+	t3->tv_usec -= 1000000;
 	t3->tv_sec++;
     }
 }
@@ -359,7 +360,7 @@ void MPID_Wtime_todouble( MPID_Time_t *t, double *val )
 }
 void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
 {
-    *t3 = *t1 + *t2;
+    *t3 += *t2 - *t1;
 }
 
 /* FIXME: We need to cleanup the use of the MPID_Generic_wtick prototype */
