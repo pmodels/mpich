@@ -1,3 +1,0 @@
-SUBDIRS= . alltoall alltoallv alltoallw barrier bcast allreduce reduce allgather allgatherv scatterv scatter gather reduce_scatter 
-INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = coll_utils.c unimpl.c star_repo.c star_utils.c

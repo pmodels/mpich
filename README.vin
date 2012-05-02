@@ -401,11 +401,11 @@ relevant Makefiles.
 =================================
 
 The communication mechanisms in MPICH2 are called "devices". MPICH2
-supports several internal devices including ch3 (default), dcmfd (for
-Blue Gene/P) and globus (for Globus), as well as many third-party
-devices that are released and maintained by other institutes such as
-osu_ch3 (from Ohio State University for InfiniBand and iWARP), ch_mx
-(from Myricom for Myrinet MX), etc.
+supports several internal devices including ch3 (default), and globus
+(for Globus), as well as many third-party devices that are released
+and maintained by other institutes such as osu_ch3 (from Ohio State
+University for InfiniBand and iWARP), ch_mx (from Myricom for Myrinet
+MX), etc.
 
                    *************************************
 
@@ -536,40 +536,6 @@ SCTP stack specific instructions:
   under Solaris, MPICH2LIB_CFLAGS must have
   -DMPICH_SCTP_CONCATENATES_IOVS set when running MPICH2's configure
   script.
-
-                   *************************************
-
-IBM Blue Gene/P device
-**********************
-MPICH2 also supports the IBM Blue Gene/P systems. Since BG/P's
-front-end uses a different architecture than the actual compute nodes,
-MPICH2 has to be cross-compiled for this platform. The configuration
-of MPICH2 on BG/P relies on the availability of the DCMF driver stack
-and cross compiler binaries on the system. These are packaged by IBM
-in their driver releases (default installation path is
-/bgsys/drivers/ppcfloor) and are not released with MPICH2.
-
-Assuming DRIVER_PATH points to the driver installation path (e.g.,
-/bgsys/drivers/ppcfloor), the following is an example configure
-command-line for MPICH2:
-
-  GCC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
-  CC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gcc \
-  CXX=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-g++ \
-  F77=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
-  FC=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-gfortran \
-  CFLAGS="-mcpu=450fp2" \
-  CXXFLAGS="-mcpu=450fp2" \
-  FFLAGS="-mcpu=450fp2" \
-  FCFLAGS="-mcpu=450fp2" \
-  AR=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ar \
-  LD=${DRIVER_PATH}/gnu-linux/bin/powerpc-bgp-linux-ld \
-  MSGLAYER_INCLUDE="-I${DRIVER_PATH}/comm/include" \
-  MSGLAYER_LIB="-L${DRIVER_PATH}/comm/lib -ldcmfcoll.cnk -ldcmf.cnk -lpthread -lrt \
-      -L$DRIVER_PATH/runtime/SPI -lSPI.cna" \
-  ./configure --with-device=dcmfd:BGP --with-pmi=no --with-pm=no --with-file-system=bgl \
-  	      --enable-timer-type=device --with-cross=src/mpid/dcmfd/cross \
-	      --host=powerpc-bgp-linux --target=powerpc-bgp-linux --build=powerpc64-linux-gnu
 
 -------------------------------------------------------------------------
 

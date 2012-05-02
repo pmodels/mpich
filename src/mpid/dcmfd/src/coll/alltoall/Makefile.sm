@@ -1,3 +1,0 @@
-SUBDIRS= .
-INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = mpido_alltoall.c star_alltoall.c alltoall_algorithms.c

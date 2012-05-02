@@ -1,3 +1,0 @@
-SUBDIRS= .
-INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = mpid_recv_init.c mpid_send_init.c mpid_startall.c

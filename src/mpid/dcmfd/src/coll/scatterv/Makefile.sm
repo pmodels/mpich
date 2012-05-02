@@ -1,4 +1,0 @@
-SUBDIRS= .
-INCLUDES = -I${master_top_srcdir}/src/include -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = mpido_scatterv.c scatterv_algorithms.c
-#lib${MPILIBNAME}_a_SOURCES = mpido_scatterv.c scatterv_algorithms.c #star_scatterv.c

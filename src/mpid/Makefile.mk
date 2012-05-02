@@ -6,7 +6,4 @@
 ##
 
 include $(top_srcdir)/src/mpid/ch3/Makefile.mk
-#include $(top_srcdir)/src/mpid/dcmfd/Makefile.mk
-
 include $(top_srcdir)/src/mpid/common/Makefile.mk
-
