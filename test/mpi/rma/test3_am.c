@@ -22,85 +22,77 @@
 int main(int argc, char *argv[]) 
 { 
     int rank, destrank, nprocs, *A, *B, i;
+    MPI_Comm CommDeuce;
     MPI_Group comm_group, group;
     MPI_Win win;
     int errs = 0;
- 
+
     MTest_Init(&argc,&argv); 
     MPI_Comm_size(MPI_COMM_WORLD,&nprocs); 
     MPI_Comm_rank(MPI_COMM_WORLD,&rank); 
 
-/*    A = (int *) malloc(SIZE * sizeof(int));
-    if (!A) {
-        printf("Can't allocate memory in test program\n");
+    if (nprocs < 2) {
+        printf("Run this program with 2 or more processes\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-    B = (int *) malloc(SIZE * sizeof(int));
-    if (!B) {
-        printf("Can't allocate memory in test program\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-*/
-    
-    i = MPI_Alloc_mem(SIZE * sizeof(int), MPI_INFO_NULL, &A);
-    if (i) {
-        printf("Can't allocate memory in test program\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-    i = MPI_Alloc_mem(SIZE * sizeof(int), MPI_INFO_NULL, &B);
-    if (i) {
-        printf("Can't allocate memory in test program\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-    
-    if (nprocs != 2) {
-        printf("Run this program with 2 processes\n");
-        MPI_Abort(MPI_COMM_WORLD,1);
     }
 
-    MPI_Comm_group(MPI_COMM_WORLD, &comm_group);
+    MPI_Comm_split(MPI_COMM_WORLD, (rank < 2), rank, &CommDeuce);
 
-    if (rank == 0) {
-        for (i=0; i<SIZE; i++) {
-            A[i] = i;
-            B[i] = SIZE + i;
+    if (rank < 2) {
+        i = MPI_Alloc_mem(SIZE * sizeof(int), MPI_INFO_NULL, &A);
+        if (i) {
+            printf("Can't allocate memory in test program\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
         }
-        MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win); 
-        destrank = 1;
-        MPI_Group_incl(comm_group, 1, &destrank, &group);
-        MPI_Win_start(group, 0, win); 
-        MPI_Put(A, SIZE, MPI_INT, 1, 0, SIZE, MPI_INT, win); 
-        MPI_Win_complete(win); 
-        MPI_Send(B, SIZE, MPI_INT, 1, 100, MPI_COMM_WORLD); 
-    }
+        i = MPI_Alloc_mem(SIZE * sizeof(int), MPI_INFO_NULL, &B);
+        if (i) {
+            printf("Can't allocate memory in test program\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
 
-    else {  /* rank=1 */
-        for (i=0; i<SIZE; i++) A[i] = B[i] = (-4)*i;
-        MPI_Win_create(B, SIZE*sizeof(int), sizeof(int), MPI_INFO_NULL, 
-                       MPI_COMM_WORLD, &win);
-        destrank = 0;
-        MPI_Group_incl(comm_group, 1, &destrank, &group);
-        MPI_Win_post(group, 0, win);
-        MPI_Recv(A, SIZE, MPI_INT, 0, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Win_wait(win);
-        
-        for (i=0; i<SIZE; i++) {
-            if (B[i] != i) {
-                printf("Rank 1: Put Error: B[i] is %d, should be %d\n", B[i], i);
-                errs++;
+        MPI_Comm_group(CommDeuce, &comm_group);
+
+        if (rank == 0) {
+            for (i=0; i<SIZE; i++) {
+                A[i] = i;
+                B[i] = SIZE + i;
             }
-            if (A[i] != SIZE + i) {
-                printf("Rank 1: Send/Recv Error: A[i] is %d, should be %d\n", A[i], SIZE+i);
-                errs++;
+            MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
+            destrank = 1;
+            MPI_Group_incl(comm_group, 1, &destrank, &group);
+            MPI_Win_start(group, 0, win);
+            MPI_Put(A, SIZE, MPI_INT, 1, 0, SIZE, MPI_INT, win);
+            MPI_Win_complete(win);
+            MPI_Send(B, SIZE, MPI_INT, 1, 100, MPI_COMM_WORLD);
+        }
+        else {  /* rank=1 */
+            for (i=0; i<SIZE; i++) A[i] = B[i] = (-4)*i;
+            MPI_Win_create(B, SIZE*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
+            destrank = 0;
+            MPI_Group_incl(comm_group, 1, &destrank, &group);
+            MPI_Win_post(group, 0, win);
+            MPI_Recv(A, SIZE, MPI_INT, 0, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Win_wait(win);
+
+            for (i=0; i<SIZE; i++) {
+                if (B[i] != i) {
+                    printf("Rank 1: Put Error: B[i] is %d, should be %d\n", B[i], i);
+                    errs++;
+                }
+                if (A[i] != SIZE + i) {
+                    printf("Rank 1: Send/Recv Error: A[i] is %d, should be %d\n", A[i], SIZE+i);
+                    errs++;
+                }
             }
         }
-    }
 
-    MPI_Group_free(&group);
-    MPI_Group_free(&comm_group);
-    MPI_Win_free(&win); 
-    MPI_Free_mem(A);
-    MPI_Free_mem(B);
+        MPI_Group_free(&group);
+        MPI_Group_free(&comm_group);
+        MPI_Win_free(&win);
+        MPI_Free_mem(A);
+        MPI_Free_mem(B);
+    }
+    MPI_Comm_free(&CommDeuce);
     MTest_Finalize(errs);
     MPI_Finalize(); 
     return 0; 
