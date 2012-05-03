@@ -245,6 +245,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     struct HYD_env *env;
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
+    struct HYD_node *node;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     char *mapping = NULL, *map = NULL;
     char *tmp[HYD_NUM_TMP_STRINGS];
@@ -262,13 +263,15 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
     /* Create the arguments list for each proxy */
     total_filler_processes = 0;
-    total_core_count = 0;
     proxy_count = 0;
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
         total_filler_processes += proxy->filler_processes;
-        total_core_count += proxy->node->core_count;
         proxy_count++;
     }
+
+    total_core_count = 0;
+    for (node = HYD_server_info.node_list; node; node = node->next)
+        total_core_count += node->core_count;
 
     HYDU_MALLOC(filler_pmi_ids, int *, proxy_count * sizeof(int), status);
     HYDU_MALLOC(nonfiller_pmi_ids, int *, proxy_count * sizeof(int), status);
