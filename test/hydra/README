@@ -1,0 +1,14 @@
+This directory contains hydra-specific tests.  Most of these are
+manual tests for the time being.
+
+
+Multi-host tests
+================
+
+Run them as follows:
+
+mpiexec -hosts "localhost:2,`hostname`:3" -n NP ./test
+
+Tests to run:
+
+ * universe_size  np=1
