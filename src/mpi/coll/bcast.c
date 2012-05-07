@@ -85,6 +85,8 @@ static int MPIR_Bcast_binomial(
         MPIR_Pack_size_impl(1, datatype, &type_size);
 
     nbytes = type_size * count;
+    if (nbytes == 0)
+        goto fn_exit; /* nothing to do */
 
     if (!is_contig || !is_homogeneous)
     {
@@ -433,6 +435,8 @@ static int MPIR_Bcast_scatter_doubling_allgather(
         MPIR_Pack_size_impl(1, datatype, &type_size);
 
     nbytes = type_size * count;
+    if (nbytes == 0)
+        goto fn_exit; /* nothing to do */
 
     if (is_contig && is_homogeneous)
     {
@@ -729,6 +733,8 @@ static int MPIR_Bcast_scatter_ring_allgather(
         MPIR_Pack_size_impl(1, datatype, &type_size);
 
     nbytes = type_size * count;
+    if (nbytes == 0)
+        goto fn_exit; /* nothing to do */
 
     if (is_contig && is_homogeneous)
     {
@@ -911,6 +917,8 @@ static int MPIR_SMP_Bcast(
         MPIR_Pack_size_impl(1, datatype, &type_size);
 
     nbytes = type_size * count;
+    if (nbytes == 0)
+        goto fn_exit; /* nothing to do */
 
     if ((nbytes < MPIR_PARAM_BCAST_SHORT_MSG_SIZE) || (comm_ptr->local_size < MPIR_PARAM_BCAST_MIN_PROCS))
     {
@@ -1146,6 +1154,8 @@ int MPIR_Bcast_intra (
         MPIR_Pack_size_impl(1, datatype, &type_size);
 
     nbytes = type_size * count;
+    if (nbytes == 0)
+        goto fn_exit; /* nothing to do */
 
     if ((nbytes < MPIR_PARAM_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_PARAM_BCAST_MIN_PROCS))
     {
