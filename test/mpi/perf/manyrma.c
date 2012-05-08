@@ -91,6 +91,7 @@ int main( int argc, char *argv[] )
 	}
 	else {
 	    fprintf( stderr, "Unrecognized argument %s\n", argv[i] );
+	    fprintf( stderr, "%s [ -put ] [ -acc ] [ -lock ] [ -fence ] [ -pscw ] [ -barrier ]  [ -maxsz msgsize ]\n", argv[0] );
 	    MPI_Abort( MPI_COMM_WORLD, 1 );
 	}
     }
