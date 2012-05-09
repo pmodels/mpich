@@ -7,6 +7,8 @@ allred3 10
 allred4 4
 allred5 5
 allred5 10
+allred6 4
+allred6 7
 reduce 5
 reduce 10
 reduce_local 2 mpiversion=2.2
