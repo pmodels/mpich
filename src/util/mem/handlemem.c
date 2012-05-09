@@ -450,19 +450,27 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
     }
 #endif
 
-    MPL_VG_MEMPOOL_FREE(objmem, obj);
-    /* MEMPOOL_FREE marks the object NOACCESS, so we have to make the
-     * MPIU_Handle_common area that is used for internal book keeping
-     * addressable again. */
-    MPL_VG_MAKE_MEM_DEFINED(&obj->handle, sizeof(obj->handle));
-    MPL_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
+    if (MPL_VG_RUNNING_ON_VALGRIND()) {
+        int tmp_handle = obj->handle;
 
-    /* Necessary to prevent annotations from being misinterpreted.  HB/HA arcs
-     * will be drawn between a req object in across a free/alloc boundary
-     * otherwise.  Specifically, stores to obj->next when obj is actually an
-     * MPID_Request falsely look like a race to DRD and Helgrind because of the
-     * other lockfree synchronization used with requests. */
-    MPL_VG_ANNOTATE_NEW_MEMORY(obj, objmem->size);
+        MPL_VG_MEMPOOL_FREE(objmem, obj);
+        /* MEMPOOL_FREE marks the object NOACCESS, so we have to make the
+         * MPIU_Handle_common area that is used for internal book keeping
+         * addressable again. */
+        MPL_VG_MAKE_MEM_DEFINED(&obj->handle, sizeof(obj->handle));
+        MPL_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
+
+        /* tt#1626: MEMPOOL_FREE also uses the value of `--free-fill=0x..` to
+         * memset the object, so we need to restore the handle */
+        obj->handle = tmp_handle;
+
+        /* Necessary to prevent annotations from being misinterpreted.  HB/HA arcs
+         * will be drawn between a req object in across a free/alloc boundary
+         * otherwise.  Specifically, stores to obj->next when obj is actually an
+         * MPID_Request falsely look like a race to DRD and Helgrind because of the
+         * other lockfree synchronization used with requests. */
+        MPL_VG_ANNOTATE_NEW_MEMORY(obj, objmem->size);
+    }
 
     obj->next	        = objmem->avail;
     objmem->avail	= obj;
