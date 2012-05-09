@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "mpitest.h"
+#include <assert.h>
 
 #define LAST_TEST 14
 #define RMA_SIZE  2048
@@ -52,7 +53,7 @@ int longcount = 512;
 int medcount  = 127;
 int mednum    = 4;
 
-void RMATest( int i, MPI_Win win, int master, int *getbuf, int getbufsize );
+void RMATest( int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *getbuf, int getbufsize );
 int  RMACheck( int i, int *buf, MPI_Aint bufsize );
 int  RMACheckGet( int i, MPI_Win win, int *getbuf, MPI_Aint getsize);
 void RMATestInit( int i, int *buf, MPI_Aint bufsize );
@@ -65,6 +66,7 @@ int main( int argc, char *argv[] )
     MPI_Aint bufsize=0, getbufsize=0;
     int      master, partner, next, wrank, wsize, i;
     int      ntest = LAST_TEST;
+    int *srcbuf;
 
     MTest_Init( &argc, &argv );
 
@@ -117,6 +119,9 @@ int main( int argc, char *argv[] )
 	    MPI_Abort( MPI_COMM_WORLD, 1 );
 	}
     }
+    srcbuf = malloc(RMA_SIZE*sizeof(*srcbuf));
+    assert(srcbuf);
+
     MPI_Win_create( rmabuffer, bufsize, sizeof(int), MPI_INFO_NULL,
 		    MPI_COMM_WORLD, &win );
     
@@ -141,7 +146,7 @@ int main( int argc, char *argv[] )
 	    MPI_Recv( MPI_BOTTOM, 0, MPI_INT, master, i, MPI_COMM_WORLD,
 		      MPI_STATUS_IGNORE );
 	    MPI_Win_lock( MPI_LOCK_EXCLUSIVE, 0, master, win );
-	    RMATest( i, win, master, getbuf, getbufsize );
+	    RMATest( i, win, master, srcbuf, RMA_SIZE, getbuf, getbufsize );
 	    MPI_Win_unlock( master, win );
 	    errs += RMACheckGet( i, win, getbuf, getbufsize );
 	    MPI_Send( MPI_BOTTOM, 0, MPI_INT, master, i, MPI_COMM_WORLD );
@@ -167,12 +172,17 @@ int main( int argc, char *argv[] )
     return MTestReturnValue( errs );
 }
 
-/* Perform the tests */
-void RMATest( int i, MPI_Win win, int master, int *getbuf, int getbufsize )
+/* Perform the tests.
+ *
+ * The srcbuf must be passed in because the buffer must remain valid
+ * until the subsequent unlock call. */
+void RMATest( int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *getbuf, int getbufsize )
 {
-    int source[RMA_SIZE], j, k;
+    int j, k;
+    int *source = srcbuf;
+    assert(srcbufsize == RMA_SIZE);
 
-    for (j=0; j<RMA_SIZE; j++) source[j] = -j;
+    for (j=0; j<srcbufsize; j++) source[j] = -j;
 
     switch (i) {
     case 0: /* Single short put (1 word at OFFSET_1) */
@@ -367,7 +377,7 @@ int RMACheck( int i, int *buf, MPI_Aint bufsize )
 		if (buf[OFFSET_2 + j*2*medcount + k] != 
 		    OFFSET_2 + 2*j*2*medcount+2*k + ACC_VAL ) {
 		    errs++;
-		    printf( "case 12: value is %d should be %d\n", 
+		    printf( "case 13: value is %d should be %d\n", 
 			    buf[OFFSET_2+j*2*medcount + k], 
 			    OFFSET_2 + 2*j*2*medcount + k +ACC_VAL);
 		}
