@@ -161,15 +161,8 @@ int MPIU_Timer_init(int rank, int size);
 int MPIU_Timer_finalize(void);
 int MPIR_Describe_timer_states(void);
 
-/* Statistics macros aren't defined yet */
-/* All uses of these are protected by the symbol COLLECT_STATS, so they
-   do not need to be defined in the non-HAVE_TIMING branch. */
-#define MPID_STAT_BEGIN
-#define MPID_STAT_END
-#define MPID_STAT_ACC(statid,val)
-#define MPID_STAT_ACC_RANGE(statid,rng)
-#define MPID_STAT_ACC_SIMPLE(statid,val)
-#define MPID_STAT_MISC(a) a
+/* The original statistics macros (see the design documentation) 
+   have been superceeded by the instrumentation macros (see mpiinstr.h) */
 
 #else /* HAVE_TIMING and doing logging */
 
