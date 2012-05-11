@@ -21,6 +21,7 @@ dnl See COPYING in top-level directory.
 # 4. If non-empty, print the announcement banner
 #
 AC_DEFUN([HWLOC_SETUP_CORE],[
+    AC_REQUIRE([AC_USE_SYSTEM_EXTENSIONS])
     AC_REQUIRE([AC_CANONICAL_TARGET])
     AC_REQUIRE([AC_PROG_CC])
 
@@ -141,7 +142,6 @@ EOF])
     fi
 
     # Enample system extensions for O_DIRECTORY, fdopen, fssl, etc.
-    AC_USE_SYSTEM_EXTENSIONS
     AH_VERBATIM([USE_HPUX_SYSTEM_EXTENSIONS],
 [/* Enable extensions on HP-UX. */
 #ifndef _HPUX_SOURCE
@@ -548,6 +548,16 @@ EOF])
 
     AC_CHECK_HEADERS([malloc.h])
     AC_CHECK_FUNCS([getpagesize memalign posix_memalign])
+
+    # when autoheader is run, it doesn't know about
+    # PAC_FUNC_NEEDS_DECL, so it doesn't generate an appropriate line
+    # in config.h.in.  We need to fool it with a dummy AC_DEFINE().
+    if false ; then
+        AC_DEFINE([NEEDS_GETPAGESIZE_DECL], 1, [Define to 1 if getpagesize needs a declaration])
+    fi
+    if test $ac_cv_func_getpagesize = "yes" ; then
+       PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getpagesize)
+    fi
 
     AC_CHECK_HEADERS([sys/utsname.h])
     AC_CHECK_FUNCS([uname])
