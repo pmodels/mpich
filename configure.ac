@@ -331,10 +331,6 @@ m4_include([subsys_include.m4])
 
 dnl ----------------------------------------------------------------------------
 dnl setup top-level argument handling
-AC_ARG_ENABLE(lib-depend,
-	AC_HELP_STRING([--enable-lib-depend], [Turn on library dependencies (experimental)]),,
-	[enable_lib_depend=no])
-
 AC_ARG_ENABLE(echo, 
 	AC_HELP_STRING([--enable-echo], [Turn on strong echoing. The default is enable=no.]),
 	set -x)
