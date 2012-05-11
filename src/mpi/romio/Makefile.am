@@ -19,6 +19,8 @@ nodist_include_HEADERS =
 noinst_HEADERS = 
 AM_CPPFLAGS =
 EXTRA_DIST =
+SUFFIXES = 
+doc1_src_txt =
 
 # ------------------------------------------------------------------------
 # variables to be populated by the included Makefile.mk fragments:
@@ -106,5 +108,53 @@ coverage:
 	    if test $$subdir = "-" ; then break ; fi ; \
 	    ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
 	done
+# --------------------------------------------------------------------------
+.PHONY: mandoc mandoc-local htmldoc htmldoc-local
+SUFFIXES += .man-phony .html-phony .man1-phony .html1-phony .txt
+
+# "make V=1" support for our documentation recipes
+doctextman_verbose = $(doctextman_verbose_$(V))
+doctextman_verbose_ = $(doctextman_verbose_$(AM_DEFAULT_VERBOSITY))
+doctextman_verbose_0 = @echo "   DOCTEXTMAN  " $@;
+doctexthtml_verbose = $(doctexthtml_verbose_$(V))
+doctexthtml_verbose_ = $(doctexthtml_verbose_$(AM_DEFAULT_VERBOSITY))
+doctexthtml_verbose_0 = @echo "   DOCTEXTHTML  " $@;
+
+# Build dir paths where the man pages will be created.  Will usually be
+# overridden by MPICH2 make.
+mandoc_path1=$(abs_top_builddir)/man/man1
+mandoc_path3=$(abs_top_builddir)/man/man3
+htmldoc_path1=$(abs_top_builddir)/www/www1
+htmldoc_path3=$(abs_top_builddir)/www/www3
+doctext_docnotes=
+
+.c.man-phony:
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path3) -ext 3 \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
+.c.html-phony:
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path3) \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
+
+.txt.man1-phony:
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path1) -ext 1 \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
+.txt.html1-phony:
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path1) \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
+
+# use mandoc-local target to force directory creation before running DOCTEXT
+mandoc:
+	test -d $(mandoc_path1) || $(MKDIR_P) $(mandoc_path1)
+	test -d $(mandoc_path3) || $(MKDIR_P) $(mandoc_path3)
+	$(MAKE) $(AM_MAKEFLAGS) mandoc-local
+mandoc-local: $(romio_mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony)
+
+# use htmldoc-local target to force directory creation before running DOCTEXT
+htmldoc:
+	test -d $(top_builddir)/www/www1 || $(MKDIR_P) $(top_builddir)/www/www1
+	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
+	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
+htmldoc-local: $(romio_mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony)
+
 # --------------------------------------------------------------------------
 

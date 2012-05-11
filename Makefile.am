@@ -31,6 +31,8 @@ MAINTAINERCLEANFILES =
 SUFFIXES = 
 EXTRA_DIST =
 DOC_SUBDIRS =
+MANDOC_SUBDIRS =
+HTMLDOC_SUBDIRS =
 INSTALL_DATA_LOCAL_TARGETS =
 doc1_src_txt =
 
@@ -276,29 +278,54 @@ doctexthtml_verbose = $(doctexthtml_verbose_$(V))
 doctexthtml_verbose_ = $(doctexthtml_verbose_$(AM_DEFAULT_VERBOSITY))
 doctexthtml_verbose_0 = @echo "   DOCTEXTHTML  " $@;
 
+# build dir paths for doc generation, used to override subdir (esp. ROMIO) doc
+# generation locations/options
+mandoc_path1=$(abs_top_builddir)/man/man1
+mandoc_path3=$(abs_top_builddir)/man/man3
+htmldoc_path1=$(abs_top_builddir)/www/www1
+htmldoc_path3=$(abs_top_builddir)/www/www3
+doctext_docnotes=$(abs_top_srcdir)/maint/docnotes
+
 # Implicit suffix rules to cause the docs to be built.  These are a bit of a
 # hack, but using the implicit rules like this instead of a shell for loop
 # permits make -jN to work.
 .c.man-phony:
-	$(doctextman_verbose)$(DOCTEXT) -man -mpath man/man3 -ext 3 -heading MPI \
-		-quotefmt ${top_srcdir}/maint/docnotes $<
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path3) -ext 3 \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
 .c.html-phony:
-	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath www/www3  -heading MPI \
-		-quotefmt ${top_srcdir}/maint/docnotes $<
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path3) \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
 
 .txt.man1-phony:
-	$(doctextman_verbose)$(DOCTEXT) -man -mpath man/man1 -ext 1 -heading MPI \
-		-quotefmt ${top_srcdir}/maint/docnotes $<
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path1) -ext 1 \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
 .txt.html1-phony:
-	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath www/www1  -heading MPI \
-		-quotefmt ${top_srcdir}/maint/docnotes $<
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path1) \
+	    -heading MPI -quotefmt $(doctext_docnotes) $<
 
 # use mandoc-local target to force directory creation before running DOCTEXT
 mandoc:
-	test -d $(top_builddir)/man/man1 || $(MKDIR_P) $(top_builddir)/man/man1
-	test -d $(top_builddir)/man/man3 || $(MKDIR_P) $(top_builddir)/man/man3
+	test -d $(mandoc_path1) || $(MKDIR_P) $(mandoc_path1)
+	test -d $(mandoc_path3) || $(MKDIR_P) $(mandoc_path3)
 	$(MAKE) $(AM_MAKEFLAGS) mandoc-local
 mandoc-local: $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony)
+	for subdir in $(MANDOC_SUBDIRS) - ; do \
+	    if test "x$$subdir" = "x-" ; then break ; fi ; \
+## MANDOC_SUBDIRS might accidentally contain "."
+	    if test "x$$subdir" = "x." ; then \
+	        : ; \
+	    else \
+		if grep 'mandoc:' $$subdir/Makefile >/dev/null 2>&1 ; then  \
+## make 'mandoc' in subdirectory but tell sub-make to output to the top-level
+	           ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) \
+			mandoc_path1=$(mandoc_path1) \
+			mandoc_path3=$(mandoc_path3) \
+			doctext_docnotes=$(doctext_docnotes) \
+			mandoc ) ; \
+		fi \
+	    fi \
+	done
+
 
 # use htmldoc-local target to force directory creation before running DOCTEXT
 htmldoc:
@@ -306,6 +333,22 @@ htmldoc:
 	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
 	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
 htmldoc-local: $(mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony)
+	for subdir in $(HTMLDOC_SUBDIRS) - ; do \
+	    if test "x$$subdir" = "x-" ; then break ; fi ; \
+## HTMLDOC_SUBDIRS might accidentally contain "."
+	    if test "x$$subdir" = "x." ; then \
+	        : ; \
+	    else \
+		if grep 'htmldoc:' $$subdir/Makefile >/dev/null 2>&1 ; then  \
+## make 'htmldoc' in subdirectory but tell sub-make to output to the top-level
+	           ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) \
+			htmldoc_path1=$(htmldoc_path1) \
+			htmldoc_path3=$(htmldoc_path3) \
+			doctext_docnotes=$(doctext_docnotes) \
+			htmldoc ) ; \
+		fi \
+	    fi \
+	done
 
 # install-man does not have a special "-local" target for some reason
 INSTALL_DATA_LOCAL_TARGETS += install-man-local
@@ -360,7 +403,7 @@ install-html-local:
 	 done ; \
 	fi
 
-.PHONY: mandir-create htmldir-create mandoc htmldoc install-html-local install-man-local
+.PHONY: mandoc mandoc-local htmldoc htmldoc-local install-html-local install-man-local
 
 # build the latex docs in the old style
 latexdoc:

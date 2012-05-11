@@ -23,6 +23,8 @@ include $(top_srcdir)/src/mpi/topo/Makefile.mk
 if BUILD_ROMIO
 SUBDIRS += src/mpi/romio
 DIST_SUBDIRS += src/mpi/romio
+MANDOC_SUBDIRS += src/mpi/romio
+HTMLDOC_SUBDIRS += src/mpi/romio
 # FIXME is this the right place to put this?
 external_libs += src/mpi/romio/libromio.la
 
