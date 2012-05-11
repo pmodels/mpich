@@ -583,11 +583,11 @@ HYD_status HYDU_sock_remote_access(char *host, int *remote_access)
                                             MAX_HOSTNAME_LEN));
         HYDU_ASSERT(ip, status);
 #else
-        strcpy(ip, host);
+        ip = HYDU_strdup(host);
 #endif
     }
     else {
-        strcpy(ip, host);
+        ip = HYDU_strdup(host);
     }
 
     /* FIXME: Comparing the hostname to "127.*" does not seem like a
@@ -598,6 +598,7 @@ HYD_status HYDU_sock_remote_access(char *host, int *remote_access)
         *remote_access = 1;
 
   fn_exit:
+    HYDU_FREE(ip);
     return status;
 
   fn_fail:

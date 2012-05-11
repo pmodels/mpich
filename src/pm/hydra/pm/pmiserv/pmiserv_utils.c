@@ -505,6 +505,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
   fn_exit:
     if (mapping)
         HYDU_FREE(mapping);
+    HYDU_FREE(filler_pmi_ids);
+    HYDU_FREE(nonfiller_pmi_ids);
     return status;
 
   fn_fail:
