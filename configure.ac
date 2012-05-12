@@ -1432,7 +1432,7 @@ fi
 if test "$enable_append_ndebug" = "yes" ; then
     CFLAGS="$CFLAGS -DNDEBUG -DNVALGRIND"
     CXXFLAGS="$CXXFLAGS -DNDEBUG -DNVALGRIND"
-    # MPICH2 do NOT assume any preprocessing support from the Fortran compiler,
+    # MPICH2 does NOT assume any preprocessing support from the Fortran compiler,
     # so no Fortran files contain any preprocessing statements.
     # Don't set FFLAGS or FCFLAGS with any -D.
 fi
@@ -2063,6 +2063,20 @@ if test "$enable_f77" = "yes" ; then
     # This is needed for Mac OSX 10.5
     PAC_F77_WORKS_WITH_CPP([F77CPP])
     AC_SUBST(F77CPP)
+
+    # Check that the Fortran compiler will allow us to pass arguments
+    # of different types (e.g., for MPI_Send)
+    PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
+    if test "X$addarg" != "X" ; then
+        # We could add the names of all of the MPI routines that 
+        # accept different types.  Instead, we fail cleanly.  
+        # Some Fortran compilers allow you to turn off checking for 
+        # mismatched arguments for *all* routines.  Adding an argument
+	# that turns off checking for *everything* is not something that 
+	# configure should do - if the user wants this, they can follow
+	# the instructions in the following error message.
+	AC_MSG_ERROR([The Fortran compiler $F77 does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FFLAGS=$addarg])
+    fi
 
     bindings="$bindings f77"
     bindings_dirs="$bindings_dirs src/binding/f77"
