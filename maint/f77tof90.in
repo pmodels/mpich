@@ -472,6 +472,11 @@ sub ConvertTestlist {
 	    # Cray-style pointers for MPI_Alloc_mem).
 	    $_ = "\@ALLOCMEMFC\@\n";
 	}
+	elsif (/^(\@\w+\@)(\w+f)\s+(.*)/) {
+	    # This handles the case where an autoconf variable in the
+            # testlist.in file is used to optionally comment out a test
+	    $_ = $1 . $2 . "90 "  . $3 . "\n";
+	}
 	print OUTF $_;
     }
     close INF;
