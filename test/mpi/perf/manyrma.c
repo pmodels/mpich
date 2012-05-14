@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_COUNT 65536
+#define MAX_COUNT 65536*4
 #define MAX_RMA_SIZE 16
 #define MAX_RUNS 10
 
@@ -47,7 +47,7 @@ void RunPutPSCW( MPI_Win win, int destRank, int cnt, int sz,
 
 int main( int argc, char *argv[] )
 {
-    int arraysize, i, cnt, sz, maxCount, *arraybuffer;
+    int arraysize, i, cnt, sz, maxCount=MAX_COUNT, *arraybuffer;
     int wrank, wsize, destRank, srcRank;
     MPI_Win win;
     MPI_Group wgroup, accessGroup, exposureGroup;
@@ -85,6 +85,10 @@ int main( int argc, char *argv[] )
 	else if (strcmp( argv[i], "-maxsz" ) == 0) {
 	    i++;
 	    maxSz = atoi( argv[i] );
+	}
+	else if (strcmp( argv[i], "-maxcount" ) == 0) {
+	    i++;
+	    maxCount = atoi( argv[i] );
 	}
 	else if (strcmp( argv[i], "-barrier" ) == 0) {
 	    barrierSync = 1;
@@ -124,7 +128,10 @@ int main( int argc, char *argv[] )
        an absolute limit.
     */
 
-    maxCount = MAX_COUNT;
+    if (maxCount > MAX_COUNT) {
+	fprintf( stderr, "MaxCount must not exceed %d\n", MAX_COUNT );
+	MPI_Abort( MPI_COMM_WORLD, 1 );
+    }
 
     if ((syncChoice & SYNC_FENCE) && (rmaChoice & RMA_ACC)) {
 	for (sz=1; sz<=maxSz; sz = sz + sz) {
