@@ -763,10 +763,36 @@ EOF
     AC_LANG_FORTRAN77
     PAC_PROG_F77_NAME_MANGLE
 
+    # Check that the Fortran compiler will allow us to pass arguments
+    # of different types (e.g., for MPI_Send)
+    # Any strict Fortran compiler will require that the arguments be 
+    # the same type - currently, the NAG Fortran compiler (nagfor) is known
+    # to enforce this.
+    # We could set the FFLAGS/FCFLAGS values with the option that disables
+    # this check (if we found one), but because that may affect other tests,
+    # instead we tell the user and exit.
+    PAC_PROG_F77_MISMATCHED_ARGS(addarg,yes)
+    if test "X$addarg" != "X" ; then
+        # We could add the names of all of the MPI routines that 
+        # accept different types.  Instead, we fail cleanly.  
+        # Some Fortran compilers allow you to turn off checking for 
+        # mismatched arguments for *all* routines.  Adding an argument
+	# that turns off checking for *everything* is not something that 
+	# configure should do - if the user wants this, they can follow
+	# the instructions in the following error message.
+	AC_MSG_ERROR([The Fortran compiler $F77 does not accept programs that call the same routine with arguments of different types without the option $addarg.  Rerun configure with FFLAGS=$addarg])
+    fi
+
     # Check whether we need -lU77 to get iargc and getarg, which 
-    # are used for a few of the tests in spawn
+    # are used for a few of the tests in spawn (U77 was needed with
+    # the native compilers on HPUX.  See the aclocal_f77(old).m4 file, 
+    # which has a much more complete set of tests.
+    #
     # FIXME: if we can't figure out how to get iargc/getarg, then 
     # we should really turn off those spawn tests
+    # Even better is to limit this to the F200x version, where there is
+    # an interface to the command line.
+    F77SPAWNARGTEST=""
     AC_MSG_CHECKING([for Fortran libraries needed for getarg])
     AC_LANG_CONFTEST([
         AC_LANG_PROGRAM([],[
@@ -801,6 +827,7 @@ EOF
     else
         if test "$pac_cv_getarg_needs_u77" = "unavailable" ; then 
             AC_MSG_RESULT([getarg and/or iargc are not available.  Some spawn tests will fail to link])
+	    F77SPAWNARGTEST="#"
         else 
             AC_MSG_RESULT([none needed])
         fi
@@ -809,6 +836,10 @@ EOF
     # FIXME: Currently, we hope that FC accepts the same library
     FC_GETARG_LIBS="$F77_GETARG_LIBS"
     AC_SUBST(FC_GETARG_LIBS)
+    # F77SPAWNARGTEST is set to "#" to comment out tests in 
+    # f77/spawn/testlist.in that require non-standard extensions to 
+    # access the commandline
+    AC_SUBST(F77SPAWNARGTEST)
 
     # ALLOCMEMF is set in f77/ext/testlist if we can try this
     # Fortran extension
@@ -897,6 +928,24 @@ if test "$enable_fc" = yes ; then
         FCFLAGS="$FCFLAGS $CRAYPTR_FCFLAGS"
     ])
     AC_SUBST(ALLOCMEMFC)
+
+    # Check for the new command line routines used in one of the spawn tests
+    F03SPAWNARGTEST=""
+    AC_MSG_CHECKING([whether $FC supports the Fortran 2003 routines to access the commandline])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([],[
+            character*64 s
+            integer i
+            i = command_argument_count()
+            call get_command_argument(i,s)
+        ])],[pac_cv_fc_has_args=yes],[pac_cv_fc_has_args=no])
+    AC_MSG_RESULT($pac_cv_fc_has_args)
+    if test "$pac_cv_has_args" != "yes" ; then
+        F03SPAWNARGTEST="#"
+    fi      
+    # F03SPAWNARGTEST is set to "#" to comment out tests in 
+    # f90/spawn/testlist.in that require Fortran 2003 features to 
+    # access the commandline
+    AC_SUBST(F90SPAWNARGTEST)
 
     if test -f f77/init/checksizes.c ; then
         # If it is a VPATH build, f90/init may not be there.
@@ -1213,6 +1262,7 @@ AC_OUTPUT(maint/testmerge \
           f77/pt2pt/Makefile \
           f77/info/Makefile \
           f77/spawn/Makefile \
+	  f77/spawn/testlist \
           f77/spawn/type1aint.h \
           f77/rma/Makefile \
           f77/ext/Makefile \
@@ -1234,6 +1284,7 @@ AC_OUTPUT(maint/testmerge \
           f90/rma/Makefile \
           f90/info/Makefile \
           f90/spawn/Makefile \
+	  f90/spawn/testlist \
           f90/timer/Makefile \
           f90/ext/Makefile \
           f90/ext/testlist \
@@ -1287,3 +1338,4 @@ AC_OUTPUT(maint/testmerge \
           errors/testlist \
           errors/cxx/testlist \
           )
+

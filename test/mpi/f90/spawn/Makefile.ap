@@ -1,0 +1,5 @@
+## vim: set ft=automake :
+
+noinst_PROGRAMS += spawnargvf03 spawnmultf03
+spawnargvf03_SOURCES = spawnargvf03.f90
+spawnmultf03_SOURCES = spawnmultf03.f90
