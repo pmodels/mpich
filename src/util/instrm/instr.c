@@ -130,6 +130,17 @@ int MPIU_INSTR_ToStr_Duration_Count( char *buf, size_t maxBuf, void *ptr )
     }
     return 0;
 }
+
+/* Print the max counter value and the total counter value. */
+int MPIU_INSTR_ToStr_Counter( char * buf, size_t maxBuf, void *ptr )
+{
+    struct MPIU_INSTR_Counter_t *dPtr = 
+	(struct MPIU_INSTR_Counter_t *)ptr;
+    snprintf( buf, maxBuf, "%-40s:\t%d\t%d", 
+	      dPtr->desc, dPtr->maxcount, dPtr->totalcount );
+    return 0;
+}
+
 #else
 /* No routines required if instrumentation is not selected */
 #endif
