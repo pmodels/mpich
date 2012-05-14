@@ -1417,15 +1417,18 @@ fi
 ])
 dnl/*D
 dnl PAC_PROG_F77_MISMATCHED_ARGS([option],[AllOnly]) - Determine whether the 
-dnl Fortran compiler
-dnl allows routines to be called with different argument types.  If not, 
-dnl attempts to determine a command-line argument that permits such use
+dnl Fortran compiler allows routines to be called with different 
+dnl argument types.  If not, attempts to determine a command-line argument 
+dnl that permits such use 
 dnl (The Fortran standard prohibits this usage)
 dnl
 dnl option is set to the compiler option to use.
 dnl if AllOnly is yes (literal, not variable with value), then only consider 
 dnl options that turn off checking
 dnl for all routines
+dnl
+dnl The NAG Fortran compiler, nagfor, is known to enforce this part of the
+dnl Fortran standard.
 dnl D*/
 AC_DEFUN([PAC_PROG_F77_MISMATCHED_ARGS],[
 AC_MSG_CHECKING([whether $F77 allows mismatched arguments])
