@@ -930,6 +930,7 @@ if test "$enable_fc" = yes ; then
     AC_SUBST(ALLOCMEMFC)
 
     # Check for the new command line routines used in one of the spawn tests
+    AC_LANG_PUSH([Fortran])
     F03SPAWNARGTEST=""
     AC_MSG_CHECKING([whether $FC supports the Fortran 2003 routines to access the commandline])
     AC_LINK_IFELSE([AC_LANG_PROGRAM([],[
@@ -939,13 +940,14 @@ if test "$enable_fc" = yes ; then
             call get_command_argument(i,s)
         ])],[pac_cv_fc_has_args=yes],[pac_cv_fc_has_args=no])
     AC_MSG_RESULT($pac_cv_fc_has_args)
-    if test "$pac_cv_has_args" != "yes" ; then
+    if test "$pac_cv_fc_has_args" != "yes" ; then
         F03SPAWNARGTEST="#"
     fi      
     # F03SPAWNARGTEST is set to "#" to comment out tests in 
     # f90/spawn/testlist.in that require Fortran 2003 features to 
     # access the commandline
-    AC_SUBST(F90SPAWNARGTEST)
+    AC_SUBST(F03SPAWNARGTEST)
+    AC_LANG_POP([Fortran])
 
     if test -f f77/init/checksizes.c ; then
         # If it is a VPATH build, f90/init may not be there.
