@@ -153,7 +153,9 @@ static int MPIR_Bcast_binomial(
             /* recvd_size may not be accurate for packed heterogeneous data */
             if (is_homogeneous && recvd_size != nbytes) {
                 *errflag = TRUE;
-                MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**collective_size_mismatch");
+                MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, 
+		      "**collective_size_mismatch",
+		      "**collective_size_mismatch %d %d", recvd_size, nbytes );
                 MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
             break;
@@ -630,7 +632,9 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     /* recvd_size may not be accurate for packed heterogeneous data */
     if (is_homogeneous && curr_size != nbytes) {
         *errflag = TRUE;
-        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**collective_size_mismatch");
+        MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, 
+		      "**collective_size_mismatch",
+		      "**collective_size_mismatch %d %d", curr_size, nbytes );
         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
@@ -815,7 +819,9 @@ static int MPIR_Bcast_scatter_ring_allgather(
     /* recvd_size may not be accurate for packed heterogeneous data */
     if (is_homogeneous && curr_size != nbytes) {
         *errflag = TRUE;
-        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**collective_size_mismatch");
+        MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, 
+		      "**collective_size_mismatch",
+		      "**collective_size_mismatch %d %d", curr_size, nbytes );
         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
@@ -950,7 +956,10 @@ static int MPIR_SMP_Bcast(
                 /* recvd_size may not be accurate for packed heterogeneous data */
                 if (is_homogeneous && recvd_size != nbytes) {
                     *errflag = TRUE;
-                    MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**collective_size_mismatch");
+                    MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, 
+				  "**collective_size_mismatch",
+				  "**collective_size_mismatch %d %d", 
+				  recvd_size, nbytes );
                     MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
             }
