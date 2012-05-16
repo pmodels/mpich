@@ -21,13 +21,15 @@
 int main( int argc, char **argv )
 {
     int      err = 0;
-    int      *sendbuf, *recvbuf, *recvcounts;
-    int      size, rsize, rank, i, sumval;
+    int      *recvcounts;
+    int      size, rsize, rank, i;
     int      recvcount, /* Each process receives this much data */
              sendcount, /* Each process contributes this much data */
 	     basecount; /* Unit of elements - basecount *rsize is recvcount, 
 			   etc. */
     int      isLeftGroup;
+    long long *sendbuf, *recvbuf;
+    long long sumval;
     MPI_Comm comm;
 
 
@@ -61,7 +63,7 @@ int main( int argc, char **argv )
 	for (i=0; i<size; i++) 
 	    recvcounts[i] = recvcount;
 	
-	sendbuf = (int *) malloc( sendcount * sizeof(int) );
+	sendbuf = (long long *) malloc( sendcount * sizeof(long long) );
 	if (!sendbuf) {
 	    fprintf( stderr, "Could not allocate %d ints for sendbuf\n", 
 		     sendcount );
@@ -69,30 +71,30 @@ int main( int argc, char **argv )
 	}
 
 	for (i=0; i<sendcount; i++) {
-	    sendbuf[i] = rank*sendcount + i;
+	    sendbuf[i] = (long long)(rank*sendcount + i);
 	}
-	recvbuf = (int *)malloc( recvcount * sizeof(int) );
+	recvbuf = (long long *)malloc( recvcount * sizeof(long long) );
 	if (!recvbuf) {
 	    fprintf( stderr, "Could not allocate %d ints for recvbuf\n", 
 		     recvcount );
 	    MPI_Abort( MPI_COMM_WORLD, 1 );
 	}
 	for (i=0; i<recvcount; i++) {
-	    recvbuf[i] = -i;
+	    recvbuf[i] = (long long)(-i);
 	}
 	
-	MPI_Reduce_scatter( sendbuf, recvbuf, recvcounts, MPI_INT, MPI_SUM, 
+	MPI_Reduce_scatter( sendbuf, recvbuf, recvcounts, MPI_LONG_LONG, MPI_SUM,
 			    comm );
 
 	/* Check received data */
 	for (i=0; i<recvcount; i++) {
-	    sumval = sendcount * (rsize * (rsize-1))/2 + 
-		(i + rank * rsize * basecount) * rsize;
+	    sumval = (long long)(sendcount) * (long long)((rsize * (rsize-1))/2) +
+		(long long)(i + rank * rsize * basecount) * (long long)rsize;
 	    if (recvbuf[i] != sumval) {
 		err++;
-		if (err < 10) {
+		if (err < 4) {
 		    fprintf( stdout, "Did not get expected value for reduce scatter\n" );
-		    fprintf( stdout, "[%d] %s recvbuf[%d] = %d, expected %d\n", 
+		    fprintf( stdout, "[%d] %s recvbuf[%d] = %lld, expected %lld\n",
 			     rank, 
 			     isLeftGroup ? "L" : "R", 
 			     i, recvbuf[i], sumval );
