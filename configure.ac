@@ -635,8 +635,18 @@ fi
 PAC_POP_FLAG([CFLAGS])
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
-AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11 silent-rules subdir-objects])
+dnl
+dnl We would like to pass -Werror, but we are cheating in the "examples/"
+dnl directory and overriding the user-flags like CFLAGS, which automake-1.12
+dnl warns about.  Long-term we may need to use a hand-written Makefile.in or
+dnl something else in this special dir.
+AM_INIT_AUTOMAKE([-Wall foreign 1.11 silent-rules subdir-objects])
 AM_MAINTAINER_MODE([enable])
+
+# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
+# must come before LT_INIT
+m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
+
 LT_INIT([disable-shared])
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])

@@ -26,6 +26,10 @@ AS_CASE([$host],
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11])
 
+# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
+# must come before LT_INIT
+m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
+
 AC_CONFIG_HEADER(include/hydra_config.h)
 
 # Non-verbose make
@@ -35,6 +39,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 PAC_RESET_LINK_FLAGS()
 
 PAC_PROG_CC
+AM_PROG_CC_C_O
 
 PAC_ARG_STRICT
 
