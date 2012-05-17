@@ -4,6 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+/* Implements a fast, lockfree, multi-producer, single-consumer queue.  It's
+ * important to note the *single-consumer* piece of this, since multithreaded
+ * consumption will surely lead to data corruption and/or other problems. */
+
 #ifndef OPA_QUEUE_H_INCLUDED
 #define OPA_QUEUE_H_INCLUDED
 
@@ -220,6 +224,8 @@ do {                                                                      \
                                                                           \
     OPA_SHM_SET_REL_NULL((elt_ptr)->elt_hdr_field.next);                  \
                                                                           \
+    OPA_write_barrier();                                                  \
+                                                                          \
     r_prev = OPA_Shm_swap_rel(&((qhead_ptr)->tail), r_elt);               \
                                                                           \
     if (OPA_SHM_IS_REL_NULL(r_prev)) {                                    \
@@ -245,10 +251,8 @@ do {                                                                      \
     This queue implementation is loosely modeled after the linked lists used in
     the linux kernel.  You put the list header structure inside of the client
     structure, rather than the other way around.
-    
-    XXX DJG NOTE: this operation is *NOT* thread-safe, it must be called from
-                  within the critical section at the moment.
-    XXX DJG NOTE: you must *always* call _is_empty() prior to this function */
+
+    NOTE: you must *always* call _is_empty() prior to this function */
 #define OPA_Queue_dequeue(qhead_ptr, elt_ptr, elt_type, elt_hdr_field)        \
 do {                                                                          \
     elt_type *_e;                                                             \
@@ -257,7 +261,6 @@ do {                                                                          \
     _r_e = (qhead_ptr)->shadow_head;                                          \
     _e = OPA_Shm_rel_to_abs(_r_e);                                            \
                                                                               \
-    /* XXX DJG why isn't this a bug, _r_e could be rel null */                \
     if (!OPA_SHM_IS_REL_NULL(_e->elt_hdr_field.next)) {                       \
         (qhead_ptr)->shadow_head = _e->elt_hdr_field.next;                    \
     }                                                                         \
@@ -276,6 +279,7 @@ do {                                                                          \
         }                                                                     \
     }                                                                         \
     OPA_SHM_SET_REL_NULL(_e->elt_hdr_field.next);                             \
+    OPA_read_barrier();                                                       \
     elt_ptr = _e;                                                             \
 } while (0)
 

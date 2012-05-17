@@ -7,7 +7,7 @@ TESTS = sanity test_primitives test_barriers test_queue
 
 check_PROGRAMS = $(TESTS)
 
-LDFLAGS = -L../src
+AM_LDFLAGS = -L../src
 LDADD = -lopa
 DEPENDENCIES = libopa.la
 

@@ -3821,6 +3821,10 @@ static int threaded_llsc_int_aba_helper_0(llsc_int_aba_t *udata)
         /* Reset pass_point_1 */
         OPA_store_int(&udata->pass_point_1, 0);
 
+        /* Read/write barrier to make sure we are done before we allow thread 1
+         * to continue */
+        OPA_read_write_barrier();
+
         /* Point 2 */
         OPA_store_int(&udata->pass_point_2, 1);
     } /* end for */
@@ -3866,6 +3870,10 @@ static void *threaded_llsc_int_aba_helper_1(void *_udata)
              * of this test */
             OPA_store_int(&udata->shared_val, 1);
             OPA_store_int(&udata->shared_val, 0);
+
+            /* Write barrier to make sure the shared value was actually updated
+             * before we mark point 1 as passed */
+            OPA_write_barrier();
         } /* end if */
 
         /* Point 1 */
@@ -4042,6 +4050,10 @@ static int threaded_llsc_ptr_aba_helper_0(llsc_ptr_aba_t *udata)
         /* Reset pass_point_1 */
         OPA_store_int(&udata->pass_point_1, 0);
 
+        /* Read/write barrier to make sure we are done before we allow thread 1
+         * to continue */
+        OPA_read_write_barrier();
+
         /* Point 2 */
         OPA_store_int(&udata->pass_point_2, 1);
     } /* end for */
@@ -4087,6 +4099,10 @@ static void *threaded_llsc_ptr_aba_helper_1(void *_udata)
              * of this test */
             OPA_store_ptr(&udata->shared_val, (void *) ((int *) 0 + 1));
             OPA_store_ptr(&udata->shared_val, (void *) 0);
+
+            /* Write barrier to make sure the shared value was actually updated
+             * before we mark point 1 as passed */
+            OPA_write_barrier();
         } /* end if */
 
         /* Point 1 */
