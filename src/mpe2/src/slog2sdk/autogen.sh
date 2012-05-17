@@ -1,7 +1,11 @@
 #! /bin/sh
 AUTOHEADER=${AUTOHEADER:-autoheader}
 AUTOCONF=${AUTOCONF:-autoconf}
-LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
+if test -z "${LIBTOOLIZE+set}" && glibtoolize --version >/dev/null 2>&1 ; then
+    LIBTOOLIZE=glibtoolize
+else
+    LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
+fi
 MPE_AUTOHEADER=${MPE_AUTOHEADER:-$AUTOHEADER}
 MPE_AUTOCONF=${MPE_AUTOCONF:-$AUTOCONF}
 MPE_LIBTOOLIZE=${MPE_LIBTOOLIZE:-$LIBTOOLIZE}
