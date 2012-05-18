@@ -355,7 +355,7 @@ that they are listed in \texttt{cb\_config\_list}.
 The following hint controls the deferred open feature of romio and are also
 applicable to all file system types: 
 \begin{itemize}
-\item \texttt{no\_indep\_rw} -- If the application plans on performing only 
+\item \texttt{romio\_no\_indep\_rw} -- If the application plans on performing only 
    collecitve operations and this hint is set to ``true'', then ROMIO can
    have just the aggregators open a file.   The \texttt{cb\_config\_list} and
    \texttt{cb\_nodes} hints can be given to further control which nodes are
