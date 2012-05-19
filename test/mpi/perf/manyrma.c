@@ -387,6 +387,7 @@ void PrintResults( int cnt, timing t[] )
 	d2 = minD2;
 	/* d1 = d1 / MAX_RUNS; d2 = d2 / MAX_RUNS); */
 	if (d2 > 0) rate = (long)(cnt) / d2;
+	/* count, op, sync, op/each, sync/each, rate */
 	printf( "%d\t%e\t%e\t%e\t%e\t%ld\n", cnt, 
 		d1, d2, 
 		d1 / cnt, d2 / cnt, rate );
