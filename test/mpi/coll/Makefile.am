@@ -91,6 +91,7 @@ noinst_PROGRAMS =      \
     redscat3           \
     redscatblk3        \
     redscatinter       \
+    redscatbkinter     \
     reduce             \
     reduce_local       \
     scantst            \

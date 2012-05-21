@@ -71,6 +71,8 @@ red_scat_block2 5 mpiversion=2.2
 red_scat_block2 10 mpiversion=2.2
 redscatblk3 8 mpiversion=2.2
 redscatblk3 10 mpiversion=2.2
+redscatbkinter 8 mpiversion=2.2
+redscatbkinter 10 mpiversion=2.2
 scantst 4
 exscan 10
 exscan2 5
