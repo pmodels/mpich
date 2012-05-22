@@ -191,8 +191,10 @@ fn_exit:
     /* Return mpi_errno in case one of the copy array functions failed */
     return mpi_errno;
 fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME

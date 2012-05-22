@@ -74,11 +74,13 @@ int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartMap != NULL) {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->topo_fns->cartMap( comm_ptr, ndims,
 						 (const int*) dims,
 						 (const int*) periods,
 						 newrank );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* --END USEREXTENSION-- */
     } else {
 	mpi_errno = MPIR_Cart_map( comm_ptr, ndims,
 				   (const int*) dims,

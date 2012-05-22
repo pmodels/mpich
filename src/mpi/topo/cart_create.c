@@ -175,12 +175,14 @@ int MPIR_Cart_create_impl(MPID_Comm *comm_ptr, int ndims, const int dims[],
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartCreate != NULL) {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->topo_fns->cartCreate( comm_ptr, ndims,
 						    (const int*) dims,
 						    (const int*) periods,
 						    reorder,
 						    comm_cart );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* --END USEREXTENSION-- */
     } else {
 	mpi_errno = MPIR_Cart_create( comm_ptr, ndims,
 				      (const int*) dims,

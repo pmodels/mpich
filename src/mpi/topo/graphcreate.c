@@ -289,10 +289,12 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, int *indx, int *edges,
 
     if (comm_ptr->topo_fns != NULL && 
 	comm_ptr->topo_fns->graphCreate != NULL) {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->topo_fns->graphCreate( comm_ptr, nnodes, 
 						     (const int *)indx,
 						     (const int *)edges, 
 						     reorder, comm_graph );
+	/* --END USEREXTENSION-- */
     }	
     else {
 	mpi_errno = MPIR_Graph_create( comm_ptr, nnodes, 

@@ -50,11 +50,13 @@ int MPIR_Graph_map_impl(const MPID_Comm *comm_ptr, int nnodes,
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphMap != NULL) {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->topo_fns->graphMap( comm_ptr, nnodes,
 						  (const int*) indx,
 						  (const int*) edges,
 						  newrank );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* --END USEREXTENSION-- */
     } else {
 	mpi_errno = MPIR_Graph_map( comm_ptr, nnodes,
 				   (const int*) indx,
