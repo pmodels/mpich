@@ -1056,10 +1056,13 @@ int MPIR_Reduce_scatter_impl(void *sendbuf, void *recvbuf, int *recvcnts,
 {
     int mpi_errno = MPI_SUCCESS;
         
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Reduce_scatter != NULL) {
+    if (comm_ptr->coll_fns != NULL && 
+	comm_ptr->coll_fns->Reduce_scatter != NULL) {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->coll_fns->Reduce_scatter(sendbuf, recvbuf, recvcnts,
                                                        datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* --END USEREXTENSION-- */
     } else {
         mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcnts,
                                         datatype, op, comm_ptr, errflag);

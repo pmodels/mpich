@@ -199,10 +199,12 @@ int MPIR_Gatherv_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Gatherv != NULL) {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->coll_fns->Gatherv(sendbuf, sendcnt, sendtype,
                                                 recvbuf, recvcnts, displs, recvtype,
                                                 root, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* --END USEREXTENSION-- */
     } else {
         mpi_errno = MPIR_Gatherv(sendbuf, sendcnt, sendtype,
                                  recvbuf, recvcnts, displs, recvtype,

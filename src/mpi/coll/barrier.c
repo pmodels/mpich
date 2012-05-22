@@ -262,8 +262,10 @@ int MPIR_Barrier_impl(MPID_Comm *comm_ptr, int *errflag)
     int mpi_errno_ret = MPI_SUCCESS;
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Barrier != NULL)
     {
+	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->coll_fns->Barrier(comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	/* --END USEREXTENSION-- */
     }
     else
     {
