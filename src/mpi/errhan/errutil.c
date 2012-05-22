@@ -191,6 +191,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 
     checkValidErrcode( error_class, fcname, &errcode );
 
+    /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Process.initialized == MPICH_PRE_INIT ||
         MPIR_Process.initialized == MPICH_POST_FINALIZED)
     {
@@ -199,6 +200,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
         handleFatalError(MPIR_Process.comm_world, fcname, errcode);
         return MPI_ERR_INTERN;
     }
+    /* --END ERROR HANDLING-- */
 
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_comm(comm_ptr=%p, fcname=%s, errcode=%d)", comm_ptr, fcname, errcode));
 
@@ -218,11 +220,13 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
         }
     }
 
+    /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) || comm_ptr == NULL) {
 	/* Calls MPID_Abort */
 	handleFatalError( comm_ptr, fcname, errcode );
         /* never get here */
     }
+    /* --END ERROR HANDLING-- */
 
     MPIU_Assert(comm_ptr != NULL);
 
@@ -232,12 +236,14 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
     errhandler = comm_ptr->errhandler;
 
+    /* --BEGIN ERROR HANDLING-- */
     if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
         MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 	/* Calls MPID_Abort */
 	handleFatalError( comm_ptr, fcname, errcode );
         /* never get here */
     }
+    /* --END ERROR HANDLING-- */
 
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode( errcode );
@@ -302,12 +308,14 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_win(win_ptr=%p, fcname=%s, errcode=%d)", win_ptr, fcname, errcode));
 
+    /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) ||
 	win_ptr == NULL || win_ptr->errhandler == NULL || 
 	win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
 	/* Calls MPID_Abort */
 	handleFatalError( NULL, fcname, errcode );
     }
+    /* --END ERROR HANDLING-- */
 
     /* Check for the special case of a user-provided error code */
     errcode = checkForUserErrcode( errcode );
@@ -456,6 +464,7 @@ static const char *ErrcodeInvalidReasonStr( int reason )
 }
 #endif /* MPICH_ERROR_MSG_LEVEL <= MPICH_ERROR_MSG_GENERIC */
 
+/* --BEGIN ERROR HANDLING-- */
 /* This routine is called when there is a fatal error */
 static void handleFatalError( MPID_Comm *comm_ptr, 
 			      const char fcname[], int errcode )
@@ -476,6 +485,7 @@ static void handleFatalError( MPID_Comm *comm_ptr,
        an error */
     MPID_Abort(comm_ptr, MPI_SUCCESS, 1, error_msg);
 }
+/* --END ERROR HANDLING-- */
 
 #if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_GENERIC
 /* 
