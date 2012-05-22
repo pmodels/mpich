@@ -111,12 +111,14 @@ fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
     return mpi_errno;
 fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
     if (*newcomm_ptr != NULL) {
         MPIR_Comm_release(*newcomm_ptr, 0/*isDisconnect*/);
         new_context_id = 0; /* MPIR_Comm_release frees the new ctx id */
     }
     if (new_context_id != 0)
         MPIR_Free_contextid(new_context_id);
+    /* --END ERROR HANDLING-- */
 
     goto fn_exit;
 }
