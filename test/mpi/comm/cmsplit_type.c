@@ -9,9 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* FIXME: This test only checks that the MPIX_Comm_split_type routine
+   doesn't fail.  It does not check for correct behavior */
+
 int main(int argc, char *argv[])
 {
     int rank, size, verbose=0;
+    int wrank;
     MPI_Comm comm;
 
     MPI_Init(&argc, &argv);
@@ -19,6 +23,7 @@ int main(int argc, char *argv[])
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
 
+    MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
 #if !defined(USE_STRICT_MPI) && defined(MPICH2)
     MPIX_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 #else
@@ -33,7 +38,11 @@ int main(int argc, char *argv[])
 
     MPI_Comm_free(&comm);
 
-    if (rank == 0)
+    /* Use wrank because Comm_split_type may return more than one communicator
+       across the job, and if so, each will have a rank 0 entry.  Test 
+       output rules are for a single process to write the successful 
+       test (No Errors) output. */
+    if (wrank == 0)
         printf(" No errors\n");
 
     MPI_Finalize();
