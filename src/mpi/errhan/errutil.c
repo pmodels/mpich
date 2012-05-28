@@ -492,6 +492,7 @@ static void handleFatalError( MPID_Comm *comm_ptr,
  * Given a message string abbreviation (e.g., one that starts "**"), return 
  * the corresponding index.  For the generic (non
  * parameterized messages), use idx = FindGenericMsgIndex( "**msg" );
+ * Returns -1 on failure to find the matching message
  */
 static int FindGenericMsgIndex( const char *msg )
 {
@@ -509,11 +510,14 @@ static int FindGenericMsgIndex( const char *msg )
 	if (c > 0)
 	{
 	    /* don't return here if the string partially matches */
+	    /* FIXME: Why return failure instead of continuing to check? */
 	    if (strncmp(generic_err_msgs[i].short_name, msg, strlen(msg)) != 0)
 		return -1;
 	}
     }
+    /* --BEGIN ERROR HANDLING-- */
     return -1;
+    /* --END ERROR HANDLING-- */
 }
 
 /* 
@@ -665,8 +669,15 @@ void MPIR_Err_get_string( int errorcode, char * msg, int length,
     int error_class;
     int len, num_remaining = length;
     
-    if (num_remaining == 0)
-	num_remaining = MPI_MAX_ERROR_STRING;
+    /* There was code to set num_remaining to MPI_MAX_ERROR_STRING
+       if it was zero.  But based on the usage of this routine, 
+       such a choice would overwrite memory. (This was caught by
+       reading the coverage reports and looking into why this
+       code was (thankfully!) never executed.) */
+    /* if (num_remaining == 0)
+       num_remaining = MPI_MAX_ERROR_STRING; */
+    if (num_remaining == 0) 
+	goto fn_exit;
 
     /* Convert the code to a string.  The cases are:
        simple class.  Find the corresponding string.
