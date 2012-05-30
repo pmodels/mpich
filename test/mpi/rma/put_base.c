@@ -44,6 +44,8 @@ int main(int argc, char **argv) {
 
     bufsize = XDIM * YDIM * sizeof(double);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &win_buf);
+    /* Alloc_mem is not required for the origin buffers for RMA operations - 
+       just for the Win_create memory */
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &src_buf);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &dst_buf);
 

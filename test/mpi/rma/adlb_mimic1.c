@@ -54,33 +54,46 @@ int main(int argc, char **argv)
     char check;
     MPI_Win win;
     MPI_Status status;
+    int max_buf_size = 0, put_size = PUT_SIZE;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
 
-    if ((comm_size > (MAX_BUF_SIZE / PUT_SIZE)) || (comm_size <= 2))
-        MPI_Abort(MPI_COMM_WORLD, 1);
+    if (comm_size <= 2) {
+	fprintf( stderr, "This test requires at least 3 processes\n" );
+	MPI_Abort( MPI_COMM_WORLD, 1 );
+    }
+
+    max_buf_size = comm_size * put_size;
+    if (max_buf_size > MAX_BUF_SIZE) {
+	fprintf( stderr, "Too many processes in COMM_WORLD (max is %d)\n",
+		 MAX_BUF_SIZE / put_size );
+	MPI_Abort( MPI_COMM_WORLD, 1 );
+    }
 
     /* If alloc mem returns an error (because too much memory is requested */
     MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
 
-    rc = MPI_Alloc_mem(MAX_BUF_SIZE, MPI_INFO_NULL, (void *) &rma_win_addr);
+    rc = MPI_Alloc_mem(max_buf_size, MPI_INFO_NULL, (void *) &rma_win_addr);
     if (rc) {
 	MTestPrintErrorMsg( "Unable to MPI_Alloc_mem space (not an error)", rc );
 	MPI_Abort( MPI_COMM_WORLD, 0 );
     }
 
-    memset(rma_win_addr, 0, MAX_BUF_SIZE);
-    MPI_Win_create((void *) rma_win_addr, MAX_BUF_SIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    memset(rma_win_addr, 0, max_buf_size);
+    MPI_Win_create((void *) rma_win_addr, max_buf_size, 1, MPI_INFO_NULL, 
+		   MPI_COMM_WORLD, &win);
 
-    rc = MPI_Alloc_mem(PUT_SIZE, MPI_INFO_NULL, (void *) &local_buf);
+    /* Note that it is not necessary to use MPI_Alloc_mem for the memory that
+       is not part of the MPI_Win.  */
+    rc = MPI_Alloc_mem(put_size, MPI_INFO_NULL, (void *) &local_buf);
     if (rc) {
 	MTestPrintErrorMsg( "Unable to MPI_Alloc_mem space (not an error)", rc );
 	MPI_Abort( MPI_COMM_WORLD, 0 );
     }
 
-    for (i = 0; i < PUT_SIZE; i++)
+    for (i = 0; i < put_size; i++)
         local_buf[i] = 1;
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -95,7 +108,8 @@ int main(int argc, char **argv)
              * data in my local window. Check the last byte to make
              * sure we got it correctly. */
             MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
-            MPI_Get((void *) &check, 1, MPI_CHAR, 0, ((by_rank + 1) * PUT_SIZE) - 1, 1,
+            MPI_Get((void *) &check, 1, MPI_CHAR, 0, 
+		    ((by_rank + 1) * put_size) - 1, 1,
                     MPI_CHAR, win);
             MPI_Win_unlock(0, win);
 
@@ -104,7 +118,7 @@ int main(int argc, char **argv)
                 errs++;
 
             /* Reset the buffer to zero for the next round */
-            memset((void *) (rma_win_addr + (by_rank * PUT_SIZE)), 0, PUT_SIZE);
+            memset((void *) (rma_win_addr + (by_rank * put_size)), 0, put_size);
 
             /* Tell the origin that I am ready for the next round */
             MPI_Send(NULL, 0, MPI_INT, by_rank, 0, MPI_COMM_WORLD);
@@ -116,7 +130,8 @@ int main(int argc, char **argv)
             /* Wait for a message from any of the origin processes
              * informing me that it has put data to the target
              * process */
-            MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+            MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, 
+		     &status);
             by_rank = status.MPI_SOURCE;
 
             /* Tell the target process that it should be seeing some
@@ -129,8 +144,8 @@ int main(int argc, char **argv)
         for (i = 0; i < NUM_TIMES; i++) {
             /* Put some data in the target window */
             MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
-            MPI_Put(local_buf, PUT_SIZE, MPI_CHAR, 0, comm_rank * PUT_SIZE, PUT_SIZE,
-                    MPI_CHAR, win);
+            MPI_Put(local_buf, put_size, MPI_CHAR, 0, comm_rank * put_size, 
+		    put_size, MPI_CHAR, win);
             MPI_Win_unlock(0, win);
 
             /* Tell the server that the put has completed */
