@@ -62,7 +62,7 @@ summarize the results.
 Specifically, (assuming the bash shell, and that the directory "btest", a
 subdirectory of the test suite directory, is used for running the tests):
 
-export MPITEST_BATCH_DIR=`pwd`/btest
+export MPITEST_BATCHDIR=`pwd`/btest
 runtests -batch -tests=testlist
 ... edit btest/runtests.batch to make it a value batch submissions script
 ... run that script and wait for the batch job to complete
