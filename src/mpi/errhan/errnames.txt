@@ -194,6 +194,7 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **dtypecommit:Datatype has not been committed 
 **dtypeperm:Cannot free permanent data type 
 **dtypemismatch:Receiving data with a datatype whose signature does not match that of the sending datatype.
+**contentspredef:Named predefined datatypes are not permitted in MPI_Type_get_contents
 **comm:Invalid communicator
 **commnull:Null communicator
 **rankarray:Invalid rank in rank array
