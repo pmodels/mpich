@@ -540,7 +540,13 @@ fi
 # Check for the MPI Version.  This test assumes at least MPI 2.0.  For
 # some tests, we need to know if we are MPI 2.1 or MPI 2.2,
 # particularly for new routines in Fortran
-AC_CACHE_CHECK([for major version of MPI],pac_cv_mpi_major_version,[
+if test "$FROM_MPICH2" != "yes" ; then
+    AC_CACHE_CHECK([that MPI program can be compiled],pac_cv_mpi_compile_ok,[
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[],pac_cv_mpi_compile_ok=yes,pac_cv_mpi_compile_ok=no)])])
+    if test "$pac_cv_mpi_compile_ok" != yes ; then
+        AC_MSG_ERROR([Unable to compile an MPI program containing mpi.h!])
+    fi
+    AC_CACHE_CHECK([for major version of MPI],pac_cv_mpi_major_version,[
 for pac_cv_mpi_major_version in 3 2 1 unknown ; do
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
 #if MPI_VERSION == $pac_cv_mpi_major_version 
@@ -549,7 +555,7 @@ for pac_cv_mpi_major_version in 3 2 1 unknown ; do
 done
 ])
 
-AC_CACHE_CHECK([for minor version of MPI],pac_cv_mpi_minor_version,[
+    AC_CACHE_CHECK([for minor version of MPI],pac_cv_mpi_minor_version,[
 for pac_cv_mpi_minor_version in 4 3 2 1 0 unknown ; do
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[
 #if MPI_SUBVERSION == $pac_cv_mpi_minor_version 
@@ -558,7 +564,19 @@ for pac_cv_mpi_minor_version in 4 3 2 1 0 unknown ; do
 done
 ])
 MPI_VERSION=$pac_cv_mpi_major_version
-MPI_SUBVERSION=$pac_cv_mpi_minor_version	
+MPI_SUBVERSION=$pac_cv_mpi_minor_version
+else
+    # We are within the MPICH2 build.  Extract the MPI versions from 
+    # mpi.h.in	
+    if test ! -f $mpich2_top_srcdir/src/include/mpi.h.in ; then
+        AC_MSG_ERROR([Could not find the required mpi.h.in file!])
+    fi
+    MPI_VERSION=`grep MPI_VERSION $mpich2_top_srcdir/src/include/mpi.h.in | \
+    		      sed -e 's/#define *MPI_VERSION *\([0-4]\).*/\1/g'`
+    MPI_SUBVERSION=`grep MPI_SUBVERSION $mpich2_top_srcdir/src/include/mpi.h.in | \
+    		      sed -e 's/#define *MPI_SUBVERSION *\([0-9]\).*/\1/g'`
+fi
+
 AC_SUBST(MPI_VERSION)
 AC_SUBST(MPI_SUBVERSION)
 
