@@ -107,7 +107,6 @@ with MPI_Alloc_mem.
 **opundefined_rma %d:RMA target received unknown RMA operation type %d
 **duphandle %d:unable to duplicate a handle (errno %d)
 **keyvalperm:Cannot free permanent attribute key
-**psm_wait:psm_wait failed
 **inet_ntop:inet_ntop failed
 **notsamevalue:Arguments to collective routine must be the same
 **invalid_shmq:invalid shm queue pointer
@@ -118,7 +117,6 @@ with MPI_Alloc_mem.
 **preinit %s:MPI_Init or MPI_Init_thread must be called before %s
 **rootlarge:Value of root is too large
 **dtypepermcontents:Cannot get contents of a permanent or basic data type 
-**psm_wait %s:psm_wait failed (%s)
 **connfailed %d %d:Failed to connect to remote process %d-%d
 **fcntl %s:fcntl failed - %s
 **getinfo %d:getaddrinfo failed (errno %d)

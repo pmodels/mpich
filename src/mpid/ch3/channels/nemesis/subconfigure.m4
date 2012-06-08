@@ -91,11 +91,10 @@ This turns off error checking and timing collection],,enable_fast=no)
 AC_CHECK_HEADERS(signal.h)
 AC_CHECK_FUNCS(signal)
 
-# Check for gm, mx, elan, psm options
+# Check for gm, mx, elan options
 PAC_SET_HEADER_LIB_PATH(gm)
 PAC_SET_HEADER_LIB_PATH(mx)
 PAC_SET_HEADER_LIB_PATH(elan)
-PAC_SET_HEADER_LIB_PATH(psm)
 
 
 nemesis_nets_dirs=""

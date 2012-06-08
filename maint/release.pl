@@ -191,7 +191,7 @@ chdir("${root}/${pack}-${version}");
 run_cmd("rm -rf doc/notes src/pm/mpd/Zeroconf.py");
 
 chdir("${root}/${pack}-${version}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
-my @nem_modules = qw(elan psm);
+my @nem_modules = qw(elan);
 run_cmd("rm -rf ".join(' ', @nem_modules));
 for my $module (@nem_modules) {
     run_cmd("rm -rf $module");

@@ -1,4 +1,0 @@
-INCLUDES = -I. -I../../include -I${master_top_srcdir}/src/ch3/channels/nemesis/nemesis/include -I${master_top_srcdir}/src/include \
-           -I${top_builddir}/src/include
-lib${MPILIBNAME}_a_SOURCES = \
-  nd_init.cpp nd_finalize.cpp nd_dp.cpp nd_poll.cpp nd_send.cpp nd_ad_util.cpp nd_dp.cpp nd_ep_util.cpp nd_misc_util.cpp nd_poll.cpp nd_send.cpp nd_sm.cpp
