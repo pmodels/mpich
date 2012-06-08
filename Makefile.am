@@ -160,7 +160,9 @@ install-exec-hook:
 			$(INSTALL_SCRIPT) $${e}.tmp $${e} ; \
 			rm -f $${e}.tmp ; \
 		fi ; \
-	done
+	done ; \
+	if test -e ${DESTDIR}${bindir}/mpicxx ; then \
+		cd ${DESTDIR}${bindir} && ln -f -s mpicxx mpic++ ; fi
 
 # the configure step checks for the 'lib' dir to decide whether a source
 # directory has been previously used for an in-path build before allowing a
@@ -179,6 +181,7 @@ DISTCLEANFILES += .mpich2
 # we can only have one clean-local, so we hook into it via conditionally
 # defined variables in the dependencies section
 clean-local: $(CLEAN_LOCAL_TARGETS)
+	rm -f ${DESTDIR}${bindir}/mpic++
 
 # --------------------------------------------------------------------------
 #  coverage rules
