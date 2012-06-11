@@ -3226,7 +3226,9 @@ typedef struct MPID_Grequest_class {
 struct MPIR_T_pvar_info;
 
 struct MPIR_T_enum {
-    /* TODO */
+    /* TODO replace this struct's contents with a real implementation once we
+     * actually have/support an enum type */
+    int dummy;
 };
 struct MPIR_T_cvar_handle {
     struct MPIR_Param_t *p;
