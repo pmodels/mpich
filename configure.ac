@@ -3621,7 +3621,7 @@ if test "$enable_f77" = yes ; then
     done
     if test "$noval" = "yes" ; then
         # Set a default
-        MPIR_RC_REAL_CTYPE="float"
+        MPIR_FC_REAL_CTYPE="float"
         AC_MSG_RESULT([unavailable])
     fi
 
