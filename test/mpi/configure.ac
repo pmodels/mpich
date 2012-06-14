@@ -482,7 +482,7 @@ CFLAGS="$CFLAGS $pac_cc_strict_flags"
 AC_HEADER_STDC
 dnl AC_CHECK_HEADERS(stdarg.h unistd.h string.h stdlib.h memory.h stdint.h)
 dnl unistd.h string.h stdlib.h memory.h stdint.h are checked by AC_PROG_CC.
-AC_CHECK_HEADERS(stdarg.h sys/time.h)
+AC_CHECK_HEADERS(stdarg.h sys/time.h sys/resource.h)
 
 # Check for fixed width types
 AC_TYPE_INT8_T
@@ -536,6 +536,8 @@ AC_COMPILE_IFELSE([
 if test "$pac_cv_have_haddr_list" = "yes" ; then
     AC_DEFINE(HAVE_H_ADDR_LIST,1,[Define if struct hostent contains h_addr_list])
 fi
+
+AC_CHECK_FUNCS(getrusage)
 
 # Check for the MPI Version.  This test assumes at least MPI 2.0.  For
 # some tests, we need to know if we are MPI 2.1 or MPI 2.2,

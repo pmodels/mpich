@@ -19,6 +19,17 @@
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif
+/* The following two includes permit the collection of resource usage
+   data in the tests
+ */
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+#include <errno.h>
+
 
 /*
  * Utility routines for writing MPI tests.
@@ -32,6 +43,7 @@
  */
 
 static void MTestRMACleanup( void );
+static void MTestResourceSummary( FILE * );
 
 /* Here is where we could put the includes and definitions to enable
    memory testing */
@@ -42,6 +54,7 @@ static int verbose = 0;         /* Message level (0 is none) */
 static int returnWithVal = 0;   /* Allow programs to return with a non-zero 
 				   if there was an error (may cause problems
 				   with some runtime systems) */
+static int usageOutput = 0;     /* */
 
 /* Provide backward portability to MPI 1 */
 #ifndef MPI_VERSION
@@ -111,6 +124,7 @@ void MTest_Init_thread( int *argc, char ***argv, int required, int *provided )
 	    }
 	}
     }
+    /* Check for option to return success/failure in the return value of main */
     envval = getenv( "MPITEST_RETURN_WITH_CODE" );
     if (envval) {
 	if (strcmp( envval, "yes" ) == 0 ||
@@ -131,6 +145,11 @@ void MTest_Init_thread( int *argc, char ***argv, int required, int *provided )
 		     envval );
 	    fflush( stderr );
 	}
+    }
+    
+    /* Print rusage data if set */
+    if (getenv( "MPITEST_RUSAGE" )) {
+	usageOutput = 1;
     }
 }
 /* 
@@ -199,6 +218,10 @@ void MTest_Finalize( int errs )
 	}
 	fflush( stdout );
     }
+    
+    if (usageOutput) 
+	MTestResourceSummary( stdout );
+
 
     /* Clean up any persistent objects that we allocated */
     MTestRMACleanup();
@@ -1480,6 +1503,47 @@ void MTestError( const char *msg )
     fprintf( stderr, "%s\n", msg );
     fflush( stderr );
     MPI_Abort( MPI_COMM_WORLD, 1 );
+}
+/* ------------------------------------------------------------------------ */
+static void MTestResourceSummary( FILE *fp )
+{
+#ifdef HAVE_GETRUSAGE
+    struct rusage ru;
+    static int pfThreshold = -2;
+    int doOutput = 1;
+    if (getrusage( RUSAGE_SELF, &ru ) == 0) {
+	/* There is an option to generate output only when a resource
+	   exceeds a threshold.  To date, only page faults supported. */
+	if (pfThreshold == -2) {
+	    char *p = getenv("MPITEST_RUSAGE_PF");
+	    pfThreshold = -1;
+	    if (p) {
+		pfThreshold = strtol( p, 0, 0 );
+	    }
+	}
+	if (pfThreshold > 0) {
+	    doOutput = ru.ru_minflt > pfThreshold;
+	}
+	if (doOutput) {
+	    /* Cast values to long in case some system has defined them
+	       as another integer type */
+	    fprintf( fp, "RUSAGE: max resident set = %ldKB\n", 
+		     (long)ru.ru_maxrss );
+	    fprintf( fp, "RUSAGE: page faults = %ld : %ld\n", 
+		     (long)ru.ru_minflt, (long)ru.ru_majflt );
+	    /* Not every Unix provides useful information for the xxrss fields */
+	    fprintf( fp, "RUSAGE: memory in text/data/stack = %ld : %ld : %ld\n", 
+		     (long)ru.ru_ixrss, (long)ru.ru_idrss, (long)ru.ru_isrss );
+	    fprintf( fp, "RUSAGE: I/O in and out = %ld : %ld\n", 
+		     (long)ru.ru_inblock, (long)ru.ru_oublock );
+	    fprintf( fp, "RUSAGE: context switch = %ld : %ld\n", 
+		     (long)ru.ru_nvcsw, (long)ru.ru_nivcsw );
+	}
+    }
+    else {
+	fprintf( fp, "RUSAGE: return error %d\n", errno );
+    }
+#endif
 }
 /* ------------------------------------------------------------------------ */
 #ifdef HAVE_MPI_WIN_CREATE
