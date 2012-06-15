@@ -42,7 +42,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, void *buf,
 					 ADIO_Offset *len_list, int *send_size,
 					 int *recv_size, ADIO_Offset off,
 					 int size, int *count,
-					 int *start_pos, int *partial_recv,
+					 int *start_pos, 
 					 int *sent_to_proc, int nprocs,
 					 int myrank, int buftype_is_contig,
 					 int contig_access_count,
@@ -310,7 +310,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
     int real_size, req_len, send_len;
     int *recv_curr_offlen_ptr, *recv_count, *recv_size;
     int *send_curr_offlen_ptr, *send_size;
-    int *partial_recv, *sent_to_proc, *recv_start_pos;
+    int *sent_to_proc, *recv_start_pos;
     int *send_buf_idx, *curr_to_proc, *done_to_proc;
     int *this_buf_idx;
     char *write_buf = NULL;
@@ -515,7 +515,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, void *buf,
         hole = data_sieving;
 	ADIOI_LUSTRE_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list,
                                      len_list, send_size, recv_size, off, real_size,
-                                     recv_count, recv_start_pos, partial_recv,
+                                     recv_count, recv_start_pos,
                                      sent_to_proc, nprocs, myrank,
                                      buftype_is_contig, contig_access_count,
                                      striping_info, others_req, send_buf_idx,
@@ -620,7 +620,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, void *buf,
 					 ADIO_Offset *len_list, int *send_size,
 					 int *recv_size, ADIO_Offset off,
 					 int size, int *count,
-					 int *start_pos, int *partial_recv,
+					 int *start_pos, 
 					 int *sent_to_proc, int nprocs,
 					 int myrank, int buftype_is_contig,
 					 int contig_access_count,
