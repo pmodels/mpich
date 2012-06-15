@@ -580,8 +580,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
     MPI_Request *requests, *send_req;
     MPI_Datatype *recv_types;
     MPI_Status *statuses, status;
-    int *srt_len, sum;
-    ADIO_Offset *srt_off;
+    int *srt_len=NULL, sum;
+    ADIO_Offset *srt_off=NULL;
     static char myname[] = "ADIOI_W_EXCHANGE_DATA";
 
 /* exchange recv_size info so that each process knows how much to
