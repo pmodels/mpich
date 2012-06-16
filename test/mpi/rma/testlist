@@ -7,6 +7,7 @@ accfence1 4
 adlb_mimic1 3
 accfence2 4
 putpscw1 4
+accpscw1 4
 getgroup 4
 transpose1 2
 transpose2 2
@@ -23,6 +24,7 @@ lockcontention 3
 lockcontention2 4
 lockcontention2 8
 lockcontention3 8
+lockopts 2
 transpose4 2
 fetchandadd 7
 fetchandadd_tree 7

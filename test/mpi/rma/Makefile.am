@@ -23,6 +23,7 @@ noinst_PROGRAMS =          \
     lockcontention         \
     lockcontention2        \
     lockcontention3        \
+    lockopts               \
     contention_put         \
     contention_putget      \
     put_base               \
@@ -47,6 +48,7 @@ noinst_PROGRAMS =          \
     accfence2              \
     adlb_mimic1            \
     putpscw1               \
+    accpscw1               \
     getgroup               \
     contig_displ           \
     test1_am               \
