@@ -815,9 +815,41 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	sendtype->CheckBuf = 0;
 	break;
 
+	/* Less commonly used but still simple types */
+    case 8:
+	sendtype->datatype = MPI_SHORT;
+	sendtype->isBasic  = 1;
+	recvtype->datatype = MPI_SHORT;
+	recvtype->isBasic  = 1;
+	break;
+    case 9:
+	sendtype->datatype = MPI_LONG;
+	sendtype->isBasic  = 1;
+	recvtype->datatype = MPI_LONG;
+	recvtype->isBasic  = 1;
+	break;
+    case 10:
+	sendtype->datatype = MPI_CHAR;
+	sendtype->isBasic  = 1;
+	recvtype->datatype = MPI_CHAR;
+	recvtype->isBasic  = 1;
+	break;
+    case 11:
+	sendtype->datatype = MPI_UINT64_T;
+	sendtype->isBasic  = 1;
+	recvtype->datatype = MPI_UINT64_T;
+	recvtype->isBasic  = 1;
+	break;
+    case 12:
+	sendtype->datatype = MPI_FLOAT;
+	sendtype->isBasic  = 1;
+	recvtype->datatype = MPI_FLOAT;
+	recvtype->isBasic  = 1;
+	break;
+
 #ifndef USE_STRICT_MPI
 	/* MPI_BYTE may only be used with MPI_BYTE in strict MPI */
-    case 8:
+    case 13:
 	sendtype->datatype = MPI_INT;
 	sendtype->isBasic  = 1;
 	recvtype->datatype = MPI_BYTE;
