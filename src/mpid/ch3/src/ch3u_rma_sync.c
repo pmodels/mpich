@@ -7,12 +7,6 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-static int EnableImmedAcc = 1;
-void MPIDI_CH3_RMA_SetAccImmed( int flag )
-{
-    EnableImmedAcc = flag;
-}
-
 #ifdef USE_MPIU_INSTR
 MPIU_INSTR_DURATION_DECL(winfence_clearlock);
 MPIU_INSTR_DURATION_DECL(winfence_rs);
@@ -20,6 +14,9 @@ MPIU_INSTR_DURATION_DECL(winfence_issue);
 MPIU_INSTR_DURATION_DECL(winfence_complete);
 MPIU_INSTR_DURATION_DECL(winfence_wait);
 MPIU_INSTR_DURATION_DECL(winfence_block);
+MPIU_INSTR_COUNTER_DECL(winfence_reqs);
+MPIU_INSTR_COUNTER_DECL(winunlock_reqs);
+MPIU_INSTR_COUNTER_DECL(wincomplete_reqs);
 MPIU_INSTR_DURATION_DECL(winpost_clearlock);
 MPIU_INSTR_DURATION_DECL(winpost_sendsync);
 MPIU_INSTR_DURATION_DECL(winstart_clearlock);
@@ -37,7 +34,9 @@ MPIU_INSTR_DURATION_DECL(lockqueue_alloc);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc_predef);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc_immed);
+MPIU_INSTR_DURATION_DECL(rmapkt_acc_immed_op);
 MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_alloc);
+MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_set);
 void MPIDI_CH3_RMA_InitInstr(void);
 
 void MPIDI_CH3_RMA_InitInstr(void)
@@ -49,6 +48,9 @@ void MPIDI_CH3_RMA_InitInstr(void)
     MPIU_INSTR_DURATION_INIT(winfence_complete,1,"WIN_FENCE:Complete RMA ops");
     MPIU_INSTR_DURATION_INIT(winfence_wait,1,"WIN_FENCE:Wait for ops from other processes");
     MPIU_INSTR_DURATION_INIT(winfence_block,0,"WIN_FENCE:Wait for any progress");
+    MPIU_INSTR_COUNTER_INIT(winfence_reqs,"WIN_FENCE:Pending requests");
+    MPIU_INSTR_COUNTER_INIT(winunlock_reqs,"WIN_UNLOCK:Pending requests");
+    MPIU_INSTR_COUNTER_INIT(wincomplete_reqs,"WIN_COMPLETE:Pending requests");
     MPIU_INSTR_DURATION_INIT(winpost_clearlock,1,"WIN_POST:Clear prior lock");
     MPIU_INSTR_DURATION_INIT(winpost_sendsync,1,"WIN_POST:Senc sync messages");
     MPIU_INSTR_DURATION_INIT(winstart_clearlock,1,"WIN_START:Clear prior lock");
@@ -65,7 +67,18 @@ void MPIDI_CH3_RMA_InitInstr(void)
     MPIU_INSTR_DURATION_INIT(rmapkt_acc,0,"RMA:PKTHANDLER for Accumulate");
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_predef,0,"RMA:PKTHANDLER for Accumulate: predef dtype");
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_immed,0,"RMA:PKTHANDLER for Accum immed");
+    MPIU_INSTR_DURATION_INIT(rmapkt_acc_immed_op,0,"RMA:PKTHANDLER for Accum immed operation");
 }
+
+/* These are used to use a common routine to complete lists of RMA 
+   operations with a single routine, while collecting data that 
+   distinguishes between different synchronization modes.  This is not
+   thread-safe; the best choice for thread-safety is to eliminate this
+   ability to discriminate between the different types of RMA synchronization.
+*/
+static MPIU_INSTR_Duration_count *list_complete;  /* outer */
+static MPIU_INSTR_Duration_count *list_block;     /* Inner; while waiting */
+
 #endif
 
 /*
@@ -92,19 +105,19 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops * rma_op, MPID_Win * win_ptr,
 				   MPI_Win target_win_handle, 
 				   MPIDI_RMA_dtype_info * dtype_info, 
 				   void ** dataloop, MPID_Request ** request); 
-static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops * rma_op, 
-					  MPID_Win * win_ptr, 
-					  MPI_Win source_win_handle, 
-					  MPI_Win target_win_handle, 
-					  MPID_Request ** request);
-static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, 
-					    int *wait_for_rma_done_pkt);
-static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr);
-static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr);
+static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops *, MPID_Win *,
+					  MPI_Win, MPI_Win, MPID_Request ** );
+static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *, int *);
+static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *);
+static int MPIDI_CH3I_Send_lock_get(MPID_Win *);
+static int MPIDI_CH3I_RMAListComplete(MPID_Win *);
+static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *, MPIDI_RMA_ops *, 
+					      int * );
 
 static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
                            const void *dataloop, MPI_Aint dataloop_sz,
-                           const void *o_addr, int o_count, MPI_Datatype o_datatype,
+                           const void *o_addr, int o_count,
+			   MPI_Datatype o_datatype,
                            MPID_Datatype **combined_dtp);
 
 #undef FUNCNAME
@@ -175,6 +188,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     else
     {
 	MPIDI_RMA_ops **prevNextPtr, *tmpptr;
+	int nRequest = 0;
+	int nRequestNew = 0;
 	MPIU_INSTR_DURATION_START(winfence_rs);
 	/* This is the second or later fence. Do all the preceding RMA ops. */
 	comm_ptr = win_ptr->comm_ptr;
@@ -233,6 +248,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_START(winfence_issue);
 	MPIU_INSTR_DURATION_INCR(winfence_issue,0,total_op_count);
 	MPIU_INSTR_DURATION_MAX(winfence_issue,1,total_op_count);
+	MPIU_INSTR_COUNTER_RESET(winfence_reqs);
 	i = 0;
 	curr_ptr    = win_ptr->rma_ops_list_head;
 	prevNextPtr = &win_ptr->rma_ops_list_head;
@@ -291,11 +307,23 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		curr_ptr     = tmpptr;
 	    }
 	    else  {
+		nRequest++;
+		MPIU_INSTR_COUNTER_INCR(winfence_reqs,1);
 		prevNextPtr = &curr_ptr->next;
 		curr_ptr    = curr_ptr->next;
-		/* FIXME: We could at least occassionally try to wait
-		   on completion of the pending send requests rather than
-		   focus on filling the queues.  */
+		/* The test on the difference is to reduce the number
+		   of times the partial complete routine is called. Without
+		   this, significant overhead is added once the
+		   number of requests exceeds the threshold, since the
+		   number that are completed in a call may be small. */
+		if (nRequest > MPIR_PARAM_RMA_NREQUEST_THRESHOLD && 
+		    nRequest - nRequestNew > MPIR_PARAM_RMA_NREQUEST_NEW_THRESHOLD) {
+		    int nDone = 0;
+		    MPIDI_CH3I_RMAListPartialComplete( win_ptr, curr_ptr, &nDone );
+		    /* if (nDone > 0) printf( "nDone = %d\n", nDone ); */
+		    nRequest -= nDone;
+		    nRequestNew = nRequest;
+		}
 	    }
 	}
 	MPIU_INSTR_DURATION_END(winfence_issue);
@@ -313,77 +341,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	*/
 	if (total_op_count)
 	{ 
-	    int ntimes = 0;
-	    MPIU_INSTR_DURATION_START(winfence_complete);
-	    MPID_Progress_start(&progress_state);
-	    /* Process all operations until they are complete */
-	    while (win_ptr->rma_ops_list_head) {
-		int loopcount = 0;
-		prevNextPtr = &win_ptr->rma_ops_list_head;
-		ntimes++;
-		curr_ptr = win_ptr->rma_ops_list_head;
-		do {
-		    if (MPID_Request_is_complete(curr_ptr->request)) {
-			/* Once we find a complete request, we complete
-			 as many as possible until we find an incomplete
-			 or null request */
-			do {
-			    mpi_errno = curr_ptr->request->status.MPI_ERROR;
-			    /* --BEGIN ERROR HANDLING-- */
-			    if (mpi_errno != MPI_SUCCESS) {
-				MPID_Progress_end(&progress_state);
-				MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
-			    }
-			    /* --END ERROR HANDLING-- */
-			    MPID_Request_release(curr_ptr->request);
-			    if (curr_ptr->dataloop != NULL) {
-				MPIU_Free(curr_ptr->dataloop); /* allocated in send_rma_msg or 
-								  recv_rma_msg */
-			    }
-			    /* We can remove and free this rma op element */
-			    tmpptr       = curr_ptr->next;
-			    *prevNextPtr = tmpptr;
-			    MPIU_Free( curr_ptr );
-			    curr_ptr     = tmpptr;
-			}
-			while (curr_ptr &&
-			       MPID_Request_is_complete(curr_ptr->request));
-			/* Once a request completes, we wait for another
-			   operation to arrive rather than check the
-			   rest of the requests.  */
-			break;
-		    }
-		    else {
-			/* In many cases, if the list of pending requests
-			   is long, there's no point in checking the entire
-			   list */
-			if (loopcount++ > 4) /* FIXME: threshold as parameter */
-			    break;  /* wait for an event */
-			prevNextPtr = &curr_ptr->next;
-			curr_ptr    = curr_ptr->next;
-		    }
-		} while (curr_ptr);
-         
-		/* Wait for something to arrive*/
-		/* In some tests, this hung unless the test ensured that 
-		   there was an incomplete request. */
-		curr_ptr = win_ptr->rma_ops_list_head;
-		if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
-		    MPIU_INSTR_DURATION_START(winfence_block);
-		    mpi_errno = MPID_Progress_wait(&progress_state);
-		    /* --BEGIN ERROR HANDLING-- */
-		    if (mpi_errno != MPI_SUCCESS) {
-			MPID_Progress_end(&progress_state);
-			MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
-		    }
-		    /* --END ERROR HANDLING-- */
-		    MPIU_INSTR_DURATION_END(winfence_block);
-		}
-	    } /* While list of rma operation is non-empty */
-	    MPID_Progress_end(&progress_state);
-	    MPIU_INSTR_DURATION_INCR(winfence_complete,0,ntimes);
-	    MPIU_INSTR_DURATION_END(winfence_complete);
+	    MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(winfence_complete));
+	    MPIU_INSTR_STMT(list_block=MPIU_INSTR_GET_VAR(winfence_block));
+	    mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr);
 	}
+
             
 	win_ptr->rma_ops_list_head = NULL;
 	win_ptr->rma_ops_list_tail = NULL;
@@ -771,7 +733,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops *rma_op,
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     /* FIXME: Make this size check efficient and match the packet type */
     len = rma_op->origin_count * origin_type_size;
-    if (EnableImmedAcc && len <= MPIDI_RMA_IMMED_INTS*sizeof(int)) {
+    if (MPIR_PARAM_RMA_ACC_IMMED && len <= MPIDI_RMA_IMMED_INTS*sizeof(int)) {
 	MPIDI_CH3_Pkt_accum_immed_t * accumi_pkt = &upkt.accum_immed;
 	void *dest = accumi_pkt->data, *src = rma_op->origin_addr;
 	
@@ -1218,6 +1180,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     MPI_Win source_win_handle, target_win_handle;
     MPID_Group *win_grp_ptr;
     int start_grp_size, *ranks_in_start_grp, *ranks_in_win_grp, rank;
+    int nRequest = 0;
+    int nRequestNew = 0;
     MPIU_CHKLMEM_DECL(9);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_COMPLETE);
 
@@ -1387,8 +1351,17 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    curr_ptr     = tmpptr;
 	}
 	else  {
+	    nRequest++;
+	    MPIU_INSTR_COUNTER_INCR(wincomplete_reqs,1);
 	    prevNextPtr = &curr_ptr->next;
 	    curr_ptr    = curr_ptr->next;
+	    if (nRequest > MPIR_PARAM_RMA_NREQUEST_THRESHOLD && 
+		nRequest - nRequestNew > MPIR_PARAM_RMA_NREQUEST_NEW_THRESHOLD) {
+		int nDone = 0;
+		MPIDI_CH3I_RMAListPartialComplete( win_ptr, curr_ptr, &nDone );
+		nRequest -= nDone;
+		nRequestNew = nRequest;
+	    }
 	}
     }
     MPIU_INSTR_DURATION_END(wincomplete_issue);
@@ -1450,9 +1423,11 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 		else
 		    win_ptr->rma_ops_list_head = new_ptr;
 		win_ptr->rma_ops_list_tail = new_ptr;
+		MPIU_INSTR_DURATION_START(rmaqueue_set);
 		new_ptr->next     = NULL;
 		new_ptr->request  = request;
 		new_ptr->dataloop = 0;
+		MPIU_INSTR_DURATION_END(rmaqueue_set);
 	    }
 	    j++;
 	    new_total_op_count++;
@@ -1461,70 +1436,9 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 
     if (new_total_op_count)
     {
-	MPID_Progress_state progress_state;
-	
-	MPIU_INSTR_DURATION_START(wincomplete_complete);
-	MPID_Progress_start(&progress_state);
-	while (win_ptr->rma_ops_list_head) {
-	    prevNextPtr = &win_ptr->rma_ops_list_head;
-	    curr_ptr    = win_ptr->rma_ops_list_head;
-	    do {
-		if (MPID_Request_is_complete(curr_ptr->request)) {
-		    /* Once we find a complete request, we complete
-		       as many as possible until we find an incomplete
-		       or null request */
-		    do {
-			mpi_errno = curr_ptr->request->status.MPI_ERROR;
-			/* --BEGIN ERROR HANDLING-- */
-			if (mpi_errno != MPI_SUCCESS) {
-			    MPID_Progress_end(&progress_state);
-			    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
-			}
-			/* --END ERROR HANDLING-- */
-			MPID_Request_release(curr_ptr->request);
-			if (curr_ptr->dataloop != NULL) {
-			    MPIU_Free(curr_ptr->dataloop); /* allocated in send_rma_msg or 
-							      recv_rma_msg */
-			}
-			/* We can remove and free this rma op element */
-			tmpptr       = curr_ptr->next;
-			*prevNextPtr = tmpptr;
-			MPIU_Free( curr_ptr );
-			curr_ptr     = tmpptr;
-		    }
-		    while (curr_ptr &&
-			   MPID_Request_is_complete(curr_ptr->request));
-		    /* Once a request completes, we wait for another
-		       operation to arrive rather than check the
-		       rest of the requests.  */
-		    break;
-		}
-		else {
-		    prevNextPtr = &curr_ptr->next;
-		    curr_ptr    = curr_ptr->next;
-		    break;
-		}
-	    } while (curr_ptr);
-
-	    /* Wait for something to arrive*/
-	    /* In some tests, this hung unless the test ensured that 
-	       there was an incomplete request. */
-	    curr_ptr = win_ptr->rma_ops_list_head;
-	    if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
-		MPIU_INSTR_DURATION_START(wincomplete_block);
-		mpi_errno = MPID_Progress_wait(&progress_state);
-		/* --BEGIN ERROR HANDLING-- */
-		if (mpi_errno != MPI_SUCCESS) {
-		    MPID_Progress_end(&progress_state);
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
-		}
-		/* --END ERROR HANDLING-- */
-		MPIU_INSTR_DURATION_END(wincomplete_block);
-	    }
-	} /* While list of rma operation is non-empty */
-	    
-	    
-	MPID_Progress_end(&progress_state);
+	MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(wincomplete_complete));
+	MPIU_INSTR_STMT(list_block=MPIU_INSTR_GET_VAR(wincomplete_block));
+	mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr);
     }
 
     MPIU_Assert( !win_ptr->rma_ops_list_head );
@@ -1678,10 +1592,12 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 	win_ptr->rma_ops_list_head = new_ptr;
 	win_ptr->rma_ops_list_tail = new_ptr;
         
+	MPIU_INSTR_DURATION_START(rmaqueue_set);
 	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_LOCK;
 	new_ptr->target_rank = dest;
 	new_ptr->lock_type = lock_type;
+	MPIU_INSTR_DURATION_END(rmaqueue_set);
     }
 
  fn_exit:
@@ -1892,6 +1808,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     MPIDI_RMA_ops *curr_ptr;
     MPIDI_RMA_ops **prevNextPtr, *tmpptr;
     MPI_Win source_win_handle, target_win_handle;
+    int nRequest=0, nRequestNew=0;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
@@ -1964,6 +1881,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     prevNextPtr = &win_ptr->rma_ops_list_head;
     curr_ptr    = win_ptr->rma_ops_list_head;
     target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
+
     while (curr_ptr != NULL)
     {
         /* To indicate the last RMA operation, we pass the
@@ -2017,77 +1935,27 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 	    curr_ptr     = tmpptr;
 	}
 	else  {
+	    nRequest++;
+	    MPIU_INSTR_COUNTER_INCR(winunlock_reqs,1);
 	    prevNextPtr = &curr_ptr->next;
 	    curr_ptr    = curr_ptr->next;
+	    if (nRequest > MPIR_PARAM_RMA_NREQUEST_THRESHOLD && 
+		nRequest - nRequestNew > MPIR_PARAM_RMA_NREQUEST_NEW_THRESHOLD) {
+		int nDone = 0;
+		MPIDI_CH3I_RMAListPartialComplete( win_ptr, curr_ptr, &nDone );
+		/* if (nDone > 0) printf( "nDone = %d\n", nDone ); */
+		nRequest -= nDone;
+		nRequestNew = nRequest;
+	    }
 	}
     }
     MPIU_INSTR_DURATION_END(winunlock_issue);
     
     if (nops)
     {
-	MPID_Progress_state progress_state;
-	
-	MPIU_INSTR_DURATION_START(winunlock_complete);
-	MPID_Progress_start(&progress_state);
-	while (win_ptr->rma_ops_list_head) {
-	    prevNextPtr = &win_ptr->rma_ops_list_head;
-	    curr_ptr    = win_ptr->rma_ops_list_head;
-	    do {
-		if (MPID_Request_is_complete(curr_ptr->request)) {
-		    /* Once we find a complete request, we complete
-		       as many as possible until we find an incomplete
-		       or null request */
-		    do {
-			mpi_errno = curr_ptr->request->status.MPI_ERROR;
-			/* --BEGIN ERROR HANDLING-- */
-			if (mpi_errno != MPI_SUCCESS) {
-			    MPID_Progress_end(&progress_state);
-			    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
-			}
-			/* --END ERROR HANDLING-- */
-			MPID_Request_release(curr_ptr->request);
-			if (curr_ptr->dataloop != NULL) {
-			    MPIU_Free(curr_ptr->dataloop); /* allocated in send_rma_msg or 
-							      recv_rma_msg */
-			}
-			/* We can remove and free this rma op element */
-			tmpptr       = curr_ptr->next;
-			*prevNextPtr = tmpptr;
-			MPIU_Free( curr_ptr );
-			curr_ptr     = tmpptr;
-		    }
-		    while (curr_ptr &&
-			   MPID_Request_is_complete(curr_ptr->request));
-		    /* Once a request completes, we wait for another
-		       operation to arrive rather than check the
-		       rest of the requests.  */
-		    break;
-		}
-		else {
-		    prevNextPtr = &curr_ptr->next;
-		    curr_ptr    = curr_ptr->next;
-		    break;
-		}
-	    } while (curr_ptr);
-	    
-	    /* Wait for something to arrive*/
-	    /* In some tests, this hung unless the test ensured that 
-	       there was an incomplete request. */
-	    curr_ptr = win_ptr->rma_ops_list_head;
-	    if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
-		MPIU_INSTR_DURATION_START(winunlock_block);
-		mpi_errno = MPID_Progress_wait(&progress_state);
-		/* --BEGIN ERROR HANDLING-- */
-		if (mpi_errno != MPI_SUCCESS) {
-		    MPID_Progress_end(&progress_state);
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
-		}
-		/* --END ERROR HANDLING-- */
-		MPIU_INSTR_DURATION_END(winunlock_block);
-	    }
-	} /* While list of rma operation is non-empty */
-	    
-	MPID_Progress_end(&progress_state);
+	MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(winunlock_complete));
+	MPIU_INSTR_STMT(list_block=MPIU_INSTR_GET_VAR(winunlock_block));
+	mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr);
     } 
     
 
@@ -2955,7 +2823,7 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* data_len == 0 (all within packet) */
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp  = NULL;
-
+    
     MPID_Datatype_get_extent_macro(accum_pkt->datatype, extent); 
     
     /* size == 0 should never happen */
@@ -2963,6 +2831,7 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	;
     }
     else {
+	MPIU_INSTR_DURATION_START(rmapkt_acc_immed_op);
 	/* Data is already present */
 	if (accum_pkt->op == MPI_REPLACE) {
 	    /* no datatypes required */
@@ -2982,7 +2851,9 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OP, "**opnotpredefined",
 				     "**opnotpredefined %d", accum_pkt->op );
 	    }
+	MPIU_INSTR_DURATION_END(rmapkt_acc_immed_op);
 	}
+	
 
 	/* There are additional steps to take if this is a passive 
 	   target RMA or the last operation from the source */
@@ -3613,6 +3484,166 @@ int MPIDI_CH3_PktHandler_PtRMADone( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_PTRMADONE);
     return MPI_SUCCESS;
+}
+
+/* ------------------------------------------------------------------------ */
+/* list_complete and list_block defined above */
+
+static int MPIDI_CH3I_RMAListComplete( MPID_Win *win_ptr )
+{
+    int ntimes = 0, mpi_errno=0;
+    MPIDI_RMA_ops *curr_ptr;
+    MPID_Progress_state progress_state;
+    MPIDI_RMA_ops **prevNextPtr, *tmpptr;
+
+    MPIU_INSTR_DURATION_START_VAR(list_complete);
+    MPID_Progress_start(&progress_state);
+    /* Process all operations until they are complete */
+    while (win_ptr->rma_ops_list_head) {
+	int loopcount = 0;
+	prevNextPtr = &win_ptr->rma_ops_list_head;
+	ntimes++;
+	curr_ptr = win_ptr->rma_ops_list_head;
+	do {
+	    if (MPID_Request_is_complete(curr_ptr->request)) {
+		/* Once we find a complete request, we complete
+		   as many as possible until we find an incomplete
+		   or null request */
+		do {
+		    mpi_errno = curr_ptr->request->status.MPI_ERROR;
+		    /* --BEGIN ERROR HANDLING-- */
+		    if (mpi_errno != MPI_SUCCESS) {
+			MPID_Progress_end(&progress_state);
+			MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+		    }
+		    /* --END ERROR HANDLING-- */
+		    MPID_Request_release(curr_ptr->request);
+		    if (curr_ptr->dataloop != NULL) {
+			MPIU_Free(curr_ptr->dataloop); /* allocated in send_rma_msg or 
+							  recv_rma_msg */
+		    }
+		    /* We can remove and free this rma op element */
+		    tmpptr       = curr_ptr->next;
+		    *prevNextPtr = tmpptr;
+		    MPIU_Free( curr_ptr );
+		    curr_ptr     = tmpptr;
+		}
+		while (curr_ptr &&
+		       MPID_Request_is_complete(curr_ptr->request));
+		/* Once a request completes, we wait for another
+		   operation to arrive rather than check the
+		   rest of the requests.  */
+		break;
+	    }
+	    else {
+		/* In many cases, if the list of pending requests
+		   is long, there's no point in checking the entire
+		   list */
+		if (loopcount++ > 4) /* FIXME: threshold as parameter */
+		    break;  /* wait for an event */
+		prevNextPtr = &curr_ptr->next;
+		curr_ptr    = curr_ptr->next;
+	    }
+	} while (curr_ptr);
+        
+	/* Wait for something to arrive*/
+	/* In some tests, this hung unless the test ensured that 
+	   there was an incomplete request. */
+	curr_ptr = win_ptr->rma_ops_list_head;
+	if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
+	    MPIU_INSTR_DURATION_START_VAR(list_block);
+	    mpi_errno = MPID_Progress_wait(&progress_state);
+	    /* --BEGIN ERROR HANDLING-- */
+	    if (mpi_errno != MPI_SUCCESS) {
+		MPID_Progress_end(&progress_state);
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
+	    }
+	    /* --END ERROR HANDLING-- */
+	    MPIU_INSTR_DURATION_END_VAR(list_block);
+	}
+    } /* While list of rma operation is non-empty */
+    MPID_Progress_end(&progress_state);
+    MPIU_INSTR_DURATION_INCR_VAR(list_complete,0,ntimes);
+    MPIU_INSTR_DURATION_END_VAR(list_complete);
+
+ fn_fail:
+    return mpi_errno;
+}
+
+/* This routine may be used to attempt to complete pending requests during
+   the initial processing of the list (to handle the case where the 
+   communication layer is returning uncompleted requests and may run the
+   danger of running out of internal data 
+
+   Unlike the completion routine, we call this when we expect to need a 
+   at least a few requests, so rather than stop looking after a few items
+   (the loopcount check in the other code), we search through the entire 
+   list until we find a completable request.
+*/
+static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *win_ptr, 
+					      MPIDI_RMA_ops *last_elm, 
+					      int *nDone )
+{
+    int mpi_errno=0;
+    MPIDI_RMA_ops *curr_ptr;
+    MPID_Progress_state progress_state;
+    MPIDI_RMA_ops **prevNextPtr, *tmpptr;
+    int nComplete = 0;
+
+    MPIU_INSTR_DURATION_START_VAR(list_complete);
+    MPID_Progress_start(&progress_state);
+
+    prevNextPtr = &win_ptr->rma_ops_list_head;
+    curr_ptr    = win_ptr->rma_ops_list_head;
+    MPID_Progress_poke();
+    do {
+	if (MPID_Request_is_complete(curr_ptr->request)) {
+	    /* Once we find a complete request, we complete
+	       as many as possible until we find an incomplete
+	       or null request */
+	    do {
+		nComplete++;
+		mpi_errno = curr_ptr->request->status.MPI_ERROR;
+		/* --BEGIN ERROR HANDLING-- */
+		if (mpi_errno != MPI_SUCCESS) {
+		    MPID_Progress_end(&progress_state);
+		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+		}
+		/* --END ERROR HANDLING-- */
+		MPID_Request_release(curr_ptr->request);
+		if (curr_ptr->dataloop != NULL) {
+		    MPIU_Free(curr_ptr->dataloop); /* allocated in send_rma_msg or 
+						      recv_rma_msg */
+		}
+		/* We can remove and free this rma op element */
+		tmpptr       = curr_ptr->next;
+		*prevNextPtr = tmpptr;
+		MPIU_Free( curr_ptr );
+		curr_ptr     = tmpptr;
+	    }
+	    while (curr_ptr && curr_ptr != last_elm && 
+		   MPID_Request_is_complete(curr_ptr->request)) ;
+	    /* Once a request completes, we wait for another
+	       operation to arrive rather than check the
+	       rest of the requests.  */
+	    break;
+	}
+	else {
+	    /* proceed to the next entry.  */
+	    prevNextPtr = &curr_ptr->next;
+	    curr_ptr    = curr_ptr->next;
+	}
+    } while (curr_ptr && curr_ptr != last_elm);
+        
+    /* if (nComplete) printf( "Completed %d requests\n", nComplete ); */
+    MPID_Progress_end(&progress_state);
+    MPIU_INSTR_DURATION_INCR_VAR(list_complete,0,1);
+    MPIU_INSTR_DURATION_END_VAR(list_complete);
+
+    *nDone = nComplete;
+
+ fn_fail:
+    return mpi_errno;
 }
 
 /* ------------------------------------------------------------------------ */

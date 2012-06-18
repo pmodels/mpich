@@ -20,6 +20,8 @@ categories:
       description : parameters that control communicator construction and operation
     - name        : pt2pt
       description : parameters that control point-to-point communication behavior
+    - name        : rma
+      description : parameters that control RMA communicatin behavior
     - name        : intranode
       description : intranode communication parameters
     - name        : developer
@@ -187,6 +189,34 @@ parameters:
       default     : true
       description : >-
         Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
+    ##############################################################
+    # RMA parameters
+    - category    : rma
+      name        : RMA_ACC_IMMED
+      type        : boolean
+      default     : true
+      description : >-
+        Use the immediate accumulate optimization
+
+    - category    : rma
+      name        : RMA_NREQUEST_THRESHOLD
+      type        : int
+      default     : 4000
+      description : >-
+        Threshold at which the RMA implementation attempts to complete requests
+        while completing RMA operations and while using the lazy synchonization
+        approach.  Change this value if programs fail because they run out of 
+        requests or other internal resources
+
+    - category    : rma
+      name        : RMA_NREQUEST_NEW_THRESHOLD
+      type        : int
+      default     : 128
+      description : >-
+        Threshold for the number of new requests since the last attempt to
+        complete pending requests.  Higher values can increase performance, 
+        but may run the risk of exceeding the available number of requests
+        or other internal resources.
 
     ##############################################################
     # intranode communication parameters
