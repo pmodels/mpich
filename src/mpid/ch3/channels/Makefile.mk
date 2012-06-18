@@ -7,4 +7,3 @@
 
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/sock/Makefile.mk
-#include $(top_srcdir)/src/mpid/ch3/channels/sctp/Makefile.mk

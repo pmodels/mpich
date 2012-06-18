@@ -3649,8 +3649,6 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef HAVE_LIBMYRIEXPRESS */")
 				Case "HAVE_LIBPSM_INFINIPATH"
 					fout.WriteLine("/* #undef HAVE_LIBPSM_INFINIPATH */")
-				Case "HAVE_LIBSCTP"
-					fout.WriteLine("/* #undef HAVE_LIBSCTP */")
 				Case "HAVE_LIBNMAD"
 					fout.WriteLine("/* #undef HAVE_LIBNMAD */")
 				Case "HAVE_LIBCR"

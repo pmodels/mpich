@@ -1,8 +1,0 @@
-SUBDIRS = src .
-
-distclean-local:
-	-rm -f include/mpidi_ch3i_sctp_conf.h
-
-maintainer-clean-local:
-	-rm -f include/mpidi_ch3i_sctp_conf.h.in
-

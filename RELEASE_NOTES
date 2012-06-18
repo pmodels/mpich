@@ -47,16 +47,6 @@
 
      http://trac.mcs.anl.gov/projects/mpich2/ticket/1122
 
- * The sctp channel is fully supported for FreeBSD and Mac OS X. As of
-   the time of this release, bugs in the stack currently existed in
-   the Linux kernel, and will hopefully soon be resolved. It is known
-   to not work under Solaris and Windows. For Solaris, the SCTP API
-   available in the kernel of standard Solaris 10 is a subset of the
-   standard API used by the sctp channel. Cooperation with the Sun
-   SCTP developers to support ch3:sctp under Solaris for future
-   releases is currently ongoing. For Windows, no known kernel-based
-   SCTP stack for Windows currently exists.
-
 
 ### Process Managers
 
