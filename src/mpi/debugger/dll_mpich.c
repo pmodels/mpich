@@ -655,7 +655,8 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
 	    int is_complete   = fetch_int ( proc, base + i_info->req_cc_offs, p_info);
         mqs_taddr_t buffer = 0;
         unsigned buf_count = -1;
-        int datatype = fetch_int(proc, base + i_info->req_datatype_offs, p_info);
+        int datatype;
+        datatype = fetch_int(proc, base + i_info->req_datatype_offs, p_info);
 
         if(look_for_user_buffer)
          {
@@ -816,7 +817,7 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
     
     while (base != 0) {
 	/* Check this entry to see if the context matches */
-	int actual_context = fetch_int( proc, base + i_info->sendq_context_id_offs, p_info );
+	int actual_context = fetch_int16( proc, base + i_info->sendq_context_id_offs, p_info );
 	
 	if (actual_context == wanted_context) {
 	    /* Fill in some of the fields */
@@ -845,6 +846,7 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
 	    res->desired_length = res->actual_length = length;
 	    res->system_buffer  = 0;
 	    res->buffer         = data;
+	    
 	    
 	    /* Don't forget to step the queue ! */
 	    p_info->next_msg = base + i_info->sendq_next_offs;
@@ -1121,6 +1123,7 @@ static mqs_tword_t fetch_int16 (mqs_process * proc, mqs_taddr_t addr,
 	dbgr_target_to_host (proc, buffer, 
 			     ((char *)&res) + (host_is_big_endian ? sizeof(mqs_tword_t)-2 : 0), 
 			     2);
+    
     return res;
 } 
 
