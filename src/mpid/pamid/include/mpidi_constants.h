@@ -84,4 +84,15 @@ enum
  };
 /** \} */
 
+
+enum
+{
+MPID_EPOTYPE_NONE      = 0,       /**< No epoch in affect */
+MPID_EPOTYPE_LOCK      = 1,       /**< MPI_Win_lock access epoch */
+MPID_EPOTYPE_START     = 2,       /**< MPI_Win_start access epoch */
+MPID_EPOTYPE_POST      = 3,       /**< MPI_Win_post exposure epoch */
+MPID_EPOTYPE_FENCE     = 4,       /**< MPI_Win_fence access/exposure epoch */
+MPID_EPOTYPE_REFENCE   = 5,       /**< MPI_Win_fence possible access/exposure epoch */
+};
+
 #endif

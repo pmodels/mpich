@@ -402,6 +402,9 @@ struct MPIDI_Win
     uint32_t assert; /**< MPI_MODE_* bits asserted at epoch start              */
 #endif
 
+    volatile int origin_epoch_type; /**< curretn epoch type for origin */
+    volatile int target_epoch_type; /**< curretn epoch type for target */
+
     /* These fields are reset by the sync functions */
     uint32_t          total;    /**< The number of PAMI requests that we know about (updated only by calling thread) */
     volatile uint32_t started;  /**< The number of PAMI requests made (updated only in the context_post callback) */

@@ -27,12 +27,47 @@ MPID_Win_fence(int       assert,
                MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  static char FCNAME[] = "MPID_Win_fence";
+
+  if(win->mpid.sync.origin_epoch_type != win->mpid.sync.target_epoch_type){
+       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+  }
+
+  if ((assert & MPI_MODE_NOPRECEDE) &&
+            win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE) {
+        /* --BEGIN ERROR HANDLING-- */
+        MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                return mpi_errno, "**rmasync");
+        /* --END ERROR HANDLING-- */
+  }
+
+  if (!(assert & MPI_MODE_NOPRECEDE) &&
+            win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_FENCE &&
+            win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_REFENCE &&
+            win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE) {
+        /* --BEGIN ERROR HANDLING-- */
+        MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                return mpi_errno, "**rmasync");
+        /* --END ERROR HANDLING-- */
+  }
+
 
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
   MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
   sync->total    = 0;
   sync->started  = 0;
   sync->complete = 0;
+
+  if(assert & MPI_MODE_NOSUCCEED)
+  {
+    win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_NONE;
+    win->mpid.sync.target_epoch_type = MPID_EPOTYPE_NONE;
+  }
+  else{
+    win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_REFENCE;
+    win->mpid.sync.target_epoch_type = MPID_EPOTYPE_REFENCE;
+  }
 
   mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
   return mpi_errno;
