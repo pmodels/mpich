@@ -356,7 +356,7 @@ void MPIR_Sendq_remember( MPID_Request *req,
 	p = (MPIR_Sendq *)MPIU_Malloc( sizeof(MPIR_Sendq) );
 	if (!p) {
 	    /* Just ignore it */
-	    return;
+            goto fn_exit;
 	}
     }
     p->sreq       = req;
@@ -365,6 +365,7 @@ void MPIR_Sendq_remember( MPID_Request *req,
     p->context_id = context_id;
     p->next       = MPIR_Sendq_head;
     MPIR_Sendq_head = p;
+fn_exit:
     MPIU_THREAD_CS_EXIT(HANDLE,req);
 }
 
