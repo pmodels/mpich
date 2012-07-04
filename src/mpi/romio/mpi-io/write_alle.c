@@ -35,7 +35,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_all_end(MPI_File mpi_fh, void *buf, MPI_Status *status)
+int MPI_File_write_all_end(MPI_File mpi_fh, MPICH2_CONST void *buf, MPI_Status *status)
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_ALL_END";
@@ -48,7 +48,7 @@ int MPI_File_write_all_end(MPI_File mpi_fh, void *buf, MPI_Status *status)
 /* prevent multiple definitions of this routine */
 #ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_write_all_end(MPI_File mpi_fh,
-			     void *buf,
+			     const void *buf,
 			     char *myname,
 			     MPI_Status *status)
 {

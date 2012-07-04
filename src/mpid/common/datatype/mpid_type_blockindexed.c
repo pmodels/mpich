@@ -32,7 +32,7 @@
 
 int MPID_Type_blockindexed(int count,
 			   int blocklength,
-			   void *displacement_array,
+			   const void *displacement_array,
 			   int dispinbytes,
 			   MPI_Datatype oldtype,
 			   MPI_Datatype *newtype)

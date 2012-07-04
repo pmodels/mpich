@@ -76,7 +76,7 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Alltoall_intra( 
-    void *sendbuf, 
+    const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
     void *recvbuf, 
@@ -569,7 +569,7 @@ int MPIR_Alltoall_intra(
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Alltoall_inter( 
-    void *sendbuf, 
+    const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
     void *recvbuf, 
@@ -662,7 +662,7 @@ int MPIR_Alltoall_inter(
 #define FUNCNAME MPIR_Alltoall
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   MPID_Comm *comm_ptr, int *errflag)
 {
@@ -692,7 +692,7 @@ int MPIR_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FUNCNAME MPIR_Alltoall_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Alltoall_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                        MPID_Comm *comm_ptr, int *errflag)
 {
@@ -748,8 +748,8 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
-                 void *recvbuf, int recvcount, MPI_Datatype recvtype, 
+int MPI_Alltoall(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
                  MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

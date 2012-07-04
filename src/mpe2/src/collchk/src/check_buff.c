@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int CollChk_check_buff(MPI_Comm comm, void *buff, char* call)
+int CollChk_check_buff(MPI_Comm comm, const void *buff, char* call)
 {
 #if defined( HAVE_MPI_IN_PLACE )
     int   num_buffs_in_place;

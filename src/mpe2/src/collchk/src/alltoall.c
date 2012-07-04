@@ -6,7 +6,7 @@
 
 #define BUFFS_NOT_SHARED 0
 
-int MPI_Alltoall( void* sbuff, int scnt, MPI_Datatype stype,
+int MPI_Alltoall( MPICH2_CONST void* sbuff, int scnt, MPI_Datatype stype,
                   void* rbuff, int rcnt, MPI_Datatype rtype,
                   MPI_Comm comm)
 {

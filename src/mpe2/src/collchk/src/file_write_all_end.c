@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_File_write_all_end(MPI_File fh, void *buff, MPI_Status *st)
+int MPI_File_write_all_end(MPI_File fh, MPICH2_CONST void *buff, MPI_Status *st)
 {
     int g2g = 1;
     char call[COLLCHK_SM_STRLEN];

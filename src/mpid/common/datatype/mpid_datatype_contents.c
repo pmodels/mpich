@@ -22,8 +22,8 @@ int MPID_Datatype_set_contents(MPID_Datatype *new_dtp,
 			       int nr_aints,
 			       int nr_types,
 			       int array_of_ints[],
-			       MPI_Aint array_of_aints[],
-			       MPI_Datatype array_of_types[])
+			       const MPI_Aint array_of_aints[],
+			       const MPI_Datatype array_of_types[])
 {
     int i, contents_size, align_sz = 8, epsilon, mpi_errno;
     int struct_sz, ints_sz, aints_sz, types_sz;

@@ -108,7 +108,7 @@
         memcpy(writebuf, (char *)buf + userbuf_off, write_sz);\
     } \
 }
-void ADIOI_GEN_WriteStrided(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
                        MPI_Datatype datatype, int file_ptr_type,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code)

@@ -98,7 +98,7 @@ void MPE_Init_mpi_spawn( void )
     state->color = "purple";
 }
 
-int MPI_Comm_spawn( char *command, char *argv[], int maxprocs,
+int MPI_Comm_spawn( MPICH2_CONST char *command, char *argv[], int maxprocs,
                     MPI_Info info, int root, MPI_Comm comm,
                     MPI_Comm *intercomm, int array_of_errcodes[] )
 {
@@ -133,7 +133,7 @@ int MPI_Comm_spawn( char *command, char *argv[], int maxprocs,
 }
 
 int MPI_Comm_spawn_multiple( int count, char *array_of_commands[],
-                             char* *array_of_argv[], int array_of_maxprocs[],
+                             char* *array_of_argv[], MPICH2_CONST int array_of_maxprocs[],
                              MPI_Info array_of_info[], int root, MPI_Comm comm,
                              MPI_Comm *intercomm, int array_of_errcodes[] )
 {
@@ -200,7 +200,7 @@ int MPI_Comm_get_parent( MPI_Comm *parent )
     return returnVal;
 }
 
-int MPI_Comm_accept( char *port_name, MPI_Info info, int root,
+int MPI_Comm_accept( MPICH2_CONST char *port_name, MPI_Info info, int root,
                      MPI_Comm comm, MPI_Comm *newcomm )
 {
     int   returnVal;
@@ -232,7 +232,7 @@ int MPI_Comm_accept( char *port_name, MPI_Info info, int root,
     return returnVal;
 }
 
-int MPI_Comm_connect( char *port_name, MPI_Info info, int root,
+int MPI_Comm_connect( MPICH2_CONST char *port_name, MPI_Info info, int root,
                       MPI_Comm comm, MPI_Comm *newcomm )
 {
     int   returnVal;
@@ -328,7 +328,7 @@ int MPI_Comm_join( int fd, MPI_Comm *intercomm )
     return returnVal;
 }
 
-int MPI_Comm_set_name( MPI_Comm comm, char *comm_name )
+int MPI_Comm_set_name( MPI_Comm comm, MPICH2_CONST char *comm_name )
 {
     int   returnVal;
     MPE_LOG_STATE_DECL
@@ -412,7 +412,7 @@ int MPI_Open_port( MPI_Info info, char *port_name )
     return returnVal;
 }
 
-int MPI_Close_port( char *port_name )
+int MPI_Close_port( MPICH2_CONST char *port_name )
 {
     int  returnVal;
     MPE_LOG_STATE_DECL

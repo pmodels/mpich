@@ -43,7 +43,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_open(MPI_Comm comm, char *filename, int amode, 
+int MPI_File_open(MPI_Comm comm, MPICH2_CONST char *filename, int amode,
                   MPI_Info info, MPI_File *fh)
 {
     int error_code, file_system, flag, tmp_amode=0, rank;

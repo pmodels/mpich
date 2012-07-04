@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods,
+int MPI_Cart_create(MPI_Comm comm_old, int ndims, MPICH2_CONST int *dims, MPICH2_CONST int *periods,
                     int reorder, MPI_Comm *comm_cart)
 {
     int g2g = 1;

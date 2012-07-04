@@ -51,13 +51,13 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gather_intra ( 
-	void *sendbuf, 
-	int sendcnt, 
-	MPI_Datatype sendtype, 
-	void *recvbuf, 
-	int recvcnt, 
-	MPI_Datatype recvtype, 
-	int root, 
+	const void *sendbuf,
+	int sendcnt,
+	MPI_Datatype sendtype,
+	void *recvbuf,
+	int recvcnt,
+	MPI_Datatype recvtype,
+	int root,
 	MPID_Comm *comm_ptr,
         int *errflag )
 {
@@ -463,13 +463,13 @@ int MPIR_Gather_intra (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gather_inter ( 
-	void *sendbuf, 
-	int sendcnt, 
-	MPI_Datatype sendtype, 
-	void *recvbuf, 
-	int recvcnt, 
-	MPI_Datatype recvtype, 
-	int root, 
+	const void *sendbuf,
+	int sendcnt,
+	MPI_Datatype sendtype,
+	void *recvbuf,
+	int recvcnt,
+	MPI_Datatype recvtype,
+	int root,
 	MPID_Comm *comm_ptr,
         int *errflag )
 {
@@ -641,7 +641,7 @@ int MPIR_Gather_inter (
 #define FUNCNAME MPIR_Gather
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+int MPIR_Gather(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                 void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                 int root, MPID_Comm *comm_ptr, int *errflag)
 {
@@ -675,7 +675,7 @@ int MPIR_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 #define FUNCNAME MPIR_Gather_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Gather_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+int MPIR_Gather_impl(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                      void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                      int root, MPID_Comm *comm_ptr, int *errflag)
 {
@@ -737,8 +737,8 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
-               void *recvbuf, int recvcnt, MPI_Datatype recvtype, 
+int MPI_Gather(MPICH2_CONST void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+               void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

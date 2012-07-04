@@ -92,7 +92,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
 #define FUNCNAME MPIR_Ibsend_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Ibsend_impl(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                      MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -102,7 +102,7 @@ int MPIR_Ibsend_impl(void *buf, int count, MPI_Datatype datatype, int dest, int 
     /* We don't try tbsend in for MPI_Ibsend because we must create a
        request even if we can send the message */
 
-    mpi_errno = MPIR_Bsend_isend( buf, count, datatype, dest, tag, comm_ptr, 
+    mpi_errno = MPIR_Bsend_isend( buf, count, datatype, dest, tag, comm_ptr,
 				  IBSEND, &request_ptr );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
@@ -161,7 +161,7 @@ Output Parameter:
 .N MPI_ERR_BUFFER
 
 @*/
-int MPI_Ibsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, 
+int MPI_Ibsend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	       MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;

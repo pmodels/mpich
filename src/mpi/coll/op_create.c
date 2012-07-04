@@ -42,7 +42,7 @@ void MPIR_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
     
     MPID_Op_get_ptr( op, op_ptr );
     op_ptr->language		= MPID_LANG_CXX;
-    MPIR_Process.cxx_call_op_fn	= (void (*)(void *, void *, int, 
+    MPIR_Process.cxx_call_op_fn	= (void (*)(const void *, void *, int,
 				    MPI_Datatype, MPI_User_function *))opcall;
 }
 #endif

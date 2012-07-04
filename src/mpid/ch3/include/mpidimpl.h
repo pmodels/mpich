@@ -1072,7 +1072,7 @@ int MPIDI_Isend_self(const void *, int, MPI_Datatype, int, int, MPID_Comm *,
 int MPIDI_Comm_connect(const char *, MPID_Info *, int, MPID_Comm *, MPID_Comm **);
 int MPIDI_Comm_accept(const char *, MPID_Info *, int, MPID_Comm *, MPID_Comm **);
 
-int MPIDI_Comm_spawn_multiple(int, char **, char ***, int *, MPID_Info **, 
+int MPIDI_Comm_spawn_multiple(int, char **, char ***, const int *, MPID_Info **,
 			      int, MPID_Comm *, MPID_Comm **, int *);
 
 
@@ -1116,13 +1116,13 @@ int MPIDI_CH3U_Comm_FinishPending( MPID_Comm * );
    work with MPI-2 RMA ops */
 typedef struct MPIDI_RMAFns {
     int (*Win_create)(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
-		      MPID_Win **, struct MPIDI_RMA_Ops *);
+		      MPID_Win **, struct MPIDI_RMAFns *);
     int (*Win_free)(MPID_Win **);
-    int (*Put)(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, 
+    int (*Put)(const void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
 		MPID_Win *);
     int (*Get)(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, 
 		MPID_Win *);
-    int (*Accumulate)(void *, int, MPI_Datatype, int, MPI_Aint, int, 
+    int (*Accumulate)(const void *, int, MPI_Datatype, int, MPI_Aint, int,
 		       MPI_Datatype, MPI_Op, MPID_Win *);
     int (*Win_fence)(int, MPID_Win *);
     int (*Win_post)(MPID_Group *, int, MPID_Win *);
@@ -1155,11 +1155,11 @@ int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns * );
 int MPIDI_Win_create(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
                     MPID_Win ** );
 int MPIDI_Win_fence(int, MPID_Win *);
-int MPIDI_Put(void *, int, MPI_Datatype, int, MPI_Aint, int,
+int MPIDI_Put(const void *, int, MPI_Datatype, int, MPI_Aint, int,
             MPI_Datatype, MPID_Win *); 
 int MPIDI_Get(void *, int, MPI_Datatype, int, MPI_Aint, int,
             MPI_Datatype, MPID_Win *);
-int MPIDI_Accumulate(void *, int, MPI_Datatype, int, MPI_Aint, int, 
+int MPIDI_Accumulate(const void *, int, MPI_Datatype, int, MPI_Aint, int,
 		   MPI_Datatype,  MPI_Op, MPID_Win *);
 int MPIDI_Win_free(MPID_Win **); 
 int MPIDI_Win_wait(MPID_Win *win_ptr);
@@ -1180,13 +1180,13 @@ int MPIDI_CH3_Win_create(void *base, MPI_Aint size, int disp_unit,
 int MPIDI_CH3_Free_mem(void *ptr);
 void MPIDI_CH3_Cleanup_mem(void);
 int MPIDI_CH3_Win_free(MPID_Win **win_ptr);
-int MPIDI_CH3_Put(void *origin_addr, int origin_count, MPI_Datatype
+int MPIDI_CH3_Put(const void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,
             int target_count, MPI_Datatype target_datatype, MPID_Win *win_ptr);
 int MPIDI_CH3_Get(void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,
             int target_count, MPI_Datatype target_datatype, MPID_Win *win_ptr);
-int MPIDI_CH3_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
+int MPIDI_CH3_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                     origin_datatype, int target_rank, MPI_Aint target_disp,
                     int target_count, MPI_Datatype target_datatype, MPI_Op op,
                     MPID_Win *win_ptr);

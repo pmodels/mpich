@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Unpack_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Unpack_impl(void *inbuf, int insize, int *position,
+int MPIR_Unpack_impl(const void *inbuf, int insize, int *position,
                      void *outbuf, int outcount, MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -132,7 +132,7 @@ Inout/Output Parameter:
 
 .seealso: MPI_Pack, MPI_Pack_size
 @*/
-int MPI_Unpack(void *inbuf, int insize, int *position,
+int MPI_Unpack(MPICH2_CONST void *inbuf, int insize, int *position,
 	       void *outbuf, int outcount, MPI_Datatype datatype,
 	       MPI_Comm comm)
 {

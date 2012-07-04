@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int CollChk_same_datarep(MPI_Comm comm, char* datarep, char *call)
+int CollChk_same_datarep(MPI_Comm comm, const char* datarep, char *call)
 {
     int r, s, i, go, ok;     /* rank, size, counter, go flag, ok flag */
     char buff[COLLCHK_STD_STRLEN];          /* temp communication buffer */

@@ -57,7 +57,7 @@ Output Parameter:
 
 .seealso: MPI_Start, MPI_Request_free, MPI_Send_init
 @*/
-int MPI_Rsend_init(void *buf, int count, MPI_Datatype datatype, int dest,
+int MPI_Rsend_init(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest,
 		   int tag, MPI_Comm comm, MPI_Request *request)
 {
     static const char FCNAME[] = "MPI_Rsend_init";

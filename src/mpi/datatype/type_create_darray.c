@@ -21,7 +21,7 @@
 #define MIN(__a, __b) (((__a) < (__b)) ? (__a) : (__b))
 #endif
 
-PMPI_LOCAL int MPIR_Type_block(int *array_of_gsizes,
+PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
 			       int dim,
 			       int ndims,
 			       int nprocs,
@@ -32,7 +32,7 @@ PMPI_LOCAL int MPIR_Type_block(int *array_of_gsizes,
 			       MPI_Datatype type_old,
 			       MPI_Datatype *type_new,
 			       MPI_Aint *st_offset);
-PMPI_LOCAL int MPIR_Type_cyclic(int *array_of_gsizes,
+PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 				int dim,
 				int ndims,
 				int nprocs,
@@ -52,7 +52,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(int *array_of_gsizes,
 
 
 
-PMPI_LOCAL int MPIR_Type_block(int *array_of_gsizes,
+PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
 			       int dim,
 			       int ndims,
 			       int nprocs,
@@ -178,7 +178,7 @@ PMPI_LOCAL int MPIR_Type_block(int *array_of_gsizes,
 }
 
 
-PMPI_LOCAL int MPIR_Type_cyclic(int *array_of_gsizes,
+PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 				int dim,
 				int ndims,
 				int nprocs,
@@ -351,10 +351,10 @@ PMPI_LOCAL int MPIR_Type_cyclic(int *array_of_gsizes,
 int MPI_Type_create_darray(int size,
 			   int rank,
 			   int ndims,
-			   int array_of_gsizes[],
-			   int array_of_distribs[],
-			   int array_of_dargs[],
-			   int array_of_psizes[],
+			   MPICH2_CONST int array_of_gsizes[],
+			   MPICH2_CONST int array_of_distribs[],
+			   MPICH2_CONST int array_of_dargs[],
+			   MPICH2_CONST int array_of_psizes[],
 			   int order,
 			   MPI_Datatype oldtype,
 			   MPI_Datatype *newtype)

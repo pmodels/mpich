@@ -26,7 +26,7 @@
 #endif
 
 /* prototypes of functions used for collective writes only. */
-static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
+static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                          datatype, int nprocs, int myrank, ADIOI_Access
                          *others_req, ADIO_Offset *offset_list,
                          ADIO_Offset *len_list, int contig_access_count, ADIO_Offset
@@ -45,10 +45,10 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                          ADIO_Offset *fd_start, ADIO_Offset *fd_end, 
                          ADIOI_Access *others_req, 
                          int *send_buf_idx, int *curr_to_proc,
-                         int *done_to_proc, int *hole, int iter, 
+                         int *done_to_proc, int *hole, int iter,
                          MPI_Aint buftype_extent, int *buf_idx, int *error_code);
 static void ADIOI_W_Exchange_data_alltoallv(
-		ADIO_File fd, void *buf, 
+		ADIO_File fd, void *buf,
 		char *write_buf,					/* 1 */
 		ADIOI_Flatlist_node *flat_buf, 
 		ADIO_Offset *offset_list, 
@@ -421,7 +421,7 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
 /* If successful, error_code is set to MPI_SUCCESS.  Otherwise an error
  * code is created and returned in error_code.
  */
-static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
+static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 				 datatype, int nprocs, 
 				 int myrank,
 				 ADIOI_Access
@@ -732,7 +732,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 /* Sets error_code to MPI_SUCCESS if successful, or creates an error code
  * in the case of error.
  */
-static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
+static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf,
 				  ADIOI_Flatlist_node *flat_buf, ADIO_Offset 
 				  *offset_list, ADIO_Offset *len_list, int *send_size, 
 				  int *recv_size, ADIO_Offset off, int size,
@@ -1256,7 +1256,7 @@ static void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count,
 
 
 static void ADIOI_W_Exchange_data_alltoallv(
-		ADIO_File fd, void *buf, 
+		ADIO_File fd, void *buf,
 		char *write_buf,					/* 1 */
 		ADIOI_Flatlist_node *flat_buf, 
 		ADIO_Offset *offset_list, 

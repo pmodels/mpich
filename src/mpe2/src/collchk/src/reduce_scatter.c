@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Reduce_scatter(void* sbuff, void* rbuff, int* rcnts, 
+int MPI_Reduce_scatter(MPICH2_CONST void* sbuff, void* rbuff, MPICH2_CONST int* rcnts,
                        MPI_Datatype dt, MPI_Op op, MPI_Comm comm)
 {
     int g2g = 1;

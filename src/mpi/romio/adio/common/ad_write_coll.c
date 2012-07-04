@@ -51,7 +51,7 @@ void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count,
                       int nprocs, int nprocs_recv, int total_elements);
 
 
-void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                        MPI_Datatype datatype, int file_ptr_type,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code)
@@ -81,7 +81,9 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
     int old_error, tmp_error;
 
     if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) { 
-	ADIOI_IOStridedColl (fd, buf, count, ADIOI_WRITE, datatype, 
+        /* Cast away const'ness as the below function is used for read
+         * and write */
+	ADIOI_IOStridedColl (fd, (char *) buf, count, ADIOI_WRITE, datatype,
 			file_ptr_type, offset, status, error_code);
 	return;
     }
@@ -202,7 +204,8 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Free(my_req);
 
 /* exchange data and write in sizes of no more than coll_bufsize. */
-    ADIOI_Exch_and_write(fd, buf, datatype, nprocs, myrank,
+    /* Cast away const'ness for the below function */
+    ADIOI_Exch_and_write(fd, (char *) buf, datatype, nprocs, myrank,
                         others_req, offset_list,
 			len_list, contig_access_count, min_st_offset,
 			fd_size, fd_start, fd_end, buf_idx, error_code);

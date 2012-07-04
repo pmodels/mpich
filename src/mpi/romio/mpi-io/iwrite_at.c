@@ -42,7 +42,7 @@ Output Parameters:
 #include "mpiu_greq.h"
 #endif
 
-int MPI_File_iwrite_at(MPI_File mpi_fh, MPI_Offset offset, void *buf,
+int MPI_File_iwrite_at(MPI_File mpi_fh, MPI_Offset offset, MPICH2_CONST void *buf,
                        int count, MPI_Datatype datatype, 
                        MPIO_Request *request)
 {

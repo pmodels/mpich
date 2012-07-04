@@ -35,7 +35,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_ordered_end(MPI_File mpi_fh, void *buf, MPI_Status *status)
+int MPI_File_write_ordered_end(MPI_File mpi_fh, MPICH2_CONST void *buf, MPI_Status *status)
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_ORDERED_END";

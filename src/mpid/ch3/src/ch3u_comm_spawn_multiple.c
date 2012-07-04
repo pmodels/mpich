@@ -102,8 +102,8 @@ static void free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
 #define FUNCNAME MPIDI_Comm_spawn_multiple
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Comm_spawn_multiple(int count, char **commands, 
-                                  char ***argvs, int *maxprocs, 
+int MPIDI_Comm_spawn_multiple(int count, char **commands,
+                                  char ***argvs, const int *maxprocs,
                                   MPID_Info **info_ptrs, int root,
                                   MPID_Comm *comm_ptr, MPID_Comm
                                   **intercomm, int *errcodes) 

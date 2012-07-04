@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int CollChk_check_graph(MPI_Comm comm, int nnodes, int *index, int* edges,
+int CollChk_check_graph(MPI_Comm comm, int nnodes, const int *index, const int* edges,
                         char* call)
 {
     char err_str[COLLCHK_STD_STRLEN], check[COLLCHK_SM_STRLEN];

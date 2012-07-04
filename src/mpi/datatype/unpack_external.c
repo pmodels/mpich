@@ -54,8 +54,8 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Unpack_external(char *datarep,
-			void *inbuf,
+int MPI_Unpack_external(MPICH2_CONST char *datarep,
+			MPICH2_CONST void *inbuf,
 			MPI_Aint insize,
 			MPI_Aint *position,
 			void *outbuf,

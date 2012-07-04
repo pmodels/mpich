@@ -48,7 +48,7 @@
 .N fortran
   
   @*/
-int MPI_Register_datarep(char *name,
+int MPI_Register_datarep(MPICH2_CONST char *name,
 			 MPI_Datarep_conversion_function *read_conv_fn,
 			 MPI_Datarep_conversion_function *write_conv_fn,
 			 MPI_Datarep_extent_function *extent_fn,

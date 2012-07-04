@@ -29,7 +29,7 @@
 #define FUNCNAME MPIR_Reduce_local_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Op *op_ptr;
@@ -88,13 +88,13 @@ int MPIR_Reduce_local_impl(void *inbuf, void *inoutbuf, int count, MPI_Datatype 
             MPI_Fint ldtype = (MPI_Fint)datatype;
             MPIR_F77_User_function *uop_f77 = (MPIR_F77_User_function *)uop;
 
-            (*uop_f77)(inbuf, inoutbuf, &lcount, &ldtype);
+            (*uop_f77)((void *) inbuf, inoutbuf, &lcount, &ldtype);
         }
         else {
-            (*uop)(inbuf, inoutbuf, &count, &datatype);
+            (*uop)((void *) inbuf, inoutbuf, &count, &datatype);
         }
 #else
-        (*uop)(inbuf, inoutbuf, &count, &datatype);
+        (*uop)((void *) inbuf, inoutbuf, &count, &datatype);
 #endif
     }
 
@@ -140,7 +140,7 @@ Output Parameter:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_local(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+int MPI_Reduce_local(MPICH2_CONST void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Op *op_ptr;

@@ -10,7 +10,7 @@
 #include "./dataloop.h"
 
 static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
-					       void *disp_array,
+					       const void *disp_array,
 					       DLOOP_Offset *out_disp_array,
 					       int dispinbytes,
 					       DLOOP_Offset old_extent);
@@ -33,7 +33,7 @@ static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
 @*/
 int PREPEND_PREFIX(Dataloop_create_blockindexed)(int icount,
 						 int iblklen,
-						 void *disp_array,
+						 const void *disp_array,
 						 int dispinbytes,
 						 DLOOP_Type oldtype,
 						 DLOOP_Dataloop **dlp_p,
@@ -249,7 +249,7 @@ int PREPEND_PREFIX(Dataloop_create_blockindexed)(int icount,
  * blocks, because that would really mess up the blockindexed type!
  */
 static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
-					       void *in_disp_array,
+					       const void *in_disp_array,
 					       DLOOP_Offset *out_disp_array,
 					       int dispinbytes,
 					       DLOOP_Offset old_extent)
@@ -276,7 +276,7 @@ static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
 
 DLOOP_Count PREPEND_PREFIX(Type_blockindexed_count_contig)(DLOOP_Count count,
                                                            DLOOP_Count blklen,
-                                                           void *disp_array,
+                                                           const void *disp_array,
                                                            int dispinbytes,
                                                            DLOOP_Offset old_extent)
 {

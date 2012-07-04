@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Allreduce( void* sbuff, void* rbuff, int cnt, 
+int MPI_Allreduce( MPICH2_CONST void* sbuff, void* rbuff, int cnt,
                    MPI_Datatype dt, MPI_Op op, MPI_Comm comm)
 {
     int g2g = 1;

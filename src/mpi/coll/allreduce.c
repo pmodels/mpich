@@ -122,7 +122,7 @@ static inline int allreduce_intra_or_coll_fn(void *sendbuf, void *recvbuf, int c
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allreduce_intra ( 
-    void *sendbuf, 
+    const void *sendbuf,
     void *recvbuf, 
     int count, 
     MPI_Datatype datatype, 
@@ -561,7 +561,7 @@ int MPIR_Allreduce_intra (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allreduce_inter ( 
-    void *sendbuf, 
+    const void *sendbuf,
     void *recvbuf, 
     int count, 
     MPI_Datatype datatype, 
@@ -666,8 +666,8 @@ int MPIR_Allreduce_inter (
 #define FUNCNAME MPIR_Allreduce
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
-                   int *errflag)
+int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                   MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -697,7 +697,7 @@ fn_fail:
 #define FUNCNAME MPIR_Allreduce_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Allreduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
                         int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -763,8 +763,8 @@ Output Parameter:
 .N MPI_ERR_OP
 .N MPI_ERR_COMM
 @*/
-int MPI_Allreduce ( void *sendbuf, void *recvbuf, int count, 
-		    MPI_Datatype datatype, MPI_Op op, MPI_Comm comm )
+int MPI_Allreduce(MPICH2_CONST void *sendbuf, void *recvbuf, int count,
+                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     static const char FCNAME[] = "MPI_Allreduce";
     int mpi_errno = MPI_SUCCESS;

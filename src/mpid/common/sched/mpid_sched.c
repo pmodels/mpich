@@ -429,7 +429,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* do these ops need an entry handle returned? */
-int MPID_Sched_send(void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPID_Sched_send(const void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -467,7 +467,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_ssend
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Sched_ssend(void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPID_Sched_ssend(const void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -505,7 +505,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_send_defer
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Sched_send_defer(void *buf, int *count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPID_Sched_send_defer(const void *buf, const int *count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -608,7 +608,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_reduce
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Sched_reduce(void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Sched_t s)
+int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -652,7 +652,7 @@ fn_fail:
  *
  * Packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype. */
-int MPID_Sched_copy(void *inbuf,  int incount,  MPI_Datatype intype,
+int MPID_Sched_copy(const void *inbuf,  int incount,  MPI_Datatype intype,
                     void *outbuf, int outcount, MPI_Datatype outtype, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -11,8 +11,8 @@
 
 static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 					  DLOOP_Count contig_count,
-					  int *input_blocklength_array,
-					  void *input_displacement_array,
+					  const int *input_blocklength_array,
+					  const void *input_displacement_array,
 					  DLOOP_Count *output_blocklength_array,
 					  DLOOP_Offset *out_disp_array,
 					  int dispinbytes,
@@ -37,8 +37,8 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 @*/
 
 int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
-					    int *blocklength_array,
-					    void *displacement_array,
+					    const int *blocklength_array,
+					    const void *displacement_array,
 					    int dispinbytes,
 					    MPI_Datatype oldtype,
 					    DLOOP_Dataloop **dlp_p,
@@ -289,8 +289,8 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
  */
 static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 					  DLOOP_Count contig_count,
-					  int *in_blklen_array,
-					  void *in_disp_array,
+					  const int *in_blklen_array,
+					  const void *in_disp_array,
 					  DLOOP_Count *out_blklen_array,
 					  DLOOP_Offset *out_disp_array,
 					  int dispinbytes,
@@ -374,8 +374,8 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
  * Extent passed in is for the original type.
  */
 DLOOP_Count PREPEND_PREFIX(Type_indexed_count_contig)(DLOOP_Count count,
-                                                      int *blocklength_array,
-                                                      void *displacement_array,
+                                                      const int *blocklength_array,
+                                                      const void *displacement_array,
                                                       int dispinbytes,
                                                       DLOOP_Offset old_extent)
 {

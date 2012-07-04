@@ -81,11 +81,11 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Exscan ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int count, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -236,7 +236,7 @@ fn_fail:
 #define FUNCNAME MPIR_Exscan_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Exscan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
+int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -298,7 +298,7 @@ Notes:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Exscan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
+int MPI_Exscan(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

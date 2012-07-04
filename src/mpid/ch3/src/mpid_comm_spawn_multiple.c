@@ -32,8 +32,8 @@
 #define FUNCNAME MPID_Comm_spawn_multiple
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_Comm_spawn_multiple(int count, char *array_of_commands[], 
-			     char ** array_of_argv[], int array_of_maxprocs[],
+int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
+			     char ** array_of_argv[], const int array_of_maxprocs[],
 			     MPID_Info * array_of_info_ptrs[], int root, 
 			     MPID_Comm * comm_ptr, MPID_Comm ** intercomm,
 			     int array_of_errcodes[]) 

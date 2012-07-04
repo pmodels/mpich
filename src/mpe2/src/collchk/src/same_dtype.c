@@ -561,7 +561,7 @@ int CollChk_dtype_scatter(MPI_Comm comm,
   on process root. 
 */
 int CollChk_dtype_scatterv(MPI_Comm comm,
-                           MPI_Datatype sendtype, int *sendcnts,
+                           MPI_Datatype sendtype, const int *sendcnts,
                            MPI_Datatype recvtype, int recvcnt,
                            int root, int are2buffs, char *call)
 {
@@ -738,7 +738,7 @@ int CollChk_dtype_allgather(MPI_Comm comm,
 */
 int CollChk_dtype_allgatherv(MPI_Comm comm,
                              MPI_Datatype sendtype, int sendcnt,
-                             MPI_Datatype recvtype, int *recvcnts,
+                             MPI_Datatype recvtype, const int *recvcnts,
                              int are2buffs, char *call)
 {
     CollChk_hash_t  *hashes;      /* hash array for (sendtype,sendcnt) */
@@ -838,8 +838,8 @@ int CollChk_dtype_allgatherv(MPI_Comm comm,
   (sendtype,sendcnts[]) collected from all the other processes.
 */
 int CollChk_dtype_alltoallv(MPI_Comm comm,
-                            MPI_Datatype sendtype, int *sendcnts,
-                            MPI_Datatype recvtype, int *recvcnts,
+                            MPI_Datatype sendtype, const int *sendcnts,
+                            MPI_Datatype recvtype, const int *recvcnts,
                             char *call)
 {
     CollChk_hash_t  *send_hashes;    /* hash array for (sendtype,sendcnt[]) */
@@ -936,8 +936,8 @@ int CollChk_dtype_alltoallv(MPI_Comm comm,
   (sendtype[],sendcnts[]) collected from all the other processes.
 */
 int CollChk_dtype_alltoallw(MPI_Comm comm,
-                            MPI_Datatype *sendtypes, int *sendcnts,
-                            MPI_Datatype *recvtypes, int *recvcnts,
+                            const MPI_Datatype *sendtypes, const int *sendcnts,
+                            const MPI_Datatype *recvtypes, const int *recvcnts,
                             char *call)
 {
     CollChk_hash_t  *send_hashes;  /* hash array for (sendtypes[],sendcnt[]) */

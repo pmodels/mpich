@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Gather(void* sbuff, int scnt, MPI_Datatype stype, 
+int MPI_Gather(MPICH2_CONST void* sbuff, int scnt, MPI_Datatype stype,
                void* rbuff, int rcnt, MPI_Datatype rtype,
                int root, MPI_Comm comm)
 {

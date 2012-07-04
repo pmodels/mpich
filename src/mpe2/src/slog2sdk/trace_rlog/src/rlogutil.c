@@ -57,8 +57,8 @@ static int WriteFileData(const char *pBuffer, int length, FILE *fout)
     return 0;
 }
 
-static int rlog_err_printf(char *str, ...);
-static int rlog_err_printf(char *str, ...)
+static int rlog_err_printf(const char *str, ...);
+static int rlog_err_printf(const char *str, ...)
 {
     int n;
     va_list list;

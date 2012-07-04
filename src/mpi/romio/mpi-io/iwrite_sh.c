@@ -41,7 +41,7 @@ Output Parameters:
 #include "mpiu_greq.h"
 #endif
 
-int MPI_File_iwrite_shared(MPI_File mpi_fh, void *buf, int count, 
+int MPI_File_iwrite_shared(MPI_File mpi_fh, MPICH2_CONST void *buf, int count,
 			   MPI_Datatype datatype, MPIO_Request *request)
 {
     int error_code, bufsize, buftype_is_contig, filetype_is_contig;

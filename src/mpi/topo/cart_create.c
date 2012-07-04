@@ -233,8 +233,8 @@ We ignore 'reorder' info currently.
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_create(MPI_Comm comm_old, int ndims, int *dims, int *periods, 
-		    int reorder, MPI_Comm *comm_cart)
+int MPI_Cart_create(MPI_Comm comm_old, int ndims, MPICH2_CONST int *dims,
+                    MPICH2_CONST int *periods, int reorder, MPI_Comm *comm_cart)
 {
     int       mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

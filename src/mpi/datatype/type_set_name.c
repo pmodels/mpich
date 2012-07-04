@@ -46,7 +46,7 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_OTHER
 @*/
-int MPI_Type_set_name(MPI_Datatype type, char *type_name)
+int MPI_Type_set_name(MPI_Datatype type, MPICH2_CONST char *type_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *datatype_ptr = NULL;

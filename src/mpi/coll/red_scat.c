@@ -34,9 +34,9 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Reduce_scatter_noncomm (
-    void *sendbuf,
+    const void *sendbuf,
     void *recvbuf,
-    int *recvcnts,
+    const int *recvcnts,
     MPI_Datatype datatype,
     MPI_Op op,
     MPID_Comm *comm_ptr,
@@ -224,11 +224,11 @@ fn_fail:
 
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_intra ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int *recvcnts, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
+    const void *sendbuf,
+    void *recvbuf,
+    const int *recvcnts,
+    MPI_Datatype datatype,
+    MPI_Op op,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -885,11 +885,11 @@ fn_fail:
 
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_inter ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int *recvcnts, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
+    const void *sendbuf,
+    void *recvbuf,
+    const int *recvcnts,
+    MPI_Datatype datatype,
+    MPI_Op op,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -1020,7 +1020,7 @@ int MPIR_Reduce_scatter_inter (
 #define FUNCNAME MPIR_Reduce_scatter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts,
+int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1051,7 +1051,7 @@ int MPIR_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts,
 #define FUNCNAME MPIR_Reduce_scatter_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_impl(void *sendbuf, void *recvbuf, int *recvcnts,
+int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int *recvcnts,
                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1112,7 +1112,7 @@ Output Parameter:
 .N MPI_ERR_OP
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_scatter(void *sendbuf, void *recvbuf, int *recvcnts, 
+int MPI_Reduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST int *recvcnts,
 		       MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

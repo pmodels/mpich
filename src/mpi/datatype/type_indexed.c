@@ -27,8 +27,8 @@
 #define FUNCNAME MPIR_Type_indexed_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Type_indexed_impl(int count, int blocklens[], int indices[], MPI_Datatype old_type,
-                           MPI_Datatype *newtype)
+int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[],
+                           MPI_Datatype old_type, MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -130,8 +130,8 @@ consider declaring the Fortran array with a zero origin
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_indexed(int count,
-		     int blocklens[],
-		     int indices[],
+		     MPICH2_CONST int blocklens[],
+		     MPICH2_CONST int indices[],
 		     MPI_Datatype old_type,
 		     MPI_Datatype *newtype)
 {

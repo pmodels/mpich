@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Info_get_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-void MPIR_Info_get_impl(MPID_Info *info_ptr, char *key, int valuelen, char *value, int *flag)
+void MPIR_Info_get_impl(MPID_Info *info_ptr, const char *key, int valuelen, char *value, int *flag)
 {
     MPID_Info *curr_ptr;
     curr_ptr = info_ptr->next;
@@ -81,7 +81,7 @@ Output Parameters:
 #define FUNCNAME MPI_Info_get
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPI_Info_get(MPI_Info info, char *key, int valuelen, char *value, 
+int MPI_Info_get(MPI_Info info, MPICH2_CONST char *key, int valuelen, char *value,
 		 int *flag)
 {
     MPID_Info *info_ptr=0;

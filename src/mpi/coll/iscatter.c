@@ -83,7 +83,7 @@ static int calc_curr_count(MPID_Comm *comm, int tag, void *state)
 #define FUNCNAME MPIR_Iscatter_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Iscatter_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
@@ -425,7 +425,7 @@ int MPIR_Iscatter_intra(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FUNCNAME MPIR_Iscatter_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Iscatter_inter(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
@@ -542,7 +542,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iscatter_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Iscatter_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iscatter_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -600,7 +600,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iscatter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
+int MPIX_Iscatter(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

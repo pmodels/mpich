@@ -95,16 +95,16 @@ int CollChk_get_win(MPI_Win win, MPI_Comm *comm);
 #endif
 void CollChk_set_begin(char* in);
 void CollChk_unset_begin(void);
-int CollChk_check_buff(MPI_Comm comm, void * buff, char* call);
-int CollChk_check_dims(MPI_Comm comm, int ndims, int *dims, char* call);
-int CollChk_check_graph(MPI_Comm comm, int nnodes, int *index, int* edges,
+int CollChk_check_buff(MPI_Comm comm, const void * buff, char* call);
+int CollChk_check_dims(MPI_Comm comm, int ndims, const int *dims, char* call);
+int CollChk_check_graph(MPI_Comm comm, int nnodes, const int *index, const int* edges,
                         char* call);
 int CollChk_check_size(MPI_Comm comm, int size, char* call);
 int CollChk_err_han(char * err_str, int err_code, char * call, MPI_Comm comm);
 int CollChk_is_init(void);
 int CollChk_same_amode(MPI_Comm comm, int amode, char* call);
 int CollChk_same_call(MPI_Comm comm, char* call);
-int CollChk_same_datarep(MPI_Comm comm, char* datarep, char *call);
+int CollChk_same_datarep(MPI_Comm comm, const char* datarep, char *call);
 
 int CollChk_hash_equal(const CollChk_hash_t *alpha,
                        const CollChk_hash_t *beta);
@@ -117,7 +117,7 @@ int CollChk_dtype_scatter(MPI_Comm comm,
                           MPI_Datatype recvtype, int recvcnt,
                           int root, int are2buffs, char *call);
 int CollChk_dtype_scatterv(MPI_Comm comm,
-                           MPI_Datatype sendtype, int *sendcnts,
+                           MPI_Datatype sendtype, const int *sendcnts,
                            MPI_Datatype recvtype, int recvcnt,
                            int root, int are2buffs, char *call);
 int CollChk_dtype_allgather(MPI_Comm comm,
@@ -126,15 +126,15 @@ int CollChk_dtype_allgather(MPI_Comm comm,
                             int are2buffs, char *call);
 int CollChk_dtype_allgatherv(MPI_Comm comm,
                              MPI_Datatype sendtype, int sendcnt,
-                             MPI_Datatype recvtype, int *recvcnts,
+                             MPI_Datatype recvtype, const int *recvcnts,
                              int are2buffs, char *call);
 int CollChk_dtype_alltoallv(MPI_Comm comm,
-                            MPI_Datatype sendtype, int *sendcnts,
-                            MPI_Datatype recvtype, int *recvcnts,
+                            MPI_Datatype sendtype, const int *sendcnts,
+                            MPI_Datatype recvtype, const int *recvcnts,
                             char *call);
 int CollChk_dtype_alltoallw(MPI_Comm comm,
-                            MPI_Datatype *sendtypes, int *sendcnts,
-                            MPI_Datatype *recvtypes, int *recvcnts,
+                            const MPI_Datatype *sendtypes, const int *sendcnts,
+                            const MPI_Datatype *recvtypes, const int *recvcnts,
                             char *call);
 
 int CollChk_same_high_low(MPI_Comm comm, int high_low, char* call);

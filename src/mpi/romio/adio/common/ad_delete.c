@@ -11,7 +11,7 @@
 #include <unistd.h>
 #endif
 
-void ADIOI_GEN_Delete(char *filename, int *error_code)
+void ADIOI_GEN_Delete(const char *filename, int *error_code)
 {
     int err;
     static char myname[] = "ADIOI_GEN_DELETE";

@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Comm_connect(char *portname, MPI_Info info, int root,
+int MPI_Comm_connect(MPICH2_CONST char *portname, MPI_Info info, int root,
                      MPI_Comm comm, MPI_Comm *newcomm)
 {
     int g2g = 1;

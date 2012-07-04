@@ -33,12 +33,12 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Reduce_binomial ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int count, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
-    int root, 
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    int root,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -241,12 +241,12 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Reduce_redscat_gather ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int count, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
-    int root, 
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    int root,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -672,12 +672,12 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_intra ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int count, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
-    int root, 
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    int root,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -738,7 +738,7 @@ int MPIR_Reduce_intra (
             if (comm_ptr->node_roots_comm->rank != MPIU_Get_internode_rank(comm_ptr, root)) {
                 /* I am not on root's node.  Use tmp_buf if we
                    participated in the first reduce, otherwise use sendbuf */
-                void *buf = (comm_ptr->node_comm == NULL ? sendbuf : tmp_buf);
+                const void *buf = (comm_ptr->node_comm == NULL ? sendbuf : tmp_buf);
                 mpi_errno = MPIR_Reduce_impl(buf, NULL, count, datatype,
                                              op, MPIU_Get_internode_rank(comm_ptr, root),
                                              comm_ptr->node_roots_comm, errflag);
@@ -861,12 +861,12 @@ int MPIR_Reduce_intra (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_inter ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int count, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
-    int root, 
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    int root,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -979,7 +979,7 @@ int MPIR_Reduce_inter (
 #define FUNCNAME MPIR_Reduce
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, int root, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1010,7 +1010,7 @@ int MPIR_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 #define FUNCNAME MPIR_Reduce_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                      MPI_Op op, int root, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1081,7 +1081,7 @@ Output Parameter:
 .N MPI_ERR_BUFFER_ALIAS
 
 @*/
-int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
+int MPI_Reduce(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 	       MPI_Op op, int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

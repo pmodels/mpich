@@ -28,9 +28,9 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Type_create_struct_impl(int count,
-                                 int array_of_blocklengths[],
-                                 MPI_Aint array_of_displacements[],
-                                 MPI_Datatype array_of_types[],
+                                 const int array_of_blocklengths[],
+                                 const MPI_Aint array_of_displacements[],
+                                 const MPI_Datatype array_of_types[],
                                  MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -105,9 +105,9 @@ int MPIR_Type_create_struct_impl(int count,
 .N MPI_ERR_TYPE
 @*/
 int MPI_Type_create_struct(int count,
-			   int array_of_blocklengths[],
-			   MPI_Aint array_of_displacements[],
-			   MPI_Datatype array_of_types[],
+			   MPICH2_CONST int array_of_blocklengths[],
+			   MPICH2_CONST MPI_Aint array_of_displacements[],
+			   MPICH2_CONST MPI_Datatype array_of_types[],
 			   MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;

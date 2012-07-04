@@ -32,8 +32,8 @@
 @*/
 
 int MPID_Type_indexed(int count,
-		      int *blocklength_array,
-		      void *displacement_array,
+		      const int *blocklength_array,
+		      const void *displacement_array,
 		      int dispinbytes,
 		      MPI_Datatype oldtype,
 		      MPI_Datatype *newtype)

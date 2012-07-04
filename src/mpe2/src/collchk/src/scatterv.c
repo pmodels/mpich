@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Scatterv(void *sbuff, int *scnts, int* displs, MPI_Datatype stype,
+int MPI_Scatterv(MPICH2_CONST void *sbuff, MPICH2_CONST int *scnts, MPICH2_CONST int* displs, MPI_Datatype stype,
                  void *rbuff, int rcnt, MPI_Datatype rtype,
                  int root, MPI_Comm comm)
 {

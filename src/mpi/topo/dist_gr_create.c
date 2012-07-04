@@ -63,8 +63,9 @@ Output Parameter:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Dist_graph_create(MPI_Comm comm_old, int n, int sources[],
-                          int degrees[], int destinations[], int weights[],
+int MPI_Dist_graph_create(MPI_Comm comm_old, int n, MPICH2_CONST int sources[],
+                          MPICH2_CONST int degrees[], MPICH2_CONST int destinations[],
+                          MPICH2_CONST int weights[],
                           MPI_Info info, int reorder, MPI_Comm *comm_dist_graph)
 {
     int mpi_errno = MPI_SUCCESS;

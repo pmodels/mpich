@@ -66,11 +66,11 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Scan_generic ( 
-    void *sendbuf, 
-    void *recvbuf, 
-    int count, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -220,7 +220,7 @@ static int MPIR_Scan_generic (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scan(
-    void *sendbuf,
+    const void *sendbuf,
     void *recvbuf,
     int count,
     MPI_Datatype datatype,
@@ -424,7 +424,7 @@ int MPIR_Scan(
 #define FUNCNAME MPIR_Scan_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Scan_impl(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                    MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -483,7 +483,7 @@ Output Parameter:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Scan(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
+int MPI_Scan(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 	     MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

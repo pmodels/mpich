@@ -40,7 +40,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_at_all(MPI_File mpi_fh, MPI_Offset offset, void *buf,
+int MPI_File_write_at_all(MPI_File mpi_fh, MPI_Offset offset, MPICH2_CONST void *buf,
                           int count, MPI_Datatype datatype, 
                           MPI_Status *status)
 {

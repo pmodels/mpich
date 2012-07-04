@@ -106,12 +106,12 @@
     defined(ROMIO_HAVE_STRUCT_STAT_WITH_ST_FSTYPE) 
 #ifndef ROMIO_NTFS
 #define ROMIO_NEEDS_ADIOPARENTDIR
-static void ADIO_FileSysType_parentdir(char *filename, char **dirnamep);
+static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep);
 #endif
 #endif 
-static void ADIO_FileSysType_prefix(char *filename, int *fstype, 
+static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
 				    int *error_code);
-static void ADIO_FileSysType_fncall(char *filename, int *fstype, 
+static void ADIO_FileSysType_fncall(const char *filename, int *fstype,
 				    int *error_code);
 
 /*
@@ -152,7 +152,7 @@ Output Parameters:
  * Returns pointer to string in dirnamep; that string is allocated with
  * strdup and must be free()'d.
  */
-static void ADIO_FileSysType_parentdir(char *filename, char **dirnamep)
+static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep)
 {
     int err;
     char *dir = NULL, *slash;
@@ -240,7 +240,7 @@ Output Parameters:
  file system type.  Most other functions use the type which is stored when the 
  file is opened.
  */
-static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code)
+static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *error_code)
 {
 #ifndef ROMIO_NTFS
     char *dir;
@@ -468,7 +468,7 @@ static void ADIO_FileSysType_fncall(char *filename, int *fstype, int *error_code
  * stat system calls (unless a fs prefix is given).  Cary out this file system
  * detection in a more scalable way by having rank 0 stat the file and broadcast the result (fs type and error code) to the other mpi processes */
 
-static void ADIO_FileSysType_fncall_scalable(MPI_Comm comm, char *filename, int * file_system, int * error_code)
+static void ADIO_FileSysType_fncall_scalable(MPI_Comm comm, const char *filename, int * file_system, int * error_code)
 {
     int rank;
     int buf[2];
@@ -502,7 +502,7 @@ Output Parameters:
   is considered an error. Except for on Windows systems where the default is NTFS.
 
  */
-static void ADIO_FileSysType_prefix(char *filename, int *fstype, int *error_code)
+static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *error_code)
 {
     static char myname[] = "ADIO_RESOLVEFILETYPE_PREFIX";
     *error_code = MPI_SUCCESS;
@@ -596,7 +596,7 @@ order to clean things up.  The goal is to separate all this "did we compile
 for this fs type" code from the MPI layer and also to introduce the ADIOI_Fns
 tables in a reasonable way. -- Rob, 06/06/2001
 @*/
-void ADIO_ResolveFileType(MPI_Comm comm, char *filename, int *fstype, 
+void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 			  ADIOI_Fns **ops, int *error_code)
 {
     int myerrcode, file_system, min_code, max_code;

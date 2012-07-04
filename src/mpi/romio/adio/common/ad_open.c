@@ -19,7 +19,7 @@ static int build_cb_config_list(ADIO_File fd,
 	int rank, int procs, int *error_code);
 
 MPI_File ADIO_Open(MPI_Comm orig_comm,
-		   MPI_Comm comm, char *filename, int file_system,
+		   MPI_Comm comm, const char *filename, int file_system,
 		   ADIOI_Fns *ops,
 		   int access_mode, ADIO_Offset disp, MPI_Datatype etype, 
 		   MPI_Datatype filetype,

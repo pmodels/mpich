@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Comm_accept_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Comm_accept_impl(char * port_name, MPID_Info * info_ptr, int root,
+int MPIR_Comm_accept_impl(const char * port_name, MPID_Info * info_ptr, int root,
                           MPID_Comm * comm_ptr, MPID_Comm ** newcomm_ptr)
 {
     return MPID_Comm_accept(port_name, info_ptr, root, comm_ptr, newcomm_ptr);
@@ -61,7 +61,7 @@ int MPIR_Comm_accept_impl(char * port_name, MPID_Info * info_ptr, int root,
 .N MPI_ERR_INFO
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_accept(char *port_name, MPI_Info info, int root, MPI_Comm comm, 
+int MPI_Comm_accept(MPICH2_CONST char *port_name, MPI_Info info, int root, MPI_Comm comm,
                     MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -5,8 +5,8 @@
 #include "collchk.h" 
 
 
-int MPI_Alltoallw(void* sbuff, int *scnts, int *sdispls, MPI_Datatype *stypes,
-                  void* rbuff, int *rcnts, int *rdispls, MPI_Datatype *rtypes,
+int MPI_Alltoallw(MPICH2_CONST void* sbuff, MPICH2_CONST int *scnts, MPICH2_CONST int *sdispls, MPICH2_CONST MPI_Datatype *stypes,
+                  void* rbuff, MPICH2_CONST int *rcnts, MPICH2_CONST int *rdispls, MPICH2_CONST MPI_Datatype *rtypes,
                   MPI_Comm comm)
 {
     int              g2g = 1, r;

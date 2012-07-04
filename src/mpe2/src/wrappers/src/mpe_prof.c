@@ -123,7 +123,7 @@ char ***argv;
     MPI_Send - prototyping replacement for MPI_Send
 */
 int MPI_Send( buf, count, datatype, dest, tag, comm )
-void *buf;
+MPICH2_CONST void *buf;
 int count, dest, tag;
 MPI_Datatype datatype;
 MPI_Comm comm;
@@ -188,7 +188,8 @@ MPI_Comm comm;
     MPI_Reduce - prototyping replacement for MPI_Reduce
 */
 int MPI_Reduce( sendbuf, recvbuf, count, datatype, op, root, comm )
-void *sendbuf, *recvbuf;
+MPICH2_CONST void *sendbuf;
+void *recvbuf;
 int count, root;
 MPI_Op op;
 MPI_Datatype datatype;
@@ -208,7 +209,7 @@ MPI_Comm comm;
    MPI_Allreduce
  */
 int MPI_Allreduce ( sendbuf, recvbuf, count, datatype, op, comm )
-void             *sendbuf;
+MPICH2_CONST void             *sendbuf;
 void             *recvbuf;
 int               count;
 MPI_Datatype      datatype;
@@ -246,7 +247,7 @@ MPI_Comm comm;
     MPI_Isend - prototyping replacement for MPI_Isend
 */
 int MPI_Isend( buf, count, datatype, dest, tag, comm, request )
-void *buf;
+MPICH2_CONST void *buf;
 int count, dest, tag;
 MPI_Datatype datatype;
 MPI_Comm comm;
@@ -345,7 +346,8 @@ MPI_Status *statuses;
 int MPI_Sendrecv( sendbuf, sendcount, sendtype, dest,   sendtag,
 	      recvbuf, recvcount, recvtype, source, recvtag,
 	      comm, status )
-void *sendbuf, *recvbuf;
+MPICH2_CONST void *sendbuf;
+void *recvbuf;
 int sendcount, dest, sendtag, source, recvtag, recvcount;
 MPI_Datatype sendtype, recvtype;
 MPI_Comm comm;
@@ -385,7 +387,7 @@ MPI_Status *status;
     MPI_Ssend - prototyping replacement for MPI_Ssend
 */
 int MPI_Ssend( buf, count, datatype, dest, tag, comm )
-void *buf;
+MPICH2_CONST void *buf;
 int count, dest, tag;
 MPI_Datatype datatype;
 MPI_Comm comm;
@@ -404,7 +406,7 @@ MPI_Comm comm;
     MPI_Issend - prototyping replacement for MPI_Issend
 */
 int MPI_Issend( buf, count, datatype, dest, tag, comm, request )
-void *buf;
+MPICH2_CONST void *buf;
 int count;
 MPI_Datatype datatype;
 int dest;

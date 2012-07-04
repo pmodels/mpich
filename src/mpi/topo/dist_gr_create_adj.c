@@ -63,8 +63,10 @@ Output Parameter:
 .N MPI_ERR_OTHER
 @*/
 int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
-                                   int indegree, int sources[], int sourceweights[],
-                                   int outdegree, int destinations[], int destweights[],
+                                   int indegree, MPICH2_CONST int sources[],
+                                   MPICH2_CONST int sourceweights[],
+                                   int outdegree, MPICH2_CONST int destinations[],
+                                   MPICH2_CONST int destweights[],
                                    MPI_Info info, int reorder, MPI_Comm *comm_dist_graph)
 {
     int       mpi_errno = MPI_SUCCESS;

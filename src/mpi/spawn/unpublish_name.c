@@ -48,7 +48,7 @@
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Unpublish_name(char *service_name, MPI_Info info, char *port_name)
+int MPI_Unpublish_name(MPICH2_CONST char *service_name, MPI_Info info, MPICH2_CONST char *port_name)
 {
     static const char FCNAME[] = "MPI_Unpublish_name";
     int mpi_errno = MPI_SUCCESS;

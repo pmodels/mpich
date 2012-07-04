@@ -14,8 +14,8 @@
 #undef MPID_STRUCT_DEBUG
 
 static int MPID_Type_struct_alignsize(int count,
-				      MPI_Datatype *oldtype_array,
-				      MPI_Aint *displacement_array);
+				      const MPI_Datatype *oldtype_array,
+				      const MPI_Aint *displacement_array);
 
 /* MPID_Type_struct_alignsize
  *
@@ -40,8 +40,8 @@ static int MPID_Type_struct_alignsize(int count,
  * different rules for this case.
  */
 static int MPID_Type_struct_alignsize(int count,
-				      MPI_Datatype *oldtype_array,
-				      MPI_Aint *displacement_array)
+				      const MPI_Datatype *oldtype_array,
+				      const MPI_Aint *displacement_array)
 {
     int i, max_alignsize = 0, tmp_alignsize, derived_alignsize = 0;
 
@@ -142,9 +142,9 @@ static int MPID_Type_struct_alignsize(int count,
   MPI_SUCCESS on success, MPI errno on failure.
 @*/
 int MPID_Type_struct(int count,
-		     int *blocklength_array,
-		     MPI_Aint *displacement_array,
-		     MPI_Datatype *oldtype_array,
+		     const int *blocklength_array,
+		     const MPI_Aint *displacement_array,
+		     const MPI_Datatype *oldtype_array,
 		     MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;

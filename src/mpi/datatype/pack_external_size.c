@@ -51,7 +51,7 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Pack_external_size(char *datarep,
+int MPI_Pack_external_size(MPICH2_CONST char *datarep,
 			   int incount,
 			   MPI_Datatype datatype,
 			   MPI_Aint *size)

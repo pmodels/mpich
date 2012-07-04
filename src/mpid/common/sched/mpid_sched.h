@@ -29,9 +29,9 @@ enum MPIDU_Sched_entry_type {
 };
 
 struct MPIDU_Sched_send {
-    void *buf;
+    const void *buf;
     int count;
-    int *count_p;
+    const int *count_p;
     MPI_Datatype datatype;
     int dest;
     MPID_Comm *comm;
@@ -50,7 +50,7 @@ struct MPIDU_Sched_recv {
 };
 
 struct MPIDU_Sched_reduce {
-    void *inbuf;
+    const void *inbuf;
     void *inoutbuf;
     int count;
     MPI_Datatype datatype;
@@ -58,7 +58,7 @@ struct MPIDU_Sched_reduce {
 };
 
 struct MPIDU_Sched_copy {
-    void *inbuf;
+    const void *inbuf;
     int incount;
     MPI_Datatype intype;
     void *outbuf;

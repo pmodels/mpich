@@ -51,13 +51,13 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatter_intra ( 
-	void *sendbuf, 
-	int sendcnt, 
-	MPI_Datatype sendtype, 
-	void *recvbuf, 
-	int recvcnt, 
-	MPI_Datatype recvtype, 
-	int root, 
+	const void *sendbuf,
+	int sendcnt,
+	MPI_Datatype sendtype,
+	void *recvbuf,
+	int recvcnt,
+	MPI_Datatype recvtype,
+	int root,
 	MPID_Comm *comm_ptr,
         int *errflag )
 {
@@ -408,13 +408,13 @@ int MPIR_Scatter_intra (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatter_inter ( 
-	void *sendbuf, 
-	int sendcnt, 
-	MPI_Datatype sendtype, 
-	void *recvbuf, 
-	int recvcnt, 
-	MPI_Datatype recvtype, 
-	int root, 
+	const void *sendbuf,
+	int sendcnt,
+	MPI_Datatype sendtype,
+	void *recvbuf,
+	int recvcnt,
+	MPI_Datatype recvtype,
+	int root,
 	MPID_Comm *comm_ptr,
         int *errflag )
 {
@@ -567,7 +567,7 @@ int MPIR_Scatter_inter (
 #define FUNCNAME MPIR_Scatter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+int MPIR_Scatter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                  void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                  int root, MPID_Comm *comm_ptr, int *errflag)
 {
@@ -602,7 +602,7 @@ int MPIR_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 #define FUNCNAME MPIR_Scatter_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Scatter_impl(void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+int MPIR_Scatter_impl(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                       void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                       int root, MPID_Comm *comm_ptr, int *errflag)
 {
@@ -663,7 +663,7 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, 
+int MPI_Scatter(MPICH2_CONST void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 		void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, 
 		MPI_Comm comm)
 {

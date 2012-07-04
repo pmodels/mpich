@@ -8,7 +8,7 @@
 #include "adio.h"
 #include "adio_extern.h"
 
-void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, void *buf, int count,
+void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
                        MPI_Datatype buftype, int file_ptr_type,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code)

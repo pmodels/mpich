@@ -116,9 +116,9 @@ typedef int MPI_Fint;
 
 /* Section 9.2 */
 /* Begin Prototypes */
-int MPI_File_open(MPI_Comm, char *, int, MPI_Info, MPI_File *);
+int MPI_File_open(MPI_Comm, MPICH2_CONST char *, int, MPI_Info, MPI_File *);
 int MPI_File_close(MPI_File *);
-int MPI_File_delete(char *, MPI_Info);
+int MPI_File_delete(MPICH2_CONST char *, MPI_Info);
 int MPI_File_set_size(MPI_File, MPI_Offset);
 int MPI_File_preallocate(MPI_File, MPI_Offset);
 int MPI_File_get_size(MPI_File, MPI_Offset *);
@@ -129,7 +129,7 @@ int MPI_File_get_info(MPI_File, MPI_Info *);
 
 /* Section 9.3 */
 int MPI_File_set_view(MPI_File, MPI_Offset, MPI_Datatype,
-	         MPI_Datatype, char *, MPI_Info);
+	         MPI_Datatype, MPICH2_CONST char *, MPI_Info);
 int MPI_File_get_view(MPI_File, MPI_Offset *, 
                  MPI_Datatype *, MPI_Datatype *, char *);
 
@@ -138,9 +138,9 @@ int MPI_File_read_at(MPI_File, MPI_Offset, void *,
 	      int, MPI_Datatype, MPI_Status *);
 int MPI_File_read_at_all(MPI_File, MPI_Offset, void *,
 	      int, MPI_Datatype, MPI_Status *);
-int MPI_File_write_at(MPI_File, MPI_Offset, void *,
+int MPI_File_write_at(MPI_File, MPI_Offset, MPICH2_CONST void *,
 	      int, MPI_Datatype, MPI_Status *);
-int MPI_File_write_at_all(MPI_File, MPI_Offset, void *,
+int MPI_File_write_at_all(MPI_File, MPI_Offset, MPICH2_CONST void *,
 	      int, MPI_Datatype, MPI_Status *);
 
 /* nonblocking calls currently use MPIO_Request, because generalized
@@ -149,21 +149,21 @@ int MPI_File_write_at_all(MPI_File, MPI_Offset, void *,
 
 int MPI_File_iread_at(MPI_File, MPI_Offset, void *,
 	      int, MPI_Datatype, MPIO_Request *);
-int MPI_File_iwrite_at(MPI_File, MPI_Offset, void *,
+int MPI_File_iwrite_at(MPI_File, MPI_Offset, MPICH2_CONST void *,
 	      int, MPI_Datatype, MPIO_Request *);
 
 /* Section 9.4.3 */
 int MPI_File_read(MPI_File, void *, int, MPI_Datatype, MPI_Status *); 
 int MPI_File_read_all(MPI_File, void *, int, MPI_Datatype, MPI_Status *); 
-int MPI_File_write(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
-int MPI_File_write_all(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
+int MPI_File_write(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPI_Status *);
+int MPI_File_write_all(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPI_Status *);
 
 /* nonblocking calls currently use MPIO_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 
 int MPI_File_iread(MPI_File, void *, int, MPI_Datatype, MPIO_Request *); 
-int MPI_File_iwrite(MPI_File, void *, int, MPI_Datatype, MPIO_Request *);
+int MPI_File_iwrite(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPIO_Request *);
 
 int MPI_File_seek(MPI_File, MPI_Offset, int);
 int MPI_File_get_position(MPI_File, MPI_Offset *);
@@ -171,13 +171,13 @@ int MPI_File_get_byte_offset(MPI_File, MPI_Offset, MPI_Offset *);
 
 /* Section 9.4.4 */
 int MPI_File_read_shared(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
-int MPI_File_write_shared(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
+int MPI_File_write_shared(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPI_Status *);
 int MPI_File_iread_shared(MPI_File, void *, int, MPI_Datatype, MPIO_Request *);
-int MPI_File_iwrite_shared(MPI_File, void *, int, 
+int MPI_File_iwrite_shared(MPI_File, MPICH2_CONST void *, int,
 			   MPI_Datatype, MPIO_Request *);
 int MPI_File_read_ordered(MPI_File, void *, int, 
                           MPI_Datatype, MPI_Status *);
-int MPI_File_write_ordered(MPI_File, void *, int, 
+int MPI_File_write_ordered(MPI_File, MPICH2_CONST void *, int,
                            MPI_Datatype, MPI_Status *);
 int MPI_File_seek_shared(MPI_File, MPI_Offset, int);
 int MPI_File_get_position_shared(MPI_File, MPI_Offset *);
@@ -186,23 +186,23 @@ int MPI_File_get_position_shared(MPI_File, MPI_Offset *);
 int MPI_File_read_at_all_begin(MPI_File, MPI_Offset, void *,
                                int, MPI_Datatype);
 int MPI_File_read_at_all_end(MPI_File, void *, MPI_Status *);
-int MPI_File_write_at_all_begin(MPI_File, MPI_Offset, void *,
+int MPI_File_write_at_all_begin(MPI_File, MPI_Offset, MPICH2_CONST void *,
                                 int, MPI_Datatype);
-int MPI_File_write_at_all_end(MPI_File, void *, MPI_Status *);
+int MPI_File_write_at_all_end(MPI_File, MPICH2_CONST void *, MPI_Status *);
 int MPI_File_read_all_begin(MPI_File, void *, int, MPI_Datatype);
 int MPI_File_read_all_end(MPI_File, void *, MPI_Status *);
-int MPI_File_write_all_begin(MPI_File, void *, int, MPI_Datatype);
-int MPI_File_write_all_end(MPI_File, void *, MPI_Status *);
+int MPI_File_write_all_begin(MPI_File, MPICH2_CONST void *, int, MPI_Datatype);
+int MPI_File_write_all_end(MPI_File, MPICH2_CONST void *, MPI_Status *);
 int MPI_File_read_ordered_begin(MPI_File, void *, int, MPI_Datatype);
 int MPI_File_read_ordered_end(MPI_File, void *, MPI_Status *);
-int MPI_File_write_ordered_begin(MPI_File, void *, int, MPI_Datatype);
-int MPI_File_write_ordered_end(MPI_File, void *, MPI_Status *);
+int MPI_File_write_ordered_begin(MPI_File, MPICH2_CONST void *, int, MPI_Datatype);
+int MPI_File_write_ordered_end(MPI_File, MPICH2_CONST void *, MPI_Status *);
 
 /* Section 9.5.1 */
 int MPI_File_get_type_extent(MPI_File, MPI_Datatype, MPI_Aint *);
 
 /* Section 9.5.3 */
-int MPI_Register_datarep(char *,
+int MPI_Register_datarep(MPICH2_CONST char *,
 			 MPI_Datarep_conversion_function *,
 			 MPI_Datarep_conversion_function *,
 			 MPI_Datarep_extent_function *,
@@ -302,9 +302,9 @@ MPI_Info MPI_Info_f2c(MPI_Fint);
 
 
 /* Section 9.2 */
-int PMPI_File_open(MPI_Comm, char *, int, MPI_Info, MPI_File *);
+int PMPI_File_open(MPI_Comm, MPICH2_CONST char *, int, MPI_Info, MPI_File *);
 int PMPI_File_close(MPI_File *);
-int PMPI_File_delete(char *, MPI_Info);
+int PMPI_File_delete(MPICH2_CONST char *, MPI_Info);
 int PMPI_File_set_size(MPI_File, MPI_Offset);
 int PMPI_File_preallocate(MPI_File, MPI_Offset);
 int PMPI_File_get_size(MPI_File, MPI_Offset *);
@@ -315,7 +315,7 @@ int PMPI_File_get_info(MPI_File, MPI_Info *);
 
 /* Section 9.3 */
 int PMPI_File_set_view(MPI_File, MPI_Offset, 
-    MPI_Datatype, MPI_Datatype, char *, MPI_Info);
+    MPI_Datatype, MPI_Datatype, MPICH2_CONST char *, MPI_Info);
 int PMPI_File_get_view(MPI_File, MPI_Offset *, 
       MPI_Datatype *, MPI_Datatype *, char *);
 
@@ -324,9 +324,9 @@ int PMPI_File_read_at(MPI_File, MPI_Offset, void *,
 	      int, MPI_Datatype, MPI_Status *);
 int PMPI_File_read_at_all(MPI_File, MPI_Offset, void *,
 	      int, MPI_Datatype, MPI_Status *);
-int PMPI_File_write_at(MPI_File, MPI_Offset, void *,
+int PMPI_File_write_at(MPI_File, MPI_Offset, MPICH2_CONST void *,
 	      int, MPI_Datatype, MPI_Status *);
-int PMPI_File_write_at_all(MPI_File, MPI_Offset, void *,
+int PMPI_File_write_at_all(MPI_File, MPI_Offset, MPICH2_CONST void *,
 	      int, MPI_Datatype, MPI_Status *);
 
 /* nonblocking calls currently use MPIO_Request, because generalized
@@ -335,21 +335,21 @@ int PMPI_File_write_at_all(MPI_File, MPI_Offset, void *,
 
 int PMPI_File_iread_at(MPI_File, MPI_Offset, void *,
 	      int, MPI_Datatype, MPIO_Request *);
-int PMPI_File_iwrite_at(MPI_File, MPI_Offset, void *,
+int PMPI_File_iwrite_at(MPI_File, MPI_Offset, MPICH2_CONST void *,
 	      int, MPI_Datatype, MPIO_Request *);
 
 /* Section 9.4.3 */
 int PMPI_File_read(MPI_File, void *, int, MPI_Datatype, MPI_Status *); 
 int PMPI_File_read_all(MPI_File, void *, int, MPI_Datatype, MPI_Status *); 
-int PMPI_File_write(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
-int PMPI_File_write_all(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
+int PMPI_File_write(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPI_Status *);
+int PMPI_File_write_all(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPI_Status *);
 
 /* nonblocking calls currently use MPIO_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 
 int PMPI_File_iread(MPI_File, void *, int, MPI_Datatype, MPIO_Request *); 
-int PMPI_File_iwrite(MPI_File, void *, int, MPI_Datatype, MPIO_Request *);
+int PMPI_File_iwrite(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPIO_Request *);
 
 int PMPI_File_seek(MPI_File, MPI_Offset, int);
 int PMPI_File_get_position(MPI_File, MPI_Offset *);
@@ -357,13 +357,13 @@ int PMPI_File_get_byte_offset(MPI_File, MPI_Offset, MPI_Offset *);
 
 /* Section 9.4.4 */
 int PMPI_File_read_shared(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
-int PMPI_File_write_shared(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
+int PMPI_File_write_shared(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPI_Status *);
 int PMPI_File_iread_shared(MPI_File, void *, int, 
 			   MPI_Datatype, MPIO_Request *);
-int PMPI_File_iwrite_shared(MPI_File, void *, int, 
+int PMPI_File_iwrite_shared(MPI_File, MPICH2_CONST void *, int,
 			    MPI_Datatype, MPIO_Request *);
 int PMPI_File_read_ordered(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
-int PMPI_File_write_ordered(MPI_File, void *, int, MPI_Datatype, MPI_Status *);
+int PMPI_File_write_ordered(MPI_File, MPICH2_CONST void *, int, MPI_Datatype, MPI_Status *);
 int PMPI_File_seek_shared(MPI_File, MPI_Offset, int);
 int PMPI_File_get_position_shared(MPI_File, MPI_Offset *);
 
@@ -371,23 +371,23 @@ int PMPI_File_get_position_shared(MPI_File, MPI_Offset *);
 int PMPI_File_read_at_all_begin(MPI_File, MPI_Offset, void *,
                                int, MPI_Datatype);
 int PMPI_File_read_at_all_end(MPI_File, void *, MPI_Status *);
-int PMPI_File_write_at_all_begin(MPI_File, MPI_Offset, void *,
+int PMPI_File_write_at_all_begin(MPI_File, MPI_Offset, MPICH2_CONST void *,
                                 int, MPI_Datatype);
-int PMPI_File_write_at_all_end(MPI_File, void *, MPI_Status *);
+int PMPI_File_write_at_all_end(MPI_File, MPICH2_CONST void *, MPI_Status *);
 int PMPI_File_read_all_begin(MPI_File, void *, int, MPI_Datatype);
 int PMPI_File_read_all_end(MPI_File, void *, MPI_Status *);
-int PMPI_File_write_all_begin(MPI_File, void *, int, MPI_Datatype);
-int PMPI_File_write_all_end(MPI_File, void *, MPI_Status *);
+int PMPI_File_write_all_begin(MPI_File, MPICH2_CONST void *, int, MPI_Datatype);
+int PMPI_File_write_all_end(MPI_File, MPICH2_CONST void *, MPI_Status *);
 int PMPI_File_read_ordered_begin(MPI_File, void *, int, MPI_Datatype);
 int PMPI_File_read_ordered_end(MPI_File, void *, MPI_Status *);
-int PMPI_File_write_ordered_begin(MPI_File, void *, int, MPI_Datatype);
-int PMPI_File_write_ordered_end(MPI_File, void *, MPI_Status *);
+int PMPI_File_write_ordered_begin(MPI_File, MPICH2_CONST void *, int, MPI_Datatype);
+int PMPI_File_write_ordered_end(MPI_File, MPICH2_CONST void *, MPI_Status *);
 
 /* Section 9.5.1 */
 int PMPI_File_get_type_extent(MPI_File, MPI_Datatype, MPI_Aint *);
 
 /* Section 9.5.3 */
-int PMPI_Register_datarep(char *,
+int PMPI_Register_datarep(MPICH2_CONST char *,
 			 MPI_Datarep_conversion_function *,
 			 MPI_Datarep_conversion_function *,
 			 MPI_Datarep_extent_function *,

@@ -55,7 +55,7 @@ process (handle)
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_sub(MPI_Comm comm, int *remain_dims, MPI_Comm *comm_new)
+int MPI_Cart_sub(MPI_Comm comm, MPICH2_CONST int *remain_dims, MPI_Comm *comm_new)
 {
     int mpi_errno = MPI_SUCCESS, all_false;
     int ndims, key, color, ndims_in_subcomm, nnodes_in_subcomm, i, j, rank;

@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Pack_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Pack_impl(void *inbuf,
+int MPIR_Pack_impl(const void *inbuf,
                    int incount,
                    MPI_Datatype datatype,
                    void *outbuf,
@@ -142,7 +142,7 @@ int MPIR_Pack_impl(void *inbuf,
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Pack(void *inbuf,
+int MPI_Pack(MPICH2_CONST void *inbuf,
 	     int incount,
 	     MPI_Datatype datatype,
 	     void *outbuf,

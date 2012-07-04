@@ -55,7 +55,7 @@ Output Parameter:
 .N MPI_ERR_RANK
 .N MPI_ERR_EXHAUSTED
 @*/
-int MPI_Issend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPI_Issend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	       MPI_Comm comm, MPI_Request *request)
 {
     static const char FCNAME[] = "MPI_Issend";

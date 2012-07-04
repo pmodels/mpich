@@ -26,7 +26,8 @@
 #define FUNCNAME MPIR_Type_struct_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Type_struct_impl(int count, int blocklens[], MPI_Aint indices[], MPI_Datatype old_types[], MPI_Datatype *newtype)
+int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[],
+                          const MPI_Datatype old_types[], MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -143,9 +144,9 @@ for the structure foo
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_struct(int count,
-		    int blocklens[],
-		    MPI_Aint indices[],
-		    MPI_Datatype old_types[],
+		    MPICH2_CONST int blocklens[],
+		    MPICH2_CONST MPI_Aint indices[],
+		    MPICH2_CONST MPI_Datatype old_types[],
 		    MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;

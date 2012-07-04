@@ -68,13 +68,13 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgatherv_intra ( 
-    void *sendbuf, 
-    int sendcount,   
-    MPI_Datatype sendtype, 
-    void *recvbuf, 
-    int *recvcounts, 
-    int *displs,   
-    MPI_Datatype recvtype, 
+    const void *sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    void *recvbuf,
+    const int *recvcounts,
+    const int *displs,
+    MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -741,13 +741,13 @@ int MPIR_Allgatherv_intra (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgatherv_inter ( 
-    void *sendbuf, 
-    int sendcount,  
-    MPI_Datatype sendtype, 
-    void *recvbuf, 
-    int *recvcounts, 
-    int *displs,   
-    MPI_Datatype recvtype, 
+    const void *sendbuf,
+    int sendcount,
+    MPI_Datatype sendtype,
+    void *recvbuf,
+    const int *recvcounts,
+    const int *displs,
+    MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -870,8 +870,8 @@ int MPIR_Allgatherv_inter (
 #define FUNCNAME MPIR_Allgatherv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Allgatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                    void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype,
+int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                    void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
                     MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -906,9 +906,9 @@ int MPIR_Allgatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FUNCNAME MPIR_Allgatherv_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                         void *recvbuf, int *recvcounts, int *displs, MPI_Datatype recvtype,
-                         MPID_Comm *comm_ptr, int *errflag)
+int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                         void *recvbuf, const int *recvcounts, const int *displs,
+                         MPI_Datatype recvtype, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -987,8 +987,8 @@ Notes:
 .N MPI_ERR_COUNT
 .N MPI_ERR_TYPE
 @*/
-int MPI_Allgatherv(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
-                   void *recvbuf, int *recvcounts, int *displs, 
+int MPI_Allgatherv(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *displs,
                    MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

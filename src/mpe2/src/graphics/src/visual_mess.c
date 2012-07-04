@@ -322,7 +322,7 @@ int MPI_Finalize()
 }
 
 int  MPI_Bsend( buf, count, datatype, dest, tag, comm )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -346,7 +346,7 @@ MPI_Comm comm;
 }
 
 int  MPI_Bsend_init( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -442,7 +442,7 @@ MPI_Request * request;
 }
 
 int  MPI_Send_init( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -478,7 +478,7 @@ MPI_Request * request;
 }
 
 int  MPI_Ibsend( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -543,7 +543,7 @@ MPI_Request * request;
 }
 
 int  MPI_Irsend( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -579,7 +579,7 @@ MPI_Request * request;
 }
 
 int  MPI_Isend( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -615,7 +615,7 @@ MPI_Request * request;
 }
 
 int  MPI_Issend( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -676,7 +676,7 @@ MPI_Status * status;
 }
 
 int  MPI_Rsend( buf, count, datatype, dest, tag, comm )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -700,7 +700,7 @@ MPI_Comm comm;
 }
 
 int  MPI_Rsend_init( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -736,7 +736,7 @@ MPI_Request * request;
 }
 
 int  MPI_Send( buf, count, datatype, dest, tag, comm )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -760,7 +760,7 @@ MPI_Comm comm;
 }
 
 int  MPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status )
-void * sendbuf;
+MPICH2_CONST void * sendbuf;
 int sendcount;
 MPI_Datatype sendtype;
 int dest;
@@ -825,7 +825,7 @@ MPI_Status * status;
 }
 
 int  MPI_Ssend( buf, count, datatype, dest, tag, comm )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;
@@ -849,7 +849,7 @@ MPI_Comm comm;
 }
 
 int  MPI_Ssend_init( buf, count, datatype, dest, tag, comm, request )
-void * buf;
+MPICH2_CONST void * buf;
 int count;
 MPI_Datatype datatype;
 int dest;

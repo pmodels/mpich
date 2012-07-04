@@ -5,7 +5,7 @@
 #include "collchk.h" 
 
 int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, 
-                      MPI_Datatype filetype, char *datarep, MPI_Info info)
+                      MPI_Datatype filetype, MPICH2_CONST char *datarep, MPI_Info info)
 {
     int g2g = 1;
     char call[COLLCHK_SM_STRLEN];

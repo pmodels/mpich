@@ -45,7 +45,7 @@
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_set_name(MPI_Comm comm, char *comm_name)
+int MPI_Comm_set_name(MPI_Comm comm, MPICH2_CONST char *comm_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

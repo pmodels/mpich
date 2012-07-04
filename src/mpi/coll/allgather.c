@@ -75,12 +75,12 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgather_intra ( 
-    void *sendbuf, 
-    int sendcount, 
+    const void *sendbuf,
+    int sendcount,
     MPI_Datatype sendtype,
-    void *recvbuf, 
-    int recvcount, 
-    MPI_Datatype recvtype, 
+    void *recvbuf,
+    int recvcount,
+    MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
     int *errflag )
 {
@@ -615,12 +615,12 @@ int MPIR_Allgather_intra (
 /* not declared static because a machine-specific function may call this one 
    in some cases */
 int MPIR_Allgather_inter ( 
-    void *sendbuf, 
-    int sendcount, 
+    const void *sendbuf,
+    int sendcount,
     MPI_Datatype sendtype,
-    void *recvbuf, 
-    int recvcount, 
-    MPI_Datatype recvtype, 
+    void *recvbuf,
+    int recvcount,
+    MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
     int *errflag)
 {
@@ -752,7 +752,7 @@ int MPIR_Allgather_inter (
 #define FUNCNAME MPIR_Allgather
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    MPID_Comm *comm_ptr, int *errflag)
 {
@@ -786,7 +786,7 @@ fn_fail:
 #define FUNCNAME MPIR_Allgather_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Allgather_impl(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         MPID_Comm *comm_ptr, int *errflag)
 {
@@ -863,8 +863,8 @@ Notes:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Allgather(void *sendbuf, int sendcount, MPI_Datatype sendtype, 
-                  void *recvbuf, int recvcount, MPI_Datatype recvtype, 
+int MPI_Allgather(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

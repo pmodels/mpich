@@ -60,7 +60,6 @@ int MPIDI_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     MPIU_UNREFERENCED_ARG(info);
 
     if(initRMAoptions) {
-	int rc;
 	MPIU_THREADSAFE_INIT_BLOCK_BEGIN(initRMAoptions);
 #ifdef USE_MPIU_INSTR
 	/* Define all instrumentation handles used in the CH3 RMA here*/
@@ -240,7 +239,7 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
 #define FUNCNAME MPIDI_Put
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Put(void *origin_addr, int origin_count, MPI_Datatype
+int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,
             int target_count, MPI_Datatype target_datatype, MPID_Win *win_ptr)
 {
@@ -290,7 +289,10 @@ int MPIDI_Put(void *origin_addr, int origin_count, MPI_Datatype
 	/* FIXME: For contig and very short operations, use a streamlined op */
 	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_PUT;
-	new_ptr->origin_addr = origin_addr;
+        /* Cast away const'ness for the origin address, as the
+         * MPIDI_RMA_ops structure is used for both PUT and GET like
+         * operations */
+	new_ptr->origin_addr = (void *) origin_addr;
 	new_ptr->origin_count = origin_count;
 	new_ptr->origin_datatype = origin_datatype;
 	new_ptr->target_rank = target_rank;
@@ -425,7 +427,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 #define FUNCNAME MPIDI_Accumulate
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
+int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                     origin_datatype, int target_rank, MPI_Aint target_disp,
                     int target_count, MPI_Datatype target_datatype, MPI_Op op,
                     MPID_Win *win_ptr)
@@ -478,7 +480,9 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 	
 	if (origin_predefined && target_predefined)
 	{    
-	    (*uop)(origin_addr, (char *) win_ptr->base + win_ptr->disp_unit *
+            /* Cast away const'ness for origin_address in order to
+             * avoid changing the prototype for MPI_User_function */
+	    (*uop)((void *) origin_addr, (char *) win_ptr->base + win_ptr->disp_unit *
 		   target_disp, &target_count, &target_datatype);
 	}
 	else
@@ -491,7 +495,8 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 	    int vec_len, i, type_size, count;
 	    MPI_Datatype type;
 	    MPI_Aint true_lb, true_extent, extent;
-	    void *tmp_buf=NULL, *source_buf, *target_buf;
+	    void *tmp_buf=NULL, *target_buf;
+            const void *source_buf;
 	    
 	    if (origin_datatype != target_datatype)
 	    {
@@ -574,7 +579,9 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 	    new_ptr->next = NULL;
 	    new_ptr->type = MPIDI_RMA_ACC_CONTIG;
 	    /* Only the information needed for the contig/predefined acc */
-	    new_ptr->origin_addr = origin_addr;
+            /* Cast away const'ness for origin_address as
+             * MPIDI_RMA_ops contain both PUT and GET like ops */
+	    new_ptr->origin_addr = (void *) origin_addr;
 	    new_ptr->origin_count = origin_count;
 	    new_ptr->origin_datatype = origin_datatype;
 	    new_ptr->target_rank = target_rank;
@@ -589,7 +596,9 @@ int MPIDI_Accumulate(void *origin_addr, int origin_count, MPI_Datatype
 	MPIU_INSTR_DURATION_START(rmaqueue_set);
 	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_ACCUMULATE;
-	new_ptr->origin_addr = origin_addr;
+        /* Cast away const'ness for origin_address as MPIDI_RMA_ops
+         * contain both PUT and GET like ops */
+	new_ptr->origin_addr = (void *) origin_addr;
 	new_ptr->origin_count = origin_count;
 	new_ptr->origin_datatype = origin_datatype;
 	new_ptr->target_rank = target_rank;

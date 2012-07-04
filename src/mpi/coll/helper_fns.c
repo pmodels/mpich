@@ -44,7 +44,7 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 #define FUNCNAME MPIC_Send
 #undef FCNAME
 #define FCNAME "MPIC_Send"
-int MPIC_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
               MPI_Comm comm)
 {
     int mpi_errno, context_id;
@@ -127,7 +127,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 #define FUNCNAME MPIC_Ssend
 #undef FCNAME
 #define FCNAME "MPIC_Ssend"
-int MPIC_Ssend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                MPI_Comm comm)
 {
     int mpi_errno, context_id;
@@ -165,7 +165,7 @@ int MPIC_Ssend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 #define FUNCNAME MPIC_Sendrecv
 #undef FCNAME
 #define FCNAME "MPIC_Sendrecv"
-int MPIC_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   int dest, int sendtag, void *recvbuf, int recvcount,
                   MPI_Datatype recvtype, int source, int recvtag,
                   MPI_Comm comm, MPI_Status *status) 
@@ -312,7 +312,7 @@ fn_fail:
 #define FUNCNAME MPIR_Localcopy
 #undef FCNAME
 #define FCNAME "MPIR_Localcopy"
-int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -456,7 +456,7 @@ int MPIR_Localcopy(void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FUNCNAME MPIC_Isend
 #undef FCNAME
 #define FCNAME "MPIC_Isend"
-int MPIC_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
               MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno, context_id;
@@ -574,7 +574,7 @@ int MPIC_Wait(MPID_Request * request_ptr)
 #define FUNCNAME MPIC_Send_ft
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Send_ft(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Send_ft(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                  MPI_Comm comm, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -645,7 +645,7 @@ int MPIC_Recv_ft(void *buf, int count, MPI_Datatype datatype, int source, int ta
 #define FUNCNAME MPIC_Ssend_ft
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Ssend_ft(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Ssend_ft(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                   MPI_Comm comm, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -671,7 +671,7 @@ int MPIC_Ssend_ft(void *buf, int count, MPI_Datatype datatype, int dest, int tag
 #define FUNCNAME MPIC_Sendrecv_ft
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Sendrecv_ft(void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIC_Sendrecv_ft(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      int dest, int sendtag, void *recvbuf, int recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
                      MPI_Comm comm, MPI_Status *status, int *errflag)
@@ -785,7 +785,7 @@ int MPIC_Sendrecv_replace_ft(void *buf, int count, MPI_Datatype datatype,
 #define FUNCNAME MPIC_Isend_ft
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Isend_ft(void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Isend_ft(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                   MPI_Comm comm, MPI_Request *request, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -4,8 +4,8 @@
 */
 #include "collchk.h" 
 
-int MPI_Gatherv(void *sbuff, int scnt, MPI_Datatype stype,
-                void *rbuff, int *rcnts, int *displs, MPI_Datatype rtype,
+int MPI_Gatherv(MPICH2_CONST void *sbuff, int scnt, MPI_Datatype stype,
+                void *rbuff, MPICH2_CONST int *rcnts, MPICH2_CONST int *displs, MPI_Datatype rtype,
                 int root, MPI_Comm comm)
 {
     int             g2g = 1, rank;

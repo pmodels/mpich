@@ -49,14 +49,14 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatterv ( 
-	void *sendbuf, 
-	int *sendcnts, 
-	int *displs, 
-	MPI_Datatype sendtype, 
-	void *recvbuf, 
-	int recvcnt,  
-	MPI_Datatype recvtype, 
-	int root, 
+	const void *sendbuf,
+	const int *sendcnts,
+	const int *displs,
+	MPI_Datatype sendtype,
+	void *recvbuf,
+	int recvcnt,
+	MPI_Datatype recvtype,
+	int root,
 	MPID_Comm *comm_ptr,
         int *errflag )
 {
@@ -169,8 +169,8 @@ fn_fail:
 #define FUNCNAME MPIR_Scatterv_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Scatterv_impl(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendtype,
-                       void *recvbuf, int recvcnt, MPI_Datatype recvtype,
+int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcnts, const int *displs,
+                       MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                        int root, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -232,10 +232,10 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Scatterv( void *sendbuf, int *sendcnts, int *displs, 
-		  MPI_Datatype sendtype, void *recvbuf, int recvcnt,
-		  MPI_Datatype recvtype,
-		  int root, MPI_Comm comm)
+int MPI_Scatterv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcnts, MPICH2_CONST int *displs,
+                 MPI_Datatype sendtype, void *recvbuf, int recvcnt,
+                 MPI_Datatype recvtype,
+                 int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

@@ -83,7 +83,7 @@ delivered.)
 
 .seealso: MPI_Buffer_attach, MPI_Ibsend, MPI_Bsend_init
 @*/
-int MPI_Bsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, 
+int MPI_Bsend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	      MPI_Comm comm)
 {
     static const char FCNAME[] = "MPI_Bsend";
