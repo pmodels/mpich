@@ -1114,7 +1114,7 @@ int MPIDI_CH3U_Comm_FinishPending( MPID_Comm * );
 
 /* This structure defines a module that handles the routines that 
    work with MPI-2 RMA ops */
-typedef struct MPIDI_RMA_Ops {
+typedef struct MPIDI_RMAFns {
     int (*Win_create)(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
 		      MPID_Win **, struct MPIDI_RMA_Ops *);
     int (*Win_free)(MPID_Win **);
