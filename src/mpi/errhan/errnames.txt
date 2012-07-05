@@ -1462,6 +1462,40 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpix_iexscan: MPIX_Iexscan failed
 **mpix_iexscan %p %p %d %D %O %C %p: MPIX_Iexscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
 
+# SCIF netmod functions
+
+**scif_open:scif_open failed
+**scif_open %s:scif_open failed (scif_open failed with error '%s')
+**scif_bind:scif_bind failed
+**scif_bind %s:scif_bind failed (scif_bind failed with error '%s')
+**scif_listen:scif_listen failed
+**scif_listen %s:scif_listen failed (scif_listen failed with error '%s')
+**scif_connect:scif_connect failed
+**scif_connect %s:scif_connect failed (scif_connect failed with error '%s')
+**scif_accept:scif_accept failed
+**scif_accept %s:scif_accept failed (scif_accept failed with error '%s')
+**scif_send:scif_send failed
+**scif_send %s:scif_send failed (scif_send failed with error '%s')
+**scif_recv:scif_recv failed
+**scif_recv %s:scif_recv failed (scif_recv failed with error '%s')
+**scif_get_nodeIDs:scif_get_nodeIDs failed
+**scif_get_nodeIDs %s %d:scif_get_nodeIDs failed (scif_get_nodeIDs failed with error '%s', error number = %d)
+**scif_init_shmsend:failed to init shared memory for send
+**scif_init_shmsend %s:failed to init shared memory for send (scif_init_shmsend failed with error '%s')
+**scif_init_shmrecv:failed to init shared memory for recv
+**scif_init_shmrecv %s:failed to init shared memory for recv (scif_init_shmrecv failed with error '%s')
+**argstr_missingnode:failed to get node from business card
+**scif_writev:scif_writev failed
+**scif_writev %s:scif_writev failed (scif_writev failed with error '%s')
+**scif_read:scif_read failed
+**scif_scif_read %s:scif_scif_read failed (scif_scif_read failed with error '%s')
+**scif_readv:scif_readv failed
+**scif_scif_readv %s:scif_scif_readv (scif_scif_readv failed with error '%s')
+**scif_poll_send:scif_poll_send failed
+**scif_poll_send %s:scif_poll_send failed (scif_poll_send failed with error '%s')
+**poll error:poll error
+**loadsendiov:sendiov failed
+
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

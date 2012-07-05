@@ -26,4 +26,3 @@ noinst_HEADERS +=                                                          \
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/nemesis/src/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/nemesis/netmod/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/nemesis/nemesis/utils/Makefile.mk
-
