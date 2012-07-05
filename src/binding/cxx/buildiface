@@ -1647,6 +1647,7 @@ sub clean_args {
     my $comma = "";
     for $parm (split(',',$args)) {
 	# Remove any leading or trailing spaces
+	$parm =~ s/^MPICH2_CONST\s//;  # Remove MPICH2_CONST if present
 	$parm =~ s/^\s*//;
 	$parm =~ s/\s*$//;
 	# Handle parameters with parameter names

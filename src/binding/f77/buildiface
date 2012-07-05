@@ -4515,6 +4515,7 @@ sub ReadAndProcessInterface {
                 }
                 $args =~ s/\)\s*;//g;
                 $args =~ s/[\r\n]*//g;
+		$args =~ s/MPICH2_CONST\s//g;
                 # remove qualifiers from args
 	    ### TEMP - REMEMBER const because we may need it later	    
                 #$args =~ s/\s*const\s+//g;
@@ -5286,6 +5287,7 @@ sub print_fint_to_int_decls {
     }
 
     foreach $parm (@parms) {
+	$parm =~ s/^MPICH2_CONST\s//;  # Remove MPICH2_CONST if present
 	$parm =~ s/^const\s//;  # Remove const if present
 	# Remove variable name if present in an array arg
 	if ($parm =~ /(.*)\s+(\w+)\[\]/) {
