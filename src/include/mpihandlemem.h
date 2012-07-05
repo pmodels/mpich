@@ -90,15 +90,17 @@ const char *MPIU_Handle_get_kind_str(int kind);
 #define HANDLE_GET_KIND(a) (((unsigned)(a)&HANDLE_KIND_MASK)>>HANDLE_KIND_SHIFT)
 #define HANDLE_SET_KIND(a,kind) ((a)|((kind)<<HANDLE_KIND_SHIFT))
 
-/* For indirect, the remainder of the handle has a block and index */
+/* For indirect, the remainder of the handle has a block and index within that
+ * block */
 #define HANDLE_INDIRECT_SHIFT 16
 #define HANDLE_BLOCK(a) (((a)& 0x03FF0000) >> HANDLE_INDIRECT_SHIFT)
 #define HANDLE_BLOCK_INDEX(a) ((a) & 0x0000FFFF)
 
-/* Handle block is between 1 and 1024 *elements* */
-#define HANDLE_BLOCK_SIZE 256
-/* Index size is bewtween 1 and 65536 *elements* */
-#define HANDLE_BLOCK_INDEX_SIZE 1024
+/* Number of blocks is between 1 and 1024 */
+#define HANDLE_NUM_BLOCKS 512
+/* Number of objects in a block is bewtween 1 and 65536 (each obj has an index
+ * within its block) */
+#define HANDLE_NUM_INDICES 16384
 
 /* For direct, the remainder of the handle is the index into a predefined 
    block */
