@@ -2,6 +2,10 @@
                                Changes in 1.5
 ===============================================================================
 
+ # OVERALL: MPI-3 const support has been added to mpi.h, although it is disabled
+   by default.  It can be enabled on a per-translation unit basis with
+   "#define MPICH2_CONST const".
+
  # OVERALL: nemesis now supports an "--enable-yield=..." configure option for
    better performance/behavior when oversubscribing processes to cores.  Some
    form of this option is enabled by default on Linux, Darwin, and systems that
@@ -58,11 +62,11 @@
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
-     svn log -r8478:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.5b1
+     svn log -r8478:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich2-1.5b2
 
      ... or at the following link:
 
-     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.5b1?action=follow_copy&rev=HEAD&stop_rev=8478&mode=follow_copy
+     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich2-1.5b2?action=follow_copy&rev=HEAD&stop_rev=8478&mode=follow_copy
 
 
 ===============================================================================
