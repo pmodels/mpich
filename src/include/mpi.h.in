@@ -222,8 +222,10 @@ extern int * const MPI_UNWEIGHTED;
 #define MPI_LOCK_EXCLUSIVE  234
 #define MPI_LOCK_SHARED     235
 
+#ifndef MPICH2_CONST
 /* #define MPICH2_CONST    const */
 #define MPICH2_CONST
+#endif
 
 /* C functions */
 typedef void (MPI_Handler_function) ( MPI_Comm *, int *, ... );
