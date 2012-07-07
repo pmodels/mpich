@@ -2,10 +2,6 @@
                                Changes in 1.5
 ===============================================================================
 
- # OVERALL: MPI-3 const support has been added to mpi.h, although it is disabled
-   by default.  It can be enabled on a per-translation unit basis with
-   "#define MPICH2_CONST const".
-
  # OVERALL: nemesis now supports an "--enable-yield=..." configure option for
    better performance/behavior when oversubscribing processes to cores.  Some
    form of this option is enabled by default on Linux, Darwin, and systems that
@@ -13,6 +9,10 @@
 
  # OVERALL: added support for Intel Many Integrated Core (MIC)
    architecture: shared memory, TCP/IP, and SCIF based communication.
+
+ # MPI-3: const support has been added to mpi.h, although it is
+   disabled by default.  It can be enabled on a per-translation unit
+   basis with "#define MPICH2_CONST const".
 
  # MPI-3: the new MPI-3 nonblocking collectives functions are now available as
    "MPIX_" functions (e.g. "MPIX_Ibcast").
