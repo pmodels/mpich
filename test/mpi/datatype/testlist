@@ -44,3 +44,4 @@ zeroblks 1
 struct-derived-zeros 1
 struct-verydeep 1
 get-elements 1
+hindexed_block 1 mpiversion=3.0
