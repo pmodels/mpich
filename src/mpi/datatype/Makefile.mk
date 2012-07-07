@@ -44,6 +44,7 @@ mpi_sources +=                                   \
     src/mpi/datatype/pack_external_size.c        \
     src/mpi/datatype/unpack_external.c           \
     src/mpi/datatype/type_create_indexed_block.c \
+    src/mpi/datatype/type_create_hindexed_block.c \
     src/mpi/datatype/type_create_resized.c       \
     src/mpi/datatype/type_create_darray.c        \
     src/mpi/datatype/type_create_subarray.c

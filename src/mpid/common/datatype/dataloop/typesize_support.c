@@ -192,6 +192,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 	 combiner == MPI_COMBINER_HVECTOR_INTEGER ||
 	 combiner == MPI_COMBINER_HVECTOR ||
 	 combiner == MPI_COMBINER_INDEXED_BLOCK ||
+	 combiner == MPIX_COMBINER_HINDEXED_BLOCK ||
 	 combiner == MPI_COMBINER_INDEXED ||
 	 combiner == MPI_COMBINER_HINDEXED_INTEGER ||
 	 combiner == MPI_COMBINER_STRUCT_INTEGER ||
@@ -284,6 +285,28 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 	    for (i=1; i < ints[0]; i++) {
 		DLOOP_DATATYPE_BLOCK_LB_UB(ints[1] /* blklen */,
 					   (DLOOP_Offset) ints[i+2] * extent /* disp */,
+					   lb, ub, extent,
+					   tmp_lb, tmp_ub);
+		if (tmp_lb < min_lb) min_lb = tmp_lb;
+		if (tmp_ub > max_ub) max_ub = tmp_ub;
+	    }
+	    tfp->size    = (DLOOP_Offset) ints[0] * (DLOOP_Offset) ints[1] * size;
+	    tfp->lb      = min_lb;
+	    tfp->ub      = max_ub;
+	    tfp->true_lb = min_lb + (true_lb - lb);
+	    tfp->true_ub = max_ub + (true_ub - ub);
+	    tfp->extent  = tfp->ub - tfp->lb;
+	    break;
+	case MPIX_COMBINER_HINDEXED_BLOCK:
+	    /* prime min_lb and max_ub */
+	    DLOOP_DATATYPE_BLOCK_LB_UB(ints[1] /* blklen */,
+				       (DLOOP_Offset) ints[2] /* disp */,
+				       lb, ub, extent,
+				       min_lb, max_ub);
+
+	    for (i=1; i < ints[0]; i++) {
+		DLOOP_DATATYPE_BLOCK_LB_UB(ints[1] /* blklen */,
+					   (DLOOP_Offset) ints[i+2] /* disp */,
 					   lb, ub, extent,
 					   tmp_lb, tmp_ub);
 		if (tmp_lb < min_lb) min_lb = tmp_lb;

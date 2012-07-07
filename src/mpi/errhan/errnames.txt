@@ -1331,6 +1331,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_create_hvector %d %d %d %D %p:MPI_Type_create_hvector(count=%d, blocklength=%d, stride=%d, %D, newtype=%p) failed
 **mpi_type_create_indexed_block:MPI_Type_create_indexed_block failed
 **mpi_type_create_indexed_block %d %d %p %D %p:MPI_Type_create_indexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
+**mpi_type_create_hindexed_block:MPIX_Type_create_hindexed_block failed
+**mpi_type_create_hindexed_block %d %d %p %D %p:MPIX_Type_create_hindexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
 **mpi_type_create_resized:MPI_Type_create_resized failed
 **mpi_type_create_resized %D %L %L %p:MPI_Type_create_resized(%D, lb=%L, extent=%L, newtype=%p) failed
 **mpi_type_create_struct:MPI_Type_create_struct failed

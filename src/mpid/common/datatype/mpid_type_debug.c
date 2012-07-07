@@ -395,6 +395,7 @@ char *MPIDU_Datatype_combiner_to_string(int combiner)
     static char c_hvector_integer[]  = "hvector_integer";
     static char c_hindexed_integer[] = "hindexed_integer";
     static char c_indexed_block[]    = "indexed_block";
+    static char c_hindexed_block[]   = "hindexed_block";
     static char c_struct_integer[]   = "struct_integer";
     static char c_subarray[]         = "subarray";
     static char c_darray[]           = "darray";
@@ -414,6 +415,7 @@ char *MPIDU_Datatype_combiner_to_string(int combiner)
     if (combiner == MPI_COMBINER_HVECTOR_INTEGER)  return c_hvector_integer;
     if (combiner == MPI_COMBINER_HINDEXED_INTEGER) return c_hindexed_integer;
     if (combiner == MPI_COMBINER_INDEXED_BLOCK)    return c_indexed_block;
+    if (combiner == MPIX_COMBINER_HINDEXED_BLOCK)  return c_hindexed_block;
     if (combiner == MPI_COMBINER_STRUCT_INTEGER)   return c_struct_integer;
     if (combiner == MPI_COMBINER_SUBARRAY)         return c_subarray;
     if (combiner == MPI_COMBINER_DARRAY)           return c_darray;

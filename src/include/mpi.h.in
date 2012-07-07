@@ -342,14 +342,15 @@ enum MPIR_Combiner_enum {
     MPI_COMBINER_HINDEXED_INTEGER = 8, 
     MPI_COMBINER_HINDEXED         = 9, 
     MPI_COMBINER_INDEXED_BLOCK    = 10, 
-    MPI_COMBINER_STRUCT_INTEGER   = 11,
-    MPI_COMBINER_STRUCT           = 12, 
-    MPI_COMBINER_SUBARRAY         = 13,
-    MPI_COMBINER_DARRAY           = 14,
-    MPI_COMBINER_F90_REAL         = 15, 
-    MPI_COMBINER_F90_COMPLEX      = 16, 
-    MPI_COMBINER_F90_INTEGER      = 17, 
-    MPI_COMBINER_RESIZED          = 18 
+    MPIX_COMBINER_HINDEXED_BLOCK  = 11,
+    MPI_COMBINER_STRUCT_INTEGER   = 12,
+    MPI_COMBINER_STRUCT           = 13,
+    MPI_COMBINER_SUBARRAY         = 14,
+    MPI_COMBINER_DARRAY           = 15,
+    MPI_COMBINER_F90_REAL         = 16,
+    MPI_COMBINER_F90_COMPLEX      = 17,
+    MPI_COMBINER_F90_INTEGER      = 18,
+    MPI_COMBINER_RESIZED          = 19
 };
 
 /* for info */
@@ -961,6 +962,7 @@ int MPI_Type_create_hindexed(int, MPICH2_CONST int [], MPICH2_CONST MPI_Aint [],
 int MPI_Type_create_hvector(int, int, MPI_Aint, MPI_Datatype, MPI_Datatype *);
 int MPI_Type_create_indexed_block(int, int, MPICH2_CONST int [], MPI_Datatype,
                                   MPI_Datatype *);
+int MPIX_Type_create_hindexed_block(int, int, const MPI_Aint [], MPI_Datatype, MPI_Datatype *);
 int MPI_Type_create_resized(MPI_Datatype, MPI_Aint, MPI_Aint, MPI_Datatype *);
 int MPI_Type_create_struct(int, MPICH2_CONST int [], MPICH2_CONST MPI_Aint [],
                            MPICH2_CONST MPI_Datatype [], MPI_Datatype *);
@@ -1336,6 +1338,7 @@ int PMPI_Type_create_hindexed(int, MPICH2_CONST int [], MPICH2_CONST MPI_Aint []
 int PMPI_Type_create_hvector(int, int, MPI_Aint, MPI_Datatype, MPI_Datatype *);
 int PMPI_Type_create_indexed_block(int, int, MPICH2_CONST int [], MPI_Datatype,
                                   MPI_Datatype *);
+int PMPIX_Type_create_hindexed_block(int, int, const MPI_Aint [], MPI_Datatype, MPI_Datatype *);
 int PMPI_Type_create_resized(MPI_Datatype, MPI_Aint, MPI_Aint, MPI_Datatype *);
 int PMPI_Type_create_struct(int, MPICH2_CONST int [], MPICH2_CONST MPI_Aint [],
                             MPICH2_CONST MPI_Datatype [], MPI_Datatype *);

@@ -210,6 +210,7 @@ PMPI_LOCAL int MPIR_Type_get_elements(int *bytes_p,
 		return MPIR_Type_get_elements(bytes_p, count * (*ints), *types);
 		break;
 	    case MPI_COMBINER_INDEXED_BLOCK:
+	    case MPIX_COMBINER_HINDEXED_BLOCK:
 		/* count is first in ints array, blocklength is second */
 		return MPIR_Type_get_elements(bytes_p,
 					      count * ints[0] * ints[1],

@@ -14,6 +14,8 @@
    disabled by default.  It can be enabled on a per-translation unit
    basis with "#define MPICH2_CONST const".
 
+ # MPI-3: added support for MPIX_Type_create_hindexed_block.
+
  # MPI-3: the new MPI-3 nonblocking collectives functions are now available as
    "MPIX_" functions (e.g. "MPIX_Ibcast").
 

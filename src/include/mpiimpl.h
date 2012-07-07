@@ -4077,6 +4077,9 @@ int MPIR_Type_create_indexed_block_impl(int count,
                                         const int array_of_displacements[],
                                         MPI_Datatype oldtype,
                                         MPI_Datatype *newtype);
+int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
+                                         const MPI_Aint array_of_displacements[],
+                                         MPI_Datatype oldtype, MPI_Datatype *newtype);
 int MPIR_Type_contiguous_impl(int count,
                               MPI_Datatype old_type,
                               MPI_Datatype *new_type_p);

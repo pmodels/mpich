@@ -251,6 +251,8 @@
 /* #define MPI_Type_create_darray PMPI_Type_create_darray */
 #undef MPI_Type_create_indexed_block
 #define MPI_Type_create_indexed_block PMPI_Type_create_indexed_block
+#undef MPIX_Type_create_hindexed_block
+#define MPIX_Type_create_indexed_block PMPIX_Type_create_hindexed_block
 /* #define MPI_Type_create_subarray PMPI_Type_create_subarray */
 #undef MPI_Type_extent
 #define MPI_Type_extent PMPI_Type_extent
