@@ -3597,6 +3597,7 @@ if ($write_mpif) {
 	if ($attrval =~ /^0x/) { $attrval = hex $attrval; }
 	$attrval++;
 	$attrval = "0x" . sprintf "%x", $attrval;
+	print "$key is now $attrval\n" if $debug;
 	$mpidef{"MPI_$key"} = $attrval;
 	&print_mpif_int( "MPI_$key" );
     } 
