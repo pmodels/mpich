@@ -1847,10 +1847,18 @@ extern Datatype TWOINTEGER;
 	else            { print $OUTFD ";\n"; }
     }
     print $OUTFD "#endif // IO\n";
+
     # Some modes are for RMA, not I/O
     foreach $int (NOCHECK,NOPRECEDE, NOPUT, NOSTORE, NOSUCCEED) {
 	print $OUTFD "${extern}const int MODE_$int";
 	if ($giveValue) { print $OUTFD " = MPI_MODE_$int;\n"; }
+	else            { print $OUTFD ";\n"; }
+    }
+
+    # Modes for comm_split_type
+    foreach $int (SHARED) {
+	print $OUTFD "${extern}const int COMM_TYPE_$int";
+	if ($giveValue) { print $OUTFD " = MPIX_COMM_TYPE_$int;\n"; }
 	else            { print $OUTFD ";\n"; }
     }
 
@@ -1863,6 +1871,13 @@ extern Datatype TWOINTEGER;
 	if ($giveValue) { print $OUTFD " = MPI_COMBINER_$int;\n"; }
 	else            { print $OUTFD ";\n"; }
     }
+    # FIXME: Merge with the above list when it's no longer MPIX_
+    foreach $int (HINDEXED_BLOCK) {
+	print $OUTFD "${extern}const int COMBINER_$int";
+	if ($giveValue) { print $OUTFD " = MPIX_COMBINER_$int;\n"; }
+	else            { print $OUTFD ";\n"; }
+    }
+
     # MPI Thread levels
     foreach $int (FUNNELED, MULTIPLE, SERIALIZED, SINGLE) {
 	print $OUTFD "${extern}const int THREAD_$int";

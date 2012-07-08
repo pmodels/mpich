@@ -3597,7 +3597,6 @@ if ($write_mpif) {
 	if ($attrval =~ /^0x/) { $attrval = hex $attrval; }
 	$attrval++;
 	$attrval = "0x" . sprintf "%x", $attrval;
-	print "$key is now $attrval\n" if $debug;
 	$mpidef{"MPI_$key"} = $attrval;
 	&print_mpif_int( "MPI_$key" );
     } 
@@ -3695,6 +3694,10 @@ if ($write_mpif) {
                   F90_COMPLEX, F90_INTEGER, RESIZED) {
 	&print_mpif_int( "MPI_COMBINER_$key" );
     }
+    # FIXME: Merge with the above list when it's no longer MPIX_
+    foreach $key (HINDEXED_BLOCK) {
+	&print_mpif_int( "MPIX_COMBINER_$key" );
+    }
     # Typeclasses
     foreach $key (REAL, INTEGER, COMPLEX) {
 	&print_mpif_int( "MPI_TYPECLASS_$key" );
@@ -3703,6 +3706,11 @@ if ($write_mpif) {
     # RMA Asserts
     foreach $mode (NOCHECK, NOSTORE, NOPUT, NOPRECEDE, NOSUCCEED) {
 	&print_mpif_int( "MPI_MODE_$mode" );
+    }
+
+    # comm_split_types
+    foreach $type (SHARED) {
+	&print_mpif_int( "MPIX_COMM_TYPE_$type" );
     }
 
     # Thread values
@@ -4674,7 +4682,7 @@ sub ReadInterfaceForDefinitions {
 	}
 
 	# Use \S instead of [^\s].  See the comment above
-	if (/^\s*#\s*define\s+(MPI_[A-Za-z_0-9]*)\s+(\S+)(.*)/) {
+	if (/^\s*#\s*define\s+(MPI[X]*_[A-Za-z_0-9]*)\s+(\S+)(.*)/) {
 	    my $name      = $1;
 	    my $val       = $2;
 	    my $remainder = $3;
@@ -4713,7 +4721,7 @@ sub ReadInterfaceForDefinitions {
                 $linecount++;
             }
 	    # Now process for names and values
-	    while ( ($enum_line =~ /\s*(MPI_[A-Z_0-9]*)\s*=\s*([a-fx0-9]*)(.*)/ ) ){
+	    while (($enum_line =~ /\s*(MPI[X]*_[A-Z_0-9]*)\s*=\s*([a-fx0-9]*)(.*)/)) {
 		$mpidef{$1} = $2;
 		$mpidefFile{$1} = "$prototype_file:$linecount";
 		$enum_line = $3;
@@ -4734,7 +4742,7 @@ sub ReadInterfaceForDefinitions {
                 $linecount++;
             }
 	    # Now process for names and values
-	    while ( ($enum_line =~ /\s*(MPI_[A-Z_0-9]*)\s*=\s*([a-fx0-9]*)(.*)/ ) ){
+	    while (($enum_line =~ /\s*(MPI[X]*_[A-Z_0-9]*)\s*=\s*([a-fx0-9]*)(.*)/)) {
 		my $name = $1;
 		my $val = $2;
 		my $remainder = $3;
