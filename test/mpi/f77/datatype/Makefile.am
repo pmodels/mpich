@@ -13,7 +13,7 @@ EXTRA_DIST = testlist
 AM_DEFAULT_SOURCE_EXT = .f
 
 noinst_PROGRAMS = typenamef typesnamef typecntsf typesubf typem2f gaddressf \
-                  packef allctypesf hindex1f
+                  packef allctypesf hindex1f hindexed_blockf
 
 ## typeaints.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT
 
@@ -22,4 +22,4 @@ gaddressf.$(OBJEXT): typeaints.h
 packef.$(OBJEXT): typeaints.h
 typecntsf.$(OBJEXT): typeaints.h
 typem2f.$(OBJEXT): typeaints.h
-
+hindexed_blockf.$(OBJEXT): typeaints.h
