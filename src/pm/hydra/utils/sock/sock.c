@@ -494,8 +494,11 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
 #if defined(HAVE_GETIFADDRS)
     struct ifaddrs *ifaddr, *ifa;
-    int remote_access;
 #endif /* HAVE_GETIFADDRS */
+
+#if defined (HAVE_INET_NTOP)
+    int remote_access;
+#endif /* HAVE_INET_NTOP */
 
     HYD_status status = HYD_SUCCESS;
 
