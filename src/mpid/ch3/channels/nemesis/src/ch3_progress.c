@@ -903,9 +903,11 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_SHM_CONNECTION_TERMINATED);
 
-    mpi_errno = VC_CH(vc)->lmt_vc_terminated(vc);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+    if (VC_CH(vc)->lmt_vc_terminated) {
+        mpi_errno = VC_CH(vc)->lmt_vc_terminated(vc);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    
     mpi_errno = MPIU_SHMW_Hnd_finalize(&(VC_CH(vc)->lmt_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     mpi_errno = MPIU_SHMW_Hnd_finalize(&(VC_CH(vc)->lmt_recv_copy_buf_handle));
