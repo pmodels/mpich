@@ -5,15 +5,30 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                           \
-    src/mpid/ch3/channels/nemesis/src/ch3_finalize.c        \
-    src/mpid/ch3/channels/nemesis/src/ch3_init.c            \
-    src/mpid/ch3/channels/nemesis/src/ch3_isend.c           \
-    src/mpid/ch3/channels/nemesis/src/ch3_isendv.c          \
-    src/mpid/ch3/channels/nemesis/src/ch3_istartmsg.c       \
-    src/mpid/ch3/channels/nemesis/src/ch3_istartmsgv.c      \
-    src/mpid/ch3/channels/nemesis/src/ch3_progress.c        \
-    src/mpid/ch3/channels/nemesis/src/ch3_abort.c           \
-    src/mpid/ch3/channels/nemesis/src/ch3i_comm.c           \
-    src/mpid/ch3/channels/nemesis/src/ch3i_eagernoncontig.c
+lib_lib@MPILIBNAME@_la_SOURCES +=				\
+    src/mpid/ch3/channels/nemesis/src/ch3_finalize.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_init.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_isend.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_isendv.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_istartmsg.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_istartmsgv.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_progress.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_abort.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3i_comm.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3i_eagernoncontig.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_alloc.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_init.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_queue.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_barrier.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_mpich2.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_ckpt.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_finalize.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_network_poll.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_network.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_debug.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt_shm.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_net_array.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt_dma.c	\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt_vmsplice.c
 

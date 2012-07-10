@@ -6,5 +6,5 @@
 ##
 
 lib_lib@MPILIBNAME@_la_SOURCES +=                                \
-    src/mpid/ch3/channels/nemesis/nemesis/netmod/none/none.c
+    src/mpid/ch3/channels/nemesis/netmod/none/none.c
 

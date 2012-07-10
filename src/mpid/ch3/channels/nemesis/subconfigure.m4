@@ -105,8 +105,8 @@ nemesis_nets_func_array=""
 nemesis_nets_macro_defs=""
 net_index=0
 for net in $nemesis_networks ; do
-    if test ! -d $srcdir/src/mpid/ch3/channels/nemesis/nemesis/netmod/${net} ; then
-        AC_MSG_ERROR([Network module ${net} is unknown "$srcdir/src/mpid/ch3/channels/nemesis/nemesis/netmod/${net}"])
+    if test ! -d $srcdir/src/mpid/ch3/channels/nemesis/netmod/${net} ; then
+        AC_MSG_ERROR([Network module ${net} is unknown "$srcdir/src/mpid/ch3/channels/nemesis/netmod/${net}"])
     fi
     net_macro=`echo $net | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
     net_macro="MPIDI_NEM_${net_macro}"
@@ -410,8 +410,8 @@ AC_SUBST(PAPI_INCLUDE)
 AC_SUBST(AS, [as])
 
 AC_CONFIG_FILES([
-src/mpid/ch3/channels/nemesis/nemesis/include/mpid_nem_net_module_defs.h
-src/mpid/ch3/channels/nemesis/nemesis/src/mpid_nem_net_array.c
+src/mpid/ch3/channels/nemesis/include/mpid_nem_net_module_defs.h
+src/mpid/ch3/channels/nemesis/src/mpid_nem_net_array.c
 ])
 
 ])dnl end AM_COND_IF(BUILD_CH3_NEMESIS,...)
