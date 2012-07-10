@@ -144,7 +144,7 @@ for net in $nemesis_networks ; do
     if test -z "$nemesis_nets_macro_defs" ; then
         nemesis_nets_macro_defs="#define $net_macro $net_index"
     else
-        nemesis_nets_macro_defs=`echo -e "${nemesis_nets_macro_defs}\n#define $net_macro $net_index"`
+        nemesis_nets_macro_defs=`printf "${nemesis_nets_macro_defs}\n#define $net_macro $net_index"`
     fi
 
     net_index=`expr $net_index + 1`
