@@ -1424,11 +1424,11 @@ static HYD_status parse_args(char **t_argv)
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 {
-    int ret;
+    int ret, len;
     char **argv = t_argv;
     char *progname = *argv;
     char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;
-    const char *home;
+    const char *home, *env_file;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -1441,9 +1441,21 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     HYDU_ERR_POP(status, "unable to parse user arguments\n");
 
     if (config_file == NULL) {
+        /* Check if there's a config file location in the environment */
+        ret = MPL_env2str("HYDRA_CONFIG_FILE", &env_file);
+        if (ret) {
+            ret = open(env_file, O_RDONLY);
+            if (ret >= 0) {
+                close(ret);
+                config_file = HYDU_strdup(env_file);
+                goto config_file_check_exit;
+            }
+        }
+
+        /* Check if there's a config file in the home directory */
         ret = MPL_env2str("HOME", &home);
         if (ret) {
-            int len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
+            len = strlen(home) + strlen("/.mpiexec.hydra.conf") + 1;
 
             HYDU_MALLOC(conf_file, char *, len, status);
             MPL_snprintf(conf_file, len, "%s/.mpiexec.hydra.conf", home);
@@ -1451,21 +1463,28 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             ret = open(conf_file, O_RDONLY);
             if (ret < 0) {
                 HYDU_FREE(conf_file);
-                conf_file = HYDU_strdup(HYDRA_CONF_FILE);
-                ret = open(conf_file, O_RDONLY);
-            }
-
-            if (ret >= 0) {
-                /* We have successfully opened the file */
-                close(ret);
-                config_file = conf_file;
             }
             else {
-                HYDU_FREE(conf_file);
+                close(ret);
+                config_file = conf_file;
+                goto config_file_check_exit;
             }
+        }
+
+        /* Check if there's a config file in the hard-coded location */
+        conf_file = HYDU_strdup(HYDRA_CONF_FILE);
+        ret = open(conf_file, O_RDONLY);
+        if (ret < 0) {
+            HYDU_FREE(conf_file);
+        }
+        else {
+            close(ret);
+            config_file = conf_file;
+            goto config_file_check_exit;
         }
     }
 
+  config_file_check_exit:
     if (config_file) {
         HYDU_ASSERT(config_argv == NULL, status);
         HYDU_MALLOC(config_argv, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
