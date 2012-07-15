@@ -67,6 +67,7 @@ noinst_PROGRAMS =          \
     nullpscw               \
     rmanull                \
     mixedsync              \
+    manyrma2		   \
     selfrma                \
     strided_acc_onelock    \
     strided_putget_indexed \

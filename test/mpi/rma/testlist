@@ -59,3 +59,4 @@ contention_put 4
 contention_putget 4
 put_base 2
 put_bottom 2
+manyrma2 2 timeLimit=10
