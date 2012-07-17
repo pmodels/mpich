@@ -108,7 +108,6 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
-    struct HYDT_topo_cpuset_t cpuset;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -213,7 +212,6 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         autofork = 1;
 
     targs[idx] = NULL;
-    HYDT_topo_cpuset_zero(&cpuset);
     for (proxy = proxy_list; proxy; proxy = proxy->next) {
 
         if (targs[host_idx])
@@ -312,7 +310,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
          * NULL, as older versions of ssh seem to freak out when no
          * stdin socket is provided. */
         status = HYDU_create_process(targs + offset, env, dummy, &fd_stdout, &fd_stderr,
-                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], cpuset);
+                                     &HYD_bscu_pid_list[HYD_bscu_pid_count++], -1);
         HYDU_ERR_POP(status, "create process returned error\n");
 
         /* Reset the exec string to the original value */

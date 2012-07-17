@@ -14,8 +14,16 @@
 #include <hwloc.h>
 #include <assert.h>
 
-HYD_status HYDT_topo_hwloc_init(HYDT_topo_support_level_t * support_level);
-HYD_status HYDT_topo_hwloc_bind(struct HYDT_topo_cpuset_t cpuset);
+struct HYDT_topo_hwloc_info {
+    int num_bitmaps;
+    hwloc_bitmap_t *bitmap;
+};
+extern struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info;
+
+HYD_status HYDT_topo_hwloc_init(const char *binding);
+HYD_status HYDT_topo_hwloc_bind(int idx);
+HYD_status HYDT_topo_hwloc_get_topomap(char **topomap);
+HYD_status HYDT_topo_hwloc_get_processmap(char **processmap);
 HYD_status HYDT_topo_hwloc_finalize(void);
 
 #endif /* TOPO_HWLOC_H_INCLUDED */

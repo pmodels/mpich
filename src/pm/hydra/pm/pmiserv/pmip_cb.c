@@ -469,7 +469,6 @@ static HYD_status launch_procs(void)
     struct HYD_exec *exec;
     struct HYD_pmcd_hdr hdr;
     int sent, closed, pmi_fds[2] = { HYD_FD_UNSET, HYD_FD_UNSET };
-    struct HYDT_topo_cpuset_t cpuset;
     char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
     HYD_status status = HYD_SUCCESS;
 
@@ -715,13 +714,13 @@ static HYD_status launch_procs(void)
                 client_args[arg++] = HYDU_strdup(exec->exec[j]);
             client_args[arg++] = NULL;
 
-            HYDT_topo_pid_to_cpuset(process_id, &cpuset);
             status = HYDU_create_process(client_args, force_env,
                                          HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? NULL :
                                          &HYD_pmcd_pmip.downstream.in,
                                          &HYD_pmcd_pmip.downstream.out[process_id],
                                          &HYD_pmcd_pmip.downstream.err[process_id],
-                                         &HYD_pmcd_pmip.downstream.pid[process_id], cpuset);
+                                         &HYD_pmcd_pmip.downstream.pid[process_id],
+                                         process_id);
             HYDU_ERR_POP(status, "create process returned error\n");
 
             HYDU_free_strlist(client_args);
