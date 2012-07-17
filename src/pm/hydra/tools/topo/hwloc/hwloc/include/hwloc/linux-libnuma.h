@@ -63,7 +63,7 @@ hwloc_cpuset_to_linux_libnuma_ulongs(hwloc_topology_t topology, hwloc_const_cpus
 
   if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
     hwloc_obj_t node = NULL;
-    while ((node = hwloc_get_next_obj_covering_cpuset_by_type(topology, cpuset, HWLOC_OBJ_NODE, node)) != NULL) {
+    while ((node = hwloc_get_next_obj_covering_cpuset_by_depth(topology, cpuset, depth, node)) != NULL) {
       if (node->os_index >= *maxnode)
 	continue;
       mask[node->os_index/sizeof(*mask)/8] |= 1UL << (node->os_index % (sizeof(*mask)*8));
@@ -106,7 +106,7 @@ hwloc_nodeset_to_linux_libnuma_ulongs(hwloc_topology_t topology, hwloc_const_nod
 
   if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
     hwloc_obj_t node = NULL;
-    while ((node = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_NODE, node)) != NULL) {
+    while ((node = hwloc_get_next_obj_by_depth(topology, depth, node)) != NULL) {
       if (node->os_index >= *maxnode)
 	continue;
       if (!hwloc_bitmap_isset(nodeset, node->os_index))
@@ -224,7 +224,7 @@ hwloc_cpuset_to_linux_libnuma_bitmask(hwloc_topology_t topology, hwloc_const_cpu
 
   if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
     hwloc_obj_t node = NULL;
-    while ((node = hwloc_get_next_obj_covering_cpuset_by_type(topology, cpuset, HWLOC_OBJ_NODE, node)) != NULL)
+    while ((node = hwloc_get_next_obj_covering_cpuset_by_depth(topology, cpuset, depth, node)) != NULL)
       if (node->memory.local_memory)
 	numa_bitmask_setbit(bitmask, node->os_index);
   } else {
@@ -257,7 +257,7 @@ hwloc_nodeset_to_linux_libnuma_bitmask(hwloc_topology_t topology, hwloc_const_no
 
   if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
     hwloc_obj_t node = NULL;
-    while ((node = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_NODE, node)) != NULL)
+    while ((node = hwloc_get_next_obj_by_depth(topology, depth, node)) != NULL)
       if (hwloc_bitmap_isset(nodeset, node->os_index) && node->memory.local_memory)
 	numa_bitmask_setbit(bitmask, node->os_index);
   } else {
@@ -326,132 +326,6 @@ hwloc_nodeset_from_linux_libnuma_bitmask(hwloc_topology_t topology, hwloc_nodese
 }
 
 /** @} */
-
-
-
-#ifdef NUMA_VERSION1_COMPATIBILITY
-/** \defgroup hwlocality_linux_libnuma_nodemask Helpers for manipulating Linux libnuma nodemask_t
- *
- * \note The Linux libnuma nodemask_t interface is deprecated and
- * its implementation is at least incorrect with respect to sparse
- * NUMA node ids. It is strongly advised to use struct bitmask
- * instead of nodemask_t, or even to use hwloc directly.
- *
- * @{
- */
-
-
-/** \brief Convert hwloc CPU set \p cpuset into libnuma nodemask \p nodemask
- *
- * This function may be used before calling some old libnuma functions
- * that use a nodemask_t as an input parameter.
- */
-static __hwloc_inline int
-hwloc_cpuset_to_linux_libnuma_nodemask(hwloc_topology_t topology, hwloc_const_cpuset_t cpuset,
-				      nodemask_t *nodemask)
-{
-  int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
-
-  nodemask_zero(nodemask);
-
-  if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
-    hwloc_obj_t node = NULL;
-    while ((node = hwloc_get_next_obj_covering_cpuset_by_type(topology, cpuset, HWLOC_OBJ_NODE, node)) != NULL)
-      nodemask_set(nodemask, node->os_index);
-  } else {
-    /* if no numa, libnuma assumes we have a single node */
-    if (!hwloc_bitmap_iszero(cpuset))
-      nodemask_set(nodemask, 0);
-  }
-
-  return 0;
-}
-
-/** \brief Convert hwloc NUMA node set \p nodeset into libnuma nodemask \p nodemask
- *
- * This function may be used before calling some old libnuma functions
- * that use a nodemask_t as an input parameter.
- */
-static __hwloc_inline int
-hwloc_nodeset_to_linux_libnuma_nodemask(hwloc_topology_t topology, hwloc_const_nodeset_t nodeset,
-					nodemask_t *nodemask)
-{
-  int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
-
-  nodemask_zero(nodemask);
-
-  if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
-    hwloc_obj_t node = NULL;
-    while ((node = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_NODE, node)) != NULL)
-      if (hwloc_bitmap_isset(nodeset, node->os_index))
-	nodemask_set(nodemask, node->os_index);
-  } else {
-    /* if no numa, libnuma assumes we have a single node */
-    if (!hwloc_bitmap_iszero(nodeset))
-      nodemask_set(nodemask, 0);
-  }
-
-  return 0;
-}
-
-/** \brief Convert libnuma nodemask \p nodemask into hwloc CPU set \p cpuset
- *
- * This function may be used before calling some old libnuma functions
- * that use a nodemask_t as an output parameter.
- */
-static __hwloc_inline int
-hwloc_cpuset_from_linux_libnuma_nodemask(hwloc_topology_t topology, hwloc_cpuset_t cpuset,
-					const nodemask_t *nodemask)
-{
-  int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
-
-  if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
-    hwloc_obj_t node = NULL;
-    hwloc_bitmap_zero(cpuset);
-    while ((node = hwloc_get_next_obj_by_depth(topology, depth, node)) != NULL)
-      if (nodemask_isset(nodemask, node->os_index))
-	hwloc_bitmap_or(cpuset, cpuset, node->cpuset);
-  } else {
-    /* if no numa, libnuma assumes we have a single node */
-    if (nodemask_isset(nodemask, 0))
-      hwloc_bitmap_copy(cpuset, hwloc_topology_get_complete_cpuset(topology));
-    else
-      hwloc_bitmap_zero(cpuset);
-  }
-
-  return 0;
-}
-
-/** \brief Convert libnuma nodemask \p nodemask into hwloc NUMA node set \p nodeset
- *
- * This function may be used before calling some old libnuma functions
- * that use a nodemask_t as an output parameter.
- */
-static __hwloc_inline int
-hwloc_nodeset_from_linux_libnuma_nodemask(hwloc_topology_t topology, hwloc_nodeset_t nodeset,
-					  const nodemask_t *nodemask)
-{
-  int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
-
-  if (depth != HWLOC_TYPE_DEPTH_UNKNOWN) {
-    hwloc_obj_t node = NULL;
-    hwloc_bitmap_zero(nodeset);
-    while ((node = hwloc_get_next_obj_by_depth(topology, depth, node)) != NULL)
-      if (nodemask_isset(nodemask, node->os_index))
-	hwloc_bitmap_set(nodeset, node->os_index);
-  } else {
-    /* if no numa, libnuma assumes we have a single node */
-    if (nodemask_isset(nodemask, 0))
-      hwloc_bitmap_fill(nodeset);
-    else
-      hwloc_bitmap_zero(nodeset);
-  }
-
-  return 0;
-}
-
-/** @} */
-#endif /* NUMA_VERSION1_COMPATIBILITY */
 
 
 #ifdef __cplusplus

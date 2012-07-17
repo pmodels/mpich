@@ -45,6 +45,11 @@ hwloc_mx_board_get_device_cpuset(hwloc_topology_t topology,
 {
   uint32_t in, out;
 
+  if (!hwloc_topology_is_thissystem(topology)) {
+    errno = EINVAL;
+    return -1;
+  }
+
   in = id;
   if (mx_get_info(NULL, MX_NUMA_NODE, &in, sizeof(in), &out, sizeof(out)) != MX_SUCCESS) {
     errno = EINVAL;

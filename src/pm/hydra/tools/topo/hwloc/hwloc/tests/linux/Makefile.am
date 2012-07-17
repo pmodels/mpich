@@ -1,4 +1,4 @@
-# Copyright © 2009-2010 inria.  All rights reserved.
+# Copyright © 2009-2012 inria.  All rights reserved.
 # Copyright © 2009-2011 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -12,7 +12,9 @@ AM_LDFLAGS = $(HWLOC_LDFLAGS)
 sysfs_outputs = \
 		2amd64-2n.output \
 		2i386-2t-hugepagesizecount.xml.output \
+		2i386-2c-nohugepage.xml.output \
 		2ps3-2t.output \
+		4em64t-2c2t-ignore-reorder.output \
 		4ia64-4s.output \
 		4ppc-4c.output \
 		256ppc-8n8s4t.output \
@@ -28,6 +30,7 @@ sysfs_outputs = \
 		8ia64-2n2s2c.output \
 		8ia64-2s2c2t.output \
 		8ia64-4s2c.output \
+		16amd64-4n4c-cgroup-distance-merge.output \
 		16amd64-8n2c.output \
 		16amd64-8n2c-cpusets.output \
 		16amd64-8n2c-cpusets.xml.output \
@@ -43,6 +46,7 @@ sysfs_outputs = \
 		16em64t-2m4c2t.output \
 		16ia64-8n2s.output \
 		48amd64-4d2n6c-sparse.output \
+		64amd64-4s2n4ca2co.output \
 		64fake-4n2s2ca2c2t.output \
 		96em64t-4n4d3ca2co.output \
 		96em64t-4n4d3ca2co-forcecpuinfo.output \
@@ -60,7 +64,10 @@ sysfs_tarballs = \
 		2amd64-2n.tar.bz2 \
 		2i386-2t-hugepagesizecount.tar.bz2 \
 		2i386-2t-hugepagesizecount.xml.source \
+		2i386-2c-nohugepage.tar.bz2 \
+		2i386-2c-nohugepage.xml.source \
 		2ps3-2t.tar.bz2 \
+		4em64t-2c2t-ignore-reorder.tar.bz2 \
 		4ia64-4s.tar.bz2 \
 		4ppc-4c.tar.bz2 \
 		256ppc-8n8s4t.tar.bz2 \
@@ -76,6 +83,7 @@ sysfs_tarballs = \
 		8ia64-2n2s2c.tar.bz2 \
 		8ia64-2s2c2t.tar.bz2 \
 		8ia64-4s2c.tar.bz2 \
+		16amd64-4n4c-cgroup-distance-merge.tar.bz2 \
 		16amd64-8n2c.tar.bz2 \
 		16amd64-8n2c-cpusets.tar.bz2 \
 		16amd64-8n2c-cpusets.xml.source \
@@ -91,6 +99,7 @@ sysfs_tarballs = \
 		16em64t-4s2c2t.xml.source \
 		16ia64-8n2s.tar.bz2 \
 		48amd64-4d2n6c-sparse.tar.bz2 \
+		64amd64-4s2n4ca2co.tar.bz2 \
 		64fake-4n2s2ca2c2t.tar.bz2 \
 		96em64t-4n4d3ca2co.tar.bz2 \
 		96em64t-4n4d3ca2co-forcecpuinfo.source \
@@ -111,6 +120,9 @@ sysfs_excludes = \
 # file modifying the behavior of lstopo
 sysfs_options = \
 		2i386-2t-hugepagesizecount.xml.options \
+		2i386-2c-nohugepage.xml.options \
+		4em64t-2c2t-ignore-reorder.options \
+		16amd64-4n4c-cgroup-distance-merge.options \
 		16amd64-8n2c-cpusets.xml.options \
 		16amd64-8n2c-cpusets_noadmin.options \
 		16em64t-4s2c2t-offlines.xml.options \

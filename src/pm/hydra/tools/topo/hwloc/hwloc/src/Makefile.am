@@ -1,7 +1,7 @@
 # Copyright © 2009-2010 inria.  All rights reserved.
 # Copyright © 2009-2010, 2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
-# Copyright © 2011      Oracle and/or its affiliates.  All rights reserved.
+# Copyright © 2011-2012 Oracle and/or its affiliates.  All rights reserved.
 # See COPYING in top-level directory.
 
 AM_CFLAGS = $(HWLOC_CFLAGS)
@@ -27,12 +27,17 @@ sources = \
         distances.c \
         topology-synthetic.c \
         topology-xml.c \
+        topology-xml-nolibxml.c \
         bind.c \
-        cpuset.c \
+        bitmap.c \
         misc.c
 ldflags =
 
 # Conditionally add to the sources and ldflags
+
+if HWLOC_HAVE_LIBXML2
+sources += topology-xml-libxml.c
+endif HWLOC_HAVE_LIBXML2
 
 if HWLOC_HAVE_LIBPCI
 sources += topology-libpci.c
@@ -41,7 +46,6 @@ endif HWLOC_HAVE_LIBPCI
 if HWLOC_HAVE_SOLARIS
 sources += topology-solaris.c
 sources += topology-solaris-chiptype.c
-ldflags += -lpicl
 endif HWLOC_HAVE_SOLARIS
 
 if HWLOC_HAVE_LINUX
@@ -85,9 +89,13 @@ export LC_MESSAGES
 ldflags += -Xlinker --output-def -Xlinker .libs/libhwloc.def
 
 if HWLOC_HAVE_MS_LIB
-.libs/libhwloc.lib: libhwloc.la dolib
-	[ ! -r .libs/libhwloc.def ] || ./dolib "$(HWLOC_MS_LIB)" $(HWLOC_MS_LIB_ARCH) .libs/libhwloc.def $(libhwloc_so_version) .libs/libhwloc.lib
+dolib$(EXEEXT): dolib.c
+	$(CC_FOR_BUILD) $< -o $@
+.libs/libhwloc.lib: libhwloc.la dolib$(EXEEXT)
+	[ ! -r .libs/libhwloc.def ] || ./dolib$(EXEEXT) "$(HWLOC_MS_LIB)" $(HWLOC_MS_LIB_ARCH) .libs/libhwloc.def $(libhwloc_so_version) .libs/libhwloc.lib
 all-local: .libs/libhwloc.lib
+clean-local:
+	$(RM) dolib$(EXEEXT)
 endif HWLOC_HAVE_MS_LIB
 
 install-exec-hook:

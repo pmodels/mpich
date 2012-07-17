@@ -1,5 +1,5 @@
-# Copyright © 2009-2011 inria.  All rights reserved.
-# Copyright © 2009-2011 Université Bordeaux 1
+# Copyright © 2009-2012 inria.  All rights reserved.
+# Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 
@@ -140,31 +140,6 @@ $(DOX_TAG): $(BUILT_SOURCES) $(dox_inputs) $(PREBUILT_IMAGES)
 	@mv $(DOX_MAN_DIR)/man3/hwloc* $(DOX_MAN_DIR)/man3/HWLOC* $(DOX_DIR)/man.tmp/
 	@rm -rf $(DOX_MAN_DIR)/man3
 	@mv $(DOX_DIR)/man.tmp $(DOX_MAN_DIR)/man3
-if HWLOC_DOXYGEN_BROKEN_SHORT_NAMES
-	@echo "Work-around buggy doxygen filenames..."
-	-@mv -f $(DOX_DIR)/html/termsanddefs.html $(DOX_DIR)/html/a00001.html
-	-@mv -f $(DOX_DIR)/latex/termsanddefs.tex $(DOX_DIR)/latex/a00001.tex
-	-@mv -f $(DOX_DIR)/html/tools.html $(DOX_DIR)/html/a00002.html
-	-@mv -f $(DOX_DIR)/latex/tools.tex $(DOX_DIR)/latex/a00002.tex
-	-@mv -f $(DOX_DIR)/html/envvar.html $(DOX_DIR)/html/a00003.html
-	-@mv -f $(DOX_DIR)/latex/envvar.tex $(DOX_DIR)/latex/a00003.tex
-	-@mv -f $(DOX_DIR)/html/cpu_mem_bind.html $(DOX_DIR)/html/a00004.html
-	-@mv -f $(DOX_DIR)/latex/cpu_mem_bind.tex $(DOX_DIR)/latex/a00004.tex
-	-@mv -f $(DOX_DIR)/html/iodevices.html $(DOX_DIR)/html/a00005.html
-	-@mv -f $(DOX_DIR)/latex/iodevices.tex $(DOX_DIR)/latex/a00005.tex
-	-@mv -f $(DOX_DIR)/html/multinode.html $(DOX_DIR)/html/a00006.html
-	-@mv -f $(DOX_DIR)/latex/multinode.tex $(DOX_DIR)/latex/a00006.tex
-	-@mv -f $(DOX_DIR)/html/xml.html $(DOX_DIR)/html/a00007.html
-	-@mv -f $(DOX_DIR)/latex/xml.tex $(DOX_DIR)/latex/a00007.tex
-	-@mv -f $(DOX_DIR)/html/interoperability.html $(DOX_DIR)/html/a00008.html
-	-@mv -f $(DOX_DIR)/latex/interoperability.tex $(DOX_DIR)/latex/a00008.tex
-	-@mv -f $(DOX_DIR)/html/threadsafety.html $(DOX_DIR)/html/a00009.html
-	-@mv -f $(DOX_DIR)/latex/threadsafety.tex $(DOX_DIR)/latex/a00009.tex
-	-@mv -f $(DOX_DIR)/html/embed.html $(DOX_DIR)/html/a00010.html
-	-@mv -f $(DOX_DIR)/latex/embed.tex $(DOX_DIR)/latex/a00010.tex
-	-@mv -f $(DOX_DIR)/html/faq.html $(DOX_DIR)/html/a00011.html
-	-@mv -f $(DOX_DIR)/latex/faq.tex $(DOX_DIR)/latex/a00011.tex
-endif
 endif
 
 #
@@ -296,6 +271,11 @@ man3_types_DATA = \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SYSTEM.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_TYPE_MAX.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_type_t.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_CACHE_UNIFIED.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_CACHE_DATA.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_CACHE_INSTRUCTION.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_cache_type_e.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_obj_cache_type_t.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_BRIDGE_HOST.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_BRIDGE_PCI.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_bridge_type_e.3 \
@@ -346,6 +326,7 @@ man3_configuration_DATA = \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_WHOLE_IO.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_TOPOLOGY_FLAG_ICACHES.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_flags_e.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_flags.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_pid.3 \
@@ -564,6 +545,7 @@ man3_helper_find_coverings_DATA = \
 man3_helper_find_cachedir = $(man3dir)
 man3_helper_find_cache_DATA = \
         $(DOX_MAN_DIR)/man3/hwlocality_helper_find_cache.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_get_cache_type_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_cache_covering_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_shared_cache_covering_obj.3
 
@@ -655,12 +637,7 @@ man3_linux_libnuma_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_cpuset_from_linux_libnuma_bitmask.3 \
         $(DOX_MAN_DIR)/man3/hwloc_nodeset_from_linux_libnuma_bitmask.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cpuset_to_linux_libnuma_bitmask.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_nodeset_from_linux_libnuma_nodemask.3 \
-        $(DOX_MAN_DIR)/man3/hwlocality_linux_libnuma_nodemask.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_cpuset_from_linux_libnuma_nodemask.3 \
         $(DOX_MAN_DIR)/man3/hwloc_nodeset_to_linux_libnuma_bitmask.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_cpuset_to_linux_libnuma_nodemask.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_nodeset_to_linux_libnuma_nodemask.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_linux_libnuma_ulongs.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cpuset_from_linux_libnuma_ulongs.3 \
         $(DOX_MAN_DIR)/man3/hwloc_nodeset_from_linux_libnuma_ulongs.3 \
@@ -676,7 +653,8 @@ man3_myriexpress_DATA = \
 man3_openfabricsdir = $(man3dir)
 man3_openfabrics_DATA = \
         $(DOX_MAN_DIR)/man3/hwlocality_openfabrics.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3
+        $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev_by_name.3
 
 # end of manpages(3) if HWLOC_BUILD_DOXYGEN
 endif
@@ -741,12 +719,22 @@ endif
 #
 
 if HWLOC_BUILD_TESTS
-TESTS = hwloc-hello
+TESTS = hwloc-hello hwloc-hello-cpp
 check_PROGRAMS = $(TESTS)
 endif HWLOC_BUILD_TESTS
 
+hwloc-hello-cpp.cpp: $(srcdir)/hwloc-hello.c
+	cp -f $< $@
+
+clean-local:
+	rm -f hwloc-hello-cpp.cpp
+
 hwloc_hello_LDADD = $(HWLOC_top_builddir)/src/libhwloc.la
 hwloc_hello_DEPENDENCIES = $(hwloc_hello_LDADD)
+
+hwloc_hello_cpp_SOURCES = hwloc-hello-cpp.cpp
+hwloc_hello_cpp_LDADD = $(HWLOC_top_builddir)/src/libhwloc.la
+hwloc_hello_cpp_DEPENDENCIES = $(hwloc_hello_LDADD)
 
 #
 # Only remove the actual generated documentation files for maintainers

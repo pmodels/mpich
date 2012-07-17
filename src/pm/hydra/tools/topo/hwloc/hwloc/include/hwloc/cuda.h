@@ -88,6 +88,11 @@ hwloc_cuda_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
   if (hwloc_cuda_get_device_pci_ids(topology, cudevice, &domainid, &busid, &deviceid))
     return -1;
 
+  if (!hwloc_topology_is_thissystem(topology)) {
+    errno = EINVAL;
+    return -1;
+  }
+
   sprintf(path, "/sys/bus/pci/devices/%04x:%02x:%02x.0/local_cpus", domainid, busid, deviceid);
   sysfile = fopen(path, "r");
   if (!sysfile)

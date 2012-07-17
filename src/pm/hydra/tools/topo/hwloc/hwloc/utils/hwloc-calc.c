@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -109,9 +109,9 @@ hwloc_calc_output(hwloc_topology_t topology, const char *sep, hwloc_bitmap_t set
       hwloc_obj_type_snprintf(type, sizeof(type), obj, 1);
       idx = logicalo ? obj->logical_index : obj->os_index;
       if (idx == (unsigned) -1)
-        printf("%s%s", first ? "" : sep, type);
+        printf("%s%s", first ? (const char *) "" : sep, type);
       else
-        printf("%s%s:%u", first ? "" : sep, type, idx);
+        printf("%s%s:%u", first ? (const char *) "" : sep, type, idx);
       hwloc_bitmap_andnot(remaining, remaining, obj->cpuset);
       first = 0;
     }
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
   set = hwloc_bitmap_alloc();
 
   hwloc_topology_init(&topology);
-  hwloc_topology_set_flags(topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO);
+  hwloc_topology_set_flags(topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO|HWLOC_TOPOLOGY_FLAG_ICACHES);
   hwloc_topology_load(topology);
   depth = hwloc_topology_get_depth(topology);
 

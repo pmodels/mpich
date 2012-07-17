@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -66,8 +66,8 @@ not support topology information, and hwloc thus uses an x86-only CPUID-based
 backend (which could be used for other OSes too).
 
 To check whether hwloc works on a particular machine, just try to build it
-and run <tt>lstopo</tt>. If some things do not look right (e.g. bogus or missing
-cache information), see \ref bugs below.
+and run <tt>lstopo</tt> or <tt>lstopo-no-graphics</tt>. If some things do not look right
+(e.g. bogus or missing cache information), see \ref bugs below.
 
 hwloc only reports the number of processors on unsupported operating
 systems; no topology information is available.
@@ -139,8 +139,8 @@ shell$ make install
 The hwloc command-line tool "lstopo" produces human-readable topology
 maps, as mentioned above.  It can also export maps to the "fig" file
 format.  Support for PDF, Postscript, and PNG exporting is provided if
-the "Cairo" development package can be found when hwloc is configured
-and build.
+the "Cairo" development package can be found in "lstopo" when hwloc
+is configured and build.
 
 The hwloc core may also benefit from the following development packages:
 <ul>
@@ -271,7 +271,7 @@ On a 4-socket 2-core Opteron NUMA machine, the \c lstopo tool may show
 the following graphical output:
 
 \image html hagrid.png
-\image latex hagrid.png width=\textwidth
+\image latex hagrid.png "" width=\textwidth
 
 Here's the equivalent output in textual form:
 
@@ -767,7 +767,7 @@ fields (depth, logical_index, etc.), and arrows show to which other hwloc_obj_t
 pointers point to (first_child, parent, etc.). The L2 cache of the last core is intentionally missing to show how asymmetric topologies are handled.
 
 \image html diagram.png
-\image latex diagram.eps width=\textwidth
+\image latex diagram.eps "" width=\textwidth
 
 It should be noted that for PU objects, the logical index -- as
 computed linearly by hwloc -- is not the same as the OS index.
@@ -782,12 +782,17 @@ command line utilities. Each of them is fully documented in its own
 manual page; the following is a summary of the available command line
 tools.
 
-\section cli_lstopo lstopo
+\section cli_lstopo lstopo and lstopo-no-graphics
 
 lstopo (also known as hwloc-info and hwloc-ls) displays the
 hierarchical topology map of the current system.  The output may be
 graphical or textual, and can also be exported to numerous file
 formats such as PDF, PNG, XML, and others.
+
+lstopo and lstopo-no-graphics accept the same command-line options.
+However graphical outputs are only available in lstopo.
+Textual outputs (those that do not depend on heavy external libraries
+such as Cairo) are supported in both lstopo and lstopo-no-graphics.
 
 This command can also display the processes currently bound to a part
 of the machine (via the --ps option).
@@ -985,7 +990,8 @@ following environment variables.
   <li>If <tt>X*Y*Z</tt> is given, X groups of Y groups of Z close objects are specified.</li>
   <li>Otherwise, the comma-separated list of distances should be given.
   If N objects are considered, the i*N+j-th value gives the
-  distance from the i-th object to the j-th object.</li>
+  distance from the i-th object to the j-th object.
+  These distance values must use a dot as a decimal separator.</li>
   </ul>
 
   Note that distances are ignored in multi-node topologies.
@@ -1429,6 +1435,11 @@ This behavior may be reverted by asserting that loaded file really
 matches the underlying system with the HWLOC_THISSYSTEM environment
 variable or the HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM topology flag.
 
+\note XML topology files are not localized. They use a dot as a
+decimal separator. Therefore any exported topology can be
+reloaded on any other machine without requiring to change the
+locale.
+
 \section xml_backends libxml2 and minimalistic XML backends
 
 hwloc offers two backends for importing/exporting XML.
@@ -1501,7 +1512,7 @@ enabled for the current topology.
 <dt>Linux libnuma</dt>
  <dd>
   hwloc/linux-libnuma.h provides conversion helpers between hwloc CPU
-  sets and libnuma-specific types, such as nodemasks and bitmasks.  It
+  sets and libnuma-specific types, such as  bitmasks.  It
   helps you use libnuma memory-binding functions with hwloc CPU sets.
  </dd>
 
@@ -1924,11 +1935,12 @@ To understand how hwloc manages such cases, one should first remember
 the meaning of levels and cousin objects. All objects of the same type
 are gathered as horizontal levels with a given depth. They are also
 connected through the cousin pointers of the hwloc_obj structure.
-Some types, such as Caches or Groups, are usually annotated with a
-depth or level attribute (for instance L2 cache). In this case, this
-attribute is also taken in account when gathering objects as
-horizontal levels.  To be clear: there will be one level for L1
-caches, another level for L2 caches, etc.
+Some types, such as Caches or Groups, are annotated with a depth or
+level attribute (for instance L2 cache or Group1). Moreover caches
+have a type attribute (for instance L1i or L1d). Such
+attributes are also taken in account when gathering objects as
+horizontal levels.  To be clear: there will be one level for L1i
+caches, another level for L1d caches, another one for L2, etc.
 
 If the topology is asymmetric (e.g., if a cache is missing in one of
 the processors), a given horizontal level will still exist if there
@@ -1996,30 +2008,25 @@ Any application using the hwloc API should be prepared to check at
 compile-time whether some features are available in the currently
 installed hwloc distribution.
 
-To check whether hwloc is at least 1.2, you should use:
+To check whether the hwloc version is at least 1.5, you should use:
 \verbatim
 #include <hwloc.h>
-#if HWLOC_API_VERSION >= 0x00010200
+#if HWLOC_API_VERSION >= 0x00010500
 ...
 #endif
 \endverbatim
 
-One of the major changes in hwloc 1.1 was the addition of the bitmap
-API. It supersedes the now deprecated cpuset API which will be removed
-in a future hwloc release. It is strongly recommended to switch existing
-codes to the bitmap API. Keeping support for older hwloc versions is easy.
-For instance, if your code uses <tt>hwloc_cpuset_alloc</tt>, you should use
-<tt>hwloc_bitmap_alloc</tt> instead and add the following code to one of your
-common headers:
+One important change in hwloc 1.5 is the removal of the deprecated
+cpuset API, which was superseded by the new bitmap API since hwloc 1.1.
+If your code must work with very old hwloc releases, you should use
+the latest bitmap API anyway. Then, use something similar to the
+following code to support old cpuset-only hwloc versions:
 \verbatim
 #include <hwloc.h>
 #if HWLOC_API_VERSION < 0x00010100
 #define hwloc_bitmap_alloc hwloc_cpuset_alloc
 #endif
 \endverbatim
-
-Similarly, the hwloc 1.0 interface may be detected by comparing
-<tt>HWLOC_API_VERSION</tt> with <tt>0x00010000</tt>.
 
 hwloc 0.9 did not define any <tt>HWLOC_API_VERSION</tt> but this very old
 release probably does not deserve support from your application anymore.

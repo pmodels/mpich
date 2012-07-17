@@ -56,6 +56,11 @@ hwloc_ibv_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
   char path[HWLOC_OPENFABRICS_VERBS_SYSFS_PATH_MAX];
   FILE *sysfile = NULL;
 
+  if (!hwloc_topology_is_thissystem(topology)) {
+    errno = EINVAL;
+    return -1;
+  }
+
   sprintf(path, "/sys/class/infiniband/%s/device/local_cpus",
 	  ibv_get_device_name(ibdev));
   sysfile = fopen(path, "r");
@@ -72,6 +77,35 @@ hwloc_ibv_get_device_cpuset(hwloc_topology_t topology __hwloc_attribute_unused,
   hwloc_bitmap_copy(set, hwloc_topology_get_complete_cpuset(topology));
 #endif
   return 0;
+}
+
+/** \brief Get the hwloc OS device object corresponding to the OpenFabrics
+ * device named \p ibname.
+ *
+ * For the OpenFabrics device whose name is \p ibname, return the hwloc OS
+ * device object describing the device. Returns NULL if there is none.
+ *
+ * The name \p ibname is usually obtained from ibv_get_device_name().
+ *
+ * IO devices detection must be enabled in topology \p topology.
+ *
+ * The topology does not necessary have to match the current machine.
+ * For instance the topology may be an XML import of a remote host.
+ *
+ * \note The corresponding PCI device object can be obtained by looking
+ * at the OS device parent object.
+ */
+static __hwloc_inline hwloc_obj_t
+hwloc_ibv_get_device_osdev_by_name(hwloc_topology_t topology,
+				   const char *ibname)
+{
+	hwloc_obj_t osdev = NULL;
+	while ((osdev = hwloc_get_next_osdev(topology, osdev)) != NULL) {
+		if (HWLOC_OBJ_OSDEV_OPENFABRICS == osdev->attr->osdev.type
+		    && osdev->name && !strcmp(ibname, osdev->name))
+			return osdev;
+	}
+	return NULL;
 }
 
 /** @} */

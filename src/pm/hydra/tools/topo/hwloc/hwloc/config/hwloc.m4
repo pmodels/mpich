@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 dnl
-dnl Copyright (c) 2009-2010 inria.  All rights reserved.
+dnl Copyright © 2009-2012 Inria.  All rights reserved.
 dnl Copyright (c) 2009-2012 Université Bordeaux 1
 dnl Copyright (c) 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
@@ -10,6 +10,7 @@ dnl                         All rights reserved.
 dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart, 
 dnl                         University of Stuttgart.  All rights reserved.
 dnl Copyright © 2006-2011  Cisco Systems, Inc.  All rights reserved.
+dnl Copyright © 2012       Oracle and/or its affiliates.  All rights reserved.
 dnl See COPYING in top-level directory.
 
 # Main hwloc m4 macro, to be invoked by the user
@@ -375,7 +376,9 @@ EOF])
                    [HWLOC_LIBS="-lm $HWLOC_LIBS"])
     ], [], [[#include <math.h>]])
 
-    AC_CHECK_HEADERS([picl.h])
+    AC_CHECK_HEADERS([picl.h], [
+      AC_CHECK_LIB([picl], [picl_initialize],
+                   [HWLOC_LIBS="-lpicl $HWLOC_LIBS"])])
 
     AC_CHECK_DECLS([_SC_NPROCESSORS_ONLN,
     		_SC_NPROCESSORS_CONF,
@@ -504,9 +507,9 @@ EOF])
         dnl We can't use AC_TRY_LINK because the failure does not appear until
         dnl run/load time and there is currently no precedent for AC_TRY_RUN
         dnl use in hwloc.  --PHH
-	dnl For now, we're going with "all gccfss compilers are broken". 
-	dnl Better to be safe and correct; it's not like this is
-	dnl performance-critical code, after all.
+        dnl For now, we're going with "all gccfss compilers are broken". 
+        dnl Better to be safe and correct; it's not like this is
+        dnl performance-critical code, after all.
         AC_DEFINE([HWLOC_HAVE_BROKEN_FFS], [1], 
                   [Define to 1 if your `ffs' function is known to be broken.])
       fi
@@ -549,16 +552,6 @@ EOF])
     AC_CHECK_HEADERS([malloc.h])
     AC_CHECK_FUNCS([getpagesize memalign posix_memalign])
 
-    # when autoheader is run, it doesn't know about
-    # PAC_FUNC_NEEDS_DECL, so it doesn't generate an appropriate line
-    # in config.h.in.  We need to fool it with a dummy AC_DEFINE().
-    if false ; then
-        AC_DEFINE([NEEDS_GETPAGESIZE_DECL], 1, [Define to 1 if getpagesize needs a declaration])
-    fi
-    if test $ac_cv_func_getpagesize = "yes" ; then
-       PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getpagesize)
-    fi
-
     AC_CHECK_HEADERS([sys/utsname.h])
     AC_CHECK_FUNCS([uname])
 
@@ -577,6 +570,7 @@ EOF])
     ]])
     AC_CHECK_FUNC([sched_setaffinity], [hwloc_have_sched_setaffinity=yes])
     AC_CHECK_HEADERS([sys/cpuset.h],,,[[#include <sys/param.h>]])
+    AC_CHECK_FUNCS([cpuset_setaffinity])
     AC_SEARCH_LIBS([pthread_getthrds_np], [pthread],
       AC_DEFINE([HWLOC_HAVE_PTHREAD_GETTHRDS_NP], 1, `Define to 1 if you have pthread_getthrds_np')
     )
@@ -812,6 +806,8 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
                        [test "x$hwloc_have_linux_libnuma" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_SCHED_SETAFFINITY],
                        [test "x$hwloc_have_sched_setaffinity" = "xyes"])
+        AM_CONDITIONAL([HWLOC_HAVE_PTHREAD],
+                       [test "x$hwloc_have_pthread" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_LIBIBVERBS], 
                        [test "x$hwloc_have_libibverbs" = "xyes"])
 	AM_CONDITIONAL([HWLOC_HAVE_CUDA],
@@ -820,7 +816,8 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
 		       [test "x$hwloc_have_myriexpress" = "xyes"])
 	AM_CONDITIONAL([HWLOC_HAVE_CUDART],
 		       [test "x$hwloc_have_cudart" = "xyes"])
-        AM_CONDITIONAL([HWLOC_HAVE_CAIRO], [test "x$enable_cairo" != "xno"])
+        AM_CONDITIONAL([HWLOC_HAVE_LIBXML2], [test "$hwloc_libxml2_happy" = "yes"])
+        AM_CONDITIONAL([HWLOC_HAVE_CAIRO], [test "$hwloc_cairo_happy" = "yes"])
         AM_CONDITIONAL([HWLOC_HAVE_LIBPCI], [test "$hwloc_pci_happy" = "yes"])
         AM_CONDITIONAL([HWLOC_HAVE_SET_MEMPOLICY], [test "x$enable_set_mempolicy" != "xno"])
         AM_CONDITIONAL([HWLOC_HAVE_MBIND], [test "x$enable_mbind" != "xno"])
@@ -846,7 +843,6 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
 
         AM_CONDITIONAL([HWLOC_HAVE_X86_32], [test "x$hwloc_x86_32" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_64], [test "x$hwloc_x86_64" = "xyes"])
-        AM_CONDITIONAL([HWLOC_DOXYGEN_BROKEN_SHORT_NAMES], [test "$HWLOC_DOXYGEN_VERSION" = "1.6.2"])
         AM_CONDITIONAL([HWLOC_HAVE_CPUID], [test "x$hwloc_have_cpuid" = "xyes"])
         AM_CONDITIONAL([HWLOC_BUILD_UTILS], [test "$hwloc_build_utils" = "yes"])
         AM_CONDITIONAL([HWLOC_BUILD_TESTS], [test "$hwloc_build_tests" = "yes"])

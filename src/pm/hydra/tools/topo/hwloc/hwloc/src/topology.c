@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -461,6 +461,12 @@ hwloc_type_cmp(hwloc_obj_t obj1, hwloc_obj_t obj2)
       return HWLOC_TYPE_DEEPER;
     else if (obj1->attr->cache.depth > obj2->attr->cache.depth)
       return HWLOC_TYPE_HIGHER;
+    else if (obj1->attr->cache.type > obj2->attr->cache.type)
+      /* consider icache deeper than dcache and dcache deeper than unified */
+      return HWLOC_TYPE_DEEPER;
+    else if (obj1->attr->cache.type < obj2->attr->cache.type)
+      /* consider icache deeper than dcache and dcache deeper than unified */
+      return HWLOC_TYPE_HIGHER;
   }
 
   /* Group objects have the same types but can have different depths.  */
@@ -556,6 +562,30 @@ hwloc_obj_cmp(hwloc_obj_t obj1, hwloc_obj_t obj2)
 
     return HWLOC_OBJ_DIFFERENT;
   }
+}
+
+/* format must contain a single %s where to print obj infos */
+static void
+hwloc___insert_object_by_cpuset_report_error(hwloc_report_error_t report_error, const char *fmt, hwloc_obj_t obj, int line)
+{
+	char typestr[64];
+	char objstr[512];
+	char msg[640];
+	char *cpusetstr;
+
+	hwloc_obj_type_snprintf(typestr, sizeof(typestr), obj, 0);
+	hwloc_bitmap_asprintf(&cpusetstr, obj->cpuset);
+	if (obj->os_index != (unsigned) -1)
+	  snprintf(objstr, sizeof(objstr), "%s P#%u cpuset %s",
+		   typestr, obj->os_index, cpusetstr);
+	else
+	  snprintf(objstr, sizeof(objstr), "%s cpuset %s",
+		   typestr, cpusetstr);
+	free(cpusetstr);
+
+	snprintf(msg, sizeof(msg), fmt,
+		 objstr);
+	report_error(msg, line);
 }
 
 /*
@@ -672,7 +702,7 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
       case HWLOC_OBJ_INCLUDED:
 	if (container) {
           if (report_error)
-            report_error("object included in several different objects!", __LINE__);
+	    hwloc___insert_object_by_cpuset_report_error(report_error, "object (%s) included in several different objects!", obj, __LINE__);
 	  /* We can't handle that.  */
 	  return -1;
 	}
@@ -681,7 +711,7 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 	break;
       case HWLOC_OBJ_INTERSECTS:
         if (report_error)
-          report_error("object intersection without inclusion!", __LINE__);
+          hwloc___insert_object_by_cpuset_report_error(report_error, "object (%s) intersection without inclusion!", obj, __LINE__);
 	/* We can't handle that.  */
 	return -1;
       case HWLOC_OBJ_CONTAINS:
@@ -1311,25 +1341,52 @@ unlink_and_free_single_object(hwloc_obj_t *pparent)
     child->next_sibling = parent->next_sibling;
   } else
     *pparent = parent->next_sibling;
-  /* Remove ignored object */
   hwloc_free_unlinked_object(parent);
 }
 
 /* Remove all ignored objects.  */
-static void
+static int
 remove_ignored(hwloc_topology_t topology, hwloc_obj_t *pparent)
 {
   hwloc_obj_t parent = *pparent, child, *pchild;
+  int dropped_children = 0;
+  int dropped = 0;
 
   for_each_child_safe(child, parent, pchild)
-    remove_ignored(topology, pchild);
+    dropped_children += remove_ignored(topology, pchild);
 
-  if (parent != topology->levels[0][0] &&
-      topology->ignored_types[parent->type] == HWLOC_IGNORE_TYPE_ALWAYS) {
+  if ((parent != topology->levels[0][0] &&
+       topology->ignored_types[parent->type] == HWLOC_IGNORE_TYPE_ALWAYS)
+      || (parent->type == HWLOC_OBJ_CACHE && parent->attr->cache.type == HWLOC_OBJ_CACHE_INSTRUCTION
+	  && !(topology->flags & HWLOC_TOPOLOGY_FLAG_ICACHES))) {
     hwloc_debug("%s", "\nDropping ignored object ");
     print_object(topology, 0, parent);
     unlink_and_free_single_object(pparent);
+    dropped = 1;
+
+  } else if (dropped_children) {
+    /* we keep this object but its children changed, reorder them by cpuset */
+
+    /* move the children list on the side */
+    hwloc_obj_t *prev, children = parent->first_child;
+    parent->first_child = NULL;
+    while (children) {
+      /* dequeue child */
+      child = children;
+      children = child->next_sibling;
+      /* find where to enqueue it */
+      prev = &parent->first_child;
+      while (*prev
+	     && (!child->cpuset || !(*prev)->cpuset
+		 || hwloc_bitmap_compare_first(child->cpuset, (*prev)->cpuset) > 0))
+	prev = &((*prev)->next_sibling);
+      /* enqueue */
+      child->next_sibling = *prev;
+      *prev = child;
+    }
   }
+
+  return dropped;
 }
 
 /* Remove an object and its children from its parent and free them.
@@ -2447,6 +2504,9 @@ hwloc_topology_setup_defaults(struct hwloc_topology *topology)
   topology->set_thread_cpubind = NULL;
   topology->get_thread_cpubind = NULL;
 #endif
+  topology->get_thisproc_last_cpu_location = NULL;
+  topology->get_proc_last_cpu_location = NULL;
+  topology->get_thisthread_last_cpu_location = NULL;
   topology->set_thisproc_membind = NULL;
   topology->get_thisproc_membind = NULL;
   topology->set_thisthread_membind = NULL;
@@ -2717,7 +2777,7 @@ hwloc_topology_ignore_all_keep_structure(struct hwloc_topology *topology)
   unsigned type;
   for(type = HWLOC_OBJ_SYSTEM; type < HWLOC_OBJ_TYPE_MAX; type++)
     if (type != HWLOC_OBJ_PU
-	&& !hwloc_obj_type_is_io(type))
+	&& !hwloc_obj_type_is_io((hwloc_obj_type_t) type))
       topology->ignored_types[type] = HWLOC_IGNORE_TYPE_KEEP_STRUCTURE;
   return 0;
 }

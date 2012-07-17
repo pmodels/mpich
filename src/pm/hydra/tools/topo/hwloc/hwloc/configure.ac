@@ -31,15 +31,10 @@ EOF
 
 # This must be before AM_INIT_AUTOMAKE
 AC_CANONICAL_TARGET
-AC_USE_SYSTEM_EXTENSIONS
 
 # Init automake
 AM_INIT_AUTOMAKE([1.10 dist-bzip2 subdir-objects foreign tar-ustar -Wall -Werror])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-
-# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
-# must come before LT_INIT
-m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 
 # We want new Libtool.  None of that old stuff.  Pfft.    
 m4_ifdef([LT_PREREQ], [],
@@ -47,6 +42,7 @@ m4_ifdef([LT_PREREQ], [],
 LT_PREREQ([2.2.6])
 
 AC_LANG([C])
+AC_USE_SYSTEM_EXTENSIONS
 
 # Make configure depend on the VERSION file, since it's used in AC_INIT
 AC_SUBST([CONFIGURE_DEPENDENCIES], ['$(top_srcdir)/VERSION'])
@@ -90,7 +86,7 @@ AC_SUBST([libhwloc_so_version])
 # Setup the header file
 AH_TOP([/* -*- c -*-
  *
- * Copyright © 2009 CNRS, inria., Université Bordeaux 1  All rights reserved.
+ * Copyright © 2009, 2012 CNRS, inria., Université Bordeaux 1  All rights reserved.
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * $COPYRIGHT$
  * 
@@ -113,8 +109,17 @@ AH_BOTTOM([
 
 CFLAGS_save="$CFLAGS"
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_CC_C_O
 CFLAGS="$CFLAGS_save"
+# This did not exist pre AM 1.11.x (where x is somewhere >0 and <3),
+# but it is necessary in AM 1.12.x.
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+
+AC_ARG_VAR(CC_FOR_BUILD,[build system C compiler])
+AS_IF([test -z "$CC_FOR_BUILD"],[
+    AC_SUBST([CC_FOR_BUILD], [$CC])
+])
 
 # Define hwloc's configure arguments
 HWLOC_DEFINE_ARGS

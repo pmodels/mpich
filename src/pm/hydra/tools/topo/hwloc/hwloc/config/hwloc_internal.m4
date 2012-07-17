@@ -117,6 +117,8 @@ EOF
     AS_IF([test "x$DOXYGEN" != "x" -a "x$PDFLATEX" != "x" -a "x$MAKEINDEX" != "x" -a "x$FIG2DEV" != "x" -a "x$GS" != "x" -a "x$EPSTOPDF" != "x"],
                  [hwloc_generate_doxs=yes], [hwloc_generate_doxs=no])
     AC_MSG_RESULT([$hwloc_generate_doxs])
+    AS_IF([test "x$hwloc_generate_doxs" = xyes -a "x$HWLOC_DOXYGEN_VERSION" = x1.6.2],
+                 [hwloc_generate_doxs="no"; AC_MSG_WARN([doxygen 1.6.2 has broken short name support, disabling])])
     
     # Linux and OS X take different sed arguments.
     AC_PROG_SED
@@ -222,7 +224,7 @@ EOF
     hwloc_build_utils=yes
 
     # Cairo support
-    hwloc_cairo_happy=
+    hwloc_cairo_happy=no
     if test "x$enable_cairo" != "xno"; then
       HWLOC_PKG_CHECK_MODULES([CAIRO], [cairo], [cairo_fill],
                               [hwloc_cairo_happy=yes],
@@ -266,9 +268,12 @@ EOF
       AC_CHECK_FUNCS([putwc])
     ], [], [[#include <wchar.h>]])
 
-    AC_CHECK_HEADERS([locale.h], [
+    HWLOC_XML_LOCALIZED=1
+    AC_CHECK_HEADERS([locale.h xlocale.h], [
       AC_CHECK_FUNCS([setlocale])
+      AC_CHECK_FUNCS([uselocale], [HWLOC_XML_LOCALIZED=0])
     ])
+    AC_SUBST([HWLOC_XML_LOCALIZED])
     AC_CHECK_HEADERS([langinfo.h], [
       AC_CHECK_FUNCS([nl_langinfo])
     ])
@@ -324,6 +329,8 @@ AC_DEFUN([HWLOC_SETUP_TESTS],[
 EOF
 
     hwloc_build_tests=yes
+
+    AC_CHECK_LIB([pthread], [pthread_self], [hwloc_have_pthread=yes])
 
     # linux-libnuma.h testing requires libnuma with numa_bitmask_alloc()
     AC_CHECK_DECL([numa_bitmask_alloc], [hwloc_have_linux_libnuma=yes], [],
@@ -409,9 +416,6 @@ EOF
     # built in standalone mode, only generate them in
     # standalone mode.
     AC_CONFIG_LINKS(
-        hwloc_config_prefix[tests/ports/topology.c]:hwloc_config_prefix[src/topology.c]
-	hwloc_config_prefix[tests/ports/traversal.c]:hwloc_config_prefix[src/traversal.c]
-	hwloc_config_prefix[tests/ports/topology-synthetic.c]:hwloc_config_prefix[src/topology-synthetic.c]
 	hwloc_config_prefix[tests/ports/topology-solaris.c]:hwloc_config_prefix[src/topology-solaris.c]
 	hwloc_config_prefix[tests/ports/topology-solaris-chiptype.c]:hwloc_config_prefix[src/topology-solaris-chiptype.c]
 	hwloc_config_prefix[tests/ports/topology-aix.c]:hwloc_config_prefix[src/topology-aix.c]

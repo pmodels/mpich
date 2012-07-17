@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -57,7 +57,7 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
 	type = HWLOC_OBJ_CORE;
       else if (!hwloc_namecoloncmp(pos, "caches", 2))
 	type = HWLOC_OBJ_CACHE;
-      else if (!hwloc_namecoloncmp(pos, "pus", 1) || !hwloc_namecoloncmp(pos, "procs", 1) /* backward compatiblity with 0.9 */)
+      else if (!hwloc_namecoloncmp(pos, "pus", 1))
 	type = HWLOC_OBJ_PU;
       else if (!hwloc_namecoloncmp(pos, "misc", 2))
 	type = HWLOC_OBJ_MISC;
@@ -315,12 +315,15 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
     case HWLOC_OBJ_CACHE:
       obj->attr->cache.depth = topology->backend_params.synthetic.depth[level];
       obj->attr->cache.linesize = 64;
-      if (obj->attr->cache.depth == 1)
-	/* 32Kb in L1 */
+      if (obj->attr->cache.depth == 1) {
+	/* 32Kb in L1d */
 	obj->attr->cache.size = 32*1024;
-      else
-	/* *4 at each level, starting from 1MB for L2 */
+	obj->attr->cache.type = HWLOC_OBJ_CACHE_DATA;
+      } else {
+	/* *4 at each level, starting from 1MB for L2, unified */
 	obj->attr->cache.size = 256*1024 << (2*obj->attr->cache.depth);
+	obj->attr->cache.type = HWLOC_OBJ_CACHE_UNIFIED;
+      }
       break;
     case HWLOC_OBJ_CORE:
       break;

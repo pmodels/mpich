@@ -21,8 +21,8 @@ static void check_cpuset(hwloc_bitmap_t set, const char *expected)
   char *string = NULL;
 
   hwloc_bitmap_asprintf(&string, set);
-  if (expected)
-    assert(!strcmp(string, expected));
+  if (expected && strcmp(string, expected))
+    assert(0);
   hwloc_bitmap_sscanf(set2, string);
   free(string);
   assert(hwloc_bitmap_isequal(set, set2));
@@ -65,7 +65,6 @@ int main(void)
   set = hwloc_bitmap_alloc_full();
   hwloc_bitmap_clr(set, 173);
   hwloc_bitmap_clr_range(set, 60, 70);
-  hwloc_bitmap_asprintf(&string, set);
   check_cpuset(set, NULL);
   hwloc_bitmap_free(set);
   printf("infinite/nonfull cpuset converted back and forth, ok\n");

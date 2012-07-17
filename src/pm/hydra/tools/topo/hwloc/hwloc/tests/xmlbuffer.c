@@ -14,20 +14,44 @@ static int one_test(void)
   hwloc_topology_t topology;
   int size1, size2;
   char *buf1, *buf2;
-  int err = 0;
+  int err = 0, i;
+  char s[129];
+  char t[10];
+
+  for(i=0; i<128; i++)
+    s[i] = ' ';
+  s[128] = 0;
+  for(i=32; i<=126; i++)
+    s[i] = i;
+  s['\t'] = '\t';
+  s['\n'] = '\n';
+  s['\r'] = '\r';
+
+  t[0] = 'x';
+  for(i=1; i<=7; i++)
+    t[i] = i;
+  t[8] = 'y';
+  t[9] = '\0';
 
   hwloc_topology_init(&topology);
   hwloc_topology_set_flags(topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO);
   hwloc_topology_load(topology);
   assert(hwloc_topology_is_thissystem(topology));
+  hwloc_obj_add_info(hwloc_get_root_obj(topology), "UglyString", s);
+  hwloc_obj_add_info(hwloc_get_root_obj(topology), "UberUglyString", t);
   hwloc_topology_export_xmlbuffer(topology, &buf1, &size1);
   hwloc_topology_destroy(topology);
   printf("exported to buffer %p length %d\n", buf1, size1);
 
   hwloc_topology_init(&topology);
+  hwloc_topology_set_flags(topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO);
   assert(!hwloc_topology_set_xmlbuffer(topology, buf1, size1));
   hwloc_topology_load(topology);
   assert(!hwloc_topology_is_thissystem(topology));
+  if (strcmp(hwloc_obj_get_info_by_name(hwloc_get_root_obj(topology), "UglyString"), s))
+    assert(0);
+  if (strcmp(hwloc_obj_get_info_by_name(hwloc_get_root_obj(topology), "UberUglyString"), "xy"))
+    assert(0);
   hwloc_topology_export_xmlbuffer(topology, &buf2, &size2);
   hwloc_topology_destroy(topology);
   printf("re-exported to buffer %p length %d\n", buf2, size2);

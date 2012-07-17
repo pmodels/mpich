@@ -1,11 +1,11 @@
 .\" -*- nroff -*-
-.\" Copyright © 2009-2011 inria.  All rights reserved.
+.\" Copyright © 2009-2012 Inria.  All rights reserved.
 .\" Copyright © 2009-2010 Université of Bordeaux
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
 .TH LSTOPO "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
 .SH NAME
-lstopo \- Show the topology of the system (note that hwloc-bind(1)
+lstopo, lstopo-no-graphics \- Show the topology of the system (note that hwloc-bind(1)
 provides a detailed explanation of the hwloc system; it should be read
 before reading this man page).
 .
@@ -15,6 +15,10 @@ before reading this man page).
 .SH SYNOPSIS
 .
 .B lstopo
+[ \fIoptions \fR]... [ \fIfilename \fR]
+.
+.PP
+.B lstopo-no-graphics
 [ \fIoptions \fR]... [ \fIfilename \fR]
 .
 .\" **************************
@@ -90,6 +94,9 @@ Do not show caches.
 \fB\-\-no\-useless\-caches\fR
 Do not show caches which do not have a hierarchical impact.
 .TP
+\fB\-\-no\-icaches\fR
+Do not show Instruction caches, only Data and Unified caches are displayed.
+.TP
 \fB\-\-whole\-system\fR
 Do not consider administration limitations.
 .TP
@@ -128,8 +135,11 @@ a custom topology such as an XML file.
 .TP
 \fB\-\-pid\fR <pid>
 Detect topology as seen by process <pid>, i.e. as if process <pid> did the
-discovery itself, and show its current binding. Note that this can for instance
-change the set of allowed processors. If 0 is given as pid, the current binding for the lstopo process will be shown.
+discovery itself.
+Note that this can for instance change the set of allowed processors.
+Also show this process current CPU binding in the graphical output
+(in Green, see the COLORS section below).
+If 0 is given as pid, the current binding for the lstopo process will be shown.
 .TP
 \fB\-\-ps\fR \fB\-\-top\fR
 Show existing processes as misc objects in the output. To avoid uselessly
@@ -165,13 +175,17 @@ Report version and exit.
 .\" **************************
 .SH DESCRIPTION
 .
-lstopo is capable of displaying a topological map of the system in a
-variety of different output formats.  If no filename is specified and
-the DISPLAY environment variable is set, lstopo displays the map in a
-graphical window.  If no filename is specified and the DISPLAY
-environment variable is
+lstopo and lstopo-no-graphics are capable of displaying a topological map of
+the system in a variety of different output formats.  The only difference
+between lstopo and lstopo-no-graphics is that graphical outputs are only
+supported by lstopo, to reduce dependencies on external libraries.
+.
+.PP
+If no filename is specified and the DISPLAY environment variable is set,
+lstopo displays the map in a graphical window.  If no filename is
+specified and the DISPLAY environment variable is
 .I not
-set, a text summary is displayed.  
+set, a text summary is displayed.
 .
 .PP
 The filename specified directly implies the output format that will be
@@ -201,9 +215,12 @@ be used with "\-\-of" or as a filename suffix.
 .TP
 .B default
 Send the output to a window or to the console depending on the environment.
+.
 .TP
 .B console
 Send a text summary to stdout.
+No color annotation for binding, unallowed or offline processors
+is shown in this mode; see the COLORS section, below.
 .
 .TP
 .B txt
@@ -278,11 +295,13 @@ Individual CPUs are colored in the semi-graphical and graphical output
 formats to indicate different characteristics:
 .TP
 Green
-The CPU is in the current CPU binding mask.
+The topology is reported as seen by a specific process (see \fB\-\-pid\fR),
+and the given CPU is in this process CPU binding mask.
 .TP
 White
-The CPU is in the allowed set (see below), but it is not in the
-current CPU binding mask.
+The CPU is in the allowed set (see below).
+If the topology is reported as seen by a specific process (see \fB\-\-pid\fR),
+the given CPU is also not in this process CPU binding mask.
 .TP
 Red
 The CPU is not in the allowed set (see below).
@@ -302,6 +321,10 @@ set.  Hence, invoking lstopo in different contexts and/or as different
 users may display different colors for the same individual CPUs (e.g.,
 running lstopo in one context may show a specific CPU as red, but
 running lstopo in a different context may show the same CPU as white).
+.PP
+Some lstopo output modes, e.g. the console mode (default non-graphical output),
+do not support colors at all.
+The above characteristics are not shown in this case.
 .
 .\" **************************
 .\"    Layout Section
@@ -320,11 +343,11 @@ topology (lstopo is not able to render that yet).
 .
 To display the machine topology in textual mode:
 
-    lstopo -
+    lstopo-no-graphics
 
 To display the machine topology in pseudo-graphical mode:
 
-    lstopo -.txt
+    lstopo-no-graphics -.txt
 
 To display in graphical mode (assuming that the DISPLAY environment
 variable is set to a relevant value):

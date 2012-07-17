@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -203,7 +203,7 @@ hwloc_obj_type_of_string (const char * string)
   if (!strcasecmp(string, "Socket")) return HWLOC_OBJ_SOCKET;
   if (!strcasecmp(string, "Cache")) return HWLOC_OBJ_CACHE;
   if (!strcasecmp(string, "Core")) return HWLOC_OBJ_CORE;
-  if (!strcasecmp(string, "PU") || !strcasecmp(string, "proc") /* backward compatiliby with 0.9 */) return HWLOC_OBJ_PU;
+  if (!strcasecmp(string, "PU")) return HWLOC_OBJ_PU;
   if (!strcasecmp(string, "Bridge")) return HWLOC_OBJ_BRIDGE;
   if (!strcasecmp(string, "PCIDev")) return HWLOC_OBJ_PCI_DEVICE;
   if (!strcasecmp(string, "OSDev")) return HWLOC_OBJ_OS_DEVICE;
@@ -373,6 +373,16 @@ hwloc_pci_class_string(unsigned short class_id)
 #define hwloc_memory_size_printf_unit(_size, _verbose) \
   ((_size) < (10ULL<<20) || _verbose ? "KB" : (_size) < (10ULL<<30) ? "MB" : "GB")
 
+static const char* hwloc_obj_cache_type_letter(hwloc_obj_cache_type_t type)
+{
+  switch (type) {
+  case HWLOC_OBJ_CACHE_UNIFIED: return "";
+  case HWLOC_OBJ_CACHE_DATA: return "d";
+  case HWLOC_OBJ_CACHE_INSTRUCTION: return "i";
+  default: return "unknown";
+  }
+}
+
 int
 hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t obj, int verbose)
 {
@@ -387,7 +397,9 @@ hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t
   case HWLOC_OBJ_PU:
     return hwloc_snprintf(string, size, "%s", hwloc_obj_type_string(type));
   case HWLOC_OBJ_CACHE:
-    return hwloc_snprintf(string, size, "L%u%s", obj->attr->cache.depth, verbose ? hwloc_obj_type_string(type): "");
+    return hwloc_snprintf(string, size, "L%u%s%s", obj->attr->cache.depth,
+			  hwloc_obj_cache_type_letter(obj->attr->cache.type),
+			  verbose ? hwloc_obj_type_string(type): "");
   case HWLOC_OBJ_GROUP:
 	  /* TODO: more pretty presentation? */
     return hwloc_snprintf(string, size, "%s%u", hwloc_obj_type_string(type), obj->attr->group.depth);

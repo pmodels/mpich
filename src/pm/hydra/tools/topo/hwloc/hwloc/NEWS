@@ -1,5 +1,5 @@
 Copyright © 2009 CNRS
-Copyright © 2009-2011 inria.  All rights reserved.
+Copyright © 2009-2012 inria.  All rights reserved.
 Copyright © 2009-2012 Université Bordeaux 1
 Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 
@@ -15,6 +15,64 @@ This file contains the main features as well as overviews of specific
 bug fixes (and other actions) for each version of hwloc since version
 0.9 (as initially released as "libtopology", then re-branded to "hwloc"
 in v0.9.1).
+
+
+Version 1.5.0
+-------------
+* Backends
+  + Do not limit the number of processors to 1024 on Solaris anymore.
+  + Gather total machine memory on FreeBSD.
+  + XML topology files do not depend on the locale anymore. Float numbers
+    such as NUMA distances or PCI link speeds now always use a dot as a
+    decimal separator.
+  + Add instruction caches detection on Linux, AIX, Windows and Darwin.
+  + Add get_last_cpu_location() support for the current thread on AIX.
+  + Support binding on AIX when threads or processes were bound with
+    bindprocessor(). Thanks to Hendryk Bockelmann for reporting the issue
+    and testing patches, and to Farid Parpia for explaining the binding
+    interfaces.
+  + Improve AMD topology detection in the x86 backend (for FreeBSD) using
+    the topoext feature.
+* API
+  + Increase HWLOC_API_VERSION to 0x00010500 so that API changes may be
+    detected at build-time.
+  + Add a cache type attribute describind Data, Instruction and Unified
+    caches. Caches with different types but same depth (for instance L1d
+    and L1i) are placed on different levels.
+  + Add hwloc_get_cache_type_depth() to retrieve the hwloc level depth of
+    of the given cache depth and type, for instance L1i or L2.
+    It helps  disambiguating the case where hwloc_get_type_depth() returns
+    HWLOC_TYPE_DEPTH_MULTIPLE.
+  + Instruction caches are ignored unless HWLOC_TOPOLOGY_FLAG_ICACHES is
+    passed to hwloc_topology_set_flags() before load.
+  + Add hwloc_ibv_get_device_osdev_by_name() OpenFabrics helper in
+    openfabrics-verbs.h to find the hwloc OS device object corresponding to
+    an OpenFabrics device.
+* Tools
+  + Add lstopo-no-graphics, a lstopo built without graphical support to
+    avoid dependencies on external libraries such as Cairo and X11. When
+    supported, graphical outputs are only available in the original lstopo
+    program.
+    - Packagers splitting lstopo and lstopo-no-graphics into different
+      packages are advised to use the alternatives system so that lstopo
+      points to the best available binary.
+  + Instruction caches are enabled in lstopo by default. User --no-icaches
+    to disable them.
+  + Add -t/--threads to show threads in hwloc-ps.
+* Removal of obsolete components
+  + Remove the old cpuset interface (hwloc/cpuset.h) which is deprecated and
+    superseded by the bitmap API (hwloc/bitmap.h) since v1.1.
+    hwloc_cpuset and nodeset types are still defined, but all hwloc_cpuset_*
+    compatibility wrappers are now gone.
+  + Remove Linux libnuma conversion helpers for the deprecated and
+    broken nodemask_t interface.
+  + Remove support for "Proc" type name, it was superseded by "PU" in v1.0.
+  + Remove hwloc-mask symlinks, it was replaced by hwloc-calc in v1.0.
+* Misc
+  + Non-printable characters are dropped from strings during XML export.
+  + Assert hwloc_is_thissystem() in several I/O related helpers.
+  + Limit the number of retries when operating on all threads within a
+    process on Linux if the list of threads is heavily getting modified.
 
 
 Version 1.4.2
