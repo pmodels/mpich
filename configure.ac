@@ -3399,10 +3399,10 @@ MPI_UINT64_T=0x4c00083e
 # The compiler may or may not support these types, depending on its level of C99
 # compliance.  We check for each one individually before assigning a handle
 # number.
-MPI_C_BOOL=$MPI_DATATYPE_NULL
-MPI_C_FLOAT_COMPLEX=$MPI_DATATYPE_NULL
-MPI_C_DOUBLE_COMPLEX=$MPI_DATATYPE_NULL
-MPI_C_LONG_DOUBLE_COMPLEX=$MPI_DATATYPE_NULL
+MPI_C_BOOL=MPI_DATATYPE_NULL
+MPI_C_FLOAT_COMPLEX=MPI_DATATYPE_NULL
+MPI_C_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
+MPI_C_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
 if test ${len__Bool} != 0 ; then
     MPI_C_BOOL=0x4c00${len__Bool}3f
 fi
