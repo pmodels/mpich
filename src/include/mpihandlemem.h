@@ -125,7 +125,7 @@ const char *MPIU_Handle_get_kind_str(int kind);
                                              "Invalid refcount (%d) in %p (0x%08x) %s",             \
                                              local_ref_count_, (objptr_), (objptr_)->handle, op_)); \
         }                                                                                           \
-        MPIU_Assert(local_ref_count_ < 0);                                                          \
+        MPIU_Assert(local_ref_count_ >= 0);                                                         \
     } while (0)
 #else
 #define MPIU_HANDLE_CHECK_REFCOUNT(objptr_,op_) \
