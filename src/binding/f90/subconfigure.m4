@@ -28,30 +28,30 @@ AC_SUBST(FCEXT)
 # find (through selected_real_kind and selected_int_kind) types with larger or
 # smaller precisions and/or ranges than the basic types.
 if test -z "$CROSS_F90_REAL_MODEL" ; then
-    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],[
-        real aa
-        print *, precision(aa), ",", range(aa)
-    ],[FC_REAL_MODEL])
+    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],
+                               [real aa],
+                               [precision(aa), ",", range(aa)],
+                               [FC_REAL_MODEL])
 else
     FC_REAL_MODEL=$CROSS_F90_REAL_MODEL
 fi
 AC_SUBST(FC_REAL_MODEL)
 #
 if test -z "$CROSS_F90_DOUBLE_MODEL" ; then
-    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],[
-        double precision aa
-        print *, precision(aa), ",", range(aa)
-    ],[FC_DOUBLE_MODEL])
+    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],
+                               [double precision aa],
+                               [precision(aa), ",", range(aa)],
+                               [FC_DOUBLE_MODEL])
 else
     FC_DOUBLE_MODEL=$CROSS_F90_DOUBLE_MODEL
 fi
 AC_SUBST(FC_DOUBLE_MODEL)
 #
 if test -z "$CROSS_F90_INTEGER_MODEL" ; then
-    PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],[
-        integer aa
-        print *, range(aa)
-    ],[FC_INTEGER_MODEL])
+    PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],
+                               [integer aa],
+                               [range(aa)],
+                               [FC_INTEGER_MODEL])
 else
     FC_INTEGER_MODEL=$CROSS_F90_INTEGER_MODEL
 fi

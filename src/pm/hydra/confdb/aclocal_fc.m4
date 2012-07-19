@@ -876,7 +876,7 @@ AC_LINK_IFELSE([
 AC_LANG_POP([Fortran])
 ])
 dnl
-dnl PAC_FC_SIMPLE_NUMBER_MODEL(message,test-fc-code,
+dnl PAC_FC_SIMPLE_NUMBER_MODEL(message, Fortran-test, Fortran_printing_code,
 dnl                            [variable-set-if-successful-test])
 dnl message      : message of what test-fc-code is checking
 dnl test-fc-code : Fortran 90 code to check a float or integer type's data model
@@ -890,23 +890,29 @@ AC_DEFUN([PAC_FC_SIMPLE_NUMBER_MODEL],[
 pac_msg="$1"
 AC_MSG_CHECKING([for $pac_msg])
 AC_LANG_PUSH([Fortran])
-AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([],[
+rm -f pac_fconftest.out
+AC_RUN_IFELSE([
+    AC_LANG_SOURCE([
+        program main
         $2
+        open(8, file="pac_fconftest.out", form="formatted")
+        write(8,*) $3
+        close(8)
+        end
     ])
 ],[
-    rm -f pac_conftest.out
-    PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
-    if test -s pac_conftest.out ; then
-        pac_fc_num_model="`cat pac_conftest.out | sed -e 's/  */ /g'`"
+    if test -s pac_fconftest.out ; then
+        pac_fc_num_model="`sed -e 's/  */ /g' pac_fconftest.out`"
         AC_MSG_RESULT([$pac_fc_num_model])
-        ifelse([$3],[],[],[$3=$pac_fc_num_model])
+        ifelse([$4],[],[],[$4=$pac_fc_num_model])
     else
+        AC_MSG_RESULT([Error])
         AC_MSG_WARN([No output from test program!])
     fi
-    rm -f pac_conftest.out
+    rm -f pac_fconftest.out
 ],[
-    AC_MSG_WARN([Failed to build program to determine $pac_msg])
+    AC_MSG_RESULT([Error])
+    AC_MSG_WARN([Failed to run program to determine $pac_msg])
 ])
 AC_LANG_POP([Fortran])
 ])
@@ -920,15 +926,17 @@ dnl
 AC_DEFUN([PAC_FC_AVAIL_INTEGER_MODELS],[
 AC_MSG_CHECKING([for available integer kinds])
 AC_LANG_PUSH([Fortran])
-AC_LINK_IFELSE([
+rm -f pac_fconftest.out
+AC_RUN_IFELSE([
     AC_LANG_SOURCE([
         program main
         integer r, lastkind
         lastkind=selected_int_kind(1)
+        open(8, file="pac_fconftest.out", form="formatted")
         do r=2,30
              k = selected_int_kind(r)
              if (k .ne. lastkind) then
-                  print *, r-1,",",lastkind
+                  write(8,*) r-1, ",", lastkind
                   lastkind = k
              endif
              if (k .le. 0) then
@@ -936,24 +944,25 @@ AC_LINK_IFELSE([
              endif
         enddo
         if (k.ne.lastkind) then
-            print *, 31, ",", k
+            write(8,*) 31, ",", k
         endif
+        close(8)
         end
     ])
 ],[
-    rm -f pac_conftest.out
-    PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
-    if test -s pac_conftest.out ; then
-        pac_flag=`cat pac_conftest.out | sed -e 's/  */ /g'| tr '\012' ','`
+    if test -s pac_fconftest.out ; then
+        pac_flag="`sed -e 's/  */ /g' pac_fconftest.out | tr '\012' ','`"
         AC_MSG_RESULT([$pac_flag])
-        pac_validKinds="`sed -e 's/  */ /g' pac_conftest.out | tr '\012' ':'`"
+        pac_validKinds="`sed -e 's/  */ /g' pac_fconftest.out | tr '\012' ':'`"
         ifelse([$1],[],[PAC_FC_ALL_INTEGER_MODELS=$pac_flag],[$1=$pac_flag])
     else
+        AC_MSG_RESULT([Error])
         AC_MSG_WARN([No output from test program!])
     fi
-    rm -f pac_conftest.out
+    rm -f pac_fconftest.out
 ],[
-    AC_MSG_WARN([Failed to build program to determine available integer models])
+    AC_MSG_RESULT([Error])
+    AC_MSG_WARN([Failed to run program to determine available integer models])
 ])
 AC_LANG_POP([Fortran])
 ])
@@ -1011,23 +1020,24 @@ if test "$pac_ccompile_ok" = "yes" ; then
                 program main
                 integer (kind=$kind) a(2)
                 integer cisize
-                print *, $range, ",", $kind, ",", cisize( a(1), a(2) )
+                open(8, file="pac_fconftest.out", form="formatted")
+                write(8,*) $range, ",", $kind, ",", cisize( a(1), a(2) )
+                close(8)
                 end
             ])
         ])
         IFS=$saved_IFS
-        AC_LINK_IFELSE([],[
-            rm -f pac_conftest.out
-            PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
-            if test -s pac_conftest.out ; then
-                sizes="`cat pac_conftest.out | sed -e 's/  */ /g'`"
+        rm -f pac_fconftest.out
+        AC_RUN_IFELSE([],[
+            if test -s pac_fconftest.out ; then
+                sizes="`sed -e 's/  */ /g' pac_fconftest.out`"
                 pac_flag="$pac_flag { $sizes },"
             else
                 AC_MSG_WARN([No output from test program!])
             fi
-            rm -f pac_conftest.out
+            rm -f pac_fconftest.out
         ],[
-            AC_MSG_WARN([Fortran program fails to build!])
+            AC_MSG_WARN([Fortran program fails to build or run!])
         ])
         IFS=:
     done
