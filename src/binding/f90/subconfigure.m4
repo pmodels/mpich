@@ -31,31 +31,31 @@ PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],
                            [real aa],
                            [precision(aa), ",", range(aa)],
                            [FC_REAL_MODEL],
-                           [CROSS_F90_REAL_MODEL])
+                           [$CROSS_F90_REAL_MODEL])
 AC_SUBST(FC_REAL_MODEL)
 #
 PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],
                            [double precision aa],
                            [precision(aa), ",", range(aa)],
                            [FC_DOUBLE_MODEL],
-                           [CROSS_F90_DOUBLE_MODEL])
+                           [$CROSS_F90_DOUBLE_MODEL])
 AC_SUBST(FC_DOUBLE_MODEL)
 #
 PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],
                            [integer aa],
                            [range(aa)],
                            [FC_INTEGER_MODEL],
-                           [CROSS_F90_INTEGER_MODEL])
+                           [$CROSS_F90_INTEGER_MODEL])
 AC_SUBST(FC_INTEGER_MODEL)
 
 # Try to find the available integer kinds by using selected_int_kind
 # This produces a table of range,kind
 PAC_FC_AVAIL_INTEGER_MODELS([FC_ALL_INTEGER_MODELS],
-                            [CROSS_F90_ALL_INTEGER_MODELS])
+                            [$CROSS_F90_ALL_INTEGER_MODELS])
 AC_SUBST(FC_ALL_INTEGER_MODELS)
 #
 PAC_FC_INTEGER_MODEL_MAP([FC_INTEGER_MODEL_MAP],
-                         [CROSS_F90_INTEGER_MODEL_MAP])
+                         [$CROSS_F90_INTEGER_MODEL_MAP])
 AC_SUBST(FC_INTEGER_MODEL_MAP)    
 
 AC_CONFIG_FILES([src/binding/f90/mpif90model.h])
