@@ -59,7 +59,7 @@ PAC_POP_ALL_FLAGS
 # Libtool might be required for third-party packages
 LT_INIT
 
-AM_PROG_MKDIR_P
+AC_PROG_MKDIR_P
 AC_PROG_INSTALL
 PAC_ARG_CACHING
 PAC_C_MACRO_VA_ARGS
