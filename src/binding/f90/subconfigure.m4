@@ -27,50 +27,35 @@ AC_SUBST(FCEXT)
 # routines, but will handle most programs.  We can extend this by trying to
 # find (through selected_real_kind and selected_int_kind) types with larger or
 # smaller precisions and/or ranges than the basic types.
-if test -z "$CROSS_F90_REAL_MODEL" ; then
-    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],
-                               [real aa],
-                               [precision(aa), ",", range(aa)],
-                               [FC_REAL_MODEL])
-else
-    FC_REAL_MODEL=$CROSS_F90_REAL_MODEL
-fi
+PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of reals],
+                           [real aa],
+                           [precision(aa), ",", range(aa)],
+                           [FC_REAL_MODEL],
+                           [CROSS_F90_REAL_MODEL])
 AC_SUBST(FC_REAL_MODEL)
 #
-if test -z "$CROSS_F90_DOUBLE_MODEL" ; then
-    PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],
-                               [double precision aa],
-                               [precision(aa), ",", range(aa)],
-                               [FC_DOUBLE_MODEL])
-else
-    FC_DOUBLE_MODEL=$CROSS_F90_DOUBLE_MODEL
-fi
+PAC_FC_SIMPLE_NUMBER_MODEL([the precision and range of double precision],
+                           [double precision aa],
+                           [precision(aa), ",", range(aa)],
+                           [FC_DOUBLE_MODEL],
+                           [CROSS_F90_DOUBLE_MODEL])
 AC_SUBST(FC_DOUBLE_MODEL)
 #
-if test -z "$CROSS_F90_INTEGER_MODEL" ; then
-    PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],
-                               [integer aa],
-                               [range(aa)],
-                               [FC_INTEGER_MODEL])
-else
-    FC_INTEGER_MODEL=$CROSS_F90_INTEGER_MODEL
-fi
+PAC_FC_SIMPLE_NUMBER_MODEL([the range of integer],
+                           [integer aa],
+                           [range(aa)],
+                           [FC_INTEGER_MODEL],
+                           [CROSS_F90_INTEGER_MODEL])
 AC_SUBST(FC_INTEGER_MODEL)
 
 # Try to find the available integer kinds by using selected_int_kind
 # This produces a table of range,kind
-if test -z "$CROSS_F90_ALL_INTEGER_MODELS" ; then
-    PAC_FC_AVAIL_INTEGER_MODELS([FC_ALL_INTEGER_MODELS])
-else
-    FC_ALL_INTEGER_MODELS="$CROSS_F90_ALL_INTEGER_MODELS"
-fi
-AC_SUBST(FC_ALL_INTEGER_MODELS)    
+PAC_FC_AVAIL_INTEGER_MODELS([FC_ALL_INTEGER_MODELS],
+                            [CROSS_F90_ALL_INTEGER_MODELS])
+AC_SUBST(FC_ALL_INTEGER_MODELS)
 #
-if test -z "$CROSS_F90_INTEGER_MODEL_MAP" ; then
-    PAC_FC_INTEGER_MODEL_MAP([FC_INTEGER_MODEL_MAP])
-else
-    FC_INTEGER_MODEL_MAP="$CROSS_F90_INTEGER_MODEL_MAP"
-fi
+PAC_FC_INTEGER_MODEL_MAP([FC_INTEGER_MODEL_MAP],
+                         [CROSS_F90_INTEGER_MODEL_MAP])
 AC_SUBST(FC_INTEGER_MODEL_MAP)    
 
 AC_CONFIG_FILES([src/binding/f90/mpif90model.h])

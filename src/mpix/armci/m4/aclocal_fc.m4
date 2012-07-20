@@ -852,37 +852,46 @@ AC_DEFUN([PAC_FC_FLOAT_MODEL],[
 type="$1"
 AC_MSG_CHECKING([for precision and range of $type])
 AC_LANG_PUSH([Fortran])
-AC_LINK_IFELSE([
+rm -f pac_fconftest.out
+AC_RUN_IFELSE([
     AC_LANG_SOURCE([
         program main
         $type aa
-        print *, precision(aa), ",", range(aa)
+        open(8, file="pac_fconftest.out", form="formatted")
+        write(8,*) precision(aa), ",", range(aa)
+        close(8)
         end
     ])
 ],[
-    rm -f pac_conftest.out
-    PAC_RUNLOG([./conftest$EXEEXT > pac_conftest.out])
-    if test -s pac_conftest.out ; then
-        pac_fc_num_model="`cat pac_conftest.out | sed -e 's/  */ /g'`"
+    if test -s pac_fconftest.out ; then
+        pac_fc_num_model="`sed -e 's/  */ /g' pac_fconftest.out`"
         AC_MSG_RESULT([$pac_fc_num_model])
         ifelse([$2],[],[],[$2=$pac_fc_num_model])
     else
+        AC_MSG_RESULT([Error])
         AC_MSG_WARN([No output from test program!])
     fi
-    rm -f pac_conftest.out
+    rm -f pac_fconftest.out
 ],[
-    AC_MSG_WARN([Failed to build program to determine the precision and range of $type])
+    AC_MSG_RESULT([Error])
+    AC_MSG_WARN([Failed to run program to determine the precision and range of $type])
 ])
 AC_LANG_POP([Fortran])
 ])
 dnl
-dnl PAC_FC_SIMPLE_NUMBER_MODEL(message, Fortran-test, Fortran_printing_code,
-dnl                            [variable-set-if-successful-test])
-dnl message      : message of what test-fc-code is checking
-dnl test-fc-code : Fortran 90 code to check a float or integer type's data model
+dnl PAC_FC_SIMPLE_NUMBER_MODEL(message, Fortran-type, Fortran-write,
+dnl                            [variable-set-if-successful-test],
+dnl                            [cross-variable])
+dnl
+dnl message        : message of what test-fc-code is checking
+dnl Fortran-type   : Fortran90 type's data model to be examined.
+dnl Fortran-write  : Fortran90 type's write statement used with write(N,*).
 dnl variable-set-if-successful-test :
-dnl                The optional variable to be set if the test-fc-code
+dnl                The optional variable to be set if the codelet:
+dnl                "Fortran-type" + "write(N,*) Fortran-write"
 dnl                is successful in returning the simple data model.
+dnl cross variable : cross value to be used for above variable when
+dnl                  cross_compiling=yes
 dnl
 dnl This is a runtime test.
 dnl
@@ -913,13 +922,20 @@ AC_RUN_IFELSE([
 ],[
     AC_MSG_RESULT([Error])
     AC_MSG_WARN([Failed to run program to determine $pac_msg])
+],[
+    AC_MSG_RESULT([${$5}])
+    ifelse([$4],[],[],[$4="${$5}"])
 ])
 AC_LANG_POP([Fortran])
 ])
 dnl
-dnl PAC_FC_AVAIL_INTEGER_MODELS([INTEGER-MODELS-FLAG])
-dnl Both INTEGER-MODELS-FLAG is an optional variable to be set if provided.
-dnl If it isn't provided, PAC_FC_ALL_INTEGER_MODELS will be set.
+dnl PAC_FC_AVAIL_INTEGER_MODELS([INTEGER-MODELS-FLAG],[CROSS-VARIABLE])
+dnl
+dnl INTEGER-MODELS-FLAG : an optional variable to be set if provided.
+dnl                       If it isn't provided, PAC_FC_ALL_INTEGER_MODELS
+dnl                       will be set.
+dnl CROSS-VARIABLE      : its value will be used to set INTEGER-MODELS-FLAG
+dnl                       or PAC_FC_ALL_INTEGER_MODELS if cross_compiling=yes.
 dnl
 dnl This is a runtime test.
 dnl
@@ -963,15 +979,23 @@ AC_RUN_IFELSE([
 ],[
     AC_MSG_RESULT([Error])
     AC_MSG_WARN([Failed to run program to determine available integer models])
+],[
+    AC_MSG_RESULT([${$2}])
+    ifelse([$1],[],[PAC_FC_ALL_INTEGER_MODELS="${$2}"],[$1="${$2}"])
 ])
 AC_LANG_POP([Fortran])
 ])
 dnl
-dnl PAC_FC_INTEGER_MODEL_MAP([INTEGER-MODEL-MAP-FLAG])
-dnl Both INTEGER-MODEL-MAP-FLAG is an optional variable to be set if provided.
-dnl If it isn't provided, PAC_FC_INTEGER_MODEL_MAP will be set.
+dnl PAC_FC_INTEGER_MODEL_MAP([INTEGER-MODEL-MAP-FLAG],[CROSS_VARIABLE]))
 dnl
-dnl This test expect pac_validKinds set by PAC_FC_ALL_INTEGER_MODELS.
+dnl INTEGER-MODEL-MAP-FLAG : an optional variable to be set if provided.
+dnl                          If it isn't provided, PAC_FC_INTEGER_MODEL_MAP
+dnl                          will be set.
+dnl CROSS-VARIABLE         : its value will be used to set
+dnl                          INTEGER-MODEL-MAP-FLAG or 
+dnl                          PAC_FC_INTEGER_MODEL_MAP if cross_compiling=yes.
+dnl
+dnl This test requires $pac_validKinds set by PAC_FC_ALL_INTEGER_MODELS().
 dnl
 dnl This is a runtime test.
 dnl
@@ -1038,6 +1062,8 @@ if test "$pac_ccompile_ok" = "yes" ; then
             rm -f pac_fconftest.out
         ],[
             AC_MSG_WARN([Fortran program fails to build or run!])
+        ],[
+            pac_flag="${$2}"
         ])
         IFS=:
     done
