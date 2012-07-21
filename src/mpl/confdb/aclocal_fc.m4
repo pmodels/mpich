@@ -980,6 +980,9 @@ AC_RUN_IFELSE([
     AC_MSG_RESULT([Error])
     AC_MSG_WARN([Failed to run program to determine available integer models])
 ],[
+    dnl Even when cross_compiling=yes,
+    dnl pac_validKinds needs to be set for PAC_FC_INTEGER_MODEL_MAP()
+    pac_validKinds="`echo \"$2\" | tr ',' ':'`"
     AC_MSG_RESULT([$2])
     ifelse([$1],[],[PAC_FC_ALL_INTEGER_MODELS=$2],[$1=$2])
 ])
