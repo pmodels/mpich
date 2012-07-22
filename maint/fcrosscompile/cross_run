@@ -1,0 +1,29 @@
+#!/bin/sh
+
+BACKEND=mic0
+pgm="$@"
+SSH="ssh -q"
+SCP="scp -q"
+
+# Assume a common file system, e.g. NFS, exists between backend and frontend,
+# a much FASTER and simpler way of launching the $pgm.
+# so $PWD which is current working directory on the frontend exists on
+# the backend as well.  Execute $@ remotely on $PWD.
+#
+# $SSH $BACKEND "cd $PWD && $pgm"
+
+# Assume NO common file system: A SLOW and complicated of running test.
+# Create a random directory name locally.
+wdir="`mktemp --tmpdir=/tmp fcross.XXXXXX`"
+# Create the same directory remotely.
+$SSH $BACKEND "mkdir $wdir" 2> /dev/null && \
+# Copy the $pgm to the remote directory.
+$SCP -p $pgm ${BACKEND}:${wdir} && \
+# Launch the $pgm from the remote diectory.
+$SSH $BACKEND "cd $wdir && $pgm" 2> /dev/null && \
+# Copy whatever remote files created due to $pgm back to local directory.
+$SCP ${BACKEND}:${wdir}/* . && \
+# Remove the remote directory.
+$SSH $BACKEND "rm -rf $wdir" 2> /dev/null && \
+# Remove the local random directory.
+rm -rf $wdir

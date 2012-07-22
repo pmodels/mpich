@@ -1,5 +1,3 @@
 #!/bin/sh
 
-export MPICH_CROSS_PRECMD="/usr/bin/ssh mic1 \"cd \/work\/chan\/fcrosscompile && "
-export MPICH_CROSS_POSTCMD=\"
 ./configure CC="icc -mmic" F77="ifort -mmic" FC="ifort -mmic"

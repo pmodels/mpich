@@ -9,15 +9,19 @@ rm -f configure && \
 rm -rf autom4te.cache)
 
 (cd $pgmdir && \
+# autoconf -I $HOME/mpich2_work/mpich2/confdb && \
 # autoheader -I ../../confdb && \
 autoconf -I ../../confdb && \
-rm -fr config.log config.status autom4te.cache )
+rm -fr config.log config.status autom4te.cache)
 
 if [ -x ./configure ] ; then
     rm -f ./configure.old
     mv ./configure ./configure.old
-    sed -e "s|'\(\./conftest\$.*\)'|'ssh mic1 \"cd \$PWD \&\& \1\"'|g" ./configure.old > ./configure
-    # sed -e "s|'\(\./conftest\$.*\)'|'\${MPICH_CROSS_PRECMD}\1\${MPICH_CROSS_POSTCMD}'|g" ./configure.old > ./configure
+    # Instead running ./conftest in configure:
+    # Replace './conftest*' by './cross_run ./conftest*'
+    # Where ./cross_run will take ./conftest as an argument and
+    # Run it remotely on the backend.
+    sed -e "s|'\(\./conftest\$.*\)'|'./cross_run \1'|g" ./configure.old > ./configure
     if [ ! -x ./configure ] ; then
         chmod u+x ./configure
     fi
