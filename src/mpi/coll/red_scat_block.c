@@ -43,7 +43,7 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Reduce_scatter_block_noncomm (
-    void *sendbuf,
+    const void *sendbuf,
     void *recvbuf,
     int recvcount,
     MPI_Datatype datatype,
@@ -231,7 +231,7 @@ fn_fail:
 
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_block_intra ( 
-    void *sendbuf, 
+    const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
     MPI_Datatype datatype, 
@@ -865,7 +865,7 @@ fn_fail:
 
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_block_inter ( 
-    void *sendbuf, 
+    const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
     MPI_Datatype datatype, 
@@ -989,7 +989,8 @@ int MPIR_Reduce_scatter_block_inter (
 #define FUNCNAME MPIR_Reduce_scatter_block
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype,
+int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, 
+                              int recvcount, MPI_Datatype datatype,
                               MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1019,7 +1020,8 @@ int MPIR_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_D
 #define FUNCNAME MPIR_Reduce_scatter_block_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_impl(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype,
+int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf, 
+                                   int recvcount, MPI_Datatype datatype,
                                    MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1083,8 +1085,9 @@ Output Parameter:
 .N MPI_ERR_OP
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, 
-		       MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int MPI_Reduce_scatter_block(MPICH2_CONST void *sendbuf, void *recvbuf, 
+                             int recvcount, 
+                             MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
@@ -1157,7 +1160,8 @@ int MPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, &errflag);
+    mpi_errno = MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, 
+                                          datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

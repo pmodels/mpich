@@ -628,6 +628,58 @@ dnl if MPICH2, assume MPI_Exscan is available.
     fi
 fi
 
+dnl Check MPI_Reduce_scatter_block
+if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
+    if test "$enable_checkMPI" = "yes" ; then
+        AC_MSG_CHECKING( [for the C version of MPI_Reduce_scatter_block] )
+        PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
+                              [[
+    int *sbuff, *rbuff;
+    int rcount;
+    MPI_Datatype  dtype;
+    int itmp;
+                              ]],
+                              [
+    itmp=MPI_Reduce_scatter_block( sbuff, rbuff, rcount, dtype, MPI_SUM, 
+                                   MPI_COMM_WORLD )
+                              ],
+                              [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+        if test "$mpe_link_ok" = "yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_MSG_CHECKING( [for the C version of PMPI_Reduce_scatter_block] )
+            PAC_MPI_LINK_CC_FUNC( $MPI_CC, [$MPI_CFLAGS], $MPI_LIBS, ,
+                                  [[
+    int *sbuff, *rbuff;
+    int rcount;
+    MPI_Datatype  dtype;
+    int itmp;
+                                  ]],
+                                  [
+    itmp=PMPI_Reduce_scatter_block( sbuff, rbuff, rcount, dtype, MPI_SUM, 
+                                   MPI_COMM_WORLD )
+                                  ],
+                                  [ mpe_link_ok=yes ], [ mpe_link_ok=no ] )
+            if test "$mpe_link_ok" = "yes" ; then
+                AC_MSG_RESULT(yes)
+                COLLCHK_BUILD_REDSCATBLK=yes
+            else
+                AC_MSG_RESULT(no)
+                COLLCHK_BUILD_REDSCATBLK=no
+            fi
+        else
+            AC_MSG_RESULT(no)
+            COLLCHK_BUILD_REDSCATBLK=no
+        fi
+    fi
+else
+dnl if MPICH2, assume MPI_Reduce_scatter_block is available.
+    if test "$MPI_IMPL" = "MPICH2" ; then
+        COLLCHK_BUILD_REDSCATBLK=yes
+    else
+        COLLCHK_BUILD_REDSCATBLK=no
+    fi
+fi
+
 dnl Check MPI-IO
 if test "$MPI_IMPL" != "MPICH" -a "$MPI_IMPL" != "MPICH2" ; then
     if test "$enable_checkMPI" = "yes" -a "$enable_checkMPIO" = "yes" ; then
@@ -770,6 +822,7 @@ fi
 
 AC_SUBST(COLLCHK_BUILD_EXSCAN)
 AC_SUBST(COLLCHK_BUILD_ALLW)
+AC_SUBST(COLLCHK_BUILD_REDSCATBLK)
 AC_SUBST(COLLCHK_BUILD_IO)
 AC_SUBST(COLLCHK_BUILD_RMA)
 AC_SUBST(COLLCHK_BUILD_COMMS)

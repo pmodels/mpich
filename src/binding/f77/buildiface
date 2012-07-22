@@ -1349,6 +1349,10 @@ sub print_args {
 	    $parm =~ s/restrict\s+//;
 	    $arg_qualifiers[$count] .= "restrict ";
 	}
+	if ($parm =~ /^MPICH2_CONST\s+/) {
+	    $parm =~ s/MPICH2_CONST\s+//g;
+	    $arg_qualifiers[$count] .= "MPICH2_CONST ";
+	}
 	# Remove arg names from array types
 	if ($parm =~ /(\w+)\s+(\w+)\s*\[\]/) {
 	    # Assume that this is <type> <name>[]; convert to
@@ -1525,7 +1529,8 @@ sub print_call_args {
     }
 
     foreach $parm (@parms) {
-	$parm =~ s/^const\s//;  # Remove const if present
+	$parm =~ s/^const\s+//;  # Remove const if present
+	$parm =~ s/^MPICH2_CONST\s+//;  # Remove MPICH2_CONST if present
 	# Remove variable name if present in an array arg
 	if ($parm =~ /(.*)\s+(\w+)\[\]/) {
 	    $parm = "$1 \[\]";
@@ -4307,7 +4312,7 @@ MPIR_Comm_delete_attr_f77_proxy(
 #undef FUNCNAME
 #define FUNCNAME MPI_Status_f2c
 
-int MPI_Status_f2c( MPI_Fint *f_status, MPI_Status *c_status )
+int MPI_Status_f2c( MPICH2_CONST MPI_Fint *f_status, MPI_Status *c_status )
 {
     int mpi_errno = MPI_SUCCESS;\n";
     &specialInitStatement( $OUTFD );
@@ -4381,7 +4386,7 @@ print $OUTFD "\
 #undef FUNCNAME
 #define FUNCNAME MPI_Status_c2f
 
-int MPI_Status_c2f( MPI_Status *c_status, MPI_Fint *f_status )
+int MPI_Status_c2f( MPICH2_CONST MPI_Status *c_status, MPI_Fint *f_status )
 {
     int mpi_errno = MPI_SUCCESS;
     if (c_status == MPI_STATUS_IGNORE ||
@@ -4526,11 +4531,13 @@ sub ReadAndProcessInterface {
                 $args =~ s/[\r\n]*//g;
 		$args =~ s/MPICH2_CONST\s//g;
                 # remove qualifiers from args
-	    ### TEMP - REMEMBER const because we may need it later	    
+	    ### TEMP - REMEMBER const because we may need it later
                 #$args =~ s/\s*const\s+//g;
                 # Convert MPIO_Request to MPI_Request (temporary)
 	    #	    $args =~ s/MPIO_Request/MPI_Request/g;
 	    
+		### TEMP: REMOVED MPICH2_CONST
+		#$args =~ s/MPICH2_CONST\s*//g;
                 # Get the name of the Fortran routine (without the prefix).  
                 # Normally, the name is just the lower-case version, but
                 # some libraries (such as NetCDF) use "real" in Fortran
@@ -5346,6 +5353,7 @@ sub print_int_to_fint {
 
     foreach $parm (@parms) {
 	$parm =~ s/^const\s//;  # Remove const if present
+	$parm =~ s/^MPICH2_CONST\s+//;  # Remove MPICH2_CONST if present
 	# Remove variable name if present in an array arg
 	if ($parm =~ /(.*)\s+(\w+)\[\]/) {
 	    $parm = "$1 \[\]";

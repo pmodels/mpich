@@ -26,7 +26,7 @@
 #define FUNCNAME MPIR_Get_count_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-void MPIR_Get_count_impl(MPI_Status *status, MPI_Datatype datatype, int *count)
+void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *count)
 {
     int size;
     /* Check for correct number of bytes */
@@ -84,7 +84,7 @@ size of 'datatype' (so that 'count' would not be integral), a 'count' of
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
-int MPI_Get_count( MPI_Status *status, 	MPI_Datatype datatype, int *count )
+int MPI_Get_count( MPICH2_CONST MPI_Status *status, MPI_Datatype datatype, int *count )
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GET_COUNT);

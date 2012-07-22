@@ -673,7 +673,7 @@ typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
 /* Begin Prototypes */
 int MPI_Send(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
 int MPI_Recv(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Status *);
-int MPI_Get_count(MPI_Status *, MPI_Datatype, int *);
+int MPI_Get_count(MPICH2_CONST MPI_Status *, MPI_Datatype, int *);
 int MPI_Bsend(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
 int MPI_Ssend(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
 int MPI_Rsend(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
@@ -724,7 +724,7 @@ int MPI_Type_lb(MPI_Datatype, MPI_Aint *);
 int MPI_Type_ub(MPI_Datatype, MPI_Aint *);
 int MPI_Type_commit(MPI_Datatype *);
 int MPI_Type_free(MPI_Datatype *);
-int MPI_Get_elements(MPI_Status *, MPI_Datatype, int *);
+int MPI_Get_elements(MPICH2_CONST MPI_Status *, MPI_Datatype, int *);
 int MPI_Pack(MPICH2_CONST void*, int, MPI_Datatype, void *, int, int *,  MPI_Comm);
 int MPI_Unpack(MPICH2_CONST void*, int, int *, void *, int, MPI_Datatype, MPI_Comm);
 int MPI_Pack_size(int, MPI_Datatype, MPI_Comm, int *);
@@ -831,7 +831,7 @@ int MPI_Comm_get_parent(MPI_Comm *);
 int MPI_Comm_join(int, MPI_Comm *);
 int MPI_Comm_spawn(MPICH2_CONST char *, char *[], int, MPI_Info, int, MPI_Comm, MPI_Comm *,
                    int []);
-int MPI_Comm_spawn_multiple(int, char *[], char **[], MPICH2_CONST int [], MPI_Info [], int,
+int MPI_Comm_spawn_multiple(int, char *[], char **[], MPICH2_CONST int [], MPICH2_CONST MPI_Info [], int,
 			    MPI_Comm, MPI_Comm *, int []); 
 int MPI_Lookup_name(MPICH2_CONST char *, MPI_Info, char *);
 int MPI_Open_port(MPI_Info, char *);
@@ -986,7 +986,7 @@ int MPI_Type_create_f90_complex( int, int, MPI_Datatype * );
 /* MPI-2.2 functions */
 int MPI_Reduce_local(MPICH2_CONST void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 int MPI_Op_commutative(MPI_Op op, int *commute);
-int MPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+int MPI_Reduce_scatter_block(MPICH2_CONST void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
 int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, MPICH2_CONST int [], MPICH2_CONST int [], int outdegree, MPICH2_CONST int [], MPICH2_CONST int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
 int MPI_Dist_graph_create(MPI_Comm comm_old, int n, MPICH2_CONST int [], MPICH2_CONST int [], MPICH2_CONST int [], MPICH2_CONST int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
 int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted);
@@ -1074,7 +1074,7 @@ int MPIX_T_category_changed(int *stamp);
 #if !defined(MPI_BUILD_PROFILING)
 int PMPI_Send(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
 int PMPI_Recv(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Status *);
-int PMPI_Get_count(MPI_Status *, MPI_Datatype, int *);
+int PMPI_Get_count(MPICH2_CONST MPI_Status *, MPI_Datatype, int *);
 int PMPI_Bsend(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
 int PMPI_Ssend(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
 int PMPI_Rsend(MPICH2_CONST void*, int, MPI_Datatype, int, int, MPI_Comm);
@@ -1120,7 +1120,7 @@ int PMPI_Type_lb(MPI_Datatype, MPI_Aint *);
 int PMPI_Type_ub(MPI_Datatype, MPI_Aint *);
 int PMPI_Type_commit(MPI_Datatype *);
 int PMPI_Type_free(MPI_Datatype *);
-int PMPI_Get_elements(MPI_Status *, MPI_Datatype, int *);
+int PMPI_Get_elements(MPICH2_CONST MPI_Status *, MPI_Datatype, int *);
 int PMPI_Pack(MPICH2_CONST void*, int, MPI_Datatype, void *, int, int *,  MPI_Comm);
 int PMPI_Unpack(MPICH2_CONST void*, int, int *, void *, int, MPI_Datatype, MPI_Comm);
 int PMPI_Pack_size(int, MPI_Datatype, MPI_Comm, int *);
@@ -1219,7 +1219,7 @@ int PMPI_Comm_get_parent(MPI_Comm *);
 int PMPI_Comm_join(int, MPI_Comm *);
 int PMPI_Comm_spawn(MPICH2_CONST char *, char *[], int, MPI_Info, int, MPI_Comm, MPI_Comm *,
                    int []);
-int PMPI_Comm_spawn_multiple(int, char *[], char **[], MPICH2_CONST int [], MPI_Info [], int,
+int PMPI_Comm_spawn_multiple(int, char *[], char **[], MPICH2_CONST int [], MPICH2_CONST MPI_Info [], int,
 			    MPI_Comm, MPI_Comm *, int []); 
 int PMPI_Lookup_name(MPICH2_CONST char *, MPI_Info, char *);
 int PMPI_Open_port(MPI_Info, char *);
@@ -1353,7 +1353,7 @@ int PMPI_Win_get_errhandler(MPI_Win, MPI_Errhandler *);
 int PMPI_Win_set_errhandler(MPI_Win, MPI_Errhandler);
 int PMPI_Reduce_local(MPICH2_CONST void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 int PMPI_Op_commutative(MPI_Op op, int *commute);
-int PMPI_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+int PMPI_Reduce_scatter_block(MPICH2_CONST void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
 int PMPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, MPICH2_CONST int [], MPICH2_CONST int [], int outdegree, MPICH2_CONST int [], MPICH2_CONST int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
 int PMPI_Dist_graph_create(MPI_Comm comm_old, int n, MPICH2_CONST int [], MPICH2_CONST int [], MPICH2_CONST int [], MPICH2_CONST int [], MPI_Info info, int reorder, MPI_Comm *comm_dist_graph);
 int PMPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted);

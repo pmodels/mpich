@@ -303,7 +303,7 @@ Output Parameter:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_elements(MPI_Status *status, MPI_Datatype datatype, int *elements)
+int MPI_Get_elements(MPICH2_CONST MPI_Status *status, MPI_Datatype datatype, int *elements)
 {
     int mpi_errno = MPI_SUCCESS, byte_count;
     MPID_Datatype *datatype_ptr = NULL;

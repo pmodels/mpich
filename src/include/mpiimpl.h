@@ -1835,7 +1835,7 @@ typedef struct MPID_Collops {
                            MPID_Comm *, int *);
     int (*Scan) (const void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm *, int * );
     int (*Exscan) (const void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm *, int * );
-    int (*Reduce_scatter_block) (void*, void*, int, MPI_Datatype, MPI_Op,
+    int (*Reduce_scatter_block) (const void*, void*, int, MPI_Datatype, MPI_Op,
                            MPID_Comm *, int *);
 
     /* MPI-3 nonblocking collectives */
@@ -3780,16 +3780,16 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int *rec
 int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int *recvcnts,
                               MPI_Datatype datatype, MPI_Op op,
                               MPID_Comm *comm_ptr, int *errflag);
-int MPIR_Reduce_scatter_block_impl(void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf, int recvcount,
                                    MPI_Datatype datatype, MPI_Op op, MPID_Comm
                                    *comm_ptr, int *errflag );
-int MPIR_Reduce_scatter_block(void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
                               MPI_Datatype datatype, MPI_Op op, MPID_Comm
                               *comm_ptr, int *errflag );
-int MPIR_Reduce_scatter_block_intra(void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Reduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm
                                     *comm_ptr, int *errflag );
-int MPIR_Reduce_scatter_block_inter(void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Reduce_scatter_block_inter(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm
                                     *comm_ptr, int *errflag);
 int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
@@ -4067,7 +4067,7 @@ int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MP
 int MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, const int *ranks1,
                                      MPID_Group *group_ptr2, int *ranks2);
 int MPIR_Group_union_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr);
-void MPIR_Get_count_impl(MPI_Status *status, MPI_Datatype datatype, int *count);
+void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *count);
 void MPIR_Grequest_complete_impl(MPID_Request *request_ptr);
 int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
                              MPI_Grequest_free_function *free_fn,

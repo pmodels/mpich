@@ -4360,10 +4360,8 @@ MPI_Request * request;
   return returnVal;
 }
 
-int   MPI_Get_elements( status, datatype, elements )
-MPI_Status * status;
-MPI_Datatype datatype;
-int * elements;
+int   MPI_Get_elements( MPICH2_CONST MPI_Status *status, MPI_Datatype datatype,
+			int *elements )
 {
   int   returnVal;
   MPE_LOG_STATE_DECL
@@ -4396,10 +4394,8 @@ int * elements;
   return returnVal;
 }
 
-int  MPI_Get_count( status, datatype, count )
-MPI_Status * status;
-MPI_Datatype datatype;
-int * count;
+int  MPI_Get_count( MPICH2_CONST MPI_Status *status, MPI_Datatype datatype, 
+		    int *count )
 {
   int  returnVal;
   MPE_LOG_STATE_DECL

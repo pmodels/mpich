@@ -30,6 +30,7 @@ LDFLAGS              = @LDFLAGS@
 MPE_BUILD_FORTRAN2C  = @MPE_BUILD_FORTRAN2C@
 
 COLLCHK_BUILD_EXSCAN = @COLLCHK_BUILD_EXSCAN@
+COLLCHK_BUILD_REDSCATBLK = @COLLCHK_BUILD_REDSCATBLK@
 COLLCHK_BUILD_ALLW   = @COLLCHK_BUILD_ALLW@
 COLLCHK_BUILD_IO     = @COLLCHK_BUILD_IO@
 COLLCHK_BUILD_RMA    = @COLLCHK_BUILD_RMA@
@@ -77,13 +78,15 @@ MPI_CORE_SRC = allgather.c allgatherv.c allreduce.c alltoall.c alltoallv.c \
                barrier.c bcast.c cart_create.c cart_map.c \
                gather.c gatherv.c graph_create.c graph_map.c init.c \
                intercomm_create.c intercomm_merge.c reduce.c reduce_scatter.c \
-               scan.c scatter.c scatterv.c finalize.c
+               scan.c scatter.c scatterv.c finalize.c 
 MPI_CORE_OBJ = $(MPI_CORE_SRC:.c=.@OBJEXT@)
 
 MPI_EXSCAN_SRC  = exscan.c
 MPI_EXSCAN_OBJ  = $(MPI_EXSCAN_SRC:.c=.@OBJEXT@)
 MPI_ALLW_SRC    = alltoallw.c
 MPI_ALLW_OBJ    = $(MPI_ALLW_SRC:.c=.@OBJEXT@)
+MPI_REDSCATBLK_SRC = reduce_scatter_blk.c
+MPI_REDSCATBLK_OBJ = $(MPI_REDSCATBLK_SRC:.c=.@OBJEXT@)
 
 MPI_IO_SRC   = file_open.c file_preallocate.c file_read_all_begin.c \
                file_read_all.c file_read_all_end.c file_read_at_all_begin.c \
@@ -119,6 +122,9 @@ ${libbuild_dir}/lib$(COLLCHK_LIBNAME).a: $(UTIL_OBJ) $(MPI_CORE_OBJ)
 	@if [ "${COLLCHK_BUILD_EXSCAN}" = "yes" ] ; then \
 	     $(MAKE) $(MAKEOPTS) $(MPI_EXSCAN_OBJ) ; \
 	 fi
+	@if [ "${COLLCHK_BUILD_REDSCATBLK}" = "yes" ] ; then \
+	     $(MAKE) $(MAKEOPTS) $(MPI_REDSCATBLK_OBJ) ; \
+	fi
 	@if [ "${COLLCHK_BUILD_ALLW}" = "yes" ] ; then \
 	     $(MAKE) $(MAKEOPTS) $(MPI_ALLW_OBJ) ; \
 	 fi
