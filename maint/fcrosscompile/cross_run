@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# This script takes one argument, $pgm, and run it on $BACKEND.
 BACKEND=mic0
 pgm="$@"
 SSH="ssh -q"
