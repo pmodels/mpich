@@ -61,6 +61,9 @@
 
  # PM/PMI: Upgraded to hwloc-1.5rc1
 
+ # PM/PMI: Several improvements to PBS support to natively use the PBS
+   launcher.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available using:
 
