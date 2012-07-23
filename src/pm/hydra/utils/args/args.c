@@ -137,7 +137,8 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
     m = match_table;
     while (m->handler_fn) {
         if (!strcasecmp(arg, m->arg)) {
-            if (**argv_p && HYD_IS_HELP(**argv_p)) {
+            if (**argv_p && (!strcmp(**argv_p, "-h") || !strcmp(**argv_p, "-help") ||
+                             !strcmp(**argv_p, "--help"))) {
                 if (m->help_fn == NULL) {
                     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                         "No help message available\n");
@@ -170,9 +171,6 @@ HYD_status HYDU_parse_array(char ***argv, struct HYD_arg_match_table *match_tabl
     HYD_status status = HYD_SUCCESS;
 
     while (**argv && ***argv == '-') {
-        if (HYD_IS_HELP(**argv)) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
-        }
         status = match_arg(argv, match_table);
         HYDU_ERR_POP(status, "argument matching returned error\n");
     }

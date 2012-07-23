@@ -20,110 +20,6 @@ struct HYD_exec *HYD_uii_mpx_exec_list = NULL;
 struct HYD_ui_info HYD_ui_info;
 struct HYD_ui_mpich_info HYD_ui_mpich_info;
 
-static void usage(void)
-{
-    printf("\n");
-    printf("Usage: ./mpiexec [global opts] [exec1 local opts] : [exec2 local opts] : ...\n\n");
-
-    printf("Global options (passed to all executables):\n");
-
-    printf("\n");
-    printf("  Global environment options:\n");
-    printf("    -genv {name} {value}             environment variable name and value\n");
-    printf("    -genvlist {env1,env2,...}        environment variable list to pass\n");
-    printf("    -genvnone                        do not pass any environment variables\n");
-    printf
-        ("    -genvall                         pass all environment variables not managed\n");
-    printf("                                          by the launcher (default)\n");
-
-    printf("\n");
-    printf("  Other global options:\n");
-    printf("    -f {name}                        file containing the host names\n");
-    printf("    -hosts {host list}               comma separated host list\n");
-    printf("    -wdir {dirname}                  working directory to use\n");
-    printf
-        ("    -configfile {name}               config file containing MPMD launch options\n");
-
-    printf("\n");
-    printf("\n");
-
-    printf("Local options (passed to individual executables):\n");
-
-    printf("\n");
-    printf("  Local environment options:\n");
-    printf("    -env {name} {value}              environment variable name and value\n");
-    printf("    -envlist {env1,env2,...}         environment variable list to pass\n");
-    printf("    -envnone                         do not pass any environment variables\n");
-    printf("    -envall                          pass all environment variables (default)\n");
-
-    printf("\n");
-    printf("  Other local options:\n");
-    printf("    -n/-np {value}                   number of processes\n");
-    printf("    {exec_name} {args}               executable name and arguments\n");
-
-    printf("\n");
-    printf("\n");
-
-    printf("Hydra specific options (treated as global):\n");
-
-    printf("\n");
-    printf("  Launch options:\n");
-    printf("    -launcher                        launcher to use (%s)\n",
-           HYDRA_AVAILABLE_LAUNCHERS);
-    printf("    -launcher-exec                   executable to use to launch processes\n");
-    printf("    -enable-x/-disable-x             enable or disable X forwarding\n");
-
-    printf("\n");
-    printf("  Resource management kernel options:\n");
-    printf("    -rmk                             resource management kernel to use (%s)\n",
-           HYDRA_AVAILABLE_RMKS);
-
-    printf("\n");
-    printf("  Processor topology options:\n");
-    printf("    -topolib                         processor topology library (%s)\n",
-           HYDRA_AVAILABLE_TOPOLIBS);
-    printf("    -bind-to                         process binding\n");
-    printf("    -map-by                          process mapping\n");
-    printf("    -membind                         memory binding policy\n");
-
-    printf("\n");
-    printf("  Checkpoint/Restart options:\n");
-    printf("    -ckpoint-interval                checkpoint interval\n");
-    printf("    -ckpoint-prefix                  checkpoint file prefix\n");
-    printf("    -ckpoint-num                     checkpoint number to restart\n");
-    printf("    -ckpointlib                      checkpointing library (%s)\n",
-           !strcmp(HYDRA_AVAILABLE_CKPOINTLIBS, "") ? "none" : HYDRA_AVAILABLE_CKPOINTLIBS);
-
-    printf("\n");
-    printf("  Demux engine options:\n");
-    printf("    -demux                           demux engine (%s)\n",
-           HYDRA_AVAILABLE_DEMUXES);
-
-    printf("\n");
-    printf("  Other Hydra options:\n");
-    printf("    -verbose                         verbose mode\n");
-    printf("    -info                            build information\n");
-    printf("    -print-all-exitcodes             print exit codes of all processes\n");
-    printf("    -iface                           network interface to use\n");
-    printf("    -ppn                             processes per node\n");
-    printf("    -profile                         turn on internal profiling\n");
-    printf("    -prepend-rank                    prepend rank to output\n");
-    printf("    -prepend-pattern                 prepend pattern to output\n");
-    printf("    -outfile-pattern                 direct stdout to file\n");
-    printf("    -errfile-pattern                 direct stderr to file\n");
-    printf
-        ("    -nameserver                      name server information (host:port format)\n");
-    printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
-    printf("    -disable-hostname-propagation    let MPICH2 auto-detect the hostname\n");
-    printf("    -order-nodes                     order nodes as ascending/descending cores\n");
-    printf("    -localhost                       local hostname for the launching node\n");
-
-    printf("\n");
-    printf("Please see the intructions provided at\n");
-    printf("http://wiki.mcs.anl.gov/mpich2/index.php/Using_the_Hydra_Process_Manager\n");
-    printf("for further details\n\n");
-}
-
 static void signal_cb(int signum)
 {
     struct HYD_cmd cmd;
@@ -255,13 +151,7 @@ int main(int argc, char **argv)
 
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
-    if (status == HYD_GRACEFUL_ABORT) {
-        exit(0);
-    }
-    else if (status != HYD_SUCCESS) {
-        usage();
-        goto fn_fail;
-    }
+    HYDU_ERR_POP(status, "error parsing parameters\n");
 
 
     /* Now we initialize engines that require us to know user
