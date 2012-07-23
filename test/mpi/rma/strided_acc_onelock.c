@@ -22,6 +22,17 @@
 #define YDIM 1024
 #define ITERATIONS 10
 
+static const int SQ_LIMIT = 10;
+static       int SQ_COUNT = 0;
+
+#define SQUELCH(X)                      \
+  do {                                  \
+    if (SQ_COUNT < SQ_LIMIT) {          \
+      SQ_COUNT++;                       \
+      X                                 \
+    }                                   \
+  } while (0)
+
 static int verbose = 0;
 
 int main(int argc, char **argv) {
@@ -70,8 +81,8 @@ int main(int argc, char **argv) {
         const double actual   = *(buffer + i + j*XDIM);
         const double expected = (1.0 + rank) + (1.0 + ((rank+nranks-1)%nranks)) * (ITERATIONS);
         if (fabs(actual - expected) > 1.0e-10) {
-          printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual);
+          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+              rank, j, i, expected, actual); );
           errors++;
           fflush(stdout);
         }
