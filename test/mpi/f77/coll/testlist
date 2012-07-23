@@ -6,3 +6,4 @@ inplacef 4
 # reducelocalf is only available since MPI 2.2
 reducelocalf 2 mpiversion=2.2
 redscatf 4
+split_typef 4 strict=false
