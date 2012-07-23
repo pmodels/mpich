@@ -9,7 +9,6 @@
 #include "pmci.h"
 #include "pmiserv_pmi.h"
 #include "bsci.h"
-#include "topo.h"
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
@@ -130,11 +129,6 @@ HYD_status HYD_pmci_launch_procs(void)
         control_fd[i] = HYD_FD_UNSET;
 
     status =
-        HYDT_topo_init(HYD_server_info.user_global.binding,
-                       HYD_server_info.user_global.topolib);
-    HYDU_ERR_POP(status, "unable to initializing topology library\n");
-
-    status =
         HYDT_bsci_launch_procs(proxy_args, HYD_server_info.pg_list.proxy_list, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
@@ -244,9 +238,6 @@ HYD_status HYD_pmci_finalize(void)
 
     status = HYDT_dmx_finalize();
     HYDU_ERR_POP(status, "error returned from demux finalize\n");
-
-    status = HYDT_topo_finalize();
-    HYDU_ERR_POP(status, "error returned from topology finalize\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();

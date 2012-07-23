@@ -775,52 +775,48 @@ static HYD_status rmk_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void binding_help_fn(void)
+static void bind_to_help_fn(void)
 {
     printf("\n");
-    printf("-binding: Process-core binding to use\n\n");
-    printf("Notes:\n");
-    printf("  * Usage: -binding [type]; where [type] can be:\n");
-    printf("        none -- no binding\n");
-    printf("        rr   -- round-robin as OS assigned processor IDs\n");
-    printf("        user:0,1,3,2 -- user specified binding\n");
-    printf("        cpu -- CPU topology-aware binding\n");
-    printf("        cache -- Cache topology-aware binding\n");
+    printf("-bind-to: Process-core binding type to use\n\n");
+    printf("    Binding type options:\n");
+    printf("        Default:\n");
+    printf("            none             -- no binding (default)\n");
     printf("\n");
-
-    printf("    CPU options (supported on CPU topology aware libs):\n");
-    printf("        cpu --         pack processes as closely to each other as possible\n");
-    printf("                       with respect to CPU processing units\n");
-    printf("        cpu:sockets -- pack processes as closely to each other as possible\n");
-    printf("                       without sharing a socket (unless the number of\n");
-    printf("                       processes is more than the number of sockets)\n");
-    printf("        cpu:cores --   pack processes as closely to each other as possible\n");
-    printf("                       without sharing a core (unless the number of processes\n");
-    printf("                       is more than the number of cores)\n");
-    printf("        cpu:threads -- pack processes as closely to each other as possible\n");
-    printf("                       without sharing a hardware thread/SMT (unless the\n");
-    printf("                       number of processes is more than the number of hardware\n");
-    printf("                       threads/SMTs\n");
+    printf("        Architecture unaware options:\n");
+    printf("            rr               -- round-robin as OS assigned processor IDs\n");
+    printf("            user:0+2,1+4,3,2 -- user specified binding\n");
     printf("\n");
+    printf("        Architecture aware options (part within the {} braces are optional):\n");
+    printf("            board{:<n>}      -- bind to 'n' motherboards\n");
+    printf("            numa{:<n>}       -- bind to 'n' numa domains\n");
+    printf("            socket{:<n>}     -- bind to 'n' sockets\n");
+    printf("            core{:<n>}       -- bind to 'n' cores\n");
+    printf("            hwthread{:<n>}   -- bind to 'n' hardware threads\n");
+    printf("            l1cache{:<n>}    -- bind to processes on 'n' L1 cache domains\n");
+    printf("            l2cache{:<n>}    -- bind to processes on 'n' L2 cache domains\n");
+    printf("            l3cache{:<n>}    -- bind to processes on 'n' L3 cache domains\n");
 
-    printf("    Cache options (supported on cache topology aware libs):\n");
-    printf("        cache --    pack processes as closely to each other as possible with\n");
-    printf("                    respect to cache layout\n");
-    printf("        cache:l3 -- pack processes as closely to each other as possible\n");
-    printf("                    without sharing the L3 cache (unless the number of\n");
-    printf("                    processes is more than the number of the number of L3\n");
-    printf("                    cache regions)\n");
-    printf("        cache:l2 -- pack processes as closely to each other as possible\n");
-    printf("                    without sharing the L2 cache (unless the number of\n");
-    printf("                    processes is more than the number of the number of L2\n");
-    printf("                    cache regions)\n");
-    printf("        cache:l1 -- pack processes as closely to each other as possible\n");
-    printf("                    without sharing the L1 cache (unless the number of\n");
-    printf("                    processes is more than the number of the number of L1\n");
-    printf("                    cache regions)\n");
+    printf("\n\n");
+
+    printf("-map-by: Order of bind mapping to use\n\n");
+    printf("    Options (T: hwthread; C: core; S: socket; N: NUMA domain; B: motherboard):\n");
+    printf("        Default: <same option as binding>\n");
+    printf("\n");
+    printf("        Architecture aware options:\n");
+    printf("            board            -- map to motherboard\n");
+    printf("            numa             -- map to numa domain\n");
+    printf("            socket           -- map to socket\n");
+    printf("            core             -- map to core\n");
+    printf("            hwthread         -- map to hardware thread\n");
+    printf("            l1cache          -- map to L1 cache domain\n");
+    printf("            l2cache          -- map to L2 cache domain\n");
+    printf("            l3cache          -- map to L3 cache domain\n");
+    printf("            TCSNB            -- map in order of T, C, S, N, B\n");
+    printf("            CTSNB            -- map in order of C, T, S, N, B\n");
 }
 
-static HYD_status binding_fn(char *arg, char ***argv)
+static HYD_status bind_to_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -831,6 +827,26 @@ static HYD_status binding_fn(char *arg, char ***argv)
 
     status = HYDU_set_str(arg, &HYD_server_info.user_global.binding, **argv);
     HYDU_ERR_POP(status, "error setting binding\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status map_by_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.mapping) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.mapping, **argv);
+    HYDU_ERR_POP(status, "error setting mapping\n");
 
   fn_exit:
     (*argv)++;
@@ -1603,8 +1619,10 @@ static struct HYD_arg_match_table match_table[] = {
     {"rmk", rmk_fn, rmk_help_fn},
 
     /* Topology options */
-    {"binding", binding_fn, binding_help_fn},
     {"topolib", topolib_fn, topolib_help_fn},
+    {"binding", bind_to_fn, bind_to_help_fn},
+    {"bind-to", bind_to_fn, bind_to_help_fn},
+    {"map-by", map_by_fn, bind_to_help_fn},
 
     /* Checkpoint/restart options */
     {"ckpoint-interval", ckpoint_interval_fn, ckpoint_interval_help_fn},

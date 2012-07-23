@@ -20,7 +20,7 @@ struct HYDT_topo_hwloc_info {
 };
 extern struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info;
 
-HYD_status HYDT_topo_hwloc_init(const char *binding);
+HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping);
 HYD_status HYDT_topo_hwloc_bind(int idx);
 HYD_status HYDT_topo_hwloc_finalize(void);
 

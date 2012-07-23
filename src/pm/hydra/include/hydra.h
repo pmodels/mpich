@@ -317,8 +317,9 @@ struct HYD_user_global {
     char *launcher_exec;
 
     /* Processor topology */
-    char *binding;
     char *topolib;
+    char *binding;
+    char *mapping;
 
     /* Checkpoint restart */
     char *ckpointlib;

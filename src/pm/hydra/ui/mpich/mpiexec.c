@@ -80,9 +80,10 @@ static void usage(void)
 
     printf("\n");
     printf("  Processor topology options:\n");
-    printf("    -binding                         process-to-core binding mode\n");
     printf("    -topolib                         processor topology library (%s)\n",
            HYDRA_AVAILABLE_TOPOLIBS);
+    printf("    -bind-to                         process binding\n");
+    printf("    -map-by                          process mapping\n");
 
     printf("\n");
     printf("  Checkpoint/Restart options:\n");

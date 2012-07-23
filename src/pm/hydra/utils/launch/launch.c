@@ -62,8 +62,10 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 
-        status = HYDT_topo_bind(idx);
-        HYDU_ERR_POP(status, "bind process failed\n");
+        if (idx >= 0) {
+            status = HYDT_topo_bind(idx);
+            HYDU_ERR_POP(status, "bind process failed\n");
+        }
 
         if (execvp(client_arg[0], client_arg) < 0) {
             /* The child process should never get back to the proxy

@@ -6,8 +6,9 @@
  */
 
 #include "hydra.h"
-#include "topo.h"
 #include "topo_hwloc.h"
+
+#define MAP_LENGTH      (5)
 
 struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info = { 0 };
 
@@ -16,8 +17,8 @@ static int hwloc_initialized = 0;
 
 static HYD_status handle_user_binding(const char *binding)
 {
-    int i;
-    char *bindstr, *bindentry;
+    int i, j, k, num_bind_entries, *bind_entry_lengths;
+    char *bindstr, **bind_entries;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -32,22 +33,50 @@ static HYD_status handle_user_binding(const char *binding)
         hwloc_bitmap_zero(HYDT_topo_hwloc_info.bitmap[i]);
     }
 
-    i = 0;
-    bindstr = HYDU_strdup(binding);
-    bindentry = strtok(bindstr, ",");
-    while (bindentry) {
-        if (strcmp(bindentry, "-1"))
-            hwloc_bitmap_set(HYDT_topo_hwloc_info.bitmap[i],
-                             atoi(bindentry) % HYDT_topo_hwloc_info.num_bitmaps);
-        i++;
-        bindentry = strtok(NULL, ",");
+    num_bind_entries = 1;
+    for (i = 0; binding[i]; i++)
+        if (binding[i] == ',')
+            num_bind_entries++;
+    HYDU_MALLOC(bind_entries, char **, num_bind_entries * sizeof(char *), status);
+    HYDU_MALLOC(bind_entry_lengths, int *, num_bind_entries * sizeof(int), status);
 
-        /* If the user provided more PU indices than the number of
-         * processing units the system has, ignore the extra ones */
-        if (i >= HYDT_topo_hwloc_info.num_bitmaps)
-            break;
+    for (i = 0; i < num_bind_entries; i++)
+        bind_entry_lengths[i] = 0;
+
+    j = 0;
+    for (i = 0; binding[i]; i++) {
+        if (binding[i] != ',')
+            bind_entry_lengths[j]++;
+        else
+            j++;
     }
-    HYDU_FREE(bindstr);
+
+    for (i = 0; i < num_bind_entries; i++) {
+        HYDU_MALLOC(bind_entries[i], char *, bind_entry_lengths[i] * sizeof(char), status);
+    }
+
+    j = 0;
+    k = 0;
+    for (i = 0; binding[i]; i++) {
+        if (binding[i] != ',')
+            bind_entries[j][k++] = binding[i];
+        else {
+            bind_entries[j][k] = 0;
+            j++;
+            k = 0;
+        }
+    }
+    bind_entries[j][k++] = 0;
+
+
+    for (i = 0; i < num_bind_entries; i++) {
+        bindstr = strtok(bind_entries[i], "+");
+        while (bindstr) {
+            hwloc_bitmap_set(HYDT_topo_hwloc_info.bitmap[i],
+                             atoi(bindstr) % HYDT_topo_hwloc_info.num_bitmaps);
+            bindstr = strtok(NULL, "+");
+        }
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -81,147 +110,85 @@ static HYD_status handle_rr_binding(void)
     goto fn_exit;
 }
 
-static HYD_status handle_cpu_bitmap_binding(hwloc_obj_type_t obj_type)
+static hwloc_obj_t find_obj_containing_pu(hwloc_obj_type_t type, int idx, int cache_depth)
 {
     int i;
-    hwloc_obj_t root, obj;
-    HYD_status status = HYD_SUCCESS;
+    hwloc_obj_t obj;
 
-    HYDU_FUNC_ENTER();
+    obj = hwloc_get_root_obj(topology);
+    if (!obj || !hwloc_bitmap_isset(obj->cpuset, idx))
+        return NULL;
 
-    HYDT_topo_hwloc_info.num_bitmaps = hwloc_get_nbobjs_by_type(topology, obj_type);
-    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
-                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
-
-    root = hwloc_get_root_obj(topology);
-    for (i = 0; i < HYDT_topo_hwloc_info.num_bitmaps; i++) {
-        obj = hwloc_get_obj_inside_cpuset_by_type(topology, root->cpuset, obj_type, i);
-        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_dup(obj->cpuset);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status handle_rr_cpu_bitmap_binding(hwloc_obj_type_t obj_type)
-{
-    int i, j, k, p, q, num_objs;
-    hwloc_obj_t root, obj;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    /* total number of bitmaps we'll create */
-    HYDT_topo_hwloc_info.num_bitmaps = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
-    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
-                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
-
-    /* number of bitmaps of the object provided by the user */
-    num_objs = hwloc_get_nbobjs_by_type(topology, obj_type);
-
-    root = hwloc_get_root_obj(topology);
-
-    i = 0;
-    j = 0;
-    k = 0;
-    while (1) {
-        obj = hwloc_get_obj_inside_cpuset_by_type(topology, root->cpuset, obj_type, j);
-
-        q = 0;
-        for (p = 0; p < HYDT_topo_hwloc_info.num_bitmaps; p++) {
-            if (hwloc_bitmap_isset(obj->cpuset, p))
-                q++;
-            if (q == k + 1)
+    while (obj) {
+        if (obj->type == type)
+            if (type != HWLOC_OBJ_CACHE || obj->attr->cache.depth == cache_depth)
                 break;
-        }
-
-        if (q == k + 1) {       /* found the j'th PU index */
-            HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
-            hwloc_bitmap_only(HYDT_topo_hwloc_info.bitmap[i], p);
-        }
-
-        i++;
-        j++;
-
-        if (i == HYDT_topo_hwloc_info.num_bitmaps)
-            break;
-        if (j == num_objs) {
-            j = 0;
-            k++;
-        }
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static hwloc_obj_t find_first_cache_obj(int level)
-{
-    int depth = 1;
-    hwloc_obj_t root, obj;
-
-    HYDU_FUNC_ENTER();
-
-    root = hwloc_get_root_obj(topology);
-    obj = root;
-    while (obj->arity)
-        obj = obj->children[0];
-
-    while (obj != root) {
-        if (obj->type == HWLOC_OBJ_CACHE) {
-            if (depth == level)
+        for (i = 0; i < obj->arity; i++) {
+            if (hwloc_bitmap_isset(obj->children[i]->cpuset, idx)) {
+                obj = obj->children[i];
                 break;
-            else
-                depth++;
+            }
         }
-        obj = obj->parent;
     }
 
-  fn_exit:
-    HYDU_FUNC_EXIT();
     return obj;
-
-  fn_fail:
-    goto fn_exit;
 }
 
-static HYD_status handle_cache_bitmap_binding(int level)
+static HYD_status get_nbobjs_by_type(hwloc_obj_type_t type, int *nbobjs,
+                                     int *nbobjs_per_parent)
 {
-    int i;
-    hwloc_obj_t obj, first;
+    int x, nb;
+    hwloc_obj_type_t parent, t;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    obj = find_first_cache_obj(level);
+    parent = HWLOC_OBJ_SYSTEM;
 
-    if (obj->parent == NULL)
-        HYDT_topo_hwloc_info.num_bitmaps = 1;
-    else {
-        first = obj;
-        HYDT_topo_hwloc_info.num_bitmaps = 0;
-        while (obj) {
-            HYDT_topo_hwloc_info.num_bitmaps++;
-            obj = obj->next_cousin;
-        }
-        obj = first;
+    if (type == HWLOC_OBJ_PU)
+        parent = HWLOC_OBJ_CORE;
+    else if (type == HWLOC_OBJ_CORE)
+        parent = HWLOC_OBJ_SOCKET;
+    else if (type == HWLOC_OBJ_SOCKET)
+        parent = HWLOC_OBJ_NODE;
+    else if (type == HWLOC_OBJ_NODE)
+        parent = HWLOC_OBJ_MACHINE;
+    else if (type == HWLOC_OBJ_MACHINE)
+        parent = HWLOC_OBJ_MACHINE;
+
+    HYDU_ASSERT(parent != HWLOC_OBJ_SYSTEM, status);
+
+    nb = 0;
+    t = type;
+    while (1) {
+        nb = hwloc_get_nbobjs_by_type(topology, t);
+        if (nb)
+            break;
+        while (--t == HWLOC_OBJ_CACHE);
+        if (t < 0)
+            break;
     }
+    HYDU_ASSERT(nb, status);
+    if (nbobjs)
+        *nbobjs = nb;
 
-    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
-                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
+    if (nbobjs_per_parent == NULL)
+        goto fn_exit;
 
-    for (i = 0; i < HYDT_topo_hwloc_info.num_bitmaps; i++) {
-        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_dup(obj->cpuset);
-        obj = obj->next_cousin;
+    x = 0;
+    t = parent;
+    while (1) {
+        x = hwloc_get_nbobjs_by_type(topology, t);
+        if (x)
+            break;
+        while (--t == HWLOC_OBJ_CACHE);
+        if (t == HWLOC_OBJ_SYSTEM)
+            break;
     }
+    HYDU_ASSERT(x, status);
+    HYDU_ASSERT(nb % x == 0, status);
+
+    *nbobjs_per_parent = (nb / x);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -231,50 +198,281 @@ static HYD_status handle_cache_bitmap_binding(int level)
     goto fn_exit;
 }
 
-static HYD_status handle_rr_cache_bitmap_binding(int level)
+static HYD_status split_count_field(const char *str, char **split_str, int *count)
 {
-    int i, j, k, p, q;
-    hwloc_obj_t obj, first;
+    char *full_str = HYDU_strdup(str), *count_str;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* total number of bitmaps we'll create */
-    HYDT_topo_hwloc_info.num_bitmaps = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
-    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
-                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
+    *split_str = strtok(full_str, ":");
+    count_str = strtok(NULL, ":");
+    if (count_str)
+        *count = atoi(count_str);
+    else
+        *count = 1;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int parse_cache_string(const char *str)
+{
+    char *t1, *t2;
+
+    if (str[0] != 'l')
+        return 0;
+
+    t1 = HYDU_strdup(str + 1);
+    for (t2 = t1;; t2++) {
+        if (*t2 == 'c') {
+            *t2 = 0;
+            break;
+        }
+        else if (*t2 < '0' || *t2 > '9')
+            return 0;
+    }
+
+    return atoi(t1);
+}
+
+static HYD_status cache_to_cpu_type(int cache_depth, hwloc_obj_type_t * cpu_type)
+{
+    hwloc_obj_t cache_obj, cpu_obj;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    cache_obj = hwloc_get_root_obj(topology);
+    HYDU_ASSERT(cache_obj, status);
+
+    while (cache_obj && cache_obj->type != HWLOC_OBJ_CACHE &&
+           cache_obj->attr->cache.depth != cache_depth)
+        cache_obj = cache_obj->first_child;
+    if (cache_obj == NULL) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cache level %d not found\n",
+                            cache_depth);
+    }
+
+    cpu_obj = hwloc_get_root_obj(topology);
+    HYDU_ASSERT(cpu_obj, status);
+
+    while (cpu_obj && cpu_obj->type == HWLOC_OBJ_CACHE &&
+           !hwloc_bitmap_isequal(cpu_obj->cpuset, cache_obj->cpuset))
+        cpu_obj = cpu_obj->first_child;
+    if (cpu_obj == NULL) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "could not find cpu type that maps cache\n");
+    }
+
+    *cpu_type = cpu_obj->type;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status obj_type_to_map_str(hwloc_obj_type_t type, int cache_depth, char **map)
+{
+    hwloc_obj_type_t cpu_type;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (type == HWLOC_OBJ_MACHINE) {
+        *map = HYDU_strdup("BTCSN");
+        goto fn_exit;
+    }
+    else if (type == HWLOC_OBJ_NODE) {
+        *map = HYDU_strdup("NTCSB");
+        goto fn_exit;
+    }
+    else if (type == HWLOC_OBJ_SOCKET) {
+        *map = HYDU_strdup("STCNB");
+        goto fn_exit;
+    }
+    else if (type == HWLOC_OBJ_CORE) {
+        *map = HYDU_strdup("CTSNB");
+        goto fn_exit;
+    }
+    else if (type == HWLOC_OBJ_PU) {
+        *map = HYDU_strdup("TCSNB");
+        goto fn_exit;
+    }
+
+    HYDU_ASSERT(type == HWLOC_OBJ_CACHE, status);
+
+    status = cache_to_cpu_type(cache_depth, &cpu_type);
+    HYDU_ERR_POP(status, "error while mapping cache to cpu object\n");
+
+    status = obj_type_to_map_str(cpu_type, cache_depth, map);
+    HYDU_ERR_POP(status, "error while mapping object to map string\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int balance_obj_idx(int *obj_idx, int *nbobjs_per_parent)
+{
+    int i, ret;
+
+    ret = 0;
+    for (i = 0; i < MAP_LENGTH - 1; i++) {
+        while (obj_idx[i] >= nbobjs_per_parent[i]) {
+            obj_idx[i] -= nbobjs_per_parent[i];
+            obj_idx[i + 1]++;
+        }
+        while (obj_idx[i] < 0) {
+            obj_idx[i] += nbobjs_per_parent[i];
+            obj_idx[i + 1]--;
+        }
+    }
+    while (obj_idx[MAP_LENGTH - 1] >= nbobjs_per_parent[MAP_LENGTH - 1]) {
+        obj_idx[MAP_LENGTH - 1] -= nbobjs_per_parent[MAP_LENGTH - 1];
+        ret = 1;
+    }
+
+    return ret;
+}
+
+static HYD_status handle_bitmap_binding(const char *binding, const char *mapping)
+{
+    int i, j, k, idx, bind_count, map_count, cache_depth = 0;
+    hwloc_obj_t obj;
+    hwloc_obj_type_t bind_obj_type;
+    int total_nbobjs[MAP_LENGTH], obj_idx[MAP_LENGTH], nbpu_per_obj[MAP_LENGTH];
+    int nbobjs_per_parent[MAP_LENGTH];
+    char *bind_str, *map_str;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* split out the count fields */
+    status = split_count_field(binding, &bind_str, &bind_count);
+    HYDU_ERR_POP(status, "error splitting count field\n");
+
+    status = split_count_field(mapping, &map_str, &map_count);
+    HYDU_ERR_POP(status, "error splitting count field\n");
+
+
+    /* get the binding object */
+    if (!strcmp(bind_str, "board"))
+        bind_obj_type = HWLOC_OBJ_MACHINE;
+    else if (!strcmp(bind_str, "numa"))
+        bind_obj_type = HWLOC_OBJ_NODE;
+    else if (!strcmp(bind_str, "socket"))
+        bind_obj_type = HWLOC_OBJ_SOCKET;
+    else if (!strcmp(bind_str, "core"))
+        bind_obj_type = HWLOC_OBJ_CORE;
+    else if (!strcmp(bind_str, "hwthread"))
+        bind_obj_type = HWLOC_OBJ_PU;
+    else {
+        /* check if it's in the l*cache format */
+        cache_depth = parse_cache_string(bind_str);
+        if (!cache_depth) {
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "unrecognized binding string \"%s\"\n", binding);
+        }
+        bind_obj_type = HWLOC_OBJ_CACHE;
+    }
+
+
+    /* get the mapping string */
+    if (!strcmp(map_str, "board")) {
+        HYDU_FREE(map_str);
+        obj_type_to_map_str(HWLOC_OBJ_MACHINE, 0, &map_str);
+    }
+    else if (!strcmp(map_str, "numa")) {
+        HYDU_FREE(map_str);
+        obj_type_to_map_str(HWLOC_OBJ_NODE, 0, &map_str);
+    }
+    else if (!strcmp(map_str, "socket")) {
+        HYDU_FREE(map_str);
+        obj_type_to_map_str(HWLOC_OBJ_SOCKET, 0, &map_str);
+    }
+    else if (!strcmp(map_str, "core")) {
+        HYDU_FREE(map_str);
+        obj_type_to_map_str(HWLOC_OBJ_CORE, 0, &map_str);
+    }
+    else if (!strcmp(map_str, "hwthread")) {
+        HYDU_FREE(map_str);
+        obj_type_to_map_str(HWLOC_OBJ_PU, 0, &map_str);
+    }
+    else {
+        cache_depth = parse_cache_string(map_str);
+        if (cache_depth) {
+            HYDU_FREE(map_str);
+            obj_type_to_map_str(HWLOC_OBJ_CACHE, cache_depth, &map_str);
+        }
+        else {
+            for (i = 0; i < strlen(map_str); i++) {
+                if (map_str[i] >= 'a' && map_str[i] <= 'z')
+                    map_str[i] += ('A' - 'a');
+
+                /* If any of the characters are not in the form, we want, */
+                if (map_str[i] != 'T' && map_str[i] != 'C' && map_str[i] != 'S' &&
+                    map_str[i] != 'N' && map_str[i] != 'B') {
+                    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                        "unrecognized mapping string \"%s\"\n", mapping);
+                }
+            }
+        }
+    }
+
+
+    for (i = 0; i < MAP_LENGTH; i++) {
+        if (map_str[i] == 'T')
+            status = get_nbobjs_by_type(HWLOC_OBJ_PU, &total_nbobjs[i], &nbobjs_per_parent[i]);
+        else if (map_str[i] == 'C')
+            status =
+                get_nbobjs_by_type(HWLOC_OBJ_CORE, &total_nbobjs[i], &nbobjs_per_parent[i]);
+        else if (map_str[i] == 'S')
+            status =
+                get_nbobjs_by_type(HWLOC_OBJ_SOCKET, &total_nbobjs[i], &nbobjs_per_parent[i]);
+        else if (map_str[i] == 'N')
+            status =
+                get_nbobjs_by_type(HWLOC_OBJ_NODE, &total_nbobjs[i], &nbobjs_per_parent[i]);
+        else if (map_str[i] == 'B')
+            status =
+                get_nbobjs_by_type(HWLOC_OBJ_MACHINE, &total_nbobjs[i], &nbobjs_per_parent[i]);
+        HYDU_ERR_POP(status, "unable to get number of objects\n");
+
+        nbpu_per_obj[i] = HYDT_topo_hwloc_info.num_bitmaps / total_nbobjs[i];
+        obj_idx[i] = 0;
+    }
 
     i = 0;
-    j = 0;
-    k = 0;
-    first = find_first_cache_obj(level);
-    obj = first;
-    while (1) {
-        q = 0;
-        for (p = 0; p < HYDT_topo_hwloc_info.num_bitmaps; p++) {
-            if (hwloc_bitmap_isset(obj->cpuset, p))
-                q++;
-            if (q == k + 1)
+    while (i < HYDT_topo_hwloc_info.num_bitmaps) {
+        for (j = 0; j < bind_count; j++) {
+            for (idx = 0, k = 0; k < MAP_LENGTH; k++)
+                idx += (obj_idx[k] * nbpu_per_obj[k]);
+
+            obj = find_obj_containing_pu(bind_obj_type, idx++, cache_depth);
+            if (obj == NULL)
                 break;
-        }
 
-        if (q == k + 1) {       /* found the j'th PU index */
-            HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
-            hwloc_bitmap_only(HYDT_topo_hwloc_info.bitmap[i], p);
-        }
+            hwloc_bitmap_or(HYDT_topo_hwloc_info.bitmap[i], HYDT_topo_hwloc_info.bitmap[i],
+                            obj->cpuset);
 
+            obj_idx[0] += map_count;
+            balance_obj_idx(obj_idx, nbobjs_per_parent);
+        }
         i++;
-        j++;
-        obj = obj->next_cousin;
-
-        if (i == HYDT_topo_hwloc_info.num_bitmaps)
-            break;
-        if (obj == NULL) {
-            obj = first;
-            j = 0;
-            k++;
-        }
     }
+
+    /* reset the number of bitmaps available to what we actually set */
+    HYDT_topo_hwloc_info.num_bitmaps = i;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -284,98 +482,48 @@ static HYD_status handle_rr_cache_bitmap_binding(int level)
     goto fn_exit;
 }
 
-HYD_status HYDT_topo_hwloc_init(const char *binding)
+HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping)
 {
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
+
+    HYDU_ASSERT(binding, status);
 
     hwloc_topology_init(&topology);
     hwloc_topology_load(topology);
 
     hwloc_initialized = 1;
 
-    HYDT_topo_hwloc_info.num_bitmaps = 0;
-    HYDT_topo_hwloc_info.bitmap = NULL;
 
-    /* user */
+    /* initialize bitmaps */
+    status = get_nbobjs_by_type(HWLOC_OBJ_PU, &HYDT_topo_hwloc_info.num_bitmaps, NULL);
+    HYDU_ERR_POP(status, "unable to get number of PUs\n");
+
+    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
+                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
+
+    for (i = 0; i < HYDT_topo_hwloc_info.num_bitmaps; i++) {
+        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
+        hwloc_bitmap_zero(HYDT_topo_hwloc_info.bitmap[i]);
+    }
+
+
+    /* bindings that don't require mapping */
     if (!strncmp(binding, "user:", strlen("user:"))) {
         status = handle_user_binding(binding + strlen("user:"));
-        HYDU_ERR_POP(status, "unable to handle user binding\n");
+        HYDU_ERR_POP(status, "error binding to %s\n", binding);
         goto fn_exit;
     }
-
-    /* rr */
-    if (!strcmp(binding, "rr")) {
+    else if (!strcmp(binding, "rr")) {
         status = handle_rr_binding();
-        HYDU_ERR_POP(status, "unable to handle rr binding\n");
+        HYDU_ERR_POP(status, "error binding to %s\n", binding);
         goto fn_exit;
     }
 
-    /* socket */
-    if (!strcmp(binding, "socket") || !strcmp(binding, "sockets")) {
-        status = handle_cpu_bitmap_binding(HWLOC_OBJ_SOCKET);
-        HYDU_ERR_POP(status, "unable to handle socket binding\n");
-        goto fn_exit;
-    }
-
-    /* core */
-    if (!strcmp(binding, "core") || !strcmp(binding, "cores")) {
-        status = handle_cpu_bitmap_binding(HWLOC_OBJ_CORE);
-        HYDU_ERR_POP(status, "unable to handle core binding\n");
-        goto fn_exit;
-    }
-
-    /* cache */
-    if (!strcmp(binding, "l1") || !strcmp(binding, "L1")) {
-        status = handle_cache_bitmap_binding(1);
-        HYDU_ERR_POP(status, "unable to handle cache binding\n");
-        goto fn_exit;
-    }
-    if (!strcmp(binding, "l2") || !strcmp(binding, "L2")) {
-        status = handle_cache_bitmap_binding(2);
-        HYDU_ERR_POP(status, "unable to handle cache binding\n");
-        goto fn_exit;
-    }
-    if (!strcmp(binding, "l3") || !strcmp(binding, "L3")) {
-        status = handle_cache_bitmap_binding(3);
-        HYDU_ERR_POP(status, "unable to handle cache binding\n");
-        goto fn_exit;
-    }
-
-    /* rr by socket */
-    if (!strcmp(binding, "rr:socket") || !strcmp(binding, "rr:sockets")) {
-        status = handle_rr_cpu_bitmap_binding(HWLOC_OBJ_SOCKET);
-        HYDU_ERR_POP(status, "unable to handle rr-socket binding\n");
-        goto fn_exit;
-    }
-
-    /* rr by core */
-    if (!strcmp(binding, "rr:core") || !strcmp(binding, "rr:cores")) {
-        status = handle_rr_cpu_bitmap_binding(HWLOC_OBJ_CORE);
-        HYDU_ERR_POP(status, "unable to handle rr-core binding\n");
-        goto fn_exit;
-    }
-
-    /* rr by cache */
-    if (!strcmp(binding, "rr:l1") || !strcmp(binding, "rr:L1")) {
-        status = handle_rr_cache_bitmap_binding(1);
-        HYDU_ERR_POP(status, "unable to handle rr:cache binding\n");
-        goto fn_exit;
-    }
-    if (!strcmp(binding, "rr:l2") || !strcmp(binding, "rr:L2")) {
-        status = handle_rr_cache_bitmap_binding(2);
-        HYDU_ERR_POP(status, "unable to handle rr:cache binding\n");
-        goto fn_exit;
-    }
-    if (!strcmp(binding, "rr:l3") || !strcmp(binding, "rr:L3")) {
-        status = handle_rr_cache_bitmap_binding(3);
-        HYDU_ERR_POP(status, "unable to handle rr:cache binding\n");
-        goto fn_exit;
-    }
-
-    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                        "unrecognized binding mode \"%s\"\n", binding);
+    status = handle_bitmap_binding(binding, mapping ? mapping : binding);
+    HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding, mapping);
 
   fn_exit:
     HYDU_FUNC_EXIT();
