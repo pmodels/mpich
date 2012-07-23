@@ -814,6 +814,20 @@ static void bind_to_help_fn(void)
     printf("            l3cache          -- map to L3 cache domain\n");
     printf("            TCSNB            -- map in order of T, C, S, N, B\n");
     printf("            CTSNB            -- map in order of C, T, S, N, B\n");
+
+    printf("\n\n");
+
+    printf("-membind: Memory binding policy\n\n");
+    printf("    Memory binding policy options:\n");
+    printf("        Default:\n");
+    printf("            none             -- no binding (default)\n");
+    printf("\n");
+    printf("        Architecture aware options:\n");
+    printf("            firsttouch        -- closest to process that first touches memory\n");
+    printf("            nexttouch         -- closest to process that next touches memory\n");
+    printf("            bind:<list>       -- bind to memory node list\n");
+    printf("            interleave:<list> -- interleave among memory node list\n");
+    printf("            replicate:<list>  -- replicate among memory node list\n");
 }
 
 static HYD_status bind_to_fn(char *arg, char ***argv)
@@ -846,6 +860,26 @@ static HYD_status map_by_fn(char *arg, char ***argv)
     }
 
     status = HYDU_set_str(arg, &HYD_server_info.user_global.mapping, **argv);
+    HYDU_ERR_POP(status, "error setting mapping\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status membind_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.membind) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    status = HYDU_set_str(arg, &HYD_server_info.user_global.membind, **argv);
     HYDU_ERR_POP(status, "error setting mapping\n");
 
   fn_exit:
@@ -1623,6 +1657,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"binding", bind_to_fn, bind_to_help_fn},
     {"bind-to", bind_to_fn, bind_to_help_fn},
     {"map-by", map_by_fn, bind_to_help_fn},
+    {"membind", membind_fn, bind_to_help_fn},
 
     /* Checkpoint/restart options */
     {"ckpoint-interval", ckpoint_interval_fn, ckpoint_interval_help_fn},

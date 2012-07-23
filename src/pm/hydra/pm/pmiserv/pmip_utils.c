@@ -218,6 +218,17 @@ static HYD_status mapping_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status membind_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.membind, **argv);
+
+    (*argv)++;
+
+    return status;
+}
+
 static HYD_status topolib_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -632,6 +643,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"topolib", topolib_fn, NULL},
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},
+    {"membind", membind_fn, NULL},
     {"ckpointlib", ckpointlib_fn, NULL},
     {"ckpoint-prefix", ckpoint_prefix_fn, NULL},
     {"ckpoint-num", ckpoint_num_fn, NULL},

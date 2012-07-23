@@ -316,10 +316,11 @@ struct HYD_user_global {
     char *launcher;
     char *launcher_exec;
 
-    /* Processor topology */
+    /* Processor/Memory topology */
     char *topolib;
     char *binding;
     char *mapping;
+    char *membind;
 
     /* Checkpoint restart */
     char *ckpointlib;

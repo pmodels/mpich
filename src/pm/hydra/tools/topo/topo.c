@@ -15,20 +15,20 @@ struct HYDT_topo_info HYDT_topo_info = { 0 };
 
 static int ignore_binding = 0;
 
-HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_mapping)
+HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_mapping,
+                          char *user_membind)
 {
-    const char *topolib = NULL, *binding = NULL, *mapping = NULL;
+    const char *topolib = NULL, *binding = NULL, *mapping = NULL, *membind = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     if (user_topolib)
-        topolib = user_topolib;
-    else if (MPL_env2str("HYDRA_TOPOLIB", &topolib) == 0)
-        topolib = HYDRA_DEFAULT_TOPOLIB;
-
-    if (topolib)
+        HYDT_topo_info.topolib = HYDU_strdup(user_topolib);
+    else if (MPL_env2str("HYDRA_TOPOLIB", &topolib))
         HYDT_topo_info.topolib = HYDU_strdup(topolib);
+    else if (HYDRA_DEFAULT_TOPOLIB)
+        HYDT_topo_info.topolib = HYDU_strdup(HYDRA_DEFAULT_TOPOLIB);
     else
         HYDT_topo_info.topolib = NULL;
 
@@ -42,6 +42,11 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
     else if (MPL_env2str("HYDRA_MAPPING", &mapping) == 0)
         mapping = NULL;
 
+    if (user_membind)
+        membind = user_membind;
+    else if (MPL_env2str("HYDRA_MEMBIND", &membind) == 0)
+        membind = NULL;
+
 
     if (!binding || !strcmp(binding, "none")) {
         ignore_binding = 1;
@@ -51,7 +56,7 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
     /* Initialize the topology library requested by the user */
 #if defined HAVE_HWLOC
     if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
-        status = HYDT_topo_hwloc_init(binding, mapping);
+        status = HYDT_topo_hwloc_init(binding, mapping, membind);
         HYDU_ERR_POP(status, "unable to initialize hwloc\n");
     }
 #endif /* HAVE_HWLOC */

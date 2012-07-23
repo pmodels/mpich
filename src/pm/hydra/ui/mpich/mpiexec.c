@@ -84,6 +84,7 @@ static void usage(void)
            HYDRA_AVAILABLE_TOPOLIBS);
     printf("    -bind-to                         process binding\n");
     printf("    -map-by                          process mapping\n");
+    printf("    -membind                         memory binding policy\n");
 
     printf("\n");
     printf("  Checkpoint/Restart options:\n");

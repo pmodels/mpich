@@ -511,7 +511,8 @@ static HYD_status launch_procs(void)
 
     status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
                             HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.mapping);
+                            HYD_pmcd_pmip.user_global.mapping,
+                            HYD_pmcd_pmip.user_global.membind);
     HYDU_ERR_POP(status, "unable to initialize process topology\n");
 
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,

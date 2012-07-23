@@ -482,7 +482,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
     goto fn_exit;
 }
 
-HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping)
+HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const char *membind)
 {
     int i;
     HYD_status status = HYD_SUCCESS;
@@ -525,6 +525,28 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping)
     status = handle_bitmap_binding(binding, mapping ? mapping : binding);
     HYDU_ERR_POP(status, "error binding with bind \"%s\" and map \"%s\"\n", binding, mapping);
 
+
+    /* Memory binding options */
+    if (membind == NULL)
+        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_DEFAULT;
+    else if (!strcmp(membind, "firsttouch"))
+        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_FIRSTTOUCH;
+    else if (!strcmp(membind, "nexttouch"))
+        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_NEXTTOUCH;
+    else if (!strncmp(membind, "bind:", strlen("bind:"))) {
+        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_BIND;
+    }
+    else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
+        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
+    }
+    else if (!strncmp(membind, "replicate:", strlen("replicate:"))) {
+        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_REPLICATE;
+    }
+    else {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unrecognized membind policy \"%s\"\n", membind);
+    }
+
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -535,12 +557,14 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping)
 
 HYD_status HYDT_topo_hwloc_bind(int idx)
 {
+    int id = idx % HYDT_topo_hwloc_info.num_bitmaps;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    hwloc_set_cpubind(topology,
-                      HYDT_topo_hwloc_info.bitmap[idx % HYDT_topo_hwloc_info.num_bitmaps], 0);
+    hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
+    hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
+                      HYDT_topo_hwloc_info.membind, 0);
 
     HYDU_FUNC_EXIT();
     return status;

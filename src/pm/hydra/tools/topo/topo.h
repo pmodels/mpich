@@ -41,7 +41,7 @@ extern struct HYDT_topo_info HYDT_topo_info;
  * user. It also queries for the support provided by the library and
  * stores it for future calls.
  */
-HYD_status HYDT_topo_init(char *topolib, char *binding, char *mapping);
+HYD_status HYDT_topo_init(char *topolib, char *binding, char *mapping, char *membind);
 
 
 /**

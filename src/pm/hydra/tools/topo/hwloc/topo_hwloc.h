@@ -17,10 +17,11 @@
 struct HYDT_topo_hwloc_info {
     int num_bitmaps;
     hwloc_bitmap_t *bitmap;
+    hwloc_membind_policy_t membind;
 };
 extern struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info;
 
-HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping);
+HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const char *membind);
 HYD_status HYDT_topo_hwloc_bind(int idx);
 HYD_status HYDT_topo_hwloc_finalize(void);
 
