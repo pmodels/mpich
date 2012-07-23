@@ -339,69 +339,6 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     waitval = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "wait");
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
-    /* handle predefined attributes */
-    if (!strcmp(key, "hydra_node_topomap")) {
-        char *map;
-
-        status = HYDT_topo_get_topomap(&map);
-        HYDU_ERR_POP(status, "error getting topology map\n");
-
-        if (map) {
-            i = 0;
-            tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
-            if (thrid) {
-                tmp[i++] = HYDU_strdup("thrid=");
-                tmp[i++] = HYDU_strdup(thrid);
-                tmp[i++] = HYDU_strdup(";");
-            }
-            tmp[i++] = HYDU_strdup("found=TRUE;value=");
-            tmp[i++] = HYDU_strdup(map);
-            tmp[i++] = HYDU_strdup(";rc=0;");
-            tmp[i++] = NULL;
-
-            status = HYDU_str_alloc_and_join(tmp, &cmd);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-            HYDU_free_strlist(tmp);
-
-            send_cmd_downstream(fd, cmd);
-            HYDU_FREE(cmd);
-
-            HYDU_FREE(map);
-
-            goto fn_exit;
-        }
-    }
-    else if (!strcmp(key, "hydra_node_processmap")) {
-        char *map;
-
-        status = HYDT_topo_get_processmap(&map);
-        HYDU_ERR_POP(status, "error getting topology map\n");
-
-        if (map) {
-            i = 0;
-            tmp[i++] = HYDU_strdup("cmd=info-getnodeattr-response;");
-            if (thrid) {
-                tmp[i++] = HYDU_strdup("thrid=");
-                tmp[i++] = HYDU_strdup(thrid);
-                tmp[i++] = HYDU_strdup(";");
-            }
-            tmp[i++] = HYDU_strdup("found=TRUE;value=");
-            tmp[i++] = HYDU_strdup(map);
-            tmp[i++] = HYDU_strdup(";rc=0;");
-            tmp[i++] = NULL;
-
-            status = HYDU_str_alloc_and_join(tmp, &cmd);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-            HYDU_free_strlist(tmp);
-
-            send_cmd_downstream(fd, cmd);
-            HYDU_FREE(cmd);
-
-            HYDU_FREE(map);
-
-            goto fn_exit;
-        }
-    }
     /* if a predefined value is not found, we let the code fall back
      * to regular search and return an error to the client */
 

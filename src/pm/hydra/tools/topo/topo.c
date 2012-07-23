@@ -86,54 +86,6 @@ HYD_status HYDT_topo_bind(int idx)
     goto fn_exit;
 }
 
-HYD_status HYDT_topo_get_topomap(char **topomap)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-#if defined HAVE_HWLOC
-    if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
-        status = HYDT_topo_hwloc_get_topomap(topomap);
-        HYDU_ERR_POP(status, "unable to get topomap\n");
-        goto fn_exit;
-    }
-#endif /* HAVE_HWLOC */
-
-    *topomap = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYDT_topo_get_processmap(char **processmap)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-#if defined HAVE_HWLOC
-    if (!strcmp(HYDT_topo_info.topolib, "hwloc")) {
-        status = HYDT_topo_hwloc_get_processmap(processmap);
-        HYDU_ERR_POP(status, "unable to get topomap\n");
-        goto fn_exit;
-    }
-#endif /* HAVE_HWLOC */
-
-    *processmap = NULL;
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYDT_topo_finalize(void)
 {
     HYD_status status = HYD_SUCCESS;

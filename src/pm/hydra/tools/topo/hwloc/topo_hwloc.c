@@ -398,65 +398,6 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
     return status;
 }
 
-HYD_status HYDT_topo_hwloc_get_topomap(char **topomap)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    *topomap = NULL;
-
-    HYDU_FUNC_EXIT();
-    return status;
-}
-
-HYD_status HYDT_topo_hwloc_get_processmap(char **processmap)
-{
-    int i, j, k, add_comma;
-    char *tmp[HYD_NUM_TMP_STRINGS];
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    i = 0;
-    tmp[i++] = HYDU_strdup("(");
-
-    for (j = 0; j < HYDT_topo_hwloc_info.num_bitmaps; j++) {
-        add_comma = 0;
-        for (k = 0; k < HYDT_topo_hwloc_info.num_bitmaps; k++) {
-            if (hwloc_bitmap_isset(HYDT_topo_hwloc_info.bitmap[j], k)) {
-                if (add_comma)
-                    tmp[i++] = HYDU_strdup(",");
-                tmp[i++] = HYDU_int_to_str(k);
-                add_comma = 1;
-            }
-        }
-        if (j < HYDT_topo_hwloc_info.num_bitmaps - 1)
-            tmp[i++] = HYDU_strdup(";");
-    }
-
-    tmp[i++] = HYDU_strdup(")");
-    tmp[i++] = NULL;
-
-    status = HYDU_str_alloc_and_join(tmp, processmap);
-    HYDU_ERR_POP(status, "unable to append string list\n");
-
-    /* if it's a logically empty mapping, replace it with NULL */
-    if (!strcmp(*processmap, "()")) {
-        HYDU_FREE(*processmap);
-        *processmap = NULL;
-    }
-
-    HYDU_free_strlist(tmp);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status HYDT_topo_hwloc_finalize(void)
 {
     HYD_status status = HYD_SUCCESS;

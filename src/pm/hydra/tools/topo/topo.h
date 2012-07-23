@@ -53,22 +53,6 @@ HYD_status HYDT_topo_finalize(void);
 
 
 /**
- * \brief HYDT_topo_get_topomap - Get the topology map
- *
- * This function returns the topology map as a string.
- */
-HYD_status HYDT_topo_get_topomap(char **topomap);
-
-
-/**
- * \brief HYDT_topo_get_processmap - Get the process binding map
- *
- * This function returns the process binding map as a string.
- */
-HYD_status HYDT_topo_get_processmap(char **processmap);
-
-
-/**
  * \brief HYDT_topo_bind - Bind process to a processing element
  *
  * \param[in] idx   Index of the cpuset to the bind to

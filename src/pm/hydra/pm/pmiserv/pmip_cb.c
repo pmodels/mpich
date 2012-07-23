@@ -515,22 +515,6 @@ static HYD_status launch_procs(void)
                             HYD_pmcd_pmip.user_global.topolib);
     HYDU_ERR_POP(status, "unable to initialize process topology\n");
 
-    if (HYD_pmcd_pmip.user_global.debug) {
-        char *map;
-
-        status = HYDT_topo_get_topomap(&map);
-        HYDU_ERR_POP(status, "error reading topology map\n");
-        if (map)
-            HYDU_dump(stdout, "topomap: %s\n", map);
-        HYDU_FREE(map);
-
-        status = HYDT_topo_get_processmap(&map);
-        HYDU_ERR_POP(status, "error reading process map\n");
-        if (map)
-            HYDU_dump(stdout, "processmap: %s\n", map);
-        HYDU_FREE(map);
-    }
-
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,
                                HYD_pmcd_pmip.user_global.ckpoint_num);
     HYDU_ERR_POP(status, "unable to initialize checkpointing\n");

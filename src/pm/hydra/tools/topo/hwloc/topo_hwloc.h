@@ -22,8 +22,6 @@ extern struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info;
 
 HYD_status HYDT_topo_hwloc_init(const char *binding);
 HYD_status HYDT_topo_hwloc_bind(int idx);
-HYD_status HYDT_topo_hwloc_get_topomap(char **topomap);
-HYD_status HYDT_topo_hwloc_get_processmap(char **processmap);
 HYD_status HYDT_topo_hwloc_finalize(void);
 
 #endif /* TOPO_HWLOC_H_INCLUDED */
