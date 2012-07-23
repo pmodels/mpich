@@ -316,6 +316,10 @@ EOF])
     #
     # Now detect support
     #
+
+    AC_CHECK_HEADERS([unistd.h])
+    AC_CHECK_HEADERS([dirent.h])
+    AC_CHECK_HEADERS([strings.h])
     
     hwloc_strncasecmp=strncmp
     AC_CHECK_FUNCS([strncasecmp], [
@@ -551,16 +555,6 @@ EOF])
 
     AC_CHECK_HEADERS([malloc.h])
     AC_CHECK_FUNCS([getpagesize memalign posix_memalign])
-
-    # when autoheader is run, it doesn't know about
-    # PAC_FUNC_NEEDS_DECL, so it doesn't generate an appropriate line
-    # in config.h.in.  We need to fool it with a dummy AC_DEFINE().
-    if false ; then
-        AC_DEFINE([NEEDS_GETPAGESIZE_DECL], 1, [Define to 1 if getpagesize needs a declaration])
-    fi
-    if test $ac_cv_func_getpagesize = "yes" ; then
-       PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getpagesize)
-    fi
 
     AC_CHECK_HEADERS([sys/utsname.h])
     AC_CHECK_FUNCS([uname])
