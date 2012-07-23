@@ -139,7 +139,7 @@ static HYD_status handle_rr_cpu_bitmap_binding(hwloc_obj_type_t obj_type)
                 break;
         }
 
-        if (q == k + 1) {   /* found the j'th PU index */
+        if (q == k + 1) {       /* found the j'th PU index */
             HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
             hwloc_bitmap_only(HYDT_topo_hwloc_info.bitmap[i], p);
         }
@@ -258,7 +258,7 @@ static HYD_status handle_rr_cache_bitmap_binding(int level)
                 break;
         }
 
-        if (q == k + 1) {   /* found the j'th PU index */
+        if (q == k + 1) {       /* found the j'th PU index */
             HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
             hwloc_bitmap_only(HYDT_topo_hwloc_info.bitmap[i], p);
         }
