@@ -462,17 +462,6 @@ static HYD_status hostname_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status local_binding_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.local_binding, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status proxy_core_count_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -656,7 +645,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"version", version_fn, NULL},
     {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
-    {"local-binding", local_binding_fn, NULL},
     {"proxy-core-count", proxy_core_count_fn, NULL},
     {"exec", exec_fn, NULL},
     {"exec-appnum", exec_appnum_fn, NULL},

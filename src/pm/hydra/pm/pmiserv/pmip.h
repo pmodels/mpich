@@ -71,7 +71,6 @@ struct HYD_pmcd_pmip {
         int pgid;
         char *iface_ip_env_name;
         char *hostname;
-        char *local_binding;
 
         int proxy_core_count;
         int proxy_process_count;

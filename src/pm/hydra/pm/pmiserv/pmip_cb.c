@@ -510,8 +510,6 @@ static HYD_status launch_procs(void)
     }
 
     status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
-                            HYD_pmcd_pmip.local.local_binding ?
-                            HYD_pmcd_pmip.local.local_binding :
                             HYD_pmcd_pmip.user_global.binding,
                             HYD_pmcd_pmip.user_global.mapping);
     HYDU_ERR_POP(status, "unable to initialize process topology\n");
@@ -799,7 +797,7 @@ static HYD_status parse_exec_params(char **t_argv)
                             "no executable given and doesn't look like a restart either\n");
 
     /* Set default values */
-    if (HYD_pmcd_pmip.user_global.binding == NULL && HYD_pmcd_pmip.local.local_binding == NULL)
+    if (HYD_pmcd_pmip.user_global.binding == NULL)
         HYD_pmcd_pmip.user_global.binding = HYDU_strdup("none");
 
     if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
