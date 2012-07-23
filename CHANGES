@@ -66,7 +66,7 @@
  # PM/PMI: Various improvements to the process binding support in
    Hydra.  Several new pre-defined binding options are provided.
 
- # PM/PMI: Upgraded to hwloc-1.5rc1
+ # PM/PMI: Upgraded to hwloc-1.5rc2
 
  # PM/PMI: Several improvements to PBS support to natively use the PBS
    launcher.
