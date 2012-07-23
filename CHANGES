@@ -2,48 +2,50 @@
                                Changes in 1.5
 ===============================================================================
 
- # OVERALL: nemesis now supports an "--enable-yield=..." configure option for
-   better performance/behavior when oversubscribing processes to cores.  Some
-   form of this option is enabled by default on Linux, Darwin, and systems that
-   support sched_yield().
+ # OVERALL: Nemesis now supports an "--enable-yield=..." configure
+   option for better performance/behavior when oversubscribing
+   processes to cores.  Some form of this option is enabled by default
+   on Linux, Darwin, and systems that support sched_yield().
 
- # OVERALL: added support for Intel Many Integrated Core (MIC)
+ # OVERALL: Added support for Intel Many Integrated Core (MIC)
    architecture: shared memory, TCP/IP, and SCIF based communication.
 
  # MPI-3: const support has been added to mpi.h, although it is
    disabled by default.  It can be enabled on a per-translation unit
    basis with "#define MPICH2_CONST const".
 
- # MPI-3: added support for MPIX_Type_create_hindexed_block.
+ # MPI-3: Added support for MPIX_Type_create_hindexed_block.
 
- # MPI-3: the new MPI-3 nonblocking collectives functions are now available as
-   "MPIX_" functions (e.g. "MPIX_Ibcast").
+ # MPI-3: The new MPI-3 nonblocking collectives functions are now
+   available as "MPIX_" functions (e.g. "MPIX_Ibcast").
 
- # MPI-3: the new MPI-3 MPI_Comm_split_type function is now available
+ # MPI-3: The new MPI-3 MPI_Comm_split_type function is now available
    as an "MPIX_" function.
 
- # MPI-3: the new MPI-3 tools interface is now available as "MPIX_T_"
-   functions.  This is a beta implementation right now with several limitations,
-   including no support for multithreading.  Several performance variables
-   related to CH3's message matching are exposed through this interface.
+ # MPI-3: The new MPI-3 tools interface is now available as "MPIX_T_"
+   functions.  This is a beta implementation right now with several
+   limitations, including no support for multithreading.  Several
+   performance variables related to CH3's message matching are exposed
+   through this interface.
 
- # MPI-3: the new MPI-3 matched probe functionality is supported via the new
-   routines MPIX_Mprobe, MPIX_Improbe, MPIX_Mrecv, and MPIX_Imrecv.
+ # MPI-3: The new MPI-3 matched probe functionality is supported via
+   the new routines MPIX_Mprobe, MPIX_Improbe, MPIX_Mrecv, and
+   MPIX_Imrecv.
 
- # MPI-3: the new MPI-3 nonblocking communicator duplication routine,
-   MPIX_Comm_idup, is now supported.  It will only work for single-threaded
-   programs at this time.
+ # MPI-3: The new MPI-3 nonblocking communicator duplication routine,
+   MPIX_Comm_idup, is now supported.  It will only work for
+   single-threaded programs at this time.
 
  # MPI-3: MPIX_Comm_reenable_anysource support
 
- # MPI-3: native MPIX_Comm_create_group support (updated version of the prior
-   MPIX_Group_comm_create routine).
+ # MPI-3: Native MPIX_Comm_create_group support (updated version of
+   the prior MPIX_Group_comm_create routine).
 
  # MPI-3: MPI_Intercomm_create's internal communication no longer interferes
    with point-to-point communication, even if point-to-point operations on the
    parent communicator use the same tag or MPI_ANY_TAG.
 
- # MPI-3: eliminated the possibility of interference between
+ # MPI-3: Eliminated the possibility of interference between
    MPI_Intercomm_create and point-to-point messaging operations.
 
  # Build system: Completely revamped build system to rely fully on
