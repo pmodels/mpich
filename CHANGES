@@ -61,6 +61,11 @@
  # JUMPSHOT: Added navigation support to locate chosen drawable's ends
    when viewport has been scrolled far from the drawable.
 
+ # PM/PMI: Added support for memory binding policies.
+
+ # PM/PMI: Various improvements to the process binding support in
+   Hydra.  Several new pre-defined binding options are provided.
+
  # PM/PMI: Upgraded to hwloc-1.5rc1
 
  # PM/PMI: Several improvements to PBS support to natively use the PBS
