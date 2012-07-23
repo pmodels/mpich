@@ -31,15 +31,10 @@ EOF
 
 # This must be before AM_INIT_AUTOMAKE
 AC_CANONICAL_TARGET
-AC_USE_SYSTEM_EXTENSIONS
 
 # Init automake
 AM_INIT_AUTOMAKE([1.10 dist-bzip2 subdir-objects foreign tar-ustar -Wall -Werror])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-
-# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
-# must come before LT_INIT
-m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 
 # We want new Libtool.  None of that old stuff.  Pfft.    
 m4_ifdef([LT_PREREQ], [],
