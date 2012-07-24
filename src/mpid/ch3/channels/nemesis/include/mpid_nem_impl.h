@@ -171,10 +171,9 @@ typedef union MPIDI_CH3_nem_pkt
         {                                                                                               \
             if (_rts_req->status.MPI_ERROR != MPI_SUCCESS)                                              \
             {                                                                                           \
+                mpi_errno = _rts_req->status.MPI_ERROR;                                                 \
                 MPIU_Object_set_ref(_rts_req, 0);                                                       \
                 MPIDI_CH3_Request_destroy(_rts_req);                                                    \
-                mpi_errno = _rts_req->status.MPI_ERROR;                                                 \
-                MPID_Request_release(_rts_req);                                                         \
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                              \
             }                                                                                           \
             MPID_Request_release(_rts_req);                                                             \
