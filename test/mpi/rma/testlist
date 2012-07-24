@@ -59,7 +59,7 @@ contention_put 4
 contention_putget 4
 put_base 2
 put_bottom 2
-win_flavors 4 struct=false
+win_flavors 4 strict=false
 manyrma2 2 timeLimit=800
 win_shared 4 strict=false
 win_shared_noncontig 4 strict=false
