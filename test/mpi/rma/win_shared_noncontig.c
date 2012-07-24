@@ -23,6 +23,7 @@ const int verbose = 0;
 
 int main(int argc, char **argv) {
     int      i, j, rank, nproc;
+    int      shm_rank, shm_nproc;
     MPI_Info alloc_shared_info;
     int      errors = 0, all_errors = 0;
     int     *my_base;
@@ -41,6 +42,9 @@ int main(int argc, char **argv) {
 
     MPIX_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
 
+    MPI_Comm_rank(shm_comm, &shm_rank);
+    MPI_Comm_size(shm_comm, &shm_nproc);
+
     /* Allocate ELEM_PER_PROC integers for each process */
     MPIX_Win_allocate_shared(sizeof(int)*ELEM_PER_PROC, alloc_shared_info, 
                              shm_comm, &my_base, &shm_win);
@@ -57,7 +61,7 @@ int main(int argc, char **argv) {
     MPIX_Win_sync(shm_win);
 
     /* Read and verify everyone's data */
-    for (i = 0; i < nproc; i++) {
+    for (i = 0; i < shm_nproc; i++) {
         int      *base;
         MPI_Aint  size;
 
@@ -67,7 +71,7 @@ int main(int argc, char **argv) {
         for (j = 0; j < ELEM_PER_PROC; j++) {
             if ( base[j] != j ) {
                 errors++;
-                printf("%d -- Got %d at rank %d index %d, expected %d\n", rank, 
+                printf("%d -- Got %d at rank %d index %d, expected %d\n", shm_rank, 
                        base[j], i, j, j);
             }
         }
