@@ -183,6 +183,9 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **memcpyalias:memcpy arguments alias each other
 **memcpyalias %p %p %L:memcpy arguments alias each other, dst=%p src=%p len=%L
 
+**rmatypenotatomic: Datatype not permitted for atomic operations
+**rmatypenotatomic %D: Datatype (%D) not permitted for atomic operations
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #
@@ -1175,6 +1178,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_get %p %d %D %d %d %d %D %W:MPI_Get(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
 **mpi_put:MPI_Put failed
 **mpi_put %p %d %D %d %d %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
+**mpi_win_allocate_shared:MPI_Win_allocate_shared failed
+**mpi_win_allocate_shared %d %I %C %p %p:MPI_Win_allocate_shared(size=%d, %I, %C, baseptr=%p, win=%p) failed
+**mpix_win_shared_query:MPIX_Win_shared_query failed
+**mpix_win_shared_query %W %d %p %p:MPIX_Win_shared_query(win=%W, rank=%d, size=%p, baseptr=%p) failed
 **mpi_win_complete:MPI_Win_complete failed
 **mpi_win_complete %W:MPI_Win_complete(%W) failed
 **mpi_win_create:MPI_Win_create failed
@@ -1361,6 +1368,44 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_dist_graph_neighbors_count %C %p %p %p: MPI_Dist_graph_neighbors_count(%C, indegree=%p, outdegree=%p, weighted=%p) failed
 **mpi_dist_graph_neighbors: MPI_Dist_graph_neighbors failed
 **mpi_dist_graph_neighbors %C %d %p %p %d %p %p: MPI_Dist_graph_neighbors(%C, maxindegree=%d, sources=%p, sourceweights=%p, maxoutdegree=%d, destinations=%p, destweights=%p) failed
+
+# MPI-3 RMA Errors
+**mpix_get_accumulate:MPIX_Get_accumulate failed
+**mpix_get_accumulate %p %d %D %p %d %D %d %d %d %D %O %W:MPIX_Get_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
+**mpix_fetch_and_op:MPIX_Fetch_and_op failed
+**mpix_fetch_and_op %p %p %D %d %d %O %W:MPIX_Fetch_and_op(origin_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %O, %W) failed
+**mpix_compare_and_swap: MPIX_Compare_and_swap failed
+**mpix_compare_and_swap %p %p %p %D %d %d %W:MPIX_Compare_and_swap(origin_addr=%p, compare_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %W) failed
+**mpix_raccumulate:MPIX_Raccumulate failed
+**mpix_raccumulate %p %d %D %d %d %d %D %O %W %p:MPIX_Raccumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, request=%p) failed
+**mpix_rget:MPIX_Rget failed
+**mpix_rget %p %d %D %d %d %d %D %W %p:MPIX_Rget(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
+**mpix_rput:MPIX_Rput failed
+**mpix_rput %p %d %D %d %d %d %D %W %p:MPIX_Rput(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
+**mpix_rget_accumulate:MPIX_Rget_accumulate failed
+**mpix_rget_accumulate %p %d %D %p %d %D %d %d %d %D %O %W %p:MPIX_Rget_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, %p) failed
+**mpix_win_allocate:MPIX_Win_allocate failed
+**mpix_win_allocate %d %d %I %C %p %p:MPIX_Win_allocate(size=%d, disp_unit=%d, %I, %C, base=%p, win=%p) failed
+**mpix_win_create_dynamic:MPIX_Win_create_dynamic failed
+**mpix_win_create_dynamic %I %C %p:MPIX_Win_create_dynamic(%I, %C, win=%p) failed
+**mpix_win_attach:MPIX_Win_attach failed
+**mpix_win_attach %W %p %d:MPIX_Win_attach(%W, base=%p, size=%d) failed
+**mpix_win_detach:MPIX_Win_detach failed
+**mpix_win_detach %W %p:MPIX_Win_detach(%W, base=%p) failed
+**mpix_win_lock_all:MPIX_Win_lock_all failed
+**mpix_win_lock_all %A %W:MPIX_Win_lock_all(%A, %W) failed
+**mpix_win_unlock_all:MPIX_Win_unlock_all failed
+**mpix_win_unlock_all %W:MPIX_Win_unlock_all(%W) failed
+**mpix_win_flush:MPIX_Win_flush failed
+**mpix_win_flush %d %W:MPIX_Win_flush(target_rank=%d, %W) failed
+**mpix_win_flush_all:MPIX_Win_flush_all failed
+**mpix_win_flush_all %W:MPIX_Win_flush_all(%W) failed
+**mpix_win_flush_local:MPIX_Win_flush_local failed
+**mpix_win_flush_local %d %W:MPIX_Win_flush_local(target_rank=%d, %W) failed
+**mpix_win_flush_local_all:MPIX_Win_flush_local_all failed
+**mpix_win_flush_local_all %W:MPIX_Win_flush_local_all(%W) failed
+**mpix_win_sync:MPIX_Win_sync failed
+**mpix_win_sync %W:MPIX_Win_sync(%W) failed
 
 # pmi2 errors
 **bad_keyval:PMI2 received malformed key-value pair

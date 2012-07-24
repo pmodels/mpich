@@ -90,7 +90,6 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
     /* Note that if we are called from Fortran, we must return the values,
        not the addresses, of these attributes */
     if (HANDLE_GET_KIND(win_keyval) == HANDLE_KIND_BUILTIN) {
-	int attr_idx = win_keyval & 0x0000000f;
 	void **attr_val_p = (void **)attribute_val;
 #ifdef HAVE_FORTRAN_BINDING
 	/* Note that this routine only has a Fortran 90 binding,
@@ -104,35 +103,52 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	 * *COPY* of the value (to prevent the user from changing it)
 	 * and the Fortran versions provide the actual value (as a Fint)
 	 */
-	switch (attr_idx) {
-	case 1: /* WIN_BASE */
+	switch (win_keyval) {
+	case MPI_WIN_BASE:
 	    *attr_val_p = win_ptr->base;
 	    break;
-	case 3: /* SIZE */
+	case MPI_WIN_SIZE:
 	    win_ptr->copySize = win_ptr->size;
 	    *attr_val_p = &win_ptr->copySize;
 	    break;
-	case 5: /* DISP_UNIT */
+	case MPI_WIN_DISP_UNIT:
 	    win_ptr->copyDispUnit = win_ptr->disp_unit;
 	    *attr_val_p = &win_ptr->copyDispUnit;
 	    break;
+	case MPIX_WIN_CREATE_FLAVOR:
+	    win_ptr->copyCreateFlavor = win_ptr->create_flavor;
+	    *attr_val_p = &win_ptr->copyCreateFlavor;
+	    break;
+	case MPIX_WIN_MODEL:
+	    win_ptr->copyModel = win_ptr->model;
+	    *attr_val_p = &win_ptr->copyModel;
+	    break;
 #ifdef HAVE_FORTRAN_BINDING
-	case 2: /* Fortran BASE */
+	case MPIR_ATTR_C_TO_FORTRAN(MPI_WIN_BASE):
 	    /* The Fortran routine that matches this routine should
 	       provide an address-sized integer, not an MPI_Fint */
 	    *attr_int = MPI_VOID_PTR_CAST_TO_MPI_AINT(win_ptr->base);
 	    break;
-	case 4: /* Fortran SIZE */
+        case MPIR_ATTR_C_TO_FORTRAN(MPI_WIN_SIZE):
 	    /* We do not need to copy because we return the value,
 	       not a pointer to the value */
 	    *attr_int = win_ptr->size;
 	    break;
-	case 6: /* Fortran DISP_UNIT */
+	case MPIR_ATTR_C_TO_FORTRAN(MPI_WIN_DISP_UNIT):
 	    /* We do not need to copy because we return the value,
 	       not a pointer to the value */
 	    *attr_int = win_ptr->disp_unit;
 	    break;
+	case MPIR_ATTR_C_TO_FORTRAN(MPIX_WIN_CREATE_FLAVOR):
+	    *attr_int = win_ptr->create_flavor;
+	    break;
+	case MPIR_ATTR_C_TO_FORTRAN(MPIX_WIN_MODEL):
+	    *attr_int = win_ptr->model;
+	    break;
 #endif
+        default:
+            MPIU_Assert(FALSE);
+            break;
 	}
     }
     else {

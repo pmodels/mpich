@@ -15,3 +15,5 @@ void MPIR_Op_set_fc( MPI_Op );
 typedef void (MPIR_F77_User_function) ( void *, void *, MPI_Fint *, MPI_Fint * );
 void MPIR_Errhandler_set_fc( MPI_Errhandler );
 #endif
+
+#define MPIR_ATTR_C_TO_FORTRAN(ATTR) ((ATTR)+1)

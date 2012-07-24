@@ -74,7 +74,10 @@ noinst_PROGRAMS =          \
     strided_acc_indexed    \
     strided_acc_subarray   \
     strided_get_indexed    \
-    window_creation
+    window_creation        \
+    win_flavors            \
+    win_shared             \
+    win_shared_noncontig
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm

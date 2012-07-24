@@ -14,7 +14,6 @@
     #include <winsock2.h>
     #include <windows.h>
 #endif
-#include "opa_primitives.h"
 
 /*#define MPID_USE_SEQUENCE_NUMBERS*/
 /*#define HAVE_CH3_PRE_INIT*/

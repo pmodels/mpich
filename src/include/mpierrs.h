@@ -199,6 +199,19 @@ do {                                                   \
     }							       \
 }
 
+#define MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype_, name_, err_)     \
+    do {                                                         \
+        if (!MPIR_Type_is_rma_atomic(datatype_)) {               \
+            err_ = MPIR_Err_create_code(MPI_SUCCESS,             \
+                                        MPIR_ERR_RECOVERABLE,    \
+                                        FCNAME, __LINE__,        \
+                                        MPI_ERR_TYPE,            \
+                                        "**rmatypenotatomic",    \
+                                        "**rmatypenotatomic %D", \
+                                        name_);                  \
+        }                                                        \
+    } while (0)
+
 #define MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf,count,err) \
   if (count > 0 && sendbuf == MPI_IN_PLACE) {\
       err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_BUFFER, "**sendbuf_inplace", 0 );}

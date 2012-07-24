@@ -23,6 +23,9 @@ typedef MPIR_Pint MPIDI_msg_sz_t;
 
 #include "mpid_dataloop.h"
 
+/* FIXME: Include here? */
+#include "opa_primitives.h"
+
 /* Include definitions from the channel which must exist before items in this 
    file (mpidpre.h) or the file it includes (mpiimpl.h) can be defined. */
 #include "mpidi_ch3_pre.h"
@@ -213,7 +216,15 @@ typedef struct MPIDI_VC * MPID_VCR;
                                processes. */                             \
     volatile int my_pt_rma_puts_accs;  /* no. of passive target puts/accums  \
                                           that this process has          \
-                                          completed as target */
+                                          completed as target */         \
+    MPI_Aint *sizes;      /* array of sizes of all windows */            \
+    int shm_allocated;  /* flag: TRUE iff this window has a shared memory \
+                           region associated with it */                  \
+    void *shm_base_addr; /* base address of shared memory region */      \
+    MPI_Aint shm_segment_len; /* size of shared memory region */             \
+    void **shm_base_addrs;     /* array of base addresses of the windows of  \
+                                  all processes in this process's address space */ \
+    MPIU_SHMW_Hnd_t shm_segment_handle; /* handle to shared memory region */
  
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

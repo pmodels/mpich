@@ -157,6 +157,7 @@ typedef int MPI_Op;
 #define MPI_MINLOC  (MPI_Op)(0x5800000b)
 #define MPI_MAXLOC  (MPI_Op)(0x5800000c)
 #define MPI_REPLACE (MPI_Op)(0x5800000d)
+#define MPIX_NO_OP  (MPI_Op)(0x5800000e)
 
 /* Permanent key values */
 /* C Versions (return pointer to value),
@@ -179,11 +180,13 @@ typedef int MPI_Op;
 #define MPI_LASTUSEDCODE     0x6440000b
 #define MPI_APPNUM           0x6440000d
 
-/* In addition, there are 3 predefined window attributes that are
+/* In addition, there are 5 predefined window attributes that are
    defined for every window */
-#define MPI_WIN_BASE         0x66000001
-#define MPI_WIN_SIZE         0x66000003
-#define MPI_WIN_DISP_UNIT    0x66000005
+#define MPI_WIN_BASE          0x66000001
+#define MPI_WIN_SIZE          0x66000003
+#define MPI_WIN_DISP_UNIT     0x66000005
+#define MPIX_WIN_CREATE_FLAVOR 0x66000007
+#define MPIX_WIN_MODEL         0x66000009
 
 /* Define some null objects */
 #define MPI_COMM_NULL      ((MPI_Comm)0x04000000)
@@ -204,6 +207,20 @@ typedef int MPI_Op;
 /* Pre-defined constants */
 #define MPI_UNDEFINED      (-32766)
 #define MPI_KEYVAL_INVALID 0x24000000
+
+/* MPI-3 window flavors */
+enum MPIR_Win_flavor_type {
+    MPIX_WIN_FLAVOR_CREATE      = 1,
+    MPIX_WIN_FLAVOR_ALLOCATE    = 2,
+    MPIX_WIN_FLAVOR_DYNAMIC     = 3,
+    MPIX_WIN_FLAVOR_SHARED      = 4
+};
+
+/* MPI-3 window consistency models */
+enum MPIR_Win_model_type {
+    MPIX_WIN_SEPARATE   = 1,
+    MPIX_WIN_UNIFIED    = 2
+};
 
 /* Upper bound on the overhead in bsend for each message buffer */
 #define MPI_BSEND_OVERHEAD @BSEND_OVERHEAD@
@@ -639,11 +656,13 @@ typedef int (MPI_Grequest_query_function)(void *, MPI_Status *);
 
 #define MPIX_ERR_PROC_FAIL_STOP 54   /* Process failure */
 
+#define MPIX_ERR_RMA_RANGE  55      /* */
+#define MPIX_ERR_RMA_ATTACH 56      /* */
+
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-
 /* WARNING: this is also defined in mpishared.h.  Update both locations */
-#define MPICH_ERR_LAST_CLASS 54     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 56     /* It is also helpful to know the
 				       last valid class */
 /* End of MPI's error classes */
 
@@ -840,11 +859,10 @@ int MPI_Unpublish_name(MPICH2_CONST char *, MPI_Info, MPICH2_CONST char *);
 
 /* One-Sided Communications */
 int MPI_Accumulate(MPICH2_CONST void *, int, MPI_Datatype, int, MPI_Aint, int,
-		   MPI_Datatype,  MPI_Op, MPI_Win);
-int MPI_Get(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, 
-	    MPI_Win);
+                   MPI_Datatype,  MPI_Op, MPI_Win);
+int MPI_Get(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, MPI_Win);
 int MPI_Put(MPICH2_CONST void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-	    MPI_Win);
+            MPI_Win);
 int MPI_Win_complete(MPI_Win);
 int MPI_Win_create(void *, MPI_Aint, int, MPI_Info, MPI_Comm, MPI_Win *);
 int MPI_Win_fence(int, MPI_Win);
@@ -856,7 +874,54 @@ int MPI_Win_start(MPI_Group, int, MPI_Win);
 int MPI_Win_test(MPI_Win, int *);
 int MPI_Win_unlock(int, MPI_Win);
 int MPI_Win_wait(MPI_Win);
- 
+
+/* MPI-3 One-Sided Communication Routines */
+int MPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
+                      MPI_Comm comm, void *baseptr, MPI_Win *win);
+int MPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
+                             void *baseptr, MPI_Win *win);
+int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, void *baseptr);
+int MPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
+int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size);
+int MPIX_Win_detach(MPI_Win win, MPICH2_CONST void *base);
+
+int MPIX_Get_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+                        MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
+int MPIX_Fetch_and_op(MPICH2_CONST void *origin_addr, void *result_addr,
+                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                      MPI_Op op, MPI_Win win);
+int MPIX_Compare_and_swap(MPICH2_CONST void *origin_addr, MPICH2_CONST void *compare_addr,
+                          void *result_addr, MPI_Datatype datatype, int target_rank,
+                          MPI_Aint target_disp, MPI_Win win);
+int MPIX_Rput(MPICH2_CONST void *origin_addr, int origin_count,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPI_Win win,
+              MPI_Request *request);
+int MPIX_Rget(void *origin_addr, int origin_count,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPI_Win win,
+              MPI_Request *request);
+int MPIX_Raccumulate(MPICH2_CONST void *origin_addr, int origin_count,
+                     MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
+                     MPI_Request *request);
+int MPIX_Rget_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
+                         MPI_Request *request);
+
+int MPIX_Win_lock_all(int assert, MPI_Win win);
+int MPIX_Win_unlock_all(MPI_Win win);
+int MPIX_Win_flush(int rank, MPI_Win win);
+int MPIX_Win_flush_all(MPI_Win win);
+int MPIX_Win_flush_local(int rank, MPI_Win win);
+int MPIX_Win_flush_local_all(MPI_Win win);
+int MPIX_Win_sync(MPI_Win win);
+
+
 /* Extended Collective Operations */
 int MPI_Alltoallw(MPICH2_CONST void *, MPICH2_CONST int [], MPICH2_CONST int [],
                   MPICH2_CONST MPI_Datatype [], void *, MPICH2_CONST int [],
@@ -1245,6 +1310,53 @@ int PMPI_Win_test(MPI_Win, int *);
 int PMPI_Win_unlock(int, MPI_Win);
 int PMPI_Win_wait(MPI_Win);
  
+/* MPI-3 One-Sided Communication Routines */
+int PMPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
+                       MPI_Comm comm, void *baseptr, MPI_Win *win);
+int PMPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
+                              void *baseptr, MPI_Win *win);
+int PMPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size,
+                           void *baseptr);
+int PMPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
+int PMPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size);
+int PMPIX_Win_detach(MPI_Win win, MPICH2_CONST void *base);
+
+int PMPIX_Get_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
+int PMPIX_Fetch_and_op(MPICH2_CONST void *origin_addr, void *result_addr,
+                       MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                       MPI_Op op, MPI_Win win);
+int PMPIX_Compare_and_swap(MPICH2_CONST void *origin_addr, MPICH2_CONST void *compare_addr,
+                           void *result_addr, MPI_Datatype datatype, int target_rank,
+                           MPI_Aint target_disp, MPI_Win win);
+int PMPIX_Rput(MPICH2_CONST void *origin_addr, int origin_count,
+               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+               int target_count, MPI_Datatype target_datatype, MPI_Win win,
+               MPI_Request *request);
+int PMPIX_Rget(void *origin_addr, int origin_count,
+               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+               int target_count, MPI_Datatype target_datatype, MPI_Win win,
+               MPI_Request *request);
+int PMPIX_Raccumulate(MPICH2_CONST void *origin_addr, int origin_count,
+                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
+                      MPI_Request *request);
+int PMPIX_Rget_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                          int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
+                          MPI_Request *request);
+
+int PMPIX_Win_lock_all(int assert, MPI_Win win);
+int PMPIX_Win_unlock_all(MPI_Win win);
+int PMPIX_Win_flush(int rank, MPI_Win win);
+int PMPIX_Win_flush_all(MPI_Win win);
+int PMPIX_Win_flush_local(int rank, MPI_Win win);
+int PMPIX_Win_flush_local_all(MPI_Win win);
+int PMPIX_Win_sync(MPI_Win win);
+
 /* Extended Collective Operations */
 int PMPI_Alltoallw(MPICH2_CONST void *, MPICH2_CONST int [], MPICH2_CONST int [],
                    MPICH2_CONST MPI_Datatype [], void *, MPICH2_CONST int [],
