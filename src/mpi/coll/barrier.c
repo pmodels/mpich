@@ -112,7 +112,7 @@ PMPI_LOCAL int MPIR_Barrier_or_coll_fn(MPID_Comm *comm_ptr, int *errflag )
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Barrier != NULL)
     {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Barrier(comm_ptr, errflag);
+        mpi_errno = comm_ptr->coll_fns->Barrier(comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         /* --END USEREXTENSION-- */
     }
