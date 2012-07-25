@@ -22,7 +22,6 @@ mpi_sources +=                          \
     src/mpi/rma/win_allocate_shared.c   \
     src/mpi/rma/win_attach.c            \
     src/mpi/rma/win_complete.c          \
-    src/mpi/rma/win_complete.c          \
     src/mpi/rma/win_create.c            \
     src/mpi/rma/win_create_dynamic.c    \
     src/mpi/rma/win_detach.c            \
@@ -44,8 +43,7 @@ mpi_sources +=                          \
     src/mpi/rma/win_test.c              \
     src/mpi/rma/win_unlock.c            \
     src/mpi/rma/win_unlock_all.c        \
-    src/mpi/rma/win_wait.c              \
-    src/mpi/rma/winutil.c
+    src/mpi/rma/win_wait.c
 
 noinst_HEADERS += src/mpi/rma/rma.h
 

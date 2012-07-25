@@ -64,7 +64,8 @@ lib_lib@MPILIBNAME@_la_SOURCES += \
     src/mpi/coll/opprod.c         \
     src/mpi/coll/opminloc.c       \
     src/mpi/coll/opmaxloc.c       \
-    src/mpi/coll/nbcutil.c
+    src/mpi/coll/nbcutil.c        \
+    src/mpi/coll/rmatypeutil.c
 
 noinst_HEADERS +=           \
     src/mpi/coll/collutil.h \
