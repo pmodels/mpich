@@ -26,6 +26,9 @@ typedef MPIR_Pint MPIDI_msg_sz_t;
 /* FIXME: Include here? */
 #include "opa_primitives.h"
 
+/* For shared memory window support in MPID_Win */
+#include "mpiu_os_wrappers_pre.h"
+
 /* Include definitions from the channel which must exist before items in this 
    file (mpidpre.h) or the file it includes (mpiimpl.h) can be defined. */
 #include "mpidi_ch3_pre.h"
