@@ -59,7 +59,7 @@ Atomic with respect to other "accumulate" operations.
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Fetch_and_op(MPICH2_CONST void *origin_addr, void *result_addr,
+int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
         MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
         MPI_Op op, MPI_Win win)
 {

@@ -59,7 +59,7 @@ Atomic with respect to other "accumulate" operations.
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Compare_and_swap(MPICH2_CONST void *origin_addr, MPICH2_CONST void *compare_addr,
+int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         void *result_addr, MPI_Datatype datatype, int target_rank,
         MPI_Aint target_disp, MPI_Win win)
 {

@@ -168,7 +168,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iscatterv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
+int MPIX_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

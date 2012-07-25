@@ -292,7 +292,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ialltoallv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *sdispls, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
+int MPIX_Ialltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

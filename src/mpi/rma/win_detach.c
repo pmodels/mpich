@@ -48,7 +48,7 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Win_detach(MPI_Win win, MPICH2_CONST void *base)
+int MPIX_Win_detach(MPI_Win win, const void *base)
 {
     static const char FCNAME[] = "MPIX_Win_detach";
     int mpi_errno = MPI_SUCCESS;

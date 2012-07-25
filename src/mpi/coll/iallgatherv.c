@@ -733,7 +733,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iallgatherv(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
+int MPIX_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

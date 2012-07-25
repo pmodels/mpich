@@ -883,19 +883,19 @@ int MPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
 int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, void *baseptr);
 int MPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size);
-int MPIX_Win_detach(MPI_Win win, MPICH2_CONST void *base);
+int MPIX_Win_detach(MPI_Win win, const void *base);
 
-int MPIX_Get_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
-int MPIX_Fetch_and_op(MPICH2_CONST void *origin_addr, void *result_addr,
+int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
                       MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
                       MPI_Op op, MPI_Win win);
-int MPIX_Compare_and_swap(MPICH2_CONST void *origin_addr, MPICH2_CONST void *compare_addr,
+int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           void *result_addr, MPI_Datatype datatype, int target_rank,
                           MPI_Aint target_disp, MPI_Win win);
-int MPIX_Rput(MPICH2_CONST void *origin_addr, int origin_count,
+int MPIX_Rput(const void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPI_Win win,
               MPI_Request *request);
@@ -903,11 +903,11 @@ int MPIX_Rget(void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPI_Win win,
               MPI_Request *request);
-int MPIX_Raccumulate(MPICH2_CONST void *origin_addr, int origin_count,
+int MPIX_Raccumulate(const void *origin_addr, int origin_count,
                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
                      MPI_Request *request);
-int MPIX_Rget_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+int MPIX_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
@@ -1069,21 +1069,21 @@ int MPIX_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request);
 /* MPI-3 nonblocking collectives, currently MPIX_ extensions */
 int MPIX_Ibarrier(MPI_Comm comm, MPI_Request *request);
 int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request *request);
-int MPIX_Igather(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int MPIX_Igatherv(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int MPIX_Iscatter(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int MPIX_Iscatterv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int MPIX_Iallgather(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int MPIX_Iallgatherv(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int MPIX_Ialltoall(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int MPIX_Ialltoallv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *sdispls, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int MPIX_Ialltoallw(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *sdispls, MPICH2_CONST MPI_Datatype *sendtypes, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *rdispls, MPICH2_CONST MPI_Datatype *recvtypes, MPI_Comm comm, MPI_Request *request);
-int MPIX_Ireduce(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request *request);
-int MPIX_Iallreduce(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int MPIX_Ireduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int MPIX_Ireduce_scatter_block(MPICH2_CONST void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int MPIX_Iscan(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int MPIX_Iexscan(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int MPIX_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int MPIX_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int MPIX_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int MPIX_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int MPIX_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int MPIX_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int MPIX_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int MPIX_Ialltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int MPIX_Ialltoallw(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPI_Comm comm, MPI_Request *request);
+int MPIX_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request *request);
+int MPIX_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int MPIX_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int MPIX_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int MPIX_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int MPIX_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 
 /* MPI-3 shared memory */
 int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
@@ -1319,19 +1319,19 @@ int PMPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size,
                            void *baseptr);
 int PMPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int PMPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size);
-int PMPIX_Win_detach(MPI_Win win, MPICH2_CONST void *base);
+int PMPIX_Win_detach(MPI_Win win, const void *base);
 
-int PMPIX_Get_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+int PMPIX_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
-int PMPIX_Fetch_and_op(MPICH2_CONST void *origin_addr, void *result_addr,
+int PMPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
                        MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
                        MPI_Op op, MPI_Win win);
-int PMPIX_Compare_and_swap(MPICH2_CONST void *origin_addr, MPICH2_CONST void *compare_addr,
+int PMPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                            void *result_addr, MPI_Datatype datatype, int target_rank,
                            MPI_Aint target_disp, MPI_Win win);
-int PMPIX_Rput(MPICH2_CONST void *origin_addr, int origin_count,
+int PMPIX_Rput(const void *origin_addr, int origin_count,
                MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                int target_count, MPI_Datatype target_datatype, MPI_Win win,
                MPI_Request *request);
@@ -1339,11 +1339,11 @@ int PMPIX_Rget(void *origin_addr, int origin_count,
                MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                int target_count, MPI_Datatype target_datatype, MPI_Win win,
                MPI_Request *request);
-int PMPIX_Raccumulate(MPICH2_CONST void *origin_addr, int origin_count,
+int PMPIX_Raccumulate(const void *origin_addr, int origin_count,
                       MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                       int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
                       MPI_Request *request);
-int PMPIX_Rget_accumulate(MPICH2_CONST void *origin_addr, int origin_count,
+int PMPIX_Rget_accumulate(const void *origin_addr, int origin_count,
                           MPI_Datatype origin_datatype, void *result_addr, int result_count,
                           MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
@@ -1477,21 +1477,21 @@ int PMPIX_Mprobe(int source, int tag, MPI_Comm comm, MPIX_Message *message, MPI_
 int PMPIX_Mrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *message, MPI_Status *status);
 int PMPIX_Ibarrier(MPI_Comm comm, MPI_Request *request);
 int PMPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Igather(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Igatherv(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Iscatter(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Iscatterv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Iallgather(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Iallgatherv(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Ialltoall(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Ialltoallv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *sdispls, MPI_Datatype sendtype, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Ialltoallw(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcounts, MPICH2_CONST int *sdispls, MPICH2_CONST MPI_Datatype *sendtypes, void *recvbuf, MPICH2_CONST int *recvcounts, MPICH2_CONST int *rdispls, MPICH2_CONST MPI_Datatype *recvtypes, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Ireduce(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Iallreduce(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Ireduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Ireduce_scatter_block(MPICH2_CONST void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Iscan(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
-int PMPIX_Iexscan(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Ialltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Ialltoallw(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
+int PMPIX_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request);
 int PMPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm);
 int PMPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm);
 int PMPIX_T_init_thread(int required, int *provided);

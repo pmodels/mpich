@@ -1054,7 +1054,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ireduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
+int MPIX_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

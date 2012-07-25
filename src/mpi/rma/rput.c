@@ -57,7 +57,7 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Rput(MPICH2_CONST void *origin_addr, int origin_count, MPI_Datatype
+int MPIX_Rput(const void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,
             int target_count, MPI_Datatype target_datatype, MPI_Win
             win, MPI_Request *request)
