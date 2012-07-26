@@ -249,7 +249,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                         code = WEXITSTATUS(proxy->exit_status[i]);
 
                     HYDU_dump_noprefix
-                        (stdout, "\n====================================================");
+                        (stdout, "\n==================================================");
                     HYDU_dump_noprefix(stdout, "=================================\n");
                     HYDU_dump_noprefix
                         (stdout, "=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES\n");
@@ -258,7 +258,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                     HYDU_dump_noprefix(stdout,
                                        "=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES\n");
                     HYDU_dump_noprefix(stdout,
-                                       "====================================================");
+                                       "==================================================");
                     HYDU_dump_noprefix(stdout, "=================================\n");
 
                     status = HYD_pmcd_pmiserv_cleanup_all_pgs();
