@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# This script takes one argument, $pgm, and run it on $BACKEND.
+pgm="$@"
+
+jobcmd="cqsub -p radix -n 1 -t 5 $pgm"
+jobid=`$jobcmd` && cqwait $jobid
