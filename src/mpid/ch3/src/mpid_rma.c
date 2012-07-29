@@ -144,9 +144,9 @@ int MPID_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm_ptr,
 {
     int mpi_errno=MPI_SUCCESS;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_ALLOCATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);
     
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_ALLOCATE);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);
 
     /* The default for this function is MPIDI_Win_allocate.
        A channel may define its own function and set it in the 
@@ -173,7 +173,7 @@ int MPID_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm_ptr,
 #endif
 
  fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_ALLOCATE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);
     return mpi_errno;
 }
 
