@@ -4,28 +4,28 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "ptlnm_impl.h"
+#include "ptl_impl.h"
 #include <pmi.h>
 #include <mpl_utlist.h>
 
 #define NUMBUFS 20
-#define BUFLEN  (sizeof(MPIDI_CH3_Pkt_t) + PTLNM_MAX_EAGER)
+#define BUFLEN  (sizeof(MPIDI_CH3_Pkt_t) + PTL_MAX_EAGER)
 
-typedef struct MPID_nem_ptlnm_sendbuf {
+typedef struct MPID_nem_ptl_sendbuf {
     ptl_md_t md;
     ptl_handle_md_t md_handle;
-    struct MPID_nem_ptlnm_sendbuf *next;
+    struct MPID_nem_ptl_sendbuf *next;
     union {
         struct {
             MPIDI_CH3_Pkt_t hdr;
-            char payload[PTLNM_MAX_EAGER];
+            char payload[PTL_MAX_EAGER];
         } hp; /* header+payload */
         char p[BUFLEN]; /* just payload */
     } buf;
-} MPID_nem_ptlnm_sendbuf_t;
+} MPID_nem_ptl_sendbuf_t;
 
-static MPID_nem_ptlnm_sendbuf_t sendbuf[NUMBUFS];
-static MPID_nem_ptlnm_sendbuf_t *free_head = NULL;
+static MPID_nem_ptl_sendbuf_t sendbuf[NUMBUFS];
+static MPID_nem_ptl_sendbuf_t *free_head = NULL;
 
 #define FREE_EMPTY() (free_head == NULL)
 #define FREE_HEAD() free_head
@@ -39,17 +39,17 @@ static int send_queued(void);
 static void vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc) {/* FIXME: write real function */ return;}
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptlnm_send_init
+#define FUNCNAME MPID_nem_ptl_send_init
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptlnm_send_init(void)
+int MPID_nem_ptl_send_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
     int ret;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTLNM_SEND_INIT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SEND_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTLNM_SEND_INIT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_SEND_INIT);
 
     MPIU_Assert(BUFLEN == sizeof(sendbuf->buf));
     
@@ -57,9 +57,9 @@ int MPID_nem_ptlnm_send_init(void)
         sendbuf[i].md.start = &sendbuf[i].buf;
         sendbuf[i].md.length = BUFLEN;
         sendbuf[i].md.options = 0x0;
-        sendbuf[i].md.eq_handle = MPIDI_nem_ptlnm_eq;
+        sendbuf[i].md.eq_handle = MPIDI_nem_ptl_eq;
         sendbuf[i].md.ct_handle = PTL_CT_NONE;
-        ret = PtlMDBind(MPIDI_nem_ptlnm_ni, &sendbuf[i].md, &sendbuf[i].md_handle);
+        ret = PtlMDBind(MPIDI_nem_ptl_ni, &sendbuf[i].md, &sendbuf[i].md_handle);
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind");
         FREE_PUSH(&sendbuf[i]);
     }
@@ -69,24 +69,24 @@ int MPID_nem_ptlnm_send_init(void)
     MPID_nem_net_module_vc_dbg_print_sendq = vc_dbg_print_sendq;
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTLNM_SEND_INIT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_SEND_INIT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptlnm_send_finalize
+#define FUNCNAME MPID_nem_ptl_send_finalize
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptlnm_send_finalize(void)
+int MPID_nem_ptl_send_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
     int i;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTLNM_SEND_FINALIZE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SEND_FINALIZE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTLNM_SEND_FINALIZE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_SEND_FINALIZE);
 
     for (i = 0; i < NUMBUFS; ++i) {
         ret = PtlMDRelease(sendbuf[i].md_handle);
@@ -94,7 +94,7 @@ int MPID_nem_ptlnm_send_finalize(void)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTLNM_SEND_FINALIZE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_SEND_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -107,7 +107,7 @@ int MPID_nem_ptlnm_send_finalize(void)
 static int init_id(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_ptlnm_vc_area *const vc_ptlnm = VC_PTLNM(vc);
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     char *bc;
     int pmi_errno;
     int val_max_sz;
@@ -123,7 +123,7 @@ static int init_id(MPIDI_VC_t *vc)
     mpi_errno = vc->pg->getConnInfo(vc->pg_rank, bc, val_max_sz, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_nem_ptlnm_get_id_from_bc(bc, &vc_ptlnm->id, &vc_ptlnm->pt);
+    mpi_errno = MPID_nem_ptl_get_id_from_bc(bc, &vc_ptl->id, &vc_ptl->pt);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
  fn_exit:
@@ -135,19 +135,19 @@ static int init_id(MPIDI_VC_t *vc)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptlnm_sendq_complete_with_error
+#define FUNCNAME MPID_nem_ptl_sendq_complete_with_error
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptlnm_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno)
+int MPID_nem_ptl_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTLNM_SENDQ_COMPLETE_WITH_ERROR);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SENDQ_COMPLETE_WITH_ERROR);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTLNM_SENDQ_COMPLETE_WITH_ERROR);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_SENDQ_COMPLETE_WITH_ERROR);
 
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTLNM_SENDQ_COMPLETE_WITH_ERROR);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_SENDQ_COMPLETE_WITH_ERROR);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -158,7 +158,7 @@ int MPID_nem_ptlnm_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno)
 #define FUNCNAME pack_byte
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static void pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf, MPID_nem_ptlnm_pack_overflow_t *overflow)
+static void pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf, MPID_nem_ptl_pack_overflow_t *overflow)
 {
     MPI_Aint my_last;
     MPI_Aint bytes;
@@ -249,8 +249,8 @@ static inline void save_iov(MPID_Request *sreq, void *hdr, void *data, MPIDI_msg
 static inline int send_pkt(MPIDI_VC_t *vc, void **vhdr_p, void **vdata_p, MPIDI_msg_sz_t *data_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_ptlnm_sendbuf_t *sb;
-    MPID_nem_ptlnm_vc_area *const vc_ptlnm = VC_PTLNM(vc);
+    MPID_nem_ptl_sendbuf_t *sb;
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     int ret;
     MPIDI_CH3_Pkt_t **hdr_p = (MPIDI_CH3_Pkt_t **)vhdr_p;
     char **data_p = (char **)vdata_p;
@@ -258,7 +258,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void **vhdr_p, void **vdata_p, MPIDI_
 
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_PKT);
     
-    if (!vc_ptlnm->id_initialized) {
+    if (!vc_ptl->id_initialized) {
         mpi_errno = init_id(vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -269,15 +269,15 @@ static inline int send_pkt(MPIDI_VC_t *vc, void **vhdr_p, void **vdata_p, MPIDI_
         FREE_POP(&sb);
         sb->buf.hp.hdr = **hdr_p;
         len = *data_sz_p;
-        if (len > PTLNM_MAX_EAGER)
-            len = PTLNM_MAX_EAGER;
+        if (len > PTL_MAX_EAGER)
+            len = PTL_MAX_EAGER;
         MPIU_Memcpy(sb->buf.hp.payload, *data_p, len);
-        ret = PtlPut(sb->md_handle, 0, sizeof(sb->buf.hp.hdr) + len, PTL_NO_ACK_REQ, vc_ptlnm->id, vc_ptlnm->pt, 0, 0, sb,
+        ret = PtlPut(sb->md_handle, 0, sizeof(sb->buf.hp.hdr) + len, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt, 0, 0, sb,
                      MPIDI_Process.my_pg_rank);
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p",
-                                                sizeof(sb->buf.hp.hdr) + len, vc_ptlnm->id.phys.nid, vc_ptlnm->id.phys.pid,
-                                                vc_ptlnm->pt, sb));
+                                                sizeof(sb->buf.hp.hdr) + len, vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
+                                                vc_ptl->pt, sb));
         *hdr_p = NULL;
         *data_p += len;
         *data_sz_p -= len;
@@ -289,10 +289,10 @@ static inline int send_pkt(MPIDI_VC_t *vc, void **vhdr_p, void **vdata_p, MPIDI_
             if (len > BUFLEN)
                 len = BUFLEN;
             MPIU_Memcpy(sb->buf.p, *data_p, len);
-            ret = PtlPut(sb->md_handle, 0, len, PTL_NO_ACK_REQ, vc_ptlnm->id, vc_ptlnm->pt, 0, 0, sb, MPIDI_Process.my_pg_rank);
+            ret = PtlPut(sb->md_handle, 0, len, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt, 0, 0, sb, MPIDI_Process.my_pg_rank);
             MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
             MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p", len,
-                                                    vc_ptlnm->id.phys.nid, vc_ptlnm->id.phys.pid, vc_ptlnm->pt, sb));
+                                                    vc_ptl->id.phys.nid, vc_ptl->id.phys.pid, vc_ptl->pt, sb));
             *data_p += len;
             *data_sz_p -= len;
         }
@@ -312,8 +312,8 @@ static inline int send_pkt(MPIDI_VC_t *vc, void **vhdr_p, void **vdata_p, MPIDI_
 static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void **vhdr_p, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_ptlnm_sendbuf_t *sb;
-    MPID_nem_ptlnm_vc_area *const vc_ptlnm = VC_PTLNM(vc);
+    MPID_nem_ptl_sendbuf_t *sb;
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     int ret;
     MPIDI_msg_sz_t last;
     MPIDI_CH3_Pkt_t **hdr_p = (MPIDI_CH3_Pkt_t **)vhdr_p;
@@ -323,9 +323,9 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void **vhdr_p,
 
     *complete = 0;
 
-    REQ_PTLNM(sreq)->overflow.len = 0; /* used by pack_byte */
+    REQ_PTL(sreq)->overflow.len = 0; /* used by pack_byte */
 
-    if (!vc_ptlnm->id_initialized) {
+    if (!vc_ptl->id_initialized) {
         mpi_errno = init_id(vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -338,15 +338,15 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void **vhdr_p,
         MPIU_Assert(sreq->dev.segment_first == 0);
 
         last = sreq->dev.segment_size;
-        if (last > PTLNM_MAX_EAGER)
-            last = PTLNM_MAX_EAGER;
-        pack_byte(sreq->dev.segment_ptr, 0, last, sb->buf.hp.payload, &REQ_PTLNM(sreq)->overflow);
-        ret = PtlPut(sb->md_handle, 0, sizeof(sb->buf.hp.hdr) + last, PTL_NO_ACK_REQ, vc_ptlnm->id, vc_ptlnm->pt, 0, 0, sb,
+        if (last > PTL_MAX_EAGER)
+            last = PTL_MAX_EAGER;
+        pack_byte(sreq->dev.segment_ptr, 0, last, sb->buf.hp.payload, &REQ_PTL(sreq)->overflow);
+        ret = PtlPut(sb->md_handle, 0, sizeof(sb->buf.hp.hdr) + last, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt, 0, 0, sb,
                      MPIDI_Process.my_pg_rank);
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p",
-                                                sizeof(sb->buf.hp.hdr) + last, vc_ptlnm->id.phys.nid, vc_ptlnm->id.phys.pid,
-                                                vc_ptlnm->pt, sb));
+                                                sizeof(sb->buf.hp.hdr) + last, vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
+                                                vc_ptl->pt, sb));
         *hdr_p = NULL;
 
         if (last == sreq->dev.segment_size) {
@@ -364,14 +364,14 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void **vhdr_p,
             if (last > sreq->dev.segment_first+BUFLEN)
                 last = sreq->dev.segment_first+BUFLEN;
 
-            pack_byte(sreq->dev.segment_ptr, sreq->dev.segment_first, last, sb->buf.p, &REQ_PTLNM(sreq)->overflow);
+            pack_byte(sreq->dev.segment_ptr, sreq->dev.segment_first, last, sb->buf.p, &REQ_PTL(sreq)->overflow);
             sreq->dev.segment_first = last;
-            ret = PtlPut(sb->md_handle, 0, last - sreq->dev.segment_first, PTL_NO_ACK_REQ, vc_ptlnm->id, vc_ptlnm->pt, 0, 0, sb,
+            ret = PtlPut(sb->md_handle, 0, last - sreq->dev.segment_first, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt, 0, 0, sb,
                          MPIDI_Process.my_pg_rank);
             MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
             MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p",
-                                                    last - sreq->dev.segment_first, vc_ptlnm->id.phys.nid, vc_ptlnm->id.phys.pid,
-                                                    vc_ptlnm->pt, sb));
+                                                    last - sreq->dev.segment_first, vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
+                                                    vc_ptl->pt, sb));
 
             if (last == sreq->dev.segment_size) {
                 *complete = 1;
@@ -395,7 +395,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void **vhdr_p,
 static int enqueue_request(MPIDI_VC_t *vc, MPID_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_ptlnm_vc_area *const vc_ptlnm = VC_PTLNM(vc);
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     MPIDI_STATE_DECL(MPID_STATE_ENQUEUE_REQUEST);
 
     MPIDI_FUNC_ENTER(MPID_STATE_ENQUEUE_REQUEST);
@@ -407,7 +407,7 @@ static int enqueue_request(MPIDI_VC_t *vc, MPID_Request *sreq)
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
 
-    ++(vc_ptlnm->num_queued_sends);
+    ++(vc_ptl->num_queued_sends);
         
     if (FREE_EMPTY()) {
         MPIDI_CH3I_Sendq_enqueue(&send_queue, sreq);
@@ -427,16 +427,16 @@ static int enqueue_request(MPIDI_VC_t *vc, MPID_Request *sreq)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptlnm_SendNoncontig
+#define FUNCNAME MPID_nem_ptl_SendNoncontig
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptlnm_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
+int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int complete = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTLNM_SENDNONCONTIG);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SENDNONCONTIG);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTLNM_SENDNONCONTIG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_SENDNONCONTIG);
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
     mpi_errno = send_noncontig_pkt(vc, sreq, &hdr, &complete);
@@ -464,7 +464,7 @@ int MPID_nem_ptlnm_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, 
         }
     }
 
-    REQ_PTLNM(sreq)->noncontig = TRUE;
+    REQ_PTL(sreq)->noncontig = TRUE;
     save_iov(sreq, hdr, NULL, 0); /* save the header in IOV if necessary */
 
     /* enqueue request */
@@ -472,24 +472,24 @@ int MPID_nem_ptlnm_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, 
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTLNM_SENDNONCONTIG);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_SENDNONCONTIG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptlnm_iStartContigMsg
+#define FUNCNAME MPID_nem_ptl_iStartContigMsg
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptlnm_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
+int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
                                    MPID_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq = NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTLNM_ISTARTCONTIGMSG);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISTARTCONTIGMSG);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTLNM_ISTARTCONTIGMSG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_ISTARTCONTIGMSG);
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     mpi_errno = send_pkt(vc, &hdr, &data, &data_sz);
@@ -508,7 +508,7 @@ int MPID_nem_ptlnm_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr
     sreq->kind = MPID_REQUEST_SEND;
 
     sreq->dev.OnDataAvail = 0;
-    REQ_PTLNM(sreq)->noncontig = FALSE;
+    REQ_PTL(sreq)->noncontig = FALSE;
     save_iov(sreq, hdr, data, data_sz);
 
     /* enqueue request */
@@ -518,23 +518,23 @@ int MPID_nem_ptlnm_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr
     *sreq_ptr = sreq;
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTLNM_ISTARTCONTIGMSG);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_ISTARTCONTIGMSG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptlnm_iSendContig
+#define FUNCNAME MPID_nem_ptl_iSendContig
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptlnm_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
+int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
                                void *data, MPIDI_msg_sz_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTLNM_ISENDCONTIG);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISENDCONTIG);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTLNM_ISENDCONTIG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_ISENDCONTIG);
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
     mpi_errno = send_pkt(vc, &hdr, &data, &data_sz);
@@ -565,7 +565,7 @@ int MPID_nem_ptlnm_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MP
         save_iov(sreq, hdr, data, data_sz);
     }
 
-    REQ_PTLNM(sreq)->noncontig = FALSE;
+    REQ_PTL(sreq)->noncontig = FALSE;
     
     /* enqueue request */
     MPIU_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].MPID_IOV_LEN > 0);
@@ -574,7 +574,7 @@ int MPID_nem_ptlnm_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MP
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTLNM_ISENDCONTIG);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_ISENDCONTIG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -587,7 +587,7 @@ int MPID_nem_ptlnm_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MP
 static int send_queued(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_ptlnm_sendbuf_t *sb;
+    MPID_nem_ptl_sendbuf_t *sb;
     int ret;
     MPIDI_STATE_DECL(MPID_STATE_SEND_QUEUED);
 
@@ -623,7 +623,7 @@ static int send_queued(void)
         }
 
         /* copy any noncontig data if there's room left in the send buffer */
-        if (send_len < BUFLEN && REQ_PTLNM(sreq)->noncontig) {
+        if (send_len < BUFLEN && REQ_PTL(sreq)->noncontig) {
             MPIDI_msg_sz_t last;
             MPIU_Assert(complete); /* if complete has been set to false, there can't be any space left in the send buffer */
             last = sreq->dev.segment_size;
@@ -631,11 +631,11 @@ static int send_queued(void)
                 last = sreq->dev.segment_first+BUFLEN;
                 complete = FALSE;
             }
-            pack_byte(sreq->dev.segment_ptr, sreq->dev.segment_first, last, sb->buf.p, &REQ_PTLNM(sreq)->overflow);
+            pack_byte(sreq->dev.segment_ptr, sreq->dev.segment_first, last, sb->buf.p, &REQ_PTL(sreq)->overflow);
             send_len += last - sreq->dev.segment_first;
             sreq->dev.segment_first = last;
         }
-        ret = PtlPut(sb->md_handle, 0, send_len, PTL_NO_ACK_REQ, VC_PTLNM(sreq->ch.vc)->id, VC_PTLNM(sreq->ch.vc)->pt, 0, 0, sb,
+        ret = PtlPut(sb->md_handle, 0, send_len, PTL_NO_ACK_REQ, VC_PTL(sreq->ch.vc)->id, VC_PTL(sreq->ch.vc)->pt, 0, 0, sb,
                      MPIDI_Process.my_pg_rank);
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
 
@@ -657,13 +657,13 @@ static int send_queued(void)
         }
         
         /* completed the request */
-        --(VC_PTLNM(sreq->ch.vc)->num_queued_sends);
+        --(VC_PTL(sreq->ch.vc)->num_queued_sends);
         MPIDI_CH3I_Sendq_dequeue(&send_queue, &sreq);
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
 
-        if (VC_PTLNM(sreq->ch.vc)->num_queued_sends == 0 && sreq->ch.vc->state == MPIDI_VC_STATE_CLOSED) {
+        if (VC_PTL(sreq->ch.vc)->num_queued_sends == 0 && sreq->ch.vc->state == MPIDI_VC_STATE_CLOSED) {
             /* this VC is closing, if this was the last req queued for that vc, call vc_terminated() */
-            mpi_errno = MPID_nem_ptlnm_vc_terminated(sreq->ch.vc);
+            mpi_errno = MPID_nem_ptl_vc_terminated(sreq->ch.vc);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         
@@ -678,15 +678,15 @@ static int send_queued(void)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptlnm_send_completed
+#define FUNCNAME MPID_nem_ptl_send_completed
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptlnm_send_completed(MPID_nem_ptlnm_sendbuf_t *sb)
+int MPID_nem_ptl_send_completed(MPID_nem_ptl_sendbuf_t *sb)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTLNM_SEND_COMPLETED);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SEND_COMPLETED);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTLNM_SEND_COMPLETED);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_SEND_COMPLETED);
 
     FREE_PUSH(sb);
     if (!MPIDI_CH3I_Sendq_empty(send_queue))
@@ -694,7 +694,7 @@ int MPID_nem_ptlnm_send_completed(MPID_nem_ptlnm_sendbuf_t *sb)
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTLNM_SEND_COMPLETED);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_SEND_COMPLETED);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
