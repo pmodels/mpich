@@ -164,9 +164,9 @@ static HYD_status get_nbobjs_by_type(hwloc_obj_type_t type, int *nbobjs,
         nb = hwloc_get_nbobjs_by_type(topology, t);
         if (nb)
             break;
-        while (--t == HWLOC_OBJ_CACHE);
-        if (t < 0)
+        if (t == HWLOC_OBJ_SYSTEM)
             break;
+        while (--t == HWLOC_OBJ_CACHE);
     }
     HYDU_ASSERT(nb, status);
     if (nbobjs)
