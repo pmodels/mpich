@@ -11,21 +11,21 @@
         /* Get ptr to RMAFns, which is embedded in MPID_Win */  \
         MPIRI_RMAFns *ftable        = &(*(win_ptr))->RMAFns;    \
         ftable->Win_free            = MPIDI_Win_free;           \
-        ftable->Win_attach          = NULL;                     \
-        ftable->Win_detach          = NULL;                     \
+        ftable->Win_attach          = MPIDI_Win_attach;         \
+        ftable->Win_detach          = MPIDI_Win_detach;         \
         ftable->Win_shared_query    = MPIDI_Win_shared_query;   \
                                                                 \
         ftable->Put                 = MPIDI_Put;                \
         ftable->Get                 = MPIDI_Get;                \
         ftable->Accumulate          = MPIDI_Accumulate;         \
-        ftable->Get_accumulate      = NULL;                     \
-        ftable->Fetch_and_op        = NULL;                     \
-        ftable->Compare_and_swap    = NULL;                     \
+        ftable->Get_accumulate      = MPIDI_Get_accumulate;     \
+        ftable->Fetch_and_op        = MPIDI_Fetch_and_op;       \
+        ftable->Compare_and_swap    = MPIDI_Compare_and_swap;   \
                                                                 \
-        ftable->Rput                = NULL;                     \
-        ftable->Rget                = NULL;                     \
-        ftable->Raccumulate         = NULL;                     \
-        ftable->Rget_accumulate     = NULL;                     \
+        ftable->Rput                = MPIDI_Rput;               \
+        ftable->Rget                = MPIDI_Rget;               \
+        ftable->Raccumulate         = MPIDI_Raccumulate;        \
+        ftable->Rget_accumulate     = MPIDI_Rget_accumulate;    \
                                                                 \
         ftable->Win_fence           = MPIDI_Win_fence;          \
         ftable->Win_post            = MPIDI_Win_post;           \
@@ -39,10 +39,10 @@
         ftable->Win_lock_all        = MPIDI_Win_lock_all;       \
         ftable->Win_unlock_all      = MPIDI_Win_unlock_all;     \
                                                                 \
-        ftable->Win_flush           = NULL;                     \
-        ftable->Win_flush_all       = NULL;                     \
-        ftable->Win_flush_local     = NULL;                     \
-        ftable->Win_flush_local_all = NULL;                     \
+        ftable->Win_flush           = MPIDI_Win_flush;          \
+        ftable->Win_flush_all       = MPIDI_Win_flush_all;      \
+        ftable->Win_flush_local     = MPIDI_Win_flush_local;    \
+        ftable->Win_flush_local_all = MPIDI_Win_flush_local_all;\
         ftable->Win_sync            = MPIDI_Win_sync;           \
     } while (0)
 
