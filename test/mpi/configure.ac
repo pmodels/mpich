@@ -406,7 +406,6 @@ else
         # We left mpiCC off of this list because mpicc and mpiCC are the 
         # same on Mac OSX systems.
         AC_PATH_PROG(MPICXX,mpicxx mpCC)
-        CXX=$with_mpi/bin/mpicxx
     fi
     if test "x$MPICXX" != "x" ; then
         CXX=$MPICXX
@@ -431,7 +430,7 @@ if test "$FROM_MPICH2" != "yes" ; then
     AC_MSG_CHECKING([whether we can compile and link MPI programs in C])
     AC_LINK_IFELSE([
 AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finalize();])
-    ],[mpi_compile_works=yes],[mpi_compiler_works=no])
+    ],[mpi_compile_works=yes],[mpi_compile_works=no])
 AC_MSG_RESULT($mpi_compile_works)
 
     if test "$mpi_compile_works" != "yes" ; then
@@ -544,7 +543,7 @@ AC_CHECK_FUNCS(getrusage)
 # particularly for new routines in Fortran
 if test "$FROM_MPICH2" != "yes" ; then
     AC_CACHE_CHECK([that MPI program can be compiled],pac_cv_mpi_compile_ok,[
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[],pac_cv_mpi_compile_ok=yes,pac_cv_mpi_compile_ok=no)])])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finalize();])],pac_cv_mpi_compile_ok=yes,pac_cv_mpi_compile_ok=no)])
     if test "$pac_cv_mpi_compile_ok" != yes ; then
         AC_MSG_ERROR([Unable to compile an MPI program containing mpi.h!])
     fi
