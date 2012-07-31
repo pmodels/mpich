@@ -230,7 +230,7 @@ void MTest_Finalize( int errs )
 /* This routine may be used instead of "return 0;" at the end of main; 
    it allows the program to use the return value to signal success or failure. 
  */
-int MTestReturnValue( errors )
+int MTestReturnValue( int errors )
 {
     if (returnWithVal) return errors ? 1 : 0;
     return 0;
