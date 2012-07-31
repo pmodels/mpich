@@ -114,6 +114,7 @@ int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
         }
     }
     
+ fn_exit: ATTRIBUTE((unused))
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
     return mpi_errno;
 }
