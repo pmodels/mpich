@@ -229,6 +229,7 @@ foreach $_ (@ARGV) {
 	     'put-5' => 'MPI_Aint *',
 	     'get-5' => 'MPI_Aint *',
 	     'alloc_mem-1' => 'MPI_Aint *',
+             'win_shared_query-3' => 'MPI_Aint *',
 	    );
 
 %argsneedcast = ( 'MPI_Request *' => '(MPI_Request *)(ARG)',
