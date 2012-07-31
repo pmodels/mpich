@@ -83,7 +83,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Rget
+#define FUNCNAME MPIDI_Rput
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Rput(const void *origin_addr, int origin_count,
