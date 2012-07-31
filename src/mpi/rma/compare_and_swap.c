@@ -106,12 +106,6 @@ int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
-            {
-                mpi_errno = MPI_ERR_TYPE;
-                goto fn_fail;
-            }
-
             /* Check if datatype is a C integer, Fortran Integer,
                logical, or byte, per the classes given on page 165. */
             MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype, "datatype", mpi_errno);

@@ -186,6 +186,8 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **rmatypenotatomic: Datatype not permitted for atomic operations
 **rmatypenotatomic %D: Datatype (%D) not permitted for atomic operations
 
+**typenotpredefined: Datatype must be predefined
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #

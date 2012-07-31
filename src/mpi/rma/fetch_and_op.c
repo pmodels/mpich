@@ -107,8 +107,7 @@ int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
             {
-              mpi_errno = MPI_ERR_TYPE;
-              goto fn_fail;
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**typenotpredefined");
             }
 
             MPIR_ERRTEST_DISP(target_disp, mpi_errno);
@@ -119,9 +118,9 @@ int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPIR_ERRTEST_OP(op, mpi_errno);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
-              mpi_errno = MPI_ERR_OP;
-              goto fn_fail;
+            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN)
+            {
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OP, "**opnotpredefined");
             }
 
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;

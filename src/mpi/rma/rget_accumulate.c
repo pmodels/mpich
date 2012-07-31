@@ -149,6 +149,8 @@ int MPIX_Rget_accumulate(const void *origin_addr, int origin_count,
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
 
+            MPIR_ERRTEST_OP(op, mpi_errno);
+
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
