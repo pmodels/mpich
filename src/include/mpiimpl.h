@@ -1930,6 +1930,8 @@ typedef struct MPID_Collops {
                  MPID_Comm *comm_ptr, MPID_Sched_t s);
     int (*Iexscan)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                    MPID_Comm *comm_ptr, MPID_Sched_t s);
+
+    struct MPID_Collops *prev_coll_fns; /* when overriding this table, set this to point to the old table */
 } MPID_Collops;
 
 #define MPIR_BARRIER_TAG 1

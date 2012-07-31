@@ -54,9 +54,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
-    mpi_errno = MPID_nem_coll_barrier_init();
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_INIT);
     return mpi_errno;

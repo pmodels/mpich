@@ -160,16 +160,6 @@ typedef union {
 
 typedef struct MPIDI_CH3I_comm
 {
-    /* FIXME we should really use the copy of these values that is stored in the
-       MPID_Comm structure */
-    int local_size;      /* number of local procs in this comm */
-    int local_rank;      /* my rank among local procs in this comm */
-    int *local_ranks;    /* list of ranks of procs local to this node */
-    int external_size;   /* number of procs in external set */
-    int external_rank;   /* my rank among external set, or -1 if I'm not in external set */
-    int *external_ranks; /* list of ranks of procs in external set */
-    int *intranode_table;
-    int *internode_table;
     int coll_active;        /* TRUE iff this communicator is collectively active */
     int anysource_enabled;  /* TRUE iff this anysource recvs can be posted on this communicator */
     struct MPID_nem_barrier_vars *barrier_vars; /* shared memory variables used in barrier */

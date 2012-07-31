@@ -24,11 +24,14 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 int MPIDI_CH3I_Seg_destroy(void);
 int MPID_nem_check_alloc(int);
 int MPID_nem_mpich2_init(void);
-int MPID_nem_coll_barrier_init (void);
+int MPID_nem_coll_init (void);
 int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, int n_iov);
 int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize);
 int MPID_nem_register_initcomp_cb(int (* callback)(void));
 int MPID_nem_choose_netmod(void);
+int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param);
+int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param);
+
 
 #define MPID_nem_mpich2_release_fbox(cell)                                                                     \
     (OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich2.source]->mpich2.flag.value, 0), \

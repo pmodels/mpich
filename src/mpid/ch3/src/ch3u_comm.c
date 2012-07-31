@@ -94,7 +94,7 @@ int MPIDI_CH3I_Comm_destroy_hook(MPID_Comm *comm)
 
     MPL_LL_FOREACH(destroy_hooks, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);;
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
  fn_exit:

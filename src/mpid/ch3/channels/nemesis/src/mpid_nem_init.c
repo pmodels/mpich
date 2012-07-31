@@ -225,6 +225,16 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 	MPID_nem_queue_enqueue(MPID_nem_mem_region.FreeQ[pg_rank], &(MPID_nem_mem_region.Elements[idx]));
     }
 
+    mpi_errno = MPID_nem_coll_init();
+    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    
+    /* This must be done before initializing the netmod so that the nemesis
+       communicator creation hooks get registered (and therefore called) before
+       the netmod hooks, giving the netmod an opportunity to override the
+       nemesis collective function table. */
+    mpi_errno = MPIDI_CH3U_Comm_register_create_hook(MPIDI_CH3I_comm_create, NULL);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* network init */
     if (MPID_nem_num_netmods)
     {
@@ -234,6 +244,11 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
+    /* Register detroy hooks after netmod init so the netmod hooks get called
+       before nemesis hooks. */
+    mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(MPIDI_CH3I_comm_destroy, NULL);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     /* set default route for external processes through network */
     for (idx = 0 ; idx < MPID_nem_mem_region.ext_procs ; idx++)
     {

@@ -290,6 +290,9 @@ static int init_default_collops(void)
                 /* --END ERROR HANDLING-- */
         }
 
+        /* this is a default table, it's not overriding another table */
+        ops->prev_coll_fns = NULL;
+
         default_collops[i] = ops;
     }
 
@@ -316,9 +319,13 @@ static int init_default_collops(void)
         ops->Iallgatherv = &MPIR_Iallgatherv_inter;
         /* scan and exscan are not valid for intercommunicators, leave them NULL */
 
+        /* this is a default table, it's not overriding another table */
+        ops->prev_coll_fns = NULL;
+        
         ic_default_collops = ops;
     }
 
+    
     /* run after MPID_Finalize to permit collective usage during finalize */
     MPIR_Add_finalize(cleanup_default_collops, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
