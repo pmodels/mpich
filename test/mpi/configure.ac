@@ -116,6 +116,9 @@ AC_ARG_ENABLE(rma,
 AC_ARG_ENABLE(long-double-complex,
 [--enable-long-double-complex - Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)],
 ,enable_long_double_complex=yes)
+AC_ARG_ENABLE(long-double,
+[--enable-long-double-complex - Enable tests involving MPI_LONG_DOUBLE and related types (default)],
+,enable_long_double=yes)
 AC_ARG_ENABLE(checkerrors,
 [--enable-checkerrors - Add some tests for checking for errors in user programs],,enable_checkerrors=default)
 AC_ARG_ENABLE(perftest,
@@ -443,13 +446,21 @@ dnl same test in the MPICH2 configure.
 # Check on support for long double and long long types.  Do this before the
 # structure alignment test because it will test for including those
 # types as well
-AC_CACHE_CHECK([whether long double is supported],pac_cv_have_long_double,[
+# 
+# If --disable-long-double is selected, then bypass this test.
+# Some MPI implementations may choose to not support long double because
+# their C compilers are inconsistent on the length of long double (this
+# is the case on the Cray, with Cray, PGI, and GNU not agreeing on the
+# size of long double)
+if test "$enable_long_double" = "yes" ; then
+    AC_CACHE_CHECK([whether long double is supported],pac_cv_have_long_double,[
     AC_COMPILE_IFELSE([
         AC_LANG_PROGRAM([],[long double a;])
     ],[pac_cv_have_long_double=yes],[pac_cv_have_long_double=no])
 ])
-if test "$pac_cv_have_long_double" = "yes" ; then
-    AC_DEFINE(HAVE_LONG_DOUBLE,1,[Define if long double is supported])
+    if test "$pac_cv_have_long_double" = "yes" ; then
+        AC_DEFINE(HAVE_LONG_DOUBLE,1,[Define if long double is supported])
+    fi
 fi
 AC_CACHE_CHECK([whether long long is supported],pac_cv_have_long_long,[
     AC_COMPILE_IFELSE([
@@ -1232,6 +1243,9 @@ if test "$FROM_MPICH2" = yes ; then
     # The only real flags we seem to add in this script relate to cray
     # pointer support in Fortran, so we include that var here where
     # appropriate.
+    #
+    # The other case are the performance tests - for datatype performance,
+    # compiling with optimization is important.
     CFLAGS=""
     CPPFLAGS=""
     LDFLAGS=""
