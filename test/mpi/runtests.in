@@ -138,19 +138,9 @@ if (defined($ENV{'MPITEST_BATCHDIR'})) {
 #---------------------------------------------------------------------------
 foreach $_ (@ARGV) {
     if (/--?mpiexec=(.*)/) { 
-	# Check that mpiexec is executable
-	if ( -x $1 ) { 
-	    $mpiexec = $1; 
-	}
-	else {
-	    print STDERR "$mpiexec does not exist or is not executable\n";
-	    if (-x "../bin/mpiexec") {
-		$bindir = `(cd .. && pwd)`;
-		chop $bindir;
-		$mpiexec = $bindir . "/bin/mpiexec";
-		print STDERR "Using $mpiexec instead\n";
-	    }
-	}
+	# Use mpiexec as given - it may be in the path, and 
+	# we don't want to bother to try and find it.
+	$mpiexec = $1; 
     }
     elsif (/--?np=(.*)/)   { $np_default = $1; }
     elsif (/--?maxnp=(.*)/) { $np_max = $1; }
