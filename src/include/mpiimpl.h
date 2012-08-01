@@ -1492,7 +1492,7 @@ MPID_Progress_state;
 /* Windows */
 #ifdef USE_MPID_RMA_TABLE
 struct MPID_Win;
-typedef struct MPIRI_RMA_Ops {
+typedef struct MPID_RMA_Ops {
     int (*Win_free)(struct MPID_Win **);
 
     int (*Put)(const void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
@@ -1544,8 +1544,8 @@ typedef struct MPIRI_RMA_Ops {
                            MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, MPI_Op,
                            struct MPID_Win *, MPID_Request**);
 
-} MPIRI_RMAFns;
-#define MPIRI_RMAFNS_VERSION 2
+} MPID_RMAFns;
+#define MPID_RMAFNS_VERSION 2
 /* Note that the memory allocation/free routines do not take a window, 
    so they must be initialized separately, and are a per-run, not per-window
    object.  If the device can manage different kinds of memory allocations,
@@ -1618,7 +1618,7 @@ typedef struct MPID_Win {
 #endif
     /* */
 #ifdef USE_MPID_RMA_TABLE
-    MPIRI_RMAFns RMAFns;
+    MPID_RMAFns RMAFns;
 #endif    
     /* These are COPIES of the values so that addresses to them
        can be returned as attributes.  They are initialized by the
