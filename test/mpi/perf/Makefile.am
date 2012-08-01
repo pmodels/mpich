@@ -11,5 +11,5 @@ EXTRA_DIST = testlist
 
 noinst_PROGRAMS = transp-datatype non_zero_root sendrecvl twovec dtpack \
                   allredtrace commcreatep allredtrace commcreatep timer \
-                  manyrma
+                  manyrma nestvec nestvec2 indexperf
 
