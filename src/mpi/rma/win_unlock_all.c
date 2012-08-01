@@ -86,14 +86,14 @@ int MPIX_Win_unlock_all(MPI_Win win)
             if (mpi_errno) goto fn_fail;
 
             /* Test that the rank we are unlocking is the rank that we locked */
-            if (win_ptr->lockRank != -2) { /* TODO: Define RANK_ALL */
-                if (win_ptr->lockRank < 0) {
+            if (win_ptr->lockRank != MPID_WIN_STATE_LOCKED_ALL) {
+                if (win_ptr->lockRank == MPID_WIN_STATE_UNLOCKED) {
                     MPIU_ERR_SET(mpi_errno,MPI_ERR_RANK,"**winunlockwithoutlock");
                 }
                 else {
                     MPIU_ERR_SET2(mpi_errno,MPI_ERR_RANK,
                     "**mismatchedlockrank", 
-                    "**mismatchedlockrank %d %d", -2 /* TODO: RANK_ALL */, win_ptr->lockRank );
+                    "**mismatchedlockrank %d %d", MPID_WIN_STATE_LOCKED_ALL, win_ptr->lockRank );
                 }
                 if (mpi_errno) goto fn_fail;
             }
@@ -108,7 +108,7 @@ int MPIX_Win_unlock_all(MPI_Win win)
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     /* Clear the lockRank on success with the unlock */
     /* FIXME: Should this always be cleared, even on failure? */
-    win_ptr->lockRank = -1;
+    win_ptr->lockRank = MPID_WIN_STATE_UNLOCKED;
 
     /* ... end of body of routine ... */
 

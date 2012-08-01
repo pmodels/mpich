@@ -75,7 +75,7 @@ int MPI_Win_test(MPI_Win win, int *flag)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
     MPID_Win_get_ptr( win, win_ptr );
@@ -88,6 +88,8 @@ int MPI_Win_test(MPI_Win win, int *flag)
 	    /* If win_ptr is not valid, it will be reset to null */
 
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
+
+            /* TODO: Ensure that window is in a PSCW active mode epoch */
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

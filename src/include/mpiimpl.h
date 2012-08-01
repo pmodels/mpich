@@ -1646,6 +1646,11 @@ extern MPIU_Object_alloc_t MPID_Win_mem;
 /* Preallocated win objects */
 extern MPID_Win MPID_Win_direct[];
 
+enum MPID_Win_lock_states { 
+    /* LOCKED = 0, 1, ... */
+    MPID_WIN_STATE_UNLOCKED   = -1,
+    MPID_WIN_STATE_LOCKED_ALL = -2
+};
 
 /* ------------------------------------------------------------------------- */
 /* also in mpirma.h ?*/

@@ -91,6 +91,7 @@ int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit,
             if (mpi_errno) goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(disp_unit, "disp_unit", mpi_errno);
             MPIR_ERRTEST_ARGNULL(baseptr, "baseptr", mpi_errno);
 
             if (mpi_errno) goto fn_fail;

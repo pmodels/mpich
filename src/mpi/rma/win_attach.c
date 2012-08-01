@@ -85,9 +85,21 @@ int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size)
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
-            MPIR_ERRTEST_ARGNEG(size, "size", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(base, "base", mpi_errno); /* TODO: Is this an error or a no-op? */
-
+            if (size < 0)
+                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS,
+                                                  MPIR_ERR_RECOVERABLE,
+                                                  FCNAME, __LINE__,
+                                                  MPI_ERR_SIZE,
+                                                  "**rmasize",
+                                                  "**rmasize %d", size);
+            if (size > 0 && base == NULL)
+                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
+                                                  MPIR_ERR_RECOVERABLE, 
+                                                  FCNAME, __LINE__, 
+                                                  MPI_ERR_ARG,
+                                                  "**nullptr",
+                                                  "**nullptr %s",
+                                                  "NULL base pointer is invalid when size is nonzero");  
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -95,7 +107,9 @@ int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+   
+    if (size == 0) goto fn_exit;
+
     mpi_errno = MPIU_RMA_CALL(win_ptr,
                               Win_attach(win_ptr, base, size));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;

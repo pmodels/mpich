@@ -70,7 +70,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
     MPID_Win_get_ptr( win, win_ptr );
@@ -113,7 +113,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     /* Clear the lockRank on success with the unlock */
     /* FIXME: Should this always be cleared, even on failure? */
-    win_ptr->lockRank = -1;
+    win_ptr->lockRank = MPID_WIN_STATE_UNLOCKED;
 
     /* ... end of body of routine ... */
 

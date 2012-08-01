@@ -83,16 +83,14 @@ int MPIX_Win_detach(MPI_Win win, const void *base)
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
-
-            MPIR_ERRTEST_ARGNULL(base, "base", mpi_errno); /* TODO: Is this an error or a no-op? */
-
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+
+    if (base == NULL) goto fn_exit;
     
     mpi_errno = MPIU_RMA_CALL(win_ptr,
                               Win_detach(win_ptr, base));

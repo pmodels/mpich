@@ -55,6 +55,9 @@ int MPI_Free_mem(void *base)
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FREE_MEM);
 
     /* ... body of routine ...  */
+
+    if (base == NULL) goto fn_exit;
+
     mpi_errno = MPID_Free_mem(base);
     if (mpi_errno) goto fn_fail;
 

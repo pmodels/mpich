@@ -78,6 +78,8 @@ int MPI_Win_wait(MPI_Win win)
         {
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
+
+            /* TODO: Ensure window is in a PSCW active mode epoch */
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

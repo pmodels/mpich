@@ -69,7 +69,7 @@ int MPIX_Win_flush_local_all(MPI_Win win)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
     MPID_Win_get_ptr( win, win_ptr );
@@ -81,10 +81,9 @@ int MPIX_Win_flush_local_all(MPI_Win win)
         {
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
-            /* If win_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
 
-            /* FIXME: Test if the window is locked?  Error or nop? */
+            /* TODO: Validate that the given window is in passive mode */
         }
         MPID_END_ERROR_CHECKS;
     }

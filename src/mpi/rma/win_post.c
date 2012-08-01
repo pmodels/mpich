@@ -100,6 +100,9 @@ int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
 
             MPID_Group_valid_ptr(group_ptr, mpi_errno);
 
+            /* TODO: Validate assert argument */
+            /* TODO: Validate that window is not in passive mode */
+
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

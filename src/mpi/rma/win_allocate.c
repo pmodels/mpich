@@ -75,6 +75,8 @@ int MPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
+            MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
+            MPIR_ERRTEST_ARGNULL(win, "win", mpi_errno);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -106,7 +108,15 @@ int MPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
                                                   FCNAME, __LINE__, 
                                                   MPI_ERR_ARG,
                                                  "**arg", "**arg %s", 
-                                                 "disp_unit must be positive");  
+                                                 "disp_unit must be positive");
+            if (size > 0 && baseptr == NULL)
+                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
+                                                  MPIR_ERR_RECOVERABLE, 
+                                                  FCNAME, __LINE__, 
+                                                  MPI_ERR_ARG,
+                                                  "**nullptr",
+                                                  "**nullptr %s",
+                                                  "NULL base pointer is invalid when size is nonzero");  
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -122,7 +132,7 @@ int MPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
     /* Initialize a few fields that have specific defaults */
     win_ptr->name[0]    = 0;
     win_ptr->errhandler = 0;
-    win_ptr->lockRank   = -1;
+    win_ptr->lockRank   = MPID_WIN_STATE_UNLOCKED;
 
     /* return the handle of the window object to the user */
     MPIU_OBJ_PUBLISH_HANDLE(*win, win_ptr->handle);

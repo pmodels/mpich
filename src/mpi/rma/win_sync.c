@@ -79,12 +79,10 @@ int MPIX_Win_sync(MPI_Win win)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
-            /* If win_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
 
-            /* FIXME: Test if the window is locked?  Error or nop? */
+            /* TODO: Ensure that window is in a passive mode epoch */
         }
         MPID_END_ERROR_CHECKS;
     }

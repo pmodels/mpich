@@ -70,7 +70,7 @@ int MPIX_Win_flush(int rank, MPI_Win win)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
     MPID_Win_get_ptr( win, win_ptr );
@@ -84,26 +84,14 @@ int MPIX_Win_flush(int rank, MPI_Win win)
             
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
-            /* If win_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
 
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
             if (mpi_errno) goto fn_fail;
 
-            /* Test that the rank we are flushing is the rank that we locked */
-            /* FIXME */
-            if (win_ptr->lockRank != rank) {
-                if (win_ptr->lockRank < 0) {
-                    MPIU_ERR_SET(mpi_errno,MPI_ERR_RANK,"**winunlockwithoutlock");
-                }
-                else {
-                    MPIU_ERR_SET2(mpi_errno,MPI_ERR_RANK,
-                    "**mismatchedlockrank", 
-                    "**mismatchedlockrank %d %d", rank, win_ptr->lockRank );
-                }
-                if (mpi_errno) goto fn_fail;
-            }
+            /* TODO: Validate that the given window is in passive mode */
+            /* TODO: Validate that the given rank is locked */
         }
         MPID_END_ERROR_CHECKS;
     }

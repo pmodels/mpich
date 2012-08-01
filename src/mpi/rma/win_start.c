@@ -85,7 +85,7 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#   endif /* HAVE_ERROR_CHECKING */
     
     /* Get handles to MPI objects. */
     MPID_Win_get_ptr( win, win_ptr );
@@ -100,6 +100,9 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
             if (mpi_errno) goto fn_fail;
 
             MPID_Group_valid_ptr(group_ptr, mpi_errno);
+
+            /* TODO: Validate assert argument */
+            /* TODO: Validate window state */
 
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }

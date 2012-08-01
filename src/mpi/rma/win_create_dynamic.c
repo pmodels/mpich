@@ -70,6 +70,8 @@ int MPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
+            MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
+            MPIR_ERRTEST_ARGNULL(win, "win", mpi_errno);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -101,7 +103,7 @@ int MPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
     /* Initialize a few fields that have specific defaults */
     win_ptr->name[0]    = 0;
     win_ptr->errhandler = 0;
-    win_ptr->lockRank   = -1;
+    win_ptr->lockRank   = MPID_WIN_STATE_UNLOCKED;
 
     /* return the handle of the window object to the user */
     MPIU_OBJ_PUBLISH_HANDLE(*win, win_ptr->handle);

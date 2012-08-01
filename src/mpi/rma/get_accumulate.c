@@ -87,7 +87,7 @@ int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
     MPID_Win_get_ptr( win, win_ptr );

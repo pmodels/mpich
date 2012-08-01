@@ -101,23 +101,21 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
     
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_GET_NAME);
     return mpi_errno;
 
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
-  fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_win_get_name", 
 	    "**mpi_win_get_name %W %p %p", win, win_name, resultlen);
     }
+#   endif
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }

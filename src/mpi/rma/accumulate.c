@@ -84,7 +84,7 @@ int MPI_Accumulate(MPICH2_CONST void *origin_addr, int origin_count, MPI_Datatyp
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
     MPID_Win_get_ptr( win, win_ptr );
