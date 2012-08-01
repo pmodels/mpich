@@ -9,7 +9,7 @@
 #define MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr)                   \
     do {                                                        \
         /* Get ptr to RMAFns, which is embedded in MPID_Win */  \
-        MPIRI_RMAFns *ftable        = &(*(win_ptr))->RMAFns;    \
+        MPID_RMAFns *ftable         = &(*(win_ptr))->RMAFns;    \
         ftable->Win_free            = MPIDI_Win_free;           \
         ftable->Win_attach          = MPIDI_Win_attach;         \
         ftable->Win_detach          = MPIDI_Win_detach;         \
