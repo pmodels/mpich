@@ -52,7 +52,7 @@
 .N MPI_ERR_RANK
 .N MPI_ERR_WIN
 @*/
-int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, void *baseptr)
+int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, void *baseptr)
 {
     static const char FCNAME[] = "MPIX_Win_shared_query";
     int mpi_errno = MPI_SUCCESS;
@@ -107,7 +107,7 @@ int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, void *baseptr)
     /* ... body of routine ...  */
     
     mpi_errno = MPIU_RMA_CALL(win_ptr,
-                              Win_shared_query(win_ptr, rank, size, baseptr));
+                              Win_shared_query(win_ptr, rank, size, disp_unit, baseptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

@@ -551,7 +551,7 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
 #define FUNCNAME MPIDI_Win_shared_query
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint *size, void *baseptr)
+int MPIDI_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr)
 {
     int comm_size;
     int mpi_errno = MPI_SUCCESS;

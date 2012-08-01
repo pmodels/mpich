@@ -1189,7 +1189,7 @@ int MPIDI_Win_allocate_shared(MPI_Aint size, MPID_Info *info_ptr, MPID_Comm *com
 int MPIDI_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm, MPID_Win **win);
 int MPIDI_Win_attach(MPID_Win *win, void *base, MPI_Aint size);
 int MPIDI_Win_detach(MPID_Win *win, const void *base);
-int MPIDI_Win_shared_query(MPID_Win *win_ptr, int rank, MPI_Aint *size, void *base);
+int MPIDI_Win_shared_query(MPID_Win *win_ptr, int rank, MPI_Aint *size, int *disp_unit, void *base);
 
 int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,

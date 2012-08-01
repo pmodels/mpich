@@ -1515,7 +1515,7 @@ typedef struct MPIRI_RMA_Ops {
     /* MPI-3 Functions */
     int (*Win_attach)(struct MPID_Win *, void *, MPI_Aint);
     int (*Win_detach)(struct MPID_Win *, const void *);
-    int (*Win_shared_query)(struct MPID_Win *, int, MPI_Aint *, void *);
+    int (*Win_shared_query)(struct MPID_Win *, int, MPI_Aint *, int *, void *);
 
     int (*Win_lock_all)(int, struct MPID_Win *);
     int (*Win_unlock_all)(struct MPID_Win *);

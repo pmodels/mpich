@@ -880,7 +880,7 @@ int MPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
                       MPI_Comm comm, void *baseptr, MPI_Win *win);
 int MPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
                              void *baseptr, MPI_Win *win);
-int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, void *baseptr);
+int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, void *baseptr);
 int MPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size);
 int MPIX_Win_detach(MPI_Win win, const void *base);
@@ -1315,8 +1315,7 @@ int PMPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
                        MPI_Comm comm, void *baseptr, MPI_Win *win);
 int PMPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
                               void *baseptr, MPI_Win *win);
-int PMPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size,
-                           void *baseptr);
+int PMPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, void *baseptr);
 int PMPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int PMPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size);
 int PMPIX_Win_detach(MPI_Win win, const void *base);

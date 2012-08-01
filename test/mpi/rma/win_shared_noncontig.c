@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
     int      shm_rank, shm_nproc;
     MPI_Info alloc_shared_info;
     int      errors = 0, all_errors = 0;
+    int      disp_unit;
     int     *my_base;
     MPI_Win  shm_win;
     MPI_Comm shm_comm;
@@ -65,7 +66,7 @@ int main(int argc, char **argv) {
         int      *base;
         MPI_Aint  size;
 
-        MPIX_Win_shared_query(shm_win, i, &size, &base);
+        MPIX_Win_shared_query(shm_win, i, &size, &disp_unit, &base);
         assert(size == ELEM_PER_PROC * sizeof(int));
 
         for (j = 0; j < ELEM_PER_PROC; j++) {

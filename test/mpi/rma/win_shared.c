@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
     MPI_Aint size;
     int      errors = 0, all_errors = 0;
     int     *base, *my_base;
+    int      disp_unit;
     MPI_Win  shm_win;
     MPI_Comm shm_comm;
 
@@ -47,7 +48,7 @@ int main(int argc, char **argv) {
                              shm_comm, &my_base, &shm_win);
 
     /* Locate absolute base */
-    MPIX_Win_shared_query(shm_win, MPI_PROC_NULL, &size, &base); 
+    MPIX_Win_shared_query(shm_win, MPI_PROC_NULL, &size, &disp_unit, &base); 
 
     if (verbose) printf("%d -- size = %d baseptr = %p my_baseptr = %p\n", shm_rank, 
                         (int) size, (void*) base, (void*) my_base);
