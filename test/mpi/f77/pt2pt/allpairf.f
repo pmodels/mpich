@@ -551,7 +551,6 @@ C
 C
          call MPI_Send_init(send_buf, count, MPI_REAL, next, tag,
      .                      comm, requests(1), ierr) 
-
 C
          call MPI_Startall(2, requests, ierr) 
          call MPI_Waitall(2, requests, statuses, ierr)
@@ -581,6 +580,7 @@ C
          call MPI_Request_free(requests(1), ierr)
       end if
 C
+      call dummyRef( send_buf, count, ierr )
       call MPI_Request_free(requests(2), ierr)
 C
       end
@@ -673,8 +673,9 @@ C
          call MPI_Wait(requests(1), status, ierr)
 C
          call MPI_Request_free(requests(1), ierr)
-         end if
+      end if
 C
+      call dummyRef( send_buf, count, ierr )
       call MPI_Request_free(requests(2), ierr)
 C
       end
@@ -765,6 +766,7 @@ C
 C
       end if
 C
+      call dummyRef( send_buf, count, ierr )
       call MPI_Request_free(requests(1), ierr)
 C
       end
@@ -1008,4 +1010,20 @@ C
 C      
 100   format('Invalid data', f6.1, ' at ', i4, ' of ', i4, ' in ', a)
 C
+      end
+C
+C    This routine is used to prevent the compiler from deallocating the 
+C    array "a", which may happen in some of the tests (see the text in 
+C    the MPI standard about why this may be a problem in valid Fortran 
+C    codes).  Without this, for example, tests fail with the Cray ftn
+C    compiler.
+C
+      subroutine dummyRef( a, n, ie )
+      integer n, ie
+      real    a(n)
+C This condition will never be true, but the compile won't know that
+      if (ie .eq. -1) then
+          print *, a(n)
+      endif
+      return
       end
