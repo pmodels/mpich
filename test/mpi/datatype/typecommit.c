@@ -17,10 +17,10 @@ void foo(void *sendbuf, MPI_Datatype sendtype, void *recvbuf,
     MPI_Datatype types[2], tmp_type;
 
     blocks[0] = 256;
-    struct_displs[0] = (MPI_Aint) sendbuf;
+    MPI_Get_address( sendbuf, &struct_displs[0] );
     types[0] = sendtype;
     blocks[1] = 256;
-    struct_displs[1] = (MPI_Aint) recvbuf;
+    MPI_Get_address( recvbuf, &struct_displs[1] );
     types[1] = MPI_BYTE;
 
     MPI_Type_create_struct(2, blocks, struct_displs, types, &tmp_type);
@@ -39,7 +39,12 @@ int main(int argc, char **argv)
     foo((void*) 0x1, MPI_LONG_INT, (void*) 0x2, MPI_BYTE);
     foo((void*) 0x1, MPI_SHORT_INT, (void*) 0x2, MPI_BYTE);
     foo((void*) 0x1, MPI_2INT, (void*) 0x2, MPI_BYTE);
-    foo((void*) 0x1, MPI_LONG_DOUBLE_INT, (void*) 0x2, MPI_BYTE);
+#ifdef HAVE_LONG_DOUBLE
+    /* Optional type may be NULL */
+    if (MPI_LONG_DOUBLE_INT != MPI_DATATYPE_NULL) {
+	foo((void*) 0x1, MPI_LONG_DOUBLE_INT, (void*) 0x2, MPI_BYTE);
+    }
+#endif
 
     MTest_Finalize(errs);
     MPI_Finalize();

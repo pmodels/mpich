@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <assert.h>
+#include "mpitest.h"
 
 /* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
  */
@@ -91,7 +92,11 @@ int main( int argc, char *argv[] )
     /* ERR: Floating point */
     CAS_CHECK_TYPE(float,               MPI_FLOAT,              MPI_ERR_TYPE);
     CAS_CHECK_TYPE(double,              MPI_DOUBLE,             MPI_ERR_TYPE);
-    CAS_CHECK_TYPE(long double,         MPI_LONG_DOUBLE,        MPI_ERR_TYPE);
+#ifdef HAVE_LONG_DOUBLE
+    if (MPI_LONG_DOUBLE != MPI_DATATYPE_NULL) {
+	CAS_CHECK_TYPE(long double,         MPI_LONG_DOUBLE,        MPI_ERR_TYPE);
+    }
+#endif
 
 #endif /* TEST_MPI3_ROUTINES */
 
