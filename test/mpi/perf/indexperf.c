@@ -25,12 +25,11 @@ static int verbose = 0;
 
 int main( int argc, char **argv )
 {
-    double       *base_loc;
     double       *inbuf, *outbuf, *outbuf2;
     MPI_Aint     lb, extent;
     int          *index_displacement;
     int          icount, errs=0;
-    int          i, typesize, packsize, position;
+    int          i, packsize, position, inbufsize;
     MPI_Datatype itype1, stype1;
     double       t0, t1;
     double       tpack, tspack, tmanual;
@@ -42,13 +41,15 @@ int main( int argc, char **argv )
 
     /* Create a simple block indexed datatype */
     index_displacement = (int *)malloc( icount * sizeof(int) );
-    base_loc           = (double *)malloc( 27 * icount * sizeof(double) );
+    if (!index_displacement) {
+	fprintf( stderr, "Unable to allocated index array of size %d\n",
+		 icount );
+	MPI_Abort( MPI_COMM_WORLD, 1 );
+    }
 
     for (i=0; i<icount; i++) {
 	index_displacement[i] = (i * 3 + (i%3));
     }
-    for (i=0; i<27*icount; i++) 
-	base_loc[i] = (double)i;
 
     MPI_Type_create_indexed_block( icount, 1, index_displacement, MPI_DOUBLE, 
 				   &itype1 );
@@ -63,11 +64,12 @@ int main( int argc, char **argv )
     }
 #endif
     MPI_Type_get_extent( itype1, &lb, &extent );
-    MPI_Type_size( itype1, &typesize );
 
     MPI_Pack_size( 1, itype1, MPI_COMM_WORLD, &packsize );
 
-    inbuf   = (double *)malloc( extent/sizeof(double) );
+    inbufsize = extent / sizeof(double);
+
+    inbuf   = (double *)malloc( extent );
     outbuf  = (double *)malloc( packsize );
     outbuf2 = (double *)malloc( icount * sizeof(double) );
     if (!inbuf) {
@@ -82,7 +84,7 @@ int main( int argc, char **argv )
 	fprintf( stderr, "Unable to allocate %ld for outbuf2\n", (long)packsize );
 	MPI_Abort( MPI_COMM_WORLD, 1 );
     }
-    for (i=0; i<extent/sizeof(double); i++) {
+    for (i=0; i<inbufsize; i++) {
 	inbuf[i] = (double)i;
     }
     position = 0;
@@ -177,6 +179,7 @@ int main( int argc, char **argv )
     free( inbuf );
     free( outbuf );
     free( outbuf2 );
+    free( index_displacement );
 
     MPI_Finalize();
     return 0;
