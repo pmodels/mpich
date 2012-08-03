@@ -11,6 +11,10 @@
 #include <string.h>
 #endif
 
+#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#define TEST_HINDEXED_BLOCK 1
+#endif
+
 static int verbose = 0;
 
 /* tests */
@@ -24,8 +28,11 @@ static int pack_and_unpack(char *typebuf, int count, MPI_Datatype datatype, int 
 int main(int argc, char **argv)
 {
     int err, errs = 0;
+    int rank;
 
     MPI_Init(&argc, &argv);     /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#if defined(TEST_HINDEXED_BLOCK)
     parse_args(argc, argv);
 
     /* To improve reporting of problems about operations, we
@@ -42,17 +49,22 @@ int main(int argc, char **argv)
     if (err && verbose)
         fprintf(stderr, "%d errors in hindexed_block vector test.\n", err);
     errs += err;
+#endif /*defined(TEST_HINDEXED_BLOCK)*/
 
     /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
-        printf(" No Errors\n");
+    if (rank == 0) {
+        if (errs) {
+            fprintf(stderr, "Found %d errors\n", errs);
+        }
+        else {
+            printf(" No Errors\n");
+        }
     }
     MPI_Finalize();
     return 0;
 }
+
+#if defined(TEST_HINDEXED_BLOCK)
 
 /* hindexed_block_contig_test()
  *
@@ -348,3 +360,4 @@ int parse_args(int argc, char **argv)
         verbose = 1;
     return 0;
 }
+#endif /*defined(TEST_HINDEXED_BLOCK)*/
