@@ -4528,6 +4528,7 @@ sub ReadAndProcessInterface {
                     $args .= <FD>;
                     $linecount++;
                 }
+                $args =~ s/MPICH_ATTR[A-Z_]*\([^)]*\)//g;
                 $args =~ s/\)\s*;//g;
                 $args =~ s/[\r\n]*//g;
 		$args =~ s/MPICH2_CONST\s//g;

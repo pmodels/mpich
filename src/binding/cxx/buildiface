@@ -3242,6 +3242,7 @@ sub ReadInterface {
 	    while (! ($args =~ /;/)) {
 		$args .= <FD>;
 	    }
+            $args =~ s/MPICH_ATTR[A-Z_]*\([^)]*\)//g;
 	    $args =~ s/\)\s*;//g;
 	    $args =~ s/[\r\n]*//g;
 	    # Special substitutions
