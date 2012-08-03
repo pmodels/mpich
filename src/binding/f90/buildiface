@@ -723,7 +723,7 @@ EXTRA_DIST += src/binding/f90/binding.sub src/binding/f90/cf90tdefs
 if MAINTAINER_MODE
 \$(top_srcdir)/src/binding/f90/Makefile.mk: src/binding/f90/buildiface-stamp
 
-src/binding/f90/buildiface-stamp: src/binding/f90/buildiface
+src/binding/f90/buildiface-stamp: \$(top_srcdir)/src/binding/f90/buildiface \$(top_srcdir)/src/include/mpi.h.in
 	( cd \$(top_srcdir)/src/binding/f90 && ./buildiface )
 endif MAINTAINER_MODE
 

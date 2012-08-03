@@ -957,7 +957,7 @@ EXTRA_DIST += src/binding/f77/buildiface
 if MAINTAINER_MODE
 \$(top_srcdir)/src/binding/f77/Makefile.mk: src/binding/f77/buildiface-stamp
 
-src/binding/f77/buildiface-stamp: src/binding/f77/buildiface
+src/binding/f77/buildiface-stamp: \$(top_srcdir)/src/binding/f77/buildiface \$(top_srcdir)/src/include/mpi.h.in
 	( cd \$(top_srcdir)/src/binding/f77 && ./buildiface )
 endif MAINTAINER_MODE
 
