@@ -58,9 +58,13 @@ extern "C" {
 #  define MPICH_ATTR_TYPE_TAG_STDINT(type)
 #endif
 
+#ifdef __STDC_VERSION__ 
 #if __STDC_VERSION__ >= 199901
 #  define MPICH_ATTR_TYPE_TAG_C99(type) MPICH_ATTR_TYPE_TAG(type)
 #else
+#  define MPICH_ATTR_TYPE_TAG_C99(type)
+#endif
+#else 
 #  define MPICH_ATTR_TYPE_TAG_C99(type)
 #endif
 
