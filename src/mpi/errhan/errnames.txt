@@ -1511,6 +1511,28 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpix_iexscan: MPIX_Iexscan failed
 **mpix_iexscan %p %p %d %D %O %C %p: MPIX_Iexscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
 
+## MPI-3 neighborhood collectives
+**mpix_ineighbor_allgather: MPIX_Ineighbor_allgather failed
+**mpix_ineighbor_allgather %p %d %D %p %d %D %C %p: MPIX_Ineighbor_allgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_allgatherv: MPIX_Ineighbor_allgatherv failed
+**mpix_ineighbor_allgatherv %p %d %D %p %p %p %D %C %p: MPIX_Ineighbor_allgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_alltoall: MPIX_Ineighbor_alltoall failed
+**mpix_ineighbor_alltoall %p %d %D %p %d %D %C %p: MPIX_Ineighbor_alltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_alltoallv: MPIX_Ineighbor_alltoallv failed
+**mpix_ineighbor_alltoallv %p %p %p %D %p %p %p %D %C %p: MPIX_Ineighbor_alltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_alltoallw: MPIX_Ineighbor_alltoallw failed
+**mpix_ineighbor_alltoallw %p %p %p %p %p %p %p %p %C %p: MPIX_Ineighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C, request=%p)
+**mpix_neighbor_allgather: MPIX_Neighbor_allgather failed
+**mpix_neighbor_allgather %p %d %D %p %d %D %C: MPIX_Neighbor_allgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C)
+**mpix_neighbor_allgatherv: MPIX_Neighbor_allgatherv failed
+**mpix_neighbor_allgatherv %p %d %D %p %p %p %D %C: MPIX_Neighbor_allgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C)
+**mpix_neighbor_alltoall: MPIX_Neighbor_alltoall failed
+**mpix_neighbor_alltoall %p %d %D %p %d %D %C: MPIX_Neighbor_alltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C)
+**mpix_neighbor_alltoallv: MPIX_Neighbor_alltoallv failed
+**mpix_neighbor_alltoallv %p %p %p %D %p %p %p %D %C: MPIX_Neighbor_alltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C)
+**mpix_neighbor_alltoallw: MPIX_Neighbor_alltoallw failed
+**mpix_neighbor_alltoallw %p %p %p %p %p %p %p %p %C: MPIX_Neighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C)
+
 # SCIF netmod functions
 
 **scif_open:scif_open failed
