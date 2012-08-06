@@ -243,3 +243,134 @@ static int MPIR_Topology_delete_fn ( MPI_Comm comm ATTRIBUTE((unused)),
 }
 
 
+/* the next two routines implement the following behavior (quoted from Section
+ * 7.6 of the MPI-3.0 standard):
+ *
+ *     For a distributed graph topology, created with MPI_DIST_GRAPH_CREATE, the
+ *     sequence of neighbors in the send and receive buffers at each process
+ *     is defined as the sequence returned by MPI_DIST_GRAPH_NEIGHBORS for
+ *     destinations and sources, respectively. For a general graph topology,
+ *     created with MPI_GRAPH_CREATE, the order of neighbors in the send and
+ *     receive buffers is defined as the sequence of neighbors as returned by
+ *     MPI_GRAPH_NEIGHBORS. Note that general graph topologies should generally
+ *     be replaced by the distributed graph topologies.
+ *
+ *     For a Cartesian topology, created with MPI_CART_CREATE, the sequence of
+ *     neighbors in the send and receive buffers at each process is defined by
+ *     order of the dimensions, first the neighbor in the negative direction and
+ *     then in the positive direction with displacement 1. The numbers of
+ *     sources and destinations in the communication routines are 2*ndims with
+ *     ndims defined in MPI_CART_CREATE. If a neighbor does not exist, i.e., at
+ *     the border of a Cartesian topology in the case of a non-periodic virtual
+ *     grid dimension (i.e., periods[...]==false), then this neighbor is defined
+ *     to be MPI_PROC_NULL.
+ */
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Topo_canon_nhb_count
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Topo_canon_nhb_count(MPID_Comm *comm_ptr, int *indegree, int *outdegree, int *weighted)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Topology *topo_ptr;
+
+    topo_ptr = MPIR_Topology_get(comm_ptr);
+
+    /* TODO consider dispatching via a vtable instead of doing if/else */
+    if (topo_ptr->kind == MPI_DIST_GRAPH) {
+        mpi_errno = MPIR_Dist_graph_neighbors_count_impl(comm_ptr, indegree, outdegree, weighted);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else if (topo_ptr->kind == MPI_GRAPH) {
+        int nneighbors = 0;
+        mpi_errno = MPIR_Graph_neighbors_count_impl(comm_ptr, comm_ptr->rank, &nneighbors);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        *indegree = *outdegree = nneighbors;
+        *weighted = FALSE;
+    }
+    else if (topo_ptr->kind == MPI_CART) {
+        *indegree  = 2 * topo_ptr->topo.cart.ndims;
+        *outdegree = 2 * topo_ptr->topo.cart.ndims;
+        *weighted  = FALSE;
+    }
+    else {
+        MPIU_Assert(FALSE);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Topo_canon_nhb
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Topo_canon_nhb(MPID_Comm *comm_ptr,
+                        int indegree, int sources[], int inweights[],
+                        int outdegree, int dests[], int outweights[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Topology *topo_ptr;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TOPO_CANON_NHB);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_TOPO_CANON_NHB);
+
+    topo_ptr = MPIR_Topology_get(comm_ptr);
+
+    /* TODO consider dispatching via a vtable instead of doing if/else */
+    if (topo_ptr->kind == MPI_DIST_GRAPH) {
+        mpi_errno = MPIR_Dist_graph_neighbors_impl(comm_ptr,
+                                                   indegree, sources, inweights,
+                                                   outdegree, dests, outweights);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else if (topo_ptr->kind == MPI_GRAPH) {
+        int nneighbors = 0;
+        MPIU_Assert(indegree == outdegree);
+        mpi_errno = MPIR_Graph_neighbors_impl(comm_ptr, comm_ptr->rank, indegree, sources);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_Memcpy(dests, sources, outdegree*sizeof(*dests));
+        /* ignore inweights/outweights */
+    }
+    else if (topo_ptr->kind == MPI_CART) {
+        int d;
+
+        MPIU_Assert(indegree == outdegree);
+        MPIU_Assert(indegree == 2*topo_ptr->topo.cart.ndims);
+
+        for (d = 0; d < indegree; ++d) {
+            mpi_errno = MPIR_Cart_shift_impl(comm_ptr, d, 1, &sources[2*d], &sources[2*d+1]);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            dests[2*d]   = sources[2*d];
+            dests[2*d+1] = sources[2*d+1];
+        }
+        /* ignore inweights/outweights */
+    }
+    else {
+        MPIU_Assert(FALSE);
+    }
+
+#ifdef USE_DBG_LOGGING
+    {
+        int i;
+        MPIU_DBG_MSG_FMT(PT2PT, VERBOSE, (MPIU_DBG_FDEST, "canonical neighbors for comm=0x%x comm_ptr=%p", comm_ptr->handle, comm_ptr));
+        for (i = 0; i < outdegree; ++i) {
+            MPIU_DBG_MSG_FMT(PT2PT, VERBOSE, (MPIU_DBG_FDEST, "%d/%d: to   %d", i, outdegree, dests[i]));
+        }
+        for (i = 0; i < indegree; ++i) {
+            MPIU_DBG_MSG_FMT(PT2PT, VERBOSE, (MPIU_DBG_FDEST, "%d/%d: from %d", i, indegree, sources[i]));
+        }
+    }
+#endif
+
+fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_TOPO_CANON_NHB);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
