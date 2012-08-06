@@ -25,6 +25,27 @@
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Neighbor_allgather_default
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Neighbor_allgather_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Request req;
+
+    /* just call the nonblocking version and wait on it */
+    mpi_errno = MPIR_Ineighbor_allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, &req);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Neighbor_allgather_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
@@ -32,7 +53,12 @@ int MPIR_Neighbor_allgather_impl(const void *sendbuf, int sendcount, MPI_Datatyp
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* TODO implement this function */
+    MPIU_Assert(comm_ptr->coll_fns != NULL);
+    MPIU_Assert(comm_ptr->coll_fns->Neighbor_allgather != NULL);
+    mpi_errno = comm_ptr->coll_fns->Neighbor_allgather(sendbuf, sendcount, sendtype,
+                                                       recvbuf, recvcount, recvtype,
+                                                       comm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;

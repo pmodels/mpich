@@ -1937,6 +1937,41 @@ typedef struct MPID_Collops {
                    MPID_Comm *comm_ptr, MPID_Sched_t s);
 
     struct MPID_Collops *prev_coll_fns; /* when overriding this table, set this to point to the old table */
+
+    /* MPI-3 neighborhood collectives (blocking & nonblocking) */
+    int (*Neighbor_allgather)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                              MPID_Comm *comm_ptr);
+    int (*Neighbor_allgatherv)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                               void *recvbuf, const int recvcounts[], const int displs[],
+                               MPI_Datatype recvtype, MPID_Comm *comm_ptr);
+    int (*Neighbor_alltoall)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                             MPID_Comm *comm_ptr);
+    int (*Neighbor_alltoallv)(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                              MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                              const int rdispls[], MPI_Datatype recvtype, MPID_Comm *comm_ptr);
+    int (*Neighbor_alltoallw)(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
+                              const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                              const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                              MPID_Comm *comm_ptr);
+    int (*Ineighbor_allgather)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                               void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                               MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ineighbor_allgatherv)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, const int recvcounts[], const int displs[],
+                                MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ineighbor_alltoall)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                              MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ineighbor_alltoallv)(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                               MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                               const int rdispls[], MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                               MPID_Sched_t s);
+    int (*Ineighbor_alltoallw)(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
+                               const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                               const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                               MPID_Comm *comm_ptr, MPID_Sched_t s);
 } MPID_Collops;
 
 #define MPIR_BARRIER_TAG 1
@@ -4018,6 +4053,19 @@ int MPIR_Neighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[], co
 int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr);
 /* end impl functions for neighborhood collectives */
 
+/* neighborhood collective default algorithms */
+int MPIR_Neighbor_allgather_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr);
+int MPIR_Neighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPID_Comm *comm_ptr);
+int MPIR_Neighbor_alltoall_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr);
+int MPIR_Neighbor_alltoallv_default(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPID_Comm *comm_ptr);
+int MPIR_Neighbor_alltoallw_default(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr);
+int MPIR_Ineighbor_allgather_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ineighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ineighbor_alltoall_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ineighbor_alltoallv_default(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s);
+int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr, MPID_Sched_t s);
+
+/* nonblocking collective default algorithms */
 int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Ibcast_inter(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s);

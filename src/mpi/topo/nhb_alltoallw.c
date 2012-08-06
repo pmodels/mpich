@@ -25,6 +25,27 @@
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Neighbor_alltoallw_default
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Neighbor_alltoallw_default(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Request req;
+
+    /* just call the nonblocking version and wait on it */
+    mpi_errno = MPIR_Ineighbor_alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, &req);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Neighbor_alltoallw_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
@@ -32,7 +53,12 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], co
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* TODO implement this function */
+    MPIU_Assert(comm_ptr->coll_fns != NULL);
+    MPIU_Assert(comm_ptr->coll_fns->Neighbor_alltoallw != NULL);
+    mpi_errno = comm_ptr->coll_fns->Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
+                                                       recvbuf, recvcounts, rdispls, recvtypes,
+                                                       comm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;

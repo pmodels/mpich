@@ -266,7 +266,16 @@ static int init_default_collops(void)
         ops->Iallgatherv = &MPIR_Iallgatherv_intra;
         ops->Iscan = &MPIR_Iscan_rec_dbl;
         ops->Iexscan = &MPIR_Iexscan;
-        /* TODO add other fns here as they are added */
+        ops->Neighbor_allgather   = &MPIR_Neighbor_allgather_default;
+        ops->Neighbor_allgatherv  = &MPIR_Neighbor_allgatherv_default;
+        ops->Neighbor_alltoall    = &MPIR_Neighbor_alltoall_default;
+        ops->Neighbor_alltoallv   = &MPIR_Neighbor_alltoallv_default;
+        ops->Neighbor_alltoallw   = &MPIR_Neighbor_alltoallw_default;
+        ops->Ineighbor_allgather  = &MPIR_Ineighbor_allgather_default;
+        ops->Ineighbor_allgatherv = &MPIR_Ineighbor_allgatherv_default;
+        ops->Ineighbor_alltoall   = &MPIR_Ineighbor_alltoall_default;
+        ops->Ineighbor_alltoallv  = &MPIR_Ineighbor_alltoallv_default;
+        ops->Ineighbor_alltoallw  = &MPIR_Ineighbor_alltoallw_default;
 
         /* override defaults, such as for SMP */
         switch (i) {
@@ -318,14 +327,16 @@ static int init_default_collops(void)
         ops->Iallgather = &MPIR_Iallgather_inter;
         ops->Iallgatherv = &MPIR_Iallgatherv_inter;
         /* scan and exscan are not valid for intercommunicators, leave them NULL */
+        /* Ineighbor_all* routines are not valid for intercommunicators, leave
+         * them NULL */
 
         /* this is a default table, it's not overriding another table */
         ops->prev_coll_fns = NULL;
-        
+
         ic_default_collops = ops;
     }
 
-    
+
     /* run after MPID_Finalize to permit collective usage during finalize */
     MPIR_Add_finalize(cleanup_default_collops, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 

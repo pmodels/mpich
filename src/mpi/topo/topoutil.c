@@ -341,7 +341,7 @@ int MPIR_Topo_canon_nhb(MPID_Comm *comm_ptr,
         MPIU_Assert(indegree == outdegree);
         MPIU_Assert(indegree == 2*topo_ptr->topo.cart.ndims);
 
-        for (d = 0; d < indegree; ++d) {
+        for (d = 0; d < topo_ptr->topo.cart.ndims; ++d) {
             mpi_errno = MPIR_Cart_shift_impl(comm_ptr, d, 1, &sources[2*d], &sources[2*d+1]);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
