@@ -17,14 +17,15 @@ lib_lib@MPICXXLIBNAME@_la_SOURCES = \
     src/binding/cxx/initcxx.cxx
 lib_lib@MPICXXLIBNAME@_la_LDFLAGS = -version-info $(ABIVERSION)
 
-# Be careful here, "multi-target" rules don't work intuitively and require
-# special tricks.  See the automake-1.11.1 manual section entitled "Handling
-# Tools that Produce Many Outputs".  We use the "simple" fix here, since there
-# are no phony dependencies and there are only two output files.
-$(top_srcdir)/src/binding/cxx/mpicxx.h.in: src/binding/cxx/buildiface
+# Update output files if the buildiface script or mpi.h.in is updated.  Use the
+# buildiface-stamp to deal with the &ReplaceIfDifferent logic
+cxx_buildiface_out_files = $(top_srcdir)/src/binding/cxx/mpicxx.h.in \
+                           $(top_srcdir)/src/binding/cxx/initcxx.cxx
+if MAINTAINER_MODE
+$(cxx_buildiface_out_files): src/binding/cxx/buildiface-stamp
+src/binding/cxx/buildiface-stamp: $(top_srcdir)/src/binding/cxx/buildiface $(top_srcdir)/src/include/mpi.h.in
 	( cd $(top_srcdir)/src/binding/cxx && ./buildiface )
-
-$(top_srcdir)/src/binding/cxx/initcxx.cxx: $(top_srcdir)/src/binding/cxx/mpicxx.h.in
+endif MAINTAINER_MODE
 
 
 # avoid dependency problems and attain an effect similar to simplemake's "all-preamble"

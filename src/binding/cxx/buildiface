@@ -1030,6 +1030,9 @@ if ($doFuncspec) {
 # (The original buildiface incorrectly generated Comm objects for these)
 # Because there are only a few routines, we can keep track of these here
 
+# create a stamp file for use by Makefile.mk rebuild make logic
+open STAMPFD, '>', 'buildiface-stamp';
+close STAMPFD;
 
 # create the master file
 $filename = "mpicxx.h.in";
