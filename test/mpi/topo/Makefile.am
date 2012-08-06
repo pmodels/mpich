@@ -26,5 +26,6 @@ noinst_PROGRAMS = \
     graphcr       \
     graphcr2      \
     distgraph1    \
-    dgraph_unwgt
+    dgraph_unwgt  \
+    neighb_coll
 
