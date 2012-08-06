@@ -24,6 +24,66 @@
 #undef MPI_Cart_shift
 #define MPI_Cart_shift PMPI_Cart_shift
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Cart_shift_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int displ, int *source, int *dest)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Topology *cart_ptr;
+    int i;
+    int pos[MAX_CART_DIM];
+
+    cart_ptr = MPIR_Topology_get( comm_ptr );
+
+    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    MPIU_ERR_CHKANDJUMP((cart_ptr->topo.cart.ndims == 0), mpi_errno, MPI_ERR_TOPOLOGY, "**dimszero");
+    MPIU_ERR_CHKANDJUMP2((direction >= cart_ptr->topo.cart.ndims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
+                         "**dimsmany %d %d", cart_ptr->topo.cart.ndims, direction);
+
+    /* Check for the case of a 0 displacement */
+    if (displ == 0) {
+        *source = *dest = comm_ptr->rank;
+    }
+    else {
+        /* To support advanced implementations that support MPI_Cart_create,
+           we compute the new position and call PMPI_Cart_rank to get the
+           source and destination.  We could bypass that step if we know that
+           the mapping is trivial.  Copy the current position. */
+        for (i=0; i<cart_ptr->topo.cart.ndims; i++) {
+            pos[i] = cart_ptr->topo.cart.position[i];
+        }
+        /* We must return MPI_PROC_NULL if shifted over the edge of a
+           non-periodic mesh */
+        pos[direction] += displ;
+        if (!cart_ptr->topo.cart.periodic[direction] &&
+            (pos[direction] >= cart_ptr->topo.cart.dims[direction] ||
+             pos[direction] < 0)) {
+            *dest = MPI_PROC_NULL;
+        }
+        else {
+            MPIR_Cart_rank_impl( cart_ptr, pos, dest );
+        }
+
+        pos[direction] = cart_ptr->topo.cart.position[direction] - displ;
+        if (!cart_ptr->topo.cart.periodic[direction] &&
+            (pos[direction] >= cart_ptr->topo.cart.dims[direction] ||
+             pos[direction] < 0)) {
+            *source = MPI_PROC_NULL;
+        }
+        else {
+            MPIR_Cart_rank_impl( cart_ptr, pos, source );
+        }
+    }
+
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
@@ -62,10 +122,6 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIR_Topology *cart_ptr;
-    int i;
-    int pos[MAX_CART_DIM];
-    int rank;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_SHIFT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -108,49 +164,9 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    cart_ptr = MPIR_Topology_get( comm_ptr );
 
-    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
-    MPIU_ERR_CHKANDJUMP((cart_ptr->topo.cart.ndims == 0), mpi_errno, MPI_ERR_TOPOLOGY, "**dimszero");
-    MPIU_ERR_CHKANDJUMP2((direction >= cart_ptr->topo.cart.ndims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
-			 "**dimsmany %d %d", cart_ptr->topo.cart.ndims, direction);
-
-    /* Check for the case of a 0 displacement */
-    rank = comm_ptr->rank;
-    if (displ == 0) {
-	*source = *dest = rank;
-    }
-    else {
-	/* To support advanced implementations that support MPI_Cart_create,
-	   we compute the new position and call PMPI_Cart_rank to get the
-	   source and destination.  We could bypass that step if we know that
-	   the mapping is trivial.  Copy the current position. */
-	for (i=0; i<cart_ptr->topo.cart.ndims; i++) {
-	    pos[i] = cart_ptr->topo.cart.position[i];
-	}
-	/* We must return MPI_PROC_NULL if shifted over the edge of a 
-	   non-periodic mesh */
-	pos[direction] += displ;
-	if (!cart_ptr->topo.cart.periodic[direction] &&
-	    (pos[direction] >= cart_ptr->topo.cart.dims[direction] ||
-	     pos[direction] < 0)) {
-	    *dest = MPI_PROC_NULL;
-	}
-	else {
-	    MPIR_Cart_rank_impl( cart_ptr, pos, dest );
-	}
-
-	pos[direction] = cart_ptr->topo.cart.position[direction] - displ;
-	if (!cart_ptr->topo.cart.periodic[direction] &&
-	    (pos[direction] >= cart_ptr->topo.cart.dims[direction] ||
-	     pos[direction] < 0)) {
-	    *source = MPI_PROC_NULL;
-	}
-	else {
-	    MPIR_Cart_rank_impl( cart_ptr, pos, source );
-	}
-    }
+    mpi_errno = MPIR_Cart_shift_impl(comm_ptr, direction, displ, source, dest);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

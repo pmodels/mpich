@@ -25,6 +25,37 @@
 #define MPI_Dist_graph_neighbors PMPI_Dist_graph_neighbors
 /* any utility functions should go here, usually prefixed with PMPI_LOCAL to
  * correctly handle weak symbols and the profiling interface */
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Dist_graph_neighbors_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Dist_graph_neighbors_impl(MPID_Comm *comm_ptr,
+                                   int maxindegree, int sources[], int sourceweights[],
+                                   int maxoutdegree, int destinations[], int destweights[])
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Topology *topo_ptr = NULL;
+
+    topo_ptr = MPIR_Topology_get(comm_ptr);
+    MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPIR_ERR_RECOVERABLE, "**notdistgraphtopo");
+
+    MPIU_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree*sizeof(int));
+    MPIU_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree*sizeof(int));
+
+    if (sourceweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
+        MPIU_Memcpy(sourceweights, topo_ptr->topo.dist_graph.in_weights, maxindegree*sizeof(int));
+    }
+    if (destweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
+        MPIU_Memcpy(destweights, topo_ptr->topo.dist_graph.out_weights, maxoutdegree*sizeof(int));
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
@@ -58,7 +89,6 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPIR_Topology *topo_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -82,14 +112,15 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     /* Convert MPI object handles to object pointers */
     MPID_Comm_get_ptr(comm, comm_ptr);
 
-    topo_ptr = MPIR_Topology_get(comm_ptr);
-    MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPIR_ERR_RECOVERABLE, "**notdistgraphtopo");
-
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPIR_Topology *topo_ptr = NULL;
+            topo_ptr = MPIR_Topology_get(comm_ptr);
+            MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPIR_ERR_RECOVERABLE, "**notdistgraphtopo");
+
             MPIR_ERRTEST_ARGNEG(maxindegree, "maxindegree", mpi_errno);
             MPIR_ERRTEST_ARGNEG(maxoutdegree, "maxoutdegree", mpi_errno);
             MPIU_ERR_CHKANDJUMP3((maxindegree > topo_ptr->topo.dist_graph.indegree), mpi_errno, MPIR_ERR_RECOVERABLE, "**argrange", "**argrange %s %d %d", "maxindegree", maxindegree, topo_ptr->topo.dist_graph.indegree);
@@ -102,15 +133,11 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
 
 
     /* ... body of routine ...  */
-    MPIU_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree*sizeof(int));
-    MPIU_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree*sizeof(int));
 
-    if (sourceweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
-        MPIU_Memcpy(sourceweights, topo_ptr->topo.dist_graph.in_weights, maxindegree*sizeof(int));
-    }
-    if (destweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
-        MPIU_Memcpy(destweights, topo_ptr->topo.dist_graph.out_weights, maxoutdegree*sizeof(int));
-    }
+    mpi_errno = MPIR_Dist_graph_neighbors_impl(comm_ptr,
+                                               maxindegree, sources, sourceweights,
+                                               maxoutdegree, destinations, destweights);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

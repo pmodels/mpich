@@ -3975,6 +3975,16 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 
 int MPIR_Barrier_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, int *errflag);
 
+
+/* topology impl functions */
+int MPIR_Dist_graph_neighbors_count_impl(MPID_Comm *comm_ptr, int *indegree, int *outdegree, int *weighted);
+int MPIR_Dist_graph_neighbors_impl(MPID_Comm *comm_ptr,
+                                   int maxindegree, int sources[], int sourceweights[],
+                                   int maxoutdegree, int destinations[], int destweights[]);
+int MPIR_Graph_neighbors_count_impl(MPID_Comm *comm_ptr, int rank, int *nneighbors);
+int MPIR_Graph_neighbors_impl(MPID_Comm *comm_ptr, int rank, int maxneighbors, int *neighbors);
+int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int displ, int *source, int *dest);
+
 /* begin impl functions for NBC */
 int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request);
 int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPI_Request *request);
