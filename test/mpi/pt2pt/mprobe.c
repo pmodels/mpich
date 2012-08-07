@@ -360,6 +360,23 @@ int main(int argc, char **argv)
     /* TODO threaded tests are also needed, but they should go in a separate
      * program */
 
+    /* simple test to ensure that c2f/f2c routines are present (initially missed
+     * in MPICH2 impl) */
+    {
+        MPI_Fint f_handle = 0xdeadbeef;
+        f_handle = MPIX_Message_c2f(MPIX_MESSAGE_NULL);
+        msg = MPIX_Message_f2c(f_handle);
+        check(f_handle != 0xdeadbeef);
+        check(msg == MPIX_MESSAGE_NULL);
+
+        /* PMPIX_ versions should also exists */
+        f_handle = 0xdeadbeef;
+        f_handle = PMPIX_Message_c2f(MPIX_MESSAGE_NULL);
+        msg = PMPIX_Message_f2c(f_handle);
+        check(f_handle != 0xdeadbeef);
+        check(msg == MPIX_MESSAGE_NULL);
+    }
+
 #endif /* TEST_MPROBE_ROUTINES */
 
 epilogue:

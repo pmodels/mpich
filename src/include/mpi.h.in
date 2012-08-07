@@ -643,6 +643,8 @@ enum MPIR_T_pvar_class_t {
 #define MPI_Errhandler_f2c(errhandler) (MPI_Errhandler)(errhandler)
 #define MPI_Win_c2f(win)   (MPI_Fint)(win)
 #define MPI_Win_f2c(win)   (MPI_Win)(win)
+#define MPIX_Message_c2f(msg) ((MPI_Fint)(msg))
+#define MPIX_Message_f2c(msg) ((MPIX_Message)(msg))
 
 /* PMPI versions of the handle transfer functions.  See section 4.17 */
 #define PMPI_Comm_c2f(comm) (MPI_Fint)(comm)
@@ -661,6 +663,8 @@ enum MPIR_T_pvar_class_t {
 #define PMPI_Errhandler_f2c(errhandler) (MPI_Errhandler)(errhandler)
 #define PMPI_Win_c2f(win)   (MPI_Fint)(win)
 #define PMPI_Win_f2c(win)   (MPI_Win)(win)
+#define PMPIX_Message_c2f(msg) ((MPI_Fint)(msg))
+#define PMPIX_Message_f2c(msg) ((MPIX_Message)(msg))
 
 #define MPI_STATUS_IGNORE (MPI_Status *)1
 #define MPI_STATUSES_IGNORE (MPI_Status *)1
