@@ -45,6 +45,12 @@
    it may simply have been undetermined.  This should instead use either 
    a configure-time test (for which there are macros) or a runtime test
    and not use this non-portable check */
+
+/* Some platforms, like AIX, use BYTE_ORDER instead of __BYTE_ORDER */
+#if defined(BYTE_ORDER) && !defined(__BYTE_ORDER)
+#define __BYTE_ORDER BYTE_ORDER
+#endif
+
 #if defined(WORDS_BIGENDIAN)
 #define BLENDIAN 0
 #elif defined(WORDS_LITTLEENDIAN)
