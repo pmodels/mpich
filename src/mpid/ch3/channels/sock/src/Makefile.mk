@@ -18,7 +18,8 @@ lib_lib@MPILIBNAME@_la_SOURCES +=   \
     src/mpid/ch3/channels/sock/src/ch3_isendv.c    \
     src/mpid/ch3/channels/sock/src/ch3_istartmsg.c    \
     src/mpid/ch3/channels/sock/src/ch3_istartmsgv.c    \
-    src/mpid/ch3/channels/sock/src/ch3_progress.c
+    src/mpid/ch3/channels/sock/src/ch3_progress.c       \
+    src/mpid/ch3/channels/sock/src/ch3_win_fns.c
 
 endif BUILD_CH3_SOCK
 

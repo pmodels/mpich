@@ -168,5 +168,8 @@ typedef struct MPIDI_CH3I_VC
     void *sendq_head;
 } MPIDI_CH3I_VC;
 
+/* Nemesis-provided RMA implementation */
+int MPIDI_CH3_SHM_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr);
+int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
 
 #endif /* !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED) */

@@ -26,9 +26,6 @@ typedef MPIR_Pint MPIDI_msg_sz_t;
 /* FIXME: Include here? */
 #include "opa_primitives.h"
 
-/* For shared memory window support in MPID_Win */
-#include "mpiu_os_wrappers_pre.h"
-
 /* Include definitions from the channel which must exist before items in this 
    file (mpidpre.h) or the file it includes (mpiimpl.h) can be defined. */
 #include "mpidi_ch3_pre.h"
@@ -211,13 +208,6 @@ typedef struct MPIDI_VC * MPID_VCR;
                                           that this process has          \
                                           completed as target */         \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
-    int shm_allocated;  /* flag: TRUE iff this window has a shared memory \
-                           region associated with it */                  \
-    void *shm_base_addr; /* base address of shared memory region */      \
-    MPI_Aint shm_segment_len; /* size of shared memory region */             \
-    void **shm_base_addrs;     /* array of base addresses of the windows of  \
-                                  all processes in this process's address space */ \
-    MPIU_SHMW_Hnd_t shm_segment_handle; /* handle to shared memory region */
  
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

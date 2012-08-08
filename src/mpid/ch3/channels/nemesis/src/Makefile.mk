@@ -14,6 +14,8 @@ lib_lib@MPILIBNAME@_la_SOURCES +=				\
     src/mpid/ch3/channels/nemesis/src/ch3_istartmsgv.c		\
     src/mpid/ch3/channels/nemesis/src/ch3_progress.c		\
     src/mpid/ch3/channels/nemesis/src/ch3_abort.c		\
+    src/mpid/ch3/channels/nemesis/src/ch3_rma_shm.c             \
+    src/mpid/ch3/channels/nemesis/src/ch3_win_fns.c             \
     src/mpid/ch3/channels/nemesis/src/ch3i_comm.c		\
     src/mpid/ch3/channels/nemesis/src/ch3i_eagernoncontig.c	\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_alloc.c		\

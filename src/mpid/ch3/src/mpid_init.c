@@ -39,6 +39,7 @@ static int MPIDI_CH3I_PG_Destroy(MPIDI_PG_t * pg );
 
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
+MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns = { NULL };
 
 #undef FUNCNAME
 #define FUNCNAME split_type
@@ -170,6 +171,11 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /* Override split_type */
     MPID_Comm_fns = &comm_fns;
     
+    /* Initialize Window functions table with defaults, then call the channel's
+       init function. */
+    MPIDI_Win_fns_init(&MPIDI_CH3U_Win_fns);
+    MPIDI_CH3_Win_fns_init(&MPIDI_CH3U_Win_fns);
+
     /*
      * Let the channel perform any necessary initialization
      * The channel init should assume that PMI_Init has been called and that
@@ -514,7 +520,7 @@ static int InitPG( int *argc, char ***argv,
 
     *pg_p      = pg;
     *pg_rank_p = pg_rank;
-    
+
  fn_exit:
     return mpi_errno;
  fn_fail:

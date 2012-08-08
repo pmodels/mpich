@@ -1114,6 +1114,34 @@ int MPIDI_CH3U_Comm_FinishPending( MPID_Comm * );
 /* mpirma.h (in src/mpi/rma?) */
 /* ------------------------------------------------------------------------- */
 
+/* The Win_fns table contains pointers to the channel's implementation of the
+ * RMA window creation routines.  The channel must provide the init function,
+ * which can optionally override any defaults already set by CH3.
+ */
+
+typedef struct MPIDI_CH3U_Win_fns_s {
+    int (*create)(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *, MPID_Win **);
+    int (*allocate)(MPI_Aint, int, MPID_Info *, MPID_Comm *, void *, MPID_Win **);
+    int (*allocate_shared)(MPI_Aint, MPID_Info *, MPID_Comm *, void **, MPID_Win **);
+    int (*create_dynamic)(MPID_Info *, MPID_Comm *, MPID_Win **);
+} MPIDI_CH3U_Win_fns_t;
+
+extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
+
+/* CH3 and Channel window functions initializers */
+int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns);
+int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns);
+
+/* Default window creation functions provided by CH3 */
+int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
+                         MPID_Win **);
+int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
+                           MPID_Comm *comm, void *baseptr, MPID_Win **win);
+int MPIDI_CH3U_Win_allocate_shared(MPI_Aint size, MPID_Info *info_ptr, MPID_Comm *comm_ptr,
+                                  void **baseptr, MPID_Win **win_ptr);
+int MPIDI_CH3U_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm, MPID_Win **win);
+
+
 /* FIXME: These are specific to the RMA code and should be in the RMA 
    header file. */
 #define MPIDI_RMA_PUT 23
@@ -1129,6 +1157,12 @@ int MPIDI_CH3U_Comm_FinishPending( MPID_Comm * );
 
 #define MPID_LOCK_NONE 0
 #define MPID_LOCK_SHARED_ALL 1
+
+/* MPI RMA Utility functions */
+
+int MPIDI_CH3U_Win_create_gather(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
+                                 MPID_Win **);
+
 
 /* MPI-2 RMA Routines */
 

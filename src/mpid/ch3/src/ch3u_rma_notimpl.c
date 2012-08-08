@@ -176,3 +176,13 @@ int MPIDI_Win_flush_local_all(MPID_Win *win)
 {
     MPIDI_FUNC_NOTIMPL(WIN_FLUSH_LOCAL_ALL)
 }
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_shared_query
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr)
+{
+    MPIDI_FUNC_NOTIMPL(WIN_FLUSH_LOCAL_ALL)
+}
