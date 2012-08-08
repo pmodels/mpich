@@ -1114,33 +1114,6 @@ int MPIDI_CH3U_Comm_FinishPending( MPID_Comm * );
 /* mpirma.h (in src/mpi/rma?) */
 /* ------------------------------------------------------------------------- */
 
-/* This structure defines a module that handles the routines that 
-   work with MPI-2 RMA ops */
-typedef struct MPIDI_RMAFns {
-    int (*Win_create)(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
-		      MPID_Win **, struct MPIDI_RMAFns *);
-    int (*Win_free)(MPID_Win **);
-    int (*Put)(const void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-		MPID_Win *);
-    int (*Get)(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, 
-		MPID_Win *);
-    int (*Accumulate)(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-		       MPI_Datatype, MPI_Op, MPID_Win *);
-    int (*Win_fence)(int, MPID_Win *);
-    int (*Win_post)(MPID_Group *, int, MPID_Win *);
-    int (*Win_start)(MPID_Group *, int, MPID_Win *);
-    int (*Win_complete)(MPID_Win *);
-    int (*Win_wait)(MPID_Win *);
-    int (*Win_lock)(int, int, int, MPID_Win *);
-    int (*Win_unlock)(int, MPID_Win *);
-    void * (*Alloc_mem)(size_t, MPID_Info *);
-    int (*Free_mem)(void *);
-    int (*Win_allocate)(MPI_Aint, int, MPID_Info *, MPID_Comm *,
-                        void *baseptr, MPID_Win **, struct MPIDI_RMAFns *);
-} MPIDI_RMAFns;
-#define MPIDI_RMAFNS_VERSION 1
-int MPIDI_CH3_RMAFnsInit( MPIDI_RMAFns * );
-
 /* FIXME: These are specific to the RMA code and should be in the RMA 
    header file. */
 #define MPIDI_RMA_PUT 23
@@ -1230,35 +1203,6 @@ int MPIDI_Win_sync(MPID_Win *win);
 
 void *MPIDI_Alloc_mem(size_t size, MPID_Info *info_ptr);
 int MPIDI_Free_mem(void *ptr);
-
-/* optional channel-specific */
-void *MPIDI_CH3_Alloc_mem(size_t size, MPID_Info *info_ptr);
-int MPIDI_CH3_Win_create(void *base, MPI_Aint size, int disp_unit, 
-			 MPID_Info *info, MPID_Comm *comm_ptr, 
-			 MPID_Win **win_ptr, MPIDI_RMAFns *RMAFns);
-int MPIDI_CH3_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
-                         MPID_Comm *comm_ptr, void *baseptr, 
-                         MPID_Win **win_ptr, MPIDI_RMAFns *RMAFns);
-int MPIDI_CH3_Free_mem(void *ptr);
-void MPIDI_CH3_Cleanup_mem(void);
-int MPIDI_CH3_Win_free(MPID_Win **win_ptr);
-int MPIDI_CH3_Put(const void *origin_addr, int origin_count, MPI_Datatype
-            origin_datatype, int target_rank, MPI_Aint target_disp,
-            int target_count, MPI_Datatype target_datatype, MPID_Win *win_ptr);
-int MPIDI_CH3_Get(void *origin_addr, int origin_count, MPI_Datatype
-            origin_datatype, int target_rank, MPI_Aint target_disp,
-            int target_count, MPI_Datatype target_datatype, MPID_Win *win_ptr);
-int MPIDI_CH3_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
-                    origin_datatype, int target_rank, MPI_Aint target_disp,
-                    int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                    MPID_Win *win_ptr);
-int MPIDI_CH3_Win_fence(int assert, MPID_Win *win_ptr);
-int MPIDI_CH3_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr);
-int MPIDI_CH3_Win_unlock(int dest, MPID_Win *win_ptr);
-int MPIDI_CH3_Win_wait(MPID_Win *win_ptr);
-int MPIDI_CH3_Win_complete(MPID_Win *win_ptr);
-int MPIDI_CH3_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr);
-int MPIDI_CH3_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr);
 
 /* internal */
 int MPIDI_CH3I_Release_lock(MPID_Win * win_ptr);

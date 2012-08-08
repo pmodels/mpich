@@ -84,13 +84,8 @@ static MPIU_INSTR_Duration_count *list_block;     /* Inner; while waiting */
 /*
  * These routines provide a default implementation of the MPI RMA operations
  * in terms of the low-level, two-sided channel operations.  A channel
- * may override these functions, on a per-window basis, by defining 
- * USE_CHANNEL_RMA_TABLE and providing the function MPIDI_CH3_RMAWinFnsInit.
- */
-
-/*
- * TODO: 
- * 
+ * may override these functions, on a per-window basis, by overriding
+ * the MPID functions in the RMAFns section of MPID_Win object.
  */
 
 #define SYNC_POST_TAG 100
