@@ -33,6 +33,7 @@ noinst_PROGRAMS =           \
     indexed-misc            \
     lbub                    \
     localpack               \
+    longdouble              \
     lots-of-types           \
     pairtype-pack           \
     pairtype-size-extent    \

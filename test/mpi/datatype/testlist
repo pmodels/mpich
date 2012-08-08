@@ -45,3 +45,4 @@ struct-derived-zeros 1
 struct-verydeep 1
 get-elements 1
 hindexed_block 1 strict=false
+longdouble 1
