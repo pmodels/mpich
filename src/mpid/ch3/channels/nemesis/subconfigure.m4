@@ -186,6 +186,38 @@ AC_CHECK_FUNCS(mkstemp)
 AC_CHECK_FUNCS(rand)
 AC_CHECK_FUNCS(srand)
 
+# check how to allocate shared memory
+AC_ARG_WITH(shared-memory, [--with-shared-memory[=auto|sysv|mmap] - create shared memory using sysv or mmap (default is auto)],,
+    with_shared_memory=auto)
+
+if test "$with_shared_memory" = auto -o "$with_shared_memory" = mmap; then
+    found_mmap_funcs=yes
+    AC_CHECK_FUNCS(mmap munmap, , found_mmap_funcs=no)
+    if test "$found_mmap_funcs" = yes ; then
+        with_shared_memory=mmap
+        AC_DEFINE(USE_MMAP_SHM,1,[Define if we have sysv shared memory])
+        AC_MSG_NOTICE([Using a memory-mapped file for shared memory])
+    elif test "$with_shared_memory" = mmap ; then
+        AC_MSG_ERROR([cannot support shared memory:  mmap() or munmap() not found])
+    fi
+fi
+if test "$with_shared_memory" = auto -o "$with_shared_memory" = sysv; then
+    found_sysv_shm_funcs=yes
+    AC_CHECK_FUNCS(shmget shmat shmctl shmdt, , found_sysv_shm_funcs=no)
+    if test "$found_sysv_shm_funcs" = yes ; then
+        AC_DEFINE(USE_SYSV_SHM,1,[Define if we have sysv shared memory])
+        AC_MSG_NOTICE([Using SYSV shared memory])
+    elif test "$with_shared_memory" = sysv ; then
+        AC_MSG_ERROR([cannot support shared memory:  sysv shared memory functions functions not found])
+    else
+        AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
+    fi
+fi
+
+if test "$found_sysv_shm_funcs" = yes ; then
+   AC_CHECK_FUNCS(strtoll, , AC_MSG_ERROR([cannot find strtoll function needed by sysv shared memory implementation]))
+fi
+
 AC_ARG_ENABLE(nemesis-shm-collectives, [--enable-nemesis-shm-collectives - enables use of shared memory for collective comunication within a node],
     AC_DEFINE(ENABLED_SHM_COLLECTIVES, 1, [Define to enable shared-memory collectives]))
 
