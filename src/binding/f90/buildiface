@@ -869,7 +869,7 @@ src/binding/f90/mpifnoext.h: src/binding/f77/mpif.h
 	sed -e 's/^C/\\!/g' -e '/EXTERNAL/d' \\
 		-e '/REAL\\*8/d' \\
 		-e '/DOUBLE PRECISION/d' \\
-		-e '/MPI_WTICK/d' \$^ > \$@
+		-e '/MPI_WTICK/d' src/binding/f77/mpif.h > \$@
 
 CLEANFILES += src/binding/f90/mpifnoext.h
 

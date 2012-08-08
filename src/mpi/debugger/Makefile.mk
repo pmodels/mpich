@@ -31,17 +31,18 @@ lib_libtvmpich2_la_LDFLAGS = -g
 #
 # NB: these tests can only be built *after* a "make install" step.  They must be
 # built explicitly
-src/mpi/debugger/tvtest: src/mpi/debugger/tvtest.o src/mpi/debugger/dbgstub.o
-	$(bindir)/mpicc -o $@ $^ -ltvmpich2
+tvtest_objs = src/mpi/debugger/tvtest.o src/mpi/debugger/dbgstub.o
+src/mpi/debugger/tvtest: $(tvtest_objs)
+	$(bindir)/mpicc -o $@ $(tvtest_objs) -ltvmpich2
 
 src/mpi/debugger/tvtest.o: src/mpi/debugger/tvtest.c
-	$(bindir)/mpicc -c -o $@ $<
+	$(bindir)/mpicc -c -o $@ $?
 
 # no rule for dbgstub.o, it needs to be built by suffix rules in the usual
 # fashion because it needs direct access to MPICH2 internal headers
 
 src/mpi/debugger/qdemo: src/mpi/debugger/qdemo.c
-	$(bindir)/mpicc -o $@ $^
+	$(bindir)/mpicc -o $@ $?
 
 endif BUILD_DEBUGGER_DLL
 
