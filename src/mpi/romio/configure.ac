@@ -481,8 +481,6 @@ if test -n "$arch_solaris" || test -n "$arch_solaris86" ; then
         TEST_CC="$CC"
         TEST_F77="$F77"
     fi
-    AR="ar cr"
-# solaris does not have l option to ar
 fi
 
 
@@ -500,21 +498,6 @@ if test -n "$arch_rs6000"; then
 fi    
 #
 
-if test -n "$arch_tflop" || test -n "$arch_tflops"; then
-    # TFLOP_FLAGS="-cougar -D__PUMA"
-    AR="xar cr$AR_LOCAL"
-    RANLIB="xranlib"
-    MPI_LIB="$MPI_LIB"
-    if test -z "$MPI_IMPL" ; then
-        MPI_IMPL=mpich
-        mpi_mpich=1
-    fi
-    # supply a reasonable default fs
-    if test -z "$FILE_SYSTEM" ; then
-        FILE_SYSTEM="ufs"
-    fi
-fi
-#
 if test -n "$arch_freebsd" || test -n "$arch_LINUX" || test -n "$arch_LINUX_ALPHA" || test -n "$arch_netbsd" || test -n "$arch_openbsd" ; then
     if test -n "$arch_freebsd" || test -n "$arch_netbsd" || test -n "$arch_openbsd"; then
         ac_cv_sizeof_long_long=${ac_cv_sizeof_long_long:-0}
