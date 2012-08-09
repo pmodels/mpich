@@ -5,5 +5,5 @@ autoreconf ${autoreconf_args:-"-vif"}
 if grep "pgcc)" config/depcomp 2>&1 >/dev/null ; then :
 else
     echo 'patching "config/depcomp" to support pgcc'
-    patch -f -p0 < ../../../../confdb/depcomp_pgcc.patch
+    patch -p0 < ../../../../confdb/depcomp_pgcc.patch
 fi
