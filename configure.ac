@@ -2180,6 +2180,10 @@ if test "$enable_fc" = "yes" ; then
     # Sets FCMODINCFLAG (and adds it to the list substed)
     PAC_FC_MODULE
     AC_SUBST(FCMODINCSPEC)
+    if test -z "$FCMODOUTFLAG" ; then
+        AC_MSG_ERROR([FCMODOUTFLAG could not be determined but is critical for the current Fortran build system])
+    fi
+
     if test "$pac_cv_fc_module_case" = "upper" ; then
         MPIMODNAME=MPI
         MPICONSTMODNAME=MPI_CONSTANTS
