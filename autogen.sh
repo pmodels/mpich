@@ -340,7 +340,7 @@ else
     autom4te=${AUTOM4TE:-autom4te}
     automake=${AUTOMAKE:-automake}
     aclocal=${ACLOCAL:-aclocal}
-    if test -z "${LIBTOOLIZE+set}" && glibtoolize --version >/dev/null 2>&1 ; then
+    if test -z "${LIBTOOLIZE+set}" && ( glibtoolize --version ) >/dev/null 2>&1 ; then
         libtoolize=glibtoolize
     else
         libtoolize=${LIBTOOLIZE:-libtoolize}
