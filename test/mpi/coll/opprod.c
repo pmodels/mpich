@@ -14,6 +14,9 @@ static char MTEST_Descrip[] = "Test MPI_PROD operations on optional datatypes du
 */
 
 typedef struct { double r, i; } d_complex;
+#ifdef HAVE_LONG_DOUBLE
+typedef struct { long double r, i; } ld_complex;
+#endif
 
 /*
  * This test looks at the handling of logical and for types that are not 
@@ -126,45 +129,96 @@ int main( int argc, char *argv[] )
 #ifndef USE_STRICT_MPI
     /* For some reason, complex is not allowed for sum and prod */
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
-	/* double complex; may be null if we do not have Fortran support */
-	dinbuf[0].r = (rank < maxsize && rank > 0) ? rank : 1;
-	dinbuf[1].r = 0;
-	dinbuf[2].r = (rank > 0);
-	dinbuf[0].i = 0;
-	dinbuf[1].i = 1;
-	dinbuf[2].i = -(rank > 0);
-	
-	doutbuf[0].r = 0;
-	doutbuf[1].r = 1;
-	doutbuf[2].r = 1;
-	doutbuf[0].i = 0;
-	doutbuf[1].i = 1;
-	doutbuf[2].i = 1;
-	MPI_Reduce( dinbuf, doutbuf, 3, MPI_DOUBLE_COMPLEX, MPI_PROD, 0, comm );
-	if (rank == 0) {
-	    double imag, real;
-	    if (doutbuf[0].r != (double)result[maxsize-1] || doutbuf[0].i != 0) {
-		errs++;
-		fprintf( stderr, "double complex PROD(rank) test failed\n" );
-	    }
-	    /* Multiplying the imaginary part depends on size mod 4 */
-	    imag = 1.0; real = 0.0; /* Make compiler happy */
-	    switch (size % 4) {
-	    case 1: imag = 1.0; real = 0.0; break;
-	    case 2: imag = 0.0; real = -1.0; break;
-	    case 3: imag =-1.0; real = 0.0; break;
-	    case 0: imag = 0.0; real = 1.0; break; 
-	    }
-	    if (doutbuf[1].r != real || doutbuf[1].i != imag) {
-		errs++;
-		fprintf( stderr, "double complex PROD(i) test failed (%f,%f)!=(%f,%f)\n",
+	int dc;
+#ifdef HAVE_LONG_DOUBLE	
+	ld_complex ldinbuf[3], ldoutbuf[3];
+#endif	
+	/* Must determine which C type matches this Fortran type */
+	MPI_Type_size( MPI_DOUBLE_COMPLEX, &dc );
+	if (dc == sizeof(d_complex)) {
+	    /* double complex; may be null if we do not have Fortran support */
+	    dinbuf[0].r = (rank < maxsize && rank > 0) ? rank : 1;
+	    dinbuf[1].r = 0;
+	    dinbuf[2].r = (rank > 0);
+	    dinbuf[0].i = 0;
+	    dinbuf[1].i = 1;
+	    dinbuf[2].i = -(rank > 0);
+	    
+	    doutbuf[0].r = 0;
+	    doutbuf[1].r = 1;
+	    doutbuf[2].r = 1;
+	    doutbuf[0].i = 0;
+	    doutbuf[1].i = 1;
+	    doutbuf[2].i = 1;
+	    MPI_Reduce( dinbuf, doutbuf, 3, MPI_DOUBLE_COMPLEX, MPI_PROD, 0, comm );
+	    if (rank == 0) {
+		double imag, real;
+		if (doutbuf[0].r != (double)result[maxsize-1] || doutbuf[0].i != 0) {
+		    errs++;
+		    fprintf( stderr, "double complex PROD(rank) test failed\n" );
+		}
+		/* Multiplying the imaginary part depends on size mod 4 */
+		imag = 1.0; real = 0.0; /* Make compiler happy */
+		switch (size % 4) {
+		case 1: imag = 1.0; real = 0.0; break;
+		case 2: imag = 0.0; real = -1.0; break;
+		case 3: imag =-1.0; real = 0.0; break;
+		case 0: imag = 0.0; real = 1.0; break; 
+		}
+		if (doutbuf[1].r != real || doutbuf[1].i != imag) {
+		    errs++;
+		    fprintf( stderr, "double complex PROD(i) test failed (%f,%f)!=(%f,%f)\n",
 			 doutbuf[1].r,doutbuf[1].i,real,imag);
-	    }
-	    if (doutbuf[2].r != 0 || doutbuf[2].i != 0) {
-		errs++;
-		fprintf( stderr, "double complex PROD(>) test failed\n" );
+		}
+		if (doutbuf[2].r != 0 || doutbuf[2].i != 0) {
+		    errs++;
+		    fprintf( stderr, "double complex PROD(>) test failed\n" );
+		}
 	    }
 	}
+#ifdef HAVE_LONG_DOUBLE
+	else if (dc == sizeof(ld_complex)) {
+	    /* double complex; may be null if we do not have Fortran support */
+	    ldinbuf[0].r = (rank < maxsize && rank > 0) ? rank : 1;
+	    ldinbuf[1].r = 0;
+	    ldinbuf[2].r = (rank > 0);
+	    ldinbuf[0].i = 0;
+	    ldinbuf[1].i = 1;
+	    ldinbuf[2].i = -(rank > 0);
+	    
+	    ldoutbuf[0].r = 0;
+	    ldoutbuf[1].r = 1;
+	    ldoutbuf[2].r = 1;
+	    ldoutbuf[0].i = 0;
+	    ldoutbuf[1].i = 1;
+	    ldoutbuf[2].i = 1;
+	    MPI_Reduce( ldinbuf, ldoutbuf, 3, MPI_DOUBLE_COMPLEX, MPI_PROD, 0, comm );
+	    if (rank == 0) {
+		long double imag, real;
+		if (ldoutbuf[0].r != (double)result[maxsize-1] || ldoutbuf[0].i != 0) {
+		    errs++;
+		    fprintf( stderr, "double complex PROD(rank) test failed\n" );
+		}
+		/* Multiplying the imaginary part depends on size mod 4 */
+		imag = 1.0; real = 0.0; /* Make compiler happy */
+		switch (size % 4) {
+		case 1: imag = 1.0; real = 0.0; break;
+		case 2: imag = 0.0; real = -1.0; break;
+		case 3: imag =-1.0; real = 0.0; break;
+		case 0: imag = 0.0; real = 1.0; break; 
+		}
+		if (ldoutbuf[1].r != real || ldoutbuf[1].i != imag) {
+		    errs++;
+		    fprintf( stderr, "double complex PROD(i) test failed (%Lf,%Lf)!=(%Lf,%Lf)\n",
+			 ldoutbuf[1].r,ldoutbuf[1].i,real,imag);
+		}
+		if (ldoutbuf[2].r != 0 || ldoutbuf[2].i != 0) {
+		    errs++;
+		    fprintf( stderr, "double complex PROD(>) test failed\n" );
+		}
+	    }
+	}
+#endif /* HAVE_LONG_DOUBLE */
     }
 #endif /* USE_STRICT_MPI */
 
