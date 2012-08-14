@@ -3719,6 +3719,8 @@ if ($write_mpif) {
     foreach $type (SHARED) {
 	&print_mpif_int( "MPIX_COMM_TYPE_$type" );
     }
+    &print_mpif_int( "MPIX_MESSAGE_NULL" );
+    &print_mpif_int( "MPIX_MESSAGE_NO_PROC" );
 
     # Thread values
     foreach my $threadlevel (SINGLE, FUNNELED, SERIALIZED, MULTIPLE) {
@@ -4444,6 +4446,16 @@ sub print_mpif_int {
     }
     # Remove any casts
     print "Input value for $key = $value\n" if $debug;
+    # Add a special case to for MPIX_*
+    if ($value =~ /\(MPIX/) {
+	$value =~ s/\(MPIX_[A-Za-z0-9]*\s*\)//;
+	print "cast removal: $value\n" if $debug;
+        # Remove any surrounding (MPI_REQUEST_NULL)
+        if ($value =~ /\(\s*[A-Z_]*\)/) {
+   	    $value =~ s/\(\s*([A-Z_]*)\s*\)/$1/;
+	    print "paren removal: $value\n" if $debug;
+        }
+    }
     if ($value =~ /\(MPI/) {
 	$value =~ s/\(MPI_[A-Za-z0-9]*\s*\)//;
 	print "cast removal: $value\n" if $debug;
