@@ -16,8 +16,11 @@
 
  # MPI-3: Added support for MPIX_Type_create_hindexed_block.
 
- # MPI-3: The new MPI-3 nonblocking collectives functions are now
-   available as "MPIX_" functions (e.g. "MPIX_Ibcast").
+ # MPI-3: The new MPI-3 nonblocking collective functions are now
+   available as "MPIX_" functions (e.g., "MPIX_Ibcast").
+
+ # MPI-3: The new MPI-3 neighborhood collective routines are now available as
+   "MPIX_" functions (e.g., "MPIX_Neighbor_allgather").
 
  # MPI-3: The new MPI-3 MPI_Comm_split_type function is now available
    as an "MPIX_" function.
