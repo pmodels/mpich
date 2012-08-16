@@ -1,5 +1,6 @@
 ## vim: set ft=automake :
 
-noinst_PROGRAMS += fandcattrf90
+noinst_PROGRAMS += fandcattrf90 baseattr3f90
 fandcattrf90_SOURCES = fandcattrf90.f90 fandcattrc.c
+baseattr3f90_SOURCES = baseattr3f90.f90
 
