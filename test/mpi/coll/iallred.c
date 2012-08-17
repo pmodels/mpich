@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* Since MPICH2 is currently the only NBC implementation in existence, just use
  * this quick-and-dirty #ifdef to decide whether to test the nonblocking

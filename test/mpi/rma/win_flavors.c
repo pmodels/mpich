@@ -6,6 +6,7 @@
  */
 #include <mpi.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 /* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
  */

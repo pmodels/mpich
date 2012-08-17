@@ -126,7 +126,7 @@ int main(int argc, char **argv)
    implementations */
 int main(int argc, char **argv)
 {
-  MPI_Init( arc, argv );
+  MPI_Init( &argc, &argv );
   printf( " No Errors\n" );
   MPI_Finalize();
   return 0;

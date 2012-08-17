@@ -13,6 +13,7 @@
  */
 
 #include "mpi.h"
+#include "mpitest.h"
 
 /* Temporary hack to make this test work with the option to define MPICH2_CONST
    Used to test the MPI-3 binding that added const to some declarations. */
@@ -21,6 +22,8 @@
 #else
 #define MPITEST_CONST
 #endif
+
+#if !defined(USE_STRICT_MPI) && defined(MPICH2)
 
 int MPI_Barrier(MPI_Comm comm)
 {
@@ -209,3 +212,4 @@ int MPI_Exscan(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Dataty
     return mpi_errno;
 }
 
+#endif

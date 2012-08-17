@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 /* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
  */
