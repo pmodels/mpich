@@ -125,6 +125,8 @@ static int init_id(MPIDI_VC_t *vc)
 
     mpi_errno = MPID_nem_ptl_get_id_from_bc(bc, &vc_ptl->id, &vc_ptl->pt);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    vc_ptl->id_initialized = TRUE;
     
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
