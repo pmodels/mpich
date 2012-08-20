@@ -692,12 +692,43 @@ extern MPID_Errhandler MPID_Errhandler_direct[];
   'MPID_Copy_function' and 'MPID_Delete_function' capture the differences
   in a single union type.
 
-  Notes:
-  One potential user error is to access an attribute in one language (say
-  Fortran) that was created in another (say C).  We could add a check and
-  generate an error message in this case; note that this would have to 
-  be an option, because (particularly when accessing the attribute from C), 
-  it may be what the user intended, and in any case, it is a valid operation.
+  The above comment is out of date but has never been updated as it should
+  have to match the introduction of a different interface.  Beware!
+
+  Notes: 
+  
+  In the original design, retrieving a attribute from a different
+  language that set it was thought to be an error.  The MPI Forum
+  decided that this should be allowed, and after much discussion, the
+  behavior was defined.  Thus, we need to record what sort of
+  attribute was provided, and be able to properly return the correct
+  value in each case.  See MPI 2.2, Section 16.3.7 (Attributes) for
+  specific requirements.  One consequence of this is that the value
+  that is returned may have a different length that how it was set.
+  On little-endian platforms (e.g., x86), this doesn't cause much of a
+  problem, because the address is that of the least significant byte,
+  and the lower bytes have the data that is needed in the case that
+  the desired attribute type is shorter than the stored attribute.
+  However, on a big-endian platform (e.g., IBM POWER), since the most
+  significant bytes are stored first, depending on the length of the
+  result type, the address of the result may not be the beginning of
+  the memory area.  For example, assume that an MPI_Fint is 4 bytes
+  and a void * (and a Fortran INTEGER of kind MPI_ADDRESS_KIND) is 8
+  bytes, and let the attribute store the value in an 8 byte integer in
+  a field named "value".  On a little-endian platform, the address of
+  the value is always the beginning of the field "value".  On a
+  big-endian platform, the address of the value is the beginning of
+  the field if the return type is a pointer (e.g., from C) or Fortran
+  (KIND=MPI_ADDRESS_KIND), and the address of the beginning of the
+  field + 4 if the return type is a Fortran 77 integer (and, as
+  specified above, an MPI_Fint is 4 bytes shorter than a void *).
+
+  For the big-endian case, it is possible to manage these shifts (using
+  WORDS_LITTLEENDIAN to detect the big-endian case).  Alternatively,
+  at a small cost in space, copies in variables of the correct length
+  can be maintained.  At this writing, the code in src/mpi/attr makes
+  use of WORDS_LITTLEENDIAN to provide the appropriate code for the most
+  common cases.
 
   T*/
 /*TAttrOverview.tex

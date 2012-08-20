@@ -141,7 +141,12 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	case 10:
 	    /* This is a special case.  If universe is not set, then we
 	       attempt to get it from the device.  If the device is doesn't
-	       supply a value, then we set the flag accordingly */
+	       supply a value, then we set the flag accordingly.  Note that
+	       we must initialize the cached value, in MPIR_Process.attr, 
+	       not the value in the copy, since that is vulnerable to being
+	       overwritten by the user, and because we always re-initialize
+	       the copy from the cache (yes, there was a time when the code
+	       did the wrong thing here). */
 	    if (attr_copy.universe >= 0)
 	    { 
 		*attr_val_p = &attr_copy.universe;
@@ -152,22 +157,23 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    }
 	    else
 	    {
-		mpi_errno = MPID_Get_universe_size(&attr_copy.universe);
+		/* We call MPID_Get_universe_size only once (see 10.5.1).
+		   Thus, we must put the value into the "master" copy*/
+		mpi_errno = MPID_Get_universe_size(&MPIR_Process.attrs.universe);
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno != MPI_SUCCESS)
 		{
-		    attr_copy.universe = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
+		    MPIR_Process.attrs.universe = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
 		    goto fn_fail;
 		}
 		/* --END ERROR HANDLING-- */
-		
+		attr_copy.universe = MPIR_Process.attrs.universe;
 		if (attr_copy.universe >= 0)
 		{
 		    *attr_val_p = &attr_copy.universe;
 		}
 		else
 		{
-		    attr_copy.universe = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
 		    *flag = 0;
 		}
 	    }
@@ -189,9 +195,12 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	    }
 	    break;
 	}
-	/* All of the predefined attributes are INTEGER; since we've set 
-	   the output value as the pointer to these, we need to dereference
-	   it here. */
+	/* All of the predefined attributes are stored internally as C ints; 
+	   since we've set the output value as the pointer to these, we need 
+	   to dereference it here. We must also be very careful of the 3 
+	   different output cases, since the two Fortran cases correspond
+	   to MPI_Fint and MPIR_FAint (an internal MPICH2 typedef for C 
+	   version of INTEGER (KIND=MPI_ADDRESS_KIND) ) */
 	if (*flag) {
             /* Use the internal pointer-sized-int for systems (e.g., BG/P)
                that define MPI_Aint as a different size than MPIR_Pint.
@@ -200,6 +209,13 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	       get the correct value, we need to extract the int.
 	       On the left, the output type is given by the argument 
 	       outAttrType - and the cast must match the intended results */
+	    /* FIXME: This code is broken.  The MPIR_ATTR_INT is for Fortran
+	       MPI_Fint types, not int, and MPIR_ATTR_AINT is for Fortran
+	       INTEGER(KIND=MPI_ADDRESS_KIND), which is probably an MPI_Aint,
+	       and MPIR_Pint is for exactly the case where MPI_Aint is not
+	       the same as MPIR_Pint. 
+	       This code needs to be fixed in every place that it occurs 
+	       (i.e., see the win and type get_attr routines). */
 	    if (outAttrType == MPIR_ATTR_AINT)
 		*(MPIR_Pint*)attr_val_p = *(int*)*(void **)attr_val_p;
 	    else if (outAttrType == MPIR_ATTR_INT)
@@ -268,6 +284,8 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 }
 
 /* This function is called by the fortran bindings. */
+/* FIXME: There is no reason to have this routine since it unnecessarily 
+   duplicates the MPIR_CommGetAttr interface. */
 int MPIR_CommGetAttr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
                           int *flag, MPIR_AttrType outAttrType )
 {
@@ -335,7 +353,6 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
     mpi_errno = MPIR_CommGetAttr( comm, comm_keyval, attribute_val, flag, 
 				  MPIR_ATTR_PTR );
     if (mpi_errno) goto fn_fail;
-    /* printf( "attr value = %x\n", *(void**)attribute_val ); */
     /* ... end of body of routine ... */
 
   fn_exit:

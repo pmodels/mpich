@@ -56,6 +56,13 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
 		goto fn_fail;
 	    }
 	    p->attrType = attrType;
+	    /* FIXME: This code is incorrect in some cases, particularly
+	       in the case where MPIR_Pint is different from MPI_Aint, 
+	       since in that case, the Fortran 9x interface will provide
+	       more bytes in the attribute_val than this allows. The 
+	       dual casts are a sign that this is faulty. This will 
+	       need to be fixed in the type/win set_attr routines as 
+	       well. */
 	    p->value    = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
 	    /* printf( "Updating attr at %x\n", &p->value ); */
 	    /* Does not change the reference count on the keyval */
@@ -71,6 +78,7 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
 	new_p->keyval	     = keyval_ptr;
 	new_p->attrType      = attrType;
 	new_p->pre_sentinal  = 0;
+	/* FIXME: See the comment above on this dual cast. */
 	new_p->value	     = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
 	new_p->post_sentinal = 0;
 	new_p->next	     = comm_ptr->attributes;

@@ -220,6 +220,8 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 
         new_p->attrType         = p->attrType;
         new_p->pre_sentinal     = 0;
+	/* FIXME: This is not correct in some cases (size(MPI_Aint)>
+	 sizeof(MPIR_Pint)) */
         new_p->value            = (MPID_AttrVal_t)(MPIR_Pint)new_value;
         new_p->post_sentinal    = 0;
         new_p->next             = 0;

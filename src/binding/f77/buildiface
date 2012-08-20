@@ -817,7 +817,7 @@ foreach $_ (@ARGV) {
 		'Dist_graph_neighbors-4' => 'out:unweighted:*v2',
                 'Dist_graph_neighbors-6' => 'out:fint2int_array:*v5',
 		'Dist_graph_neighbors-7' => 'out:unweighted:*v5',
-
+# MPI 3.0 functions
     'Igather' => '1', 'Igather-1' => 'in:inplace', 
     'Igatherv' => '1:5:6', 'Igatherv-1' => 'in:inplace',
                 'Igatherv-5' => 'in:fint2int_array:_commsize(*v9)',
@@ -2273,14 +2273,19 @@ sub attrint_ctof {
     my $fvar = $_[0];
     my $cvar = $_[1];
     my $flagarg = 4; # get from option
-    # The double cast of attr$cvar first to MPIR_Pint and then to MPI_Fint
-    # keeps some compilers happy on 64-bit platforms
+    # The strange cast is due to the following:
+    # The MPICH2 attribute code returns an int in the void *.  In
+    # little-endian, a cast to an int is all that's necessary.  In 
+    # big-endian, to interpret the first sizeof(int) bytes as an int,
+    # we must first cast as pointer to int, then dereference it.
+    # We must use "int" because the MPICH2 code incorrectly uses int
+    # instead of MPI_Fint.
     print $OUTFD "
     if ((int)*ierr || !l$flagarg) {
         *(MPI_Fint*)$cvar = 0;
     }
     else {
-        *(MPI_Fint*)$cvar = (MPI_Fint)(MPIR_Pint)attr$cvar;
+        *(MPI_Fint*)$cvar = (MPI_Fint)*(int *)&attr$cvar;
     }\n";
 }
 
@@ -2303,6 +2308,11 @@ sub attrint_out_arg {
 # Address and attribute handling
 # This version of attrint uses Aints instead of ints, and is appropriate
 # for the MPI-2 attribute caching functions
+#
+# FIXME: This is no longer correct if the BlueGene definition for MPI_Aint
+# is used (as an integer big enough for an MPI_Offset and larger than
+# sizeof(void*), since this stores the result into the argument.  The
+# definitions here and in the MPICH2 attribute code must match.
 #in:addraint
 #out:attraint:4
 sub addraint_ftoc {
