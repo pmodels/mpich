@@ -328,12 +328,23 @@ fi
 AC_SUBST(faultsdir)
 #
 MPI_IS_STRICT=false
+AC_SUBST(MPI_IS_STRICT)
 if test "$enable_strictmpi" = "yes" ; then
     MPI_IS_STRICT=true
-    AC_SUBST(MPI_IS_STRICT)
     AC_DEFINE(USE_STRICT_MPI,1,[Define if only operations defined in MPI should be tested])
 fi
-
+#
+# At this writing, MPICH2 has many MPIX routines, and the test suite includes
+# them.  As these are not MPI routines (yet), they are invalid and incorrect
+# when this test suite is used for other MPI implementations, including those
+# based on earlier versions of MPICH2.
+MPI_HAS_MPIX=no
+#
+# Hack to detect build from within MPICH2.  Ensure strictmpi not selected.
+if test "$FROM_MPICH2" = "yes" -a "$enable_strictmpi" = "no" ; then
+   MPI_HAS_MPIX=yes
+fi
+AC_SUBST(MPI_HAS_MPIX)
 
 # preserve these values across a reconfigure
 AC_ARG_VAR([WRAPPER_CFLAGS],[])

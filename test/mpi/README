@@ -4,8 +4,8 @@ This test suite is a *supplement* to other test suites, including the
 original MPICH testsuite, the Intel testsuite, and the IBM MPI test suite 
 (or test suites derived from that test, including the MPI C++ tests).
 
-Building the Test
-=================
+Building the Test Suite
+=======================
 In many cases, configure will find the MPI implementation
 automatically.  In some cases, it will need some help.  For example:
 
@@ -81,4 +81,75 @@ such unfortunate behavior is common, the option -ignorebogus can be given
 to checktests:
 
 cd btest && ../checktests --ignorebogus
+
+Controlling the Tests that are Run
+==================================
+The tests are actually built and run by the script "runtests".  This script 
+can be given a file that contains a list of the tests to run.  This file has
+two primary types of entries:
+
+    directories:  Enter directory and look for the file "testlist".  
+                  Recursively run the contents of that file
+    program names: Build and run that program
+
+Lines may also be commented out with "#".
+
+The simplest program line contains the name of the program and the number of
+MPI processes to use.  For example, the following will build the
+program sendrecv1 and run it with 4 processes:
+
+sendrecv1 4
+
+In addition, the program line can contain key=value pairs that provide 
+special information about running the test.  For example, 
+
+sendflood 8 timeLimit=600
+
+says to build and run the program sendflood with 8 MPI processes and
+permit the test to run for 600 seconds (by default, at least for
+MPICH2, the default timelimit is 180 seconds).  Other key=value pairs
+can be used to select whether a program should be run at all,
+depending on the abilities of the MPI implementation (this is
+particularly important for Fortran programs, since preprocessor
+support for Fortran is a non-standard extension to the Fortran
+language, and there are some compilers that would not accept Fortran
+programs that used the preprocessor).
+
+The most important key=value pairs are:
+
+
+timeLimit=n : Use a timelimit of n seconds
+
+arg=string  : Run the program with string as an argument to the program
+
+mpiexecarg=string  : Run the program with string as an argument to mpiexec
+
+env=name=value : Run the program with environment variable "name" given the
+                 value "value"
+
+mpiversion=x.y : Build and run the program only if the MPI version is at 
+                 least x.y.  For example, 
+
+                distgraph1 4 mpiversion=2.2
+
+		will build and run distgraph1 with 4 MPI processes only 
+		if the MPI version is at least 2.2.
+
+strict=bool : If bool is false, only build and run the program if 
+              --enable-strict was not used in configuring the test suite.
+	      That is, a line such as 
+
+              neighb_coll 4 strict=false
+
+              Says that this test is not valid for a strict MPI implementation;
+              it contains extensions to the standard, or in the case of some
+	      MPICH2 development, MPIX routines
+
+resultTest=proc : This is used to change the way in which the success or 
+                  failure of a test is evaluated.  proc is one of several 
+                  Perl subroutines defined within the runtest program.  These
+                  are primarily used within the testsuite for tests programs
+                  exit with expected status values or that timeouts are 
+                  in fact handled.
+
 
