@@ -316,18 +316,18 @@ static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NU
 #define MPI_KEYVAL_INVALID 0x24000000
 
 /* MPI-3 window flavors */
-enum MPIR_Win_flavor_type {
+typedef enum MPIR_Win_flavor_e {
     MPIX_WIN_FLAVOR_CREATE      = 1,
     MPIX_WIN_FLAVOR_ALLOCATE    = 2,
     MPIX_WIN_FLAVOR_DYNAMIC     = 3,
     MPIX_WIN_FLAVOR_SHARED      = 4
-};
+} MPIR_Win_flavor_t;
 
 /* MPI-3 window consistency models */
-enum MPIR_Win_model_type {
+typedef enum MPIR_Win_model_e {
     MPIX_WIN_SEPARATE   = 1,
     MPIX_WIN_UNIFIED    = 2
-};
+} MPIR_Win_model_t;
 
 /* Upper bound on the overhead in bsend for each message buffer */
 #define MPI_BSEND_OVERHEAD @BSEND_OVERHEAD@

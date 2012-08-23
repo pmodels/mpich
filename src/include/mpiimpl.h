@@ -1663,10 +1663,10 @@ typedef struct MPID_Win {
     
     char          name[MPI_MAX_OBJECT_NAME];  
 
-    int create_flavor;          /* How this window was created */
-    int model;                  /* Separate or Unified */
-    int copyCreateFlavor;
-    int copyModel;
+    MPIR_Win_flavor_t create_flavor;
+    MPIR_Win_model_t  model;
+    MPIR_Win_flavor_t copyCreateFlavor;
+    MPIR_Win_model_t  copyModel;
 
   /* Other, device-specific information */
 #ifdef MPID_DEV_WIN_DECL
