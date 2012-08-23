@@ -128,9 +128,14 @@ int MPID_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm_ptr,
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);
 
-    mpi_errno = win_init(0 /* size */, 1 /* disp_unit */, MPIX_WIN_FLAVOR_DYNAMIC,
-                               MPIX_WIN_SEPARATE, info, comm_ptr, win_ptr);
+    mpi_errno = win_init(0 /* spec defines size to be 0 */,
+                         1 /* spec defines disp_unit to be 1 */,
+                         MPIX_WIN_FLAVOR_DYNAMIC, MPIX_WIN_SEPARATE, info,
+                         comm_ptr, win_ptr);
+
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    (*win_ptr)->base = MPI_BOTTOM;
 
     mpi_errno = MPIDI_CH3U_Win_fns.create_dynamic(info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }

@@ -151,13 +151,60 @@ int MPIDI_CH3U_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm_ptr, MPID_Win
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_CREATE_DYNAMIC);
 
-    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+    mpi_errno = MPIDI_CH3U_Win_create_gather(MPI_BOTTOM, 0, 1, info, comm_ptr, win_ptr);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
 fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_CREATE_DYNAMIC);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_attach
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_attach(MPID_Win *win, void *base, MPI_Aint size)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_ATTACH);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_ATTACH);
+
+    /* no op, all of memory is exposed */
+
+ fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_ATTACH);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_detach
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_detach(MPID_Win *win, const void *base)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_DETACH);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_DETACH);
+
+    /* no op, all of memory is exposed */
+
+ fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_DETACH);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

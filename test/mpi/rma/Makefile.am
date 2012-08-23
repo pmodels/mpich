@@ -79,6 +79,7 @@ noinst_PROGRAMS =          \
     win_shared             \
     win_shared_noncontig   \
     win_shared_noncontig_put \
+    win_dynamic_acc        \
     get_acc_local
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm

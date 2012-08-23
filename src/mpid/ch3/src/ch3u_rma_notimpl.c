@@ -29,26 +29,6 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Win_attach
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_attach(MPID_Win *win, void *base, MPI_Aint size)
-{
-    MPIDI_FUNC_NOTIMPL(WIN_ATTACH)
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Win_detach
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_detach(MPID_Win *win, const void *base)
-{
-    MPIDI_FUNC_NOTIMPL(WIN_DETACH)
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Fetch_and_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

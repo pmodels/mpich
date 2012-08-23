@@ -94,6 +94,32 @@ int main( int argc, char *argv[] )
 
     MPI_Win_free(&window);
 
+    /** Create using MPI_Win_create_dynamic() **/
+
+    MPIX_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &window);
+
+    MPI_Win_get_attr(window, MPIX_WIN_CREATE_FLAVOR, &flavor, &flag);
+
+    if (!flag) {
+      printf("%d: MPI_Win_create_dynamic - Error, no flavor\n", rank);
+      errors++;
+    } else if (*flavor != MPIX_WIN_FLAVOR_DYNAMIC) {
+      printf("%d: MPI_Win_create_dynamic - Error, bad flavor (%d)\n", rank, *flavor);
+      errors++;
+    }
+
+    MPI_Win_get_attr(window, MPIX_WIN_MODEL, &model, &flag);
+
+    if (!flag) {
+      printf("%d: MPI_Win_create_dynamic - Error, no model\n", rank);
+      errors++;
+    } else if (*model != MPIX_WIN_SEPARATE && *model != MPIX_WIN_UNIFIED) {
+      printf("%d: MPI_Win_create_dynamic - Error, bad model (%d)\n", rank, *model);
+      errors++;
+    }
+
+    MPI_Win_free(&window);
+
 #endif /* TEST_MPI3_ROUTINES */
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
