@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidrma.h"
 
 
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);

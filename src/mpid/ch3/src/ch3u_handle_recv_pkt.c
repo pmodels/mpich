@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidrma.h"
 
 /*
  * This file contains the dispatch routine called by the ch3 progress 

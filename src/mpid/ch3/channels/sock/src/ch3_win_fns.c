@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidrma.h"
 
 
 #undef FUNCNAME

@@ -1140,22 +1140,6 @@ int MPIDI_CH3U_Win_allocate_shared(MPI_Aint size, MPID_Info *info_ptr, MPID_Comm
 int MPIDI_CH3U_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm, MPID_Win **win);
 
 
-/* FIXME: These are specific to the RMA code and should be in the RMA 
-   header file. */
-#define MPIDI_RMA_PUT 23
-#define MPIDI_RMA_GET 24
-#define MPIDI_RMA_ACCUMULATE 25
-#define MPIDI_RMA_LOCK 26
-
-/* Special case RMA operations */
-#define MPIDI_RMA_ACC_CONTIG 27
-
-#define MPIDI_RMA_DATATYPE_BASIC 50
-#define MPIDI_RMA_DATATYPE_DERIVED 51
-
-#define MPID_LOCK_NONE 0
-#define MPID_LOCK_SHARED_ALL 1
-
 /* MPI RMA Utility functions */
 
 int MPIDI_CH3U_Win_create_gather(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,

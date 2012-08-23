@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidrma.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_send_req

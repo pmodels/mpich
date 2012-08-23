@@ -6,6 +6,7 @@
 
 #include "mpid_nem_impl.h"
 #include "mpidimpl.h"
+#include "mpidrma.h"
 
 /* FIXME: get this from OS */
 #define MPIDI_CH3_PAGESIZE ((MPI_Aint)4096)

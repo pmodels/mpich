@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidrma.h"
 
 #ifdef USE_MPIU_INSTR
 MPIU_INSTR_DURATION_EXTERN_DECL(wincreate_allgather);
