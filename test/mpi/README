@@ -136,7 +136,7 @@ mpiversion=x.y : Build and run the program only if the MPI version is at
 		if the MPI version is at least 2.2.
 
 strict=bool : If bool is false, only build and run the program if 
-              --enable-strict was not used in configuring the test suite.
+              --enable-strictmpi was not used in configuring the test suite.
 	      That is, a line such as 
 
               neighb_coll 4 strict=false
