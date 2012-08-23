@@ -146,6 +146,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 	mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
 				   (char *) win_ptr->base + win_ptr->disp_unit *
 				   target_disp, target_count, target_datatype); 
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
     else
     {
@@ -243,6 +244,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 				   target_count, target_datatype,
 				   origin_addr, origin_count,
 				   origin_datatype);  
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
     else
     {
@@ -344,6 +346,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 				origin_datatype,
 				(char *) win_ptr->base + win_ptr->disp_unit *
 				target_disp, target_count, target_datatype); 
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	    goto fn_exit;
 	}
 	

@@ -77,7 +77,8 @@ noinst_PROGRAMS =          \
     window_creation        \
     win_flavors            \
     win_shared             \
-    win_shared_noncontig
+    win_shared_noncontig   \
+    get_acc_local
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm

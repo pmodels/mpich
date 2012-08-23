@@ -49,19 +49,6 @@ int MPIDI_Win_detach(MPID_Win *win, const void *base)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Get_accumulate
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
-                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win)
-{
-    MPIDI_FUNC_NOTIMPL(GET_ACCUMULATE)
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Fetch_and_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

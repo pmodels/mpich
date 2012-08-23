@@ -63,3 +63,4 @@ win_flavors 4 strict=false
 manyrma2 2 timeLimit=800
 win_shared 4 strict=false
 win_shared_noncontig 4 strict=false
+get_acc_local 1 strict=false
