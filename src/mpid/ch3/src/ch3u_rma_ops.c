@@ -355,7 +355,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 			     "**opnotpredefined %d", op );
 	
 	/* get the function by indexing into the op table */
-	uop = MPIR_Op_table[((op)&0xf) - 1];
+	uop = MPIR_OP_HDL_TO_FN(op);
 	
 	if (origin_predefined && target_predefined)
 	{    

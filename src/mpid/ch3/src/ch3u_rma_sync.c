@@ -2926,7 +2926,7 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	    if (HANDLE_GET_KIND(accum_pkt->op) == HANDLE_KIND_BUILTIN) {
 		MPI_User_function *uop;
 		/* get the function by indexing into the op table */
-		uop = MPIR_Op_table[((accum_pkt->op)&0xf) - 1];
+		uop = MPIR_OP_HDL_TO_FN(accum_pkt->op);
 		(*uop)(accum_pkt->data, accum_pkt->addr,
 		       &(accum_pkt->count), &(accum_pkt->datatype));
 	    }

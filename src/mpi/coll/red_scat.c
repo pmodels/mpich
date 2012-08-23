@@ -1184,7 +1184,7 @@ int MPI_Reduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST i
             }
             if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = 
-                    ( * MPIR_Op_check_dtype_table[op%16 - 1] )(datatype); 
+                    ( * MPIR_OP_HDL_TO_DTYPE_FN(op) )(datatype); 
             }
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }

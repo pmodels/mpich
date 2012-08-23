@@ -49,7 +49,7 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         /* get the function by indexing into the op table */
-        uop = MPIR_Op_table[op%16 - 1];
+        uop = MPIR_OP_HDL_TO_FN(op);
     }
     else {
         MPID_Op_get_ptr(op, op_ptr);
@@ -164,7 +164,7 @@ int MPI_Reduce_local(MPICH2_CONST void *inbuf, void *inoutbuf, int count, MPI_Da
                 MPID_Op_valid_ptr( op_ptr, mpi_errno );
             }
             if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-                mpi_errno = (*MPIR_Op_check_dtype_table[op%16 - 1])(datatype);
+                mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op))(datatype);
             }
             if (count != 0) {
                 MPIR_ERRTEST_ALIAS_COLL(inbuf, inoutbuf, mpi_errno);

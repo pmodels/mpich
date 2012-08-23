@@ -418,7 +418,7 @@ int MPIX_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
                 MPID_Op_valid_ptr(op_ptr, mpi_errno);
             }
             else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-                mpi_errno = ( * MPIR_Op_check_dtype_table[op%16 - 1] )(datatype);
+                mpi_errno = ( * MPIR_OP_HDL_TO_DTYPE_FN(op) )(datatype);
             }
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
