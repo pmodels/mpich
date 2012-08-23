@@ -78,6 +78,7 @@ noinst_PROGRAMS =          \
     win_flavors            \
     win_shared             \
     win_shared_noncontig   \
+    win_shared_noncontig_put \
     get_acc_local
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm

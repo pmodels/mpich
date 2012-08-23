@@ -88,7 +88,7 @@ int MPIDI_CH3U_Win_create_gather( void *base, MPI_Aint size, int disp_unit,
     tmp_buf[4*rank+3] = (MPI_Aint) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                    tmp_buf, 4 * sizeof(MPI_Aint), MPI_BYTE,
+                                    tmp_buf, 4, MPI_AINT,
                                     (*win_ptr)->comm_ptr, &errflag);
     MPIU_INSTR_DURATION_END(wincreate_allgather);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
@@ -167,7 +167,7 @@ fn_fail:
 #define FUNCNAME MPIDI_CH3U_Win_allocate_shared
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_Comm *comm_ptr,
+int MPIDI_CH3U_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
                                   void **base_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

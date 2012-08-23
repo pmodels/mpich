@@ -17,7 +17,7 @@
 MPIU_INSTR_DURATION_EXTERN_DECL(wincreate_allgather);
 #endif
 
-static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_Comm *comm_ptr,
+static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
                                           void **base_ptr, MPID_Win **win_ptr);
 
 #undef FUNCNAME
@@ -43,8 +43,8 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns)
 #define FUNCNAME MPIDI_CH3I_Win_allocate_shared
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_Comm *comm_ptr,
-                                          void **base_ptr, MPID_Win **win_ptr)
+static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info,
+                                          MPID_Comm *comm_ptr, void **base_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, k, comm_size, rank;
@@ -83,7 +83,6 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_C
 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->disp_units, int *, comm_size*sizeof(int),
                         mpi_errno, "(*win_ptr)->disp_units");
-    for (i=0; i<comm_size; i++)	(*win_ptr)->disp_units[i] = 1;
 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->all_win_handles, MPI_Win *,
                         comm_size*sizeof(MPI_Win),
@@ -96,14 +95,15 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_C
 
     /* get the sizes of the windows and window objectsof
        all processes.  allocate temp. buffer for communication */
-    MPIU_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 2*comm_size*sizeof(MPI_Aint), mpi_errno, "tmp_buf");
+    MPIU_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 3*comm_size*sizeof(MPI_Aint), mpi_errno, "tmp_buf");
 
     /* FIXME: This needs to be fixed for heterogeneous systems */
-    tmp_buf[2*rank]   = (MPI_Aint) size;
-    tmp_buf[2*rank+1] = (MPI_Aint) (*win_ptr)->handle;
+    tmp_buf[3*rank]   = (MPI_Aint) size;
+    tmp_buf[3*rank+1] = (MPI_Aint) disp_unit;
+    tmp_buf[3*rank+2] = (MPI_Aint) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                    tmp_buf, 2 * sizeof(MPI_Aint), MPI_BYTE,
+                                    tmp_buf, 3 * sizeof(MPI_Aint), MPI_BYTE,
                                     (*win_ptr)->comm_ptr, &errflag);
     MPIU_INSTR_DURATION_END(wincreate_allgather);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -113,6 +113,7 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_C
     k = 0;
     for (i = 0; i < comm_size; ++i) {
         (*win_ptr)->sizes[i]           = tmp_buf[k++];
+        (*win_ptr)->disp_units[i]      = (int) tmp_buf[k++];
         (*win_ptr)->all_win_handles[i] = (MPI_Win) tmp_buf[k++];
 
         if (noncontig)
@@ -172,16 +173,20 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_C
     }
 
     /* compute the base addresses of each process within the shared memory segment */
-    (*win_ptr)->shm_base_addrs[0] = (*win_ptr)->shm_base_addr;
-    for (i = 1; i < comm_size; ++i) {
-        if ((*win_ptr)->sizes[i]) {
-            if (noncontig)
-                (*win_ptr)->shm_base_addrs[i] = (char *)(*win_ptr)->shm_base_addrs[i-1] +
-                    MPIDI_CH3_ROUND_UP_PAGESIZE((*win_ptr)->sizes[i-1]);
-            else
-                (*win_ptr)->shm_base_addrs[i] = (char *)(*win_ptr)->shm_base_addrs[i-1] + (*win_ptr)->sizes[i-1];
-        } else {
-            (*win_ptr)->shm_base_addrs[i] = NULL; /* FIXME: Is this right? */
+    {
+        char *cur_base = (*win_ptr)->shm_base_addr;
+        (*win_ptr)->shm_base_addrs[0] = (*win_ptr)->shm_base_addr;
+        for (i = 1; i < comm_size; ++i) {
+            if ((*win_ptr)->sizes[i]) {
+                if (noncontig) {
+                    (*win_ptr)->shm_base_addrs[i] = cur_base + MPIDI_CH3_ROUND_UP_PAGESIZE((*win_ptr)->sizes[i-1]);
+                } else {
+                    (*win_ptr)->shm_base_addrs[i] = cur_base + (*win_ptr)->sizes[i-1];
+                }
+                cur_base = (*win_ptr)->shm_base_addrs[i];
+            } else {
+                (*win_ptr)->shm_base_addrs[i] = NULL; /* FIXME: Is this right? */
+            }
         }
     }
 
@@ -189,18 +194,16 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_C
 
     /* get the base addresses of the windows.  Note we reuse tmp_buf from above
        since it's at least as large as we need it for this allgather. */
-
-    /* FIXME: This needs to be fixed for heterogeneous systems */
-    tmp_buf[rank] = (MPI_Aint) (*win_ptr)->base;
+    tmp_buf[rank] = MPIU_PtrToAint((*win_ptr)->base);
 
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                    tmp_buf, sizeof(MPI_Aint), MPI_BYTE,
+                                    tmp_buf, 1, MPI_AINT,
                                     (*win_ptr)->comm_ptr, &errflag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     for (i = 0; i < comm_size; ++i)
-        (*win_ptr)->base_addrs[i] = (void *)(tmp_buf[i]);
+        (*win_ptr)->base_addrs[i] = MPIU_AintToPtr(tmp_buf[i]);
 
     *base_ptr = (*win_ptr)->base;
 

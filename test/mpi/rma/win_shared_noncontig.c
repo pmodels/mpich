@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     MPI_Comm_size(shm_comm, &shm_nproc);
 
     /* Allocate ELEM_PER_PROC integers for each process */
-    MPIX_Win_allocate_shared(sizeof(int)*ELEM_PER_PROC, alloc_shared_info, 
+    MPIX_Win_allocate_shared(sizeof(int)*ELEM_PER_PROC, sizeof(int), alloc_shared_info, 
                              shm_comm, &my_base, &shm_win);
 
     MPIX_Win_lock_all(MPI_MODE_NOCHECK, shm_win);

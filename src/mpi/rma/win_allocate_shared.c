@@ -55,7 +55,7 @@
 .N MPI_ERR_OTHER
 .N MPI_ERR_SIZE
 @*/
-int MPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
+int MPIX_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
                              void *baseptr, MPI_Win *win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -65,7 +65,7 @@ int MPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
     MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_ALLOCATE_SHARED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_WIN_ALLOCATE_SHARED);
 
@@ -95,21 +95,17 @@ int MPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
             /* Validate pointers */
 	    MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-            if (size < 0)
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS,
-						  MPIR_ERR_RECOVERABLE,
-						  FCNAME, __LINE__,
-						  MPI_ERR_SIZE,
-                                                  "**rmasize",
-                                                  "**rmasize %d", size);
-            if (size > 0 && baseptr == NULL)
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-                                                  MPIR_ERR_RECOVERABLE, 
-                                                  FCNAME, __LINE__, 
-                                                  MPI_ERR_ARG,
-                                                  "**nullptr",
-                                                  "**nullptr %s",
-                                                  "NULL base pointer is invalid when size is nonzero");  
+
+            MPIU_ERR_CHKANDJUMP1(disp_unit != 0, mpi_errno, MPI_ERR_ARG,
+                                 "**arg", "**arg %s", "disp_unit must be positive");
+
+            MPIU_ERR_CHKANDJUMP1(size < 0, mpi_errno, MPI_ERR_SIZE,
+                                 "**rmasize", "**rmasize %d", size);
+
+            MPIU_ERR_CHKANDJUMP1(size > 0 && baseptr == NULL, mpi_errno, MPI_ERR_ARG,
+                                 "**nullptr", "**nullptr %s",
+                                 "NULL base pointer is invalid when size is nonzero");
+
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -117,8 +113,8 @@ int MPIX_Win_allocate_shared(MPI_Aint size, MPI_Info info, MPI_Comm comm,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPID_Win_allocate_shared(size, info_ptr, comm_ptr, baseptr, &win_ptr);
+
+    mpi_errno = MPID_Win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, baseptr, &win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* Initialize a few fields that have specific defaults */

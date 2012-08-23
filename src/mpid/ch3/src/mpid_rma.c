@@ -186,7 +186,7 @@ int MPID_Free_mem( void *ptr )
 #define FUNCNAME MPID_Win_allocate_shared
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_Comm *comm_ptr,
+int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
                              void **base_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -195,10 +195,10 @@ int MPID_Win_allocate_shared(MPI_Aint size, MPID_Info *info, MPID_Comm *comm_ptr
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_ALLOCATE_SHARED);
 
-    mpi_errno = win_init(size, 1, MPIX_WIN_FLAVOR_SHARED, MPIX_WIN_UNIFIED, info, comm_ptr, win_ptr);
+    mpi_errno = win_init(size, disp_unit, MPIX_WIN_FLAVOR_SHARED, MPIX_WIN_UNIFIED, info, comm_ptr, win_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_CH3U_Win_fns.allocate_shared(size, info, comm_ptr, base_ptr, win_ptr);
+    mpi_errno = MPIDI_CH3U_Win_fns.allocate_shared(size, disp_unit, info, comm_ptr, base_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
  fn_fail:
