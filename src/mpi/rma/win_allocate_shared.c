@@ -96,7 +96,7 @@ int MPIX_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Co
 	    MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            MPIU_ERR_CHKANDJUMP1(disp_unit != 0, mpi_errno, MPI_ERR_ARG,
+            MPIU_ERR_CHKANDJUMP1(disp_unit <= 0, mpi_errno, MPI_ERR_ARG,
                                  "**arg", "**arg %s", "disp_unit must be positive");
 
             MPIU_ERR_CHKANDJUMP1(size < 0, mpi_errno, MPI_ERR_SIZE,
