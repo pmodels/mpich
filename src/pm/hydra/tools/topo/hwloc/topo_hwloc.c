@@ -420,7 +420,8 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
                 if (map_str[i] >= 'a' && map_str[i] <= 'z')
                     map_str[i] += ('A' - 'a');
 
-                /* If any of the characters are not in the form, we want, */
+                /* If any of the characters are not in the form, we
+                 * want, return an error */
                 if (map_str[i] != 'T' && map_str[i] != 'C' && map_str[i] != 'S' &&
                     map_str[i] != 'N' && map_str[i] != 'B') {
                     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
