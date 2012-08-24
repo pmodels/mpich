@@ -175,8 +175,6 @@ distclean-local:
 
 # created by confdb/aclocal_cache.m4
 DISTCLEANFILES += config.system
-# created by configure
-DISTCLEANFILES += .mpich2
 
 # we can only have one clean-local, so we hook into it via conditionally
 # defined variables in the dependencies section

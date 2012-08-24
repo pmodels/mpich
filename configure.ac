@@ -699,11 +699,7 @@ AC_SUBST(master_top_builddir)
 AC_SUBST(master_top_srcdir)
 export master_top_builddir
 export master_top_srcdir
-# ----------------------------------------------------------------------------
-# We create this file to allow other configures to find the "master" 
-# top builddir
-rm -f .mpich2
-date > .mpich2
+
 # ----------------------------------------------------------------------------
 # with-device
 if test "$with_device" = "default" ; then
