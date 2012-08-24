@@ -319,10 +319,6 @@ AC_ARG_ENABLE(echo,
 	AC_HELP_STRING([--enable-echo], [Turn on strong echoing. The default is enable=no.]),
 	set -x)
 
-AC_ARG_ENABLE(dynamiclibs,
-	AC_HELP_STRING([--enable-dynamiclibs], [Enable the use of dynamic libraries
-                       by the devices that support them]),,enable_dynamiclibs=no)
-
 AC_ARG_ENABLE(error-checking,
 [  --enable-error-checking=level
       Control the amount of error checking.  
