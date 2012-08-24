@@ -101,24 +101,8 @@ dnl    MPICH2_ENABLE_F77
 dnl    MPICH2_ENABLE_FC
 dnl    MPICH2_ENABLE_CXX
 dnl
-dnl The file name here refers to a file in the source being configured
-dnl In later versions of autoconf, the binding of AC_INIT changed (!!!)
-dnl The original version was AC_INIT(a source file)
-dnl The later version is AC_INIT(package,version,[bug-report],[tarname])
-dnl
 dnl Note that no executable statements are allowed (and any are silently 
 dnl dropped) before AC_INIT.
-dnl
-dnl AC_INIT requires an explicit version number
-dnl Args are package name, version, bug report, and tar file name
-dnl All must be literals
-dnl Note that AC_PACKAGE_STRING is not a command but must be defined(!)
-dnl Unfortunately, setting the PACKAGE names is not compatible with
-dnl AC_CONFIG_SUBDIRS, since the resulting values in the generated
-dnl conf file will not be consistent.
-dnl define([AC_PACKAGE_STRING],[MPICH2 1.0.6])
-dnl AC_INIT(mpich2,1.0.6,mpich2-maint@mcs.anl.gov,mpich2-1.0.6)
-dnl Use the oldstyle AC_INIT instead
 
 m4_include([maint/version.m4])
 dnl 2nd arg is intentionally underquoted
