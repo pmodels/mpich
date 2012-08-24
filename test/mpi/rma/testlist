@@ -60,7 +60,7 @@ contention_putget 4
 put_base 2
 put_bottom 2
 win_flavors 4 strict=false
-manyrma2 2 timeLimit=800
+manyrma2 2 timeLimit=500
 win_shared 4 strict=false
 win_shared_noncontig 4 strict=false
 win_shared_noncontig_put 4 strict=false
