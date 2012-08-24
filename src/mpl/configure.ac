@@ -20,9 +20,9 @@ m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 LT_PREREQ([2.2.6])
 
 # Bug in libtool adds -O2 and -g by default
-save_cflags=$CFLAGS
+PAC_PUSH_FLAG([CFLAGS])
 LT_INIT(disable-shared)
-CFLAGS=$save_cflags
+PAC_POP_FLAG([CFLAGS])
 
 if test -s "$srcdir/VERSION" ; then
    . $srcdir/VERSION
