@@ -98,6 +98,8 @@ C              See the MPI-2 Standard, 5.4.4
 C        This should not happen (ERRORS_ARE_FATAL), but just in case...
          if (ierr .ne. MPI_SUCCESS) then
             errs = errs + 1
+            print *, ' Major error: errors_are_fatal set but returned'
+            print *, ' non MPI_SUCCESS value.  Details:'
             call MTestPrintErrorMsg( ' Unable to lookup fservtest port', 
      &                               ierr )
 C           Unable to continue without a valid port
