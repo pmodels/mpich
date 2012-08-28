@@ -6,6 +6,13 @@
 
 #include "adio.h"
 
+#ifdef ROMIO_BGL
+void ADIOI_BGL_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code);
+#endif
+#ifdef ROMIO_BG
+void ADIOI_BG_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code);
+#endif
+
 /* returns the current location of the shared_fp in terms of the
    no. of etypes relative to the current view, and also increments the
    shared_fp by the number of etypes to be accessed (incr) in the read
