@@ -21,6 +21,7 @@ noinst_HEADERS +=                      \
     adio/include/mpiu_greq.h           \
     adio/include/nopackage.h
 
+include $(top_srcdir)/adio/ad_bg/Makefile.mk
 include $(top_srcdir)/adio/ad_bgl/Makefile.mk
 include $(top_srcdir)/adio/ad_bglockless/Makefile.mk
 include $(top_srcdir)/adio/ad_gridftp/Makefile.mk
