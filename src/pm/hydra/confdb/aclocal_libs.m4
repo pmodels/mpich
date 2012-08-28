@@ -1,34 +1,59 @@
 
-dnl PAC_SET_HEADER_LIB_PATH(with_option)
+dnl PAC_SET_HEADER_LIB_PATH(with_option,[default_path])
 dnl This macro looks for the --with-xxx=, --with-xxx-include and --with-xxx-lib=
 dnl options and sets the library and include paths.
+dnl
+dnl TODO as written, this macro cannot handle a "with_option" arg that has "-"
+dnl characters in it.  Use AS_TR_SH (and possibly AS_VAR_* macros) to handle
+dnl this case if it ever arises.
 AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
-    AC_ARG_WITH($1, 
-    		AC_HELP_STRING([--with-$1=path],
-			       [specify path where $1 include directory and lib directory can be found]),
-        if test "${with_$1}" != "yes" -a "${with_$1}" != "no" ; then
-            # is adding lib64 by default really the right thing to do?  What if
-            # we are on a 32-bit host that happens to have both lib dirs available?
-            LDFLAGS="$LDFLAGS -L${with_$1}/lib64 -L${with_$1}/lib"
-            CPPFLAGS="$CPPFLAGS -I${with_$1}/include"
-	    WRAPPER_CFLAGS="$WRAPPER_CFLAGS -I${with_$1}/include"
-        fi,
-    )
-    AC_ARG_WITH($1-include, 
-    		AC_HELP_STRING([--with-$1-include=path],
-			       [specify path where $1 include directory can be found]),
-        if test "${with_$1_include}" != "yes" -a "${with_$1_include}" != "no" ; then
-            CPPFLAGS="$CPPFLAGS -I${with_$1_include}"
-            WRAPPER_CFLAGS="$WRAPPER_CFLAGS -I${with_$1_include}"
-        fi,
-    )
-    AC_ARG_WITH($1-lib, 
-    		AC_HELP_STRING([--with-$1-lib=path],
-			       [specify path where $1 lib directory can be found]),
-        if test "${with_$1_lib}" != "yes" -a "${with_$1_lib}" != "no" ; then
-            LDFLAGS="$LDFLAGS -L${with_$1_lib}"
-        fi,
-    )
+    AC_ARG_WITH([$1],
+                [AC_HELP_STRING([--with-$1=PATH],
+                                [specify path where $1 include directory and lib directory can be found])],
+
+                [AS_CASE(["$withval"],
+                         [yes|no|''],
+                         [AC_MSG_WARN([--with[out]-$1=PATH expects a valid PATH])
+                          with_$1=""])],
+                [with_$1=$2])
+    AC_ARG_WITH([$1-include],
+                [AC_HELP_STRING([--with-$1-include=PATH],
+                                [specify path where $1 include directory can be found])],
+                [AS_CASE(["$withval"],
+                         [yes|no|''],
+                         [AC_MSG_WARN([--with[out]-$1-include=PATH expects a valid PATH])
+                          with_$1_include=""])],
+                [])
+    AC_ARG_WITH([$1-lib],
+                [AC_HELP_STRING([--with-$1-lib=PATH],
+                                [specify path where $1 lib directory can be found])],
+                [AS_CASE(["$withval"],
+                         [yes|no|''],
+                         [AC_MSG_WARN([--with[out]-$1-lib=PATH expects a valid PATH])
+                          with_$1_lib=""])],
+                [])
+
+    # The args have been sanitized into empty/non-empty values above.
+    # Now append -I/-L args to CPPFLAGS/LDFLAGS, with more specific options
+    # taking priority
+
+    AS_IF([test -n "${with_$1_include}"],
+          [PAC_APPEND_FLAG([-I${with_$1_include}],[CPPFLAGS])
+	   PAC_APPEND_FLAG([-I${with_$1_include}],[WRAPPER_CPPFLAGS])],
+          [AS_IF([test -n "${with_$1}"],
+                 [PAC_APPEND_FLAG([-I${with_$1}/include],[CPPFLAGS])
+		  PAC_APPEND_FLAG([-I${with_$1}/include],[WRAPPER_CPPFLAGS])])])
+
+    AS_IF([test -n "${with_$1_lib}"],
+          [PAC_APPEND_FLAG([-L${with_$1_lib}],[LDFLAGS])
+	   PAC_APPEND_FLAG([-L${with_$1_lib}],[WRAPPER_LDFLAGS])],
+          [AS_IF([test -n "${with_$1}"],
+                 dnl is adding lib64 by default really the right thing to do?  What if
+                 dnl we are on a 32-bit host that happens to have both lib dirs available?
+                 [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])
+		  PAC_APPEND_FLAG([-L${with_$1}/lib64],[WRAPPER_LDFLAGS])
+                  PAC_APPEND_FLAG([-L${with_$1}/lib],[LDFLAGS])
+		  PAC_APPEND_FLAG([-L${with_$1}/lib],[WRAPPER_LDFLAGS])])])
 ])
 
 
@@ -36,6 +61,9 @@ dnl PAC_CHECK_HEADER_LIB(header.h, libname, function, action-if-yes, action-if-n
 dnl This macro checks for a header and lib.  It is assumed that the
 dnl user can specify a path to the includes and libs using --with-xxx=.
 dnl The xxx is specified in the "with_option" parameter.
+dnl
+dnl NOTE: This macro expects a corresponding PAC_SET_HEADER_LIB_PATH
+dnl macro (or equivalent logic) to be used before this macro is used.
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
     AC_CHECK_HEADER([$1],,failure=yes)
