@@ -218,8 +218,8 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		hydra_bss_external=true
 		# Check if TM library support is available
 		PAC_SET_HEADER_LIB_PATH(pbs)
-		PAC_CHECK_HEADER_LIB(pbs, tm.h, torque, tm_init, have_pbs_launcher=yes,
-					  have_pbs_launcher=no)
+		PAC_CHECK_HEADER_LIB(tm.h, torque, tm_init, have_pbs_launcher=yes,
+					   have_pbs_launcher=no)
                 if test "$have_pbs_launcher" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
                 fi
@@ -450,7 +450,7 @@ for hydra_ckpointlib in ${hydra_ckpointlibs}; do
     case "$hydra_ckpointlib" in
     	blcr)
 	    PAC_SET_HEADER_LIB_PATH(blcr)
-	    PAC_CHECK_HEADER_LIB(blcr, libcr.h, cr, cr_init, have_blcr=yes, have_blcr=no)
+	    PAC_CHECK_HEADER_LIB(libcr.h, cr, cr_init, have_blcr=yes, have_blcr=no)
 	    # BLCR works
 	    if test "$have_blcr" = "yes" ; then
 	       AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
@@ -624,7 +624,7 @@ PAC_PUSH_FLAG([LIBS])
 PAC_PREPEND_FLAG([-lpthread],[LIBS])
 PAC_SET_HEADER_LIB_PATH(ftb)
 PAC_POP_FLAG([LIBS])
-PAC_CHECK_HEADER_LIB(ftb, libftb.h, ftb, FTB_Connect, have_ftb=yes, have_ftb=no)
+PAC_CHECK_HEADER_LIB(libftb.h, ftb, FTB_Connect, have_ftb=yes, have_ftb=no)
 if test "$have_ftb" = "yes" ; then
    # FIXME: We need to test to make sure FTB works correctly
    PAC_APPEND_FLAG([-lpthread],[LIBS])
