@@ -33,7 +33,7 @@ int MPID_nem_ptl_poll_init(void)
         recvbuf_le[i].uid = PTL_UID_ANY;
         recvbuf_le[i].options = (PTL_LE_OP_PUT | PTL_LE_USE_ONCE |
                                  PTL_LE_EVENT_UNLINK_DISABLE | PTL_LE_EVENT_LINK_DISABLE);
-        ret = PtlLEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &recvbuf_le[i], PTL_PRIORITY_LIST, (void *)(uint64_t)i,
+        ret = PtlLEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &recvbuf_le[i], PTL_PRIORITY_LIST, (void *)(uint64_t)i,
                           &recvbuf_le_handle[i]);
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend");
     }
@@ -107,7 +107,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             mpi_errno = MPID_nem_handle_pkt(vc, event.start, event.rlength);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             assert(event.start == recvbuf[(uint64_t)event.user_ptr]);
-            ret = PtlLEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &recvbuf_le[(uint64_t)event.user_ptr],
+            ret = PtlLEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &recvbuf_le[(uint64_t)event.user_ptr],
                               PTL_PRIORITY_LIST, event.user_ptr, &recvbuf_le_handle[(uint64_t)event.user_ptr]);
             MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend");
             break;

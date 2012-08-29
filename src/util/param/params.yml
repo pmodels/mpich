@@ -367,6 +367,17 @@ parameters:
         will always be sent eagerly.  If this parameter is set to -2,
         then Nemesis will choose an appropriate value.
 
+    - category    : nemesis
+      name        : COMM_OVERRIDES
+      type        : boolean
+      default     : true
+      description : >-
+        If set to false, communication override functionality will be
+        disabled for netmods that provide the override feature.  Some
+        netmods may not honor this flag.
+        # Note the netmod must implement this functionality by not
+        # setting the comm_ops table in any VC.
+
   ##############################################################
     # debugging parameters
     - category    : debugger
