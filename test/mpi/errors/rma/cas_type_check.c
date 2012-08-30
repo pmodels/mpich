@@ -23,7 +23,7 @@ do {                                                    \
     c_type         buf, res;                            \
     MPI_Win        win;                                 \
                                                         \
-    val = cmp_val = 0;                                  \
+    val = cmp_val = buf = 0;                            \
                                                         \
     MPI_Win_create( &buf, sizeof(c_type), sizeof(c_type),       \
                     MPI_INFO_NULL, MPI_COMM_WORLD, &win );      \
@@ -41,9 +41,6 @@ do {                                                    \
 } while (0);
 
 
-/* TODO: Compare_and_swap currently returns a notimpl error */
-#define MY_ERR_SUCCESS MPI_ERR_OTHER
-
 int main( int argc, char *argv[] )
 {
     int          rank;
@@ -55,30 +52,30 @@ int main( int argc, char *argv[] )
 #ifdef TEST_MPI3_ROUTINES
 
     /* C Integer */
-    CAS_CHECK_TYPE(signed char,         MPI_SIGNED_CHAR,        MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(short,               MPI_SHORT,              MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(int,                 MPI_INT,                MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(long,                MPI_LONG,               MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(long long,           MPI_LONG_LONG,          MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(unsigned char,       MPI_UNSIGNED_CHAR,      MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(unsigned short,      MPI_UNSIGNED_SHORT,     MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(unsigned,            MPI_UNSIGNED,           MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(unsigned long,       MPI_UNSIGNED_LONG,      MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(unsigned long long,  MPI_UNSIGNED_LONG_LONG, MY_ERR_SUCCESS);
+    CAS_CHECK_TYPE(signed char,         MPI_SIGNED_CHAR,        MPI_SUCCESS);
+    CAS_CHECK_TYPE(short,               MPI_SHORT,              MPI_SUCCESS);
+    CAS_CHECK_TYPE(int,                 MPI_INT,                MPI_SUCCESS);
+    CAS_CHECK_TYPE(long,                MPI_LONG,               MPI_SUCCESS);
+    CAS_CHECK_TYPE(long long,           MPI_LONG_LONG,          MPI_SUCCESS);
+    CAS_CHECK_TYPE(unsigned char,       MPI_UNSIGNED_CHAR,      MPI_SUCCESS);
+    CAS_CHECK_TYPE(unsigned short,      MPI_UNSIGNED_SHORT,     MPI_SUCCESS);
+    CAS_CHECK_TYPE(unsigned,            MPI_UNSIGNED,           MPI_SUCCESS);
+    CAS_CHECK_TYPE(unsigned long,       MPI_UNSIGNED_LONG,      MPI_SUCCESS);
+    CAS_CHECK_TYPE(unsigned long long,  MPI_UNSIGNED_LONG_LONG, MPI_SUCCESS);
 
     /* Multilanguage Types */
-    CAS_CHECK_TYPE(MPI_Aint,            MPI_AINT,               MY_ERR_SUCCESS);
-    CAS_CHECK_TYPE(MPI_Offset,          MPI_OFFSET,             MY_ERR_SUCCESS);
+    CAS_CHECK_TYPE(MPI_Aint,            MPI_AINT,               MPI_SUCCESS);
+    CAS_CHECK_TYPE(MPI_Offset,          MPI_OFFSET,             MPI_SUCCESS);
     /* TODO: MPI_Count support needed */
     /*
-    CAS_CHECK_TYPE(MPI_Count,           MPI_COUNT,              MY_ERR_SUCCESS);
+    CAS_CHECK_TYPE(MPI_Count,           MPI_COUNT,              MPI_SUCCESS);
     */
 
     /* Byte */
-    CAS_CHECK_TYPE(char,                MPI_BYTE,               MY_ERR_SUCCESS);
+    CAS_CHECK_TYPE(char,                MPI_BYTE,               MPI_SUCCESS);
 
     /* Logical */
-    CAS_CHECK_TYPE(char,                MPI_C_BOOL,             MY_ERR_SUCCESS);
+    CAS_CHECK_TYPE(char,                MPI_C_BOOL,             MPI_SUCCESS);
 
     /* ERR: Derived datatypes */
     MPI_Type_contiguous(sizeof(int), MPI_BYTE, &my_int);
@@ -87,14 +84,14 @@ int main( int argc, char *argv[] )
     MPI_Type_free(&my_int);
 
     /* ERR: Character types */
-    CAS_CHECK_TYPE(char,                MPI_CHAR,               MPI_ERR_TYPE);
+    CAS_CHECK_TYPE(char,                MPI_CHAR,               MPI_SUCCESS);
 
     /* ERR: Floating point */
     CAS_CHECK_TYPE(float,               MPI_FLOAT,              MPI_ERR_TYPE);
     CAS_CHECK_TYPE(double,              MPI_DOUBLE,             MPI_ERR_TYPE);
 #ifdef HAVE_LONG_DOUBLE
     if (MPI_LONG_DOUBLE != MPI_DATATYPE_NULL) {
-	CAS_CHECK_TYPE(long double,         MPI_LONG_DOUBLE,        MPI_ERR_TYPE);
+        CAS_CHECK_TYPE(long double,         MPI_LONG_DOUBLE,        MPI_ERR_TYPE);
     }
 #endif
 
