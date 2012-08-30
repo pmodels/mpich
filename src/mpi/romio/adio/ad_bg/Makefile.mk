@@ -7,8 +7,7 @@
 
 if BUILD_AD_BG
 
-
-CPPFLAGS += -DBGL_OPTIM_STEP1_2=1 -DBGL_OPTIM_STEP1_1=1 
+AM_CPPFLAGS += -DBGL_OPTIM_STEP1_2=1 -DBGL_OPTIM_STEP1_1=1
 
 noinst_HEADERS +=                                                    \
     adio/ad_bg/ad_bg_aggrs.h                                         \
@@ -33,6 +32,4 @@ romio_other_sources +=                                               \
     adio/ad_bg/ad_bg_setsh.c                                         \
     adio/ad_bg/ad_bg_wrcoll.c
 
-
 endif BUILD_AD_BG
-
