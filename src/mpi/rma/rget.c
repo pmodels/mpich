@@ -106,7 +106,8 @@ int MPIX_Rget(void *origin_addr, int origin_count, MPI_Datatype
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype",
                                   mpi_errno);
-            MPIR_ERRTEST_DISP(target_disp, mpi_errno);
+            if (win_ptr->create_flavor != MPIX_WIN_FLAVOR_DYNAMIC)
+                MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
             if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
             {
