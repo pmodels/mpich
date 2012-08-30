@@ -114,6 +114,7 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_ACCUM_IMMED,     /* optimization for short accumulate */
     /* FIXME: Add PUT, GET_IMMED packet types */
     MPIDI_CH3_PKT_CAS,
+    MPIDI_CH3_PKT_CAS_UNLOCK,
     MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
@@ -287,17 +288,17 @@ MPIDI_CH3_Pkt_accum_immed_t;
 typedef struct MPIDI_CH3_Pkt_cas
 {
     MPIDI_CH3_Pkt_type_t type;
-    void *addr;
     MPI_Datatype datatype;
+    void *addr;
     MPI_Request request_handle;
-    /* FIXME: do we need both handles? */
     MPI_Win target_win_handle; /* Used in the last RMA operation in each
-                               * epoch for decrementing rma op counter in
-                               * active target rma and for unlocking window 
-                               * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle; /* Used in the last RMA operation in an
-                               * epoch in the case of passive target rma
-                               * with shared locks. Otherwise set to NULL*/
+                                * epoch for decrementing rma op counter in
+                                * active target rma and for unlocking window 
+                                * in passive target rma. Otherwise set to NULL*/
+
+                               /* source_win_handle is omitted here to reduce
+                                * the packet size.  If this is the last CAS
+                                * packet, the type will be set to CAS_UNLOCK */
     MPIDI_CH3_CAS_Immed_u origin_data;
     MPIDI_CH3_CAS_Immed_u compare_data;
 }

@@ -871,11 +871,17 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *rma_op,
 
         MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
 
-        MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
+        /* If this is the last operation, it also unlocks the window 
+           at the target. */
+        if (rma_op->next == NULL) {
+            MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS_UNLOCK);
+        } else {
+            MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
+        }
+
         cas_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] + rma_op->target_disp;
         cas_pkt->datatype = rma_op->target_datatype;
         cas_pkt->target_win_handle = target_win_handle;
-        cas_pkt->source_win_handle = source_win_handle;
         cas_pkt->request_handle = resp_req->handle;
 
         MPIU_Memcpy( (void *) &cas_pkt->origin_data, rma_op->origin_addr, len );
@@ -2014,8 +2020,10 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
            to the end of the list and do it last, in which case an rma done 
            pkt is not needed. If there is no get, rma done pkt is needed */
 
-        if (win_ptr->rma_ops_list_tail->type == MPIDI_RMA_GET) {
-            /* last operation is a get. no need to wait for rma done pkt */
+        if (win_ptr->rma_ops_list_tail->type == MPIDI_RMA_GET ||
+            win_ptr->rma_ops_list_tail->type == MPIDI_RMA_COMPARE_AND_SWAP) {
+            /* last operation sends a response message. no need to wait
+               for an additional rma done pkt */
             *wait_for_rma_done_pkt = 0;
         }
         else {
@@ -3168,7 +3176,7 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         win_ptr->my_pt_rma_puts_accs++;
 
     /* Send RMA done packet?  FIXME: Can the cas_resp handler handle this? */
-    if (cas_pkt->source_win_handle != MPI_WIN_NULL) {
+    if (cas_pkt->type == MPIDI_CH3_PKT_CAS_UNLOCK) {
         /* Last RMA operation from source. If active
            target RMA, decrement window counter. If
            passive target RMA, release lock on window and
@@ -3182,11 +3190,6 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
             MPIDI_CH3_Progress_signal_completion();
         }
         else {
-            if ((win_ptr->current_lock_type == MPI_LOCK_SHARED) ||
-                (/*rreq->dev.single_op_opt*/ 0 == 1)) {
-                mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, cas_pkt->source_win_handle);
-                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-            }
             mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
             /* Without the following signal_completion call, we 
                sometimes hang */
