@@ -714,10 +714,6 @@ fi
 
 # Capture the error messages
 if [ $do_geterrmsgs = "yes" ] ; then
-    if [ ! -x maint/extracterrmsgs -a -s maint/extracterrmsgs ] ; then
-        # grrr.  CVS doesn't maintain permissions correctly across Windows/Unix
-        chmod a+x maint/extracterrmsgs
-    fi
     if [ -x maint/extracterrmsgs ] ; then
         echo_n "Extracting error messages... "
         rm -rf .tmp

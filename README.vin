@@ -853,7 +853,7 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
     Intel Fortran 8.0 or later
     cygwin
 	choose the dos file format option
-	install perl and cvs
+	install perl and svn
 
 (b) Checkout mpich2:
 
