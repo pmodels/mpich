@@ -41,8 +41,7 @@ AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3 silent-rules subdir-objects])
 AM_MAINTAINER_MODE([enable])
 # not using libtool for the test suite, so no LT_INIT
 AC_PROG_RANLIB
-# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
-m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
+AM_PROG_AR
 
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])

@@ -19,9 +19,7 @@ fi
 PAC_PUSH_FLAG(CFLAGS)
 AC_PROG_CC(mpicc)
 
-# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
-# must come before LT_INIT
-m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
+AM_PROG_AR
 
 LT_INIT(disable-shared)
 PAC_POP_FLAG(CFLAGS)
