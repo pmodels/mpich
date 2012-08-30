@@ -33,7 +33,7 @@ EOF
 AC_CANONICAL_TARGET
 
 # Init automake
-AM_INIT_AUTOMAKE([1.10 dist-bzip2 subdir-objects foreign tar-ustar -Wall -Werror])
+AM_INIT_AUTOMAKE([1.12.3 dist-bzip2 subdir-objects foreign tar-ustar -Wall -Werror])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # We want new Libtool.  None of that old stuff.  Pfft.    

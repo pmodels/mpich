@@ -487,7 +487,7 @@ fi
 
 echo_n "Checking for automake version... "
 recreate_tmp
-ver=1.11
+ver=1.12.3
 cat > .tmp/configure.ac<<EOF
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
@@ -1055,14 +1055,6 @@ if [ "$do_build_configure" = "yes" ] ; then
 	    echo "------------------------------------------------------------------------"
 	    echo "running $autoreconf in $amdir"
             (cd $amdir && $autoreconf $autoreconf_args) || exit 1
-
-            # fix depcomp to support pgcc correctly
-            if grep "pgcc)" confdb/depcomp 2>&1 >/dev/null ; then :
-            else
-                echo "------------------------------------------------------------------------"
-                echo 'patching "confdb/depcomp" to support pgcc'
-                patch -p0 < confdb/depcomp_pgcc.patch
-            fi
 	fi
     done
 fi

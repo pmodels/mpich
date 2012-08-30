@@ -37,7 +37,7 @@ AC_CONFIG_MACRO_DIR([../../confdb])
 dnl
 echo "RUNNING CONFIGURE FOR MPI TESTS"
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.11 silent-rules subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3 silent-rules subdir-objects])
 AM_MAINTAINER_MODE([enable])
 # not using libtool for the test suite, so no LT_INIT
 AC_PROG_RANLIB
