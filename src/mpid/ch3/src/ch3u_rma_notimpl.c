@@ -41,18 +41,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Compare_and_swap
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
-                          void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPID_Win *win)
-{
-    MPIDI_FUNC_NOTIMPL(COMPARE_AND_SWAP)
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Rput
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

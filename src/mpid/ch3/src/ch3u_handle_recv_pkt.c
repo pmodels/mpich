@@ -588,6 +588,10 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
 	MPIDI_CH3_PktHandler_LockGetUnlock;
     pktArray[MPIDI_CH3_PKT_ACCUM_IMMED] = 
 	MPIDI_CH3_PktHandler_Accumulate_Immed;
+    pktArray[MPIDI_CH3_PKT_CAS] =
+        MPIDI_CH3_PktHandler_CAS;
+    pktArray[MPIDI_CH3_PKT_CAS_RESP] =
+        MPIDI_CH3_PktHandler_CASResp;
     /* End of default RMA operations */
 
  fn_fail:

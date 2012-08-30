@@ -16,6 +16,69 @@
 /* This is the number of ints that can be carried within an RMA packet */
 #define MPIDI_RMA_IMMED_INTS 1
 
+/* Union over all types that are allowed in a CAS operation.  This
+   is used to allocate enough space in the packet header for immediate
+   data.  */
+typedef union {
+    char       cas_char;
+    short      cas_short;
+    int        cas_int;
+    long       cas_long;
+    MPI_Aint   cas_aint;
+    MPI_Offset cas_offset;
+#if defined(HAVE_INT8_T)
+    int8_t     cas_int8_t;
+#endif
+#if defined(HAVE_INT16_T)
+    int16_t    cas_int16_t;
+#endif
+#if defined(HAVE_INT32_T)
+    int32_t    cas_int32_t;
+#endif
+#if defined(HAVE_INT64_T)
+    int64_t    cas_int64_t;
+#endif
+#if defined(HAVE_UINT8_T)
+    uint8_t    cas_uint8_t;
+#endif
+#if defined(HAVE_UINT16_T)
+    uint16_t   cas_uint16_t;
+#endif
+#if defined(HAVE_UINT32_T)
+    uint32_t   cas_uint32_t;
+#endif
+#if defined(HAVE_UINT64_T)
+    uint64_t   cas_uint64_t;
+#endif
+#if defined(HAVE_LONG_LONG_INT)
+    long long  cas_long_long;
+#endif
+#if defined(HAVE_FORTRAN_BINDING)
+    MPI_Fint   cas_fint;
+#endif
+#if defined(HAVE__BOOL)
+    _Bool      cas__bool;
+#endif
+#if defined(HAVE_CXX_BINDING)
+    MPIR_CXX_BOOL_CTYPE cas_cxx_bool;
+#endif
+#if defined(MPIR_INTEGER1_CTYPE)
+    MPIR_INTEGER1_CTYPE cas_integer1;
+#endif
+#if defined(MPIR_INTEGER2_CTYPE)
+    MPIR_INTEGER2_CTYPE cas_integer2;
+#endif
+#if defined(MPIR_INTEGER4_CTYPE)
+    MPIR_INTEGER4_CTYPE cas_integer4;
+#endif
+#if defined(MPIR_INTEGER8_CTYPE)
+    MPIR_INTEGER8_CTYPE cas_integer8;
+#endif
+#if defined(MPIR_INTEGER16_CTYPE)
+    MPIR_INTEGER16_CTYPE cas_integer16;
+#endif
+} MPIDI_CH3_CAS_Immed_u;
+
 /*
  * MPIDI_CH3_Pkt_type_t
  *
@@ -50,6 +113,8 @@ typedef enum MPIDI_CH3_Pkt_type
                                      /* RMA Packets end here */
     MPIDI_CH3_PKT_ACCUM_IMMED,     /* optimization for short accumulate */
     /* FIXME: Add PUT, GET_IMMED packet types */
+    MPIDI_CH3_PKT_CAS,
+    MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
     MPIDI_CH3_PKT_END_CH3
@@ -219,6 +284,33 @@ typedef struct MPIDI_CH3_Pkt_accum_immed
 }
 MPIDI_CH3_Pkt_accum_immed_t;
 
+typedef struct MPIDI_CH3_Pkt_cas
+{
+    MPIDI_CH3_Pkt_type_t type;
+    void *addr;
+    MPI_Datatype datatype;
+    MPI_Request request_handle;
+    /* FIXME: do we need both handles? */
+    MPI_Win target_win_handle; /* Used in the last RMA operation in each
+                               * epoch for decrementing rma op counter in
+                               * active target rma and for unlocking window 
+                               * in passive target rma. Otherwise set to NULL*/
+    MPI_Win source_win_handle; /* Used in the last RMA operation in an
+                               * epoch in the case of passive target rma
+                               * with shared locks. Otherwise set to NULL*/
+    MPIDI_CH3_CAS_Immed_u origin_data;
+    MPIDI_CH3_CAS_Immed_u compare_data;
+}
+MPIDI_CH3_Pkt_cas_t;
+
+typedef struct MPIDI_CH3_Pkt_cas_resp
+{
+    MPIDI_CH3_Pkt_type_t type;
+    MPI_Request request_handle;
+    MPIDI_CH3_CAS_Immed_u data;
+}
+MPIDI_CH3_Pkt_cas_resp_t;
+
 typedef struct MPIDI_CH3_Pkt_lock
 {
     MPIDI_CH3_Pkt_type_t type;
@@ -310,6 +402,8 @@ typedef union MPIDI_CH3_Pkt
     MPIDI_CH3_Pkt_lock_get_unlock_t lock_get_unlock;
     MPIDI_CH3_Pkt_lock_accum_unlock_t lock_accum_unlock;
     MPIDI_CH3_Pkt_close_t close;
+    MPIDI_CH3_Pkt_cas_t cas;
+    MPIDI_CH3_Pkt_cas_resp_t cas_resp;
 # if defined(MPIDI_CH3_PKT_DECL)
     MPIDI_CH3_PKT_DECL
 # endif

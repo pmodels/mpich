@@ -166,3 +166,90 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Compare_and_swap
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
+                          void *result_addr, MPI_Datatype datatype, int target_rank,
+                          MPI_Aint target_disp, MPID_Win *win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int rank;
+    MPIDI_RMA_ops *new_ptr;
+
+    MPIU_CHKPMEM_DECL(1);
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+
+    if (target_rank == MPI_PROC_NULL) {
+        goto fn_exit;
+    }
+
+    rank = win_ptr->myrank;
+
+    /* The datatype must be predefined, and one of: C integer, Fortran integer,
+     * Logical, Multi-language types, or Byte.  This is checked above the ADI,
+     * so there's no need to check it again here. */
+
+    if (target_rank == rank) {
+        void *dest_addr = (char *) win_ptr->base + target_disp;
+        int len;
+
+        MPID_Datatype_get_size_macro(datatype, len);
+        MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
+
+        MPIU_Memcpy(result_addr, dest_addr, len);
+
+        if (MPIR_Compare_equal(compare_addr, dest_addr, datatype)) {
+            MPIU_Memcpy(dest_addr, origin_addr, len);
+        }
+
+        goto fn_exit;
+    }
+    else {
+        /* Append this operation to the RMA ops queue */
+        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
+                            mpi_errno, "RMA operation entry");
+        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        if (win_ptr->rma_ops_list_tail) 
+            win_ptr->rma_ops_list_tail->next = new_ptr;
+        else
+            win_ptr->rma_ops_list_head = new_ptr;
+        win_ptr->rma_ops_list_tail = new_ptr;
+
+        MPIU_INSTR_DURATION_START(rmaqueue_set);
+        new_ptr->next = NULL;
+        new_ptr->type = MPIDI_RMA_COMPARE_AND_SWAP;
+        new_ptr->origin_addr = (void *) origin_addr;
+        new_ptr->origin_count = 1;
+        new_ptr->origin_datatype = datatype;
+        new_ptr->target_rank = target_rank;
+        new_ptr->target_disp = target_disp;
+        new_ptr->target_count = 1;
+        new_ptr->target_datatype = datatype;
+        new_ptr->result_addr = result_addr;
+        new_ptr->result_count = 1;
+        new_ptr->result_datatype = datatype;
+        new_ptr->compare_addr = (void *) compare_addr;
+        new_ptr->compare_count = 1;
+        new_ptr->compare_datatype = datatype;
+        MPIU_INSTR_DURATION_END(rmaqueue_set);
+    }
+
+fn_exit:
+    MPIU_CHKPMEM_COMMIT();
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+

@@ -35,6 +35,7 @@ MPIU_INSTR_DURATION_DECL(rmapkt_acc);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc_predef);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc_immed);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc_immed_op);
+MPIU_INSTR_DURATION_DECL(rmapkt_cas);
 MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_alloc);
 MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_set);
 void MPIDI_CH3_RMA_InitInstr(void);
@@ -68,6 +69,7 @@ void MPIDI_CH3_RMA_InitInstr(void)
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_predef,0,"RMA:PKTHANDLER for Accumulate: predef dtype");
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_immed,0,"RMA:PKTHANDLER for Accum immed");
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_immed_op,0,"RMA:PKTHANDLER for Accum immed operation");
+    MPIU_INSTR_DURATION_INIT(rmapkt_cas,0,"RMA:PKTHANDLER for Compare-and-swap");
 }
 
 /* These are used to use a common routine to complete lists of RMA 
@@ -102,6 +104,8 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_ops * rma_op, MPID_Win * win_ptr,
 				   void ** dataloop, MPID_Request ** request); 
 static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops *, MPID_Win *,
 					  MPI_Win, MPI_Win, MPID_Request ** );
+static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *, MPID_Win *,
+                                         MPI_Win, MPI_Win, MPID_Request ** );
 static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *, int *);
 static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *);
 static int MPIDI_CH3I_Send_lock_get(MPID_Win *);
@@ -285,6 +289,13 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 					&curr_ptr->dataloop, &curr_ptr->request);
 		if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 		break;
+            case (MPIDI_RMA_COMPARE_AND_SWAP):
+                mpi_errno = MPIDI_CH3I_Send_immed_rmw_msg(curr_ptr, win_ptr,
+                                                          source_win_handle, target_win_handle, 
+                                                          &curr_ptr->request );
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+                break;
+
 	    default:
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winInvalidOp");
 	    }
@@ -799,6 +810,97 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops *rma_op,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
+    if (*request)
+    {
+        MPIU_Object_set_ref(*request, 0);
+        MPIDI_CH3_Request_destroy(*request);
+    }
+    *request = NULL;
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+/*
+ * Initiate an immediate RMW accumulate operation
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Send_immed_rmw_msg
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *rma_op, 
+                                         MPID_Win *win_ptr,
+                                         MPI_Win source_win_handle, 
+                                         MPI_Win target_win_handle, 
+                                         MPID_Request **request) 
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request *req, *resp_req = NULL;
+    MPIDI_VC_t *vc;
+    MPID_Comm *comm_ptr;
+    int len;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEND_IMMED_RMW_MSG);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEND_IMMED_RMW_MSG);
+
+    *request = NULL;
+
+    /* Create a request for the RMW response.  Store the origin buf, count, and
+       datatype in it, and pass the request's handle RMW packet. When the
+       response comes from the target, it will contain the request handle. */
+    resp_req = MPID_Request_create();
+    MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    *request = resp_req;
+
+    /* Set refs on the request to 2: one for the response message, and one for
+       the partial completion handler */
+    MPIU_Object_set_ref(resp_req, 2);
+
+    resp_req->dev.user_buf = rma_op->result_addr;
+    resp_req->dev.user_count = rma_op->result_count;
+    resp_req->dev.datatype = rma_op->result_datatype;
+    resp_req->dev.target_win_handle = MPI_WIN_NULL;
+    resp_req->dev.source_win_handle = source_win_handle;
+
+    /* REQUIRE: All datatype arguments must be of the same, builtin
+                type and counts must be 1. */
+    MPID_Datatype_get_size_macro(rma_op->origin_datatype, len);
+
+    if (rma_op->type == MPIDI_RMA_COMPARE_AND_SWAP) {
+        MPIDI_CH3_Pkt_t upkt;
+        MPIDI_CH3_Pkt_cas_t *cas_pkt = &upkt.cas;
+
+        MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
+
+        MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
+        cas_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] + rma_op->target_disp;
+        cas_pkt->datatype = rma_op->target_datatype;
+        cas_pkt->target_win_handle = target_win_handle;
+        cas_pkt->source_win_handle = source_win_handle;
+        cas_pkt->request_handle = resp_req->handle;
+
+        MPIU_Memcpy( (void *) &cas_pkt->origin_data, rma_op->origin_addr, len );
+        MPIU_Memcpy( (void *) &cas_pkt->compare_data, rma_op->compare_addr, len );
+
+        comm_ptr = win_ptr->comm_ptr;
+        MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
+        MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+        mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_pkt, sizeof(*cas_pkt), &req);
+        MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+    }
+
+    /* TODO: Fetch-and-op implementation will go here */
+
+    else {
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+    }
+
+fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_IMMED_RMW_MSG);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
     if (*request)
     {
         MPIU_Object_set_ref(*request, 0);
@@ -1329,6 +1431,13 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 				&curr_ptr->dataloop, &curr_ptr->request);
 	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	    break;
+        case (MPIDI_RMA_COMPARE_AND_SWAP):
+            mpi_errno = MPIDI_CH3I_Send_immed_rmw_msg(curr_ptr, win_ptr,
+                                                      source_win_handle, target_win_handle, 
+                                                      &curr_ptr->request );
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            break;
+
 	default:
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winInvalidOp");
 	}
@@ -1662,7 +1771,8 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, dest, &vc);
 
-    if (rma_op->next->next == NULL) {
+    /* TODO: MPI-3: Add lock->cas->unlock optimization */
+    if (rma_op->next->next == NULL && rma_op->next->type != MPIDI_RMA_COMPARE_AND_SWAP) {
 	/* Single put, get, or accumulate between the lock and unlock. If it
 	 * is of small size and predefined datatype at the target, we
 	 * do an optimization where the lock and the RMA operation are
@@ -2002,6 +2112,14 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
                                 &curr_ptr->dataloop, &curr_ptr->request);
 	    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
             break;
+        case (MPIDI_RMA_COMPARE_AND_SWAP):
+            win_ptr->pt_rma_puts_accs[curr_ptr->target_rank]++;
+            mpi_errno = MPIDI_CH3I_Send_immed_rmw_msg(curr_ptr, win_ptr,
+                                                       source_win_handle, target_win_handle, 
+                                                       &curr_ptr->request );
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            break;
+
         default:
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winInvalidOp");
         }
@@ -2989,6 +3107,138 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     goto fn_exit;
 
 }
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_CAS
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                              MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_CH3_Pkt_t upkt;
+    MPIDI_CH3_Pkt_cas_resp_t *cas_resp_pkt = &upkt.cas_resp;
+    MPIDI_CH3_Pkt_cas_t *cas_pkt = &pkt->cas;
+    MPID_Win *win_ptr;
+    MPID_Request *req;
+    int len;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
+
+    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"received CAS pkt");
+    MPIU_INSTR_DURATION_START(rmapkt_cas);
+
+    /* return the number of bytes processed in this function */
+    /* data_len == 0 (all within packet) */
+    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *rreqp  = NULL;
+
+    MPIDI_Pkt_init(cas_resp_pkt, MPIDI_CH3_PKT_CAS_RESP);
+    cas_resp_pkt->request_handle = cas_pkt->request_handle;
+
+    /* Copy old value into the response packet */
+    MPID_Datatype_get_size_macro(cas_pkt->datatype, len);
+    MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
+    MPIU_Memcpy( (void *)&cas_resp_pkt->data, cas_pkt->addr, len );
+
+    /* Send the response packet */
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &req);
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+
+    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+
+    if (req != NULL) {
+        MPID_Request_release(req);
+    }
+
+    /* Compare and replace if equal */
+    if (MPIR_Compare_equal(&cas_pkt->compare_data, cas_pkt->addr, cas_pkt->datatype)) {
+        MPIU_Memcpy(cas_pkt->addr, &cas_pkt->origin_data, len);
+    }
+
+    /* There are additional steps to take if this is a passive 
+       target RMA or the last operation from the source */
+
+    MPID_Win_get_ptr(cas_pkt->target_win_handle, win_ptr);
+
+    /* if passive target RMA, increment counter */
+    if (win_ptr->current_lock_type != MPID_LOCK_NONE)
+        win_ptr->my_pt_rma_puts_accs++;
+
+    /* Send RMA done packet?  FIXME: Can the cas_resp handler handle this? */
+    if (cas_pkt->source_win_handle != MPI_WIN_NULL) {
+        /* Last RMA operation from source. If active
+           target RMA, decrement window counter. If
+           passive target RMA, release lock on window and
+           grant next lock in the lock queue if there is
+           any. If it's a shared lock or a lock-put-unlock
+           type of optimization, we also need to send an
+           ack to the source. */ 
+        if (win_ptr->current_lock_type == MPID_LOCK_NONE) {
+            /* FIXME: MT: this has to be done atomically */
+            win_ptr->my_counter -= 1;
+            MPIDI_CH3_Progress_signal_completion();
+        }
+        else {
+            if ((win_ptr->current_lock_type == MPI_LOCK_SHARED) ||
+                (/*rreq->dev.single_op_opt*/ 0 == 1)) {
+                mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, cas_pkt->source_win_handle);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            }
+            mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
+            /* Without the following signal_completion call, we 
+               sometimes hang */
+            MPIDI_CH3_Progress_signal_completion();
+        }
+    }
+
+fn_exit:
+    MPIU_INSTR_DURATION_END(rmapkt_cas);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_CASResp
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_PktHandler_CASResp( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+                                  MPIDI_CH3_Pkt_t *pkt,
+                                  MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_CH3_Pkt_cas_resp_t *cas_resp_pkt = &pkt->cas_resp;
+    MPID_Request *req;
+    int len;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
+    
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
+    
+    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"received CAS response pkt");
+
+    MPID_Request_get_ptr(cas_resp_pkt->request_handle, req);
+    MPID_Datatype_get_size_macro(req->dev.datatype, len);
+    
+    MPIU_Memcpy( req->dev.user_buf, (void *)&cas_resp_pkt->data, len );
+
+    MPIDI_CH3U_Request_complete( req );
+    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *rreqp = NULL;
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_PktHandler_Lock

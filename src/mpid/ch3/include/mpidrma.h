@@ -12,7 +12,8 @@ typedef enum MPIDI_RMA_Op_type_e {
     MPIDI_RMA_ACCUMULATE        = 25,
     MPIDI_RMA_LOCK              = 26,
     MPIDI_RMA_ACC_CONTIG        = 27,
-    MPIDI_RMA_GET_ACCUMULATE    = 28
+    MPIDI_RMA_GET_ACCUMULATE    = 28,
+    MPIDI_RMA_COMPARE_AND_SWAP  = 29
 } MPIDI_RMA_Op_type_t;
 
 /* Special case RMA operations */
@@ -70,6 +71,12 @@ typedef struct MPIDI_RMA_ops {
     struct MPID_Request *request;
     MPIDI_RMA_dtype_info dtype_info;
     void *dataloop;
+    void *result_addr;
+    int result_count;
+    MPI_Datatype result_datatype;
+    void *compare_addr;
+    int compare_count;
+    MPI_Datatype compare_datatype;
 } MPIDI_RMA_ops;
 
 typedef struct MPIDI_PT_single_op {

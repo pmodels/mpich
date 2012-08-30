@@ -3843,6 +3843,7 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 #endif /* MPIR_MAX */
 
 int MPIR_Type_is_rma_atomic(MPI_Datatype type);
+int MPIR_Compare_equal(const void *a, const void *b, MPI_Datatype type);
 
 int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
