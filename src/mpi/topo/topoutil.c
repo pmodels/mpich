@@ -328,7 +328,6 @@ int MPIR_Topo_canon_nhb(MPID_Comm *comm_ptr,
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else if (topo_ptr->kind == MPI_GRAPH) {
-        int nneighbors = 0;
         MPIU_Assert(indegree == outdegree);
         mpi_errno = MPIR_Graph_neighbors_impl(comm_ptr, comm_ptr->rank, indegree, sources);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
