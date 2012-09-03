@@ -3,12 +3,13 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-# Note: libraries will only be present for mutex-based emulation builds
+# Technically, the -lopa below isn't needed if you are only using the atomic
+# primitives (not the queue code) and you are not using mutex emulation.
 
 Name: OpenPA
 Description: Portable library for atomic operations
 Version: @VERSION@
-Libs: @external_pkg_config_libs@
-Libs.private: @internal_pkg_config_libs@
+Libs: -L${libdir} -lopa
+Libs.private: @LIBS@
 Cflags: -I${includedir}
 
