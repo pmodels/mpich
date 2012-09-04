@@ -8,3 +8,5 @@ reducelocalf 2 mpiversion=2.2
 redscatf 4
 split_typef 4 strict=false
 nonblockingf 4 strict=false
+vw_inplacef 4 mpiversion=2.2
+red_scat_blockf 4 mpiversion=2.2
