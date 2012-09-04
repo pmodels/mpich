@@ -5,5 +5,4 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include $(top_srcdir)/src/mpix/mutex/Makefile.mk
-include $(top_srcdir)/src/mpix/comm/Makefile.mk
+mpi_sources += src/mutex/mutex.c

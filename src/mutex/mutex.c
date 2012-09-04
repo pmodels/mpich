@@ -16,7 +16,6 @@
 #include <strings.h>
 
 #include <mpi.h>
-#include <mpix.h>
 #include <mpitypedefs.h>
 
 #define MPI_MUTEX_TAG 100

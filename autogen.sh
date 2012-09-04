@@ -138,7 +138,7 @@ MAKE=${MAKE-make}
 
 # externals are the directories for external packages that we have
 # included into MPICH2
-externals="src/mpe2 src/pm/hydra src/mpi/romio src/mpix/armci src/pm/mpd src/openpa"
+externals="src/mpe2 src/pm/hydra src/mpi/romio src/armci src/pm/mpd src/openpa"
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/mpl"
 

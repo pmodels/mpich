@@ -1227,6 +1227,15 @@ int MPIX_Comm_group_failed(MPI_Comm, MPI_Group *);
 int MPIX_Comm_remote_group_failed(MPI_Comm, MPI_Group *);
 int MPIX_Comm_reenable_anysource(MPI_Comm, MPI_Group *);
 
+/* RMA Mutexes extension declarations: */
+struct mpixi_mutex_s;
+typedef struct mpixi_mutex_s * MPIX_Mutex;
+
+int MPIX_Mutex_create(int count, MPI_Comm comm, MPIX_Mutex *hdl);
+int MPIX_Mutex_free(MPIX_Mutex *hdl);
+int MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc);
+int MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc);
+
 /* MPI-3 MPI_T interface, currently available as MPIX_T extensions */
 
 /* The MPI_T routines are available only in C bindings - tell tools that they
@@ -1345,6 +1354,10 @@ int PMPI_Group_compare(MPI_Group, MPI_Group, int *);
 int PMPIX_Comm_group_failed(MPI_Comm, MPI_Group *);
 int PMPIX_Comm_reenable_anysource(MPI_Comm, MPI_Group *);
 int PMPIX_Comm_remote_group_failed(MPI_Comm, MPI_Group *);
+int PMPIX_Mutex_create(int count, MPI_Comm comm, MPIX_Mutex *hdl);
+int PMPIX_Mutex_free(MPIX_Mutex *hdl);
+int PMPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc);
+int PMPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc);
 int PMPI_Comm_group(MPI_Comm, MPI_Group *);
 int PMPI_Group_union(MPI_Group, MPI_Group, MPI_Group *);
 int PMPI_Group_intersection(MPI_Group, MPI_Group, MPI_Group *);
