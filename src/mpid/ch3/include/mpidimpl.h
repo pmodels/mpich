@@ -1709,17 +1709,6 @@ int MPIDI_CH3_Pre_init (int *setvals, int *has_parent, int *rank, int *size);
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_ptr, int pg_rank );
 
 /*@
-  MPIDI_CH3_PreLoad - Setup a channel before calling MPIDI_CH3_Init
-
-  Notes:
-  This routine is called only if the channel defines 'HAVE_CH3_PRELOAD' .
-  It may be used to perform any initialization that is required before any
-  of the channel routines may be used.
-
-  @*/
-int MPIDI_CH3_PreLoad( void );
-
-/*@
   MPIDI_CH3_Finalize - Shutdown the channel implementation.
 
   Return value:

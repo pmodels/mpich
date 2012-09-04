@@ -131,13 +131,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
      */
     MPIR_Process.attrs.tag_ub = MPIDI_TAG_UB; /* see also mpidpre.h:NOTE-T1 */
 
-    /* If the channel requires any setup before making any other 
-       channel calls (including CH3_PG_Init), the channel will define
-       this routine (the dynamically loaded channel uses this) */
-#ifdef HAVE_CH3_PRELOAD
-    mpi_errno = MPIDI_CH3_PreLoad();
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-#endif
     /*
      * Perform channel-independent PMI initialization
      */
