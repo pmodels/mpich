@@ -873,7 +873,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *rma_op,
 
         /* If this is the last operation, it also unlocks the window 
            at the target. */
-        if (rma_op->next == NULL) {
+        if (source_win_handle != MPI_WIN_NULL) {
             MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS_UNLOCK);
         } else {
             MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
