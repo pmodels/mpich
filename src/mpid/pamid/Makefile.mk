@@ -36,9 +36,8 @@ noinst_HEADERS +=                                                    \
     src/mpid/pamid/include/mpidpre.h                                 \
     src/mpid/pamid/include/mpidi_platform.h
 
-include_HEADERS += src/mpid/pamid/include/mpix_pamid.h
+include_HEADERS += src/mpid/pamid/include/mpix.h
 
 include $(top_srcdir)/src/mpid/pamid/src/Makefile.mk
 
 endif BUILD_PAMID
-
