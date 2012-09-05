@@ -16,7 +16,7 @@
 /* end_generated_IBM_copyright_prolog                               */
 /*  (C)Copyright IBM Corp.  2007, 2011  */
 /**
- * \file include/mpix_pamid.h
+ * \file include/mpix.h
  * \brief PAMI device extensions to the MPI Spec
  *
  * These functions generally use MPI functions and internal APIs to
@@ -25,8 +25,8 @@
  * optimizations to be made.
  */
 
-#ifndef __include_mpix_pamid_h__
-#define __include_mpix_pamid_h__
+#ifndef __include_mpix_h__
+#define __include_mpix_h__
 
 #if defined(__cplusplus)
 extern "C" {
