@@ -84,6 +84,17 @@ static HYD_status debug_fn(char *arg, char ***argv)
     return HYDU_set_int(arg, &HYD_pmcd_pmip.user_global.debug, 1);
 }
 
+static HYD_status usize_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_pmcd_pmip.user_global.usize = atoi(**argv);
+
+    (*argv)++;
+
+    return status;
+}
+
 static HYD_status rmk_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -628,6 +639,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"proxy-id", proxy_id_fn, NULL},
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
+    {"usize", usize_fn, NULL},
     {"rmk", rmk_fn, NULL},
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},

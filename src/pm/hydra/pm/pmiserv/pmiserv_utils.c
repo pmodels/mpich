@@ -92,6 +92,9 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     proxy_args[arg++] = HYDU_strdup("--retries");
     proxy_args[arg++] = HYDU_int_to_str(retries);
 
+    proxy_args[arg++] = HYDU_strdup("--usize");
+    proxy_args[arg++] = HYDU_int_to_str(HYD_server_info.user_global.usize);
+
     proxy_args[arg++] = HYDU_strdup("--proxy-id");
     proxy_args[arg++] = NULL;
 

@@ -298,7 +298,12 @@ static HYD_status fn_get_usize(int fd, char *args[])
 
     i = 0;
     tmp[i++] = HYDU_strdup("cmd=universe_size size=");
-    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_core_map.global_count);
+    if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM)
+        tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_core_map.global_count);
+    else if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_INFINITE)
+        tmp[i++] = HYDU_int_to_str(-1);
+    else
+        tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.user_global.usize);
     tmp[i++] = HYDU_strdup("\n");
     tmp[i++] = NULL;
 

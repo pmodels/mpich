@@ -190,6 +190,10 @@ typedef enum {
     HYD_INTERNAL_ERROR
 } HYD_status;
 
+#define HYD_USIZE_UNSET     (0)
+#define HYD_USIZE_SYSTEM    (-1)
+#define HYD_USIZE_INFINITE  (-2)
+
 #if defined(NEEDS_GETHOSTNAME_DECL)
 int gethostname(char *name, size_t len);
 #endif
@@ -333,6 +337,7 @@ struct HYD_user_global {
     /* Other random parameters */
     int enablex;
     int debug;
+    int usize;
 
     int auto_cleanup;
 

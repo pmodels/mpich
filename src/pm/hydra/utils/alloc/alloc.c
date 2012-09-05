@@ -24,6 +24,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
 
     user_global->enablex = -1;
     user_global->debug = -1;
+    user_global->usize = HYD_USIZE_UNSET;
 
     user_global->auto_cleanup = -1;
 

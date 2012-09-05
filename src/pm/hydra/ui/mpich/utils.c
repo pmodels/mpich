@@ -142,6 +142,7 @@ static void help_help_fn(void)
     printf("    -disable-hostname-propagation    let MPICH2 auto-detect the hostname\n");
     printf("    -order-nodes                     order nodes as ascending/descending cores\n");
     printf("    -localhost                       local hostname for the launching node\n");
+    printf("    -usize                           universe size (SYSTEM, INFINITE, <value>\n");
 
     printf("\n");
     printf("Please see the intructions provided at\n");
@@ -1435,6 +1436,45 @@ static HYD_status localhost_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void usize_help_fn(void)
+{
+    printf("\n");
+    printf("-usize: Universe size (SYSTEM, INFINITE, <value>\n");
+    printf("   SYSTEM: Number of cores passed to mpiexec through hostfile or resource manager\n");
+    printf("   INFINITE: No limit\n");
+    printf("   <value>: Numeric value >= 0\n\n");
+}
+
+static HYD_status usize_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.usize) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.usize != HYD_USIZE_UNSET,
+                        HYD_INTERNAL_ERROR, "universe size already set\n");
+
+    if (!strcmp(**argv, "SYSTEM"))
+        HYD_server_info.user_global.usize = HYD_USIZE_SYSTEM;
+    else if (!strcmp(**argv, "INFINITE"))
+        HYD_server_info.user_global.usize = HYD_USIZE_INFINITE;
+    else {
+        HYD_server_info.user_global.usize = atoi(**argv);
+        HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.usize <= 0,
+                            HYD_INTERNAL_ERROR, "invalid universe size\n");
+    }
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status set_default_values(void)
 {
     char *tmp;
@@ -1518,6 +1558,11 @@ static HYD_status set_default_values(void)
      * environment variable for doing that */
     if (hostname_propagation || hostname_propagation == -1)
         HYD_server_info.iface_ip_env_name = HYDU_strdup("MPICH_INTERFACE_HOSTNAME");
+
+    /* Default universe size if the user did not specify anything is
+     * INFINITE */
+    if (HYD_server_info.user_global.usize == HYD_USIZE_UNSET)
+        HYD_server_info.user_global.usize = HYD_USIZE_INFINITE;
 
   fn_exit:
     return status;
@@ -1805,6 +1850,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"order-nodes", order_nodes_fn, order_nodes_help_fn},
     {"localhost", localhost_fn, localhost_help_fn},
+    {"usize", usize_fn, usize_help_fn},
 
     {"\0", NULL}
 };
