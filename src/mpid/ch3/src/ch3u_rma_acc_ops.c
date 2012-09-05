@@ -196,12 +196,10 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
      * so there's no need to check it again here. */
 
     if (target_rank == rank) {
-        void *dest_addr = (char *) win_ptr->base + target_disp;
+        void *dest_addr = (char *) win_ptr->base + win_ptr->disp_unit * target_disp;
         int len;
 
         MPID_Datatype_get_size_macro(datatype, len);
-        MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
-
         MPIU_Memcpy(result_addr, dest_addr, len);
 
         if (MPIR_Compare_equal(compare_addr, dest_addr, datatype)) {

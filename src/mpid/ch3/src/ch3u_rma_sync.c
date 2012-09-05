@@ -879,7 +879,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *rma_op,
             MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
         }
 
-        cas_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] + rma_op->target_disp;
+        cas_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] + win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
         cas_pkt->datatype = rma_op->target_datatype;
         cas_pkt->target_win_handle = target_win_handle;
         cas_pkt->request_handle = resp_req->handle;
