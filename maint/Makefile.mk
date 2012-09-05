@@ -33,11 +33,9 @@ dist_noinst_SCRIPTS +=                \
     maint/parsetest                   \
     maint/release.pl                  \
     maint/samplebuilds                \
-    maint/simplemake.in               \
     maint/testbuild                   \
     maint/update_windows_version      \
-    maint/testpmpi                    \
-    maint/smlib/libadd.smlib
+    maint/testpmpi
 
 dist_noinst_DATA +=                        \
     maint/Version                          \
@@ -57,9 +55,7 @@ dist_noinst_DATA +=                        \
     maint/structalign.c                    \
     maint/template.c                       \
     maint/version.m4                       \
-    maint/winbuild.wsf                     \
-    maint/simplemake.txt                   \
-    maint/smlib/README
+    maint/winbuild.wsf
 
 ### TODO FIXME what do we do about these?
 ##makedefs

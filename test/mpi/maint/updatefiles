@@ -40,8 +40,7 @@ autoconfdir=""
 #
 # Location of mpich2 source tree 
 mpich2dir=../..
-# Extract the arguments intended for updatefiles.  Any others are
-# given to simplemake.  
+# Extract the arguments intended for updatefiles.
 temp_args=""
 for arg in "$@" ; do
     case $arg in 
@@ -92,13 +91,13 @@ for arg in "$@" ; do
     -help|--help|-usage|--usage)
     cat <<EOF
     updatefiles [ --with-autoconf=dir ] [ -do=stepname ]
-                [ args for simplemake ] 
+
     Update the files in the MPICH2 build tree.  This file builds the 
-    configure files, creates the Makefile.in files (using the simplemake
-    program), extracts the error messages.
+    configure files, creates the Makefile.in files (using the autotools),
+    and extracts the error messages.
 
     You can use --with-autoconf=dir to specify a directory that contains
-    an alternate autoconf and autoheader.  
+    an alternate autoconf (and especially autoreconf).
 
     Use -do=stepname to update only a single step.  For example, 
     -do=build_configure only updates the configure scripts.  The available
@@ -125,22 +124,16 @@ fi
 # autoconf and autoheader from that directory
 # This may also be needed for tools in the maint directory
 if [ -n "$autoconfdir" ] ; then
-    if [ -x $autoconfdir/autoconf -a -x $autoconfdir/autoheader ] ; then
-        autoconf=$autoconfdir/autoconf
-        autoheader=$autoconfdir/autoheader
-	# Simplemake looks in environment variables for the autoconf
-	# and autoheader to use
-	AUTOCONF=$autoconf
-	AUTOHEADER=$autoheader
-	export AUTOCONF
-	export AUTOHEADER
+    if [ -x $autoconfdir/autoreconf ] ; then
+        autoreconf=$autoconfdir/autoreconf
+        AUTORECONF=$autoreconf
+        export AUTORECONF
     else
-        echo "Could not find executable autoconf and autoheader in $autoconfdir"
+        echo "Could not find executable autoreconf in $autoconfdir"
 	exit 1
     fi
 else
-    autoconf=${AUTOCONF:-autoconf}
-    autoheader=${AUTOHEADER:-autoheader}
+    autoreconf=${AUTORECONF:-autoreconf}
 fi
 #
 # Check that you have a working autoconf.  Autoconf 2.57 is not compatible with
@@ -151,16 +144,13 @@ if [ -s .tmp ] ; then rm -f .tmp ; fi
 if [ ! -d .tmp ] ; then
     mkdir .tmp 2>&1 >/dev/null
 fi
-# As of autoconf 2.59, the command line arguments changed (again)
-# We now require 2.59 everywhere, so we just double check
-# Somewhere between 2.12 and 2.58, -l changed to -B
-# Argh.  In autoconf 2.59, -B doesn't work.  You must use -I instead of -B (!!)
-# Find the configure version
+
+# we require autoconf version 2.67 or greater
 # acSubversion is the version number minus 2.  (we assume autoconf 2.xx)
 # -1 is used for unknown
 acSubversion=-1
 acIncDirFlag=-I
-for ver in 62 61 60 59 ; do
+for ver in 70 69 68 67 ; do
     rm -f .tmp/configure.ac .tmp/configure
     cat >.tmp/configure.ac <<EOF
 AC_PREREQ(2.$ver)
@@ -191,9 +181,9 @@ fi
 rm -rf .tmp
 
 #
-# Build scripts such as simplemake if necessary
-made_simplemake=no
+# Build scripts such as f77tof90 if necessary
 run_configure=no
+
 # Later versions of autoconf put the autoconf version into the autom4te*.cache
 # name.
 # Later versions of autoconf (2.57+?) will silently ignore the command to 
@@ -224,14 +214,6 @@ if [ "$run_configure" = "yes" ] ; then
     (cd maint && ./configure)
 fi
 
-#
-if [ ! -x $mpich2dir/maint/simplemake -a $do_makefiles = yes ] ; then
-    echo "Simplemake is not available"
-    echo "You can copy simplemake.in to simplemake, replacing @PERL@ with the"
-    echo "path to Perl (version5).  Make sure the resulting file has"
-    echo "execute permissions set."
-    exit 1
-fi
 
 # Create and/or update the f90 tests
 if [ -x maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
@@ -254,44 +236,7 @@ rm_prepost=no
 if [ ! -s src/include/mpidpre.h ] ; then
     rm_prepost=yes
 fi
-otherargs="$@"
-# If there is no mpi.h file (and other files, but testing on mpi.h should
-# be enough), don't generate the dependency information in the Makefiles
-# with the static dependency target.  The new default in simplemake is
-# dynamic dependency data
-# Currently, the dependency generation relies on using gcc, so we may 
-# want to test on that as well.
-# 
-# 
-otherargs="$otherargs -nodepend"
-# 
-# autoconf 2.57 drastically changed the command line arguments.
-# Up through 2.52, -l dir was the "localdir for searching"
-# By 2.57, -l was no longer accepted, and -B dir or --prepend-include=DIR
-# was used.  
-# To make things more exciting, the format of autoconf --version has
-# changed, making it very hard to automatically extract the version number
-# so that programs like this can work around poor software engineering, 
-# such as incompatible changes in a minor-numbered release.
-#
-# Just to make this even more interesting, the cygwin version of 
-# autoconf selects a version.  But the code to so this causes --version 
-# (and --help!) to fail unless there is a configure.ac file in the current
-# directory.  
-if [ $do_makefiles = yes ] ; then
-    if $mpich2dir/maint/simplemake -common=$mpich2dir/maint/makedefs \
-        -docnamedefs='${master_top_srcdir}/maint/docnotes' \
-        -autoconf="$acIncDirFlag ROOTDIR/confdb" \
-        -libdir='${MPILIBNAME}'=ROOTDIR/lib \
-	-smroot='${master_top_srcdir}/maint' $otherargs \
-        Makefile.sm ; then
-        :
-    else
-        echo "Simplemake step failed!"
-        exit 1
-    fi
-fi
-#
+
 # Create the configure files and run autoheader
 # Eventually, make this a test for find available.  Perhaps
 # find . -name configure.ac > /dev/null 2>&1
@@ -304,9 +249,7 @@ if [ $do_build_configure = yes ] ; then
     # Gah. Some xargs don't accept -r, other break if there is no
     # input.  To avoid that, we do this in two steps: first the
     # find, then the rm (if there are any files)
-    if [ -d autom4te.cache ] ; then rm -rf autom4te.cache ; fi
-    $autoheader $acIncDirFlag $mpich2dir/confdb
-    $autoconf $acIncDirFlag $mpich2dir/confdb && rm -rf autom4te*.cache
+    $autoreconf -vif $acIncDirFlag $mpich2dir/confdb
     if [ ! -x configure ] ; then 
         # Check for a few allowed exceptions
         echo "Could not build configure from configure.ac in $dir"

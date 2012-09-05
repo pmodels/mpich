@@ -1,7 +1,0 @@
-SUBDIRS = @ch3subsystems@ @ftb_dir@
-SUBDIRS_ch3subsystems = sock
-SUBDIRS_ftb_dir = ftb
-
-distclean-local:
-
-maintainer-clean-local:

@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_PREREQ(2.59)
+AC_PREREQ(2.67)
 dnl
 dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes 
 dnl bugs in autoconf caching.
@@ -46,7 +46,6 @@ AM_PROG_AR
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# XXX DJG FIXME is this needed still?
 if test -z "$mpich2_top_srcdir" ; then 
     if test -z "$top_srcdir" ; then
        use_top_srcdir=$srcdir   
@@ -59,7 +58,7 @@ if test -z "$mpich2_top_srcdir" ; then
         use_top_srcdir=`(cd $use_top_srcdir && pwd)`
         ;;        
     esac
-    if test -x $use_top_srcdir/../../maint/simplemake ; then 
+    if test -f $use_top_srcdir/../../maint/version.m4 ; then 
         mpich2_top_srcdir=`cd $use_top_srcdir && cd ../.. && pwd`
     fi
 fi

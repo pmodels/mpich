@@ -72,7 +72,7 @@ echo
 ########################################################################
 
 echo_n "Verifying the location of autogen.sh... "
-if [ ! -d maint -o ! -s maint/simplemake.in ] ; then
+if [ ! -d maint -o ! -s maint/version.m4 ] ; then
     echo "must execute at top level directory for now"
     exit 1
 fi
@@ -250,10 +250,10 @@ for arg in "$@" ; do
                 [ -atdircheck=[yes|no] ] \\
                 [ -atvercheck=[yes|no] ] \\
                 [ --verbose-autoreconf ] \\
-                [ --do=stepname ] [ -distrib ] [ args for simplemake ]
+                [ --do=stepname ] [ -distrib ]
     Update the files in the MPICH2 build tree.  This file builds the 
-    configure files, creates the Makefile.in files (using the simplemake
-    program), extracts the error messages.
+    configure files, creates the Makefile.in files, extracts the error
+    messages.
 
     You can use --with-autotools=dir to specify a directory that
     contains alternate autotools.
@@ -312,8 +312,6 @@ if [ -n "$autotoolsdir" ] ; then
             libtoolize=$autotoolsdir/libtoolize
         fi
 
-	# Simplemake looks in environment variables for the autoconf
-	# and autoheader to use
 	AUTOCONF=$autoconf
 	AUTOHEADER=$autoheader
         AUTORECONF=$autoreconf
@@ -781,8 +779,8 @@ fi  # do_geterrmsgs
 echo
 echo "------------------------------------"
 echo "Initiating building required scripts"
-# Build scripts such as simplemake if necessary
-made_simplemake=no
+# Build scripts such as genstates if necessary
+ran_maint_configure=no
 run_configure=no
 # The information that autoconf uses is saved in the autom4te*.cache
 # file; since this cache is not accurate, we delete it.
@@ -792,18 +790,11 @@ elif find maint -name 'configure.ac' -newer 'maint/configure' >/dev/null 2>&1 ; 
     # The above relies on the Unix find command
     (cd maint && $autoconf && rm -rf autom4te*.cache)
 fi
-if [ ! -x maint/simplemake -o ! -x maint/genstates ] ; then
+if [ ! -x maint/genstates ] ; then
     run_configure=yes
 fi
 
 # The following relies on the Unix find command
-if [ -s maint/simplemake ] ; then
-    if find maint -name 'simplemake.in' -newer 'maint/simplemake' >/dev/null 2>&1 ; then
-        run_configure=yes
-    fi
-else
-    run_configure=yes
-fi
 if [ -s maint/genstates ] ; then 
     if find maint -name 'genstates.in' -newer 'maint/genstates' >/dev/null 2>&1 ; then
         run_configure=yes
@@ -814,19 +805,11 @@ fi
 
 if [ "$run_configure" = "yes" ] ; then
     (cd maint && ./configure)
-    made_simplemake=yes
+    ran_maint_configure=yes
 fi
 echo "Done building required scripts"
 echo "------------------------------------"
 echo
-
-if [ ! -x maint/simplemake ] ; then
-    echo "Could not create simplemake"
-    echo "You can copy simplemake.in to simplemake, replacing @PERL@ with the"
-    echo "path to Perl (version5).  Make sure the resulting file has"
-    echo "execute permissions set."
-    exit 1
-fi
 
 # Run some of the simple codes
 echo_n "Creating the enumeration of logging states into src/include/mpiallstates.h... "
@@ -849,26 +832,6 @@ else
     echo "skipped"
 fi
 
-# simplemake
-if [ $made_simplemake != "no" ] ; then
-    echo_n "Checking if simplemake is created correctly... "
-    # Check that only the first three lines were changed:
-    rm -f .t1 .t2
-    sed -e 1,3d maint/simplemake.in > .t1
-    sed -e 1,3d maint/simplemake > .t2
-    if diff .t1 .t2 >/dev/null 2>&1 ; then
-	echo "done"
-        :
-    else
-	echo "done"
-        echo "Something is wrong with simplemake; configure may have"
-        echo "replaced variables that it should not have."
-        diff .t1 .t2
-        exit 1
-    fi
-    rm -f .t1 .t2
-fi
-
 # Create and/or update the f90 tests
 if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
     echo_n "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "
@@ -884,156 +847,10 @@ if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
     echo "done"
 fi
 
-
-
 echo
 echo
 echo "###########################################################"
-echo "## Generating configure in simplemake directories"
-echo "###########################################################"
-echo
-
-########################################################################
-## Creating configures in simplemake directories
-########################################################################
-
-# Create the configure files and run autoheader
-fixBackWhackCtrlMBug=no
-if [ $do_build_configure = yes ] ; then
-    # Check for out-of-date configures (the dependency handling isn't
-    # 100% accurate, so we use this step as an additional check)
-    if [ ! -s maint/conftimestamp ] ; then
-	echo_n "Deleting all configure scripts because of missing confdbtimestamp... "
-	find . -name configure -print | grep -v maint/configure | xargs rm -f
-	find . -name autom4te.cache -print | xargs rm -rf
-	date > maint/conftimestamp
-	echo "done"
-    else
-	# We can't use a status check here because find will always
-	# report success, even if there are no newer files in confdb
-	files=`find confdb -newer  maint/conftimestamp 2>&1` 
-	if [ -n "$files" ] ; then
-	    echo_n "Deleting all configure scripts because of changes in confdb... "
- 	    find . -name configure -print | grep -v maint/configure | xargs rm -f
-	    date > maint/conftimestamp
-	    echo "done"
-	fi
-    fi
-
-    echo
-    echo "---------------------------------------------------------------"
-    echo "Generating configure scripts"
-    for dir in `find . -name 'configure.ac' -print` ; do
-        dir=`dirname $dir`
-
-	found=0
-	for d in $amdirs $externals ; do
-	    foo=`echo $dir | sed -e 's%.*'"$d"'.*%FOUNDDIR%'`
-	    if [ "$foo" = "FOUNDDIR" ] ; then
-		# We'll use autoreconf later in this script for these
-		# directories
-		found=1
-		break
-	    fi
-	done
-	if [ "$found" = "1" ] ; then
-	    continue
-	fi
-
-	qtestmaint=`echo $dir | sed -e 's%.*test/mpi/maint.*%FOUNDTESTMAINT%'`
-	if [ "$qtestmaint" = "FOUNDTESTMAINT" ] ; then
-	    # echo "Found test/maint directory; skipping"
-	    # test/maint has its own autogen.sh script, which should
-	    # be used instead of this one when building that configure
-	    continue
-        fi
-
-	if [ -s $dir/Makefile.in ] ; then 
-	    # First, check for a configure target in Makefile.in
-	    # FIXME: this check is completely broken for Makefiles
-	    # that have multiple targets on the same line (e.g.,
-	    # configure config.h: configure.ac)
-	    if grep 'configure:' $dir/Makefile.in >/dev/null 2>&1 ; then
-		# The make -q checks whether the target is upto date first;
-		# if it isn't, we remake it.
-		#
-		# The make target should be for ${srcdir}/configure,
-		# so in the make line, the target needs to be
-		# ./configure Using just "configure" is incorrect and
-		# will fail with some makes.
-		rm -f $dir/mf.out 
-		rm -f $dir/mf.newer
-		date > $dir/mf.newer
-                (cd $dir && rm -f mf.tmp ; \
-                     sed -e 's%@SHELL@%/bin/sh%' -e "s%@srcdir@%.%g" \
-                         -e '/include .*alldeps/d' -e '/@SET_MAKE@/d' \
-                         -e 's%@VPATH@%%' Makefile.in > mf.tmp ; \
-                 echo "Found $dir/configure.ac; executing ${MAKE} -f mf.tmp ./configure" ; \
-                 if ${MAKE} -q -f mf.tmp ./configure >mf.out 2>&1 ; then \
-                     : ; \
-                 else \
-                     ${MAKE} -f mf.tmp ./configure ; \
-                 fi \
-                )
-
-		# Remove make output now that we no longer need it.
-		rm -f $dir/mf.newer
-		rm -f $dir/mf.out
-		rm -f $dir/mf.tmp
-            fi
-        fi
-	# Make sure a configure was created
-	if [ ! -x $dir/configure ] ; then
-	    echo "Could not build configure in $dir"
-	    exit 1
-	elif grep '\bPAC_' $dir/configure >/dev/null 2>&1 ; then
-	    echo "configure in $dir contains unresolved PAC macros"
-	    exit 1
-	fi
-    done
-    echo "Done generating configure scripts"
-    echo "---------------------------------------------------------------"
-    echo
-fi
-
-
-# Under cygwin, sometimes (?) configure ends up containing \^M (that's
-# <ctrl>-M).  We may need to add this sed step sed -e '/"\"/d' -e
-# 's/\//g' (the first removes case statements on \^M, the second
-# removes the \^M from the ac_config_files statement
-echo_n "Fixing ^M characters in configure files... "
-fixBackWhackCtrlMBug=no
-for cf in `find . -name 'configure' -print` ; do
-    if grep 'src/Makefile \\ src' $cf 2>&1 >/dev/null ; then 
-	fixBackWhackCtrlMBug=yes
-    elif grep 'src/Makefile \\ src' $cf 2>&1 >/dev/null ; then 
-	fixBackWhackCtrlMBug=yes
-    elif grep 'attr/Makefile \\ util' $cf 2>&1 >/dev/null ; then 
-	fixBackWhackCtrlMBug=yes
-    elif grep 'attr/Makefile \\' $cf 2>&1 >/dev/null ; then 
-	fixBackWhackCtrlMBug=yes
-    elif grep 'mpi2-other/info/Makefile \\' $cf 2>&1 >/dev/null ; then 
-	fixBackWhackCtrlMBug=yes
-    elif grep 'maint/testmerge \\' $cf 2>&1 >/dev/null ; then 
-	fixBackWhackCtrlMBug=yes
-    fi
-    # Add other tests here (sigh) as necessary
-
-    if [ "$fixBackWhackCtrlMBug" = yes ] ; then
-	rm -f c.tmp 
-  	sed -e '/"\\/d' -e 's/\\//g' $dir/configure > c.tmp
-	rm -f $dir/configure
-	mv c.tmp $dir/configure
-	chmod a+x $dir/configure
-    fi
-done
-echo "done"
-
-
-echo
-echo
-echo "###########################################################"
-echo "## Generating configure in non-simplemake directories"
+echo "## Generating configure files"
 echo "###########################################################"
 echo
 

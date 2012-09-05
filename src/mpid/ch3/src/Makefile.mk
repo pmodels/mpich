@@ -5,10 +5,6 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-## FIXME need to deal with MPID_THREAD_SOURCES junk
-## MPID_THREAD_SOURCES was in this list in the simplemake world, but it's
-## forbidden in automake: @MPID_THREAD_SOURCES@
-
 lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/ch3/src/ch3u_buffer.c                         \
     src/mpid/ch3/src/ch3u_comm.c                           \

@@ -28,13 +28,7 @@ fi
 AC_SUBST(XARGS_NODATA_OPT)
 
 AC_OUTPUT_COMMANDS([chmod a+x f77tof90] )
-# We have to redefine the variables that autoconf always substitutes and that
-# are used in simplemake
-# (These are left here incase we include simplemake with later versions
-# of the test suite)
-CFLAGS='@CFLAGS@'
-FFLAGS='@FFLAGS@'
-CXXFLAGS='@CXXFLAGS@'
+
 # The directory substitutions apparently don't work under Cygwin, so
 # simplemake manufactures these in a way that avoids triggering the 
 # autoconf replacement.

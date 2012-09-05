@@ -1,3 +1,0 @@
-testnd_SOURCES = testnd.c
-testnd_LDADD   = -L../../../lib -lmpich
-INCLUDES = -I${master_top_srcdir}/src/mpi/spawn
