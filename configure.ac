@@ -5884,8 +5884,6 @@ if test -z "$modincbuild_dir" ; then
     modincbuild_dir=`pwd`/src/binding/f90
 fi
 
-AC_OUTPUT_COMMANDS([chmod +x doc/mansrc/createhtmlindex])
-
 dnl
 dnl If we rerun configure, place a file in the lib directory with the
 dnl date.  We can use this to avoid rebuilding the library when
@@ -6032,7 +6030,6 @@ AC_OUTPUT(Makefile \
           doc/smpd/Makefile \
           doc/userguide/Makefile \
           doc/windev/Makefile \
-	  test/commands/cmdtests \
-	  doc/mansrc/createhtmlindex)
+          test/commands/cmdtests)
 
 echo 'Configuration completed.'

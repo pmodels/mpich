@@ -1,3 +1,0 @@
-#
-# Source text for named blocks in the automatically generated documentation
-# (Get most of this file from /home/MPI/maint/mansrc?)
