@@ -11,8 +11,7 @@ include $(top_srcdir)/src/pm/util/Makefile.mk
 
 include $(top_srcdir)/src/pm/gforker/Makefile.mk
 include $(top_srcdir)/src/pm/smpd/Makefile.mk
-## TODO uncomment this and implement it
-##include $(top_srcdir)/src/pm/remshell/Makefile.mk
+include $(top_srcdir)/src/pm/remshell/Makefile.mk
 
 ## a note about DIST_SUBDIRS:
 ## We conditionally add DIST_SUBDIRS entries because we conditionally configure

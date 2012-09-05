@@ -64,7 +64,7 @@
   FIXME: The above has not been implemented yet.
 */
 
-#include "remshellconf.h"
+#include "mpichconf.h"
 #include <stdio.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
