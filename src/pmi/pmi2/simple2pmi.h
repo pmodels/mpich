@@ -7,7 +7,7 @@
 #ifndef SIMPLE2PMI_H_INCLUDED
 #define SIMPLE2PMI_H_INCLUDED
 
-#include "pmi2conf.h"
+#include "mpichconf.h"
 
 
 #define PMII_COMMANDLEN_SIZE 6

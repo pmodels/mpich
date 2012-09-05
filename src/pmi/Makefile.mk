@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-#include $(top_srcdir)/src/pmi/pmi2/Makefile.mk
+include $(top_srcdir)/src/pmi/pmi2/Makefile.mk
 include $(top_srcdir)/src/pmi/simple/Makefile.mk
 include $(top_srcdir)/src/pmi/smpd/Makefile.mk
 

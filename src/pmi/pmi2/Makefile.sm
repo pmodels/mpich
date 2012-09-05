@@ -1,6 +1,0 @@
-lib${MPILIBNAME}_a_SOURCES = simple2pmi.c simple_pmiutil.c
-HEADERS = simple2pmi.h simple_pmiutil.h
-INCLUDES = -I@master_top_builddir@/src/include -I${master_top_srcdir}/src/include -I@master_top_builddir@/src/mpid/@DEVICE_NAME@/include -I${master_top_srcdir}/src/mpid/@DEVICE_NAME@/include
-
-distclean-local:
-	@-rm -f pmi2conf.h

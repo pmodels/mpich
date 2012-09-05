@@ -6,7 +6,7 @@
 #ifndef SIMPLE_PMI_UTIL_H_INCLUDED
 #define SIMPLE_PMI_UTIL_H_INCLUDED
 
-#include "pmi2conf.h"
+#include "mpichconf.h"
 
 /* maximum sizes for arrays */
 #define PMI2U_MAXLINE 1024

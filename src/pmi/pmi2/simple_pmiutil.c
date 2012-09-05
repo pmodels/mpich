@@ -11,7 +11,7 @@
    the PMI interface itself.  Reading and writing on pipes, signals, and parsing
    key=value messages
 */
-#include "pmi2conf.h"
+#include "mpichconf.h"
 #define printf_d(x...) /* printf(x) */
 
 #include "pmi2compat.h"

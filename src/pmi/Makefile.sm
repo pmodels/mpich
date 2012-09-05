@@ -1,6 +1,0 @@
-# SUBDIRS_pmi_name are the names that @ pmi_name @ can take in SUBDIRS
-SUBDIRS_pmi_name = pmi2 simple smpd slurm
-SUBDIRS = @pmi_name@ .
-# Remove PMPILIBNAME from the common make variables for the mpid
-# directories
-smvarSubdir_commonmake=MPILIBNAME      = @MPILIBNAME@

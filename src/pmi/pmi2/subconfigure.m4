@@ -6,13 +6,17 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
-AM_CONDITIONAL([BUILD_PMI_SIMPLE],[test "x$pmi_name" = "xsimple"])
+AM_CONDITIONAL([BUILD_PMI_PMI2],[test "x$pmi_name" = "xpmi2"])
 
-AM_COND_IF([BUILD_PMI_SIMPLE],[
+AM_COND_IF([BUILD_PMI_PMI2],[
 if test "$enable_pmiport" != "no" ; then
    enable_pmiport=yes
 fi
-AC_CHECK_HEADERS(unistd.h string.h stdlib.h sys/socket.h strings.h assert.h)
+
+dnl causes USE_PMI2_API to be AC_DEFINE'ed by the top-level configure.ac
+USE_PMI2_API=yes
+
+AC_CHECK_HEADERS([unistd.h string.h stdlib.h sys/socket.h strings.h assert.h])
 dnl Use snprintf if possible when creating messages
 AC_CHECK_FUNCS(snprintf)
 if test "$ac_cv_func_snprintf" = "yes" ; then
@@ -30,15 +34,15 @@ fi
 if test "$enable_pmiport" = "yes" ; then
     # Check for the necessary includes and functions
     missing_headers=no
-    AC_CHECK_HEADERS([	\
-	sys/types.h	\
-	sys/param.h	\
-	sys/socket.h	\
-	netinet/in.h	\
-	netinet/tcp.h	\
-	sys/un.h	\
-	netdb.h		\
-	],,missing_headers=yes )
+    AC_CHECK_HEADERS([  \
+        sys/types.h     \
+        sys/param.h     \
+        sys/socket.h    \
+        netinet/in.h    \
+        netinet/tcp.h   \
+        sys/un.h        \
+        netdb.h         \
+        ],,missing_headers=yes )
     AC_SEARCH_LIBS(socket,socket)
     AC_SEARCH_LIBS(gethostbyname,nsl)
     missing_functions=no

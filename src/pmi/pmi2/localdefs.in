@@ -1,4 +1,0 @@
-#! /bin/sh
-
-LIBS="@LIBS@"
-USE_PMI2_API=yes
