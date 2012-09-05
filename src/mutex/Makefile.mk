@@ -5,8 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-mpi_sources += \
-	src/mutex/create.c	\
-	src/mutex/free.c	\
-	src/mutex/lock.c	\
-	src/mutex/unlock.c
+mpi_sources +=                   \
+        src/mutex/mutex_create.c \
+        src/mutex/mutex_free.c   \
+        src/mutex/mutex_lock.c   \
+        src/mutex/mutex_unlock.c
