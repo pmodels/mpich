@@ -6,7 +6,7 @@ AC_PREREQ([2.63])
 AC_CONFIG_AUX_DIR([./config])
 AC_CONFIG_MACRO_DIR([./config])
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE([1.12.3 dist-bzip2 foreign subdir-objects tar-ustar -Wall -Werror])
+AM_INIT_AUTOMAKE([1.10 dist-bzip2 foreign subdir-objects tar-ustar -Wall -Werror])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_LANG([C])
