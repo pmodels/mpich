@@ -14,10 +14,12 @@
 
 #define PTL_LARGE_THRESHOLD (64*1024) /* 64K */
 
-ptl_handle_ni_t MPIDI_nem_ptl_ni;
-ptl_pt_index_t  MPIDI_nem_ptl_pt;
-ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
-ptl_handle_eq_t MPIDI_nem_ptl_eq;
+extern ptl_handle_ni_t MPIDI_nem_ptl_ni;
+extern ptl_pt_index_t  MPIDI_nem_ptl_pt;
+extern ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
+extern ptl_handle_eq_t MPIDI_nem_ptl_eq;
+
+extern ptl_handle_md_t MPIDI_nem_ptl_global_md;
 
 #define MPID_NEM_PTL_MAX_OVERFLOW_DATA 32 /* that's way more than we need */
 typedef struct MPID_nem_ptl_pack_overflow
@@ -26,6 +28,8 @@ typedef struct MPID_nem_ptl_pack_overflow
     MPI_Aint offset;
     char buf[MPID_NEM_PTL_MAX_OVERFLOW_DATA];
 } MPID_nem_ptl_pack_overflow_t;
+
+typedef int (* event_handler_fn)(const ptl_event_t *e);
 
 #define MPID_NEM_PTL_NUM_CHUNK_BUFFERS 2
 
@@ -36,26 +40,35 @@ typedef struct {
     ptl_handle_md_t md;
     ptl_handle_me_t me;
     void *chunk_buffer[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
+    MPIDI_msg_sz_t bytes_put;
+    event_handler_fn ack_handler;
+    event_handler_fn put_handler;
+    event_handler_fn get_handler;
+    event_handler_fn reply_handler;
 } MPID_nem_ptl_req_area;
 
 /* macro for ptl private in req */
 #define REQ_PTL(req) ((MPID_nem_ptl_req_area *)((req)->ch.netmod_area.padding))
 
-#define MPID_nem_ptl_init_sreq(sreq_) do {                      \
+#define MPID_nem_ptl_init_req(req_) do {                        \
         int i;                                                  \
         for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i) {  \
-            REQ_PTL(sreq)->overflow[i].len  = 0;                \
-            REQ_PTL(sreq_)->chunk_buffer[i] = NULL;             \
+            REQ_PTL(req)->overflow[i].len  = 0;                 \
+            REQ_PTL(req_)->chunk_buffer[i] = NULL;              \
         }                                                       \
-        REQ_PTL(sreq_)->noncontig    = FALSE;                   \
-        REQ_PTL(sreq_)->large        = FALSE;                   \
-        REQ_PTL(sreq_)->md           = PTL_INVALID_HANDLE;      \
-        REQ_PTL(sreq_)->me           = PTL_INVALID_HANDLE;      \
+        REQ_PTL(req_)->noncontig     = FALSE;                   \
+        REQ_PTL(req_)->large         = FALSE;                   \
+        REQ_PTL(req_)->md            = PTL_INVALID_HANDLE;      \
+        REQ_PTL(req_)->me            = PTL_INVALID_HANDLE;      \
+        REQ_PTL(req_)->ack_handler   = NULL;                    \
+        REQ_PTL(req_)->put_handler   = NULL;                    \
+        REQ_PTL(req_)->get_handler   = NULL;                    \
+        REQ_PTL(req_)->reply_handler = NULL;                    \
     } while (0)
 
-#define MPID_nem_ptl_request_create_sreq(sreq_, errno_, on_fail_) do {  \
+#define MPID_nem_ptl_request_create_req(sreq_, errno_, on_fail_) do {   \
         MPIDI_Request_create_sreq(sreq_, errno_, on_fail_);             \
-        MPID_nem_ptl_init_sreq(sreq_);                                  \
+        MPID_nem_ptl_init_req(req_);                                    \
     } while (0)
 
 typedef struct {
@@ -100,15 +113,14 @@ typedef struct {
 #define NPTL_MAX_PROCS (NPTL_SOURCE_MASK+1)
 
 /* create a match value */
-#define NPTL_TAG_SHIFT 32
+#define NPTL_TAG_SHIFT 32 /* tag and ctx_id are limited to 32 bits each */
 #define NPTL_MATCH(tag, context_id) (((ptl_match_bits)(tag) << NPTL_TAG_SHIFT)  | (ptl_match_bits)(context_id))
-
-
-struct MPID_nem_ptl_sendbuf;
+#define NPTL_MATCH_GET_TAG(match_bits) ((match_bits) >> NPTL_TAG_SHIFT)
+#define NPTL_ANY_TAG_MASK NPTL_MATCH(~0, 0)
 
 int MPID_nem_ptl_send_init(void);
 int MPID_nem_ptl_send_finalize(void);
-int MPID_nem_ptl_send_completed(struct MPID_nem_ptl_sendbuf *sb);
+int MPID_nem_ptl_ev_send_handler(ptl_event_t *e);
 int MPID_nem_ptl_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno);
 int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz);
 int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,

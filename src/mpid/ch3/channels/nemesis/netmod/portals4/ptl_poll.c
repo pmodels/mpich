@@ -118,7 +118,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
                 assert(0);
             }
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Send completed");
-            mpi_errno = MPID_nem_ptl_send_completed(event.user_ptr);
+            mpi_errno = MPID_nem_ptl_ev_send_handler(&event);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             break;
         case PTL_EVENT_ACK:

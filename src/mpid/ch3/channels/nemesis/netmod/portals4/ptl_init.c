@@ -1,4 +1,4 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *  (C) 2012 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
@@ -35,7 +35,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_portals4_funcs = {
     vc_init,
     vc_destroy,
     vc_terminate,
-    NULL /* anysource iprobe */
+    MPID_nem_ptl_anysource_iprobe,
+    MPID_nem_ptl_anysource_improbe
 };
 
 static MPIDI_Comm_ops_t comm_ops = {
