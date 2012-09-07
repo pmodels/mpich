@@ -3811,6 +3811,8 @@ void MPIR_LXOR  ( void *, void *, int *, MPI_Datatype * ) ;
 void MPIR_BXOR  ( void *, void *, int *, MPI_Datatype * ) ;
 void MPIR_MAXLOC  ( void *, void *, int *, MPI_Datatype * ) ;
 void MPIR_MINLOC  ( void *, void *, int *, MPI_Datatype * ) ;
+void MPIR_REPLACE  ( void *, void *, int *, MPI_Datatype * ) ;
+void MPIR_NO_OP  ( void *, void *, int *, MPI_Datatype * ) ;
 
 int MPIR_MAXF_check_dtype  ( MPI_Datatype ) ;
 int MPIR_MINF_check_dtype ( MPI_Datatype ) ;
@@ -3824,8 +3826,10 @@ int MPIR_LXOR_check_dtype ( MPI_Datatype ) ;
 int MPIR_BXOR_check_dtype  ( MPI_Datatype ) ;
 int MPIR_MAXLOC_check_dtype  ( MPI_Datatype ) ;
 int MPIR_MINLOC_check_dtype  ( MPI_Datatype ) ;
+int MPIR_REPLACE_check_dtype  ( MPI_Datatype ) ;
+int MPIR_NO_OP_check_dtype  ( MPI_Datatype ) ;
 
-#define MPIR_PREDEF_OP_COUNT 12
+#define MPIR_PREDEF_OP_COUNT 14
 extern MPI_User_function *MPIR_Op_table[];
 
 typedef int (MPIR_Op_check_dtype_fn) ( MPI_Datatype ); 

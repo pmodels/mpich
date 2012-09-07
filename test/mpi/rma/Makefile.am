@@ -83,6 +83,7 @@ noinst_PROGRAMS =          \
     get_acc_local          \
     compare_and_swap       \
     linked_list            \
+    linked_list_fop        \
     fetch_and_op
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm

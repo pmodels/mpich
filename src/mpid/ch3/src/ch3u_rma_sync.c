@@ -918,7 +918,9 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *rma_op,
         fop_pkt->request_handle = resp_req->handle;
         fop_pkt->op = rma_op->op;
 
-        MPIU_Memcpy( (void *) &fop_pkt->origin_data, rma_op->origin_addr, len );
+        if (rma_op->op != MPIX_NO_OP) {
+            MPIU_Memcpy( (void *) &fop_pkt->origin_data, rma_op->origin_addr, len );
+        }
 
         comm_ptr = win_ptr->comm_ptr;
         MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);

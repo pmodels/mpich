@@ -67,5 +67,6 @@ win_shared_noncontig_put 4 strict=false
 win_dynamic_acc 4 strict=false
 get_acc_local 1 strict=false
 linked_list 4 strict=false
+linked_list_fop 4 strict=false
 compare_and_swap 4 strict=false
 fetch_and_op 4 strict=false

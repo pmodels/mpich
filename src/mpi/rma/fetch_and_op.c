@@ -99,7 +99,10 @@ int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
-            MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
+            if (op != MPIX_NO_OP) {
+                MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
+            }
+
             MPIR_ERRTEST_ARGNULL(result_addr, "result_addr", mpi_errno);
             if (mpi_errno) goto fn_fail;
 

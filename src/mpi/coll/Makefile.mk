@@ -64,6 +64,8 @@ lib_lib@MPILIBNAME@_la_SOURCES += \
     src/mpi/coll/opprod.c         \
     src/mpi/coll/opminloc.c       \
     src/mpi/coll/opmaxloc.c       \
+    src/mpi/coll/opno_op.c        \
+    src/mpi/coll/opreplace.c      \
     src/mpi/coll/nbcutil.c        \
     src/mpi/coll/rmatypeutil.c
 
