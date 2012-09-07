@@ -251,3 +251,83 @@ fn_fail:
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Fetch_and_op
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
+                       MPI_Datatype datatype, int target_rank,
+                       MPI_Aint target_disp, MPI_Op op, MPID_Win *win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int rank;
+    MPIDI_RMA_ops *new_ptr;
+
+    MPIU_CHKPMEM_DECL(1);
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+
+    if (target_rank == MPI_PROC_NULL) {
+        goto fn_exit;
+    }
+
+    rank = win_ptr->myrank;
+
+    /* The datatype and op must be predefined.  This is checked above the ADI,
+     * so there's no need to check it again here. */
+
+    if (target_rank == rank) {
+        void *dest_addr = (char *) win_ptr->base + win_ptr->disp_unit * target_disp;
+        int len, one;
+        MPI_User_function *uop;
+
+        MPID_Datatype_get_size_macro(datatype, len);
+        MPIU_Memcpy(result_addr, dest_addr, len);
+
+        uop = MPIR_OP_HDL_TO_FN(op);
+        one = 1;
+
+        (*uop)((void *) origin_addr, dest_addr, &one, &datatype);
+
+        goto fn_exit;
+    }
+    else {
+        /* Append this operation to the RMA ops queue */
+        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
+                            mpi_errno, "RMA operation entry");
+        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        if (win_ptr->rma_ops_list_tail) 
+            win_ptr->rma_ops_list_tail->next = new_ptr;
+        else
+            win_ptr->rma_ops_list_head = new_ptr;
+        win_ptr->rma_ops_list_tail = new_ptr;
+
+        MPIU_INSTR_DURATION_START(rmaqueue_set);
+        new_ptr->next = NULL;
+        new_ptr->type = MPIDI_RMA_FETCH_AND_OP;
+        new_ptr->origin_addr = (void *) origin_addr;
+        new_ptr->origin_count = 1;
+        new_ptr->origin_datatype = datatype;
+        new_ptr->target_rank = target_rank;
+        new_ptr->target_disp = target_disp;
+        new_ptr->target_count = 1;
+        new_ptr->target_datatype = datatype;
+        new_ptr->result_addr = result_addr;
+        new_ptr->result_count = 1;
+        new_ptr->result_datatype = datatype;
+        new_ptr->op = op;
+        MPIU_INSTR_DURATION_END(rmaqueue_set);
+    }
+
+fn_exit:
+    MPIU_CHKPMEM_COMMIT();
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}

@@ -1787,6 +1787,10 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
                               MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CASResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
                                   MPIDI_msg_sz_t *, MPID_Request ** );
+int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
+                              MPIDI_msg_sz_t *, MPID_Request ** );
+int MPIDI_CH3_PktHandler_FOPResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
+                                  MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 			      MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_GetResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 

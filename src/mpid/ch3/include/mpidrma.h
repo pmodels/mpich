@@ -13,7 +13,8 @@ typedef enum MPIDI_RMA_Op_type_e {
     MPIDI_RMA_LOCK              = 26,
     MPIDI_RMA_ACC_CONTIG        = 27,
     MPIDI_RMA_GET_ACCUMULATE    = 28,
-    MPIDI_RMA_COMPARE_AND_SWAP  = 29
+    MPIDI_RMA_COMPARE_AND_SWAP  = 29,
+    MPIDI_RMA_FETCH_AND_OP      = 30
 } MPIDI_RMA_Op_type_t;
 
 /* Special case RMA operations */

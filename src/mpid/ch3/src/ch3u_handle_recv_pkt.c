@@ -594,6 +594,12 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
         MPIDI_CH3_PktHandler_CAS;
     pktArray[MPIDI_CH3_PKT_CAS_RESP] =
         MPIDI_CH3_PktHandler_CASResp;
+    pktArray[MPIDI_CH3_PKT_FOP] =
+        MPIDI_CH3_PktHandler_FOP;
+    pktArray[MPIDI_CH3_PKT_FOP_UNLOCK] =
+        MPIDI_CH3_PktHandler_FOP;
+    pktArray[MPIDI_CH3_PKT_FOP_RESP] =
+        MPIDI_CH3_PktHandler_FOPResp;
     /* End of default RMA operations */
 
  fn_fail:

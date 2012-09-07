@@ -82,7 +82,8 @@ noinst_PROGRAMS =          \
     win_dynamic_acc        \
     get_acc_local          \
     compare_and_swap       \
-    linked_list
+    linked_list            \
+    fetch_and_op
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm

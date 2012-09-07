@@ -29,18 +29,6 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Fetch_and_op
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
-                       MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-                       MPI_Op op, MPID_Win *win)
-{
-    MPIDI_FUNC_NOTIMPL(FETCH_AND_OP)
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Rput
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

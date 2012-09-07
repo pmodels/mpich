@@ -79,6 +79,116 @@ typedef union {
 #endif
 } MPIDI_CH3_CAS_Immed_u;
 
+/* Union over all types that are allowed in a Fetch-and-op operation.  This
+   is used to allocate enough space in the packet header for immediate
+   data.  */
+typedef union {
+    char       fop_char;
+    short      fop_short;
+    int        fop_int;
+    long       fop_long;
+    MPI_Aint   fop_aint;
+    MPI_Offset fop_offset;
+
+#if defined(HAVE_INT8_T)
+    int8_t     fop_int8_t;
+#endif
+#if defined(HAVE_INT16_T)
+    int16_t    fop_int16_t;
+#endif
+#if defined(HAVE_INT32_T)
+    int32_t    fop_int32_t;
+#endif
+#if defined(HAVE_INT64_T)
+    int64_t    fop_int64_t;
+#endif
+#if defined(HAVE_UINT8_T)
+    uint8_t    fop_uint8_t;
+#endif
+#if defined(HAVE_UINT16_T)
+    uint16_t   fop_uint16_t;
+#endif
+#if defined(HAVE_UINT32_T)
+    uint32_t   fop_uint32_t;
+#endif
+#if defined(HAVE_UINT64_T)
+    uint64_t   fop_uint64_t;
+#endif
+#if defined(HAVE_LONG_LONG_INT)
+    long long  fop_long_long;
+#endif
+#if defined(HAVE_FORTRAN_BINDING)
+    MPI_Fint   fop_fint;
+#endif
+#if defined(HAVE__BOOL)
+    _Bool      fop__bool;
+#endif
+#if defined(HAVE_CXX_BINDING)
+    MPIR_CXX_BOOL_CTYPE fop_cxx_bool;
+#endif
+#if defined(MPIR_INTEGER1_CTYPE)
+    MPIR_INTEGER1_CTYPE fop_integer1;
+#endif
+#if defined(MPIR_INTEGER2_CTYPE)
+    MPIR_INTEGER2_CTYPE fop_integer2;
+#endif
+#if defined(MPIR_INTEGER4_CTYPE)
+    MPIR_INTEGER4_CTYPE fop_integer4;
+#endif
+#if defined(MPIR_INTEGER8_CTYPE)
+    MPIR_INTEGER8_CTYPE fop_integer8;
+#endif
+#if defined(MPIR_INTEGER16_CTYPE)
+    MPIR_INTEGER16_CTYPE fop_integer16;
+#endif
+
+    float      fop_float;
+    double     fop_double;
+
+#if defined(HAVE_LONG_DOUBLE)
+    long double fop_long_double;
+#endif
+
+#if defined(MPIR_REAL4_CTYPE)
+    MPIR_REAL4_CTYPE fop_mpir_real4_ctype;
+#endif
+#if defined(MPIR_REAL8_CTYPE)
+    MPIR_REAL8_CTYPE fop_mpir_real8_ctype;
+#endif
+#if defined(MPIR_REAL16_CTYPE)
+    MPIR_REAL16_CTYPE fop_mpir_real16_ctype;
+#endif
+
+    struct {
+        double re;
+        double im;
+    } fop_d_complex;
+
+#if defined(HAVE_LONG_DOUBLE)
+    struct {
+        long double re;
+        long double im;
+    } fop_ld_complex;
+#endif
+
+    struct { 
+        float re;
+        float im;
+    } fop_s_complex;
+
+#if defined(HAVE_FORTRAN_BINDING)
+    struct {
+        MPIR_FC_REAL_CTYPE re;
+        MPIR_FC_REAL_CTYPE im;
+    } fop_s_fc_complex;
+
+    struct {
+        MPIR_FC_DOUBLE_CTYPE re;
+        MPIR_FC_DOUBLE_CTYPE im;
+    } fop_d_fc_complex;
+#endif
+} MPIDI_CH3_FOP_Immed_u;
+
 /*
  * MPIDI_CH3_Pkt_type_t
  *
@@ -116,6 +226,9 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_CAS,
     MPIDI_CH3_PKT_CAS_UNLOCK,
     MPIDI_CH3_PKT_CAS_RESP,
+    MPIDI_CH3_PKT_FOP,
+    MPIDI_CH3_PKT_FOP_UNLOCK,
+    MPIDI_CH3_PKT_FOP_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
     MPIDI_CH3_PKT_END_CH3
@@ -312,6 +425,33 @@ typedef struct MPIDI_CH3_Pkt_cas_resp
 }
 MPIDI_CH3_Pkt_cas_resp_t;
 
+typedef struct MPIDI_CH3_Pkt_fop
+{
+    MPIDI_CH3_Pkt_type_t type;
+    MPI_Datatype datatype;
+    void *addr;
+    MPI_Op op;
+    MPI_Request request_handle;
+    MPI_Win target_win_handle; /* Used in the last RMA operation in each
+                                * epoch for decrementing rma op counter in
+                                * active target rma and for unlocking window 
+                                * in passive target rma. Otherwise set to NULL*/
+
+                               /* source_win_handle is omitted here to reduce
+                                * the packet size.  If this is the last FETCH_OP
+                                * packet, the type will be set to FETCH_OP_UNLOCK */
+    MPIDI_CH3_FOP_Immed_u origin_data;
+}
+MPIDI_CH3_Pkt_fop_t;
+
+typedef struct MPIDI_CH3_Pkt_fop_resp
+{
+    MPIDI_CH3_Pkt_type_t type;
+    MPI_Request request_handle;
+    MPIDI_CH3_FOP_Immed_u data;
+}
+MPIDI_CH3_Pkt_fop_resp_t;
+
 typedef struct MPIDI_CH3_Pkt_lock
 {
     MPIDI_CH3_Pkt_type_t type;
@@ -405,6 +545,8 @@ typedef union MPIDI_CH3_Pkt
     MPIDI_CH3_Pkt_close_t close;
     MPIDI_CH3_Pkt_cas_t cas;
     MPIDI_CH3_Pkt_cas_resp_t cas_resp;
+    MPIDI_CH3_Pkt_fop_t fop;
+    MPIDI_CH3_Pkt_fop_resp_t fop_resp;
 # if defined(MPIDI_CH3_PKT_DECL)
     MPIDI_CH3_PKT_DECL
 # endif
