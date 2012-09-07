@@ -11,4 +11,5 @@
 **ptlmdbind:PtlMDBind()failed
 **ptlmdrelease:PtlMDRelease() failed
 **ptlput:PtlPut() failed
+**ptlget:PtlGet() failed
 **badbusinesscard:Invalid business card
