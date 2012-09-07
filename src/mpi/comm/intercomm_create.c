@@ -8,6 +8,8 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 
+#define MPIR_INTERCOMM_CREATE_TAG 0
+
 /* -- Begin Profiling Symbol Block for routine MPI_Intercomm_create */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Intercomm_create = PMPI_Intercomm_create
@@ -192,8 +194,9 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
 
-    /* Shift tag into the tagged coll space */
-    cts_tag = tag | MPIR_Process.tagged_coll_mask;
+    /* Shift tag into the tagged coll space (tag provided by the user 
+       is ignored as of MPI 3.0) */
+    cts_tag = MPIR_INTERCOMM_CREATE_TAG | MPIR_Process.tagged_coll_mask;
 
     /*
      * Error checking for this routine requires care.  Because this
