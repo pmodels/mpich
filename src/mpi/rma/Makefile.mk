@@ -48,5 +48,6 @@ mpi_sources +=                          \
 noinst_HEADERS += src/mpi/rma/rma.h
 
 lib_lib@MPILIBNAME@_la_SOURCES += \
-    src/mpi/rma/winutil.c
+    src/mpi/rma/winutil.c         \
+    src/mpi/rma/rmatypeutil.c
 

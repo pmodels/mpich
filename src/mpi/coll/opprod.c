@@ -28,7 +28,7 @@ void MPIR_PROD (
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LPROD)
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LPROD)
         /* no semicolons by necessity */
         MPIR_OP_TYPE_GROUP(C_INTEGER)
         MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
@@ -40,7 +40,7 @@ void MPIR_PROD (
 
         /* complex multiplication is slightly different than scalar multiplication */
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_)          \
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) \
         case (mpi_type_): {                             \
             c_type_ * restrict a = (c_type_ *)inoutvec; \
             c_type_ * restrict b = (c_type_ *)invec;    \
@@ -53,13 +53,13 @@ void MPIR_PROD (
             break;                                      \
         }
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
-#define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,MPIR_LPROD)
+#define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,MPIR_LPROD)
         MPIR_OP_TYPE_GROUP(COMPLEX)
         MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
         /* put things back where we found them */
 #undef MPIR_OP_TYPE_MACRO
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
-#define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_)
+#define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
         /* --BEGIN ERROR HANDLING-- */
         default: {
             MPIU_THREADPRIV_DECL;
@@ -95,7 +95,7 @@ int MPIR_PROD_check_dtype( MPI_Datatype type )
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case (mpi_type_):
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case (mpi_type_):
         MPIR_OP_TYPE_GROUP(C_INTEGER)
         MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
         MPIR_OP_TYPE_GROUP(FLOATING_POINT)

@@ -24,7 +24,7 @@ int MPIR_Type_is_rma_atomic(MPI_Datatype type)
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_) case mpi_type_:
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case mpi_type_:
         MPIR_OP_TYPE_GROUP(C_INTEGER)
         MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
         MPIR_OP_TYPE_GROUP(LOGICAL)
@@ -32,6 +32,7 @@ int MPIR_Type_is_rma_atomic(MPI_Datatype type)
         MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
         MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
         MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
+        MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
             return TRUE;
             break;
 #undef MPIR_OP_TYPE_MACRO
@@ -53,7 +54,7 @@ int MPIR_Compare_equal(const void *a, const void *b, MPI_Datatype type)
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_)  \
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) \
         case mpi_type_:                         \
             if (*(c_type_ *)a == *(c_type_ *)b) \
                 return TRUE;                    \
