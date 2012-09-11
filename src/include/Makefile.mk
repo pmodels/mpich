@@ -58,6 +58,7 @@ noinst_HEADERS +=                   \
     src/include/mpiu_utarray.h      \
     src/include/mpiutil.h           \
     src/include/nopackage.h         \
+    src/include/oputil.h            \
     src/include/pmi.h               \
     src/include/pmi2.h              \
     src/include/rlog.h              \

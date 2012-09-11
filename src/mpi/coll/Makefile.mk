@@ -66,10 +66,8 @@ lib_lib@MPILIBNAME@_la_SOURCES += \
     src/mpi/coll/opmaxloc.c       \
     src/mpi/coll/opno_op.c        \
     src/mpi/coll/opreplace.c      \
-    src/mpi/coll/nbcutil.c        \
-    src/mpi/coll/rmatypeutil.c
+    src/mpi/coll/nbcutil.c
 
 noinst_HEADERS +=           \
-    src/mpi/coll/collutil.h \
-    src/mpi/coll/oputil.h
+    src/mpi/coll/collutil.h
 
