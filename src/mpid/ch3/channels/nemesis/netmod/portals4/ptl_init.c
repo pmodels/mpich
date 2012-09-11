@@ -107,7 +107,10 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     /* create business card */
     mpi_errno = get_business_card(pg_rank, bc_val_p, val_max_sz_p);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
+
+    mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_ptl_anysource_posted, MPID_nem_ptl_anysource_matched);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* init other modules */
     mpi_errno = MPID_nem_ptl_poll_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

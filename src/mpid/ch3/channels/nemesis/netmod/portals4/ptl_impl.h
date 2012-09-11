@@ -41,10 +41,8 @@ typedef struct {
     ptl_handle_me_t me;
     void *chunk_buffer[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
     MPIDI_msg_sz_t bytes_put;
-    event_handler_fn ack_handler;
-    event_handler_fn put_handler;
-    event_handler_fn get_handler;
-    event_handler_fn reply_handler;
+    int found; /* used in probes with PtlMESearch() */
+    event_handler_fn event_handler;
 } MPID_nem_ptl_req_area;
 
 /* macro for ptl private in req */
@@ -60,10 +58,7 @@ typedef struct {
         REQ_PTL(req_)->large         = FALSE;                   \
         REQ_PTL(req_)->md            = PTL_INVALID_HANDLE;      \
         REQ_PTL(req_)->me            = PTL_INVALID_HANDLE;      \
-        REQ_PTL(req_)->ack_handler   = NULL;                    \
-        REQ_PTL(req_)->put_handler   = NULL;                    \
-        REQ_PTL(req_)->get_handler   = NULL;                    \
-        REQ_PTL(req_)->reply_handler = NULL;                    \
+        REQ_PTL(req_)->event_handler = NULL;                    \
     } while (0)
 
 #define MPID_nem_ptl_request_create_req(sreq_, errno_, on_fail_) do {   \
@@ -85,38 +80,51 @@ typedef struct {
 /* Header bit fields
    bit   field
    ----  -------------------
-   50    single/multiple
-   49    large/small
-   48    ssend
-   24-47 match-bits for large messages (24 bits)
-   0-23  source
+   63    single/multiple
+   62    large/small
+   61    ssend
+   32-60 seqnum for large messages (29 bits)
+   0-31  length
 
    Note: This means we support no more than 2^24 processes.
 */
-#define NPTL_SOURCE_OFFSET                          0
-#define NPTL_MATCH_BITS_OFFSET                     24
-#define NPTL_SSEND             ((ptl_hdr_data_t)1<<48)
-#define NPTL_LARGE             ((ptl_hdr_data_t)1<<49)
-#define NPTL_MULTIPLE          ((ptl_hdr_data_t)1<<50)
+#define NPTL_LENGTH_OFFSET                          0
+#define NPTL_SEQNUM_OFFSET                         32
+#define NPTL_SSEND             ((ptl_hdr_data_t)1<<61)
+#define NPTL_LARGE             ((ptl_hdr_data_t)1<<62)
+#define NPTL_MULTIPLE          ((ptl_hdr_data_t)1<<63)
 
-#define NPTL_SOURCE_MASK     ((((ptl_hdr_data_t)1<<24)-1)<<NPTL_SOURCE_OFFSET)
-#define NPTL_MATCH_BITS_MASK ((((ptl_hdr_data_t)1<<24)-1)<<NPTL_MATCH_BITS_OFFSET)
+#define NPTL_LENGTH_MASK     ((((ptl_hdr_data_t)1<<32)-1)<<NPTL_LENGTH_OFFSET)
+#define NPTL_SEQNUM_MASK ((((ptl_hdr_data_t)1<<29)-1)<<NPTL_SEQNUM_OFFSET)
 
-#define NPTL_HEADER(flags, match_bits, source) ((flags) |                                                       \
-                                                ((ptl_hdr_data_t)(match_bits))<<NPTL_MATCH_BITS_OFFSET |        \
-                                                ((ptl_hdr_data_t)(source))<<NPTL_SOURCE_OFFSET)
+#define NPTL_HEADER(flags, large_seqnum, length) ((flags) |                                             \
+                                                ((ptl_hdr_data_t)(seqnum))<<NPTL_SEQNUM_OFFSET |        \
+                                                ((ptl_hdr_data_t)(length))<<NPTL_LENGTH_OFFSET)
 
-#define NPTL_HEADER_SOURCE(hdr)     ((hdr & NPTL_SOURCE_MASK)>>NPTL_SOURCE_OFFSET)
-#define NPTL_HEADER_MATCH_BITS(hdr) ((hdr & NPTL_MATCH_BITS_MASK)>>NPTL_MATCH_BITS_OFFSET)
+#define NPTL_HEADER_GET_SEQNUM(hdr) ((hdr & NPTL_SEQNUM_MASK)>>NPTL_SEQNUM_OFFSET)
+#define NPTL_HEADER_GET_LENGTH(hdr) ((hdr & NPTL_LENGTH_MASK)>>NPTL_LENGTH_OFFSET)
 
-/* This is the maximum number of processes we support */
-#define NPTL_MAX_PROCS (NPTL_SOURCE_MASK+1)
+/* The comm_world rank of the sender is stored in the match_bits, but they are
+   ignored when matching.
+   bit   field
+   ----  -------------------
+   32-63  Tag
+   16-31  Context id
+    0-15  Rank
+*/
 
-/* create a match value */
-#define NPTL_TAG_SHIFT 32 /* tag and ctx_id are limited to 32 bits each */
-#define NPTL_MATCH(tag, context_id) (((ptl_match_bits)(tag) << NPTL_TAG_SHIFT)  | (ptl_match_bits)(context_id))
-#define NPTL_MATCH_GET_TAG(match_bits) ((match_bits) >> NPTL_TAG_SHIFT)
-#define NPTL_ANY_TAG_MASK NPTL_MATCH(~0, 0)
+#define NPTL_MATCH_TAG_OFFSET 32
+#define NPTL_MATCH_CTX_OFFSET 16
+#define NPTL_MATCH_RANK_MASK (((ptl_match_bits)(1) << 16) - 1)
+#define NPTL_MATCH_TAG_MASK ((((ptl_match_bits)(1) << 16) - 1) << NPTL_MATCH_TAG_OFFSET)
+#define NPTL_MATCH(tag, ctx) (((ptl_match_bits)(tag) << NPTL_MATCH_TAG_OFFSET) |        \
+                              ((ptl_match_bits)(ctx) << NPTL_MATCH_CTX_OFFSET) |        \
+                              ((ptl_match_bits)MPIDI_Process.my_pg_rank))
+#define NPTL_MATCH_IGNORE NPTL_MATCH_RANK_MASK
+#define NPTL_MATCH_IGNORE_ANY_TAG (NPTL_MATCH_IGNORE | NPTL_MATCH_TAG_MASK)
+
+#define NPTL_MATCH_GET_RANK(match_bits) ((match_bits) & NPTL_MATCH_RANK_MASK)
+#define NPTL_MATCH_GET_TAG(match_bits) ((match_bits) >> NPTL_MATCH_TAG_OFFSET)
 
 int MPID_nem_ptl_send_init(void);
 int MPID_nem_ptl_send_finalize(void);

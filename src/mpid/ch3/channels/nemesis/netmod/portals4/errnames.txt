@@ -8,6 +8,7 @@
 **ptleqget:PtlEQGet() failed
 **ptlmeappend:PtlMEAppend() failed
 **ptlmeunlink:PtlMEUnlink() failed
+**ptlmesearch:PtlMESearch() failed
 **ptlmdbind:PtlMDBind()failed
 **ptlmdrelease:PtlMDRelease() failed
 **ptlput:PtlPut() failed

@@ -735,6 +735,8 @@ static int handler_send_complete(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_SEND_COMPLETE);
 
+    MPIU_Assert(e->type == PTL_EVENT_ACK || e->type == PTL_EVENT_PUT || e->type == PTL_EVENT_GET);
+
     if (REQ_PTL(sreq)->me != PTL_INVALID_HANDLE) {
         ret = PtlMEUnlink(REQ_PTL(sreq)->me);
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink");
@@ -770,13 +772,14 @@ static int handler_large(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_LARGE);
 
+    MPIU_Assert(e->type == PTL_EVENT_ACK);
+
     if (e->mlength < PTL_LARGE_THRESHOLD) {
         /* truncated message */
         mpi_errno = handler_send_complete(e);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
-        REQ_PTL(sreq)->ack_handler = NULL;
-        REQ_PTL(sreq)->get_handler = handler_send_complete;
+        REQ_PTL(sreq)->event_handler = handler_send_complete;
     }
 
  fn_exit:
@@ -799,6 +802,14 @@ static int handler_pack_chunk(const ptl_event_t *e)
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_PACK_CHUNK);
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_PACK_CHUNK);
+
+    MPIU_Assert(e->type == PTL_EVENT_GET || e->type == PTL_EVENT_PUT);
+
+    if (e->type == PTL_EVENT_PUT) {
+        mpi_errno = handler_send_complete(e);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        goto fn_exit;
+    }
 
     /* pack next chunk */
     pack_byte(sreq->dev.segment_ptr, sreq->dev.segment_first, sreq->dev.segment_first + PTL_LARGE_THRESHOLD,
@@ -850,15 +861,15 @@ static int handler_large_multi(const ptl_event_t *e)
     MPID_Request *const sreq = e->user_ptr;
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_LARGE_MULTI);
 
+    MPIU_Assert(e->type == PTL_EVENT_ACK);
+
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_LARGE_MULTI);
     if (e->mlength < PTL_LARGE_THRESHOLD) {
         /* truncated message */
         mpi_errno = handler_send_complete(e);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
-        REQ_PTL(sreq)->ack_handler = NULL;
-        REQ_PTL(sreq)->put_handler = handler_send_complete;
-        REQ_PTL(sreq)->get_handler = handler_pack_chunk;
+        REQ_PTL(sreq)->event_handler = handler_pack_chunk;
     }
     
  fn_exit:
@@ -891,6 +902,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     int initial_iov_count, remaining_iov_count;
     ptl_md_t md;
     MPI_Aint last;
+    MPIDI_Message_match match;
     MPIU_CHKPMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_SEND_MSG);
 
@@ -911,10 +923,11 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         MPI_Aint last;
 
         if (dt_contig) {
+            REQ_PTL(sreq)->event_handler = handler_send_complete;
             ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)buf, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
-                         NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq, NPTL_HEADER(ssend_flag, MPIDI_Process.my_pg_rank, 0));
+                         NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
+                         NPTL_HEADER(ssend_flag, 0, data_sz));
             MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
-            REQ_PTL(sreq)->ack_handler = handler_send_complete;
             goto fn_exit;
         }
         
@@ -940,11 +953,11 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(sreq)->md);
             MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind");
                 
+            REQ_PTL(sreq)->event_handler = handler_send_complete;
             ret = PtlPut(REQ_PTL(sreq)->md, (ptl_size_t)buf, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                          NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
-                         NPTL_HEADER(ssend_flag, MPIDI_Process.my_pg_rank, 0));
+                         NPTL_HEADER(ssend_flag, 0, data_sz));
             MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
-            REQ_PTL(sreq)->ack_handler = handler_send_complete;
             goto fn_exit;
         }
         
@@ -954,11 +967,11 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         last = data_sz;
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, REQ_PTL(sreq)->chunk_buffer[0]);
         MPIU_Assert(last == sreq->dev.segment_size);
+        REQ_PTL(sreq)->event_handler = handler_send_complete;
         ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], data_sz, PTL_ACK_REQ,
                      vc_ptl->id, vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
-                     NPTL_HEADER(ssend_flag, MPIDI_Process.my_pg_rank, 0));
+                     NPTL_HEADER(ssend_flag, 0, data_sz));
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
-        REQ_PTL(sreq)->ack_handler = handler_send_complete;
         goto fn_exit;
     }
         
@@ -982,11 +995,11 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
         REQ_PTL(sreq)->large = TRUE;
             
+        REQ_PTL(sreq)->event_handler = handler_large;
         ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)buf, PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                      NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
-                     NPTL_HEADER(ssend_flag | NPTL_LARGE, MPIDI_Process.my_pg_rank, me.match_bits));
+                     NPTL_HEADER(ssend_flag | NPTL_LARGE, me.match_bits, data_sz));
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
-        REQ_PTL(sreq)->ack_handler = handler_large;
         goto fn_exit;
     }
     
@@ -1047,11 +1060,11 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
                 REQ_PTL(sreq)->large = TRUE;
                         
+                REQ_PTL(sreq)->event_handler = handler_large;
                 ret = PtlPut(REQ_PTL(sreq)->md, 0, PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                              NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
-                             NPTL_HEADER(ssend_flag | NPTL_LARGE, MPIDI_Process.my_pg_rank, me.match_bits));
+                             NPTL_HEADER(ssend_flag | NPTL_LARGE, me.match_bits, data_sz));
                 MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
-                REQ_PTL(sreq)->ack_handler = handler_large;
                 goto fn_exit;
             }
         }
@@ -1082,11 +1095,11 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     
     REQ_PTL(sreq)->large = TRUE;
     
+    REQ_PTL(sreq)->event_handler = handler_large;
     ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], PTL_LARGE_THRESHOLD, PTL_ACK_REQ,
                  vc_ptl->id, vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
-                 NPTL_HEADER(ssend_flag | NPTL_LARGE, MPIDI_Process.my_pg_rank, me.match_bits));
+                 NPTL_HEADER(ssend_flag | NPTL_LARGE, me.match_bits, data_sz));
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
-    REQ_PTL(sreq)->ack_handler = handler_large;
     goto fn_exit;
 
 #if 0
@@ -1122,11 +1135,11 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
     REQ_PTL(sreq)->large = TRUE;
                         
+    REQ_PTL(sreq)->event_handler = handler_large_multi;
     ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq_)->chunk_buffer[0], PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id,
                  vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
-                 NPTL_HEADER(ssend_flag | NPTL_LARGE | NPTL_MULTIPLE, MPIDI_Process.my_pg_rank, me.match_bits));
+                 NPTL_HEADER(ssend_flag | NPTL_LARGE | NPTL_MULTIPLE, me.match_bits, data_sz));
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput");
-    REQ_PTL(sreq)->ack_handler = handler_large_multi;
 #endif
     
  fn_exit:

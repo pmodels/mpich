@@ -92,7 +92,29 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         if (ret == PTL_EQ_EMPTY)
             break;
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget");
+        switch (event.type) {
+            MPID_Request * const req = e->user_ptr;
+        case PTL_EVENT_PUT:
+        case PTL_EVENT_GET:
+        case PTL_EVENT_ACK:
+        case PTL_EVENT_REPLY:
+        case PTL_EVENT_SEARCH:
+            mpi_errno = REQ_PTL(sreq)->event_handler(e);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            break;
+        case PTL_EVENT_PUT_OVERFLOW:
+            MPIU_ERR_INTERNALANDJUMP(mpi_errno, "Overflow event");
+            break
+        default:
+            MPIU_ERR_INTERNALANDJUMP(mpi_errno, "Unexpected event type");
+        }
+    }
+    
+    
+        
+        
 
+#if 0 /* used for non-matching message passing */
         switch (event.type) {
         case PTL_EVENT_PUT:
             if (event.ni_fail_type) {
@@ -134,7 +156,9 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             printf("Got unexpected event %d\n", event.type);
             break;
         }
-    };
+    }
+#endif
+
 
  fn_exit:
     /* MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_POLL); */
