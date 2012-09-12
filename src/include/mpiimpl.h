@@ -3243,7 +3243,7 @@ int MPID_Rput(const void *origin_addr, int origin_count,
               int target_count, MPI_Datatype target_datatype, MPID_Win *win,
               MPID_Request **request);
 int MPID_Rget(void *origin_addr, int origin_count,
-              MPID_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPID_Win *win,
               MPID_Request **request);
 int MPID_Raccumulate(const void *origin_addr, int origin_count,
