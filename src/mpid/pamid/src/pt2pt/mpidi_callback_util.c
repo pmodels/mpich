@@ -34,10 +34,6 @@ MPIDI_Callback_process_unexp(MPID_Request *newreq,
                              unsigned              isSync)
 {
   MPID_Request *rreq = NULL;
-#ifdef MPIDI_TRACE
-  int  idx=(msginfo->MPIseqno & SEQMASK);
-  int  source=PAMIX_Endpoint_query(sender);
-#endif
 
   /* ---------------------------------------------------- */
   /*  Fallback position:                                  */
@@ -78,13 +74,15 @@ MPIDI_Callback_process_unexp(MPID_Request *newreq,
 
   MPID_assert(!sndlen || rreq->mpid.uebuf != NULL);
 #ifdef MPIDI_TRACE
-   memset(&MPIDI_In_cntr[source].R[idx],0,sizeof(recv_status));
-   MPIDI_In_cntr[source].R[idx].msgid=msginfo->MPIseqno;
-   MPIDI_In_cntr[source].R[idx].rtag=tag;
-   MPIDI_In_cntr[source].R[idx].rctx=msginfo->MPIctxt;
-   MPIDI_In_cntr[source].R[idx].rlen=sndlen;
-   MPIDI_In_cntr[source].R[idx].sync=isSync;
-   MPIDI_In_cntr[source].R[idx].rsource=source;
+   int  idx=(msginfo->MPIseqno & SEQMASK);
+   int  source=PAMIX_Endpoint_query(sender);
+   memset(&MPIDI_Trace_buf[source].R[idx],0,sizeof(recv_status));
+   MPIDI_Trace_buf[source].R[idx].msgid=msginfo->MPIseqno;
+   MPIDI_Trace_buf[source].R[idx].rtag=tag;
+   MPIDI_Trace_buf[source].R[idx].rctx=msginfo->MPIctxt;
+   MPIDI_Trace_buf[source].R[idx].rlen=sndlen;
+   MPIDI_Trace_buf[source].R[idx].sync=isSync;
+   MPIDI_Trace_buf[source].R[idx].rsource=source;
    rreq->mpid.idx=idx;
 #endif
 
