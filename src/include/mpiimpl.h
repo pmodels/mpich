@@ -3241,20 +3241,20 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 int MPID_Rput(const void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPID_Win *win,
-              MPI_Request *request);
+              MPID_Request **request);
 int MPID_Rget(void *origin_addr, int origin_count,
-              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              MPID_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPID_Win *win,
-              MPI_Request *request);
+              MPID_Request **request);
 int MPID_Raccumulate(const void *origin_addr, int origin_count,
                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
-                     MPI_Request *request);
+                     MPID_Request **request);
 int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
-                         MPI_Request *request);
+                         MPID_Request **request);
 
 int MPID_Win_lock_all(int assert, MPID_Win *win);
 int MPID_Win_unlock_all(MPID_Win *win);
