@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
 
         for (j = 0; j < nproc; j++) {
             if (res_ptr[j] != (i-1)*rank) {
-                SQUELCH( printf("%d->%d -- ALL-TO-ALL: expected result %d, got %d\n", rank, j, (i-1)*rank, val_ptr[j]); );
+                SQUELCH( printf("%d->%d -- ALL-TO-ALL: expected result %d, got %d\n", rank, j, (i-1)*rank, res_ptr[j]); );
                 errors++;
             }
         }
