@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <mpi.h>
 #include <assert.h>
+#include "mpitest.h"
 
 /* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
  */
@@ -54,6 +55,7 @@ static llist_elem_t **my_elems = NULL;
 static int my_elems_size  = 0;
 static int my_elems_count = 0;
 
+#ifdef TEST_MPI3_ROUTINES
 /* Allocate a new shared linked list element */
 MPI_Aint alloc_elem(int value, MPI_Win win) {
     MPI_Aint disp;
@@ -76,6 +78,7 @@ MPI_Aint alloc_elem(int value, MPI_Win win) {
     MPI_Get_address(elem_ptr, &disp);
     return disp;
 }
+#endif
 
 int main(int argc, char **argv) {
     int           procid, nproc, i;
@@ -243,7 +246,7 @@ int main(int argc, char **argv) {
         MPI_Free_mem(my_elems[my_elems_count-1]);
 
 #else /* ! TEST_MPI3_ROUTINES */
-    if (rank == 0)
+    if (procid == 0)
         printf(" No Errors\n");
 #endif
 
