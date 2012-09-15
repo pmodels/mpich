@@ -40,6 +40,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                 gettimeofday(&now, NULL);
                 time_elapsed = (now.tv_sec - start.tv_sec);     /* Ignore microsec granularity */
 
+                time_left = -1;
                 if (timeout > 0) {
                     if (time_elapsed > timeout) {
 #if defined(HAVE_GETPGID) && defined(HAVE_SETSID)
@@ -55,8 +56,6 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                     else
                         time_left = timeout - time_elapsed;
                 }
-                else
-                    time_left = -1;
 
                 status = HYDT_dmx_wait_for_event(time_left);
                 HYDU_ERR_POP(status, "error waiting for event\n");

@@ -349,7 +349,7 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
 HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *node_list,
                                   struct HYD_pg *pg)
 {
-    struct HYD_proxy *proxy = NULL, *last_proxy, *tmp;
+    struct HYD_proxy *proxy = NULL, *last_proxy = NULL, *tmp;
     struct HYD_exec *exec;
     struct HYD_node *node;
     int max_oversubscribe, c, num_procs, proxy_rem_cores, exec_rem_procs, allocated_procs;

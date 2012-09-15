@@ -174,6 +174,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
         while (pg_scratch->control_listen_fd != HYD_FD_CLOSED) {
             gettimeofday(&now, NULL);
             time_elapsed = (now.tv_sec - start.tv_sec);
+            time_left = timeout;
             if (timeout > 0) {
                 if (time_elapsed > timeout) {
                     HYDU_dump(stdout, "APPLICATION TIMED OUT\n");
@@ -188,8 +189,6 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
                 else
                     time_left = timeout - time_elapsed;
             }
-            else
-                time_left = timeout;
 
             status = HYDT_dmx_wait_for_event(time_left);
             if (status == HYD_TIMED_OUT)
