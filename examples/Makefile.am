@@ -78,7 +78,7 @@ parent_SOURCES = parent.c
 # --disable-static" is passed to configure.
 cpi_SOURCES = cpi.c
 cpi_LDADD = -lm
-cpi_LDFLAGS = $(LDFLAGS) -static
+cpi_LDFLAGS = $(LDFLAGS) -all-static
 
 icpi_SOURCES = icpi.c
 icpi_LDADD = -lm
