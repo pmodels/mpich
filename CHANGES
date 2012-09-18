@@ -10,6 +10,9 @@
  # OVERALL: Added support for Intel Many Integrated Core (MIC)
    architecture: shared memory, TCP/IP, and SCIF based communication.
 
+ # OVERALL: Added support for IBM BG/Q architecture.  Thanks to IBM
+   for the contribution.
+
  # MPI-3: const support has been added to mpi.h, although it is
    disabled by default.  It can be enabled on a per-translation unit
    basis with "#define MPICH2_CONST const".
