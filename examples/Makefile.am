@@ -43,7 +43,7 @@ LDFLAGS += -L../src/mpl -L../src/openpa/src
 # libraries.
 LDFLAGS += $(WRAPPER_LDFLAGS)
 
-external_libs = -lmpl -lopa
+external_libs = -lmpl -lopa $(WRAPPER_LIBS)
 if BUILD_PROFILING_LIB
 LIBS += -l@PMPILIBNAME@
 cpi_DEPENDENCIES += ../lib/lib@PMPILIBNAME@.la
