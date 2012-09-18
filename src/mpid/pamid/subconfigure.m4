@@ -46,9 +46,6 @@ AC_DEFINE_UNQUOTED([ASSERT_LEVEL], $ASSERT_LEVEL, [The pamid assert level])
 #
 # This macro adds the -I to CPPFLAGS and/or the -L to LDFLAGS
 #
-# TODO - This macro DOES NOT set the BINLDFLAGS, so there may be a mismatch when
-#        a custom pami is used.
-#
 PAC_SET_HEADER_LIB_PATH(pami)
 
 #
@@ -59,11 +56,12 @@ PAC_APPEND_FLAG([-D__${pamid_platform}__], [CPPFLAGS])
 #
 # This configure option allows "sandbox" bgq system software to be used.
 #
-AC_ARG_WITH(bgq-driver,
+AC_ARG_WITH(bgq-install-dir,
   AS_HELP_STRING([--with-bgq-install-dir=PATH],[specify path where bgq system software can be found;
                                                 may also be specified with the 'BGQ_INSTALL_DIR'
                                                 environment variable]),
   [ BGQ_INSTALL_DIR=$withval ])
+AC_SUBST(BGQ_INSTALL_DIR)
 
 #
 # Add bgq-specific build options.
@@ -91,10 +89,15 @@ if test "${pamid_platform}" = "BGQ" ; then
       PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [CPPFLAGS])
       PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [CPPFLAGS])
 
+      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_CPPFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],       [WRAPPER_CPPFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [WRAPPER_CPPFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_CPPFLAGS])
+
       PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [LDFLAGS])
 
-      PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [BINLDFLAGS])
-      PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],           [BINLDFLAGS])
+      PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [WRAPPER_LDFLAGS])
+      PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],           [WRAPPER_LDFLAGS])
 
       break
     fi
@@ -110,23 +113,16 @@ if test "${pamid_platform}" = "BGQ" ; then
   PAC_APPEND_FLAG([-lpthread],   [WRAPPER_LIBS])
   PAC_APPEND_FLAG([-lstdc++],    [WRAPPER_LIBS])
 
-  PAC_APPEND_FLAG([-lpami],      [BINLIBS])
-  PAC_APPEND_FLAG([-lSPI],       [BINLIBS])
-  PAC_APPEND_FLAG([-lSPI_cnk],   [BINLIBS])
-  PAC_APPEND_FLAG([-lrt],        [BINLIBS])
-  PAC_APPEND_FLAG([-lpthread],   [BINLIBS])
-  PAC_APPEND_FLAG([-lstdc++],    [BINLIBS])
-
   #
   # For some reason, on bgq, libtool will incorrectly attempt a static link
   # of libstdc++.so unless this '-all-static' option is used. This seems to
   # be a problem specific to libstdc++.
   #
-  PAC_APPEND_FLAG([-all-static], [BINLDFLAGS])
+  # Only the 'cpi' executable has this problem.
+  #
+  dnl PAC_APPEND_FLAG([-all-static], [WRAPPER_LDFLAGS])
 fi
 
-PAC_APPEND_FLAG([${MPICH2BIN_LDFLAGS}],[BINLDFLAGS])
-PAC_APPEND_FLAG([${MPICH2BIN_LIBS}],[BINLIBS])
 
 #
 # Check for gnu-style option to enable all warnings; if specified, then
@@ -135,15 +131,6 @@ PAC_APPEND_FLAG([${MPICH2BIN_LIBS}],[BINLIBS])
 if echo $CFLAGS | grep -q -- -Wall
 then
     PAC_APPEND_FLAG([-Werror],   [CFLAGS])
-fi
-
-#
-# Check for xl-style option to enable all warnings; if specified, then
-# add xl option to treat all warnings as errors.
-#
-if echo $CFLAGS | grep -q -- -qflag
-then
-    PAC_APPEND_FLAG([--qhalt=w], [CFLAGS])
 fi
 
 PAC_APPEND_FLAG([-I${master_top_srcdir}/src/include],              [CPPFLAGS])

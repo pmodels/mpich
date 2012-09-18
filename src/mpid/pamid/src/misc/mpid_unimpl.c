@@ -84,9 +84,150 @@ int MPID_Comm_remote_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr
   return 0;
 }
 
-
-
 int MPID_Comm_group_failed(MPID_Comm *comm_ptr, MPID_Group **failed_group_ptr)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_attach(MPID_Win *win, void *base, MPI_Aint size)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info_ptr, MPID_Comm *comm_ptr,
+                             void **base_ptr, MPID_Win **win_ptr)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Rput(const void *origin_addr, int origin_count,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPID_Win *win,
+              MPID_Request **request)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_flush_local(int rank, MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_detach(MPID_Win *win, const void *base)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
+                          void *result_addr, MPI_Datatype datatype, int target_rank,
+                          MPI_Aint target_disp, MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Raccumulate(const void *origin_addr, int origin_count,
+                     MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
+                     MPID_Request **request)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
+                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
+                         MPID_Request **request)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
+                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                      MPI_Op op, MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size, int *disp_unit,
+                          void *baseptr)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
+                      MPID_Comm *comm, void *baseptr, MPID_Win **win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_flush(int rank, MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_flush_local_all(MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_unlock_all(MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm, MPID_Win **win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Rget(void *origin_addr, int origin_count,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPID_Win *win,
+              MPID_Request **request)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_sync(MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_flush_all(MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Get_accumulate(const void *origin_addr, int origin_count,
+                        MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Win_lock_all(int assert, MPID_Win *win)
 {
   MPID_abort();
   return 0;
