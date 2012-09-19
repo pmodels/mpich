@@ -12,4 +12,3 @@ EXTRA_DIST = testlist.in
 static_subdirs = util attr pt2pt init info comm coll datatype errhan
 SUBDIRS      = $(static_subdirs) $(iodir) $(rmadir) $(spawndir)
 DIST_SUBDIRS = $(static_subdirs) io rma spawn
-

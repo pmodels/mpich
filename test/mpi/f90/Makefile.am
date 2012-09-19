@@ -13,4 +13,3 @@ static_subdirs = util timer attr coll datatype pt2pt info comm topo ext init \
 		 misc f90types
 SUBDIRS = $(static_subdirs) $(rmadir) $(spawndir) $(iodir)
 DIST_SUBDIRS = $(static_subdirs) rma spawn io
-
