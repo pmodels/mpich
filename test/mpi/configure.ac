@@ -319,20 +319,16 @@ if test "$FROM_MPICH2" = yes ; then
     fi
 fi
 
-# 
 # Some MPI-2 implementations (including some of the MPICH2 shared-memory
 # channels and BG/L) leave out the dynamic process routines.  This
 # allows tests to avoid reporting failure for these routines.  
 # This can be controlled by either a --disable-spawn argument or by
 # setting the environment variable MPI_NO_SPAWN to yes.
 AC_ARG_VAR([MPI_NO_SPAWN],[set to "yes" to disable dynamic process tests])
-spawndir=spawn
-if test "$enable_spawn" != yes ; then
-    spawndir="#"
-elif test "$MPI_NO_SPAWN" = yes ; then
-    spawndir="#"
+if test "$enable_spawn" = "yes" -a test "$MPI_NO_SPAWN" != "yes" ; then
+    spawndir=spawn
+    AC_DEFINE(HAVE_MPI_SPAWN,1,[Define if Dynamic Process functionality is available])
 fi
-#echo "MPI_NO_SPAWN = $MPI_NO_SPAWN"
 AC_SUBST(spawndir)
 
 # Also allow rma to be disabled

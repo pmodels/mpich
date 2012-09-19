@@ -199,6 +199,8 @@ void testAll(void)
     MPI_Abort(comm, i);
     MPI_Pcontrol(0);
     MPI_DUP_FN( comm, i, vbuf, vbuf, vbuf, &i );
+
+#if defined HAVE_MPI_SPAWN
     MPI_Close_port(cbuf);
     MPI_Comm_accept(cbuf, info, i, comm, &comm);
     MPI_Comm_connect(cbuf, info, i, comm, &comm);
@@ -211,6 +213,8 @@ void testAll(void)
     MPI_Open_port(info, cbuf);
     MPI_Publish_name(cbuf, info, cbuf);
     MPI_Unpublish_name(cbuf, info, cbuf);
+#endif /* HAVE_MPI_SPAWN */
+
     MPI_Accumulate(vbuf, i, dtype, i, aint, i, dtype,  op, win);
     MPI_Get(vbuf, i, dtype, i, aint, i, dtype, win);
     MPI_Put(vbuf, i, dtype, i, aint, i, dtype, win);
