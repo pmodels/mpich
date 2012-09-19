@@ -265,8 +265,8 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
     MPIU_CHKPMEM_DECL(1);
 
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP);
 
     if (target_rank == MPI_PROC_NULL) {
         goto fn_exit;
@@ -323,7 +323,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
 fn_exit:
     MPIU_CHKPMEM_COMMIT();
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_FETCH_AND_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
