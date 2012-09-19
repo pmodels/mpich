@@ -118,7 +118,7 @@ AC_DEFUN([PAC_PROG_FC_INT_KIND],[
 # Set the default
 $1=-1
 if test "$pac_cv_prog_fc_cross" = "yes" ; then
-    AS_IF([-z "$3"],[AC_MSG_ERROR(['$3' is empty])])
+    AS_IF([test -z "$3"],[AC_MSG_ERROR(['$3' is empty])])
     $1="$3"
 else
     AC_LANG_PUSH(Fortran)
