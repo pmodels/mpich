@@ -92,72 +92,101 @@ if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
     fi
 fi
 
-AC_ARG_ENABLE(echo, 
-[--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
-otherlangs=""
+AC_ARG_ENABLE(echo,
+	AC_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.]),
+	[set -x])
+
 AC_ARG_ENABLE(f77,
-[--enable-f77 - Turn on Fortran 77 tests (default)],,enable_f77=yes)
-dnl
+	AC_HELP_STRING([--enable-f77],[Turn on Fortran 77 tests (default)]),,[enable_f77=yes])
 AC_ARG_ENABLE(fc,
-[--enable-fc - Turn on Fortran 90 tests (if f90 available)],,enable_fc=yes)
+	AC_HELP_STRING([--enable-fc],[Turn on Fortran 90 tests (if f90 available)]),,
+	[enable_fc=yes])
 AC_ARG_ENABLE(cxx,
-[--enable-cxx - Turn on C++ tests (default)],,enable_cxx=yes)
+	AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)]),,[enable_cxx=yes])
+
 AC_ARG_ENABLE(romio,
-[--enable-romio - Enable ROMIO MPI I/O implementation],
-,enable_romio=yes)
+	AC_HELP_STRING([--enable-romio],[Enable ROMIO MPI I/O implementation]),,[enable_romio=yes])
+
 AC_ARG_ENABLE(spawn,
-[--enable-spawn - Enable tests of the dynamic process parts of MPI-2 (default)],
-,enable_spawn=yes)
+	AC_HELP_STRING([--enable-spawn],[
+		Enable tests of the dynamic process parts of MPI-2 (default)]),,
+	[enable_spawn=yes])
+
 AC_ARG_ENABLE(rma,
-[--enable-rma - Enable tests of the one sided parts of MPI-2 (default)],
-,enable_rma=yes)
+	AC_HELP_STRING([--enable-rma],[Enable tests of the one sided parts of MPI-2 (default)]),,
+	[enable_rma=yes])
+
 AC_ARG_ENABLE(long-double-complex,
-[--enable-long-double-complex - Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)],
-,enable_long_double_complex=yes)
+	AC_HELP_STRING([--enable-long-double-complex],
+		[Enable tests involving MPI_LONG_DOUBLE_COMPLEX (default)]),,
+	[enable_long_double_complex=yes])
 AC_ARG_ENABLE(long-double,
-[--enable-long-double-complex - Enable tests involving MPI_LONG_DOUBLE and related types (default)],
-,enable_long_double=yes)
+	AC_HELP_STRING([--enable-long-double-complex],
+		[Enable tests involving MPI_LONG_DOUBLE and related types (default)]),,
+	[enable_long_double=yes])
+
 AC_ARG_ENABLE(checkerrors,
-[--enable-checkerrors - Add some tests for checking for errors in user programs],,enable_checkerrors=default)
+	AC_HELP_STRING([--enable-checkerrors],
+		[Add some tests for checking for errors in user programs]),,
+	[enable_checkerrors=default])
+
 AC_ARG_ENABLE(perftest,
-[--enable-perftest - Include tests for basic performance consistency (default)],,enable_perftest=yes)
+	AC_HELP_STRING([--enable-perftest],
+		[Include tests for basic performance consistency (default)]),,
+	[enable_perftest=yes])
+
 AC_ARG_ENABLE(checkfaults,
-[--enable-checkfaults - Add some tests for checking on handling of faults in user programs],,enable_checkfaults=no)
+	AC_HELP_STRING([--enable-checkfaults],
+		[Add some tests for checking on handling of faults in user programs]),,
+	[enable_checkfaults=no])
+
 AC_ARG_ENABLE(fast,
-[--enable-fast - Indicates that the MPI implementation may have been built for fastest operation, such as building without error checking.  Has the effect of --enable-checkerrors=no])
+	AC_HELP_STRING([--enable-fast],
+		[Indicates that the MPI implementation may have been
+		built for fastest operation, such as building without
+		error checking.  Has the effect of
+		--enable-checkerrors=no]),,)
+
 AC_ARG_ENABLE(strictmpi,
-[--enable-strictmpi - Only test for operations specifically defined by the MPI standard.  This turns off tests for some common extensions, including for combinations of predefined datatypes and predefined MPI_Op s.],,enable_strictmpi=no)
+	AC_HELP_STRING([--enable-strictmpi],
+		[Only test for operations specifically defined by the
+		MPI standard.  This turns off tests for some common
+		extensions, including for combinations of predefined
+		datatypes and predefined MPI_Op s.]),,
+	[enable_strictmpi=no])
 
 AC_ARG_ENABLE(threads,
-[--enable-threads=level - Specify the level of thread support expected from the
-MPI implementation.  The following levels are supported.
-    single - No threads (MPI_THREAD_SINGLE)
-    funneled - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
-    serialized - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
-    multiple - Fully multi-threaded (MPI_THREAD_MULTIPLE)
-The default is funneled.  If enabled and no level is specified, the
-level is set to multiple.  If disabled, the level is set to single.
-If the environment variable MPICH_THREAD_LEVEL is set, that thread
-level is used (this is to let MPICH2 build for the correct thread 
-support without requiring a specific --enable-threads argument.
-],,
-enable_threads=default)
+	[--enable-threads=level - Specify the level of thread support expected from the
+				MPI implementation.  The following levels are supported.
+
+	single - No threads (MPI_THREAD_SINGLE)
+	funneled - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
+	serialized - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
+	multiple - Fully multi-threaded (MPI_THREAD_MULTIPLE)
+
+	The default is funneled.  If enabled and no level is
+	specified, the level is set to multiple.  If disabled, the
+	level is set to single.  If the environment variable
+	MPICH_THREAD_LEVEL is set, that thread level is used (this is
+	to let MPICH2 build for the correct thread support without
+	requiring a specific --enable-threads argument.],,
+	[enable_threads=default])
 
 AC_ARG_WITH(mpi,
-[--with-mpi=dir - Use the selected MPI; compilation scripts for mpicc, mpif77
-                  and mpicxx should be in dir/bin],,)
+	AC_HELP_STRING([--with-mpi=dir],
+		[Use the selected MPI; compilation scripts for mpicc,
+		mpif77 and mpicxx should be in dir/bin]),,)
 
 AC_ARG_WITH(config-args,
-[--with-config-args=filename        - Specify configure argument file that
-                                     contains the values of variables that
-                                     configure reads,
-                                     e.g. CC,CFLAGS,F77,FFLAGS,FC,FCFLAGS....
-                                     If the filename does not begin with
-                                     / (absolute path), . or .. (relative path),
-                                     the filename will be assumed to be
-                                     $top_srcdir/configargs/<filename>.cfg.],,
-with_config_args=no)
-dnl
+	AC_HELP_STRING([--with-config-args=filename],
+		[Specify configure argument file that contains the
+		values of variables that configure reads,
+		e.g. CC,CFLAGS,F77,FFLAGS,FC,FCFLAGS....  If the
+		filename does not begin with / (absolute path), . or
+		.. (relative path), the filename will be assumed to be
+		$top_srcdir/configargs/<filename>.cfg.]),,
+	[with_config_args=no])
+
 if test "$with_config_args" != "no" ; then
     case "$with_config_args" in 
         /*|../*|./*)
@@ -183,7 +212,6 @@ if test "$with_config_args" != "no" ; then
     fi
 fi
 
-#
 # First, determine whether we are/can support the language bindings
 #
 # Since F90/F90FLAGS are replaced by FC/FCFLAGS, rather than silently
