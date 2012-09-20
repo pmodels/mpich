@@ -121,9 +121,6 @@ if test -z "$ENABLE_SHLIB" ; then
     ENABLE_SHLIB=none
 fi
 PAC_CC_SUBDIR_SHLIBS
-dnl
-dnl Dependency handling
-AC_SUBST(MAKE_DEPEND_C)
 
 dnl AC_SEARCH_LIBS(socket, socket)
 dnl AC_CHECK_LIB(thread, mutex_init)

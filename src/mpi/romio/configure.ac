@@ -2179,9 +2179,6 @@ AC_SUBST(ROMIO_TFFLAGS)
 AC_SUBST(MPIRUN)
 AC_SUBST(FORTRAN_TEST)
 dnl
-dnl Dependency handling
-AC_SUBST(MAKE_DEPEND_C)
-dnl
 dnl Support shared libraries
 if test -z "$ENABLE_SHLIB" ; then
    ENABLE_SHLIB=none

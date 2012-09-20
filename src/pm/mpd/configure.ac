@@ -192,9 +192,6 @@ dnl Output:
 # Starting output
 MPD_HOME=`pwd`
 AC_SUBST(MPD_HOME)
-dnl
-dnl Dependency handling
-AC_SUBST(MAKE_DEPEND_C)
 
 # AC_OUTPUT_COMMANDS(chmod +x startdaemons)
 AC_OUTPUT(Makefile)
