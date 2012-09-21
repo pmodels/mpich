@@ -414,6 +414,130 @@ int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *vc,
     return mpi_errno;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_ReqHandler_FOPComplete
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc, 
+                                      MPID_Request *rreq, int *complete )
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_CH3_Pkt_t upkt;
+    MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
+    MPID_Request *resp_req;
+    MPID_Win *win_ptr;
+    MPI_User_function *uop;
+    int len, one;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPCOMPLETE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPCOMPLETE);
+    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"performing FOP operation");
+
+    MPID_Datatype_get_size_macro(rreq->dev.datatype, len);
+
+    MPIDI_Pkt_init(fop_resp_pkt, MPIDI_CH3_PKT_FOP_RESP);
+    fop_resp_pkt->request_handle = rreq->dev.request_handle;
+
+    /* Copy original data into the send buffer.  If data will fit in the
+       header, use that.  Otherwise allocate a temporary buffer.  */
+    if (len <= sizeof(fop_resp_pkt->data)) {
+        MPIU_Memcpy( fop_resp_pkt->data, rreq->dev.real_user_buf, len );
+    }
+    else {
+        resp_req = MPID_Request_create();
+        MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        MPIU_Object_set_ref(resp_req, 1);
+
+        MPIDI_CH3U_SRBuf_alloc(resp_req, len);
+        MPIU_ERR_CHKANDJUMP(resp_req->dev.tmpbuf_sz < len, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        MPIU_Memcpy( resp_req->dev.tmpbuf, rreq->dev.real_user_buf, len );
+    }
+
+    /* Apply the op */
+    uop = MPIR_OP_HDL_TO_FN(rreq->dev.op);
+    one = 1;
+
+    (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf, &one, &rreq->dev.datatype);
+
+    /* Send back the original data.  We do this here to ensure that the
+       operation is remote complete before responding to the origin. */
+    if (len <= sizeof(fop_resp_pkt->data)) {
+        MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+        mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_resp_pkt, sizeof(*fop_resp_pkt), &resp_req);
+        MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+
+        if (resp_req != NULL) {
+            MPID_Request_release(resp_req);
+        }
+    }
+    else {
+        MPID_IOV iov[MPID_IOV_LIMIT];
+
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) fop_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*fop_resp_pkt);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)resp_req->dev.tmpbuf;
+        iov[1].MPID_IOV_LEN = len;
+
+        MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+        mpi_errno = MPIDI_CH3_iSendv(vc, resp_req, iov, 2);
+        MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+    }
+
+    /* Free temporary buffer allocated in PktHandler_FOP */
+    if (len > sizeof(int) * MPIDI_RMA_FOP_IMMED_INTS) {
+        MPIU_Free(rreq->dev.user_buf);
+    }
+
+    /* There are additional steps to take if this is a passive 
+       target RMA or the last operation from the source */
+
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
+    /* if passive target RMA, increment counter */
+    if (win_ptr->current_lock_type != MPID_LOCK_NONE)
+        win_ptr->my_pt_rma_puts_accs++;
+
+    if (rreq->dev.source_win_handle != MPI_WIN_NULL) {
+        /* Last RMA operation from source. If active
+           target RMA, decrement window counter. If
+           passive target RMA, release lock on window and
+           grant next lock in the lock queue if there is
+           any. If it's a shared lock or a lock-put-unlock
+           type of optimization, we also need to send an
+           ack to the source. */ 
+        if (win_ptr->current_lock_type == MPID_LOCK_NONE) {
+            /* FIXME: MT: this has to be done atomically */
+            win_ptr->my_counter -= 1;
+            MPIDI_CH3_Progress_signal_completion();
+        }
+        else {
+            mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
+            /* Without the following signal_completion call, we 
+               sometimes hang */
+            MPIDI_CH3_Progress_signal_completion();
+        }
+    }
+
+    *complete = 1;
+
+ fn_exit:
+    MPID_Request_release(rreq);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPCOMPLETE);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+    if (resp_req != NULL) {
+        MPIU_Object_set_ref(resp_req, 0);
+        MPIDI_CH3_Request_destroy(resp_req);
+    }
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_ReqHandler_UnpackUEBufComplete
 #undef FCNAME

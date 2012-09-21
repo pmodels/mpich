@@ -34,9 +34,13 @@ typedef union {
 #undef MPIR_OP_TYPE_MACRO
 } MPIDI_CH3_CAS_Immed_u;
 
-/* Union over all types (all builtin types) that are allowed in a Fetch-and-op
-   operation.  This is used to allocate enough space in the packet header for
-   immediate data. */
+/* Union over all types (all predefined types) that are allowed in a
+   Fetch-and-op operation.  This can be too large for the packet header, so we
+   limit the immediate space in the header to FOP_IMMED_INTS. */
+
+#define MPIDI_RMA_FOP_IMMED_INTS 2
+#define MPIDI_RMA_FOP_RESP_IMMED_INTS 8
+
 typedef union {
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) c_type_ fop##type_name_;
         MPIR_OP_TYPE_GROUP_ALL_BASIC
@@ -82,7 +86,6 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_CAS_UNLOCK,
     MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_FOP,
-    MPIDI_CH3_PKT_FOP_UNLOCK,
     MPIDI_CH3_PKT_FOP_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
@@ -291,11 +294,10 @@ typedef struct MPIDI_CH3_Pkt_fop
                                 * epoch for decrementing rma op counter in
                                 * active target rma and for unlocking window 
                                 * in passive target rma. Otherwise set to NULL*/
-
-                               /* source_win_handle is omitted here to reduce
-                                * the packet size.  If this is the last FETCH_OP
-                                * packet, the type will be set to FETCH_OP_UNLOCK */
-    MPIDI_CH3_FOP_Immed_u origin_data;
+    MPI_Win source_win_handle; /* Used in the last RMA operation in an
+                                * epoch in the case of passive target rma
+                                * with shared locks. Otherwise set to NULL*/
+    int origin_data[MPIDI_RMA_FOP_IMMED_INTS];
 }
 MPIDI_CH3_Pkt_fop_t;
 
@@ -303,7 +305,7 @@ typedef struct MPIDI_CH3_Pkt_fop_resp
 {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
-    MPIDI_CH3_FOP_Immed_u data;
+    int data[MPIDI_RMA_FOP_RESP_IMMED_INTS];
 }
 MPIDI_CH3_Pkt_fop_resp_t;
 
