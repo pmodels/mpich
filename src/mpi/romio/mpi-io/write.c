@@ -123,7 +123,7 @@ int MPIOI_File_write(MPI_File mpi_fh,
 
     xbuf = (void *)buf;
     if (fh->is_external32) {
-	error_code = MPIU_external32_buffer_setup(buf, count, datatype, e32buf);
+	error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
 	if (error_code != MPI_SUCCESS) 
 	    goto fn_exit;
 

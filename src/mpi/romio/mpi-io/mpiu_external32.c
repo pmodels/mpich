@@ -133,10 +133,10 @@ fn_exit:
     return error_code;
 }
 
-/* given a buffer, count, and datatype, return an apropriately sized and
- * external32-formatted buffer, suitable for handing off to a subsequent write
- * routine */
-int MPIU_external32_buffer_setup(void * buf, int count, MPI_Datatype type, void *newbuf)
+/* given a buffer, count, and datatype, return an apropriately allocated, sized
+ * and external32-formatted buffer, suitable for handing off to a subsequent
+ * write routine.  Caller is responsible for freeing 'newbuf' */
+int MPIU_external32_buffer_setup(void * buf, int count, MPI_Datatype type, void **newbuf)
 {
 
     MPI_Aint datatype_size=0, bytes=0;
@@ -147,9 +147,9 @@ int MPIU_external32_buffer_setup(void * buf, int count, MPI_Datatype type, void 
 	return error_code;
 
     bytes = datatype_size * count;
-    newbuf = ADIOI_Malloc(bytes);
+    *newbuf = ADIOI_Malloc(bytes);
 
-    error_code = MPIU_write_external32_conversion_fn(buf, type, count, newbuf);
+    error_code = MPIU_write_external32_conversion_fn(buf, type, count, *newbuf);
     if (error_code != MPI_SUCCESS) {
 	ADIOI_Free(newbuf);
 	return error_code;

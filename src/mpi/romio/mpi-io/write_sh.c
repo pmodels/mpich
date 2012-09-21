@@ -99,7 +99,7 @@ int MPI_File_write_shared(MPI_File mpi_fh, MPICH2_CONST void *buf, int count,
 
     xbuf = buf;
     if (fh->is_external32) {
-	error_code = MPIU_external32_buffer_setup(buf, count, datatype, e32buf);
+	error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
 	if (error_code != MPI_SUCCESS) 
 	    goto fn_exit;
 

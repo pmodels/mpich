@@ -173,6 +173,8 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
 	MPI_Barrier(fh->comm); /* for above to work correctly */
     }
     if (strcmp(datarep, "external32") && strcmp(datarep, "EXTERNAL32"))
+	fh->is_external32 = 0;
+    else
 	fh->is_external32 = 1;
 
 fn_exit:
