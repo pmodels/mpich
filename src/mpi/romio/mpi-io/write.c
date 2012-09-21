@@ -74,6 +74,7 @@ int MPIOI_File_write(MPI_File mpi_fh,
     int datatype_size;
     ADIO_Offset off;
     ADIO_File fh;
+    void *e32buf=NULL, *xbuf=NULL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
@@ -120,6 +121,15 @@ int MPIOI_File_write(MPI_File mpi_fh,
 
     ADIOI_TEST_DEFERRED(fh, myname, &error_code);
 
+    xbuf = (void *)buf;
+    if (fh->is_external32) {
+	error_code = MPIU_external32_buffer_setup(buf, count, datatype, e32buf);
+	if (error_code != MPI_SUCCESS) 
+	    goto fn_exit;
+
+	xbuf = e32buf;
+    }
+
     if (buftype_is_contig && filetype_is_contig)
     {
 	/* convert bufcount and offset to bytes */
@@ -142,7 +152,7 @@ int MPIOI_File_write(MPI_File mpi_fh,
             ADIOI_WRITE_LOCK(fh, off, SEEK_SET, bufsize);
 	}
 
-	ADIO_WriteContig(fh, buf, count, datatype, file_ptr_type,
+	ADIO_WriteContig(fh, xbuf, count, datatype, file_ptr_type,
 		     off, status, &error_code); 
 
         if ((fh->atomicity) && ADIO_Feature(fh, ADIO_LOCKS))
@@ -153,9 +163,10 @@ int MPIOI_File_write(MPI_File mpi_fh,
     else
     {
 	/* For strided and atomic mode, locking is done in ADIO_WriteStrided */
-	ADIO_WriteStrided(fh, buf, count, datatype, file_ptr_type,
+	ADIO_WriteStrided(fh, xbuf, count, datatype, file_ptr_type,
 			  offset, status, &error_code);
     }
+
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
@@ -163,6 +174,7 @@ int MPIOI_File_write(MPI_File mpi_fh,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
+    if (e32buf!= NULL) ADIOI_Free(e32buf);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;

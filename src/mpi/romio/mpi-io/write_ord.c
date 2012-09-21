@@ -3,6 +3,7 @@
  *
  *   Copyright (C) 1997 University of Chicago. 
  *   See COPYRIGHT notice in top-level directory.
+ *
  */
 
 #include "mpioimpl.h"
@@ -47,6 +48,7 @@ int MPI_File_write_ordered(MPI_File mpi_fh, MPICH2_CONST void *buf, int count,
     static char myname[] = "MPI_FILE_WRITE_ORDERED";
     ADIO_Offset shared_fp;
     ADIO_File fh;
+    void *e32buf, *xbuf;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
@@ -93,7 +95,16 @@ int MPI_File_write_ordered(MPI_File mpi_fh, MPICH2_CONST void *buf, int count,
 
     MPI_Send(NULL, 0, MPI_BYTE, dest, 0, fh->comm);
 
-    ADIO_WriteStridedColl(fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+    xbuf = buf;
+    if (fh->is_external32) {
+	error_code = MPIU_external32_buffer_setup(buf, count, datatype, e32buf);
+	if (error_code != MPI_SUCCESS) 
+	    goto fn_exit;
+
+	xbuf = e32buf;
+    }
+
+    ADIO_WriteStridedColl(fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
                           shared_fp, status, &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -102,6 +113,7 @@ int MPI_File_write_ordered(MPI_File mpi_fh, MPICH2_CONST void *buf, int count,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
+    if (e32buf != NULL) ADIOI_Free(e32buf);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     /* FIXME: Check for error code from WriteStridedColl? */

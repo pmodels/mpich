@@ -21,7 +21,7 @@ MPI_File MPIO_File_create(int size)
 {
     MPI_File mpi_fh;
 
-    mpi_fh = (MPI_File) ADIOI_Malloc(size);
+    mpi_fh = (MPI_File) ADIOI_Calloc(size,1);
     return mpi_fh;
 }
 

@@ -74,6 +74,7 @@ int MPIOI_File_read_all(MPI_File mpi_fh,
 {
     int error_code, datatype_size;
     ADIO_File fh;
+    void *xbuf=NULL, *e32_buf=NULL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
@@ -103,13 +104,30 @@ int MPIOI_File_read_all(MPI_File mpi_fh,
     MPIO_CHECK_COUNT_SIZE(fh, count, datatype_size, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    ADIO_ReadStridedColl(fh, buf, count, datatype, file_ptr_type,
+    xbuf = buf;
+    if (fh->is_external32)
+    {
+        error_code = MPIU_datatype_full_size(datatype, &datatype_size);
+        if (error_code != MPI_SUCCESS)
+            goto fn_exit;
+
+        e32_buf = ADIOI_Malloc(datatype_size*count);
+	xbuf = e32_buf;
+    }
+
+    ADIO_ReadStridedColl(fh, xbuf, count, datatype, file_ptr_type,
 			 offset, status, &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
 	error_code = MPIO_Err_return_file(fh, error_code);
     /* --END ERROR HANDLING-- */
+
+    if (e32_buf != NULL) {
+        error_code = MPIU_read_external32_conversion_fn(xbuf, datatype,
+                count, e32_buf);
+	ADIOI_Free(e32_buf);
+    }
 
 fn_exit:
     MPIU_THREAD_CS_EXIT(ALLFUNC,);

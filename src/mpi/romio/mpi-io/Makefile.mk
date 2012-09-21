@@ -67,11 +67,13 @@ romio_mpi_sources +=          \
     mpi-io/write_orde.c       \
     mpi-io/write_sh.c
 
+
 # non-MPI/PMPI sources that will be included in libromio
 romio_other_sources +=       \
     mpi-io/mpich2_fileutil.c \
     mpi-io/mpir-mpioinit.c   \
-    mpi-io/mpiu_greq.c
+    mpi-io/mpiu_greq.c \
+    mpi-io/mpiu_external32.c
 
 # helper variables for conditionally compiled sources
 mpio_request_sources=   \

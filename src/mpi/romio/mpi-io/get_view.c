@@ -70,7 +70,8 @@ int MPI_File_get_view(MPI_File mpi_fh,
     /* --END ERROR HANDLING-- */
 
     *disp = fh->disp;
-    ADIOI_Strncpy(datarep, "native", MPI_MAX_DATAREP_STRING);
+    ADIOI_Strncpy(datarep, 
+	    (fh->is_external32 ? "external32": "native"), MPI_MAX_DATAREP_STRING);
 
     MPI_Type_get_envelope(fh->etype, &i, &j, &k, &combiner);
     if (combiner == MPI_COMBINER_NAMED) *etype = fh->etype;

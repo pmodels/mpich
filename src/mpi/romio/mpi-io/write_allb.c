@@ -60,6 +60,7 @@ int MPIOI_File_write_all_begin(MPI_File mpi_fh,
 {
     int error_code, datatype_size;
     ADIO_File fh;
+    void *e32buf=NULL, *xbuf=NULL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
@@ -98,8 +99,18 @@ int MPIOI_File_write_all_begin(MPI_File mpi_fh,
     MPIO_CHECK_COUNT_SIZE(fh, count, datatype_size, myname, error_code);
     /* --END ERROR HANDLING-- */
 
+
+    xbuf = (void *)buf;
+    if (fh->is_external32) {
+	error_code = MPIU_external32_buffer_setup(buf, count, datatype, e32buf);
+	if (error_code != MPI_SUCCESS) 
+	    goto fn_exit;
+
+	xbuf = e32buf;
+    }
+
     fh->split_datatype = datatype;
-    ADIO_WriteStridedColl(fh, buf, count, datatype, file_ptr_type,
+    ADIO_WriteStridedColl(fh, xbuf, count, datatype, file_ptr_type,
 			  offset, &fh->split_status, &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -108,6 +119,7 @@ int MPIOI_File_write_all_begin(MPI_File mpi_fh,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
+    if ( e32buf != NULL) ADIOI_Free(e32buf);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;

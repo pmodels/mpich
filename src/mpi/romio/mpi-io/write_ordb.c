@@ -44,6 +44,7 @@ int MPI_File_write_ordered_begin(MPI_File mpi_fh, MPICH2_CONST void *buf, int co
     static char myname[] = "MPI_FILE_WRITE_ORDERED_BEGIN";
     ADIO_Offset shared_fp;
     ADIO_File fh;
+    void *e32buf = NULL, *xbuf=NULL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
@@ -100,7 +101,16 @@ int MPI_File_write_ordered_begin(MPI_File mpi_fh, MPICH2_CONST void *buf, int co
 
     MPI_Send(NULL, 0, MPI_BYTE, dest, 0, fh->comm);
 
-    ADIO_WriteStridedColl(fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+    xbuf = buf;
+    if (fh->is_external32) {
+	error_code = MPIU_external32_buffer_setup(buf, count, datatype, e32buf);
+	if (error_code != MPI_SUCCESS) 
+	    goto fn_exit;
+
+	xbuf = e32buf;
+    }
+
+    ADIO_WriteStridedColl(fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
 			  shared_fp, &fh->split_status, &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
