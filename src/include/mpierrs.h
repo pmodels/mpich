@@ -40,24 +40,6 @@
  *  Standardized error checking macros.  These provide the correct tests for
  *  common tests.  These set err with the encoded error value.
  */
-#define MPIR_ERRTEST_INITIALIZED(err)                  \
-do {                                                   \
-  if (MPIR_Process.initialized != MPICH_WITHIN_MPI) {  \
-      if (MPIR_Process.initialized == MPICH_PRE_INIT)  \
-          err = MPIR_Err_create_code(MPI_SUCCESS,      \
-				 MPIR_ERR_RECOVERABLE, \
-				 FCNAME, __LINE__,     \
-				 MPI_ERR_OTHER,        \
-				 "**initialized", 0 ); \
-      else                                             \
-          err = MPIR_Err_create_code(MPI_SUCCESS,      \
-				 MPIR_ERR_RECOVERABLE, \
-				 FCNAME, __LINE__,     \
-				 MPI_ERR_OTHER,        \
-				 "**finalized", 0 );   \
-  }                                                    \
-} while (0)
-
 #define MPIR_ERRTEST_SEND_TAG(tag,err) \
   if ((tag) < 0 || (tag) > MPIR_Process.attrs.tag_ub) {\
       err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TAG, "**tag", "**tag %d", tag);}
