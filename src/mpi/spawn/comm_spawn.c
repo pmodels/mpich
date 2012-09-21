@@ -78,7 +78,6 @@ int MPI_Comm_spawn(MPICH2_CONST char *command, char *argv[], int maxprocs, MPI_I
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -105,8 +104,6 @@ int MPI_Comm_spawn(MPICH2_CONST char *command, char *argv[], int maxprocs, MPI_I
 		MPIR_ERRTEST_ARGNULL(command, "command", mpi_errno);
 		MPIR_ERRTEST_ARGNEG(maxprocs, "maxprocs", mpi_errno);
 	    }
-
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

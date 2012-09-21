@@ -184,7 +184,6 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_ARGNULL(request,"request",mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

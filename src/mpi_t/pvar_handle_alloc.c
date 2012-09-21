@@ -126,7 +126,6 @@ int MPIX_T_pvar_handle_alloc(MPIX_T_pvar_session session, int pvar_index, void *
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
             MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

@@ -73,7 +73,6 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -89,12 +88,11 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges,
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    
 	    MPIR_ERRTEST_ARGNULL( edges, "edges", mpi_errno );
 	    MPIR_ERRTEST_ARGNULL( indx,  "indx", mpi_errno );
-
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

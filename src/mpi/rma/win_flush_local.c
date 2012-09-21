@@ -66,7 +66,6 @@ int MPIX_Win_flush_local(int rank, MPI_Win win)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -88,7 +87,6 @@ int MPIX_Win_flush_local(int rank, MPI_Win win)
 
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
-            if (mpi_errno) goto fn_fail;
 
             /* TODO: Validate that the given window is in passive mode */
             /* TODO: Validate that the given rank is locked */

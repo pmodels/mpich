@@ -128,7 +128,6 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
 	    MPIR_ERRTEST_ARGNULL( result, "result", mpi_errno );
 	    MPIR_ERRTEST_GROUP(group1, mpi_errno);
 	    MPIR_ERRTEST_GROUP(group2, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

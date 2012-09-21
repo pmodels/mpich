@@ -104,8 +104,6 @@ int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

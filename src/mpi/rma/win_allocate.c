@@ -77,7 +77,6 @@ int MPIX_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
             MPIR_ERRTEST_COMM(comm, mpi_errno);
             MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
             MPIR_ERRTEST_ARGNULL(win, "win", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

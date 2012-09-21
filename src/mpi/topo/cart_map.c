@@ -142,7 +142,6 @@ int MPI_Cart_map(MPI_Comm comm_old, int ndims, MPICH2_CONST int *dims, MPICH2_CO
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm_old, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -158,6 +157,7 @@ int MPI_Cart_map(MPI_Comm comm_old, int ndims, MPICH2_CONST int *dims, MPICH2_CO
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(newrank,"newrank",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(dims,"dims",mpi_errno);
@@ -167,8 +167,8 @@ int MPI_Cart_map(MPI_Comm comm_old, int ndims, MPICH2_CONST int *dims, MPICH2_CO
 				  MPIR_ERR_RECOVERABLE, 
 				  FCNAME, __LINE__, MPI_ERR_DIMS,
 				  "**dims", "**dims %d", ndims );
-		}
-            if (mpi_errno) goto fn_fail;
+                goto fn_fail;
+            }
         }
         MPID_END_ERROR_CHECKS;
     }

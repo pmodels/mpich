@@ -90,7 +90,6 @@ int MPIX_T_pvar_get_num(int *num_pvar)
         {
             MPIR_ERRTEST_ARGNULL(num_pvar, "num_pvar", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

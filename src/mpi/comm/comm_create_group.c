@@ -170,7 +170,6 @@ int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * n
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
 
@@ -180,15 +179,14 @@ int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * n
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
-            if (mpi_errno) goto fn_fail;
 
             /* only test for MPI_GROUP_NULL after attempting to convert the comm
              * so that any errhandlers on comm will (correctly) be invoked */
             MPIR_ERRTEST_GROUP(group, mpi_errno);
             MPIR_ERRTEST_COMM_TAG(tag, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
 

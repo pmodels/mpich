@@ -1131,7 +1131,6 @@ int MPI_Reduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST i
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }
@@ -1165,7 +1164,9 @@ int MPI_Reduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST i
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
                 MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr( datatype_ptr, mpi_errno );
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
             MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcnts[comm_ptr->rank], mpi_errno);
@@ -1174,10 +1175,8 @@ int MPI_Reduce_scatter(MPICH2_CONST void *sendbuf, void *recvbuf, MPICH2_CONST i
 
             MPIR_ERRTEST_USERBUFFER(recvbuf,recvcnts[comm_ptr->rank],datatype,mpi_errno);
             MPIR_ERRTEST_USERBUFFER(sendbuf,sum,datatype,mpi_errno); 
-
 	    MPIR_ERRTEST_OP(op, mpi_errno);
 
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPID_Op_get_ptr(op, op_ptr);
                 MPID_Op_valid_ptr( op_ptr, mpi_errno );

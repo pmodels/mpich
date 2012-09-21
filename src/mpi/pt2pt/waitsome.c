@@ -108,7 +108,6 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COUNT(incount, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
 	    if (incount != 0) {
 		MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
@@ -117,14 +116,10 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 		MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
 	    }
 	    MPIR_ERRTEST_ARGNULL(outcount, "outcount", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-	    for (i = 0; i < incount; i++)
-	    {
-		MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], 
-						  i, mpi_errno);
+	    for (i = 0; i < incount; i++) {
+		MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], i, mpi_errno);
 	    }
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }

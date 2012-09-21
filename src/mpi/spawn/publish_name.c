@@ -69,7 +69,6 @@ int MPI_Publish_name(MPICH2_CONST char *service_name, MPI_Info info, MPICH2_CONS
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -88,7 +87,6 @@ int MPI_Publish_name(MPICH2_CONST char *service_name, MPI_Info info, MPICH2_CONS
 	    /* Validate character pointers */
 	    MPIR_ERRTEST_ARGNULL( service_name, "service_name", mpi_errno );
 	    MPIR_ERRTEST_ARGNULL( port_name, "port_name", mpi_errno );
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

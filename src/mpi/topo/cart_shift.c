@@ -134,7 +134,6 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -150,6 +149,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 
 	    MPIR_ERRTEST_ARGNULL( source, "source", mpi_errno );
@@ -157,7 +157,6 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 	    MPIR_ERRTEST_ARGNEG( direction, "direction", mpi_errno );
 	    /* Nothing in the standard indicates that a zero displacement 
 	       is not valid, so we don't check for a zero shift */
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

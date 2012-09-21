@@ -400,7 +400,6 @@ int MPI_Dims_create(int nnodes, int ndims, int *dims)
 	    MPIR_ERRTEST_ARGNEG(nnodes,"nnodes",mpi_errno);
 	    MPIR_ERRTEST_ARGNEG(ndims,"ndims",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(dims,"dims",mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

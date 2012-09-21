@@ -68,7 +68,6 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
             /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }
@@ -86,7 +85,9 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
                 MPID_Datatype *datatype_ptr = NULL;
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
             /* MPIX_MESSAGE_NO_PROC should yield a "proc null" status */
@@ -95,12 +96,10 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 MPIU_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
                                      mpi_errno, MPI_ERR_ARG, "**reqnotmsg");
-
             }
 
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

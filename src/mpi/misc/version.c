@@ -62,7 +62,6 @@ int MPI_Get_version( int *version, int *subversion )
         {
 	    MPIR_ERRTEST_ARGNULL(version,"version",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(subversion,"subversion",mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

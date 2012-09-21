@@ -83,7 +83,6 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
         {
 	    MPIR_ERRTEST_COMM(comm1, mpi_errno);
 	    MPIR_ERRTEST_COMM(comm2, mpi_errno);
-            if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }
@@ -100,10 +99,10 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr1, mpi_errno );
-            MPID_Comm_valid_ptr( comm_ptr2, mpi_errno );
-	    MPIR_ERRTEST_ARGNULL( result, "result", mpi_errno );
-	    /* If comm_ptr1 or 2 is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
+            MPID_Comm_valid_ptr( comm_ptr2, mpi_errno );
+            if (mpi_errno) goto fn_fail;
+	    MPIR_ERRTEST_ARGNULL( result, "result", mpi_errno );
         }
         MPID_END_ERROR_CHECKS;
     }

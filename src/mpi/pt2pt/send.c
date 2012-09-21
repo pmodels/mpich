@@ -77,7 +77,6 @@ int MPI_Send(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }
@@ -97,7 +96,6 @@ int MPI_Send(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest,
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    MPIR_ERRTEST_SEND_RANK(comm_ptr, dest, mpi_errno);
 	    MPIR_ERRTEST_SEND_TAG(tag, mpi_errno);
-            if (mpi_errno) goto fn_fail;
 	    
 	    /* Validate datatype handle */
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
@@ -109,13 +107,13 @@ int MPI_Send(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest,
 
 		MPID_Datatype_get_ptr(datatype, datatype_ptr);
 		MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+		if (mpi_errno) goto fn_fail;
 		MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
 		if (mpi_errno) goto fn_fail;
 	    }
 	    
 	    /* Validate buffer */
 	    MPIR_ERRTEST_USERBUFFER(buf,count,datatype,mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

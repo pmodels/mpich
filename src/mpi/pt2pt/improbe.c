@@ -67,7 +67,6 @@ int MPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *me
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }
@@ -82,9 +81,10 @@ int MPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *me
         MPID_BEGIN_ERROR_CHECKS
         {
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
             MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

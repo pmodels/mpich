@@ -96,7 +96,6 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -112,10 +111,9 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
-	    MPIR_ERRTEST_ARGNULL(nneighbors, "nneighbors", mpi_errno);
-
-	    /* If comm_ptr is not value, it will be reset to null */
             if (mpi_errno) goto fn_fail;
+	    MPIR_ERRTEST_ARGNULL(nneighbors, "nneighbors", mpi_errno);
+	    /* If comm_ptr is not value, it will be reset to null */
         }
         MPID_END_ERROR_CHECKS;
     }

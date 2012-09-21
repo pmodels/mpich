@@ -95,7 +95,6 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_INFO(info, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

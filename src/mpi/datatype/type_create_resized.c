@@ -73,7 +73,6 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
 	    MPID_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             /* Validate datatype_ptr */
 	    MPID_Datatype_get_ptr(oldtype, datatype_ptr);

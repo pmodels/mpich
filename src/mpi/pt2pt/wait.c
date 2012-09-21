@@ -130,10 +130,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 	    MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
 	    /* NOTE: MPI_STATUS_IGNORE != NULL */
 	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
-	    if (mpi_errno) goto fn_fail;
-
 	    MPIR_ERRTEST_REQUEST_OR_NULL(*request, mpi_errno);
-	    if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }

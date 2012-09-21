@@ -79,7 +79,6 @@ int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -102,7 +101,6 @@ int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
             MPIR_ERRTEST_ARGNULL(compare_addr, "compare_addr", mpi_errno);
             MPIR_ERRTEST_ARGNULL(result_addr, "result_addr", mpi_errno);
-            if (mpi_errno) goto fn_fail;
 
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
@@ -115,8 +113,6 @@ int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
-
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

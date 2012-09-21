@@ -144,7 +144,6 @@ int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosi
             MPIR_ERRTEST_ARGNULL(binding, "binding", mpi_errno);
             MPIR_ERRTEST_ARGNULL(scope, "scope", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

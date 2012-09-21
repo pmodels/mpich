@@ -53,10 +53,9 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	       case.  Note that this code assumes sizeof(MPIR_Pint) is
 	       a power of 2. */
 	    if ((MPIR_Pint)attribute_val & (sizeof(MPIR_Pint)-1)) {
-		MPIU_ERR_SET(mpi_errno,MPI_ERR_ARG,"**attrnotptr");
+		MPIU_ERR_SETANDSTMT(mpi_errno,MPI_ERR_ARG,goto fn_fail,"**attrnotptr");
 	    }
 #           endif
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -75,7 +74,6 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	    /* If win_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(attribute_val, "attribute_val", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
-            if (mpi_errno) goto fn_fail;
 	}
 	MPID_END_ERROR_CHECKS;
     }

@@ -65,7 +65,6 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
         {
 	    /* FIXME: verify that errorclass is a dynamic class */
 	    MPIR_ERRTEST_ARGNULL(errorcode, "errorcode", mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

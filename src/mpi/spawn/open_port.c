@@ -81,7 +81,6 @@ int MPI_Open_port(MPI_Info info, char *port_name)
         {
 	    /* Note that a NULL info is allowed */
 	    MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -97,7 +96,6 @@ int MPI_Open_port(MPI_Info info, char *port_name)
         {
 	    /* FIXME: If info_ptr is non-null, we should validate it */
 	    MPIR_ERRTEST_ARGNULL(port_name,"port_name",mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

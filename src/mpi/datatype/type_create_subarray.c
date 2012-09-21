@@ -115,6 +115,7 @@ int MPI_Type_create_subarray(int ndims,
 						     "array_of_subsizes",
 						     array_of_subsizes[i],
 						     array_of_sizes[i]);
+                    goto fn_fail;
 		}
 		if (array_of_starts[i] > (array_of_sizes[i] - array_of_subsizes[i]))
 		{
@@ -129,6 +130,7 @@ int MPI_Type_create_subarray(int ndims,
 						     array_of_starts[i],
 						     array_of_sizes[i] -
 						     array_of_subsizes[i]);
+                    goto fn_fail;
 		}
 	    }
 	    if (order != MPI_ORDER_FORTRAN && order != MPI_ORDER_C) {
@@ -140,6 +142,7 @@ int MPI_Type_create_subarray(int ndims,
 						 "**arg",
 						 "**arg %s",
 						 "order");
+                goto fn_fail;
 	    }
 
 	    MPIR_Type_extent_impl(oldtype, &extent);
@@ -160,6 +163,7 @@ int MPI_Type_create_subarray(int ndims,
 						 "**subarrayoflow",
 						 "**subarrayoflow %L",
 						 size_with_offset);
+                goto fn_fail;
             }
 
             /* Validate datatype_ptr */
@@ -206,6 +210,7 @@ int MPI_Type_create_subarray(int ndims,
 		tmp1 = tmp2;
 	    }
 	}
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
 	/* add displacement and UB */
 	

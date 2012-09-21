@@ -65,11 +65,8 @@ int MPI_Type_free_keyval(int *type_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_ARGNULL(type_keyval, "type_keyval", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-	    MPIR_ERRTEST_KEYVAL(*type_keyval, MPID_DATATYPE, "datatype", 
-				mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(*type_keyval, MPID_DATATYPE, "datatype", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(*type_keyval, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

@@ -89,7 +89,6 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
         {
             MPIR_ERRTEST_COMM(comm_old, mpi_errno);
             MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -105,6 +104,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             if (comm_ptr) {
                 MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
@@ -117,6 +117,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
                 MPIR_ERRTEST_ARGNULL(sources, "sources", mpi_errno);
                 if (sourceweights == MPI_UNWEIGHTED && destweights != MPI_UNWEIGHTED) {
                     MPIU_ERR_SET(mpi_errno, MPIR_ERR_RECOVERABLE, "**unweightedboth");
+                    goto fn_fail;
                 }
                 /* TODO check ranges for array elements too (**argarrayneg / **rankarray)*/
             }
@@ -124,11 +125,10 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
                 MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);
                 if (destweights == MPI_UNWEIGHTED && sourceweights != MPI_UNWEIGHTED) {
                     MPIU_ERR_SET(mpi_errno, MPIR_ERR_RECOVERABLE, "**unweightedboth");
+                    goto fn_fail;
                 }
             }
             MPIR_ERRTEST_ARGNULL(comm_dist_graph, "comm_dist_graph", mpi_errno);
-
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

@@ -67,7 +67,6 @@ int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

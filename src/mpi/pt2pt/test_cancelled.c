@@ -62,7 +62,6 @@ int MPI_Test_cancelled(MPICH2_CONST MPI_Status *status, int *flag)
         {
 	    MPIR_ERRTEST_ARGNULL( status, "status", mpi_errno );
 	    MPIR_ERRTEST_ARGNULL( flag, "flag", mpi_errno );
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

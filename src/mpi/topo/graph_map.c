@@ -116,7 +116,6 @@ int MPI_Graph_map(MPI_Comm comm_old, int nnodes, MPICH2_CONST int *indx, MPICH2_
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm_old, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -132,12 +131,12 @@ int MPI_Graph_map(MPI_Comm comm_old, int nnodes, MPICH2_CONST int *indx, MPICH2_
         {
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(newrank,"newrank",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(indx,"indx",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(edges,"edges",mpi_errno);
 	    MPIR_ERRTEST_ARGNONPOS(nnodes,"nnodes",mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

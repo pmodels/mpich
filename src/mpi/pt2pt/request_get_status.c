@@ -72,7 +72,6 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
 	    /* NOTE: MPI_STATUS_IGNORE != NULL */
 	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
-	    if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }

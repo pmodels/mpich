@@ -150,7 +150,6 @@ int MPI_Unpack(MPICH2_CONST void *inbuf, int insize, int *position,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -173,10 +172,10 @@ int MPI_Unpack(MPICH2_CONST void *inbuf, int insize, int *position,
 
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
+	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
 	    if (datatype != MPI_DATATYPE_NULL &&
 		HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {

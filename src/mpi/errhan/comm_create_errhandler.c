@@ -91,7 +91,6 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function,
         {
 	    MPIR_ERRTEST_ARGNULL(function, "function", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(errhandler, "errhandler", mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

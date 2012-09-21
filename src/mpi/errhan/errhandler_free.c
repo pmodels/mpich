@@ -64,9 +64,7 @@ int MPI_Errhandler_free(MPI_Errhandler *errhandler)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_ARGNULL(*errhandler, "errhandler", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    MPIR_ERRTEST_ERRHANDLER(*errhandler, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

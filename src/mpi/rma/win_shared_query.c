@@ -70,7 +70,6 @@ int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -94,12 +93,8 @@ int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit,
             MPIR_ERRTEST_ARGNULL(disp_unit, "disp_unit", mpi_errno);
             MPIR_ERRTEST_ARGNULL(baseptr, "baseptr", mpi_errno);
 
-            if (mpi_errno) goto fn_fail;
-
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
-
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

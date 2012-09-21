@@ -83,7 +83,6 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -115,7 +114,6 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
 		    MPIR_ERRTEST_ARGNULL(array_of_commands[i], "array_of_commands[i]", mpi_errno);
 		    MPIR_ERRTEST_ARGNEG(array_of_maxprocs[i], "array_of_maxprocs[i]", mpi_errno);
 		}
-		if (mpi_errno) goto fn_fail;
 	    }
         }
         MPID_END_ERROR_CHECKS;

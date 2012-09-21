@@ -71,7 +71,6 @@ int MPI_Win_test(MPI_Win win, int *flag)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -85,12 +84,12 @@ int MPI_Win_test(MPI_Win win, int *flag)
         {
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
 	    /* If win_ptr is not valid, it will be reset to null */
 
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
 
             /* TODO: Ensure that window is in a PSCW active mode epoch */
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

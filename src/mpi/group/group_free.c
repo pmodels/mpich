@@ -85,7 +85,6 @@ int MPI_Group_free(MPI_Group *group)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_GROUP(*group, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

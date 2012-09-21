@@ -74,7 +74,6 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
             MPIR_ERRTEST_ARGNULL(group, "group", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

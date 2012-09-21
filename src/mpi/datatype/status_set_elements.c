@@ -68,7 +68,6 @@ int MPI_Status_set_elements(MPI_Status *status, MPI_Datatype datatype,
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(status,"status",mpi_errno);
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-            if (mpi_errno) goto fn_fail;
 
             /* Validate datatype_ptr */
 	    MPID_Datatype_get_ptr( datatype, datatype_ptr );

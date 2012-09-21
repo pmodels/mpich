@@ -66,7 +66,6 @@ int MPIX_Mprobe(int source, int tag, MPI_Comm comm, MPIX_Message *message, MPI_S
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

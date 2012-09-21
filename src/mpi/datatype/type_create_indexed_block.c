@@ -155,7 +155,6 @@ int MPI_Type_create_indexed_block(int count,
 				     mpi_errno);
 	    }
 	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-            if (mpi_errno) goto fn_fail;
 	    
 	    if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
 		MPID_Datatype_get_ptr(oldtype, datatype_ptr);

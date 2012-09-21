@@ -99,7 +99,6 @@ int MPI_Info_get(MPI_Info info, MPICH2_CONST char *key, int valuelen, char *valu
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_INFO(info, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -130,9 +129,8 @@ int MPI_Info_get(MPI_Info info, MPICH2_CONST char *key, int valuelen, char *valu
 
 	    /* Check value arguments */
 	    MPIR_ERRTEST_ARGNEG(valuelen, "valuelen", mpi_errno);
-	    MPIU_ERR_CHKANDSTMT((!value), mpi_errno, MPI_ERR_INFO_VALUE,;, 
+	    MPIU_ERR_CHKANDSTMT((!value), mpi_errno, MPI_ERR_INFO_VALUE,goto fn_fail,
 				"**infovalnull");
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

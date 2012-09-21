@@ -103,7 +103,6 @@ int MPIX_T_category_get_info(int cat_index, char *name, int *name_len, char *des
             MPIR_ERRTEST_ARGNULL(num_pvars, "num_pvars", mpi_errno);
             MPIR_ERRTEST_ARGNULL(num_categories, "num_categories", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

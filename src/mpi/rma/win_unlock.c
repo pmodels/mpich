@@ -66,7 +66,6 @@ int MPI_Win_unlock(int rank, MPI_Win win)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -89,7 +88,6 @@ int MPI_Win_unlock(int rank, MPI_Win win)
 
 	    comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
-            if (mpi_errno) goto fn_fail;
 	    /* Test that the rank we are unlocking is the rank that we locked */
 	    if (win_ptr->lockRank != rank) {
 		if (win_ptr->lockRank < 0) {

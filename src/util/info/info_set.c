@@ -65,7 +65,6 @@ int MPI_Info_set( MPI_Info info, MPICH2_CONST char *key, MPICH2_CONST char *valu
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_INFO(info, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

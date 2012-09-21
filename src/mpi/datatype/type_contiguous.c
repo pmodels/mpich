@@ -107,18 +107,14 @@ int MPI_Type_contiguous(int count,
         {
             MPID_Datatype *datatype_ptr = NULL;
 
-	    /* MPIR_ERRTEST_XXX macros defined in mpiimpl.h */
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-	    
-	    MPIR_ERRTEST_DATATYPE(old_type, "datatype", mpi_errno);
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_DATATYPE(old_type, "datatype", mpi_errno);
 	    
             if (HANDLE_GET_KIND(old_type) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype_get_ptr(old_type, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    }
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

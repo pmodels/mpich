@@ -65,7 +65,6 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -83,7 +82,6 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
             MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

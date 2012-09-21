@@ -72,7 +72,6 @@ int MPI_Address(MPICH2_CONST void *location, MPI_Aint *address)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_ARGNULL(address,"address",mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

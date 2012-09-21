@@ -157,19 +157,19 @@ int MPI_Reduce_local(MPICH2_CONST void *inbuf, void *inoutbuf, int count, MPI_Da
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_OP(op, mpi_errno);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPID_Op_get_ptr(op, op_ptr);
                 MPID_Op_valid_ptr( op_ptr, mpi_errno );
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
             if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op))(datatype);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
             if (count != 0) {
                 MPIR_ERRTEST_ALIAS_COLL(inbuf, inoutbuf, mpi_errno);
             }
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

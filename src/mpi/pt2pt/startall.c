@@ -78,13 +78,10 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
         {
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(array_of_requests,"array_of_requests", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    
-	    for (i = 0; i < count; i++)
-	    {
+	    for (i = 0; i < count; i++) {
 		MPIR_ERRTEST_REQUEST(array_of_requests[i], mpi_errno);
 	    }
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }
@@ -106,17 +103,14 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    for (i = 0; i < count; i++)
-	    {
+	    for (i = 0; i < count; i++) {
 		MPID_Request_valid_ptr( request_ptrs[i], mpi_errno );
+                if (mpi_errno) goto fn_fail;
 	    }
-            if (mpi_errno) goto fn_fail;
-	    for (i = 0; i < count; i++)
-	    {
+	    for (i = 0; i < count; i++) {
 		MPIR_ERRTEST_PERSISTENT(request_ptrs[i], mpi_errno);
 		MPIR_ERRTEST_PERSISTENT_ACTIVE(request_ptrs[i], mpi_errno);
 	    }
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

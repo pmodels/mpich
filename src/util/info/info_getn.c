@@ -84,7 +84,6 @@ int MPI_Info_get_nkeys( MPI_Info info, int *nkeys )
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_INFO(info, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -102,7 +101,6 @@ int MPI_Info_get_nkeys( MPI_Info info, int *nkeys )
             MPID_Info_valid_ptr( info_ptr, mpi_errno );
 	    
             MPIR_ERRTEST_ARGNULL(nkeys,"nkeys",mpi_errno);
-            if (mpi_errno) goto fn_fail;
 
         }
         MPID_END_ERROR_CHECKS;

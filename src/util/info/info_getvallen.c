@@ -90,7 +90,6 @@ int MPI_Info_get_valuelen( MPI_Info info, MPICH2_CONST char *key, int *valuelen,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_INFO(info, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -121,7 +120,6 @@ int MPI_Info_get_valuelen( MPI_Info info, MPICH2_CONST char *key, int *valuelen,
 
 	    MPIR_ERRTEST_ARGNULL(valuelen, "valuelen", mpi_errno);
             MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

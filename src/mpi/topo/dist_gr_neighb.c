@@ -103,7 +103,6 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -125,7 +124,6 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
             MPIR_ERRTEST_ARGNEG(maxoutdegree, "maxoutdegree", mpi_errno);
             MPIU_ERR_CHKANDJUMP3((maxindegree > topo_ptr->topo.dist_graph.indegree), mpi_errno, MPIR_ERR_RECOVERABLE, "**argrange", "**argrange %s %d %d", "maxindegree", maxindegree, topo_ptr->topo.dist_graph.indegree);
             MPIU_ERR_CHKANDJUMP3((maxoutdegree > topo_ptr->topo.dist_graph.outdegree), mpi_errno, MPIR_ERR_RECOVERABLE, "**argrange", "**argrange %s %d %d", "maxoutdegree", maxoutdegree, topo_ptr->topo.dist_graph.outdegree);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

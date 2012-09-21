@@ -63,7 +63,6 @@ int MPI_Type_set_name(MPI_Datatype type, MPICH2_CONST char *type_name)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_DATATYPE(type, "datatype", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -83,13 +82,11 @@ int MPI_Type_set_name(MPI_Datatype type, MPICH2_CONST char *type_name)
             MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
 	    /* If datatype_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(type_name,"type_name", mpi_errno);
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
 	    slen = (int)strlen( type_name );
 	    MPIU_ERR_CHKANDSTMT1((slen >= MPI_MAX_OBJECT_NAME), mpi_errno, 
-				 MPI_ERR_ARG,;, "**typenamelen",
+				 MPI_ERR_ARG,goto fn_fail, "**typenamelen",
 				    "**typenamelen %d", slen );
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

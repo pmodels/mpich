@@ -127,7 +127,6 @@ int MPIX_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosi
             MPIR_ERRTEST_ARGNULL(continuous, "continuous", mpi_errno);
             MPIR_ERRTEST_ARGNULL(atomic, "atomic", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

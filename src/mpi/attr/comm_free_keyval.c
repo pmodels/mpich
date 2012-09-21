@@ -86,11 +86,8 @@ int MPI_Comm_free_keyval(int *comm_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_ARGNULL(comm_keyval, "comm_keyval", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-	    MPIR_ERRTEST_KEYVAL(*comm_keyval, MPID_COMM, "communicator", 
-				mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(*comm_keyval, MPID_COMM, "communicator", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(*comm_keyval, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

@@ -157,7 +157,6 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, MPICH2_CONST int *ranks1,
         {
 	    MPIR_ERRTEST_GROUP(group1, mpi_errno);
 	    MPIR_ERRTEST_GROUP(group2, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -190,11 +189,10 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, MPICH2_CONST int *ranks1,
 							  MPI_ERR_RANK,
 						  "**rank", "**rank %d %d", 
 						  ranks1[i], size1 );
-			break;
+                        goto fn_fail;
 		    }
 		}
 	    }
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

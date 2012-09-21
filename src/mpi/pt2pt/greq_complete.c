@@ -79,7 +79,6 @@ int MPI_Grequest_complete( MPI_Request request )
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_REQUEST(request, mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

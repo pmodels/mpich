@@ -90,7 +90,6 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -120,6 +119,7 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
             if (lock_type != MPI_LOCK_SHARED && 
 		lock_type != MPI_LOCK_EXCLUSIVE) {
 		MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER, "**locktype" );
+                if (mpi_errno) goto fn_fail;
 	    }
 
             /* Test if window is unlocked */
@@ -127,12 +127,12 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 		MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
 			     "**lockwhilelocked", 
 			     "**lockwhilelocked %d", win_ptr->lockRank );
+                if (mpi_errno) goto fn_fail;
 	    }
 	    comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, rank, mpi_errno);
 
             /* TODO: Validate that window is not in active mode */
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

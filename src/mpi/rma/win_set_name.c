@@ -62,7 +62,6 @@ int MPI_Win_set_name(MPI_Win win, MPICH2_CONST char *win_name)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -78,10 +77,10 @@ int MPI_Win_set_name(MPI_Win win, MPICH2_CONST char *win_name)
         {
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
 	    /* If win_ptr is not valid, it will be reset to null */
 
 	    MPIR_ERRTEST_ARGNULL(win_name, "win_name", mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

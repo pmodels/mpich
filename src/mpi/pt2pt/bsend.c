@@ -103,7 +103,6 @@ int MPI_Bsend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
     }
@@ -120,6 +119,7 @@ int MPI_Bsend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    if (comm_ptr) {
 		MPIR_ERRTEST_SEND_TAG(tag,mpi_errno);
@@ -127,7 +127,6 @@ int MPI_Bsend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest
 	    }
 	    /* Validate datatype handle */
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-            if (mpi_errno) goto fn_fail;
 
 	    /* Validate datatype object */
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
@@ -136,13 +135,13 @@ int MPI_Bsend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest
 
 		MPID_Datatype_get_ptr(datatype, datatype_ptr);
 		MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+		if (mpi_errno) goto fn_fail;
 		MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
 		if (mpi_errno) goto fn_fail;
 	    }
 	    
 	    /* Validate buffer */
 	    MPIR_ERRTEST_USERBUFFER(buf,count,datatype,mpi_errno);
-            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

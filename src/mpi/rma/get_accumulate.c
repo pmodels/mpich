@@ -83,7 +83,6 @@ int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_WIN(win, mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -104,14 +103,11 @@ int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
             if (mpi_errno) goto fn_fail;
 
             MPIR_ERRTEST_COUNT(origin_count, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype",
-                                  mpi_errno);
+            MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
             MPIR_ERRTEST_COUNT(result_count, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(result_datatype, "result_datatype",
-                                  mpi_errno);
+            MPIR_ERRTEST_DATATYPE(result_datatype, "result_datatype", mpi_errno);
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype",
-                                  mpi_errno);
+            MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype", mpi_errno);
             if (win_ptr->create_flavor != MPIX_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
@@ -121,7 +117,9 @@ int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
                 
                 MPID_Datatype_get_ptr(origin_datatype, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
             if (HANDLE_GET_KIND(result_datatype) != HANDLE_KIND_BUILTIN)
@@ -130,7 +128,9 @@ int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
                 
                 MPID_Datatype_get_ptr(origin_datatype, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
             if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN)
@@ -139,15 +139,14 @@ int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
                 
                 MPID_Datatype_get_ptr(target_datatype, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
-
             MPIR_ERRTEST_OP(op, mpi_errno);
-
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

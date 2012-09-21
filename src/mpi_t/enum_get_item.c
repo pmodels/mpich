@@ -97,7 +97,6 @@ int MPIX_T_enum_get_item(MPIX_T_enum enumtype, int num, int *value, char *name, 
             MPIR_ERRTEST_ARGNULL(value, "value", mpi_errno);
             MPIR_ERRTEST_ARGNULL(name_len, "name_len", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }

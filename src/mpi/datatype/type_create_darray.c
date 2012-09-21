@@ -388,7 +388,6 @@ int MPI_Type_create_darray(int size,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -421,6 +420,7 @@ int MPI_Type_create_darray(int size,
 						 "**arg",
 						 "**arg %s",
 						 "order");
+                goto fn_fail;
 	    }
 
 	    for (i=0; mpi_errno == MPI_SUCCESS && i < ndims; i++) {
@@ -438,6 +438,7 @@ int MPI_Type_create_darray(int size,
 						     MPI_ERR_ARG,
 						     "**darrayunknown",
 						     0);
+                    goto fn_fail;
 		}
 
 		if ((array_of_dargs[i] != MPI_DISTRIBUTE_DFLT_DARG) &&
@@ -451,6 +452,7 @@ int MPI_Type_create_darray(int size,
 						     "**arg",
 						     "**arg %s",
 						     "array_of_dargs");
+                    goto fn_fail;
 		}
 
 		if ((array_of_distribs[i] == MPI_DISTRIBUTE_NONE) &&
@@ -464,6 +466,7 @@ int MPI_Type_create_darray(int size,
 						     "**darraydist",
 						     "**darraydist %d %d",
 						     i, array_of_psizes[i]);
+                    goto fn_fail;
 		}
 	    }
 
@@ -485,6 +488,7 @@ int MPI_Type_create_darray(int size,
 						 "**darrayoverflow",
 						 "**darrayoverflow %L",
 						 size_with_offset);
+                goto fn_fail;
 	    }
 
             /* Validate datatype_ptr */

@@ -88,7 +88,6 @@ int MPIX_T_category_get_num(int *num_cat)
         {
             MPIR_ERRTEST_ARGNULL(num_cat, "num_cat", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }
