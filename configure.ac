@@ -1480,10 +1480,6 @@ if test "$with_cross" != "no" ; then
     fi
 fi
 
-if test "$enable_nmpi_as_mpi" = yes ; then
-   AC_DEFINE(USE_MPI_FOR_NMPI,1,[Define if the NMPI names should use MPI instead of PMPI])
-fi
-
 # This goes here because we need the top_srcdir
 if test "$enable_romio" = "yes" ; then
    if test -d $use_top_srcdir/src/mpi/romio ; then
