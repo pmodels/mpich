@@ -18,13 +18,12 @@ noinst_PROGRAMS = \
     wtime         \
     netpipe       \
     patterns      \
-    adapt         \
-    allmpi
+    adapt
 
 noinst_HEADERS = GetOpt.h
 netpipe_SOURCES = netmpi.c GetOpt.c
 adapt_SOURCES = adapt.c GetOpt.c
 
-EXTRA_DIST = adapt.vcproj allmpi.vcproj netpipe.vcproj patterns.vcproj \
+EXTRA_DIST = adapt.vcproj netpipe.vcproj patterns.vcproj \
              sendrecv.vcproj simple.vcproj srtest.vcproj
 
