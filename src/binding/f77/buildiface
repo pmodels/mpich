@@ -451,6 +451,7 @@ foreach $_ (@ARGV) {
     'Reduce_scatter_block' => '1',
                 'Reduce_scatter_block-1' => 'in:inplace',
     'Scan' => '1', 'Scan-1' => 'in:inplace',
+    'Exscan' => '1', 'Exscan-1' => 'in:inplace',
     'Alltoall' => '1',
                 'Alltoall-1' => 'in:inplace',
     'Alltoallv' => '1:2:3:6:7',
