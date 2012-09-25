@@ -1427,14 +1427,16 @@ struct MPID_Grequest_fns {
 typedef struct MPID_Request {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Request_kind_t kind;
-    /* completion counter */
-    MPID_cc_t cc;
     /* pointer to the completion counter */
     /* This is necessary for the case when an operation is described by a 
        list of requests */
     MPID_cc_t *cc_ptr;
     /* A comm is needed to find the proper error handler */
     MPID_Comm *comm;
+    /* completion counter.  Ensure cc and status are in the same cache
+       line, assuming the cache line size is a multiple of 32 bytes
+       and 32-bit integers */
+    MPID_cc_t cc;
     /* Status is needed for wait/test/recv */
     MPI_Status status;
     /* Persistent requests have their own "real" requests.  Receive requests
@@ -1449,7 +1451,7 @@ typedef struct MPID_Request {
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL
 #endif
-} MPID_Request;
+} MPID_Request ATTRIBUTE((__aligned__(32)));
 
 extern MPIU_Object_alloc_t MPID_Request_mem;
 /* Preallocated request objects */
