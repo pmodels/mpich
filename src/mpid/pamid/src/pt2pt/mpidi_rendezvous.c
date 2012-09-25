@@ -243,3 +243,9 @@ pami_result_t MPIDI_RendezvousTransfer_SyncAck (pami_context_t context, void * _
   // Continue on to the rendezvous transfer part.
   return MPIDI_RendezvousTransfer(context, _rreq);
 }
+
+pami_result_t MPIDI_RendezvousTransfer_zerobyte (pami_context_t context, void * _rreq)
+{
+  MPIDI_RecvRzvDoneCB_zerobyte (context, _rreq, PAMI_SUCCESS);
+  return PAMI_SUCCESS;
+}

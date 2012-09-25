@@ -26,25 +26,18 @@
  * \brief The callback for a new RZV RTS
  * \note  Because this is a short message, the data is already received
  * \param[in]  context      The context on which the message is being received.
- * \param[in]  cookie       Unused
+ * \param[in]  sender       The origin endpoint
  * \param[in]  _msginfo     The extended header information
  * \param[in]  msginfo_size The size of the extended header information
- * \param[in]  sndbuf       Unused
- * \param[in]  sndlen       Unused
- * \param[out] recv         Unused
+ * \param[in]  is_zero_byte The rendezvous message is zero bytes in length.
  */
 void
-MPIDI_RecvRzvCB(pami_context_t    context,
-                void            * cookie,
-                const void      * _msginfo,
-                size_t            msginfo_size,
-                const void      * sndbuf,
-                size_t            sndlen,
-                pami_endpoint_t   sender,
-                pami_recv_t     * recv)
+MPIDI_RecvRzvCB_impl(pami_context_t    context,
+                     pami_endpoint_t   sender,
+                     const void      * _msginfo,
+                     size_t            msginfo_size,
+                     const unsigned    is_zero_byte)
 {
-  MPID_assert(recv == NULL);
-  MPID_assert(sndlen == 0);
   MPID_assert(_msginfo != NULL);
   MPID_assert(msginfo_size == sizeof(MPIDI_MsgEnvelope));
   const MPIDI_MsgEnvelope * envelope = (const MPIDI_MsgEnvelope *)_msginfo;
@@ -91,21 +84,35 @@ MPIDI_RecvRzvCB(pami_context_t    context,
   /* node calls a receive function and the data is         */
   /* retreived from the origin node.                       */
   /* ----------------------------------------------------- */
+  if (is_zero_byte)
+    {
+      rreq->mpid.envelope.length = 0;
+      rreq->mpid.envelope.data   = NULL;
+    }
+  else
+    {
 #ifdef USE_PAMI_RDMA
-  memcpy(&rreq->mpid.envelope.memregion,
-	 &envelope->memregion,
-	 sizeof(pami_memregion_t));
+      memcpy(&rreq->mpid.envelope.memregion,
+             &envelope->memregion,
+             sizeof(pami_memregion_t));
 #else
-  rreq->mpid.envelope.memregion_used = envelope->memregion_used;
-  if(envelope->memregion_used) {
-    memcpy(&rreq->mpid.envelope.memregion,
-           &envelope->memregion,
-           sizeof(pami_memregion_t));
-  }
-  rreq->mpid.envelope.data   = envelope->data;
+      rreq->mpid.envelope.memregion_used = envelope->memregion_used;
+      if(envelope->memregion_used)
+        {
+          memcpy(&rreq->mpid.envelope.memregion,
+                 &envelope->memregion,
+                 sizeof(pami_memregion_t));
+        }
+      rreq->mpid.envelope.data   = envelope->data;
 #endif
-  rreq->mpid.envelope.length = envelope->length;
-
+      rreq->mpid.envelope.length = envelope->length;
+#ifdef MPIDI_TRACE
+      MPIDI_In_cntr[source].R[(rreq->mpid.idx)].req=rreq;
+      MPIDI_In_cntr[source].R[(rreq->mpid.idx)].rzv=1;
+      MPIDI_In_cntr[source].R[(rreq->mpid.idx)].rlen=envelope->length;
+      MPIDI_In_cntr[source].R[(rreq->mpid.idx)].sync=msginfo->isSync;
+#endif
+    }
   /* ----------------------------------------- */
   /* figure out target buffer for request data */
   /* ----------------------------------------- */
@@ -122,7 +129,17 @@ MPIDI_RecvRzvCB(pami_context_t    context,
 
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
 
-      MPIDI_RendezvousTransfer(context, rreq);
+      if (is_zero_byte)
+        MPIDI_RecvRzvDoneCB_zerobyte(context, rreq, PAMI_SUCCESS);
+      else
+        {
+          MPIDI_RendezvousTransfer(context, rreq);
+#ifdef MPIDI_TRACE
+          MPIDI_In_cntr[source].R[(rreq->mpid.idx)].sync_com_in_HH=1;
+          MPIDI_In_cntr[source].R[(rreq->mpid.idx)].matchedInHH=1;
+          MPIDI_In_cntr[source].R[(rreq->mpid.idx)].bufadd=rreq->mpid.userbuf;
+#endif
+        }
       MPID_Request_discard(newreq);
     }
 
@@ -154,4 +171,56 @@ MPIDI_RecvRzvCB(pami_context_t    context,
   /*  Signal that the recv has been started.  */
   /* ---------------------------------------- */
   MPIDI_Progress_signal();
+}
+
+/**
+ * \brief The callback for a new RZV RTS
+ * \param[in]  context      The context on which the message is being received.
+ * \param[in]  cookie       Unused
+ * \param[in]  _msginfo     The extended header information
+ * \param[in]  msginfo_size The size of the extended header information
+ * \param[in]  sndbuf       Unused
+ * \param[in]  sndlen       Unused
+ * \param[in]  sender       The origin endpoint
+ * \param[out] recv         Unused
+ */
+void
+MPIDI_RecvRzvCB(pami_context_t    context,
+                void            * cookie,
+                const void      * _msginfo,
+                size_t            msginfo_size,
+                const void      * sndbuf,
+                size_t            sndlen,
+                pami_endpoint_t   sender,
+                pami_recv_t     * recv)
+{
+  MPID_assert(recv == NULL);
+  MPID_assert(sndlen == 0);
+  MPIDI_RecvRzvCB_impl (context, sender, _msginfo, msginfo_size, 0);
+}
+
+/**
+ * \brief The callback for a new "zero byte" RZV RTS
+ * \param[in]  context      The context on which the message is being received.
+ * \param[in]  cookie       Unused
+ * \param[in]  _msginfo     The extended header information
+ * \param[in]  msginfo_size The size of the extended header information
+ * \param[in]  sndbuf       Unused
+ * \param[in]  sndlen       Unused
+ * \param[in]  sender       The origin endpoint
+ * \param[out] recv         Unused
+ */
+void
+MPIDI_RecvRzvCB_zerobyte(pami_context_t    context,
+                         void            * cookie,
+                         const void      * _msginfo,
+                         size_t            msginfo_size,
+                         const void      * sndbuf,
+                         size_t            sndlen,
+                         pami_endpoint_t   sender,
+                         pami_recv_t     * recv)
+{
+  MPID_assert(recv == NULL);
+  MPID_assert(sndlen == 0);
+  MPIDI_RecvRzvCB_impl (context, sender, _msginfo, msginfo_size, 1);
 }

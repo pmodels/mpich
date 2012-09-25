@@ -96,6 +96,7 @@ static struct
   struct protocol_t Control;
   struct protocol_t WinCtrl;
   struct protocol_t WinAccum;
+  struct protocol_t RVZ_zerobyte;
 } proto_list = {
   .Short = {
     .func = MPIDI_RecvShortAsyncCB,
@@ -182,6 +183,17 @@ static struct
     },
     .immediate_min     = sizeof(MPIDI_MsgInfo),
   },
+  .RVZ_zerobyte = {
+    .func = MPIDI_RecvRzvCB_zerobyte,
+    .dispatch = MPIDI_Protocols_RVZ_zerobyte,
+    .options = {
+      .consistency     = USE_PAMI_CONSISTENCY,
+      .long_header     = PAMI_HINT_DISABLE,
+      .recv_immediate  = PAMI_HINT_ENABLE,
+      .use_rdma        = PAMI_HINT_DISABLE,
+    },
+    .immediate_min     = sizeof(MPIDI_MsgEnvelope),
+  },
 };
 
 static void
@@ -194,17 +206,6 @@ MPIDI_PAMI_client_init(int* rank, int* size, int threading)
   pami_result_t        rc = PAMI_ERROR;
   unsigned             n  = 0;
 
-#ifndef HAVE_ERROR_CHECKING
-#ifdef OUT_OF_ORDER_HANDLING
-  /* fast library only, request lockless mode in PAMI */
-  if (threading == MPI_THREAD_SINGLE)
-    {
-      config.name = PAMI_CLIENT_THREAD_SAFE;
-      config.value.intval = 0;
-      n++;
-    }
-#endif
-#endif
   rc = PAMI_Client_create("MPI", &MPIDI_Client, &config, n);
   MPID_assert_always(rc == PAMI_SUCCESS);
   PAMIX_Initialize(MPIDI_Client);
@@ -326,6 +327,17 @@ MPIDI_PAMI_context_init(int* threading)
   memset((void *) MPIDI_In_cntr,0, sizeof(MPIDI_In_cntr_t));
   memset((void *) MPIDI_Out_cntr,0, sizeof(MPIDI_Out_cntr_t));
 #endif
+#ifdef MPIDI_TRACE
+      int i; 
+      for (i=0; i < numTasks; i++) {
+          MPIDI_In_cntr[i].R=MPIU_Calloc0(N_MSGS, recv_status);
+          if (MPIDI_In_cntr[i].R==NULL) MPID_abort();
+          MPIDI_In_cntr[i].PR=MPIU_Calloc0(N_MSGS, posted_recv);
+          if (MPIDI_In_cntr[i].PR ==NULL) MPID_abort();
+          MPIDI_Out_cntr[i].S=MPIU_Calloc0(N_MSGS, send_status);
+          if (MPIDI_Out_cntr[i].S ==NULL) MPID_abort();
+      }
+#endif
 
 
   /* ----------------------------------- */
@@ -416,6 +428,7 @@ MPIDI_PAMI_dispath_init()
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_Control,   &proto_list.Control,   NULL);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_WinCtrl,   &proto_list.WinCtrl,   NULL);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_WinAccum,  &proto_list.WinAccum,  NULL);
+  MPIDI_PAMI_dispath_set(MPIDI_Protocols_RVZ_zerobyte, &proto_list.RVZ_zerobyte, NULL);
 
   /*
    * The first two protocols are our short protocols: they use

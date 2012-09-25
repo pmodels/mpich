@@ -42,6 +42,8 @@
 #define ASYNC_PROGRESS_MODE_DEFAULT 0
 
 #ifdef __BGQ__
+#undef  MPIDI_EAGER_LIMIT_LOCAL
+#define MPIDI_EAGER_LIMIT_LOCAL  64
 #define MPIDI_MAX_THREADS     64
 #define MPIDI_MUTEX_L2_ATOMIC 1
 #define MPIDI_OPTIMIZED_COLLECTIVE_DEFAULT 1
@@ -52,7 +54,7 @@
 #undef ASYNC_PROGRESS_MODE_DEFAULT
 #define ASYNC_PROGRESS_MODE_DEFAULT 1
 
-static const char _ibm_release_version_[] = "V1R1M0";
+static const char _ibm_release_version_[] = "V1R2M0";
 #endif
 
 #ifdef __PE__

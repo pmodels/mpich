@@ -304,7 +304,11 @@ MPIDI_Mutex_initialize()
   pthread_mutexattr_t attr;
   rc = pthread_mutexattr_init(&attr);
   MPID_assert(rc == 0);
+#if !defined(__AIX__)
   extern int pthread_mutexattr_settype(pthread_mutexattr_t *__attr, int __kind) __THROW __nonnull ((1));
+#else
+  extern int pthread_mutexattr_settype(pthread_mutexattr_t *__attr, int __kind);
+#endif
 #ifndef __PE__
 #if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
    rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
@@ -312,7 +316,11 @@ MPIDI_Mutex_initialize()
    rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
 #endif /*(MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)*/
 #else /* __PE__ */
+#if !defined(__AIX__)
    rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+#else
+   rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+#endif
 #endif
   MPID_assert(rc == 0);
 

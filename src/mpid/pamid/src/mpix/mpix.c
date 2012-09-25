@@ -73,6 +73,7 @@ MPIX_Init()
 }
 
 
+#if !defined(__AIX__)
 extern int backtrace(void **buffer, int size);                  /**< GlibC backtrace support */
 extern char **backtrace_symbols(void *const *buffer, int size); /**< GlibC backtrace support */
 void MPIX_Dump_stacks()
@@ -95,6 +96,9 @@ void MPIX_Dump_stacks()
   free(bt_strings); /* Since this is not allocated by MPIU_Malloc, do not use MPIU_Free */
 #endif
 }
+#else
+void MPIX_Dump_stacks(){}
+#endif
 
 
 void

@@ -228,6 +228,10 @@ MPIDI_RecvCB(pami_context_t    context,
       /* -------------------------------------------------- */
       recv->addr = rreq->mpid.uebuf;
     }
+#ifdef MPIDI_TRACE
+   MPIDI_In_cntr[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].comp_in_HH=2;
+   MPIDI_In_cntr[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].bufadd=rreq->mpid.userbuf;
+#endif
 
  fn_exit_eager:
   /* ---------------------------------------- */

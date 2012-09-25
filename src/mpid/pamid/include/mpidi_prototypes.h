@@ -67,6 +67,7 @@ void MPIDI_Buffer_copy(const void     * const sbuf,
 pami_result_t MPIDI_Send_handoff (pami_context_t context, void * sreq);
 pami_result_t MPIDI_Ssend_handoff(pami_context_t context, void * sreq);
 pami_result_t MPIDI_Isend_handoff(pami_context_t context, void * sreq);
+pami_result_t MPIDI_Isend_handoff_internal(pami_context_t context, void * sreq);
 
 void MPIDI_RecvMsg_procnull(MPID_Comm     * comm,
                             unsigned        is_blocking,
@@ -118,6 +119,14 @@ void MPIDI_RecvRzvCB       (pami_context_t    context,
                             size_t            sndlen,
                             pami_endpoint_t   sender,
                             pami_recv_t     * recv);
+void MPIDI_RecvRzvCB_zerobyte (pami_context_t    context,
+                               void            * cookie,
+                               const void      * _msginfo,
+                               size_t            msginfo_size,
+                               const void      * sndbuf,
+                               size_t            sndlen,
+                               pami_endpoint_t   sender,
+                               pami_recv_t     * recv);
 
 void MPIDI_RecvDoneCB        (pami_context_t    context,
                               void            * clientdata,
@@ -128,6 +137,9 @@ void MPIDI_RecvDoneCB_mutexed(pami_context_t    context,
 void MPIDI_RecvRzvDoneCB     (pami_context_t    context,
                               void            * cookie,
                               pami_result_t     result);
+void MPIDI_RecvRzvDoneCB_zerobyte (pami_context_t    context,
+                                   void            * cookie,
+                                   pami_result_t     result);
 #ifdef OUT_OF_ORDER_HANDLING
 void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t context);
 int MPIDI_Recvq_search_recv_posting_queue(int src, int tag, int context_id,
@@ -178,6 +190,7 @@ MPIDI_WinControlCB(pami_context_t    context,
 /** \brief Helper function to complete a rendevous transfer */
 pami_result_t MPIDI_RendezvousTransfer(pami_context_t context, void* rreq);
 pami_result_t MPIDI_RendezvousTransfer_SyncAck(pami_context_t context, void* rreq);
+pami_result_t MPIDI_RendezvousTransfer_zerobyte(pami_context_t context, void* rreq);
 
 
 int  MPIDI_Comm_create      (MPID_Comm *comm);

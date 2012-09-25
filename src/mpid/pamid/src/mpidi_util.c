@@ -591,7 +591,8 @@ int MPIDI_Print_mpenv(int rank,int size)
         sender.retransmit_interval = mpich_env->retransmit_interval;
 
         /* Get shared memory  */
-        sender.shared_memory = mpich_env->shared_memory;
+        sender.shmem_pt2pt = MPIDI_Process.shmem_pt2pt;
+        sender.use_shmem = mpich_env->use_shmem;
 #ifndef LINUX
         cp = getenv("MEMORY_AFFINITY");
         if ( cp ) strncpy(sender.mem_affinity, cp, 8);
@@ -731,7 +732,8 @@ int MPIDI_Print_mpenv(int rank,int size)
                 MATCHI(eager_limit,"Message Eager Limit (MP_EAGER_LIMIT/Bytes):");
                 MATCHC(wait_mode,"Message Wait Mode(MP_WAIT_MODE):",8);
                 MATCHI(retransmit_interval,"Retransmit Interval (MP_RETRANSMIT_INTERVAL/count):");
-                MATCHB(shared_memory,"Shared Memory Enabled (MP_SHARED_MEMORY):");
+                MATCHB(use_shmem,"Shared Memory Enabled (MP_SHARED_MEMORY):");
+                MATCHB(shmem_pt2pt,"Intranode pt2pt Shared Memory Enabled (MP_SHMEM_PT2PT):");
                 MATCHB(mp_statistics,"Statistics Collection Enabled (MP_STATISTICS):");
                 MATCHC(mem_affinity,"MEMORY_AFFINITY:",8);
                 MATCHT(single_thread,"Single Thread Usage(MP_SINGLE_THREAD):");

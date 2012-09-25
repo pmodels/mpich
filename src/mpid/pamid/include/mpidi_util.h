@@ -86,7 +86,7 @@ typedef struct {
         char wait_mode[8];
         int use_shmem;
         uint retransmit_interval;
-        int shared_memory;
+        int shmem_pt2pt;
         int shared_mem_pg_size;
         char mem_affinity[8];
         int single_thread;

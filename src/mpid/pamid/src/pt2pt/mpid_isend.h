@@ -117,7 +117,10 @@ MPID_Isend_inline(const void    * buf,
   MPIR_Comm_add_ref(comm);
 
   pami_context_t context = MPIDI_Context[MPIDI_Context_hash(rank, context_id, 0, ncontexts)];
-  MPIDI_Context_post(context, &sreq->mpid.post_request, MPIDI_Isend_handoff, sreq);
+  if (context_offset == 0)
+    MPIDI_Context_post(context, &sreq->mpid.post_request, MPIDI_Isend_handoff, sreq);
+  else
+    MPIDI_Context_post(context, &sreq->mpid.post_request, MPIDI_Isend_handoff_internal, sreq);
 
   return MPI_SUCCESS;
 }

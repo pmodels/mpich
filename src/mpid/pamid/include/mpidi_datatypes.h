@@ -114,6 +114,7 @@ enum
     MPIDI_Protocols_Control,
     MPIDI_Protocols_WinCtrl,
     MPIDI_Protocols_WinAccum,
+    MPIDI_Protocols_RVZ_zerobyte,
     MPIDI_Protocols_COUNT,
   };
 
@@ -177,10 +178,10 @@ typedef struct
   union {
     uint16_t  flags;
     struct {
-      uint16_t    control:3;   /**< message type for control protocols */
-      uint16_t    isSync:1;    /**< set for sync sends     */
-      uint16_t    isRzv :1;    /**< use pt2pt rendezvous   */
-    };
+      unsigned control:3;  /**< message type for control protocols */
+      unsigned isSync:1;   /**< set for sync sends     */
+      unsigned isRzv :1;   /**< use pt2pt rendezvous   */
+    } __attribute__ ((__packed__));
   };
 
 #ifdef OUT_OF_ORDER_HANDLING
@@ -232,6 +233,12 @@ struct MPIDI_Request
 #ifdef RDMA_FAILOVER
   uint32_t             memregion_used:16;
   uint32_t             shm:16;
+#endif
+#ifdef MPIDI_TRACE
+  int   cur_nMsgs;
+  int   partner_id;
+  int   idx;
+  int   PR_idx;
 #endif
 };
 

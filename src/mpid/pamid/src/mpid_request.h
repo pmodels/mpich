@@ -145,7 +145,7 @@ MPIDI_Request_create_basic()
   MPIDI_Request_tls_alloc(req);
   MPID_assert(req != NULL);
   MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
-  MPID_cc_set(&req->cc, 1);
+  MPID_cc_set_1(&req->cc);
   req->cc_ptr = &req->cc;
 
 #if 0

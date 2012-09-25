@@ -166,6 +166,11 @@ MPIDI_Recvq_FDU_or_AEP(MPID_Request *newreq, int source, pami_task_t pami_source
      so we need to allocate a new request and add it to the
      posted queue */
   rreq = newreq;
+#ifdef  MPIDI_TRACE
+  rreq->mpid.envelope.msginfo.MPIseqno=-1;
+  rreq->mpid.envelope.length=-1;
+  rreq->mpid.envelope.data=NULL;
+#endif
   rreq->kind = MPID_REQUEST_RECV;
   MPIDI_Request_setMatch(rreq, tag, source, context_id);
   MPIDI_Recvq_append(MPIDI_Recvq.posted, rreq);
@@ -184,6 +189,12 @@ typedef struct MPIDI_In_cntr {
   uint               n_OutOfOrderMsgs:16; /* the number of out-of-order messages received */
   uint               nMsgs;               /* the number of received messages */
   MPID_Request       *OutOfOrderList;     /* link list of out-of-order messages */
+#ifdef MPIDI_TRACE
+  recv_status *R;
+  int  totPR;
+  int  nRdmaMsgs;
+  posted_recv *PR;
+#endif
 } MPIDI_In_cntr_t;
 
 /**
@@ -192,6 +203,9 @@ typedef struct MPIDI_In_cntr {
 typedef struct MPIDI_Out_cntr {
   uint         unmatched:16;             /* the number of un-matched messages */
   uint         nMsgs;                    /* the number of out-going messages */
+#ifdef MPIDI_TRACE
+  send_status *S;
+#endif
 } MPIDI_Out_cntr_t;
 
 /* global data to keep track of pair-wise communication, storage malloced
@@ -221,6 +235,13 @@ MPIDI_Recvq_FDP(size_t source, pami_task_t pami_source, int tag, int context_id,
   MPID_Request * prev_rreq = NULL;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
+#endif
+#ifdef MPIDI_TRACE
+  int idx;
+  idx=(msg_seqno & SEQMASK);
+  recv_status  *rstatus;
+  memset(&MPIDI_In_cntr[pami_source].R[idx],0,sizeof(recv_status));
+  rstatus=&MPIDI_In_cntr[pami_source].R[idx];
 #endif
 
   rreq = MPIDI_Recvq.posted_head;
@@ -260,6 +281,19 @@ MPIDI_Recvq_FDP(size_t source, pami_task_t pami_source, int tag, int context_id,
     if (flag)
 #endif
       {
+#ifdef MPIDI_TRACE
+        rstatus->req=rreq;
+        rstatus->msgid=msg_seqno;
+        rstatus->posted=1;
+        rstatus->bufadd=rreq->mpid.userbuf;
+        rstatus->len=rreq->mpid.envelope.length;
+        rstatus->rtag=tag;
+        rstatus->rctx=context_id;
+        rstatus->matchedInHH=1;
+        rstatus->rsource=pami_source;
+        rreq->mpid.idx=idx;
+        rreq->mpid.partner_id=pami_source;
+#endif
         MPIDI_Recvq_remove(MPIDI_Recvq.posted, rreq, prev_rreq);
 #ifdef USE_STATISTICS
         MPIDI_Statistics_time(MPIDI_Statistics.recvq.unexpected_search, search_length);

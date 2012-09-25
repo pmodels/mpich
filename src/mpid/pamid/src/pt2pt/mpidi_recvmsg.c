@@ -36,9 +36,15 @@ MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
   /* The recvnew callback will acknowledge the posted messages    */
   /* Recv functions will ack the messages that are unexpected     */
   /* ------------------------------------------------------------ */
+#ifdef MPIDI_TRACE
+  MPIDI_In_cntr[(rreq->mpid.partner_id)].R[(rreq->mpid.idx)].matchedInUQ=1;
+#endif
 
   if (MPIDI_Request_isRzv(rreq))
     {
+      const unsigned is_sync = MPIDI_Request_isSync(rreq);
+      const unsigned is_zero = (rreq->mpid.envelope.length==0);
+
       /* -------------------------------------------------------- */
       /* Received an expected flow-control rendezvous RTS.        */
       /*     This is very similar to the found/incomplete case    */
@@ -49,10 +55,12 @@ MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
           MPID_Datatype_add_ref(rreq->mpid.datatype_ptr);
         }
 
-      if (unlikely(MPIDI_Request_isSync(rreq)))
+      if (likely((is_sync+is_zero) == 0))
+        MPIDI_Context_post(MPIDI_Context_local(rreq), &rreq->mpid.post_request, MPIDI_RendezvousTransfer, rreq);
+      else if (is_sync != 0)
         MPIDI_Context_post(MPIDI_Context_local(rreq), &rreq->mpid.post_request, MPIDI_RendezvousTransfer_SyncAck, rreq);
       else
-        MPIDI_Context_post(MPIDI_Context_local(rreq), &rreq->mpid.post_request, MPIDI_RendezvousTransfer, rreq);
+        MPIDI_Context_post(MPIDI_Context_local(rreq), &rreq->mpid.post_request, MPIDI_RendezvousTransfer_zerobyte, rreq);
     }
   else 
     {

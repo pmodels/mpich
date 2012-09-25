@@ -68,6 +68,19 @@ int MPID_Finalize()
   rc = PAMI_Client_destroy(&MPIDI_Client);
   MPID_assert_always(rc == PAMI_SUCCESS);
 
+#ifdef MPIDI_TRACE
+ {  int i;
+  for (i=0; i< numTasks; i++) {
+      if (MPIDI_In_cntr[i].R)
+          MPIU_Free(MPIDI_In_cntr[i].R);
+      if (MPIDI_In_cntr[i].PR)
+          MPIU_Free(MPIDI_In_cntr[i].PR);
+      if (MPIDI_Out_cntr[i].S)
+          MPIU_Free(MPIDI_Out_cntr[i].S);
+  }
+ }
+#endif
+
 #ifdef OUT_OF_ORDER_HANDLING
   MPIU_Free(MPIDI_In_cntr);
   MPIU_Free(MPIDI_Out_cntr);
