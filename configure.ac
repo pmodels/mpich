@@ -50,6 +50,8 @@ dnl    EXTRA_STATUS_DECL     - Any extra declarations that the device
 dnl                            needs added to the definition of MPI_Status.
 dnl    MPID_MAX_PROCESSOR_NAME - The maximum number of character in a processor
 dnl                            name.  If not set, 128 will be used.
+dnl    MPID_MAX_ERROR_STRING - The maximum number of character in an error
+dnl                            string.  If not set, 1024 will be used.
 dnl    PMI_REQUIRES_READABLE_TOKENS - if yes, define the C-preprocessor
 dnl                            value USE_HUMAN_READABLE_TOKENS, which is
 dnl                            used in src/include/mpimem.h to define token
@@ -5732,6 +5734,17 @@ else
     MPI_MAX_PROCESSOR_NAME=$MPID_MAX_PROCESSOR_NAME
 fi
 AC_SUBST(MPI_MAX_PROCESSOR_NAME)
+
+# Get the value of MPI_MAX_ERROR_STRING
+if test -z "$MPID_MAX_ERROR_STRING" ; then
+    if test -z "$MPI_MAX_ERROR_STRING" ; then
+       MPI_MAX_ERROR_STRING=1024
+    fi
+    AC_MSG_WARN([The $with_device device did not set the maximum size of an error string, $MPI_MAX_ERROR_STRING being used.])
+else
+    MPI_MAX_ERROR_STRING=$MPID_MAX_ERROR_STRING
+fi
+AC_SUBST(MPI_MAX_ERROR_STRING)
 
 # Add a definition that is used to help support Windows DLLs (used in mpi.h.in)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
