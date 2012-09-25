@@ -36,6 +36,7 @@ typedef struct sorttype {
     int orig_idx;
 } sorttype;
 
+#if defined(HAVE_QSORT)
 static int sorttype_compare(const void *v1, const void *v2) {
     const sorttype *s1 = v1;
     const sorttype *s2 = v2;
@@ -55,6 +56,7 @@ static int sorttype_compare(const void *v1, const void *v2) {
     return 0; /* should never happen */
     /* --END ERROR HANDLING-- */
 }
+#endif
 
 /* Sort the entries in keytable into increasing order by key.  A stable
    sort should be used incase the key values are not unique. */
