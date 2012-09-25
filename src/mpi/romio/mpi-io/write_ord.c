@@ -48,7 +48,7 @@ int MPI_File_write_ordered(MPI_File mpi_fh, MPICH2_CONST void *buf, int count,
     static char myname[] = "MPI_FILE_WRITE_ORDERED";
     ADIO_Offset shared_fp;
     ADIO_File fh;
-    void *e32buf, *xbuf;
+    void *e32buf=NULL, *xbuf;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
