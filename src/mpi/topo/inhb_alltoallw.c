@@ -35,10 +35,7 @@ int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[]
     int indegree, outdegree, weighted;
     int k,l;
     int *srcs, *dsts;
-    int comm_size;
     MPIU_CHKLMEM_DECL(2);
-
-    comm_size = comm_ptr->local_size;
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

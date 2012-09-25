@@ -24,7 +24,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 {
     int              mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t   data_sz;
-    int              rank, origin_predefined, result_predefined, target_predefined;
+    int              rank, origin_predefined, target_predefined;
     int              dt_contig ATTRIBUTE((unused));
     MPI_Aint         dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype   *dtp;
@@ -43,7 +43,6 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     rank = win_ptr->myrank;
     
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(result_datatype, result_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
     /* Do =! rank first (most likely branch?) */
