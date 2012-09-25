@@ -4400,7 +4400,7 @@ if test "$ac_cv_c_int64_t" != "no" -o -n "$INT64_T" ; then
          fi
     fi
     # We use the type that we're going use for int64.
-    AC_CACHE_CHECK([for alignment restrictions on $MYINT64_T],pac_cv_int64_t_alignment,[
+    AC_CACHE_CHECK([for alignment restrictions on $INT64_T],pac_cv_int64_t_alignment,[
     AC_TRY_RUN([
 #include <sys/types.h>
 #include <stdlib.h>
