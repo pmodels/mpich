@@ -1785,11 +1785,12 @@ int MPID_Mem_was_alloced( void *ptr );  /* brad : this isn't used or implemented
   Module:
   Collective-DS
   E*/
-typedef enum MPID_Op_kind { MPID_OP_MAX=1, MPID_OP_MIN=2, 
+typedef enum MPID_Op_kind { MPID_OP_NULL=0, MPID_OP_MAX=1, MPID_OP_MIN=2,
 			    MPID_OP_SUM=3, MPID_OP_PROD=4, 
 	       MPID_OP_LAND=5, MPID_OP_BAND=6, MPID_OP_LOR=7, MPID_OP_BOR=8,
 	       MPID_OP_LXOR=9, MPID_OP_BXOR=10, MPID_OP_MAXLOC=11, 
                MPID_OP_MINLOC=12, MPID_OP_REPLACE=13, 
+               MPID_OP_NO_OP=14,
                MPID_OP_USER_NONCOMMUTE=32, MPID_OP_USER=33 }
   MPID_Op_kind;
 
@@ -1858,7 +1859,7 @@ typedef struct MPID_Op {
      MPID_Lang_t        language;
      MPID_User_function function;
   } MPID_Op;
-#define MPID_OP_N_BUILTIN 14
+#define MPID_OP_N_BUILTIN 15
 extern MPID_Op MPID_Op_builtin[MPID_OP_N_BUILTIN];
 extern MPID_Op MPID_Op_direct[];
 extern MPIU_Object_alloc_t MPID_Op_mem;
