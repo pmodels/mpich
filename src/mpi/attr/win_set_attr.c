@@ -98,7 +98,8 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 		goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
-	    p->value = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
+	    p->value    = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
+	    p->attrType = attrType;
 	    /* Does not change the reference count on the keyval */
 	    break;
 	}

@@ -93,7 +93,8 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
 		goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
-	    p->value = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
+	    p->value    = (MPID_AttrVal_t)(MPIR_Pint)attribute_val;
+	    p->attrType = attrType;
 	    break;
 	}
 	else if (p->keyval->handle > keyval_ptr->handle) {
