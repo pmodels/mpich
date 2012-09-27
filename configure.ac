@@ -1042,7 +1042,7 @@ if test "$logging_name" != "none" ; then
         done
         for dir in $logging_subsystems ; do
             if test ! -x $srcdir/$dir/configure ; then
-	        AC_MSG_ERROR([$logdir/$dir has no configure (required).  Configure aborted])
+	        AC_MSG_ERROR([$srcdir/$dir has no configure (required).  Configure aborted])
 	        logging_name=none
             fi
             other_install_dirs="${other_install_dirs} $logreldir"
