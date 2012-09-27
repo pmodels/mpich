@@ -136,11 +136,10 @@ export do_build_configure
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
 
-# externals are the directories for external packages that we have
-# included into MPICH2
+# external packages that require autogen.sh to be run for each of them
 externals="src/mpe2 src/pm/hydra src/mpi/romio src/armci src/pm/mpd src/openpa"
 # amdirs are the directories that make use of autoreconf
-amdirs=". src/mpl"
+amdirs=". src/mpl src/util/logging/rlog"
 
 autoreconf_args="-if"
 export autoreconf_args
