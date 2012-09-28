@@ -47,7 +47,7 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
               MPI_Comm comm)
 {
-    int mpi_errno, context_id;
+    int context_id, mpi_errno = MPI_SUCCESS;
     MPID_Request *request_ptr=NULL;
     MPID_Comm *comm_ptr=NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SEND);
