@@ -16,7 +16,7 @@
 
 int main(int argc, char *argv[]) 
 { 
-    int rank, nprocs, A[SIZE2], B[SIZE2], i;
+    int rank, nprocs, A[SIZE2], B[SIZE2], i, j;
     MPI_Comm CommDeuce;
     MPI_Win win;
     int errs = 0;
@@ -37,16 +37,18 @@ int main(int argc, char *argv[])
             for (i=0; i<SIZE2; i++) A[i] = B[i] = i;
             MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
 
-            for (i=0; i<SIZE1; i++) {
-                MPI_Win_lock(MPI_LOCK_SHARED, 1, 0, win);
-                MPI_Put(A+i, 1, MPI_INT, 1, i, 1, MPI_INT, win);
-                MPI_Win_unlock(1, win);
-            }
+            for (j = 0; j < 2; j++) {
+                for (i=0; i<SIZE1; i++) {
+                    MPI_Win_lock(MPI_LOCK_SHARED, 1, j == 0 ? 0 : MPI_MODE_NOCHECK, win);
+                    MPI_Put(A+i, 1, MPI_INT, 1, i, 1, MPI_INT, win);
+                    MPI_Win_unlock(1, win);
+                }
 
-            for (i=0; i<SIZE1; i++) {
-                MPI_Win_lock(MPI_LOCK_SHARED, 1, 0, win);
-                MPI_Get(B+i, 1, MPI_INT, 1, SIZE1+i, 1, MPI_INT, win);
-                MPI_Win_unlock(1, win);
+                for (i=0; i<SIZE1; i++) {
+                    MPI_Win_lock(MPI_LOCK_SHARED, 1, j == 0 ? 0 : MPI_MODE_NOCHECK, win);
+                    MPI_Get(B+i, 1, MPI_INT, 1, SIZE1+i, 1, MPI_INT, win);
+                    MPI_Win_unlock(1, win);
+                }
             }
 
             MPI_Win_free(&win);
