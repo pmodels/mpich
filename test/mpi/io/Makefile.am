@@ -22,7 +22,8 @@ noinst_PROGRAMS = \
     async         \
     async_any     \
     userioerr     \
-    resized
+    resized       \
+    llnl-mpio
 
 clean-local:
 	-rm -f testfile testfile.*
