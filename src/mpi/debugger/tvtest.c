@@ -77,6 +77,9 @@ int main( int argc, char *argv[] )
     showQueues( 3, 0 );
 
     /* Shut down */
+    MPI_Cancel(&rreq2);
+    MPI_Wait(&rreq2, MPI_STATUS_IGNORE);
+    MPI_Comm_free(&dupworld);
 
     MPI_Finalize();
     
