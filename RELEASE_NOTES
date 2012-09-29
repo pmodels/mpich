@@ -9,6 +9,10 @@
    fault-tolerance features. If you are seeing this error, try setting
    the environment variable MPICH_ENABLE_COLL_FT_RET=0.
 
+ * The new MPI-3 RMA functionality is very experimental.  Using it can
+   cause the program to hang/crash, your machine to catch fire, and
+   flying monkeys to shoot darts at you!
+
 
 ### Threads
 
