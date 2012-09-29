@@ -215,13 +215,12 @@ print("===> Disabling unnecessary tests in the main package... ");
 chdir("${root}/${pack}-${version}");
 run_cmd("perl -p -i -e 's/^perf\$/#perf/' test/mpi/testlist.in");
 run_cmd("perl -p -i -e 's/^large_message /#large_message /' test/mpi/pt2pt/testlist");
-run_cmd("perl -p -i -e 's/^llnl-mpio /#llnl-mpio /' test/mpi/io/testlist");
 print("done\n");
 
 # Remove unnecessary files
 print("===> Removing unnecessary files in the main package... ");
 chdir("${root}/${pack}-${version}");
-run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt src/mpe2/src/slog2sdk/doc/jumpshot-4/tex test/mpi/io/llnl-mpio.c");
+run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt src/mpe2/src/slog2sdk/doc/jumpshot-4/tex");
 run_cmd("find . -name autom4te.cache | xargs rm -rf");
 print("done\n");
 
