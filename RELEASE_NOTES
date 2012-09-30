@@ -1,3 +1,11 @@
+----------------------------------------------------------------------
+                        Experimental Features
+----------------------------------------------------------------------
+
+ * New MPI-3 RMA functionality has been included in this release;
+   however, it is experimental and not yet supported.  Users may try
+   out this new feature, but they should not rely on its correctness
+   or performance.
 
 ----------------------------------------------------------------------
 			KNOWN ISSUES
@@ -8,10 +16,6 @@
  * MPI_Alltoall might fail in some cases because of the newly added
    fault-tolerance features. If you are seeing this error, try setting
    the environment variable MPICH_ENABLE_COLL_FT_RET=0.
-
- * The new MPI-3 RMA functionality is very experimental.  Using it can
-   cause the program to hang/crash, your machine to catch fire, and
-   flying monkeys to shoot darts at you!
 
 
 ### Threads
