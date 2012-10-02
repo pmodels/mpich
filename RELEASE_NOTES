@@ -17,6 +17,12 @@
    fault-tolerance features. If you are seeing this error, try setting
    the environment variable MPICH_ENABLE_COLL_FT_RET=0.
 
+ * On Solaris/SPARC (and likely some other platforms) programs may
+   encounter a SIGBUS from ch3:nemesis, especially when using MPI-2
+   dynamic process routines.  See the following ticket for more
+   information:
+
+    http://trac.mcs.anl.gov/projects/mpich2/ticket/1679
 
 ### Threads
 
