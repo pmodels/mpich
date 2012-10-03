@@ -167,12 +167,22 @@ int hindexed_block_contig_test(void)
  */
 int hindexed_block_vector_test(void)
 {
-    int buf[18] = { -1, -1, -1,
-        1, -2, 2,
+#define NELT (18)
+    int buf[NELT] = {
+        -1, -1, -1,
+         1, -2,  2,
         -3, -3, -3,
         -4, -4, -4,
-        3, -5, 4,
-        5, -6, 6
+         3, -5,  4,
+         5, -6,  6
+    };
+    int expected[NELT] = {
+         0,  0,  0,
+         1,  0,  2,
+         0,  0,  0,
+         0,  0,  0,
+         3,  0,  4,
+         5,  0,  6
     };
     int err, errs = 0;
 
@@ -228,7 +238,7 @@ int hindexed_block_vector_test(void)
 
     MPI_Type_extent(newtype, &extent);
 
-    err = pack_and_unpack((char *) buf, 1, newtype, 16 * sizeof(int));
+    err = pack_and_unpack((char *) buf, 1, newtype, NELT * sizeof(int));
     if (err != 0) {
         if (verbose) {
             fprintf(stderr, "error packing/unpacking in hindexed_block_vector_test()\n");
@@ -236,37 +246,11 @@ int hindexed_block_vector_test(void)
         errs += err;
     }
 
-    for (i = 0; i < 16; i++) {
-        int goodval;
-
-        switch (i) {
-        case 3:
-            goodval = 1;
-            break;
-        case 5:
-            goodval = 2;
-            break;
-        case 12:
-            goodval = 3;
-            break;
-        case 14:
-            goodval = 4;
-            break;
-        case 15:
-            goodval = 5;
-            break;
-        case 16:
-            goodval = 6;
-            break;
-
-        default:
-            goodval = 0;        /* pack_and_unpack() zeros before unpack */
-            break;
-        }
-        if (buf[i] != goodval) {
+    for (i = 0; i < NELT; i++) {
+        if (buf[i] != expected[i]) {
             errs++;
             if (verbose)
-                fprintf(stderr, "buf[%d] = %d; should be %d\n", i, buf[i], goodval);
+                fprintf(stderr, "buf[%d] = %d; should be %d\n", i, buf[i], expected[i]);
         }
     }
 
