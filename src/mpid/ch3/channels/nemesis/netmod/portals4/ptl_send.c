@@ -51,7 +51,6 @@ int MPID_nem_ptl_send_init(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     int ret;
-    ptl_md_t md;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SEND_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_SEND_INIT);
@@ -65,7 +64,7 @@ int MPID_nem_ptl_send_init(void)
         sendbuf[i].md.eq_handle = MPIDI_nem_ptl_eq;
         sendbuf[i].md.ct_handle = PTL_CT_NONE;
         ret = PtlMDBind(MPIDI_nem_ptl_ni, &sendbuf[i].md, &sendbuf[i].md_handle);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
         FREE_PUSH(&sendbuf[i]);
     }
 
@@ -95,7 +94,7 @@ int MPID_nem_ptl_send_finalize(void)
 
     for (i = 0; i < NUMBUFS; ++i) {
         ret = PtlMDRelease(sendbuf[i].md_handle);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease", "**ptlmdrelease %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease", "**ptlmdrelease %s", MPID_nem_ptl_strerror(ret));
     }
 
  fn_exit:
@@ -221,7 +220,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void **vhdr_p, void **vdata_p, MPIDI_
         MPIU_Memcpy(sb->buf.hp.payload, *data_p, len);
         ret = PtlPut(sb->md_handle, 0, sizeof(sb->buf.hp.hdr) + len, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->ptc, 0, 0, sb,
                      MPIDI_Process.my_pg_rank);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p",
                                                 sizeof(sb->buf.hp.hdr) + len, vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
                                                 vc_ptl->ptc, sb));
@@ -237,7 +236,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void **vhdr_p, void **vdata_p, MPIDI_
                 len = BUFLEN;
             MPIU_Memcpy(sb->buf.p, *data_p, len);
             ret = PtlPut(sb->md_handle, 0, len, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->ptc, 0, 0, sb, MPIDI_Process.my_pg_rank);
-            MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
             MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p", len,
                                                     vc_ptl->id.phys.nid, vc_ptl->id.phys.pid, vc_ptl->ptc, sb));
             *data_p += len;
@@ -289,7 +288,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void **vhdr_p,
         MPI_nem_ptl_pack_byte(sreq->dev.segment_ptr, 0, last, sb->buf.hp.payload, &REQ_PTL(sreq)->overflow[0]);
         ret = PtlPut(sb->md_handle, 0, sizeof(sb->buf.hp.hdr) + last, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->ptc, 0, 0, sb,
                      MPIDI_Process.my_pg_rank);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p",
                                                 sizeof(sb->buf.hp.hdr) + last, vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
                                                 vc_ptl->ptc, sb));
@@ -314,7 +313,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void **vhdr_p,
             sreq->dev.segment_first = last;
             ret = PtlPut(sb->md_handle, 0, last - sreq->dev.segment_first, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->ptc, 0, 0, sb,
                          MPIDI_Process.my_pg_rank);
-            MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
             MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x) sb=%p",
                                                     last - sreq->dev.segment_first, vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
                                                     vc_ptl->ptc, sb));
@@ -383,6 +382,8 @@ int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MP
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SENDNONCONTIG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_SENDNONCONTIG);
+    MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+    
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
     mpi_errno = send_noncontig_pkt(vc, sreq, &hdr, &complete);
@@ -436,6 +437,7 @@ int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISTARTCONTIGMSG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_ISTARTCONTIGMSG);
+    MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     mpi_errno = send_pkt(vc, &hdr, &data, &data_sz);
@@ -481,6 +483,7 @@ int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISENDCONTIG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_ISENDCONTIG);
+    MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
     mpi_errno = send_pkt(vc, &hdr, &data, &data_sz);
@@ -583,7 +586,7 @@ static int send_queued(void)
         }
         ret = PtlPut(sb->md_handle, 0, send_len, PTL_NO_ACK_REQ, VC_PTL(sreq->ch.vc)->id, VC_PTL(sreq->ch.vc)->ptc, 0, 0, sb,
                      MPIDI_Process.my_pg_rank);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
 
         if (!complete)
             continue;
@@ -665,12 +668,12 @@ static int handler_send_complete(const ptl_event_t *e)
 
     if (REQ_PTL(sreq)->me != PTL_INVALID_HANDLE) {
         ret = PtlMEUnlink(REQ_PTL(sreq)->me);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
     }
 
     if (REQ_PTL(sreq)->md != PTL_INVALID_HANDLE) {
         ret = PtlMDRelease(REQ_PTL(sreq)->md);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease", "**ptlmdrelease %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease", "**ptlmdrelease %s", MPID_nem_ptl_strerror(ret));
     }
 
     for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i)
@@ -849,7 +852,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)buf, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                          NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
                          NPTL_HEADER(ssend_flag, 0, data_sz));
-            MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
             goto fn_exit;
         }
         
@@ -872,13 +875,13 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             md.eq_handle = MPIDI_nem_ptl_eq;
             md.ct_handle = PTL_CT_NONE;
             ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(sreq)->md);
-            MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
                 
             REQ_PTL(sreq)->event_handler = handler_send_complete;
             ret = PtlPut(REQ_PTL(sreq)->md, (ptl_size_t)buf, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                          NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
                          NPTL_HEADER(ssend_flag, 0, data_sz));
-            MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
             goto fn_exit;
         }
         
@@ -892,7 +895,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], data_sz, PTL_ACK_REQ,
                      vc_ptl->id, vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
                      NPTL_HEADER(ssend_flag, 0, data_sz));
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
     }
         
@@ -911,7 +914,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         me.min_free = 0;
 
         ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, sreq, &REQ_PTL(sreq)->me);
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
 
         REQ_PTL(sreq)->large = TRUE;
             
@@ -919,7 +922,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)buf, PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                      NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
                      NPTL_HEADER(ssend_flag | NPTL_LARGE, me.match_bits, data_sz));
-        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
     }
     
@@ -967,7 +970,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                         
                 ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, sreq,
                                   &REQ_PTL(sreq)->me);
-                MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
+                MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
 
                 /* Create MD for first chunk */
                 md.start = sreq->dev.iov;
@@ -976,7 +979,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                 md.eq_handle = MPIDI_nem_ptl_eq;
                 md.ct_handle = PTL_CT_NONE;
                 ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(sreq)->md);
-                MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
+                MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
 
                 REQ_PTL(sreq)->large = TRUE;
                         
@@ -984,7 +987,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                 ret = PtlPut(REQ_PTL(sreq)->md, 0, PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                              NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
                              NPTL_HEADER(ssend_flag | NPTL_LARGE, me.match_bits, data_sz));
-                MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+                MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
                 goto fn_exit;
             }
         }
@@ -1011,7 +1014,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     me.min_free = 0;
     
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, sreq, &REQ_PTL(sreq)->me);
-    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
     
     REQ_PTL(sreq)->large = TRUE;
     
@@ -1019,7 +1022,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], PTL_LARGE_THRESHOLD, PTL_ACK_REQ,
                  vc_ptl->id, vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
                  NPTL_HEADER(ssend_flag | NPTL_LARGE, me.match_bits, data_sz));
-    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
     goto fn_exit;
 
 #if 0
@@ -1050,7 +1053,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     me.min_free = 0;
             
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, sreq, &REQ_PTL(sreq)->me);
-    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
 
 
     REQ_PTL(sreq)->large = TRUE;
@@ -1059,7 +1062,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq_)->chunk_buffer[0], PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id,
                  vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset), 0, sreq,
                  NPTL_HEADER(ssend_flag | NPTL_LARGE | NPTL_MULTIPLE, me.match_bits, data_sz));
-    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
 #endif
     
  fn_exit:
