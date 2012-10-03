@@ -97,19 +97,19 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     
     /* init portals */
     ret = PtlInit();
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlinit");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlinit", "**ptlinit %s", MPID_nem_ptl_strerror(ret));
     
     ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_MATCHING | PTL_NI_PHYSICAL,
                     PTL_PID_ANY, NULL, NULL, &MPIDI_nem_ptl_ni);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
     ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EQ_COUNT, &MPIDI_nem_ptl_eq);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for matching messages */
     ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_pt);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for MPICH control messages */
     ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
@@ -122,7 +122,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     md.eq_handle = MPIDI_nem_ptl_eq;
     md.ct_handle = PTL_CT_NONE;
     ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &MPIDI_nem_ptl_global_md);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
 
 
     /* create business card */
@@ -163,10 +163,10 @@ static int ptl_finalize(void)
 
     /* shut down portals */
     ret = PtlPTFree(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
 
     ret = PtlNIFini(MPIDI_nem_ptl_ni);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlnifini");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlnifini", "**ptlnifini %s", MPID_nem_ptl_strerror(ret));
 
     PtlFini();
 
@@ -195,7 +195,7 @@ static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
     MPIDI_FUNC_ENTER(MPID_STATE_GET_BUSINESS_CARD);
 
     ret = PtlGetId(MPIDI_nem_ptl_ni, &my_ptl_id);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlgetid");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlgetid", "**ptlgetid %s", MPID_nem_ptl_strerror(ret));
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Allocated NI and PT id=(%#x,%#x) pt=%#x",
                                             my_ptl_id.phys.nid, my_ptl_id.phys.pid, MPIDI_nem_ptl_pt));
 

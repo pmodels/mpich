@@ -48,7 +48,7 @@ int MPID_nem_ptl_poll_init(void)
                                  PTL_LE_EVENT_UNLINK_DISABLE | PTL_LE_EVENT_LINK_DISABLE);
         ret = PtlLEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &recvbuf_le[i], PTL_PRIORITY_LIST, (void *)(uint64_t)i,
                           &recvbuf_le_handle[i]);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlleappend");
+        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlleappend", "**ptlleappend %s", MPID_nem_ptl_strerror(ret));
     }
 
     /* create overflow buffers */
@@ -86,12 +86,12 @@ int MPID_nem_ptl_poll_finalize(void)
     for (i = 0; i < NUM_OVERFLOW_ME; ++i)
         if (overflow_me_handle[i] != PTL_INVALID_HANDLE) {
             ret = PtlMEUnlink(overflow_me_handle[i]);
-            MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink");
+            MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
         }
     
     for (i = 0; i < NUMBUFS; ++i) {
         ret = PtlLEUnlink(recvbuf_le_handle[i]);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlleunlink");
+        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlleunlink", "**ptlleunlink %s", MPID_nem_ptl_strerror(ret));
     }
 
  fn_exit:
@@ -133,7 +133,7 @@ static int append_overflow(int i)
     
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_OVERFLOW_LIST, (void *)(size_t)i,
                       &overflow_me_handle[i]);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_APPEND_OVERFLOW);
@@ -161,7 +161,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         if (ret == PTL_EQ_EMPTY)
             break;
         MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget");
+        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget", "**ptleqget %s", MPID_nem_ptl_strerror(ret));
 
         switch (event.type) {
         case PTL_EVENT_PUT:
@@ -213,7 +213,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             assert(event.start == recvbuf[(uint64_t)event.user_ptr]);
             ret = PtlLEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &recvbuf_le[(uint64_t)event.user_ptr],
                               PTL_PRIORITY_LIST, event.user_ptr, &recvbuf_le_handle[(uint64_t)event.user_ptr]);
-            MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend");
+            MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
             break;
         case PTL_EVENT_SEND:
             if (event.ni_fail_type) {

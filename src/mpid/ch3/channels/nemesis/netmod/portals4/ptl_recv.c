@@ -55,7 +55,7 @@ static int handler_recv_complete(const ptl_event_t *e)
     
     if (REQ_PTL(rreq)->md != PTL_INVALID_HANDLE) {
         ret = PtlMDRelease(REQ_PTL(rreq)->md);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease");
+        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease", "**ptlmdrelease %s", MPID_nem_ptl_strerror(ret));
     }
 
     for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i)
@@ -217,7 +217,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
         ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)rreq->dev.user_buf + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD,
                      vc_ptl->id, vc_ptl->ptc, NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget");
+        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
     }
 
@@ -247,12 +247,12 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         md.eq_handle = MPIDI_nem_ptl_eq;
         md.ct_handle = PTL_CT_NONE;
         ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(rreq)->md);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind");
+        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
 
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
         ret = PtlGet(REQ_PTL(rreq)->md, 0, rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptc,
                      NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget");
+        MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
     }
         
@@ -264,7 +264,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
                  rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptc,
                  NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();
@@ -325,7 +325,7 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
     ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
                  rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptc,
                  NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();
@@ -450,7 +450,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     }
 
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_PRIORITY_LIST, rreq, &REQ_PTL(rreq)->me);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend");
+    MPIU_ERR_CHKANDJUMP2(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
 
 
  fn_exit:
