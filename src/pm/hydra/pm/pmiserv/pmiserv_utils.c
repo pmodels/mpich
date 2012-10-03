@@ -244,7 +244,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
     int i, arg, inherited_env_count, user_env_count, system_env_count, exec_count;
     int total_args, proxy_count, total_filler_processes, total_core_count;
-    int pmi_id, *filler_pmi_ids, *nonfiller_pmi_ids;
+    int pmi_id, *filler_pmi_ids = NULL, *nonfiller_pmi_ids = NULL;
     struct HYD_env *env;
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
