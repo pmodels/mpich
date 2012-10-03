@@ -34,7 +34,6 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
     MPID_Datatype *new_dtp;
-    int i;
     int ints[2];
 
     mpi_errno = MPID_Type_blockindexed(count, blocklength, array_of_displacements, 1,
