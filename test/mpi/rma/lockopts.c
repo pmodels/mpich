@@ -83,6 +83,8 @@ int main(int argc, char *argv[])
 	MPI_Barrier( MPI_COMM_WORLD );
     }
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     /* Put with a derived origin type and target predefined type*/
     if (wrank == 0) {
 	MPI_Barrier( MPI_COMM_WORLD );
@@ -114,6 +116,8 @@ int main(int argc, char *argv[])
     else {
 	MPI_Barrier( MPI_COMM_WORLD );
     }
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* Put with a derived origin type and target predefined type, with 
        a get (see the move-to-end optimization) */
@@ -153,6 +157,8 @@ int main(int argc, char *argv[])
     else {
 	MPI_Barrier( MPI_COMM_WORLD );
     }
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* Put with a derived origin type and target predefined type, with 
        a get already at the end (see the move-to-end optimization) */
