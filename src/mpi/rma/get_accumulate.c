@@ -126,7 +126,7 @@ int MPIX_Get_accumulate(const void *origin_addr, int origin_count,
             {
                 MPID_Datatype *datatype_ptr = NULL;
                 
-                MPID_Datatype_get_ptr(origin_datatype, datatype_ptr);
+                MPID_Datatype_get_ptr(result_datatype, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
