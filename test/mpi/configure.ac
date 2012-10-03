@@ -326,7 +326,7 @@ fi
 # This can be controlled by either a --disable-spawn argument or by
 # setting the environment variable MPI_NO_SPAWN to yes.
 AC_ARG_VAR([MPI_NO_SPAWN],[set to "yes" to disable dynamic process tests])
-if test "$enable_spawn" = "yes" -a test "$MPI_NO_SPAWN" != "yes" ; then
+if test "$enable_spawn" = "yes" -a "$MPI_NO_SPAWN" != "yes" ; then
     spawndir=spawn
     AC_DEFINE(HAVE_MPI_SPAWN,1,[Define if Dynamic Process functionality is available])
 fi
