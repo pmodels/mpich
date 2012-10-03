@@ -4,11 +4,13 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "ptl_impl.h"
+
 #undef FUNCNAME
 #define FUNCNAME handle_probe
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int handle_probe(const ptl_event_t *e)
+static int handle_probe(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *const req = e->user_ptr;
@@ -24,7 +26,7 @@ int handle_probe(const ptl_event_t *e)
     REQ_PTL(req)->found = TRUE;
     req->status.MPI_SOURCE = NPTL_MATCH_GET_RANK(e->match_bits);
     req->status.MPI_TAG = NPTL_MATCH_GET_TAG(e->match_bits);
-    req->status.count = NPTL_MATCH_GET_LENGTH(e->match_bits);
+    req->status.count = NPTL_HEADER_GET_LENGTH(e->match_bits);
 
     MPIDI_CH3U_Request_complete(req);
     
@@ -53,9 +55,11 @@ int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int
 int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     int ret;
     ptl_process_t id_any;
-    MPID_Request_t *req;
+    ptl_me_t me;
+    MPID_Request *req;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_IPROBE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_IPROBE);
@@ -66,8 +70,8 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
     /* create a request */
     req = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
-    MPIU_Object_set_ref(sreq, 2); /* 1 ref for progress engine and 1 ref for us */
-    REQ_PTL(req)->search_handler = handle_probe;
+    MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
+    REQ_PTL(req)->event_handler = handle_probe;
 
     /* create a dummy ME to use for searching the list */
     me.start = NULL;
@@ -94,7 +98,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
 
     /* wait for search request to complete */
     do {
-        mpierrno = MPID_nem_ptl_poll(FALSE);
+        mpi_errno = MPID_nem_ptl_poll(FALSE);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } while (!MPID_Request_is_complete(req));
 
@@ -118,7 +122,6 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
                          MPID_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
-    ptl_me_t me;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_IMPROBE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_IMPROBE);

@@ -51,7 +51,7 @@ typedef struct {
 #define MPID_nem_ptl_init_req(req_) do {                        \
         int i;                                                  \
         for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i) {  \
-            REQ_PTL(req)->overflow[i].len  = 0;                 \
+            REQ_PTL(req_)->overflow[i].len  = 0;                \
             REQ_PTL(req_)->chunk_buffer[i] = NULL;              \
         }                                                       \
         REQ_PTL(req_)->noncontig     = FALSE;                   \
@@ -61,9 +61,24 @@ typedef struct {
         REQ_PTL(req_)->event_handler = NULL;                    \
     } while (0)
 
-#define MPID_nem_ptl_request_create_req(sreq_, errno_, on_fail_) do {   \
-        MPIDI_Request_create_sreq(sreq_, errno_, on_fail_);             \
-        MPID_nem_ptl_init_req(req_);                                    \
+#define MPID_nem_ptl_request_create_sreq(sreq_, errno_, comm_) do {                                             \
+        (sreq_) = MPIU_Handle_obj_alloc(&MPID_Request_mem);                                                     \
+        MPIU_ERR_CHKANDJUMP1((sreq_) == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "request");    \
+        MPIU_Object_set_ref((sreq_), 2);                                                                        \
+        (sreq_)->kind               = MPID_REQUEST_SEND;                                                        \
+        MPIR_Comm_add_ref(comm_);                                                                               \
+        (sreq_)->comm               = comm_;                                                                    \
+        (sreq_)->greq_fns           = NULL;                                                                     \
+        MPID_cc_set(&(sreq_)->cc, 1);                                                                           \
+        (sreq_)->cc_ptr             = &(sreq_)->cc;                                                             \
+        (sreq_)->status.MPI_ERROR   = MPI_SUCCESS;                                                              \
+        (sreq_)->status.cancelled   = FALSE;                                                                    \
+        (sreq_)->dev.cancel_pending = FALSE;                                                                    \
+        (sreq_)->dev.state          = 0;                                                                        \
+        (sreq_)->dev.datatype_ptr   = NULL;                                                                     \
+        (sreq_)->dev.segment_ptr    = NULL;                                                                     \
+                                                                                                                \
+        MPID_nem_ptl_init_req(sreq_);                                                                           \
     } while (0)
 
 typedef struct {
@@ -95,14 +110,14 @@ typedef struct {
 #define NPTL_MULTIPLE          ((ptl_hdr_data_t)1<<63)
 
 #define NPTL_LENGTH_MASK     ((((ptl_hdr_data_t)1<<32)-1)<<NPTL_LENGTH_OFFSET)
-#define NPTL_SEQNUM_MASK ((((ptl_hdr_data_t)1<<29)-1)<<NPTL_SEQNUM_OFFSET)
+#define NPTL_SEQNUM_MASK     ((((ptl_hdr_data_t)1<<29)-1)<<NPTL_SEQNUM_OFFSET)
 
-#define NPTL_HEADER(flags, large_seqnum, length) ((flags) |                                             \
-                                                ((ptl_hdr_data_t)(seqnum))<<NPTL_SEQNUM_OFFSET |        \
-                                                ((ptl_hdr_data_t)(length))<<NPTL_LENGTH_OFFSET)
+#define NPTL_HEADER(flags_, large_seqnum_, length_) ((flags_) |                                              \
+                                                     ((ptl_hdr_data_t)(large_seqnum_))<<NPTL_SEQNUM_OFFSET | \
+                                                     ((ptl_hdr_data_t)(length_))<<NPTL_LENGTH_OFFSET)
 
-#define NPTL_HEADER_GET_SEQNUM(hdr) ((hdr & NPTL_SEQNUM_MASK)>>NPTL_SEQNUM_OFFSET)
-#define NPTL_HEADER_GET_LENGTH(hdr) ((hdr & NPTL_LENGTH_MASK)>>NPTL_LENGTH_OFFSET)
+#define NPTL_HEADER_GET_SEQNUM(hdr_) (((hdr_) & NPTL_SEQNUM_MASK)>>NPTL_SEQNUM_OFFSET)
+#define NPTL_HEADER_GET_LENGTH(hdr_) (((hdr_) & NPTL_LENGTH_MASK)>>NPTL_LENGTH_OFFSET)
 
 /* The comm_world rank of the sender is stored in the match_bits, but they are
    ignored when matching.
@@ -115,20 +130,20 @@ typedef struct {
 
 #define NPTL_MATCH_TAG_OFFSET 32
 #define NPTL_MATCH_CTX_OFFSET 16
-#define NPTL_MATCH_RANK_MASK (((ptl_match_bits)(1) << 16) - 1)
-#define NPTL_MATCH_TAG_MASK ((((ptl_match_bits)(1) << 16) - 1) << NPTL_MATCH_TAG_OFFSET)
-#define NPTL_MATCH(tag, ctx) (((ptl_match_bits)(tag) << NPTL_MATCH_TAG_OFFSET) |        \
-                              ((ptl_match_bits)(ctx) << NPTL_MATCH_CTX_OFFSET) |        \
-                              ((ptl_match_bits)MPIDI_Process.my_pg_rank))
+#define NPTL_MATCH_RANK_MASK (((ptl_match_bits_t)(1) << 16) - 1)
+#define NPTL_MATCH_TAG_MASK ((((ptl_match_bits_t)(1) << 16) - 1) << NPTL_MATCH_TAG_OFFSET)
+#define NPTL_MATCH(tag_, ctx_) (((ptl_match_bits_t)(tag_) << NPTL_MATCH_TAG_OFFSET) |      \
+                                ((ptl_match_bits_t)(ctx_) << NPTL_MATCH_CTX_OFFSET) |      \
+                                ((ptl_match_bits_t)(MPIDI_Process.my_pg_rank)))
 #define NPTL_MATCH_IGNORE NPTL_MATCH_RANK_MASK
 #define NPTL_MATCH_IGNORE_ANY_TAG (NPTL_MATCH_IGNORE | NPTL_MATCH_TAG_MASK)
 
-#define NPTL_MATCH_GET_RANK(match_bits) ((match_bits) & NPTL_MATCH_RANK_MASK)
-#define NPTL_MATCH_GET_TAG(match_bits) ((match_bits) >> NPTL_MATCH_TAG_OFFSET)
+#define NPTL_MATCH_GET_RANK(match_bits_) ((match_bits_) & NPTL_MATCH_RANK_MASK)
+#define NPTL_MATCH_GET_TAG(match_bits_) ((match_bits_) >> NPTL_MATCH_TAG_OFFSET)
 
 int MPID_nem_ptl_send_init(void);
 int MPID_nem_ptl_send_finalize(void);
-int MPID_nem_ptl_ev_send_handler(ptl_event_t *e);
+int MPID_nem_ptl_ev_send_handler(const ptl_event_t *e);
 int MPID_nem_ptl_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno);
 int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz);
 int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
@@ -140,6 +155,11 @@ int MPID_nem_ptl_poll_finalize(void);
 int MPID_nem_ptl_poll(int is_blocking_poll);
 int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptc);
+void MPI_nem_ptl_pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
+                           MPID_nem_ptl_pack_overflow_t *overflow);
+int MPID_nem_ptl_unpack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
+                             MPID_nem_ptl_pack_overflow_t *overflow);
+const char *MPID_nem_ptl_strerror(int ret);
 
 /* comm override functions */
 int MPID_nem_ptl_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
@@ -156,6 +176,10 @@ int MPID_nem_ptl_iprobe(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *co
                         MPI_Status *status);
 int MPID_nem_ptl_improbe(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag,
                          MPID_Request **message, MPI_Status *status);
-
+int MPID_nem_ptl_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPI_Status * status);
+int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPID_Request **message,
+                                   MPI_Status * status);
+void MPID_nem_ptl_anysource_posted(MPID_Request *rreq);
+int MPID_nem_ptl_anysource_matched(MPID_Request *rreq);
 
 #endif /* PTL_IMPL_H */

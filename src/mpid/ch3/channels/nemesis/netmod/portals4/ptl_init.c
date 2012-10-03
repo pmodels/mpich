@@ -16,6 +16,13 @@
 #define PTI_KEY  "PTI"
 #define PTIC_KEY "PTIC"
 
+ptl_handle_ni_t MPIDI_nem_ptl_ni;
+ptl_pt_index_t  MPIDI_nem_ptl_pt;
+ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
+ptl_handle_eq_t MPIDI_nem_ptl_eq;
+ptl_handle_md_t MPIDI_nem_ptl_global_md;
+
+extern ptl_handle_md_t MPIDI_nem_ptl_global_md;
 static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 static int ptl_finalize(void);
 static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p);
@@ -23,8 +30,6 @@ static int connect_to_root(const char *business_card, MPIDI_VC_t *new_vc);
 static int vc_init(MPIDI_VC_t *vc);
 static int vc_destroy(MPIDI_VC_t *vc);
 static int vc_terminate(MPIDI_VC_t *vc);
-
-static ptl_process_t my_ptl_id;
 
 MPID_nem_netmod_funcs_t MPIDI_nem_portals4_funcs = {
     ptl_init,
@@ -72,6 +77,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    ptl_md_t md;
     MPIDI_STATE_DECL(MPID_STATE_PTL_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_PTL_INIT);
@@ -79,6 +85,16 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     /* first make sure that our private fields in the vc fit into the area provided  */
     MPIU_Assert(sizeof(MPID_nem_ptl_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
 
+    /* Make sure our IOV is the same as portals4's IOV */
+    MPIU_Assert(sizeof(ptl_iovec_t) == sizeof(MPID_IOV));
+    MPIU_Assert(((void*)&(((ptl_iovec_t*)0)->iov_base)) == ((void*)&(((MPID_IOV*)0)->MPID_IOV_BUF)));
+    MPIU_Assert(((void*)&(((ptl_iovec_t*)0)->iov_len))  == ((void*)&(((MPID_IOV*)0)->MPID_IOV_LEN)));
+    MPIU_Assert(sizeof(((ptl_iovec_t*)0)->iov_len) == sizeof(((MPID_IOV*)0)->MPID_IOV_LEN));
+            
+
+    mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_ptl_anysource_posted, MPID_nem_ptl_anysource_matched);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    
     /* init portals */
     ret = PtlInit();
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlinit");
@@ -91,24 +107,26 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc");
 
     /* allocate portal for matching messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOW_CONTROL, MPIDI_nem_ptl_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_pt);
     MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc");
 
     /* allocate portal for MPICH control messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOW_CONTROL, MPIDI_nem_ptl_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_control_pt);
 
-    ret = PtlGetId(MPIDI_nem_ptl_ni, &my_ptl_id);
-    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlgetid");
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Allocated NI and PT id=(%#x,%#x) pt=%#x",
-                                            my_id.phys.nid, my_id.phys.pid, MPIDI_nem_ptl_pt));
+    /* create an MD that covers all of memory */
+    md.start = 0;
+    md.length = (ptl_size_t)-1;
+    md.options = 0x0;
+    md.eq_handle = MPIDI_nem_ptl_eq;
+    md.ct_handle = PTL_CT_NONE;
+    ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &MPIDI_nem_ptl_global_md);
+    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind");
+
 
     /* create business card */
     mpi_errno = get_business_card(pg_rank, bc_val_p, val_max_sz_p);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_ptl_anysource_posted, MPID_nem_ptl_anysource_matched);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* init other modules */
@@ -171,9 +189,15 @@ static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPIU_STR_SUCCESS;
     int ret;
+    ptl_process_t my_ptl_id;
     MPIDI_STATE_DECL(MPID_STATE_GET_BUSINESS_CARD);
 
     MPIDI_FUNC_ENTER(MPID_STATE_GET_BUSINESS_CARD);
+
+    ret = PtlGetId(MPIDI_nem_ptl_ni, &my_ptl_id);
+    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlgetid");
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Allocated NI and PT id=(%#x,%#x) pt=%#x",
+                                            my_ptl_id.phys.nid, my_ptl_id.phys.pid, MPIDI_nem_ptl_pt));
 
     str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, NID_KEY, (char *)&my_ptl_id.phys.nid, sizeof(my_ptl_id.phys.nid));
     if (str_errno) {
@@ -238,9 +262,6 @@ static int vc_init(MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_VC_INIT);
 
-    /* */
-    MPIU_Assert(vc->lpid < NPTL_MAX_PROCS);
-    
     vc->sendNoncontig_fn   = MPID_nem_ptl_SendNoncontig;
     vc_ch->iStartContigMsg = MPID_nem_ptl_iStartContigMsg;
     vc_ch->iSendContig     = MPID_nem_ptl_iSendContig;
@@ -366,3 +387,27 @@ int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
+#define CASE_STR(x) case x: return ##x
+
+const char *MPID_nem_ptl_strerror(int ret)
+{
+    switch (ret) {
+    CASE_STR(PTL_OK);
+    CASE_STR(PTL_ARG_INVALID);
+    CASE_STR(PTL_CT_NONE_REACHED);
+    CASE_STR(PTL_EQ_DROPPED);
+    CASE_STR(PTL_EQ_EMPTY);
+    CASE_STR(PTL_FAIL);
+    CASE_STR(PTL_IN_USE);
+    CASE_STR(PTL_INTERRUPTED);
+    CASE_STR(PTL_IGNORED);
+    CASE_STR(PTL_LIST_TOO_LONG);
+    CASE_STR(PTL_NO_INIT);
+    CASE_STR(PTL_NO_SPACE);
+    CASE_STR(PTL_PID_IN_USE);
+    CASE_STR(PTL_PT_FULL);
+    CASE_STR(PTL_PT_EQ_NEEDED);
+    CASE_STR(PTL_PT_IN_USE);
+    default: return "UNKNOWN";
+    }
+}

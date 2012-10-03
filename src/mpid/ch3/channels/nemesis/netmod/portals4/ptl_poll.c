@@ -9,9 +9,17 @@
 #define NUMBUFS 20
 #define BUFLEN  (sizeof(MPIDI_CH3_Pkt_t) + PTL_MAX_EAGER)
 
+#define OVERFLOW_LENGTH (1024*1024)
+#define NUM_OVERFLOW_ME 5
+
 static char recvbuf[BUFLEN][NUMBUFS];
 static ptl_le_t recvbuf_le[NUMBUFS];
 static ptl_handle_le_t recvbuf_le_handle[NUMBUFS];
+
+static ptl_handle_me_t overflow_me_handle[NUM_OVERFLOW_ME];
+static void *overflow_buf[NUM_OVERFLOW_ME];
+
+static int append_overflow(int i);
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_poll_init
@@ -22,10 +30,15 @@ int MPID_nem_ptl_poll_init(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     int ret;
+    ptl_process_t id_any;
+    MPIU_CHKPMEM_DECL(NUM_OVERFLOW_ME);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_POLL_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_POLL_INIT);
 
+    id_any.phys.pid = PTL_PID_ANY;
+    id_any.phys.nid = PTL_NID_ANY;
+    
     for (i = 0; i < NUMBUFS; ++i) {
         recvbuf_le[i].start = recvbuf[i];
         recvbuf_le[i].length = BUFLEN;
@@ -35,15 +48,24 @@ int MPID_nem_ptl_poll_init(void)
                                  PTL_LE_EVENT_UNLINK_DISABLE | PTL_LE_EVENT_LINK_DISABLE);
         ret = PtlLEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &recvbuf_le[i], PTL_PRIORITY_LIST, (void *)(uint64_t)i,
                           &recvbuf_le_handle[i]);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend");
+        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlleappend");
     }
 
-
+    /* create overflow buffers */
+    for (i = 0; i < NUM_OVERFLOW_ME; ++i) {
+        MPIU_CHKPMEM_MALLOC(overflow_buf[i], void *, OVERFLOW_LENGTH, mpi_errno, "overflow buffer");
+        mpi_errno = append_overflow(i);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    
  fn_exit:
+    MPIU_CHKPMEM_COMMIT();
+ fn_exit2:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_POLL_INIT);
     return mpi_errno;
  fn_fail:
-    goto fn_exit;
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit2;
 }
 
 
@@ -61,9 +83,15 @@ int MPID_nem_ptl_poll_finalize(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_POLL_FINALIZE);
     
+    for (i = 0; i < NUM_OVERFLOW_ME; ++i)
+        if (overflow_me_handle[i] != PTL_INVALID_HANDLE) {
+            ret = PtlMEUnlink(overflow_me_handle[i]);
+            MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink");
+        }
+    
     for (i = 0; i < NUMBUFS; ++i) {
         ret = PtlLEUnlink(recvbuf_le_handle[i]);
-        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink");
+        MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlleunlink");
     }
 
  fn_exit:
@@ -74,6 +102,48 @@ int MPID_nem_ptl_poll_finalize(void)
 }
 
 #undef FUNCNAME
+#define FUNCNAME append_overflow
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int append_overflow(int i)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ret;
+    ptl_me_t me;
+    ptl_process_t id_any;
+    MPIDI_STATE_DECL(MPID_STATE_APPEND_OVERFLOW);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_APPEND_OVERFLOW);
+
+    MPIU_Assert(i >= 0 && i < NUM_OVERFLOW_ME);
+    
+    id_any.phys.pid = PTL_PID_ANY;
+    id_any.phys.nid = PTL_NID_ANY;
+
+    me.start = overflow_buf[i];
+    me.length = OVERFLOW_LENGTH;
+    me.ct_handle = PTL_CT_NONE;
+    me.uid = PTL_UID_ANY;
+    me.options = ( PTL_ME_OP_PUT | PTL_ME_MANAGE_LOCAL | PTL_ME_NO_TRUNCATE | PTL_ME_MAY_ALIGN |
+                   PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE | PTL_ME_EVENT_UNLINK_DISABLE );
+    me.match_id = id_any;
+    me.match_bits = 0;
+    me.ignore_bits = ~((ptl_match_bits_t)0);
+    me.min_free = PTL_MAX_EAGER;
+    
+    ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_OVERFLOW_LIST, (void *)(size_t)i,
+                      &overflow_me_handle[i]);
+    MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend");
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_APPEND_OVERFLOW);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_poll
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
@@ -82,7 +152,6 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
     int mpi_errno = MPI_SUCCESS;
     ptl_event_t event;
     int ret;
-    MPIDI_VC_t *vc;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_POLL);
 
     /* MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_POLL); */
@@ -91,21 +160,33 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         ret = PtlEQGet(MPIDI_nem_ptl_eq, &event);
         if (ret == PTL_EQ_EMPTY)
             break;
+        MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
         MPIU_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget");
+
         switch (event.type) {
-            MPID_Request * const req = e->user_ptr;
         case PTL_EVENT_PUT:
+        case PTL_EVENT_PUT_OVERFLOW:
         case PTL_EVENT_GET:
         case PTL_EVENT_ACK:
         case PTL_EVENT_REPLY:
-        case PTL_EVENT_SEARCH:
-            mpi_errno = REQ_PTL(sreq)->event_handler(e);
+        case PTL_EVENT_SEARCH: {
+            MPID_Request * const req = event.user_ptr;
+            mpi_errno = REQ_PTL(req)->event_handler(&event);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             break;
-        case PTL_EVENT_PUT_OVERFLOW:
-            MPIU_ERR_INTERNALANDJUMP(mpi_errno, "Overflow event");
-            break
+        }
+        case PTL_EVENT_AUTO_FREE:
+            mpi_errno = append_overflow((size_t)event.user_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            break;
+        case PTL_EVENT_AUTO_UNLINK:
+            overflow_me_handle[(size_t)event.user_ptr] = PTL_INVALID_HANDLE;
+            break;
+        case PTL_EVENT_SEND:
+            /* ignore */
+            break;
         default:
+            MPIDI_err_printf(FCNAME, "Received unexpected event type: %d", event.type);
             MPIU_ERR_INTERNALANDJUMP(mpi_errno, "Unexpected event type");
         }
     }
@@ -116,6 +197,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
 
 #if 0 /* used for non-matching message passing */
         switch (event.type) {
+            MPIDI_VC_t *vc;
         case PTL_EVENT_PUT:
             if (event.ni_fail_type) {
                 /* FIXME: handle comm failures */

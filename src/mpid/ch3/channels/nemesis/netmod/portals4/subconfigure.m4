@@ -12,10 +12,12 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_NEMESIS_NETMOD_PORTALS4],[
-AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:portals4])
+    AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:portals4])
 
     PAC_SET_HEADER_LIB_PATH(portals4)
     PAC_CHECK_HEADER_LIB_FATAL(portals4, portals4.h, portals, PtlInit)
+    
+    AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions]) 
 
 ])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_PORTALS4,...)
 ])dnl end _BODY
