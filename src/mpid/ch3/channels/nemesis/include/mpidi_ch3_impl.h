@@ -156,9 +156,14 @@ typedef struct MPIDI_CH3I_VC
     MPIDI_CH3_PktHandler_Fcn **pkt_handler;
     int num_pkt_handlers;
     
-    struct
+    union
     {
         char padding[MPID_NEM_VC_NETMOD_AREA_LEN];
+
+        /* Temporary helper field for ticket #1679.  Should force proper pointer
+         * alignment on finnicky platforms like SPARC.  Proper fix is to stop
+         * this questionable type aliasing altogether. */
+        void *align_helper;
     } netmod_area;
     
 

@@ -45,9 +45,14 @@ struct MPIDI_CH3I_Request
     MPID_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
     void                *s_cookie;       /* temporary storage for the cookie data in case the packet can't be sent immediately */
 
-    struct
+    union
     {
         char padding[MPID_NEM_REQ_NETMOD_AREA_LEN];
+
+        /* Temporary helper field for ticket #1679.  Should force proper pointer
+         * alignment on finnicky platforms like SPARC.  Proper fix is to stop
+         * this questionable type aliasing altogether. */
+        void *align_helper;
     } netmod_area;
 };
 
