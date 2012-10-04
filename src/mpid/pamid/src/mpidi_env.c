@@ -427,6 +427,7 @@ ENV_Unsigned__(char* name[], unsigned* val, char* string, unsigned num_supported
     ENV_Deprecated(name, num_supported, deprecated, rank, NA);
 
   char * env;
+  int  rc;
 
   unsigned i=0;
   for (;; ++i) {
@@ -437,7 +438,17 @@ ENV_Unsigned__(char* name[], unsigned* val, char* string, unsigned num_supported
       break;
   }
 
-  *val = atoi(env);
+  unsigned oldval = *val;
+  rc=MPIDI_atoi(env,val);
+  if(rc != 0)
+    {
+      /* Something went wrong with the processing this integer
+       * Print a warning, and restore the original value */
+      *val = oldval;
+      fprintf(stderr, "Warning:  Environment variable: %s should be an integer value:  defaulting to %d", string, *val);
+      return;
+    }
+
   if (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && rank == 0)
     fprintf(stderr, "%s = %u\n", string, *val);
 }
@@ -932,83 +943,83 @@ MPIDI_Env_setup(int rank, int requested)
     unsigned tmp;
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLGATHER", "PAMI_ALLGATHER", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLGATHER_PREALLREDUCE", "PAMI_ALLGATHER_PREALLREDUCE", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLGATHERV", "PAMI_ALLGATHERV", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLGATHERV_PREALLREDUCE", "PAMI_ALLGATHERV_PREALLREDUCE", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLREDUCE", "PAMI_ALLREDUCE", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLREDUCE_PREALLREDUCE", "PAMI_ALLREDUCE_PREALLREDUCE", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLTOALL", "PAMI_ALLTOALL", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLTOALLV", "PAMI_ALLTOALLV", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLTOALLV_INT", "PAMI_ALLTOALLV_INT", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_BARRIER", "PAMI_BARRIER", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_BCAST", "PAMI_BCAST", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_BCAST_PREALLREDUCE", "PAMI_BCAST_PREALLREDUCE", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_GATHER", "PAMI_GATHER", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_GATHERV", "PAMI_GATHERV", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_REDUCE", "PAMI_REDUCE", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_SCAN", "PAMI_SCAN", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_SCATTER", "PAMI_SCATTER", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_SCATTERV", "PAMI_SCATTERV", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_COLLECTIVE_SCATTERV_PREALLREDUCE", "PAMI_SCATTERV_PREALLREDUCE", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
     {
       char* names[] = {"PAMID_CORE_ON_ABORT", "PAMI_COREONABORT", "PAMI_COREONMPIABORT", "PAMI_COREONMPIDABORT", NULL};
-      ENV_Unsigned(names, &tmp, 1, &found_deprecated_env_var, rank);
+      ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
     mpich_env=(MPIDI_printenv_t *) MPIU_Malloc(sizeof(MPIDI_printenv_t)+1);
