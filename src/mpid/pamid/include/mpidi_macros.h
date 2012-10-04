@@ -106,10 +106,16 @@ _dt_contig_out, _data_sz_out, _dt_ptr, _dt_true_lb)             \
 ({                                              \
   vcr[index];                                   \
 })
+
+/* Upper layers check the error code from this macro.  The gnu
+ * extension used by the macro sets the return value to the value of
+ * the last expression in the macro.  By ordering the statements in
+ * the macro, to have the "gpid[0] = 0" statement at the end, the
+ * macro will evaluate to 'zero' which is considered successful. */
 #define MPID_GPID_Get(comm_ptr, rank, gpid)             \
 ({                                                      \
-  gpid[0] = 0;                                          \
   gpid[1] = MPID_VCR_GET_LPID(comm_ptr->vcr, rank);     \
+  gpid[0] = 0;                                          \
 })
 
 
