@@ -5,7 +5,7 @@
 
 lib_LTLIBRARIES = libopa.la
 libopa_la_SOURCES = opa_primitives.c opa_queue.c
-libopa_la_LDFLAGS = -version-info ${libopa_so_version}
+libopa_la_LDFLAGS = ${libopa_so_versionflags}
 
 include_HEADERS = opa_primitives.h opa_queue.h opa_util.h
 nodist_include_HEADERS = opa_config.h

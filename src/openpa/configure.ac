@@ -14,7 +14,9 @@ AC_CONFIG_MACRO_DIR([confdb])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign color-tests 1.12.3])
 
-AM_PROG_AR
+# automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
+# must come before LT_INIT
+m4_ifdef([AM_PROG_AR],[AM_PROG_AR])
 
 LT_PREREQ([2.2.6])
 
@@ -407,6 +409,19 @@ if test "${strict_fairness_checks}" = "yes"; then
 else
     AC_MSG_RESULT([no])
 fi
+
+## Enable creation of libtool-style versioning or no versioning
+AC_ARG_ENABLE(versioning,
+        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+        [enable_versioning=yes])
+
+if test "$enable_versioning" = "yes" ; then
+   libopa_so_versionflags="-version-info \$(libopa_so_version)"
+else
+   libopa_so_versionflags="-avoid-version"
+fi
+export libopa_so_versionflags
+AC_SUBST(libopa_so_versionflags)
 
 
 AC_CONFIG_FILES([Makefile src/Makefile test/Makefile openpa.pc])
