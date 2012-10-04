@@ -502,7 +502,6 @@ configure options can be used:
 	      --enable-error-messages --disable-debuginfo
 	      --enable-thread-cs=per-object --enable-handle-allocation=tls
 	      --enable-refcount=lock-free --disable-predefined-refcount
-	      --enable-all-static
 	      CC=/bgsys/drivers/V1R1M2/ppc64/gnu-linux/bin/powerpc64-bgq-linux-gcc
 	      CXX=/bgsys/drivers/V1R1M2/ppc64/gnu-linux/bin/powerpc64-bgq-linux-g++
 	      F77=/bgsys/drivers/V1R1M2/ppc64/gnu-linux/bin/powerpc64-bgq-linux-gfortran

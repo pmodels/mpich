@@ -23,6 +23,7 @@ MPID_MAX_PROCESSOR_NAME=128
 
 MPID_DEVICE_TIMER_TYPE=double
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
+MPID_LIBTOOL_STATIC_FLAG="-all-static"
 
 # the PAMID device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
