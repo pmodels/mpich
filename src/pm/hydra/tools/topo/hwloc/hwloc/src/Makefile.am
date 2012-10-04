@@ -111,7 +111,7 @@ sources += topology-x86.c
 # Installable library
 
 libhwloc_la_SOURCES = $(sources)
-libhwloc_la_LDFLAGS = $(ldflags) -version-info $(libhwloc_so_version) $(HWLOC_LIBS)
+libhwloc_la_LDFLAGS = $(ldflags) $(libhwloc_so_versionflags) $(HWLOC_LIBS)
 
 # Embedded library (note the lack of a .so version number -- that
 # intentionally only appears in the installable library).  Also note

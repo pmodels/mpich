@@ -32,7 +32,7 @@ libarmci_la_SOURCES = $(top_srcdir)/src/buffer.c        \
                       $(top_srcdir)/src/conflict_tree.c \
                       $(top_srcdir)/src/parmci.c
 
-libarmci_la_LDFLAGS = -version-info $(libarmci_abi_version)
+libarmci_la_LDFLAGS = $(libarmci_abi_versionflags)
 
 libarmcii_la_SOURCES = $(libarmci_la_SOURCES)
 libarmcii_la_LDFLAGS = $(libarmci_abi_version)

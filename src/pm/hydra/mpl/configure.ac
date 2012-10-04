@@ -142,6 +142,20 @@ char mempool_obj;
         CPPFLAGS="$savedCPPFLAGS"
     fi
 fi
+
+## Enable creation of libtool-style versioning or no versioning
+AC_ARG_ENABLE(versioning,
+        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+        [enable_versioning=yes])
+
+if test "$enable_versioning" = "yes" ; then
+   libmpl_so_versionflags="-version-info \$(libmpl_so_version)"
+else
+   libmpl_so_versionflags="-avoid-version"
+fi
+export libmpl_so_versionflags
+AC_SUBST(libmpl_so_versionflags)
+
 #######################################################################
 
 

@@ -435,6 +435,21 @@ if test $smpcoll = "yes" ; then
    AC_DEFINE(USE_SMP_COLLECTIVES,1,[define to enable SMP/multi-core aware collectives])
 fi
 
+
+## Enable creation of libtool-style versioning or no versioning
+AC_ARG_ENABLE(versioning,
+        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+        [enable_versioning=yes])
+
+if test "$enable_versioning" = "yes" ; then
+   ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
+else
+   ABIVERSIONFLAGS="-avoid-version"
+fi
+export ABIVERSIONFLAGS
+AC_SUBST(ABIVERSIONFLAGS)
+
+
 dnl The environment variable MPICH_DEBUGLIBNAME may be used to
 dnl override the default name of the library that the debugger will
 dnl load to access the MPICH2 internal data structures.

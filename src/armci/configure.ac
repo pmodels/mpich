@@ -171,6 +171,20 @@ if test $enable_weak_symbols = "yes" ; then
     fi
 fi
 
+## Enable creation of libtool-style versioning or no versioning
+AC_ARG_ENABLE(versioning,
+        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
+        [enable_versioning=yes])
+
+if test "$enable_versioning" = "yes" ; then
+   libarmci_abi_versionflags="-version-info \$(libarmci_abi_version)"
+else
+   libarmci_abi_versionflags="-avoid-version"
+fi
+export libarmci_abi_versionflags
+AC_SUBST(libarmci_abi_versionflags)
+
+
 ## Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
 AC_SUBST(DOXYGEN)

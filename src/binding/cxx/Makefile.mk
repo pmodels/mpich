@@ -15,7 +15,7 @@ lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
 
 lib_lib@MPICXXLIBNAME@_la_SOURCES = \
     src/binding/cxx/initcxx.cxx
-lib_lib@MPICXXLIBNAME@_la_LDFLAGS = -version-info $(ABIVERSION)
+lib_lib@MPICXXLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 
 # Update output files if the buildiface script or mpi.h.in is updated.  Use the
 # buildiface-stamp to deal with the &ReplaceIfDifferent logic

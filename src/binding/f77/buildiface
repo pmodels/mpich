@@ -5273,7 +5273,7 @@ sub AddFwrapDefs {
     ## FIXME should these be CPPFLAGS instead?
     print MAKEFD "lib_lib\@FWRAPNAME\@_la_CFLAGS = \$(AM_CFLAGS) -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES\n";
     print MAKEFD "lib_lib\@FWRAPNAME\@_la_SOURCES = \$(mpi_f77_sources)\n";
-    print MAKEFD "lib_lib\@FWRAPNAME\@_la_LDFLAGS = -version-info \$(ABIVERSION)\n\n";
+    print MAKEFD "lib_lib\@FWRAPNAME\@_la_LDFLAGS = \$(ABIVERSIONFLAGS)\n\n";
 }
 
 # Allow multiple underscore versions of names

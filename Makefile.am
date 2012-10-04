@@ -78,7 +78,7 @@ lib_LTLIBRARIES = lib/lib@MPILIBNAME@.la
 lib_lib@MPILIBNAME@_la_SOURCES =
 nodist_lib_lib@MPILIBNAME@_la_SOURCES =
 lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs)
-lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) -version-info $(ABIVERSION)
+lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
 
 ## Automake attempts to guess the correct linker among the various compilers
 ## for each language (see "How the Linker is Chosen" in the AM manual).
@@ -107,7 +107,7 @@ lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_CFLAGS = $(AM_CFLAGS) -DMPICH_MPI_FROM_PMPI
 lib_lib@PMPILIBNAME@_la_SOURCES =
 lib_lib@PMPILIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(lib_lib@MPILIBNAME@_la_LIBADD)
-lib_lib@PMPILIBNAME@_la_LDFLAGS = -version-info $(ABIVERSION)
+lib_lib@PMPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 endif BUILD_PROFILING_LIB
 
 # these are files that provide "MPI_" functions with "PMPI_" profiling versions

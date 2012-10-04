@@ -771,7 +771,7 @@ nodist_noinst_HEADERS += \\
     src/binding/f90/mpif90model.h
 
 # actual f90 code that also gets compiled into modules
-lib_lib\@MPILIBNAME\@f90_la_LDFLAGS = -version-info \$(ABIVERSION)
+lib_lib\@MPILIBNAME\@f90_la_LDFLAGS = \$(ABIVERSIONFLAGS)
 
 # cause any .\$(MOD) files to be output in the f90 bindings directory instead of
 # the current directory
