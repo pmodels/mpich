@@ -22,7 +22,7 @@ lib_LTLIBRARIES += lib/libtvmpich2.la
 # There is no static debugger interface library
 lib_libtvmpich2_la_SOURCES = src/mpi/debugger/dll_mpich2.c
 lib_libtvmpich2_la_CFLAGS = -g
-lib_libtvmpich2_la_LDFLAGS = -g
+lib_libtvmpich2_la_LDFLAGS = -g $(ABIVERSIONFLAGS)
 
 # tvtest builds a main program that uses the routines in dll_mpich2 to 
 # access the internal structure of an MPICH2 program.  This is only a partial
