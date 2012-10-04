@@ -17,6 +17,8 @@ if BUILD_PROFILING_LIB
 src_env_mpich2version_LDADD += lib/lib@PMPILIBNAME@.la
 endif BUILD_PROFILING_LIB
 
+src_env_mpich2version_LDFLAGS = $(mpich_libtool_static_flag)
+
 sysconf_DATA += src/env/mpicc.conf
 
 if BUILD_F77_BINDING

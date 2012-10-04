@@ -571,6 +571,17 @@ AC_ARG_ENABLE([wrapper-rpath],
               [],[enable_wrapper_rpath=yes])
 AC_SUBST([enable_wrapper_rpath])
 
+AC_ARG_ENABLE([all-static],
+	[AC_HELP_STRING([--enable-all-static],
+		[Force example executable within MPICH to be built with static libraries only])],,
+	[enable_all_static=no])
+if test "$enable_all_static" = "yes" ; then
+   mpich_libtool_static_flag="-all-static"
+else
+   mpich_libtool_static_flag="-static"
+fi
+AC_SUBST([mpich_libtool_static_flag])
+
 AC_ARG_WITH(cross,
 	AC_HELP_STRING([--with-cross=file],
 		[Specify the values of variables that configure cannot
