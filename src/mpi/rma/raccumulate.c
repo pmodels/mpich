@@ -72,12 +72,12 @@ int MPIX_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_Request *request_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_ACCUMULATE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_RACCUMULATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_ACCUMULATE);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_RACCUMULATE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -157,7 +157,7 @@ int MPIX_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_ACCUMULATE);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_RACCUMULATE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
