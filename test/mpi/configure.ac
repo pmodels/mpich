@@ -29,11 +29,8 @@ AH_BOTTOM([#endif])
 # 1.2: Automake replaces simplemake
 VERSION=1.2
 AC_SUBST(VERSION)
-dnl
-dnl XXX DJG Dries thinks that I want MACRO_DIR instead
-dnl AC_CONFIG_AUX_DIR(../../confdb)
-AC_CONFIG_AUX_DIR([../../confdb])
-AC_CONFIG_MACRO_DIR([../../confdb])
+AC_CONFIG_AUX_DIR([confdb])
+AC_CONFIG_MACRO_DIR([confdb])
 dnl
 echo "RUNNING CONFIGURE FOR MPI TESTS"
 

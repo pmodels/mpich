@@ -8,7 +8,7 @@
 # mix in the "make testing" rule and other boilerplate
 include $(top_srcdir)/Makefile.mtest
 
-ACLOCAL_AMFLAGS = -I ../../confdb
+ACLOCAL_AMFLAGS = -I confdb
 
 static_subdirs = util attr basic datatype coll comm errhan group info init \
                  pt2pt rma topo errors manual perf
@@ -29,15 +29,7 @@ DISTCLEANFILES = config.system
 noinst_HEADERS = include/mpitest.h include/mpitestcxx.h include/mpithreadtest.h
 nodist_noinst_HEADERS = include/mpitestconf.h
 
-# Need to patch some things up: put a local copy of confdb in the directory
-# and make configure use that.  We also need to rebuild configure, since
-# automake has already done that. 
-# An alternative is to copy the confdb directory here rather than link to the
-# master one in MPICH2.  The drawback to that approach is that critical macros
-# might be deleted by someone looking at the confdb in this test directory,
-# on the basis that they are not used by the tests, even though they are needed
-# by MPICH2 or other tools.  As this very problem has (and continues) to happen,
-# it is safer to use the master confdb.
+# Need to patch some things up:
 # Make sure to disable rebuilding the autotools related files - the 
 # receiver of this distribution may not have the necessary tools and 
 # should not need them.  Finally, the distributed configure must disable
@@ -46,18 +38,10 @@ nodist_noinst_HEADERS = include/mpitestconf.h
 # fail unless the user has the correct versions of all of the tools
 dist-hook:
 	cd $(distdir) && \
-	    svn export https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk/confdb confdb
-	cd $(distdir) && \
-	    sed -e 's/AC_CONFIG_AUX_DIR.*/AC_CONFIG_AUX_DIR([confdb])/' \
-	        -e 's/AC_CONFIG_MACRO_DIR.*/AC_CONFIG_MACRO_DIR([confdb])/' \
-		-e 's/AM_MAINTAINER_MODE.*/AM_MAINTAINER_MODE([disable])/' \
+	    sed -e 's/AM_MAINTAINER_MODE.*/AM_MAINTAINER_MODE([disable])/' \
 	        configure.ac > conftmp.ac && mv conftmp.ac configure.ac
-	cd $(distdir) && \
-	    sed -e 's%ACLOCAL_AMFLAGS.*%ACLOCAL_AMFLAGS = -I confdb%' \
-		Makefile.am > m.am && mv m.am Makefile.am
 	cd $(distdir) && $(AUTOMAKE) --add-missing
 	cd $(distdir) && $(AUTOMAKE) --foreign
 	cd $(distdir) && $(ACLOCAL) -Iconfdb
 	cd $(distdir) && $(AUTOCONF) -Iconfdb
 	cd $(distdir) && $(AUTOHEADER) -Iconfdb
-

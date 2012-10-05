@@ -37,9 +37,6 @@ stepsCleared=no
 
 # Options for some steps
 autoconfdir=""
-#
-# Location of mpich2 source tree 
-mpich2dir=../..
 # Extract the arguments intended for updatefiles.
 temp_args=""
 for arg in "$@" ; do
@@ -47,10 +44,6 @@ for arg in "$@" ; do
     -echo)
 	set -x
 	;;
-
-    -mpich2dir=*)
-    mpich2dir=`echo A$arg | sed -e 's/A-mpich2dir=//'`
-    ;;
 
     -do=*)
     opt=`echo A$arg | sed -e 's/A-do=//'`
@@ -249,7 +242,7 @@ if [ $do_build_configure = yes ] ; then
     # Gah. Some xargs don't accept -r, other break if there is no
     # input.  To avoid that, we do this in two steps: first the
     # find, then the rm (if there are any files)
-    $autoreconf -vif $acIncDirFlag $mpich2dir/confdb
+    $autoreconf -vif $acIncDirFlag confdb
     if [ ! -x configure ] ; then 
         # Check for a few allowed exceptions
         echo "Could not build configure from configure.ac in $dir"
