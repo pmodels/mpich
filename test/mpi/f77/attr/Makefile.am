@@ -13,6 +13,7 @@ EXTRA_DIST = testlist
 AM_DEFAULT_SOURCE_EXT = .f
 
 noinst_PROGRAMS =                   \
+    attrmpi1f                       \
     baseattrf baseattr2f            \
     commattrf commattr2f commattr3f \
     typeattrf typeattr2f typeattr3f
