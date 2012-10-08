@@ -337,6 +337,7 @@ dnl without AC_TRY_RUN().
         OPA_TRY_RUN_PRIMITIVE_HEADER([opa_gcc_intel_32_64_p3.h], [GCC_X86_32_64_P3], [gcc x86 primitives for pre-Pentium 4])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ia64.h], [GCC_AND_IA64_ASM], [gcc ia64 primitives])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_ppc.h], [GCC_AND_POWERPC_ASM], [gcc PowerPC atomics])
+        OPA_TRY_PRIMITIVE_HEADER([opa_gcc_arm.h], [GCC_AND_ARM_ASM], [gcc ARM atomics])
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sicortex.h], [GCC_AND_SICORTEX_ASM], [gcc SiCortex atomics])
     fi
 

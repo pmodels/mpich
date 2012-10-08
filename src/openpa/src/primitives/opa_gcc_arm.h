@@ -1,13 +1,13 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*  
- *  (C) 2008 by Argonne National Laboratory.
+ *  (C) 2012 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef OPA_GCC_PPC_H_INCLUDED
-#define OPA_GCC_PPC_H_INCLUDED
+#ifndef OPA_GCC_ARM_H_INCLUDED
+#define OPA_GCC_ARM_H_INCLUDED
 
-/* these need to be aligned on an 8-byte boundary to work on a BG/P */
+/* let's set 8 byte boundary  for now */
 typedef struct { volatile int v    OPA_ATTRIBUTE((aligned (8))); } OPA_int_t;
 typedef struct { void * volatile v OPA_ATTRIBUTE((aligned (8))); } OPA_ptr_t;
 
@@ -38,51 +38,42 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
     ptr->v = val;
 }
 
-/* a useful link for PPC memory ordering issues:
- *   http://www.rdrop.com/users/paulmck/scalability/paper/N2745r.2009.02.22a.html
- *
- * lwsync: orders L-L, S-S, L-S, but *not* S-L (i.e. gives x86-ish ordering)
- * eieio: orders S-S (but only for cacheable memory, not for MMIO)
- * sync: totally orders memops
- * isync: force all preceeding insns to appear complete before starting
- *        subsequent insns, but w/o cumulativity (very confusing)
+/*
+  
  */
 /* helper macros */
-#define OPA_ppc_lwsync_() __asm__ __volatile__  ( "lwsync" ::: "memory" )
-#define OPA_ppc_hwsync_() __asm__ __volatile__  ( "sync"   ::: "memory" )
-#define OPA_ppc_eieio_()  __asm__ __volatile__  ( "eieio"  ::: "memory" )
+/* NOTE: only support ARM v7 */
+#define OPA_arm_dmb_() __asm__ __volatile__  ( "dmb" ::: "memory" )
+#define OPA_arm_dsb_() __asm__ __volatile__  ( "dsb" ::: "memory" )
 
-#define OPA_write_barrier()      OPA_ppc_eieio_()
-#define OPA_read_barrier()       OPA_ppc_lwsync_()
-#define OPA_read_write_barrier() OPA_ppc_hwsync_()
+#define OPA_write_barrier()      OPA_arm_dsb_()
+#define OPA_read_barrier()       OPA_arm_dmb_()
+#define OPA_read_write_barrier() OPA_arm_dsb_()
 #define OPA_compiler_barrier()   __asm__ __volatile__  ( "" ::: "memory" )
 
-/* NOTE-PPC-1 we use lwsync, although I think we might be able to use
- * conditional-branch+isync in some cases (load_acquire?) once we understand it
- * better */
 
 static _opa_inline int   OPA_load_acquire_int(_opa_const OPA_int_t *ptr)
 {
     int tmp;
     tmp = ptr->v;
-    OPA_ppc_lwsync_(); /* NOTE-PPC-1 */
+    OPA_arm_dsb_();
     return tmp;
 }
 static _opa_inline void  OPA_store_release_int(OPA_int_t *ptr, int val)
 {
-    OPA_ppc_lwsync_();
+    OPA_arm_dsb_();
     ptr->v = val;
 }
 static _opa_inline void *OPA_load_acquire_ptr(_opa_const OPA_ptr_t *ptr)
 {
     void *tmp;
     tmp = ptr->v;
-    OPA_ppc_lwsync_(); /* NOTE-PPC-1 */
+    OPA_arm_dsb_();
     return tmp;
 }
 static _opa_inline void  OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
 {
-    OPA_ppc_lwsync_();
+    OPA_arm_dsb_();
     ptr->v = val;
 }
 
@@ -95,9 +86,9 @@ static _opa_inline void  OPA_store_release_ptr(OPA_ptr_t *ptr, void *val)
 static _opa_inline int OPA_LL_int(OPA_int_t *ptr)
 {
     int val;
-    __asm__ __volatile__ ("lwarx %[val],0,%[ptr]"
-                          : [val] "=r" (val)
-                          : [ptr] "r" (&ptr->v)
+    __asm__ __volatile__ ("ldrex %0,[%1]"
+                          : "=&r" (val)
+                          : "r" (&ptr->v)
                           : "cc");
 
     return val;
@@ -106,24 +97,23 @@ static _opa_inline int OPA_LL_int(OPA_int_t *ptr)
 /* Returns non-zero if the store was successful, zero otherwise. */
 static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val)
 {
-    int ret = 1; /* init to non-zero, will be reset to 0 if SC was unsuccessful */
-    __asm__ __volatile__ ("stwcx. %[val],0,%[ptr];\n"
-                          "beq 1f;\n"
-                          "li %[ret], 0;\n"
-                          "1: ;\n"
-                          : [ret] "=r" (ret)
-                          : [ptr] "r" (&ptr->v), [val] "r" (val), "0" (ret)
+    int ret; /* will be overwritten by strex */
+    /*
+      strex returns 0 on success
+     */
+    __asm__ __volatile__ ("strex %0, %1, [%2]\n"
+                          : "=&r" (ret)
+                          : "r" (val), "r"(&ptr->v)
                           : "cc", "memory");
-    return ret;
+
+    return !ret;
 }
 
 
 /* Pointer versions of LL/SC. */
 
-/* Set OPA_SS (Size Suffix) which is used to choose between lwarx/stwcx and
- * ldarx/stdcx when using 4 or 8 byte pointer operands */
 #if OPA_SIZEOF_VOID_P == 4
-#define OPA_SS "w"
+#define OPA_SS ""
 #elif OPA_SIZEOF_VOID_P == 8
 #define OPA_SS "d"
 #else
@@ -134,27 +124,29 @@ static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val)
 static _opa_inline void *OPA_LL_ptr(OPA_ptr_t *ptr)
 {
     void *val;
-    __asm__ __volatile__ ("l"OPA_SS"arx %[val],0,%[ptr]"
-                          : [val] "=r" (val)
-                          : [ptr] "r" (&ptr->v)
-                          : "cc");
 
+    __asm__ __volatile__ ("ldrex"OPA_SS" %0,[%1]\n"
+                          : "=&r" (val)
+                          : "r" (&ptr->v)
+                          : "cc");
     return val;
 }
 
 /* Returns non-zero if the store was successful, zero otherwise. */
 static _opa_inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val)
 {
-    int ret = 1; /* init to non-zero, will be reset to 0 if SC was unsuccessful */
-    __asm__ __volatile__ ("st"OPA_SS"cx. %[val],0,%[ptr];\n"
-                          "beq 1f;\n"
-                          "li %[ret], 0;\n"
-                          "1: ;\n"
-                          : [ret] "=r" (ret)
-                          : [ptr] "r" (&ptr->v), [val] "r" (val), "0" (ret)
+    int ret; /* will be overwritten by strex */
+    __asm__ __volatile__ ("strex"OPA_SS" %0, %1, [%2]\n"
+                          : "=&r" (ret)
+                          : "r" (val), "r"(&ptr->v)
                           : "cc", "memory");
-    return ret;
+
+    return !ret;
 }
+
+
+
+
 
 #undef OPA_SS
 
@@ -177,4 +169,4 @@ static _opa_inline int OPA_SC_ptr(OPA_ptr_t *ptr, void *val)
 
 #include "opa_emulated.h"
 
-#endif /* OPA_GCC_PPC_H_INCLUDED */
+#endif /* OPA_GCC_ARM_H_INCLUDED */
