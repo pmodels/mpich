@@ -80,6 +80,7 @@ typedef struct
     unsigned             limits_lookup[2][2][2];
     MPIDI_pt2pt_limits_t limits;
   } pt2pt;
+  unsigned disable_internal_eager_scale; /**< The number of tasks at which point eager will be disabled */
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
   unsigned mp_infolevel;
   unsigned mp_statistics;     /* print pamid statistcs data                           */

@@ -33,6 +33,9 @@
 #define MPIDI_EAGER_LIMIT  2049
 /** This is set to 0 which effectively disables the eager protocol for local transfers */
 #define MPIDI_EAGER_LIMIT_LOCAL  0
+/** This is set to 'max unsigned' which effectively never disables internal eager at scale */
+#define MPIDI_DISABLE_INTERNAL_EAGER_SCALE ((unsigned)-1)
+
 /* Default features */
 #define USE_PAMI_RDMA 1
 #define USE_PAMI_CONSISTENCY PAMI_HINT_ENABLE
@@ -64,6 +67,8 @@
 #ifdef __BGQ__
 #undef  MPIDI_EAGER_LIMIT_LOCAL
 #define MPIDI_EAGER_LIMIT_LOCAL  64
+#undef  MPIDI_DISABLE_INTERNAL_EAGER_SCALE
+#define MPIDI_DISABLE_INTERNAL_EAGER_SCALE (512*1024)
 #define MPIDI_MAX_THREADS     64
 #define MPIDI_MUTEX_L2_ATOMIC 1
 #define MPIDI_OPTIMIZED_COLLECTIVE_DEFAULT 1
