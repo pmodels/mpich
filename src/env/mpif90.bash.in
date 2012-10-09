@@ -32,7 +32,6 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 sysconfdir=@sysconfdir@
 includedir=@includedir@
-modincdir=@modincdir@
 libdir=@libdir@
 
 # Default settings for compiler, flags, and libraries
@@ -318,15 +317,14 @@ fi
 
 # Handle the specification of the directory containing the modules
 # For now, these are in the includedir (no choice argument supported)
-moduledir=$modincdir
 modulelib="@MPILIBNAME@f90"
 if [ -n "$FCMODINCSPEC" ] ; then
     newarg=`echo A"$FCMODINCSPEC" | \
-	sed -e 's/^A//' -e 's%<dir>%'"$moduledir%g" -e 's/<file>/mpi/g'`
+	sed -e 's/^A//' -e 's%<dir>%'"$includedir%g" -e 's/<file>/mpi/g'`
     FCMODDIRS="$newarg"
     FCMODLIBS="-l$modulelib"
 elif [ -n "$FCMODINC" ] ; then
-    FCMODDIRS="${FCMODINC}$moduledir"
+    FCMODDIRS="${FCMODINC}$includedir"
     FCMODLIBS="-l$modulelib"
 fi
 

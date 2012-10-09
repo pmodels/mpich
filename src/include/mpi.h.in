@@ -798,9 +798,6 @@ typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
 */
 /* --Insert Additional Definitions Here-- */
 
-/* Include any device specific definitions */
-@INCLUDE_MPIDDEFS_H@
-
 /*
  * Normally, we provide prototypes for all MPI routines.  In a few weird
  * cases, we need to suppress the prototypes.

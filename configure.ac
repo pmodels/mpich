@@ -259,7 +259,6 @@ AC_CONFIG_MACRO_DIR([confdb])
 # built from within MPICH2
 FROM_MPICH2=yes
 export FROM_MPICH2
-AC_SUBST([FROM_MPICH2])
 
 # Save a copy of precious flags as USER_* before any of these flags
 # are being modified by configure tests.
@@ -754,18 +753,6 @@ esac
 export device_name
 export device_args
 export devicedir
-# Make the device base name and args available to generated files
-DEVICE_NAME=$device_name
-AC_SUBST(DEVICE_NAME)
-DEVICE_ARGS=$device_args
-AC_SUBST(DEVICE_ARGS)
-#
-# Give the device an opportunity to include a header file in mpi.h.  The
-# default value of INCLUDE_MPIDDEFS_H is set prior to the inclusion of the
-# device's mpich2prereq script.  The device's script may override the value
-# if needed.
-INCLUDE_MPIDDEFS_H='/* ... no device specific definitions ... */'
-AC_SUBST(INCLUDE_MPIDDEFS_H)
 
 # See if the device wants to say something about the compilers
 if test -f $devicedir/mpich2prereq ; then
@@ -1043,7 +1030,6 @@ if test "$logging_name" != "none" ; then
 	# Add the dir to the include paths
 	#CPPFLAGS="$CPPFLAGS -I$logdir"
 	CPPFLAGS="$CPPFLAGS -I$logdir"
-	EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS $logdir"
 	# Add to the list of external modules to setup
 	if test -x $logdir/setup_logging ; then
 	     EXTERNAL_SETUPS="$EXTERNAL_SETUPS $logdir/setup_logging"
@@ -1052,8 +1038,7 @@ if test "$logging_name" != "none" ; then
         logdir=$srcdir/src/util/logging
         logreldir=src/util/logging/$logging_name
         logging_subsystems="$logging_subsystems $logreldir"
-        logging_subdirs=$logging_name
-        for dir in $logging_subdirs ; do
+        for dir in $logging_name ; do
             if test ! -d $logdir/$dir ; then
 	        AC_MSG_ERROR([$logdir/$dir does not exist.  Configure aborted])
 	        logging_name=none
@@ -1064,7 +1049,6 @@ if test "$logging_name" != "none" ; then
 	        AC_MSG_ERROR([$srcdir/$dir has no configure (required).  Configure aborted])
 	        logging_name=none
             fi
-            other_install_dirs="${other_install_dirs} $logreldir"
         done
     fi
 fi
@@ -1077,14 +1061,11 @@ if test "$logging_name" != "none" ; then
 	    enable_timing=log
 	    timing_name=log
     	fi
-	logging_dir=logging
 	subsystems="$subsystems $logging_subsystems"
     else
 	AC_MSG_WARN([Timing was disabled.  Logging has been disabled as well.])
 	with_logging=no
 	logging_name=none
-        logging_dir=
-        logging_subdirs=
     fi
 else
     if test "$logging_required" = "true" ; then
@@ -1092,8 +1073,6 @@ else
 	enable_timing=no
 	timing_name=none
     fi
-    logging_dir=
-    logging_subdirs=
 fi
 if test "$timing_name" != "none" ; then
     timing_kind=`echo $timing_name | \
@@ -1104,10 +1083,7 @@ if test "$timing_name" != "none" ; then
         AC_DEFINE(COLLECT_STATS,1,[define to enable collection of statistics])
     fi
 fi
-#
-AC_SUBST(logging_dir)
-AC_SUBST(logging_name)
-AC_SUBST(logging_subdirs)
+
 use_logging_variable="MPID_LOGGING_`echo $logging_name | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`"
 AC_DEFINE_UNQUOTED(USE_LOGGING,$use_logging_variable,[define to choose logging library])
 # ----------------------------------------------------------------------------
@@ -1129,8 +1105,6 @@ PAC_CONFIG_SUBDIR(src/mpl,,AC_MSG_ERROR(MPL configure failed))
 PAC_PREPEND_FLAG([-lmpl], [WRAPPER_LIBS])
 PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
 PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
-EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/mpl"
-other_install_dirs="$other_install_dirs src/mpl"
 
 # OpenPA
 AC_ARG_WITH([openpa-prefix],
@@ -1154,15 +1128,9 @@ OPA_fetch_and_incr_int(&i,5);
                             [with_openpa_prefix=system],[with_openpa_prefix=embedded])
              PAC_POP_FLAG([LIBS])
              ])
-# @opadir@ is used in src/Makefile.sm to control whether or not the OPA in
-# src/openpa is built and installed
-opadir=""
-AC_SUBST([opadir])
 
 if test "$with_openpa_prefix" = "embedded" ; then
     if test -e "${use_top_srcdir}/src/openpa" ; then
-        opadir="openpa"
-        EXTERNAL_SRC_DIRS="$EXTERNAL_SRC_DIRS src/openpa"
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
 
@@ -1180,8 +1148,6 @@ if test "$with_openpa_prefix" = "embedded" ; then
         fi
         PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
         PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
-
-        other_install_dirs="$other_install_dirs src/openpa"
     else
         AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
     fi
@@ -1515,8 +1481,6 @@ if test "$enable_romio" = "yes" ; then
        PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
 
        # Set environment variables that the romio configure expects
-       romio_dir=romio
-       AC_SUBST(romio_dir)
        export use_top_srcdir
        top_build_dir=`pwd`
        export top_build_dir
@@ -1553,14 +1517,7 @@ else
     devsubsystems="$devsubsystems $devicereldir"
     # Make device_name available to subdirs
 fi
-#
-# Allow the device to request that the install step invoke the install 
-# target in the device's Makefile.
-if test -n "$device_name" -a "$INSTALL_FROM_DEVICE" = yes ; then
-    other_install_dirs="${other_install_dirs} $devicereldir"
-fi
-AC_SUBST(device_name)
-#
+
 # with-pm
 if test "$with_pm" = "none" ; then
     # add "none" as synonym for "no" to agree with older erroneous docs
@@ -1585,9 +1542,6 @@ if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
 fi
 
 # We allow multiple pm names, separated by : or ,
-# If multiple PMs are provided, we set the value MANY_PM to yes
-MANY_PM=no
-AC_SUBST(MANY_PM)
 if test "$with_pm" != "no" ; then
     pm_names="`echo $with_pm | sed -e 's/:/ /g' -e 's/,/ /g'`"
 else
@@ -1616,13 +1570,6 @@ for pm_name in $pm_names ; do
     if test -z "$first_pm_name" ; then
        first_pm_name=$pm_name
        export first_pm_name
-    else 
-       # Only add to other_pm_names if the directory exists,
-       # since the Makefile in src/pm/Makefile will try to cd to
-       # that directory
-       if test -d $use_top_srcdir/src/pm/$pm_name ; then
-           other_pm_names="$other_pm_names $pm_name"
-       fi
     fi
     if test ! -d $use_top_srcdir/src/pm/$pm_name ; then
         AC_MSG_WARN([$use_top_srcdir/src/pm/$pm_name does not exist. PM is unknown])
@@ -1658,7 +1605,6 @@ fi
 # pm_name is the *primary* pm
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
-AC_SUBST(other_pm_names)
 
 # Some versions of PM and PMI require a special definition (currently, only
 # smpd requires this)
@@ -1666,9 +1612,6 @@ if test "$PMI_REQUIRES_READABLE_TOKENS" = "yes" ; then
     AC_DEFINE(USE_HUMAN_READABLE_TOKENS,1,[Define to use ='s and spaces in the string utilities.])
 fi
 
-if test -n "$first_pm_name" ; then
-    other_install_dirs="${other_install_dirs} src/pm/$first_pm_name"
-fi
 # Step 2:
 # Once we've selected the process manager (or managers), we can
 # check that we have a compatible PMI implemenatation.
@@ -1709,7 +1652,6 @@ elif test "$with_pmi" != "no" ; then
 else
     AC_MSG_ERROR([A PMI implementation must be selected or the default used.])
 fi
-AC_SUBST(pmi_name)
 
 # Step 3: complete pm setup.
 # Note that checks for errors have already been performed, so this
@@ -1742,8 +1684,6 @@ if test $with_mpe != no ; then
         fi
     else
         subsystems="$subsystems src/mpe2"
-	other_install_dirs="$other_install_dirs src/mpe2"
-	mpe_dir=mpe2
 
         # for AM_CONDITIONAL
         build_src_mpe2=yes
@@ -1776,8 +1716,6 @@ if test $with_mpe != no ; then
         export top_build_dir
     fi
 fi
-AC_SUBST(mpe_dir)
-AC_SUBST(other_install_dirs)
 AM_CONDITIONAL([BUILD_SRC_MPE2],[test "X$build_src_mpe2" = "Xyes"])
 
 # Check for whether the compiler defines a symbol that contains the 
@@ -1801,12 +1739,9 @@ if test "$enable_default_optimize" = "yes" \
     fi
 fi
 
-# Check for support for weak symbols.  If not found, set NO_WEAK_SYM
-# to the Make target name understood by simplemake.
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
 # and -lp$MPILIBNAME.
 NEEDSPLIB=yes
-NO_WEAK_SYM_TARGET=build_proflib
 if test $enable_weak_symbols = yes ; then
     # Turn off weak symbols if they aren't available
     PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
@@ -1818,18 +1753,8 @@ if test $enable_weak_symbols = "yes" ; then
     if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
        PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
     fi
-else
-    NO_WEAK_SYM=build_proflib
-    PROFILE_DEF_MPI="-DMPICH_MPI_FROM_PMPI"
 fi
 export NEEDSPLIB
-export NO_WEAK_SYM
-export NO_WEAK_SYM_TARGET
-export PROFILE_DEF_MPI
-AC_SUBST(NEEDSPLIB)
-AC_SUBST(NO_WEAK_SYM)
-AC_SUBST(NO_WEAK_SYM_TARGET)
-AC_SUBST(PROFILE_DEF_MPI)
 
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
 
@@ -2027,15 +1952,6 @@ if test "$enable_f77" = "yes" ; then
     AC_LANG_FORTRAN77
     PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
     PAC_PROG_F77_HAS_INCDIR(src)
-    if test -n "$F77_INCDIR" ; then
-        # For building the Fortran files, add the directory where we are building 
-        # the object to the include list.  This is needed for g77, which makes
-        # includes relative to the source directory of the file, not the 
-        # directory that the command is executed in
-        FINCLUDES="$F77_INCDIR`pwd`/src"
-    fi
-    AC_SUBST(FINCLUDES)
-    #
     PAC_PROG_F77_LIBRARY_DIR_FLAG
 
     AC_SUBST(MPIFPMPI)
@@ -2080,7 +1996,6 @@ if test "$enable_f77" = "yes" ; then
     fi
 
     bindings="$bindings f77"
-    bindings_dirs="$bindings_dirs src/binding/f77"
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
     # Also define the name FORTRAN_BINDING for use in #if @FORTRAN_BINDING@..
     FORTRAN_BINDING=1
@@ -2119,7 +2034,6 @@ if test "$enable_fc" = "yes" ; then
     else 
         bindingsubsystems="$bindingsubsystems src/binding/f90"
         bindings="$bindings f90"
-        bindings_dirs="$bindings_dirs src/binding/f90"
     fi
 fi
 
@@ -2190,12 +2104,7 @@ if test "$enable_fc" = "yes" ; then
     AC_SUBST(MPICONSTMODNAME)
     AC_SUBST(MPISIZEOFMODNAME)
     AC_SUBST(MPIBASEMODNAME)
-    if test -z "$modincdir" ; then
-        # The default module include dir is the same as the include dir
-        modincdir=$includedir
-    fi
-    AC_SUBST(modincdir)    
-    #
+
     # Assume that all Fortran 90 compilers accept -I for include directories
     FCINC=-I
     AC_SUBST(FCINC)
@@ -2289,22 +2198,12 @@ public:
     AC_TRY_COMPILE([
 #include <iostream>
 ],[using namespace std;],pac_cv_cxx_has_iostream=yes,pac_cv_cxx_has_iostream=no)])
-    if test "$pac_cv_cxx_has_iostream" = yes ; then
-        CXX_DEFS="$CXX_DEFS -DHAVE_CXX_IOSTREAM"
-    fi
     AX_CXX_NAMESPACE_STD
-    if test "$ac_cv_cxx_namespace_std" = "yes" ; then
-        CXX_DEFS="$CXX_DEFS -DHAVE_NAMESPACE_STD"
-    fi
    
     AC_CACHE_CHECK([whether <math> available],pac_cv_cxx_has_math,[
     AC_TRY_COMPILE([
 #include <math>
 ],[using namespace std;],pac_cv_cxx_has_math=yes,pac_cv_cxx_has_math=no)])
-    if test "$pac_cv_cxx_has_math" = yes ; then
-        CXX_DEFS="$CXX_DEFS -DHAVE_CXX_MATH"
-    fi
-    AC_SUBST(CXX_DEFS)
 
     # GNU changed the calling conventions between minor releases (!!!)
     # This is too hard to detect, but we should be able to detect
@@ -2357,7 +2256,6 @@ int main() {
     AC_SUBST(GNUCXX_MINORVERSION)
 
     bindings="$bindings cxx"
-    bindings_dirs="$bindings_dirs src/binding/cxx"
     AC_DEFINE(HAVE_CXX_BINDING,1,[Define if C++ is supported])
     INCLUDE_MPICXX_H='#include "mpicxx.h"'
     AC_SUBST(INCLUDE_MPICXX_H)
@@ -2402,9 +2300,7 @@ if test "$enable_cxx" = yes; then
 fi
 
 AC_SUBST(bindings)
-# Bindings dirs is used for the installation target
-AC_SUBST(bindings_dirs)
-#
+
 # ----------------------------------------------------------------------------
 # End of the bindings support
 # ----------------------------------------------------------------------------
@@ -2547,11 +2443,9 @@ option
     +noobjdebug
 on all link lines (consider adding it to LDFLAGS)])
    fi
-   AC_SUBST(BUILD_TVDLL)
 
     # The debugger library name cannot be set until we know the extension
     # of shared libraries - the name is so on most Unix system, dylib on OS X.
-    debugger_dir=debugger
     AC_DEFINE(HAVE_DEBUGGER_SUPPORT,1,[Define if debugger support is included])
     # The debugger support requires a shared library.  This is handled 
     # below, after we check for compiler support for shared libraries
@@ -2589,7 +2483,6 @@ on all link lines (consider adding it to LDFLAGS)])
     dlldir='"'$dlldir'"'
     AC_DEFINE_UNQUOTED(MPICH_INFODLL_LOC,$dlldir,[Define as the name of the debugger support library])
 fi
-AC_SUBST(debugger_dir)
 
 # used by automakefiles to conditionally build the DLL
 AM_CONDITIONAL([BUILD_DEBUGGER_DLL], [test x$BUILD_TVDLL = xyes])
@@ -2597,8 +2490,6 @@ AM_CONDITIONAL([BUILD_DEBUGGER_DLL], [test x$BUILD_TVDLL = xyes])
 # ----------------------------------------------------------------------------
 
 nameserv_name=""
-AC_SUBST(nameserv_name)
-# 
 # Get the default nameserver, if no nameserver was selected.  A process
 # manager may advertise a nameserver name by setting the variable
 # MPID_PM_NAMESERVER.
@@ -2676,31 +2567,8 @@ AM_CONDITIONAL([BUILD_NAMEPUB_PMI],[test "X$nameserv_name" = "Xpmi"])
 # find the source for the doctext LaTeX style files.  Use "false" if
 # doctext is not found
 AC_PATH_PROG(DOCTEXT,doctext,false)
-if test -n "$DOCTEXT" -a "$DOCTEXT" != "false" ; then
-    if test -z "$DOCTEXTSYTLE" ; then
-        AC_MSG_CHECKING([for location of doctext style files])
-        dpath=`$DOCTEXT -debug_paths 2>&1 | grep 'default path' | \
-	      sed -e 's%.*default path\(.*\),%\1:%g'`
-        saveIFS="$IFS"
-        IFS=": "
-	for dir in $dpath ; do
-	    if test -s $dir/refman.sty ; then
-	       DOCTEXTSTYLE=$dir
-	       break
-	    fi
-	done
-        IFS="$saveIFS"
-	if test -n "$DOCTEXTSTYLE" ; then
-	    AC_MSG_RESULT($DOCTEXTSTYLE)
-        else
-	    AC_MSG_RESULT([unavailable])
-        fi
-    fi
-fi
 export DOCTEXT
-export DOCTEXTSTYLE
 AC_SUBST(DOCTEXT)
-AC_SUBST(DOCTEXTSTYLE)
 
 # ----------------------------------------------------------------------------
 # Check for C compiler characteristics
@@ -5516,9 +5384,6 @@ if test "$ac_cv_func_thread_policy_set" = yes ; then
     fi
 fi
 
-MPIU_THREAD_LIB_NAME=${MPILIBNAME}
-AC_SUBST(MPIU_THREAD_LIB_NAME)
-
 # -----------------------------------------------------------------------------
 # End of thread configure
 # -----------------------------------------------------------------------------
@@ -5590,7 +5455,6 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # Make subsystems available to makefiles.
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
-AC_SUBST(subsystems)
 
 # Find the size of OPA_ptr_t. This step needs to come after the OPA
 # configure above in order to get the size OPA_ptr_t evaluated for
@@ -5777,10 +5641,6 @@ AC_SUBST([mpich_libtool_static_flag])
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
 AC_SUBST(MPIU_DLL_SPEC_DEF)
 
-dnl We can include external packages at configure/build time by 
-dnl adding them to EXTERNAL_SRC_DIRS.
-AC_SUBST(EXTERNAL_SRC_DIRS)
-
 dnl We can configure the test directory after the rest of the configure 
 dnl steps because it does not depend on them.
 # set and export values that the test/mpi configure will reference to ensure
@@ -5863,18 +5723,6 @@ AC_OUTPUT_COMMANDS([chmod a+x src/util/dbg/getfuncstack])
 
 AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 
-
-# For the examples, we want to use the scripts to encourage users
-# to use them and to make them work more robustly with shared libraries
-# and, for Fortran 90, any special Fortran 90 module features.
-if test -z "$MPICC" ; then MPICC='$(bindir)/mpicc' ; fi
-if test -z "$MPIF77" ; then MPIF77='$(bindir)/mpif77' ; fi
-if test -z "$MPIFC" ; then MPIFC='$(bindir)/mpif90' ; fi
-if test -z "$MPICXX" ; then MPICXX='$(bindir)/mpicxx' ; fi
-AC_SUBST(MPICC)
-AC_SUBST(MPICXX)
-AC_SUBST(MPIF77)
-AC_SUBST(MPIFC)
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
 
