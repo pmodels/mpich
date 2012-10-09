@@ -842,6 +842,7 @@ MPIDI_Env_setup(int rank, int requested)
       ENV_Char(names, &mpich_env->interrupts);
       if (mpich_env->interrupts == 1)      /* force on  */
       {
+        MPIDI_Process.mp_interrupts=1;
         MPIDI_Process.perobj.context_post.requested = 0;
         MPIDI_Process.async_progress.mode    = ASYNC_PROGRESS_MODE_TRIGGER;
 #if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)

@@ -399,3 +399,181 @@ MPIX_Get_last_algorithm_name(MPI_Comm comm, char *protocol, int length)
 
 
 #endif
+
+#ifdef __PE__
+void mpc_disableintr() __attribute__ ((alias("MPIX_disableintr")));
+void mp_disableintr() __attribute__ ((alias("MPIXF_disableintr")));
+void mp_disableintr_() __attribute__ ((alias("MPIXF_disableintr")));
+void mp_disableintr__() __attribute__ ((alias("MPIXF_disableintr")));
+void mpc_enableintr() __attribute__ ((alias("MPIX_enableintr")));
+void mp_enableintr() __attribute__ ((alias("MPIXF_enableintr")));
+void mp_enableintr_() __attribute__ ((alias("MPIXF_enableintr")));
+void mp_enableintr__() __attribute__ ((alias("MPIXF_enableintr")));
+void mpc_queryintr() __attribute__ ((weak,alias("MPIX_queryintr")));
+void mp_queryintr() __attribute__ ((alias("MPIXF_queryintr")));
+void mp_queryintr_() __attribute__ ((alias("MPIXF_queryintr")));
+void mp_queryintr__() __attribute__ ((alias("MPIXF_queryintr")));
+
+ /***************************************************************************
+ Function Name: MPIX_disableintr
+
+ Description: Call the pamid layer to disable interrupts.
+              (Similar to setting MP_CSS_INTERRUPT to "no")
+
+ Parameters: The Fortran versions have an int* parameter used to pass the
+             return code to the calling program.
+
+ Returns: 0     Success
+         <0     Failure
+ ***************************************************************************/
+
+int
+_MPIDI_disableintr()
+{
+        return(MPIDI_disableintr());
+}
+
+int
+MPIX_disableintr()
+{
+        return(_MPIDI_disableintr());
+}
+
+void
+MPIXF_disableintr(int *rc)
+{
+        *rc = _MPIDI_disableintr();
+}
+
+void
+MPIXF_disableintr_(int *rc)
+{
+        *rc = _MPIDI_disableintr();
+}
+
+/*
+ ** Called by: _mp_disableintr
+ ** Purpose : Disables interrupts
+ */
+int
+MPIDI_disableintr()
+{
+    pami_result_t rc=0;
+    int i;
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    if (MPIDI_Process.mp_interrupts!= 0)
+       {
+         TRACE_ERR("Async advance beginning...\n");
+         /* Enable async progress on all contexts.*/
+         for (i=0; i<MPIDI_Process.avail_contexts; ++i)
+         {
+             PAMIX_Progress_disable(MPIDI_Context[i], PAMIX_PROGRESS_ALL);
+          }
+         TRACE_ERR("Async advance disabled\n");
+         MPIDI_Process.mp_interrupts=0;
+       }
+    return(rc);
+}
+ /***************************************************************************
+ Function Name: MPIX_enableintr
+
+ Description: Call the pamid-layer function to enable interrupts.
+              (Similar to setting MP_CSS_INTERRUPT to "yes")
+
+ Parameters: The Fortran versions have an int* parameter used to pass the
+             return code to the calling program.
+
+ Returns: 0     Success
+         <0     Failure
+ ***************************************************************************/
+int
+_MPIDI_enableintr()
+{
+       return(MPIDI_enableintr());
+}
+
+/* C callable version           */
+int
+MPIX_enableintr()
+{
+        return(_MPIDI_enableintr());
+}
+
+/* Fortran callable version     */                  
+void 
+MPIXF_enableintr(int *rc)
+{
+        *rc = _MPIDI_enableintr();
+}
+
+/* Fortran callable version for -qEXTNAME support  */
+void 
+MPIXF_enableintr_(int *rc)
+{
+        *rc = _MPIDI_enableintr();
+}
+
+int
+MPIDI_enableintr()
+{
+    pami_result_t rc=0;
+    int i;
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    if (MPIDI_Process.mp_interrupts == 0)
+       {
+         /* Enable async progress on all contexts.*/
+         for (i=0; i<MPIDI_Process.avail_contexts; ++i)
+         {
+             PAMIX_Progress_enable(MPIDI_Context[i], PAMIX_PROGRESS_ALL);
+          }
+         TRACE_ERR("Async advance enabled\n");
+         MPIDI_Process.mp_interrupts=1;
+       }
+    MPID_assert(rc == PAMI_SUCCESS);
+    return(rc);
+}
+
+ /***************************************************************************
+ Function Name: MPIX_queryintr
+
+ Description: Call the pamid-layer function to determine if
+              interrupts are currently on or off.
+
+ Parameters: The Fortran versions have an int* parameter used to pass the
+             current interrupt setting to the calling program.
+ Returns: 0     Indicates interrupts are currently off
+          1     Indicates interrupts are currently on
+         <0     Failure
+ ***************************************************************************/
+int
+MPIDI_queryintr()
+{
+        return(MPIDI_Process.mp_interrupts);
+}
+
+int
+_MPIDI_queryintr()
+{
+        return(MPIDI_queryintr());
+}
+
+int
+MPIX_queryintr()
+{
+        return(_MPIDI_queryintr());
+}
+
+void
+MPIXF_queryintr(int *rc)
+{
+        *rc = _MPIDI_queryintr();
+}
+
+void
+MPIXF_queryintr_(int *rc)
+{
+        *rc = _MPIDI_queryintr();
+}
+#endif

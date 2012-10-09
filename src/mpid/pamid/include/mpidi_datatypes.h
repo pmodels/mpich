@@ -61,6 +61,7 @@ typedef struct
   unsigned mp_infolevel;
   unsigned mp_statistics;     /* print pamid statistcs data                           */
   unsigned mp_printenv; ;     /* print env data                                       */
+  unsigned mp_interrupts; ;   /* interrupts                                           */
 #endif
 #ifdef RDMA_FAILOVER
   unsigned mp_s_use_pami_get; /* force the PAMI_Get path instead of PAMI_Rget         */
