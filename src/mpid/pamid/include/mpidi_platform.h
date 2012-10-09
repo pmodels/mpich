@@ -41,15 +41,39 @@
 
 #define ASYNC_PROGRESS_MODE_DEFAULT 0
 
+/*
+ * The default behavior is to disable (ignore) 'internal vs application' and
+ * 'local vs remote' point-to-point limits. The only limits provided are the
+ * 'immediate' and  'eager (rzv)' limits.
+ */
+#define MPIDI_PT2PT_LIMIT(is_internal,is_eager,is_local)                        \
+({                                                                              \
+  MPIDI_Process.pt2pt.limits_lookup[0][is_eager][0];                            \
+})
+
+
+
 #ifdef __BGQ__
 #undef  MPIDI_EAGER_LIMIT_LOCAL
 #define MPIDI_EAGER_LIMIT_LOCAL  64
 #define MPIDI_MAX_THREADS     64
 #define MPIDI_MUTEX_L2_ATOMIC 1
 #define MPIDI_OPTIMIZED_COLLECTIVE_DEFAULT 1
+
 #define PAMIX_IS_LOCAL_TASK
 #define PAMIX_IS_LOCAL_TASK_STRIDE  (4)
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (6)
+
+/*
+ * Enable both 'internal vs application' and 'local vs remote' point-to-point
+ * limits, in addition to the 'immediate' and 'eager (rzv)' point-to-point limits.
+ */
+#undef MPIDI_PT2PT_LIMIT
+#define MPIDI_PT2PT_LIMIT(is_internal,is_eager,is_local)                        \
+({                                                                              \
+  MPIDI_Process.pt2pt.limits_lookup[is_internal][is_eager][is_local];           \
+})
+
 
 #undef ASYNC_PROGRESS_MODE_DEFAULT
 #define ASYNC_PROGRESS_MODE_DEFAULT 1
@@ -72,9 +96,22 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #define RDMA_FAILOVER
 #define MPIDI_BANNER          1
 #define MPIDI_NO_ASSERT       1
+
+/* 'is local task' extension and limits */
 #define PAMIX_IS_LOCAL_TASK
 #define PAMIX_IS_LOCAL_TASK_STRIDE  (1)
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (0)
+
+/*
+ * Enable only the 'local vs remote' point-to-point limits, in addition to the
+ * 'immediate' and 'eager (rzv)' point-to-point limits.
+ */
+#undef MPIDI_PT2PT_LIMIT
+#define MPIDI_PT2PT_LIMIT(is_internal,is_eager,is_local)                        \
+({                                                                              \
+  MPIDI_Process.pt2pt.limits_lookup[0][is_eager][is_local];                     \
+})
+
 
 #undef ASYNC_PROGRESS_MODE_DEFAULT
 #define ASYNC_PROGRESS_MODE_DEFAULT 2

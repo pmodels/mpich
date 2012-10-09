@@ -45,6 +45,26 @@ typedef struct
 } MPIDI_RequestHandle_t;
 #endif
 
+#define MPIDI_PT2PT_LIMIT_SET(is_internal,is_immediate,is_local,value)		\
+  MPIDI_Process.pt2pt.limits_lookup[is_internal][is_immediate][is_local] = value\
+
+typedef struct
+{
+  unsigned remote;
+  unsigned local;
+} MPIDI_remote_and_local_limits_t;
+
+typedef struct
+{
+  MPIDI_remote_and_local_limits_t eager;
+  MPIDI_remote_and_local_limits_t immediate;
+} MPIDI_immediate_and_eager_limits_t;
+
+typedef struct
+{
+  MPIDI_immediate_and_eager_limits_t application;
+  MPIDI_immediate_and_eager_limits_t internal;
+} MPIDI_pt2pt_limits_t;
 
 /**
  * \brief MPI Process descriptor
@@ -54,9 +74,12 @@ typedef struct
 typedef struct
 {
   unsigned avail_contexts;
-  unsigned short_limit;
-  unsigned eager_limit;
-  unsigned eager_limit_local;
+  union
+  {
+    unsigned             limits_array[8];
+    unsigned             limits_lookup[2][2][2];
+    MPIDI_pt2pt_limits_t limits;
+  } pt2pt;
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
   unsigned mp_infolevel;
   unsigned mp_statistics;     /* print pamid statistcs data                           */

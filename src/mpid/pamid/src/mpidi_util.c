@@ -51,7 +51,7 @@ void MPIDI_Set_mpich_env(int rank, int size) {
 
      mpich_env->this_task = rank;
      mpich_env->nprocs  = size;
-     mpich_env->eager_limit=MPIDI_Process.eager_limit;
+     mpich_env->eager_limit=MPIDI_Process.pt2pt.limits.application.eager.remote;
      mpich_env->mp_statistics=MPIDI_Process.mp_statistics;
      if (mpich_env->polling_interval == 0) {
             mpich_env->polling_interval = 400000;

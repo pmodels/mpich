@@ -402,7 +402,8 @@ static inline void
 ENV_Unsigned__(char* name[], unsigned* val, char* string, unsigned num_supported, unsigned* deprecated, int rank, int NA)
 {
   /* Check for deprecated environment variables. */
-  ENV_Deprecated(name, num_supported, deprecated, rank, NA);
+  if (deprecated != NULL)
+    ENV_Deprecated(name, num_supported, deprecated, rank, NA);
 
   char * env;
 
@@ -660,23 +661,126 @@ MPIDI_Env_setup(int rank, int requested)
     TRACE_ERR("MPIDI_Process.async_progress.mode=%u\n", MPIDI_Process.async_progress.mode);
   }
 
-  /* Determine short limit */
+  /*
+   * Determine 'short' limit
+   * - sets both the 'local' and 'remote' short limit, and
+   * - sets both the 'application' and 'internal' short limit
+   *
+   * Identical to setting the PAMID_PT2PT_LIMITS environment variable as:
+   *
+   *   PAMID_PT2PT_LIMITS="::x:x:::x:x"
+   */
   {
     /* THIS ENVIRONMENT VARIABLE NEEDS TO BE DOCUMENTED ABOVE */
     char* names[] = {"PAMID_SHORT", "MP_S_SHORT_LIMIT", "PAMI_SHORT", NULL};
-    ENV_Unsigned(names, &MPIDI_Process.short_limit, 2, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.immediate.remote, 2, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.immediate.local, 2, NULL, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.immediate.remote, 2, NULL, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.immediate.local, 2, NULL, rank);
   }
 
-  /* Determine eager limit */
+  /*
+   * Determine 'remote' eager limit
+   * - sets both the 'application' and 'internal' remote eager limit
+   *
+   * Identical to setting the PAMID_PT2PT_LIMITS environment variable as:
+   *
+   *   PAMID_PT2PT_LIMITS="x::::x:::"
+   *   -- or --
+   *   PAMID_PT2PT_LIMITS="x::::x"
+   */
   {
     char* names[] = {"PAMID_EAGER", "PAMID_RZV", "MP_EAGER_LIMIT", "PAMI_RVZ", "PAMI_RZV", "PAMI_EAGER", NULL};
-    ENV_Unsigned(names, &MPIDI_Process.eager_limit, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.eager.remote, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.eager.remote, 3, NULL, rank);
   }
 
-  /* Determine 'local' eager limit */
+  /*
+   * Determine 'local' eager limit
+   * - sets both the 'application' and 'internal' local eager limit
+   *
+   * Identical to setting the PAMID_PT2PT_LIMITS environment variable as:
+   *
+   *   PAMID_PT2PT_LIMITS=":x::::x::"
+   *   -- or --
+   *   PAMID_PT2PT_LIMITS=":x::::x"
+   */
   {
     char* names[] = {"PAMID_RZV_LOCAL", "PAMID_EAGER_LOCAL", "MP_EAGER_LIMIT_LOCAL", "PAMI_RVZ_LOCAL", "PAMI_RZV_LOCAL", "PAMI_EAGER_LOCAL", NULL};
-    ENV_Unsigned(names, &MPIDI_Process.eager_limit_local, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.eager.local, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.eager.local, 3, NULL, rank);
+  }
+
+  /*
+   * Determine *all* point-to-point limit overrides.
+   *
+   * The entire point-to-point limit set is determined by three boolean
+   * configuration values:
+   * - 'is non-local limit'   vs 'is local limit'
+   * - 'is eager limit'       vs 'is immediate limit'
+   * - 'is application limit' vs 'is internal limit'
+   *
+   * The point-to-point configuration limit values are specified in order and
+   * are delimited by ':' characters. If a value is not specified for a given
+   * configuration then the limit is not changed. All eight configuration
+   * values are not required to be specified, although in order to set the
+   * last (eighth) configuration value the previous seven configurations must
+   * be listed. For example:
+   *
+   *    PAMID_PT2PT_LIMITS=":::::::10240"
+   *
+   * The configuration entries can be described as:
+   *    0 - remote eager     application limit
+   *    1 - local  eager     application limit
+   *    2 - remote immediate application limit
+   *    3 - local  immediate application limit
+   *    4 - remote eager     internal    limit
+   *    5 - local  eager     internal    limit
+   *    6 - remote immediate internal    limit
+   *    7 - local  immediate internal    limit
+   *
+   * Examples:
+   *
+   *    "10240"
+   *      - sets the application internode eager (the "normal" eager limit)
+   *
+   *    "10240::64"
+   *      - sets the application internode eager and immediate limits
+   *
+   *    "::::0:0:0:0"
+   *      - disables 'eager' and 'immediate' for all internal point-to-point
+   */
+  {
+    char * env = getenv("PAMID_PT2PT_LIMITS");
+    if (env != NULL)
+      {
+        size_t i, n = strlen(env);
+        char * tmp = (char *) malloc(n+1);
+        strncpy(tmp,env,n);
+        if (n>0) tmp[n]=0;
+
+        char * tail  = tmp;
+        char * token = tail;
+        for (i = 0; token == tail; i++)
+          {
+            while (*tail != 0 && *tail != ':') tail++;
+            if (*tail == ':')
+              {
+                *tail = 0;
+                if (token != tail)
+                  MPIDI_atoi(token, &MPIDI_Process.pt2pt.limits_array[i]);
+                tail++;
+                token = tail;
+              }
+            else
+              {
+                if (token != tail)
+                  MPIDI_atoi(token, &MPIDI_Process.pt2pt.limits_array[i]);
+              }
+          }
+
+        free (tmp);
+      }
   }
 
   /* Set the maximum number of outstanding RDMA requests */

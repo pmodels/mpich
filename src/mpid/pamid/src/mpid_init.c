@@ -59,9 +59,30 @@ MPIDI_Process_t  MPIDI_Process = {
     },
   },
 #endif
-  .short_limit           = MPIDI_SHORT_LIMIT,
-  .eager_limit           = MPIDI_EAGER_LIMIT,
-  .eager_limit_local     = MPIDI_EAGER_LIMIT_LOCAL,
+  .pt2pt = {
+    .limits = {
+      .application = {
+        .eager = {
+          .remote          = MPIDI_EAGER_LIMIT,
+          .local           = MPIDI_EAGER_LIMIT_LOCAL,
+        },
+        .immediate = {
+          .remote          = MPIDI_SHORT_LIMIT,
+          .local           = MPIDI_SHORT_LIMIT,
+        },
+      },
+      .internal = {
+        .eager = {
+          .remote          = MPIDI_EAGER_LIMIT,
+          .local           = MPIDI_EAGER_LIMIT_LOCAL,
+        },
+        .immediate = {
+          .remote          = MPIDI_SHORT_LIMIT,
+          .local           = MPIDI_SHORT_LIMIT,
+        },
+      },
+    },
+  },
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
   .mp_infolevel          = 0,
   .mp_statistics         = 0,
@@ -388,7 +409,7 @@ MPIDI_PAMI_dispath_set(size_t              dispatch,
   TRACE_ERR("Immediate-max query:  dispatch=%zu  got=%zu  required=%zu\n",
             dispatch, im_max, proto->immediate_min);
   MPID_assert_always(proto->immediate_min <= im_max);
-  if (immediate_max != NULL)
+  if ((immediate_max != NULL) && (im_max < *immediate_max))
     *immediate_max = im_max;
 }
 
@@ -407,21 +428,25 @@ MPIDI_PAMI_dispath_init()
     if ( rc == PAMI_SUCCESS )
       {
         TRACE_ERR("PAMI_DISPATCH_SEND_IMMEDIATE_MAX=%d.\n", config.value.intval, rc);
-        MPIDI_Process.short_limit = config.value.intval;
+        MPIDI_Process.pt2pt.limits_array[2] = config.value.intval;
       }
     else
       {
         TRACE_ERR((" Attention: PAMI_Client_query(DISPATCH_SEND_IMMEDIATE_MAX=%d) rc=%d\n", config.name, rc));
-        MPIDI_Process.short_limit = 256;
+        MPIDI_Process.pt2pt.limits_array[2] = 256;
       }
+
+    MPIDI_Process.pt2pt.limits_array[3] = MPIDI_Process.pt2pt.limits_array[2];
+    MPIDI_Process.pt2pt.limits_array[6] = MPIDI_Process.pt2pt.limits_array[2];
+    MPIDI_Process.pt2pt.limits_array[7] = MPIDI_Process.pt2pt.limits_array[2];
   }
 #endif
   /* ------------------------------------ */
   /*  Set up the communication protocols  */
   /* ------------------------------------ */
-  unsigned pami_short_limit[2] = {MPIDI_Process.short_limit, MPIDI_Process.short_limit};
-  MPIDI_PAMI_dispath_set(MPIDI_Protocols_Short,     &proto_list.Short,     pami_short_limit+0);
-  MPIDI_PAMI_dispath_set(MPIDI_Protocols_ShortSync, &proto_list.ShortSync, pami_short_limit+1);
+  unsigned send_immediate_max_bytes = (unsigned) -1;
+  MPIDI_PAMI_dispath_set(MPIDI_Protocols_Short,     &proto_list.Short,     &send_immediate_max_bytes);
+  MPIDI_PAMI_dispath_set(MPIDI_Protocols_ShortSync, &proto_list.ShortSync, &send_immediate_max_bytes);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_Eager,     &proto_list.Eager,     NULL);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_RVZ,       &proto_list.RVZ,       NULL);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_Cancel,    &proto_list.Cancel,    NULL);
@@ -443,13 +468,19 @@ MPIDI_PAMI_dispath_init()
    *
    * - We use the min of the results just to be safe.
    */
-  pami_short_limit[0] -= (sizeof(MPIDI_MsgInfo) - 1);
-  if (MPIDI_Process.short_limit > pami_short_limit[0])
-    MPIDI_Process.short_limit = pami_short_limit[0];
-  pami_short_limit[1] -= (sizeof(MPIDI_MsgInfo) - 1);
-  if (MPIDI_Process.short_limit > pami_short_limit[1])
-    MPIDI_Process.short_limit = pami_short_limit[1];
-  TRACE_ERR("pami_short_limit[2] = [%u,%u]\n", pami_short_limit[0], pami_short_limit[1]);
+  send_immediate_max_bytes -= (sizeof(MPIDI_MsgInfo) - 1);
+
+  if (MPIDI_Process.pt2pt.limits.application.immediate.remote > send_immediate_max_bytes)
+    MPIDI_Process.pt2pt.limits.application.immediate.remote = send_immediate_max_bytes;
+
+  if (MPIDI_Process.pt2pt.limits.application.immediate.local > send_immediate_max_bytes)
+    MPIDI_Process.pt2pt.limits.application.immediate.local = send_immediate_max_bytes;
+
+  if (MPIDI_Process.pt2pt.limits.internal.immediate.remote > send_immediate_max_bytes)
+    MPIDI_Process.pt2pt.limits.internal.immediate.remote = send_immediate_max_bytes;
+
+  if (MPIDI_Process.pt2pt.limits.internal.immediate.local > send_immediate_max_bytes)
+    MPIDI_Process.pt2pt.limits.internal.immediate.local = send_immediate_max_bytes;
 }
 
 
@@ -485,9 +516,17 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              "  contexts              : %u\n"
              "  async_progress        : %u\n"
              "  context_post          : %u\n"
-             "  short_limit           : %u\n"
-             "  eager_limit           : %u\n"
-             "  eager_limit_local     : %u\n"
+             "  pt2pt.limits\n"
+             "    application\n"
+             "      eager\n"
+             "        remote, local   : %u, %u\n"
+             "      short\n"
+             "        remote, local   : %u, %u\n"
+             "    internal\n"
+             "      eager\n"
+             "        remote, local   : %u, %u\n"
+             "      short\n"
+             "        remote, local   : %u, %u\n"
              "  rma_pending           : %u\n"
              "  shmem_pt2pt           : %u\n"
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
@@ -504,9 +543,14 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              MPIDI_Process.avail_contexts,
              MPIDI_Process.async_progress.mode,
              MPIDI_Process.perobj.context_post.requested,
-             MPIDI_Process.short_limit,
-             MPIDI_Process.eager_limit,
-             MPIDI_Process.eager_limit_local,
+             MPIDI_Process.pt2pt.limits_array[0],
+             MPIDI_Process.pt2pt.limits_array[1],
+             MPIDI_Process.pt2pt.limits_array[2],
+             MPIDI_Process.pt2pt.limits_array[3],
+             MPIDI_Process.pt2pt.limits_array[4],
+             MPIDI_Process.pt2pt.limits_array[5],
+             MPIDI_Process.pt2pt.limits_array[6],
+             MPIDI_Process.pt2pt.limits_array[7],
              MPIDI_Process.rma_pending,
              MPIDI_Process.shmem_pt2pt,
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
@@ -624,7 +668,6 @@ int MPID_Init(int * argc,
   /*  Initialize the pami client to get the process rank; needed for env var output. */
   /* ------------------------------------------------------------------------------- */
   MPIDI_PAMI_client_init(&rank, &size, requested);
-
 
   /* ------------------------------------ */
   /*  Get new defaults from the Env Vars  */
