@@ -3051,17 +3051,16 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
 	MPIR_Type_get_true_extent_impl(accum_pkt->datatype, &true_lb, &true_extent);
 	MPID_Datatype_get_extent_macro(accum_pkt->datatype, extent); 
+
+        /* Predefined types should always have zero lb */
+        MPIU_Assert(true_lb == 0);
+
 	tmp_buf = MPIU_Malloc(accum_pkt->count * 
 			      (MPIR_MAX(extent,true_extent)));
 	if (!tmp_buf) {
 	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
 			 accum_pkt->count * MPIR_MAX(extent,true_extent));
 	}
-	
-        /* FIXME: This seems unnecessary - predefined datatypes should always
-         * have true_lb of 0, right? */
-	/* adjust for potential negative lower bound in datatype */
-	tmp_buf = (void *)((char*)tmp_buf - true_lb);
 	
 	req->dev.user_buf = tmp_buf;
 	
