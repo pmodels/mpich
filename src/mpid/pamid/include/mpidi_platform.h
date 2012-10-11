@@ -42,13 +42,21 @@
 #define ASYNC_PROGRESS_MODE_DEFAULT 0
 
 /*
- * The default behavior is to disable (ignore) 'internal vs application' and
- * 'local vs remote' point-to-point limits. The only limits provided are the
- * 'immediate' and  'eager (rzv)' limits.
+ * The default behavior is to disable (ignore) the 'internal vs application' and
+ * the 'local vs remote' point-to-point eager limits.
  */
-#define MPIDI_PT2PT_LIMIT(is_internal,is_eager,is_local)                        \
+#define MPIDI_PT2PT_EAGER_LIMIT(is_internal,is_local)                           \
 ({                                                                              \
-  MPIDI_Process.pt2pt.limits_lookup[0][is_eager][0];                            \
+  MPIDI_Process.pt2pt.limits_lookup[0][0][0];                                   \
+})
+
+/*
+ * The default behavior is to disable (ignore) the 'internal vs application' and
+ * the 'local vs remote' point-to-point short limits.
+ */
+#define MPIDI_PT2PT_SHORT_LIMIT(is_internal,is_local)                           \
+({                                                                              \
+  MPIDI_Process.pt2pt.limits_lookup[0][1][0];                                   \
 })
 
 
@@ -65,13 +73,23 @@
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (6)
 
 /*
- * Enable both 'internal vs application' and 'local vs remote' point-to-point
- * limits, in addition to the 'immediate' and 'eager (rzv)' point-to-point limits.
+ * Enable both the 'internal vs application' and the 'local vs remote'
+ * point-to-point eager limits.
  */
-#undef MPIDI_PT2PT_LIMIT
-#define MPIDI_PT2PT_LIMIT(is_internal,is_eager,is_local)                        \
+#undef MPIDI_PT2PT_EAGER_LIMIT
+#define MPIDI_PT2PT_EAGER_LIMIT(is_internal,is_local)                           \
 ({                                                                              \
-  MPIDI_Process.pt2pt.limits_lookup[is_internal][is_eager][is_local];           \
+  MPIDI_Process.pt2pt.limits_lookup[is_internal][0][is_local];                  \
+})
+
+/*
+ * Enable both the 'internal vs application' and the 'local vs remote'
+ * point-to-point short limits.
+ */
+#undef MPIDI_PT2PT_SHORT_LIMIT
+#define MPIDI_PT2PT_SHORT_LIMIT(is_internal,is_local)                           \
+({                                                                              \
+  MPIDI_Process.pt2pt.limits_lookup[is_internal][1][is_local];                  \
 })
 
 
@@ -103,13 +121,21 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (0)
 
 /*
- * Enable only the 'local vs remote' point-to-point limits, in addition to the
- * 'immediate' and 'eager (rzv)' point-to-point limits.
+ * Enable only the 'local vs remote' point-to-point eager limits.
  */
-#undef MPIDI_PT2PT_LIMIT
-#define MPIDI_PT2PT_LIMIT(is_internal,is_eager,is_local)                        \
+#undef MPIDI_PT2PT_EAGER_LIMIT
+#define MPIDI_PT2PT_EAGER_LIMIT(is_internal,is_local)                           \
 ({                                                                              \
-  MPIDI_Process.pt2pt.limits_lookup[0][is_eager][is_local];                     \
+  MPIDI_Process.pt2pt.limits_lookup[0][0][is_local];                            \
+})
+
+/*
+ * Enable only the 'local vs remote' point-to-point short limits.
+ */
+#undef MPIDI_PT2PT_SHORT_LIMIT
+#define MPIDI_PT2PT_SHORT_LIMIT(is_internal,is_local)                           \
+({                                                                              \
+  MPIDI_Process.pt2pt.limits_lookup[0][1][is_local];                            \
 })
 
 

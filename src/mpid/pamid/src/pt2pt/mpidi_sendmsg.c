@@ -419,15 +419,13 @@ MPIDI_SendMsg(pami_context_t   context,
 #endif
 
   const unsigned isLocal = PAMIX_Task_is_local(dest_tid);
-  const unsigned testImmediate = 1;
-  const unsigned testEager     = 0;
 
   /*
    * Always use the short protocol when data_sz is small.
    */
-  if (likely(data_sz < MPIDI_PT2PT_LIMIT(isInternal,testImmediate,isLocal)))
+  if (likely(data_sz < MPIDI_PT2PT_SHORT_LIMIT(isInternal,isLocal)))
     {
-      TRACE_ERR("Sending(short%s%s) bytes=%u (short_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_LIMIT(isInternal,testImmediate,isLocal));
+      TRACE_ERR("Sending(short%s%s) bytes=%u (short_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_SHORT_LIMIT(isInternal,isLocal));
       MPIDI_SendMsg_short(context,
                           sreq,
                           dest,
@@ -438,9 +436,9 @@ MPIDI_SendMsg(pami_context_t   context,
   /*
    * Use the eager protocol when data_sz is less than the eager limit.
    */
-  else if (data_sz < MPIDI_PT2PT_LIMIT(isInternal,testEager,isLocal))
+  else if (data_sz < MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal))
     {
-      TRACE_ERR("Sending(eager%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_LIMIT(isInternal,testEager,isLocal));
+      TRACE_ERR("Sending(eager%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
       MPIDI_SendMsg_eager(context,
                           sreq,
                           dest,
@@ -460,7 +458,7 @@ MPIDI_SendMsg(pami_context_t   context,
    */
   else
     {
-      TRACE_ERR("Sending(rendezvous%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_LIMIT(isInternal,testEager,isLocal));
+      TRACE_ERR("Sending(rendezvous%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
 #ifdef OUT_OF_ORDER_HANDLING
       sreq->mpid.shm=isLocal;
 #endif
