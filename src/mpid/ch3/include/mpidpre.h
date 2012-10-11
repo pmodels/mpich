@@ -297,6 +297,7 @@ typedef struct MPIDI_Request {
     MPI_Win     source_win_handle;
     int single_op_opt;   /* to indicate a lock-put-unlock optimization case */
     struct MPIDI_Win_lock_queue *lock_queue_entry; /* for single lock-put-unlock optimization */
+    MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 
     MPIDI_REQUEST_SEQNUM
 

@@ -37,6 +37,7 @@ MPIU_INSTR_DURATION_DECL(rmapkt_acc_immed);
 MPIU_INSTR_DURATION_DECL(rmapkt_acc_immed_op);
 MPIU_INSTR_DURATION_DECL(rmapkt_cas);
 MPIU_INSTR_DURATION_DECL(rmapkt_fop);
+MPIU_INSTR_DURATION_DECL(rmapkt_get_accum);
 MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_alloc);
 MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_set);
 void MPIDI_CH3_RMA_InitInstr(void);
@@ -72,6 +73,7 @@ void MPIDI_CH3_RMA_InitInstr(void)
     MPIU_INSTR_DURATION_INIT(rmapkt_acc_immed_op,0,"RMA:PKTHANDLER for Accum immed operation");
     MPIU_INSTR_DURATION_INIT(rmapkt_cas,0,"RMA:PKTHANDLER for Compare-and-swap");
     MPIU_INSTR_DURATION_INIT(rmapkt_fop,0,"RMA:PKTHANDLER for Fetch-and-op");
+    MPIU_INSTR_DURATION_INIT(rmapkt_get_accum,0,"RMA:PKTHANDLER for Get-Accumulate");
 }
 
 /* These are used to use a common routine to complete lists of RMA 
@@ -272,6 +274,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	    {
 	    case (MPIDI_RMA_PUT):
 	    case (MPIDI_RMA_ACCUMULATE):
+	    case (MPIDI_RMA_GET_ACCUMULATE):
 		mpi_errno = MPIDI_CH3I_Send_rma_msg(curr_ptr, win_ptr,
 					source_win_handle, target_win_handle, 
 					&curr_ptr->dtype_info,
@@ -496,6 +499,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
     MPIDI_VC_t * vc;
     MPID_Comm *comm_ptr;
     MPID_Datatype *target_dtp=NULL, *origin_dtp=NULL;
+    MPID_Request *resp_req=NULL;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEND_RMA_MSG);
     MPIDI_STATE_DECL(MPID_STATE_MEMCPY);
@@ -518,6 +522,46 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) put_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*put_pkt);
+    }
+    else if (rma_op->type == MPIDI_RMA_GET_ACCUMULATE)
+    {
+        /* Create a request for the GACC response.  Store the response buf, count, and
+           datatype in it, and pass the request's handle in the GACC packet. When the
+           response comes from the target, it will contain the request handle. */
+        resp_req = MPID_Request_create();
+        MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+
+        MPIU_Object_set_ref(resp_req, 2);
+
+        resp_req->dev.user_buf = rma_op->result_addr;
+        resp_req->dev.user_count = rma_op->result_count;
+        resp_req->dev.datatype = rma_op->result_datatype;
+        resp_req->dev.target_win_handle = target_win_handle;
+        resp_req->dev.source_win_handle = source_win_handle;
+
+        MPIDI_CH3I_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype, predefined);
+        if (!predefined) {
+            MPID_Datatype *result_dtp = NULL;
+            MPID_Datatype_get_ptr(resp_req->dev.datatype, result_dtp);
+            resp_req->dev.datatype_ptr = result_dtp;
+            /* this will cause the datatype to be freed when the
+               request is freed. */
+        }
+
+        /* Note: Get_accumulate uses the same packet type as accumulate */
+        MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
+        accum_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
+            win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+        accum_pkt->count = rma_op->target_count;
+        accum_pkt->datatype = rma_op->target_datatype;
+        accum_pkt->dataloop_size = 0;
+        accum_pkt->op = rma_op->op;
+        accum_pkt->target_win_handle = target_win_handle;
+        accum_pkt->source_win_handle = source_win_handle;
+        accum_pkt->request_handle = resp_req->handle;
+
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) accum_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*accum_pkt);
     }
     else
     {
@@ -691,13 +735,48 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
         if (origin_dt_derived)
             MPID_Datatype_release(origin_dtp);
         MPID_Datatype_release(target_dtp);
-    }    
+    }
+
+    /* This operation can generate two requests; one for inbound and one for
+       outbound data. */
+    if (resp_req != NULL) {
+        if (*request != NULL) {
+            /* If we have both inbound and outbound requests (i.e. GACC
+               operation), we need to ensure that the source buffer is
+               available and that the response data has been received before
+               informing the origin that this operation is complete.  Because
+               the update needs to be done atomically at the target, they will
+               not send back data until it has been received.  Therefore,
+               completion of the response request implies that the send request
+               has completed.
+
+               Therefore: refs on the response request are set to two: one is
+               held by the progress engine and the other by the RMA op
+               completion code.  Refs on the outbound request are set to one;
+               it will be completed by the progress engine.
+             */
+
+            MPIU_Object_set_ref(*request, 1);
+            *request = resp_req;
+
+        } else {
+            *request = resp_req;
+        }
+
+        /* For error checking */
+        resp_req = NULL;
+    }
 
  fn_exit:
+    MPIU_CHKPMEM_COMMIT();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_RMA_MSG);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
+    if (resp_req) {
+        MPIU_Object_set_ref(resp_req, 0);
+        MPIDI_CH3_Request_destroy(resp_req);
+    }
     if (*request)
     {
         MPIU_CHKPMEM_REAP();
@@ -1479,6 +1558,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	{
 	case (MPIDI_RMA_PUT):
 	case (MPIDI_RMA_ACCUMULATE):
+	case (MPIDI_RMA_GET_ACCUMULATE):
 	    mpi_errno = MPIDI_CH3I_Send_rma_msg(curr_ptr, win_ptr,
 				source_win_handle, target_win_handle, 
 				&curr_ptr->dtype_info,
@@ -1842,7 +1922,8 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     /* TODO: MPI-3: Add lock->cas->unlock optimization */
     if ( rma_op->next->next == NULL && 
          rma_op->next->type != MPIDI_RMA_COMPARE_AND_SWAP &&
-         rma_op->next->type != MPIDI_RMA_FETCH_AND_OP ) {
+         rma_op->next->type != MPIDI_RMA_FETCH_AND_OP &&
+         rma_op->next->type != MPIDI_RMA_GET_ACCUMULATE ) {
 	/* Single put, get, or accumulate between the lock and unlock. If it
 	 * is of small size and predefined datatype at the target, we
 	 * do an optimization where the lock and the RMA operation are
@@ -2087,7 +2168,8 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 
         if (win_ptr->rma_ops_list_tail->type == MPIDI_RMA_GET ||
             win_ptr->rma_ops_list_tail->type == MPIDI_RMA_COMPARE_AND_SWAP ||
-            win_ptr->rma_ops_list_tail->type == MPIDI_RMA_FETCH_AND_OP) {
+            win_ptr->rma_ops_list_tail->type == MPIDI_RMA_FETCH_AND_OP ||
+            win_ptr->rma_ops_list_tail->type == MPIDI_RMA_GET_ACCUMULATE) {
             /* last operation sends a response message. no need to wait
                for an additional rma done pkt */
             *wait_for_rma_done_pkt = 0;
@@ -2164,6 +2246,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
         {
         case (MPIDI_RMA_PUT):  /* same as accumulate */
         case (MPIDI_RMA_ACCUMULATE):
+	case (MPIDI_RMA_GET_ACCUMULATE):
             win_ptr->pt_rma_puts_accs[curr_ptr->target_rank]++;
             mpi_errno = MPIDI_CH3I_Send_rma_msg(curr_ptr, win_ptr,
 				source_win_handle, target_win_handle, 
@@ -2953,6 +3036,12 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.target_win_handle = accum_pkt->target_win_handle;
     req->dev.source_win_handle = accum_pkt->source_win_handle;
 
+    if (accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM) {
+        req->dev.resp_request_handle = accum_pkt->request_handle;
+    } else {
+        req->dev.resp_request_handle = MPI_REQUEST_NULL;
+    }
+
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(accum_pkt->datatype, predefined);
     if (predefined)
     {
@@ -2969,6 +3058,8 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 			 accum_pkt->count * MPIR_MAX(extent,true_extent));
 	}
 	
+        /* FIXME: This seems unnecessary - predefined datatypes should always
+         * have true_lb of 0, right? */
 	/* adjust for potential negative lower bound in datatype */
 	tmp_buf = (void *)((char*)tmp_buf - true_lb);
 	
@@ -3457,6 +3548,63 @@ int MPIDI_CH3_PktHandler_FOPResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_Get_AccumResp
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_PktHandler_Get_AccumResp( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                        MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+{
+    MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &pkt->get_accum_resp;
+    MPID_Request *req;
+    int complete;
+    char *data_buf = NULL;
+    MPIDI_msg_sz_t data_len;
+    int mpi_errno = MPI_SUCCESS;
+    int type_size;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
+
+    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"received Get-Accumulate response pkt");
+    MPIU_INSTR_DURATION_START(rmapkt_get_accum);
+
+    data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
+    data_buf = (char *)pkt + sizeof(MPIDI_CH3_Pkt_t);
+
+    MPID_Request_get_ptr(get_accum_resp_pkt->request_handle, req);
+
+    MPID_Datatype_get_size_macro(req->dev.datatype, type_size);
+    req->dev.recv_data_sz = type_size * req->dev.user_count;
+
+    /* FIXME: It is likely that this cannot happen (never perform
+       a get with a 0-sized item).  In that case, change this
+       to an MPIU_Assert (and do the same for accumulate and put) */
+    if (req->dev.recv_data_sz == 0) {
+        MPIDI_CH3U_Request_complete( req );
+        *buflen = sizeof(MPIDI_CH3_Pkt_t);
+        *rreqp = NULL;
+    }
+    else {
+        *rreqp = req;
+        mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
+        MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv", 
+                             "**ch3|postrecv %s", "MPIDI_CH3_PKT_GET_ACCUM_RESP");
+        if (complete) {
+            MPIDI_CH3U_Request_complete(req);
+            *rreqp = NULL;
+        }
+        /* return the number of bytes processed in this function */
+        *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
+    }
+
+fn_exit:
+    MPIU_INSTR_DURATION_END(rmapkt_get_accum);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
 
 
 #undef FUNCNAME

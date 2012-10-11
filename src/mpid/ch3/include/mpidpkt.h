@@ -87,6 +87,8 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_FOP,
     MPIDI_CH3_PKT_FOP_RESP,
+    MPIDI_CH3_PKT_GET_ACCUM,
+    MPIDI_CH3_PKT_GET_ACCUM_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
     MPIDI_CH3_PKT_END_CH3
@@ -221,6 +223,7 @@ MPIDI_CH3_Pkt_get_resp_t;
 typedef struct MPIDI_CH3_Pkt_accum
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPI_Request request_handle; /* For get_accumulate response */
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -235,6 +238,13 @@ typedef struct MPIDI_CH3_Pkt_accum
                                * with shared locks. Otherwise set to NULL*/
 }
 MPIDI_CH3_Pkt_accum_t;
+
+typedef struct MPIDI_CH3_Pkt_get_accum_resp
+{
+    MPIDI_CH3_Pkt_type_t type;
+    MPI_Request request_handle;
+}
+MPIDI_CH3_Pkt_get_accum_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_accum_immed
 {
@@ -404,6 +414,7 @@ typedef union MPIDI_CH3_Pkt
     MPIDI_CH3_Pkt_cas_resp_t cas_resp;
     MPIDI_CH3_Pkt_fop_t fop;
     MPIDI_CH3_Pkt_fop_resp_t fop_resp;
+    MPIDI_CH3_Pkt_get_accum_resp_t get_accum_resp;
 # if defined(MPIDI_CH3_PKT_DECL)
     MPIDI_CH3_PKT_DECL
 # endif

@@ -22,13 +22,15 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win_ptr)
 {
-    int              mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t   data_sz;
-    int              rank, origin_predefined, result_predefined, target_predefined;
-    int              dt_contig ATTRIBUTE((unused));
-    MPI_Aint         dt_true_lb ATTRIBUTE((unused));
-    MPID_Datatype   *dtp;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_msg_sz_t data_sz;
+    int rank, origin_predefined, result_predefined, target_predefined;
+    int dt_contig ATTRIBUTE((unused));
+    MPI_Aint dt_true_lb ATTRIBUTE((unused));
+    MPID_Datatype *dtp;
+    MPIDI_RMA_ops *new_ptr;
     MPIU_CHKLMEM_DECL(2);
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
@@ -152,17 +154,62 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         }
     }
     else {
-        /* TODO: Inter-process get_accumulate isn't implemented yet */
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+        /* Append the operation to the window's RMA ops queue */
+        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops),
+                            mpi_errno, "RMA operation entry");
+        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        if (win_ptr->rma_ops_list_tail)
+            win_ptr->rma_ops_list_tail->next = new_ptr;
+        else
+            win_ptr->rma_ops_list_head = new_ptr;
+        win_ptr->rma_ops_list_tail = new_ptr;
+
+        /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
+
+        MPIU_INSTR_DURATION_START(rmaqueue_set);
+        new_ptr->next = NULL;
+        new_ptr->type = MPIDI_RMA_GET_ACCUMULATE;
+        /* Cast away const'ness for origin_address as MPIDI_RMA_ops
+         * contain both PUT and GET like ops */
+        new_ptr->origin_addr = (void *) origin_addr;
+        new_ptr->origin_count = origin_count;
+        new_ptr->origin_datatype = origin_datatype;
+        new_ptr->result_addr = result_addr;
+        new_ptr->result_count = result_count;
+        new_ptr->result_datatype = result_datatype;
+        new_ptr->target_rank = target_rank;
+        new_ptr->target_disp = target_disp;
+        new_ptr->target_count = target_count;
+        new_ptr->target_datatype = target_datatype;
+        new_ptr->op = op;
+        MPIU_INSTR_DURATION_END(rmaqueue_set);
+
+        /* if source or target datatypes are derived, increment their
+           reference counts */
+        if (!origin_predefined) {
+            MPID_Datatype_get_ptr(origin_datatype, dtp);
+            MPID_Datatype_add_ref(dtp);
+        }
+        if (!result_predefined) {
+            MPID_Datatype_get_ptr(result_datatype, dtp);
+            MPID_Datatype_add_ref(dtp);
+        }
+        if (!target_predefined) {
+            MPID_Datatype_get_ptr(target_datatype, dtp);
+            MPID_Datatype_add_ref(dtp);
+        }
     }
 
  fn_exit:
+    MPIU_CHKPMEM_COMMIT();
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
