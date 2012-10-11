@@ -70,13 +70,11 @@ int main(int argc, char **argv) {
     /* Perform ITERATIONS strided accumulate operations */
 
     for (i = 0; i < ITERATIONS; i++) {
-      MPI_Aint idx_loc[SUB_YDIM];
       int idx_rem[SUB_YDIM];
       int blk_len[SUB_YDIM];
       MPI_Datatype src_type, dst_type;
 
       for (j = 0; j < SUB_YDIM; j++) {
-        MPI_Get_address(&src_buf[j*XDIM], &idx_loc[j]);
         idx_rem[j] = j*XDIM;
         blk_len[j] = SUB_XDIM;
       }

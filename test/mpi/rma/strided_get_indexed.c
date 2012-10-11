@@ -44,7 +44,6 @@ int main(int argc, char **argv) {
     double *win_buf, *loc_buf;
     MPI_Win buf_win;
 
-    MPI_Aint idx_loc[SUB_YDIM];
     int idx_rem[SUB_YDIM];
     int blk_len[SUB_YDIM];
     MPI_Datatype loc_type, rem_type;
@@ -73,7 +72,6 @@ int main(int argc, char **argv) {
     /* Build the datatype */
 
     for (i = 0; i < SUB_YDIM; i++) {
-      MPI_Get_address(&loc_buf[i*XDIM], &idx_loc[i]);
       idx_rem[i] = i*XDIM;
       blk_len[i] = SUB_XDIM;
     }
