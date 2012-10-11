@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
-    if (errors == 0)
+    if (errors == 0 && rank == 0)
         printf(" No errors\n");
 
     MPI_Finalize();
