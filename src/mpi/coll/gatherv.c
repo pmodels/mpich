@@ -258,8 +258,8 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Gatherv(MPICH2_CONST void *sendbuf, int sendcnt, MPI_Datatype sendtype,
-                void *recvbuf, MPICH2_CONST int *recvcnts, MPICH2_CONST int *displs,
+int MPI_Gatherv(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                void *recvbuf, const int *recvcnts, const int *displs,
                 MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

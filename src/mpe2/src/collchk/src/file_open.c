@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_File_open(MPI_Comm comm, MPICH2_CONST char *filename, int amode,
+int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
                   MPI_Info info, MPI_File *fh)
 {
     int g2g = 1,i;

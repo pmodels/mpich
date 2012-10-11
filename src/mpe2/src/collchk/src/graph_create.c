@@ -4,8 +4,8 @@
 */
 #include "collchk.h" 
 
-int MPI_Graph_create(MPI_Comm comm_old, int nnodes, MPICH2_CONST int *index,
-                     MPICH2_CONST int *edges, int reorder, MPI_Comm *comm_graph)
+int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int *index,
+                     const int *edges, int reorder, MPI_Comm *comm_graph)
 {
     int g2g = 1;
     char call[COLLCHK_SM_STRLEN];

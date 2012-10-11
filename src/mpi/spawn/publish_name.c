@@ -51,7 +51,7 @@ The maximum size string that may be supplied for 'port_name' is
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 @*/
-int MPI_Publish_name(MPICH2_CONST char *service_name, MPI_Info info, MPICH2_CONST char *port_name)
+int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_name)
 {
     static const char FCNAME[] = "MPI_Publish_name";
     int mpi_errno = MPI_SUCCESS;

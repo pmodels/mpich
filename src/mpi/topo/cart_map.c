@@ -125,7 +125,7 @@ Output Parameter:
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_map(MPI_Comm comm_old, int ndims, MPICH2_CONST int *dims, MPICH2_CONST int *periods,
+int MPI_Cart_map(MPI_Comm comm_old, int ndims, const int *dims, const int *periods,
 		 int *newrank)
 {
     int mpi_errno = MPI_SUCCESS;

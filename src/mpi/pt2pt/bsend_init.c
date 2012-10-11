@@ -56,7 +56,7 @@ Output Parameter:
 
 .seealso: MPI_Buffer_attach
 @*/
-int MPI_Bsend_init(MPICH2_CONST void *buf, int count, MPI_Datatype datatype,
+int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
                    int dest, int tag, MPI_Comm comm, MPI_Request *request)
 {
     static const char FCNAME[] = "MPI_Bsend_init";

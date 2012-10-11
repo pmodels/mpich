@@ -140,7 +140,7 @@ Output Parameter:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_local(MPICH2_CONST void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Op *op_ptr;

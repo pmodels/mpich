@@ -45,7 +45,7 @@
 .N MPI_ERR_OTHER
 .N MPI_ERR_ARG
 @*/
-int MPI_Win_set_name(MPI_Win win, MPICH2_CONST char *win_name)
+int MPI_Win_set_name(MPI_Win win, const char *win_name)
 {
     static const char FCNAME[] = "MPI_Win_set_name";
     int mpi_errno = MPI_SUCCESS;

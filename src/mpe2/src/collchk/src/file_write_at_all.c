@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, MPICH2_CONST void *buff, int cnt,
+int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buff, int cnt,
                           MPI_Datatype dtype, MPI_Status *st)
 {
     int g2g = 1;

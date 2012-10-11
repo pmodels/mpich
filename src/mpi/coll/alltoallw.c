@@ -438,10 +438,10 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int *sendcnts, const int *sdi
 .N MPI_ERR_COUNT
 .N MPI_ERR_TYPE
 @*/
-int MPI_Alltoallw(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcnts,
-                  MPICH2_CONST int *sdispls, MPICH2_CONST MPI_Datatype *sendtypes,
-                  void *recvbuf, MPICH2_CONST int *recvcnts, MPICH2_CONST int *rdispls,
-                  MPICH2_CONST MPI_Datatype *recvtypes, MPI_Comm comm)
+int MPI_Alltoallw(const void *sendbuf, const int *sendcnts,
+                  const int *sdispls, const MPI_Datatype *sendtypes,
+                  void *recvbuf, const int *recvcnts, const int *rdispls,
+                  const MPI_Datatype *recvtypes, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

@@ -232,7 +232,7 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Scatterv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcnts, MPICH2_CONST int *displs,
+int MPI_Scatterv(const void *sendbuf, const int *sendcnts, const int *displs,
                  MPI_Datatype sendtype, void *recvbuf, int recvcnt,
                  MPI_Datatype recvtype,
                  int root, MPI_Comm comm)

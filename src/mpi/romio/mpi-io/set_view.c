@@ -37,7 +37,7 @@ Input Parameters:
 .N fortran
 @*/
 int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
-		      MPI_Datatype filetype, MPICH2_CONST char *datarep, MPI_Info info)
+		      MPI_Datatype filetype, const char *datarep, MPI_Info info)
 {
     int filetype_size, etype_size, error_code;
     static char myname[] = "MPI_FILE_SET_VIEW";

@@ -57,7 +57,7 @@ Output Parameter:
 
 .seealso: MPI_Start, MPI_Startall, MPI_Request_free
 @*/
-int MPI_Send_init(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest,
+int MPI_Send_init(const void *buf, int count, MPI_Datatype datatype, int dest,
 		  int tag, MPI_Comm comm, MPI_Request *request)
 {
     static const char FCNAME[] = "MPI_Send_init";

@@ -442,9 +442,9 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Alltoallv(MPICH2_CONST void *sendbuf, MPICH2_CONST int *sendcnts,
-                  MPICH2_CONST int *sdispls, MPI_Datatype sendtype, void *recvbuf,
-                  MPICH2_CONST int *recvcnts, MPICH2_CONST int *rdispls, MPI_Datatype recvtype,
+int MPI_Alltoallv(const void *sendbuf, const int *sendcnts,
+                  const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+                  const int *recvcnts, const int *rdispls, MPI_Datatype recvtype,
                   MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

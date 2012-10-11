@@ -114,7 +114,7 @@ function is erroneous.
 
 .seealso: MPI_Group_free
 @*/
-int MPI_Group_excl(MPI_Group group, int n, MPICH2_CONST int *ranks, MPI_Group *newgroup)
+int MPI_Group_excl(MPI_Group group, int n, const int *ranks, MPI_Group *newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL, *new_group_ptr;

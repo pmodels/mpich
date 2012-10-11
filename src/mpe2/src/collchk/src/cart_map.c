@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Cart_map(MPI_Comm comm, int ndims, MPICH2_CONST int *dims, MPICH2_CONST int *periods,
+int MPI_Cart_map(MPI_Comm comm, int ndims, const int *dims, const int *periods,
                  int *newrank)
 {
     int g2g = 1;

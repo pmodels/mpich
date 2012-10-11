@@ -39,7 +39,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_at(MPI_File mpi_fh, MPI_Offset offset, MPICH2_CONST void *buf,
+int MPI_File_write_at(MPI_File mpi_fh, MPI_Offset offset, const void *buf,
                       int count, MPI_Datatype datatype, MPI_Status *status)
 {
     int error_code;

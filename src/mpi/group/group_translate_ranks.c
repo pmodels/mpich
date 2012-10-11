@@ -134,7 +134,7 @@ fn_fail:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Group_translate_ranks(MPI_Group group1, int n, MPICH2_CONST int *ranks1,
+int MPI_Group_translate_ranks(MPI_Group group1, int n, const int *ranks1,
 			      MPI_Group group2, int *ranks2)
 {
     int mpi_errno = MPI_SUCCESS;

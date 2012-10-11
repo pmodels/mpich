@@ -55,9 +55,9 @@
 .N MPI_ERR_ARG
 @*/
 int MPI_Type_create_subarray(int ndims,
-			     MPICH2_CONST int array_of_sizes[],
-			     MPICH2_CONST int array_of_subsizes[],
-			     MPICH2_CONST int array_of_starts[],
+			     const int array_of_sizes[],
+			     const int array_of_subsizes[],
+			     const int array_of_starts[],
 			     int order,
 			     MPI_Datatype oldtype,
 			     MPI_Datatype *newtype)

@@ -4,8 +4,8 @@
 */
 #include "collchk.h" 
 
-int MPI_Allgatherv( MPICH2_CONST void* sbuff, int scnt, MPI_Datatype stype,
-                    void* rbuff, MPICH2_CONST int *rcnts, MPICH2_CONST int *displs, MPI_Datatype rtype,
+int MPI_Allgatherv( const void* sbuff, int scnt, MPI_Datatype stype,
+                    void* rbuff, const int *rcnts, const int *displs, MPI_Datatype rtype,
                     MPI_Comm comm )
 {
     char            call[COLLCHK_SM_STRLEN];

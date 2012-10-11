@@ -52,8 +52,8 @@
 .N MPI_ERR_ARG
 @*/
 int MPI_Type_create_hindexed(int count,
-			     MPICH2_CONST int blocklengths[],
-			     MPICH2_CONST MPI_Aint displacements[],
+			     const int blocklengths[],
+			     const MPI_Aint displacements[],
 			     MPI_Datatype oldtype,
 			     MPI_Datatype *newtype)
 {

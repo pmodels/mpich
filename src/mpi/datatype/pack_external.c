@@ -55,8 +55,8 @@
 .N MPI_ERR_ARG
 .N MPI_ERR_COUNT
 @*/
-int MPI_Pack_external(MPICH2_CONST char *datarep,
-		      MPICH2_CONST void *inbuf,
+int MPI_Pack_external(const char *datarep,
+		      const void *inbuf,
 		      int incount,
 		      MPI_Datatype datatype,
 		      void *outbuf,

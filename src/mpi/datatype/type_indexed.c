@@ -130,8 +130,8 @@ consider declaring the Fortran array with a zero origin
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_indexed(int count,
-		     MPICH2_CONST int blocklens[],
-		     MPICH2_CONST int indices[],
+		     const int blocklens[],
+		     const int indices[],
 		     MPI_Datatype old_type,
 		     MPI_Datatype *newtype)
 {

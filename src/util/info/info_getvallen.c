@@ -73,7 +73,7 @@ void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, const char *key, int *valu
 #define FUNCNAME MPIRInfo_get_valuelen
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPI_Info_get_valuelen( MPI_Info info, MPICH2_CONST char *key, int *valuelen, int *flag )
+int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *flag )
 {
     MPID_Info *info_ptr=0;
     int mpi_errno = MPI_SUCCESS;

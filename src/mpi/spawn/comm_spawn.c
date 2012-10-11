@@ -57,7 +57,7 @@
 .N MPI_ERR_INFO
 .N MPI_ERR_SPAWN
 @*/
-int MPI_Comm_spawn(MPICH2_CONST char *command, char *argv[], int maxprocs, MPI_Info info,
+int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info info,
 		   int root, MPI_Comm comm, MPI_Comm *intercomm,
 		   int array_of_errcodes[])
 {

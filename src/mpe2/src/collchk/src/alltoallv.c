@@ -4,8 +4,8 @@
 */
 #include "collchk.h" 
 
-int MPI_Alltoallv(MPICH2_CONST void* sbuff, MPICH2_CONST int *scnts, MPICH2_CONST int *sdispls, MPI_Datatype stype,
-                  void* rbuff, MPICH2_CONST int *rcnts, MPICH2_CONST int *rdispls, MPI_Datatype rtype,
+int MPI_Alltoallv(const void* sbuff, const int *scnts, const int *sdispls, MPI_Datatype stype,
+                  void* rbuff, const int *rcnts, const int *rdispls, MPI_Datatype rtype,
                   MPI_Comm comm)
 {
     int             g2g = 1, rank;

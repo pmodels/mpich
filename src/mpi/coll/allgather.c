@@ -863,7 +863,7 @@ Notes:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Allgather(MPICH2_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   MPI_Comm comm)
 {

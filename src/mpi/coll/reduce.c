@@ -1081,7 +1081,7 @@ Output Parameter:
 .N MPI_ERR_BUFFER_ALIAS
 
 @*/
-int MPI_Reduce(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 	       MPI_Op op, int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

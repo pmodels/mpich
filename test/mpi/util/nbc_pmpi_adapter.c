@@ -15,14 +15,6 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-/* Temporary hack to make this test work with the option to define MPICH2_CONST
-   Used to test the MPI-3 binding that added const to some declarations. */
-#ifdef MPICH2_CONST
-#define MPITEST_CONST MPICH2_CONST
-#else
-#define MPITEST_CONST
-#endif
-
 #if !defined(USE_STRICT_MPI) && defined(MPICH2)
 
 int MPI_Barrier(MPI_Comm comm)
@@ -47,7 +39,7 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
     return mpi_errno;
 }
 
-int MPI_Gather(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
+int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -58,7 +50,7 @@ int MPI_Gather(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype
     return mpi_errno;
 }
 
-int MPI_Gatherv(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, MPITEST_CONST int *recvcounts, MPITEST_CONST int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm)
+int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -69,7 +61,7 @@ int MPI_Gatherv(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtyp
     return mpi_errno;
 }
 
-int MPI_Scatter(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
+int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -80,7 +72,7 @@ int MPI_Scatter(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtyp
     return mpi_errno;
 }
 
-int MPI_Scatterv(MPITEST_CONST void *sendbuf, MPITEST_CONST int *sendcounts, MPITEST_CONST int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
+int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -91,7 +83,7 @@ int MPI_Scatterv(MPITEST_CONST void *sendbuf, MPITEST_CONST int *sendcounts, MPI
     return mpi_errno;
 }
 
-int MPI_Allgather(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm)
+int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -102,7 +94,7 @@ int MPI_Allgather(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendt
     return mpi_errno;
 }
 
-int MPI_Allgatherv(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, MPITEST_CONST int *recvcounts, MPITEST_CONST int *displs, MPI_Datatype recvtype, MPI_Comm comm)
+int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -113,7 +105,7 @@ int MPI_Allgatherv(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype send
     return mpi_errno;
 }
 
-int MPI_Alltoall(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm)
+int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -124,7 +116,7 @@ int MPI_Alltoall(MPITEST_CONST void *sendbuf, int sendcount, MPI_Datatype sendty
     return mpi_errno;
 }
 
-int MPI_Alltoallv(MPITEST_CONST void *sendbuf, MPITEST_CONST int *sendcounts, MPITEST_CONST int *sdispls, MPI_Datatype sendtype, void *recvbuf, MPITEST_CONST int *recvcounts, MPITEST_CONST int *rdispls, MPI_Datatype recvtype, MPI_Comm comm)
+int MPI_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -135,7 +127,7 @@ int MPI_Alltoallv(MPITEST_CONST void *sendbuf, MPITEST_CONST int *sendcounts, MP
     return mpi_errno;
 }
 
-int MPI_Alltoallw(MPITEST_CONST void *sendbuf, MPITEST_CONST int *sendcounts, MPITEST_CONST int *sdispls, MPITEST_CONST MPI_Datatype *sendtypes, void *recvbuf, MPITEST_CONST int *recvcounts, MPITEST_CONST int *rdispls, MPITEST_CONST MPI_Datatype *recvtypes, MPI_Comm comm)
+int MPI_Alltoallw(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -146,7 +138,7 @@ int MPI_Alltoallw(MPITEST_CONST void *sendbuf, MPITEST_CONST int *sendcounts, MP
     return mpi_errno;
 }
 
-int MPI_Reduce(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
+int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -157,7 +149,7 @@ int MPI_Reduce(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Dataty
     return mpi_errno;
 }
 
-int MPI_Allreduce(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -168,7 +160,7 @@ int MPI_Allreduce(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Dat
     return mpi_errno;
 }
 
-int MPI_Reduce_scatter(MPITEST_CONST void *sendbuf, void *recvbuf, MPITEST_CONST int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -179,7 +171,7 @@ int MPI_Reduce_scatter(MPITEST_CONST void *sendbuf, void *recvbuf, MPITEST_CONST
     return mpi_errno;
 }
 
-int MPI_Reduce_scatter_block(MPITEST_CONST void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -190,7 +182,7 @@ int MPI_Reduce_scatter_block(MPITEST_CONST void *sendbuf, void *recvbuf, int rec
     return mpi_errno;
 }
 
-int MPI_Scan(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -201,7 +193,7 @@ int MPI_Scan(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype
     return mpi_errno;
 }
 
-int MPI_Exscan(MPITEST_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;

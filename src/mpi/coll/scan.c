@@ -483,7 +483,7 @@ Output Parameter:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Scan(MPICH2_CONST void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
 	     MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;

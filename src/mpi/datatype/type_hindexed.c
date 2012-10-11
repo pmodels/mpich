@@ -77,8 +77,8 @@ consider declaring the Fortran array with a zero origin
 .N MPI_ERR_ARG
 @*/
 int MPI_Type_hindexed(int count,
-		      MPICH2_CONST int blocklens[],
-		      MPICH2_CONST MPI_Aint indices[],
+		      const int blocklens[],
+		      const MPI_Aint indices[],
 		      MPI_Datatype old_type,
 		      MPI_Datatype *newtype)
 {

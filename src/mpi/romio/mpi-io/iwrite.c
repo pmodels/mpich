@@ -41,7 +41,7 @@ Output Parameters:
 #include "mpiu_greq.h"
 #endif
 
-int MPI_File_iwrite(MPI_File mpi_fh, MPICH2_CONST void *buf, int count,
+int MPI_File_iwrite(MPI_File mpi_fh, const void *buf, int count,
 		    MPI_Datatype datatype, MPI_Request *request)
 {
     int error_code=MPI_SUCCESS;

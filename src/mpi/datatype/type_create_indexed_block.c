@@ -128,7 +128,7 @@ consider declaring the Fortran array with a zero origin
 @*/
 int MPI_Type_create_indexed_block(int count,
 				  int blocklength,
-				  MPICH2_CONST int array_of_displacements[],
+				  const int array_of_displacements[],
 				  MPI_Datatype oldtype,
 				  MPI_Datatype *newtype)
 {

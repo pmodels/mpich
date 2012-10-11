@@ -86,7 +86,7 @@ Notes:
 .N MPI_ERR_RANK
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_rank(MPI_Comm comm, MPICH2_CONST int *coords, int *rank)
+int MPI_Cart_rank(MPI_Comm comm, const int *coords, int *rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

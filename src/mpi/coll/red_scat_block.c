@@ -1085,7 +1085,7 @@ Output Parameter:
 .N MPI_ERR_OP
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_scatter_block(MPICH2_CONST void *sendbuf, void *recvbuf, 
+int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, 
                              int recvcount, 
                              MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {

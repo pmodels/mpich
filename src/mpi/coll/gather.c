@@ -737,7 +737,7 @@ Output Parameter:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Gather(MPICH2_CONST void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+int MPI_Gather(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                int root, MPI_Comm comm)
 {

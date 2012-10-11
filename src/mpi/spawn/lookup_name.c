@@ -61,7 +61,7 @@ If the 'service_name' is found, MPI copies the associated value into
 .N MPI_ERR_OTHER
 .N MPI_ERR_ARG
 @*/
-int MPI_Lookup_name(MPICH2_CONST char *service_name, MPI_Info info, char *port_name)
+int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
 {
     static const char FCNAME[] = "MPI_Lookup_name";
     int mpi_errno = MPI_SUCCESS;

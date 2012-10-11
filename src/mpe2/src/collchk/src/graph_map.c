@@ -5,7 +5,7 @@
 #include "collchk.h" 
 
 int MPI_Graph_map(MPI_Comm comm, int nnodes,
-                  MPICH2_CONST int *index, MPICH2_CONST int *edges, int *newrank)
+                  const int *index, const int *edges, int *newrank)
 {
     int g2g = 1;
     char call[COLLCHK_SM_STRLEN];

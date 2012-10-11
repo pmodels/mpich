@@ -142,7 +142,7 @@ int MPIR_Pack_impl(const void *inbuf,
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Pack(MPICH2_CONST void *inbuf,
+int MPI_Pack(const void *inbuf,
 	     int incount,
 	     MPI_Datatype datatype,
 	     void *outbuf,

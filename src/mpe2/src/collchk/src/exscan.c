@@ -4,7 +4,7 @@
 */
 #include "collchk.h" 
 
-int MPI_Exscan(MPICH2_CONST void* sbuff, void* rbuff, int cnt,
+int MPI_Exscan(const void* sbuff, void* rbuff, int cnt,
                MPI_Datatype dt, MPI_Op op, MPI_Comm comm)
 {
     int g2g = 1;

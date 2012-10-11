@@ -122,7 +122,7 @@ void MPE_Init_mpi_rma( void )
   state->color = "maroon";
 }
 
-int MPI_Accumulate( MPICH2_CONST void *origin_addr, int origin_count,
+int MPI_Accumulate( const void *origin_addr, int origin_count,
                     MPI_Datatype origin_datatype, int target_rank,
                     MPI_Aint target_disp, int target_count,
                     MPI_Datatype target_datatype, MPI_Op op, MPI_Win win )
@@ -266,7 +266,7 @@ int MPI_Get( void *origin_addr, int origin_count,
   return returnVal;
 }
 
-int MPI_Put( MPICH2_CONST void *origin_addr, int origin_count,
+int MPI_Put( const void *origin_addr, int origin_count,
              MPI_Datatype origin_datatype, int target_rank,
              MPI_Aint target_disp, int target_count,
              MPI_Datatype target_datatype, MPI_Win win )
@@ -572,7 +572,7 @@ int MPI_Win_post( MPI_Group group, int assert, MPI_Win win )
   return returnVal;
 }
 
-int MPI_Win_set_name( MPI_Win win, MPICH2_CONST char *win_name )
+int MPI_Win_set_name( MPI_Win win, const char *win_name )
 {
   int returnVal;
   MPE_LOG_STATE_DECL

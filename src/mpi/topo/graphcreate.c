@@ -165,8 +165,8 @@ We ignore the 'reorder' info currently.
 .N MPI_ERR_ARG
 
 @*/
-int MPI_Graph_create(MPI_Comm comm_old, int nnodes, MPICH2_CONST int *indx,
-                     MPICH2_CONST int *edges, int reorder, MPI_Comm *comm_graph)
+int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int *indx,
+                     const int *edges, int reorder, MPI_Comm *comm_graph)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

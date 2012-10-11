@@ -55,7 +55,7 @@ Output Parameter:
 .N MPI_ERR_EXHAUSTED
 
 @*/
-int MPI_Isend(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	      MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;

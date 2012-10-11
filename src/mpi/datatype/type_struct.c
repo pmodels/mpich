@@ -144,9 +144,9 @@ for the structure foo
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_struct(int count,
-		    MPICH2_CONST int blocklens[],
-		    MPICH2_CONST MPI_Aint indices[],
-		    MPICH2_CONST MPI_Datatype old_types[],
+		    const int blocklens[],
+		    const MPI_Aint indices[],
+		    const MPI_Datatype old_types[],
 		    MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;

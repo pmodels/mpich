@@ -57,7 +57,7 @@ process.
 
 .seealso: MPI_Isend, MPI_Bsend
 @*/
-int MPI_Send(MPICH2_CONST void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
 	     MPI_Comm comm)
 {
     static const char FCNAME[] = "MPI_Send";

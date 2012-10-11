@@ -333,7 +333,7 @@ void MPE_Init_mpi_io( void )
 }
 
 
-int MPI_File_open( MPI_Comm  comm, MPICH2_CONST char * filename,int  amode,MPI_Info  info,MPI_File * fh  )
+int MPI_File_open( MPI_Comm  comm, const char * filename,int  amode,MPI_Info  info,MPI_File * fh  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -399,7 +399,7 @@ int MPI_File_close( MPI_File * fh  )
   return returnVal;
 }
 
-int MPI_File_delete( MPICH2_CONST char * filename,MPI_Info  info  )
+int MPI_File_delete( const char * filename,MPI_Info  info  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -663,7 +663,7 @@ int MPI_File_get_info( MPI_File  fh,MPI_Info * info_used  )
   return returnVal;
 }
 
-int MPI_File_set_view( MPI_File  fh,MPI_Offset  disp,MPI_Datatype  etype,MPI_Datatype  filetype, MPICH2_CONST char * datarep,MPI_Info  info  )
+int MPI_File_set_view( MPI_File  fh,MPI_Offset  disp,MPI_Datatype  etype,MPI_Datatype  filetype, const char * datarep,MPI_Info  info  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -795,7 +795,7 @@ int MPI_File_read_at_all( MPI_File  fh,MPI_Offset  offset,void * buf,int  count,
   return returnVal;
 }
 
-int MPI_File_write_at( MPI_File  fh,MPI_Offset  offset, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
+int MPI_File_write_at( MPI_File  fh,MPI_Offset  offset, const void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -828,7 +828,7 @@ int MPI_File_write_at( MPI_File  fh,MPI_Offset  offset, MPICH2_CONST void * buf,
   return returnVal;
 }
 
-int MPI_File_write_at_all( MPI_File  fh,MPI_Offset  offset, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
+int MPI_File_write_at_all( MPI_File  fh,MPI_Offset  offset, const void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -894,7 +894,7 @@ int MPI_File_iread_at( MPI_File  fh,MPI_Offset  offset,void * buf,int  count,MPI
   return returnVal;
 }
 
-int MPI_File_iwrite_at( MPI_File  fh,MPI_Offset  offset, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPIO_Request * request  )
+int MPI_File_iwrite_at( MPI_File  fh,MPI_Offset  offset, const void * buf,int  count,MPI_Datatype  datatype,MPIO_Request * request  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -993,7 +993,7 @@ int MPI_File_read_all( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatype
   return returnVal;
 }
 
-int MPI_File_write( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
+int MPI_File_write( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1026,7 +1026,7 @@ int MPI_File_write( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatyp
   return returnVal;
 }
 
-int MPI_File_write_all( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
+int MPI_File_write_all( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1092,7 +1092,7 @@ int MPI_File_iread( MPI_File  fh,void * buf,int  count,MPI_Datatype  datatype,MP
   return returnVal;
 }
 
-int MPI_File_iwrite( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPIO_Request * request  )
+int MPI_File_iwrite( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype,MPIO_Request * request  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1257,7 +1257,7 @@ int MPI_File_read_shared( MPI_File  fh,void * buf,int  count,MPI_Datatype  datat
   return returnVal;
 }
 
-int MPI_File_write_shared( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
+int MPI_File_write_shared( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1323,7 +1323,7 @@ int MPI_File_iread_shared( MPI_File  fh,void * buf,int  count,MPI_Datatype  data
   return returnVal;
 }
 
-int MPI_File_iwrite_shared( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPIO_Request * request  )
+int MPI_File_iwrite_shared( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype,MPIO_Request * request  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1389,7 +1389,7 @@ int MPI_File_read_ordered( MPI_File  fh,void * buf,int  count,MPI_Datatype  data
   return returnVal;
 }
 
-int MPI_File_write_ordered( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
+int MPI_File_write_ordered( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1554,7 +1554,7 @@ int MPI_File_read_at_all_end( MPI_File  fh,void * buf,MPI_Status * status  )
   return returnVal;
 }
 
-int MPI_File_write_at_all_begin( MPI_File  fh,MPI_Offset  offset, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype  )
+int MPI_File_write_at_all_begin( MPI_File  fh,MPI_Offset  offset, const void * buf,int  count,MPI_Datatype  datatype  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1587,7 +1587,7 @@ int MPI_File_write_at_all_begin( MPI_File  fh,MPI_Offset  offset, MPICH2_CONST v
   return returnVal;
 }
 
-int MPI_File_write_at_all_end( MPI_File  fh, MPICH2_CONST void * buf,MPI_Status * status  )
+int MPI_File_write_at_all_end( MPI_File  fh, const void * buf,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1686,7 +1686,7 @@ int MPI_File_read_all_end( MPI_File  fh,void * buf,MPI_Status * status  )
   return returnVal;
 }
 
-int MPI_File_write_all_begin( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype  )
+int MPI_File_write_all_begin( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1719,7 +1719,7 @@ int MPI_File_write_all_begin( MPI_File  fh, MPICH2_CONST void * buf,int  count,M
   return returnVal;
 }
 
-int MPI_File_write_all_end( MPI_File  fh, MPICH2_CONST void * buf,MPI_Status * status  )
+int MPI_File_write_all_end( MPI_File  fh, const void * buf,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1818,7 +1818,7 @@ int MPI_File_read_ordered_end( MPI_File  fh,void * buf,MPI_Status * status  )
   return returnVal;
 }
 
-int MPI_File_write_ordered_begin( MPI_File  fh, MPICH2_CONST void * buf,int  count,MPI_Datatype  datatype  )
+int MPI_File_write_ordered_begin( MPI_File  fh, const void * buf,int  count,MPI_Datatype  datatype  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
@@ -1851,7 +1851,7 @@ int MPI_File_write_ordered_begin( MPI_File  fh, MPICH2_CONST void * buf,int  cou
   return returnVal;
 }
 
-int MPI_File_write_ordered_end( MPI_File  fh, MPICH2_CONST void * buf,MPI_Status * status  )
+int MPI_File_write_ordered_end( MPI_File  fh, const void * buf,MPI_Status * status  )
 {
   int returnVal;
   MPE_LOG_STATE_DECL
