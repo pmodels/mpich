@@ -2148,7 +2148,7 @@ int MPIDI_Win_sync(MPID_Win *win_ptr)
 static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, 
 					    int *wait_for_rma_done_pkt)
 {
-    int mpi_errno = MPI_SUCCESS, i, nops;
+    int mpi_errno = MPI_SUCCESS, nops;
     MPIDI_RMA_ops *curr_ptr;
     MPIDI_RMA_ops **prevNextPtr, *tmpptr;
     MPI_Win source_win_handle, target_win_handle;
@@ -2218,7 +2218,6 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     }
     
     MPIU_INSTR_DURATION_START(winunlock_issue);
-    i = 0;
 
     /* Remove the lock entry */
     curr_ptr = win_ptr->rma_ops_list_head;
@@ -2236,7 +2235,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
            source_win_handle only on the last operation. Otherwise, 
            we pass MPI_WIN_NULL. */
 	/* Could also be curr_ptr->next == NULL */
-        if (/*i == nops - 1*/!curr_ptr->next)
+        if (!curr_ptr->next)
             source_win_handle = win_ptr->handle;
         else 
             source_win_handle = MPI_WIN_NULL;
@@ -2280,7 +2279,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
         default:
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winInvalidOp");
         }
-        i++;
+
 	/* If the request is null, we can remove it immediately */
 	if (!curr_ptr->request) {
 	    if (curr_ptr->dataloop != NULL) {
