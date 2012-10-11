@@ -89,7 +89,16 @@ noinst_PROGRAMS =          \
     fetch_and_op_int       \
     fetch_and_op_long      \
     fetch_and_op_double    \
-    fetch_and_op_long_double
+    fetch_and_op_long_double \
+    get_accumulate_short   \
+    get_accumulate_long    \
+    get_accumulate_double  \
+    get_accumulate_int     \
+    get_accumulate_short_derived   \
+    get_accumulate_long_derived    \
+    get_accumulate_double_derived  \
+    get_accumulate_int_derived     \
+    strided_getacc_indexed
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
@@ -97,12 +106,12 @@ strided_acc_subarray_LDADD      = $(LDADD) -lm
 strided_get_indexed_LDADD       = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 
-fetch_and_op_char_CFLAGS        = -DFOP_TYPE_CHAR
-fetch_and_op_short_CFLAGS       = -DFOP_TYPE_SHORT
-fetch_and_op_int_CFLAGS         = -DFOP_TYPE_INT
-fetch_and_op_long_CFLAGS        = -DFOP_TYPE_LONG
-fetch_and_op_double_CFLAGS      = -DFOP_TYPE_DOUBLE
-fetch_and_op_long_double_CFLAGS = -DFOP_TYPE_LONG_DOUBLE
+fetch_and_op_char_CPPFLAGS       = -DFOP_TYPE_CHAR $(AM_CPPFLAGS)
+fetch_and_op_short_CPPFLAGS      = -DFOP_TYPE_SHORT $(AM_CPPFLAGS)
+fetch_and_op_int_CPPFLAGS        = -DFOP_TYPE_INT $(AM_CPPFLAGS)
+fetch_and_op_long_CPPFLAGS       = -DFOP_TYPE_LONG $(AM_CPPFLAGS)
+fetch_and_op_double_CPPFLAGS     = -DFOP_TYPE_DOUBLE $(AM_CPPFLAGS)
+fetch_and_op_long_double_CPPFLAGS= -DFOP_TYPE_LONG_DOUBLE $(AM_CPPFLAGS)
 
 fetch_and_op_char_SOURCES        = fetch_and_op.c
 fetch_and_op_short_SOURCES       = fetch_and_op.c
@@ -110,3 +119,21 @@ fetch_and_op_int_SOURCES         = fetch_and_op.c
 fetch_and_op_long_SOURCES        = fetch_and_op.c
 fetch_and_op_double_SOURCES      = fetch_and_op.c
 fetch_and_op_long_double_SOURCES = fetch_and_op.c
+
+get_accumulate_short_CPPFLAGS    = -DGACC_TYPE_SHORT $(AM_CPPFLAGS)
+get_accumulate_long_CPPFLAGS     = -DGACC_TYPE_LONG $(AM_CPPFLAGS)
+get_accumulate_double_CPPFLAGS   = -DGACC_TYPE_DOUBLE $(AM_CPPFLAGS)
+get_accumulate_int_CPPFLAGS      = -DGACC_TYPE_INT $(AM_CPPFLAGS)
+get_accumulate_short_derived_CPPFLAGS  = -DGACC_TYPE_SHORT -DGACC_TYPE_DERIVED $(AM_CPPFLAGS)
+get_accumulate_long_derived_CPPFLAGS   = -DGACC_TYPE_LONG -DGACC_TYPE_DERIVED $(AM_CPPFLAGS)
+get_accumulate_double_derived_CPPFLAGS = -DGACC_TYPE_DOUBLE -DGACC_TYPE_DERIVED $(AM_CPPFLAGS)
+get_accumulate_int_derived_CPPFLAGS    = -DGACC_TYPE_INT -DGACC_TYPE_DERIVED $(AM_CPPFLAGS)
+
+get_accumulate_short_SOURCES     = get_accumulate.c
+get_accumulate_long_SOURCES      = get_accumulate.c
+get_accumulate_double_SOURCES    = get_accumulate.c
+get_accumulate_int_SOURCES       = get_accumulate.c
+get_accumulate_short_derived_SOURCES  = get_accumulate.c
+get_accumulate_long_derived_SOURCES   = get_accumulate.c
+get_accumulate_double_derived_SOURCES = get_accumulate.c
+get_accumulate_int_derived_SOURCES      = get_accumulate.c
