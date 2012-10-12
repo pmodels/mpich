@@ -12,9 +12,11 @@
 #define OVERFLOW_LENGTH (1024*1024)
 #define NUM_OVERFLOW_ME 5
 
+#if 0
 static char recvbuf[BUFLEN][NUMBUFS];
 static ptl_le_t recvbuf_le[NUMBUFS];
 static ptl_handle_le_t recvbuf_le_handle[NUMBUFS];
+#endif
 
 static ptl_handle_me_t overflow_me_handle[NUM_OVERFLOW_ME];
 static void *overflow_buf[NUM_OVERFLOW_ME];
@@ -29,8 +31,10 @@ int MPID_nem_ptl_poll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
+#if 0
     int ret;
     ptl_process_t id_any;
+#endif
     MPIU_CHKPMEM_DECL(NUM_OVERFLOW_ME);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_POLL_INIT);
 
@@ -85,17 +89,21 @@ int MPID_nem_ptl_poll_finalize(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_POLL_FINALIZE);
     
-    for (i = 0; i < NUM_OVERFLOW_ME; ++i)
+    for (i = 0; i < NUM_OVERFLOW_ME; ++i) {
         if (overflow_me_handle[i] != PTL_INVALID_HANDLE) {
             ret = PtlMEUnlink(overflow_me_handle[i]);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
         }
+        MPIU_Free(overflow_buf[i]);
+    }
     
+#if 0
     for (i = 0; i < NUMBUFS; ++i) {
         ret = PtlLEUnlink(recvbuf_le_handle[i]);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlleunlink", "**ptlleunlink %s", MPID_nem_ptl_strerror(ret));
     }
-
+#endif
+    
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_POLL_FINALIZE);
     return mpi_errno;
@@ -164,9 +172,14 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             break;
         MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget", "**ptleqget %s", MPID_nem_ptl_strerror(ret));
-
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx\n",
+                                                MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type),
+                                                MPID_nem_ptl_strlist(event.ptl_list), event.user_ptr, event.hdr_data));
+        
         switch (event.type) {
         case PTL_EVENT_PUT:
+            if (event.ptl_list == PTL_OVERFLOW_LIST)
+                break;
         case PTL_EVENT_PUT_OVERFLOW:
         case PTL_EVENT_GET:
         case PTL_EVENT_ACK:

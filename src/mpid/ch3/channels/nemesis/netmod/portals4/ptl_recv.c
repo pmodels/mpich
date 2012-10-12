@@ -367,12 +367,18 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     me.uid = PTL_UID_ANY;
     me.options = ( PTL_ME_OP_PUT | PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE |
                    PTL_ME_EVENT_UNLINK_DISABLE | PTL_ME_USE_ONCE );
-    if (vc == NULL)
+    if (vc == NULL) {
         /* MPI_ANY_SOURCE receive */
         me.match_id = id_any;
-    else
+    } else {
+        if (!vc_ptl->id_initialized) {
+            mpi_errno = MPID_nem_ptl_init_id(vc);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
         me.match_id = vc_ptl->id;
-    me.match_bits = NPTL_MATCH(rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id);
+    }
+    
+    me.match_bits = NPTL_MATCH(rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id, rreq->dev.match.parts.rank);
     me.ignore_bits = NPTL_MATCH_IGNORE;
     me.min_free = 0;
 
@@ -451,7 +457,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
 
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_PRIORITY_LIST, rreq, &REQ_PTL(rreq)->me);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
-
+    DBG_MSG_MEAPPEND("REG", vc->pg_rank, me, rreq);
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();

@@ -80,7 +80,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
     me.uid = PTL_UID_ANY;
     me.options = ( PTL_ME_OP_PUT | PTL_ME_USE_ONCE );
     me.min_free = 0;
-    me.match_bits = NPTL_MATCH(tag, comm->context_id + context_offset);
+    me.match_bits = NPTL_MATCH(tag, comm->context_id + context_offset, source);
 
     if (source == MPI_ANY_SOURCE)
         me.match_id = id_any;
@@ -95,7 +95,8 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
     /* submit a search request */
     ret = PtlMESearch(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_SEARCH_ONLY, req);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
-
+    DBG_MSG_MESearch("REG", vc->pg_rank, me, req);
+    
     /* wait for search request to complete */
     do {
         mpi_errno = MPID_nem_ptl_poll(FALSE);

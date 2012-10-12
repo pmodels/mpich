@@ -10,9 +10,9 @@
 #include <mpid_nem_impl.h>
 #include <portals4.h>
 
-#define PTL_MAX_EAGER (64*1024) /* 64K */
+#define PTL_MAX_EAGER (64*1024UL) /* 64K */
 
-#define PTL_LARGE_THRESHOLD (64*1024) /* 64K */
+#define PTL_LARGE_THRESHOLD (64*1024UL) /* 64K */
 
 extern ptl_handle_ni_t MPIDI_nem_ptl_ni;
 extern ptl_pt_index_t  MPIDI_nem_ptl_pt;
@@ -131,14 +131,16 @@ typedef struct {
 #define NPTL_MATCH_TAG_OFFSET 32
 #define NPTL_MATCH_CTX_OFFSET 16
 #define NPTL_MATCH_RANK_MASK (((ptl_match_bits_t)(1) << 16) - 1)
-#define NPTL_MATCH_TAG_MASK ((((ptl_match_bits_t)(1) << 16) - 1) << NPTL_MATCH_TAG_OFFSET)
-#define NPTL_MATCH(tag_, ctx_) (((ptl_match_bits_t)(tag_) << NPTL_MATCH_TAG_OFFSET) |      \
-                                ((ptl_match_bits_t)(ctx_) << NPTL_MATCH_CTX_OFFSET) |      \
-                                ((ptl_match_bits_t)(MPIDI_Process.my_pg_rank)))
+#define NPTL_MATCH_CTX_MASK ((((ptl_match_bits_t)(1) << 16) - 1) << NPTL_MATCH_CTX_OFFSET)
+#define NPTL_MATCH_TAG_MASK ((((ptl_match_bits_t)(1) << 32) - 1) << NPTL_MATCH_TAG_OFFSET)
+#define NPTL_MATCH(tag_, ctx_, rank_) (((ptl_match_bits_t)(tag_) << NPTL_MATCH_TAG_OFFSET) |     \
+                                       ((ptl_match_bits_t)(ctx_) << NPTL_MATCH_CTX_OFFSET) |     \
+                                       ((ptl_match_bits_t)(rank_)))
 #define NPTL_MATCH_IGNORE NPTL_MATCH_RANK_MASK
 #define NPTL_MATCH_IGNORE_ANY_TAG (NPTL_MATCH_IGNORE | NPTL_MATCH_TAG_MASK)
 
 #define NPTL_MATCH_GET_RANK(match_bits_) ((match_bits_) & NPTL_MATCH_RANK_MASK)
+#define NPTL_MATCH_GET_CTX(match_bits_) (((match_bits_) & NPTL_MATCH_CTX_MASK) >> NPTL_MATCH_CTX_OFFSET)
 #define NPTL_MATCH_GET_TAG(match_bits_) ((match_bits_) >> NPTL_MATCH_TAG_OFFSET)
 
 int MPID_nem_ptl_send_init(void);
@@ -159,7 +161,6 @@ void MPI_nem_ptl_pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last,
                            MPID_nem_ptl_pack_overflow_t *overflow);
 int MPID_nem_ptl_unpack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
                              MPID_nem_ptl_pack_overflow_t *overflow);
-const char *MPID_nem_ptl_strerror(int ret);
 
 /* comm override functions */
 int MPID_nem_ptl_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
@@ -181,5 +182,42 @@ int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
                                    MPI_Status * status);
 void MPID_nem_ptl_anysource_posted(MPID_Request *rreq);
 int MPID_nem_ptl_anysource_matched(MPID_Request *rreq);
+int MPID_nem_ptl_init_id(MPIDI_VC_t *vc);
+
+
+/* debugging */
+const char *MPID_nem_ptl_strerror(int ret);
+const char *MPID_nem_ptl_strevent(const ptl_event_t *ev);
+const char *MPID_nem_ptl_strnifail(ptl_ni_fail_t ni_fail);
+const char *MPID_nem_ptl_strlist(ptl_list_t list);
+
+#define DBG_MSG_PUT(md_, data_sz_, pg_rank_, match_, header_) do {                                                                          \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
+                                                NPTL_MATCH_GET_TAG(match_), NPTL_MATCH_GET_CTX(match_), NPTL_MATCH_GET_RANK(match_), match_)); \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        flags=%c%c%c seqnum=%ld data_sz=%ld header=%#lx",                  \
+                                                header_ & NPTL_SSEND ? 'S':' ',                                                             \
+                                                header_ & NPTL_LARGE ? 'L':' ',                                                             \
+                                                header_ & NPTL_MULTIPLE ? 'M':' ',                                                          \
+                                                NPTL_HEADER_GET_SEQNUM(header_), NPTL_HEADER_GET_LENGTH(header_), header_));                \
+                                                                                                                                            \
+    } while(0)
+
+#define DBG_MSG_MEAPPEND(pt_, pg_rank_, me_, usr_ptr_) do {                                                                                 \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend: pt=%s pg_rank=%d me.length=%lu IOV=%d usr_ptr=%p",            \
+                                                pt_, pg_rank_, me_.length, me_.options & PTL_IOVEC, usr_ptr_));                             \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "             tag=%#lx ctx=%#lx rank=%ld match=%#lx ignore=%#lx",           \
+                                                NPTL_MATCH_GET_TAG(me_.match_bits), NPTL_MATCH_GET_CTX(me_.match_bits),                     \
+                                                NPTL_MATCH_GET_RANK(me_.match_bits), me_.match_bits, me_.ignore_bits));                     \
+    } while(0)
+    
+#define DBG_MSG_MESearch(pt_, pg_rank_, me_, usr_ptr_) do {                                                                             \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMESearch: pt=%s pg_rank=%d usr_ptr=%p", pt_, pg_rank_, usr_ptr_));  \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "             tag=%#lx ctx=%#lx rank=%ld match=%#lx ignore=%#lx",       \
+                                                NPTL_MATCH_GET_TAG(me_.match_bits), NPTL_MATCH_GET_CTX(me_.match_bits),                 \
+                                                NPTL_MATCH_GET_RANK(me_.match_bits), me_.match_bits, me_.ignore_bits));                 \
+    } while(0)
+    
+
 
 #endif /* PTL_IMPL_H */

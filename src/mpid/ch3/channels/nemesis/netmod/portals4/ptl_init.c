@@ -5,6 +5,7 @@
  */
 
 #include "ptl_impl.h"
+#include <pmi.h>
 
 #ifdef ENABLE_CHECKPOINTING
 #error Checkpointing not implemented
@@ -387,6 +388,43 @@ int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ptl_init_id
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_ptl_init_id(MPIDI_VC_t *vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
+    char *bc;
+    int pmi_errno;
+    int val_max_sz;
+    MPIU_CHKLMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_INIT_ID);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_INIT_ID);
+
+    pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
+    MPIU_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
+    MPIU_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc");
+
+    mpi_errno = vc->pg->getConnInfo(vc->pg_rank, bc, val_max_sz, vc->pg);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPID_nem_ptl_get_id_from_bc(bc, &vc_ptl->id, &vc_ptl->pt, &vc_ptl->ptc);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    vc_ptl->id_initialized = TRUE;
+    
+ fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_INIT_ID);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #define CASE_STR(x) case x: return #x
 
 const char *MPID_nem_ptl_strerror(int ret)
@@ -408,6 +446,53 @@ const char *MPID_nem_ptl_strerror(int ret)
     CASE_STR(PTL_PT_FULL);
     CASE_STR(PTL_PT_EQ_NEEDED);
     CASE_STR(PTL_PT_IN_USE);
+    default: return "UNKNOWN";
+    }
+}
+
+const char *MPID_nem_ptl_strnifail(ptl_ni_fail_t ni_fail)
+{
+    switch (ni_fail) {
+    CASE_STR(PTL_NI_OK);
+    CASE_STR(PTL_NI_UNDELIVERABLE);
+    CASE_STR(PTL_NI_DROPPED);
+    CASE_STR(PTL_NI_PT_DISABLED);
+    CASE_STR(PTL_NI_PERM_VIOLATION);
+    CASE_STR(PTL_NI_OP_VIOLATION);
+    CASE_STR(PTL_NI_NO_MATCH);
+    CASE_STR(PTL_NI_SEGV);
+    default: return "UNKNOWN";
+    }
+}
+
+const char *MPID_nem_ptl_strevent(const ptl_event_t *ev)
+{
+    switch (ev->type) {
+    CASE_STR(PTL_EVENT_GET);
+    CASE_STR(PTL_EVENT_GET_OVERFLOW);
+    CASE_STR(PTL_EVENT_PUT);
+    CASE_STR(PTL_EVENT_PUT_OVERFLOW);
+    CASE_STR(PTL_EVENT_ATOMIC);
+    CASE_STR(PTL_EVENT_ATOMIC_OVERFLOW);
+    CASE_STR(PTL_EVENT_FETCH_ATOMIC);
+    CASE_STR(PTL_EVENT_FETCH_ATOMIC_OVERFLOW);
+    CASE_STR(PTL_EVENT_REPLY);
+    CASE_STR(PTL_EVENT_SEND);
+    CASE_STR(PTL_EVENT_ACK);
+    CASE_STR(PTL_EVENT_PT_DISABLED);
+    CASE_STR(PTL_EVENT_LINK);
+    CASE_STR(PTL_EVENT_AUTO_UNLINK);
+    CASE_STR(PTL_EVENT_AUTO_FREE);
+    CASE_STR(PTL_EVENT_SEARCH);
+    default: return "UNKNOWN";
+    }
+}
+
+const char *MPID_nem_ptl_strlist(ptl_list_t pt_list)
+{
+    switch (pt_list) {
+    CASE_STR(PTL_OVERFLOW_LIST);
+    CASE_STR(PTL_PRIORITY_LIST);
     default: return "UNKNOWN";
     }
 }
