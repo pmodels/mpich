@@ -74,11 +74,12 @@ int MPIDO_Allreduce(const void *sendbuf,
    else rc = MPIDI_Datatype_to_pami(dt, &pdt, op, &pop, &mu);
 
   if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
-      fprintf(stderr,"allred rc %u, Datatype %p, op %p, mu %u, selectedvar %u != %u\n",
-              rc, pdt, pop, mu, 
-              (unsigned)comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLREDUCE],MPID_COLL_USE_MPICH);
+      fprintf(stderr,"allred rc %u,count %d, Datatype %p, op %p, mu %u, selectedvar %u != %u, sendbuf %p, recvbuf %p\n",
+              rc, count, pdt, pop, mu, 
+              (unsigned)comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLREDUCE],MPID_COLL_USE_MPICH, sendbuf, recvbuf);
       /* convert to metadata query */
-  if(unlikely(rc != MPI_SUCCESS || 
+  /* Punt count 0 allreduce to MPICH. Let them do whatever's 'right' */
+  if(unlikely(rc != MPI_SUCCESS || (count==0) ||
 	      comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] == MPID_COLL_USE_MPICH))
    {
       if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
