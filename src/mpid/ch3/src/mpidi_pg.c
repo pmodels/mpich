@@ -1194,7 +1194,8 @@ int MPIDI_PG_Close_VCs( void )
 
 	    if (vc->state == MPIDI_VC_STATE_ACTIVE ||
 		vc->state == MPIDI_VC_STATE_REMOTE_CLOSE) {
-		MPIDI_CH3U_VC_SendClose( vc, i );
+		mpi_errno = MPIDI_CH3U_VC_SendClose( vc, i );
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	    } else if (vc->state == MPIDI_VC_STATE_INACTIVE ||
                        vc->state == MPIDI_VC_STATE_MORIBUND) {
                 /* XXX DJG FIXME-MT should we be checking this? */
@@ -1222,8 +1223,11 @@ int MPIDI_PG_Close_VCs( void )
        connections are in fact closed (by the final progress loop that
        handles any close requests that this code generates) */
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PG_CLOSE_VCS);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /*
