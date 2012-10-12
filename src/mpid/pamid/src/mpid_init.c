@@ -244,13 +244,28 @@ MPIDI_PAMI_client_init(int* rank, int* size, int threading)
   /* Determine if the eager point-to-point protocol for internal mpi */
   /* operations should be disabled.                                  */
   /* --------------------------------------------------------------- */
-  if (MPIDI_Process.disable_internal_eager_scale <= *size)
-    {
-      MPIDI_Process.pt2pt.limits.internal.eager.remote     = 0;
-      MPIDI_Process.pt2pt.limits.internal.eager.local      = 0;
-      MPIDI_Process.pt2pt.limits.internal.immediate.remote = 0;
-      MPIDI_Process.pt2pt.limits.internal.immediate.local  = 0;
-    }
+  {
+    char * env = getenv("PAMID_DISABLE_INTERNAL_EAGER_TASK_LIMIT");
+    if (env != NULL)
+      {
+        size_t i, n = strlen(env);
+        char * tmp = (char *) malloc(n+1);
+        strncpy(tmp,env,n);
+        if (n>0) tmp[n]=0;
+
+        MPIDI_atoi(tmp, &MPIDI_Process.disable_internal_eager_scale);
+
+        free (tmp);
+      }
+
+    if (MPIDI_Process.disable_internal_eager_scale <= *size)
+      {
+        MPIDI_Process.pt2pt.limits.internal.eager.remote     = 0;
+        MPIDI_Process.pt2pt.limits.internal.eager.local      = 0;
+        MPIDI_Process.pt2pt.limits.internal.immediate.remote = 0;
+        MPIDI_Process.pt2pt.limits.internal.immediate.local  = 0;
+      }
+  }
 }
 
 
