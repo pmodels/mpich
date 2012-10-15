@@ -2309,14 +2309,14 @@ sub attrint_ctof {
     # little-endian, a cast to an int is all that's necessary.  In 
     # big-endian, to interpret the first sizeof(int) bytes as an int,
     # we must first cast as pointer to int, then dereference it.
-    # We must use "int" because the MPICH2 code incorrectly uses int
-    # instead of MPI_Fint.
+    # This has been patched to use a consistent int choice with
+    # what is used in comm_get_attr.c
     print $OUTFD "
     if ((int)*ierr || !l$flagarg) {
         *(MPI_Fint*)$cvar = 0;
     }
     else {
-        *(MPI_Fint*)$cvar = (MPI_Fint)*(int *)&attr$cvar;
+        *(MPI_Fint*)$cvar = (MPI_Fint)(MPIR_Pint)attr$cvar;
     }\n";
 }
 

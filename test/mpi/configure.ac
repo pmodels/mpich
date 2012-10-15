@@ -1020,6 +1020,9 @@ if test "$enable_fc" = yes ; then
         fi
         cp f77/init/checksizes.c f90/init
     fi
+    # At least one of the Fortran 90 tests makes use of a module; this
+    # allows us to find it to delete the created object file
+    PAC_FC_MODULE
 fi
 #
 if test "$FROM_MPICH2" = yes ; then

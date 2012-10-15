@@ -1,6 +1,12 @@
 ## vim: set ft=automake :
 
-noinst_PROGRAMS += fandcattrf90 baseattr3f90
+noinst_PROGRAMS += fandcattrf90 baseattr3f90 attrlangf90
 fandcattrf90_SOURCES = fandcattrf90.f90 fandcattrc.c
 baseattr3f90_SOURCES = baseattr3f90.f90
+attrlangf90_SOURCES = attrlangf90.f90 attrlangc.c
+
+# Remove any created module files, if we know the extension of those files
+clean-local:
+	if [ "@FCMODEXT@" != "" ] ; then rm -f *.@FCMODEXT@ ; fi
+
 
