@@ -7,7 +7,7 @@ C
       implicit none
       include 'mpif.h'
       integer value, wsize, wrank, extra, mykey
-      integer rvalue, ncomm
+      integer rvalue, svalue, ncomm
       logical flag
       integer ierr, errs
 C
@@ -28,27 +28,31 @@ C
       endif
 C
       value = 1234567
+      svalue = value
       call mpi_attr_put( MPI_COMM_WORLD, mykey, value, ierr )
+      value = -9876543
       call mpi_attr_get( MPI_COMM_WORLD, mykey, rvalue, flag, ierr )
       if (.not. flag) then
          errs = errs + 1
          print *, "Did not find attribute after set"
       else
-         if (rvalue .ne. value) then
+         if (rvalue .ne. svalue) then
             errs = errs + 1
-            print *, "Attribute value ", rvalue, " should be ", value
+            print *, "Attribute value ", rvalue, " should be ", svalue
          endif
       endif
       value = -123456
+      svalue = value
       call mpi_attr_put( MPI_COMM_WORLD, mykey, value, ierr )
+      value = 987654
       call mpi_attr_get( MPI_COMM_WORLD, mykey, rvalue, flag, ierr )
       if (.not. flag) then
          errs = errs + 1
          print *, "Did not find attribute after set (neg)"
       else
-         if (rvalue .ne. value) then
+         if (rvalue .ne. svalue) then
             errs = errs + 1
-            print *, "Neg Attribute value ", rvalue, " should be ",value
+            print *, "Neg Attribute value ", rvalue," should be ",svalue
          endif
       endif
 C      
