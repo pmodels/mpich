@@ -19,6 +19,10 @@
  * \file src/mpid_init.c
  * \brief Normal job startup code
  */
+
+#include <stdlib.h>
+#include <string.h>
+
 #include <mpidimpl.h>
 #include "mpidi_platform.h"
 #include "onesided/mpidi_onesided.h"
