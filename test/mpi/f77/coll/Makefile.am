@@ -12,4 +12,4 @@ EXTRA_DIST = testlist
 # avoid having to write many "foo_SOURCES = foo.f" lines
 AM_DEFAULT_SOURCE_EXT = .f
 
-noinst_PROGRAMS = uallreducef exscanf alltoallwf inplacef allredint8f allredopttf reducelocalf alltoallvf redscatf split_typef nonblockingf vw_inplacef red_scat_blockf
+noinst_PROGRAMS = uallreducef exscanf alltoallwf inplacef allredint8f allredopttf reducelocalf alltoallvf redscatf split_typef nonblockingf vw_inplacef red_scat_blockf nonblocking_inpf

@@ -85,10 +85,6 @@ C Scatter with inplace
           endif
        endif   
 
-C Alltoall with inplace
-       call mpi_alltoall( MPI_IN_PLACE, -1, MPI_DATATYPE_NULL,
-     $      rbuf, 1, MPI_INTEGER, comm, ierr )
-
        call mtest_finalize( errs )
        call mpi_finalize( ierr )
 
