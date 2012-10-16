@@ -253,13 +253,13 @@ MPIDI_PAMI_client_init(int* rank, int* size, int threading)
     if (env != NULL)
       {
         size_t i, n = strlen(env);
-        char * tmp = (char *) malloc(n+1);
+        char * tmp = (char *) MPIU_Malloc(n+1);
         strncpy(tmp,env,n);
         if (n>0) tmp[n]=0;
 
         MPIDI_atoi(tmp, &MPIDI_Process.disable_internal_eager_scale);
 
-        free (tmp);
+        MPIU_Free(tmp);
       }
 
     if (MPIDI_Process.disable_internal_eager_scale <= *size)
