@@ -100,6 +100,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
    if(size == 1)
    {
       proc->iamBridge = 1;
+      proc->bridgeRank = rank;
 
       /* Set up the other parameters */
       proc->myIOSize = size;
