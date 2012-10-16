@@ -1022,6 +1022,9 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *rma_op,
             MPIU_ERR_CHKANDJUMP(rmw_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
             MPIU_Object_set_ref(rmw_req, 1);
 
+            rmw_req->dev.OnFinal = 0;
+            rmw_req->dev.OnDataAvail = 0;
+
             iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)fop_pkt;
             iov[0].MPID_IOV_LEN = sizeof(*fop_pkt);
             iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)rma_op->origin_addr;
