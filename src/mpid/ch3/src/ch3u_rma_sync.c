@@ -756,7 +756,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops *rma_op, MPID_Win *win_ptr,
                it will be completed by the progress engine.
              */
 
-            MPIU_Object_set_ref(*request, 1);
+            MPID_Request_release(*request);
             *request = resp_req;
 
         } else {
